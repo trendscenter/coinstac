@@ -153,28 +153,25 @@ A running COINSTAC system relies on [CouchDB](http://couchdb.apache.org/) for da
 
 ### consortiameta
 
-Contains “meta” documents for every consortium. Each document's `id` is the consortium ID, a key used to match “up” and “down” database names. Each document in the database is backed by `Consortium` models.
+Contains “meta” documents for every consortium. Each document's `id` is the consortium ID, a key used to match “local” and “remote” database names. Each document in the database is backed by `Consortium` models.
 
 ```js
 [
     // Consortium instance:
     {
         id: 'consortium1',
-        computations: [/* ... */],
         usernames: ['user-1', 'user-2', 'user-3', /* ... */],
     },
 
     // Consortium instance:
     {
         id: 'consortium2',
-        computations: [/* ... */],
         usernames: ['user-14', 'user-15', /* ... */],
     },
 
     // Consortium instance:
     {
         id: 'consortium3',
-        computations: [/* ... */],
         // ...
     },
 
@@ -328,54 +325,54 @@ Here’s how a basic computation work:
 3. All clients running the computation seed their local computation documents:
 
     ```
-    +----------+                           +---------------+
-    | Client 1 | - LocalComputation -----> |               |
-    +----------+        (async)            |               |
-                                           |       UP      |
-    +----------+                           |               |
-    | Client 2 | --- LocalComputation ---> |  Consortium’s |
-    +----------+          (async)          | “up” database |
-                                           |               |
-    +----------+                           |               |
-    | Client 3 | ----- LocalComputation -> |               |
-    +----------+            (async)        +---------------+
+    +----------+                           +------------------+
+    | Client 1 | - LocalComputation -----> |                  |
+    +----------+        (async)            |                  |
+                                           |       LOCAL      |
+    +----------+                           |                  |
+    | Client 2 | --- LocalComputation ---> |   Consortium’s   |
+    +----------+          (async)          | “local” database |
+                                           |                  |
+    +----------+                           |                  |
+    | Client 3 | ----- LocalComputation -> |                  |
+    +----------+            (async)        +------------------+
     ```
 
 4. The server sees when all the client’s `LocalComputation` documents have been uploaded. It then runs a remote computation:
 
     ```
-    +---------------+
-    |               |                       +-------------+
-    |       UP      | - LocalComputation -> |   Server’s  |
-    |               | - LocalComputation -> |    remote   |
-    |  Consortium’s | - LocalComputation -> | computation |
-    | “up” database |                       |   function  |
-    |               |                       +-------------+
-    +---------------+                              |
-                                           RemoteComputation
-                                                   |
-                                                   v
-                                          +-----------------+
-                                          |                 |
-                                          |       DOWN      |
-                                          |                 |
-                                          |  Consortium’s   |
-                                          | “down” database |
-                                          |                 |
-                                          +-----------------+
+    +------------------+
+    |                  |                       +-------------+
+    |       LOCAL      | - LocalComputation -> |   Server’s  |
+    |                  | - LocalComputation -> |    remote   |
+    |   Consortium’s   | - LocalComputation -> | computation |
+    | “local” database |                       |   function  |
+    |                  |                       +-------------+
+    +------------------+                              |
+                                              RemoteComputation
+                                                      |
+                                                      v
+                                            +-------------------+
+                                            |                   |
+                                            |       REMOTE      |
+                                            |                   |
+                                            |    Consortium’s   |
+                                            | “remote” database |
+                                            |                   |
+                                            +-------------------+
     ```
 
-5. The clients see when the remote server adds a document to the “down” database. Each client then runs its local computation:
+5. The clients see when the remote server adds a document to the “remote” database. Each client then runs its local computation:
 
     ```
-               +-----------------+   
-               |                 |
-               |       DOWN      |
-               |                 |
-               |  Consortium’s   |
-               | “down” database |
-               |                 |
-               +-----------------+
+              +-------------------+   
+              |                   |
+              |       REMOTE      |
+              |                   |
+              |    Consortium’s   |
+              | “remote” database |
+              |                   |
+              +-------------------+
                         |
                 RemoteComputation
               (clients get same doc)
@@ -391,16 +388,16 @@ Here’s how a basic computation work:
 6. The local and remote computers iterate between steps 3 through 5 until the remote machine deems the computation is done. Data flows in one direction, in a circular manner:
 
     ```
-       +---------+                        +-------------+
-       | Clients | - LocalComputations -> | UP database |
-       +---------+                        +-------------+
-            ^                                    |
-            |                            LocalComputations
-    RemoteComputation                            |
-            |                                    V
-    +---------------+                        +--------+
-    | DOWN database | <- RemoteComputation - | Server |
-    +---------------+                        +--------+
+        +---------+                        +----------------+
+        | Clients | - LocalComputations -> | LOCAL database |
+        +---------+                        +----------------+
+             ^                                      |
+             |                              LocalComputations
+     RemoteComputation                              |
+             |                                      V
+    +-----------------+                        +--------+
+    | REMOTE database | <- RemoteComputation - | Server |
+    +-----------------+                        +--------+
     ```
 
 ### Pipelines
