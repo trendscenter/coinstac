@@ -149,7 +149,7 @@ Computations are instructions for client-server interaction. Clients are referre
 
 ## Database Structure
 
-A running COINSTAC system relies on [CouchDB](http://couchdb.apache.org/) for data storage and [Pouchy](https://www.npmjs.com/package/pouchy) for data reads and writes. CouchDB serves as a document store, and every document is backed by a model from coinstac-common. There are **four** key databases:
+A running COINSTAC system relies on [CouchDB](http://couchdb.apache.org/) for data storage and [Pouchy](https://www.npmjs.com/package/pouchy) for data reads and writes. CouchDB serves as a document store, and every document is backed by a model from [coinstac-common](#coinstac-common). There are **four** key databases:
 
 ### consortiameta
 
@@ -181,145 +181,121 @@ Contains “meta” documents for every consortium. Each document's `id` is the 
     // ...
 ```
 
-### up
+### local
 
-Contains local computation results. Database name follows `up/${consortiumId}-local-results`. This database is backed by `LocalComputation` models. Calling `LocalComputation#save` (on an instance) synchronizes the computation's result to this database.
+Contains local computation results. Database name follows `local-consortium-${consortiumId}`, where `consortiumId` is a consortium's unique numeric identifier. This database is backed by `LocalComputation` models. Calling `LocalComputation#save` (on an instance) synchronizes the computation's result to this database.
 
 Saved local computation result documents have a few important items:
 
+* **_id:** an identifier of the form `${runId}-${username}`. `runId` is a unique number that signifies a decentralized computation “run.” The `runId` is used as a key to match several local documents and a single remote document.
 * **data:** an object/primitive that is the result of the computation.
 * **timestamp** entry of when the data was saved
-* **name:** name of the computation. Required for finding a particular computation’s local results when filtering over this `up` database.
-* **history:** LocalComputation maintains a sequential array of past `data` values. They’re `push`-ed here. History items should also have a timestamp:
-
-    ```js
-    history: [
-    {
-        data: { /* ... */ },
-        timestamp: moment().format(),
-    }, {
-        data: { /* ... */ },
-        timestamp: moment().format(),
-    },
-    // …
-    ]
-    ```
-
-* **runId:** Each LocalComputation instance is paired with a RemoteComputation using a unique `runId`. (There may be several instances of a computation).
+* **name:** name of the computation. UsedRequired for finding a particular computation’s local results when filtering
 * **username:** The local computation’s client’s username. (This is also maintained in RemoteComputation’s `usernames` array.)
+* **version:** version of the computation. Used in conjunction with **name** to look up a decentralized computation.
 
-* up/consortium1-local-results
+* local-consortium-1
     ```js
     // LocalComputation instance:
     {
+        _id: '100-user-1',
         data: { /* ... */ },
-        history: [/* ... */],
         name: 'simple-computation',
-        runId: 100,
         timestamp: // ...
         username: 'user-1',
+        version: '1.0.0',
     }
 
     // LocalComputation instance:
     {
+        _id: '100-user-2',
         data: { /* ... */ },
-        history: [/* ... */],
         name: 'simple-computation',
-        runId: 100,
         timestamp: // ...
         username: 'user-2',
+        version: '1.0.0',
     }
 
     // LocalComputation instance:
     {
+        _id: '100-user-3',
         data: { /* ... */ },
-        history: [ /* ... */ ],
         name: 'simple-computation',
-        runId: 100,
         timestamp: // ...
         username: 'user-3',
+        version: '1.0.0',
     }
 
     // LocalComputation instance:
     {
+        _id: '101-user-4'
         data: { /* ... */ },
-        history: [ /* ... */ ],
         name: 'other-computation',
-        runId: 101,
         timestamp: // ...
         username: 'user-4',
+        version: '0.5.1',
     }
 
     // ...
     ```
-* up/consortium2-local-results
+* local-consortium-2
     ```js
     // LocalComputation instance:
     {
+        _id: '102-user-14',
         data: { /* ... */ },
-        history: [ /* ... */ ],
         name: 'advanced-computation',
-        runId: 102,
         timestamp: // ...
-        username: 'user-14',
+        username: 'user-15',
+        version: '2.15.1',
     }
 
     // ...
     ```
-* up/consortium3-local-results
-    ```js
-    // ...
-    ```
 
-### down
+### remote
 
-Contains remote computation results. Database name follows `down/${consortiumId}-remote-results`. This database is backed by `RemoteComputation` models. Calling `RemoteComputation#save` (on an instance) synchronizes the computation's results to this database.
+Contains remote computation results. Database name follows `remote-consortium-${consortiumId}`, where `consortiumId` is a consortium's unique numeric identifier. This database is backed by `RemoteComputation` models. Calling `RemoteComputation#save` (on an instance) synchronizes the computation's results to this database.
 
 Saved `RemoteComputation`s have a few important values:
 
+* **_id:** This _is_ a computation instance’s `runId`. This links a remote document to clients’ local documents.
 * **data:** result of running a remote computation
-* **history:** like `LocalComputation`’s `history`: array of past remote computation results
-* **name:** name of the computation. Useful for linking `RemoteComputation`s to `LocalComputation`s.
-* **runId:** unique identifier for this computation’s instance. Like `LocalComputation`’s `runId`.
+* **name:** name of the computation.
 * **usernames:** Collection of all user names involved in computation instance.
 * **version:** semver version number of computation.
 
-* down/consortium1-remote-results
+* remote-consortium-1
     ```js
     // RemoteComputation instance:
     {
+        _id: '100',
         data: { /* ... */ },
-        history: [/* ... */],
         name: 'simple-computation',
-        runId: 100,
         usernames: ['user-1', 'user-2', 'user-3']
         version: '1.0.0',
     }
 
     // RemoteComputation instance:
     {
+        _id: '101',
         data: { /* ... */ },
         name: 'other-computation',
-        runId: 101,
         usernames: ['user-4', 'user-5']
         version: '1.0.0',
     }
     ```
-* down/consortium2-remote-results
+* remote-consortium-2
     ```js
     // RemoteComputation instance:
     {
+        _id: '102',
         data: { /* ... */ },
         name: 'advanced-computation',
-        runId: 102,
         usernames: ['user-14', 'user-15', /* ... */ ],
         version: '2.0.1',
     }
 
-    // ...
-    ```
-* down/consortium3-remote-results
-    ```js
     // ...
     ```
 
@@ -332,10 +308,10 @@ This database contains definitions for computations which are backed by `Distrib
     ```js
     // DistributedComputation instance:
     {
-        id: 'simple-computation',
-        name: 'My Simple Computation',
-        description: 'This is a really dumb, iterative computation.',
+        name: 'simple-computation',
         version: '1.0.0',
+        label: 'My Simple Computation',
+        description: 'This is a really dumb, iterative computation.',
     }
     ```
 
