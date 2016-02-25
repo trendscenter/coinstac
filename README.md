@@ -4,6 +4,17 @@ _Documentation for the COINSTAC ecosystem._
 
 At a high level, COINSTAC (Collaborative Informatics and Neuroimaging Suite Toolkit for Anonymous Computation) is software for running distributed computations that maintain data anonymity through added random noise.
 
+**Table of Contents:**
+
+* [The Pieces](#the-pieces)
+* [Consortia](#consortia)
+* [Computations](#computations)
+* [Database Structure](#database-structure)
+* [Computation Lifecycle](#computation-lifecycle)
+* [Authentication](#authentication)
+* [Coding Standards](#coding-standards])
+* [License](#license)
+
 ## The Pieces
 
 COINSTAC is composed of many pieces stored in GitHub repositories. Here’s an overview:
