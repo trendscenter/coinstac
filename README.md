@@ -22,7 +22,7 @@ COINSTAC is composed of many pieces stored in GitHub repositories. Here’s an o
 ### [coinstac-common](https://github.com/MRN-Code/coinstac-common)
 
 * **Uses:**
-* **Used by:**
+* **Used by:** [coinstac-client-core](#coinstac-client-core), [coinstac-server-core](#coinstac-server-core)
 
 Reusable pieces of COINSTAC shared by both the client and server.
 
@@ -60,21 +60,21 @@ Reusable pieces of COINSTAC shared by both the client and server.
 
 ### [coinstac-client-core](https://github.com/MRN-Code/coinstac-client-core)
 
-* **Uses:** coinstac-common
-* **Used by:** coinstac-ui
+* **Uses:** [coinstac-common](#coinstac-common)
+* **Used by:** [coinstac-ui](#coinstac-ui)
 
 Core library for running local computations on a client.
 
 ### [coinstac-distributed-algorithm-set](https://github.com/MRN-Code/coinstac-distributed-algorithm-set)
 
 * **Uses:**
-* **Used by:** ?
+* **Used by:**
 
 A set of useful functions for algorithms.
 
 ### [coinstac-server-core](https://github.com/MRN-Code/coinstac-server-core)
 
-* **Uses:** coinstac-common
+* **Uses:** [coinstac-common](#coinstac-common)
 * **Used by:**
 
 Core library for running remote computations on a server. It has two modes:
@@ -84,21 +84,21 @@ Core library for running remote computations on a server. It has two modes:
 
 ### [coinstac-storage-proxy](https://github.com/MRN-Code/coinstac-storage-proxy)
 
-* **Uses:** coinstac-common
-* **Used by:** nodeapi
+* **Uses:** [coinstac-common](#coinstac-common)
+* **Used by:** [nodeapi](#nodeapi)
 
 Authentication plugin for [hapi](http://hapijs.com/) server. This ensures COINSTAC’s CouchDB databases are secure.
 
 ### [coinstac-ui](https://github.com/MRN-Code/coinstac-ui)
 
-* **Uses:** coinstac-client-core
+* **Uses:** [coinstac-client-core](#coinstac-client-core)
 * **Used by:**
 
 This is the Electron-based application that runs on OS X, Windows and Linux. It consumes coinstac-client-core and coinstac-common.
 
 ### [nodeapi](https://github.com/MRN-Code/nodeapi)
 
-* **Uses:** coinstac-storage-proxy
+* **Uses:** [coinstac-storage-proxy](#coinstac-storage-proxy)
 * **Used by:**
 
 ## Consortia
