@@ -2,7 +2,7 @@
 
 _Documentation for the COINSTAC ecosystem._
 
-COINSTAC (Collaborative Informatics and Neuroimaging Suite Toolkit for Anonymous Computation) is software for running decentralized computations. Its objective is to foster collaborative research, removing large barriers to tradtional data-centric collaboration approaches.  It enables many users to run a common set of analyses or general computation pipelines on their data _with ease_.  The results of member analyses may be syncronized in the cloud, and undergo aggregated analyses with all member data.  If offers data anonymity through differential privacy algorithms, so members do not need to fear PHI traceback.
+COINSTAC (Collaborative Informatics and Neuroimaging Suite Toolkit for Anonymous Computation) is software for running decentralized computations. Its objective is to foster collaborative research, removing large barriers to tradtional data-centric collaboration approaches.  It enables many users to individually run a common set of analyses on their datasets _with ease_.  The results of these analyses may be syncronized in the cloud, and undergo an aggregated analyses process using all member data.  If offers data anonymity through differential privacy algorithms, so members do not need to fear PHI traceback.
 
 Let's do research!
 
