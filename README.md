@@ -111,21 +111,30 @@ Computations are instructions for client-server interaction. Clients are referre
 
 ```js
 {
-    id: 'barebones-multishot',
-    name: 'Barebones Ultra-dumb Multi-shot',
-    description: 'This is a really dumb, iterative computation.',
+    name: 'barebones-multishot',
     version: '1.0.0',
+    repository: {
+        url: 'https://github.com/MRN-Code/barebones-multishot',
+    },
+    label: 'Barebones Multi-shot',
+    description: 'This is a simple, iterative computation.',
     local: {
         type: 'function',
         fn: function(previousLocalResult, remoteResult, next) {
+            if (typeof previousLocalResult === 'undefined') {
+                previousLocalResult = Math.round(Math.random() * 10);
+            }
             // Average previous and remote results
             return (previousLocalResult + remoteResult) / 2;
         },
-        seed: Math.round(Math.random() * 10),
-    }],
+    },
     remote: {
         type: 'function',
         fn: function(previousRemoteResult, localResults, next) {
+            if (typeof previousRemoteResult === 'undefined') {
+                previousRemoteResult = 0;
+            }
+
             // Move on to next task if the remote value exceeds 30
             if (previousRemoteResult >= 30) {
                 return next();
@@ -134,8 +143,7 @@ Computations are instructions for client-server interaction. Clients are referre
             // Add all the local results
             return localResults.reduce((sum, n) => sum + n);
         },
-        seed: 0,
-    }],
+    },
 };
 ```
 
