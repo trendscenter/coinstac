@@ -52,7 +52,7 @@ If you are a developer or scientist and want to design a decentralized computati
 
 ## Under The Hood
 
-Developer documentation and system design information may be found over in our [techinal docs](./TECHNICAL.md).
+Developer documentation and system design information may be found over in our [technical docs](./TECHNICAL.md).
 
 ## License
 
