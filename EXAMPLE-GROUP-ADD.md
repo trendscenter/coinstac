@@ -69,6 +69,16 @@ fn: function(opts, cb) {
     // stub some default values
     const _default = { step: 1, userStep: {} };
 
+    /*
+    {
+      step: 1, // <== step starts at 1, and we will count to 3 with all users
+      userStep: { // <== userStep will have approximately the following shape:
+        brad: 1,  // @note, if we have 3 `usernames` in `opts.usernames`,
+        sacha: 1, // only after each person has contributed will this have three kv-pairs
+      }
+    }
+    */
+
     // construct our current group data from default and past values
     let result = _.assign({}, _default, opts.previousData);
 
@@ -76,7 +86,7 @@ fn: function(opts, cb) {
     opts.userResults.forEach(usrRslt => {
         result.userStep[usrRslt.username] = usrRslt.data;
     });
-    const userStepValues = _.values(result.userStep);
+    const userStepValues = _.values(result.userStep); // <== e.g. [ 1, 1 ]
     const allUsersMatch = userStepValues.every(uStep => uStep === result.step);
     const allUsersPresent = userStepValues.length === opts.usernames.length;
     const shouldBumpStep = allUsersMatch && allUsersPresent;
