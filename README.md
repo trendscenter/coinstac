@@ -23,7 +23,7 @@ You want to do research, and you want to include data from around the world.  Un
 
 - Ensuring privacy can be difficult.  Can I trust other people or institutions with my research participants' data?  Am I even allowed to share it?
 
-- Large datasets can be expensive to transfer.  When filesets are in the GB and TB range, network transfers are not immediately trivial or even practical.
+- Large datasets can be expensive to transfer.  When file sets are in the GB and TB range, network transfers are not immediately trivial or even practical.
 
 - Valuable research data may often not be shared due to privacy or IRB constraints.
 
@@ -53,7 +53,7 @@ You may wonder why we haven't been doing this before!  Us too.  Let's get starte
 
 - If you are a developer or scientist and want to design a decentralized computation, please see:
   - [DecentralizedComputation.md](DecentralizedComputation.md) for how to build your own `DecentralizedComputation`.
-  - [coinstac-simulator](mrn-code/coinstac-simulator) for how to test your freshly created `DecentralizedComputation`.
+  - [coinstac-simulator](mrn-code/coinstac-simulatorhttps://github.com/MRN-Code/coinstac-simulator) for how to test your freshly created `DecentralizedComputation`.
   - "Under the Hood" below, if you want to understand how the system works.
 
 

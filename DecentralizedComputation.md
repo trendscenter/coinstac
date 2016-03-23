@@ -10,7 +10,7 @@ let's figure out how to build one.
 
 ## prepare
 - install [nodejs](https://nodejs.org).  it's a quick [installation](https://nodejs.org/en/download/).
-- install [coinstac-simulator](MRN-Code/coinstac-simulator).
+- install [coinstac-simulator](https://github.com/MRN-Code/coinstac-simulator).
 - open the [integration repo](https://github.com/MRN-Code/coinstac-decentralized-algorithm-integration), as we will reference it in our examples.
 
 ## design
@@ -109,7 +109,7 @@ at current time, dependencies are not partitioned between `local` and `remote` p
 
 ### run
 
-See [coinstac-simulator](MRN-Code/ccoinstac-simulator)'s documentation.  If you've already accomplished the above, it should be a piece of cake! :cake:
+See [coinstac-simulator](https://github.com/MRN-Code/coinstac-simulator)'s documentation.  If you've already accomplished the above, it should be a piece of cake! :cake:
 
 ### publish
 
