@@ -40,7 +40,7 @@ A few things to note:
 
 ### pipeline basics
 
-a [`Pipeline`](http://mrn-code.github.io/coinstac-common/DecentralizedComputation.html) in COINSTAC is not your run-of-the-mill, [traditional sequential Pipeline](https://en.wikipedia.org/wiki/Pipeline_(computing)).  COINSTAC decentralized Pipelines differ from traditional pipelines with the following modifications:
+a [`Pipeline`](http://mrn-code.github.io/coinstac-common/Pipeline.html) in COINSTAC is not your run-of-the-mill, [traditional sequential Pipeline](https://en.wikipedia.org/wiki/Pipeline_(computing)).  COINSTAC decentralized Pipelines differ from traditional pipelines with the following modifications:
 
 - COINSTAC Pipelines may `halt` and `resume`.
 - COINSTAC Pipelines may conditionally `progress` to subsequent steps, or, repeat the current step many times.
