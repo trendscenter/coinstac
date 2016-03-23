@@ -1,4 +1,5 @@
 # COINSTAC
+_Decentralized Analyses Made Easy_
 
 <img src="https://github.com/MRN-Code/coinstac-common/blob/master/img/coinstac.png" height="75px" />
 
