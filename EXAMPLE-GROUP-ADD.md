@@ -79,7 +79,7 @@ fn: function(opts, cb) {
     }
     */
 
-    // construct our current group data from default and past values
+    // update our perception of state by applying our results from the last run
     let result = _.assign({}, _default, opts.previousData);
 
     // apply user integer counts to our RemoteComputationResult
