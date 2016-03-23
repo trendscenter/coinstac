@@ -1,12 +1,99 @@
 # COINSTAC Technical Documentation
 
+* [Computation Lifecycle](#computation-lifecycle)
 * [The Pieces](#the-pieces)
 * [Consortia](#consortia)
 * [Computations](#computations)
 * [Database Structure](#database-structure)
-* [Computation Lifecycle](#computation-lifecycle)
 * [Authentication](#authentication)
 * [Coding Standards](#coding-standards])
+
+## Computation Lifecycle
+
+### Basic Example
+
+Here’s how a basic decentralized computation works:
+
+1. A consortium leader selects a computation from the list of computations in the _computations_ database. The consortium configures the computation with the usernames of clients that will run the computation.
+2. The server seeds the remote computation document
+3. All clients running the computation seed their local computation documents:
+
+    ```
+    +----------+                           +------------------+
+    | Client 1 | - LocalComputation -----> |                  |
+    +----------+        (async)            |                  |
+                                           |       LOCAL      |
+    +----------+                           |                  |
+    | Client 2 | --- LocalComputation ---> |   Consortium’s   |
+    +----------+          (async)          | “local” database |
+                                           |                  |
+    +----------+                           |                  |
+    | Client 3 | ----- LocalComputation -> |                  |
+    +----------+            (async)        +------------------+
+    ```
+
+4. The server sees when all the client’s `LocalComputation` documents have been uploaded. It then runs a remote computation:
+
+    ```
+    +------------------+
+    |                  |                       +-------------+
+    |       LOCAL      | - LocalComputation -> |   Server’s  |
+    |                  | - LocalComputation -> |    remote   |
+    |   Consortium’s   | - LocalComputation -> | computation |
+    | “local” database |                       |   function  |
+    |                  |                       +-------------+
+    +------------------+                              |
+                                              RemoteComputation
+                                                      |
+                                                      v
+                                            +-------------------+
+                                            |                   |
+                                            |       REMOTE      |
+                                            |                   |
+                                            |    Consortium’s   |
+                                            | “remote” database |
+                                            |                   |
+                                            +-------------------+
+    ```
+
+5. The clients see when the remote server adds a document to the “remote” database. Each client then runs its local computation:
+
+    ```
+              +-------------------+   
+              |                   |
+              |       REMOTE      |
+              |                   |
+              |    Consortium’s   |
+              | “remote” database |
+              |                   |
+              +-------------------+
+                        |
+                RemoteComputation
+              (clients get same doc)
+                        |
+         +--------------+--------------+
+         |              |              |                   
+         v              v              v
+    +----------+   +----------+   +----------+
+    | Client 1 |   | Client 2 |   | Client 3 |
+    +----------+   +----------+   +----------+
+    ```
+
+6. The local and remote computers iterate between steps 3 through 5 until the remote machine deems the computation is done. Data flows in one direction, in a circular manner:
+
+    ```
+        +---------+                        +----------------+
+        | Clients | - LocalComputations -> | LOCAL database |
+        +---------+                        +----------------+
+             ^                                      |
+             |                              LocalComputations
+     RemoteComputation                              |
+             |                                      V
+    +-----------------+                        +--------+
+    | REMOTE database | <- RemoteComputation - | Server |
+    +-----------------+                        +--------+
+    ```
+
 
 ## The Pieces
 
@@ -307,92 +394,6 @@ This database contains definitions for computations which are backed by `Distrib
 
     It’s important to note that CouchDB uses a `_id` attribute as a unique identifier. There can be several versions of the `simple-computation` computation: their `version` properties will be different.
 
-## Computation Lifecycle
-
-### Basic Example
-
-Here’s how a basic computation work:
-
-1. A consortium selects a computation from the list of computations in the _computations_ database. The consortium configures the computation with the usernames of clients that will run the computation.
-2. The server seeds the remote computation document
-3. All clients running the computation seed their local computation documents:
-
-    ```
-    +----------+                           +------------------+
-    | Client 1 | - LocalComputation -----> |                  |
-    +----------+        (async)            |                  |
-                                           |       LOCAL      |
-    +----------+                           |                  |
-    | Client 2 | --- LocalComputation ---> |   Consortium’s   |
-    +----------+          (async)          | “local” database |
-                                           |                  |
-    +----------+                           |                  |
-    | Client 3 | ----- LocalComputation -> |                  |
-    +----------+            (async)        +------------------+
-    ```
-
-4. The server sees when all the client’s `LocalComputation` documents have been uploaded. It then runs a remote computation:
-
-    ```
-    +------------------+
-    |                  |                       +-------------+
-    |       LOCAL      | - LocalComputation -> |   Server’s  |
-    |                  | - LocalComputation -> |    remote   |
-    |   Consortium’s   | - LocalComputation -> | computation |
-    | “local” database |                       |   function  |
-    |                  |                       +-------------+
-    +------------------+                              |
-                                              RemoteComputation
-                                                      |
-                                                      v
-                                            +-------------------+
-                                            |                   |
-                                            |       REMOTE      |
-                                            |                   |
-                                            |    Consortium’s   |
-                                            | “remote” database |
-                                            |                   |
-                                            +-------------------+
-    ```
-
-5. The clients see when the remote server adds a document to the “remote” database. Each client then runs its local computation:
-
-    ```
-              +-------------------+   
-              |                   |
-              |       REMOTE      |
-              |                   |
-              |    Consortium’s   |
-              | “remote” database |
-              |                   |
-              +-------------------+
-                        |
-                RemoteComputation
-              (clients get same doc)
-                        |
-         +--------------+--------------+
-         |              |              |                   
-         v              v              v
-    +----------+   +----------+   +----------+
-    | Client 1 |   | Client 2 |   | Client 3 |
-    +----------+   +----------+   +----------+
-    ```
-
-6. The local and remote computers iterate between steps 3 through 5 until the remote machine deems the computation is done. Data flows in one direction, in a circular manner:
-
-    ```
-        +---------+                        +----------------+
-        | Clients | - LocalComputations -> | LOCAL database |
-        +---------+                        +----------------+
-             ^                                      |
-             |                              LocalComputations
-     RemoteComputation                              |
-             |                                      V
-    +-----------------+                        +--------+
-    | REMOTE database | <- RemoteComputation - | Server |
-    +-----------------+                        +--------+
-    ```
-
 ### Pipelines
 
 Computations are pipelines. The basic example above has one pipeline element for both remote and client computers. In more robust cases, computations may contain multiple sub-computation functions that iterate and yield to the next sub-computation.
@@ -402,3 +403,5 @@ Computations are pipelines. The basic example above has one pipeline element for
 ## Coding Standards
 
 Each COINSTAC project uses [coins-validate](https://github.com/MRN-Code/coins-validate) to ensure consistent code style
+
+https://www.lucidchart.com/documents/edit/1d7f8f06-d29c-4896-a282-845fbd61f4d5

@@ -1,4 +1,4 @@
-# design a distributed computation
+# design a decentralized computation
 a  [DecentralizedComputation](http://mrn-code.github.io/coinstac-common/DecentralizedComputation.html) is a  [DataType in coinstac](http://mrn-code.github.io/coinstac-common/).  as a consortium leader or designer, your goal is to provide the content and algorithms for how pipelines, analyses, or general computations are run both on  consortium members' devices, as well as on a central compute server.
 
 a `DecentralizedComputation` is composed of three parts:
@@ -9,13 +9,13 @@ a `DecentralizedComputation` is composed of three parts:
 let's figure out how to build one.
 
 ## prepare
-- [fork](https://help.github.com/articles/fork-a-repo/) and [clone](https://help.github.com/articles/cloning-a-repository/) your copy of this repository.
-- run `npm install` in your cloned directory.  if you don't have [nodejs](https://nodejs.org) installed, go grab it.  it's a quick [installation](https://nodejs.org/en/download/).
-- run `npm test` for a sanity purposes!  make sure the tests all pass on your machine.
+- install [nodejs](https://nodejs.org).  it's a quick [installation](https://nodejs.org/en/download/).
+- install [coinstac-simulator](MRN-Code/coinstac-simulator).
+- open the [integration repo](https://github.com/MRN-Code/coinstac-decentralized-algorithm-integration), as we will reference it in our examples.
 
 ## design
 
-how to design an `DecentralizedComputation` is best discovered through example. we will follow some examples found in `src/distributed`.
+how to design an `DecentralizedComputation` is best discovered through example. we will follow some examples found in the integration repository mentioned above.
 
 ### definition
 
@@ -32,7 +32,7 @@ the general form of a `DecentralizedComputation` is a simple `.js` file defined 
 ```
 
 A few things to note:
-- **name**: we encourage an all lowercase, hyphen seperated name (e.g. [kebab-case](https://lodash.com/docs#kebabCase)).  all names will be kebab-cased if imported into the greater COINSTAC system
+- **name**: we encourage an all lowercase, hyphen separated name (e.g. [kebab-case](https://lodash.com/docs#kebabCase)).  all names will be kebab-cased if imported into the greater COINSTAC system
 - **version**: it is critical that you version your computations, such that all your users and central compute server run the correctly corresponding code.  we strongly recommend using semantic versioning, i.e. [semver](http://semver.org/).
 - **local**/**remote**: these are arrays or objects that define a set of computations (a `Pipeline`) to run in either environment.  If you've used pipelines before, please note that these Pipelines have some bells and whistles attached to them, which we will cover soon.
   - `local: [ ... ]` runs on user machines (e.g. consortium members)
@@ -42,11 +42,11 @@ A few things to note:
 
 a [`Pipeline`](http://mrn-code.github.io/coinstac-common/DecentralizedComputation.html) in COINSTAC is not your run-of-the-mill, [traditional sequential Pipeline](https://en.wikipedia.org/wiki/Pipeline_(computing)).  COINSTAC decentralized Pipelines differ from traditional pipelines with the following modifications:
 
-- COINSTAC Pipelines may `halt` and `resume`
-- COINSTAC Pipelines may conditionally `progress` to subsequent steps, or, repeat the current step many times
+- COINSTAC Pipelines may `halt` and `resume`.
+- COINSTAC Pipelines may conditionally `progress` to subsequent steps, or, repeat the current step many times.
 - COINSTAC Pipelines _do not_ [stream](https://en.wikipedia.org/wiki/Stream_(computing)) data from step to step, but do present prior step data to subsequent steps.
 
-let us observer a very simple pipeline declaration from the `process-files` `DecentralizedComputation` in `src/distributed`:
+let us observe a very simple pipeline declaration from the `process-files` `DecentralizedComputation`, found `src/decentralized` in the integration repo:
 
 ```js
 local: [{
@@ -60,6 +60,8 @@ local: [{
 It would appear that this single step Pipeline simply runs `node ./process-data.js`.  In fact, it does do this, _however_, also provides a great deal of extra data to the passed command as well.  The _actual_ command run is something more to the tune of:
 
 `node ./process-data.js -run { ...coinstac-inputs }`
+
+Read further to understand exactly what `...coinstac-inputs` really are.
 
 #### pipeline inputs
 
@@ -107,7 +109,7 @@ at current time, dependencies are not partitioned between `local` and `remote` p
 
 ### run
 
-eventually, we will bundle this package as a runner, so your library can require it, and it can run your design for you!  until then, add your library into ours. That is, in `src/distributed/your-computation/index.js`, `require('your-computation')`.  if you need help, don't hesitate to contact us.
+See [coinstac-simulator](MRN-Code/ccoinstac-simulator)'s documentation.  If you've already accomplished the above, it should be a piece of cake! :cake:
 
 ### publish
 
