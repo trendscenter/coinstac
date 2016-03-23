@@ -3,7 +3,7 @@ _Decentralized Analyses Made Easy_
 
 <img src="https://github.com/MRN-Code/coinstac-common/blob/master/img/coinstac.png" height="75px" />
 
-[COINSTAC](# "(Collaborative Informatics and Neuroimaging Suite Toolkit for Anonymous Computation)") is software for running decentralized computations. Its objective is to foster collaborative research, removing large barriers to traditional data-centric collaboration approaches.  It enables many users to individually run a common set of analyses on their datasets _with ease_.  The results of these analyses are synchronized to the cloud, and undergo an aggregate analyses process using all contributor data.  If offers data anonymity through differential privacy algorithms, so members do not need to fear PHI traceback.
+[COINSTAC](# "Collaborative Informatics and Neuroimaging Suite Toolkit for Anonymous Computation") is software to foster collaborative research, removing large barriers to traditional data-centric collaboration approaches.  It enables groups of users to run common analyses _on their own machines_ over _their own datasets_ with ease.  The results of these analyses are synchronized to the cloud, and undergo aggregate analyses processes using all contributor data.  Decentralized pipelines allow for distributed, iterative, and feature rich analyses to be run, opening new and exciting capabilities for collaborative computation.  If also offers data anonymity through differential privacy algorithms, so members do not need to fear PHI traceback.
 
 Let's do research!
 
@@ -29,11 +29,11 @@ You want to do research, and you want to include data from around the world.  Un
 
 - "Smart bullies" have demonstrated ability to extract personal information from various aggregated, anonymized datasets.  How can we share data without revealing confidential information?
 
-Bottom line--collaborative group research requires a great deal of coordination.  Human and business factors can  prevent or hamper research from happening at a pace we are able to handle, fast!    Constraints may even forbid group research to happen at all.
+Bottom line--collaborative group research requires a great deal of coordination.  Human and business factors can hamper research from happening at a pace that we are able to handle!  Constraints may even forbid group research to occur at all.
 
 # The Solution
 
-Let's remove these barriers.  The best usage of research data is to apply it everywhere it can be useful, to progress science, so long as it can be done so _safely_.
+Let's remove these barriers.  The best usage of research data is to apply it _everywhere it can be useful_.  Our strategy enables otherwise "locked-down data" to become useful again.
 
 COINSTAC removes the barriers to collaborative analysis by:
 
@@ -49,9 +49,13 @@ You may wonder why we haven't been doing this before!  Us too.  Let's get starte
 
 ## Getting Started
 
-If you are looking to contribute data, head over to the [coinstac-ui](https://github.com/MRN-Code/coinstac-ui) site.  There, you will be able to download the application!
+- If you are looking to contribute data, head over to [coinstac-ui](https://github.com/MRN-Code/coinstac-ui).  There, you will be able to download the application.
 
-If you are a developer or scientist and want to design a decentralized computation, see "Under the Hood" below.
+- If you are a developer or scientist and want to design a decentralized computation, please see:
+  - [DecentralizedComputation.md](DecentralizedComputation.md) for how to build your own `DecentralizedComputation`.
+  - [coinstac-simulator](coinstac-simulator) for how to test your freshly created `DecentralizedComputation`.
+  - "Under the Hood" below, if you want to understand how the system works.
+
 
 ## Under The Hood
 
