@@ -53,7 +53,7 @@ You may wonder why we haven't been doing this before!  Us too.  Let's get starte
 
 - If you are a developer or scientist and want to design a decentralized computation, please see:
   - [DecentralizedComputation.md](DecentralizedComputation.md) for how to build your own `DecentralizedComputation`.
-  - [coinstac-simulator](MRN-Code/coinstac-simulator) for how to test your freshly created `DecentralizedComputation`.
+  - [coinstac-simulator](mrn-code/coinstac-simulator) for how to test your freshly created `DecentralizedComputation`.
   - "Under the Hood" below, if you want to understand how the system works.
 
 
