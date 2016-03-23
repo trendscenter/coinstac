@@ -3,7 +3,7 @@ _Decentralized Analyses Made Easy_
 
 <img src="https://github.com/MRN-Code/coinstac-common/blob/master/img/coinstac.png" height="75px" />
 
-<a href="#" data-tooltip="(Collaborative Informatics and Neuroimaging Suite Toolkit for Anonymous Computation)">COINSTAC</a> is software for running decentralized computations. Its objective is to foster collaborative research, removing large barriers to traditional data-centric collaboration approaches.  It enables many users to individually run a common set of analyses on their datasets _with ease_.  The results of these analyses are synchronized to the cloud, and undergo an aggregate analyses process using all contributor data.  If offers data anonymity through differential privacy algorithms, so members do not need to fear PHI traceback.
+[COINSTAC](# "(Collaborative Informatics and Neuroimaging Suite Toolkit for Anonymous Computation)") is software for running decentralized computations. Its objective is to foster collaborative research, removing large barriers to traditional data-centric collaboration approaches.  It enables many users to individually run a common set of analyses on their datasets _with ease_.  The results of these analyses are synchronized to the cloud, and undergo an aggregate analyses process using all contributor data.  If offers data anonymity through differential privacy algorithms, so members do not need to fear PHI traceback.
 
 Let's do research!
 
