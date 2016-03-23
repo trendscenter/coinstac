@@ -124,4 +124,4 @@ note, calling back with `.complete` set to something truthy is a _special case_.
 
 ## test
 
-group-add is available as an integration test.  you can run `npm test` in this repo root to watch group-add go!  feel free to edit [test/index.js](https://github.com/MRN-Code/coinstac-decentralized-algorithm-integration/blob/master/test/index.js) and comment out the other integration files to focus just on this one.
+group-add is available as an integration test.  you can run `npm test` in this repo root to watch group-add go!  feel free to edit [test/index.js](https://github.com/MRN-Code/coinstac-decentralized-algorithm-integration/blob/master/test/index.js) and comment out the other integration files to focus just on this one.  of course, you may also run the coinstac-simulator against the "declaration" in that repo as well.  make tweaks to the algorithm and watch the output change!
