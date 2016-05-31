@@ -53,16 +53,6 @@ You may wonder why we haven't been doing this before!  Us too.  Let's get starte
   - [coinstac-simulator](https://github.com/MRN-Code/coinstac-simulator) for how to test your freshly created `DecentralizedComputation`.
   - "Under the Hood" below, if you want to understand how the system works.
 
-## Install
-Note: Before installing this, follow the install steps in the [coinstac-ui](https://github.com/MRN-Code/coinstac-ui) README.
-
-1. `cd /coins`
-1. clone this repo: `git clone https://github.com/MRN-Code/coinstac.git`.
-1. Install dependencies:
- - `cd /coins/coinstac`
- - `npm install`
-1. Configure the client: see the [config](#config) section.
-
 ## Under The Hood
 Developer documentation and system design information may be found over in our [technical docs](./TECHNICAL.md).
 
