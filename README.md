@@ -16,7 +16,6 @@ Let's do research!
 * [License](#license)
 
 ## The Problem
-
 You want to do research, and you want to include data from around the world.  Unfortunately, orchestrating such an event is anything but trivial.
 
 - Coordinating data-driven research can be difficult.  Who's going to collect all of the files?  Who is going to actually "run" all of the data?
@@ -32,7 +31,6 @@ You want to do research, and you want to include data from around the world.  Un
 Bottom line--collaborative group research requires a great deal of coordination.  Human and business factors can hamper research from happening at a pace that we are able to handle!  Constraints may even forbid group research to occur at all.
 
 # The Solution
-
 Let's remove these barriers.  The best usage of research data is to apply it _everywhere it can be useful_.  Our strategy enables otherwise "locked-down data" to become useful again.
 
 COINSTAC removes the barriers to collaborative analysis by:
@@ -48,7 +46,6 @@ COINSTAC removes the barriers to collaborative analysis by:
 You may wonder why we haven't been doing this before!  Us too.  Let's get started!
 
 ## Getting Started
-
 - If you are looking to contribute data, head over to [coinstac-ui](https://github.com/MRN-Code/coinstac-ui).  There, you will be able to download the application.
 
 - If you are a developer or scientist and want to design a decentralized computation, please see:
@@ -56,11 +53,18 @@ You may wonder why we haven't been doing this before!  Us too.  Let's get starte
   - [coinstac-simulator](https://github.com/MRN-Code/coinstac-simulator) for how to test your freshly created `DecentralizedComputation`.
   - "Under the Hood" below, if you want to understand how the system works.
 
+## Install
+Note: Before installing this, follow the install steps in the [coinstac-ui](https://github.com/MRN-Code/coinstac-ui) README.
+
+1. `cd /coins`
+1. clone this repo: `git clone https://github.com/MRN-Code/coinstac.git`.
+1. Install dependencies:
+ - `cd /coins/coinstac`
+ - `npm install`
+1. Configure the client: see the [config](#config) section.
 
 ## Under The Hood
-
 Developer documentation and system design information may be found over in our [technical docs](./TECHNICAL.md).
 
 ## License
-
 MIT. See [LICENSE](./LICENSE) for details.
