@@ -1,0 +1,10 @@
+npm-*
+*.log
+.DS_Store
+node_modules
+coverage
+.vscode
+.tmp
+# Computation definitions are placed in /computations in a 'remote' environment
+/computations
+*.tar.gz

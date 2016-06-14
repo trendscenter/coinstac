@@ -1,0 +1,65 @@
+{
+  "name": "coinstac-simulator",
+  "version": "0.0.10",
+  "description": "simulate a COINSTAC DecentralizedComputation run",
+  "main": "src/index.js",
+  "bin": "src/cli/index.js",
+  "scripts": {
+    "test": "node test/",
+    "lint": "eslint src/ test/",
+    "lintfix": "eslint --fix src/ test/",
+    "validate": "npm ls",
+    "preversion": "git checkout master && git pull && npm ls",
+    "docs": "mkdir -p docs && jsdoc -t ./node_modules/minami -d docs -R README.md -r src/",
+    "deploy-docs": "gh-pages -d docs && rm -rf docs",
+    "postpublish": "npm run docs && npm run deploy-docs",
+    "publish-patch": "npm run preversion && npm version patch && git push origin master --tags && npm publish",
+    "publish-minor": "npm run preversion && npm version minor && git push origin master --tags && npm publish",
+    "publish-major": "npm run preversion && npm version major && git push origin master --tags && npm publish"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MRN-Code/coinstac-simulator.git"
+  },
+  "keywords": [
+    "coinstac",
+    "decentralized",
+    "simulation",
+    "simulator",
+    "run",
+    "distributed"
+  ],
+  "author": "cdaringe",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/MRN-Code/coinstac-simulator/issues"
+  },
+  "homepage": "https://github.com/MRN-Code/coinstac-simulator#readme",
+  "pre-commit": [
+    "validate",
+    "lint",
+    "test"
+  ],
+  "dependencies": {
+    "chalk": "^1.1.1",
+    "coinstac-common": "0.0.25",
+    "commander": "^2.9.0",
+    "lodash": "^4.5.1",
+    "memdown": "^1.1.2",
+    "pouchy": "^9.0.1",
+    "spawn-pouchdb-server": "^3.3.1",
+    "winston": "^2.2.0"
+  },
+  "devDependencies": {
+    "coins-validate": "^4.1.0",
+    "eslint": "^2.8.0",
+    "eslint-config-airbnb": "^8.0.0",
+    "eslint-plugin-import": "^1.6.0",
+    "eslint-plugin-jsx-a11y": "^1.0.3",
+    "eslint-plugin-react": "^5.0.1",
+    "gh-pages": "^0.11.0",
+    "jsdoc": "^3.4.0",
+    "minami": "^1.1.1",
+    "nyc": "^6.4.4"
+  }
+}
