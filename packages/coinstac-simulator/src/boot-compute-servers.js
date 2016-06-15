@@ -28,17 +28,17 @@ module.exports = function bootComputeServers(declPath) {
     srv.on('error', (err) => logger.error(`process errored ${err.message}`));
     srv.on('exit', (code) => {
       if (code) {
-        throw new Error(`${serverName}: exited with ${code}`);
+        throw new Error(`${serverName} [${process.pid}]: exited with ${code}`);
       }
     });
     srv.stdout.on('data', (data) => {
       if (!decl.verbose) { return; }
       const content = data.slice(0, -1);
-      logger.info(userChatOK(`${serverName}: ${content}`));
+      logger.info(userChatOK(`${serverName} [${srv.pid}]: ${content}`));
     });
     srv.stderr.on('data', (data) => {
       const content = data.slice(0, -1);
-      logger.error(`${serverName}: ${content}`);
+      logger.error(`${serverName} [${srv.pid}]: ${content}`);
     });
   });
 };

@@ -1,7 +1,7 @@
+'use strict';
 // the following DecentralizedComputation has each member initially "guess" the
 // number that the remote compute server is "thinking."
 
-'use strict';
 
 module.exports = {
   name: 'bisect-converge',

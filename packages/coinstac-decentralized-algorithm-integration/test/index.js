@@ -1,16 +1,17 @@
 'use strict';
 
-require('./diehard')();
+require('perish');
 const path = require('path');
 const sim = require('coinstac-simulator');
 
 let toRun = [
   'declarations/group-add.js',
   'declarations/plugin-group-step.js',
+  'declarations/plugin-group-step-seeder.js',
   'declarations/process-files.js',
   'declarations/process-dir.js',
   'declarations/computation-error-handled.js',
-  '../node_modules/coinstac-example-computation-bisect-converge/test/declaration.js',
+  'declarations/bisect-converge.js',
   // '../node_modules/decentralized-laplacian-ridge-regression/test/declaration.js',
 ];
 
@@ -22,7 +23,7 @@ toRun.reduce(
   (chain, filename, ndx) => { // eslint-disable-line
     return chain.then(() => {
       console.log(`\nSIMULATION (${ndx + 1}/${toRun.length}): ${path.basename(filename)}`);
-      return sim.setup(filename).then(() => sim.teardown());
+      return sim.run(filename);
     });
   },
   Promise.resolve()

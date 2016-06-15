@@ -10,11 +10,8 @@ module.exports = {
   local: [
     {
       type: 'function',
-      fn: function (opts) { return 10; },
-    }, {
-      type: 'function',
       fn: function (opts) {
-        const value = opts.previousData + 1;
+        const value = (opts.previousData || 25) + 1;
         console.log(value);
         return value;
       },

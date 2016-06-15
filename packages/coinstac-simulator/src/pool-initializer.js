@@ -2,6 +2,8 @@
 
 const pdbsConfig = require('./.pouchdb-server-config');
 const common = require('coinstac-common');
+const DBRegistry = require('coinstac-common').services.dbRegistry.DBRegistry;
+DBRegistry.Pouchy.plugin(require('pouchdb-adapter-memory'));
 const dbRegistryFactory = common.services.dbRegistry;
 const computationRegistryFactory = common.services.computationRegistry;
 
@@ -40,11 +42,11 @@ module.exports = {
     return dbRegistryFactory({
       isLocal: opts.isLocal,
       isRemote: !opts.isLocal,
-      local: { pouchConfig: { db: require('memdown') } },
+      local: { pouchConfig: { adapter: 'memory' } },
       noURLPrefix: true, // disable db pre-fixing (e.g. no `up/`, `down/`)
       path: __dirname,
       remote: {
-        pouchConfig: { db: require('memdown') },
+        pouchConfig: { adapter: 'memory' },
         db: { protocol: 'http', hostname: 'localhost', port: pdbsConfig.port },
       },
     });

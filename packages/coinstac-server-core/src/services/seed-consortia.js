@@ -1,6 +1,6 @@
 'use strict';
 
-const Consortium = require('coinstac-common/src/models/consortium.js');
+const Consortium = require('coinstac-common').models.Consortium;
 const dbRegistryService = require('./db-registry');
 const logger = require('./logger.js');
 

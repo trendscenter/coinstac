@@ -31,18 +31,16 @@ module.exports = function bootClients(declPath) {
         });
         userProcess.send({ boot: { declPath, username } });
         userProcess.on('exit', (code) => {
-          if (code) {
-            throw new Error(`user process exited with ${code}`);
-          }
+          if (code) { throw new Error(`user process exited with ${code}`); }
         });
         userProcess.stdout.on('data', (data) => {
           if (!decl.verbose) { return; }
           const content = data.slice(0, -1);
-          logger.info(userChatOK(`USER: ${username} ${content}`));
+          logger.info(userChatOK(`USER ${username} [${userProcess.pid}]: ${content}`));
         });
         userProcess.stderr.on('data', (data) => {
           const content = data.slice(0, -1);
-          logger.error(`USER: ${username} ${content}`);
+          logger.error(`USER ${username} [${userProcess.pid}]: ${content}`);
         });
       });
     })

@@ -9,7 +9,7 @@ const handleAsyncErrors = require('./handle-errors')(); // eslint-disable-line
 const logger = require('./logger');
 const bootComputeServers = require('./boot-compute-servers');
 const bootClients = require('./boot-clients');
-const dbServer = require('./db-server');
+const bootDBServer = require('./boot-db-server');
 const seedCentralDB = require('./seed-central-db');
 
 const processes = {};
@@ -23,12 +23,12 @@ module.exports = {
    * @param {function}
    * @returns {Promise}
    */
-  setup(declPath) {
+  run(declPath) {
     // setup remote db service
     const cwd = process.cwd();
     process.chdir(path.resolve(__dirname, '..'));
     // ^because spawn-pouchdb-server makes naughty assumptions :/
-    return dbServer.setup()
+    return bootDBServer.setup(declPath)
     .then((srv) => { processes.db = srv; })
     .then(() => logger.info('db server up'))
     .then(() => process.chdir(cwd))
@@ -43,10 +43,12 @@ module.exports = {
     .then(() => bootClients(declPath))
     .then((userProcesses) => { processes.local = userProcesses; })
     .then(() => logger.info('clients up'))
-    .then(() => processes.local.forEach((proc) => proc.send({ kickoff: true })));
+    .then(() => processes.local.forEach((proc) => proc.send({ kickoff: true })))
+    .then(() => this.teardown());
   },
 
   /**
+   * @private
    * @description tears down all processes. because `setup` both sets up and automatically
    * runs the simulation, teardown should be called immediately after setup
    * calls back.  this is generally unintuitive behavior.  please take note.
@@ -60,7 +62,7 @@ module.exports = {
       processes.remote.on('exit', () => {
         // kill all child processes cleanly after remote server has exited
         Promise.all(
-          processes.local.map((proc) => { // eslint-disable-line
+          processes.local.map((proc, ndx) => { // eslint-disable-line
             return new Promise((res, rej) => {
               proc.on('message', (m) => {
                 if (m.toredown) { return res(); }
@@ -70,7 +72,7 @@ module.exports = {
             });
           })
         )
-        .then(() => dbServer.teardown())
+        .then(() => bootDBServer.teardown())
         .then(() => resolve())
         .catch((err) => reject(err));
       });

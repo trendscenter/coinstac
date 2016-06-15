@@ -44,6 +44,19 @@ const teardown = () => { // eslint-disable-line
   });
 };
 
-me.setup = setup;
-me.teardown = teardown;
-module.exports = me;
+process.on('message', (opts) => {
+  if (opts.boot) {
+    return setup(opts.boot)
+    .then(() => process.send({ ready: true }));
+  } else if (opts.teardown) {
+    return teardown()
+    .then(() => {
+      process.send({ toredown: true });
+      process.exit(0);
+    });
+  }
+  throw new Error([
+    'message from parent process has no matching command',
+    JSON.stringify(opts),
+  ].join(' '));
+});

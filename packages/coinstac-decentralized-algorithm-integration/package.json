@@ -32,7 +32,6 @@
     "test"
   ],
   "devDependencies": {
-    "async": "^2.0.0-rc.1",
     "coins-validate": "latest",
     "coinstac-simulator": "^2.0.0",
     "eslint": "^2.4.0",
@@ -44,7 +43,8 @@
     "jsdoc": "^3.4.0",
     "lodash": "^4.13.1",
     "minami": "^1.1.1",
-    "nyc": "^6.4.2"
+    "nyc": "^6.4.2",
+    "perish": "0.0.3"
   },
   "dependencies": {
     "coinstac-example-computation-bisect-converge": "^2.0.0",

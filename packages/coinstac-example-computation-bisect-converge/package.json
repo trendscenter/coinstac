@@ -4,7 +4,7 @@
   "description": "example coinstac decentralized computation.",
   "main": "src/index.js",
   "scripts": {
-    "test": "nyc --reporter=lcov --check-coverage --functions=90 --branches=90 node test/",
+    "test": "echo 'See tests in coinstac-dist-algos'",
     "lint": "eslint src/ test/",
     "lintfix": "eslint --fix src/ test/",
     "validate": "npm ls",

@@ -1,4 +1,6 @@
-const path = require('path');
+'use strict';
+
+console.log(require.resolve('coinstac-example-computation-bisect-converge'));
 
 module.exports = {
   users: [
@@ -7,6 +9,6 @@ module.exports = {
     { username: 'drew', userData: null },
     { username: 'ross', userData: null },
   ],
-  computationPath: path.resolve(__dirname, '../src/index.js'),
+  computationPath: require.resolve('coinstac-example-computation-bisect-converge'),
   verbose: true,
 };

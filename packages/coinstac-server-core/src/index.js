@@ -16,7 +16,7 @@ module.exports = {
    * @private
    * @returns {undefined}
    */
-  _exposeInternals() {
+  exposeInternals() {
     this.computationRegistry = computationRegistryService.get();
     this.dbRegistry = dbRegistryService.get();
     this.pool = remotePRPService.pool;
@@ -48,7 +48,7 @@ module.exports = {
       .then(() => seedConsortia(config))
       .then(() => computationsSyncer.sync())
       .then(() => remotePRPService.init())
-      .then(() => this._exposeInternals())
+      .then(() => this.exposeInternals())
       .then(() => this.pool);
   },
 

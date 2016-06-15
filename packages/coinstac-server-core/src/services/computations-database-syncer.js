@@ -20,7 +20,7 @@ module.exports = {
    * @returns {object} returns diff object, where each value set is ready for db
    *                           `bulkDoc`ing. shape ~= { add:/delete:/update: }
    */
-  _getComputationsDiff(goldenCompSet, dbCompSet) {
+  getComputationsDiff(goldenCompSet, dbCompSet) {
     const diff = { add: [], delete: [], update: [] };
     const shouldUpdate = (gDoc, dDoc) => (!isEqual(gDoc.tags, dDoc.tags));
     // find computations to add and update
@@ -63,7 +63,7 @@ module.exports = {
    * @param {object} diff
    * @returns {Promise}
    */
-  _patchDBWithComputationDiff(diff) {
+  patchDBWithComputationDiff(diff) {
     const dbRegistry = dbRegistryService.get();
     const computationsDb = dbRegistry.get('computations');
     return computationsDb.bulkDocs(diff.add)
@@ -84,8 +84,8 @@ module.exports = {
     const dbRegistry = dbRegistryService.get();
     const comupationsDb = dbRegistry.get('computations');
     return comupationsDb.all()
-    .then((dbComps) => this._getComputationsDiff(compReg.registry, dbComps))
-    .then((diff) => this._patchDBWithComputationDiff(diff));
+    .then((dbComps) => this.getComputationsDiff(compReg.registry, dbComps))
+    .then((diff) => this.patchDBWithComputationDiff(diff));
   },
 
 };
