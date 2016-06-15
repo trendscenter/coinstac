@@ -104,16 +104,13 @@ tape('wires up to pool events', t => {
   ];
 
   server.start({ inMemory: true })
-  .then(pool => {
-    t.ok(
-      events.every(e => !!pool.events.listenerCount(e)),
-      'listens on every event'
-    );
-    pool.destroy(err => {
-      if (err) { throw err; }
-      t.pass('tears down');
-      t.end();
-    });
-  })
-  .catch(t.end);
+    .then(pool => {
+      t.ok(
+        events.every(e => !!pool.events.listenerCount(e)),
+        'listens on every event'
+      );
+      return pool.destroy();
+    })
+    .then(() => t.pass('tears down'))
+    .catch(t.end);
 });

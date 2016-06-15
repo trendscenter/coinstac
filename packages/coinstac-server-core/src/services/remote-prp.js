@@ -29,51 +29,50 @@ module.exports = {
 
     this.pool = new RemotePipelineRunnerPool({ computationRegistry, dbRegistry });
 
-    return new Promise((resolve, reject) => {
-      logger.info('initializing RemotePipelineRunnerPool…');
-
-      // Wire up event listeneres
-      this.pool.events.on('run:start', computationResult => {
-        /* istanbul ignore next */
-        logger.info(
-          'PipelineRunner starting run',
-          computationResult.serialize()
-        );
-      });
-      this.pool.events.on('run:end', computationResult => {
-        /* istanbul ignore next */
-        logger.info(
-          'PipelineRunner ending run',
-          computationResult.serialize()
-        );
-      });
-      this.pool.events.on('queue:start', runId => {
-        /* istanbul ignore next */
-        logger.info('Starting queue', runId);
-      });
-      this.pool.events.on('queue:end', runId => {
-        /* istanbul ignore next */
-        logger.info('Ending queue', runId);
-      });
-      this.pool.events.on('pipeline:inProgress', runId => {
-        /* istanbul ignore next */
-        logger.info('Pipeline progressing', runId);
-      });
-
-      this.pool.init(error => { // eslint-disable-line consistent-return
-        /* istanbul ignore if */
-        if (error) {
-          logger.error(
-            'RemotePipelineRunnerPool initialization failed',
-            error
-          );
-          return reject(error);
-        }
-
-        logger.info('RemotePipelineRunnerPool ready');
-        resolve(this.pool);
-      });
+    // Wire up event listeneres
+    this.pool.events.on('run:start', computationResult => {
+      /* istanbul ignore next */
+      logger.info(
+        'PipelineRunner starting run',
+        computationResult.serialize()
+      );
     });
+    this.pool.events.on('run:end', computationResult => {
+      /* istanbul ignore next */
+      logger.info(
+        'PipelineRunner ending run',
+        computationResult.serialize()
+      );
+    });
+    this.pool.events.on('queue:start', runId => {
+      /* istanbul ignore next */
+      logger.info('Starting queue', runId);
+    });
+    this.pool.events.on('queue:end', runId => {
+      /* istanbul ignore next */
+      logger.info('Ending queue', runId);
+    });
+    this.pool.events.on('pipeline:inProgress', runId => {
+      /* istanbul ignore next */
+      logger.info('Pipeline progressing', runId);
+    });
+
+    logger.info('initializing RemotePipelineRunnerPool…');
+
+    return this.pool.init().then(
+      () => {
+        logger.info('RemotePipelineRunnerPool ready');
+      },
+
+      // TODO: Move error logging to handler?
+      error => {
+        logger.error(
+          'RemotePipelineRunnerPool initialization failed',
+          error
+        );
+        throw error;
+      }
+    );
   },
 
   /**
@@ -81,13 +80,8 @@ module.exports = {
    * @returns {Promise}
    */
   teardown() {
-    return new Promise((resolve, reject) => {
-      this.pool.destroy((err) => {
-        /* istanbul ignore if */
-        if (err) { return reject(err); }
-        delete this.pool;
-        return resolve();
-      });
-    });
+    logger.info('destroying RmotePipelineRunnerPool...');
+
+    return this.pool.destroy();
   },
 };
