@@ -123,6 +123,36 @@ class ModelService {
     }
   }
 
+  /**
+   * Validate model.
+   *
+   * {@link https://github.com/hapijs/joi#usage}
+   *
+   * @param {Object} properties Key-value pairs to validate against the model
+   * @param {boolean} [onlyFields=true] Only validate fields present in
+   * `properties`
+   * @returns {Promise} Resolves to Joi's validated model if valid or rejects
+   * with Joi's error if invalid.
+   */
+  validate(properties, onlyFields) {
+    const localOnlyFields = typeof onlyFields === 'boolean' ? onlyFields : true;
+    const Model = this.modelServiceHooks().ModelType;
+
+    if (typeof properties === 'undefined' || !(properties instanceof Object)) {
+      return Promise.reject(new Error('Expected properties to be an object'));
+    }
+
+    try {
+      const value = Model.prototype._validate.call(null, properties, {
+        fields: localOnlyFields,
+        schema: Model.schema,
+      });
+      return Promise.resolve(value);
+    } catch (error) {
+      return Promise.reject(error);
+    }
+  }
+
 }
 
 module.exports = ModelService;
