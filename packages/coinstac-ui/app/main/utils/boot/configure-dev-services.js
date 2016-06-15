@@ -1,0 +1,34 @@
+'use strict';
+
+// Conditionally load development services if run from CLI
+if (process.defaultApp) {
+  // active long stack trace
+  require('trace'); // eslint-disable-line global-require
+  const chain = require('stack-chain'); // eslint-disable-line global-require
+  const sep = require('path').sep; // eslint-disable-line global-require
+
+  // There is no limit for the size of the stack trace (v8 default is 10)
+  Error.stackTraceLimit = Infinity;
+
+  chain.filter.attach(function (error, frames) {
+    return frames.filter(function (callSite) {
+      const name = callSite && callSite.getFileName();
+      const include = !(
+        !name ||
+        name.indexOf(sep) === -1 ||
+        name.match(/internal\//) ||
+        name.match(/tick/) ||
+        name.match(/electron-preb/)
+     );
+      return include;
+    });
+  });
+
+  /**
+  * Load electron-debug, which loads devtron automatically.
+  *
+  * {@link https://github.com/sindresorhus/electron-debug#usage}
+  * {@link https://github.com/electron/devtron}
+  */
+  require('electron-debug')({ showDevTools: true }); // eslint-disable-line global-require
+}

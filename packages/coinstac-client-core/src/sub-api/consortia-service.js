@@ -1,0 +1,65 @@
+'use strict';
+
+/**
+ * @module consortia-service
+ */
+const common = require('coinstac-common');
+const uuid = require('uuid');
+const toArray = require('lodash/toArray');
+const Consortium = common.models.Consortium;
+const ModelService = require('../model-service');
+
+class ConsortiaService extends ModelService {
+
+  constructor(opts) {
+    super(opts);
+    this.auth = opts.client.auth;
+    /* istanbul ignore next */
+    if (!this.auth) {
+      throw new ReferenceError('auth instance');
+    }
+  }
+
+  modelServiceHooks() {
+    return {
+      dbName: 'consortia',
+      ModelType: Consortium,
+    };
+  }
+
+  /**
+   * Get consortia that a user has joined.
+   *
+   * @param  {string}  username
+   * @returns {Promise}
+   */
+  getUserConsortia(username) {
+    /* istanbul ignore if */
+    if (typeof username !== 'string') {
+      throw new TypeError('expected string username');
+    }
+    return this.all()
+    .then((consortia) => { // eslint-disable-line
+      return consortia.filter((consortium) => { // eslint-disable-line
+        // users is arr of [ usernames ]. :/
+        return consortium.users.some((uname) => (uname === username));
+      });
+    });
+  }
+
+  /**
+   * proxy ModelService.save call and assert valid consortium `_id`s are added
+   * @see ModelService.save
+   */
+  save() {
+    const args = toArray(arguments); // eslint-disable-line
+    const tium = args[0];
+    if (!tium._id) {
+      tium._id = uuid.v4().replace(/-/ig, '');
+    }
+    return ModelService.prototype.save.apply(this, args);
+  }
+
+}
+
+module.exports = ConsortiaService;

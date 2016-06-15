@@ -1,0 +1,40 @@
+{
+  "name": "coinstac",
+  "version": "2.0.0",
+  "description": "Decentralized Analyses Made Easy",
+  "main": "index.js",
+  "dependencies": {},
+  "devDependencies": {
+    "lerna": "2.0.0-beta.20"
+  },
+  "scripts": {
+    "bootstrap": "lerna bootstrap",
+    "publish": "lerna publish"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MRN-Code/coinstac.git"
+  },
+  "keywords": [
+    "coins",
+    "coinstac",
+    "analysis",
+    "distributed",
+    "decentralized",
+    "differential",
+    "privacy"
+  ],
+  "author": "NI Development - The Mind Research Network <nidev@mrn.org> (http://coins.mrn.org)",
+  "contributors": [
+    "Chris Dieringer <cdaringe@gmail.org>",
+    "Cory Reed <swashcap@gmail.com>",
+    "Ross Kelly <rkelly@mrn.org>",
+    "Drew Landis <landis.d@gmail.com>",
+    "Sergey Plis <splis@mrn.org>"
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/MRN-Code/coinstac/issues"
+  },
+  "homepage": "https://github.com/MRN-Code/coinstac#readme"
+}

@@ -1,0 +1,11 @@
+- declare our users/clients (don't yet boot them)
+- setup a central datastore. this process simply hosts our central db
+    - add our test consortium, with all users
+    - add our test DecentralizedComputation
+- boot up a central processing server
+    - generate a RemotePipelineRunnerPool (we are now listening to our test consortium)
+- boot up each client
+    - generate a LocalPipelineRunnerPool in each
+- "kickoff/teeoff"
+    - pool.run({ computationId, consortiumId })
+      - => generates runId, fake RemoteResultDoc to `triggerRunner`

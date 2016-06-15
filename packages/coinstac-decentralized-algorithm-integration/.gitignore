@@ -1,0 +1,5 @@
+npm-*
+.vscode
+.git
+node_modules
+coverage

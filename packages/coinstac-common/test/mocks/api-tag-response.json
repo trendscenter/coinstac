@@ -1,0 +1,25 @@
+[{
+    "name": "v1.0.1",
+    "zipball_url": "https://api.github.com/repos/MRN-Code/a-small-bag/zipball/v1.0.1",
+    "tarball_url": "https://api.github.com/repos/MRN-Code/a-small-bag/tarball/v1.0.1",
+    "commit": {
+        "sha": "acdc950a8fb88f32be6b4642a9e0a8b042895b07",
+        "url": "https://api.github.com/repos/MRN-Code/a-small-bag/commits/acdc950a8fb88f32be6b4642a9e0a8b042895b07"
+    }
+}, {
+    "name": "v1.0.0",
+    "zipball_url": "https://api.github.com/repos/MRN-Code/a-small-bag/zipball/v1.0.0",
+    "tarball_url": "https://api.github.com/repos/MRN-Code/a-small-bag/tarball/v1.0.0",
+    "commit": {
+        "sha": "02539f00e801629affc49ff49a5251201c4475e1",
+        "url": "https://api.github.com/repos/MRN-Code/a-small-bag/commits/02539f00e801629affc49ff49a5251201c4475e1"
+    }
+}, {
+    "name": "v1.0.0-beta",
+    "zipball_url": "https://api.github.com/repos/MRN-Code/a-small-bag/zipball/v1.0.0-beta",
+    "tarball_url": "https://api.github.com/repos/MRN-Code/a-small-bag/tarball/v1.0.0-beta",
+    "commit": {
+        "sha": "e2d6924a7d0401a7cf1b3d40c4c3fdb9a510fa98",
+        "url": "https://api.github.com/repos/MRN-Code/a-small-bag/commits/e2d6924a7d0401a7cf1b3d40c4c3fdb9a510fa98"
+    }
+}]
