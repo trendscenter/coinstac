@@ -24,7 +24,8 @@ export const initPrivateBackgroundServices = applyAsyncLoading(
       // set background event listeners
       // @NOTE: "change" document shape differences in computations & consortia attributed
       // to different replication configs (e.g. sync both dirs vs sync on dir)
-      app.core.dbRegistry.get('consortia').syncEmitter.on('change', (change) => {
+      const tiaDB = app.core.dbRegistry.get('consortia');
+      tiaDB.syncEmitter.on('change', (change) => {
         const toUpdate = change.change.docs.map((changed) => {
           const cloned = cloneDeep(changed); // de-ref main memory
           delete cloned._revisions; // gross. pouchy maybe can save the day?
@@ -32,7 +33,8 @@ export const initPrivateBackgroundServices = applyAsyncLoading(
         });
         updateConsortia({ dispatch, toUpdate, isBg: true });
       });
-      app.core.dbRegistry.get('computations').syncEmitter.on('change', (change) => {
+      const compsDB = app.core.dbRegistry.get('computations');
+      compsDB.syncEmitter.on('change', (change) => {
         const toUpdate = change.docs.map((changed) => {
           const cloned = cloneDeep(changed); // de-ref main memory
           delete cloned._revisions; // gross. pouchy maybe can save the day?
@@ -40,6 +42,10 @@ export const initPrivateBackgroundServices = applyAsyncLoading(
         });
         updateComputations({ dispatch, toUpdate, isBg: true });
       });
+      return Promise.all([
+        tiaDB.all().then((docs) => updateConsortia({ dispatch, docs, isBg: true })),
+        compsDB.all().then((docs) => updateComputations({ dispatch, docs, isBg: true })),
+      ]);
     };
   }
 );
