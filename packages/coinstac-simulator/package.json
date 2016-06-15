@@ -1,6 +1,6 @@
 {
   "name": "coinstac-simulator",
-  "version": "0.0.10",
+  "version": "2.0.0",
   "description": "simulate a COINSTAC DecentralizedComputation run",
   "main": "src/index.js",
   "bin": "src/cli/index.js",
@@ -42,7 +42,7 @@
   ],
   "dependencies": {
     "chalk": "^1.1.1",
-    "coinstac-common": "0.0.25",
+    "coinstac-common": "^2.0.0",
     "commander": "^2.9.0",
     "lodash": "^4.5.1",
     "memdown": "^1.1.2",

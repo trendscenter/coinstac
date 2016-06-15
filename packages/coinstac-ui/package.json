@@ -1,6 +1,6 @@
 {
   "name": "coinstac-ui",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "distributed analytics and results sharing",
   "main": "app/main/index.js",
   "dependencies": {
@@ -10,7 +10,7 @@
     "babel-polyfill": "^6.9.1",
     "bluebird": "^3.4.0",
     "bootstrap-sass": "^3.3.5",
-    "coinstac-client-core": "^0.0.4",
+    "coinstac-client-core": "^2.0.0",
     "commander": "^2.9.0",
     "convict": "^1.4.0",
     "lodash": "4.13.1",

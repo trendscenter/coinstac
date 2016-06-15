@@ -1,6 +1,6 @@
 {
   "name": "coinstac-distributed-algorithm-integration",
-  "version": "0.0.0",
+  "version": "2.0.0",
   "description": "demonstrate and test coinstac distributed analysis synchronization",
   "main": "src/runner/run.js",
   "scripts": {
@@ -34,7 +34,7 @@
   "devDependencies": {
     "async": "^2.0.0-rc.1",
     "coins-validate": "latest",
-    "coinstac-simulator": "latest",
+    "coinstac-simulator": "^2.0.0",
     "eslint": "^2.4.0",
     "eslint-config-airbnb": "^6.1.0",
     "eslint-plugin-import": "^1.6.0",
@@ -47,7 +47,7 @@
     "nyc": "^6.4.2"
   },
   "dependencies": {
-    "coinstac-example-computation-bisect-converge": "*",
+    "coinstac-example-computation-bisect-converge": "^2.0.0",
     "decentralized-laplacian-ridge-regression": "*"
   }
 }

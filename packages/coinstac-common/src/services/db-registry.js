@@ -70,4 +70,10 @@ const dbRegistryFactory = function (opts) {
   }, opts));
 };
 
+/**
+ * @todo Rename the factory to `dbRegistryFactory` in this package's root
+ * export to differentiate between the factory and the class.
+ */
+dbRegistryFactory.DBRegistry = DBRegistry;
+
 module.exports = dbRegistryFactory;

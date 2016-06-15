@@ -1,6 +1,6 @@
 {
   "name": "coinstac",
-  "version": "0.0.1",
+  "version": "2.0.0",
   "description": "Decentralized Analyses Made Easy",
   "main": "index.js",
   "dependencies": {},
