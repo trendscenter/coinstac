@@ -62,7 +62,6 @@ test('RemotePipelineRunner::run - basic', t => {
 
 test('RemotePipelineRunner::run - basic - input errors', t => {
   let runner = new RemotePipelineRunner(runnerUtils.remoteOpts());
-  let localResult = runnerUtils.getLocalResult();
   t.plan(1);
   runner.events.on('error', (err) => {
     t.ok(err.message, 'errors without local result');
@@ -81,5 +80,32 @@ test('RemotePipelineRunner::run - basic - bogus pipeline handling', (t) => {
     t.end();
   });
   runner.events.on('error', () => t.pass('error event emitted'));
+  runner.run(localResult).catch(t.end);
+});
+
+test('propogate user errors via remote `userErrors` aggregation', (t) => {
+  t.plan(2);
+  let stubbedLocalDocs = [];
+  let runner = new RemotePipelineRunner(runnerUtils.remoteOpts());
+  runner.result._id = 'runId';
+  runner.pipeline = runnerUtils.getPipeline();
+  let localResult = runnerUtils.getLocalResult();
+  runner.getResultDocs = () => stubbedLocalDocs;
+  localResult._id = localResult._rev = 'runId-old';
+  localResult.error = { test: 1 };
+  stubbedLocalDocs.push(localResult.serialize());
+  runner.events.on('halt', (doc) => {
+    const errors = doc.userErrors;
+    if (errors && errors.length === 1) {
+      t.equals(errors.length, 1, 'user errors propogated');
+      delete localResult.error;
+      localResult._id = localResult._rev = 'runId-new';
+      stubbedLocalDocs = [localResult.serialize()];
+      return runner.run(localResult).catch(t.end);
+    }
+    t.equals(errors.length, 0, 'errors cleared when users are non-erroring');
+    return t.end();
+  });
+  runner.events.on('error', () => t.fail('error event emitted'));
   runner.run(localResult).catch(t.end);
 });
