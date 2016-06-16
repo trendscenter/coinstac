@@ -5,6 +5,7 @@ const bluebird = require('bluebird');
 const access = bluebird.promisify(require('fs').access);
 const path = require('path');
 const localConfig = path.resolve(__dirname, '..', 'config', 'local.json');
+const memdown = require('memdown');
 
 const fileExists = (fPath) => {
   return access(fPath)
@@ -38,7 +39,7 @@ const conf = convict({
     },
     local: {
       pouchConfig: {
-        db: 'memdown',
+        db: memdown,
       },
     },
   },
