@@ -8,3 +8,4 @@ coverage
 # Computation definitions are placed in /computations in a 'remote' environment
 /computations
 *.tar.gz
+jsconfig.json

@@ -71,6 +71,12 @@ class RemotePipelineRunner extends PipelineRunner {
       }
       this.userResultState = resultState;
 
+      this.result.userErrors = this.getUserErrors(userResults);
+      if (this.result.userErrors.length) {
+        return this.saveResult(this.remoteDB, null, null, true)
+        .then(this._flush.bind(this));
+      }
+
       return this._run({ userResults, prevData });
     });
   }
@@ -97,6 +103,21 @@ class RemotePipelineRunner extends PipelineRunner {
       userResults,
     };
     return this._runPipeline(payload);
+  }
+
+  /**
+   * generate set of user Errors provided user `LocalComputationResult` set.
+   * @param {LocalComputationResult[]} userResults
+   * @returns {object[]} serialized error objects
+   */
+  getUserErrors(userResults) {
+    const errors = [];
+    userResults.forEach((uR) => {
+      /* istanbul ignore if */
+      if (!uR.error) { return; }
+      errors.push(uR.error);
+    });
+    return errors;
   }
 }
 

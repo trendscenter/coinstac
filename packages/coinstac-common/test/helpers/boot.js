@@ -11,7 +11,8 @@ const fail = function (err) {
     err && (
       err.code === 'ECONNREFUSED' ||
       err.code === 'ECONNRESET' ||
-      err.message.match(/destroyed/)
+      err.message.match(/destroyed/) ||
+      (err.message.match(/hang up/) && err.status === 400)
     )
   );
   if (isLikelyBecausePouchDBServerHasNoTeardownHooks) {
@@ -24,11 +25,6 @@ const fail = function (err) {
     'occurred, and subsequently a falsy value was thrown vs the Error',
   ].join(' '));
   err = err || emptyError;
-
-    // handle weird pouch/spawn-pouchdb-server bug
-  if (err.message.match(/hang up/) && err.status === 400) {
-    return; // no op.  couchdb will not do this
-  }
 
   console.error(err); // eslint-disable-line
   console.error(err.stack); // eslint-disable-line
