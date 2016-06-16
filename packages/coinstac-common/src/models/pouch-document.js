@@ -11,7 +11,7 @@ const util = require('util');
  * @property {string} _rev
  */
 function PouchDocument() {
-  Base.apply(this, arguments);
+  Base.apply(this, arguments); // eslint-disable-line
 }
 
 util.inherits(PouchDocument, Base);

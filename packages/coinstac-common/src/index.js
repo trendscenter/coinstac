@@ -23,9 +23,9 @@ module.exports = {
         LocalPipelineRunner: require('./models/pipeline/runner/local-pipeline-runner'),
         RemotePipelineRunner: require('./models/pipeline/runner/remote-pipeline-runner'),
         pool: {
-          PipelineRunnerPool: PipelineRunnerPool,
-          LocalPipelineRunnerPool: LocalPipelineRunnerPool,
-          RemotePipelineRunnerPool: RemotePipelineRunnerPool,
+          PipelineRunnerPool,
+          LocalPipelineRunnerPool,
+          RemotePipelineRunnerPool,
         },
       },
     },

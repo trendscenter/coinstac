@@ -1,10 +1,11 @@
 'use strict';
-var _ = require('lodash');
-var joi = require('joi');
-var Base = require('../../').models.Base;
-var util = require('util');
-var test = require('tape');
-var now = require('performance-now');
+
+const _ = require('lodash');
+const joi = require('joi');
+const Base = require('../../').models.Base;
+const util = require('util');
+const test = require('tape');
+const now = require('performance-now');
 
 // define SimpleModel, pure JS class, no validation
 function SimpleModel(attrs) {
@@ -13,7 +14,7 @@ function SimpleModel(attrs) {
 
 // define HeavyModel
 function HeavyModel() {
-  Base.apply(this, arguments);
+  Base.apply(this, arguments); // eslint-disable-line
 }
 
 HeavyModel.schema = Object.assign({}, Base.schema, {
@@ -26,18 +27,18 @@ util.inherits(HeavyModel, Base);
 
 // define HeavyModelNoValidation
 function HeavyModelNoValidation(attrs) {
-  HeavyModel.apply(this, arguments);
+  HeavyModel.apply(this, arguments); // eslint-disable-line
 }
 
 util.inherits(HeavyModelNoValidation, HeavyModel);
 HeavyModelNoValidation.prototype.validate = attrs => attrs;
 HeavyModelNoValidation.prototype.validateOnSet = function () {};
 
-var factory = function (opts) {
+const factory = function (opts) {
   return new HeavyModel(opts);
 };
 
-var validOps = function () {
+const validOps = function () {
   return {
     string: 'abcdefghijklmnop',
     stringData: '2016-02-05T16:49:50-07:00',
@@ -47,9 +48,9 @@ var validOps = function () {
 };
 
 test('perf - reality check', function (t) {
-  var begin = now();
-  var end = now();
-  var noTimeDiff = parseFloat((end - begin).toFixed(2), 10);
+  let begin = now();
+  let end = now();
+  let noTimeDiff = parseFloat((end - begin).toFixed(2), 10);
   t.ok(
       noTimeDiff > 0 && noTimeDiff < 1,
       'no time diff takes more than 0 ms and less than 1ms'
@@ -58,26 +59,26 @@ test('perf - reality check', function (t) {
 });
 
 test('perf - pojo model time diff', function (t) {
-  var pojoTime;
-  var simpleModelTime;
-  var heavyModelTime;
-  var heavyModelNoValidationTime;
-  var model;
+  let pojoTime;
+  let simpleModelTime;
+  let heavyModelTime;
+  let heavyModelNoValidationTime;
+  let model;
   const modelGenCount = 2000;
 
     // pojo time
-  var begin = now();
-  for (var i = 0; i < _.times(modelGenCount).length; i++) {
+  let begin = now();
+  for (let i = 0; i < _.times(modelGenCount).length; i++) {
     model = validOps();
   }
 
-  var end = now();
+  let end = now();
 
   pojoTime = parseFloat((end - begin).toFixed(2), 10);
 
     // simple model time
   begin = now();
-  for (var i = 0; i < _.times(modelGenCount).length; i++) {
+  for (let i = 0; i < _.times(modelGenCount).length; i++) {
     model = new SimpleModel(validOps());
   }
 
@@ -87,7 +88,7 @@ test('perf - pojo model time diff', function (t) {
 
     // heavy model time
   begin = now();
-  for (var i = 0; i < _.times(modelGenCount).length; i++) {
+  for (let i = 0; i < _.times(modelGenCount).length; i++) {
     model = new HeavyModel(validOps());
   }
 
@@ -97,7 +98,7 @@ test('perf - pojo model time diff', function (t) {
 
     // heavy model no validation time
   begin = now();
-  for (var i = 0; i < _.times(modelGenCount).length; i++) {
+  for (let i = 0; i < _.times(modelGenCount).length; i++) {
     model = new HeavyModelNoValidation(validOps());
   }
 

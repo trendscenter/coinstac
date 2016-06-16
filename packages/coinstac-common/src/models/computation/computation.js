@@ -22,7 +22,7 @@ const assign = require('lodash/assign');
  *                              progress
  */
 function Computation(opts) {
-  Base.apply(this, arguments);
+  Base.apply(this, arguments); // eslint-disable-line
 }
 
 util.inherits(Computation, Base);

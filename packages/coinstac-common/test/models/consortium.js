@@ -27,10 +27,10 @@ test('model::consortium - hasMember', function (t) {
 });
 
 test('model::consortium - isOwnedBy', function (t) {
-    // Create a model without an owner property
+  // Create a model without an owner property
   const ownerlessModel = new Consortium(validOpts());
 
-    // Create a model with an owners property
+  // Create a model with an owners property
   const ownersOps = _.assign(validOpts(), {
     owners: ['adumbledor'],
   });

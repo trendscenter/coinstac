@@ -1,7 +1,8 @@
 'use strict';
+
 const url = require('url');
 
-var config = {
+const config = {
     backend: false, // e.g. memdown
     config: { file: false },
     log: { file: false },
@@ -11,13 +12,13 @@ var config = {
 };
 
 config.dbURL = function(dbname) {
-    if (!dbname) { throw new ReferenceError('dbname required'); }
-    return url.format({
-        protocol: 'http',
-        hostname: 'localhost',
-        port: config.port,
-        pathname: dbname
-    });
+  if (!dbname) { throw new ReferenceError('dbname required'); }
+  return url.format({
+    protocol: 'http',
+    hostname: 'localhost',
+    port: config.port,
+    pathname: dbname
+  });
 };
 
 module.exports = config;

@@ -13,7 +13,7 @@ const util = require('util');
  * @property {object} tags @deprecated
  */
 function File(attrs) {
-  Base.apply(this, arguments);
+  Base.apply(this, arguments); // eslint-disable-line
 }
 
 File.schema = Object.assign({

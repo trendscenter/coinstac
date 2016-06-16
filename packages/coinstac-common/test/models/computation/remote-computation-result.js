@@ -13,7 +13,7 @@ const genOpts = (opts) => {
   }, opts);
 };
 
-test('constructor - runId', t => {
+test('constructor - runId', (t) => {
   const wildRunId = '!@$#(&ABC)_!~\\]';
   let validOpts = genOpts();
   let invalidOpts = genOpts({ _id: wildRunId + '-garbage' });
@@ -29,10 +29,10 @@ test('constructor - runId', t => {
 
     // test invalid
   t.throws(
-        () => (new RemoteComputationResult(invalidWildOpts)),
-        /Error/,
-        'errors on bogus -suffix trailing content'
-    );
+    () => (new RemoteComputationResult(invalidOpts)),
+    /Error/,
+    'errors on bogus -suffix trailing content'
+  );
 
-  t.end();
+  return t.end();
 });

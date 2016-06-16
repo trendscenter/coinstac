@@ -77,9 +77,7 @@ function findTarballUrl(options, callback) {
     repo,
     user,
   }, (err, res) => {
-    if (err) {
-      return callback(err);
-    }
+    if (err) { return callback(err); }
 
     const tag = res.find(t => t.name === 'v' + version);
 
@@ -89,7 +87,7 @@ function findTarballUrl(options, callback) {
         `Couldn’t find tag for ${user}/${repo}@${version}`
       ));
     }
-    callback(null, tag.tarball_url); // jshint ignore:line
+    return callback(null, tag.tarball_url); // jshint ignore:line
   });
 }
 
@@ -125,16 +123,16 @@ function getTarballUrl(options) {
 
   return new Promise((resolve, reject) => {
     findTarballUrl({
-      github: github,
+      github,
       repo: pathPieces[1],
       user: pathPieces[0],
-      version: version,
+      version,
     }, (err, tarballUrl) => {
       if (err) {
         return reject(err);
       }
 
-      resolve(tarballUrl);
+      return resolve(tarballUrl);
     });
   });
 }
@@ -251,7 +249,7 @@ ComputationRegistry.prototype._getFromDisk = function (name, version) {
   const computationPath = this._getComputationPath(name, version);
 
   return new Promise((resolve, reject) => {
-    fs.stat(computationPath, err => {
+    fs.stat(computationPath, (err) => {
       if (err) {
         return reject(err);
       }
@@ -261,6 +259,7 @@ ComputationRegistry.prototype._getFromDisk = function (name, version) {
       } catch (error) {
         reject(error);
       }
+      return null;
     });
   });
 };
@@ -279,31 +278,25 @@ ComputationRegistry.prototype._getFromSource = function (name, version) {
 
   return getTarballUrl({
     github: this.github,
-    name: name,
+    name,
     registry: this.registry,
-    version: version,
+    version,
   })
-        .then(tarballUrl => {
-          return new Promise((resolve, reject) => {
-            mkdirp(path, err => {
-              if (err) {
-                return reject(err);
-              }
+  .then(tarballUrl => {
+    return new Promise((resolve, reject) => {
+      mkdirp(path, (err) => {
+        if (err) { return reject(err); }
 
-              const tarExtract = tar.extract(path);
-              const request = https.request(tarballUrl).pipe(tarExtract);
+        const tarExtract = tar.extract(path);
+        const request = https.request(tarballUrl).pipe(tarExtract);
 
-              request.on('error', error => {
-                reject(error);
-              });
-              tarExtract.on('finish', function () {
-                resolve();
-              });
-            });
-          });
-        })
-        .then(() => runNPMInstall(path))
-        .then(() => this._getFromDisk(name, version));
+        request.on('error', reject);
+        return tarExtract.on('finish', resolve);
+      });
+    });
+  })
+  .then(() => runNPMInstall(path))
+  .then(() => this._getFromDisk(name, version));
 };
 
 /**
@@ -398,11 +391,8 @@ ComputationRegistry.prototype.remove = function (name, version, fromDisk) {
 
   return new Promise((resolve, reject) => {
     rimraf(this._getComputationPath(name, version), (err, res) => {
-      if (err) {
-        return reject(err);
-      }
-
-      resolve(res);
+      if (err) { return reject(err); }
+      return resolve(res);
     });
   });
 };
@@ -416,14 +406,14 @@ ComputationRegistry.DIRECTORY_PATTERN = /^([\w-\.]+)@([\w-\.]+)$/;
  * @todo  Test it
  * @static
  * @param {string} directory
- * @returns {(array|undefined)}
+ * @returns {(array|null)}
  */
 ComputationRegistry.getNameAndVersion = function (directory) {
   const matches = directory.match(ComputationRegistry.DIRECTORY_PATTERN);
-
   if (matches) {
     return [matches[1], matches[2]];
   }
+  return null;
 };
 
 module.exports = ComputationRegistry;

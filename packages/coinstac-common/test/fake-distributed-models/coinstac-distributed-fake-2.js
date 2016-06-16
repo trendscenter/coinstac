@@ -4,14 +4,12 @@ module.exports = {
   version: 'test-fake-distributed-model-2-version-1',
   local: {
     type: 'function',
-    fn: function (prevRslt, agg, next) {},
-
-    seed: function () {},
+    fn(prevRslt, agg, next) {},
+    seed() {},
   },
   remote: {
     type: 'function',
-    fn: function (newDoc, allDocs, aggData) {},
-
-    seed: function () {},
+    fn(newDoc, allDocs, aggData) {},
+    seed() {},
   },
 };

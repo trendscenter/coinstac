@@ -31,7 +31,7 @@ test('LocalPipelineRunner run - basic', t => {
       if (err) { return t.end(err.message); }
       t.deepEqual(docs[0], result.serialize(), 'result persisted');
       t.equal(docs.length, 1, 'exactly one result persisted');
-      t.end();
+      return t.end();
     });
   });
 });
@@ -59,7 +59,7 @@ test('run - basic - input errors', t => {
 });
 
 test('run - basic - bogus pipeline handling', t => {
-  t.plan(2);
+  t.plan(3);
   let runner = new LocalPipelineRunner(runnerUtils.localOpts());
   runner.pipeline = runnerUtils.getBustedPipeline();
   let remoteResult = runnerUtils.getRemoteResult();
@@ -68,8 +68,8 @@ test('run - basic - bogus pipeline handling', t => {
     t.ok(result.error.message.match(/test-error/), 'pipeline errors propogated');
   });
   runner.run(remoteResult)
-  .catch((err) => {
-    t.ok(result.error.message.match(/test-error/), 'pipeline errors rejected via runner');
+  .then((err) => {
+    t.pass('run completes even w/ error');
     t.end();
   });
 });
