@@ -11,8 +11,6 @@
     "validate": "npm ls",
     "preversion": "git checkout master && git pull && npm ls",
     "docs": "mkdir -p docs && jsdoc -t ./node_modules/minami -d docs -R README.md -r src/",
-    "deploy-docs": "gh-pages -d docs && rm -rf docs",
-    "postpublish": "npm run docs && npm run deploy-docs",
     "publish-patch": "npm run preversion && npm version patch && git push origin master --tags && npm publish",
     "publish-minor": "npm run preversion && npm version minor && git push origin master --tags && npm publish",
     "publish-major": "npm run preversion && npm version major && git push origin master --tags && npm publish"
