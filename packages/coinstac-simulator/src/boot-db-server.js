@@ -8,7 +8,7 @@ const dbsOK = chalk.gray;
 
 let srv;
 
-const filtered = (str) => str.match(/deprecated/);
+const filtered = (str) => str.match(/deprecated|Warning: a promise/);
 
 module.exports = {
   setup(declPath) {
