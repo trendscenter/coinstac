@@ -95,6 +95,7 @@ class PipelineRunner extends Base {
 
   /**
    * complete a pipeline run or run attempt.
+   * @private
    * @returns {Promise}
    */
   _flush() {
