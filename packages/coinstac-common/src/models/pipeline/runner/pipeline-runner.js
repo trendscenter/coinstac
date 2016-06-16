@@ -21,6 +21,8 @@ const extractRunId = ComputationResult.prototype._extractRunId;
  * collecting a Pipeline's required inputs.  Lastly, the PipelineRunner is
  * responsible for persisting the computation results and pipeline state.
  * @property {EventEmitter} events
+ * @property {Pipeline} pipeline
+ * @property {ComputationResult} result
  */
 class PipelineRunner extends Base {
   constructor(opts) {
@@ -89,6 +91,19 @@ class PipelineRunner extends Base {
       throw new ReferenceError('expected db to write computation results into');
     }
     return this.saveResult(db, rslt, err, force);
+  }
+
+  /**
+   * complete a pipeline run or run attempt.
+   * @private
+   * @returns {Promise}
+   */
+  _flush() {
+    return (this._saveQueue || Promise.resolve()) // wait for saves to settle out
+    .then(() => {
+      this.events.emit('halt', this.result);
+      return this.result;
+    });
   }
 
   /**
@@ -295,11 +310,7 @@ class PipelineRunner extends Base {
       this.events.emit('error', err);
       return this.saveResult(this.db || this.remoteDB, null, err);
     })
-    .then(() => this._saveQueue) // wait for saves to settle out
-    .then(() => {
-      this.events.emit('halt', this.result);
-      return this.result;
-    });
+    .then(this._flush.bind(this));
   }
 }
 

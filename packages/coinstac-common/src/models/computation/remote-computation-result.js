@@ -20,9 +20,10 @@ util.inherits(RemoteComputationResult, ComputationResult);
 RemoteComputationResult._idRegex = /^([^-]+$)/; // format: runId
 RemoteComputationResult.schema = Object.assign({}, ComputationResult.schema, {
   _id: joi.string().regex(RemoteComputationResult._idRegex).required(),
+  complete: joi.boolean().default(false), // DecentralizedComputation complete/halted
   usernames: joi.array().items(joi.string()).default([]),
-  complete: joi.boolean().default(false), // DecentralizedComputation fully complete
-    // runId - derived from _id, enforced on ComputationResult instantiation
+  userErrors: joi.array(),
+  // runId - derived from _id, enforced on ComputationResult instantiation
 });
 
 module.exports = RemoteComputationResult;
