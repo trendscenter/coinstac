@@ -1,6 +1,6 @@
 {
   "name": "coinstac-example-computation-bisect-converge",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "example coinstac decentralized computation.",
   "main": "src/index.js",
   "scripts": {
@@ -37,7 +37,7 @@
     "test"
   ],
   "devDependencies": {
-    "coinstac-simulator": "^2.0.1",
+    "coinstac-simulator": "^2.0.2",
     "eslint": "^2.9.0",
     "eslint-config-airbnb": "^9.0.1",
     "eslint-plugin-import": "^1.8.0",
