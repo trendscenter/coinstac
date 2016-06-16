@@ -14,5 +14,5 @@ module.exports = (lifecycleStep, type, decl) => {
   let tasks = get(decl, `${type}.${lifecycleStep}`);
   if (!tasks) { return Promise.resolve(); }
   tasks = isArray(tasks) ? tasks : [tasks];
-  return Promise.all(tasks);
+  return Promise.all(tasks.map((fn) => fn()));
 };
