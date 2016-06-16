@@ -85,27 +85,40 @@ test('RemotePipelineRunner::run - basic - bogus pipeline handling', (t) => {
 
 test('propogate user errors via remote `userErrors` aggregation', (t) => {
   t.plan(2);
+  const runId = 'runId';
+
+  // prep runner and localResult to feed to runner.
   let stubbedLocalDocs = [];
   let runner = new RemotePipelineRunner(runnerUtils.remoteOpts());
-  runner.result._id = 'runId';
+  runner.result._id = `${runId}`;
   runner.pipeline = runnerUtils.getPipeline();
   let localResult = runnerUtils.getLocalResult();
-  runner.getResultDocs = () => stubbedLocalDocs;
-  localResult._id = localResult._rev = 'runId-old';
+  localResult._id = localResult._rev = `${runId}-old`;
   localResult.error = { test: 1 };
+
+  // stub in local result query so we can skip db calls.
+  runner.getResultDocs = () => stubbedLocalDocs;
   stubbedLocalDocs.push(localResult.serialize());
+
+  // assert RemoteComputationResult has proper `userErrors` state on halt.
   runner.events.on('halt', (doc) => {
     const errors = doc.userErrors;
+    // on first halt, expect one user error
     if (errors && errors.length === 1) {
       t.equals(errors.length, 1, 'user errors propogated');
+
+      // cool. now clear the error, update the db stub, and run it again!
       delete localResult.error;
       localResult._id = localResult._rev = 'runId-new';
       stubbedLocalDocs = [localResult.serialize()];
       return runner.run(localResult).catch(t.end);
     }
+    // on second halt, expect error to be cleared.
     t.equals(errors.length, 0, 'errors cleared when users are non-erroring');
     return t.end();
   });
   runner.events.on('error', () => t.fail('error event emitted'));
+
+  // go.
   runner.run(localResult).catch(t.end);
 });
