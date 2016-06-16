@@ -1,4 +1,5 @@
 'use strict';
+
 const assign = require('lodash/assign');
 const path = require('path');
 const computations = require('../../../').models.computation;

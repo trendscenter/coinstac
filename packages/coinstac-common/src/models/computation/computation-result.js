@@ -21,7 +21,7 @@ const memoize = require('lodash/memoize');
  *                             child classes
  */
 function ComputationResult() {
-  PouchDocument.apply(this, arguments);
+  PouchDocument.apply(this, arguments); // eslint-disable-line
   this._configureRunId();
 }
 util.inherits(ComputationResult, PouchDocument);

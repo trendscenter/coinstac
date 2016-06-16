@@ -290,49 +290,37 @@ tape('gets computation from source', t => {
       );
 
       fs.readdir(
-              path.join(TEST_COMPUTATION_PATH, slug),
-              (err, files) => {
-                if (err) {
-                  return t.end(err);
-                }
-
-                const requiredFiles = ['index.js', 'package.json'];
-
-                t.ok(
-                      requiredFiles.every(f => files.indexOf(f) !== -1) &&
-                      files.every(f => {
-                        return (
-                              requiredFiles.indexOf(f) !== -1 ||
-                              f === 'node_modules'
-                          );
-                      }),
-                      'unpacks all computation files'
-                  );
-
-                fs.readdir(
-                      path.join(
-                          TEST_COMPUTATION_PATH,
-                          slug,
-                          'node_modules'
-                      ),
-                      (err, nodeModules) => {
-                        if (err) {
-                          return t.end(err);
-                        }
-
-                        t.ok(
-                              nodeModules.length === 1 &&
-                              nodeModules[0] === 'lodash',
-                              'installs dependencies via NPM'
-                          );
-
-                          // Cleanup
-                        githubStub.restore();
-                        requestStub.restore();
-                      }
-                  );
-              }
+        path.join(TEST_COMPUTATION_PATH, slug),
+        (err, files) => {
+          if (err) { return t.end(err); }
+          const requiredFiles = ['index.js', 'package.json'];
+          t.ok(
+            requiredFiles.every(f => files.indexOf(f) !== -1) &&
+            files.every(f => {
+              return (
+                requiredFiles.indexOf(f) !== -1 ||
+                f === 'node_modules'
+              );
+            }),
+            'unpacks all computation files'
           );
+
+          return fs.readdir(
+            path.join(TEST_COMPUTATION_PATH, slug, 'node_modules'),
+            (err, nodeModules) => {
+              if (err) { return t.end(err); }
+              t.ok(
+                nodeModules.length === 1 &&
+                nodeModules[0] === 'lodash',
+                'installs dependencies via NPM'
+              );
+              // Cleanup
+              githubStub.restore();
+              return requestStub.restore();
+            }
+          );
+        }
+      );
     });
   })
   .then(helpers.cleanupTestDir)
@@ -608,16 +596,15 @@ tape('remove computation from store', t => {
   seedInstanceComputations(instance, mockComputations);
 
   instance.remove(name, version)
-        .then(() => {
-
-          t.ok(
-                values(instance.store).every(c => {
-                  return !(c.name === name && c.version === version);
-                }),
-                'computation removed'
-            );
-        })
-        .catch(t.end);
+  .then(() => {
+    t.ok(
+      values(instance.store).every(c => {
+        return !(c.name === name && c.version === version);
+      }),
+      'computation removed'
+    );
+  })
+  .catch(t.end);
 });
 
 tape('remove computation from disk', t => {
@@ -630,42 +617,36 @@ tape('remove computation from disk', t => {
   const stubs = setupNetworkStubs(slug);
 
   instance.add(name, version)
-        .then(computation => {
-          t.ok(computation, 'gets computation');
-
-          stubs.githubStub.restore();
-          stubs.requestStub.restore();
-
-          return instance.remove(name, version, true);
-        })
-        .then(() => {
-          fs.readdir(TEST_COMPUTATION_PATH, (err, files) => {
-            if (err) {
-              return t.end(err);
-            }
-
-            t.ok(
-                    files.indexOf(slug) === -1,
-                    'removes computation from disk'
-                );
-          });
-        })
-        .catch(t.end)
-        .then(() => helpers.cleanupTestDir())
-        .then(() => t.pass('test cleanup'));
+  .then(computation => {
+    t.ok(computation, 'gets computation');
+    stubs.githubStub.restore();
+    stubs.requestStub.restore();
+    return instance.remove(name, version, true);
+  })
+  .then(() => {
+    fs.readdir(TEST_COMPUTATION_PATH, (err, files) => {
+      if (err) { return t.end(err); }
+      return t.ok(
+        files.indexOf(slug) === -1,
+        'removes computation from disk'
+      );
+    });
+  })
+  .catch(t.end)
+  .then(() => helpers.cleanupTestDir())
+  .then(() => t.pass('test cleanup'));
 });
 
 tape('gets name and version from directory name', t => {
   const get = ComputationRegistry.getNameAndVersion;
-
   t.deepEqual(get('whatsup@1.0.0'), ['whatsup', '1.0.0']);
   t.deepEqual(
-        get('My_Fanciness--200@5.30.1'),
-        ['My_Fanciness--200', '5.30.1']
-    );
+    get('My_Fanciness--200@5.30.1'),
+    ['My_Fanciness--200', '5.30.1']
+  );
   t.deepEqual(
-        get('banana-guards@0.5.1-beta'),
-        ['banana-guards', '0.5.1-beta']
-    );
+    get('banana-guards@0.5.1-beta'),
+    ['banana-guards', '0.5.1-beta']
+  );
   t.end();
 });

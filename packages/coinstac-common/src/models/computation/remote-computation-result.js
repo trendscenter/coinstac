@@ -1,6 +1,7 @@
+'use strict';
+
 const ComputationResult = require('./computation-result');
 const joi = require('joi');
-const util = require('util');
 
 /* istanbul ignore next */
 /**
@@ -11,11 +12,12 @@ const util = require('util');
  * @property {string} _id extends it's parent `PouchDocument` `_id` requirement
  *                        and mandates the format: `runId`
  */
-function RemoteComputationResult() {
-  this._idRegex = RemoteComputationResult._idRegex;
-  ComputationResult.apply(this, arguments);
+class RemoteComputationResult extends ComputationResult {
+  constructor(opts) {
+    super(opts);
+    this._idRegex = RemoteComputationResult._idRegex;
+  }
 }
-util.inherits(RemoteComputationResult, ComputationResult);
 
 RemoteComputationResult._idRegex = /^([^-]+$)/; // format: runId
 RemoteComputationResult.schema = Object.assign({}, ComputationResult.schema, {

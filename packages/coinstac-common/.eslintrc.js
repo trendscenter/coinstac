@@ -21,6 +21,7 @@ module.exports = {
     'no-param-reassign': 0,
     'no-shadow': 0,
     'no-underscore-dangle': 0,
+    'no-unused-vars': 0,
     'prefer-arrow-callback': 0,
     'prefer-const': 0,
     'prefer-template': 0,

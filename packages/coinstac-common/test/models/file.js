@@ -1,16 +1,17 @@
 'use strict';
-var _ = require('lodash');
-var path = require('path');
-var File = require(path.join(process.cwd(), 'src/models/file.js'));
-var test = require('tape');
 
-var factory = function (opts) {
+const _ = require('lodash');
+const path = require('path');
+const File = require(path.join(process.cwd(), 'src/models/file.js'));
+const test = require('tape');
+
+const factory = function (opts) {
   return function () {
     return new File(opts);
   };
 };
 
-var validOps = function () {
+const validOps = function () {
   return {
     filename: '/test/dir',
     sha: 'testSha0123456789',

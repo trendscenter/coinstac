@@ -1,4 +1,5 @@
 'use strict';
+
 const assign = require('lodash/assign');
 const path = require('path');
 const computations = require('../../../').models.computation;
@@ -14,7 +15,7 @@ const genOpts = (opts) => {
   }, opts);
 };
 
-test('constructor - runId', t => {
+test('constructor - runId', (t) => {
   const wildRunId = '!@$#(&ABC)_!~\\]';
   let validOpts = genOpts();
   let validWildOpts = genOpts({ _id: wildRunId + '-username' });
@@ -33,17 +34,17 @@ test('constructor - runId', t => {
     return t.end(err.message);
   }
 
-    // test invalid
+  // test invalid
   t.throws(
-        () => (new LocalComputationResult(invalidWildOpts1)),
-        /Error/,
-        'errors on bogus -suffix trailing username'
-    );
+    () => (new LocalComputationResult(invalidWildOpts1)),
+    /Error/,
+    'errors on bogus -suffix trailing username'
+  );
   t.throws(
-        () => (new LocalComputationResult(invalidWildOpts2)),
-        /Error/,
-        'errors on missing username'
-    );
+    () => (new LocalComputationResult(invalidWildOpts2)),
+    /Error/,
+    'errors on missing username'
+  );
 
-  t.end();
+  return t.end();
 });

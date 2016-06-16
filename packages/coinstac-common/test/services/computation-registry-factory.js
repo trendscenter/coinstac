@@ -209,7 +209,7 @@ tape('local computation registry fetches computations from source', t => {
     return all.concat(c.tags.filter(t => t === version).map(version => {
       return {
         name: c.name,
-        version: version,
+        version,
         url: c.url,
       };
     }));
@@ -226,36 +226,34 @@ tape('local computation registry fetches computations from source', t => {
   });
 
   computationRegistryFactory(options)
-        .then(computationRegistry => {
-          t.ok(dbGetStub.calledWith('computations'), 'gets computations DB');
-
-          return computationRegistry.add(name, version)
-                .then(() => {
-                  t.equal(
-                        spy.callCount,
-                        1,
-                        'gets all documents from computations DB'
-                    );
-                  t.deepEqual(
-                        computationRegistry.registry[0],
-                    {
-                      name: name,
-                      tags: [version],
-                      url: returnDocs[0].url,
-                    },
-                        'sets computations docs to internal registry'
-                    );
-                  t.deepEqual(
-                        compAddStub.firstCall.args,
-                        [name, version],
-                        'proxies to ComputationRegistry#add'
-                    );
-
-                  compAddStub.restore();
-                  dbGetStub.restore();
-                });
-        })
-        .catch(t.end);
+  .then(computationRegistry => {
+    t.ok(dbGetStub.calledWith('computations'), 'gets computations DB');
+    return computationRegistry.add(name, version)
+    .then(() => {
+      t.equal(
+        spy.callCount,
+        1,
+        'gets all documents from computations DB'
+      );
+      t.deepEqual(
+        computationRegistry.registry[0],
+        {
+          name,
+          tags: [version],
+          url: returnDocs[0].url,
+        },
+        'sets computations docs to internal registry'
+      );
+      t.deepEqual(
+        compAddStub.firstCall.args,
+        [name, version],
+        'proxies to ComputationRegistry#add'
+      );
+      compAddStub.restore();
+      dbGetStub.restore();
+    });
+  })
+  .catch(t.end);
 });
 
 tape('local computation registry mutates whitelist', t => {
@@ -270,42 +268,37 @@ tape('local computation registry mutates whitelist', t => {
 
   const dbGetStub = sinon.stub(options.dbRegistry, 'get');
   const registry = [{
-    name: name,
+    name,
     tags: ['1.0.0', '3.0.0'],
-    url: url,
+    url,
   }];
 
   dbGetStub.returns({
     find: () => Promise.resolve({
-      docs: [{
-        name: name,
-        version: version,
-        url: url,
-      }],
+      docs: [{ name, version, url }],
     }),
   });
 
   options.registry = registry;
 
   computationRegistryFactory(options)
-        .then(computationRegistry => Promise.all([
-          Promise.resolve(computationRegistry),
-          computationRegistry.add(name, version),
-        ]))
-        .then(responses => {
-          const instance = responses[0];
-
-          t.equal(instance.registry, registry, 'keeps passed registry');
-          t.ok(
-                instance.registry[0].tags.indexOf(version) !== -1,
-                'adds version to existing registry item'
-            );
-        })
-        .catch(t.end)
-        .then(() => {
-          compAddStub.restore();
-          dbGetStub.restore();
-        });
+    .then(computationRegistry => Promise.all([
+      Promise.resolve(computationRegistry),
+      computationRegistry.add(name, version),
+    ]))
+    .then(responses => {
+      const instance = responses[0];
+      t.equal(instance.registry, registry, 'keeps passed registry');
+      t.ok(
+        instance.registry[0].tags.indexOf(version) !== -1,
+        'adds version to existing registry item'
+      );
+    })
+    .catch(t.end)
+    .then(() => {
+      compAddStub.restore();
+      dbGetStub.restore();
+    });
 });
 
 tape('local computation registry handles not-found computation', t => {

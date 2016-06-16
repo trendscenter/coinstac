@@ -26,22 +26,20 @@ const scheme = joi.array().items(joi.object().keys({
   url: joi.string().uri().regex(/github.com/).required(),
 }));
 
-tape('every entry is valid', t => {
-    /**
-     * Joi's `validate` API is a little confusing:
-     * {@link https://github.com/hapijs/joi/blob/v7.2.3/API.md#joi}
-     */
+tape('every entry is valid', (t) => {
+  /**
+   * Joi's `validate` API is a little confusing:
+   * {@link https://github.com/hapijs/joi/blob/v7.2.3/API.md#joi}
+   */
   const result = joi.validate(decentralizedComputations, scheme);
-
   if (result.error) {
     return t.end(result.error);
   }
-
   t.pass();
-  t.end();
+  return t.end();
 });
 
-tape('all tags are semver', t => {
+tape('all tags are semver', (t) => {
   decentralizedComputations.forEach(computation => {
     computation.tags.forEach(tag => {
       if (!semver.valid(tag)) {
@@ -51,5 +49,5 @@ tape('all tags are semver', t => {
   });
 
   t.pass();
-  t.end();
+  return t.end();
 });

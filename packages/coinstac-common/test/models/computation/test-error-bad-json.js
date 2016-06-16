@@ -1,1 +1,2 @@
-console.log('{ "key": "bananas" '); // <== missing closing bracket
+console.log('{ "key": "bananas" '); // eslint-disable-line
+// ^^ missing closing bracket

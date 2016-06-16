@@ -63,19 +63,12 @@ function setupTestDir(slugs) {
   return Promise.all(slugs.map(slug => {
     const sourceDir = path.join(MOCK_COMPUTATION_PATH, slug);
     const targetDir = path.join(TEST_COMPUTATION_PATH, slug);
-
     return new Promise((resolve, reject) => {
       mkdirp(targetDir, error => {
-        if (error) {
-          return reject(error);
-        }
-
-        ncp(sourceDir, targetDir, error => {
-          if (error) {
-            return reject(error);
-          }
-
-          resolve();
+        if (error) { return reject(error); }
+        return ncp(sourceDir, targetDir, error => {
+          if (error) { return reject(error); }
+          return resolve();
         });
       });
     });
@@ -83,8 +76,8 @@ function setupTestDir(slugs) {
 }
 
 module.exports = {
-  cleanupTestDir: cleanupTestDir,
-  MOCK_COMPUTATION_PATH: MOCK_COMPUTATION_PATH,
-  setupTestDir: setupTestDir,
-  TEST_COMPUTATION_PATH: TEST_COMPUTATION_PATH,
+  cleanupTestDir,
+  MOCK_COMPUTATION_PATH,
+  setupTestDir,
+  TEST_COMPUTATION_PATH,
 };

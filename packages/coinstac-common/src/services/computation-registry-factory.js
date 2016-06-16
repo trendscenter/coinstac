@@ -181,25 +181,22 @@ function computationRegistryFactory(options) {
 
   return new Promise((resolve, reject) => {
     fs.readdir(computationsPath, (err, files) => {
-      if (err) {
-        return reject(err);
-      }
-
-      resolve(files.filter(f => {
+      if (err) { return reject(err); }
+      return resolve(files.filter((f) => {
         return ComputationRegistry.DIRECTORY_PATTERN.test(f);
       }));
     });
   })
-        .then(directories => Promise.all(directories.map(directory => {
-          const nameAndVersion =
-                ComputationRegistry.getNameAndVersion(directory);
-          const name = nameAndVersion[0];
-          const version = nameAndVersion[1];
+  .then(directories => Promise.all(directories.map(directory => {
+    const nameAndVersion =
+          ComputationRegistry.getNameAndVersion(directory);
+    const name = nameAndVersion[0];
+    const version = nameAndVersion[1];
 
-          return instance._getFromDisk(name, version)
-                .then(definition => instance._doAdd(name, version, definition));
-        })))
-        .then(() => instance);
+    return instance._getFromDisk(name, version)
+          .then(definition => instance._doAdd(name, version, definition));
+  })))
+  .then(() => instance);
 }
 
 module.exports = computationRegistryFactory;
