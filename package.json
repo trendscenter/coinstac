@@ -6,14 +6,16 @@
   "dependencies": {},
   "devDependencies": {
     "gh-pages": "^0.11.0",
+    "github-markdown-css": "^2.3.0",
     "jsdoc": "^3.4.0",
     "lerna": "2.0.0-beta.20",
+    "marked": "^0.3.5",
     "minami": "^1.1.1",
     "swig-templates": "^2.0.1"
   },
   "scripts": {
     "bootstrap": "lerna bootstrap",
-    "publish": "lerna publish"
+    "publish": "lerna publish && node scripts/docs.js"
   },
   "repository": {
     "type": "git",
