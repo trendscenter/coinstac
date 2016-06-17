@@ -24,7 +24,7 @@ class ProjectsList extends Component {
 
     dispatch(fetchProjects((err) => {
       if (err) {
-        app.notify('error', err.message);
+        app.notify('error', `Failed to load projects: ${err.message}`);
       } else {
         this.setState({ ready: true });
       }

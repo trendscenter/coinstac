@@ -1,116 +1,118 @@
-import React from 'react';
-import Reactabular from 'reactabular';
 import { Button } from 'react-bootstrap';
-import _ from 'lodash';
-const Search = Reactabular.Search;
-const RTable = Reactabular.Table;
-const sortColumn = Reactabular.sortColumn;
+import React, { Component, PropTypes } from 'react';
+import { ColumnNames, Search, sortColumn, Table } from 'reactabular';
+import orderBy from 'lodash/orderBy';
 
-export default class ProjectFiles extends React.Component {
+export default class ProjectFiles extends Component {
+  constructor(props) {
+    super(props);
 
-    static propTypes = {
-        projectId: React.PropTypes.string
+    this.columnFilters = this.columnFilters.bind(this);
+    this.onClearSearchClick = this.onClearSearchClick.bind(this);
+    this.onSearchChange = this.onSearchChange.bind(this);
+
+    this.state = {
+      columns: [{
+        header: 'File',
+        property: 'filename',
+      }, {
+        cell: (value, data, rowIndex) => {
+          return {
+            value: (
+              <div className="text-right">
+                <Button
+                  bsSize="small"
+                  bsStyle="danger"
+                  onClick={this.props.onRemoveFileClick.bind(null, data[rowIndex])}
+                  title="Remove file from project">
+                  ×
+                </Button>
+              </div>
+            ),
+          };
+        },
+        header: 'Remove',
+      }],
+      search: null,
+      sortingColumn: null,
+    };
+  }
+
+  columnFilters(column) {
+    const { columns } = this.state;
+    const config = {
+      onClick: column => {
+        // Don't sort on the 'remove file' column
+        if (column.header !== 'Remove') {
+          sortColumn(columns, column, this.setState.bind(this));
+        }
+      },
     };
 
-    constructor(props) {
-        super(props);
-        if (!props.project || !props.project._id) {
-            throw new ReferenceError('project prop is required to render project files');
-        }
-        if (!props.project.files) {
-            throw new ReferenceError('project.files attr is required to render project files');
-        }
-        this.columns = [
-            {
-                property: 'filename',
-                header: 'File'
-            },
-            {
-                header: 'Is Control',
-                cell: (value, data, rowIndex) => {
-                    value = data[rowIndex]; // so weird.
-                    const isChecked = _.get(value, 'tags.control');
-                    const handleChange = props.toggleControlTag.bind(null, value);
-                    return {
-                        value: (
-                            <input
-                                checked={isChecked}
-                                onChange={handleChange}
-                                type="checkbox" />
-                        ),
-                    };
-                }
-            },
-            {
-                header: 'Delete',
-                cell: (value, data, rowIndex, property) => {
-                    value = data[rowIndex];
-                    return {
-                        value: (
-                            <span>
-                                <span
-                                    onClick={ () => this.props.deleteFile(data) }
-                                    style={{cursor: 'pointer', padding: '10px'}}
-                                    >&#10007;
-                                </span>
-                            </span>
-                        )
-                    };
-                },
-            }
-        ];
+    return (
+      <thead>
+        <ColumnNames config={config} columns={columns} />
+      </thead>
+    );
+  }
+
+  onSearchChange(filter = null) {
+    this.setState({
+      search: filter,
+    });
+  }
+
+  onClearSearchClick() {
+    this.setState({
+      search: null,
+    });
+
+    // Reset Reactabular's search component's value
+    this.refs['table-search'].setState({ query: '' });
+  }
+
+  render() {
+    const { columns, search, sortingColumn } = this.state;
+    const { files } = this.props;
+
+    let data = search ?
+      Search.search(files, columns, search.column, search.query) :
+      files;
+
+    if (sortingColumn) {
+      data = sortColumn.sort(data, sortingColumn, orderBy);
     }
 
-    render() {
-        let { project, _search } = this.props;
-        let files = project.files;
-        let body;
-        _search = _search || {};
+    return (
+      <div>
+        <div>
+          <Search
+            columns={columns}
+            data={data}
+            onChange={this.onSearchChange}
+            ref="table-search"
+          />
+          <Button
+            bsStyle="default"
+            bsSize="small"
+            onClick={this.onClearSearchClick}
+            title="Clear search">
+            ×
+          </Button>
+        </div>
+        <Table
+          className="table table-striped"
+          columns={columns}
+          columnNames={this.columnFilters}
+          data={data}
+          rowKey="id"
+        />
+      </div>
+    );
+  }
+}
 
-        if (!files) {
-            body = <span>Loading files...</span>
-        } else if (!files.length) {
-            body = <span>No project files.  Add some!</span>
-        } else {
-            // apply search reduction
-            files = Search.search(files, this.columns, _search.column, _search.query);
-            body = (
-                <div className="page-header clearfix">
-                    <div className="pull-right" style={{ marginRight: '4px'}}>
-                        <Button
-                            bsStyle="default"
-                            onClick={ () => this.props.toggleControlTag(project.files) }>
-                            Toggle “Is Control”
-                        </Button>
-                    </div>
-                    <div className='well search-container'>
-                        Search:
-                        <Search
-                            columns={ this.columns }
-                            data={ files.models }
-                            onChange={ () => console.warn('this.props.handleFileSearch') }>
-                        </Search>
-                    </div>
-                    <RTable
-                        className="table"
-                        columns={ this.columns}
-                        data={ files } />
-                </div>
-            );
-        }
-
-        return (
-            <div>
-                <Button onClick={ this.props.triggerAddFiles } bsStyle="info">
-                    <span
-                        className="glyphicon glyphicon-open-file"
-                        aria-hidden="true">
-                    </span>
-                    {'Add +'}
-                </Button>
-                {' '}
-                { body }
-            </div>
-        );
-    }
+ProjectFiles.propTypes = {
+  files: PropTypes.array.isRequired,
+  onRemoveFileClick: PropTypes.func.isRequired,
 };
