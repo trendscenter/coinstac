@@ -1,9 +1,13 @@
 'use strict';
 
-const test = require('tape');
 const clientFactory = require('../utils/client-factory');
+const fileStats = require('../../src/utils/file-stats');
 const projectFactory = require('../utils/project-factory');
+const ProjectService = require('../../src/sub-api/project-service');
+const sinon = require('sinon');
+const test = require('tape');
 
+// TODO: This test fails when this file is tested independently. Why?
 test('ProjectService - addFiles/removeFiles', (t) => {
   const p1 = projectFactory();
   let c1;
@@ -37,4 +41,32 @@ test('ProjectService - addFiles/removeFiles', (t) => {
   .then(() => c1.teardown())
   .then(() => t.pass('teardown'))
   .then(t.end, t.end);
+});
+
+test('ProjectSerice - gets stats', t => {
+  const param1 = [0, 1, 2];
+  const param2 = 'wat';
+  const prepareStub = sinon.stub(fileStats, 'prepare');
+
+  prepareStub.returns(Promise.resolve('bananas'));
+
+
+  t.plan(3);
+
+  ProjectService.prototype.getFileStats(param1)
+    .then(response => {
+      t.equal(prepareStub.lastCall.args[0], param1, 'passes array param');
+      t.equal(response, 'bananas', 'passes fileStats#prepare response');
+
+      return ProjectService.prototype.getFileStats(param2);
+    })
+    .then(() => {
+      t.deepEqual(
+        prepareStub.lastCall.args[0],
+        [param2],
+        'changes single items to array'
+      );
+    })
+    .catch(t.end)
+    .then(prepareStub.restore);
 });
