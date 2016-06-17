@@ -1,7 +1,7 @@
 # COINSTAC
 _Decentralized Analyses Made Easy_
 
-<img src="https://github.com/MRN-Code/coinstac-common/blob/master/img/coinstac.png" height="75px" />
+<img src="https://raw.githubusercontent.com/MRN-Code/coinstac/master/packages/coinstac-common/img/coinstac.png" height="75px" />
 
 [COINSTAC](# "Collaborative Informatics and Neuroimaging Suite Toolkit for Anonymous Computation") is software to foster collaborative research, removing large barriers to traditional data-centric collaboration approaches.  It enables groups of users to run common analyses _on their own machines_ over _their own datasets_ with ease.  The results of these analyses are synchronized to the cloud, and undergo aggregate analyses processes using all contributor data.  Decentralized pipelines allow for distributed, iterative, and feature rich analyses to be run, opening new and exciting capabilities for collaborative computation.  If also offers data anonymity through differential privacy algorithms, so members do not need to fear PHI traceback.
 
@@ -46,11 +46,11 @@ COINSTAC removes the barriers to collaborative analysis by:
 You may wonder why we haven't been doing this before!  Us too.  Let's get started!
 
 ## Getting Started
-- If you are looking to contribute data, head over to [coinstac-ui](https://github.com/MRN-Code/coinstac-ui).  There, you will be able to download the application.
+- If you are looking to contribute data, head over to [coinstac-ui](https://github.com/MRN-Code/coinstac/tree/master/packages/coinstac-ui).  There, you will be able to download the application.
 
 - If you are a developer or scientist and want to design a decentralized computation, please see:
   - [DecentralizedComputation.md](DecentralizedComputation.md) for how to build your own `DecentralizedComputation`.
-  - [coinstac-simulator](https://github.com/MRN-Code/coinstac-simulator) for how to test your freshly created `DecentralizedComputation`.
+  - [coinstac-simulator](https://github.com/MRN-Code/coinstac/tree/master/packages/coinstac-simulator) for how to test your freshly created `DecentralizedComputation`.
   - "Under the Hood" below, if you want to understand how the system works.
 
 ## Under The Hood
