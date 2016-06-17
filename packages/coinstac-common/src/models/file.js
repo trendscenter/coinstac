@@ -1,7 +1,9 @@
 'use strict';
+
 const Base = require('./base.js');
 const joi = require('joi');
 const util = require('util');
+
 /**
  * @class File
  * @constructor
