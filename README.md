@@ -52,6 +52,7 @@ You may wonder why we haven't been doing this before!  Us too.  Let's get starte
   - [DecentralizedComputation.md](DecentralizedComputation.md) for how to build your own `DecentralizedComputation`.
   - [coinstac-simulator](https://github.com/MRN-Code/coinstac/tree/master/packages/coinstac-simulator) for how to test your freshly created `DecentralizedComputation`.
   - "Under the Hood" below, if you want to understand how the system works.
+  - **API Documentation** is formally available [here](http://mrn-code.github.io/coinstac/index.html#api-docs).
 
 ## Under The Hood
 Developer documentation and system design information may be found over in our [technical docs](./TECHNICAL.md).
