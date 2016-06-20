@@ -8,6 +8,32 @@ const tape = require('tape');
 const Computation = common.models.computation.Computation;
 const RemoteComputationResult = common.models.computation.RemoteComputationResult;
 
+/**
+ * Get stubbed params fro `ComputationService#kickoff`.
+ *
+ * @returns {Object}
+ */
+function getStubbedParams() {
+  return {
+    client: {
+      consortia: {
+        db: {
+          get: sinon.stub(),
+        },
+      },
+      projects: {
+        db: {
+          get: sinon.stub(),
+        },
+      },
+      pool: {
+        triggerRunner: sinon.stub().returns(Promise.resolve()),
+      },
+    },
+    dbRegistry: {},
+  };
+}
+
 tape('ComputationService :: modelServiceHooks', t => {
   const computationService = new ComputationService({
     client: {},
@@ -21,11 +47,39 @@ tape('ComputationService :: modelServiceHooks', t => {
   t.end();
 });
 
-tape('ComputationService :: kickoff', t => {
-  const consortiumId = 'the-wildest-computation';
-  const consortiaGetStub = sinon.stub().returns(Promise.resolve({
-    activeComputationId: 'the-most-active-id-evar',
+tape('ComputationService :: kickoff errors', t => {
+  const params = getStubbedParams();
+  const computationService = new ComputationService(params);
+
+  params.client.consortia.db.get.returns(Promise.resolve({
+    _id: 'bla bla bla',
+    label: 'WAT is consortium?',
   }));
+  params.client.projects.db.get.returns(Promise.resolve({
+    _id: 'wat wat wat',
+    label: 'Bla is project?',
+  }));
+
+  t.plan(1);
+
+  computationService.kickoff({
+    consortiumId: 'bla bla bla',
+    projectId: 'wat wat wat',
+  })
+    .then(() => t.fail('resolves when consortium lacks active computation ID'))
+    .catch(error => {
+      t.ok(
+        error && error.message.indexOf('active computation') > -1,
+        'rejects when consortium lacks active computation ID'
+      );
+    });
+});
+
+tape('ComputationService :: kickoff', t => {
+  const params = getStubbedParams();
+
+  const computationService = new ComputationService(params);
+  const consortiumId = 'the-wildest-computation';
   const project = {
     name: 'a-project-so-sweet',
     files: [{
@@ -36,47 +90,35 @@ tape('ComputationService :: kickoff', t => {
       filename: 'ill-file',
     }],
   };
-  const projectsGetStub = sinon.stub().returns(Promise.resolve(project));
   const projectId = 'the-craziest-project';
-  const triggerRunnerStub = sinon.stub().returns(
-    Promise.resolve('consider-yourself-triggered')
-  );
 
-  const computationService = new ComputationService({
-    client: {
-      consortia: {
-        db: {
-          get: consortiaGetStub,
-        },
-      },
-      projects: {
-        db: {
-          get: projectsGetStub,
-        },
-      },
-      pool: {
-        triggerRunner: triggerRunnerStub,
-      },
-    },
-    dbRegistry: {},
-  });
+  params.client.consortia.db.get.returns(Promise.resolve({
+    _id: consortiumId,
+    activeComputationId: 'the-most-active-id-evar',
+    label: 'Baller Consortium',
+  }));
+  params.client.projects.db.get.returns(Promise.resolve(project));
+  params.client.pool.triggerRunner.returns(Promise.resolve(
+    'consider-yourself-triggered'
+  ));
 
   t.plan(7);
 
   computationService.kickoff({ consortiumId, projectId })
     .then(response => {
       t.equal(
-        consortiaGetStub.firstCall.args[0],
+        params.client.consortia.db.get.firstCall.args[0],
         consortiumId,
         'retrieves consortium via consortiumId'
       );
       t.equal(
-        projectsGetStub.firstCall.args[0],
+        params.client.projects.db.get.firstCall.args[0],
         projectId,
         'retrieves project via projectId'
       );
 
 
+      const triggerRunnerStub = params.client.pool.triggerRunner;
       const args = triggerRunnerStub.firstCall.args;
 
       t.ok(
