@@ -210,8 +210,8 @@ class PipelineRunner extends Base {
 
   /**
    * Handles case where we were requested to save/update a result
-   * document, but none was found.  this case is _expected_ each time we kick of
-   * a Pipeline cycle in any environment, as no result exists on init
+   * document, but none was found.  this case is _expected_ each time we kick
+   * off a Pipeline cycle in any environment, as no result exists on init
    * @private
    * @param {Pouchy} db
    * @param {object} patch document
