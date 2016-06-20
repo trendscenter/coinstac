@@ -40,6 +40,12 @@ class ComputationService extends ModelService {
       client.consortia.db.get(consortiumId),
       client.projects.db.get(projectId),
     ]).then(([consortium, project]) => {
+      if (!consortium.activeComputationId) {
+        throw new Error(
+          `Consortium "${consortium.label}" doesn't have an active computation`
+        );
+      }
+
       const result = new RemoteComputationResult({
         _id: runId,
         computationId: consortium.activeComputationId,
