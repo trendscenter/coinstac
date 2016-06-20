@@ -14,5 +14,5 @@ const app = require('ampersand-app');
  */
 
 process.on('unhandledRejection', (reason, p) => {
-  app.logger.error('Unhandled rejection at: Promise ', p, ' reason: ', r);
+  app.logger.error('Unhandled rejection at: Promise ', p, ' reason: ', reason);
 });
