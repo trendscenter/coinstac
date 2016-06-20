@@ -10,18 +10,13 @@ export const setProjects = (projects) => ({ type: SET_PROJECTS, projects });
 export const REMOVE_PROJECT = 'REMOVE_PROJECT';
 export const removeProject = (project) => ({ type: REMOVE_PROJECT, project });
 
-export const addProject = applyAsyncLoading(function addProject(project, cb) {
+export const addProject = applyAsyncLoading(function addProject(project) {
   return (dispatch) => {
     return app.core.projects.save(project)
       .then((proj) => {
         app.notify('success', `Project '${project.name}' created`);
         dispatch(_addProject(project));
-        cb(null, proj);
         return proj;
-      })
-      .catch((err) => {
-        app.notify('error', err.message);
-        cb(err);
       });
   };
 });
@@ -56,7 +51,7 @@ export const fetch = applyAsyncLoading(function fetchProjects(cb) {
 
 /**
  * Projects reducer.
- * 
+ *
  * @param {Project[]} [projects]
  * @param {Object} action
  * @param {string} action.type One of the projects' actions
