@@ -1,33 +1,68 @@
 'use strict';
 
-const test = require('tape');
 const syncService = require('../../src/services/computations-database-syncer');
+const tape = require('tape');
 
-test('seed diffing', (t) => {
+tape('seed diffing', (t) => {
+  const mockGoldenSet = [{
+    name: 'a',
+    version: '1.0.0',
+  }, {
+    name: 'b',
+    version: '1.0.0',
+  }, {
+    name: 'b',
+    version: '0.5.0',
+  }];
+  const mockDeleteSet = [{
+    name: 'c',
+    version: '1.0.0',
+  }];
+
   t.deepEqual(
     syncService.getComputationsDiff([], []),
-    { add: [], update: [], delete: [] },
+    {
+      add: [],
+      delete: [],
+      update: [],
+    },
     'diff object generated'
   );
 
-  const mockGoldenSetA = [{ name: 'a', tags: ['a'] }, { name: 'b', tags: ['b1', 'b2'] }];
   t.deepEqual(
-    syncService.getComputationsDiff(mockGoldenSetA, []),
-    { add: mockGoldenSetA, update: [], delete: [] },
+    syncService.getComputationsDiff(mockGoldenSet, []),
+    {
+      add: mockGoldenSet,
+      delete: [],
+      update: [],
+    },
     'add diff generated'
   );
 
 
   t.deepEqual(
-    syncService.getComputationsDiff(mockGoldenSetA, [{ name: 'b', tags: ['z'] }]),
-    { add: [mockGoldenSetA[0]], update: [mockGoldenSetA[1]], delete: [] },
+    syncService.getComputationsDiff(
+      mockGoldenSet,
+      [{
+        name: 'b',
+        version: '0.5.0',
+      }]
+    ),
+    {
+      add: mockGoldenSet.slice(0, 2),
+      delete: [],
+      update: mockGoldenSet.slice(-1),
+    },
     'update diff generated'
   );
 
   t.deepEqual(
-    syncService.getComputationsDiff(mockGoldenSetA, [{ name: 'c', tags: ['c'] }]),
-    { add: mockGoldenSetA, update: [], delete: [{ name: 'c', tags: ['c'], _deleted: true }] },
-    'delete diff generated'
+    syncService.getComputationsDiff(mockGoldenSet, mockDeleteSet),
+    {
+      add: mockGoldenSet,
+      delete: mockDeleteSet.map(c => Object.assign({}, c, { _deleted: true })),
+      update: [],
+    }
   );
 
   t.end();
