@@ -20,6 +20,8 @@ const pdbs = require('spawn-pouchdb-server');
 const cp = require('child_process');
 const pdbsConfig = require('./.pouchdb-server-config');
 const common = require('../../../../../');
+const ComputationRegistry =
+  require('../../../../../src/services/classes/computation-registry');
 const computationRegistryFactory = common.services.computationRegistry;
 const dbRegistryFactory = common.services.dbRegistry;
 const Consortium = common.models.Consortium;
@@ -27,6 +29,8 @@ const User = common.models.User;
 const RemoteComputationResult = common.models.computation.RemoteComputationResult;
 const cloneDeep = require('lodash/cloneDeep');
 const assign = require('lodash/assign');
+const path = require('path');
+const sinon = require('sinon');
 
 /**
  * @function fail
@@ -34,15 +38,26 @@ const assign = require('lodash/assign');
  * and abandon tests
  */
 const fail = (err) => {
-    console.error(err.message);
-    console.error(err.stack);
+    console.error(err);
     process.exit(1);
 };
 
 module.exports = {
+  /**
+   * Placeholder for the `ComputationRegistry#_doAdd` stub, created so the
+   * registry doesn't make wierdo network requests.
+   *
+   * @type {(sinon.stub|null)}
+   */
+  compRegAddStub: null,
 
     buildComputationRegistry: function() {
+      this.compRegAddStub = sinon
+        .stub(ComputationRegistry.prototype, 'add')
+        .returns(Promise.resolve());
+
         return computationRegistryFactory({
+            path: path.join('..', '..', '..', '..', '..', '.tmp'),
             registry: [{
                 name: 'my-computation',
                 tags: ['1.0.0'],
@@ -54,6 +69,7 @@ module.exports = {
             }]
         })
         .then((reg) => {
+          debugger;
             this.computationRegistry = reg;
         })
         .catch(fail);
@@ -199,6 +215,10 @@ module.exports = {
       // https://github.com/hoodiehq/spawn-pouchdb-server/issues/41
       return bluebird.delay(200)
       .then(() => {
+        if (this.compRegAddStub) {
+          this.compRegAddStub.restore();
+        }
+
         return new Promise((res) => {
           this.server.stop((err) => {
             if (err) { fail(err.message); }

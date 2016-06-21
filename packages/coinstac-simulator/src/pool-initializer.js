@@ -6,6 +6,7 @@ const DBRegistry = require('coinstac-common').services.dbRegistry.DBRegistry;
 DBRegistry.Pouchy.plugin(require('pouchdb-adapter-memory'));
 const dbRegistryFactory = common.services.dbRegistry;
 const computationRegistryFactory = common.services.computationRegistry;
+const path = require('path');
 
 /**
  * @private
@@ -22,7 +23,10 @@ module.exports = {
   getPoolOpts(opts) {
     if (!opts) { throw new ReferenceError('opts required'); }
     return Promise.all([
-      computationRegistryFactory({ registry: [] }),
+      computationRegistryFactory({
+        path: path.join(__dirname, '..', '.tmp'),
+        registry: [],
+      }),
       this.getDBRegistry(opts.dbRegistry),
     ])
     .then((r) => ({
