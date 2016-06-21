@@ -46,7 +46,6 @@ module.exports = {
    */
   init() {
     return coinstacCommon.services.computationRegistry({
-      isRemote: true,
       path: this.getComputationsPath(),
     })
     .then((reg) => (this.instance = reg))

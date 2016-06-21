@@ -141,12 +141,17 @@ class CoinstacClient {
    * @returns {Promise}
    */
   _initComputationRegistry() {
+    const computationsDirectory = path.join(this.appDirectory, 'computations');
+
     this.logger.info('initializing ComputationRegistry');
-    return computationRegistryFactory({
-      isLocal: true,
-      dbRegistry: this.dbRegistry,
-    })
-    .then((reg) => { this.computationRegistry = reg; });
+
+    return bluebird.promisify(mkdirp)(computationsDirectory)
+      .then(() => computationRegistryFactory({
+        isLocal: true,
+        dbRegistry: this.dbRegistry,
+        path: computationsDirectory,
+      }))
+      .then((reg) => { this.computationRegistry = reg; });
   }
 
 
