@@ -200,7 +200,7 @@ class PipelineRunnerPool extends Base {
   /**
    * @description gets a DecentralizedComputation instance from the registry
    * @param {string} id computations store id
-   * @returns {Proimse}
+   * @returns {Promise} Resolves with a `DecentralizedComputation`
    */
   getDecentralizedComputation(id) {
     return this.dbRegistry.get('computations').get(id)
