@@ -148,20 +148,22 @@ tape('adds definition to store', t => {
   const name = registry[0].name;
   const version = registry[0].tags[1];
   const definition = require(`${MOCK_COMPUTATION_PATH}/${name}@${version}/`);
+  const url = registry[0].url;
 
-  instance._doAdd(name, version, definition)
+  instance._doAdd({ definition, name, url, version })
   .then(computation => {
     t.ok(
       computation instanceof DecentralizedComputation,
       'returns DecentralizedComputation instance'
     );
     t.ok(
-          (
-              computation.name === name &&
-              computation.version === version
-          ),
-          'instance name and version match'
-      );
+      (
+        computation.name === name &&
+        computation.repository.url === url &&
+        computation.version === version
+      ),
+      'instance name, url and version match'
+    );
     t.ok(
           values(instance.store)[0] === computation,
           'saves DecentralizedComputation to internal store'
@@ -194,7 +196,7 @@ tape('sets definition’s cwd on model', t => {
     version,
   };
 
-  instance._doAdd(name, version, definition)
+  instance._doAdd({ definition, name, version })
   .then(computation => {
     t.equal(
       computation.cwd,
@@ -244,6 +246,7 @@ tape('gets computation from source', t => {
 
   const instance = factory();
   const name = registry[2].name;
+  const url = registry[2].url;
   const version = registry[2].tags[0];
 
   const slug = `${name}@${version}`;
@@ -391,6 +394,7 @@ tape('add a computation (gets from memory)', t => {
   const instance = factory();
   const mockComputations = getMockComputations();
   const name = registry[1].name;
+  const url = registry[1].url;
   const version = registry[1].tags[0];
 
   const computation = mockComputations.find(
@@ -398,7 +402,12 @@ tape('add a computation (gets from memory)', t => {
     );
 
     // Setup
-  instance._doAdd(name, version, computation)
+  instance._doAdd({
+    definition: computation,
+    name,
+    url,
+    version,
+  })
         .then(() => instance.add(name, version))
         .then(response => {
             // `response` and expected `computation` are different instances

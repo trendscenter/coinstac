@@ -161,9 +161,7 @@ tape('local computation registry fetches computations from source', t => {
     find: () => {
       spy.apply(spy, arguments);
 
-      return Promise.resolve({
-        docs: returnDocs,
-      });
+      return Promise.resolve(returnDocs);
     },
   });
 
@@ -214,13 +212,11 @@ tape('local computation registry mutates whitelist', t => {
   }];
 
   dbGetStub.returns({
-    find: () => Promise.resolve({
-      docs: [{
-        name,
-        version,
-        url,
-      }],
-    }),
+    find: () => Promise.resolve([{
+      name,
+      version,
+      url,
+    }]),
   });
 
   options.registry = registry;
@@ -299,4 +295,3 @@ tape('teardown', t => {
   addStub.restore();
   t.end();
 });
-

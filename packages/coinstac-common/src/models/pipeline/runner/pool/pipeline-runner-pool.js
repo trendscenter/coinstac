@@ -204,7 +204,7 @@ class PipelineRunnerPool extends Base {
    */
   getDecentralizedComputation(id) {
     return this.dbRegistry.get('computations').get(id)
-    .then((comp) => this.computationRegistry.get(comp.name, comp.version));
+      .then(({ name, version }) => this.computationRegistry.add(name, version));
   }
 
   /**
