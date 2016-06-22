@@ -52,10 +52,14 @@ function getComputationsDiff(decentralizedComputations, computationDocs) {
     );
 
     if (!matchingDoc) {
-      toAdd.push(computation);
+      toAdd.push(computation.getComputationDocument());
     } else {
       // Ensure the `_id` and `_rev` are added so PouchDB does an update
-      toUpdate.push(Object.assign({}, matchingDoc, computation));
+      toUpdate.push(Object.assign(
+        {},
+        matchingDoc,
+        computation.getComputationDocument()
+      ));
     }
   });
 
@@ -106,8 +110,8 @@ function sync() {
     computationRegistryService.get().all(),
     dbRegistryService.get().get('computations').all(),
   ])
-  .then(spread(getComputationsDiff))
-  .then(patchDBWithComputationDiff);
+    .then(spread(getComputationsDiff))
+    .then(patchDBWithComputationDiff);
 }
 
 /* eslint-disable object-shorthand */
