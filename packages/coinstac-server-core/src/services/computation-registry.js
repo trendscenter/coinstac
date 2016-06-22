@@ -4,10 +4,12 @@
 * @module service/computation-registry
 */
 
+const coinstacCommon = require('coinstac-common');
 const os = require('os');
 const mkdirp = require('mkdirp-promise');
 const path = require('path');
-const coinstacCommon = require('coinstac-common');
+
+const logger = require('./logger');
 
 /**
  * @property instance ComputationRegistry instance
@@ -45,12 +47,17 @@ module.exports = {
    * @returns {Promise}
    */
   init() {
+    logger.info('Initializing computation registry');
+
     return coinstacCommon.services.computationRegistry({
       path: this.getComputationsPath(),
     })
     .then((reg) => (this.instance = reg))
     .then(() => this.upsertComputationsDir())
-    .then(() => this.get());
+    .then(() => {
+      logger.info('Computation registry set up');
+      return this.get();
+    });
   },
 
   /**
