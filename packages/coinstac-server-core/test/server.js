@@ -9,6 +9,18 @@ const url = require('url');
 
 const RemotePipelineRunnerPool =
   coinstacCommon.models.pipeline.runner.pool.RemotePipelineRunnerPool;
+const ComputationRegistry =
+  coinstacCommon.services.computationRegistry.ComputationRegistry;
+let addStub;
+
+// Stub `ComputationRegistry#add` so no network requests occur
+tape('setup', t => {
+  addStub = sinon
+    .stub(ComputationRegistry.prototype, 'add')
+    .returns(Promise.resolve());
+
+  t.end();
+});
 
 tape('works without configuration', t => {
   t.plan(3);
@@ -114,3 +126,9 @@ tape('wires up to pool events', t => {
     .then(() => t.pass('tears down'))
     .catch(t.end);
 });
+
+tape('teardown', t => {
+  addStub.restore();
+  t.end();
+});
+

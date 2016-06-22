@@ -20,6 +20,8 @@ const pdbs = require('spawn-pouchdb-server');
 const cp = require('child_process');
 const pdbsConfig = require('./.pouchdb-server-config');
 const common = require('../../../../../');
+const ComputationRegistry =
+  require('../../../../../src/services/classes/computation-registry');
 const computationRegistryFactory = common.services.computationRegistry;
 const dbRegistryFactory = common.services.dbRegistry;
 const Consortium = common.models.Consortium;
@@ -27,6 +29,8 @@ const User = common.models.User;
 const RemoteComputationResult = common.models.computation.RemoteComputationResult;
 const cloneDeep = require('lodash/cloneDeep');
 const assign = require('lodash/assign');
+const path = require('path');
+const sinon = require('sinon');
 
 /**
  * @function fail
@@ -34,32 +38,66 @@ const assign = require('lodash/assign');
  * and abandon tests
  */
 const fail = (err) => {
-    console.error(err.message);
-    console.error(err.stack);
+    console.error(err);
     process.exit(1);
 };
 
 module.exports = {
+  buildComputationRegistry: function() {
+    const registry = [{
+      name: 'my-computation',
+      tags: ['1.0.0'],
+      url: 'https://github.com/MRN-Code/coinstac-my-computation',
+    }, {
+      name: 'my-other-computation',
+      tags: ['0.5.1', '0.6.0'],
+      url: 'https://github.com/MRN-Code/coinstac-my-other-computation',
+    }];
 
-    buildComputationRegistry: function() {
-        return computationRegistryFactory({
-            registry: [{
-                name: 'my-computation',
-                tags: ['1.0.0'],
-                url: 'https://github.com/MRN-Code/coinstac-my-computation',
-            }, {
-                name: 'my-other-computation',
-                tags: ['0.5.1', '0.6.0'],
-                url: 'https://github.com/MRN-Code/coinstac-my-other-computation',
-            }]
-        })
-        .then((reg) => {
-            this.computationRegistry = reg;
-        })
-        .catch(fail);
-    },
+    /**
+     * Manually add all computations in `registry` for this "remote"-configured
+     * `ComputationRegistry`. This avoids API requests that return 404s.
+     */
+    const addStub = sinon
+      .stub(ComputationRegistry.prototype, 'add')
+      .returns(Promise.resolve());
 
-    computationRegistry: null, // see `buildComputationRegistry`
+    return computationRegistryFactory({
+      path: path.join('..', '..', '..', '..', '..', '.tmp'),
+      registry: registry,
+    })
+      .then(compReg => {
+        this.computationRegistry = compReg;
+
+        addStub.restore();
+
+        return Promise.all(registry.reduce((memo, { name, tags, url }) => {
+          return memo.concat(tags.map(version => {
+            return compReg._doAdd({
+              definition: {
+                local: {
+                  fn: () => Promise.resolve(name),
+                  type: 'function',
+                },
+                name,
+                remote: {
+                  fn: () => name,
+                  type: 'function',
+                },
+                repository: { url },
+                version,
+              },
+              name,
+              url,
+              version,
+            });
+          }));
+        }, []));
+      })
+      .catch(fail);
+  },
+
+  computationRegistry: null, // see `buildComputationRegistry`
 
     getDummyConsortium: (function() {
         var count = 0;
@@ -179,18 +217,33 @@ module.exports = {
      * computation registry's mem-store
      * @param {string} compId will be used as the name, version, and _id of the
      *                        computation in the reg
-     * @returns {undefined}
+     * @returns {Promise}
      */
     stubBasicComputation: function(compId) {
       if (!this.computationRegistry) {
         throw new ReferenceError('computationRegistry not init\'d yet');
       }
-      if (!compId) { throw new ReferenceError('compId required'); }
-      return this.computationRegistry._doAdd(compId, compId, {
-        local: { fn: (opts) => bluebird.delay(1).then(() => compId), type: 'function', },
+
+      if (!compId) {
+        throw new ReferenceError('compId required');
+      }
+
+      this.computationRegistry.registry.push({
         name: compId,
-        remote: { fn: (opts) => bluebird.delay(1).then(() => compId), type: 'function', },
-        repository: { url: 'https://github.com/test/url' },
+        tags: [compId],
+        url: 'https://github.com/test/url',
+      });
+
+      return this.computationRegistry._doAdd({
+        definition: {
+          local: { fn: (opts) => bluebird.delay(1).then(() => compId), type: 'function', },
+          name: compId,
+          remote: { fn: (opts) => bluebird.delay(1).then(() => compId), type: 'function', },
+          repository: { url: 'https://github.com/test/url' },
+          version: compId,
+        },
+        name: compId,
+        url: 'https://github.com/test/url',
         version: compId,
       });
     },

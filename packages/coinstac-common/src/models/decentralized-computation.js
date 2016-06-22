@@ -21,6 +21,19 @@ const joi = require('joi');
  * @param {string=} opts.cwd will be squashed by system
  */
 class DecentralizedComputation extends Base {
+  /**
+   * Get a serialized model suitable for saving in the 'computations' database.
+   *
+   * @returns {Object} Serialized model
+   * @property {string} name
+   * @property {string} url
+   * @property {string} version
+   */
+  getComputationDocument() {
+    const { name, repository: { url }, version } = this.serialize();
+
+    return { name, url, version };
+  }
 }
 
 DecentralizedComputation.schema = Object.assign({
