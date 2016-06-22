@@ -122,10 +122,9 @@ function computationRegistryFactory(options) {
             fields: ['name', 'version', 'url'],
             selector: { name, version },
           })
-            .then(response => {
+            .then(docs => {
               let i;
               let il;
-              const docs = response.docs;
 
               if (!docs || !docs.length) {
                 throw new Error(

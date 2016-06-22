@@ -43,39 +43,61 @@ const fail = (err) => {
 };
 
 module.exports = {
-  /**
-   * Placeholder for the `ComputationRegistry#_doAdd` stub, created so the
-   * registry doesn't make wierdo network requests.
-   *
-   * @type {(sinon.stub|null)}
-   */
-  compRegAddStub: null,
+  buildComputationRegistry: function() {
+    const registry = [{
+      name: 'my-computation',
+      tags: ['1.0.0'],
+      url: 'https://github.com/MRN-Code/coinstac-my-computation',
+    }, {
+      name: 'my-other-computation',
+      tags: ['0.5.1', '0.6.0'],
+      url: 'https://github.com/MRN-Code/coinstac-my-other-computation',
+    }];
 
-    buildComputationRegistry: function() {
-      this.compRegAddStub = sinon
-        .stub(ComputationRegistry.prototype, 'add')
-        .returns(Promise.resolve());
+    /**
+     * Manually add all computations in `registry` for this "remote"-configured
+     * `ComputationRegistry`. This avoids API requests that return 404s.
+     */
+    const addStub = sinon
+      .stub(ComputationRegistry.prototype, 'add')
+      .returns(Promise.resolve());
 
-        return computationRegistryFactory({
-            path: path.join('..', '..', '..', '..', '..', '.tmp'),
-            registry: [{
-                name: 'my-computation',
-                tags: ['1.0.0'],
-                url: 'https://github.com/MRN-Code/coinstac-my-computation',
-            }, {
-                name: 'my-other-computation',
-                tags: ['0.5.1', '0.6.0'],
-                url: 'https://github.com/MRN-Code/coinstac-my-other-computation',
-            }]
-        })
-        .then((reg) => {
-          debugger;
-            this.computationRegistry = reg;
-        })
-        .catch(fail);
-    },
+    return computationRegistryFactory({
+      path: path.join('..', '..', '..', '..', '..', '.tmp'),
+      registry: registry,
+    })
+      .then(compReg => {
+        this.computationRegistry = compReg;
 
-    computationRegistry: null, // see `buildComputationRegistry`
+        addStub.restore();
+
+        return Promise.all(registry.reduce((memo, { name, tags, url }) => {
+          return memo.concat(tags.map(version => {
+            return compReg._doAdd({
+              definition: {
+                local: {
+                  fn: () => Promise.resolve(name),
+                  type: 'function',
+                },
+                name,
+                remote: {
+                  fn: () => name,
+                  type: 'function',
+                },
+                repository: { url },
+                version,
+              },
+              name,
+              url,
+              version,
+            });
+          }));
+        }, []));
+      })
+      .catch(fail);
+  },
+
+  computationRegistry: null, // see `buildComputationRegistry`
 
     getDummyConsortium: (function() {
         var count = 0;
@@ -195,18 +217,33 @@ module.exports = {
      * computation registry's mem-store
      * @param {string} compId will be used as the name, version, and _id of the
      *                        computation in the reg
-     * @returns {undefined}
+     * @returns {Promise}
      */
     stubBasicComputation: function(compId) {
       if (!this.computationRegistry) {
         throw new ReferenceError('computationRegistry not init\'d yet');
       }
-      if (!compId) { throw new ReferenceError('compId required'); }
-      return this.computationRegistry._doAdd(compId, compId, {
-        local: { fn: (opts) => bluebird.delay(1).then(() => compId), type: 'function', },
+
+      if (!compId) {
+        throw new ReferenceError('compId required');
+      }
+
+      this.computationRegistry.registry.push({
         name: compId,
-        remote: { fn: (opts) => bluebird.delay(1).then(() => compId), type: 'function', },
-        repository: { url: 'https://github.com/test/url' },
+        tags: [compId],
+        url: 'https://github.com/test/url',
+      });
+
+      return this.computationRegistry._doAdd({
+        definition: {
+          local: { fn: (opts) => bluebird.delay(1).then(() => compId), type: 'function', },
+          name: compId,
+          remote: { fn: (opts) => bluebird.delay(1).then(() => compId), type: 'function', },
+          repository: { url: 'https://github.com/test/url' },
+          version: compId,
+        },
+        name: compId,
+        url: 'https://github.com/test/url',
         version: compId,
       });
     },
@@ -215,10 +252,6 @@ module.exports = {
       // https://github.com/hoodiehq/spawn-pouchdb-server/issues/41
       return bluebird.delay(200)
       .then(() => {
-        if (this.compRegAddStub) {
-          this.compRegAddStub.restore();
-        }
-
         return new Promise((res) => {
           this.server.stop((err) => {
             if (err) { fail(err.message); }
