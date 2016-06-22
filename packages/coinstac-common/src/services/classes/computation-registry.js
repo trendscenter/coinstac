@@ -5,13 +5,15 @@ const compact = require('lodash/compact');
 const concatStream = require('concat-stream');
 const DecentralizedComputation =
     require('../../models/decentralized-computation.js');
+const followRedirects = require('follow-redirects');
 const fs = require('fs');
 const GitHubApi = require('github');
-const https = require('https');
+const gunzipMaybe = require('gunzip-maybe');
 const mkdirp = require('mkdirp');
 const path = require('path');
 const rimraf = require('rimraf');
 const spawn = require('child_process').spawn;
+const tail = require('lodash/tail');
 const tar = require('tar-fs');
 const url = require('url');
 const values = require('lodash/values');
@@ -296,13 +298,34 @@ ComputationRegistry.prototype._getFromSource = function (name, version) {
   .then(tarballUrl => {
     return new Promise((resolve, reject) => {
       mkdirp(path, (err) => {
-        if (err) { return reject(err); }
+        if (err) {
+          reject(err);
+        } else {
+          const parsedUrl = url.parse(tarballUrl);
+          const tarExtract = tar.extract(path, {
+            map: header => {
+              // Ensure the tarball isn't unpacked into a deep directory
+              // TODO: Add test to make sure this is needed
+              header.name = tail(header.name.split('/')).join('/');
 
-        const tarExtract = tar.extract(path);
-        const request = https.request(tarballUrl).pipe(tarExtract);
+              return header;
+            },
+          });
 
-        request.on('error', reject);
-        return tarExtract.on('finish', resolve);
+          const wat = followRedirects.https.get({
+            hostname: parsedUrl.hostname,
+            path: parsedUrl.path,
+            headers: {
+              'User-Agent': 'COINSTAC',
+            },
+            protocol: parsedUrl.protocol,
+          }, res => {
+            res.pipe(gunzipMaybe()).pipe(tarExtract);
+          }).on('error', reject);
+
+          tarExtract.on('error', reject);
+          tarExtract.on('finish', resolve);
+        }
       });
     });
   })
