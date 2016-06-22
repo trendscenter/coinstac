@@ -1,16 +1,19 @@
 'use strict';
 
+const assign = require('lodash/assign');
 const compact = require('lodash/compact');
 const concatStream = require('concat-stream');
 const DecentralizedComputation =
     require('../../models/decentralized-computation.js');
+const followRedirects = require('follow-redirects');
 const fs = require('fs');
 const GitHubApi = require('github');
-const https = require('https');
+const gunzipMaybe = require('gunzip-maybe');
 const mkdirp = require('mkdirp');
 const path = require('path');
 const rimraf = require('rimraf');
 const spawn = require('child_process').spawn;
+const tail = require('lodash/tail');
 const tar = require('tar-fs');
 const url = require('url');
 const values = require('lodash/values');
@@ -213,17 +216,27 @@ function ComputationRegistry(options) {
 /**
  * Actually add a computation to the store.
  * @private
- * @param {string} name
- * @param {string} version
- * @param {object} definition Raw computation definition
+ * @param {Object} options
+ * @param {object} option.definition Raw computation definition
+ * @param {string} options.name
+ * @param {string} options.url
+ * @param {string} options.version
  * @returns {Promise} Resolves to `DecentralizedComputation` if match is found
  */
-ComputationRegistry.prototype._doAdd = function (name, version, definition) {
-  const model = new DecentralizedComputation(definition);
-
-  model.cwd = definition.cwd || this._getComputationPath(name, version);
+ComputationRegistry.prototype._doAdd = function ({
+  definition, name, url, version,
+}) {
+  const model = new DecentralizedComputation(assign(
+    {},
+    {
+      cwd: this._getComputationPath(name, version),
+      repository: { url },
+    },
+    definition
+  ));
 
   this.store[getId(name, version)] = model;
+
   return this.get(name, version);
 };
 
@@ -285,13 +298,34 @@ ComputationRegistry.prototype._getFromSource = function (name, version) {
   .then(tarballUrl => {
     return new Promise((resolve, reject) => {
       mkdirp(path, (err) => {
-        if (err) { return reject(err); }
+        if (err) {
+          reject(err);
+        } else {
+          const parsedUrl = url.parse(tarballUrl);
+          const tarExtract = tar.extract(path, {
+            map: header => {
+              // Ensure the tarball isn't unpacked into a deep directory
+              // TODO: Add test to make sure this is needed
+              header.name = tail(header.name.split('/')).join('/');
 
-        const tarExtract = tar.extract(path);
-        const request = https.request(tarballUrl).pipe(tarExtract);
+              return header;
+            },
+          });
 
-        request.on('error', reject);
-        return tarExtract.on('finish', resolve);
+          const wat = followRedirects.https.get({
+            hostname: parsedUrl.hostname,
+            path: parsedUrl.path,
+            headers: {
+              'User-Agent': 'COINSTAC',
+            },
+            protocol: parsedUrl.protocol,
+          }, res => {
+            res.pipe(gunzipMaybe()).pipe(tarExtract);
+          }).on('error', reject);
+
+          tarExtract.on('error', reject);
+          tarExtract.on('finish', resolve);
+        }
       });
     });
   })
@@ -307,31 +341,36 @@ ComputationRegistry.prototype._getFromSource = function (name, version) {
  * @returns {Promise}
  */
 ComputationRegistry.prototype.add = function (name, version) {
-  const isValid = this.registry.some(registryFilter(name, version));
+  const registryItem = this.registry.find(registryFilter(name, version));
 
   function doAdd(definition) {
-    return this._doAdd(name, version, definition); // jshint ignore:line
+    return this._doAdd({
+      definition,
+      name,
+      url: registryItem.url,
+      version,
+    });
   }
 
-    // Check registry to make sure name/version is valid
-  if (!isValid) {
+  // Check registry to make sure name/version is valid
+  if (!registryItem) {
     return Promise.reject(new Error(
-            `computation ${getId(name, version)} not in registry`
-        ));
+      `computation ${getId(name, version)} not in registry`
+    ));
   }
 
-    // Check the store to see if computation exists
+  // Check the store to see if computation exists
   return this.get(name, version)
 
-        // Check disk to see if computation is saved
-        .catch(() => {
-          return this._getFromDisk(name, version).then(doAdd.bind(this));
-        })
+    // Check disk to see if computation is saved
+    .catch(() => {
+      return this._getFromDisk(name, version).then(doAdd.bind(this));
+    })
 
-        // Download computation from source, save to Disk
-        .catch(() => {
-          return this._getFromSource(name, version).then(doAdd.bind(this));
-        });
+    // Download computation from source, save to Disk
+    .catch(() => {
+      return this._getFromSource(name, version).then(doAdd.bind(this));
+    });
 };
 
 /**

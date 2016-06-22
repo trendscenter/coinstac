@@ -19,5 +19,18 @@ module.exports = function stubComputationToRegistry(opts) {
     throw new ReferenceError('computation & registry requried');
   }
   const comp = opts.computation;
-  return opts.registry._doAdd(comp.name, comp.version, comp);
+  const url = `https://github.com/MRN-Code/${comp.name}`;
+
+  opts.registry.registry.push({
+    name: comp.name,
+    tags: [comp.version],
+    url,
+  });
+
+  return opts.registry._doAdd({
+    definition: comp,
+    name: comp.name,
+    url,
+    version: comp.version,
+  });
 };
