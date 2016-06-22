@@ -44,6 +44,7 @@ class ConsortiumSingleController extends Component {
     const { dispatch, consortium } = this.props;
     const computationId = evt.target.value;
     consortium.activeComputationId = computationId;
+
     dispatch(saveConsortium(consortium));
   }
 
