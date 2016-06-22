@@ -5,6 +5,24 @@ const sinon = require('sinon');
 const syncService = require('../../src/services/computations-database-syncer');
 const tape = require('tape');
 
+class MockDecentralizedComputation {
+  constructor(opts) {
+    this.name = opts.name;
+    this.version = opts.version;
+  }
+
+  getComputationDocument() {
+    return {
+      name: this.name,
+      version: this.version,
+    };
+  }
+
+  static factory(opts) {
+    return new MockDecentralizedComputation(opts);
+  }
+}
+
 tape('seed diffing', (t) => {
   const mockGoldenSet = [{
     name: 'a',
@@ -32,7 +50,10 @@ tape('seed diffing', (t) => {
   );
 
   t.deepEqual(
-    syncService.getComputationsDiff(mockGoldenSet, []),
+    syncService.getComputationsDiff(
+      mockGoldenSet.map(MockDecentralizedComputation.factory),
+      []
+    ),
     {
       add: mockGoldenSet,
       delete: [],
@@ -44,7 +65,7 @@ tape('seed diffing', (t) => {
 
   t.deepEqual(
     syncService.getComputationsDiff(
-      mockGoldenSet,
+      mockGoldenSet.map(MockDecentralizedComputation.factory),
       [{
         name: 'b',
         version: '0.5.0',
@@ -59,7 +80,10 @@ tape('seed diffing', (t) => {
   );
 
   t.deepEqual(
-    syncService.getComputationsDiff(mockGoldenSet, mockDeleteSet),
+    syncService.getComputationsDiff(
+      mockGoldenSet.map(MockDecentralizedComputation.factory),
+      mockDeleteSet
+    ),
     {
       add: mockGoldenSet,
       delete: mockDeleteSet.map(c => Object.assign({}, c, { _deleted: true })),
@@ -94,12 +118,3 @@ tape('patches DB', t => {
     .catch(t.end)
     .then(() => dbGetStub.restore());
 });
-
-// tape(, t => {
-//   syncService.sync()
-//
-//
-//
-//
-// });
-//
