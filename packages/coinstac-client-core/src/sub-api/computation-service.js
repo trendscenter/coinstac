@@ -40,15 +40,15 @@ class ComputationService extends ModelService {
           `Consortium "${consortium.label}" doesn't have an active computation`
         );
       }
-
+      const activeComputationId = consortium.activeComputationId;
       const runId = crypto
         .createHash('md5')
         .update(`${consortiumId}${activeComputationId}`)
-        .digest("hex");
+        .digest('hex');
 
       const result = new RemoteComputationResult({
         _id: runId,
-        computationId: consortium.activeComputationId,
+        computationId: activeComputationId,
         consortiumId,
       });
 
