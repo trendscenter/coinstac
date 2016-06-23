@@ -18,7 +18,7 @@ const computationRegistryFactory = common.services.computationRegistry;
 const registryFactory = require('coinstac-common').services.dbRegistry;
 
 // init & teardown
-const initializeAPIClient = require('./init/halfpenny').initializeAPIClient;
+const initializeAPIClient = require('./init/halfpenny');
 const teardownAuth = require('./teardown/auth');
 
 // client sub-apis
@@ -113,13 +113,28 @@ class CoinstacClient {
       );
     }
     this.logger.info('initializing coinstac-client');
+
     return Promise.resolve(bluebird.promisify(mkdirp)(this.halfpennyDirectory))
-    .then(() => this._initDBRegistry())
-    .then(() => this._initSubAPIs())
-    .then(() => this._initAuthorization(credentials))
-    .then(() => this._initComputationRegistry())
-    .then(() => this._initPool())
-    .then(() => this.auth.getUser().serialize());
+      .then(() => {
+        const hpOpts = { storagePath: this.halfpennyDirectory };
+
+        /* istanbul ignore else */
+        if (this.storage) {
+          hpOpts.storage = this.storage;
+        }
+
+        this.halfpenny = initializeAPIClient(hpOpts);
+        this.auth = new Auth({
+          halfpenny: this.halfpenny,
+        });
+
+        return this._initAuthorization(credentials);
+      })
+      .then(() => this._initDBRegistry())
+      .then(() => this._initSubAPIs())
+      .then(() => this._initComputationRegistry())
+      .then(() => this._initPool())
+      .then(() => this.auth.getUser().serialize());
   }
 
   /**
@@ -176,9 +191,11 @@ class CoinstacClient {
     // all dbs will have the returned ajax headers applied.
     const ajax = {
       ajax: function applyHawkAjaxHeaders() {
+        // debugger;
         return hawkifyPouchDB(pouchAjax, this.halfpenny.auth.getAuthCredentials());
       }.bind(this),
     };
+    // debugger;
     const regOpts = Object.assign(defaults, this.dbConfig, ajax);
     this.dbRegistry = registryFactory(regOpts);
     return this.dbRegistry;
@@ -216,16 +233,8 @@ class CoinstacClient {
       client: this,
       dbRegistry: this.dbRegistry,
     };
-    const hpOpts = { storagePath: this.halfpennyDirectory };
-    /* istanbul ignore else */
-    if (this.storage) {
-      hpOpts.storage = this.storage;
-    }
-
-    this.halfpenny = initializeAPIClient(hpOpts);
 
     // init sub-api services
-    this.auth = new Auth(subAPIConf);
     this.consortia = new ConsortiaService(subAPIConf);
     this.computations = new ComputationService(subAPIConf);
     this.projects = new ProjectServices(subAPIConf);
