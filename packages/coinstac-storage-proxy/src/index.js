@@ -10,6 +10,7 @@ const optionSchema = joi.object().keys({
 const rootPath = '/coinstacdb';
 const rootPathRegExp = new RegExp('^/coinstacdb/?($|/_rev|/_local)');
 const consortiaPath = `${rootPath}/consortia/{param*}`;
+const computationsPath = `${rootPath}/computations/{param*}`;
 const upPath = `${rootPath}/up/{param*}`;
 const upPathRegExp = new RegExp(`^${rootPath}/up/local-consortium-`);
 const downPath = `${rootPath}/down/{param*}`;
@@ -37,6 +38,7 @@ const registerRoutes = (server, options, next) => {
     handler: bouncerFactory({ allowEverybody: true, pathRegExp: rootPathRegExp }).handler,
   });
 
+  // Consortia routes.
   server.route({
     config: {
       tags: ['coinstac'],
@@ -68,6 +70,39 @@ const registerRoutes = (server, options, next) => {
     handler: bouncerFactory({ consortiumOwnersOnly: true }).handler,
   });
 
+  // Computation routes.
+  server.route({
+    config: {
+      tags: ['coinstac'],
+      auth: false,
+    },
+    path: computationsPath,
+    method: 'get',
+    handler: bouncerFactory({ allowEverybody: true }).handler,
+  });
+
+  server.route({
+    path: computationsPath,
+    method: 'put',
+    handler: bouncerFactory({ allowEverybody: true }).handler,
+  });
+
+  server.route({
+    path: computationsPath,
+    method: 'post',
+    handler: bouncerFactory({
+      consortiumOwnersOnly: true,
+      exceptionRegExp: [/_revs_diff$/, /_bulk_docs$/],
+    }).handler,
+  });
+
+  server.route({
+    path: computationsPath,
+    method: 'delete',
+    handler: bouncerFactory({ consortiumOwnersOnly: true }).handler,
+  });
+
+  // Consortium ComputationResult routes.
   server.route({
     path: upPath,
     method: 'get',
