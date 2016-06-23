@@ -21,4 +21,4 @@ function initializeAPIClient(opts) {
   return hpFactory(hpConf);
 }
 
-module.exports.initializeAPIClient = initializeAPIClient;
+module.exports = initializeAPIClient;

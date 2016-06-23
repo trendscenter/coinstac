@@ -19,14 +19,14 @@ class Auth {
   /**
    * @constructor
    * @param {object} opts
-   * @param {CoinstacClient} opts.client
+   * @param {Halfpenny} opts.halfpenny
    */
   constructor(opts) {
     /* istanbul ignore next */
-    if (!opts.client || !opts.client.halfpenny) {
+    if (!opts.halfpenny) {
       throw new ReferenceError('missing halfpenny');
     }
-    this.halfpenny = opts.client.halfpenny;
+    this.halfpenny = opts.halfpenny;
   }
 
   /**
