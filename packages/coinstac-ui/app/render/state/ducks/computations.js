@@ -32,8 +32,7 @@ export const fetchComputations = applyAsyncLoading(function fetchComputations() 
  * @returns {undefined}
  */
 export const updateComputations = ({ dispatch, toUpdate, isBg }) => {
-  const currComps = getStore().getState().computations;
-  if (!currComps) { return; }
+  const currComps = getStore().getState().computations || [];
   if (!Array.isArray(toUpdate)) {
     toUpdate = [toUpdate];
   }

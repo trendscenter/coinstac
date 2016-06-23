@@ -43,8 +43,8 @@ export const initPrivateBackgroundServices = applyAsyncLoading(
         updateComputations({ dispatch, toUpdate, isBg: true });
       });
       return Promise.all([
-        tiaDB.all().then((docs) => updateConsortia({ dispatch, docs, isBg: true })),
-        compsDB.all().then((docs) => updateComputations({ dispatch, docs, isBg: true })),
+        tiaDB.all().then((docs) => updateConsortia({ dispatch, toUpdate: docs, isBg: true })),
+        compsDB.all().then((docs) => updateComputations({ dispatch, toUpdate: docs, isBg: true })),
       ]);
     };
   }
@@ -53,5 +53,22 @@ export const initPrivateBackgroundServices = applyAsyncLoading(
 export const teardownPrivateBackgroundServices = applyAsyncLoading(
   function teardownPrivateBackgroundServices() {
     return (dispatch) => app.core.teardown(); // eslint-disable-line
+  }
+);
+
+/**
+ * Run a computation.
+ *
+ * @param {string} consortiumId Target consortium's ID. coinstac-client-core
+ * uses this to determine the computation to run.
+ * @param {string} projectId User's project's ID.  coinstac-client-core uses
+ * this to retrieve the user's project from the dbRegistry.
+ * @returns {Promise}
+ */
+export const runComputation = applyAsyncLoading(
+  function runComputationBackgroundService({ consortiumId, projectId }) {
+    return dispatch => {
+      return app.core.computations.kickoff({ consortiumId, projectId });
+    };
   }
 );

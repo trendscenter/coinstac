@@ -1,8 +1,12 @@
+'use strict';
+
 const assign = require('lodash/assign');
+const clone = require('lodash/clone');
 const ComputationRegistry =
     require('../../src/services/classes/computation-registry');
 const DecentralizedComputation =
     require('../../src/models/decentralized-computation');
+const followRedirects = require('follow-redirects');
 const fs = require('fs');
 const GitHubApi = require('github');
 const helpers = require('../helpers/computation-registry-helpers.js');
@@ -13,6 +17,7 @@ const registry = require('../mocks/decentralized-computations.json');
 const sinon = require('sinon');
 const tape = require('tape');
 const tar = require('tar-fs');
+const url = require('url');
 const values = require('lodash/values');
 
 const github = new GitHubApi({ version: '3.0.0' });
@@ -86,14 +91,26 @@ function seedInstanceComputations(instance, computations) {
  */
 function setupNetworkStubs(computationSlug) {
   const githubStub = sinon.stub(github.repos, 'getTags');
-  const requestStub = sinon.stub(https, 'request');
+  const getStub = sinon.stub(followRedirects.https, 'get');
+  const tarPacker = tar.pack(
+    path.join(MOCK_COMPUTATION_PATH, computationSlug),
+    {
+      map: header => {
+        header.name = computationSlug + '/' + header.name;
+
+        return header;
+      },
+    }
+  );
 
   githubStub.yields(null, mockApiTagResponse);
-  requestStub.returns(tar.pack(
-        path.join(MOCK_COMPUTATION_PATH, computationSlug)
-    ));
+  getStub.yields(tarPacker);
+  getStub.returns(tarPacker);
 
-  return { githubStub, requestStub };
+  return {
+    githubStub,
+    requestStub: getStub,
+  };
 }
 
 /**
@@ -107,6 +124,22 @@ function filterComputation(name, version) {
   return function _filterComputation(computation) {
     return computation.name === name && computation.version === version;
   };
+}
+
+
+/**
+ * Get a URL string from a Node.js `http.request` options hash.
+ *
+ * @param {Object} urlObject
+ * @returns {string}
+ */
+function urlToString(urlObject) {
+  const localUrlObject = clone(urlObject);
+
+  localUrlObject.pathname = localUrlObject.path;
+  delete localUrlObject.path;
+
+  return url.format(localUrlObject);
 }
 
 tape('constructor', t => {
@@ -148,20 +181,22 @@ tape('adds definition to store', t => {
   const name = registry[0].name;
   const version = registry[0].tags[1];
   const definition = require(`${MOCK_COMPUTATION_PATH}/${name}@${version}/`);
+  const url = registry[0].url;
 
-  instance._doAdd(name, version, definition)
+  instance._doAdd({ definition, name, url, version })
   .then(computation => {
     t.ok(
       computation instanceof DecentralizedComputation,
       'returns DecentralizedComputation instance'
     );
     t.ok(
-          (
-              computation.name === name &&
-              computation.version === version
-          ),
-          'instance name and version match'
-      );
+      (
+        computation.name === name &&
+        computation.repository.url === url &&
+        computation.version === version
+      ),
+      'instance name, url and version match'
+    );
     t.ok(
           values(instance.store)[0] === computation,
           'saves DecentralizedComputation to internal store'
@@ -194,7 +229,7 @@ tape('sets definition’s cwd on model', t => {
     version,
   };
 
-  instance._doAdd(name, version, definition)
+  instance._doAdd({ definition, name, version })
   .then(computation => {
     t.equal(
       computation.cwd,
@@ -244,6 +279,7 @@ tape('gets computation from source', t => {
 
   const instance = factory();
   const name = registry[2].name;
+  const itemUrl = registry[2].url;
   const version = registry[2].tags[0];
 
   const slug = `${name}@${version}`;
@@ -274,7 +310,7 @@ tape('gets computation from source', t => {
     );
 
     t.equal(
-      requestStub.firstCall.args[0],
+      urlToString(requestStub.firstCall.args[0]),
       tarballUrl,
       'requests expected tarball'
     );
@@ -327,9 +363,7 @@ tape('gets computation from source', t => {
 
   // Remove temporary test computation directory
   .then(() => t.pass('test cleanup'))
-  .catch(error => {
-    t.end(error);
-  });
+  .catch(t.end);
 });
 
 tape('handles GitHub API errors', t => {
@@ -391,6 +425,7 @@ tape('add a computation (gets from memory)', t => {
   const instance = factory();
   const mockComputations = getMockComputations();
   const name = registry[1].name;
+  const itemUrl = registry[1].url;
   const version = registry[1].tags[0];
 
   const computation = mockComputations.find(
@@ -398,7 +433,12 @@ tape('add a computation (gets from memory)', t => {
     );
 
     // Setup
-  instance._doAdd(name, version, computation)
+  instance._doAdd({
+    definition: computation,
+    name,
+    itemUrl,
+    version,
+  })
         .then(() => instance.add(name, version))
         .then(response => {
             // `response` and expected `computation` are different instances
@@ -450,7 +490,7 @@ tape('add a computation (gets from disk)', t => {
 });
 
 tape('add a computation (gets from network)', t => {
-  t.plan(5);
+  t.plan(6);
 
   const instance = factory();
   const name = 'a-small-bag';
@@ -487,10 +527,17 @@ tape('add a computation (gets from network)', t => {
                 'calls GitHub API'
             );
           t.equal(
-                requestStub.firstCall.args[0],
+                urlToString(requestStub.firstCall.args[0]),
                 expectedUrl,
                 'downloads computation from source'
             );
+          t.deepEqual(
+            requestStub.firstCall.args[0].headers,
+            {
+              'User-Agent': 'COINSTAC',
+            },
+            'adds user agent to tarball request'
+          );
           t.ok(
                 (
                     response.name === name &&

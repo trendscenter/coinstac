@@ -1,5 +1,12 @@
-import { FormControl, FormGroup, HelpBlock, ControlLabel, Button } from 'react-bootstrap';
+import {
+  Button,
+  ControlLabel,
+  FormControl,
+  FormGroup,
+  HelpBlock,
+} from 'react-bootstrap';
 import React, { Component, PropTypes } from 'react';
+
 import ConsortiumResult from './consortium-result';
 
 class ConsortiumSingle extends Component {
@@ -27,26 +34,43 @@ class ConsortiumSingle extends Component {
   }
 
   renderComputationSelect() {
-    const { computations, consortium, user } = this.props;
-    const isOwner = !!consortium.owners.find(own => own === user.username);
+    const {
+      computations,
+      consortium,
+      consortium: { activeComputationId, owners },
+      updateComputation,
+      user,
+    } = this.props;
+
+    const isOwner = owners.some(own => own === user.username);
+    let helpBlock;
+
+    if (!isOwner) {
+      helpBlock = (
+        <HelpBlock>
+          Only consortium owners can select the staged analysis.
+        </HelpBlock>
+      );
+    }
+
     return (
       <FormGroup controlId="formControlsSelect">
         <ControlLabel>Analysis</ControlLabel>
         <FormControl
           componentClass="select"
-          placeholder="Select group analysis/computation"
           disabled={!isOwner}
-          onChange={this.props.updateComputation}
+          onChange={updateComputation}
+          placeholder="Select group analysis/computation"
+          value={activeComputationId || 0}
         >
-        {computations.map((comp) => {
-          return (
-            <option value={comp._id} selected={comp._id === consortium.activeComputationId}>
-            {`${comp.name}@${comp.tags[comp.tags.length - 1]}`}
-            </option>
-          );
-        })}
+          <option disabled key="0">
+            Select group analysis/computation
+          </option>
+          {computations.map(({ _id, name, version }) => {
+            return <option key={_id} value={_id}>{name}@{version}</option>;
+          })}
         </FormControl>
-        {!isOwner ? (<HelpBlock>Only consortium owners can select the staged analysis.</HelpBlock>) : ''}
+        {helpBlock}
       </FormGroup>
     );
   }

@@ -4,6 +4,20 @@ const DecentralizedComputation =
     require('../../src/models/decentralized-computation.js');
 const tape = require('tape');
 
+function getValidOpts() {
+  return {
+    cwd: './',
+    local: {},
+    name: 'bananas',
+    remote: {},
+    repository: {
+      url: 'https://github.com/MRN-Code/bananas',
+    },
+    setup: 'node ./my-setup.js',
+    version: '1.0.0',
+  };
+}
+
 tape('model::DecentralizedComputation constructor errors', t => {
   function factory(options) {
     return new DecentralizedComputation(options);
@@ -56,17 +70,26 @@ tape('model::DecentralizedComputation constructor errors', t => {
 
 tape('model::DecentralizedComputation constructor', t => {
   t.ok(
-    new DecentralizedComputation({
-      cwd: './',
-      local: {},
-      name: 'bananas',
-      remote: {},
-      repository: {
-        url: 'https://github.com/MRN-Code/bananas',
-      },
-      setup: 'node ./my-setup.js',
-      version: '1.0.0',
-    })
+    new DecentralizedComputation(getValidOpts())
   );
   t.end();
 });
+
+tape('model::DecentralizedComputation - getComputationDocument', t => {
+  const opts = getValidOpts();
+  const decentralizedComputation = new DecentralizedComputation(opts);
+  const doc = decentralizedComputation.getComputationDocument();
+
+  t.equal(doc.constructor, Object, 'returns a POJO');
+  t.deepEqual(
+    doc,
+    {
+      name: opts.name,
+      url: opts.repository.url,
+      version: opts.version,
+    },
+    'only outputs specific props'
+  );
+  t.end();
+});
+
