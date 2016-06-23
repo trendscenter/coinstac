@@ -5,6 +5,7 @@
  */
 const common = require('coinstac-common');
 const Computation = common.models.computation.Computation;
+const crypto = require('crypto');
 const ModelService = require('../model-service');
 const RemoteComputationResult = common.models.computation.RemoteComputationResult;
 
@@ -40,7 +41,10 @@ class ComputationService extends ModelService {
         );
       }
 
-      const runId = `${consortiumId}-${activeComputationId}`;
+      const runId = crypto
+        .createHash('md5')
+        .update(`${consortiumId}${activeComputationId}`)
+        .digest("hex");
 
       const result = new RemoteComputationResult({
         _id: runId,
