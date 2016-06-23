@@ -5,7 +5,6 @@
  */
 const common = require('coinstac-common');
 const Computation = common.models.computation.Computation;
-const crypto = require('crypto');
 const ModelService = require('../model-service');
 const RemoteComputationResult = common.models.computation.RemoteComputationResult;
 
@@ -31,11 +30,6 @@ class ComputationService extends ModelService {
   kickoff({ consortiumId, projectId }) {
     const client = this.client;
 
-    // Create an unique run ID based on the parameters and date
-    const runId = crypto
-      .createHmac('sha256', `${consortiumId} ${projectId} ${Date.now()}`)
-      .digest('hex');
-
     return Promise.all([
       client.consortia.db.get(consortiumId),
       client.projects.db.get(projectId),
@@ -45,6 +39,8 @@ class ComputationService extends ModelService {
           `Consortium "${consortium.label}" doesn't have an active computation`
         );
       }
+
+      const runId = `${consortiumId}-${activeComputationId}`;
 
       const result = new RemoteComputationResult({
         _id: runId,
