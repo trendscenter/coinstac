@@ -262,7 +262,10 @@ class CoinstacClient {
         );
       });
 
-      // TODO: Ensure this is set up on new LocalPipeline...
+      this.logger.info('initializing LocalPipelineRunnerPool');
+    })
+    .then(() => this.pool.init())
+    .then(() => {
       this.pool.consortiaListener.on('delete', event => {
         this.logger.info(
           'LocalPipelineRunnerPool.consortiaListener [delete]',
@@ -277,10 +280,7 @@ class CoinstacClient {
           'Document:', event.doc
         );
       });
-
-      this.logger.info('initializing LocalPipelineRunnerPool');
-    })
-    .then(() => this.pool.init());
+    });
   }
 
   /**
