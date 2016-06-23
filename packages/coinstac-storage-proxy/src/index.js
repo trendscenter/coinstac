@@ -84,14 +84,14 @@ const registerRoutes = (server, options, next) => {
   server.route({
     path: computationsPath,
     method: 'put',
-    handler: bouncerFactory({ allowEverybody: true }).handler,
+    handler: bouncerFactory({ rejectEverybody: true }).handler,
   });
 
   server.route({
     path: computationsPath,
     method: 'post',
     handler: bouncerFactory({
-      consortiumOwnersOnly: true,
+      rejectEverybody: true,
       exceptionRegExp: [/_revs_diff$/, /_bulk_docs$/],
     }).handler,
   });
@@ -99,7 +99,7 @@ const registerRoutes = (server, options, next) => {
   server.route({
     path: computationsPath,
     method: 'delete',
-    handler: bouncerFactory({ consortiumOwnersOnly: true }).handler,
+    handler: bouncerFactory({ rejectEverybody: true }).handler,
   });
 
   // Consortium ComputationResult routes.
