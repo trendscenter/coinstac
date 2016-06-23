@@ -219,6 +219,65 @@ class CoinstacClient {
         dbRegistry: this.dbRegistry,
         user,
       });
+
+      this.pool.events.on('computation:complete', runId => {
+        this.logger.info(
+          'LocalPipelineRunnerPool.events [computation:complete]', 'Run id: %s', runId
+        );
+      });
+      this.pool.events.on('ready', () => {
+        this.logger.info('LocalPipelineRunnerPool.events [ready]');
+      });
+      this.pool.events.on('listener:created', dbName => {
+        this.logger.info(
+          'LocalPipelineRunnerPool.events [listener:created]', 'DB name: %s', dbName
+        );
+      });
+      this.pool.events.on('queue:start', runId => {
+        this.logger.info(
+          'LocalPipelineRunnerPool.events [queue:start]', 'Run id: %s', runId
+        );
+      });
+      this.pool.events.on('queue:end', runId => {
+        this.logger.info(
+          'LocalPipelineRunnerPool.events [queue:end]', 'Run id: %s', runId
+        );
+      });
+      this.pool.events.on('pipeline:inProgress', () => {
+        this.logger.info('LocalPipelineRunnerPool.events [pipeline:inProgress]');
+      });
+      this.pool.events.on('run:end', compResult => {
+        this.logger.info(
+          'LocalPipelineRunnerPool.events [run:end]', 'Computation result:', compResult
+        );
+      });
+      this.pool.events.on('computation:complete', runId => {
+        this.logger.info(
+          'LocalPipelineRunnerPool.events [computation:complete]', 'Run id: %s', runId
+        );
+      });
+      this.pool.events.on('run:start', result => {
+        this.logger.info(
+          'LocalPipelineRunnerPool.events [run:start]', 'Result:', result
+        );
+      });
+
+      // TODO: Ensure this is set up on new LocalPipeline...
+      this.pool.consortiaListener.on('delete', event => {
+        this.logger.info(
+          'LocalPipelineRunnerPool.consortiaListener [delete]',
+          'Name: %s', event.name,
+          'Document:', event.doc
+        );
+      });
+      this.pool.consortiaListener.on('change', event => {
+        this.logger.info(
+          'LocalPipelineRunnerPool.consortiaListener [change]',
+          'Name: %s', event.name,
+          'Document:', event.doc
+        );
+      });
+
       this.logger.info('initializing LocalPipelineRunnerPool');
     })
     .then(() => this.pool.init());
