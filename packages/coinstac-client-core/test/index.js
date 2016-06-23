@@ -12,6 +12,7 @@ process.on('unhandledRejection', fail);
 
 require('./model-service');
 require('./sub-api/auth');
+require('./sub-api/computation-service');
 require('./sub-api/consortia-service');
 require('./sub-api/project-service');
 require('./coinstac-client');

@@ -1,8 +1,6 @@
 import { applyAsyncLoading } from './loading.js';
 import app from 'ampersand-app';
 
-export const getDb = () => app.core.dbRegistry.get('projects');
-
 export const ADD_PROJECT = 'ADD_PROJECT';
 export const _addProject = (project) => ({ type: ADD_PROJECT, project });
 
@@ -12,24 +10,20 @@ export const setProjects = (projects) => ({ type: SET_PROJECTS, projects });
 export const REMOVE_PROJECT = 'REMOVE_PROJECT';
 export const removeProject = (project) => ({ type: REMOVE_PROJECT, project });
 
-export const addProject = applyAsyncLoading(function addProject(project, cb) {
+export const addProject = applyAsyncLoading(function addProject(project) {
   return (dispatch) => {
-    return app.core.project.add(project)
-    .then((proj) => {
-      app.notify('success', `Project '${project.name}' created`);
-      dispatch(_addProject(project));
-      return proj;
-    })
-    .catch((err) => {
-      app.notify('error', err.message);
-      throw err;
-    });
+    return app.core.projects.save(project)
+      .then((proj) => {
+        app.notify('success', `Project '${project.name}' created`);
+        dispatch(_addProject(project));
+        return proj;
+      });
   };
 });
 
 export const remove = applyAsyncLoading(function remove(project) {
   return (dispatch) => {
-    return app.core.project.delete(project)
+    return app.core.projects.delete(project)
     .then((rslt) => {
       app.notify('success', `Project '${project.name}' removed`);
       dispatch(removeProject(project));
@@ -44,30 +38,39 @@ export const remove = applyAsyncLoading(function remove(project) {
 
 export const fetch = applyAsyncLoading(function fetchProjects(cb) {
   return (dispatch) => {
-    getDb().all((err, projects) => {
-      if (err && err.length) {
-        app.notify('error', 'Failed to initialize COINSTAC-UI');
-      }
-      if (projects) { dispatch(setProjects(projects)); }
-      cb(err, projects);
-    });
+    return app.core.projects.all()
+      .then(projects => {
+        dispatch(setProjects(projects));
+        cb(null, projects);
+      })
+      .catch(error => {
+        cb(error);
+      });
   };
 });
 
-export default function reducer(state = null, action) {
-  let projects;
+/**
+ * Projects reducer.
+ *
+ * @param {Project[]} [projects]
+ * @param {Object} action
+ * @param {string} action.type One of the projects' actions
+ * @param {Project} action.project
+ * @param {Projects[]} action.projects ?
+ * @returns {Project[]}
+ */
+export default function reducer(projects = [], action) {
   switch (action.type) {
     case ADD_PROJECT:
-      projects = (state || []).push(action.project);
-      return [...projects];
+      return projects.concat(action.project);
     case SET_PROJECTS:
-      if (!action.projects) return null;
+      if (!action.projects) {
+        return projects;
+      }
       return [...action.projects];
     case REMOVE_PROJECT:
-      projects = state;
-      projects = projects.filter(proj => proj.name !== action.project.name);
-      return [...projects];
+      return projects.filter(p => p.name !== action.project.name);
     default:
-      return state;
+      return projects;
   }
 }

@@ -13,10 +13,8 @@ import Signup from './components/form-signup-controller';
 import ConsortiumSingleController from './components/consortium-single-controller';
 import DashboardProjects from './components/projects/dashboard-projects';
 import ProjectsList from './components/projects/projects-list';
-import PageProjectController from './components/projects/page-project-controller';
 import FormAddConsortiumController from './components/form-add-consortium-controller';
-import FormAddProjectController from './components/projects/form-add-project-controller';
-import FormEditProjectController from './components/projects/form-edit-project-controller';
+import FormProjectController from './components/projects/form-project-controller';
 import { Route, IndexRoute } from 'react-router';
 import React from 'react';
 
@@ -31,18 +29,8 @@ export default (
       <Route path="/consortia/:_id" component={ConsortiumSingleController} />
       <Route path="/projects" component={DashboardProjects}>
         <IndexRoute component={ProjectsList} />
-        <Route
-          path="edit/:projectId"
-          component={FormEditProjectController}
-        />
-        <Route
-          path="new"
-          component={FormAddProjectController}
-        />
-        <Route
-          path=":projectId"
-          component={PageProjectController}
-        />
+        <Route path="new" component={FormProjectController} />
+        <Route path=":projectId" component={FormProjectController} />
       </Route>
     </Route>
   </Route>

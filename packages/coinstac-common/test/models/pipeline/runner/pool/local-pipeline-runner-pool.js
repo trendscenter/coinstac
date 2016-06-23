@@ -48,83 +48,79 @@ const teardownServer = () => poolUtils.teardown();
  * to db activity
  */
 test('local-runner-pool builds & execs runners in response to db events', (t) => {
-  t.plan(4);
-  setupServer().then(() => {
-    const compId = 'testlocalrunnerpool';
-    const consortium = getDummyConsortium();
-    const runId = 'testRunDBChangeEvents';
-    const remoteComputationOpts = remoteResultOpts({
-      _id: runId,
-      computationId: compId,
-      consortiumId: consortium._id,
-    });
-    const remoteResult = new RemoteComputationResult(remoteComputationOpts);
+  const compId = 'testlocalrunnerpool';
 
+  t.plan(4);
+
+  setupServer()
     // stub in a computation, allowing LocalPipeLineRunnerPool to instantiate
     // a LocalPipeLineRunner the `local` pipline defined
-    poolUtils.computationRegistry._doAdd(compId, compId, {
-      local: { fn: (opts) => bluebird.delay(1).then(() => compId), type: 'function' },
-      name: compId,
-      remote: { fn: (opts) => compId, type: 'function' }, // eslint-disable-line
-      repository: { url: 'https://github.com/test/url' },
-      version: '1.0.0',
-    });
-
-    // create pool instance
-    const tPoolOpts = poolUtils.getPoolOpts({
-      user: poolUtils.getDummyUser(),
-      dbRegistry: { isLocal: true },
-    });
-    let pool = new LocalPipelineRunnerPool(tPoolOpts);
-    poolUtils.suppressCreateDestroyHandlers(pool);
-
-    // add in a consortium for pool to listen to events on
-    pool.dbRegistry.get('consortia')
-    .save(consortium.serialize())
-
-    // add computation to computations db
+    .then(() => poolUtils.stubBasicComputation(compId))
     .then(() => {
-      return pool.dbRegistry.get('computations')
-      .save({ _id: compId, name: compId, version: compId });
-    })
+      const consortium = getDummyConsortium();
+      const runId = 'testRunDBChangeEvents';
+      const remoteComputationOpts = remoteResultOpts({
+        _id: runId,
+        computationId: compId,
+        consortiumId: consortium._id,
+      });
+      const remoteResult = new RemoteComputationResult(remoteComputationOpts);
 
-    // initialize pool
-    // `.init` after consortia has docs s.t. listeners are auto created
-    .then(() => pool.init())
+      // create pool instance
+      const tPoolOpts = poolUtils.getPoolOpts({
+        user: poolUtils.getDummyUser(),
+        dbRegistry: { isLocal: true },
+      });
+      let pool = new LocalPipelineRunnerPool(tPoolOpts);
+      poolUtils.suppressCreateDestroyHandlers(pool);
 
-    // create new database for remote results, sync a remote result, which
-    // will trigger LocalPipeLineRunnerPool to start a new LocalPipeLineRunner
-    .then(() => {
-      return pool.dbRegistry.get('remote-consortium-' + consortium._id)
-      .save(remoteResult.serialize());
-    })
+      // add in a consortium for pool to listen to events on
+      pool.dbRegistry.get('consortia')
+      .save(consortium.serialize())
 
-    .catch(t.end);
+      // add computation to computations db
+      .then(() => {
+        return pool.dbRegistry.get('computations')
+        .save({ _id: compId, name: compId, version: compId });
+      })
 
-    // listen for the run to begin as consequence of seeing a new document
-    // @note fired twice in this test. first from the saved consortium,
-    // second from the `pool.triggerRunner` call
-    pool.events.on('run:start', () => {
-      t.pass('run started from new db document event');
+      // initialize pool
+      // `.init` after consortia has docs s.t. listeners are auto created
+      .then(() => pool.init())
+
+      // create new database for remote results, sync a remote result, which
+      // will trigger LocalPipeLineRunnerPool to start a new LocalPipeLineRunner
+      .then(() => {
+        return pool.dbRegistry.get('remote-consortium-' + consortium._id)
+        .save(remoteResult.serialize());
+      })
+
+      .catch(t.end);
+
+      // listen for the run to begin as consequence of seeing a new document
+      // @note fired twice in this test. first from the saved consortium,
+      // second from the `pool.triggerRunner` call
+      pool.events.on('run:start', () => {
+        t.pass('run started from new db document event');
+      });
+      pool.events.on('run:end', (result) => {
+        if (!result.data) {
+          // we know that the remote doc kicked off a computation, but it
+          // noop'd because there was no user data yet! stub in dummy user data
+          return pool.triggerRunner(result, { kickoff: true });
+        }
+        t.equal(
+          result.data,
+          compId,
+          'LocalPipelineRunner instantiated & returned local pipeline result'
+        );
+        return null;
+      });
+      pool.events.on('queue:end', () => {
+        pool.destroy()
+        .then(() => teardownServer())
+        .then(() => t.pass('pool teardown'))
+        .then(t.end, t.end);
+      });
     });
-    pool.events.on('run:end', (result) => {
-      if (!result.data) {
-        // we know that the remote doc kicked off a computation, but it
-        // noop'd because there was no user data yet! stub in dummy user data
-        return pool.triggerRunner(result, { kickoff: true });
-      }
-      t.equal(
-        result.data,
-        compId,
-        'LocalPipelineRunner instantiated & returned local pipeline result'
-      );
-      return null;
-    });
-    pool.events.on('queue:end', () => {
-      pool.destroy()
-      .then(() => teardownServer())
-      .then(() => t.pass('pool teardown'))
-      .then(t.end, t.end);
-    });
-  });
 });

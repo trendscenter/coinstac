@@ -36,8 +36,7 @@ export const fetchConsortia = applyAsyncLoading(function fetchConsortia() {
  * @returns {undefined}
  */
 export const updateConsortia = ({ dispatch, toUpdate, isBg }) => {
-  const currTia = getStore().getState().consortia;
-  if (!currTia) { return; }
+  const currTia = getStore().getState().consortia || [];
   if (!Array.isArray(toUpdate)) {
     toUpdate = [toUpdate];
   }

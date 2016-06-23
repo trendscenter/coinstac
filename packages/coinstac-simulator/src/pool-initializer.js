@@ -6,6 +6,7 @@ const DBRegistry = require('coinstac-common').services.dbRegistry.DBRegistry;
 DBRegistry.Pouchy.plugin(require('pouchdb-adapter-memory'));
 const dbRegistryFactory = common.services.dbRegistry;
 const computationRegistryFactory = common.services.computationRegistry;
+const path = require('path');
 
 /**
  * @private
@@ -20,15 +21,27 @@ module.exports = {
    * @returns {Promise}
    */
   getPoolOpts(opts) {
-    if (!opts) { throw new ReferenceError('opts required'); }
-    return Promise.all([
-      computationRegistryFactory({ registry: [] }),
-      this.getDBRegistry(opts.dbRegistry),
-    ])
-    .then((r) => ({
-      computationRegistry: r[0],
-      dbRegistry: r[1],
-    }));
+    if (!opts) {
+      return Promise.reject(new ReferenceError('opts required'));
+    }
+
+    const compRegOpts = {
+      path: path.join(__dirname, '..', '.tmp'),
+      registry: [],
+    };
+    const dbRegistry = this.getDBRegistry(opts.dbRegistry);
+
+    // TODO: improve `opts`
+    if (opts.dbRegistry.isLocal) {
+      compRegOpts.dbRegistry = dbRegistry;
+      compRegOpts.isLocal = true;
+    }
+
+    /* eslint-disable arrow-body-style */
+    return computationRegistryFactory(compRegOpts).then(computationRegistry => {
+      return { computationRegistry, dbRegistry };
+    });
+    /* eslint-enable arrow-body-style */
   },
 
   /**

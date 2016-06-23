@@ -26,7 +26,7 @@ export class ProjectCard extends React.Component {
                             Delete
                         </Button>
                         <LinkContainer
-                            to={`/projects/edit/${project._id}`}
+                            to={`/projects/${project._id}`}
                             query={{_id: this.props._id}}>
                             <Button bsSize="small">
                                 <span

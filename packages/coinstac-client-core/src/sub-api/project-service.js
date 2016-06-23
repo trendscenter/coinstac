@@ -9,13 +9,24 @@ const Project = require('coinstac-common').models.Project;
 const fileStats = require('../utils/file-stats');
 const includes = require('lodash/includes');
 const find = require('lodash/find');
-const isArray = require('lodash/isArray');
 
 /**
  * @class
  * @extends ModelService
  */
 class ProjectService extends ModelService {
+
+  /**
+   * Get file stats.
+   *
+   * @param {(string|string[])} filenames Collection (or single) full file paths
+   * @returns {Promise} Resolves to serialized File model(s)
+   */
+  getFileStats(filenames) {
+    return fileStats.prepare(
+      Array.isArray(filenames) ? filenames : [filenames]
+    );
+  }
 
   modelServiceHooks() {
     return {
@@ -31,23 +42,24 @@ class ProjectService extends ModelService {
    * @returns {Promise}
    */
   addFiles(project, toAdd) {
-    /* istanbul ignore else */
-    if (!isArray(toAdd)) {
-      toAdd = [toAdd];
-    }
+    let localToAdd = Array.isArray(toAdd) ? toAdd : [toAdd];
+
     // prevent duplicate file adding
-    toAdd = toAdd.filter((filename) => {
+    localToAdd = localToAdd.filter((filename) => {
       return filename && !find(project.files, { filename });
     });
 
-    if (!toAdd.length) { return Promise.resolve(project.files || []); }
-    return fileStats.prepare(toAdd)
-    .then((files) => {
-      project.files = project.files.concat(files);
-    })
-    .then(() => this.save(project))
-    .then((doc) => Object.assign(project, doc))
-    .then(() => project.files);
+    if (!localToAdd.length) {
+      return Promise.resolve(project.files || []);
+    }
+
+    return this.getFileStats(localToAdd)
+      .then((files) => {
+        project.files = project.files.concat(files);
+        return this.save(project);
+      })
+      .then((doc) => Object.assign(project, doc))
+      .then(() => project.files);
   }
 
   /**
@@ -58,7 +70,7 @@ class ProjectService extends ModelService {
    */
   removeFiles(project, toRemove) {
     /* istanbul ignore else */
-    if (!isArray(toRemove)) {
+    if (Array.isArray(toRemove)) {
       toRemove = [toRemove];
     }
 
