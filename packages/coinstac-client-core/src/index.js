@@ -18,7 +18,7 @@ const computationRegistryFactory = common.services.computationRegistry;
 const registryFactory = require('coinstac-common').services.dbRegistry;
 
 // init & teardown
-const initializeAPIClient = require('./init/halfpenny').initializeAPIClient;
+const initializeAPIClient = require('./init/halfpenny');
 const teardownAuth = require('./teardown/auth');
 
 // client sub-apis
@@ -113,13 +113,28 @@ class CoinstacClient {
       );
     }
     this.logger.info('initializing coinstac-client');
+
     return Promise.resolve(bluebird.promisify(mkdirp)(this.halfpennyDirectory))
-    .then(() => this._initDBRegistry())
-    .then(() => this._initSubAPIs())
-    .then(() => this._initAuthorization(credentials))
-    .then(() => this._initComputationRegistry())
-    .then(() => this._initPool())
-    .then(() => this.auth.getUser().serialize());
+      .then(() => {
+        const hpOpts = { storagePath: this.halfpennyDirectory };
+
+        /* istanbul ignore else */
+        if (this.storage) {
+          hpOpts.storage = this.storage;
+        }
+
+        this.halfpenny = initializeAPIClient(hpOpts);
+        this.auth = new Auth({
+          halfpenny: this.halfpenny,
+        });
+
+        return this._initAuthorization(credentials);
+      })
+      .then(() => this._initDBRegistry())
+      .then(() => this._initSubAPIs())
+      .then(() => this._initComputationRegistry())
+      .then(() => this._initPool())
+      .then(() => this.auth.getUser().serialize());
   }
 
   /**
@@ -202,9 +217,68 @@ class CoinstacClient {
         dbRegistry: this.dbRegistry,
         user,
       });
+
+      this.pool.events.on('computation:complete', runId => {
+        this.logger.verbose(
+          'LocalPipelineRunnerPool.events [computation:complete]', 'Run id: %s', runId
+        );
+      });
+      this.pool.events.on('ready', () => {
+        this.logger.verbose('LocalPipelineRunnerPool.events [ready]');
+      });
+      this.pool.events.on('listener:created', dbName => {
+        this.logger.verbose(
+          'LocalPipelineRunnerPool.events [listener:created]', 'DB name: %s', dbName
+        );
+      });
+      this.pool.events.on('queue:start', runId => {
+        this.logger.verbose(
+          'LocalPipelineRunnerPool.events [queue:start]', 'Run id: %s', runId
+        );
+      });
+      this.pool.events.on('queue:end', runId => {
+        this.logger.verbose(
+          'LocalPipelineRunnerPool.events [queue:end]', 'Run id: %s', runId
+        );
+      });
+      this.pool.events.on('pipeline:inProgress', () => {
+        this.logger.verbose('LocalPipelineRunnerPool.events [pipeline:inProgress]');
+      });
+      this.pool.events.on('run:end', compResult => {
+        this.logger.verbose(
+          'LocalPipelineRunnerPool.events [run:end]', 'Computation result:', compResult
+        );
+      });
+      this.pool.events.on('computation:complete', runId => {
+        this.logger.verbose(
+          'LocalPipelineRunnerPool.events [computation:complete]', 'Run id: %s', runId
+        );
+      });
+      this.pool.events.on('run:start', result => {
+        this.logger.verbose(
+          'LocalPipelineRunnerPool.events [run:start]', 'Result:', result
+        );
+      });
+
       this.logger.info('initializing LocalPipelineRunnerPool');
     })
-    .then(() => this.pool.init());
+    .then(() => this.pool.init())
+    .then(() => {
+      this.pool.consortiaListener.on('delete', event => {
+        this.logger.verbose(
+          'LocalPipelineRunnerPool.consortiaListener [delete]',
+          'Name: %s', event.name,
+          'Document:', event.doc
+        );
+      });
+      this.pool.consortiaListener.on('change', event => {
+        this.logger.verbose(
+          'LocalPipelineRunnerPool.consortiaListener [change]',
+          'Name: %s', event.name,
+          'Document:', event.doc
+        );
+      });
+    });
   }
 
   /**
@@ -216,16 +290,8 @@ class CoinstacClient {
       client: this,
       dbRegistry: this.dbRegistry,
     };
-    const hpOpts = { storagePath: this.halfpennyDirectory };
-    /* istanbul ignore else */
-    if (this.storage) {
-      hpOpts.storage = this.storage;
-    }
-
-    this.halfpenny = initializeAPIClient(hpOpts);
 
     // init sub-api services
-    this.auth = new Auth(subAPIConf);
     this.consortia = new ConsortiaService(subAPIConf);
     this.computations = new ComputationService(subAPIConf);
     this.projects = new ProjectServices(subAPIConf);

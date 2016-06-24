@@ -25,20 +25,16 @@ class FormLoginController extends Component {
 
     evt.preventDefault();
 
-    dispatch(authActions.login(userCred, (err, user) => {
-      if (err) {
-        return app.notifications.push({
-          level: 'error',
-          message: err.message,
+    dispatch(authActions.login(userCred))
+      .then(user => {
+        app.notifications.push({
+          message: `Welcome, ${user.label}!`,
+          level: 'success',
         });
-      }
-      router.push({ state: 'authorized' }, '/');
 
-      app.notifications.push({
-        message: `Welcome, ${user.label}!`,
-        level: 'success',
+        // TODO: Figure why `nextTick` is needed
+        process.nextTick(() => router.push('/'));
       });
-    }));
   }
   render() {
     const { loading } = this.props;
