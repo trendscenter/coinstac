@@ -4,3 +4,4 @@ node_modules
 coverage
 .nyc_output
 scripts/docs-*
+coinstac-log.json

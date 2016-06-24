@@ -42,8 +42,7 @@ const conf = convict({
       },
     },
   },
-  log: 'logs/log.json',
-  logFile: 'constac-log.json',
+  logFile: 'coinstac-log.json',
 });
 
 if (!process.env.NODE_ENV === 'development') {
