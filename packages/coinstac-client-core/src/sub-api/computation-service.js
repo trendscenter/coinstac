@@ -31,11 +31,6 @@ class ComputationService extends ModelService {
   kickoff({ consortiumId, projectId }) {
     const client = this.client;
 
-    // Create an unique run ID based on the parameters and date
-    const runId = crypto
-      .createHmac('sha256', `${consortiumId} ${projectId} ${Date.now()}`)
-      .digest('hex');
-
     return Promise.all([
       client.consortia.db.get(consortiumId),
       client.projects.db.get(projectId),
@@ -45,10 +40,15 @@ class ComputationService extends ModelService {
           `Consortium "${consortium.label}" doesn't have an active computation`
         );
       }
+      const activeComputationId = consortium.activeComputationId;
+      const runId = crypto
+        .createHash('md5')
+        .update(`${consortiumId}${activeComputationId}`)
+        .digest('hex');
 
       const result = new RemoteComputationResult({
         _id: runId,
-        computationId: consortium.activeComputationId,
+        computationId: activeComputationId,
         consortiumId,
       });
 

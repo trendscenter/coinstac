@@ -175,13 +175,13 @@ class DBRegistry {
       defaultsDeep(conf, this.remote);
       conf.replicate = { in: defaultsDeep({}, this.replicationOpts, syncDefaults) };
       conf.url = conf.url || url.format(
-        assign({}, this.remote.db, { pathname: remoteDownPrefix + conf.name })
+        assign({}, this.remote.db, { pathname: rootRemoteDBPathname + '/' + conf.name })
       );
     } else if (this.isSyncOutStore(connStr)) {
       defaultsDeep(conf, this.remote);
       conf.replicate = { out: defaultsDeep({}, this.replicationOpts, syncDefaults) };
       conf.url = conf.url || url.format(
-        assign({}, this.remote.db, { pathname: remoteUpPrefix + conf.name })
+        assign({}, this.remote.db, { pathname: rootRemoteDBPathname + '/' + conf.name })
       );
     } else {
       /* istanbul ignore next */
