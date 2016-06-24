@@ -19,37 +19,32 @@ const conf = convict({
   env: {
     doc: 'The applicaton environment.',
     format: ['production', 'development'],
-    default: 'development',
+    default: 'production',
     env: 'NODE_ENV',
   },
   api: {
-    protocol: 'https',
-    hostname: 'localcoin.mrn.org',
-    port: 8443,
+    hostname: 'coins-api.mrn.org',
+    pathname: '/api/v1.3.0',
+    protocol: 'https:',
   },
   db: {
     remote: {
       db: {
-        protocol: 'http',
-        hostname: 'localhost',
-        port: 443,
-        pathname: 'coinstacdb',
-      },
+        hostname: 'coinstac.mrn.org',
+        pathname: '',
+        protocol: 'https:',
+      }
     },
-    local: {
-      pouchConfig: {
-        db: 'memdown',
-      },
-    },
+    noURLPrefix: true
   },
   logFile: 'coinstac-log.json',
 });
 
-if (!process.env.NODE_ENV === 'development') {
-  conf.set('db', { remote: { protocol: 'https', hostname: 'coinsapi.mrn.org', pathname: 'coinstacdb' } });
-}
-
 module.exports = function loadConfig() {
+  if (conf.get('env') === 'production') {
+    return Promise.resolve(conf);
+  }
+
   return fileExists(localConfig)
   .then(exists => {
     if (exists) {

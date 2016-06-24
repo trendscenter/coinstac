@@ -34,6 +34,7 @@ app/index.html
 npm-debug*
 
 # Configuration files
+config/*local.json
 *.log
 *log.json
 
