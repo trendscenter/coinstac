@@ -7,24 +7,12 @@ const path = require('path');
 const rimraf = require('rimraf');
 const superagent = require('superagent');
 
-const COMPUTATIONS_DIRECTORY = path.join(
-  os.tmpdir(),
-  'coinstac-server-core',
-  'computations'
-);
-
-const DATABASE_DIRECTORY = path.join(
-  os.tmpdir(),
-  'coinstac-server-core',
-  'dbs'
-);
-
 async.parallel([
   cb1 => {
     async.parallel([
       cb1a => {
         console.log('Removing database dir…');
-        rimraf(DATABASE_DIRECTORY, error => {
+        rimraf(path.join(os.tmpDir(), 'coinstac'), error => {
           if (error) {
             cb1a(error);
           } else {
@@ -35,7 +23,7 @@ async.parallel([
       },
       cb1b => {
         console.log('Removing computations dir…');
-        rimraf(COMPUTATIONS_DIRECTORY, error => {
+        rimraf(path.join(os.tmpDir(), 'coinstac-server-core'), error => {
           if (error) {
             cb1b(error);
           } else {
