@@ -191,11 +191,9 @@ class CoinstacClient {
     // all dbs will have the returned ajax headers applied.
     const ajax = {
       ajax: function applyHawkAjaxHeaders() {
-        // debugger;
         return hawkifyPouchDB(pouchAjax, this.halfpenny.auth.getAuthCredentials());
       }.bind(this),
     };
-    // debugger;
     const regOpts = Object.assign(defaults, this.dbConfig, ajax);
     this.dbRegistry = registryFactory(regOpts);
     return this.dbRegistry;
@@ -221,43 +219,43 @@ class CoinstacClient {
       });
 
       this.pool.events.on('computation:complete', runId => {
-        this.logger.info(
+        this.logger.verbose(
           'LocalPipelineRunnerPool.events [computation:complete]', 'Run id: %s', runId
         );
       });
       this.pool.events.on('ready', () => {
-        this.logger.info('LocalPipelineRunnerPool.events [ready]');
+        this.logger.verbose('LocalPipelineRunnerPool.events [ready]');
       });
       this.pool.events.on('listener:created', dbName => {
-        this.logger.info(
+        this.logger.verbose(
           'LocalPipelineRunnerPool.events [listener:created]', 'DB name: %s', dbName
         );
       });
       this.pool.events.on('queue:start', runId => {
-        this.logger.info(
+        this.logger.verbose(
           'LocalPipelineRunnerPool.events [queue:start]', 'Run id: %s', runId
         );
       });
       this.pool.events.on('queue:end', runId => {
-        this.logger.info(
+        this.logger.verbose(
           'LocalPipelineRunnerPool.events [queue:end]', 'Run id: %s', runId
         );
       });
       this.pool.events.on('pipeline:inProgress', () => {
-        this.logger.info('LocalPipelineRunnerPool.events [pipeline:inProgress]');
+        this.logger.verbose('LocalPipelineRunnerPool.events [pipeline:inProgress]');
       });
       this.pool.events.on('run:end', compResult => {
-        this.logger.info(
+        this.logger.verbose(
           'LocalPipelineRunnerPool.events [run:end]', 'Computation result:', compResult
         );
       });
       this.pool.events.on('computation:complete', runId => {
-        this.logger.info(
+        this.logger.verbose(
           'LocalPipelineRunnerPool.events [computation:complete]', 'Run id: %s', runId
         );
       });
       this.pool.events.on('run:start', result => {
-        this.logger.info(
+        this.logger.verbose(
           'LocalPipelineRunnerPool.events [run:start]', 'Result:', result
         );
       });
@@ -267,14 +265,14 @@ class CoinstacClient {
     .then(() => this.pool.init())
     .then(() => {
       this.pool.consortiaListener.on('delete', event => {
-        this.logger.info(
+        this.logger.verbose(
           'LocalPipelineRunnerPool.consortiaListener [delete]',
           'Name: %s', event.name,
           'Document:', event.doc
         );
       });
       this.pool.consortiaListener.on('change', event => {
-        this.logger.info(
+        this.logger.verbose(
           'LocalPipelineRunnerPool.consortiaListener [change]',
           'Name: %s', event.name,
           'Document:', event.doc
