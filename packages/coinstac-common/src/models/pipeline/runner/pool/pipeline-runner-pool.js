@@ -581,7 +581,7 @@ class PipelineRunnerPool extends Base {
   }
 
   /**
-   * Runs the env specific pipleine runner
+   * Runs the env specific pipeline runner
    * @private
    * @param {object} input
    * @param {ComputationResult} input.result
