@@ -3,5 +3,9 @@
     "name": "bisect-converge",
     "tags": ["2.0.2"],
     "url": "https://github.com/MRN-Code/coinstac-example-computation-bisect-converge"
+  }, {
+    "name": "decentralized-laplacian-ridge-regression",
+    "tags": ["2.0.0"],
+    "url": "https://github.com/MRN-Code/decentralized-laplacian-ridge-regression"
   }
 ]
