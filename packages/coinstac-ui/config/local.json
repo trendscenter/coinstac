@@ -1,0 +1,23 @@
+{
+  "api": {
+    "hostname": "coins-api.mrn.org",
+    "port": 443,
+    "pathname": "/api/v1.3.0",
+    "protocol": "https:"
+  },
+  "db": {
+    "remote": {
+      "db": {
+        "hostname": "coinstac.mrn.org",
+        "port": 443,
+        "protocol": "https:",
+        "pathname": ""
+      }
+    },
+    "noURLPrefix": true
+  },
+  "testUser": {
+    "username": "mochatest",
+    "password": "mochapassword"
+  }
+}
