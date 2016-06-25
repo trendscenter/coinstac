@@ -41,18 +41,29 @@ class ComputationService extends ModelService {
         );
       }
       const activeComputationId = consortium.activeComputationId;
-      const runId = crypto
-        .createHash('md5')
-        .update(`${consortiumId}${activeComputationId}`)
-        .digest('hex');
 
-      const result = new RemoteComputationResult({
-        _id: runId,
-        computationId: activeComputationId,
-        consortiumId,
-      });
+      return client.dbRegistry.get(`remote-consortium-${consortiumId}`)
+        .find({
+          selector: { completed: false },
+        })
+        .then(docs => {
+          if (!docs || !docs.length) {
+            return crypto
+              .createHash('md5')
+              .update(`${consortiumId}${activeComputationId}${Date.now()}`)
+              .digest('hex');
+          }
 
-      return client.pool.triggerRunner(result, project);
+          return docs[0]._id;
+        })
+        .then(runId => {
+          const result = new RemoteComputationResult({
+            _id: runId,
+            computationId: activeComputationId,
+            consortiumId,
+          });
+          return client.pool.triggerRunner(result, project);
+        });
     });
   }
 }
