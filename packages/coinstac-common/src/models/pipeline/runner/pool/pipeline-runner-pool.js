@@ -32,6 +32,7 @@ const PLUGINS = require('../../plugins');
  *
  * @event PipelineRunnerPool#computation:complete
  * @param {string} runId
+ * @param {string} consortiumId
  */
 
 /**
@@ -285,7 +286,11 @@ class PipelineRunnerPool extends Base {
 
     /* istanbul ignore next */
     if (result.data && result.data.complete) {
-      this.events.emit('computation:complete', result.runId);
+      this.events.emit(
+        'computation:complete',
+        result.runId,
+        result.consortiumId
+      );
       return null;
     }
 
@@ -604,7 +609,11 @@ class PipelineRunnerPool extends Base {
     const _runEmitRunEnd = (compRslt) => {
       this.events.emit('run:end', compRslt);
       if (compRslt.data && compRslt.data.complete) {
-        this.events.emit('computation:complete', compRslt.runId);
+        this.events.emit(
+          'computation:complete',
+          compRslt.runId,
+          compRslt.consortiumId
+        );
       }
       configureRunBindings('removeListener'); // eslint-disable-line
       hasHalted = true;
