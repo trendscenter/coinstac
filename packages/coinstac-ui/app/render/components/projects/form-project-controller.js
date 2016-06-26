@@ -2,6 +2,7 @@ import app from 'ampersand-app';
 import clone from 'lodash/clone';
 import { connect } from 'react-redux';
 import React, { Component, PropTypes } from 'react';
+import noop from 'lodash/noop';
 
 import { runComputation } from '../../state/ducks/bg-services';
 import { addProject } from '../../state/ducks/projects';
@@ -22,6 +23,9 @@ class FormProjectController extends Component {
         files: [],
         name: '',
       },
+
+      // TODO: Drop state item
+      showFilesComponent: false,
     };
 
     /**
@@ -43,6 +47,10 @@ class FormProjectController extends Component {
     this.handleSubmit = this.handleSubmit.bind(this);
   }
 
+  componentWillMount() {
+    this.maybeShowFilesComponent(this.state.project.consortiumId);
+  }
+
   /**
    * Set state.
    *
@@ -54,6 +62,9 @@ class FormProjectController extends Component {
     super.setState({
       errors: Object.assign({}, this.state.errors, newState.errors),
       project: Object.assign({}, this.state.project, newState.project),
+      showFilesComponent: typeof newState.showFilesComponent !== 'undefined' ?
+        newState.showFilesComponent :
+        this.state.showFilesComponent,
     });
   }
 
@@ -81,6 +92,7 @@ class FormProjectController extends Component {
     this.setState({
       project: { consortiumId },
     });
+    this.maybeShowFilesComponent(consortiumId);
   }
 
   handleNameChange(event) {
@@ -153,9 +165,34 @@ class FormProjectController extends Component {
     }
   }
 
+  maybeShowFilesComponent(consortiumId) {
+    const { consortia } = this.props;
+
+    if (consortiumId) {
+      const consortium = consortia.find(c => c._id === consortiumId);
+
+      /**
+       * Show files component if needed.
+       *
+       * @todo This is for the demo. Determine a better method for UI based on
+       * the computation definition.
+       */
+      if (consortium && consortium.activeComputationId) {
+        app.core.dbRegistry.get('computations')
+          .get(consortium.activeComputationId)
+          .then(computation => {
+            this.setState({
+              showFilesComponent:
+                computation.name.indexOf('ridge-regression') > -1,
+            });
+          }, noop);
+      }
+    }
+  }
+
   render() {
     const { consortia, params } = this.props;
-    const { errors, project } = this.state;
+    const { errors, project, showFilesComponent } = this.state;
 
     const allowComputationRun = !!params.projectId;
     const isEditing = !!params.projectId;
@@ -174,6 +211,7 @@ class FormProjectController extends Component {
         onRunComputation={this.handleRunComputation}
         onSubmit={this.handleSubmit}
         project={project}
+        showFilesComponent={showFilesComponent}
       />
     );
   }
