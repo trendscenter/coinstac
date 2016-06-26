@@ -68,8 +68,13 @@ export default class FormProject extends Component {
       onAddFiles,
       onRemoveFile,
       project: { files },
+      showFilesComponent,
     } = this.props;
     let helpBlock;
+
+    if (!showFilesComponent) {
+      return;
+    }
 
     if (filesError) {
       helpBlock = <HelpBlock>{filesError}</HelpBlock>;
@@ -77,7 +82,15 @@ export default class FormProject extends Component {
 
     return (
       <div>
-        <Button onClick={onAddFiles} type="button">Add Files</Button>
+        <div className="clearfix">
+          <Button
+            className="pull-right"
+            onClick={onAddFiles}
+            type="button"
+          >
+            Add Files
+          </Button>
+        </div>
         <ProjectFiles files={files} onRemoveFileClick={onRemoveFile} />
         {helpBlock}
       </div>
@@ -152,4 +165,5 @@ FormProject.propTypes = {
   onRunComputation: PropTypes.func.isRequired,
   onSubmit: PropTypes.func.isRequired,
   project: PropTypes.object.isRequired,
+  showFilesComponent: PropTypes.bool.isRequired,
 };

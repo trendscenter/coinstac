@@ -83,23 +83,27 @@ export default class ProjectFiles extends Component {
       data = sortColumn.sort(data, sortingColumn, orderBy);
     }
 
+    // TODO: Re-style and insert
+    const searchHeader = ( // eslint-disable-line
+      <div>
+        <Search
+          columns={columns}
+          data={data}
+          onChange={this.onSearchChange}
+          ref="table-search"
+        />
+        <Button
+          bsStyle="default"
+          bsSize="small"
+          onClick={this.onClearSearchClick}
+          title="Clear search">
+          ×
+        </Button>
+      </div>
+    );
+
     return (
       <div>
-        <div>
-          <Search
-            columns={columns}
-            data={data}
-            onChange={this.onSearchChange}
-            ref="table-search"
-          />
-          <Button
-            bsStyle="default"
-            bsSize="small"
-            onClick={this.onClearSearchClick}
-            title="Clear search">
-            ×
-          </Button>
-        </div>
         <Table
           className="table table-striped"
           columns={columns}
