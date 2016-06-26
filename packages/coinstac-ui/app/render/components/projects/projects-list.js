@@ -10,6 +10,7 @@ import {
 import { ProjectCard } from './project-card.js';
 import { hilarious } from 'app/render/utils/hilarious-loading-messages.js';
 import app from 'ampersand-app';
+import { runComputation } from '../../state/ducks/bg-services';
 
 class ProjectsList extends Component {
   constructor(props) {
@@ -41,6 +42,22 @@ class ProjectsList extends Component {
     dispatch(removeProject(project));
   }
 
+  /**
+   * Run a computation.
+   *
+   * @param {Object} project
+   * @param {string} project._id
+   * @param {string} project.consortiumId
+   */
+  runComputation({ _id: projectId, consortiumId }) {
+    const { dispatch } = this.props;
+
+    dispatch(runComputation({ consortiumId, projectId }))
+      .catch((err) => {
+        app.notify('error', err.message);
+      });
+  }
+
   render() {
     const { projects } = this.props;
 
@@ -58,12 +75,15 @@ class ProjectsList extends Component {
         </LinkContainer>
         <div className="projects-list">
           {projects.map(project => {
+            const canRunComputation = true;
             return (
               <ProjectCard
+                canRunComputation={canRunComputation}
                 id={project._id}
                 key={`project-card-${project._id}`}
                 name={project.name}
                 removeProject={() => this.delete(project)}
+                runComputation={() => this.runComputation(project)}
               />
             );
           })}
