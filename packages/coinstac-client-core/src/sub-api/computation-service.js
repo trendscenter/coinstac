@@ -41,7 +41,7 @@ class ComputationService extends ModelService {
         );
       }
       const activeComputationId = consortium.activeComputationId;
-      const isConsortiumOwner = consortium.users.indexOf(client.auth.getUser().username) > -1;
+      const isConsortiumOwner = consortium.owners.indexOf(client.auth.getUser().username) > -1;
 
       return client.dbRegistry.get(`remote-consortium-${consortiumId}`)
         .find({
