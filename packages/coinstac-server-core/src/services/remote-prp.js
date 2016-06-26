@@ -30,31 +30,54 @@ module.exports = {
     this.pool = new RemotePipelineRunnerPool({ computationRegistry, dbRegistry });
 
     // Wire up event listeneres
-    this.pool.events.on('run:start', computationResult => {
-      /* istanbul ignore next */
-      logger.info(
-        'PipelineRunner starting run',
-        computationResult.serialize()
+    this.pool.events.on('computation:complete', runId => {
+      logger.verbose(
+        'RemotePipelineRunnerPool.events [computation:complete]', 'Run id: %s', runId
       );
     });
-    this.pool.events.on('run:end', computationResult => {
-      /* istanbul ignore next */
-      logger.info(
-        'PipelineRunner ending run',
-        computationResult.serialize()
+    this.pool.events.on('ready', () => {
+      logger.verbose('RemotePipelineRunnerPool.events [ready]');
+    });
+    this.pool.events.on('listener:created', dbName => {
+      logger.verbose(
+        'RemotePipelineRunnerPool.events [listener:created]', 'DB name: %s', dbName
       );
     });
     this.pool.events.on('queue:start', runId => {
-      /* istanbul ignore next */
-      logger.info('Starting queue', runId);
+      logger.verbose(
+        'RemotePipelineRunnerPool.events [queue:start]', 'Run id: %s', runId
+      );
     });
     this.pool.events.on('queue:end', runId => {
-      /* istanbul ignore next */
-      logger.info('Ending queue', runId);
+      logger.verbose(
+        'RemotePipelineRunnerPool.events [queue:end]', 'Run id: %s', runId
+      );
     });
-    this.pool.events.on('pipeline:inProgress', runId => {
-      /* istanbul ignore next */
-      logger.info('Pipeline progressing', runId);
+    this.pool.events.on('pipeline:inProgress', () => {
+      logger.verbose('RemotePipelineRunnerPool.events [pipeline:inProgress]');
+    });
+    this.pool.events.on('run:end', compResult => {
+      logger.verbose(
+        'RemotePipelineRunnerPool.events [run:end]', 'Computation result:', compResult
+      );
+    });
+    this.pool.events.on('computation:complete', runId => {
+      logger.verbose(
+        'RemotePipelineRunnerPool.events [computation:complete]', 'Run id: %s', runId
+      );
+    });
+    this.pool.events.on('computation:markedComplete', runId => {
+      logger.verbose(
+        'RemotePipelineRunnerPool.events [computation:markedComplete]', 'Run id: %s', runId
+      );
+    });
+    this.pool.events.on('error', error => {
+      logger.verbose('RemotePipelineRunnerPool.events [error]', error);
+    });
+    this.pool.events.on('run:start', result => {
+      logger.verbose(
+        'RemotePipelineRunnerPool.events [run:start]', 'Result:', result
+      );
     });
 
     logger.info('initializing RemotePipelineRunnerPool…');
