@@ -5,7 +5,13 @@ import { LinkContainer } from 'react-router-bootstrap';
 
 export class ProjectCard extends Component {
   render() {
-    const { id, name, removeProject } = this.props;
+    const {
+      canRunComputation,
+      id,
+      name,
+      removeProject,
+      runComputation,
+    } = this.props;
 
     return (
       <div className="project panel panel-default">
@@ -14,27 +20,51 @@ export class ProjectCard extends Component {
             <Link to={`/projects/${id}`}>{name}</Link>
           </h4>
           <p>ID: {id}</p>
-          <ButtonToolbar>
-            <Button
-              bsSize="small"
-              bsStyle="danger"
-              onClick={removeProject}
-            >
-              Delete
-            </Button>
-            <LinkContainer
-              to={`/projects/${id}`}
-            >
-              <Button bsSize="small">
+          <div className="clearfix">
+            <ButtonToolbar className="pull-left">
+              <Button
+                bsSize="small"
+                bsStyle="danger"
+                onClick={removeProject}
+              >
                 <span
-                  className="glyphicon glyphicon-cog"
+                  className="glyphicon glyphicon-trash"
                   aria-hidden="true"
                 >
                 </span>
-                Edit
+                {' '}
+                Delete
               </Button>
-            </LinkContainer>
-          </ButtonToolbar>
+              <LinkContainer
+                to={`/projects/${id}`}
+              >
+                <Button bsSize="small">
+                  <span
+                    className="glyphicon glyphicon-cog"
+                    aria-hidden="true"
+                  >
+                  </span>
+                  {' '}
+                  Edit
+                </Button>
+              </LinkContainer>
+            </ButtonToolbar>
+            <Button
+              bsSize="small"
+              bsStyle="primary"
+              className="pull-right"
+              disabled={!canRunComputation}
+              onClick={runComputation}
+            >
+              <span
+                className="glyphicon glyphicon-repeat"
+                aria-hidden="true"
+              >
+              </span>
+              {' '}
+              Run Computation
+            </Button>
+          </div>
         </div>
       </div>
     );
@@ -42,7 +72,9 @@ export class ProjectCard extends Component {
 }
 
 ProjectCard.propTypes = {
+  canRunComputation: PropTypes.bool.isRequired,
   id: PropTypes.string.isRequired,
   name: PropTypes.string.isRequired,
   removeProject: PropTypes.func.isRequired,
+  runComputation: PropTypes.func.isRequired,
 };
