@@ -5,7 +5,9 @@
   "main": "src/index.js",
   "bin": "bin/coinstac-server-core",
   "scripts": {
-    "clean": "node scripts/clean.js",
+    "clean": "npm run clean:computations && npm run clean:db",
+    "clean:db": "node scripts/clean-db.js",
+    "clean:computations": "node scripts/clean-computations.js",
     "lint": "eslint bin/coinstac-server-core scripts src test",
     "test": "nyc --reporter=lcov --check-coverage --functions=90 --branches=90 node test/",
     "lintfix": "eslint --fix src/ test/",
