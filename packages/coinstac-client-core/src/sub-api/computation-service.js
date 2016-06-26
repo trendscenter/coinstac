@@ -41,6 +41,7 @@ class ComputationService extends ModelService {
         );
       }
       const activeComputationId = consortium.activeComputationId;
+      const isConsortiumOwner = consortium.users.indexOf(client.auth.getUser().username) > -1;
 
       return client.dbRegistry.get(`remote-consortium-${consortiumId}`)
         .find({
@@ -50,6 +51,10 @@ class ComputationService extends ModelService {
         })
         .then(docs => {
           if (!docs || !docs.length) {
+            if (!isConsortiumOwner) {
+              throw new Error('Only consortium owners can start!');
+            }
+
             return crypto
               .createHash('md5')
               .update(`${consortiumId}${activeComputationId}${Date.now()}`)
