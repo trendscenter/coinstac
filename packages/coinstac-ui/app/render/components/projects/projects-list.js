@@ -60,10 +60,10 @@ class ProjectsList extends Component {
           {projects.map(project => {
             return (
               <ProjectCard
+                id={project._id}
                 key={`project-card-${project._id}`}
-                {...this.props}
-                project={project}
-                delete={() => this.delete(project)}
+                name={project.name}
+                removeProject={() => this.delete(project)}
               />
             );
           })}
