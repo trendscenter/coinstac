@@ -126,9 +126,6 @@ class FormProjectController extends Component {
     const { project: { consortiumId } } = this.state;
 
     dispatch(runComputation({ consortiumId, projectId }))
-      .then(() => {
-        app.notify('info', 'Computation run complete!');
-      })
       .catch((err) => {
         app.notify('error', err.message);
       });

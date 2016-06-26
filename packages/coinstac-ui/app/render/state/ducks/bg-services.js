@@ -3,6 +3,7 @@ import { applyAsyncLoading } from './loading';
 import { updateConsortia } from './consortia';
 import { updateComputations } from './computations';
 import cloneDeep from 'lodash/cloneDeep';
+import { hashHistory } from 'react-router';
 
 export const listenToConsortia = (tia) => {
   app.core.pool.listenToConsortia(tia);
@@ -68,7 +69,53 @@ export const teardownPrivateBackgroundServices = applyAsyncLoading(
 export const runComputation = applyAsyncLoading(
   function runComputationBackgroundService({ consortiumId, projectId }) {
     return dispatch => {
-      return app.core.computations.kickoff({ consortiumId, projectId });
+      // Unfortunately, requires we `get` the document for its label
+      app.core.dbRegistry.get('consortia').get(consortiumId)
+        .then(consortium => {
+          /**
+           * Add notifications for computation runs and completion.
+           *
+           * @todo Consider moving the notifications to a better location.
+           */
+          function runError(error) {
+            app.notifications.push({
+              autoDismiss: 1,
+              level: 'error',
+              message: `Error running computation for “${consortium.label}”: ${error.message}`,
+            });
+          }
+          function runEnd() {
+            app.notifications.push({
+              autoDismiss: 1,
+              level: 'info',
+              message: `Ran computation for “${consortium.label}”`,
+            });
+          }
+
+          app.notifications.push({
+            autoDismiss: 1,
+            level: 'info',
+            message: `Starting computation for “${consortium.label}”`,
+          });
+
+          app.core.pool.events.on('run:end', runEnd);
+          app.core.pool.events.on('error', runError);
+          app.core.pool.events.once('computation:complete', () => {
+            app.notifications.push({
+              action: {
+                label: 'View Results',
+                callback: () => hashHistory.push(`/consortia/${consortiumId}`),
+              },
+              autoDismiss: 3,
+              level: 'success',
+              message: `Computation for “${consortium.label}” complete`,
+            });
+            app.core.pool.events.removeListener('run:end', runEnd);
+            app.core.pool.events.removeListener('error', runError);
+          });
+
+          return app.core.computations.kickoff({ consortiumId, projectId });
+        });
     };
   }
 );
