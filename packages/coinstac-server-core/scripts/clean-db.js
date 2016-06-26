@@ -9,30 +9,15 @@ const superagent = require('superagent');
 
 async.parallel([
   cb1 => {
-    async.parallel([
-      cb1a => {
-        console.log('Removing database dir…');
-        rimraf(path.join(os.tmpDir(), 'coinstac'), error => {
-          if (error) {
-            cb1a(error);
-          } else {
-            console.log('Database dir removed');
-            cb1a(null);
-          }
-        });
-      },
-      cb1b => {
-        console.log('Removing computations dir…');
-        rimraf(path.join(os.tmpDir(), 'coinstac-server-core'), error => {
-          if (error) {
-            cb1b(error);
-          } else {
-            console.log('Computations dir removed');
-            cb1b(null);
-          }
-        });
-      },
-    ], cb1);
+    console.log('Removing database dir…');
+    rimraf(path.join(os.tmpDir(), 'coinstac'), error => {
+      if (error) {
+        cb1(error);
+      } else {
+        console.log('Database dir removed');
+        cb1(null);
+      }
+    });
   },
   cb2 => {
     async.waterfall([
@@ -73,4 +58,3 @@ async.parallel([
   }
 });
 /* eslint-enable no-console */
-
