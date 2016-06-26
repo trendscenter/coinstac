@@ -45,7 +45,7 @@ class ComputationService extends ModelService {
       return client.dbRegistry.get(`remote-consortium-${consortiumId}`)
         .find({
           selector: {
-            'data.complete': false,
+            complete: false,
           },
         })
         .then(docs => {
