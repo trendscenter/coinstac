@@ -74,6 +74,7 @@ class CoinstacClient {
     this.dbRegistry = {};
     this.halfpenny = {};
     this.projects = {};
+    this.pool = {};
 
     /* istanbul ignore if */
     if (opts.logLevel) {
