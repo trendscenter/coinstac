@@ -17,6 +17,15 @@ const rl = readline.createInterface({ // eslint-disable-line no-unused-vars
   output: process.stdout,
 });
 
+/**
+ * Winston's valid log levels.
+ *
+ * {@link https://www.npmjs.com/package/winston#logging-levels}
+ *
+ * @const {string[]}
+ */
+const VALID_LOG_LEVELS = ['error', 'warn', 'info', 'verbose', 'debug', 'silly'];
+
 const config = {};
 
 /**
@@ -47,6 +56,7 @@ process.on('exit', () => {
 program
   .version(pkg.version)
   .option('-db, --database [value]', 'Database connection string')
+  .option('-l, --loglevel [value]', `Log level ${VALID_LOG_LEVELS.toString()}`)
   .option('-m, --memory', 'Use in-memory database')
   .option('-s, --seed [value]', 'Seed the consortiameta database');
 
@@ -72,6 +82,13 @@ program.parse(process.argv);
 
 if (typeof program.database === 'string') {
   config.dbUrl = program.database;
+}
+
+if (
+  typeof program.loglevel === 'string' &&
+  VALID_LOG_LEVELS.indexOf(program.loglevel) > -1
+) {
+  logger.transports.console.level = program.loglevel;
 }
 
 if (program.memory) {
