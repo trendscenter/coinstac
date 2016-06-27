@@ -12,20 +12,27 @@ import ConsortiumResult from './consortium-result';
 class ConsortiumSingle extends Component {
 
   renderComputationResults() {
-    const { remoteResults } = this.props;
-    if (!remoteResults.length) {
+    const { computations, remoteResults } = this.props;
+
+    if (!remoteResults || !remoteResults.length) {
       return (
-        <p style={{ fontStyle: 'italic' }}>
-        Pending consortium analysis kickoff.  Get started and group data will show here.
+        <p>
+          <em>
+            Pending consortium analysis kickoff. Get started and group data will
+            show here.
+          </em>
         </p>
       );
     }
+
     return (
       <ul className="list-unstyled">
         {remoteResults.map((result, index) => {
+          const computation = computations.find(c => c._id === result._id);
+
           return (
             <li key={index}>
-              <ConsortiumResult result={result} />
+              <ConsortiumResult computation={computation} {...result} />
             </li>
           );
         })}
@@ -36,7 +43,6 @@ class ConsortiumSingle extends Component {
   renderComputationSelect() {
     const {
       computations,
-      consortium,
       consortium: { activeComputationId, owners },
       updateComputation,
       user,
@@ -103,7 +109,6 @@ class ConsortiumSingle extends Component {
   }
 
   renderMemberContent() {
-    const { consortium, user } = this.props;
     return (
       <div ref="member-content">
         <div className="row">
