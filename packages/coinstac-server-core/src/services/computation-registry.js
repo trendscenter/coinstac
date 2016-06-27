@@ -49,15 +49,15 @@ module.exports = {
   init() {
     logger.info('Initializing computation registry');
 
-    return coinstacCommon.services.computationRegistry({
-      path: this.getComputationsPath(),
-    })
-    .then((reg) => (this.instance = reg))
-    .then(() => this.upsertComputationsDir())
-    .then(() => {
-      logger.info('Computation registry set up');
-      return this.get();
-    });
+    return this.upsertComputationsDir()
+      .then(() => coinstacCommon.services.computationRegistry({
+        path: this.getComputationsPath(),
+      }))
+      .then(reg => {
+        this.instance = reg;
+        logger.info('Computation registry set up');
+        return this.get();
+      });
   },
 
   /**
