@@ -35,7 +35,7 @@ module.exports = {
        * letting the user apply them.
        */
       tags: {
-        isControl: filename.indexOf('controls') > -1 ? true : false,
+        isControl: filename.indexOf('controls') > -1,
       },
     }));
   },
