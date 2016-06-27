@@ -2,6 +2,7 @@
 
 const mkdirp = require('mkdirp-promise');
 const path = require('path');
+const touch = require('touch');
 const winston = require('winston');
 
 /**
@@ -44,9 +45,21 @@ const logger = new (winston.Logger)({
  */
 mkdirp(LOG_DIR)
   .then(() => {
+    return new Promise((resolve, reject) => {
+      touch(path.join(LOG_DIR, LOG_BASE), error => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve();
+        }
+      });
+    });
+  })
+  .then(() => {
     logger.add(winston.transports.File, {
       filename: path.join(LOG_DIR, LOG_BASE),
       level: 'silly',
+      silent: false,
     });
   });
 
