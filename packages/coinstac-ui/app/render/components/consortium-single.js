@@ -28,7 +28,9 @@ class ConsortiumSingle extends Component {
     return (
       <ul className="list-unstyled">
         {remoteResults.map((result, index) => {
-          const computation = computations.find(c => c._id === result._id);
+          const computation = computations.find(c => {
+            return c._id === result.computationId;
+          });
 
           return (
             <li key={index}>
