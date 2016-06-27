@@ -25,7 +25,7 @@ class FormProjectController extends Component {
       },
 
       // TODO: Drop state item
-      showFilesComponent: false,
+      showFilesComponent: true,
     };
 
     /**
@@ -47,9 +47,9 @@ class FormProjectController extends Component {
     this.handleSubmit = this.handleSubmit.bind(this);
   }
 
-  componentWillMount() {
-    this.maybeShowFilesComponent(this.state.project.consortiumId);
-  }
+  // componentWillMount() {
+  //   this.maybeShowFilesComponent(this.state.project.consortiumId);
+  // }
 
   /**
    * Set state.
@@ -92,7 +92,7 @@ class FormProjectController extends Component {
     this.setState({
       project: { consortiumId },
     });
-    this.maybeShowFilesComponent(consortiumId);
+    // this.maybeShowFilesComponent(consortiumId);
   }
 
   handleNameChange(event) {
