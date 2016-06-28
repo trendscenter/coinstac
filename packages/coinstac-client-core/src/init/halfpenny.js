@@ -9,13 +9,14 @@ const axios = require('axios');
  * builds a ready-to-go api client!
  * @param {object} opts
  * @param {string} opts.storagePath
+ * @param {string} [opts.baseUrl]
  * @param {LocalStorage} [opts.storage]
  * @returns {Halfpenny}
  */
 function initializeAPIClient(opts) {
   const hpConf = {
     agent: axios,
-    baseUrl: conf.get('baseUrl'),
+    baseUrl: opts.baseUrl || conf.get('baseUrl'),
     store: opts.storage ? opts.storage : new LocalStorage(opts.storagePath),
   };
   return hpFactory(hpConf);
