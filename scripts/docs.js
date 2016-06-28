@@ -1,12 +1,12 @@
 'use strict';
 
-const fs = require('fs');
+const fs = require('fs-extra');
 const path = require('path');
 const swig = require('swig-templates');
 const cp = require('child_process');
 const ghpages = require('gh-pages');
-const mkdir = (path) => cp.execSync(`mkdir -p ${path}`);
-const rmdir = (path) => { try { cp.execSync(`rm -rf ${path}`); } catch (e) { /* pass */ } };
+const mkdir = (path) => fs.mkdirsSync(`${path}`);
+const rmdir = (path) => { try { fs.removeSync(`${path}`); } catch (e) { /* pass */ } };
 const docsPath = path.resolve(__dirname, 'docs');
 const packagesPath = path.resolve(__dirname, '..', 'packages');
 const marked = require('marked');
@@ -46,7 +46,8 @@ packages.forEach((pkg, ndx, arr) => {
     rmdir(dest);
     return;
   }
-  cp.execSync(`mv ${dest} ${docsPath}/${pkg.name}`);
+  fs.copySync(`${dest}`, `${docsPath}/${pkg.name}`);
+  fs.removeSync(`${dest}`);
 });
 
 // build documentation entry.
@@ -62,7 +63,7 @@ const docsIndexStr = swig.renderFile(
 // output index file and associated assets
 fs.writeFileSync(path.join(docsPath, 'index.html'), docsIndexStr);
 const gfmCSSPath = path.resolve(__dirname, '../node_modules/github-markdown-css/github-markdown.css');
-cp.execSync(`cp ${gfmCSSPath} ${docsPath}/`);
+fs.copySync(`${gfmCSSPath}`, `${docsPath}/github-markdown.css`);
 
 // publish.
 ghpages.publish(docsPath, (err) => {
