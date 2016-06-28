@@ -426,7 +426,7 @@ class PipelineRunnerPool extends Base {
   /**
    * @description destroy listeners on each consortium as required for
    * the env (e.g. local env, remote env)
-   * @param {array|object} consortiaIds
+   * @param {(string[]|string)} consortiaIds
    * @returns {Promise}
    */
   unlistenToConsortia(consortiaIds) {

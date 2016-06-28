@@ -35,7 +35,9 @@ class ConsortiumSingleController extends Component {
     consortium.users.push(username);
     dispatch(saveConsortium(consortium))
     .then((tium) => {
-      dispatch(listenToConsortia(tium));
+      // TODO: Figure out a better way to initiate this background service
+      listenToConsortia(tium);
+
       app.logger.info(`now listening to events on consortium ${tium.label}`);
     });
   }
@@ -52,8 +54,12 @@ class ConsortiumSingleController extends Component {
     const { dispatch, consortium } = this.props;
     consortium.users = without(consortium.users, username);
     dispatch(saveConsortium(consortium))
-    .then(() => dispatch(unlistenToConsortia(consortium.id)))
-    .then(() => app.notify('success', `${username} removed`))
+    .then(() => {
+      // TODO: Figure out a better way to initiate this background service
+      unlistenToConsortia(consortium._id);
+
+      app.notify('success', `${username} removed`);
+    })
     .catch((err) => app.notify('error', err.message));
   }
 
