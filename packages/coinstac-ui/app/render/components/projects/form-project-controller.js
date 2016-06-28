@@ -236,11 +236,10 @@ function select(state, { params: { projectId } }) {
   const project = projectId ?
     state.projects.find(p => p._id === projectId) :
     undefined;
+  const username = state.auth.user.username;
+  const consortia = state.consortia.filter(c => c.users.indexOf(username) > -1);
 
-  return {
-    consortia: state.consortia,
-    project,
-  };
+  return { consortia, project };
 }
 
 export default connect(select)(FormProjectController);
