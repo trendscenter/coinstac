@@ -16,15 +16,17 @@ const RemoteComputationResult = common.models.computation.RemoteComputationResul
 function getStubbedParams() {
   return {
     client: {
+      auth: {
+        getUser: sinon.stub(),
+      },
       consortia: {
-        db: {
-          get: sinon.stub(),
-        },
+        get: sinon.stub(),
+      },
+      dbRegistry: {
+        get: sinon.stub(),
       },
       projects: {
-        db: {
-          get: sinon.stub(),
-        },
+        get: sinon.stub(),
       },
       pool: {
         triggerRunner: sinon.stub().returns(Promise.resolve()),
@@ -51,11 +53,11 @@ tape('ComputationService :: kickoff errors', t => {
   const params = getStubbedParams();
   const computationService = new ComputationService(params);
 
-  params.client.consortia.db.get.returns(Promise.resolve({
+  params.client.consortia.get.returns(Promise.resolve({
     _id: 'bla bla bla',
     label: 'WAT is consortium?',
   }));
-  params.client.projects.db.get.returns(Promise.resolve({
+  params.client.projects.get.returns(Promise.resolve({
     _id: 'wat wat wat',
     label: 'Bla is project?',
   }));
@@ -92,12 +94,21 @@ tape('ComputationService :: kickoff', t => {
   };
   const projectId = 'the-craziest-project';
 
-  params.client.consortia.db.get.returns(Promise.resolve({
+  params.client.auth.getUser.returns({
+    username: 'testUserName',
+  });
+  params.client.consortia.get.returns(Promise.resolve({
     _id: consortiumId,
     activeComputationId: 'the-most-active-id-evar',
     label: 'Baller Consortium',
+    owners: ['testUserName'],
   }));
-  params.client.projects.db.get.returns(Promise.resolve(project));
+  params.client.dbRegistry.get.returns({
+    find() {
+      return Promise.resolve();
+    },
+  });
+  params.client.projects.get.returns(Promise.resolve(project));
   params.client.pool.triggerRunner.returns(Promise.resolve(
     'consider-yourself-triggered'
   ));
@@ -107,12 +118,12 @@ tape('ComputationService :: kickoff', t => {
   computationService.kickoff({ consortiumId, projectId })
     .then(response => {
       t.equal(
-        params.client.consortia.db.get.firstCall.args[0],
+        params.client.consortia.get.firstCall.args[0],
         consortiumId,
         'retrieves consortium via consortiumId'
       );
       t.equal(
-        params.client.projects.db.get.firstCall.args[0],
+        params.client.projects.get.firstCall.args[0],
         projectId,
         'retrieves project via projectId'
       );
