@@ -1,5 +1,5 @@
 import React, { Component, PropTypes } from 'react';
-import { Label, Panel, ProgressBar } from 'react-bootstrap';
+import { Label, Panel } from 'react-bootstrap';
 
 function toUl(items) {
   /*
@@ -34,7 +34,6 @@ class ConsortiumResult extends Component {
     let dataOutput;
     let errors;
     let indicator;
-    let progressBar;
     let stateOutput;
 
     if (userErrors.length) {
@@ -73,27 +72,6 @@ class ConsortiumResult extends Component {
       );
     }
 
-    /**
-     * @todo The ridge-regression is programmed to max out at 50 iterations for
-     * the demo. Remove progress bar afterwards.
-     */
-    if (computation && computation.name.indexOf('ridge-regression') > -1) {
-      const now = history.length * 2;
-      let bsStyle;
-
-      if (userErrors.length) {
-        bsStyle = 'danger';
-      } else if (now === 100) {
-        bsStyle = 'success';
-      } else {
-        bsStyle = 'default';
-      }
-
-      progressBar = (
-        <ProgressBar bsStyle={bsStyle} now={now} label={history.length} />
-      );
-    }
-
     if (data) {
       dataOutput = (
         <div>
@@ -108,7 +86,6 @@ class ConsortiumResult extends Component {
     return (
       <Panel>
         <h2 className="h3" style={headingStyle}>Computation #{_id} {indicator}</h2>
-        {progressBar}
         {computationOutput}
         {errors}
         {dataOutput}
