@@ -17,19 +17,25 @@ function getStubbedParams() {
   return {
     client: {
       auth: {
-        getUser: sinon.stub(),
+        getUser: sinon.stub().returns({
+          username: 'testUserName',
+        }),
       },
       consortia: {
         get: sinon.stub(),
       },
       dbRegistry: {
-        get: sinon.stub(),
+        get: sinon.stub().returns({
+          find: () => Promise.resolve([]),
+        }),
       },
       projects: {
         get: sinon.stub(),
       },
       pool: {
-        triggerRunner: sinon.stub().returns(Promise.resolve()),
+        triggerRunner: sinon.stub().returns(Promise.resolve(
+          'consider-yourself-triggered'
+        )),
       },
     },
     dbRegistry: {},
@@ -50,29 +56,47 @@ tape('ComputationService :: modelServiceHooks', t => {
 });
 
 tape('ComputationService :: kickoff errors', t => {
+  const args = {
+    consortiumId: 'bla bla bla',
+    projectId: 'wat wat wat',
+  };
   const params = getStubbedParams();
   const computationService = new ComputationService(params);
 
-  params.client.consortia.get.returns(Promise.resolve({
+  params.client.consortia.get.onCall(0).returns(Promise.resolve({
     _id: 'bla bla bla',
     label: 'WAT is consortium?',
+    owners: [],
   }));
+  params.client.consortia.get.onCall(1).returns(Promise.resolve({
+    _id: 'bla bla bla',
+    activeComputationId: 'most active evar',
+    label: 'WAT is consortium?',
+    owners: [],
+  }));
+
   params.client.projects.get.returns(Promise.resolve({
     _id: 'wat wat wat',
     label: 'Bla is project?',
   }));
 
-  t.plan(1);
+  t.plan(2);
 
-  computationService.kickoff({
-    consortiumId: 'bla bla bla',
-    projectId: 'wat wat wat',
-  })
+  computationService.kickoff(args)
     .then(() => t.fail('resolves when consortium lacks active computation ID'))
     .catch(error => {
       t.ok(
         error && error.message.indexOf('active computation') > -1,
         'rejects when consortium lacks active computation ID'
+      );
+
+      return computationService.kickoff(args);
+    })
+    .then(() => t.fail('resolves when not a consortium owner'))
+    .catch(error => {
+      t.ok(
+        error && error.message.indexOf('consortium owner') > -1,
+        'rejects when not a consortium owner'
       );
     });
 });
@@ -94,24 +118,13 @@ tape('ComputationService :: kickoff', t => {
   };
   const projectId = 'the-craziest-project';
 
-  params.client.auth.getUser.returns({
-    username: 'testUserName',
-  });
   params.client.consortia.get.returns(Promise.resolve({
     _id: consortiumId,
     activeComputationId: 'the-most-active-id-evar',
     label: 'Baller Consortium',
     owners: ['testUserName'],
   }));
-  params.client.dbRegistry.get.returns({
-    find() {
-      return Promise.resolve();
-    },
-  });
   params.client.projects.get.returns(Promise.resolve(project));
-  params.client.pool.triggerRunner.returns(Promise.resolve(
-    'consider-yourself-triggered'
-  ));
 
   t.plan(7);
 

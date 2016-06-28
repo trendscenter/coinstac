@@ -34,43 +34,39 @@ class ComputationService extends ModelService {
     return Promise.all([
       client.consortia.get(consortiumId),
       client.projects.get(projectId),
-    ]).then(([consortium, project]) => {
-      if (!consortium.activeComputationId) {
+      client.dbRegistry.get(`remote-consortium-${consortiumId}`).find({
+        selector: {
+          complete: false,
+        },
+      }),
+    ])
+    .then(([consortium, project, docs]) => {
+      const activeComputationId = consortium.activeComputationId;
+      const isConsortiumOwner = consortium.owners.indexOf(client.auth.getUser().username) > -1;
+
+      if (!activeComputationId) {
         throw new Error(
           `Consortium "${consortium.label}" doesn't have an active computation`
         );
       }
-      const activeComputationId = consortium.activeComputationId;
-      const isConsortiumOwner = consortium.owners.indexOf(client.auth.getUser().username) > -1;
 
-      return client.dbRegistry.get(`remote-consortium-${consortiumId}`)
-        .find({
-          selector: {
-            complete: false,
-          },
-        })
-        .then(docs => {
-          if (!docs || !docs.length) {
-            if (!isConsortiumOwner) {
-              throw new Error('Only consortium owners can start!');
-            }
+      if (!isConsortiumOwner && !docs.length) {
+        throw new Error('Only consortium owners can start!');
+      }
 
-            return crypto
-              .createHash('md5')
-              .update(`${consortiumId}${activeComputationId}${Date.now()}`)
-              .digest('hex');
-          }
+      const runId = docs.length ?
+        docs[0]._id :
+        crypto.createHash('md5')
+          .update(`${consortiumId}${activeComputationId}${Date.now()}`)
+          .digest('hex');
 
-          return docs[0]._id;
-        })
-        .then(runId => {
-          const result = new RemoteComputationResult({
-            _id: runId,
-            computationId: activeComputationId,
-            consortiumId,
-          });
-          return client.pool.triggerRunner(result, project);
-        });
+      const result = new RemoteComputationResult({
+        _id: runId,
+        computationId: activeComputationId,
+        consortiumId,
+      });
+
+      return client.pool.triggerRunner(result, project);
     });
   }
 }
