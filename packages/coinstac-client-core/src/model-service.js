@@ -51,16 +51,50 @@ class ModelService {
     Object.assign(this, hooks);
 
     this.ModelType = hooks.ModelType;
+    this.dbInstance = null;
   }
 
+
   /**
-   * @property {Pouchy} db
+   * @private
    * lazy `getting` of db is important to prevent Pouchy generation pre-access,
    * specfically pre-auth. otherwise, syncing may occur before auth headers set.
    * this is OK for some stores, but taboo for others.
+   *
+   * @returns {Promise}
    */
-  get db() {
-    return this.dbs.get(this.dbName);
+  getDbInstance() {
+    if (this.instance) {
+      return Promise.resolve(this.dbInstance);
+    }
+
+    return new Promise((resolve, reject) => {
+      const pouchy = this.dbs.get(this.dbName);
+      const syncEmitter = pouchy.syncEmitter;
+
+      function onSync() {
+        /* eslint-disable no-use-before-define */
+        syncEmitter.removeListener('error', onError);
+        /* eslint-enable no-use-before-define */
+        resolve(pouchy);
+      }
+      function onError(error) {
+        pouchy.syncEmitter.removeListener('hasLikelySynced', onSync);
+        reject(error);
+      }
+
+      this.dbInstance = pouchy;
+
+      /**
+       * Pouchy doesn't add a `url` property when the database isn't replicated.
+       */
+      if (!pouchy.url || pouchy._hasLikelySynced) {
+        resolve(pouchy);
+      } else {
+        syncEmitter.once('hasLikelySynced', onSync);
+        syncEmitter.once('error', onError);
+      }
+    });
   }
 
   /**
@@ -76,7 +110,7 @@ class ModelService {
    * @returns {Promise}
    */
   all() {
-    return this.db.all();
+    return this.getDbInstance().then(db => db.all());
   }
 
   /**
@@ -85,7 +119,7 @@ class ModelService {
    * @returns {Promise}
    */
   delete(model) {
-    return this.db.delete(model);
+    return this.getDbInstance().then(db => db.delete(model));
   }
 
   /**
@@ -94,7 +128,7 @@ class ModelService {
    * @returns {Promise}
    */
   get(id) {
-    return this.db.get(id);
+    return this.getDbInstance().then(db => db.get(id));
   }
 
   /**
@@ -105,7 +139,9 @@ class ModelService {
    * @returns {Promise}
    */
   getBy(field, val) {
-    return this.db.all().then((docs) => find(docs, matchesProperty(field, val)));
+    return this.getDbInstance()
+      .then(db => db.all())
+      .then((docs) => find(docs, matchesProperty(field, val)));
   }
 
   /**
@@ -116,7 +152,9 @@ class ModelService {
   save(rawModel) {
     try {
       const modelInstance = new this.ModelType(rawModel);
-      return this.db.save(modelInstance.serialize());
+
+      return this.getDbInstance()
+        .then(db => db.save(modelInstance.serialize()));
     } catch (err) {
       /* istanbul ignore next */
       return Promise.reject(err);

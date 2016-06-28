@@ -32,8 +32,8 @@ class ComputationService extends ModelService {
     const client = this.client;
 
     return Promise.all([
-      client.consortia.db.get(consortiumId),
-      client.projects.db.get(projectId),
+      client.consortia.get(consortiumId),
+      client.projects.get(projectId),
     ]).then(([consortium, project]) => {
       if (!consortium.activeComputationId) {
         throw new Error(
