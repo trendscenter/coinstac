@@ -46,6 +46,7 @@ const ProjectServices = require('./sub-api/project-service');
  * @param {Winston} [opts.logger] permit user injected logger vs default logger
  * @param {string} [opts.logLevel] npm log levels, e.g. 'verbose', 'error', etc
  * @param {object} [opts.db] coinstac-common dbRegistry service configuration
+ * @param {string} [opts.hp] URL configutation for Halfpenny's `baseUrl`
  * @param {LocalStorage} [opts.storage] storage engine for halfpenny
  * @property {LocalStorage} storage
  * @property {Halfpenny} apiClient
@@ -64,6 +65,7 @@ class CoinstacClient {
     this.dbConfig = opts.db;
     this.storage = opts.storage;
     this.appDirectory = opts.appDirectory || appDirectory;
+    this.halfpennyBaseUrl = opts.hp;
     this.halfpennyDirectory = path.join(this.appDirectory, '.halfpenny');
     this.logger = opts.logger || new Logger({ transports: [new Console()] });
 
@@ -117,7 +119,10 @@ class CoinstacClient {
 
     return Promise.resolve(bluebird.promisify(mkdirp)(this.halfpennyDirectory))
       .then(() => {
-        const hpOpts = { storagePath: this.halfpennyDirectory };
+        const hpOpts = {
+          baseUrl: this.halfpennyBaseUrl,
+          storagePath: this.halfpennyDirectory,
+        };
 
         /* istanbul ignore else */
         if (this.storage) {
