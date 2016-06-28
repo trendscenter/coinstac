@@ -3,7 +3,7 @@
 const fs = require('fs-extra');
 const path = require('path');
 const swig = require('swig-templates');
-const cp = require('child_process');
+const spawn = require('cross-spawn')
 const ghpages = require('gh-pages');
 const mkdir = (path) => fs.mkdirsSync(`${path}`);
 const rmdir = (path) => { try { fs.removeSync(`${path}`); } catch (e) { /* pass */ } };
@@ -32,22 +32,28 @@ packages.forEach((pkg, ndx, arr) => {
   const readmePath = path.join(pkg.path, 'README.md');
   const conf = path.join(__dirname, '.jsdoc.json');
   const dest = path.join(__dirname, `docs-${pkg.name}`);
-  const cmd = { bin: 'jsdoc', args: [pkg.path, '-c', conf, '-R', readmePath, '-d', dest] };
+  const cmd = {
+    bin: path.resolve(__dirname, '..', 'node_modules', '.bin', 'jsdoc'),
+    args: [pkg.path, '-c', conf, '-R', readmePath, '-d', dest] };
   console.log(`Generating docs for ${pkg.name}`);
   try {
     rmdir(dest);
-    const rslt = cp.spawnSync(cmd.bin, cmd.args);
-    if (rslt.stderr.toString()) { throw rslt.error; }
+    const rslt = spawn.sync(cmd.bin, cmd.args, { stdio: 'inherit' });
+    if (rslt.error) { throw rslt.error; }
+    fs.copySync(`${dest}`, `${docsPath}/${pkg.name}`);
+    fs.removeSync(`${dest}`);
   } catch (err) {
+    // @TODO SCRAP and die hard when all docs are g2g. currently there's some issues with -ui
+    // that need to get ironed out.  for now, ignore, proceed.
     console.error([
       `Failed to generate docs for ${pkg.name}.`,
-      `Failing cmd ${cmd.bin} ${cmd.args.join(' ')} `
+      `Failing cmd ${cmd.bin} ${cmd.args.join(' ')}`,
+      `${err.message}`,
+      `${err.stack}`,
     ].join(' '));
     rmdir(dest);
     return;
   }
-  fs.copySync(`${dest}`, `${docsPath}/${pkg.name}`);
-  fs.removeSync(`${dest}`);
 });
 
 // build documentation entry.
@@ -66,6 +72,7 @@ const gfmCSSPath = path.resolve(__dirname, '../node_modules/github-markdown-css/
 fs.copySync(`${gfmCSSPath}`, `${docsPath}/github-markdown.css`);
 
 // publish.
+console.log(`Starting to pulbish docs from: ${docsPath}`)
 ghpages.publish(docsPath, (err) => {
   rmdir(docsPath);
   if (err) {
