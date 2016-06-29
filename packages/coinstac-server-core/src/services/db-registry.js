@@ -6,11 +6,12 @@
 
 const os = require('os');
 const mkdirp = require('mkdirp-promise');
-const coinstacCommon = require('coinstac-common');
-const memdown = require('memdown');
 const url = require('url');
 const path = require('path');
 const cloneDeep = require('lodash/cloneDeep');
+const dbRegistryFactory = require('coinstac-common').services.dbRegistry;
+const pouchDBAdapterMemory = require('pouchdb-adapter-memory');
+const pouchDbAdapterLevelDB = require('pouchdb-adapter-leveldb');
 
 const DB_REGISTRY_DEFAULTS = {
   isRemote: true,
@@ -64,11 +65,17 @@ module.exports = {
     if (config.dbUrl) {
       dbRegistryOptions.remote.db = url.parse(config.dbUrl);
     }
+
     if (config.inMemory) {
-      dbRegistryOptions.pouchConfig.db = memdown;
+      dbRegistryFactory.DBRegistry.Pouchy.plugin(pouchDBAdapterMemory);
+      dbRegistryOptions.pouchConfig.adapter = 'memory';
+    } else {
+      dbRegistryFactory.DBRegistry.Pouchy.plugin(pouchDbAdapterLevelDB)
+      dbRegistryOptions.pouchConfig.adapter = 'leveldb';
     }
+    
     dbRegistryOptions.path = this.getDBPath();
-    this.instance = coinstacCommon.services.dbRegistry(dbRegistryOptions);
+    this.instance = dbRegistryFactory(dbRegistryOptions);
     return this.upsertDBDir().then(() => this.get());
   },
 

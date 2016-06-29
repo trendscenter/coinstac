@@ -2,15 +2,15 @@
 'use strict';
 
 const async = require('async');
-const os = require('os');
-const path = require('path');
 const rimraf = require('rimraf');
 const superagent = require('superagent');
+
+const getDBPath = require('../src/services/db-registry').getDBPath;
 
 async.parallel([
   cb1 => {
     console.log('Removing database dir…');
-    rimraf(path.join(os.tmpDir(), 'coinstac'), error => {
+    rimraf(getDBPath(), error => {
       if (error) {
         cb1(error);
       } else {
