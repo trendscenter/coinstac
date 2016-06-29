@@ -3,7 +3,7 @@
 const os = require('os');
 const LocalStorage = require('node-localstorage').LocalStorage;
 const path = require('path');
-global.LocalStorage = global.localStorage = new LocalStorage(path.join(os.tmpDir(), 'coinstac'));
+global.LocalStorage = global.localStorage = new LocalStorage(path.join(os.tmpDir(), 'coinstac'), 100* 1024 * 1024);
 const Pouchy = require('pouchy');
 Pouchy.PouchDB.plugin(require('pouchdb-adapter-localstorage'));
 // Pouchy.PouchDB.debug.enable('*');
