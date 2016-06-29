@@ -51,6 +51,9 @@ class RemotePipelineRunner extends PipelineRunner {
         `local result doc required, received ${lResult}`
       ));
     }
+
+    // TODO: Consider chaining on _saveQueue
+    // return (this._saveQueue ? this._saveQueue : Promise.resolve())
     return Promise.all([
       this.getResultDocs(this.localDB, lResult.runId),
       this.getPreviousResultData(this.remoteDB),
