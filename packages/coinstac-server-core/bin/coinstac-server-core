@@ -35,7 +35,7 @@ function errorHandler(error, promise) {
     logger.error('Server promise rejection', error, promise);
   }
 
-  return process.exit(1);
+  process.nextTick(() => process.exit(1));
 }
 
 process.on('uncaughtException', errorHandler);
