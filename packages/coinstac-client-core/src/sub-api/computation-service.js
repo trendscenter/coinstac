@@ -6,6 +6,7 @@
 const common = require('coinstac-common');
 const Computation = common.models.computation.Computation;
 const crypto = require('crypto');
+const getSyncedDatabase = require('../utils/get-synced-database');
 const ModelService = require('../model-service');
 const RemoteComputationResult = common.models.computation.RemoteComputationResult;
 
@@ -31,15 +32,21 @@ class ComputationService extends ModelService {
   kickoff({ consortiumId, projectId }) {
     const client = this.client;
 
-    return Promise.all([
-      client.consortia.get(consortiumId),
-      client.projects.get(projectId),
-      client.dbRegistry.get(`remote-consortium-${consortiumId}`).find({
-        selector: {
-          complete: false,
-        },
-      }),
-    ])
+    return getSyncedDatabase(
+      client.dbRegistry,
+      `remote-consortium-${consortiumId}`
+    )
+    .then(remoteDatabase => {
+      return Promise.all([
+        client.consortia.get(consortiumId),
+        client.projects.get(projectId),
+        remoteDatabase.find({
+          selector: {
+            complete: false,
+          },
+        }),
+      ]);
+    })
     .then(([consortium, project, docs]) => {
       const activeComputationId = consortium.activeComputationId;
       const isConsortiumOwner = consortium.owners.indexOf(client.auth.getUser().username) > -1;
