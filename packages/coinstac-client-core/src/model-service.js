@@ -1,6 +1,7 @@
 'use strict';
 
 const find = require('lodash/find');
+const getSyncedDatabase = require('./utils/get-synced-database');
 const matchesProperty = require('lodash/matchesProperty');
 
 /**
@@ -64,37 +65,15 @@ class ModelService {
    * @returns {Promise}
    */
   getDbInstance() {
-    if (this.instance) {
+    if (this.dbInstance) {
       return Promise.resolve(this.dbInstance);
     }
+    return getSyncedDatabase(this.dbs, this.dbName)
+      .then(pouchy => {
+        this.dbInstance = pouchy;
 
-    return new Promise((resolve, reject) => {
-      const pouchy = this.dbs.get(this.dbName);
-      const syncEmitter = pouchy.syncEmitter;
-
-      function onSync() {
-        /* eslint-disable no-use-before-define */
-        syncEmitter.removeListener('error', onError);
-        /* eslint-enable no-use-before-define */
-        resolve(pouchy);
-      }
-      function onError(error) {
-        pouchy.syncEmitter.removeListener('hasLikelySynced', onSync);
-        reject(error);
-      }
-
-      this.dbInstance = pouchy;
-
-      /**
-       * Pouchy doesn't add a `url` property when the database isn't replicated.
-       */
-      if (!pouchy.url || pouchy._hasLikelySynced) {
-        resolve(pouchy);
-      } else {
-        syncEmitter.once('hasLikelySynced', onSync);
-        syncEmitter.once('error', onError);
-      }
-    });
+        return this.dbInstance;
+      });
   }
 
   /**

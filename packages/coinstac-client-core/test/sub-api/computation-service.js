@@ -26,7 +26,9 @@ function getStubbedParams() {
       },
       dbRegistry: {
         get: sinon.stub().returns({
+          _hasLikelySynced: true,
           find: () => Promise.resolve([]),
+          url: 'http://coins.mrn.org',
         }),
       },
       projects: {
