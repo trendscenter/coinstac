@@ -4,9 +4,11 @@
 const assign = require('lodash/assign');
 const CoinstacClient = require('../src/index');
 const DBRegistry = require('coinstac-common').services.dbRegistry.DBRegistry;
+const dropRight = require('lodash/dropRight');
 const flatten = require('lodash/flatten');
 const glob = require('glob');
 const inquirer = require('inquirer');
+const last = require('lodash/last');
 const path = require('path');
 const pkg = require('../package.json');
 const pouchDBAdapterMemory = require('pouchdb-adapter-memory');
@@ -32,8 +34,8 @@ const STORAGE_DIR = path.join(__dirname, '..', '.tmp');
 let client;
 let username;
 
-function errorHandler(error) {
-  logger.error(error);
+function errorHandler(...errors) {
+  errors.forEach(error => logger.error(error));
   process.exit(1);
 }
 
@@ -48,16 +50,25 @@ program
   .option('-a --api [value])', 'API connection string')
   .option('-c --consortium [value]', 'Consortium ID')
   .option('-d --database [value]', 'Database connection string')
+  .option('-p --password [value]', 'Password')
+  .option('-u --username [value]', 'Username')
   .parse(process.argv);
 
-inquirer.prompt([{
-  message: 'Username:',
-  name: 'username',
-}, {
-  message: 'Password:',
-  name: 'password',
-  type: 'password',
-}])
+(
+  program.password && program.username ?
+    Promise.resolve({
+      password: program.password,
+      username: program.username,
+    }) :
+    inquirer.prompt([{
+      message: 'Username:',
+      name: 'username',
+    }, {
+      message: 'Password:',
+      name: 'password',
+      type: 'password',
+    }])
+)
   .then(answers => {
     if (!program.consortium) {
       throw new Error('Consortium ID required');
@@ -79,6 +90,15 @@ inquirer.prompt([{
     const remoteDbConfig = program.database ?
       assign(defaultDb, url.parse(program.database)) :
       defaultDb;
+
+    // TODO: Figure out DBRegistryFactory configuration
+    if (
+      last(remoteDbConfig.path) === '/' &&
+      last(remoteDbConfig.pathname) === '/'
+    ) {
+      remoteDbConfig.path = dropRight(remoteDbConfig.path, 1).join('');
+      remoteDbConfig.pathname = dropRight(remoteDbConfig.pathname, 1).join('');
+    }
 
     client = new CoinstacClient({
       appDirectory: STORAGE_DIR,
