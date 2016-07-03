@@ -19,8 +19,10 @@ const packages = fs.readdirSync(packagesPath)
   return {
     name: p,
     path: pkgRoot,
-    packageJSON: require(path.resolve(pkgRoot, 'package.json'))
-  }
+    /* eslint-disable global-require */
+    packageJSON: require(path.resolve(pkgRoot, 'package.json')),
+    /* eslint-enable global-require */
+  };
 });
 
 // clean && create docs folder.
@@ -28,20 +30,20 @@ rmdir(docsPath);
 mkdir(docsPath);
 
 // generate all docs.
-packages.forEach((pkg, ndx, arr) => {
+packages.forEach((pkg) => {
   const readmePath = path.join(pkg.path, 'README.md');
   const conf = path.join(__dirname, '.jsdoc.json');
   const dest = path.join(__dirname, `docs-${pkg.name}`);
   const cmd = { bin: 'jsdoc', args: [pkg.path, '-c', conf, '-R', readmePath, '-d', dest] };
-  console.log(`Generating docs for ${pkg.name}`);
+  console.log(`Generating docs for ${pkg.name}`); // eslint-disable-line no-console
   try {
     rmdir(dest);
     const rslt = cp.spawnSync(cmd.bin, cmd.args);
     if (rslt.stderr.toString()) { throw rslt.error; }
   } catch (err) {
-    console.error([
+    console.error([ // eslint-disable-line no-console
       `Failed to generate docs for ${pkg.name}.`,
-      `Failing cmd ${cmd.bin} ${cmd.args.join(' ')} `
+      `Failing cmd ${cmd.bin} ${cmd.args.join(' ')} `,
     ].join(' '));
     rmdir(dest);
     return;
@@ -61,15 +63,20 @@ const docsIndexStr = swig.renderFile(
 
 // output index file and associated assets
 fs.writeFileSync(path.join(docsPath, 'index.html'), docsIndexStr);
-const gfmCSSPath = path.resolve(__dirname, '../node_modules/github-markdown-css/github-markdown.css');
+const gfmCSSPath = path.resolve(
+  __dirname,
+  '../node_modules/github-markdown-css/github-markdown.css'
+);
 cp.execSync(`cp ${gfmCSSPath} ${docsPath}/`);
 
 // publish.
 ghpages.publish(docsPath, (err) => {
   rmdir(docsPath);
+  /* eslint-disable no-console */
   if (err) {
     console.error(err);
   } else {
     console.log('Docs successfully published to http://mrn-code.github.io/coinstac');
   }
+  /* eslint-enable no-console */
 });

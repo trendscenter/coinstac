@@ -19,7 +19,7 @@ const VALID_LOG_LEVELS = ['error', 'warn', 'info', 'verbose', 'debug', 'silly'];
 
 const config = {};
 
-let rl;
+let rl; // eslint-disable-line no-unused-vars
 
 /**
  * Error handler for server errors, process `uncaughtException`s and
