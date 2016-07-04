@@ -55,5 +55,9 @@
     "url": "https://github.com/MRN-Code/coinstac/issues"
   },
   "homepage": "https://github.com/MRN-Code/coinstac#readme",
-  "pre-commit": ["lint", "test"]
+  "pre-commit": {
+    "colors": true,
+    "silent": false,
+    "run": ["lint", "test"]
+  }
 }
