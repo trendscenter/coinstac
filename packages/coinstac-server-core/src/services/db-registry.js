@@ -9,7 +9,7 @@ const mkdirp = require('mkdirp-promise');
 const url = require('url');
 const path = require('path');
 const cloneDeep = require('lodash/cloneDeep');
-const dbRegistryFactory = require('coinstac-common').services.dbRegistry;
+const common = require('coinstac-common');
 const pouchDBAdapterMemory = require('pouchdb-adapter-memory');
 const pouchDbAdapterLevelDB = require('pouchdb-adapter-leveldb');
 
@@ -60,6 +60,9 @@ module.exports = {
    * @returns {Promise} resolves to DBRegistry instance
    */
   init(opts) {
+    // Unfortunately necessary for sinon spying
+    const dbRegistryFactory = common.services.dbRegistry;
+
     const config = opts ? cloneDeep(opts) : {};
     const dbRegistryOptions = cloneDeep(DB_REGISTRY_DEFAULTS);
     if (config.dbUrl) {
@@ -73,7 +76,7 @@ module.exports = {
       dbRegistryFactory.DBRegistry.Pouchy.plugin(pouchDbAdapterLevelDB)
       dbRegistryOptions.pouchConfig.adapter = 'leveldb';
     }
-    
+
     dbRegistryOptions.path = this.getDBPath();
     this.instance = dbRegistryFactory(dbRegistryOptions);
     return this.upsertDBDir().then(() => this.get());
