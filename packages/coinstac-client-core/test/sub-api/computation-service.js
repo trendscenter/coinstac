@@ -57,34 +57,45 @@ tape('ComputationService :: modelServiceHooks', t => {
   t.end();
 });
 
-tape('ComputationService :: kickoff errors', t => {
-  const args = {
-    consortiumId: 'bla bla bla',
-    projectId: 'wat wat wat',
+tape('ComputationService :: canStartComputation', t => {
+  const consortiumId = 'bla bla bla';
+  const consortium = {
+    _id: consortiumId,
+    label: 'WAT is consortium?',
+    owners: [],
   };
   const params = getStubbedParams();
   const computationService = new ComputationService(params);
 
-  params.client.consortia.get.onCall(0).returns(Promise.resolve({
-    _id: 'bla bla bla',
-    label: 'WAT is consortium?',
-    owners: [],
-  }));
-  params.client.consortia.get.onCall(1).returns(Promise.resolve({
-    _id: 'bla bla bla',
-    activeComputationId: 'most active evar',
-    label: 'WAT is consortium?',
-    owners: [],
-  }));
+  params.client.consortia.get.onCall(0).returns(Promise.resolve(consortium));
+  params.client.consortia.get.onCall(1).returns(Promise.resolve(
+    Object.assign({}, consortium, {
+      activeComputationId: 'most active evar',
+    })
+  ));
+  params.client.consortia.get.onCall(2).returns(Promise.resolve(
+    Object.assign({}, consortium, {
+      activeComputationId: 'most active evar',
+      owners: ['testUserName'],
+    })
+  ));
+
+  params.client.dbRegistry.get.returns(Promise.resolve({
+    _hasLikelySynced: true,
+    find: () => Promise.resolve([{
+      _id: 'baller-document',
+    }]),
+    url: 'http://coins.mrn.org',
+  }))
 
   params.client.projects.get.returns(Promise.resolve({
     _id: 'wat wat wat',
     label: 'Bla is project?',
   }));
 
-  t.plan(2);
+  t.plan(3);
 
-  computationService.kickoff(args)
+  computationService.canStartComputation(consortiumId)
     .then(() => t.fail('resolves when consortium lacks active computation ID'))
     .catch(error => {
       t.ok(
@@ -92,13 +103,22 @@ tape('ComputationService :: kickoff errors', t => {
         'rejects when consortium lacks active computation ID'
       );
 
-      return computationService.kickoff(args);
+      return computationService.canStartComputation(consortiumId);
     })
     .then(() => t.fail('resolves when not a consortium owner'))
     .catch(error => {
       t.ok(
         error && error.message.indexOf('consortium owner') > -1,
         'rejects when not a consortium owner'
+      );
+
+      return computationService.canStartComputation(consortiumId);
+    })
+    .then(() => t.fail('resolves when a run is active'))
+    .catch(error => {
+      t.ok(
+        error && error.message.indexOf('one computation') > -1,
+        'rejects when a run is active'
       );
     });
 });
