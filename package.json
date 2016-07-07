@@ -23,7 +23,7 @@
   },
   "scripts": {
     "bootstrap": "lerna bootstrap",
-    "lint": "eslint **/*.js **/bin/*",
+    "lint": "eslint '**/*.js' '**/bin/*'",
     "lintfix": "eslint --fix **/*.js",
     "publish": "lerna publish && node scripts/docs.js",
     "test": "node scripts/test.js"
