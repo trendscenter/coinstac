@@ -22,6 +22,54 @@ class ComputationService extends ModelService {
   }
 
   /**
+   * Can a computation start?
+   *
+   * @params {string} consortiumId
+   * @returns {Promise} Resolves if a computation *can* start or rejects with an
+   * error if a computation *can not* start.
+   */
+  canStartComputation(consortiumId) {
+    const client = this.client;
+
+    return getSyncedDatabase(
+      client.dbRegistry,
+      `remote-consortium-${consortiumId}`
+    )
+      .then(remoteDatabase => Promise.all([
+        client.consortia.get(consortiumId),
+        remoteDatabase.find({
+          selector: {
+            complete: false,
+          },
+        })
+      ]))
+      .then(([consortium, docs]) => {
+        const activeComputationId = consortium.activeComputationId;
+        const isConsortiumOwner = consortium.owners.indexOf(client.auth.getUser().username) > -1;
+
+        if (!activeComputationId) {
+          throw new Error(
+            `Consortium "${consortium.label}" doesn't have an active computation`
+          );
+        }
+
+        if (!isConsortiumOwner) {
+          throw new Error('Only consortium owners can start a computation');
+        }
+
+        /**
+         * This enforces one run per consortium.
+         *
+         * @todo Either move this functionality into coinstac-common or refactor
+         * UI so consortia may run multiple computations.
+         */
+        if (docs.length) {
+          throw new Error('Only one computation may run at a time');
+        }
+      });
+  }
+
+  /**
    * Kick off a remote computation result.
    *
    * @param {Object} options
@@ -32,49 +80,25 @@ class ComputationService extends ModelService {
   kickoff({ consortiumId, projectId }) {
     const client = this.client;
 
-    return getSyncedDatabase(
-      client.dbRegistry,
-      `remote-consortium-${consortiumId}`
-    )
-    .then(remoteDatabase => {
-      return Promise.all([
+    return this.canStartComputation(consortiumId)
+      .then(() => Promise.all([
         client.consortia.get(consortiumId),
         client.projects.get(projectId),
-        remoteDatabase.find({
-          selector: {
-            complete: false,
-          },
-        }),
-      ]);
-    })
-    .then(([consortium, project, docs]) => {
-      const activeComputationId = consortium.activeComputationId;
-      const isConsortiumOwner = consortium.owners.indexOf(client.auth.getUser().username) > -1;
-
-      if (!activeComputationId) {
-        throw new Error(
-          `Consortium "${consortium.label}" doesn't have an active computation`
-        );
-      }
-
-      if (!isConsortiumOwner && !docs.length) {
-        throw new Error('Only consortium owners can start!');
-      }
-
-      const runId = docs.length ?
-        docs[0]._id :
-        crypto.createHash('md5')
+      ]))
+      .then(([consortium, project]) => {
+        const activeComputationId = consortium.activeComputationId;
+        const runId = crypto.createHash('md5')
           .update(`${consortiumId}${activeComputationId}${Date.now()}`)
           .digest('hex');
 
-      const result = new RemoteComputationResult({
-        _id: runId,
-        computationId: activeComputationId,
-        consortiumId,
-      });
+        const result = new RemoteComputationResult({
+          _id: runId,
+          computationId: activeComputationId,
+          consortiumId,
+        });
 
-      return client.pool.triggerRunner(result, project);
-    });
+        return client.pool.triggerRunner(result, project);
+      });
   }
 }
 
