@@ -10,8 +10,10 @@
 const async = require('async');
 const exec = require('shelljs').exec;
 
+const children = [];
+
 function getExec(dirPath, callback) {
-  return exec('npm test', {
+  const child = exec('npm test', {
     async: true,
     cwd: dirPath,
     silent: false,
@@ -22,7 +24,17 @@ function getExec(dirPath, callback) {
       callback(null, stdout.toString());
     }
   });
+
+  children.push(child);
+
+  return child;
 }
+
+function killChildren() {
+  children.forEach(c => c.kill());
+}
+
+process.on('exit', killChildren);
 
 async.series([
   cb1 => {
@@ -43,13 +55,14 @@ async.series([
       } else {
         cb1(null, response);
       }
-      children.forEach(c => c.kill());
     });
   },
   cb2 => {
     getExec('./packages/coinstac-decentralized-algorithm-integration', cb2);
   },
 ], (error, results) => {
+  killChildren(); // Ensure child processes are killed
+
   /* eslint-disable no-console */
   if (error) {
     console.error(error);
@@ -58,4 +71,3 @@ async.series([
   }
   /* eslint-enable no-console */
 });
-
