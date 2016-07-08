@@ -10,6 +10,11 @@ import React, { Component, PropTypes } from 'react';
 import ProjectFiles from './project-files';
 
 export default class FormProject extends Component {
+  constructor(props) {
+    super(props);
+    this.onSubmit = this.onSubmit.bind(this);
+  }
+
   onSubmit(event) {
     event.preventDefault();
 
@@ -17,10 +22,21 @@ export default class FormProject extends Component {
   }
 
   maybeRenderComputationRunButton() {
-    const { allowComputationRun, onRunComputation } = this.props;
+    const {
+      allowComputationRun,
+      onRunComputation,
+      showComputationRunButton,
+    } = this.props;
 
-    if (allowComputationRun) {
-      return <Button onClick={onRunComputation}>Run Computation</Button>;
+    if (showComputationRunButton) {
+      return (
+        <Button
+          disabled={!allowComputationRun}
+          onClick={onRunComputation}
+        >
+          Run Computation
+        </Button>
+      );
     }
   }
 
@@ -127,7 +143,7 @@ export default class FormProject extends Component {
     const isDisabled = Object.values(errors).some(e => !!e);
 
     return (
-      <form className="clearfix" onSubmit={this.onSubmit.bind(this)}>
+      <form className="clearfix" onSubmit={this.onSubmit}>
         <h3>{isEditing ? 'Edit' : 'New'} Project</h3>
 
         {this.renderNameField()}
@@ -165,5 +181,6 @@ FormProject.propTypes = {
   onRunComputation: PropTypes.func.isRequired,
   onSubmit: PropTypes.func.isRequired,
   project: PropTypes.object.isRequired,
+  showComputationRunButton: PropTypes.bool.isRequired,
   showFilesComponent: PropTypes.bool.isRequired,
 };

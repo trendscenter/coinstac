@@ -6,9 +6,9 @@ import {
   fetch as fetchProjects,
   remove as removeProject,
   setProjects,
-} from 'app/render/state/ducks/projects.js';
+} from '../../state/ducks/projects.js';
 import { ProjectCard } from './project-card.js';
-import { hilarious } from 'app/render/utils/hilarious-loading-messages.js';
+import { hilarious } from '../../utils/hilarious-loading-messages.js';
 import app from 'ampersand-app';
 import { runComputation } from '../../state/ducks/bg-services';
 
@@ -25,6 +25,7 @@ class ProjectsList extends Component {
 
     dispatch(fetchProjects((err) => {
       if (err) {
+        app.logger.error(err);
         app.notify('error', `Failed to load projects: ${err.message}`);
       } else {
         this.setState({ ready: true });
@@ -59,7 +60,7 @@ class ProjectsList extends Component {
   }
 
   render() {
-    const { projects } = this.props;
+    const { consortia, projects, username } = this.props;
 
     if (!this.state.ready) {
       return (<span>{hilarious.random()}</span>);
@@ -75,15 +76,23 @@ class ProjectsList extends Component {
         </LinkContainer>
         <div className="projects-list">
           {projects.map(project => {
-            const canRunComputation = true;
+            const allowComputationRun = false;
+            const consortium = consortia.find(c => {
+              return c._id === project.consortiumId;
+            });
+
+            const showComputationRunButton =
+              !!consortium && consortium.owners.indexOf(username) > -1;
+
             return (
               <ProjectCard
-                canRunComputation={canRunComputation}
+                allowComputationRun={allowComputationRun}
                 id={project._id}
                 key={`project-card-${project._id}`}
                 name={project.name}
                 removeProject={() => this.delete(project)}
                 runComputation={() => this.runComputation(project)}
+                showComputationRunButton={showComputationRunButton}
               />
             );
           })}
@@ -94,13 +103,17 @@ class ProjectsList extends Component {
 }
 
 ProjectsList.propTypes = {
+  consortia: PropTypes.arrayOf(PropTypes.object).isRequired,
   dispatch: PropTypes.func.isRequired,
   projects: PropTypes.array,
+  username: PropTypes.string.isRequired,
 };
 
 function select(state) {
   return {
+    consortia: state.consortia,
     projects: state.projects,
+    username: state.auth.user.username,
   };
 }
 
