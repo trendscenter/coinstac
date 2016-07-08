@@ -13,6 +13,7 @@ class FormProjectController extends Component {
     super(props);
 
     this.state = {
+      allowComputationRun: false,
       errors: {
         consortiumId: null,
         name: null,
@@ -47,9 +48,10 @@ class FormProjectController extends Component {
     this.handleSubmit = this.handleSubmit.bind(this);
   }
 
-  // componentWillMount() {
-  //   this.maybeShowFilesComponent(this.state.project.consortiumId);
-  // }
+  componentWillMount() {
+    // this.maybeShowFilesComponent(this.state.project.consortiumId);
+    this.maybeAllowComputationRun(this.state.project.consortiumId);
+  }
 
   /**
    * Set state.
@@ -60,9 +62,16 @@ class FormProjectController extends Component {
    */
   setState(newState = {}) {
     super.setState({
-      errors: Object.assign({}, this.state.errors, newState.errors),
-      project: Object.assign({}, this.state.project, newState.project),
-      showFilesComponent: typeof newState.showFilesComponent !== 'undefined' ?
+      allowComputationRun: 'allowComputationRun' in newState ?
+        newState.allowComputationRun :
+        this.state.allowComputationRun,
+      errors: 'errors' in newState ?
+        Object.assign({}, this.state.errors, newState.errors) :
+        this.state.errors,
+      project: 'project' in newState ?
+        Object.assign({}, this.state.project, newState.project) :
+        this.state.project,
+      showFilesComponent: 'showFilesComponent' in newState ?
         newState.showFilesComponent :
         this.state.showFilesComponent,
     });
@@ -92,6 +101,9 @@ class FormProjectController extends Component {
     this.setState({
       project: { consortiumId },
     });
+
+    // TODO: Figure out why `nextTick` is necessary. React internals?
+    process.nextTick(() => this.maybeAllowComputationRun(consortiumId));
     // this.maybeShowFilesComponent(consortiumId);
   }
 
@@ -165,6 +177,28 @@ class FormProjectController extends Component {
     }
   }
 
+  /**
+   * Determine whether the project (or, computation) can be run.
+   * @see coinstac-client-core/src/sub-api/computation-service.js
+   *
+   * @param {string} consortiumId
+   */
+  maybeAllowComputationRun(consortiumId) {
+    const { params: { projectId } } = this.props;
+
+    if (!projectId) {
+      this.setState({ allowComputationRun: false });
+    } else {
+      app.core.computations.canStartComputation(consortiumId)
+        .then(() => {
+          this.setState({ allowComputationRun: true });
+        })
+        .catch(() => {
+          this.setState({ allowComputationRun: false });
+        });
+    }
+  }
+
   maybeShowFilesComponent(consortiumId) {
     const { consortia } = this.props;
 
@@ -191,11 +225,24 @@ class FormProjectController extends Component {
   }
 
   render() {
-    const { consortia, params } = this.props;
-    const { errors, project, showFilesComponent } = this.state;
+    const { consortia, params, username } = this.props;
+    const {
+      allowComputationRun,
+      errors,
+      project,
+      showFilesComponent,
+    } = this.state;
 
-    const allowComputationRun = !!params.projectId;
     const isEditing = !!params.projectId;
+    let showComputationRunButton = false;
+
+    if (project.consortiumId) {
+      const selected = consortia.find(c => c._id === project.consortiumId);
+
+      if (selected && selected.owners.indexOf(username) > -1) {
+        showComputationRunButton = true;
+      }
+    }
 
     return (
       <FormProject
@@ -211,6 +258,7 @@ class FormProjectController extends Component {
         onRunComputation={this.handleRunComputation}
         onSubmit={this.handleSubmit}
         project={project}
+        showComputationRunButton={showComputationRunButton}
         showFilesComponent={showFilesComponent}
       />
     );
@@ -226,6 +274,7 @@ FormProjectController.propTypes = {
   dispatch: PropTypes.func.isRequired,
   params: PropTypes.object.isRequired,
   project: PropTypes.object,
+  username: PropTypes.string.isRequired,
 };
 
 /**
@@ -239,7 +288,7 @@ function select(state, { params: { projectId } }) {
   const username = state.auth.user.username;
   const consortia = state.consortia.filter(c => c.users.indexOf(username) > -1);
 
-  return { consortia, project };
+  return { consortia, project, username };
 }
 
 export default connect(select)(FormProjectController);

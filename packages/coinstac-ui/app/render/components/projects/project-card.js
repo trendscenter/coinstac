@@ -4,13 +4,39 @@ import { Link } from 'react-router';
 import { LinkContainer } from 'react-router-bootstrap';
 
 export class ProjectCard extends Component {
+  maybeRenderComputationRunButton() {
+    const {
+      allowComputationRun,
+      runComputation,
+      showComputationRunButton,
+    } = this.props;
+
+    if (showComputationRunButton) {
+      return (
+        <Button
+          bsSize="small"
+          bsStyle="primary"
+          className="pull-right"
+          disabled={!allowComputationRun}
+          onClick={runComputation}
+        >
+          <span
+            className="glyphicon glyphicon-repeat"
+            aria-hidden="true"
+          >
+          </span>
+          {' '}
+          Run Computation
+        </Button>
+      );
+    }
+  }
+
   render() {
     const {
-      canRunComputation,
       id,
       name,
       removeProject,
-      runComputation,
     } = this.props;
 
     return (
@@ -49,21 +75,7 @@ export class ProjectCard extends Component {
                 </Button>
               </LinkContainer>
             </ButtonToolbar>
-            <Button
-              bsSize="small"
-              bsStyle="primary"
-              className="pull-right"
-              disabled={!canRunComputation}
-              onClick={runComputation}
-            >
-              <span
-                className="glyphicon glyphicon-repeat"
-                aria-hidden="true"
-              >
-              </span>
-              {' '}
-              Run Computation
-            </Button>
+            {this.maybeRenderComputationRunButton()}
           </div>
         </div>
       </div>
@@ -72,9 +84,10 @@ export class ProjectCard extends Component {
 }
 
 ProjectCard.propTypes = {
-  canRunComputation: PropTypes.bool.isRequired,
+  allowComputationRun: PropTypes.bool.isRequired,
   id: PropTypes.string.isRequired,
   name: PropTypes.string.isRequired,
   removeProject: PropTypes.func.isRequired,
   runComputation: PropTypes.func.isRequired,
+  showComputationRunButton: PropTypes.bool.isRequired,
 };
