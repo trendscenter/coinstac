@@ -76,7 +76,6 @@ class ProjectsList extends Component {
         </LinkContainer>
         <div className="projects-list">
           {projects.map(project => {
-            const allowComputationRun = false;
             const consortium = consortia.find(c => {
               return c._id === project.consortiumId;
             });
@@ -86,7 +85,7 @@ class ProjectsList extends Component {
 
             return (
               <ProjectCard
-                allowComputationRun={allowComputationRun}
+                allowComputationRun={project.allowComputationRun}
                 id={project._id}
                 key={`project-card-${project._id}`}
                 name={project.name}
@@ -105,7 +104,13 @@ class ProjectsList extends Component {
 ProjectsList.propTypes = {
   consortia: PropTypes.arrayOf(PropTypes.object).isRequired,
   dispatch: PropTypes.func.isRequired,
-  projects: PropTypes.array,
+  projects: PropTypes.arrayOf(PropTypes.shape({
+    _id: PropTypes.string,
+    allowComputationRun: PropTypes.bool.isRequired,
+    consortiumId: PropTypes.string,
+    files: PropTypes.array,
+    name: PropTypes.string.isRequired,
+  })),
   username: PropTypes.string.isRequired,
 };
 
