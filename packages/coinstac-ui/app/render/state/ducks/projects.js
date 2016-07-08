@@ -40,6 +40,30 @@ export const fetch = applyAsyncLoading(function fetchProjects(cb) {
   return (dispatch) => {
     return app.core.projects.all()
       .then(projects => {
+        /**
+         * Determine whether computations can be run.
+         *
+         * @todo This is an _awful hack_ as it requires network requests to
+         * determine whether a computation can run. Derive this information from
+         * already stored state or add a computed property to the `Project`
+         * model.
+         */
+        return Promise.all(projects.map(project => {
+          function getProject(allowComputationRun = false) {
+            return Object.assign({}, project, { allowComputationRun });
+          }
+
+          if (project.consortiumId) {
+            return app.core.computations
+              .canStartComputation(project.consortiumId)
+              .then(() => getProject(true))
+              .catch(() => getProject());
+          }
+
+          return getProject();
+        }));
+      })
+      .then(projects => {
         dispatch(setProjects(projects));
         cb(null, projects);
       })
