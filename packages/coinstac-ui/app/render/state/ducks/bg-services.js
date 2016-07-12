@@ -3,6 +3,7 @@ import { applyAsyncLoading } from './loading';
 import { updateConsortia } from './consortia';
 import { updateComputations } from './computations';
 import cloneDeep from 'lodash/cloneDeep';
+import map from 'lodash/map';
 import { hashHistory } from 'react-router';
 
 export const listenToConsortia = (tia) => {
@@ -27,6 +28,7 @@ export const initPrivateBackgroundServices = applyAsyncLoading(
       // to different replication configs (e.g. sync both dirs vs sync on dir)
       const tiaDB = app.core.dbRegistry.get('consortia');
       tiaDB.syncEmitter.on('change', (change) => {
+
         const toUpdate = change.change.docs.map((changed) => {
           const cloned = cloneDeep(changed); // de-ref main memory
           delete cloned._revisions; // gross. pouchy maybe can save the day?
@@ -43,6 +45,36 @@ export const initPrivateBackgroundServices = applyAsyncLoading(
         });
         updateComputations({ dispatch, toUpdate, isBg: true });
       });
+      const appUser = app.core.auth.getUser().username;
+      app.core.consortia.getUserConsortia(appUser)
+      .then(userConsortia => {
+        userConsortia.forEach(consortia => {
+          debugger;
+          app.core.dbRegistry.get(`remote-consortium-${consortia._id}`)
+          .syncEmitter.on('change', change => {
+            app.core.dbRegistry.get(`local-consortium-${consortia._id}`).all()
+            .then(docs => {
+              console.log(docs);
+              const appUser = app.core.auth.getUser().username;
+              const compIds = map(docs, (doc) => {
+                return doc._id.replace(`-${appUser}`, '');
+              });
+              return app.core.dbRegistry.get(`remote-consortium-${consortia._id}`).all()
+              .then(remoteDocs => {
+                return remoteDocs.filter(doc => compIds.indexOf(doc._id) === -1);
+              });
+            }).then(consortia => {
+              app.core.dbRegistry.get('projects').find({
+                selector: { consortiumId: { $in: consortia } }
+              }).then(projects => (
+                projects.forEach(project => {
+                  app.core.computations.kickoff({ project.consortiumId, project._Id });
+                })
+              ));
+            });
+          });
+        });
+      })
       return Promise.all([
         tiaDB.all().then((docs) => updateConsortia({ dispatch, toUpdate: docs, isBg: true })),
         compsDB.all().then((docs) => updateComputations({ dispatch, toUpdate: docs, isBg: true })),
