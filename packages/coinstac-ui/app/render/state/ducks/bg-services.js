@@ -15,11 +15,53 @@ export const unlistenToConsortia = (tiaIds) => {
 };
 
 /**
- * Sets up the COINSTAC environment once a user is authorized (hence "Private"
- * in initPrivateBackgroundServices).  Primarily, this instantiates a
- * LocalPipelineRunnerPool kickoff new and existing computation runs
- * @returns {function}
+ * Joins a computation for which the user was not the initiator on
+ * but has a project that should be run on that computation
+ * @param  Object consortium pouchy instance
+ * @return undefined
  */
+const joinSlaveComputation = (consortium) => {
+  app.core.dbRegistry.get(`local-consortium-${consortium._id}`).all()
+  .then(docs => {
+    const appUser = app.core.auth.getUser().username;
+    const compIds = map(docs, (doc) => {
+      return doc._id.replace(`-${appUser}`, '');
+    });
+    return app.core.dbRegistry.get(`remote-consortium-${consortium._id}`)
+    .find({
+      selector: { usernames: { $nin: [appUser] }, complete: { $ne: true } },
+    })
+    .then(remoteDocs => {
+      // done here as find() can't use $nin on _id
+      return remoteDocs.filter(doc => compIds.indexOf(doc._id) === -1);
+    });
+  })
+  .then(compRuns => {
+    const mappedRuns = map(compRuns, (run) => {
+      return { [run.consortiumId]: run._id };
+    });
+    app.core.dbRegistry.get('projects').find({
+      selector: { consortiumId: { $in: mappedRuns.keys() } },
+    }).then(projects => (
+      projects.forEach(project => {
+        app.core.computations.joinRun(
+          {
+            consortiumId: project.consortiumId,
+            projectId: project._Id,
+            runId: mappedRuns[project.consortiumId],
+          }
+        );
+      })
+    ));
+  });
+};
+
+/**
+* Sets up the COINSTAC environment once a user is authorized (hence "Private"
+* in initPrivateBackgroundServices).  Primarily, this instantiates a
+* LocalPipelineRunnerPool kickoff new and existing computation runs
+* @returns {function}
+*/
 export const initPrivateBackgroundServices = applyAsyncLoading(
   function initPrivateBackgroundServices() {
     return (dispatch) => { // eslint-disable-line
@@ -28,7 +70,6 @@ export const initPrivateBackgroundServices = applyAsyncLoading(
       // to different replication configs (e.g. sync both dirs vs sync on dir)
       const tiaDB = app.core.dbRegistry.get('consortia');
       tiaDB.syncEmitter.on('change', (change) => {
-
         const toUpdate = change.change.docs.map((changed) => {
           const cloned = cloneDeep(changed); // de-ref main memory
           delete cloned._revisions; // gross. pouchy maybe can save the day?
@@ -48,33 +89,16 @@ export const initPrivateBackgroundServices = applyAsyncLoading(
       const appUser = app.core.auth.getUser().username;
       app.core.consortia.getUserConsortia(appUser)
       .then(userConsortia => {
-        userConsortia.forEach(consortia => {
-          debugger;
-          app.core.dbRegistry.get(`remote-consortium-${consortia._id}`)
+        userConsortia.forEach(consortium => {
+          // this is called twice, once on startup
+          // second time inside change listener
+          joinSlaveComputation(consortium)
+          app.core.dbRegistry.get(`remote-consortium-${consortium._id}`)
           .syncEmitter.on('change', change => {
-            app.core.dbRegistry.get(`local-consortium-${consortia._id}`).all()
-            .then(docs => {
-              console.log(docs);
-              const appUser = app.core.auth.getUser().username;
-              const compIds = map(docs, (doc) => {
-                return doc._id.replace(`-${appUser}`, '');
-              });
-              return app.core.dbRegistry.get(`remote-consortium-${consortia._id}`).all()
-              .then(remoteDocs => {
-                return remoteDocs.filter(doc => compIds.indexOf(doc._id) === -1);
-              });
-            }).then(consortia => {
-              app.core.dbRegistry.get('projects').find({
-                selector: { consortiumId: { $in: consortia } }
-              }).then(projects => (
-                projects.forEach(project => {
-                  app.core.computations.kickoff({ project.consortiumId, project._Id });
-                })
-              ));
-            });
+            joinSlaveComputation(consortium)
           });
         });
-      })
+      });
       return Promise.all([
         tiaDB.all().then((docs) => updateConsortia({ dispatch, toUpdate: docs, isBg: true })),
         compsDB.all().then((docs) => updateComputations({ dispatch, toUpdate: docs, isBg: true })),

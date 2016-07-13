@@ -41,7 +41,7 @@ class ComputationService extends ModelService {
           selector: {
             complete: false,
           },
-        })
+        }),
       ]))
       .then(([consortium, docs]) => {
         const activeComputationId = consortium.activeComputationId;
@@ -99,6 +99,29 @@ class ComputationService extends ModelService {
 
         return client.pool.triggerRunner(result, project);
       });
+  }
+
+  /**
+   * Join an already in progress computation
+   * @param  string { consortiumId  the consortium the runId is from
+   * @param  string projectId       the project to run on
+   * @param  string runId     }     the run id to join
+   * @return Promise           promise from runner pool
+   */
+  joinComputation({ consortiumId, projectId, runId }) {
+    const client = this.client;
+    const consortium = client.consortia.get(consortiumId);
+    const project = client.projects.get(projectId);
+    const activeComputationId = consortium.activeComputationId;
+
+
+    const result = new RemoteComputationResult({
+      _id: runId,
+      computationId: activeComputationId,
+      consortiumId,
+    });
+
+    return client.pool.triggerRunner(result, project);
   }
 }
 
