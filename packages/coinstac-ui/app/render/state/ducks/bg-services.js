@@ -29,9 +29,10 @@ const joinSlaveComputation = (consortium) => {
     });
     return app.core.dbRegistry.get(`remote-consortium-${consortium._id}`)
     .find({
-      selector: { usernames: { $nin: [appUser] }, complete: { $ne: true } },
+      selector: { complete: { $ne: true } },
     })
     .then(remoteDocs => {
+      // filter out already ran (by user) computations
       // done here as find() can't use $nin on _id
       return remoteDocs.filter(doc => compIds.indexOf(doc._id) === -1);
     });
