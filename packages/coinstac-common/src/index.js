@@ -1,4 +1,6 @@
 'use strict';
+
+const DBListener = require('./models/db-listener');
 const PipelineRunnerPool =
     require('./models/pipeline/runner/pool/pipeline-runner-pool');
 const LocalPipelineRunnerPool =
@@ -7,6 +9,9 @@ const RemotePipelineRunnerPool =
     require('./models/pipeline/runner/pool/remote-pipeline-runner-pool');
 
 module.exports = {
+  helpers: {
+    DBListener: DBListener,
+  },
   models: {
     computation: {
       CommandComputation: require('./models/computation/command-computation'),
