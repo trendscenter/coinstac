@@ -80,12 +80,19 @@ class ProjectsList extends Component {
               return c._id === project.consortiumId;
             });
 
-            const showComputationRunButton =
-              !!consortium && consortium.owners.indexOf(username) > -1;
+            let showComputationRunButton = false;
+            let computationStatus = 'waiting';
+
+            if (consortium) {
+              showComputationRunButton =
+                consortium.owners.indexOf(username) > -1;
+              // computationState
+            }
 
             return (
               <ProjectCard
                 allowComputationRun={project.allowComputationRun}
+                computationStatus={computationStatus}
                 id={project._id}
                 key={`project-card-${project._id}`}
                 name={project.name}

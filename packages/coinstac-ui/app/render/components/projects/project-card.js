@@ -32,6 +32,57 @@ export class ProjectCard extends Component {
     }
   }
 
+  renderComputationStatus() {
+    const { computationStatus } = this.props;
+    const className = `project-status ${ProjectCard.computationStatusClassNames.get(
+      computationStatus
+    )}`;
+    let status;
+
+    switch (computationStatus) {
+      case 'active':
+        status = (
+          <span>
+            <span aria-hidden="true" className="glyphicon glyphicon-refresh"></span>
+            {' '}
+            Running
+          </span>
+        );
+        break;
+      case 'complete':
+        status = (
+          <span>
+            <span aria-hidden="true" className="glyphicon glyphicon-ok"></span>
+            {' '}
+            Complete
+          </span>
+        );
+        break;
+      case 'error':
+        status = (
+          <span>
+            <span aria-hidden="true" className="glyphicon glyphicon-alert"></span>
+            {' '}
+            Error
+          </span>
+        );
+        break;
+      case 'waiting':
+        status = (
+          <span>
+            <span aria-hidden="true" className="glyphicon glyphicon-alert"></span>
+            {' '}
+            Waiting to start
+          </span>
+        );
+        break;
+      default:
+        status = <span>Unknown status</span>;
+    }
+
+    return <div className={className}>{status}</div>;
+  }
+
   render() {
     const {
       id,
@@ -40,11 +91,14 @@ export class ProjectCard extends Component {
     } = this.props;
 
     return (
-      <div className="project panel panel-default">
-        <div className="panel-body">
-          <h4>
+      <div className="project-card panel panel-default">
+        <div className="panel-heading">
+          <h4 className="panel-title">
             <Link to={`/projects/${id}`}>{name}</Link>
           </h4>
+          {this.renderComputationStatus()}
+        </div>
+        <div className="panel-body">
           <p>ID: {id}</p>
           <div className="clearfix">
             <ButtonToolbar className="pull-left">
@@ -83,8 +137,21 @@ export class ProjectCard extends Component {
   }
 }
 
+ProjectCard.computationStatusClassNames = new Map([
+  ['active', 'is-active text-muted'],
+  ['complete', 'text-success'],
+  ['error', 'text-danger'],
+  ['waiting', 'text-muted'],
+]);
+
 ProjectCard.propTypes = {
   allowComputationRun: PropTypes.bool.isRequired,
+  computationStatus: PropTypes.oneOf([
+    'active',
+    'complete',
+    'error',
+    'waiting',
+  ]).isRequired,
   id: PropTypes.string.isRequired,
   name: PropTypes.string.isRequired,
   removeProject: PropTypes.func.isRequired,
