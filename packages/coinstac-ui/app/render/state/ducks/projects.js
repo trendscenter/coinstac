@@ -10,12 +10,39 @@ export const setProjects = (projects) => ({ type: SET_PROJECTS, projects });
 export const REMOVE_PROJECT = 'REMOVE_PROJECT';
 export const removeProject = (project) => ({ type: REMOVE_PROJECT, project });
 
+/**
+ * Determine whether computations can be run.
+ *
+ * @todo This is an _awful hack_ as it requires network requests to
+ * determine whether a computation can run. Derive this information from
+ * already stored state or add a computed property to the `Project`
+ * model.
+ *
+ * @param {Object} project Project-like POJO.
+ * @returns {Promise} Resolves to project
+ */
+function mapProject(project) {
+  function getProject(allowComputationRun = false) {
+    return Object.assign({}, project, { allowComputationRun });
+  }
+
+  if (project.consortiumId) {
+    return app.core.computations
+      .canStartComputation(project.consortiumId)
+      .then(() => getProject(true))
+      .catch(() => getProject());
+  }
+
+  return Promise.resolve(getProject());
+}
+
 export const addProject = applyAsyncLoading(function addProject(project) {
   return (dispatch) => {
     return app.core.projects.save(project)
+      .then(mapProject)
       .then((proj) => {
         app.notify('success', `Project '${project.name}' created`);
-        dispatch(_addProject(project));
+        dispatch(_addProject(proj));
         return proj;
       });
   };
@@ -39,30 +66,7 @@ export const remove = applyAsyncLoading(function remove(project) {
 export const fetch = applyAsyncLoading(function fetchProjects(cb) {
   return (dispatch) => {
     return app.core.projects.all()
-      .then(projects => {
-        /**
-         * Determine whether computations can be run.
-         *
-         * @todo This is an _awful hack_ as it requires network requests to
-         * determine whether a computation can run. Derive this information from
-         * already stored state or add a computed property to the `Project`
-         * model.
-         */
-        return Promise.all(projects.map(project => {
-          function getProject(allowComputationRun = false) {
-            return Object.assign({}, project, { allowComputationRun });
-          }
-
-          if (project.consortiumId) {
-            return app.core.computations
-              .canStartComputation(project.consortiumId)
-              .then(() => getProject(true))
-              .catch(() => getProject());
-          }
-
-          return getProject();
-        }));
-      })
+      .then(projects => Promise.all(projects.map(mapProject)))
       .then(projects => {
         dispatch(setProjects(projects));
         cb(null, projects);
