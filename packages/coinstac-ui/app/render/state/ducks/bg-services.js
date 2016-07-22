@@ -4,9 +4,7 @@ import { updateConsortia } from './consortia';
 import { updateComputations } from './computations';
 import { updateProjectStatus } from './projects';
 import cloneDeep from 'lodash/cloneDeep';
-import map from 'lodash/map';
 import { hashHistory } from 'react-router';
-import bluebird from 'bluebird';
 
 export const listenToConsortia = (tia) => {
   app.core.pool.listenToConsortia(tia);
@@ -19,52 +17,78 @@ export const unlistenToConsortia = (tiaIds) => {
 /**
  * Joins a computation for which the user was not the initiator on
  * but has a project that should be run on that computation
- * @param  Object consortium pouchy instance
- * @return Promise
+ *
+ * @param {Object} consortium PouchDB document representing consortium
+ * @param {string} consortium._id
+ * @return {Promise}
  */
 export const joinSlaveComputation = (consortium) => {
-  return app.core.dbRegistry.get(`local-consortium-${consortium._id}`).all()
-  .then(docs => {
-    const appUser = app.core.auth.getUser().username;
-    const compIds = map(docs, (doc) => {
-      return doc._id.replace(`-${appUser}`, '');
-    });
-    return app.core.dbRegistry.get(`remote-consortium-${consortium._id}`)
-    .find({
-      selector: { complete: { $ne: true } },
-    })
-    .then(remoteDocs => {
+  return Promise.all([
+    /**
+     * @todo coinstac-storage-proxy doesn't allow GET requests to
+     * `local-consortium-*` databases. Figure out another approach.
+     */
+    app.core.dbRegistry.get(`local-consortium-${consortium._id}`).all(),
+    app.core.dbRegistry.get(`remote-consortium-${consortium._id}`).find({
+      selector: {
+        complete: false,
+      },
+    }),
+  ])
+    .then(([localDocs, remoteDocs]) => {
+      const { username } = app.core.auth.getUser();
+      const userRunIds = localDocs.reduce((memo, { _id }) => {
+        return _id.indexOf(username) > -1 ?
+          memo.concat(_id.replace(`-${username}`, '')) :
+          memo;
+      }, []);
+
       // filter out already ran (by user) computations
       // done here as find() can't use $nin on _id
-      return remoteDocs.filter(doc => compIds.indexOf(doc._id) === -1);
-    });
-  })
-  .then(compRuns => {
-    const mappedRuns = map(compRuns, (run) => {
-      return { [run.consortiumId]: run._id };
-    });
-        debugger;
-    return app.core.dbRegistry.get('projects').find({
-      selector: { consortiumId: { $in: mappedRuns.keys() } },
-    }).then(projects => {
-      const promises = map(projects, project => {
-        debugger;
-        app.core.computations.joinComputation(
-          {
-            consortiumId: project.consortiumId,
-            projectId: project._Id,
-            runId: mappedRuns[project.consortiumId],
-          }
-        );
-      });
-      return bluebird.all(promises);
-    });
-  });
+      /**
+       * @todo This assumes a one-to-one relationship between run IDs and
+       * consortium IDs. The approach should change when a consortium
+       * permits multiple simultaneous runs.
+       */
+      const runs = new Map(
+        remoteDocs.reduce((memo, { _id: runId, consortiumId }) => {
+          return userRunIds.indexOf(runId) < 0 ?
+            [...memo, [consortiumId, runId]] :
+            memo;
+        }, [])
+      );
+
+      return Promise.all([
+        runs,
+        app.core.dbRegistry.get('projects').find({
+          selector: {
+            consortiumId: {
+              $in: Array.from(runs.keys()),
+            },
+          },
+        }),
+      ]);
+    })
+    .then(([runs, projects]) => Promise.all(
+      projects.map(({ _id, consortiumId }) => {
+        const runId = runs.get(consortiumId);
+
+        if (!runId) {
+          throw new Error(`No run ID for consortium ${consortiumId}`);
+        }
+
+        return app.core.computations.joinRun({
+          consortiumId,
+          projectId: _id,
+          runId,
+        });
+      })
+    ));
 };
 
 export const addConsortiumComputationListener = (consortium) => {
   return app.core.dbRegistry.get(`remote-consortium-${consortium._id}`)
-  .syncEmitter.on('change', change => {
+  .syncEmitter.on('change', () => {
     joinSlaveComputation(consortium);
   });
 };
