@@ -9,6 +9,7 @@ import { fetch as fetchRemoteResults, setRemoteResults } from 'app/render/state/
 import without from 'lodash/without';
 import noop from 'lodash/noop';
 import app from 'ampersand-app';
+import { addConsortiumComputationListener } from 'app/render/state/ducks/bg-services';  // eslint-disable-line
 
 class ConsortiumSingleController extends Component {
 
@@ -36,8 +37,10 @@ class ConsortiumSingleController extends Component {
     dispatch(saveConsortium(consortium))
     .then((tium) => {
       // TODO: Figure out a better way to initiate this background service
-      listenToConsortia(tium);
-
+      listenToConsortia(tium)
+      .then(() => {
+        addConsortiumComputationListener(tium);
+      });
       app.logger.info(`now listening to events on consortium ${tium.label}`);
     });
   }
