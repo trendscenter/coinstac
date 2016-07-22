@@ -5,6 +5,7 @@ import { updateComputations } from './computations';
 import cloneDeep from 'lodash/cloneDeep';
 import map from 'lodash/map';
 import { hashHistory } from 'react-router';
+import bluebird from 'bluebird';
 
 export const listenToConsortia = (tia) => {
   app.core.pool.listenToConsortia(tia);
@@ -18,10 +19,10 @@ export const unlistenToConsortia = (tiaIds) => {
  * Joins a computation for which the user was not the initiator on
  * but has a project that should be run on that computation
  * @param  Object consortium pouchy instance
- * @return undefined
+ * @return Promise
  */
-const joinSlaveComputation = (consortium) => {
-  app.core.dbRegistry.get(`local-consortium-${consortium._id}`).all()
+export const joinSlaveComputation = (consortium) => {
+  return app.core.dbRegistry.get(`local-consortium-${consortium._id}`).all()
   .then(docs => {
     const appUser = app.core.auth.getUser().username;
     const compIds = map(docs, (doc) => {
@@ -41,19 +42,29 @@ const joinSlaveComputation = (consortium) => {
     const mappedRuns = map(compRuns, (run) => {
       return { [run.consortiumId]: run._id };
     });
-    app.core.dbRegistry.get('projects').find({
+        debugger;
+    return app.core.dbRegistry.get('projects').find({
       selector: { consortiumId: { $in: mappedRuns.keys() } },
-    }).then(projects => (
-      projects.forEach(project => {
-        app.core.computations.joinRun(
+    }).then(projects => {
+      const promises = map(projects, project => {
+        debugger;
+        app.core.computations.joinComputation(
           {
             consortiumId: project.consortiumId,
             projectId: project._Id,
             runId: mappedRuns[project.consortiumId],
           }
         );
-      })
-    ));
+      });
+      return bluebird.all(promises);
+    });
+  });
+};
+
+export const addConsortiumComputationListener = (consortium) => {
+  return app.core.dbRegistry.get(`remote-consortium-${consortium._id}`)
+  .syncEmitter.on('change', change => {
+    joinSlaveComputation(consortium);
   });
 };
 
@@ -93,11 +104,8 @@ export const initPrivateBackgroundServices = applyAsyncLoading(
         userConsortia.forEach(consortium => {
           // this is called twice, once on startup
           // second time inside change listener
-          joinSlaveComputation(consortium)
-          app.core.dbRegistry.get(`remote-consortium-${consortium._id}`)
-          .syncEmitter.on('change', change => {
-            joinSlaveComputation(consortium)
-          });
+          joinSlaveComputation(consortium);
+          addConsortiumComputationListener(consortium);
         });
       });
       return Promise.all([
