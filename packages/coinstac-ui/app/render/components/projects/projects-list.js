@@ -81,7 +81,6 @@ class ProjectsList extends Component {
             });
 
             let showComputationRunButton = false;
-            let computationStatus = 'waiting';
 
             if (consortium) {
               showComputationRunButton =
@@ -92,7 +91,7 @@ class ProjectsList extends Component {
             return (
               <ProjectCard
                 allowComputationRun={project.allowComputationRun}
-                computationStatus={computationStatus}
+                computationStatus={project.status}
                 id={project._id}
                 key={`project-card-${project._id}`}
                 name={project.name}
@@ -117,6 +116,7 @@ ProjectsList.propTypes = {
     consortiumId: PropTypes.string,
     files: PropTypes.array,
     name: PropTypes.string.isRequired,
+    status: PropTypes.string.isRequired,
   })),
   username: PropTypes.string.isRequired,
 };

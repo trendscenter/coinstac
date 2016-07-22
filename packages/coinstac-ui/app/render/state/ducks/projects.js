@@ -10,8 +10,33 @@ export const setProjects = (projects) => ({ type: SET_PROJECTS, projects });
 export const REMOVE_PROJECT = 'REMOVE_PROJECT';
 export const removeProject = (project) => ({ type: REMOVE_PROJECT, project });
 
+export const UPDATE_PROJECT_STATUS = 'UPDATE_PROJECT_STATUS';
+
 /**
- * Determine whether computations can be run.
+ * @param {Object} options
+ * @param {string} options.id Project's ID
+ * @param {string} options.status Status
+ * @returns {Object}
+ * @property {string} id
+ * @property {string} status
+ * @property {string} type
+ */
+export function updateProjectStatus({ id, status }) {
+  return {
+    id,
+    status,
+    type: UPDATE_PROJECT_STATUS,
+  };
+}
+
+/**
+ * Map project model.
+ *
+ * This decorates the `Project` model with computated properties:
+ *
+ * - `allowComputationRun`: Determine whether computations can be run.
+ *   Determined via async request.
+ * - `status`: project's "state"
  *
  * @todo This is an _awful hack_ as it requires network requests to
  * determine whether a computation can run. Derive this information from
@@ -21,9 +46,13 @@ export const removeProject = (project) => ({ type: REMOVE_PROJECT, project });
  * @param {Object} project Project-like POJO.
  * @returns {Promise} Resolves to project
  */
-function mapProject(project) {
+export function mapProject(project) {
   function getProject(allowComputationRun = false) {
-    return Object.assign({}, project, { allowComputationRun });
+    return Object.assign(
+      { status: 'waiting' },
+      project,
+      { allowComputationRun }
+    );
   }
 
   if (project.consortiumId) {
@@ -98,6 +127,12 @@ export default function reducer(projects = [], action) {
       return [...action.projects];
     case REMOVE_PROJECT:
       return projects.filter(p => p.name !== action.project.name);
+    case UPDATE_PROJECT_STATUS:
+      return projects.map(p => {
+        return p._id === action.id ?
+          Object.assign({}, p, { status: action.status }) :
+          p;
+      });
     default:
       return projects;
   }
