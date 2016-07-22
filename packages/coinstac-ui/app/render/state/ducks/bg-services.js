@@ -2,6 +2,7 @@ import app from 'ampersand-app';
 import { applyAsyncLoading } from './loading';
 import { updateConsortia } from './consortia';
 import { updateComputations } from './computations';
+import { updateProjectStatus } from './projects';
 import cloneDeep from 'lodash/cloneDeep';
 import map from 'lodash/map';
 import { hashHistory } from 'react-router';
@@ -108,6 +109,37 @@ export const initPrivateBackgroundServices = applyAsyncLoading(
           addConsortiumComputationListener(consortium);
         });
       });
+
+      /**
+       * Listen to project changes and update the renderer's state tree.
+       *
+       * @todo Refactor into service? Something?
+       */
+      app.core.projects.initializeListeners((error, { doc, projectId }) => {
+        let status;
+
+        if (error) {
+          app.logger.error(error);
+          app.notifications.push({
+            level: 'error',
+            message: `Project listener error: ${error.message}`,
+          });
+
+          // TODO: attempt to recover?
+          throw error;
+        }
+
+        if (doc.userErrors.length) {
+          status = 'error';
+        } else if (doc.complete) {
+          status = 'complete';
+        } else {
+          status = 'active';
+        }
+
+        dispatch(updateProjectStatus({ id: projectId, status }));
+      });
+
       return Promise.all([
         tiaDB.all().then((docs) => updateConsortia({ dispatch, toUpdate: docs, isBg: true })),
         compsDB.all().then((docs) => updateComputations({ dispatch, toUpdate: docs, isBg: true })),
