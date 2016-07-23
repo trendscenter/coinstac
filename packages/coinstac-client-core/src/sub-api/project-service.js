@@ -4,13 +4,20 @@
  * @module project-service
  */
 
-const coinstacCommon = require('coinstac-common');
-const difference = require('lodash/difference');
 const ModelService = require('../model-service');
 const Project = require('coinstac-common').models.Project;
+const bluebird = require('bluebird');
+const coinstacCommon = require('coinstac-common');
+const concatStream = require('concat-stream');
+const csvParse = require('csv-parse');
+const difference = require('lodash/difference');
 const fileStats = require('../utils/file-stats');
-const includes = require('lodash/includes');
 const find = require('lodash/find');
+const findIndex = require('lodash/findIndex');
+const firstline = require('firstline');
+const fs = require('fs');
+const includes = require('lodash/includes');
+const mapStream = require('map-stream');
 
 /**
  * @class
@@ -25,6 +32,104 @@ class ProjectService extends ModelService {
 
     this.projects = new Map();
     this.listeners = new Map();
+  }
+
+  /**
+   * Get meta file's contents.
+   *
+   * This method parses a CSV for data under a 'Is Control' column header.
+   *
+   * @example
+   * myProjectService.getMetaFileContents('./path/to/my.csv')
+   *   .then(output => {
+   *     // `output` looks like:
+   *     // [
+   *     //   ['M100', true],
+   *     //   ['M101', false],
+   *     //   ['M102', true],
+   *     //   ['M102', false],
+   *     // ]
+   *     console.log(output);
+   *   })
+   *   .catch(error => console.error(error));
+   *
+   * @param {string} file Full path to CSV
+   * @returns {Promise} Resolves to a collection of two-dimensional arrays,
+   * where the first element is the left-most column value and the second
+   * element is the 'Is Control' column text's coerced boolean value.
+   */
+  getMetaFileContents(file) {
+    const parseOpts = { delimiter: ',' };
+    const isControlColumnPattern = /is ?control/i;
+    let firstRowString;
+    let isControlColumnIndex;
+
+    const map = mapStream((data, callback) => {
+      if (
+        // Ignore empty rows
+        !data ||
+        !Array.isArray(data) ||
+        (Array.isArray(data) && !data.length) ||
+
+        // Ignore first row
+        data.toString() === firstRowString
+      ) {
+        // No args filters out this item
+        callback();
+      } else if (data.length < isControlColumnIndex + 1) {
+        // Don't output potential PHI
+        callback(new Error('Row missing isControl column'));
+      } else {
+        // Assumes filenames are stored in the first column
+        // TODO: Figure out why map-stream needs nested arrays
+        const value = data[isControlColumnIndex];
+        let parsed;
+
+        if (/true/i.test(value)) {
+          parsed = true;
+        } else if (/false/i.test(value)) {
+          parsed = false;
+        } else if (typeof value === 'string') {
+          const parseAttempt = parseInt(value, 10);
+          if (!Number.isNaN(parseAttempt)) {
+            parsed = parseAttempt;
+          }
+        }
+
+        if (typeof parsed === 'number') {
+          parsed = parsed > 0;
+        }
+
+        if (typeof parsed !== 'boolean') {
+          callback(new Error(`Cannot parse value: ${value}`));
+        } else {
+          callback(null, [[data[0], parsed]]);
+        }
+      }
+    });
+    const parse = csvParse(parseOpts);
+    const readStream = fs.createReadStream(file);
+
+    return firstline(file)
+      .then(line => bluebird.promisify(csvParse)(line, parseOpts))
+      .then(([firstRow]) => {
+        firstRowString = firstRow.toString();
+        isControlColumnIndex = findIndex(firstRow, headerText => {
+          return isControlColumnPattern.test(headerText);
+        });
+
+        if (isControlColumnIndex < 0) {
+          throw new Error('Couldn\'t find control column');
+        }
+
+        return new Promise((resolve, reject) => {
+          map.on('error', reject);
+          parse.on('error', reject);
+          readStream.on('error', reject);
+
+          readStream.pipe(parse).pipe(map).pipe(concatStream(resolve));
+        });
+      });
   }
 
   /**

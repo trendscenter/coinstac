@@ -3,8 +3,10 @@
 const clientFactory = require('../utils/client-factory');
 const coinstacCommon = require('coinstac-common');
 const EventEmitter = require('events');
+const fs = require('fs');
 const fileStats = require('../../src/utils/file-stats');
 const noop = require('lodash/noop');
+const path = require('path');
 const projectFactory = require('../utils/project-factory');
 const ProjectService = require('../../src/sub-api/project-service');
 const sinon = require('sinon');
@@ -22,6 +24,54 @@ function getNextTick(callback) {
     });
   });
 }
+
+test('ProjectService - getMetaFileContents', t => {
+  const badFile1 = path.resolve(__dirname, '..', 'mocks', 'bad-dummy-1.csv');
+  const badFile2 = path.resolve(__dirname, '..', 'mocks', 'bad-dummy-2.csv');
+  const createReadStreamSpy = sinon.spy(fs, 'createReadStream');
+  const goodFile = path.resolve(__dirname, '..', 'mocks', 'good-dummy.csv');
+
+  t.plan(4);
+
+  ProjectService.prototype.getMetaFileContents(badFile1)
+    .then(() => t.fail('resolves with header-less CSV'))
+    .catch(error => {
+      t.ok(
+        createReadStreamSpy.calledWith(badFile1),
+        'creates read stream with file arg'
+      );
+      t.ok(
+        error.message.toLowerCase().indexOf('is control'),
+        'rejects without \'is control\' header'
+      );
+
+      return ProjectService.prototype.getMetaFileContents(badFile2);
+    })
+    .then(() => t.fail('resolves with malformed CSV'))
+    .catch(() => {
+      t.pass('rejects with malformed CSV');
+
+      return ProjectService.prototype.getMetaFileContents(goodFile);
+    })
+    .then(output => {
+      t.deepEqual(
+        output,
+        [
+          ['M100', true],
+          ['M101', true],
+          ['M102', false],
+          ['M103', false],
+          ['M104', false],
+        ],
+        'returns is controls'
+      );
+    })
+    .catch(t.end)
+    .then(() => {
+      // teardown
+      createReadStreamSpy.restore();
+    });
+});
 
 // TODO: This test fails when this file is tested independently. Why?
 test('ProjectService - addFiles/removeFiles', (t) => {
