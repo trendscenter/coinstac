@@ -27,16 +27,7 @@ module.exports = {
       filename,
       size: stat.size,
       modified: stat.mtime.getTime(),
-
-      /**
-       * @todo The `isControl` tag is hard-coded to demo the
-       * decentralized-laplacian-ridge-regression computation. Determine a
-       * method for informing the UI of a computation's required tags and
-       * letting the user apply them.
-       */
-      tags: {
-        isControl: filename.indexOf('controls') > -1,
-      },
+      tags: {},
     }));
   },
 

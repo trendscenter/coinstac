@@ -7,6 +7,7 @@ const common = require('coinstac-common');
 const Computation = common.models.computation.Computation;
 const crypto = require('crypto');
 const getSyncedDatabase = require('../utils/get-synced-database');
+const merge = require('lodash/merge');
 const ModelService = require('../model-service');
 const RemoteComputationResult = common.models.computation.RemoteComputationResult;
 
@@ -70,6 +71,66 @@ class ComputationService extends ModelService {
   }
 
   /**
+   * Call the local pipeline runner pool's `triggerRunner`.
+   * @private
+   *
+   * @param {Object} options
+   * @param {string} options.consortiumId Consortium the runId is from
+   * @param {string} options.projectId Project to run on
+   * @param {string} options.runId
+   * @returns {Promise}
+   */
+  doTriggerRunner({ consortiumId, projectId, runId }) {
+    if (!consortiumId) {
+      return Promise.reject(new Error('Consortium ID required'));
+    } else if (!projectId) {
+      return Promise.reject(new Error('Project ID required'));
+    } else if (!runId) {
+      return Promise.reject(new Error('Computation run ID required'));
+    }
+
+    const { consortia, pool, projects } = this.client;
+
+    return projects.get(projectId)
+      .then(project => Promise.all([
+        project,
+        projects.getMetaFileContents(project.metaFile),
+      ]))
+      .then(([project, projectMeta]) => Promise.all([
+        consortia.get(consortiumId),
+
+        // Map the project's metadata to its files
+        // TODO: Refactor this into model method?
+        Object.assign({}, project, {
+          files: project.files.map(file => {
+            const meta = projectMeta.find(m => {
+              return m[0].indexOf(file.filename) > -1;
+            });
+
+            if (!meta) {
+              throw new Error(`Couldn't find meta for ${file.filename}`);
+            }
+
+            return merge({}, file, {
+              tags: {
+                isControl: meta[1],
+              },
+            });
+          }),
+        }),
+      ]))
+      .then(([consortium, project]) => {
+        const result = new RemoteComputationResult({
+          _id: runId,
+          computationId: consortium.activeComputationId,
+          consortiumId,
+        });
+
+        return pool.triggerRunner(result, project);
+      });
+  }
+
+  /**
    * Kick off a remote computation result.
    *
    * @param {Object} options
@@ -78,50 +139,28 @@ class ComputationService extends ModelService {
    * @returns {Promise}
    */
   kickoff({ consortiumId, projectId }) {
-    const client = this.client;
-
     return this.canStartComputation(consortiumId)
-      .then(() => Promise.all([
-        client.consortia.get(consortiumId),
-        client.projects.get(projectId),
-      ]))
-      .then(([consortium, project]) => {
-        const activeComputationId = consortium.activeComputationId;
+      .then(() => this.client.consortia.get(consortiumId))
+      .then(({ activeComputationId }) => {
         const runId = crypto.createHash('md5')
           .update(`${consortiumId}${activeComputationId}${Date.now()}`)
           .digest('hex');
 
-        const result = new RemoteComputationResult({
-          _id: runId,
-          computationId: activeComputationId,
-          consortiumId,
-        });
-
-        return client.pool.triggerRunner(result, project);
+        return this.doTriggerRunner({ consortiumId, projectId, runId });
       });
   }
 
   /**
-   * Join an already in progress computation
-   * @param  string { consortiumId  the consortium the runId is from
-   * @param  string projectId       the project to run on
-   * @param  string runId     }     the run id to join
-   * @return Promise           promise from runner pool
+   * Join an already in progress computation.
+   *
+   * @param {Object} options
+   * @param {string} options.consortiumId Consortium the runId is from
+   * @param {string} options.projectId Project to run on
+   * @param {string} options.runId
+   * @return {Promise}
    */
   joinComputation({ consortiumId, projectId, runId }) {
-    const client = this.client;
-    const consortium = client.consortia.get(consortiumId);
-    const project = client.projects.get(projectId);
-    const activeComputationId = consortium.activeComputationId;
-
-
-    const result = new RemoteComputationResult({
-      _id: runId,
-      computationId: activeComputationId,
-      consortiumId,
-    });
-
-    return client.pool.triggerRunner(result, project);
+    return this.doTriggerRunner({ consortiumId, projectId, runId });
   }
 }
 
