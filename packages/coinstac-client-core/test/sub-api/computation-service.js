@@ -33,6 +33,7 @@ function getStubbedParams() {
       },
       projects: {
         get: sinon.stub(),
+        getMetaFileContents: sinon.stub(),
       },
       pool: {
         triggerRunner: sinon.stub().returns(Promise.resolve(
@@ -67,16 +68,16 @@ tape('ComputationService :: canStartComputation', t => {
   const params = getStubbedParams();
   const computationService = new ComputationService(params);
 
+  params.client.consortia.get.returns(Promise.resolve(
+    Object.assign({}, consortium, {
+      activeComputationId: 'most active evar',
+      owners: ['testUserName'],
+    })
+  ));
   params.client.consortia.get.onCall(0).returns(Promise.resolve(consortium));
   params.client.consortia.get.onCall(1).returns(Promise.resolve(
     Object.assign({}, consortium, {
       activeComputationId: 'most active evar',
-    })
-  ));
-  params.client.consortia.get.onCall(2).returns(Promise.resolve(
-    Object.assign({}, consortium, {
-      activeComputationId: 'most active evar',
-      owners: ['testUserName'],
     })
   ));
 
@@ -86,14 +87,19 @@ tape('ComputationService :: canStartComputation', t => {
       _id: 'baller-document',
     }]),
     url: 'http://coins.mrn.org',
-  }))
+  }));
+  params.client.dbRegistry.get.onCall(3).returns(Promise.resolve({
+    _hasLikelySynced: true,
+    find: () => Promise.resolve([]),
+    url: 'http://coins.mrn.org',
+  }));
 
   params.client.projects.get.returns(Promise.resolve({
     _id: 'wat wat wat',
     label: 'Bla is project?',
   }));
 
-  t.plan(3);
+  t.plan(4);
 
   computationService.canStartComputation(consortiumId)
     .then(() => t.fail('resolves when consortium lacks active computation ID'))
@@ -120,25 +126,78 @@ tape('ComputationService :: canStartComputation', t => {
         error && error.message.indexOf('one computation') > -1,
         'rejects when a run is active'
       );
-    });
+
+      return computationService.canStartComputation(consortiumId);
+    })
+    .then(() => t.pass('resolves when conditions suitable'))
+    .catch(t.end);
 });
 
-tape('ComputationService :: kickoff', t => {
+tape('ComputationService :: doTriggerRunner errors', t => {
+  const params = getStubbedParams();
+  const computationService = new ComputationService(params);
+
+  params.client.projects.get.returns(Promise.resolve({
+    files: [{
+      filename: 'session-ale',
+      tags: {},
+    }],
+  }));
+  params.client.projects.getMetaFileContents.returns(Promise.resolve([]));
+
+  t.plan(4);
+
+  computationService.doTriggerRunner({})
+    .catch(() => {
+      t.pass('rejects without consortium ID');
+
+      return computationService.doTriggerRunner({ consortiumId: 'pilsner' });
+    })
+    .catch(() => {
+      t.pass('rejects without project ID');
+
+      return computationService.doTriggerRunner({
+        consortiumId: 'pilsner',
+        projectId: 'ipa',
+      });
+    })
+    .catch(() => {
+      t.pass('rejects without run ID');
+
+      return computationService.doTriggerRunner({
+        consortiumId: 'pilsner',
+        projectId: 'ipa',
+        runId: 'pale-ale',
+      });
+    })
+    .catch(error => {
+      t.ok(
+        error.message.indexOf('session-ale') > -1,
+        'rejects when file meta DNE'
+      );
+    })
+    .catch(t.end);
+});
+
+tape('ComputationService :: doTriggerRunner', t => {
   const params = getStubbedParams();
 
   const computationService = new ComputationService(params);
   const consortiumId = 'the-wildest-computation';
   const project = {
-    name: 'a-project-so-sweet',
+    _id: 'a-project-so-sweet',
+    name: 'The Sweetest Project',
     files: [{
       filename: 'dope-file',
+      tags: {},
     }, {
       filename: 'baller-file',
+      tags: {},
     }, {
       filename: 'ill-file',
     }],
   };
-  const projectId = 'the-craziest-project';
+  const runId = 'runningestIdentifier';
 
   params.client.consortia.get.returns(Promise.resolve({
     _id: consortiumId,
@@ -147,10 +206,19 @@ tape('ComputationService :: kickoff', t => {
     owners: ['testUserName'],
   }));
   params.client.projects.get.returns(Promise.resolve(project));
+  params.client.projects.getMetaFileContents.returns(Promise.resolve([
+    [project.files[0].filename, true],
+    [project.files[1].filename, false],
+    [project.files[2].filename, true],
+  ]));
 
   t.plan(7);
 
-  computationService.kickoff({ consortiumId, projectId })
+  computationService.doTriggerRunner({
+    consortiumId,
+    projectId: project._id,
+    runId,
+  })
     .then(response => {
       t.equal(
         params.client.consortia.get.firstCall.args[0],
@@ -159,7 +227,7 @@ tape('ComputationService :: kickoff', t => {
       );
       t.equal(
         params.client.projects.get.firstCall.args[0],
-        projectId,
+        project._id,
         'retrieves project via projectId'
       );
 
@@ -178,12 +246,20 @@ tape('ComputationService :: kickoff', t => {
         'sets computation and consortium IDs on remote computation result'
       );
 
-      t.ok(args[0]._id, 'sets run ID on remote computation result');
+      t.equal(args[0]._id, runId, 'sets run ID on remote computation result');
 
-      t.equal(
+      t.deepEqual(
         triggerRunnerStub.firstCall.args[1],
-        project,
-        'passes project to pool’s triggerRunner method'
+        Object.assign({}, project, {
+          files: project.files.map((file, index) => {
+            return Object.assign({}, file, {
+              tags: {
+                isControl: index % 2 < 1,
+              },
+            });
+          }),
+        }),
+        'passes transformed project to pool’s triggerRunner method'
       );
       t.equal(
         response,
@@ -192,4 +268,64 @@ tape('ComputationService :: kickoff', t => {
       );
     })
     .catch(t.end);
+});
+
+tape('ComputationService :: kickoff', t => {
+  const params = getStubbedParams();
+
+  const computationService = new ComputationService(params);
+  const canStub = sinon
+    .stub(computationService, 'canStartComputation')
+    .returns(Promise.resolve(true));
+  const consortiumId = 'brown-ale';
+  const doStub = sinon.stub(computationService, 'doTriggerRunner')
+    .returns(Promise.resolve('porter'));
+  const projectId = 'irish-red';
+
+  params.client.consortia.get.returns({ activeComputationId: '' });
+
+  t.plan(3);
+
+  computationService.kickoff({ consortiumId, projectId })
+    .then(response => {
+      t.ok(
+        params.client.consortia.get.calledWith(consortiumId),
+        'retrieves consortium by passed ID'
+      );
+      t.ok(doStub.firstCall.args[0].runId, 'passes a run ID');
+      t.equal(response, 'porter', 'returns doTrigger\'s response');
+    })
+    .catch(t.end)
+    .then(() => {
+      // teardown
+      canStub.restore();
+      doStub.restore();
+    });
+});
+
+tape('ComputationService :: joinComputation', t => {
+  const params = getStubbedParams();
+
+  const computationService = new ComputationService(params);
+  const consortiumId = 'stout';
+  const doStub = sinon.stub(computationService, 'doTriggerRunner')
+    .returns(Promise.resolve('farmhouse-ale'))
+  const projectId = 'saison';
+  const runId = 'bier-de-garde';
+
+  t.plan(2);
+
+  computationService.joinComputation({ consortiumId, projectId, runId })
+    .then(response => {
+      t.ok(
+        doStub.calledWithExactly({ consortiumId, projectId, runId }),
+        'passes args to doTrigger'
+      );
+      t.equal(response, 'farmhouse-ale', 'passes doTrigger\'s response');
+    })
+    .catch(t.end)
+    .then(() => {
+      // teardown
+      doStub.restore();
+    });
 });
