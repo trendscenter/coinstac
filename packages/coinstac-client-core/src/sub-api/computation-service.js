@@ -104,7 +104,7 @@ class ComputationService extends ModelService {
         Object.assign({}, project, {
           files: project.files.map(file => {
             const meta = projectMeta.find(m => {
-              return m[0].indexOf(file.filename) > -1;
+              return file.filename.indexOf(m[0]) > -1;
             });
 
             if (!meta) {
