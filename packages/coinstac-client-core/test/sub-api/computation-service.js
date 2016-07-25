@@ -188,13 +188,13 @@ tape('ComputationService :: doTriggerRunner', t => {
     _id: 'a-project-so-sweet',
     name: 'The Sweetest Project',
     files: [{
-      filename: 'dope-file',
+      filename: '/Users/coinstac/dope-file.txt',
       tags: {},
     }, {
-      filename: 'baller-file',
+      filename: '/Users/coinstac/baller-file.txt',
       tags: {},
     }, {
-      filename: 'ill-file',
+      filename: '/Users/coinstac/ill-file.txt',
     }],
   };
   const runId = 'runningestIdentifier';
@@ -207,9 +207,9 @@ tape('ComputationService :: doTriggerRunner', t => {
   }));
   params.client.projects.get.returns(Promise.resolve(project));
   params.client.projects.getMetaFileContents.returns(Promise.resolve([
-    [project.files[0].filename, true],
-    [project.files[1].filename, false],
-    [project.files[2].filename, true],
+    ['dope-file.txt', true],
+    ['baller-file.txt', false],
+    ['ill-file.txt', true],
   ]));
 
   t.plan(7);
