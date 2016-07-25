@@ -9,6 +9,26 @@ import { addProject } from '../../state/ducks/projects';
 import FormProject from './form-project';
 
 class FormProjectController extends Component {
+  /**
+   * Get errors from the project state.
+   *
+   * @param {Object} project
+   * @returns {Object}
+   */
+  static getErrors(project) {
+    return Object.keys(project).reduce((memo, key) => {
+      const value = project[key];
+
+      if ((key === 'files' && !value.length) || !value) {
+        memo[key] = FormProjectController.ERRORS.get(key);
+      } else {
+        memo[key] = null;
+      }
+
+      return memo;
+    }, {});
+  }
+
   constructor(props) {
     super(props);
 
@@ -86,6 +106,9 @@ class FormProjectController extends Component {
     app.main.services.files.select()
       .then(files => {
         this.setState({
+          errors: {
+            files: null,
+          },
           project: {
             files: [...this.state.project.files, ...JSON.parse(files)],
           },
@@ -105,6 +128,9 @@ class FormProjectController extends Component {
     app.main.services.files.getMetaFile()
       .then(metaFile => {
         this.setState({
+          errors: {
+            metaFile: null,
+          },
           project: {
             metaFile,
           },
@@ -124,6 +150,7 @@ class FormProjectController extends Component {
     const { value: consortiumId } = event.target;
 
     this.setState({
+      errors: FormProjectController.getErrors({ consortiumId }),
       project: { consortiumId },
     });
 
@@ -136,6 +163,7 @@ class FormProjectController extends Component {
     const { value: name } = event.target;
 
     this.setState({
+      errors: FormProjectController.getErrors({ name }),
       project: { name },
     });
 
@@ -204,8 +232,12 @@ class FormProjectController extends Component {
       Object.assign({}, this.props.project, project) :
       project;
 
-    // Ensure no errors before submitting
-    if (!Object.values(errors).some(e => !!e)) {
+    const newErrors = FormProjectController.getErrors(project);
+
+    if (Object.values(newErrors).some(e => !!e)) {
+      this.setState({ errors: newErrors });
+    } else if (!Object.values(errors).some(e => !!e)) {
+      // Ensure no errors before submitting
       dispatch(addProject(toAdd))
         .then(() => {
           router.push('/projects');
@@ -314,6 +346,18 @@ class FormProjectController extends Component {
 FormProjectController.contextTypes = {
   router: PropTypes.object.isRequired,
 };
+
+/**
+ * Field to error message map.
+ *
+ * @const {Map}
+ */
+FormProjectController.ERRORS = new Map([
+  ['consortiumId', 'Select a consortium'],
+  ['files', 'Add some files'],
+  ['metaFile', 'Add a meta file'],
+  ['name', 'Add a name'],
+]);
 
 FormProjectController.propTypes = {
   consortia: PropTypes.array.isRequired,
