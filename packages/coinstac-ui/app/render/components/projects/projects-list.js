@@ -68,12 +68,16 @@ class ProjectsList extends Component {
 
     return (
       <div>
-        <LinkContainer to="/projects/new" id="add_project">
-          <Button bsStyle="primary" className="pull-right">
-            <strong>+</strong>
-            Add Project
-          </Button>
-        </LinkContainer>
+        <div className="page-header clearfix">
+          <h1 className="pull-left">Projects</h1>
+          <LinkContainer className="pull-right" to="/projects/new">
+            <Button bsStyle="primary" className="pull-right">
+              <span aria-hidden="true" className="glphicon glyphicon-plus"></span>
+              {' '}
+              Add Project
+            </Button>
+          </LinkContainer>
+        </div>
         <div className="projects-list">
           {projects.map(project => {
             const consortium = consortia.find(c => {

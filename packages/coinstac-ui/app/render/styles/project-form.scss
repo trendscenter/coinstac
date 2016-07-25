@@ -1,0 +1,81 @@
+///
+/// Project Form
+///
+
+$border-radius: 5px !default;
+$vertical-breakpoint: 38em;
+
+.project-form {
+  @media (min-height: $vertical-breakpoint) {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+  }
+
+  // TODO: Refactor into global styles
+  .alert {
+    border: none;
+    font-style: italic;
+    margin: 0;
+    padding-top: .8em;
+    padding-bottom: .8em;
+    text-align: center;
+
+    abbr[title] {
+      border: none;
+    }
+  }
+}
+
+.project-form-section-header {
+  margin-bottom: 1em;
+
+  h2 {
+    margin: 0;
+  }
+}
+
+.project-form-fields {
+  margin-bottom: 2em;
+}
+.project-form-files {
+  margin-bottom: 1.5em;
+
+  @media (min-height: $vertical-breakpoint) {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 2;
+  }
+
+  .project-form-section-content {
+    max-height: 20em;
+    overflow: scroll;
+
+    @media (min-height: $vertical-breakpoint) {
+      flex-grow: 2;
+      max-height: none;
+    }
+  }
+  ul {
+    margin: 0;
+  }
+  li + li {
+    margin-top: .5em;
+  }
+}
+.project-form-meta {
+  margin-bottom: 1.5em;
+}
+.project-form-controls {
+  padding-bottom: 1.5em;
+
+  .btn-link {
+    color: $gray;
+
+    &:focus,
+    &:hover,
+    &:active {
+      color: $brand-danger;
+    }
+  }
+}
