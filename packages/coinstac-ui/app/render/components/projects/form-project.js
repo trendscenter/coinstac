@@ -5,6 +5,7 @@ import {
   FormControl,
   FormGroup,
   HelpBlock,
+  Label,
 } from 'react-bootstrap';
 import React, { Component, PropTypes } from 'react';
 
@@ -90,6 +91,7 @@ export default class FormProject extends Component {
     } = this.props;
     let buttons;
     let content;
+    let heading;
     let helpBlock;
 
     if (files.length) {
@@ -132,6 +134,13 @@ export default class FormProject extends Component {
           })}
         </ul>
       );
+      heading = (
+        <span>
+          Files
+          {' '}
+          <Label>{files.length}</Label>
+        </span>
+      );
     } else {
       buttons = (
         <Button
@@ -146,6 +155,7 @@ export default class FormProject extends Component {
           Add Files
         </Button>
       );
+      heading = 'Files';
 
       if (!filesError) {
         content = (
@@ -165,7 +175,7 @@ export default class FormProject extends Component {
     return (
       <div className="project-form-section project-form-files">
         <div className="project-form-section-header clearfix">
-          <h2 className="h3 pull-left">Files</h2>
+          <h2 className="h3 pull-left">{heading}</h2>
           {buttons}
         </div>
         <div className="project-form-section-content">
