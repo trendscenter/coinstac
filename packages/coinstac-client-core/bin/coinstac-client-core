@@ -6,6 +6,7 @@ const CoinstacClient = require('../src/index');
 const DBRegistry = require('coinstac-common').services.dbRegistry.DBRegistry;
 const dropRight = require('lodash/dropRight');
 const flatten = require('lodash/flatten');
+const getSyncedDatabase = require('../src/utils/get-synced-database');
 const glob = require('glob');
 const inquirer = require('inquirer');
 const last = require('lodash/last');
@@ -50,6 +51,7 @@ program
   .option('-a --api [value])', 'API connection string')
   .option('-c --consortium [value]', 'Consortium ID')
   .option('-d --database [value]', 'Database connection string')
+  .option('-m --metafile [value]', 'Meta file path')
   .option('-p --password [value]', 'Password')
   .option('-u --username [value]', 'Username')
   .parse(process.argv);
@@ -152,22 +154,51 @@ program
       .then(client.projects.getFileStats);
   })
   .then(files => {
+    const consortiumId = program.consortium;
     logger.info('Saving project...');
 
     const project = new Project({
-      consortiumId: program.consortium,
+      consortiumId,
       files: files, // eslint-disable-line object-shorthand
+      metaFile: program.metafile,
       name: `${username}'s project`,
     });
 
-    return client.dbRegistry.get('projects').save(project.serialize());
+    return Promise.all([
+      client.dbRegistry.get('projects').save(project.serialize()),
+      client.dbRegistry.get('consortia').get(consortiumId),
+    ]);
   })
-  .then(project => {
+  .then(([project, consortium]) => {
+    const consortiumId = consortium._id;
+    const projectId = project._id;
+
     logger.log('Starting computation...');
 
-    return client.computations.kickoff({
-      consortiumId: program.consortium,
-      projectId: project._id,
-    });
+    if (consortium.owners.indexOf(username) > -1) {
+      return client.computations.kickoff({ consortiumId, projectId });
+    }
+
+    // TODO: Roll active run ID retrieval into client-core. Oh, and actually
+    // make it work.
+    return getSyncedDatabase(
+      client.dbRegistry,
+      `remote-consortium-${consortiumId}`
+    )
+      .then(db => db.all())
+      .then(docs => {
+        // Owner's doc _should_ be saved
+        if (!docs.length) {
+          throw new Error(`Couldn't find active run ID for ${consortiumId}`);
+        }
+
+        const runId = docs[0]._id;
+
+        return client.computations.joinComputation({
+          consortiumId,
+          projectId,
+          runId,
+        });
+      });
   })
   .catch(errorHandler);
