@@ -18,10 +18,12 @@ class FormProjectController extends Component {
         consortiumId: null,
         name: null,
         files: null,
+        metaFile: null,
       },
       project: {
         consortiumId: undefined,
         files: [],
+        metaFile: null,
         name: '',
       },
 
@@ -40,8 +42,11 @@ class FormProjectController extends Component {
     }
 
     this.handleAddFiles = this.handleAddFiles.bind(this);
+    this.handleAddMetaFile = this.handleAddMetaFile.bind(this);
     this.handleConsortiumChange = this.handleConsortiumChange.bind(this);
     this.handleNameChange = this.handleNameChange.bind(this);
+    this.handleRemoveAllFiles = this.handleRemoveAllFiles.bind(this);
+    this.handleRemoveMetaFile = this.handleRemoveMetaFile.bind(this);
     this.handleRemoveFile = this.handleRemoveFile.bind(this);
     this.handleReset = this.handleReset.bind(this);
     this.handleRunComputation = this.handleRunComputation.bind(this);
@@ -88,10 +93,30 @@ class FormProjectController extends Component {
       })
       .catch(error => {
         // Electron's dialog doesn't produce errors, so this should never happen
+        app.logger.error(error);
         app.notify(
           'error',
           `An error occurred when adding files: ${error.message}`
         );
+      });
+  }
+
+  handleAddMetaFile() {
+    app.main.services.files.getMetaFile()
+      .then(metaFile => {
+        this.setState({
+          project: {
+            metaFile,
+          },
+        });
+      })
+      .catch(error => {
+        app.logger.error(error);
+        this.setState({
+          errors: {
+            metaFile: error.message,
+          },
+        });
       });
   }
 
@@ -131,12 +156,28 @@ class FormProjectController extends Component {
       });
   }
 
+  handleRemoveAllFiles() {
+    this.setState({
+      project: {
+        files: [],
+      },
+    });
+  }
+
   handleRemoveFile(file) {
     this.setState({
       project: {
         files: this.state.project.files.filter(f => {
           return f.filename !== file.filename;
         }),
+      },
+    });
+  }
+
+  handleRemoveMetaFile() {
+    this.setState({
+      project: {
+        metaFile: null,
       },
     });
   }
@@ -229,6 +270,7 @@ class FormProjectController extends Component {
     const {
       allowComputationRun,
       errors,
+      metaFile,
       project,
       showFilesComponent,
     } = this.state;
@@ -250,10 +292,14 @@ class FormProjectController extends Component {
         consortia={consortia}
         errors={errors}
         isEditing={isEditing}
+        metaFile={metaFile}
         onAddFiles={this.handleAddFiles}
+        onAddMetaFile={this.handleAddMetaFile}
         onConsortiumChange={this.handleConsortiumChange}
         onNameChange={this.handleNameChange}
+        onRemoveAllFiles={this.handleRemoveAllFiles}
         onRemoveFile={this.handleRemoveFile}
+        onRemoveMetaFile={this.handleRemoveMetaFile}
         onReset={this.handleReset}
         onRunComputation={this.handleRunComputation}
         onSubmit={this.handleSubmit}

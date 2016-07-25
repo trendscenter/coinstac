@@ -1,4 +1,5 @@
 import {
+  Alert,
   Button,
   ControlLabel,
   FormControl,
@@ -7,7 +8,7 @@ import {
 } from 'react-bootstrap';
 import React, { Component, PropTypes } from 'react';
 
-import ProjectFiles from './project-files';
+import ProjectFile from './project-file';
 
 export default class FormProject extends Component {
   constructor(props) {
@@ -82,33 +83,149 @@ export default class FormProject extends Component {
     const {
       errors: { files: filesError },
       onAddFiles,
+      onRemoveAllFiles,
       onRemoveFile,
       project: { files },
       showFilesComponent,
     } = this.props;
+    let buttons;
+    let content;
     let helpBlock;
+
+    if (files.length) {
+      buttons = (
+        <div className="pull-right">
+          <Button
+            bsSize="small"
+            bsStyle="primary"
+            onClick={onAddFiles}
+            type="button"
+          >
+            <span aria-hidden="true" className="glyphicon glyphicon-plus"></span>
+            {' '}
+            Add Files
+          </Button>
+          {' '}
+          <Button
+            bsSize="small"
+            bsStyle="danger"
+            onClick={onRemoveAllFiles}
+            type="button"
+          >
+            <span aria-hidden="true" className="glyphicon glyphicon-minus"></span>
+            {' '}
+            Remove All Files
+          </Button>
+        </div>
+      );
+      content = (
+        <ul className="list-unstyled">
+          {files.map((file, index) => {
+            return (
+              <li key={index}>
+                <ProjectFile
+                  filename={file.filename}
+                  onRemove={() => onRemoveFile(file)}
+                />
+              </li>
+            );
+          })}
+        </ul>
+      );
+    } else {
+      buttons = (
+        <Button
+          bsSize="small"
+          bsStyle="primary"
+          className="pull-right"
+          onClick={onAddFiles}
+          type="button"
+        >
+          <span aria-hidden="true" className="glyphicon glyphicon-plus"></span>
+          {' '}
+          Add Files
+        </Button>
+      );
+      content = (
+        <Alert bsStyle="info">Select files for the computation.</Alert>
+      );
+    }
 
     if (!showFilesComponent) {
       return;
     }
 
     if (filesError) {
-      helpBlock = <HelpBlock>{filesError}</HelpBlock>;
+      helpBlock = <HelpBlock className="text-danger">{filesError}</HelpBlock>;
     }
 
     return (
-      <div>
-        <div className="clearfix">
-          <Button
-            className="pull-right"
-            onClick={onAddFiles}
-            type="button"
-          >
-            Add Files
-          </Button>
+      <div className="project-form-section project-form-files">
+        <div className="project-form-section-header clearfix">
+          <h2 className="h3 pull-left">Files</h2>
+          {buttons}
         </div>
-        <ProjectFiles files={files} onRemoveFileClick={onRemoveFile} />
-        {helpBlock}
+        <div className="project-form-section-content">
+          {helpBlock}
+          {content}
+        </div>
+      </div>
+    );
+  }
+
+  renderMetaFileField() {
+    const {
+      errors: {
+        metaFile: metaFileError,
+      },
+      project: {
+        metaFile,
+      },
+      onAddMetaFile,
+      onRemoveMetaFile,
+    } = this.props;
+    let button;
+    let contents;
+    let errorMessage;
+
+    if (metaFile) {
+      contents = <ProjectFile filename={metaFile} onRemove={onRemoveMetaFile} />;
+    } else {
+      button = (
+        <Button
+          bsSize="small"
+          bsStyle="primary"
+          className="pull-right"
+          onClick={onAddMetaFile}
+          type="button"
+        >
+          <span aria-hidden="true" className="glyphicon glyphicon-plus"></span>
+          {' '}
+          Add File
+        </Button>
+      );
+      contents = (
+        <Alert bsStyle="info">
+          Add a <abbr title="Comma Separated Values">CSV</abbr> file with
+          metadata for selected files.
+        </Alert>
+      );
+    }
+
+    if (metaFileError) {
+      errorMessage = <HelpBlock bsClass="text-danger">{metaFileError}</HelpBlock>;
+    }
+
+    return (
+      <div className="project-form-section project-form-meta">
+        <div className="project-form-section-header clearfix">
+          <h2 className="h3 pull-left">Meta File</h2>
+          {button}
+        </div>
+        <div className="project-form-section-content">
+          {contents}
+          {errorMessage}
+        </div>
       </div>
     );
   }
@@ -143,25 +260,35 @@ export default class FormProject extends Component {
     const isDisabled = Object.values(errors).some(e => !!e);
 
     return (
-      <form className="clearfix" onSubmit={this.onSubmit}>
-        <h3>{isEditing ? 'Edit' : 'New'} Project</h3>
+      <form className="project-form clearfix" onSubmit={this.onSubmit}>
+        <div className="page-header">
+          <h1>{isEditing ? 'Edit' : 'New'} Project</h1>
+        </div>
 
-        {this.renderNameField()}
-        {this.renderConsortiaField()}
+        <div className="project-form-section project-form-fields">
+          {this.renderNameField()}
+          {this.renderConsortiaField()}
+        </div>
+
         {this.renderFilesField()}
-        {this.maybeRenderComputationRunButton()}
+        {this.renderMetaFileField()}
 
-        <div className="text-right">
-          <Button bsStyle="link" onClick={onReset} type="reset">
-            <span className="glyphicon glyphicon-remove" aria-hidden="true"></span>
-            {' '}
-            Cancel
-          </Button>
-          <Button bsStyle="primary" disabled={isDisabled} type="submit">
-            <span className="glyphicon glyphicon-ok" aria-hidden="true"></span>
-            {' '}
-            {isEditing ? 'Update' : 'Save'}
-          </Button>
+        <div className="project-form-section project-form-controls clearfix">
+          <div className="pull-left">
+            {this.maybeRenderComputationRunButton()}
+          </div>
+          <div className="pull-right">
+            <Button bsStyle="success" disabled={isDisabled} type="submit">
+              <span className="glyphicon glyphicon-ok" aria-hidden="true"></span>
+              {' '}
+              {isEditing ? 'Update' : 'Save'}
+            </Button>
+            <Button bsStyle="link" onClick={onReset} type="reset">
+              <span className="glyphicon glyphicon-remove" aria-hidden="true"></span>
+              {' '}
+              Cancel
+            </Button>
+          </div>
         </div>
       </form>
     );
@@ -174,13 +301,23 @@ FormProject.propTypes = {
   errors: PropTypes.object.isRequired,
   isEditing: PropTypes.bool.isRequired,
   onAddFiles: PropTypes.func.isRequired,
+  onAddMetaFile: PropTypes.func.isRequired,
   onConsortiumChange: PropTypes.func.isRequired,
   onNameChange: PropTypes.func.isRequired,
+  onRemoveAllFiles: PropTypes.func.isRequired,
   onRemoveFile: PropTypes.func.isRequired,
+  onRemoveMetaFile: PropTypes.func.isRequired,
   onReset: PropTypes.func.isRequired,
   onRunComputation: PropTypes.func.isRequired,
   onSubmit: PropTypes.func.isRequired,
-  project: PropTypes.object.isRequired,
+  project: PropTypes.shape({
+    files: PropTypes.arrayOf(
+      PropTypes.shape({
+        filename: PropTypes.string.isRequired,
+      })
+    ).isRequired,
+    metaFile: PropTypes.string,
+  }).isRequired,
   showComputationRunButton: PropTypes.bool.isRequired,
   showFilesComponent: PropTypes.bool.isRequired,
 };
