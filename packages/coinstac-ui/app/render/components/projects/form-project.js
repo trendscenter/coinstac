@@ -146,9 +146,12 @@ export default class FormProject extends Component {
           Add Files
         </Button>
       );
-      content = (
-        <Alert bsStyle="info">Select files for the computation.</Alert>
-      );
+
+      if (!filesError) {
+        content = (
+          <Alert bsStyle="info">Select files for the computation.</Alert>
+        );
+      }
     }
 
     if (!showFilesComponent) {
@@ -156,7 +159,7 @@ export default class FormProject extends Component {
     }
 
     if (filesError) {
-      helpBlock = <HelpBlock className="text-danger">{filesError}</HelpBlock>;
+      helpBlock = <Alert bsStyle="danger">{filesError}</Alert>;
     }
 
     return (
@@ -204,16 +207,19 @@ export default class FormProject extends Component {
           Add File
         </Button>
       );
-      contents = (
-        <Alert bsStyle="info">
-          Add a <abbr title="Comma Separated Values">CSV</abbr> file with
-          metadata for selected files.
-        </Alert>
-      );
+
+      if (!metaFileError) {
+        contents = (
+          <Alert bsStyle="info">
+            Add a <abbr title="Comma Separated Values">CSV</abbr> file with
+            metadata for selected files.
+          </Alert>
+        );
+      }
     }
 
     if (metaFileError) {
-      errorMessage = <HelpBlock bsClass="text-danger">{metaFileError}</HelpBlock>;
+      errorMessage = <Alert bsStyle="danger">{metaFileError}</Alert>;
     }
 
     return (
