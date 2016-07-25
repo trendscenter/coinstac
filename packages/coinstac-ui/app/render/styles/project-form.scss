@@ -36,15 +36,16 @@ $vertical-breakpoint: 38em;
 }
 
 .project-form-fields {
-  margin-bottom: 2em;
+  padding-bottom: 2em;
 }
 .project-form-files {
-  margin-bottom: 1.5em;
+  padding-bottom: 1.5em;
 
   @media (min-height: $vertical-breakpoint) {
     display: flex;
     flex-direction: column;
     flex-grow: 2;
+    flex-shrink: 2;
   }
 
   .project-form-section-content {
@@ -64,7 +65,11 @@ $vertical-breakpoint: 38em;
   }
 }
 .project-form-meta {
-  margin-bottom: 1.5em;
+  padding-bottom: 1.5em;
+
+  @media (min-height: $vertical-breakpoint) {
+    flex-shrink: 0;
+  }
 }
 .project-form-controls {
   padding-bottom: 1.5em;
