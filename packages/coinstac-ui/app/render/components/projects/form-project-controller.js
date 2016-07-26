@@ -58,6 +58,7 @@ class FormProjectController extends Component {
     if (props.project) {
       this.state.project.consortiumId = props.project.consortiumId;
       this.state.project.files = clone(props.project.files);
+      this.state.project.metaFile = props.project.metaFile;
       this.state.project.name = props.project.name;
     }
 
