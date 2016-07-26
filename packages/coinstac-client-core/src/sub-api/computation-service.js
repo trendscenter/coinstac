@@ -159,7 +159,7 @@ class ComputationService extends ModelService {
    * @param {string} options.runId
    * @return {Promise}
    */
-  joinComputation({ consortiumId, projectId, runId }) {
+  joinRun({ consortiumId, projectId, runId }) {
     return this.doTriggerRunner({ consortiumId, projectId, runId });
   }
 }
