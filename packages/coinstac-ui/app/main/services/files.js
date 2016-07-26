@@ -52,7 +52,7 @@ module.exports = {
         dialog.showOpenDialog(
           mainWindow,
           {
-            properties: ['openFile', 'multiSelections'],
+            properties: ['openDirectory', 'openFile', 'multiSelections'],
           },
           files => resolve(files || [])
         );
