@@ -1,5 +1,6 @@
 import { applyAsyncLoading } from './loading.js';
 import app from 'ampersand-app';
+import omit from 'lodash/omit';
 
 export const ADD_PROJECT = 'ADD_PROJECT';
 export const _addProject = (project) => ({ type: ADD_PROJECT, project });
@@ -67,7 +68,14 @@ export function mapProject(project) {
 
 export const addProject = applyAsyncLoading(function addProject(project) {
   return (dispatch) => {
-    return app.core.projects.save(project)
+    /**
+     * @todo: The `Project` model is decorated with `allowComputationRun` and
+     * `status` properties for the UI. Determine a consistent way to add/strip
+     * these props when dealing with the storage layer.
+     */
+    return app.core.projects.save(
+      omit(project, ['allowComputationRun', 'status'])
+    )
       .then(mapProject)
       .then((proj) => {
         app.notify('success', `Project '${project.name}' created`);
