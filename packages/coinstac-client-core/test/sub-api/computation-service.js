@@ -303,19 +303,19 @@ tape('ComputationService :: kickoff', t => {
     });
 });
 
-tape('ComputationService :: joinComputation', t => {
+tape('ComputationService :: joinRun', t => {
   const params = getStubbedParams();
 
   const computationService = new ComputationService(params);
   const consortiumId = 'stout';
   const doStub = sinon.stub(computationService, 'doTriggerRunner')
-    .returns(Promise.resolve('farmhouse-ale'))
+    .returns(Promise.resolve('farmhouse-ale'));
   const projectId = 'saison';
   const runId = 'bier-de-garde';
 
   t.plan(2);
 
-  computationService.joinComputation({ consortiumId, projectId, runId })
+  computationService.joinRun({ consortiumId, projectId, runId })
     .then(response => {
       t.ok(
         doStub.calledWithExactly({ consortiumId, projectId, runId }),
