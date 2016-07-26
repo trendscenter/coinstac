@@ -73,11 +73,6 @@ class FormProjectController extends Component {
     this.handleSubmit = this.handleSubmit.bind(this);
   }
 
-  componentWillMount() {
-    // this.maybeShowFilesComponent(this.state.project.consortiumId);
-    this.maybeAllowComputationRun(this.state.project.consortiumId);
-  }
-
   /**
    * Set state.
    *
@@ -153,10 +148,6 @@ class FormProjectController extends Component {
       errors: FormProjectController.getErrors({ consortiumId }),
       project: { consortiumId },
     });
-
-    // TODO: Figure out why `nextTick` is necessary. React internals?
-    process.nextTick(() => this.maybeAllowComputationRun(consortiumId));
-    // this.maybeShowFilesComponent(consortiumId);
   }
 
   handleNameChange(event) {
@@ -251,27 +242,9 @@ class FormProjectController extends Component {
   }
 
   /**
-   * Determine whether the project (or, computation) can be run.
-   * @see coinstac-client-core/src/sub-api/computation-service.js
-   *
-   * @param {string} consortiumId
+   * @todo This is currently unused. Refactor this method to rely on the
+   * computation definition.
    */
-  maybeAllowComputationRun(consortiumId) {
-    const { params: { projectId } } = this.props;
-
-    if (!projectId) {
-      this.setState({ allowComputationRun: false });
-    } else {
-      app.core.computations.canStartComputation(consortiumId)
-        .then(() => {
-          this.setState({ allowComputationRun: true });
-        })
-        .catch(() => {
-          this.setState({ allowComputationRun: false });
-        });
-    }
-  }
-
   maybeShowFilesComponent(consortiumId) {
     const { consortia } = this.props;
 
