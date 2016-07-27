@@ -12,7 +12,7 @@ const LayoutNoAuth = ({ children }) => {
                             <h1 className="logo text-center">
                                 <abbr title="Collaborative Informatics and Neuroimaging Suite Toolkit for Anonymous Computation">COINSTAC</abbr>
                             </h1>
-                            <Nav bsStyle="pills" justifed>
+                            <Nav bsStyle="pills" justified>
                                 <LinkContainer to="/login">
                                     <NavItem>Log In</NavItem>
                                 </LinkContainer>
