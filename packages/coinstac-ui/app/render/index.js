@@ -18,7 +18,6 @@ import routes from 'app/render/routes.js';
 
 // load application stylesheets
 require('./styles/app.scss');
-require('reactabular/style.css');
 
 const loadUI = function loadUI() {
   configureStore();
