@@ -99,17 +99,6 @@ export default class FormProject extends Component {
         <div className="pull-right">
           <Button
             bsSize="small"
-            bsStyle="primary"
-            onClick={onAddFiles}
-            type="button"
-          >
-            <span aria-hidden="true" className="glyphicon glyphicon-plus"></span>
-            {' '}
-            Add Files
-          </Button>
-          {' '}
-          <Button
-            bsSize="small"
             bsStyle="danger"
             onClick={onRemoveAllFiles}
             type="button"
@@ -117,6 +106,17 @@ export default class FormProject extends Component {
             <span aria-hidden="true" className="glyphicon glyphicon-minus"></span>
             {' '}
             Remove All Files
+          </Button>
+          {' '}
+          <Button
+            bsSize="small"
+            bsStyle="primary"
+            onClick={onAddFiles}
+            type="button"
+          >
+            <span aria-hidden="true" className="glyphicon glyphicon-plus"></span>
+            {' '}
+            Add Files
           </Button>
         </div>
       );
