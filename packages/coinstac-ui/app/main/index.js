@@ -7,9 +7,6 @@
 
 'use strict';
 
-// Prep packages for electron
-require('require-rebuild')();
-
 // if no env set prd
 process.env.NODE_ENV = process.env.NODE_ENV || 'production';
 
