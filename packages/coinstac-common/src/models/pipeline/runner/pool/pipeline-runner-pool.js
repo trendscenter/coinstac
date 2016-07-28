@@ -391,7 +391,7 @@ class PipelineRunnerPool extends Base {
       ].join(' '));
     }
     /* istanbul ignore next */
-    if (typeof this.resultsListeners[db.name] === DBListener) {
+    if (db.name in this.resultsListeners && this.resultsListener[db.name]) {
       throw new ReferenceError(`listener already exists for ${db.name}`);
     }
     const listener = new DBListener(db);
@@ -445,6 +445,7 @@ class PipelineRunnerPool extends Base {
         this.listenTo = without(this.listenTo, id);
       }
       this.resultsListeners[db.name].destroy();
+      delete this.resultsListener[db.name];
       return db.destroy();
     }));
   }
