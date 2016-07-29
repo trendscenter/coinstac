@@ -4,7 +4,13 @@ import { updateConsortia } from './consortia';
 import { updateComputations } from './computations';
 import { updateProjectStatus } from './projects';
 import cloneDeep from 'lodash/cloneDeep';
-import { hashHistory } from 'react-router';
+
+import {
+  computationCompleteNotification,
+  computationStartNotification,
+  getRunEndNotifier,
+  getRunErrorNotifier,
+} from '../../utils/notifications';
 
 export const listenToConsortia = (tia) => {
   app.core.pool.listenToConsortia(tia);
@@ -76,6 +82,18 @@ export const joinSlaveComputation = (consortium) => {
         if (!runId) {
           throw new Error(`No run ID for consortium ${consortiumId}`);
         }
+
+        const onRunEnd = getRunEndNotifier(consortium);
+        const onRunError = getRunErrorNotifier(consortium);
+
+        computationStartNotification(consortium);
+        app.core.pool.events.on('run:end', onRunEnd);
+        app.core.pool.events.on('error', onRunError);
+        app.core.pool.events.once('computation:complete', () => {
+          computationCompleteNotification(consortium);
+          app.core.pool.events.removeListener('run:end', onRunEnd);
+          app.core.pool.events.removeListener('error', onRunError);
+        });
 
         return app.core.computations.joinRun({
           consortiumId,
@@ -193,46 +211,16 @@ export const runComputation = applyAsyncLoading(
       // Unfortunately, requires we `get` the document for its label
       app.core.dbRegistry.get('consortia').get(consortiumId)
         .then(consortium => {
-          /**
-           * Add notifications for computation runs and completion.
-           *
-           * @todo Consider moving the notifications to a better location.
-           */
-          function runError(error) {
-            app.notifications.push({
-              autoDismiss: 1,
-              level: 'error',
-              message: `Error running computation for “${consortium.label}”: ${error.message}`,
-            });
-          }
-          function runEnd() {
-            app.notifications.push({
-              autoDismiss: 1,
-              level: 'info',
-              message: `Ran computation for “${consortium.label}”`,
-            });
-          }
+          const onRunEnd = getRunEndNotifier(consortium);
+          const onRunError = getRunErrorNotifier(consortium);
 
-          app.notifications.push({
-            autoDismiss: 1,
-            level: 'info',
-            message: `Starting computation for “${consortium.label}”`,
-          });
-
-          app.core.pool.events.on('run:end', runEnd);
-          app.core.pool.events.on('error', runError);
+          computationStartNotification(consortium);
+          app.core.pool.events.on('run:end', onRunEnd);
+          app.core.pool.events.on('error', onRunError);
           app.core.pool.events.once('computation:complete', () => {
-            app.notifications.push({
-              action: {
-                label: 'View Results',
-                callback: () => hashHistory.push(`/consortia/${consortiumId}`),
-              },
-              autoDismiss: 3,
-              level: 'success',
-              message: `Computation for “${consortium.label}” complete`,
-            });
-            app.core.pool.events.removeListener('run:end', runEnd);
-            app.core.pool.events.removeListener('error', runError);
+            computationCompleteNotification(consortium);
+            app.core.pool.events.removeListener('run:end', onRunEnd);
+            app.core.pool.events.removeListener('error', onRunError);
           });
 
           return app.core.computations.kickoff({ consortiumId, projectId });
