@@ -5,6 +5,12 @@
   "main": "index.js",
   "dependencies": {},
   "devDependencies": {
+    "async": "^2.0.0-rc.6",
+    "eslint": "^3.0.0",
+    "eslint-config-airbnb": "^9.0.1",
+    "eslint-plugin-import": "^1.10.1",
+    "eslint-plugin-jsx-a11y": "^1.5.3",
+    "eslint-plugin-react": "^5.2.2",
     "cross-spawn": "^4.0.0",
     "fs-extra": "^0.30.0",
     "gh-pages": "^0.11.0",
@@ -13,11 +19,16 @@
     "lerna": "2.0.0-beta.20",
     "marked": "^0.3.5",
     "minami": "^1.1.1",
+    "pre-commit": "^1.1.3",
+    "shelljs": "^0.7.0",
     "swig-templates": "^2.0.1"
   },
   "scripts": {
     "bootstrap": "lerna bootstrap",
-    "publish": "lerna publish && node scripts/docs.js"
+    "lint": "eslint '**/*.js' '**/bin/*'",
+    "lintfix": "eslint --fix **/*.js",
+    "publish": "lerna publish && node scripts/docs.js",
+    "test": "node scripts/test.js"
   },
   "repository": {
     "type": "git",
@@ -44,5 +55,10 @@
   "bugs": {
     "url": "https://github.com/MRN-Code/coinstac/issues"
   },
-  "homepage": "https://github.com/MRN-Code/coinstac#readme"
+  "homepage": "https://github.com/MRN-Code/coinstac#readme",
+  "pre-commit": {
+    "colors": true,
+    "silent": false,
+    "run": ["lint", "test"]
+  }
 }

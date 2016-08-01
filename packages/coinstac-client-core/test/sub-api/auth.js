@@ -18,9 +18,7 @@ function halfpennyFactory() {
 
 function authFactory(halfpenny) {
   return new Auth({
-    client: {
-      halfpenny: halfpenny || halfpennyFactory(),
-    },
+    halfpenny: halfpenny || halfpennyFactory(),
   });
 }
 

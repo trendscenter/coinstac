@@ -11,6 +11,7 @@ const ConsortiaService = require('../src/sub-api/consortia-service.js');
 const crasher = require('./utils/crash-hard');
 const fs = require('fs');
 const getLoginResponse = require('./utils/get-login-response.js');
+const identity = require('lodash/identity');
 const loadConfig = require('./utils/load-config.js');
 const nock = require('nock');
 const noop = require('lodash/noop');
@@ -39,7 +40,13 @@ test('CoinstacClient - constructor', (t) => {
 test('CoinstacClient - logger injections', (t) => {
   let c;
   t.plan(2);
-  clientFactory({ logger: { info: (echo) => echo } })
+  clientFactory({
+    logger: {
+      error: identity,
+      info: identity,
+      verbose: identity,
+    },
+  })
   .then((client) => { c = client; })
   .then(() => t.equal(c.logger.info('bananas'), 'bananas', 'logger injection ok'))
   .then(() => c.teardown())
@@ -73,7 +80,9 @@ test('CoinstacClient - initialize process', (t) => {
     {
       appDirectory: path.resolve(__dirname, '..', '.tmp'),
       logger: {
-        info: noop, // disable logging during test
+        // disable logging during test
+        info: noop,
+        verbose: noop,
       },
       storage: LocalStorageMemory,
     },

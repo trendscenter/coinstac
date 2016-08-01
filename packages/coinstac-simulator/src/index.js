@@ -11,8 +11,27 @@ const bootComputeServers = require('./boot-compute-servers');
 const bootClients = require('./boot-clients');
 const bootDBServer = require('./boot-db-server');
 const seedCentralDB = require('./seed-central-db');
+const flatten = require('lodash/flatten');
+// const values = require('lodash/values');
 
-const processes = {};
+/**
+ * Processes.
+ *
+ * Storage for child processes.
+ *
+ * @const {Object}
+ * @property {(ChildProcess|null)} db
+ * @property {(ChildProcess[]|null)} localhost
+ * @property {(ChildProcess|null)} remote
+ */
+const processes = {
+  db: null,
+  local: null,
+  remote: null,
+};
+
+// Ensure all processes are killed
+process.on('exit', module.exports.killProcesses);
 
 module.exports = {
   /**
@@ -77,5 +96,12 @@ module.exports = {
         .catch((err) => reject(err));
       });
     });
+  },
+
+  /**
+   * Send kill signals to all processes.
+   */
+  killProcesses() {
+    flatten(values(processes)).forEach(p => p.kill());
   },
 };

@@ -5,14 +5,7 @@
   "main": "src/runner/run.js",
   "scripts": {
     "test": "nyc --reporter=lcov --check-coverage --functions=90 --branches=90 node test/",
-    "lint": "eslint src/ test/",
-    "lintfix": "eslint --fix src/ test/",
-    "validate": "npm ls",
-    "preversion": "git checkout master && git pull && npm ls",
-    "docs": "mkdir -p docs && jsdoc -c .jsdoc.json src/",
-    "publish-patch": "npm run preversion && npm version patch && git push origin master --tags && npm publish",
-    "publish-minor": "npm run preversion && npm version minor && git push origin master --tags && npm publish",
-    "publish-major": "npm run preversion && npm version major && git push origin master --tags && npm publish"
+    "docs": "mkdir -p docs && jsdoc -c .jsdoc.json src/"
   },
   "repository": {
     "type": "git",
@@ -24,19 +17,8 @@
     "url": "https://github.com/MRN-Code/coinstac-distributed-algorithm-integration/issues"
   },
   "homepage": "https://github.com/MRN-Code/coinstac-distributed-algorithm-integration",
-  "pre-commit": [
-    "validate",
-    "lint",
-    "test"
-  ],
   "devDependencies": {
-    "coins-validate": "latest",
     "coinstac-simulator": "^2.0.2",
-    "eslint": "^2.4.0",
-    "eslint-config-airbnb": "^6.1.0",
-    "eslint-plugin-import": "^1.6.0",
-    "eslint-plugin-jsx-a11y": "^1.0.3",
-    "eslint-plugin-react": "^4.2.3",
     "gh-pages": "^0.9.0",
     "jsdoc": "^3.4.0",
     "lodash": "^4.13.1",

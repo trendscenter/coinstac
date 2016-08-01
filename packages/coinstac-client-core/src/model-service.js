@@ -1,6 +1,7 @@
 'use strict';
 
 const find = require('lodash/find');
+const getSyncedDatabase = require('./utils/get-synced-database');
 const matchesProperty = require('lodash/matchesProperty');
 
 /**
@@ -51,16 +52,28 @@ class ModelService {
     Object.assign(this, hooks);
 
     this.ModelType = hooks.ModelType;
+    this.dbInstance = null;
   }
 
+
   /**
-   * @property {Pouchy} db
+   * @private
    * lazy `getting` of db is important to prevent Pouchy generation pre-access,
    * specfically pre-auth. otherwise, syncing may occur before auth headers set.
    * this is OK for some stores, but taboo for others.
+   *
+   * @returns {Promise}
    */
-  get db() {
-    return this.dbs.get(this.dbName);
+  getDbInstance() {
+    if (this.dbInstance) {
+      return Promise.resolve(this.dbInstance);
+    }
+    return getSyncedDatabase(this.dbs, this.dbName)
+      .then(pouchy => {
+        this.dbInstance = pouchy;
+
+        return this.dbInstance;
+      });
   }
 
   /**
@@ -76,7 +89,7 @@ class ModelService {
    * @returns {Promise}
    */
   all() {
-    return this.db.all();
+    return this.getDbInstance().then(db => db.all());
   }
 
   /**
@@ -85,7 +98,7 @@ class ModelService {
    * @returns {Promise}
    */
   delete(model) {
-    return this.db.delete(model);
+    return this.getDbInstance().then(db => db.delete(model));
   }
 
   /**
@@ -94,7 +107,7 @@ class ModelService {
    * @returns {Promise}
    */
   get(id) {
-    return this.db.get(id);
+    return this.getDbInstance().then(db => db.get(id));
   }
 
   /**
@@ -105,7 +118,9 @@ class ModelService {
    * @returns {Promise}
    */
   getBy(field, val) {
-    return this.db.all().then((docs) => find(docs, matchesProperty(field, val)));
+    return this.getDbInstance()
+      .then(db => db.all())
+      .then((docs) => find(docs, matchesProperty(field, val)));
   }
 
   /**
@@ -116,7 +131,9 @@ class ModelService {
   save(rawModel) {
     try {
       const modelInstance = new this.ModelType(rawModel);
-      return this.db.save(modelInstance.serialize());
+
+      return this.getDbInstance()
+        .then(db => db.save(modelInstance.serialize()));
     } catch (err) {
       /* istanbul ignore next */
       return Promise.reject(err);

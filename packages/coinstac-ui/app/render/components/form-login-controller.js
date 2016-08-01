@@ -38,12 +38,15 @@ class FormLoginController extends Component {
   }
   render() {
     const { loading } = this.props;
+    const showHotRoute = app.config.get('env') === 'development';
+
     return (
       <LayoutNoauth>
         <FormLogin
           ref="logon"
           loading={loading}
           hotRoute={this.hotRoute.bind(this)}
+          showHotRoute={showHotRoute}
           submit={this.submit.bind(this)}
         />
       </LayoutNoauth>

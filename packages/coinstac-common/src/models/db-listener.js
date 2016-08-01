@@ -1,7 +1,6 @@
 'use strict';
 
 const EventEmitter = require('events');
-const inherits = require('util').inherits;
 
 /**
  * @class DBListener
@@ -12,29 +11,41 @@ const inherits = require('util').inherits;
  *
  * @param {Pouchy} pouchy
  */
-function DBListener(pouchy) {
-  EventEmitter.apply(this, arguments); // eslint-disable-line
-  this.name = pouchy.name;
-  this.changes = pouchy.changes({
-    live: true,
-    since: 'now',
-    include_docs: true,
-  })
-  .on('change', info => {
-    const doc = info.doc;
-    /* istanbul ignore if */
-    if (info.deleted) {
-      this.emit('delete', { doc, name: this.name });
-    } else {
-      this.emit('change', { doc, name: this.name });
-    }
-  })
-  .on('error', (error) => {
-    /* istanbul ignore next */
-    this.emit('error', error);
-  });
+class DBListener extends EventEmitter {
+  constructor(pouchy) {
+    super(pouchy);
+
+    this.name = pouchy.name;
+    this.changes = pouchy.changes({
+      live: true,
+      since: 'now',
+      include_docs: true,
+    })
+    .on('change', info => {
+      const doc = info.doc;
+      /* istanbul ignore if */
+      if (info.deleted) {
+        this.emit('delete', { doc, name: this.name });
+      } else {
+        this.emit('change', { doc, name: this.name });
+      }
+    })
+    .on('error', (error) => {
+      /* istanbul ignore next */
+      this.emit('error', error);
+    });
+  }
+
+  /**
+   * @description destroys DBListener
+   * @returns {undefined}
+   */
+  destroy() {
+    this.removeAllListeners();
+    this.changes.removeAllListeners();
+    this.changes.cancel();
+  }
 }
-inherits(DBListener, EventEmitter);
 
 /**
  * DB document delete
@@ -53,15 +64,5 @@ inherits(DBListener, EventEmitter);
  * @property {object} doc - document that initiated the DB change
  * @property {string} name - database name
  */
-
-/**
- * @description destroys DBListener
- * @returns {undefined}
- */
-DBListener.prototype.destroy = function () {
-  this.removeAllListeners();
-  this.changes.removeAllListeners();
-  this.changes.cancel();
-};
 
 module.exports = DBListener;

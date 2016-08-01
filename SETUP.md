@@ -50,3 +50,4 @@ The user interface is an [Electron application](http://electron.atom.io/). To ru
 
 * Ensure machines have at least 2 GB of memory. If you don’t have that much memory, run `npm install` in each directory in _coinstac/packages/_.
 * If `npm run bootstrap` fails repeatedly, there’s likely a problem with [lerna’s](https://lernajs.io/) persisted state. Remove the _node_modules_ directory from each of the _coinstac/packages/<package name>_ directories.
+* If you notice repeated `TypeError`s related to COINSTAC internal methods, the COINSTAC internals maybe be unlinked. Run `npm run bootstrap` to re-link them.

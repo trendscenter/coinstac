@@ -32,6 +32,7 @@ const PLUGINS = require('../../plugins');
  *
  * @event PipelineRunnerPool#computation:complete
  * @param {string} runId
+ * @param {string} consortiumId
  */
 
 /**
@@ -285,7 +286,11 @@ class PipelineRunnerPool extends Base {
 
     /* istanbul ignore next */
     if (result.data && result.data.complete) {
-      this.events.emit('computation:complete', result.runId);
+      this.events.emit(
+        'computation:complete',
+        result.runId,
+        result.consortiumId
+      );
       return null;
     }
 
@@ -386,7 +391,7 @@ class PipelineRunnerPool extends Base {
       ].join(' '));
     }
     /* istanbul ignore next */
-    if (typeof this.resultsListeners[db.name] === DBListener) {
+    if (db.name in this.resultsListeners && this.resultsListener[db.name]) {
       throw new ReferenceError(`listener already exists for ${db.name}`);
     }
     const listener = new DBListener(db);
@@ -421,7 +426,7 @@ class PipelineRunnerPool extends Base {
   /**
    * @description destroy listeners on each consortium as required for
    * the env (e.g. local env, remote env)
-   * @param {array|object} consortiaIds
+   * @param {(string[]|string)} consortiaIds
    * @returns {Promise}
    */
   unlistenToConsortia(consortiaIds) {
@@ -440,6 +445,7 @@ class PipelineRunnerPool extends Base {
         this.listenTo = without(this.listenTo, id);
       }
       this.resultsListeners[db.name].destroy();
+      delete this.resultsListener[db.name];
       return db.destroy();
     }));
   }
@@ -581,7 +587,7 @@ class PipelineRunnerPool extends Base {
   }
 
   /**
-   * Runs the env specific pipleine runner
+   * Runs the env specific pipeline runner
    * @private
    * @param {object} input
    * @param {ComputationResult} input.result
@@ -604,7 +610,11 @@ class PipelineRunnerPool extends Base {
     const _runEmitRunEnd = (compRslt) => {
       this.events.emit('run:end', compRslt);
       if (compRslt.data && compRslt.data.complete) {
-        this.events.emit('computation:complete', compRslt.runId);
+        this.events.emit(
+          'computation:complete',
+          compRslt.runId,
+          compRslt.consortiumId
+        );
       }
       configureRunBindings('removeListener'); // eslint-disable-line
       hasHalted = true;

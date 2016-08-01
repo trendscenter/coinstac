@@ -6,10 +6,11 @@ import {
   fetch as fetchProjects,
   remove as removeProject,
   setProjects,
-} from 'app/render/state/ducks/projects.js';
+} from '../../state/ducks/projects.js';
 import { ProjectCard } from './project-card.js';
-import { hilarious } from 'app/render/utils/hilarious-loading-messages.js';
+import { hilarious } from '../../utils/hilarious-loading-messages.js';
 import app from 'ampersand-app';
+import { runComputation } from '../../state/ducks/bg-services';
 
 class ProjectsList extends Component {
   constructor(props) {
@@ -24,6 +25,7 @@ class ProjectsList extends Component {
 
     dispatch(fetchProjects((err) => {
       if (err) {
+        app.logger.error(err);
         app.notify('error', `Failed to load projects: ${err.message}`);
       } else {
         this.setState({ ready: true });
@@ -41,8 +43,24 @@ class ProjectsList extends Component {
     dispatch(removeProject(project));
   }
 
+  /**
+   * Run a computation.
+   *
+   * @param {Object} project
+   * @param {string} project._id
+   * @param {string} project.consortiumId
+   */
+  runComputation({ _id: projectId, consortiumId }) {
+    const { dispatch } = this.props;
+
+    dispatch(runComputation({ consortiumId, projectId }))
+      .catch((err) => {
+        app.notify('error', err.message);
+      });
+  }
+
   render() {
-    const { projects } = this.props;
+    const { consortia, projects, username } = this.props;
 
     if (!this.state.ready) {
       return (<span>{hilarious.random()}</span>);
@@ -50,20 +68,40 @@ class ProjectsList extends Component {
 
     return (
       <div>
-        <LinkContainer to="/projects/new" id="add_project">
-          <Button bsStyle="primary" className="pull-right">
-            <strong>+</strong>
-            Add Project
-          </Button>
-        </LinkContainer>
+        <div className="page-header clearfix">
+          <h1 className="pull-left">Projects</h1>
+          <LinkContainer className="pull-right" to="/projects/new">
+            <Button bsStyle="primary" className="pull-right">
+              <span aria-hidden="true" className="glphicon glyphicon-plus"></span>
+              {' '}
+              Add Project
+            </Button>
+          </LinkContainer>
+        </div>
         <div className="projects-list">
           {projects.map(project => {
+            const consortium = consortia.find(c => {
+              return c._id === project.consortiumId;
+            });
+
+            let showComputationRunButton = false;
+
+            if (consortium) {
+              showComputationRunButton =
+                consortium.owners.indexOf(username) > -1;
+              // computationState
+            }
+
             return (
               <ProjectCard
+                allowComputationRun={project.allowComputationRun}
+                computationStatus={project.status}
+                id={project._id}
                 key={`project-card-${project._id}`}
-                {...this.props}
-                project={project}
-                delete={() => this.delete(project)}
+                name={project.name}
+                removeProject={() => this.delete(project)}
+                runComputation={() => this.runComputation(project)}
+                showComputationRunButton={showComputationRunButton}
               />
             );
           })}
@@ -74,13 +112,24 @@ class ProjectsList extends Component {
 }
 
 ProjectsList.propTypes = {
+  consortia: PropTypes.arrayOf(PropTypes.object).isRequired,
   dispatch: PropTypes.func.isRequired,
-  projects: PropTypes.array,
+  projects: PropTypes.arrayOf(PropTypes.shape({
+    _id: PropTypes.string,
+    allowComputationRun: PropTypes.bool.isRequired,
+    consortiumId: PropTypes.string,
+    files: PropTypes.array,
+    name: PropTypes.string.isRequired,
+    status: PropTypes.string.isRequired,
+  })),
+  username: PropTypes.string.isRequired,
 };
 
 function select(state) {
   return {
+    consortia: state.consortia,
     projects: state.projects,
+    username: state.auth.user.username,
   };
 }
 

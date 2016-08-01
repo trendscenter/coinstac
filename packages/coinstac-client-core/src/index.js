@@ -1,9 +1,12 @@
 'use strict';
 
 // app package deps
+const deburr = require('lodash/deburr');
+const kebabCase = require('lodash/kebabCase');
 const mkdirp = require('mkdirp');
 const bluebird = require('bluebird');
 bluebird.config({ warnings: false });
+const osHomedir = require('os-homedir');
 const path = require('path');
 const winston = require('winston');
 const Logger = winston.Logger;
@@ -13,7 +16,6 @@ const hawkifyPouchDB = require('hawkify-pouchdb');
 // app utils
 const common = require('coinstac-common');
 const LocalPipelineRunnerPool = common.models.pipeline.runner.pool.LocalPipelineRunnerPool;
-const appDirectory = require('./utils/app-directory');
 const computationRegistryFactory = common.services.computationRegistry;
 const registryFactory = require('coinstac-common').services.dbRegistry;
 
@@ -46,6 +48,7 @@ const ProjectServices = require('./sub-api/project-service');
  * @param {Winston} [opts.logger] permit user injected logger vs default logger
  * @param {string} [opts.logLevel] npm log levels, e.g. 'verbose', 'error', etc
  * @param {object} [opts.db] coinstac-common dbRegistry service configuration
+ * @param {string} [opts.hp] URL configutation for Halfpenny's `baseUrl`
  * @param {LocalStorage} [opts.storage] storage engine for halfpenny
  * @property {LocalStorage} storage
  * @property {Halfpenny} apiClient
@@ -57,14 +60,30 @@ const ProjectServices = require('./sub-api/project-service');
  * @property {Project} project
  */
 class CoinstacClient {
+  /**
+   * Sanitize username for use as a directory.
+   * @private
+   *
+   * @throws {Error}
+   * @param {string} username
+   * @returns {string} Transformed username
+   */
+  static sanitizeUsername(username) {
+    if (!username) {
+      throw new Error('Username required');
+    }
+
+    return kebabCase(deburr(username));
+  }
+
   constructor(opts) {
     if (!opts || !(opts instanceof Object)) {
       throw new TypeError('coinstac-client requires configuration opts');
     }
     this.dbConfig = opts.db;
     this.storage = opts.storage;
-    this.appDirectory = opts.appDirectory || appDirectory;
-    this.halfpennyDirectory = path.join(this.appDirectory, '.halfpenny');
+    this.appDirectory = opts.appDirectory || path.join(osHomedir(), '.coinstac');
+    this.halfpennyBaseUrl = opts.hp;
     this.logger = opts.logger || new Logger({ transports: [new Console()] });
 
     // hack for electron-remote. generate full API, even if it's dead.
@@ -74,6 +93,7 @@ class CoinstacClient {
     this.dbRegistry = {};
     this.halfpenny = {};
     this.projects = {};
+    this.pool = {};
 
     /* istanbul ignore if */
     if (opts.logLevel) {
@@ -109,14 +129,24 @@ class CoinstacClient {
       );
     } else if (!credentials.password || !credentials.username) {
       return Promise.reject(
-          new TypeError('Expected credentials to contain a username and password')
+        new TypeError('Expected credentials to contain a username and password')
       );
     }
     this.logger.info('initializing coinstac-client');
 
-    return Promise.resolve(bluebird.promisify(mkdirp)(this.halfpennyDirectory))
+    const username = credentials.username;
+    const hpDir = this.getHalfpennyDirectory(username);
+    const mkdirpAsync = bluebird.promisify(mkdirp);
+
+    return Promise.all([
+      mkdirpAsync(hpDir),
+      mkdirpAsync(this.getDatabaseDirectory(username)),
+    ])
       .then(() => {
-        const hpOpts = { storagePath: this.halfpennyDirectory };
+        const hpOpts = {
+          baseUrl: this.halfpennyBaseUrl,
+          storagePath: hpDir,
+        };
 
         /* istanbul ignore else */
         if (this.storage) {
@@ -130,11 +160,53 @@ class CoinstacClient {
 
         return this._initAuthorization(credentials);
       })
-      .then(() => this._initDBRegistry())
+
+      // TODO: Figure out how to now pass the username everywhere:
+      .then(() => this._initDBRegistry(username))
       .then(() => this._initSubAPIs())
       .then(() => this._initComputationRegistry())
       .then(() => this._initPool())
       .then(() => this.auth.getUser().serialize());
+  }
+
+  /**
+   * Get computations directory.
+   * @private
+   *
+   * @returns {string}
+   */
+  getComputationsDirectory() {
+    return path.join(this.appDirectory, 'computations');
+  }
+
+  /**
+   * Get database storage directory.
+   * @private
+   *
+   * @param {string} username
+   * @returns {string}
+   */
+  getDatabaseDirectory(username) {
+    return path.join(
+      this.appDirectory,
+      CoinstacClient.sanitizeUsername(username),
+      'dbs'
+    );
+  }
+
+  /**
+   * Get Halfpenny storage directory.
+   * @private
+   *
+   * @param {string} username
+   * @returns {string}
+   */
+  getHalfpennyDirectory(username) {
+    return path.join(
+      this.appDirectory,
+      CoinstacClient.sanitizeUsername(username),
+      'halfpenny'
+    );
   }
 
   /**
@@ -156,7 +228,8 @@ class CoinstacClient {
    * @returns {Promise}
    */
   _initComputationRegistry() {
-    const computationsDirectory = path.join(this.appDirectory, 'computations');
+    // TODO: Clean up path garbage
+    const computationsDirectory = this.getComputationsDirectory();
 
     this.logger.info('initializing ComputationRegistry');
 
@@ -170,14 +243,14 @@ class CoinstacClient {
   }
 
 
-  _initDBRegistry() {
+  _initDBRegistry(username) {
     const defaults = {
       isLocal: true,
-      path: appDirectory,
+      path: this.getDatabaseDirectory(username),
       remote: {
         db: {
           protocol: 'https',
-          hostname: 'prodapicoin.mrn.org',
+          hostname: 'coins-api.mrn.org',
           port: 5984,
           pathname: 'coinstacdb',
         },

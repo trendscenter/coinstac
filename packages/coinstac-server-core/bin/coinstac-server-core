@@ -9,15 +9,17 @@ const readline = require('readline');
 const server = require('../src/index.js');
 
 /**
- * Use readline interface to keep the process open.
- * {@link https://nodejs.org/api/readline.html#readline_readline}
+ * Winston's valid log levels.
+ *
+ * {@link https://www.npmjs.com/package/winston#logging-levels}
+ *
+ * @const {string[]}
  */
-const rl = readline.createInterface({ // eslint-disable-line no-unused-vars
-  input: process.stdin,
-  output: process.stdout,
-});
+const VALID_LOG_LEVELS = ['error', 'warn', 'info', 'verbose', 'debug', 'silly'];
 
 const config = {};
+
+let rl; // eslint-disable-line no-unused-vars
 
 /**
  * Error handler for server errors, process `uncaughtException`s and
@@ -33,7 +35,7 @@ function errorHandler(error, promise) {
     logger.error('Server promise rejection', error, promise);
   }
 
-  return process.exit(1);
+  process.nextTick(() => process.exit(1));
 }
 
 process.on('uncaughtException', errorHandler);
@@ -47,7 +49,9 @@ process.on('exit', () => {
 program
   .version(pkg.version)
   .option('-db, --database [value]', 'Database connection string')
+  .option('-l, --loglevel [value]', `Log level ${VALID_LOG_LEVELS.toString()}`)
   .option('-m, --memory', 'Use in-memory database')
+  .option('-n --nohang', 'Don\'t hang')
   .option('-s, --seed [value]', 'Seed the consortiameta database');
 
 program.on('--help', () => {
@@ -70,8 +74,26 @@ program.on('--help', () => {
 
 program.parse(process.argv);
 
+/**
+ * Use readline interface to keep the process open.
+ * {@link https://nodejs.org/api/readline.html#readline_readline}
+ */
+if (program.nohang) {
+  rl = readline.createInterface({ // eslint-disable-line no-unused-vars
+    input: process.stdin,
+    output: process.stdout,
+  });
+}
+
 if (typeof program.database === 'string') {
   config.dbUrl = program.database;
+}
+
+if (
+  typeof program.loglevel === 'string' &&
+  VALID_LOG_LEVELS.indexOf(program.loglevel) > -1
+) {
+  logger.transports.console.level = program.loglevel;
 }
 
 if (program.memory) {
@@ -85,5 +107,11 @@ if (typeof program.seed === 'string') {
 logger.info('Starting server…');
 
 server.start(config)
-.then(() => logger.info('Server ready'))
-.catch(errorHandler);
+  .then(() => {
+    logger.info('Server ready');
+
+    if (program.nohang) {
+      process.exit();
+    }
+  })
+  .catch(errorHandler);

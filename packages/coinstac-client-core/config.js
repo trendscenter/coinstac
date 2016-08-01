@@ -13,7 +13,7 @@ module.exports = conf = convict({
   baseUrl: {
     doc: 'steelpenny url',
     format: 'url',
-    default: 'https://prodapicoin.mrn.org:443',
+    default: 'https://coins-api.mrn.org:443',
     env: 'STEELPENNY_URL',
   },
 });
