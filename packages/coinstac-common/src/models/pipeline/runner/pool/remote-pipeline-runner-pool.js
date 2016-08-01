@@ -17,6 +17,18 @@ const joi = require('joi');
  */
 class RemotePipelineRunnerPool extends PipelineRunnerPool {
   /**
+   * @see PipelineRunnerPool#constructor
+   * @param {Object} opgs
+   */
+  constructor(opts) {
+    super(opts);
+    this.events.on(
+      'computation:complete',
+      this._handleComputationComplete.bind(this)
+    );
+  }
+
+  /**
    * @protected
    * @description create a new PipelineRunner for the run proposed by the passed
    * computation result.
@@ -91,6 +103,29 @@ class RemotePipelineRunnerPool extends PipelineRunnerPool {
    */
   _handleCreatedDB(dbStr) {
     this.upsertListener({ dbStr, listenToPrefix: 'local' });
+  }
+
+  /**
+   * Handle a computation completion.
+   * @private
+   *
+   * @param {string} runId
+   * @param {string} consortiumId
+   */
+  _handleComputationComplete(runId, consortiumId) {
+    const db = this.dbRegistry.get(`remote-consortium-${consortiumId}`)
+
+    db.get(runId)
+      .then(compResult => {
+        compResult.complete = true;
+        return db.save(compResult);
+      })
+      .then(() => {
+        this.events.emit('computation:markedComplete', runId, consortiumId);
+      })
+      .catch(error => {
+        this.events.emit('error', error);
+      });
   }
 
   /**

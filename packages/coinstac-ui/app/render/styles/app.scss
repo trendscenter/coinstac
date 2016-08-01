@@ -1,6 +1,10 @@
 $icon-font-path: "~bootstrap-sass/assets/fonts/bootstrap/";
 
 @import "~bootstrap-sass/assets/stylesheets/_bootstrap.scss";
+@import "./page-header";
+@import "./project-card";
+@import "./project-file";
+@import "./project-form";
 
 .screen {
   min-height: 100vh;

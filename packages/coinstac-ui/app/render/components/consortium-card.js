@@ -25,8 +25,10 @@ export default class ConsortiumCard extends React.Component {
           <p>{this.props.description}</p>
           <ButtonToolbar>
             <LinkContainer
-              to={`/consortia/${this.props._id}`}
-              query={{ _id: this.props._id }}
+              to={{
+                pathname: `/consortia/${this.props._id}`,
+                query: { _id: this.props._id }
+              }}
             >
               <Button bsSize="small">
                 <span

@@ -145,3 +145,39 @@ test('fetch or seed computation results on init', (t) => {
     .then(t.end, t.end);
   });
 });
+
+test('marks completed computations', t => {
+  t.plan(2);
+
+  const consortiumId = 'abc';
+  const runId = 'runId';
+
+  setupServer().then(() => {
+    const pool = new RemotePipelineRunnerPool(
+      poolUtils.getPoolOpts({ dbRegistry: { isRemote: true } })
+    );
+    const resultDB = pool.dbRegistry.get(`remote-consortium-${consortiumId}`);
+    const remoteResult = poolUtils.getDummyRemoteResult();
+
+    pool.events.on('computation:markedComplete', () => {
+      resultDB.get(runId).then(
+        doc => {
+          t.equal(doc.complete, true, 'sets "completed" to true');
+        },
+        error => {
+          throw error;
+        }
+      );
+    });
+
+    return resultDB.save(remoteResult.serialize())
+      .then(pool.init())
+      .then(() => {
+        pool.events.emit('computation:complete', runId, consortiumId);
+      })
+      .then(() => pool.destroy())
+      .then(() => teardownServer())
+      .then(() => t.pass('teardown ok'))
+      .then(t.end, t.end);
+  });
+});

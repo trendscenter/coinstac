@@ -10,11 +10,10 @@ class FormLogin extends Component {
     };
   }
   render() {
-    const { loading, submit } = this.props;
-    const isDev = process.env.NODE_ENV = 'development';
+    const { loading, submit, showHotRoute } = this.props;
     let devButtons;
 
-    if (isDev) {
+    if (showHotRoute) {
       devButtons = (
         <Button
           bsStyle="warning"
@@ -22,7 +21,7 @@ class FormLogin extends Component {
           disabled={loading.isLoading}
           onClick={ this.props.hotRoute }
           block>Hot Route</Button>
-      )
+      );
     }
 
     return (
@@ -58,8 +57,10 @@ class FormLogin extends Component {
 };
 
 FormLogin.propTypes = {
-  submit: PropTypes.func.isRequired,
+  hotRoute: PropTypes.func,
   loading: PropTypes.object,
+  showHotRoute: PropTypes.bool.isRequired,
+  submit: PropTypes.func.isRequired,
 };
 
 export default FormLogin;

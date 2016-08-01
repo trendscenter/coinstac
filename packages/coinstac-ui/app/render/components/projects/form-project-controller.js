@@ -2,26 +2,53 @@ import app from 'ampersand-app';
 import clone from 'lodash/clone';
 import { connect } from 'react-redux';
 import React, { Component, PropTypes } from 'react';
+import noop from 'lodash/noop';
 
 import { runComputation } from '../../state/ducks/bg-services';
 import { addProject } from '../../state/ducks/projects';
 import FormProject from './form-project';
 
 class FormProjectController extends Component {
+  /**
+   * Get errors from the project state.
+   *
+   * @param {Object} project
+   * @returns {Object}
+   */
+  static getErrors(project) {
+    return Object.keys(project).reduce((memo, key) => {
+      const value = project[key];
+
+      if ((key === 'files' && !value.length) || !value) {
+        memo[key] = FormProjectController.ERRORS.get(key);
+      } else {
+        memo[key] = null;
+      }
+
+      return memo;
+    }, {});
+  }
+
   constructor(props) {
     super(props);
 
     this.state = {
+      allowComputationRun: false,
       errors: {
         consortiumId: null,
         name: null,
         files: null,
+        metaFile: null,
       },
       project: {
         consortiumId: undefined,
         files: [],
+        metaFile: null,
         name: '',
       },
+
+      // TODO: Drop state item
+      showFilesComponent: true,
     };
 
     /**
@@ -31,12 +58,16 @@ class FormProjectController extends Component {
     if (props.project) {
       this.state.project.consortiumId = props.project.consortiumId;
       this.state.project.files = clone(props.project.files);
+      this.state.project.metaFile = props.project.metaFile;
       this.state.project.name = props.project.name;
     }
 
     this.handleAddFiles = this.handleAddFiles.bind(this);
+    this.handleAddMetaFile = this.handleAddMetaFile.bind(this);
     this.handleConsortiumChange = this.handleConsortiumChange.bind(this);
     this.handleNameChange = this.handleNameChange.bind(this);
+    this.handleRemoveAllFiles = this.handleRemoveAllFiles.bind(this);
+    this.handleRemoveMetaFile = this.handleRemoveMetaFile.bind(this);
     this.handleRemoveFile = this.handleRemoveFile.bind(this);
     this.handleReset = this.handleReset.bind(this);
     this.handleRunComputation = this.handleRunComputation.bind(this);
@@ -52,8 +83,18 @@ class FormProjectController extends Component {
    */
   setState(newState = {}) {
     super.setState({
-      errors: Object.assign({}, this.state.errors, newState.errors),
-      project: Object.assign({}, this.state.project, newState.project),
+      allowComputationRun: 'allowComputationRun' in newState ?
+        newState.allowComputationRun :
+        this.state.allowComputationRun,
+      errors: 'errors' in newState ?
+        Object.assign({}, this.state.errors, newState.errors) :
+        this.state.errors,
+      project: 'project' in newState ?
+        Object.assign({}, this.state.project, newState.project) :
+        this.state.project,
+      showFilesComponent: 'showFilesComponent' in newState ?
+        newState.showFilesComponent :
+        this.state.showFilesComponent,
     });
   }
 
@@ -61,6 +102,9 @@ class FormProjectController extends Component {
     app.main.services.files.select()
       .then(files => {
         this.setState({
+          errors: {
+            files: null,
+          },
           project: {
             files: [...this.state.project.files, ...JSON.parse(files)],
           },
@@ -68,6 +112,7 @@ class FormProjectController extends Component {
       })
       .catch(error => {
         // Electron's dialog doesn't produce errors, so this should never happen
+        app.logger.error(error);
         app.notify(
           'error',
           `An error occurred when adding files: ${error.message}`
@@ -75,10 +120,33 @@ class FormProjectController extends Component {
       });
   }
 
+  handleAddMetaFile() {
+    app.main.services.files.getMetaFile()
+      .then(metaFile => {
+        this.setState({
+          errors: {
+            metaFile: null,
+          },
+          project: {
+            metaFile,
+          },
+        });
+      })
+      .catch(error => {
+        app.logger.error(error);
+        this.setState({
+          errors: {
+            metaFile: error.message,
+          },
+        });
+      });
+  }
+
   handleConsortiumChange(event) {
     const { value: consortiumId } = event.target;
 
     this.setState({
+      errors: FormProjectController.getErrors({ consortiumId }),
       project: { consortiumId },
     });
   }
@@ -87,6 +155,7 @@ class FormProjectController extends Component {
     const { value: name } = event.target;
 
     this.setState({
+      errors: FormProjectController.getErrors({ name }),
       project: { name },
     });
 
@@ -107,12 +176,28 @@ class FormProjectController extends Component {
       });
   }
 
+  handleRemoveAllFiles() {
+    this.setState({
+      project: {
+        files: [],
+      },
+    });
+  }
+
   handleRemoveFile(file) {
     this.setState({
       project: {
         files: this.state.project.files.filter(f => {
           return f.filename !== file.filename;
         }),
+      },
+    });
+  }
+
+  handleRemoveMetaFile() {
+    this.setState({
+      project: {
+        metaFile: null,
       },
     });
   }
@@ -126,9 +211,6 @@ class FormProjectController extends Component {
     const { project: { consortiumId } } = this.state;
 
     dispatch(runComputation({ consortiumId, projectId }))
-      .then(() => {
-        app.notify('info', 'Computation run complete!');
-      })
       .catch((err) => {
         app.notify('error', err.message);
       });
@@ -142,8 +224,12 @@ class FormProjectController extends Component {
       Object.assign({}, this.props.project, project) :
       project;
 
-    // Ensure no errors before submitting
-    if (!Object.values(errors).some(e => !!e)) {
+    const newErrors = FormProjectController.getErrors(project);
+
+    if (Object.values(newErrors).some(e => !!e)) {
+      this.setState({ errors: newErrors });
+    } else if (!Object.values(errors).some(e => !!e)) {
+      // Ensure no errors before submitting
       dispatch(addProject(toAdd))
         .then(() => {
           router.push('/projects');
@@ -156,12 +242,55 @@ class FormProjectController extends Component {
     }
   }
 
-  render() {
-    const { consortia, params } = this.props;
-    const { errors, project } = this.state;
+  /**
+   * @todo This is currently unused. Refactor this method to rely on the
+   * computation definition.
+   */
+  maybeShowFilesComponent(consortiumId) {
+    const { consortia } = this.props;
 
-    const allowComputationRun = !!params.projectId;
+    if (consortiumId) {
+      const consortium = consortia.find(c => c._id === consortiumId);
+
+      /**
+       * Show files component if needed.
+       *
+       * @todo This is for the demo. Determine a better method for UI based on
+       * the computation definition.
+       */
+      if (consortium && consortium.activeComputationId) {
+        app.core.dbRegistry.get('computations')
+          .get(consortium.activeComputationId)
+          .then(computation => {
+            this.setState({
+              showFilesComponent:
+                computation.name.indexOf('ridge-regression') > -1,
+            });
+          }, noop);
+      }
+    }
+  }
+
+  render() {
+    const { consortia, params, username } = this.props;
+    const {
+      allowComputationRun,
+      errors,
+      metaFile,
+      project,
+      showFilesComponent,
+    } = this.state;
+
     const isEditing = !!params.projectId;
+    let showComputationRunButton = false;
+
+    if (project.consortiumId) {
+      const selected = consortia.find(c => c._id === project.consortiumId);
+
+      if (selected && selected.owners.indexOf(username) > -1) {
+        showComputationRunButton = true;
+      }
+    }
 
     return (
       <FormProject
@@ -169,14 +298,20 @@ class FormProjectController extends Component {
         consortia={consortia}
         errors={errors}
         isEditing={isEditing}
+        metaFile={metaFile}
         onAddFiles={this.handleAddFiles}
+        onAddMetaFile={this.handleAddMetaFile}
         onConsortiumChange={this.handleConsortiumChange}
         onNameChange={this.handleNameChange}
+        onRemoveAllFiles={this.handleRemoveAllFiles}
         onRemoveFile={this.handleRemoveFile}
+        onRemoveMetaFile={this.handleRemoveMetaFile}
         onReset={this.handleReset}
         onRunComputation={this.handleRunComputation}
         onSubmit={this.handleSubmit}
         project={project}
+        showComputationRunButton={showComputationRunButton}
+        showFilesComponent={showFilesComponent}
       />
     );
   }
@@ -186,11 +321,24 @@ FormProjectController.contextTypes = {
   router: PropTypes.object.isRequired,
 };
 
+/**
+ * Field to error message map.
+ *
+ * @const {Map}
+ */
+FormProjectController.ERRORS = new Map([
+  ['consortiumId', 'Select a consortium'],
+  ['files', 'Add some files'],
+  ['metaFile', 'Add a meta file'],
+  ['name', 'Add a name'],
+]);
+
 FormProjectController.propTypes = {
   consortia: PropTypes.array.isRequired,
   dispatch: PropTypes.func.isRequired,
   params: PropTypes.object.isRequired,
   project: PropTypes.object,
+  username: PropTypes.string.isRequired,
 };
 
 /**
@@ -201,11 +349,10 @@ function select(state, { params: { projectId } }) {
   const project = projectId ?
     state.projects.find(p => p._id === projectId) :
     undefined;
+  const username = state.auth.user.username;
+  const consortia = state.consortia.filter(c => c.users.indexOf(username) > -1);
 
-  return {
-    consortia: state.consortia,
-    project,
-  };
+  return { consortia, project, username };
 }
 
 export default connect(select)(FormProjectController);

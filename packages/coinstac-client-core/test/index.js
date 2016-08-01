@@ -11,6 +11,7 @@ process.on('uncaughtExpection', fail);
 process.on('unhandledRejection', fail);
 
 require('./model-service');
+require('./utils/get-synced-database');
 require('./sub-api/auth');
 require('./sub-api/computation-service');
 require('./sub-api/consortia-service');

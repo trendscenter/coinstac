@@ -6,29 +6,48 @@
  */
 'use strict';
 
+const compact = require('lodash/compact');
+const flatten = require('lodash/flatten');
 const fs = require('fs');
+const path = require('path');
 const sha = require('sha');
 const bluebird = require('bluebird');
 
+const readdirAsync = bluebird.promisify(fs.readdir, { context: fs });
 const statAsync = bluebird.promisify(fs.stat, { context: fs });
 const shaAsync = bluebird.promisify(sha.get, { context: sha });
 
-module.exports = {
+/**
+ * generate simple file stat object for a provided filename
+ *
+ * @param {string} path Directory or file path
+ * @param {boolean} [recurse=false] Recurse if path is a directory. Will only
+ * recurse once.
+ * @returns {Promise} Resolves to a file object, array of file objects, or
+ * `undefined`
+ */
+function buildBasicStat(filepath, recurse = false) {
+  return statAsync(filepath).then(stats => {
+    if (stats.isDirectory() && recurse) {
+      return readdirAsync(filepath).then(files => Promise.all(
+        files.map(f => buildBasicStat(path.join(filepath, f)))
+      ));
+    } else if (stats.isFile() && path.basename(filepath)[0] !== '.') {
+      return {
+        filename: filepath,
+        modified: stats.mtime.getTime(),
+        size: stats.size,
+        tags: {},
+      };
+    }
+  });
+}
 
+module.exports = {
   /**
-   * generate simple file stat object for a provided filename
    * @private
-   * @param {string} filename
-   * @returns {Promise}
    */
-  _buildBasicStat(filename) {
-    return statAsync(filename)
-    .then((stat) => ({
-      filename,
-      size: stat.size,
-      modified: stat.mtime.getTime(),
-    }));
-  },
+  _buildBasicStat: buildBasicStat,
 
   /**
    * append file sha to file meta object
@@ -49,8 +68,12 @@ module.exports = {
    */
   prepare(filenames) {
     filenames = filenames || [];
-    return Promise.all(filenames.map(this._buildBasicStat.bind(this)))
-    .then((stats) => Promise.all(stats.map(this._appendSha.bind(this))));
+    return Promise.all(filenames.map(f => buildBasicStat(f, true)))
+      .then(flatten)
+      .then(compact)
+      .then(filesStats => {
+        return Promise.all(filesStats.map(this._appendSha.bind(this)));
+      });
   },
 
 };
