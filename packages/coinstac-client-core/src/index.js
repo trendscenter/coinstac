@@ -250,7 +250,7 @@ class CoinstacClient {
       remote: {
         db: {
           protocol: 'https',
-          hostname: 'prodapicoin.mrn.org',
+          hostname: 'coins-api.mrn.org',
           port: 5984,
           pathname: 'coinstacdb',
         },
