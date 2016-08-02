@@ -162,6 +162,42 @@ class ComputationService extends ModelService {
   joinRun({ consortiumId, projectId, runId }) {
     return this.doTriggerRunner({ consortiumId, projectId, runId });
   }
+
+  /**
+   * Determine whether the user should join a computation's run.
+   *
+   * @param {string} consortiumId
+   * @returns {Promise} Resolves to a boolean
+   */
+  shouldJoinRun(consortiumId) {
+    const { auth, consortia, dbRegistry } = this.client;
+
+    return Promise.all([
+      /**
+       * @todo coinstac-storage-proxy doesn't allow GET requests to
+       * `local-consortium-*` databases. Figure out another approach.
+       */
+      dbRegistry.get(`local-consortium-${consortiumId}`).all(),
+      consortia.getActiveRunId(consortiumId),
+    ])
+      .then(([localDocs, runId]) => {
+        if (!runId) {
+          return false;
+        }
+
+        /**
+         * @todo This assumes a one-to-one relationship between run IDs and
+         * consortium IDs. The approach should change when a consortium
+         * permits multiple simultaneous runs.
+         */
+        const { username } = auth.getUser();
+
+        // Determine whether the user has a doc with the run ID:
+        return !localDocs.find(({ _id }) => {
+          return _id.indexOf(runId) > -1 && _id.indexOf(username) > -1;
+        });
+      });
+  }
 }
 
 module.exports = ComputationService;

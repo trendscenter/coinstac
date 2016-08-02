@@ -29,60 +29,15 @@ export const unlistenToConsortia = (tiaIds) => {
  * @return {Promise}
  */
 export const joinSlaveComputation = (consortium) => {
+  const { _id: consortiumId } = consortium;
+
   return Promise.all([
-    /**
-     * @todo coinstac-storage-proxy doesn't allow GET requests to
-     * `local-consortium-*` databases. Figure out another approach.
-     */
-    app.core.dbRegistry.get(`local-consortium-${consortium._id}`).all(),
-    app.core.dbRegistry.get(`remote-consortium-${consortium._id}`).find({
-      selector: {
-        complete: false,
-      },
-    }),
+    app.core.projects.getBy('consortiumId', consortiumId),
+    app.core.consortia.getActiveRunId(consortiumId),
+    app.core.computations.shouldJoinRun(consortiumId),
   ])
-    .then(([localDocs, remoteDocs]) => {
-      const { username } = app.core.auth.getUser();
-      const userRunIds = localDocs.reduce((memo, { _id }) => {
-        return _id.indexOf(username) > -1 ?
-          memo.concat(_id.replace(`-${username}`, '')) :
-          memo;
-      }, []);
-
-      // filter out already ran (by user) computations
-      // done here as find() can't use $nin on _id
-      /**
-       * @todo This assumes a one-to-one relationship between run IDs and
-       * consortium IDs. The approach should change when a consortium
-       * permits multiple simultaneous runs.
-       */
-      const runs = new Map(
-        remoteDocs.reduce((memo, { _id: runId, consortiumId }) => {
-          return userRunIds.indexOf(runId) < 0 ?
-            [...memo, [consortiumId, runId]] :
-            memo;
-        }, [])
-      );
-
-      return Promise.all([
-        runs,
-        app.core.dbRegistry.get('projects').find({
-          selector: {
-            consortiumId: {
-              $in: Array.from(runs.keys()),
-            },
-          },
-        }),
-      ]);
-    })
-    .then(([runs, projects]) => Promise.all(
-      projects.map(({ _id, consortiumId }) => {
-        const runId = runs.get(consortiumId);
-
-        if (!runId) {
-          throw new Error(`No run ID for consortium ${consortiumId}`);
-        }
-
+    .then(([project, runId, shouldJoinRun]) => {
+      if (project && runId && shouldJoinRun) {
         const onRunEnd = getRunEndNotifier(consortium);
         const onRunError = getRunErrorNotifier(consortium);
 
@@ -97,11 +52,11 @@ export const joinSlaveComputation = (consortium) => {
 
         return app.core.computations.joinRun({
           consortiumId,
-          projectId: _id,
+          projectId: project._id,
           runId,
         });
-      })
-    ));
+      }
+    });
 };
 
 export const addConsortiumComputationListener = (consortium) => {
