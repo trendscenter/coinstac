@@ -40,8 +40,10 @@ const conf = convict({
   logFile: 'coinstac-log.json',
   logLocations: {
     darwin: '~/Library/Logs/coinstac/',
-    win32: '$HOME/AppData/Roaming/coinstac/',
+    freebsd: '~/.config/coinstac/',
     linux: '~/.config/coinstac/',
+    sunos: '~/.config/coinstac/',
+    win32: '$HOME/AppData/Roaming/coinstac/',
   },
 });
 
