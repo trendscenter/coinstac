@@ -28,6 +28,24 @@ class ConsortiaService extends ModelService {
   }
 
   /**
+   * Get a consortium's active run ID.
+   *
+   * @param {string} consortiumId
+   * @returns {Promise} Resolves to the run ID string
+   */
+  getActiveRunId(consortiumId) {
+    return this.client.dbRegistry.get(`remote-consortium-${consortiumId}`)
+      .find({
+        selector: {
+          complete: false,
+        },
+      })
+      .then(docs => {
+        return docs.length ? docs[0]._id : undefined;
+      });
+  }
+
+  /**
    * Get consortia that a user has joined.
    *
    * @param  {string}  username
