@@ -10,7 +10,6 @@ const options = {
   overwrite: true,
   platform: 'all',
   prune: true,
-  version: '1.1.1',
 };
 const outputDirs = [
   'coinstac-darwin-x64',

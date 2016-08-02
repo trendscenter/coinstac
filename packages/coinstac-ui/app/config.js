@@ -38,6 +38,11 @@ const conf = convict({
     noURLPrefix: true
   },
   logFile: 'coinstac-log.json',
+  logLocations: {
+    darwin: '~/Library/Logs/coinstac/',
+    win32: '$HOME/AppData/Roaming/coinstac/',
+    linux: '~/.config/coinstac/',
+  },
 });
 
 module.exports = function loadConfig() {
