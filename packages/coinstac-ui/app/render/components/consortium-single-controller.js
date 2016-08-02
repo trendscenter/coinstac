@@ -38,9 +38,8 @@ class ConsortiumSingleController extends Component {
     .then((tium) => {
       // TODO: Figure out a better way to initiate this background service
       listenToConsortia(tium)
-      .then(() => {
-        addConsortiumComputationListener(tium);
-      });
+      addConsortiumComputationListener(tium);
+
       app.logger.info(`now listening to events on consortium ${tium.label}`);
     });
   }
