@@ -1,6 +1,7 @@
 import { applyAsyncLoading } from './loading.js';
 import app from 'ampersand-app';
 import omit from 'lodash/omit';
+import { joinSlaveComputation } from './bg-services';
 
 export const ADD_PROJECT = 'ADD_PROJECT';
 export const _addProject = (project) => ({ type: ADD_PROJECT, project });
@@ -76,7 +77,22 @@ export const addProject = applyAsyncLoading(function addProject(project) {
     return app.core.projects.save(
       omit(project, ['allowComputationRun', 'status'])
     )
-      .then(mapProject)
+      .then(doc => {
+        /**
+         * New projects don't have an `_id`. Maybe join the computation run in
+         * the 'background':
+         *
+         * @todo This relies on `joinSlaveComputation` so that UI notifications
+         * fire. Move this functionality to coinstac-client-core.
+         */
+        if (!('_id' in project)) {
+          app.core.consortia
+            .get(project.consortiumId)
+            .then(c => joinSlaveComputation(c));
+        }
+
+        return mapProject(doc);
+      })
       .then((proj) => {
         app.notify('success', `Project '${project.name}' created`);
         dispatch(_addProject(proj));
