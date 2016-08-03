@@ -1,19 +1,21 @@
 import React, { Component, PropTypes } from 'react';
 import { reduxForm } from 'redux-form';
-import { FormGroup, ControlLabel, FormControl, ButtonToolbar, Button } from 'react-bootstrap';
+import { FormGroup, ControlLabel, FormControl, Button } from 'react-bootstrap';
+
 export const fields = ['label', 'description'];
 
 class FormAddConsortium extends Component { // eslint-disable-line
   render() {
     const {
-      fields: { label, description },
+      fields: { description, label },
       handleSubmit,
-      resetForm,
       loading,
+      handleCancel,
+      resetForm,
     } = this.props;
+
     return (
       <form onSubmit={handleSubmit}>
-        <h1>Add New Consortium</h1>
         <FormGroup controlId="name">
           <ControlLabel>Name</ControlLabel>
           <FormControl type="text" placeholder="Enter Name" {...label} />
@@ -29,12 +31,28 @@ class FormAddConsortium extends Component { // eslint-disable-line
             value={description.value || ''}
           />
         </FormGroup>
-        <ButtonToolbar>
-          <Button bsStyle="primary" type="submit" disabled={loading.isLoading}>
-            Submit
-          </Button>
-          <Button onClick={resetForm && this.props.onCancel()}>Cancel</Button>
-        </ButtonToolbar>
+        <div className="clearfix">
+          <div className="pull-right">
+            <Button
+              bsStyle="success"
+              disabled={loading}
+              type="submit"
+            >
+              <span className="glyphicon glyphicon-ok"></span>
+              {' '}
+              Submit
+            </Button>
+            <Button
+              bsStyle="link"
+              onClick={() => resetForm() && handleCancel()}
+              type="reset"
+            >
+              <span className="glyphicon glyphicon-remove"></span>
+              {' '}
+              Cancel
+            </Button>
+          </div>
+        </div>
       </form>
     );
   }
@@ -42,10 +60,9 @@ class FormAddConsortium extends Component { // eslint-disable-line
 
 FormAddConsortium.propTypes = {
   fields: PropTypes.object.isRequired,
+  handleCancel: PropTypes.func.isRequired,
   handleSubmit: PropTypes.func.isRequired,
-  loading: PropTypes.object,
-  onSubmit: PropTypes.func.isRequired,
-  onCancel: PropTypes.func.isRequired,
+  loading: PropTypes.bool.isRequired,
   resetForm: PropTypes.func.isRequired,
 };
 

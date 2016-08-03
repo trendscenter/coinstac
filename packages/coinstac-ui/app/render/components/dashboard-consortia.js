@@ -3,7 +3,7 @@ import { Button } from 'react-bootstrap';
 import { LinkContainer } from 'react-router-bootstrap';
 import ConsortiumCard from './consortium-card';
 import { connect } from 'react-redux';
-import { setConsortia, fetchConsortia } from 'app/render/state/ducks/consortia.js';
+import { fetchConsortia } from '../state/ducks/consortia.js';
 import noop from 'lodash/noop';
 
 class DashboardConsortia extends React.Component {
@@ -36,14 +36,16 @@ class DashboardConsortia extends React.Component {
 
     return (
       <div className="dashboard-consortia">
-        <div className="page-header">
-          <h1>Consortia</h1>
+        <div className="page-header clearfix">
+          <h1 className="pull-left">Consortia</h1>
+          <LinkContainer className="pull-right" to="/consortia/new">
+            <Button bsStyle="primary" className="pull-right">
+              <span aria-hidden="true" className="glphicon glyphicon-plus"></span>
+              {' '}
+              Add Consortium
+            </Button>
+          </LinkContainer>
         </div>
-        <LinkContainer to="/consortia/new" id="add_consortium">
-          <Button bsStyle="primary" className="pull-right">
-            Add Consortium
-          </Button>
-        </LinkContainer>
         <div className="row">
           {content}
         </div>

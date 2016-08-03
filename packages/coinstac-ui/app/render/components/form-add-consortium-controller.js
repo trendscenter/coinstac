@@ -1,13 +1,18 @@
-import React, { PropTypes } from 'react';
+import React, { Component, PropTypes } from 'react';
 import FormAddConsortium from './form-add-consortium';
-import { saveConsortium } from 'app/render/state/ducks/consortium';
+import { saveConsortium } from '../state/ducks/consortium';
 import { connect } from 'react-redux';
 
-class FormAddConsortiumController extends React.Component {
+class FormAddConsortiumController extends Component {
+  constructor(props) {
+    super(props);
+
+    this.handleClickCancel = this.handleClickCancel.bind(this);
+    this.submit = this.submit.bind(this);
+  }
 
   handleClickCancel() {
-    // hashHistory.push('/consortia');
-    // @TODO why is onClick called immediately on cancel button
+    this.context.router.push('/consortia');
   }
 
   submit(consortium) {
@@ -25,13 +30,18 @@ class FormAddConsortiumController extends React.Component {
 
   render() {
     const { loading } = this.props;
+
     return (
-      <FormAddConsortium
-        ref="add"
-        loading={loading}
-        onCancel={this.handleClickCancel.bind(this)}
-        onSubmit={this.submit.bind(this)}
-      />
+      <div>
+        <div className="page-header clearfix">
+          <h1 className="pull-left">Add New Consortium</h1>
+        </div>
+        <FormAddConsortium
+          loading={!!loading.isLoading}
+          handleCancel={this.handleClickCancel}
+          handleSubmit={this.submit}
+        />
+      </div>
     );
   }
 }
