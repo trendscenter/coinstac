@@ -10,7 +10,7 @@ class FormAddConsortium extends Component { // eslint-disable-line
       fields: { description, label },
       handleSubmit,
       loading,
-      handleCancel,
+      onResetForm,
       resetForm,
     } = this.props;
 
@@ -44,7 +44,7 @@ class FormAddConsortium extends Component { // eslint-disable-line
             </Button>
             <Button
               bsStyle="link"
-              onClick={() => resetForm() && handleCancel()}
+              onClick={() => resetForm() && onResetForm()}
               type="reset"
             >
               <span className="glyphicon glyphicon-remove"></span>
@@ -60,10 +60,10 @@ class FormAddConsortium extends Component { // eslint-disable-line
 
 FormAddConsortium.propTypes = {
   fields: PropTypes.object.isRequired,
-  handleCancel: PropTypes.func.isRequired,
   handleSubmit: PropTypes.func.isRequired,
   loading: PropTypes.bool.isRequired,
   resetForm: PropTypes.func.isRequired,
+  onResetForm: PropTypes.func.isRequired,
 };
 
 export default reduxForm({
