@@ -38,8 +38,8 @@ class FormAddConsortiumController extends Component {
         </div>
         <FormAddConsortium
           loading={!!loading.isLoading}
-          handleCancel={this.handleClickCancel}
-          handleSubmit={this.submit}
+          onResetForm={this.handleClickCancel}
+          onSubmit={this.submit}
         />
       </div>
     );
