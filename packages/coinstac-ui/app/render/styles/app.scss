@@ -5,6 +5,7 @@ $icon-font-path: "~bootstrap-sass/assets/fonts/bootstrap/";
 @import "./project-card";
 @import "./project-file";
 @import "./project-form";
+@import "./user-list";
 
 .screen {
   min-height: 100vh;
@@ -105,7 +106,7 @@ $icon-font-path: "~bootstrap-sass/assets/fonts/bootstrap/";
     clear: both;
 }
 .consortium {
-    min-height: 220px;
+
 }
 .consortium .btn-toolbar {
     .glyphicon {
