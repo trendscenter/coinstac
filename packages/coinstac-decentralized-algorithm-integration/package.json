@@ -1,6 +1,6 @@
 {
   "name": "coinstac-distributed-algorithm-integration",
-  "version": "2.0.3",
+  "version": "2.0.5",
   "description": "demonstrate and test coinstac distributed analysis synchronization",
   "main": "src/runner/run.js",
   "scripts": {
@@ -18,7 +18,7 @@
   },
   "homepage": "https://github.com/MRN-Code/coinstac-distributed-algorithm-integration",
   "devDependencies": {
-    "coinstac-simulator": "^2.0.3",
+    "coinstac-simulator": "^2.0.5",
     "gh-pages": "^0.9.0",
     "jsdoc": "^3.4.0",
     "lodash": "^4.13.1",

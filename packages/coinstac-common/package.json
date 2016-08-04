@@ -1,6 +1,6 @@
 {
   "name": "coinstac-common",
-  "version": "2.0.3",
+  "version": "2.0.5",
   "description": "COINSTAC utilities and models",
   "main": "src/index.js",
   "directories": {
