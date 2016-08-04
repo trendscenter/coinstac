@@ -57,7 +57,7 @@ export default function ConsortiumCard(props) {
   }
 
   return (
-    <div className="consortium panel panel-default">
+    <div className="consortium-card panel panel-default">
       <div className="panel-heading">
         <h4 className="panel-title">
           <Link to={`/consortia/${id}`}>{label}</Link>
@@ -69,6 +69,7 @@ export default function ConsortiumCard(props) {
             <p>{description}</p>
           </div>
           <div className="col-sm-6">
+            <h5>Users:</h5>
             <UserList users={users} />
           </div>
         </div>
