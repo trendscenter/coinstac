@@ -1,15 +1,111 @@
 import app from 'ampersand-app';
-import { get as getStore } from '../store';
 import { applyAsyncLoading } from './loading';
-import sortBy from 'lodash/sortBy';
-import findIndex from 'lodash/findIndex';
 
+const DO_DELETE_CONSORTIUM = 'DO_DELETE_CONSORTIUM';
+
+function doDeleteConsortium(id) {
+  return {
+    id,
+    type: DO_DELETE_CONSORTIUM,
+  };
+}
+
+const DO_UPDATE_CONSORTIUM = 'DO_UPDATE_CONSORTIUM';
+
+function doUpdateConsortium(consortium) {
+  return {
+    consortium,
+    type: DO_UPDATE_CONSORTIUM,
+  };
+}
 
 const SET_CONSORTIA = 'SET_CONSORTIA';
-const BG_SET_CONSORTIA = 'BG_SET_CONSORTIA';
-export const setConsortia = (consortia, isBg) => ({
-  type: isBg ? BG_SET_CONSORTIA : SET_CONSORTIA,
-  consortia,
+
+export function setConsortia(consortia) {
+  return {
+    consortia,
+    type: SET_CONSORTIA,
+  };
+}
+
+/**
+ * Delete a consortium.
+ *
+ * Deleting the consortium causes the change to flow through `setConsortium`,
+ * updating the state.
+ *
+ * @param {string} consortiumId
+ * @returns {Function}
+ */
+export const deleteConsortium = applyAsyncLoading(consortiumId => {
+  return () => {
+    const { core: { consortia } } = app;
+
+    return consortia.get(consortiumId)
+      .then(consortium => consortia.delete(consortium));
+  };
+});
+
+/**
+ * Remove a user from a consortium.
+ *
+ * Saving the consortium causes the change to flow through `setConsortium`,
+ * updating the state.
+ *
+ * @param {string} consortiumId
+ * @param {string} username
+ * @returns {Function}
+ */
+export const joinConsortium = applyAsyncLoading((consortiumId, username) => {
+  return () => {
+    const { core: { consortia } } = app;
+
+    return consortia.get(consortiumId)
+      .then(consortium => {
+        if (consortium.users.indexOf(username) > -1) {
+          throw new Error(
+            `User ${username} already in consortium ${consortiumId}`
+          );
+        }
+
+        // TODO: Array#push doesn't work.
+        // https://github.com/electron/electron/issues/6734
+        consortium.users = consortium.users.concat(username);
+
+        return consortia.save(consortium);
+      });
+  };
+});
+
+/**
+ * Remove a user from a consortium.
+ *
+ * Saving the consortium causes the change to flow through `setConsortium`,
+ * updating the state.
+ *
+ * @param {string} consortiumId
+ * @param {string} username
+ * @returns {Function}
+ */
+export const leaveConsortium = applyAsyncLoading((consortiumId, username) => {
+  return () => {
+    const { core: { consortia } } = app;
+
+    return consortia.get(consortiumId)
+      .then(consortium => {
+        const index = consortium.users.indexOf(username);
+
+        if (index < 0) {
+          throw new Error(`User ${username} not in consortium ${consortiumId}`);
+        }
+
+        // TODO: Array#splice doesn't work.
+        // https://github.com/electron/electron/issues/6734
+        consortium.users = consortium.users.filter(u => u !== username);
+
+        return consortia.save(consortium);
+      });
+  };
 });
 
 export const fetchConsortia = applyAsyncLoading(function fetchConsortia() {
@@ -27,38 +123,41 @@ export const fetchConsortia = applyAsyncLoading(function fetchConsortia() {
 });
 
 /**
- * efficiently update consortia state given a set of consortia which may
- * be new or updated.
- * @param {object} opts
- * @param {function} dispatch redux dispatcher
- * @param {object|object[]} toUpdate POJO consortium/tia to patch onto existing state
- * @param {boolean} [isBg] indicates that this patch has originated from bg-service (vs. user)
- * @returns {undefined}
+ * Update consortia from database change objects.
+ *
+ * @param {Object|Object[]} toUpdate POJO consortium/tia to patch onto existing state
+ * @returns {Function}
  */
-export const updateConsortia = ({ dispatch, toUpdate, isBg }) => {
-  const currTia = getStore().getState().consortia || [];
-  if (!Array.isArray(toUpdate)) {
-    toUpdate = [toUpdate];
-  }
-  toUpdate.forEach((changed) => {
-    const toSwapNdx = findIndex(currTia, { _id: changed._id });
-    if (toSwapNdx >= 0) {
-      currTia[toSwapNdx] = changed;
-    } else {
-      currTia.push(changed);
-    }
-  });
-  dispatch(setConsortia(currTia, isBg));
-};
+export function updateConsortia(toUpdate) {
+  return dispatch => {
+    const localToUpdate = Array.isArray(toUpdate) ? toUpdate : [toUpdate];
 
-export default function reducer(state = null, action) {
-  switch (action.type) {
-    case BG_SET_CONSORTIA:
-    case SET_CONSORTIA:
-      if (action.consortia === null) {
-        return null;
+    localToUpdate.forEach(change => {
+      if ('_deleted' in change && change._deleted) {
+        dispatch(doDeleteConsortium(change._id));
+      } else {
+        dispatch(doUpdateConsortium(change));
       }
-      return [...sortBy(action.consortia, 'label')];
+    });
+  };
+}
+
+function consortiumSorter(a, b) {
+  return a.label > b.label;
+}
+
+export default function reducer(state = [], action) {
+  switch (action.type) {
+    case SET_CONSORTIA:
+      return [...state, ...action.consortia].sort(consortiumSorter);
+    case DO_UPDATE_CONSORTIUM:
+      return state.map(consortium => {
+        return consortium._id === action.consortium._id ?
+          action.consortium :
+          consortium;
+      }).sort(consortiumSorter);
+    case DO_DELETE_CONSORTIUM:
+      return state.filter(({ _id }) => _id !== action.id);
     default:
       return state;
   }
