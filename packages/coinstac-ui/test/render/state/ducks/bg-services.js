@@ -1,4 +1,5 @@
 import app from 'ampersand-app';
+import EventEmitter from 'events';
 import {
   joinSlaveComputation,
 } from '../../../../app/render/state/ducks/bg-services';
@@ -8,102 +9,85 @@ import sinon from 'sinon';
 import tape from 'tape';
 
 tape('joins slave computation', t => {
-  const consortiumId1 = 'geodude';
-  const consortiumId2 = 'charmander';
-  const joinRunStub = sinon.stub().returns(Promise.resolve());
-  const runId1 = 'bulbasaur';
-  const runId2 = 'pikachu';
-  const runId3 = 'jigglypuff';
-  const username = 'kittens';
+  const consortiumId = 'geodude';
+  const ee = new EventEmitter();
+  const getActiveRunIdStub = sinon.stub();
+  const getByStub = sinon.stub();
+  const joinRunStub = sinon.stub();
+  const shouldJoinRunStub = sinon.stub();
+  const runId = 'bulbasaur';
 
   const consortium = {
-    _id: consortiumId1,
-    activeRunId: runId1,
+    _id: consortiumId,
+    activeRunId: runId,
     label: 'Geodude is cool',
-    users: [username],
+    users: ['pikachu'],
   };
 
-  const localDocs = [{
-    _id: `${runId1}-puppies`,
-  }, {
-    _id: `${runId2}-${username}`,
-  }, {
-    _id: `${runId3}-calves`,
-  }];
-  const remoteDocs = [{
-    _id: runId1,
-    consortiumId: consortiumId1,
-  }, {
-    _id: runId2,
-    consortiumId: consortiumId2,
-  }];
-  const projects = [{
+  const project = {
     _id: 'project-1',
-    consortiumId: consortiumId1,
-  }, {
-    _id: 'project-2',
-    consortiumId: consortiumId1,
-  }];
+    consortiumId,
+  };
 
-  setProp(app, 'core.auth.getUser', () => ({ username }));
-  setProp(app, 'core.dbRegistry.get', noop);
+  getByStub.returns(Promise.resolve(project));
+  getByStub.onCall(0).returns(Promise.resolve(undefined));
+  getActiveRunIdStub.returns(Promise.resolve(runId));
+  getActiveRunIdStub.onCall(1).returns(Promise.resolve(undefined));
+  shouldJoinRunStub.returns(Promise.resolve(true));
+  shouldJoinRunStub.onCall(2).returns(Promise.resolve(false));
+
   setProp(app, 'core.computations.joinRun', joinRunStub);
+  setProp(app, 'core.computations.shouldJoinRun', shouldJoinRunStub);
+  setProp(app, 'core.consortia.getActiveRunId', getActiveRunIdStub);
+  setProp(app, 'core.pool.events', ee);
+  setProp(app, 'core.projects.getBy', getByStub);
 
-  const projectsDBFindStub = sinon.stub().returns(Promise.resolve(projects));
+  // TODO: Figure out how to mock the utils/notifications.js module
+  setProp(app, 'notifications.push', noop);
 
-  const dbGetStub = sinon.stub(app.core.dbRegistry, 'get', (dbName) => {
-    if (dbName.indexOf('local-consortium-') > -1) {
-      return {
-        all: () => Promise.resolve(localDocs),
-      };
-    } else if (dbName.indexOf('remote-consortium-') > -1) {
-      return {
-        find: () => Promise.resolve(remoteDocs),
-      };
-    } else if (dbName === 'projects') {
-      return {
-        find: projectsDBFindStub,
-      };
-    }
-  });
-
-  t.plan(2);
+  t.plan(7);
 
   joinSlaveComputation(consortium)
     .then(() => {
-      t.deepEqual(
-        projectsDBFindStub.lastCall.args[0],
-        {
-          selector: {
-            consortiumId: {
-              $in: [consortiumId1],
-            },
-          },
-        },
-        'only retrieves unrun projects'
+      t.ok(
+        getByStub.calledWithExactly('consortiumId', consortiumId),
+        'calls projects getBy'
       );
+      t.ok(
+        getActiveRunIdStub.calledWithExactly(consortiumId),
+        'gets active run ID'
+      );
+      t.ok(
+        shouldJoinRunStub.calledWithExactly(consortiumId),
+        'calls should join'
+      );
+      t.notOk(joinRunStub.callCount, 'doesn’t call without project');
 
+      return joinSlaveComputation(consortium);
+    })
+    .then(() => {
+      t.notOk(joinRunStub.callCount, 'doesn’t call without run ID');
+      return joinSlaveComputation(consortium);
+    })
+    .then(() => {
+      t.notOk(joinRunStub.callCount, 'doesn’t call without should join');
+      return joinSlaveComputation(consortium);
+    })
+    .then(() => {
       t.deepEqual(
-        [
-          joinRunStub.firstCall.args[0],
-          joinRunStub.secondCall.args[0],
-        ],
-        [{
-          consortiumId: consortiumId1,
+        joinRunStub.firstCall.args[0],
+        {
+          consortiumId,
           projectId: 'project-1',
-          runId: runId1,
-        }, {
-          consortiumId: consortiumId1,
-          projectId: 'project-2',
-          runId: runId1,
-        }],
+          runId,
+        },
         'calls joinRun with proper args'
       );
     })
     .catch(t.end)
     .then(() => {
       // teardown
-      dbGetStub.restore();
       delete app.core;
+      delete app.notifications;
     });
 });
