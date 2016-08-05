@@ -1,30 +1,29 @@
 import app from 'ampersand-app';
 import { applyAsyncLoading } from './loading';
 
-const DO_DELETE_CONSORTIUM = 'DO_DELETE_CONSORTIUM';
+export const DO_DELETE_CONSORTIA = 'DO_DELETE_CONSORTIA';
 
-function doDeleteConsortium(id) {
-  return {
-    id,
-    type: DO_DELETE_CONSORTIUM,
-  };
-}
+function doDeleteConsortia(consortia) {
+  if (!Array.isArray(consortia)) {
+    throw new Error('Expected consortia to be an array');
+  }
 
-const DO_UPDATE_CONSORTIUM = 'DO_UPDATE_CONSORTIUM';
-
-function doUpdateConsortium(consortium) {
-  return {
-    consortium,
-    type: DO_UPDATE_CONSORTIUM,
-  };
-}
-
-const SET_CONSORTIA = 'SET_CONSORTIA';
-
-export function setConsortia(consortia) {
   return {
     consortia,
-    type: SET_CONSORTIA,
+    type: DO_DELETE_CONSORTIA,
+  };
+}
+
+export const DO_UPDATE_CONSORTIA = 'DO_UPDATE_CONSORTIA';
+
+function doUpdateConsortia(consortia) {
+  if (!Array.isArray(consortia)) {
+    throw new Error('Expected consortia to be an array');
+  }
+
+  return {
+    consortia,
+    type: DO_UPDATE_CONSORTIA,
   };
 }
 
@@ -78,6 +77,33 @@ export const joinConsortium = applyAsyncLoading((consortiumId, username) => {
 });
 
 /**
+ * Set active computation on a consortium.
+ *
+ * @param {string} consortiumId
+ * @param {string} computationId Computation's ID to set as
+ * `activeComputationId` on the consortium model
+ * @returns {Function}
+ */
+export const setActiveComputation = applyAsyncLoading(
+  (consortiumId, computationId) => {
+    return () => {
+      const { core: { consortia } } = app;
+
+      if (!computationId) {
+        return Promise.reject('No computation ID specified');
+      }
+
+      return consortia.get(consortiumId)
+        .then(consortium => {
+          consortium.activeComputationId = computationId;
+
+          return consortia.save(consortium);
+        });
+    };
+  }
+);
+
+/**
  * Remove a user from a consortium.
  *
  * Saving the consortium causes the change to flow through `setConsortium`,
@@ -108,56 +134,85 @@ export const leaveConsortium = applyAsyncLoading((consortiumId, username) => {
   };
 });
 
-export const fetchConsortia = applyAsyncLoading(function fetchConsortia() {
-  return (dispatch) => {
-    return app.core.consortia.all()
-    .then((consortia) => {
-      dispatch(setConsortia(consortia));
-      return consortia;
-    })
-    .catch((err) => {
-      app.notify('error', `Unable to download consortia: ${err}`);
-      throw err;
-    });
-  };
-});
-
 /**
  * Update consortia from database change objects.
  *
  * @param {Object|Object[]} toUpdate POJO consortium/tia to patch onto existing state
  * @returns {Function}
  */
-export function updateConsortia(toUpdate) {
+export function updateConsortia(consortia) {
   return dispatch => {
-    const localToUpdate = Array.isArray(toUpdate) ? toUpdate : [toUpdate];
+    const localToUpdate = Array.isArray(consortia) ? consortia : [consortia];
+    const toDelete = [];
+    const toUpdate = [];
 
     localToUpdate.forEach(change => {
       if ('_deleted' in change && change._deleted) {
-        dispatch(doDeleteConsortium(change._id));
+        toDelete.push(change);
       } else {
-        dispatch(doUpdateConsortium(change));
+        toUpdate.push(change);
       }
     });
+
+    if (toDelete.length) {
+      dispatch(doDeleteConsortia(toDelete));
+    }
+
+    if (toUpdate.length) {
+      dispatch(doUpdateConsortia(toUpdate));
+    }
   };
 }
 
-function consortiumSorter(a, b) {
+/**
+ * Save a consortium.
+ *
+ * @param {Object} consortium
+ * @returns {Function}
+ */
+export const saveConsortium = applyAsyncLoading(consortium => {
+  return dispatch => {
+    return app.core.consortia.save(consortium)
+    .then((newTium) => {
+      dispatch(updateConsortia(newTium));
+      return newTium;
+    });
+  };
+});
+
+export function consortiaSorter(a, b) {
   return a.label > b.label;
 }
 
 export default function reducer(state = [], action) {
   switch (action.type) {
-    case SET_CONSORTIA:
-      return [...state, ...action.consortia].sort(consortiumSorter);
-    case DO_UPDATE_CONSORTIUM:
-      return state.map(consortium => {
-        return consortium._id === action.consortium._id ?
-          action.consortium :
-          consortium;
-      }).sort(consortiumSorter);
-    case DO_DELETE_CONSORTIUM:
-      return state.filter(({ _id }) => _id !== action.id);
+    /**
+     * There's no distinction between 'new' and 'changed' consortia in PouchDB
+     * change events. Treat both cases as 'updates':
+     */
+    case DO_UPDATE_CONSORTIA: {
+      const newConsortia = [];
+      const changed = [];
+      const unchanged = [...state];
+
+      action.consortia.forEach(consortium => {
+        const index = unchanged.findIndex(c => c._id === consortium._id);
+
+        if (index > -1) {
+          unchanged.splice(index, 1);
+          changed.push(consortium);
+        } else {
+          newConsortia.push(consortium);
+        }
+      });
+
+      return [...unchanged, ...changed, ...newConsortia].sort(consortiaSorter);
+    }
+    case DO_DELETE_CONSORTIA: {
+      const ids = action.consortia.map(({ _id }) => _id);
+
+      return state.filter(({ _id }) => ids.indexOf(_id) < 0);
+    }
     default:
       return state;
   }

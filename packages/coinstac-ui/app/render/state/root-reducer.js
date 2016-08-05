@@ -3,7 +3,6 @@ import auth from './ducks/auth';
 import computation from './ducks/computation';
 import computations from './ducks/computations';
 import consortia from './ducks/consortia';
-import consortium from './ducks/consortium';
 import loading from './ducks/loading';
 import project from './ducks/project';
 import projects from './ducks/projects';
@@ -16,7 +15,6 @@ export default function get() {
     computation,
     computations,
     consortia,
-    consortium,
     form,
     loading,
     project,
