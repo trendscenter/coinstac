@@ -5,19 +5,11 @@ import ConsortiumCard from './consortium-card';
 import { connect } from 'react-redux';
 import {
   deleteConsortium,
-  fetchConsortia,
   joinConsortium,
   leaveConsortium,
 } from '../state/ducks/consortia';
-import noop from 'lodash/noop';
 
 class DashboardConsortia extends Component {
-
-  componentWillMount() {
-    const { dispatch } = this.props;
-    dispatch(fetchConsortia(noop));
-  }
-
   renderConsortia() {
     const { consortia, dispatch, user: { username } } = this.props;
 

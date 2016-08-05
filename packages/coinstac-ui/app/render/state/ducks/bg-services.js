@@ -97,8 +97,14 @@ export const initPrivateBackgroundServices = applyAsyncLoading(
         updateComputations({ dispatch, toUpdate, isBg: true });
       });
       const appUser = app.core.auth.getUser().username;
-      app.core.consortia.getUserConsortia(appUser)
-      .then(userConsortia => {
+      app.core.consortia.all()
+      .then(consortia => {
+        dispatch(updateConsortia(consortia));
+
+        const userConsortia = consortia.filter(c => {
+          return c.users.indexOf(appUser) > -1;
+        });
+
         userConsortia.forEach(consortium => {
           // this is called twice, once on startup
           // second time inside change listener
