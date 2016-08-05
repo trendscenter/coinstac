@@ -79,19 +79,33 @@ class ConsortiumSingleController extends Component {
   }
 
   render() {
-    const { auth, computations, consortium, loading, remoteResults } = this.props;
-    if (!consortium || !remoteResults || !computations) { return (<span>{hilarious.random()}</span>); }
+    const {
+      auth: {
+        user,
+        user: { username },
+      },
+      computations,
+      consortium,
+      loading,
+      remoteResults,
+    } = this.props;
+
+    if (!consortium || !remoteResults || !computations) {
+      return <span>{hilarious.random()}</span>;
+    }
+
     return (
       <ConsortiumSingle
         addUser={this.addUser}
         computations={computations}
         consortium={consortium}
-        user={auth.user}
+        user={user}
         updateComputation={this.updateComputation}
-        isMember={consortium.users.some(un => un === auth.user.username)}
+        isMember={consortium.users.some(un => un === username)}
+        isOwner={consortium.owners.some(un => un === username)}
         removeUser={this.removeUser}
         remoteResults={remoteResults || []}
-        { ...loading }
+        {...loading}
       />
     );
   }
