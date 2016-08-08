@@ -15,13 +15,12 @@ const genOpts = (opts) => {
 
 test('constructor - runId', (t) => {
   const wildRunId = '!@$#(&ABC)_!~\\]';
-  let validOpts = genOpts();
-  let invalidOpts = genOpts({ _id: wildRunId + '-garbage' });
-  let result;
+  const validOpts = genOpts();
+  const invalidOpts = genOpts({ _id: `${wildRunId}-garbage` });
 
     // test valid
   try {
-    result = new RemoteComputationResult(validOpts);
+    const result = new RemoteComputationResult(validOpts); // eslint-disable-line no-unused-vars
     t.pass('valid constructor options ok');
   } catch (err) {
     return t.end(err.message);

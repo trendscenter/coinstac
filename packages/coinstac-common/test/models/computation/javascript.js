@@ -1,24 +1,22 @@
 'use strict';
 
-const _ = require('lodash');
-const path = require('path');
 const computations = require('../../../').models.computation;
 const JavascriptComputation = computations.JavascriptComputation;
 const test = require('tape');
 
-test('model::JavascriptComputation constructor', function (t) {
-  t.throws(function () {
-    const comp = new JavascriptComputation({ type: 'function' });
+test('model::JavascriptComputation constructor', t => {
+  t.throws(() => {
+    return new JavascriptComputation({ type: 't =>' });
   }, /Validation/, 'throws without fn');
 
   t.end();
 });
 
-test('model::JavascriptComputation run (basic-1)', function (t) {
+test('model::JavascriptComputation run (basic-1)', t => {
   t.plan(1);
   const comp = new JavascriptComputation({
-    type: 'function',
-    fn: (opts) => Promise.resolve(12345),
+    type: 't =>',
+    fn: (opts) => Promise.resolve(12345), // eslint-disable-line no-unused-vars
     cwd: __dirname,
   });
   comp.run()
@@ -26,10 +24,10 @@ test('model::JavascriptComputation run (basic-1)', function (t) {
   .then(t.end, t.end);
 });
 
-test('model::JavascriptComputation run (basic-2)', function (t) {
+test('model::JavascriptComputation run (basic-2)', t => {
   t.plan(1);
   const comp = new JavascriptComputation({
-    type: 'function',
+    type: 't =>',
     fn: (opts) => Promise.resolve(opts.definition.seed + 1),
     cwd: __dirname,
   });

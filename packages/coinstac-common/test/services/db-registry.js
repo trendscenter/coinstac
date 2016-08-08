@@ -3,29 +3,7 @@
 
 require('../helpers/boot');
 const registryFactory = require('../../').services.dbRegistry;
-const Pouchy = require('pouchy');
 const test = require('tape');
-const url = require('url');
-const assign = require('lodash/assign');
-const path = require('path');
-const dbDir = path.join(__dirname, './test-db-dir');
-const cp = require('child_process');
-const fs = require('fs');
-
-const setup = () => {
-  try { cp.execSync('rm -rf ' + dbDir); } catch (err) {
-    // pass
-  }
-  try { cp.execSync('mkdir -p ' + dbDir); } catch (err) {
-    // pass
-  }
-};
-
-const teardown = () => {
-  try { cp.execSync('rm -rf ' + dbDir); } catch (err) {
-    // pass
-  }
-};
 
 test('registry - construction', t => {
   t.throws(() => {

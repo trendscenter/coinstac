@@ -23,7 +23,7 @@ const DBRegistry = require('./classes/db-registry');
  * @param {boolean=} opts.isRemote configures the database store to run on a
  *                                 remote machine (central compute node).
  */
-const dbRegistryFactory = function (opts) {
+function dbRegistryFactory(opts) {
   if (!opts) {
     throw new ReferenceError('missing db-registry opts');
   }
@@ -68,7 +68,7 @@ const dbRegistryFactory = function (opts) {
       /computations/,
     ],
   }, opts));
-};
+}
 
 /**
  * @todo Rename the factory to `dbRegistryFactory` in this package's root

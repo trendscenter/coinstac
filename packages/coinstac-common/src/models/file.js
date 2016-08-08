@@ -2,7 +2,6 @@
 
 const Base = require('./base.js');
 const joi = require('joi');
-const util = require('util');
 
 /**
  * @class File
@@ -14,9 +13,7 @@ const util = require('util');
  * @property {string} sha
  * @property {object} tags @deprecated
  */
-function File(attrs) {
-  Base.apply(this, arguments); // eslint-disable-line
-}
+class File extends Base {}
 
 File.schema = Object.assign({
   filename: joi.string().min(4).required(),
@@ -25,6 +22,5 @@ File.schema = Object.assign({
   sha: joi.string().min(15).required(),
   tags: joi.object(),
 }, Base.schema);
-util.inherits(File, Base);
 
 module.exports = File;

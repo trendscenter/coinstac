@@ -40,7 +40,7 @@
     "jsdoc": "^3.4.0",
     "minami": "^1.1.1",
     "ncp": "^2.0.0",
-    "nyc": "^6.4.4",
+    "nyc": "^7.1.0",
     "performance-now": "^0.2.0",
     "pouchdb-adapter-memory": "^5.4.3",
     "semver": "^5.1.0",

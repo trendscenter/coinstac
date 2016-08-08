@@ -2,7 +2,6 @@
 
 const Base = require('./base.js');
 const joi = require('joi');
-const util = require('util');
 
 /**
  * @class User
@@ -14,9 +13,7 @@ const util = require('util');
  * @property {string} institution
  * @property {name} name human readable name, vs username (e.g. handle)
  */
-function User() {
-  Base.apply(this, arguments); // eslint-disable-line
-}
+class User extends Base {}
 
 // @ref COINS user db fields
 User.schema = Object.assign({
@@ -31,8 +28,8 @@ User.schema = Object.assign({
   password: joi.string().min(5),
   passwordExpDate: joi.any(),
   siteId: joi.any(),
-  username: joi.string().min(3).regex(/^[^-]+$/).required(), // no -'s
+  username: joi.string().min(3).regex(/^[^-]+$/)
+    .required(), // no -'s
 }, Base.schema);
-util.inherits(User, Base);
 
 module.exports = User;

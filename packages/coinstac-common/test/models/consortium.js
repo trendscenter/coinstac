@@ -14,7 +14,7 @@ const validOpts = () => ({
 });
 const mockConsortium = new Consortium(validOpts());
 
-test('model::consortium - hasMember', function (t) {
+test('model::consortium - hasMember', t => {
   t.plan(2);
   t.ok(
     mockConsortium.hasMember('hpotter'),
@@ -26,7 +26,7 @@ test('model::consortium - hasMember', function (t) {
   );
 });
 
-test('model::consortium - isOwnedBy', function (t) {
+test('model::consortium - isOwnedBy', t => {
   // Create a model without an owner property
   const ownerlessModel = new Consortium(validOpts());
 
@@ -42,7 +42,7 @@ test('model::consortium - isOwnedBy', function (t) {
   t.end();
 });
 
-test('Consortium.compareUsernames', function (t) {
+test('Consortium.compareUsernames', t => {
   t.plan(3);
   t.ok(Consortium.compareUsernames('foo', 'foo'), 'matching usernames');
   t.ok(Consortium.compareUsernames(' Foo', 'foo'), 'whitespace/case diff');
