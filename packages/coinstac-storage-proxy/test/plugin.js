@@ -4,6 +4,7 @@ const tape = require('tape');
 const hapi = require('hapi');
 const path = require('path');
 const plugin = require(path.join(process.cwd(), 'src', 'index.js'));
+const h2o2 = require('h2o2');
 
 tape('COINSTAC-storage-proxy: plugin', (t) => {
   t.plan(2);
@@ -16,7 +17,7 @@ tape('COINSTAC-storage-proxy: plugin', (t) => {
   server.register(
     [
       { register: plugin, options: mockOptions },
-      require('h2o2')
+      h2o2,
     ],
         (err) => {
           if (err) {
