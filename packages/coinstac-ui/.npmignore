@@ -1,0 +1,9 @@
+.jsdoc.json
+app/render/build/
+coinstac-*
+config
+CONTRIBUTING.md
+couchdb*
+coverage
+img
+test
