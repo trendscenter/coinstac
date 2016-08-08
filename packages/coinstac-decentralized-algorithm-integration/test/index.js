@@ -17,6 +17,7 @@ let toRun = [
 
 toRun = toRun.map((f) => path.resolve(__dirname, f));
 
+/* eslint-disable no-console */
 console.log(`---\nSIMULATION PLAN: ${toRun.length} simulations\n---`);
 
 toRun.reduce(
@@ -28,3 +29,4 @@ toRun.reduce(
   },
   Promise.resolve()
 );
+/* eslint-enable no-console */

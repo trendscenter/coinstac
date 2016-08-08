@@ -10,9 +10,9 @@ module.exports = {
   local: [
     {
       type: 'function',
-      fn: function (opts) {
+      fn(opts) {
         const value = (opts.previousData || 25) + 1;
-        console.log(value);
+        console.log(value); // eslint-disable-line no-console
         return value;
       },
     },
@@ -21,7 +21,7 @@ module.exports = {
     type: 'function',
     fn(opts) {
       let value = (opts.previousData || 0) + 1;
-      console.log(value);
+      console.log(value); // eslint-disable-line no-console
       if (value === 5) {
         value = { complete: true };
       }
