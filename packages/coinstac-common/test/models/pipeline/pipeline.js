@@ -6,28 +6,26 @@ const Pipeline = common.models.pipeline.Pipeline;
 const pipelines = require('./.test-pipelines');
 const test = require('tape');
 
-test('model::Pipeline constructor - basics', function (t) {
-  let p;
+test('model::Pipeline constructor - basics', t => {
   t.throws(
-    () => { new Pipeline(); },
+    () => new Pipeline(),
     /ValidationError/,
     'constructor attrs present'
   );
   t.throws(
-    () => { new Pipeline({ computations: [] }); },
+    () => new Pipeline({ computations: [] }),
     /ValidationError/,
     '1+ computation required'
   );
-  p = pipelines.basic();
+  const p = pipelines.basic();
   t.equal(p.inProgress, false, 'inProgress defaults without explicit set');
   t.equal(p.step, 0, 'step defaults without explicit set');
   t.end();
 });
 
-test('model::Pipeline run - basic (single, `run` error)', function (t) {
-  let p;
+test('model::Pipeline run - basic (single, `run` error)', t => {
   t.plan(2);
-  p = pipelines.basicError();
+  const p = pipelines.basicError();
 
   p.run({}, {})
   .catch((err) => {
@@ -37,10 +35,9 @@ test('model::Pipeline run - basic (single, `run` error)', function (t) {
   });
 });
 
-test('model::Pipeline run - basic (single comp, error, invalid opts)', function (t) {
-  let p;
+test('model::Pipeline run - basic (single comp, error, invalid opts)', t => {
   t.plan(1);
-  p = pipelines.basic();
+  const p = pipelines.basic();
   p.run(null, {})
   .then(() => t.end('should error without `run` opts'))
   .catch((err) => {
@@ -49,10 +46,9 @@ test('model::Pipeline run - basic (single comp, error, invalid opts)', function 
   });
 });
 
-test('model::Pipeline run - basic (forbid parallel running)', function (t) {
-  let p;
+test('model::Pipeline run - basic (forbid parallel running)', t => {
   t.plan(2);
-  p = pipelines.basicAsync();
+  const p = pipelines.basicAsync();
   p.run({ async: 'is-happening-now, baby' }, {})
   .catch(() => t.end('should error without `run` opts'));
   p.run({}, {})
@@ -67,10 +63,9 @@ test('model::Pipeline run - basic (forbid parallel running)', function (t) {
   });
 });
 
-test('model::Pipeline run - basic (single)', function (t) {
-  let p;
+test('model::Pipeline run - basic (single)', t => {
   t.plan(2);
-  p = pipelines.basic();
+  const p = pipelines.basic();
   const serial = p.serialize();
   t.notOk(serial.computations, 'computations not serialized');
   p.run({}, {})
@@ -78,10 +73,10 @@ test('model::Pipeline run - basic (single)', function (t) {
   .then(t.end, t.end);
 });
 
-test('model::Pipeline run - basic (double, immediate stepping w/out next)', function (t) {
+test('model::Pipeline run - basic (double, immediate stepping w/out next)', t => {
   let calledFirst;
   t.plan(6);
-  let p = pipelines.basicDouble();
+  const p = pipelines.basicDouble();
   p.events.on('save-request', (rslt) => {
     if (!calledFirst) {
       calledFirst = true;
@@ -99,10 +94,10 @@ test('model::Pipeline run - basic (double, immediate stepping w/out next)', func
   .catch(t.end);
 });
 
-test('model::Pipeline run - basic (double, immediate stepping w/ next)', function (t) {
+test('model::Pipeline run - basic (double, immediate stepping w/ next)', t => {
   let calledFirst;
   t.plan(2);
-  let p = pipelines.basicDoubleNext();
+  const p = pipelines.basicDoubleNext();
   p.events.on('save-request', (rslt) => {
     if (!calledFirst) {
       calledFirst = true;
@@ -116,8 +111,8 @@ test('model::Pipeline run - basic (double, immediate stepping w/ next)', functio
   .catch((err) => t.end(err && err.message));
 });
 
-test('model::Pipeline tryNext - basic (double, `next` errors pre-run)', function (t) {
-  let p = pipelines.invalidOptsNextPreRunError();
+test('model::Pipeline tryNext - basic (double, `next` errors pre-run)', t => {
+  const p = pipelines.invalidOptsNextPreRunError();
   t.plan(2);
   p.run({}, {})
   .then(() => t.end('error should have occurred'))
@@ -128,8 +123,8 @@ test('model::Pipeline tryNext - basic (double, `next` errors pre-run)', function
   });
 });
 
-test('model::Pipeline tryNext - basic (double, `next` errors post-run)', function (t) {
-  let p = pipelines.invalidOptsNextPostRunError();
+test('model::Pipeline tryNext - basic (double, `next` errors post-run)', t => {
+  const p = pipelines.invalidOptsNextPostRunError();
   t.plan(2);
   p.run({}, {})
   .then(() => t.end('error should have occurred'))
@@ -143,9 +138,9 @@ test('model::Pipeline tryNext - basic (double, `next` errors post-run)', functio
   });
 });
 
-test('model::Pipeline run - intermediate (double, user event stepping)', function (t) {
+test('model::Pipeline run - intermediate (double, user event stepping)', t => {
   t.plan(4);
-  let p = pipelines.userTriggeredStepping();
+  const p = pipelines.userTriggeredStepping();
   p.run({}, {})
   .then((rslt) => {
     t.equal(p.step, 0, 'pipeline does not progress when `next` returns falsy');

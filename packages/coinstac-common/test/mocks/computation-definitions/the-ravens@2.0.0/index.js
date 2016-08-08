@@ -14,7 +14,7 @@ module.exports = {
     type: 'function',
   },
   repository: {
-    url: 'https://github.com/MRN-Code/' + pkgName,
+    url: `https://github.com/MRN-Code/${pkgName}`,
   },
   version: pkg.version,
 };

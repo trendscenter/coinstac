@@ -1,24 +1,22 @@
 'use strict';
 
-const _ = require('lodash');
-const path = require('path');
 const computations = require('../../../').models.computation;
 const CommandComputation = computations.CommandComputation;
 const test = require('tape');
 
-test('model::CommandComputation constructor', function (t) {
-  t.throws(function () {
-    const comp = new CommandComputation({ type: 'function' });
+test('model::CommandComputation constructor', t => {
+  t.throws(() => {
+    return new CommandComputation({ type: 'function' });
   }, /cmd/, 'requires type: "cmd"');
 
-  t.throws(function () {
-    const comp = new CommandComputation({ type: 'cmd', cmd: 'test' });
+  t.throws(() => {
+    return new CommandComputation({ type: 'cmd', cmd: 'test' });
   }, /cwd/, 'throws without cwd');
 
   t.end();
 });
 
-test('model::CommandComputation run (args passed to file)', function (t) {
+test('model::CommandComputation run (args passed to file)', t => {
   t.plan(1);
   const runInputs = { filenames: ['/dummy/path'] };
   const comp = new CommandComputation({
@@ -35,7 +33,7 @@ test('model::CommandComputation run (args passed to file)', function (t) {
   }, t.end);
 });
 
-test('model::CommandComputation run (basic, from command line)', function (t) {
+test('model::CommandComputation run (basic, from command line)', t => {
   t.plan(1);
   const comp = new CommandComputation({
     cwd: __dirname,
@@ -50,7 +48,7 @@ test('model::CommandComputation run (basic, from command line)', function (t) {
   }, t.end);
 });
 
-test('model::CommandComputation run (basic, from file)', function (t) {
+test('model::CommandComputation run (basic, from file)', t => {
   t.plan(1);
   const comp = new CommandComputation({
     cwd: __dirname,
@@ -65,7 +63,7 @@ test('model::CommandComputation run (basic, from file)', function (t) {
   }, t.end);
 });
 
-test('model::CommandComputation run fail (basic, invalid cmd)', function (t) {
+test('model::CommandComputation run fail (basic, invalid cmd)', t => {
   t.plan(1);
   const comp = new CommandComputation({
     cwd: __dirname,
@@ -81,7 +79,7 @@ test('model::CommandComputation run fail (basic, invalid cmd)', function (t) {
   });
 });
 
-test('model::CommandComputation run fail (basic, invalid syntax)', function (t) {
+test('model::CommandComputation run fail (basic, invalid syntax)', t => {
   t.plan(1);
   const comp = new CommandComputation({
     cwd: __dirname,
@@ -97,7 +95,7 @@ test('model::CommandComputation run fail (basic, invalid syntax)', function (t) 
   });
 });
 
-test('model::CommandComputation run fail (basic, file throws Exception)', function (t) {
+test('model::CommandComputation run fail (basic, file throws Exception)', t => {
   t.plan(1);
   const comp = new CommandComputation({
     cwd: __dirname,
@@ -113,7 +111,7 @@ test('model::CommandComputation run fail (basic, file throws Exception)', functi
   });
 });
 
-test('model::CommandComputation run fail (invalid return)', function (t) {
+test('model::CommandComputation run fail (invalid return)', t => {
   t.plan(1);
   const comp = new CommandComputation({
     cwd: __dirname,

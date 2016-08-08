@@ -179,7 +179,7 @@ class Pipeline extends Base {
     const runCancelled = opts.runCancelled;
 
     this.events.emit('computation:end', runInputs);
-    let postRunInputs = assign({}, runInputs, { previousData: runOutput });
+    const postRunInputs = assign({}, runInputs, { previousData: runOutput });
     return (runCancelled ?
       Promise.resolve({ didStep: false }) :
       this.tryNext(postRunInputs, { postRun: true })
@@ -206,7 +206,7 @@ class Pipeline extends Base {
    * @returns {object}
    */
   serialize() {
-    let serialized = Base.prototype.serialize.call(this);
+    const serialized = Base.prototype.serialize.call(this);
     delete serialized.computations;
     return serialized;
   }
@@ -230,7 +230,7 @@ class Pipeline extends Base {
    * @returns {Promise}
    */
   tryNext(opts, cycle) {
-    let resp = { didStep: false };
+    const resp = { didStep: false };
     const handleNextComplete = (doNext) => {
       const endOfPipe = !this.computations[this.step + 1];
       if (doNext && !endOfPipe) {
@@ -251,7 +251,8 @@ class Pipeline extends Base {
 }
 
 Pipeline.schema = Object.assign({}, Base.schema, {
-  computations: joi.array().min(1).items(joi.object().type(Computation)).required(),
+  computations: joi.array().min(1).items(joi.object().type(Computation))
+    .required(),
   plugins: joi.object().keys({
     preRun: joi.array().items(joi.func()),
     postRun: joi.array().items(joi.func()),

@@ -1,7 +1,7 @@
 'use strict';
+
 const Base = require('./base.js');
 const joi = require('joi');
-const util = require('util');
 
 /**
  * @class PouchDocument
@@ -10,11 +10,8 @@ const util = require('util');
  * @property {string} _id
  * @property {string} _rev
  */
-function PouchDocument() {
-  Base.apply(this, arguments); // eslint-disable-line
-}
+class PouchDocument extends Base {}
 
-util.inherits(PouchDocument, Base);
 PouchDocument.schema = Object.assign({
   _id: joi.string().min(2),
   _rev: joi.string().min(3),

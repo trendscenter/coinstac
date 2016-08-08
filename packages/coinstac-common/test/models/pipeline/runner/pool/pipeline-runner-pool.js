@@ -52,7 +52,7 @@ const setupServer = () => poolUtils.setup();
 const teardownServer = () => poolUtils.teardown();
 
 
-test('PipelineRunnerPool - handles new dbs', function (t) {
+test('PipelineRunnerPool - handles new dbs', t => {
   // @TODO handle https://github.com/pouchdb/pouchdb/issues/4922
   t.plan(3);
   setupServer().then(() => {
@@ -61,8 +61,8 @@ test('PipelineRunnerPool - handles new dbs', function (t) {
       PipelineRunnerPool.prototype._handleCreatedDB,
       'abstract unextended handleCreatedDB throws'
     );
-    let pool = new PipelineRunnerPool(poolOpts);
-    pool._handleCreatedDB = function (dbName) {
+    const pool = new PipelineRunnerPool(poolOpts);
+    pool._handleCreatedDB = function _handleCreatedDB(dbName) {
           // see above issue for early return justification
       if (this.createdHandlerCalled) { return; }
       this.createdHandlerCalled = true;
@@ -80,16 +80,16 @@ test('queues processing for rapid succession database events', t => {
   t.plan(3);
   setupServer().then(() => {
     const runId = 'testrun123';
-    const resultOpts = localResultOpts({ _id: runId + '-bilboBaggins' });
-    let localResult1 = new LocalComputationResult(resultOpts);
-    let localResult2 = new LocalComputationResult(resultOpts);
+    const resultOpts = localResultOpts({ _id: `${runId}-bilboBaggins` });
+    const localResult1 = new LocalComputationResult(resultOpts);
+    const localResult2 = new LocalComputationResult(resultOpts);
     const tDB = new Pouchy({ name: 'queue-db', pouchConfig: { adapter: 'memory' } });
     const runner = new LocalPipelineRunner({
       pipeline: pipelines.userTriggeredStepping(), // generic _async_ js pipeline
       result: localResult1,
       db: tDB,
     });
-    let pool = new PipelineRunnerPool(poolUtils.getPoolOpts({ dbRegistry: { isLocal: true } }));
+    const pool = new PipelineRunnerPool(poolUtils.getPoolOpts({ dbRegistry: { isLocal: true } }));
     poolUtils.suppressCreateDestroyHandlers(pool);
     pool.runners[runId] = runner; // stub in the pipeline-runner
 
@@ -130,16 +130,16 @@ test('queues processing for rapid succession database events', t => {
 test('does not proceed queue whilst pipeline is `inProgress`', t => {
   t.plan(5);
   setupServer().then(() => {
-    let localResult = new LocalComputationResult(localResultOpts());
-    let remoteResult1 = new RemoteComputationResult(remoteResultOpts());
-    let remoteResult2 = new RemoteComputationResult(remoteResultOpts());
-    let remoteResult3 = new RemoteComputationResult(remoteResultOpts());
+    const localResult = new LocalComputationResult(localResultOpts());
+    const remoteResult1 = new RemoteComputationResult(remoteResultOpts());
+    const remoteResult2 = new RemoteComputationResult(remoteResultOpts());
+    const remoteResult3 = new RemoteComputationResult(remoteResultOpts());
     const runner = new LocalPipelineRunner({
       pipeline: pipelines.basicMultiAsyncStep(), // steps sync, then async
       result: localResult,
       db: new Pouchy({ name: 'queue-db', pouchConfig: { adapter: 'memory' } }),
     });
-    let pool = new PipelineRunnerPool(poolUtils.getPoolOpts({ dbRegistry: { isLocal: true } }));
+    const pool = new PipelineRunnerPool(poolUtils.getPoolOpts({ dbRegistry: { isLocal: true } }));
     poolUtils.suppressCreateDestroyHandlers(pool);
     pool.runners[localResult.runId] = runner; // stub in the runner
     const getQueLen = () => pool.runQueueSize[localResult.runId];
@@ -186,16 +186,16 @@ test('Pool emits queue and run event activity', t => {
   t.plan(8);
   setupServer().then(() => {
     const runId = 'test_run_db_triggers_run';
-    const compSeed1 = { _id: runId + '-testuser1', username: 'testuser1' };
-    const compSeed2 = { _id: runId + '-testuser2', username: 'testuser2' };
-    let localResult1 = new LocalComputationResult(localResultOpts(compSeed1));
-    let localResult2 = new LocalComputationResult(localResultOpts(compSeed2));
+    const compSeed1 = { _id: `${runId}-testuser1`, username: 'testuser1' };
+    const compSeed2 = { _id: `${runId}-testuser2`, username: 'testuser2' };
+    const localResult1 = new LocalComputationResult(localResultOpts(compSeed1));
+    const localResult2 = new LocalComputationResult(localResultOpts(compSeed2));
     const runner = new LocalPipelineRunner({
       pipeline: pipelines.basic(),
       result: localResult1,
       db: new Pouchy({ name: 'testeventsdb', pouchConfig: { adapter: 'memory' } }),
     });
-    let pool = new PipelineRunnerPool(poolUtils.getPoolOpts({ dbRegistry: { isLocal: true } }));
+    const pool = new PipelineRunnerPool(poolUtils.getPoolOpts({ dbRegistry: { isLocal: true } }));
     poolUtils.suppressCreateDestroyHandlers(pool);
     pool.runners[runId] = runner; // stub in the runner
     const confirmStartRunEvents = (result) => {
@@ -238,7 +238,7 @@ test('Pool emits queue and run event activity', t => {
 
 test('abstract methods', (t) => {
   t.plan(1);
-  let pool = new PipelineRunnerPool(poolUtils.getPoolOpts({ dbRegistry: { isLocal: true } }));
+  const pool = new PipelineRunnerPool(poolUtils.getPoolOpts({ dbRegistry: { isLocal: true } }));
   pool.createNewRunner(null)
   .catch((err) => t.ok(err.message.match(/abstract/), 'illegal createNewRunner call'))
   .then(t.end, t.end);

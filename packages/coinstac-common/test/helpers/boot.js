@@ -6,7 +6,7 @@ require('clarify'); // Exclude node internal calls from the stack
 const Pouchy = require('pouchy');
 Pouchy.plugin(require('pouchdb-adapter-memory'));
 
-const fail = function (err) {
+function fail(err) {
   const isLikelyBecausePouchDBServerHasNoTeardownHooks = (
     err && (
       err.code === 'ECONNREFUSED' ||
@@ -29,7 +29,7 @@ const fail = function (err) {
   console.error(err); // eslint-disable-line
   console.error(err.stack); // eslint-disable-line
   process.exit(1);
-};
+}
 
 process.on('uncaughtExpection', fail);
 process.on('unhandledRejection', fail);

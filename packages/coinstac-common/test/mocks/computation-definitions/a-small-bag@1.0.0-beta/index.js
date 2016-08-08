@@ -4,7 +4,7 @@ const _ = require('lodash');
 const pkg = require('./package.json');
 
 const local = {
-  fn(local, remote, cb) {
+  fn(local, remote) {
     return (local + remote) / 2;
   },
 
@@ -12,7 +12,7 @@ const local = {
 };
 
 const remote = {
-  fn(locals, remote) {
+  fn(locals) {
     return _.reduce(locals, (sum, n) => sum + n);
   },
 
@@ -24,7 +24,7 @@ module.exports = {
   name: pkg.name,
   remote,
   repository: {
-    url: 'https://github.com/MRN-Code/' + pkg.name,
+    url: `https://github.com/MRN-Code/${pkg.name}`,
   },
   version: pkg.version,
 };

@@ -34,7 +34,7 @@ test('builds & execs runners in response to db events', t => {
 
     // create pool instance
     const tPoolOpts = poolUtils.getPoolOpts({ dbRegistry: { isRemote: true } });
-    let pool = new RemotePipelineRunnerPool(tPoolOpts);
+    const pool = new RemotePipelineRunnerPool(tPoolOpts);
 
     // seed random consortium
     const consortium = poolUtils.getDummyConsortium();
@@ -88,13 +88,13 @@ test('builds new listeners when new a new consortium is added', t => {
   setupServer().then(() => {
     const consortium = poolUtils.getDummyConsortium();
     const tPoolOpts = poolUtils.getPoolOpts({ dbRegistry: { isRemote: true } });
-    let pool = new RemotePipelineRunnerPool(tPoolOpts);
+    const pool = new RemotePipelineRunnerPool(tPoolOpts);
     // assert that listener is generated for new consortium on-add
     const listenerCreatedP = new Promise((res) => {
       pool.events.on('listener:created', (dbname) => {
         t.equal(
           dbname,
-          'local-consortium-' + consortium._id,
+          `local-consortium-${consortium._id}`,
           'listener generated dynamically'
         );
         res();
@@ -118,7 +118,7 @@ test('fetch or seed computation results on init', (t) => {
   t.plan(3);
   setupServer().then(() => {
     const tPoolOpts = poolUtils.getPoolOpts({ dbRegistry: { isRemote: true } });
-    let pool = new RemotePipelineRunnerPool(tPoolOpts);
+    const pool = new RemotePipelineRunnerPool(tPoolOpts);
     const resultDB = pool.dbRegistry.get('remote-consortium-abc');
     const remoteResult = poolUtils.getDummyRemoteResult();
 
