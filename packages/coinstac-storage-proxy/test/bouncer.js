@@ -9,7 +9,7 @@ const AuthorizationError = require(
 );
 
 const defaultOpts = {
-  targetBaseUrl: 'http://localhost:5432'
+  targetBaseUrl: 'http://localhost:5432',
 };
 
 /**
@@ -31,16 +31,15 @@ const factory = (config, postConstructionProps) => {
  * @return {Function}    spy function, contains a `callCount` property
  */
 const getMockFn = (fn) => {
-  let spy = function () {
+  function spy(...args) {
     spy.callCount++;
     if (fn) {
-
-            // call callback with current context and args
-      return fn.apply(this, arguments);
+      // call callback with current context and args
+      return fn.apply(this, args);
     }
 
     return;
-  };
+  }
 
   spy.callCount = 0;
   return spy;
@@ -87,10 +86,10 @@ tape('Bouncer: testPathRegExp', (t) => {
   t.plan(2);
   const bouncer = factory({ pathRegExp: /^\/foo/ });
   const mockRequest = {
-    path: '/foo/'
+    path: '/foo/',
   };
   const mockRequest2 = {
-    path: '/bar/'
+    path: '/bar/',
   };
   t.equals(bouncer.testPathRegExp(mockRequest), true, 'Return true if match');
   t.equals(bouncer.testPathRegExp(mockRequest2), false, 'Return false');
@@ -107,7 +106,7 @@ tape('Bouncer: mapUri', (t) => {
     valConMem: getMockFn(() => { return Promise.resolve(true); }),
     valConMemThrow: getMockFn(() => { return Promise.reject(false); }),
     handleAuthRejection: getMockFn(),
-    testPathRegExp: getMockFn(() => { return true; })
+    testPathRegExp: getMockFn(() => { return true; }),
   };
 
   const resetMocks = () => {
@@ -134,7 +133,7 @@ tape('Bouncer: mapUri', (t) => {
         validateConsortiumMembership: mocks.valConMem,
         validateConsortiumOwnership: mocks.valConOwn,
         handleAuthRejection: mocks.handleAuthRejection,
-        testPathRegExp: mocks.testPathRegExp
+        testPathRegExp: mocks.testPathRegExp,
       }
         ).mapUri().then(() => {
           t.equals(mocks.valConMem.callCount, 1, 'calls valConMem');
@@ -157,7 +156,7 @@ tape('Bouncer: mapUri', (t) => {
         allow: mocks.allow,
         validateConsortiumMembership: mocks.valConMemThrow,
         validateConsortiumOwnership: mocks.valConOwn,
-        handleAuthRejection: mocks.handleAuthRejection
+        handleAuthRejection: mocks.handleAuthRejection,
       }
         ).mapUri().then(() => {
           t.equals(mocks.valConMemThrow.callCount, 1, 'calls valConMemThrow');
@@ -179,23 +178,23 @@ tape('Bouncer: validateConsortiumOwnership', (t) => {
     const mockRequest = {
       payload: { _rev: true },
       path: null,
-      auth: { credentials: { username: mockUsername } }
+      auth: { credentials: { username: mockUsername } },
     };
 
     const mockThis = {
       utils: {
-        getConsortium: getMockFn(function (baseUrl, req) {
+        getConsortium: getMockFn((baseUrl, req) => {
           t.equals(req, mockRequest, 'pass doc to getConsortium');
           return Promise.resolve(req.payload);
-        })
+        }),
       },
-      consortiumIsOwnedBy: getMockFn(function (username) {
+      consortiumIsOwnedBy: getMockFn(function mockFn(username) {
         t.equals(username, mockUsername, 'pass username to isOwnedBy');
         t.equals(this, mockRequest.payload, 'pass doc to isOwnedBy');
         return this;
       }),
 
-      config: { consortiumOwnersOnly: true }
+      config: { consortiumOwnersOnly: true },
     };
 
     factory({}, mockThis).validateConsortiumOwnership(mockRequest)
@@ -224,17 +223,17 @@ tape('Bouncer: validateConsortiumOwnership', (t) => {
     const mockRequest = {
       payload: {},
       path: null,
-      auth: { credentials: { username: mockUsername } }
+      auth: { credentials: { username: mockUsername } },
     };
 
     const mockThis = {
-      consortiumIsOwnedBy: getMockFn(function (username) {
+      consortiumIsOwnedBy: getMockFn(function mockFn(username) {
         t.equals(username, mockUsername, 'pass username to isOwnedBy');
         t.equals(mockRequest.payload, this, 'pass doc to isOwnedBy');
         return this;
       }),
 
-      config: { consortiumOwnersOnly: true }
+      config: { consortiumOwnersOnly: true },
     };
 
     factory({}, mockThis).validateConsortiumOwnership(mockRequest)
@@ -246,7 +245,6 @@ tape('Bouncer: validateConsortiumOwnership', (t) => {
                 );
               t.equals(result, mockRequest.payload, 'promises chained ok');
             });
-
   });
 
   t.test('Invalid Update Request', (t) => {
@@ -255,23 +253,23 @@ tape('Bouncer: validateConsortiumOwnership', (t) => {
     const mockRequest = {
       payload: { _rev: true },
       path: null,
-      auth: { credentials: { username: mockUsername } }
+      auth: { credentials: { username: mockUsername } },
     };
 
     const mockThis = {
       utils: {
-        getConsortium: getMockFn(function (baseUrl, req) {
+        getConsortium: getMockFn((baseUrl, req) => {
           t.equals(req, mockRequest, 'pass doc to getConsortium');
           return Promise.resolve(req.payload);
-        })
+        }),
       },
-      consortiumIsOwnedBy: getMockFn(function (username) {
+      consortiumIsOwnedBy: getMockFn(function mockFn(username) {
         t.equals(username, mockUsername, 'pass username to isOwnedBy');
         t.equals(this, mockRequest.payload, 'pass doc to isOwnedBy');
         return false;
       }),
 
-      config: { consortiumOwnersOnly: true }
+      config: { consortiumOwnersOnly: true },
     };
 
     factory({}, mockThis).validateConsortiumOwnership(mockRequest)
@@ -302,17 +300,17 @@ tape('Bouncer: validateConsortiumOwnership', (t) => {
     const mockRequest = {
       payload: {},
       path: null,
-      auth: { credentials: { username: mockUsername } }
+      auth: { credentials: { username: mockUsername } },
     };
 
     const mockThis = {
-      consortiumIsOwnedBy: getMockFn(function (username) {
+      consortiumIsOwnedBy: getMockFn(function mockFn(username) {
         t.equals(username, mockUsername, 'pass username to isOwnedBy');
         t.equals(mockRequest.payload, this, 'pass doc to isOwnedBy');
         return false;
       }),
 
-      config: { consortiumOwnersOnly: true }
+      config: { consortiumOwnersOnly: true },
     };
 
     factory({}, mockThis).validateConsortiumOwnership(mockRequest)
@@ -330,7 +328,6 @@ tape('Bouncer: validateConsortiumOwnership', (t) => {
                     'Should reject with AuthorizationError'
                 );
             });
-
   });
 
   t.test('Skip validation', (t) => {
@@ -340,10 +337,10 @@ tape('Bouncer: validateConsortiumOwnership', (t) => {
 
     const mockThis = {
       utils: {
-        getConsortium: getMockFn()
+        getConsortium: getMockFn(),
       },
       consortiumIsOwnedBy: getMockFn(),
-      config: { consortiumOwnersOnly: false }
+      config: { consortiumOwnersOnly: false },
     };
 
     factory({}, mockThis).validateConsortiumOwnership(mockRequest)
@@ -375,23 +372,23 @@ tape('Bouncer: validateConsortiumMembership', (t) => {
     const mockRequest = {
       payload: { _rev: true },
       path: null,
-      auth: { credentials: { username: mockUsername } }
+      auth: { credentials: { username: mockUsername } },
     };
 
     const mockThis = {
       utils: {
-        getConsortium: getMockFn(function (baseUrl, req) {
+        getConsortium: getMockFn((baseUrl, req) => {
           t.equals(req, mockRequest, 'pass doc to getConsortium');
           return Promise.resolve(req.payload);
-        })
+        }),
       },
-      consortiumHasMember: getMockFn(function (username) {
+      consortiumHasMember: getMockFn(function mockFn(username) {
         t.equals(username, mockUsername, 'pass username to isOwnedBy');
         t.equals(this, mockRequest.payload, 'pass doc to isOwnedBy');
         return this;
       }),
 
-      config: { consortiumMembersOnly: true }
+      config: { consortiumMembersOnly: true },
     };
 
     factory({}, mockThis).validateConsortiumMembership(mockRequest)
@@ -420,23 +417,23 @@ tape('Bouncer: validateConsortiumMembership', (t) => {
     const mockRequest = {
       payload: { _rev: true },
       path: null,
-      auth: { credentials: { username: mockUsername } }
+      auth: { credentials: { username: mockUsername } },
     };
 
     const mockThis = {
       utils: {
-        getConsortium: getMockFn(function (baseUrl, req) {
+        getConsortium: getMockFn((baseUrl, req) => {
           t.equals(req, mockRequest, 'pass doc to getConsortium');
           return Promise.resolve(req.payload);
-        })
+        }),
       },
-      consortiumHasMember: getMockFn(function (username) {
+      consortiumHasMember: getMockFn(function mockFn(username) {
         t.equals(username, mockUsername, 'pass username to isOwnedBy');
         t.equals(this, mockRequest.payload, 'pass doc to isOwnedBy');
         return false;
       }),
 
-      config: { consortiumMembersOnly: true }
+      config: { consortiumMembersOnly: true },
     };
 
     factory({}, mockThis).validateConsortiumMembership(mockRequest)
@@ -468,10 +465,10 @@ tape('Bouncer: validateConsortiumMembership', (t) => {
 
     const mockThis = {
       utils: {
-        getConsortium: getMockFn()
+        getConsortium: getMockFn(),
       },
       consortiumHasMember: getMockFn(),
-      config: { consortiumMembersOnly: false }
+      config: { consortiumMembersOnly: false },
     };
 
     factory({}, mockThis).validateConsortiumMembership(mockRequest)
@@ -499,9 +496,9 @@ tape('Bouncer: reject', (t) => {
   t.plan(3);
   const mockRequest = {
     url: {
-      pathname: '/up/consortia/consortium-id'
+      pathname: '/up/consortia/consortium-id',
     },
-    method: 'GET'
+    method: 'GET',
   };
   const mockGetUnauthorizedUrl = getMockFn((request, msg) => {
     t.deepEquals(
@@ -532,9 +529,9 @@ tape('Bouncer: handleAuthRejection', (t) => {
   t.plan(4);
   const mockRequest = {
     url: {
-      pathname: '/up/consortia/consortium-id'
+      pathname: '/up/consortia/consortium-id',
     },
-    method: 'GET'
+    method: 'GET',
   };
   const mockGetUnauthorizedUrl = getMockFn((request, msg) => {
     t.deepEquals(
@@ -589,7 +586,7 @@ tape('Bouncer: unauthorizedRoute', (t) => {
   t.equals(Bouncer.unauthorizedRoute.config.auth, false, 'no auth required');
 
   const mockRequest = {
-    query: { msg: 'test message' }
+    query: { msg: 'test message' },
   };
 
   const mockReply = (response) => {
