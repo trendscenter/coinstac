@@ -1,0 +1,5 @@
+.jsdoc.json
+couchdb*
+coverage
+docs
+test
