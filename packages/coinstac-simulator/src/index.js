@@ -12,7 +12,7 @@ const bootClients = require('./boot-clients');
 const bootDBServer = require('./boot-db-server');
 const seedCentralDB = require('./seed-central-db');
 const flatten = require('lodash/flatten');
-// const values = require('lodash/values');
+const values = require('lodash/values');
 
 /**
  * Processes.

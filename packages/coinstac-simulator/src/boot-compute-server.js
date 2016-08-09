@@ -20,8 +20,8 @@ const lifecycle = require('./lifecycle-runner');
  * @returns {Promise}
  */
 const boot = function boot(opts) {
-  const decl = require(opts.declPath);
-  const dComp = require(decl.computationPath);
+  const decl = require(opts.declPath); // eslint-disable-line global-require
+  const dComp = require(decl.computationPath); // eslint-disable-line global-require
   const optsPatch = { dbRegistry: { isRemote: true } };
   let pool;
   return poolInitializer.getPoolOpts(optsPatch)
