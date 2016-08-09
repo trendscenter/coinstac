@@ -1,5 +1,3 @@
-const get = require('lodash/get');
-
 // PART 1 - scaffold
 module.exports = {
   name: 'group-add',
@@ -9,7 +7,7 @@ module.exports = {
   },
   remote: {
     type: 'function',
-    fn: function (opts, cb) {
+    fn(opts) {
       // PART 6
       // stub some default values for the remote step and userSteps
       const _default = { step: 1, userStep: {} };
