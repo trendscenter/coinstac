@@ -1,4 +1,5 @@
 import {
+  Alert,
   Button,
   ControlLabel,
   FormControl,
@@ -8,6 +9,7 @@ import {
 import React, { Component, PropTypes } from 'react';
 
 import ConsortiumResult from './consortium-result';
+import UserList from './user-list';
 
 class ConsortiumSingle extends Component {
 
@@ -16,12 +18,10 @@ class ConsortiumSingle extends Component {
 
     if (!remoteResults || !remoteResults.length) {
       return (
-        <p>
-          <em>
-            Pending consortium analysis kickoff. Get started and group data will
-            show here.
-          </em>
-        </p>
+        <Alert bsStyle="info">
+          Pending consortium analysis kickoff. Get started and group data will
+          show here.
+        </Alert>
       );
     }
 
@@ -63,7 +63,7 @@ class ConsortiumSingle extends Component {
 
     return (
       <FormGroup controlId="formControlsSelect">
-        <ControlLabel>Analysis</ControlLabel>
+        <ControlLabel srOnly>Analysis</ControlLabel>
         <FormControl
           componentClass="select"
           disabled={!isOwner}
@@ -84,57 +84,60 @@ class ConsortiumSingle extends Component {
   }
 
   renderMembershipButton() {
-    const { isMember, user, removeUser, addUser } = this.props;
-    if (isMember) {
-      return (
-        <Button
-          block
-          className="clearfix pull-right"
-          onClick={() => removeUser(user.username)}
-          type="button"
-        >
-        Leave Consortium
+    const {
+      addUser,
+      isMember,
+      isOwner,
+      removeUser,
+      user: { username },
+    } = this.props;
+
+    if (!isOwner) {
+      return isMember ?
+      (
+        <Button bsStyle="danger" onClick={() => removeUser(username)}>
+          <span
+            aria-hidden="true"
+            className="glyphicon glyphicon glyphicon-minus"
+          ></span>
+          {' '}
+          Leave
+        </Button>
+      ) :
+      (
+        <Button bsStyle="success" onClick={() => addUser(username)}>
+          <span
+            aria-hidden="true"
+            className="glyphicon glyphicon glyphicon-plus"
+          ></span>
+          {' '}
+          Join
         </Button>
       );
     }
-    return (
-      <Button
-        block
-        bsStyle="success"
-        className="clearfix pull-right"
-        onClick={() => addUser(user.username)}
-        type="button"
-      >
-      Join Consortium
-      </Button>
-    );
   }
 
   renderMemberContent() {
     return (
-      <div ref="member-content">
-        <div className="row">
-          <div className="col-xs-12">
-            <h2>Consortium Objective Analysis</h2>
-            {this.renderComputationSelect()}
-          </div>
-        </div>
-        <div className="row">
-          <div className="col-xs-12 col-sm-6">
-            <h3>Users:</h3>
-            {this.renderUsers()}
-          </div>
-        </div>
-        <h3>Results:</h3>
-        <div>
+      <div>
+        <section className="section">
+          <h2 className="h4">Analysis:</h2>
+          {this.renderComputationSelect()}
+        </section>
+        <section>
+          <h2 className="h4">Results:</h2>
           {this.renderComputationResults()}
-        </div>
+        </section>
       </div>
     );
   }
 
   renderNonMemberConent() {
-    return (<p>Please join the consortium to view member conent</p>);
+    return (
+      <section>
+        <Alert bsStyle="info">Join the consortium to view member content</Alert>
+      </section>
+    );
   }
 
   renderTags() {
@@ -146,24 +149,21 @@ class ConsortiumSingle extends Component {
     );
   }
 
-  renderUsers() {
-    const { consortium: { users } } = this.props;
-    return (
-      <ul className="list-inline">
-        {users.map((username, index) => {
-          return <li key={index}>{username}</li>;
-        })}
-      </ul>
-    );
-  }
-
   render() {
-    const { consortium, isMember } = this.props;
+    const { consortium, consortium: { users }, isMember } = this.props;
     return (
       <div className="consortium-single">
-        <h1>{consortium.label}</h1>
-        {this.renderMembershipButton()}
-        <p className="lead">{consortium.description}</p>
+        <div className="page-header clearfix">
+          <h1>{consortium.label}</h1>
+        </div>
+        <p className="lead section">{consortium.description}</p>
+        <section className="section clearfix">
+          <h2 className="h4">Users:</h2>
+          <UserList size="large" users={users} />
+          <div className="pull-right">
+            {this.renderMembershipButton()}
+          </div>
+        </section>
         {isMember ? this.renderMemberContent() : this.renderNonMemberConent()}
       </div>
     );
@@ -177,6 +177,7 @@ ConsortiumSingle.propTypes = {
   computations: PropTypes.array.isRequired,
   consortium: PropTypes.object.isRequired,
   isMember: PropTypes.bool.isRequired,
+  isOwner: PropTypes.bool.isRequired,
   loading: PropTypes.object.isRequired,
   user: PropTypes.object.isRequired,
   updateComputation: PropTypes.func.isRequired,
