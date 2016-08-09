@@ -29,7 +29,7 @@ tape('project :: add files', t => {
     addFilesToProject(JSON.stringify(FILES_FIXTURE)).files,
     FILES_FIXTURE,
     'passes files param'
-  )
+  );
   t.end();
 });
 
@@ -43,7 +43,7 @@ tape('project :: remove files', t => {
     removeFilesFromProject(FILES_FIXTURE).files,
     FILES_FIXTURE,
     'passes files param'
-  )
+  );
   t.end();
 });
 
@@ -88,8 +88,8 @@ tape('project :: reducer', t => {
     FILES_FIXTURE.concat(filesToAdd),
     'adds files to project'
   );
-  
-  console.log(projectReducer(
+
+  console.log(projectReducer( // eslint-disable-line no-console
     PROJECT_FIXTURE,
     addFilesToProject(JSON.stringify(FILES_FIXTURE[1]))
   ));
@@ -102,7 +102,7 @@ tape('project :: reducer', t => {
     PROJECT_FIXTURE,
     'doesn’t add already existing files'
   );
-  
+
   t.deepEqual(
     projectReducer(
       Object.assign({}, PROJECT_FIXTURE, {

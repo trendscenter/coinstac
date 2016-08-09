@@ -2,15 +2,14 @@
 
 const app = require('ampersand-app');
 const path = require('path');
-const cliOpts = require('app/main/utils/boot/parse-cli-input.js').get();
-const config = require('../../../config.js');
+const cliOpts = require('./parse-cli-input.js').get();
 const winston = require('winston');
 const promisify = require('bluebird').promisify;
 const mkdirp = promisify(require('mkdirp'));
 
 const resolveHome = (filepath) => {
   return filepath.replace(/~|\$HOME/, process.env.HOME);
-}
+};
 
 module.exports = function configureLogger() {
   const logLocation = resolveHome(app.config.get('logLocations')[process.platform]);
@@ -35,8 +34,11 @@ module.exports = function configureLogger() {
     app.logger = logger;
   })
   .catch((err) => {
+    /* eslint-disable no-console */
     console.log(`Warning: could not create log location at: ${logLocation}`);
     console.log(`Error: ${err}`);
+    /* eslint-enable no-console */
+
     const logger = new winston.Logger({
       transports: [
         new winston.transports.Console(),

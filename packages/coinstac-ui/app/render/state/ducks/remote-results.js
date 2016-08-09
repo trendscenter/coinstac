@@ -5,7 +5,7 @@ const SET_REMOTE_RESULTS = 'SET_REMOTE_RESULTS';
 
 export const setRemoteResults = (results) => ({ type: SET_REMOTE_RESULTS, results });
 
-export const fetch = applyAsyncLoading(function fetchConsortiumRemoteResults(id) {
+export const fetch = applyAsyncLoading(id => {
   return (dispatch) => { // eslint-disable-line
     const db = app.core.dbRegistry.get(`remote-consortium-${id}`);
     return db.all()

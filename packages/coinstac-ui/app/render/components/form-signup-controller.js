@@ -3,8 +3,7 @@ import { connect } from 'react-redux';
 import React, { Component, PropTypes } from 'react';
 import FormSignup from './form-signup';
 import LayoutNoauth from './layout-noauth';
-import { signUp } from 'app/render/state/ducks/auth';
-import noop from 'lodash/noop';
+import { signUp } from '../state/ducks/auth';
 
 class FormSignupController extends Component {
 
