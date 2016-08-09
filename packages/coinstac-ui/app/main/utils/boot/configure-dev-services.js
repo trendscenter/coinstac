@@ -10,8 +10,8 @@ if (process.defaultApp && process.env.NODE_ENV !== 'production') {
   // There is no limit for the size of the stack trace (v8 default is 10)
   Error.stackTraceLimit = Infinity;
 
-  chain.filter.attach(function (error, frames) {
-    return frames.filter(function (callSite) {
+  chain.filter.attach((error, frames) => {
+    return frames.filter(callSite => {
       const name = callSite && callSite.getFileName();
       const include = !(
         !name ||

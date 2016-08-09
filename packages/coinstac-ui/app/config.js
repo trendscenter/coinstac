@@ -7,12 +7,7 @@ const path = require('path');
 const localConfig = path.resolve(__dirname, '..', 'config', 'local.json');
 
 const fileExists = (fPath) => {
-  return access(fPath)
-  .then(res => {
-    return true
-  }).catch(err => {
-    return false;
-  });
+  return access(fPath).then(() => true, () => false);
 };
 
 const conf = convict({
@@ -33,9 +28,9 @@ const conf = convict({
         hostname: 'coinstac.mrn.org',
         pathname: '',
         protocol: 'https:',
-      }
+      },
     },
-    noURLPrefix: true
+    noURLPrefix: true,
   },
   logFile: 'coinstac-log.json',
   logLocations: {

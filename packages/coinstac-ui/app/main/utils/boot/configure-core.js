@@ -4,7 +4,7 @@ const app = require('ampersand-app');
 const common = require('coinstac-common');
 const CoinstacClientCore = require('coinstac-client-core');
 const merge = require('lodash/merge');
-const parseCLIInput = require('app/main/utils/boot/parse-cli-input.js');
+const parseCLIInput = require('./parse-cli-input.js');
 const PouchDBAdapterLevelDB = require('pouchdb-adapter-leveldb');
 const url = require('url');
 

@@ -10,7 +10,9 @@ new WebpackDevServer(webpack(config), {
   historyApiFallback: true,
   contentBase: './app/',
   colors: true,
-}).listen(config.WPDS_PORT, 'localhost', function (err, result) { // jshint ignore:line
+}).listen(config.WPDS_PORT, 'localhost', err => {
+  /* eslint-disable no-console */
   if (err) { console.log(err); }
   console.log(`Listening at localhost: ${config.WPDS_PORT}`);
+  /* eslint-enable no-console */
 });

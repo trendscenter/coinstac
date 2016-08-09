@@ -16,26 +16,27 @@ class UserAccount extends Component {
     const { logout, user: { label, email } } = this.props;
 
     return (
-            <div className="user-account">
-                <div className="media">
-                    <div className="media-left">
-                        <img
-                          className="media-object img-rounded"
-                          height="50"
-                          src={this.getAvatarUrl()}
-                          width="50"
-    />
-                    </div>
-                    <div className="media-body">
-                        <strong className="block">{label}</strong>
-                        <br />
-                        <em className="h6">{email}</em>
-                        <br />
-                        <Button onClick={logout} bsSize="xsmall" to="login">Log Out</Button>
-                    </div>
-                </div>
-            </div>
-        );
+      <div className="user-account">
+        <div className="media">
+          <div className="media-left">
+            <img
+              alt={label}
+              className="media-object img-rounded"
+              height="50"
+              src={this.getAvatarUrl()}
+              width="50"
+            />
+          </div>
+          <div className="media-body">
+            <strong className="block">{label}</strong>
+            <br />
+            <em className="h6">{email}</em>
+            <br />
+            <Button onClick={logout} bsSize="xsmall" to="login">Log Out</Button>
+          </div>
+        </div>
+      </div>
+    );
   }
 }
 

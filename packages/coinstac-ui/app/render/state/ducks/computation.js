@@ -6,7 +6,7 @@ import { applyAsyncLoading } from './loading';
 const SET_COMPUTATION = 'SET_COMPUTATION';
 export const setComputation = (computation) => ({ computation, type: SET_COMPUTATION });
 
-export const fetchComputation = applyAsyncLoading(function fetchComputation(id) {
+export const fetchComputation = applyAsyncLoading(id => {
   return (dispatch) => {
     return app.core.computations.get(id)
     .then((computation) => {

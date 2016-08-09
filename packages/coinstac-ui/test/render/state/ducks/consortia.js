@@ -9,7 +9,7 @@ tape('consortia reducer', t => {
   const consortium1 = {
     _id: 'wat',
     label: 'waaat',
-  }
+  };
   const consortium2 = {
     _id: 'such-id',
     label: 'very label',
@@ -26,7 +26,7 @@ tape('consortia reducer', t => {
 
   t.equal(
     reducer(initialState, {}),
-    initialState, 
+    initialState,
     'returns initial state as default'
   );
 
@@ -40,7 +40,7 @@ tape('consortia reducer', t => {
           _id: consortium3._id,
         }],
         type: DO_DELETE_CONSORTIA,
-      },
+      }
     ),
     [consortium2],
     'deletes consortia'
@@ -67,7 +67,7 @@ tape('consortia reducer', t => {
         label: 'whodat',
       },
       consortium3,
-      consortium4
+      consortium4,
     ].sort(consortiaSorter),
     'updates consortia'
   );

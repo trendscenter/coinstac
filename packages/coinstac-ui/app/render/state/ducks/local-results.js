@@ -1,12 +1,11 @@
 import { applyAsyncLoading } from './loading';
 import app from 'ampersand-app';
-import bluebird from 'bluebird';
 
 const SET_LOCAL_RESULTS = 'SET_LOCAL_RESULTS';
 
 export const setLocalResults = (results) => ({ type: SET_LOCAL_RESULTS, results });
 
-export const fetch = applyAsyncLoading(function fetchConsortiumLocalResults(id) {
+export const fetch = applyAsyncLoading(id => {
   return (dispatch) => { // eslint-disable-line
     return app.core.dbRegistry.get(`local-consortium-${id}`).all()
     .then(setLocalResults);

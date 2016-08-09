@@ -3,16 +3,15 @@
 const app = require('ampersand-app');
 const ipc = require('electron').ipcMain;
 
-function groundControl(opts) {
-  ipc.on('major-tom-to-ground-control', function onMajorTom(arg) {
+function groundControl() {
+  ipc.on('major-tom-to-ground-control', arg => {
     groundControl.receive(arg.evt, arg.arg);
   });
-};
+}
 
 // TODO: ???
-groundControl.receive = function receive(evt, arg) {
-
-};
+// groundControl.receive = function receive(evt, arg) {
+// };
 
 groundControl.broadcast = function broadcast(evt, arg) {
   // you'd think to use just ipc.send, but
@@ -20,8 +19,8 @@ groundControl.broadcast = function broadcast(evt, arg) {
   app.mainWindow.webContents.send(
     'ground-control-to-major-tom',
     {
-      arg: arg,
-      evt: evt,
+      arg,
+      evt,
     }
   );
 };

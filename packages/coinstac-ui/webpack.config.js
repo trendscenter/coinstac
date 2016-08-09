@@ -5,6 +5,8 @@ const path = require('path');
 const webpack = require('webpack');
 const isDev = process.env.NODE_ENV === 'development';
 
+const pkg = require('./package.json');
+
 /**
  * Get files that webpack will ignore from bundling, and expect to be available in the env
  * @return {object} { packageName: 'commonjs packageName' } formatted entries
@@ -22,7 +24,7 @@ const getExternals = () => {
   };
 
   // add all packages to externals that aren't otherwise explicity internal
-  Object.keys(require('./package.json').dependencies).forEach((packageName) => {
+  Object.keys(pkg.dependencies).forEach((packageName) => {
     const isInternal = internals.some((internal) => packageName.match(internal));
     if (isInternal) { return; }
     externalsHash[packageName] = `commonjs ${packageName}`;
@@ -34,7 +36,7 @@ const getExternals = () => {
     /common\/boot/,
     /app\/main\/.*js/,
     // /app\/render\/*.js/, // @note, we _must_ bundle render files! jsx/es6 for days!
-  ].forEach(function addRegexExternalRequire(rgx) {
+  ].forEach(rgx => {
     externals.push((context, request, callback) => {
       if (rgx.test(request)) {
         return callback(null, `require('${request}')`);
