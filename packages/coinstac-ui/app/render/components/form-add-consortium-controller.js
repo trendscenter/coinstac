@@ -1,7 +1,8 @@
 import React, { Component, PropTypes } from 'react';
-import FormAddConsortium from './form-add-consortium';
-import { saveConsortium } from '../state/ducks/consortium';
 import { connect } from 'react-redux';
+
+import FormAddConsortium from './form-add-consortium';
+import { saveConsortium } from '../state/ducks/consortia';
 
 class FormAddConsortiumController extends Component {
   constructor(props) {

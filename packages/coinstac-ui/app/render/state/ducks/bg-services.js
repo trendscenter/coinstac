@@ -85,7 +85,7 @@ export const initPrivateBackgroundServices = applyAsyncLoading(
           delete cloned._revisions; // gross. pouchy maybe can save the day?
           return cloned;
         });
-        updateConsortia({ dispatch, toUpdate, isBg: true });
+        dispatch(updateConsortia(toUpdate));
       });
       const compsDB = app.core.dbRegistry.get('computations');
       compsDB.syncEmitter.on('change', (change) => {
@@ -97,8 +97,14 @@ export const initPrivateBackgroundServices = applyAsyncLoading(
         updateComputations({ dispatch, toUpdate, isBg: true });
       });
       const appUser = app.core.auth.getUser().username;
-      app.core.consortia.getUserConsortia(appUser)
-      .then(userConsortia => {
+      app.core.consortia.all()
+      .then(consortia => {
+        dispatch(updateConsortia(consortia));
+
+        const userConsortia = consortia.filter(c => {
+          return c.users.indexOf(appUser) > -1;
+        });
+
         userConsortia.forEach(consortium => {
           // this is called twice, once on startup
           // second time inside change listener
@@ -138,7 +144,7 @@ export const initPrivateBackgroundServices = applyAsyncLoading(
       });
 
       return Promise.all([
-        tiaDB.all().then((docs) => updateConsortia({ dispatch, toUpdate: docs, isBg: true })),
+        tiaDB.all().then((docs) => dispatch(updateConsortia(docs))),
         compsDB.all().then((docs) => updateComputations({ dispatch, toUpdate: docs, isBg: true })),
       ]);
     };

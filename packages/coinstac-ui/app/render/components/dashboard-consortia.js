@@ -1,16 +1,39 @@
-import React, { PropTypes } from 'react';
+import React, { Component, PropTypes } from 'react';
 import { Button } from 'react-bootstrap';
 import { LinkContainer } from 'react-router-bootstrap';
 import ConsortiumCard from './consortium-card';
 import { connect } from 'react-redux';
-import { fetchConsortia } from '../state/ducks/consortia.js';
-import noop from 'lodash/noop';
+import {
+  deleteConsortium,
+  joinConsortium,
+  leaveConsortium,
+} from '../state/ducks/consortia';
 
-class DashboardConsortia extends React.Component {
+class DashboardConsortia extends Component {
+  renderConsortia() {
+    const { consortia, dispatch, user: { username } } = this.props;
 
-  componentWillMount() {
-    const { dispatch } = this.props;
-    dispatch(fetchConsortia(noop));
+    return (
+      <div>
+        {consortia.map((consortium, index) => {
+          const { _id: id, owners, users } = consortium;
+          const isMember = users.indexOf(username) > -1;
+          const isOwner = owners.indexOf(username) > -1;
+
+          return (
+            <ConsortiumCard
+              deleteConsortium={() => dispatch(deleteConsortium(id))}
+              isMember={isMember}
+              isOwner={isOwner}
+              joinConsortium={() => dispatch(joinConsortium(id, username))}
+              key={index}
+              leaveConsortium={() => dispatch(leaveConsortium(id, username))}
+              {...consortium}
+            />
+          );
+        })}
+      </div>
+    );
   }
 
   render() {
@@ -19,19 +42,7 @@ class DashboardConsortia extends React.Component {
     if (loading.isLoading) {
       content = (<span></span>);
     } else if (consortia) {
-      content = consortia.map((consortium) => {
-        return (
-          <div className="col-xs-12 col-sm-6" key={consortium._id}>
-            <ConsortiumCard
-              _id={consortium._id}
-              label={consortium.label}
-              users={consortium.users}
-              description={consortium.description}
-              tags={consortium.tags}
-            />
-          </div>
-        );
-      });
+      content = this.renderConsortia();
     }
 
     return (
@@ -46,9 +57,7 @@ class DashboardConsortia extends React.Component {
             </Button>
           </LinkContainer>
         </div>
-        <div className="row">
-          {content}
-        </div>
+        {content}
       </div>
     );
   }
@@ -58,13 +67,11 @@ DashboardConsortia.propTypes = {
   dispatch: PropTypes.func.isRequired,
   loading: PropTypes.object,
   consortia: PropTypes.array,
+  user: PropTypes.object.isRequired,
 };
 
-function select(state) {
-  return {
-    loading: state.loading,
-    consortia: state.consortia,
-  };
+function mapStateToProps({ loading, consortia, auth: { user } }) {
+  return { consortia, loading, user };
 }
 
-export default connect(select)(DashboardConsortia);
+export default connect(mapStateToProps)(DashboardConsortia);
