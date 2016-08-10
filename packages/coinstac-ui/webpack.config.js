@@ -12,12 +12,15 @@ const config = {
   entry: [
     path.join(__dirname, 'app', 'render', 'index.js'),
   ],
+
   /**
-   * Don't bundle anything in node_modules. Electron's `require` will work.
+   * Don't bundle anything in node_modules and ensure Webpack doesn't resolve
+   * Electron's internals.
    * {@link https://webpack.github.io/docs/configuration.html#externals}
    */
   externals: Object.keys(pkg.dependencies).concat(
-    Object.keys(pkg.devDependencies)
+    Object.keys(pkg.devDependencies),
+    'electron'
   ),
   module: {
     loaders: [{
@@ -66,7 +69,6 @@ const config = {
 
   // `port` isn't part of Webpack's config. It's used by webpack-dev-server.
   port,
-  target: 'electron',
 };
 
 if (process.env.NODE_ENV === 'development') {
@@ -83,18 +85,13 @@ if (process.env.NODE_ENV === 'development') {
     'webpack/hot/only-dev-server'
   );
 
-  /**
-   * @todo Determine why webpack-hot-middleware needs the `path` configuration.
-   * {@link https://github.com/gaearon/react-transform-boilerplate/issues/47#issuecomment-151909080}
-   */
-  // config.entry.unshift(
-  //   `webpack-hot-middleware/client?path=${config.output.publicPath}__webpack_hmr`
-  // );
 
-  // Remove react and redux from externals. This is necessary for hot reloading?
-  // const pattern = /react|redux/;
-  config.externals = {}; // config.externals.filter(name => !pattern.test(name));
-  console.log(config.entry);
+  /**
+   * Remove react and redux from externals to make HMR easier.
+   * {@link https://github.com/gaearon/react-hot-loader/tree/master/docs#usage-with-external-react}
+   */
+  const pattern = /react|redux/;
+  config.externals = config.externals.filter(name => !pattern.test(name));
 } else {
   config.plugins.push(
     new webpack.optimize.UglifyJsPlugin({ sourceMap: false })
