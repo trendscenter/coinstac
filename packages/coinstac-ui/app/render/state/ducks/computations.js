@@ -1,7 +1,7 @@
 import app from 'ampersand-app';
 import { applyAsyncLoading } from './loading';
 import { get as getStore } from '../store';
-import findIndex from 'lodash/findIndex';
+import { findIndex } from 'lodash';
 
 
 const SET_COMPUTATIONS = 'SET_COMPUTATIONS';
