@@ -1,109 +1,104 @@
-
-const WPDS_PORT = 3000;
+'use strict';
 
 const path = require('path');
-const webpack = require('webpack');
-const isDev = process.env.NODE_ENV === 'development';
-
 const pkg = require('./package.json');
+const webpack = require('webpack');
 
-/**
- * Get files that webpack will ignore from bundling, and expect to be available in the env
- * @return {object} { packageName: 'commonjs packageName' } formatted entries
- */
-const getExternals = () => {
-  const internals = [/react/]; // assert that all of these entries remain in webpack bundle
-  const externals = [];
-  const externalsHash = {
-    electron: 'commonjs electron',
-    fs: 'commonjs fs',
-    ipc: 'commonjs ipc',
-    path: 'commonjs path',
-    convict: 'commonjs convict',
-    os: 'commonjs os',
-  };
+const port = 3000;
 
-  // add all packages to externals that aren't otherwise explicity internal
-  Object.keys(pkg.dependencies).forEach((packageName) => {
-    const isInternal = internals.some((internal) => packageName.match(internal));
-    if (isInternal) { return; }
-    externalsHash[packageName] = `commonjs ${packageName}`;
-  });
-
-
-  externals.push(externalsHash);
-  [
-    /common\/boot/,
-    /app\/main\/.*js/,
-    // /app\/render\/*.js/, // @note, we _must_ bundle render files! jsx/es6 for days!
-  ].forEach(rgx => {
-    externals.push((context, request, callback) => {
-      if (rgx.test(request)) {
-        return callback(null, `require('${request}')`);
-      }
-      callback();
-    });
-  });
-  return externals;
-};
-
-module.exports = {
-  WPDS_PORT: 3000,
-  bail: !isDev,
-  context: `${__dirname}/app`,
+const config = {
+  bail: true,
   devtool: 'eval',
   entry: [
-    './render/index.js',
-  ].concat(isDev ? [
-    `webpack-dev-server/client?http://localhost:${WPDS_PORT}`,
-    'webpack/hot/only-dev-server',
-  ] : []),
-  output: {
-    path: isDev ? __dirname : `${__dirname}/app/render/build`,
-    filename: 'bundle.js',
-    publicPath: isDev ? 'http://localhost:3000/' : `${__dirname}/app/render/build/`,
-  },
-  externals: getExternals(),
-  plugins: [
-    new webpack.NoErrorsPlugin(),
-  ].concat(isDev ? [
-    new webpack.HotModuleReplacementPlugin(),
-  ] : [
-    new webpack.optimize.UglifyJsPlugin({ sourceMap: false }),
-  ]),
-  resolve: {
-    modulesDirectories: [
-      'node_modules',
-      __dirname,
-    ],
-    extensions: ['', '.js', '.jsx'],
-    alias: { },
-  },
+    path.join(__dirname, 'app', 'render', 'index.js'),
+  ],
+  /**
+   * Don't bundle anything in node_modules. Electron's `require` will work.
+   * {@link https://webpack.github.io/docs/configuration.html#externals}
+   */
+  externals: Object.keys(pkg.dependencies).concat(
+    Object.keys(pkg.devDependencies)
+  ),
   module: {
-    loaders: [
-      { test: /\.css$/, loader: 'style-loader!css-loader' },
-      { test: /\.eot(\?v=\d+\.\d+\.\d+)?$/, loader: 'file' },
-      { test: /\.json$/, loader: 'json' },
-      { test: /\.jsx?$/, loaders: ['react-hot', 'babel'], include: path.join(__dirname, 'app/') },
-      { test: /\.scss$/, loader: 'style!css!sass?sourceMap' },
-      { test: /\.svg(\?v=\d+\.\d+\.\d+)?$/, loader: 'url?limit=10000&minetype=image/svg+xml' },
-      {
-        test: /\.ttf(\?v=\d+\.\d+\.\d+)?$/,
-        loader: 'url?limit=10000&minetype=application/octet-stream',
-      },
-      {
-        test: /\.woff(\?v=\d+\.\d+\.\d+)?$/,
-        loader: 'url?limit=10000&minetype=application/font-woff',
-      },
-      {
-        test: /\.woff2(\?v=\d+\.\d+\.\d+)?$/,
-        loader: 'url?limit=10000&minetype=application/font-woff',
-      },
-      { test: /\.md$/, loader: 'html!markdown' },
-      {
-        test: /\.png/,
-        loader: 'file-loader',
-      },
-    ],
+    loaders: [{
+      loaders: ['style', 'css'],
+      test: /\.css$/,
+    }, {
+      loaders: ['file'],
+      test: /\.eot(\?v=\d+\.\d+\.\d+)?$/,
+    }, {
+      loaders: ['json'],
+      test: /\.json$/,
+    }, {
+      include: path.join(__dirname, 'app', 'render'),
+      loaders: ['react-hot', 'babel'],
+      test: /\.js$/,
+    }, {
+      loaders: ['style', 'css', 'sass?sourceMap'],
+      test: /\.scss$/,
+    }, {
+      loaders: ['url?limit=10000&minetype=image/svg+xml'],
+      test: /\.svg(\?v=\d+\.\d+\.\d+)?$/,
+    }, {
+      loaders: ['url?limit=10000&minetype=application/octet-stream'],
+      test: /\.ttf(\?v=\d+\.\d+\.\d+)?$/,
+    }, {
+      loaders: ['url?limit=10000&minetype=application/font-woff'],
+      test: /\.woff(\?v=\d+\.\d+\.\d+)?$/,
+    }, {
+      loaders: ['url?limit=10000&minetype=application/font-woff'],
+      test: /\.woff2(\?v=\d+\.\d+\.\d+)?$/,
+    }, {
+      loaders: ['html', 'markdown'],
+      test: /\.md$/,
+    }, {
+      loaders: ['file'],
+      test: /\.png/,
+    }],
   },
+  output: {
+    filename: 'bundle.js',
+    libraryTarget: 'commonjs2',
+    path: path.join(__dirname, 'app', 'render', 'build'),
+    publicPath: './build/',
+  },
+  plugins: [new webpack.optimize.OccurrenceOrderPlugin()],
+
+  // `port` isn't part of Webpack's config. It's used by webpack-dev-server.
+  port,
+  target: 'electron',
 };
+
+if (process.env.NODE_ENV === 'development') {
+  config.bail = false;
+  // config.plugins.push(new webpack.NoErrorsPlugin());
+
+  // Massage configuration for hot module replacement:
+  config.output.publicPath = `http://localhost:${port}/`;
+  config.plugins.push(new webpack.HotModuleReplacementPlugin());
+
+
+  config.entry.unshift(
+    `webpack-dev-server/client?http://localhost:${port}`,
+    'webpack/hot/only-dev-server'
+  );
+
+  /**
+   * @todo Determine why webpack-hot-middleware needs the `path` configuration.
+   * {@link https://github.com/gaearon/react-transform-boilerplate/issues/47#issuecomment-151909080}
+   */
+  // config.entry.unshift(
+  //   `webpack-hot-middleware/client?path=${config.output.publicPath}__webpack_hmr`
+  // );
+
+  // Remove react and redux from externals. This is necessary for hot reloading?
+  // const pattern = /react|redux/;
+  config.externals = {}; // config.externals.filter(name => !pattern.test(name));
+  console.log(config.entry);
+} else {
+  config.plugins.push(
+    new webpack.optimize.UglifyJsPlugin({ sourceMap: false })
+  );
+}
+
+module.exports = config;
