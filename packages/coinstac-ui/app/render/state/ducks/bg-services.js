@@ -3,7 +3,7 @@ import { applyAsyncLoading } from './loading';
 import { updateConsortia } from './consortia';
 import { updateComputations } from './computations';
 import { updateProjectStatus } from './projects';
-import cloneDeep from 'lodash/cloneDeep';
+import { cloneDeep } from 'lodash';
 
 import {
   computationCompleteNotification,
