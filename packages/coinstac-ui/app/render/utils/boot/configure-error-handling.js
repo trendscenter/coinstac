@@ -9,7 +9,7 @@ function onError(error) {
 }
 
 function onUnhandledRejection(event) {
-  app.logger.error('Unhandled rejection:', event.promise, event.reason)
+  app.logger.error('Unhandled rejection:', event.promise, event.reason);
 }
 
 export function start() {
@@ -26,5 +26,5 @@ export function start() {
 
 export function stop() {
   window.removeEventListener('error', onError);
-  window.removeEventListener('unhandledrejection', onUnhandledRejection)
+  window.removeEventListener('unhandledrejection', onUnhandledRejection);
 }

@@ -7,14 +7,14 @@ const test = require('tape');
 const Runner = common.models.pipeline.runner.PipelineRunner;
 
 test('constructor - basic', t => {
-  let runner = new Runner(runnerUtils.basicOpts());
+  const runner = new Runner(runnerUtils.basicOpts());
   t.throws(() => new Runner(), /Error/, 'requires min attrs');
   t.throws(() => runner.run(), /ReferenceError/, 'run must be extended');
   t.end();
 });
 
 test('saveResult - basic', t => {
-  let runner = new Runner(runnerUtils.basicOpts());
+  const runner = new Runner(runnerUtils.basicOpts());
   const db = runnerUtils.getDB('testdb'); // use for local and remote
   t.plan(3);
   runner.saveResult(db, { bananas: 1 })
@@ -29,7 +29,7 @@ test('saveResult - basic', t => {
 });
 
 test('saveResult - basic - noop\'s on empty save', t => {
-  let runner = new Runner(runnerUtils.basicOpts());
+  const runner = new Runner(runnerUtils.basicOpts());
   const db = runnerUtils.getDB('testdb'); // use for local and remote
   t.plan(2);
   runner.saveResult(db, null, null)
@@ -46,7 +46,7 @@ test('saveResult - basic - noop\'s on empty save', t => {
 });
 
 test('saveResult - basic - error', t => {
-  let runner = new Runner(runnerUtils.basicOpts());
+  const runner = new Runner(runnerUtils.basicOpts());
   const db = runnerUtils.getDB('no_seed_result_db');
   t.plan(2);
   runner.hasPersistedResult = true; // <==  we did _actually_ not persist a result doc yet
@@ -90,7 +90,7 @@ test('getPreviousResultData', t => {
   const runnerOpts = runnerUtils.basicOpts();
   const db = runnerUtils.getDB('prev_results_db');
   const toAdd = { bananas: 1 };
-  let runner = new Runner(runnerOpts);
+  const runner = new Runner(runnerOpts);
   t.plan(2);
 
   const hasNoPrevResultPreAdd = () => {

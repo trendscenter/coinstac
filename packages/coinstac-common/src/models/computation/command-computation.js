@@ -2,7 +2,6 @@
 
 const Computation = require('./computation.js');
 const spawn = require('child_process').spawn;
-const util = require('util');
 const joi = require('joi');
 
 /**
@@ -69,10 +68,14 @@ class CommandComputation extends Computation {
             console.error(errMsg); // eslint-disable-line
           }
         } catch (err) {
-          console.error([ // eslint-disable-line
+          // TODO: Figure out what this error logging does
+          /* eslint-disable */
+          console.error([
             'failed to parse computation results. invalid JSON:',
             (err && err.message || '').substr(0, 50) + '...',
           ].join(' '));
+          /* eslint-enable */
+
           /* istanbul ignore if */
           if (this.verbose) { console.error(errMsg); } // eslint-disable-line
           return rej(err);

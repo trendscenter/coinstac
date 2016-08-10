@@ -2,7 +2,6 @@
 
 const PouchDocument = require('./pouch-document');
 const joi = require('joi');
-const util = require('util');
 
 /**
  * @class Project
@@ -13,16 +12,14 @@ const util = require('util');
  * @property {(File[])=} files
  * @property {string=} metaFile Full path to the project's metadata CSV
  */
-function Project() {
-  PouchDocument.apply(this, arguments); // eslint-disable-line
-}
+class Project extends PouchDocument {}
 
 Project.schema = Object.assign({
-  name: joi.string().min(1).regex(/[a-zA-Z]+/, 'at least one character').required(),
+  name: joi.string().min(1).regex(/[a-zA-Z]+/, 'at least one character')
+    .required(),
   consortiumId: joi.string().optional(),
   files: joi.alternatives().try(joi.array()).default([]),
   metaFile: joi.string().min(2).optional(),
 }, PouchDocument.schema);
-util.inherits(Project, PouchDocument);
 
 module.exports = Project;

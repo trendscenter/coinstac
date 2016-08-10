@@ -170,25 +170,24 @@ class Bouncer {
     const msg = `Only consortium owners may ${request.method} it`;
 
     if (!doc._rev) {
-            // new document
+      // new document
       const isOwner = callIsOwnedBy(doc);
       if (isOwner) {
         return Promise.resolve(isOwner);
-      } else {
-        return Promise.reject(new AuthorizationError(msg));
       }
-    } else {
-            // existing document (update)
-      return this.utils.getConsortium(this.targetBaseUrl, request)
-                .then(callIsOwnedBy)
-                .then((isOwner) => {
-                  if (!isOwner) {
-                    return Promise.reject(new AuthorizationError(msg));
-                  }
-
-                  return isOwner;
-                });
+      return Promise.reject(new AuthorizationError(msg));
     }
+
+    // existing document (update)
+    return this.utils.getConsortium(this.targetBaseUrl, request)
+      .then(callIsOwnedBy)
+      .then((isOwner) => {
+        if (!isOwner) {
+          return Promise.reject(new AuthorizationError(msg));
+        }
+
+        return isOwner;
+      });
   }
 
   handleAuthRejection(request, callback, error) {

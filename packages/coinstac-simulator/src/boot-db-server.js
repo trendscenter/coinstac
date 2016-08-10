@@ -13,7 +13,7 @@ const filtered = (str) => str.match(/deprecated|Warning: a promise/);
 module.exports = {
   setup(declPath) {
     return new Promise((res, rej) => {
-      const decl = require(declPath);
+      const decl = require(declPath); // eslint-disable-line global-require
       const serverName = 'DB-SERVER';
       srv = cp.fork(
         path.resolve(__dirname, './db-server'),

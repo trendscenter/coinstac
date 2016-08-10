@@ -1,8 +1,6 @@
 /*
  * @module actions/loading
  */
-import dropRight from 'lodash/dropRight';
-import last from 'lodash/last';
 import toArray from 'lodash/toArray';
 
 let asyncLoadingCallCount = 0;

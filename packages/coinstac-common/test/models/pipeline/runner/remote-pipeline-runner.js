@@ -8,15 +8,15 @@ const RemotePipelineRunner = common.models.pipeline.runner.RemotePipelineRunner;
 const cloneDeep = require('lodash/cloneDeep');
 
 test('RemotePipelineRunner::constructor', t => {
-  let runner = new RemotePipelineRunner(runnerUtils.remoteOpts());
+  const runner = new RemotePipelineRunner(runnerUtils.remoteOpts());
   t.ok(runner instanceof RemotePipelineRunner, 'basic instantiation ok');
   t.end();
 });
 
 test('RemotePipelineRunner::run - basic', t => {
-  let opts = runnerUtils.remoteOpts();
-  let runner = new RemotePipelineRunner(opts);
-  let localResult = runnerUtils.getLocalResult();
+  const opts = runnerUtils.remoteOpts();
+  const runner = new RemotePipelineRunner(opts);
+  const localResult = runnerUtils.getLocalResult();
   t.plan(5);
 
   // seed user results db with a result
@@ -43,7 +43,7 @@ test('RemotePipelineRunner::run - basic', t => {
       runner.pipeline.run.apply(runner.pipeline, arguments);
     };
     runner.pipeline.run = pipelineRunStub;
-    runner.events.on('noop:noStateChange', (doc) => {
+    runner.events.on('noop:noStateChange', () => {
       t.deepEqual(
         runner.userResultState,
         prevUserResultState,
@@ -61,7 +61,7 @@ test('RemotePipelineRunner::run - basic', t => {
 });
 
 test('RemotePipelineRunner::run - basic - input errors', t => {
-  let runner = new RemotePipelineRunner(runnerUtils.remoteOpts());
+  const runner = new RemotePipelineRunner(runnerUtils.remoteOpts());
   t.plan(1);
   runner.events.on('error', (err) => {
     t.ok(err.message, 'errors without local result');
@@ -72,9 +72,9 @@ test('RemotePipelineRunner::run - basic - input errors', t => {
 
 test('RemotePipelineRunner::run - basic - bogus pipeline handling', (t) => {
   t.plan(2);
-  let runner = new RemotePipelineRunner(runnerUtils.remoteOpts());
+  const runner = new RemotePipelineRunner(runnerUtils.remoteOpts());
   runner.pipeline = runnerUtils.getBustedPipeline();
-  let localResult = runnerUtils.getLocalResult();
+  const localResult = runnerUtils.getLocalResult();
   runner.events.on('halt', (doc) => {
     t.ok(doc.error.message.match(/test-error/), 'pipeline errors propogated');
     t.end();
@@ -89,10 +89,10 @@ test('propogate user errors via remote `userErrors` aggregation', (t) => {
 
   // prep runner and localResult to feed to runner.
   let stubbedLocalDocs = [];
-  let runner = new RemotePipelineRunner(runnerUtils.remoteOpts());
+  const runner = new RemotePipelineRunner(runnerUtils.remoteOpts());
   runner.result._id = `${runId}`;
   runner.pipeline = runnerUtils.getPipeline();
-  let localResult = runnerUtils.getLocalResult();
+  const localResult = runnerUtils.getLocalResult();
   localResult._id = localResult._rev = `${runId}-old`;
   localResult.error = { test: 1 };
 

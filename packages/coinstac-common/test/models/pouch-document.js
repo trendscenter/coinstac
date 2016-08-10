@@ -13,7 +13,7 @@ const validOps = () => {
   };
 };
 
-test('model::pouch-document - constructor', function (t) {
+test('model::pouch-document - constructor', t => {
   const pd1 = factory(validOps());
   t.ok(pd1, 'constructs with valid input');
   t.throws(

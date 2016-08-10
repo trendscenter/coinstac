@@ -1,32 +1,49 @@
 'use strict';
 
+const Base = require('./models/base');
+const CommandComputation = require('./models/computation/command-computation');
+const Computation = require('./models/computation/computation');
+const ComputationResult = require('./models/computation/computation-result');
+const Consortium = require('./models/consortium');
 const DBListener = require('./models/db-listener');
-const PipelineRunnerPool =
-    require('./models/pipeline/runner/pool/pipeline-runner-pool');
-const LocalPipelineRunnerPool =
-    require('./models/pipeline/runner/pool/local-pipeline-runner-pool');
+const DecentralizedComputation = require('./models/decentralized-computation.js');
+const File = require('./models/file');
+const JavascriptComputation = require('./models/computation/javascript-computation');
+const LocalComputationResult = require('./models/computation/local-computation-result');
+const LocalPipelineRunner = require('./models/pipeline/runner/local-pipeline-runner');
+const LocalPipelineRunnerPool = require('./models/pipeline/runner/pool/local-pipeline-runner-pool');
+const Pipeline = require('./models/pipeline/pipeline.js');
+const PipelineRunner = require('./models/pipeline/runner/pipeline-runner');
+const PipelineRunnerPool = require('./models/pipeline/runner/pool/pipeline-runner-pool');
+const PouchDocument = require('./models/pouch-document');
+const Project = require('./models/project');
+const RemoteComputationResult = require('./models/computation/remote-computation-result');
+const RemotePipelineRunner = require('./models/pipeline/runner/remote-pipeline-runner');
 const RemotePipelineRunnerPool =
-    require('./models/pipeline/runner/pool/remote-pipeline-runner-pool');
+  require('./models/pipeline/runner/pool/remote-pipeline-runner-pool');
+const User = require('./models/user');
+const computationRegistry = require('./services/computation-registry-factory');
+const dbRegistry = require('./services/db-registry');
 
 module.exports = {
   helpers: {
-    DBListener: DBListener,
+    DBListener,
   },
   models: {
     computation: {
-      CommandComputation: require('./models/computation/command-computation'),
-      Computation: require('./models/computation/computation'),
-      ComputationResult: require('./models/computation/computation-result'),
-      RemoteComputationResult: require('./models/computation/remote-computation-result'),
-      LocalComputationResult: require('./models/computation/local-computation-result'),
-      JavascriptComputation: require('./models/computation/javascript-computation'),
+      CommandComputation,
+      Computation,
+      ComputationResult,
+      RemoteComputationResult,
+      LocalComputationResult,
+      JavascriptComputation,
     },
     pipeline: {
-      Pipeline: require('./models/pipeline/pipeline.js'),
+      Pipeline,
       runner: {
-        PipelineRunner: require('./models/pipeline/runner/pipeline-runner'),
-        LocalPipelineRunner: require('./models/pipeline/runner/local-pipeline-runner'),
-        RemotePipelineRunner: require('./models/pipeline/runner/remote-pipeline-runner'),
+        PipelineRunner,
+        LocalPipelineRunner,
+        RemotePipelineRunner,
         pool: {
           PipelineRunnerPool,
           LocalPipelineRunnerPool,
@@ -34,16 +51,16 @@ module.exports = {
         },
       },
     },
-    Base: require('./models/base'),
-    DecentralizedComputation: require('./models/decentralized-computation.js'),
-    Consortium: require('./models/consortium'),
-    File: require('./models/file'),
-    PouchDocument: require('./models/pouch-document'),
-    Project: require('./models/project'),
-    User: require('./models/user'),
+    Base,
+    DecentralizedComputation,
+    Consortium,
+    File,
+    PouchDocument,
+    Project,
+    User,
   },
   services: {
-    dbRegistry: require('./services/db-registry'),
-    computationRegistry: require('./services/computation-registry-factory'),
+    dbRegistry,
+    computationRegistry,
   },
 };

@@ -1,11 +1,17 @@
 import app from 'ampersand-app';
 import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
-import * as authActions from 'app/render/state/ducks/auth.js';
+import * as authActions from '../state/ducks/auth.js';
 import FormLogin from './form-login';
 import LayoutNoauth from './layout-noauth';
 
 class FormLoginController extends Component {
+  constructor(props) {
+    super(props);
+    this.hotRoute = this.hotRoute.bind(this);
+    this.submit = this.submit.bind(this);
+  }
+
   hotRoute() {
     const { dispatch } = this.props;
     const { router } = this.context;
@@ -13,7 +19,7 @@ class FormLoginController extends Component {
     // warning - hot routing will grant access to the UI, however submitted
     // data will not be persisted/honored
     return dispatch(authActions.hotRoute())
-    .then((user) => {
+    .then(() => {
       process.nextTick(() => router.push('/'));
     });
   }
@@ -45,9 +51,9 @@ class FormLoginController extends Component {
         <FormLogin
           ref="logon"
           loading={loading}
-          hotRoute={this.hotRoute.bind(this)}
+          hotRoute={this.hotRoute}
           showHotRoute={showHotRoute}
-          submit={this.submit.bind(this)}
+          submit={this.submit}
         />
       </LayoutNoauth>
     );

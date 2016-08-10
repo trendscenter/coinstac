@@ -2,7 +2,6 @@
 
 const PouchDocument = require('../pouch-document');
 const joi = require('joi');
-const util = require('util');
 const memoize = require('lodash/memoize');
 
 /**
@@ -20,33 +19,34 @@ const memoize = require('lodash/memoize');
  *                             from the `_id` property. must be extended by
  *                             child classes
  */
-function ComputationResult() {
-  PouchDocument.apply(this, arguments); // eslint-disable-line
-  this._configureRunId();
-}
-util.inherits(ComputationResult, PouchDocument);
+class ComputationResult extends PouchDocument {
+  constructor(attrs) {
+    super(attrs);
+    this._configureRunId();
+  }
 
-/**
- * @private
- * @description sets a read-only attribute `runId` on the provided context
- * @returns {undefined}
- */
-ComputationResult.prototype._configureRunId = function () {
-  Object.defineProperty(
-    this,
-    'runId',
-    {
-      get() {
-        return this._extractRunId(this._id);
-      },
-      set() {
-        throw new Error('cannot set protected `runId`');
-      },
-    }
-  );
-  // cache & validate runId immediately
-  this.runId; // eslint-disable-line
-};
+  /**
+   * @private
+   * @description sets a read-only attribute `runId` on the provided context
+   * @returns {undefined}
+   */
+  _configureRunId() {
+    Object.defineProperty(
+      this,
+      'runId',
+      {
+        get() {
+          return this._extractRunId(this._id);
+        },
+        set() {
+          throw new Error('cannot set protected `runId`');
+        },
+      }
+    );
+    // cache & validate runId immediately
+    this.runId; // eslint-disable-line
+  }
+}
 
 /**
  * @private
@@ -54,7 +54,7 @@ ComputationResult.prototype._configureRunId = function () {
  * @description extracts runId from a provided _id
  * @returns {string}
  */
-ComputationResult.prototype._extractRunId = memoize(function (_id) {
+ComputationResult.prototype._extractRunId = memoize(function _extractRunId(_id) {
   let runId;
 
   // enable abstract class testing by enabling loose _id runId extraction

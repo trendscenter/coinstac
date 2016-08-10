@@ -13,7 +13,7 @@ const logger = require('./logger');
 const userChatOK = chalk.magenta;
 
 module.exports = function bootClients(declPath) {
-  const decl = require(declPath);
+  const decl = require(declPath); // eslint-disable-line global-require
   const usernames = typeof decl.users[0] === 'string' ?
     decl.users :
     decl.users.map(user => user.username);

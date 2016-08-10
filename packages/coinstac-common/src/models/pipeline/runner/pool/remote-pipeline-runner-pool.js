@@ -113,7 +113,7 @@ class RemotePipelineRunnerPool extends PipelineRunnerPool {
    * @param {string} consortiumId
    */
   _handleComputationComplete(runId, consortiumId) {
-    const db = this.dbRegistry.get(`remote-consortium-${consortiumId}`)
+    const db = this.dbRegistry.get(`remote-consortium-${consortiumId}`);
 
     db.get(runId)
       .then(compResult => {

@@ -23,7 +23,8 @@ const tape = require('tape');
 const scheme = joi.array().items(joi.object().keys({
   name: joi.string().min(4).required(),
   tags: joi.array().items(joi.string().min(5).required()).required(),
-  url: joi.string().uri().regex(/github.com/).required(),
+  url: joi.string().uri().regex(/github.com/)
+    .required(),
 }));
 
 tape('every entry is valid', (t) => {

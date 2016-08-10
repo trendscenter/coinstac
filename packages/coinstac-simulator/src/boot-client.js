@@ -22,7 +22,7 @@ const boot = function boot(opts) {
   if (!opts.declPath || !opts.username) {
     throw new ReferenceError('missing decl or username');
   }
-  decl = require(opts.declPath);
+  decl = require(opts.declPath); // eslint-disable-line global-require
   username = opts.username;
   const poolPatch = { dbRegistry: { isLocal: true } };
 
@@ -39,7 +39,9 @@ const boot = function boot(opts) {
     return pool.init()
     .then(() => {
       // stub registry (to circumvent needing to d/l DecentralizedComputation)
+      /* eslint-disable global-require */
       const decentralizedComputation = require(decl.computationPath);
+      /* eslint-enable global-require */
       return stubComputationToRegistry({
         computation: decentralizedComputation,
         registry: pool.computationRegistry,

@@ -21,9 +21,9 @@ SuuuuuperExtendedBase.schema = Object.assign({
   extendedBase: joi.object().type(ExtendedBase),
 }, ExtendedBase.schema);
 
-test('model::base - extended class', function (t) {
+test('model::base - extended class', t => {
   t.throws(
-    function () { new ExtendedBase(); },
+    () => new ExtendedBase(),
     Error,
     'schema validated using base.prototype.validate'
   );
@@ -54,7 +54,7 @@ test('model::base - extended class', function (t) {
     'base serialize ok (only schema attrs copied) (incomplete attr set)'
   );
 
-  let suuuper = new SuuuuuperExtendedBase({
+  const suuuper = new SuuuuuperExtendedBase({
     extendedBase: extbm,
     dummyField: 'abcdef',
   });

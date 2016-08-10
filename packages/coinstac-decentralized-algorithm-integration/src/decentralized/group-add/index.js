@@ -14,7 +14,7 @@ module.exports = {
       const remoteData = opts.remoteResult ? opts.remoteResult.data : null;
       const userStep = opts.previousData || 0;
       const groupStep = remoteData && remoteData.step || 1;
-      if (userStep === groupStep) { return null;}
+      if (userStep === groupStep) { return null; }
       console.log('...bumping', userStep + 1); // eslint-disable-line
       return userStep + 1;
     },

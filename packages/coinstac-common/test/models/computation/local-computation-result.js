@@ -1,7 +1,6 @@
 'use strict';
 
 const assign = require('lodash/assign');
-const path = require('path');
 const computations = require('../../../').models.computation;
 const LocalComputationResult = computations.LocalComputationResult;
 const test = require('tape');
@@ -17,18 +16,19 @@ const genOpts = (opts) => {
 
 test('constructor - runId', (t) => {
   const wildRunId = '!@$#(&ABC)_!~\\]';
-  let validOpts = genOpts();
-  let validWildOpts = genOpts({ _id: wildRunId + '-username' });
-  let invalidWildOpts1 = genOpts({
-    _id: wildRunId + '-username-bogus', // excess -suffix
+  const validOpts = genOpts();
+  const validWildOpts = genOpts({ _id: `${wildRunId}-username` });
+  const invalidWildOpts1 = genOpts({
+    _id: `${wildRunId}-username-bogus`, // excess -suffix
   });
-  let invalidWildOpts2 = genOpts({ _id: wildRunId }); // no username
-  let result;
+  const invalidWildOpts2 = genOpts({ _id: wildRunId }); // no username
 
-    // test valid
+  // test valid
   try {
-    result = new LocalComputationResult(validOpts);
-    result = new LocalComputationResult(validWildOpts);
+    /* eslint-disable no-unused-vars */
+    const result1 = new LocalComputationResult(validOpts);
+    const result2 = new LocalComputationResult(validWildOpts);
+    /* eslint-enable no-unused-vars */
     t.pass('valid constructor options ok');
   } catch (err) {
     return t.end(err.message);

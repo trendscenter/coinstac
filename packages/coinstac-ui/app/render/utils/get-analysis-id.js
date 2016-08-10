@@ -7,5 +7,5 @@ import sha1 from 'sha-1';
  * @return {string}
  */
 export default function getAnalysisId(fileShas) {
-    return sha1(fileShas.sort().join(''));
+  return sha1(fileShas.sort().join(''));
 }
