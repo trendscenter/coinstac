@@ -43,8 +43,8 @@ export function removeFilesFromProject(files) {
  * @param {object|Project}
  * @returns {Promise}
  */
-export const saveProject = applyAsyncLoading(function saveProject(project) {
-  return (dispatch) => {
+export const saveProject = applyAsyncLoading(project => {
+  return () => {
     return app.core.projects.save(project)
     .catch((err) => {
       app.notify('error', err.message);
@@ -59,7 +59,7 @@ export const saveProject = applyAsyncLoading(function saveProject(project) {
  * @param {function} cb
  * @returns {undefined}
  */
-export const fetchProject = applyAsyncLoading(function fetchProject(projectId, cb) {
+export const fetchProject = applyAsyncLoading(projectId => {
   return (dispatch) => {
     return app.core.dbRegistry.get('projects').get(projectId)
     .then((proj) => {

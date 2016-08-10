@@ -3,7 +3,6 @@
 const _ = require('lodash');
 const joi = require('joi');
 const Base = require('../../').models.Base;
-const util = require('util');
 const test = require('tape');
 const now = require('performance-now');
 
@@ -13,44 +12,35 @@ function SimpleModel(attrs) {
 }
 
 // define HeavyModel
-function HeavyModel() {
-  Base.apply(this, arguments); // eslint-disable-line
-}
+class HeavyModel extends Base {}
 
 HeavyModel.schema = Object.assign({}, Base.schema, {
   string: joi.string().min(10).required(),
   stringData: joi.string().isoDate().required(),
-  number: joi.number().min(5).max(15).required(),
+  number: joi.number().min(5).max(15)
+    .required(),
   object: joi.object().required(),
 });
-util.inherits(HeavyModel, Base);
 
 // define HeavyModelNoValidation
-function HeavyModelNoValidation(attrs) {
-  HeavyModel.apply(this, arguments); // eslint-disable-line
-}
+class HeavyModelNoValidation extends HeavyModel {}
 
-util.inherits(HeavyModelNoValidation, HeavyModel);
 HeavyModelNoValidation.prototype.validate = attrs => attrs;
-HeavyModelNoValidation.prototype.validateOnSet = function () {};
+HeavyModelNoValidation.prototype.validateOnSet = _.noop;
 
-const factory = function (opts) {
-  return new HeavyModel(opts);
-};
-
-const validOps = function () {
+function validOps() {
   return {
     string: 'abcdefghijklmnop',
     stringData: '2016-02-05T16:49:50-07:00',
     number: 10,
     object: { someRandomData: 'rando-calrisian' },
   };
-};
+}
 
-test('perf - reality check', function (t) {
-  let begin = now();
-  let end = now();
-  let noTimeDiff = parseFloat((end - begin).toFixed(2), 10);
+test('perf - reality check', t => {
+  const begin = now();
+  const end = now();
+  const noTimeDiff = parseFloat((end - begin).toFixed(2), 10);
   t.ok(
       noTimeDiff > 0 && noTimeDiff < 1,
       'no time diff takes more than 0 ms and less than 1ms'
@@ -58,7 +48,8 @@ test('perf - reality check', function (t) {
   t.end();
 });
 
-test('perf - pojo model time diff', function (t) {
+test('perf - pojo model time diff', t => {
+  /* eslint-disable no-unused-vars,no-redeclare,prefer-const */
   let pojoTime;
   let simpleModelTime;
   let heavyModelTime;
@@ -114,4 +105,5 @@ test('perf - pojo model time diff', function (t) {
 
   t.ok(heavyModelTime / modelGenCount < 5, 'heavy models generated in < 5ms');
   t.end();
+  /* eslint-enable no-unused-vars,no-redeclare,prefer-const */
 });

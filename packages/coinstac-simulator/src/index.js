@@ -12,7 +12,7 @@ const bootClients = require('./boot-clients');
 const bootDBServer = require('./boot-db-server');
 const seedCentralDB = require('./seed-central-db');
 const flatten = require('lodash/flatten');
-// const values = require('lodash/values');
+const values = require('lodash/values');
 
 /**
  * Processes.
@@ -31,7 +31,9 @@ const processes = {
 };
 
 // Ensure all processes are killed
-process.on('exit', module.exports.killProcesses);
+process.on('exit', () => {
+  flatten(values(processes)).forEach(p => p.kill());
+});
 
 module.exports = {
   /**
@@ -96,12 +98,5 @@ module.exports = {
         .catch((err) => reject(err));
       });
     });
-  },
-
-  /**
-   * Send kill signals to all processes.
-   */
-  killProcesses() {
-    flatten(values(processes)).forEach(p => p.kill());
   },
 };

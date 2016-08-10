@@ -11,7 +11,7 @@ export const setComputations = (computations, isBg) => ({
   computations,
 });
 
-export const fetchComputations = applyAsyncLoading(function fetchComputations() {
+export const fetchComputations = applyAsyncLoading(() => {
   return (dispatch) => {
     return app.core.computations.all()
     .then((computations) => {

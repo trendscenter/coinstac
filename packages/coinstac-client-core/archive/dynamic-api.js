@@ -1,59 +1,68 @@
+'use strict';
+
+const _ = require('lodash');
+const cycle = require('cycle');
+const fs = require('fs');
+const path = require('path');
+
 module.exports = {
-    api: null, // cached built API
+  api: null, // cached built API
 
-    build: function(opts) {
-        opts = opts || {};
-        if (opts.force) {
-            delete this.api;
-        }
-        var allFileStats = [];
+  build(opts) {
+    opts = opts || {};
+    if (opts.force) {
+      delete this.api;
+    }
+    const allFileStats = [];
 
-        var isJavascriptFile = function(path) {
-            if (path.match(/js$/)) { return true; }
-        };
-        var notIgnored = function(filepath) {
-           var IGNORE_API = [
+    const isJavascriptFile = path => {
+      if (path.match(/js$/)) { return true; }
+    };
+    const notIgnored = filepath => {
+      const IGNORE_API = [
             //    __filename
-           ];
-           if (IGNORE_API.some(function(txt) { return filepath.match(txt); })) { return false; }
-           return true;
-        };
-        var statToPath = function(stat) { return stat.path; };
-        var pathToAPIComponents = function(filepath) {
-            return {
-                fields: filepath.replace(__dirname, '').replace('.js', '').split(path.sep),
-                filepath: filepath
-            };
-        };
-        var componentsToAPIInstance = function(apiRoot, srvComponent, ndx) {
-            var serviceFieldPath = srvComponent.fields.map(_.camelCase).join('.');
-            _.set(apiRoot, serviceFieldPath, require(srvComponent.filepath));
-            return apiRoot;
-        };
+      ];
+      return IGNORE_API.some(txt => filepath.match(txt));
+    };
+    const statToPath = stat => stat.path;
+    const pathToAPIComponents = filepath => {
+      return {
+        fields: filepath.replace(__dirname, '').replace('.js', '').split(path.sep),
+        filepath,
+      };
+    };
+    const componentsToAPIInstance = (apiRoot, srvComponent) => {
+      const serviceFieldPath = srvComponent.fields.map(_.camelCase).join('.');
+      /* eslint-disable global-require */
+      _.set(apiRoot, serviceFieldPath, require(srvComponent.filepath));
+      /* eslint-enable global-require */
+      return apiRoot;
+    };
 
-        return new Promise(function(res, rej) {
-            if (this.api) {
-                return res(opts.decycled ? require('cycle').decycle(this.api) : this.api);
-            }
+    return new Promise((res, rej) => {
+      if (this.api) {
+        return res(opts.decycled ? cycle.decycle(this.api) : this.api);
+      }
 
-            fs.walk(__dirname)
-            .on('data', function(stat) { allFileStats.push(stat); })
-            .on('end', function constructAPI() {
-                this.api = allFileStats
-                .map(statToPath)
-                .filter(isJavascriptFile)
-                .filter(notIgnored)
-                .map(pathToAPIComponents)
-                .reduce(componentsToAPIInstance, {});
-                return res(this.api);
-            }.bind(this))
-            .on('error', rej);
+      fs.walk(__dirname)
+        .on('data', stat => allFileStats.push(stat))
+        .on('end', () => {
+          this.api = allFileStats
+            .map(statToPath)
+            .filter(isJavascriptFile)
+            .filter(notIgnored)
+            .map(pathToAPIComponents)
+            .reduce(componentsToAPIInstance, {});
+          return res(this.api);
+        })
+        .on('error', rej);
 
-            setTimeout(
-                function limitAPIBuildTime() { rej(new Error('timed out building API')); },
-                4000
-            );
-
-        }.bind(this));
-    },
+      setTimeout(
+        () => {
+          rej(new Error('timed out building API'));
+        },
+        4000
+      );
+    });
+  },
 };

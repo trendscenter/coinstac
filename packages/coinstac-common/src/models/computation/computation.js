@@ -1,7 +1,6 @@
 'use strict';
 
 const Base = require('../base.js');
-const util = require('util');
 const joi = require('joi');
 const isArray = require('lodash/isArray');
 const assign = require('lodash/assign');
@@ -21,47 +20,48 @@ const assign = require('lodash/assign');
  *                              ultimately complete, s.t. a pipleline may
  *                              progress
  */
-function Computation(opts) {
-  Base.apply(this, arguments); // eslint-disable-line
+class Computation extends Base {
+  /**
+   * @static
+   * @description produces Computation sub-types provided raw computations
+   * @param {object|array} comps raw computations
+   * @param {object=} opts settings to apply onto each Computation
+   * @return {Computation[]}
+   */
+  static factory(comps, opts) {
+    let rawComps = isArray(comps) ? comps : [comps];
+    rawComps = opts ? rawComps.map(raw => assign(raw, opts)) : rawComps;
+
+    // Dynamically require to prevent cyclic dependencies
+    /* eslint-disable global-require */
+    const JavascriptComputation = require('./javascript-computation');
+    const CommandComputation = require('./command-computation');
+    /* eslint-enable global-require */
+
+    return rawComps.map(comp => {
+      const type = comp.type;
+      switch (type) {
+        case 'function':
+          return new JavascriptComputation(comp);
+        case 'cmd':
+          return new CommandComputation(comp);
+        default:
+          throw new ReferenceError(`unable to instantiate ${type} computation`);
+      }
+    });
+  }
+
+  /**
+   * @abstract
+   * @throws {ReferenceError} must be extended by sub-types
+   */
+  run() {
+    throw new ReferenceError([
+      'Computation is an abstract class.  Run must be extended',
+      'by sub-classes',
+    ].join(' '));
+  }
 }
-
-util.inherits(Computation, Base);
-
-/**
- * @static
- * @description produces Computation sub-types provided raw computations
- * @param {object|array} comps raw computations
- * @param {object=} opts settings to apply onto each Computation
- * @return {Computation[]}
- */
-Computation.factory = function (comps, opts) {
-  const JavascriptComputation = require('./javascript-computation.js');
-  const CommandComputation = require('./command-computation.js');
-  let rawComps = isArray(comps) ? comps : [comps];
-  rawComps = opts ? rawComps.map(raw => assign(raw, opts)) : rawComps;
-  return rawComps.map(comp => {
-    const type = comp.type;
-    switch (type) {
-      case 'function':
-        return new JavascriptComputation(comp);
-      case 'cmd':
-        return new CommandComputation(comp);
-      default:
-        throw new ReferenceError(`unable to instantiate ${type} computation`);
-    }
-  });
-};
-
-/**
- * @abstract
- * @throws {ReferenceError} must be extended by sub-types
- */
-Computation.prototype.run = function () {
-  throw new ReferenceError([
-    'Computation is an abstract class.  Run must be extended',
-    'by sub-classes',
-  ].join(' '));
-};
 
 Computation.schema = Object.assign({
   cwd: joi.string().min(2).required(),

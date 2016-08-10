@@ -1,5 +1,6 @@
 'use strict';
 
+/* eslint-disable no-console */
 module.exports = {
   name: 'group-step-seeding',
   version: '0.0.1',
@@ -15,7 +16,7 @@ module.exports = {
     },
     {
       type: 'function',
-      fn: function (opts) {
+      fn(opts) {
         const remote = opts.remoteResult.data;
         if (remote !== 2) {
           throw new Error('expected seed average of 2');
@@ -43,10 +44,11 @@ module.exports = {
     },
     {
       type: 'function',
-      fn(opts) {
+      fn(opts) { // eslint-disable-line no-unused-vars
         console.log('boom baby.');
         return { complete: true };
       },
     },
   ],
 };
+/* eslint-enable no-console */

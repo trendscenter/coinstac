@@ -1,7 +1,10 @@
 'use strict';
 
 const app = require('ampersand-app');
-const fs = require('fs');
+const mkdirp = require('mkdirp');
+const { promisify } = require('bluebird');
+
+const promisifiedMkdirp = promisify(mkdirp);
 
 /**
  * Upsert COINSTAC user directory.
@@ -9,24 +12,6 @@ const fs = require('fs');
  * @returns {Promise}
  */
 module.exports = function upsertCoinstacUserDir() {
-  const appDirectory = app.core.appDirectory;
-
-  return new Promise(function upsertExecutor(resolve, reject) {
-    fs.stat(appDirectory, function statCallback(error) {
-      if (!error) {
-        resolve();
-      } else if (error.code === 'ENOENT') {
-        fs.mkdir(appDirectory, function mkdirCallback(mkdirError) {
-          if (mkdirError) {
-            reject(mkdirError);
-          } else {
-            resolve();
-          }
-        });
-      } else {
-        reject(error);
-      }
-    });
-  });
+  return promisifiedMkdirp(app.core.appDirectory);
 };
 

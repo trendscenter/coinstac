@@ -1,4 +1,3 @@
-const get = require('lodash/get');
 const values = require('lodash/values');
 
 // PART 1 - scaffold
@@ -10,7 +9,7 @@ module.exports = {
   },
   remote: {
     type: 'function',
-    fn: function (opts, cb) {
+    fn(opts) {
       // PART 6
       // stub some default values for the remote step and userSteps
       const _default = { step: 1, userStep: {} };
@@ -29,7 +28,7 @@ module.exports = {
       const userStepValues = values(result.userStep); // e.g. [1, 1, 1]
       const allUsersMatch = userStepValues.every(uStep => uStep === result.step);
       const allUsersPresent = userStepValues.length === opts.usernames.length;
-      const shouldBumpStep = allUsersMatch && allUsersPresent;
+      const shouldBumpStep = allUsersMatch && allUsersPresent; // eslint-disable-line
 
       // ...
     },

@@ -1,33 +1,29 @@
 import Notify from './notification';
-import React, { Component, PropTypes } from 'react';
+import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
 
-class App extends Component {
+function App(props) {
+  const isLoading = props.loading.isLoading;
+  return (
+    <div className="app">
+      <ul id="spinner" className={isLoading ? 'is-loading' : ''}>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+      </ul>
 
-  render() {
-    const isLoading = this.props.loading.isLoading;
-    return (
-      <div className="app">
-        <ul id="spinner" className={isLoading ? 'is-loading' : ''}>
-          <li></li>
-          <li></li>
-          <li></li>
-          <li></li>
-        </ul>
+      {props.children}
 
-        {this.props.children}
+      <ul id="loading_list">
+        {Object.keys(props.loading.wip).map((loadingKey, ndx) => {
+          return (<li key={ndx}>{loadingKey}</li>);
+        })}
+      </ul>
 
-        <ul id="loading_list">
-          {Object.keys(this.props.loading.wip).map((loadingKey, ndx) => {
-            return (<li key={ndx}>{loadingKey}</li>);
-          })}
-        </ul>
-
-        <Notify />
-      </div>
-    );
-  }
-
+      <Notify />
+    </div>
+  );
 }
 
 App.displayName = 'App';

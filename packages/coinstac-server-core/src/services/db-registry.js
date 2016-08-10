@@ -73,7 +73,7 @@ module.exports = {
       dbRegistryFactory.DBRegistry.Pouchy.plugin(pouchDBAdapterMemory);
       dbRegistryOptions.pouchConfig.adapter = 'memory';
     } else {
-      dbRegistryFactory.DBRegistry.Pouchy.plugin(pouchDbAdapterLevelDB)
+      dbRegistryFactory.DBRegistry.Pouchy.plugin(pouchDbAdapterLevelDB);
       dbRegistryOptions.pouchConfig.adapter = 'leveldb';
     }
 

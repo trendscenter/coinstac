@@ -8,14 +8,14 @@ const LocalPipelineRunner = common.models.pipeline.runner.LocalPipelineRunner;
 const noop = require('lodash/noop');
 
 test('LocalPipelineRunner constructor - basic', t => {
-  let runner = new LocalPipelineRunner(runnerUtils.localOpts());
+  const runner = new LocalPipelineRunner(runnerUtils.localOpts());
   t.ok(runner instanceof LocalPipelineRunner, 'basic instantiation ok');
   t.end();
 });
 
 test('LocalPipelineRunner run - basic', t => {
-  let runner = new LocalPipelineRunner(runnerUtils.localOpts());
-  let remoteResult = runnerUtils.getRemoteResult();
+  const runner = new LocalPipelineRunner(runnerUtils.localOpts());
+  const remoteResult = runnerUtils.getRemoteResult();
   t.plan(4);
   runner.run(remoteResult);
   runner.events.on('halt', (result) => {
@@ -37,8 +37,8 @@ test('LocalPipelineRunner run - basic', t => {
 });
 
 test('run - basic - input errors', t => {
-  let runner = new LocalPipelineRunner(runnerUtils.localOpts());
-  let remoteResult = runnerUtils.getRemoteResult();
+  const runner = new LocalPipelineRunner(runnerUtils.localOpts());
+  const remoteResult = runnerUtils.getRemoteResult();
   remoteResult.complete = true;
 
   const _handleNoInput = (err) => t.ok(err.message, 'errors without remote result');
@@ -60,15 +60,15 @@ test('run - basic - input errors', t => {
 
 test('run - basic - bogus pipeline handling', t => {
   t.plan(3);
-  let runner = new LocalPipelineRunner(runnerUtils.localOpts());
+  const runner = new LocalPipelineRunner(runnerUtils.localOpts());
   runner.pipeline = runnerUtils.getBustedPipeline();
-  let remoteResult = runnerUtils.getRemoteResult();
+  const remoteResult = runnerUtils.getRemoteResult();
   runner.events.on('error', () => t.pass('runner error on bogus pipeline'));
   runner.events.on('halt', (result) => {
     t.ok(result.error.message.match(/test-error/), 'pipeline errors propogated');
   });
   runner.run(remoteResult)
-  .then((err) => {
+  .then(() => {
     t.pass('run completes even w/ error');
     t.end();
   });

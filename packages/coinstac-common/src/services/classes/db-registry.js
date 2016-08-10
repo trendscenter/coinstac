@@ -1,6 +1,5 @@
 'use strict';
 
-const os = require('os');
 const path = require('path');
 const Pouchy = require('pouchy');
 // Pouchy.PouchDB.debug.enable('*');
@@ -146,11 +145,6 @@ class DBRegistry {
     const conf = cloneDeep(opts);
     const rootRemoteDBPathname = get(this, 'remote.db.pathname') || '';
     const connStr = conf.name || conf.url;
-    const noURLPrefix = this.isRemote || this.noURLPrefix;
-    const _downPrefix = this.remoteDownPrefix || `${rootRemoteDBPathname}/down/`;
-    const _upPrefix = this.remoteUpPrefix || `${rootRemoteDBPathname}/up/`;
-    const remoteDownPrefix = noURLPrefix ? '' : _downPrefix;
-    const remoteUpPrefix = noURLPrefix ? '' : _upPrefix;
     const syncDefaults = { live: true, retry: true, heartbeat: 5000 };
     conf.path = conf.path || this.path;
     conf.pouchConfig = conf.pouchConfig || {};
@@ -172,13 +166,17 @@ class DBRegistry {
       defaultsDeep(conf, this.remote);
       conf.replicate = { in: defaultsDeep({}, this.replicationOpts, syncDefaults) };
       conf.url = conf.url || url.format(
-        assign({}, this.remote.db, { pathname: rootRemoteDBPathname + '/' + conf.name })
+        assign({}, this.remote.db, {
+          pathname: `${rootRemoteDBPathname}/${conf.name}`,
+        })
       );
     } else if (this.isSyncOutStore(connStr)) {
       defaultsDeep(conf, this.remote);
       conf.replicate = { out: defaultsDeep({}, this.replicationOpts, syncDefaults) };
       conf.url = conf.url || url.format(
-        assign({}, this.remote.db, { pathname: rootRemoteDBPathname + '/' + conf.name })
+        assign({}, this.remote.db, {
+          pathname: `${rootRemoteDBPathname}/${conf.name}`,
+        })
       );
     } else {
       /* istanbul ignore next */

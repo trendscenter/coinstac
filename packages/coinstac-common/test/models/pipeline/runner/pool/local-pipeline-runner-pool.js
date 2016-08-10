@@ -9,7 +9,6 @@ const Consortium = common.models.Consortium;
 const LocalPipelineRunnerPool = common.models.pipeline.runner.pool.LocalPipelineRunnerPool;
 const RemoteComputationResult = computation.RemoteComputationResult;
 const assign = require('lodash/assign');
-const bluebird = require('bluebird');
 
 /**
  * @function remoteResultOpts
@@ -30,8 +29,8 @@ const getDummyConsortium = (() => {
     ++count;
     return new Consortium({
       _id: `testconsortium${count}`,
-      description: 'test-consortium-' + count,
-      label: 'test-consortium-' + count,
+      description: `test-consortium-${count}`,
+      label: `test-consortium-${count}`,
       users: [],
       owners: [],
     });
@@ -71,7 +70,7 @@ test('local-runner-pool builds & execs runners in response to db events', (t) =>
         user: poolUtils.getDummyUser(),
         dbRegistry: { isLocal: true },
       });
-      let pool = new LocalPipelineRunnerPool(tPoolOpts);
+      const pool = new LocalPipelineRunnerPool(tPoolOpts);
       poolUtils.suppressCreateDestroyHandlers(pool);
 
       // add in a consortium for pool to listen to events on
@@ -91,7 +90,7 @@ test('local-runner-pool builds & execs runners in response to db events', (t) =>
       // create new database for remote results, sync a remote result, which
       // will trigger LocalPipeLineRunnerPool to start a new LocalPipeLineRunner
       .then(() => {
-        return pool.dbRegistry.get('remote-consortium-' + consortium._id)
+        return pool.dbRegistry.get(`remote-consortium-${consortium._id}`)
         .save(remoteResult.serialize());
       })
 

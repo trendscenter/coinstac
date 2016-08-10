@@ -1,33 +1,33 @@
-var hotmop = require('hotmop');
-var _ = require('lodash');
-var logger = require('ampersand-app').logger;
-var app = require('ampersand-app');
+const hotmop = require('hotmop');
+const _ = require('lodash');
+const logger = require('ampersand-app').logger;
+const app = require('ampersand-app');
 
-var rebuildServiceApi = function(newModule) {
-    app.core = require('coinstac-client-core').get();
-    swapLog(newModule);
-    require('./ground-control.js').broadcast('main-rebuild');
+const swapLog = () => {
+  const logger = require('ampersand-app').logger; // eslint-disable-line global-require
+  logger.debug('swapped module');
 };
 
-var swapLog = function(newModule) {
-    var logger = require('ampersand-app').logger;
-    logger.debug('swapped module');
+const rebuildServiceApi = newModule => {
+  app.core = require('coinstac-client-core').get(); // eslint-disable-line global-require
+  swapLog(newModule);
+  require('./ground-control.js').broadcast('main-rebuild'); // eslint-disable-line global-require
 };
 
-var swapErrorLog = function (err) {
-    var logger = require('ampersand-app').logger;
-    logger.debug('error in module', err)
+const swapErrorLog = err => {
+  const logger = require('ampersand-app').logger; // eslint-disable-line global-require
+  logger.debug('error in module', err);
 };
 
-var requireCachePaths = _.keys(require.cache);
+const requireCachePaths = _.keys(require.cache);
 
-var watchCount = 0;
-_.each(requireCachePaths, function hotswapCstacModules(pkgPath) {
-    if (!pkgPath.match('coinstac-client-core')) { return; } // swap our pkgs only, not vendor packages
-    var swapper = hotmop(pkgPath)
-    swapper.on('error', swapErrorLog);
-    swapper.on('swap', rebuildServiceApi);
-    ++watchCount;
+let watchCount = 0;
+_.each(requireCachePaths, pkgPath => {
+  if (!pkgPath.match('coinstac-client-core')) { return; } // swap our pkgs only, not vendor packages
+  const swapper = hotmop(pkgPath);
+  swapper.on('error', swapErrorLog);
+  swapper.on('swap', rebuildServiceApi);
+  ++watchCount;
 });
 
-logger.info(watchCount + ' files watched for node hotswapping');
+logger.info(`${watchCount} files watched for node hotswapping`);

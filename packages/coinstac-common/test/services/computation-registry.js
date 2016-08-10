@@ -10,7 +10,6 @@ const followRedirects = require('follow-redirects');
 const fs = require('fs');
 const GitHubApi = require('github');
 const helpers = require('../helpers/computation-registry-helpers.js');
-const https = require('https');
 const mockApiTagResponse = require('../mocks/api-tag-response.json');
 const path = require('path');
 const registry = require('../mocks/decentralized-computations.json');
@@ -96,7 +95,7 @@ function setupNetworkStubs(computationSlug) {
     path.join(MOCK_COMPUTATION_PATH, computationSlug),
     {
       map: header => {
-        header.name = computationSlug + '/' + header.name;
+        header.name = `${computationSlug}/${header.name}`;
 
         return header;
       },
@@ -180,7 +179,9 @@ tape('adds definition to store', t => {
   const instance = factory({ registry: [] });
   const name = registry[0].name;
   const version = registry[0].tags[1];
+  /* eslint-disable global-require */
   const definition = require(`${MOCK_COMPUTATION_PATH}/${name}@${version}/`);
+  /* eslint-enable global-require */
   const url = registry[0].url;
 
   instance._doAdd({ definition, name, url, version })
@@ -265,7 +266,9 @@ tape('gets definition from disk', t => {
   });
   const name = registry[0].name;
   const version = registry[0].tags[1];
+  /* eslint-disable global-require */
   const expected = require(`${MOCK_COMPUTATION_PATH}/${name}@${version}/`);
+  /* eslint-enable global-require */
 
   instance._getFromDisk(name, version)
   .then(definition => {
@@ -279,7 +282,6 @@ tape('gets computation from source', t => {
 
   const instance = factory();
   const name = registry[2].name;
-  const itemUrl = registry[2].url;
   const version = registry[2].tags[0];
 
   const slug = `${name}@${version}`;
@@ -458,7 +460,7 @@ tape('add a computation (gets from disk)', t => {
   const name = 'the-ravens';
   const version = '2.0.0';
 
-  const slug = name + '@' + version;
+  const slug = `${name}@${version}`;
   const stubs = setupNetworkStubs(slug);
   const githubStub = stubs.githubStub;
   const requestStub = stubs.requestStub;
@@ -507,7 +509,7 @@ tape('add a computation (gets from network)', t => {
 
   const expectedUrl =
         `https://api.github.com/repos/MRN-Code/${name}/tarball/v${version}`;
-  const slug = name + '@' + version;
+  const slug = `${name}@${version}`;
   const stubs = setupNetworkStubs(slug);
   const githubStub = stubs.githubStub;
   const requestStub = stubs.requestStub;
@@ -660,7 +662,7 @@ tape('remove computation from disk', t => {
   const instance = factory();
   const name = 'a-small-bag';
   const version = '1.0.0-beta';
-  const slug = name + '@' + version;
+  const slug = `${name}@${version}`;
   const stubs = setupNetworkStubs(slug);
 
   instance.add(name, version)

@@ -14,7 +14,7 @@ const userChatOK = chalk.blue;
 
 module.exports = function bootComputeServers(declPath) {
   return new Promise((res, rej) => {
-    const decl = require(declPath);
+    const decl = require(declPath); // eslint-disable-line global-require
     const serverName = 'COMPUTE-SERVER'; // just one server ATM...
     const srv = cp.fork(
       path.resolve(__dirname, './boot-compute-server'),

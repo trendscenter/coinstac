@@ -19,8 +19,9 @@ class FormLogin extends Component {
           bsStyle="warning"
           type="button"
           disabled={loading.isLoading}
-          onClick={ this.props.hotRoute }
-          block>Hot Route</Button>
+          onClick={this.props.hotRoute}
+          block
+        >Hot Route</Button>
       );
     }
 
@@ -33,19 +34,22 @@ class FormLogin extends Component {
                 <ControlLabel>Username:</ControlLabel>
                 <FormControl
                   ref="username"
-                  type="text" />
+                  type="text"
+                />
               </FormGroup>
               <FormGroup controlId="login-password">
                 <ControlLabel>Password:</ControlLabel>
                 <FormControl
                   ref="password"
-                  type="password" />
+                  type="password"
+                />
               </FormGroup>
               <Button
                 bsStyle="primary"
                 type="submit"
                 disabled={loading.isLoading}
-                block>Log In</Button>
+                block
+              >Log In</Button>
               {devButtons}
             </form>
           </div>
@@ -54,7 +58,7 @@ class FormLogin extends Component {
       </div>
     );
   }
-};
+}
 
 FormLogin.propTypes = {
   hotRoute: PropTypes.func,

@@ -6,6 +6,6 @@
 
 'use strict';
 
-var os = require('os');
+const os = require('os');
 
 module.exports = os.hostname();

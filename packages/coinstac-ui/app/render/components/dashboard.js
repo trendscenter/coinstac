@@ -1,11 +1,11 @@
-'use strict';
 import React, { Component, PropTypes } from 'react';
 import DashboardNav from './dashboard-nav';
 import UserAccountController from './user-account-controller';
 import { connect } from 'react-redux';
-import * as bgServices from 'app/render/state/ducks/bg-services';
+import * as bgServices from '../state/ducks/bg-services';
 import app from 'ampersand-app';
-import noop from 'lodash/noop';
+
+import CoinstacAbbr from './coinstac-abbr';
 
 class Dashboard extends Component {
 
@@ -26,10 +26,6 @@ class Dashboard extends Component {
   render() {
     const { auth, children } = this.props;
     const { router } = this.context;
-    const title = [
-      'Collaborative Informatics and Neuroimaging Suite Toolkit',
-      'for Anonymous Computation',
-    ].join(' ');
 
     if (!auth || !auth.user) {
       return (<p>Redirecting to login...</p>);
@@ -41,7 +37,7 @@ class Dashboard extends Component {
           <div className="col-xs-12 col-sm-4">
             <nav className="navigation" role="navigation">
               <h1 className="logo text-center">
-                <abbr title={title}>COINSTAC</abbr>
+                <CoinstacAbbr />
               </h1>
               <DashboardNav />
               <UserAccountController push={router.push} />

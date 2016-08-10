@@ -1,9 +1,13 @@
 'use strict';
-var appOpts;
 
-var parse = function() {
+const spawn = require('child_process').spawn;
+const program = require('commander');
+let appOpts;
+
+/* eslint-disable no-console */
+function parse() {
   if (process.defaultApp) {
-    const opts = require('commander')
+    const opts = program
     .option('-dev, --development', 'run in development mode (NODE_ENV === "development")')
     .option('-w, --webpack', 'boot webpack dev server as child process')
     .option('--hotswap', 'enable hotswapping of node modules for main process')
@@ -17,39 +21,39 @@ var parse = function() {
     }
 
     if (opts.webpack) {
-      var spawn = require('child_process').spawn;
       console.log('booting webpack-dev-server');
-      var wpds = spawn('node', ['webpack-dev-server.js', '--development']);
-      wpds.stdout.on('data', function(data) {
+      const wpds = spawn('node', ['webpack-dev-server.js', '--development']);
+      wpds.stdout.on('data', data => {
         data = data.toString();
         // don't fill the screen with useful build information. scan for it,
         // summarize it instead
-        var builtRegex = /.*(\[(built|not cacheable)\]|\{0\}).*[\r\n]/gm;
-        var builtFiles = data.match(builtRegex);
+        const builtRegex = /.*(\[(built|not cacheable)\]|\{0\}).*[\r\n]/gm;
+        const builtFiles = data.match(builtRegex);
         data = data.replace(builtRegex, '');
         console.log([
           'coinstac-wpds:',
-          builtFiles ? '(' + builtFiles.length + ' files processed)' : '',
+          builtFiles ? `(${builtFiles.length} files processed` : '',
           data,
         ].join(' '));
       });
 
-      wpds.stderr.on('data', function(data) {
-        console.error('coinstac-webpack-server [error]: ' + data);
+      wpds.stderr.on('data', data => {
+        console.error(`coinstac-webpack-server [error]: ${data}`);
       });
 
-      wpds.on('close', function(code) {
+      wpds.on('close', code => {
         if (code !== 0) {
-          console.log('coinstac-webpack-server [fatal] ' + code);
+          console.log(`coinstac-webpack-server [fatal] ${code}`);
         }
       });
 
       process.on('exit', wpds.kill);
     }
   }
-};
+}
+/* eslint-enable no-console */
 
-parse.get = function() {
+parse.get = function get() {
   return appOpts || {};
 };
 

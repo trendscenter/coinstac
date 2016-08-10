@@ -6,6 +6,7 @@
  * small: less than 1ms per operation...
  */
 
+/* eslint-disable no-console */
 const Consortium = require('coinstac-common').models.Consortium;
 
 const config = {
@@ -55,3 +56,4 @@ while (i < 10000) {
 }
 
 console.timeEnd('Pure Function');
+/* eslint-enable no-console */

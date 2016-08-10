@@ -1,6 +1,5 @@
 'use strict';
 
-const passed = {};
 process.argv.forEach((arg, ndx) => {
     // e.g. -run { "filenames": [ ... ] }
   if (arg.indexOf('--') === 0) {

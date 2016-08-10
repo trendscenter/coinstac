@@ -9,19 +9,19 @@ export default function DashboardNav() {
         <NavItem>
           <span aria-hidden="true" className="glyphicon glyphicon-home"></span>
           {' '}
-	      Home
-	    </NavItem>
+          Home
+        </NavItem>
       </IndexLinkContainer>
-	  <LinkContainer to="/consortia">
-	    <NavItem>
-	      <span aria-hidden="true" className="glyphicon glyphicon-list"></span>
-          {' '}
-          Consortia
-	    </NavItem>
-	  </LinkContainer>
-	  <LinkContainer to="/projects">
-	    <NavItem>
-	      <span aria-hidden="true" className="glyphicon glyphicon-list-alt"></span>
+      <LinkContainer to="/consortia">
+        <NavItem>
+          <span aria-hidden="true" className="glyphicon glyphicon-list"></span>
+            {' '}
+            Consortia
+        </NavItem>
+      </LinkContainer>
+      <LinkContainer to="/projects">
+        <NavItem>
+          <span aria-hidden="true" className="glyphicon glyphicon-list-alt"></span>
           {' '}
           Projects
         </NavItem>

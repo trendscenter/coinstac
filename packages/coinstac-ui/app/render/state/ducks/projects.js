@@ -67,7 +67,7 @@ export function mapProject(project) {
   return Promise.resolve(getProject());
 }
 
-export const addProject = applyAsyncLoading(function addProject(project) {
+export const addProject = applyAsyncLoading(project => {
   return (dispatch) => {
     /**
      * @todo: The `Project` model is decorated with `allowComputationRun` and
@@ -101,7 +101,7 @@ export const addProject = applyAsyncLoading(function addProject(project) {
   };
 });
 
-export const remove = applyAsyncLoading(function remove(project) {
+export const remove = applyAsyncLoading(project => {
   return (dispatch) => {
     return app.core.projects.delete(project)
     .then((rslt) => {
@@ -116,7 +116,7 @@ export const remove = applyAsyncLoading(function remove(project) {
   };
 });
 
-export const fetch = applyAsyncLoading(function fetchProjects(cb) {
+export const fetch = applyAsyncLoading(cb => {
   return (dispatch) => {
     return app.core.projects.all()
       .then(projects => Promise.all(projects.map(mapProject)))

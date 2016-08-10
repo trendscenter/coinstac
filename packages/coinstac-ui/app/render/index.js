@@ -9,12 +9,12 @@ import { render } from 'react-dom';
 import { Router, hashHistory } from 'react-router';
 import { Provider } from 'react-redux';
 
-import { start as startErrorHandling } from 'app/render/utils/boot/configure-error-handling.js';
-import configureLogger from 'app/render/utils/boot/configure-logger.js';
-import configureMainServices from 'app/render/utils/configure-main-services.js';
-import { configure as configureStore, get as getStore } from 'app/render/state/store.js';
-import majorTom from 'app/render/utils/boot/major-tom.js';
-import routes from 'app/render/routes.js';
+import { start as startErrorHandling } from './utils/boot/configure-error-handling.js';
+import configureLogger from './utils/boot/configure-logger.js';
+import configureMainServices from './utils/configure-main-services.js';
+import { configure as configureStore, get as getStore } from './state/store.js';
+import majorTom from './utils/boot/major-tom.js';
+import routes from './routes.js';
 
 // load application stylesheets
 require('./styles/app.scss');

@@ -1,4 +1,3 @@
-const get = require('lodash/get');
 const values = require('lodash/values');
 
 // PART 1 - scaffold
@@ -10,7 +9,7 @@ module.exports = {
   },
   remote: {
     type: 'function',
-    fn: function (opts, cb) {
+    fn(opts, cb) {
       // PART 6
       // stub some default values for the remote step and userSteps
       const _default = { step: 1, userStep: {} };

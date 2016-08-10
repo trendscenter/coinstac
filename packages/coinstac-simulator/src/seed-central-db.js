@@ -16,7 +16,7 @@ const Consortium = common.models.Consortium;
 module.exports = {
 
   seed(declPath) {
-    const decl = require(declPath);
+    const decl = require(declPath); // eslint-disable-line global-require
     return Promise.all([
       this._seedConsortia(decl),
       this._seedComputations(decl),
@@ -55,7 +55,9 @@ module.exports = {
       pathname: 'computations',
     });
     const computationsDB = new Pouchy({ url: dburl });
+    /* eslint-disable global-require */
     const decentralizedComputation = require(decl.computationPath);
+    /* eslint-enable global-require */
     return computationsDB.save({
       _id: 'testcomputationid',
       name: decentralizedComputation.name,

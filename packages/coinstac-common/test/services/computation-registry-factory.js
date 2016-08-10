@@ -7,8 +7,6 @@ const ComputationRegistry =
 const computationRegistryFactory =
   require('../../src/services/computation-registry-factory');
 const DBRegistry = require('../../src/services/classes/db-registry');
-const fs = require('fs');
-const helpers = require('../helpers/computation-registry-helpers');
 const mockDecentralizedComputations =
   require('../mocks/decentralized-computations.json');
 const path = require('path');
@@ -282,7 +280,7 @@ tape('remote computation registry retrieves all computations', t => {
     path: testDirectory,
     registry: mockDecentralizedComputations,
   })
-    .then(computationRegistry => {
+    .then(() => {
       t.ok(
         expected.every(e => addStub.calledWithExactly(e.name, e.version)),
         'adds every decentralized computation to registry'

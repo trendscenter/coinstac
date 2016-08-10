@@ -39,17 +39,16 @@ class Consortium extends PouchDocument {
     return false;
   }
 
+  /**
+   * compare two usernames in a case-insensitive way
+   * @param  {string} uname1
+   * @param  {string} uname2
+   * @return {boolean} true if the names match
+   */
+  static compareUsernames(uname1, uname2) {
+    return uname1.toLowerCase().trim() === uname2.toLowerCase().trim();
+  }
 }
-
-/**
- * compare two usernames in a case-insensitive way
- * @param  {string} uname1
- * @param  {string} uname2
- * @return {boolean} true if the names match
- */
-Consortium.compareUsernames = function (uname1, uname2) {
-  return uname1.toLowerCase().trim() === uname2.toLowerCase().trim();
-};
 
 Consortium.schema = Object.assign({}, PouchDocument.schema, {
   _id: joi.string().regex(/^[a-zA-Z0-9]+$/),
@@ -58,7 +57,9 @@ Consortium.schema = Object.assign({}, PouchDocument.schema, {
   description: joi.string().required(),
   label: joi.string().min(1).required(),
   tags: joi.array().default([]),
-  users: joi.array().items(joi.string()).required().default([]), // @TODO users => usernames
+  users: joi.array().items(joi.string()).required()
+    .default([]), // @TODO users => usernames
   owners: joi.array().items(joi.string()).required(),
 });
+
 module.exports = Consortium;
