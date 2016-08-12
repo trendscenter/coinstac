@@ -53,6 +53,17 @@ class Consortium extends PouchDocument {
 Consortium.schema = Object.assign({}, PouchDocument.schema, {
   _id: joi.string().regex(/^[a-zA-Z0-9]+$/),
   activeComputationId: joi.string().min(1),
+
+  /**
+   * @todo A computation's inputs shouldn't be set on the consortium because
+   * this limits runs to one-at-a-time. Consider moving elsewhere, perhaps some
+   * sort of `ComputationRun` model.
+   */
+  activeComputationInputs: joi.array().items(
+    joi.array().items(
+      joi.array().items(joi.string(), joi.number())
+    )
+  ),
   activeRunId: joi.string().min(1),
   description: joi.string().required(),
   label: joi.string().min(1).required(),
