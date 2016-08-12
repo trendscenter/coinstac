@@ -255,7 +255,7 @@ class ComputationRegistry {
    * @private
    * @param {string} name
    * @param {string} version
-   * @returns {Promise}
+   * @returns {Promise} Resolves to computation definition
    */
   _getFromDisk(name, version) {
     const computationPath = this._getComputationPath(name, version);
@@ -271,7 +271,6 @@ class ComputationRegistry {
         } catch (error) {
           reject(error);
         }
-        return null;
       });
     });
   }
