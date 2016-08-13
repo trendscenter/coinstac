@@ -20,7 +20,9 @@ const config = {
    */
   externals: Object.keys(pkg.dependencies).concat(
     Object.keys(pkg.devDependencies),
-    'electron'
+    'electron',
+    'fs',
+    'path'
   ),
   module: {
     loaders: [{
