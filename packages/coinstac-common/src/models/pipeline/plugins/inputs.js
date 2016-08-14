@@ -1,13 +1,58 @@
 'use strict';
 
-const { get, noop, set } = require('lodash');
+const { get, set } = require('lodash');
+
+/**
+ * Plugin's state location in a `ComputationResult` document.
+ *
+ * @const {string}
+ */
+const SELECTOR = 'pluginState.inputs';
+
+/**
+ * Is a inputs item valid?
+ *
+ * @todo Use a joi schema?
+ *
+ * @param {*} inputs
+ * @returns {boolean} Whether the `inputs` looks as expected.
+ */
+function isValidInputs(inputs) {
+  return !!inputs && Array.isArray(inputs) && !!inputs.length;
+}
 
 module.exports = {
   preRun: {
-    local: noop,
+    /**
+     * @param {Object} runInput
+     * @param {RemoteComputationResult} runInput.remoteResult
+     * @param {LocalComputationResult} compResult
+     * @param {Object} hooks
+     * @param {Function} hooks.cancelRun
+     * @param {Function} hooks.forceSave
+     * @param {Function} hooks.isRunCancelled
+     * @returns {(LocalComputationResult|undefined)}
+     */
+    local(runInput, compResult, hooks) {
+      /**
+       * @todo: Determine why are a client's local info is stored on a
+       * `RemoteComputationResult`.
+       */
+      const remoteInputs = get(runInput.remoteResult, SELECTOR);
+      const localInputs = get(compResult, SELECTOR);
+
+      // Save inputs to `compResult` if it doesn't yet contain them:
+      if (!isValidInputs(localInputs) && isValidInputs(remoteInputs)) {
+        set(compResult, SELECTOR, remoteInputs);
+        hooks.forceSave();
+
+        return compResult;
+      }
+    },
 
     /**
-     * @param {Object} runInputs
+     * @param {Object} runInput
+     * @param {Object[]} runInput.userResults Collection of user result docs
      * @param {ComputationResult} compResult
      * @param {Object} hooks
      * @param {Function} hooks.cancelRun
@@ -16,20 +61,19 @@ module.exports = {
      * @returns {(ComputationResult|undefined)} Transformed compResult if a doc
      * update is required, otherwise `undefined`.
      */
-    remote(runInputs, compResult, hooks) {
-      const SELECTOR = 'pluginState[\'inputs\']';
+    remote(runInput, compResult, hooks) {
       const remoteInputs = get(compResult, SELECTOR);
 
-      if (remoteInputs && Array.isArray(remoteInputs)) {
+      if (isValidInputs(remoteInputs)) {
         return;
       }
 
       let localInputs;
 
-      for (const runInput of runInputs) {
-        const inputs = get(runInput, SELECTOR);
+      for (const result of runInput.userResults) {
+        const inputs = get(result, SELECTOR);
 
-        if (inputs && Array.isArray(inputs)) {
+        if (isValidInputs(inputs)) {
           localInputs = inputs;
           break;
         }
@@ -45,8 +89,5 @@ module.exports = {
       return compResult;
     },
   },
-  postRun: {
-    local: noop,
-    remote: noop,
-  },
 };
+
