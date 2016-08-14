@@ -218,7 +218,7 @@ program
 
         const runId = docs[0]._id;
 
-        return client.computations.joinComputation({
+        return client.computations.joinRun({
           consortiumId,
           projectId,
           runId,
