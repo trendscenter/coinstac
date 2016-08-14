@@ -54,6 +54,7 @@ program
   .option('-d --database [value]', 'Database connection string')
   .option('-m --metafile [value]', 'Meta file path')
   .option('-p --password [value]', 'Password')
+  .option('-s --storage', 'Store in coinstac-common location (default false)', false)
   .option('-u --username [value]', 'Username')
   .parse(process.argv);
 
@@ -103,8 +104,7 @@ program
       remoteDbConfig.pathname = dropRight(remoteDbConfig.pathname, 1).join('');
     }
 
-    client = new CoinstacClient({
-      appDirectory: STORAGE_DIR,
+    const clientOptions = {
       db: {
         local: {
           pouchConfig: {
@@ -112,7 +112,6 @@ program
           },
         },
         noURLPrefix: true,
-        path: path.join(STORAGE_DIR, 'db'),
         remote: {
           db: remoteDbConfig,
           pouchConfig: {
@@ -123,7 +122,15 @@ program
       hp: hpConfig,
       logger: logger, // eslint-disable-line object-shorthand
       storage: new Storage(null, { strict: true }),
-    });
+    };
+
+    if (!program.storage) {
+      clientOptions.appDirectory = STORAGE_DIR;
+      clientOptions.db.path = path.join(STORAGE_DIR, 'db');
+    }
+
+    client = new CoinstacClient(clientOptions);
+
     username = answers.username;
 
     logger.info('Logging in...');
