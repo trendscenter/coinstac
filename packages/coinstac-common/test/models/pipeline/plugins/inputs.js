@@ -13,6 +13,67 @@ function getHooks() {
   };
 }
 
+tape('inputs plugin :: local has no inputs', t => {
+  const hooks = getHooks();
+
+  t.notOk(
+    inputs.preRun.local({}, {}, hooks),
+    'doesn\'t return doc'
+  );
+  t.notOk(hooks.forceSave.called, 'doesn\'t force save');
+  t.end();
+});
+
+tape('inputs plugin :: local has no local inputs', t => {
+  const hooks = getHooks();
+
+  t.notOk(
+    inputs.preRun.local(
+      {},
+      {
+        pluginState: {
+          inputs: ['test'],
+        },
+      },
+      hooks
+    ),
+    'doesn\'t return doc'
+  );
+  t.notOk(hooks.forceSave.called, 'doesn\'t force save');
+  t.end();
+});
+
+tape('inputs plugin :: local has remote and has no local inputs', t => {
+  const compResult = {};
+  const hooks = getHooks();
+  const runInput = {
+    remoteResult: {
+      pluginState: {
+        inputs: ['wat'],
+      },
+    },
+  };
+
+  t.equal(
+    inputs.preRun.local(
+      runInput,
+      compResult,
+      hooks
+    ),
+    compResult,
+    'returns doc'
+  );
+  t.equal(
+    compResult.pluginState.inputs,
+    runInput.remoteResult.pluginState.inputs,
+    'sets inputs plugin state on result doc'
+  );
+  t.ok(hooks.forceSave.called, 'calls force save');
+  t.end();
+});
+
+tape('inputs plugin :: local has local inputs');
+
 tape('inputs plugin :: remote has inputs', t => {
   const hooks = getHooks();
 
@@ -21,7 +82,9 @@ tape('inputs plugin :: remote has inputs', t => {
       [],
       {
         pluginState: {
-          inputs: [],
+          inputs: [[
+            'test',
+          ]],
         },
       },
       hooks
@@ -37,11 +100,13 @@ tape('inputs plugin :: no local inputs', t => {
 
   t.notOk(
     inputs.preRun.remote(
-      [{
-        pluginState: {},
-      }, {
-        pluginState: {},
-      }],
+      {
+        userResults: [{
+          pluginState: {},
+        }, {
+          pluginState: {},
+        }],
+      },
       {
         pluginState: {},
       },
@@ -58,15 +123,17 @@ tape('inputs plugin :: local has inputs', t => {
     pluginState: {},
   };
   const hooks = getHooks();
-  const runInputs = [{
-    pluginState: {},
-  }, {
-    pluginState: {},
-  }, {
-    pluginState: {
-      inputs: ['my', 'great', 'inputs'],
-    },
-  }];
+  const runInputs = {
+    userResults: [{
+      pluginState: {},
+    }, {
+      pluginState: {},
+    }, {
+      pluginState: {
+        inputs: ['my', 'great', 'inputs'],
+      },
+    }],
+  };
 
   t.equal(
     inputs.preRun.remote(
@@ -79,7 +146,7 @@ tape('inputs plugin :: local has inputs', t => {
   );
   t.equal(
     compResult.pluginState.inputs,
-    runInputs[2].pluginState.inputs,
+    runInputs.userResults[2].pluginState.inputs,
     'sets runInput to compResult'
   );
   t.ok(hooks.forceSave.called, 'calls force save');
