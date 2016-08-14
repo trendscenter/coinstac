@@ -3,9 +3,10 @@
 
 const assign = require('lodash/assign');
 const CoinstacClient = require('../src/index');
+const { compact, flatten } = require('lodash');
 const DBRegistry = require('coinstac-common').services.dbRegistry.DBRegistry;
 const dropRight = require('lodash/dropRight');
-const flatten = require('lodash/flatten');
+const fs = require('fs');
 const getSyncedDatabase = require('../src/utils/get-synced-database');
 const glob = require('glob');
 const inquirer = require('inquirer');
@@ -151,6 +152,22 @@ program
       });
     }))
       .then(flatten)
+      .then(files => Promise.all(files.map(file => {
+        return new Promise((resolve, reject) => {
+          fs.stat(file, (error, stats) => {
+            if (error) {
+              reject(error);
+            }
+
+            if (stats.isFile()) {
+              resolve(file);
+            }
+
+            resolve();
+          });
+        });
+      })))
+      .then(compact)
       .then(client.projects.getFileStats);
   })
   .then(files => {
