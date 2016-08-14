@@ -212,8 +212,10 @@ class PipelineRunnerPool extends Base {
    * generates a set of plugins.
    * @param {object} opts
    * @param {DecentralizedComputation} opts.comp
-   * @param {string} env local/remote
-   * @returns {array} hooks plugin hooks
+   * @param {string} opts.env local/remote
+   * @returns {Object} Plugin hooks
+   * @property {Function[]} preRun
+   * @property {Function[]} postRun
    */
   getPipelinePlugins(opts) {
     const plugins = opts.comp.plugins;
