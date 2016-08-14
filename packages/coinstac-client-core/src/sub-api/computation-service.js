@@ -120,11 +120,22 @@ class ComputationService extends ModelService {
         }),
       ]))
       .then(([consortium, project]) => {
-        const result = new RemoteComputationResult({
+        const options = {
           _id: runId,
           computationId: consortium.activeComputationId,
           consortiumId,
-        });
+        };
+
+        if (
+          consortium.activeComputationInputs &&
+          Array.isArray(consortium.activeComputationInputs)
+        ) {
+          options.pluginState = {
+            inputs: consortium.activeComputationInputs,
+          };
+        }
+
+        const result = new RemoteComputationResult(options);
 
         return pool.triggerRunner(result, project);
       });
