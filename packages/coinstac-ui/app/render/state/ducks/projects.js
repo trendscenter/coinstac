@@ -1,6 +1,6 @@
 import { applyAsyncLoading } from './loading.js';
 import app from 'ampersand-app';
-import omit from 'lodash/omit';
+import { omit } from 'lodash';
 import { joinSlaveComputation } from './bg-services';
 
 export const ADD_PROJECT = 'ADD_PROJECT';

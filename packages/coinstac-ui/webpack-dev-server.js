@@ -2,17 +2,20 @@
 
 const webpack = require('webpack');
 const WebpackDevServer = require('webpack-dev-server');
+
 const config = require('./webpack.config');
+const port = config.port;
 
 new WebpackDevServer(webpack(config), {
   publicPath: config.output.publicPath,
   hot: true,
   historyApiFallback: true,
-  contentBase: './app/',
-  colors: true,
-}).listen(config.WPDS_PORT, 'localhost', err => {
+}).listen(port, 'localhost', err => {
   /* eslint-disable no-console */
-  if (err) { console.log(err); }
-  console.log(`Listening at localhost: ${config.WPDS_PORT}`);
+  if (err) {
+    console.log(err);
+  } else {
+    console.log(`Listening at port ${port}`);
+  }
   /* eslint-enable no-console */
 });

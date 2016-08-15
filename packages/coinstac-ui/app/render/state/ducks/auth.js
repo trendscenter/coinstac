@@ -1,7 +1,7 @@
 import app from 'ampersand-app';
 import * as util from './util';
 import { applyAsyncLoading } from './loading';
-import pick from 'lodash/pick';
+import { pick } from 'lodash';
 import { teardownPrivateBackgroundServices } from './bg-services';
 const SET_USER = 'SET_USER';
 const setUser = (user) => ({ type: SET_USER, user });
