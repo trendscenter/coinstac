@@ -1,5 +1,6 @@
 import app from 'ampersand-app';
 import { applyAsyncLoading } from './loading';
+import { map } from 'lodash';
 
 export const DO_DELETE_CONSORTIA = 'DO_DELETE_CONSORTIA';
 
@@ -96,6 +97,134 @@ export const setActiveComputation = applyAsyncLoading(
       return consortia.get(consortiumId)
         .then(consortium => {
           consortium.activeComputationId = computationId;
+
+          return consortia.save(consortium);
+        });
+    };
+  }
+);
+
+/**
+ * Set inputs on a consortium's selected computation.
+ *
+ * This expects computations to look something like:
+ *
+ *   {
+ *     "inputs": [
+ *       [{
+ *         "label": "Question 1",
+ *         "type": "select",
+ *         "values": ["Answer 1", "Answer 2", "Answer 3"]
+ *       }, {
+ *         "label": "Question 2",
+ *         "multiple": true,
+ *         "type": "select",
+ *         "values": ["Answer 4", "Answer 5", "Answer 6"]
+ *       }]
+ *       // ...
+ *     ],
+ *     "local": [
+ *       // ...
+ *     ],
+ *     "name": "my-comp",
+ *     "plugins": ["group-step", "inputs"],
+ *     "remote": [
+ *       // ...
+ *     ],
+ *     "repository": "https://github.com/MRN-Code/my-comp",
+ *     "version": "1.0.0"
+ *   }
+ *
+ * …where the `inputs` is a collection of question arrays (questions). A
+ * questions' index should coorespond with the `local` or `remote` pipeline
+ * index for which the computation designer needs the input. Each question
+ * object should directly represents a form control UI that's exposed to the
+ * user before or during a run.
+ *
+ * For the time being, inputs' user responses are stored on the consortium to
+ * facilitate runs.
+ *
+ *   {
+ *     "activeComputationId": "123abc",
+ *     "activeComputationInputs": [
+ *       [
+ *         ["Answer 2"],
+ *         ["Answer 4", "Answer 6"]
+ *       ],
+ *       // ...
+ *     ],
+ *     "description": "My great consortium!",
+ *     "label": "my-consortium",
+ *     "owners": ["demo1"],
+ *     "users": ["demo1", "demo2", "demo3"]
+ *   }
+ *
+ * `activeComputationInputs`'s structure mirrors the computation's `inputs`
+ * structure, except that the consortium's `activeComputationInputs` array's
+ * array's contents match values found in the question object's `values` array.
+ * These are the full value text instead of question values' indices to reduce
+ * lookup queries and retain data in the case that computations' questions
+ * change.
+ *
+ * @todo Refactor for extensibility along with other 'inputs' code.
+ *
+ * @param {string} consortiumId
+ * @param {Number} fieldIndex
+ * @param {Array} inputs
+ * @returns {Function}
+ */
+export const setComputationInputs = applyAsyncLoading(
+  (consortiumId, fieldIndex, values) => {
+    return () => {
+      const { core: { computations, consortia } } = app;
+
+      return consortia.get(consortiumId)
+        .then(consortium => {
+          if (!consortium.activeComputationId) {
+            throw new Error(
+              `Can't set computation inputs without active computation on
+              consortium ${consortiumId}`
+            );
+          }
+
+          return Promise.all([
+            consortium,
+            computations.get(consortium.activeComputationId),
+          ]);
+        })
+        .then(([consortium, computation]) => {
+          // TODO: Add model prop accessor method to avoid ridiculous checks
+          if (
+            !computation ||
+            !('inputs' in computation) ||
+            !Array.isArray(computation.inputs) ||
+            !computation.inputs.length
+          ) {
+            throw new Error(
+              `Couldn't find inputs for computation ${computation._id}`
+            );
+          }
+
+          let activeCompInputs = consortium.activeComputationInputs;
+
+          // TODO: Figure out better `activeComputationInputs` initializiation.
+          // Place on the model?
+          if (!Array.isArray(activeCompInputs) || !activeCompInputs.lenght) {
+            activeCompInputs = [[]];
+          }
+
+          // TODO: Don't lock to first index!
+          if (activeCompInputs[0].length < fieldIndex) {
+            // Fill with empty arrays:
+            [].push.apply(
+              activeCompInputs[0],
+              map(Array(fieldIndex - activeCompInputs[0].length), () => [])
+            );
+          }
+
+          activeCompInputs[0][fieldIndex] = values;
+
+          consortium.activeComputationInputs = activeCompInputs;
 
           return consortia.save(consortium);
         });
