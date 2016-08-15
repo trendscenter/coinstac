@@ -1,8 +1,6 @@
 /*
  * @module actions/loading
  */
-import toArray from 'lodash/toArray';
-
 let asyncLoadingCallCount = 0;
 
 const LOADING_START = 'LOADING_START';
@@ -28,8 +26,7 @@ export const applyAsyncLoading = function applyAsyncLoading(fn) {
    * stores the action creator's inputs in the closure for when redux execs it
    * @private
    */
-  return function wrappedActionCreator() {
-    const args = toArray(arguments); // eslint-disable-line
+  return function wrappedActionCreator(...args) {
     return (dispatch) => {
       ++asyncLoadingCallCount;
       const currCount = asyncLoadingCallCount;
