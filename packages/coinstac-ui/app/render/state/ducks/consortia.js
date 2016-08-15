@@ -1,5 +1,6 @@
 import app from 'ampersand-app';
 import { applyAsyncLoading } from './loading';
+import { clone } from 'lodash';
 
 export const DO_DELETE_CONSORTIA = 'DO_DELETE_CONSORTIA';
 
@@ -95,9 +96,10 @@ export const setActiveComputation = applyAsyncLoading(
 
       return consortia.get(consortiumId)
         .then(consortium => {
-          consortium.activeComputationId = computationId;
+          const myConsortium = clone(consortium);
+          myConsortium.activeComputationId = computationId;
 
-          return consortia.save(consortium);
+          return consortia.save(myConsortium);
         });
     };
   }
