@@ -13,7 +13,7 @@ module.exports = () => {
   });
   electronVersion = electronVersion.match(/v(\d+\.\d+\.\d+)/)[1];
   electronABI = electronABI.match(/(\d+)/)[1];
-  exec(`npm rebuild --runtime=electron --target=${electronVersion} --disturl=https://atom.io/download/atom-shell --abi=${electronABI}`)
+  return exec(`npm rebuild --runtime=electron --target=${electronVersion} --disturl=https://atom.io/download/atom-shell --abi=${electronABI}`)
   .then(res => {
     console.log(`Done building native modules: ${res}`); // eslint-disable-line no-console
   })
