@@ -1,29 +1,32 @@
 import Notify from './notification';
-import React, { PropTypes } from 'react';
+import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
 
-function App(props) {
-  const isLoading = props.loading.isLoading;
-  return (
-    <div className="app">
-      <ul id="spinner" className={isLoading ? 'is-loading' : ''}>
-        <li></li>
-        <li></li>
-        <li></li>
-        <li></li>
-      </ul>
+class App extends Component { // eslint-disable-line react/prefer-stateless-function
+  render() {
+    const { children, loading: { isLoading, wip } } = this.props;
 
-      {props.children}
+    return (
+      <div className="app">
+        <ul id="spinner" className={isLoading ? 'is-loading' : ''}>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+        </ul>
 
-      <ul id="loading_list">
-        {Object.keys(props.loading.wip).map((loadingKey, ndx) => {
-          return (<li key={ndx}>{loadingKey}</li>);
-        })}
-      </ul>
+        {children}
 
-      <Notify />
-    </div>
-  );
+        <ul id="loading_list">
+          {Object.keys(wip).map((loadingKey, ndx) => {
+            return (<li key={ndx}>{loadingKey}</li>);
+          })}
+        </ul>
+
+        <Notify />
+      </div>
+    );
+  }
 }
 
 App.displayName = 'App';

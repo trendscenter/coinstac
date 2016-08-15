@@ -1,8 +1,7 @@
 import app from 'ampersand-app';
-import clone from 'lodash/clone';
+import { clone, noop } from 'lodash';
 import { connect } from 'react-redux';
 import React, { Component, PropTypes } from 'react';
-import noop from 'lodash/noop';
 
 import { runComputation } from '../../state/ducks/bg-services';
 import { addProject } from '../../state/ducks/projects';
