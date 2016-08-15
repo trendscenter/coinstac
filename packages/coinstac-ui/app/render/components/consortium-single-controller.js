@@ -14,6 +14,7 @@ import {
   joinConsortium,
   leaveConsortium,
   setActiveComputation,
+  setComputationInputs,
 } from '../state/ducks/consortia';
 import {
   fetch as fetchRemoteResults,
@@ -27,6 +28,7 @@ class ConsortiumSingleController extends Component {
     this.addUser = this.addUser.bind(this);
     this.removeUser = this.removeUser.bind(this);
     this.updateComputation = this.updateComputation.bind(this);
+    this.updateComputationField = this.updateComputationField.bind(this);
   }
 
   componentWillMount() {
@@ -65,6 +67,26 @@ class ConsortiumSingleController extends Component {
     dispatch(setActiveComputation(consortiumId, computationId));
   }
 
+  /**
+   * Handle computation field updates.
+   *
+   * @todo This is coded specifically for the ridge-regression example. Make it
+   * more flexible.
+   *
+   * @param {Number} fieldIndex Computation inputs' array index of field.
+   * @param {Array} values
+   */
+  updateComputationField(fieldIndex, values) {
+    const { consortium, dispatch } = this.props;
+
+    if (consortium && consortium.activeComputationId) {
+      dispatch(setComputationInputs(consortium._id, fieldIndex, values))
+        .catch(error => {
+          app.notify('error', error.message);
+        });
+    }
+  }
+
   removeUser(username) {
     const { dispatch, consortium: { _id: consortiumId } } = this.props;
 
@@ -101,6 +123,7 @@ class ConsortiumSingleController extends Component {
         consortium={consortium}
         user={user}
         updateComputation={this.updateComputation}
+        updateComputationField={this.updateComputationField}
         isMember={consortium.users.some(un => un === username)}
         isOwner={consortium.owners.some(un => un === username)}
         removeUser={this.removeUser}

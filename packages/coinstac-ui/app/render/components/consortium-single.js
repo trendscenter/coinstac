@@ -50,7 +50,8 @@ class ConsortiumSingle extends Component {
       user,
     } = this.props;
 
-    const isOwner = owners.some(own => own === user.username);
+    const isOwner = owners.indexOf(user.username) > -1;
+    let computationFields;
     let helpBlock;
 
     if (!isOwner) {
@@ -61,25 +62,114 @@ class ConsortiumSingle extends Component {
       );
     }
 
+    if (activeComputationId) {
+      const { inputs } = computations.find(c => {
+        return c._id === activeComputationId;
+      });
+
+      if (inputs && Array.isArray(inputs) && inputs.length) {
+        computationFields = this.renderComputationFields(inputs[0]);
+      }
+    }
+
     return (
-      <FormGroup controlId="formControlsSelect">
-        <ControlLabel srOnly>Analysis</ControlLabel>
-        <FormControl
-          componentClass="select"
-          disabled={!isOwner}
-          onChange={updateComputation}
-          placeholder="Select group analysis/computation"
-          value={activeComputationId || 0}
-        >
-          <option disabled key="0">
-            Select group analysis/computation
-          </option>
-          {computations.map(({ _id, name, version }) => {
-            return <option key={_id} value={_id}>{name}@{version}</option>;
-          })}
-        </FormControl>
-        {helpBlock}
-      </FormGroup>
+      <div>
+        <FormGroup controlId="formControlsSelect">
+          <ControlLabel srOnly>Analysis</ControlLabel>
+          <FormControl
+            componentClass="select"
+            disabled={!isOwner}
+            onChange={updateComputation}
+            placeholder="Select group analysis/computation"
+            value={activeComputationId || 0}
+          >
+            <option disabled key="0">
+              Select group analysis/computation
+            </option>
+            {computations.map(({ _id, name, version }) => {
+              return <option key={_id} value={_id}>{name}@{version}</option>;
+            })}
+          </FormControl>
+          {helpBlock}
+        </FormGroup>
+        {computationFields}
+      </div>
+    );
+  }
+
+  renderComputationFields(fields) {
+    const {
+      consortium: { activeComputationInputs, owners },
+      updateComputationField,
+      user,
+    } = this.props;
+    const isOwner = owners.indexOf(user.username) > -1;
+
+    let activeInputs;
+
+    // TODO: Don't lock to first index
+    // TODO: Ugh, checks
+    if (
+      activeComputationInputs &&
+      Array.isArray(activeComputationInputs) &&
+      activeComputationInputs.length &&
+      Array.isArray(activeComputationInputs[0])
+    ) {
+      activeInputs = activeComputationInputs[0];
+    }
+
+    return (
+      <div>
+        {fields.map(({ help, label, values }, fieldIndex) => {
+          let value;
+
+          if (
+            activeInputs &&
+            activeInputs[fieldIndex] &&
+            activeInputs[fieldIndex].length
+          ) {
+            value = values.reduce((indicies, item, index) => {
+              return activeInputs[fieldIndex].indexOf(item) > -1 ?
+                indicies.concat(index) :
+                indicies;
+            }, []);
+          }
+
+          // TODO: Support multiple field types
+          const controlProps = {
+            componentClass: 'select',
+            disabled: !isOwner,
+            multiple: true,
+            onChange: event => {
+              const options = event.target.options;
+              const selectedValues = [];
+
+              for (let i = 0, il = options.length; i < il; i++) {
+                if (options[i].selected) {
+                  selectedValues.push(values[parseInt(options[i].value, 10)]);
+                }
+              }
+              updateComputationField(fieldIndex, selectedValues);
+            },
+            value,
+          };
+
+          return (
+            <FormGroup
+              controlId={`consortiumSingleCompField${fieldIndex}`}
+              key={fieldIndex}
+            >
+              <ControlLabel>{label}</ControlLabel>
+              <FormControl {...controlProps}>
+                {values.map((value, index) => {
+                  return <option key={index} value={index}>{value}</option>;
+                })}
+              </FormControl>
+              <HelpBlock>{help}</HelpBlock>
+            </FormGroup>
+          );
+        })}
+      </div>
     );
   }
 
@@ -181,6 +271,7 @@ ConsortiumSingle.propTypes = {
   loading: PropTypes.object.isRequired,
   user: PropTypes.object.isRequired,
   updateComputation: PropTypes.func.isRequired,
+  updateComputationField: PropTypes.func.isRequired,
   remoteResults: PropTypes.array.isRequired,
   removeUser: PropTypes.func.isRequired,
 };
