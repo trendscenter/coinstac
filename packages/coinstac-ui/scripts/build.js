@@ -3,9 +3,7 @@ const packager = prom(require('electron-packager'));
 const zip = require('tar.gz');
 const fs = require('fs');
 const os = require('os');
-const rebuild = require('electron-rebuild');
-const electron = require('electron-prebuilt');
-const childProcess = require('child_process');
+const buildNative = require('./utils/build-native.js');
 
 const options = {
   asar: true,
@@ -16,20 +14,6 @@ const options = {
   prune: true,
 };
 
-const buildNative = () => {
-  return rebuild.shouldRebuildNativeModules(electron)
-  .then(should => {
-    if (should) {
-      let electronVersion = childProcess.execSync(`${electron} --version`, {
-        encoding: 'utf8',
-      });
-      electronVersion = electronVersion.match(/v(\d+\.\d+\.\d+)/)[1];
-
-      return rebuild.installNodeHeaders(electronVersion)
-      .then(() => rebuild.rebuildNativeModules(electronVersion, `${__dirname}/../node_modules`));
-    }
-  });
-};
 // TODO: build mult arch when possible
 buildNative()
 .then(() => {
