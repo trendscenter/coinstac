@@ -79,14 +79,13 @@ if (process.env.NODE_ENV === 'development') {
 
   // Massage configuration for hot module replacement:
   config.output.publicPath = `http://localhost:${port}/`;
+  config.plugins.push(new webpack.NoErrorsPlugin());
   config.plugins.push(new webpack.HotModuleReplacementPlugin());
-
 
   config.entry.unshift(
     `webpack-dev-server/client?http://localhost:${port}`,
     'webpack/hot/only-dev-server'
   );
-
 
   /**
    * Remove react and redux from externals to make HMR easier.
