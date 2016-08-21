@@ -42,8 +42,11 @@ class DBListener extends EventEmitter {
    */
   destroy() {
     this.removeAllListeners();
-    this.changes.removeAllListeners();
-    this.changes.cancel();
+
+    return new Promise(resolve => {
+      this.changes.on('complete', resolve);
+      this.changes.cancel();
+    });
   }
 }
 

@@ -183,12 +183,17 @@ class PipelineRunnerPool extends Base {
     })
     .then(() => { // purge all listeners
       this.events.removeAllListeners();
+      Pouchy.PouchDB.removeAllListeners();
+
       /* istanbul ignore else */
       if (this.consortiaListener) {
-        this.consortiaListener.destroy();
+        return this.consortiaListener.destroy();
       }
-      values(this.resultsListeners).forEach(listener => listener.destroy());
-      Pouchy.PouchDB.removeAllListeners();
+    })
+    .then(() => Promise.all(values(this.resultsListeners).map(listener => {
+      return listener.destroy();
+    })))
+    .then(() => {
       delete this.resultsListeners;
     })
     .then(() => this.dbRegistry.destroy())
@@ -444,8 +449,9 @@ class PipelineRunnerPool extends Base {
       if (this.listenTo) {
         this.listenTo = without(this.listenTo, id);
       }
-      this.resultsListeners[db.name].destroy();
-      return db.destroy();
+
+      return this.resultsListeners[db.name].destroy()
+        .then(() => db.destroy());
     }));
   }
 
