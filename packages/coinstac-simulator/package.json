@@ -32,7 +32,7 @@
     "commander": "^2.9.0",
     "lodash": "^4.5.1",
     "pouchdb-adapter-memory": "^5.4.3",
-    "pouchy": "^10.0.0",
+    "pouchy": "^10.1.0",
     "spawn-pouchdb-server": "^3.3.1",
     "winston": "^2.2.0"
   },
