@@ -249,14 +249,10 @@ module.exports = {
     },
 
     teardown: function() {
-      // https://github.com/hoodiehq/spawn-pouchdb-server/issues/41
-      return bluebird.delay(200)
-      .then(() => {
-        return new Promise((res) => {
-          this.server.stop((err) => {
-            if (err) { fail(err.message); }
-            res();
-        });
+      return new Promise((res) => {
+        this.server.stop((err) => {
+          if (err) { fail(err.message); }
+          res();
         });
       });
     }
