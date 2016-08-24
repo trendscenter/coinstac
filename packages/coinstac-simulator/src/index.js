@@ -99,7 +99,7 @@ const exportList = {
 
 // Ensure all processes are killed
 process.on('exit', () => {
-  flatten(values(processes)).forEach(p => p.kill());
+  flatten(values(processes)).forEach(p => p && p.kill());
 });
 
 module.exports = Object.assign(exportList, fileLoader);
