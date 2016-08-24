@@ -1,6 +1,7 @@
 'use strict';
 
-require('./handle-errors')();
+require('./handle-errors');
+
 const poolInitializer = require('./pool-initializer');
 const common = require('coinstac-common');
 const stubComputationToRegistry = require('./stub-computation-to-registry');

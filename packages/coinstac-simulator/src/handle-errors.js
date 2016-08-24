@@ -1,19 +1,24 @@
 'use strict';
+
+require('trace');
+require('clarity');
+
+Error.stackTraceLimit = Infinity;
+
 const logger = require('./logger');
 
-const fail = function fail(err) {
-  const emptyError = new Error([
-    'expected an Error instance.  this means that an uncaughtExpection',
-    'occurred, and subsequently a falsy value was thrown vs the Error',
-  ].join(' '));
-  const error = err || emptyError;
+/**
+ * {@link https://nodejs.org/api/process.html#process_event_uncaughtexception}
+ */
+process.on('uncaughtExpection', error => {
   logger.error(error);
-  logger.error(error.stack);
   process.exit(1);
-};
+});
 
-module.exports = function registerErrorHandlers() {
-  process.on('uncaughtExpection', fail);
-  process.on('unhandledRejection', fail);
-  Error.stackTraceLimit = Infinity;
-};
+/**
+ * {@link https://nodejs.org/api/process.html#process_event_unhandledrejection}
+ */
+process.on('unhandledRejection', (reason, p) => {
+  logger.error('Unhandled Rejection at: Promise', p, 'reason:', reason);
+  process.exit(1);
+});

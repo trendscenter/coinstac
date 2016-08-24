@@ -3,9 +3,9 @@
 /**
  * @module simulator
  */
+require('./handle-errors');
 
 const path = require('path');
-const handleAsyncErrors = require('./handle-errors')(); // eslint-disable-line
 const logger = require('./logger');
 const bootComputeServers = require('./boot-compute-servers');
 const bootClients = require('./boot-clients');

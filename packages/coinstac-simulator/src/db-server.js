@@ -5,7 +5,8 @@
  * @module db-server
  */
 
-require('./handle-errors')();
+require('./handle-errors');
+
 const pdbs = require('spawn-pouchdb-server');
 const cp = require('child_process');
 const pdbsConfig = require('./.pouchdb-server-config');

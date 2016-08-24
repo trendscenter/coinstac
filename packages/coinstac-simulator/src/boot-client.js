@@ -5,7 +5,8 @@
  * @module boot-client
  */
 
-require('./handle-errors')();
+require('./handle-errors');
+
 const poolInitializer = require('./pool-initializer');
 const common = require('coinstac-common');
 const User = common.models.User;
