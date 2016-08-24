@@ -5,7 +5,8 @@
  * @module boot-compute-servers
  */
 
-require('./handle-errors')();
+require('./handle-errors');
+
 const cp = require('child_process');
 const chalk = require('chalk');
 const path = require('path');
