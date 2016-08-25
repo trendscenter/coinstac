@@ -33,10 +33,10 @@
     "commander": "^2.9.0",
     "csv-load-sync": "^1.0.0",
     "glob": "^7.0.6",
-    "lodash": "^4.5.1",
+    "lodash": "^4.15.0",
     "pouchdb-adapter-memory": "^5.4.3",
     "pouchy": "^10.1.0",
-    "spawn-pouchdb-server": "^3.3.1",
+    "spawn-pouchdb-server": "^3.3.2",
     "trace": "^2.3.3",
     "winston": "^2.2.0"
   },
@@ -44,7 +44,7 @@
     "gh-pages": "^0.11.0",
     "jsdoc": "^3.4.0",
     "minami": "^1.1.1",
-    "nyc": "^6.4.4",
+    "nyc": "^8.1.0",
     "tape": "^4.6.0"
   }
 }
