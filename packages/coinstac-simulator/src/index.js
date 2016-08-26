@@ -45,8 +45,8 @@ const exportList = {
     process.chdir(path.resolve(__dirname, '..'));
     // ^because spawn-pouchdb-server makes naughty assumptions :/
     return dbServer.setup(declPath)
+    .then(() => logger.info('db server up'))
     .then(() => process.chdir(cwd))
-
     // boot our central compute server
     .then(() => bootComputeServers(declPath))
     .then(computeServers => {
