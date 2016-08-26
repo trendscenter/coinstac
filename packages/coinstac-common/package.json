@@ -45,6 +45,7 @@
     "pouchdb-adapter-memory": "^5.4.3",
     "semver": "^5.1.0",
     "sinon": "^1.17.3",
+    "spawn-pouchdb-server": "^3.3.1",
     "tape": "^4.4.0",
     "trace": "^2.3.0"
   },
