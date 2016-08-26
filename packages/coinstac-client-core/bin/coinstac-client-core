@@ -2,11 +2,11 @@
 'use strict';
 
 const assign = require('lodash/assign');
+const common = require('coinstac-common');
 const CoinstacClient = require('../src/index');
 const DBRegistry = require('coinstac-common').services.dbRegistry.DBRegistry;
 const dropRight = require('lodash/dropRight');
 const flatten = require('lodash/flatten');
-const getSyncedDatabase = require('../src/utils/get-synced-database');
 const glob = require('glob');
 const inquirer = require('inquirer');
 const last = require('lodash/last');
@@ -18,6 +18,8 @@ const Project = require('coinstac-common').models.Project;
 const Storage = require('dom-storage');
 const url = require('url');
 const winston = require('winston');
+
+const getSyncedDatabase = common.utils.getSyncedDatabase;
 
 // PouchDB 5.4.x requires the memory plugin
 DBRegistry.Pouchy.plugin(pouchDBAdapterMemory);
