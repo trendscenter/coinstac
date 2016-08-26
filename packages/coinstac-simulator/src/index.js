@@ -11,6 +11,7 @@ const bootComputeServers = require('./boot-compute-servers');
 const bootClients = require('./boot-clients');
 const dbServer = require('./db-server');
 const flatten = require('lodash/flatten');
+const noop = require('lodash/noop');
 const values = require('lodash/values');
 const fileLoader = require('./file-loader');
 
@@ -44,18 +45,23 @@ const exportList = {
     process.chdir(path.resolve(__dirname, '..'));
     // ^because spawn-pouchdb-server makes naughty assumptions :/
     return dbServer.setup(declPath)
-    .then(() => logger.info('db server up'))
     .then(() => process.chdir(cwd))
+
     // boot our central compute server
     .then(() => bootComputeServers(declPath))
-    .then((computeServers) => { processes.remote = computeServers[0]; })
-    .then(() => logger.info('compute server up'))
+    .then(computeServers => {
+      processes.remote = computeServers[0];
+      logger.info('compute server up');
+    })
+
     // boot user machines, and kickoff first computation
     .then(() => bootClients(declPath))
-    .then((userProcesses) => { processes.local = userProcesses; })
-    .then(() => logger.info('clients up'))
-    .then(() => processes.local.forEach((proc) => proc.send({ kickoff: true })))
-    .then(() => this.teardown());
+    .then(userProcesses => {
+      processes.local = userProcesses;
+      logger.info('clients up');
+      processes.local.forEach(proc => proc.send({ kickoff: true }));
+      return this.teardown();
+    });
   },
 
   /**
@@ -93,7 +99,7 @@ const exportList = {
 
 // Ensure all processes are killed
 process.on('exit', () => {
-  dbServer.teardown();
+  dbServer.teardown().catch(noop);
   flatten(values(processes)).forEach(p => p && p.kill());
 });
 
