@@ -70,9 +70,16 @@ const kickoff = function kickoff() {
   const isInitiator = username === usernames[0];
   // get consortium we're working in the context of
   return consortiaDB.all()
-  .then((docs) => { consortiumDoc = docs[0]; })
-  // get computation we're working in the context of
-  .then(() => computationDB.all())
+  .then(docs => {
+    if (!docs.length) {
+      throw new Error('Consortia DB has no documents');
+    }
+
+    consortiumDoc = docs[0];
+
+    // get computation we're working in the context of
+    return computationDB.all();
+  })
   .then((docs) => { computationDoc = docs[0]; })
   // wait for remote result if we are _not_ the initiator to begin our kickoff
   .then(() => {
