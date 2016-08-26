@@ -24,6 +24,8 @@ const RemotePipelineRunnerPool =
 const User = require('./models/user');
 const computationRegistry = require('./services/computation-registry-factory');
 const dbRegistry = require('./services/db-registry');
+const getSyncedDatabase = require('./utils/get-synced-database');
+
 
 module.exports = {
   helpers: {
@@ -62,5 +64,8 @@ module.exports = {
   services: {
     dbRegistry,
     computationRegistry,
+  },
+  utils: {
+    getSyncedDatabase,
   },
 };
