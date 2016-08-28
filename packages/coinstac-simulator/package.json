@@ -38,6 +38,7 @@
     "lodash": "^4.15.0",
     "pouchdb-adapter-memory": "^5.4.3",
     "pouchy": "^10.1.0",
+    "retry": "^0.10.0",
     "spawn-pouchdb-server": "^3.3.2",
     "trace": "^2.3.3",
     "winston": "^2.2.0"
