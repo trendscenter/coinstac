@@ -1,9 +1,9 @@
 'use strict';
 
-require('./handle-errors');
+require('./utils/handle-errors');
 
 const cp = require('child_process');
-const logger = require('./logger');
+const logger = require('./utils/logger');
 const path = require('path');
 
 /**
