@@ -5,12 +5,12 @@
  * @module boot-compute-servers
  */
 
-require('./handle-errors');
+require('./utils/handle-errors');
 
 const cp = require('child_process');
 const chalk = require('chalk');
 const path = require('path');
-const logger = require('./logger');
+const logger = require('./utils/logger');
 const userChatOK = chalk.blue;
 
 module.exports = function bootComputeServers(declPath) {

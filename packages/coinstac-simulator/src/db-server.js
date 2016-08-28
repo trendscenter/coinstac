@@ -5,12 +5,12 @@
  * @module db-server
  */
 
-require('./handle-errors');
+require('./utils/handle-errors');
 
 const cloneDeep = require('lodash/cloneDeep');
 const common = require('coinstac-common');
 const dbConf = require('./.pouchdb-server-config');
-const logger = require('./logger');
+const logger = require('./utils/logger');
 const pdbs = require('spawn-pouchdb-server');
 const pdbsConfig = require('./.pouchdb-server-config');
 const Pouchy = require('pouchy');

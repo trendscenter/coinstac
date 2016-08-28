@@ -5,7 +5,7 @@
  * @module boot-client
  */
 
-require('./handle-errors');
+require('./utils/handle-errors');
 
 const poolInitializer = require('./pool-initializer');
 const common = require('coinstac-common');
@@ -13,7 +13,7 @@ const User = common.models.User;
 const stubComputationToRegistry = require('./stub-computation-to-registry');
 const LocalPipelineRunnerPool = common.models.pipeline.runner.pool.LocalPipelineRunnerPool;
 const RemoteComputationResult = common.models.computation.RemoteComputationResult;
-const logger = require('./logger');
+const logger = require('./utils/logger');
 
 let pool;
 let decl;

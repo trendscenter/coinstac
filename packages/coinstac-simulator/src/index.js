@@ -3,10 +3,10 @@
 /**
  * @module simulator
  */
-require('./handle-errors');
+require('./utils/handle-errors');
 
 const path = require('path');
-const logger = require('./logger');
+const logger = require('./utils/logger');
 const bootComputeServers = require('./boot-compute-servers');
 const bootClients = require('./boot-clients');
 const dbServer = require('./db-server');

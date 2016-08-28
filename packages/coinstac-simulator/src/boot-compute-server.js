@@ -1,12 +1,12 @@
 'use strict';
 
-require('./handle-errors');
+require('./utils/handle-errors');
 
 const poolInitializer = require('./pool-initializer');
 const common = require('coinstac-common');
 const stubComputationToRegistry = require('./stub-computation-to-registry');
 const RemotePipelineRunnerPool = common.models.pipeline.runner.pool.RemotePipelineRunnerPool;
-const logger = require('./logger');
+const logger = require('./utils/logger');
 const lifecycle = require('./lifecycle-runner');
 
 /**
