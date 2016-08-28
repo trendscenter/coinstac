@@ -32,6 +32,7 @@
     "clarity": "^1.0.2",
     "coinstac-common": "^2.0.6",
     "commander": "^2.9.0",
+    "convict": "^1.4.0",
     "csv-load-sync": "^1.0.0",
     "glob": "^7.0.6",
     "lodash": "^4.15.0",

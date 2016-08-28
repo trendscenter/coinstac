@@ -1,0 +1,13 @@
+{
+  "backend": false,
+  "config": {
+    "file": false
+  },
+  "log": {
+    "file": false,
+    "level": "info"
+  },
+  "port": 5987,
+  "timeout": 10000,
+  "verbose": false
+}
