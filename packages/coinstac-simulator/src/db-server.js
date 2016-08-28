@@ -9,10 +9,9 @@ require('./utils/handle-errors');
 
 const cloneDeep = require('lodash/cloneDeep');
 const common = require('coinstac-common');
-const dbConf = require('./.pouchdb-server-config');
+const config = require('./utils/config');
 const logger = require('./utils/logger');
 const pdbs = require('spawn-pouchdb-server');
-const pdbsConfig = require('./.pouchdb-server-config');
 const Pouchy = require('pouchy');
 const url = require('url');
 
@@ -29,7 +28,7 @@ function addDocument(pathname, doc) {
   const dbUrl = url.format({
     hostname: 'localhost',
     pathname,
-    port: dbConf.port,
+    port: config.port,
     protocol: 'http',
   });
 
@@ -59,7 +58,7 @@ function setup(declPath) {
   return new Promise((resolve, reject) => {
     // spawn-pouchdb-server mutates user input >:(
     // https://github.com/hoodiehq/spawn-pouchdb-server/pull/33
-    pdbs(cloneDeep(pdbsConfig), (error, srv) => {
+    pdbs(cloneDeep(config), (error, srv) => {
       if (error) {
         reject(error);
       } else {
@@ -69,7 +68,7 @@ function setup(declPath) {
     });
   })
     .then(() => {
-      logger.info(`pouchdb-server running on http://localhost:${pdbsConfig.port}`);
+      logger.info(`pouchdb-server running on http://localhost:${config.port}`);
       const users = decl.users.map(u => u.username);
       const defaultConsortium = new Consortium({
         _id: `testconsortiumid${Date.now()}`,
