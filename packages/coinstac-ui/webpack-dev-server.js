@@ -1,21 +1,21 @@
 'use strict';
 
-const Dashboard = require('webpack-dashboard');
 const DashboardPlugin = require('webpack-dashboard/plugin');
 const webpack = require('webpack');
 const WebpackDevServer = require('webpack-dev-server');
 
 const config = require('./webpack.config');
-const dashboard = new Dashboard();
+const compiler = webpack(config);
 const port = config.port;
 
-config.plugins.push(new DashboardPlugin(dashboard.setData));
+compiler.apply(new DashboardPlugin({
+  port: 3001,
+}));
 
-new WebpackDevServer(webpack(config), {
+new WebpackDevServer(compiler, {
   publicPath: config.output.publicPath,
   hot: true,
   historyApiFallback: true,
-  quiet: true,
 }).listen(port, 'localhost', err => {
   /* eslint-disable no-console */
   if (err) {
