@@ -1,6 +1,6 @@
 {
   "name": "coinstac-simulator",
-  "version": "2.0.5",
+  "version": "2.0.6",
   "description": "simulate a COINSTAC DecentralizedComputation run",
   "main": "src/index.js",
   "bin": "src/cli/index.js",
@@ -28,7 +28,7 @@
   "homepage": "https://github.com/MRN-Code/coinstac-simulator#readme",
   "dependencies": {
     "chalk": "^1.1.1",
-    "coinstac-common": "^2.0.5",
+    "coinstac-common": "^2.0.6",
     "commander": "^2.9.0",
     "lodash": "^4.5.1",
     "pouchdb-adapter-memory": "^5.4.3",
