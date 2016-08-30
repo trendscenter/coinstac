@@ -4,7 +4,7 @@
 
 _Decentralized Analyses Made Easy_
 
-<img src="https://github.com/MRN-Code/coinstac-common/blob/master/img/coinstac.png" height="75px" />
+<img src="https://raw.githubusercontent.com/MRN-Code/coinstac/master/img/coinstac.png" height="75px">
 
 _Collaborative Informatics and Neuroimaging Suite Toolkit for Anonymous Computation, User Interface_
 

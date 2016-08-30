@@ -1,6 +1,6 @@
 # coinstac-simulator
 
-<img src="https://raw.githubusercontent.com/MRN-Code/coinstac-common/master/img/coinstac.png" height="75px" />
+<img src="https://raw.githubusercontent.com/MRN-Code/coinstac/master/img/coinstac.png" height="75px">
 
 [ ![Codeship Status for MRN-Code/coinstac-simulator](https://codeship.com/projects/370d2330-d2b2-0133-5da2-5e07c373472b/status?branch=master)](https://codeship.com/projects/141922)
 

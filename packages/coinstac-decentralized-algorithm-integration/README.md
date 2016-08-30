@@ -1,6 +1,6 @@
 # coinstac-decentralized-algorithm-integration
 
-<img src="https://github.com/MRN-Code/coinstac-common/blob/master/img/coinstac.png" height="75px" />
+<img src="https://raw.githubusercontent.com/MRN-Code/coinstac/master/img/coinstac.png" height="75px">
 
 [ ![Codeship Status for MRN-Code/coinstac-decentralized-algorithm-integration](https://codeship.com/projects/52e2c720-b1b4-0133-6b78-66cd7c0bebc3/status?branch=master)](https://codeship.com/projects/133147)
 
