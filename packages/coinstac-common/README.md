@@ -30,3 +30,7 @@ const pipeline = new Pipeline({
 });
 pipeline.run((err, rslt) => console.log(rslt)); // ==> { foo: 'bar' }
 ```
+
+## License
+
+MIT. See [LICENSE](./LICENSE) for details.

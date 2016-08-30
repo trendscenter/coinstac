@@ -37,3 +37,7 @@ right there at your desk.
 ## it's not working
 
 file an issue!  we will try and be prompt, and even try to help you with your algorithms if necessary.
+
+# License
+
+MIT. See [LICENSE](./LICENSE) for details.

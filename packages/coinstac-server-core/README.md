@@ -77,4 +77,4 @@ $ coinstac-server-core --help
 
 ## License
 
-MIT. See [LICENSE](./LICENSE).
+MIT. See [LICENSE](./LICENSE) for details.

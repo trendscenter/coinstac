@@ -25,3 +25,7 @@ Production-ready binaries are not yet released.  COINSTAC is only available to b
 
 ### Development
 See [CONTRIBUTING](CONTRIBUTING.md) for development contribution
+
+## License
+
+MIT. See [LICENSE](./LICENSE) for details.
