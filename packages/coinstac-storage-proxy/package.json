@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/MRN-Code/coinstac-storage-proxy.git"
+    "url": "git+https://github.com/MRN-Code/coinstac.git"
   },
   "author": "NI Development - The Mind Research Network <nidev@mrn.org> (http://coins.mrn.org)",
   "contributors": [
@@ -21,9 +21,9 @@
   ],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/MRN-Code/coinstac-storage-proxy/issues"
+    "url": "https://github.com/MRN-Code/coinstac/issues"
   },
-  "homepage": "https://github.com/MRN-Code/coinstac-storage-proxy#readme",
+  "homepage": "https://github.com/MRN-Code/coinstac#readme",
   "devDependencies": {
     "gh-pages": "^0.11.0",
     "h2o2": "5.0.0",

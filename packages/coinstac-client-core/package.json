@@ -11,7 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/MRN-Code/coinstac-client-core.git"
+    "url": "git+https://github.com/MRN-Code/coinstac.git"
   },
   "keywords": [
     "coinstac"
@@ -26,9 +26,9 @@
   ],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/MRN-Code/coinstac-client-core/issues"
+    "url": "https://github.com/MRN-Code/coinstac/issues"
   },
-  "homepage": "https://github.com/MRN-Code/coinstac-client-core#readme",
+  "homepage": "https://github.com/MRN-Code/coinstac#readme",
   "dependencies": {
     "async": "^1.5.2",
     "atob": "^2.0.0",
