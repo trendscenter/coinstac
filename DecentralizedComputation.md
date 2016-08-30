@@ -1,4 +1,5 @@
-# design a decentralized computation
+# Design a Decentralized Computation
+
 A  [Decentralized Computation](http://mrn-code.github.io/coinstac/coinstac-common/DecentralizedComputation.html) is a [data type in coinstac-common](http://mrn-code.github.io/coinstac/coinstac-common/index.html). As a consortium leader or designer, your goal is to provide the content and algorithms for how pipelines, analyses, or general computations are run both on  consortium members' devices, as well as on a central compute server.
 
 a `DecentralizedComputation` is composed of three parts:

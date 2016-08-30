@@ -2,9 +2,7 @@
 
 <img src="https://raw.githubusercontent.com/MRN-Code/coinstac/master/img/coinstac.png" height="75px">
 
-[ ![Codeship Status for MRN-Code/coinstac-simulator](https://codeship.com/projects/370d2330-d2b2-0133-5da2-5e07c373472b/status?branch=master)](https://codeship.com/projects/141922)
-
-the official API documentation [lives here](http://mrn-code.github.io/coinstac-simulator/), albeit there's not much too it!
+COINSTAC simulator for computation runs. [Documentation](http://mrn-code.github.io/coinstac/).
 
 ## what
 

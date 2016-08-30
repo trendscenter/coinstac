@@ -1,15 +1,17 @@
 # coinstac-storage-proxy
 
-[ ![Codeship Status for MRN-Code/coinstac-storage-proxy](https://codeship.com/projects/9f952560-b95e-0133-c4ba-76946c995c7e/status?branch=master)](https://codeship.com/projects/135500)
+<img src="https://raw.githubusercontent.com/MRN-Code/coinstac/master/img/coinstac.png" height="75px">
 
-A Hapijs plugin that registers http endpoints to perform authentication and
-authorization of requests to the coinstac storage service (couchdb).
+COINSTAC hapi plugin for securing CouchDB. [Documentation](http://mrn-code.github.io/coinstac/).
+
+A [hapi](http://hapijs.com) plugin that registers HTTP endpoints to perform authentication and
+authorization of requests to the COINSTAC storage service (CouchDB).
 
 ## Installation
 
 ```
 # install from git
-npm i --save MRN-Code/coinstac-storage-proxy
+npm i --save coinstac-storage-proxy
 ```
 
 ## Use:

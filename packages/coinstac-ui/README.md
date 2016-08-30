@@ -1,17 +1,8 @@
 # coinstac-ui
 
-[ ![Codeship Status for MRN-Code/coinstac-ui](https://codeship.com/projects/c103f910-09d2-0134-7828-0ed96050b2d1/status?branch=master)](https://codeship.com/projects/155385)
-
-_Decentralized Analyses Made Easy_
-
 <img src="https://raw.githubusercontent.com/MRN-Code/coinstac/master/img/coinstac.png" height="75px">
 
-_Collaborative Informatics and Neuroimaging Suite Toolkit for Anonymous Computation, User Interface_
-
-A research project by your friends @[MRN](http://www.mrn.org/).
-
-If you are looking for general information about COINSTAC, please visit [mrn-code/coinstac](https://github.com/mrn-code/coinstac).
-
+COINSTAC desktop application. [Documentation](http://mrn-code.github.io/coinstac/).
 
 ## About
 
