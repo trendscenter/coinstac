@@ -12,7 +12,8 @@
 <a href="https://github.com/MRN-Code/coinstac-common">.: browse code on github :.</a>
 
 # usage
-See the [official API docs](http://mrn-code.github.io/coinstac-common/index.html) (or source!) for full library capability.
+
+See the [official API docs](http://mrn-code.github.io/coinstac/coinstac-common/index.html) (or source!) for full library capability.
 
 Example:
 ```js
