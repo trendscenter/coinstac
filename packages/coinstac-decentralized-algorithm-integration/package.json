@@ -12,7 +12,7 @@
     "url": "git+https://github.com/MRN-Code/coinstac-distributed-algorithm-integration.git"
   },
   "author": "cdaringe",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/MRN-Code/coinstac-distributed-algorithm-integration/issues"
   },

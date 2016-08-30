@@ -9,3 +9,6 @@ COINSTAC business logic for clients.  Formally supports [coinstac-ui](https://gi
 ## documentation
 
 Formal documentation is [available here](http://mrn-code.github.io/coinstac-client-core/index.html).
+## License
+
+MIT. See [LICENSE](./LICENSE) for details.

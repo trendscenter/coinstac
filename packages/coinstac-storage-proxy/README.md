@@ -63,3 +63,7 @@ server.start();
 
 See `src/index.js` for a list of supported endpoints and how authorization is
 enforced.
+
+## License
+
+MIT. See [LICENSE](./LICENSE) for details.
