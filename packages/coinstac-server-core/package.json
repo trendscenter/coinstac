@@ -19,7 +19,14 @@
     "coinstac",
     "distributed"
   ],
-  "author": "Cory Reed <creed@mrn.org>",
+  "author": "NI Development - The Mind Research Network <nidev@mrn.org> (http://coins.mrn.org)",
+  "contributors": [
+    "Chris Dieringer <cdaringe@gmail.org>",
+    "Cory Reed <swashcap@gmail.com>",
+    "Ross Kelly <rkelly@mrn.org>",
+    "Drew Landis <landis.d@gmail.com>",
+    "Sergey Plis <splis@mrn.org>"
+  ],
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/MRN-Code/coinstac-server-core/issues"
