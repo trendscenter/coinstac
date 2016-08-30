@@ -1,7 +1,7 @@
 {
   "name": "coinstac-storage-proxy",
   "version": "2.0.6",
-  "description": "Hapi plugin that registers a route which proxies to couchdb after performing auth ",
+  "description": "COINSTAC hapi plugin for securing CouchDB.",
   "main": "src/index.js",
   "scripts": {
     "test": "nyc --reporter=lcov --check-coverage --lines=75 --functions=75 --branches=75 node test/",

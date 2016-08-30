@@ -1,7 +1,7 @@
 {
   "name": "coinstac-distributed-algorithm-integration",
   "version": "2.0.6",
-  "description": "demonstrate and test coinstac distributed analysis synchronization",
+  "description": "COINSTAC distributed analysis synchronization and testing.",
   "main": "src/runner/run.js",
   "scripts": {
     "test": "nyc --reporter=lcov --check-coverage --functions=90 --branches=90 node test/",

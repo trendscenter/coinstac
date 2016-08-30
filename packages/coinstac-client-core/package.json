@@ -1,7 +1,7 @@
 {
   "name": "coinstac-client-core",
   "version": "2.0.6",
-  "description": "exposes utilities for coinstac client node operation",
+  "description": "COINSTAC business logic for clients.",
   "main": "src/index.js",
   "bin": "./bin/coinstac-client-core",
   "scripts": {

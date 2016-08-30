@@ -145,13 +145,6 @@ Reusable pieces of COINSTAC shared by both the client and server.
 
 Core library for running local computations on a client.
 
-### [coinstac-distributed-algorithm-set](https://github.com/MRN-Code/coinstac-distributed-algorithm-set)
-
-* **Uses:**
-* **Used by:**
-
-A set of useful functions for algorithms.
-
 ### [coinstac-server-core](https://github.com/MRN-Code/coinstac/tree/master/packages/coinstac-server-core)
 
 * **Uses:** [coinstac-common](#coinstac-common)

@@ -1,7 +1,7 @@
 {
   "name": "coinstac-common",
   "version": "2.0.6",
-  "description": "COINSTAC utilities and models",
+  "description": "COINSTAC core functionality.",
   "main": "src/index.js",
   "directories": {
     "test": "test"

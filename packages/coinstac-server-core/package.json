@@ -1,7 +1,7 @@
 {
   "name": "coinstac-server-core",
   "version": "2.0.6",
-  "description": "COINSTAC’s core server functionality.",
+  "description": "COINSTAC core server functionality.",
   "main": "src/index.js",
   "bin": "bin/coinstac-server-core",
   "scripts": {
