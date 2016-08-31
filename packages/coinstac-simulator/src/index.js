@@ -13,6 +13,7 @@ const bootDBServer = require('./boot-db-server');
 const seedCentralDB = require('./seed-central-db');
 const flatten = require('lodash/flatten');
 const values = require('lodash/values');
+const fileLoader = require('./file-loader');
 
 /**
  * Processes.
@@ -30,12 +31,7 @@ const processes = {
   remote: null,
 };
 
-// Ensure all processes are killed
-process.on('exit', () => {
-  flatten(values(processes)).forEach(p => p.kill());
-});
-
-module.exports = {
+const exportList = {
   /**
    * @description boots the infrastructure required to run a simulation. this
    * includes a db server, computer server, and client processes for each client
@@ -100,3 +96,10 @@ module.exports = {
     });
   },
 };
+
+// Ensure all processes are killed
+process.on('exit', () => {
+  flatten(values(processes)).forEach(p => p.kill());
+});
+
+module.exports = Object.assign(exportList, fileLoader);
