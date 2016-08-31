@@ -13,6 +13,7 @@ const bootDBServer = require('./boot-db-server');
 const seedCentralDB = require('./seed-central-db');
 const flatten = require('lodash/flatten');
 const values = require('lodash/values');
+const fileLoader = require('./file-loader');
 
 /**
  * Processes.
@@ -99,4 +100,7 @@ module.exports = {
       });
     });
   },
+
+  // load in file loading utlilities
+  fileLoader,
 };
