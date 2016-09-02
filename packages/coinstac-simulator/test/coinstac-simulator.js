@@ -24,7 +24,7 @@ tape('gets declaration by path :: errors', t => {
     isDirectory: () => false,
   });
 
-  t.plan(10);
+  t.plan(11);
 
   mockery.enable();
   mockery.registerMock('non-object', 'random-string');
@@ -38,6 +38,10 @@ tape('gets declaration by path :: errors', t => {
   mockery.registerMock('bad-local', {
     computationPath: 'heyo',
     local: 'suppp',
+  });
+  mockery.registerMock('empty-local', {
+    computationPath: 'supp',
+    local: [],
   });
   mockery.registerMock('bad-remote', {
     computationPath: 'wat',
@@ -123,6 +127,16 @@ tape('gets declaration by path :: errors', t => {
           error.message.indexOf('have a \'local\' array') > -1,
           'Rejects with bad local property in declaration'
         );
+        return getDeclaration('empty-local');
+      }
+    )
+    .then(
+      () => t.fail('Resolves with empty local array in declaration'),
+      error => {
+        t.ok(
+          error.message.indexOf('have items in \'local\' array') > -1,
+          'Rejects with empty local array in declaration'
+        );
         return getDeclaration('bad-remote');
       }
     )
@@ -175,11 +189,29 @@ tape('gets declaration by path :: declaration rejections', t => {
 });
 
 tape('gets declaration by path', t => {
-  t.plan(4);
+  const getDeclaration = coinstacSimulator.getDeclaration;
 
-  coinstacSimulator.getDeclaration(
-    path.join(__dirname, 'mocks', 'good-declaration.js')
+  t.plan(5);
+
+  getDeclaration(
+    path.join(__dirname, 'mocks', 'good-declaration-1.js')
   )
+    .then(declaration => {
+      t.deepEqual(
+        declaration,
+        {
+          computationPath: './path/to/computation.js',
+          local: [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
+          remote: undefined,
+          verbose: false,
+        },
+        'expands local items via Array constructor'
+      );
+
+      return getDeclaration(
+        path.join(__dirname, 'mocks', 'good-declaration-2.js')
+      );
+    })
     .then(declaration => {
       t.equal(
         declaration.computationPath,
