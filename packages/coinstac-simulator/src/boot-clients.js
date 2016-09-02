@@ -9,14 +9,16 @@ const path = require('path');
 /**
  * Get ready client.
  *
- * @param {string} username
- * @param {string} declPath
- * @param {boolean} [verbose=false]
+ * @param {Object} params
+ * @param {string} params.computationPath
+ * @param {Object} [params.data] Declaration data for computation kickoff
+ * @param {string} params.username
+ * @param {boolean} [params.verbose=false]
  * @returns {Promise}
  */
-function getReadyClient(username, declPath, verbose) {
+function getReadyClient({ computationPath, data, username, verbose }) {
   return new Promise((resolve, reject) => {
-    const client = cp.fork(path.resolve(__dirname, './boot-client.js'), {
+    const client = cp.fork(path.join(__dirname, 'boot-client.js'), {
       cwd: process.cwd(),
       silent: true,
     });
@@ -47,7 +49,8 @@ function getReadyClient(username, declPath, verbose) {
 
     client.send({
       boot: {
-        declPath,
+        computationPath,
+        data,
         username,
       },
     });
@@ -55,22 +58,20 @@ function getReadyClient(username, declPath, verbose) {
 }
 
 /**
- * Boot clients.
- * @module
+ * Run clients booting.
  *
  * @param {string} declPath
  * @returns {Promise} Resolves with an array of forked client processes
  */
-function bootClients(declPath) {
-  const decl = require(declPath); // eslint-disable-line global-require
-  const usernames = typeof decl.users[0] === 'string' ?
-    decl.users :
-    decl.users.map(user => user.username);
-
-  return Promise.all(usernames.map(username => {
-    return getReadyClient(username, declPath, decl.verbose);
+function run({ computationPath, users, verbose }) {
+  return Promise.all(users.map(({ data, username }) => {
+    return getReadyClient({ computationPath, data, username, verbose });
   }));
 }
 
-module.exports = bootClients;
+/**
+ * Boot clients.
+ * @module
+ */
+module.exports = { run };
 
