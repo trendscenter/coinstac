@@ -5,9 +5,10 @@
  */
 require('./utils/handle-errors');
 
-const { fill, flatten, noop, uniqueId, values } = require('lodash');
+const { fill, flatten, noop, times, uniqueId, values } = require('lodash');
 const bluebird = require('bluebird');
 const fs = require('fs');
+const isPromise = require('is-promise');
 const path = require('path');
 
 const bootClients = require('./boot-clients');
@@ -70,6 +71,10 @@ const exportList = {
           throw new Error(
             `Expected declaration ${declarationPath} to have a 'local' array`
           );
+        } else if (!declaration.local.length) {
+          throw new Error(
+            `Expected declaration ${declarationPath} to have items in 'local' array`
+          );
         } else if (
           'remote' in declaration && !(declaration.remote instanceof Object)
         ) {
@@ -78,18 +83,24 @@ const exportList = {
           );
         }
 
-        // Resolve local and remote promises
-        const local = Promise.all(declaration.local.map(bluebird.props));
+        // Support empty arrays created by `Array(<number>)`
+        const local = declaration.local.every(l => typeof l === 'undefined') ?
+          times(declaration.local.length, () => ({})) :
+          Promise.all(declaration.local.map(l => {
+            return l instanceof Object && values(l).some(isPromise) ?
+              bluebird.props(l) :
+              l;
+          }));
+
         const remote = declaration.remote ?
           bluebird.props(declaration.remote) :
           undefined;
-
 
         return Promise.all([
           declaration.computationPath,
           local,
           remote,
-          declaration.verbose,
+          !!declaration.verbose,
         ]);
       })
       .then(([computationPath, local, remote, verbose]) => {

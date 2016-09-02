@@ -36,6 +36,7 @@
     "convict": "^1.4.0",
     "csv-load-sync": "^1.0.0",
     "glob": "^7.0.6",
+    "is-promise": "^2.1.0",
     "lodash": "^4.15.0",
     "pouchdb-adapter-memory": "^5.4.3",
     "pouchy": "^10.1.0",
