@@ -8,10 +8,8 @@
 require('./utils/handle-errors');
 
 const cp = require('child_process');
-const chalk = require('chalk');
 const path = require('path');
-const logger = require('./utils/logger');
-const userChatOK = chalk.blue;
+const { logger, getProcessLogger } = require('./utils/logging');
 
 module.exports = function bootComputeServers(declPath) {
   return new Promise((res, rej) => {
@@ -26,20 +24,19 @@ module.exports = function bootComputeServers(declPath) {
       return rej(new Error(msg)); // err if we don't receive ready
     });
     srv.send({ boot: { declPath } });
-    srv.on('error', (err) => logger.error(`process errored ${err.message}`));
-    srv.on('exit', (code) => {
+
+    server.on('error', (err) => logger.error(`process errored ${err.message}`));
+    server.on('exit', (code) => {
       if (code) {
         throw new Error(`${serverName} [${process.pid}]: exited with ${code}`);
       }
     });
-    srv.stdout.on('data', (data) => {
-      if (!decl.verbose) { return; }
-      const content = data.slice(0, -1);
-      logger.info(userChatOK(`${serverName} [${srv.pid}]: ${content}`));
-    });
-    srv.stderr.on('data', (data) => {
-      const content = data.slice(0, -1);
-      logger.error(`${serverName} [${srv.pid}]: ${content}`);
+
+    if (verbose) {
+      server.stdout.on('data', getProcessLogger(server, serverName));
+    }
+
+    server.stderr.on('data', getProcessLogger(server, serverName, 'error'));
     });
   });
 };

@@ -10,7 +10,7 @@ require('./utils/handle-errors');
 const cloneDeep = require('lodash/cloneDeep');
 const common = require('coinstac-common');
 const config = require('./utils/config');
-const logger = require('./utils/logger');
+const { logger } = require('./utils/logging');
 const pdbs = require('spawn-pouchdb-server');
 const Pouchy = require('pouchy');
 const url = require('url');

@@ -6,7 +6,7 @@
 require('./utils/handle-errors');
 
 const path = require('path');
-const logger = require('./utils/logger');
+const { logger } = require('./utils/logging');
 const bootComputeServers = require('./boot-compute-servers');
 const bootClients = require('./boot-clients');
 const dbServer = require('./db-server');
