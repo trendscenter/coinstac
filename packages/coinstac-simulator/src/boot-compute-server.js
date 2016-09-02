@@ -7,7 +7,6 @@ const common = require('coinstac-common');
 const stubComputationToRegistry = require('./stub-computation-to-registry');
 const RemotePipelineRunnerPool = common.models.pipeline.runner.pool.RemotePipelineRunnerPool;
 const { logger } = require('./utils/logging');
-const lifecycle = require('./lifecycle-runner');
 
 /**
  * @private
@@ -17,30 +16,32 @@ const lifecycle = require('./lifecycle-runner');
 /**
  * @function bootCentralComputeServer
  * pooler will auto-listen to consortium change events
- * @note central compute server will run in _this_ process
+ *
+ * @todo Figure out how to use `params.data` in this…scenario.
+ *
+ * @params {Object} params
+ * @params {string} params.computationPath
+ * @params {Object} [params.data]
  * @returns {Promise}
  */
-const boot = function boot(opts) {
-  const decl = require(opts.declPath); // eslint-disable-line global-require
-  const dComp = require(decl.computationPath); // eslint-disable-line global-require
+const boot = function boot({ computationPath, data }) { // eslint-disable-line no-unused-vars
+  const dComp = require(computationPath); // eslint-disable-line global-require
   const optsPatch = { dbRegistry: { isRemote: true } };
   let pool;
   return poolInitializer.getPoolOpts(optsPatch)
   .then((opts) => { pool = new RemotePipelineRunnerPool(opts); })
   .then(() => {
-    pool.events.on('error', (err) => logger.error(err.message));
+    pool.events.on('error', error => {
+      logger.error(error);
+      // TODO: Exit on pool error?
+      // process.exit(1);
+    });
     pool.events.on('computation:complete', (runId) => {
       logger.info('computation complete, run', runId);
-      return lifecycle('postRun', 'server', decl)
       // .then(() => pool.destroy()) // pool destroying is nice, but who cares. it's in mem only.
-      .then(() => process.exit(0))
-      .catch((err) => {
-        console.error(err.message); // eslint-disable-line
-        process.exit(1);
-      });
+      process.exit(0);
     });
   })
-  .then(() => lifecycle('preRun', 'server', decl))
   .then(() => pool.init())
   .then(() => stubComputationToRegistry({
     computation: dComp,
@@ -60,21 +61,3 @@ process.on('message', (opts) => {
     ].join(' '));
   }
 });
-
-// @NOTE the following is useful for debugging when running just a single process
-// vs letting the runner fire this as a child process
-// boot({
-//     decl: {
-//       usernames: [
-//             'chris',
-//             'runtang',
-//             'vince',
-//             'margaret'
-//         ],
-//         computationPath: require('path').resolve(__dirname, '../src/distributed/group-add'),
-//         verbose: true
-//     },
-// }, (err, r) => {
-//     if (err) throw err
-//     console.log('ok');
-// });

@@ -16,41 +16,67 @@ const RemoteComputationResult = common.models.computation.RemoteComputationResul
 const { logger } = require('./utils/logging');
 const retry = require('retry');
 
+/**
+ * Placeholder for user's data. This is used with
+ * @type {Object}
+ */
+let userData = {
+  kickoff: true,
+};
+
+let initiate = false;
 let pool;
-let decl;
 let username;
 
-const boot = function boot(opts) {
-  if (!opts.declPath || !opts.username) {
-    throw new ReferenceError('missing decl or username');
-  }
-  decl = require(opts.declPath); // eslint-disable-line global-require
-  username = opts.username;
-  const poolPatch = { dbRegistry: { isLocal: true } };
 
-  return poolInitializer.getPoolOpts(poolPatch)
-  .then((_opts) => {
-    const runnerOpts = Object.assign({}, _opts);
-    runnerOpts.user = new User({
-      username,
-      email: `${username}@simulating.org`,
-      password: 'dummypw',
-    });
-    pool = new LocalPipelineRunnerPool(runnerOpts);
-    pool.events.on('error', (err) => logger.error(err.message));
-    return pool.init()
+/**
+ * Boot client.
+ *
+ * @param {Object} params
+ * @param {string} params.computationPath
+ * @param {Object} [params.data]
+ * @param {boolean} [params.initiate=false] Whether the process should initiate
+ * the computation run.
+ * @param {string} params.username
+ * @returns {Promise}
+ */
+function boot({
+  computationPath,
+  data,
+  initiate: init,
+  username: uname,
+}) {
+  initiate = !!init;
+  username = uname;
+
+  if (data) {
+    userData = data;
+  }
+
+  return poolInitializer.getPoolOpts({ dbRegistry: { isLocal: true } })
+    .then(opts => {
+      pool = new LocalPipelineRunnerPool(Object.assign({
+        user: new User({
+          username,
+          email: `${username}@simulating.org`,
+          password: 'dummypw',
+        }),
+      }, opts));
+      pool.events.on('error', logger.error);
+
+      return pool.init();
+    })
     .then(() => {
       // stub registry (to circumvent needing to d/l DecentralizedComputation)
       /* eslint-disable global-require */
-      const decentralizedComputation = require(decl.computationPath);
+      const decentralizedComputation = require(computationPath);
       /* eslint-enable global-require */
       return stubComputationToRegistry({
         computation: decentralizedComputation,
         registry: pool.computationRegistry,
       });
     });
-  });
-};
+}
 
 /**
  * Get all documents.
@@ -111,8 +137,6 @@ function getAllDocuments(dbRegistry, dbName) {
  */
 const kickoff = function kickoff() {
   const dbRegistry = pool.dbRegistry;
-  const usernames = decl.users.map(user => user.username);
-  const isInitiator = username === usernames[0];
   let consortiumDoc;
   let computationDoc;
   let remoteResult;
@@ -131,7 +155,7 @@ const kickoff = function kickoff() {
       consortiumDoc = consortiaDocs[0];
       computationDoc = computationDocs[0];
 
-      if (isInitiator) {
+      if (initiate) {
         remoteResult = new RemoteComputationResult({
           _id: 'test_run_id',
           computationId: computationDoc._id,
@@ -162,20 +186,7 @@ const kickoff = function kickoff() {
         );
       });
     })
-    .then(() => {
-      const user = decl.users.find(usr => usr.username === username);
-      let userData;
-      // inject requested userData into pipeline runner
-      // if none specific, inject default data, declaring that we
-      // are kicking off
-      if (user.userData) {
-        userData = user.userData;
-      } else {
-        userData = { kickoff: true }; // default to generic
-      }
-      return userData;
-    })
-    .then((userData) => pool.triggerRunner(remoteResult, userData));
+    .then(() => pool.triggerRunner(remoteResult, userData));
 };
 
 // boot with data provided by `boot-clients`
@@ -196,21 +207,3 @@ process.on('message', (opts) => {
     throw new Error('message from parent process has no matching command', opts);
   }
 });
-
-// @NOTE the following is useful for debugging when running just a single process
-// vs letting the runner fire this as a child process
-// boot({
-//     decl: {
-//       usernames: [
-//             'chris',
-//             'runtang',
-//             'vince',
-//             'margaret'
-//         ],
-//         computationPath: require('path').resolve(__dirname, '../src/distributed/group-add'),
-//         verbose: true
-//     },
-//     username: 'chris'
-// }, (err, r) => {
-//     if (err) throw err
-// });
