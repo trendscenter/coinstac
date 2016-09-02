@@ -16,6 +16,7 @@ const Pouchy = require('pouchy');
 const url = require('url');
 
 const Consortium = common.models.Consortium;
+const pouchDBServerConfig = config['pouch-db-server'];
 
 /**
  * Placeholder for the server.
@@ -28,7 +29,7 @@ function addDocument(pathname, doc) {
   const dbUrl = url.format({
     hostname: 'localhost',
     pathname,
-    port: config.port,
+    port: pouchDBServerConfig.port,
     protocol: 'http',
   });
 
@@ -58,7 +59,7 @@ function setup(declPath) {
   return new Promise((resolve, reject) => {
     // spawn-pouchdb-server mutates user input >:(
     // https://github.com/hoodiehq/spawn-pouchdb-server/pull/33
-    pdbs(cloneDeep(config), (error, srv) => {
+    pdbs(cloneDeep(pouchDBServerConfig), (error, srv) => {
       if (error) {
         reject(error);
       } else {
@@ -68,7 +69,9 @@ function setup(declPath) {
     });
   })
     .then(() => {
-      logger.info(`pouchdb-server running on http://localhost:${config.port}`);
+      logger.info(
+        `pouchdb-server running on http://localhost:${pouchDBServerConfig.port}`
+      );
       const users = decl.users.map(u => u.username);
       const defaultConsortium = new Consortium({
         _id: `testconsortiumid${Date.now()}`,
