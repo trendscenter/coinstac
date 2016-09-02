@@ -3,7 +3,7 @@
 require('./utils/handle-errors');
 
 const cp = require('child_process');
-const logger = require('./utils/logger');
+const { getProcessLogger } = require('./utils/logging');
 const path = require('path');
 
 /**
@@ -36,14 +36,13 @@ function getReadyClient(username, declPath, verbose) {
       }
     });
     client.on('message', messageHandler);
-    client.stderr.on('data', data => {
-      logger.error(`USER ${username} [${client.pid}]: ${data.slice(0, -1)}`);
-    });
+    client.stderr.on(
+      'data',
+      getProcessLogger(client, `USER ${username}`, 'error')
+    );
 
     if (verbose) {
-      client.stdout.on('data', data => {
-        logger.info(`USER ${username} [${client.pid}]: ${data.slice(0, -1)}`);
-      });
+      client.stdout.on('data', getProcessLogger(client, `USER ${username}`));
     }
 
     client.send({

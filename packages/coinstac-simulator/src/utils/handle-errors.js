@@ -5,7 +5,7 @@ require('clarity');
 
 Error.stackTraceLimit = Infinity;
 
-const logger = require('./logger');
+const { logger } = require('./logging');
 
 /**
  * {@link https://nodejs.org/api/process.html#process_event_uncaughtexception}

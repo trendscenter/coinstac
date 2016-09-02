@@ -13,7 +13,7 @@ const User = common.models.User;
 const stubComputationToRegistry = require('./stub-computation-to-registry');
 const LocalPipelineRunnerPool = common.models.pipeline.runner.pool.LocalPipelineRunnerPool;
 const RemoteComputationResult = common.models.computation.RemoteComputationResult;
-const logger = require('./utils/logger');
+const { logger } = require('./utils/logging');
 const retry = require('retry');
 
 let pool;
