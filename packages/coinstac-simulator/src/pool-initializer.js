@@ -8,6 +8,8 @@ const dbRegistryFactory = common.services.dbRegistry;
 const computationRegistryFactory = common.services.computationRegistry;
 const path = require('path');
 
+const pouchDBServerConfig = config['pouch-db-server'];
+
 /**
  * @private
  * @module pool-initializer
@@ -62,7 +64,7 @@ module.exports = {
         pouchConfig: { adapter: 'memory' },
         db: {
           hostname: 'localhost',
-          port: config.port,
+          port: pouchDBServerConfig.port,
           protocol: 'http',
         },
       },
