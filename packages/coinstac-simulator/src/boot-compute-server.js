@@ -6,7 +6,9 @@ const poolInitializer = require('./pool-initializer');
 const common = require('coinstac-common');
 const stubComputationToRegistry = require('./stub-computation-to-registry');
 const RemotePipelineRunnerPool = common.models.pipeline.runner.pool.RemotePipelineRunnerPool;
-const { logger } = require('./utils/logging');
+const { getChildProcessLogger } = require('./utils/logging');
+
+const logger = getChildProcessLogger();
 
 /**
  * @private

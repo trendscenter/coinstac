@@ -3,7 +3,7 @@
 require('./utils/handle-errors');
 
 const cp = require('child_process');
-const { getProcessLogger } = require('./utils/logging');
+const { getStdDataHandler } = require('./utils/logging');
 const path = require('path');
 
 /**
@@ -40,11 +40,11 @@ function getReadyClient({ computationPath, data, username, verbose }) {
     client.on('message', messageHandler);
     client.stderr.on(
       'data',
-      getProcessLogger(client, `USER ${username}`, 'error')
+      getStdDataHandler(client, `USER ${username}`, 'error')
     );
 
     if (verbose) {
-      client.stdout.on('data', getProcessLogger(client, `USER ${username}`));
+      client.stdout.on('data', getStdDataHandler(client, `USER ${username}`));
     }
 
     client.send({
