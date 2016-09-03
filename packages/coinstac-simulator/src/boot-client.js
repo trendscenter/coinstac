@@ -48,7 +48,7 @@ function boot({
   initiate: init,
   username: uname,
 }) {
-  initiate = !!init;
+  initiate = init;
   username = uname;
 
   if (data) {
