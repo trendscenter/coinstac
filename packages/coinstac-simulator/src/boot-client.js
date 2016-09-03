@@ -113,7 +113,7 @@ function getAllDocuments(dbRegistry, dbName) {
               throw new Error(`${dbName} database contains no documents`);
             }
 
-            logger.debug(`Database ${dbName} .all() attempts: ${currentAttempt}`);
+            logger.verbose(`Database ${dbName} .all() attempts: ${currentAttempt}`);
 
             operation.stop();
             resolve(docs);
@@ -143,6 +143,8 @@ const kickoff = function kickoff() {
   let computationDoc;
   let remoteResult;
 
+  logger.verbose(`${username} kicking off`);
+
   return Promise.all([
     getAllDocuments(dbRegistry, 'consortia'),
     getAllDocuments(dbRegistry, 'computations'),
@@ -158,6 +160,7 @@ const kickoff = function kickoff() {
       computationDoc = computationDocs[0];
 
       if (initiate) {
+        logger.verbose(`${username} initiating`);
         remoteResult = new RemoteComputationResult({
           _id: 'test_run_id',
           computationId: computationDoc._id,
@@ -188,7 +191,10 @@ const kickoff = function kickoff() {
         );
       });
     })
-    .then(() => pool.triggerRunner(remoteResult, userData));
+    .then(() => {
+      logger.verbose(`${username} triggering runner`);
+      pool.triggerRunner(remoteResult, userData);
+    })
 };
 
 // boot with data provided by `boot-clients`
