@@ -30,9 +30,15 @@ const boot = function boot({ computationPath, data }) { // eslint-disable-line n
   const dComp = require(computationPath); // eslint-disable-line global-require
   const optsPatch = { dbRegistry: { isRemote: true } };
   let pool;
+
+  logger.verbose('Booting server');
+
   return poolInitializer.getPoolOpts(optsPatch)
   .then((opts) => { pool = new RemotePipelineRunnerPool(opts); })
   .then(() => {
+    pool.events.on('computation:start', runId => {
+      logger.verbose(`Run ${runId} starting`);
+    });
     pool.events.on('error', error => {
       logger.error(error);
       // TODO: Exit on pool error?
@@ -43,8 +49,10 @@ const boot = function boot({ computationPath, data }) { // eslint-disable-line n
       // .then(() => pool.destroy()) // pool destroying is nice, but who cares. it's in mem only.
       process.exit(0);
     });
+
+    logger.verbose('Initializing RemotePipelineRunnerPool');
+    return pool.init();
   })
-  .then(() => pool.init())
   .then(() => stubComputationToRegistry({
     computation: dComp,
     registry: pool.computationRegistry,
