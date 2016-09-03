@@ -1,13 +1,14 @@
 const path = require('path');
 
 module.exports = {
-  users: [
-    { username: 'jill', userData: { dirs: ['jills-data'] } },
-    { username: 'chris', userData: { dirs: ['chris-data'] } },
-  ],
   computationPath: path.resolve(
     __dirname,
     '../../src/decentralized/process-dir/index.js'
   ),
+  local: [{
+    dirs: ['jills-data'],
+  }, {
+    dirs: ['chris-data'],
+  }],
   verbose: true,
 };
