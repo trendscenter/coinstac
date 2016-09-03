@@ -12,11 +12,18 @@ const path = require('path');
  * @param {Object} params
  * @param {string} params.computationPath
  * @param {Object} [params.data] Declaration data for computation kickoff
+ * @param {boolean} params.initiate
  * @param {string} params.username
  * @param {boolean} [params.verbose=false]
  * @returns {Promise}
  */
-function getReadyClient({ computationPath, data, username, verbose }) {
+function getReadyClient({
+  computationPath,
+  data,
+  initiate,
+  username,
+  verbose,
+}) {
   return new Promise((resolve, reject) => {
     const client = cp.fork(path.join(__dirname, 'boot-client.js'), {
       cwd: process.cwd(),
@@ -51,6 +58,7 @@ function getReadyClient({ computationPath, data, username, verbose }) {
       boot: {
         computationPath,
         data,
+        initiate,
         username,
       },
     });
@@ -64,8 +72,14 @@ function getReadyClient({ computationPath, data, username, verbose }) {
  * @returns {Promise} Resolves with an array of forked client processes
  */
 function run({ computationPath, users, verbose }) {
-  return Promise.all(users.map(({ data, username }) => {
-    return getReadyClient({ computationPath, data, username, verbose });
+  return Promise.all(users.map(({ data, username }, index) => {
+    return getReadyClient({
+      computationPath,
+      data,
+      initiate: index === 0,
+      username,
+      verbose
+    });
   }));
 }
 
