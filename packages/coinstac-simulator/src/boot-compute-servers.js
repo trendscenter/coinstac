@@ -9,7 +9,7 @@ require('./utils/handle-errors');
 
 const cp = require('child_process');
 const path = require('path');
-const { logger, getProcessLogger } = require('./utils/logging');
+const { logger, getStdDataHandler } = require('./utils/logging');
 
 /**
  * Run boot compute servers.
@@ -48,10 +48,10 @@ function run({
     });
 
     if (verbose) {
-      server.stdout.on('data', getProcessLogger(server, serverName));
+      server.stdout.on('data', getStdDataHandler(server, serverName));
     }
 
-    server.stderr.on('data', getProcessLogger(server, serverName, 'error'));
+    server.stderr.on('data', getStdDataHandler(server, serverName, 'error'));
 
     server.send({
       boot: {

@@ -13,8 +13,10 @@ const User = common.models.User;
 const stubComputationToRegistry = require('./stub-computation-to-registry');
 const LocalPipelineRunnerPool = common.models.pipeline.runner.pool.LocalPipelineRunnerPool;
 const RemoteComputationResult = common.models.computation.RemoteComputationResult;
-const { logger } = require('./utils/logging');
+const { getChildProcessLogger } = require('./utils/logging');
 const retry = require('retry');
+
+const logger = getChildProcessLogger();
 
 /**
  * Placeholder for user's data. This is used with
