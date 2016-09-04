@@ -1,8 +1,10 @@
 'use strict';
 
+const common = require('coinstac-common');
 const find = require('lodash/find');
-const getSyncedDatabase = require('./utils/get-synced-database');
 const matchesProperty = require('lodash/matchesProperty');
+
+const getSyncedDatabase = common.utils.getSyncedDatabase;
 
 /**
  * @abstract
