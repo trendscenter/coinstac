@@ -3,15 +3,15 @@
 /**
  * @module simulator
  */
+require('./utils/handle-errors');
 
 const path = require('path');
-const handleAsyncErrors = require('./handle-errors')(); // eslint-disable-line
-const logger = require('./logger');
+const logger = require('./utils/logger');
 const bootComputeServers = require('./boot-compute-servers');
 const bootClients = require('./boot-clients');
-const bootDBServer = require('./boot-db-server');
-const seedCentralDB = require('./seed-central-db');
+const dbServer = require('./db-server');
 const flatten = require('lodash/flatten');
+const noop = require('lodash/noop');
 const values = require('lodash/values');
 const fileLoader = require('./file-loader');
 
@@ -26,7 +26,6 @@ const fileLoader = require('./file-loader');
  * @property {(ChildProcess|null)} remote
  */
 const processes = {
-  db: null,
   local: null,
   remote: null,
 };
@@ -45,23 +44,24 @@ const exportList = {
     const cwd = process.cwd();
     process.chdir(path.resolve(__dirname, '..'));
     // ^because spawn-pouchdb-server makes naughty assumptions :/
-    return bootDBServer.setup(declPath)
-    .then((srv) => { processes.db = srv; })
-    .then(() => logger.info('db server up'))
+    return dbServer.setup(declPath)
     .then(() => process.chdir(cwd))
-    // seed central db with dummy conortium and computation data
-    .then(() => seedCentralDB.seed(declPath))
-    .then(() => logger.info('db seeded'))
+
     // boot our central compute server
     .then(() => bootComputeServers(declPath))
-    .then((computeServers) => { processes.remote = computeServers[0]; })
-    .then(() => logger.info('compute server up'))
+    .then(computeServers => {
+      processes.remote = computeServers[0];
+      logger.info('compute server up');
+    })
+
     // boot user machines, and kickoff first computation
     .then(() => bootClients(declPath))
-    .then((userProcesses) => { processes.local = userProcesses; })
-    .then(() => logger.info('clients up'))
-    .then(() => processes.local.forEach((proc) => proc.send({ kickoff: true })))
-    .then(() => this.teardown());
+    .then(userProcesses => {
+      processes.local = userProcesses;
+      logger.info('clients up');
+      processes.local.forEach(proc => proc.send({ kickoff: true }));
+      return this.teardown();
+    });
   },
 
   /**
@@ -89,7 +89,7 @@ const exportList = {
             });
           })
         )
-        .then(() => bootDBServer.teardown())
+        .then(dbServer.teardown)
         .then(() => resolve())
         .catch((err) => reject(err));
       });
@@ -99,7 +99,8 @@ const exportList = {
 
 // Ensure all processes are killed
 process.on('exit', () => {
-  flatten(values(processes)).forEach(p => p.kill());
+  dbServer.teardown().catch(noop);
+  flatten(values(processes)).forEach(p => p && p.kill());
 });
 
 module.exports = Object.assign(exportList, fileLoader);
