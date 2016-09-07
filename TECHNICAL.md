@@ -99,7 +99,7 @@ Here’s how a basic decentralized computation works:
 
 COINSTAC is composed of many pieces stored in GitHub repositories. Here’s an overview:
 
-### [coinstac-common](https://github.com/MRN-Code/coinstac-common)
+### [coinstac-common](https://github.com/MRN-Code/coinstac/tree/master/packages/coinstac-common)
 
 * **Uses:**
 * **Used by:** [coinstac-client-core](#coinstac-client-core), [coinstac-server-core](#coinstac-server-core)
@@ -138,21 +138,14 @@ Reusable pieces of COINSTAC shared by both the client and server.
 * DB Registry: holds databases. This should keep PouchDB memory footprint low as there's only ever 1 reference to a database.
 * Listener registry: similar idea to DB registry
 
-### [coinstac-client-core](https://github.com/MRN-Code/coinstac-client-core)
+### [coinstac-client-core](https://github.com/MRN-Code/coinstac/tree/master/packages/coinstac-client-core)
 
 * **Uses:** [coinstac-common](#coinstac-common)
 * **Used by:** [coinstac-ui](#coinstac-ui)
 
 Core library for running local computations on a client.
 
-### [coinstac-distributed-algorithm-set](https://github.com/MRN-Code/coinstac-distributed-algorithm-set)
-
-* **Uses:**
-* **Used by:**
-
-A set of useful functions for algorithms.
-
-### [coinstac-server-core](https://github.com/MRN-Code/coinstac-server-core)
+### [coinstac-server-core](https://github.com/MRN-Code/coinstac/tree/master/packages/coinstac-server-core)
 
 * **Uses:** [coinstac-common](#coinstac-common)
 * **Used by:**
@@ -162,14 +155,14 @@ Core library for running remote computations on a server. It has two modes:
 * **daemon:** Runs in the background on a server and manages the remote side of the [computation lifecycle](#computation-lifecycle).
 * **require-able:** Runs the computation lifecycle programmatically.
 
-### [coinstac-storage-proxy](https://github.com/MRN-Code/coinstac-storage-proxy)
+### [coinstac-storage-proxy](https://github.com/MRN-Code/coinstac/tree/master/packages/coinstac-storage-proxy)
 
 * **Uses:** [coinstac-common](#coinstac-common)
 * **Used by:** [nodeapi](#nodeapi)
 
 Authentication plugin for [hapi](http://hapijs.com/) server. This ensures COINSTAC’s CouchDB databases are secure.
 
-### [coinstac-ui](https://github.com/MRN-Code/coinstac-ui)
+### [coinstac-ui](https://github.com/MRN-Code/coinstac/tree/master/packages/coinstac-ui)
 
 * **Uses:** [coinstac-client-core](#coinstac-client-core)
 * **Used by:**
