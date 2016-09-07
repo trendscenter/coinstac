@@ -1,9 +1,8 @@
 # COINSTAC Server Core
 
-[ ![Codeship Status for MRN-Code/coinstac-server-core](https://codeship.com/projects/a8196230-f9d0-0133-2f5f-124ad23604b3/status?branch=master)](https://codeship.com/projects/151361) [![Coverage Status](https://coveralls.io/repos/github/MRN-Code/coinstac-server-core/badge.svg?branch=master)](https://coveralls.io/github/MRN-Code/coinstac-server-core?branch=master)
+<img src="https://raw.githubusercontent.com/MRN-Code/coinstac/master/img/coinstac.png" height="75px">
 
-
-_COINSTAC’s core server functionality._
+COINSTAC core server functionality. [Documentation](http://mrn-code.github.io/coinstac/).
 
 ## Install
 
@@ -77,4 +76,4 @@ $ coinstac-server-core --help
 
 ## License
 
-MIT. See [LICENSE](./LICENSE).
+MIT. See [LICENSE](./LICENSE) for details.

@@ -1,7 +1,7 @@
 {
   "name": "coinstac-ui",
   "version": "2.0.6",
-  "description": "distributed analytics and results sharing",
+  "description": "COINSTAC desktop application.",
   "main": "app/main/index.js",
   "dependencies": {
     "ampersand-app": "^2.0.0",
@@ -87,11 +87,18 @@
     "type": "git",
     "url": "git+https://github.com/MRN-Code/coinstac.git"
   },
-  "author": "",
+  "author": "NI Development - The Mind Research Network <nidev@mrn.org> (http://coins.mrn.org)",
+  "contributors": [
+    "Chris Dieringer <cdaringe@gmail.org>",
+    "Cory Reed <swashcap@gmail.com>",
+    "Ross Kelly <rkelly@mrn.org>",
+    "Drew Landis <landis.d@gmail.com>",
+    "Sergey Plis <splis@mrn.org>"
+  ],
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/MRN-Code/coinstac/issues"
   },
-  "homepage": "https://github.com/MRN-Code/coinstac",
+  "homepage": "https://github.com/MRN-Code/coinstac#readme",
   "keywords": []
 }

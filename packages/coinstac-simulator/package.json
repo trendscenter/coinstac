@@ -1,16 +1,16 @@
 {
   "name": "coinstac-simulator",
   "version": "2.0.6",
-  "description": "simulate a COINSTAC DecentralizedComputation run",
+  "description": "COINSTAC simulator for computation runs.",
   "main": "src/index.js",
   "bin": "bin/coinstac-simulator",
   "scripts": {
-    "test": "node test/index.js && echo 'Please see mrn-code/coinstac-decentralized-algorithm-integration for further testing'",
+    "test": "node test/index.js && echo 'Please see coinstac-decentralized-algorithm-integration for further testing'",
     "docs": "mkdir -p docs && jsdoc -t ./node_modules/minami -d docs -R README.md -r src/"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/MRN-Code/coinstac-simulator.git"
+    "url": "git+https://github.com/MRN-Code/coinstac.git"
   },
   "keywords": [
     "coinstac",
@@ -20,12 +20,19 @@
     "run",
     "distributed"
   ],
-  "author": "cdaringe",
+  "author": "NI Development - The Mind Research Network <nidev@mrn.org> (http://coins.mrn.org)",
+  "contributors": [
+    "Chris Dieringer <cdaringe@gmail.org>",
+    "Cory Reed <swashcap@gmail.com>",
+    "Ross Kelly <rkelly@mrn.org>",
+    "Drew Landis <landis.d@gmail.com>",
+    "Sergey Plis <splis@mrn.org>"
+  ],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/MRN-Code/coinstac-simulator/issues"
+    "url": "https://github.com/MRN-Code/coinstac/issues"
   },
-  "homepage": "https://github.com/MRN-Code/coinstac-simulator#readme",
+  "homepage": "https://github.com/MRN-Code/coinstac#readme",
   "dependencies": {
     "axios": "^0.13.1",
     "chalk": "^1.1.1",
