@@ -1,7 +1,7 @@
 {
   "name": "coinstac-server-core",
   "version": "2.0.6",
-  "description": "COINSTAC’s core server functionality.",
+  "description": "COINSTAC core server functionality.",
   "main": "src/index.js",
   "bin": "bin/coinstac-server-core",
   "scripts": {
@@ -13,18 +13,25 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/MRN-Code/coinstac-server-core.git"
+    "url": "git+https://github.com/MRN-Code/coinstac.git"
   },
   "keywords": [
     "coinstac",
     "distributed"
   ],
-  "author": "Cory Reed <creed@mrn.org>",
+  "author": "NI Development - The Mind Research Network <nidev@mrn.org> (http://coins.mrn.org)",
+  "contributors": [
+    "Chris Dieringer <cdaringe@gmail.org>",
+    "Cory Reed <swashcap@gmail.com>",
+    "Ross Kelly <rkelly@mrn.org>",
+    "Drew Landis <landis.d@gmail.com>",
+    "Sergey Plis <splis@mrn.org>"
+  ],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/MRN-Code/coinstac-server-core/issues"
+    "url": "https://github.com/MRN-Code/coinstac/issues"
   },
-  "homepage": "https://github.com/MRN-Code/coinstac-server-core#readme",
+  "homepage": "https://github.com/MRN-Code/coinstac#readme",
   "dependencies": {
     "async": "^2.0.0-rc.6",
     "coinstac-common": "^2.0.6",

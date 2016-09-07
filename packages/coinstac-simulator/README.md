@@ -1,22 +1,18 @@
 # coinstac-simulator
 
-<img src="https://raw.githubusercontent.com/MRN-Code/coinstac-common/master/img/coinstac.png" height="75px" />
+<img src="https://raw.githubusercontent.com/MRN-Code/coinstac/master/img/coinstac.png" height="75px">
 
-[ ![Codeship Status for MRN-Code/coinstac-simulator](https://codeship.com/projects/370d2330-d2b2-0133-5da2-5e07c373472b/status?branch=master)](https://codeship.com/projects/141922)
-
-the official API documentation [lives here](http://mrn-code.github.io/coinstac-simulator/), albeit there's not much too it!
+COINSTAC simulator for computation runs. [Documentation](http://mrn-code.github.io/coinstac/).
 
 ## what
 
-provides a runner for you to test your [DecentralizedComputations](http://mrn-code.github.io/coinstac-common/DecentralizedComputation.html).
+Provides a runner for you to test your [DecentralizedComputations](http://mrn-code.github.io/coinstac/coinstac-common/DecentralizedComputation.html) via a **CLI** tool and an **importable library**.
 
-we offer both a *cli* tool and an importable *library*
-
-<img src="https://raw.githubusercontent.com/MRN-Code/coinstac-simulator/master/media/demo-capture.gif" />
+<img src="https://raw.githubusercontent.com/MRN-Code/coinstac/master/packages/coinstac-simulator/media/demo-capture.gif" />
 
 ## how
 
-regardless if you are simulating by using our CLI or the library, you need to define a "declaration" on how your simulation will be run.  you are welcome to [look here at some examples](https://github.com/MRN-Code/coinstac-decentralized-algorithm-integration/blob/master/test/declarations/).
+regardless if you are simulating by using our CLI or the library, you need to define a "declaration" on how your simulation will be run.  you are welcome to [look here at some examples](https://github.com/MRN-Code/coinstac/blob/master/packages/coinstac-decentralized-algorithm-integration/test/declarations/).
 
 a simulation "declaration" is a `.js` file with the following shape:
 
@@ -74,8 +70,12 @@ right there at your desk.
 
 ### debugging
 
-if `verbose` is toggled to `true` in your computation definition for [`cmd` type Computations](http://mrn-code.github.io/coinstac-common/CommandComputation.html), you can write to `stderr` to have your information streamed onto the screen.  if that is otherwise insufficient, you will need to capture the inputs to the process, (via parsing the CLI input), and run your faulty script/program using your normal debug strategies of choice for whichever particular language you are using.
+if `verbose` is toggled to `true` in your computation definition for [`cmd` type Computations](http://mrn-code.github.io/coinstac/coinstac-common/CommandComputation.html), you can write to `stderr` to have your information streamed onto the screen.  if that is otherwise insufficient, you will need to capture the inputs to the process, (via parsing the CLI input), and run your faulty script/program using your normal debug strategies of choice for whichever particular language you are using.
 
 ## it's not working
 
 file an issue!  we will try and be prompt, and even try to help you with your algorithms if necessary.
+
+## License
+
+MIT. See [LICENSE](./LICENSE) for details.
