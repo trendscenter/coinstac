@@ -9,7 +9,9 @@ COINSTAC is an ecosystem for running decentralized algorithms with many clients.
 COINSTAC’s core is written entirely in JavaScript; writing an algorithm requires writing an entry point in this language.
  However, the system is robust enough to support algorithms in any language.
 
-It’s important to note that *COINSTAC is alpha software*: its rough around the edges. If you have a question or locate a bug please *[open an issue](https://github.com/MRN-Code/coinstac/issues/new)*.
+| Alpha Warning |
+| ------------- |
+| It’s important to note that *COINSTAC is alpha software*: its rough around the edges. If you have a question or locate a bug please **[open an issue](https://github.com/MRN-Code/coinstac/issues/new)**. |
 
 ## Setting Up Your Environment
 
