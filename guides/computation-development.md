@@ -4,7 +4,7 @@ _This guide will walk through basic algorithm development in the COINSTAC ecosys
 
 ## Basic overview of COINSTAC system
 
-COINSTAC is an ecosystem for running decentralized algorithms with many clients. It uses a client-server model: while arbitrary calculations can run on clients and servers, the system’s primary use case is differential privacy, where clients run algorithms with data to ensure their privacy. Clients submit their anonymized results to the server, which amalgamates clients’ data and performs interesting computations, such as averaging, modeling, etc.
+COINSTAC is an ecosystem for running decentralized algorithms with many clients. It uses a client-server model: while arbitrary calculations can run on clients and servers, the system’s primary use case is [differential privacy](https://en.wikipedia.org/wiki/Differential_privacy), where clients run algorithms with data to ensure their privacy. Clients submit their anonymized results to the server, which amalgamates clients’ data and performs interesting computations, such as averaging, modeling, etc.
 
 COINSTAC’s core is written entirely in JavaScript; writing an algorithm requires writing an entry point in this language.
  However, the system is robust enough to support algorithms in any language. This guide will explain
