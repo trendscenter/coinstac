@@ -263,7 +263,7 @@ The only plugin currently available is *group-step*. It is a flow control modifi
 
 ## Testing Computations
 
-To test your computation you’ll need to provide some basic parameters and pass things to _coinstac-simulator_. It needs a declaration file, which is written in JavaScript:
+To test your computation you’ll need to provide some basic parameters and pass things to _[coinstac-simulator](https://github.com/MRN-Code/coinstac/tree/master/packages/coinstac-simulator)_. It needs a declaration file, which is written in JavaScript:
 
 ```js
 // declaration.js
