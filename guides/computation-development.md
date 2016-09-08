@@ -308,7 +308,7 @@ Here’s the API:
 #### coinstacSimulator.loadFiles(pattern, [delimiter]):
 
 * **`pattern`** `<String>`: File globbing pattern passed to [glob](https://www.npmjs.com/package/glob)
-* **`delimiter`** `<String>`: CSV delimter
+* **`delimiter`** `<String>`: CSV delimiter
 
 Use:
 
@@ -335,7 +335,7 @@ module.exports = {
 
 * **`pattern`** `<String>`: File globbing pattern passed to [glob](https://www.npmjs.com/package/glob)
 * **`csvPath`** `<String>`: Path to a CSV variables file to load
-* **`delimiter`** `<String>`: CSV delimter
+* **`delimiter`** `<String>`: CSV delimiter
 
 Use:
 
