@@ -123,8 +123,7 @@ const exportList = {
    * @description boots the infrastructure required to run a simulation. this
    * includes a db server, computer server, and client processes for each client
    * in the provided simulation declaration
-   * @param {string} declPath simulation declaration. @see {@link http://mrn-code.github.io/coinstac-simulator/index.html#how|declaration description}
-   * @param {function}
+   * @param {string} declPath simulation declaration.
    * @returns {Promise}
    */
   run(declPath) {
