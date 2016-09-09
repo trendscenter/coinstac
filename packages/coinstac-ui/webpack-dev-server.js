@@ -1,12 +1,18 @@
 'use strict';
 
+const DashboardPlugin = require('webpack-dashboard/plugin');
 const webpack = require('webpack');
 const WebpackDevServer = require('webpack-dev-server');
 
 const config = require('./webpack.config');
+const compiler = webpack(config);
 const port = config.port;
 
-new WebpackDevServer(webpack(config), {
+compiler.apply(new DashboardPlugin({
+  port: 3001,
+}));
+
+new WebpackDevServer(compiler, {
   publicPath: config.output.publicPath,
   hot: true,
   historyApiFallback: true,

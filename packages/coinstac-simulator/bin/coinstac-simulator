@@ -1,8 +1,10 @@
+#!/usr/bin/env node
 'use strict';
-const program = require('commander');
+
 const path = require('path');
-const pkgPath = path.resolve(__dirname, '../../package.json');
-const pkg = require(pkgPath);
+const pkg = require('../package.json');
+const program = require('commander');
+const sim = require('../src/');
 
 program
   .version(pkg.version)
@@ -25,4 +27,8 @@ if (!program.declaration) {
   console.error('ERROR: declaration path required (-d)'); // eslint-disable-line
   process.exit(1);
 }
-module.exports = program;
+
+const declPath = path.resolve(process.cwd(), program.declaration);
+
+sim.run(declPath);
+
