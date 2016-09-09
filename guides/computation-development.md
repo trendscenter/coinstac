@@ -28,7 +28,7 @@ _It is recommended that you develop in a UNIX-like environment, such as Mac OS X
 
 Here’s what you’ll need to get up and running with COINSTAC:
 
-1. **Node.js and NPM:** You’ll need the JavaScript runtime to develop for COINSTAC. The easiest way to get it is to [download it via the website](https://nodejs.org/en/download/). Alternatively, you can use [Node Version Manager](https://github.com/creationix/nvm) or [n](https://www.npmjs.com/package/n) to maintain multiple versions of Node.js on the same machine.
+1. **Node.js and NPM:** You’ll need version 6.x.x of the JavaScript runtime to develop for COINSTAC. The easiest way to get it is to [download it via the website](https://nodejs.org/en/download/). Alternatively, you can use [Node Version Manager](https://github.com/creationix/nvm) or [n](https://www.npmjs.com/package/n) to maintain multiple versions of Node.js on the same machine.
 2. **coinstac-simulator:** This will assist in testing your algorithms in the COINSTAC ecosystem. To install, run from a shell:
 
     ```shell
