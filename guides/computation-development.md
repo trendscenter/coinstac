@@ -2,6 +2,15 @@
 
 _This guide will walk through basic algorithm development in the COINSTAC ecosystem. It is intended for algorithm authors and developers._
 
+**Table Of Contents:**
+
+* [Basic Overview of COINSTAC System](#basic-overview-of-coinstac-system)
+* [Setting Up Your Environment](#setting-up-your-environment)
+* [How to Create a Computation](#how-to-create-a-computation)
+* [Testing Computations](#testing-computations)
+* [Publishing Computations](#publishing-computations)
+* [Examples](#examples)
+
 ## Basic Overview of COINSTAC System
 
 COINSTAC is an ecosystem for running decentralized algorithms with many clients. It uses a client-server model: while arbitrary calculations can run on clients and servers, the system’s primary use case is [differential privacy](https://en.wikipedia.org/wiki/Differential_privacy), where clients run algorithms with data to ensure their privacy. Clients submit their anonymized results to the server, which amalgamates clients’ data and performs interesting computations, such as averaging, modeling, etc.
