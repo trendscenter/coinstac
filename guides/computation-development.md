@@ -37,7 +37,7 @@ Here’s what you’ll need to get up and running with COINSTAC:
 
 ## How to Create a Computation
 
-Computations in COINSTAC, often referred to as a “decentralized computations” throughout docs, are a set of functions for clients (referred to as “local”) and a central server (referred to as “remote”). These instructions are encapsulated in a JavaScript file that uses a CommonJS export object. Here’s a basic example:
+Computations in COINSTAC, referred to as a “decentralized computations” throughout code, are sets of commands for clients (referred to as “local”) and a central server (referred to as “remote”). These instructions are encapsulated in a JavaScript file that uses a CommonJS export object. Here’s a basic example:
 
 ```js
 module.exports = {
@@ -63,17 +63,17 @@ This is the decentralized computation “definition.” The basic properties:
 * **`name`** `<String>`: The name of your computation, a JavaScript string of two or more characters. The name uniquely identifies your computation in the COINSTAC ecosystem.
 * **`version`** `<String>`: The release of your computation, a JavaScript string that adheres to [semver](http://semver.org/). This should be incremented in accordance to updates in algorithm code.
 * **`local`** `<Object>` | `<Array>`: Code to be run on clients.
-* **`remote`** `<Object>` | `<Array>`: Code run on _the server_.
+* **`remote`** `<Object>` | `<Array>`: Code run on the server.
 
 Definitions also support additional, optional properties (see [Pipelines](#pipelines) and [Plugins](#plugins)).
 
-### Computation Step Basics
+### Commands
 
-The `local` and `remote` values above are a special type of object, which COINSTAC recognizes as a computation step, or “computation”.
+The `local` and `remote` values above are a special type of object, which COINSTAC recognizes as a “command,” or an atomic operation to be performed on a client or server. COINSTAC currently supports two types of commands:
 
-### JavaScript Computations
+#### JavaScript Commands
 
-COINSTAC executes these computations in its own Node.js context:
+COINSTAC executes these commands in its own Node.js context:
 
 ```js
 {
@@ -84,8 +84,8 @@ COINSTAC executes these computations in its own Node.js context:
 }
 ```
 
-* **`type`** `<String>`: Must be `function`, which specifies a “JavaScript”-type computation step.
-* **`fn`** `<Function>`: Function to call. See [Computation Parameters](#computation-parameters) for documentation on the passed arguments.
+* **`type`** `<String>`: Must be `function`, which specifies a “JavaScript”-type command.
+* **`fn`** `<Function>`: Function to call. See [Command Parameters](#command-parameters) for documentation on passed arguments.
 * **`verbose`** `<Boolean>`: Whether to output the computation’s output to stdout.
 
 These support a few more options, and you can do interesting things inside `fn`:
@@ -104,9 +104,9 @@ These support a few more options, and you can do interesting things inside `fn`:
 
 The above example generates a random number using JavaScript’s `Math.random` and assigns it to the `myNumber` variable. The `console.log` prints the value to output; the value is returned to COINSTAC on the following line. Note the `verbose` property: this ensures that COINSTAC prints `console.log` calls to stdout.
 
-### Non-JavaScript Computations
+#### Non-JavaScript Commands
 
-COINSTAC has a second type of computation that allows algorithm developers to integrate any script they can dream of. It’s called a “command” computation:
+COINSTAC has a second type of command that allows algorithm developers to integrate any script they can dream of:
 
 ```js
 {
@@ -117,14 +117,14 @@ COINSTAC has a second type of computation that allows algorithm developers to in
 }
 ```
 
-* **`type`** `<String>`: Must be `cmd`, which specifies a “command”-type computation step.
+* **`type`** `<String>`: Must be `cmd`, which specifies a non-JavaScript-type command.
 * **`cmd`** `<String>`: Executable to use.
 * **`args`** `<Array>`: Arguments to pass to the executable.
 * **`verbose`** `<Boolean>`: Whether to output the computation’s output to stdout.
 
-The command computation spawns a new process, in the above case with Python, and executes with the arguments passed to the executable. COINSTAC will serialize input parameters as JSON and pass them as the last argument to the executable (see [Computation Parameters](#computation-parameters)).
+The command spawns a new process, in the above case with Python, and executes with the arguments passed to the executable. COINSTAC will serialize input parameters as JSON and pass them as the last argument to the executable (see [Command Parameters](#command-parameters)).
 
-#### Returning Data
+##### Returning Data
 
 It’s important that your script **only output valid JSON** via stdout; otherwise, COINSTAC will throw an error. You can test your script by [installing `jq`](https://stedolan.github.io/jq/) and running:
 
@@ -134,17 +134,17 @@ python ./path/to/my/script.py --some --flags | jq .
 
 This should alert you to invalid JSON.
 
-#### Returning An Error
+##### Returning An Error
 
-Write to stderr if you need to raise an exception. COINSTAC will detect this and mark the computation result as an error.
+Write to stderr if you need to raise an exception. COINSTAC will detect this and mark the command result as an error.
 
-### Computation Parameters
+### Command Parameters
 
-Computations – both JavaScript and non-JavaScript – receive parameters from COINSTAC. The parameters’ shape depends on whether the computation is intended for use with clients (`local`) or the server (`remote`).
+Commands – both JavaScript and non-JavaScript – receive parameters from COINSTAC. The parameters’ shape depends on whether the command is intended for use with clients (`local`) or the server (`remote`).
 
 #### Local Parameters
 
-A JavaScript object containing the following properties and values is passed to local computations:
+A JavaScript object containing the following properties and values is passed to local commands:
 
 * **`computationId`** `<String>`: Unique computation identifier
 * **`consortiumId`** `<String>`: Unique consortium identifier
@@ -166,7 +166,7 @@ A JavaScript object containing the following properties and values is passed to 
 
 #### Remote Parameters
 
-A JavaScript object containing the following properties and values is passed to remote computations:
+A JavaScript object containing the following properties and values is passed to remote command:
 
 * **`computationId`** `<String>`: Unique computation identifier
 * **`consortiumId`** `<String>`: Unique consortium identifier
@@ -187,7 +187,7 @@ A JavaScript object containing the following properties and values is passed to 
 
 ### Pipelines
 
-Computations can be strung together to form a “pipeline,” or a collection of discrete steps. These differ from [traditional sequential Pipeline](https://en.wikipedia.org/wiki/Pipeline_(computing)) in a few ways:
+Commands can be strung together to form a “pipeline,” or a collection of discrete steps. These differ from [traditional sequential Pipeline](https://en.wikipedia.org/wiki/Pipeline_(computing)) in a few ways:
 
 * COINSTAC pipelines may halt and resume.
 * COINSTAC pipelines may conditionally progress to subsequent steps or repeat the current step many times.
@@ -215,7 +215,7 @@ module.exports = {
   // ...
 
   local: [
-    // First computation:
+    // First command:
     {
       type: 'function',
       fn: function(params) {
@@ -223,7 +223,7 @@ module.exports = {
       },
     },
 
-    // Second computation:
+    // Second command:
     {
       type: 'function',
       fn: function(params) {
@@ -268,7 +268,7 @@ module.exports = {
 };
 ```
 
-The only plugin currently available is *group-step*. It is a flow control modifier that ensures that all clients have completed a computation “step” before passing control back to the server.
+The only plugin currently available is *group-step*. It is a flow control modifier that ensures that all clients have completed a command “step” before passing control back to the server.
 
 ## Testing Computations
 
