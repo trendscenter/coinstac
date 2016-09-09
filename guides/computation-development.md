@@ -306,59 +306,7 @@ coinstac-simulator --declaration ./path/to/declaration.js
 
 ### File-loading Utilities
 
-_coinstac-simulator_ comes with two utility methods to assist in loading your data. To use them you’ll need to set up a module with a [_package.json_ via NPM](https://docs.npmjs.com/getting-started/using-a-package.json):
-
-1. Locate or create a directory suitable for your algorithm testing.
-2. Run `npm init` and follow the prompts. This will generate a _package.json_ file, which NPM uses to manage dependencies.
-3. Run `npm install coinstac-simulator --save` to add _coinstac-simulator_ as a dependency to your project. This will create a _node_modules_ directory – where NPM places packages – in your project directory.
-
-Here’s the API:
-
-#### coinstacSimulator.loadFiles(pattern, [delimiter]):
-
-* **`pattern`** `<String>`: File globbing pattern passed to [glob](https://www.npmjs.com/package/glob)
-* **`delimiter`** `<String>`: CSV delimiter
-
-Use:
-
-```js
-// declaration.js
-const coinstacSimulator = require('coinstac-simulator');
-
-module.exports = {
-  computationPath: './path/to/computation.js',
-  local: [
-    {
-      x: coinstacSimulator.loadFiles('./path/to/files/1/*.txt'),
-    },
-    {
-      x: coinstacSimulator.loadFiles('./path/to/files/2/*.txt'),
-    }, {
-      x: coinstacSimulator.loadFiles('./path/to/files/3/*.txt'),
-    },
-  ],
-}
-```
-
-#### coinstacSimulator.createUserData(pattern, [csvPath], [delimiter])
-
-* **`pattern`** `<String>`: File globbing pattern passed to [glob](https://www.npmjs.com/package/glob)
-* **`csvPath`** `<String>`: Path to a CSV variables file to load
-* **`delimiter`** `<String>`: CSV delimiter
-
-Use:
-
-```js
-const coinstacSimulator = require('coinstac-simulator');
-
-module.exports = {
-  computationPath: './path/to/computation.js',
-  local: coinstacSimulator.createUserData(
-    './path/to/data/**/*.txt',
-    './path/to/vars.csv'
-  ),
-};
-```
+_coinstac-simulator_ comes with two utility methods to assist in loading your data. To use them you’ll need to set up a module with a [_package.json_ via NPM](https://docs.npmjs.com/getting-started/using-a-package.json). Consult the [_coinstac-simulator_ Readme](https://github.com/MRN-Code/coinstac/tree/master/packages/coinstac-simulator#programmatic-use) for setup instructions and API documentation.
 
 ## Publishing Computations
 
