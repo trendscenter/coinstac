@@ -1,12 +1,14 @@
 'use strict';
 
-const pdbsConfig = require('./.pouchdb-server-config');
+const config = require('./utils/config');
 const common = require('coinstac-common');
 const DBRegistry = require('coinstac-common').services.dbRegistry.DBRegistry;
 DBRegistry.Pouchy.plugin(require('pouchdb-adapter-memory'));
 const dbRegistryFactory = common.services.dbRegistry;
 const computationRegistryFactory = common.services.computationRegistry;
 const path = require('path');
+
+const pouchDBServerConfig = config['pouch-db-server'];
 
 /**
  * @private
@@ -60,7 +62,11 @@ module.exports = {
       path: __dirname,
       remote: {
         pouchConfig: { adapter: 'memory' },
-        db: { protocol: 'http', hostname: 'localhost', port: pdbsConfig.port },
+        db: {
+          hostname: 'localhost',
+          port: pouchDBServerConfig.port,
+          protocol: 'http',
+        },
       },
     });
   },

@@ -1,5 +1,6 @@
-# design a decentralized computation
-a  [DecentralizedComputation](http://mrn-code.github.io/coinstac-common/DecentralizedComputation.html) is a  [DataType in coinstac](http://mrn-code.github.io/coinstac-common/).  as a consortium leader or designer, your goal is to provide the content and algorithms for how pipelines, analyses, or general computations are run both on  consortium members' devices, as well as on a central compute server.
+# Design a Decentralized Computation
+
+A  [Decentralized Computation](http://mrn-code.github.io/coinstac/coinstac-common/DecentralizedComputation.html) is a [data type in coinstac-common](http://mrn-code.github.io/coinstac/coinstac-common/index.html). As a consortium leader or designer, your goal is to provide the content and algorithms for how pipelines, analyses, or general computations are run both on  consortium members' devices, as well as on a central compute server.
 
 a `DecentralizedComputation` is composed of three parts:
 - the overall description of your computation.
@@ -10,8 +11,8 @@ let's figure out how to build one.
 
 ## prepare
 - install [nodejs](https://nodejs.org).  it's a quick [installation](https://nodejs.org/en/download/).
-- install [coinstac-simulator](https://github.com/MRN-Code/coinstac-simulator).
-- open the [integration repo](https://github.com/MRN-Code/coinstac-decentralized-algorithm-integration), as we will reference it in our examples.
+- install [coinstac-simulator](http://mrn-code.github.io/coinstac/coinstac-simulator/).
+- open the [integration package](http://mrn-code.github.io/coinstac/coinstac-decentralized-algorithm-integration/), as we will reference it in our examples.
 
 ## design
 
@@ -40,7 +41,7 @@ A few things to note:
 
 ### pipeline basics
 
-a [`Pipeline`](http://mrn-code.github.io/coinstac-common/Pipeline.html) in COINSTAC is not your run-of-the-mill, [traditional sequential Pipeline](https://en.wikipedia.org/wiki/Pipeline_(computing)).  COINSTAC decentralized Pipelines differ from traditional pipelines with the following modifications:
+a [`Pipeline`]http://mrn-code.github.io/coinstac/coinstac-common/Pipeline.html) in COINSTAC is not your run-of-the-mill, [traditional sequential Pipeline](https://en.wikipedia.org/wiki/Pipeline_(computing)).  COINSTAC decentralized Pipelines differ from traditional pipelines with the following modifications:
 
 - COINSTAC Pipelines may `halt` and `resume`.
 - COINSTAC Pipelines may conditionally `progress` to subsequent steps, or, repeat the current step many times.
@@ -81,7 +82,7 @@ if your Pipeline is running on user machines, you may need a local user's `usern
     userData: {*}
 }
 ```
-[@ref](http://mrn-code.github.io/coinstac-common/LocalPipelineRunner.html#run)
+[@ref](http://mrn-code.github.io/coinstac/coinstac-common/LocalPipelineRunner.html#run)
 
 ##### remote pipeline inputs
 
@@ -96,7 +97,7 @@ if your Pipeline is running on the remote compute server, you may require _all_ 
     userResults: {LocalComputationResult[]},
 }
 ```
-[@ref](http://mrn-code.github.io/coinstac-common/RemotePipelineRunner.html#run)
+[@ref](http://mrn-code.github.io/coinstac/coinstac-common/RemotePipelineRunner.html#run)
 
 ### example - group-add
 See [EXAMPLE-GROUP-ADD.md](./EXAMPLE-GROUP-ADD.md) for a step-by-step walkthrough on how a simple decentralized algorithm is developed.
@@ -109,7 +110,7 @@ at current time, dependencies are not partitioned between `local` and `remote` p
 
 ### run
 
-See [coinstac-simulator](https://github.com/MRN-Code/coinstac-simulator)'s documentation.  If you've already accomplished the above, it should be a piece of cake! :cake:
+See [coinstac-simulator](http://mrn-code.github.io/coinstac/coinstac-simulator/)'s documentation.  If you've already accomplished the above, it should be a piece of cake! :cake:
 
 ### publish
 

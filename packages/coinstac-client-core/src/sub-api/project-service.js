@@ -139,10 +139,11 @@ class ProjectService extends ModelService {
    */
   destroyListeners() {
     this.projects.clear();
-    this.removeUnusedListeners();
-    this.listeners.get(ProjectService.PROJECTS_LISTENER).destroy();
 
-    return Promise.resolve();
+    return Promise.all([
+      this.removeUnusedListeners(),
+      this.listeners.get(ProjectService.PROJECTS_LISTENER).destroy(),
+    ]);
   }
 
   /**
@@ -411,12 +412,11 @@ class ProjectService extends ModelService {
       Array.from(projects.values()).concat(ProjectService.PROJECTS_LISTENER)
     );
 
-    toDelete.forEach(consortiumId => {
-      listeners.get(consortiumId).destroy();
+    return Promise.all(toDelete.map(consortiumId => {
+      const destroy = listeners.get(consortiumId).destroy();
       listeners.delete(consortiumId);
-    });
-
-    return Promise.resolve(toDelete);
+      return destroy;
+    }));
   }
 }
 

@@ -6,8 +6,8 @@
 const common = require('coinstac-common');
 const Computation = common.models.computation.Computation;
 const crypto = require('crypto');
-const getSyncedDatabase = require('../utils/get-synced-database');
 const merge = require('lodash/merge');
+const getSyncedDatabase = common.utils.getSyncedDatabase;
 const ModelService = require('../model-service');
 const RemoteComputationResult = common.models.computation.RemoteComputationResult;
 
