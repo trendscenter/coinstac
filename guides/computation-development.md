@@ -67,8 +67,6 @@ This is the decentralized computation “definition.” The basic properties:
 
 Definitions also support additional, optional properties (see [Pipelines](#pipelines) and [Plugins](#plugins)).
 
-### Pipelines And Computation Steps
-
 ### Computation Step Basics
 
 The `local` and `remote` values above are a special type of object, which COINSTAC recognizes as a computation step, or “computation”.
