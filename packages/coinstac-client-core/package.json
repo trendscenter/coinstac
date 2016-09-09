@@ -37,6 +37,7 @@
     "btoa": "^1.1.2",
     "coinstac-common": "^2.0.6",
     "commander": "^2.9.0",
+    "concat-stream": "^1.5.2",
     "convict": "^1.3.0",
     "csv-parse": "^1.1.5",
     "firstline": "^1.2.0",
