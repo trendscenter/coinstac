@@ -37,7 +37,9 @@ function getChildProcessLogger(level = 'verbose') {
     transports: [
       new (winston.transports.Console)({
         /** {@link https://www.npmjs.com/package/winston#custom-log-format} */
-        formatter: options => options.message ? options.message : '',
+        formatter: options => {
+          return options.message ? options.message : '';
+        },
       }),
     ],
   });

@@ -194,7 +194,7 @@ const kickoff = function kickoff() {
     .then(() => {
       logger.verbose(`${username} triggering runner`);
       pool.triggerRunner(remoteResult, userData);
-    })
+    });
 };
 
 // boot with data provided by `boot-clients`

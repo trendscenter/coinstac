@@ -78,7 +78,7 @@ function run({ computationPath, users, verbose }) {
       data,
       initiate: index === 0,
       username,
-      verbose
+      verbose,
     });
   }));
 }
