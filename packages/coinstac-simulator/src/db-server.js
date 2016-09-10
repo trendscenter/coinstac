@@ -74,7 +74,6 @@ function setup({ computationPath, usernames }) {
       logger.info(
         `pouchdb-server running on http://localhost:${pouchDBServerConfig.port}`
       );
-      const users = decl.users.map(u => u.username);
       const defaultConsortium = new Consortium({
         _id: `testconsortiumid${Date.now()}`,
         description: 'test-default-consortium',
