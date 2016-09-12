@@ -10,7 +10,7 @@ require('./utils/handle-errors');
 const cloneDeep = require('lodash/cloneDeep');
 const common = require('coinstac-common');
 const config = require('./utils/config');
-const logger = require('./utils/logger');
+const { logger } = require('./utils/logging');
 const pdbs = require('spawn-pouchdb-server');
 const Pouchy = require('pouchy');
 const url = require('url');
@@ -46,15 +46,17 @@ function addDocument(pathname, doc) {
  * @description boots a pouchdb-server, a dbRegistry instance, and
  * a computation registry instance.  these utilities are commonly
  * required for PipelineRunnerPool testing
- * @param {string} declPath Path to the declaration file
+ *
+ * @param {Object} params
+ * @param {string} params.computationPath Path to the decentralized computation
+ * definition
+ * @param {string[]} params.usernames
  * @returns {Promise}
  */
-function setup(declPath) {
+function setup({ computationPath, usernames }) {
   if (server) {
     return Promise.reject(new Error('Server already instantiated'));
   }
-
-  const decl = require(declPath); // eslint-disable-line global-require
 
   return new Promise((resolve, reject) => {
     // spawn-pouchdb-server mutates user input >:(
@@ -72,16 +74,15 @@ function setup(declPath) {
       logger.info(
         `pouchdb-server running on http://localhost:${pouchDBServerConfig.port}`
       );
-      const users = decl.users.map(u => u.username);
       const defaultConsortium = new Consortium({
         _id: `testconsortiumid${Date.now()}`,
         description: 'test-default-consortium',
         label: 'test-default-consortium',
-        owners: users,
-        users,
+        owners: usernames,
+        users: usernames,
       });
       /* eslint-disable global-require */
-      const decentralizedComputation = require(decl.computationPath);
+      const decentralizedComputation = require(computationPath);
       /* eslint-enable global-require */
       const computationDoc = {
         _id: 'testcomputationid',

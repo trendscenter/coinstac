@@ -5,8 +5,8 @@
   "main": "src/index.js",
   "bin": "bin/coinstac-simulator",
   "scripts": {
-    "test": "node test/index.js && echo 'Please see coinstac-decentralized-algorithm-integration for further testing'",
-    "docs": "mkdir -p docs && jsdoc -t ./node_modules/minami -d docs -R README.md -r src/"
+    "docs": "mkdir -p docs && jsdoc -t ./node_modules/minami -d docs -R README.md -r src/",
+    "test": "nyc --reporter=lcov --check-coverage --branches=40 --functions=40 --lines=40 node test/"
   },
   "repository": {
     "type": "git",
@@ -35,6 +35,7 @@
   "homepage": "https://github.com/MRN-Code/coinstac#readme",
   "dependencies": {
     "axios": "^0.13.1",
+    "bluebird": "^3.4.4",
     "chalk": "^1.1.1",
     "clarity": "^1.0.2",
     "coinstac-common": "^2.0.6",
@@ -42,6 +43,7 @@
     "convict": "^1.4.0",
     "csv-load-sync": "^1.0.0",
     "glob": "^7.0.6",
+    "is-promise": "^2.1.0",
     "lodash": "^4.15.0",
     "pouchdb-adapter-memory": "^5.4.3",
     "pouchy": "^10.1.0",
@@ -54,7 +56,9 @@
     "gh-pages": "^0.11.0",
     "jsdoc": "^3.4.0",
     "minami": "^1.1.1",
+    "mockery": "^1.7.0",
     "nyc": "^8.1.0",
+    "sinon": "^2.0.0-pre.2",
     "tape": "^4.6.0"
   }
 }
