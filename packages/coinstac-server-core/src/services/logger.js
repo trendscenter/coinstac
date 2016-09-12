@@ -1,7 +1,8 @@
 'use strict';
 
-const mkdirp = require('mkdirp-promise');
+const mkdirp = require('mkdirp');
 const path = require('path');
+const pify = require('pify');
 const touch = require('touch');
 const winston = require('winston');
 
@@ -43,7 +44,7 @@ const logger = new (winston.Logger)({
  * Set up file transport async. If an error occurs the executable will catch the
  * unhandled rejection and shut the server down.
  */
-mkdirp(LOG_DIR)
+pify(mkdirp)(LOG_DIR)
   .then(() => {
     return new Promise((resolve, reject) => {
       touch(path.join(LOG_DIR, LOG_BASE), error => {
