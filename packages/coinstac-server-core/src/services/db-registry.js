@@ -5,9 +5,10 @@
  */
 
 const os = require('os');
-const mkdirp = require('mkdirp-promise');
+const mkdirp = require('mkdirp');
 const url = require('url');
 const path = require('path');
+const pify = require('pify');
 const cloneDeep = require('lodash/cloneDeep');
 const common = require('coinstac-common');
 const pouchDBAdapterMemory = require('pouchdb-adapter-memory');
@@ -87,7 +88,7 @@ module.exports = {
    * @returns {Promise} resolves with db-directory
    */
   upsertDBDir() {
-    return mkdirp(this.getDBPath());
+    return pify(mkdirp)(this.getDBPath());
   },
 
   /**

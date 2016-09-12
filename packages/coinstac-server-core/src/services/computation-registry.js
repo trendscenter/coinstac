@@ -6,8 +6,9 @@
 
 const coinstacCommon = require('coinstac-common');
 const os = require('os');
-const mkdirp = require('mkdirp-promise');
+const mkdirp = require('mkdirp');
 const path = require('path');
+const pify = require('pify');
 
 const logger = require('./logger');
 
@@ -65,7 +66,7 @@ module.exports = {
    * @returns {Promise} resolves with computations dir
    */
   upsertComputationsDir() {
-    return mkdirp(this.getComputationsPath());
+    return pify(mkdirp)(this.getComputationsPath());
   },
 
   /**
