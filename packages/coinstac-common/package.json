@@ -1,19 +1,26 @@
 {
   "name": "coinstac-common",
-  "version": "2.0.5",
-  "description": "COINSTAC utilities and models",
+  "version": "2.0.6",
+  "description": "COINSTAC core functionality.",
   "main": "src/index.js",
   "directories": {
     "test": "test"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/MRN-Code/coinstac-common.git"
+    "url": "git+https://github.com/MRN-Code/coinstac.git"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "NI Development - The Mind Research Network <nidev@mrn.org> (http://coins.mrn.org)",
+  "contributors": [
+    "Chris Dieringer <cdaringe@gmail.org>",
+    "Cory Reed <swashcap@gmail.com>",
+    "Ross Kelly <rkelly@mrn.org>",
+    "Drew Landis <landis.d@gmail.com>",
+    "Sergey Plis <splis@mrn.org>"
+  ],
+  "license": "MIT",
   "bugs": {
-    "url": "https://github.com/MRN-Code/coinstac-common/issues"
+    "url": "https://github.com/MRN-Code/coinstac/issues"
   },
   "dependencies": {
     "async": "^2.0.0-rc.5",
@@ -27,11 +34,11 @@
     "md5": "^2.0.0",
     "mkdirp": "^0.5.1",
     "moment": "^2.11.1",
-    "pouchy": "^10.0.0",
+    "pouchy": "^10.1.0",
     "rimraf": "^2.5.2",
     "tar-fs": "^1.10.0"
   },
-  "homepage": "http://mrn-code.github.io/coinstac-common/",
+  "homepage": "http://mrn-code.github.io/coinstac#readme",
   "devDependencies": {
     "clarify": "^1.0.5",
     "fs.extra": "^1.3.2",

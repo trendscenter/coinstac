@@ -1,7 +1,7 @@
 {
   "name": "coinstac-ui",
-  "version": "2.0.5",
-  "description": "distributed analytics and results sharing",
+  "version": "2.0.6",
+  "description": "COINSTAC desktop application.",
   "main": "app/main/index.js",
   "dependencies": {
     "ampersand-app": "^2.0.0",
@@ -11,8 +11,8 @@
     "bluebird": "^3.4.0",
     "bootstrap-sass": "^3.3.5",
     "classnames": "^2.2.5",
-    "coinstac-client-core": "^2.0.5",
-    "coinstac-common": "^2.0.5",
+    "coinstac-client-core": "^2.0.6",
+    "coinstac-common": "^2.0.6",
     "commander": "^2.9.0",
     "convict": "^1.4.0",
     "lodash": "4.14.0",
@@ -69,6 +69,7 @@
     "trace": "^2.3.3",
     "url-loader": "^0.5.6",
     "webpack": "1.13.1",
+    "webpack-dashboard": "0.1.8",
     "webpack-dev-server": "1.14.1"
   },
   "scripts": {
@@ -79,17 +80,25 @@
     "clean": "rm -rf ~/.coinstac",
     "clean-db": "find ~/.coinstac/* ! -name computations -maxdepth 0 -exec rm -rf '{}' \\;",
     "docs": "mkdir -p docs && jsdoc -t ./node_modules/minami -d docs -R README.md -r src/",
-    "test": "nyc --reporter=lcov --check-coverage --lines=1 --functions=1 --branches=1 babel-node test/"
+    "test": "nyc --reporter=lcov --check-coverage --lines=1 --functions=1 --branches=1 babel-node test/",
+    "watch": "webpack-dashboard -p 3001 -- node webpack-dev-server.js"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/MRN-Code/coinstac.git"
   },
-  "author": "",
+  "author": "NI Development - The Mind Research Network <nidev@mrn.org> (http://coins.mrn.org)",
+  "contributors": [
+    "Chris Dieringer <cdaringe@gmail.org>",
+    "Cory Reed <swashcap@gmail.com>",
+    "Ross Kelly <rkelly@mrn.org>",
+    "Drew Landis <landis.d@gmail.com>",
+    "Sergey Plis <splis@mrn.org>"
+  ],
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/MRN-Code/coinstac/issues"
   },
-  "homepage": "https://github.com/MRN-Code/coinstac",
+  "homepage": "https://github.com/MRN-Code/coinstac#readme",
   "keywords": []
 }
