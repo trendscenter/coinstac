@@ -82,6 +82,7 @@ class ConsortiumSingleController extends Component {
     if (consortium && consortium.activeComputationId) {
       dispatch(setComputationInputs(consortium._id, fieldIndex, values))
         .catch(error => {
+          app.logger.error(error);
           app.notify('error', error.message);
         });
     }

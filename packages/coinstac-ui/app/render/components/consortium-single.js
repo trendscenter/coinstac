@@ -8,6 +8,7 @@ import {
 } from 'react-bootstrap';
 import React, { Component, PropTypes } from 'react';
 
+import ComputationField from './computation-field';
 import ConsortiumResult from './consortium-result';
 import UserList from './user-list';
 
@@ -116,59 +117,73 @@ class ConsortiumSingle extends Component {
       Array.isArray(activeComputationInputs[0])
     ) {
       activeInputs = activeComputationInputs[0];
+    } else {
+      activeInputs = [];
     }
 
     return (
       <div>
-        {fields.map(({ help, label, values }, fieldIndex) => {
-          let value;
+        {fields.map(
+          ({ defaultValue, help, label, type, values }, fieldIndex) => {
+            const fieldProps = {
+              defaultValue,
+              disabled: !isOwner,
+              fieldIndex,
+              help,
+              key: fieldIndex,
+              label,
+              onChange: null,
+              options: values,
+              type,
+              value: null,
+            };
 
-          if (
-            activeInputs &&
-            activeInputs[fieldIndex] &&
-            activeInputs[fieldIndex].length
-          ) {
-            value = values.reduce((indicies, item, index) => {
-              return activeInputs[fieldIndex].indexOf(item) > -1 ?
-                indicies.concat(index) :
-                indicies;
-            }, []);
-          }
+            if (type === 'number') {
+              fieldProps.onChange = event => {
+                if (typeof event === 'number') {
+                  const currentValue = Array.isArray(values) && values[fieldIndex] ?
+                    values[fieldIndex] :
+                    defaultValue;
 
-          // TODO: Support multiple field types
-          const controlProps = {
-            componentClass: 'select',
-            disabled: !isOwner,
-            multiple: true,
-            onChange: event => {
-              const options = event.target.options;
-              const selectedValues = [];
-
-              for (let i = 0, il = options.length; i < il; i++) {
-                if (options[i].selected) {
-                  selectedValues.push(values[parseInt(options[i].value, 10)]);
+                  updateComputationField(fieldIndex, currentValue + event);
+                } else {
+                  updateComputationField(
+                    fieldIndex,
+                    parseInt(event.target.value, 10)
+                  );
                 }
-              }
-              updateComputationField(fieldIndex, selectedValues);
-            },
-            value,
-          };
+              };
 
-          return (
-            <FormGroup
-              controlId={`consortiumSingleCompField${fieldIndex}`}
-              key={fieldIndex}
-            >
-              <ControlLabel>{label}</ControlLabel>
-              <FormControl {...controlProps}>
-                {values.map((value, index) => {
-                  return <option key={index} value={index}>{value}</option>;
-                })}
-              </FormControl>
-              <HelpBlock>{help}</HelpBlock>
-            </FormGroup>
-          );
-        })}
+              if (typeof activeInputs[fieldIndex] !== 'undefined') {
+                fieldProps.value = activeInputs[fieldIndex];
+              }
+            } else if (type === 'select') {
+              fieldProps.onChange = event => {
+                const options = event.target.options;
+                const selectedValues = [];
+
+                for (let i = 0, il = options.length; i < il; i++) {
+                  if (options[i].selected) {
+                    selectedValues.push(values[parseInt(options[i].value, 10)]);
+                  }
+                }
+                updateComputationField(fieldIndex, selectedValues);
+              };
+
+              if (values && Array.isArray(activeInputs[fieldIndex])) {
+                fieldProps.value = values.reduce((indices, value, index) => {
+                  if (activeInputs[fieldIndex].indexOf(value) > -1) {
+                    indices.push(index);
+                  }
+
+                  return indices;
+                }, []);
+              }
+            }
+
+            return <ComputationField {...fieldProps} />;
+          }
+        )}
       </div>
     );
   }

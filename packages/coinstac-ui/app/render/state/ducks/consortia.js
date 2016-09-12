@@ -210,12 +210,12 @@ export const setComputationInputs = applyAsyncLoading(
 
           // TODO: Figure out better `activeComputationInputs` initializiation.
           // Place on the model?
-          if (!Array.isArray(activeCompInputs) || !activeCompInputs.lenght) {
+          if (!Array.isArray(activeCompInputs) || !activeCompInputs.length) {
             activeCompInputs = [[]];
           }
 
           // TODO: Don't lock to first index!
-          if (activeCompInputs[0].length < fieldIndex) {
+          if (activeCompInputs[0].length <= fieldIndex) {
             // Fill with empty arrays:
             [].push.apply(
               activeCompInputs[0],

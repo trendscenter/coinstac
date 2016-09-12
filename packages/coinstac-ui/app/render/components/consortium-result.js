@@ -31,7 +31,6 @@ export default function ConsortiumResult({
   let dataOutput;
   let errors;
   let indicator;
-  let stateOutput;
 
   if (userErrors.length) {
     indicator = <Label bsStyle="danger">Error!</Label>;
@@ -52,7 +51,7 @@ export default function ConsortiumResult({
     );
   }
 
-  stateOutput = (
+  const stateOutput = (
     <div>
       <h3 className="h4">Computation state:</h3>
       <ul>
