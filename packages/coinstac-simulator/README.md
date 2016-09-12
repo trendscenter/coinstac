@@ -1,81 +1,185 @@
 # coinstac-simulator
 
-<img src="https://raw.githubusercontent.com/MRN-Code/coinstac-common/master/img/coinstac.png" height="75px" />
+<img src="https://raw.githubusercontent.com/MRN-Code/coinstac/master/img/coinstac.png" height="75px">
 
-[ ![Codeship Status for MRN-Code/coinstac-simulator](https://codeship.com/projects/370d2330-d2b2-0133-5da2-5e07c373472b/status?branch=master)](https://codeship.com/projects/141922)
+COINSTAC simulator for computation runs. [Documentation](http://mrn-code.github.io/coinstac/).
 
-the official API documentation [lives here](http://mrn-code.github.io/coinstac-simulator/), albeit there's not much too it!
+<img src="https://raw.githubusercontent.com/MRN-Code/coinstac/master/packages/coinstac-simulator/media/demo-capture.gif" />
 
-## what
+## Installation
 
-provides a runner for you to test your [DecentralizedComputations](http://mrn-code.github.io/coinstac-common/DecentralizedComputation.html).
+Ensure you have [Node.js](https://nodejs.org/) installed. Then, the following command from a shell:
 
-we offer both a *cli* tool and an importable *library*
+```shell
+npm install --global coinstac-simulator
+```
 
-<img src="https://raw.githubusercontent.com/MRN-Code/coinstac-simulator/master/media/demo-capture.gif" />
+## Use
 
-## how
+_coinstac-simulator_ contains a command line interface and a Node.js API. Read the [_Computation Development_ guide](https://github.com/MRN-Code/coinstac/blob/master/guides/computation-development.md) for more information on creating decentralized computations and testing them with _coinstac-simulator_.
 
-regardless if you are simulating by using our CLI or the library, you need to define a "declaration" on how your simulation will be run.  you are welcome to [look here at some examples](https://github.com/MRN-Code/coinstac-decentralized-algorithm-integration/blob/master/test/declarations/).
+### CLI
 
-a simulation "declaration" is a `.js` file with the following shape:
+_coinstac-simulator_ has one required flag, `--declaration` (`-d` for short). Use it to designate the location of your declaration file:
+
+```shell
+coinstac-simulator -d ./path/to/declaration.js
+```
+
+Run `coinstac-simulator --help` for more information on how to use the CLI.
+
+### Programmatic Use
+
+Ensure that a valid _package.json_ exists in your project’s directory (easily create one with `npm init`). Then, add _coinstac-simulator_ as a dependency:
+
+```shell
+npm install coinstac-simulator --save
+```
+
+_coinstac-simulator_ is now available in your JavaScript modules. Include it using `require`:
 
 ```js
-module.exports = {
-  computationPath: './path/to/decentralized-computation.js',
-  users: [
-    { username: 'user_a', data: { ... } },
-    { username: 'user_b', data: { ... } },
-  ],
-  server: { // optional
-    preRun: [
-      (done) => { /* do something interesting */},
+// declaration.js
+const coinstacSimulator = require('coinstac-simulator');
+```
+
+#### coinstacSimulator.createUserData(pattern, [csvPath], [delimiter])
+
+* **`pattern`** `<String>`: File globbing pattern passed to [glob](https://www.npmjs.com/package/glob)
+* **`csvPath`** `<String>`: Path to a CSV variables file to load
+* **`delimiter`** `<String>`: CSV delimiter
+* return: `<Array>` Collection of user data
+
+Synchronously transpose a directory structure into user data suitable for simulation. This method supports a particular directory structure:
+
+```shell
+$ tree path/to/data/
+path/to/data/
+├── user-1
+│   └── x
+│   │   ├── data-1.txt
+│   │   └── data-2.txt
+│   └── y
+│       ├── data-3.txt
+│       └── data-4.txt
+└── user-2
+  └── x
+  │   ├── data-5.txt
+  │   └── data-6.txt
+  └── y
+      ├── data-7.txt
+      └── data-8.txt
+```
+
+Top-level directories are treated as users; their immediate subdirectories are treated as variable names. The subdirectories’ files’ data are loading into these properties, like so:
+
+```js
+[
+  // user-1:
+  {
+    x: [
+      // data-1.txt, data-2.txt
     ],
-    postRun: [
-      (done) => { /* do something interesting */},
+    y: [
+      // data-3.txt, data-4.txt
     ],
   },
+
+  // user-2:
+  {
+    x: [
+      // data-5.txt, data-6.txt
+    ],
+    y: [
+      // data-7.txt, data-8.txt
+    ],
+  },
+]
+```
+
+Adding a supporting CSV via the `csvPath` argument aids in parsing files:
+
+```csv
+user,t,u,v
+user-1,1,2,2
+user-2,4,5,6
+```
+
+`createUserData` is most useful in a declaration file:
+
+```js
+const coinstacSimulator = require('coinstac-simulator');
+
+module.exports = {
+  computationPath: './path/to/computation.js',
+  local: coinstacSimulator.createUserData(
+    './path/to/data/**/*.txt',
+    './path/to/vars.csv'
+  ),
+};
+```
+
+#### coinstacSimulator.loadFiles(pattern, [delimiter]):
+
+* **`pattern`** `<String>`: File globbing pattern passed to [glob](https://www.npmjs.com/package/glob)
+* **`delimiter`** `<String>`: CSV delimiter
+* return: `<Array>` Parsed input data
+
+Synchronously loads files' data. `loadFiles` is most useful in a declaration file:
+
+```js
+// declaration.js
+const coinstacSimulator = require('coinstac-simulator');
+
+module.exports = {
+  computationPath: './path/to/computation.js',
+  local: [
+    {
+      x: coinstacSimulator.loadFiles('./path/to/files/1/*.txt'),
+    },
+    {
+      x: coinstacSimulator.loadFiles('./path/to/files/2/*.txt'),
+    }, {
+      x: coinstacSimulator.loadFiles('./path/to/files/3/*.txt'),
+    },
+  ],
+};
+```
+
+#### coinstacSimulator.run(declarationPath)
+
+* **`declarationPath`** `<String>`: Path to declaration file
+* return: `<Promise>` Resolves upon simulator run completion, or rejects with a run error
+
+`run` is _coinstac-simulator_’s programmatic function for running an entire simulation. Use it if you don’t want to use the CLI:
+
+```js
+const coinstacSimulator = require('coinstac-simulator');
+
+coinstacSimulator.run('./path/to/declaration.js')
+  .then(() => console.log('Simulation run complete!'))
+  .catch(error => console.error('Simulation run failed!', error));
+```
+
+## Debugging
+
+Set the `verbose` property in your declaration to `true`:
+
+```js
+// declaration.js
+module.exports = {
+  computationPath:
+  local: [
+    // ...
+  ],
   verbose: true,
 };
 ```
- - _@NOTE_ the **data** property in each `users` object is _optional_, and can be any JSON serializable input
- - _@NOTE_ the declaration must always be _javascript_.  feel free to submit a PR to support other types if you strongly prefer YAML/JSON/something-else!
 
-### cli mode
+This ensures that all `console.log`s in your JavaScript computations and stdout/stderr writes in your command computations will persist to the main process’s logger and your terminal.
 
-- `npm install -g coinstac-simulator`
-- `coinstac-simulator -d path-to-declaration.js`
+View the [_Computation Development_ guide](https://github.com/MRN-Code/coinstac/blob/master/guides/computation-development.md) for more information on computations in COINSTAC.
 
-### library
+## License
 
-```js
-const sim = require('coinstac-simulator');
-const handleErrors = require('coinstac-simulator/src/handle-errors')();
-const declaration = require('./path-to-declaration.js');
-sim.setup(declaration, (err) => {
-  if (err) { throw err; }
-  sim.teardown((err) => {
-    if (err) { throw err; }
-  });
-});
-```
-
-## why
-
-because decentralized computation authoring can be difficult.  you should validate your process before going live!
-
-## when
-
-now.
-
-## where
-
-right there at your desk.
-
-### debugging
-
-if `verbose` is toggled to `true` in your computation definition for [`cmd` type Computations](http://mrn-code.github.io/coinstac-common/CommandComputation.html), you can write to `stderr` to have your information streamed onto the screen.  if that is otherwise insufficient, you will need to capture the inputs to the process, (via parsing the CLI input), and run your faulty script/program using your normal debug strategies of choice for whichever particular language you are using.
-
-## it's not working
-
-file an issue!  we will try and be prompt, and even try to help you with your algorithms if necessary.
+MIT. See [LICENSE](./LICENSE) for details.

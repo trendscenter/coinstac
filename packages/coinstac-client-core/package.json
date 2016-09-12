@@ -1,7 +1,7 @@
 {
   "name": "coinstac-client-core",
-  "version": "2.0.5",
-  "description": "exposes utilities for coinstac client node operation",
+  "version": "2.0.6",
+  "description": "COINSTAC business logic for clients.",
   "main": "src/index.js",
   "bin": "./bin/coinstac-client-core",
   "scripts": {
@@ -11,25 +11,33 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/MRN-Code/coinstac-client-core.git"
+    "url": "git+https://github.com/MRN-Code/coinstac.git"
   },
   "keywords": [
     "coinstac"
   ],
-  "author": "cdaringe",
+  "author": "NI Development - The Mind Research Network <nidev@mrn.org> (http://coins.mrn.org)",
+  "contributors": [
+    "Chris Dieringer <cdaringe@gmail.org>",
+    "Cory Reed <swashcap@gmail.com>",
+    "Ross Kelly <rkelly@mrn.org>",
+    "Drew Landis <landis.d@gmail.com>",
+    "Sergey Plis <splis@mrn.org>"
+  ],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/MRN-Code/coinstac-client-core/issues"
+    "url": "https://github.com/MRN-Code/coinstac/issues"
   },
-  "homepage": "https://github.com/MRN-Code/coinstac-client-core#readme",
+  "homepage": "https://github.com/MRN-Code/coinstac#readme",
   "dependencies": {
     "async": "^1.5.2",
     "atob": "^2.0.0",
     "axios": "^0.11.1",
     "bluebird": "3.1.1",
     "btoa": "^1.1.2",
-    "coinstac-common": "^2.0.5",
+    "coinstac-common": "^2.0.6",
     "commander": "^2.9.0",
+    "concat-stream": "^1.5.2",
     "convict": "^1.3.0",
     "csv-parse": "^1.1.5",
     "firstline": "^1.2.0",
