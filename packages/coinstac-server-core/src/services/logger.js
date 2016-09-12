@@ -45,16 +45,11 @@ const logger = new (winston.Logger)({
  * unhandled rejection and shut the server down.
  */
 pify(mkdirp)(LOG_DIR)
-  .then(() => {
-    return new Promise((resolve, reject) => {
-      touch(path.join(LOG_DIR, LOG_BASE), error => {
-        if (error) {
-          reject(error);
-        } else {
-          resolve();
-        }
-      });
-    });
+  .then(() => pify(touch)(path.join(LOG_DIR, LOG_BASE)))
+  .catch(() => {
+    throw new Error(
+      `Couldn't create log file: ${path.join(LOG_DIR, LOG_BASE)}`
+    );
   })
   .then(() => {
     logger.add(winston.transports.File, {
