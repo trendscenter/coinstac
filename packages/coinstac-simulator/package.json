@@ -1,6 +1,6 @@
 {
   "name": "coinstac-simulator",
-  "version": "2.0.6",
+  "version": "2.0.7",
   "description": "COINSTAC simulator for computation runs.",
   "main": "src/index.js",
   "bin": "bin/coinstac-simulator",
@@ -38,7 +38,7 @@
     "bluebird": "^3.4.4",
     "chalk": "^1.1.1",
     "clarity": "^1.0.2",
-    "coinstac-common": "^2.0.6",
+    "coinstac-common": "^2.0.7",
     "commander": "^2.9.0",
     "convict": "^1.4.0",
     "csv-load-sync": "^1.0.0",
