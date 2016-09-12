@@ -58,7 +58,7 @@
   },
   "scripts": {
     "docs": "mkdir -p docs && jsdoc -t ./node_modules/minami -d docs -R README.md -r src/",
-    "test": "nyc --reporter=lcov --check-coverage --functions=90 --branches=79 node test/"
+    "test": "nyc --reporter=lcov --check-coverage --functions=90 --branches=75 node test/"
   },
   "nyc": {
     "exclude": [
