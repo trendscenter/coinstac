@@ -375,3 +375,12 @@ tape('runs declaration :: errors', t => {
     });
 });
 
+tape('sets commands\' cwd', t => {
+  t.plan(1);
+
+  coinstacSimulator.run(path.resolve(__dirname, 'mocks/exec-declaration.js'))
+    .then(() => {
+      t.pass('resolves!');
+    })
+    .catch(t.end);
+});
