@@ -26,7 +26,7 @@ function getReadyClient({
 }) {
   return new Promise((resolve, reject) => {
     const client = cp.fork(path.join(__dirname, 'boot-client.js'), {
-      cwd: process.cwd(),
+      cwd: path.dirname(computationPath),
       silent: true,
     });
 

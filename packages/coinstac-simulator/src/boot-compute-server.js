@@ -2,9 +2,8 @@
 
 require('./utils/handle-errors');
 
-const poolInitializer = require('./pool-initializer');
 const common = require('coinstac-common');
-const stubComputationToRegistry = require('./stub-computation-to-registry');
+const getPoolConfig = require('./utils/get-pool-config');
 const RemotePipelineRunnerPool = common.models.pipeline.runner.pool.RemotePipelineRunnerPool;
 const { getChildProcessLogger } = require('./utils/logging');
 
@@ -27,15 +26,16 @@ const logger = getChildProcessLogger();
  * @returns {Promise}
  */
 const boot = function boot({ computationPath, data }) { // eslint-disable-line no-unused-vars
-  const dComp = require(computationPath); // eslint-disable-line global-require
-  const optsPatch = { dbRegistry: { isRemote: true } };
   let pool;
 
   logger.verbose('Booting server');
 
-  return poolInitializer.getPoolOpts(optsPatch)
-  .then((opts) => { pool = new RemotePipelineRunnerPool(opts); })
-  .then(() => {
+  return getPoolConfig({
+    computationPath,
+    isLocal: false,
+  })
+  .then((opts) => {
+    pool = new RemotePipelineRunnerPool(opts);
     pool.events.on('computation:start', runId => {
       logger.verbose(`Run ${runId} starting`);
     });
@@ -52,18 +52,14 @@ const boot = function boot({ computationPath, data }) { // eslint-disable-line n
 
     logger.verbose('Initializing RemotePipelineRunnerPool');
     return pool.init();
-  })
-  .then(() => stubComputationToRegistry({
-    computation: dComp,
-    registry: pool.computationRegistry,
-  }));
+  });
 };
 
 // boot with data provided by `boot-clients`
 process.on('message', (opts) => {
   if (opts.boot) {
     boot(opts.boot)
-    .then((result) => process.send({ ready: true, result }));
+    .then(() => process.send({ ready: true }));
   } else {
     throw new Error([
       'message from parent process has no matching command',
