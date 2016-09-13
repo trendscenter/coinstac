@@ -97,7 +97,10 @@ const exportList = {
           undefined;
 
         return Promise.all([
-          declaration.computationPath,
+          path.resolve(
+            path.dirname(require.resolve(declarationPath)),
+            declaration.computationPath
+          ),
           local,
           remote,
           !!declaration.verbose,

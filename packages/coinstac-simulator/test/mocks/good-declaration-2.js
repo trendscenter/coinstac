@@ -1,7 +1,9 @@
 'use strict';
 
+const path = require('path');
+
 module.exports = {
-  computationPath: './path/to/computation.js',
+  computationPath: path.join(__dirname, 'path', 'to', 'computation.js'),
   local: [{
     x: Promise.resolve('how'),
     y: 'who',
