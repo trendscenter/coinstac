@@ -56,12 +56,9 @@ class RemotePipelineRunner extends PipelineRunner {
     // return (this._saveQueue ? this._saveQueue : Promise.resolve())
     return Promise.all([
       this.getResultDocs(this.localDB, lResult.runId),
-      this.getPreviousResultData(this.remoteDB),
+      this.getPreviousResult(this.remoteDB),
     ])
-    .then((rslts) => {
-      const userResults = rslts[0];
-      const prevData = rslts[1];
-
+    .then(([userResults, { prevData, pluginState }]) => {
       // // test for run conditions, prevent frivolous runs
       // /* istanbul ignore if */
       // if (userResults.some((d) => d.pipelineState.inProgress)) {
@@ -80,7 +77,7 @@ class RemotePipelineRunner extends PipelineRunner {
         .then(this._flush.bind(this));
       }
 
-      return this._run({ userResults, prevData });
+      return this._run({ userResults, pluginState, prevData });
     });
   }
 
@@ -90,22 +87,19 @@ class RemotePipelineRunner extends PipelineRunner {
    * the inputs needed to run. `._run` actually runs the computation
    * @param {object} inputs
    * @param {object[]} inputs.userResults all userland computation results (raw)
-   * @param {object} inputs.prevData previous remote computation result
+   * @param {(Object|null)} inputs.pluginState
+   * @param {(Object|null} inputs.prevData previous remote computation result
    * @returns {Promise}
    */
   _run(inputs) {
-    const userResults = inputs.userResults;
-    const prevData = inputs.prevData;
-
-    const resultCopy = cloneDeep(this.result);
-    const payload = {
-      computationId: resultCopy.computationId,
-      consortiumId: resultCopy.consortiumId,
-      previousData: prevData,
-      usernames: resultCopy.usernames,
-      userResults,
-    };
-    return this._runPipeline(payload);
+    return this._runPipeline({
+      computationId: this.result.computationId,
+      consortiumId: this.result.consortiumId,
+      pluginState: inputs.pluginState,
+      previousData: inputs.prevData,
+      usernames: cloneDeep(this.result.usernames),
+      userResults: inputs.userResults,
+    });
   }
 
   /**
