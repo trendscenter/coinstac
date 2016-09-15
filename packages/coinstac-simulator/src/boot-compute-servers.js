@@ -31,7 +31,7 @@ function run({
     const server = cp.fork(
       path.join(__dirname, 'boot-compute-server.js'),
       {
-        cwd: process.cwd(),
+        cwd: path.dirname(computationPath),
         silent: true,
       }
     );
