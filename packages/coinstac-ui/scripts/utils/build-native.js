@@ -7,7 +7,7 @@ const promisify = require('bluebird').promisify;
 module.exports = function buildNative() {
   const exec = promisify(cp.exec);
 
-  Promise.all([
+  return Promise.all([
     exec(`${electron} --version`, { encoding: 'utf8' }),
     exec(`${electron} --abi`, { encoding: 'utf8' }),
   ])
