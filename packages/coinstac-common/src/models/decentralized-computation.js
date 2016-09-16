@@ -25,14 +25,59 @@ class DecentralizedComputation extends Base {
    * Get a serialized model suitable for saving in the 'computations' database.
    *
    * @returns {Object} Serialized model
+   * @property {Object[]} [inputs]
    * @property {string} name
    * @property {string} url
    * @property {string} version
    */
   getComputationDocument() {
     const { name, repository: { url }, version } = this.serialize();
+    const doc = { name, url, version };
 
-    return { name, url, version };
+    /**
+     * Gather pipeline items' `inputs` arrays and save them in the computation
+     * document.
+     *
+     * @todo This is a temporary hack! It's to facilitate selectable ROIs for
+     * Freesurfer analysis. See {@link https://github.com/MRN-Code/coinstac/issues/12}
+     * for discussion on computation input/output.
+     */
+    const inputs = [];
+
+    if (Array.isArray(this.local)) {
+      this.local.forEach(localItem => {
+        if (DecentralizedComputation.hasInputs(localItem)) {
+          inputs.push(localItem.inputs);
+        }
+      });
+    } else if (DecentralizedComputation.hasInputs(this.local)) {
+      inputs.push(this.local.inputs);
+    }
+
+    if (inputs.length) {
+      doc.inputs = inputs;
+    }
+
+    return doc;
+  }
+
+  /**
+   * Does an item have proper `inputs`?
+   * @private
+   * @static
+   *
+   * @todo This confirms the shape of an `input`. Change to a joi schema.
+   * @throws {Error}
+   *
+   * @param {Object} localItem
+   * @returns {boolean}
+   */
+  static hasInputs(localItem) {
+    if (!(localItem instanceof Object)) {
+      throw new Error('Expected arg to be an object');
+    }
+
+    return 'inputs' in localItem && Array.isArray(localItem.inputs);
   }
 }
 

@@ -6,6 +6,7 @@ const Pipeline = require('../pipeline');
 const ComputationResult = require('../../computation/computation-result');
 const joi = require('joi');
 const assign = require('lodash/assign');
+const get = require('lodash/get');
 const extractRunId = ComputationResult.prototype._extractRunId;
 
 /**
@@ -41,18 +42,22 @@ class PipelineRunner extends Base {
    */
 
   /**
-   * @description get previous result data from db
+   * @description Get the previous result data and plugin state from the
+   * database
    * @param {Pouchy} db
-   * @returns {Promise} Resolves to a data object or null
+   * @returns {Promise} Resolves to an object containing `prevData` and
+   * `pluginState` properties
    */
-  getPreviousResultData(db) {
+  getPreviousResult(db) {
     /* istanbul ignore next */
     if (!db) { throw new ReferenceError('missing db'); }
     const runId = extractRunId(this.result._id);
     return this.findResultByRunId(db, runId)
-    .then((doc) => {
-      if (!doc) { return null; }
-      return doc.data;
+    .then(doc => {
+      return {
+        pluginState: get(doc, 'pluginState', null),
+        prevData: get(doc, 'data', null),
+      };
     });
   }
 
