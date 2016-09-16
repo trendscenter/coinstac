@@ -140,18 +140,10 @@ class ConsortiumSingle extends Component {
 
             if (type === 'number') {
               fieldProps.onChange = event => {
-                if (typeof event === 'number') {
-                  const currentValue = Array.isArray(values) && values[fieldIndex] ?
-                    values[fieldIndex] :
-                    defaultValue;
-
-                  updateComputationField(fieldIndex, currentValue + event);
-                } else {
-                  updateComputationField(
-                    fieldIndex,
-                    parseInt(event.target.value, 10)
-                  );
-                }
+                updateComputationField(
+                  fieldIndex,
+                  parseInt(event.target.value, 10)
+                );
               };
 
               if (typeof activeInputs[fieldIndex] !== 'undefined') {
