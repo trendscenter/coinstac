@@ -65,7 +65,7 @@ Consortium.schema = Object.assign({}, PouchDocument.schema, {
       joi.number(),
       joi.string()
     )
-  ),
+  ).default([]),
   activeRunId: joi.string().min(1),
   description: joi.string().required(),
   label: joi.string().min(1).required(),
