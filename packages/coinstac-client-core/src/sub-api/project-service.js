@@ -73,26 +73,27 @@ class ProjectService extends ModelService {
   /**
    * Get meta file's contents.
    *
-   * This method parses a CSV for data under a 'Is Control' column header.
+   * This method parses a CSV and transforms rows into object entries in a
+   * `Map`.
    *
    * @example
    * myProjectService.getMetaFileContents('./path/to/my.csv')
    *   .then(output => {
-   *     // `output` looks like:
-   *     // [
-   *     //   ['M100', true],
-   *     //   ['M101', false],
-   *     //   ['M102', true],
-   *     //   ['M102', false],
-   *     // ]
-   *     console.log(output);
+   *     // `output` is a Map:
+   *     output.get('M100.txt');
+   *     // {
+   *     //   age: 30,
+   *     //   gender: 'male',
+   *     //   isControl: true,
+   *     // }
+   *     console.log(Array.from(output.entries()));
    *   })
    *   .catch(error => console.error(error));
    *
    * @param {string} file Full path to CSV
-   * @returns {Promise} Resolves to a collection of two-dimensional arrays,
-   * where the first element is the left-most column value and the second
-   * element is the 'Is Control' column text's coerced boolean value.
+   * @returns {Promise} Resolves to a `Map` where keys correspond to the left
+   * column of the CSV (should be a string corresponding to a project file's
+   * basename) and values are objects representing the row's data.
    */
   getMetaFileContents(file) {
     return bluebird.promisify(fs.readFile)(file)
