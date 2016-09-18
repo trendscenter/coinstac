@@ -1,6 +1,7 @@
 'use strict';
 
 const clientFactory = require('../utils/client-factory');
+const cloneDeep = require('lodash/cloneDeep');
 const coinstacCommon = require('coinstac-common');
 const EventEmitter = require('events');
 const fs = require('fs');
@@ -26,51 +27,161 @@ function getNextTick(callback) {
 }
 
 test('ProjectService - getMetaFileContents', t => {
-  const badFile1 = path.resolve(__dirname, '..', 'mocks', 'bad-dummy-1.csv');
-  const badFile2 = path.resolve(__dirname, '..', 'mocks', 'bad-dummy-2.csv');
-  const createReadStreamSpy = sinon.spy(fs, 'createReadStream');
-  const goodFile = path.resolve(__dirname, '..', 'mocks', 'good-dummy.csv');
+  const badFile = path.resolve(__dirname, '..', 'mocks', 'bad-metadata.csv');
+  const goodFile1 = path.resolve(__dirname, '..', 'mocks', 'good-metadata-1.csv');
+  const goodFile2 = path.resolve(__dirname, '..', 'mocks', 'good-metadata-2.csv');
+  const goodFile3 = path.resolve(__dirname, '..', 'mocks', 'good-metadata-3.csv');
+  const goodFile4 = path.resolve(__dirname, '..', 'mocks', 'good-metadata-4.csv');
+  const readFileSpy = sinon.spy(fs, 'readFile');
 
-  t.plan(4);
+  t.plan(6);
 
-  ProjectService.prototype.getMetaFileContents(badFile1)
-    .then(() => t.fail('resolves with header-less CSV'))
-    .catch(error => {
-      t.ok(
-        createReadStreamSpy.calledWith(badFile1),
-        'creates read stream with file arg'
-      );
-      t.ok(
-        error.message.toLowerCase().indexOf('is control'),
-        'rejects without \'is control\' header'
-      );
-
-      return ProjectService.prototype.getMetaFileContents(badFile2);
-    })
+  ProjectService.prototype.getMetaFileContents(badFile)
     .then(() => t.fail('resolves with malformed CSV'))
     .catch(() => {
-      t.pass('rejects with malformed CSV');
+      t.ok(
+        readFileSpy.calledWith(badFile),
+        'reads file from arg'
+      );
+      t.ok('rejects with malformed CSV');
 
-      return ProjectService.prototype.getMetaFileContents(goodFile);
+      return ProjectService.prototype.getMetaFileContents(goodFile1);
     })
     .then(output => {
       t.deepEqual(
-        output,
+        Array.from(output.entries()),
+        [['M100', {
+          bogusData: 'dragons',
+          isControl: true,
+          moreSillyData: 'reptile',
+        }], ['M101', {
+          bogusData: 'raccoons',
+          isControl: true,
+          moreSillyData: 'marsupial',
+        }], ['M102', {
+          bogusData: 'kittens',
+          isControl: true,
+          moreSillyData: 'feline',
+        }], ['M103', {
+          bogusData: 'puppies',
+          isControl: false,
+          moreSillyData: 'canine',
+        }], ['M104', {
+          bogusData: 'squirrels',
+          isControl: false,
+          moreSillyData: 'rodent',
+        }]],
+        'returns parsed tag objects'
+      );
+
+      return ProjectService.prototype.getMetaFileContents(goodFile2);
+    })
+    .then(output => {
+      t.deepEqual(
+        Array.from(output.entries()),
+        [['M100', {
+          strangeBools: 1,
+        }], ['M101', {
+          strangeBools: 0,
+        }], ['M102', {
+          strangeBools: -1,
+        }]],
+        'doesn\'t do anything with strange booleans'
+      );
+
+      return ProjectService.prototype.getMetaFileContents(goodFile3);
+    })
+    .then(output => {
+      t.deepEqual(
+        Array.from(output.entries()),
+        [['M100', {
+          stringyBools: true,
+        }], ['M101', {
+          stringyBools: false,
+        }], ['M102', {
+          stringyBools: true,
+        }]],
+        'parses long string booleans'
+      );
+
+      return ProjectService.prototype.getMetaFileContents(goodFile4);
+    })
+    .then(output => {
+      t.deepEqual(
+        Array.from(output.entries()),
         [
-          ['M100', true],
-          ['M101', true],
-          ['M102', false],
-          ['M103', false],
-          ['M104', false],
+          ['M100', { rad: true }],
+          ['M101', { rad: false }],
+          ['M102', { rad: true }],
+          ['M103', { rad: false }],
         ],
-        'returns is controls'
+        'parses short string booleans'
       );
     })
     .catch(t.end)
     .then(() => {
       // teardown
-      createReadStreamSpy.restore();
+      readFileSpy.restore();
     });
+});
+
+test('ProjectService - setMetaContents', t => {
+  const badProject = {
+    files: [{
+      filename: path.join(__dirname, 'baddies.txt'),
+    }],
+  };
+  const filename1 = path.join(__dirname, 'M100.txt');
+  const filename2 = path.join(__dirname, 'M101.txt');
+  const goodProject = {
+    files: [{
+      filename: filename1,
+      tags: {},
+    }, {
+      filename: filename2,
+      tags: {
+        already: 'taggin',
+      },
+    }],
+  };
+  const meta = new Map([[
+    filename1,
+    { rando: 'stuff' },
+  ], [
+    path.basename(filename2),
+    { hello: 'bonjour' },
+  ], [
+    'M102.txt',
+    { hola: 'guten tag' },
+  ]]);
+
+  t.throws(ProjectService.prototype.setMetaContents, 'throws without project');
+  t.throws(
+    ProjectService.prototype.setMetaContents.bind(null, {}),
+    'throws without meta map'
+  );
+  t.throws(
+    ProjectService.prototype.setMetaContents.bind(null, badProject, meta),
+    /baddies\.txt/,
+    'throws with missing file'
+  );
+  t.deepEqual(
+    // `goodProject` is mutated, so clone:
+    ProjectService.prototype.setMetaContents(cloneDeep(goodProject), meta).files,
+    [{
+      filename: filename1,
+      tags: meta.get(filename1),
+    }, {
+      filename: filename2,
+      tags: Object.assign(
+        {},
+        goodProject.files[1].tags,
+        meta.get(path.basename(filename2))
+      ),
+    }],
+    'adds meta to project tags'
+  );
+  t.end();
 });
 
 // TODO: This test fails when this file is tested independently. Why?

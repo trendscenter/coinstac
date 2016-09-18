@@ -8,16 +8,52 @@ const ModelService = require('../model-service');
 const Project = require('coinstac-common').models.Project;
 const bluebird = require('bluebird');
 const coinstacCommon = require('coinstac-common');
-const concatStream = require('concat-stream');
 const csvParse = require('csv-parse');
-const difference = require('lodash/difference');
 const fileStats = require('../utils/file-stats');
-const find = require('lodash/find');
-const findIndex = require('lodash/findIndex');
-const firstline = require('firstline');
 const fs = require('fs');
+const path = require('path');
+const camelCase = require('lodash/camelCase');
+const difference = require('lodash/difference');
+const find = require('lodash/find');
 const includes = require('lodash/includes');
-const mapStream = require('map-stream');
+const tail = require('lodash/tail');
+
+function maybeParseNumber(value) {
+  const parsed = parseInt(value, 10);
+  return !Number.isNaN(parsed) ? parsed : value;
+}
+
+function isNumericBool1(value) {
+  const parsed = parseInt(value, 10);
+  return !Number.isNaN(parsed) && (parsed === 1 || parsed === 0);
+}
+
+function isNumericBool2(value) {
+  const parsed = parseInt(value, 10);
+  return !Number.isNaN(parsed) && (parsed === 1 || parsed === -1);
+}
+
+function toNumericBool(value) {
+  return value > 0;
+}
+
+function isLongStringBool(value) {
+  const lower = value.toLowerCase();
+  return lower === 'true' || lower === 'false';
+}
+
+function toLongStringBool(value) {
+  return value.toLowerCase() === 'true';
+}
+
+function isShortStringBool(value) {
+  const lower = value.toLowerCase();
+  return lower === 't' || lower === 'f';
+}
+
+function toShortStringBool(value) {
+  return value.toLowerCase() === 't';
+}
 
 /**
  * @class
@@ -59,77 +95,74 @@ class ProjectService extends ModelService {
    * element is the 'Is Control' column text's coerced boolean value.
    */
   getMetaFileContents(file) {
-    const parseOpts = { delimiter: ',' };
-    const isControlColumnPattern = /is ?control/i;
-    let firstRowString;
-    let isControlColumnIndex;
+    return bluebird.promisify(fs.readFile)(file)
+      .then(data => bluebird.promisify(csvParse)(data.toString()))
+      .then(output => {
+        const firstRow = tail(output[0]).map(camelCase);
+        const tailRows = tail(output);
 
-    const map = mapStream((data, callback) => {
-      if (
-        // Ignore empty rows
-        !data ||
-        !Array.isArray(data) ||
-        (Array.isArray(data) && !data.length) ||
+        const columnOperators = firstRow.map((value, index) => {
+          const column = tailRows.map(row => row[index + 1]);
 
-        // Ignore first row
-        data.toString() === firstRowString
-      ) {
-        // No args filters out this item
-        callback();
-      } else if (data.length < isControlColumnIndex + 1) {
-        // Don't output potential PHI
-        callback(new Error('Row missing isControl column'));
-      } else {
-        // Assumes filenames are stored in the first column
-        // TODO: Figure out why map-stream needs nested arrays
-        const value = data[isControlColumnIndex];
-        let parsed;
-
-        if (/true/i.test(value)) {
-          parsed = true;
-        } else if (/false/i.test(value)) {
-          parsed = false;
-        } else if (typeof value === 'string') {
-          const parseAttempt = parseInt(value, 10);
-          if (!Number.isNaN(parseAttempt)) {
-            parsed = parseAttempt;
+          // TODO: Improve performance by dropping loops
+          if (column.every(isNumericBool1) || column.every(isNumericBool2)) {
+            return toNumericBool;
+          } else if (column.every(isLongStringBool)) {
+            return toLongStringBool;
+          } else if (column.every(isShortStringBool)) {
+            return toShortStringBool;
           }
-        }
 
-        if (typeof parsed === 'number') {
-          parsed = parsed > 0;
-        }
+          return maybeParseNumber;
+        });
 
-        if (typeof parsed !== 'boolean') {
-          callback(new Error(`Cannot parse value: ${value}`));
-        } else {
-          callback(null, [[data[0], parsed]]);
+        return tail(output).reduce((memo, row) => {
+          memo.set(row[0], tail(row).reduce((tags, value, index) => {
+            tags[firstRow[index]] = columnOperators[index](value);
+            return tags;
+          }, {}));
+
+          return memo;
+        }, new Map());
+      });
+  }
+
+  /**
+   * Set meta contents to a project's files.
+   *
+   * @todo Refactor this into model method?
+   *
+   * @throws {Error} Project file's filename isn't a key in `metaContents`
+   *
+   * @param {Project} project
+   * @param {Map} metaContents Retrieved from `getMetaFileContents`
+   * @returns {Project} Mutated project with meta content as file tags
+   */
+  setMetaContents(project, metaContents) {
+    if (!project) {
+      throw new Error('Project required');
+    } else if (!metaContents || !(metaContents instanceof Map)) {
+      throw new Error('Meta contents map required');
+    }
+
+    project.files.forEach(file => {
+      let meta;
+
+      for (const key of [file.filename, path.basename(file.filename)]) {
+        if (metaContents.has(key)) {
+          meta = metaContents.get(key);
+          break;
         }
       }
+
+      if (!meta) {
+        throw new Error(`Couldn't find meta for ${file.filename}`);
+      }
+
+      Object.assign(file.tags, meta);
     });
-    const parse = csvParse(parseOpts);
-    const readStream = fs.createReadStream(file);
 
-    return firstline(file)
-      .then(line => bluebird.promisify(csvParse)(line, parseOpts))
-      .then(([firstRow]) => {
-        firstRowString = firstRow.toString();
-        isControlColumnIndex = findIndex(firstRow, headerText => {
-          return isControlColumnPattern.test(headerText);
-        });
-
-        if (isControlColumnIndex < 0) {
-          throw new Error('Couldn\'t find control column');
-        }
-
-        return new Promise((resolve, reject) => {
-          map.on('error', reject);
-          parse.on('error', reject);
-          readStream.on('error', reject);
-
-          readStream.pipe(parse).pipe(map).pipe(concatStream(resolve));
-        });
-      });
+    return project;
   }
 
   /**
