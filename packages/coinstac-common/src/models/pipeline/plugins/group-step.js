@@ -4,6 +4,8 @@ const get = require('lodash/get');
 const set = require('lodash/set');
 const values = require('lodash/values');
 
+/** @todo Test group-step */
+/* istanbul ignore next */
 module.exports = {
   preRun: {
     local: function groupStepLocal(runInputs, compResult, hooks) {

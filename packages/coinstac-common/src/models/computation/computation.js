@@ -68,6 +68,7 @@ Computation.schema = Object.assign({
   type: joi.string().min(2).required(),
   next: joi.object().type(Computation),
   verbose: joi.boolean().default(false),
+  inputs: joi.array().items(joi.object()),
 }, Base.schema);
 
 module.exports = Computation;

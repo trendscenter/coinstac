@@ -7,10 +7,9 @@
 
 require('./utils/handle-errors');
 
-const poolInitializer = require('./pool-initializer');
+const getPoolConfig = require('./utils/get-pool-config');
 const common = require('coinstac-common');
 const User = common.models.User;
-const stubComputationToRegistry = require('./stub-computation-to-registry');
 const LocalPipelineRunnerPool = common.models.pipeline.runner.pool.LocalPipelineRunnerPool;
 const RemoteComputationResult = common.models.computation.RemoteComputationResult;
 const { getChildProcessLogger } = require('./utils/logging');
@@ -55,7 +54,10 @@ function boot({
     userData = data;
   }
 
-  return poolInitializer.getPoolOpts({ dbRegistry: { isLocal: true } })
+  return getPoolConfig({
+    computationPath,
+    isLocal: true,
+  })
     .then(opts => {
       pool = new LocalPipelineRunnerPool(Object.assign({
         user: new User({
@@ -67,16 +69,6 @@ function boot({
       pool.events.on('error', logger.error);
 
       return pool.init();
-    })
-    .then(() => {
-      // stub registry (to circumvent needing to d/l DecentralizedComputation)
-      /* eslint-disable global-require */
-      const decentralizedComputation = require(computationPath);
-      /* eslint-enable global-require */
-      return stubComputationToRegistry({
-        computation: decentralizedComputation,
-        registry: pool.computationRegistry,
-      });
     });
 }
 
@@ -201,7 +193,7 @@ const kickoff = function kickoff() {
 process.on('message', (opts) => {
   if (opts.boot) {
     boot(opts.boot)
-    .then((result) => process.send({ ready: true, result }));
+    .then(() => process.send({ ready: true }));
   } else if (opts.kickoff) {
     kickoff();
   } else if (opts.teardown) {

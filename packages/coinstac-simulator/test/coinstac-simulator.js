@@ -200,7 +200,10 @@ tape('gets declaration by path', t => {
       t.deepEqual(
         declaration,
         {
-          computationPath: './path/to/computation.js',
+          computationPath: path.resolve(
+            __dirname,
+            'mocks/path/to/computation.js'
+          ),
           local: [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
           remote: undefined,
           verbose: false,
@@ -215,8 +218,11 @@ tape('gets declaration by path', t => {
     .then(declaration => {
       t.equal(
         declaration.computationPath,
-        './path/to/computation.js',
-        'passes computation path'
+        path.resolve(
+          __dirname,
+          'mocks/path/to/computation.js'
+        ),
+        'passes resolved computation path'
       );
       t.deepEqual(
         declaration.local,
@@ -369,3 +375,12 @@ tape('runs declaration :: errors', t => {
     });
 });
 
+tape('sets commands\' cwd', t => {
+  t.plan(1);
+
+  coinstacSimulator.run(path.resolve(__dirname, 'mocks/exec-declaration.js'))
+    .then(() => {
+      t.pass('resolves!');
+    })
+    .catch(t.end);
+});
