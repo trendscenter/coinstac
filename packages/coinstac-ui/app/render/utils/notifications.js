@@ -34,7 +34,7 @@ export function getRunEndNotifier(consortium) {
     app.notifications.push({
       autoDismiss: 1,
       level: 'info',
-      message: `Ran computation for “${consortium.label}”`,
+      message: `Ran computation step for “${consortium.label}”`,
     });
   };
 }

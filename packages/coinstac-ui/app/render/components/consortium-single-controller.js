@@ -6,11 +6,6 @@ import { hilarious } from '../utils/hilarious-loading-messages';
 import ConsortiumSingle from './consortium-single';
 import { fetchComputations } from '../state/ducks/computations';
 import {
-  addConsortiumComputationListener,
-  listenToConsortia,
-  unlistenToConsortia,
-} from '../state/ducks/bg-services';
-import {
   joinConsortium,
   leaveConsortium,
   setActiveComputation,
@@ -51,13 +46,10 @@ class ConsortiumSingleController extends Component {
     const { dispatch, consortium: { _id: consortiumId } } = this.props;
 
     dispatch(joinConsortium(consortiumId, username))
-    .then((tium) => {
-      // TODO: Figure out a better way to initiate this background service
-      listenToConsortia(tium);
-      addConsortiumComputationListener(tium);
-
-      app.logger.info(`now listening to events on consortium ${tium.label}`);
-    });
+      .catch(error => {
+        console.error(error); // eslint-disable-line no-console
+        app.logger.error(error.message);
+      });
   }
 
   updateComputation(evt) {
@@ -92,13 +84,10 @@ class ConsortiumSingleController extends Component {
     const { dispatch, consortium: { _id: consortiumId } } = this.props;
 
     dispatch(leaveConsortium(consortiumId, username))
-    .then(() => {
-      // TODO: Figure out a better way to initiate this background service
-      unlistenToConsortia(consortiumId);
-
-      app.notify('success', `${username} removed`);
-    })
-    .catch((err) => app.notify('error', err.message));
+      .catch(error => {
+        console.error(error); // eslint-disable-line no-console
+        app.logger.error(error.message);
+      });
   }
 
   render() {
