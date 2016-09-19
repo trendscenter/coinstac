@@ -1,6 +1,7 @@
 'use strict';
 
 const assign = require('lodash/assign');
+const bluebird = require('bluebird');
 const compact = require('lodash/compact');
 const concatStream = require('concat-stream');
 const DecentralizedComputation =
@@ -140,35 +141,6 @@ function getTarballUrl(options) {
   });
 }
 
-/**
- * Run `npm install` on a path.
- * @private
- * @param {string} path
- * @returns {Promise}
- */
-function runNPMInstall(path) {
-  return new Promise((resolve, reject) => {
-    const child = spawn('npm', ['install', '--production'], { cwd: path });
-
-    let error;
-    let out;
-
-    child.stderr.pipe(concatStream(data => {
-      error = data.toString();
-    }));
-    child.stdout.pipe(concatStream(data => {
-      out = data.toString();
-    }));
-
-    child.on('close', exitCode => {
-      /* istanbul ignore if */
-      if (exitCode) {
-        return reject(error);
-      }
-      return resolve(out);
-    });
-  });
-}
 
 /**
  * Computation registry.
@@ -285,50 +257,46 @@ class ComputationRegistry {
    * @returns {Promise}
    */
   _getFromSource(name, version) {
-    const path = this._getComputationPath(name, version);
+    const computationPath = this._getComputationPath(name, version);
 
-    return getTarballUrl({
-      github: this.github,
-      name,
-      registry: this.registry,
-      version,
-    })
-    .then(tarballUrl => {
-      return new Promise((resolve, reject) => {
-        mkdirp(path, (err) => {
-          if (err) {
-            reject(err);
-          } else {
-            const parsedUrl = url.parse(tarballUrl);
-            const tarExtract = tar.extract(path, {
-              map: header => {
-                // Ensure the tarball isn't unpacked into a deep directory
-                // TODO: Add test to make sure this is needed
-                header.name = tail(header.name.split('/')).join('/');
+    return Promise.all([
+      getTarballUrl({
+        github: this.github,
+        name,
+        registry: this.registry,
+        version,
+      }),
+      bluebird.promisify(mkdirp)(computationPath),
+    ])
+      .then(([tarballUrl]) => {
+        const parsedUrl = url.parse(tarballUrl);
+        const tarExtract = tar.extract(computationPath, {
+          map: header => {
+            // Ensure the tarball isn't unpacked into a deep directory
+            // TODO: Add test to make sure this is needed
+            header.name = tail(header.name.split('/')).join('/');
 
-                return header;
-              },
-            });
-
-            followRedirects.https.get({
-              hostname: parsedUrl.hostname,
-              path: parsedUrl.path,
-              headers: {
-                'User-Agent': 'COINSTAC',
-              },
-              protocol: parsedUrl.protocol,
-            }, res => {
-              res.pipe(gunzipMaybe()).pipe(tarExtract);
-            }).on('error', reject);
-
-            tarExtract.on('error', reject);
-            tarExtract.on('finish', resolve);
-          }
+            return header;
+          },
         });
-      });
-    })
-    .then(() => runNPMInstall(path))
-    .then(() => this._getFromDisk(name, version));
+
+        return new Promise((resolve, reject) => {
+          followRedirects.https.get({
+            hostname: parsedUrl.hostname,
+            path: parsedUrl.path,
+            headers: {
+              'User-Agent': 'COINSTAC',
+            },
+            protocol: parsedUrl.protocol,
+          }, res => {
+            res.pipe(gunzipMaybe()).pipe(tarExtract);
+          }).on('error', reject);
+          tarExtract.on('error', reject);
+          tarExtract.on('finish', resolve);
+        });
+      })
+      .then(() => ComputationRegistry.runNPMInstall(path))
+      .then(() => this._getFromDisk(name, version));
   }
 
   /**
@@ -448,6 +416,38 @@ class ComputationRegistry {
       return [matches[1], matches[2]];
     }
     return null;
+  }
+
+  /**
+   * Run `npm install` on a path.
+   * @private
+   * @static
+   *
+   * @param {string} path
+   * @returns {Promise}
+   */
+  static runNPMInstall(path) {
+    return new Promise((resolve, reject) => {
+      const child = spawn('npm', ['install', '--production'], { cwd: path });
+
+      let error;
+      let out;
+
+      child.stderr.pipe(concatStream(data => {
+        error = data.toString();
+      }));
+      child.stdout.pipe(concatStream(data => {
+        out = data.toString();
+      }));
+
+      child.on('close', exitCode => {
+        /* istanbul ignore if */
+        if (exitCode) {
+          return reject(error);
+        }
+        return resolve(out);
+      });
+    });
   }
 }
 
