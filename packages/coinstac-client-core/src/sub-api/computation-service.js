@@ -9,6 +9,7 @@ const crypto = require('crypto');
 const getSyncedDatabase = common.utils.getSyncedDatabase;
 const ModelService = require('../model-service');
 const RemoteComputationResult = common.models.computation.RemoteComputationResult;
+const ProjectService = require('./project-service');
 
 /**
  * @extends ModelService
@@ -91,13 +92,10 @@ class ComputationService extends ModelService {
     const { consortia, pool, projects } = this.client;
 
     return projects.get(projectId)
-      .then(project => Promise.all([
-        project,
-        projects.getMetaFileContents(project.metaFile),
-      ]))
-      .then(([project, projectMeta]) => Promise.all([
+      .then(project => ProjectService.getMetaFileContents(project.metaFile))
+      .then(projectMeta => Promise.all([
         consortia.get(consortiumId),
-        projects.setMetaContents(project, projectMeta),
+        projects.setMetaContents(projectId, projectMeta),
       ]))
       .then(([consortium, project]) => {
         const options = {
