@@ -72,6 +72,7 @@ class ProjectService extends ModelService {
 
   /**
    * Get meta file's contents.
+   * @static
    *
    * This method parses a CSV and transforms rows into object entries in a
    * `Map`.
@@ -95,7 +96,7 @@ class ProjectService extends ModelService {
    * column of the CSV (should be a string corresponding to a project file's
    * basename) and values are objects representing the row's data.
    */
-  getMetaFileContents(file) {
+  static getMetaFileContents(file) {
     return bluebird.promisify(fs.readFile)(file)
       .then(data => bluebird.promisify(csvParse)(data.toString()))
       .then(output => {
@@ -133,37 +134,37 @@ class ProjectService extends ModelService {
    *
    * @todo Refactor this into model method?
    *
-   * @throws {Error} Project file's filename isn't a key in `metaContents`
-   *
-   * @param {Project} project
+   * @param {string} projectId
    * @param {Map} metaContents Retrieved from `getMetaFileContents`
-   * @returns {Project} Mutated project with meta content as file tags
+   * @returns {Promise} Mutated project with meta content as file tags
    */
-  setMetaContents(project, metaContents) {
-    if (!project) {
-      throw new Error('Project required');
+  setMetaContents(projectId, metaContents) {
+    if (!projectId) {
+      return Promise.reject(new Error('Project ID required'));
     } else if (!metaContents || !(metaContents instanceof Map)) {
-      throw new Error('Meta contents map required');
+      return Promise.reject(new Error('Meta contents map required'));
     }
 
-    project.files.forEach(file => {
-      let meta;
+    return this.get(projectId).then(project => {
+      project.files.forEach(file => {
+        let meta;
 
-      for (const key of [file.filename, path.basename(file.filename)]) {
-        if (metaContents.has(key)) {
-          meta = metaContents.get(key);
-          break;
+        for (const key of [file.filename, path.basename(file.filename)]) {
+          if (metaContents.has(key)) {
+            meta = metaContents.get(key);
+            break;
+          }
         }
-      }
 
-      if (!meta) {
-        throw new Error(`Couldn't find meta for ${file.filename}`);
-      }
+        if (!meta) {
+          throw new Error(`Couldn't find meta for ${file.filename}`);
+        }
 
-      Object.assign(file.tags, meta);
+        Object.assign(file.tags, meta);
+      });
+
+      return this.save(project);
     });
-
-    return project;
   }
 
   /**

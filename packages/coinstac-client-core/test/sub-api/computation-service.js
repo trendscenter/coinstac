@@ -2,6 +2,7 @@
 
 const common = require('coinstac-common');
 const ComputationService = require('../../src/sub-api/computation-service');
+const ProjectService = require('../../src/sub-api/project-service');
 const sinon = require('sinon');
 const tape = require('tape');
 
@@ -33,7 +34,6 @@ function getStubbedParams() {
       },
       projects: {
         get: sinon.stub(),
-        getMetaFileContents: sinon.stub().returns(Promise.resolve()),
         setMetaContents: sinon.stub(),
       },
       pool: {
@@ -173,6 +173,7 @@ tape('ComputationService :: doTriggerRunner', t => {
 
   const computationService = new ComputationService(params);
   const consortiumId = 'the-wildest-computation';
+  const meta = new Map();
   const project = {
     _id: 'a-project-so-sweet',
     name: 'The Sweetest Project',
@@ -187,6 +188,8 @@ tape('ComputationService :: doTriggerRunner', t => {
     }],
   };
   const runId = 'runningestIdentifier';
+  const getMetaStub = sinon.stub(ProjectService, 'getMetaFileContents')
+    .returns(Promise.resolve(meta));
 
   params.client.consortia.get.returns(Promise.resolve({
     _id: consortiumId,
@@ -195,10 +198,9 @@ tape('ComputationService :: doTriggerRunner', t => {
     owners: ['testUserName'],
   }));
   params.client.projects.get.returns(Promise.resolve(project));
-  params.client.projects.getMetaFileContents.returns(Promise.resolve());
-  params.client.projects.setMetaContents.returns(project);
+  params.client.projects.setMetaContents.returns(Promise.resolve(project));
 
-  t.plan(7);
+  t.plan(8);
 
   computationService.doTriggerRunner({
     consortiumId,
@@ -216,7 +218,6 @@ tape('ComputationService :: doTriggerRunner', t => {
         project._id,
         'retrieves project via projectId'
       );
-
 
       const triggerRunnerStub = params.client.pool.triggerRunner;
       const args = triggerRunnerStub.firstCall.args;
@@ -244,8 +245,16 @@ tape('ComputationService :: doTriggerRunner', t => {
         'consider-yourself-triggered',
         'passes pool’s triggerRunner’s response'
       );
+      t.ok(
+        params.client.projects.setMetaContents.calledWithExactly(
+          project._id,
+          meta
+        ),
+        'calls ProjectService#setMetaContents with proper params'
+      );
     })
-    .catch(t.end);
+    .catch(t.end)
+    .then(getMetaStub.restore);
 });
 
 tape('ComputationService :: kickoff', t => {

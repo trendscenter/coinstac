@@ -36,7 +36,7 @@ test('ProjectService - getMetaFileContents', t => {
 
   t.plan(6);
 
-  ProjectService.prototype.getMetaFileContents(badFile)
+  ProjectService.getMetaFileContents(badFile)
     .then(() => t.fail('resolves with malformed CSV'))
     .catch(() => {
       t.ok(
@@ -45,7 +45,7 @@ test('ProjectService - getMetaFileContents', t => {
       );
       t.ok('rejects with malformed CSV');
 
-      return ProjectService.prototype.getMetaFileContents(goodFile1);
+      return ProjectService.getMetaFileContents(goodFile1);
     })
     .then(output => {
       t.deepEqual(
@@ -74,7 +74,7 @@ test('ProjectService - getMetaFileContents', t => {
         'returns parsed tag objects'
       );
 
-      return ProjectService.prototype.getMetaFileContents(goodFile2);
+      return ProjectService.getMetaFileContents(goodFile2);
     })
     .then(output => {
       t.deepEqual(
@@ -89,7 +89,7 @@ test('ProjectService - getMetaFileContents', t => {
         'doesn\'t do anything with strange booleans'
       );
 
-      return ProjectService.prototype.getMetaFileContents(goodFile3);
+      return ProjectService.getMetaFileContents(goodFile3);
     })
     .then(output => {
       t.deepEqual(
@@ -104,7 +104,7 @@ test('ProjectService - getMetaFileContents', t => {
         'parses long string booleans'
       );
 
-      return ProjectService.prototype.getMetaFileContents(goodFile4);
+      return ProjectService.getMetaFileContents(goodFile4);
     })
     .then(output => {
       t.deepEqual(
@@ -154,34 +154,67 @@ test('ProjectService - setMetaContents', t => {
     'M102.txt',
     { hola: 'guten tag' },
   ]]);
+  const project = {
+    // `setMetaContents` mutates the project
+    get: sinon.stub().returns(Promise.resolve(cloneDeep(goodProject))),
+    save: sinon.stub().returns(Promise.resolve()),
+  };
+  const projectId = 'what-a-lovely-id';
 
-  t.throws(ProjectService.prototype.setMetaContents, 'throws without project');
-  t.throws(
-    ProjectService.prototype.setMetaContents.bind(null, {}),
-    'throws without meta map'
-  );
-  t.throws(
-    ProjectService.prototype.setMetaContents.bind(null, badProject, meta),
-    /baddies\.txt/,
-    'throws with missing file'
-  );
-  t.deepEqual(
-    // `goodProject` is mutated, so clone:
-    ProjectService.prototype.setMetaContents(cloneDeep(goodProject), meta).files,
-    [{
-      filename: filename1,
-      tags: meta.get(filename1),
-    }, {
-      filename: filename2,
-      tags: Object.assign(
-        {},
-        goodProject.files[1].tags,
-        meta.get(path.basename(filename2))
-      ),
-    }],
-    'adds meta to project tags'
-  );
-  t.end();
+  project.get.onCall(0).returns(Promise.resolve(badProject));
+
+  t.plan(6);
+
+  ProjectService.prototype.setMetaContents()
+    .then(() => t.fail('Resolves without project ID'))
+    .catch(() => {
+      t.pass('Rejects without project ID');
+
+      return ProjectService.prototype.setMetaContents(projectId);
+    })
+    .then(() => t.fail('Resolves without meta map'))
+    .catch(() => {
+      t.pass('Rejects without meta map');
+
+      return ProjectService.prototype.setMetaContents.call(
+        project,
+        projectId,
+        meta
+      );
+    })
+    .then(() => t.fail('Resolves with missing file'))
+    .catch(error => {
+      t.ok(project.get.calledWithExactly(projectId), 'gets project via ID');
+      t.ok(
+        error.message.indexOf('baddies.txt') > -1,
+        'Rejects with missing file'
+      );
+
+      return ProjectService.prototype.setMetaContents.call(
+        project,
+        projectId,
+        meta
+      );
+    })
+    .then(() => {
+      t.deepEqual(
+        project.save.lastCall.args[0].files,
+        [{
+          filename: filename1,
+          tags: meta.get(filename1),
+        }, {
+          filename: filename2,
+          tags: Object.assign(
+            {},
+            goodProject.files[1].tags,
+            meta.get(path.basename(filename2))
+          ),
+        }],
+        'adds meta to project tags'
+      );
+      t.ok(project.save.called, 'saves project');
+    })
+    .catch(t.end);
 });
 
 // TODO: This test fails when this file is tested independently. Why?
