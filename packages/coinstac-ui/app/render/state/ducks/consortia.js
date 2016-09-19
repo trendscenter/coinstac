@@ -1,6 +1,11 @@
 import app from 'ampersand-app';
 import { applyAsyncLoading } from './loading';
 import { clone, map } from 'lodash';
+import {
+  addConsortiumComputationListener,
+  listenToConsortia,
+  unlistenToConsortia,
+} from './bg-services';
 
 export const DO_DELETE_CONSORTIA = 'DO_DELETE_CONSORTIA';
 
@@ -67,6 +72,12 @@ export const joinConsortium = applyAsyncLoading((consortiumId, username) => {
             `User ${username} already in consortium ${consortiumId}`
           );
         }
+
+        listenToConsortia(consortium);
+        addConsortiumComputationListener(consortium);
+        app.logger.info(
+          `Listening to events on consortium "${consortium.label}"`
+        );
 
         // TODO: Array#push doesn't work.
         // https://github.com/electron/electron/issues/6734
@@ -254,6 +265,11 @@ export const leaveConsortium = applyAsyncLoading((consortiumId, username) => {
         if (index < 0) {
           throw new Error(`User ${username} not in consortium ${consortiumId}`);
         }
+
+        unlistenToConsortia(consortiumId);
+        app.logger.info(
+          `Not listening to consortium "${consortium.label}`
+        );
 
         // TODO: Array#splice doesn't work.
         // https://github.com/electron/electron/issues/6734
