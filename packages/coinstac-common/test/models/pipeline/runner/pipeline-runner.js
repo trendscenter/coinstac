@@ -86,24 +86,28 @@ test('saveResult - queue simultaneous saves, history OK', t => {
   .then(t.end, t.end);
 });
 
-test('getPreviousResultData', t => {
+test('getPreviousResult', t => {
   const runnerOpts = runnerUtils.basicOpts();
   const db = runnerUtils.getDB('prev_results_db');
   const toAdd = { bananas: 1 };
   const runner = new Runner(runnerOpts);
-  t.plan(2);
+  t.plan(3);
 
   const hasNoPrevResultPreAdd = () => {
-    return runner.getPreviousResultData(db)
-    .then((prev) => t.notOk(prev, 'has no prev result'))
+    return runner.getPreviousResult(db)
+    .then((prev) => t.notOk(prev.prevData, 'has no prev result'))
     .catch(t.end);
   };
 
   const addResult = () => runner.saveResult(db, toAdd);
 
   const hasPrevResult = () => {
-    return runner.getPreviousResultData(db)
-    .then((prev) => t.deepEqual(prev, toAdd, 'has prev result'))
+    return runner.getPreviousResult(db)
+    .then((prev) => {
+      t.deepEqual(prev.prevData, toAdd, 'has prev result');
+      // TODO: Determine how to better test `pluginState` retrieval
+      t.ok('pluginState' in prev, 'has plugin state');
+    })
     .catch(t.end);
   };
 
