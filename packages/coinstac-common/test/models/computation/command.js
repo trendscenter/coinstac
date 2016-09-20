@@ -1,10 +1,12 @@
 'use strict';
 
-const computations = require('../../../').models.computation;
-const CommandComputation = computations.CommandComputation;
-const test = require('tape');
+const CommandComputation = require('../../../').models.computation.CommandComputation;
+const cp = require('child_process');
+const EventEmitter = require('events');
+const sinon = require('sinon');
+const tape = require('tape');
 
-test('model::CommandComputation constructor', t => {
+tape('model::CommandComputation constructor', t => {
   t.throws(() => {
     return new CommandComputation({ type: 'function' });
   }, /cmd/, 'requires type: "cmd"');
@@ -16,113 +18,204 @@ test('model::CommandComputation constructor', t => {
   t.end();
 });
 
-test('model::CommandComputation run (args passed to file)', t => {
-  t.plan(1);
-  const runInputs = { filenames: ['/dummy/path'] };
-  const comp = new CommandComputation({
-    cwd: __dirname,
-    type: 'cmd',
-    cmd: 'node',
-    args: ['./test-command-inputs.js'],
+function getStubbedCommand() {
+  const command = new EventEmitter();
+  command.stderr = new EventEmitter();
+  command.stdout = new EventEmitter();
+  return command;
+}
+
+tape('CommandComputation#run', t => {
+  const args = ['some', 'crazy', 'arguments'];
+  const command = getStubbedCommand();
+  const cmd = 'oh-my-executables';
+  const cwd = 'rando-directory';
+  const opts = {
+    will: 'this make',
+    some: 'pretty json?',
+  };
+  const spawnStub = sinon.stub(cp, 'spawn').returns(command);
+  const stderr = [
+    'a penny for ',
+    'your errors',
+  ];
+  const stdout = [
+    '{ "when": "the data comes ',
+    'a knockin", "dont": "worry',
+    ' too much about it" }',
+  ];
+
+  t.plan(3);
+
+  const run1 = CommandComputation.prototype.run.call({
+    cmd,
+    cwd,
+    isVerbose: true,
+  }, opts);
+
+  stderr.forEach(data => command.stderr.emit('data', data));
+  stdout.forEach(data => command.stdout.emit('data', data));
+  command.emit('exit', 0);
+
+  run1
+    .then(response => {
+      t.ok(
+        spawnStub.calledWithExactly(
+          cmd,
+          ['--run', JSON.stringify(opts)],
+          { cwd }
+        ),
+        'spawns with expected params'
+      );
+      t.deepEqual(
+        response,
+        JSON.parse(stdout.join('')),
+        'returns stdout response'
+      );
+
+      const run2 = CommandComputation.prototype.run.call({
+        args,
+        cmd,
+        cwd,
+        isVerbose: false,
+      }, opts);
+      command.emit('exit', 0);
+
+      return run2;
+    })
+    .then(() => {
+      t.deepEqual(
+        spawnStub.lastCall.args[1],
+        args.concat(['--run', JSON.stringify(opts)]),
+        'adds class args property to spawn params'
+      );
+    })
+    .catch(t.end)
+    .then(spawnStub.restore);
+});
+
+tape('CommandComputation#run verbose logging', t => {
+  const args = ['some', 'silly', 'arguments'];
+  const cmd = 'macho';
+  const command = getStubbedCommand();
+
+  /**
+   * @todo Don't spy on console methods! Figure out how to inject the logger and
+   * spy on it.
+   */
+  const consoleSpy = sinon.spy(console, 'error');
+  const error1 = 'A very dangerous error';
+  const error2 = 'Things are cooling up';
+  const spawnStub = sinon.stub(cp, 'spawn').returns(command);
+
+  const run1 = CommandComputation.prototype.run.call({
+    args,
+    cmd,
     verbose: true,
   });
-  comp.run(runInputs)
-  .then((rslt) => {
-    t.deepEqual(rslt, runInputs, 'inputs in === inputs out');
-    t.end();
-  }, t.end);
+
+  command.stderr.emit('data', error1);
+  command.emit('exit', 1);
+
+  t.plan(4);
+
+  run1
+    .catch(() => {
+      t.ok(
+        consoleSpy.firstCall.args[0].indexOf(`${cmd} ${args.join(' ')}`) > -1,
+        'logs command'
+      );
+      t.ok(
+        consoleSpy.secondCall.args[0].message.indexOf(error1) > -1,
+        'logs stderr'
+      );
+
+      const run2 = CommandComputation.prototype.run.call({
+        args,
+        cmd,
+        verbose: true,
+      });
+      command.emit('exit', 0);
+
+      return run2;
+    })
+    .then(() => {
+      t.equal(consoleSpy.callCount, 2, 'doesn\'t log with no stderr');
+
+      const run3 = CommandComputation.prototype.run.call({
+        args,
+        cmd,
+        verbose: true,
+      });
+      command.stderr.emit('data', error2);
+      command.emit('exit', 0);
+
+      return run3;
+    })
+    .then(() => {
+      t.equal(
+        consoleSpy.lastCall.args[0],
+        error2,
+        'logs with stderr'
+      );
+    })
+    .catch(t.end)
+    .then(() => {
+      consoleSpy.restore();
+      spawnStub.restore();
+    });
 });
 
-test('model::CommandComputation run (basic, from command line)', t => {
-  t.plan(1);
-  const comp = new CommandComputation({
-    cwd: __dirname,
-    type: 'cmd',
-    cmd: 'python',
-    args: ['-c', 'import json; print json.dumps({ "foo": "bar" });'],
-  });
-  comp.run()
-  .then((rslt) => {
-    t.deepEqual(rslt, { foo: 'bar' }, 'computation result passed per expectation');
-    t.end();
-  }, t.end);
+tape('CommandComputation#run errors', t => {
+  const command = getStubbedCommand();
+  const error1 = { message: 'error 1' };
+  const error2 = { message: 'error 2' };
+  const spawnStub = sinon.stub(cp, 'spawn').returns(command);
+
+  spawnStub.onCall(0).throws(error1);
+
+  t.plan(4);
+
+  CommandComputation.prototype.run.call({})
+    .then(() => t.fail('Resolves when spawn throws'))
+    .catch(error => {
+      t.equal(error, error1, 'Rejects when spawn throws');
+
+      const run = CommandComputation.prototype.run.call({});
+      command.emit('error', error2);
+
+      return run;
+    })
+    .then(() => t.fail('Resolves when command emits error'))
+    .catch(error => {
+      t.equal(error, error2, 'Rejects when command emits error');
+
+      const run = CommandComputation.prototype.run.call({});
+      command.emit('exit', 'random-exit-code');
+
+      return run;
+    })
+    .then(() => t.fail('Resolves with process exits with non-zero'))
+    .catch(error => {
+      t.ok(
+        error.message.indexOf('random-exit-code') > -1,
+        'Rejects with non-zero exit code'
+      );
+
+      const run = CommandComputation.prototype.run.call({});
+
+      command.stdout.emit('data', '{ "some": "particularly",\n"ugly": json }');
+      command.emit('exit', 0);
+
+      return run;
+    })
+    .then(() => t.fail('Resolves with malformed JSON'))
+    .catch(error => {
+      t.ok(
+        error.message.indexOf('"ugly": json') > -1,
+        'Rejects with malformed JSON'
+      );
+    })
+    .then(spawnStub.restore);
 });
 
-test('model::CommandComputation run (basic, from file)', t => {
-  t.plan(1);
-  const comp = new CommandComputation({
-    cwd: __dirname,
-    type: 'cmd',
-    cmd: 'python',
-    args: ['test-command-good.py'],
-  });
-  comp.run()
-  .then((rslt) => {
-    t.deepEqual(rslt, { bar: 'baz' }, 'computation handles file stdout results');
-    t.end();
-  }, t.end);
-});
-
-test('model::CommandComputation run fail (basic, invalid cmd)', t => {
-  t.plan(1);
-  const comp = new CommandComputation({
-    cwd: __dirname,
-    type: 'cmd',
-    cmd: 'bogus',
-    args: ['bargus.py'],
-  });
-  comp.run()
-  .then(() => t.end('computation should have failed'))
-  .catch(() => {
-    t.ok('handled invalid command');
-    return t.end();
-  });
-});
-
-test('model::CommandComputation run fail (basic, invalid syntax)', t => {
-  t.plan(1);
-  const comp = new CommandComputation({
-    cwd: __dirname,
-    type: 'cmd',
-    cmd: 'python',
-    args: ['test-command-bad-syntax.py'],
-  });
-  comp.run()
-  .then(() => t.end('computation should have failed'))
-  .catch(() => {
-    t.ok('handled bad syntax');
-    return t.end();
-  });
-});
-
-test('model::CommandComputation run fail (basic, file throws Exception)', t => {
-  t.plan(1);
-  const comp = new CommandComputation({
-    cwd: __dirname,
-    type: 'cmd',
-    cmd: 'python',
-    args: ['test-command-bad-exception.py'],
-  });
-  comp.run()
-  .then(() => t.end('computation should have failed'))
-  .catch(() => {
-    t.ok('handled exception');
-    return t.end();
-  });
-});
-
-test('model::CommandComputation run fail (invalid return)', t => {
-  t.plan(1);
-  const comp = new CommandComputation({
-    cwd: __dirname,
-    type: 'cmd',
-    cmd: 'node',
-    args: ['test-error-bad-json.js'],
-  });
-  comp.run()
-  .then(() => t.end('computation should have failed'))
-  .catch(() => {
-    t.ok('handle invalid json error');
-    return t.end();
-  });
-});
