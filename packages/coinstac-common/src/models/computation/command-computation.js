@@ -2,6 +2,7 @@
 
 const Computation = require('./computation.js');
 const cp = require('child_process');
+const indentString = require('indent-string');
 const joi = require('joi');
 const jph = require('json-parse-helpfulerror');
 
@@ -38,15 +39,15 @@ class CommandComputation extends Computation {
           /* eslint-disable no-console */
           console.error(`Command failed to run:
 
-  ${this.cmd} ${args.join(' ')}
+${indentString(`${this.cmd} ${args.join(' ')}`, 2)}
 
 stdout:
 
-  ${jsonStr}
+${indentString(jsonStr, 2)}
 
 stderr:
 
-  ${errMsg}
+${indentString(errMsg, 2)}
 `);
           console.error(error);
           /* eslint-enable no-console */
