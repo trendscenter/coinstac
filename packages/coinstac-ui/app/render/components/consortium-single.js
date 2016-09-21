@@ -8,7 +8,8 @@ import {
 } from 'react-bootstrap';
 import React, { Component, PropTypes } from 'react';
 
-import ComputationField from './computation-field';
+import ComputationFieldBasic from './computation-field-basic';
+import ComputationFieldCovariates from './computation-field-covariates';
 import ConsortiumResult from './consortium-result';
 import UserList from './user-list';
 
@@ -133,10 +134,43 @@ class ConsortiumSingle extends Component {
               key: fieldIndex,
               label,
               onChange: null,
-              options: values,
               type,
               value: null,
             };
+
+            if (type === 'covariates') {
+              /**
+               * Handle covariate field changes.
+               *
+               * @todo Move this to a reducer
+               *
+               * @param {(Object|null)} changeValue
+               * @param {number} itemsIndex
+               */
+              fieldProps.onChange = (changeValue, itemsIndex) => {
+                let value = activeInputs[fieldIndex] || [];
+                // debugger;
+                if (!changeValue) {
+                  value = value.filter((v, i) => i !== itemsIndex);
+                } else if (itemsIndex > value.length - 1) {
+                  value = value.concat(changeValue);
+                } else {
+                  Object.assign(value[itemsIndex], changeValue);
+                }
+
+                updateComputationField(fieldIndex, value);
+              };
+
+              if (Array.isArray(activeInputs[fieldIndex])) {
+                fieldProps.value = activeInputs[fieldIndex];
+              } else if (defaultValue) {
+                fieldProps.value = defaultValue;
+              } else {
+                fieldProps.value = [];
+              }
+
+              return <ComputationFieldCovariates {...fieldProps} />;
+            }
 
             if (type === 'number') {
               fieldProps.onChange = event => {
@@ -161,6 +195,7 @@ class ConsortiumSingle extends Component {
                 }
                 updateComputationField(fieldIndex, selectedValues);
               };
+              fieldProps.options = values;
 
               if (values && Array.isArray(activeInputs[fieldIndex])) {
                 fieldProps.value = values.reduce((indices, value, index) => {
@@ -173,7 +208,7 @@ class ConsortiumSingle extends Component {
               }
             }
 
-            return <ComputationField {...fieldProps} />;
+            return <ComputationFieldBasic {...fieldProps} />;
           }
         )}
       </div>

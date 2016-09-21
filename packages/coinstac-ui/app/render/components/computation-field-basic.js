@@ -9,7 +9,7 @@ import {
 
 const INPUT_REF = 'computation-field-input';
 
-export default class ComputationField extends Component {
+export default class ComputationFieldBasic extends Component {
   constructor(props) {
     super(props);
     this.handleButtonClick = this.handleButtonClick.bind(this);
@@ -100,7 +100,7 @@ export default class ComputationField extends Component {
   }
 }
 
-ComputationField.propTypes = {
+ComputationFieldBasic.propTypes = {
   defaultValue: PropTypes.oneOfType([
     PropTypes.number,
     PropTypes.string,
