@@ -1,8 +1,10 @@
 'use strict';
 
 const Computation = require('./computation.js');
-const spawn = require('child_process').spawn;
+const cp = require('child_process');
+const indentString = require('indent-string');
 const joi = require('joi');
+const jph = require('json-parse-helpfulerror');
 
 /**
  * @class CommandComputation
@@ -28,61 +30,75 @@ class CommandComputation extends Computation {
    * @returns {Promise}
    */
   run(opts) {
-    let cmd;
-    let jsonStr = '';
-    let errMsg = '';
     return new Promise((res, rej) => {
-      const stringifiedRunputs = JSON.stringify(opts);
-      const args = (this.args || []).concat(['--run', stringifiedRunputs]);
-      try {
-        cmd = spawn(this.cmd, args, { cwd: this.cwd });
-      } catch (err) {
-        /* istanbul ignore if */
-        if (this.verbose) { console.error(err && err.message); } // eslint-disable-line
-        return rej(err);
-      }
-      /* istanbul ignore next */
-      cmd.on('error', (err) => {
-        const coreArgs = this.args.join(' ');
-        console.error([ // eslint-disable-line
-          `command failed to run: ${err.message}\n`,
-          'this most often indicates that there is an error in the command\n',
-          `\tcmd: ${this.cmd} ${coreArgs} --run '{ ...coinstac-inputs }\n`,
-          `\tcwd: ${this.cwd}`,
-        ].join(''));
-        return rej(err);
-      });
-      cmd.stderr.on('data', (data) => { errMsg += data; });
-      cmd.stdout.on('data', (data) => { jsonStr += data; });
-      cmd.on('exit', (code) => {
-        let rslt;
-        if (code) {
-          console.error(`process exited with code ${code}`); // eslint-disable-line
-          return rej(new Error(`CommandComputation: ${errMsg}`));
-        }
-        try {
-          if (jsonStr === '') { return res(); } // permit ''
-          rslt = JSON.parse(jsonStr);
-          /* istanbul ignore if */
-          if (this.verbose) {
-            console.error(errMsg); // eslint-disable-line
-          }
-        } catch (err) {
-          // TODO: Figure out what this error logging does
-          /* eslint-disable */
-          console.error([
-            'failed to parse computation results. invalid JSON:',
-            (err && err.message || '').substr(0, 50) + '...',
-          ].join(' '));
-          /* eslint-enable */
+      const args = (this.args || []).concat(['--run', JSON.stringify(opts)]);
+      let jsonStr = '';
+      let errMsg = '';
+      const handleError = error => {
+        if (this.verbose) {
+          /* eslint-disable no-console */
+          console.error(`Command failed to run:
 
-          /* istanbul ignore if */
-          if (this.verbose) { console.error(errMsg); } // eslint-disable-line
-          return rej(err);
+${indentString(`${this.cmd} ${args.join(' ')}`, 2)}
+
+stdout:
+
+${indentString(jsonStr, 2)}
+
+stderr:
+
+${indentString(errMsg, 2)}
+`);
+          console.error(error);
+          /* eslint-enable no-console */
         }
-        return res(rslt);
-      });
-      return null;
+        rej(error);
+      };
+      const maybeLogStderr = () => {
+        if (this.verbose && errMsg) {
+          console.error(errMsg); // eslint-disable-line no-console
+        }
+      };
+
+      try {
+        const cmd = cp.spawn(this.cmd, args, { cwd: this.cwd });
+
+        cmd.on('error', handleError);
+        cmd.stderr.on('data', data => {
+          errMsg += data;
+        });
+        cmd.stdout.on('data', data => {
+          jsonStr += data;
+        });
+        cmd.on('exit', code => {
+          if (code) {
+            handleError(new Error(`Process exited with code ${code}:
+
+${errMsg}`));
+          } else if (jsonStr === '') {
+            // permit ''
+            res();
+            maybeLogStderr();
+          } else {
+            try {
+              res(jph.parse(jsonStr));
+              maybeLogStderr();
+            } catch (error) {
+              handleError(error);
+            }
+          }
+
+          /**
+           * Reset output so it's not persisted to the next call.
+           *
+           * @todo Determine why this is necessary.
+           */
+          errMsg = '';
+          jsonStr = '';
+        });
+      } catch (error) {
+        handleError(error);
+      }
     });
   }
 }
