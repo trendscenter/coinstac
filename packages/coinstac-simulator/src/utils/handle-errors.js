@@ -1,10 +1,5 @@
 'use strict';
 
-require('trace');
-require('clarity');
-
-Error.stackTraceLimit = Infinity;
-
 const { logger } = require('./logging');
 
 /**
