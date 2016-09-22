@@ -88,7 +88,11 @@ ${errMsg}`));
             }
           }
 
-          // ?
+          /**
+           * Reset output so it's not persisted to the next call.
+           *
+           * @todo Determine why this is necessary.
+           */
           errMsg = '';
           jsonStr = '';
         });
