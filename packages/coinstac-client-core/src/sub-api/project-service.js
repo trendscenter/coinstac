@@ -70,6 +70,12 @@ class ProjectService extends ModelService {
     this.listeners = new Map();
   }
 
+  getCSV(filename) {
+    return bluebird.promisify(fs.readFile)(filename)
+      .then(data => bluebird.promisify(csvParse)(data.toString()))
+      .then(JSON.stringify);
+  }
+
   /**
    * Get meta file's contents.
    * @static
