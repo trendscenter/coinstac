@@ -9,6 +9,7 @@ import {
 } from 'react-bootstrap';
 import React, { Component, PropTypes } from 'react';
 
+import ProjectCovariatesMapper from './project-covariates-mapper';
 import ProjectFile from './project-file';
 
 export default class FormProject extends Component {
@@ -188,21 +189,48 @@ export default class FormProject extends Component {
 
   renderMetaFileField() {
     const {
+      consortia,
       errors: {
+        metaCovariateMapping: metaCovariateErrors,
         metaFile: metaFileError,
       },
       project: {
+        consortiumId,
+        metaCovariateMapping,
         metaFile,
+        metaFilePath,
       },
       onAddMetaFile,
+      onMapCovariate,
       onRemoveMetaFile,
     } = this.props;
+    const selectedConsortia = consortia.find(({ _id }) => _id === consortiumId);
     let button;
     let contents;
     let errorMessage;
+    let covariateMapper;
 
-    if (metaFile) {
-      contents = <ProjectFile filename={metaFile} onRemove={onRemoveMetaFile} />;
+    if (metaFilePath) {
+      contents = (
+        <ProjectFile
+          filename={metaFilePath}
+          onRemove={onRemoveMetaFile}
+        />
+      );
+
+      if (selectedConsortia) {
+        const covariates = selectedConsortia.activeComputationInputs[0][2] || [];
+
+        covariateMapper = (
+          <ProjectCovariatesMapper
+            covariates={covariates}
+            csv={metaFile}
+            onMapCovariate={onMapCovariate}
+            metaCovariateErrors={metaCovariateErrors}
+            metaCovariateMapping={metaCovariateMapping}
+          />
+        );
+      }
     } else {
       button = (
         <Button
@@ -241,6 +269,7 @@ export default class FormProject extends Component {
         <div className="project-form-section-content">
           {contents}
           {errorMessage}
+          {covariateMapper}
         </div>
       </div>
     );
@@ -314,11 +343,19 @@ export default class FormProject extends Component {
 FormProject.propTypes = {
   allowComputationRun: PropTypes.bool.isRequired,
   consortia: PropTypes.array.isRequired,
-  errors: PropTypes.object.isRequired,
+  errors: PropTypes.shape({
+    consortiumId: PropTypes.string,
+    files: PropTypes.string,
+    metaCovariateMapping: PropTypes.array,
+    metaFile: PropTypes.string,
+    metaFilePath: PropTypes.string,
+    name: PropTypes.string,
+  }),
   isEditing: PropTypes.bool.isRequired,
   onAddFiles: PropTypes.func.isRequired,
   onAddMetaFile: PropTypes.func.isRequired,
   onConsortiumChange: PropTypes.func.isRequired,
+  onMapCovariate: PropTypes.func.isRequired,
   onNameChange: PropTypes.func.isRequired,
   onRemoveAllFiles: PropTypes.func.isRequired,
   onRemoveFile: PropTypes.func.isRequired,
@@ -327,12 +364,17 @@ FormProject.propTypes = {
   onRunComputation: PropTypes.func.isRequired,
   onSubmit: PropTypes.func.isRequired,
   project: PropTypes.shape({
+    consortiumId: PropTypes.string,
     files: PropTypes.arrayOf(
       PropTypes.shape({
         filename: PropTypes.string.isRequired,
+        tags: PropTypes.object.isRequired,
       })
     ).isRequired,
-    metaFile: PropTypes.string,
+    metaCovariateMapping: PropTypes.arrayOf(PropTypes.number),
+    metaFile: PropTypes.arrayOf(PropTypes.array),
+    metaFilePath: PropTypes.string,
+    name: PropTypes.string.isRequired,
   }).isRequired,
   showComputationRunButton: PropTypes.bool.isRequired,
   showFilesComponent: PropTypes.bool.isRequired,
