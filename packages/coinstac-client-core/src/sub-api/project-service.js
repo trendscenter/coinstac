@@ -16,44 +16,6 @@ const camelCase = require('lodash/camelCase');
 const difference = require('lodash/difference');
 const find = require('lodash/find');
 const includes = require('lodash/includes');
-const tail = require('lodash/tail');
-
-function maybeParseNumber(value) {
-  const parsed = parseInt(value, 10);
-  return !Number.isNaN(parsed) ? parsed : value;
-}
-
-function isNumericBool1(value) {
-  const parsed = parseInt(value, 10);
-  return !Number.isNaN(parsed) && (parsed === 1 || parsed === 0);
-}
-
-function isNumericBool2(value) {
-  const parsed = parseInt(value, 10);
-  return !Number.isNaN(parsed) && (parsed === 1 || parsed === -1);
-}
-
-function toNumericBool(value) {
-  return value > 0;
-}
-
-function isLongStringBool(value) {
-  const lower = value.toLowerCase();
-  return lower === 'true' || lower === 'false';
-}
-
-function toLongStringBool(value) {
-  return value.toLowerCase() === 'true';
-}
-
-function isShortStringBool(value) {
-  const lower = value.toLowerCase();
-  return lower === 't' || lower === 'f';
-}
-
-function toShortStringBool(value) {
-  return value.toLowerCase() === 't';
-}
 
 /**
  * @class
@@ -77,65 +39,6 @@ class ProjectService extends ModelService {
   }
 
   /**
-   * Get meta file's contents.
-   * @static
-   *
-   * This method parses a CSV and transforms rows into object entries in a
-   * `Map`.
-   *
-   * @example
-   * myProjectService.getMetaFileContents('./path/to/my.csv')
-   *   .then(output => {
-   *     // `output` is a Map:
-   *     output.get('M100.txt');
-   *     // {
-   *     //   age: 30,
-   *     //   gender: 'male',
-   *     //   isControl: true,
-   *     // }
-   *     console.log(Array.from(output.entries()));
-   *   })
-   *   .catch(error => console.error(error));
-   *
-   * @param {string} file Full path to CSV
-   * @returns {Promise} Resolves to a `Map` where keys correspond to the left
-   * column of the CSV (should be a string corresponding to a project file's
-   * basename) and values are objects representing the row's data.
-   */
-  static getMetaFileContents(file) {
-    return bluebird.promisify(fs.readFile)(file)
-      .then(data => bluebird.promisify(csvParse)(data.toString()))
-      .then(output => {
-        const firstRow = tail(output[0]).map(camelCase);
-        const tailRows = tail(output);
-
-        const columnOperators = firstRow.map((value, index) => {
-          const column = tailRows.map(row => row[index + 1]);
-
-          // TODO: Improve performance by dropping loops
-          if (column.every(isNumericBool1) || column.every(isNumericBool2)) {
-            return toNumericBool;
-          } else if (column.every(isLongStringBool)) {
-            return toLongStringBool;
-          } else if (column.every(isShortStringBool)) {
-            return toShortStringBool;
-          }
-
-          return maybeParseNumber;
-        });
-
-        return tail(output).reduce((memo, row) => {
-          memo.set(row[0], tail(row).reduce((tags, value, index) => {
-            tags[firstRow[index]] = columnOperators[index](value);
-            return tags;
-          }, {}));
-
-          return memo;
-        }, new Map());
-      });
-  }
-
-  /**
    * Set meta contents to a project's files.
    *
    * @todo Refactor this into model method?
@@ -144,33 +47,90 @@ class ProjectService extends ModelService {
    * @param {Map} metaContents Retrieved from `getMetaFileContents`
    * @returns {Promise} Mutated project with meta content as file tags
    */
-  setMetaContents(projectId, metaContents) {
+  setMetaContents(projectId) {
     if (!projectId) {
       return Promise.reject(new Error('Project ID required'));
-    } else if (!metaContents || !(metaContents instanceof Map)) {
-      return Promise.reject(new Error('Meta contents map required'));
     }
 
-    return this.get(projectId).then(project => {
-      project.files.forEach(file => {
-        let meta;
+    return this.get(projectId)
+      .then(project => {
+        if (!project.consortiumId) {
+          throw new Error(
+            `No active consortium set of project ${projectId}`
+          );
+        }
 
-        for (const key of [file.filename, path.basename(file.filename)]) {
-          if (metaContents.has(key)) {
-            meta = metaContents.get(key);
-            break;
+        return Promise.all([
+          project,
+          this.dbRegistry.get('consortia').get(project.consortiumId),
+        ]);
+      })
+      .then(([project, consortium]) => {
+        const covariates = consortium.activeComputationInputs[0][2];
+
+        if (!Array.isArray(covariates) || !covariates.length) {
+          throw new Error('Expected covariates');
+        }
+
+        /**
+         * [
+         *   [1, 2, 3],
+         *   [4, 5, 6],
+         * ]
+         */
+        const metaFile = project.metaFile;
+
+        // [undefined, <covariateIndex>, <covariateIndex>, ....]
+        const metaCovariateMapping = project.metaCovariateMapping;
+
+        function getTags(metaRow) {
+          return covariates.reduce((tags, { name, type }, covariateIndex) => {
+            const raw = metaRow[metaCovariateMapping.indexOf(covariateIndex)];
+            let value;
+
+            if (type === 'number') {
+              value = parseFloat(raw, 10);
+            } else if (type === 'boolean') {
+              const num = parseInt(raw, 10);
+              const low = raw.toLowerCase();
+
+              if (!Number.isNaN(num)) {
+                value = !!num;
+              } else if (low === 't' || low === 'true') {
+                value = true;
+              } else if (low === 'f' || low === 'false') {
+                value = false;
+              }
+            }
+
+            if (typeof value === 'undefined') {
+              throw new Error('Couldn\'t determine column value!');
+            }
+
+            tags[camelCase(name)] = value;
+
+            return tags;
+          }, {});
+        }
+
+        project.files.forEach(file => {
+          const metaRow = metaFile.find(row => {
+            const filename = row[0];
+            return (
+              filename === file.filename ||
+              filename === path.basename(file.filename)
+            );
+          });
+
+          if (!metaRow) {
+            throw new Error(`Couldn't find meta info for file ${file.filename}`);
           }
-        }
 
-        if (!meta) {
-          throw new Error(`Couldn't find meta for ${file.filename}`);
-        }
+          Object.assign(file.tags, getTags(metaRow));
+        });
 
-        Object.assign(file.tags, meta);
+        return this.save(project);
       });
-
-      return this.save(project);
-    });
   }
 
   /**

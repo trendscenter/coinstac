@@ -2,7 +2,6 @@
 
 const common = require('coinstac-common');
 const ComputationService = require('../../src/sub-api/computation-service');
-const ProjectService = require('../../src/sub-api/project-service');
 const sinon = require('sinon');
 const tape = require('tape');
 
@@ -173,7 +172,6 @@ tape('ComputationService :: doTriggerRunner', t => {
 
   const computationService = new ComputationService(params);
   const consortiumId = 'the-wildest-computation';
-  const meta = new Map();
   const project = {
     _id: 'a-project-so-sweet',
     name: 'The Sweetest Project',
@@ -188,8 +186,6 @@ tape('ComputationService :: doTriggerRunner', t => {
     }],
   };
   const runId = 'runningestIdentifier';
-  const getMetaStub = sinon.stub(ProjectService, 'getMetaFileContents')
-    .returns(Promise.resolve(meta));
 
   params.client.consortia.get.returns(Promise.resolve({
     _id: consortiumId,
@@ -197,10 +193,9 @@ tape('ComputationService :: doTriggerRunner', t => {
     label: 'Baller Consortium',
     owners: ['testUserName'],
   }));
-  params.client.projects.get.returns(Promise.resolve(project));
   params.client.projects.setMetaContents.returns(Promise.resolve(project));
 
-  t.plan(8);
+  t.plan(7);
 
   computationService.doTriggerRunner({
     consortiumId,
@@ -214,7 +209,7 @@ tape('ComputationService :: doTriggerRunner', t => {
         'retrieves consortium via consortiumId'
       );
       t.equal(
-        params.client.projects.get.firstCall.args[0],
+        params.client.projects.setMetaContents.firstCall.args[0],
         project._id,
         'retrieves project via projectId'
       );
@@ -245,16 +240,8 @@ tape('ComputationService :: doTriggerRunner', t => {
         'consider-yourself-triggered',
         'passes pool’s triggerRunner’s response'
       );
-      t.ok(
-        params.client.projects.setMetaContents.calledWithExactly(
-          project._id,
-          meta
-        ),
-        'calls ProjectService#setMetaContents with proper params'
-      );
     })
-    .catch(t.end)
-    .then(getMetaStub.restore);
+    .catch(t.end);
 });
 
 tape('ComputationService :: kickoff', t => {
