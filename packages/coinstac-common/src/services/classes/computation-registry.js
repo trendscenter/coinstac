@@ -295,7 +295,7 @@ class ComputationRegistry {
           tarExtract.on('finish', resolve);
         });
       })
-      .then(() => ComputationRegistry.runNPMInstall(path))
+      .then(() => ComputationRegistry.runNPMInstall(computationPath))
       .then(() => this._getFromDisk(name, version));
   }
 
@@ -423,12 +423,16 @@ class ComputationRegistry {
    * @private
    * @static
    *
-   * @param {string} path
+   * @param {string} computationPath
    * @returns {Promise}
    */
-  static runNPMInstall(path) {
+  static runNPMInstall(computationPath) {
     return new Promise((resolve, reject) => {
-      const child = spawn('npm', ['install', '--production'], { cwd: path });
+      const child = spawn(
+        'npm',
+        ['install', '--production'],
+        { cwd: computationPath }
+      );
 
       let error;
       let out;

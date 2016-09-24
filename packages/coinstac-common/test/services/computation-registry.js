@@ -317,7 +317,12 @@ tape('gets computation from source', t => {
         'requests expected tarball'
       );
 
-      t.ok(installStub.called, 'runs npm install on computation');
+      t.ok(
+        installStub.calledWithExactly(
+          instance._getComputationPath(name, version)
+        ),
+        'runs npm install on computation'
+      );
 
       return Promise.all([
         readdirAsync(TEST_COMPUTATION_PATH),
