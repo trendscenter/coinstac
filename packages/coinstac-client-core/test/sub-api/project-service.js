@@ -26,114 +26,182 @@ function getNextTick(callback) {
   });
 }
 
-test('ProjectService - getMetaFileContents', t => {
-  const badFile = path.resolve(__dirname, '..', 'mocks', 'bad-metadata.csv');
-  const goodFile1 = path.resolve(__dirname, '..', 'mocks', 'good-metadata-1.csv');
-  const goodFile2 = path.resolve(__dirname, '..', 'mocks', 'good-metadata-2.csv');
-  const goodFile3 = path.resolve(__dirname, '..', 'mocks', 'good-metadata-3.csv');
-  const goodFile4 = path.resolve(__dirname, '..', 'mocks', 'good-metadata-4.csv');
-  const readFileSpy = sinon.spy(fs, 'readFile');
+test('ProjectService#getCSV', t => {
+  const readFileStub = sinon.stub(fs, 'readFile');
+  const filename = './path/to/random.csv';
+  const data = [
+    ['filename', 'random', 'column'],
+    ['M100.txt', '44', 'true'],
+    ['M101.txt', '18', 'false'],
+    ['M102.txt', '65', 'true'],
+  ];
+  readFileStub.yields(null, new Buffer(data.map(r => r.join(',')).join('\n')));
 
-  t.plan(6);
+  t.plan(2);
 
-  ProjectService.getMetaFileContents(badFile)
-    .then(() => t.fail('resolves with malformed CSV'))
-    .catch(() => {
+  ProjectService.prototype.getCSV(filename)
+    .then(csvString => {
       t.ok(
-        readFileSpy.calledWith(badFile),
-        'reads file from arg'
+        readFileStub.calledWith(filename),
+        'reads file via passed arg'
       );
-      t.ok('rejects with malformed CSV');
-
-      return ProjectService.getMetaFileContents(goodFile1);
-    })
-    .then(output => {
       t.deepEqual(
-        Array.from(output.entries()),
-        [['M100', {
-          bogusData: 'dragons',
-          isControl: true,
-          moreSillyData: 'reptile',
-        }], ['M101', {
-          bogusData: 'raccoons',
-          isControl: true,
-          moreSillyData: 'marsupial',
-        }], ['M102', {
-          bogusData: 'kittens',
-          isControl: true,
-          moreSillyData: 'feline',
-        }], ['M103', {
-          bogusData: 'puppies',
-          isControl: false,
-          moreSillyData: 'canine',
-        }], ['M104', {
-          bogusData: 'squirrels',
-          isControl: false,
-          moreSillyData: 'rodent',
-        }]],
-        'returns parsed tag objects'
+        JSON.parse(csvString),
+        data,
+        'parses and returns CSV string'
+      );
+    })
+    .then(readFileStub.restore, readFileStub.restore)
+    .catch(t.end);
+});
+
+test('ProjectService#setMetaContents errors', t => {
+  const consortiumId = 'test-consortium';
+  const projectId = 'test-project';
+
+  // const goodMetaFile = [
+  //   ['filename', 'age', 'is control'],
+  //   ['M100.txt', '30', 'true'],
+  //   ['M101.txt', '29', 'false'],
+  //   ['M102.txt', '28', 'true'],
+  // ];
+
+
+  const dbGetStub = sinon.stub();
+  const project = {
+    dbRegistry: {
+      get() {
+        return {
+          get: dbGetStub,
+        };
+      },
+    },
+    get: sinon.stub(),
+  };
+
+  const setMetaContents = ProjectService.prototype.setMetaContents.bind(
+    project
+  );
+  const badFiles = [{
+    filename: path.join(__dirname, 'baddies.txt'),
+    tags: {},
+  }];
+
+  project.get.returns(Promise.resolve({
+    _id: projectId,
+    consortiumId,
+    files: [{
+      filename: path.join(__dirname, 'M100.txt'),
+      tags: {},
+    }, {
+      filename: path.join(__dirname, 'M101.txt'),
+      tags: {},
+    }],
+    metaFile: [
+      ['filename', 'bogus'],
+      ['M100.txt', 'stringz'],
+    ],
+    metaCovariateMapping: [undefined, 0],
+  }));
+  project.get.onCall(0).returns(Promise.resolve({
+    _id: projectId,
+  }));
+  project.get.onCall(2).returns(Promise.resolve({
+    _id: projectId,
+    consortiumId,
+    files: badFiles,
+    metaFile: [
+      ['filename', 'age', 'is control'],
+      ['M100.txt', '30', 'true'],
+      ['M101.txt', '29', 'false'],
+      ['M102.txt', '28', 'true'],
+    ],
+  }));
+
+  dbGetStub.returns(Promise.resolve({
+    _id: consortiumId,
+    activeComputationInputs: [[
+      'wat',
+      'wat',
+      [{
+        name: 'Is Control',
+        type: 'boolean',
+      }],
+    ]],
+  }));
+  dbGetStub.onCall(0).returns(Promise.resolve({
+    _id: consortiumId,
+    activeComputationInputs: [['wat', 'wat', 'wat']],
+  }));
+
+  t.plan(5);
+
+  setMetaContents()
+    .catch(error => {
+      t.ok(
+        /project id/i.test(error.message),
+        'Rejects without project ID'
       );
 
-      return ProjectService.getMetaFileContents(goodFile2);
+      return setMetaContents(projectId);
     })
-    .then(output => {
-      t.deepEqual(
-        Array.from(output.entries()),
-        [['M100', {
-          strangeBools: 1,
-        }], ['M101', {
-          strangeBools: 0,
-        }], ['M102', {
-          strangeBools: -1,
-        }]],
-        'doesn\'t do anything with strange booleans'
+    .catch(error => {
+      t.ok(
+        error.message.indexOf('consortium') > -1,
+        'Rejects without project consortium ID'
       );
 
-      return ProjectService.getMetaFileContents(goodFile3);
+      return setMetaContents(projectId);
     })
-    .then(output => {
-      t.deepEqual(
-        Array.from(output.entries()),
-        [['M100', {
-          stringyBools: true,
-        }], ['M101', {
-          stringyBools: false,
-        }], ['M102', {
-          stringyBools: true,
-        }]],
-        'parses long string booleans'
+    .catch(error => {
+      t.ok(
+        error.message.indexOf('covariates') > -1,
+        'Rejects without active computation inputs'
       );
 
-      return ProjectService.getMetaFileContents(goodFile4);
+      return setMetaContents(projectId);
     })
-    .then(output => {
-      t.deepEqual(
-        Array.from(output.entries()),
-        [
-          ['M100', { rad: true }],
-          ['M101', { rad: false }],
-          ['M102', { rad: true }],
-          ['M103', { rad: false }],
-        ],
-        'parses short string booleans'
+    .catch(error => {
+      t.ok(
+        error.message.indexOf('baddies.txt') > -1,
+        'Rejects with missing file'
+      );
+
+      return setMetaContents(projectId);
+    })
+    .catch(error => {
+      t.ok(
+        error.message.indexOf('determine column value') > -1,
+        'errors with bad metaFile column'
       );
     })
-    .catch(t.end)
-    .then(() => {
-      // teardown
-      readFileSpy.restore();
-    });
+    .catch(t.end);
 });
 
 test('ProjectService - setMetaContents', t => {
-  const badProject = {
-    files: [{
-      filename: path.join(__dirname, 'baddies.txt'),
-    }],
-  };
+  const consortiumId = 'test-consortium';
+  const projectId = 'test-project';
   const filename1 = path.join(__dirname, 'M100.txt');
   const filename2 = path.join(__dirname, 'M101.txt');
-  const goodProject = {
+  const filename3 = path.join(__dirname, 'M102.txt');
+
+  const dbGetStub = sinon.stub().returns(Promise.resolve({
+    _id: consortiumId,
+    activeComputationInputs: [[
+      0,
+      1,
+      [{
+        name: 'Is Control',
+        type: 'boolean',
+      }, {
+        name: 'Age',
+        type: 'number',
+      }],
+    ]],
+  }));
+  const goodProject1 = {
+    _id: projectId,
+    consortiumId,
     files: [{
       filename: filename1,
       tags: {},
@@ -142,77 +210,74 @@ test('ProjectService - setMetaContents', t => {
       tags: {
         already: 'taggin',
       },
+    }, {
+      filename: filename3,
+      tags: {},
     }],
+    metaFile: [
+      ['filename', 'Age', 'Diagnosis'],
+      ['M100.txt', '40', 'true'],
+      ['M101.txt', '20', 'false'],
+      ['M102.txt', '60', '0'],
+    ],
+    metaCovariateMapping: [undefined, 1, 0],
   };
-  const meta = new Map([[
-    filename1,
-    { rando: 'stuff' },
-  ], [
-    path.basename(filename2),
-    { hello: 'bonjour' },
-  ], [
-    'M102.txt',
-    { hola: 'guten tag' },
-  ]]);
+
   const project = {
+    dbRegistry: {
+      get() {
+        return {
+          get: dbGetStub,
+        };
+      },
+    },
+
     // `setMetaContents` mutates the project
-    get: sinon.stub().returns(Promise.resolve(cloneDeep(goodProject))),
+    get: sinon.stub().returns(Promise.resolve(cloneDeep(goodProject1))),
     save: sinon.stub().returns(Promise.resolve()),
   };
-  const projectId = 'what-a-lovely-id';
 
-  project.get.onCall(0).returns(Promise.resolve(badProject));
+  const setMetaContents = ProjectService.prototype.setMetaContents.bind(
+    project
+  );
 
-  t.plan(6);
+  t.plan(3);
 
-  ProjectService.prototype.setMetaContents()
-    .then(() => t.fail('Resolves without project ID'))
-    .catch(() => {
-      t.pass('Rejects without project ID');
-
-      return ProjectService.prototype.setMetaContents(projectId);
-    })
-    .then(() => t.fail('Resolves without meta map'))
-    .catch(() => {
-      t.pass('Rejects without meta map');
-
-      return ProjectService.prototype.setMetaContents.call(
-        project,
-        projectId,
-        meta
-      );
-    })
-    .then(() => t.fail('Resolves with missing file'))
-    .catch(error => {
-      t.ok(project.get.calledWithExactly(projectId), 'gets project via ID');
-      t.ok(
-        error.message.indexOf('baddies.txt') > -1,
-        'Rejects with missing file'
-      );
-
-      return ProjectService.prototype.setMetaContents.call(
-        project,
-        projectId,
-        meta
-      );
-    })
+  setMetaContents(projectId)
     .then(() => {
+      t.ok(
+        project.get.calledWithExactly(projectId),
+        'gets project by ID'
+      );
+      t.ok(
+        dbGetStub.calledWithExactly(consortiumId),
+        'gets consortium by ID'
+      );
+
       t.deepEqual(
-        project.save.lastCall.args[0].files,
+        project.save.firstCall.args[0].files,
         [{
           filename: filename1,
-          tags: meta.get(filename1),
+          tags: {
+            age: 40,
+            isControl: true,
+          },
         }, {
           filename: filename2,
-          tags: Object.assign(
-            {},
-            goodProject.files[1].tags,
-            meta.get(path.basename(filename2))
-          ),
+          tags: {
+            age: 20,
+            already: 'taggin',
+            isControl: false,
+          },
+        }, {
+          filename: filename3,
+          tags: {
+            age: 60,
+            isControl: false,
+          },
         }],
-        'adds meta to project tags'
+        'adds tags to project\'s files'
       );
-      t.ok(project.save.called, 'saves project');
     })
     .catch(t.end);
 });
