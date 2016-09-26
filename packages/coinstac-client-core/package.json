@@ -1,6 +1,6 @@
 {
   "name": "coinstac-client-core",
-  "version": "2.0.7",
+  "version": "2.0.9",
   "description": "COINSTAC business logic for clients.",
   "main": "src/index.js",
   "bin": "./bin/coinstac-client-core",
@@ -35,7 +35,7 @@
     "axios": "^0.11.1",
     "bluebird": "3.1.1",
     "btoa": "^1.1.2",
-    "coinstac-common": "^2.0.7",
+    "coinstac-common": "^2.0.9",
     "commander": "^2.9.0",
     "concat-stream": "^1.5.2",
     "convict": "^1.3.0",
