@@ -1,5 +1,5 @@
 import app from 'ampersand-app';
-import { cloneDeep, map, noop, tail } from 'lodash';
+import { cloneDeep, get, noop, values } from 'lodash';
 import { connect } from 'react-redux';
 import React, { Component, PropTypes } from 'react';
 
@@ -24,7 +24,8 @@ class FormProjectController extends Component {
       project: {
         consortiumId: undefined,
         files: [],
-        metaCovariateMapping: [],
+        // TODO: Don't tie datastructure to input type
+        metaCovariateMapping: {},
         metaFile: null,
         metaFilePath: null,
         name: '',
@@ -95,31 +96,30 @@ class FormProjectController extends Component {
     const {
       consortia,
     } = this.props;
-    const consortiumId = (this.state.project || {}).consortiumId;
-    let selectedConsortium;
-
-    if (consortiumId) {
-      selectedConsortium = consortia.find(({ _id }) => _id === consortiumId);
-    }
 
     return Object.keys(project).reduce((memo, key) => {
       const value = project[key];
 
-      if (
-        key === 'metaCovariateMapping' &&
-        selectedConsortium &&
-        Array.isArray(selectedConsortium.activeComputationInputs[0][2]) &&
-        selectedConsortium.activeComputationInputs[0][2].length
-      ) {
-        const newVal = tail(value);
+      if (key === 'metaCovariateMapping') {
+        const consortiumId = get(this.state, 'project.consortiumId');
+        let selectedConsortium;
 
-        memo[key] = selectedConsortium.activeComputationInputs[0][2]
-          .map((input, covariateIndex) => {
-            return !newVal[covariateIndex] ? 'error' : undefined;
+        if (consortiumId) {
+          selectedConsortium = consortia.find(({ _id }) => {
+            return _id === consortiumId;
           });
+        }
 
-        if (!memo[key].some(x => !!x)) {
-          memo[key] = null;
+        if (
+          selectedConsortium &&
+          Array.isArray(selectedConsortium.activeComputationInputs[0][2]) &&
+          selectedConsortium.activeComputationInputs[0][2].length &&
+          (
+            values(value).length <
+            selectedConsortium.activeComputationInputs[0][2].length
+          )
+        ) {
+          memo[key] = 'Missing covariate mapping';
         }
       } else if ((key === 'files' && !value.length) || !value) {
         memo[key] = FormProjectController.ERRORS.get(key);
@@ -196,22 +196,37 @@ class FormProjectController extends Component {
    *
    * @param {number} covariateIndex Consortium's corresponding 'covariate'
    * computation input's element's index
-   * @param {number} columnIndex Index of metadata CSV's column
+   * @param {number} metaFileIndex Index of metadata file's column
    */
-  handleMapCovariate(covariateIndex, columnIndex) {
+  handleMapCovariate(covariateIndex, metaFileIndex) {
     const {
       project: {
         metaCovariateMapping: mapping,
       },
     } = this.state;
 
-    mapping[covariateIndex] = columnIndex;
+    const keys = Object.keys(mapping);
+    let metaCovariateMapping;
 
-    const metaCovariateMapping = map(mapping, (value, index) => {
-      return index === covariateIndex || value !== columnIndex ?
-        value :
-        undefined;
-    });
+    if (!keys.length) {
+      metaCovariateMapping = {
+        [metaFileIndex]: covariateIndex,
+      };
+    } else if (!(metaFileIndex in mapping)) {
+      metaCovariateMapping = Object.assign({}, mapping, {
+        [metaFileIndex]: covariateIndex,
+      });
+    } else {
+      metaCovariateMapping = keys.reduce((newMapping, key) => {
+        if (key === metaFileIndex) {
+          newMapping[key] = covariateIndex;
+        } else if (mapping[key] !== covariateIndex) {
+          newMapping[key] = mapping[key];
+        }
+
+        return newMapping;
+      }, {});
+    }
 
     this.setState({
       errors: {

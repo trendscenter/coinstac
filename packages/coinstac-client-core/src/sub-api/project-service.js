@@ -16,6 +16,7 @@ const camelCase = require('lodash/camelCase');
 const difference = require('lodash/difference');
 const find = require('lodash/find');
 const includes = require('lodash/includes');
+const findKey = require('lodash/findKey');
 
 /**
  * @class
@@ -80,12 +81,29 @@ class ProjectService extends ModelService {
          */
         const metaFile = project.metaFile;
 
-        // [undefined, <covariateIndex>, <covariateIndex>, ....]
+        /**
+         * {
+         *   <metaColumnIndex 1>: <covariateIndex 1>,
+         *   <metaColumnIndex 2>: <covariateIndex 2>,
+         *   // ...
+         * }
+         */
         const metaCovariateMapping = project.metaCovariateMapping;
 
         function getTags(metaRow) {
           return covariates.reduce((tags, { name, type }, covariateIndex) => {
-            const raw = metaRow[metaCovariateMapping.indexOf(covariateIndex)];
+            const metaColumnIndex = parseInt(findKey(
+              metaCovariateMapping, x => x === covariateIndex
+            ), 10);
+
+            if (
+              typeof metaColumnIndex !== 'number' ||
+              Number.isNaN(metaColumnIndex)
+            ) {
+              throw new Error(`Couldn't find covariate mapping for "${name}"`);
+            }
+
+            const raw = metaRow[metaColumnIndex];
             let value;
 
             if (type === 'number') {

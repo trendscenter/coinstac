@@ -21,8 +21,7 @@ Project.schema = Object.assign({
   files: joi.alternatives().try(joi.array()).default([]),
   metaFile: joi.array(),
   metaFilePath: joi.string().min(2).optional(),
-  metaCovariateMapping: joi.array().sparse().items(joi.number())
-    .default([]),
+  metaCovariateMapping: joi.object().default({}),
 }, PouchDocument.schema);
 
 module.exports = Project;

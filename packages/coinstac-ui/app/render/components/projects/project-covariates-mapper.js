@@ -18,11 +18,10 @@ export default class ProjectCovariatesMapper extends Component {
       metaCovariateErrors,
       onMapCovariate,
     } = this.props;
-    const options = [<option disabled key={0} value={0}>Map column…</option>]
+    const options = [<option disabled key={0} value="null">Map column…</option>]
       .concat(covariates.map(({ name, type }, i) => {
-        const index = i + 1;
         return (
-          <option key={index} value={index}>
+          <option key={i + 1} value={i}>
             {`${name} (${ComputationFieldCovariates.typeMap.get(type)})`}
           </option>
         );
@@ -31,8 +30,13 @@ export default class ProjectCovariatesMapper extends Component {
     const tableHeadings = [<th key={0}>{row[0]}</th>].concat(
       tail(row).map((heading, i) => {
         const index = i + 1;
-        const value = typeof metaCovariateMapping[index] !== 'undefined' ?
-          metaCovariateMapping[index] : 0;
+        const value =
+          (
+            index in metaCovariateMapping &&
+            typeof metaCovariateMapping[index] === 'number'
+          ) ?
+            metaCovariateMapping[index] :
+            'null';
         const formGroupProps = {
           bsSize: 'small',
           controlId: `project-covariates-mapper-${index}`,
@@ -47,7 +51,7 @@ export default class ProjectCovariatesMapper extends Component {
               </span>
             </span>
           );
-        } else if (value !== 0) {
+        } else if (value !== 'null') {
           formGroupProps.validationState = 'success';
           indicator = (
             <span className="text-success">
@@ -66,7 +70,7 @@ export default class ProjectCovariatesMapper extends Component {
               <FormControl
                 componentClass="select"
                 onChange={(event) => {
-                  onMapCovariate(index, parseInt(event.target.value, 10));
+                  onMapCovariate(parseInt(event.target.value, 10), index);
                 }}
                 value={value}
               >

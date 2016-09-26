@@ -191,8 +191,9 @@ export default class FormProject extends Component {
     const {
       consortia,
       errors: {
-        metaCovariateMapping: metaCovariateErrors,
+        metaCovariateMapping: metaCovariateMappingErrors,
         metaFile: metaFileError,
+        metaFilePath: metaFilePathError,
       },
       project: {
         consortiumId,
@@ -226,7 +227,7 @@ export default class FormProject extends Component {
             covariates={covariates}
             csv={metaFile}
             onMapCovariate={onMapCovariate}
-            metaCovariateErrors={metaCovariateErrors}
+            metaCovariateErrors={metaCovariateMappingErrors}
             metaCovariateMapping={metaCovariateMapping}
           />
         );
@@ -256,8 +257,12 @@ export default class FormProject extends Component {
       }
     }
 
-    if (metaFileError) {
-      errorMessage = <Alert bsStyle="danger">{metaFileError}</Alert>;
+    if (metaFileError || metaFilePathError || metaCovariateMappingErrors) {
+      errorMessage = (
+        <Alert bsStyle="danger">
+          {metaFileError || metaFilePathError || metaCovariateMappingErrors}
+        </Alert>
+      );
     }
 
     return (
