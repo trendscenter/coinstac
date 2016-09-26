@@ -1,5 +1,5 @@
 import app from 'ampersand-app';
-import { cloneDeep, get, noop, values } from 'lodash';
+import { cloneDeep, get, noop, pickBy, values } from 'lodash';
 import { connect } from 'react-redux';
 import React, { Component, PropTypes } from 'react';
 
@@ -205,28 +205,12 @@ class FormProjectController extends Component {
       },
     } = this.state;
 
-    const keys = Object.keys(mapping);
-    let metaCovariateMapping;
-
-    if (!keys.length) {
-      metaCovariateMapping = {
-        [metaFileIndex]: covariateIndex,
-      };
-    } else if (!(metaFileIndex in mapping)) {
-      metaCovariateMapping = Object.assign({}, mapping, {
-        [metaFileIndex]: covariateIndex,
-      });
-    } else {
-      metaCovariateMapping = keys.reduce((newMapping, key) => {
-        if (key === metaFileIndex) {
-          newMapping[key] = covariateIndex;
-        } else if (mapping[key] !== covariateIndex) {
-          newMapping[key] = mapping[key];
-        }
-
-        return newMapping;
-      }, {});
-    }
+    const metaCovariateMapping = pickBy(
+      Object.assign({}, mapping, { [metaFileIndex]: covariateIndex }),
+      (value, key) => {
+        return value !== covariateIndex || parseInt(key, 10) === metaFileIndex;
+      }
+    );
 
     this.setState({
       errors: {
