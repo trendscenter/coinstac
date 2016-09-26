@@ -59,14 +59,6 @@ test('ProjectService#setMetaContents errors', t => {
   const consortiumId = 'test-consortium';
   const projectId = 'test-project';
 
-  // const goodMetaFile = [
-  //   ['filename', 'age', 'is control'],
-  //   ['M100.txt', '30', 'true'],
-  //   ['M101.txt', '29', 'false'],
-  //   ['M102.txt', '28', 'true'],
-  // ];
-
-
   const dbGetStub = sinon.stub();
   const project = {
     dbRegistry: {
@@ -86,22 +78,31 @@ test('ProjectService#setMetaContents errors', t => {
     filename: path.join(__dirname, 'baddies.txt'),
     tags: {},
   }];
+  const files = [{
+    filename: path.join(__dirname, 'M100.txt'),
+    tags: {},
+  }, {
+    filename: path.join(__dirname, 'M101.txt'),
+    tags: {},
+  }];
+  const metaFile = [
+    ['filename', 'age', 'is control'],
+    ['M100.txt', '30', 'true'],
+    ['M101.txt', '29', 'false'],
+    ['M102.txt', '28', 'true'],
+  ];
 
   project.get.returns(Promise.resolve({
     _id: projectId,
     consortiumId,
-    files: [{
-      filename: path.join(__dirname, 'M100.txt'),
-      tags: {},
-    }, {
-      filename: path.join(__dirname, 'M101.txt'),
-      tags: {},
-    }],
+    files,
     metaFile: [
       ['filename', 'bogus'],
       ['M100.txt', 'stringz'],
     ],
-    metaCovariateMapping: [undefined, 0],
+    metaCovariateMapping: {
+      0: 1,
+    },
   }));
   project.get.onCall(0).returns(Promise.resolve({
     _id: projectId,
@@ -110,12 +111,16 @@ test('ProjectService#setMetaContents errors', t => {
     _id: projectId,
     consortiumId,
     files: badFiles,
-    metaFile: [
-      ['filename', 'age', 'is control'],
-      ['M100.txt', '30', 'true'],
-      ['M101.txt', '29', 'false'],
-      ['M102.txt', '28', 'true'],
-    ],
+    metaFile,
+  }));
+  project.get.onCall(4).returns(Promise.resolve({
+    _id: projectId,
+    consortiumId,
+    files,
+    metaCovariateMapping: {
+      0: 0,
+    },
+    metaFile,
   }));
 
   dbGetStub.returns(Promise.resolve({
@@ -134,7 +139,7 @@ test('ProjectService#setMetaContents errors', t => {
     activeComputationInputs: [['wat', 'wat', 'wat']],
   }));
 
-  t.plan(5);
+  t.plan(6);
 
   setMetaContents()
     .catch(error => {
@@ -165,6 +170,14 @@ test('ProjectService#setMetaContents errors', t => {
       t.ok(
         error.message.indexOf('baddies.txt') > -1,
         'Rejects with missing file'
+      );
+
+      return setMetaContents(projectId);
+    })
+    .catch(error => {
+      t.ok(
+        error.message.indexOf('Is Control') > -1,
+        'errors with bad metaFile to covariate mapping'
       );
 
       return setMetaContents(projectId);
@@ -220,7 +233,10 @@ test('ProjectService - setMetaContents', t => {
       ['M101.txt', '20', 'false'],
       ['M102.txt', '60', '0'],
     ],
-    metaCovariateMapping: [undefined, 1, 0],
+    metaCovariateMapping: {
+      1: 1,
+      2: 0,
+    },
   };
 
   const project = {
