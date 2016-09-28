@@ -50,11 +50,10 @@ export default class ComputationFieldCovariates extends Component {
         <ol className="list-unstyled">
           {items.map(({ name, type }, index) => {
             const typeValue = !type ? 0 : type;
-
-            const options = [<option disabled value="0">Choose…</option>]
+            const options = [<option disabled key="0" value="0">Choose…</option>]
               .concat(Array.from(ComputationFieldCovariates.typeMap.entries())
-                .map(([key, value]) => {
-                  return <option value={key}>{value}</option>;
+                .map(([key, value], i) => {
+                  return <option key={i + 1} value={key}>{value}</option>;
                 })
               );
 
@@ -134,7 +133,6 @@ ComputationFieldCovariates.propTypes = {
   disabled: PropTypes.bool.isRequired,
   fieldIndex: PropTypes.number,
   help: PropTypes.string,
-  key: PropTypes.number.isRequired,
   label: PropTypes.string.isRequired,
   onChange: PropTypes.func.isRequired,
   value: PropTypes.arrayOf(PropTypes.shape({
