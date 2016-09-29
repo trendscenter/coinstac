@@ -112,7 +112,7 @@ COINSTAC has a second type of command that allows algorithm developers to integr
 {
   type: 'cmd',
   cmd: 'python',
-  args: ['./path/to/my/script.py', '--some', '--flags'],
+  args: ['./path/to/my/script.py'],
   verbose: true,
 }
 ```
@@ -122,7 +122,37 @@ COINSTAC has a second type of command that allows algorithm developers to integr
 * **`args`** `<Array>`: Arguments to pass to the executable.
 * **`verbose`** `<Boolean>`: Whether to output the computation’s output to stdout.
 
-The command spawns a new process, in the above case with Python, and executes with the arguments passed to the executable. COINSTAC will serialize input parameters as JSON and pass them as the last argument to the executable (see [Command Parameters](#command-parameters)).
+The command spawns a new process, in the above case with Python, and executes with the arguments in the `args` array. The above example is analogous to running from a shell:
+
+```shell
+python ./path/to/my/script.py
+```
+
+Pass additional flags and parameters to a script by adding them to the `args` array:
+
+```js
+{
+  type: 'cmd',
+  cmd: 'python',
+  args: [
+    './path/to/my/script.py',
+    '--some',
+    '--flags',
+    '--value=100',
+    '--other-value',
+    '200'
+  ],
+  verbose: true,
+}
+```
+
+This equates to:
+
+```shell
+pyton ./path/to/my/script.py --some --flags --value=100 --other-value 200
+```
+
+COINSTAC will serialize input parameters as JSON and pass them as the last argument to the executable (see [Command Parameters](#command-parameters)).
 
 ##### Returning Data
 
