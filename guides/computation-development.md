@@ -197,6 +197,22 @@ See [Command Parameters](#command-parameters) for documentation on COINSTAC data
 
 Write to stderr if you need to raise an exception. COINSTAC will detect this and mark the command result as an error.
 
+#### Marking As Completing
+
+Marking a command as “complete” allows COINSTAC to progress to the next command in your pipeline. To do so, add a `complete` property the returned JSON data and mark it as `true`:
+
+```js
+{
+  type: 'function',
+  fn: function alwaysMarksComplete(params) {
+    const data = params.previousData || {};
+    data.complete = true;
+
+    return data;
+  },
+}
+```
+
 ### Command Parameters
 
 Commands – both JavaScript and non-JavaScript – receive parameters from COINSTAC. The parameters’ shape depends on whether the command is intended for use with clients (`local`) or the server (`remote`).
