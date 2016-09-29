@@ -159,10 +159,39 @@ COINSTAC will serialize input parameters as JSON and pass them as the last argum
 It’s important that your script **only output valid JSON** via stdout; otherwise, COINSTAC will throw an error. You can test your script by [installing `jq`](https://stedolan.github.io/jq/) and running:
 
 ```shell
-python ./path/to/my/script.py --some --flags | jq .
+python ./path/to/my/script.py | jq .
 ```
 
-This should alert you to invalid JSON.
+This should alert you to invalid JSON. Be sure to replace `python ./path/to/my/script.py` to your appropriate command.
+
+You may also need to pass JSON to your script to simulate its use within COINSTAC. Do so using the `--run` flag. The following shows an example COINSTAC data structure passed to a local script in bash:
+
+```shell
+SAMPLE_DATA='{
+  "computationId": "test",
+  "consortiumId": "test",
+  "previousData": [],
+  "remoteResult": {
+    "computationId": "test",
+    "complete": false,
+    "consortiumId": "test",
+    "usernames": ["test"],
+    "userErrors": [],
+    "data": null,
+    "error": null,
+    "history": [],
+    "pipelineState": {
+      "step": 0,
+      "inProgress": true
+    }
+  },
+  "username": "test",
+  "userData": null
+}'
+python ./path/to/my/script.py --run $SAMPLE_DATA | jq .
+```
+
+See [Command Parameters](#command-parameters) for documentation on COINSTAC data shapes.
 
 ##### Returning An Error
 
