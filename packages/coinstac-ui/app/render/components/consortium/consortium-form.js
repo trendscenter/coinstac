@@ -7,7 +7,7 @@ import { get } from 'lodash';
 
 import ConsortiumComputationFields from './consortium-computation-fields';
 
-class FormConsortium extends Component {
+class ConsortiumForm extends Component {
   static renderInput(field) {
     const className = classNames({
       'form-group': true,
@@ -173,7 +173,7 @@ class FormConsortium extends Component {
       computations,
       handleSubmit,
       onReset,
-      loading,
+      isLoading,
       reset,
       initialValues,
     } = this.props;
@@ -187,23 +187,23 @@ class FormConsortium extends Component {
     );
 
     return (
-      <form onSubmit={handleSubmit(this.onSubmit)}>
+      <form className="consortium-form" onSubmit={handleSubmit(this.onSubmit)}>
         <Field
-          component={FormConsortium.renderInput}
+          component={ConsortiumForm.renderInput}
           label="Name"
           name="label"
           placeholder="Enter Name"
           type="text"
         />
         <Field
-          component={FormConsortium.renderInput}
+          component={ConsortiumForm.renderInput}
           label="Description"
           name="description"
           placeholder="Enter Description"
           type="textarea"
         />
         <Field
-          component={FormConsortium.renderInput}
+          component={ConsortiumForm.renderInput}
           label="Computations"
           name="activeComputationId"
           type="select"
@@ -217,7 +217,7 @@ class FormConsortium extends Component {
           <div className="pull-right">
             <Button
               bsStyle="success"
-              disabled={loading}
+              disabled={isLoading}
               type="submit"
             >
               <span className="glyphicon glyphicon-ok"></span>
@@ -239,51 +239,44 @@ class FormConsortium extends Component {
   }
 }
 
-FormConsortium.propTypes = {
+ConsortiumForm.displayName = 'ConsortiumForm';
+
+ConsortiumForm.propTypes = {
   activeComputationId: PropTypes.string,
   computations: PropTypes.arrayOf(PropTypes.object).isRequired,
-  consortiumId: PropTypes.string,
+  consortium: PropTypes.object,
   handleSubmit: PropTypes.func.isRequired,
   initialValues: PropTypes.object,
+  isLoading: PropTypes.bool.isRequired,
   isOwner: PropTypes.bool.isRequired,
-  loading: PropTypes.bool.isRequired,
   reset: PropTypes.func.isRequired,
   onSubmit: PropTypes.func.isRequired,
   onReset: PropTypes.func.isRequired,
 };
 
-FormConsortium.FORM_NAME = 'addConsortium';
+ConsortiumForm.FORM_NAME = 'consortium-form';
 
-const selector = formValueSelector(FormConsortium.FORM_NAME);
+const selector = formValueSelector(ConsortiumForm.FORM_NAME);
 
 /**
  * Apparently supplying a `initialValues` prop to the component magically wires
  * it up? {@link http://redux-form.com/6.0.2/examples/initializeFromState/}
  */
-function mapStateToProps(state, { consortiumId }) {
+function mapStateToProps(state, ownProps) {
   const props = {
     activeComputationId: selector(state, 'activeComputationId'),
-    // TODO: Ensure computations is always an array in the state tree
-    computations: state.computations
-      .sort((a, b) => `${a.name}@${a.version}` > `${b.name}@${b.version}`) ||
-      [],
-    isOwner: true,
-    loading: state.loading.isLoading,
   };
 
-  if (consortiumId) {
-    props.initialValues = state.consortia.find(({ _id }) => _id === consortiumId);
-    props.owner = !!props.consortium && props.consortium.owners
-      .indexOf(state.auth.user.username) > -1;
-  } else {
-    props.owner = true;
+  if (ownProps.consortium) {
+    props.initialValues = ownProps.consortium;
   }
 
   return props;
 }
 
 export default connect(mapStateToProps)(reduxForm({
-  form: FormConsortium.FORM_NAME,
+  form: ConsortiumForm.FORM_NAME,
   pure: false,
-  validate: FormConsortium.validate,
-})(FormConsortium));
+  validate: ConsortiumForm.validate,
+})(ConsortiumForm));
+

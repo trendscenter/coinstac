@@ -1,6 +1,6 @@
 import React, { PropTypes } from 'react';
-import ComputationFieldBasic from './computation-field-basic';
-import ComputationFieldCovariates from './computation-field-covariates';
+import ComputationFieldBasic from '../computation-field-basic';
+import ComputationFieldCovariates from '../computation-field-covariates';
 
 export default function ConsortiumComputationFields(props) {
   const {

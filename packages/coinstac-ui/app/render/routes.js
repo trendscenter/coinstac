@@ -12,7 +12,7 @@ import Login from './components/form-login-controller';
 import Signup from './components/form-signup-controller';
 import DashboardProjects from './components/projects/dashboard-projects';
 import ProjectsList from './components/projects/projects-list';
-import FormConsortiumController from './components/form-consortium-controller';
+import ConsortiumController from './components/consortium/consortium-controller';
 import FormProjectController from './components/projects/form-project-controller';
 import { Route, IndexRoute } from 'react-router';
 import React from 'react';
@@ -24,8 +24,8 @@ export default (
     <Route path="/" component={Dashboard} >
       <IndexRoute component={DashboardHome} />
       <Route path="/consortia" component={DashboardConsortia} />
-      <Route path="/consortia/new" component={FormConsortiumController} />
-      <Route path="/consortia/:consortiumId" component={FormConsortiumController} />
+      <Route path="/consortia/new" component={ConsortiumController} />
+      <Route path="/consortia/:consortiumId" component={ConsortiumController} />
       <Route path="/projects" component={DashboardProjects}>
         <IndexRoute component={ProjectsList} />
         <Route path="new" component={FormProjectController} />
