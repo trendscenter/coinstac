@@ -12,8 +12,8 @@ const pouchDBServerConfig = config['pouch-db-server'];
  * Get pool configuration.
  * @private
  *
- * @description utility to generate PipelineRunnerPool inputs, used by
- * compute client and compute servers
+ * @description utility to generate PipelineRunnerPool inputs, used by local and
+ * remote processes.
  *
  * @param {Object} params
  * @param {string} params.computationPath

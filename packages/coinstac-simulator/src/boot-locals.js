@@ -7,7 +7,7 @@ const { getStdDataHandler } = require('./utils/logging');
 const path = require('path');
 
 /**
- * Get ready client.
+ * Get a ready local process.
  *
  * @param {Object} params
  * @param {string} params.computationPath
@@ -17,7 +17,7 @@ const path = require('path');
  * @param {boolean} [params.verbose=false]
  * @returns {Promise}
  */
-function getReadyClient({
+function getReadyLocalProcess({
   computationPath,
   data,
   initiate,
@@ -25,36 +25,39 @@ function getReadyClient({
   verbose,
 }) {
   return new Promise((resolve, reject) => {
-    const client = cp.fork(path.join(__dirname, 'boot-client.js'), {
+    const localProcess = cp.fork(path.join(__dirname, 'local.js'), {
       cwd: path.dirname(computationPath),
       silent: true,
     });
 
     function messageHandler(message) {
       if ('ready' in message && message.ready) {
-        client.removeListener('message', messageHandler);
-        resolve(client);
+        localProcess.removeListener('message', messageHandler);
+        resolve(localProcess);
       } else {
-        reject(new Error('Client sent non-ready message first'));
+        reject(new Error('Local process sent non-ready message first'));
       }
     }
 
-    client.on('exit', code => {
+    localProcess.on('exit', code => {
       if (code) {
-        throw new Error(`Client process exited with code ${code}`);
+        throw new Error(`Local process exited with code ${code}`);
       }
     });
-    client.on('message', messageHandler);
-    client.stderr.on(
+    localProcess.on('message', messageHandler);
+    localProcess.stderr.on(
       'data',
-      getStdDataHandler(client, `USER ${username}`, 'error')
+      getStdDataHandler(localProcess, `LOCAL ${username}`, 'error')
     );
 
     if (verbose) {
-      client.stdout.on('data', getStdDataHandler(client, `USER ${username}`));
+      localProcess.stdout.on(
+        'data',
+        getStdDataHandler(localProcess, `LOCAL ${username}`)
+      );
     }
 
-    client.send({
+    localProcess.send({
       boot: {
         computationPath,
         data,
@@ -66,14 +69,14 @@ function getReadyClient({
 }
 
 /**
- * Run clients booting.
+ * Run local processes booting.
  *
  * @param {string} declPath
- * @returns {Promise} Resolves with an array of forked client processes
+ * @returns {Promise} Resolves with an array of forked local processes
  */
 function run({ computationPath, users, verbose }) {
   return Promise.all(users.map(({ data, username }, index) => {
-    return getReadyClient({
+    return getReadyLocalProcess({
       computationPath,
       data,
       initiate: index === 0,
@@ -84,7 +87,7 @@ function run({ computationPath, users, verbose }) {
 }
 
 /**
- * Boot clients.
+ * Boot local processes.
  * @module
  */
 module.exports = { run };

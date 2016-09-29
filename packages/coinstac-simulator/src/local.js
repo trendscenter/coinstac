@@ -2,7 +2,7 @@
 
 /**
  * @private
- * @module boot-client
+ * @module local
  */
 
 require('./utils/handle-errors');
@@ -31,7 +31,7 @@ let username;
 
 
 /**
- * Boot client.
+ * Boot local process.
  *
  * @param {Object} params
  * @param {string} params.computationPath
@@ -189,7 +189,7 @@ const kickoff = function kickoff() {
     });
 };
 
-// boot with data provided by `boot-clients`
+// boot with data provided by src/boot-locals.js
 process.on('message', (opts) => {
   if (opts.boot) {
     boot(opts.boot)
