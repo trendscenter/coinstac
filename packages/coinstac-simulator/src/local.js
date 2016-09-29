@@ -66,6 +66,22 @@ function boot({
           password: 'dummypw',
         }),
       }, opts));
+
+      // Log computation output if it exists
+      pool.events.on('run:end', result => {
+        if (
+          result &&
+          result instanceof Object &&
+          'data' in result &&
+          typeof result.data !== 'undefined' &&
+          result.data !== null &&
+          result.data !== ''
+        ) {
+          logger.verbose(
+            `Computation run ended: ${JSON.stringify(result.data)}`
+          );
+        }
+      });
       pool.events.on('error', logger.error);
 
       return pool.init();
