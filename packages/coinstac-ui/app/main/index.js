@@ -10,6 +10,9 @@
 // if no env set prd
 process.env.NODE_ENV = process.env.NODE_ENV || 'production';
 
+// Set up error handling
+require('./utils/boot/configure-uncaught-exceptions.js');
+
 // Set up root paths
 require('../common/utils/add-root-require-path.js');
 
@@ -22,10 +25,8 @@ require('./utils/boot/configure-dev-services.js');
 
 // Set up logging
 const configureLogger = require('./utils/boot/configure-logger.js');
-
-// Set up error handling
-require('./utils/boot/configure-uncaught-exceptions.js');
 require('./utils/boot/configure-unhandled-rejections.js');
+
 
 // Load the UI
 require('./utils/boot/configure-browser-window.js');
