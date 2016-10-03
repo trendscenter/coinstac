@@ -9,7 +9,7 @@ import {
 
 const INPUT_REF = 'computation-field-input';
 
-export default class ComputationField extends Component {
+export default class ComputationFieldBasic extends Component {
   constructor(props) {
     super(props);
     this.handleButtonClick = this.handleButtonClick.bind(this);
@@ -24,7 +24,6 @@ export default class ComputationField extends Component {
 
   render() {
     const {
-      defaultValue,
       disabled = false,
       fieldIndex,
       help,
@@ -49,7 +48,7 @@ export default class ComputationField extends Component {
     if (type === 'select') {
       controlProps.componentClass = 'select';
       controlProps.multiple = true;
-      controlProps.value = value;
+      controlProps.value = Array.isArray(value) ? value : [];
       formGroupProps.className = 'computation-field-select';
 
       formControl = (
@@ -65,8 +64,6 @@ export default class ComputationField extends Component {
 
       if (value) {
         controlProps.value = value;
-      } else if (typeof defaultValue !== 'undefined') {
-        controlProps.value = defaultValue;
       }
 
       formControl = (
@@ -100,11 +97,7 @@ export default class ComputationField extends Component {
   }
 }
 
-ComputationField.propTypes = {
-  defaultValue: PropTypes.oneOfType([
-    PropTypes.number,
-    PropTypes.string,
-  ]),
+ComputationFieldBasic.propTypes = {
   disabled: PropTypes.bool.isRequired,
   fieldIndex: PropTypes.number.isRequired,
   help: PropTypes.string,

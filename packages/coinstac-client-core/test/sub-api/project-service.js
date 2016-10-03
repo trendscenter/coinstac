@@ -1,6 +1,7 @@
 'use strict';
 
 const clientFactory = require('../utils/client-factory');
+const cloneDeep = require('lodash/cloneDeep');
 const coinstacCommon = require('coinstac-common');
 const EventEmitter = require('events');
 const fs = require('fs');
@@ -25,52 +26,276 @@ function getNextTick(callback) {
   });
 }
 
-test('ProjectService - getMetaFileContents', t => {
-  const badFile1 = path.resolve(__dirname, '..', 'mocks', 'bad-dummy-1.csv');
-  const badFile2 = path.resolve(__dirname, '..', 'mocks', 'bad-dummy-2.csv');
-  const createReadStreamSpy = sinon.spy(fs, 'createReadStream');
-  const goodFile = path.resolve(__dirname, '..', 'mocks', 'good-dummy.csv');
+test('ProjectService#getCSV', t => {
+  const readFileStub = sinon.stub(fs, 'readFile');
+  const filename = './path/to/random.csv';
+  const data = [
+    ['filename', 'random', 'column'],
+    ['M100.txt', '44', 'true'],
+    ['M101.txt', '18', 'false'],
+    ['M102.txt', '65', 'true'],
+  ];
+  readFileStub.yields(null, new Buffer(data.map(r => r.join(',')).join('\n')));
 
-  t.plan(4);
+  t.plan(2);
 
-  ProjectService.prototype.getMetaFileContents(badFile1)
-    .then(() => t.fail('resolves with header-less CSV'))
+  ProjectService.prototype.getCSV(filename)
+    .then(csvString => {
+      t.ok(
+        readFileStub.calledWith(filename),
+        'reads file via passed arg'
+      );
+      t.deepEqual(
+        JSON.parse(csvString),
+        data,
+        'parses and returns CSV string'
+      );
+    })
+    .then(readFileStub.restore, readFileStub.restore)
+    .catch(t.end);
+});
+
+test('ProjectService#setMetaContents errors', t => {
+  const consortiumId = 'test-consortium';
+  const projectId = 'test-project';
+
+  const dbGetStub = sinon.stub();
+  const project = {
+    dbRegistry: {
+      get() {
+        return {
+          get: dbGetStub,
+        };
+      },
+    },
+    get: sinon.stub(),
+  };
+
+  const setMetaContents = ProjectService.prototype.setMetaContents.bind(
+    project
+  );
+  const badFiles = [{
+    filename: path.join(__dirname, 'baddies.txt'),
+    tags: {},
+  }];
+  const files = [{
+    filename: path.join(__dirname, 'M100.txt'),
+    tags: {},
+  }, {
+    filename: path.join(__dirname, 'M101.txt'),
+    tags: {},
+  }];
+  const metaFile = [
+    ['filename', 'age', 'is control'],
+    ['M100.txt', '30', 'true'],
+    ['M101.txt', '29', 'false'],
+    ['M102.txt', '28', 'true'],
+  ];
+
+  project.get.returns(Promise.resolve({
+    _id: projectId,
+    consortiumId,
+    files,
+    metaFile: [
+      ['filename', 'bogus'],
+      ['M100.txt', 'stringz'],
+    ],
+    metaCovariateMapping: {
+      0: 1,
+    },
+  }));
+  project.get.onCall(0).returns(Promise.resolve({
+    _id: projectId,
+  }));
+  project.get.onCall(2).returns(Promise.resolve({
+    _id: projectId,
+    consortiumId,
+    files: badFiles,
+    metaFile,
+  }));
+  project.get.onCall(4).returns(Promise.resolve({
+    _id: projectId,
+    consortiumId,
+    files,
+    metaCovariateMapping: {
+      0: 0,
+    },
+    metaFile,
+  }));
+
+  dbGetStub.returns(Promise.resolve({
+    _id: consortiumId,
+    activeComputationInputs: [[
+      'wat',
+      'wat',
+      [{
+        name: 'Is Control',
+        type: 'boolean',
+      }],
+    ]],
+  }));
+  dbGetStub.onCall(0).returns(Promise.resolve({
+    _id: consortiumId,
+    activeComputationInputs: [['wat', 'wat', 'wat']],
+  }));
+
+  t.plan(6);
+
+  setMetaContents()
     .catch(error => {
       t.ok(
-        createReadStreamSpy.calledWith(badFile1),
-        'creates read stream with file arg'
+        /project id/i.test(error.message),
+        'Rejects without project ID'
+      );
+
+      return setMetaContents(projectId);
+    })
+    .catch(error => {
+      t.ok(
+        error.message.indexOf('consortium') > -1,
+        'Rejects without project consortium ID'
+      );
+
+      return setMetaContents(projectId);
+    })
+    .catch(error => {
+      t.ok(
+        error.message.indexOf('covariates') > -1,
+        'Rejects without active computation inputs'
+      );
+
+      return setMetaContents(projectId);
+    })
+    .catch(error => {
+      t.ok(
+        error.message.indexOf('baddies.txt') > -1,
+        'Rejects with missing file'
+      );
+
+      return setMetaContents(projectId);
+    })
+    .catch(error => {
+      t.ok(
+        error.message.indexOf('Is Control') > -1,
+        'errors with bad metaFile to covariate mapping'
+      );
+
+      return setMetaContents(projectId);
+    })
+    .catch(error => {
+      t.ok(
+        error.message.indexOf('determine column value') > -1,
+        'errors with bad metaFile column'
+      );
+    })
+    .catch(t.end);
+});
+
+test('ProjectService - setMetaContents', t => {
+  const consortiumId = 'test-consortium';
+  const projectId = 'test-project';
+  const filename1 = path.join(__dirname, 'M100.txt');
+  const filename2 = path.join(__dirname, 'M101.txt');
+  const filename3 = path.join(__dirname, 'M102.txt');
+
+  const dbGetStub = sinon.stub().returns(Promise.resolve({
+    _id: consortiumId,
+    activeComputationInputs: [[
+      0,
+      1,
+      [{
+        name: 'Is Control',
+        type: 'boolean',
+      }, {
+        name: 'Age',
+        type: 'number',
+      }],
+    ]],
+  }));
+  const goodProject1 = {
+    _id: projectId,
+    consortiumId,
+    files: [{
+      filename: filename1,
+      tags: {},
+    }, {
+      filename: filename2,
+      tags: {
+        already: 'taggin',
+      },
+    }, {
+      filename: filename3,
+      tags: {},
+    }],
+    metaFile: [
+      ['filename', 'Age', 'Diagnosis'],
+      ['M100.txt', '40', 'true'],
+      ['M101.txt', '20', 'false'],
+      ['M102.txt', '60', '0'],
+    ],
+    metaCovariateMapping: {
+      1: 1,
+      2: 0,
+    },
+  };
+
+  const project = {
+    dbRegistry: {
+      get() {
+        return {
+          get: dbGetStub,
+        };
+      },
+    },
+
+    // `setMetaContents` mutates the project
+    get: sinon.stub().returns(Promise.resolve(cloneDeep(goodProject1))),
+    save: sinon.stub().returns(Promise.resolve()),
+  };
+
+  const setMetaContents = ProjectService.prototype.setMetaContents.bind(
+    project
+  );
+
+  t.plan(3);
+
+  setMetaContents(projectId)
+    .then(() => {
+      t.ok(
+        project.get.calledWithExactly(projectId),
+        'gets project by ID'
       );
       t.ok(
-        error.message.toLowerCase().indexOf('is control'),
-        'rejects without \'is control\' header'
+        dbGetStub.calledWithExactly(consortiumId),
+        'gets consortium by ID'
       );
 
-      return ProjectService.prototype.getMetaFileContents(badFile2);
-    })
-    .then(() => t.fail('resolves with malformed CSV'))
-    .catch(() => {
-      t.pass('rejects with malformed CSV');
-
-      return ProjectService.prototype.getMetaFileContents(goodFile);
-    })
-    .then(output => {
       t.deepEqual(
-        output,
-        [
-          ['M100', true],
-          ['M101', true],
-          ['M102', false],
-          ['M103', false],
-          ['M104', false],
-        ],
-        'returns is controls'
+        project.save.firstCall.args[0].files,
+        [{
+          filename: filename1,
+          tags: {
+            age: 40,
+            isControl: true,
+          },
+        }, {
+          filename: filename2,
+          tags: {
+            age: 20,
+            already: 'taggin',
+            isControl: false,
+          },
+        }, {
+          filename: filename3,
+          tags: {
+            age: 60,
+            isControl: false,
+          },
+        }],
+        'adds tags to project\'s files'
       );
     })
-    .catch(t.end)
-    .then(() => {
-      // teardown
-      createReadStreamSpy.restore();
-    });
+    .catch(t.end);
 });
 
 // TODO: This test fails when this file is tested independently. Why?

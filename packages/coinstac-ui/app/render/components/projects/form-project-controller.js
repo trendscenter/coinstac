@@ -1,5 +1,5 @@
 import app from 'ampersand-app';
-import { clone, noop } from 'lodash';
+import { cloneDeep, get, noop, pickBy, values } from 'lodash';
 import { connect } from 'react-redux';
 import React, { Component, PropTypes } from 'react';
 
@@ -8,26 +8,6 @@ import { addProject } from '../../state/ducks/projects';
 import FormProject from './form-project';
 
 class FormProjectController extends Component {
-  /**
-   * Get errors from the project state.
-   *
-   * @param {Object} project
-   * @returns {Object}
-   */
-  static getErrors(project) {
-    return Object.keys(project).reduce((memo, key) => {
-      const value = project[key];
-
-      if ((key === 'files' && !value.length) || !value) {
-        memo[key] = FormProjectController.ERRORS.get(key);
-      } else {
-        memo[key] = null;
-      }
-
-      return memo;
-    }, {});
-  }
-
   constructor(props) {
     super(props);
 
@@ -35,14 +15,19 @@ class FormProjectController extends Component {
       allowComputationRun: false,
       errors: {
         consortiumId: null,
-        name: null,
         files: null,
+        metaCovariateMapping: null,
         metaFile: null,
+        metaFilePath: null,
+        name: null,
       },
       project: {
         consortiumId: undefined,
         files: [],
+        // TODO: Don't tie datastructure to input type
+        metaCovariateMapping: {},
         metaFile: null,
+        metaFilePath: null,
         name: '',
       },
 
@@ -56,14 +41,18 @@ class FormProjectController extends Component {
      */
     if (props.project) {
       this.state.project.consortiumId = props.project.consortiumId;
-      this.state.project.files = clone(props.project.files);
+      this.state.project.files = cloneDeep(props.project.files);
+      this.state.project.metaCovariateMapping =
+        cloneDeep(props.project.metaCovariateMapping);
       this.state.project.metaFile = props.project.metaFile;
+      this.state.project.metaFilePath = props.project.metaFilePath;
       this.state.project.name = props.project.name;
     }
 
     this.handleAddFiles = this.handleAddFiles.bind(this);
     this.handleAddMetaFile = this.handleAddMetaFile.bind(this);
     this.handleConsortiumChange = this.handleConsortiumChange.bind(this);
+    this.handleMapCovariate = this.handleMapCovariate.bind(this);
     this.handleNameChange = this.handleNameChange.bind(this);
     this.handleRemoveAllFiles = this.handleRemoveAllFiles.bind(this);
     this.handleRemoveMetaFile = this.handleRemoveMetaFile.bind(this);
@@ -97,6 +86,51 @@ class FormProjectController extends Component {
     });
   }
 
+  /**
+   * Get errors from the project state.
+   *
+   * @param {Object} project
+   * @returns {Object}
+   */
+  getErrors(project) {
+    const {
+      consortia,
+    } = this.props;
+
+    return Object.keys(project).reduce((memo, key) => {
+      const value = project[key];
+
+      if (key === 'metaCovariateMapping') {
+        const consortiumId = get(this.state, 'project.consortiumId');
+        let selectedConsortium;
+
+        if (consortiumId) {
+          selectedConsortium = consortia.find(({ _id }) => {
+            return _id === consortiumId;
+          });
+        }
+
+        if (
+          selectedConsortium &&
+          Array.isArray(selectedConsortium.activeComputationInputs[0][2]) &&
+          selectedConsortium.activeComputationInputs[0][2].length &&
+          (
+            values(value).length <
+            selectedConsortium.activeComputationInputs[0][2].length
+          )
+        ) {
+          memo[key] = 'Missing covariate mapping';
+        }
+      } else if ((key === 'files' && !value.length) || !value) {
+        memo[key] = FormProjectController.ERRORS.get(key);
+      } else {
+        memo[key] = null;
+      }
+
+      return memo;
+    }, {});
+  }
+
   handleAddFiles() {
     app.main.services.files.select()
       .then(files => {
@@ -121,13 +155,18 @@ class FormProjectController extends Component {
 
   handleAddMetaFile() {
     app.main.services.files.getMetaFile()
-      .then(metaFile => {
+      .then(metaFilePath => Promise.all([
+        metaFilePath,
+        app.core.projects.getCSV(metaFilePath),
+      ]))
+      .then(([metaFilePath, metaFile]) => {
         this.setState({
           errors: {
             metaFile: null,
           },
           project: {
-            metaFile,
+            metaFile: JSON.parse(metaFile),
+            metaFilePath,
           },
         });
       })
@@ -145,8 +184,41 @@ class FormProjectController extends Component {
     const { value: consortiumId } = event.target;
 
     this.setState({
-      errors: FormProjectController.getErrors({ consortiumId }),
+      errors: this.getErrors({ consortiumId }),
       project: { consortiumId },
+    });
+  }
+
+  /**
+   * Handle project metadata to covariate mapping changes.
+   *
+   * @todo Refactor into a `Project` model method? Clean it up.
+   *
+   * @param {number} covariateIndex Consortium's corresponding 'covariate'
+   * computation input's element's index
+   * @param {number} metaFileIndex Index of metadata file's column
+   */
+  handleMapCovariate(covariateIndex, metaFileIndex) {
+    const {
+      project: {
+        metaCovariateMapping: mapping,
+      },
+    } = this.state;
+
+    const metaCovariateMapping = pickBy(
+      Object.assign({}, mapping, { [metaFileIndex]: covariateIndex }),
+      (value, key) => {
+        return value !== covariateIndex || parseInt(key, 10) === metaFileIndex;
+      }
+    );
+
+    this.setState({
+      errors: {
+        metaCovariateMapping: null,
+      },
+      project: {
+        metaCovariateMapping,
+      },
     });
   }
 
@@ -154,7 +226,7 @@ class FormProjectController extends Component {
     const { value: name } = event.target;
 
     this.setState({
-      errors: FormProjectController.getErrors({ name }),
+      errors: this.getErrors({ name }),
       project: { name },
     });
 
@@ -196,7 +268,7 @@ class FormProjectController extends Component {
   handleRemoveMetaFile() {
     this.setState({
       project: {
-        metaFile: null,
+        metaFilePath: null,
       },
     });
   }
@@ -223,7 +295,7 @@ class FormProjectController extends Component {
       Object.assign({}, this.props.project, project) :
       project;
 
-    const newErrors = FormProjectController.getErrors(project);
+    const newErrors = this.getErrors(project);
 
     if (Object.values(newErrors).some(e => !!e)) {
       this.setState({ errors: newErrors });
@@ -276,6 +348,7 @@ class FormProjectController extends Component {
       allowComputationRun,
       errors,
       metaFile,
+      metaFilePath,
       project,
       showFilesComponent,
     } = this.state;
@@ -298,9 +371,11 @@ class FormProjectController extends Component {
         errors={errors}
         isEditing={isEditing}
         metaFile={metaFile}
+        metaFilePath={metaFilePath}
         onAddFiles={this.handleAddFiles}
         onAddMetaFile={this.handleAddMetaFile}
         onConsortiumChange={this.handleConsortiumChange}
+        onMapCovariate={this.handleMapCovariate}
         onNameChange={this.handleNameChange}
         onRemoveAllFiles={this.handleRemoveAllFiles}
         onRemoveFile={this.handleRemoveFile}
@@ -328,7 +403,8 @@ FormProjectController.contextTypes = {
 FormProjectController.ERRORS = new Map([
   ['consortiumId', 'Select a consortium'],
   ['files', 'Add some files'],
-  ['metaFile', 'Add a meta file'],
+  ['metaFile', 'Trouble mapping covariates'],
+  ['metaFilePath', 'Add a meta file'],
   ['name', 'Add a name'],
 ]);
 

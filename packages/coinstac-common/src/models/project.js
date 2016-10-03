@@ -19,7 +19,9 @@ Project.schema = Object.assign({
     .required(),
   consortiumId: joi.string().optional(),
   files: joi.alternatives().try(joi.array()).default([]),
-  metaFile: joi.string().min(2).optional(),
+  metaFile: joi.array(),
+  metaFilePath: joi.string().min(2).optional(),
+  metaCovariateMapping: joi.object().default({}),
 }, PouchDocument.schema);
 
 module.exports = Project;
