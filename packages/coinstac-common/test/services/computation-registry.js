@@ -1,6 +1,7 @@
 'use strict';
 
 const assign = require('lodash/assign');
+const bluebird = require('bluebird');
 const clone = require('lodash/clone');
 const ComputationRegistry =
     require('../../src/services/classes/computation-registry');
@@ -282,11 +283,14 @@ tape('gets computation from source', t => {
 
   const instance = factory();
   const name = registry[2].name;
+  const readdirAsync = bluebird.promisify(fs.readdir);
   const version = registry[2].tags[0];
 
   const slug = `${name}@${version}`;
   const stubs = setupNetworkStubs(slug);
   const githubStub = stubs.githubStub;
+  const installStub = sinon.stub(ComputationRegistry, 'runNPMInstall')
+    .returns(Promise.resolve());
   const requestStub = stubs.requestStub;
 
     // Expected tarball URL, taken from the mock JSON
@@ -294,78 +298,65 @@ tape('gets computation from source', t => {
     `https://api.github.com/repos/MRN-Code/${name}/tarball/v${version}`;
 
   instance._getFromSource(name, version)
-  .then(res => {
-    t.ok(
-      res.name === name && res.version === version,
-      'returns computation definition'
-    );
+    .then(res => {
+      t.ok(
+        res.name === name && res.version === version,
+        'returns computation definition'
+      );
 
-    const args = githubStub.firstCall.args[0];
+      const args = githubStub.firstCall.args[0];
 
-    t.ok(
-      (
-          args.page === 1 &&
-          args.repo === name &&
-          args.user === 'MRN-Code'
-      ),
-      'calls getTags() with right args'
-    );
+      t.ok(
+        args.page === 1 && args.repo === name && args.user === 'MRN-Code',
+        'calls getTags() with right args'
+      );
 
-    t.equal(
-      urlToString(requestStub.firstCall.args[0]),
-      tarballUrl,
-      'requests expected tarball'
-    );
+      t.equal(
+        urlToString(requestStub.firstCall.args[0]),
+        tarballUrl,
+        'requests expected tarball'
+      );
 
-    fs.readdir(TEST_COMPUTATION_PATH, (err, computations) => { // eslint-disable-line
-      if (err) {
-        return t.end(err);
-      }
+      t.ok(
+        installStub.calledWithExactly(
+          instance._getComputationPath(name, version)
+        ),
+        'runs npm install on computation'
+      );
+
+      return Promise.all([
+        readdirAsync(TEST_COMPUTATION_PATH),
+        readdirAsync(path.join(TEST_COMPUTATION_PATH, slug)),
+      ]);
+    })
+    .then(([computations, files]) => {
+      const requiredFiles = ['index.js', 'package.json'];
 
       t.ok(
         computations.indexOf(slug) !== -1,
         'unpacks tarball in expected directory'
       );
-
-      fs.readdir(
-        path.join(TEST_COMPUTATION_PATH, slug),
-        (err, files) => {
-          if (err) { return t.end(err); }
-          const requiredFiles = ['index.js', 'package.json'];
-          t.ok(
-            requiredFiles.every(f => files.indexOf(f) !== -1) &&
-            files.every(f => {
-              return (
-                requiredFiles.indexOf(f) !== -1 ||
-                f === 'node_modules'
-              );
-            }),
-            'unpacks all computation files'
+      t.ok(
+        requiredFiles.every(f => files.indexOf(f) !== -1) &&
+        files.every(f => {
+          return (
+            requiredFiles.indexOf(f) !== -1 ||
+            f === 'node_modules'
           );
-
-          return fs.readdir(
-            path.join(TEST_COMPUTATION_PATH, slug, 'node_modules'),
-            (err, nodeModules) => {
-              if (err) { return t.end(err); }
-              t.ok(
-                nodeModules.length === 1 &&
-                nodeModules[0] === 'lodash',
-                'installs dependencies via NPM'
-              );
-              // Cleanup
-              githubStub.restore();
-              return requestStub.restore();
-            }
-          );
-        }
+        }),
+        'unpacks all computation files'
       );
-    });
-  })
-  .then(helpers.cleanupTestDir)
 
-  // Remove temporary test computation directory
-  .then(() => t.pass('test cleanup'))
-  .catch(t.end);
+      // Cleanup
+      githubStub.restore();
+      installStub.restore();
+      requestStub.restore();
+      return helpers.cleanupTestDir();
+    })
+
+    // Remove temporary test computation directory
+    .then(() => t.pass('test cleanup'))
+    .catch(t.end);
 });
 
 tape('handles GitHub API errors', t => {

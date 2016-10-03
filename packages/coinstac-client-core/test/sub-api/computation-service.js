@@ -33,7 +33,7 @@ function getStubbedParams() {
       },
       projects: {
         get: sinon.stub(),
-        getMetaFileContents: sinon.stub(),
+        setMetaContents: sinon.stub(),
       },
       pool: {
         triggerRunner: sinon.stub().returns(Promise.resolve(
@@ -67,6 +67,10 @@ tape('ComputationService :: canStartComputation', t => {
   };
   const params = getStubbedParams();
   const computationService = new ComputationService(params);
+  const project = {
+    _id: 'wat wat wat',
+    label: 'Bla is project?',
+  };
 
   params.client.consortia.get.returns(Promise.resolve(
     Object.assign({}, consortium, {
@@ -94,10 +98,8 @@ tape('ComputationService :: canStartComputation', t => {
     url: 'http://coins.mrn.org',
   }));
 
-  params.client.projects.get.returns(Promise.resolve({
-    _id: 'wat wat wat',
-    label: 'Bla is project?',
-  }));
+  params.client.projects.get.returns(Promise.resolve(project));
+  params.client.projects.setMetaContents.returns(project);
 
   t.plan(4);
 
@@ -143,9 +145,8 @@ tape('ComputationService :: doTriggerRunner errors', t => {
       tags: {},
     }],
   }));
-  params.client.projects.getMetaFileContents.returns(Promise.resolve([]));
 
-  t.plan(4);
+  t.plan(3);
 
   computationService.doTriggerRunner({})
     .catch(() => {
@@ -163,20 +164,7 @@ tape('ComputationService :: doTriggerRunner errors', t => {
     })
     .catch(() => {
       t.pass('rejects without run ID');
-
-      return computationService.doTriggerRunner({
-        consortiumId: 'pilsner',
-        projectId: 'ipa',
-        runId: 'pale-ale',
-      });
-    })
-    .catch(error => {
-      t.ok(
-        error.message.indexOf('session-ale') > -1,
-        'rejects when file meta DNE'
-      );
-    })
-    .catch(t.end);
+    });
 });
 
 tape('ComputationService :: doTriggerRunner', t => {
@@ -205,12 +193,7 @@ tape('ComputationService :: doTriggerRunner', t => {
     label: 'Baller Consortium',
     owners: ['testUserName'],
   }));
-  params.client.projects.get.returns(Promise.resolve(project));
-  params.client.projects.getMetaFileContents.returns(Promise.resolve([
-    ['dope-file.txt', true],
-    ['baller-file.txt', false],
-    ['ill-file.txt', true],
-  ]));
+  params.client.projects.setMetaContents.returns(Promise.resolve(project));
 
   t.plan(7);
 
@@ -226,11 +209,10 @@ tape('ComputationService :: doTriggerRunner', t => {
         'retrieves consortium via consortiumId'
       );
       t.equal(
-        params.client.projects.get.firstCall.args[0],
+        params.client.projects.setMetaContents.firstCall.args[0],
         project._id,
         'retrieves project via projectId'
       );
-
 
       const triggerRunnerStub = params.client.pool.triggerRunner;
       const args = triggerRunnerStub.firstCall.args;
@@ -248,17 +230,9 @@ tape('ComputationService :: doTriggerRunner', t => {
 
       t.equal(args[0]._id, runId, 'sets run ID on remote computation result');
 
-      t.deepEqual(
+      t.equal(
         triggerRunnerStub.firstCall.args[1],
-        Object.assign({}, project, {
-          files: project.files.map((file, index) => {
-            return Object.assign({}, file, {
-              tags: {
-                isControl: index % 2 < 1,
-              },
-            });
-          }),
-        }),
+        project,
         'passes transformed project to pool’s triggerRunner method'
       );
       t.equal(
