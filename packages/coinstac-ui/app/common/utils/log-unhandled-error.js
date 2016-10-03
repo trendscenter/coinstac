@@ -24,26 +24,36 @@ const logLocations = {
 const unhandledBootLogger = () => {
   const logLocation = path.join(process.env.HOME, logLocations[process.platform]);
   const logFilePath = path.join(logLocation, 'coinstac-boot-error-log.txt');
+  const consoleLogger = (data) => {
+    return console.error(`${new Date()} ERROR: ${data}`); // eslint-disable-line no-console
+  };
+
+  if (process.env === 'development') {
+    console.error(  // eslint-disable-line no-console
+      `${new Date()} WARNING: boot error logging to file disabled`
+    );
+    return consoleLogger;
+  }
+
   try {
-    if (process.env === 'development') throw new Error('disable boot file logging');
     mkdirpSync(logLocation, parseInt('0775', 8));
 
     const fileLogger = (data) => {
       if (process.ENV === 'development') {
-        return console.error(`${new Date()}ERROR: ${data}`); // eslint-disable-line no-console
+        return console.error(`${new Date()} ERROR: ${data}`); // eslint-disable-line no-console
       }
-      return fs.appendFileSync(logFilePath, `${new Date()}ERROR: ${data}${os.EOL}`);
+      return fs.appendFileSync(logFilePath, `${new Date()} ERROR: ${data}${os.EOL}`);
     };
     return fileLogger;
   } catch (err) {
     // can't open file for writes, try to log to console
     console.error(  // eslint-disable-line no-console
-      `${new Date()}WARNING: boot error logging to file disabled`
+      `${new Date()} WARNING: boot error logging to file disabled`
     );
     console.error(`ERROR: ${err}`); // eslint-disable-line no-console
 
     const consoleLogger = (data) => {
-      return console.error(`${new Date()}ERROR: ${data}`); // eslint-disable-line no-console
+      return console.error(`${new Date()} ERROR: ${data}`); // eslint-disable-line no-console
     };
     return consoleLogger;
   }
