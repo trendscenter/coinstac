@@ -112,7 +112,7 @@ COINSTAC has a second type of command that allows algorithm developers to integr
 {
   type: 'cmd',
   cmd: 'python',
-  args: ['./path/to/my/script.py', '--some', '--flags'],
+  args: ['./path/to/my/script.py'],
   verbose: true,
 }
 ```
@@ -122,21 +122,96 @@ COINSTAC has a second type of command that allows algorithm developers to integr
 * **`args`** `<Array>`: Arguments to pass to the executable.
 * **`verbose`** `<Boolean>`: Whether to output the computation’s output to stdout.
 
-The command spawns a new process, in the above case with Python, and executes with the arguments passed to the executable. COINSTAC will serialize input parameters as JSON and pass them as the last argument to the executable (see [Command Parameters](#command-parameters)).
+The command spawns a new process, in the above case with Python, and executes with the arguments in the `args` array. The above example is analogous to running from a shell:
+
+```shell
+python ./path/to/my/script.py
+```
+
+Pass additional flags and parameters to a script by adding them to the `args` array:
+
+```js
+{
+  type: 'cmd',
+  cmd: 'python',
+  args: [
+    './path/to/my/script.py',
+    '--some',
+    '--flags',
+    '--value=100',
+    '--other-value',
+    '200'
+  ],
+  verbose: true,
+}
+```
+
+This equates to:
+
+```shell
+pyton ./path/to/my/script.py --some --flags --value=100 --other-value 200
+```
+
+COINSTAC will serialize input parameters as JSON and pass them as the last argument to the executable (see [Command Parameters](#command-parameters)).
 
 ##### Returning Data
 
 It’s important that your script **only output valid JSON** via stdout; otherwise, COINSTAC will throw an error. You can test your script by [installing `jq`](https://stedolan.github.io/jq/) and running:
 
 ```shell
-python ./path/to/my/script.py --some --flags | jq .
+python ./path/to/my/script.py | jq .
 ```
 
-This should alert you to invalid JSON.
+This should alert you to invalid JSON. Be sure to replace `python ./path/to/my/script.py` to your appropriate command.
+
+You may also need to pass JSON to your script to simulate its use within COINSTAC. Do so using the `--run` flag. The following shows an example COINSTAC data structure passed to a local script in bash:
+
+```shell
+SAMPLE_DATA='{
+  "computationId": "test",
+  "consortiumId": "test",
+  "previousData": [],
+  "remoteResult": {
+    "computationId": "test",
+    "complete": false,
+    "consortiumId": "test",
+    "usernames": ["test"],
+    "userErrors": [],
+    "data": null,
+    "error": null,
+    "history": [],
+    "pipelineState": {
+      "step": 0,
+      "inProgress": true
+    }
+  },
+  "username": "test",
+  "userData": null
+}'
+python ./path/to/my/script.py --run $SAMPLE_DATA | jq .
+```
+
+See [Command Parameters](#command-parameters) for documentation on COINSTAC data shapes.
 
 ##### Returning An Error
 
 Write to stderr if you need to raise an exception. COINSTAC will detect this and mark the command result as an error.
+
+#### Marking As Completing
+
+Marking a command as “complete” allows COINSTAC to progress to the next command in your pipeline. To do so, add a `complete` property the returned JSON data and mark it as `true`:
+
+```js
+{
+  type: 'function',
+  fn: function alwaysMarksComplete(params) {
+    const data = params.previousData || {};
+    data.complete = true;
+
+    return data;
+  },
+}
+```
 
 ### Command Parameters
 

@@ -11,8 +11,8 @@ const fs = require('fs');
 const isPromise = require('is-promise');
 const path = require('path');
 
-const bootClients = require('./boot-clients');
-const bootComputeServers = require('./boot-compute-servers');
+const bootLocals = require('./boot-locals');
+const bootRemote = require('./boot-remote');
 const dbServer = require('./db-server');
 const fileLoader = require('./file-loader');
 const { logger } = require('./utils/logging');
@@ -123,9 +123,11 @@ const exportList = {
   },
 
   /**
-   * @description boots the infrastructure required to run a simulation. this
-   * includes a db server, computer server, and client processes for each client
-   * in the provided simulation declaration
+   * Run simulation.
+   *
+   * @description Boots the infrastructure required to run a simulation and runs
+   * it.
+   *
    * @param {string} declPath simulation declaration.
    * @returns {Promise}
    */
@@ -154,18 +156,18 @@ const exportList = {
         return Promise.all([
           declaration,
           usernames,
-          bootComputeServers.run({
+          bootRemote.run({
             computationPath: declaration.computationPath,
             data: declaration.remote,
             verbose: declaration.verbose,
           }),
         ]);
       })
-      .then(([declaration, usernames, computeServers]) => {
-        processes.remote = computeServers[0];
-        logger.info('compute server up');
+      .then(([declaration, usernames, remoteProcess]) => {
+        processes.remote = remoteProcess;
+        logger.info('Remote process booted');
 
-        return bootClients.run({
+        return bootLocals.run({
           computationPath: declaration.computationPath,
           users: declaration.local.map((data, i) => {
             return {
@@ -176,9 +178,9 @@ const exportList = {
           verbose: declaration.verbose,
         });
       })
-      .then(userProcesses => {
-        processes.local = userProcesses;
-        logger.info('clients up');
+      .then(localProcesses => {
+        processes.local = localProcesses;
+        logger.info('Local processes booted');
         processes.local.forEach(proc => proc.send({ kickoff: true }));
         return this.teardown();
       });
