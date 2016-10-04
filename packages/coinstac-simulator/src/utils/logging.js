@@ -26,7 +26,7 @@ function getStdDataHandler(childProcess, name, mode = 'info') {
 }
 
 /**
- * Get a logger for a client or server child process.
+ * Get a logger for a local or remote child process.
  *
  * @param {string} [level='verbose']
  * @returns {Winston} Re-configured logger instance

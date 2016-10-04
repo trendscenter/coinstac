@@ -2,7 +2,7 @@
 
 /**
  * @private
- * @module boot-client
+ * @module local
  */
 
 require('./utils/handle-errors');
@@ -31,7 +31,7 @@ let username;
 
 
 /**
- * Boot client.
+ * Boot local process.
  *
  * @param {Object} params
  * @param {string} params.computationPath
@@ -66,6 +66,22 @@ function boot({
           password: 'dummypw',
         }),
       }, opts));
+
+      // Log computation output if it exists
+      pool.events.on('run:end', result => {
+        if (
+          result &&
+          result instanceof Object &&
+          'data' in result &&
+          typeof result.data !== 'undefined' &&
+          result.data !== null &&
+          result.data !== ''
+        ) {
+          logger.verbose(
+            `Computation run ended: ${JSON.stringify(result.data)}`
+          );
+        }
+      });
       pool.events.on('error', logger.error);
 
       return pool.init();
@@ -189,7 +205,7 @@ const kickoff = function kickoff() {
     });
 };
 
-// boot with data provided by `boot-clients`
+// boot with data provided by src/boot-locals.js
 process.on('message', (opts) => {
   if (opts.boot) {
     boot(opts.boot)
