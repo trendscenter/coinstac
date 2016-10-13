@@ -3,7 +3,6 @@
 const ComputationRegistry = require('./classes/computation-registry.js');
 const DBRegistry = require('./classes/db-registry');
 const defaultRegistry = require('../decentralized-computations.json');
-const GitHubApi = require('github');
 
 /**
  * Computation registry factory.
@@ -79,22 +78,7 @@ function computationRegistryFactory(options) {
     registry = defaultRegistry;
   }
 
-  /**
-   * Configure GitHub client.
-   * {@link https://github.com/mikedeboer/node-github#example}
-   */
-  const github = new GitHubApi({
-    headers: {
-      'user-agent': 'COINSTAC',
-    },
-    host: 'api.github.com',
-    protocol: 'https',
-    timeout: 8000,
-    version: '3.0.0',
-  });
-
   const instance = new ComputationRegistry({
-    github,
     path: computationsPath,
     registry,
   });

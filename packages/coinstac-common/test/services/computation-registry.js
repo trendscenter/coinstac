@@ -1,33 +1,22 @@
 'use strict';
 
 const assign = require('lodash/assign');
-const bluebird = require('bluebird');
-const clone = require('lodash/clone');
 const ComputationRegistry =
     require('../../src/services/classes/computation-registry');
 const DecentralizedComputation =
     require('../../src/models/decentralized-computation');
-const followRedirects = require('follow-redirects');
-const fs = require('fs');
-const GitHubApi = require('github');
 const helpers = require('../helpers/computation-registry-helpers.js');
-const mockApiTagResponse = require('../mocks/api-tag-response.json');
 const path = require('path');
 const registry = require('../mocks/decentralized-computations.json');
-const sinon = require('sinon');
 const tape = require('tape');
-const tar = require('tar-fs');
-const url = require('url');
 const values = require('lodash/values');
 
-const github = new GitHubApi({ version: '3.0.0' });
 const MOCK_COMPUTATION_PATH = helpers.MOCK_COMPUTATION_PATH;
 const TEST_COMPUTATION_PATH = helpers.TEST_COMPUTATION_PATH;
 
 // Get a configured ComputationRegistry class
 function factory(options) {
   const defaults = {
-    github,
     path: TEST_COMPUTATION_PATH,
     registry,
   };
@@ -77,43 +66,6 @@ function seedInstanceComputations(instance, computations) {
 }
 
 /**
- * Set up network stubs.
- *
- * Wraps the GitHub API’s `getTags` method and `request`. User must call
- * sinon’s `restore()` on each stub.
- *
- * @param {string} computationSlug A <name>@<version> slug that matches to a
- * mock computation's directory name. This is used on requests to pack a tarball
- * from the directory's contents.
- * @returns {object}
- * @property {function} githubStub
- * @property {function} requestStub
- */
-function setupNetworkStubs(computationSlug) {
-  const githubStub = sinon.stub(github.repos, 'getTags');
-  const getStub = sinon.stub(followRedirects.https, 'get');
-  const tarPacker = tar.pack(
-    path.join(MOCK_COMPUTATION_PATH, computationSlug),
-    {
-      map: header => {
-        header.name = `${computationSlug}/${header.name}`;
-
-        return header;
-      },
-    }
-  );
-
-  githubStub.yields(null, mockApiTagResponse);
-  getStub.yields(tarPacker);
-  getStub.returns(tarPacker);
-
-  return {
-    githubStub,
-    requestStub: getStub,
-  };
-}
-
-/**
  * Get a computation filter function.
  *
  * @param {string} name
@@ -126,35 +78,14 @@ function filterComputation(name, version) {
   };
 }
 
-
-/**
- * Get a URL string from a Node.js `http.request` options hash.
- *
- * @param {Object} urlObject
- * @returns {string}
- */
-function urlToString(urlObject) {
-  const localUrlObject = clone(urlObject);
-
-  localUrlObject.pathname = localUrlObject.path;
-  delete localUrlObject.path;
-
-  return url.format(localUrlObject);
-}
-
 tape('constructor', t => {
   function badFactory(options) {
     return new ComputationRegistry(options || {});
   }
 
-  t.throws(badFactory, /github/gi, 'throws with no GitHub API client');
+  t.throws(badFactory, /path/gi, 'throws with no path');
   t.throws(
-    badFactory.bind(null, { github }),
-    /path/gi,
-    'throws with no path'
-  );
-  t.throws(
-    badFactory.bind(null, { github, path }),
+    badFactory.bind(null, { path }),
     /registry/gi,
     'throws with no registry'
   );
@@ -164,13 +95,9 @@ tape('constructor', t => {
   const instance = factory();
 
   t.ok(
-        (
-            instance.github === github &&
-            instance.path === TEST_COMPUTATION_PATH &&
-            instance.registry === registry
-        ),
-        'sets instance properties'
-    );
+    instance.path === TEST_COMPUTATION_PATH && instance.registry === registry,
+    'sets instance properties'
+  );
   t.end();
 });
 
@@ -605,76 +532,16 @@ tape('gets computation by name and version', t => {
         });
 
   instance.get(name, version)
-        .then(computation => {
-          t.ok(
-                (
-                    computation.name === name &&
-                    computation.version === version
-                ),
-                'gets computation by name and version'
-            );
-        })
-        .catch(t.end);
-});
-
-tape('doesn’t remove unknown computation', t => {
-  t.plan(1);
-
-  factory().remove('bogus-name', 'what-is-version')
-        .then(() => t.fail('expected bad name/version to reject'))
-        .catch(() => t.pass('errored on bad name/version'));
-});
-
-tape('remove computation from store', t => {
-  t.plan(1);
-
-  const instance = factory();
-  const mockComputations = getMockComputations();
-  const name = registry[0].name;
-  const version = registry[0].tags[0];
-
-  seedInstanceComputations(instance, mockComputations);
-
-  instance.remove(name, version)
-  .then(() => {
-    t.ok(
-      values(instance.store).every(c => {
-        return !(c.name === name && c.version === version);
-      }),
-      'computation removed'
-    );
-  })
-  .catch(t.end);
-});
-
-tape('remove computation from disk', t => {
-  t.plan(3);
-
-  const instance = factory();
-  const name = 'a-small-bag';
-  const version = '1.0.0-beta';
-  const slug = `${name}@${version}`;
-  const stubs = setupNetworkStubs(slug);
-
-  instance.add(name, version)
-  .then(computation => {
-    t.ok(computation, 'gets computation');
-    stubs.githubStub.restore();
-    stubs.requestStub.restore();
-    return instance.remove(name, version, true);
-  })
-  .then(() => {
-    fs.readdir(TEST_COMPUTATION_PATH, (err, files) => {
-      if (err) { return t.end(err); }
-      return t.ok(
-        files.indexOf(slug) === -1,
-        'removes computation from disk'
+    .then(computation => {
+      t.ok(
+        (
+          computation.name === name &&
+          computation.version === version
+        ),
+        'gets computation by name and version'
       );
-    });
-  })
-  .catch(t.end)
-  .then(() => helpers.cleanupTestDir())
-  .then(() => t.pass('test cleanup'));
+    })
+    .catch(t.end);
 });
 
 tape('gets name and version from directory name', t => {
