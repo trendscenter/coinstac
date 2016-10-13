@@ -10,4 +10,8 @@
     "name": "a-small-bag",
     "tags": ["1.0.0-beta"],
     "url": "https://github.com/MRN-Code/a-small-bag"
+}, {
+    "name": "malformed",
+    "tags": ["1.0.0"],
+    "url": "https://github.com/MRN-Code/malformed"
 }]

@@ -127,9 +127,9 @@ tape('adds definition to store', t => {
       'instance name, url and version match'
     );
     t.ok(
-          values(instance.store)[0] === computation,
-          'saves DecentralizedComputation to internal store'
-      );
+      values(instance.store)[0] === computation,
+      'saves DecentralizedComputation to internal store'
+    );
   })
   .catch(t.end);
 });
@@ -186,7 +186,7 @@ tape('gets computation path', t => {
 });
 
 tape('gets definition from disk', t => {
-  t.plan(1);
+  t.plan(3);
 
   const instance = factory({
     path: MOCK_COMPUTATION_PATH,
@@ -198,133 +198,21 @@ tape('gets definition from disk', t => {
   const expected = require(`${MOCK_COMPUTATION_PATH}/${name}@${version}/`);
   /* eslint-enable global-require */
 
-  instance._getFromDisk(name, version)
-  .then(definition => {
-    t.deepEqual(definition, expected, 'definition matches');
-  })
-  .catch(t.end);
-});
+  instance._getFromDisk('bogus-name', '1.0.0')
+    .catch(() => {
+      t.pass('rejects with non-existent computation');
 
-tape('gets computation from source', t => {
-  t.plan(7);
-
-  const instance = factory();
-  const name = registry[2].name;
-  const readdirAsync = bluebird.promisify(fs.readdir);
-  const version = registry[2].tags[0];
-
-  const slug = `${name}@${version}`;
-  const stubs = setupNetworkStubs(slug);
-  const githubStub = stubs.githubStub;
-  const installStub = sinon.stub(ComputationRegistry, 'runNPMInstall')
-    .returns(Promise.resolve());
-  const requestStub = stubs.requestStub;
-
-    // Expected tarball URL, taken from the mock JSON
-  const tarballUrl =
-    `https://api.github.com/repos/MRN-Code/${name}/tarball/v${version}`;
-
-  instance._getFromSource(name, version)
-    .then(res => {
-      t.ok(
-        res.name === name && res.version === version,
-        'returns computation definition'
-      );
-
-      const args = githubStub.firstCall.args[0];
-
-      t.ok(
-        args.page === 1 && args.repo === name && args.user === 'MRN-Code',
-        'calls getTags() with right args'
-      );
-
-      t.equal(
-        urlToString(requestStub.firstCall.args[0]),
-        tarballUrl,
-        'requests expected tarball'
-      );
-
-      t.ok(
-        installStub.calledWithExactly(
-          instance._getComputationPath(name, version)
-        ),
-        'runs npm install on computation'
-      );
-
-      return Promise.all([
-        readdirAsync(TEST_COMPUTATION_PATH),
-        readdirAsync(path.join(TEST_COMPUTATION_PATH, slug)),
-      ]);
+      return instance._getFromDisk(registry[3].name, registry[3].tags[0]);
     })
-    .then(([computations, files]) => {
-      const requiredFiles = ['index.js', 'package.json'];
+    .catch(() => {
+      t.pass('rejects with malformed computation');
 
-      t.ok(
-        computations.indexOf(slug) !== -1,
-        'unpacks tarball in expected directory'
-      );
-      t.ok(
-        requiredFiles.every(f => files.indexOf(f) !== -1) &&
-        files.every(f => {
-          return (
-            requiredFiles.indexOf(f) !== -1 ||
-            f === 'node_modules'
-          );
-        }),
-        'unpacks all computation files'
-      );
-
-      // Cleanup
-      githubStub.restore();
-      installStub.restore();
-      requestStub.restore();
-      return helpers.cleanupTestDir();
+      return instance._getFromDisk(name, version);
     })
-
-    // Remove temporary test computation directory
-    .then(() => t.pass('test cleanup'))
+    .then(definition => {
+      t.deepEqual(definition, expected, 'definition matches');
+    })
     .catch(t.end);
-});
-
-tape('handles GitHub API errors', t => {
-  t.plan(1);
-
-  const githubStub = sinon.stub(github.repos, 'getTags');
-  const instance = factory();
-
-  githubStub.yields(new Error('bananas'));
-
-  instance._getFromSource(registry[2].name, registry[2].tags[0])
-        .then(() => t.fail('expected GitHub API error'))
-        .catch(error => {
-          t.equal(error.message, 'bananas', 'handles GitHub API error');
-          githubStub.restore();
-        });
-});
-
-tape('handles non-existant GitHub API tag', t => {
-  t.plan(1);
-
-  const githubStub = sinon.stub(github.repos, 'getTags');
-  const instance = factory();
-  const name = registry[2].name;
-  const version = registry[2].tags[0];
-
-  githubStub.yields(null, []);
-
-  instance._getFromSource(name, version)
-        .then(() => t.fail('expected no present tag'))
-        .catch(error => {
-          const message = error.message;
-
-          t.ok(
-                message.indexOf(name) !== -1 &&
-                message.indexOf(version) !== -1,
-                'errors with name and tag (version)'
-            );
-
-          githubStub.restore();
-        });
 });
 
 tape('adds computation that isn’t registered', t => {
@@ -333,10 +221,10 @@ tape('adds computation that isn’t registered', t => {
   const instance = factory();
 
   instance.add('bananas', 'are yummy')
-        .then(() => t.fail('expected to reject'))
-        .catch(() => {
-          t.ok('rejects on non-registry name/version');
-        });
+    .then(() => t.fail('expected to reject'))
+    .catch(() => {
+      t.ok('rejects on non-registry name/version');
+    });
 });
 
 tape('add a computation (gets from memory)', t => {
@@ -349,132 +237,55 @@ tape('add a computation (gets from memory)', t => {
   const version = registry[1].tags[0];
 
   const computation = mockComputations.find(
-        filterComputation(name, version)
-    );
+    filterComputation(name, version)
+  );
 
-    // Setup
+  // Setup
   instance._doAdd({
     definition: computation,
     name,
     itemUrl,
     version,
   })
-        .then(() => instance.add(name, version))
-        .then(response => {
-            // `response` and expected `computation` are different instances
-          t.deepEqual(
-                response.serialize(),
-                computation.serialize(),
-                'gets computation from memory'
-            );
-        })
-        .catch(t.end);
+    .then(() => instance.add(name, version))
+    .then(response => {
+      // `response` and expected `computation` are different instances
+      t.deepEqual(
+        response.serialize(),
+        computation.serialize(),
+        'gets computation from memory'
+      );
+    })
+    .catch(t.end);
 });
 
 tape('add a computation (gets from disk)', t => {
-  t.plan(4);
+  t.plan(2);
 
   const instance = factory();
   const name = 'the-ravens';
   const version = '2.0.0';
 
   const slug = `${name}@${version}`;
-  const stubs = setupNetworkStubs(slug);
-  const githubStub = stubs.githubStub;
-  const requestStub = stubs.requestStub;
 
   helpers.setupTestDir(slug)
-        .then(() => instance.add(name, version))
-        .then(response => {
-            // Check that `response` matches the mock computation definition
-            // (see) the-ravens@2.0.0/index.js
-          t.ok(
-                (
-                    response.name === name &&
-                    response.version === version &&
-                    response.remote.fn instanceof Function &&
-                    response.local.fn instanceof Function
-                ),
-                'gets computation from disk'
-            );
-
-          t.notOk(githubStub.callCount, 'doesn’t call GitHub API');
-          t.notOk(requestStub.callCount, 'doesn’t download tarball');
-
-          githubStub.restore();
-          requestStub.restore();
-        })
-        .catch(t.end)
-        .then(helpers.cleanupTestDir)
-        .then(() => t.pass('test cleanup'));
-});
-
-tape('add a computation (gets from network)', t => {
-  t.plan(6);
-
-  const instance = factory();
-  const name = 'a-small-bag';
-
-    /**
-     * Node uses `fs.stat` behind the scenes to see if a `require`-d path
-     * exists. By asserting this spy is called before network activiy we can
-     * test that a disk search was executed first.
-     *
-     * {@link https://github.com/nodejs/node/blob/master/lib/module.js}
-     */
-  const statSpy = sinon.spy(fs, 'stat');
-  const version = '1.0.0-beta';
-
-  const expectedUrl =
-        `https://api.github.com/repos/MRN-Code/${name}/tarball/v${version}`;
-  const slug = `${name}@${version}`;
-  const stubs = setupNetworkStubs(slug);
-  const githubStub = stubs.githubStub;
-  const requestStub = stubs.requestStub;
-
-  instance.add(name, version)
-        .then(response => {
-          t.ok(
-                statSpy.calledWith(path.join(TEST_COMPUTATION_PATH, slug)) &&
-                statSpy.calledBefore(githubStub),
-                'checks filesystem before going to network'
-            );
-          t.ok(
-                (
-                    githubStub.callCount === 1 &&
-                    githubStub.firstCall.args[0].repo === name
-                ),
-                'calls GitHub API'
-            );
-          t.equal(
-                urlToString(requestStub.firstCall.args[0]),
-                expectedUrl,
-                'downloads computation from source'
-            );
-          t.deepEqual(
-            requestStub.firstCall.args[0].headers,
-            {
-              'User-Agent': 'COINSTAC',
-            },
-            'adds user agent to tarball request'
-          );
-          t.ok(
-                (
-                    response.name === name &&
-                    response.version === version &&
-                    response.remote.fn instanceof Function &&
-                    response.local.fn instanceof Function
-                ),
-                'gets computation from network'
-            );
-
-          githubStub.restore();
-          requestStub.restore();
-          statSpy.restore();
-        })
-        .catch(t.end)
-        .then(helpers.cleanupTestDir)
-        .then(() => t.pass('test cleanup'));
+    .then(() => instance.add(name, version))
+    .then(response => {
+      // Check that `response` matches the mock computation definition
+      // (see) the-ravens@2.0.0/index.js
+      t.ok(
+        (
+          response.name === name &&
+          response.version === version &&
+          response.remote.fn instanceof Function &&
+          response.local.fn instanceof Function
+        ),
+        'gets computation from disk'
+      );
+    })
+    .catch(t.end)
+    .then(helpers.cleanupTestDir)
+    .then(() => t.pass('test cleanup'));
 });
 
 tape('gets all stored computations', t => {
@@ -486,31 +297,31 @@ tape('gets all stored computations', t => {
   seedInstanceComputations(instance, mockComputations);
 
   instance.all()
-        .then(computations => {
-          t.ok(computations.length, 'returns *some* computations');
-          t.deepEqual(
-                computations,
-                mockComputations,
-                'returns all stored computations'
-            );
-        })
-        .catch(t.end);
+    .then(computations => {
+      t.ok(computations.length, 'returns *some* computations');
+      t.deepEqual(
+        computations,
+        mockComputations,
+        'returns all stored computations'
+      );
+    })
+    .catch(t.end);
 });
 
 tape('get fails on with no computation name', t => {
   t.plan(1);
 
   factory().get()
-        .then(() => t.fail('expected to reject without args'))
-        .catch(() => t.pass('rejects without args'));
+    .then(() => t.fail('expected to reject without args'))
+    .catch(() => t.pass('rejects without args'));
 });
 
 tape('get fails on with no computation name', t => {
   t.plan(1);
 
   factory().get('bananas')
-        .then(() => t.fail('expected no version to reject'))
-        .catch(() => t.pass('rejects without version'));
+    .then(() => t.fail('expected no version to reject'))
+    .catch(() => t.pass('rejects without version'));
 });
 
 tape('gets computation by name and version', t => {
@@ -524,12 +335,12 @@ tape('gets computation by name and version', t => {
   seedInstanceComputations(instance, mockComputations);
 
   instance.get('bogus-name', 'what is a version even')
-        .then(() => {
-          t.fail('returned bogus computation');
-        })
-        .catch(error => {
-          t.ok(error, 'errored on bogus computation name');
-        });
+    .then(() => {
+      t.fail('returned bogus computation');
+    })
+    .catch(error => {
+      t.ok(error, 'errored on bogus computation name');
+    });
 
   instance.get(name, version)
     .then(computation => {
@@ -555,5 +366,7 @@ tape('gets name and version from directory name', t => {
     get('banana-guards@0.5.1-beta'),
     ['banana-guards', '0.5.1-beta']
   );
+  t.equal(get('rando-string'), null, 'returns null for no matches');
   t.end();
 });
+
