@@ -20,7 +20,7 @@ COINSTAC’s core is written entirely in JavaScript; writing an algorithm requir
 
 | Alpha Warning |
 | ------------- |
-| It’s important to note that *COINSTAC is alpha software*: its rough around the edges. If you have a question or locate a bug please **[open an issue](https://github.com/MRN-Code/coinstac/issues/new)**. |
+| It’s important to note that *COINSTAC is alpha software*: it's rough around the edges. If you have a question or locate a bug please **[open an issue](https://github.com/MRN-Code/coinstac/issues/new)**. |
 
 ## Setting Up Your Environment
 
@@ -149,7 +149,7 @@ Pass additional flags and parameters to a script by adding them to the `args` ar
 This equates to:
 
 ```shell
-pyton ./path/to/my/script.py --some --flags --value=100 --other-value 200
+python ./path/to/my/script.py --some --flags --value=100 --other-value 200
 ```
 
 COINSTAC will serialize input parameters as JSON and pass them as the last argument to the executable (see [Command Parameters](#command-parameters)).
