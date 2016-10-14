@@ -35,7 +35,7 @@ function getMockComputations() {
       return new DecentralizedComputation({
         cwd: path.join(
             TEST_COMPUTATION_PATH,
-            `${registryItem.name}@${tag}`
+            `${registryItem.name}--${tag}`
           ),
         local: {},
         name: registryItem.name,
@@ -61,7 +61,7 @@ function getMockComputations() {
  */
 function seedInstanceComputations(instance, computations) {
   computations.forEach(c => {
-    instance.store[`${c.name}@${c.version}`] = c; // eslint-disable-line
+    instance.store[`${c.name}--${c.version}`] = c; // eslint-disable-line
   });
 }
 
@@ -108,7 +108,7 @@ tape('adds definition to store', t => {
   const name = registry[0].name;
   const version = registry[0].tags[1];
   /* eslint-disable global-require */
-  const definition = require(`${MOCK_COMPUTATION_PATH}/${name}@${version}/`);
+  const definition = require(`${MOCK_COMPUTATION_PATH}/${name}--${version}/`);
   /* eslint-enable global-require */
   const url = registry[0].url;
 
@@ -162,7 +162,7 @@ tape('sets definition’s cwd on model', t => {
   .then(computation => {
     t.equal(
       computation.cwd,
-      path.join(instance.path, `${name}@${version}`),
+      path.join(instance.path, `${name}--${version}`),
       'sets cwd on string setup'
     );
   })
@@ -195,7 +195,7 @@ tape('gets definition from disk', t => {
   const name = registry[0].name;
   const version = registry[0].tags[1];
   /* eslint-disable global-require */
-  const expected = require(`${MOCK_COMPUTATION_PATH}/${name}@${version}/`);
+  const expected = require(`${MOCK_COMPUTATION_PATH}/${name}--${version}/`);
   /* eslint-enable global-require */
 
   instance._getFromDisk('bogus-name', '1.0.0')
@@ -266,13 +266,13 @@ tape('add a computation (gets from disk)', t => {
   const name = 'the-ravens';
   const version = '2.0.0';
 
-  const slug = `${name}@${version}`;
+  const slug = `${name}--${version}`;
 
   helpers.setupTestDir(slug)
     .then(() => instance.add(name, version))
     .then(response => {
       // Check that `response` matches the mock computation definition
-      // (see) the-ravens@2.0.0/index.js
+      // (see) the-ravens--2.0.0/index.js
       t.ok(
         (
           response.name === name &&
@@ -357,13 +357,13 @@ tape('gets computation by name and version', t => {
 
 tape('gets name and version from directory name', t => {
   const get = ComputationRegistry.getNameAndVersion;
-  t.deepEqual(get('whatsup@1.0.0'), ['whatsup', '1.0.0']);
+  t.deepEqual(get('whatsup--1.0.0'), ['whatsup', '1.0.0']);
   t.deepEqual(
-    get('My_Fanciness--200@5.30.1'),
-    ['My_Fanciness--200', '5.30.1']
+    get('My_Fanciness-200--5.30.1'),
+    ['My_Fanciness-200', '5.30.1']
   );
   t.deepEqual(
-    get('banana-guards@0.5.1-beta'),
+    get('banana-guards--0.5.1-beta'),
     ['banana-guards', '0.5.1-beta']
   );
   t.equal(get('rando-string'), null, 'returns null for no matches');

@@ -16,7 +16,7 @@ const values = require('lodash/values');
  * @returns {string}
  */
 function getId(name, version) {
-  return `${name}@${version}`;
+  return `${name}--${version}`;
 }
 
 /**
@@ -213,6 +213,6 @@ class ComputationRegistry {
   }
 }
 
-ComputationRegistry.DIRECTORY_PATTERN = /^([\w-\.]+)@([\w-\.]+)$/;
+ComputationRegistry.DIRECTORY_PATTERN = /^([\w-\.]+)--([\w-\.]+)$/;
 
 module.exports = ComputationRegistry;
