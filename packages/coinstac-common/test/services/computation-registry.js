@@ -72,28 +72,6 @@ tape('constructor', t => {
   t.end();
 });
 
-tape('get computation cwd', t => {
-  const getIdStub = sinon
-    .stub(ComputationRegistry, 'getId')
-    .returns('lodash');
-  const name = 'random-module';
-  const version = '1.0.0';
-
-  t.equal(
-    ComputationRegistry.getComputationCwd(name, version),
-    path.join(__dirname, '..', '..', 'node_modules', 'lodash'),
-    'returns module path'
-  );
-  t.deepEqual(
-    getIdStub.firstCall.args,
-    [name, version],
-    'gets'
-  );
-
-  getIdStub.restore();
-  t.end();
-});
-
 tape('adds definition to store', t => {
   t.plan(3);
 
@@ -157,10 +135,7 @@ tape('gets definition from disk', t => {
   mockery.enable({
     warnOnUnregistered: false,
   });
-  mockery.registerMock(
-    ComputationRegistry.getId(name, version),
-    computation
-  );
+  mockery.registerMock(name, computation);
 
   instance._getFromDisk('bogus-name', '1.0.0')
     .catch(() => {
@@ -223,10 +198,7 @@ tape('adds a computation', t => {
     warnOnUnregistered: false,
   });
 
-  mockery.registerMock(
-    ComputationRegistry.getId(registry[1].name, registry[1].tags[0]),
-    definition
-  );
+  mockery.registerMock(registry[1].name, definition);
 
   instance.add('bananas', 'are yummy')
     .then(() => t.fail('expected to reject'))
