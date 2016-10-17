@@ -1,23 +1,11 @@
 'use strict';
 
-const assign = require('lodash/assign');
 const DecentralizedComputation =
-    require('../../models/decentralized-computation.js');
-const fs = require('fs');
+  require('../../models/decentralized-computation.js');
 const path = require('path');
 const values = require('lodash/values');
 
-/**
- * Get a computation ID from its name and version.
- *
- * @private
- * @param {string} name
- * @param {string} version
- * @returns {string}
- */
-function getId(name, version) {
-  return `${name}--${version}`;
-}
+const DELIMITER = '--';
 
 /**
  * Get a registry filter function.
@@ -42,7 +30,6 @@ function registryFilter(name, version) {
  *
  * @example
  * const instance = new ComputationRegistry({
- *   path: path.join(__dirname, 'computations'),
  *   registry: [{
  *     name: 'my-computation',
  *     tags: ['1.0.0'],
@@ -60,15 +47,10 @@ function registryFilter(name, version) {
  */
 class ComputationRegistry {
   constructor(options) {
-    if (!options.path) {
-      throw new TypeError('Expected path');
-    }
-
     if (!options.registry || !Array.isArray(options.registry)) {
       throw new TypeError('Expected registry of computations');
     }
 
-    this.path = options.path;
     this.registry = options.registry;
     this.store = {};
   }
@@ -77,36 +59,25 @@ class ComputationRegistry {
    * Actually add a computation to the store.
    * @private
    * @param {Object} options
-   * @param {object} option.definition Raw computation definition
+   * @param {string} options.cwd
+   * @param {object} options.definition Raw computation definition
    * @param {string} options.name
    * @param {string} options.url
    * @param {string} options.version
    * @returns {Promise} Resolves to `DecentralizedComputation` if match is found
    */
-  _doAdd({ definition, name, url, version }) {
-    const model = new DecentralizedComputation(assign(
-      {},
+  _doAdd({ cwd, definition, name, url, version }) {
+    const model = new DecentralizedComputation(Object.assign(
       {
-        cwd: this._getComputationPath(name, version),
+        cwd,
         repository: { url },
       },
       definition
     ));
 
-    this.store[getId(name, version)] = model;
+    this.store[ComputationRegistry.getId(name, version)] = model;
 
     return this.get(name, version);
-  }
-
-  /**
-   * Get a computation's path on disk.
-   * @private
-   * @param {string} name
-   * @param {string} version
-   * @returns {string}
-   */
-  _getComputationPath(name, version) {
-    return path.join(this.path, `/${getId(name, version)}`);
   }
 
   /**
@@ -117,20 +88,14 @@ class ComputationRegistry {
    * @returns {Promise} Resolves to computation definition
    */
   _getFromDisk(name, version) {
-    const computationPath = this._getComputationPath(name, version);
-
     return new Promise((resolve, reject) => {
-      fs.stat(computationPath, (err) => {
-        if (err) {
-          return reject(err);
-        }
-
-        try {
-          resolve(require(computationPath)); // eslint-disable-line global-require
-        } catch (error) {
-          reject(error);
-        }
-      });
+      try {
+        /* eslint-disable global-require */
+        resolve(require(ComputationRegistry.getId(name, version)));
+        /* eslint-enable global-require */
+      } catch (error) {
+        reject(error);
+      }
     });
   }
 
@@ -147,7 +112,7 @@ class ComputationRegistry {
     // Check registry to make sure name/version is valid
     if (!registryItem) {
       return Promise.reject(new Error(
-        `computation ${getId(name, version)} not in registry`
+        `computation ${ComputationRegistry.getId(name, version)} not in registry`
       ));
     }
 
@@ -155,12 +120,14 @@ class ComputationRegistry {
     return this.get(name, version)
 
       // Check disk to see if computation is saved
-      .catch(() => this._getFromDisk(name, version))
-      .then(definition => this._doAdd({
-        definition,
-        name,
-        url: registryItem.url,
-        version,
+      .catch(() => this._getFromDisk(name, version).then(definition => {
+        return this._doAdd({
+          cwd: ComputationRegistry.getComputationCwd(name, version),
+          definition,
+          name,
+          url: registryItem.url,
+          version,
+        });
       }));
   }
 
@@ -185,15 +152,48 @@ class ComputationRegistry {
       return Promise.reject(new TypeError('expected name and version'));
     }
 
-    const id = getId(name, version);
+    const id = ComputationRegistry.getId(name, version);
 
     if (!(id in this.store)) {
       return Promise.reject(new Error(
-              `computation ${getId(name, version)} not in registry`
-          ));
+        `computation ${ComputationRegistry.getId(name, version)} not in registry`
+      ));
     }
 
     return Promise.resolve(this.store[id]);
+  }
+
+  /**
+   * Get a computation's path on disk.
+   * @private
+   * @static
+   * @param {string} name
+   * @param {string} version
+   * @returns {string}
+   */
+  static getComputationCwd(name, version) {
+    /**
+     * @todo It's impossible to stub `require.resolve` or Node.js's module
+     * internals. Determine better way to test.
+     */
+    /* istanbul ignore next */
+    return path.dirname(require.resolve(ComputationRegistry.getId(
+      name,
+      version
+    )));
+  }
+
+  /**
+   * Get a computation ID from its name and version.
+   * @private
+   *
+   * @private
+   * @param {string} name
+   * @param {string} version
+   * @returns {string}
+   */
+  static getId(name, version) {
+    return `${name}${DELIMITER}${version}`;
   }
 
   /**
@@ -213,6 +213,8 @@ class ComputationRegistry {
   }
 }
 
-ComputationRegistry.DIRECTORY_PATTERN = /^([\w-\.]+)--([\w-\.]+)$/;
+ComputationRegistry.DIRECTORY_PATTERN = new RegExp(
+  `^([\\w-\\.]+)${DELIMITER}([\\w-\\.]+)$`
+);
 
 module.exports = ComputationRegistry;

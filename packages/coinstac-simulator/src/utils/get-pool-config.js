@@ -55,7 +55,6 @@ module.exports = function getPoolConfig(params) {
     common.services.computationRegistry({
       dbRegistry,
       isLocal,
-      path: computationDir,
       registry: [],
     }),
   ]).then(([computationDir, dbRegistry, computationRegistry]) => {
@@ -73,6 +72,7 @@ module.exports = function getPoolConfig(params) {
       url,
     });
     computationRegistry._doAdd({
+      cwd: path.dirname(require.resolve(computationPath)),
       definition: computation,
       name,
       url,
