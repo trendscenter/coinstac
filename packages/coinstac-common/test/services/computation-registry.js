@@ -1,27 +1,21 @@
 'use strict';
 
-const assign = require('lodash/assign');
 const ComputationRegistry =
-    require('../../src/services/classes/computation-registry');
+  require('../../src/services/classes/computation-registry');
 const DecentralizedComputation =
-    require('../../src/models/decentralized-computation');
-const helpers = require('../helpers/computation-registry-helpers.js');
+  require('../../src/models/decentralized-computation');
+const mockery = require('mockery');
+const noop = require('lodash/noop');
 const path = require('path');
+const pick = require('lodash/pick');
 const registry = require('../mocks/decentralized-computations.json');
+const sinon = require('sinon');
 const tape = require('tape');
 const values = require('lodash/values');
 
-const MOCK_COMPUTATION_PATH = helpers.MOCK_COMPUTATION_PATH;
-const TEST_COMPUTATION_PATH = helpers.TEST_COMPUTATION_PATH;
-
 // Get a configured ComputationRegistry class
 function factory(options) {
-  const defaults = {
-    path: TEST_COMPUTATION_PATH,
-    registry,
-  };
-
-  return new ComputationRegistry(assign({}, defaults, options));
+  return new ComputationRegistry(Object.assign({ registry }, options));
 }
 
 /**
@@ -31,12 +25,12 @@ function factory(options) {
  */
 function getMockComputations() {
   return registry.reduce((all, registryItem) => {
-    all = all.concat(registryItem.tags.map(tag => {
+    return all.concat(registryItem.tags.map(tag => {
       return new DecentralizedComputation({
         cwd: path.join(
-            TEST_COMPUTATION_PATH,
-            `${registryItem.name}--${tag}`
-          ),
+          __dirname,
+          ComputationRegistry.getId(registryItem.name, tag)
+        ),
         local: {},
         name: registryItem.name,
         remote: {},
@@ -46,8 +40,6 @@ function getMockComputations() {
         version: tag,
       });
     }));
-
-    return all;
   }, []);
 }
 
@@ -61,31 +53,13 @@ function getMockComputations() {
  */
 function seedInstanceComputations(instance, computations) {
   computations.forEach(c => {
-    instance.store[`${c.name}--${c.version}`] = c; // eslint-disable-line
+    instance.store[ComputationRegistry.getId(c.name, c.version)] = c; // eslint-disable-line
   });
 }
 
-/**
- * Get a computation filter function.
- *
- * @param {string} name
- * @param {string} version Semver version
- * @returns {function}
- */
-function filterComputation(name, version) {
-  return function _filterComputation(computation) {
-    return computation.name === name && computation.version === version;
-  };
-}
-
 tape('constructor', t => {
-  function badFactory(options) {
-    return new ComputationRegistry(options || {});
-  }
-
-  t.throws(badFactory, /path/gi, 'throws with no path');
   t.throws(
-    badFactory.bind(null, { path }),
+    () => new ComputationRegistry({}),
     /registry/gi,
     'throws with no registry'
   );
@@ -94,36 +68,68 @@ tape('constructor', t => {
 
   const instance = factory();
 
-  t.ok(
-    instance.path === TEST_COMPUTATION_PATH && instance.registry === registry,
-    'sets instance properties'
+  t.ok(instance.registry === registry, 'sets instance properties');
+  t.end();
+});
+
+tape('get computation cwd', t => {
+  const getIdStub = sinon
+    .stub(ComputationRegistry, 'getId')
+    .returns('lodash');
+  const name = 'random-module';
+  const version = '1.0.0';
+
+  t.equal(
+    ComputationRegistry.getComputationCwd(name, version),
+    path.join(__dirname, '..', '..', 'node_modules', 'lodash'),
+    'returns module path'
   );
+  t.deepEqual(
+    getIdStub.firstCall.args,
+    [name, version],
+    'gets'
+  );
+
+  getIdStub.restore();
   t.end();
 });
 
 tape('adds definition to store', t => {
   t.plan(3);
 
-  const instance = factory({ registry: [] });
+  const cwd = '/some/random/directory';
   const name = registry[0].name;
   const version = registry[0].tags[1];
-  /* eslint-disable global-require */
-  const definition = require(`${MOCK_COMPUTATION_PATH}/${name}--${version}/`);
-  /* eslint-enable global-require */
   const url = registry[0].url;
 
-  instance._doAdd({ definition, name, url, version })
+  const definition = {
+    local: {
+      type: 'function',
+      fn: noop,
+    },
+    name,
+    remote: {
+      type: 'function',
+      fn: noop,
+    },
+    version,
+  };
+  const instance = factory({ registry: [] });
+
+  instance._doAdd({ cwd, definition, name, url, version })
   .then(computation => {
     t.ok(
       computation instanceof DecentralizedComputation,
       'returns DecentralizedComputation instance'
     );
-    t.ok(
-      (
-        computation.name === name &&
-        computation.repository.url === url &&
-        computation.version === version
-      ),
+    t.deepEqual(
+      pick(computation, ['cwd', 'name', 'repository', 'version']),
+      {
+        cwd,
+        name,
+        repository: { url },
+        version,
+      },
       'instance name, url and version match'
     );
     t.ok(
@@ -134,69 +140,27 @@ tape('adds definition to store', t => {
   .catch(t.end);
 });
 
-tape('sets definition’s cwd on model', t => {
-  t.plan(1);
-
-  const instance = factory();
-  const name = registry[0].name;
-  const version = registry[0].tags[1];
-
-  const definition = {
-    local: {
-      type: 'function',
-      fn: () => 1,
-    },
-    name,
-    repository: {
-      url: 'https://github.com/MRN-Code',
-    },
-    remote: {
-      type: 'function',
-      fn: () => 2,
-    },
-    setup: cb => cb(null, true),
-    version,
-  };
-
-  instance._doAdd({ definition, name, version })
-  .then(computation => {
-    t.equal(
-      computation.cwd,
-      path.join(instance.path, `${name}--${version}`),
-      'sets cwd on string setup'
-    );
-  })
-  .catch(t.end);
-});
-
-tape('gets computation path', t => {
-  const instance = factory();
-  const name = registry[0].name;
-  const version = registry[0].tags[1];
-
-  const computationPath = instance._getComputationPath(name, version);
-
-  t.ok(
-    computationPath.indexOf(TEST_COMPUTATION_PATH) !== -1,
-    'contains path'
-  );
-  t.ok(computationPath.indexOf(name) !== -1, 'contains name');
-  t.ok(computationPath.indexOf(version) !== -1, 'contains version');
-  t.end();
-});
-
 tape('gets definition from disk', t => {
   t.plan(3);
 
   const instance = factory({
-    path: MOCK_COMPUTATION_PATH,
     registry: [],
   });
   const name = registry[0].name;
   const version = registry[0].tags[1];
-  /* eslint-disable global-require */
-  const expected = require(`${MOCK_COMPUTATION_PATH}/${name}--${version}/`);
-  /* eslint-enable global-require */
+
+  const computation = {
+    name,
+    version,
+  };
+
+  mockery.enable({
+    warnOnUnregistered: false,
+  });
+  mockery.registerMock(
+    ComputationRegistry.getId(name, version),
+    computation
+  );
 
   instance._getFromDisk('bogus-name', '1.0.0')
     .catch(() => {
@@ -210,82 +174,109 @@ tape('gets definition from disk', t => {
       return instance._getFromDisk(name, version);
     })
     .then(definition => {
-      t.deepEqual(definition, expected, 'definition matches');
+      t.deepEqual(definition, computation, 'definition matches');
     })
-    .catch(t.end);
+    .catch(t.end)
+    .then(mockery.disable);
 });
 
-tape('adds computation that isn’t registered', t => {
-  t.plan(1);
+tape('adds a computation', t => {
+  t.plan(6);
 
+  const computation = new DecentralizedComputation({
+    cwd: __dirname,
+    local: {},
+    name: registry[0].name,
+    remote: {},
+    repository: {
+      url: registry[0].url,
+    },
+    version: registry[0].tags[0],
+  });
+  const cwd = __dirname;
+  const definition = {
+    local: {
+      fn: noop,
+      type: 'function',
+    },
+    name: registry[1].name,
+    remote: {
+      fn: noop,
+      type: 'function',
+    },
+    version: registry[1].tags[0],
+  };
   const instance = factory();
+
+  const doAddStub = sinon.stub(instance, '_doAdd').returns(Promise.resolve());
+  const getCwdStub = sinon
+    .stub(ComputationRegistry, 'getComputationCwd')
+    .returns(cwd);
+  const getFromDiskStub = sinon
+    .stub(instance, '_getFromDisk')
+    .returns(Promise.resolve(definition));
+  const getSpy = sinon.spy(instance, 'get');
+
+  // Setup
+  seedInstanceComputations(instance, [computation]);
+  mockery.enable({
+    warnOnUnregistered: false,
+  });
+
+  mockery.registerMock(
+    ComputationRegistry.getId(registry[1].name, registry[1].tags[0]),
+    definition
+  );
 
   instance.add('bananas', 'are yummy')
     .then(() => t.fail('expected to reject'))
     .catch(() => {
-      t.ok('rejects on non-registry name/version');
-    });
-});
+      t.pass('rejects on non-registry name/version');
 
-tape('add a computation (gets from memory)', t => {
-  t.plan(1);
-
-  const instance = factory();
-  const mockComputations = getMockComputations();
-  const name = registry[1].name;
-  const itemUrl = registry[1].url;
-  const version = registry[1].tags[0];
-
-  const computation = mockComputations.find(
-    filterComputation(name, version)
-  );
-
-  // Setup
-  instance._doAdd({
-    definition: computation,
-    name,
-    itemUrl,
-    version,
-  })
-    .then(() => instance.add(name, version))
-    .then(response => {
-      // `response` and expected `computation` are different instances
-      t.deepEqual(
-        response.serialize(),
-        computation.serialize(),
-        'gets computation from memory'
-      );
+      return instance.add(registry[0].name, registry[0].tags[0]);
     })
-    .catch(t.end);
-});
+    .then(() => {
+      t.deepEqual(
+        getSpy.firstCall.args,
+        [registry[0].name, registry[0].tags[0]],
+        'checks in-memory store with name and version'
+      );
+      t.notOk(
+        getFromDiskStub.called,
+        'doesn\'t check disk when computation is in memory'
+      );
+      t.notOk(
+        doAddStub.called,
+        'doesn\'t add computation when it\'s in memory'
+      );
 
-tape('add a computation (gets from disk)', t => {
-  t.plan(2);
-
-  const instance = factory();
-  const name = 'the-ravens';
-  const version = '2.0.0';
-
-  const slug = `${name}--${version}`;
-
-  helpers.setupTestDir(slug)
-    .then(() => instance.add(name, version))
-    .then(response => {
-      // Check that `response` matches the mock computation definition
-      // (see) the-ravens--2.0.0/index.js
-      t.ok(
-        (
-          response.name === name &&
-          response.version === version &&
-          response.remote.fn instanceof Function &&
-          response.local.fn instanceof Function
-        ),
+      return instance.add(registry[1].name, registry[1].tags[0]);
+    })
+    .then(() => {
+      t.deepEqual(
+        getFromDiskStub.firstCall.args,
+        [registry[1].name, registry[1].tags[0]],
         'gets computation from disk'
+      );
+      t.deepEqual(
+        doAddStub.firstCall.args[0],
+        {
+          cwd,
+          definition,
+          name: registry[1].name,
+          url: registry[1].url,
+          version: registry[1].tags[0],
+        },
+        'adds computation to in-memory store'
       );
     })
     .catch(t.end)
-    .then(helpers.cleanupTestDir)
-    .then(() => t.pass('test cleanup'));
+    .then(() => {
+      doAddStub.restore();
+      getCwdStub.restore();
+      getFromDiskStub.restore();
+      getSpy.restore();
+    });
 });
 
 tape('gets all stored computations', t => {

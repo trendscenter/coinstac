@@ -45,7 +45,6 @@ const defaultRegistry = require('../decentralized-computations.json');
  * // => Promise that resolves to ComputationRegistry instance
  *
  * @param {object} options
- * @param {string} options.path Configure's the instance's path.
  * @param {object[]} options.registry Collection of registered computations (see
  * example for formatting)
  * @param {DbRegistry} [options.dbRegistry] Reference to a `DbRegistry`
@@ -57,14 +56,11 @@ const defaultRegistry = require('../decentralized-computations.json');
  */
 function computationRegistryFactory(options) {
   const localOptions = options || {};
-  const computationsPath = localOptions.path;
   const isLocal = localOptions.isLocal;
   const dbRegistry = localOptions.dbRegistry;
   let registry;
 
-  if (!computationsPath) {
-    return Promise.reject(new Error('Computation registry requires a path'));
-  } else if (isLocal && (!dbRegistry || !(dbRegistry instanceof DBRegistry))) {
+  if (isLocal && (!dbRegistry || !(dbRegistry instanceof DBRegistry))) {
     return Promise.reject(
       new Error('Computation registry requires DB registry')
     );
@@ -79,7 +75,6 @@ function computationRegistryFactory(options) {
   }
 
   const instance = new ComputationRegistry({
-    path: computationsPath,
     registry,
   });
 
