@@ -87,11 +87,11 @@ class ComputationRegistry {
    * @param {string} version
    * @returns {Promise} Resolves to computation definition
    */
-  _getFromDisk(name, version) {
+  _getFromDisk(name) {
     return new Promise((resolve, reject) => {
       try {
         /* eslint-disable global-require */
-        resolve(require(ComputationRegistry.getId(name, version)));
+        resolve(require(name));
         /* eslint-enable global-require */
       } catch (error) {
         reject(error);
@@ -171,16 +171,13 @@ class ComputationRegistry {
    * @param {string} version
    * @returns {string}
    */
-  static getComputationCwd(name, version) {
+  static getComputationCwd(name) {
     /**
      * @todo It's impossible to stub `require.resolve` or Node.js's module
      * internals. Determine better way to test.
      */
     /* istanbul ignore next */
-    return path.dirname(require.resolve(ComputationRegistry.getId(
-      name,
-      version
-    )));
+    return path.dirname(require.resolve(name));
   }
 
   /**
