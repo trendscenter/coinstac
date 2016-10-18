@@ -19,9 +19,8 @@ const LocalPipelineRunnerPool = common.models.pipeline.runner.pool.LocalPipeline
 const computationRegistryFactory = common.services.computationRegistry;
 const registryFactory = require('coinstac-common').services.dbRegistry;
 
-// init & teardown
+// init
 const initializeAPIClient = require('./init/halfpenny');
-const teardownAuth = require('./teardown/auth');
 
 // client sub-apis
 // const project = require('./sub-api/project');
@@ -376,18 +375,25 @@ class CoinstacClient {
    * @returns {undefined}
    */
   teardown() {
-    // Repeated so Sinon can spy:
-    return teardownAuth.teardownAuth(this)
-    .then(() => (this.pool ? this.pool.destroy() : this.dbRegistry.destroy()))
-    .then(() => {
+    const deleteProps = () => {
       delete this.halfpenny;
       delete this.auth;
       delete this.consortia;
       delete this.computations;
       delete this.projects;
-      return null;
-    });
+    };
+
+    return this.auth.logout()
+      .then(() => {
+        if (this.pool) {
+          return this.pool.destroy();
+        }
+
+        return this.dbRegistry.destroy();
+      })
+      .then(deleteProps, deleteProps);
   }
 }
 
 module.exports = CoinstacClient;
+
