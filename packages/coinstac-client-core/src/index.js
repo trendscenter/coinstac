@@ -61,6 +61,15 @@ const ProjectServices = require('./sub-api/project-service');
  */
 class CoinstacClient {
   /**
+   * Get the default application storage directory.
+   *
+   * @returns {string}
+   */
+  static getDefaultAppDirectory() {
+    return path.join(osHomedir(), '.coinstac');
+  }
+
+  /**
    * Sanitize username for use as a directory.
    * @private
    *
@@ -82,7 +91,8 @@ class CoinstacClient {
     }
     this.dbConfig = opts.db;
     this.storage = opts.storage;
-    this.appDirectory = opts.appDirectory || path.join(osHomedir(), '.coinstac');
+    this.appDirectory = opts.appDirectory ||
+      CoinstacClient.getDefaultAppDirectory();
     this.halfpennyBaseUrl = opts.hp;
     this.logger = opts.logger || new Logger({ transports: [new Console()] });
 

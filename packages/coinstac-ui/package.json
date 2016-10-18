@@ -77,8 +77,8 @@
     "build": "npm run build:webpack && node ./scripts/build.js",
     "start": "webpack && cross-env STEELPENNY_URL='https://coins-api.mrn.org/api/v1.3.0' electron . --log-level=debug",
     "build-native": "node ./scripts/build-native.js",
-    "clean": "rm -rf ~/.coinstac",
-    "clean-db": "find ~/.coinstac/* ! -name computations -maxdepth 0 -exec rm -rf '{}' \\;",
+    "clean": "node scripts/clean.js",
+    "clean:db": "node scripts/clean-db.js",
     "docs": "mkdir -p docs && jsdoc -t ./node_modules/minami -d docs -R README.md -r src/",
     "test": "nyc --reporter=lcov --check-coverage --lines=1 --functions=1 --branches=1 babel-node test/",
     "watch": "webpack-dashboard -p 3001 -- node webpack-dev-server.js"
