@@ -9,10 +9,8 @@ const computationRegistryFactory =
 const DBRegistry = require('../../src/services/classes/db-registry');
 const mockDecentralizedComputations =
   require('../mocks/decentralized-computations.json');
-const path = require('path');
 const sinon = require('sinon');
 const tape = require('tape');
-const testDirectory = path.join(__dirname, '..', '..', '.tmp');
 
 let addStub;
 
@@ -28,7 +26,6 @@ function getValidLocalOptions() {
       },
     }),
     isLocal: true,
-    path: testDirectory,
   };
 }
 
@@ -41,19 +38,10 @@ tape('setup', t => {
 });
 
 tape('configuration errors', t => {
-  t.plan(4);
-
-  computationRegistryFactory()
-    .then(() => t.fail('resolves without args'))
-    .catch(() => t.pass('rejects without args'));
-
-  computationRegistryFactory({})
-    .then(() => t.fail('resolves without computation path'))
-    .catch(() => t.pass('rejects without computation path'));
+  t.plan(2);
 
   computationRegistryFactory({
     isLocal: true,
-    path: testDirectory,
   })
     .then(() => t.fail('resolves without DB registry'))
     .catch(() => t.pass('rejects without DB registry'));
@@ -61,25 +49,28 @@ tape('configuration errors', t => {
   computationRegistryFactory({
     dbRegistry: {},
     isLocal: true,
-    path: testDirectory,
   })
     .then(() => t.fail('resolves with bad DB registry'))
     .catch(() => t.pass('rejects with bad DB registry'));
 });
 
 tape('returns ComputationRegistry instance', t => {
-  t.plan(3);
+  t.plan(4);
 
-  computationRegistryFactory({
-    path: testDirectory,
-    registry: [],
-  })
+  computationRegistryFactory()
     .then(computationRegistry => {
       t.ok(
         computationRegistry &&
         computationRegistry instanceof ComputationRegistry,
-        'returns a non-local registry instance'
+        'returns instance without args'
       );
+
+      return computationRegistryFactory({
+        registry: [],
+      });
+    })
+    .then(computationRegistry => {
+      t.ok(computationRegistry, 'returns a non-local registry instance');
 
       return computationRegistryFactory(getValidLocalOptions());
     })
@@ -102,31 +93,12 @@ tape('passes custom registry', t => {
   t.plan(1);
 
   computationRegistryFactory({
-    path: testDirectory,
     registry: mockDecentralizedComputations,
   })
     .then(computationRegistry => {
       t.equal(
         computationRegistry.registry,
         mockDecentralizedComputations
-      );
-    })
-    .catch(t.end);
-});
-
-tape('sets path', t => {
-  t.plan(1);
-
-  const customPath = path.join(
-    __dirname, '..', 'mocks', 'decentralized-computations.json'
-  );
-
-  computationRegistryFactory({ path: customPath })
-    .then(computationRegistry => {
-      t.equal(
-        computationRegistry.path,
-        customPath,
-        'sets custom path'
       );
     })
     .catch(t.end);
@@ -277,7 +249,6 @@ tape('remote computation registry retrieves all computations', t => {
   t.plan(1);
 
   computationRegistryFactory({
-    path: testDirectory,
     registry: mockDecentralizedComputations,
   })
     .then(() => {
