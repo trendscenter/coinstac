@@ -17,6 +17,8 @@ import FormProjectController from './components/projects/form-project-controller
 import { Route, IndexRoute } from 'react-router';
 import React from 'react';
 
+import Settings from './components/settings';
+
 export default (
   <Route component={App}>
     <Route path="login" component={Login} />
@@ -31,6 +33,7 @@ export default (
         <Route path="new" component={FormProjectController} />
         <Route path=":projectId" component={FormProjectController} />
       </Route>
+      <Route path="/settings" component={Settings} />
     </Route>
   </Route>
 );
