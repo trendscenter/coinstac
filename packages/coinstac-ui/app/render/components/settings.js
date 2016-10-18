@@ -7,21 +7,7 @@ class Settings extends Component {
   constructor(props) {
     super(props);
 
-    this.deleteComputations = this.deleteComputations.bind(this);
     this.deleteUserData = this.deleteUserData.bind(this);
-  }
-
-  deleteComputations(event) {
-    event.preventDefault();
-
-    app.main.services.clean.computations()
-      .then(() => {
-        app.notify('info', 'Computations removed');
-      })
-      .catch(error => {
-        app.logger.error(error);
-        app.notify('error', `Could not remove computations: ${error.message}`);
-      });
   }
 
   deleteUserData(event) {
@@ -52,13 +38,6 @@ class Settings extends Component {
           <p>Remove stored data for your user:</p>
           <Button bsStyle="danger" type="submit">
             Delete User Data
-          </Button>
-        </form>
-        <form method="post" onSubmit={this.deleteComputations}>
-          <h3 className="h4">Clear computations</h3>
-          <p>Remove cached computations from your computer:</p>
-          <Button bsStyle="danger" type="submit">
-            Delete Computations
           </Button>
         </form>
       </div>
