@@ -1,6 +1,7 @@
 import { Button } from 'react-bootstrap';
 import md5 from 'md5';
 import React, { Component, PropTypes } from 'react';
+import { Link } from 'react-router';
 
 class UserAccount extends Component {
   constructor(props) {
@@ -28,6 +29,13 @@ class UserAccount extends Component {
             />
           </div>
           <div className="media-body">
+            <Link aria-label="settings" title="Settings" to="/settings">
+              <span
+                aria-hidden="true"
+                className="glyphicon glyphicon-cog"
+              >
+              </span>
+            </Link>
             <strong className="block">{label}</strong>
             <br />
             <em className="h6">{email}</em>
