@@ -35,7 +35,7 @@ class Settings extends Component {
         <h2>Remove Data</h2>
         <form method="post" onSubmit={this.deleteUserData}>
           <h3 className="h4">Clear user data</h3>
-          <p>Remove stored data for your user:</p>
+          <p>Remove stored data for your user, including your projects. <strong>This action is permanent.</strong></p>
           <Button bsStyle="danger" type="submit">
             Delete User Data
           </Button>
