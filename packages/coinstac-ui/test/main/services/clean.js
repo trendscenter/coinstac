@@ -37,10 +37,11 @@ tape('cleans user data', t => {
   electronStub.dialog.showMessageBox.yields(0);
   rimrafStub.yields(null);
 
-  t.plan(7);
+  t.plan(9);
 
   clean.userData(username)
-    .then(() => {
+    .then(response => {
+      t.notOk(response, 'returns false when not deleting');
       t.ok(electronStub.dialog.showMessageBox.called, 'shows dialog');
       t.notOk(
         rimrafStub.called,
@@ -50,7 +51,8 @@ tape('cleans user data', t => {
 
       return clean.userData(username);
     })
-    .then(() => {
+    .then(response => {
+      t.ok(response, 'returns true when deleting');
       t.ok(
         appStub.core.getDatabaseDirectory.calledWith(username),
         'gets user\'s database directory'
