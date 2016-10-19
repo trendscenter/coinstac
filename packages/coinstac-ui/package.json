@@ -57,6 +57,7 @@
     "json-loader": "*",
     "markdown-loader": "^0.1.7",
     "minami": "^1.1.1",
+    "mockery": "^2.0.0",
     "node-sass": "^3.5.3",
     "nyc": "^7.1.0",
     "react-hot-loader": "^3.0.0-beta.5",
