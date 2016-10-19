@@ -19,7 +19,6 @@ const path = require('path');
 const pick = require('lodash/pick');
 const ProjectService = require('../src/sub-api/project-service.js');
 const sinon = require('sinon');
-const teardownAuth = require('../src/teardown/auth.js');
 const test = require('tape');
 const LocalStorageMemory = require('localstorage-memory');
 
@@ -161,33 +160,56 @@ test('CoinstacClient - initialize process', (t) => {
 });
 
 test('CoinstacClient - teardown process', (t) => {
-  const teardownAuthSpy = sinon.spy(teardownAuth, 'teardownAuth');
-  let dbRegistryDestroy;
-  let c;
+  const logoutStub1 = sinon.stub().returns(bluebird.resolve());
+  const logoutStub2 = sinon.stub().returns(bluebird.resolve());
+  const clientStub1 = {
+    auth: {
+      logout: logoutStub1,
+    },
+    computations: null,
+    consortia: null,
+    halfpenny: null,
+    pool: {
+      destroy: sinon.stub().returns(bluebird.resolve()),
+    },
+    project: null,
+  };
+  const clientStub2 = {
+    auth: {
+      logout: logoutStub2,
+    },
+    computations: null,
+    consortia: null,
+    dbRegistry: {
+      destroy: sinon.stub().returns(bluebird.resolve()),
+    },
+    halfpenny: null,
+    project: null,
+  };
 
   t.plan(4);
 
-  clientFactory()
-  .then((client) => {
-    c = client;
-    dbRegistryDestroy = sinon.spy(c.dbRegistry, 'destroy');
-  })
-  .then(() => c.teardown())
-  .then(() => {
-    t.ok(teardownAuthSpy.callCount, 'calls auth teardown');
-    t.ok(dbRegistryDestroy.callCount, 'destroys DB registry');
-    t.ok(!('halfpenny' in c), 'drops Halfpenny reference');
-    t.ok(
-      (
-        !('auth' in c) &&
-        !('consortia' in c) &&
-        !('computations' in c) &&
-        !('projects' in c)
-      ),
-      'removes sub-api references'
-    );
-    dbRegistryDestroy.restore();
-    teardownAuthSpy.restore();
-  })
-  .then(t.end, t.end);
+  CoinstacClient.prototype.teardown.apply(clientStub1)
+    .then(() => {
+      t.ok(logoutStub1.called, 'logs out');
+      t.ok(clientStub1.pool.destroy.called, 'destroys pool when it exists');
+      t.ok(
+        !('halfpenny' in clientStub1) &&
+        !('auth' in clientStub1) &&
+        !('consortia' in clientStub1) &&
+        !('computations' in clientStub1) &&
+        !('projects' in clientStub1),
+        'deletes sub-api services'
+      );
+
+      return CoinstacClient.prototype.teardown.apply(clientStub2);
+    })
+    .then(() => {
+      t.ok(
+        clientStub2.dbRegistry.destroy.called,
+        'destroys database registry when pool doesn\'t exist'
+      );
+    })
+    .catch(t.end);
 });
+
