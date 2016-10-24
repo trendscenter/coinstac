@@ -63,7 +63,7 @@ function getQueueEndStopper(count, fn) {
   };
 }
 
-function start({ consortiumId, files, initiate, metaFilePath, username }) {
+function start({ consortiumId, files, metaFilePath, username }) {
   const client = new CoinstacClient({
     appDirectory: STORAGE_DIR,
     db: {

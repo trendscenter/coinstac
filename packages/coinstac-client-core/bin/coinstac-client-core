@@ -55,7 +55,7 @@ function getFiles(dirs) {
   return Promise.all(dirs.map(dir => globAsync(dir)))
     .then(flatten)
     .then(files => Promise.all(files.map(file => {
-      return statAsync(file).then(stats => stats.isFile() ? file : undefined);
+      return statAsync(file).then(stats => (stats.isFile() ? file : undefined));
     })))
     .then(compact);
 }
