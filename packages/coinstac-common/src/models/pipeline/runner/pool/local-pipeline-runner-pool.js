@@ -36,17 +36,27 @@ class LocalPipelineRunnerPool extends PipelineRunnerPool {
       this.getLocalResult(localDB, runId, rResult),
       this.getDecentralizedComputation(rResult.computationId),
     ])
-    .then((rslts) => {
-      const lResult = rslts[0];
-      const dComp = rslts[1];
-      const computations = Computation.factory(dComp.local, { cwd: dComp.cwd });
-      const plugins = this.getPipelinePlugins({ comp: dComp, env: 'local' });
-      const runner = new LocalPipelineRunner({
-        pipeline: new Pipeline({ computations, plugins }),
-        result: lResult,
+    .then(([localResult, decentralizedComputation]) => {
+      const pipelineOptions = {
+        computations: Computation.factory(
+          decentralizedComputation.local,
+          { cwd: decentralizedComputation.cwd }
+        ),
+        plugins: this.getPipelinePlugins({
+          comp: decentralizedComputation,
+          env: 'local',
+        }),
+      };
+
+      if (localResult.pipelineState && localResult.pipelineState.step) {
+        pipelineOptions.step = localResult.pipelineState.step;
+      }
+
+      return new LocalPipelineRunner({
         db: localDB,
+        pipeline: new Pipeline(pipelineOptions),
+        result: localResult,
       });
-      return runner;
     });
   }
 
