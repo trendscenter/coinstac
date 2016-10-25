@@ -129,4 +129,3 @@ ProjectCovariatesMapper.propTypes = {
   metaCovariateMapping: PropTypes.arrayOf(PropTypes.number).isRequired,
   onMapCovariate: PropTypes.func.isRequired,
 };
-

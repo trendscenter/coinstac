@@ -195,6 +195,7 @@ export default class FormProject extends Component {
         metaFile: metaFileError,
         metaFilePath: metaFilePathError,
       },
+      inputs,
       project: {
         consortiumId,
         metaCovariateMapping,
@@ -219,18 +220,25 @@ export default class FormProject extends Component {
         />
       );
 
-      if (selectedConsortia) {
-        const covariates = selectedConsortia.activeComputationInputs[0][2] || [];
+      if (selectedConsortia && inputs) {
+        const covariatesIndex = inputs.findIndex(({ type }) => {
+          return type === 'covariates';
+        });
 
-        covariateMapper = (
-          <ProjectCovariatesMapper
-            covariates={covariates}
-            csv={metaFile}
-            onMapCovariate={onMapCovariate}
-            metaCovariateErrors={metaCovariateMappingErrors}
-            metaCovariateMapping={metaCovariateMapping}
-          />
-        );
+        if (covariatesIndex > -1) {
+          const covariates =
+            selectedConsortia.activeComputationInputs[0][covariatesIndex] || [];
+
+          covariateMapper = (
+            <ProjectCovariatesMapper
+              covariates={covariates}
+              csv={metaFile}
+              onMapCovariate={onMapCovariate}
+              metaCovariateErrors={metaCovariateMappingErrors}
+              metaCovariateMapping={metaCovariateMapping}
+            />
+          );
+        }
       }
     } else {
       button = (
@@ -356,6 +364,7 @@ FormProject.propTypes = {
     metaFilePath: PropTypes.string,
     name: PropTypes.string,
   }),
+  inputs: PropTypes.arrayOf(PropTypes.object),
   isEditing: PropTypes.bool.isRequired,
   onAddFiles: PropTypes.func.isRequired,
   onAddMetaFile: PropTypes.func.isRequired,
