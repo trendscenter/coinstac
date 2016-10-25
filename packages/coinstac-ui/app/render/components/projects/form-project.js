@@ -385,7 +385,7 @@ FormProject.propTypes = {
         tags: PropTypes.object.isRequired,
       })
     ).isRequired,
-    metaCovariateMapping: PropTypes.arrayOf(PropTypes.number),
+    metaCovariateMapping: PropTypes.object.isRequired,
     metaFile: PropTypes.arrayOf(PropTypes.array),
     metaFilePath: PropTypes.string,
     name: PropTypes.string.isRequired,
