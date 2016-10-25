@@ -284,9 +284,6 @@ class PipelineRunner extends Base {
     // build result history on existing results
     this.hasPersistedResult = true;
     assign(this.result, doc, patch);
-    if (doc.data !== undefined && doc.data !== null) {
-      this.result.history = doc.history.concat(doc.data);
-    }
     return this._persistResult(db);
   }
 

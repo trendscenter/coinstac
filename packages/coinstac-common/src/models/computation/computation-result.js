@@ -78,7 +78,6 @@ ComputationResult.prototype._extractRunId = memoize(function _extractRunId(_id) 
 ComputationResult.schema = Object.assign({
   data: joi.any(),
   error: joi.object(),
-  history: joi.array().default([]),
   pipelineState: joi.object().keys({
     step: joi.number(),
     inProgress: joi.boolean(),
