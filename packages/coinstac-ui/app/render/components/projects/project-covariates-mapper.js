@@ -126,6 +126,6 @@ ProjectCovariatesMapper.propTypes = {
   covariates: PropTypes.array.isRequired,
   csv: PropTypes.array.isRequired,
   metaCovariateErrors: PropTypes.array,
-  metaCovariateMapping: PropTypes.arrayOf(PropTypes.number).isRequired,
+  metaCovariateMapping: PropTypes.object.isRequired,
   onMapCovariate: PropTypes.func.isRequired,
 };
