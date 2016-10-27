@@ -6,7 +6,6 @@
 const common = require('coinstac-common');
 const Computation = common.models.computation.Computation;
 const crypto = require('crypto');
-const merge = require('lodash/merge');
 const getSyncedDatabase = common.utils.getSyncedDatabase;
 const ModelService = require('../model-service');
 const RemoteComputationResult = common.models.computation.RemoteComputationResult;
@@ -91,34 +90,10 @@ class ComputationService extends ModelService {
 
     const { consortia, pool, projects } = this.client;
 
-    return projects.get(projectId)
-      .then(project => Promise.all([
-        project,
-        projects.getMetaFileContents(project.metaFile),
-      ]))
-      .then(([project, projectMeta]) => Promise.all([
-        consortia.get(consortiumId),
-
-        // Map the project's metadata to its files
-        // TODO: Refactor this into model method?
-        Object.assign({}, project, {
-          files: project.files.map(file => {
-            const meta = projectMeta.find(m => {
-              return file.filename.indexOf(m[0]) > -1;
-            });
-
-            if (!meta) {
-              throw new Error(`Couldn't find meta for ${file.filename}`);
-            }
-
-            return merge({}, file, {
-              tags: {
-                isControl: meta[1],
-              },
-            });
-          }),
-        }),
-      ]))
+    return Promise.all([
+      consortia.get(consortiumId),
+      projects.setMetaContents(projectId),
+    ])
       .then(([consortium, project]) => {
         const options = {
           _id: runId,

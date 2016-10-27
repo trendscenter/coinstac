@@ -36,7 +36,7 @@ const config = {
       test: /\.json$/,
     }, {
       include: path.join(__dirname, 'app', 'render'),
-      loaders: ['react-hot', 'babel'],
+      loaders: ['babel'],
       test: /\.js$/,
     }, {
       loaders: ['style', 'css', 'sass?sourceMap'],

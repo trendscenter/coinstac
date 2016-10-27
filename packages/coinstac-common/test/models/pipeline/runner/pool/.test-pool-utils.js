@@ -74,6 +74,7 @@ module.exports = {
         return Promise.all(registry.reduce((memo, { name, tags, url }) => {
           return memo.concat(tags.map(version => {
             return compReg._doAdd({
+              cwd: __dirname,
               definition: {
                 local: {
                   fn: () => Promise.resolve(name),
@@ -235,6 +236,7 @@ module.exports = {
       });
 
       return this.computationRegistry._doAdd({
+        cwd: __dirname,
         definition: {
           local: { fn: (opts) => bluebird.delay(1).then(() => compId), type: 'function', },
           name: compId,

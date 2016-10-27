@@ -16,12 +16,12 @@ module.exports = function configureLogger() {
 
   return mkdirp(logLocation, parseInt('0775', 8))
   .then(() => {
-    const logPath = path.join(logLocation, app.config.get('logFile'));
+    const logFilePath = path.join(logLocation, app.config.get('logFile'));
     const logger = new winston.Logger({
       transports: [
         new winston.transports.Console(),
         new winston.transports.File({
-          filename: logPath,
+          filename: logFilePath,
         }),
       ],
     });

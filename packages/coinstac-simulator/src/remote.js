@@ -1,5 +1,10 @@
 'use strict';
 
+/**
+ * @private
+ * @module remote
+ */
+
 require('./utils/handle-errors');
 
 const common = require('coinstac-common');
@@ -10,25 +15,19 @@ const { getChildProcessLogger } = require('./utils/logging');
 const logger = getChildProcessLogger();
 
 /**
- * @private
- * @module boot-compute-server
- */
-
-/**
- * @function bootCentralComputeServer
- * pooler will auto-listen to consortium change events
+ * Boot remote process.
  *
- * @todo Figure out how to use `params.data` in this…scenario.
+ * @todo Figure out how to use `params.data` in this scenario.
  *
  * @params {Object} params
  * @params {string} params.computationPath
  * @params {Object} [params.data]
  * @returns {Promise}
  */
-const boot = function boot({ computationPath, data }) { // eslint-disable-line no-unused-vars
+function boot({ computationPath, data }) { // eslint-disable-line no-unused-vars
   let pool;
 
-  logger.verbose('Booting server');
+  logger.verbose('Booting…');
 
   return getPoolConfig({
     computationPath,
@@ -53,9 +52,9 @@ const boot = function boot({ computationPath, data }) { // eslint-disable-line n
     logger.verbose('Initializing RemotePipelineRunnerPool');
     return pool.init();
   });
-};
+}
 
-// boot with data provided by `boot-clients`
+// boot with data provided by src/boot-remote.js
 process.on('message', (opts) => {
   if (opts.boot) {
     boot(opts.boot)

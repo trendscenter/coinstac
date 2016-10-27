@@ -1,7 +1,7 @@
 'use strict';
 
-const bootClients = require('../src/boot-clients');
-const bootComputeServers = require('../src/boot-compute-servers');
+const bootLocals = require('../src/boot-locals');
+const bootRemote = require('../src/boot-remote');
 const coinstacSimulator = require('../src/index');
 const dbServer = require('../src/db-server');
 const EventEmitter = require('events');
@@ -268,7 +268,7 @@ tape('gets usernames', t => {
 
 tape('runs declaration :: errors', t => {
   /* eslint-disable no-use-before-define */
-  const clients = [getMockProcess(), getMockProcess()];
+  const localProcesses = [getMockProcess(), getMockProcess()];
   /* eslint-enable no-use-before-define */
   const computationPath = './path/to/computation.js';
   const declaration = {
@@ -285,7 +285,7 @@ tape('runs declaration :: errors', t => {
     verbose: true,
   };
   const declarationPath = 'greatest-declaration.js';
-  const servers = [getMockProcess()]; // eslint-disable-line no-use-before-define
+  const remoteProcess = getMockProcess(); // eslint-disable-line no-use-before-define
   const usernames = ['dude', 'dudette'];
 
   function getMockProcess() {
@@ -299,17 +299,17 @@ tape('runs declaration :: errors', t => {
         mockProcess.emit('message', { toredown: true });
       } else if ('kickoff' in arg && arg.kickoff) {
         // Force coinstacSimulator#teardown
-        process.nextTick(() => servers[0].emit('exit'));
+        process.nextTick(() => remoteProcess.emit('exit'));
       }
     };
 
     return mockProcess;
   }
 
-  const bootComputeServersStub = sinon.stub(bootComputeServers, 'run')
-    .returns(Promise.resolve(servers));
-  const bootClientsStub = sinon.stub(bootClients, 'run')
-    .returns(Promise.resolve(clients));
+  const bootRemoteStub = sinon.stub(bootRemote, 'run')
+    .returns(Promise.resolve(remoteProcess));
+  const bootLocalsStub = sinon.stub(bootLocals, 'run')
+    .returns(Promise.resolve(localProcesses));
   const getDeclarationStub = sinon.stub(coinstacSimulator, 'getDeclaration')
     .returns(Promise.resolve(declaration));
   const getUsernamesStub = sinon.stub(coinstacSimulator, 'getUsernames')
@@ -323,15 +323,15 @@ tape('runs declaration :: errors', t => {
   coinstacSimulator.run(declarationPath)
     .then(() => {
       t.ok(
-        bootComputeServersStub.calledWithExactly({
+        bootRemoteStub.calledWithExactly({
           computationPath,
           data: declaration.remote,
           verbose: declaration.verbose,
         }),
-        'calls boot servers with params'
+        'calls boot remote process with params'
       );
       t.ok(
-        bootClientsStub.calledWithExactly({
+        bootLocalsStub.calledWithExactly({
           computationPath,
           users: [{
             data: declaration.local[0],
@@ -342,7 +342,7 @@ tape('runs declaration :: errors', t => {
           }],
           verbose: declaration.verbose,
         }),
-        'calls boot clients with params'
+        'calls boot locals with params'
       );
       t.ok(
         getDeclarationStub.calledWithExactly(declarationPath),
@@ -355,19 +355,19 @@ tape('runs declaration :: errors', t => {
       );
       t.ok(getUsernamesStub.calledWithExactly(2), 'gets usernames');
       t.ok(
-        clients.every(c => c.sendSpy.calledWithExactly({ kickoff: true })),
-        'kicks off every client'
+        localProcesses.every(c => c.sendSpy.calledWithExactly({ kickoff: true })),
+        'kicks off every local process'
       );
       t.ok(teardownStub.callCount, 'calls db teardown');
       t.ok(
-        clients.every(c => c.sendSpy.calledWithExactly({ teardown: true })),
-        'kills every client'
+        localProcesses.every(c => c.sendSpy.calledWithExactly({ teardown: true })),
+        'kills every local process'
       );
     })
     .catch(t.end)
     .then(() => {
-      bootComputeServersStub.restore();
-      bootClientsStub.restore();
+      bootRemoteStub.restore();
+      bootLocalsStub.restore();
       getUsernamesStub.restore();
       getDeclarationStub.restore();
       setupStub.restore();

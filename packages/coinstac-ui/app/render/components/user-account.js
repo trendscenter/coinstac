@@ -1,6 +1,7 @@
 import { Button } from 'react-bootstrap';
 import md5 from 'md5';
 import React, { Component, PropTypes } from 'react';
+import { Link } from 'react-router';
 
 class UserAccount extends Component {
   constructor(props) {
@@ -16,24 +17,48 @@ class UserAccount extends Component {
     const { logout, user: { label, email } } = this.props;
 
     return (
-      <div className="user-account">
-        <div className="media">
-          <div className="media-left">
-            <img
-              alt={label}
-              className="media-object img-rounded"
-              height="50"
-              src={this.getAvatarUrl()}
-              width="50"
-            />
-          </div>
-          <div className="media-body">
-            <strong className="block">{label}</strong>
-            <br />
-            <em className="h6">{email}</em>
-            <br />
-            <Button onClick={logout} bsSize="xsmall" to="login">Log Out</Button>
-          </div>
+      <div className="user-account media">
+        <div className="media-left">
+          <img
+            alt={label}
+            className="media-object img-rounded"
+            height="50"
+            src={this.getAvatarUrl()}
+            width="50"
+          />
+        </div>
+        <div className="media-body">
+          <h4 className="user-account-name media-heading">{label}</h4>
+          <p className="user-account-email">{email}</p>
+          <Link
+            aria-label="settings"
+            className="user-account-settings btn btn-link btn-block"
+            title="Settings"
+            to="/settings"
+          >
+            <span
+              aria-hidden="true"
+              className="glyphicon glyphicon-cog"
+            >
+            </span>
+            {' '}
+            Settings
+          </Link>
+          <Button
+            block
+            bsStyle="link"
+            className="user-account-logout"
+            onClick={logout}
+            to="/login"
+          >
+            <span
+              aria-hidden="true"
+              className="glyphicon glyphicon-log-out"
+            >
+            </span>
+            {' '}
+            Log Out
+          </Button>
         </div>
       </div>
     );

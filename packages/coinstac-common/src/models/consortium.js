@@ -61,7 +61,7 @@ Consortium.schema = Object.assign({}, PouchDocument.schema, {
    */
   activeComputationInputs: joi.array().items(
     joi.array().items(
-      joi.array().items(joi.number(), joi.string()),
+      joi.array().items(joi.number(), joi.object(), joi.string()),
       joi.number(),
       joi.string()
     )

@@ -1,33 +1,30 @@
 import app from 'ampersand-app';
 import electron from 'electron';
-import { partial } from 'lodash';
+
+const mainLogger = electron.remote.require('app/main/utils/expose-app.js')().logger;
+
+/**
+ * Get configured logger.
+ *
+ * @param {string} consoleMethod Name of `console` method
+ * @param {string} winstonMethod Name of Winston's logger method (selected from
+ * defaults)
+ * @returns {Function} logger
+ */
+function getLogger(consoleMethod, winstonMethod) {
+  return (...args) => {
+    console[consoleMethod].apply(console, args); // eslint-disable-line no-console
+    mainLogger[winstonMethod].apply(null, ['ui', ...args]);
+  };
+}
 
 module.exports = function configureLogger() {
-  const colorMap = {
-    verbose: 'cyan',
-    info: 'green',
-    warn: 'orange',
-    debug: 'blue',
-    error: 'red',
-  };
-  const mainLogger = () => {
-    return electron.remote.require('app/main/utils/expose-app.js')().logger;
-  };
-  const proxyLog = (type, content) => {
-    if (type === 'log') {
-      type = 'info';
-    }
-    /* eslint-disable no-console */
-    console.log(`%c ${type}`, `color:${colorMap[type]};font-weight:bold`, content);
-    /* eslint-enable no-console */
-    mainLogger()[type]('[ui]', content);
-  };
   app.logger = {
-    error: partial(proxyLog, 'error'),
-    warn: partial(proxyLog, 'warn'),
-    info: partial(proxyLog, 'info'),
-    verbose: partial(proxyLog, 'verbose'),
-    debug: partial(proxyLog, 'debug'),
-    log: partial(proxyLog, 'log'),
+    debug: getLogger('log', 'debug'),
+    error: getLogger('error', 'error'),
+    info: getLogger('log', 'info'),
+    log: getLogger('log', 'info'),
+    verbose: getLogger('log', 'verbose'),
+    warn: getLogger('warn', 'warn'),
   };
 };
