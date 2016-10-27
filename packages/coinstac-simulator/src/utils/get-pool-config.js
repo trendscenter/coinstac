@@ -12,8 +12,8 @@ const pouchDBServerConfig = config['pouch-db-server'];
  * Get pool configuration.
  * @private
  *
- * @description utility to generate PipelineRunnerPool inputs, used by
- * compute client and compute servers
+ * @description utility to generate PipelineRunnerPool inputs, used by local and
+ * remote processes.
  *
  * @param {Object} params
  * @param {string} params.computationPath
@@ -55,7 +55,6 @@ module.exports = function getPoolConfig(params) {
     common.services.computationRegistry({
       dbRegistry,
       isLocal,
-      path: computationDir,
       registry: [],
     }),
   ]).then(([computationDir, dbRegistry, computationRegistry]) => {
@@ -73,6 +72,7 @@ module.exports = function getPoolConfig(params) {
       url,
     });
     computationRegistry._doAdd({
+      cwd: path.dirname(require.resolve(computationPath)),
       definition: computation,
       name,
       url,

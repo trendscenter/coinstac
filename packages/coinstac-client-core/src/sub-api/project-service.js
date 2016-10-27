@@ -8,16 +8,15 @@ const ModelService = require('../model-service');
 const Project = require('coinstac-common').models.Project;
 const bluebird = require('bluebird');
 const coinstacCommon = require('coinstac-common');
-const concatStream = require('concat-stream');
 const csvParse = require('csv-parse');
-const difference = require('lodash/difference');
 const fileStats = require('../utils/file-stats');
-const find = require('lodash/find');
-const findIndex = require('lodash/findIndex');
-const firstline = require('firstline');
 const fs = require('fs');
+const path = require('path');
+const camelCase = require('lodash/camelCase');
+const difference = require('lodash/difference');
+const find = require('lodash/find');
 const includes = require('lodash/includes');
-const mapStream = require('map-stream');
+const findKey = require('lodash/findKey');
 
 /**
  * @class
@@ -34,101 +33,121 @@ class ProjectService extends ModelService {
     this.listeners = new Map();
   }
 
+  getCSV(filename) {
+    return bluebird.promisify(fs.readFile)(filename)
+      .then(data => bluebird.promisify(csvParse)(data.toString()))
+      .then(JSON.stringify);
+  }
+
   /**
-   * Get meta file's contents.
+   * Set meta contents to a project's files.
    *
-   * This method parses a CSV for data under a 'Is Control' column header.
+   * @todo Refactor this into model method?
    *
-   * @example
-   * myProjectService.getMetaFileContents('./path/to/my.csv')
-   *   .then(output => {
-   *     // `output` looks like:
-   *     // [
-   *     //   ['M100', true],
-   *     //   ['M101', false],
-   *     //   ['M102', true],
-   *     //   ['M102', false],
-   *     // ]
-   *     console.log(output);
-   *   })
-   *   .catch(error => console.error(error));
-   *
-   * @param {string} file Full path to CSV
-   * @returns {Promise} Resolves to a collection of two-dimensional arrays,
-   * where the first element is the left-most column value and the second
-   * element is the 'Is Control' column text's coerced boolean value.
+   * @param {string} projectId
+   * @param {Map} metaContents Retrieved from `getMetaFileContents`
+   * @returns {Promise} Mutated project with meta content as file tags
    */
-  getMetaFileContents(file) {
-    const parseOpts = { delimiter: ',' };
-    const isControlColumnPattern = /is ?control/i;
-    let firstRowString;
-    let isControlColumnIndex;
+  setMetaContents(projectId) {
+    if (!projectId) {
+      return Promise.reject(new Error('Project ID required'));
+    }
 
-    const map = mapStream((data, callback) => {
-      if (
-        // Ignore empty rows
-        !data ||
-        !Array.isArray(data) ||
-        (Array.isArray(data) && !data.length) ||
+    return this.get(projectId)
+      .then(project => {
+        if (!project.consortiumId) {
+          throw new Error(
+            `No active consortium set of project ${projectId}`
+          );
+        }
 
-        // Ignore first row
-        data.toString() === firstRowString
-      ) {
-        // No args filters out this item
-        callback();
-      } else if (data.length < isControlColumnIndex + 1) {
-        // Don't output potential PHI
-        callback(new Error('Row missing isControl column'));
-      } else {
-        // Assumes filenames are stored in the first column
-        // TODO: Figure out why map-stream needs nested arrays
-        const value = data[isControlColumnIndex];
-        let parsed;
+        return Promise.all([
+          project,
+          this.dbRegistry.get('consortia').get(project.consortiumId),
+        ]);
+      })
+      .then(([project, consortium]) => {
+        const covariates = consortium.activeComputationInputs[0][2];
 
-        if (/true/i.test(value)) {
-          parsed = true;
-        } else if (/false/i.test(value)) {
-          parsed = false;
-        } else if (typeof value === 'string') {
-          const parseAttempt = parseInt(value, 10);
-          if (!Number.isNaN(parseAttempt)) {
-            parsed = parseAttempt;
+        if (!Array.isArray(covariates) || !covariates.length) {
+          throw new Error('Expected covariates');
+        }
+
+        /**
+         * [
+         *   [1, 2, 3],
+         *   [4, 5, 6],
+         * ]
+         */
+        const metaFile = project.metaFile;
+
+        /**
+         * {
+         *   <metaColumnIndex 1>: <covariateIndex 1>,
+         *   <metaColumnIndex 2>: <covariateIndex 2>,
+         *   // ...
+         * }
+         */
+        const metaCovariateMapping = project.metaCovariateMapping;
+
+        function getTags(metaRow) {
+          return covariates.reduce((tags, { name, type }, covariateIndex) => {
+            const metaColumnIndex = parseInt(findKey(
+              metaCovariateMapping, x => x === covariateIndex
+            ), 10);
+
+            if (
+              typeof metaColumnIndex !== 'number' ||
+              Number.isNaN(metaColumnIndex)
+            ) {
+              throw new Error(`Couldn't find covariate mapping for "${name}"`);
+            }
+
+            const raw = metaRow[metaColumnIndex];
+            let value;
+
+            if (type === 'number') {
+              value = parseFloat(raw, 10);
+            } else if (type === 'boolean') {
+              const num = parseInt(raw, 10);
+              const low = raw.toLowerCase();
+
+              if (!Number.isNaN(num)) {
+                value = !!num;
+              } else if (low === 't' || low === 'true') {
+                value = true;
+              } else if (low === 'f' || low === 'false') {
+                value = false;
+              }
+            }
+
+            if (typeof value === 'undefined') {
+              throw new Error('Couldn\'t determine column value!');
+            }
+
+            tags[camelCase(name)] = value;
+
+            return tags;
+          }, {});
+        }
+
+        project.files.forEach(file => {
+          const metaRow = metaFile.find(row => {
+            const filename = row[0];
+            return (
+              filename === file.filename ||
+              filename === path.basename(file.filename)
+            );
+          });
+
+          if (!metaRow) {
+            throw new Error(`Couldn't find meta info for file ${file.filename}`);
           }
-        }
 
-        if (typeof parsed === 'number') {
-          parsed = parsed > 0;
-        }
-
-        if (typeof parsed !== 'boolean') {
-          callback(new Error(`Cannot parse value: ${value}`));
-        } else {
-          callback(null, [[data[0], parsed]]);
-        }
-      }
-    });
-    const parse = csvParse(parseOpts);
-    const readStream = fs.createReadStream(file);
-
-    return firstline(file)
-      .then(line => bluebird.promisify(csvParse)(line, parseOpts))
-      .then(([firstRow]) => {
-        firstRowString = firstRow.toString();
-        isControlColumnIndex = findIndex(firstRow, headerText => {
-          return isControlColumnPattern.test(headerText);
+          Object.assign(file.tags, getTags(metaRow));
         });
 
-        if (isControlColumnIndex < 0) {
-          throw new Error('Couldn\'t find control column');
-        }
-
-        return new Promise((resolve, reject) => {
-          map.on('error', reject);
-          parse.on('error', reject);
-          readStream.on('error', reject);
-
-          readStream.pipe(parse).pipe(map).pipe(concatStream(resolve));
-        });
+        return this.save(project);
       });
   }
 

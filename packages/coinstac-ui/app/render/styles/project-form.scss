@@ -9,9 +9,8 @@ $vertical-breakpoint: 38em;
   @media (min-height: $vertical-breakpoint) {
     display: flex;
     flex-direction: column;
-    height: 100vh;
+    // height: 100vh;
   }
-
 }
 
 .project-form-section-header {
@@ -30,7 +29,7 @@ $vertical-breakpoint: 38em;
   padding-bottom: 2em;
 }
 .project-form-files {
-  padding-bottom: 1.5em;
+  padding-bottom: 2em;
 
   @media (min-height: $vertical-breakpoint) {
     display: flex;
@@ -40,12 +39,25 @@ $vertical-breakpoint: 38em;
   }
 
   .project-form-section-content {
-    max-height: 20em;
-    overflow: scroll;
+    max-height: 22em;
+    overflow-y: scroll;
+    padding-right: 10px;
+
+    &::-webkit-scrollbar {
+      width: 10px;
+    }
+    &::-webkit-scrollbar-track {
+      background: #ddd;
+      border-radius: $border-radius;
+    }
+    &::-webkit-scrollbar-thumb {
+      background: #666;
+      border-radius: $border-radius;
+      height: 30px;
+    }
 
     @media (min-height: $vertical-breakpoint) {
       flex-grow: 2;
-      max-height: none;
     }
   }
   ul {
@@ -63,7 +75,12 @@ $vertical-breakpoint: 38em;
   }
 }
 .project-form-controls {
+  background: #fff;
+  // bottom: 0;
+  // left: 0;
   padding-bottom: 1.5em;
+  // position: absolute;
+  // width: 100%;
 
   .btn-link {
     color: $gray;
