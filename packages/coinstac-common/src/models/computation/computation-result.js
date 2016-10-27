@@ -10,7 +10,6 @@ const memoize = require('lodash/memoize');
  * @extends PouchDocument
  * @description Generic ComputationResult result container.
  * @property {*} data
- * @property {array} history previous computation result (data only)
  * @property {object} pipelineState snapshot of latest pipeline state
  * @property {string} computationId _id of computation definition executed
  * @property {string} runId non-persisted attr used as the unique identifier for
@@ -78,7 +77,6 @@ ComputationResult.prototype._extractRunId = memoize(function _extractRunId(_id) 
 ComputationResult.schema = Object.assign({
   data: joi.any(),
   error: joi.object(),
-  history: joi.array().default([]),
   pipelineState: joi.object().keys({
     step: joi.number(),
     inProgress: joi.boolean(),

@@ -18,15 +18,12 @@ const genOpts = (opts) => {
 test('constructor - basic', t => {
   const minFullOptsPatch = {
     data: 'a',
-    history: [],
     pipelineState: { step: 0, inProgress: false },
   };
   const richFullOptsPatch = {
     data: { a: ['b'] },
-    history: ['c', 'd'],
     pipelineState: { step: 1, inProgress: true },
   };
-  const errorOptsPatch1 = { history: {} };
   const errorOptsPatch2 = { pipelineState: null };
 
   t.ok(
@@ -36,10 +33,6 @@ test('constructor - basic', t => {
   t.ok(
         new ComputationResult(genOpts(richFullOptsPatch)),
         'fully loaded ComputationResult ok, 2'
-    );
-  t.throws(
-        () => (new ComputationResult(genOpts(errorOptsPatch1))),
-        'bogus data rejected (.history)'
     );
   t.throws(
         () => (new ComputationResult(genOpts(errorOptsPatch2))),
