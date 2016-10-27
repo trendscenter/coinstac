@@ -33,7 +33,7 @@
     "lodash": "^4.3.0",
     "md5": "^2.0.0",
     "moment": "^2.11.1",
-    "pouchy": "^10.1.0"
+    "pouchy": "^11.0.1"
   },
   "homepage": "http://mrn-code.github.io/coinstac#readme",
   "devDependencies": {
@@ -46,7 +46,7 @@
     "mockery": "^2.0.0",
     "nyc": "^7.1.0",
     "performance-now": "^0.2.0",
-    "pouchdb-adapter-memory": "^5.4.3",
+    "pouchdb-adapter-memory": "^6.0.5",
     "semver": "^5.1.0",
     "sinon": "^1.17.3",
     "spawn-pouchdb-server": "^3.3.1",
