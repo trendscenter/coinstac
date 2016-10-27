@@ -22,7 +22,7 @@ const logLocations = {
  * @return {function} appropriate logging function for permissions
  */
 const unhandledBootLogger = () => {
-  const logLocation = path.join(process.env.HOME, logLocations[process.platform]);
+  const logLocation = path.join(process.env.HOME || process.env.TEMP, logLocations[process.platform]);
   const logFilePath = path.join(logLocation, 'coinstac-boot-error-log.txt');
   const consoleLogger = (data) => {
     return console.error(`${new Date()} ERROR: ${data}`); // eslint-disable-line no-console
