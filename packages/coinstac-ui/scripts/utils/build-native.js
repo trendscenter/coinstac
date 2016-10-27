@@ -19,7 +19,7 @@ module.exports = function buildNative() {
       return new Promise((resolve, reject) => {
         let cmd = 'npm';
         if (os.platform() === 'win32') {
-           cmd = 'npm.cmd';
+          cmd = 'npm.cmd';
         }
 
         const build = cp.spawn(cmd, [
