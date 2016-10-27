@@ -65,27 +65,6 @@ test('saveResult - basic - error', t => {
   .then(t.end, t.end);
 });
 
-test('saveResult - queue simultaneous saves, history OK', t => {
-  const runner = new Runner(runnerUtils.basicOpts());
-  const db = runnerUtils.getDB('history_test_db');
-  t.plan(5);
-  Promise.resolve()
-  .then(() => runner.saveResult(db, { first: 1 }))
-  .then(() => db.all().then((docs) => docs[0]))
-  .then((doc) => {
-    t.notOk(doc.history.length, 'no history after first save');
-    t.equal(doc.data.first, 1, 'first-to-queue data saved on concurrent save request');
-  })
-  .then(() => runner.saveResult(db, { second: 2 }))
-  .then(() => db.all().then((docs) => docs[0]))
-  .then((doc) => {
-    t.equal(doc.history.length, 1, 'history maintained');
-    t.deepEqual(doc.history, [{ first: 1 }]);
-    t.deepEqual(doc.data, { second: 2 });
-  })
-  .then(t.end, t.end);
-});
-
 test('getPreviousResult', t => {
   const runnerOpts = runnerUtils.basicOpts();
   const db = runnerUtils.getDB('prev_results_db');

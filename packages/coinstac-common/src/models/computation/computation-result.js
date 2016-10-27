@@ -10,7 +10,6 @@ const memoize = require('lodash/memoize');
  * @extends PouchDocument
  * @description Generic ComputationResult result container.
  * @property {*} data
- * @property {array} history previous computation result (data only)
  * @property {object} pipelineState snapshot of latest pipeline state
  * @property {string} computationId _id of computation definition executed
  * @property {string} runId non-persisted attr used as the unique identifier for
