@@ -44,8 +44,8 @@
     "glob": "^7.0.6",
     "is-promise": "^2.1.0",
     "lodash": "^4.15.0",
-    "pouchdb-adapter-memory": "^5.4.3",
-    "pouchy": "^10.1.0",
+    "pouchdb-adapter-memory": "^6.0.5",
+    "pouchy": "^11.0.1",
     "retry": "^0.10.0",
     "spawn-pouchdb-server": "^3.3.2",
     "winston": "^2.2.0"
