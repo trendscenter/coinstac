@@ -3,6 +3,7 @@
 const cp = require('child_process');
 const electron = require('electron-prebuilt');
 const promisify = require('bluebird').promisify;
+const os = require('os');
 
 module.exports = function buildNative() {
   const exec = promisify(cp.exec);
@@ -16,7 +17,12 @@ module.exports = function buildNative() {
       const electronABI = abi.match(/(\d+)/)[1];
 
       return new Promise((resolve, reject) => {
-        const build = cp.spawn('npm', [
+        let cmd = 'npm';
+        if (os.platform() === 'win32') {
+           cmd = 'npm.cmd';
+        }
+
+        const build = cp.spawn(cmd, [
           'rebuild',
           '--runtime=electron',
           `--target=${electronVersion}`,
