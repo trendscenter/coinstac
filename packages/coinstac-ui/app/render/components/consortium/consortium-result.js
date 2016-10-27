@@ -22,7 +22,6 @@ export default function ConsortiumResult({
   computation,
   complete,
   data,
-  history,
   pipelineState,
   userErrors,
   usernames,
@@ -55,7 +54,6 @@ export default function ConsortiumResult({
     <div>
       <h3 className="h4">Computation state:</h3>
       <ul>
-        <li>Iteration #: <strong>{history.length}</strong></li>
         <li>Pipeline step: <strong>{pipelineState.step}</strong></li>
         <li>Users: <strong>{usernames.join(', ')}</strong></li>
       </ul>
@@ -97,7 +95,6 @@ ConsortiumResult.propTypes = {
   computation: PropTypes.object,
   complete: PropTypes.bool.isRequired,
   data: PropTypes.object,
-  history: PropTypes.array.isRequired,
   pipelineState: PropTypes.object.isRequired,
   pluginState: PropTypes.object.isRequired,
   usernames: PropTypes.array.isRequired,
