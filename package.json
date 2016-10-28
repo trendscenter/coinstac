@@ -16,7 +16,7 @@
     "gh-pages": "^0.11.0",
     "github-markdown-css": "^2.3.0",
     "jsdoc": "^3.4.0",
-    "lerna": "2.0.0-beta.20",
+    "lerna": "2.0.0-beta.30",
     "marked": "^0.3.5",
     "minami": "^1.1.1",
     "pre-commit": "^1.1.3",
@@ -59,6 +59,9 @@
   "pre-commit": {
     "colors": true,
     "silent": false,
-    "run": ["lint", "test"]
+    "run": [
+      "lint",
+      "test"
+    ]
   }
 }
