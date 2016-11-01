@@ -1,6 +1,8 @@
 import React, { Component, PropTypes } from 'react';
 import { Button } from 'react-bootstrap';
 
+import ConsortiumComputationInputsViewer from
+  './consortium-computation-inputs-viewer';
 import ConsortiumForm from './consortium-form';
 import ConsortiumTags from './consortium-tags';
 import ConsortiumResults from './consortium-results';
@@ -112,6 +114,23 @@ export default class Consortium extends Component {
       );
     }
 
+    const inputsViewerProps = {};
+
+    if (consortium.activeComputationId) {
+      const activeComputation = computations.find(({ _id }) => {
+        return _id === consortium.activeComputationId;
+      });
+
+      if (
+        activeComputation &&
+        Array.isArray(activeComputation.inputs) &&
+        activeComputation.inputs.length
+      ) {
+        inputsViewerProps.inputs = activeComputation.inputs[0];
+        inputsViewerProps.values = consortium.activeComputationInputs[0];
+      }
+    }
+
     // TODO: Add active computation display for members
     return (
       <div className="consortium-details">
@@ -120,6 +139,7 @@ export default class Consortium extends Component {
         </div>
         <p className="lead section">{consortium.description}</p>
         <ConsortiumTags tags={consortium.tags} />
+        <ConsortiumComputationInputsViewer {...inputsViewerProps} />
       </div>
     );
   }
