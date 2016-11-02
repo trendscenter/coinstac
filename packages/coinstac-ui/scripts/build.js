@@ -1,10 +1,14 @@
 const prom = require('bluebird').promisify;
 const packager = prom(require('electron-packager'));
-const zip = require('tar.gz');
+const archiver = require('archiver');
 const fs = require('fs');
 const os = require('os');
 const buildNative = require('./utils/build-native.js');
 
+const outputDir = `${__dirname}/../coinstac-${os.platform()}-${os.arch()}`;
+const zip = os.platform() === 'win32' ?
+  archiver.create('zip') : archiver.create('tar', { gzip: true });
+const zipOutput = os.platform() === 'win32' ? `${outputDir}.zip` : `${outputDir}.tar.gz`;
 const options = {
   asar: true,
   dir: `${__dirname}/../`,
@@ -23,15 +27,17 @@ buildNative()
 })
 .then((appPath) => {
   console.log(`Finished building at: ${appPath}`); // eslint-disable-line no-console
-  console.log('Now tarring...'); // eslint-disable-line no-console
-  const dir = `${__dirname}/../coinstac-${os.platform()}-${os.arch()}`;
+  console.log('Now archiving...'); // eslint-disable-line no-console
 
-  const read = zip().createReadStream(`${dir}`);
-  const write = fs.createWriteStream(`${dir}.tar.gz`);
+  const write = fs.createWriteStream(zipOutput);
 
-  read.pipe(write);
+  zip.pipe(write);
+  zip.on('error', (err) => {
+    throw err;
+  });
+  zip.directory(outputDir);
   write.on('close', () => {
-    console.log(`Finished zipping ${dir}`); // eslint-disable-line no-console
+    console.log(`Finished zipping ${outputDir}`); // eslint-disable-line no-console
   });
 })
 .catch(err => {
