@@ -5,6 +5,10 @@ const fs = require('fs');
 const os = require('os');
 const buildNative = require('./utils/build-native.js');
 
+const outputDir = `${__dirname}/../coinstac-${os.platform()}-${os.arch()}`;
+const zip = os.platform() === 'win32' ?
+  archiver.create('zip') : archiver.create('tar', { gzip: true });
+const zipOutput = os.platform() === 'win32' ? `${outputDir}.zip` : `${outputDir}.tar.gz`;
 const options = {
   asar: true,
   dir: `${__dirname}/../`,
@@ -22,26 +26,18 @@ buildNative()
   return packager(options);
 })
 .then((appPath) => {
-  let zip;
-  const dir = `${__dirname}/../coinstac-${os.platform()}-${os.arch()}`;
-
   console.log(`Finished building at: ${appPath}`); // eslint-disable-line no-console
   console.log('Now archiving...'); // eslint-disable-line no-console
 
-  if (os.platform() === 'win32') {
-    zip = archiver.create('zip');
-  } else {
-    zip = archiver.create('tar', { gzip: true });
-  }
-  const write = fs.createWriteStream(os.platform() === 'win32' ? `${dir}.zip` : `${dir}.tar.gz`);
+  const write = fs.createWriteStream(zipOutput);
 
   zip.pipe(write);
   zip.on('error', (err) => {
     throw err;
   });
-  zip.directory(dir);
+  zip.directory(outputDir);
   write.on('close', () => {
-    console.log(`Finished zipping ${dir}`); // eslint-disable-line no-console
+    console.log(`Finished zipping ${outputDir}`); // eslint-disable-line no-console
   });
 })
 .catch(err => {
