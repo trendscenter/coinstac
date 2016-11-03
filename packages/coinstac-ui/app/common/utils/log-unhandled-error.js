@@ -13,7 +13,7 @@ const logLocations = {
   freebsd: '.config/coinstac/',
   linux: '.config/coinstac/',
   sunos: '.config/coinstac/',
-  win32: 'AppData/Roaming/coinstac/',
+  win32: 'coinstac/',
 };
 
 /**
