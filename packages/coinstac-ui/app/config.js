@@ -33,7 +33,7 @@ const conf = convict({
     noURLPrefix: true,
   },
   logFile: 'coinstac-log.json',
-  // these are appended to the home dir for you OS 
+  // these are appended to the home dir for you OS
   // *nix: ~/.config/coinstac
   // win: C:\Users\username\AppData\Local\Temp\coinstac
   logLocations: {
