@@ -5,7 +5,8 @@ const fs = require('fs');
 const os = require('os');
 const buildNative = require('./utils/build-native.js');
 
-const outputDir = `${__dirname}/../coinstac-${os.platform()}-${os.arch()}`;
+const dirName = `coinstac-${os.platform()}-${os.arch()}`
+const outputDir = `${__dirname}/../${dirName}`;
 const zip = os.platform() === 'win32' ?
   archiver.create('zip') : archiver.create('tar', { gzip: true });
 const zipOutput = os.platform() === 'win32' ? `${outputDir}.zip` : `${outputDir}.tar.gz`;
@@ -35,7 +36,9 @@ buildNative()
   zip.on('error', (err) => {
     throw err;
   });
-  zip.directory(outputDir);
+  zip.directory(outputDir, dirName)
+  .finalize();
+  
   write.on('close', () => {
     console.log(`Finished zipping ${outputDir}`); // eslint-disable-line no-console
   });
