@@ -33,12 +33,15 @@ const conf = convict({
     noURLPrefix: true,
   },
   logFile: 'coinstac-log.json',
+  // these are appended to the home dir for you OS
+  // *nix: ~/.config/coinstac
+  // win: C:\Users\username\AppData\Local\Temp\coinstac
   logLocations: {
-    darwin: '~/Library/Logs/coinstac/',
-    freebsd: '~/.config/coinstac/',
-    linux: '~/.config/coinstac/',
-    sunos: '~/.config/coinstac/',
-    win32: '$HOME/AppData/Roaming/coinstac/',
+    darwin: 'Library/Logs/coinstac/',
+    freebsd: '.config/coinstac/',
+    linux: '.config/coinstac/',
+    sunos: '.config/coinstac/',
+    win32: 'coinstac/',
   },
 });
 

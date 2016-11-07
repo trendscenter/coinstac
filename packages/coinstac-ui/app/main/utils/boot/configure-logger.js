@@ -7,12 +7,11 @@ const winston = require('winston');
 const promisify = require('bluebird').promisify;
 const mkdirp = promisify(require('mkdirp'));
 
-const resolveHome = (filepath) => {
-  return filepath.replace(/~|\$HOME/, process.env.HOME);
-};
-
 module.exports = function configureLogger() {
-  const logLocation = resolveHome(app.config.get('logLocations')[process.platform]);
+  const logLocation = path.join(
+    process.env.HOME || process.env.TEMP,
+    app.config.get('logLocations')[process.platform]
+    );
 
   return mkdirp(logLocation, parseInt('0775', 8))
   .then(() => {
