@@ -213,3 +213,33 @@ test('CoinstacClient - teardown process', (t) => {
     .catch(t.end);
 });
 
+test('CoinstacClient - auth initialization', t => {
+  const authStub = {
+    createUser: sinon.stub().returns(Promise.resolve()),
+    login: sinon.stub().returns(Promise.resolve()),
+  };
+  const credentials = {
+    email: 'test@mrn.org',
+    name: 'test',
+    password: 'testtest',
+    username: 'test',
+  };
+
+  t.plan(2);
+
+  CoinstacClient.prototype._initAuthorization.call(
+    { auth: authStub },
+    credentials
+  )
+    .then(() => {
+      t.ok(
+        authStub.createUser.calledWith(credentials),
+        'calls create user'
+      );
+      t.ok(
+        authStub.login.calledWith(credentials),
+        'calls login'
+      );
+    })
+    .catch(t.end);
+});
