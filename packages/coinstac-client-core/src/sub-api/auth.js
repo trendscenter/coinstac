@@ -1,10 +1,8 @@
 'use strict';
 
-const common = require('coinstac-common');
-const User = common.models.User;
 const atob = require('atob');
 const btoa = require('btoa');
-const bluebird = require('bluebird');
+const User = require('coinstac-common').models.User;
 
 const USER_KEY = btoa('COINSTAC_USER');
 
@@ -35,27 +33,23 @@ class Auth {
    * Makes a request to the API to create a new user. Response should contain
    * new user info.
    *
-   * @param {Object}  data          Information to create a new user
-   * @param {string}  data.username
-   * @param {string}  data.email
-   * @param {string}  data.name     New user's first name and last name
-   * @param {string}  data.password
+   * @todo Use user's site ID
+   *
+   * @param {Object} data Information to create a new user
+   * @param {string} data.email
+   * @param {string} data.name New user's first name and last name
+   * @param {string} data.password
+   * @param {string} data.username
    * @returns {Promise}
    */
-  createUser(user) {
-    // the API requires a `label` key instead of `name`
-    /* istanbul ignore next */
-    const newUser = {
-      email: user.email,
-      label: user.name,
-      password: user.password,
-      username: user.username,
-      siteId: '7', // @TODO :(
-    };
-
-    // @TODO use actual user siteId
-    /* istanbul ignore next */
-    return bluebird.resolve(this.halfpenny.users.post(newUser));
+  createUser({ email, name, password, username }) {
+    return this.halfpenny.users.post({
+      email,
+      label: name,  // the API requires a `label` key instead of `name`
+      password,
+      siteId: '7',
+      username,
+    });
   }
 
   /**
@@ -70,34 +64,27 @@ class Auth {
   }
 
   /**
-   * Log in.  Set active user.
+   * Log in and set active user.
    *
-   * @param  {Object}  data user login credentials
-   * @param  {string}  data.password
-   * @param  {string}  data.username
+   * @param {Object} data user login credentials
+   * @param {string} data.password
+   * @param {string} data.username
    * @returns {Promise}
    */
-  login(data) {
-    /* istanbul ignore next */
-    const handleLoginFail = (err) => {
-      if (err.status === 500) {
-        throw new Error(
-          'unable to log into COINS.  Please try again or file a support ticket'
-        );
-      } else if (err.status === 401) {
-        throw new Error('Invalid username or password.  Please try again');
-      }
-      throw err;
-    };
+  login({ password, username }) {
+    return this.halfpenny.auth.login(username, password)
+      .then(({ data: { data: [{ user }] } }) => this.setUser(user))
+      .catch(error => {
+        if (error.status === 500) {
+          throw new Error(
+            'Unable to log in to COINS. Please try again or file a support ticket.'
+          );
+        } else if (error.status === 401) {
+          throw new Error('Invalid username or password');
+        }
 
-    /* istanbul ignore next */
-    return this.halfpenny.auth.login(data.username, data.password)
-    .then((response) => {
-      const result = response.data.data[0];
-      const newUser = this.setUser(result.user);
-      return newUser;
-    })
-    .catch(handleLoginFail);
+        throw error;
+      });
   }
 
   /**
@@ -107,8 +94,7 @@ class Auth {
    */
   logout() {
     this.halfpenny.store.removeItem(USER_KEY);
-    /* istanbul ignore next */
-    return bluebird.resolve(this.halfpenny.auth.logout());
+    return this.halfpenny.auth.logout();
   }
 
   /**

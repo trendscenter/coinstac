@@ -109,7 +109,7 @@ tape('Auth#login errors', (t) => {
     t.equal(args[1], credentials.password, 'sends password');
     t.ok(
       error1 instanceof Error &&
-      error1.message.indexOf('unable to log in') > -1,
+      error1.message.indexOf('Unable to log in') > -1,
       'passes server error'
     );
   })
