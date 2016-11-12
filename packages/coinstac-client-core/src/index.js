@@ -225,10 +225,11 @@ class CoinstacClient {
    * @returns {Promise}
    */
   _initAuthorization(credentials) {
-    if (credentials.email && credentials.name) {
-      return this.auth.createUser(credentials);
-    }
-    return this.auth.login(credentials);
+    const doLogin = () => this.auth.login(credentials);
+
+    return credentials.email && credentials.name ?
+      this.auth.createUser(credentials).then(doLogin) :
+      doLogin();
   }
 
   /**
