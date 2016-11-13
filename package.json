@@ -25,6 +25,7 @@
   },
   "scripts": {
     "bootstrap": "lerna bootstrap",
+    "build:server": "lerna bootstrap --ignore 'coinstac-{client-core,decentralized-algorithm-integration,simulator,storage-proxy,ui}'",
     "lint": "eslint '**/*.js' '**/bin/*'",
     "lintfix": "eslint --fix **/*.js",
     "publish": "lerna publish && node scripts/docs.js",
