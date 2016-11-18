@@ -23,7 +23,6 @@
     "url": "https://github.com/MRN-Code/coinstac/issues"
   },
   "dependencies": {
-    "async": "^2.0.0-rc.5",
     "bluebird": "^3.4.0",
     "coinstac-example-computation-bisect-converge": "github:mrn-code/coinstac-example-computation-bisect-converge#v2.0.2",
     "indent-string": "^3.0.0",
