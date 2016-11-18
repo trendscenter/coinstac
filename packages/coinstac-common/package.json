@@ -23,16 +23,13 @@
     "url": "https://github.com/MRN-Code/coinstac/issues"
   },
   "dependencies": {
-    "async": "^2.0.0-rc.5",
     "bluebird": "^3.4.0",
     "coinstac-example-computation-bisect-converge": "github:mrn-code/coinstac-example-computation-bisect-converge#v2.0.2",
     "indent-string": "^3.0.0",
-    "joi": "^8.4.1",
+    "joi": "^10.0.0",
     "json-parse-helpfulerror": "^1.0.3",
     "laplacian-noise-ridge-regression": "github:mrn-code/decentralized-laplacian-ridge-regression#v3.1.0",
     "lodash": "^4.3.0",
-    "md5": "^2.0.0",
-    "moment": "^2.11.1",
     "pouchy": "^11.0.1"
   },
   "homepage": "http://mrn-code.github.io/coinstac#readme",

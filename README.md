@@ -2,6 +2,8 @@
 
 <img src="https://raw.githubusercontent.com/MRN-Code/coinstac/master/img/coinstac.png" height="75px">
 
+[ ![Codeship Status for MRN-Code/coinstac](https://app.codeship.com/projects/9a9dd9b0-8f5a-0134-c5bf-0e20509a962c/status?branch=master)](https://app.codeship.com/projects/185577)
+
 _Collaborative Informatics and Neuroimaging Suite Toolkit for Anonymous Computation, User Interface._ A research project by your friends [The Mind Research Network](http://www.mrn.org/).
 
 COINSTAC is software to foster collaborative research, removing large barriers to traditional data-centric collaboration approaches.  It enables groups of users to run common analyses _on their own machines_ over _their own datasets_ with ease.  The results of these analyses are synchronized to the cloud, and undergo aggregate analyses processes using all contributor data.  Decentralized pipelines allow for distributed, iterative, and feature rich analyses to be run, opening new and exciting capabilities for collaborative computation.  If also offers data anonymity through differential privacy algorithms, so members do not need to fear PHI traceback.
@@ -38,7 +40,7 @@ COINSTAC removes the barriers to collaborative analysis by:
 
 - **decentralizing analyses and computation**
   - each user performs analyses/pipelines/etc all on their own computers. bits and pieces of each users' output _may_ be sent to a central compute node
-  - a central compute node performs a complimentary component of the group analysis, generally a Machine Learning algorithm.  this node may trigger adjusted computations on users' machines, generally in effort to improve a model, which the research is trying to predict!  
+  - a central compute node performs a complimentary component of the group analysis, generally a Machine Learning algorithm.  this node may trigger adjusted computations on users' machines, generally in effort to improve a model, which the research is trying to predict!
 - _not_ synchronizing full datasets. instead, **synchronizing only resultant analysis metrics**
   - as previously discussed, central compute nodes aggregate these metrics, and attempt to draw conclusions from the contributor swarm
   - because machine learning algorithms can be designed to model outcomes via artifacts of your analysis Pipelines, we keep your data safely and conveniently on your own machine, _untouched_.
