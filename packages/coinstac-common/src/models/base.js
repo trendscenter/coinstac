@@ -122,6 +122,7 @@ class Base {
   }
 }
 
+Base.joi = joi;
 Base.schema = {};
 
 module.exports = Base;
