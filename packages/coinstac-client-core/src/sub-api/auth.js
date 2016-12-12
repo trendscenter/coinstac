@@ -46,9 +46,9 @@ class Auth {
     return this.halfpenny.users.post({
       email,
       label: name,  // the API requires a `label` key instead of `name`
-      password,
+      password: btoa(password),
       siteId: '7',
-      username,
+      username: btoa(username),
     });
   }
 
