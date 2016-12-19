@@ -24,13 +24,13 @@ export const logout = applyAsyncLoading(() => {
   };
 });
 
-export const signUp = applyAsyncLoading(user => {
-  return (dispatch) => { // eslint-disable-line
-    return app.core.initialize(user)
-    .then(() => app.notify('success', 'New user created successfully'))
-    .catch(util.notifyAndThrow);
-  };
-});
+export const signUp = applyAsyncLoading(user => dispatch => app.core
+  .initialize(user)
+  .then(user => {
+    dispatch(setUser(user));
+    return user;
+  })
+);
 
 export const hotRoute = () => {
   return (dispatch) => { // eslint-disable-line
