@@ -27,7 +27,7 @@ function parse() {
         data = data.toString();
         // don't fill the screen with useful build information. scan for it,
         // summarize it instead
-        const builtRegex = /.*(\[(built|not cacheable)\]|\{0\}).*[\r\n]/gm; // eslint-disable-line
+        const builtRegex = /.*(\[(built|not cacheable)]|\{0\}).*[\r\n]/gm;
         const builtFiles = data.match(builtRegex);
         data = data.replace(builtRegex, '');
         console.log([

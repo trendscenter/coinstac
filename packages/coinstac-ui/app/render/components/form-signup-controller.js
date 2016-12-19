@@ -43,12 +43,23 @@ class FormSignupController extends Component {
     } else if (!formData.institution) {
       error = 'Institution required';
     }
-    if (error) { return FormSignupController.handleSignupError(error); }
-    dispatch(signUp(formData, (err) => {
-      if (!err) {
-        router.push('/login');
-      }
-    }));
+
+    if (error) {
+      return FormSignupController.handleSignupError(error);
+    }
+
+    return dispatch(signUp(formData))
+      .then(() => {
+        app.notifications.push({
+          autoDismiss: 2,
+          level: 'success',
+          message: 'Account created',
+        });
+        process.nextTick(() => router.push('/'));
+      })
+      .catch(error => {
+        app.notify.error(error.message);
+      });
   }
 
   render() {
