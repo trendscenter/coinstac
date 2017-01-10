@@ -1,0 +1,42 @@
+{
+  "author": "NI Development - The Mind Research Network <nidev@mrn.org> (http://coins.mrn.org)",
+  "bugs": {
+    "url": "https://github.com/MRN-Code/coinstac/issues"
+  },
+  "contributors": [
+    "Chris Dieringer <cdaringe@gmail.org>",
+    "Cory Reed <swashcap@gmail.com>",
+    "Ross Kelly <rkelly@mrn.org>",
+    "Drew Landis <landis.d@gmail.com>",
+    "Sergey Plis <splis@mrn.org>"
+  ],
+  "dependencies": {
+    "coinstac-common": "^2.2.2",
+    "lodash": "^4.17.4"
+  },
+  "description": "Computation registry service for COINSTAC.",
+  "devDependencies": {
+    "joi": "^10.1.0",
+    "mockery": "^2.0.0",
+    "nyc": "^10.0.0",
+    "pouchdb-adapter-memory": "^6.1.1",
+    "sinon": "^1.17.7",
+    "tape": "^4.6.3"
+  },
+  "homepage": "https://github.com/MRN-Code/coinstac#readme",
+  "keywords": [
+    "coinstac",
+    "computations"
+  ],
+  "license": "MIT",
+  "main": "src/index.js",
+  "name": "coinstac-computation-registry",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MRN-Code/coinstac.git"
+  },
+  "scripts": {
+    "test": "nyc --reporter=lcov node test/index.js"
+  },
+  "version": "2.2.2"
+}

@@ -1,7 +1,7 @@
 'use strict';
 
 const DecentralizedComputation =
-  require('../../models/decentralized-computation.js');
+  require('coinstac-common').models.DecentralizedComputation;
 const path = require('path');
 const values = require('lodash/values');
 
