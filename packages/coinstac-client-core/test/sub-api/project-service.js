@@ -59,14 +59,51 @@ test('ProjectService#setMetaContents errors', t => {
   const consortiumId = 'test-consortium';
   const projectId = 'test-project';
 
-  const dbGetStub = sinon.stub();
+  const dbGetSpy = sinon.spy();
+
+  // Sinon doesn't support dynamic stub responses based on args. Do it manually.
+  function dbGetStub(name) {
+    let doc;
+
+    if (name === 'computations') {
+      doc = {
+        inputs: dbGetSpy.callCount <= 1 ?
+          [[]] :
+          [[
+            'wat',
+            'wat',
+            {
+              type: 'covariates',
+            },
+          ]],
+      };
+    } else {
+      doc = {
+        _id: consortiumId,
+        activeComputationInputs: dbGetSpy.callCount <= 2 ?
+          [['wat', 'wat', 'wat']] :
+          [[
+            'wat',
+            'wat',
+            [{
+              name: 'Is Control',
+              type: 'boolean',
+            }],
+          ]],
+      };
+    }
+
+    return {
+      get(...args) {
+        dbGetSpy.apply(dbGetSpy, args);
+        return Promise.resolve(doc);
+      },
+    };
+  }
+
   const project = {
     dbRegistry: {
-      get() {
-        return {
-          get: dbGetStub,
-        };
-      },
+      get: dbGetStub,
     },
     get: sinon.stub(),
   };
@@ -107,13 +144,13 @@ test('ProjectService#setMetaContents errors', t => {
   project.get.onCall(0).returns(Promise.resolve({
     _id: projectId,
   }));
-  project.get.onCall(2).returns(Promise.resolve({
+  project.get.onCall(3).returns(Promise.resolve({
     _id: projectId,
     consortiumId,
     files: badFiles,
     metaFile,
   }));
-  project.get.onCall(4).returns(Promise.resolve({
+  project.get.onCall(5).returns(Promise.resolve({
     _id: projectId,
     consortiumId,
     files,
@@ -123,23 +160,7 @@ test('ProjectService#setMetaContents errors', t => {
     metaFile,
   }));
 
-  dbGetStub.returns(Promise.resolve({
-    _id: consortiumId,
-    activeComputationInputs: [[
-      'wat',
-      'wat',
-      [{
-        name: 'Is Control',
-        type: 'boolean',
-      }],
-    ]],
-  }));
-  dbGetStub.onCall(0).returns(Promise.resolve({
-    _id: consortiumId,
-    activeComputationInputs: [['wat', 'wat', 'wat']],
-  }));
-
-  t.plan(6);
+  t.plan(7);
 
   setMetaContents()
     .catch(error => {
@@ -154,6 +175,14 @@ test('ProjectService#setMetaContents errors', t => {
       t.ok(
         error.message.indexOf('consortium') > -1,
         'Rejects without project consortium ID'
+      );
+
+      return setMetaContents(projectId);
+    })
+    .catch(error => {
+      t.ok(
+        error.message.indexOf('covariates index') > -1,
+        'Rejects without covariates index'
       );
 
       return setMetaContents(projectId);

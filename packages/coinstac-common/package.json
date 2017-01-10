@@ -25,6 +25,7 @@
   "dependencies": {
     "bluebird": "^3.4.0",
     "coinstac-example-computation-bisect-converge": "github:mrn-code/coinstac-example-computation-bisect-converge#v2.0.2",
+    "decentralized-single-shot-ridge-regression": "github:mrn-code/decentralized-single-shot-ridge-regression",
     "indent-string": "^3.0.0",
     "joi": "^10.0.0",
     "json-parse-helpfulerror": "^1.0.3",
