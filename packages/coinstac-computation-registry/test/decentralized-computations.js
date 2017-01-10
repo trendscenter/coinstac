@@ -15,7 +15,7 @@
 
 // `require`-ing ensures it's in the right place
 const decentralizedComputations =
-    require('../../src/decentralized-computations.json');
+    require('../src/decentralized-computations.json');
 const joi = require('joi');
 const semver = require('semver');
 const tape = require('tape');

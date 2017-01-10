@@ -1,14 +1,13 @@
 'use strict';
 
-const ComputationRegistry =
-  require('../../src/services/classes/computation-registry');
+const ComputationRegistry = require('../src/computation-registry.js');
 const DecentralizedComputation =
-  require('../../src/models/decentralized-computation');
+  require('coinstac-common').models.DecentralizedComputation;
 const mockery = require('mockery');
 const noop = require('lodash/noop');
 const path = require('path');
 const pick = require('lodash/pick');
-const registry = require('../mocks/decentralized-computations.json');
+const registry = require('./mocks/decentralized-computations.json');
 const sinon = require('sinon');
 const tape = require('tape');
 const values = require('lodash/values');

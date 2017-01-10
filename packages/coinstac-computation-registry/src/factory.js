@@ -1,12 +1,12 @@
 'use strict';
 
-const ComputationRegistry = require('./classes/computation-registry.js');
-const DBRegistry = require('./classes/db-registry');
-const defaultRegistry = require('../decentralized-computations.json');
+const coinstacCommon = require('coinstac-common');
+const ComputationRegistry = require('./computation-registry.js');
+const defaultRegistry = require('./decentralized-computations.json');
 
 /**
  * Computation registry factory.
- * @module services/computation-registry-factory
+ * @module computation-registry-factory
  * @description Get a properly configured `ComputationRegistry` class.
  * @example <caption>Remote configuration</caption>
  * computationRegistryFactory({
@@ -60,7 +60,13 @@ function computationRegistryFactory(options) {
   const dbRegistry = localOptions.dbRegistry;
   let registry;
 
-  if (isLocal && (!dbRegistry || !(dbRegistry instanceof DBRegistry))) {
+  if (
+    isLocal &&
+    (
+      !dbRegistry ||
+      !(dbRegistry instanceof coinstacCommon.services.dbRegistry.DBRegistry)
+    )
+  ) {
     return Promise.reject(
       new Error('Computation registry requires DB registry')
     );
@@ -145,7 +151,5 @@ function computationRegistryFactory(options) {
   }, []))
     .then(() => instance);
 }
-
-computationRegistryFactory.ComputationRegistry = ComputationRegistry;
 
 module.exports = computationRegistryFactory;

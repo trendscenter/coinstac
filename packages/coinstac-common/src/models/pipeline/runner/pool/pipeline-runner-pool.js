@@ -4,7 +4,6 @@ const EventEmitter = require('events').EventEmitter;
 const Base = require('../../../base');
 const DBRegistry = require('../../../../services/classes/db-registry');
 const DBListener = require('../../../db-listener');
-const ComputationRegistry = require('../../../../services/classes/computation-registry');
 const Consortium = require('../../../consortium');
 const ComputationResult = require('../../../computation/computation-result');
 const RemoteComputationResult = require('../../../computation/remote-computation-result');
@@ -678,7 +677,7 @@ class PipelineRunnerPool extends Base {
 PipelineRunnerPool.instanceCount = 0;
 
 PipelineRunnerPool.schema = Object.assign({}, Base.schema, {
-  computationRegistry: joi.object().type(ComputationRegistry).required(),
+  computationRegistry: joi.object().required(),
   dbRegistry: joi.object().type(DBRegistry).required(),
   listenTo: joi.array(),
 });

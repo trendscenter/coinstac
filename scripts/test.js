@@ -42,6 +42,7 @@ async.series([
     const dirPaths = [
       './packages/coinstac-client-core',
       './packages/coinstac-common',
+      './packages/coinstac-computation-registry',
       './packages/coinstac-server-core',
       './packages/coinstac-storage-proxy',
       './packages/coinstac-ui',
