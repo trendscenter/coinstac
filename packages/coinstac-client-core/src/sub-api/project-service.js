@@ -66,8 +66,26 @@ class ProjectService extends ModelService {
           this.dbRegistry.get('consortia').get(project.consortiumId),
         ]);
       })
-      .then(([project, consortium]) => {
-        const covariates = consortium.activeComputationInputs[0][2];
+      .then(([project, consortium]) => Promise.all([
+        project,
+        consortium,
+        this.dbRegistry.get('computations').get(consortium.activeComputationId),
+      ]))
+      .then(([project, consortium, computation]) => {
+        const covariatesIndex = computation.inputs[0].findIndex(({ type }) => {
+          return type === 'covariates';
+        });
+
+        /**
+         * @todo This requires a 'covariates' input type in the computation.
+         * Make this not required!
+         */
+        if (covariatesIndex < 0) {
+          throw new Error('Expected covariates index');
+        }
+
+        const covariates = consortium
+          .activeComputationInputs[0][covariatesIndex];
 
         if (!Array.isArray(covariates) || !covariates.length) {
           throw new Error('Expected covariates');

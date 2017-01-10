@@ -60,6 +60,7 @@ class FormProjectController extends Component {
     this.handleReset = this.handleReset.bind(this);
     this.handleRunComputation = this.handleRunComputation.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
+    this.maybeGetInputs = this.maybeGetInputs.bind(this);
   }
 
   /**
@@ -93,30 +94,30 @@ class FormProjectController extends Component {
    * @returns {Object}
    */
   getErrors(project) {
-    const {
-      consortia,
-    } = this.props;
+    const { consortia } = this.props;
 
     return Object.keys(project).reduce((memo, key) => {
       const value = project[key];
 
       if (key === 'metaCovariateMapping') {
         const consortiumId = get(this.state, 'project.consortiumId');
-        let selectedConsortium;
-
-        if (consortiumId) {
-          selectedConsortium = consortia.find(({ _id }) => {
-            return _id === consortiumId;
-          });
-        }
+        const selectedConsortium = consortiumId ?
+          consortia.find(({ _id }) => _id === consortiumId) :
+          undefined;
+        const inputs = this.maybeGetInputs();
+        const covariatesIndex = inputs ?
+          inputs.findIndex(({ type }) => type === 'covariates') :
+          -1;
 
         if (
-          selectedConsortium &&
-          Array.isArray(selectedConsortium.activeComputationInputs[0][2]) &&
-          selectedConsortium.activeComputationInputs[0][2].length &&
+          covariatesIndex > -1 &&
+          Array.isArray(
+            selectedConsortium.activeComputationInputs[0][covariatesIndex]
+          ) &&
+          selectedConsortium.activeComputationInputs[0][covariatesIndex].length &&
           (
             values(value).length <
-            selectedConsortium.activeComputationInputs[0][2].length
+            selectedConsortium.activeComputationInputs[0][covariatesIndex].length
           )
         ) {
           memo[key] = 'Missing covariate mapping';
@@ -314,6 +315,42 @@ class FormProjectController extends Component {
   }
 
   /**
+   * Maybe get the project's associated computation's inputs.
+   *
+   * @returns {(Object[]|undefined)} inputs
+   */
+  maybeGetInputs() {
+    const { computations, consortia } = this.props;
+    const { project: { consortiumId } } = this.state;
+
+    if (!consortiumId) {
+      return;
+    }
+
+    const selectedConsortium = consortia.find(({ _id }) => {
+      return _id === consortiumId;
+    });
+
+    if (!selectedConsortium || !selectedConsortium.activeComputationId) {
+      return;
+    }
+
+    const activeComputation = computations.find(({ _id }) => {
+      return _id === selectedConsortium.activeComputationId;
+    });
+
+    if (
+      !activeComputation ||
+      !Array.isArray(activeComputation.inputs) ||
+      !Array.isArray(activeComputation.inputs[0])
+    ) {
+      return;
+    }
+
+    return activeComputation.inputs[0];
+  }
+
+  /**
    * @todo This is currently unused. Refactor this method to rely on the
    * computation definition.
    */
@@ -369,6 +406,7 @@ class FormProjectController extends Component {
         allowComputationRun={allowComputationRun}
         consortia={consortia}
         errors={errors}
+        inputs={this.maybeGetInputs()}
         isEditing={isEditing}
         metaFile={metaFile}
         metaFilePath={metaFilePath}
@@ -409,6 +447,7 @@ FormProjectController.ERRORS = new Map([
 ]);
 
 FormProjectController.propTypes = {
+  computations: PropTypes.arrayOf(PropTypes.object).isRequired,
   consortia: PropTypes.array.isRequired,
   dispatch: PropTypes.func.isRequired,
   params: PropTypes.object.isRequired,
@@ -419,15 +458,37 @@ FormProjectController.propTypes = {
 /**
  * Pluck project and put it on the component's props when editing.
  * {@link https://github.com/reactjs/react-redux/blob/master/docs/api.md}
+ *
+ * @param {Object} state
+ * @param {Object} state.auth
+ * @param {Object[]} state.computations
+ * @param {Object[]} state.consortia
+ * @param {Object[]} state.projects
+ * @param {Object} ownProps
+ * @param {Object} ownProps.params
+ * @returns {Object}
  */
-function select(state, { params: { projectId } }) {
-  const project = projectId ?
-    state.projects.find(p => p._id === projectId) :
-    undefined;
-  const username = state.auth.user.username;
-  const consortia = state.consortia.filter(c => c.users.indexOf(username) > -1);
+function select(
+  {
+    auth,
+    computations,
+    consortia,
+    projects,
+  },
+  {
+    params: { projectId },
+  }
+) {
+  const { user: { username } } = auth;
 
-  return { consortia, project, username };
+  return {
+    computations,
+    consortia: consortia.filter(({ users }) => users.indexOf(username) > -1),
+    project: projectId ?
+      projects.find(({ _id }) => _id === projectId) :
+      undefined,
+    username,
+  };
 }
 
 export default connect(select)(FormProjectController);
