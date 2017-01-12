@@ -89,6 +89,10 @@ module.exports = {
                 repository: { url },
                 version,
               },
+              meta: {
+                description: `Description for ${name}`,
+                name,
+              },
               name,
               url,
               version,
@@ -244,6 +248,10 @@ module.exports = {
           remote: { fn: (opts) => bluebird.delay(1).then(() => compId), type: 'function', },
           repository: { url: 'https://github.com/test/url' },
           version: compId,
+        },
+        meta: {
+          description: `Description for ${compId}`,
+          name: compId,
         },
         name: compId,
         url: 'https://github.com/test/url',

@@ -31,8 +31,8 @@ class DecentralizedComputation extends Base {
    * @property {string} version
    */
   getComputationDocument() {
-    const { name, repository: { url }, version } = this.serialize();
-    const doc = { name, url, version };
+    const { meta, name, repository: { url }, version } = this.serialize();
+    const doc = { meta, name, url, version };
 
     /**
      * Gather pipeline items' `inputs` arrays and save them in the computation
@@ -101,6 +101,11 @@ DecentralizedComputation.schema = Object.assign({
     joi.object().required(),
     joi.array().required()
   ).required(),
+  meta: joi.object().keys({
+    description: joi.string().required(),
+    name: joi.string().required(),
+    tags: joi.array().items(joi.string()),
+  }).required(),
 }, Base.schema);
 
 module.exports = DecentralizedComputation;
