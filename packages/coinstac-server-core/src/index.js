@@ -9,6 +9,32 @@ const dbRegistryService = require('./services/db-registry');
 const remotePRPService = require('./services/remote-prp');
 const seedConsortia = require('./services/seed-consortia');
 const getSyncedDatabase = require('coinstac-common').utils.getSyncedDatabase;
+const logger = require('./services/logger.js');
+
+/**
+ * Error handler for server errors, process `uncaughtException`s and
+ * process `unhandledRejection`s.
+ *
+ * @param {Error} error
+ * @param {Promise} [promise]
+ */
+function errorHandler(error, promise) {
+  if (typeof promise === 'undefined') {
+    logger.error('Server error', error);
+  } else {
+    logger.error('Server promise rejection', error, promise);
+  }
+
+  process.nextTick(() => process.exit(1));
+}
+
+process.on('uncaughtException', errorHandler);
+
+process.on('unhandledRejection', errorHandler);
+
+process.on('exit', () => {
+  logger.info('Shutting down server…');
+});
 
 module.exports = {
 
