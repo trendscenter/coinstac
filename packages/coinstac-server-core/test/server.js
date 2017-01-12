@@ -127,8 +127,13 @@ tape('wires up to pool events', t => {
     .catch(t.end);
 });
 
-tape('teardown', t => {
+tape('teardown', (t) => {
+  // t.plan(1);
+
   addStub.restore();
+
+  // server.stop().then(t.end, t.end);
+  
   t.end();
 });
 
