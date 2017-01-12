@@ -103,7 +103,7 @@ module.exports = {
    * @returns {Promise}
    */
   teardown() {
-    logger.info('destroying RmotePipelineRunnerPool...');
+    logger.info('destroying RemotePipelineRunnerPool...');
 
     return this.pool.destroy();
   },
