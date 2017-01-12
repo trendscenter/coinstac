@@ -4,10 +4,11 @@
  * @module server
  */
 const computationRegistryService = require('./services/computation-registry');
-const computationsSyncer = require('./services/computations-database-syncer');
+const computationsDatabaseSyncer = require('./services/computations-database-syncer');
 const dbRegistryService = require('./services/db-registry');
 const remotePRPService = require('./services/remote-prp');
 const seedConsortia = require('./services/seed-consortia');
+const getSyncedDatabase = require('coinstac-common').utils.getSyncedDatabase;
 
 module.exports = {
 
@@ -45,8 +46,18 @@ module.exports = {
     // do all seed ops after pool init s.t. dbs are-likely-synced across the network
     return dbRegistryService.init(config)
       .then(() => computationRegistryService.init())
-      .then(() => seedConsortia(config))
-      .then(() => computationsSyncer.sync())
+      .then(() => Promise.all([
+        seedConsortia(config),
+        getSyncedDatabase(dbRegistryService.get(), 'computations'),
+        computationRegistryService.get().all(),
+      ]))
+      .then(
+        ([, computationDatabase, decentralizedComputations]) =>
+        computationsDatabaseSyncer.sync(
+          computationDatabase,
+          decentralizedComputations
+        )
+      )
       .then(() => remotePRPService.init())
       .then(() => this.exposeInternals())
       .then(() => this.pool);
