@@ -24,11 +24,9 @@
   },
   "dependencies": {
     "bluebird": "^3.4.0",
-    "decentralized-single-shot-ridge-regression": "github:mrn-code/decentralized-single-shot-ridge-regression",
     "indent-string": "^3.0.0",
     "joi": "^10.0.0",
     "json-parse-helpfulerror": "^1.0.3",
-    "laplacian-noise-ridge-regression": "github:mrn-code/decentralized-laplacian-ridge-regression#v3.1.0",
     "lodash": "^4.3.0",
     "pouchy": "^11.0.1"
   },

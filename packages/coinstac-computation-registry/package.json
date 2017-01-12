@@ -12,6 +12,8 @@
   ],
   "dependencies": {
     "coinstac-common": "^2.2.2",
+    "decentralized-single-shot-ridge-regression": "github:mrn-code/decentralized-single-shot-ridge-regression",
+    "laplacian-noise-ridge-regression": "github:mrn-code/decentralized-laplacian-ridge-regression#v3.1.0",
     "lodash": "^4.17.4"
   },
   "description": "Computation registry service for COINSTAC.",

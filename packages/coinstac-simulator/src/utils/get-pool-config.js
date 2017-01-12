@@ -75,6 +75,10 @@ module.exports = function getPoolConfig(params) {
     computationRegistry._doAdd({
       cwd: path.dirname(require.resolve(computationPath)),
       definition: computation,
+      meta: {
+        description: `Description for ${name}`,
+        name,
+      },
       name,
       url,
       version,
