@@ -2,7 +2,6 @@
 
 'use strict';
 
-const logger = require('../src/services/logger.js');
 const pkg = require('../package.json');
 const program = require('commander');
 const readline = require('readline');
@@ -20,31 +19,6 @@ const VALID_LOG_LEVELS = ['error', 'warn', 'info', 'verbose', 'debug', 'silly'];
 const config = {};
 
 let rl; // eslint-disable-line no-unused-vars
-
-/**
- * Error handler for server errors, process `uncaughtException`s and
- * process `unhandledRejection`s.
- *
- * @param {Error} error
- * @param {Promise} [promise]
- */
-function errorHandler(error, promise) {
-  if (typeof promise === 'undefined') {
-    logger.error('Server error', error);
-  } else {
-    logger.error('Server promise rejection', error, promise);
-  }
-
-  process.nextTick(() => process.exit(1));
-}
-
-process.on('uncaughtException', errorHandler);
-
-process.on('unhandledRejection', errorHandler);
-
-process.on('exit', () => {
-  logger.info('Shutting down server…');
-});
 
 program
   .version(pkg.version)
@@ -93,7 +67,7 @@ if (
   typeof program.loglevel === 'string' &&
   VALID_LOG_LEVELS.indexOf(program.loglevel) > -1
 ) {
-  logger.transports.console.level = program.loglevel;
+  config.logLevel = program.loglevel;
 }
 
 if (program.memory) {
@@ -104,14 +78,8 @@ if (typeof program.seed === 'string') {
   config.seed = program.seed;
 }
 
-logger.info('Starting server…');
-
-server.start(config)
-  .then(() => {
-    logger.info('Server ready');
-
-    if (program.nohang) {
-      process.exit();
-    }
-  })
-  .catch(errorHandler);
+server.start(config).then(() => {
+  if (program.nohang) {
+    process.exit();
+  }
+});
