@@ -48,16 +48,11 @@ module.exports = {
    * @returns {Promise}
    */
   start(config) {
-    logger.info('Starting server…');
-
     if (!server) {
       server = new CoinstacServer(typeof config === 'object' ? config : {});
     }
 
-    return server.start().then((remotePipelineRunnerPool) => {
-      logger.info('Server ready');
-      return remotePipelineRunnerPool;
-    });
+    return server.start();
   },
 
   /**
