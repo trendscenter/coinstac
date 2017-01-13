@@ -163,24 +163,27 @@ class PipelineRunnerPool extends Base {
    * @returns {Promise}
    */
   destroy() {
+    /* istanbul ignore if */
+    if (!this.isInitialized && !this.isInitializing) {
+      return Promise.reject(new Error(
+        'must initialize pool before destroying it.'
+      ));
+    }
+
     this.isDestroying = true;
-    return Promise.resolve()
-    .then(() => { // wait for init completion before destroying
-      if (!this.isInitialized) {
-        /* istanbul ignore if */
-        if (!this.isInitializing) {
-          throw new Error('must initialize pool before destroying it.');
-        }
+
+    return (
+      !this.isInitialized ?
+        // wait for init completion before destroying
         // listen for the pool to come up, and only permit destroy sequence
         // once init complete
-        return new Promise((res, rej) => {
-          this.events.on('ready', () => res());
+        new Promise((resolve, reject) => {
+          this.events.on('ready', resolve);
           /* istanbul ignore next */
-          this.events.on('error', (err) => rej(err));
-        });
-      }
-      return Promise.resolve();
-    })
+          this.events.on('error', reject);
+        }) :
+        Promise.resolve()
+    )
     .then(() => { // purge all listeners
       this.events.removeAllListeners();
       Pouchy.PouchDB.removeAllListeners();
@@ -198,6 +201,8 @@ class PipelineRunnerPool extends Base {
     })
     .then(() => this.dbRegistry.destroy())
     .then(() => {
+      this.isInitialized = false;
+      this.isInitializing = false;
       this.isDestroying = false;
       this.isDestroyed = true;
     });
