@@ -69,27 +69,27 @@ test('ProjectService#setMetaContents errors', t => {
       doc = {
         inputs: dbGetSpy.callCount <= 1 ?
           [[]] :
-          [[
-            'wat',
-            'wat',
-            {
-              type: 'covariates',
-            },
-          ]],
+        [[
+          'wat',
+          'wat',
+          {
+            type: 'covariates',
+          },
+        ]],
       };
     } else {
       doc = {
         _id: consortiumId,
         activeComputationInputs: dbGetSpy.callCount <= 2 ?
           [['wat', 'wat', 'wat']] :
-          [[
-            'wat',
-            'wat',
-            [{
-              name: 'Is Control',
-              type: 'boolean',
-            }],
-          ]],
+        [[
+          'wat',
+          'wat',
+          [{
+            name: 'Is Control',
+            type: 'boolean',
+          }],
+        ]],
       };
     }
 
