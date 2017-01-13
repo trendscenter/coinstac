@@ -1,6 +1,5 @@
 'use strict';
 
-const dbRegistryService = require('../../src/services/db-registry');
 const sinon = require('sinon');
 const syncService = require('../../src/services/computations-database-syncer');
 const tape = require('tape');

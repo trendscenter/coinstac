@@ -64,7 +64,7 @@ tape('seeds stringified docs', t => {
     inMemory: true,
     seed: JSON.stringify(mockConsortiumDocs),
   })
-  .then(() => server.dbRegistry.get('consortia').all())
+  .then(() => server.getInstance().dbRegistry.get('consortia').all())
   // @TODO no fake server. if couchdb is up, it may auto-sync many consortia
   // down before this assertion occurs.  brittle test.
   .then((docs) => t.ok(docs.length >= mockConsortiumDocs.length, 'seeds docs'))
@@ -74,35 +74,41 @@ tape('seeds stringified docs', t => {
 });
 
 tape('rejects naughty seed docs', t => {
-  t.plan(1);
+  t.plan(2);
+
   server.start({
     inMemory: true,
     seed: 'rubbish string',
   })
-  .then(() => t.fail('accepted bad seed docs'))
-  .catch(() => {
-    t.pass('rejected on bad seed docs');
-    t.end();
-  });
+  .then(
+    () => t.fail('accepted bad seed docs'),
+    () => t.pass('rejected on bad seed docs')
+  )
+  .then(server.stop)
+  .then(() => t.pass('tears down'))
+  .catch(t.end);
 });
 
-// @TODO test hangs.
-// tape('handles pool errors', t => {
-//   t.plan(1);
-//
-//   const stub = sinon.stub(RemotePipelineRunnerPool.prototype, 'init');
-//   const message = 'whoopsie';
-//
-//   stub.yields(new Error(message));
-//
-//   server.start({ inMemory: true })
-//     .then(() => t.fail('didn’t handle pool init error'))
-//     .catch(error => {
-//       t.equal(error.message, message, 'rejects with init error');
-//       stub.restore();
-//       t.end();
-//     });
-// });
+tape('handles pool errors', t => {
+  const message = 'whoopsie';
+  const stub = sinon.stub(
+    RemotePipelineRunnerPool.prototype,
+    'init',
+    () => Promise.reject(new Error(message))
+  );
+
+  t.plan(2);
+
+  server.start({ inMemory: true })
+    .then(() => t.fail('didn’t handle pool init error'))
+    .catch(error => {
+      t.equal(error.message, message, 'rejects with init error');
+      stub.restore();
+      return server.stop();
+    })
+    .then(() => t.pass('tears down'))
+    .catch(t.end);
+});
 
 tape('wires up to pool events', t => {
   t.plan(2);
@@ -121,19 +127,13 @@ tape('wires up to pool events', t => {
         events.every(e => !!pool.events.listenerCount(e)),
         'listens on every event'
       );
-      return pool.destroy();
+      return server.stop();
     })
     .then(() => t.pass('tears down'))
     .catch(t.end);
 });
 
 tape('teardown', (t) => {
-  // t.plan(1);
-
   addStub.restore();
-
-  // server.stop().then(t.end, t.end);
-  
   t.end();
 });
-
