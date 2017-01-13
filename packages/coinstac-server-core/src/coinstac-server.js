@@ -274,6 +274,7 @@ class CoinstacServer {
       ]))
       .then(([remotePipelineRunnerPool]) => {
         this.remotePipelineRunnerPool = remotePipelineRunnerPool;
+        this.logger.info('Server ready');
         return remotePipelineRunnerPool;
       });
   }
