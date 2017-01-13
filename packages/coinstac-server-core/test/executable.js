@@ -26,7 +26,7 @@ tape('executable works', t => {
     child.on('close', errorExit);
     child.on('error', errorExit);
 
-    child.stdout.on('data', data => {
+    child.stdout.once('data', data => {
       t.ok(
         data.toString().toLowerCase().indexOf('starting server') !== -1,
         'has startup message'

@@ -1,64 +1,72 @@
 'use strict';
 
+const CoinstacServer = require('./coinstac-server.js');
+const logger = require('./services/logger.js');
+
 /**
- * @module server
+ * Error handler for server errors, process `uncaughtException`s and
+ * process `unhandledRejection`s.
+ *
+ * @param {Error} error
+ * @param {Promise} [promise]
  */
-const computationRegistryService = require('./services/computation-registry');
-const computationsSyncer = require('./services/computations-database-syncer');
-const dbRegistryService = require('./services/db-registry');
-const remotePRPService = require('./services/remote-prp');
-const seedConsortia = require('./services/seed-consortia');
+function errorHandler(error, promise) {
+  if (typeof promise === 'undefined') {
+    logger.error('Server error', error);
+  } else {
+    logger.error('Server promise rejection', error, promise);
+  }
+
+  process.nextTick(() => process.exit(1));
+}
+
+process.on('uncaughtException', errorHandler);
+
+process.on('unhandledRejection', errorHandler);
+
+process.on('exit', () => {
+  logger.info('Shutting down server…');
+});
+
+let server;
 
 module.exports = {
-
   /**
-   * exposes primary server components
+   * Get the server instance.
    * @private
-   * @returns {undefined}
+   *
+   * @returns {(CoinstacServer|undefined)}
    */
-  exposeInternals() {
-    this.computationRegistry = computationRegistryService.get();
-    this.dbRegistry = dbRegistryService.get();
-    this.pool = remotePRPService.pool;
+  getInstance() {
+    return server;
   },
 
   /**
+   * Start the server.
    *
-   * Set up registries, initializers and listeners.
-   *
-   * @param {object} [config={}]
-   * @param {(string|object[])} [config.seed] Whether or not to seed the database.
-   * This only seeds if no documents exist in the `consortia` database. Pass
-   * JSON as a string or a collection of document objects.
-   * @param {string} [config.dbUrl] Database URL.
-   * @param {boolean} [config.inMemory=false] Use an in-memory database using
-   * instead of writing to disk.
+   * @param {Object} [config]
    * @returns {Promise}
    */
   start(config) {
-    /* istanbul ignore if */
-    if (typeof config === 'undefined') {
-      config = {}; // eslint-disable-line no-param-reassign
+    if (!server) {
+      server = new CoinstacServer(typeof config === 'object' ? config : {});
     }
 
-    // init.
-    // do all seed ops after pool init s.t. dbs are-likely-synced across the network
-    return dbRegistryService.init(config)
-      .then(() => computationRegistryService.init())
-      .then(() => seedConsortia(config))
-      .then(() => computationsSyncer.sync())
-      .then(() => remotePRPService.init())
-      .then(() => this.exposeInternals())
-      .then(() => this.pool);
+    return server.start();
   },
 
   /**
-   * stop the server. teardown internal services.
+   * Stop the server.
+   *
    * @returns {Promise}
    */
   stop() {
-    computationRegistryService.teardown();
-    dbRegistryService.teardown();
-    return remotePRPService.teardown();
+    if (server) {
+      return server.stop().then(() => {
+        server = undefined;
+      });
+    }
+
+    return Promise.resolve();
   },
 };

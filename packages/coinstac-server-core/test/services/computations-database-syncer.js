@@ -1,6 +1,5 @@
 'use strict';
 
-const dbRegistryService = require('../../src/services/db-registry');
 const sinon = require('sinon');
 const syncService = require('../../src/services/computations-database-syncer');
 const tape = require('tape');
@@ -42,9 +41,9 @@ tape('seed diffing', (t) => {
   t.deepEqual(
     syncService.getComputationsDiff([], []),
     {
-      add: [],
-      delete: [],
-      update: [],
+      toAdd: [],
+      toDelete: [],
+      toUpdate: [],
     },
     'diff object generated'
   );
@@ -55,9 +54,9 @@ tape('seed diffing', (t) => {
       []
     ),
     {
-      add: mockGoldenSet,
-      delete: [],
-      update: [],
+      toAdd: mockGoldenSet,
+      toDelete: [],
+      toUpdate: [],
     },
     'add diff generated'
   );
@@ -72,9 +71,9 @@ tape('seed diffing', (t) => {
       }]
     ),
     {
-      add: mockGoldenSet.slice(0, 2),
-      delete: [],
-      update: mockGoldenSet.slice(-1),
+      toAdd: mockGoldenSet.slice(0, 2),
+      toDelete: [],
+      toUpdate: mockGoldenSet.slice(-1),
     },
     'update diff generated'
   );
@@ -85,36 +84,80 @@ tape('seed diffing', (t) => {
       mockDeleteSet
     ),
     {
-      add: mockGoldenSet,
-      delete: mockDeleteSet.map(c => Object.assign({}, c, { _deleted: true })),
-      update: [],
+      toAdd: mockGoldenSet,
+      toDelete: mockDeleteSet.map(c => Object.assign({}, c, { _deleted: true })),
+      toUpdate: [],
     }
   );
 
   t.end();
 });
 
-tape('patches DB', t => {
-  const bulkStub = sinon.stub().returns(Promise.resolve());
-  const dbGetStub = sinon.stub(dbRegistryService, 'get')
-    .returns({
-      get: () => ({ bulkDocs: bulkStub }),
-    });
-  const diff = {
-    add: 'so add',
-    delete: 'very delete',
-    update: 'wow update',
+tape('Synchronizes database', (t) => {
+  const rawComputations = [{
+    name: 'a-great-computation',
+    version: '1.0.0',
+  }, {
+    name: 'whoa-computerz',
+    version: '2.0.0',
+  }, {
+    name: 'zulu',
+    version: '0.5.0',
+  }];
+
+  const dbStub = {
+    all: sinon.stub().returns(Promise.resolve([
+      {
+        name: rawComputations[1].name,
+        version: '1.0.0',
+      },
+      rawComputations[2],
+    ])),
+    bulkDocs: sinon.stub().returns(Promise.resolve([])),
   };
+  const decentralizedComputations = rawComputations
+    .slice(0, 2)
+    .map(MockDecentralizedComputation.factory);
 
-  t.plan(4);
+  dbStub.bulkDocs.onCall(1).returns(Promise.resolve([{
+    ok: true,
+    id: 'test-id',
+    rev: 'test-rev',
+  }, {
+    error: true,
+    message: 'Document update conflict',
+    status: 409,
+  }]));
 
-  syncService.patchDBWithComputationDiff(diff)
-    .then(response => {
-      t.equal(bulkStub.firstCall.args[0], 'so add', 'bulk adds');
-      t.equal(bulkStub.secondCall.args[0], 'wow update', 'bulk updates');
-      t.equal(bulkStub.thirdCall.args[0], 'very delete', 'bulk deletes');
-      t.equal(response, diff, 'resolves with diff');
+  t.plan(2);
+
+  syncService.sync(dbStub, decentralizedComputations)
+    .then(() => {
+      t.deepEqual(
+        dbStub.bulkDocs.firstCall.args[0],
+        rawComputations.slice(0, 2).concat(
+          {
+            _deleted: true,
+            name: rawComputations[1].name,
+            version: '1.0.0',
+          },
+          {
+            _deleted: true,
+            name: rawComputations[2].name,
+            version: rawComputations[2].version,
+          }
+        ),
+        'bulk-updates computation database'
+      );
+
+      return syncService.sync(dbStub, decentralizedComputations);
     })
-    .catch(t.end)
-    .then(() => dbGetStub.restore());
+    .catch((error) => {
+      t.ok(
+        error.message.includes('Document update conflict'),
+        'passes bulkDocs error'
+      );
+    })
+    .catch(t.end);
 });
+

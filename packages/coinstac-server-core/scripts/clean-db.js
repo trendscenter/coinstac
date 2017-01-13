@@ -2,15 +2,14 @@
 'use strict';
 
 const async = require('async');
+const CoinstacServer = require('../src/coinstac-server.js');
 const rimraf = require('rimraf');
 const superagent = require('superagent');
-
-const getDBPath = require('../src/services/db-registry').getDBPath;
 
 async.parallel([
   cb1 => {
     console.log('Removing database dir…');
-    rimraf(getDBPath(), error => {
+    rimraf(CoinstacServer.DB_PATH, error => {
       if (error) {
         cb1(error);
       } else {

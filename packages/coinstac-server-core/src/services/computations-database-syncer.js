@@ -1,14 +1,6 @@
 'use strict';
 
 /**
- * @module service/computations-database-syncer
- */
-
-const computationRegistryService = require('./computation-registry');
-const dbRegistryService = require('./db-registry');
-const spread = require('lodash/spread');
-
-/**
  * Get a computation finder function.
  *
  * @param {Object} target
@@ -16,22 +8,17 @@ const spread = require('lodash/spread');
  * @param {string} target.version
  * @returns {Function}
  */
-function getComputationFinder(target) {
-  return function computationFinder(computation) {
-    return (
-      computation.name === target.name && computation.version === target.version
-    );
-  };
-}
+const getComputationFinder = target => computation => (
+  computation.name === target.name && computation.version === target.version
+);
 
 /**
  * Get computation documents diff.
- *
- * Identifies which decentralized computations from the "golden set" are
- * missing from the computation database's documents, which exist in the db
- * but aren't in the golden set, and those that need to be updated.
- *
  * @private
+ *
+ * @description Identifies which decentralized computations from the "golden
+ * set" are missing from the computation database's documents, which exist in
+ * the db but aren't in the golden set, and those that need to be updated.
  *
  * @see ComputationRegistry
  * @see DecentralizedComputation
@@ -71,29 +58,7 @@ function getComputationsDiff(decentralizedComputations, computationDocs) {
     return memo;
   }, []);
 
-  return {
-    add: toAdd,
-    delete: toDelete,
-    update: toUpdate,
-  };
-}
-
-/**
- * update database with computation diff. diff represents
- * the difference between the server's current database state
- * and the computations requested per the coinstac computation
- * whitelist
- * @private
- * @param {object} diff
- * @returns {Promise} Resolves with diff object
- */
-function patchDBWithComputationDiff(diff) {
-  const computationsDb = dbRegistryService.get().get('computations');
-
-  return computationsDb.bulkDocs(diff.add)
-  .then(() => computationsDb.bulkDocs(diff.update))
-  .then(() => computationsDb.bulkDocs(diff.delete))
-  .then(() => diff);
+  return { toAdd, toDelete, toUpdate };
 }
 
 /**
@@ -103,21 +68,39 @@ function patchDBWithComputationDiff(diff) {
  * the goldenset/whitelist. The remote ComputationRegistry uses the JSON file
  * as its whitelist.
  *
- * @returns {Promise} Resolves with diff object
+ * @param {Pouchy} computationsDatabase
+ * @param {DecentralizedComputation[]} decentralizedComputations
+ * @returns {Promise}
  */
-function sync() {
-  return Promise.all([
-    computationRegistryService.get().all(),
-    dbRegistryService.get().get('computations').all(),
-  ])
-    .then(spread(getComputationsDiff))
-    .then(patchDBWithComputationDiff);
+function sync(computationsDatabase, decentralizedComputations) {
+  return computationsDatabase.all()
+    .then((computationDocs) => {
+      const { toAdd, toDelete, toUpdate } = getComputationsDiff(
+        decentralizedComputations,
+        computationDocs
+      );
+
+      return computationsDatabase.bulkDocs(
+        toAdd.concat(toDelete, toUpdate)
+      );
+    })
+    .then((responses) => {
+      /**
+       * Ensure bulkDocs's response doesn't contain an error.
+       * {@link https://pouchdb.com/api.html#batch_create}
+       */
+      const error = responses.find(r => r.error);
+
+      if (error) {
+        throw new Error(
+          `Error synchronizing computation documents: ${error.message}`
+        );
+      }
+    });
 }
 
-/* eslint-disable object-shorthand */
 module.exports = {
-  getComputationsDiff: getComputationsDiff,
-  patchDBWithComputationDiff: patchDBWithComputationDiff,
-  sync: sync,
+  getComputationsDiff,
+  sync,
 };
-/* eslint-enable object-shorthand */
+
