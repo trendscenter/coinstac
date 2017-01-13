@@ -2,7 +2,6 @@
 
 'use strict';
 
-const logger = require('../src/services/logger.js');
 const pkg = require('../package.json');
 const program = require('commander');
 const readline = require('readline');
@@ -68,7 +67,7 @@ if (
   typeof program.loglevel === 'string' &&
   VALID_LOG_LEVELS.indexOf(program.loglevel) > -1
 ) {
-  logger.transports.console.level = program.loglevel;
+  config.logLevel = program.loglevel;
 }
 
 if (program.memory) {
@@ -79,14 +78,8 @@ if (typeof program.seed === 'string') {
   config.seed = program.seed;
 }
 
-logger.info('Starting server…');
-
-server.start(config)
-  .then(() => {
-    logger.info('Server ready');
-
-    if (program.nohang) {
-      process.exit();
-    }
-  })
-  .catch(errorHandler);
+server.start(config).then(() => {
+  if (program.nohang) {
+    process.exit();
+  }
+});
