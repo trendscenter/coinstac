@@ -1,0 +1,82 @@
+///
+/// Computation radio.
+///
+/// Styles for computation selection radio input, found in the consortium form.
+///
+
+/// @TODO: Why aren't these vars global?
+$body-bg: #fff !default;
+$border-radius: 5px !default;
+$brand-primary: #337ab7 !default;
+$gray-light: #777 !default;
+$gray-lighter: #eee !default;
+
+.computation-radio {
+  margin: 0;
+
+  + .computation-radio {
+    margin-top: 0;
+  }
+
+  &:first-of-type h3 {
+    border-top-width: 1px;
+    border-radius: $border-radius $border-radius 0 0;
+  }
+  &:last-of-type p {
+    border-bottom-width: 1px;
+    border-radius: 0 0 $border-radius $border-radius;
+  }
+
+  label {
+    display: block;
+    padding-left: 0;
+    position: relative;
+  }
+  label:focus,
+  label:hover {
+    h3,
+    p {
+      background: $gray-lighter;
+    }
+  }
+
+  input:checked ~ .glyphicon {
+    color: $body-bg;
+    opacity: 1;
+  }
+  input:checked ~ h3,
+  input:checked ~ p {
+    background: $brand-primary;
+    color: $body-bg;
+  }
+  .glyphicon {
+    font-size: 125%;
+    left: 1.1rem;
+    opacity: .45;
+    position: absolute;
+    top: 1.4rem;
+  }
+  h3,
+  p {
+    border-color: #ccc;
+    border-width: 0 1px;
+    border-style: solid;
+    margin: 0;
+    padding-right: 1.5rem;
+    padding-left: 3.75rem;
+    transition-property: background color;
+    transition-duration: 120ms;
+  }
+  h3 {
+    padding-top: 1.25rem;
+    padding-bottom: .25rem;
+
+    small {
+      color: inherit;
+      opacity: .8;
+    }
+  }
+  p {
+    padding-bottom: 1.1rem;
+  }
+}

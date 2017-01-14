@@ -8,6 +8,58 @@ import { get } from 'lodash';
 import ConsortiumComputationFields from './consortium-computation-fields';
 
 class ConsortiumForm extends Component {
+  static renderComputationInput({ computations, input, meta }) {
+    let radioClassNames = 'computation-radio radio';
+    let helpBlock;
+
+    if (meta.touched && meta.error) {
+      helpBlock = <span className="help-block">{meta.error}</span>;
+      radioClassNames += ' has-error';
+    }
+
+    const computationsFields = computations.map(
+      (
+        {
+          _id,
+          meta: { description, name, tags },
+          version,
+        },
+        index
+      ) => {
+        const isChecked = input.value === _id;
+
+        return (
+          <div className={radioClassNames} key={index}>
+            <label>
+              <input
+                checked={isChecked}
+                className="sr-only"
+                onChange={input.onChange}
+                name={input.name}
+                type="radio"
+                value={_id}
+              />
+              <span
+                aria-hidden="true"
+                className={`glyphicon glyphicon-${isChecked ? 'check' : 'unchecked'}`}
+              >
+              </span>
+              <h3 className="h5">{name} <small>Version {version}</small></h3>
+              <p>{description}</p>
+            </label>
+          </div>
+        );
+      }
+    );
+
+    return (
+      <div>
+        {helpBlock}
+        {computationsFields}
+      </div>
+    );
+  }
+
   static renderInput(field) {
     const className = classNames({
       'form-group': true,
@@ -178,14 +230,6 @@ class ConsortiumForm extends Component {
       initialValues,
     } = this.props;
 
-    const options = [<option disabled key={0} value="">Choose…</option>].concat(
-      computations.map(({ _id, name, version }, index) => {
-        return (
-          <option key={index + 1} value={_id}>{`${name}@${version}`}</option>
-        );
-      })
-    );
-
     return (
       <form className="consortium-form" onSubmit={handleSubmit(this.onSubmit)}>
         <Field
@@ -202,14 +246,14 @@ class ConsortiumForm extends Component {
           placeholder="Enter Description"
           type="textarea"
         />
-        <Field
-          component={ConsortiumForm.renderInput}
-          label="Computations"
-          name="activeComputationId"
-          type="select"
-        >
-          {options}
-        </Field>
+        <fieldset className="computation-select">
+          <legend>Active Computation</legend>
+          <Field
+            component={ConsortiumForm.renderComputationInput}
+            computations={computations}
+            name="activeComputationId"
+          />
+        </fieldset>
 
         {this.maybeRenderComputationFields()}
 
@@ -269,6 +313,13 @@ function mapStateToProps(state, ownProps) {
 
   if (ownProps.consortium) {
     props.initialValues = ownProps.consortium;
+  } else if (ownProps.computations) {
+    // TODO: Don't hard-code default computation
+    props.initialValues = {
+      activeComputationId: ownProps.computations
+        .find(c => c.name === 'decentralized-single-shot-ridge-regression')
+        ._id,
+    };
   }
 
   return props;
