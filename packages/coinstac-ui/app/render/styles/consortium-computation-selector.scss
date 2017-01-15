@@ -1,5 +1,5 @@
 ///
-/// Computation radio.
+/// Consortium computation seelctor.
 ///
 /// Styles for computation selection radio input, found in the consortium form.
 ///
@@ -11,17 +11,27 @@ $brand-primary: #337ab7 !default;
 $gray-light: #777 !default;
 $gray-lighter: #eee !default;
 
-.computation-radio {
+.consortium-computation-selector-group {
+  margin-bottom: 1rem;
+}
+
+.consortium-computation-selector-label {
+  background: $gray-lighter;
+  border: 1px solid #ccc;
+  border-radius: $border-radius $border-radius 0 0;
+  font-size: 100%;
+  font-weight: 400;
+  margin: 0;
+  padding: .8rem 1rem .8rem 1.1rem;
+}
+
+.consortium-computation-selector-radio {
   margin: 0;
 
-  + .computation-radio {
+  + .consortium-computation-selector-radio {
     margin-top: 0;
   }
 
-  &:first-of-type h3 {
-    border-top-width: 1px;
-    border-radius: $border-radius $border-radius 0 0;
-  }
   &:last-of-type p {
     border-bottom-width: 1px;
     border-radius: 0 0 $border-radius $border-radius;
