@@ -13,10 +13,12 @@ const Logger = winston.Logger;
 const Console = winston.transports.Console;
 const hawkifyPouchDB = require('hawkify-pouchdb');
 
+
 // app utils
 const common = require('coinstac-common');
 const LocalPipelineRunnerPool = common.models.pipeline.runner.pool.LocalPipelineRunnerPool;
-const computationRegistryFactory = common.services.computationRegistry;
+const computationRegistryFactory =
+  require('coinstac-computation-registry').factory;
 const registryFactory = require('coinstac-common').services.dbRegistry;
 
 // init

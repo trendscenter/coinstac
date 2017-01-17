@@ -1,5 +1,6 @@
 'use strict';
 
+const coinstacComputationRegistry = require('coinstac-computation-registry');
 const config = require('./config');
 const common = require('coinstac-common');
 const DBRegistry = require('coinstac-common').services.dbRegistry.DBRegistry;
@@ -52,7 +53,7 @@ module.exports = function getPoolConfig(params) {
   return Promise.all([
     computationDir,
     dbRegistry,
-    common.services.computationRegistry({
+    coinstacComputationRegistry.factory({
       dbRegistry,
       isLocal,
       registry: [],
@@ -74,6 +75,10 @@ module.exports = function getPoolConfig(params) {
     computationRegistry._doAdd({
       cwd: path.dirname(require.resolve(computationPath)),
       definition: computation,
+      meta: {
+        description: `Description for ${name}`,
+        name,
+      },
       name,
       url,
       version,

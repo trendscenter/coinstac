@@ -16,6 +16,7 @@
  */
 
 const coinstacCommon = require('coinstac-common');
+const coinstacComputationRegistry = require('coinstac-computation-registry');
 const omit = require('lodash/omit');
 const partialRight = require('lodash/partialRight');
 const pify = require('pify');
@@ -69,7 +70,7 @@ tape('setup', (t) => {
 
   allStub = sinon
     .stub(
-      coinstacCommon.services.computationRegistry.ComputationRegistry.prototype,
+      coinstacComputationRegistry.ComputationRegistry.prototype,
       'all'
     )
     // Mock `DecentralizedComputation`s

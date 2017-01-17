@@ -8,6 +8,10 @@ function getValidOpts() {
   return {
     cwd: './',
     local: {},
+    meta: {
+      description: 'Yellow fruits',
+      name: 'Bananas',
+    },
     name: 'bananas',
     remote: {},
     repository: {
@@ -84,6 +88,7 @@ tape('model::DecentralizedComputation - getComputationDocument', t => {
   t.deepEqual(
     doc,
     {
+      meta: opts.meta,
       name: opts.name,
       url: opts.repository.url,
       version: opts.version,

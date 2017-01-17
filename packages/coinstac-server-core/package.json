@@ -35,6 +35,7 @@
   "dependencies": {
     "async": "^2.0.0-rc.6",
     "coinstac-common": "^2.2.2",
+    "coinstac-computation-registry": "^2.2.2",
     "commander": "^2.9.0",
     "lodash": "^4.12.0",
     "memdown": "^1.1.2",

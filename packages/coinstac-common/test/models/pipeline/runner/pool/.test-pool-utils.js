@@ -20,9 +20,7 @@ const pdbs = require('spawn-pouchdb-server');
 const cp = require('child_process');
 const pdbsConfig = require('./.pouchdb-server-config');
 const common = require('../../../../../');
-const ComputationRegistry =
-  require('../../../../../src/services/classes/computation-registry');
-const computationRegistryFactory = common.services.computationRegistry;
+const coinstacComputationRegistry = require('coinstac-computation-registry');
 const dbRegistryFactory = common.services.dbRegistry;
 const Consortium = common.models.Consortium;
 const User = common.models.User;
@@ -31,6 +29,9 @@ const cloneDeep = require('lodash/cloneDeep');
 const assign = require('lodash/assign');
 const path = require('path');
 const sinon = require('sinon');
+
+const ComputationRegistry = coinstacComputationRegistry.ComputationRegistry;
+const computationRegistryFactory = coinstacComputationRegistry.factory;
 
 /**
  * @function fail
@@ -87,6 +88,10 @@ module.exports = {
                 },
                 repository: { url },
                 version,
+              },
+              meta: {
+                description: `Description for ${name}`,
+                name,
               },
               name,
               url,
@@ -243,6 +248,10 @@ module.exports = {
           remote: { fn: (opts) => bluebird.delay(1).then(() => compId), type: 'function', },
           repository: { url: 'https://github.com/test/url' },
           version: compId,
+        },
+        meta: {
+          description: `Description for ${compId}`,
+          name: compId,
         },
         name: compId,
         url: 'https://github.com/test/url',

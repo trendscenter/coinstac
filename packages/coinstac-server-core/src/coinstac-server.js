@@ -4,6 +4,7 @@ const computationsDatabaseSyncer =
   require('./services/computations-database-syncer.js');
 const cloneDeep = require('lodash/cloneDeep');
 const coinstacCommon = require('coinstac-common');
+const coinstacComputationRegistry = require('coinstac-computation-registry');
 const logger = require('./services/logger.js');
 const mkdirp = require('mkdirp');
 const os = require('os');
@@ -75,13 +76,10 @@ class CoinstacServer {
    * @returns {Promise<ComputationRegistry>}
    */
   getComputationRegistry() {
-    const computationRegistryFactory =
-      coinstacCommon.services.computationRegistry;
-
     this.logger.info('Initializing computation registry...');
 
     return mkdirpAsync(CoinstacServer.COMPUTATIONS_PATH)
-      .then(() => computationRegistryFactory({
+      .then(() => coinstacComputationRegistry.factory({
         path: CoinstacServer.COMPUTATIONS_PATH,
       }))
       .then((computationRegistry) => {

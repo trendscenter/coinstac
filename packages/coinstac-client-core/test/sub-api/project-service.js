@@ -227,7 +227,9 @@ test('ProjectService - setMetaContents', t => {
   const filename2 = path.join(__dirname, 'M101.txt');
   const filename3 = path.join(__dirname, 'M102.txt');
 
-  const dbGetStub = sinon.stub().returns(Promise.resolve({
+  const dbGetStub = sinon.stub();
+
+  dbGetStub.onCall(0).returns(Promise.resolve({
     _id: consortiumId,
     activeComputationInputs: [[
       0,
@@ -241,6 +243,16 @@ test('ProjectService - setMetaContents', t => {
       }],
     ]],
   }));
+  dbGetStub.onCall(1).returns(Promise.resolve({
+    inputs: [[{
+      type: 'something',
+    }, {
+      type: 'whatever',
+    }, {
+      type: 'covariates',
+    }]],
+  }));
+
   const goodProject1 = {
     _id: projectId,
     consortiumId,

@@ -1,7 +1,8 @@
 'use strict';
 
 const DecentralizedComputation =
-  require('../../models/decentralized-computation.js');
+  require('coinstac-common').models.DecentralizedComputation;
+const helpers = require('./helpers.js');
 const path = require('path');
 const values = require('lodash/values');
 
@@ -61,15 +62,17 @@ class ComputationRegistry {
    * @param {Object} options
    * @param {string} options.cwd
    * @param {object} options.definition Raw computation definition
+   * @param {Object} options.meta Computation's metadata
    * @param {string} options.name
    * @param {string} options.url
    * @param {string} options.version
    * @returns {Promise} Resolves to `DecentralizedComputation` if match is found
    */
-  _doAdd({ cwd, definition, name, url, version }) {
+  _doAdd({ cwd, definition, name, meta, url, version }) {
     const model = new DecentralizedComputation(Object.assign(
       {
         cwd,
+        meta,
         repository: { url },
       },
       definition
@@ -85,7 +88,8 @@ class ComputationRegistry {
    * @private
    * @param {string} name
    * @param {string} version
-   * @returns {Promise} Resolves to computation definition
+   * @returns {Promise<Object>} Resolves to an object containing computation
+   * definition and computation meta
    */
   _getFromDisk(name) {
     return new Promise((resolve, reject) => {
@@ -96,7 +100,20 @@ class ComputationRegistry {
       } catch (error) {
         reject(error);
       }
-    });
+    })
+      .then((definition) => Promise.all([
+        definition,
+        helpers.getPackage(path.dirname(require.resolve(name))),
+      ]))
+      .then(
+        ([
+          definition,
+          { coinstac: meta },
+        ]) => ({
+          definition,
+          meta,
+        })
+      );
   }
 
   /**
@@ -120,15 +137,16 @@ class ComputationRegistry {
     return this.get(name, version)
 
       // Check disk to see if computation is saved
-      .catch(() => this._getFromDisk(name, version).then(definition => {
-        return this._doAdd({
+      .catch(() => this._getFromDisk(name, version)
+        .then(({ definition, meta }) => this._doAdd({
           cwd: ComputationRegistry.getComputationCwd(name, version),
           definition,
+          meta,
           name,
           url: registryItem.url,
           version,
-        });
-      }));
+        })
+      ));
   }
 
   /**

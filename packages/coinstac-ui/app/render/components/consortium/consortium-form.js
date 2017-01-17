@@ -6,6 +6,7 @@ import { formValueSelector, Field, reduxForm } from 'redux-form';
 import { get } from 'lodash';
 
 import ConsortiumComputationFields from './consortium-computation-fields';
+import ConsortiumComputationSelector from './consortium-computation-selector';
 
 class ConsortiumForm extends Component {
   static renderInput(field) {
@@ -178,14 +179,6 @@ class ConsortiumForm extends Component {
       initialValues,
     } = this.props;
 
-    const options = [<option disabled key={0} value="">Choose…</option>].concat(
-      computations.map(({ _id, name, version }, index) => {
-        return (
-          <option key={index + 1} value={_id}>{`${name}@${version}`}</option>
-        );
-      })
-    );
-
     return (
       <form className="consortium-form" onSubmit={handleSubmit(this.onSubmit)}>
         <Field
@@ -202,14 +195,16 @@ class ConsortiumForm extends Component {
           placeholder="Enter Description"
           type="textarea"
         />
-        <Field
-          component={ConsortiumForm.renderInput}
-          label="Computations"
-          name="activeComputationId"
-          type="select"
-        >
-          {options}
-        </Field>
+        <fieldset className="computation-select">
+          <legend className="computation-select-label">
+            Active Computation
+          </legend>
+          <Field
+            component={ConsortiumComputationSelector}
+            computations={computations}
+            name="activeComputationId"
+          />
+        </fieldset>
 
         {this.maybeRenderComputationFields()}
 
@@ -269,6 +264,13 @@ function mapStateToProps(state, ownProps) {
 
   if (ownProps.consortium) {
     props.initialValues = ownProps.consortium;
+  } else if (ownProps.computations) {
+    // TODO: Don't hard-code default computation
+    props.initialValues = {
+      activeComputationId: ownProps.computations
+        .find(c => c.name === 'decentralized-single-shot-ridge-regression')
+        ._id,
+    };
   }
 
   return props;

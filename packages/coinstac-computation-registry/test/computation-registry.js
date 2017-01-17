@@ -1,14 +1,15 @@
 'use strict';
 
-const ComputationRegistry =
-  require('../../src/services/classes/computation-registry');
+const ComputationRegistry = require('../src/computation-registry.js');
 const DecentralizedComputation =
-  require('../../src/models/decentralized-computation');
+  require('coinstac-common').models.DecentralizedComputation;
+const helpers = require('../src/helpers.js');
 const mockery = require('mockery');
+const mod = require('module');
 const noop = require('lodash/noop');
 const path = require('path');
 const pick = require('lodash/pick');
-const registry = require('../mocks/decentralized-computations.json');
+const registry = require('./mocks/decentralized-computations.json');
 const sinon = require('sinon');
 const tape = require('tape');
 const values = require('lodash/values');
@@ -32,6 +33,10 @@ function getMockComputations() {
           ComputationRegistry.getId(registryItem.name, tag)
         ),
         local: {},
+        meta: {
+          description: 'test description',
+          name: registryItem.name,
+        },
         name: registryItem.name,
         remote: {},
         repository: {
@@ -79,6 +84,10 @@ tape('adds definition to store', t => {
   const name = registry[0].name;
   const version = registry[0].tags[1];
   const url = registry[0].url;
+  const meta = {
+    description: `Description for ${name}`,
+    name,
+  };
 
   const definition = {
     local: {
@@ -94,7 +103,7 @@ tape('adds definition to store', t => {
   };
   const instance = factory({ registry: [] });
 
-  instance._doAdd({ cwd, definition, name, url, version })
+  instance._doAdd({ cwd, definition, meta, name, url, version })
   .then(computation => {
     t.ok(
       computation instanceof DecentralizedComputation,
@@ -131,11 +140,31 @@ tape('gets definition from disk', t => {
     name,
     version,
   };
+  const meta = {
+    description: 'test description',
+    name,
+  };
+
+  const getPackageStub = sinon
+    .stub(helpers, 'getPackage')
+    .returns(Promise.resolve({
+      coinstac: meta,
+    }));
+
+  /**
+   * It's impossible to stub `require.resolve` because each module in Node.js
+   * receives a new `require`. Stub the internal module method instead.
+   *
+   * {@link https://github.com/nodejs/node/blob/38b18e330fc74029515bd1d9e39bc9c670119a39/lib/internal/module.js#L27}
+   */
+  const resolveStub = sinon.stub(mod, '_resolveFilename')
+    .returns('/path/to/fake.js');
 
   mockery.enable({
     warnOnUnregistered: false,
   });
   mockery.registerMock(name, computation);
+
 
   instance._getFromDisk('bogus-name', '1.0.0')
     .catch(() => {
@@ -148,11 +177,22 @@ tape('gets definition from disk', t => {
 
       return instance._getFromDisk(name, version);
     })
-    .then(definition => {
-      t.deepEqual(definition, computation, 'definition matches');
+    .then(response => {
+      t.deepEqual(
+        response,
+        {
+          definition: computation,
+          meta,
+        },
+        'definition matches'
+      );
     })
     .catch(t.end)
-    .then(mockery.disable);
+    .then(() => {
+      getPackageStub.restore();
+      resolveStub.restore();
+      mockery.disable();
+    });
 });
 
 tape('adds a computation', t => {
@@ -161,6 +201,10 @@ tape('adds a computation', t => {
   const computation = new DecentralizedComputation({
     cwd: __dirname,
     local: {},
+    meta: {
+      description: 'test description',
+      name: registry[0].name,
+    },
     name: registry[0].name,
     remote: {},
     repository: {
@@ -182,6 +226,10 @@ tape('adds a computation', t => {
     version: registry[1].tags[0],
   };
   const instance = factory();
+  const meta = {
+    description: 'test description',
+    name: registry[1].name,
+  };
 
   const doAddStub = sinon.stub(instance, '_doAdd').returns(Promise.resolve());
   const getCwdStub = sinon
@@ -189,7 +237,7 @@ tape('adds a computation', t => {
     .returns(cwd);
   const getFromDiskStub = sinon
     .stub(instance, '_getFromDisk')
-    .returns(Promise.resolve(definition));
+    .returns(Promise.resolve({ definition, meta }));
   const getSpy = sinon.spy(instance, 'get');
 
   // Setup
@@ -235,6 +283,7 @@ tape('adds a computation', t => {
         {
           cwd,
           definition,
+          meta,
           name: registry[1].name,
           url: registry[1].url,
           version: registry[1].tags[0],
