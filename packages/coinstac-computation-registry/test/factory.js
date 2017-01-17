@@ -1,16 +1,15 @@
 'use strict';
 
-require('../helpers/boot');
-
-const ComputationRegistry =
-  require('../../src/services/classes/computation-registry');
-const computationRegistryFactory =
-  require('../../src/services/computation-registry-factory');
-const DBRegistry = require('../../src/services/classes/db-registry');
+const ComputationRegistry = require('../src/computation-registry.js');
+const DBRegistry = require('coinstac-common').services.dbRegistry.DBRegistry;
+const factory = require('../src/factory.js');
 const mockDecentralizedComputations =
-  require('../mocks/decentralized-computations.json');
+  require('./mocks/decentralized-computations.json');
+const pouchDBAdapterMemory = require('pouchdb-adapter-memory');
 const sinon = require('sinon');
 const tape = require('tape');
+
+DBRegistry.Pouchy.plugin(pouchDBAdapterMemory);
 
 let addStub;
 
@@ -40,13 +39,13 @@ tape('setup', t => {
 tape('configuration errors', t => {
   t.plan(2);
 
-  computationRegistryFactory({
+  factory({
     isLocal: true,
   })
     .then(() => t.fail('resolves without DB registry'))
     .catch(() => t.pass('rejects without DB registry'));
 
-  computationRegistryFactory({
+  factory({
     dbRegistry: {},
     isLocal: true,
   })
@@ -57,7 +56,7 @@ tape('configuration errors', t => {
 tape('returns ComputationRegistry instance', t => {
   t.plan(4);
 
-  computationRegistryFactory()
+  factory()
     .then(computationRegistry => {
       t.ok(
         computationRegistry &&
@@ -65,14 +64,14 @@ tape('returns ComputationRegistry instance', t => {
         'returns instance without args'
       );
 
-      return computationRegistryFactory({
+      return factory({
         registry: [],
       });
     })
     .then(computationRegistry => {
       t.ok(computationRegistry, 'returns a non-local registry instance');
 
-      return computationRegistryFactory(getValidLocalOptions());
+      return factory(getValidLocalOptions());
     })
     .then(computationRegistry => {
       t.ok(
@@ -92,7 +91,7 @@ tape('returns ComputationRegistry instance', t => {
 tape('passes custom registry', t => {
   t.plan(1);
 
-  computationRegistryFactory({
+  factory({
     registry: mockDecentralizedComputations,
   })
     .then(computationRegistry => {
@@ -135,7 +134,7 @@ tape('local computation registry fetches computations from source', t => {
     },
   });
 
-  computationRegistryFactory(options)
+  factory(options)
     .then(computationRegistry => {
       t.ok(dbGetStub.calledWith('computations'), 'gets computations DB');
       return computationRegistry.add(name, version)
@@ -191,7 +190,7 @@ tape('local computation registry mutates whitelist', t => {
 
   options.registry = registry;
 
-  computationRegistryFactory(options)
+  factory(options)
     .then(computationRegistry => Promise.all([
       Promise.resolve(computationRegistry),
       computationRegistry.add(name, version),
@@ -221,7 +220,7 @@ tape('local computation registry handles not-found computation', t => {
     find: () => Promise.resolve({ docs: [] }),
   });
 
-  computationRegistryFactory(options)
+  factory(options)
     .then(computationRegistry => computationRegistry.add(name, version))
     .then(() => t.fail('expected not-found error'))
     .catch(() => t.pass('rejects with not-found error'))
@@ -248,7 +247,7 @@ tape('remote computation registry retrieves all computations', t => {
 
   t.plan(1);
 
-  computationRegistryFactory({
+  factory({
     registry: mockDecentralizedComputations,
   })
     .then(() => {

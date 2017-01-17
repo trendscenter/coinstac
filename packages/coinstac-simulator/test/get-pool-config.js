@@ -1,5 +1,6 @@
 'use strict';
 
+const coinstacComputationRegistry = require('coinstac-computation-registry');
 const common = require('coinstac-common');
 const getPoolConfig = require('../src/utils/get-pool-config');
 const path = require('path');
@@ -19,7 +20,7 @@ tape('gets valid pool configuration', t => {
         (
           'computationRegistry' in config &&
           config.computationRegistry instanceof
-            common.services.computationRegistry.ComputationRegistry
+            coinstacComputationRegistry.ComputationRegistry
         ),
         'returns computation registry'
       );

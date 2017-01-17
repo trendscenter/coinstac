@@ -1,5 +1,6 @@
 'use strict';
 
+const atob = require('atob');
 const Auth = require('../../src/sub-api/auth.js');
 const axios = require('axios');
 const halfpenny = require('halfpenny');
@@ -58,8 +59,8 @@ tape('Auth#createUser', (t) => {
       (
         user.email === arg.email &&
         user.name === arg.label &&
-        user.password === arg.password &&
-        user.username === arg.username
+        user.password === atob(arg.password) &&
+        user.username === atob(arg.username)
       ),
       'sets user props'
     );

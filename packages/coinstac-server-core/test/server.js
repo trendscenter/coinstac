@@ -1,6 +1,7 @@
 'use strict';
 
 const coinstacCommon = require('coinstac-common');
+const coinstacComputationRegistry = require('coinstac-computation-registry');
 const mockConsortiumDocs = require('./mocks/consortium-docs.json');
 const server = require('../src/');
 const sinon = require('sinon');
@@ -9,8 +10,7 @@ const url = require('url');
 
 const RemotePipelineRunnerPool =
   coinstacCommon.models.pipeline.runner.pool.RemotePipelineRunnerPool;
-const ComputationRegistry =
-  coinstacCommon.services.computationRegistry.ComputationRegistry;
+const ComputationRegistry = coinstacComputationRegistry.ComputationRegistry;
 let addStub;
 
 // Stub `ComputationRegistry#add` so no network requests occur
