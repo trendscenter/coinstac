@@ -1,11 +1,11 @@
 [
   {
     "name": "laplacian-noise-ridge-regression",
-    "tags": ["3.1.0"],
+    "tags": ["3.1.1"],
     "url": "https://github.com/MRN-Code/decentralized-laplacian-ridge-regression"
   }, {
     "name": "decentralized-single-shot-ridge-regression",
-    "tags": ["1.1.0"],
+    "tags": ["1.1.1"],
     "url": "https://github.com/MRN-Code/decentralized-single-shot-ridge-regression"
   }
 ]
