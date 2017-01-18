@@ -4,7 +4,7 @@ import { Alert } from 'react-bootstrap';
 import ConsortiumResult from './consortium-result';
 
 export default function ConsortiumResults(props) {
-  const { computations, remoteResults } = props;
+  const { activeComputationInputs, computations, remoteResults } = props;
   const content = !remoteResults || !remoteResults.length ?
   (
     <Alert bsStyle="info">
@@ -21,7 +21,11 @@ export default function ConsortiumResults(props) {
 
         return (
           <li key={index}>
-            <ConsortiumResult computation={computation} {...result} />
+            <ConsortiumResult
+              activeComputationInputs={activeComputationInputs}
+              computation={computation}
+              {...result}
+            />
           </li>
         );
       })}
@@ -39,6 +43,7 @@ export default function ConsortiumResults(props) {
 ConsortiumResults.displayName = 'ConsortiumResults';
 
 ConsortiumResults.propTypes = {
+  activeComputationInputs: PropTypes.array,
   computations: PropTypes.array,
   remoteResults: PropTypes.array,
 };
