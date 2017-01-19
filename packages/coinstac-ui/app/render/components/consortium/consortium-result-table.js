@@ -1,7 +1,16 @@
 import React, { PropTypes } from 'react';
+import scino from 'scino';
 
-function toTableData(content, index) {
-  return <td key={index}><samp>{content}</samp></td>;
+function getTableDataElement(value, index) {
+  return <td key={index}><samp>{value}</samp></td>;
+}
+
+function toTableData(value, index) {
+  return getTableDataElement(Math.round(value * 1e4) / 1e4, index);
+}
+
+function toPValueTableData(value, index) {
+  return getTableDataElement(scino(value, 5), index);
 }
 
 /**
@@ -47,7 +56,7 @@ export default function ConsortiumResultTable({ covariates, results }) {
         {averageBetaVectors}
         <tr>
           <th scope="row">P Values</th>
-          {results.pValues.map(toTableData)}
+          {results.pValues.map(toPValueTableData)}
         </tr>
         <tr>
           <th scope="row">T Values</th>
