@@ -1,5 +1,6 @@
 import React, { PropTypes } from 'react';
 import { Label, Panel } from 'react-bootstrap';
+import scino from 'scino';
 
 import ConsortiumResultTable from './consortium-result-table';
 
@@ -69,7 +70,7 @@ export default function ConsortiumResult({
           <h4>Global</h4>
           <dl className="consortium-result-list">
             <dt>R²</dt>
-            <dd><samp>{data.rSquaredGlobal}</samp></dd>
+            <dd><samp>{scino(data.rSquaredGlobal, 5)}</samp></dd>
           </dl>
           <ConsortiumResultTable
             covariates={covariates}
@@ -85,7 +86,7 @@ export default function ConsortiumResult({
             <h4>Site {index + 1}</h4>
             <dl className="consortium-result-list">
               <dt>R²</dt>
-              <dd><samp>{data.rSquaredLocal[index]}</samp></dd>
+              <dd><samp>{scino(data.rSquaredLocal[index], 5)}</samp></dd>
             </dl>
             <ConsortiumResultTable
               covariates={covariates}
