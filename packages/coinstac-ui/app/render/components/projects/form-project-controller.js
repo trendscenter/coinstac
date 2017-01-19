@@ -269,6 +269,8 @@ class FormProjectController extends Component {
   handleRemoveMetaFile() {
     this.setState({
       project: {
+        metaCovariateMapping: {},
+        metaFile: null,
         metaFilePath: null,
       },
     });
