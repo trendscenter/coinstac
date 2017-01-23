@@ -97,64 +97,81 @@ class Pipeline extends Base {
   }
 
   /**
-   * @description run the pipeline from its current state, feeding in inputs
+   * Run.
+   * @description Run the pipeline from its current state, feeding in inputs
    * provided by the pipeline caller
-   * @param {object} runInputs object that is fed to the computation, provided by
-   *                      the pipeline runner
-   * @param {ComputationResult} compResult the ComputationResult for the environment.
-   *                                @note this should only be touched by plugins.
+   *
+   * @param {Object} runInputs Input passed to the computation, provided by the
+   * pipeline runner.
+   * @param {ComputationResult} compResult Environment-specific
+   * ComputationResult. This should only be touched by plugins.
    * @returns {Promise}
    */
   run(runInputs, compResult) {
     if (!runInputs || !compResult) {
-      return Promise.reject(
-        new ReferenceError('options & ComputationResult required to pass to computations')
-      );
+      return Promise.reject(new Error(
+        'Run inputs and ComputationResult required to pass to computations'
+      ));
+    } else if (this.inProgress) {
+      return Promise.reject(new Error(
+        /* eslint-disable max-len */
+        'Pipelines do not permit concurrent running. Please spawn a new pipeline instance if concurrency is required.'
+        /* eslint-enable max-len */
+      ));
     }
-    if (this.inProgress) {
-      return Promise.reject(
-        new Error([
-          'pipelines do not permit concurrent running. please spawn a new',
-          'pipeline instance if concurrency is required',
-        ].join(' '))
-      );
-    }
+
     this.inProgress = true;
     this.computation = this.computations[this.step];
-    let runCancelled = false;
     let forceSave = false;
-    // offer plugin hooks as functions.  restrict plugins from meddling with
-    // run state. simply expose some run modifiers.
+    let shouldContinueRun = true;
+
+    /**
+     * Offer plugin hooks as functions. Restrict plugins from meddling with
+     * run state: simply expose some run modifiers.
+     */
     const pluginHooks = {
-      isRunCancelled() { return runCancelled; },
-      cancelRun() { runCancelled = true; },
-      forceSave() { forceSave = true; },
+      isRunCancelled() {
+        return !shouldContinueRun;
+      },
+      cancelRun() {
+        shouldContinueRun = false;
+      },
+      forceSave() {
+        forceSave = true;
+      },
     };
+
     return this.tryNext(runInputs, { preRun: true })
-    .then(() => this.events.emit('computation:start', runInputs))
-    .then(() => this._preRunPlugins({ runInputs, compResult, pluginHooks }))
-    .then(() => {
-      if (runCancelled) { return Promise.resolve(null); }
-      return this.computation.run(runInputs);
-    })
-    .then((runOutput) => {
-      if (runCancelled) { return Promise.resolve(runOutput); }
-      // postRun plugins are only run if a computation _actually_ ran
-      return this._postRunPlugins({ runOutput, compResult, pluginHooks })
-      .then(() => runOutput);
-    })
-    .then((runOutput) => this._postRun({
-      runInputs,
-      runOutput,
-      compResult,
-      runCancelled,
-      forceSave,
-    }))
-    .catch((err) => {
-      this.inProgress = false;
-      if (err) { err.isRunError = true; }
-      throw err;
-    });
+      .then(() => {
+        this.events.emit('computation:start', runInputs);
+        return this._preRunPlugins({ runInputs, compResult, pluginHooks });
+      })
+      .then(() => (
+        shouldContinueRun ?
+          this.computation.run(runInputs) :
+          undefined
+      ))
+      .then((runOutput) => (
+        // postRun plugins are only run if a computation _actually_ ran
+        shouldContinueRun ?
+          Promise.all([
+            runOutput,
+            this._postRunPlugins({ runOutput, compResult, pluginHooks }),
+          ]) :
+          [runOutput]
+      ))
+      .then(([runOutput]) => this._postRun({
+        runInputs,
+        runOutput,
+        compResult,
+        runCancelled: !shouldContinueRun,
+        forceSave,
+      }))
+      .catch((error) => {
+        this.inProgress = false;
+        error.isRunError = true;
+        throw error;
+      });
   }
 
   /**
