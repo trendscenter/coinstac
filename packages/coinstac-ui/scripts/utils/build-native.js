@@ -24,6 +24,8 @@ module.exports = function buildNative() {
 
         const build = cp.spawn(cmd, [
           'rebuild',
+          'leveldown',
+          '--depth=0',
           '--runtime=electron',
           `--target=${electronVersion}`,
           '--disturl=https://atom.io/download/atom-shell',
