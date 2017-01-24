@@ -8,67 +8,53 @@
  * Exit if any of the tests fail.
  */
 const async = require('async');
-const exec = require('shelljs').exec;
+const shelljs = require('shelljs');
+const path = require('path');
 
 const children = [];
+const packages = shelljs.ls(path.resolve(__dirname, '../packages/')).stdout
+  .split('\n')
+  .reduce((memo, packageDir) => (
+    packageDir.trim() ?
+      memo.concat(path.resolve(__dirname, `../packages/${packageDir}`)) :
+      memo
+  ), []);
 
 function getExec(dirPath, callback) {
-  const child = exec('npm test', {
-    async: true,
+  const child = shelljs.exec('npm test', {
     cwd: dirPath,
+    env: Object.assign({}, process.env, {
+      BLUEBIRD_WARNINGS: 0,
+    }),
     silent: false,
-  }, (exitCode, stdout, stderr) => {
+  }, (exitCode) => {
     if (exitCode) {
-      callback(stderr.toString());
+      callback(`Tests in ${dirPath} exitied with code ${exitCode}`);
     } else {
-      callback(null, stdout.toString());
+      callback(null, dirPath);
     }
   });
 
   children.push(child);
-
-  return child;
 }
 
 function killChildren() {
-  children.forEach(c => c.kill());
+  children.forEach(c => c && c.kill());
 }
 
 process.on('exit', killChildren);
 
-async.series([
-  cb1 => {
-    const children = [];
-    const dirPaths = [
-      './packages/coinstac-client-core',
-      './packages/coinstac-common',
-      './packages/coinstac-computation-registry',
-      './packages/coinstac-server-core',
-      './packages/coinstac-storage-proxy',
-      './packages/coinstac-ui',
-    ];
+async.mapSeries(
+  packages,
+  (dirPath, cb) => getExec(dirPath, cb),
+  (error) => {
+    killChildren(); // Ensure child processes are killed
 
-    async.parallel(dirPaths.map(dirPath => {
-      return cb1a => children.push(getExec(dirPath, cb1a));
-    }), (error, response) => {
-      if (error) {
-        cb1(error);
-      } else {
-        cb1(null, response);
-      }
-    });
-  },
-  cb2 => {
-    getExec('./packages/coinstac-decentralized-algorithm-integration', cb2);
-  },
-], (error, results) => {
-  killChildren(); // Ensure child processes are killed
-
-  /* eslint-disable no-console */
-  if (error) {
-    console.error(error);
-  } else {
-    console.log(results);
+    /* eslint-disable no-console */
+    if (error) {
+      console.error(error);
+    }
+    /* eslint-enable no-console */
   }
-  /* eslint-enable no-console */
-});
+);
+
