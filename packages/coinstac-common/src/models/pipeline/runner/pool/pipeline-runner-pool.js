@@ -583,7 +583,7 @@ class PipelineRunnerPool extends Base {
    * Ensures that runner is instantiated to to support the run
    * @private
    * @param {ComputationResult} result
-   * @returns {Promise}
+   * @returns {Promise<PipelineRunner>}
    */
   _prepareRunner(result) {
     const existingRunner = this.runners[result.runId];
