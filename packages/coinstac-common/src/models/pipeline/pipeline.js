@@ -141,7 +141,7 @@ class Pipeline extends Base {
       },
     };
 
-    return this.tryNext(runInputs, { preRun: true })
+    return this.maybeIncrementStep(runInputs, true)
       .then(() => {
         this.events.emit('computation:start', runInputs);
         return this._preRunPlugins({ runInputs, compResult, pluginHooks });
@@ -198,17 +198,17 @@ class Pipeline extends Base {
     this.events.emit('computation:end', runInputs);
     const postRunInputs = assign({}, runInputs, { previousData: runOutput });
     return (runCancelled ?
-      Promise.resolve({ didStep: false }) :
-      this.tryNext(postRunInputs, { postRun: true })
+      Promise.resolve(false) :
+      this.maybeIncrementStep(postRunInputs, false)
     )
-    .then((stepRslt) => {
+    .then((didIncrementStep) => {
       // set `inProgress` to represent whether we are about to be inProgress
       // again (e.g. if pipeline will run again). in this regard cb()s get
       // accurate depiction of state
-      this.inProgress = !!stepRslt.didStep;
+      this.inProgress = !!didIncrementStep;
       this.events.emit('save-request', runOutput, null, forceSave);
       this.inProgress = false; // reset
-      if (stepRslt.didStep) {
+      if (didIncrementStep) {
         this.events.emit('inProgress', runOutput);
         return this.run(postRunInputs, compResult);
       }
@@ -229,40 +229,48 @@ class Pipeline extends Base {
   }
 
   /**
-   * Attempt to bump the pipeline step.  runs the `next` computation
-   * if present, and conditionally bumps the pipeline state. to be clear, this
-   * runs a computation's `next` computation, _not the next step in the pipeline_
+   * Maybe increment the pipeline's step.
    *
-   * if tryNext is called pre-`run` (`cycle.preRun`) and no `next` is defined,
-   * the pipeline will **not progress** its current computation index.
+   * This method increments the pipeline's `step` property based on a few
+   * conditions:
    *
-   * if tryNext is called post-`run` (`cycle.postRun`) and no `next` is defined,
-   * the pipeline **will progress** its current computation index.
+   * * If `isPreRun` is `true` and the computation has no `.next` property **do
+   *   not increment**.
+   * * If `isPreRun` is `false` and the computation has no `.next` property **do
+   *   increment**.
+   * * If a `.next` property exists pass `opts`. The `.next` computation should
+   *   return a boolean value indicating whether the pipeline should increment
+   *   its step.
+   * * Don't increment if there's no more computations to run.
    *
    * @private
-   * @param {object} opts inputs to next computation
-   * @param {object} cycle
-   * @param {boolean=} cycle.preRun tryNext is being called before `run` is called
-   * @param {boolean=} cycle.postRun tryNext is being called after `run` is called
-   * @returns {Promise}
+   * @param {Object} opts Inputs to next computation
+   * @param {boolean} [isPreRun=false] Whether method is called before
+   * `Pipeline#run` is called
+   * @returns {Promise<boolean>} Value representing whether the pipeline
+   * instance's `step` property was incremented and its `computation` property
+   * was updated: `true` indicates incrementation occurred, `false` indicates no
+   * change.
    */
-  tryNext(opts, cycle) {
-    const resp = { didStep: false };
+  maybeIncrementStep(opts, isPreRun) {
     const handleNextComplete = (doNext) => {
-      const endOfPipe = !this.computations[this.step + 1];
-      if (doNext && !endOfPipe) {
+      if (doNext && this.computations[this.step + 1]) {
         ++this.step;
         this.computation = this.computations[this.step];
-        resp.didStep = true;
+
+        return true;
       }
-      return resp;
+
+      return false;
     };
+
     if (this.computation.next) {
-      return this.computation.next.run(opts)
-      .then((doNext) => handleNextComplete(doNext));
+      return this.computation.next.run(opts).then(handleNextComplete);
+    } else if (isPreRun) {
+      // do not auto-progress w/out .next fn on-pre-run
+      return Promise.resolve(false);
     }
-    // do not auto-progress w/out .next fn on-pre-run
-    if (cycle.preRun) { return Promise.resolve(resp); }
+
     return Promise.resolve(handleNextComplete(true));
   }
 }
