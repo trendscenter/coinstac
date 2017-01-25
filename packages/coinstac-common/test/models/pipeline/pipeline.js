@@ -111,7 +111,7 @@ test('model::Pipeline run - basic (double, immediate stepping w/ next)', t => {
   .catch((err) => t.end(err && err.message));
 });
 
-test('model::Pipeline tryNext - basic (double, `next` errors pre-run)', t => {
+test('model::Pipeline maybeIncrementStep - basic (double, `next` errors pre-run)', t => {
   const p = pipelines.invalidOptsNextPreRunError();
   t.plan(2);
   p.run({}, {})
@@ -123,7 +123,7 @@ test('model::Pipeline tryNext - basic (double, `next` errors pre-run)', t => {
   });
 });
 
-test('model::Pipeline tryNext - basic (double, `next` errors post-run)', t => {
+test('model::Pipeline maybeIncrementStep - basic (double, `next` errors post-run)', t => {
   const p = pipelines.invalidOptsNextPostRunError();
   t.plan(2);
   p.run({}, {})
