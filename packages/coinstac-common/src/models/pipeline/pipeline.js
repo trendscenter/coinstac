@@ -1,11 +1,13 @@
 'use strict';
 
-const Base = require('../base.js');
-const Computation = require('../computation/computation.js');
 const assign = require('lodash/assign');
+const debug = require('debug')('coinstac:pipeline');
 const noop = require('lodash/noop');
 const joi = require('joi');
 const EventEmitter = require('events');
+
+const Base = require('../base.js');
+const Computation = require('../computation/computation.js');
 
 /**
  * Emits a request for the PipelineRunner to save a PipelineResult
@@ -125,6 +127,8 @@ class Pipeline extends Base {
     let forceSave = false;
     let shouldContinueRun = true;
 
+    debug(`starting run, step ${this.step}`);
+
     /**
      * Offer plugin hooks as functions. Restrict plugins from meddling with
      * run state: simply expose some run modifiers.
@@ -134,9 +138,11 @@ class Pipeline extends Base {
         return !shouldContinueRun;
       },
       cancelRun() {
+        debug('run canceled');
         shouldContinueRun = false;
       },
       forceSave() {
+        debug('force save');
         forceSave = true;
       },
     };
@@ -144,22 +150,26 @@ class Pipeline extends Base {
     return this.maybeIncrementStep(runInputs, true)
       .then(() => {
         this.events.emit('computation:start', runInputs);
+        debug(`pre-run plugins, step ${this.step}`);
         return this._preRunPlugins({ runInputs, compResult, pluginHooks });
       })
-      .then(() => (
-        shouldContinueRun ?
-          this.computation.run(runInputs) :
-          undefined
-      ))
-      .then((runOutput) => (
-        // postRun plugins are only run if a computation _actually_ ran
-        shouldContinueRun ?
-          Promise.all([
+      .then(() => {
+        if (shouldContinueRun) {
+          debug(`running computation, step ${this.step}`);
+          return this.computation.run(runInputs);
+        }
+      })
+      .then((runOutput) => {
+        if (shouldContinueRun) {
+          // postRun plugins are only run if a computation _actually_ ran
+          debug(`post-run plugins, step ${this.step}`);
+          return Promise.all([
             runOutput,
             this._postRunPlugins({ runOutput, compResult, pluginHooks }),
-          ]) :
-          [runOutput]
-      ))
+          ]);
+        }
+        return [runOutput];
+      })
       .then(([runOutput]) => this._postRun({
         runInputs,
         runOutput,
@@ -168,6 +178,7 @@ class Pipeline extends Base {
         forceSave,
       }))
       .catch((error) => {
+        debug(`run error: ${error.message}`);
         this.inProgress = false;
         error.isRunError = true;
         throw error;
