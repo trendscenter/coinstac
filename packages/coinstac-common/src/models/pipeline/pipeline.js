@@ -1,11 +1,13 @@
 'use strict';
 
-const Base = require('../base.js');
-const Computation = require('../computation/computation.js');
 const assign = require('lodash/assign');
+const debug = require('debug')('coinstac:pipeline');
 const noop = require('lodash/noop');
 const joi = require('joi');
 const EventEmitter = require('events');
+
+const Base = require('../base.js');
+const Computation = require('../computation/computation.js');
 
 /**
  * Emits a request for the PipelineRunner to save a PipelineResult
@@ -97,64 +99,90 @@ class Pipeline extends Base {
   }
 
   /**
-   * @description run the pipeline from its current state, feeding in inputs
+   * Run.
+   * @description Run the pipeline from its current state, feeding in inputs
    * provided by the pipeline caller
-   * @param {object} runInputs object that is fed to the computation, provided by
-   *                      the pipeline runner
-   * @param {ComputationResult} compResult the ComputationResult for the environment.
-   *                                @note this should only be touched by plugins.
+   *
+   * @param {Object} runInputs Input passed to the computation, provided by the
+   * pipeline runner.
+   * @param {ComputationResult} compResult Environment-specific
+   * ComputationResult. This should only be touched by plugins.
    * @returns {Promise}
    */
   run(runInputs, compResult) {
     if (!runInputs || !compResult) {
-      return Promise.reject(
-        new ReferenceError('options & ComputationResult required to pass to computations')
-      );
+      return Promise.reject(new Error(
+        'Run inputs and ComputationResult required to pass to computations'
+      ));
+    } else if (this.inProgress) {
+      return Promise.reject(new Error(
+        /* eslint-disable max-len */
+        'Pipelines do not permit concurrent running. Please spawn a new pipeline instance if concurrency is required.'
+        /* eslint-enable max-len */
+      ));
     }
-    if (this.inProgress) {
-      return Promise.reject(
-        new Error([
-          'pipelines do not permit concurrent running. please spawn a new',
-          'pipeline instance if concurrency is required',
-        ].join(' '))
-      );
-    }
+
     this.inProgress = true;
     this.computation = this.computations[this.step];
-    let runCancelled = false;
     let forceSave = false;
-    // offer plugin hooks as functions.  restrict plugins from meddling with
-    // run state. simply expose some run modifiers.
+    let shouldContinueRun = true;
+
+    debug(`starting run, step ${this.step}`);
+
+    /**
+     * Offer plugin hooks as functions. Restrict plugins from meddling with
+     * run state: simply expose some run modifiers.
+     */
     const pluginHooks = {
-      isRunCancelled() { return runCancelled; },
-      cancelRun() { runCancelled = true; },
-      forceSave() { forceSave = true; },
+      isRunCancelled() {
+        return !shouldContinueRun;
+      },
+      cancelRun() {
+        debug('run canceled');
+        shouldContinueRun = false;
+      },
+      forceSave() {
+        debug('force save');
+        forceSave = true;
+      },
     };
-    return this.tryNext(runInputs, { preRun: true })
-    .then(() => this.events.emit('computation:start', runInputs))
-    .then(() => this._preRunPlugins({ runInputs, compResult, pluginHooks }))
-    .then(() => {
-      if (runCancelled) { return Promise.resolve(null); }
-      return this.computation.run(runInputs);
-    })
-    .then((runOutput) => {
-      if (runCancelled) { return Promise.resolve(runOutput); }
-      // postRun plugins are only run if a computation _actually_ ran
-      return this._postRunPlugins({ runOutput, compResult, pluginHooks })
-      .then(() => runOutput);
-    })
-    .then((runOutput) => this._postRun({
-      runInputs,
-      runOutput,
-      compResult,
-      runCancelled,
-      forceSave,
-    }))
-    .catch((err) => {
-      this.inProgress = false;
-      if (err) { err.isRunError = true; }
-      throw err;
-    });
+
+    return this.maybeIncrementStep(runInputs, true)
+      .then(() => {
+        this.events.emit('computation:start', runInputs);
+        debug(`pre-run plugins, step ${this.step}`);
+        return this._preRunPlugins({ runInputs, compResult, pluginHooks });
+      })
+      .then(() => {
+        if (shouldContinueRun) {
+          debug(`running computation, step ${this.step}`);
+          return this.computation.run(runInputs);
+        }
+      })
+      .then((runOutput) => {
+        if (shouldContinueRun) {
+          // postRun plugins are only run if a computation _actually_ ran
+          debug(`post-run plugins, step ${this.step}`);
+          return Promise.all([
+            runOutput,
+            this._postRunPlugins({ runOutput, compResult, pluginHooks }),
+          ]);
+        }
+        return [runOutput];
+      })
+      .then(([runOutput]) => this._postRun({
+        runInputs,
+        runOutput,
+        compResult,
+        runCancelled: !shouldContinueRun,
+        forceSave,
+      }))
+      .catch((error) => {
+        debug(`run error: ${error.message}`);
+        this.inProgress = false;
+        error.isRunError = true;
+        throw error;
+      });
   }
 
   /**
@@ -181,17 +209,17 @@ class Pipeline extends Base {
     this.events.emit('computation:end', runInputs);
     const postRunInputs = assign({}, runInputs, { previousData: runOutput });
     return (runCancelled ?
-      Promise.resolve({ didStep: false }) :
-      this.tryNext(postRunInputs, { postRun: true })
+      Promise.resolve(false) :
+      this.maybeIncrementStep(postRunInputs, false)
     )
-    .then((stepRslt) => {
+    .then((didIncrementStep) => {
       // set `inProgress` to represent whether we are about to be inProgress
       // again (e.g. if pipeline will run again). in this regard cb()s get
       // accurate depiction of state
-      this.inProgress = !!stepRslt.didStep;
+      this.inProgress = !!didIncrementStep;
       this.events.emit('save-request', runOutput, null, forceSave);
       this.inProgress = false; // reset
-      if (stepRslt.didStep) {
+      if (didIncrementStep) {
         this.events.emit('inProgress', runOutput);
         return this.run(postRunInputs, compResult);
       }
@@ -212,40 +240,48 @@ class Pipeline extends Base {
   }
 
   /**
-   * Attempt to bump the pipeline step.  runs the `next` computation
-   * if present, and conditionally bumps the pipeline state. to be clear, this
-   * runs a computation's `next` computation, _not the next step in the pipeline_
+   * Maybe increment the pipeline's step.
    *
-   * if tryNext is called pre-`run` (`cycle.preRun`) and no `next` is defined,
-   * the pipeline will **not progress** its current computation index.
+   * This method increments the pipeline's `step` property based on a few
+   * conditions:
    *
-   * if tryNext is called post-`run` (`cycle.postRun`) and no `next` is defined,
-   * the pipeline **will progress** its current computation index.
+   * * If `isPreRun` is `true` and the computation has no `.next` property **do
+   *   not increment**.
+   * * If `isPreRun` is `false` and the computation has no `.next` property **do
+   *   increment**.
+   * * If a `.next` property exists pass `opts`. The `.next` computation should
+   *   return a boolean value indicating whether the pipeline should increment
+   *   its step.
+   * * Don't increment if there's no more computations to run.
    *
    * @private
-   * @param {object} opts inputs to next computation
-   * @param {object} cycle
-   * @param {boolean=} cycle.preRun tryNext is being called before `run` is called
-   * @param {boolean=} cycle.postRun tryNext is being called after `run` is called
-   * @returns {Promise}
+   * @param {Object} opts Inputs to next computation
+   * @param {boolean} [isPreRun=false] Whether method is called before
+   * `Pipeline#run` is called
+   * @returns {Promise<boolean>} Value representing whether the pipeline
+   * instance's `step` property was incremented and its `computation` property
+   * was updated: `true` indicates incrementation occurred, `false` indicates no
+   * change.
    */
-  tryNext(opts, cycle) {
-    const resp = { didStep: false };
+  maybeIncrementStep(opts, isPreRun) {
     const handleNextComplete = (doNext) => {
-      const endOfPipe = !this.computations[this.step + 1];
-      if (doNext && !endOfPipe) {
+      if (doNext && this.computations[this.step + 1]) {
         ++this.step;
         this.computation = this.computations[this.step];
-        resp.didStep = true;
+
+        return true;
       }
-      return resp;
+
+      return false;
     };
+
     if (this.computation.next) {
-      return this.computation.next.run(opts)
-      .then((doNext) => handleNextComplete(doNext));
+      return this.computation.next.run(opts).then(handleNextComplete);
+    } else if (isPreRun) {
+      // do not auto-progress w/out .next fn on-pre-run
+      return Promise.resolve(false);
     }
-    // do not auto-progress w/out .next fn on-pre-run
-    if (cycle.preRun) { return Promise.resolve(resp); }
+
     return Promise.resolve(handleNextComplete(true));
   }
 }
