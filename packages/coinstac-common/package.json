@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "bluebird": "^3.4.0",
+    "debug": "^2.6.0",
     "indent-string": "^3.0.0",
     "joi": "^10.0.0",
     "json-parse-helpfulerror": "^1.0.3",
