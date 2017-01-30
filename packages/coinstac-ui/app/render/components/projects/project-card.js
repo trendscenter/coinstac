@@ -99,7 +99,6 @@ export class ProjectCard extends Component {
           {this.renderComputationStatus()}
         </div>
         <div className="panel-body">
-          <p>ID: {id}</p>
           <div className="clearfix">
             <ButtonToolbar className="pull-left">
               <Button
