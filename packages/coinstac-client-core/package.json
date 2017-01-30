@@ -1,6 +1,6 @@
 {
   "name": "coinstac-client-core",
-  "version": "2.2.2",
+  "version": "2.3.0",
   "description": "COINSTAC business logic for clients.",
   "main": "src/index.js",
   "bin": "./bin/coinstac-client-core",
