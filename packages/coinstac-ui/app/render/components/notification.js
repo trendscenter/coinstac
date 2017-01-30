@@ -15,7 +15,7 @@ export default class Notify extends React.Component {
       throw new ReferenceError('notification system already registered');
     }
     app.notifications = this;
-    app.notify = (level, message) => this.push({ level, message, autoDismiss: 0 });
+    app.notify = (level, message) => this.push({ level, message, autoDismiss: 2 });
   }
 
   /**
