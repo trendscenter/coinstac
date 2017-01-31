@@ -11,8 +11,6 @@ const path = require('path');
 const winston = require('winston');
 const Logger = winston.Logger;
 const Console = winston.transports.Console;
-const hawkifyPouchDB = require('hawkify-pouchdb');
-
 
 // app utils
 const common = require('coinstac-common');
@@ -268,19 +266,9 @@ class CoinstacClient {
         },
       },
     };
-    /* istanbul ignore next */
-    const pouchAjax = function stubPouchDBAjax() {};
-    // @TODO ^ replace with require('pouch-ajax') when pouchdb#5322 is closed
-    // and hawkify-pouchdb actually wraps the pouchAjax function successfully!
-    // for now, hawkify-pouchdb simply returns an object with the proper headers.
-    // all dbs will have the returned ajax headers applied.
-    const ajax = {
-      ajax: function applyHawkAjaxHeaders() {
-        return hawkifyPouchDB(pouchAjax, this.halfpenny.auth.getAuthCredentials());
-      }.bind(this),
-    };
-    const regOpts = Object.assign(defaults, this.dbConfig, ajax);
-    this.dbRegistry = registryFactory(regOpts);
+
+    this.dbRegistry = registryFactory(Object.assign(defaults, this.dbConfig));
+
     return this.dbRegistry;
   }
 
