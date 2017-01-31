@@ -5,7 +5,8 @@ import {
   FormControl,
   FormGroup,
   HelpBlock,
-  Label,
+// TODO: enable with fileRender
+//  Label,
 } from 'react-bootstrap';
 import React, { Component, PropTypes } from 'react';
 
@@ -81,111 +82,112 @@ export default class FormProject extends Component {
     );
   }
 
-  renderFilesField() {
-    const {
-      errors: { files: filesError },
-      onAddFiles,
-      onRemoveAllFiles,
-      onRemoveFile,
-      project: { files },
-      showFilesComponent,
-    } = this.props;
-    let buttons;
-    let content;
-    let heading;
-    let helpBlock;
-
-    if (files.length) {
-      buttons = (
-        <div className="pull-right">
-          <Button
-            bsSize="small"
-            bsStyle="danger"
-            onClick={onRemoveAllFiles}
-            type="button"
-          >
-            <span aria-hidden="true" className="glyphicon glyphicon-minus"></span>
-            {' '}
-            Remove All Files
-          </Button>
-          {' '}
-          <Button
-            bsSize="small"
-            bsStyle="primary"
-            onClick={onAddFiles}
-            type="button"
-          >
-            <span aria-hidden="true" className="glyphicon glyphicon-plus"></span>
-            {' '}
-            Add Files
-          </Button>
-        </div>
-      );
-      content = (
-        <ul className="list-unstyled">
-          {files.map((file, index) => {
-            return (
-              <li key={index}>
-                <ProjectFile
-                  filename={file.filename}
-                  onRemove={() => onRemoveFile(file)}
-                />
-              </li>
-            );
-          })}
-        </ul>
-      );
-      heading = (
-        <span>
-          Files
-          {' '}
-          <Label>{files.length}</Label>
-        </span>
-      );
-    } else {
-      buttons = (
-        <Button
-          bsSize="small"
-          bsStyle="primary"
-          className="pull-right"
-          onClick={onAddFiles}
-          type="button"
-        >
-          <span aria-hidden="true" className="glyphicon glyphicon-plus"></span>
-          {' '}
-          Add Files
-        </Button>
-      );
-      heading = 'Files';
-
-      if (!filesError) {
-        content = (
-          <Alert bsStyle="info">Select files for the computation.</Alert>
-        );
-      }
-    }
-
-    if (!showFilesComponent) {
-      return;
-    }
-
-    if (filesError) {
-      helpBlock = <Alert bsStyle="danger">{filesError}</Alert>;
-    }
-
-    return (
-      <div className="project-form-section project-form-files">
-        <div className="project-form-section-header clearfix">
-          <h2 className="h3 pull-left">{heading}</h2>
-          {buttons}
-        </div>
-        <div className="project-form-section-content">
-          {helpBlock}
-          {content}
-        </div>
-      </div>
-    );
-  }
+  // TODO: enable with better file traversing
+  // renderFilesField() {
+  //   const {
+  //     errors: { files: filesError },
+  //     onAddFiles,
+  //     onRemoveAllFiles,
+  //     onRemoveFile,
+  //     project: { files },
+  //     showFilesComponent,
+  //   } = this.props;
+  //   let buttons;
+  //   let content;
+  //   let heading;
+  //   let helpBlock;
+  //
+  //   if (files.length) {
+  //     buttons = (
+  //       <div className="pull-right">
+  //         <Button
+  //           bsSize="small"
+  //           bsStyle="danger"
+  //           onClick={onRemoveAllFiles}
+  //           type="button"
+  //         >
+  //           <span aria-hidden="true" className="glyphicon glyphicon-minus"></span>
+  //           {' '}
+  //           Remove All Files
+  //         </Button>
+  //         {' '}
+  //         <Button
+  //           bsSize="small"
+  //           bsStyle="primary"
+  //           onClick={onAddFiles}
+  //           type="button"
+  //         >
+  //           <span aria-hidden="true" className="glyphicon glyphicon-plus"></span>
+  //           {' '}
+  //           Add Files
+  //         </Button>
+  //       </div>
+  //     );
+  //     content = (
+  //       <ul className="list-unstyled">
+  //         {files.map((file, index) => {
+  //           return (
+  //             <li key={index}>
+  //               <ProjectFile
+  //                 filename={file.filename}
+  //                 onRemove={() => onRemoveFile(file)}
+  //               />
+  //             </li>
+  //           );
+  //         })}
+  //       </ul>
+  //     );
+  //     heading = (
+  //       <span>
+  //         Files
+  //         {' '}
+  //         <Label>{files.length}</Label>
+  //       </span>
+  //     );
+  //   } else {
+  //     buttons = (
+  //       <Button
+  //         bsSize="small"
+  //         bsStyle="primary"
+  //         className="pull-right"
+  //         onClick={onAddFiles}
+  //         type="button"
+  //       >
+  //         <span aria-hidden="true" className="glyphicon glyphicon-plus"></span>
+  //         {' '}
+  //         Add Files
+  //       </Button>
+  //     );
+  //     heading = 'Files';
+  //
+  //     if (!filesError) {
+  //       content = (
+  //         <Alert bsStyle="info">Select files for the computation.</Alert>
+  //       );
+  //     }
+  //   }
+  //
+  //   if (!showFilesComponent) {
+  //     return;
+  //   }
+  //
+  //   if (filesError) {
+  //     helpBlock = <Alert bsStyle="danger">{filesError}</Alert>;
+  //   }
+  //
+  //   return (
+  //     <div className="project-form-section project-form-files">
+  //       <div className="project-form-section-header clearfix">
+  //         <h2 className="h3 pull-left">{heading}</h2>
+  //         {buttons}
+  //       </div>
+  //       <div className="project-form-section-content">
+  //         {helpBlock}
+  //         {content}
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   renderMetaFileField() {
     const {
@@ -276,7 +278,9 @@ export default class FormProject extends Component {
     return (
       <div className="project-form-section project-form-meta">
         <div className="project-form-section-header clearfix">
-          <h2 className="h3 pull-left">Meta File</h2>
+          <h3 className="h3">Meta File</h3>
+          <p>Upload a CSV with full file paths in
+          the first column and any covariates in the columns after</p>
           {button}
         </div>
         <div className="project-form-section-content">
@@ -327,8 +331,10 @@ export default class FormProject extends Component {
           {this.renderNameField()}
           {this.renderConsortiaField()}
         </div>
-
-        {this.renderFilesField()}
+        {/*
+          // TODO: enable with better file traversing
+          {this.renderFilesField()}
+        */}
         {this.renderMetaFileField()}
 
         <div className="project-form-section project-form-controls clearfix">
@@ -358,7 +364,8 @@ FormProject.propTypes = {
   consortia: PropTypes.array.isRequired,
   errors: PropTypes.shape({
     consortiumId: PropTypes.string,
-    files: PropTypes.string,
+    // TODO: enable with fileRender
+    // files: PropTypes.string,
     metaCovariateMapping: PropTypes.array,
     metaFile: PropTypes.string,
     metaFilePath: PropTypes.string,
@@ -366,30 +373,34 @@ FormProject.propTypes = {
   }),
   inputs: PropTypes.arrayOf(PropTypes.object),
   isEditing: PropTypes.bool.isRequired,
-  onAddFiles: PropTypes.func.isRequired,
+  // TODO: enable with fileRender
+  // onAddFiles: PropTypes.func.isRequired,
   onAddMetaFile: PropTypes.func.isRequired,
   onConsortiumChange: PropTypes.func.isRequired,
   onMapCovariate: PropTypes.func.isRequired,
   onNameChange: PropTypes.func.isRequired,
-  onRemoveAllFiles: PropTypes.func.isRequired,
-  onRemoveFile: PropTypes.func.isRequired,
+  // TODO: enable with fileRender
+  // onRemoveAllFiles: PropTypes.func.isRequired,
+  // onRemoveFile: PropTypes.func.isRequired,
   onRemoveMetaFile: PropTypes.func.isRequired,
   onReset: PropTypes.func.isRequired,
   onRunComputation: PropTypes.func.isRequired,
   onSubmit: PropTypes.func.isRequired,
   project: PropTypes.shape({
     consortiumId: PropTypes.string,
-    files: PropTypes.arrayOf(
-      PropTypes.shape({
-        filename: PropTypes.string.isRequired,
-        tags: PropTypes.object.isRequired,
-      })
-    ).isRequired,
+    // TODO: enable with fileRender
+    // files: PropTypes.arrayOf(
+    //   PropTypes.shape({
+    //     filename: PropTypes.string.isRequired,
+    //     tags: PropTypes.object.isRequired,
+    //   })
+    // ).isRequired,
     metaCovariateMapping: PropTypes.object.isRequired,
     metaFile: PropTypes.arrayOf(PropTypes.array),
     metaFilePath: PropTypes.string,
     name: PropTypes.string.isRequired,
   }).isRequired,
   showComputationRunButton: PropTypes.bool.isRequired,
-  showFilesComponent: PropTypes.bool.isRequired,
+  // TODO: enable with fileRender
+  // showFilesComponent: PropTypes.bool.isRequired,
 };
