@@ -11,7 +11,6 @@ const nock = require('nock');
 const pouchDBAdapterMemory = require('pouchdb-adapter-memory');
 const testDirectory = require('./test-directory.js');
 const userFactory = require('./user-factory');
-const LocalStorageMemory = require('localstorage-memory');
 
 bluebird.config({ warnings: false });
 
@@ -28,9 +27,9 @@ module.exports = function clientFactory(opts) {
      * development application state.
      */
     appDirectory: testDirectory,
+    hp: config.get('baseUrl'),
     logLevel: 'error',
     user: userFactory(),
-    storage: LocalStorageMemory,
   };
   const clientOpts = assign(defaults, opts, conf);
   const cc = new CoinstacClient(clientOpts);
