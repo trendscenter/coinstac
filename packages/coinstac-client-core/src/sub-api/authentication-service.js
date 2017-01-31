@@ -17,7 +17,22 @@ const User = require('coinstac-common').models.User;
 class AuthenticationService extends Halfpenny {
   constructor(config) {
     super(config);
+
+    /**
+     * @todo: Don't clear to persist user and database credentials between
+     * sessions.
+     */
+    this.clearDatabaseCredentials();
     this.clearUser();
+  }
+
+  /**
+   * Clear stored database credentials.
+   *
+   * @returns {null}
+   */
+  clearDatabaseCredentials() {
+    return this.setDatabaseCredentials(null);
   }
 
   /**
@@ -27,6 +42,17 @@ class AuthenticationService extends Halfpenny {
    */
   clearUser() {
     return this.setUser(null);
+  }
+
+  /**
+   * Get stored database credentials.
+   *
+   * @returns {(Object|null)}
+   */
+  getDatabaseCredentials() {
+    return JSON.parse(atob(
+      this.storage[AuthenticationService.DATABASE_CREDENTIALS_KEY]
+    ));
   }
 
   /**
@@ -47,10 +73,12 @@ class AuthenticationService extends Halfpenny {
    * @returns {Promise}
    */
   login(data) {
-    return super.login(data).then((response) => {
-      this.setUser(response.data.data[0].user);
-      return response;
-    });
+    return super.login(Object.assign({}, data, { coinstac: true }))
+      .then((response) => {
+        this.setDatabaseCredentials(response.data.data[0].coinstac);
+        this.setUser(response.data.data[0].user);
+        return response;
+      });
   }
 
   /**
@@ -59,8 +87,21 @@ class AuthenticationService extends Halfpenny {
    * @returns {Promise}
    */
   logout() {
+    this.clearDatabaseCredentials();
     this.clearUser();
     return super.logout();
+  }
+
+  /**
+   * Set database credentials.
+   *
+   * @param {(Object|null)} credentials
+   * @returns {(Object|null)}
+   */
+  setDatabaseCredentials(credentials) {
+    this.storage[AuthenticationService.DATABASE_CREDENTIALS_KEY] =
+      btoa(JSON.stringify(credentials));
+    return this.getDatabaseCredentials();
   }
 
   /**
@@ -97,6 +138,19 @@ class AuthenticationService extends Halfpenny {
   }
 }
 
+
+/**
+ * User storage key.
+ *
+ * @const {string}
+ */
 AuthenticationService.USER_KEY = 'USER_KEY';
+
+/**
+ * Database credentials storage key.
+ *
+ * @const {string}
+ */
+AuthenticationService.DATABASE_CREDENTIALS_KEY = 'DATABASE_CREDENTIALS_KEY';
 
 module.exports = AuthenticationService;
