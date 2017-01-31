@@ -48,12 +48,41 @@ tape('AuthenticationService :: user storage', (t) => {
   t.end();
 });
 
+tape('AuthenticationService :: database credentials storage', (t) => {
+  const auth = AuthenticationService.factory();
+  const credentials = {
+    password: 'oooh-no',
+    username: 'silly-uname',
+  };
+
+  t.notOk(auth.getDatabaseCredentials(), 'sets empty database credentials');
+
+  auth.setDatabaseCredentials(credentials);
+
+  t.deepEqual(
+    auth.getDatabaseCredentials(),
+    credentials,
+    'retrieves set database credentials'
+  );
+
+  auth.clearDatabaseCredentials();
+
+  t.notOk(auth.getDatabaseCredentials(), 'clears database credentials');
+
+  t.end();
+});
+
 tape('AuthenticationService :: login/logout`', (t) => {
   const auth = AuthenticationService.factory();
+  const credentials = {
+    password: 'so-secret-dbs',
+    username: 'great-db-user',
+  };
   const user = getUser();
   const response = {
     data: {
       data: [{
+        coinstac: credentials,
         user,
       }],
     },
@@ -64,18 +93,27 @@ tape('AuthenticationService :: login/logout`', (t) => {
   const logoutStub = sinon.stub(Halfpenny.prototype, 'logout')
     .returns(Promise.resolve());
 
-  t.plan(5);
+  t.plan(7);
 
   auth.login(user)
     .then((res) => {
       t.equal(loginStub.callCount, 1, 'calls Halfpenny login');
       t.equal(res, response, 'passes login response');
       t.deepEqual(auth.getUser(), user, 'sets user on login');
+      t.deepEqual(
+        auth.getDatabaseCredentials(),
+        credentials,
+        'sets database credentials on login'
+      );
 
       return auth.logout();
     })
     .then(() => {
       t.equal(logoutStub.callCount, 1, 'calls Halfpenny logout');
+      t.notOk(
+        auth.getDatabaseCredentials(),
+        'clears database credentials on logout'
+      );
       t.notOk(auth.getUser(), 'clears user on logout');
     })
     .catch(t.end)
