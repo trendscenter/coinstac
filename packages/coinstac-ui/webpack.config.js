@@ -54,9 +54,6 @@ const config = {
       loaders: ['url?limit=10000&minetype=application/font-woff'],
       test: /\.woff2(\?v=\d+\.\d+\.\d+)?$/,
     }, {
-      loaders: ['html', 'markdown'],
-      test: /\.md$/,
-    }, {
       loaders: ['file'],
       test: /\.png/,
     }],
