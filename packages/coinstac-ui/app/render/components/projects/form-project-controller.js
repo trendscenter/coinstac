@@ -6,6 +6,7 @@ import React, { Component, PropTypes } from 'react';
 import { runComputation } from '../../state/ducks/bg-services';
 import { addProject } from '../../state/ducks/projects';
 import FormProject from './form-project';
+import path from 'path';
 
 class FormProjectController extends Component {
   constructor(props) {
@@ -123,8 +124,9 @@ class FormProjectController extends Component {
         ) {
           memo[key] = 'Missing covariate mapping';
         }
-      } else if ((key === 'files' && !value.length) || !value) {
-        memo[key] = FormProjectController.ERRORS.get(key);
+      // TODO: enable with fileRender
+      // } else if (key === 'files' && !value.length) || !value) {
+      //   memo[key] = FormProjectController.ERRORS.get(key);
       } else {
         memo[key] = null;
       }
@@ -168,7 +170,10 @@ class FormProjectController extends Component {
             files: null,
           },
           project: {
-            files: [...tail(JSON.parse(metaFile)).map(metaRow => metaRow[0])],
+            files: [...tail(JSON.parse(metaFile)).map(metaRow => {
+              return path.isAbsolute(metaRow[0]) ?
+              metaRow[0] : path.resolve(path.join(path.dirname(metaFilePath), metaRow[0]));
+            })],
             metaFile: JSON.parse(metaFile),
             metaFilePath,
           },
@@ -297,6 +302,7 @@ class FormProjectController extends Component {
     const { dispatch, params: { projectId } } = this.props;
     const { router } = this.context;
     const { errors, project } = this.state;
+
     const toAdd = projectId ?
       Object.assign({}, this.props.project, project) :
       project;
@@ -309,9 +315,11 @@ class FormProjectController extends Component {
       // Ensure no errors before submitting
       dispatch(addProject(toAdd))
         .then(() => {
+
           router.push('/projects');
         })
         .catch((err) => {
+
           app.notify('error', err.message);
         });
     } else {
