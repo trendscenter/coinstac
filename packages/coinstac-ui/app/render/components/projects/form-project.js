@@ -278,8 +278,8 @@ export default class FormProject extends Component {
     return (
       <div className="project-form-section project-form-meta">
         <div className="project-form-section-header clearfix">
-          <h3 className="h3">Meta File</h3>
-          <p>Upload a CSV with full file paths in
+          <h3 className="h3">Metadata File</h3>
+          <p>Upload a CSV with the full file paths to your data files in
           the first column and any covariates in the columns after</p>
           {button}
         </div>

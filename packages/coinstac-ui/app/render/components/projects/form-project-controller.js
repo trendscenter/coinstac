@@ -315,11 +315,9 @@ class FormProjectController extends Component {
       // Ensure no errors before submitting
       dispatch(addProject(toAdd))
         .then(() => {
-
           router.push('/projects');
         })
         .catch((err) => {
-
           app.notify('error', err.message);
         });
     } else {
@@ -459,7 +457,7 @@ FormProjectController.ERRORS = new Map([
   ['consortiumId', 'Select a consortium'],
   ['files', 'Add some files'],
   ['metaFile', 'Trouble mapping covariates'],
-  ['metaFilePath', 'Add a meta file'],
+  ['metaFilePath', 'Add a metadata file'],
   ['name', 'Add a name'],
 ]);
 
