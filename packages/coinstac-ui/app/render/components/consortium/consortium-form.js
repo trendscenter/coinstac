@@ -190,9 +190,9 @@ class ConsortiumForm extends Component {
         />
         <Field
           component={ConsortiumForm.renderInput}
-          label="Description"
+          label="Public Description"
           name="description"
-          placeholder="Enter Description"
+          placeholder="Enter you description that best describes the Consortium's purpose to others"
           type="textarea"
         />
         <fieldset className="computation-select">
@@ -281,4 +281,3 @@ export default connect(mapStateToProps)(reduxForm({
   pure: false,
   validate: ConsortiumForm.validate,
 })(ConsortiumForm));
-

@@ -1,11 +1,12 @@
 import app from 'ampersand-app';
-import { cloneDeep, get, noop, pickBy, values } from 'lodash';
+import { cloneDeep, get, noop, pickBy, values, tail } from 'lodash';
 import { connect } from 'react-redux';
 import React, { Component, PropTypes } from 'react';
 
 import { runComputation } from '../../state/ducks/bg-services';
 import { addProject } from '../../state/ducks/projects';
 import FormProject from './form-project';
+import path from 'path';
 
 class FormProjectController extends Component {
   constructor(props) {
@@ -41,14 +42,14 @@ class FormProjectController extends Component {
      */
     if (props.project) {
       this.state.project.consortiumId = props.project.consortiumId;
-      this.state.project.files = cloneDeep(props.project.files);
+      // TODO: enable with fileRender
+      // this.state.project.files = cloneDeep(props.project.files);
       this.state.project.metaCovariateMapping =
         cloneDeep(props.project.metaCovariateMapping);
       this.state.project.metaFile = props.project.metaFile;
       this.state.project.metaFilePath = props.project.metaFilePath;
       this.state.project.name = props.project.name;
     }
-
     this.handleAddFiles = this.handleAddFiles.bind(this);
     this.handleAddMetaFile = this.handleAddMetaFile.bind(this);
     this.handleConsortiumChange = this.handleConsortiumChange.bind(this);
@@ -81,9 +82,10 @@ class FormProjectController extends Component {
       project: 'project' in newState ?
         Object.assign({}, this.state.project, newState.project) :
         this.state.project,
-      showFilesComponent: 'showFilesComponent' in newState ?
-        newState.showFilesComponent :
-        this.state.showFilesComponent,
+      // TODO: enable with fileRender
+      // showFilesComponent: 'showFilesComponent' in newState ?
+      //   newState.showFilesComponent :
+      //   this.state.showFilesComponent,
     });
   }
 
@@ -122,8 +124,9 @@ class FormProjectController extends Component {
         ) {
           memo[key] = 'Missing covariate mapping';
         }
-      } else if ((key === 'files' && !value.length) || !value) {
-        memo[key] = FormProjectController.ERRORS.get(key);
+      // TODO: enable with fileRender
+      // } else if (key === 'files' && !value.length) || !value) {
+      //   memo[key] = FormProjectController.ERRORS.get(key);
       } else {
         memo[key] = null;
       }
@@ -164,8 +167,13 @@ class FormProjectController extends Component {
         this.setState({
           errors: {
             metaFile: null,
+            files: null,
           },
           project: {
+            files: [...tail(JSON.parse(metaFile)).map(metaRow => {
+              return path.isAbsolute(metaRow[0]) ?
+              metaRow[0] : path.resolve(path.join(path.dirname(metaFilePath), metaRow[0]));
+            })],
             metaFile: JSON.parse(metaFile),
             metaFilePath,
           },
@@ -294,6 +302,7 @@ class FormProjectController extends Component {
     const { dispatch, params: { projectId } } = this.props;
     const { router } = this.context;
     const { errors, project } = this.state;
+
     const toAdd = projectId ?
       Object.assign({}, this.props.project, project) :
       project;
@@ -389,7 +398,8 @@ class FormProjectController extends Component {
       metaFile,
       metaFilePath,
       project,
-      showFilesComponent,
+      // TODO: enable with fileRender
+      // showFilesComponent,
     } = this.state;
 
     const isEditing = !!params.projectId;
@@ -412,20 +422,23 @@ class FormProjectController extends Component {
         isEditing={isEditing}
         metaFile={metaFile}
         metaFilePath={metaFilePath}
-        onAddFiles={this.handleAddFiles}
+        // TODO: enable with fileRender
+        // onAddFiles={this.handleAddFiles}
         onAddMetaFile={this.handleAddMetaFile}
         onConsortiumChange={this.handleConsortiumChange}
         onMapCovariate={this.handleMapCovariate}
         onNameChange={this.handleNameChange}
-        onRemoveAllFiles={this.handleRemoveAllFiles}
-        onRemoveFile={this.handleRemoveFile}
+        // TODO: enable with fileRender
+        // onRemoveAllFiles={this.handleRemoveAllFiles}
+        // onRemoveFile={this.handleRemoveFile}
         onRemoveMetaFile={this.handleRemoveMetaFile}
         onReset={this.handleReset}
         onRunComputation={this.handleRunComputation}
         onSubmit={this.handleSubmit}
         project={project}
         showComputationRunButton={showComputationRunButton}
-        showFilesComponent={showFilesComponent}
+        // TODO: enable with fileRender
+        // showFilesComponent={showFilesComponent}
       />
     );
   }
@@ -444,7 +457,7 @@ FormProjectController.ERRORS = new Map([
   ['consortiumId', 'Select a consortium'],
   ['files', 'Add some files'],
   ['metaFile', 'Trouble mapping covariates'],
-  ['metaFilePath', 'Add a meta file'],
+  ['metaFilePath', 'Add a metadata file'],
   ['name', 'Add a name'],
 ]);
 
