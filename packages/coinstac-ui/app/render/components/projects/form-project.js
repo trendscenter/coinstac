@@ -24,25 +24,6 @@ export default class FormProject extends Component {
     this.props.onSubmit();
   }
 
-  maybeRenderComputationRunButton() {
-    const {
-      allowComputationRun,
-      onRunComputation,
-      showComputationRunButton,
-    } = this.props;
-
-    if (showComputationRunButton) {
-      return (
-        <Button
-          disabled={!allowComputationRun}
-          onClick={onRunComputation}
-        >
-          Run Computation
-        </Button>
-      );
-    }
-  }
-
   renderConsortiaField() {
     const {
       consortia,
@@ -332,9 +313,6 @@ export default class FormProject extends Component {
         {this.renderMetaFileField()}
 
         <div className="project-form-section project-form-controls clearfix">
-          <div className="pull-left">
-            {this.maybeRenderComputationRunButton()}
-          </div>
           <div className="pull-right">
             <Button bsStyle="success" disabled={isDisabled} type="submit">
               <span className="glyphicon glyphicon-ok" aria-hidden="true"></span>
