@@ -62,7 +62,7 @@ export default function ConsortiumResult({
      * @todo This assumes covariates are placed at a specific location in
      * `activeComputationInputs`. Don't hard-code this!
      */
-    const covariates = activeComputationInputs[0][1].map(x => x.name);
+    const covariates = activeComputationInputs[0][2].map(x => x.name);
 
     dataOutput = (
       <div>
@@ -117,7 +117,13 @@ ConsortiumResult.displayName = 'ConsortiumResult';
 
 ConsortiumResult.propTypes = {
   _id: PropTypes.string.isRequired,
-  activeComputationInputs: PropTypes.array,
+  activeComputationInputs: PropTypes.arrayOf(PropTypes.arrayOf(
+    PropTypes.oneOfType([
+      PropTypes.arrayOf(PropTypes.string),
+      PropTypes.arrayOf(PropTypes.object),
+      PropTypes.number,
+    ])
+  )).isRequired,
   complete: PropTypes.bool.isRequired,
   computation: PropTypes.shape({
     version: PropTypes.string.isRequired,
