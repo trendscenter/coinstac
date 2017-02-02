@@ -53,7 +53,10 @@ const unhandledBootLogger = () => {
     console.error(  // eslint-disable-line no-console
       `${new Date()} WARNING: boot error logging to file disabled`
     );
-    console.error(`ERROR: ${err}`); // eslint-disable-line no-console
+    /* eslint-disable no-console */
+    console.error(`ERROR: ${err}`);
+    console.error(`ERROR: ${err.stack}`);
+    /* eslint-enable no-console */
 
     const consoleLogger = (data) => {
       return console.error(`${new Date()} ERROR: ${data}`); // eslint-disable-line no-console
@@ -76,12 +79,14 @@ module.exports = function logUnhandledError(opts) {
     if (logger === unfinishedBootLog) {
       errorLogger('error occurred before application had finished booting');
       errorLogger(err);
+      errorLogger(err.stack);
       process.exit(1);
     } else if (opts.processType === 'render') {
       errorLogger(err);
       errorLogger(err.stack);
     } else {
       errorLogger(err);
+      errorLogger(err.stack);
     }
 
     throw err;
