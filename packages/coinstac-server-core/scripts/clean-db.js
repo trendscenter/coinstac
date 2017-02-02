@@ -3,8 +3,13 @@
 
 const async = require('async');
 const CoinstacServer = require('../src/coinstac-server.js');
+const dbmap = require('/coins/config/dbmap.json');
 const rimraf = require('rimraf');
 const superagent = require('superagent');
+
+const urlBase = dbmap.coinstac ?
+  `http://${dbmap.coinstac.user}:${dbmap.coinstac.password}@localhost:5984` :
+  'http://localhost:5984';
 
 async.parallel([
   cb1 => {
@@ -22,7 +27,7 @@ async.parallel([
     async.waterfall([
       cb2a => {
         superagent
-          .get('http://localhost:5984/_all_dbs')
+          .get(`${urlBase}/_all_dbs`)
           .set('Accept', 'application/json')
           .end(cb2a);
       },
@@ -31,7 +36,7 @@ async.parallel([
           response.body.filter(name => name.charAt(0) !== '_'),
           (dbName, cb2b1) => {
             superagent
-              .delete(`http://localhost:5984/${dbName}`)
+              .delete(`${urlBase}/${dbName}`)
               .set('Accept', 'application/json')
               .end((error, deleteResponse) => {
                 const body = deleteResponse.body;
