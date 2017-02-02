@@ -242,17 +242,17 @@ class CoinstacClient {
 
 
   _initDBRegistry(username) {
+    const authCreds = this.auth.getDatabaseCredentials();
     const defaults = {
-      pouchConfig: {
-        auth: this.auth.getDatabaseCredentials(),
-      },
+      auth: this.auth.getDatabaseCredentials(),
       isLocal: true,
       path: this.getDatabaseDirectory(username),
       remote: {
         db: {
+          auth: `${authCreds.user}:${authCreds.password}`,
           protocol: 'https',
-          hostname: 'coins-api.mrn.org',
-          port: 5984,
+          hostname: 'coinstac.mrn.org',
+          port: 443,
           pathname: 'coinstacdb',
         },
       },
