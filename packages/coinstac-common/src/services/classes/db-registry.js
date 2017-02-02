@@ -148,7 +148,6 @@ class DBRegistry {
     const syncDefaults = { live: true, retry: true, heartbeat: 5000 };
     conf.path = conf.path || this.path;
     conf.pouchConfig = conf.pouchConfig || {};
-
     // assert that db can register, and configure its domain
     if (this.isLocalStore(connStr)) {
       defaultsDeep(conf, this.local);

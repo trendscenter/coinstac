@@ -21,7 +21,7 @@ const DB_REGISTRY_DEFAULTS = {
   localStores: null,
   pouchConfig: {
     auth: {
-      username: dbmap.coinstac.username,
+      username: dbmap.coinstac.user,
       password: dbmap.coinstac.password,
     },
   },
