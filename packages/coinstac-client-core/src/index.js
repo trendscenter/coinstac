@@ -249,7 +249,7 @@ class CoinstacClient {
       path: this.getDatabaseDirectory(username),
       remote: {
         db: {
-          auth: `${authCreds.user}:${authCreds.password}`,
+          auth: authCreds ? `${authCreds.user}:${authCreds.password}` : '',
           protocol: 'https',
           hostname: 'coinstac.mrn.org',
           port: 443,
