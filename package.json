@@ -25,7 +25,7 @@
   },
   "scripts": {
     "bootstrap": "echo 'Deprecated! Please use \"npm run build\"'; exit 1;",
-    "build": "lerna bootstrap",
+    "build": "lerna bootstrap && cd ./packages/coinstac-ui && npm run build-native",
     "build:server": "lerna bootstrap --ignore 'coinstac-{client-core,decentralized-algorithm-integration,simulator,storage-proxy,ui}'",
     "lint": "eslint '**/*.js' '**/bin/*'",
     "lintfix": "eslint --fix **/*.js",
