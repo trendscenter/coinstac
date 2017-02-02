@@ -20,6 +20,7 @@ export default function ConsortiumCard(props) {
 
   let deleteButton;
   let membershipButton;
+  let editOrViewText;
 
   if (isOwner) {
     deleteButton = (
@@ -32,6 +33,7 @@ export default function ConsortiumCard(props) {
         Delete
       </Button>
     );
+    editOrViewText = 'Edit';
   } else {
     membershipButton = isMember ?
     (
@@ -54,6 +56,7 @@ export default function ConsortiumCard(props) {
         Join
       </Button>
     );
+    editOrViewText = 'View';
   }
 
   return (
@@ -86,7 +89,7 @@ export default function ConsortiumCard(props) {
                   className="glyphicon glyphicon glyphicon-eye-open"
                 ></span>
                 {' '}
-                View
+                {editOrViewText}
               </Button>
             </LinkContainer>
           </ButtonToolbar>
