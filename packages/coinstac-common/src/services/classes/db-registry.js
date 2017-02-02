@@ -184,7 +184,6 @@ class DBRegistry {
         `database ${connStr} does not fit local or remote database variants`
       );
     }
-
     if (this.pouchConfig) {
       conf.pouchConfig = defaultsDeep(this.pouchConfig, conf.pouchConfig);
     }
