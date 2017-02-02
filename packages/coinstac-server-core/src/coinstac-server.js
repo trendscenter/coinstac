@@ -19,6 +19,7 @@ const BASE_PATH = path.join(os.tmpdir(), 'coinstac-server-core');
 const DB_REGISTRY_DEFAULTS = {
   isRemote: true,
   localStores: null,
+  pouchConfig: {},
   remote: {
     db: {
       auth: dbmap.coinstac ? `${dbmap.coinstac.user}:${dbmap.coinstac.password}` : '',
