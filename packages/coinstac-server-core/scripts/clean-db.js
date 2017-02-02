@@ -6,10 +6,14 @@ const CoinstacServer = require('../src/coinstac-server.js');
 const dbmap = require('/coins/config/dbmap.json');
 const rimraf = require('rimraf');
 const superagent = require('superagent');
+const url = require('url');
 
-const urlBase = dbmap.coinstac ?
-  `http://${dbmap.coinstac.user}:${dbmap.coinstac.password}@localhost:5984` :
-  'http://localhost:5984';
+const urlBase = url.format({
+  auth: dbmap.coinstac ?`${dbmap.coinstac.user}:${dbmap.coinstac.password}` : '',
+  hostname: 'localhost',
+  port: 5984,
+  protocol: 'http',
+})
 
 async.parallel([
   cb1 => {
