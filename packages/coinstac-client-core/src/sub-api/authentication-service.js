@@ -78,6 +78,17 @@ class AuthenticationService extends Halfpenny {
         this.setDatabaseCredentials(response.data.data[0].coinstac);
         this.setUser(response.data.data[0].user);
         return response;
+      })
+      .catch((error) => {
+        if (error.status === 500) {
+          throw new Error(
+            'Unable to log in to COINS. Please try again or file a support ticket.'
+          );
+        } else if (error.status === 401) {
+          throw new Error('Invalid username or password');
+        }
+
+        throw error;
       });
   }
 
