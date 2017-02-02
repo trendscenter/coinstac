@@ -62,7 +62,10 @@ export default function ConsortiumResult({
      * @todo This assumes covariates are placed at a specific location in
      * `activeComputationInputs`. Don't hard-code this!
      */
-    const covariates = activeComputationInputs[0][2].map(x => x.name);
+    const covariates =
+      computation.name === 'decentralized-single-shot-ridge-regression' ?
+      activeComputationInputs[0][1].map(x => x.name) :
+      activeComputationInputs[0][2].map(x => x.name);
 
     dataOutput = (
       <div>
@@ -131,7 +134,15 @@ ConsortiumResult.propTypes = {
       name: PropTypes.string.isRequired,
     }),
   }).isRequired,
-  data: PropTypes.object,
+  data: PropTypes.shape({
+    averageBetaVector: PropTypes.arrayOf(PropTypes.number),
+    pValueGlobal: PropTypes.arrayOf(PropTypes.number).isRequired,
+    pValueLocal: PropTypes.arrayOf(PropTypes.array).isRequired,
+    rSquaredGlobal: PropTypes.number.isRequired,
+    rSquaredLocal: PropTypes.arrayOf(PropTypes.number).isRequired,
+    tValueGlobal: PropTypes.arrayOf(PropTypes.number).isRequired,
+    tValueLocal: PropTypes.arrayOf(PropTypes.array).isRequired,
+  }),
   pipelineState: PropTypes.object.isRequired,
   pluginState: PropTypes.object.isRequired,
   usernames: PropTypes.array.isRequired,
