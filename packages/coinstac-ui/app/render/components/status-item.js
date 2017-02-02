@@ -1,112 +1,179 @@
-import React, { PropTypes } from 'react';
-import { Button, Panel } from 'react-bootstrap';
 import { difference, reduce, values } from 'lodash';
+import React, { Component, PropTypes } from 'react';
+import { Button, Panel } from 'react-bootstrap';
+import { Link } from 'react-router';
 
-function getWaitingOnUsers(allUsernames, groupStep) {
-  const currentUsernames = Object.keys(groupStep.userStep);
-  const currentStep = groupStep.step;
+export default class StatusItem extends Component {
+  getWaitingOnUsers() {
+    const {
+      remoteResult: {
+        usernames: allUsernames,
+        pluginState: {
+          'group-step': groupStep,
+        },
+      },
+    } = this.props;
+    const currentUsernames = Object.keys(groupStep.userStep);
+    const currentStep = groupStep.step;
 
-  if (allUsernames.length !== Object.keys(groupStep.userStep).length) {
-    return difference(allUsernames, currentUsernames);
-  } else if (values(groupStep.userStep).some(step => step !== currentStep)) {
-    return reduce(groupStep.userStep, (memo, step, username) => (
-      step !== currentStep ? memo.concat(username) : memo
-    ), []);
+    if (allUsernames.length !== Object.keys(groupStep.userStep).length) {
+      return difference(allUsernames, currentUsernames);
+    } else if (values(groupStep.userStep).some(step => step !== currentStep)) {
+      return reduce(groupStep.userStep, (memo, step, username) => (
+        step !== currentStep ? memo.concat(username) : memo
+      ), []);
+    }
+
+    return [];
   }
 
-  return [];
-}
+  maybeRenderButton() {
+    const {
+      allowRun,
+      runComputation,
+      showRunButton,
+    } = this.props;
 
-export default function StatusItem({
-  computation,
-  isOwner,
-  status,
-  remoteResult,
-}) {
-  const waitingOnUsers = getWaitingOnUsers(
-    remoteResult.usernames,
-    remoteResult.pluginState['group-step']
-  );
-  let button;
-  let iteration;
-  let waitingOn;
-  let users;
-
-  if (isOwner && status === 'ready') {
-    button = (
-      <Button bsStyle="primary">
-        <span
-          className="glyphicon glyphicon-repeat"
-          aria-hidden="true"
+    if (showRunButton) {
+      return (
+        <Button
+          bsStyle="primary"
+          disabled={!allowRun}
+          onClick={runComputation}
         >
+          <span
+            className="glyphicon glyphicon-repeat"
+            aria-hidden="true"
+          >
+          </span>
+          {' '}
+          Run Computation
+        </Button>
+      );
+    }
+  }
+
+  renderStatus() {
+    const { status } = this.props;
+    let className = 'project-status';
+    let icon;
+    let text;
+
+    switch (status) {
+      case 'active':
+        className += ' is-active text-muted';
+        icon = 'refresh';
+        text = 'Running';
+        break;
+      case 'complete':
+        className += 'text-success';
+        icon = 'ok';
+        text = 'Complete';
+        break;
+      case 'error':
+        className += ' text-danger';
+        icon = 'alert';
+        text = 'Error';
+        break;
+      case 'waiting':
+        className += ' text-muted';
+        icon = 'alert';
+        text = 'Waiting to start';
+        break;
+      default:
+        icon = 'question-sign';
+        text = 'Unknown status';
+    }
+
+    return (
+      <div className={className}>
+        <span>
+          <span aria-hidden="true" className={`glyphicon glyphicon-${icon}`}></span>
+          {' '}
+          {text}
         </span>
-        {' '}
-        Run Computation
-      </Button>
+      </div>
     );
   }
 
-  if (computation.name === 'laplacian-noise-ridge-regression' && remoteResult) {
-    iteration = (
-      <li>
-        <strong>Iteration:</strong>
-        {' '}
-        {remoteResult.pipelineState.step}
-      </li>
-    );
-  }
+  render() {
+    const {
+      computation,
+      consortium,
+      remoteResult,
+    } = this.props;
 
-  if (waitingOnUsers.length) {
-    waitingOn = (
-      <li>
-        <strong>Waiting on:</strong>
-        {' '}
-        {waitingOnUsers.join(', ')}
-      </li>
-    );
-  }
+    let iteration;
+    let waitingOn;
+    let users;
 
-  if (remoteResult) {
-    users = (
-      <section>
-        <h3 className="h5">Users</h3>
-        <p>{remoteResult.usernames.join(', ')}</p>
-      </section>
-    );
-  }
-
-  return (
-    <Panel className="consortium-status">
-      <h2 className="h4">Status</h2>
-
-      <p>{status}</p>
-
-      {button}
-
-      <ul className="list-unstyled">
+    if (computation.name === 'laplacian-noise-ridge-regression' && remoteResult) {
+      iteration = (
         <li>
-          <strong>Computation:</strong>
+          <strong>Iteration:</strong>
           {' '}
-          {computation.name}
-          {' '}
-          <span className="text-muted">(Version {computation.version})</span>
+          {remoteResult.pluginState['group-step'].step}
         </li>
-        {iteration}
-        {waitingOn}
-      </ul>
+      );
+    }
 
-      {users}
-    </Panel>
-  );
+    if (remoteResult) {
+      users = (
+        <section>
+          <h3 className="h5">Users</h3>
+          <p>{remoteResult.usernames.join(', ')}</p>
+        </section>
+      );
+
+      const waitingOnUsers = this.getWaitingOnUsers();
+
+      if (waitingOnUsers.length) {
+        waitingOn = (
+          <li>
+            <strong>Waiting on:</strong>
+            {' '}
+            {waitingOnUsers.join(', ')}
+          </li>
+        );
+      }
+    }
+
+    return (
+      <Panel className="consortium-status">
+        <ul className="list-unstyled">
+          <li><strong>Status:</strong>{' '}{this.renderStatus()}</li>
+          <li>
+            <strong>Consortium:</strong>
+            {' '}
+            <Link to={`/consortia/${consortium._id}`}>{consortium.label}</Link>
+          </li>
+          <li>
+            <strong>Computation:</strong>
+            {' '}
+            {computation.name}
+            {' '}
+            <span className="text-muted">(Version {computation.version})</span>
+          </li>
+          {iteration}
+          {waitingOn}
+        </ul>
+
+        {users}
+      </Panel>
+    );
+  }
 }
 
 StatusItem.propTypes = {
+  allowRun: PropTypes.bool.isRequired,
+  consortium: PropTypes.shape({
+    _id: PropTypes.string.isRequired,
+    label: PropTypes.string.isRequired,
+  }).isRequired,
   computation: PropTypes.shape({
     name: PropTypes.string.isRequired,
     version: PropTypes.string.isRequired,
   }).isRequired,
-  isOwner: PropTypes.bool.isRequired,
-  status: PropTypes.string.isRequired,
   remoteResult: PropTypes.shape({
     pipelineState: PropTypes.shape({
       step: PropTypes.number.isRequired,
@@ -116,5 +183,12 @@ StatusItem.propTypes = {
     }),
     usernames: PropTypes.arrayOf(PropTypes.string).isRequired,
   }),
+  runComputation: PropTypes.func.isRequired,
+  showRunButton: PropTypes.bool.isRequired,
+  status: PropTypes.oneOf([
+    'active',
+    'complete',
+    'error',
+    'waiting',
+  ]).isRequired,
 };
-
