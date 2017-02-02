@@ -22,7 +22,7 @@ const DB_REGISTRY_DEFAULTS = {
   pouchConfig: {
     auth: {
       username: dbmap.coinstac.username,
-      password: dbmap.coisntac.password,
+      password: dbmap.coinstac.password,
     },
   },
   remote: {
