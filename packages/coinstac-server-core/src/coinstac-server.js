@@ -13,12 +13,18 @@ const pify = require('pify');
 const pouchDbAdapterLevelDB = require('pouchdb-adapter-leveldb');
 const pouchDBAdapterMemory = require('pouchdb-adapter-memory');
 const url = require('url');
+const dbmap = require('/coins/config/dbmap.json');
 
 const BASE_PATH = path.join(os.tmpdir(), 'coinstac-server-core');
 const DB_REGISTRY_DEFAULTS = {
   isRemote: true,
   localStores: null,
-  pouchConfig: {},
+  pouchConfig: {
+    auth: {
+      username: dbmap.coinstac.username,
+      password: dbmap.coisntac.password,
+    },
+  },
   remote: {
     db: {
       protocol: 'http',
@@ -115,15 +121,15 @@ class CoinstacServer {
 
     dbRegistryOptions.path = CoinstacServer.DB_PATH;
 
-    const getDBRegistry = () => {
+    const factoryProxy = () => {
       const dbRegistry = dbRegistryFactory(dbRegistryOptions);
       this.logger.info('DB registry initialized');
       return dbRegistry;
     };
 
     return this.config.inMemory ?
-      Promise.resolve(getDBRegistry()) :
-      mkdirpAsync(CoinstacServer.DB_PATH).then(getDBRegistry);
+      Promise.resolve(factoryProxy()) :
+      mkdirpAsync(CoinstacServer.DB_PATH).then(factoryProxy);
   }
 
   /**

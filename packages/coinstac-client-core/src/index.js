@@ -244,8 +244,7 @@ class CoinstacClient {
   _initDBRegistry(username) {
     const defaults = {
       pouchConfig: {
-        username: 'poop',
-        password: 'poopfuck',
+        auth: this.auth.getDatabaseCredentials(),
       },
       isLocal: true,
       path: this.getDatabaseDirectory(username),
@@ -258,7 +257,6 @@ class CoinstacClient {
         },
       },
     };
-
     const regOpts = merge(defaults, this.dbConfig);
     this.dbRegistry = registryFactory(regOpts);
     return this.dbRegistry;
@@ -329,7 +327,6 @@ class CoinstacClient {
     })
     .then(() => this.pool.init())
     .then(() => {
-      debugger;
       this.pool.consortiaListener.on('delete', event => {
         this.logger.verbose(
           'LocalPipelineRunnerPool.consortiaListener [delete]',
