@@ -2,6 +2,7 @@
 
 // app package deps
 const deburr = require('lodash/deburr');
+const merge = require('lodash/merge');
 const kebabCase = require('lodash/kebabCase');
 const mkdirp = require('mkdirp');
 const bluebird = require('bluebird');
@@ -233,12 +234,19 @@ class CoinstacClient {
         dbRegistry: this.dbRegistry,
         path: computationsDirectory,
       }))
-      .then((reg) => { this.computationRegistry = reg; });
+      .then((reg) => {
+        this.computationRegistry = reg;
+        return reg;
+      });
   }
 
 
   _initDBRegistry(username) {
     const defaults = {
+      pouchConfig: {
+        username: 'poop',
+        password: 'poopfuck',
+      },
       isLocal: true,
       path: this.getDatabaseDirectory(username),
       remote: {
@@ -251,8 +259,8 @@ class CoinstacClient {
       },
     };
 
-    this.dbRegistry = registryFactory(Object.assign(defaults, this.dbConfig));
-
+    const regOpts = merge(defaults, this.dbConfig);
+    this.dbRegistry = registryFactory(regOpts);
     return this.dbRegistry;
   }
 
@@ -321,6 +329,7 @@ class CoinstacClient {
     })
     .then(() => this.pool.init())
     .then(() => {
+      debugger;
       this.pool.consortiaListener.on('delete', event => {
         this.logger.verbose(
           'LocalPipelineRunnerPool.consortiaListener [delete]',
@@ -381,4 +390,3 @@ class CoinstacClient {
 }
 
 module.exports = CoinstacClient;
-
