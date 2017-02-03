@@ -31,9 +31,9 @@ test('ProjectService#getCSV', t => {
   const filename = './path/to/random.csv';
   const data = [
     ['filename', 'random', 'column'],
-    ['M100.txt', '44', 'true'],
-    ['M101.txt', '18', 'false'],
-    ['M102.txt', '65', 'true'],
+    ['./M100.txt', '44', 'true'],
+    ['./M101.txt', '18', 'false'],
+    ['./M102.txt', '65', 'true'],
   ];
   readFileStub.yields(null, new Buffer(data.map(r => r.join(',')).join('\n')));
 
@@ -124,10 +124,11 @@ test('ProjectService#setMetaContents errors', t => {
   }];
   const metaFile = [
     ['filename', 'age', 'is control'],
-    ['M100.txt', '30', 'true'],
-    ['M101.txt', '29', 'false'],
-    ['M102.txt', '28', 'true'],
+    ['./M100.txt', '30', 'true'],
+    ['./M101.txt', '29', 'false'],
+    ['./M102.txt', '28', 'true'],
   ];
+  const metaFilePath = path.join(__dirname, 'metadata.csv');
 
   project.get.returns(Promise.resolve({
     _id: projectId,
@@ -137,6 +138,7 @@ test('ProjectService#setMetaContents errors', t => {
       ['filename', 'bogus'],
       ['M100.txt', 'stringz'],
     ],
+    metaFilePath,
     metaCovariateMapping: {
       0: 1,
     },
@@ -149,6 +151,7 @@ test('ProjectService#setMetaContents errors', t => {
     consortiumId,
     files: badFiles,
     metaFile,
+    metaFilePath,
   }));
   project.get.onCall(5).returns(Promise.resolve({
     _id: projectId,
@@ -158,6 +161,7 @@ test('ProjectService#setMetaContents errors', t => {
       0: 0,
     },
     metaFile,
+    metaFilePath,
   }));
 
   t.plan(7);
@@ -223,9 +227,9 @@ test('ProjectService#setMetaContents errors', t => {
 test('ProjectService - setMetaContents', t => {
   const consortiumId = 'test-consortium';
   const projectId = 'test-project';
-  const filename1 = path.join(__dirname, 'M100.txt');
-  const filename2 = path.join(__dirname, 'M101.txt');
-  const filename3 = path.join(__dirname, 'M102.txt');
+  const filename1 = path.join(__dirname, 'controls', 'M100.txt');
+  const filename2 = path.join(__dirname, 'patients', 'M101.txt');
+  const filename3 = path.join(__dirname, 'patients', 'M102.txt');
 
   const dbGetStub = sinon.stub();
 
@@ -270,10 +274,11 @@ test('ProjectService - setMetaContents', t => {
     }],
     metaFile: [
       ['filename', 'Age', 'Diagnosis'],
-      ['M100.txt', '40', 'true'],
-      ['M101.txt', '20', 'false'],
-      ['M102.txt', '60', '0'],
+      ['./controls/M100.txt', '40', 'true'],
+      [filename2, '20', 'false'],
+      ['./patients/M102.txt', '60', '0'],
     ],
+    metaFilePath: path.join(__dirname, 'metadata.csv'),
     metaCovariateMapping: {
       1: 1,
       2: 0,
