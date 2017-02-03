@@ -149,17 +149,29 @@ class ProjectService extends ModelService {
           }, {});
         }
 
-        project.files.forEach(file => {
-          const metaRow = metaFile.find(row => {
-            const filename = row[0];
-            return (
-              filename === file.filename ||
-              filename === path.basename(file.filename)
-            );
-          });
+        project.files.forEach((file) => {
+          const filename = file.filename;
+
+          /**
+           * Find the `file`'s corresponding row in the CSV metaFile.
+           *
+           * It's assumed that the metaFile's first column stores file names
+           * that correspond one-to-one to a project's files. The CSV's file
+           * name values can either be a full file path or a relative file path;
+           * if the file path is relative the CSV file's location is considered
+           * the base.
+           */
+          const metaRow = metaFile.find(([metaFilename]) => (
+            path.isAbsolute(metaFilename) ?
+              filename === metaFilename :
+              filename === path.resolve(
+                path.dirname(project.metaFilePath),
+                metaFilename
+              )
+          ));
 
           if (!metaRow) {
-            throw new Error(`Couldn't find meta info for file ${file.filename}`);
+            throw new Error(`Couldn't find meta info for file ${filename}`);
           }
 
           Object.assign(file.tags, getTags(metaRow));
