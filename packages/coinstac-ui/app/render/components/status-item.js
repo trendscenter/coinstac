@@ -113,6 +113,9 @@ export default class StatusItem extends Component {
           <strong>Iteration:</strong>
           {' '}
           {remoteResult.pluginState['group-step'].step}
+          <span className="text-muted">
+            /{remoteResult.pluginState.inputs[0][1]}
+          </span>
         </li>
       );
     }
