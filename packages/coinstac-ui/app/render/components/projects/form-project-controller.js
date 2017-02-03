@@ -163,18 +163,22 @@ class FormProjectController extends Component {
         metaFilePath,
         app.core.projects.getCSV(metaFilePath),
       ]))
-      .then(([metaFilePath, metaFile]) => {
+      .then(([metaFilePath, rawMetaFile]) => {
+        const metaFile = JSON.parse(rawMetaFile);
+
         this.setState({
           errors: {
             metaFile: null,
             files: null,
           },
           project: {
-            files: [...tail(JSON.parse(metaFile)).map(metaRow => {
-              return path.isAbsolute(metaRow[0]) ?
-              metaRow[0] : path.resolve(path.join(path.dirname(metaFilePath), metaRow[0]));
-            })],
-            metaFile: JSON.parse(metaFile),
+            files: tail(metaFile).map(([filename]) => ({
+              filename: path.isAbsolute(filename) ?
+                filename :
+                path.resolve(path.join(path.dirname(metaFilePath), filename)),
+              tags: {},
+            })),
+            metaFile,
             metaFilePath,
           },
         });
