@@ -1,28 +1,15 @@
 import React, { PropTypes } from 'react';
 import { Label, Panel } from 'react-bootstrap';
+import scino from 'scino';
 
-function toUl(items) {
-  /*
-   <ul>
-    {Object.keys(data).map((key, i) => {
-      const value = data[key];
-
-      if (!(value instanceof Object)) {
-        return <li key={i}>{key}: <strong>{data[key].toString()}</strong></li>;
-      }
-    })}
-  </ul>
-  */
-
-  return <pre>{JSON.stringify(items, null, 2)}</pre>;
-}
+import ConsortiumResultTable from './consortium-result-table';
 
 export default function ConsortiumResult({
   _id,
-  computation,
+  activeComputationInputs,
   complete,
+  computation,
   data,
-  pipelineState,
   userErrors,
   usernames,
 }) {
@@ -50,27 +37,69 @@ export default function ConsortiumResult({
     );
   }
 
-  const stateOutput = (
-    <div>
-      <h3 className="h4">Computation state:</h3>
-      <ul>
-        <li>Pipeline step: <strong>{pipelineState.step}</strong></li>
-        <li>Users: <strong>{usernames.join(', ')}</strong></li>
-      </ul>
-    </div>
-  );
-
   if (computation) {
     computationOutput = (
-      <p><strong>{computation.name}</strong> @ {computation.version}</p>
+      <ul className="list-unstyled">
+        <li>
+          <strong>Computation:</strong>
+          {' '}
+          {computation.meta.name}
+          {' '}
+          <span className="text-muted">(Version {computation.version})</span>
+        </li>
+        <li>
+          <strong>Freesurfer ROI:</strong>
+          {' '}
+          {activeComputationInputs[0][0].join(', ')}
+        </li>
+        <li><strong>Users:</strong>{` ${usernames.join(', ')}`}</li>
+      </ul>
     );
   }
 
   if (data) {
+    /**
+     * @todo This assumes covariates are placed at a specific location in
+     * `activeComputationInputs`. Don't hard-code this!
+     */
+    const covariates =
+      computation.name === 'decentralized-single-shot-ridge-regression' ?
+      activeComputationInputs[0][1].map(x => x.name) :
+      activeComputationInputs[0][2].map(x => x.name);
+
     dataOutput = (
       <div>
-        <h3 className="h4">Data:</h3>
-        {toUl(data)}
+        <div>
+          <h4>Global</h4>
+          <dl className="consortium-result-list">
+            <dt>R²</dt>
+            <dd><samp>{scino(data.rSquaredGlobal, 5)}</samp></dd>
+          </dl>
+          <ConsortiumResultTable
+            covariates={covariates}
+            results={{
+              averageBetaVectors: data.averageBetaVector,
+              pValues: data.pValueGlobal,
+              tValues: data.tValueGlobal,
+            }}
+          />
+        </div>
+        {data.tValueLocal.map((tValues, index) => (
+          <div key={index}>
+            <h4>Site {index + 1}</h4>
+            <dl className="consortium-result-list">
+              <dt>R²</dt>
+              <dd><samp>{scino(data.rSquaredLocal[index], 5)}</samp></dd>
+            </dl>
+            <ConsortiumResultTable
+              covariates={covariates}
+              results={{
+                pValues: data.pValueLocal[index],
+                tValues,
+              }}
+            />
+          </div>
+        ))}
       </div>
     );
   }
@@ -78,12 +107,11 @@ export default function ConsortiumResult({
   const headingStyle = { marginTop: 0 };
 
   return (
-    <Panel>
+    <Panel className="consortium-result">
       <h2 className="h3" style={headingStyle}>Computation #{_id} {indicator}</h2>
       {computationOutput}
       {errors}
       {dataOutput}
-      {stateOutput}
     </Panel>
   );
 }
@@ -92,9 +120,29 @@ ConsortiumResult.displayName = 'ConsortiumResult';
 
 ConsortiumResult.propTypes = {
   _id: PropTypes.string.isRequired,
-  computation: PropTypes.object,
+  activeComputationInputs: PropTypes.arrayOf(PropTypes.arrayOf(
+    PropTypes.oneOfType([
+      PropTypes.arrayOf(PropTypes.string),
+      PropTypes.arrayOf(PropTypes.object),
+      PropTypes.number,
+    ])
+  )).isRequired,
   complete: PropTypes.bool.isRequired,
-  data: PropTypes.object,
+  computation: PropTypes.shape({
+    version: PropTypes.string.isRequired,
+    meta: PropTypes.shape({
+      name: PropTypes.string.isRequired,
+    }),
+  }).isRequired,
+  data: PropTypes.shape({
+    averageBetaVector: PropTypes.arrayOf(PropTypes.number),
+    pValueGlobal: PropTypes.arrayOf(PropTypes.number).isRequired,
+    pValueLocal: PropTypes.arrayOf(PropTypes.array).isRequired,
+    rSquaredGlobal: PropTypes.number.isRequired,
+    rSquaredLocal: PropTypes.arrayOf(PropTypes.number).isRequired,
+    tValueGlobal: PropTypes.arrayOf(PropTypes.number).isRequired,
+    tValueLocal: PropTypes.arrayOf(PropTypes.array).isRequired,
+  }),
   pipelineState: PropTypes.object.isRequired,
   pluginState: PropTypes.object.isRequired,
   usernames: PropTypes.array.isRequired,

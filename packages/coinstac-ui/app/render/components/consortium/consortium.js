@@ -18,11 +18,18 @@ export default class Consortium extends Component {
   }
 
   maybeRenderResults() {
-    const { computations, isMember, isNew, remoteResults } = this.props;
+    const {
+      computations,
+      consortium,
+      isMember,
+      isNew,
+      remoteResults,
+    } = this.props;
 
-    if (!isNew && isMember) {
+    if (!isNew && isMember && consortium) {
       return (
         <ConsortiumResults
+          activeComputationInputs={consortium.activeComputationInputs}
           computations={computations}
           remoteResults={remoteResults}
         />
@@ -162,6 +169,7 @@ Consortium.propTypes = {
   computations: PropTypes.arrayOf(PropTypes.object).isRequired,
   consortium: PropTypes.shape({
     _id: PropTypes.string.isRequired,
+    activeComputationInputs: PropTypes.array.isRequired,
     description: PropTypes.string.isRequired,
     label: PropTypes.string.isRequired,
     owners: PropTypes.arrayOf(PropTypes.string).isRequired,
