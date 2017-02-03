@@ -66,7 +66,7 @@ export default class StatusItem extends Component {
         text = 'Running';
         break;
       case 'complete':
-        className += 'text-success';
+        className += ' text-success';
         icon = 'ok';
         text = 'Complete';
         break;
