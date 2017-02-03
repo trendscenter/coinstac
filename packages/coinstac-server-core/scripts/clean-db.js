@@ -9,11 +9,11 @@ const superagent = require('superagent');
 const url = require('url');
 
 const urlBase = url.format({
-  auth: dbmap.coinstac ?`${dbmap.coinstac.user}:${dbmap.coinstac.password}` : '',
+  auth: dbmap.coinstac ? `${dbmap.coinstac.user}:${dbmap.coinstac.password}` : '',
   hostname: 'localhost',
   port: 5984,
   protocol: 'http',
-})
+});
 
 async.parallel([
   cb1 => {
