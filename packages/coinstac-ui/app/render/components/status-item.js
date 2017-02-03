@@ -1,4 +1,4 @@
-import { difference, reduce, values } from 'lodash';
+import { difference, get, reduce, values } from 'lodash';
 import React, { Component, PropTypes } from 'react';
 import { Button, Panel } from 'react-bootstrap';
 import { Link } from 'react-router';
@@ -107,7 +107,11 @@ export default class StatusItem extends Component {
     let waitingOn;
     let users;
 
-    if (computation.name === 'laplacian-noise-ridge-regression' && remoteResult) {
+    if (
+      computation.name === 'laplacian-noise-ridge-regression' &&
+      remoteResult &&
+      get(remoteResult, 'pluginState.inputs[0][1]')
+    ) {
       iteration = (
         <li>
           <strong>Iteration:</strong>
