@@ -71,7 +71,7 @@
     "trace": "^2.3.3",
     "url-loader": "^0.5.6",
     "webpack": "1.13.1",
-    "webpack-dashboard": "0.1.8",
+    "webpack-dashboard": "0.3.0",
     "webpack-dev-server": "1.14.1"
   },
   "scripts": {
