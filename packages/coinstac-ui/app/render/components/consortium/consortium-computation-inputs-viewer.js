@@ -1,14 +1,19 @@
 import React, { PropTypes } from 'react';
 
 /**
+ * Consortium computation inputs viewer.
+ *
  * @param {Object} props
+ * @param {Object} props.computation
  * @param {Object[]} props.inputs
  * @param {Object[]} props.values
  * @returns {React.Component}
  */
-export default function ConsortiumComputationInputsViewer(props) {
-  const { inputs, values } = props;
-
+export default function ConsortiumComputationInputsViewer({
+  computation,
+  inputs,
+  values,
+}) {
   return (
     <div className="consortium-computation-inputs-viewer panel panel-default">
       <div className="panel-heading">
@@ -16,6 +21,13 @@ export default function ConsortiumComputationInputsViewer(props) {
       </div>
       <div className="panel-body">
         <ul className="list-unstyled">
+          <li>
+            <strong>Computation:</strong>
+            {' '}
+            {computation.name}
+            {' '}
+            <small className="text-muted">Version {computation.version}</small>
+          </li>
           {inputs.map((input, index) => {
             let value;
 
@@ -40,6 +52,10 @@ export default function ConsortiumComputationInputsViewer(props) {
 }
 
 ConsortiumComputationInputsViewer.propTypes = {
+  computation: PropTypes.shape({
+    name: PropTypes.string.isRequired,
+    version: PropTypes.string.isRequired,
+  }),
   inputs: PropTypes.arrayOf(PropTypes.object).isRequired,
   values: PropTypes.array.isRequired,
 };
