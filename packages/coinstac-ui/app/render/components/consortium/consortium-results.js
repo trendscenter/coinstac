@@ -7,10 +7,7 @@ export default function ConsortiumResults(props) {
   const { activeComputationInputs, computations, remoteResults } = props;
   const content = !remoteResults || !remoteResults.length ?
   (
-    <Alert bsStyle="info">
-      Pending consortium analysis kickoff. Get started and group data will
-      show here.
-    </Alert>
+    <Alert bsStyle="info">No results.</Alert>
   ) :
   (
     <ul className="list-unstyled">
