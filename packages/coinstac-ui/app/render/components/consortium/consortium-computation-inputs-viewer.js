@@ -56,6 +56,15 @@ ConsortiumComputationInputsViewer.propTypes = {
     name: PropTypes.string.isRequired,
     version: PropTypes.string.isRequired,
   }),
-  inputs: PropTypes.arrayOf(PropTypes.object).isRequired,
-  values: PropTypes.array.isRequired,
+  inputs: PropTypes.arrayOf(PropTypes.shape({
+    label: PropTypes.string.isRequired,
+    type: PropTypes.string.isRequired,
+  })).isRequired,
+  values: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.oneOfType([
+    PropTypes.number,
+    PropTypes.string,
+    PropTypes.shape({
+      name: PropTypes.string.isRequired,
+    }),
+  ]))).isRequired,
 };
