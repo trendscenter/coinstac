@@ -13,6 +13,8 @@ function toPValueTableData(value, index) {
   return getTableDataElement(scino(value, 5), index);
 }
 
+const subscripts = ['₀', '₁', '₂', '₃', '₄', '₅', '₆', '₇', '₈', '₉'];
+
 /**
  * Get formatted data transformed to components.
  *
@@ -25,12 +27,12 @@ function toPValueTableData(value, index) {
  * @returns {React.Component}
  */
 export default function ConsortiumResultTable({ covariates, results }) {
-  let averageBetaVectors;
+  let betaVector;
 
   if (results.averageBetaVectors) {
-    averageBetaVectors = (
+    betaVector = (
       <tr>
-        <th scope="row">Averaged Beta Vectors</th>
+        <th scope="row">β Vector</th>
         {results.averageBetaVectors.map(toTableData)}
       </tr>
     );
@@ -43,23 +45,26 @@ export default function ConsortiumResultTable({ covariates, results }) {
           <th scope="col">
             <span className="sr-only">Row label:</span>
           </th>
-          <th scope="col">Beta 0 <span className="text-muted">(Intercept)</span></th>
+          <th scope="col">
+            β{`${subscripts[0]} `}
+            <span className="text-muted">(Intercept)</span>
+          </th>
           {covariates.map((covariate, i) => (
             <th key={i} scope="col">
-              Beta {` ${i + 1} `}
+              β{`${subscripts[i + 1]} `}
               <span className="text-muted">({covariate})</span>
             </th>
           ))}
         </tr>
       </thead>
       <tbody>
-        {averageBetaVectors}
+        {betaVector}
         <tr>
-          <th scope="row">P Values</th>
+          <th scope="row">P Value</th>
           {results.pValues.map(toPValueTableData)}
         </tr>
         <tr>
-          <th scope="row">T Values</th>
+          <th scope="row">T Value</th>
           {results.tValues.map(toTableData)}
         </tr>
       </tbody>
