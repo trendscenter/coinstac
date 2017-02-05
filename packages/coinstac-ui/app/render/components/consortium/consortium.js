@@ -128,17 +128,22 @@ export default class Consortium extends Component {
         return _id === consortium.activeComputationId;
       });
 
-      if (
-        activeComputation &&
-        Array.isArray(activeComputation.inputs) &&
-        activeComputation.inputs.length
-      ) {
-        inputsViewerProps.inputs = activeComputation.inputs[0];
-        inputsViewerProps.values = consortium.activeComputationInputs[0];
+      if (activeComputation) {
+        inputsViewerProps.computation = {
+          name: activeComputation.meta.name,
+          version: activeComputation.version,
+        };
+
+        if (
+          Array.isArray(activeComputation.inputs) &&
+          activeComputation.inputs.length
+        ) {
+          inputsViewerProps.inputs = activeComputation.inputs[0];
+          inputsViewerProps.values = consortium.activeComputationInputs[0];
+        }
       }
     }
 
-    // TODO: Add active computation display for members
     return (
       <div className="consortium-details">
         <div className="page-header clearfix">
