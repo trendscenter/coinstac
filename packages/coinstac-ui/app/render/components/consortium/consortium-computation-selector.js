@@ -17,8 +17,8 @@ export default function ConsortiumComputationSelector({
   }
 
   /**
-   * @todo Don't hard-code the 'Regressions' label. Determine a way to map
-   * computation tags to human-readable names.
+   * @todo Don't hard-code the 'FreeSurfer Regressions' label. Determine a way
+   * to map computation tags to human-readable names.
    */
   const computationsFields = chain(computations)
     .sortBy(getFirstTag)
@@ -26,7 +26,7 @@ export default function ConsortiumComputationSelector({
     .map((comps, tag) => (
       <fieldset className="consortium-computation-selector-group" key={tag}>
         <legend className="consortium-computation-selector-label">
-          Regressions
+          FreeSurfer Regressions
         </legend>
         {comps.map(
           (
