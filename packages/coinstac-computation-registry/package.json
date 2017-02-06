@@ -11,10 +11,11 @@
     "Sergey Plis <splis@mrn.org>"
   ],
   "dependencies": {
-    "coinstac-common": "^2.3.0",
-    "decentralized-single-shot-ridge-regression": "github:mrn-code/decentralized-single-shot-ridge-regression#v1.1.1",
-    "laplacian-noise-ridge-regression": "github:mrn-code/decentralized-laplacian-ridge-regression#v3.1.1",
-    "lodash": "^4.17.4"
+    "coinstac-common": "^2.2.2",
+    "decentralized-single-shot-ridge-regression": "github:mrn-code/decentralized-single-shot-ridge-regression#v1.1.3",
+    "laplacian-noise-ridge-regression": "github:mrn-code/decentralized-laplacian-ridge-regression#v3.1.4",
+    "lodash": "^4.17.4",
+    "read-pkg-up": "^2.0.0"
   },
   "description": "Computation registry service for COINSTAC.",
   "devDependencies": {

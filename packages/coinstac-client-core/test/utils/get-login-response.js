@@ -38,6 +38,10 @@ module.exports = function getLoginResponse(user) {
       issueTime: Date.now(),
       expireTime: Date.now + 200000,
       studyRoles: {},
+      coinstac: {
+        username: 'test',
+        password: 'test',
+      },
     }],
     error: null,
     stats: {},

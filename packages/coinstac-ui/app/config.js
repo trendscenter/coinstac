@@ -27,6 +27,7 @@ const conf = convict({
       db: {
         hostname: 'coinstac.mrn.org',
         pathname: '',
+        port: '',
         protocol: 'https:',
       },
     },

@@ -2,6 +2,7 @@
 
 // app package deps
 const deburr = require('lodash/deburr');
+const merge = require('lodash/merge');
 const kebabCase = require('lodash/kebabCase');
 const mkdirp = require('mkdirp');
 const bluebird = require('bluebird');
@@ -11,8 +12,8 @@ const path = require('path');
 const winston = require('winston');
 const Logger = winston.Logger;
 const Console = winston.transports.Console;
-const hawkifyPouchDB = require('hawkify-pouchdb');
-
+const DomStorage = require('dom-storage');
+const touch = require('touch');
 
 // app utils
 const common = require('coinstac-common');
@@ -21,16 +22,13 @@ const computationRegistryFactory =
   require('coinstac-computation-registry').factory;
 const registryFactory = require('coinstac-common').services.dbRegistry;
 
-// init
-const initializeAPIClient = require('./init/halfpenny');
-
-// client sub-apis
-// const project = require('./sub-api/project');
-const Auth = require('./sub-api/auth');
+const AuthenticationService = require('./sub-api/authentication-service.js');
 const ConsortiaService = require('./sub-api/consortia-service');
 const ComputationService = require('./sub-api/computation-service');
 const ProjectServices = require('./sub-api/project-service');
 
+const mkdirpAsync = bluebird.promisify(mkdirp);
+const touchAsync = bluebird.promisify(touch);
 
 /**
  * Create a user client for COINSTAC
@@ -50,9 +48,6 @@ const ProjectServices = require('./sub-api/project-service');
  * @param {string} [opts.logLevel] npm log levels, e.g. 'verbose', 'error', etc
  * @param {object} [opts.db] coinstac-common dbRegistry service configuration
  * @param {string} [opts.hp] URL configutation for Halfpenny's `baseUrl`
- * @param {LocalStorage} [opts.storage] storage engine for halfpenny
- * @property {LocalStorage} storage
- * @property {Halfpenny} apiClient
  * @property {DBRegistry} dbRegistry
  * @property {object} dbConfig db registry configuration stashed for late initialization
  * @property {Winston} logger
@@ -91,7 +86,6 @@ class CoinstacClient {
       throw new TypeError('coinstac-client requires configuration opts');
     }
     this.dbConfig = opts.db;
-    this.storage = opts.storage;
     this.appDirectory = opts.appDirectory ||
       CoinstacClient.getDefaultAppDirectory();
     this.halfpennyBaseUrl = opts.hp;
@@ -102,7 +96,6 @@ class CoinstacClient {
     this.consortia = {};
     this.computations = {};
     this.dbRegistry = {};
-    this.halfpenny = {};
     this.projects = {};
     this.pool = {};
 
@@ -146,27 +139,17 @@ class CoinstacClient {
     this.logger.info('initializing coinstac-client');
 
     const username = credentials.username;
-    const hpDir = this.getHalfpennyDirectory(username);
-    const mkdirpAsync = bluebird.promisify(mkdirp);
+    const storageFilename = this.getHalfpennyStorageFilename(username);
 
     return Promise.all([
-      mkdirpAsync(hpDir),
+      mkdirpAsync(path.dirname(storageFilename)),
       mkdirpAsync(this.getDatabaseDirectory(username)),
     ])
+      .then(() => touchAsync(storageFilename))
       .then(() => {
-        const hpOpts = {
+        this.auth = AuthenticationService.factory({
           baseUrl: this.halfpennyBaseUrl,
-          storagePath: hpDir,
-        };
-
-        /* istanbul ignore else */
-        if (this.storage) {
-          hpOpts.storage = this.storage;
-        }
-
-        this.halfpenny = initializeAPIClient(hpOpts);
-        this.auth = new Auth({
-          halfpenny: this.halfpenny,
+          storage: new DomStorage(storageFilename),
         });
 
         return this._initAuthorization(credentials);
@@ -206,17 +189,17 @@ class CoinstacClient {
   }
 
   /**
-   * Get Halfpenny storage directory.
+   * Get Halfpenny storage filename.
    * @private
    *
    * @param {string} username
    * @returns {string}
    */
-  getHalfpennyDirectory(username) {
+  getHalfpennyStorageFilename(username) {
     return path.join(
       this.appDirectory,
       CoinstacClient.sanitizeUsername(username),
-      'halfpenny'
+      'halfpenny.json'
     );
   }
 
@@ -230,7 +213,7 @@ class CoinstacClient {
     const doLogin = () => this.auth.login(credentials);
 
     return credentials.email && credentials.name ?
-      this.auth.createUser(credentials).then(doLogin) :
+      this.auth.signup(credentials).then(doLogin) :
       doLogin();
   }
 
@@ -251,35 +234,30 @@ class CoinstacClient {
         dbRegistry: this.dbRegistry,
         path: computationsDirectory,
       }))
-      .then((reg) => { this.computationRegistry = reg; });
+      .then((reg) => {
+        this.computationRegistry = reg;
+        return reg;
+      });
   }
 
 
   _initDBRegistry(username) {
+    const authCreds = this.auth.getDatabaseCredentials();
     const defaults = {
+      auth: this.auth.getDatabaseCredentials(),
       isLocal: true,
       path: this.getDatabaseDirectory(username),
       remote: {
         db: {
+          auth: authCreds ? `${authCreds.user}:${authCreds.password}` : '',
           protocol: 'https',
-          hostname: 'coins-api.mrn.org',
-          port: 5984,
+          hostname: 'coinstac.mrn.org',
+          port: 443,
           pathname: 'coinstacdb',
         },
       },
     };
-    /* istanbul ignore next */
-    const pouchAjax = function stubPouchDBAjax() {};
-    // @TODO ^ replace with require('pouch-ajax') when pouchdb#5322 is closed
-    // and hawkify-pouchdb actually wraps the pouchAjax function successfully!
-    // for now, hawkify-pouchdb simply returns an object with the proper headers.
-    // all dbs will have the returned ajax headers applied.
-    const ajax = {
-      ajax: function applyHawkAjaxHeaders() {
-        return hawkifyPouchDB(pouchAjax, this.halfpenny.auth.getAuthCredentials());
-      }.bind(this),
-    };
-    const regOpts = Object.assign(defaults, this.dbConfig, ajax);
+    const regOpts = merge(defaults, this.dbConfig);
     this.dbRegistry = registryFactory(regOpts);
     return this.dbRegistry;
   }
@@ -409,4 +387,3 @@ class CoinstacClient {
 }
 
 module.exports = CoinstacClient;
-

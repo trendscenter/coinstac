@@ -1,0 +1,17 @@
+///
+/// Consortium result definition list styles.
+///
+
+.consortium-result-list {
+  display: flex;
+  margin-bottom: 8px;
+
+  dt,
+  dd {
+    padding: 8px;
+  }
+  dt {
+    font-weight: 500;
+    width: 18rem;
+  }
+}
