@@ -32,12 +32,7 @@ class FormLoginController extends Component {
     evt.preventDefault();
 
     dispatch(authActions.login(userCred))
-      .then(user => {
-        app.notifications.push({
-          message: `Welcome, ${user.label}!`,
-          level: 'success',
-        });
-
+      .then(() => {
         // TODO: Figure why `nextTick` is needed
         process.nextTick(() => router.push('/'));
       });

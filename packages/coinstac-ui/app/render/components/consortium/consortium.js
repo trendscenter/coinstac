@@ -18,11 +18,18 @@ export default class Consortium extends Component {
   }
 
   maybeRenderResults() {
-    const { computations, isMember, isNew, remoteResults } = this.props;
+    const {
+      computations,
+      consortium,
+      isMember,
+      isNew,
+      remoteResults,
+    } = this.props;
 
-    if (!isNew && isMember) {
+    if (!isNew && isMember && consortium) {
       return (
         <ConsortiumResults
+          activeComputationInputs={consortium.activeComputationInputs}
           computations={computations}
           remoteResults={remoteResults}
         />
@@ -121,17 +128,22 @@ export default class Consortium extends Component {
         return _id === consortium.activeComputationId;
       });
 
-      if (
-        activeComputation &&
-        Array.isArray(activeComputation.inputs) &&
-        activeComputation.inputs.length
-      ) {
-        inputsViewerProps.inputs = activeComputation.inputs[0];
-        inputsViewerProps.values = consortium.activeComputationInputs[0];
+      if (activeComputation) {
+        inputsViewerProps.computation = {
+          name: activeComputation.meta.name,
+          version: activeComputation.version,
+        };
+
+        if (
+          Array.isArray(activeComputation.inputs) &&
+          activeComputation.inputs.length
+        ) {
+          inputsViewerProps.inputs = activeComputation.inputs[0];
+          inputsViewerProps.values = consortium.activeComputationInputs[0];
+        }
       }
     }
 
-    // TODO: Add active computation display for members
     return (
       <div className="consortium-details">
         <div className="page-header clearfix">
@@ -162,6 +174,7 @@ Consortium.propTypes = {
   computations: PropTypes.arrayOf(PropTypes.object).isRequired,
   consortium: PropTypes.shape({
     _id: PropTypes.string.isRequired,
+    activeComputationInputs: PropTypes.array.isRequired,
     description: PropTypes.string.isRequired,
     label: PropTypes.string.isRequired,
     owners: PropTypes.arrayOf(PropTypes.string).isRequired,

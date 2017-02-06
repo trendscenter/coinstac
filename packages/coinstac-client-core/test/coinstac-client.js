@@ -1,7 +1,8 @@
 'use strict';
 
 const assign = require('lodash/assign');
-const Auth = require('../src/sub-api/auth.js');
+const AuthenticationService =
+  require('../src/sub-api/authentication-service.js');
 const bluebird = require('bluebird');
 const clientFactory = require('./utils/client-factory');
 const CoinstacClient = require('../');
@@ -98,9 +99,9 @@ test('CoinstacClient - initialize process', (t) => {
     '_initComputationRegistry'
   );
   const loginResponse = getLoginResponse();
-  const loginSpy = sinon.spy(Auth.prototype, 'login');
+  const loginSpy = sinon.spy(AuthenticationService.prototype, 'login');
 
-  t.plan(8);
+  t.plan(7);
 
   nock(config.get('baseUrl'))
     .post('/auth/keys')
@@ -125,17 +126,9 @@ test('CoinstacClient - initialize process', (t) => {
   .then(() => bluebird.promisify(fs.stat, { context: fs })(cc.appDirectory))
   .then((stat) => t.ok(stat, '“upserts” application directory'))
   .then(() => {
-    /**
-     * Halfpenny doesn’t export its `ApiClient` class, so an exact check is
-     * impossible.
-     */
-    t.ok(
-      'halfpenny' in cc && cc.halfpenny instanceof Object,
-      'sets Halfpenny instance'
-    );
     t.ok(
       (
-        'auth' in cc && cc.auth instanceof Auth &&
+        'auth' in cc && cc.auth instanceof AuthenticationService &&
         'consortia' in cc && cc.consortia instanceof ConsortiaService &&
         'computations' in cc && cc.computations instanceof ComputationService &&
         'projects' in cc && cc.projects instanceof ProjectService
@@ -215,8 +208,8 @@ test('CoinstacClient - teardown process', (t) => {
 
 test('CoinstacClient - auth initialization', t => {
   const authStub = {
-    createUser: sinon.stub().returns(Promise.resolve()),
     login: sinon.stub().returns(Promise.resolve()),
+    signup: sinon.stub().returns(Promise.resolve()),
   };
   const credentials = {
     email: 'test@mrn.org',
@@ -233,7 +226,7 @@ test('CoinstacClient - auth initialization', t => {
   )
     .then(() => {
       t.ok(
-        authStub.createUser.calledWith(credentials),
+        authStub.signup.calledWith(credentials),
         'calls create user'
       );
       t.ok(

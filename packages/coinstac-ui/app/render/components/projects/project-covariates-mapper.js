@@ -100,7 +100,7 @@ export default class ProjectCovariatesMapper extends Component {
 
     return (
       <div className="project-covariates-mapper">
-        <p>Map your meta file’s columns to required computation inputs:</p>
+        <p>Map your metadata file’s columns to the required computation input fields:</p>
         <Table striped condensed className="project-covariates-mapper">
           <thead>
             {this.renderHeadingRow()}
