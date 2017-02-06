@@ -16,10 +16,17 @@ export default class ComputationFieldBasic extends Component {
   }
 
   handleButtonClick(increment) {
+    const { max, min, onChange } = this.props;
     const value = this.refs[INPUT_REF].props.value + increment;
-    this.props.onChange({
-      target: { value },
-    });
+
+    if (
+      (typeof max !== 'number' || value <= max) &&
+      (typeof min !== 'number' || value >= min)
+    ) {
+      onChange({
+        target: { value },
+      });
+    }
   }
 
   render() {
@@ -28,8 +35,11 @@ export default class ComputationFieldBasic extends Component {
       fieldIndex,
       help,
       label,
+      max,
+      min,
       onChange,
       options,
+      step,
       type,
       value,
     } = this.props;
@@ -59,10 +69,21 @@ export default class ComputationFieldBasic extends Component {
         </FormControl>
       );
     } else if (type === 'number') {
+      const localStep = step || 1;
+
+      controlProps.step = localStep;
       controlProps.type = 'number';
       formGroupProps.className = 'computation-field-number';
 
-      if (value) {
+      if (max) {
+        controlProps.max = max;
+      }
+
+      if (min) {
+        controlProps.min = min;
+      }
+
+      if (typeof value !== 'number' || typeof value !== 'string') {
         controlProps.value = value;
       }
 
@@ -71,7 +92,7 @@ export default class ComputationFieldBasic extends Component {
           <Button
             aria-label="Subtract 1"
             bsStyle="primary"
-            onClick={() => this.handleButtonClick(-1)}
+            onClick={() => this.handleButtonClick(-1 * localStep)}
           >
             <span className="glyphicon glyphicon-minus"></span>
           </Button>
@@ -79,7 +100,7 @@ export default class ComputationFieldBasic extends Component {
           <Button
             aria-label="Add 1"
             bsStyle="primary"
-            onClick={() => this.handleButtonClick(1)}
+            onClick={() => this.handleButtonClick(localStep)}
           >
             <span className="glyphicon glyphicon-plus"></span>
           </Button>
@@ -102,8 +123,11 @@ ComputationFieldBasic.propTypes = {
   fieldIndex: PropTypes.number.isRequired,
   help: PropTypes.string,
   label: PropTypes.string.isRequired,
+  max: PropTypes.number,
+  min: PropTypes.number,
   onChange: PropTypes.func.isRequired,
   options: PropTypes.array,
+  step: PropTypes.number,
   type: PropTypes.string.isRequired,
   value: PropTypes.oneOfType([
     PropTypes.array,
