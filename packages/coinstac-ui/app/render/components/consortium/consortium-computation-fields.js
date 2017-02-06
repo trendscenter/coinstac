@@ -1,6 +1,7 @@
 import React, { PropTypes } from 'react';
 import ComputationFieldBasic from '../computation-field-basic';
 import ComputationFieldCovariates from '../computation-field-covariates';
+import { round } from 'lodash';
 
 export default function ConsortiumComputationFields(props) {
   const {
@@ -13,7 +14,18 @@ export default function ConsortiumComputationFields(props) {
   return (
     <ol className="list-unstyled">
       {fields.map(
-        ({ help, label, type, values }, fieldIndex) => {
+        (
+          {
+            help,
+            label,
+            max,
+            min,
+            step,
+            type,
+            values,
+          },
+          fieldIndex
+        ) => {
           const fieldProps = {
             disabled: !isOwner,
             fieldIndex,
@@ -36,7 +48,6 @@ export default function ConsortiumComputationFields(props) {
              */
             fieldProps.onChange = (changeValue, itemsIndex) => {
               let value = activeComputationInputs[fieldIndex] || [];
-              // debugger;
               if (!changeValue) {
                 value = value.filter((v, i) => i !== itemsIndex);
               } else if (itemsIndex > value.length - 1) {
@@ -57,12 +68,16 @@ export default function ConsortiumComputationFields(props) {
             computationField = <ComputationFieldCovariates {...fieldProps} />;
           } else {
             if (type === 'number') {
-              fieldProps.onChange = event => {
-                updateComputationField(
-                  fieldIndex,
-                  parseInt(event.target.value, 10)
-                );
+              fieldProps.onChange = ({ target: { value } }) => {
+                const newValue = typeof value === 'string' ?
+                  parseFloat(value, 10) :
+                  value;
+
+                updateComputationField(fieldIndex, round(newValue, 3));
               };
+              fieldProps.max = max;
+              fieldProps.min = min;
+              fieldProps.step = step;
 
               if (typeof activeComputationInputs[fieldIndex] !== 'undefined') {
                 fieldProps.value = activeComputationInputs[fieldIndex];
