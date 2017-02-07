@@ -63,8 +63,8 @@ export default function ConsortiumResult({
      */
     const covariates =
       computation.name === 'decentralized-single-shot-ridge-regression' ?
-      computationInputs[0][1].map(x => x.name) :
-      computationInputs[0][2].map(x => x.name);
+      computationInputs[0][2].map(x => x.name) :
+      computationInputs[0][3].map(x => x.name);
 
     dataOutput = (
       <div>

@@ -11,7 +11,7 @@ export default function ConsortiumResultMeta({
 
   // TODO: Don't hard-code for inputs
   if (computation.name === 'decentralized-single-shot-ridge-regression') {
-    covariates = computationInputs[0][1].map(x => x.name);
+    covariates = computationInputs[0][2].map(x => x.name);
   } else {
     const maxIterations = computationInputs[0][1];
 
@@ -21,7 +21,7 @@ export default function ConsortiumResultMeta({
      */
     const currentIteration = step > maxIterations ? maxIterations : step;
 
-    covariates = computationInputs[0][2].map(x => x.name);
+    covariates = computationInputs[0][3].map(x => x.name);
     iterations = (
       <li>
         <strong>Iterations:</strong>
