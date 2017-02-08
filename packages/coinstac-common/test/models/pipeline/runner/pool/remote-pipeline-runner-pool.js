@@ -147,7 +147,7 @@ test('fetch or seed computation results on init', (t) => {
 });
 
 test('marks completed computations', t => {
-  t.plan(2);
+  t.plan(3);
 
   const consortiumId = 'abc';
   const runId = 'runId';
@@ -162,6 +162,11 @@ test('marks completed computations', t => {
     pool.events.on('computation:markedComplete', () => {
       resultDB.get(runId).then(
         doc => {
+          t.ok(
+            typeof doc.endDate === 'number' &&
+            Date.now() - doc.endDate < 200,
+            'sets end date'
+          );
           t.equal(doc.complete, true, 'sets "completed" to true');
         },
         error => {
