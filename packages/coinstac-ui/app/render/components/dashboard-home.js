@@ -113,13 +113,7 @@ class DashboardHome extends Component {
           );
           const isMember = consortium.users.indexOf(username) > -1;
 
-          if (!project && isMember) {
-            return memo.concat(
-              <Alert bsStyle="info">
-                Create a project for "{consortium.label}" consortium
-              </Alert>
-            );
-          } else if (isMember) {
+          if (isMember) {
             return memo.concat(this.maybeRenderStatusItem({
               computation,
               consortium,
