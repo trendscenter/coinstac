@@ -1,5 +1,6 @@
 import React, { PropTypes } from 'react';
-import { Label, Panel } from 'react-bootstrap';
+import { Collapse, Label } from 'react-bootstrap';
+import classNames from 'classnames';
 import scino from 'scino';
 
 import ConsortiumResultMeta from './consortium-result-meta';
@@ -11,7 +12,9 @@ export default function ConsortiumResult({
   complete,
   computation,
   data,
+  expanded,
   pluginState,
+  toggleCollapse,
   userErrors,
   usernames,
 }) {
@@ -97,15 +100,33 @@ export default function ConsortiumResult({
     );
   }
 
-  const headingStyle = { marginTop: 0 };
-
   return (
-    <Panel className="consortium-result">
-      <h2 className="h3" style={headingStyle}>Computation #{_id} {indicator}</h2>
-      {computationOutput}
-      {errors}
-      {dataOutput}
-    </Panel>
+    <div className="consortium-result panel panel-default">
+      <div className="panel-heading">
+        <h3 className="panel-title h4">
+          <a
+            onClick={toggleCollapse}
+            role="button"
+          >
+            Computation #{_id} {indicator}
+            <span
+              aria-hidden="true"
+              className={classNames('glyphicon glyphicon-chevron-down', {
+                open: expanded,
+              })}
+            >
+            </span>
+          </a>
+        </h3>
+      </div>
+      <Collapse in={expanded}>
+        <div className="panel-body">
+          {computationOutput}
+          {errors}
+          {dataOutput}
+        </div>
+      </Collapse>
+    </div>
   );
 }
 
@@ -136,8 +157,10 @@ ConsortiumResult.propTypes = {
     tValueGlobal: PropTypes.arrayOf(PropTypes.number).isRequired,
     tValueLocal: PropTypes.arrayOf(PropTypes.array).isRequired,
   }),
+  expanded: PropTypes.bool.isRequired,
   pipelineState: PropTypes.object.isRequired,
   pluginState: PropTypes.object.isRequired,
+  toggleCollapse: PropTypes.func.isRequired,
   usernames: PropTypes.array.isRequired,
   userErrors: PropTypes.array.isRequired,
 };
