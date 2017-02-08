@@ -118,6 +118,7 @@ class RemotePipelineRunnerPool extends PipelineRunnerPool {
     db.get(runId)
       .then(compResult => {
         compResult.complete = true;
+        compResult.endDate = Date.now();
         return db.save(compResult);
       })
       .then(() => {
