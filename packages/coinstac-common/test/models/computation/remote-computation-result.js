@@ -10,6 +10,10 @@ const genOpts = (opts) => {
     usernames: ['testLocalUser'],
     computationId: 'test-computation-id',
     consortiumId: 'testconsortium',
+    computationInputs: [[
+      ['TotalGrayVol'],
+      200,
+    ]],
   }, opts);
 };
 

@@ -76,6 +76,7 @@ function setup({ computationPath, usernames }) {
       );
       const defaultConsortium = new Consortium({
         _id: `testconsortiumid${Date.now()}`,
+        activeComputationInputs: [[]],
         description: 'test-default-consortium',
         label: 'test-default-consortium',
         owners: usernames,

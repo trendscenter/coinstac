@@ -31,6 +31,10 @@ const remoteResultOpts = (opts) => {
     usernames: ['testUser'],
     consortiumId: 'test-consortium',
     computationId: 'testcomputation-testversion',
+    computationInputs: [[
+      ['TotalGrayVol'],
+      200,
+    ]],
   }, opts);
 };
 

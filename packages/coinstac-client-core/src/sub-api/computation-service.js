@@ -98,6 +98,7 @@ class ComputationService extends ModelService {
         const options = {
           _id: runId,
           computationId: consortium.activeComputationId,
+          computationInputs: consortium.activeComputationInputs,
           consortiumId,
         };
 
