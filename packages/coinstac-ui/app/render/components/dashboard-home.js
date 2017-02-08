@@ -2,7 +2,7 @@ import React, { Component, PropTypes } from 'react';
 import { Alert } from 'react-bootstrap';
 import { connect } from 'react-redux';
 import { core, logger, notify } from 'ampersand-app';
-import { flatten } from 'lodash';
+import { flatten, sortBy } from 'lodash';
 
 import StatusItem from './status-item.js';
 import { fetch as fetchProjects } from '../state/ducks/projects.js';
@@ -48,7 +48,8 @@ class DashboardHome extends Component {
         dbRegistry.get(`remote-consortium-${_id}`).all()
       )))
       .then((responses) => {
-        const remoteResults = flatten(responses);
+        const remoteResults =
+          sortBy(flatten(responses), ['endDate', 'startDate']).reverse();
         this.setState({ remoteResults });
         return remoteResults;
       })
@@ -62,21 +63,15 @@ class DashboardHome extends Component {
       });
   }
 
-  maybeRenderStatusItem({ computation, consortium, project, remoteResult }) {
-    const { username } = this.props;
-    const isMember = consortium.users.indexOf(username) > -1;
-    const isOwner = consortium.owners.indexOf(username) > -1;
+  maybeRenderStatusItem({ computation, consortium, remoteResult }) {
+    const isMember = consortium.users.indexOf(this.props.username) > -1;
 
     if (isMember) {
       return (
         <StatusItem
-          allowRun={project.allowComputationRun}
           computation={computation}
           consortium={consortium}
-          showRunButton={isOwner}
           remoteResult={remoteResult}
-          runComputation={() => this.runComputation(project)}
-          status={project.status}
         />
       );
     }
