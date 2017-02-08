@@ -1,19 +1,21 @@
 import React, { PropTypes } from 'react';
 import { Collapse, Label } from 'react-bootstrap';
 import classNames from 'classnames';
+import moment from 'moment';
 import scino from 'scino';
 
 import ConsortiumResultMeta from './consortium-result-meta';
 import ConsortiumResultTable from './consortium-result-table';
 
 export default function ConsortiumResult({
-  _id,
   computationInputs,
   complete,
   computation,
   data,
+  endDate,
   expanded,
   pluginState,
+  startDate,
   toggleCollapse,
   userErrors,
   usernames,
@@ -21,6 +23,7 @@ export default function ConsortiumResult({
   let computationOutput;
   let dataOutput;
   let errors;
+  let heading;
   let indicator;
 
   if (userErrors.length) {
@@ -100,6 +103,12 @@ export default function ConsortiumResult({
     );
   }
 
+  if (endDate) {
+    heading = `Ended ${moment(endDate).fromNow()}`;
+  } else {
+    heading = `Started ${moment(startDate).fromNow()}`;
+  }
+
   return (
     <div className="consortium-result panel panel-default">
       <div className="panel-heading">
@@ -108,7 +117,9 @@ export default function ConsortiumResult({
             onClick={toggleCollapse}
             role="button"
           >
-            Computation #{_id} {indicator}
+            {heading}
+            {' '}
+            {indicator}
             <span
               aria-hidden="true"
               className={classNames('glyphicon glyphicon-chevron-down', {
@@ -133,7 +144,7 @@ export default function ConsortiumResult({
 ConsortiumResult.displayName = 'ConsortiumResult';
 
 ConsortiumResult.propTypes = {
-  _id: PropTypes.string.isRequired,
+
   complete: PropTypes.bool.isRequired,
   computation: PropTypes.shape({
     meta: PropTypes.shape({
@@ -157,9 +168,11 @@ ConsortiumResult.propTypes = {
     tValueGlobal: PropTypes.arrayOf(PropTypes.number).isRequired,
     tValueLocal: PropTypes.arrayOf(PropTypes.array).isRequired,
   }),
+  endDate: PropTypes.number,
   expanded: PropTypes.bool.isRequired,
   pipelineState: PropTypes.object.isRequired,
   pluginState: PropTypes.object.isRequired,
+  startDate: PropTypes.number.isRequired,
   toggleCollapse: PropTypes.func.isRequired,
   usernames: PropTypes.array.isRequired,
   userErrors: PropTypes.array.isRequired,

@@ -1,130 +1,79 @@
 import { difference, reduce, values } from 'lodash';
-import React, { Component, PropTypes } from 'react';
-import { Button, Panel } from 'react-bootstrap';
+import React, { PropTypes } from 'react';
+import { Label } from 'react-bootstrap';
 import { Link } from 'react-router';
+import moment from 'moment';
 
 import ConsortiumResultMeta from './consortium/consortium-result-meta.js';
 
-export default class StatusItem extends Component {
-  getWaitingOnUsers() {
-    const {
-      remoteResult: {
-        usernames: allUsernames,
-        pluginState: {
-          'group-step': groupStep,
-        },
-      },
-    } = this.props;
-    const currentUsernames = Object.keys(groupStep.userStep);
-    const currentStep = groupStep.step;
+function getWaitingOnUsers({
+  usernames: allUsernames,
+  pluginState: {
+    'group-step': groupStep,
+  },
+}) {
+  const currentUsernames = Object.keys(groupStep.userStep);
+  const currentStep = groupStep.step;
 
-    if (allUsernames.length !== Object.keys(groupStep.userStep).length) {
-      return difference(allUsernames, currentUsernames);
-    } else if (values(groupStep.userStep).some(step => step !== currentStep)) {
-      return reduce(groupStep.userStep, (memo, step, username) => (
-        step !== currentStep ? memo.concat(username) : memo
-      ), []);
-    }
-
-    return [];
+  if (allUsernames.length !== Object.keys(groupStep.userStep).length) {
+    return difference(allUsernames, currentUsernames);
+  } else if (values(groupStep.userStep).some(step => step !== currentStep)) {
+    return reduce(groupStep.userStep, (memo, step, username) => (
+      step !== currentStep ? memo.concat(username) : memo
+    ), []);
   }
 
-  maybeRenderButton() {
-    const {
-      allowRun,
-      runComputation,
-      showRunButton,
-    } = this.props;
+  return [];
+}
 
-    if (showRunButton) {
-      return (
-        <Button
-          bsStyle="primary"
-          disabled={!allowRun}
-          onClick={runComputation}
-        >
-          <span
-            className="glyphicon glyphicon-repeat"
-            aria-hidden="true"
-          >
-          </span>
+export default function StatusItem({
+  computation,
+  consortium,
+  remoteResult,
+}) {
+  let heading;
+  let indicator;
+  let waitingOn;
+
+  if (remoteResult.userErrors.length) {
+    indicator = <Label bsStyle="danger">Error</Label>;
+  } else if (remoteResult.complete) {
+    indicator = <Label bsStyle="success">Complete</Label>;
+  } else {
+    indicator = <Label bsStyle="default">In Progress</Label>;
+  }
+
+  if (remoteResult && !remoteResult.complete) {
+    const waitingOnUsers = getWaitingOnUsers(remoteResult);
+
+    if (waitingOnUsers.length) {
+      waitingOn = (
+        <li>
+          <strong>Waiting on:</strong>
           {' '}
-          Run Computation
-        </Button>
+          {waitingOnUsers.join(', ')}
+        </li>
       );
     }
   }
 
-  renderStatus() {
-    const { status } = this.props;
-    let className = 'project-status';
-    let icon;
-    let text;
-
-    switch (status) {
-      case 'active':
-        className += ' is-active text-muted';
-        icon = 'refresh';
-        text = 'Running';
-        break;
-      case 'complete':
-        className += ' text-success';
-        icon = 'ok';
-        text = 'Complete';
-        break;
-      case 'error':
-        className += ' text-danger';
-        icon = 'alert';
-        text = 'Error';
-        break;
-      case 'waiting':
-        className += ' text-muted';
-        icon = 'alert';
-        text = 'Waiting to start';
-        break;
-      default:
-        icon = 'question-sign';
-        text = 'Unknown status';
-    }
-
-    return (
-      <div className={className}>
-        <span>
-          <span aria-hidden="true" className={`glyphicon glyphicon-${icon}`}></span>
-          {' '}
-          {text}
-        </span>
-      </div>
-    );
+  if (remoteResult.endDate) {
+    heading = `Ended ${moment(remoteResult.endDate).fromNow()}`;
+  } else {
+    heading = `Started ${moment(remoteResult.startDate).fromNow()}`;
   }
 
-  render() {
-    const {
-      computation,
-      consortium,
-      remoteResult,
-    } = this.props;
-
-    let waitingOn;
-
-    if (remoteResult) {
-      const waitingOnUsers = this.getWaitingOnUsers();
-
-      if (waitingOnUsers.length) {
-        waitingOn = (
-          <li>
-            <strong>Waiting on:</strong>
-            {' '}
-            {waitingOnUsers.join(', ')}
-          </li>
-        );
-      }
-    }
-
-    return (
-      <Panel className="consortium-status">
+  return (
+    <div className="consortium-status panel panel-default">
+      <div className="panel-heading">
+        <h3 className="panel-title h4">
+          {heading}
+          {' '}
+          {indicator}
+        </h3>
+      </div>
+      <div className="panel-body">
         <ul className="list-unstyled">
-          <li><strong>Status:</strong>{' '}{this.renderStatus()}</li>
           <li>
             <strong>Consortium:</strong>
             {' '}
@@ -138,13 +87,12 @@ export default class StatusItem extends Component {
           step={remoteResult.pluginState['group-step'].step}
           usernames={remoteResult.usernames}
         />
-      </Panel>
-    );
-  }
+      </div>
+    </div>
+  );
 }
 
 StatusItem.propTypes = {
-  allowRun: PropTypes.bool.isRequired,
   consortium: PropTypes.shape({
     _id: PropTypes.string.isRequired,
     label: PropTypes.string.isRequired,
@@ -155,20 +103,14 @@ StatusItem.propTypes = {
   }).isRequired,
   remoteResult: PropTypes.shape({
     computationInputs: PropTypes.arrayOf(PropTypes.array).isRequired,
+    endDate: PropTypes.number,
     pipelineState: PropTypes.shape({
       step: PropTypes.number.isRequired,
     }).isRequired,
     pluginState: PropTypes.shape({
       'group-step': PropTypes.object,
     }),
+    startDate: PropTypes.number.isRequired,
     usernames: PropTypes.arrayOf(PropTypes.string).isRequired,
   }),
-  runComputation: PropTypes.func.isRequired,
-  showRunButton: PropTypes.bool.isRequired,
-  status: PropTypes.oneOf([
-    'active',
-    'complete',
-    'error',
-    'waiting',
-  ]).isRequired,
 };
