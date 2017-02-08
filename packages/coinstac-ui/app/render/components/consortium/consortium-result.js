@@ -2,6 +2,7 @@ import React, { PropTypes } from 'react';
 import { Label, Panel } from 'react-bootstrap';
 import scino from 'scino';
 
+import ConsortiumResultMeta from './consortium-result-meta';
 import ConsortiumResultTable from './consortium-result-table';
 
 export default function ConsortiumResult({
@@ -10,6 +11,7 @@ export default function ConsortiumResult({
   complete,
   computation,
   data,
+  pluginState,
   userErrors,
   usernames,
 }) {
@@ -39,21 +41,12 @@ export default function ConsortiumResult({
 
   if (computation) {
     computationOutput = (
-      <ul className="list-unstyled">
-        <li>
-          <strong>Computation:</strong>
-          {' '}
-          {computation.meta.name}
-          {' '}
-          <span className="text-muted">(Version {computation.version})</span>
-        </li>
-        <li>
-          <strong>Freesurfer ROI:</strong>
-          {' '}
-          {computationInputs[0][0].join(', ')}
-        </li>
-        <li><strong>Users:</strong>{` ${usernames.join(', ')}`}</li>
-      </ul>
+      <ConsortiumResultMeta
+        computation={computation}
+        computationInputs={computationInputs}
+        step={pluginState['group-step'].step}
+        usernames={usernames}
+      />
     );
   }
 

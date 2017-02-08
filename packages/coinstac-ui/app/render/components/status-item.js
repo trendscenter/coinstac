@@ -1,7 +1,9 @@
-import { difference, get, reduce, values } from 'lodash';
+import { difference, reduce, values } from 'lodash';
 import React, { Component, PropTypes } from 'react';
 import { Button, Panel } from 'react-bootstrap';
 import { Link } from 'react-router';
+
+import ConsortiumResultMeta from './consortium/consortium-result-meta.js';
 
 export default class StatusItem extends Component {
   getWaitingOnUsers() {
@@ -103,35 +105,9 @@ export default class StatusItem extends Component {
       remoteResult,
     } = this.props;
 
-    let iteration;
     let waitingOn;
-    let users;
-
-    if (
-      computation.name === 'laplacian-noise-ridge-regression' &&
-      remoteResult &&
-      get(remoteResult, 'pluginState.inputs[0][1]')
-    ) {
-      iteration = (
-        <li>
-          <strong>Iteration:</strong>
-          {' '}
-          {remoteResult.pluginState['group-step'].step}
-          <span className="text-muted">
-            /{remoteResult.pluginState.inputs[0][1]}
-          </span>
-        </li>
-      );
-    }
 
     if (remoteResult) {
-      users = (
-        <section>
-          <h3 className="h5">Users</h3>
-          <p>{remoteResult.usernames.join(', ')}</p>
-        </section>
-      );
-
       const waitingOnUsers = this.getWaitingOnUsers();
 
       if (waitingOnUsers.length) {
@@ -154,18 +130,14 @@ export default class StatusItem extends Component {
             {' '}
             <Link to={`/consortia/${consortium._id}`}>{consortium.label}</Link>
           </li>
-          <li>
-            <strong>Computation:</strong>
-            {' '}
-            {computation.name}
-            {' '}
-            <span className="text-muted">(Version {computation.version})</span>
-          </li>
-          {iteration}
           {waitingOn}
         </ul>
-
-        {users}
+        <ConsortiumResultMeta
+          computation={computation}
+          computationInputs={remoteResult.computationInputs}
+          step={remoteResult.pluginState['group-step'].step}
+          usernames={remoteResult.usernames}
+        />
       </Panel>
     );
   }
@@ -182,6 +154,7 @@ StatusItem.propTypes = {
     version: PropTypes.string.isRequired,
   }).isRequired,
   remoteResult: PropTypes.shape({
+    computationInputs: PropTypes.arrayOf(PropTypes.array).isRequired,
     pipelineState: PropTypes.shape({
       step: PropTypes.number.isRequired,
     }).isRequired,
