@@ -14,3 +14,19 @@
   font-size: 12px;
   line-height: 1.667;
 }
+
+.consortium-result .panel-heading a {
+  display: block;
+  position: relative;
+}
+.consortium-result .panel-heading .glyphicon-chevron-down {
+  font-size: 14px;
+  font-weight: 700;
+  opacity: .5;
+  position: absolute;
+  right: 0;
+
+  &.open {
+    transform: rotate(180deg);
+  }
+}
