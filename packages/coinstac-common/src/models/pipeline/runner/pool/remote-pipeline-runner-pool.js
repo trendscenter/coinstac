@@ -140,14 +140,13 @@ class RemotePipelineRunnerPool extends PipelineRunnerPool {
     const consortiumId = lResult.consortiumId;
     const computationId = lResult.computationId;
     return this.dbRegistry.get('consortia').get(consortiumId)
-    .then((consortium) => {
-      return new RemoteComputationResult({
-        _id: runId,
-        computationId,
-        consortiumId,
-        usernames: consortium.users,
-      });
-    });
+    .then(({ activeComputationInputs, users }) => new RemoteComputationResult({
+      _id: runId,
+      computationId,
+      computationInputs: activeComputationInputs,
+      consortiumId,
+      usernames: users,
+    }));
   }
 }
 

@@ -67,7 +67,11 @@ module.exports = {
         _id: '12345',
         usernames: ['testuser'],
         computationId: 'test_computation_id',
-        consortiumId: 'test_consortium'
+        consortiumId: 'test_consortium',
+        computationInputs: [[
+          ['TotalGrayVol'],
+          200,
+        ]],
       },
       opts
     ));

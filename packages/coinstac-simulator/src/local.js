@@ -172,6 +172,7 @@ const kickoff = function kickoff() {
         remoteResult = new RemoteComputationResult({
           _id: 'test_run_id',
           computationId: computationDoc._id,
+          computationInputs: [[]],
           consortiumId: consortiumDoc._id,
         });
         return remoteResult;

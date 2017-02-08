@@ -132,7 +132,11 @@ module.exports = {
             _id: 'runId',
             usernames: ['testUser'],
             computationId: 'testComptuation',
-            consortiumId: 'testConsortium'
+            consortiumId: 'testConsortium',
+            computationInputs: [[
+              ['TotalGrayVol'],
+              200,
+            ]],
         });
     },
 
