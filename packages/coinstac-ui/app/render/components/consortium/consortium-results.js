@@ -3,8 +3,7 @@ import { Alert } from 'react-bootstrap';
 
 import ConsortiumResult from './consortium-result';
 
-export default function ConsortiumResults(props) {
-  const { activeComputationInputs, computations, remoteResults } = props;
+export default function ConsortiumResults({ computations, remoteResults }) {
   const content = !remoteResults || !remoteResults.length ?
   (
     <Alert bsStyle="info">No results.</Alert>
@@ -19,7 +18,6 @@ export default function ConsortiumResults(props) {
         return (
           <li key={index}>
             <ConsortiumResult
-              activeComputationInputs={activeComputationInputs}
               computation={computation}
               {...result}
             />
@@ -40,7 +38,6 @@ export default function ConsortiumResults(props) {
 ConsortiumResults.displayName = 'ConsortiumResults';
 
 ConsortiumResults.propTypes = {
-  activeComputationInputs: PropTypes.array,
   computations: PropTypes.array,
   remoteResults: PropTypes.array,
 };

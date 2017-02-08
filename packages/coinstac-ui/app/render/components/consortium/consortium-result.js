@@ -6,7 +6,7 @@ import ConsortiumResultTable from './consortium-result-table';
 
 export default function ConsortiumResult({
   _id,
-  activeComputationInputs,
+  computationInputs,
   complete,
   computation,
   data,
@@ -50,7 +50,7 @@ export default function ConsortiumResult({
         <li>
           <strong>Freesurfer ROI:</strong>
           {' '}
-          {activeComputationInputs[0][0].join(', ')}
+          {computationInputs[0][0].join(', ')}
         </li>
         <li><strong>Users:</strong>{` ${usernames.join(', ')}`}</li>
       </ul>
@@ -60,12 +60,12 @@ export default function ConsortiumResult({
   if (data) {
     /**
      * @todo This assumes covariates are placed at a specific location in
-     * `activeComputationInputs`. Don't hard-code this!
+     * `computationInputs`. Don't hard-code this!
      */
     const covariates =
       computation.name === 'decentralized-single-shot-ridge-regression' ?
-      activeComputationInputs[0][1].map(x => x.name) :
-      activeComputationInputs[0][2].map(x => x.name);
+      computationInputs[0][1].map(x => x.name) :
+      computationInputs[0][2].map(x => x.name);
 
     dataOutput = (
       <div>
@@ -120,20 +120,20 @@ ConsortiumResult.displayName = 'ConsortiumResult';
 
 ConsortiumResult.propTypes = {
   _id: PropTypes.string.isRequired,
-  activeComputationInputs: PropTypes.arrayOf(PropTypes.arrayOf(
+  complete: PropTypes.bool.isRequired,
+  computation: PropTypes.shape({
+    meta: PropTypes.shape({
+      name: PropTypes.string.isRequired,
+    }),
+    version: PropTypes.string.isRequired,
+  }).isRequired,
+  computationInputs: PropTypes.arrayOf(PropTypes.arrayOf(
     PropTypes.oneOfType([
       PropTypes.arrayOf(PropTypes.string),
       PropTypes.arrayOf(PropTypes.object),
       PropTypes.number,
     ])
   )).isRequired,
-  complete: PropTypes.bool.isRequired,
-  computation: PropTypes.shape({
-    version: PropTypes.string.isRequired,
-    meta: PropTypes.shape({
-      name: PropTypes.string.isRequired,
-    }),
-  }).isRequired,
   data: PropTypes.shape({
     averageBetaVector: PropTypes.arrayOf(PropTypes.number),
     pValueGlobal: PropTypes.arrayOf(PropTypes.number).isRequired,
