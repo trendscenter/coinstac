@@ -54,6 +54,7 @@ test('local-runner-pool builds & execs runners in response to db events', (t) =>
   setupServer()
     // stub in a computation, allowing LocalPipeLineRunnerPool to instantiate
     // a LocalPipeLineRunner the `local` pipline defined
+    .then(() => poolUtils.stubBasicComputation(compId))
     .then(() => {
       const consortium = getDummyConsortium();
       const runId = 'testRunDBChangeEvents';
