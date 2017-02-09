@@ -20,7 +20,6 @@ const pdbs = require('spawn-pouchdb-server');
 const cp = require('child_process');
 const pdbsConfig = require('./.pouchdb-server-config');
 const common = require('../../../../../');
-const coinstacComputationRegistry = require('coinstac-computation-registry');
 const dbRegistryFactory = common.services.dbRegistry;
 const Consortium = common.models.Consortium;
 const User = common.models.User;
@@ -28,10 +27,9 @@ const RemoteComputationResult = common.models.computation.RemoteComputationResul
 const cloneDeep = require('lodash/cloneDeep');
 const assign = require('lodash/assign');
 const path = require('path');
-const sinon = require('sinon');
+const DecentralizedComputation =
+  require('../../../../../src/models/decentralized-computation.js');
 
-const ComputationRegistry = coinstacComputationRegistry.ComputationRegistry;
-const computationRegistryFactory = coinstacComputationRegistry.factory;
 
 /**
  * @function fail
@@ -44,63 +42,37 @@ const fail = (err) => {
 };
 
 module.exports = {
-  buildComputationRegistry: function() {
-    const registry = [{
-      name: 'my-computation',
-      tags: ['1.0.0'],
-      url: 'https://github.com/MRN-Code/coinstac-my-computation',
-    }, {
-      name: 'my-other-computation',
-      tags: ['0.5.1', '0.6.0'],
-      url: 'https://github.com/MRN-Code/coinstac-my-other-computation',
-    }];
+  buildComputationRegistry() {
+    this.computationRegistry = {
+      add(name, version) {
+        const url = `https://github.com/MRN-Code/${name}`;
 
-    /**
-     * Manually add all computations in `registry` for this "remote"-configured
-     * `ComputationRegistry`. This avoids API requests that return 404s.
-     */
-    const addStub = sinon
-      .stub(ComputationRegistry.prototype, 'add')
-      .returns(Promise.resolve());
+        return new DecentralizedComputation({
+          cwd: __dirname,
+          local: {
+            fn(wat) {
+              return Promise.resolve(wat);
+            },
+            type: 'function',
+          },
+          name,
+          remote: {
+            fn(wat) {
+              return Promise.resolve(wat);
+            },
+            type: 'function',
+          },
+          repository: { url },
+          version,
+          meta: {
+            description: `Description for ${name}`,
+            name,
+          },
+        });
+      },
+    };
 
-    return computationRegistryFactory({
-      path: path.join('..', '..', '..', '..', '..', '.tmp'),
-      registry: registry,
-    })
-      .then(compReg => {
-        this.computationRegistry = compReg;
-
-        addStub.restore();
-
-        return Promise.all(registry.reduce((memo, { name, tags, url }) => {
-          return memo.concat(tags.map(version => {
-            return compReg._doAdd({
-              cwd: __dirname,
-              definition: {
-                local: {
-                  fn: () => Promise.resolve(name),
-                  type: 'function',
-                },
-                name,
-                remote: {
-                  fn: () => name,
-                  type: 'function',
-                },
-                repository: { url },
-                version,
-              },
-              meta: {
-                description: `Description for ${name}`,
-                name,
-              },
-              name,
-              url,
-              version,
-            });
-          }));
-        }, []));
-      })
-      .catch(fail);
+    return Promise.resolve(this.computationRegistry);
   },
 
   computationRegistry: null, // see `buildComputationRegistry`
@@ -215,48 +187,6 @@ module.exports = {
      */
     suppressCreateDestroyHandlers: function(pool) {
       pool._handleCreatedDB = pool._handleDestroyedDB = function() {}; // squash!
-    },
-
-    /**
-     * @function stubBasicComputation
-     * @description stubs a stupid simple DecentralizedComputation into the
-     * computation registry's mem-store
-     * @param {string} compId will be used as the name, version, and _id of the
-     *                        computation in the reg
-     * @returns {Promise}
-     */
-    stubBasicComputation: function(compId) {
-      if (!this.computationRegistry) {
-        throw new ReferenceError('computationRegistry not init\'d yet');
-      }
-
-      if (!compId) {
-        throw new ReferenceError('compId required');
-      }
-
-      this.computationRegistry.registry.push({
-        name: compId,
-        tags: [compId],
-        url: 'https://github.com/test/url',
-      });
-
-      return this.computationRegistry._doAdd({
-        cwd: __dirname,
-        definition: {
-          local: { fn: (opts) => bluebird.delay(1).then(() => compId), type: 'function', },
-          name: compId,
-          remote: { fn: (opts) => bluebird.delay(1).then(() => compId), type: 'function', },
-          repository: { url: 'https://github.com/test/url' },
-          version: compId,
-        },
-        meta: {
-          description: `Description for ${compId}`,
-          name: compId,
-        },
-        name: compId,
-        url: 'https://github.com/test/url',
-        version: compId,
-      });
     },
 
     teardown: function() {
