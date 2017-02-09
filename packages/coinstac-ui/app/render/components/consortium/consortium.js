@@ -20,16 +20,14 @@ export default class Consortium extends Component {
   maybeRenderResults() {
     const {
       computations,
-      consortium,
       isMember,
       isNew,
       remoteResults,
     } = this.props;
 
-    if (!isNew && isMember && consortium) {
+    if (!isNew && isMember) {
       return (
         <ConsortiumResults
-          activeComputationInputs={consortium.activeComputationInputs}
           computations={computations}
           remoteResults={remoteResults}
         />

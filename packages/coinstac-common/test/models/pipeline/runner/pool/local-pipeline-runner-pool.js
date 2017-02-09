@@ -62,6 +62,10 @@ test('local-runner-pool builds & execs runners in response to db events', (t) =>
         _id: runId,
         computationId: compId,
         consortiumId: consortium._id,
+        computationInputs: [[
+          ['TotalGrayVol'],
+          200,
+        ]],
       });
       const remoteResult = new RemoteComputationResult(remoteComputationOpts);
 
