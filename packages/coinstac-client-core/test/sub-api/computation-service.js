@@ -190,6 +190,10 @@ tape('ComputationService :: doTriggerRunner', t => {
   params.client.consortia.get.returns(Promise.resolve({
     _id: consortiumId,
     activeComputationId: 'the-most-active-id-evar',
+    activeComputationInputs: [[
+      ['TotalGrayVol'],
+      200,
+    ]],
     label: 'Baller Consortium',
     owners: ['testUserName'],
   }));
