@@ -8,7 +8,6 @@ import { cloneDeep } from 'lodash';
 import {
   computationCompleteNotification,
   computationStartNotification,
-  getRunEndNotifier,
   getRunErrorNotifier,
 } from '../../utils/notifications';
 
@@ -38,15 +37,12 @@ export const joinSlaveComputation = (consortium) => {
   ])
     .then(([project, runId, shouldJoinRun]) => {
       if (project && runId && shouldJoinRun) {
-        const onRunEnd = getRunEndNotifier(consortium);
         const onRunError = getRunErrorNotifier(consortium);
 
         computationStartNotification(consortium);
-        app.core.pool.events.on('run:end', onRunEnd);
         app.core.pool.events.on('error', onRunError);
         app.core.pool.events.once('computation:complete', () => {
           computationCompleteNotification(consortium);
-          app.core.pool.events.removeListener('run:end', onRunEnd);
           app.core.pool.events.removeListener('error', onRunError);
         });
 
@@ -168,15 +164,12 @@ export const runComputation = applyAsyncLoading(
       // Unfortunately, requires we `get` the document for its label
       app.core.dbRegistry.get('consortia').get(consortiumId)
         .then(consortium => {
-          const onRunEnd = getRunEndNotifier(consortium);
           const onRunError = getRunErrorNotifier(consortium);
 
           computationStartNotification(consortium);
-          app.core.pool.events.on('run:end', onRunEnd);
           app.core.pool.events.on('error', onRunError);
           app.core.pool.events.once('computation:complete', () => {
             computationCompleteNotification(consortium);
-            app.core.pool.events.removeListener('run:end', onRunEnd);
             app.core.pool.events.removeListener('error', onRunError);
           });
 
