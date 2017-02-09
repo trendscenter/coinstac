@@ -44,35 +44,45 @@ const fail = (err) => {
 module.exports = {
   buildComputationRegistry() {
     this.computationRegistry = {
-      add(name, version) {
-        const url = `https://github.com/MRN-Code/${name}`;
+      registry: [],
 
-        return new DecentralizedComputation({
-          cwd: __dirname,
-          local: {
-            fn(wat) {
-              return Promise.resolve(wat);
-            },
-            type: 'function',
-          },
-          name,
-          remote: {
-            fn(wat) {
-              return Promise.resolve(wat);
-            },
-            type: 'function',
-          },
-          repository: { url },
-          version,
-          meta: {
-            description: `Description for ${name}`,
-            name,
-          },
-        });
+      add(name, version) {
+        return this.registry.find((decentralized) => (
+          decentralized.name === name && decentralized.version === version
+        ));
       },
     };
 
     return Promise.resolve(this.computationRegistry);
+  },
+
+  stubBasicComputation(compId) {
+    const decentralized = new DecentralizedComputation({
+      cwd: __dirname,
+      local: {
+        fn(wat) {
+          return Promise.resolve(compId);
+        },
+        type: 'function',
+      },
+      name: compId,
+      remote: {
+        fn(wat) {
+          return Promise.resolve(compId);
+        },
+        type: 'function',
+      },
+      repository: {
+        url: `https://github.com/MRN-Code/${compId}`,
+      },
+      version: compId,
+      meta: {
+        description: `Description for ${compId}`,
+        name: compId,
+      },
+    });
+
+    this.computationRegistry.registry.push(decentralized);
   },
 
   computationRegistry: null, // see `buildComputationRegistry`
