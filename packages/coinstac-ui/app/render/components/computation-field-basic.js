@@ -17,14 +17,20 @@ export default class ComputationFieldBasic extends Component {
 
   handleButtonClick(increment) {
     const { max, min, onChange } = this.props;
-    const value = this.refs[INPUT_REF].props.value + increment;
+    const value = this.refs[INPUT_REF].props.value;
 
-    if (
+    if (typeof value !== 'number' || Number.isNaN(value)) {
+      throw new Error('No value!');
+    } else if (
       (typeof max !== 'number' || value <= max) &&
       (typeof min !== 'number' || value >= min)
     ) {
+      const newValue = value + increment;
+
       onChange({
-        target: { value },
+        target: {
+          value: newValue.toString(),
+        },
       });
     }
   }
