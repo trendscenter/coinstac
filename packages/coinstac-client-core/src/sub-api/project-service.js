@@ -91,6 +91,16 @@ class ProjectService extends ModelService {
           throw new Error('Expected covariates');
         }
 
+        return Promise.all([
+          project,
+          covariates,
+          ProjectService.statAll(
+            project.files.map(f => f.filename),
+            path.dirname(project.metaFilePath)
+          ),
+        ]);
+      })
+      .then(([project, covariates]) => {
         /**
          * [
          *   [1, 2, 3],
@@ -466,6 +476,33 @@ class ProjectService extends ModelService {
       listeners.delete(consortiumId);
       return destroy;
     }));
+  }
+
+  /**
+   * Stat all files.
+   *
+   * {@link http://bluebirdjs.com/docs/api/reflect.html}
+   *
+   * @param {string[]} files Collection of file paths
+   * @param {string} cwd Current working directory
+   * @returns {Promise<boolean>}
+   */
+  static statAll(files, cwd) {
+    const resolvedFiles = files.map(file => (
+      path.isAbsolute(file) ? file : path.resolve(cwd, file)
+    ));
+    const stat = bluebird.promisify(fs.stat);
+
+    return Promise.all(resolvedFiles.map((file) => stat(file).reflect()))
+      .then((inspections) => {
+        const missingFiles = inspections.reduce((memo, inspection, index) => (
+          inspection.isFulfilled() ? memo : memo.concat(resolvedFiles[index])
+        ), []);
+
+        if (missingFiles.length) {
+          throw new Error(`Project files don't exist: ${missingFiles.join(', ')}`);
+        }
+      });
   }
 }
 
