@@ -47,7 +47,10 @@ export default function ConsortiumComputationFields(props) {
              * @param {number} itemsIndex
              */
             fieldProps.onChange = (changeValue, itemsIndex) => {
-              let value = activeComputationInputs[fieldIndex] || [];
+              let value = Array.isArray(activeComputationInputs[fieldIndex]) ?
+                activeComputationInputs[fieldIndex] :
+                [];
+
               if (!changeValue) {
                 value = value.filter((v, i) => i !== itemsIndex);
               } else if (itemsIndex > value.length - 1) {
