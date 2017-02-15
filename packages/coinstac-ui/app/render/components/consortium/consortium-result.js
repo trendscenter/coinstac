@@ -2,7 +2,7 @@ import React, { PropTypes } from 'react';
 import { Collapse, Label } from 'react-bootstrap';
 import classNames from 'classnames';
 import moment from 'moment';
-import scino from 'scino';
+import { reduce } from 'lodash';
 
 import ConsortiumResultMeta from './consortium-result-meta';
 import ConsortiumResultTable from './consortium-result-table';
@@ -68,37 +68,41 @@ export default function ConsortiumResult({
 
     dataOutput = (
       <div>
-        <div>
-          <h4>Global</h4>
-          <dl className="consortium-result-list">
-            <dt>R²</dt>
-            <dd><samp>{scino(data.rSquaredGlobal, 5)}</samp></dd>
-          </dl>
-          <ConsortiumResultTable
-            covariates={covariates}
-            results={{
-              averageBetaVectors: data.averageBetaVector,
-              pValues: data.pValueGlobal,
-              tValues: data.tValueGlobal,
-            }}
-          />
-        </div>
-        {data.tValueLocal.map((tValues, index) => (
-          <div key={index}>
-            <h4>Site {index + 1}</h4>
-            <dl className="consortium-result-list">
-              <dt>R²</dt>
-              <dd><samp>{scino(data.rSquaredLocal[index], 5)}</samp></dd>
-            </dl>
-            <ConsortiumResultTable
-              covariates={covariates}
-              results={{
-                pValues: data.pValueLocal[index],
-                tValues,
-              }}
-            />
-          </div>
-        ))}
+        {reduce(data, (memo, item, prop) => {
+          /**
+           * Computations store users' data in numeric properties and global
+           * data under the `global` property.
+           */
+          if (prop === 'global') {
+            return [
+              <ConsortiumResultTable
+                betaVector={item.betaVector}
+                covariates={covariates}
+                key={prop}
+                name={'Global'}
+                pValue={item.pValue}
+                rSquared={item.rSquared}
+                tValue={item.tValue}
+              />,
+              ...memo,
+            ];
+          } else if (Number(prop) == prop) { // eslint-disable-line eqeqeq
+            return [
+              ...memo,
+              <ConsortiumResultTable
+                betaVector={item.betaVector}
+                covariates={covariates}
+                key={prop}
+                name={usernames[prop]}
+                pValue={item.pValueOriginal}
+                rSquared={item.rSquared}
+                tValue={item.tValueOriginal}
+              />,
+            ];
+          }
+
+          return memo;
+        }, [])}
       </div>
     );
   }
@@ -160,13 +164,12 @@ ConsortiumResult.propTypes = {
     ])
   )).isRequired,
   data: PropTypes.shape({
-    averageBetaVector: PropTypes.arrayOf(PropTypes.number),
-    pValueGlobal: PropTypes.arrayOf(PropTypes.number).isRequired,
-    pValueLocal: PropTypes.arrayOf(PropTypes.array).isRequired,
-    rSquaredGlobal: PropTypes.number.isRequired,
-    rSquaredLocal: PropTypes.arrayOf(PropTypes.number).isRequired,
-    tValueGlobal: PropTypes.arrayOf(PropTypes.number).isRequired,
-    tValueLocal: PropTypes.arrayOf(PropTypes.array).isRequired,
+    global: PropTypes.shape({
+      betaVector: PropTypes.arrayOf(PropTypes.number).isRequired,
+      pValue: PropTypes.arrayOf(PropTypes.number).isRequired,
+      rSquared: PropTypes.number.isRequired,
+      tValue: PropTypes.arrayOf(PropTypes.number).isRequired,
+    }).isRequired,
   }),
   endDate: PropTypes.number,
   expanded: PropTypes.bool.isRequired,
