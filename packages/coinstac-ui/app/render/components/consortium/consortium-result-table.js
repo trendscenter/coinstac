@@ -1,8 +1,24 @@
 import React, { PropTypes } from 'react';
 import scino from 'scino';
+import { isNumber, round } from 'lodash';
 
+function formatNumber(num) {
+  return num > 100 || num < 0.01 ? scino(num, 5) : round(num, 5);
+}
+
+/**
+ * Get a table data element.
+ *
+ * @param {number} value
+ * @param {number} index
+ * @returns {React.Component}
+ */
 function getTableDataElement(value, index) {
-  return <td key={index}><samp>{scino(value, 5)}</samp></td>;
+  const output = isNumber(value) ?
+    <samp>{formatNumber(value)}</samp> :
+    <samp className="text-warning">Not a Number</samp>;
+
+  return <td key={index}>{output}</td>;
 }
 
 const subscripts = ['₀', '₁', '₂', '₃', '₄', '₅', '₆', '₇', '₈', '₉'];
@@ -32,7 +48,7 @@ export default function ConsortiumResultTable({
       <h4>{name}</h4>
       <dl className="consortium-result-list">
         <dt>R²</dt>
-        <dd><samp>{scino(rSquared, 5)}</samp></dd>
+        <dd><samp>{formatNumber(rSquared)}</samp></dd>
       </dl>
       <table className="consortium-result-table table">
         <thead>
