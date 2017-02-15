@@ -8,10 +8,12 @@ export default function ConsortiumResultMeta({
 }) {
   let covariates;
   let iterations;
+  let lambda;
 
   // TODO: Don't hard-code for inputs
   if (computation.name === 'decentralized-single-shot-ridge-regression') {
-    covariates = computationInputs[0][1].map(x => x.name);
+    covariates = computationInputs[0][2].map(x => x.name);
+    lambda = computationInputs[0][1];
   } else {
     const maxIterations = computationInputs[0][1];
 
@@ -21,7 +23,7 @@ export default function ConsortiumResultMeta({
      */
     const currentIteration = step > maxIterations ? maxIterations : step;
 
-    covariates = computationInputs[0][2].map(x => x.name);
+    covariates = computationInputs[0][3].map(x => x.name);
     iterations = (
       <li>
         <strong>Iterations:</strong>
@@ -29,6 +31,7 @@ export default function ConsortiumResultMeta({
         <span className="text-muted">/{maxIterations}</span>
       </li>
     );
+    lambda = computationInputs[0][2];
   }
 
   return (
@@ -47,6 +50,7 @@ export default function ConsortiumResultMeta({
         {' '}
         {computationInputs[0][0].join(', ')}
       </li>
+      <li><strong>Lambda:</strong>{' '}<samp>{lambda}</samp></li>
       <li><strong>Users:</strong>{` ${usernames.join(', ')}`}</li>
     </ul>
   );
