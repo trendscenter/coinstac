@@ -95,7 +95,7 @@ export default function ConsortiumResult({
                 key={prop}
                 name={usernames[prop]}
                 pValue={item.pValueOriginal}
-                rSquared={item.rSquared}
+                rSquared={item.rSquaredOriginal}
                 tValue={item.tValueOriginal}
               />,
             ];
