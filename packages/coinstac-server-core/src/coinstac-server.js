@@ -285,7 +285,10 @@ class CoinstacServer {
         this.remotePipelineRunnerPool = remotePipelineRunnerPool;
         this.logger.info('Server ready');
         return remotePipelineRunnerPool;
-      });
+      })
+      .catch((error) => this.stop().then(() => {
+        throw error;
+      }));
   }
 
   /**
