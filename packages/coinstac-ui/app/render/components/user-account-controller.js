@@ -51,7 +51,8 @@ UserAccountController.propTypes = {
 function select(state) {
   return {
     auth: state.auth,
-    user: app.core.auth.getUser(),
+    // if auth is gone, we're probably logging out, use prev state
+    user: app.core.auth ? app.core.auth.getUser() : state.auth.user,
   };
 }
 

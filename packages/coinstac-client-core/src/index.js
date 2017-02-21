@@ -363,9 +363,14 @@ class CoinstacClient {
   /**
    * Inverse of .initialize.  Clears all authorization content, clears the
    * db registry (content remains intact), and purges the API client instance
+   * @param {object} opts options consisting of
+   *                      {
+   *                        deleteDBs: boolean, delete all local databases
+   *                      }
    * @returns {undefined}
    */
-  teardown() {
+  teardown(opts) {
+    const options = opts || {};
     const deleteProps = () => {
       delete this.halfpenny;
       delete this.auth;
@@ -377,10 +382,9 @@ class CoinstacClient {
     return this.auth.logout()
       .then(() => {
         if (this.pool) {
-          return this.pool.destroy();
+          return this.pool.destroy({ deleteDBs: options.deleteDBs });
         }
-
-        return this.dbRegistry.destroy();
+        return this.dbRegistry.destroy({ deleteDBs: options.deleteDBs });
       })
       .then(deleteProps, deleteProps);
   }

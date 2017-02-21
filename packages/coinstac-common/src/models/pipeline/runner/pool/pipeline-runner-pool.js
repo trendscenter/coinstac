@@ -159,9 +159,14 @@ class PipelineRunnerPool extends Base {
   /**
    * @description destroy pool.  scraps dbs in the registry (not the remote copies),
    * and all DBListeners
+   * @param {object} opts options consisting of
+   *                      {
+   *                        deleteDBs: boolean, delete all local databases
+   *                      }
    * @returns {Promise}
    */
-  destroy() {
+  destroy(opts) {
+    const options = opts || {};
     /* istanbul ignore if */
     if (!this.isInitialized && !this.isInitializing) {
       return Promise.reject(new Error(
@@ -198,7 +203,7 @@ class PipelineRunnerPool extends Base {
     .then(() => {
       delete this.resultsListeners;
     })
-    .then(() => this.dbRegistry.destroy())
+    .then(() => this.dbRegistry.destroy({ deleteDBs: options.deleteDBs }))
     .then(() => {
       this.isInitialized = false;
       this.isInitializing = false;
