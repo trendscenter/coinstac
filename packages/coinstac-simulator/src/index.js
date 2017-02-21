@@ -157,8 +157,10 @@ const exportList = {
           declaration,
           usernames,
           bootRemote.run({
+            activeComputationInputs: declaration.activeComputationInputs,
             computationPath: declaration.computationPath,
             data: declaration.remote,
+            usernames,
             verbose: declaration.verbose,
           }),
         ]);

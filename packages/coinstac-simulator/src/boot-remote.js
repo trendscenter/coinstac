@@ -15,15 +15,19 @@ const { logger, getStdDataHandler } = require('./utils/logging');
  * Run remote process booting.
  *
  * @param {Object} params
+ * @param {Array[]} params.activeComputationInputs
  * @param {string} params.computationPath
  * @param {Object} [params.data] Remote portion of declaration, intended for
  * seeding the remote process.
+ * @param {string[]} params.usernames
  * @param {boolean} [params.verbose=false] Enable verbose logging
  * @returns {Promise} Resolves to a booted remote process.
  */
 function run({
+  activeComputationInputs,
   computationPath,
   data,
+  usernames,
   verbose,
 }) {
   return new Promise((res, rej) => {
@@ -65,8 +69,10 @@ function run({
 
     remoteProcess.send({
       boot: {
+        activeComputationInputs,
         computationPath,
         data,
+        usernames,
       },
     });
   });
