@@ -75,7 +75,7 @@ test('builds & execs runners in response to db events', t => {
 
     pool.events.on('queue:start', () => t.pass('queue executing on `staticRun`'));
     pool.events.on('queue:end', () => {
-      pool.destroy()
+      pool.destroy({ deleteDBs: true })
       .then(() => teardownServer())
       .then(() => t.pass('pool tore-down ok'))
       .then(t.end, t.end);
@@ -107,7 +107,7 @@ test('builds new listeners when new a new consortium is added', t => {
       pool.dbRegistry.get('consortia').save(rawConsortium);
     })
     .then(() => listenerCreatedP)
-    .then(() => pool.destroy())
+    .then(() => pool.destroy({ deleteDBs: true }))
     .then(() => teardownServer())
     .then(() => t.pass('teardown ok'))
     .then(t.end, t.end);
@@ -139,7 +139,7 @@ test('fetch or seed computation results on init', (t) => {
       rslt instanceof RemoteComputationResult,
       'can fetch latest remote computation result'
     ))
-    .then(() => pool.destroy())
+    .then(() => pool.destroy({ deleteDBs: true }))
     .then(() => teardownServer())
     .then(() => t.pass('teardown ok'))
     .then(t.end, t.end);
@@ -175,7 +175,7 @@ test('marks completed computations', t => {
       .then(() => {
         pool.events.emit('computation:complete', runId, consortiumId);
       })
-      .then(() => pool.destroy())
+      .then(() => pool.destroy({ deleteDBs: true }))
       .then(() => teardownServer())
       .then(() => t.pass('teardown ok'))
       .then(t.end, t.end);

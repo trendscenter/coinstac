@@ -20,7 +20,7 @@ export const login = applyAsyncLoading(reqUser => {
 export const logout = applyAsyncLoading(() => {
   return (dispatch) => {
     return dispatch(teardownPrivateBackgroundServices()) // does app.core.logout*
-    .then(() => dispatch(setUser(null)));
+    .then(() => dispatch(setUser({ email: '' })));
   };
 });
 

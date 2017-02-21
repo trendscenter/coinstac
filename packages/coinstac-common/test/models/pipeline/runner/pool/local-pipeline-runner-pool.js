@@ -120,7 +120,7 @@ test('local-runner-pool builds & execs runners in response to db events', (t) =>
         return null;
       });
       pool.events.on('queue:end', () => {
-        pool.destroy()
+        pool.destroy({ deleteDBs: true })
         .then(() => teardownServer())
         .then(() => t.pass('pool teardown'))
         .then(t.end, t.end);
