@@ -7,11 +7,12 @@
 
 require('./utils/handle-errors');
 
-const { Consortium, DecentralizedComputation } = require('coinstac-common');
+const Consortium = require('coinstac-common').models.Consortium;
 const CoinstacServer = require('coinstac-server-core/src/coinstac-server.js');
 const config = require('./utils/config.js');
+const getComputationRegistryStub =
+  require('./utils/get-computation-registry-stub.js');
 const { getChildProcessLogger } = require('./utils/logging');
-const path = require('path');
 
 const logger = getChildProcessLogger();
 
@@ -34,34 +35,14 @@ function boot({
   data, // eslint-disable-line no-unused-vars
   usernames,
 }) {
-  const definition = require(computationPath); // eslint-disable-line global-require
-
   const server = new CoinstacServer({
     dbUrl: `http://localhost:${config['pouch-db-server'].port}`,
     inMemory: true,
   });
 
-  const computation = new DecentralizedComputation(Object.assign({
-    cwd: path.dirname(computationPath),
-    meta: {
-      description: definition.name,
-      name: definition.name,
-    },
-    repository: {
-      url: `http://github.com/${definition.name}`,
-    },
-  }, definition));
-
   // Override method to stub computation registry
-  server.getComputationRegistry = function getComputationRegistryStub() {
-    return Promise.resolve({
-      add() {
-        return computation;
-      },
-      all() {
-        return [computation];
-      },
-    });
+  server.getComputationRegistry = function getStub() {
+    return Promise.resolve(getComputationRegistryStub(computationPath));
   };
 
   // Re-assign logger to get simulator-centric logging
