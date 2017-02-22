@@ -68,7 +68,6 @@ class ProjectService extends ModelService {
    * @todo Refactor this into model method?
    *
    * @param {string} projectId
-   * @param {Map} metaContents Retrieved from `getMetaFileContents`
    * @returns {Promise} Mutated project with meta content as file tags
    */
   setMetaContents(projectId) {
