@@ -55,6 +55,28 @@ test('ProjectService#getCSV', t => {
     .catch(t.end);
 });
 
+test('ProjectService#getFilesFromMetadata', (t) => {
+  t.deepEqual(
+    ProjectService.prototype.getFilesFromMetadata(
+      path.join(__dirname, 'metadata.csv'),
+      [
+        ['files header'],
+        ['/full/path/to/file.txt'],
+        ['./partial/path/to/file.txt'],
+      ]
+    ),
+    [{
+      filename: '/full/path/to/file.txt',
+      tags: {},
+    }, {
+      filename: path.join(__dirname, './partial/path/to/file.txt'),
+      tags: {},
+    }],
+    'Gets files from metadata'
+  );
+  t.end();
+});
+
 test('ProjectService#setMetaContents errors', t => {
   const consortiumId = 'test-consortium';
   const projectId = 'test-project';
