@@ -53,7 +53,7 @@ const exportList = {
 
         /* eslint-disable global-require */
         const declaration = require(declarationPath);
-        /* eslint-ensable global-require */
+        /* eslint-enable global-require */
 
         // Validate declaration's shape
         if (!(declaration instanceof Object)) {
