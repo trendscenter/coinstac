@@ -5,10 +5,9 @@
  */
 require('./utils/handle-errors');
 
-const { fill, flatten, noop, times, uniqueId, values } = require('lodash');
+const { fill, flatten, omit, noop, times, uniqueId, values } = require('lodash');
 const bluebird = require('bluebird');
 const fs = require('fs');
-const isPromise = require('is-promise');
 const path = require('path');
 
 const bootLocals = require('./boot-locals');
@@ -56,24 +55,18 @@ const exportList = {
         /* eslint-enable global-require */
 
         // Validate declaration's shape
-        if (!(declaration instanceof Object)) {
-          throw new Error(`Expected declaration ${declarationPath} to be an object`);
-        } else if (
+        if (
           !('computationPath' in declaration) ||
           typeof declaration.computationPath !== 'string'
         ) {
           throw new Error(
             `Expected declaration ${declarationPath} to have a 'computationPath' property`
           );
-        } else if (
-          !('local' in declaration) || !Array.isArray(declaration.local)
-        ) {
+        } else if (!(declaration instanceof Object)) {
+          throw new Error(`Expected declaration ${declarationPath} to be an object`);
+        } else if (!Array.isArray(declaration.local)) {
           throw new Error(
             `Expected declaration ${declarationPath} to have a 'local' array`
-          );
-        } else if (!declaration.local.length) {
-          throw new Error(
-            `Expected declaration ${declarationPath} to have items in 'local' array`
           );
         } else if (
           'remote' in declaration && !(declaration.remote instanceof Object)
@@ -86,28 +79,50 @@ const exportList = {
         // Support empty arrays created by `Array(<number>)`
         const local = declaration.local.every(l => typeof l === 'undefined') ?
           times(declaration.local.length, () => ({})) :
-          Promise.all(declaration.local.map(l => {
-            return l instanceof Object && values(l).some(isPromise) ?
-              bluebird.props(l) :
-              l;
-          }));
+          Promise.all(declaration.local.map((item) => (
+            item instanceof Object ? bluebird.props(item) : item
+          )));
 
         const remote = declaration.remote ?
           bluebird.props(declaration.remote) :
           undefined;
 
+        // Pass local and remote immediately to handle rejections
         return Promise.all([
-          path.resolve(
+          local,
+          remote,
+          omit(declaration, ['local', 'remote']),
+        ]);
+      })
+      .then(([local, remote, declaration]) => {
+        if (!local.length) {
+          throw new Error(
+            `Expected declaration ${declarationPath} to have items in 'local' array`
+          );
+        } else if (!Array.isArray(declaration.__ACTIVE_COMPUTATION_INPUTS__)) {
+          /**
+           * @todo Don't require computation inputs.
+           *
+           * {@link https://github.com/MRN-Code/coinstac/issues/161}
+           */
+          /* eslint-disable max-len */
+          throw new Error(
+            `Expected declaration ${declarationPath} to contain '__ACTIVE_COMPUTATION_INPUTS__' array`
+          );
+          /* eslint-enable max-len */
+        }
+
+
+        return {
+          activeComputationInputs: declaration.__ACTIVE_COMPUTATION_INPUTS__,
+          computationPath: path.resolve(
             path.dirname(require.resolve(declarationPath)),
             declaration.computationPath
           ),
           local,
           remote,
-          !!declaration.verbose,
-        ]);
-      })
-      .then(([computationPath, local, remote, verbose]) => {
-        return { computationPath, local, remote, verbose };
+          verbose: !!declaration.verbose,
+        };
       });
   },
 
@@ -133,7 +148,7 @@ const exportList = {
    */
   run(declPath) {
     return this.getDeclaration(declPath)
-      .then(declaration => {
+      .then((declaration) => {
         const cwd = process.cwd();
         const usernames = this.getUsernames(declaration.local.length);
 

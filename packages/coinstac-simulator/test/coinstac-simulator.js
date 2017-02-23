@@ -201,7 +201,7 @@ tape('gets declaration by path', t => {
         declaration,
         {
           activeComputationInputs: [[[{
-            name: 'Sample boolean',
+            name: 'Is Control',
             type: 'boolean',
           }]]],
           computationPath: path.resolve(
