@@ -51,7 +51,7 @@ function run({
     remoteProcess.on('exit', (code) => {
       if (code) {
         throw new Error(
-          `${remoteProcessName} [${process.pid}]: exited with ${code}`
+          `${remoteProcessName} [${remoteProcess.pid}]: exited with ${code}`
         );
       }
     });
