@@ -36,6 +36,7 @@ function run({
       path.join(__dirname, 'remote.js'),
       {
         cwd: path.dirname(computationPath),
+        execArgv: process.execArgv.filter(arg => !arg.includes('--debug')),
         silent: true,
       }
     );

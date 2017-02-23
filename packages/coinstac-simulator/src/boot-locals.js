@@ -27,6 +27,7 @@ function getReadyLocalProcess({
   return new Promise((resolve, reject) => {
     const localProcess = cp.fork(path.join(__dirname, 'local.js'), {
       cwd: path.dirname(computationPath),
+      execArgv: process.execArgv.filter(arg => !arg.includes('--debug')),
       silent: true,
     });
 
