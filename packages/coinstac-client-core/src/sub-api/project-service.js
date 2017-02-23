@@ -101,6 +101,8 @@ class ProjectService extends ModelService {
         /**
          * @todo This requires a 'covariates' input type in the computation.
          * Make this not required!
+         *
+         * {@link https://github.com/MRN-Code/coinstac/issues/161}
          */
         if (covariatesIndex < 0) {
           throw new Error('Expected covariates index');
