@@ -37,6 +37,7 @@
     "axios": "^0.13.1",
     "bluebird": "^3.4.4",
     "chalk": "^1.1.1",
+    "coinstac-client-core": "^2.3.1",
     "coinstac-common": "^2.3.1",
     "coinstac-computation-registry": "^2.3.1",
     "coinstac-server-core": "^2.3.1",
@@ -46,8 +47,7 @@
     "glob": "^7.0.6",
     "is-promise": "^2.1.0",
     "lodash": "^4.15.0",
-    "pouchdb-adapter-memory": "^6.0.5",
-    "pouchy": "^11.0.1",
+    "pouchdb-adapter-memory": "^6.1.2",
     "retry": "^0.10.0",
     "spawn-pouchdb-server": "^3.3.2",
     "winston": "^2.2.0"

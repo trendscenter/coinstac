@@ -196,10 +196,14 @@ tape('gets declaration by path', t => {
   getDeclaration(
     path.join(__dirname, 'mocks', 'good-declaration-1.js')
   )
-    .then(declaration => {
+    .then((declaration) => {
       t.deepEqual(
         declaration,
         {
+          activeComputationInputs: [[[{
+            name: 'Sample boolean',
+            type: 'boolean',
+          }]]],
           computationPath: path.resolve(
             __dirname,
             'mocks/path/to/computation.js'
@@ -324,8 +328,10 @@ tape('runs declaration :: errors', t => {
     .then(() => {
       t.ok(
         bootRemoteStub.calledWithExactly({
+          activeComputationInputs: undefined,
           computationPath,
           data: declaration.remote,
+          usernames,
           verbose: declaration.verbose,
         }),
         'calls boot remote process with params'
@@ -348,11 +354,7 @@ tape('runs declaration :: errors', t => {
         getDeclarationStub.calledWithExactly(declarationPath),
         'gets declaration'
       );
-      t.deepEqual(
-        setupStub.firstCall.args[0],
-        { computationPath, usernames },
-        'sets up database with params'
-      );
+      t.equal(setupStub.callCount, 1, 'sets up database');
       t.ok(getUsernamesStub.calledWithExactly(2), 'gets usernames');
       t.ok(
         localProcesses.every(c => c.sendSpy.calledWithExactly({ kickoff: true })),

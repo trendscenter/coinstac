@@ -144,10 +144,7 @@ const exportList = {
           cwd,
           declaration,
           usernames,
-          dbServer.setup({
-            computationPath: declaration.computationPath,
-            usernames,
-          }),
+          dbServer.setup(),
         ]);
       })
       .then(([cwd, declaration, usernames]) => {
