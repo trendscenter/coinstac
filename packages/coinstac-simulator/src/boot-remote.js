@@ -17,7 +17,7 @@ const { logger, getStdDataHandler } = require('./utils/logging');
  * @param {Object} params
  * @param {Array[]} params.activeComputationInputs
  * @param {string} params.computationPath
- * @param {Object} [params.data] Remote portion of declaration, intended for
+ * @param {Object} params.data Remote portion of declaration, intended for
  * seeding the remote process.
  * @param {string[]} params.usernames
  * @param {boolean} [params.verbose=false] Enable verbose logging
