@@ -18,6 +18,15 @@ module.exports = {
       console.log('...bumping', userStep + 1); // eslint-disable-line
       return userStep + 1;
     },
+
+    /**
+     * @todo Remove once covariate inputs aren't required.
+     *
+     * {@link https://github.com/MRN-Code/coinstac/issues/161}
+     */
+    inputs: [{
+      type: 'covariates',
+    }],
   },
   remote: {
     type: 'function',
