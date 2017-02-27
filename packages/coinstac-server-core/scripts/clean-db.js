@@ -3,10 +3,29 @@
 
 const async = require('async');
 const CoinstacServer = require('../src/coinstac-server.js');
-const dbmap = require('/coins/config/dbmap.json');
 const rimraf = require('rimraf');
 const superagent = require('superagent');
 const url = require('url');
+
+/**
+ * @todo Don't depend on dbmap.json for secrets.
+ *
+ * {@link https://github.com/MRN-Code/coinstac/issues/163}
+ */
+let dbmap;
+
+try {
+  /* eslint-disable import/no-unresolved,global-require */
+  dbmap = require('/coins/config/dbmap.json');
+  /* eslint-enable import/no-unresolved,global-require */
+} catch (error) {
+  dbmap = {
+    coinstac: {
+      user: '',
+      password: '',
+    },
+  };
+}
 
 const urlBase = url.format({
   auth: dbmap.coinstac ? `${dbmap.coinstac.user}:${dbmap.coinstac.password}` : '',

@@ -13,7 +13,26 @@ const pify = require('pify');
 const pouchDbAdapterLevelDB = require('pouchdb-adapter-leveldb');
 const pouchDBAdapterMemory = require('pouchdb-adapter-memory');
 const url = require('url');
-const dbmap = require('/coins/config/dbmap.json');
+
+/**
+ * @todo Don't depend on dbmap.json for secrets.
+ *
+ * {@link https://github.com/MRN-Code/coinstac/issues/163}
+ */
+let dbmap;
+
+try {
+  /* eslint-disable import/no-unresolved,global-require */
+  dbmap = require('/coins/config/dbmap.json');
+  /* eslint-enable import/no-unresolved,global-require */
+} catch (error) {
+  dbmap = {
+    coinstac: {
+      user: '',
+      password: '',
+    },
+  };
+}
 
 const BASE_PATH = path.join(os.tmpdir(), 'coinstac-server-core');
 const DB_REGISTRY_DEFAULTS = {
