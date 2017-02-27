@@ -15,6 +15,15 @@ module.exports = {
         console.log(value); // eslint-disable-line no-console
         return value;
       },
+
+      /**
+       * @todo Remove once covariate inputs aren't required.
+       *
+       * {@link https://github.com/MRN-Code/coinstac/issues/161}
+       */
+      inputs: [{
+        type: 'covariates',
+      }],
     },
   ],
   remote: {
