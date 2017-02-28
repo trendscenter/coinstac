@@ -1,12 +1,11 @@
 import app from 'ampersand-app';
-import { cloneDeep, get, noop, pickBy, values, tail } from 'lodash';
+import { cloneDeep, get, noop, pickBy, values } from 'lodash';
 import { connect } from 'react-redux';
 import React, { Component, PropTypes } from 'react';
 
 import { runComputation } from '../../state/ducks/bg-services';
 import { addProject } from '../../state/ducks/projects';
 import FormProject from './form-project';
-import path from 'path';
 
 class FormProjectController extends Component {
   constructor(props) {
@@ -172,12 +171,10 @@ class FormProjectController extends Component {
             files: null,
           },
           project: {
-            files: tail(metaFile).map(([filename]) => ({
-              filename: path.isAbsolute(filename) ?
-                filename :
-                path.resolve(path.join(path.dirname(metaFilePath), filename)),
-              tags: {},
-            })),
+            files: app.core.projects.getFilesFromMetaData(
+              metaFilePath,
+              metaFile
+            ),
             metaFile,
             metaFilePath,
           },

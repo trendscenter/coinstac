@@ -43,7 +43,6 @@ function registryFilter(name, version) {
  * });
  *
  * @param {object} options
- * @param {string} options.path Path on disk to cache computations
  * @param {object[]} options.registry Collection of computation registry objects
  */
 class ComputationRegistry {

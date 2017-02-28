@@ -15,15 +15,19 @@ const { logger, getStdDataHandler } = require('./utils/logging');
  * Run remote process booting.
  *
  * @param {Object} params
+ * @param {Array[]} params.activeComputationInputs
  * @param {string} params.computationPath
- * @param {Object} [params.data] Remote portion of declaration, intended for
+ * @param {Object} params.data Remote portion of declaration, intended for
  * seeding the remote process.
+ * @param {string[]} params.usernames
  * @param {boolean} [params.verbose=false] Enable verbose logging
  * @returns {Promise} Resolves to a booted remote process.
  */
 function run({
+  activeComputationInputs,
   computationPath,
   data,
+  usernames,
   verbose,
 }) {
   return new Promise((res, rej) => {
@@ -32,6 +36,7 @@ function run({
       path.join(__dirname, 'remote.js'),
       {
         cwd: path.dirname(computationPath),
+        execArgv: process.execArgv.filter(arg => !arg.includes('--debug')),
         silent: true,
       }
     );
@@ -46,7 +51,7 @@ function run({
     remoteProcess.on('exit', (code) => {
       if (code) {
         throw new Error(
-          `${remoteProcessName} [${process.pid}]: exited with ${code}`
+          `${remoteProcessName} [${remoteProcess.pid}]: exited with ${code}`
         );
       }
     });
@@ -65,8 +70,10 @@ function run({
 
     remoteProcess.send({
       boot: {
+        activeComputationInputs,
         computationPath,
         data,
+        usernames,
       },
     });
   });
