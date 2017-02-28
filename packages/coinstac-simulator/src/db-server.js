@@ -8,14 +8,10 @@
 require('./utils/handle-errors');
 
 const cloneDeep = require('lodash/cloneDeep');
-const common = require('coinstac-common');
 const config = require('./utils/config');
 const { logger } = require('./utils/logging');
 const pdbs = require('spawn-pouchdb-server');
-const Pouchy = require('pouchy');
-const url = require('url');
 
-const Consortium = common.models.Consortium;
 const pouchDBServerConfig = config['pouch-db-server'];
 
 /**
@@ -24,22 +20,6 @@ const pouchDBServerConfig = config['pouch-db-server'];
  * @type {(undefined|Function)}
  */
 let server;
-
-function addDocument(pathname, doc) {
-  const dbUrl = url.format({
-    hostname: 'localhost',
-    pathname,
-    port: pouchDBServerConfig.port,
-    protocol: 'http',
-  });
-
-  const db = new Pouchy({
-    url: dbUrl,
-    sync: 'out',
-  });
-
-  return db.save(doc);
-}
 
 /**
  * @function setup
@@ -53,7 +33,7 @@ function addDocument(pathname, doc) {
  * @param {string[]} params.usernames
  * @returns {Promise}
  */
-function setup({ computationPath, usernames }) {
+function setup() {
   if (server) {
     return Promise.reject(new Error('Server already instantiated'));
   }
@@ -74,33 +54,6 @@ function setup({ computationPath, usernames }) {
       logger.info(
         `pouchdb-server running on http://localhost:${pouchDBServerConfig.port}`
       );
-      const defaultConsortium = new Consortium({
-        _id: `testconsortiumid${Date.now()}`,
-        activeComputationInputs: [[]],
-        description: 'test-default-consortium',
-        label: 'test-default-consortium',
-        owners: usernames,
-        users: usernames,
-      });
-      /* eslint-disable global-require */
-      const decentralizedComputation = require(computationPath);
-      /* eslint-enable global-require */
-      const computationDoc = {
-        _id: 'testcomputationid',
-        name: decentralizedComputation.name,
-        version: decentralizedComputation.version,
-      };
-
-      return Promise.all([
-        addDocument('consortia', defaultConsortium.serialize()),
-        addDocument('computations', computationDoc),
-      ]);
-    })
-    .then(responses => {
-      logger.info('Seeded database', {
-        consortium: responses[0]._id,
-        computation: responses[1].name,
-      });
 
       return server;
     });

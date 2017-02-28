@@ -9,6 +9,15 @@ module.exports = { // eslint-disable-line
     cmd: 'python',
     args: ['./echo-my-data.py'],
     verbose: true,
+
+    /**
+     * @todo Remove once covariate inputs aren't required.
+     *
+     * {@link https://github.com/MRN-Code/coinstac/issues/161}
+     */
+    inputs: [{
+      type: 'covariates',
+    }],
   },
   remote: {
     type: 'function',
