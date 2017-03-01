@@ -69,12 +69,12 @@ class ProjectsList extends Component {
     return (
       <div>
         <div className="page-header clearfix">
-          <h1 className="pull-left">Projects</h1>
-          <LinkContainer className="pull-right" to="/projects/new">
+          <h1 className="pull-left">My Files</h1>
+          <LinkContainer className="pull-right" to="/my-files/new">
             <Button bsStyle="primary" className="pull-right">
               <span aria-hidden="true" className="glphicon glyphicon-plus"></span>
               {' '}
-              Add Project
+              Add Files Collection
             </Button>
           </LinkContainer>
         </div>
