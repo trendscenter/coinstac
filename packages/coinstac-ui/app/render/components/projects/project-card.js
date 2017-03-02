@@ -94,7 +94,7 @@ export class ProjectCard extends Component {
       <div className="project-card panel panel-default">
         <div className="panel-heading">
           <h4 className="panel-title">
-            <Link to={`/projects/${id}`}>{name}</Link>
+            <Link to={`/my-files/${id}`}>{name}</Link>
           </h4>
           {this.renderComputationStatus()}
         </div>
@@ -115,7 +115,7 @@ export class ProjectCard extends Component {
                 Delete
               </Button>
               <LinkContainer
-                to={`/projects/${id}`}
+                to={`/my-files/${id}`}
               >
                 <Button bsSize="small">
                   <span

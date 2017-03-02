@@ -28,7 +28,7 @@ export default (
       <Route path="/consortia" component={DashboardConsortia} />
       <Route path="/consortia/new" component={ConsortiumController} />
       <Route path="/consortia/:consortiumId" component={ConsortiumController} />
-      <Route path="/projects" component={DashboardProjects}>
+      <Route path="/my-files" component={DashboardProjects}>
         <IndexRoute component={ProjectsList} />
         <Route path="new" component={FormProjectController} />
         <Route path=":projectId" component={FormProjectController} />
