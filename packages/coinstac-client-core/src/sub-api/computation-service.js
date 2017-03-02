@@ -6,6 +6,7 @@
 const common = require('coinstac-common');
 const Computation = common.models.computation.Computation;
 const crypto = require('crypto');
+const deepEqual = require('deep-equal');
 const getSyncedDatabase = common.utils.getSyncedDatabase;
 const ModelService = require('../model-service');
 const RemoteComputationResult = common.models.computation.RemoteComputationResult;
@@ -95,12 +96,33 @@ class ComputationService extends ModelService {
       projects.setMetaContents(projectId),
     ])
       .then(([consortium, project]) => {
+        /**
+         * Ensure project's computation inputs match the consortium; if not,
+         * throw an error and make the user re-match.
+         *
+         * @todo Find better method for guaranteeing project-to-computation
+         * input alignment.
+         *
+         * {@link https://github.com/MRN-Code/coinstac/issues/151}
+         */
+        if (
+          !deepEqual(
+            consortium.activeComputationInputs,
+            project.computationInputs
+          )
+        ) {
+          throw new Error(
+            `Project ${project.name}'s inputs must be re-entered`
+          );
+        }
+
         const options = {
           _id: runId,
           computationId: consortium.activeComputationId,
           computationInputs: consortium.activeComputationInputs,
           consortiumId,
         };
+
 
         if (
           consortium.activeComputationInputs &&
