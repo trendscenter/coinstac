@@ -139,14 +139,19 @@ tape('ComputationService :: doTriggerRunner errors', t => {
   const params = getStubbedParams();
   const computationService = new ComputationService(params);
 
-  params.client.projects.get.returns(Promise.resolve({
+  params.client.projects.setMetaContents.returns(Promise.resolve({
+    computationInputs: ['some', ['inputs']],
     files: [{
       filename: 'session-ale',
       tags: {},
     }],
   }));
 
-  t.plan(3);
+  params.client.consortia.get.returns({
+    activeComputationInputs: ['some', 'inputs'],
+  });
+
+  t.plan(4);
 
   computationService.doTriggerRunner({})
     .catch(() => {
@@ -164,6 +169,19 @@ tape('ComputationService :: doTriggerRunner errors', t => {
     })
     .catch(() => {
       t.pass('rejects without run ID');
+
+      return computationService.doTriggerRunner({
+        consortiumId: 'pilsner',
+        projectId: 'ipa',
+        runId: 'porter',
+      });
+    })
+    .catch((error) => {
+      // TODO: Export computation sub-api's errors for testing
+      t.ok(
+        error.message.includes('inputs must'),
+        'rejects with non-equal computation inputs'
+      );
     });
 });
 
@@ -174,6 +192,10 @@ tape('ComputationService :: doTriggerRunner', t => {
   const consortiumId = 'the-wildest-computation';
   const project = {
     _id: 'a-project-so-sweet',
+    computationInputs: [[
+      ['TotalGrayVol'],
+      200,
+    ]],
     name: 'The Sweetest Project',
     files: [{
       filename: '/Users/coinstac/dope-file.txt',
