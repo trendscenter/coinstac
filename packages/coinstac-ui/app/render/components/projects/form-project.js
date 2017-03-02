@@ -305,7 +305,7 @@ export default class FormProject extends Component {
     return (
       <form className="project-form clearfix" onSubmit={this.onSubmit}>
         <div className="page-header">
-          <h1>{isEditing ? 'Edit' : 'New'} Project</h1>
+          <h1>{isEditing ? 'Edit' : 'New'} Files Collection</h1>
         </div>
 
         <div className="project-form-section project-form-fields">
