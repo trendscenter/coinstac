@@ -171,7 +171,7 @@ class FormProjectController extends Component {
             files: null,
           },
           project: {
-            files: app.core.projects.getFilesFromMetaData(
+            files: app.core.projects.getFilesFromMetadata(
               metaFilePath,
               metaFile
             ),
@@ -286,7 +286,7 @@ class FormProjectController extends Component {
   }
 
   handleReset() {
-    this.context.router.push('/projects');
+    this.context.router.push('/my-files');
   }
 
   handleRunComputation() {
@@ -316,7 +316,7 @@ class FormProjectController extends Component {
       // Ensure no errors before submitting
       dispatch(addProject(toAdd))
         .then(() => {
-          router.push('/projects');
+          router.push('/my-files');
         })
         .catch((err) => {
           app.notify('error', err.message);
