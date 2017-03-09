@@ -2,6 +2,7 @@ import app from 'ampersand-app';
 import { cloneDeep, get, noop, pickBy, values } from 'lodash';
 import { connect } from 'react-redux';
 import React, { Component, PropTypes } from 'react';
+import deepEqual from 'deep-equal';
 
 import { runComputation } from '../../state/ducks/bg-services';
 import { addProject } from '../../state/ducks/projects';
@@ -22,6 +23,7 @@ class FormProjectController extends Component {
         name: null,
       },
       project: {
+        computationInputs: null,
         consortiumId: undefined,
         files: [],
         // TODO: Don't tie datastructure to input type
@@ -43,11 +45,33 @@ class FormProjectController extends Component {
       this.state.project.consortiumId = props.project.consortiumId;
       // TODO: enable with fileRender
       // this.state.project.files = cloneDeep(props.project.files);
-      this.state.project.metaCovariateMapping =
-        cloneDeep(props.project.metaCovariateMapping);
       this.state.project.metaFile = props.project.metaFile;
       this.state.project.metaFilePath = props.project.metaFilePath;
       this.state.project.name = props.project.name;
+
+      if (props.project.consortiumId) {
+        const consortium = props.consortia.find(
+          ({ _id }) => _id === props.project.consortiumId
+        );
+
+        /**
+         * Always load the consortium's `activeComputationInputs` to ensure the
+         * project's `metaCovariateMapping` matches.
+         *
+         * @todo Investigate race conditions where a consortium's inputs change
+         * while a user creates a project.
+         */
+        this.state.project.computationInputs =
+          cloneDeep(consortium.activeComputationInputs);
+
+        if (deepEqual(
+          props.project.computationInputs,
+          consortium.activeComputationInputs
+        )) {
+          this.state.project.metaCovariateMapping =
+            cloneDeep(props.project.metaCovariateMapping);
+        }
+      }
     }
     this.handleAddFiles = this.handleAddFiles.bind(this);
     this.handleAddMetaFile = this.handleAddMetaFile.bind(this);
@@ -195,7 +219,13 @@ class FormProjectController extends Component {
 
     this.setState({
       errors: this.getErrors({ consortiumId }),
-      project: { consortiumId },
+      project: {
+        consortiumId,
+        computationInputs: cloneDeep(this.props.consortia
+          .find(({ _id }) => _id === consortiumId)
+          .activeComputationInputs),
+        metaCovariateMapping: {},
+      },
     });
   }
 
