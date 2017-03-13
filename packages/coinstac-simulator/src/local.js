@@ -139,13 +139,22 @@ function boot({
       getAllDocuments(client.dbRegistry, 'consortia'),
       client.projects.getCSV(data.metaFilePath),
     ]))
-    .then(([[{ _id: consortiumId }], csv]) => {
+    .then(([
+      [
+        {
+          _id: consortiumId,
+          activeComputationInputs: computationInputs,
+        },
+      ],
+      csv,
+    ]) => {
       logger.verbose('Saving project');
 
       const metaFile = JSON.parse(csv);
 
       return client.projects.save({
         consortiumId,
+        computationInputs,
         files: client.projects.getFilesFromMetadata(
           data.metaFilePath,
           metaFile
