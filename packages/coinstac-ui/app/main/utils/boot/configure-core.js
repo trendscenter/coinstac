@@ -6,11 +6,15 @@ const CoinstacClientCore = require('coinstac-client-core');
 const { merge } = require('lodash');
 const parseCLIInput = require('./parse-cli-input.js');
 const PouchDBAdapterLevelDB = require('pouchdb-adapter-leveldb');
+const PouchDBAdapterMemory = require('pouchdb-adapter-memory');
 const url = require('url');
 
 // TODO: Yeeikes
 common.services.dbRegistry.DBRegistry.Pouchy.PouchDB.plugin(
   PouchDBAdapterLevelDB
+);
+common.services.dbRegistry.DBRegistry.Pouchy.PouchDB.plugin(
+  PouchDBAdapterMemory
 );
 
 module.exports = function configureCore() {
@@ -22,7 +26,9 @@ module.exports = function configureCore() {
       logger: app.logger,
       db: {
         pouchConfig: {
-          adapter: 'leveldb',
+          getAdapter(name) {
+            return name.includes('projects') ? 'leveldb' : 'memory';
+          },
         },
       },
     }
