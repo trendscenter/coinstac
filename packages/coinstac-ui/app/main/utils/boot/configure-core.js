@@ -26,7 +26,9 @@ module.exports = function configureCore() {
       logger: app.logger,
       db: {
         pouchConfig: {
-          adapter: 'leveldb',
+          getAdapter(name) {
+            return name.includes('projects') ? 'leveldb' : 'memory';
+          },
         },
       },
     }
