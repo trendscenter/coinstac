@@ -11,6 +11,7 @@ import { ProjectCard } from './project-card.js';
 import { hilarious } from '../../utils/hilarious-loading-messages.js';
 import app from 'ampersand-app';
 import { runComputation } from '../../state/ducks/bg-services';
+import deepEqual from 'deep-equal';
 
 class ProjectsList extends Component {
   constructor(props) {
@@ -79,17 +80,21 @@ class ProjectsList extends Component {
           </LinkContainer>
         </div>
         <div className="projects-list">
-          {projects.map(project => {
+          {projects.map((project) => {
             const consortium = consortia.find(c => {
               return c._id === project.consortiumId;
             });
 
             let showComputationRunButton = false;
+            let isInvalidMapping = false;
 
             if (consortium) {
               showComputationRunButton =
                 consortium.owners.indexOf(username) > -1;
-              // computationState
+              isInvalidMapping = !deepEqual(
+                consortium.activeComputationInputs,
+                project.computationInputs
+              );
             }
 
             return (
@@ -97,6 +102,7 @@ class ProjectsList extends Component {
                 allowComputationRun={project.allowComputationRun}
                 computationStatus={project.status}
                 id={project._id}
+                isInvalidMapping={isInvalidMapping}
                 key={`project-card-${project._id}`}
                 name={project.name}
                 removeProject={() => this.delete(project)}
@@ -112,11 +118,16 @@ class ProjectsList extends Component {
 }
 
 ProjectsList.propTypes = {
-  consortia: PropTypes.arrayOf(PropTypes.object).isRequired,
+  consortia: PropTypes.arrayOf(PropTypes.shape({
+    _id: PropTypes.string.isRequired,
+    activeComputationInputs: PropTypes.array.isRequired,
+    owners: PropTypes.arrayOf(PropTypes.string).isRequired,
+  })).isRequired,
   dispatch: PropTypes.func.isRequired,
   projects: PropTypes.arrayOf(PropTypes.shape({
     _id: PropTypes.string,
     allowComputationRun: PropTypes.bool.isRequired,
+    computationInputs: PropTypes.array.isRequired,
     consortiumId: PropTypes.string,
     files: PropTypes.array,
     name: PropTypes.string.isRequired,
