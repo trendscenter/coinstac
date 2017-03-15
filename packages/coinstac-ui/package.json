@@ -16,6 +16,7 @@
     "commander": "^2.9.0",
     "convict": "^1.4.0",
     "deep-equal": "^1.0.1",
+    "electron-default-menu": "^1.0.0",
     "lodash": "4.14.0",
     "md5": "^2.0.0",
     "mkdirp": "^0.5.1",

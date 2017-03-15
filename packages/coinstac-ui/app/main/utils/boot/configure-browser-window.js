@@ -8,6 +8,9 @@
 
 const app = require('ampersand-app');
 const electron = require('electron');
+const electronDefaultMenu = require('electron-default-menu');
+const path = require('path');
+const url = require('url');
 
 const BrowserWindow = electron.BrowserWindow;
 const electronApp = electron.app;
@@ -17,6 +20,7 @@ const electronApp = electron.app;
  */
 function createWindow() {
   const renderIndexPath = require.resolve('app/render/index.html');
+  const menu = electronDefaultMenu(electron.app, electron.shell);
   const size = electron.screen.getPrimaryDisplay().workAreaSize;
 
   /**
@@ -38,6 +42,38 @@ function createWindow() {
     // when you should delete the corresponding element.
     app.mainWindow = null;
   });
+
+  // Set app's menu
+  menu[0].submenu.splice(1, 0,
+    {
+      type: 'separator',
+    },
+    {
+      label: 'Logs',
+      click() {
+        let logWindow = new BrowserWindow({
+          height: 600,
+          width: 800,
+        });
+
+        logWindow.loadURL(url.format({
+          pathname: path.join(__dirname, '../../../render/log.html'),
+          protocol: 'file:',
+          slashes: true,
+          webPreferences: {
+            devTools: false,
+          },
+        }));
+        // `webPreferences.devTools = false` doesn't work?!
+        logWindow.webContents.closeDevTools();
+
+        logWindow.once('close', () => {
+          logWindow = null;
+        });
+      },
+    }
+  );
+  electron.Menu.setApplicationMenu(electron.Menu.buildFromTemplate(menu));
 }
 
 // This method will be called when Electron has finished
