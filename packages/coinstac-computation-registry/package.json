@@ -12,8 +12,8 @@
   ],
   "dependencies": {
     "coinstac-common": "^2.3.1",
-    "decentralized-single-shot-ridge-regression": "github:mrn-code/decentralized-single-shot-ridge-regression#v1.1.9",
-    "laplacian-noise-ridge-regression": "github:mrn-code/decentralized-laplacian-ridge-regression#v3.1.9",
+    "decentralized-single-shot-ridge-regression": "github:mrn-code/decentralized-single-shot-ridge-regression#v1.1.10",
+    "laplacian-noise-ridge-regression": "github:mrn-code/decentralized-laplacian-ridge-regression#v3.1.10",
     "lodash": "^4.17.4",
     "read-pkg-up": "^2.0.0"
   },

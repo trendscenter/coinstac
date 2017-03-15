@@ -78,6 +78,7 @@ export default function ConsortiumResult({
               <ConsortiumResultTable
                 betaVector={item.betaVector}
                 covariates={covariates}
+                degreesOfFreedom={item.degreesOfFreedom}
                 key={prop}
                 name={'Global'}
                 pValue={item.pValue}
@@ -92,6 +93,7 @@ export default function ConsortiumResult({
               <ConsortiumResultTable
                 betaVector={item.betaVector}
                 covariates={covariates}
+                degreesOfFreedom={item.degreesOfFreedom}
                 key={prop}
                 name={usernames[prop]}
                 pValue={item.pValueOriginal}
@@ -166,6 +168,7 @@ ConsortiumResult.propTypes = {
   data: PropTypes.shape({
     global: PropTypes.shape({
       betaVector: PropTypes.arrayOf(PropTypes.number).isRequired,
+      degreesOfFreedom: PropTypes.number.isRequired,
       pValue: PropTypes.arrayOf(PropTypes.number).isRequired,
       rSquared: PropTypes.number.isRequired,
       tValue: PropTypes.arrayOf(PropTypes.number).isRequired,

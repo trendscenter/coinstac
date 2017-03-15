@@ -29,6 +29,7 @@ const subscripts = ['₀', '₁', '₂', '₃', '₄', '₅', '₆', '₇', '₈
  * @param {Object} props Computation result
  * @param {number[]} props.betaVector
  * @param {string[]} props.covariates
+ * @param {number} props.degreesOfFreedom
  * @param {string} props.name
  * @param {number[]} props.pValue
  * @param {number} props.rSquared
@@ -38,6 +39,7 @@ const subscripts = ['₀', '₁', '₂', '₃', '₄', '₅', '₆', '₇', '₈
 export default function ConsortiumResultTable({
   betaVector,
   covariates,
+  degreesOfFreedom,
   name,
   pValue,
   rSquared,
@@ -46,9 +48,11 @@ export default function ConsortiumResultTable({
   return (
     <div>
       <h4>{name}</h4>
-      <dl className="consortium-result-list">
+      <dl className="consortium-result-list clearfix">
         <dt>R²</dt>
         <dd><samp>{formatNumber(rSquared)}</samp></dd>
+        <dt>Degrees of Freedom</dt>
+        <dd><samp>{degreesOfFreedom}</samp></dd>
       </dl>
       <table className="consortium-result-table table">
         <thead>
@@ -92,6 +96,7 @@ ConsortiumResultTable.displayName = 'ConsortiumResultTable';
 ConsortiumResultTable.propTypes = {
   betaVector: PropTypes.arrayOf(PropTypes.number).isRequired,
   covariates: PropTypes.arrayOf(PropTypes.string).isRequired,
+  degreesOfFreedom: PropTypes.number.isRequired,
   name: PropTypes.string.isRequired,
   pValue: PropTypes.arrayOf(PropTypes.number).isRequired,
   rSquared: PropTypes.number.isRequired,
