@@ -3,14 +3,15 @@
 ///
 
 .consortium-result-list {
-  display: flex;
   margin-bottom: 8px;
 
   dt,
   dd {
-    padding: 8px;
+    float: left;
+    padding: 2px 8px;
   }
   dt {
+    clear: left;
     font-weight: 500;
     width: 18rem;
   }
