@@ -30,6 +30,7 @@
         position: fixed;
         top: 0;
         width: 100%;
+        z-index: 1;
       }
       pre {
         font-family: Menlo, Consolas, 'Courier New', Courier, monospace;
@@ -46,6 +47,28 @@
       }
       .error {
         color: red;
+      }
+
+      /* Loading (empty) state */
+      #output:empty {
+        position: relative;
+      }
+      #output:empty:before {
+        animation: rotate 1s linear infinite;
+        content: '-';
+        left: 1rem;
+        opacity: .5;
+        position: absolute;
+        top: 4rem;
+      }
+
+      @keyframes rotate {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(359deg);
+        }
       }
     </style>
   </head>
