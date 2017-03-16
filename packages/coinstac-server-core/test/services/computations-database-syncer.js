@@ -159,6 +159,4 @@ tape('Synchronizes database', (t) => {
       );
     })
     .catch(t.end);
-    console.log('?')
 });
-    console.log('??')
