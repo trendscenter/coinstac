@@ -7,86 +7,26 @@
 
 require('./utils/handle-errors');
 
-const getPoolConfig = require('./utils/get-pool-config');
-const common = require('coinstac-common');
-const User = common.models.User;
-const LocalPipelineRunnerPool = common.models.pipeline.runner.pool.LocalPipelineRunnerPool;
-const RemoteComputationResult = common.models.computation.RemoteComputationResult;
-const { getChildProcessLogger } = require('./utils/logging');
+const CoinstacClient = require('coinstac-client-core');
+const coinstacCommon = require('coinstac-common');
+const path = require('path');
+const pouchDBAdapterMemory = require('pouchdb-adapter-memory');
 const retry = require('retry');
 
-const logger = getChildProcessLogger();
+const config = require('./utils/config.js');
+const getComputationRegistryStub =
+  require('./utils/get-computation-registry-stub.js');
+const { getChildProcessLogger } = require('./utils/logging.js');
 
-/**
- * Placeholder for user's data. This is used with
- * @type {Object}
- */
-let userData = {
-  kickoff: true,
-};
+const dbRegistry = coinstacCommon.services.dbRegistry;
+const logger = getChildProcessLogger();
+const pouchDBServerConfig = config['pouch-db-server'];
+
+dbRegistry.DBRegistry.Pouchy.plugin(pouchDBAdapterMemory);
 
 let initiate = false;
-let pool;
+let client;
 let username;
-
-
-/**
- * Boot local process.
- *
- * @param {Object} params
- * @param {string} params.computationPath
- * @param {Object} [params.data]
- * @param {boolean} [params.initiate=false] Whether the process should initiate
- * the computation run.
- * @param {string} params.username
- * @returns {Promise}
- */
-function boot({
-  computationPath,
-  data,
-  initiate: init,
-  username: uname,
-}) {
-  initiate = init;
-  username = uname;
-
-  if (data) {
-    userData = data;
-  }
-
-  return getPoolConfig({
-    computationPath,
-    isLocal: true,
-  })
-    .then(opts => {
-      pool = new LocalPipelineRunnerPool(Object.assign({
-        user: new User({
-          username,
-          email: `${username}@simulating.org`,
-          password: 'dummypw',
-        }),
-      }, opts));
-
-      // Log computation output if it exists
-      pool.events.on('run:end', result => {
-        if (
-          result &&
-          result instanceof Object &&
-          'data' in result &&
-          typeof result.data !== 'undefined' &&
-          result.data !== null &&
-          result.data !== ''
-        ) {
-          logger.verbose(
-            `Computation run ended: ${JSON.stringify(result.data)}`
-          );
-        }
-      });
-      pool.events.on('error', logger.error);
-
-      return pool.init();
-    });
-}
 
 /**
  * Get all documents.
@@ -104,7 +44,7 @@ function boot({
  * @returns {Promise}
  */
 function getAllDocuments(dbRegistry, dbName) {
-  const getSyncedDatabase = common.utils.getSyncedDatabase;
+  const getSyncedDatabase = coinstacCommon.utils.getSyncedDatabase;
 
   return getSyncedDatabase(dbRegistry, dbName).then(database => {
     const operation = retry.operation({
@@ -137,6 +77,98 @@ function getAllDocuments(dbRegistry, dbName) {
 }
 
 /**
+ * Boot local process.
+ *
+ * @param {Object} params
+ * @param {string} params.computationPath
+ * @param {Object} [params.data]
+ * @param {boolean} [params.initiate=false] Whether the process should initiate
+ * the computation run.
+ * @param {string} params.username
+ * @returns {Promise}
+ */
+function boot({
+  computationPath,
+  data,
+  initiate: init,
+  username: uname,
+}) {
+  initiate = init;
+  username = uname;
+
+  client = new CoinstacClient({
+    appDirectory: path.resolve(__dirname, '../.tmp/'),
+    db: {
+      remote: {
+        db: {
+          hostname: 'localhost',
+          pathname: '',
+          port: pouchDBServerConfig.port,
+          protocol: 'http',
+        },
+      },
+      pouchConfig: {
+        adapter: 'memory',
+      },
+    },
+    hp: 'http://localhost:8801/api/v1.3.0',
+    logger,
+  });
+
+  /**
+   * Stub computation registry and its private `CoinstacClient` instantiation
+   * method to load the computation under test.
+   */
+  client._initComputationRegistry = function compRegStub() {
+    client.computationRegistry = getComputationRegistryStub(computationPath);
+    return Promise.resolve(client.computationRegistry);
+  };
+
+  client._initAuthorization = function authStub(user) {
+    client.auth.setUser(user);
+    return Promise.resolve(user);
+  };
+
+  return client.initialize({
+    email: `${username}@mrn.org`,
+    password: 'dummypw',
+    name: username,
+    username,
+  })
+    .then(() => Promise.all([
+      getAllDocuments(client.dbRegistry, 'consortia'),
+      client.projects.getCSV(data.metaFilePath),
+    ]))
+    .then(([
+      [
+        {
+          _id: consortiumId,
+          activeComputationInputs: computationInputs,
+        },
+      ],
+      csv,
+    ]) => {
+      logger.verbose('Saving project');
+
+      const metaFile = JSON.parse(csv);
+
+      return client.projects.save({
+        consortiumId,
+        computationInputs,
+        files: client.projects.getFilesFromMetadata(
+          data.metaFilePath,
+          metaFile
+        ),
+        metaFile,
+        metaFilePath: data.metaFilePath,
+        metaCovariateMapping: data.metaCovariateMapping,
+        name: `${username}'s project`,
+      });
+    })
+    .then(({ _id }) => client.projects.setMetaContents(_id));
+}
+
+/**
  * @function kickoff
  * @description starts a run. if the initiator, kicks-off immediately. others
  * who want to kickoff wait for a remote result doc, then proceed to kickoff
@@ -146,50 +178,45 @@ function getAllDocuments(dbRegistry, dbName) {
  * @returns {Promise}
  */
 const kickoff = function kickoff() {
-  const dbRegistry = pool.dbRegistry;
-  let consortiumDoc;
-  let computationDoc;
-  let remoteResult;
-
   logger.verbose(`${username} kicking off`);
 
   return Promise.all([
-    getAllDocuments(dbRegistry, 'consortia'),
-    getAllDocuments(dbRegistry, 'computations'),
+    getAllDocuments(client.dbRegistry, 'consortia'),
+    getAllDocuments(client.dbRegistry, 'projects'),
   ])
-    .then(([consortiaDocs, computationDocs]) => {
+    .then(([consortiaDocs, projectsDocs]) => {
       if (!consortiaDocs.length) {
         throw new Error('Couldn\'t get consortia docs');
-      } else if (!computationDocs.length) {
-        throw new Error('Couldn\'t get computations docs');
+      } else if (!projectsDocs.length) {
+        throw new Error('Couldn\'t get projects docs');
       }
 
-      consortiumDoc = consortiaDocs[0];
-      computationDoc = computationDocs[0];
+      const consortiumId = consortiaDocs[0]._id;
+      const projectId = projectsDocs[0]._id;
 
       if (initiate) {
         logger.verbose(`${username} initiating`);
-        remoteResult = new RemoteComputationResult({
-          _id: 'test_run_id',
-          computationId: computationDoc._id,
-          computationInputs: [[]],
-          consortiumId: consortiumDoc._id,
+        return client.computations.kickoff({
+          consortiumId,
+          projectId,
         });
-        return remoteResult;
       }
-      const remoteResultDB = pool.dbRegistry.get(
-        `remote-consortium-${consortiumDoc._id}`
+
+      const remoteResultDB = client.dbRegistry.get(
+        `remote-consortium-${consortiumId}`
       );
+
       return new Promise((res, rej) => {
         const pollForRemoteResult = setInterval(
           // test if remote result present yet
           () => {
             remoteResultDB.all()
             .then((docs) => {
-              if (!docs || !docs.length) { return null; }
-              remoteResult = new RemoteComputationResult(docs[0]);
+              if (!docs || !docs.length) {
+                return null;
+              }
               clearInterval(pollForRemoteResult);
-              return res(remoteResult);
+              return res([consortiumId, projectId, docs[0]._id]);
             })
             .catch((err) => {
               clearInterval(pollForRemoteResult);
@@ -198,11 +225,16 @@ const kickoff = function kickoff() {
           },
           50
         );
+      })
+      .then(([consortiumId, projectId, runId]) => {
+        logger.verbose(`${username} triggering runner`);
+
+        return client.computations.joinRun({
+          consortiumId,
+          projectId,
+          runId,
+        });
       });
-    })
-    .then(() => {
-      logger.verbose(`${username} triggering runner`);
-      pool.triggerRunner(remoteResult, userData);
     });
 };
 

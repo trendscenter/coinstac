@@ -11,9 +11,9 @@
     "Sergey Plis <splis@mrn.org>"
   ],
   "dependencies": {
-    "coinstac-common": "^2.2.2",
-    "decentralized-single-shot-ridge-regression": "github:mrn-code/decentralized-single-shot-ridge-regression#v1.1.4",
-    "laplacian-noise-ridge-regression": "github:mrn-code/decentralized-laplacian-ridge-regression#v3.1.5",
+    "coinstac-common": "^2.3.1",
+    "decentralized-single-shot-ridge-regression": "github:mrn-code/decentralized-single-shot-ridge-regression#v1.1.10",
+    "laplacian-noise-ridge-regression": "github:mrn-code/decentralized-laplacian-ridge-regression#v3.1.10",
     "lodash": "^4.17.4",
     "read-pkg-up": "^2.0.0"
   },
@@ -41,5 +41,5 @@
   "scripts": {
     "test": "nyc --reporter=lcov node test/index.js"
   },
-  "version": "2.3.0"
+  "version": "2.4.0"
 }

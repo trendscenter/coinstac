@@ -1,8 +1,20 @@
 import NotificationSystem from 'react-notification-system';
 import React from 'react';
 import app from 'ampersand-app';
+import { ipcRenderer } from 'electron';
+import truncate from 'lodash/truncate';
+
 
 export default class Notify extends React.Component {
+  constructor(props) {
+    super(props);
+
+    this.handleAsyncError = this.handleAsyncError.bind(this);
+  }
+
+  componentWillMount() {
+    ipcRenderer.on('async-error', this.handleAsyncError);
+  }
 
   /**
    * build the notification system _once_, and enforce that it is not dually instantiated.
@@ -16,6 +28,19 @@ export default class Notify extends React.Component {
     }
     app.notifications = this;
     app.notify = (level, message) => this.push({ level, message, autoDismiss: 2 });
+  }
+
+
+  componentWillUnmount() {
+    ipcRenderer.removeListener('async-error', this.handleAsyncError);
+  }
+
+  handleAsyncError(event, message) {
+    this.push({
+      autoDismiss: 0,
+      level: 'error',
+      message: truncate(message, { length: 250 }),
+    });
   }
 
   /**

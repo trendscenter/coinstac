@@ -24,6 +24,8 @@ RemoteComputationResult.schema = Object.assign({}, ComputationResult.schema, {
   _id: joi.string().regex(RemoteComputationResult._idRegex).required(),
   complete: joi.boolean().default(false), // DecentralizedComputation complete/halted
   computationInputs: joi.array().items(joi.array()).required(),
+  endDate: joi.date().timestamp(),
+  startDate: joi.date().timestamp().default(Date.now()),
   usernames: joi.array().items(joi.string()).default([]),
   userErrors: joi.array(),
   // runId - derived from _id, enforced on ComputationResult instantiation

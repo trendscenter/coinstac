@@ -17,6 +17,7 @@ const difference = require('lodash/difference');
 const find = require('lodash/find');
 const includes = require('lodash/includes');
 const findKey = require('lodash/findKey');
+const tail = require('lodash/tail');
 
 /**
  * @class
@@ -33,10 +34,32 @@ class ProjectService extends ModelService {
     this.listeners = new Map();
   }
 
+  /**
+   * Get a metadata CSV's contents.
+   *
+   * @param {string} filename Full file path to CSV
+   * @returns {Promise<Project>}
+   */
   getCSV(filename) {
     return bluebird.promisify(fs.readFile)(filename)
       .then(data => bluebird.promisify(csvParse)(data.toString()))
       .then(JSON.stringify);
+  }
+
+  /**
+   * Load a metadata CSV file.
+   *
+   * @param {string} metaFilePath Path to metadata CSV
+   * @param {Array[]} metaFile Metadata CSV's contents
+   * @returns {File[]} Collection of files
+   */
+  getFilesFromMetadata(metaFilePath, metaFile) {
+    return tail(metaFile).map(([filename]) => ({
+      filename: path.isAbsolute(filename) ?
+        filename :
+        path.resolve(path.join(path.dirname(metaFilePath), filename)),
+      tags: {},
+    }));
   }
 
   /**
@@ -45,7 +68,6 @@ class ProjectService extends ModelService {
    * @todo Refactor this into model method?
    *
    * @param {string} projectId
-   * @param {Map} metaContents Retrieved from `getMetaFileContents`
    * @returns {Promise} Mutated project with meta content as file tags
    */
   setMetaContents(projectId) {
@@ -79,6 +101,8 @@ class ProjectService extends ModelService {
         /**
          * @todo This requires a 'covariates' input type in the computation.
          * Make this not required!
+         *
+         * {@link https://github.com/MRN-Code/coinstac/issues/161}
          */
         if (covariatesIndex < 0) {
           throw new Error('Expected covariates index');
@@ -91,6 +115,16 @@ class ProjectService extends ModelService {
           throw new Error('Expected covariates');
         }
 
+        return Promise.all([
+          project,
+          covariates,
+          ProjectService.statAll(
+            project.files.map(f => f.filename),
+            path.dirname(project.metaFilePath)
+          ),
+        ]);
+      })
+      .then(([project, covariates]) => {
         /**
          * [
          *   [1, 2, 3],
@@ -466,6 +500,33 @@ class ProjectService extends ModelService {
       listeners.delete(consortiumId);
       return destroy;
     }));
+  }
+
+  /**
+   * Stat all files.
+   *
+   * {@link http://bluebirdjs.com/docs/api/reflect.html}
+   *
+   * @param {string[]} files Collection of file paths
+   * @param {string} cwd Current working directory
+   * @returns {Promise<boolean>}
+   */
+  static statAll(files, cwd) {
+    const resolvedFiles = files.map(file => (
+      path.isAbsolute(file) ? file : path.resolve(cwd, file)
+    ));
+    const stat = bluebird.promisify(fs.stat);
+
+    return Promise.all(resolvedFiles.map((file) => stat(file).reflect()))
+      .then((inspections) => {
+        const missingFiles = inspections.reduce((memo, inspection, index) => (
+          inspection.isFulfilled() ? memo : memo.concat(resolvedFiles[index])
+        ), []);
+
+        if (missingFiles.length) {
+          throw new Error(`Project files don't exist: ${missingFiles.join(', ')}`);
+        }
+      });
   }
 }
 

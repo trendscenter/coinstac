@@ -1,12 +1,12 @@
 import app from 'ampersand-app';
-import { cloneDeep, get, noop, pickBy, values, tail } from 'lodash';
+import { cloneDeep, get, noop, pickBy, values } from 'lodash';
 import { connect } from 'react-redux';
 import React, { Component, PropTypes } from 'react';
+import deepEqual from 'deep-equal';
 
 import { runComputation } from '../../state/ducks/bg-services';
 import { addProject } from '../../state/ducks/projects';
 import FormProject from './form-project';
-import path from 'path';
 
 class FormProjectController extends Component {
   constructor(props) {
@@ -23,6 +23,7 @@ class FormProjectController extends Component {
         name: null,
       },
       project: {
+        computationInputs: null,
         consortiumId: undefined,
         files: [],
         // TODO: Don't tie datastructure to input type
@@ -44,11 +45,33 @@ class FormProjectController extends Component {
       this.state.project.consortiumId = props.project.consortiumId;
       // TODO: enable with fileRender
       // this.state.project.files = cloneDeep(props.project.files);
-      this.state.project.metaCovariateMapping =
-        cloneDeep(props.project.metaCovariateMapping);
       this.state.project.metaFile = props.project.metaFile;
       this.state.project.metaFilePath = props.project.metaFilePath;
       this.state.project.name = props.project.name;
+
+      if (props.project.consortiumId) {
+        const consortium = props.consortia.find(
+          ({ _id }) => _id === props.project.consortiumId
+        );
+
+        /**
+         * Always load the consortium's `activeComputationInputs` to ensure the
+         * project's `metaCovariateMapping` matches.
+         *
+         * @todo Investigate race conditions where a consortium's inputs change
+         * while a user creates a project.
+         */
+        this.state.project.computationInputs =
+          cloneDeep(consortium.activeComputationInputs);
+
+        if (deepEqual(
+          props.project.computationInputs,
+          consortium.activeComputationInputs
+        )) {
+          this.state.project.metaCovariateMapping =
+            cloneDeep(props.project.metaCovariateMapping);
+        }
+      }
     }
     this.handleAddFiles = this.handleAddFiles.bind(this);
     this.handleAddMetaFile = this.handleAddMetaFile.bind(this);
@@ -172,12 +195,10 @@ class FormProjectController extends Component {
             files: null,
           },
           project: {
-            files: tail(metaFile).map(([filename]) => ({
-              filename: path.isAbsolute(filename) ?
-                filename :
-                path.resolve(path.join(path.dirname(metaFilePath), filename)),
-              tags: {},
-            })),
+            files: app.core.projects.getFilesFromMetadata(
+              metaFilePath,
+              metaFile
+            ),
             metaFile,
             metaFilePath,
           },
@@ -198,7 +219,13 @@ class FormProjectController extends Component {
 
     this.setState({
       errors: this.getErrors({ consortiumId }),
-      project: { consortiumId },
+      project: {
+        consortiumId,
+        computationInputs: cloneDeep(this.props.consortia
+          .find(({ _id }) => _id === consortiumId)
+          .activeComputationInputs),
+        metaCovariateMapping: {},
+      },
     });
   }
 
@@ -289,7 +316,7 @@ class FormProjectController extends Component {
   }
 
   handleReset() {
-    this.context.router.push('/projects');
+    this.context.router.push('/my-files');
   }
 
   handleRunComputation() {
@@ -319,7 +346,7 @@ class FormProjectController extends Component {
       // Ensure no errors before submitting
       dispatch(addProject(toAdd))
         .then(() => {
-          router.push('/projects');
+          router.push('/my-files');
         })
         .catch((err) => {
           app.notify('error', err.message);
