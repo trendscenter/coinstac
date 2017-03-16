@@ -24,6 +24,7 @@ module.exports = function buildNative() {
 
         const build = cp.spawn(cmd, [
           'rebuild',
+          '--build-from-source',
           'leveldown',
           '--depth=0',
           '--runtime=electron',

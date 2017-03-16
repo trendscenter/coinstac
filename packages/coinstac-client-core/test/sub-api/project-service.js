@@ -55,6 +55,28 @@ test('ProjectService#getCSV', t => {
     .catch(t.end);
 });
 
+test('ProjectService#getFilesFromMetadata', (t) => {
+  t.deepEqual(
+    ProjectService.prototype.getFilesFromMetadata(
+      path.join(__dirname, 'metadata.csv'),
+      [
+        ['files header'],
+        ['/full/path/to/file.txt'],
+        ['./partial/path/to/file.txt'],
+      ]
+    ),
+    [{
+      filename: '/full/path/to/file.txt',
+      tags: {},
+    }, {
+      filename: path.join(__dirname, './partial/path/to/file.txt'),
+      tags: {},
+    }],
+    'Gets files from metadata'
+  );
+  t.end();
+});
+
 test('ProjectService#setMetaContents errors', t => {
   const consortiumId = 'test-consortium';
   const projectId = 'test-project';
@@ -129,6 +151,8 @@ test('ProjectService#setMetaContents errors', t => {
     ['./M102.txt', '28', 'true'],
   ];
   const metaFilePath = path.join(__dirname, 'metadata.csv');
+  const statAllStub = sinon.stub(ProjectService, 'statAll')
+    .returns(Promise.resolve());
 
   project.get.returns(Promise.resolve({
     _id: projectId,
@@ -221,7 +245,8 @@ test('ProjectService#setMetaContents errors', t => {
         'errors with bad metaFile column'
       );
     })
-    .catch(t.end);
+    .catch(t.end)
+    .then(statAllStub.restore, statAllStub.restore);
 });
 
 test('ProjectService - setMetaContents', t => {
@@ -303,6 +328,9 @@ test('ProjectService - setMetaContents', t => {
     project
   );
 
+  const statAllStub = sinon.stub(ProjectService, 'statAll')
+    .returns(Promise.resolve());
+
   t.plan(3);
 
   setMetaContents(projectId)
@@ -341,7 +369,8 @@ test('ProjectService - setMetaContents', t => {
         'adds tags to project\'s files'
       );
     })
-    .catch(t.end);
+    .catch(t.end)
+    .then(statAllStub.restore, statAllStub.restore);
 });
 
 // TODO: This test fails when this file is tested independently. Why?
@@ -654,4 +683,44 @@ test('ProjectService - database listener events', t => {
       // teardown
       dbListenerStub.restore();
     });
+});
+
+
+test('ProjectService - stat all files', (t) => {
+  const badFiles = ['/such/a/nasty/file.txt', '/incredible/stamina.csv'];
+  const goodFiles = ['/path/to/rando.txt', 'where/am/i/even.csv'];
+  const statStub = sinon.stub(fs, 'stat');
+
+  statStub.onCall(0).yields({
+    code: 'ENOENT',
+  });
+  statStub.onCall(1).yields({
+    code: 'ENOENT',
+  });
+  statStub.yields(null, {});
+
+  t.plan(3);
+
+  ProjectService.statAll(badFiles, __dirname)
+    .then(() => t.fail('Resolves with bad file paths'))
+    .catch((error) => {
+      t.ok(
+        badFiles.every(f => statStub.calledWith(f)),
+        'stats every file'
+      );
+      t.ok(
+        badFiles.every(f => error.message.includes(f)),
+        'adds bad files to error message'
+      );
+
+      return ProjectService.statAll(goodFiles, __dirname);
+    })
+    .then(() => {
+      t.ok(
+        statStub.calledWith(path.resolve(__dirname, goodFiles[1])),
+        'resolves non-absolute file paths'
+      );
+    })
+    .catch(t.end)
+    .then(statStub.restore, statStub.restore);
 });

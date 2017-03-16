@@ -26,6 +26,11 @@ test('constructor - runId', (t) => {
   try {
     const result = new RemoteComputationResult(validOpts); // eslint-disable-line no-unused-vars
     t.pass('valid constructor options ok');
+    t.pass(
+      typeof result.startDate === 'number' &&
+      Date.now() - result.startDate < 100,
+      'sets start date'
+    );
   } catch (err) {
     return t.end(err.message);
   }

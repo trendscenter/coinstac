@@ -7,6 +7,7 @@ export class ProjectCard extends Component {
   maybeRenderComputationRunButton() {
     const {
       allowComputationRun,
+      isInvalidMapping,
       runComputation,
       showComputationRunButton,
     } = this.props;
@@ -17,7 +18,7 @@ export class ProjectCard extends Component {
           bsSize="small"
           bsStyle="primary"
           className="pull-right"
-          disabled={!allowComputationRun}
+          disabled={isInvalidMapping || !allowComputationRun}
           onClick={runComputation}
         >
           <span
@@ -33,51 +34,56 @@ export class ProjectCard extends Component {
   }
 
   renderComputationStatus() {
-    const { computationStatus } = this.props;
-    const className = `project-status ${ProjectCard.computationStatusClassNames.get(
-      computationStatus
+    const { computationStatus, isInvalidMapping } = this.props;
+    const className = `project-status ${(
+      isInvalidMapping ?
+        ProjectCard.computationStatusClassNames.get('error') :
+        ProjectCard.computationStatusClassNames.get(computationStatus)
     )}`;
     let status;
 
-    switch (computationStatus) {
-      case 'active':
-        status = (
-          <span>
-            <span aria-hidden="true" className="glyphicon glyphicon-refresh"></span>
-            {' '}
-            Running
-          </span>
-        );
-        break;
-      case 'complete':
-        status = (
-          <span>
-            <span aria-hidden="true" className="glyphicon glyphicon-ok"></span>
-            {' '}
-            Complete
-          </span>
-        );
-        break;
-      case 'error':
-        status = (
-          <span>
-            <span aria-hidden="true" className="glyphicon glyphicon-alert"></span>
-            {' '}
-            Error
-          </span>
-        );
-        break;
-      case 'waiting':
-        status = (
-          <span>
-            <span aria-hidden="true" className="glyphicon glyphicon-alert"></span>
-            {' '}
-            Waiting to start
-          </span>
-        );
-        break;
-      default:
-        status = <span>Unknown status</span>;
+    if (isInvalidMapping) {
+      status = (
+        <span>
+          <span aria-hidden="true" className="glyphicon glyphicon-exclamation-sign"></span>
+          {' '}
+          Must remap covariates
+        </span>
+      );
+    } else if (computationStatus === 'active') {
+      status = (
+        <span>
+          <span aria-hidden="true" className="glyphicon glyphicon-refresh"></span>
+          {' '}
+          Running
+        </span>
+      );
+    } else if (computationStatus === 'complete') {
+      status = (
+        <span>
+          <span aria-hidden="true" className="glyphicon glyphicon-ok"></span>
+          {' '}
+          Complete
+        </span>
+      );
+    } else if (computationStatus === 'error') {
+      status = (
+        <span>
+          <span aria-hidden="true" className="glyphicon glyphicon-alert"></span>
+          {' '}
+          Error
+        </span>
+      );
+    } else if (computationStatus === 'waiting') {
+      status = (
+        <span>
+          <span aria-hidden="true" className="glyphicon glyphicon-alert"></span>
+          {' '}
+          Waiting to start
+        </span>
+      );
+    } else {
+      status = <span>Unknown status</span>;
     }
 
     return <div className={className}>{status}</div>;
@@ -94,7 +100,7 @@ export class ProjectCard extends Component {
       <div className="project-card panel panel-default">
         <div className="panel-heading">
           <h4 className="panel-title">
-            <Link to={`/projects/${id}`}>{name}</Link>
+            <Link to={`/my-files/${id}`}>{name}</Link>
           </h4>
           {this.renderComputationStatus()}
         </div>
@@ -115,7 +121,7 @@ export class ProjectCard extends Component {
                 Delete
               </Button>
               <LinkContainer
-                to={`/projects/${id}`}
+                to={`/my-files/${id}`}
               >
                 <Button bsSize="small">
                   <span
@@ -152,6 +158,7 @@ ProjectCard.propTypes = {
     'waiting',
   ]).isRequired,
   id: PropTypes.string.isRequired,
+  isInvalidMapping: PropTypes.bool.isRequired,
   name: PropTypes.string.isRequired,
   removeProject: PropTypes.func.isRequired,
   runComputation: PropTypes.func.isRequired,

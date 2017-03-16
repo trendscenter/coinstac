@@ -11,6 +11,15 @@ module.exports = {
     cmd: 'node',
     args: ['./process-data.js'],
     verbose: true,
+
+    /**
+     * @todo Remove once covariate inputs aren't required.
+     *
+     * {@link https://github.com/MRN-Code/coinstac/issues/161}
+     */
+    inputs: [{
+      type: 'covariates',
+    }],
   },
   remote: {
     // simply stores each user file content to the remote result.  Exits

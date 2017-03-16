@@ -19,11 +19,11 @@ export default function DashboardNav() {
             Consortia
         </NavItem>
       </LinkContainer>
-      <LinkContainer to="/projects">
+      <LinkContainer to="/my-files">
         <NavItem>
           <span aria-hidden="true" className="glyphicon glyphicon-list-alt"></span>
           {' '}
-          Projects
+          My Files
         </NavItem>
       </LinkContainer>
     </Nav>

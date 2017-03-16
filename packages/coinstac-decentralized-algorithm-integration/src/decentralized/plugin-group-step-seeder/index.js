@@ -13,6 +13,15 @@ module.exports = {
         return [1, 2, 3];
       },
       verbose: true,
+
+      /**
+       * @todo Remove once covariate inputs aren't required.
+       *
+       * {@link https://github.com/MRN-Code/coinstac/issues/161}
+       */
+      inputs: [{
+        type: 'covariates',
+      }],
     },
     {
       type: 'function',

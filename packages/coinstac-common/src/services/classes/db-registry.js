@@ -8,8 +8,6 @@ const assign = require('lodash/assign');
 const cloneDeep = require('lodash/cloneDeep');
 const defaultsDeep = require('lodash/defaultsDeep');
 const get = require('lodash/get');
-const set = require('lodash/set');
-const isString = require('lodash/isString');
 const without = require('lodash/without');
 const result = require('lodash/result');
 
@@ -189,11 +187,18 @@ class DBRegistry {
 
     conf.pouchConfig.ajax = result(this, 'ajax');
 
-    // convert string declared PouchDB adapter to adapter instance
-    const requestedAdapter = get(conf, 'pouchConfig.db');
-    /* istanbul ignore if */
-    if (isString(requestedAdapter)) {
-      set(conf, 'pouchConfig.db', require(requestedAdapter)); // eslint-disable-line
+    /**
+     * Ensure local (client) instances' non-projects databases are stored in
+     * memory.
+     *
+     * {@link https://github.com/MRN-Code/coinstac/issues/155}
+     */
+    if (
+      this.localStores &&
+      this.localStores.indexOf('projects') > -1 &&
+      conf.pouchConfig.getAdapter instanceof Function
+    ) {
+      conf.pouchConfig.adapter = conf.pouchConfig.getAdapter(connStr);
     }
 
     // build db and cache it
