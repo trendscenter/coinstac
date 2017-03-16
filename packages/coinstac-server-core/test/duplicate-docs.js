@@ -121,6 +121,7 @@ tape('test', (t) => {
       return getDb('in').all();
     })
     .then((docs) => {
+			debugger;
       t.deepEqual(
         sortBy(
           docs.map(partialRight(omit, ['_id', '_rev'])),

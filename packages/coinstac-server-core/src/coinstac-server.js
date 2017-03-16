@@ -273,16 +273,18 @@ class CoinstacServer {
         computationDatabase,
         decentralizedComputations,
         remotePipelineRunnerPool,
-      ]) => Promise.all([
-        remotePipelineRunnerPool,
-        this.maybeSeedConsortia(),
-        computationsDatabaseSyncer.sync(
-          computationDatabase,
-          decentralizedComputations
-        ),
-      ]))
-      .then(([remotePipelineRunnerPool]) => {
+      ]) => {
         this.remotePipelineRunnerPool = remotePipelineRunnerPool;
+        return Promise.all([
+          remotePipelineRunnerPool,
+          this.maybeSeedConsortia(),
+          computationsDatabaseSyncer.sync(
+            computationDatabase,
+            decentralizedComputations
+          ),
+        ]);
+      })
+      .then(([remotePipelineRunnerPool]) => {
         this.logger.info('Server ready');
         return remotePipelineRunnerPool;
       })
