@@ -43,8 +43,7 @@ class FormProjectController extends Component {
      */
     if (props.project) {
       this.state.project.consortiumId = props.project.consortiumId;
-      // TODO: enable with fileRender
-      // this.state.project.files = cloneDeep(props.project.files);
+      this.state.project.files = cloneDeep(props.project.files);
       this.state.project.metaFile = props.project.metaFile;
       this.state.project.metaFilePath = props.project.metaFilePath;
       this.state.project.name = props.project.name;
