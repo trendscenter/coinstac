@@ -21,6 +21,7 @@ test('ConsortiaService - Model Service methods', (t) => {
     t.pass('teardown ok');
     t.end();
   };
+
   let c1;
 
   t.plan(4);
@@ -40,13 +41,19 @@ test('ConsortiaService - Model Service methods', (t) => {
   .then((doc) => {
     t.ok(doc._id, 'doc generated');
   })
-  .then(() => c1.teardown(handleTeardown))
+  .then(() => c1.teardown({ deleteDBs: true }))
   .then(() => t.pass('teardown'))
-  .catch(t.end);
+  .catch(handleTeardown);
 });
 
 test('ConsortiaService - getUserConsortia', (t) => {
   const con1 = consortiumFactory();
+  const handleTeardown = (err) => {
+    if (err) { return t.end(err && err.message); }
+    t.pass('teardown ok');
+    t.end();
+  };
+
   let c1;
 
   t.plan(2);
@@ -58,7 +65,7 @@ test('ConsortiaService - getUserConsortia', (t) => {
   })
   .then(() => c1.consortia.getUserConsortia(userFactory().username))
   .then((docs) => t.equals(docs.length, 1, 'getUserConsortia'))
-  .then(() => c1.teardown())
+  .then(() => c1.teardown({ deleteDBs: true }))
   .then(() => t.pass('teardown'))
-  .catch(t.end);
+  .catch(handleTeardown);
 });
