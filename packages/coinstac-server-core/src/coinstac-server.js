@@ -283,24 +283,18 @@ class CoinstacServer {
           computationRegistry.all(),
         ]);
       })
-      .then(([computationDatabase, decentralizedComputations]) => Promise.all([
-        computationDatabase,
-        decentralizedComputations,
-        this.getRemotePipelineRunnerPool(),
-      ]))
-      .then(([
-        computationDatabase,
-        decentralizedComputations,
-        remotePipelineRunnerPool,
-      ]) => {
+      .then(([computationDatabase, decentralizedComputations]) =>
+        computationsDatabaseSyncer.sync(
+          computationDatabase,
+          decentralizedComputations
+        )
+      )
+      .then(() => this.getRemotePipelineRunnerPool())
+      .then((remotePipelineRunnerPool) => {
         this.remotePipelineRunnerPool = remotePipelineRunnerPool;
         return Promise.all([
           remotePipelineRunnerPool,
           this.maybeSeedConsortia(),
-          computationsDatabaseSyncer.sync(
-            computationDatabase,
-            decentralizedComputations
-          ),
         ]);
       })
       .then(([remotePipelineRunnerPool]) => {
