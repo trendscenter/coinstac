@@ -71,7 +71,7 @@ test('PipelineRunnerPool - handles new dbs', t => {
       if (this.createdHandlerCalled) { return; }
       this.createdHandlerCalled = true;
       t.ok(dbName, 'created db handler called');
-      pool.destroy()
+      pool.destroy({ deleteDBs: true })
       .then(() => teardownServer())
       .then(() => t.pass('teardown ok'))
       .then(t.end, t.end);
@@ -124,7 +124,7 @@ test('queues processing for rapid succession database events', t => {
       pool.triggerRunner(localResult1); // fire the requests ~concurrently
       return pool.triggerRunner(localResult2);
     })
-    .then(() => pool.destroy())
+    .then(() => pool.destroy({ deleteDBs: true }))
     .then(() => teardownServer())
     .then(() => t.pass('teardown ok'))
     .then(() => t.end(), t.end);
@@ -167,7 +167,7 @@ test('does not proceed queue whilst pipeline is `inProgress`', t => {
       return t.fail('bogu run:end occurred');
     });
     pool.events.on('queue:end', () => {
-      pool.destroy()
+      pool.destroy({ deleteDBs: true })
       .then(() => teardownServer())
       .then(() => {
         t.equal(requestComplete, 3, 'three jobs run');
@@ -221,7 +221,7 @@ test('Pool emits queue and run event activity', t => {
     pool.events.on('queue:start', qRunId => t.equal(qRunId, runId, 'queue on starts'));
     pool.events.on('queue:end', qRunId => {
       t.equal(qRunId, runId, 'queue on ends');
-      pool.destroy()
+      pool.destroy({ deleteDBs: true })
       .then(() => teardownServer())
       .then(() => t.pass('pool teardown ok'))
       .then(t.end, t.end);
@@ -280,7 +280,7 @@ test('consortia has DBListeners on pool.init()', t => {
       const cachedListener = pool.resultsListeners[`remote-consortium-${testId}`];
       t.ok(cachedListener instanceof EventEmitter, 'listener ok');
     })
-    .then(() => pool.destroy())
+    .then(() => pool.destroy({ deleteDBs: true }))
     .then(() => teardownServer())
     .then(() => t.pass('pool teardown ok'))
     .then(t.end, t.end);
@@ -341,7 +341,7 @@ test('pool selectively listens to consortia when using `listenTo`', (t) => {
         'should not listen to non-listenTo consortium'
       );
     })
-    .then(() => pool.destroy())
+    .then(() => pool.destroy({ deleteDBs: true }))
     .then(() => teardownServer())
     .then(() => t.pass('pool teardown ok'))
     .then(t.end, t.end);

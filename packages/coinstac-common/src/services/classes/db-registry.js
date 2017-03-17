@@ -209,12 +209,13 @@ class DBRegistry {
   }
 
   /**
-   * Removes database from registry
+   * Removes database from registry optionally deleting it from pouchy
+   * @param  {boolean} deleteDB call pouchy destroy on DB
    * @param  {Pouchy|string} db database or database name
    * @param  {function=} cb
    * @return {Promise}
    */
-  unregister(db) {
+  cleanUpDB(deleteDB, db) {
     /* istanbul ignore if */
     if (typeof db === 'string') {
       db = this.all.find(pouchy => pouchy.name === db);
@@ -225,31 +226,36 @@ class DBRegistry {
     }
     /* istanbul ignore else */
     if (db.syncEmitter) { db.syncEmitter.cancel(); }
-    return db.destroy()
-    .then((rslt) => {
+    const unregister = () => {
       this.all = without(this.all, db);
       delete this.registry[db.name];
-      return rslt;
-    });
+    };
+    return Promise.all([
+      deleteDB ? db.destroy() : undefined,
+      unregister(),
+    ]);
   }
 
-  destroy() {
-    return Promise.all(this.all.map(this.unregister.bind(this)))
+  destroy(opts) {
+    const options = opts || {};
+    return Promise.all(this.all.map(this.cleanUpDB.bind(this, options.deleteDBs)))
     .then((destroyed) => {
-      const notDestroyed = destroyed.filter((confirmation) => !confirmation.ok);
+      const notDestroyed = destroyed.filter((confirmation) =>
+        (confirmation[0] ? !confirmation[0].ok : false));
       /* istanbul ignore if */
       if (notDestroyed.length) {
         throw new Error('unable to destroy all dbs');
       }
+      this.destroyed = true;
       return destroyed;
     });
   }
 }
 
 /**
- * @property {array} names returns an array of db names from the registry
- * @example `dbs.names;` ==> ['db1', 'db2']
- */
+* @property {array} names returns an array of db names from the registry
+* @example `dbs.names;` ==> ['db1', 'db2']
+*/
 Object.defineProperty(DBRegistry.prototype, 'names', {
   get() {
     /* istanbul ignore next */
