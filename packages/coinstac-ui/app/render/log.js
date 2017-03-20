@@ -10,7 +10,10 @@ const access = bluebird.promisify(require('fs').access);
 
 
 const fileExists = (fPath) => {
-  return access(fPath).then(() => [fPath, true], () => [fPath, false]);
+  return access(fPath).then(
+    () => ({ target: fPath, exists: true }),
+    () => ({ target: fPath, exists: false })
+  );
 };
 
 function maybeAddOutput(output, className) {
@@ -50,32 +53,29 @@ loadConfig()
 
     console.log(`Reading log: ${targets.toString()}`); // eslint-disable-line no-console
 
-    // return Promise.all([targets.reduce((memo, target) => {
-    //   if (fileExists(target)) {
-    //     memo.push(target);
-    //   }
-    //   return memo;
-    // }, [])])
-    Promise.all([targets.map(target =>)])
-    .then((existingTargets) => {
-      debugger;
-      Promise.all([
-        existingTargets,
-        ...existingTargets.map((target) => readLastLines.read(target, 50)),
-      ]);
-    });
+    return Promise.all(targets.map(target => fileExists(target)))
+    .then((targetInfo) =>
+      Promise.all(
+        targetInfo.reduce((memo, target) => {
+          return target.exists ?
+            memo.concat(readLastLines.read(target.target, 50)
+              .then(lines => ({ target: target.target, lines }))) :
+            memo;
+        }, [])
+      )
+    );
   })
-  .then((res) => {
-    debugger;
-    logData(lines);
+  .then((reads) => {
+    reads.forEach((read) => {
+      logData(read.lines);
+      const tail = new Tail(read.target, {
+        follow: true,
+        logger: console,
+      });
 
-    const tail = new Tail(target, {
-      follow: true,
-      logger: console,
+      tail.on('line', logData);
+      tail.on('error', logError);
     });
-
-    tail.on('line', logData);
-    tail.on('error', logError);
   })
   .catch(logError);
 
