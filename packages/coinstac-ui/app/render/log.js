@@ -5,6 +5,13 @@ const os = require('os');
 const path = require('path');
 const readLastLines = require('read-last-lines');
 const { Tail } = require('tail');
+const bluebird = require('bluebird');
+const access = bluebird.promisify(require('fs').access);
+
+
+const fileExists = (fPath) => {
+  return access(fPath).then(() => [fPath, true], () => [fPath, false]);
+};
 
 function maybeAddOutput(output, className) {
   if (typeof document !== 'undefined') {
@@ -30,17 +37,36 @@ function logError(error) {
 
 loadConfig()
   .then((config) => {
-    const target = path.join(
-      os.homedir(),
+    const targets = [
+      path.join(
+      process.env.HOME || process.env.TEMP,
       config.get('logLocations')[os.platform()],
-      config.get('logFile')
-    );
+      config.get('logFile')),
+      path.join(
+      process.env.HOME || process.env.TEMP,
+      config.get('logLocations')[os.platform()],
+      config.get('logFileBoot')),
+    ];
 
-    console.log(`Reading log: ${target}`); // eslint-disable-line no-console
+    console.log(`Reading log: ${targets.toString()}`); // eslint-disable-line no-console
 
-    return Promise.all([target, readLastLines.read(target, 50)]);
+    // return Promise.all([targets.reduce((memo, target) => {
+    //   if (fileExists(target)) {
+    //     memo.push(target);
+    //   }
+    //   return memo;
+    // }, [])])
+    Promise.all([targets.map(target =>)])
+    .then((existingTargets) => {
+      debugger;
+      Promise.all([
+        existingTargets,
+        ...existingTargets.map((target) => readLastLines.read(target, 50)),
+      ]);
+    });
   })
-  .then(([target, lines]) => {
+  .then((res) => {
+    debugger;
     logData(lines);
 
     const tail = new Tail(target, {

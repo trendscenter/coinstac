@@ -34,6 +34,7 @@ const conf = convict({
     noURLPrefix: true,
   },
   logFile: 'coinstac-log.json',
+  logFileBoot: 'coinstac-boot-error-log.txt',
   // these are appended to the home dir for you OS
   // *nix: ~/.config/coinstac
   // win: C:\Users\username\AppData\Local\Temp\coinstac
