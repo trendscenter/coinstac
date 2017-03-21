@@ -266,10 +266,10 @@ function mapStateToProps(state, ownProps) {
     props.initialValues = ownProps.consortium;
   } else if (ownProps.computations) {
     // TODO: Don't hard-code default computation
+    const decentComp = ownProps.computations
+      .find(c => c.name === 'decentralized-single-shot-ridge-regression');
     props.initialValues = {
-      activeComputationId: ownProps.computations
-        .find(c => c.name === 'decentralized-single-shot-ridge-regression')
-        ._id,
+      activeComputationId: decentComp ? decentComp._id : null,
     };
   }
 
