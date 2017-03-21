@@ -59,16 +59,21 @@ class FormProjectController extends Component {
          *
          * @todo Investigate race conditions where a consortium's inputs change
          * while a user creates a project.
+         * @todo remove consortiumId clearing on bad find lookup
          */
-        this.state.project.computationInputs =
+        if (consortium) {
+          this.state.project.computationInputs =
           cloneDeep(consortium.activeComputationInputs);
 
-        if (deepEqual(
-          props.project.computationInputs,
-          consortium.activeComputationInputs
-        )) {
-          this.state.project.metaCovariateMapping =
+          if (deepEqual(
+            props.project.computationInputs,
+            consortium.activeComputationInputs
+          )) {
+            this.state.project.metaCovariateMapping =
             cloneDeep(props.project.metaCovariateMapping);
+          }
+        } else {
+          this.state.project.consortiumId = null;
         }
       }
     }
