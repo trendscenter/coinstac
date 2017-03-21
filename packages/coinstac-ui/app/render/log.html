@@ -45,8 +45,40 @@
         font-size: 100%;
         line-height: inherit;
       }
+
+      /* Output variations */
+      .boot-log,
+      .standard-log {
+        display: block;
+        padding-left: 4rem;
+        position: relative;
+      }
+      .boot-log {
+        color: #ffa;
+      }
+
+      .boot-log:before,
+      .standard-log:before {
+        font-family: 'Helvetica Neue', sans-serif;
+        font-size: 60%;
+        left: 0;
+        letter-spacing: .15ex;
+        opacity: .667;
+        padding: .25rem 0 0;
+        position: absolute;
+        text-transform: uppercase;
+        top: 0;
+        width: 4rem;
+      }
+      .boot-log:before {
+        content: 'Boot';
+      }
+      .standard-log:before {
+        content: 'Standard';
+      }
+
       .error {
-        color: red;
+        color: #faa;
       }
 
       /* Loading (empty) state */
