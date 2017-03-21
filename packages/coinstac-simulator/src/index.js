@@ -225,8 +225,12 @@ const exportList = {
             });
           })
         )
-        .then(dbServer.teardown)
-        .then(() => resolve())
+        .then(dbServer.getRemoteResult)
+        .then(remoteResult => Promise.all([
+          remoteResult,
+          dbServer.teardown(),
+        ]))
+        .then(([remoteResult]) => resolve(remoteResult))
         .catch((err) => reject(err));
       });
     });
