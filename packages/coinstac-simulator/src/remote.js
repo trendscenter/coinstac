@@ -56,9 +56,21 @@ function boot({
         'computation:markedComplete',
         () => {
           logger.verbose('Shutting down server...');
-          return server.stop().then(() => process.exit());
+
+          /**
+           * @todo PouchDB's internal request queue doesn't send document saves
+           * if `server.stop` isn't delayed on the Node.js event queue.
+           * Determine a better way to ensure `PouchDB#save` fired.
+           */
+          setTimeout(
+            () => {
+              server.stop().then(() => process.exit());
+            },
+            1000
+          );
         }
       );
+      remotePipelineRunnerPool.events.on('error', logger.error);
 
       return server.dbRegistry.get('computations').all();
     })

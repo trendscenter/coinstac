@@ -7,6 +7,7 @@
 
 require('./utils/handle-errors');
 
+const axios = require('axios');
 const cloneDeep = require('lodash/cloneDeep');
 const config = require('./utils/config');
 const { logger } = require('./utils/logging');
@@ -20,6 +21,35 @@ const pouchDBServerConfig = config['pouch-db-server'];
  * @type {(undefined|Function)}
  */
 let server;
+
+/**
+ * Get remote result.
+ *
+ * Get the last remote result output from the current computation.
+ *
+ * @returns {Promise<Object>}
+ */
+function getRemoteResult() {
+  const host = `http://localhost:${pouchDBServerConfig.port}`;
+
+  return axios.get(`${host}/_all_dbs`)
+    .then((result) => {
+      const remoteDb = result.data.find(db => db.includes('remote-consortium-'));
+
+      if (!remoteDb) {
+        throw new Error('Remote consortium database not found');
+      }
+
+      return axios.get(`${host}/${remoteDb}/_all_docs?include_docs=true`);
+    })
+    .then((result) => {
+      if (!result.data.rows.length) {
+        throw new Error('No remote consortium results');
+      }
+
+      return result.data.rows[0].doc.data;
+    });
+}
 
 /**
  * @function setup
@@ -82,6 +112,7 @@ function teardown() {
 }
 
 module.exports = {
+  getRemoteResult,
   setup,
   teardown,
 };

@@ -321,6 +321,8 @@ tape('runs declaration :: errors', t => {
   const setupStub = sinon.stub(dbServer, 'setup').returns(Promise.resolve());
   const teardownStub = sinon.stub(dbServer, 'teardown')
     .returns(Promise.resolve());
+  const getRemoteResultStub = sinon.stub(dbServer, 'getRemoteResult')
+    .returns(Promise.resolve({}));
 
   t.plan(8);
 
@@ -372,6 +374,7 @@ tape('runs declaration :: errors', t => {
       bootLocalsStub.restore();
       getUsernamesStub.restore();
       getDeclarationStub.restore();
+      getRemoteResultStub.restore();
       setupStub.restore();
       teardownStub.restore();
     });
@@ -381,8 +384,15 @@ tape('sets commands\' cwd', t => {
   t.plan(1);
 
   coinstacSimulator.run(path.resolve(__dirname, 'mocks/exec-declaration.js'))
-    .then(() => {
-      t.pass('resolves!');
+    .then((result) => {
+      t.deepEqual(
+        result,
+        {
+          complete: true,
+          process: 'remote',
+        },
+        'returns remote result'
+      );
     })
     .catch(t.end);
 });
