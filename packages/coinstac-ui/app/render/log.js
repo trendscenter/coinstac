@@ -8,17 +8,12 @@ const { Tail } = require('tail');
 const bluebird = require('bluebird');
 const access = bluebird.promisify(require('fs').access);
 
+const outputEl = typeof document !== 'undefined' ?
+  document.getElementById('output') :
+  undefined;
 
-const fileExists = (fPath) => {
-  return access(fPath).then(
-    () => ({ target: fPath, exists: true }),
-    () => ({ target: fPath, exists: false })
-  );
-};
-
-function maybeAddOutput(output, className) {
-  if (typeof document !== 'undefined') {
-    const outputEl = document.getElementById('output');
+function maybeAddOutput(output, logName, className) {
+  if (outputEl) {
     const code = document.createElement('code');
     code.className = className;
     code.innerHTML = output;
@@ -28,54 +23,68 @@ function maybeAddOutput(output, className) {
   }
 }
 
-function logData(data) {
-  console.log(data); // eslint-disable-line no-console
-  maybeAddOutput(data);
+function getDataLogger(logName, className) {
+  return function dataLogger(data) {
+    console.log(data); // eslint-disable-line no-console
+    maybeAddOutput(data, logName, className);
+  };
 }
 
-function logError(error) {
-  console.error(error); // eslint-disable-line no-console
-  maybeAddOutput(error.message, 'error');
+function getErrorLogger(logName, className) {
+  return function errorLogger(error) {
+    console.error(error); // eslint-disable-line no-console
+    maybeAddOutput(error.message, logName, `error ${className}`);
+  };
 }
 
 loadConfig()
   .then((config) => {
-    const targets = [
-      path.join(
+    const base = path.join(
       process.env.HOME || process.env.TEMP,
-      config.get('logLocations')[os.platform()],
-      config.get('logFile')),
-      path.join(
-      process.env.HOME || process.env.TEMP,
-      config.get('logLocations')[os.platform()],
-      config.get('logFileBoot')),
-    ];
-
-    console.log(`Reading log: ${targets.toString()}`); // eslint-disable-line no-console
-
-    return Promise.all(targets.map(target => fileExists(target)))
-    .then((targetInfo) =>
-      Promise.all(
-        targetInfo.reduce((memo, target) => {
-          return target.exists ?
-            memo.concat(readLastLines.read(target.target, 50)
-              .then(lines => ({ target: target.target, lines }))) :
-            memo;
-        }, [])
-      )
+      config.get('logLocations')[os.platform()]
     );
-  })
-  .then((reads) => {
-    reads.forEach((read) => {
-      logData(read.lines);
-      const tail = new Tail(read.target, {
-        follow: true,
-        logger: console,
-      });
+    const targets = [{
+      className: 'standard-log',
+      filename: path.join(base, config.get('logFile')),
+      name: 'Log',
+    }, {
+      className: 'boot-log',
+      filename: path.join(base, config.get('logFileBoot')),
+      name: 'Boot log',
+    }];
 
-      tail.on('line', logData);
-      tail.on('error', logError);
-    });
+    /* eslint-disable no-console */
+    console.log(
+      `Reading logs: ${targets.map(({ filename }) => filename).toString()}`
+    );
+    /* eslint-enable no-console */
+
+    return Promise.all(targets.map(target => access(target.filename).then(
+      () => Object.assign({}, target, { exists: true }),
+      () => Object.assign({}, target, { exists: false })
+    )));
   })
-  .catch(logError);
+  .then(targets => Promise.all(targets.reduce((memo, target) => (
+    target.exists ?
+      memo.concat(
+        readLastLines.read(target.filename, 50)
+          .then(lines => Object.assign({}, target, { lines }))
+      ) :
+      memo
+  ), [])))
+  .then((targets) => targets.forEach((target) => {
+    const dataLogger = getDataLogger(target.name, target.className);
+    const errorLogger = getErrorLogger(target.name, target.className);
+
+    dataLogger(target.lines);
+
+    const tail = new Tail(target.filename, {
+      follow: true,
+      logger: console,
+    });
+
+    tail.on('line', dataLogger);
+    tail.on('error', errorLogger);
+  }))
+  .catch(getErrorLogger());
 
