@@ -34,7 +34,11 @@ function getDataLogger(logName, className) {
 function getErrorLogger(logName, className) {
   return function errorLogger(error) {
     console.error(error); // eslint-disable-line no-console
-    maybeAddOutput(serializeError(error), logName, `error ${className}`);
+    maybeAddOutput(
+      JSON.stringify(serializeError(error), null, 2).replace(/\\n/g, '\n'),
+      logName,
+      `error ${className}`
+    );
   };
 }
 
