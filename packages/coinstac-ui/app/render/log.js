@@ -6,6 +6,7 @@ const path = require('path');
 const readLastLines = require('read-last-lines');
 const { Tail } = require('tail');
 const bluebird = require('bluebird');
+const serializeError = require('serialize-error');
 const access = bluebird.promisify(require('fs').access);
 
 const outputEl = typeof document !== 'undefined' ?
@@ -33,7 +34,11 @@ function getDataLogger(logName, className) {
 function getErrorLogger(logName, className) {
   return function errorLogger(error) {
     console.error(error); // eslint-disable-line no-console
-    maybeAddOutput(error.message, logName, `error ${className}`);
+    maybeAddOutput(
+      JSON.stringify(serializeError(error), null, 2).replace(/\\n/g, '\n'),
+      logName,
+      `error ${className}`
+    );
   };
 }
 
