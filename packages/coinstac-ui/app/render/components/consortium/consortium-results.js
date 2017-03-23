@@ -33,22 +33,26 @@ export default class ConsortiumResults extends Component {
     ) :
     (
       <ul className="list-unstyled">
-        {remoteResults.map((result, index) => {
-          const computation = computations.find(c => {
-            return c._id === result.computationId;
-          });
+        {remoteResults
+          .slice(0)
+          .sort(ConsortiumResults.compareRemoteResults)
+          .map((result, index) => {
+            const computation = computations.find(c => {
+              return c._id === result.computationId;
+            });
 
-          return (
-            <li key={index}>
-              <ConsortiumResult
-                computation={computation}
-                expanded={!!this.state.expanded[index]}
-                toggleCollapse={() => this.toggleCollapse(index)}
-                {...result}
-              />
-            </li>
-          );
-        })}
+            return (
+              <li key={index}>
+                <ConsortiumResult
+                  computation={computation}
+                  expanded={!!this.state.expanded[index]}
+                  toggleCollapse={() => this.toggleCollapse(index)}
+                  {...result}
+                />
+              </li>
+            );
+          })
+        }
       </ul>
     );
 
@@ -68,3 +72,22 @@ ConsortiumResults.propTypes = {
   remoteResults: PropTypes.array,
 };
 
+/**
+ * Compare remote results for sorting purposes.
+ *
+ * @param {RemoteResult} a
+ * @param {RemoteResult} b
+ * @returns {number}
+ */
+ConsortiumResults.compareRemoteResults = (
+  { endDate: a },
+  { endDate: b }
+) => {
+  if (a < b) {
+    return 1;
+  } else if (a > b) {
+    return -1;
+  }
+
+  return 0;
+};
