@@ -3,14 +3,23 @@ import ComputationFieldBasic from '../computation-field-basic';
 import ComputationFieldCovariates from '../computation-field-covariates';
 import { round } from 'lodash';
 
-export default function ConsortiumComputationFields(props) {
-  const {
-    activeComputationInputs,
-    fields,
-    isOwner,
-    updateComputationField,
-  } = props;
-
+/**
+ * Consortium computation fields.
+ *
+ * @param {Object} props
+ * @param {Array} props.activeComputationInputs Collection of inputs, matched
+ * with `props.fields` by array index
+ * @param {Object[]} props.fields Collection of field description objects
+ * @param {boolean} props.isOwner
+ * @param {Function} props.updateComputationField Handler for field changes
+ * @returns {React.Component}
+ */
+export default function ConsortiumComputationFields({
+  activeComputationInputs,
+  fields,
+  isOwner,
+  updateComputationField,
+}) {
   return (
     <ol className="list-unstyled">
       {fields.map(
