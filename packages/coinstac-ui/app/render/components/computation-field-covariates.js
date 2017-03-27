@@ -1,5 +1,7 @@
-import React, { Component, PropTypes } from 'react';
+import React, { PropTypes } from 'react';
+import { Field } from 'redux-form';
 import {
+  Alert,
   Button,
   ControlLabel,
   FormControl,
@@ -7,138 +9,151 @@ import {
   HelpBlock,
 } from 'react-bootstrap';
 
-export default class ComputationFieldCovariates extends Component {
-  constructor(props) {
-    super(props);
-
-    this.handleNewClick = this.handleNewClick.bind(this);
-    this.getHandleValueChange = this.getHandleValueChange.bind(this);
-  }
-
-  getHandleValueChange(property, index) {
-    return event => {
-      // `property` will be `null` on delete clicks
-      return this.props.onChange(
-        property ? { [property]: event.target.value } : null,
-        index
-      );
-    };
-  }
-
-  handleNewClick() {
-    this.props.onChange(
-      {
-        name: '',
-        type: null,
-      },
-      this.props.value.length
-    );
-  }
-
-  render() {
-    const { help, label, value: items } = this.props;
-
-    const helpBlock = help ? <HelpBlock>{help}</HelpBlock> : undefined;
-
-    const lastItem = items[items.length - 1];
-    const isAddDisabled = lastItem && !lastItem.name && !lastItem.type;
-
-    return (
-      <fieldset className="computation-field-covariates">
-        <legend>{label}</legend>
-        {helpBlock}
-        <ol className="list-unstyled">
-          {items.map(({ name, type }, index) => {
-            const typeValue = !type ? 0 : type;
-            const options = [<option disabled key="0" value="0">Choose…</option>]
-              .concat(Array.from(ComputationFieldCovariates.typeMap.entries())
-                .map(([key, value], i) => {
-                  return <option key={i + 1} value={key}>{value}</option>;
-                })
-              );
-
-            return (
-              <li key={index}>
-                <div className="row">
-                  <FormGroup
-                    className="col-xs-5"
-                    controlId={`computation-field-map-name-${index}`}
-                  >
-                    <ControlLabel>Name</ControlLabel>
-                    <FormControl
-                      onChange={this.getHandleValueChange('name', index)}
-                      value={name}
-                    />
-                  </FormGroup>
-                  <FormGroup
-                    className="col-xs-5"
-                    controlId={`computation-field-map-type-${index}`}
-                  >
-                    <ControlLabel>Type</ControlLabel>
-                    <FormControl
-                      componentClass="select"
-                      onChange={this.getHandleValueChange('type', index)}
-                      value={typeValue}
-                    >
-                      {options}
-                    </FormControl>
-                  </FormGroup>
-                  <div className="col-xs-2">
-                    <Button
-                      block
-                      bsStyle="danger"
-                      onClick={this.getHandleValueChange(null, index)}
-                    >
-                      <span
-                        aria-hidden="true"
-                        className="glyphicon glyphicon-minus"
-                      ></span>
-                      {' '}
-                      Delete
-                    </Button>
-                  </div>
-                </div>
-              </li>
-            );
-          })}
-        </ol>
-        <div className="row">
-          <div className="col-xs-2 col-xs-push-10">
-            <Button
-              block
-              bsStyle="primary"
-              disabled={isAddDisabled}
-              onClick={this.handleNewClick}
-            >
-              <span
-                aria-hidden="true"
-                className="glyphicon glyphicon-plus"
-              ></span>
-              {' '}
-              New
-            </Button>
-          </div>
-        </div>
-      </fieldset>
-    );
-  }
+function covariateName({
+  input: {
+    onChange,
+    value,
+  },
+}) {
+  return (
+    <FormControl
+      onChange={onChange}
+      value={value}
+    />
+  );
 }
 
-ComputationFieldCovariates.typeMap = new Map([
-  ['boolean', 'True/False'],
-  ['number', 'Number'],
-]);
+covariateName.propTypes = {
+  input: PropTypes.shape({
+    onChange: PropTypes.func.isRequired,
+    value: PropTypes.string.isRequired,
+  }).isRequired,
+};
+
+function covariateType({
+  input: {
+    onChange,
+    value,
+  },
+}) {
+  return (
+    <FormControl
+      componentClass="select"
+      onChange={onChange}
+      value={value}
+    >
+      <option disabled value="">Choose…</option>
+      <option value="boolean">True/False</option>
+      <option value="number">Number</option>
+    </FormControl>
+  );
+}
+
+covariateType.propTypes = {
+  input: PropTypes.shape({
+    onChange: PropTypes.func.isRequired,
+    value: PropTypes.oneOf(['', 'boolean', 'number']),
+  }).isRequired,
+};
+
+export default function ComputationFieldCovariates({
+  fields,
+  help,
+  label,
+  meta: {
+    error,
+  },
+}) {
+  const lastItem = fields.get(fields.length - 1);
+  const isAddDisabled = lastItem && !lastItem.name && !lastItem.type;
+  const helpBlock = help ? <HelpBlock>{help}</HelpBlock> : undefined;
+  const errorBlock = error ?
+    <Alert bsStyle="danger">{error}</Alert> :
+    undefined;
+
+  return (
+    <fieldset className="computation-field-covariates">
+      <legend>{label}</legend>
+      {helpBlock}
+      {errorBlock}
+      <ol className="list-unstyled">
+        {fields.map((name, index) => {
+          return (
+            <li key={index}>
+              <div className="row">
+                <FormGroup
+                  className="col-xs-5"
+                  controlId={`computation-field-map-name-${index}`}
+                >
+                  <ControlLabel>Name</ControlLabel>
+                  <Field
+                    component={covariateName}
+                    name={`${name}.name`}
+                  />
+                </FormGroup>
+                <FormGroup
+                  className="col-xs-5"
+                  controlId={`computation-field-map-type-${index}`}
+                >
+                  <ControlLabel>Type</ControlLabel>
+                  <Field
+                    component={covariateType}
+                    name={`${name}.type`}
+                  />
+                </FormGroup>
+                <div className="col-xs-2">
+                  <Button
+                    block
+                    bsStyle="danger"
+                    onClick={() => fields.remove(index)}
+                  >
+                    <span
+                      aria-hidden="true"
+                      className="glyphicon glyphicon-minus"
+                    ></span>
+                    {' '}
+                    Delete
+                  </Button>
+                </div>
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+      <div className="row">
+        <div className="col-xs-2 col-xs-push-10">
+          <Button
+            block
+            bsStyle="primary"
+            disabled={isAddDisabled}
+            onClick={() => fields.push({
+              name: '',
+              type: '',
+            })}
+          >
+            <span
+              aria-hidden="true"
+              className="glyphicon glyphicon-plus"
+            ></span>
+            {' '}
+            New
+          </Button>
+        </div>
+      </div>
+    </fieldset>
+  );
+}
+
 
 ComputationFieldCovariates.propTypes = {
   disabled: PropTypes.bool.isRequired,
-  fieldIndex: PropTypes.number,
   help: PropTypes.string,
+  fields: PropTypes.shape({
+    map: PropTypes.func.isRequired,
+  }).isRequired,
   label: PropTypes.string.isRequired,
-  onChange: PropTypes.func.isRequired,
-  value: PropTypes.arrayOf(PropTypes.shape({
-    name: PropTypes.string.isRequired,
-    type: PropTypes.oneOf(
-      Array.from(ComputationFieldCovariates.typeMap.keys()).concat(null)
-    ).isRequired,
-  })),
+  meta: PropTypes.shape({
+    error: PropTypes.string,
+  }).isRequired,
 };
+

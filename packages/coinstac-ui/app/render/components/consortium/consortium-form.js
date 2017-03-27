@@ -2,8 +2,7 @@ import classNames from 'classnames';
 import React, { Component, PropTypes } from 'react';
 import { Button } from 'react-bootstrap';
 import { connect } from 'react-redux';
-import { formValueSelector, Field, reduxForm } from 'redux-form';
-import { get } from 'lodash';
+import { Field, FieldArray, reduxForm } from 'redux-form';
 
 import ConsortiumComputationFields from './consortium-computation-fields';
 import ConsortiumComputationSelector from './consortium-computation-selector';
@@ -76,102 +75,52 @@ class ConsortiumForm extends Component {
       errors.label = 'Name required';
     }
 
+    /**
+     * Find the `covariates` computation input and verify every covariate has a
+     * `name` and `type` property.
+     *
+     * @todo Validate is a static method and doesn't have access to the
+     * `computationInputs` property. Improve duck-like `covariateIndex` checks!
+     */
+    const covariatesIndex = values.activeComputationInputs.findIndex(input => (
+      Array.isArray(input) &&
+      input.length &&
+      typeof input[0] === 'object'
+    ));
+
+    if (
+      covariatesIndex > -1 &&
+      values.activeComputationInputs[covariatesIndex].some((covariate) => !(
+        covariate.name.length &&
+        (covariate.type === 'boolean' || covariate.type === 'number')
+      ))
+    ) {
+      errors.activeComputationInputs = {
+        [covariatesIndex]: {
+          _error: 'Please ensure all fields are filled',
+        },
+      };
+    }
+
     return errors;
   }
 
   constructor(props) {
     super(props);
-
-    const inputs = get(props, 'initialValues.activeComputationInputs[0]');
-
-    this.state = Array.isArray(inputs) ?
-      // Silly React needs `this.state` to be an object
-      inputs.reduce((memo, value, index) => {
-        memo[index] = value;
-        return memo;
-      }, {}) :
-      {};
-
-    this.maybeRenderComputationFields =
-      this.maybeRenderComputationFields.bind(this);
-    this.onComputationFieldChange = this.onComputationFieldChange.bind(this);
     this.onSubmit = this.onSubmit.bind(this);
   }
 
-  onComputationFieldChange(fieldIndex, newValue) {
-    this.setState(Object.assign({}, this.state, {
-      [fieldIndex]: newValue,
-    }));
-  }
-
   onSubmit(data) {
-    const inputs = this.getComputationInputs();
-
-    this.props.onSubmit(
-      inputs ?
-        Object.assign({}, data, {
-          activeComputationInputs: inputs.activeComputationInputs,
-        }) :
-        data
-    );
-  }
-
-  getComputationInputs() {
-    const { activeComputationId, computations } = this.props;
-
-    if (activeComputationId) {
-      const activeComputation = computations.find(({ _id }) => {
-        return _id === activeComputationId;
-      });
-
-      if (
-        activeComputation &&
-        'inputs' in activeComputation &&
-        Array.isArray(activeComputation.inputs) &&
-        Array.isArray(activeComputation.inputs[0]) &&
-        activeComputation.inputs[0].length
-      ) {
-        const fields = activeComputation.inputs[0];
-
-        return {
-          activeComputationInputs: [fields.reduce((memo, field, index) => {
-            if (
-              index in this.state &&
-              typeof this.state[index] !== 'undefined' &&
-              this.state[index] !== null
-            ) {
-              memo[index] = this.state[index];
-            } else if ('defaultValue' in field) {
-              memo[index] = field.defaultValue;
-            }
-
-            return memo;
-          }, [])],
-          fields,
-        };
-      }
-    }
-  }
-
-  maybeRenderComputationFields() {
-    const { isOwner } = this.props;
-    const inputs = this.getComputationInputs();
-
-    if (inputs) {
-      return (
-        <ConsortiumComputationFields
-          activeComputationInputs={inputs.activeComputationInputs[0]}
-          fields={inputs.fields}
-          isOwner={isOwner}
-          updateComputationField={this.onComputationFieldChange}
-        />
-      );
-    }
+    // Map form data to shape expected by coinstac-common:
+    this.props.onSubmit(Object.assign({}, data, {
+      activeComputationInputs: [data.activeComputationInputs],
+    }));
   }
 
   render() {
     const {
       computations,
+      computationInputs,
       handleSubmit,
       onReset,
       isLoading,
@@ -206,7 +155,14 @@ class ConsortiumForm extends Component {
           />
         </fieldset>
 
-        {this.maybeRenderComputationFields()}
+        <fieldset>
+          <legend className="sr-only">Computation Inputs</legend>
+          <FieldArray
+            component={ConsortiumComputationFields}
+            computationInputs={computationInputs}
+            name="activeComputationInputs"
+          />
+        </fieldset>
 
         <div className="clearfix">
           <div className="pull-right">
@@ -238,46 +194,87 @@ ConsortiumForm.displayName = 'ConsortiumForm';
 
 ConsortiumForm.propTypes = {
   activeComputationId: PropTypes.string,
+  computationInputs: PropTypes.arrayOf(PropTypes.object).isRequired,
   computations: PropTypes.arrayOf(PropTypes.object).isRequired,
   consortium: PropTypes.object,
   handleSubmit: PropTypes.func.isRequired,
   initialValues: PropTypes.object,
   isLoading: PropTypes.bool.isRequired,
   isOwner: PropTypes.bool.isRequired,
-  reset: PropTypes.func.isRequired,
-  onSubmit: PropTypes.func.isRequired,
   onReset: PropTypes.func.isRequired,
+  onSubmit: PropTypes.func.isRequired,
+  reset: PropTypes.func.isRequired,
 };
-
-ConsortiumForm.FORM_NAME = 'consortium-form';
-
-const selector = formValueSelector(ConsortiumForm.FORM_NAME);
 
 /**
  * Apparently supplying a `initialValues` prop to the component magically wires
  * it up? {@link http://redux-form.com/6.0.2/examples/initializeFromState/}
+ *
+ * @param {Object} state
+ * @param {Object} ownProps
  */
-function mapStateToProps(state, ownProps) {
-  const props = {
-    activeComputationId: selector(state, 'activeComputationId'),
+function mapStateToProps(state, { computations, consortium, isOwner }) {
+  const initialValues = {
+    activeComputationId: '',
+    activeComputationInputs: [],
   };
+  const computationInputs = [];
 
-  if (ownProps.consortium) {
-    props.initialValues = ownProps.consortium;
-  } else if (ownProps.computations) {
-    // TODO: Don't hard-code default computation
-    const decentComp = ownProps.computations
-      .find(c => c.name === 'decentralized-single-shot-ridge-regression');
-    props.initialValues = {
-      activeComputationId: decentComp ? decentComp._id : null,
-    };
+  // TODO: Don't hard-code default computation
+  const decentComp = computations ?
+    computations
+      .find(c => c.name === 'decentralized-single-shot-ridge-regression') :
+    undefined;
+
+  if (decentComp) {
+    initialValues.activeComputationId = decentComp._id;
+
+    // Map computations' inputs into a Redux Form-friendly format
+    decentComp.inputs[0].forEach(({
+      defaultValue,
+      help,
+      label,
+      max,
+      min,
+      step,
+      type,
+      values,
+    }) => {
+      initialValues.activeComputationInputs.push(
+        typeof defaultValue !== 'undefined' || defaultValue !== null ?
+        defaultValue :
+        ''
+      );
+
+      computationInputs.push({
+        disabled: !isOwner,
+        help,
+        label,
+        options: values,
+        max,
+        min,
+        step,
+        type,
+      });
+    });
   }
 
-  return props;
+  if (consortium) {
+    /**
+     * @todo This mutates the `activeComputationInputs` array set in the
+     * previous `for` loop. Make this less confusing!
+     */
+    Object.assign(initialValues, consortium, {
+      activeComputationInputs:
+        consortium.activeComputationInputs[0],
+    });
+  }
+
+  return { computationInputs, initialValues };
 }
 
 export default connect(mapStateToProps)(reduxForm({
-  form: ConsortiumForm.FORM_NAME,
-  pure: false,
+  enableReinitialize: true,
+  form: 'consortium-form',
   validate: ConsortiumForm.validate,
 })(ConsortiumForm));
