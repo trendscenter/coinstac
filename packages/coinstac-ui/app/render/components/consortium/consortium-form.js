@@ -274,7 +274,9 @@ function mapStateToProps(state, { computations, consortium, isOwner }) {
 }
 
 export default connect(mapStateToProps)(reduxForm({
+  destroyOnUnmount: false,
   enableReinitialize: true,
   form: 'consortium-form',
+  keepDirtyOnReinitialize: true,
   validate: ConsortiumForm.validate,
 })(ConsortiumForm));
