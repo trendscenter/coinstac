@@ -91,7 +91,7 @@ class ConsortiumForm extends Component {
     if (
       covariatesIndex > -1 &&
       values.activeComputationInputs[covariatesIndex].some((covariate) => !(
-        covariate.name.length &&
+        typeof covariate.name === 'string' && covariate.name.length &&
         (covariate.type === 'boolean' || covariate.type === 'number')
       ))
     ) {
