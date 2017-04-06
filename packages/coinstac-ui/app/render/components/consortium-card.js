@@ -33,7 +33,7 @@ export default function ConsortiumCard(props) {
         Delete
       </Button>
     );
-    editOrViewText = 'Edit';
+    editOrViewText = 'Edit/View';
   } else {
     membershipButton = isMember ?
     (
