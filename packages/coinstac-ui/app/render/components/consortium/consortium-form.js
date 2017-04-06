@@ -138,8 +138,8 @@ class ConsortiumForm extends Component {
       computationInputs,
       computations,
       handleSubmit,
-      initialValues,
       isLoading,
+      isNew,
       onReset,
       reset,
     } = this.props;
@@ -194,7 +194,7 @@ class ConsortiumForm extends Component {
               type="submit"
             >
               <span className="glyphicon glyphicon-ok"></span>
-              {!!initialValues ? ' Update' : ' Create'}
+              {isNew ? ' Create' : ' Update'}
             </Button>
             <Button
               bsStyle="link"
@@ -224,8 +224,8 @@ ConsortiumForm.propTypes = {
   computationInputs: PropTypes.array.isRequired,
   consortium: PropTypes.object,
   handleSubmit: PropTypes.func.isRequired,
-  initialValues: PropTypes.object,
   isLoading: PropTypes.bool.isRequired,
+  isNew: PropTypes.bool.isRequired,
   isOwner: PropTypes.bool.isRequired,
   onReset: PropTypes.func.isRequired,
   onSubmit: PropTypes.func.isRequired,
@@ -244,7 +244,7 @@ const selector = formValueSelector(ConsortiumForm.FORM_NAME);
  * @param {Object} state
  * @param {Object} ownProps
  */
-function mapStateToProps(state, { computations, consortium, isOwner }) {
+function mapStateToProps(state, { computations, consortium, isNew, isOwner }) {
   const formValue = selector(state, 'activeComputationId');
   const initialValues = consortium ? cloneDeep(consortium) : {};
   let activeComputationId;
@@ -312,6 +312,7 @@ function mapStateToProps(state, { computations, consortium, isOwner }) {
     computationInputs,
     computations,
     initialValues,
+    isNew,
   };
 }
 
