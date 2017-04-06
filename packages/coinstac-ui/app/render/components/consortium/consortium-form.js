@@ -2,7 +2,8 @@ import classNames from 'classnames';
 import React, { Component, PropTypes } from 'react';
 import { Button } from 'react-bootstrap';
 import { connect } from 'react-redux';
-import { Field, FieldArray, reduxForm } from 'redux-form';
+import { Field, FieldArray, formValueSelector, reduxForm } from 'redux-form';
+import cloneDeep from 'lodash/cloneDeep';
 
 import ConsortiumComputationFields from './consortium-computation-fields';
 import ConsortiumComputationSelector from './consortium-computation-selector';
@@ -107,6 +108,7 @@ class ConsortiumForm extends Component {
 
   constructor(props) {
     super(props);
+    this.handleComputationChange = this.handleComputationChange.bind(this);
     this.onSubmit = this.onSubmit.bind(this);
   }
 
@@ -117,16 +119,42 @@ class ConsortiumForm extends Component {
     }));
   }
 
+
+  handleComputationChange(event, newValue, previousValue) {
+    const {
+      array: {
+        removeAll,
+      },
+    } = this.props;
+
+    // TODO: Add `array.push` for new inputs here!
+    if (newValue && newValue !== previousValue) {
+      removeAll('activeComputationInputs');
+    }
+  }
+
   render() {
     const {
-      computations,
       computationInputs,
+      computations,
       handleSubmit,
-      onReset,
-      isLoading,
-      reset,
       initialValues,
+      isLoading,
+      onReset,
+      reset,
     } = this.props;
+
+    // Only display computation input fields if the inputs are loaded
+    const computationInputsFields = computationInputs.length ?
+      <fieldset>
+        <legend className="sr-only">Computation Inputs</legend>
+        <FieldArray
+          component={ConsortiumComputationFields}
+          computationInputs={computationInputs}
+          name="activeComputationInputs"
+        />
+      </fieldset> :
+      undefined;
 
     return (
       <form className="consortium-form" onSubmit={handleSubmit(this.onSubmit)}>
@@ -152,23 +180,17 @@ class ConsortiumForm extends Component {
             component={ConsortiumComputationSelector}
             computations={computations}
             name="activeComputationId"
+            onChange={this.handleComputationChange}
           />
         </fieldset>
 
-        <fieldset>
-          <legend className="sr-only">Computation Inputs</legend>
-          <FieldArray
-            component={ConsortiumComputationFields}
-            computationInputs={computationInputs}
-            name="activeComputationInputs"
-          />
-        </fieldset>
+        {computationInputsFields}
 
         <div className="clearfix">
           <div className="pull-right">
             <Button
               bsStyle="success"
-              disabled={isLoading}
+              disabled={!!isLoading}
               type="submit"
             >
               <span className="glyphicon glyphicon-ok"></span>
@@ -194,8 +216,12 @@ ConsortiumForm.displayName = 'ConsortiumForm';
 
 ConsortiumForm.propTypes = {
   activeComputationId: PropTypes.string,
-  computationInputs: PropTypes.arrayOf(PropTypes.object).isRequired,
+  array: PropTypes.shape({
+    removeAll: PropTypes.func.isRequired,
+  }).isRequired,
+  change: PropTypes.func.isRequired,
   computations: PropTypes.arrayOf(PropTypes.object).isRequired,
+  computationInputs: PropTypes.array.isRequired,
   consortium: PropTypes.object,
   handleSubmit: PropTypes.func.isRequired,
   initialValues: PropTypes.object,
@@ -206,6 +232,11 @@ ConsortiumForm.propTypes = {
   reset: PropTypes.func.isRequired,
 };
 
+ConsortiumForm.FORM_NAME = 'consortiumForm';
+
+const selector = formValueSelector(ConsortiumForm.FORM_NAME);
+
+
 /**
  * Apparently supplying a `initialValues` prop to the component magically wires
  * it up? {@link http://redux-form.com/6.0.2/examples/initializeFromState/}
@@ -214,69 +245,80 @@ ConsortiumForm.propTypes = {
  * @param {Object} ownProps
  */
 function mapStateToProps(state, { computations, consortium, isOwner }) {
-  const initialValues = {
-    activeComputationId: '',
-    activeComputationInputs: [],
-  };
-  const computationInputs = [];
+  const formValue = selector(state, 'activeComputationId');
+  const initialValues = consortium ? cloneDeep(consortium) : {};
+  let activeComputationId;
 
-  // TODO: Don't hard-code default computation
-  const decentComp = computations ?
-    computations
-      .find(c => c.name === 'decentralized-single-shot-ridge-regression') :
-    undefined;
+  if (formValue) {
+    activeComputationId = formValue;
+  } else if (initialValues.activeComputationId) {
+    activeComputationId = initialValues.activeComputationId;
+  } else {
+    // TODO: Don't hard-code default computation
+    activeComputationId = computations.find(
+      ({ name }) => name === 'decentralized-single-shot-ridge-regression'
+    )._id;
+  }
+  const decentComp = activeComputationId ?
+    computations.find(({ _id }) => _id === activeComputationId) :
+    [];
 
-  if (decentComp) {
-    initialValues.activeComputationId = decentComp._id;
-
-    // Map computations' inputs into a Redux Form-friendly format
-    decentComp.inputs[0].forEach(({
-      defaultValue,
-      help,
-      label,
-      max,
-      min,
-      step,
-      type,
-      values,
-    }) => {
-      initialValues.activeComputationInputs.push(
-        typeof defaultValue !== 'undefined' || defaultValue !== null ?
-        defaultValue :
-        ''
-      );
-
-      computationInputs.push({
-        disabled: !isOwner,
+  // Map computations' inputs into a Redux Form-friendly format
+  const computationInputs =
+    (decentComp ? decentComp.inputs[0] : []).map(
+      ({
+        defaultValue,
         help,
         label,
-        options: values,
         max,
         min,
         step,
         type,
-      });
-    });
+        values,
+      }) => ({
+        defaultValue,
+        disabled: !isOwner,
+        help,
+        label,
+        max,
+        min,
+        options: values,
+        step,
+        type,
+      })
+    );
+
+  if (
+    activeComputationId &&
+    initialValues.activeComputationId !== activeComputationId
+  ) {
+    initialValues.activeComputationId = activeComputationId;
+    // Do reset of initial values
+    initialValues.activeComputationInputs = computationInputs.map(
+      ({ defaultValue }) => (
+        typeof defaultValue !== 'undefined' && defaultValue !== null ?
+          defaultValue :
+          ''
+      )
+    );
+  } else {
+    // Map from document structure to form's expected structure
+    initialValues.activeComputationInputs =
+      initialValues.activeComputationInputs[0];
   }
 
-  if (consortium) {
-    /**
-     * @todo This mutates the `activeComputationInputs` array set in the
-     * previous `for` loop. Make this less confusing!
-     */
-    Object.assign(initialValues, consortium, {
-      activeComputationInputs:
-        consortium.activeComputationInputs[0],
-    });
-  }
-
-  return { computationInputs, initialValues };
+  return {
+    activeComputationId,
+    computationInputs,
+    computations,
+    initialValues,
+  };
 }
 
 export default connect(mapStateToProps)(reduxForm({
-  destroyOnUnmount: false,
+  // destroyOnUnmount: false,
   enableReinitialize: true,
-  form: 'consortium-form',
-  keepDirtyOnReinitialize: true,
+  form: ConsortiumForm.FORM_NAME,
+  // keepDirtyOnReinitialize: true,
   validate: ConsortiumForm.validate,
 })(ConsortiumForm));

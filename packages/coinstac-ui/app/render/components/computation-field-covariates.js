@@ -67,7 +67,7 @@ export default function ComputationFieldCovariates({
   },
 }) {
   const lastItem = fields.get(fields.length - 1);
-  const isAddDisabled = lastItem && !lastItem.name && !lastItem.type;
+  const isAddDisabled = !!lastItem && !lastItem.name && !lastItem.type;
   const helpBlock = help ? <HelpBlock>{help}</HelpBlock> : undefined;
   const errorBlock = (submitFailed || touched) && error ?
     <Alert bsStyle="danger">{error}</Alert> :
