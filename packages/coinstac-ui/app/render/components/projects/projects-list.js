@@ -54,6 +54,8 @@ class ProjectsList extends Component {
   runComputation({ _id: projectId, consortiumId }) {
     const { dispatch } = this.props;
 
+    this.context.router.push('/');
+
     dispatch(runComputation({ consortiumId, projectId }))
       .catch((err) => {
         app.notify('error', err.message);
@@ -116,6 +118,12 @@ class ProjectsList extends Component {
     );
   }
 }
+
+ProjectsList.contextTypes = {
+  router: PropTypes.shape({
+    push: PropTypes.func.isRequired,
+  }).isRequired,
+};
 
 ProjectsList.propTypes = {
   consortia: PropTypes.arrayOf(PropTypes.shape({
