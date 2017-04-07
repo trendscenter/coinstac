@@ -85,10 +85,12 @@ class ProjectsList extends Component {
               return c._id === project.consortiumId;
             });
 
+            let consortiumName = '';
             let showComputationRunButton = false;
             let isInvalidMapping = false;
 
             if (consortium) {
+              consortiumName = consortium.label;
               showComputationRunButton =
                 consortium.owners.indexOf(username) > -1;
               isInvalidMapping = !deepEqual(
@@ -101,6 +103,7 @@ class ProjectsList extends Component {
               <ProjectCard
                 allowComputationRun={project.allowComputationRun}
                 computationStatus={project.status}
+                consortiumName={consortiumName}
                 id={project._id}
                 isInvalidMapping={isInvalidMapping}
                 key={`project-card-${project._id}`}
