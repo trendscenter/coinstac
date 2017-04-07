@@ -10,7 +10,10 @@ export const SET_PROJECTS = 'SET_PROJECTS';
 export const setProjects = (projects) => ({ type: SET_PROJECTS, projects });
 
 export const REMOVE_PROJECT = 'REMOVE_PROJECT';
-export const removeProject = (project) => ({ type: REMOVE_PROJECT, project });
+export const removeProject = (id) => ({
+  id,
+  type: REMOVE_PROJECT,
+});
 
 export const UPDATE_PROJECT_STATUS = 'UPDATE_PROJECT_STATUS';
 
@@ -101,20 +104,25 @@ export const addProject = applyAsyncLoading(project => {
   };
 });
 
-export const remove = applyAsyncLoading(project => {
-  return (dispatch) => {
-    return app.core.projects.delete(project)
-    .then((rslt) => {
+/**
+ * Remove a project.
+ *
+ * @param {Project} project
+ * @returns {Promise}
+ */
+export const remove = applyAsyncLoading(
+  project => dispatch => app.core.projects.delete(project).then(
+    (rslt) => {
       app.notify('success', `Project '${project.name}' removed`);
-      dispatch(removeProject(project));
+      dispatch(removeProject(project._id));
       return rslt;
-    })
-    .catch((err) => {
+    },
+    (err) => {
       app.notify('error', err.message);
       throw err;
-    });
-  };
-});
+    }
+  )
+);
 
 export const fetch = applyAsyncLoading(cb => {
   return (dispatch) => {
@@ -150,7 +158,7 @@ export default function reducer(projects = [], action) {
       }
       return [...action.projects];
     case REMOVE_PROJECT:
-      return projects.filter(p => p.name !== action.project.name);
+      return projects.filter(({ _id }) => _id !== action.id);
     case UPDATE_PROJECT_STATUS:
       return projects.map(p => {
         return p._id === action.id ?
