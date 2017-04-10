@@ -2,6 +2,7 @@ import app from 'ampersand-app';
 import noop from 'lodash/noop';
 import projectsReducer, {
   mapProject,
+  removeProject,
   updateProjectStatus,
   UPDATE_PROJECT_STATUS,
 } from '../../../../app/render/state/ducks/projects';
@@ -90,3 +91,22 @@ tape('Updates project status', t => {
 
   t.end();
 });
+
+tape('removes project', (t) => {
+  const projectId = 'delete-me';
+  const initialProjects = [{
+    _id: projectId,
+    name: 'Project to delete',
+  }, {
+    _id: 'save-me',
+    name: 'Project to save',
+  }];
+
+  t.deepEqual(
+    projectsReducer(initialProjects, removeProject(projectId)),
+    [initialProjects[1]],
+    'removes project from state'
+  );
+  t.end();
+});
+
