@@ -36,15 +36,20 @@ function covariateType({
     value,
   },
 }) {
+  /* eslint-disable no-use-before-define */
+  const options = Array.from(ComputationFieldCovariates.typeMap).map(
+    ([value, name]) => <option key={value} value={value}>{name}</option>
+  );
+  /* eslint-disable no-use-before-define */
+
   return (
     <FormControl
       componentClass="select"
       onChange={onChange}
       value={value}
     >
-      <option disabled value="">Choose…</option>
-      <option value="boolean">True/False</option>
-      <option value="number">Number</option>
+      <option disabled key={0} value="">Choose…</option>
+      {options}
     </FormControl>
   );
 }
@@ -158,4 +163,14 @@ ComputationFieldCovariates.propTypes = {
     error: PropTypes.string,
   }).isRequired,
 };
+
+/**
+ * Covariate types.
+ *
+ * @const {Map}
+ */
+ComputationFieldCovariates.typeMap = new Map([
+  ['boolean', 'True/False'],
+  ['number', 'Number'],
+]);
 
