@@ -7,54 +7,52 @@ import {
   HelpBlock,
 } from 'react-bootstrap';
 
-const INPUT_REF = 'computation-field-input';
-
 export default class ComputationFieldBasic extends Component {
-  constructor(props) {
-    super(props);
-    this.handleButtonClick = this.handleButtonClick.bind(this);
-  }
-
   handleButtonClick(increment) {
-    const { max, min, onChange } = this.props;
-    const value = this.refs[INPUT_REF].props.value;
+    const {
+      input: {
+        onChange,
+        value,
+      },
+      max,
+      min,
+    } = this.props;
+    const newValue = value + increment;
 
-    if (typeof value !== 'number' || Number.isNaN(value)) {
-      throw new Error('No value!');
-    } else if (
-      (typeof max !== 'number' || value <= max) &&
-      (typeof min !== 'number' || value >= min)
+    if (
+      typeof newValue === 'number' &&
+      !Number.isNaN(newValue) &&
+      (typeof max !== 'number' || newValue <= max) &&
+      (typeof min !== 'number' || newValue >= min)
     ) {
-      const newValue = value + increment;
-
-      onChange({
-        target: {
-          value: newValue.toString(),
-        },
-      });
+      onChange(newValue);
     }
   }
 
   render() {
     const {
-      disabled = false,
-      fieldIndex,
+      disabled,
       help,
+      input: {
+        name,
+        onChange,
+        value,
+      },
       label,
       max,
       min,
-      onChange,
       options,
       step,
       type,
-      value,
     } = this.props;
     const controlProps = {
       disabled,
       onChange,
+      name,
+      value,
     };
     const formGroupProps = {
-      controlId: `computation-field-${fieldIndex}`,
+      controlId: `computation-field-${name}`,
     };
     const helpBlock = help ?
       <HelpBlock>{help}</HelpBlock> :
@@ -64,13 +62,20 @@ export default class ComputationFieldBasic extends Component {
     if (type === 'select') {
       controlProps.componentClass = 'select';
       controlProps.multiple = true;
-      controlProps.value = Array.isArray(value) ? value : [];
       formGroupProps.className = 'computation-field-select';
+
+      /**
+       * Redux Form transforms single-item arrays into that singular value.
+       * Adjust it for the `select`.
+       */
+      if (!Array.isArray(value) && value !== '') {
+        controlProps.value = [value];
+      }
 
       formControl = (
         <FormControl {...controlProps}>
           {options.map((option, index) => {
-            return <option key={index} value={index}>{option}</option>;
+            return <option key={index} value={option}>{option}</option>;
           })}
         </FormControl>
       );
@@ -102,7 +107,7 @@ export default class ComputationFieldBasic extends Component {
           >
             <span className="glyphicon glyphicon-minus"></span>
           </Button>
-          <FormControl ref={INPUT_REF} {...controlProps} />
+          <FormControl {...controlProps} />
           <Button
             aria-label="Add 1"
             bsStyle="primary"
@@ -126,18 +131,24 @@ export default class ComputationFieldBasic extends Component {
 
 ComputationFieldBasic.propTypes = {
   disabled: PropTypes.bool.isRequired,
-  fieldIndex: PropTypes.number.isRequired,
   help: PropTypes.string,
   label: PropTypes.string.isRequired,
   max: PropTypes.number,
+  meta: PropTypes.shape({
+    error: PropTypes.string,
+    touched: PropTypes.bool.isRequired,
+  }).isRequired,
   min: PropTypes.number,
-  onChange: PropTypes.func.isRequired,
+  input: PropTypes.shape({
+    name: PropTypes.string.isRequired,
+    onChange: PropTypes.func.isRequired,
+    value: PropTypes.oneOfType([
+      PropTypes.array,
+      PropTypes.number,
+      PropTypes.string,
+    ]),
+  }).isRequired,
   options: PropTypes.array,
   step: PropTypes.number,
   type: PropTypes.string.isRequired,
-  value: PropTypes.oneOfType([
-    PropTypes.array,
-    PropTypes.number,
-    PropTypes.string,
-  ]),
 };
