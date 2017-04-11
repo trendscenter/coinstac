@@ -97,7 +97,10 @@ ConsortiumResultTable.propTypes = {
   betaVector: PropTypes.arrayOf(PropTypes.number).isRequired,
   covariates: PropTypes.arrayOf(PropTypes.string).isRequired,
   degreesOfFreedom: PropTypes.number.isRequired,
-  name: PropTypes.string.isRequired,
+  name: PropTypes.oneOfType([
+    PropTypes.node,
+    PropTypes.string,
+  ]).isRequired,
   pValue: PropTypes.arrayOf(PropTypes.number).isRequired,
   rSquared: PropTypes.number.isRequired,
   tValue: PropTypes.arrayOf(PropTypes.number).isRequired,
