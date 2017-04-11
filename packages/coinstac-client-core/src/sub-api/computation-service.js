@@ -194,17 +194,8 @@ class ComputationService extends ModelService {
           return false;
         }
 
-        /**
-         * @todo This assumes a one-to-one relationship between run IDs and
-         * consortium IDs. The approach should change when a consortium
-         * permits multiple simultaneous runs.
-         */
-        const { username } = auth.getUser();
-
-        // Determine whether the user has a doc with the run ID:
-        return !localDocs.find(({ _id }) => {
-          return _id.indexOf(runId) > -1 && _id.indexOf(username) > -1;
-        });
+        // The client is part of the consortia, and there is an active run
+        return true;
       });
   }
 }
