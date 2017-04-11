@@ -8,6 +8,17 @@
   font-weight: 700;
   margin: 32px 0 8px;
   padding: 12px 8px 0;
+
+  .label {
+    border-radius: 100%;
+    display: inline-block;
+    font-size: 1.15rem;
+    line-height: 1.5em;
+    margin-left: .5em;
+    padding: 0;
+    vertical-align: top;
+    width: 1.5em;
+  }
 }
 
 .consortium-result samp {

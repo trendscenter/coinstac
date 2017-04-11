@@ -1,5 +1,5 @@
 import React, { PropTypes } from 'react';
-import { Collapse, Label } from 'react-bootstrap';
+import { Collapse, Label, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import classNames from 'classnames';
 import moment from 'moment';
 import { camelCase, reduce } from 'lodash';
@@ -79,13 +79,25 @@ export default function ConsortiumResult({
            * data under the `global` property.
            */
           if (prop === 'global') {
+            const tooltip =
+              computation.name === 'decentralized-single-shot-ridge-regression' ?
+                <Tooltip id="tooltip">Meta-analysis (averaging)</Tooltip> :
+                <Tooltip id="tooltip">Mega-analysis</Tooltip>;
+            const name = (
+              <OverlayTrigger overlay={tooltip} placement="right">
+                <span>
+                  Global
+                  <Label>?</Label>
+                </span>
+              </OverlayTrigger>
+            );
             return [
               <ConsortiumResultTable
                 betaVector={item.betaVector}
                 covariates={covariates}
                 degreesOfFreedom={item.degreesOfFreedom}
                 key={prop}
-                name={'Global'}
+                name={name}
                 pValue={item.pValue}
                 rSquared={item.rSquared}
                 tValue={item.tValue}
