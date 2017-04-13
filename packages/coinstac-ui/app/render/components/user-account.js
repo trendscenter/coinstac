@@ -1,6 +1,7 @@
 import { Button } from 'react-bootstrap';
 import md5 from 'md5';
-import React, { Component, PropTypes } from 'react';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import { Link } from 'react-router';
 
 class UserAccount extends Component {
