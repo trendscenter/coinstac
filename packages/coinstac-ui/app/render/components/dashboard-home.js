@@ -50,6 +50,16 @@ class DashboardHome extends Component {
       .then((responses) => {
         const remoteResults =
           sortBy(flatten(responses), ['endDate', 'startDate']).reverse();
+
+        /**
+         * Combat some weird React internal bug where `componentWillUnmount`
+         * never fires.
+         */
+        if (this._calledComponentWillUnmount) {
+          clearInterval(this.interval);
+          return [];
+        }
+
         this.setState({ remoteResults });
         return remoteResults;
       })
