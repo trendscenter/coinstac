@@ -25,36 +25,74 @@ const config = {
     'path'
   ),
   module: {
-    loaders: [{
-      loaders: ['style', 'css'],
+    rules: [{
       test: /\.css$/,
+      use: ['style-loader', 'css-loader'],
     }, {
-      loaders: ['file'],
-      test: /\.eot(\?v=\d+\.\d+\.\d+)?$/,
+      test: /\.eot(\?v: \d+\.\d+\.\d+)?$/,
+      use: ['file-loader'],
     }, {
-      loaders: ['json'],
       test: /\.json$/,
+      use: ['json-loader'],
     }, {
       include: path.join(__dirname, 'app', 'render'),
-      loaders: ['babel'],
       test: /\.js$/,
+      use: [{
+        loader: 'babel-loader',
+        options: {
+          cacheDirectory: true,
+        },
+      }],
     }, {
-      loaders: ['style', 'css', 'sass?sourceMap'],
       test: /\.scss$/,
+      use: [{
+        loader: 'style-loader',
+      }, {
+        loader: 'css-loader',
+      }, {
+        loader: 'sass-loader',
+        options: {
+          sourceMap: true,
+        },
+      }],
     }, {
-      loaders: ['url?limit=10000&minetype=image/svg+xml'],
-      test: /\.svg(\?v=\d+\.\d+\.\d+)?$/,
+      test: /\.svg(\?v: \d+\.\d+\.\d+)?$/,
+      use: [{
+        loader: 'url-loader',
+        options: {
+          limit: 10000,
+          minetype: 'image/svg+xml',
+        },
+      }],
     }, {
-      loaders: ['url?limit=10000&minetype=application/octet-stream'],
-      test: /\.ttf(\?v=\d+\.\d+\.\d+)?$/,
+      test: /\.ttf(\?v: \d+\.\d+\.\d+)?$/,
+      use: [{
+        loader: 'url-loader',
+        options: {
+          limit: 10000,
+          minetype: 'application/octet-stream',
+        },
+      }],
     }, {
-      loaders: ['url?limit=10000&minetype=application/font-woff'],
-      test: /\.woff(\?v=\d+\.\d+\.\d+)?$/,
+      use: [{
+        loader: 'url-loader',
+        options: {
+          limit: 10000,
+          mimetype: 'application/font-woff',
+        },
+      }],
+      test: /\.woff(\?v: \d+\.\d+\.\d+)?$/,
     }, {
-      loaders: ['url?limit=10000&minetype=application/font-woff'],
-      test: /\.woff2(\?v=\d+\.\d+\.\d+)?$/,
+      use: [{
+        loader: 'url-loader',
+        options: {
+          limit: 10000,
+          mimetype: 'application/font-woff',
+        },
+      }],
+      test: /\.woff2(\?v: \d+\.\d+\.\d+)?$/,
     }, {
-      loaders: ['file'],
+      use: ['file-loader'],
       test: /\.png/,
     }],
   },
@@ -65,22 +103,23 @@ const config = {
     publicPath: './build/',
   },
   plugins: [new webpack.optimize.OccurrenceOrderPlugin()],
-
-  // `port` isn't part of Webpack's config. It's used by webpack-dev-server.
-  port,
 };
 
 if (process.env.NODE_ENV === 'development') {
   config.bail = false;
   // config.plugins.push(new webpack.NoErrorsPlugin());
 
+  config.devServer = {
+    inline: true,
+  };
+
   // Massage configuration for hot module replacement:
   config.output.publicPath = `http://localhost:${port}/`;
   config.plugins.push(new webpack.HotModuleReplacementPlugin());
 
   config.entry.unshift(
-    `webpack-dev-server/client?http://localhost:${port}`,
-    'webpack/hot/only-dev-server'
+    require.resolve('webpack-dev-server/client') + `?http://localhost:${port}`,
+    require.resolve('webpack/hot/dev-server')
   );
 
   /**
