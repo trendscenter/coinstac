@@ -1,5 +1,6 @@
 import Notify from './notification';
-import React, { Component, PropTypes } from 'react';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 
 class App extends Component { // eslint-disable-line react/prefer-stateless-function

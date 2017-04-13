@@ -1,5 +1,6 @@
 import { difference, reduce, values } from 'lodash';
-import React, { PropTypes } from 'react';
+import React from 'react';
+import PropTypes from 'prop-types';
 import { Label } from 'react-bootstrap';
 import { Link } from 'react-router';
 import moment from 'moment';

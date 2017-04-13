@@ -1,6 +1,7 @@
 import app from 'ampersand-app';
 import { connect } from 'react-redux';
-import React, { Component, PropTypes } from 'react';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import FormSignup from './form-signup';
 import LayoutNoauth from './layout-noauth';
 import { signUp } from '../state/ducks/auth';
