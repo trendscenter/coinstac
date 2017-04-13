@@ -1,6 +1,5 @@
 import app from 'ampersand-app';
 import { applyAsyncLoading } from './loading';
-import { get as getStore } from '../store';
 import { findIndex } from 'lodash';
 
 
@@ -31,21 +30,22 @@ export const fetchComputations = applyAsyncLoading(() => {
  * @param {boolean} [isBg] indicates that this patch has originated from bg-service (vs. user)
  * @returns {undefined}
  */
-export const updateComputations = ({ dispatch, toUpdate, isBg }) => {
-  const currComps = getStore().getState().computations || [];
-  if (!Array.isArray(toUpdate)) {
-    toUpdate = [toUpdate];
-  }
-  toUpdate.forEach((changed) => {
-    const toSwapNdx = findIndex(currComps, { _id: changed._id });
-    if (toSwapNdx >= 0) {
-      currComps[toSwapNdx] = changed;
-    } else {
-      currComps.push(changed);
+export const updateComputations = ({ toUpdate, isBg }) =>
+  (dispatch, getState) => {
+    const currComps = getState().computations || [];
+    if (!Array.isArray(toUpdate)) {
+      toUpdate = [toUpdate];
     }
-  });
-  dispatch(setComputations(currComps, isBg));
-};
+    toUpdate.forEach((changed) => {
+      const toSwapNdx = findIndex(currComps, { _id: changed._id });
+      if (toSwapNdx >= 0) {
+        currComps[toSwapNdx] = changed;
+      } else {
+        currComps.push(changed);
+      }
+    });
+    dispatch(setComputations(currComps, isBg));
+  };
 
 export default function reducer(state = null, action) {
   switch (action.type) {

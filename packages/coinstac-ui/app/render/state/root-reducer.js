@@ -9,16 +9,16 @@ import projects from './ducks/projects';
 import remoteResults from './ducks/remote-results';
 import { reducer as form } from 'redux-form';
 
-export default function get() {
-  return combineReducers({
-    auth,
-    computation,
-    computations,
-    consortia,
-    form,
-    loading,
-    project,
-    projects,
-    remoteResults,
-  });
-}
+const rootReducer = combineReducers({
+  auth,
+  computation,
+  computations,
+  consortia,
+  form,
+  loading,
+  project,
+  projects,
+  remoteResults,
+});
+
+export default rootReducer;
