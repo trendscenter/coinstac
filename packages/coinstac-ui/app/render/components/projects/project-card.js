@@ -91,6 +91,7 @@ export class ProjectCard extends Component {
 
   render() {
     const {
+      consortiumName,
       id,
       name,
       removeProject,
@@ -105,6 +106,7 @@ export class ProjectCard extends Component {
           {this.renderComputationStatus()}
         </div>
         <div className="panel-body">
+          <p>Consortium: {consortiumName}</p>
           <div className="clearfix">
             <ButtonToolbar className="pull-left">
               <Button
@@ -157,6 +159,7 @@ ProjectCard.propTypes = {
     'error',
     'waiting',
   ]).isRequired,
+  consortiumName: PropTypes.string.isRequired,
   id: PropTypes.string.isRequired,
   isInvalidMapping: PropTypes.bool.isRequired,
   name: PropTypes.string.isRequired,
