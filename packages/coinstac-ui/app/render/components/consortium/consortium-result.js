@@ -1,8 +1,8 @@
 import React, { PropTypes } from 'react';
-import { Collapse, Label } from 'react-bootstrap';
+import { Collapse, Label, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import classNames from 'classnames';
 import moment from 'moment';
-import { reduce } from 'lodash';
+import { camelCase, reduce } from 'lodash';
 
 import ConsortiumResultMeta from './consortium-result-meta';
 import ConsortiumResultTable from './consortium-result-table';
@@ -61,10 +61,15 @@ export default function ConsortiumResult({
      * @todo This assumes covariates are placed at a specific location in
      * `computationInputs`. Don't hard-code this!
      */
-    const covariates =
+    const covariatesIndex =
       computation.name === 'decentralized-single-shot-ridge-regression' ?
-      computationInputs[0][2].map(x => x.name) :
-      computationInputs[0][3].map(x => x.name);
+      2 :
+      3;
+
+    const covariates = computationInputs[0][covariatesIndex]
+      .slice(0)
+      .sort(ConsortiumResult.sortCovariates)
+      .map(x => x.name);
 
     dataOutput = (
       <div>
@@ -74,13 +79,25 @@ export default function ConsortiumResult({
            * data under the `global` property.
            */
           if (prop === 'global') {
+            const tooltip =
+              computation.name === 'decentralized-single-shot-ridge-regression' ?
+                <Tooltip id="tooltip">Meta-analysis (averaging)</Tooltip> :
+                <Tooltip id="tooltip">Mega-analysis</Tooltip>;
+            const name = (
+              <OverlayTrigger overlay={tooltip} placement="right">
+                <span>
+                  Global
+                  <Label>?</Label>
+                </span>
+              </OverlayTrigger>
+            );
             return [
               <ConsortiumResultTable
                 betaVector={item.betaVector}
                 covariates={covariates}
                 degreesOfFreedom={item.degreesOfFreedom}
                 key={prop}
-                name={'Global'}
+                name={name}
                 pValue={item.pValue}
                 rSquared={item.rSquared}
                 tValue={item.tValue}
@@ -150,7 +167,6 @@ export default function ConsortiumResult({
 ConsortiumResult.displayName = 'ConsortiumResult';
 
 ConsortiumResult.propTypes = {
-
   complete: PropTypes.bool.isRequired,
   computation: PropTypes.shape({
     meta: PropTypes.shape({
@@ -183,3 +199,6 @@ ConsortiumResult.propTypes = {
   usernames: PropTypes.array.isRequired,
   userErrors: PropTypes.array.isRequired,
 };
+
+ConsortiumResult.sortCovariates = ({ name: a }, { name: b }) =>
+  camelCase(a) > camelCase(b);

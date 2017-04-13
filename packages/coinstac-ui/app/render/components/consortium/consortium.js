@@ -97,9 +97,10 @@ export default class Consortium extends Component {
       computations,
       consortium,
       isLoading,
+      isNew,
       isOwner,
-      onSubmit,
       onReset,
+      onSubmit,
     };
 
     if (isNew) {

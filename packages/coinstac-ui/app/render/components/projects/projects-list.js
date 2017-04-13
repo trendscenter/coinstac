@@ -54,6 +54,8 @@ class ProjectsList extends Component {
   runComputation({ _id: projectId, consortiumId }) {
     const { dispatch } = this.props;
 
+    this.context.router.push('/');
+
     dispatch(runComputation({ consortiumId, projectId }))
       .catch((err) => {
         app.notify('error', err.message);
@@ -85,10 +87,12 @@ class ProjectsList extends Component {
               return c._id === project.consortiumId;
             });
 
+            let consortiumName = '';
             let showComputationRunButton = false;
             let isInvalidMapping = false;
 
             if (consortium) {
+              consortiumName = consortium.label;
               showComputationRunButton =
                 consortium.owners.indexOf(username) > -1;
               isInvalidMapping = !deepEqual(
@@ -101,6 +105,7 @@ class ProjectsList extends Component {
               <ProjectCard
                 allowComputationRun={project.allowComputationRun}
                 computationStatus={project.status}
+                consortiumName={consortiumName}
                 id={project._id}
                 isInvalidMapping={isInvalidMapping}
                 key={`project-card-${project._id}`}
@@ -116,6 +121,12 @@ class ProjectsList extends Component {
     );
   }
 }
+
+ProjectsList.contextTypes = {
+  router: PropTypes.shape({
+    push: PropTypes.func.isRequired,
+  }).isRequired,
+};
 
 ProjectsList.propTypes = {
   consortia: PropTypes.arrayOf(PropTypes.shape({
