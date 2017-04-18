@@ -1,6 +1,7 @@
 import app from 'ampersand-app';
 import { connect } from 'react-redux';
-import React, { Component, PropTypes } from 'react';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import FormSignup from './form-signup';
 import LayoutNoauth from './layout-noauth';
 import { signUp } from '../state/ducks/auth';
@@ -50,11 +51,7 @@ class FormSignupController extends Component {
 
     return dispatch(signUp(formData))
       .then(() => {
-        app.notifications.push({
-          autoDismiss: 2,
-          level: 'success',
-          message: 'Account created',
-        });
+        app.notify('success', 'Account created');
         process.nextTick(() => router.push('/'));
       })
       .catch(error => {
@@ -82,10 +79,7 @@ FormSignupController.handleSignupError = function _(error) {
     message = 'Signup error occurred. Please try again.';
   }
 
-  app.notifications.push({
-    level: 'error',
-    message,
-  });
+  app.notify('error', message);
 };
 
 FormSignupController.contextTypes = {

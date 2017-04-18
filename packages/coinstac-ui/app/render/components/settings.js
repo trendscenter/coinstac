@@ -1,7 +1,8 @@
 import app from 'ampersand-app';
 import { Button } from 'react-bootstrap';
 import { connect } from 'react-redux';
-import React, { Component, PropTypes } from 'react';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 
 class Settings extends Component {
   constructor(props) {

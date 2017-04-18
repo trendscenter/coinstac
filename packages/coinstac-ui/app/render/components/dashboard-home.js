@@ -1,4 +1,5 @@
-import React, { Component, PropTypes } from 'react';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import { Alert } from 'react-bootstrap';
 import { connect } from 'react-redux';
 import { core, logger, notify } from 'ampersand-app';
@@ -50,6 +51,16 @@ class DashboardHome extends Component {
       .then((responses) => {
         const remoteResults =
           sortBy(flatten(responses), ['endDate', 'startDate']).reverse();
+
+        /**
+         * Combat some weird React internal bug where `componentWillUnmount`
+         * never fires.
+         */
+        if (this._calledComponentWillUnmount) {
+          clearInterval(this.interval);
+          return [];
+        }
+
         this.setState({ remoteResults });
         return remoteResults;
       })

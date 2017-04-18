@@ -34,34 +34,15 @@ require('./utils/boot/configure-browser-window.js');
 const app = require('ampersand-app');
 const configureCore = require('./utils/boot/configure-core.js');
 const configureServices = require('./utils/boot/configure-services.js');
-const groundControl = require('./utils/boot/ground-control.js');
 const upsertCoinstacUserDir = require('./utils/boot/upsert-coinstac-user-dir.js');
 const loadConfig = require('./utils/boot/load-config.js');
-
-/**
- * @todo Move all CLI flag handling to this block or another appropriate file.
- * @todo Make hotswap module statically `require`-able
- */
-function configureMainHotSwap() {
-  if (process.env.NODE_ENV === 'development') {
-    const cliOptions = parseCLIInput.get();
-
-    if (cliOptions.hotswap) {
-      /* eslint-disable global-require */
-      require('./utils/boot/configure-main-hotswap.js');
-      /* eslint-enable global-require */
-    }
-  }
-}
 
 // Boot up the main process
 loadConfig()
 .then(configureCore)
 .then(configureLogger)
-.then(configureMainHotSwap)
 .then(upsertCoinstacUserDir)
 .then(configureServices)
-.then(groundControl)
 .then(() => {
   app.logger.verbose('main process booted');
 });

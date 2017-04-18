@@ -1,7 +1,8 @@
 import app from 'ampersand-app';
 import { cloneDeep, get, noop, pickBy, values } from 'lodash';
 import { connect } from 'react-redux';
-import React, { Component, PropTypes } from 'react';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import deepEqual from 'deep-equal';
 
 import { runComputation } from '../../state/ducks/bg-services';
