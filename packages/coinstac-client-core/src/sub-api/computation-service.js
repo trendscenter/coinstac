@@ -256,8 +256,8 @@ class ComputationService extends ModelService {
           });
         }
 
-        // first this time run has been joined since init
-        // allow resumes
+        // first time this run has been joined since init
+        // allow resume/first join
         return true;
       });
   }
