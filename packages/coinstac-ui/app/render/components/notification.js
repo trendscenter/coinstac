@@ -10,28 +10,21 @@ export default class Notify extends React.Component {
     super(props);
 
     this.handleAsyncError = this.handleAsyncError.bind(this);
+    this.notificationSystem = null;
   }
 
   componentWillMount() {
     ipcRenderer.on('async-error', this.handleAsyncError);
   }
 
-  /**
-   * build the notification system _once_, and enforce that it is not dually instantiated.
-   * put the notification system on the app as a global
-   * @return {undefined}
-   */
   componentDidMount() {
     this.notificationSystem = this.refs.notificationSystem;
-    if (app.notifications) {
-      throw new ReferenceError('notification system already registered');
-    }
-    app.notifications = this;
     app.notify = (level, message) => this.push({ level, message, autoDismiss: 2 });
   }
 
-
   componentWillUnmount() {
+    delete app.notify;
+    delete this.notificationSystem;
     ipcRenderer.removeListener('async-error', this.handleAsyncError);
   }
 
