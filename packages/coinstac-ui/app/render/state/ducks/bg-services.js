@@ -19,9 +19,13 @@ export const unlistenToConsortia = (tiaIds) => {
   app.core.pool.unlistenToConsortia(tiaIds);
 };
 
+let alreadyRan = {};
+
 /**
  * Joins a computation for which the user was not the initiator on
- * but has a project that should be run on that computation
+ * but has a project that should be run on that computation. Also checks
+ * if this is the first run, if so, allows the client to join if they
+ * have not started.
  *
  * @param {Object} consortium PouchDB document representing consortium
  * @param {string} consortium._id
@@ -29,28 +33,57 @@ export const unlistenToConsortia = (tiaIds) => {
  */
 export const joinSlaveComputation = (consortium) => {
   const { _id: consortiumId } = consortium;
+  let currentRunHist;
 
-  return Promise.all([
-    app.core.projects.getBy('consortiumId', consortiumId),
-    app.core.consortia.getActiveRunId(consortiumId),
-    app.core.computations.shouldJoinRun(consortiumId),
-  ])
+  return app.core.consortia.getActiveRunId(consortiumId)
+  .then((runId) => {
+    currentRunHist = alreadyRan[runId];
+    return Promise.all([
+      app.core.projects.getBy('consortiumId', consortiumId),
+      runId,
+      app.core.computations.shouldJoinRun(consortiumId, currentRunHist === true),
+    ]);
+  })
     .then(([project, runId, shouldJoinRun]) => {
+      const proceedWithRun = (doRun) => {
+        let runProm;
+        if (doRun) {
+          const onRunError = getRunErrorNotifier(consortium);
+
+          computationStartNotification(consortium);
+          app.core.pool.events.on('error', onRunError);
+          app.core.pool.events.once('computation:complete', () => {
+            computationCompleteNotification(consortium);
+            app.core.pool.events.removeListener('error', onRunError);
+          });
+
+          if (alreadyRan[runId]) {
+            runProm = app.core.computations.joinRun({
+              consortiumId,
+              projectId: project._id,
+              runId,
+            });
+          }
+          runProm = app.core.computations.joinSlavedRun({
+            consortiumId,
+            projectId: project._id,
+            runId,
+          });
+
+          alreadyRan[runId] = true;
+          return runProm;
+        }
+      };
+
       if (project && runId && shouldJoinRun) {
-        const onRunError = getRunErrorNotifier(consortium);
-
-        computationStartNotification(consortium);
-        app.core.pool.events.on('error', onRunError);
-        app.core.pool.events.once('computation:complete', () => {
-          computationCompleteNotification(consortium);
-          app.core.pool.events.removeListener('error', onRunError);
-        });
-
-        return app.core.computations.joinRun({
-          consortiumId,
-          projectId: project._id,
-          runId,
-        });
+        if (currentRunHist !== alreadyRan[consortium._id]) {
+          // current hist has changed, prob not the first run now, check if we can
+          // run again
+          return app.core.computations
+          .shouldJoinRun(consortiumId, alreadyRan[consortium._id] === true)
+          .then(proceedWithRun);
+        }
+        return proceedWithRun(shouldJoinRun);
       }
     });
 };
@@ -146,6 +179,7 @@ export const initPrivateBackgroundServices = applyAsyncLoading(() => {
 });
 
 export const teardownPrivateBackgroundServices = applyAsyncLoading(() => {
+  alreadyRan = {};
   return () => app.core.teardown();
 });
 

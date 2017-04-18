@@ -173,12 +173,65 @@ class ComputationService extends ModelService {
   }
 
   /**
+   * Allows the client to join a run for which they have no started document for.
+   * @param  {string} options.consortiumId Consortium the runId is from
+   * @param  {string} options.projectId    project to run on
+   * @param  {string} options.runId
+   * @return {Promise}
+   */
+  joinSlavedRun({ consortiumId, projectId, runId }) {
+    const { consortia, pool, projects } = this.client;
+    return Promise.all([
+      consortia.get(consortiumId),
+      projects.setMetaContents(projectId),
+      this.client.dbRegistry.get(`remote-consortium-${consortiumId}`).get(runId),
+    ])
+      .then(([consortium, project, resultDoc]) => {
+        /**
+         * Ensure project's computation inputs match the consortium; if not,
+         * throw an error and make the user re-match.
+         *
+         * @todo Find better method for guaranteeing project-to-computation
+         * input alignment.
+         *
+         * {@link https://github.com/MRN-Code/coinstac/issues/151}
+         */
+        if (
+          !deepEqual(
+            consortium.activeComputationInputs,
+            project.computationInputs
+          )
+        ) {
+          throw new Error(
+            `Project ${project.name}'s inputs must be re-entered`
+          );
+        }
+
+        const options = {};
+        if (
+          consortium.activeComputationInputs &&
+          Array.isArray(consortium.activeComputationInputs) &&
+          !resultDoc.pluginState.inputs
+        ) {
+          options.pluginState = {
+            inputs: consortium.activeComputationInputs,
+          };
+        }
+
+        const result = new RemoteComputationResult(Object.assign({}, resultDoc, options));
+
+        return pool.triggerRunner(result, project);
+      });
+  }
+
+  /**
    * Determine whether the user should join a computation's run.
    *
-   * @param {string} consortiumId
+   * @param {string}  consortiumId
+   * @param {boolean} notFirstRun
    * @returns {Promise} Resolves to a boolean
    */
-  shouldJoinRun(consortiumId) {
+  shouldJoinRun(consortiumId, notFirstRun) {
     const { auth, consortia, dbRegistry } = this.client;
 
     return Promise.all([
@@ -194,7 +247,17 @@ class ComputationService extends ModelService {
           return false;
         }
 
-        // The client is part of the consortia, and there is an active run
+        const { username } = auth.getUser();
+
+        // Determine whether the user has a doc with the run ID:
+        if (notFirstRun) {
+          return !localDocs.find(({ _id }) => {
+            return _id.indexOf(runId) > -1 && _id.indexOf(username) > -1;
+          });
+        }
+
+        // first this time run has been joined since init
+        // allow resumes
         return true;
       });
   }
