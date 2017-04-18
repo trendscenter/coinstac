@@ -14,6 +14,7 @@ tape('joins slave computation', t => {
   const getActiveRunIdStub = sinon.stub();
   const getByStub = sinon.stub();
   const joinRunStub = sinon.stub();
+  const joinSlavedRunStub = sinon.stub();
   const shouldJoinRunStub = sinon.stub();
   const runId = 'bulbasaur';
 
@@ -37,6 +38,7 @@ tape('joins slave computation', t => {
   shouldJoinRunStub.onCall(2).returns(Promise.resolve(false));
 
   setProp(app, 'core.computations.joinRun', joinRunStub);
+  setProp(app, 'core.computations.joinSlavedRun', joinSlavedRunStub);
   setProp(app, 'core.computations.shouldJoinRun', shouldJoinRunStub);
   setProp(app, 'core.consortia.getActiveRunId', getActiveRunIdStub);
   setProp(app, 'core.pool.events', ee);
@@ -58,10 +60,11 @@ tape('joins slave computation', t => {
         'gets active run ID'
       );
       t.ok(
-        shouldJoinRunStub.calledWithExactly(consortiumId),
+        shouldJoinRunStub.calledWithExactly(consortiumId, false),
         'calls should join'
       );
       t.notOk(joinRunStub.callCount, 'doesn’t call without project');
+      t.notOk(joinSlavedRunStub.callCount, 'doesn’t call slaved without project');
 
       return joinSlaveComputation(consortium);
     })

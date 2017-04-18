@@ -48,10 +48,6 @@ const conf = convict({
 });
 
 module.exports = function loadConfig() {
-  if (conf.get('env') === 'production') {
-    return Promise.resolve(conf);
-  }
-
   return fileExists(localConfig)
   .then(exists => {
     if (exists) {
