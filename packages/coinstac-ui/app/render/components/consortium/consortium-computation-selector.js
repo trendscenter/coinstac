@@ -1,4 +1,5 @@
-import React, { PropTypes } from 'react';
+import React from 'react';
+import PropTypes from 'prop-types';
 import { chain } from 'lodash';
 
 const getFirstTag = c => c.meta.tags[0];

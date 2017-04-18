@@ -1,6 +1,7 @@
 import { Button, ControlLabel, FormControl, FormGroup } from 'react-bootstrap';
 import { findDOMNode } from 'react-dom';
-import React, { Component, PropTypes } from 'react';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 
 class FormLogin extends Component {
   data() {

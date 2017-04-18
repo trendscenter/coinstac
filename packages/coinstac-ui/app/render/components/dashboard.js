@@ -1,4 +1,5 @@
-import React, { Component, PropTypes } from 'react';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import DashboardNav from './dashboard-nav';
 import UserAccountController from './user-account-controller';
 import { connect } from 'react-redux';
@@ -55,7 +56,7 @@ class Dashboard extends Component {
 Dashboard.displayName = 'Dashboard';
 
 Dashboard.contextTypes = {
-  router: React.PropTypes.object,
+  router: PropTypes.object,
 };
 
 Dashboard.propTypes = {

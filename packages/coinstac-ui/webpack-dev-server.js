@@ -3,10 +3,11 @@
 const DashboardPlugin = require('webpack-dashboard/plugin');
 const webpack = require('webpack');
 const WebpackDevServer = require('webpack-dev-server');
+const url = require('url');
 
 const config = require('./webpack.config');
 const compiler = webpack(config);
-const port = config.port;
+const port = url.parse(config.output.publicPath).port;
 
 compiler.apply(new DashboardPlugin({
   port: 3001,

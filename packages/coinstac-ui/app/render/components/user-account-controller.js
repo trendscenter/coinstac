@@ -1,6 +1,7 @@
 import app from 'ampersand-app';
 import { connect } from 'react-redux';
-import React, { Component, PropTypes } from 'react';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 
 import { logout } from '../state/ducks/auth';
 import UserAccount from './user-account';

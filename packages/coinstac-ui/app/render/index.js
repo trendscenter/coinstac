@@ -6,40 +6,45 @@ require('../common/utils/add-root-require-path.js');
 import app from 'ampersand-app';
 import React from 'react';
 import { render } from 'react-dom';
-import { Router, hashHistory } from 'react-router';
-import { Provider } from 'react-redux';
+import { hashHistory } from 'react-router';
 
 import { start as startErrorHandling } from './utils/boot/configure-error-handling.js';
 import configureLogger from './utils/boot/configure-logger.js';
 import configureMainServices from './utils/configure-main-services.js';
-import { configure as configureStore, get as getStore } from './state/store.js';
-import majorTom from './utils/boot/major-tom.js';
-import routes from './routes.js';
+import { configure as configureStore } from './state/store.js';
+
+import Root from './containers/root';
+
+// Boot up the render process
+configureLogger();
+startErrorHandling();
+configureMainServices();
+
+window.app = app;
+app.isDev = process.env.NODE_ENV === 'development';
+app.analysisRequestId = app.analysisRequestId || 0;
 
 // load application stylesheets
 require('./styles/app.scss');
 
-const loadUI = function loadUI() {
-  configureStore();
+const rootEl = document.getElementById('app');
+const store = configureStore();
 
-  window.app = app;
-  app.isDev = process.env.NODE_ENV === 'development';
-  app.analysisRequestId = app.analysisRequestId || 0;
+render(
+  <Root history={hashHistory} store={store} />,
+  rootEl
+);
 
-  render(
-    <Provider store={getStore()}>
-      <Router history={hashHistory} routes={routes} />
-    </Provider>,
-    document.getElementById('app')
-  );
+app.logger.info('renderer process up');
 
-  app.logger.info('renderer process up');
-};
-
-
-// Boot up the render process
-Promise.resolve(configureLogger())
-  .then(startErrorHandling)
-  .then(majorTom)
-  .then(configureMainServices)
-  .then(loadUI);
+if (module.hot) {
+  module.hot.accept('./containers/root', () => {
+    /* eslint-disable global-require */
+    const NextRoot = require('./containers/root').default;
+    /* eslint-enable global-require */
+    render(
+      <NextRoot history={hashHistory} store={store} />,
+      rootEl
+    );
+  });
+}

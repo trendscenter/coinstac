@@ -8,7 +8,8 @@ import {
 // TODO: enable with fileRender
 //  Label,
 } from 'react-bootstrap';
-import React, { Component, PropTypes } from 'react';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 
 import ProjectCovariatesMapper from './project-covariates-mapper';
 import ProjectFile from './project-file';
