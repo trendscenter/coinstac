@@ -3,7 +3,7 @@ import { applyAsyncLoading } from './loading';
 import { updateConsortia } from './consortia';
 import { updateComputations } from './computations';
 import { updateProjectStatus } from './projects';
-import { cloneDeep } from 'lodash';
+import { cloneDeep, each } from 'lodash';
 
 import {
   computationCompleteNotification,
@@ -19,7 +19,7 @@ export const unlistenToConsortia = (tiaIds) => {
   app.core.pool.unlistenToConsortia(tiaIds);
 };
 
-let alreadyRan = {};
+export const alreadyRan = {};
 
 /**
  * Joins a computation for which the user was not the initiator on
@@ -179,7 +179,9 @@ export const initPrivateBackgroundServices = applyAsyncLoading(() => {
 });
 
 export const teardownPrivateBackgroundServices = applyAsyncLoading(() => {
-  alreadyRan = {};
+  each(alreadyRan, (value, key) => {
+    alreadyRan[key] = undefined;
+  });
   return () => app.core.teardown();
 });
 
