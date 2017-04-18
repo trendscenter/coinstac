@@ -13,7 +13,6 @@ import { start as startErrorHandling } from './utils/boot/configure-error-handli
 import configureLogger from './utils/boot/configure-logger.js';
 import configureMainServices from './utils/configure-main-services.js';
 import { configure as configureStore } from './state/store.js';
-import majorTom from './utils/boot/major-tom.js';
 import routes from './routes.js';
 
 
@@ -41,6 +40,5 @@ const loadUI = function loadUI() {
 // Boot up the render process
 Promise.resolve(configureLogger())
   .then(startErrorHandling)
-  .then(majorTom)
   .then(configureMainServices)
   .then(loadUI);
