@@ -10,7 +10,6 @@ function parse() {
     const opts = program
     .option('-dev, --development', 'run in development mode (NODE_ENV === "development")')
     .option('-w, --webpack', 'boot webpack dev server as child process')
-    .option('--hotswap', 'enable hotswapping of node modules for main process')
     .option('--log-level [level]', 'set log level (silly/verbose/info/warn/error)')
     .parse(process.argv);
     appOpts = opts;
