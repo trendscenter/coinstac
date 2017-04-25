@@ -70,26 +70,8 @@ class ComputationService extends ModelService {
       });
   }
 
-  /**
-   * Call the local pipeline runner pool's `triggerRunner`.
-   * @private
-   *
-   * @param {Object} options
-   * @param {string} options.consortiumId Consortium the runId is from
-   * @param {string} options.projectId Project to run on
-   * @param {string} options.runId
-   * @returns {Promise}
-   */
-  doTriggerRunner({ consortiumId, projectId, runId }) {
-    if (!consortiumId) {
-      return Promise.reject(new Error('Consortium ID required'));
-    } else if (!projectId) {
-      return Promise.reject(new Error('Project ID required'));
-    } else if (!runId) {
-      return Promise.reject(new Error('Computation run ID required'));
-    }
-
-    const { consortia, pool, projects } = this.client;
+  checkProjectCompInputs({ consortiumId, projectId }) {
+    const { consortia, projects } = this.client;
 
     return Promise.all([
       consortia.get(consortiumId),
@@ -116,27 +98,52 @@ class ComputationService extends ModelService {
           );
         }
 
-        const options = {
-          _id: runId,
-          computationId: consortium.activeComputationId,
-          computationInputs: consortium.activeComputationInputs,
-          consortiumId,
-        };
-
-
-        if (
-          consortium.activeComputationInputs &&
-          Array.isArray(consortium.activeComputationInputs)
-        ) {
-          options.pluginState = {
-            inputs: consortium.activeComputationInputs,
-          };
-        }
-
-        const result = new RemoteComputationResult(options);
-
-        return pool.triggerRunner(result, project);
+        return [consortium, project];
       });
+  }
+
+  /**
+   * Call the local pipeline runner pool's `triggerRunner`.
+   * @private
+   *
+   * @param {Object} options
+   * @param {string} options.consortiumId Consortium the runId is from
+   * @param {string} options.projectId Project to run on
+   * @param {string} options.runId
+   * @returns {Promise}
+   */
+  doTriggerRunner({ consortiumId, projectId, runId }) {
+    const { pool } = this.client;
+    if (!consortiumId) {
+      return Promise.reject(new Error('Consortium ID required'));
+    } else if (!projectId) {
+      return Promise.reject(new Error('Project ID required'));
+    } else if (!runId) {
+      return Promise.reject(new Error('Computation run ID required'));
+    }
+
+    this.checkProjectCompInputs({ consortiumId, projectId })
+    .then(([consortium, project]) => {
+      const options = {
+        _id: runId,
+        computationId: consortium.activeComputationId,
+        computationInputs: consortium.activeComputationInputs,
+        consortiumId,
+      };
+
+      if (
+        consortium.activeComputationInputs &&
+        Array.isArray(consortium.activeComputationInputs)
+      ) {
+        options.pluginState = {
+          inputs: consortium.activeComputationInputs,
+        };
+      }
+
+      const result = new RemoteComputationResult(options);
+
+      return pool.triggerRunner(result, project);
+    });
   }
 
   /**
@@ -180,48 +187,31 @@ class ComputationService extends ModelService {
    * @return {Promise}
    */
   joinSlavedRun({ consortiumId, projectId, runId }) {
-    const { consortia, pool, projects } = this.client;
-    return Promise.all([
-      consortia.get(consortiumId),
-      projects.setMetaContents(projectId),
-      this.client.dbRegistry.get(`remote-consortium-${consortiumId}`).get(runId),
-    ])
-      .then(([consortium, project, resultDoc]) => {
-        /**
-         * Ensure project's computation inputs match the consortium; if not,
-         * throw an error and make the user re-match.
-         *
-         * @todo Find better method for guaranteeing project-to-computation
-         * input alignment.
-         *
-         * {@link https://github.com/MRN-Code/coinstac/issues/151}
-         */
-        if (
-          !deepEqual(
-            consortium.activeComputationInputs,
-            project.computationInputs
-          )
-        ) {
-          throw new Error(
-            `Project ${project.name}'s inputs must be re-entered`
-          );
-        }
+    const { pool } = this.client;
+    this.checkProjectCompInputs({ consortiumId, projectId })
+    .then(([consortium, project]) => {
+      return Promise.all([
+        consortium,
+        project,
+        this.client.dbRegistry.get(`remote-consortium-${consortiumId}`).get(runId),
+      ]);
+    })
+    .then(([consortium, project, resultDoc]) => {
+      const options = {};
+      if (
+        consortium.activeComputationInputs &&
+        Array.isArray(consortium.activeComputationInputs) &&
+        !resultDoc.pluginState.inputs
+      ) {
+        options.pluginState = {
+          inputs: consortium.activeComputationInputs,
+        };
+      }
 
-        const options = {};
-        if (
-          consortium.activeComputationInputs &&
-          Array.isArray(consortium.activeComputationInputs) &&
-          !resultDoc.pluginState.inputs
-        ) {
-          options.pluginState = {
-            inputs: consortium.activeComputationInputs,
-          };
-        }
+      const result = new RemoteComputationResult(Object.assign({}, resultDoc, options));
 
-        const result = new RemoteComputationResult(Object.assign({}, resultDoc, options));
-
-        return pool.triggerRunner(result, project);
-      });
+      return pool.triggerRunner(result, project);
+    });
   }
 
   /**
