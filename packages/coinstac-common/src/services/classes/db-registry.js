@@ -188,14 +188,15 @@ class DBRegistry {
     conf.pouchConfig.ajax = result(this, 'ajax');
 
     /**
-     * Ensure local (client) instances' non-projects databases are stored in
-     * memory.
+     * Ensure local (client) instances' databases are stored in
+     * memory. This excludes projects and local consortium results.
      *
      * {@link https://github.com/MRN-Code/coinstac/issues/155}
      */
     if (
       this.localStores &&
       this.localStores.indexOf('projects') > -1 &&
+      this.localStores.indexOf('local-consortium') > -1 &&
       conf.pouchConfig.getAdapter instanceof Function
     ) {
       conf.pouchConfig.adapter = conf.pouchConfig.getAdapter(connStr);

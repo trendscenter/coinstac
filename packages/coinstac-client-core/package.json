@@ -7,7 +7,7 @@
   "scripts": {
     "clean": "rm -rf .nyc_output coverage .tmp",
     "docs": "mkdir -p docs && jsdoc -c .jsdoc.json src/",
-    "test": "npm run clean && nyc --reporter=lcov --check-coverage --functions=70 --branches=80 --lines 89 node test"
+    "test": "npm run clean && nyc --reporter=lcov --check-coverage --functions=70 --branches=80 --lines 87 node test"
   },
   "repository": {
     "type": "git",

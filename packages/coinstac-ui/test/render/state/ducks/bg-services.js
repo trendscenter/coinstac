@@ -2,6 +2,7 @@ import app from 'ampersand-app';
 import EventEmitter from 'events';
 import {
   joinSlaveComputation,
+  alreadyRan,
 } from '../../../../app/render/state/ducks/bg-services';
 import noop from 'lodash/noop';
 import setProp from 'lodash/set';
@@ -14,6 +15,7 @@ tape('joins slave computation', t => {
   const getActiveRunIdStub = sinon.stub();
   const getByStub = sinon.stub();
   const joinRunStub = sinon.stub();
+  const joinSlavedRunStub = sinon.stub();
   const shouldJoinRunStub = sinon.stub();
   const runId = 'bulbasaur';
 
@@ -30,13 +32,14 @@ tape('joins slave computation', t => {
   };
 
   getByStub.returns(Promise.resolve(project));
-  getByStub.onCall(0).returns(Promise.resolve(undefined));
+  getByStub.onCall(1).returns(Promise.resolve(undefined));
   getActiveRunIdStub.returns(Promise.resolve(runId));
-  getActiveRunIdStub.onCall(1).returns(Promise.resolve(undefined));
+  getActiveRunIdStub.onCall(2).returns(Promise.resolve(undefined));
   shouldJoinRunStub.returns(Promise.resolve(true));
-  shouldJoinRunStub.onCall(2).returns(Promise.resolve(false));
+  shouldJoinRunStub.onCall(3).returns(Promise.resolve(false));
 
   setProp(app, 'core.computations.joinRun', joinRunStub);
+  setProp(app, 'core.computations.joinSlavedRun', joinSlavedRunStub);
   setProp(app, 'core.computations.shouldJoinRun', shouldJoinRunStub);
   setProp(app, 'core.consortia.getActiveRunId', getActiveRunIdStub);
   setProp(app, 'core.pool.events', ee);
@@ -45,9 +48,27 @@ tape('joins slave computation', t => {
   // TODO: Figure out how to mock the utils/notifications.js module
   setProp(app, 'notifications.push', noop);
 
-  t.plan(7);
+  t.plan(10);
 
   joinSlaveComputation(consortium)
+  .then(() => {
+    t.deepEqual(
+      joinSlavedRunStub.firstCall.args[0],
+      {
+        consortiumId,
+        projectId: 'project-1',
+        runId,
+      },
+      'calls joinSlavedRun with proper args'
+    );
+    t.deepEqual(
+      alreadyRan,
+      {
+        [runId]: true,
+      }
+    );
+  })
+  .then(() => joinSlaveComputation(consortium))
     .then(() => {
       t.ok(
         getByStub.calledWithExactly('consortiumId', consortiumId),
@@ -58,10 +79,11 @@ tape('joins slave computation', t => {
         'gets active run ID'
       );
       t.ok(
-        shouldJoinRunStub.calledWithExactly(consortiumId),
+        shouldJoinRunStub.calledWithExactly(consortiumId, false),
         'calls should join'
       );
       t.notOk(joinRunStub.callCount, 'doesn’t call without project');
+      t.notOk(joinSlavedRunStub.callCount > 1, 'doesn’t call slaved without project');
 
       return joinSlaveComputation(consortium);
     })
