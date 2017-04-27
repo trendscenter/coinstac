@@ -121,7 +121,7 @@ if (process.env.NODE_ENV === 'development') {
   );
 
   config.entry.unshift(
-    require.resolve('webpack-dev-server/client') + `?http://localhost:${port}`,
+    `${require.resolve('webpack-dev-server/client')}?http://localhost:${port}`,
     require.resolve('webpack/hot/dev-server')
   );
 
