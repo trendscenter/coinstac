@@ -115,10 +115,13 @@ if (process.env.NODE_ENV === 'development') {
 
   // Massage configuration for hot module replacement:
   config.output.publicPath = `http://localhost:${port}/`;
-  config.plugins.push(new webpack.HotModuleReplacementPlugin());
+  config.plugins.push(
+    new webpack.HotModuleReplacementPlugin(),
+    new webpack.NamedModulesPlugin()
+  );
 
   config.entry.unshift(
-    require.resolve('webpack-dev-server/client') + `?http://localhost:${port}`,
+    `${require.resolve('webpack-dev-server/client')}?http://localhost:${port}`,
     require.resolve('webpack/hot/dev-server')
   );
 
