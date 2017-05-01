@@ -246,12 +246,29 @@ const selector = formValueSelector(ConsortiumForm.FORM_NAME);
  * @param {Object} ownProps
  */
 function mapStateToProps(state, { computations, consortium, isNew, isOwner }) {
-  const formValue = selector(state, 'activeComputationId');
+  /**
+   * Redux-Form's selector
+   * {@link http://redux-form.com/6.6.3/docs/api/FormValueSelector.md/#selector}
+   */
+  const formValues = selector(
+    state,
+    'activeComputationId',
+    'description',
+    'label'
+  );
   const initialValues = consortium ? cloneDeep(consortium) : {};
   let activeComputationId;
 
-  if (formValue) {
-    activeComputationId = formValue;
+  if (formValues.description) {
+    initialValues.description = formValues.description;
+  }
+
+  if (formValues.label) {
+    initialValues.label = formValues.label;
+  }
+
+  if (formValues.activeComputationId) {
+    activeComputationId = formValues.activeComputationId;
   } else if (initialValues.activeComputationId) {
     activeComputationId = initialValues.activeComputationId;
   } else {
@@ -318,9 +335,7 @@ function mapStateToProps(state, { computations, consortium, isNew, isOwner }) {
 }
 
 export default connect(mapStateToProps)(reduxForm({
-  // destroyOnUnmount: false,
   enableReinitialize: true,
   form: ConsortiumForm.FORM_NAME,
-  // keepDirtyOnReinitialize: true,
   validate: ConsortiumForm.validate,
 })(ConsortiumForm));
