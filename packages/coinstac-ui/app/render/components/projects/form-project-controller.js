@@ -178,10 +178,10 @@ class FormProjectController extends Component {
       .catch(error => {
         // Electron's dialog doesn't produce errors, so this should never happen
         app.logger.error(error);
-        app.notify(
-          'error',
-          `An error occurred when adding files: ${error.message}`
-        );
+        app.notify({
+          level: 'error',
+          message: `An error occurred when adding files: ${error.message}`,
+        });
       });
   }
 
@@ -330,7 +330,10 @@ class FormProjectController extends Component {
 
     dispatch(runComputation({ consortiumId, projectId }))
       .catch((err) => {
-        app.notify('error', err.message);
+        app.notify({
+          level: 'error',
+          message: err.message,
+        });
       });
   }
 
@@ -354,10 +357,15 @@ class FormProjectController extends Component {
           router.push('/my-files');
         })
         .catch((err) => {
-          app.notify('error', err.message);
+          app.notify({
+            level: 'error',
+            message: err.message,
+          });
         });
     } else {
-      app.notify('info', 'Fix form errors before submitting');
+      app.notify({
+        message: 'Fix form errors before submitting',
+      });
     }
   }
 

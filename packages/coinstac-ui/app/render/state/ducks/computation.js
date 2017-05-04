@@ -14,7 +14,10 @@ export const fetchComputation = applyAsyncLoading(id => {
       return computation;
     })
     .catch((err) => {
-      app.notify('error', 'Failed to fetch computation');
+      app.notify({
+        level: 'error',
+        message: 'Failed to fetch computation',
+      });
       throw err;
     });
   };
