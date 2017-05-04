@@ -15,7 +15,7 @@ import { hashHistory } from 'react-router';
  */
 export function getRunErrorNotifier(consortium) {
   return (error) => {
-    app.notifications.push({
+    app.notify({
       autoDismiss: 1,
       level: 'error',
       message: `Error running computation for “${consortium.label}”: ${error.message}`,
@@ -31,7 +31,7 @@ export function getRunErrorNotifier(consortium) {
  */
 export function getRunEndNotifier(consortium) {
   return () => {
-    app.notifications.push({
+    app.notify({
       autoDismiss: 1,
       level: 'info',
       message: `Ran computation step for “${consortium.label}”`,
@@ -45,7 +45,7 @@ export function getRunEndNotifier(consortium) {
  * @param {Object} consortium
  */
 export function computationStartNotification(consortium) {
-  app.notifications.push({
+  app.notify({
     autoDismiss: 1,
     level: 'info',
     message: `Starting computation for “${consortium.label}”`,
@@ -58,7 +58,7 @@ export function computationStartNotification(consortium) {
  * @param {Object} consortium
  */
 export function computationCompleteNotification(consortium) {
-  app.notifications.push({
+  app.notify({
     action: {
       label: 'View Results',
       callback: () => hashHistory.push(`/consortia/${consortium._id}`),

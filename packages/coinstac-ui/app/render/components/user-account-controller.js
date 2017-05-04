@@ -22,11 +22,17 @@ class UserAccountController extends Component {
     dispatch(logout())
     .then(() => {
       router.push('/login');
-      app.notify('success', 'Successfully logged out');
+      app.notify({
+        level: 'success',
+        message: 'Successfully logged out',
+      });
     })
     .catch(err => {
       app.logger.error(err);
-      app.notify('error', 'Error logging out');
+      app.notify({
+        level: 'error',
+        message: 'Error logging out',
+      });
     });
   }
 

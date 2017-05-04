@@ -16,7 +16,10 @@ export const fetchConsortium = applyAsyncLoading(id => {
       return consortium;
     })
     .catch((err) => {
-      app.notify('error', 'Failed to fetch consortium');
+      app.notify({
+        level: 'error',
+        message: 'Failed to fetch consortium',
+      });
       throw err;
     });
   };

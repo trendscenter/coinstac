@@ -47,7 +47,10 @@ export const saveProject = applyAsyncLoading(project => {
   return () => {
     return app.core.projects.save(project)
     .catch((err) => {
-      app.notify('error', err.message);
+      app.notify({
+        level: 'error',
+        message: err.message,
+      });
       throw err;
     });
   };
@@ -67,7 +70,10 @@ export const fetchProject = applyAsyncLoading(projectId => {
       return proj;
     })
     .catch((err) => {
-      app.notify('error', `Unable to fetch project: ${err.message}`);
+      app.notify({
+        level: 'error',
+        message: `Unable to fetch project: ${err.message}`,
+      });
       throw err;
     });
   };

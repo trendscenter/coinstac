@@ -51,11 +51,17 @@ class FormSignupController extends Component {
 
     return dispatch(signUp(formData))
       .then(() => {
-        app.notify('success', 'Account created');
+        app.notify({
+          level: 'success',
+          message: 'Account created',
+        });
         process.nextTick(() => router.push('/'));
       })
       .catch(error => {
-        app.notify.error(error.message);
+        app.notify({
+          level: 'error',
+          message: error.message,
+        });
       });
   }
 
@@ -79,7 +85,10 @@ FormSignupController.handleSignupError = function _(error) {
     message = 'Signup error occurred. Please try again.';
   }
 
-  app.notify('error', message);
+  app.notify({
+    level: 'error',
+    message,
+  });
 };
 
 FormSignupController.contextTypes = {
