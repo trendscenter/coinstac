@@ -17,7 +17,10 @@ export const fetchComputations = applyAsyncLoading(() => {
       dispatch(setComputations(computations));
       return computations;
     })
-    .catch((err) => app.notify('error', `Unable to download computations: ${err}`));
+    .catch((err) => app.notify({
+      level: 'error',
+      message: `Unable to download computations: ${err}`,
+    }));
   };
 });
 

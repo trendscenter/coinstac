@@ -97,7 +97,10 @@ export const addProject = applyAsyncLoading(project => {
         return mapProject(doc);
       })
       .then((proj) => {
-        app.notify('success', `Project '${project.name}' created`);
+        app.notify({
+          level: 'success',
+          message: `Project '${project.name}' created`,
+        });
         dispatch(_addProject(proj));
         return proj;
       });
@@ -113,12 +116,18 @@ export const addProject = applyAsyncLoading(project => {
 export const remove = applyAsyncLoading(
   project => dispatch => app.core.projects.delete(project).then(
     (rslt) => {
-      app.notify('success', `Project '${project.name}' removed`);
+      app.notify({
+        level: 'success',
+        message: `Project '${project.name}' removed`,
+      });
       dispatch(removeProject(project._id));
       return rslt;
     },
     (err) => {
-      app.notify('error', err.message);
+      app.notify({
+        level: 'error',
+        message: err.message,
+      });
       throw err;
     }
   )
