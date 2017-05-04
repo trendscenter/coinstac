@@ -19,7 +19,12 @@ export default class Notify extends React.Component {
 
   componentDidMount() {
     this.notificationSystem = this.refs.notificationSystem;
-    app.notify = (level, message) => this.push({ level, message, autoDismiss: 2 });
+    app.notify = ({
+      action,
+      autoDismiss = 2,
+      level = 'info',
+      message,
+    }) => this.push({ action, autoDismiss, level, message });
   }
 
   componentWillUnmount() {

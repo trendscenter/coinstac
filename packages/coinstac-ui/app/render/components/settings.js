@@ -17,7 +17,9 @@ class Settings extends Component {
     app.main.services.clean.userData(this.props.username)
       .then(didDelete => {
         if (didDelete) {
-          app.notify('info', 'Logged out');
+          app.notify({
+            message: 'Logged out',
+          });
 
           // TODO: Figure why `nextTick` is needed
           process.nextTick(() => this.context.router.push('/login'));
@@ -25,7 +27,10 @@ class Settings extends Component {
       })
       .catch(error => {
         app.logger.error(error);
-        app.notify('error', `Could not remove user data: ${error.message}`);
+        app.notify({
+          level: 'error',
+          message: `Could not remove user data: ${error.message}`,
+        });
       });
   }
 

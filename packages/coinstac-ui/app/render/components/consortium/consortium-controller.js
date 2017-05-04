@@ -68,7 +68,10 @@ class ConsortiumController extends Component {
         this.context.router.push('/consortia');
       })
       .catch(error => {
-        app.notify('error', error.message);
+        app.notify({
+          level: 'error',
+          message: error.message,
+        });
         console.error(error); // eslint-disable-line no-console
       });
   }
@@ -98,9 +101,15 @@ class ConsortiumController extends Component {
       // TODO: Figure out a better way to initiate this background service
       unlistenToConsortia(consortiumId);
 
-      app.notify('success', `${username} removed`);
+      app.notify({
+        level: 'success',
+        message: `${username} removed`,
+      });
     })
-    .catch((err) => app.notify('error', err.message));
+    .catch((err) => app.notify({
+      level: 'error',
+      message: err.message,
+    }));
   }
 
   render() {

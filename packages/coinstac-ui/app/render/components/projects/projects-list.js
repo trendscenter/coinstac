@@ -28,7 +28,10 @@ class ProjectsList extends Component {
     dispatch(fetchProjects((err) => {
       if (err) {
         app.logger.error(err);
-        app.notify('error', `Failed to load projects: ${err.message}`);
+        app.notify({
+          level: 'error',
+          message: `Failed to load projects: ${err.message}`,
+        });
       } else {
         this.setState({ ready: true });
       }
@@ -59,7 +62,10 @@ class ProjectsList extends Component {
 
     dispatch(runComputation({ consortiumId, projectId }))
       .catch((err) => {
-        app.notify('error', err.message);
+        app.notify({
+          level: 'error',
+          message: err.message,
+        });
       });
   }
 
