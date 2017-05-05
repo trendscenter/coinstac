@@ -12,7 +12,9 @@ const path = require('path');
 const pify = require('pify');
 const pouchDbAdapterLevelDB = require('pouchdb-adapter-leveldb');
 const pouchDBAdapterMemory = require('pouchdb-adapter-memory');
+const touch = require('touch');
 const url = require('url');
+const winston = require('winston');
 
 /**
  * @todo Don't depend on dbmap.json for secrets.
@@ -72,6 +74,8 @@ class CoinstacServer {
    * @param {string} [config.dbUrl] Database URL.
    * @param {boolean} [config.inMemory=false] Use an in-memory database using
    * instead of writing to disk.
+   * @param {string} [config.logFile] Full path to a log file. No log files
+   * will be written if this isn not set.
    * @param {string} [config.logLevel=info] Logger level for winston's console
    * transport.
    */
@@ -88,6 +92,15 @@ class CoinstacServer {
 
     this.logger = logger;
     this.logger.level = this.config.logLevel || 'info';
+
+    if (this.config.logFile) {
+      // Ensure process can write to log file
+      touch.sync(this.config.logFile);
+
+      this.logger.add(winston.transports.File, {
+        filename: this.config.logFile,
+      });
+    }
   }
 
   /**
