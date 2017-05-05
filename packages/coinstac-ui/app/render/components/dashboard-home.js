@@ -103,7 +103,8 @@ class DashboardHome extends Component {
     if (
       remoteResults.length &&
       computations.length &&
-      consortia.length
+      consortia.length &&
+      username
     ) {
       Array.prototype.push.apply(
         statusItems,
@@ -172,7 +173,7 @@ DashboardHome.propTypes = {
       'waiting',
     ]).isRequired,
   })).isRequired,
-  username: PropTypes.string.isRequired,
+  username: PropTypes.string,
 };
 
 function mapStateToProps({
