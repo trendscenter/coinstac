@@ -9,6 +9,11 @@ import setProp from 'lodash/set';
 import sinon from 'sinon';
 import tape from 'tape';
 
+tape('bg-services setup', (t) => {
+  app.notify = noop;
+  t.end();
+});
+
 tape('joins slave computation', t => {
   const consortiumId = 'geodude';
   const ee = new EventEmitter();
@@ -112,4 +117,9 @@ tape('joins slave computation', t => {
       delete app.core;
       delete app.notifications;
     });
+});
+
+tape('bg-services teardown', (t) => {
+  delete app.notify;
+  t.end();
 });
