@@ -55,12 +55,22 @@ UserAccountController.propTypes = {
   dispatch: PropTypes.func.isRequired,
 };
 
-function select(state) {
-  return {
-    auth: state.auth,
-    // if auth is gone, we're probably logging out, use prev state
-    user: app.core.auth ? app.core.auth.getUser() : state.auth.user,
-  };
-}
+const mapStateToProps = ({ auth }) => {
+  let user = auth.user;
 
-export default connect(select)(UserAccountController);
+  // if auth is gone, we're probably logging out, use prev state
+  if (typeof app.core.auth === 'object') {
+    if ('getUser' in app.core.auth) {
+      if (app.core.auth.getUser instanceof Function) {
+        user = app.core.auth.getUser();
+      }
+    }
+  }
+
+  return {
+    auth,
+    user,
+  };
+};
+
+export default connect(mapStateToProps)(UserAccountController);
