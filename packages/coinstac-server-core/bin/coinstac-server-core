@@ -24,6 +24,7 @@ program
   .version(pkg.version)
   .option('-db, --database [value]', 'Database connection string')
   .option('-l, --loglevel [value]', `Log level ${VALID_LOG_LEVELS.toString()}`)
+  .option('--logfile [value]', 'Full filename for a log file')
   .option('-m, --memory', 'Use in-memory database')
   .option('-n --nohang', 'Don\'t hang')
   .option('-s, --seed [value]', 'Seed the consortiameta database');
@@ -68,6 +69,10 @@ if (
   VALID_LOG_LEVELS.indexOf(program.loglevel) > -1
 ) {
   config.logLevel = program.loglevel;
+}
+
+if (program.logfile) {
+  config.logFile = program.logfile;
 }
 
 if (program.memory) {
