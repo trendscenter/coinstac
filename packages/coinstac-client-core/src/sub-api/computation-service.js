@@ -122,7 +122,7 @@ class ComputationService extends ModelService {
       return Promise.reject(new Error('Computation run ID required'));
     }
 
-    this.checkProjectCompInputs({ consortiumId, projectId })
+    return this.checkProjectCompInputs({ consortiumId, projectId })
     .then(([consortium, project]) => {
       const options = {
         _id: runId,
