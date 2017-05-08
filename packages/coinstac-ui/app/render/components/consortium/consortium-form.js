@@ -84,11 +84,13 @@ class ConsortiumForm extends Component {
      * @todo Validate is a static method and doesn't have access to the
      * `computationInputs` property. Improve duck-like `covariateIndex` checks!
      */
-    const covariatesIndex = values.activeComputationInputs.findIndex(input => (
-      Array.isArray(input) &&
-      input.length &&
-      typeof input[0] === 'object'
-    ));
+    const covariatesIndex = values.activeComputationInputs ?
+      values.activeComputationInputs.findIndex(input => (
+        Array.isArray(input) &&
+        input.length &&
+        typeof input[0] === 'object'
+      )) :
+      -1;
 
     if (
       covariatesIndex > -1 &&
@@ -273,13 +275,17 @@ function mapStateToProps(state, { computations, consortium, isNew, isOwner }) {
     activeComputationId = initialValues.activeComputationId;
   } else {
     // TODO: Don't hard-code default computation
-    activeComputationId = computations.find(
+    const activeComp = computations.find(
       ({ name }) => name === 'decentralized-single-shot-ridge-regression'
-    )._id;
+    );
+
+    if (activeComp) {
+      activeComputationId = activeComp._id;
+    }
   }
   const decentComp = activeComputationId ?
     computations.find(({ _id }) => _id === activeComputationId) :
-    [];
+    undefined;
 
   // Map computations' inputs into a Redux Form-friendly format
   const computationInputs =
@@ -319,7 +325,7 @@ function mapStateToProps(state, { computations, consortium, isNew, isOwner }) {
           ''
       )
     );
-  } else {
+  } else if (Array.isArray(initialValues.activeComputationInputs)) {
     // Map from document structure to form's expected structure
     initialValues.activeComputationInputs =
       initialValues.activeComputationInputs[0];
