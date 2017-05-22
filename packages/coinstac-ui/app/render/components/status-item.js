@@ -82,7 +82,7 @@ export default function StatusItem({
           <li>
             <strong>Consortium:</strong>
             {' '}
-            <Link to={`/consortia/${consortium._id}`}>{consortium.label}</Link>
+            <Link to={`/consortia/${consortium._id}/${computation._id}`}>{consortium.label}</Link>
           </li>
           {waitingOn}
         </ul>
