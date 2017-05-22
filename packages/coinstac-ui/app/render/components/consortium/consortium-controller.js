@@ -122,6 +122,7 @@ class ConsortiumController extends Component {
       isOwner,
       remoteResults,
       username,
+      activeComputation,
     } = this.props;
 
     return (
@@ -138,6 +139,7 @@ class ConsortiumController extends Component {
         remoteResults={remoteResults}
         removeUser={this.removeUser}
         username={username}
+        activeComputation={activeComputation}
       />
     );
   }
@@ -150,6 +152,7 @@ ConsortiumController.contextTypes = {
 ConsortiumController.displayName = 'ConsortiumController';
 
 ConsortiumController.propTypes = {
+  activeComputation: PropTypes.string,
   computations: PropTypes.arrayOf(PropTypes.object).isRequired,
   consortium: PropTypes.object,
   dispatch: PropTypes.func.isRequired,
@@ -161,7 +164,7 @@ ConsortiumController.propTypes = {
   username: PropTypes.string.isRequired,
 };
 
-function mapStateToProps(state, { params: { consortiumId } }) {
+function mapStateToProps(state, { params: { consortiumId, computationId } }) {
   const {
     auth: {
       user: { username },
@@ -172,12 +175,14 @@ function mapStateToProps(state, { params: { consortiumId } }) {
     remoteResults,
   } = state;
   const isNew = !consortiumId;
+  const activeComputation = computationId;
   const consortium = !isNew ?
     consortia.find(({ _id }) => _id === consortiumId) :
     null;
 
   return {
     // TODO: Ensure computations is always an array in the state tree
+    activeComputation,
     computations: (computations || [])
       .sort((a, b) => `${a.name}@${a.version}` > `${b.name}@${b.version}`),
     consortium,
