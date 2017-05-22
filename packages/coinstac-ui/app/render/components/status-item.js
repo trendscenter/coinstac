@@ -42,9 +42,8 @@ export default function StatusItem({
     indicator = <Label bsStyle="danger">Error</Label>;
   } else if (remoteResult.complete) {
     indicator = <Label bsStyle="success">Complete</Label>;
-    resultButton = <LinkContainer to={`/consortia/${consortium._id}/${computation._id}`}>
-                    <Button bsStyle="default" className="pull-right">View Results</Button>
-                  </LinkContainer>;
+    resultButton = (<LinkContainer to={`/consortia/${consortium._id}/${computation._id}`}>
+      <Button bsStyle="default" className="pull-right">View Results</Button></LinkContainer>);
   } else {
     indicator = <Label bsStyle="default">In Progress</Label>;
   }

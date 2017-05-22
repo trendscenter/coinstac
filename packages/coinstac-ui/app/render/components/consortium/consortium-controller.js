@@ -15,7 +15,6 @@ import {
   leaveConsortium,
   saveConsortium,
 } from '../../state/ducks/consortia';
-
 import {
   fetch as fetchRemoteResults,
   setRemoteResults,
@@ -116,13 +115,13 @@ class ConsortiumController extends Component {
     const {
       computations,
       consortium,
+      initialComputationId,
       isLoading,
       isMember,
       isNew,
       isOwner,
       remoteResults,
       username,
-      activeComputation,
     } = this.props;
 
     return (
@@ -130,6 +129,7 @@ class ConsortiumController extends Component {
         addUser={this.addUser}
         computations={computations}
         consortium={consortium}
+        initialComputationId={initialComputationId}
         isLoading={isLoading}
         isMember={isMember}
         isNew={isNew}
@@ -139,7 +139,6 @@ class ConsortiumController extends Component {
         remoteResults={remoteResults}
         removeUser={this.removeUser}
         username={username}
-        activeComputation={activeComputation}
       />
     );
   }
@@ -152,10 +151,10 @@ ConsortiumController.contextTypes = {
 ConsortiumController.displayName = 'ConsortiumController';
 
 ConsortiumController.propTypes = {
-  activeComputation: PropTypes.string,
   computations: PropTypes.arrayOf(PropTypes.object).isRequired,
   consortium: PropTypes.object,
   dispatch: PropTypes.func.isRequired,
+  initialComputationId: PropTypes.string,
   isLoading: PropTypes.bool.isRequired,
   isMember: PropTypes.bool.isRequired,
   isNew: PropTypes.bool.isRequired,
@@ -175,22 +174,23 @@ function mapStateToProps(state, { params: { consortiumId, computationId } }) {
     remoteResults,
   } = state;
   const isNew = !consortiumId;
-  const activeComputation = computationId;
+  const initialComputationId = computationId;
   const consortium = !isNew ?
     consortia.find(({ _id }) => _id === consortiumId) :
     null;
 
+
+
   return {
     // TODO: Ensure computations is always an array in the state tree
-    activeComputation,
     computations: (computations || [])
       .sort((a, b) => `${a.name}@${a.version}` > `${b.name}@${b.version}`),
     consortium,
+    initialComputationId,
     isLoading,
     isMember: isNew ? true : consortium.users.indexOf(username) > -1,
     isNew,
     isOwner: isNew ? true : consortium.owners.indexOf(username) > -1,
-
     remoteResults: remoteResults || [],
     username,
   };
