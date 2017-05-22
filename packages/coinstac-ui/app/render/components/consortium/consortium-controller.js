@@ -179,8 +179,6 @@ function mapStateToProps(state, { params: { consortiumId, computationId } }) {
     consortia.find(({ _id }) => _id === consortiumId) :
     null;
 
-
-
   return {
     // TODO: Ensure computations is always an array in the state tree
     computations: (computations || [])
