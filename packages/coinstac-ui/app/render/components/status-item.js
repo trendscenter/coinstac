@@ -1,8 +1,9 @@
 import { difference, reduce, values } from 'lodash';
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Label } from 'react-bootstrap';
+import { Label, Button } from 'react-bootstrap';
 import { Link } from 'react-router';
+import { LinkContainer } from 'react-router-bootstrap';
 import moment from 'moment';
 
 import ConsortiumResultMeta from './consortium/consortium-result-meta.js';
@@ -35,11 +36,15 @@ export default function StatusItem({
   let heading;
   let indicator;
   let waitingOn;
+  let resultButton = null;
 
   if (remoteResult.userErrors.length) {
     indicator = <Label bsStyle="danger">Error</Label>;
   } else if (remoteResult.complete) {
     indicator = <Label bsStyle="success">Complete</Label>;
+    resultButton = <LinkContainer to={`/consortia/${consortium._id}/${computation._id}`}>
+                    <Button bsStyle="default" className="pull-right">View Results</Button>
+                  </LinkContainer>;
   } else {
     indicator = <Label bsStyle="default">In Progress</Label>;
   }
@@ -88,6 +93,7 @@ export default function StatusItem({
           step={remoteResult.pluginState['group-step'].step}
           usernames={remoteResult.usernames}
         />
+        {resultButton}
       </div>
     </div>
   );
