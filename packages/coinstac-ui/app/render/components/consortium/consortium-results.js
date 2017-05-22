@@ -10,7 +10,7 @@ class ConsortiumResults extends Component {
   constructor(props) {
     super(props);
 
-    this.goToHash = this.goToHash.bind(this);
+    this.goToResults = this.goToResults.bind(this);
   }
 
   componentWillMount() {
@@ -20,10 +20,10 @@ class ConsortiumResults extends Component {
   }
 
   componentDidMount() {
-    this.goToHash();
+    this.goToResults();
   }
 
-  goToHash() {
+  goToResults() {
     if (document.querySelector('#results')) {
       document.querySelector('#results').scrollIntoView();
     }
