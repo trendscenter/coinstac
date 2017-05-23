@@ -23,7 +23,16 @@ let toRun = [
   // 'declarations/process-files.js',
   // 'declarations/process-dir.js',
 
-  'declarations/computation-error-handled.js',
+  /**
+   * @todo Asynchronous/parallel execution of python scripts on CI servers with
+   * pyenv causes the processes to exit with a shim rehash error. Re-enable the
+   * computation-error-handled.js declaration when a pyenv 'no-rehash' option is
+   * available.
+   *
+   * {@link https://github.com/MRN-Code/coinstac/pull/221#issuecomment-303450215}
+   * {@link https://github.com/pyenv/pyenv/pull/350#issuecomment-303472897}
+   */
+  // 'declarations/computation-error-handled.js',
 
   /**
    * Due to the required `covariates` computation input bisect-converge is
