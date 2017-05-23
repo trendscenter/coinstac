@@ -8,8 +8,9 @@ const tape = require('tape');
 
 function getUser() {
   return {
-    activeFlag: null,
     acctExpDate: null,
+    activeFlag: null,
+    dateAdded: undefined,
     email: 'test@mrn.org',
     emailUnsubscribed: true,
     institution: 'Mind Research Network',
@@ -18,6 +19,9 @@ function getUser() {
     name: 'Robert Robert',
     password: 'bobbobbob',
     passwordExpDate: Date.now(),
+    passwordResetExpiration: undefined,
+    passwordResetKey: undefined,
+    passwordResetSessionId: undefined,
     siteId: '7',
     username: 'bob',
   };
