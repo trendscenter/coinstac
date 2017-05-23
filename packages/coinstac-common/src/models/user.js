@@ -17,8 +17,9 @@ class User extends Base {}
 
 // @ref COINS user db fields
 User.schema = Object.assign({
-  activeFlag: joi.any(),
   acctExpDate: joi.any(),
+  activeFlag: joi.any(),
+  dateAdded: joi.date().allow(null),
   email: joi.string().email().required(),
   emailUnsubscribed: joi.boolean(),
   institution: joi.string(),
@@ -27,6 +28,9 @@ User.schema = Object.assign({
   name: joi.string(),
   password: joi.string().min(5),
   passwordExpDate: joi.any(),
+  passwordResetExpiration: joi.date().allow(null),
+  passwordResetKey: joi.string().allow(null),
+  passwordResetSessionId: joi.string().allow(null),
   siteId: joi.any(),
   username: joi.string().min(3).regex(/^[^-]+$/)
     .required(), // no -'s
