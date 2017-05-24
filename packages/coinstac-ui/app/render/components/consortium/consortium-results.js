@@ -82,7 +82,7 @@ class ConsortiumResults extends Component {
 ConsortiumResults.displayName = 'ConsortiumResults';
 
 ConsortiumResults.propTypes = {
-  expandedComputation: PropTypes.string.isRequired,
+  expandedResult: PropTypes.string.isRequired,
   computations: PropTypes.array,
   initialResultId: PropTypes.string.isRequired,
   remoteResults: PropTypes.array,
