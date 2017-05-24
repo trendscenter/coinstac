@@ -115,7 +115,7 @@ class ConsortiumController extends Component {
     const {
       computations,
       consortium,
-      initialComputationId,
+      initialResultId,
       isLoading,
       isMember,
       isNew,
@@ -129,7 +129,7 @@ class ConsortiumController extends Component {
         addUser={this.addUser}
         computations={computations}
         consortium={consortium}
-        initialComputationId={initialComputationId}
+        initialResultId={initialResultId}
         isLoading={isLoading}
         isMember={isMember}
         isNew={isNew}
@@ -154,7 +154,7 @@ ConsortiumController.propTypes = {
   computations: PropTypes.arrayOf(PropTypes.object).isRequired,
   consortium: PropTypes.object,
   dispatch: PropTypes.func.isRequired,
-  initialComputationId: PropTypes.string,
+  initialResultId: PropTypes.string,
   isLoading: PropTypes.bool.isRequired,
   isMember: PropTypes.bool.isRequired,
   isNew: PropTypes.bool.isRequired,
@@ -163,7 +163,7 @@ ConsortiumController.propTypes = {
   username: PropTypes.string.isRequired,
 };
 
-function mapStateToProps(state, { params: { consortiumId, computationId } }) {
+function mapStateToProps(state, { params: { consortiumId, resultId } }) {
   const {
     auth: {
       user: { username },
@@ -174,7 +174,7 @@ function mapStateToProps(state, { params: { consortiumId, computationId } }) {
     remoteResults,
   } = state;
   const isNew = !consortiumId;
-  const initialComputationId = computationId;
+  const initialResultId = resultId;
   const consortium = !isNew ?
     consortia.find(({ _id }) => _id === consortiumId) :
     null;
@@ -184,7 +184,7 @@ function mapStateToProps(state, { params: { consortiumId, computationId } }) {
     computations: (computations || [])
       .sort((a, b) => `${a.name}@${a.version}` > `${b.name}@${b.version}`),
     consortium,
-    initialComputationId,
+    initialResultId,
     isLoading,
     isMember: isNew ? true : consortium.users.indexOf(username) > -1,
     isNew,

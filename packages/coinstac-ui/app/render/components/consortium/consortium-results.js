@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { Alert } from 'react-bootstrap';
-import { setExpandedComputation } from '../../state/ducks/consortia-page';
+import { setExpandedResult } from '../../state/ducks/consortia-page';
 
 import ConsortiumResult from './consortium-result';
 
@@ -14,9 +14,9 @@ class ConsortiumResults extends Component {
   }
 
   componentWillMount() {
-    const { initialComputationId, setExpandedComputation } = this.props;
+    const { initialResultId, setExpandedResult } = this.props;
 
-    setExpandedComputation(initialComputationId);
+    setExpandedResult(initialResultId);
   }
 
   componentDidMount() {
@@ -29,15 +29,18 @@ class ConsortiumResults extends Component {
     }
   }
 
-  toggleCollapse(computationId) {
-    const { setExpandedComputation, expandedComputation } = this.props;
+  toggleCollapse(resultId) {
+    const { setExpandedResult, expandedResult } = this.props;
 
-    if (computationId !== expandedComputation) setExpandedComputation(computationId);
-    else setExpandedComputation('');
+    if (resultId !== expandedResult) {
+      setExpandedResult(resultId);
+    } else {
+      setExpandedResult('');
+    }
   }
 
   render() {
-    const { expandedComputation, computations, remoteResults } = this.props;
+    const { expandedResult, computations, remoteResults } = this.props;
     const content = !remoteResults || !remoteResults.length ?
     (
       <Alert bsStyle="info">No results.</Alert>
@@ -56,7 +59,7 @@ class ConsortiumResults extends Component {
               <li key={index} id={result.computationId}>
                 <ConsortiumResult
                   computation={computation}
-                  expanded={result.computationId === expandedComputation}
+                  expanded={result.computationId === expandedResult}
                   toggleCollapse={() => this.toggleCollapse(result.computationId)}
                   {...result}
                 />
@@ -81,9 +84,9 @@ ConsortiumResults.displayName = 'ConsortiumResults';
 ConsortiumResults.propTypes = {
   expandedComputation: PropTypes.string.isRequired,
   computations: PropTypes.array,
-  initialComputationId: PropTypes.string.isRequired,
+  initialResultId: PropTypes.string.isRequired,
   remoteResults: PropTypes.array,
-  setExpandedComputation: PropTypes.func,
+  setExpandedResult: PropTypes.func,
 };
 
 /**
@@ -107,9 +110,9 @@ ConsortiumResults.compareRemoteResults = (
 };
 
 const mapStateToProps = ({ consortiaPage }) => {
-  const { expandedComputation } = consortiaPage;
+  const { expandedResult } = consortiaPage;
 
-  return { expandedComputation };
+  return { expandedResult };
 };
 
-export default connect(mapStateToProps, { setExpandedComputation })(ConsortiumResults);
+export default connect(mapStateToProps, { setExpandedResult })(ConsortiumResults);
