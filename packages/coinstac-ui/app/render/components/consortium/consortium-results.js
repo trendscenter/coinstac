@@ -19,14 +19,15 @@ class ConsortiumResults extends Component {
     setExpandedResult(initialResultId);
   }
 
-  componentDidMount() {
-    this.goToResults();
-  }
-
   goToResults() {
-    if (document.querySelector('#results')) {
-      document.querySelector('#results').scrollIntoView();
-    }
+    const { expandedResult } = this.props;
+
+    // Hacky - used to delay querying ids until results list items are rendered
+    setTimeout(() => {
+      if (document.querySelector(`#C${expandedResult}`)) {
+        document.querySelector(`#C${expandedResult}`).scrollIntoView();
+      }
+    }, 500);
   }
 
   toggleCollapse(resultId) {
@@ -56,7 +57,7 @@ class ConsortiumResults extends Component {
             });
 
             return (
-              <li key={index} id={result.computationId}>
+              <li key={index} id={`C${result.computationId}`}>
                 <ConsortiumResult
                   computation={computation}
                   expanded={result.computationId === expandedResult}
@@ -74,6 +75,7 @@ class ConsortiumResults extends Component {
       <section id="results">
         <h2 className="h4">Results:</h2>
         {content}
+        {remoteResults.length && this.goToResults()}
       </section>
     );
   }
