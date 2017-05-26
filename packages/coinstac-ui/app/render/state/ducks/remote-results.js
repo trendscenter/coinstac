@@ -14,7 +14,7 @@ export const fetch = applyAsyncLoading(id => (dispatch) => {
 
   return Promise.all(dbs.map(db => db.all()))
     .then((responses) => {
-      const results = sortBy(compact(flatten(responses), ['endDate', 'startDate'])).reverse();
+      const results = sortBy(compact(flatten(responses)), ['endDate', 'startDate']).reverse();
       dispatch(setRemoteResults(results));
       return results;
     });
