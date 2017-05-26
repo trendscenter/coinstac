@@ -14,28 +14,10 @@ export const fetch = applyAsyncLoading(id => (dispatch) => {
 
   return Promise.all(dbs.map(db => db.all()))
     .then((responses) => {
-      const results = compact(flatten(responses));
+      const results = sortBy(compact(flatten(responses), ['endDate', 'startDate'])).reverse();
       dispatch(setRemoteResults(results));
       return results;
     });
-});
-
-export const fetchConsortiaResults = applyAsyncLoading(() => {
-  const dbRegistry = app.core.dbRegistry;
-
-  return (dispatch) => {
-    return app.core.consortia
-    .then((docs) =>
-      Promise.all(docs.map(({ _id }) =>
-        dbRegistry.get(`remote-consortium-${_id}`)
-      ))
-    )
-    .then((responses) => {
-      const results = sortBy(flatten(responses), ['endDate', 'startDate']).reverse();
-      dispatch(setRemoteResults(results));
-      return results;
-    });
-  };
 });
 
 export default function reducer(state = null, action = {}) {

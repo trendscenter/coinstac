@@ -3,6 +3,7 @@ import { applyAsyncLoading } from './loading';
 import { updateConsortia } from './consortia';
 import { updateComputations } from './computations';
 import { updateProjectStatus } from './projects';
+import { fetch as fetchResults } from './remote-results';
 import { cloneDeep, each } from 'lodash';
 
 import {
@@ -114,6 +115,7 @@ export const initPrivateBackgroundServices = applyAsyncLoading(() => {
         return cloned;
       });
       dispatch(updateConsortia(toUpdate));
+      dispatch(fetchResults());
     });
     const compsDB = app.core.dbRegistry.get('computations');
     compsDB.syncEmitter.on('change', (change) => {
