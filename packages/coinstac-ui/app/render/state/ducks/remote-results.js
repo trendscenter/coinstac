@@ -1,6 +1,6 @@
 import { applyAsyncLoading } from './loading';
 import app from 'ampersand-app';
-import { compact, flatten } from 'lodash';
+import { compact, flatten, sortBy } from 'lodash';
 
 const SET_REMOTE_RESULTS = 'SET_REMOTE_RESULTS';
 
@@ -18,6 +18,24 @@ export const fetch = applyAsyncLoading(id => (dispatch) => {
       dispatch(setRemoteResults(results));
       return results;
     });
+});
+
+export const fetchConsortiaResults = applyAsyncLoading(() => {
+  const dbRegistry = app.core.dbRegistry;
+
+  return (dispatch) => {
+    return app.core.consortia
+    .then((docs) =>
+      Promise.all(docs.map(({ _id }) =>
+        dbRegistry.get(`remote-consortium-${_id}`)
+      ))
+    )
+    .then((responses) => {
+      const results = sortBy(flatten(responses), ['endDate', 'startDate']).reverse();
+      dispatch(setRemoteResults(results));
+      return results;
+    });
+  };
 });
 
 export default function reducer(state = null, action = {}) {

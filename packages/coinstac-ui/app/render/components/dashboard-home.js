@@ -2,25 +2,25 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { Alert } from 'react-bootstrap';
 import { connect } from 'react-redux';
-import { core, logger, notify } from 'ampersand-app';
-import { flatten, sortBy } from 'lodash';
+import { logger, notify } from 'ampersand-app';
 
 import StatusItem from './status-item.js';
 import { fetch as fetchProjects } from '../state/ducks/projects.js';
 import { fetchComputations } from '../state/ducks/computations.js';
+import { fetch as fetchConsortiaResults } from '../state/ducks/remote-results';
 
 class DashboardHome extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      remoteResults: [],
-    };
-  }
-
   componentWillMount() {
-    const { dispatch } = this.props;
+    const { computations, dispatch, remoteResults } = this.props;
 
-    dispatch(fetchComputations());
+    if (!remoteResults.length) {
+      dispatch(fetchConsortiaResults());
+    }
+
+    if (!computations.length) {
+      dispatch(fetchComputations());
+    }
+
     // TODO: Modify action creator to use Promise
     dispatch(fetchProjects((error) => {
       if (error) {
@@ -28,50 +28,6 @@ class DashboardHome extends Component {
         notify('error', error.message);
       }
     }));
-
-    this.getRemoteResults().then(() => {
-      this.interval = setInterval(() => this.getRemoteResults(), 2000);
-    });
-  }
-
-  componentWillUnmount() {
-    if (this.interval) {
-      clearInterval(this.interval);
-    }
-  }
-
-  getRemoteResults() {
-    const dbRegistry = core.dbRegistry;
-
-    return dbRegistry.get('consortia')
-      .all()
-      .then((docs) => Promise.all(docs.map(({ _id }) =>
-        dbRegistry.get(`remote-consortium-${_id}`).all()
-      )))
-      .then((responses) => {
-        const remoteResults =
-          sortBy(flatten(responses), ['endDate', 'startDate']).reverse();
-
-        /**
-         * Combat some weird React internal bug where `componentWillUnmount`
-         * never fires.
-         */
-        if (this._calledComponentWillUnmount) {
-          clearInterval(this.interval);
-          return [];
-        }
-
-        this.setState({ remoteResults });
-        return remoteResults;
-      })
-      .catch((error) => {
-        logger.error(error);
-        notify('error', error.message);
-
-        if (this.interval) {
-          clearInterval(this.interval);
-        }
-      });
   }
 
   maybeRenderStatusItem({ computation, consortium, remoteResult }) {
@@ -94,10 +50,8 @@ class DashboardHome extends Component {
       consortia,
       projects,
       username,
-    } = this.props;
-    const {
       remoteResults,
-    } = this.state;
+    } = this.props;
     let statusItems = [];
 
     if (
@@ -173,6 +127,7 @@ DashboardHome.propTypes = {
       'waiting',
     ]).isRequired,
   })).isRequired,
+  remoteResults: PropTypes.arrayOf(PropTypes.object),
   username: PropTypes.string,
 };
 
