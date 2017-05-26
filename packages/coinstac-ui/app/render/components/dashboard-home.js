@@ -7,14 +7,14 @@ import { logger, notify } from 'ampersand-app';
 import StatusItem from './status-item.js';
 import { fetch as fetchProjects } from '../state/ducks/projects.js';
 import { fetchComputations } from '../state/ducks/computations.js';
-import { fetch as fetchConsortiaResults } from '../state/ducks/remote-results';
+import { fetch as fetchResults } from '../state/ducks/remote-results';
 
 class DashboardHome extends Component {
   componentWillMount() {
     const { computations, dispatch, remoteResults } = this.props;
 
     if (!remoteResults.length) {
-      dispatch(fetchConsortiaResults());
+      dispatch(fetchResults());
     }
 
     if (!computations.length) {
