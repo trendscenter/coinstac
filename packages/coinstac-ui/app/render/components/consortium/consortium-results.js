@@ -10,7 +10,6 @@ class ConsortiumResults extends Component {
   constructor(props) {
     super(props);
 
-    this.state = { wentToResult: false };
     this.goToResults = this.goToResults.bind(this);
   }
 
@@ -37,7 +36,6 @@ class ConsortiumResults extends Component {
         document.querySelector(`#C${expandedResults[0]}`).scrollIntoView();
       }
     }, 500);
-    this.setState({ wentToResult: true });
   }
 
   toggleCollapse(resultId) {
@@ -81,7 +79,7 @@ class ConsortiumResults extends Component {
       <section id="results">
         <h2 className="h4">Results:</h2>
         {content}
-        {remoteResults.length && !this.state.wentToResult && this.goToResults()}
+        {remoteResults.length && expandedResults.length === 1 && this.goToResults()}
       </section>
     );
   }
