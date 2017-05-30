@@ -115,6 +115,7 @@ export const initPrivateBackgroundServices = applyAsyncLoading(() => {
       });
       dispatch(updateConsortia(toUpdate));
     });
+
     const compsDB = app.core.dbRegistry.get('computations');
     compsDB.syncEmitter.on('change', (change) => {
       const toUpdate = change.docs.map((changed) => {
