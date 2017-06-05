@@ -61,39 +61,40 @@ Follow the general steps above before continuing.
 1. **CouchDB** On OSX, using [Homebrew](https://brew.sh/) will likely be the easiest way to install [CouchDB](http://couchdb.apache.org/) in a manner compatible with setup scripts: `brew install couchdb`. Installing from the binary is another viable option, just be sure to add it to your path.
 2. **VSCode** There are no shortage of options when it comes to an editor, but [VSCode](https://code.visualstudio.com/) offers some great [debugging functionality](https://code.visualstudio.com/Docs/editor/debugging). You'll need to create a `launch.json` file as outlined [here](https://code.visualstudio.com/Docs/editor/debugging#_launch-configurations), with the following contents:
 
-```json
-{
-    "version": "0.1.1",
-    "configurations": [
-        {
-            "type": "node",
-            "request": "attach",
-            "name": "Attach to Port",
-            "port": 9229
-        },
-        {
-            "name": "Debug",
-            "type": "node",
-            "request": "launch",
-            "cwd": "${workspaceRoot}",
-            "runtimeExecutable": "${workspaceRoot}/packages/coinstac-ui/node_modules/.bin/electron",
-            "program": "${workspaceRoot}/packages/coinstac-ui/app/main/index.js",
-            "env": {
-                "COINS_ENV": "development",
-                "NODE_ENV": "development"
-            },
-            "runtimeArgs": []
-        },
-        {
-            "name": "Attach",
-            "type": "node",
-            "address": "localhost",
-            "port": 5858,
-            "sourceMaps": false
-        }
-    ]
-}
-``` 
+   ```json
+   {
+      "version": "0.1.1",
+      "configurations": [
+          {
+              "type": "node",
+              "request": "attach",
+              "name": "Attach to Port",
+              "port": 9229
+          },
+          {
+              "name": "Debug",
+              "type": "node",
+              "request": "launch",
+              "cwd": "${workspaceRoot}",
+              "runtimeExecutable": "${workspaceRoot}/packages/coinstac-ui/node_modules/.bin/electron",
+              "program": "${workspaceRoot}/packages/coinstac-ui/app/main/index.js",
+              "env": {
+                  "COINS_ENV": "development",
+                  "NODE_ENV": "development"
+              },
+              "runtimeArgs": []
+          },
+          {
+              "name": "Attach",
+              "type": "node",
+              "address": "localhost",
+              "port": 5858,
+              "sourceMaps": false
+          }
+      ]
+   }
+   ``` 
+
 3. **tmux & Tmuxinator** To ease the process of initializing the development environment, we use [tmux](https://github.com/tmux/tmux) and [Tmuxinator](https://github.com/tmuxinator/tmuxinator) to automate things like starting CouchDB, creating a test user, creating a database, starting the webpack server and more. tmux can be installed via Homebrew `brew install tmux`. Tmuxinator can be installed via `gem install tmuxinator`. You'll also need to setup a couple environment variables for Tmuxinator, which you can find in their README linked above.
 
    // TODO: Bring this into VSCode?
@@ -106,39 +107,39 @@ Follow the general steps above before continuing.
 
 2. **COINS** Next, create a directory in your root directory called **coins**. Alternatively, clone the [COINS](https://github.com/MRN-Code/coins) repo there. Once you have the directory, create a subdirectory called **config**. Lastly create a file at `/coins/config/dbmap.json` and copy into it the following:
 
-```json
-{
-  "coinstac": {
-    "user": "coinstac",
-    "password": "test"
-  }
-}
-```
+   ```json
+   {
+     "coinstac": {
+       "user": "coinstac",
+       "password": "test"
+     }
+   }
+   ```
 
 ## Configuration
 
 Create a new file at `coinstac/packages/coinstac-ui/config/local.json` and copy into it the following:
 
-```json
-{
-  "api": {
-    "hostname": "localhost",
-    "pathname": "/api/v1.3.0",
-    "port": 8800,
-    "protocol": "http:"
-  },
-  "db": {
-    "remote": {
-      "db": {
+   ```json
+   {
+      "api": {
         "hostname": "localhost",
-        "pathname": "",
-        "port": 5984,
+        "pathname": "/api/v1.3.0",
+        "port": 8800,
         "protocol": "http:"
+      },
+      "db": {
+        "remote": {
+          "db": {
+            "hostname": "localhost",
+            "pathname": "",
+            "port": 5984,
+            "protocol": "http:"
+          }
+        }
       }
-    }
-  }
-}
-```
+   }
+   ```
 
 ## Tmuxinator Script
 
@@ -166,17 +167,7 @@ pre:
   - bin/coinstac-server-core --nohang
   - cd ~/coinstac/packages/coinstac-ui
   - npm run clean:db
-  #- cp ~/Sites/coinstac-setup/local.json config/local.json
   - cd ~/coinstac/
-
-# Runs in each window and pane before window/pane specific commands. Useful for setting up interpreter versions.
-# pre_window: rbenv shell 2.0.0-p247
-
-# Pass command line options to tmux. Useful for specifying a different tmux.conf.
-# tmux_options: -f ~/.tmux.mac.conf
-
-# Change the command to call tmux.  This can be used by derivatives/wrappers like byobu.
-# tmux_command: byobu
 
 # Specifies (by name or index) which window will be selected on project startup. If not set, the first window is used.
 startup_window: editor
@@ -186,7 +177,6 @@ startup_window: editor
 
 # Runs after everything. Use it to attach to tmux with custom options etc.
 post:
-  #- rm ~/coinstac/packages/coinstac-ui/config/local.json
   - curl -X DELETE localhost:5984/_config/admins/coinstac --user coinstac:test
   - couchdb -d
 
@@ -203,19 +193,12 @@ windows:
       root: ~/coinstac/packages/coinstac-ui
       panes:
         - npm run watch
-  - electron:
-      root: ~/coinstac/packages/coinstac-ui
-      panes:
-        - node_modules/.bin/electron .
-
 ```
 
 ## Run Development Environment
 
-The last step is to start your development environment: `tmuxinator start coinstac`. If all goes well, you should be looking at the COINSTAC UI in Electron. 
+The last step is to start your development environment: `tmuxinator start coinstac`.
 
-To use VSCode to debug your code rather than the Tmuxinator window, go back to your terminal and use `Ctrl-b, Ctrl-n` to move your way through the tmux windows until you reach the electron window. You can determine which window you're in by looking at the green bar at the bottom of the pane and noting which numbered window currently has an asterisk next to its name. Once in the electron window, `Ctrl-c` to end the process and type `exit` to close the pane.
-
-Next, open COINSTAC in VSCode and click on the debugging icon, which is the fourth icon down on the left-hand side of the screen. At the top of the left-hand side panel should be a *DEBUG* dropdown. Select `Debug` in the dropdown and hit the play button to begin debugging.
+Next, open the COINSTAC repo in VSCode and click on the debugging icon, which is the fourth icon down on the left-hand side of the screen. At the top of the left-hand side panel should be a *DEBUG* dropdown. Select `Debug` in the dropdown and hit the play button to begin debugging.
 
 **Test data will also be required to create and run computations**
