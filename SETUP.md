@@ -20,7 +20,7 @@ You’ll need some software installed:
 Open a shell and navigate (using `cd`) to the directory where you want to install COINSTAC. This can be anywhere, but if you're following the development instructions below, having it in your HOME directory is recommended. Then, use git to download the repository:
 
 ```shell
-git clone -b demo https://github.com/MRN-Code/coinstac.git
+git clone https://github.com/MRN-Code/coinstac.git
 ```
 
 This will place COINSTAC into a new folder named “coinstac” and check out the “demo” branch.
