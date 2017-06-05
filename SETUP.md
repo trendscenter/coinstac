@@ -31,13 +31,13 @@ Move into the _coinstac_ directory (`cd coinstac`) and run the following command
 
 ```shell
 npm install
-npm run bootstrap
+npm run build
 ```
 
 ## Updating Source Code
 
 1. `git pull` to get the latest source code
-2. `npm run bootstrap` from the root _coinstac_ directory to install dependencies and link packages
+2. `npm run build` from the root _coinstac_ directory to install dependencies and link packages
 
 ## Running the UI
 
@@ -49,8 +49,8 @@ The user interface is an [Electron application](http://electron.atom.io/). To ru
 ## Troubleshooting
 
 * Ensure machines have at least 2 GB of memory. If you don’t have that much memory, run `npm install` in each directory in _coinstac/packages/_.
-* If `npm run bootstrap` fails repeatedly, there’s likely a problem with [lerna’s](https://lernajs.io/) persisted state. Remove the _node_modules_ directory from each of the _coinstac/packages/<package name>_ directories.
-* If you notice repeated `TypeError`s related to COINSTAC internal methods, the COINSTAC internals maybe be unlinked. Run `npm run bootstrap` to re-link them.
+* If `npm run build` fails repeatedly, there’s likely a problem with [lerna’s](https://lernajs.io/) persisted state. Remove the _node_modules_ directory from each of the _coinstac/packages/<package name>_ directories.
+* If you notice repeated `TypeError`s related to COINSTAC internal methods, the COINSTAC internals maybe be unlinked. Run `npm run build` to re-link them.
 
 # Development Setup
 
