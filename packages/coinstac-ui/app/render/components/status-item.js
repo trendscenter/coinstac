@@ -43,7 +43,7 @@ export default function StatusItem({
   } else if (remoteResult.complete) {
     indicator = <Label bsStyle="success">Complete</Label>;
     resultButton = (
-      <LinkContainer to={`/consortia/${consortium._id}/${computation._id}`}>
+      <LinkContainer to={`/consortia/${consortium._id}/${remoteResult._id}`}>
         <Button bsStyle="default" className="pull-right">View Results</Button>
       </LinkContainer>
     );

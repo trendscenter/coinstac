@@ -61,11 +61,11 @@ class ConsortiumResults extends Component {
             });
 
             return (
-              <li key={index} id={`C${result.computationId}`}>
+              <li key={index} id={`C${result._id}`}>
                 <ConsortiumResult
                   computation={computation}
-                  expanded={expandedResults.includes(result.computationId)}
-                  toggleCollapse={() => this.toggleCollapse(result.computationId)}
+                  expanded={expandedResults.includes(result._id)}
+                  toggleCollapse={() => this.toggleCollapse(result._id)}
                   {...result}
                 />
               </li>
