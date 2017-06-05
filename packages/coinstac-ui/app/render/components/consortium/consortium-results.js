@@ -90,7 +90,7 @@ ConsortiumResults.displayName = 'ConsortiumResults';
 ConsortiumResults.propTypes = {
   expandedResults: PropTypes.array.isRequired,
   computations: PropTypes.array,
-  initialResultId: PropTypes.string.isRequired,
+  initialResultId: PropTypes.string,
   remoteResults: PropTypes.array,
   setExpandedResults: PropTypes.func,
 };
