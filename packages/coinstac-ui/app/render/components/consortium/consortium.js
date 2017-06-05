@@ -173,7 +173,7 @@ Consortium.displayName = 'Consortium';
 
 Consortium.propTypes = {
   addUser: PropTypes.func.isRequired,
-  initialResultId: PropTypes.string.isRequired,
+  initialResultId: PropTypes.string,
   computations: PropTypes.arrayOf(PropTypes.object).isRequired,
   consortium: PropTypes.shape({
     _id: PropTypes.string.isRequired,
