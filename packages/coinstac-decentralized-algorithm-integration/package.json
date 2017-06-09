@@ -28,14 +28,14 @@
     "coinstac-simulator": "^2.5.0",
     "cross-env": "^2.0.1",
     "gh-pages": "^0.9.0",
-    "jsdoc": "^3.4.0",
-    "lodash": "^4.13.1",
-    "minami": "^1.1.1",
-    "nyc": "^6.4.2",
+    "jsdoc": "^3.4.3",
+    "lodash": "^4.17.4",
+    "minami": "^1.2.3",
+    "nyc": "^6.6.1",
     "perish": "0.0.3"
   },
   "dependencies": {
     "coinstac-example-computation-bisect-converge": "^2.0.2",
-    "decentralized-laplacian-ridge-regression": "*"
+    "decentralized-laplacian-ridge-regression": "0.0.1"
   }
 }

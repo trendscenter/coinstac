@@ -15,7 +15,6 @@ import {
   leaveConsortium,
   saveConsortium,
 } from '../../state/ducks/consortia';
-
 import {
   fetch as fetchRemoteResults,
   setRemoteResults,
@@ -116,6 +115,7 @@ class ConsortiumController extends Component {
     const {
       computations,
       consortium,
+      initialResultId,
       isLoading,
       isMember,
       isNew,
@@ -129,6 +129,7 @@ class ConsortiumController extends Component {
         addUser={this.addUser}
         computations={computations}
         consortium={consortium}
+        initialResultId={initialResultId}
         isLoading={isLoading}
         isMember={isMember}
         isNew={isNew}
@@ -153,6 +154,7 @@ ConsortiumController.propTypes = {
   computations: PropTypes.arrayOf(PropTypes.object).isRequired,
   consortium: PropTypes.object,
   dispatch: PropTypes.func.isRequired,
+  initialResultId: PropTypes.string,
   isLoading: PropTypes.bool.isRequired,
   isMember: PropTypes.bool.isRequired,
   isNew: PropTypes.bool.isRequired,
@@ -161,7 +163,7 @@ ConsortiumController.propTypes = {
   username: PropTypes.string.isRequired,
 };
 
-function mapStateToProps(state, { params: { consortiumId } }) {
+function mapStateToProps(state, { params: { consortiumId, resultId } }) {
   const {
     auth: {
       user: { username },
@@ -181,11 +183,11 @@ function mapStateToProps(state, { params: { consortiumId } }) {
     computations: (computations || [])
       .sort((a, b) => `${a.name}@${a.version}` > `${b.name}@${b.version}`),
     consortium,
+    initialResultId: resultId,
     isLoading,
     isMember: isNew ? true : consortium.users.indexOf(username) > -1,
     isNew,
     isOwner: isNew ? true : consortium.owners.indexOf(username) > -1,
-
     remoteResults: remoteResults || [],
     username,
   };
