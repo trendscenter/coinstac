@@ -195,8 +195,6 @@ class DBRegistry {
      */
     if (
       this.localStores &&
-      this.localStores.indexOf('projects') > -1 &&
-      this.localStores.indexOf('local-consortium') > -1 &&
       conf.pouchConfig.getAdapter instanceof Function
     ) {
       conf.pouchConfig.adapter = conf.pouchConfig.getAdapter(connStr);
