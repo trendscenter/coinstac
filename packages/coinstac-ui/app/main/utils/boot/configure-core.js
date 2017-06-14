@@ -27,7 +27,8 @@ module.exports = function configureCore() {
       db: {
         pouchConfig: {
           getAdapter(name) {
-            return name.includes('projects') ? 'leveldb' : 'memory';
+            return name.includes('projects') ||
+             name.includes('local-consortium') ? 'leveldb' : 'memory';
           },
         },
       },
