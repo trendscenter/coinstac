@@ -1,7 +1,9 @@
 'use strict';
 
 // Conditionally load development services if run from CLI
-if (process.defaultApp && process.env.NODE_ENV !== 'production') {
+if (process.defaultApp
+    && process.env.NODE_ENV !== 'production'
+    && process.env.NODE_ENV !== 'test') {
   // active long stack trace
   require('trace'); // eslint-disable-line global-require
   const chain = require('stack-chain'); // eslint-disable-line global-require
