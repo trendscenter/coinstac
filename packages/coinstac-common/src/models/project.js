@@ -15,7 +15,7 @@ const joi = require('joi');
 class Project extends PouchDocument {}
 
 Project.schema = Object.assign({
-  name: joi.string().min(1).regex(/[a-zA-Z]+/, 'at least one character')
+  name: joi.string().min(1).regex(/[a-zA-Z0-9]+/, 'at least one character')
     .required(),
 
   /**
