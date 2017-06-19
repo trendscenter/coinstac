@@ -1,3 +1,4 @@
+/* eslint func-names: 0, prefer-arrow-callback: 0 */
 const Application = require('spectron').Application;
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
@@ -14,7 +15,6 @@ const CONS_NAME = 'e2e-consortium';
 const CONS_DESC = 'e2e-description';
 const PROJECT_NAME = 'e2e-files';
 
-/*ignore jslint start*/
 global.before(function () {
   chai.should();
   chai.use(chaiAsPromised);
@@ -67,7 +67,7 @@ describe('Testing::e2e', function () {
     return app.client
             .setValue("[name='label']", CONS_NAME)
             .setValue("[name='description']", CONS_DESC)
-            // .selectByVisibleText();
+            .click('p=Iterative decentralized ridge regression.')
             // .selectByValue("[name='activeComputationInputs[0]']", 'Right-Caudate');
             .click('button=New')
             .setValue('#computation-field-map-name-0', 'isControl')
@@ -135,5 +135,4 @@ describe('Testing::e2e', function () {
             .click('button=Log Out')
             .waitForExist('button=Log In', EXIST_TIMEOUT);
   });
-  /*ignore jslint end*/ 
 });
