@@ -6,6 +6,7 @@ const rm = require('rimraf');
 const os = require('os');
 const buildNative = require('./utils/build-native.js');
 const bb = require('bluebird');
+const path = require('path');
 
 const dirName = `coinstac-${os.platform()}-${os.arch()}`;
 const outputDir = `${__dirname}/../${dirName}`;
@@ -15,11 +16,18 @@ const zipOutput = os.platform() === 'win32' ? `${outputDir}.zip` : `${outputDir}
 const options = {
   asar: true,
   dir: `${__dirname}/../`,
-  icon: `${__dirname}/../app/render/images/logo`,
   name: 'coinstac',
   overwrite: true,
   prune: true,
 };
+
+if (os.platform() === 'darwin') {
+  options.icon = path.resolve(__dirname, '../img/icons/coinstac.icns');
+} else if (os.platform() === 'win32') {
+  options.icon = path.resolve(__dirname, '../img/icons/coinstac.ico');
+} else {
+  options.icon = path.resolve(__dirname, '../img/icons/png/256x256.png');
+}
 
 // TODO: build mult arch when possible
 bb.promisify(rm)(zipOutput)
