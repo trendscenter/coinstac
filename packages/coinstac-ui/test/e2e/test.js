@@ -63,12 +63,17 @@ describe('Testing::e2e', function () {
   });
 
   it('creates a consortium', function () {
-    // TODO: Don't rely on default values in computation radio and computation input select
     return app.client
             .setValue("[name='label']", CONS_NAME)
             .setValue("[name='description']", CONS_DESC)
-            .click('p=Iterative decentralized ridge regression.')
-            // .selectByValue("[name='activeComputationInputs[0]']", 'Right-Caudate');
+            .click('p=Decentralized ridge regression.')
+            .getValue("[name='activeComputationInputs[0]']")
+              .then(function (res) {
+                if (res !== 'Right-Cerebellum-Cortex') {
+                  return app.client
+                  .selectByValue("[name='activeComputationInputs[0]']", 'Right-Cerebellum-Cortex');
+                }
+              })
             .click('button=New')
             .setValue('#computation-field-map-name-0', 'isControl')
             .selectByValue('#computation-field-map-type-0', 'boolean')
