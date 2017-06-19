@@ -8,11 +8,12 @@ const buildNative = require('./utils/build-native.js');
 const bb = require('bluebird');
 const path = require('path');
 
-const dirName = `coinstac-${os.platform()}-${os.arch()}`;
+const platform = os.platform();
+const dirName = `coinstac-${platform}-${os.arch()}`;
 const outputDir = `${__dirname}/../${dirName}`;
-const zip = os.platform() === 'win32' ?
+const zip = platform === 'win32' ?
   archiver.create('zip') : archiver.create('tar', { gzip: true });
-const zipOutput = os.platform() === 'win32' ? `${outputDir}.zip` : `${outputDir}.tar.gz`;
+const zipOutput = platform === 'win32' ? `${outputDir}.zip` : `${outputDir}.tar.gz`;
 const options = {
   asar: true,
   dir: `${__dirname}/../`,
@@ -21,9 +22,9 @@ const options = {
   prune: true,
 };
 
-if (os.platform() === 'darwin') {
+if (platform === 'darwin') {
   options.icon = path.resolve(__dirname, '../img/icons/coinstac.icns');
-} else if (os.platform() === 'win32') {
+} else if (platform === 'win32') {
   options.icon = path.resolve(__dirname, '../img/icons/coinstac.ico');
 } else {
   options.icon = path.resolve(__dirname, '../img/icons/png/256x256.png');
@@ -34,7 +35,7 @@ bb.promisify(rm)(zipOutput)
 .then(() => buildNative())
 .then(() => {
   options.arch = os.arch();
-  options.platform = os.platform();
+  options.platform = platform;
   return packager(options);
 })
 .then((appPath) => {
