@@ -1,4 +1,3 @@
-/* eslint func-names: 0, prefer-arrow-callback: 0 */
 const Application = require('spectron').Application;
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
@@ -24,26 +23,26 @@ const app = new Application({
   args: [appPath, '-r', mocksPath],
 });
 
-describe('Testing::e2e', function () {
-  before(function () {
+describe('Testing::e2e', () => {
+  before(() => {
     return app.start();
   });
 
-  after(function (done) {
-    app.stop().then(function () { done(); });
+  after((done) => {
+    app.stop().then(() => { done(); });
   });
 
-  it('opens a single window', function () {
+  it('opens a single window', () => {
     return app.client.waitUntilWindowLoaded()
       .getWindowCount().should.eventually.equal(1);
   });
 
-  it('displays the correct title', function () {
+  it('displays the correct title', () => {
     return app.client.waitUntilWindowLoaded()
       .getTitle().should.eventually.equal('COINSTAC');
   });
 
-  it('authenticates demo user', function () {
+  it('authenticates demo user', () => {
     return app.client
       .setValue('#login-username', USER_ID)
       .setValue('#login-password', PASS)
@@ -52,7 +51,7 @@ describe('Testing::e2e', function () {
       .getText('.user-account-name').should.eventually.equal(USER_ID);
   });
 
-  it('accesses the Add Consortium page', function () {
+  it('accesses the Add Consortium page', () => {
     return app.client
       .click('a=Consortia')
       .waitForExist('a=Add Consortium', EXIST_TIMEOUT)
@@ -60,13 +59,13 @@ describe('Testing::e2e', function () {
       .isVisible('h1=Add New Consortium').should.eventually.equal(true);
   });
 
-  it('creates a consortium', function () {
+  it('creates a consortium', () => {
     return app.client
       .setValue("[name='label']", CONS_NAME)
       .setValue("[name='description']", CONS_DESC)
       .click('p=Decentralized ridge regression.')
       .getValue("[name='activeComputationInputs[0]']")
-      .then(function (res) {
+      .then((res) => {
         if (res !== 'Right-Cerebellum-Cortex') {
           return app.client
             .selectByValue("[name='activeComputationInputs[0]']", 'Right-Cerebellum-Cortex');
@@ -83,7 +82,7 @@ describe('Testing::e2e', function () {
       .getText('div.panel-heading h4.panel-title a').should.eventually.equal(CONS_NAME);
   });
 
-  it('accesses the New Files Collection page', function () {
+  it('accesses the New Files Collection page', () => {
     return app.client
       .click('a=My Files')
       .waitForExist('a=Add Files Collection', EXIST_TIMEOUT)
@@ -91,7 +90,7 @@ describe('Testing::e2e', function () {
       .isVisible('h1=New Files Collection').should.eventually.equal(true);
   });
 
-  it('adds files to a consortium', function () {
+  it('adds files to a consortium', () => {
     return app.client
       .setValue('#form-project-name', PROJECT_NAME)
       .selectByVisibleText('#form-project-consortium-id', CONS_NAME)
@@ -104,20 +103,20 @@ describe('Testing::e2e', function () {
       .getText('div.panel-heading h4.panel-title a').should.eventually.equal(PROJECT_NAME);
   });
 
-  it('runs a computation', function () {
+  it('runs a computation', () => {
     return app.client
       .click('button=Run Computation')
       .waitForExist('span=Complete', EXIST_TIMEOUT);
   });
 
-  it('displays results', function () {
+  it('displays results', () => {
     return app.client
       .click('a=View Results')
       .waitForExist('#results', EXIST_TIMEOUT)
       .waitForExist('span=Complete!', EXIST_TIMEOUT);
   });
 
-  it('deletes files', function () {
+  it('deletes files', () => {
     return app.client
       .click('a=My Files')
       .waitForExist('a=Add Files Collection', EXIST_TIMEOUT)
@@ -125,7 +124,7 @@ describe('Testing::e2e', function () {
       .isVisible('div.panel-heading').should.eventually.equal(false);
   });
 
-  it('deletes a consortium', function () {
+  it('deletes a consortium', () => {
     return app.client
       .click('a=Consortia')
       .waitForExist('a=Add Consortium', EXIST_TIMEOUT)
@@ -133,7 +132,7 @@ describe('Testing::e2e', function () {
       .isVisible('div.panel-heading').should.eventually.equal(false);
   });
 
-  it('logs out', function () {
+  it('logs out', () => {
     return app.client
       .click('button=Log Out')
       .waitForExist('button=Log In', EXIST_TIMEOUT);
