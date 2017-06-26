@@ -24,12 +24,12 @@ const app = new Application({
 });
 
 describe('Testing::e2e', () => {
-  before(() => {
-    return app.start();
-  });
+  before(() => app.start());
 
-  after((done) => {
-    app.stop().then(() => { done(); });
+  after(() => {
+    if (app && app.isRunning()) {
+      return app.stop();
+    }
   });
 
   it('opens a single window', () => {
