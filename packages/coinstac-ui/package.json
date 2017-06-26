@@ -95,8 +95,8 @@
     "clean:db": "node scripts/clean-db.js",
     "docs": "mkdir -p docs && jsdoc -t ./node_modules/minami -d docs -R README.md -r src/",
     "test": "nyc --reporter=lcov --check-coverage --lines=1 --functions=1 --branches=1 babel-node test/",
-    "watch": "webpack-dashboard -p 3001 -- node webpack-dev-server.js",
-    "e2e": "mocha --timeout=120000 test/e2e/test.js"
+    "test:e2e": "npm run build && mocha --timeout=120000 test/e2e/test.js",
+    "watch": "webpack-dashboard -p 3001 -- node webpack-dev-server.js"
   },
   "repository": {
     "type": "git",

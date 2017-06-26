@@ -14,6 +14,8 @@ const electron = require('electron');
 process.env.NODE_ENV = process.env.NODE_ENV || 'production';
 
 // Mock file dialogue in testing environment
+// Watch the following issue for progress on dialog support
+// https://github.com/electron/spectron/issues/94
 if (process.env.NODE_ENV === 'test') {
   mock(electron.dialog);
 }
