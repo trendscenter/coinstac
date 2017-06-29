@@ -1,33 +1,51 @@
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { Alert } from 'react-bootstrap';
+import { setExpandedResults } from '../../state/ducks/consortia-page';
 
 import ConsortiumResult from './consortium-result';
 
-export default class ConsortiumResults extends Component {
+class ConsortiumResults extends Component {
   constructor(props) {
     super(props);
 
-    // TODO: `state` holds collapsed/expanded bool for remote results. Move to redux.
-    this.state = {
-      expanded: [true],
-    };
+    this.goToResults = this.goToResults.bind(this);
   }
 
-  toggleCollapse(index) {
-    if (index in this.state.expanded) {
-      this.state.expanded[index] = !this.state.expanded[index];
-    } else {
-      this.state.expanded[index] = true;
-    }
+  componentWillMount() {
+    const { initialResultId, setExpandedResults } = this.props;
 
-    this.setState({
-      expanded: this.state.expanded,
-    });
+    setExpandedResults(initialResultId);
+  }
+
+  componentWillUnmount() {
+    const { setExpandedResults } = this.props;
+
+    setExpandedResults(null);
+  }
+
+  goToResults() {
+    const { expandedResults } = this.props;
+
+    /* TODO: Timeout used to delay querying ids until results list items are rendered.
+     *       Find another way to delay action until data loads.
+     */
+    setTimeout(() => {
+      if (document.querySelector(`#C${expandedResults[0]}`)) {
+        document.querySelector(`#C${expandedResults[0]}`).scrollIntoView();
+      }
+    }, 500);
+  }
+
+  toggleCollapse(resultId) {
+    const { setExpandedResults } = this.props;
+
+    setExpandedResults(resultId);
   }
 
   render() {
-    const { computations, remoteResults } = this.props;
+    const { expandedResults, computations, remoteResults } = this.props;
     const content = !remoteResults || !remoteResults.length ?
     (
       <Alert bsStyle="info">No results.</Alert>
@@ -43,11 +61,11 @@ export default class ConsortiumResults extends Component {
             });
 
             return (
-              <li key={index}>
+              <li key={index} id={`C${result._id}`}>
                 <ConsortiumResult
                   computation={computation}
-                  expanded={!!this.state.expanded[index]}
-                  toggleCollapse={() => this.toggleCollapse(index)}
+                  expanded={expandedResults.includes(result._id)}
+                  toggleCollapse={() => this.toggleCollapse(result._id)}
                   {...result}
                 />
               </li>
@@ -58,9 +76,10 @@ export default class ConsortiumResults extends Component {
     );
 
     return (
-      <section>
+      <section id="results">
         <h2 className="h4">Results:</h2>
         {content}
+        {remoteResults.length && expandedResults.length === 1 && this.goToResults()}
       </section>
     );
   }
@@ -69,8 +88,11 @@ export default class ConsortiumResults extends Component {
 ConsortiumResults.displayName = 'ConsortiumResults';
 
 ConsortiumResults.propTypes = {
+  expandedResults: PropTypes.array.isRequired,
   computations: PropTypes.array,
+  initialResultId: PropTypes.string,
   remoteResults: PropTypes.array,
+  setExpandedResults: PropTypes.func,
 };
 
 /**
@@ -92,3 +114,9 @@ ConsortiumResults.compareRemoteResults = (
 
   return 0;
 };
+
+const mapStateToProps = ({ consortiaPage: { expandedResults } }) => {
+  return { expandedResults };
+};
+
+export default connect(mapStateToProps, { setExpandedResults })(ConsortiumResults);

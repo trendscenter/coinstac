@@ -7,8 +7,18 @@
 
 'use strict';
 
+const mock = require('../../test/e2e/mocks');
+const electron = require('electron');
+
 // if no env set prd
 process.env.NODE_ENV = process.env.NODE_ENV || 'production';
+
+// Mock file dialogue in testing environment
+// Watch the following issue for progress on dialog support
+// https://github.com/electron/spectron/issues/94
+if (process.env.NODE_ENV === 'test') {
+  mock(electron.dialog);
+}
 
 // Set up error handling
 require('./utils/boot/configure-uncaught-exceptions.js');

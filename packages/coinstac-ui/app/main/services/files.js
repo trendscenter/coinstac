@@ -24,17 +24,14 @@ module.exports = {
    */
   getMetaFile: () => {
     return getMainWindow().then(mainWindow => new Promise(resolve => {
-      dialog.showOpenDialog(
-        mainWindow,
-        {
-          filters: [{
-            name: 'CSV',
-            extensions: ['csv', 'txt'],
-          }],
-          properties: ['openFile'],
-        },
-        file => resolve(file ? file[0] : undefined)
-      );
+      const files = dialog.showOpenDialog(mainWindow, {
+        filters: [{
+          name: 'CSV',
+          extensions: ['csv', 'txt'],
+        }],
+        properties: ['openFile'],
+      });
+      resolve(files ? files[0] : undefined);
     }));
   },
 
