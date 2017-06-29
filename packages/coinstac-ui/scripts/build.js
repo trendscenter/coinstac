@@ -6,27 +6,36 @@ const rm = require('rimraf');
 const os = require('os');
 const buildNative = require('./utils/build-native.js');
 const bb = require('bluebird');
+const path = require('path');
 
-const dirName = `coinstac-${os.platform()}-${os.arch()}`;
+const platform = os.platform();
+const dirName = `coinstac-${platform}-${os.arch()}`;
 const outputDir = `${__dirname}/../${dirName}`;
-const zip = os.platform() === 'win32' ?
+const zip = platform === 'win32' ?
   archiver.create('zip') : archiver.create('tar', { gzip: true });
-const zipOutput = os.platform() === 'win32' ? `${outputDir}.zip` : `${outputDir}.tar.gz`;
+const zipOutput = platform === 'win32' ? `${outputDir}.zip` : `${outputDir}.tar.gz`;
 const options = {
   asar: true,
   dir: `${__dirname}/../`,
-  icon: `${__dirname}/../app/render/images/logo`,
   name: 'coinstac',
   overwrite: true,
   prune: true,
 };
+
+if (platform === 'darwin') {
+  options.icon = path.resolve(__dirname, '../img/icons/coinstac.icns');
+} else if (platform === 'win32') {
+  options.icon = path.resolve(__dirname, '../img/icons/coinstac.ico');
+} else {
+  options.icon = path.resolve(__dirname, '../img/icons/png/256x256.png');
+}
 
 // TODO: build mult arch when possible
 bb.promisify(rm)(zipOutput)
 .then(() => buildNative())
 .then(() => {
   options.arch = os.arch();
-  options.platform = os.platform();
+  options.platform = platform;
   return packager(options);
 })
 .then((appPath) => {

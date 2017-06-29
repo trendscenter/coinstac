@@ -44,48 +44,49 @@ export const joinSlaveComputation = (consortium) => {
       app.core.computations.shouldJoinRun(consortiumId, currentRunHist === true),
     ]);
   })
-    .then(([project, runId, shouldJoinRun]) => {
-      const proceedWithRun = (doRun) => {
-        let runProm;
-        if (doRun) {
-          const onRunError = getRunErrorNotifier(consortium);
+  .then(([project, runId, shouldJoinRun]) => {
+    const proceedWithRun = (doRun) => {
+      let runProm;
+      if (doRun) {
+        const onRunError = getRunErrorNotifier(consortium);
 
-          computationStartNotification(consortium);
-          app.core.pool.events.on('error', onRunError);
-          app.core.pool.events.once('computation:complete', () => {
-            computationCompleteNotification(consortium);
-            app.core.pool.events.removeListener('error', onRunError);
+        computationStartNotification(consortium);
+        app.core.pool.events.on('error', onRunError);
+        app.core.pool.events.once('computation:complete', () => {
+          computationCompleteNotification(consortium);
+          app.core.pool.events.removeListener('error', onRunError);
+        });
+
+        if (alreadyRan[runId]) {
+          runProm = app.core.computations.joinRun({
+            consortiumId,
+            projectId: project._id,
+            runId,
           });
-
-          if (alreadyRan[runId]) {
-            runProm = app.core.computations.joinRun({
-              consortiumId,
-              projectId: project._id,
-              runId,
-            });
-          }
+        } else {
           runProm = app.core.computations.joinSlavedRun({
             consortiumId,
             projectId: project._id,
             runId,
           });
-
-          alreadyRan[runId] = true;
-          return runProm;
         }
-      };
 
-      if (project && runId && shouldJoinRun) {
-        if (currentRunHist !== alreadyRan[consortium._id]) {
-          // current hist has changed, prob not the first run now, check if we can
-          // run again
-          return app.core.computations
-          .shouldJoinRun(consortiumId, alreadyRan[consortium._id] === true)
-          .then(proceedWithRun);
-        }
-        return proceedWithRun(shouldJoinRun);
+        alreadyRan[runId] = true;
+        return runProm;
       }
-    });
+    };
+
+    if (project && runId && shouldJoinRun) {
+      if (currentRunHist !== alreadyRan[consortium._id]) {
+        // current hist has changed, prob not the first run now, check if we can
+        // run again
+        return app.core.computations
+        .shouldJoinRun(consortiumId, alreadyRan[consortium._id] === true)
+        .then(proceedWithRun);
+      }
+      return proceedWithRun(shouldJoinRun);
+    }
+  });
 };
 
 export const addConsortiumComputationListener = (consortium) => {
@@ -115,6 +116,7 @@ export const initPrivateBackgroundServices = applyAsyncLoading(() => {
       });
       dispatch(updateConsortia(toUpdate));
     });
+
     const compsDB = app.core.dbRegistry.get('computations');
     compsDB.syncEmitter.on('change', (change) => {
       const toUpdate = change.docs.map((changed) => {

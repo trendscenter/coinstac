@@ -24,6 +24,7 @@ export default class Consortium extends Component {
       isMember,
       isNew,
       remoteResults,
+      initialResultId,
     } = this.props;
 
     if (!isNew && isMember) {
@@ -31,6 +32,7 @@ export default class Consortium extends Component {
         <ConsortiumResults
           computations={computations}
           remoteResults={remoteResults}
+          initialResultId={initialResultId}
         />
       );
     }
@@ -171,6 +173,7 @@ Consortium.displayName = 'Consortium';
 
 Consortium.propTypes = {
   addUser: PropTypes.func.isRequired,
+  initialResultId: PropTypes.string,
   computations: PropTypes.arrayOf(PropTypes.object).isRequired,
   consortium: PropTypes.shape({
     _id: PropTypes.string.isRequired,

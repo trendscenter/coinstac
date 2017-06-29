@@ -37,7 +37,7 @@ $icon-font-path: "~bootstrap-sass/assets/fonts/bootstrap/";
     margin: 0 0 2rem;
 
     &:before {
-        background: url(../images/logo.png) no-repeat;
+        background: url(../../../img/icons/png/256x256.png) no-repeat;
         background-size: contain;
         content: '';
         display: inline-block;
@@ -142,7 +142,7 @@ $icon-font-path: "~bootstrap-sass/assets/fonts/bootstrap/";
     width: 1em;
     height: 1em;
     margin: 10px 10px;
-    position: absolute;
+    position: fixed;
     top: 0em;
     right: 0em;
     z-index: 10;
