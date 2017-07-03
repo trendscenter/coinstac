@@ -1,4 +1,5 @@
 'use strict';
+
 // find ~/.coinstac/* ! -name computations -maxdepth 0 -exec rm -rf '{}' \\;
 
 const bluebird = require('bluebird');
@@ -16,17 +17,17 @@ const statAsync = bluebird.promisify(fs.stat);
 console.log('Removing local dbs…');
 
 bluebird.promisify(fs.readdir)(dir)
-  .then(files => Promise.all(files.map(file => {
+  .then(files => Promise.all(files.map((file) => {
     const fullPath = path.join(dir, file);
 
-    return statAsync(fullPath).then(stats => {
+    return statAsync(fullPath).then((stats) => {
       return stats.isDirectory() && file !== 'computations' ?
         fullPath :
         undefined;
     });
   })))
   .then(compact)
-  .then(fullPaths => Promise.all(fullPaths.map(fullPath => {
+  .then(fullPaths => Promise.all(fullPaths.map((fullPath) => {
     return rimrafAsync(fullPath).then(() => {
       console.log(`Removed ${fullPath}`);
     });

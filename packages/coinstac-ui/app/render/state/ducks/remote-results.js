@@ -1,10 +1,10 @@
-import { applyAsyncLoading } from './loading';
 import app from 'ampersand-app';
 import { compact, flatten } from 'lodash';
+import { applyAsyncLoading } from './loading';
 
 const SET_REMOTE_RESULTS = 'SET_REMOTE_RESULTS';
 
-export const setRemoteResults = (results) => ({ type: SET_REMOTE_RESULTS, results });
+export const setRemoteResults = results => ({ type: SET_REMOTE_RESULTS, results });
 
 export const fetch = applyAsyncLoading(id => (dispatch) => {
   const dbRegistry = app.core.dbRegistry;

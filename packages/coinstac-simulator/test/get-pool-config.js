@@ -6,7 +6,7 @@ const getPoolConfig = require('../src/utils/get-pool-config');
 const path = require('path');
 const tape = require('tape');
 
-tape('gets valid pool configuration', t => {
+tape('gets valid pool configuration', (t) => {
   const computationPath = path.join(__dirname, 'mocks', 'exec-computation.js');
 
   t.plan(2);
@@ -15,7 +15,7 @@ tape('gets valid pool configuration', t => {
     computationPath,
     isLocal: false,
   })
-    .then(config => {
+    .then((config) => {
       t.ok(
         (
           'computationRegistry' in config &&

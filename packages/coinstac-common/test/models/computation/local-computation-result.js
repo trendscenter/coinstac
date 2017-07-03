@@ -2,6 +2,7 @@
 
 const assign = require('lodash/assign');
 const computations = require('../../../').models.computation;
+
 const LocalComputationResult = computations.LocalComputationResult;
 const test = require('tape');
 

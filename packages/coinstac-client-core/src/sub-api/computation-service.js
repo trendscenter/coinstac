@@ -4,18 +4,21 @@
  * @module computation-service
  */
 const common = require('coinstac-common');
+
 const Computation = common.models.computation.Computation;
 const crypto = require('crypto');
 const deepEqual = require('deep-equal');
+
 const getSyncedDatabase = common.utils.getSyncedDatabase;
 const ModelService = require('../model-service');
+
 const RemoteComputationResult = common.models.computation.RemoteComputationResult;
 
 /**
  * @extends ModelService
  */
 class ComputationService extends ModelService {
-  modelServiceHooks() {
+  static modelServiceHooks() {
     return {
       dbName: 'computations',
       ModelType: Computation,

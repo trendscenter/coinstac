@@ -1,6 +1,6 @@
+import { clone, map } from 'lodash';
 import app from 'ampersand-app';
 import { applyAsyncLoading } from './loading';
-import { clone, map } from 'lodash';
 import {
   addConsortiumComputationListener,
   listenToConsortia,
@@ -42,7 +42,7 @@ function doUpdateConsortia(consortia) {
  * @param {string} consortiumId
  * @returns {Function}
  */
-export const deleteConsortium = applyAsyncLoading(consortiumId => {
+export const deleteConsortium = applyAsyncLoading((consortiumId) => {
   return () => {
     const { core: { consortia } } = app;
 
@@ -66,7 +66,7 @@ export const joinConsortium = applyAsyncLoading((consortiumId, username) => {
     const { core: { consortia } } = app;
 
     return consortia.get(consortiumId)
-      .then(consortium => {
+      .then((consortium) => {
         if (consortium.users.indexOf(username) > -1) {
           throw new Error(
             `User ${username} already in consortium ${consortiumId}`
@@ -106,7 +106,7 @@ export const setActiveComputation = applyAsyncLoading(
       }
 
       return consortia.get(consortiumId)
-        .then(consortium => {
+        .then((consortium) => {
           const myConsortium = clone(consortium);
           myConsortium.activeComputationId = computationId;
 
@@ -191,7 +191,7 @@ export const setComputationInputs = applyAsyncLoading(
       const { core: { computations, consortia } } = app;
 
       return consortia.get(consortiumId)
-        .then(consortium => {
+        .then((consortium) => {
           if (!consortium.activeComputationId) {
             throw new Error(
               `Can't set computation inputs without active computation on
@@ -259,7 +259,7 @@ export const leaveConsortium = applyAsyncLoading((consortiumId, username) => {
     const { core: { consortia } } = app;
 
     return consortia.get(consortiumId)
-      .then(consortium => {
+      .then((consortium) => {
         const index = consortium.users.indexOf(username);
 
         if (index < 0) {
@@ -287,12 +287,12 @@ export const leaveConsortium = applyAsyncLoading((consortiumId, username) => {
  * @returns {Function}
  */
 export function updateConsortia(consortia) {
-  return dispatch => {
+  return (dispatch) => {
     const localToUpdate = Array.isArray(consortia) ? consortia : [consortia];
     const toDelete = [];
     const toUpdate = [];
 
-    localToUpdate.forEach(change => {
+    localToUpdate.forEach((change) => {
       if ('_deleted' in change && change._deleted) {
         toDelete.push(change);
       } else {
@@ -316,8 +316,8 @@ export function updateConsortia(consortia) {
  * @param {Object} consortium
  * @returns {Function}
  */
-export const saveConsortium = applyAsyncLoading(consortium => {
-  return dispatch => {
+export const saveConsortium = applyAsyncLoading((consortium) => {
+  return (dispatch) => {
     return app.core.consortia.save(consortium)
     .then((newTium) => {
       dispatch(updateConsortia(newTium));
@@ -341,7 +341,7 @@ export default function reducer(state = [], action) {
       const changed = [];
       const unchanged = [...state];
 
-      action.consortia.forEach(consortium => {
+      action.consortia.forEach((consortium) => {
         const index = unchanged.findIndex(c => c._id === consortium._id);
 
         if (index > -1) {
