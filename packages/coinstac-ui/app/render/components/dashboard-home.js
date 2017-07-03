@@ -26,6 +26,14 @@ class DashboardHome extends Component {
         notify('error', error.message);
       }
     }));
+
+    this.interval = setInterval(() => dispatch(fetchResults()), 5000);
+  }
+
+  componentWillUnmount() {
+    if (this.interval) {
+      clearInterval(this.interval);
+    }
   }
 
   maybeRenderStatusItem({ computation, consortium, remoteResult }) {
