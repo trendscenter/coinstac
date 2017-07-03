@@ -114,3 +114,9 @@ FormProjectContext.propTypes = {
   consortium: PropTypes.object,
   consortiumLabel: PropTypes.string,
 };
+
+FormProjectContext.defaultProps = {
+  analysisLabel: null,
+  consortium: null,
+  consortiumLabel: null,
+};

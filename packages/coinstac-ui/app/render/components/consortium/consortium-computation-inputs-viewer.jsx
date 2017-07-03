@@ -72,3 +72,7 @@ ConsortiumComputationInputsViewer.propTypes = {
     ]),
   ])).isRequired,
 };
+
+ConsortiumComputationInputsViewer.defaultProps = {
+  computation: null,
+};

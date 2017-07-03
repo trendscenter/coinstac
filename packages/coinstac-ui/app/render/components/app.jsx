@@ -19,9 +19,9 @@ class App extends Component { // eslint-disable-line react/prefer-stateless-func
         {children}
 
         <ul id="loading_list">
-          {Object.keys(wip).map((loadingKey, ndx) => {
-            return (<li key={ndx}>{loadingKey}</li>);
-          })}
+          {Object.keys(wip).map(loadingKey =>
+            (<li key={loadingKey}>{loadingKey}</li>)
+          )}
         </ul>
 
         <Notify />
@@ -35,6 +35,11 @@ App.displayName = 'App';
 App.propTypes = {
   children: PropTypes.node,
   loading: PropTypes.object,
+};
+
+App.defaultProps = {
+  children: null,
+  loading: null,
 };
 
 function select(state) {

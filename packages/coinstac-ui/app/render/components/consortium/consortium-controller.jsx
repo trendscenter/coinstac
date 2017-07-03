@@ -163,6 +163,11 @@ ConsortiumController.propTypes = {
   username: PropTypes.string.isRequired,
 };
 
+ConsortiumController.defaultProps = {
+  consortium: null,
+  initialResultId: null,
+};
+
 function mapStateToProps(state, { params: { consortiumId, resultId } }) {
   const {
     auth: {

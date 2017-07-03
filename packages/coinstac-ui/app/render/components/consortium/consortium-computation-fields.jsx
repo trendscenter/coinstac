@@ -54,7 +54,7 @@ export default function ConsortiumComputationFields({
           );
         }
 
-        return <li key={index}>{component}</li>;
+        return <li key={name}>{component}</li>;
       })}
     </ol>
   );

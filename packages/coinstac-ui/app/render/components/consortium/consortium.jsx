@@ -193,3 +193,8 @@ Consortium.propTypes = {
   removeUser: PropTypes.func.isRequired,
   username: PropTypes.string.isRequired,
 };
+
+Consortium.defaultProps = {
+  initialResultId: null,
+  consortium: null,
+};

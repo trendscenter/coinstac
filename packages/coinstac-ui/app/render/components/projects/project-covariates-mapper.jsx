@@ -130,4 +130,8 @@ ProjectCovariatesMapper.propTypes = {
   onMapCovariate: PropTypes.func.isRequired,
 };
 
+ProjectCovariatesMapper.defaultProps = {
+  metaCovariateErrors: null,
+};
+
 export default ProjectCovariatesMapper;

@@ -14,3 +14,7 @@ export default class DashboardProjects extends React.Component { // eslint-disab
 DashboardProjects.propTypes = {
   children: PropTypes.element,
 };
+
+DashboardProjects.defaultProps = {
+  children: null,
+};

@@ -383,3 +383,8 @@ FormProject.propTypes = {
   // TODO: enable with fileRender
   // showFilesComponent: PropTypes.bool.isRequired,
 };
+
+FormProject.defaultProps = {
+  errors: null,
+  inputs: null,
+};
