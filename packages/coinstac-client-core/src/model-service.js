@@ -26,7 +26,8 @@ class ModelService {
     if (!opts.dbRegistry) {
       throw new ReferenceError('ModelService dbRegistry missing');
     }
-    this.dbRegistry = this.dbs = opts.dbRegistry;
+    this.dbRegistry = opts.dbRegistry;
+    this.dbs = opts.dbRegistry;
 
     /* istanbul ignore if */
     if (!opts.client) {
@@ -35,11 +36,13 @@ class ModelService {
     this.client = opts.client;
 
     /* istanbul ignore if */
-    if (!this.modelServiceHooks || !(this.modelServiceHooks instanceof Function)) {
+    if (!this.constructor.modelServiceHooks
+        || !(this.constructor.modelServiceHooks instanceof Function)
+      ) {
       throw new Error('expected modelServiceHooks method on child');
     }
 
-    const hooks = this.modelServiceHooks();
+    const hooks = this.constructor.modelServiceHooks();
 
     /* istanbul ignore if */
     if (!hooks.ModelType || !(hooks.ModelType instanceof Function)) {
@@ -71,7 +74,7 @@ class ModelService {
       return Promise.resolve(this.dbInstance);
     }
     return getSyncedDatabase(this.dbs, this.dbName)
-      .then(pouchy => {
+      .then((pouchy) => {
         this.dbInstance = pouchy;
 
         return this.dbInstance;
@@ -81,7 +84,7 @@ class ModelService {
   /**
    * @abstract
    */
-  modelServiceHooks() {
+  static modelServiceHooks() {
     /* istanbul ignore next */
     throw new Error('child classes must extend modelServiceHooks');
   }
@@ -122,7 +125,7 @@ class ModelService {
   getBy(field, val) {
     return this.getDbInstance()
       .then(db => db.all())
-      .then((docs) => find(docs, matchesProperty(field, val)));
+      .then(docs => find(docs, matchesProperty(field, val)));
   }
 
   /**
@@ -155,7 +158,7 @@ class ModelService {
    */
   validate(properties, onlyFields) {
     const localOnlyFields = typeof onlyFields === 'boolean' ? onlyFields : true;
-    const Model = this.modelServiceHooks().ModelType;
+    const Model = this.constructor.modelServiceHooks().ModelType;
 
     if (typeof properties === 'undefined' || !(properties instanceof Object)) {
       return Promise.reject(new Error('Expected properties to be an object'));

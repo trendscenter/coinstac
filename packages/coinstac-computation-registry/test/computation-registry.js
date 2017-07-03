@@ -26,7 +26,7 @@ function factory(options) {
  */
 function getMockComputations() {
   return registry.reduce((all, registryItem) => {
-    return all.concat(registryItem.tags.map(tag => {
+    return all.concat(registryItem.tags.map((tag) => {
       return new DecentralizedComputation({
         cwd: path.join(
           __dirname,
@@ -57,12 +57,12 @@ function getMockComputations() {
  * @param {DecentralizedComputation[]} computations
  */
 function seedInstanceComputations(instance, computations) {
-  computations.forEach(c => {
+  computations.forEach((c) => {
     instance.store[ComputationRegistry.getId(c.name, c.version)] = c; // eslint-disable-line
   });
 }
 
-tape('constructor', t => {
+tape('constructor', (t) => {
   t.throws(
     () => new ComputationRegistry({}),
     /registry/gi,
@@ -77,7 +77,7 @@ tape('constructor', t => {
   t.end();
 });
 
-tape('adds definition to store', t => {
+tape('adds definition to store', (t) => {
   t.plan(3);
 
   const cwd = '/some/random/directory';
@@ -104,7 +104,7 @@ tape('adds definition to store', t => {
   const instance = factory({ registry: [] });
 
   instance._doAdd({ cwd, definition, meta, name, url, version })
-  .then(computation => {
+  .then((computation) => {
     t.ok(
       computation instanceof DecentralizedComputation,
       'returns DecentralizedComputation instance'
@@ -127,12 +127,9 @@ tape('adds definition to store', t => {
   .catch(t.end);
 });
 
-tape('gets definition from disk', t => {
+tape('gets definition from disk', (t) => {
   t.plan(3);
 
-  const instance = factory({
-    registry: [],
-  });
   const name = registry[0].name;
   const version = registry[0].tags[1];
 
@@ -166,18 +163,18 @@ tape('gets definition from disk', t => {
   mockery.registerMock(name, computation);
 
 
-  instance._getFromDisk('bogus-name', '1.0.0')
+  ComputationRegistry._getFromDisk('bogus-name', '1.0.0')
     .catch(() => {
       t.pass('rejects with non-existent computation');
 
-      return instance._getFromDisk(registry[3].name, registry[3].tags[0]);
+      return ComputationRegistry._getFromDisk(registry[3].name, registry[3].tags[0]);
     })
     .catch(() => {
       t.pass('rejects with malformed computation');
 
-      return instance._getFromDisk(name, version);
+      return ComputationRegistry._getFromDisk(name, version);
     })
-    .then(response => {
+    .then((response) => {
       t.deepEqual(
         response,
         {
@@ -195,7 +192,7 @@ tape('gets definition from disk', t => {
     });
 });
 
-tape('adds a computation', t => {
+tape('adds a computation', (t) => {
   t.plan(6);
 
   const computation = new DecentralizedComputation({
@@ -236,7 +233,7 @@ tape('adds a computation', t => {
     .stub(ComputationRegistry, 'getComputationCwd')
     .returns(cwd);
   const getFromDiskStub = sinon
-    .stub(instance, '_getFromDisk')
+    .stub(ComputationRegistry, '_getFromDisk')
     .returns(Promise.resolve({ definition, meta }));
   const getSpy = sinon.spy(instance, 'get');
 
@@ -300,7 +297,7 @@ tape('adds a computation', t => {
     });
 });
 
-tape('gets all stored computations', t => {
+tape('gets all stored computations', (t) => {
   t.plan(2);
 
   const instance = factory();
@@ -309,7 +306,7 @@ tape('gets all stored computations', t => {
   seedInstanceComputations(instance, mockComputations);
 
   instance.all()
-    .then(computations => {
+    .then((computations) => {
       t.ok(computations.length, 'returns *some* computations');
       t.deepEqual(
         computations,
@@ -320,7 +317,7 @@ tape('gets all stored computations', t => {
     .catch(t.end);
 });
 
-tape('get fails on with no computation name', t => {
+tape('get fails on with no computation name', (t) => {
   t.plan(1);
 
   factory().get()
@@ -328,7 +325,7 @@ tape('get fails on with no computation name', t => {
     .catch(() => t.pass('rejects without args'));
 });
 
-tape('get fails on with no computation name', t => {
+tape('get fails on with no computation name', (t) => {
   t.plan(1);
 
   factory().get('bananas')
@@ -336,7 +333,7 @@ tape('get fails on with no computation name', t => {
     .catch(() => t.pass('rejects without version'));
 });
 
-tape('gets computation by name and version', t => {
+tape('gets computation by name and version', (t) => {
   t.plan(2);
 
   const instance = factory();
@@ -350,12 +347,12 @@ tape('gets computation by name and version', t => {
     .then(() => {
       t.fail('returned bogus computation');
     })
-    .catch(error => {
+    .catch((error) => {
       t.ok(error, 'errored on bogus computation name');
     });
 
   instance.get(name, version)
-    .then(computation => {
+    .then((computation) => {
       t.ok(
         (
           computation.name === name &&
@@ -367,7 +364,7 @@ tape('gets computation by name and version', t => {
     .catch(t.end);
 });
 
-tape('gets name and version from directory name', t => {
+tape('gets name and version from directory name', (t) => {
   const get = ComputationRegistry.getNameAndVersion;
   t.deepEqual(get('whatsup--1.0.0'), ['whatsup', '1.0.0']);
   t.deepEqual(

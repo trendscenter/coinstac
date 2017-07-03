@@ -40,7 +40,7 @@ class ProjectService extends ModelService {
    * @param {string} filename Full file path to CSV
    * @returns {Promise<Project>}
    */
-  getCSV(filename) {
+  static getCSV(filename) {
     return bluebird.promisify(fs.readFile)(filename)
       .then(data => bluebird.promisify(csvParse)(data.toString()))
       .then(JSON.stringify);
@@ -53,7 +53,7 @@ class ProjectService extends ModelService {
    * @param {Array[]} metaFile Metadata CSV's contents
    * @returns {File[]} Collection of files
    */
-  getFilesFromMetadata(metaFilePath, metaFile) {
+  static getFilesFromMetadata(metaFilePath, metaFile) {
     return tail(metaFile).map(([filename]) => ({
       filename: path.isAbsolute(filename) ?
         filename :
@@ -76,7 +76,7 @@ class ProjectService extends ModelService {
     }
 
     return this.get(projectId)
-      .then(project => {
+      .then((project) => {
         if (!project.consortiumId) {
           throw new Error(
             `No active consortium set of project ${projectId}`
@@ -265,7 +265,7 @@ class ProjectService extends ModelService {
     );
 
     dbListener.on('change', ({ doc }) => {
-      this.handleRemoteResultChange({
+      ProjectService.handleRemoteResultChange({
         callback,
         consortiumId,
         doc,
@@ -273,7 +273,7 @@ class ProjectService extends ModelService {
       });
     });
     dbListener.on('delete', ({ doc }) => {
-      this.handleRemoteResultDelete({
+      ProjectService.handleRemoteResultDelete({
         callback,
         consortiumId,
         doc,
@@ -290,7 +290,7 @@ class ProjectService extends ModelService {
    * @param {(string|string[])} filenames Collection (or single) full file paths
    * @returns {Promise} Resolves to serialized File model(s)
    */
-  getFileStats(filenames) {
+  static getFileStats(filenames) {
     return fileStats.prepare(
       Array.isArray(filenames) ? filenames : [filenames]
     );
@@ -308,7 +308,7 @@ class ProjectService extends ModelService {
     const { listeners, projects } = this;
     const { _id: projectId } = doc;
 
-    return this.getConsortiumId(projectId).then(consortiumId => {
+    return this.getConsortiumId(projectId).then((consortiumId) => {
       const oldConsortiumId = projects.get(projectId);
       let dbListener;
 
@@ -361,7 +361,7 @@ class ProjectService extends ModelService {
    * @param {Object} options.doc
    * @param {string} options.projectId
    */
-  handleRemoteResultChange({ callback, consortiumId, doc, projectId }) {
+  static handleRemoteResultChange({ callback, consortiumId, doc, projectId }) {
     callback(null, { consortiumId, doc, projectId });
   }
 
@@ -375,11 +375,11 @@ class ProjectService extends ModelService {
    * @param {Object} options.doc
    * @param {string} options.projectId
    */
-  handleRemoteResultDelete({ callback, consortiumId, doc, projectId }) {
+  static handleRemoteResultDelete({ callback, consortiumId, doc, projectId }) {
     callback(null, { consortiumId, doc, projectId });
   }
 
-  modelServiceHooks() {
+  static modelServiceHooks() {
     return {
       dbName: 'projects',
       ModelType: Project,
@@ -416,7 +416,7 @@ class ProjectService extends ModelService {
     listeners.set(ProjectService.PROJECTS_LISTENER, projectsDbListener);
 
     return projectsDb.all()
-      .then(projectDocs => {
+      .then((projectDocs) => {
         projectDocs.forEach(({ _id: projectId, consortiumId }) => {
           if (consortiumId) {
             const dbListener = this.getDBListener({
@@ -450,12 +450,12 @@ class ProjectService extends ModelService {
       return Promise.resolve(project.files || []);
     }
 
-    return this.getFileStats(localToAdd)
+    return ProjectService.getFileStats(localToAdd)
       .then((files) => {
         project.files = project.files.concat(files);
         return this.save(project);
       })
-      .then((doc) => Object.assign(project, doc))
+      .then(doc => Object.assign(project, doc))
       .then(() => project.files);
   }
 
@@ -475,7 +475,7 @@ class ProjectService extends ModelService {
       return !includes(toRemove, existing.filename);
     });
     return this.save(project)
-    .then((doc) => Object.assign(project, doc))
+    .then(doc => Object.assign(project, doc))
     .then(() => project.files);
   }
 
@@ -495,7 +495,7 @@ class ProjectService extends ModelService {
       Array.from(projects.values()).concat(ProjectService.PROJECTS_LISTENER)
     );
 
-    return Promise.all(toDelete.map(consortiumId => {
+    return Promise.all(toDelete.map((consortiumId) => {
       const destroy = listeners.get(consortiumId).destroy();
       listeners.delete(consortiumId);
       return destroy;
@@ -517,7 +517,7 @@ class ProjectService extends ModelService {
     ));
     const stat = bluebird.promisify(fs.stat);
 
-    return Promise.all(resolvedFiles.map((file) => stat(file).reflect()))
+    return Promise.all(resolvedFiles.map(file => stat(file).reflect()))
       .then((inspections) => {
         const missingFiles = inspections.reduce((memo, inspection, index) => (
           inspection.isFulfilled() ? memo : memo.concat(resolvedFiles[index])

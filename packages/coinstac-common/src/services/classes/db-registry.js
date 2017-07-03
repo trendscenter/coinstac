@@ -239,7 +239,7 @@ class DBRegistry {
     const options = opts || {};
     return Promise.all(this.all.map(this.cleanUpDB.bind(this, options.deleteDBs)))
     .then((destroyed) => {
-      const notDestroyed = destroyed.filter((confirmation) =>
+      const notDestroyed = destroyed.filter(confirmation =>
         (confirmation[0] ? !confirmation[0].ok : false));
       /* istanbul ignore if */
       if (notDestroyed.length) {
@@ -258,7 +258,7 @@ class DBRegistry {
 Object.defineProperty(DBRegistry.prototype, 'names', {
   get() {
     /* istanbul ignore next */
-    return this.all.map((db) => db.name);
+    return this.all.map(db => db.name);
   },
   enumerable: true,
 });

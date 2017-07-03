@@ -3,8 +3,11 @@
 // counted to the next integer (e.g. 1), then each user is permitted to count to
 // the following integer (e.g. 2).  each user waits to hear back from the
 // central compute server if it's ok to proceed or not
+
 'use strict';
-const _ = require('lodash'); // @note - see docs on how to use external libs
+
+const _ = require('lodash');
+ // @note - see docs on how to use external libs
 module.exports = {
   name: 'group-add',
   version: '0.0.1',
@@ -13,7 +16,7 @@ module.exports = {
     fn: function (opts) { // eslint-disable-line
       const remoteData = opts.remoteResult ? opts.remoteResult.data : null;
       const userStep = opts.previousData || 0;
-      const groupStep = remoteData && remoteData.step || 1;
+      const groupStep = (remoteData && remoteData.step) || 1;
       if (userStep === groupStep) { return null; }
       console.log('...bumping', userStep + 1); // eslint-disable-line
       return userStep + 1;
@@ -38,7 +41,7 @@ module.exports = {
       const result = _.assign({}, _default, opts.previousData);
 
       // apply user integer counts to our RemoteComputationResult
-      opts.userResults.forEach(usrRslt => {
+      opts.userResults.forEach((usrRslt) => {
         result.userStep[usrRslt.username] = usrRslt.data;
       });
       const userStepValues = _.values(result.userStep);

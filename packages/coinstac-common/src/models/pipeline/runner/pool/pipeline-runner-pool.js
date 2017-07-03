@@ -131,7 +131,8 @@ class PipelineRunnerPool extends Base {
     this.events.setMaxListeners(20);
     this.isInitializing = null;
     this.isInitialized = null;
-    this._instance = ++PipelineRunnerPool.instanceCount;
+    this._instance = PipelineRunnerPool.instanceCount;
+    this._instance += 1;
     this.listenTo = opts.listenTo;
   }
 
@@ -150,7 +151,7 @@ class PipelineRunnerPool extends Base {
    * @param {ComputationResult} result
    * @returns {Promise}
    */
-  createNewRunner() {
+  createNewRunner() { // eslint-disable-line class-methods-use-this
     return Promise.reject(
       new ReferenceError('abstract createNewRunner must be extended')
     );
@@ -197,7 +198,7 @@ class PipelineRunnerPool extends Base {
         return this.consortiaListener.destroy();
       }
     })
-    .then(() => Promise.all(values(this.resultsListeners).map(listener => {
+    .then(() => Promise.all(values(this.resultsListeners).map((listener) => {
       return listener.destroy();
     })))
     .then(() => {
@@ -231,7 +232,7 @@ class PipelineRunnerPool extends Base {
    * @property {Function[]} preRun
    * @property {Function[]} postRun
    */
-  getPipelinePlugins(opts) {
+  static getPipelinePlugins(opts) {
     const plugins = opts.comp.plugins;
     const env = opts.env;
     /* istanbul ignore if */
@@ -318,7 +319,7 @@ class PipelineRunnerPool extends Base {
    * @abstract
    * @private
    */
-  _handleCreatedDB() {
+  _handleCreatedDB() { // eslint-disable-line class-methods-use-this
     throw new ReferenceError([
       'abstract db created/destroyed handlers must be extended.',
       'db', arguments[0], 'created or destroyed' // eslint-disable-line
@@ -376,10 +377,10 @@ class PipelineRunnerPool extends Base {
   listenToConsortia(consortia) {
     /* istanbul ignore next */
     if (!Array.isArray(consortia)) { consortia = [consortia]; }
-    consortia = consortia.map((tium) => new Consortium(tium));
+    consortia = consortia.map(tium => new Consortium(tium));
     /* istanbul ignore else */
     if (!consortia.length) { return []; }
-    return consortia.map((tium) => this._listenToConsortium(tium));
+    return consortia.map(tium => this._listenToConsortium(tium));
   }
 
   /**
@@ -407,13 +408,13 @@ class PipelineRunnerPool extends Base {
       ].join(' '));
     }
     /* istanbul ignore next */
-    if (typeof this.resultsListeners[db.name] === DBListener) {
+    if (typeof this.resultsListeners[db.name] === typeof DBListener) {
       throw new ReferenceError(`listener already exists for ${db.name}`);
     }
     const listener = new DBListener(db);
     listener.on(
       'change',
-      (result) => this.handleResultChange(new ResultDocType(result.doc))
+      result => this.handleResultChange(new ResultDocType(result.doc))
     );
     this.resultsListeners[db.name] = listener;
     this.events.emit('listener:created', db.name);
@@ -556,10 +557,10 @@ class PipelineRunnerPool extends Base {
     }
 
     // enter computation result into processing queue
-    ++this.runQueueSize[runId];
+    this.runQueueSize[runId] += 1;
     this.runQueue[runId] = this.runQueue[runId]
     .then(() => {
-      --this.runQueueSize[runId];
+      this.runQueueSize[runId] -= 1;
       return bluebird.resolve(this._triggerRun({ result, userData }))
       .finally(() => {
         if (!this.runQueueSize[runId]) {
@@ -672,9 +673,10 @@ class PipelineRunnerPool extends Base {
     });
     /* istanbul ignore next */
     Pouchy.PouchDB.on('destroyed', () => {
-      if (!this.isActive) { return; }
-      // @TODO define business logic. noop, perhaps
-      // this._handleDestroyedDB(dbName);
+      if (!this.isActive) {
+        // @TODO define business logic. noop, perhaps
+        // this._handleDestroyedDB(dbName);
+      }
     });
   }
 }

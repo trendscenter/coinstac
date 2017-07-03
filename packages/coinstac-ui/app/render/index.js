@@ -1,19 +1,18 @@
+/* eslint-disable react/jsx-filename-extension */
+import app from 'ampersand-app';
+import React from 'react';
+import { render } from 'react-dom';
+
+import { start as startErrorHandling } from './utils/boot/configure-error-handling';
+import configureLogger from './utils/boot/configure-logger';
+import configureMainServices from './utils/configure-main-services';
+
+import Root from './containers/root';
+
 require('babel-polyfill');
 
 // Set up root paths
 require('../common/utils/add-root-require-path.js');
-
-import app from 'ampersand-app';
-import React from 'react';
-import { render } from 'react-dom';
-import { hashHistory } from 'react-router';
-
-import { start as startErrorHandling } from './utils/boot/configure-error-handling.js';
-import configureLogger from './utils/boot/configure-logger.js';
-import configureMainServices from './utils/configure-main-services.js';
-import { configure as configureStore } from './state/store.js';
-
-import Root from './containers/root';
 
 // Boot up the render process
 configureLogger();
@@ -28,10 +27,9 @@ app.analysisRequestId = app.analysisRequestId || 0;
 require('./styles/app.scss');
 
 const rootEl = document.getElementById('app');
-const store = configureStore();
 
 render(
-  <Root history={hashHistory} store={store} />,
+  <Root />,
   rootEl
 );
 
@@ -43,7 +41,7 @@ if (module.hot) {
     const NextRoot = require('./containers/root').default;
     /* eslint-enable global-require */
     render(
-      <NextRoot history={hashHistory} store={store} />,
+      <NextRoot />,
       rootEl
     );
   });

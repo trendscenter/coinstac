@@ -15,7 +15,7 @@ if (
   Error.stackTraceLimit = Infinity;
 
   chain.filter.attach((error, frames) => {
-    return frames.filter(callSite => {
+    return frames.filter((callSite) => {
       const name = callSite && callSite.getFileName();
       const include = !(
         !name ||
