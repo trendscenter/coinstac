@@ -11,11 +11,9 @@ import { fetch as fetchResults } from '../state/ducks/remote-results';
 
 class DashboardHome extends Component {
   componentWillMount() {
-    const { computations, dispatch, remoteResults } = this.props;
+    const { computations, dispatch } = this.props;
 
-    if (!remoteResults.length) {
-      dispatch(fetchResults());
-    }
+    dispatch(fetchResults());
 
     if (!computations.length) {
       dispatch(fetchComputations());
