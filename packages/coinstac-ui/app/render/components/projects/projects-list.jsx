@@ -154,6 +154,10 @@ ProjectsList.propTypes = {
   username: PropTypes.string.isRequired,
 };
 
+ProjectsList.defaultProps = {
+  projects: null,
+};
+
 function select(state) {
   return {
     consortia: state.consortia,

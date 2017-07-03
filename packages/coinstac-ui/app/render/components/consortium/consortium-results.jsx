@@ -95,6 +95,13 @@ ConsortiumResults.propTypes = {
   setExpandedResults: PropTypes.func,
 };
 
+ConsortiumResults.defaultProps = {
+  computations: null,
+  initialResultId: null,
+  remoteResults: null,
+  setExpandedResults: null,
+};
+
 /**
  * Compare remote results for sorting purposes.
  *

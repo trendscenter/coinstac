@@ -33,16 +33,15 @@ export default function ConsortiumComputationSelector({
           (
             {
               _id,
-              meta: { description, name, tags },
+              meta: { description, name }, // , tags },
               version,
-            },
-            index
+            }
           ) => {
             const isChecked = input.value === _id;
 
             return (
-              <div className={radioClassNames} key={index}>
-                <label>
+              <div className={radioClassNames} key={_id}>
+                <label htmlFor={`computation-radio-${_id}`}>
                   <input
                     checked={isChecked}
                     className="sr-only"
@@ -50,6 +49,7 @@ export default function ConsortiumComputationSelector({
                     name={input.name}
                     type="radio"
                     value={_id}
+                    id={`computation-radio-${_id}`}
                   />
                   <span
                     aria-hidden="true"
@@ -78,4 +78,10 @@ ConsortiumComputationSelector.propTypes = {
   computations: PropTypes.array,
   input: PropTypes.object,
   meta: PropTypes.object,
+};
+
+ConsortiumComputationSelector.defaultProps = {
+  computations: null,
+  input: null,
+  meta: null,
 };

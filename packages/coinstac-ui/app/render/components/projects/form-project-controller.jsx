@@ -514,6 +514,10 @@ FormProjectController.propTypes = {
   username: PropTypes.string.isRequired,
 };
 
+FormProjectController.defaultProps = {
+  project: null,
+};
+
 /**
  * Pluck project and put it on the component's props when editing.
  * {@link https://github.com/reactjs/react-redux/blob/master/docs/api.md}

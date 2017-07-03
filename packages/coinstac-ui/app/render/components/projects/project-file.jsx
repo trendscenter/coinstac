@@ -52,3 +52,7 @@ ProjectFile.propTypes = {
   filename: PropTypes.string.isRequired,
   onRemove: PropTypes.func,
 };
+
+ProjectFile.defaultProps = {
+  onRemove: null,
+};
