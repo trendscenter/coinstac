@@ -28,6 +28,7 @@ module.exports = {
     'no-param-reassign': 0,
     'no-shadow': 0,
     'no-underscore-dangle':0,
+    'react/forbid-prop-types': 0,
     'import/no-extraneous-dependencies': ["error", { "devDependencies": true }],
     'comma-dangle': ['error', {
         'arrays': 'always-multiline',
