@@ -39,3 +39,7 @@ UserList.propTypes = {
   size: PropTypes.oneOf(['large', 'regular']),
   users: PropTypes.arrayOf(PropTypes.string).isRequired,
 };
+
+UserList.defaultProps = {
+  size: null,
+};

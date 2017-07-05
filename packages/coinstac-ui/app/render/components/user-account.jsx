@@ -80,4 +80,8 @@ UserAccount.propTypes = {
   }),
 };
 
+UserAccount.defaultProps = {
+  user: null,
+};
+
 export default UserAccount;

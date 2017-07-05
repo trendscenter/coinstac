@@ -1,3 +1,5 @@
+/* eslint-disable react/no-array-index-key */
+
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { Alert } from 'react-bootstrap';
@@ -174,6 +176,10 @@ DashboardHome.propTypes = {
     ]).isRequired,
   })).isRequired,
   username: PropTypes.string,
+};
+
+DashboardHome.defaultProps = {
+  username: null,
 };
 
 function mapStateToProps({

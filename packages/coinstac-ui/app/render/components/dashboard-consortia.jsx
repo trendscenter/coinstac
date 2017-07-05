@@ -71,6 +71,11 @@ DashboardConsortia.propTypes = {
   user: PropTypes.object.isRequired,
 };
 
+DashboardConsortia.defaultProps = {
+  loading: null,
+  consortia: null,
+};
+
 function mapStateToProps({ loading, consortia, auth: { user } }) {
   return { consortia, loading, user };
 }

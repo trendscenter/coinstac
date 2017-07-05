@@ -68,4 +68,9 @@ FormLogin.propTypes = {
   submit: PropTypes.func.isRequired,
 };
 
+FormLogin.defaultProps = {
+  hotRoute: null,
+  loading: null,
+};
+
 export default FormLogin;

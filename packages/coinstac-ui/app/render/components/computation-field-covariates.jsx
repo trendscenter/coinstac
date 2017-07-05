@@ -1,3 +1,5 @@
+/* eslint-disable react/no-array-index-key */
+
 import React from 'react';
 import PropTypes from 'prop-types';
 import { Field } from 'redux-form';
@@ -163,6 +165,10 @@ ComputationFieldCovariates.propTypes = {
   meta: PropTypes.shape({
     error: PropTypes.string,
   }).isRequired,
+};
+
+ComputationFieldCovariates.defaultProps = {
+  help: null,
 };
 
 /**
