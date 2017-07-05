@@ -75,8 +75,8 @@ export default class ComputationFieldBasic extends Component {
 
       formControl = (
         <FormControl {...controlProps}>
-          {options.map((option, index) => {
-            return <option key={index} value={option}>{option}</option>;
+          {options.map((option) => {
+            return <option key={option} value={option}>{option}</option>;
           })}
         </FormControl>
       );
@@ -152,4 +152,12 @@ ComputationFieldBasic.propTypes = {
   options: PropTypes.array,
   step: PropTypes.number,
   type: PropTypes.string.isRequired,
+};
+
+ComputationFieldBasic.defaultProps = {
+  help: null,
+  max: null,
+  min: null,
+  options: null,
+  step: null,
 };

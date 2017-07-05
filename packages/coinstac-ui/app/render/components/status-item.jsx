@@ -123,3 +123,7 @@ StatusItem.propTypes = {
     usernames: PropTypes.arrayOf(PropTypes.string).isRequired,
   }),
 };
+
+StatusItem.defaultProps = {
+  remoteResult: null,
+};
