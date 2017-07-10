@@ -65,8 +65,11 @@ class DashboardConsortia extends Component {
 }
 
 DashboardConsortia.propTypes = {
-  loading: PropTypes.object,
   consortia: PropTypes.array,
+  deleteConsortium: PropTypes.func,
+  joinConsortium: PropTypes.func,
+  leaveConsortium: PropTypes.func,
+  loading: PropTypes.object,
   user: PropTypes.object.isRequired,
 };
 

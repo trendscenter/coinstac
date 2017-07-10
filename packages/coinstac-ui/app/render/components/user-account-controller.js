@@ -50,6 +50,7 @@ UserAccountController.contextTypes = {
 UserAccountController.displayName = 'UserAccountController';
 
 UserAccountController.propTypes = {
+  logout: PropTypes.func,
   push: PropTypes.func.isRequired,
 };
 

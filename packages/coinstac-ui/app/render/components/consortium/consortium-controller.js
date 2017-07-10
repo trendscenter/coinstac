@@ -151,14 +151,23 @@ ConsortiumController.contextTypes = {
 ConsortiumController.displayName = 'ConsortiumController';
 
 ConsortiumController.propTypes = {
+  addConsortiumComputationListener: PropTypes.func,
   computations: PropTypes.arrayOf(PropTypes.object).isRequired,
   consortium: PropTypes.object,
+  fetchComputations: PropTypes.func,
+  fetchRemoteResults: PropTypes.func,
   initialResultId: PropTypes.string,
   isLoading: PropTypes.bool.isRequired,
   isMember: PropTypes.bool.isRequired,
   isNew: PropTypes.bool.isRequired,
   isOwner: PropTypes.bool.isRequired,
+  joinConsortium: PropTypes.func,
+  leaveConsortium: PropTypes.func,
+  listenToConsortia: PropTypes.func,
   remoteResults: PropTypes.arrayOf(PropTypes.object).isRequired,
+  saveConsortium: PropTypes.func,
+  setRemoteResults: PropTypes.func,
+  unlistenToConsortia: PropTypes.func,
   username: PropTypes.string.isRequired,
 };
 

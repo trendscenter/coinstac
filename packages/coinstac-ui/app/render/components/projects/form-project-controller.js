@@ -159,7 +159,6 @@ class FormProjectController extends Component {
       } else {
         memo[key] = null;
       }
-
       return memo;
     }, {});
   }
@@ -429,7 +428,6 @@ class FormProjectController extends Component {
               showFilesComponent:
                 computation.name.indexOf('ridge-regression') > -1,
             });
-            console.log(computation.name);
           }, noop);
       }
     }
@@ -507,10 +505,13 @@ FormProjectController.ERRORS = new Map([
 ]);
 
 FormProjectController.propTypes = {
+  addProject: PropTypes.func,
   computations: PropTypes.arrayOf(PropTypes.object).isRequired,
   consortia: PropTypes.array.isRequired,
+  fetchComputation: PropTypes.func,
   params: PropTypes.object.isRequired,
   project: PropTypes.object,
+  runComputation: PropTypes.func,
   username: PropTypes.string.isRequired,
 };
 
