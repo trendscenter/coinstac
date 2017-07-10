@@ -15,7 +15,7 @@ class UserAccount extends Component {
     return `http://www.gravatar.com/avatar/${md5(email)}?s=200`;
   }
   render() {
-    const { logout, user } = this.props;
+    const { logoutUser, user } = this.props;
 
     if (user) {
       const { label, email } = user;
@@ -52,7 +52,7 @@ class UserAccount extends Component {
               block
               bsStyle="link"
               className="user-account-logout"
-              onClick={logout}
+              onClick={logoutUser}
               to="/login"
             >
               <span
@@ -75,7 +75,7 @@ class UserAccount extends Component {
 UserAccount.displayName = 'UserAccount';
 
 UserAccount.propTypes = {
-  logout: PropTypes.func.isRequired,
+  logoutUser: PropTypes.func.isRequired,
   user: PropTypes.shape({
     email: PropTypes.string,
     label: PropTypes.string,

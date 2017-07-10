@@ -12,7 +12,7 @@ import {
 
 class DashboardConsortia extends Component {
   renderConsortia() {
-    const { consortia, dispatch, user: { username } } = this.props;
+    const { consortia, user: { username } } = this.props;
 
     return (
       <div>
@@ -23,12 +23,12 @@ class DashboardConsortia extends Component {
 
           return (
             <ConsortiumCard
-              deleteConsortium={() => dispatch(deleteConsortium(id))}
+              deleteConsortium={() => this.props.deleteConsortium(id)}
               isMember={isMember}
               isOwner={isOwner}
-              joinConsortium={() => dispatch(joinConsortium(id, username))}
+              joinConsortium={() => this.props.joinConsortium(id, username)}
               key={index}
-              leaveConsortium={() => dispatch(leaveConsortium(id, username))}
+              leaveConsortium={() => this.props.leaveConsortium(id, username)}
               {...consortium}
             />
           );
@@ -65,7 +65,6 @@ class DashboardConsortia extends Component {
 }
 
 DashboardConsortia.propTypes = {
-  dispatch: PropTypes.func.isRequired,
   loading: PropTypes.object,
   consortia: PropTypes.array,
   user: PropTypes.object.isRequired,
@@ -75,4 +74,8 @@ function mapStateToProps({ loading, consortia, auth: { user } }) {
   return { consortia, loading, user };
 }
 
-export default connect(mapStateToProps)(DashboardConsortia);
+export default connect(mapStateToProps, {
+  deleteConsortium,
+  joinConsortium,
+  leaveConsortium,
+})(DashboardConsortia);

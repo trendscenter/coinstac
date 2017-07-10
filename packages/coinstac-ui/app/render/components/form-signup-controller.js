@@ -27,7 +27,6 @@ class FormSignupController extends Component {
    * @return {undefined}
    */
   onSubmit(formData) {
-    const { dispatch } = this.props;
     const { router } = this.context;
     let error;
 
@@ -49,7 +48,7 @@ class FormSignupController extends Component {
       return FormSignupController.handleSignupError(error);
     }
 
-    return dispatch(signUp(formData))
+    return this.props.signUp(formData)
       .then(() => {
         app.notify({
           level: 'success',
@@ -98,7 +97,7 @@ FormSignupController.contextTypes = {
 FormSignupController.displayName = 'FormSignupController';
 
 FormSignupController.propTypes = {
-  dispatch: PropTypes.func.isRequired,
+  
 };
 
-export default connect()(FormSignupController);
+export default connect(null, { signUp })(FormSignupController);
