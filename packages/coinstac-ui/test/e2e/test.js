@@ -79,7 +79,7 @@ describe('Testing::e2e', () => {
       .selectByValue('#computation-field-map-type-1', 'number')
       .click('button=Create')
       .waitForExist('div.panel-heading h4.panel-title', EXIST_TIMEOUT)
-      .getText('div.panel-heading h4.panel-title a').should.eventually.equal(CONS_NAME)
+      .getText('div.panel-heading h4.panel-title a').should.eventually.include(CONS_NAME)
   );
 
   it('accesses the New Files Collection page', () =>
@@ -129,7 +129,7 @@ describe('Testing::e2e', () => {
       .click('a=Consortia')
       .waitForExist('a=Add Consortium', EXIST_TIMEOUT)
       .click('button=Delete')
-      .isVisible('div.panel-heading').should.eventually.equal(false)
+      .isVisible(`a=${CONS_NAME}`).should.eventually.equal(false)
   );
 
   it('logs out', () =>
