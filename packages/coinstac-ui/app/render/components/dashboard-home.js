@@ -18,16 +18,14 @@ class DashboardHome extends Component {
   }
 
   componentWillMount() {
-    const { dispatch } = this.props;
-
-    dispatch(fetchComputations());
+    this.props.fetchComputations();
     // TODO: Modify action creator to use Promise
-    dispatch(fetchProjects((error) => {
+    this.props.fetchProjects((error) => {
       if (error) {
         logger.error(error);
         notify('error', error.message);
       }
-    }));
+    });
 
     this.getRemoteResults().then(() => {
       this.interval = setInterval(() => this.getRemoteResults(), 2000);
@@ -162,7 +160,6 @@ DashboardHome.propTypes = {
     owners: PropTypes.arrayOf(PropTypes.string).isRequired,
     users: PropTypes.arrayOf(PropTypes.string).isRequired,
   })).isRequired,
-  dispatch: PropTypes.func.isRequired,
   projects: PropTypes.arrayOf(PropTypes.shape({
     allowComputationRun: PropTypes.bool.isRequired,
     consortiumId: PropTypes.string.isRequired,
@@ -192,4 +189,7 @@ function mapStateToProps({
   };
 }
 
-export default connect(mapStateToProps)(DashboardHome);
+export default connect(mapStateToProps, {
+  fetchProjects,
+  fetchComputations,
+})(DashboardHome);
