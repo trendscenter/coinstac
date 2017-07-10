@@ -25,7 +25,7 @@ export default function ConsortiumCard(props) {
 
   if (isOwner) {
     deleteButton = (
-      <Button bsSize="small" bsStyle="danger" onClick={deleteConsortium}>
+      <Button bsSize="small" bsStyle="danger" onClick={deleteConsortium} id={`delete-${label}`}>
         <span
           aria-hidden="true"
           className="glyphicon glyphicon glyphicon-remove"

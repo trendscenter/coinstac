@@ -8,6 +8,7 @@ export class ProjectCard extends Component {
   maybeRenderComputationRunButton() {
     const {
       allowComputationRun,
+      consortiumName,
       isInvalidMapping,
       runComputation,
       showComputationRunButton,
@@ -21,6 +22,7 @@ export class ProjectCard extends Component {
           className="pull-right"
           disabled={isInvalidMapping || !allowComputationRun}
           onClick={runComputation}
+          id={`run-${consortiumName}`}
         >
           <span
             className="glyphicon glyphicon-repeat"
@@ -114,6 +116,7 @@ export class ProjectCard extends Component {
                 bsSize="small"
                 bsStyle="danger"
                 onClick={removeProject}
+                id={`delete-${consortiumName}`}
               >
                 <span
                   className="glyphicon glyphicon-trash"
