@@ -100,18 +100,19 @@ describe('Testing::e2e', () => {
       .selectByValue('#project-covariates-mapper-2', '1')
       .click('button=Save')
       .waitForExist('div.panel-heading h4.panel-title', EXIST_TIMEOUT)
-      .getText('div.panel-heading h4.panel-title a').should.eventually.equal(PROJECT_NAME)
+      .getText('div.panel-heading h4.panel-title a').should.eventually.include(PROJECT_NAME)
   );
 
   it('runs a computation', () =>
     app.client
-      .click('button=Run Computation')
+      .click(`#run-${CONS_NAME}`)
       .waitForExist('span=Complete', EXIST_TIMEOUT)
   );
 
   it('displays results', () =>
     app.client
-      .click('a=View Results')
+      .waitForExist(`#results-${CONS_NAME}`)
+      .click(`#results-${CONS_NAME}`)
       .waitForExist('#results', EXIST_TIMEOUT)
       .waitForExist('span=Complete!', EXIST_TIMEOUT)
   );
@@ -120,15 +121,15 @@ describe('Testing::e2e', () => {
     app.client
       .click('a=My Files')
       .waitForExist('a=Add Files Collection', EXIST_TIMEOUT)
-      .click('button=Delete')
-      .isVisible('div.panel-heading').should.eventually.equal(false)
+      .click(`#delete-${CONS_NAME}`)
+      .isVisible(`#delete-${CONS_NAME}`).should.eventually.equal(false)
   );
 
   it('deletes a consortium', () =>
     app.client
       .click('a=Consortia')
       .waitForExist('a=Add Consortium', EXIST_TIMEOUT)
-      .click('button=Delete')
+      .click(`#delete-${CONS_NAME}`)
       .isVisible(`a=${CONS_NAME}`).should.eventually.equal(false)
   );
 
