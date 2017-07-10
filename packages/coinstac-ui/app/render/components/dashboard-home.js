@@ -160,6 +160,8 @@ DashboardHome.propTypes = {
     owners: PropTypes.arrayOf(PropTypes.string).isRequired,
     users: PropTypes.arrayOf(PropTypes.string).isRequired,
   })).isRequired,
+  fetchComputations: PropTypes.func,
+  fetchProjects: PropTypes.func,
   projects: PropTypes.arrayOf(PropTypes.shape({
     allowComputationRun: PropTypes.bool.isRequired,
     consortiumId: PropTypes.string.isRequired,

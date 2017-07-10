@@ -62,6 +62,7 @@ Dashboard.contextTypes = {
 Dashboard.propTypes = {
   auth: PropTypes.object.isRequired,
   children: PropTypes.node.isRequired,
+  initPrivateBackgroundServices: PropTypes.func,
 };
 
 function select(state) {

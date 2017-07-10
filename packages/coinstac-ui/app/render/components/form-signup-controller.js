@@ -97,7 +97,7 @@ FormSignupController.contextTypes = {
 FormSignupController.displayName = 'FormSignupController';
 
 FormSignupController.propTypes = {
-  
+  signUp: PropTypes.func,
 };
 
 export default connect(null, { signUp })(FormSignupController);

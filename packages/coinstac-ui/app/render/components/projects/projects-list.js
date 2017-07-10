@@ -135,6 +135,7 @@ ProjectsList.propTypes = {
     activeComputationInputs: PropTypes.array.isRequired,
     owners: PropTypes.arrayOf(PropTypes.string).isRequired,
   })).isRequired,
+  fetchProjects: PropTypes.func,
   projects: PropTypes.arrayOf(PropTypes.shape({
     _id: PropTypes.string,
     allowComputationRun: PropTypes.bool.isRequired,
@@ -144,6 +145,9 @@ ProjectsList.propTypes = {
     name: PropTypes.string.isRequired,
     status: PropTypes.string.isRequired,
   })),
+  removeProject: PropTypes.func,
+  runComputation: PropTypes.func,
+  setProjects: PropTypes.func,
   username: PropTypes.string.isRequired,
 };
 
