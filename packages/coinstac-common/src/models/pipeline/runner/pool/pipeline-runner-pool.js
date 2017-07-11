@@ -408,7 +408,7 @@ class PipelineRunnerPool extends Base {
       ].join(' '));
     }
     /* istanbul ignore next */
-    if (typeof this.resultsListeners[db.name] === typeof DBListener) {
+    if (typeof this.resultsListeners[db.name] instanceof DBListener) {
       throw new ReferenceError(`listener already exists for ${db.name}`);
     }
     const listener = new DBListener(db);
