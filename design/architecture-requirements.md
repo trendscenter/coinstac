@@ -35,7 +35,7 @@ A pipeline assembles single computations into a series. Owners of a consortium c
 1. Must compose computations: a pipeline combines computations into a series of steps for clients to execute. It facilitates computation-to-computation flow by passing data via the computation input/output specification.
     1. Should be composed via a user interface: an interface requiring no coding should assemble computations.
     2. Pipelines should be savable for reuse, possibly sharable.
-2. Must accept input from users. (Example: A FreeSurfer computation requires a collection of scan files from several participants.) (What other types of input?)
+2. Must accept input from users. (Example: A FreeSurfer computation requires a collection of scan files from several participants.)
     1. Must provide users a means to specify file paths of data on their local machines for input into pipeline
 3. Must work regardless of network conditions:
     1. The run must operate with intermittent Internet connections
@@ -136,11 +136,11 @@ A client is the local application that users interact with to use COINSTAC.
             1. Should show consortia currently running pipelines
     2. During a pipeline run
         1. Reveal local client’s pipelines’ states
-        2. Reveal pipeline states of other users?
+        2. Reveal pipeline states of other users
         3. Reveal progress of pipeline run
     3. After a run
         1. View pipeline run results
-        2. Should allow exporting of results of computation runs (in CSV, JSON, email?, etc.)
+        2. Should allow exporting of results of computation runs (in CSV, JSON, email, etc.)
 11. Should afford users a reasonable measure of security
     1. User information, consortium information, PHI data should be handled correctly
     2. E.g., Someone creates a computation that sends everyone’s data to another server
