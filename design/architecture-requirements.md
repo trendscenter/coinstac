@@ -13,11 +13,10 @@ Computations are self-contained chunks of code that perform a specific job withi
 1. Must allow for decentralized use: a computation may contain code that runs on client machines and a central server.
 2. Must support multiple programming languages: a computation written in another language (Python, R, etc.) should work with COINSTAC, which is written primarily in JavaScript. Multiple languages should be supported on both COINSTAC clients and the central server.
 3. Should be composable: runs should be able to configure computations in varying orders.
-    1. Should have an input and output specification to aid composing and output (ex: output in graph).
 4. Should be reproducible: users should be able to re-run a computation, or series of computations, with varying parameters easily.Should be easy for algorithm authors to develop:
     1. Debugging tools (ex: coinstac-simulator) should exist to allow authors to easily test their algorithms and simulate their use within a COINSTAC-like system
     2. COINSTAC should perform automated checks against authors’ code to ensure it works within the system, and alert them to errors or potential problems.
-5. Should have an input and output specifications (see [MRN-Code/coinstac#12](https://github.com/MRN-Code/coinstac/issues/12)):
+5. Should have an input and output specifications (see [MRN-Code/coinstac#12](https://github.com/MRN-Code/coinstac/issues/12)) to aid in composability and reproducibility:
     1. Should be able to specify inputs: the computation dictates what it needs to run. This could be a collection of FreeSurfer files, a range of DICOM files, a CSV full of metadata, etc. This may also include inputs from previous computations in the pipeline (Ex: second computation needs the original files for meta-analysis).
     2. Should be able to specify outputs: the computation declares its results. In some cases this may be raw JSON, or a table, a graph, an image, a file path, or a 3D visualization.
     3. Should easily differentiate between local and remote i/o.???
