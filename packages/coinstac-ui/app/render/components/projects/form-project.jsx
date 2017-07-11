@@ -339,12 +339,9 @@ export default class FormProject extends Component {
 }
 
 FormProject.propTypes = {
-  // allowComputationRun: PropTypes.bool.isRequired,
   consortia: PropTypes.array.isRequired,
   errors: PropTypes.shape({
     consortiumId: PropTypes.string,
-    // TODO: enable with fileRender
-    // files: PropTypes.string,
     metaCovariateMapping: PropTypes.array,
     metaFile: PropTypes.string,
     metaFilePath: PropTypes.string,
@@ -352,36 +349,20 @@ FormProject.propTypes = {
   }),
   inputs: PropTypes.arrayOf(PropTypes.object),
   isEditing: PropTypes.bool.isRequired,
-  // TODO: enable with fileRender
-  // onAddFiles: PropTypes.func.isRequired,
   onAddMetaFile: PropTypes.func.isRequired,
   onConsortiumChange: PropTypes.func.isRequired,
   onMapCovariate: PropTypes.func.isRequired,
   onNameChange: PropTypes.func.isRequired,
-  // TODO: enable with fileRender
-  // onRemoveAllFiles: PropTypes.func.isRequired,
-  // onRemoveFile: PropTypes.func.isRequired,
   onRemoveMetaFile: PropTypes.func.isRequired,
   onReset: PropTypes.func.isRequired,
-  // onRunComputation: PropTypes.func.isRequired,
   onSubmit: PropTypes.func.isRequired,
   project: PropTypes.shape({
     consortiumId: PropTypes.string,
-    // TODO: enable with fileRender
-    // files: PropTypes.arrayOf(
-    //   PropTypes.shape({
-    //     filename: PropTypes.string.isRequired,
-    //     tags: PropTypes.object.isRequired,
-    //   })
-    // ).isRequired,
     metaCovariateMapping: PropTypes.object.isRequired,
     metaFile: PropTypes.arrayOf(PropTypes.array),
     metaFilePath: PropTypes.string,
     name: PropTypes.string.isRequired,
   }).isRequired,
-  // showComputationRunButton: PropTypes.bool.isRequired,
-  // TODO: enable with fileRender
-  // showFilesComponent: PropTypes.bool.isRequired,
 };
 
 FormProject.defaultProps = {

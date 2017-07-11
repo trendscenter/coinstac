@@ -218,18 +218,14 @@ class ConsortiumForm extends Component {
 ConsortiumForm.displayName = 'ConsortiumForm';
 
 ConsortiumForm.propTypes = {
-  // activeComputationId: PropTypes.string,
   array: PropTypes.shape({
     removeAll: PropTypes.func.isRequired,
   }).isRequired,
-  // change: PropTypes.func.isRequired,
   computations: PropTypes.arrayOf(PropTypes.object).isRequired,
   computationInputs: PropTypes.array.isRequired,
-  // consortium: PropTypes.object,
   handleSubmit: PropTypes.func.isRequired,
   isLoading: PropTypes.bool.isRequired,
   isNew: PropTypes.bool.isRequired,
-  // isOwner: PropTypes.bool.isRequired,
   onReset: PropTypes.func.isRequired,
   onSubmit: PropTypes.func.isRequired,
   reset: PropTypes.func.isRequired,

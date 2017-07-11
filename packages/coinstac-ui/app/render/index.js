@@ -2,7 +2,9 @@
 import app from 'ampersand-app';
 import React from 'react';
 import { render } from 'react-dom';
+import { hashHistory } from 'react-router';
 
+import configureStore from './state/store';
 import { start as startErrorHandling } from './utils/boot/configure-error-handling';
 import configureLogger from './utils/boot/configure-logger';
 import configureMainServices from './utils/configure-main-services';
@@ -13,6 +15,7 @@ require('babel-polyfill');
 
 // Set up root paths
 require('../common/utils/add-root-require-path.js');
+
 
 // Boot up the render process
 configureLogger();
@@ -27,9 +30,10 @@ app.analysisRequestId = app.analysisRequestId || 0;
 require('./styles/app.scss');
 
 const rootEl = document.getElementById('app');
+const store = configureStore();
 
 render(
-  <Root />,
+  <Root history={hashHistory} store={store} />,
   rootEl
 );
 
@@ -41,7 +45,7 @@ if (module.hot) {
     const NextRoot = require('./containers/root').default;
     /* eslint-enable global-require */
     render(
-      <NextRoot />,
+      <NextRoot history={hashHistory} store={store} />,
       rootEl
     );
   });

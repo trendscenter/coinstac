@@ -193,7 +193,6 @@ ConsortiumResult.propTypes = {
   }),
   endDate: PropTypes.number,
   expanded: PropTypes.bool.isRequired,
-  // pipelineState: PropTypes.object.isRequired,
   pluginState: PropTypes.object.isRequired,
   startDate: PropTypes.number.isRequired,
   toggleCollapse: PropTypes.func.isRequired,

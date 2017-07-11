@@ -33,7 +33,7 @@ export default function ConsortiumComputationSelector({
           (
             {
               _id,
-              meta: { description, name }, // , tags },
+              meta: { description, name },
               version,
             }
           ) => {

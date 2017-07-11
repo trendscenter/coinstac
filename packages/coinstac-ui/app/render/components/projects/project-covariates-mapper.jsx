@@ -10,7 +10,7 @@ import { tail } from 'lodash';
 
 import ComputationFieldCovariates from '../computation-field-covariates';
 
-class ProjectCovariatesMapper extends Component {
+export default class ProjectCovariatesMapper extends Component {
   renderHeadingRow() {
     const {
       covariates,
@@ -133,5 +133,3 @@ ProjectCovariatesMapper.propTypes = {
 ProjectCovariatesMapper.defaultProps = {
   metaCovariateErrors: null,
 };
-
-export default ProjectCovariatesMapper;
