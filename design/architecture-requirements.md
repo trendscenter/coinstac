@@ -55,8 +55,7 @@ A pipeline assembles single computations into a series. Owners of a consortium c
     5. Should allow user to elect a site for special participation (Example: specify a “hold-out” site that doesn’t participate in iterative analysis. This site’s data is used at the end of iteration to validate – quality check – the model computed through iteration over the other sites.)
 5. Should be easy for consortium owners to develop and debug.
 6. Should be inspectable: users should be able to examine the current state and existing steps of a pipeline.
-7. Should cache results of a computation run (ex: FreeSurfer preprocessing) for reuse. Don’t make the client do the same job twice.
-    1. Should cache intermediate and final results 
+7. Should cache intermediate and final results of a computation run (ex: FreeSurfer preprocessing) for reuse. Don’t make the client do the same job twice.
 8. A running pipeline:
     1. Should not use all of a client’s resources: runs should enter a queue system and run in a rate-limited parallel manner (ex: “four runs at a time, in order of run initiation issue”)
     2. Should surface metrics about its progress. This should involve collecting information about raw computation time, network travel time, iteration count, estimated finish time, etc. A user interface should be able to display this information.
