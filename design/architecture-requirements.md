@@ -23,7 +23,7 @@ Computations are self-contained chunks of code that perform a specific job withi
 6. Should exist within a package manager ecosystem:
     1. Computations should have (unique) names, descriptions, author(s), tags, and other metadata appropriate for a package.
     2. Authors should be able to publish, update versions, deprecate and transfer ownership of computations.
-    3. Authors need to specify the dependencies of their computations 
+    3. Authors need to specify the dependencies of their computations
         1. Environment dependencies (e.g., Python 3.5+, numpy==1.12, etc.)
         2. Dependencies on other computations
 7. Support for local computation (e.g. preprocessing) as well as decentralized computations.
@@ -48,8 +48,8 @@ A pipeline assembles single computations into a series. Owners of a consortium c
         * Allow for clients to drop out of a computation after a heartbeat timeout
     4. Should allow for flexible run initiation. Examples:
         1. Every client should be ready prior to start
-        2. Clients can join when ready, then the pipeline starts 
-        3. Run the pipeline immediately 
+        2. Clients can join when ready, then the pipeline starts
+        3. Run the pipeline immediately
         4. Set a future date for the run to begin
         5. Set the pipeline to run when a predefined number of users have joined
     5. Should allow user to elect a site for special participation (Example: specify a “hold-out” site that doesn’t participate in iterative analysis. This site’s data is used at the end of iteration to validate – quality check – the model computed through iteration over the other sites.)
@@ -62,9 +62,9 @@ A pipeline assembles single computations into a series. Owners of a consortium c
     3. Should operate in the background. Ideally, pipelines run when a user is away from their computer.
     4. Should be pausable, resumable, and cancel-able. (Functional interpretation: pipelines should maintain minimal internal state, ideally they're lambdas.)
 9. Should provide records for posterity and citations such that users and sites can receive credit for participating in runs.
-10. Pipeline should be fault-tolerant and have excellent error handling. 
+10. Pipeline should be fault-tolerant and have excellent error handling.
     1. Errors and crashes on local sites should not propagate to the run on the entire consortium, causing it to crash
-    2. Crashes in individual computations should not crash the entire pipeline. 
+    2. Crashes in individual computations should not crash the entire pipeline.
     3. In the event of a computation crash, the pipeline should notify the user, relaying any error messages.
     4. The pipeline should send automatically generated crash reports to the author of the computation.
     5. Should generate crash report.
@@ -157,7 +157,7 @@ A client is the local application that users interact with to use COINSTAC.
 Requirements of the system or the development process:
 
 * Ensure rapid development is possible in the system. We should be able to respond to feature requests and stakeholder feedback without hacking the system or contributing to technical debt.
-* Ensure algorithm developers can begin ASAP such that re-architecture, feature development and algorithm authorship happen in parallel. 
+* Ensure algorithm developers can begin ASAP such that re-architecture, feature development and algorithm authorship happen in parallel.
 * Define processes for developing features, ensure architecture documentation updates are included.
 * Make it easier for external or new developers to contribute. Adopting a composable microservices approach with good integration testing is key for this.
 * Continuous feature delivery: ensure we can continually roll out re-architecture features to the current demo. Don’t let it stagnate!
