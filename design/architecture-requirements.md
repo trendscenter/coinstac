@@ -13,7 +13,7 @@ Computations are self-contained chunks of code that perform a specific job withi
 1. Must allow for decentralized use: a computation may contain code that runs on client machines and a central server.
 2. Must support multiple programming languages: a computation written in another language (Python, R, etc.) should work with COINSTAC, which is written primarily in JavaScript. Multiple languages should be supported on both COINSTAC clients and the central server.
 3. Should be composable: runs should be able to configure computations in varying orders.
-4. Should be reproducible: users should be able to re-run a computation, or series of computations, with varying parameters easily.Should be easy for algorithm authors to develop:
+4. Should be reproducible: users should be able to re-run a computation, or series of computations, with varying parameters easily. Should be easy for algorithm authors to develop:
     1. Debugging tools (Example: coinstac-simulator) should exist to allow authors to easily test their algorithms and simulate their use within a COINSTAC-like system
     2. COINSTAC should perform automated checks against authors’ code to ensure it works within the system, and alert them to errors or potential problems.
 5. Should have an input and output specifications (see [MRN-Code/coinstac#12](https://github.com/MRN-Code/coinstac/issues/12)) to aid in composability and reproducibility:
