@@ -144,8 +144,7 @@ A client is the local application that users interact with to use COINSTAC.
 11. Should afford users a reasonable measure of security
     1. User information, consortium information, PHI data should be handled correctly
     2. E.g., Someone creates a computation that sends everyone’s data to another server
-12. Error handling
-    1. Sometimes, a crash in one step might be related to errors in a previous step. The user should be able to manually send free-form text feedback and automated crash reports to the author of any computation.
+12. Error handling: a crash in one step might be related to errors in a previous step. The user should be able to manually send free-form text feedback and automated crash reports to the author of any computation.
 
 ### System Characteristics
 
