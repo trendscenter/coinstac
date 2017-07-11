@@ -43,7 +43,9 @@ A pipeline assembles single computations into a series. Owners of a consortium c
 4. Must be configurable:
     1. Must accept input from consortium owners for specific computation steps and pass this input to the computations as they need it.
     2. Should be configured via a user interface.
-    3. Should expose control flow such that it’s configurable (Examples: synchronized group stepping on iterative computations, allow for clients to drop out of a computation after a heartbeat timeout, etc.). This should be exposable at the single computation step level.
+    3. Should expose control flow at a granular level (per computation) such that it’s configurable. Examples:
+        * Synchronized group stepping on iterative computations
+        * Allow for clients to drop out of a computation after a heartbeat timeout
     4. Should allow for flexible run initiation. Examples
         1. Every client should be ready prior to start
         2. Clients can join when ready, then the pipeline starts 
