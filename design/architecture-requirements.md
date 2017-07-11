@@ -19,7 +19,7 @@ Computations are self-contained chunks of code that perform a specific job withi
 5. Should have an input and output specifications (see [MRN-Code/coinstac#12](https://github.com/MRN-Code/coinstac/issues/12)) to aid in composability and reproducibility:
     1. Should be able to specify inputs: the computation dictates what it needs to run. This could be a collection of FreeSurfer files, a range of DICOM files, a CSV full of metadata, etc. This may also include inputs from previous computations in the pipeline (Example: second computation needs the original files for meta-analysis).
     2. Should be able to specify outputs: the computation declares its results. In some cases this may be raw JSON, or a table, a graph, an image, a file path, or a 3D visualization.
-    3. Should easily differentiate between local and remote i/o.???
+    3. Should have provisions for remote and local specifications. (Example: separate “remote” and “local” properties in a JSON schema.)
 6. Should exist within a package manager ecosystem:
     1. Computations should have (unique) names, descriptions, author(s), tags, and other metadata appropriate for a package.
     2. Authors should be able to publish, update versions, deprecate and transfer ownership of computations.
