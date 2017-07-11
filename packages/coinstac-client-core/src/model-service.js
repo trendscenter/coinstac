@@ -36,9 +36,7 @@ class ModelService {
     this.client = opts.client;
 
     /* istanbul ignore if */
-    if (!this.constructor.modelServiceHooks
-        || !(this.constructor.modelServiceHooks instanceof Function)
-      ) {
+    if (!(this.constructor.modelServiceHooks instanceof Function)) {
       throw new Error('expected modelServiceHooks method on child');
     }
 

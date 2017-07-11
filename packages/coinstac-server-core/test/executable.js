@@ -22,7 +22,9 @@ tape('executable works', (t) => {
 
   try {
     const child = spawn(executable);
-    const errorExit = (exitCode) => { t.notOk(exitCode, 'exited with non-error'); };
+    const errorExit = (exitCode) => {
+      t.notOk(exitCode, 'exited with non-error');
+    };
     child.on('close', errorExit);
     child.on('error', errorExit);
 
