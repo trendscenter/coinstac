@@ -530,7 +530,7 @@ FormProjectController.propTypes = {
 function select(
   {
     auth,
-    computations,
+    computationsState,
     consortia,
     projects,
   },
@@ -541,7 +541,7 @@ function select(
   const { user: { username } } = auth;
 
   return {
-    computations,
+    computations: computationsState.computations,
     consortia: consortia.filter(({ users }) => users.indexOf(username) > -1),
     project: projectId ?
       projects.find(({ _id }) => _id === projectId) :

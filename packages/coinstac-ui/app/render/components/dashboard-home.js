@@ -178,13 +178,13 @@ DashboardHome.propTypes = {
 
 function mapStateToProps({
   auth,
-  computations,
+  computationsState,
   consortia,
   projects,
   remoteResults,
 }) {
   return {
-    computations: computations || [],
+    computations: computationsState.computations,
     consortia: consortia || [],
     projects: projects || [],
     remoteResults: remoteResults || [],

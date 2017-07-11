@@ -1,13 +1,34 @@
+'use strict';
+
 import app from 'ampersand-app';
 import { applyAsyncLoading } from './loading';
 import { findIndex } from 'lodash';
 
-
+const SET_COMPUTATION = 'SET_COMPUTATION';
 const SET_COMPUTATIONS = 'SET_COMPUTATIONS';
 const BG_SET_COMPUTATIONS = 'BG_SET_COMPUTATIONS';
-export const setComputations = (computations, isBg) => ({
+
+const setComputation = (computation) => ({ payload: computation, type: SET_COMPUTATION });
+const setComputations = (computations, isBg) => ({
   type: isBg ? BG_SET_COMPUTATIONS : SET_COMPUTATIONS,
-  computations,
+  payload: computations,
+});
+
+export const fetchComputation = applyAsyncLoading(id => {
+  return (dispatch) => {
+    return app.core.computations.get(id)
+    .then((computation) => {
+      dispatch(setComputation(computation));
+      return computation;
+    })
+    .catch((err) => {
+      app.notify({
+        level: 'error',
+        message: 'Failed to fetch computation',
+      });
+      throw err;
+    });
+  };
 });
 
 export const fetchComputations = applyAsyncLoading(() => {
@@ -35,7 +56,7 @@ export const fetchComputations = applyAsyncLoading(() => {
  */
 export const updateComputations = ({ toUpdate, isBg }) =>
   (dispatch, getState) => {
-    const currComps = getState().computations || [];
+    const currComps = getState().computationsDuck.computations;
     if (!Array.isArray(toUpdate)) {
       toUpdate = [toUpdate];
     }
@@ -50,14 +71,18 @@ export const updateComputations = ({ toUpdate, isBg }) =>
     dispatch(setComputations(currComps, isBg));
   };
 
-export default function reducer(state = null, action) {
+const INITIAL_STATE = {
+  computation: null,
+  computations: [],
+};
+
+export default function reducer(state = INITIAL_STATE, action) {
   switch (action.type) {
     case BG_SET_COMPUTATIONS:
+    case SET_COMPUTATION:
+      return { ...state, computation: action.payload };
     case SET_COMPUTATIONS:
-      if (action.computations === null) {
-        return null;
-      }
-      return [...action.computations];
+      return { ...state, computations: [...action.payload] };
     default:
       return state;
   }
