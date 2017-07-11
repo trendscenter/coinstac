@@ -1,6 +1,6 @@
 # Architecture Requirements
 
-These requirements listed below are must haves for a COINSTAC architected.
+These requirements listed below are must haves for a COINSTAC architecture.
 
 ## System Entities
 
