@@ -14,10 +14,10 @@ Computations are self-contained chunks of code that perform a specific job withi
 2. Must support multiple programming languages: a computation written in another language (Python, R, etc.) should work with COINSTAC, which is written primarily in JavaScript. Multiple languages should be supported on both COINSTAC clients and the central server.
 3. Should be composable: runs should be able to configure computations in varying orders.
 4. Should be reproducible: users should be able to re-run a computation, or series of computations, with varying parameters easily.Should be easy for algorithm authors to develop:
-    1. Debugging tools (ex: coinstac-simulator) should exist to allow authors to easily test their algorithms and simulate their use within a COINSTAC-like system
+    1. Debugging tools (Example: coinstac-simulator) should exist to allow authors to easily test their algorithms and simulate their use within a COINSTAC-like system
     2. COINSTAC should perform automated checks against authors’ code to ensure it works within the system, and alert them to errors or potential problems.
 5. Should have an input and output specifications (see [MRN-Code/coinstac#12](https://github.com/MRN-Code/coinstac/issues/12)) to aid in composability and reproducibility:
-    1. Should be able to specify inputs: the computation dictates what it needs to run. This could be a collection of FreeSurfer files, a range of DICOM files, a CSV full of metadata, etc. This may also include inputs from previous computations in the pipeline (Ex: second computation needs the original files for meta-analysis).
+    1. Should be able to specify inputs: the computation dictates what it needs to run. This could be a collection of FreeSurfer files, a range of DICOM files, a CSV full of metadata, etc. This may also include inputs from previous computations in the pipeline (Example: second computation needs the original files for meta-analysis).
     2. Should be able to specify outputs: the computation declares its results. In some cases this may be raw JSON, or a table, a graph, an image, a file path, or a 3D visualization.
     3. Should easily differentiate between local and remote i/o.???
 6. Should exist within a package manager ecosystem:
@@ -34,7 +34,7 @@ A pipeline assembles single computations into a series. Owners of a consortium c
 
 1. Must compose computations: a pipeline combines computations into a series of steps for clients to execute. It facilitates computation-to-computation flow by passing data via the computation input/output specification.
     1. Should be composed via a user interface: an interface requiring no coding should assemble computations.
-    2. Pipelines should be savable for reuse, possibly sharable.
+    2. Pipelines should be savable for reuse, possibly shareable.
 2. Must accept input from users. (Example: A FreeSurfer computation requires a collection of scan files from several participants.)
     1. Must provide users a means to specify file paths of data on their local machines for input into pipeline
 3. Must work regardless of network conditions:
@@ -46,7 +46,7 @@ A pipeline assembles single computations into a series. Owners of a consortium c
     3. Should expose control flow at a granular level (per computation) such that it’s configurable. Examples:
         * Synchronized group stepping on iterative computations
         * Allow for clients to drop out of a computation after a heartbeat timeout
-    4. Should allow for flexible run initiation. Examples
+    4. Should allow for flexible run initiation. Examples:
         1. Every client should be ready prior to start
         2. Clients can join when ready, then the pipeline starts 
         3. Run the pipeline immediately 
@@ -55,12 +55,12 @@ A pipeline assembles single computations into a series. Owners of a consortium c
     5. Should allow user to elect a site for special participation (Example: specify a “hold-out” site that doesn’t participate in iterative analysis. This site’s data is used at the end of iteration to validate – quality check – the model computed through iteration over the other sites.)
 5. Should be easy for consortium owners to develop and debug.
 6. Should be inspectable: users should be able to examine the current state and existing steps of a pipeline.
-7. Should cache intermediate and final results of a computation run (ex: FreeSurfer preprocessing) for reuse. Don’t make the client do the same job twice.
+7. Should cache intermediate and final results of a computation run (Example: FreeSurfer preprocessing) for reuse. Don’t make the client do the same job twice.
 8. A running pipeline:
-    1. Should not use all of a client’s resources: runs should enter a queue system and run in a rate-limited parallel manner (ex: “four runs at a time, in order of run initiation issue”)
+    1. Should not use all of a client’s resources: runs should enter a queue system and run in a rate-limited parallel manner (Example: “four runs at a time, in order of run initiation issue”)
     2. Should surface metrics about its progress. This should involve collecting information about raw computation time, network travel time, iteration count, estimated finish time, etc. A user interface should be able to display this information.
     3. Should operate in the background. Ideally, pipelines run when a user is away from their computer.
-    4. Should be pausable, resumable, and cancelable. (Functional interpretation: pipelines should maintain minimal internal state, ideally they're lambdas.)
+    4. Should be pausable, resumable, and cancel-able. (Functional interpretation: pipelines should maintain minimal internal state, ideally they're lambdas.)
 9. Should provide records for posterity and citations such that users and sites can receive credit for participating in runs.
 10. Pipeline should be fault-tolerant and have excellent error handling. 
     1. Errors and crashes on local sites should not propagate to the run on the entire consortium, causing it to crash
@@ -164,7 +164,7 @@ Requirements of the system or the development process:
 * Continuous feature delivery: ensure we can continually roll out re-architecture features to the current demo. Don’t let it stagnate!
 * Create phases of re-architecture: we might not need social features for another 2 years, we might not need a robust computation registry for another 3 years, etc.
 * Define a project management workflow. Stick to it!
-* Define a process for adding high-level features and documenting them. See [Rust’s RFC repo](https://github.com/rust-lang/rfcs) and [Ember’s RFC repo](https://github.com/emberjs/rfcs) for excellent examples. Perhaps design documents can exist in a top-level rfcs or design directory. Ensure design documents are followed with issues to track active development. Ensure special GitHub labels exist for the design PRs and issues. (Also: [Swift Evolution](https://github.com/apple/swift-evolution))
+* Define a process for adding high-level features and documenting them. See [Rust’s RFC repo](https://github.com/rust-lang/rfcs) and [Ember’s RFC repo](https://github.com/emberjs/rfcs) for excellent examples. Perhaps design documents can exist in a top-level rfcs or design directory. Ensure design documents are followed with issues to track active development. Ensure special GitHub labels exist for the design pull requests and issues. (Also: [Swift Evolution](https://github.com/apple/swift-evolution))
 * Don’t attempt to create a schema that encompasses data: this is likely a black hole. Sites store data differently; normalizing data via scripts has been a years-long effort. Adopt [an existing](http://bids.neuroimaging.io/) spec or leave that responsibility in the hands of computation authors.
 * Build systems such that they’re extensible. This should assist the “rapid development” requirement in that changing from, say, Docker to [Singularity](http://singularity.lbl.gov/) is as easy as building a Singularity adapter.
 
