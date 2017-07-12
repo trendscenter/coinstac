@@ -9,14 +9,15 @@ import {
   unlistenToConsortia,
 } from './bg-services';
 
-const DO_DELETE_CONSORTIA = 'DO_DELETE_CONSORTIA';
-const DO_UPDATE_CONSORTIA = 'DO_UPDATE_CONSORTIA';
-const SET_CONSORTIUM = 'SET_CONSORTIUM';
-const SET_EXPANDED_RESULTS = 'SET_EXPANDED_RESULT';
+// Actions
+export const DO_DELETE_CONSORTIA = 'DO_DELETE_CONSORTIA';
+export const DO_UPDATE_CONSORTIA = 'DO_UPDATE_CONSORTIA';
+export const SET_CONSORTIUM = 'SET_CONSORTIUM';
+export const SET_EXPANDED_RESULTS = 'SET_EXPANDED_RESULT';
 
-const setConsortium = (consortium) => ({ payload: consortium, type: SET_CONSORTIUM });
-
-function doDeleteConsortia(consortia) {
+// Action Creators
+export const setConsortium = (consortium) => ({ payload: consortium, type: SET_CONSORTIUM });
+export function doDeleteConsortia(consortia) {
   if (!Array.isArray(consortia)) {
     throw new Error('Expected consortia to be an array');
   }
@@ -27,7 +28,7 @@ function doDeleteConsortia(consortia) {
   };
 }
 
-function doUpdateConsortia(consortia) {
+export function doUpdateConsortia(consortia) {
   if (!Array.isArray(consortia)) {
     throw new Error('Expected consortia to be an array');
   }
@@ -38,6 +39,7 @@ function doUpdateConsortia(consortia) {
   };
 }
 
+// Helpers
 /**
  * Delete a consortium.
  *
@@ -365,6 +367,7 @@ const INITIAL_STATE = {
   expandedResults: [],
 };
 
+// Reducer
 export default function reducer(state = INITIAL_STATE, action) {
   switch (action.type) {
     /**
