@@ -67,10 +67,7 @@ export function updateProjectStatus({ id, status }) {
   };
 }
 
-/*
-  "Side Effects"
-*/
-
+// Helpers
 /**
  * Map project model.
  *
