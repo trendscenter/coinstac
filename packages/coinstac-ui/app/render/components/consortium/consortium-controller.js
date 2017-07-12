@@ -169,13 +169,13 @@ function mapStateToProps(state, { params: { consortiumId, resultId } }) {
       user: { username },
     },
     computations,
-    consortia,
+    consortiaState,
     loading: { isLoading },
     remoteResults,
   } = state;
   const isNew = !consortiumId;
   const consortium = !isNew ?
-    consortia.find(({ _id }) => _id === consortiumId) :
+    consortiaState.consortia.find(({ _id }) => _id === consortiumId) :
     null;
 
   return {

@@ -1,3 +1,5 @@
+'use strict';
+
 import app from 'ampersand-app';
 import { applyAsyncLoading } from './loading';
 import { clone, map } from 'lodash';
@@ -7,7 +9,12 @@ import {
   unlistenToConsortia,
 } from './bg-services';
 
-export const DO_DELETE_CONSORTIA = 'DO_DELETE_CONSORTIA';
+const DO_DELETE_CONSORTIA = 'DO_DELETE_CONSORTIA';
+const DO_UPDATE_CONSORTIA = 'DO_UPDATE_CONSORTIA';
+const SET_CONSORTIUM = 'SET_CONSORTIUM';
+const SET_EXPANDED_RESULTS = 'SET_EXPANDED_RESULT';
+
+const setConsortium = (consortium) => ({ consortium, type: SET_CONSORTIUM });
 
 function doDeleteConsortia(consortia) {
   if (!Array.isArray(consortia)) {
@@ -19,8 +26,6 @@ function doDeleteConsortia(consortia) {
     type: DO_DELETE_CONSORTIA,
   };
 }
-
-export const DO_UPDATE_CONSORTIA = 'DO_UPDATE_CONSORTIA';
 
 function doUpdateConsortia(consortia) {
   if (!Array.isArray(consortia)) {
@@ -48,6 +53,23 @@ export const deleteConsortium = applyAsyncLoading(consortiumId => {
 
     return consortia.get(consortiumId)
       .then(consortium => consortia.delete(consortium));
+  };
+});
+
+export const fetchConsortium = applyAsyncLoading(id => {
+  return (dispatch) => {
+    return app.core.consortia.get(id)
+    .then((consortium) => {
+      dispatch(setConsortium(consortium));
+      return consortium;
+    })
+    .catch((err) => {
+      app.notify({
+        level: 'error',
+        message: 'Failed to fetch consortium',
+      });
+      throw err;
+    });
   };
 });
 
@@ -244,6 +266,13 @@ export const setComputationInputs = applyAsyncLoading(
   }
 );
 
+export const setExpandedResults = (resultId) => {
+  return {
+    type: SET_EXPANDED_RESULTS,
+    payload: resultId,
+  };
+};
+
 /**
  * Remove a user from a consortium.
  *
@@ -330,7 +359,13 @@ export function consortiaSorter(a, b) {
   return a.label > b.label;
 }
 
-export default function reducer(state = [], action) {
+const INITIAL_STATE = {
+  consortium: null,
+  consortia: [],
+  expandedResults: [],
+};
+
+export default function reducer(state = INITIAL_STATE, action) {
   switch (action.type) {
     /**
      * There's no distinction between 'new' and 'changed' consortia in PouchDB
@@ -339,9 +374,9 @@ export default function reducer(state = [], action) {
     case DO_UPDATE_CONSORTIA: {
       const newConsortia = [];
       const changed = [];
-      const unchanged = [...state];
+      const unchanged = [...state.consortia];
 
-      action.consortia.forEach(consortium => {
+      action.payload.forEach(consortium => {
         const index = unchanged.findIndex(c => c._id === consortium._id);
 
         if (index > -1) {
@@ -352,13 +387,41 @@ export default function reducer(state = [], action) {
         }
       });
 
-      return [...unchanged, ...changed, ...newConsortia].sort(consortiaSorter);
+      return {
+        ...state,
+        consortia: [...unchanged, ...changed, ...newConsortia].sort(consortiaSorter),
+      };
     }
     case DO_DELETE_CONSORTIA: {
-      const ids = action.consortia.map(({ _id }) => _id);
+      const ids = action.payload.map(({ _id }) => _id);
 
-      return state.filter(({ _id }) => ids.indexOf(_id) < 0);
+      return {
+        ...state,
+        consortia: state.consortia.filter(({ _id }) => ids.indexOf(_id) < 0),
+      };
     }
+    case SET_CONSORTIUM:
+      if (action.payload === null) { return null; }
+      return {
+        ...state,
+        consortium: { ...action.payload },
+      };
+    case SET_EXPANDED_RESULTS:
+      if (state.expandedResults.includes(action.payload)) {
+        return {
+          ...state,
+          expandedResults: state.expandedResults.filter((res) => res !== action.payload),
+        };
+      } else if (action.payload !== null) {
+        return {
+          ...state,
+          expandedResults: [action.payload, ...state.expandedResults],
+        };
+      }
+      return {
+        ...state,
+        expandedResults: [],
+      };
     default:
       return state;
   }

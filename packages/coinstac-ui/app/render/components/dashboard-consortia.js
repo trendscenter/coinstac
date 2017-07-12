@@ -71,7 +71,7 @@ DashboardConsortia.propTypes = {
   user: PropTypes.object.isRequired,
 };
 
-function mapStateToProps({ loading, consortia, auth: { user } }) {
+function mapStateToProps({ loading, consortiaState: { consortia }, auth: { user } }) {
   return { consortia, loading, user };
 }
 
