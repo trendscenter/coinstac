@@ -2,32 +2,65 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { Alert } from 'react-bootstrap';
 import { connect } from 'react-redux';
-import { logger, notify } from 'ampersand-app';
+// import { logger, notify } from 'ampersand-app';
 
 import StatusItem from './status-item.js';
-import { fetch as fetchProjects } from '../state/ducks/projects.js';
+// Not sure that Projects is used--
+// import { fetch as fetchProjects } from '../state/ducks/projects.js';
 import { fetchComputations } from '../state/ducks/computations.js';
-import { fetch as fetchResults } from '../state/ducks/remote-results';
+import {
+  fetchRemoteResultsForUser,
+} from '../state/ducks/remote-results';
 
 class DashboardHome extends Component {
-  componentWillMount() {
-    const { computations, dispatch } = this.props;
+  constructor(props) {
+    super(props);
 
-    dispatch(fetchResults());
+    this.state = {
+      didInitResults: false,
+    };
+  }
+
+  componentWillMount() {
+    const { computations, dispatch, username } = this.props;
 
     if (!computations.length) {
       dispatch(fetchComputations());
     }
 
     // TODO: Modify action creator to use Promise
+    // Why fetch projects?
+    /*
     dispatch(fetchProjects((error) => {
       if (error) {
         logger.error(error);
         notify('error', error.message);
       }
     }));
+    */
 
-    this.interval = setInterval(() => dispatch(fetchResults()), 5000);
+    this.interval = setInterval(() => dispatch(fetchRemoteResultsForUser(username)), 5000);
+  }
+
+  componentWillUpdate() {
+    const {
+      computations,
+      consortia,
+      dispatch,
+      // Projects don't seem to be used-- projects,
+      username,
+    } = this.props;
+
+    if (
+      !this.state.didInitResults &&
+      computations.length &&
+      consortia.length &&
+      // Projects don't seem to be used-- projects.length &&
+      username
+    ) {
+      this.setState({ didInitResults: true });
+      dispatch(fetchRemoteResultsForUser(username));
+    }
   }
 
   componentWillUnmount() {
@@ -36,75 +69,27 @@ class DashboardHome extends Component {
     }
   }
 
-  maybeRenderStatusItem({ computation, consortium, remoteResult }) {
-    const isMember = consortium.users.indexOf(this.props.username) > -1;
-
-    if (isMember) {
-      return (
-        <StatusItem
-          computation={computation}
-          consortium={consortium}
-          remoteResult={remoteResult}
-        />
-      );
-    }
-  }
-
   render() {
     const {
-      computations,
-      consortia,
-      projects,
-      username,
       remoteResults,
     } = this.props;
-    let statusItems = [];
-
-    if (
-      remoteResults.length &&
-      computations.length &&
-      consortia.length &&
-      username
-    ) {
-      Array.prototype.push.apply(
-        statusItems,
-        remoteResults.reduce((memo, remoteResult) => {
-          const computation = computations.find(
-            ({ _id }) => _id === remoteResult.computationId
-          );
-          const consortium = consortia.find(
-            ({ _id }) => _id === remoteResult.consortiumId
-          );
-          const project = projects.find(
-            ({ consortiumId }) => consortiumId === consortium._id
-          );
-          const isMember = consortium.users.indexOf(username) > -1;
-
-          if (isMember) {
-            return memo.concat(this.maybeRenderStatusItem({
-              computation,
-              consortium,
-              project,
-              remoteResult,
-            }));
-          }
-
-          return memo;
-        }, [])
-      );
-    }
-
-    if (!statusItems.length) {
-      statusItems = [<Alert>No computation results</Alert>];
-    }
 
     return (
       <div className="dashboard-home">
         <h1 className="h2">Computation statuses:</h1>
+        {!remoteResults.length &&
+          <Alert>No computation results</Alert>
+        }
         <ul className="list-unstyled">
-          {statusItems.map((item, index) => (
-            <li key={index}>{item}</li>
-          ))}
+          {remoteResults.map((res) =>
+            <li key={res.startDate}>
+              <StatusItem
+                computation={res.computation}
+                consortium={res.consortium}
+                remoteResult={res}
+              />
+            </li>
+          )}
         </ul>
       </div>
     );
