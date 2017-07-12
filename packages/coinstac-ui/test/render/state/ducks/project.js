@@ -7,7 +7,7 @@ import projectReducer, {
   removeFilesFromProject,
   SET_PROJECT,
   setProject,
-} from '../../../../app/render/state/ducks/project';
+} from '../../../../app/render/state/ducks/projects';
 import tape from 'tape';
 
 const FILES_FIXTURE = [{
