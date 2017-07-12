@@ -179,7 +179,7 @@ DashboardHome.propTypes = {
 function mapStateToProps({
   auth,
   computations,
-  consortia,
+  consortiaState: { consortia },
   projects,
   remoteResults,
 }) {
