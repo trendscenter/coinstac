@@ -14,7 +14,7 @@ const DO_UPDATE_CONSORTIA = 'DO_UPDATE_CONSORTIA';
 const SET_CONSORTIUM = 'SET_CONSORTIUM';
 const SET_EXPANDED_RESULTS = 'SET_EXPANDED_RESULT';
 
-const setConsortium = (consortium) => ({ consortium, type: SET_CONSORTIUM });
+const setConsortium = (consortium) => ({ payload: consortium, type: SET_CONSORTIUM });
 
 function doDeleteConsortia(consortia) {
   if (!Array.isArray(consortia)) {
@@ -22,7 +22,7 @@ function doDeleteConsortia(consortia) {
   }
 
   return {
-    consortia,
+    payload: consortia,
     type: DO_DELETE_CONSORTIA,
   };
 }
@@ -33,7 +33,7 @@ function doUpdateConsortia(consortia) {
   }
 
   return {
-    consortia,
+    payload: consortia,
     type: DO_UPDATE_CONSORTIA,
   };
 }
