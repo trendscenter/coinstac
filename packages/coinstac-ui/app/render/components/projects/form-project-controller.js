@@ -516,7 +516,7 @@ FormProjectController.propTypes = {
 
 /**
  * Pluck project and put it on the component's props when editing.
- * {@link https://github.com/reactjs/react-redux/blob/master/docs/api.md}
+ * {@link -}
  *
  * @param {Object} state
  * @param {Object} state.auth
@@ -531,7 +531,7 @@ function select(
   {
     auth,
     computations,
-    consortia,
+    consortiaState: { consortia },
     projects,
   },
   {

@@ -156,7 +156,7 @@ ProjectsList.propTypes = {
 
 function select(state) {
   return {
-    consortia: state.consortia,
+    consortia: state.consortiaState.consortia,
     projects: state.projects,
     username: state.auth.user.username,
   };
