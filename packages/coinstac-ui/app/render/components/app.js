@@ -37,10 +37,10 @@ App.propTypes = {
   loading: PropTypes.object,
 };
 
-function select(state) {
+function mapStateToProps({ loading }) {
   return {
-    loading: state.loading,
+    loading,
   };
 }
 
-export default connect(select)(App);
+export default connect(mapStateToProps)(App);
