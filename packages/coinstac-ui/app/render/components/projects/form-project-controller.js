@@ -532,7 +532,7 @@ function select(
     auth,
     computations,
     consortia,
-    projects,
+    projectsState: { projects },
   },
   {
     params: { projectId },

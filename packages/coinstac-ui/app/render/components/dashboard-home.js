@@ -180,7 +180,7 @@ function mapStateToProps({
   auth,
   computations,
   consortia,
-  projects,
+  projectsState: { projects },
   remoteResults,
 }) {
   return {
