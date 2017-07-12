@@ -4,16 +4,19 @@ import app from 'ampersand-app';
 import { applyAsyncLoading } from './loading';
 import { findIndex } from 'lodash';
 
-const SET_COMPUTATION = 'SET_COMPUTATION';
-const SET_COMPUTATIONS = 'SET_COMPUTATIONS';
-const BG_SET_COMPUTATIONS = 'BG_SET_COMPUTATIONS';
+// Actions
+export const SET_COMPUTATION = 'SET_COMPUTATION';
+export const SET_COMPUTATIONS = 'SET_COMPUTATIONS';
+export const BG_SET_COMPUTATIONS = 'BG_SET_COMPUTATIONS';
 
-const setComputation = (computation) => ({ payload: computation, type: SET_COMPUTATION });
-const setComputations = (computations, isBg) => ({
+// Action Creators
+export const setComputation = (computation) => ({ payload: computation, type: SET_COMPUTATION });
+export const setComputations = (computations, isBg) => ({
   type: isBg ? BG_SET_COMPUTATIONS : SET_COMPUTATIONS,
   payload: computations,
 });
 
+// Helpers
 export const fetchComputation = applyAsyncLoading(id => {
   return (dispatch) => {
     return app.core.computations.get(id)
@@ -76,6 +79,7 @@ const INITIAL_STATE = {
   computations: [],
 };
 
+// Reducer
 export default function reducer(state = INITIAL_STATE, action) {
   switch (action.type) {
     case BG_SET_COMPUTATIONS:
