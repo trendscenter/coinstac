@@ -154,12 +154,12 @@ ProjectsList.propTypes = {
   username: PropTypes.string.isRequired,
 };
 
-function select(state) {
+function mapStateToProps({ consortia, projects, auth }) {
   return {
-    consortia: state.consortia,
-    projects: state.projects,
-    username: state.auth.user.username,
+    consortia,
+    projects,
+    username: auth.user.username,
   };
 }
 
-export default connect(select)(ProjectsList);
+export default connect(mapStateToProps)(ProjectsList);

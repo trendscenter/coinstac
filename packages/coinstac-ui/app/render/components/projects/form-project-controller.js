@@ -527,7 +527,7 @@ FormProjectController.propTypes = {
  * @param {Object} ownProps.params
  * @returns {Object}
  */
-function select(
+function mapStateToProps(
   {
     auth,
     computations,
@@ -550,4 +550,4 @@ function select(
   };
 }
 
-export default connect(select)(FormProjectController);
+export default connect(mapStateToProps)(FormProjectController);

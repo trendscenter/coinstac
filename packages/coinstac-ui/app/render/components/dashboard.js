@@ -65,10 +65,10 @@ Dashboard.propTypes = {
   children: PropTypes.node.isRequired,
 };
 
-function select(state) {
+function mapStateToProps({ auth }) {
   return {
-    auth: state.auth,
+    auth,
   };
 }
 
-export default connect(select)(Dashboard);
+export default connect(mapStateToProps)(Dashboard);
