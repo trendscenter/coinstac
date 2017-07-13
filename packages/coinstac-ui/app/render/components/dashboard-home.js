@@ -181,7 +181,7 @@ function mapStateToProps({
   computations,
   consortia,
   projects,
-  remoteResults,
+  resultsState: { remoteResults },
 }) {
   return {
     computations: computations || [],

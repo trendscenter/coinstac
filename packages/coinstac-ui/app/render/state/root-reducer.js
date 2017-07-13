@@ -7,7 +7,7 @@ import consortiaPage from './ducks/consortia-page';
 import loading from './ducks/loading';
 import project from './ducks/project';
 import projects from './ducks/projects';
-import remoteResults from './ducks/remote-results';
+import resultsState from './ducks/results';
 import { reducer as form } from 'redux-form';
 
 const rootReducer = combineReducers({
@@ -20,7 +20,7 @@ const rootReducer = combineReducers({
   loading,
   project,
   projects,
-  remoteResults,
+  resultsState,
 });
 
 export default rootReducer;
