@@ -2,12 +2,13 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { Alert } from 'react-bootstrap';
 import { connect } from 'react-redux';
-import { core, logger, notify } from 'ampersand-app';
+import { core, notify } from 'ampersand-app';
 import { flatten, sortBy } from 'lodash';
 
 import StatusItem from './status-item.js';
 import { fetch as fetchProjects } from '../state/ducks/projects.js';
 import { fetchComputations } from '../state/ducks/computations.js';
+import { logUI } from '../state/ducks/util';
 
 class DashboardHome extends Component {
   constructor(props) {
@@ -24,7 +25,7 @@ class DashboardHome extends Component {
     // TODO: Modify action creator to use Promise
     dispatch(fetchProjects((error) => {
       if (error) {
-        logger.error(error);
+        logUI('error', error);
         notify('error', error.message);
       }
     }));
@@ -65,7 +66,7 @@ class DashboardHome extends Component {
         return remoteResults;
       })
       .catch((error) => {
-        logger.error(error);
+        logUI('error', error);
         notify('error', error.message);
 
         if (this.interval) {

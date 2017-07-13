@@ -7,6 +7,7 @@ import deepEqual from 'deep-equal';
 
 import { runComputation } from '../../state/ducks/bg-services';
 import { addProject } from '../../state/ducks/projects';
+import { logUI } from '../../state/ducks/util';
 import FormProject from './form-project';
 
 class FormProjectController extends Component {
@@ -177,7 +178,7 @@ class FormProjectController extends Component {
       })
       .catch(error => {
         // Electron's dialog doesn't produce errors, so this should never happen
-        app.logger.error(error);
+        logUI('error', error);
         app.notify({
           level: 'error',
           message: `An error occurred when adding files: ${error.message}`,
@@ -210,7 +211,7 @@ class FormProjectController extends Component {
         });
       })
       .catch(error => {
-        app.logger.error(error);
+        logUI('error', error);
         this.setState({
           errors: {
             metaFile: error.message,

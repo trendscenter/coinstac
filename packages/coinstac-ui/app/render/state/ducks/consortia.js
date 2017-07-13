@@ -6,6 +6,7 @@ import {
   listenToConsortia,
   unlistenToConsortia,
 } from './bg-services';
+import { logUI } from './util';
 
 export const DO_DELETE_CONSORTIA = 'DO_DELETE_CONSORTIA';
 
@@ -75,9 +76,7 @@ export const joinConsortium = applyAsyncLoading((consortiumId, username) => {
 
         listenToConsortia(consortium);
         addConsortiumComputationListener(consortium);
-        app.logger.info(
-          `Listening to events on consortium "${consortium.label}"`
-        );
+        logUI('info', `Listening to events on consortium "${consortium.label}"`);
 
         // TODO: Array#push doesn't work.
         // https://github.com/electron/electron/issues/6734
@@ -267,9 +266,7 @@ export const leaveConsortium = applyAsyncLoading((consortiumId, username) => {
         }
 
         unlistenToConsortia(consortiumId);
-        app.logger.info(
-          `Not listening to consortium "${consortium.label}`
-        );
+        logUI('info', `Not listening to consortium "${consortium.label}`);
 
         // TODO: Array#splice doesn't work.
         // https://github.com/electron/electron/issues/6734

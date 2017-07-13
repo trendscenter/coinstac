@@ -1,7 +1,8 @@
 import app from 'ampersand-app';
 import electron from 'electron';
 
-const mainLogger = electron.remote.require('app/main/utils/expose-app.js')().logger;
+const mainLogger = electron.remote.require('app/main/utils/expose-app.js')().mainLogger;
+const renderLogger = electron.remote.require('app/main/utils/expose-app.js')().renderLogger;
 
 /**
  * Get configured logger.
@@ -11,20 +12,29 @@ const mainLogger = electron.remote.require('app/main/utils/expose-app.js')().log
  * defaults)
  * @returns {Function} logger
  */
-function getLogger(consoleMethod, winstonMethod) {
+function getLogger(consoleMethod, winstonMethod, logger) {
   return (...args) => {
     console[consoleMethod].apply(console, args); // eslint-disable-line no-console
-    mainLogger[winstonMethod].apply(null, ['ui', ...args]);
+    logger[winstonMethod].apply(null, ['ui', ...args]);
   };
 }
 
 module.exports = function configureLogger() {
-  app.logger = {
-    debug: getLogger('log', 'debug'),
-    error: getLogger('error', 'error'),
-    info: getLogger('log', 'info'),
-    log: getLogger('log', 'info'),
-    verbose: getLogger('log', 'verbose'),
-    warn: getLogger('warn', 'warn'),
+  app.mainLogger = {
+    debug: getLogger('log', 'debug', mainLogger),
+    error: getLogger('error', 'error', mainLogger),
+    info: getLogger('log', 'info', mainLogger),
+    log: getLogger('log', 'info', mainLogger),
+    verbose: getLogger('log', 'verbose', mainLogger),
+    warn: getLogger('warn', 'warn', mainLogger),
+  };
+
+  app.renderLogger = {
+    debug: getLogger('log', 'debug', renderLogger),
+    error: getLogger('error', 'error', renderLogger),
+    info: getLogger('log', 'info', renderLogger),
+    log: getLogger('log', 'info', renderLogger),
+    verbose: getLogger('log', 'verbose', renderLogger),
+    warn: getLogger('warn', 'warn', renderLogger),
   };
 };

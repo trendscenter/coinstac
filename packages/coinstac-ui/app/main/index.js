@@ -54,5 +54,5 @@ loadConfig()
 .then(upsertCoinstacUserDir)
 .then(configureServices)
 .then(() => {
-  app.logger.verbose('main process booted');
+  app.mainLogger.verbose('main process booted');
 });

@@ -4,7 +4,7 @@ import DashboardNav from './dashboard-nav';
 import UserAccountController from './user-account-controller';
 import { connect } from 'react-redux';
 import * as bgServices from '../state/ducks/bg-services';
-import app from 'ampersand-app';
+import { logUI } from '../state/ducks/util';
 
 import CoinstacAbbr from './coinstac-abbr';
 
@@ -16,7 +16,7 @@ class Dashboard extends Component {
 
     process.nextTick(() => {
       if (!user) {
-        app.logger.verbose('Redirecting login (no authorized user)');
+        logUI('verbose', 'Redirecting login (no authorized user)');
         router.push('/login');
       } else {
         dispatch(bgServices.initPrivateBackgroundServices());

@@ -4,6 +4,7 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 
 import { logout } from '../state/ducks/auth';
+import { logUI } from '../state/ducks/util';
 import UserAccount from './user-account';
 
 
@@ -28,7 +29,7 @@ class UserAccountController extends Component {
       });
     })
     .catch(err => {
-      app.logger.error(err);
+      logUI('error', err);
       app.notify({
         level: 'error',
         message: 'Error logging out',

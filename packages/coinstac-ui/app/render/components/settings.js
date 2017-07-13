@@ -3,6 +3,7 @@ import { Button } from 'react-bootstrap';
 import { connect } from 'react-redux';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
+import { logUI } from '../state/ducks/util';
 
 class Settings extends Component {
   constructor(props) {
@@ -26,7 +27,7 @@ class Settings extends Component {
         }
       })
       .catch(error => {
-        app.logger.error(error);
+        logUI('error', error);
         app.notify({
           level: 'error',
           message: `Could not remove user data: ${error.message}`,

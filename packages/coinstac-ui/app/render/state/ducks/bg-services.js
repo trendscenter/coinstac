@@ -152,7 +152,7 @@ export const initPrivateBackgroundServices = applyAsyncLoading(() => {
       let status;
 
       if (error) {
-        app.logger.error(error);
+        app.renderLogger.error(error);
         app.notify({
           level: 'error',
           message: `Project listener error: ${error.message}`,

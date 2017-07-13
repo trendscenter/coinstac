@@ -19,6 +19,7 @@ import {
   fetch as fetchRemoteResults,
   setRemoteResults,
 } from '../../state/ducks/remote-results';
+import { logUI } from '../../state/ducks/util';
 
 class ConsortiumController extends Component {
   constructor(props) {
@@ -88,7 +89,7 @@ class ConsortiumController extends Component {
       listenToConsortia(tium);
       addConsortiumComputationListener(tium);
 
-      app.logger.info(`now listening to events on consortium ${tium.label}`);
+      logUI('info', `now listening to events on consortium ${tium.label}`);
     });
   }
 

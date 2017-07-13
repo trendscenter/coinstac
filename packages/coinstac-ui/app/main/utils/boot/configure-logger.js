@@ -15,8 +15,18 @@ module.exports = function configureLogger() {
 
   return mkdirp(logLocation, parseInt('0775', 8))
   .then(() => {
-    const logFilePath = path.join(logLocation, app.config.get('logFile'));
-    const logger = new winston.Logger({
+    let logFilePath = path.join(logLocation, app.config.get('mainLogFile'));
+    const mainLogger = new winston.Logger({
+      transports: [
+        new winston.transports.Console(),
+        new winston.transports.File({
+          filename: logFilePath,
+        }),
+      ],
+    });
+
+    logFilePath = path.join(logLocation, app.config.get('renderLogFile'));
+    const renderLogger = new winston.Logger({
       transports: [
         new winston.transports.Console(),
         new winston.transports.File({
@@ -26,11 +36,12 @@ module.exports = function configureLogger() {
     });
 
     if (cliOpts.loglevel) {
-      logger.level = cliOpts.loglevel;
-      logger.verbose(`logLevel set to \`${cliOpts.loglevel}\``);
+      mainLogger.level = cliOpts.loglevel;
+      mainLogger.verbose(`logLevel set to \`${cliOpts.loglevel}\``);
     }
 
-    app.logger = logger;
+    app.mainLogger = mainLogger;
+    app.renderLogger = renderLogger;
   })
   .catch((err) => {
     /* eslint-disable no-console */
@@ -38,17 +49,26 @@ module.exports = function configureLogger() {
     console.log(`Error: ${err}`);
     /* eslint-enable no-console */
 
-    const logger = new winston.Logger({
+    const mainLogger = new winston.Logger({
+      transports: [
+        new winston.transports.Console(),
+      ],
+    });
+
+    const renderLogger = new winston.Logger({
       transports: [
         new winston.transports.Console(),
       ],
     });
 
     if (cliOpts.loglevel) {
-      logger.level = cliOpts.loglevel;
-      logger.verbose(`logLevel set to \`${cliOpts.loglevel}\``);
+      mainLogger.level = cliOpts.loglevel;
+      mainLogger.verbose(`logLevel set to \`${cliOpts.loglevel}\``);
+      renderLogger.level = cliOpts.loglevel;
+      renderLogger.verbose(`logLevel set to \`${cliOpts.loglevel}\``);
     }
 
-    app.logger = logger;
+    app.mainLogger = mainLogger;
+    app.renderLogger = renderLogger;
   });
 };

@@ -12,6 +12,7 @@ import { ProjectCard } from './project-card.js';
 import { hilarious } from '../../utils/hilarious-loading-messages.js';
 import app from 'ampersand-app';
 import { runComputation } from '../../state/ducks/bg-services';
+import { logUI } from '../../state/ducks/util';
 import deepEqual from 'deep-equal';
 
 class ProjectsList extends Component {
@@ -27,7 +28,7 @@ class ProjectsList extends Component {
 
     dispatch(fetchProjects((err) => {
       if (err) {
-        app.logger.error(err);
+        logUI('error', err);
         app.notify({
           level: 'error',
           message: `Failed to load projects: ${err.message}`,

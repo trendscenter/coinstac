@@ -89,7 +89,7 @@ class CoinstacClient {
     this.appDirectory = opts.appDirectory ||
       CoinstacClient.getDefaultAppDirectory();
     this.halfpennyBaseUrl = opts.hp;
-    this.logger = opts.logger || new Logger({ transports: [new Console()] });
+    this.logger = opts.mainLogger || new Logger({ transports: [new Console()] });
 
     // hack for electron-remote. generate full API, even if it's dead.
     this.auth = {};
