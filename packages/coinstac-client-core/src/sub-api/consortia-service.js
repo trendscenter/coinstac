@@ -4,7 +4,7 @@
  * @module consortia-service
  */
 const common = require('coinstac-common');
-const uuid = require('uuid');
+const uuidv4 = require('uuid/v4');
 const toArray = require('lodash/toArray');
 const Consortium = common.models.Consortium;
 const ModelService = require('../model-service');
@@ -73,7 +73,7 @@ class ConsortiaService extends ModelService {
     const args = toArray(arguments); // eslint-disable-line
     const tium = args[0];
     if (!tium._id) {
-      tium._id = uuid.v4().replace(/-/ig, '');
+      tium._id = uuidv4().replace(/-/ig, '');
     }
     return ModelService.prototype.save.apply(this, args);
   }
