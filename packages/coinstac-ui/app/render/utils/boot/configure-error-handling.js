@@ -5,11 +5,11 @@
 import app from 'ampersand-app';
 
 function onError(error) {
-  app.logger.error('Unhandled error:', error);
+  app.renderLogger.error('Unhandled error:', error);
 }
 
 function onUnhandledRejection(event) {
-  app.logger.error('Unhandled rejection:', event.promise, event.reason);
+  app.renderLogger.error('Unhandled rejection:', event.promise, event.reason);
 }
 
 export function start() {

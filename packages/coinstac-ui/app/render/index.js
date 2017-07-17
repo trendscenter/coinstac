@@ -35,7 +35,7 @@ render(
   rootEl
 );
 
-app.logger.info('renderer process up');
+app.renderLogger.info('renderer process up');
 
 if (module.hot) {
   module.hot.accept('./containers/root', () => {

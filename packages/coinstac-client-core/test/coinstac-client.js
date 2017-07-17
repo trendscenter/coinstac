@@ -41,7 +41,7 @@ test('CoinstacClient - logger injections', (t) => {
   let c;
   t.plan(2);
   clientFactory({
-    logger: {
+    mainLogger: {
       error: identity,
       info: identity,
       verbose: identity,

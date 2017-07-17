@@ -23,7 +23,8 @@ module.exports = function configureCore() {
     parseCLIInput.get(),
     {
       hp: url.format(app.config.get('api')),
-      logger: app.logger,
+      mainLogger: app.mainLogger,
+      renderLogger: app.renderLogger,
       db: {
         pouchConfig: {
           getAdapter(name) {

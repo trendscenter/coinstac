@@ -33,7 +33,8 @@ const conf = convict({
     },
     noURLPrefix: true,
   },
-  logFile: 'coinstac-log.json',
+  mainLogFile: 'coinstac-log-main.json',
+  renderLogFile: 'coinstac-log-render.json',
   logFileBoot: 'coinstac-boot-error-log.txt',
   // these are appended to the home dir for you OS
   // *nix: ~/.config/coinstac
