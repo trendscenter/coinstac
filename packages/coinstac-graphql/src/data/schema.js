@@ -8,7 +8,7 @@ const typeDefs = `
   }
 
   type ComputationInput {
-    _id: ID!,
+    id: ID!,
     defaultValue: [String]
     type: String!
     label: String!
@@ -26,7 +26,7 @@ const typeDefs = `
   }
 
   type Computation {
-    _id: ID!
+    id: ID!
     meta: ComputationMeta
     name: String!
     url: String!
@@ -36,7 +36,7 @@ const typeDefs = `
 
   # Should owners/users be an array of user objects?
   type Consortium {
-    _id: ID!
+    id: ID!
     activeComputationId: ID
     activeComputationInputs: [String]
     description: String!
@@ -47,7 +47,7 @@ const typeDefs = `
   }
 
   input ConsortiumInput {
-    _id: ID!
+    id: ID!
     activeComputationId: ID
     activeComputationInputs: [String]
     description: String!
@@ -58,7 +58,7 @@ const typeDefs = `
   }
 
   type Run {
-    _id: ID!,
+    id: ID!,
     consortiumId: ID!
     startDate: String
     endDate: String

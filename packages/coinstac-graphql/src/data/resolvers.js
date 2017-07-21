@@ -13,9 +13,15 @@ rethink.connect({ host: 'localhost', port: 28015 },
 const resolvers = {
   Query: {
     fetchAllComputations: () => {
-      return new Promise(
-        
-      );
+      return new Promise ((res, rej) => 
+        rethink.db('coinstac').table('Computations').run(connection, (error, cursor) => {
+          if (error) throw error;
+          return cursor.toArray(function(err, result) {
+            if (err) throw err;
+            res(result);
+          });
+        })
+      )
     },
     fetchComputationById: (_, args) => {
       return new Promise();
