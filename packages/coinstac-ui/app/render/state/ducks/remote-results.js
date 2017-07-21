@@ -1,5 +1,5 @@
 import app from 'ampersand-app';
-import { compact, flatten } from 'lodash';
+import { compact, flatten, sortBy } from 'lodash';
 import { applyAsyncLoading } from './loading';
 
 const SET_REMOTE_RESULTS = 'SET_REMOTE_RESULTS';
@@ -14,11 +14,35 @@ export const fetch = applyAsyncLoading(id => (dispatch) => {
 
   return Promise.all(dbs.map(db => db.all()))
     .then((responses) => {
-      const results = compact(flatten(responses));
+      const results = sortBy(compact(flatten(responses)), ['endDate', 'startDate']).reverse();
       dispatch(setRemoteResults(results));
       return results;
     });
 });
+
+export const fetchRemoteResultsForUser = username => (dispatch, getState) => {
+  const dbRegistry = app.core.dbRegistry;
+  const dbs = dbRegistry.all.filter(({ name }) => name.includes('remote-consortium-'));
+
+  return Promise.all(dbs.map(db => db.all()))
+    .then((responses) => {
+      const userResults = compact(flatten(responses))
+        .filter(obj => obj.usernames.indexOf(username) > -1)
+        .map((res) => {
+          return {
+            ...res,
+            consortium: getState().consortia.find(({ _id }) => _id === res.consortiumId),
+            // This doesn't actually seem to be used
+            // project: getState().projects.find(({ consortiumId }) =>
+            //   consortiumId === res.consortiumId),
+            computation: getState().computations.find(({ _id }) => _id === res.computationId),
+          };
+        });
+      const results = sortBy(userResults, ['endDate', 'startDate']).reverse();
+      dispatch(setRemoteResults(results));
+      return results;
+    });
+};
 
 export default function reducer(state = null, action = {}) {
   switch (action.type) {
