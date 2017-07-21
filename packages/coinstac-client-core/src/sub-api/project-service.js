@@ -379,7 +379,7 @@ class ProjectService extends ModelService {
     callback(null, { consortiumId, doc, projectId });
   }
 
-  static modelServiceHooks() {
+  modelServiceHooks() { // eslint-disable-line class-methods-use-this
     return {
       dbName: 'projects',
       ModelType: Project,

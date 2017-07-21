@@ -46,7 +46,11 @@ function getStubbedParams() {
 }
 
 tape('ComputationService :: modelServiceHooks', (t) => {
-  const modelServiceHooks = ComputationService.modelServiceHooks();
+  const computationService = new ComputationService({
+    client: {},
+    dbRegistry: {},
+  });
+  const modelServiceHooks = computationService.modelServiceHooks();
 
   t.equal(modelServiceHooks.dbName, 'computations', 'returns db name');
   t.equal(modelServiceHooks.ModelType, Computation, 'returns Computation model');
