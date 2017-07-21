@@ -21,13 +21,13 @@ class DashboardHome extends Component {
   }
 
   componentWillMount() {
-    const { computations, dispatch, username } = this.props;
+    const { computations, consortia, dispatch, username } = this.props;
 
     if (!computations.length) {
       dispatch(fetchComputations());
     }
 
-    this.interval = setInterval(() => dispatch(fetchRemoteResultsForUser(username)), 5000);
+    this.interval = setInterval(() => dispatch(fetchRemoteResultsForUser(username)), 2000);
   }
 
   componentWillUpdate() {
@@ -35,15 +35,15 @@ class DashboardHome extends Component {
       computations,
       consortia,
       dispatch,
-      // Projects don't seem to be used-- projects,
       username,
     } = this.props;
+
+    console.log('update');
 
     if (
       !this.state.didInitResults &&
       computations.length &&
       consortia.length &&
-      // Projects don't seem to be used-- projects.length &&
       username
     ) {
       this.setState({ didInitResults: true });
