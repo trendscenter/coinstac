@@ -15,7 +15,9 @@ const path = require('path');
  * @returns {Object}
  */
 module.exports = function getComputationRegistryStub(computationPath) {
-  const definition = require(computationPath); // eslint-disable-line global-require
+  /* eslint-disable global-require, import/no-dynamic-require */
+  const definition = require(computationPath);
+  /* eslint-enable global-require, import/no-dynamic-require  */
 
   const computation = new DecentralizedComputation(Object.assign({
     cwd: path.dirname(computationPath),

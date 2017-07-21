@@ -70,7 +70,8 @@ module.exports = {
 
       let localInputs;
 
-      for (const result of runInput.userResults) {
+      for (let i = 0; i < runInput.userResults.length; i += 1) {
+        const result = runInput.userResults[i];
         const inputs = get(result, SELECTOR);
 
         if (isValidInputs(inputs)) {

@@ -4,6 +4,7 @@ require('../pipeline/.test-pipelines');
 
 const assign = require('lodash/assign');
 const computations = require('../../../').models.computation;
+
 const ComputationResult = computations.ComputationResult;
 const test = require('tape');
 
@@ -15,7 +16,7 @@ const genOpts = (opts) => {
   }, opts);
 };
 
-test('constructor - basic', t => {
+test('constructor - basic', (t) => {
   const minFullOptsPatch = {
     data: 'a',
     pipelineState: { step: 0, inProgress: false },
@@ -41,7 +42,7 @@ test('constructor - basic', t => {
   t.end();
 });
 
-test('constructor - deny runId set', t => {
+test('constructor - deny runId set', (t) => {
   t.throws(
     () => {
       const result = new ComputationResult(genOpts());

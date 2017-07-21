@@ -36,7 +36,7 @@ module.exports = function buildNative() {
         build.stdout.pipe(process.stdout);
         build.stderr.pipe(process.stderr);
 
-        build.on('close', code => {
+        build.on('close', (code) => {
           if (code) {
             reject(new Error(`Rebuild exited with code ${code}`));
           } else {
@@ -48,7 +48,7 @@ module.exports = function buildNative() {
     .then(() => {
       console.log('Done building native modules'); // eslint-disable-line no-console
     })
-    .catch(error => {
+    .catch((error) => {
       console.log('There was a problem building', error); // eslint-disable-line no-console
     });
 };

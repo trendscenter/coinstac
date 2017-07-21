@@ -6,9 +6,9 @@ import { updateConsortia } from './consortia';
 import { applyAsyncLoading } from './loading';
 
 const SET_CONSORTIUM = 'SET_CONSORTIUM';
-export const setConsortium = (consortium) => ({ consortium, type: SET_CONSORTIUM });
+export const setConsortium = consortium => ({ consortium, type: SET_CONSORTIUM });
 
-export const fetchConsortium = applyAsyncLoading(id => {
+export const fetchConsortium = applyAsyncLoading((id) => {
   return (dispatch) => {
     return app.core.consortia.get(id)
     .then((consortium) => {
@@ -30,7 +30,7 @@ export const fetchConsortium = applyAsyncLoading(id => {
  * @param {object} consortium
  * @returns {undefined}
  */
-export const saveConsortium = applyAsyncLoading(consortium => {
+export const saveConsortium = applyAsyncLoading((consortium) => {
   return (dispatch) => {
     return app.core.consortia.save(consortium)
     .then((newTium) => {

@@ -4,6 +4,7 @@ const convict = require('convict');
 const bluebird = require('bluebird');
 const access = bluebird.promisify(require('fs').access);
 const path = require('path');
+
 const localConfig = path.resolve(__dirname, '..', 'config', 'local.json');
 
 const fileExists = (fPath) => {
@@ -53,7 +54,7 @@ module.exports = function loadConfig() {
   }
 
   return fileExists(localConfig)
-  .then(exists => {
+  .then((exists) => {
     if (exists) {
       conf.loadFile(localConfig);
     }

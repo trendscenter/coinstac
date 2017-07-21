@@ -5,6 +5,7 @@ const tape = require('tape');
 const utils = require('../src/utils');
 const Consortium = require('coinstac-common').models.Consortium;
 const url = require('url');
+
 const mockUrl = url.parse('http://localhost:5984');
 const mockConsortium = new Consortium({
   _id: 'thisisonlyatest',

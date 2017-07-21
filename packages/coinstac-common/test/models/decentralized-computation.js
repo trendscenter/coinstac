@@ -22,7 +22,7 @@ function getValidOpts() {
   };
 }
 
-tape('model::DecentralizedComputation constructor errors', t => {
+tape('model::DecentralizedComputation constructor errors', (t) => {
   function factory(options) {
     return new DecentralizedComputation(options);
   }
@@ -72,14 +72,14 @@ tape('model::DecentralizedComputation constructor errors', t => {
   t.end();
 });
 
-tape('model::DecentralizedComputation constructor', t => {
+tape('model::DecentralizedComputation constructor', (t) => {
   t.ok(
     new DecentralizedComputation(getValidOpts())
   );
   t.end();
 });
 
-tape('model::DecentralizedComputation - getComputationDocument', t => {
+tape('model::DecentralizedComputation - getComputationDocument', (t) => {
   const opts = getValidOpts();
   const decentralizedComputation = new DecentralizedComputation(opts);
   const doc = decentralizedComputation.getComputationDocument();
