@@ -8,7 +8,7 @@ const test = require('tape');
 class DummyModel extends BaseModel {}
 
 class Dummy extends ModelService {
-  static modelServiceHooks() {
+  modelServiceHooks() { // eslint-disable-line class-methods-use-this
     return {
       dbName: 'test-db-name',
       ModelType: DummyModel,

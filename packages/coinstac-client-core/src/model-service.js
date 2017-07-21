@@ -36,11 +36,11 @@ class ModelService {
     this.client = opts.client;
 
     /* istanbul ignore if */
-    if (!(this.constructor.modelServiceHooks instanceof Function)) {
+    if (!(this.modelServiceHooks instanceof Function)) {
       throw new Error('expected modelServiceHooks method on child');
     }
 
-    const hooks = this.constructor.modelServiceHooks();
+    const hooks = this.modelServiceHooks();
 
     /* istanbul ignore if */
     if (!hooks.ModelType || !(hooks.ModelType instanceof Function)) {
@@ -82,7 +82,7 @@ class ModelService {
   /**
    * @abstract
    */
-  static modelServiceHooks() {
+  modelServiceHooks() { // eslint-disable-line class-methods-use-this
     /* istanbul ignore next */
     throw new Error('child classes must extend modelServiceHooks');
   }
@@ -156,7 +156,7 @@ class ModelService {
    */
   validate(properties, onlyFields) {
     const localOnlyFields = typeof onlyFields === 'boolean' ? onlyFields : true;
-    const Model = this.constructor.modelServiceHooks().ModelType;
+    const Model = this.modelServiceHooks().ModelType;
 
     if (typeof properties === 'undefined' || !(properties instanceof Object)) {
       return Promise.reject(new Error('Expected properties to be an object'));

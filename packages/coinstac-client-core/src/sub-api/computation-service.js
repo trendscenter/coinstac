@@ -18,7 +18,7 @@ const RemoteComputationResult = common.models.computation.RemoteComputationResul
  * @extends ModelService
  */
 class ComputationService extends ModelService {
-  static modelServiceHooks() {
+  modelServiceHooks() { // eslint-disable-line class-methods-use-this
     return {
       dbName: 'computations',
       ModelType: Computation,

@@ -21,7 +21,7 @@ class ConsortiaService extends ModelService {
     }
   }
 
-  static modelServiceHooks() {
+  modelServiceHooks() { // eslint-disable-line class-methods-use-this
     return {
       dbName: 'consortia',
       ModelType: Consortium,
