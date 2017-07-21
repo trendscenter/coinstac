@@ -90,17 +90,17 @@ class ComputationRegistry {
    * @returns {Promise<Object>} Resolves to an object containing computation
    * definition and computation meta
    */
-  _getFromDisk(name) {
+  static _getFromDisk(name) {
     return new Promise((resolve, reject) => {
       try {
-        /* eslint-disable global-require */
+        /* eslint-disable global-require, import/no-dynamic-require */
         resolve(require(name));
-        /* eslint-enable global-require */
+        /* eslint-enable global-require, import/no-dynamic-require */
       } catch (error) {
         reject(error);
       }
     })
-      .then((definition) => Promise.all([
+      .then(definition => Promise.all([
         definition,
         helpers.getPackage(path.dirname(require.resolve(name))),
       ]))
@@ -136,7 +136,7 @@ class ComputationRegistry {
     return this.get(name, version)
 
       // Check disk to see if computation is saved
-      .catch(() => this._getFromDisk(name, version)
+      .catch(() => ComputationRegistry._getFromDisk(name, version)
         .then(({ definition, meta }) => this._doAdd({
           cwd: ComputationRegistry.getComputationCwd(name, version),
           definition,

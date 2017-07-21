@@ -1,7 +1,6 @@
 'use strict';
 
-const path = require('path');
-const Base = require(path.join(__dirname, '../../src/models/base.js'));
+const Base = require('../../src/models/base.js');
 const test = require('tape');
 const joi = require('joi');
 const sinon = require('sinon');
@@ -21,7 +20,7 @@ SuuuuuperExtendedBase.schema = Object.assign({
   extendedBase: joi.object().type(ExtendedBase),
 }, ExtendedBase.schema);
 
-test('model::base - extended class', t => {
+test('model::base - extended class', (t) => {
   t.throws(
     () => new ExtendedBase(),
     Error,

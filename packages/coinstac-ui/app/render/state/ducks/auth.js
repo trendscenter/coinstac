@@ -1,12 +1,13 @@
+import { pick } from 'lodash';
 import app from 'ampersand-app';
 import * as util from './util';
 import { applyAsyncLoading } from './loading';
-import { pick } from 'lodash';
 import { teardownPrivateBackgroundServices } from './bg-services';
-const SET_USER = 'SET_USER';
-const setUser = (user) => ({ type: SET_USER, user });
 
-export const login = applyAsyncLoading(reqUser => {
+const SET_USER = 'SET_USER';
+const setUser = user => ({ type: SET_USER, user });
+
+export const login = applyAsyncLoading((reqUser) => {
   return (dispatch) => {
     return app.core.initialize(pick(reqUser, ['password', 'username']))
     .then((user) => {
@@ -26,7 +27,7 @@ export const logout = applyAsyncLoading(() => {
 
 export const signUp = applyAsyncLoading(user => dispatch => app.core
   .initialize(user)
-  .then(user => {
+  .then((user) => {
     dispatch(setUser(user));
     return user;
   })

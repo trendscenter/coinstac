@@ -1,5 +1,5 @@
-import { applyAsyncLoading } from './loading.js';
 import app from 'ampersand-app';
+import { applyAsyncLoading } from './loading';
 
 export const SET_PROJECT = 'SET_PROJECT';
 export function setProject(project) {
@@ -43,7 +43,7 @@ export function removeFilesFromProject(files) {
  * @param {object|Project}
  * @returns {Promise}
  */
-export const saveProject = applyAsyncLoading(project => {
+export const saveProject = applyAsyncLoading((project) => {
   return () => {
     return app.core.projects.save(project)
     .catch((err) => {
@@ -62,7 +62,7 @@ export const saveProject = applyAsyncLoading(project => {
  * @param {function} cb
  * @returns {undefined}
  */
-export const fetchProject = applyAsyncLoading(projectId => {
+export const fetchProject = applyAsyncLoading((projectId) => {
   return (dispatch) => {
     return app.core.dbRegistry.get('projects').get(projectId)
     .then((proj) => {
@@ -108,7 +108,7 @@ export default function reduce(project = null, action) {
       return Object.assign({}, project, action.project);
     case REMOVE_FILES_FROM_PROJECT:
       return Object.assign({}, project, {
-        files: project.files.filter(file => {
+        files: project.files.filter((file) => {
           return action.files.every(f => f.filename !== file.filename);
         }),
       });

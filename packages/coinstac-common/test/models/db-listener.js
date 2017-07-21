@@ -7,7 +7,7 @@ const PouchDBAdapterMemory = require('pouchdb-adapter-memory');
 
 Pouchy.plugin(PouchDBAdapterMemory);
 
-tape('DBListener :: destroy', t => {
+tape('DBListener :: destroy', (t) => {
   const pouchy = new Pouchy({
     name: 'testing',
   });

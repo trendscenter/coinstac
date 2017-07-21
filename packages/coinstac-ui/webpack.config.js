@@ -36,7 +36,7 @@ const config = {
       use: ['json-loader'],
     }, {
       include: path.join(__dirname, 'app', 'render'),
-      test: /\.js$/,
+      test: /\.(js|jsx)$/,
       use: [{
         loader: 'babel-loader',
         options: {
@@ -103,6 +103,9 @@ const config = {
     publicPath: './build/',
   },
   plugins: [new webpack.optimize.OccurrenceOrderPlugin()],
+  resolve: {
+    extensions: ['.json', '.js', '.jsx'],
+  },
 };
 
 if (process.env.NODE_ENV === 'development') {

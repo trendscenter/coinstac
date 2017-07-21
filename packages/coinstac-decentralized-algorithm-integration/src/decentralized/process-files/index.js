@@ -1,7 +1,9 @@
 // the following DecentralizedComputation simulates running a computation
 // which filenames are passed in from the user, and the computation reads and
 // acts on them.
+
 'use strict';
+
 module.exports = {
   name: 'process-files',
   version: '0.0.1',
@@ -30,7 +32,7 @@ module.exports = {
     type: 'function',
     fn: function (opts) { // eslint-disable-line
       const current = opts.previousData || {};
-      opts.userResults.forEach(u => {
+      opts.userResults.forEach((u) => {
         current[u.username] = u.data;
       });
       const allUsersPresent = opts.userResults.length === opts.usernames.length;

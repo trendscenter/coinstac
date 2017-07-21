@@ -42,7 +42,7 @@ class LocalPipelineRunnerPool extends PipelineRunnerPool {
           decentralizedComputation.local,
           { cwd: decentralizedComputation.cwd }
         ),
-        plugins: this.getPipelinePlugins({
+        plugins: PipelineRunnerPool.getPipelinePlugins({
           comp: decentralizedComputation,
           env: 'local',
         }),
@@ -67,8 +67,8 @@ class LocalPipelineRunnerPool extends PipelineRunnerPool {
    * @param {string} runId
    * @returns {Promise}
    */
-  getLatestResult(db, runId) {
-    return PipelineRunner.prototype.findResultByRunId(db, runId)
+  static getLatestResult(db, runId) {
+    return PipelineRunner.findResultByRunId(db, runId)
     .then((doc) => {
       /* istanbul ignore next */
       if (doc) { return new LocalComputationResult(doc); }
@@ -85,7 +85,7 @@ class LocalPipelineRunnerPool extends PipelineRunnerPool {
    * @returns {Promise}
    */
   getLocalResult(db, runId, rResult) {
-    return this.getLatestResult(db, runId)
+    return LocalPipelineRunnerPool.getLatestResult(db, runId)
     .then((localResult) => {
       /* istanbul ignore next */
       if (localResult) { return localResult; }
