@@ -39,7 +39,7 @@ class DashboardHome extends Component {
     }));
     */
 
-    this.interval = setInterval(() => dispatch(fetchRemoteResultsForUser(username)), 5000);
+    this.interval = setInterval(() => dispatch(fetchRemoteResultsForUser(username)), 2000);
   }
 
   componentWillUpdate() {
