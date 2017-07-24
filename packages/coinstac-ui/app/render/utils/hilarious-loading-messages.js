@@ -1,4 +1,4 @@
-export const hilarious = {
+export default {
   messages: [
     'Sit tight, big cat!  We\'ll be right back with your data...',
     'It\'s a bird, it\'s a plane, ...it\'s all your data comin\' in hot',

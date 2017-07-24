@@ -29,7 +29,7 @@ function getFilesFromDir(dir) {
   const statAsync = promisify(fs.stat);
 
   return promisify(glob)(dir)
-    .then(files => Promise.all(files.map(file => {
+    .then(files => Promise.all(files.map((file) => {
       return statAsync(file).then(stats => ({ file, stats }));
     })))
     .then(results => results.reduce((memo, { file, stats }) => {
@@ -42,7 +42,7 @@ function getQueueEndStopper(count, fn) {
   let endCount = 0;
 
   return function queEndStopper(runId) {
-    endCount++;
+    endCount += 1;
 
     logger.info('queue:end', `runId: ${runId}`, `count: ${endCount}`);
 
@@ -54,7 +54,7 @@ function getQueueEndStopper(count, fn) {
        *
        * @todo Determine if this is necessary
        */
-      if (typeof value === 'object' && value.then & value.catch) {
+      if (typeof value === 'object' && value.then && value.catch) {
         value.then(process.exit);
       } else {
         process.exit();
@@ -107,7 +107,7 @@ function start({ consortiumId, files, metaFilePath, username }) {
 
       return Promise.all([
         getFilesFromDir(files),
-        client.projects.getCSV(metaFilePath),
+        ProjectService.getCSV(metaFilePath),
         getSyncedDatabase(
           client.dbRegistry,
           `remote-consortium-${consortiumId}`
@@ -161,7 +161,7 @@ function getMessageSender(message) {
   };
 }
 
-process.on('uncaughtException', error => {
+process.on('uncaughtException', (error) => {
   logger.error(error);
   process.exit(1);
 });
@@ -171,7 +171,7 @@ process.on('unhandledRejection', (reason, p) => {
   process.exit(1);
 });
 
-process.on('message', message => {
+process.on('message', (message) => {
   const messageSender = getMessageSender(message);
   const { command, data } = message;
 

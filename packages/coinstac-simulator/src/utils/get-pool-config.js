@@ -59,9 +59,9 @@ module.exports = function getPoolConfig(params) {
       registry: [],
     }),
   ]).then(([computationDir, dbRegistry, computationRegistry]) => {
-    /* eslint-disable global-require */
+    /* eslint-disable global-require, import/no-dynamic-require  */
     const computation = require(computationPath);
-    /* eslint-enable global-require */
+    /* eslint-enable global-require, import/no-dynamic-require */
 
     const { name, version } = computation;
     const url = `https://github.com/MRN-Code/${name}`;

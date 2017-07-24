@@ -48,7 +48,7 @@ let toRun = [
   // '../node_modules/decentralized-laplacian-ridge-regression/test/declaration.js',
 ];
 
-toRun = toRun.map((f) => path.resolve(__dirname, f));
+toRun = toRun.map(f => path.resolve(__dirname, f));
 
 /* eslint-disable no-console */
 console.log(`---\nSIMULATION PLAN: ${toRun.length} simulations\n---`);

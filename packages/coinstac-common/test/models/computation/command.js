@@ -6,7 +6,7 @@ const EventEmitter = require('events');
 const sinon = require('sinon');
 const tape = require('tape');
 
-tape('model::CommandComputation constructor', t => {
+tape('model::CommandComputation constructor', (t) => {
   t.throws(() => {
     return new CommandComputation({ type: 'function' });
   }, /cmd/, 'requires type: "cmd"');
@@ -25,7 +25,7 @@ function getStubbedCommand() {
   return command;
 }
 
-tape('CommandComputation#run', t => {
+tape('CommandComputation#run', (t) => {
   const args = ['some', 'crazy', 'arguments'];
   const command = getStubbedCommand();
   const cmd = 'oh-my-executables';
@@ -58,7 +58,7 @@ tape('CommandComputation#run', t => {
   command.emit('exit', 0);
 
   run1
-    .then(response => {
+    .then((response) => {
       t.ok(
         spawnStub.calledWithExactly(
           cmd,
@@ -94,7 +94,7 @@ tape('CommandComputation#run', t => {
     .then(spawnStub.restore);
 });
 
-tape('CommandComputation#run verbose logging', t => {
+tape('CommandComputation#run verbose logging', (t) => {
   const args = ['some', 'silly', 'arguments'];
   const cmd = 'macho';
   const command = getStubbedCommand();
@@ -166,7 +166,7 @@ tape('CommandComputation#run verbose logging', t => {
     });
 });
 
-tape('CommandComputation#run errors', t => {
+tape('CommandComputation#run errors', (t) => {
   const command = getStubbedCommand();
   const error1 = { message: 'error 1' };
   const error2 = { message: 'error 2' };
@@ -178,7 +178,7 @@ tape('CommandComputation#run errors', t => {
 
   CommandComputation.prototype.run.call({})
     .then(() => t.fail('Resolves when spawn throws'))
-    .catch(error => {
+    .catch((error) => {
       t.equal(error, error1, 'Rejects when spawn throws');
 
       const run = CommandComputation.prototype.run.call({});
@@ -187,7 +187,7 @@ tape('CommandComputation#run errors', t => {
       return run;
     })
     .then(() => t.fail('Resolves when command emits error'))
-    .catch(error => {
+    .catch((error) => {
       t.equal(error, error2, 'Rejects when command emits error');
 
       const run = CommandComputation.prototype.run.call({});
@@ -196,7 +196,7 @@ tape('CommandComputation#run errors', t => {
       return run;
     })
     .then(() => t.fail('Resolves with process exits with non-zero'))
-    .catch(error => {
+    .catch((error) => {
       t.ok(
         error.message.indexOf('random-exit-code') > -1,
         'Rejects with non-zero exit code'
@@ -210,7 +210,7 @@ tape('CommandComputation#run errors', t => {
       return run;
     })
     .then(() => t.fail('Resolves with malformed JSON'))
-    .catch(error => {
+    .catch((error) => {
       t.ok(
         error.message.indexOf('"ugly": json') > -1,
         'Rejects with malformed JSON'

@@ -28,7 +28,7 @@ function getValidLocalOptions() {
   };
 }
 
-tape('setup', t => {
+tape('setup', (t) => {
   addStub = sinon
     .stub(ComputationRegistry.prototype, 'add')
     .returns(Promise.resolve());
@@ -36,7 +36,7 @@ tape('setup', t => {
   t.end();
 });
 
-tape('configuration errors', t => {
+tape('configuration errors', (t) => {
   t.plan(2);
 
   factory({
@@ -53,11 +53,11 @@ tape('configuration errors', t => {
     .catch(() => t.pass('rejects with bad DB registry'));
 });
 
-tape('returns ComputationRegistry instance', t => {
+tape('returns ComputationRegistry instance', (t) => {
   t.plan(4);
 
   factory()
-    .then(computationRegistry => {
+    .then((computationRegistry) => {
       t.ok(
         computationRegistry &&
         computationRegistry instanceof ComputationRegistry,
@@ -68,12 +68,12 @@ tape('returns ComputationRegistry instance', t => {
         registry: [],
       });
     })
-    .then(computationRegistry => {
+    .then((computationRegistry) => {
       t.ok(computationRegistry, 'returns a non-local registry instance');
 
       return factory(getValidLocalOptions());
     })
-    .then(computationRegistry => {
+    .then((computationRegistry) => {
       t.ok(
         computationRegistry &&
         computationRegistry instanceof ComputationRegistry,
@@ -88,13 +88,13 @@ tape('returns ComputationRegistry instance', t => {
     .catch(t.end);
 });
 
-tape('passes custom registry', t => {
+tape('passes custom registry', (t) => {
   t.plan(1);
 
   factory({
     registry: mockDecentralizedComputations,
   })
-    .then(computationRegistry => {
+    .then((computationRegistry) => {
       t.equal(
         computationRegistry.registry,
         mockDecentralizedComputations
@@ -103,7 +103,7 @@ tape('passes custom registry', t => {
     .catch(t.end);
 });
 
-tape('local computation registry fetches computations from source', t => {
+tape('local computation registry fetches computations from source', (t) => {
   t.plan(4);
 
   const options = getValidLocalOptions();
@@ -117,7 +117,7 @@ tape('local computation registry fetches computations from source', t => {
       return all;
     }
 
-    return all.concat(c.tags.filter(t => t === version).map(version => {
+    return all.concat(c.tags.filter(t => t === version).map((version) => {
       return {
         name: c.name,
         version,
@@ -135,7 +135,7 @@ tape('local computation registry fetches computations from source', t => {
   });
 
   factory(options)
-    .then(computationRegistry => {
+    .then((computationRegistry) => {
       t.ok(dbGetStub.calledWith('computations'), 'gets computations DB');
       return computationRegistry.add(name, version)
       .then(() => {
@@ -164,7 +164,7 @@ tape('local computation registry fetches computations from source', t => {
     .then(() => dbGetStub.restore());
 });
 
-tape('local computation registry mutates whitelist', t => {
+tape('local computation registry mutates whitelist', (t) => {
   t.plan(2);
 
   // Prevent network calls by stubbing 'add':
@@ -195,7 +195,7 @@ tape('local computation registry mutates whitelist', t => {
       Promise.resolve(computationRegistry),
       computationRegistry.add(name, version),
     ]))
-    .then(responses => {
+    .then((responses) => {
       const instance = responses[0];
       t.equal(instance.registry, registry, 'keeps passed registry');
       t.ok(
@@ -207,7 +207,7 @@ tape('local computation registry mutates whitelist', t => {
     .then(() => dbGetStub.restore());
 });
 
-tape('local computation registry handles not-found computation', t => {
+tape('local computation registry handles not-found computation', (t) => {
   t.plan(1);
 
   const options = getValidLocalOptions();
@@ -227,7 +227,7 @@ tape('local computation registry handles not-found computation', t => {
     .then(() => dbGetStub.restore());
 });
 
-tape('remote computation registry retrieves all computations', t => {
+tape('remote computation registry retrieves all computations', (t) => {
   const expected = [{
     name: 'the-ravens',
     version: '1.0.0',
@@ -259,7 +259,7 @@ tape('remote computation registry retrieves all computations', t => {
     .catch(t.end);
 });
 
-tape('teardown', t => {
+tape('teardown', (t) => {
   addStub.restore();
   t.end();
 });
