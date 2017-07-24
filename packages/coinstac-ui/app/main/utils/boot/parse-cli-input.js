@@ -2,6 +2,7 @@
 
 const spawn = require('child_process').spawn;
 const program = require('commander');
+
 let appOpts;
 
 /* eslint-disable no-console */
@@ -22,7 +23,7 @@ function parse() {
     if (opts.webpack) {
       console.log('booting webpack-dev-server');
       const wpds = spawn('node', ['webpack-dev-server.js', '--development']);
-      wpds.stdout.on('data', data => {
+      wpds.stdout.on('data', (data) => {
         data = data.toString();
         // don't fill the screen with useful build information. scan for it,
         // summarize it instead
@@ -36,11 +37,11 @@ function parse() {
         ].join(' '));
       });
 
-      wpds.stderr.on('data', data => {
+      wpds.stderr.on('data', (data) => {
         console.error(`coinstac-webpack-server [error]: ${data}`);
       });
 
-      wpds.on('close', code => {
+      wpds.on('close', (code) => {
         if (code !== 0) {
           console.log(`coinstac-webpack-server [fatal] ${code}`);
         }

@@ -33,7 +33,7 @@ function getComputationsDiff(decentralizedComputations, computationDocs) {
   const toAdd = [];
   const toUpdate = [];
 
-  decentralizedComputations.forEach(computation => {
+  decentralizedComputations.forEach((computation) => {
     const matchingDoc = computationDocs.find(
       getComputationFinder(computation)
     );

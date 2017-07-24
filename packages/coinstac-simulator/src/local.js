@@ -46,7 +46,7 @@ let username;
 function getAllDocuments(dbRegistry, dbName) {
   const getSyncedDatabase = coinstacCommon.utils.getSyncedDatabase;
 
-  return getSyncedDatabase(dbRegistry, dbName).then(database => {
+  return getSyncedDatabase(dbRegistry, dbName).then((database) => {
     const operation = retry.operation({
       maxTimeout: 3000,
       minTimeout: 250,
@@ -54,9 +54,9 @@ function getAllDocuments(dbRegistry, dbName) {
     });
 
     return new Promise((resolve, reject) => {
-      operation.attempt(currentAttempt => {
+      operation.attempt((currentAttempt) => {
         database.all()
-          .then(docs => {
+          .then((docs) => {
             if (!docs.length) {
               throw new Error(`${dbName} database contains no documents`);
             }
@@ -66,7 +66,7 @@ function getAllDocuments(dbRegistry, dbName) {
             operation.stop();
             resolve(docs);
           })
-          .catch(error => {
+          .catch((error) => {
             if (!operation.retry(error)) {
               reject(operation.mainError());
             }
@@ -137,7 +137,7 @@ function boot({
   })
     .then(() => Promise.all([
       getAllDocuments(client.dbRegistry, 'consortia'),
-      client.projects.getCSV(data.metaFilePath),
+      client.projects.constructor.getCSV(data.metaFilePath),
     ]))
     .then(([
       [
@@ -155,7 +155,7 @@ function boot({
       return client.projects.save({
         consortiumId,
         computationInputs,
-        files: client.projects.getFilesFromMetadata(
+        files: client.projects.constructor.getFilesFromMetadata(
           data.metaFilePath,
           metaFile
         ),

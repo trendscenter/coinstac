@@ -1,6 +1,6 @@
 import app from 'ampersand-app';
 
-export const notifyAndThrow = (err) => {
+const notifyAndThrow = (err) => {
   app.logger.error(err);
   app.notify({
     level: 'error',
@@ -8,3 +8,5 @@ export const notifyAndThrow = (err) => {
   });
   throw err;
 };
+
+export { notifyAndThrow as default };

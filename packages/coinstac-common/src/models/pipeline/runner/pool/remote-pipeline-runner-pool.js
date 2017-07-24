@@ -51,7 +51,7 @@ class RemotePipelineRunnerPool extends PipelineRunnerPool {
       const rResult = rslts[0];
       const dComp = rslts[1];
       const computations = Computation.factory(dComp.remote, { cwd: dComp.cwd });
-      const plugins = this.getPipelinePlugins({ comp: dComp, env: 'remote' });
+      const plugins = PipelineRunnerPool.getPipelinePlugins({ comp: dComp, env: 'remote' });
       const runner = new RemotePipelineRunner({
         pipeline: new Pipeline({ computations, plugins }),
         result: rResult,
@@ -69,8 +69,8 @@ class RemotePipelineRunnerPool extends PipelineRunnerPool {
    * @param {string} runId
    * @returns {Promise}
    */
-  getLatestResult(db, runId) {
-    return PipelineRunner.prototype.findResultByRunId(db, runId)
+  static getLatestResult(db, runId) {
+    return PipelineRunner.findResultByRunId(db, runId)
     .then((doc) => {
       if (doc) { return new RemoteComputationResult(doc); }
       return null;
@@ -86,7 +86,7 @@ class RemotePipelineRunnerPool extends PipelineRunnerPool {
    */
   getRemoteResult(db, lResult) {
     const runId = lResult.runId;
-    return this.getLatestResult(db, runId)
+    return RemotePipelineRunnerPool.getLatestResult(db, runId)
     .then((rResult) => {
       if (rResult) { return rResult; }
       return this.buildNewRemoteResult(lResult);
@@ -116,7 +116,7 @@ class RemotePipelineRunnerPool extends PipelineRunnerPool {
     const db = this.dbRegistry.get(`remote-consortium-${consortiumId}`);
 
     db.get(runId)
-      .then(compResult => {
+      .then((compResult) => {
         compResult.complete = true;
         compResult.endDate = Date.now();
         return db.save(compResult);
@@ -124,7 +124,7 @@ class RemotePipelineRunnerPool extends PipelineRunnerPool {
       .then(() => {
         this.events.emit('computation:markedComplete', runId, consortiumId);
       })
-      .catch(error => {
+      .catch((error) => {
         this.events.emit('error', error);
       });
   }

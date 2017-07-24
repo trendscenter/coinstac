@@ -8,7 +8,7 @@ const test = require('tape');
 class DummyModel extends BaseModel {}
 
 class Dummy extends ModelService {
-  modelServiceHooks() {
+  modelServiceHooks() { // eslint-disable-line class-methods-use-this
     return {
       dbName: 'test-db-name',
       ModelType: DummyModel,
@@ -34,7 +34,7 @@ test('ModelService extension', (t) => {
   t.end();
 });
 
-test('ModelService validation params', t => {
+test('ModelService validation params', (t) => {
   const dummy = dummyFactory();
   const validateSpy = sinon.stub(BaseModel.prototype, '_validate');
 
@@ -57,7 +57,7 @@ test('ModelService validation params', t => {
     .catch(t.end);
 });
 
-test('ModelService validation', t => {
+test('ModelService validation', (t) => {
   const dummy = dummyFactory();
   const props = {
     my: 'random',
@@ -73,14 +73,14 @@ test('ModelService validation', t => {
   dummy.validate(props)
     .then(
       () => t.fail('Expected validation to throw'),
-      error => {
+      (error) => {
         t.equal(validateStub.firstCall.args[0], props, 'passes props to validator');
         t.equal(error.message, 'bogus', 'passes validation error');
 
         return dummy.validate(props);
       }
     )
-    .then(value => {
+    .then((value) => {
       t.equal(value, 'hooray', 'passes validation value');
 
       validateStub.restore();
