@@ -31,12 +31,17 @@ class ConsortiumController extends Component {
   }
 
   componentWillMount() {
-    const { consortium, isNew } = this.props;
+    const {
+      consortium,
+      fetchComputations,
+      fetchRemoteResults,
+      isNew,
+    } = this.props;
 
     if (!isNew) {
-      this.props.fetchRemoteResults(consortium._id);
+      fetchRemoteResults(consortium._id);
       // TODO never set. let background service keep up to date
-      this.props.fetchComputations();
+      fetchComputations();
     }
   }
 
@@ -80,25 +85,34 @@ class ConsortiumController extends Component {
   }
 
   addUser(username) {
-    const { consortium: { _id: consortiumId } } = this.props;
+    const {
+      addConsortiumComputationListener,
+      consortium: { _id: consortiumId },
+      joinConsortium,
+      listenToConsortia,
+    } = this.props;
 
-    this.props.joinConsortium(consortiumId, username)
+    joinConsortium(consortiumId, username)
     .then((tium) => {
       // TODO: Figure out a better way to initiate this background service
-      this.props.listenToConsortia(tium);
-      this.props.addConsortiumComputationListener(tium);
+      listenToConsortia(tium);
+      addConsortiumComputationListener(tium);
 
       app.logger.info(`now listening to events on consortium ${tium.label}`);
     });
   }
 
   removeUser(username) {
-    const { consortium: { _id: consortiumId } } = this.props;
+    const {
+      consortium: { _id: consortiumId },
+      leaveConsortium,
+      unlistenToConsortia,
+    } = this.props;
 
-    this.props.leaveConsortium(consortiumId, username)
+    leaveConsortium(consortiumId, username)
     .then(() => {
       // TODO: Figure out a better way to initiate this background service
-      this.props.unlistenToConsortia(consortiumId);
+      unlistenToConsortia(consortiumId);
 
       app.notify({
         level: 'success',

@@ -12,7 +12,13 @@ import {
 
 class DashboardConsortia extends Component {
   renderConsortia() {
-    const { consortia, user: { username } } = this.props;
+    const {
+      consortia,
+      deleteConsortium,
+      joinConsortium,
+      leaveConsortium,
+      user: { username },
+    } = this.props;
 
     return (
       <div>
@@ -23,12 +29,12 @@ class DashboardConsortia extends Component {
 
           return (
             <ConsortiumCard
-              deleteConsortium={() => this.props.deleteConsortium(id)}
+              deleteConsortium={() => deleteConsortium(id)}
               isMember={isMember}
               isOwner={isOwner}
-              joinConsortium={() => this.props.joinConsortium(id, username)}
+              joinConsortium={() => joinConsortium(id, username)}
               key={index}
-              leaveConsortium={() => this.props.leaveConsortium(id, username)}
+              leaveConsortium={() => leaveConsortium(id, username)}
               {...consortium}
             />
           );
