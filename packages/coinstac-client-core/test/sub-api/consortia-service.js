@@ -4,7 +4,7 @@ const test = require('tape');
 const clientFactory = require('../utils/client-factory');
 const userFactory = require('../utils/user-factory');
 
-const consortiumFactory = (opts) => (Object.assign({
+const consortiumFactory = opts => (Object.assign({
   _id: 'thisisonlyatest',
   users: ['adumbledor', 'hpotter', userFactory().username],
   owners: ['adumbledor'],
@@ -32,9 +32,9 @@ test('ConsortiaService - Model Service methods', (t) => {
     return c1.consortia.save(con1);
   })
   .then(() => c1.consortia.all())
-  .then((docs) => t.equals(docs.length, 1, 'service persists models'))
+  .then(docs => t.equals(docs.length, 1, 'service persists models'))
   .then(() => c1.consortia.getBy('_id', con1._id))
-  .then((doc) => t.equals(doc.description, con1.description, 'getBy proxy'))
+  .then(doc => t.equals(doc.description, con1.description, 'getBy proxy'))
   .then(() => {
     return c1.consortia.save(con2);
   })
@@ -64,7 +64,7 @@ test('ConsortiaService - getUserConsortia', (t) => {
     return c1.consortia.save(con1);
   })
   .then(() => c1.consortia.getUserConsortia(userFactory().username))
-  .then((docs) => t.equals(docs.length, 1, 'getUserConsortia'))
+  .then(docs => t.equals(docs.length, 1, 'getUserConsortia'))
   .then(() => c1.teardown({ deleteDBs: true }))
   .then(() => t.pass('teardown'))
   .catch(handleTeardown);

@@ -1,11 +1,11 @@
+import tape from 'tape';
 import reducer, {
   consortiaSorter,
   DO_DELETE_CONSORTIA,
   DO_UPDATE_CONSORTIA,
 } from '../../../../app/render/state/ducks/consortia';
-import tape from 'tape';
 
-tape('consortia reducer', t => {
+tape('consortia reducer', (t) => {
   const consortium1 = {
     _id: 'wat',
     label: 'waaat',

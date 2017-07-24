@@ -13,7 +13,7 @@ module.exports = function configureLogger() {
     app.config.get('logLocations')[process.platform]
     );
 
-  return mkdirp(logLocation, parseInt('0775', 8))
+  return mkdirp(logLocation, 0o0775)
   .then(() => {
     const logFilePath = path.join(logLocation, app.config.get('logFile'));
     const logger = new winston.Logger({

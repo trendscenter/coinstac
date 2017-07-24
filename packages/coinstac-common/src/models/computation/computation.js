@@ -38,7 +38,7 @@ class Computation extends Base {
     const CommandComputation = require('./command-computation');
     /* eslint-enable global-require */
 
-    return rawComps.map(comp => {
+    return rawComps.map((comp) => {
       const type = comp.type;
       switch (type) {
         case 'function':
@@ -55,7 +55,7 @@ class Computation extends Base {
    * @abstract
    * @throws {ReferenceError} must be extended by sub-types
    */
-  run() {
+  run() { // eslint-disable-line class-methods-use-this
     throw new ReferenceError([
       'Computation is an abstract class.  Run must be extended',
       'by sub-classes',

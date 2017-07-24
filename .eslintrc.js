@@ -2,7 +2,8 @@ module.exports = {
   parserOptions: {
     ecmaVersion: 6,
     ecmaFeatures: {
-      jsx: true
+      jsx: true,
+      experimentalObjectRestSpread: true
     },
   },
   extends: 'airbnb',
@@ -10,7 +11,8 @@ module.exports = {
     node: true,
     commonjs: true,
     mocha: true,
-    es6: true
+    es6: true,
+    browser: true,
   },
 
   /**
@@ -27,5 +29,14 @@ module.exports = {
     'no-param-reassign': 0,
     'no-shadow': 0,
     'no-underscore-dangle':0,
+    'react/forbid-prop-types': 0,
+    'import/no-extraneous-dependencies': ["error", { "devDependencies": true }],
+    'comma-dangle': ['error', {
+        'arrays': 'always-multiline',
+        'objects': 'always-multiline',
+        'imports': 'always-multiline',
+        'exports': 'always-multiline',
+        'functions': 'never',
+    }],
   }
 };

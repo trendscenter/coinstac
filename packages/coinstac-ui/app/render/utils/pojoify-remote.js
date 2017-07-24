@@ -29,7 +29,7 @@ function pojoify(api, keys = [], root) {
   let currKeyPath;
   let value;
 
-  getKeys(api).forEach(key => {
+  getKeys(api).forEach((key) => {
     value = api[key];
     currKeyPath = keys.concat([key]);
     if (isFunction(value) && !value.isPlanified) {

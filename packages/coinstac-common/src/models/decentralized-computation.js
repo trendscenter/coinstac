@@ -45,7 +45,7 @@ class DecentralizedComputation extends Base {
     const inputs = [];
 
     if (Array.isArray(this.local)) {
-      this.local.forEach(localItem => {
+      this.local.forEach((localItem) => {
         if (DecentralizedComputation.hasInputs(localItem)) {
           inputs.push(localItem.inputs);
         }
