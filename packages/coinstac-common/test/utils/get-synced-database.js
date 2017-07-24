@@ -11,7 +11,7 @@ function getMockDBRegistry(pouchy) {
   };
 }
 
-tape('rejects with errors', t => {
+tape('rejects with errors', (t) => {
   t.plan(2);
 
   getSyncedDatabase()
@@ -23,7 +23,7 @@ tape('rejects with errors', t => {
     .catch(() => t.pass('Rejects with no DB name'));
 });
 
-tape('handles non-replicating or already synced', t => {
+tape('handles non-replicating or already synced', (t) => {
   const mockPouchy1 = {};
   const mockPouchy2 = {
     _hasLikelySynced: true,
@@ -36,7 +36,7 @@ tape('handles non-replicating or already synced', t => {
   t.plan(3);
 
   getSyncedDatabase(mockDBRegistry1, 'name-1')
-    .then(response => {
+    .then((response) => {
       t.ok(
         mockDBRegistry1.get.calledWithExactly('name-1'),
         'gets DB by name'
@@ -45,13 +45,13 @@ tape('handles non-replicating or already synced', t => {
 
       return getSyncedDatabase(mockDBRegistry2, 'name-2');
     })
-    .then(response => {
+    .then((response) => {
       t.equal(response, mockPouchy2, 'returns already synced DB');
     })
     .catch(t.end);
 });
 
-tape('handles sync error', t => {
+tape('handles sync error', (t) => {
   const ee = new EventEmitter();
   const error = new Error('wat');
   const mockDBRegistry = getMockDBRegistry({
@@ -64,7 +64,7 @@ tape('handles sync error', t => {
 
   getSyncedDatabase(mockDBRegistry, 'bananas')
     .then(() => t.fail('resolves with sync errors'))
-    .catch(response => {
+    .catch((response) => {
       t.equal(response, error, 'rejects on sync errors');
       t.equal(ee.eventNames().length, 0, 'removes all registered listeners');
     });
@@ -72,7 +72,7 @@ tape('handles sync error', t => {
   ee.emit('error', error);
 });
 
-tape('handles sync success', t => {
+tape('handles sync success', (t) => {
   const ee = new EventEmitter();
   const mockPouchy = {
     _hasLikelySynced: false,
@@ -84,7 +84,7 @@ tape('handles sync success', t => {
   t.plan(2);
 
   getSyncedDatabase(mockDBRegistry, 'bananas')
-    .then(response => {
+    .then((response) => {
       t.equal(mockPouchy, response, 'returns DB');
       t.equal(ee.eventNames().length, 0, 'removes all registered listeners');
     })

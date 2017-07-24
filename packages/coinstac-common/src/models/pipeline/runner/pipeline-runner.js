@@ -7,6 +7,7 @@ const ComputationResult = require('../../computation/computation-result');
 const joi = require('joi');
 const assign = require('lodash/assign');
 const get = require('lodash/get');
+
 const extractRunId = ComputationResult.prototype._extractRunId;
 
 /**
@@ -52,8 +53,8 @@ class PipelineRunner extends Base {
     /* istanbul ignore next */
     if (!db) { throw new ReferenceError('missing db'); }
     const runId = extractRunId(this.result._id);
-    return this.findResultByRunId(db, runId)
-    .then(doc => {
+    return PipelineRunner.findResultByRunId(db, runId)
+    .then((doc) => {
       return {
         pluginState: get(doc, 'pluginState', null),
         prevData: get(doc, 'data', null),
@@ -67,7 +68,7 @@ class PipelineRunner extends Base {
    * @param {string} runId
    * @returns {Promise}
    */
-  getResultDocs(db, runId) {
+  getResultDocs(db, runId) { // eslint-disable-line class-methods-use-this
     const re = new RegExp(`^${runId}`);
 
     // db.all({ include_docs: false })
@@ -77,7 +78,7 @@ class PipelineRunner extends Base {
     // .catch(cb);
     // @TODO get bulkGet ^^ working for improved efficency (`.all()` ==> heavy)
     return db.all()
-    .then((docs) => docs.filter(doc => doc._id.match(re)));
+    .then(docs => docs.filter(doc => doc._id.match(re)));
   }
 
   /**
@@ -119,9 +120,9 @@ class PipelineRunner extends Base {
    * @param {cb} cb(err, {null|object})
    * @returns {Promise}
    */
-  findResultByRunId(db, runId) {
+  static findResultByRunId(db, runId) {
     return db.all({ include_docs: false })
-    .then((docs) => docs.find(doc => doc._id.match(runId)))
+    .then(docs => docs.find(doc => doc._id.match(runId)))
     .then((doc) => {
       if (!doc) { return Promise.resolve(); }
       return db.get(doc._id);
@@ -205,8 +206,8 @@ class PipelineRunner extends Base {
 
     // find DB copy of our result document, then patch it
     const runId = extractRunId(this.result._id);
-    return this.findResultByRunId(db, runId)
-    .then((doc) => this._updateResult(db, patch, doc))
+    return PipelineRunner.findResultByRunId(db, runId)
+    .then(doc => this._updateResult(db, patch, doc))
     .catch((err) => {
       this.events.emit('error', err);
       throw err;
@@ -294,7 +295,7 @@ class PipelineRunner extends Base {
    * how to progress/run the Pipeline itself
    * @throws {ReferenceError} always.
    */
-  run() {
+  run() { // eslint-disable-line class-methods-use-this
     throw new ReferenceError('abstract PipelineRunner must be extended');
   }
 

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+
 'use strict';
 
 const assign = require('lodash/assign');
@@ -54,7 +55,7 @@ function getFiles(dirs) {
 
   return Promise.all(dirs.map(dir => globAsync(dir)))
     .then(flatten)
-    .then(files => Promise.all(files.map(file => {
+    .then(files => Promise.all(files.map((file) => {
       return statAsync(file).then(stats => (stats.isFile() ? file : undefined));
     })))
     .then(compact);
@@ -92,7 +93,7 @@ program
       type: 'password',
     }])
 )
-  .then(answers => {
+  .then((answers) => {
     if (!program.consortium) {
       throw new Error('Consortium ID required');
     }
@@ -168,7 +169,7 @@ program
 
     return Promise.all([
       getFiles(program.args).then(client.projects.getFileStats),
-      client.projects.getCSV(program.metafile),
+      client.projects.constructor.getCSV(program.metafile),
     ]);
   })
   .then(([files, metaFile]) => {
@@ -209,7 +210,7 @@ program
       `remote-consortium-${consortiumId}`
     )
       .then(db => db.all())
-      .then(docs => {
+      .then((docs) => {
         // Owner's doc _should_ be saved
         if (!docs.length) {
           throw new Error(`Couldn't find active run ID for ${consortiumId}`);
