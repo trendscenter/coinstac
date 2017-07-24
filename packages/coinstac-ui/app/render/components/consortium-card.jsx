@@ -23,9 +23,15 @@ export default function ConsortiumCard(props) {
   let membershipButton;
   let editOrViewText;
 
+  const labelNoSpace = label.replace(' ', '-');
   if (isOwner) {
     deleteButton = (
-      <Button bsSize="small" bsStyle="danger" onClick={deleteConsortium}>
+      <Button
+        bsSize="small"
+        bsStyle="danger"
+        onClick={deleteConsortium}
+        id={`delete-${labelNoSpace}`}
+      >
         <span
           aria-hidden="true"
           className="glyphicon glyphicon glyphicon-remove"

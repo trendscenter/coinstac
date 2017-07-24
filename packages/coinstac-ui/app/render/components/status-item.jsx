@@ -44,7 +44,13 @@ export default function StatusItem({
     indicator = <Label bsStyle="success">Complete</Label>;
     resultButton = (
       <LinkContainer to={`/consortia/${consortium._id}/${remoteResult._id}`}>
-        <Button bsStyle="default" className="pull-right">View Results</Button>
+        <Button
+          bsStyle="default"
+          className="pull-right"
+          id={`results-${consortium.label}`}
+        >
+          View Results
+        </Button>
       </LinkContainer>
     );
   } else {
