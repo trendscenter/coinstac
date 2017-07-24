@@ -54,7 +54,7 @@ module.exports = {
       .then(() => coinstacComputationRegistry.factory({
         path: this.getComputationsPath(),
       }))
-      .then(reg => {
+      .then((reg) => {
         this.instance = reg;
         logger.info('Computation registry set up');
         return this.get();

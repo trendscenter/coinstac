@@ -5,7 +5,7 @@ const { logger } = require('./logging');
 /**
  * {@link https://nodejs.org/api/process.html#process_event_uncaughtexception}
  */
-process.on('uncaughtExpection', error => {
+process.on('uncaughtExpection', (error) => {
   logger.error(error);
   process.exit(1);
 });

@@ -22,7 +22,7 @@ module.exports = {
      *
      * {@link http://electron.atom.io/docs/api/dialog/#dialogshowmessageboxbrowserwindow-options-callback}
      */
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       dialog.showMessageBox({
         type: 'warning',
         detail: 'You can not undo this action',
@@ -32,7 +32,7 @@ module.exports = {
         cancelId: 1,
       }, resolve);
     })
-      .then(response => {
+      .then((response) => {
         if (response === 0) {
           return rimrafAsync(app.core.getDatabaseDirectory(username))
             .then(() => app.core.teardown())

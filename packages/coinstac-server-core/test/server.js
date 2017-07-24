@@ -14,7 +14,7 @@ const ComputationRegistry = coinstacComputationRegistry.ComputationRegistry;
 let addStub;
 
 // Stub `ComputationRegistry#add` so no network requests occur
-tape('setup', t => {
+tape('setup', (t) => {
   addStub = sinon
     .stub(ComputationRegistry.prototype, 'add')
     .returns(Promise.resolve());
@@ -22,7 +22,7 @@ tape('setup', t => {
   t.end();
 });
 
-tape('works without configuration', t => {
+tape('works without configuration', (t) => {
   t.plan(3);
 
   const response = server.start({ inMemory: true });
@@ -30,7 +30,7 @@ tape('works without configuration', t => {
   t.ok(response instanceof Promise, 'returns a Promise');
 
   response
-  .then(pool => {
+  .then((pool) => {
     t.ok(pool instanceof RemotePipelineRunnerPool, 'resolves to pool instance');
   })
   .then(() => server.stop())
@@ -38,7 +38,7 @@ tape('works without configuration', t => {
   .catch(t.end);
 });
 
-tape('passes database URL', t => {
+tape('passes database URL', (t) => {
   t.plan(2);
 
   const dbUrl = 'https://wild-west.database.net:1234/';
@@ -58,7 +58,7 @@ tape('passes database URL', t => {
   .catch(t.end);
 });
 
-tape('seeds stringified docs', t => {
+tape('seeds stringified docs', (t) => {
   t.plan(2);
   server.start({
     inMemory: true,
@@ -67,13 +67,13 @@ tape('seeds stringified docs', t => {
   .then(() => server.getInstance().dbRegistry.get('consortia').all())
   // @TODO no fake server. if couchdb is up, it may auto-sync many consortia
   // down before this assertion occurs.  brittle test.
-  .then((docs) => t.ok(docs.length >= mockConsortiumDocs.length, 'seeds docs'))
+  .then(docs => t.ok(docs.length >= mockConsortiumDocs.length, 'seeds docs'))
   .then(() => server.stop())
   .then(() => t.pass('tears down'))
   .catch(t.end);
 });
 
-tape('rejects naughty seed docs', t => {
+tape('rejects naughty seed docs', (t) => {
   t.plan(2);
 
   server.start({
@@ -89,7 +89,7 @@ tape('rejects naughty seed docs', t => {
   .catch(t.end);
 });
 
-tape('handles pool errors', t => {
+tape('handles pool errors', (t) => {
   const message = 'whoopsie';
   const stub = sinon.stub(
     RemotePipelineRunnerPool.prototype,
@@ -101,7 +101,7 @@ tape('handles pool errors', t => {
 
   server.start({ inMemory: true })
     .then(() => t.fail('didn’t handle pool init error'))
-    .catch(error => {
+    .catch((error) => {
       t.equal(error.message, message, 'rejects with init error');
       stub.restore();
       return server.stop();
@@ -110,7 +110,7 @@ tape('handles pool errors', t => {
     .catch(t.end);
 });
 
-tape('wires up to pool events', t => {
+tape('wires up to pool events', (t) => {
   t.plan(2);
 
   const events = [
@@ -122,7 +122,7 @@ tape('wires up to pool events', t => {
   ];
 
   server.start({ inMemory: true })
-    .then(pool => {
+    .then((pool) => {
       t.ok(
         events.every(e => !!pool.events.listenerCount(e)),
         'listens on every event'
