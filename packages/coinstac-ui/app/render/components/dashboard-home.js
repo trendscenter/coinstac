@@ -18,9 +18,14 @@ class DashboardHome extends Component {
   }
 
   componentWillMount() {
-    this.props.fetchComputations();
+    const {
+      fetchComputations,
+      fetchProjects,
+    } = this.props;
+
+    fetchComputations();
     // TODO: Modify action creator to use Promise
-    this.props.fetchProjects((error) => {
+    fetchProjects((error) => {
       if (error) {
         logger.error(error);
         notify('error', error.message);
