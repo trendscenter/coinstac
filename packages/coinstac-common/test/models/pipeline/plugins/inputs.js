@@ -13,7 +13,7 @@ function getHooks() {
   };
 }
 
-tape('inputs plugin :: local has no inputs', t => {
+tape('inputs plugin :: local has no inputs', (t) => {
   const hooks = getHooks();
 
   t.notOk(
@@ -24,7 +24,7 @@ tape('inputs plugin :: local has no inputs', t => {
   t.end();
 });
 
-tape('inputs plugin :: local has no local inputs', t => {
+tape('inputs plugin :: local has no local inputs', (t) => {
   const hooks = getHooks();
 
   t.notOk(
@@ -43,7 +43,7 @@ tape('inputs plugin :: local has no local inputs', t => {
   t.end();
 });
 
-tape('inputs plugin :: local has remote and has no local inputs', t => {
+tape('inputs plugin :: local has remote and has no local inputs', (t) => {
   const compResult = {};
   const hooks = getHooks();
   const runInput = {
@@ -74,7 +74,7 @@ tape('inputs plugin :: local has remote and has no local inputs', t => {
 
 tape('inputs plugin :: local has local inputs');
 
-tape('inputs plugin :: remote has inputs', t => {
+tape('inputs plugin :: remote has inputs', (t) => {
   const hooks = getHooks();
 
   t.notOk(
@@ -95,7 +95,7 @@ tape('inputs plugin :: remote has inputs', t => {
   t.end();
 });
 
-tape('inputs plugin :: no local inputs', t => {
+tape('inputs plugin :: no local inputs', (t) => {
   const hooks = getHooks();
 
   t.notOk(
@@ -118,7 +118,7 @@ tape('inputs plugin :: no local inputs', t => {
   t.end();
 });
 
-tape('inputs plugin :: local has inputs', t => {
+tape('inputs plugin :: local has inputs', (t) => {
   const compResult = {
     pluginState: {},
   };

@@ -54,7 +54,7 @@ test('CoinstacClient - logger injections', (t) => {
   .then(t.end, t.end);
 });
 
-test('CoinstacClient - initialize errors', t => {
+test('CoinstacClient - initialize errors', (t) => {
   t.plan(4);
   const emptyCredentials = {
     password: null,
@@ -65,13 +65,13 @@ test('CoinstacClient - initialize errors', t => {
   });
 
   cc.initialize.bind(null)()
-  .catch((err) => t.ok(err, 'rejects with bad “this”'))
+  .catch(err => t.ok(err, 'rejects with bad “this”'))
   .then(() => cc.initialize())
-  .catch((err) => t.ok(err, 'rejects without params'))
+  .catch(err => t.ok(err, 'rejects without params'))
   .then(() => cc.initialize({}))
-  .catch((err) => t.ok(err, 'rejects with missing credentials'))
+  .catch(err => t.ok(err, 'rejects with missing credentials'))
   .then(() => cc.initialize(emptyCredentials))
-  .catch((err) => t.ok(err, 'rejects with empty credentials'))
+  .catch(err => t.ok(err, 'rejects with empty credentials'))
   .then(t.end, t.end);
 });
 
@@ -124,7 +124,7 @@ test('CoinstacClient - initialize process', (t) => {
    * `mkdirp` with Sinon, so to a `fs.stat`:
    */
   .then(() => bluebird.promisify(fs.stat, { context: fs })(cc.appDirectory))
-  .then((stat) => t.ok(stat, '“upserts” application directory'))
+  .then(stat => t.ok(stat, '“upserts” application directory'))
   .then(() => {
     t.ok(
       (
@@ -206,7 +206,7 @@ test('CoinstacClient - teardown process', (t) => {
     .catch(t.end);
 });
 
-test('CoinstacClient - auth initialization', t => {
+test('CoinstacClient - auth initialization', (t) => {
   const authStub = {
     login: sinon.stub().returns(Promise.resolve()),
     signup: sinon.stub().returns(Promise.resolve()),

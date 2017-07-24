@@ -4,6 +4,7 @@ require('../../../../helpers/boot');
 const test = require('tape');
 const poolUtils = require('./.test-pool-utils');
 const common = require('../../../../../');
+
 const runner = common.models.pipeline.runner;
 const computation = common.models.computation;
 const RemotePipelineRunnerPool = runner.pool.RemotePipelineRunnerPool;
@@ -27,7 +28,7 @@ const localResultOpts = (opts) => {
 const setupServer = () => poolUtils.setup();
 const teardownServer = () => poolUtils.teardown();
 
-test('builds & execs runners in response to db events', t => {
+test('builds & execs runners in response to db events', (t) => {
   t.plan(4);
   setupServer().then(() => {
     const compId = 'test-rrp';
@@ -83,7 +84,7 @@ test('builds & execs runners in response to db events', t => {
   });
 });
 
-test('builds new listeners when new a new consortium is added', t => {
+test('builds new listeners when new a new consortium is added', (t) => {
   t.plan(2);
   setupServer().then(() => {
     const consortium = poolUtils.getDummyConsortium();
@@ -126,8 +127,8 @@ test('fetch or seed computation results on init', (t) => {
     return resultDB.save(remoteResult.serialize())
     .then(() => pool.init())
     // fetch latest result, just seeded
-    .then(() => pool.getLatestResult(resultDB, remoteResult.runId))
-    .then((rslt) => t.ok(
+    .then(() => RemotePipelineRunnerPool.getLatestResult(resultDB, remoteResult.runId))
+    .then(rslt => t.ok(
       rslt instanceof RemoteComputationResult,
       'can fetch latest remote computation result'
     ))
@@ -135,7 +136,7 @@ test('fetch or seed computation results on init', (t) => {
     // instantiate a result if none found--tested in integration)
     // @note really, we shoul be passing a local result ¯\_(LOC)_/¯
     .then(() => pool.getRemoteResult(resultDB, remoteResult))
-    .then((rslt) => t.ok(
+    .then(rslt => t.ok(
       rslt instanceof RemoteComputationResult,
       'can fetch latest remote computation result'
     ))
@@ -146,7 +147,7 @@ test('fetch or seed computation results on init', (t) => {
   });
 });
 
-test('marks completed computations', t => {
+test('marks completed computations', (t) => {
   t.plan(3);
 
   const consortiumId = 'abc';
@@ -161,7 +162,7 @@ test('marks completed computations', t => {
 
     pool.events.on('computation:markedComplete', () => {
       resultDB.get(runId).then(
-        doc => {
+        (doc) => {
           t.ok(
             typeof doc.endDate === 'number' &&
             Date.now() - doc.endDate < 200,
@@ -169,7 +170,7 @@ test('marks completed computations', t => {
           );
           t.equal(doc.complete, true, 'sets "completed" to true');
         },
-        error => {
+        (error) => {
           throw error;
         }
       );

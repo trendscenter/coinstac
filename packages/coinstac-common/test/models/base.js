@@ -3,7 +3,7 @@
 const Base = require('../../').models.Base;
 const test = require('tape');
 
-test('model::base - constructor', t => {
+test('model::base - constructor', (t) => {
   let bm = new Base();
   t.ok(bm, 'constructs with valid input');
   const dummyAttrs = { dummy: true, arr: [1, 2, 3] };

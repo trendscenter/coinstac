@@ -1,8 +1,8 @@
 'use strict';
 
 import app from 'ampersand-app';
-import { applyAsyncLoading } from './loading';
 import { clone, map } from 'lodash';
+import { applyAsyncLoading } from './loading';
 import {
   addConsortiumComputationListener,
   listenToConsortia,
@@ -16,7 +16,7 @@ export const SET_CONSORTIUM = 'SET_CONSORTIUM';
 export const SET_EXPANDED_RESULTS = 'SET_EXPANDED_RESULT';
 
 // Action Creators
-export const setConsortium = (consortium) => ({ payload: consortium, type: SET_CONSORTIUM });
+export const setConsortium = consortium => ({ payload: consortium, type: SET_CONSORTIUM });
 export function doDeleteConsortia(consortia) {
   if (!Array.isArray(consortia)) {
     throw new Error('Expected consortia to be an array');
@@ -49,7 +49,7 @@ export function doUpdateConsortia(consortia) {
  * @param {string} consortiumId
  * @returns {Function}
  */
-export const deleteConsortium = applyAsyncLoading(consortiumId => {
+export const deleteConsortium = applyAsyncLoading((consortiumId) => {
   return () => {
     const { core: { consortia } } = app;
 
@@ -58,7 +58,7 @@ export const deleteConsortium = applyAsyncLoading(consortiumId => {
   };
 });
 
-export const fetchConsortium = applyAsyncLoading(id => {
+export const fetchConsortium = applyAsyncLoading((id) => {
   return (dispatch) => {
     return app.core.consortia.get(id)
     .then((consortium) => {
@@ -90,7 +90,7 @@ export const joinConsortium = applyAsyncLoading((consortiumId, username) => {
     const { core: { consortia } } = app;
 
     return consortia.get(consortiumId)
-      .then(consortium => {
+      .then((consortium) => {
         if (consortium.users.indexOf(username) > -1) {
           throw new Error(
             `User ${username} already in consortium ${consortiumId}`
@@ -130,7 +130,7 @@ export const setActiveComputation = applyAsyncLoading(
       }
 
       return consortia.get(consortiumId)
-        .then(consortium => {
+        .then((consortium) => {
           const myConsortium = clone(consortium);
           myConsortium.activeComputationId = computationId;
 
@@ -215,7 +215,7 @@ export const setComputationInputs = applyAsyncLoading(
       const { core: { computations, consortia } } = app;
 
       return consortia.get(consortiumId)
-        .then(consortium => {
+        .then((consortium) => {
           if (!consortium.activeComputationId) {
             throw new Error(
               `Can't set computation inputs without active computation on
@@ -290,7 +290,7 @@ export const leaveConsortium = applyAsyncLoading((consortiumId, username) => {
     const { core: { consortia } } = app;
 
     return consortia.get(consortiumId)
-      .then(consortium => {
+      .then((consortium) => {
         const index = consortium.users.indexOf(username);
 
         if (index < 0) {
@@ -318,12 +318,12 @@ export const leaveConsortium = applyAsyncLoading((consortiumId, username) => {
  * @returns {Function}
  */
 export function updateConsortia(consortia) {
-  return dispatch => {
+  return (dispatch) => {
     const localToUpdate = Array.isArray(consortia) ? consortia : [consortia];
     const toDelete = [];
     const toUpdate = [];
 
-    localToUpdate.forEach(change => {
+    localToUpdate.forEach((change) => {
       if ('_deleted' in change && change._deleted) {
         toDelete.push(change);
       } else {
@@ -347,8 +347,8 @@ export function updateConsortia(consortia) {
  * @param {Object} consortium
  * @returns {Function}
  */
-export const saveConsortium = applyAsyncLoading(consortium => {
-  return dispatch => {
+export const saveConsortium = applyAsyncLoading((consortium) => {
+  return (dispatch) => {
     return app.core.consortia.save(consortium)
     .then((newTium) => {
       dispatch(updateConsortia(newTium));
@@ -379,7 +379,7 @@ export default function reducer(state = INITIAL_STATE, action) {
       const changed = [];
       const unchanged = [...state.consortia];
 
-      action.payload.forEach(consortium => {
+      action.payload.forEach((consortium) => {
         const index = unchanged.findIndex(c => c._id === consortium._id);
 
         if (index > -1) {
@@ -413,7 +413,7 @@ export default function reducer(state = INITIAL_STATE, action) {
       if (state.expandedResults.includes(action.payload)) {
         return {
           ...state,
-          expandedResults: state.expandedResults.filter((res) => res !== action.payload),
+          expandedResults: state.expandedResults.filter(res => res !== action.payload),
         };
       } else if (action.payload !== null) {
         return {

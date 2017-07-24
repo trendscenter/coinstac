@@ -4,6 +4,7 @@ require('../../../../helpers/boot');
 const test = require('tape');
 const poolUtils = require('./.test-pool-utils');
 const common = require('../../../../../');
+
 const computation = common.models.computation;
 const Consortium = common.models.Consortium;
 const LocalPipelineRunnerPool = common.models.pipeline.runner.pool.LocalPipelineRunnerPool;
@@ -26,7 +27,7 @@ const remoteResultOpts = (opts) => {
 const getDummyConsortium = (() => {
   let count = 0;
   return () => {
-    ++count;
+    count += 1;
     return new Consortium({
       _id: `testconsortium${count}`,
       description: `test-consortium-${count}`,

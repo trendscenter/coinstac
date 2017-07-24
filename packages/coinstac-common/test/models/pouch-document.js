@@ -1,10 +1,9 @@
 'use strict';
 
-const path = require('path');
-const PD = require(path.join(__dirname, '../../src/models/pouch-document'));
+const PD = require('../../src/models/pouch-document');
 const test = require('tape');
 
-const factory = (opts) => (new PD(opts));
+const factory = opts => (new PD(opts));
 
 const validOps = () => {
   return {
@@ -13,7 +12,7 @@ const validOps = () => {
   };
 };
 
-test('model::pouch-document - constructor', t => {
+test('model::pouch-document - constructor', (t) => {
   const pd1 = factory(validOps());
   t.ok(pd1, 'constructs with valid input');
   t.throws(

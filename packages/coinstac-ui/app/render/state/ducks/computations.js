@@ -1,7 +1,6 @@
+import { findIndex } from 'lodash';
 import app from 'ampersand-app';
 import { applyAsyncLoading } from './loading';
-import { findIndex } from 'lodash';
-
 
 const SET_COMPUTATIONS = 'SET_COMPUTATIONS';
 const BG_SET_COMPUTATIONS = 'BG_SET_COMPUTATIONS';
@@ -17,7 +16,7 @@ export const fetchComputations = applyAsyncLoading(() => {
       dispatch(setComputations(computations));
       return computations;
     })
-    .catch((err) => app.notify({
+    .catch(err => app.notify({
       level: 'error',
       message: `Unable to download computations: ${err}`,
     }));
