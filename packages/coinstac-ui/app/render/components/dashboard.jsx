@@ -4,7 +4,6 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import DashboardNav from './dashboard-nav';
 import UserAccountController from './user-account-controller';
-import { connect } from 'react-redux';
 import { initPrivateBackgroundServices } from '../state/ducks/bg-services';
 import CoinstacAbbr from './coinstac-abbr';
 

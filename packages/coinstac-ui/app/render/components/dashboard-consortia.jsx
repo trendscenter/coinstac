@@ -33,7 +33,7 @@ class DashboardConsortia extends Component {
               isMember={isMember}
               isOwner={isOwner}
               joinConsortium={() => joinConsortium(id, username)}
-              key={index}
+              key={id}
               leaveConsortium={() => leaveConsortium(id, username)}
               {...consortium}
             />
