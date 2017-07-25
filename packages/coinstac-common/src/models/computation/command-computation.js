@@ -34,7 +34,7 @@ class CommandComputation extends Computation {
       const args = (this.args || []).concat(['--run', JSON.stringify(opts)]);
       let jsonStr = '';
       let errMsg = '';
-      const handleError = error => {
+      const handleError = (error) => {
         if (this.verbose) {
           /* eslint-disable no-console */
           console.error(`Command failed to run:
@@ -64,13 +64,13 @@ ${indentString(errMsg, 2)}
         const cmd = cp.spawn(this.cmd, args, { cwd: this.cwd });
 
         cmd.on('error', handleError);
-        cmd.stderr.on('data', data => {
+        cmd.stderr.on('data', (data) => {
           errMsg += data;
         });
-        cmd.stdout.on('data', data => {
+        cmd.stdout.on('data', (data) => {
           jsonStr += data;
         });
-        cmd.on('exit', code => {
+        cmd.on('exit', (code) => {
           if (code) {
             handleError(new Error(`Process exited with code ${code}:
 

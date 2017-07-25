@@ -5,7 +5,8 @@ const path = require('path');
 const swig = require('swig-templates');
 const cp = require('child_process');
 const ghpages = require('gh-pages');
-const mkdir = (path) => cp.execSync(`mkdir -p ${path}`);
+
+const mkdir = path => cp.execSync(`mkdir -p ${path}`);
 const rmdir = (path) => { try { cp.execSync(`rm -rf ${path}`); } catch (e) { /* pass */ } };
 const docsPath = path.resolve(__dirname, 'docs');
 const packagesPath = path.resolve(__dirname, '..', 'packages');
@@ -13,15 +14,15 @@ const marked = require('marked');
 
 // get packages to doc'ify.
 const packages = fs.readdirSync(packagesPath)
-.filter((p) => p.match(/coinstac/))
+.filter(p => p.match(/coinstac/))
 .map((p) => {
   const pkgRoot = path.resolve(packagesPath, p);
   return {
     name: p,
     path: pkgRoot,
-    /* eslint-disable global-require */
+    /* eslint-disable global-require, import/no-dynamic-require */
     packageJSON: require(path.resolve(pkgRoot, 'package.json')),
-    /* eslint-enable global-require */
+    /* eslint-enable global-require, import/no-dynamic-require  */
   };
 });
 

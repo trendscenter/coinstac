@@ -1,4 +1,5 @@
 /* eslint-disable no-console */
+
 'use strict';
 
 const async = require('async');
@@ -15,9 +16,9 @@ const url = require('url');
 let dbmap;
 
 try {
-  /* eslint-disable import/no-unresolved,global-require */
+  /* eslint-disable import/no-unresolved,global-require,import/no-absolute-path */
   dbmap = require('/coins/config/dbmap.json');
-  /* eslint-enable import/no-unresolved,global-require */
+  /* eslint-enable import/no-unresolved,global-require,import/no-absolute-path */
 } catch (error) {
   dbmap = {
     coinstac: {
@@ -35,9 +36,9 @@ const urlBase = url.format({
 });
 
 async.parallel([
-  cb1 => {
+  (cb1) => {
     console.log('Removing database dir…');
-    rimraf(CoinstacServer.DB_PATH, error => {
+    rimraf(CoinstacServer.DB_PATH, (error) => {
       if (error) {
         cb1(error);
       } else {
@@ -46,9 +47,9 @@ async.parallel([
       }
     });
   },
-  cb2 => {
+  (cb2) => {
     async.waterfall([
-      cb2a => {
+      (cb2a) => {
         superagent
           .get(`${urlBase}/_all_dbs`)
           .set('Accept', 'application/json')
@@ -79,7 +80,7 @@ async.parallel([
       },
     ], cb2);
   },
-], error => {
+], (error) => {
   if (error) {
     console.error(error);
   }

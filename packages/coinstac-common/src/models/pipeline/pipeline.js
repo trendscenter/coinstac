@@ -70,7 +70,7 @@ class Pipeline extends Base {
     const pluginHooks = opts.pluginHooks;
     if (!this._postRunTasks.length) { return Promise.resolve(); }
     return Promise.all(
-      this._postRunTasks.map((fn) => fn(runOutput, compResult, pluginHooks))
+      this._postRunTasks.map(fn => fn(runOutput, compResult, pluginHooks))
     );
   }
 
@@ -266,7 +266,7 @@ class Pipeline extends Base {
   maybeIncrementStep(opts, isPreRun) {
     const handleNextComplete = (doNext) => {
       if (doNext && this.computations[this.step + 1]) {
-        ++this.step;
+        this.step += 1;
         this.computation = this.computations[this.step];
 
         return true;

@@ -77,7 +77,7 @@ loadConfig()
       ) :
       memo
   ), [])))
-  .then((targets) => targets.forEach((target) => {
+  .then(targets => targets.forEach((target) => {
     const dataLogger = getDataLogger(target.name, target.className);
     const errorLogger = getErrorLogger(target.name, target.className);
 

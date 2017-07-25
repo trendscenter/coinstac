@@ -1,20 +1,20 @@
 import app from 'ampersand-app';
 import EventEmitter from 'events';
-import {
-  joinSlaveComputation,
-  alreadyRan,
-} from '../../../../app/render/state/ducks/bg-services';
 import noop from 'lodash/noop';
 import setProp from 'lodash/set';
 import sinon from 'sinon';
 import tape from 'tape';
+import {
+  joinSlaveComputation,
+  alreadyRan,
+} from '../../../../app/render/state/ducks/bg-services';
 
 tape('bg-services setup', (t) => {
   app.notify = noop;
   t.end();
 });
 
-tape('joins slave computation', t => {
+tape('joins slave computation', (t) => {
   const consortiumId = 'geodude';
   const ee = new EventEmitter();
   const getActiveRunIdStub = sinon.stub();

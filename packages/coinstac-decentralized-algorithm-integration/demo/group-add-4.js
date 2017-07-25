@@ -21,7 +21,7 @@ module.exports = {
 
       // PART 4
       // incriment our step value!
-      ++userStep;
+      userStep += 1;
       console.log('...bumping', userStep); // eslint-disable-line
       return cb(null, userStep); // cb(null, value) saves our value
     },

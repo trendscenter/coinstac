@@ -45,14 +45,14 @@ const exportList = {
     }
 
     return bluebird.promisify(fs.stat)(declarationPath)
-      .then(stats => {
+      .then((stats) => {
         if (!stats.isFile() && !stats.isDirectory()) {
           throw new Error(`Couldn't find declaration ${declarationPath}`);
         }
 
-        /* eslint-disable global-require */
+        /* eslint-disable global-require, import/no-dynamic-require */
         const declaration = require(declarationPath);
-        /* eslint-enable global-require */
+        /* eslint-enable global-require, import/no-dynamic-require */
 
         // Validate declaration's shape
         if (
@@ -79,7 +79,7 @@ const exportList = {
         // Support empty arrays created by `Array(<number>)`
         const local = declaration.local.every(l => typeof l === 'undefined') ?
           times(declaration.local.length, () => ({})) :
-          Promise.all(declaration.local.map((item) => (
+          Promise.all(declaration.local.map(item => (
             item instanceof Object ? bluebird.props(item) : item
           )));
 
@@ -192,7 +192,7 @@ const exportList = {
           verbose: declaration.verbose,
         });
       })
-      .then(localProcesses => {
+      .then((localProcesses) => {
         processes.local = localProcesses;
         logger.info('Local processes booted');
         processes.local.forEach(proc => proc.send({ kickoff: true }));
@@ -231,7 +231,7 @@ const exportList = {
           dbServer.teardown(),
         ]))
         .then(([remoteResult]) => resolve(remoteResult))
-        .catch((err) => reject(err));
+        .catch(err => reject(err));
       });
     });
   },

@@ -1,6 +1,7 @@
 'use strict';
 
 require('./utils/boot');
+
 const fail = (err) => {
   console.error(err); // eslint-disable-line
   console.error(err.stack); // eslint-disable-line
