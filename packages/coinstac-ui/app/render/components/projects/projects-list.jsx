@@ -23,9 +23,7 @@ class ProjectsList extends Component {
   }
 
   componentWillMount() {
-    const { dispatch } = this.props;
-
-    dispatch(fetchProjects((err) => {
+    this.props.fetchProjects((err) => {
       if (err) {
         app.logger.error(err);
         app.notify({
@@ -35,17 +33,15 @@ class ProjectsList extends Component {
       } else {
         this.setState({ ready: true });
       }
-    }));
+    });
   }
 
   componentWillUnmount() {
-    const { dispatch } = this.props;
-    dispatch(setProjects(null));
+    this.props.setProjects(null);
   }
 
   delete(project) {
-    const { dispatch } = this.props;
-    dispatch(removeProject(project));
+    this.props.removeProject(project);
   }
 
   /**
@@ -56,11 +52,9 @@ class ProjectsList extends Component {
    * @param {string} project.consortiumId
    */
   runComputation({ _id: projectId, consortiumId }) {
-    const { dispatch } = this.props;
-
     this.context.router.push('/');
 
-    dispatch(runComputation({ consortiumId, projectId }))
+    this.props.runComputation({ consortiumId, projectId })
       .catch((err) => {
         app.notify({
           level: 'error',
@@ -141,7 +135,7 @@ ProjectsList.propTypes = {
     activeComputationInputs: PropTypes.array.isRequired,
     owners: PropTypes.arrayOf(PropTypes.string).isRequired,
   })).isRequired,
-  dispatch: PropTypes.func.isRequired,
+  fetchProjects: PropTypes.func,
   projects: PropTypes.arrayOf(PropTypes.shape({
     _id: PropTypes.string,
     allowComputationRun: PropTypes.bool.isRequired,
@@ -151,6 +145,9 @@ ProjectsList.propTypes = {
     name: PropTypes.string.isRequired,
     status: PropTypes.string.isRequired,
   })),
+  removeProject: PropTypes.func,
+  runComputation: PropTypes.func,
+  setProjects: PropTypes.func,
   username: PropTypes.string.isRequired,
 };
 
@@ -166,4 +163,9 @@ function select(state) {
   };
 }
 
-export default connect(select)(ProjectsList);
+export default connect(select, {
+  fetchProjects,
+  removeProject,
+  runComputation,
+  setProjects,
+})(ProjectsList);

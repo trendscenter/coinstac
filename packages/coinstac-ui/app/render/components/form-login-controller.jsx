@@ -2,7 +2,7 @@ import app from 'ampersand-app';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import * as authActions from '../state/ducks/auth';
+import { hotRoute, login } from '../state/ducks/auth';
 import FormLogin from './form-login';
 import LayoutNoauth from './layout-noauth';
 
@@ -14,25 +14,23 @@ class FormLoginController extends Component {
   }
 
   hotRoute() {
-    const { dispatch } = this.props;
     const { router } = this.context;
 
     // warning - hot routing will grant access to the UI, however submitted
     // data will not be persisted/honored
-    return dispatch(authActions.hotRoute())
+    return this.props.hotRoute()
     .then(() => {
       process.nextTick(() => router.push('/'));
     });
   }
 
   submit(evt) {
-    const { dispatch } = this.props;
     const { router } = this.context;
     const userCred = this.formLogon.data();
 
     evt.preventDefault();
 
-    dispatch(authActions.login(userCred))
+    this.props.login(userCred)
       .then(() => {
         // TODO: Figure why `nextTick` is needed
         process.nextTick(() => router.push('/'));
@@ -63,8 +61,9 @@ FormLoginController.contextTypes = {
 FormLoginController.displayName = 'FormLoginController';
 
 FormLoginController.propTypes = {
-  dispatch: PropTypes.func.isRequired,
+  hotRoute: PropTypes.func,
   loading: PropTypes.object.isRequired,
+  login: PropTypes.func,
 };
 
 const mapStateToProps = (state) => {
@@ -72,4 +71,7 @@ const mapStateToProps = (state) => {
   return { auth, loading };
 };
 
-export default connect(mapStateToProps)(FormLoginController);
+export default connect(mapStateToProps, {
+  hotRoute,
+  login,
+})(FormLoginController);
