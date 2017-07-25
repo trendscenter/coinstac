@@ -12,7 +12,7 @@ const path = require('path');
 const sinon = require('sinon');
 const tape = require('tape');
 
-tape('gets declaration by path :: errors', t => {
+tape('gets declaration by path :: errors', (t) => {
   const getDeclaration = coinstacSimulator.getDeclaration;
   const statStub = sinon.stub(fs, 'stat').yields(null, {
     isFile: () => true,
@@ -52,7 +52,7 @@ tape('gets declaration by path :: errors', t => {
   getDeclaration()
     .then(
       () => t.fail('Resolves without declaration path'),
-      error => {
+      (error) => {
         t.ok(
           error.message.indexOf('declaration path string') > -1,
           'Rejects without declaration path'
@@ -62,7 +62,7 @@ tape('gets declaration by path :: errors', t => {
     )
     .then(
       () => t.fail('Resolves with bad declaration path'),
-      error => {
+      (error) => {
         t.ok(
           error.message.indexOf('./path/to/bogus/declaration.js') > -1,
           'Rejects with bad declaration path'
@@ -72,7 +72,7 @@ tape('gets declaration by path :: errors', t => {
     )
     .then(
       () => t.fail('Resolves with non-file non-dir declaration'),
-      error => {
+      (error) => {
         t.ok(
           error.message.indexOf('Couldn\'t find declaration') > -1,
           'Resolves with non-file non-dir declaration'
@@ -82,7 +82,7 @@ tape('gets declaration by path :: errors', t => {
     )
     .then(
       () => t.fail('Resolves with non-object declaration'),
-      error => {
+      (error) => {
         t.ok(
           error.message.indexOf('object'),
           'Rejects with non-object declaration'
@@ -92,7 +92,7 @@ tape('gets declaration by path :: errors', t => {
     )
     .then(
       () => t.fail('Resolves with no computation path in declaration'),
-      error => {
+      (error) => {
         t.ok(
           error.message.indexOf('\'computationPath\' property') > -1,
           'Rejects with no computation path declaration'
@@ -102,7 +102,7 @@ tape('gets declaration by path :: errors', t => {
     )
     .then(
       () => t.fail('Resolves with bad computation path in declaration'),
-      error => {
+      (error) => {
         t.ok(
           error.message.indexOf('\'computationPath\' property') > -1,
           'Rejects with bad computation path in declaration'
@@ -112,7 +112,7 @@ tape('gets declaration by path :: errors', t => {
     )
     .then(
       () => t.fail('Resolves with no local property in declaration'),
-      error => {
+      (error) => {
         t.ok(
           error.message.indexOf('\'local\' array') > -1,
           'Rejects with no local property in declaration'
@@ -122,7 +122,7 @@ tape('gets declaration by path :: errors', t => {
     )
     .then(
       () => t.fail('Resolves with bad local property in declaration'),
-      error => {
+      (error) => {
         t.ok(
           error.message.indexOf('have a \'local\' array') > -1,
           'Rejects with bad local property in declaration'
@@ -132,7 +132,7 @@ tape('gets declaration by path :: errors', t => {
     )
     .then(
       () => t.fail('Resolves with empty local array in declaration'),
-      error => {
+      (error) => {
         t.ok(
           error.message.indexOf('have items in \'local\' array') > -1,
           'Rejects with empty local array in declaration'
@@ -142,7 +142,7 @@ tape('gets declaration by path :: errors', t => {
     )
     .then(
       () => t.fail('Resolves with bad remote property in declaration'),
-      error => {
+      (error) => {
         t.ok(
           error.message.indexOf('\'remote\' value to be an object') > -1,
           'Rejects with bad remote property in declaration'
@@ -152,7 +152,7 @@ tape('gets declaration by path :: errors', t => {
     )
     .then(
       () => t.fail('Resolves with bad remote property in declaration'),
-      error => {
+      (error) => {
         t.ok(
           error.message.indexOf('\'remote\' value to be an object') > -1,
           'Rejects with bad remote property in declaration'
@@ -166,7 +166,7 @@ tape('gets declaration by path :: errors', t => {
     });
 });
 
-tape('gets declaration by path :: declaration rejections', t => {
+tape('gets declaration by path :: declaration rejections', (t) => {
   const getDeclaration = coinstacSimulator.getDeclaration;
 
   t.plan(2);
@@ -174,21 +174,21 @@ tape('gets declaration by path :: declaration rejections', t => {
   getDeclaration(path.join(__dirname, 'mocks', 'bad-local.js'))
     .then(
       () => t.fail('Resolves with rejecting local value in declaration'),
-      error => {
+      (error) => {
         t.equal(error, 'bye', 'rejects with local value rejection');
         return getDeclaration(path.join(__dirname, 'mocks', 'bad-remote.js'));
       }
     )
     .then(
       () => t.fail('Resolves with rejecting remote value in declaration'),
-      error => {
+      (error) => {
         t.equal(error, 'pikachu', 'Rejects with remote value rejection');
       }
     )
     .catch(t.end);
 });
 
-tape('gets declaration by path', t => {
+tape('gets declaration by path', (t) => {
   const getDeclaration = coinstacSimulator.getDeclaration;
 
   t.plan(5);
@@ -219,7 +219,7 @@ tape('gets declaration by path', t => {
         path.join(__dirname, 'mocks', 'good-declaration-2.js')
       );
     })
-    .then(declaration => {
+    .then((declaration) => {
       t.equal(
         declaration.computationPath,
         path.resolve(
@@ -249,7 +249,7 @@ tape('gets declaration by path', t => {
     .catch(t.end);
 });
 
-tape('gets usernames', t => {
+tape('gets usernames', (t) => {
   const usernames = coinstacSimulator.getUsernames(10);
 
   t.ok(
@@ -270,7 +270,7 @@ tape('gets usernames', t => {
   t.end();
 });
 
-tape('runs declaration :: errors', t => {
+tape('runs declaration :: errors', (t) => {
   /* eslint-disable no-use-before-define */
   const localProcesses = [getMockProcess(), getMockProcess()];
   /* eslint-enable no-use-before-define */
@@ -380,7 +380,7 @@ tape('runs declaration :: errors', t => {
     });
 });
 
-tape('sets commands\' cwd', t => {
+tape('sets commands\' cwd', (t) => {
   t.plan(1);
 
   coinstacSimulator.run(path.resolve(__dirname, 'mocks/exec-declaration.js'))

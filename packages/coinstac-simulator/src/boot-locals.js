@@ -40,7 +40,7 @@ function getReadyLocalProcess({
       }
     }
 
-    localProcess.on('exit', code => {
+    localProcess.on('exit', (code) => {
       if (code) {
         throw new Error(`Local process exited with code ${code}`);
       }

@@ -10,9 +10,11 @@ const test = require('tape');
 const poolUtils = require('./.test-pool-utils');
 const EventEmitter = require('events').EventEmitter;
 const common = require('../../../../../');
+
 const computation = common.models.computation;
 const Consortium = common.models.Consortium;
 const Pouchy = require('pouchy');
+
 const PipelineRunnerPool = common.models.pipeline.runner.pool.PipelineRunnerPool;
 const ComputationResult = computation.ComputationResult;
 const LocalComputationResult = computation.LocalComputationResult;
@@ -56,7 +58,7 @@ const setupServer = () => poolUtils.setup();
 const teardownServer = () => poolUtils.teardown();
 
 
-test('PipelineRunnerPool - handles new dbs', t => {
+test('PipelineRunnerPool - handles new dbs', (t) => {
   // @TODO handle https://github.com/pouchdb/pouchdb/issues/4922
   t.plan(3);
   setupServer().then(() => {
@@ -80,7 +82,7 @@ test('PipelineRunnerPool - handles new dbs', t => {
   });
 });
 
-test('queues processing for rapid succession database events', t => {
+test('queues processing for rapid succession database events', (t) => {
   t.plan(3);
   setupServer().then(() => {
     const runId = 'testrun123';
@@ -100,7 +102,7 @@ test('queues processing for rapid succession database events', t => {
     const origRunnerRun = runner.run;
     let callCount = 0;
     runner.run = (opts) => {
-      ++callCount;
+      callCount += 1;
       if (callCount === 1) {
         t.equal(
           pool.runQueueSize[runId],
@@ -131,7 +133,7 @@ test('queues processing for rapid succession database events', t => {
   });
 });
 
-test('does not proceed queue whilst pipeline is `inProgress`', t => {
+test('does not proceed queue whilst pipeline is `inProgress`', (t) => {
   t.plan(5);
   setupServer().then(() => {
     const localResult = new LocalComputationResult(localResultOpts());
@@ -155,7 +157,7 @@ test('does not proceed queue whilst pipeline is `inProgress`', t => {
     // detect when the runner completes requests, but that event is _not_
     // bubbled out.  `run:end` serves the same purpose.
     pool.events.on('run:end', () => {
-      ++requestComplete;
+      requestComplete += 1;
       const queueLen = getQueLen();
       if (requestComplete === 1) {
         return t.equal(queueLen, 2, 'two jobs queued');
@@ -186,7 +188,7 @@ test('does not proceed queue whilst pipeline is `inProgress`', t => {
   });
 });
 
-test('Pool emits queue and run event activity', t => {
+test('Pool emits queue and run event activity', (t) => {
   t.plan(8);
   setupServer().then(() => {
     const runId = 'test_run_db_triggers_run';
@@ -219,7 +221,7 @@ test('Pool emits queue and run event activity', t => {
     pool.events.on('run:start', confirmStartRunEvents);
     pool.events.on('run:end', confirmEndRunEvents);
     pool.events.on('queue:start', qRunId => t.equal(qRunId, runId, 'queue on starts'));
-    pool.events.on('queue:end', qRunId => {
+    pool.events.on('queue:end', (qRunId) => {
       t.equal(qRunId, runId, 'queue on ends');
       pool.destroy({ deleteDBs: true })
       .then(() => teardownServer())
@@ -244,11 +246,11 @@ test('abstract methods', (t) => {
   t.plan(1);
   const pool = new PipelineRunnerPool(poolUtils.getPoolOpts({ dbRegistry: { isLocal: true } }));
   pool.createNewRunner(null)
-  .catch((err) => t.ok(err.message.match(/abstract/), 'illegal createNewRunner call'))
+  .catch(err => t.ok(err.message.match(/abstract/), 'illegal createNewRunner call'))
   .then(t.end, t.end);
 });
 
-test('consortia has DBListeners on pool.init()', t => {
+test('consortia has DBListeners on pool.init()', (t) => {
   t.plan(2);
   setupServer().then(() => {
     /**
@@ -349,9 +351,7 @@ test('pool selectively listens to consortia when using `listenTo`', (t) => {
 });
 
 test('getPipelinePlugins', (t) => {
-  const poolOpts = poolUtils.getPoolOpts({ dbRegistry: { isLocal: true } });
-  const pool = new PipelineRunnerPool(poolOpts);
-  const hooks = pool.getPipelinePlugins({
+  const hooks = PipelineRunnerPool.getPipelinePlugins({
     comp: { plugins: ['group-step'] },
     env: 'local',
   });

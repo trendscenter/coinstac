@@ -1,8 +1,8 @@
 'use strict';
 
+import { findIndex } from 'lodash';
 import app from 'ampersand-app';
 import { applyAsyncLoading } from './loading';
-import { findIndex } from 'lodash';
 
 // Actions
 export const SET_COMPUTATION = 'SET_COMPUTATION';
@@ -10,14 +10,14 @@ export const SET_COMPUTATIONS = 'SET_COMPUTATIONS';
 export const BG_SET_COMPUTATIONS = 'BG_SET_COMPUTATIONS';
 
 // Action Creators
-export const setComputation = (computation) => ({ payload: computation, type: SET_COMPUTATION });
+export const setComputation = computation => ({ payload: computation, type: SET_COMPUTATION });
 export const setComputations = (computations, isBg) => ({
   type: isBg ? BG_SET_COMPUTATIONS : SET_COMPUTATIONS,
   payload: computations,
 });
 
 // Helpers
-export const fetchComputation = applyAsyncLoading(id => {
+export const fetchComputation = applyAsyncLoading((id) => {
   return (dispatch) => {
     return app.core.computations.get(id)
     .then((computation) => {
@@ -41,7 +41,7 @@ export const fetchComputations = applyAsyncLoading(() => {
       dispatch(setComputations(computations));
       return computations;
     })
-    .catch((err) => app.notify({
+    .catch(err => app.notify({
       level: 'error',
       message: `Unable to download computations: ${err}`,
     }));
@@ -59,7 +59,7 @@ export const fetchComputations = applyAsyncLoading(() => {
  */
 export const updateComputations = ({ toUpdate, isBg }) =>
   (dispatch, getState) => {
-    const currComps = getState().computationsDuck.computations;
+    const currComps = getState().computations.allComputations;
     if (!Array.isArray(toUpdate)) {
       toUpdate = [toUpdate];
     }
@@ -75,8 +75,8 @@ export const updateComputations = ({ toUpdate, isBg }) =>
   };
 
 const INITIAL_STATE = {
-  computation: null,
-  computations: [],
+  activeComputation: null,
+  allComputations: [],
 };
 
 // Reducer
@@ -84,9 +84,9 @@ export default function reducer(state = INITIAL_STATE, action) {
   switch (action.type) {
     case BG_SET_COMPUTATIONS:
     case SET_COMPUTATION:
-      return { ...state, computation: action.payload };
+      return { ...state, activeComputation: action.payload };
     case SET_COMPUTATIONS:
-      return { ...state, computations: [...action.payload] };
+      return { ...state, allComputations: [...action.payload] };
     default:
       return state;
   }

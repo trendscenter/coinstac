@@ -15,17 +15,17 @@ module.exports = {
     }
     const allFileStats = [];
 
-    const isJavascriptFile = path => {
+    const isJavascriptFile = (path) => {
       if (path.match(/js$/)) { return true; }
     };
-    const notIgnored = filepath => {
+    const notIgnored = (filepath) => {
       const IGNORE_API = [
             //    __filename
       ];
       return IGNORE_API.some(txt => filepath.match(txt));
     };
     const statToPath = stat => stat.path;
-    const pathToAPIComponents = filepath => {
+    const pathToAPIComponents = (filepath) => {
       return {
         fields: filepath.replace(__dirname, '').replace('.js', '').split(path.sep),
         filepath,
@@ -33,9 +33,9 @@ module.exports = {
     };
     const componentsToAPIInstance = (apiRoot, srvComponent) => {
       const serviceFieldPath = srvComponent.fields.map(_.camelCase).join('.');
-      /* eslint-disable global-require */
+      /* eslint-disable global-require, import/no-dynamic-require */
       _.set(apiRoot, serviceFieldPath, require(srvComponent.filepath));
-      /* eslint-enable global-require */
+      /* eslint-enable global-require, import/no-dynamic-require */
       return apiRoot;
     };
 
