@@ -22,7 +22,6 @@ class DashboardHome extends Component {
   componentWillMount() {
     const {
       computations,
-      consortia,
       fetchComputations,
       fetchRemoteResultsForUser,
       username,
@@ -49,7 +48,7 @@ class DashboardHome extends Component {
       consortia.length &&
       username
     ) {
-      this.setState({ didInitResults: true }, () => {
+      this.setState({ didInitResults: true }, () => { //eslint-disable-line
         fetchRemoteResultsForUser(username);
       });
     }
@@ -73,7 +72,7 @@ class DashboardHome extends Component {
           <Alert>No computation results</Alert>
         }
         <ul className="list-unstyled">
-          {remoteResults.map((res) =>
+          {remoteResults.map(res => (
             <li key={res.startDate}>
               <StatusItem
                 computation={res.computation}
@@ -81,7 +80,7 @@ class DashboardHome extends Component {
                 remoteResult={res}
               />
             </li>
-          )}
+          ))}
         </ul>
       </div>
     );
@@ -99,35 +98,26 @@ DashboardHome.propTypes = {
     owners: PropTypes.arrayOf(PropTypes.string).isRequired,
     users: PropTypes.arrayOf(PropTypes.string).isRequired,
   })).isRequired,
-  fetchComputations: PropTypes.func,
-  fetchRemoteResultsForUser: PropTypes.func,
-  projects: PropTypes.arrayOf(PropTypes.shape({
-    allowComputationRun: PropTypes.bool.isRequired,
-    consortiumId: PropTypes.string.isRequired,
-    status: PropTypes.oneOf([
-      'active',
-      'complete',
-      'error',
-      'waiting',
-    ]).isRequired,
-  })).isRequired,
+  fetchComputations: PropTypes.func.isRequired,
+  fetchRemoteResultsForUser: PropTypes.func.isRequired,
   remoteResults: PropTypes.arrayOf(PropTypes.object),
   username: PropTypes.string,
 };
 
 DashboardHome.defaultProps = {
   username: null,
+  remoteResults: [],
 };
 
 function mapStateToProps({
   auth,
-  computations,
+  computations: { allComputations },
   consortia,
   projects,
   remoteResults,
 }) {
   return {
-    computations: computations || [],
+    computations: allComputations || [],
     consortia: consortia || [],
     projects: projects || [],
     remoteResults: remoteResults || [],
