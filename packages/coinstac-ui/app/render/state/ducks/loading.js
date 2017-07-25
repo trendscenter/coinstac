@@ -4,10 +4,10 @@
 let asyncLoadingCallCount = 0;
 
 const LOADING_START = 'LOADING_START';
-const start = (key) => ({ type: LOADING_START, key });
+const start = key => ({ type: LOADING_START, key });
 
 const LOADING_FINISH = 'LOADING_FINISH';
-const finish = (key) => ({ type: LOADING_FINISH, key });
+const finish = key => ({ type: LOADING_FINISH, key });
 
 /**
  * Wraps a normal async action and applies the loading actions to it.
@@ -28,11 +28,11 @@ export const applyAsyncLoading = function applyAsyncLoading(fn) {
    */
   return function wrappedActionCreator(...args) {
     return (dispatch) => {
-      ++asyncLoadingCallCount;
+      asyncLoadingCallCount += 1;
       const currCount = asyncLoadingCallCount;
       dispatch(start(`${fnName}-${currCount}`));
       const dispatchComplete = () => dispatch(finish(`${fnName}-${currCount}`));
-      return Promise.resolve(fn.apply(null, args)(dispatch))
+      return Promise.resolve(fn(...args)(dispatch))
       .then((rslt) => {
         dispatchComplete();
         return rslt;

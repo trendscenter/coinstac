@@ -24,9 +24,9 @@ const winston = require('winston');
 let dbmap;
 
 try {
-  /* eslint-disable import/no-unresolved,global-require */
+  /* eslint-disable import/no-unresolved,global-require, import/no-absolute-path */
   dbmap = require('/coins/config/dbmap.json');
-  /* eslint-enable import/no-unresolved,global-require */
+  /* eslint-enable import/no-unresolved,global-require, import/no-absolute-path */
 } catch (error) {
   dbmap = {
     coinstac: {
@@ -229,7 +229,7 @@ class CoinstacServer {
       },
 
       // TODO: Move error logging to handler?
-      error => {
+      (error) => {
         this.logger.error(
           'RemotePipelineRunnerPool initialization failed',
           error
@@ -314,7 +314,7 @@ class CoinstacServer {
         this.logger.info('Server ready');
         return remotePipelineRunnerPool;
       })
-      .catch((error) => this.stop().then(() => {
+      .catch(error => this.stop().then(() => {
         throw error;
       }));
   }

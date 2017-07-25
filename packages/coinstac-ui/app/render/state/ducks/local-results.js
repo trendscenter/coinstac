@@ -1,11 +1,11 @@
-import { applyAsyncLoading } from './loading';
 import app from 'ampersand-app';
+import { applyAsyncLoading } from './loading';
 
 const SET_LOCAL_RESULTS = 'SET_LOCAL_RESULTS';
 
-export const setLocalResults = (results) => ({ type: SET_LOCAL_RESULTS, results });
+export const setLocalResults = results => ({ type: SET_LOCAL_RESULTS, results });
 
-export const fetch = applyAsyncLoading(id => {
+export const fetch = applyAsyncLoading((id) => {
   return (dispatch) => { // eslint-disable-line
     return app.core.dbRegistry.get(`local-consortium-${id}`).all()
     .then(setLocalResults);

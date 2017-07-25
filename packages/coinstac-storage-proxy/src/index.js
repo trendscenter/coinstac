@@ -3,6 +3,7 @@
 const pkg = require('../package.json');
 const joi = require('joi');
 const Bouncer = require('./bouncer.js');
+
 const optionSchema = joi.object().keys({
   targetBaseUrl: joi.string().uri({ scheme: /https?/ }).required(),
 });

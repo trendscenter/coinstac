@@ -1,6 +1,6 @@
-import { applyAsyncLoading } from './loading.js';
 import app from 'ampersand-app';
 import { omit } from 'lodash';
+import { applyAsyncLoading } from './loading';
 import { joinSlaveComputation } from './bg-services';
 
 // Actions
@@ -13,12 +13,13 @@ export const REMOVE_PROJECT = 'REMOVE_PROJECT';
 export const UPDATE_PROJECT_STATUS = 'UPDATE_PROJECT_STATUS';
 
 // Action Creators
-export const _addProject = (project) => ({ type: ADD_PROJECT, payload: project });
-export const setProjects = (projects) => ({ type: SET_PROJECTS, payload: projects });
-export const removeProject = (id) => ({
+export const _addProject = project => ({ type: ADD_PROJECT, payload: project });
+export const setProjects = projects => ({ type: SET_PROJECTS, payload: projects });
+export const removeProject = id => ({
   payload: id,
   type: REMOVE_PROJECT,
 });
+
 export function setProject(project) {
   return { type: SET_PROJECT, payload: project };
 }
@@ -104,7 +105,7 @@ export function mapProject(project) {
   return Promise.resolve(getProject());
 }
 
-export const addProject = applyAsyncLoading(project => {
+export const addProject = applyAsyncLoading((project) => {
   return (dispatch) => {
     /**
      * @todo: The `Project` model is decorated with `allowComputationRun` and
@@ -114,7 +115,7 @@ export const addProject = applyAsyncLoading(project => {
     return app.core.projects.save(
       omit(project, ['allowComputationRun', 'status'])
     )
-      .then(doc => {
+      .then((doc) => {
         /**
          * New projects don't have an `_id`. Maybe join the computation run in
          * the 'background':
@@ -141,15 +142,15 @@ export const addProject = applyAsyncLoading(project => {
   };
 });
 
-export const fetch = applyAsyncLoading(cb => {
+export const fetch = applyAsyncLoading((cb) => {
   return (dispatch) => {
     return app.core.projects.all()
       .then(projects => Promise.all(projects.map(mapProject)))
-      .then(projects => {
+      .then((projects) => {
         dispatch(setProjects(projects));
         cb(null, projects);
       })
-      .catch(error => {
+      .catch((error) => {
         cb(error);
       });
   };
@@ -161,7 +162,7 @@ export const fetch = applyAsyncLoading(cb => {
  * @param {function} cb
  * @returns {undefined}
  */
-export const fetchProject = applyAsyncLoading(projectId => {
+export const fetchProject = applyAsyncLoading((projectId) => {
   return (dispatch) => {
     return app.core.dbRegistry.get('projects').get(projectId)
     .then((proj) => {
@@ -183,7 +184,7 @@ export const fetchProject = applyAsyncLoading(projectId => {
  * @param {object|Project}
  * @returns {Promise}
  */
-export const saveProject = applyAsyncLoading(project => {
+export const saveProject = applyAsyncLoading((project) => {
   return () => {
     return app.core.projects.save(project)
     .catch((err) => {
@@ -223,8 +224,8 @@ export const remove = applyAsyncLoading(
 );
 
 const INITIAL_STATE = {
-  project: null,
-  projects: [],
+  activeProject: null,
+  allProjects: [],
 };
 
 /**
@@ -242,25 +243,25 @@ export default function reducer(state = INITIAL_STATE, action) {
     case ADD_FILES_TO_PROJECT:
       return {
         ...state,
-        project: Object.assign({}, action.payload, {
-          files: [...state.project.files, ...action.payload],
+        activeProject: Object.assign({}, action.payload, {
+          files: [...state.activeProject.files, ...action.payload],
         }),
       };
     case ADD_PROJECT:
       return {
         ...state,
-        projects: [...state.projects, ...action.payload],
+        allProjects: [...state.allProjects, ...action.payload],
       };
     case SET_PROJECT:
       if (!action.project) {
         return {
           ...state,
-          project: INITIAL_STATE.project,
+          activeProject: INITIAL_STATE.project,
         }; // clear project state
       }
       return {
         ...state,
-        project: Object.assign({}, state.project, action.payload),
+        activeProject: Object.assign({}, state.activeProject, action.payload),
       };
     case SET_PROJECTS:
       if (!action.payload) {
@@ -268,13 +269,13 @@ export default function reducer(state = INITIAL_STATE, action) {
       }
       return {
         ...state,
-        projects: [...action.payload],
+        allProjects: [...action.payload],
       };
     case REMOVE_FILES_FROM_PROJECT:
       return {
         ...state,
-        project: Object.assign({}, state.project, {
-          files: state.project.files.filter(file => {
+        activeProject: Object.assign({}, state.project, {
+          files: state.activeProject.files.filter((file) => {
             return action.payload.every(f => f.filename !== file.filename);
           }),
         }),
@@ -282,12 +283,12 @@ export default function reducer(state = INITIAL_STATE, action) {
     case REMOVE_PROJECT:
       return {
         ...state,
-        projects: state.projects.filter(({ _id }) => _id !== action.payload),
+        allProjects: state.allProjects.filter(({ _id }) => _id !== action.payload),
       };
     case UPDATE_PROJECT_STATUS:
       return {
         ...state,
-        projects: state.projects.map(p => {
+        allProjects: state.allProjects.map((p) => {
           return p._id === action.payload.id ?
             Object.assign({}, p, { status: action.payload.status }) :
             p;

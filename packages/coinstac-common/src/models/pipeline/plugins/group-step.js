@@ -31,8 +31,8 @@ module.exports = {
         state.userStep[usrRslt.username] = userStep;
       });
       const userStepValues = values(state.userStep);
-      const allUsersMatch = userStepValues.every((uStep) => uStep === userStepValues[0]);
-      const allUsersLatest = userStepValues.every((uStep) => uStep === state.step);
+      const allUsersMatch = userStepValues.every(uStep => uStep === userStepValues[0]);
+      const allUsersLatest = userStepValues.every(uStep => uStep === state.step);
       const allUsersPresent = userStepValues.length === runInputs.usernames.length;
       const shouldBumpStep = allUsersMatch && allUsersPresent && allUsersLatest;
       let waitForOtherUsers = false;

@@ -39,7 +39,7 @@ const unhandledBootLogger = () => {
   }
 
   try {
-    mkdirpSync(logLocation, parseInt('0775', 8));
+    mkdirpSync(logLocation, 0o0775);
 
     const fileLogger = (data) => {
       if (process.ENV === 'development') {

@@ -24,12 +24,10 @@ const loadFiles = (fileGlob, delim) => {
       if (ext === '.json') {
         // expects JSON array
         userData = userData.concat(JSON.parse(data));
+      } else if (delimiter.match(/\n|\r/g)) {
+        userData = userData.concat(data.replace(/\n$|\r$/, '').split(delimiter));
       } else {
-        if (delimiter.match(/\n|\r/g)) {
-          userData = userData.concat(data.replace(/\n$|\r$/, '').split(delimiter));
-        } else {
-          userData = userData.concat(data.replace(/\n|\r/g, '').split(delimiter));
-        }
+        userData = userData.concat(data.replace(/\n|\r/g, '').split(delimiter));
       }
     }
   });
