@@ -106,19 +106,19 @@ DashboardHome.propTypes = {
 
 DashboardHome.defaultProps = {
   username: null,
-  remoteResults: null,
+  remoteResults: [],
 };
 
 function mapStateToProps({
   auth,
-  computations,
   consortia: { allConsortia },
+  computations: { allComputations },
   projects,
   remoteResults,
 }) {
   return {
-    computations: computations || [],
     consortia: allConsortia || [],
+    computations: allComputations || [],
     projects: projects || [],
     remoteResults: remoteResults || [],
     username: auth.user.username,

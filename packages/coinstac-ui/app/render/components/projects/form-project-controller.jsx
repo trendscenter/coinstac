@@ -7,7 +7,7 @@ import deepEqual from 'deep-equal';
 
 import { runComputation } from '../../state/ducks/bg-services';
 import { addProject } from '../../state/ducks/projects';
-import { fetchComputation } from '../../state/ducks/computation';
+import { fetchComputation } from '../../state/ducks/computations';
 import FormProject from './form-project';
 
 class FormProjectController extends Component {
@@ -423,7 +423,7 @@ class FormProjectController extends Component {
        */
       if (consortium && consortium.activeComputationId) {
         fetchComputation(consortium.activeComputationId)
-          .then(computation => {
+          .then((computation) => {
             this.setState({
               showFilesComponent:
                 computation.name.indexOf('ridge-regression') > -1,
@@ -505,13 +505,13 @@ FormProjectController.ERRORS = new Map([
 ]);
 
 FormProjectController.propTypes = {
-  addProject: PropTypes.func,
+  addProject: PropTypes.func.isRequired,
   computations: PropTypes.arrayOf(PropTypes.object).isRequired,
   consortia: PropTypes.array.isRequired,
-  fetchComputation: PropTypes.func,
+  fetchComputation: PropTypes.func.isRequired,
   params: PropTypes.object.isRequired,
   project: PropTypes.object,
-  runComputation: PropTypes.func,
+  runComputation: PropTypes.func.isRequired,
   username: PropTypes.string.isRequired,
 };
 
@@ -535,8 +535,8 @@ FormProjectController.defaultProps = {
 function select(
   {
     auth,
-    computations,
     consortia: { allConsortia },
+    computations: { allComputations },
     projects,
   },
   {
@@ -546,8 +546,8 @@ function select(
   const { user: { username } } = auth;
 
   return {
-    computations,
     consortia: allConsortia.filter(({ users }) => users.indexOf(username) > -1),
+    computations: allComputations,
     project: projectId ?
       projects.find(({ _id }) => _id === projectId) :
       undefined,
