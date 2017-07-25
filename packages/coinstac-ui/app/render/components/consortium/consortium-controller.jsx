@@ -31,25 +31,30 @@ class ConsortiumController extends Component {
   }
 
   componentWillMount() {
-    const { consortium, dispatch, isNew } = this.props;
+    const {
+      consortium,
+      fetchComputations,
+      fetchRemoteResults,
+      isNew,
+    } = this.props;
 
     if (!isNew) {
-      dispatch(fetchRemoteResults(consortium._id));
+      fetchRemoteResults(consortium._id);
       // TODO never set. let background service keep up to date
-      dispatch(fetchComputations());
+      fetchComputations();
     }
   }
 
   componentWillUnmount() {
-    const { dispatch, isNew } = this.props;
+    const { isNew } = this.props;
 
     if (!isNew) {
-      dispatch(setRemoteResults(null));
+      this.props.setRemoteResults(null);
     }
   }
 
   onSubmit(consortium) {
-    const { dispatch, isNew, username } = this.props;
+    const { isNew, username } = this.props;
 
     const toSave = isNew ?
       // New consortium:
@@ -62,7 +67,7 @@ class ConsortiumController extends Component {
       consortium;
 
 
-    dispatch(saveConsortium(toSave))
+    this.props.saveConsortium(toSave)
       .then(() => {
         this.context.router.push('/consortia');
       })
@@ -80,9 +85,14 @@ class ConsortiumController extends Component {
   }
 
   addUser(username) {
-    const { dispatch, consortium: { _id: consortiumId } } = this.props;
+    const {
+      addConsortiumComputationListener,
+      consortium: { _id: consortiumId },
+      joinConsortium,
+      listenToConsortia,
+    } = this.props;
 
-    dispatch(joinConsortium(consortiumId, username))
+    joinConsortium(consortiumId, username)
     .then((tium) => {
       // TODO: Figure out a better way to initiate this background service
       listenToConsortia(tium);
@@ -93,9 +103,13 @@ class ConsortiumController extends Component {
   }
 
   removeUser(username) {
-    const { dispatch, consortium: { _id: consortiumId } } = this.props;
+    const {
+      consortium: { _id: consortiumId },
+      leaveConsortium,
+      unlistenToConsortia,
+    } = this.props;
 
-    dispatch(leaveConsortium(consortiumId, username))
+    leaveConsortium(consortiumId, username)
     .then(() => {
       // TODO: Figure out a better way to initiate this background service
       unlistenToConsortia(consortiumId);
@@ -151,15 +165,23 @@ ConsortiumController.contextTypes = {
 ConsortiumController.displayName = 'ConsortiumController';
 
 ConsortiumController.propTypes = {
+  addConsortiumComputationListener: PropTypes.func,
   computations: PropTypes.arrayOf(PropTypes.object).isRequired,
   consortium: PropTypes.object,
-  dispatch: PropTypes.func.isRequired,
+  fetchComputations: PropTypes.func,
+  fetchRemoteResults: PropTypes.func,
   initialResultId: PropTypes.string,
   isLoading: PropTypes.bool.isRequired,
   isMember: PropTypes.bool.isRequired,
   isNew: PropTypes.bool.isRequired,
   isOwner: PropTypes.bool.isRequired,
+  joinConsortium: PropTypes.func,
+  leaveConsortium: PropTypes.func,
+  listenToConsortia: PropTypes.func,
   remoteResults: PropTypes.arrayOf(PropTypes.object).isRequired,
+  saveConsortium: PropTypes.func,
+  setRemoteResults: PropTypes.func,
+  unlistenToConsortia: PropTypes.func,
   username: PropTypes.string.isRequired,
 };
 
@@ -198,4 +220,14 @@ function mapStateToProps(state, { params: { consortiumId, resultId } }) {
   };
 }
 
-export default connect(mapStateToProps)(ConsortiumController);
+export default connect(mapStateToProps, {
+  fetchRemoteResults,
+  fetchComputations,
+  setRemoteResults,
+  saveConsortium,
+  joinConsortium,
+  leaveConsortium,
+  addConsortiumComputationListener,
+  listenToConsortia,
+  unlistenToConsortia,
+})(ConsortiumController);

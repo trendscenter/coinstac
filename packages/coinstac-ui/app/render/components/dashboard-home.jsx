@@ -20,24 +20,27 @@ class DashboardHome extends Component {
   }
 
   componentWillMount() {
-    const { computations, dispatch, username } = this.props;
+    const {
+      computations,
+      fetchComputations,
+      fetchRemoteResultsForUser,
+      username,
+    } = this.props;
 
     if (!computations.length) {
-      dispatch(fetchComputations());
+      fetchComputations();
     }
 
-    this.interval = setInterval(() => dispatch(fetchRemoteResultsForUser(username)), 2000);
+    this.interval = setInterval(() => fetchRemoteResultsForUser(username), 2000);
   }
 
   componentWillUpdate() {
     const {
       computations,
       consortia,
-      dispatch,
+      fetchRemoteResultsForUser,
       username,
     } = this.props;
-
-    console.log('update');
 
     if (
       !this.state.didInitResults &&
@@ -45,8 +48,9 @@ class DashboardHome extends Component {
       consortia.length &&
       username
     ) {
-      this.setState({ didInitResults: true }); // eslint-disable-line
-      dispatch(fetchRemoteResultsForUser(username));
+      this.setState({ didInitResults: true }, () => { // eslint-disable-line
+        fetchRemoteResultsForUser(username);
+      });
     }
   }
 
@@ -94,7 +98,8 @@ DashboardHome.propTypes = {
     owners: PropTypes.arrayOf(PropTypes.string).isRequired,
     users: PropTypes.arrayOf(PropTypes.string).isRequired,
   })).isRequired,
-  dispatch: PropTypes.func.isRequired,
+  fetchComputations: PropTypes.func.isRequired,
+  fetchRemoteResultsForUser: PropTypes.func.isRequired,
   remoteResults: PropTypes.arrayOf(PropTypes.object),
   username: PropTypes.string,
 };
@@ -120,4 +125,7 @@ function mapStateToProps({
   };
 }
 
-export default connect(mapStateToProps)(DashboardHome);
+export default connect(mapStateToProps, {
+  fetchComputations,
+  fetchRemoteResultsForUser,
+})(DashboardHome);
