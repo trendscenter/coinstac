@@ -63,7 +63,7 @@ const INITIAL_STATE = {
 // Reducer
 export default function reducer(state = INITIAL_STATE, action = {}) {
   switch (action.type) {
-    case 'SET_LOCAL_RESULTS':
+    case SET_LOCAL_RESULTS:
       if (!action.payload) {
         return {
           ...state,
@@ -74,7 +74,7 @@ export default function reducer(state = INITIAL_STATE, action = {}) {
         ...state,
         localResults: [...action.payload],
       };
-    case 'SET_REMOTE_RESULTS':
+    case SET_REMOTE_RESULTS:
       if (!action.payload) {
         return {
           ...state,
