@@ -1,5 +1,5 @@
 import app from 'ampersand-app';
-import { compact, flatten } from 'lodash';
+import { compact, flatten, sortBy } from 'lodash';
 import { applyAsyncLoading } from './loading';
 
 // Actions
@@ -31,6 +31,29 @@ export const fetchRemoteResults = applyAsyncLoading(id => (dispatch) => {
       return results;
     });
 });
+
+export const fetchRemoteResultsForUser = username => (dispatch, getState) => {
+  const dbRegistry = app.core.dbRegistry;
+  const dbs = dbRegistry.all.filter(({ name }) => name.includes('remote-consortium-'));
+
+  return Promise.all(dbs.map(db => db.all()))
+    .then((responses) => {
+      const userResults = compact(flatten(responses))
+        .filter(obj => obj.usernames.indexOf(username) > -1)
+        .map((res) => {
+          return {
+            ...res,
+            consortium: getState().consortia.find(({ _id }) => _id === res.consortiumId),
+            computation: getState().computations
+              .allComputations
+              .find(({ _id }) => _id === res.computationId),
+          };
+        });
+      const results = sortBy(userResults, ['endDate', 'startDate']).reverse();
+      dispatch(setRemoteResults(results));
+      return results;
+    });
+};
 
 const INITIAL_STATE = {
   localResults: [],
