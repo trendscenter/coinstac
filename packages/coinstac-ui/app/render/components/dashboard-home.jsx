@@ -4,9 +4,8 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { Alert } from 'react-bootstrap';
 import { connect } from 'react-redux';
-// import { logger, notify } from 'ampersand-app';
 import StatusItem from './status-item';
-import { fetchComputations } from '../state/ducks/computations.js';
+import { fetchComputations } from '../state/ducks/computations';
 import {
   fetchRemoteResultsForUser,
 } from '../state/ducks/remote-results';
@@ -21,24 +20,28 @@ class DashboardHome extends Component {
   }
 
   componentWillMount() {
-    const { computations, consortia, dispatch, username } = this.props;
+    const {
+      computations,
+      consortia,
+      fetchComputations,
+      fetchRemoteResultsForUser,
+      username,
+    } = this.props;
 
     if (!computations.length) {
-      dispatch(fetchComputations());
+      fetchComputations();
     }
 
-    this.interval = setInterval(() => dispatch(fetchRemoteResultsForUser(username)), 2000);
+    this.interval = setInterval(() => fetchRemoteResultsForUser(username), 2000);
   }
 
   componentWillUpdate() {
     const {
       computations,
       consortia,
-      dispatch,
+      fetchRemoteResultsForUser,
       username,
     } = this.props;
-
-    console.log('update');
 
     if (
       !this.state.didInitResults &&
@@ -46,8 +49,9 @@ class DashboardHome extends Component {
       consortia.length &&
       username
     ) {
-      this.setState({ didInitResults: true });
-      dispatch(fetchRemoteResultsForUser(username));
+      this.setState({ didInitResults: true }, () => {
+        fetchRemoteResultsForUser(username);
+      });
     }
   }
 
@@ -95,7 +99,8 @@ DashboardHome.propTypes = {
     owners: PropTypes.arrayOf(PropTypes.string).isRequired,
     users: PropTypes.arrayOf(PropTypes.string).isRequired,
   })).isRequired,
-  dispatch: PropTypes.func.isRequired,
+  fetchComputations: PropTypes.func,
+  fetchRemoteResultsForUser: PropTypes.func,
   projects: PropTypes.arrayOf(PropTypes.shape({
     allowComputationRun: PropTypes.bool.isRequired,
     consortiumId: PropTypes.string.isRequired,
@@ -130,4 +135,7 @@ function mapStateToProps({
   };
 }
 
-export default connect(mapStateToProps)(DashboardHome);
+export default connect(mapStateToProps, {
+  fetchComputations,
+  fetchRemoteResultsForUser,
+})(DashboardHome);
