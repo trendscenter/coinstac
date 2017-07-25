@@ -23,7 +23,7 @@ module.exports = {
    * path.
    */
   getMetaFile: () => {
-    return getMainWindow().then(mainWindow => new Promise(resolve => {
+    return getMainWindow().then(mainWindow => new Promise((resolve) => {
       const files = dialog.showOpenDialog(mainWindow, {
         filters: [{
           name: 'CSV',
@@ -45,7 +45,7 @@ module.exports = {
    */
   select: function selectFiles() {
     return getMainWindow()
-      .then(mainWindow => new Promise(resolve => {
+      .then(mainWindow => new Promise((resolve) => {
         dialog.showOpenDialog(
           mainWindow,
           {

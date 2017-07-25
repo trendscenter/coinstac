@@ -23,7 +23,7 @@ module.exports = { // eslint-disable-line
     type: 'function',
     fn(opts) {
       const data = opts.previousData || {};
-      opts.userResults.forEach(rslt => (data[rslt.username] = rslt.data));
+      opts.userResults.forEach((rslt) => { data[rslt.username] = rslt.data; });
       if (data && Object.keys(data).length === opts.usernames.length) {
         data.complete = true;
       }

@@ -6,6 +6,7 @@
 const common = require('coinstac-common');
 const uuid = require('uuid');
 const toArray = require('lodash/toArray');
+
 const Consortium = common.models.Consortium;
 const ModelService = require('../model-service');
 
@@ -20,7 +21,7 @@ class ConsortiaService extends ModelService {
     }
   }
 
-  modelServiceHooks() {
+  modelServiceHooks() { // eslint-disable-line class-methods-use-this
     return {
       dbName: 'consortia',
       ModelType: Consortium,
@@ -40,7 +41,7 @@ class ConsortiaService extends ModelService {
           complete: false,
         },
       })
-      .then(docs => {
+      .then((docs) => {
         return docs.length ? docs[0]._id : undefined;
       });
   }
@@ -60,7 +61,7 @@ class ConsortiaService extends ModelService {
     .then((consortia) => { // eslint-disable-line
       return consortia.filter((consortium) => { // eslint-disable-line
         // users is arr of [ usernames ]. :/
-        return consortium.users.some((uname) => (uname === username));
+        return consortium.users.some(uname => (uname === username));
       });
     });
   }

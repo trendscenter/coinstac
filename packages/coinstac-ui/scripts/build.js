@@ -55,6 +55,6 @@ bb.promisify(rm)(zipOutput)
     console.log(`Finished zipping ${outputDir}`); // eslint-disable-line no-console
   });
 })
-.catch(err => {
+.catch((err) => {
   console.log(`Build failed with: ${err}`); // eslint-disable-line no-console
 });
