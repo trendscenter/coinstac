@@ -1,12 +1,11 @@
 'use strict';
 
 const tape = require('tape');
-const path = require('path');
-const Bouncer = require(path.join(process.cwd(), 'src', 'bouncer.js'));
+
+const Bouncer = require('../src/bouncer.js');
 const url = require('url');
-const AuthorizationError = require(
-    path.join(process.cwd(), 'src', 'authorization-error.js')
-);
+
+const AuthorizationError = require('../src/authorization-error.js');
 
 const defaultOpts = {
   targetBaseUrl: 'http://localhost:5432',
@@ -32,13 +31,11 @@ const factory = (config, postConstructionProps) => {
  */
 const getMockFn = (fn) => {
   function spy(...args) {
-    spy.callCount++;
+    spy.callCount += 1;
     if (fn) {
       // call callback with current context and args
       return fn.apply(this, args);
     }
-
-    return;
   }
 
   spy.callCount = 0;
@@ -141,7 +138,6 @@ tape('Bouncer: mapUri', (t) => {
           t.equals(mocks.allow.callCount, 1, 'calls allow');
           t.equals(mocks.handleAuthRejection.callCount, 0, 'does not reject');
           t.equals(mocks.testPathRegExp.callCount, 1, 'calls testPathRegExp');
-          return;
         });
   };
 
@@ -163,7 +159,6 @@ tape('Bouncer: mapUri', (t) => {
           t.equals(mocks.valConOwn.callCount, 0, 'does not call valConOwn');
           t.equals(mocks.allow.callCount, 0, 'does not call allow');
           t.equals(mocks.handleAuthRejection.callCount, 1, 'calls reject');
-          return;
         });
   };
 

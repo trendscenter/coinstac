@@ -2,8 +2,8 @@
 
 const tape = require('tape');
 const hapi = require('hapi');
-const path = require('path');
-const plugin = require(path.join(process.cwd(), 'src', 'index.js'));
+
+const plugin = require('../src/index');
 const h2o2 = require('h2o2');
 
 tape('COINSTAC-storage-proxy: plugin', (t) => {
@@ -23,7 +23,6 @@ tape('COINSTAC-storage-proxy: plugin', (t) => {
           if (err) {
             t.fail('failed to load plugin');
             t.comment('err.message');
-            return;
           }
         }
     );

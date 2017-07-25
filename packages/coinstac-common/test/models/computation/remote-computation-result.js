@@ -1,6 +1,8 @@
 'use strict';
+
 const assign = require('lodash/assign');
 const computations = require('../../../').models.computation;
+
 const RemoteComputationResult = computations.RemoteComputationResult;
 const test = require('tape');
 

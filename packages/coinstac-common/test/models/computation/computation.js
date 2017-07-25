@@ -2,10 +2,11 @@
 
 const _ = require('lodash');
 const computations = require('../../../').models.computation;
+
 const Computation = computations.Computation;
 const test = require('tape');
 
-test('model::Computation', t => {
+test('model::Computation', (t) => {
   t.throws(() => {
     return new Computation();
   }, /Validation/, 'throws without type');
@@ -18,7 +19,7 @@ test('model::Computation', t => {
   t.end();
 });
 
-test('model::Computation.factory', t => {
+test('model::Computation.factory', (t) => {
   let comps = Computation.factory({
     type: 'function',
     fn(opts) {}, // eslint-disable-line no-unused-vars

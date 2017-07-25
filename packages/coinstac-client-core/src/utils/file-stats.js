@@ -4,6 +4,7 @@
  * `files` should not generally be used publically, unless absolutely necessary.
  * Use the `projects` lib in order to access files.
  */
+
 'use strict';
 
 const compact = require('lodash/compact');
@@ -27,7 +28,7 @@ const shaAsync = bluebird.promisify(sha.get, { context: sha });
  * `undefined`
  */
 function buildBasicStat(filepath, recurse = false) {
-  return statAsync(filepath).then(stats => {
+  return statAsync(filepath).then((stats) => {
     if (stats.isDirectory() && recurse) {
       return readdirAsync(filepath).then(files => Promise.all(
         files.map(f => buildBasicStat(path.join(filepath, f)))
@@ -57,7 +58,7 @@ module.exports = {
    */
   _appendSha(fileMeta) {
     return shaAsync(fileMeta.filename)
-    .then((rSha) => Object.assign(fileMeta, { sha: rSha }));
+    .then(rSha => Object.assign(fileMeta, { sha: rSha }));
   },
 
   /**
@@ -71,7 +72,7 @@ module.exports = {
     return Promise.all(filenames.map(f => buildBasicStat(f, true)))
       .then(flatten)
       .then(compact)
-      .then(filesStats => {
+      .then((filesStats) => {
         return Promise.all(filesStats.map(this._appendSha.bind(this)));
       });
   },
