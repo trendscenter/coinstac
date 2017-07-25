@@ -165,23 +165,23 @@ ConsortiumController.contextTypes = {
 ConsortiumController.displayName = 'ConsortiumController';
 
 ConsortiumController.propTypes = {
-  addConsortiumComputationListener: PropTypes.func,
+  addConsortiumComputationListener: PropTypes.func.isRequired,
   computations: PropTypes.arrayOf(PropTypes.object).isRequired,
   consortium: PropTypes.object,
-  fetchComputations: PropTypes.func,
-  fetchRemoteResults: PropTypes.func,
+  fetchComputations: PropTypes.func.isRequired,
+  fetchRemoteResults: PropTypes.func.isRequired,
   initialResultId: PropTypes.string,
   isLoading: PropTypes.bool.isRequired,
   isMember: PropTypes.bool.isRequired,
   isNew: PropTypes.bool.isRequired,
   isOwner: PropTypes.bool.isRequired,
-  joinConsortium: PropTypes.func,
-  leaveConsortium: PropTypes.func,
-  listenToConsortia: PropTypes.func,
+  joinConsortium: PropTypes.func.isRequired,
+  leaveConsortium: PropTypes.func.isRequired,
+  listenToConsortia: PropTypes.func.isRequired,
   remoteResults: PropTypes.arrayOf(PropTypes.object).isRequired,
-  saveConsortium: PropTypes.func,
-  setRemoteResults: PropTypes.func,
-  unlistenToConsortia: PropTypes.func,
+  saveConsortium: PropTypes.func.isRequired,
+  setRemoteResults: PropTypes.func.isRequired,
+  unlistenToConsortia: PropTypes.func.isRequired,
   username: PropTypes.string.isRequired,
 };
 
@@ -195,8 +195,8 @@ function mapStateToProps(state, { params: { consortiumId, resultId } }) {
     auth: {
       user: { username },
     },
-    computations,
     consortia: { allConsortia },
+    computations: { allComputations },
     loading: { isLoading },
     remoteResults,
   } = state;
@@ -207,7 +207,7 @@ function mapStateToProps(state, { params: { consortiumId, resultId } }) {
 
   return {
     // TODO: Ensure computations is always an array in the state tree
-    computations: (computations || [])
+    computations: (allComputations || [])
       .sort((a, b) => `${a.name}@${a.version}` > `${b.name}@${b.version}`),
     consortium,
     initialResultId: resultId,
