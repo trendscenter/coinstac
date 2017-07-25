@@ -135,7 +135,7 @@ ProjectsList.propTypes = {
     activeComputationInputs: PropTypes.array.isRequired,
     owners: PropTypes.arrayOf(PropTypes.string).isRequired,
   })).isRequired,
-  fetchProjects: PropTypes.func,
+  fetchProjects: PropTypes.func.isRequired,
   projects: PropTypes.arrayOf(PropTypes.shape({
     _id: PropTypes.string,
     allowComputationRun: PropTypes.bool.isRequired,
@@ -145,25 +145,26 @@ ProjectsList.propTypes = {
     name: PropTypes.string.isRequired,
     status: PropTypes.string.isRequired,
   })),
-  removeProject: PropTypes.func,
-  runComputation: PropTypes.func,
-  setProjects: PropTypes.func,
+  removeProject: PropTypes.func.isRequired,
+  runComputation: PropTypes.func.isRequired,
+  setProjects: PropTypes.func.isRequired,
   username: PropTypes.string.isRequired,
 };
+
 
 ProjectsList.defaultProps = {
   projects: null,
 };
 
-function select(state) {
+function mapStateToProps({ consortia, projects, auth }) {
   return {
-    consortia: state.consortia,
-    projects: state.projects,
-    username: state.auth.user.username,
+    consortia,
+    projects,
+    username: auth.user.username,
   };
 }
 
-export default connect(select, {
+export default connect(mapStateToProps, {
   fetchProjects,
   removeProject,
   runComputation,
