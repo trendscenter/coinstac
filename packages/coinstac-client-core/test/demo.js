@@ -2,6 +2,7 @@
 
 const async = require('async');
 const CC = require('../');
+
 const opts = {
   db: {
     remote: {
@@ -35,8 +36,8 @@ const cc = new CC(opts);
 
 // go
 async.series([
-  (cb) => cc.auth.login({ username: 'mochatest', password: 'mochapassword' }, cb),
-  (cb) => cc.initialize(cb),
+  cb => cc.auth.login({ username: 'mochatest', password: 'mochapassword' }, cb),
+  cb => cc.initialize(cb),
 ], (err) => {
   /* eslint-disable no-console */
   if (err) {
@@ -45,10 +46,10 @@ async.series([
   }
   consortiaDB = cc.dbRegistry.get('consortia');
   consortiaDB.all()
-    .then((docs) => console.log('# DOCS:', docs.length))
+    .then(docs => console.log('# DOCS:', docs.length))
     .then(() => {
       consortiaDB.syncEmitter
-      .on('change', (arg) => console.log('change', arg))
+      .on('change', arg => console.log('change', arg))
       // .on('paused', () => console.log('paused', arguments[0]))
       // .on('active', () => console.log('active', arguments[0]))
       .on('denied', () => console.log('denied', arguments[0]))

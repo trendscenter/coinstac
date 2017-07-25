@@ -64,14 +64,14 @@ class RemotePipelineRunner extends PipelineRunner {
       // if (userResults.some((d) => d.pipelineState.inProgress)) {
       //   return this.events.emit('noop:noStateChange', this.result);
       // }
-      const resultState = userResults.map((d) => ({ _id: d._id, _rev: d._rev })).sort();
+      const resultState = userResults.map(d => ({ _id: d._id, _rev: d._rev })).sort();
       if (isEqual(this.userResultState, resultState)) {
         // no state change, don't rerun pipeline
         return this.events.emit('noop:noStateChange', this.result);
       }
       this.userResultState = resultState;
 
-      this.result.userErrors = this.getUserErrors(userResults);
+      this.result.userErrors = RemotePipelineRunner.getUserErrors(userResults);
       if (this.result.userErrors.length) {
         return this.saveResult(this.remoteDB, null, null, true)
         .then(this._flush.bind(this));
@@ -107,7 +107,7 @@ class RemotePipelineRunner extends PipelineRunner {
    * @param {LocalComputationResult[]} userResults
    * @returns {object[]} serialized error objects
    */
-  getUserErrors(userResults) {
+  static getUserErrors(userResults) {
     const errors = [];
     userResults.forEach((uR) => {
       /* istanbul ignore if */

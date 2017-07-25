@@ -1,17 +1,17 @@
-import { applyAsyncLoading } from './loading';
 import app from 'ampersand-app';
 import { compact, flatten } from 'lodash';
+import { applyAsyncLoading } from './loading';
 
 // Actions
 export const SET_LOCAL_RESULTS = 'SET_LOCAL_RESULTS';
 export const SET_REMOTE_RESULTS = 'SET_REMOTE_RESULTS';
 
 // Action Creators
-export const setLocalResults = (results) => ({ type: SET_LOCAL_RESULTS, payload: results });
-export const setRemoteResults = (results) => ({ type: SET_REMOTE_RESULTS, payload: results });
+export const setLocalResults = results => ({ type: SET_LOCAL_RESULTS, payload: results });
+export const setRemoteResults = results => ({ type: SET_REMOTE_RESULTS, payload: results });
 
 // Helpers
-export const fetchLocalResults = applyAsyncLoading(id => {
+export const fetchLocalResults = applyAsyncLoading((id) => {
   return (dispatch) => { // eslint-disable-line
     return app.core.dbRegistry.get(`local-consortium-${id}`).all()
     .then(setLocalResults);

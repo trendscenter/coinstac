@@ -6,10 +6,12 @@ const merge = require('lodash/merge');
 const kebabCase = require('lodash/kebabCase');
 const mkdirp = require('mkdirp');
 const bluebird = require('bluebird');
+
 bluebird.config({ warnings: false });
 const osHomedir = require('os-homedir');
 const path = require('path');
 const winston = require('winston');
+
 const Logger = winston.Logger;
 const Console = winston.transports.Console;
 const DomStorage = require('dom-storage');
@@ -17,6 +19,7 @@ const touch = require('touch');
 
 // app utils
 const common = require('coinstac-common');
+
 const LocalPipelineRunnerPool = common.models.pipeline.runner.pool.LocalPipelineRunnerPool;
 const computationRegistryFactory =
   require('coinstac-computation-registry').factory;
@@ -272,7 +275,7 @@ class CoinstacClient {
     const user = this.auth.getUser();
     return this.consortia.getUserConsortia(user.username)
     .then((tia) => {
-      const tiaIds = tia.map((tium) => tium._id);
+      const tiaIds = tia.map(tium => tium._id);
       this.logger.info(`user belongs to consortia: ${tiaIds.join(', ')}`);
       this.pool = new LocalPipelineRunnerPool({
         listenTo: tiaIds,
@@ -281,7 +284,7 @@ class CoinstacClient {
         user,
       });
 
-      this.pool.events.on('computation:complete', runId => {
+      this.pool.events.on('computation:complete', (runId) => {
         this.logger.verbose(
           'LocalPipelineRunnerPool.events [computation:complete]', 'Run id: %s', runId
         );
@@ -289,17 +292,17 @@ class CoinstacClient {
       this.pool.events.on('ready', () => {
         this.logger.verbose('LocalPipelineRunnerPool.events [ready]');
       });
-      this.pool.events.on('listener:created', dbName => {
+      this.pool.events.on('listener:created', (dbName) => {
         this.logger.verbose(
           'LocalPipelineRunnerPool.events [listener:created]', 'DB name: %s', dbName
         );
       });
-      this.pool.events.on('queue:start', runId => {
+      this.pool.events.on('queue:start', (runId) => {
         this.logger.verbose(
           'LocalPipelineRunnerPool.events [queue:start]', 'Run id: %s', runId
         );
       });
-      this.pool.events.on('queue:end', runId => {
+      this.pool.events.on('queue:end', (runId) => {
         this.logger.verbose(
           'LocalPipelineRunnerPool.events [queue:end]', 'Run id: %s', runId
         );
@@ -307,17 +310,17 @@ class CoinstacClient {
       this.pool.events.on('pipeline:inProgress', () => {
         this.logger.verbose('LocalPipelineRunnerPool.events [pipeline:inProgress]');
       });
-      this.pool.events.on('run:end', compResult => {
+      this.pool.events.on('run:end', (compResult) => {
         this.logger.verbose(
           'LocalPipelineRunnerPool.events [run:end]', 'Computation result:', compResult
         );
       });
-      this.pool.events.on('computation:complete', runId => {
+      this.pool.events.on('computation:complete', (runId) => {
         this.logger.verbose(
           'LocalPipelineRunnerPool.events [computation:complete]', 'Run id: %s', runId
         );
       });
-      this.pool.events.on('run:start', result => {
+      this.pool.events.on('run:start', (result) => {
         this.logger.verbose(
           'LocalPipelineRunnerPool.events [run:start]', 'Result:', result
         );
@@ -327,14 +330,14 @@ class CoinstacClient {
     })
     .then(() => this.pool.init())
     .then(() => {
-      this.pool.consortiaListener.on('delete', event => {
+      this.pool.consortiaListener.on('delete', (event) => {
         this.logger.verbose(
           'LocalPipelineRunnerPool.consortiaListener [delete]',
           'Name: %s', event.name,
           'Document:', event.doc
         );
       });
-      this.pool.consortiaListener.on('change', event => {
+      this.pool.consortiaListener.on('change', (event) => {
         this.logger.verbose(
           'LocalPipelineRunnerPool.consortiaListener [change]',
           'Name: %s', event.name,

@@ -1,9 +1,9 @@
+import { cloneDeep, each } from 'lodash';
 import app from 'ampersand-app';
 import { applyAsyncLoading } from './loading';
 import { updateConsortia } from './consortia';
 import { updateComputations } from './computations';
 import { updateProjectStatus } from './projects';
-import { cloneDeep, each } from 'lodash';
 
 import {
   computationCompleteNotification,
@@ -128,14 +128,14 @@ export const initPrivateBackgroundServices = applyAsyncLoading(() => {
     });
     const appUser = app.core.auth.getUser().username;
     app.core.consortia.all()
-    .then(consortia => {
+    .then((consortia) => {
       dispatch(updateConsortia(consortia));
 
-      const userConsortia = consortia.filter(c => {
+      const userConsortia = consortia.filter((c) => {
         return c.users.indexOf(appUser) > -1;
       });
 
-      userConsortia.forEach(consortium => {
+      userConsortia.forEach((consortium) => {
         // this is called twice, once on startup
         // second time inside change listener
         joinSlaveComputation(consortium);
@@ -174,8 +174,8 @@ export const initPrivateBackgroundServices = applyAsyncLoading(() => {
     });
 
     return Promise.all([
-      tiaDB.all().then((docs) => dispatch(updateConsortia(docs))),
-      compsDB.all().then((docs) => updateComputations({ dispatch, toUpdate: docs, isBg: true })),
+      tiaDB.all().then(docs => dispatch(updateConsortia(docs))),
+      compsDB.all().then(docs => updateComputations({ dispatch, toUpdate: docs, isBg: true })),
     ]);
   };
 });
@@ -201,7 +201,7 @@ export const runComputation = applyAsyncLoading(
     return () => {
       // Unfortunately, requires we `get` the document for its label
       app.core.dbRegistry.get('consortia').get(consortiumId)
-        .then(consortium => {
+        .then((consortium) => {
           const onRunError = getRunErrorNotifier(consortium);
 
           computationStartNotification(consortium);

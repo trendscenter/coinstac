@@ -1,11 +1,12 @@
 // @TODO port -client registry tests to -coinstac-common. improved method coverage
+
 'use strict';
 
 require('../helpers/boot');
 const registryFactory = require('../../').services.dbRegistry;
 const test = require('tape');
 
-test('registry - construction', t => {
+test('registry - construction', (t) => {
   t.throws(() => {
     registryFactory();
   }, /missing db-registry opts/, 'requires opts');
