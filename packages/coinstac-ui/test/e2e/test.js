@@ -32,34 +32,34 @@ describe('Testing::e2e', () => {
     }
   });
 
-  it('opens a single window', () =>
+  it('opens a single window', () => (
     app.client.waitUntilWindowLoaded()
       .getWindowCount().should.eventually.equal(1)
-  );
+  ));
 
-  it('displays the correct title', () =>
+  it('displays the correct title', () => (
     app.client.waitUntilWindowLoaded()
       .getTitle().should.eventually.equal('COINSTAC')
-  );
+  ));
 
-  it('authenticates demo user', () =>
+  it('authenticates demo user', () => (
     app.client
       .setValue('#login-username', USER_ID)
       .setValue('#login-password', PASS)
       .click('button=Log In')
       .waitForExist('.user-account-name', EXIST_TIMEOUT)
       .getText('.user-account-name').should.eventually.equal(USER_ID)
-  );
+  ));
 
-  it('accesses the Add Consortium page', () =>
+  it('accesses the Add Consortium page', () => (
     app.client
       .click('a=Consortia')
       .waitForExist('a=Add Consortium', EXIST_TIMEOUT)
       .click('a=Add Consortium')
       .isVisible('h1=Add New Consortium').should.eventually.equal(true)
-  );
+  ));
 
-  it('creates a consortium', () =>
+  it('creates a consortium', () => (
     app.client
       .setValue("[name='label']", CONS_NAME)
       .setValue("[name='description']", CONS_DESC)
@@ -79,18 +79,18 @@ describe('Testing::e2e', () => {
       .selectByValue('#computation-field-map-type-1', 'number')
       .click('button=Create')
       .waitForExist('div.panel-heading h4.panel-title', EXIST_TIMEOUT)
-      .getText('div.panel-heading h4.panel-title a').should.eventually.equal(CONS_NAME)
-  );
+      .getText('div.panel-heading h4.panel-title a').should.eventually.include(CONS_NAME)
+  ));
 
-  it('accesses the New Files Collection page', () =>
+  it('accesses the New Files Collection page', () => (
     app.client
       .click('a=My Files')
       .waitForExist('a=Add Files Collection', EXIST_TIMEOUT)
       .click('a=Add Files Collection')
       .isVisible('h1=New Files Collection').should.eventually.equal(true)
-  );
+  ));
 
-  it('adds files to a consortium', () =>
+  it('adds files to a consortium', () => (
     app.client
       .setValue('#form-project-name', PROJECT_NAME)
       .selectByVisibleText('#form-project-consortium-id', CONS_NAME)
@@ -100,41 +100,42 @@ describe('Testing::e2e', () => {
       .selectByValue('#project-covariates-mapper-2', '1')
       .click('button=Save')
       .waitForExist('div.panel-heading h4.panel-title', EXIST_TIMEOUT)
-      .getText('div.panel-heading h4.panel-title a').should.eventually.equal(PROJECT_NAME)
-  );
+      .getText('div.panel-heading h4.panel-title a').should.eventually.include(PROJECT_NAME)
+  ));
 
-  it('runs a computation', () =>
+  it('runs a computation', () => (
     app.client
-      .click('button=Run Computation')
+      .click(`#run-${CONS_NAME}`)
       .waitForExist('span=Complete', EXIST_TIMEOUT)
-  );
+  ));
 
-  it('displays results', () =>
+  it('displays results', () => (
     app.client
-      .click('a=View Results')
+      .waitForExist(`#results-${CONS_NAME}`)
+      .click(`#results-${CONS_NAME}`)
       .waitForExist('#results', EXIST_TIMEOUT)
       .waitForExist('span=Complete!', EXIST_TIMEOUT)
-  );
+  ));
 
-  it('deletes files', () =>
+  it('deletes files', () => (
     app.client
       .click('a=My Files')
       .waitForExist('a=Add Files Collection', EXIST_TIMEOUT)
-      .click('button=Delete')
-      .isVisible('div.panel-heading').should.eventually.equal(false)
-  );
+      .click(`#delete-${CONS_NAME}`)
+      .isVisible(`#delete-${CONS_NAME}`).should.eventually.equal(false)
+  ));
 
-  it('deletes a consortium', () =>
+  it('deletes a consortium', () => (
     app.client
       .click('a=Consortia')
       .waitForExist('a=Add Consortium', EXIST_TIMEOUT)
-      .click('button=Delete')
-      .isVisible('div.panel-heading').should.eventually.equal(false)
-  );
+      .click(`#delete-${CONS_NAME}`)
+      .isVisible(`a=${CONS_NAME}`).should.eventually.equal(false)
+  ));
 
-  it('logs out', () =>
+  it('logs out', () => (
     app.client
       .click('button=Log Out')
       .waitForExist('button=Log In', EXIST_TIMEOUT)
-  );
+  ));
 });

@@ -107,7 +107,7 @@ function computationRegistryFactory(options) {
             fields: ['name', 'version', 'url'],
             selector: { name, version },
           })
-            .then(docs => {
+            .then((docs) => {
               let i;
               let il;
 
@@ -125,7 +125,7 @@ function computationRegistryFactory(options) {
               for (
                 i = 0, il = instance.registry.length;
                 i < il;
-                i++
+                i += 1
               ) {
                 if (instance.registry[i].name === name) {
                   instance.registry[i].tags.push(version);

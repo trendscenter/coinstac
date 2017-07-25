@@ -1,19 +1,21 @@
-require('babel-polyfill');
-
-// Set up root paths
-require('../common/utils/add-root-require-path.js');
-
+/* eslint-disable react/jsx-filename-extension */
 import app from 'ampersand-app';
 import React from 'react';
 import { render } from 'react-dom';
 import { hashHistory } from 'react-router';
 
-import { start as startErrorHandling } from './utils/boot/configure-error-handling.js';
-import configureLogger from './utils/boot/configure-logger.js';
-import configureMainServices from './utils/configure-main-services.js';
-import { configure as configureStore } from './state/store.js';
+import configureStore from './state/store';
+import { start as startErrorHandling } from './utils/boot/configure-error-handling';
+import configureLogger from './utils/boot/configure-logger';
+import configureMainServices from './utils/configure-main-services';
 
 import Root from './containers/root';
+
+require('babel-polyfill');
+
+// Set up root paths
+require('../common/utils/add-root-require-path.js');
+
 
 // Boot up the render process
 configureLogger();

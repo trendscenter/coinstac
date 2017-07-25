@@ -33,7 +33,7 @@ function getChild() {
 
     child.stderr.on('data', errorLogger);
     child.stdout.on('data', logger);
-    child.on('close', code => {
+    child.on('close', (code) => {
       if (code) {
         errorLogger(`Exited with code ${code}`);
       } else {
@@ -42,7 +42,7 @@ function getChild() {
     });
     child.on('error', errorHandler);
 
-    child.on('message', m => {
+    child.on('message', (m) => {
       if (m.response === 'READY') {
         child.removeListener('error', errorHandler);
         resolve(child);
@@ -59,8 +59,8 @@ function startChild(
   child,
   { consortiumId, files, initiate, metaFilePath, username }
 ) {
-  return new Promise(resolve => {
-    child.on('message', m => {
+  return new Promise((resolve) => {
+    child.on('message', (m) => {
       if (m.response === 'START') {
         resolve(child);
       }
@@ -80,7 +80,7 @@ function startChild(
 }
 
 Promise.all(usernames.map(getChild))
-  .then(children => {
+  .then((children) => {
     children.forEach(kid => kids.push(kid));
 
     return Promise.all(children.map((child, index) => startChild(child, {

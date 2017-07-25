@@ -40,7 +40,7 @@ module.exports = {
     {
       type: 'function',
       fn: function doSeeding(opts) {
-        const avg = (arr) => arr.reduce((p, i) => i + p, 0) / arr.length;
+        const avg = arr => arr.reduce((p, i) => i + p, 0) / arr.length;
         const r = opts.userResults.reduce((p, uR) => p + avg(uR.data), 0) / opts.userResults.length;
         console.log([
           `I've computed everyone's average: ${r}. By using the group-step`,

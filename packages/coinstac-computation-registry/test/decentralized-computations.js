@@ -11,6 +11,7 @@
  *       "url": "https://github.com/MRN-Code/the-ravens"
  *     }
  */
+
 'use strict';
 
 // `require`-ing ensures it's in the right place
@@ -41,8 +42,8 @@ tape('every entry is valid', (t) => {
 });
 
 tape('all tags are semver', (t) => {
-  decentralizedComputations.forEach(computation => {
-    computation.tags.forEach(tag => {
+  decentralizedComputations.forEach((computation) => {
+    computation.tags.forEach((tag) => {
       if (!semver.valid(tag)) {
         t.end(`“${computation.name}” has invalid tag: “${tag}”`);
       }
