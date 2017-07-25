@@ -61,15 +61,15 @@ Dashboard.contextTypes = {
 Dashboard.propTypes = {
   auth: PropTypes.object.isRequired,
   children: PropTypes.node.isRequired,
-  initPrivateBackgroundServices: PropTypes.func,
+  initPrivateBackgroundServices: PropTypes.func.isRequired,
 };
 
-function select(state) {
+function mapStateToProps({ auth }) {
   return {
-    auth: state.auth,
+    auth,
   };
 }
 
-export default connect(select, {
+export default connect(mapStateToProps, {
   initPrivateBackgroundServices,
 })(Dashboard);
