@@ -33,19 +33,14 @@ class App extends Component { // eslint-disable-line react/prefer-stateless-func
 App.displayName = 'App';
 
 App.propTypes = {
-  children: PropTypes.node,
-  loading: PropTypes.object,
+  children: PropTypes.node.isRequired,
+  loading: PropTypes.object.isRequired,
 };
 
-App.defaultProps = {
-  children: null,
-  loading: null,
-};
-
-function select(state) {
+function mapStateToProps({ loading }) {
   return {
-    loading: state.loading,
+    loading,
   };
 }
 
-export default connect(select)(App);
+export default connect(mapStateToProps)(App);

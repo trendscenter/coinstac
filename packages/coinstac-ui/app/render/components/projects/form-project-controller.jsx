@@ -532,7 +532,7 @@ FormProjectController.defaultProps = {
  * @param {Object} ownProps.params
  * @returns {Object}
  */
-function select(
+function mapStateToProps(
   {
     auth,
     consortia: { allConsortia },
@@ -555,7 +555,7 @@ function select(
   };
 }
 
-export default connect(select, {
+export default connect(mapStateToProps, {
   runComputation,
   addProject,
   fetchComputation,
