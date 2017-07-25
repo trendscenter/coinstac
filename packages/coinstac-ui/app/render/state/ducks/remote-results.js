@@ -35,7 +35,9 @@ export const fetchRemoteResultsForUser = username => (dispatch, getState) => {
             // This doesn't actually seem to be used
             // project: getState().projects.find(({ consortiumId }) =>
             //   consortiumId === res.consortiumId),
-            computation: getState().computations.find(({ _id }) => _id === res.computationId),
+            computation: getState().computations
+              .allComputations
+              .find(({ _id }) => _id === res.computationId),
           };
         });
       const results = sortBy(userResults, ['endDate', 'startDate']).reverse();

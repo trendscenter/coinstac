@@ -195,7 +195,7 @@ function mapStateToProps(state, { params: { consortiumId, resultId } }) {
     auth: {
       user: { username },
     },
-    computations,
+    computations: { allComputations },
     consortia,
     loading: { isLoading },
     remoteResults,
@@ -207,7 +207,7 @@ function mapStateToProps(state, { params: { consortiumId, resultId } }) {
 
   return {
     // TODO: Ensure computations is always an array in the state tree
-    computations: (computations || [])
+    computations: (allComputations || [])
       .sort((a, b) => `${a.name}@${a.version}` > `${b.name}@${b.version}`),
     consortium,
     initialResultId: resultId,
