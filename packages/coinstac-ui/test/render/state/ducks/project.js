@@ -1,5 +1,6 @@
 'use strict';
 
+import tape from 'tape';
 import projectReducer, {
   ADD_FILES_TO_PROJECT,
   addFilesToProject,
@@ -8,7 +9,6 @@ import projectReducer, {
   SET_PROJECT,
   setProject,
 } from '../../../../app/render/state/ducks/projects';
-import tape from 'tape';
 
 const FILES_FIXTURE = [{
   filename: 'wat.gif',
@@ -23,7 +23,7 @@ const PROJECT_FIXTURE = {
   files: FILES_FIXTURE,
 };
 
-tape('project :: add files', t => {
+tape('project :: add files', (t) => {
   t.equal(addFilesToProject().type, ADD_FILES_TO_PROJECT, 'returns type');
   t.deepEqual(
     addFilesToProject(JSON.stringify(FILES_FIXTURE)).files,
@@ -33,7 +33,7 @@ tape('project :: add files', t => {
   t.end();
 });
 
-tape('project :: remove files', t => {
+tape('project :: remove files', (t) => {
   t.equal(
     removeFilesFromProject().type,
     REMOVE_FILES_FROM_PROJECT,
@@ -47,7 +47,7 @@ tape('project :: remove files', t => {
   t.end();
 });
 
-tape('project :: set project', t => {
+tape('project :: set project', (t) => {
   t.equal(setProject().type, SET_PROJECT, 'returns type');
   t.equal(
     setProject(PROJECT_FIXTURE).project,
@@ -57,7 +57,7 @@ tape('project :: set project', t => {
   t.end();
 });
 
-tape('project :: reducer', t => {
+tape('project :: reducer', (t) => {
   const filesToAdd = [{
     filename: 'rage2.jpg',
   }, {

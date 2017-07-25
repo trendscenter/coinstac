@@ -13,7 +13,7 @@ const mainLogger = electron.remote.require('app/main/utils/expose-app.js')().log
  */
 function getLogger(consoleMethod, winstonMethod) {
   return (...args) => {
-    console[consoleMethod].apply(console, args); // eslint-disable-line no-console
+    console[consoleMethod](...args); // eslint-disable-line no-console
     mainLogger[winstonMethod].apply(null, ['ui', ...args]);
   };
 }

@@ -1,23 +1,21 @@
 import { combineReducers } from 'redux';
+import { reducer as form } from 'redux-form';
 import auth from './ducks/auth';
-import computation from './ducks/computation';
 import computations from './ducks/computations';
 import consortia from './ducks/consortia';
 import consortiaPage from './ducks/consortia-page';
 import loading from './ducks/loading';
-import projectsState from './ducks/projects';
+import projects from './ducks/projects';
 import remoteResults from './ducks/remote-results';
-import { reducer as form } from 'redux-form';
 
 const rootReducer = combineReducers({
   auth,
-  computation,
   computations,
   consortia,
   consortiaPage,
   form,
   loading,
-  projectsState,
+  projects,
   remoteResults,
 });
 

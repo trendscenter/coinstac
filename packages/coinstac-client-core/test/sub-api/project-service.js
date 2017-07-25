@@ -26,7 +26,7 @@ function getNextTick(callback) {
   });
 }
 
-test('ProjectService#getCSV', t => {
+test('ProjectService#getCSV', (t) => {
   const readFileStub = sinon.stub(fs, 'readFile');
   const filename = './path/to/random.csv';
   const data = [
@@ -39,8 +39,8 @@ test('ProjectService#getCSV', t => {
 
   t.plan(2);
 
-  ProjectService.prototype.getCSV(filename)
-    .then(csvString => {
+  ProjectService.getCSV(filename)
+    .then((csvString) => {
       t.ok(
         readFileStub.calledWith(filename),
         'reads file via passed arg'
@@ -57,7 +57,7 @@ test('ProjectService#getCSV', t => {
 
 test('ProjectService#getFilesFromMetadata', (t) => {
   t.deepEqual(
-    ProjectService.prototype.getFilesFromMetadata(
+    ProjectService.getFilesFromMetadata(
       path.join(__dirname, 'metadata.csv'),
       [
         ['files header'],
@@ -77,7 +77,7 @@ test('ProjectService#getFilesFromMetadata', (t) => {
   t.end();
 });
 
-test('ProjectService#setMetaContents errors', t => {
+test('ProjectService#setMetaContents errors', (t) => {
   const consortiumId = 'test-consortium';
   const projectId = 'test-project';
 
@@ -191,7 +191,7 @@ test('ProjectService#setMetaContents errors', t => {
   t.plan(7);
 
   setMetaContents()
-    .catch(error => {
+    .catch((error) => {
       t.ok(
         /project id/i.test(error.message),
         'Rejects without project ID'
@@ -199,7 +199,7 @@ test('ProjectService#setMetaContents errors', t => {
 
       return setMetaContents(projectId);
     })
-    .catch(error => {
+    .catch((error) => {
       t.ok(
         error.message.indexOf('consortium') > -1,
         'Rejects without project consortium ID'
@@ -207,7 +207,7 @@ test('ProjectService#setMetaContents errors', t => {
 
       return setMetaContents(projectId);
     })
-    .catch(error => {
+    .catch((error) => {
       t.ok(
         error.message.indexOf('covariates index') > -1,
         'Rejects without covariates index'
@@ -215,7 +215,7 @@ test('ProjectService#setMetaContents errors', t => {
 
       return setMetaContents(projectId);
     })
-    .catch(error => {
+    .catch((error) => {
       t.ok(
         error.message.indexOf('covariates') > -1,
         'Rejects without active computation inputs'
@@ -223,7 +223,7 @@ test('ProjectService#setMetaContents errors', t => {
 
       return setMetaContents(projectId);
     })
-    .catch(error => {
+    .catch((error) => {
       t.ok(
         error.message.indexOf('baddies.txt') > -1,
         'Rejects with missing file'
@@ -231,7 +231,7 @@ test('ProjectService#setMetaContents errors', t => {
 
       return setMetaContents(projectId);
     })
-    .catch(error => {
+    .catch((error) => {
       t.ok(
         error.message.indexOf('Is Control') > -1,
         'errors with bad metaFile to covariate mapping'
@@ -239,7 +239,7 @@ test('ProjectService#setMetaContents errors', t => {
 
       return setMetaContents(projectId);
     })
-    .catch(error => {
+    .catch((error) => {
       t.ok(
         error.message.indexOf('determine column value') > -1,
         'errors with bad metaFile column'
@@ -249,7 +249,7 @@ test('ProjectService#setMetaContents errors', t => {
     .then(statAllStub.restore, statAllStub.restore);
 });
 
-test('ProjectService - setMetaContents', t => {
+test('ProjectService - setMetaContents', (t) => {
   const consortiumId = 'test-consortium';
   const projectId = 'test-project';
   const filename1 = path.join(__dirname, 'controls', 'M100.txt');
@@ -381,15 +381,15 @@ test('ProjectService - addFiles/removeFiles', (t) => {
   t.plan(6);
 
   clientFactory()
-  .then(client => {
+  .then((client) => {
     c1 = client;
     return c1.projects.save(p1);
   })
-  .then((doc) => Object.assign(p1, doc)) // update p1 w/ latest attrs, e.g. _rev
+  .then(doc => Object.assign(p1, doc)) // update p1 w/ latest attrs, e.g. _rev
   .then(() => t.equals(p1.files.length, 0, 'files empty on first persist'))
   // pretend to add some files
   .then(() => c1.projects.addFiles(p1, []))
-  .then((files) => t.equals(files.length, 0, 'no files added'))
+  .then(files => t.equals(files.length, 0, 'no files added'))
   // add some files
   .then(() => c1.projects.addFiles(p1, __filename))
   .then((files) => {
@@ -403,13 +403,13 @@ test('ProjectService - addFiles/removeFiles', (t) => {
   })
   // remove files
   .then(() => c1.projects.removeFiles(p1, __filename))
-  .then((files) => t.equals(files.length, 0, 'file removed'))
+  .then(files => t.equals(files.length, 0, 'file removed'))
   .then(() => c1.teardown())
   .then(() => t.pass('teardown'))
   .then(t.end, t.end);
 });
 
-test('ProjectSerice - gets stats', t => {
+test('ProjectSerice - gets stats', (t) => {
   const param1 = [0, 1, 2];
   const param2 = 'wat';
   const prepareStub = sinon.stub(fileStats, 'prepare');
@@ -419,12 +419,12 @@ test('ProjectSerice - gets stats', t => {
 
   t.plan(3);
 
-  ProjectService.prototype.getFileStats(param1)
-    .then(response => {
+  ProjectService.getFileStats(param1)
+    .then((response) => {
       t.equal(prepareStub.lastCall.args[0], param1, 'passes array param');
       t.equal(response, 'bananas', 'passes fileStats#prepare response');
 
-      return ProjectService.prototype.getFileStats(param2);
+      return ProjectService.getFileStats(param2);
     })
     .then(() => {
       t.deepEqual(
@@ -437,7 +437,7 @@ test('ProjectSerice - gets stats', t => {
     .then(prepareStub.restore);
 });
 
-test('ProjectService - database listeners', t => {
+test('ProjectService - database listeners', (t) => {
   const addListenerSpy = sinon.spy();
   const dbAllStub = sinon.stub();
   const dbListenerStub = sinon.stub(
@@ -534,7 +534,7 @@ test('ProjectService - database listeners', t => {
     });
 });
 
-test('ProjectService - database listener events', t => {
+test('ProjectService - database listener events', (t) => {
   const callbackSpy = sinon.spy();
   const consortium2ChangeDoc = {};
   const consortiumEmitter1 = new EventEmitter();
@@ -569,10 +569,10 @@ test('ProjectService - database listener events', t => {
   const projectService = new ProjectService({
     client: {},
     dbRegistry: {
-      get: dbName => {
+      get: (dbName) => {
         const db = {
           name: dbName,
-          get: id => {
+          get: (id) => {
             if (dbName === 'projects') {
               return Promise.resolve(projects.find(p => p._id === id));
             }

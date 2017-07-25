@@ -1,16 +1,16 @@
 import app from 'ampersand-app';
 import noop from 'lodash/noop';
+import setProp from 'lodash/set';
+import sinon from 'sinon';
+import tape from 'tape';
 import projectsReducer, {
   mapProject,
   removeProject,
   updateProjectStatus,
   UPDATE_PROJECT_STATUS,
 } from '../../../../app/render/state/ducks/projects';
-import setProp from 'lodash/set';
-import sinon from 'sinon';
-import tape from 'tape';
 
-tape('Project mapping', t => {
+tape('Project mapping', (t) => {
   setProp(app, 'core.computations.canStartComputation', noop);
 
   const canStartStub = sinon.stub(app.core.computations, 'canStartComputation');
@@ -28,14 +28,14 @@ tape('Project mapping', t => {
   t.plan(6);
 
   mapProject(project)
-    .then(p => {
+    .then((p) => {
       t.ok('allowComputationRun' in p && 'status' in p, 'adds properties');
       t.notOk(p.allowComputationRun, 'no consortium == no comp run');
       t.ok(p.status, 'waiting', 'sets default status');
 
       return mapProject(Object.assign({}, p, { consortiumId }));
     })
-    .then(p => {
+    .then((p) => {
       t.notOk(p.allowComputationRun, 'disallows comp run via client-core');
 
       return mapProject(Object.assign({}, p, {
@@ -43,7 +43,7 @@ tape('Project mapping', t => {
         status: 'active',
       }));
     })
-    .then(p => {
+    .then((p) => {
       t.ok(p.status, 'active', 'doesn\'t modify set status');
       t.ok(p.allowComputationRun, 'permits comp run via client-core');
     })
@@ -51,7 +51,7 @@ tape('Project mapping', t => {
     .then(() => canStartStub.restore());
 });
 
-tape('Updates project status', t => {
+tape('Updates project status', (t) => {
   const project1 = {
     _id: 'portland',
     allowComputationRun: false,
@@ -81,13 +81,13 @@ tape('Updates project status', t => {
   );
   t.deepEqual(
     projectsReducer(
-      { projects: [project1, project2] },
+      { allProjects: [project1, project2] },
       updateProjectStatus({
         id: 'nashville',
         status: 'active',
       })
     ),
-    { projects: [project1, Object.assign({}, project2, { status: 'active' })] },
+    { allProjects: [project1, Object.assign({}, project2, { status: 'active' })] },
     'updates project'
   );
 
@@ -105,8 +105,8 @@ tape('removes project', (t) => {
   }];
 
   t.deepEqual(
-    projectsReducer({ projects: initialProjects }, removeProject(projectId)),
-    { projects: [initialProjects[1]] },
+    projectsReducer({ allProjects: initialProjects }, removeProject(projectId)),
+    { allProjects: [initialProjects[1]] },
     'removes project from state'
   );
   t.end();

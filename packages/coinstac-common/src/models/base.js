@@ -37,12 +37,12 @@ class Base {
     if (!uncompiledSchema || !Object.keys(uncompiledSchema).length) { return null; }
 
     if (opts.fields) {
-      return Object.keys(attrs).forEach(field => {
+      return Object.keys(attrs).forEach((field) => {
         joi.validate(
           attrs[field],
           uncompiledSchema[field],
           validateOpts,
-          err => {
+          (err) => {
             if (err) { throw err; }
           }
         );

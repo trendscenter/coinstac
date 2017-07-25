@@ -37,7 +37,7 @@ function validOps() {
   };
 }
 
-test('perf - reality check', t => {
+test('perf - reality check', (t) => {
   const begin = now();
   const end = now();
   const noTimeDiff = parseFloat((end - begin).toFixed(2), 10);
@@ -48,7 +48,7 @@ test('perf - reality check', t => {
   t.end();
 });
 
-test('perf - pojo model time diff', t => {
+test('perf - pojo model time diff', (t) => {
   /* eslint-disable no-unused-vars,no-redeclare,prefer-const */
   let pojoTime;
   let simpleModelTime;
@@ -59,7 +59,7 @@ test('perf - pojo model time diff', t => {
 
     // pojo time
   let begin = now();
-  for (let i = 0; i < _.times(modelGenCount).length; i++) {
+  for (let i = 0; i < _.times(modelGenCount).length; i += 1) {
     model = validOps();
   }
 
@@ -69,7 +69,7 @@ test('perf - pojo model time diff', t => {
 
     // simple model time
   begin = now();
-  for (let i = 0; i < _.times(modelGenCount).length; i++) {
+  for (let i = 0; i < _.times(modelGenCount).length; i += 1) {
     model = new SimpleModel(validOps());
   }
 
@@ -79,7 +79,7 @@ test('perf - pojo model time diff', t => {
 
     // heavy model time
   begin = now();
-  for (let i = 0; i < _.times(modelGenCount).length; i++) {
+  for (let i = 0; i < _.times(modelGenCount).length; i += 1) {
     model = new HeavyModel(validOps());
   }
 
@@ -89,7 +89,7 @@ test('perf - pojo model time diff', t => {
 
     // heavy model no validation time
   begin = now();
-  for (let i = 0; i < _.times(modelGenCount).length; i++) {
+  for (let i = 0; i < _.times(modelGenCount).length; i += 1) {
     model = new HeavyModelNoValidation(validOps());
   }
 

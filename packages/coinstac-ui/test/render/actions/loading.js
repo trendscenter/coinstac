@@ -1,12 +1,12 @@
 'use strict';
 
-import * as ld from '../../../app/render/state/ducks/loading.js';
 import test from 'tape';
+import * as ld from '../../../app/render/state/ducks/loading';
 
-test('applyAsyncLoading properly wraps and dispathes', (t) => {
+test('applyAsyncLoading properly wraps and dispatches', (t) => {
   t.plan(2);
   let dispatchCount = 0;
-  const _dispatch = () => (++dispatchCount && 42);
+  const _dispatch = () => (++dispatchCount && 42); // eslint-disable-line no-plusplus
   const dummyAsyncAction = function testActionCreator() {
     return (dispatch) => {
       t.equal(dispatch(), 42, 'dispatch injected');
