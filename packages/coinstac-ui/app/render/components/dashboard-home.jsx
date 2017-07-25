@@ -112,13 +112,13 @@ DashboardHome.defaultProps = {
 function mapStateToProps({
   auth,
   computations,
-  consortiaState: { consortia },
+  consortia: { allConsortia },
   projects,
   remoteResults,
 }) {
   return {
     computations: computations || [],
-    consortia: consortia || [],
+    consortia: allConsortia || [],
     projects: projects || [],
     remoteResults: remoteResults || [],
     username: auth.user.username,

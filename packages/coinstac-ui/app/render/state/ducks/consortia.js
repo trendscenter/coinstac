@@ -362,8 +362,8 @@ export function consortiaSorter(a, b) {
 }
 
 const INITIAL_STATE = {
-  consortium: null,
-  consortia: [],
+  activeConsortium: null,
+  allConsortia: [],
   expandedResults: [],
 };
 
@@ -377,7 +377,7 @@ export default function reducer(state = INITIAL_STATE, action) {
     case DO_UPDATE_CONSORTIA: {
       const newConsortia = [];
       const changed = [];
-      const unchanged = [...state.consortia];
+      const unchanged = [...state.allConsortia];
 
       action.payload.forEach((consortium) => {
         const index = unchanged.findIndex(c => c._id === consortium._id);
@@ -392,7 +392,7 @@ export default function reducer(state = INITIAL_STATE, action) {
 
       return {
         ...state,
-        consortia: [...unchanged, ...changed, ...newConsortia].sort(consortiaSorter),
+        allConsortia: [...unchanged, ...changed, ...newConsortia].sort(consortiaSorter),
       };
     }
     case DO_DELETE_CONSORTIA: {
@@ -400,14 +400,14 @@ export default function reducer(state = INITIAL_STATE, action) {
 
       return {
         ...state,
-        consortia: state.consortia.filter(({ _id }) => ids.indexOf(_id) < 0),
+        allConsortia: state.allConsortia.filter(({ _id }) => ids.indexOf(_id) < 0),
       };
     }
     case SET_CONSORTIUM:
       if (action.payload === null) { return null; }
       return {
         ...state,
-        consortium: { ...action.payload },
+        activeConsortium: { ...action.payload },
       };
     case SET_EXPANDED_RESULTS:
       if (state.expandedResults.includes(action.payload)) {
