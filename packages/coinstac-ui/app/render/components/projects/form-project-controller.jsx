@@ -536,7 +536,7 @@ function select(
   {
     auth,
     computations,
-    consortiaState: { consortia },
+    consortia: { allConsortia },
     projects,
   },
   {
@@ -547,7 +547,7 @@ function select(
 
   return {
     computations,
-    consortia: consortia.filter(({ users }) => users.indexOf(username) > -1),
+    consortia: allConsortia.filter(({ users }) => users.indexOf(username) > -1),
     project: projectId ?
       projects.find(({ _id }) => _id === projectId) :
       undefined,

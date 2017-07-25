@@ -157,7 +157,7 @@ ProjectsList.defaultProps = {
 
 function select(state) {
   return {
-    consortia: state.consortiaState.consortia,
+    consortia: state.consortia.allConsortia,
     projects: state.projects,
     username: state.auth.user.username,
   };

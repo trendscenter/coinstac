@@ -122,7 +122,7 @@ ConsortiumResults.compareRemoteResults = (
   return 0;
 };
 
-const mapStateToProps = ({ consortiaState: { expandedResults } }) => {
+const mapStateToProps = ({ consortia: { expandedResults } }) => {
   return { expandedResults };
 };
 

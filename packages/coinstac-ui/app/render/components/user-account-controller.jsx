@@ -50,8 +50,7 @@ UserAccountController.contextTypes = {
 UserAccountController.displayName = 'UserAccountController';
 
 UserAccountController.propTypes = {
-  logout: PropTypes.func,
-  push: PropTypes.func.isRequired,
+  logout: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = ({ auth }) => {

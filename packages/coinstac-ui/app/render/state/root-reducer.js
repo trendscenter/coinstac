@@ -3,7 +3,7 @@ import { reducer as form } from 'redux-form';
 import auth from './ducks/auth';
 import computation from './ducks/computation';
 import computations from './ducks/computations';
-import consortiaState from './ducks/consortia';
+import consortia from './ducks/consortia';
 import loading from './ducks/loading';
 import project from './ducks/project';
 import projects from './ducks/projects';
@@ -13,7 +13,7 @@ const rootReducer = combineReducers({
   auth,
   computation,
   computations,
-  consortiaState,
+  consortia,
   form,
   loading,
   project,

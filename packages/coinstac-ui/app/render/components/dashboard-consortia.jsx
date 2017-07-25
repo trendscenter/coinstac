@@ -72,9 +72,9 @@ class DashboardConsortia extends Component {
 
 DashboardConsortia.propTypes = {
   consortia: PropTypes.array,
-  deleteConsortium: PropTypes.func,
-  joinConsortium: PropTypes.func,
-  leaveConsortium: PropTypes.func,
+  deleteConsortium: PropTypes.func.isRequired,
+  joinConsortium: PropTypes.func.isRequired,
+  leaveConsortium: PropTypes.func.isRequired,
   loading: PropTypes.object,
   user: PropTypes.object.isRequired,
 };
@@ -84,8 +84,8 @@ DashboardConsortia.defaultProps = {
   consortia: null,
 };
 
-function mapStateToProps({ loading, consortiaState: { consortia }, auth: { user } }) {
-  return { consortia, loading, user };
+function mapStateToProps({ loading, consortia: { allConsortia }, auth: { user } }) {
+  return { consortia: allConsortia, loading, user };
 }
 
 export default connect(mapStateToProps, {
