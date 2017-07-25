@@ -7,7 +7,7 @@ import deepEqual from 'deep-equal';
 
 import { runComputation } from '../../state/ducks/bg-services';
 import { addProject } from '../../state/ducks/projects';
-import { fetchComputation } from '../../state/ducks/computation';
+import { fetchComputation } from '../../state/ducks/computations';
 import FormProject from './form-project';
 
 class FormProjectController extends Component {
@@ -535,7 +535,7 @@ FormProjectController.defaultProps = {
 function mapStateToProps(
   {
     auth,
-    computations,
+    computations: { allComputations },
     consortia,
     projects,
   },
@@ -546,7 +546,7 @@ function mapStateToProps(
   const { user: { username } } = auth;
 
   return {
-    computations,
+    computations: allComputations,
     consortia: consortia.filter(({ users }) => users.indexOf(username) > -1),
     project: projectId ?
       projects.find(({ _id }) => _id === projectId) :
