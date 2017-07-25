@@ -7,6 +7,7 @@ import deepEqual from 'deep-equal';
 
 import { runComputation } from '../../state/ducks/bg-services';
 import { addProject } from '../../state/ducks/projects';
+import { fetchComputation } from '../../state/ducks/computation';
 import FormProject from './form-project';
 
 class FormProjectController extends Component {
@@ -158,7 +159,6 @@ class FormProjectController extends Component {
       } else {
         memo[key] = null;
       }
-
       return memo;
     }, {});
   }
@@ -325,10 +325,10 @@ class FormProjectController extends Component {
   }
 
   handleRunComputation() {
-    const { dispatch, params: { projectId } } = this.props;
+    const { params: { projectId } } = this.props;
     const { project: { consortiumId } } = this.state;
 
-    dispatch(runComputation({ consortiumId, projectId }))
+    this.props.runComputation({ consortiumId, projectId })
       .catch((err) => {
         app.notify({
           level: 'error',
@@ -338,7 +338,7 @@ class FormProjectController extends Component {
   }
 
   handleSubmit() {
-    const { dispatch, params: { projectId } } = this.props;
+    const { params: { projectId } } = this.props;
     const { router } = this.context;
     const { errors, project } = this.state;
 
@@ -352,7 +352,7 @@ class FormProjectController extends Component {
       this.setState({ errors: newErrors });
     } else if (!Object.values(errors).some(e => !!e)) {
       // Ensure no errors before submitting
-      dispatch(addProject(toAdd))
+      this.props.addProject(toAdd)
         .then(() => {
           router.push('/my-files');
         })
@@ -410,7 +410,7 @@ class FormProjectController extends Component {
    * computation definition.
    */
   maybeShowFilesComponent(consortiumId) {
-    const { consortia } = this.props;
+    const { consortia, fetchComputation } = this.props;
 
     if (consortiumId) {
       const consortium = consortia.find(c => c._id === consortiumId);
@@ -422,9 +422,8 @@ class FormProjectController extends Component {
        * the computation definition.
        */
       if (consortium && consortium.activeComputationId) {
-        app.core.dbRegistry.get('computations')
-          .get(consortium.activeComputationId)
-          .then((computation) => {
+        fetchComputation(consortium.activeComputationId)
+          .then(computation => {
             this.setState({
               showFilesComponent:
                 computation.name.indexOf('ridge-regression') > -1,
@@ -506,11 +505,13 @@ FormProjectController.ERRORS = new Map([
 ]);
 
 FormProjectController.propTypes = {
+  addProject: PropTypes.func,
   computations: PropTypes.arrayOf(PropTypes.object).isRequired,
   consortia: PropTypes.array.isRequired,
-  dispatch: PropTypes.func.isRequired,
+  fetchComputation: PropTypes.func,
   params: PropTypes.object.isRequired,
   project: PropTypes.object,
+  runComputation: PropTypes.func,
   username: PropTypes.string.isRequired,
 };
 
@@ -554,4 +555,8 @@ function select(
   };
 }
 
-export default connect(select)(FormProjectController);
+export default connect(select, {
+  runComputation,
+  addProject,
+  fetchComputation,
+})(FormProjectController);

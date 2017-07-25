@@ -10,16 +10,15 @@ import UserAccount from './user-account';
 class UserAccountController extends Component {
   constructor(props) {
     super(props);
-    this.logout = this.logout.bind(this);
+    this.logoutUser = this.logoutUser.bind(this);
   }
 
-  logout(evt) {
-    const { dispatch } = this.props;
+  logoutUser(evt) {
     const { router } = this.context;
 
     evt.preventDefault();
 
-    dispatch(logout())
+    this.props.logout()
     .then(() => {
       router.push('/login');
       app.notify({
@@ -38,7 +37,7 @@ class UserAccountController extends Component {
 
   render() {
     return (
-      <UserAccount logout={this.logout} {...this.props} />
+      <UserAccount logoutUser={this.logoutUser} {...this.props} />
     );
   }
 
@@ -51,7 +50,8 @@ UserAccountController.contextTypes = {
 UserAccountController.displayName = 'UserAccountController';
 
 UserAccountController.propTypes = {
-  dispatch: PropTypes.func.isRequired,
+  logout: PropTypes.func,
+  push: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = ({ auth }) => {
@@ -72,4 +72,6 @@ const mapStateToProps = ({ auth }) => {
   };
 };
 
-export default connect(mapStateToProps)(UserAccountController);
+export default connect(mapStateToProps, {
+  logout,
+})(UserAccountController);
