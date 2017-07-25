@@ -8,7 +8,7 @@ import StatusItem from './status-item';
 import { fetchComputations } from '../state/ducks/computations';
 import {
   fetchRemoteResultsForUser,
-} from '../state/ducks/remote-results';
+} from '../state/ducks/results';
 
 class DashboardHome extends Component {
   constructor(props) {
