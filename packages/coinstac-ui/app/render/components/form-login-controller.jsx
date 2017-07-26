@@ -61,9 +61,9 @@ FormLoginController.contextTypes = {
 FormLoginController.displayName = 'FormLoginController';
 
 FormLoginController.propTypes = {
-  hotRoute: PropTypes.func,
+  hotRoute: PropTypes.func.isRequired,
   loading: PropTypes.object.isRequired,
-  login: PropTypes.func,
+  login: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = (state) => {
