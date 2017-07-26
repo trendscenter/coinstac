@@ -48,7 +48,7 @@ class DashboardHome extends Component {
       consortia.length &&
       username
     ) {
-      this.setState({ didInitResults: true }, () => { //eslint-disable-line
+      this.setState({ didInitResults: true }, () => { // eslint-disable-line
         fetchRemoteResultsForUser(username);
       });
     }
@@ -111,14 +111,14 @@ DashboardHome.defaultProps = {
 
 function mapStateToProps({
   auth,
+  consortia: { allConsortia },
   computations: { allComputations },
-  consortia,
   projects,
   remoteResults,
 }) {
   return {
+    consortia: allConsortia || [],
     computations: allComputations || [],
-    consortia: consortia || [],
     projects: projects || [],
     remoteResults: remoteResults || [],
     username: auth.user.username,
