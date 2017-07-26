@@ -2,19 +2,18 @@ const rethink = require('rethinkdb');
 
 let connection = null;
 
-rethink.connect({ host: 'localhost', port: 28015 },
+rethink.connect({ host: 'localhost', port: 28015, db: 'coinstac' },
   (err, conn) => {
     if (err) throw err;
     connection = conn;
-  }
-);
+  });
 
 /* eslint-disable */
 const resolvers = {
   Query: {
     fetchAllComputations: () => {
       return new Promise ((res, rej) => 
-        rethink.db('coinstac').table('Computations').run(connection, (error, cursor) => {
+        rethink.table('Computations').run(connection, (error, cursor) => {
           if (error) throw error;
           return cursor.toArray(function(err, result) {
             if (err) throw err;

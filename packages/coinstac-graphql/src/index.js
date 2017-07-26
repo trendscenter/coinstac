@@ -8,6 +8,8 @@ server.connection({
   port: 3100,
 });
 
+const io = require('socket.io')(server);
+
 server.register([
   {
     register: graphiqlHapi,

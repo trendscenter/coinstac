@@ -25,6 +25,7 @@
     "pouchdb-adapter-memory": "^6.2.0",
     "prop-types": "^15.5.10",
     "react": "^15.5.4",
+    "react-apollo": "^1.4.8",
     "react-bootstrap": "^0.31.0",
     "react-dom": "^15.5.4",
     "react-notification-system": "^0.2.14",
