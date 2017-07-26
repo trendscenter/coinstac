@@ -521,7 +521,7 @@ FormProjectController.defaultProps = {
 
 /**
  * Pluck project and put it on the component's props when editing.
- * {@link https://github.com/reactjs/react-redux/blob/master/docs/api.md}
+ * {@link -}
  *
  * @param {Object} state
  * @param {Object} state.auth
@@ -535,8 +535,8 @@ FormProjectController.defaultProps = {
 function mapStateToProps(
   {
     auth,
+    consortia: { allConsortia },
     computations: { allComputations },
-    consortia,
     projects: { allProjects },
   },
   {
@@ -546,8 +546,8 @@ function mapStateToProps(
   const { user: { username } } = auth;
 
   return {
+    consortia: allConsortia.filter(({ users }) => users.indexOf(username) > -1),
     computations: allComputations,
-    consortia: consortia.filter(({ users }) => users.indexOf(username) > -1),
     project: projectId ?
       allProjects.find(({ _id }) => _id === projectId) :
       undefined,

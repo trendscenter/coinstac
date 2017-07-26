@@ -156,10 +156,14 @@ ProjectsList.defaultProps = {
   projects: null,
 };
 
-function mapStateToProps({ consortia, projects: { allProjects }, auth }) {
+function mapStateToProps({
+  consortia: { allConsortia },
+  projects: { allProjects },
+  auth,
+}) {
   return {
-    consortia,
     projects: allProjects,
+    consortia: allConsortia,
     username: auth.user.username,
   };
 }
