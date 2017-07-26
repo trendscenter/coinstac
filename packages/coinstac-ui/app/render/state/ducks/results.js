@@ -43,7 +43,9 @@ export const fetchRemoteResultsForUser = username => (dispatch, getState) => {
         .map((res) => {
           return {
             ...res,
-            consortium: getState().consortia.find(({ _id }) => _id === res.consortiumId),
+            consortium: getState()
+              .consortia.allConsortia
+              .find(({ _id }) => _id === res.consortiumId),
             computation: getState().computations
               .allComputations
               .find(({ _id }) => _id === res.computationId),
