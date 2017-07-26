@@ -4,6 +4,10 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { Alert } from 'react-bootstrap';
 import { connect } from 'react-redux';
+import {
+  gql,
+  graphql,
+} from 'react-apollo';
 import StatusItem from './status-item';
 import { fetchComputations } from '../state/ducks/computations';
 import {
@@ -26,6 +30,8 @@ class DashboardHome extends Component {
       fetchRemoteResultsForUser,
       username,
     } = this.props;
+
+    console.log(this.props);
 
     if (!computations.length) {
       fetchComputations();
@@ -125,7 +131,22 @@ function mapStateToProps({
   };
 }
 
+const dashHomeQuery = gql`
+   query DashHomeQuery {
+     fetchComputations {
+       id
+       name
+     }
+   }
+ `;
+const DashHomeWithData = graphql(dashHomeQuery, {
+  props: ({ data: { loading, store } }) => ({
+    store,
+    loading,
+  }),
+})(DashboardHome);
+
 export default connect(mapStateToProps, {
   fetchComputations,
   fetchRemoteResultsForUser,
-})(DashboardHome);
+})(DashHomeWithData);
