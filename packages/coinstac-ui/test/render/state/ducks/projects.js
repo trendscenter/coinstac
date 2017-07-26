@@ -71,21 +71,23 @@ tape('Updates project status', (t) => {
       status: 'wat',
     }),
     {
-      id: 'yolo',
-      status: 'wat',
+      payload: {
+        id: 'yolo',
+        status: 'wat',
+      },
       type: UPDATE_PROJECT_STATUS,
     },
     'action creator generates proper payload'
   );
   t.deepEqual(
     projectsReducer(
-      [project1, project2],
+      { allProjects: [project1, project2] },
       updateProjectStatus({
         id: 'nashville',
         status: 'active',
       })
     ),
-    [project1, Object.assign({}, project2, { status: 'active' })],
+    { allProjects: [project1, Object.assign({}, project2, { status: 'active' })] },
     'updates project'
   );
 
@@ -103,8 +105,8 @@ tape('removes project', (t) => {
   }];
 
   t.deepEqual(
-    projectsReducer(initialProjects, removeProject(projectId)),
-    [initialProjects[1]],
+    projectsReducer({ allProjects: initialProjects }, removeProject(projectId)),
+    { allProjects: [initialProjects[1]] },
     'removes project from state'
   );
   t.end();

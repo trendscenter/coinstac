@@ -537,7 +537,7 @@ function mapStateToProps(
     auth,
     consortia: { allConsortia },
     computations: { allComputations },
-    projects,
+    projects: { allProjects },
   },
   {
     params: { projectId },
@@ -549,7 +549,7 @@ function mapStateToProps(
     consortia: allConsortia.filter(({ users }) => users.indexOf(username) > -1),
     computations: allComputations,
     project: projectId ?
-      projects.find(({ _id }) => _id === projectId) :
+      allProjects.find(({ _id }) => _id === projectId) :
       undefined,
     username,
   };
