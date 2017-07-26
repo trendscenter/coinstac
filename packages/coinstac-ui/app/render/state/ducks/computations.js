@@ -1,7 +1,6 @@
 import app from 'ampersand-app';
-import { applyAsyncLoading } from './loading';
 import { findIndex } from 'lodash';
-
+import { applyAsyncLoading } from './loading';
 
 const SET_COMPUTATIONS = 'SET_COMPUTATIONS';
 const BG_SET_COMPUTATIONS = 'BG_SET_COMPUTATIONS';
