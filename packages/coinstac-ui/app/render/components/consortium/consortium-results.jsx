@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { Alert } from 'react-bootstrap';
-import { setExpandedResults } from '../../state/ducks/consortia-page';
+import { setExpandedResults } from '../../state/ducks/consortia';
 
 import ConsortiumResult from './consortium-result';
 
@@ -122,7 +122,7 @@ ConsortiumResults.compareRemoteResults = (
   return 0;
 };
 
-const mapStateToProps = ({ consortiaPage: { expandedResults } }) => {
+const mapStateToProps = ({ consortia: { expandedResults } }) => {
   return { expandedResults };
 };
 
