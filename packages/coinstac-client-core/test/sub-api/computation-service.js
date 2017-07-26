@@ -45,7 +45,7 @@ function getStubbedParams() {
   };
 }
 
-tape('ComputationService :: modelServiceHooks', t => {
+tape('ComputationService :: modelServiceHooks', (t) => {
   const computationService = new ComputationService({
     client: {},
     dbRegistry: {},
@@ -58,7 +58,7 @@ tape('ComputationService :: modelServiceHooks', t => {
   t.end();
 });
 
-tape('ComputationService :: canStartComputation', t => {
+tape('ComputationService :: canStartComputation', (t) => {
   const consortiumId = 'bla bla bla';
   const consortium = {
     _id: consortiumId,
@@ -105,7 +105,7 @@ tape('ComputationService :: canStartComputation', t => {
 
   computationService.canStartComputation(consortiumId)
     .then(() => t.fail('resolves when consortium lacks active computation ID'))
-    .catch(error => {
+    .catch((error) => {
       t.ok(
         error && error.message.indexOf('active computation') > -1,
         'rejects when consortium lacks active computation ID'
@@ -114,7 +114,7 @@ tape('ComputationService :: canStartComputation', t => {
       return computationService.canStartComputation(consortiumId);
     })
     .then(() => t.fail('resolves when not a consortium owner'))
-    .catch(error => {
+    .catch((error) => {
       t.ok(
         error && error.message.indexOf('consortium owner') > -1,
         'rejects when not a consortium owner'
@@ -123,7 +123,7 @@ tape('ComputationService :: canStartComputation', t => {
       return computationService.canStartComputation(consortiumId);
     })
     .then(() => t.fail('resolves when a run is active'))
-    .catch(error => {
+    .catch((error) => {
       t.ok(
         error && error.message.indexOf('one computation') > -1,
         'rejects when a run is active'
@@ -135,7 +135,7 @@ tape('ComputationService :: canStartComputation', t => {
     .catch(t.end);
 });
 
-tape('ComputationService :: doTriggerRunner errors', t => {
+tape('ComputationService :: doTriggerRunner errors', (t) => {
   const params = getStubbedParams();
   const computationService = new ComputationService(params);
 
@@ -185,7 +185,7 @@ tape('ComputationService :: doTriggerRunner errors', t => {
     });
 });
 
-tape('ComputationService :: doTriggerRunner', t => {
+tape('ComputationService :: doTriggerRunner', (t) => {
   const params = getStubbedParams();
 
   const computationService = new ComputationService(params);
@@ -228,7 +228,7 @@ tape('ComputationService :: doTriggerRunner', t => {
     projectId: project._id,
     runId,
   })
-    .then(response => {
+    .then((response) => {
       t.equal(
         params.client.consortia.get.firstCall.args[0],
         consortiumId,
@@ -270,7 +270,7 @@ tape('ComputationService :: doTriggerRunner', t => {
     .catch(t.end);
 });
 
-tape('ComputationService :: kickoff', t => {
+tape('ComputationService :: kickoff', (t) => {
   const params = getStubbedParams();
 
   const computationService = new ComputationService(params);
@@ -287,7 +287,7 @@ tape('ComputationService :: kickoff', t => {
   t.plan(3);
 
   computationService.kickoff({ consortiumId, projectId })
-    .then(response => {
+    .then((response) => {
       t.ok(
         params.client.consortia.get.calledWith(consortiumId),
         'retrieves consortium by passed ID'
@@ -303,7 +303,7 @@ tape('ComputationService :: kickoff', t => {
     });
 });
 
-tape('ComputationService :: joinRun', t => {
+tape('ComputationService :: joinRun', (t) => {
   const params = getStubbedParams();
 
   const computationService = new ComputationService(params);
@@ -316,7 +316,7 @@ tape('ComputationService :: joinRun', t => {
   t.plan(2);
 
   computationService.joinRun({ consortiumId, projectId, runId })
-    .then(response => {
+    .then((response) => {
       t.ok(
         doStub.calledWithExactly({ consortiumId, projectId, runId }),
         'passes args to doTrigger'

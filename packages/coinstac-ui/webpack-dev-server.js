@@ -4,8 +4,8 @@ const DashboardPlugin = require('webpack-dashboard/plugin');
 const webpack = require('webpack');
 const WebpackDevServer = require('webpack-dev-server');
 const url = require('url');
-
 const config = require('./webpack.config');
+
 const compiler = webpack(config);
 const port = url.parse(config.output.publicPath).port;
 
@@ -17,7 +17,7 @@ new WebpackDevServer(compiler, {
   publicPath: config.output.publicPath,
   hot: true,
   historyApiFallback: true,
-}).listen(port, 'localhost', err => {
+}).listen(port, 'localhost', (err) => {
   /* eslint-disable no-console */
   if (err) {
     console.log(err);

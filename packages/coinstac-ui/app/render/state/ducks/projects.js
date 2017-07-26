@@ -1,16 +1,16 @@
-import { applyAsyncLoading } from './loading.js';
 import app from 'ampersand-app';
 import { omit } from 'lodash';
+import { applyAsyncLoading } from './loading';
 import { joinSlaveComputation } from './bg-services';
 
 export const ADD_PROJECT = 'ADD_PROJECT';
-export const _addProject = (project) => ({ type: ADD_PROJECT, project });
+export const _addProject = project => ({ type: ADD_PROJECT, project });
 
 export const SET_PROJECTS = 'SET_PROJECTS';
-export const setProjects = (projects) => ({ type: SET_PROJECTS, projects });
+export const setProjects = projects => ({ type: SET_PROJECTS, projects });
 
 export const REMOVE_PROJECT = 'REMOVE_PROJECT';
-export const removeProject = (id) => ({
+export const removeProject = id => ({
   id,
   type: REMOVE_PROJECT,
 });
@@ -70,7 +70,7 @@ export function mapProject(project) {
   return Promise.resolve(getProject());
 }
 
-export const addProject = applyAsyncLoading(project => {
+export const addProject = applyAsyncLoading((project) => {
   return (dispatch) => {
     /**
      * @todo: The `Project` model is decorated with `allowComputationRun` and
@@ -80,7 +80,7 @@ export const addProject = applyAsyncLoading(project => {
     return app.core.projects.save(
       omit(project, ['allowComputationRun', 'status'])
     )
-      .then(doc => {
+      .then((doc) => {
         /**
          * New projects don't have an `_id`. Maybe join the computation run in
          * the 'background':
@@ -133,15 +133,15 @@ export const remove = applyAsyncLoading(
   )
 );
 
-export const fetch = applyAsyncLoading(cb => {
+export const fetch = applyAsyncLoading((cb) => {
   return (dispatch) => {
     return app.core.projects.all()
       .then(projects => Promise.all(projects.map(mapProject)))
-      .then(projects => {
+      .then((projects) => {
         dispatch(setProjects(projects));
         cb(null, projects);
       })
-      .catch(error => {
+      .catch((error) => {
         cb(error);
       });
   };
@@ -169,7 +169,7 @@ export default function reducer(projects = [], action) {
     case REMOVE_PROJECT:
       return projects.filter(({ _id }) => _id !== action.id);
     case UPDATE_PROJECT_STATUS:
-      return projects.map(p => {
+      return projects.map((p) => {
         return p._id === action.id ?
           Object.assign({}, p, { status: action.status }) :
           p;

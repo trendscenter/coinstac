@@ -21,7 +21,7 @@ class DBListener extends EventEmitter {
       since: 'now',
       include_docs: true,
     })
-    .on('change', info => {
+    .on('change', (info) => {
       const doc = info.doc;
       /* istanbul ignore if */
       if (info.deleted) {
@@ -43,7 +43,7 @@ class DBListener extends EventEmitter {
   destroy() {
     this.removeAllListeners();
 
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       this.changes.on('complete', resolve);
       this.changes.cancel();
     });

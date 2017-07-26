@@ -4,21 +4,22 @@ require('../../../helpers/boot');
 const runnerUtils = require('./.test-runner-utils');
 const common = require('../../../../');
 const test = require('tape');
+
 const Runner = common.models.pipeline.runner.PipelineRunner;
 
-test('constructor - basic', t => {
+test('constructor - basic', (t) => {
   const runner = new Runner(runnerUtils.basicOpts());
   t.throws(() => new Runner(), /Error/, 'requires min attrs');
   t.throws(() => runner.run(), /ReferenceError/, 'run must be extended');
   t.end();
 });
 
-test('saveResult - basic', t => {
+test('saveResult - basic', (t) => {
   const runner = new Runner(runnerUtils.basicOpts());
   const db = runnerUtils.getDB('testdb'); // use for local and remote
   t.plan(3);
   runner.saveResult(db, { bananas: 1 })
-  .then(() => db.all().then((docs) => docs[0]))
+  .then(() => db.all().then(docs => docs[0]))
   .then((doc) => {
     t.ok(doc.pipelineState, 'serialized pipeline state persists');
     t.deepEqual(doc.data, { bananas: 1 }, 'computation result stashed to `.data`');
@@ -28,7 +29,7 @@ test('saveResult - basic', t => {
   .then(() => t.end(), t.end);
 });
 
-test('saveResult - basic - noop\'s on empty save', t => {
+test('saveResult - basic - noop\'s on empty save', (t) => {
   const runner = new Runner(runnerUtils.basicOpts());
   const db = runnerUtils.getDB('testdb'); // use for local and remote
   t.plan(2);
@@ -45,7 +46,7 @@ test('saveResult - basic - noop\'s on empty save', t => {
   .then(() => t.end(), t.end);
 });
 
-test('saveResult - basic - error', t => {
+test('saveResult - basic - error', (t) => {
   const runner = new Runner(runnerUtils.basicOpts());
   const db = runnerUtils.getDB('no_seed_result_db');
   t.plan(2);
@@ -65,7 +66,7 @@ test('saveResult - basic - error', t => {
   .then(t.end, t.end);
 });
 
-test('getPreviousResult', t => {
+test('getPreviousResult', (t) => {
   const runnerOpts = runnerUtils.basicOpts();
   const db = runnerUtils.getDB('prev_results_db');
   const toAdd = { bananas: 1 };
@@ -74,7 +75,7 @@ test('getPreviousResult', t => {
 
   const hasNoPrevResultPreAdd = () => {
     return runner.getPreviousResult(db)
-    .then((prev) => t.notOk(prev.prevData, 'has no prev result'))
+    .then(prev => t.notOk(prev.prevData, 'has no prev result'))
     .catch(t.end);
   };
 

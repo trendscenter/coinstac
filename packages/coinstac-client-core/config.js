@@ -1,9 +1,8 @@
 'use strict';
 
 const convict = require('convict');
-let conf;
 
-module.exports = conf = convict({
+const conf = convict({
   env: {
     doc: 'The applicaton environment.',
     format: ['production', 'development', 'release'],
@@ -22,3 +21,5 @@ module.exports = conf = convict({
 if (process.env.NODE_ENV === 'development' && !process.env.STEELPENNY_URL) {
   conf.set('baseUrl', 'http://localhost:8800');
 }
+
+module.exports = conf;

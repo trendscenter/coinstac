@@ -26,7 +26,8 @@ class ModelService {
     if (!opts.dbRegistry) {
       throw new ReferenceError('ModelService dbRegistry missing');
     }
-    this.dbRegistry = this.dbs = opts.dbRegistry;
+    this.dbRegistry = opts.dbRegistry;
+    this.dbs = opts.dbRegistry;
 
     /* istanbul ignore if */
     if (!opts.client) {
@@ -35,7 +36,7 @@ class ModelService {
     this.client = opts.client;
 
     /* istanbul ignore if */
-    if (!this.modelServiceHooks || !(this.modelServiceHooks instanceof Function)) {
+    if (!(this.modelServiceHooks instanceof Function)) {
       throw new Error('expected modelServiceHooks method on child');
     }
 
@@ -71,7 +72,7 @@ class ModelService {
       return Promise.resolve(this.dbInstance);
     }
     return getSyncedDatabase(this.dbs, this.dbName)
-      .then(pouchy => {
+      .then((pouchy) => {
         this.dbInstance = pouchy;
 
         return this.dbInstance;
@@ -81,7 +82,7 @@ class ModelService {
   /**
    * @abstract
    */
-  modelServiceHooks() {
+  modelServiceHooks() { // eslint-disable-line class-methods-use-this
     /* istanbul ignore next */
     throw new Error('child classes must extend modelServiceHooks');
   }
@@ -122,7 +123,7 @@ class ModelService {
   getBy(field, val) {
     return this.getDbInstance()
       .then(db => db.all())
-      .then((docs) => find(docs, matchesProperty(field, val)));
+      .then(docs => find(docs, matchesProperty(field, val)));
   }
 
   /**

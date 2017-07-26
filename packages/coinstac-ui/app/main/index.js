@@ -28,6 +28,7 @@ require('../common/utils/add-root-require-path.js');
 
 // Parse and handle CLI flags
 const parseCLIInput = require('./utils/boot/parse-cli-input.js');
+
 parseCLIInput();
 
 // Add dev mode specific services
