@@ -8,7 +8,7 @@ import projectReducer, {
   removeFilesFromProject,
   SET_PROJECT,
   setProject,
-} from '../../../../app/render/state/ducks/project';
+} from '../../../../app/render/state/ducks/projects';
 
 const FILES_FIXTURE = [{
   filename: 'wat.gif',

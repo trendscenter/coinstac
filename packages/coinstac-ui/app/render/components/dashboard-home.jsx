@@ -113,13 +113,13 @@ function mapStateToProps({
   auth,
   consortia: { allConsortia },
   computations: { allComputations },
-  projects,
+  projects: { allProjects },
   remoteResults,
 }) {
   return {
     consortia: allConsortia || [],
     computations: allComputations || [],
-    projects: projects || [],
+    projects: allProjects || [],
     remoteResults: remoteResults || [],
     username: auth.user.username,
   };
