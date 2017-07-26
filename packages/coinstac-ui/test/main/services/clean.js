@@ -4,7 +4,7 @@ const mockery = require('mockery');
 const sinon = require('sinon');
 const tape = require('tape');
 
-tape('cleans user data', t => {
+tape('cleans user data', (t) => {
   const dir = '/tmp/coinstac';
   const username = 'bogus-username';
 
@@ -40,7 +40,7 @@ tape('cleans user data', t => {
   t.plan(9);
 
   clean.userData(username)
-    .then(response => {
+    .then((response) => {
       t.notOk(response, 'returns false when not deleting');
       t.ok(electronStub.dialog.showMessageBox.called, 'shows dialog');
       t.notOk(
@@ -51,7 +51,7 @@ tape('cleans user data', t => {
 
       return clean.userData(username);
     })
-    .then(response => {
+    .then((response) => {
       t.ok(response, 'returns true when deleting');
       t.ok(
         appStub.core.getDatabaseDirectory.calledWith(username),

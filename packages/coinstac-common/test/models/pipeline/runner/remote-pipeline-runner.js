@@ -4,16 +4,17 @@ require('../../../helpers/boot');
 const common = require('../../../../');
 const test = require('tape');
 const runnerUtils = require('./.test-runner-utils');
+
 const RemotePipelineRunner = common.models.pipeline.runner.RemotePipelineRunner;
 const cloneDeep = require('lodash/cloneDeep');
 
-test('RemotePipelineRunner::constructor', t => {
+test('RemotePipelineRunner::constructor', (t) => {
   const runner = new RemotePipelineRunner(runnerUtils.remoteOpts());
   t.ok(runner instanceof RemotePipelineRunner, 'basic instantiation ok');
   t.end();
 });
 
-test('RemotePipelineRunner::run - basic', t => {
+test('RemotePipelineRunner::run - basic', (t) => {
   const opts = runnerUtils.remoteOpts();
   const runner = new RemotePipelineRunner(opts);
   const localResult = runnerUtils.getLocalResult();
@@ -40,7 +41,7 @@ test('RemotePipelineRunner::run - basic', t => {
     const pipelineRunStub = () => {
       // sinon stub is freaking out, so self-stub
       pipelineRunStub.called = true;
-      runner.pipeline.run.apply(runner.pipeline, arguments);
+      runner.pipeline.run(...arguments);
     };
     runner.pipeline.run = pipelineRunStub;
     runner.events.on('noop:noStateChange', () => {
@@ -60,7 +61,7 @@ test('RemotePipelineRunner::run - basic', t => {
   .catch(t.end);
 });
 
-test('RemotePipelineRunner::run - basic - input errors', t => {
+test('RemotePipelineRunner::run - basic - input errors', (t) => {
   const runner = new RemotePipelineRunner(runnerUtils.remoteOpts());
   t.plan(1);
   runner.events.on('error', (err) => {
@@ -93,7 +94,8 @@ test('propogate user errors via remote `userErrors` aggregation', (t) => {
   runner.result._id = `${runId}`;
   runner.pipeline = runnerUtils.getPipeline();
   const localResult = runnerUtils.getLocalResult();
-  localResult._id = localResult._rev = `${runId}-old`;
+  localResult._id = `${runId}-old`;
+  localResult._rev = `${runId}-old`;
   localResult.error = { test: 1 };
 
   // stub in local result query so we can skip db calls.
@@ -109,7 +111,8 @@ test('propogate user errors via remote `userErrors` aggregation', (t) => {
 
       // cool. now clear the error, update the db stub, and run it again!
       delete localResult.error;
-      localResult._id = localResult._rev = 'runId-new';
+      localResult._id = 'runId-new';
+      localResult._rev = 'runId-new';
       stubbedLocalDocs = [localResult.serialize()];
       return runner.run(localResult).catch(t.end);
     }
