@@ -1,11 +1,11 @@
 import {
   ApolloClient,
-  createNetworkInterface,
   addTypeName,
+  createNetworkInterface,
 } from 'react-apollo';
 
 const client = new ApolloClient({
-  networkInterface: createNetworkInterface('http://localhost:3100/graphql'),
+  networkInterface: createNetworkInterface({ uri: 'http://localhost:3100/graphql' }),
   queryTransformer: addTypeName,
 });
 export default client;

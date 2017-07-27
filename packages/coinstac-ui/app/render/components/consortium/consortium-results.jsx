@@ -57,7 +57,7 @@ class ConsortiumResults extends Component {
           .sort(ConsortiumResults.compareRemoteResults)
           .map((result) => {
             const computation = computations.find((c) => {
-              return c._id === result.computationId;
+              return c.id === result.computationId;
             });
 
             return (

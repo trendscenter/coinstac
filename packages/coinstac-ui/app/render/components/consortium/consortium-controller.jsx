@@ -2,6 +2,10 @@ import app from 'ampersand-app';
 import { connect } from 'react-redux';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
+import {
+  gql,
+  graphql,
+} from 'react-apollo';
 
 import {
   addConsortiumComputationListener,
@@ -9,7 +13,7 @@ import {
   unlistenToConsortia,
 } from '../../state/ducks/bg-services';
 import Consortium from './consortium';
-import { fetchComputations } from '../../state/ducks/computations';
+// import { fetchComputations } from '../../state/ducks/computations';
 import {
   joinConsortium,
   leaveConsortium,
@@ -33,7 +37,7 @@ class ConsortiumController extends Component {
   componentWillMount() {
     const {
       consortium,
-      fetchComputations,
+      // fetchComputations,
       fetchRemoteResults,
       isNew,
     } = this.props;
@@ -41,7 +45,7 @@ class ConsortiumController extends Component {
     if (!isNew) {
       fetchRemoteResults(consortium._id);
       // TODO never set. let background service keep up to date
-      fetchComputations();
+      // fetchComputations();
     }
   }
 
@@ -166,9 +170,9 @@ ConsortiumController.displayName = 'ConsortiumController';
 
 ConsortiumController.propTypes = {
   addConsortiumComputationListener: PropTypes.func.isRequired,
-  computations: PropTypes.arrayOf(PropTypes.object).isRequired,
+  computations: PropTypes.arrayOf(PropTypes.object),
   consortium: PropTypes.object,
-  fetchComputations: PropTypes.func.isRequired,
+  // fetchComputations: PropTypes.func.isRequired,
   fetchRemoteResults: PropTypes.func.isRequired,
   initialResultId: PropTypes.string,
   isLoading: PropTypes.bool.isRequired,
@@ -186,6 +190,7 @@ ConsortiumController.propTypes = {
 };
 
 ConsortiumController.defaultProps = {
+  computations: [],
   consortium: null,
   initialResultId: null,
 };
@@ -196,7 +201,7 @@ function mapStateToProps(state, { params: { consortiumId, resultId } }) {
       user: { username },
     },
     consortia: { allConsortia },
-    computations: { allComputations },
+    // computations: { allComputations },
     loading: { isLoading },
     remoteResults,
   } = state;
@@ -207,8 +212,8 @@ function mapStateToProps(state, { params: { consortiumId, resultId } }) {
 
   return {
     // TODO: Ensure computations is always an array in the state tree
-    computations: (allComputations || [])
-      .sort((a, b) => `${a.name}@${a.version}` > `${b.name}@${b.version}`),
+    // computations: (allComputations || [])
+    //   .sort((a, b) => `${a.name}@${a.version}` > `${b.name}@${b.version}`),
     consortium,
     initialResultId: resultId,
     isLoading,
@@ -220,9 +225,42 @@ function mapStateToProps(state, { params: { consortiumId, resultId } }) {
   };
 }
 
+const consortiumControllerData = gql`
+   query ConsortiumControllerQuery {
+     fetchAllComputations {
+       id
+       name
+       version
+       meta {
+         description
+         name
+         tags
+       }
+       url
+       inputs {
+         defaultValue
+         type
+         label
+         help
+         max
+         min
+         step
+         values
+       }
+     }
+   }
+ `;
+
+const ConsortiumControllerWithData = graphql(consortiumControllerData, {
+  props: ({ data: { loading, fetchAllComputations } }) => ({
+    loading,
+    computations: fetchAllComputations,
+  }),
+})(ConsortiumController);
+
 export default connect(mapStateToProps, {
   fetchRemoteResults,
-  fetchComputations,
+  // fetchComputations,
   setRemoteResults,
   saveConsortium,
   joinConsortium,
@@ -230,4 +268,4 @@ export default connect(mapStateToProps, {
   addConsortiumComputationListener,
   listenToConsortia,
   unlistenToConsortia,
-})(ConsortiumController);
+})(ConsortiumControllerWithData);
