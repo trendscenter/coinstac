@@ -8,8 +8,7 @@ const typeDefs = `
   }
 
   type ComputationInput {
-    id: ID!,
-    defaultValue: [String]
+    defaultValue: String
     type: String!
     label: String!
     help: String

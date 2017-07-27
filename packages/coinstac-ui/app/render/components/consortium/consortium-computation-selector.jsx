@@ -32,24 +32,24 @@ export default function ConsortiumComputationSelector({
         {comps.map(
           (
             {
-              _id,
+              id,
               meta: { description, name },
               version,
             }
           ) => {
-            const isChecked = input.value === _id;
+            const isChecked = input.value === id;
 
             return (
-              <div className={radioClassNames} key={_id}>
-                <label htmlFor={`computation-radio-${_id}`}>
+              <div className={radioClassNames} key={id}>
+                <label htmlFor={`computation-radio-${id}`}>
                   <input
                     checked={isChecked}
                     className="sr-only"
                     onChange={input.onChange}
                     name={input.name}
                     type="radio"
-                    value={_id}
-                    id={`computation-radio-${_id}`}
+                    value={id}
+                    id={`computation-radio-${id}`}
                   />
                   <span
                     aria-hidden="true"

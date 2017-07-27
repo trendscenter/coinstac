@@ -17,7 +17,7 @@ import client from './apollo-client';
 import rootReducer from './root-reducer';
 
 const finalCreateStore = applyMiddleware(
-  client.middleware,
+  client.middleware(),
   thunkMiddleware,
   promiseMiddleware,
   createLogger({ collapsed: true })
