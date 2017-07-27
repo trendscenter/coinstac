@@ -276,11 +276,11 @@ function mapStateToProps(state, { computations, consortium, isNew, isOwner }) {
     );
 
     if (activeComp) {
-      activeComputationId = activeComp._id;
+      activeComputationId = activeComp.id;
     }
   }
   const decentComp = activeComputationId ?
-    computations.find(({ _id }) => _id === activeComputationId) :
+    computations.find(({ id }) => id === activeComputationId) :
     undefined;
 
   // Map computations' inputs into a Redux Form-friendly format
@@ -314,8 +314,11 @@ function mapStateToProps(state, { computations, consortium, isNew, isOwner }) {
   ) {
     initialValues.activeComputationId = activeComputationId;
     // Do reset of initial values
+
     initialValues.activeComputationInputs = computationInputs.map(
-      ({ defaultValue }) => (
+      ({ defaultValue, type }) => (
+        typeof defaultValue !== 'undefined' && defaultValue !== null && type === 'covariates' ? // eslint-disable-line
+          JSON.parse(defaultValue) :
         typeof defaultValue !== 'undefined' && defaultValue !== null ?
           defaultValue :
           ''
