@@ -5,7 +5,7 @@ import computations from './ducks/computations';
 import consortia from './ducks/consortia';
 import loading from './ducks/loading';
 import projects from './ducks/projects';
-import remoteResults from './ducks/remote-results';
+import results from './ducks/results';
 
 const rootReducer = combineReducers({
   auth,
@@ -14,7 +14,7 @@ const rootReducer = combineReducers({
   form,
   loading,
   projects,
-  remoteResults,
+  results,
 });
 
 export default rootReducer;

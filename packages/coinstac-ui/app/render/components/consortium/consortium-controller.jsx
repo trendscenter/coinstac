@@ -16,9 +16,9 @@ import {
   saveConsortium,
 } from '../../state/ducks/consortia';
 import {
-  fetch as fetchRemoteResults,
+  fetchRemoteResults,
   setRemoteResults,
-} from '../../state/ducks/remote-results';
+} from '../../state/ducks/results';
 
 class ConsortiumController extends Component {
   constructor(props) {
@@ -198,7 +198,7 @@ function mapStateToProps(state, { params: { consortiumId, resultId } }) {
     consortia: { allConsortia },
     computations: { allComputations },
     loading: { isLoading },
-    remoteResults,
+    results: { remoteResults },
   } = state;
   const isNew = !consortiumId;
   const consortium = !isNew ?
