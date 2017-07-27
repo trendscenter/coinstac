@@ -2,11 +2,23 @@ import app from 'ampersand-app';
 import { compact, flatten, sortBy } from 'lodash';
 import { applyAsyncLoading } from './loading';
 
-const SET_REMOTE_RESULTS = 'SET_REMOTE_RESULTS';
+// Actions
+export const SET_LOCAL_RESULTS = 'SET_LOCAL_RESULTS';
+export const SET_REMOTE_RESULTS = 'SET_REMOTE_RESULTS';
 
-export const setRemoteResults = results => ({ type: SET_REMOTE_RESULTS, results });
+// Action Creators
+export const setLocalResults = results => ({ type: SET_LOCAL_RESULTS, payload: results });
+export const setRemoteResults = results => ({ type: SET_REMOTE_RESULTS, payload: results });
 
-export const fetch = applyAsyncLoading(id => (dispatch) => {
+// Helpers
+export const fetchLocalResults = applyAsyncLoading((id) => {
+  return (dispatch) => { // eslint-disable-line
+    return app.core.dbRegistry.get(`local-consortium-${id}`).all()
+    .then(setLocalResults);
+  };
+});
+
+export const fetchRemoteResults = applyAsyncLoading(id => (dispatch) => {
   const dbRegistry = app.core.dbRegistry;
   const dbs = id ?
     [dbRegistry.get(`remote-consortium-${id}`)] :
@@ -14,7 +26,7 @@ export const fetch = applyAsyncLoading(id => (dispatch) => {
 
   return Promise.all(dbs.map(db => db.all()))
     .then((responses) => {
-      const results = sortBy(compact(flatten(responses)), ['endDate', 'startDate']).reverse();
+      const results = compact(flatten(responses));
       dispatch(setRemoteResults(results));
       return results;
     });
@@ -34,9 +46,6 @@ export const fetchRemoteResultsForUser = username => (dispatch, getState) => {
             consortium: getState()
               .consortia.allConsortia
               .find(({ _id }) => _id === res.consortiumId),
-            // This doesn't actually seem to be used
-            // project: getState().projects.find(({ consortiumId }) =>
-            //   consortiumId === res.consortiumId),
             computation: getState().computations
               .allComputations
               .find(({ _id }) => _id === res.computationId),
@@ -48,11 +57,36 @@ export const fetchRemoteResultsForUser = username => (dispatch, getState) => {
     });
 };
 
-export default function reducer(state = null, action = {}) {
+const INITIAL_STATE = {
+  localResults: [],
+  remoteResults: [],
+};
+
+// Reducer
+export default function reducer(state = INITIAL_STATE, action = {}) {
   switch (action.type) {
-    case 'SET_REMOTE_RESULTS':
-      if (!action.results) { return null; }
-      return [...action.results];
+    case SET_LOCAL_RESULTS:
+      if (!action.payload) {
+        return {
+          ...state,
+          localResults: INITIAL_STATE.localResults,
+        };
+      }
+      return {
+        ...state,
+        localResults: [...action.payload],
+      };
+    case SET_REMOTE_RESULTS:
+      if (!action.payload) {
+        return {
+          ...state,
+          remoteResults: INITIAL_STATE.remoteResults,
+        };
+      }
+      return {
+        ...state,
+        remoteResults: [...action.payload],
+      };
     default: return state;
   }
 }
