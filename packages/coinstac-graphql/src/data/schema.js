@@ -7,6 +7,7 @@ const typeDefs = `
     type: String
   }
 
+  # Computation inputs are described by computation authors
   type ComputationInput {
     defaultValue: String
     type: String!
@@ -30,7 +31,7 @@ const typeDefs = `
     name: String!
     url: String!
     version: String!
-    inputs: [ComputationInput]
+    inputs: [[ComputationInput]]
   }
 
   # Should owners/users be an array of user objects?
@@ -70,7 +71,9 @@ const typeDefs = `
     username: String!
   }
 
+  # This is the general mutation description
   type Mutation {
+    # This is an individual mutation description
     deleteConsortiumById(consortiumId: ID): String
     joinConsortium(username: String, consortiumId: ID): Consortium
     setActiveComputation(computationId: ID, consortiumId: ID): String
@@ -79,7 +82,9 @@ const typeDefs = `
     saveConsortium(consortium: ConsortiumInput): String
   }
 
+  # This is a description of the queries
   type Query {
+    # This is a description of the fetchAllComputations query
     fetchAllComputations: [Computation]
     fetchComputationById(computationId: ID): Computation
     fetchConsortiumById(consortiumId: ID): Consortium

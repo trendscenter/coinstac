@@ -138,26 +138,31 @@ class ConsortiumController extends Component {
       isMember,
       isNew,
       isOwner,
+      loading,
       remoteResults,
       username,
     } = this.props;
 
     return (
-      <Consortium
-        addUser={this.addUser}
-        computations={computations}
-        consortium={consortium}
-        initialResultId={initialResultId}
-        isLoading={isLoading}
-        isMember={isMember}
-        isNew={isNew}
-        isOwner={isOwner}
-        onSubmit={this.onSubmit}
-        onReset={this.onReset}
-        remoteResults={remoteResults}
-        removeUser={this.removeUser}
-        username={username}
-      />
+      <div>
+        {!loading &&
+          <Consortium
+            addUser={this.addUser}
+            computations={computations}
+            consortium={consortium}
+            initialResultId={initialResultId}
+            isLoading={isLoading}
+            isMember={isMember}
+            isNew={isNew}
+            isOwner={isOwner}
+            onSubmit={this.onSubmit}
+            onReset={this.onReset}
+            remoteResults={remoteResults}
+            removeUser={this.removeUser}
+            username={username}
+          />
+        }
+      </div>
     );
   }
 }
@@ -180,6 +185,7 @@ ConsortiumController.propTypes = {
   isNew: PropTypes.bool.isRequired,
   isOwner: PropTypes.bool.isRequired,
   joinConsortium: PropTypes.func.isRequired,
+  loading: PropTypes.bool,
   leaveConsortium: PropTypes.func.isRequired,
   listenToConsortia: PropTypes.func.isRequired,
   remoteResults: PropTypes.arrayOf(PropTypes.object).isRequired,
@@ -193,6 +199,7 @@ ConsortiumController.defaultProps = {
   computations: [],
   consortium: null,
   initialResultId: null,
+  loading: true,
 };
 
 function mapStateToProps(state, { params: { consortiumId, resultId } }) {

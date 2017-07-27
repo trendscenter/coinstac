@@ -2,7 +2,7 @@
 
 <img src="https://raw.githubusercontent.com/MRN-Code/coinstac/master/img/coinstac.png" height="75px">
 
-COINSTAC experiment in [GraphQL](http://graphql.org/), [Hapi](https://hapijs.com/), [RethinkDB](https://www.rethinkdb.com/) and [Socket.io](https://socket.io/).
+COINSTAC experiment using [GraphQL](http://graphql.org/), [Hapi](https://hapijs.com/), [RethinkDB](https://www.rethinkdb.com/).
 
 ## Installing/Running
 
@@ -12,6 +12,7 @@ COINSTAC experiment in [GraphQL](http://graphql.org/), [Hapi](https://hapijs.com
     * Add `Computations` table
   * Add computations to table: http://localhost:8080/#dataexplorer
     * `r.db('coinstac').table('Computations').insert([{ _Your Computation Here_ }])`
+    * Two example Computation inserts can be found in `computations-queries.txt`
   * Clone repo: `git clone URL`
   * Navigate into repo and `npm i`
   * Start server: `npm run start`
@@ -25,7 +26,5 @@ COINSTAC experiment in [GraphQL](http://graphql.org/), [Hapi](https://hapijs.com
     } 
   ```
 
-
-## License
-
-MIT. See [LICENSE](./LICENSE) for details.
+## Todo
+  * RethinkDB Changefeeds & Apollo Subscriptions
