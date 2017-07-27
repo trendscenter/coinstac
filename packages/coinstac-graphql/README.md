@@ -13,8 +13,7 @@ COINSTAC experiment using [GraphQL](http://graphql.org/), [Hapi](https://hapijs.
   * Add computations to table: http://localhost:8080/#dataexplorer
     * `r.db('coinstac').table('Computations').insert([{ _Your Computation Here_ }])`
     * Two example Computation inserts can be found in `computations-queries.txt`
-  * Clone repo: `git clone URL`
-  * Navigate into repo and `npm i`
+  * Navigate into `packages/coinstac-graphql` and `npm i`
   * Start server: `npm run start`
   * View GraphiQL: http://localhost:3100/graphiql
   * Query Computations via GraphiQL:
