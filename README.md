@@ -4,6 +4,8 @@
 
 [ ![Codeship Status for MRN-Code/coinstac](https://app.codeship.com/projects/9a9dd9b0-8f5a-0134-c5bf-0e20509a962c/status?branch=master)](https://app.codeship.com/projects/185577)
 
+[![DOI](https://zenodo.org/badge/52497909.svg)](https://zenodo.org/badge/latestdoi/52497909)
+
 _Collaborative Informatics and Neuroimaging Suite Toolkit for Anonymous Computation, User Interface._ A research project by your friends [The Mind Research Network](http://www.mrn.org/).
 
 📖 Read the project’s paper, [_COINSTAC: A Privacy Enabled Model and Prototype for Leveraging and Processing Decentralized Brain Imaging Data_ on Frontiers in Neuroscience](http://journal.frontiersin.org/article/10.3389/fnins.2016.00365/full)
