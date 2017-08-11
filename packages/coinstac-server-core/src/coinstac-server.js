@@ -5,6 +5,7 @@ const computationsDatabaseSyncer =
 const cloneDeep = require('lodash/cloneDeep');
 const coinstacCommon = require('coinstac-common');
 const coinstacComputationRegistry = require('coinstac-computation-registry');
+const ComputationRegistryNew = require('coinstac-computation-registry-new');
 const logger = require('./services/logger.js');
 const mkdirp = require('mkdirp');
 const os = require('os');
@@ -290,10 +291,12 @@ class CoinstacServer {
       .then(([computationRegistry, dbRegistry]) => {
         this.computationRegistry = computationRegistry;
         this.dbRegistry = dbRegistry;
+        this.computationRegistryNew = new ComputationRegistryNew('cli');
 
         return Promise.all([
           coinstacCommon.utils.getSyncedDatabase(dbRegistry, 'computations'),
           computationRegistry.all(),
+          this.computationRegistryNew.serverStart(),
         ]);
       })
       .then(([computationDatabase, decentralizedComputations]) =>
