@@ -9,6 +9,7 @@
 
 const mock = require('../../test/e2e/mocks');
 const electron = require('electron');
+const ipcPromise = require('ipc-promise');
 
 // if no env set prd
 process.env.NODE_ENV = process.env.NODE_ENV || 'production';
@@ -56,4 +57,9 @@ loadConfig()
 .then(configureServices)
 .then(() => {
   app.logger.verbose('main process booted');
+
+  ipcPromise.on('download-comps', (params) => {
+    return app.core.computationRegistryNew
+      .pullPipelineComputations({ window: app.mainWindow, comps: params });
+  });
 });
