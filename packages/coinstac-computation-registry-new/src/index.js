@@ -1,7 +1,7 @@
 'use strict';
 
 const nano = require('nano')('http://coinstac:test@localhost:5984');
-const { spawnSync } = require('child_process');
+const { spawn, spawnSync } = require('child_process');
 const fs = require('fs');
 const CLIAdapter = require('./adapters/cli-adapter');
 const UIAdapter = require('./adapters/ui-adapter');
@@ -13,7 +13,7 @@ const FILE_TO_COPY = 'adduser.conf';
 /**
  * ComputationRegistry
  * @class
- * @param {string} adapter Determines which adapter to use: cli or ui (Server uses cli)
+ * @param string adapter Determines which adapter to use: cli or ui (Server uses cli)
  */
 class ComputationRegistry {
   constructor(adapter) {
@@ -54,10 +54,36 @@ class ComputationRegistry {
     .catch(console.log);
   }
 
+  getLocalImages() { // eslint-disable-line class-methods-use-this
+    return new Promise((res) => {
+      const sp = spawn('docker', ['images']);
+      const images = [];
+
+      sp.stdout.on('data', (data) => {
+        console.log(`----${data}----`);
+        images.push(data.toString());
+      });
+
+      sp.stderr.on('data', (data) => {
+        console.log(data);
+      });
+
+      sp.on('close', () => {
+        res(images);
+      });
+    })
+    .catch(console.log);
+  }
+
   /**
    * Server
    */
 
+  /**
+   * Recursive function to create temporary container with first image in passed in array,
+   *   copy contents of metadata file locally, then push that metadata information to the DB
+   * @param {Array} comps - list of computation images
+   */
   addMetadataToDB(comps) { // eslint-disable-line class-methods-use-this
     if (comps.length === 0) {
       fs.rmdirSync(`${__dirname}/tmp`);

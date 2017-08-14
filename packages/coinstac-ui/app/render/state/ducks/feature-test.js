@@ -7,6 +7,7 @@ import { applyAsyncLoading } from './loading';
 export const PULL_COMPUTATIONS = 'PULL_COMPUTATIONS';
 export const UPDATE_DOCKER_OUTPUT = 'UPDATE_DOCKER_OUTPUT';
 export const CLEAR_DOCKER_OUTPUT = 'CLEAR_DOCKER_OUTPUT';
+export const GET_LOCAL_IMAGES = 'GET_LOCAL_IMAGES';
 
 // Action Creators
 export const pullComputations = applyAsyncLoading((computations) => {
@@ -24,11 +25,26 @@ export const pullComputations = applyAsyncLoading((computations) => {
   };
 });
 
+export const getLocalImages = applyAsyncLoading(() => {
+  return (dispatch) => {
+    return ipcPromise.send('get-images')
+    .then((res) => {
+      dispatch({ payload: res, type: GET_LOCAL_IMAGES });
+      return res;
+    })
+    .catch((err) => {
+      console.log(err);
+      return err;
+    });
+  };
+});
+
 export const updateDockerOutput = output => ({ payload: output, type: UPDATE_DOCKER_OUTPUT });
 
 const INITIAL_STATE = {
   dockerOut: '',
   dlComplete: false,
+  localImages: [],
 };
 
 // Reducer
@@ -36,6 +52,8 @@ export default function reducer(state = INITIAL_STATE, action) {
   switch (action.type) {
     case CLEAR_DOCKER_OUTPUT:
       return { ...state, dockerOut: '' };
+    case GET_LOCAL_IMAGES:
+      return { ...state, localImages: action.payload };
     case PULL_COMPUTATIONS:
       return { ...state, dlComplete: action.payload };
     case UPDATE_DOCKER_OUTPUT:
