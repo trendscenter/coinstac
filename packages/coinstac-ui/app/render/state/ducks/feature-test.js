@@ -39,7 +39,7 @@ export default function reducer(state = INITIAL_STATE, action) {
     case PULL_COMPUTATIONS:
       return { ...state, dlComplete: action.payload };
     case UPDATE_DOCKER_OUTPUT:
-      return { ...state, dockerOut: state.dockerOut.concat(action.payload) };
+      return { ...state, dockerOut: action.payload.concat(state.dockerOut) };
     default:
       return state;
   }
