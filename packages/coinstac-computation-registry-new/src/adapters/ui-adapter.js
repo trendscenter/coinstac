@@ -1,15 +1,15 @@
 const { spawn } = require('child_process');
 
 class UIAdapter {
-  /*
-    Wrap single docker pull command in a promise
-    @param: payload
-      - img (string) - required
-      - window (object) - for UI calls only
-  */
+  /**
+   * Wrap single docker pull command in a promise
+   * @param {Object} payload
+   * @param {string} payload.img
+   * @param {Object} window - for UI calls only
+   */
   pullImage(payload) {  // eslint-disable-line class-methods-use-this
     return new Promise((res) => {
-      const sp = spawn('docker', ['pull', payload.img]);
+      const sp = spawn('docker', ['pull', payload.img], { stdio: ['pipe', process.stdout, 'pipe'] });
 
       sp.stdout.on('data', (data) => {
         console.log(data.toString());

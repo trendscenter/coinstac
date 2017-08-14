@@ -2,10 +2,11 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { ipcRenderer } from 'electron';
-import { Form, FormGroup, FormControl, Col, Button } from 'react-bootstrap';
+import { Form, FormGroup, FormControl, Col, Button, Panel } from 'react-bootstrap';
 import {
   pullComputations,
   updateDockerOutput,
+  getLocalImages,
 } from '../state/ducks/feature-test';
 
 const styles = {
@@ -24,6 +25,14 @@ class FeatureTest extends Component { // eslint-disable-line
     this.pullComps = this.pullComps.bind(this);
   }
 
+  componentWillMount() {
+    const {
+      getLocalImages,
+    } = this.props;
+
+    getLocalImages();
+  }
+
   pullComps(e) {
     e.preventDefault();
     this.props.pullComputations([this.img1.value, this.img2.value, this.img3.value])
@@ -38,7 +47,7 @@ class FeatureTest extends Component { // eslint-disable-line
   }
 
   render() {
-    const { dockerOut } = this.props;
+    const { dockerOut, localImages } = this.props;
 
     return (
       <div style={styles.topMargin}>
@@ -85,6 +94,9 @@ class FeatureTest extends Component { // eslint-disable-line
           <Button bsStyle="primary" type="submit">Pull Images</Button>
         </Form>
 
+        {localImages &&
+          <Panel>{localImages}</Panel>}
+
         {dockerOut &&
           <pre style={styles.outputBox}>{dockerOut}</pre>
         }
@@ -95,15 +107,18 @@ class FeatureTest extends Component { // eslint-disable-line
 
 FeatureTest.propTypes = {
   dockerOut: PropTypes.string.isRequired,
+  getLocalImages: PropTypes.func.isRequired,
+  localImages: PropTypes.array.isRequired,
   pullComputations: PropTypes.func.isRequired,
   updateDockerOutput: PropTypes.func.isRequired,
 };
 
-function mapStateToProps({ featureTest: { dockerOut } }) {
-  return { dockerOut };
+function mapStateToProps({ featureTest: { dockerOut, localImages } }) {
+  return { dockerOut, localImages };
 }
 
 export default connect(mapStateToProps, {
+  getLocalImages,
   pullComputations,
   updateDockerOutput,
 })(FeatureTest);
