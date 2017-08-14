@@ -1,6 +1,6 @@
 # Computation Registry
 
-The following lists the general purpose of, and requirements, for the COINSTAC Computation Registry. This is subject to change.
+The following lists the general purpose of, and requirements for, the COINSTAC Computation Registry. This is subject to change.
 
 ## Purpose
 
@@ -49,8 +49,8 @@ The COINSTAC Computation Registry will:
 
 ## (Mostly) Server-side Workflow
 
-<img src="https://raw.githubusercontent.com/MRN-Code/coinstac/redesign/comp-reg-docs/img/comp-reg-server.svg">
+<img src="https://rawgit.com/MRN-Code/coinstac/redesign/comp-reg-docs/img/comp-reg-server.svg" width="100%" height="600">
 
 ## Client-side Workflow
 
-<img src="https://raw.githubusercontent.com/MRN-Code/coinstac/redesign/comp-reg-docs/img/comp-reg-client.svg">
+<img src="https://rawgit.com/MRN-Code/coinstac/redesign/comp-reg-docs/img/comp-reg-client.svg" width="100%" height="600">
