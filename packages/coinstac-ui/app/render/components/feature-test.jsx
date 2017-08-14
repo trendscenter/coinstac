@@ -9,6 +9,7 @@ import {
 } from '../state/ducks/feature-test';
 
 const styles = {
+  outputBox: { marginTop: 10, height: 400, overflowY: 'scroll' },
   topMargin: { marginTop: 10 },
 };
 
@@ -23,7 +24,8 @@ class FeatureTest extends Component { // eslint-disable-line
     this.pullComps = this.pullComps.bind(this);
   }
 
-  pullComps() {
+  pullComps(e) {
+    e.preventDefault();
     this.props.pullComputations([this.img1.value, this.img2.value, this.img3.value])
     .then((res) => {
       this.img1.value = null;
@@ -84,7 +86,7 @@ class FeatureTest extends Component { // eslint-disable-line
         </Form>
 
         {dockerOut &&
-          <pre style={styles.topMargin}>{dockerOut}</pre>
+          <pre style={styles.outputBox}>{dockerOut}</pre>
         }
       </div>
     );
