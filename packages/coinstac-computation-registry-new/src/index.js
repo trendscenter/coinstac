@@ -83,18 +83,11 @@ class ComputationRegistry {
           let dataIn = compact(data.toString().split('\n'));
           dataIn = dataIn.map((row) => {
             const imgSplit = row.split(/\s+/);
-            const imgObj = {
-              id: imgSplit[0],
-              repository: imgSplit[1],
-              tag: imgSplit[2],
-              size: imgSplit[3],
-            };
-
             const imgIndex = containerImages.findIndex(img => imgSplit[1] === img[1]);
             if (imgIndex > -1) {
-              imgObj.containerId = containerImages[imgIndex][0];
+              imgSplit.push(containerImages[imgIndex][0]);
             }
-            return imgObj;
+            return imgSplit;
           });
           images = images.concat(dataIn);
         });
