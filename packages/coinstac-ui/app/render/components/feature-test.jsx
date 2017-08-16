@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { ipcRenderer } from 'electron';
-import { Form, FormGroup, FormControl, Col, Button, Panel } from 'react-bootstrap';
+import { Form, FormGroup, FormControl, Col, Button, Panel, Table } from 'react-bootstrap';
 import {
   pullComputations,
   updateDockerOutput,
@@ -51,6 +51,31 @@ class FeatureTest extends Component { // eslint-disable-line
 
     return (
       <div style={styles.topMargin}>
+        {localImages &&
+          <Panel style={styles.topMargin}>
+            <h2 style={{ marginTop: 0 }}>Locally Saved Images:</h2>
+            <Table striped bordered condensed hover>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Repository</th>
+                  <th>Tag</th>
+                  <th>Size</th>
+                  <th>Used by Container ID</th>
+                </tr>
+              </thead>
+              <tbody>
+                {localImages.map((row) => {
+                  return (
+                    <tr key={`${row[0]}-row`}>
+                      {row.map(column => <td key={`${column}-col`}>{column}</td>)}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </Table>
+          </Panel>}
+
         <Form horizontal onSubmit={this.pullComps}>
           <FormGroup controlId="img1">
             <Col sm={2}>
@@ -93,9 +118,6 @@ class FeatureTest extends Component { // eslint-disable-line
 
           <Button bsStyle="primary" type="submit">Pull Images</Button>
         </Form>
-
-        {localImages &&
-          <Panel>{localImages}</Panel>}
 
         {dockerOut &&
           <pre style={styles.outputBox}>{dockerOut}</pre>
