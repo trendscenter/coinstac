@@ -1,6 +1,6 @@
 # Computation Registry
 
-In COINSTAC, __Computations__ are self-contained algorithms that provide researchers additional insight into their data. They do this based upon a detailed I/O schema that *computation authors* define prior to exporting them as Docker images. Multiple computations can be aligned with varying I/O mappings to form a __pipeline__.
+In COINSTAC, __Computations__ are self-contained algorithms that provide researchers additional insight into their data. Computations use a detailed I/O schema that *computation authors* define prior to exporting them as Docker images. Multiple computations can be aligned with varying I/O mappings to form a __pipeline__.
 
 The __Computation Registry__ acts as a repository for the metadata concerning these computations. It is responsible for downloading a pipeline's computations and for validating those computations prior to their being run.
 
