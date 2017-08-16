@@ -10,6 +10,7 @@
   "license": "ISC",
   "devDependencies": {},
   "dependencies": {
+    "lodash": "^4.17.4",
     "nano": "^6.4.0"
   }
 }

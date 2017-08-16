@@ -3,6 +3,7 @@
 const nano = require('nano')('http://coinstac:test@localhost:5984');
 const { spawn, spawnSync } = require('child_process');
 const fs = require('fs');
+const { compact } = require('lodash');
 const CLIAdapter = require('./adapters/cli-adapter');
 const UIAdapter = require('./adapters/ui-adapter');
 const whitelist = require('./whitelisted-computations');
@@ -56,23 +57,96 @@ class ComputationRegistry {
 
   getLocalImages() { // eslint-disable-line class-methods-use-this
     return new Promise((res) => {
-      const sp = spawn('docker', ['images']);
-      const images = [];
+      const sp = spawn('docker', ['ps', '--format', '{{.ID}} {{.Image}}']);
+      let containerImages = [];
 
       sp.stdout.on('data', (data) => {
-        console.log(`----${data}----`);
-        images.push(data.toString());
+        let dataIn = compact(data.toString().split('\n'));
+        dataIn = dataIn.map(row => row.split(/\s+/));
+        containerImages = containerImages.concat(dataIn);
       });
 
       sp.stderr.on('data', (data) => {
-        console.log(data);
+        res(data);
       });
 
       sp.on('close', () => {
-        res(images);
+        res(containerImages);
+      });
+    })
+    .then((containerImages) => {
+      return new Promise((res) => {
+        const sp = spawn('docker', ['images', '--format', '{{.ID}} {{.Repository}} {{.Tag}} {{.Size}}']);
+        let images = [];
+
+        sp.stdout.on('data', (data) => {
+          let dataIn = compact(data.toString().split('\n'));
+          dataIn = dataIn.map((row) => {
+            const imgSplit = row.split(/\s+/);
+            const imgObj = {
+              id: imgSplit[0],
+              repository: imgSplit[1],
+              tag: imgSplit[2],
+              size: imgSplit[3],
+            };
+
+            const imgIndex = containerImages.findIndex(img => imgSplit[1] === img[1]);
+            if (imgIndex > -1) {
+              imgObj.containerId = containerImages[imgIndex][0];
+            }
+            return imgObj;
+          });
+          images = images.concat(dataIn);
+        });
+
+        sp.stderr.on('data', (data) => {
+          res(data);
+        });
+
+        sp.on('close', () => {
+          res(images);
+        });
       });
     })
     .catch(console.log);
+  }
+
+  removeContainer(containerId) {  // eslint-disable-line class-methods-use-this
+    return new Promise((res) => {
+      const sp = spawn('docker', ['rm', '-f', containerId]);
+      const outArr = [];
+
+      sp.stdout.on('data', (data) => {
+        outArr.push(data);
+      });
+
+      sp.stderr.on('data', (data) => {
+        res(data);
+      });
+
+      sp.on('close', () => {
+        res(outArr);
+      });
+    });
+  }
+
+  removeImage(imageId) {  // eslint-disable-line class-methods-use-this
+    return new Promise((res) => {
+      const sp = spawn('docker', ['rmi', imageId]);
+      const outArr = [];
+
+      sp.stdout.on('data', (data) => {
+        outArr.push(data);
+      });
+
+      sp.stderr.on('data', (data) => {
+        res(data);
+      });
+
+      sp.on('close', () => {
+        res(outArr);
+      });
+    });
   }
 
   /**
