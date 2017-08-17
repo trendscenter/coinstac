@@ -1,14 +1,30 @@
 r.db('coinstac').table('Computations').insert([
   {
-    inputs: [[
-       {
-           "defaultValue": [
-               "Right-Cerebellum-Cortex"
-           ],
-           "help": "Select Freesurfer region(s) of interest",
-           "label": "Freesurfer ROI",
-           "type": "select",
-           "values": [
+    meta: {
+      "repository": 'https://github.com/MRN-Code/decentralized-laplacian-ridge-regression',
+      "description": "Iterative decentralized ridge regression.",
+      "name": "Multi-Shot Ridge Regression",
+      "tags": [
+        "regression"
+      ],
+      "version": "3.1.11",
+      "dockerImage": "cstac-msrr"
+    },
+    local: {
+      "type": "function",
+      "command": "src/local.js",
+      "input": {
+        "FreeSurferRegion":
+        {
+          "type": "array",
+          "defaultValue": [
+            "Right-Cerebellum-Cortex"
+          ],
+          "help": "Select Freesurfer region(s) of interest",
+          "label": "Freesurfer ROI",
+          "type": "select",
+          "items": "string",
+          "values": [
                "3rd-Ventricle",
                "4th-Ventricle",
                "5th-Ventricle",
@@ -75,37 +91,116 @@ r.db('coinstac').table('Computations').insert([
                "SurfaceHoles",
                "TotalGrayVol",
                "WM-hypointensities"
-           ]
-       },
-       {
-           "defaultValue": 250,
-           "label": "Iteration count",
-           "type": "number"
-       },
-       {
-           "defaultValue": 0,
-           "label": "Lambda",
-           "max": 1,
-           "min": 0,
-           "step": 0.05,
-           "type": "number"
-       },
-       {
-           "defaultValue": '[{"name": "Is Control?","type": "boolean"}]',
-           "label": "Covariates",
-           "type": "covariates"
-       }
-   ]],
-    meta: {
-   "description": "Iterative decentralized ridge regression.",
-   "name": "Multi-Shot Ridge Regression",
-   "tags": [
-       "regression"
-   ]
-},
-    name: 'laplacian-noise-ridge-regression',
-    url: 'https://github.com/MRN-Code/decentralized-laplacian-ridge-regression',
-    version: '3.1.11'
+          ]
+          
+        },
+        "iterationCount":
+        {
+          "defaultValue": 250,
+          "label": "Iteration count",
+          "type": "number"
+        },
+        "lambda":
+        {
+          "defaultValue": 0,
+          "label": "Lambda",
+          "max": 1,
+          "min": 0,
+          "step": 0.05,
+          "type": "number"
+        },
+        "covariates":
+        {
+          "defaultValue": '[{"name": "Is Control?","type": "boolean"}]',
+          "label": "Covariates",
+          "type": "array",
+          "items": ["boolean", "number"]
+        }
+      },
+      "output": {
+        "type": "function",
+        "command": "src/remote.js",
+        "betaVector": {
+          "type": "array",
+          "label": "Beta Vector",
+          "items": "number"
+        },
+        "localCount": {
+          "type": "array",
+          "label": "Local Count",
+          "items": "number"
+        },
+        "localMeanY": {
+          "type": "number",
+          "label": "Local Mean Y",
+        },
+        "rSquared": {
+          "type": "number",
+          "lable": "R squared"
+        },
+        "tValue": {
+          "type": "number",
+          "label": "T value",
+        },
+        "pValue": {
+          "type": "number",
+          "label": "P Value",
+        },
+        "biasedX": {
+          "type": "number",
+          "label": "Biased Xs",
+        },
+        "y": {
+          "type": "number",
+          "label": "Y",
+        }
+      }
+    },
+    "remote": {
+      "input": {
+        "betaCount": {
+          "type": "number",
+          "label": "Beta Count",
+          "help": "Beta Vector size"
+        },
+        "userCount": {
+          "type": "number",
+          "label": "User Count",
+          "help": "Number of Users"
+
+        },
+        "localMeanY": {
+          "type": "number",
+          "label": "Local Mean Y",
+        },
+        "yLabel": {
+          "type": "number",
+          "label": "Y Label",
+        },
+        "xLabel": {
+          "type": "number",
+          "label": "X Label",
+        }
+      },
+      "output": {
+        "averageBetaVector": {
+          "type": "array",
+          "label": "Average Beta Vector",
+        },
+        "globalMeanY": {
+          "type": "number",
+          "label": "Global Mean Y",
+        },
+        "xLabel": {
+          "type": "string",
+          "label": "X Label",
+        },
+        "yLabel": {
+          "type": "string",
+          "label": "Y Label",
+        }
+      }
+    }
   }
 ])
 
@@ -113,15 +208,31 @@ r.db('coinstac').table('Computations').insert([
 
 r.db('coinstac').table('Computations').insert([
   {
-    inputs: [[
-       {
-           "defaultValue": [
-               "Right-Cerebellum-Cortex"
-           ],
-           "help": "Select Freesurfer region(s) of interest",
-           "label": "Freesurfer ROI",
-           "type": "select",
-           "values": [
+    meta: {
+      "repository": "https://github.com/MRN-Code/decentralized-single-shot-ridge-regression",
+      "description": "Decentralized ridge regression.",
+      "name": "Single-Shot Ridge Regression",
+      "tags": [
+        "regression"
+      ],
+      "version": "v1.1.10",
+      "dockerImage": "cstac-ssrr"
+    },
+    local: {
+      "type": "function",
+      "command": "src/local.js",
+      "input": {
+        "FreeSurferRegion":
+        {
+          "type": "array",
+          "defaultValue": [
+            "Right-Cerebellum-Cortex", "Left-Cerebellum-Cortex"
+          ],
+          "help": "Select Freesurfer region(s) of interest",
+          "label": "Freesurfer ROI",
+          "type": "select",
+          "items": "string",
+          "values": [
                "3rd-Ventricle",
                "4th-Ventricle",
                "5th-Ventricle",
@@ -188,30 +299,108 @@ r.db('coinstac').table('Computations').insert([
                "SurfaceHoles",
                "TotalGrayVol",
                "WM-hypointensities"
-           ]
-       },
-       {
-           "defaultValue": 0,
-           "label": "Lambda",
-           "max": 1,
-           "min": 0,
-           "step": 0.05,
-           "type": "number"
-       },
-       {
-           "label": "Covariates",
-           "type": "covariates"
-       }
-    ]],
-    meta: {
-      "description": "Decentralized ridge regression.",
-      "name": "Single-Shot Ridge Regression",
-      "tags": [
-          "regression"
-      ]
+          ]
+          
+        },
+        "lambda":
+        {
+          "defaultValue": 0,
+          "label": "Lambda",
+          "max": 1,
+          "min": 0,
+          "step": 0.05,
+          "type": "number"
+        },
+        "covariates":
+        {
+          "label": "Covariates",
+          "type": "array",
+          "items": ["boolean", "number"]
+        }
+      },
+      "output": {
+        "type": "function",
+        "command": "src/remote.js",
+        "betaVector": {
+          "type": "array",
+          "label": "Beta Vector",
+          "items": "number"
+        },
+        "localCount": {
+          "type": "array",
+          "label": "Local Count",
+          "items": "number"
+        },
+        "localMeanY": {
+          "type": "number",
+          "label": "Local Mean Y",
+        },
+        "rSquared": {
+          "type": "number",
+          "lable": "R squared"
+        },
+        "tValue": {
+          "type": "number",
+          "label": "T value",
+        },
+        "pValue": {
+          "type": "number",
+          "label": "P Value",
+        },
+        "biasedX": {
+          "type": "number",
+          "label": "Biased Xs",
+        },
+        "y": {
+          "type": "number",
+          "label": "Y",
+        }
+      }
     },
-    name: 'decentralized-single-shot-ridge-regression',
-    url: 'https://github.com/MRN-Code/decentralized-single-shot-ridge-regression',
-    version: '1.1.10'
+    "remote": {
+      "input": {
+        "betaCount": {
+          "type": "number",
+          "label": "Beta Count",
+          "help": "Beta Vector size"
+        },
+        "userCount": {
+          "type": "number",
+          "label": "User Count",
+          "help": "Number of Users"
+
+        },
+        "localMeanY": {
+          "type": "number",
+          "label": "Local Mean Y",
+        },
+        "yLabel": {
+          "type": "number",
+          "label": "Y Label",
+        },
+        "xLabel": {
+          "type": "number",
+          "label": "X Label",
+        }
+      },
+      "output": {
+        "averageBetaVector": {
+          "type": "array",
+          "label": "Average Beta Vector",
+        },
+        "globalMeanY": {
+          "type": "number",
+          "label": "Global Mean Y",
+        },
+        "xLabel": {
+          "type": "string",
+          "label": "X Label",
+        },
+        "yLabel": {
+          "type": "string",
+          "label": "Y Label",
+        }
+      }
+    }
   }
 ])
