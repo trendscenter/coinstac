@@ -28,6 +28,7 @@
     "prop-types": "^15.5.10",
     "react": "^15.5.4",
     "react-bootstrap": "^0.31.2",
+    "react-apollo": "^1.4.8",
     "react-dom": "^15.5.4",
     "react-notification-system": "^0.2.14",
     "react-redux": "^5.0.5",
