@@ -24,10 +24,12 @@ class ComputationRegistry {
 
   getAllComputations() {
     // TODO: Return IDs, image name and comp names from all computations
+    console.log('getComps');
   }
 
   getMetadataForName(imageName) {
     // TODO: Return all metadata for given image name
+    console.log('getMetadata');
   }
 
   /**
@@ -50,6 +52,7 @@ class ComputationRegistry {
 
   validateComputation(id) {
     // TODO: Return boolean for whether or not computation is approved
+    console.log('validate');
   }
 
   /**
@@ -62,6 +65,7 @@ class ComputationRegistry {
    */
   addComputation(comp) { // eslint-disable-line class-methods-use-this
     // TODO: Insert passed-in computation schema to DB
+    console.log('addComp');
   }
 
   /**
@@ -70,6 +74,7 @@ class ComputationRegistry {
    */
   removeComputation(id) { // eslint-disable-line class-methods-use-this
     // TODO: Remove passed-in computation id from DB
+    console.log('removeComp');
   }
 
   /**
