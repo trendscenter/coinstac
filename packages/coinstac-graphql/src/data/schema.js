@@ -2,36 +2,75 @@ const { makeExecutableSchema } = require('graphql-tools');
 const resolvers = require('./resolvers');
 
 const typeDefs = `
-  type ActiveInputValue {
-    name: String
-    type: String
+  type ComputationIOItem {
+    type: String,
+    defaultValue: [String],
+    values: [String],
+    help: String,
+    label: String,
+    items: String,
+    max: Int,
+    min: Int,
+    step: Float,
   }
 
   # Computation inputs are described by computation authors
-  type ComputationInput {
-    defaultValue: String
-    type: String!
-    label: String!
-    help: String
-    max: Int
-    min: Int
-    step: Float
-    values: [String]
+  type ComputationRemoteInput {
+    betaCount: ComputationIOItem,
+    userCount: ComputationIOItem,
+    localMeanY: ComputationIOItem,
+    yLabel: ComputationIOItem,
+    xLabel: ComputationIOItem
+  }
+
+  type ComputationRemoteOutput {
+    averageBetaVector: ComputationIOItem,
+    globalMeanY: ComputationIOItem,
+    xLabel: ComputationIOItem,
+    yLabel: ComputationIOItem
+  }
+
+  type ComputationLocalInput {
+    freeSurferRegion: ComputationIOItem,
+    lambda: ComputationIOItem,
+    covariates: ComputationIOItem
+  }
+
+  type ComputationLocalOutput {
+    betaVector: ComputationIOItem,
+    localCount: ComputationIOItem,
+    localMeanY: ComputationIOItem
+    rSquared: ComputationIOItem,
+    tValue: ComputationIOItem,
+    pValue: ComputationIOItem,
+    biasedX: ComputationIOItem.
+    y: ComputationIOItem
+  }
+
+  union ComputationLocaleInput = ComputationLocalInput | ComputationRemoteInput
+
+  union ComputationLocaleOutput = ComputationLocalOutput | ComputationRemoteOutput
+
+  type ComputationLocale {
+    type: String,
+    command: String,
+    input: ComputationLocaleInput,
+    output: ComputationLocaleOutput
   }
 
   type ComputationMeta {
     description: String
     name: String!
     tags: [String]
+    version: String
+    dockerImage: String
   }
 
   type Computation {
     id: ID!
     meta: ComputationMeta
-    name: String!
-    url: String!
-    version: String!
-    inputs: [[ComputationInput]]
+    local: ComputationLocale
+    remote: ComputationLocale
   }
 
   # Should owners/users be an array of user objects?
@@ -74,6 +113,8 @@ const typeDefs = `
   # This is the general mutation description
   type Mutation {
     # This is an individual mutation description
+    addComputation(computation: Computation)
+    removeComputation(compId: ID)
     deleteConsortiumById(consortiumId: ID): String
     joinConsortium(username: String, consortiumId: ID): Consortium
     setActiveComputation(computationId: ID, consortiumId: ID): String
@@ -86,7 +127,8 @@ const typeDefs = `
   type Query {
     # This is a description of the fetchAllComputations query
     fetchAllComputations: [Computation]
-    fetchComputationById(computationId: ID): Computation
+    fetchComputationComputationMetadataByName(computationName: String): Computation
+    validateComputation(compId: ID)
     fetchConsortiumById(consortiumId: ID): Consortium
     fetchRunForConsortium(consortiumId: ID): [Run]
     fetchRunForUser(username: String): [Run]
