@@ -22,7 +22,10 @@ const resolvers = {
         })
       )
     },
-    fetchComputationById: (_, args) => {
+    fetchComputationMetadataByName: (_, args) => {
+      return new Promise();
+    },
+    validateComputation: (_, args) => {
       return new Promise();
     },
     fetchConsortiumById: (_, args) => {
@@ -39,6 +42,12 @@ const resolvers = {
     },
   },
   Mutation: {
+    addComputation: (_, args) => {
+      return new Promise();
+    },
+    removeComputation: (_, args) => {
+      return new Promise();
+    },
     deleteConsortiumById: (_, args) => {
       return new Promise();
     },
