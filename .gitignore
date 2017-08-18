@@ -41,6 +41,7 @@ scripts/docs-*
 coinstac-log.json
 npm-*
 .vscode
+rethinkdb_data
 
 # Computation definitions are placed in /computations in a 'remote' environment
 packages/coinstac-common/computations
