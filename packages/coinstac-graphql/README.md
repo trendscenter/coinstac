@@ -17,12 +17,17 @@ COINSTAC experiment using [GraphQL](http://graphql.org/), [Hapi](https://hapijs.
   * Start server: `npm run start`
   * View GraphiQL: http://localhost:3100/graphiql
   * Query Computations via GraphiQL:
-  ```json {
+  ```json 
+    {
       fetchAllComputations {
-        url
-        name
+        id
+        meta {
+          description
+          version
+          dockerImage
+        }
       }
-    } 
+    }
   ```
 
 ## Todo
