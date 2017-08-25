@@ -9,10 +9,9 @@ class UIAdapter {
    */
   pullImage(payload) {  // eslint-disable-line class-methods-use-this
     return new Promise((res) => {
-      const sp = spawn('docker', ['pull', payload.img], { stdio: ['pipe', process.stdout, 'pipe'] });
+      const sp = spawn('docker', ['pull', payload.img]);
 
       sp.stdout.on('data', (data) => {
-        console.log(data.toString());
         payload.window.webContents.send('docker-out', data.toString());
       });
 

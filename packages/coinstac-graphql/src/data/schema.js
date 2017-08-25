@@ -1,76 +1,29 @@
 const { makeExecutableSchema } = require('graphql-tools');
 const resolvers = require('./resolvers');
+const compFields = require('./computation-fields');
 
 const typeDefs = `
-  type ComputationIOItem {
-    type: String
-    defaultValue: [String]
-    values: [String]
-    help: String
-    label: String
-    items: String
-    max: Int
-    min: Int
-    step: Float
-  }
-
-  # Computation inputs are described by computation authors
-  type ComputationRemoteInput {
-    betaCount: ComputationIOItem
-    userCount: ComputationIOItem
-    localMeanY: ComputationIOItem
-    yLabel: ComputationIOItem
-    xLabel: ComputationIOItem
-  }
-
-  type ComputationRemoteOutput {
-    averageBetaVector: ComputationIOItem
-    globalMeanY: ComputationIOItem
-    xLabel: ComputationIOItem
-    yLabel: ComputationIOItem
-  }
-
-  type ComputationLocalInput {
-    freeSurferRegion: ComputationIOItem
-    lambda: ComputationIOItem
-    covariates: ComputationIOItem
-  }
-
-  type ComputationLocalOutput {
-    betaVector: ComputationIOItem
-    localCount: ComputationIOItem
-    localMeanY: ComputationIOItem
-    rSquared: ComputationIOItem
-    tValue: ComputationIOItem
-    pValue: ComputationIOItem
-    biasedX: ComputationIOItem
-    y: ComputationIOItem
-  }
-
-  union ComputationLocaleInput = ComputationLocalInput | ComputationRemoteInput
-
-  union ComputationLocaleOutput = ComputationLocalOutput | ComputationRemoteOutput
-
-  type ComputationLocale {
-    type: String
-    command: String
-    input: ComputationLocaleInput
-    output: ComputationLocaleOutput
-  }
+  scalar JSON
 
   type ComputationMeta {
-    description: String
-    name: String!
-    tags: [String]
-    version: String
-    dockerImage: String
+    ${compFields.computationMetaFields()}
+  }
+
+  input ComputationMetaInput {
+    ${compFields.computationMetaFields()}
   }
 
   type Computation {
     id: ID!
     meta: ComputationMeta
-    local: ComputationLocale
-    remote: ComputationLocale
+    local: JSON
+    remote: JSON
+  }
+
+  input ComputationInput {
+    meta: ComputationMetaInput
+    local: JSON
+    remote: JSON
   }
 
   # Should owners/users be an array of user objects?
@@ -113,7 +66,7 @@ const typeDefs = `
   # This is the general mutation description
   type Mutation {
     # Stringify incoming computation, parse prior to insertion call
-    addComputation(computation: String): String
+    addComputation(computationSchema: ComputationInput): String
     removeComputation(compId: ID): String
     deleteConsortiumById(consortiumId: ID): String
     joinConsortium(username: String, consortiumId: ID): Consortium

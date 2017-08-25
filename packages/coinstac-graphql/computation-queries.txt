@@ -8,15 +8,14 @@ r.db('coinstac').table('Computations').insert([
         "regression"
       ],
       "version": "3.1.11",
-      "dockerImage": "cstac-msrr"
+      "dockerImage": "mongo"
     },
     local: {
       "type": "function",
       "command": "src/local.js",
       "input": {
-        "FreeSurferRegion":
+        "freeSurferRegion":
         {
-          "type": "array",
           "defaultValue": [
             "Right-Cerebellum-Cortex"
           ],
@@ -136,7 +135,7 @@ r.db('coinstac').table('Computations').insert([
         },
         "rSquared": {
           "type": "number",
-          "lable": "R squared"
+          "label": "R squared"
         },
         "tValue": {
           "type": "number",
@@ -222,7 +221,7 @@ r.db('coinstac').table('Computations').insert([
       "type": "function",
       "command": "src/local.js",
       "input": {
-        "FreeSurferRegion":
+        "freeSurferRegion":
         {
           "type": "array",
           "defaultValue": [
@@ -337,7 +336,7 @@ r.db('coinstac').table('Computations').insert([
         },
         "rSquared": {
           "type": "number",
-          "lable": "R squared"
+          "label": "R squared"
         },
         "tValue": {
           "type": "number",
