@@ -62,19 +62,4 @@ loadConfig()
     return app.core.computationRegistryNew
       .pullPipelineComputations({ window: app.mainWindow, comps: params });
   });
-
-  ipcPromise.on('get-images', () => {
-    return app.core.computationRegistryNew
-      .getLocalImages();
-  });
-
-  ipcPromise.on('remove-container', (containerId) => {
-    return app.core.computationRegistryNew
-      .removeContainer(containerId);
-  });
-
-  ipcPromise.on('remove-image', (imageId) => {
-    return app.core.computationRegistryNew
-      .removeImage(imageId);
-  });
 });

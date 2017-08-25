@@ -233,30 +233,18 @@ function mapStateToProps(state, { params: { consortiumId, resultId } }) {
 }
 
 const consortiumControllerData = gql`
-   query ConsortiumControllerQuery {
-     fetchAllComputations {
-       id
-       name
-       version
-       meta {
-         description
-         name
-         tags
-       }
-       url
-       inputs {
-         defaultValue
-         type
-         label
-         help
-         max
-         min
-         step
-         values
-       }
-     }
-   }
- `;
+  query ConsortiumControllerQuery {
+    fetchAllComputations {
+      id
+      meta {
+        name
+        description
+        version
+        dockerImage
+      }
+    }
+  }
+`;
 
 const ConsortiumControllerWithData = graphql(consortiumControllerData, {
   props: ({ data: { loading, fetchAllComputations } }) => ({

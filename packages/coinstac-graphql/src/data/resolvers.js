@@ -1,4 +1,5 @@
 const rethink = require('rethinkdb');
+const GraphQLJSON = require('graphql-type-json');
 
 let connection = null;
 
@@ -10,6 +11,7 @@ rethink.connect({ host: 'localhost', port: 28015, db: 'coinstac' },
 
 /* eslint-disable */
 const resolvers = {
+  JSON: GraphQLJSON,
   Query: {
     fetchAllComputations: () => {
       return new Promise ((res, rej) => 
@@ -23,7 +25,17 @@ const resolvers = {
       )
     },
     fetchComputationMetadataByName: (_, args) => {
-      return new Promise();
+      return new Promise ((res, rej) =>
+        rethink.table('Computations').filter({ meta: { name: args.computationName } })
+          .run(connection, (error, cursor) => {
+            if (error) throw error;
+            return cursor.toArray(function(err, result) {
+              if (err) throw err;
+              console.log(result);
+              res(result[0]);
+            });
+          })
+      )
     },
     validateComputation: (_, args) => {
       return new Promise();
@@ -43,7 +55,12 @@ const resolvers = {
   },
   Mutation: {
     addComputation: (_, args) => {
-      return new Promise();
+      return new Promise ((res, rej) =>
+        rethink.table('Computations').insert(
+          args.computationSchema
+        )
+          .run(connection)
+      )
     },
     removeComputation: (_, args) => {
       return new Promise();

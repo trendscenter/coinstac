@@ -23,6 +23,7 @@ const RemotePipelineRunnerPool =
   require('./models/pipeline/runner/pool/remote-pipeline-runner-pool');
 const User = require('./models/user');
 const dbRegistry = require('./services/db-registry');
+const dockerManager = require('./services/docker-manager');
 const getSyncedDatabase = require('./utils/get-synced-database');
 
 
@@ -62,6 +63,7 @@ module.exports = {
   },
   services: {
     dbRegistry,
+    dockerManager,
   },
   utils: {
     getSyncedDatabase,

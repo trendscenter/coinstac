@@ -13,6 +13,7 @@
     "apollo-server-hapi": "^1.0.2",
     "graphql": "^0.10.5",
     "graphql-tools": "^1.1.0",
+    "graphql-type-json": "^0.1.4",
     "hapi": "^16.5.0",
     "rethinkdb": "^2.3.3"
   }

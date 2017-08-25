@@ -21,17 +21,7 @@ class ComputationRegistry {
   /**
    * Client
    */
-
-  getAllComputations() {
-    // TODO: Return IDs, image name and comp names from all computations
-    console.log('getComps');
-  }
-
-  getMetadataForName(imageName) {
-    // TODO: Return all metadata for given image name
-    console.log('getMetadata');
-  }
-
+  
   /**
    * Generate array of docker pull promises and wait until aa resolved to return
    * @param {Object} payload
@@ -40,6 +30,7 @@ class ComputationRegistry {
    * @return {Promise<array>} Resolves to array of success flags for each computation in comps array
    */
   pullPipelineComputations(payload) {
+    /*
     const compsP = payload.comps.reduce((arr, img) => {
       arr.push(this.adapter.pullImage(Object.assign({}, payload, { img })));
       return arr;
@@ -48,6 +39,7 @@ class ComputationRegistry {
     return Promise.all(compsP)
     .then(res => res)
     .catch(console.log);
+    */
   }
 
   validateComputation(id) {
@@ -58,24 +50,6 @@ class ComputationRegistry {
   /**
    * Server
    */
-
-  /**
-   * Submit computation schema for approval
-   * @param {Object} comp - authors computation schema
-   */
-  addComputation(comp) { // eslint-disable-line class-methods-use-this
-    // TODO: Insert passed-in computation schema to DB
-    console.log('addComp');
-  }
-
-  /**
-   * Remove computation schema
-   * @param {int} id - authors computation schema
-   */
-  removeComputation(id) { // eslint-disable-line class-methods-use-this
-    // TODO: Remove passed-in computation id from DB
-    console.log('removeComp');
-  }
 
   /**
    * On server start, pull in comps from whitelist and download via docker

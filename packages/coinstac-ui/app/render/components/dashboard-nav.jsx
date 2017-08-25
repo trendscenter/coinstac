@@ -26,6 +26,13 @@ export default function DashboardNav() {
           My Files
         </NavItem>
       </LinkContainer>
+      <LinkContainer to="/submit-computation">
+        <NavItem>
+          <span aria-hidden="true" className="glyphicon glyphicon-export" />
+          {' '}
+          Submit Computation
+        </NavItem>
+      </LinkContainer>
       <LinkContainer to="/test">
         <NavItem>
           <span aria-hidden="true" className="glyphicon glyphicon-sunglasses" />
