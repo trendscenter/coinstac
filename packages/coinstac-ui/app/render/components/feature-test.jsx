@@ -46,7 +46,7 @@ class FeatureTest extends Component { // eslint-disable-line
   pullComps(e) {
     e.preventDefault();
     this.props.pullComputations([this.img1.value, this.img2.value, this.img3.value])
-    .then((res) => {
+    .then(() => {
       this.img1.value = null;
       this.img2.value = null;
       this.img3.value = null;
@@ -80,12 +80,14 @@ class FeatureTest extends Component { // eslint-disable-line
           </Table>
         }
 
-        {this.state.activeComp && 
+        {this.state.activeComp &&
           <div>
             {this.state.activeComp.meta.name}
             <ComputationIO computationName={this.state.activeComp.meta.name} />
           </div>
         }
+
+        <p style={{ fontWeight: 'bold' }}>Be sure to include tags (eg: ':latest') or you'll be downloading all versions.</p>
 
         <Form horizontal onSubmit={this.pullComps}>
           <FormGroup controlId="img1">
@@ -131,7 +133,13 @@ class FeatureTest extends Component { // eslint-disable-line
         </Form>
 
         {dockerOut &&
-          <pre style={styles.outputBox}>{dockerOut}</pre>
+          <pre style={styles.outputBox}>
+            {dockerOut.map(elem => (
+              <div key={elem.id && elem.id !== 'latest' ? elem.id : elem.status}>
+                {elem.id ? `${elem.id}: ` : ''}{elem.status} {elem.progress}
+              </div>
+            ))}
+          </pre>
         }
       </div>
     );
@@ -139,7 +147,8 @@ class FeatureTest extends Component { // eslint-disable-line
 }
 
 FeatureTest.propTypes = {
-  dockerOut: PropTypes.string.isRequired,
+  computations: PropTypes.array.isRequired,
+  dockerOut: PropTypes.array.isRequired,
   pullComputations: PropTypes.func.isRequired,
   updateDockerOutput: PropTypes.func.isRequired,
 };

@@ -13,6 +13,10 @@ COINSTAC experiment using [GraphQL](http://graphql.org/), [Hapi](https://hapijs.
   * Add computations to table: http://localhost:8080/#dataexplorer
     * `r.db('coinstac').table('Computations').insert([{ _Your Computation Here_ }])`
     * Two example Computation inserts can be found in `computations-queries.txt`
+    * Preferrably, you can add computations in the UI through the `Submit Computations ` navigation item.
+      * There are two json files in this directory, Multi-Shot and Single-Shot, that can be uploaded.
+      * There are still some state updating errors using this method that might require you to reload the application
+      to see the computations appear in the `Feature Test` nav item. They should be worked out shortly. 
   * Navigate into `packages/coinstac-graphql` and `npm i`
   * Start server: `npm run start`
   * View GraphiQL: http://localhost:3100/graphiql

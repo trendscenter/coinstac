@@ -72,25 +72,14 @@ const queueJob = (jobId, input, opts) => {
 };
 
 const pullImage = (computation) => {
-  return new Promise ((res) => {
+  return new Promise((res) => {
     docker.pull(computation, (err, stream) => {
-    
+      res(stream);
     });
   });
 };
 
-const pullComputations = (computations) => {
-  const compsP = payload.comps.reduce((arr, img) => {
-      arr.push(pullImage(img));
-      return arr;
-    }, []);
-
-    return Promise.all(compsP)
-    .then(res => res)
-    .catch(console.log);
-};
-
 module.exports = {
-  pullComputations,
+  pullImage,
   queueJob,
 };

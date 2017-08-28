@@ -7,7 +7,7 @@
       "regression"
     ],
     "version": "3.1.11",
-    "dockerImage": "mongo"
+    "dockerImage": "mongo:latest"
   },
   "local": {
     "type": "function",

@@ -1,4 +1,5 @@
-const { spawn } = require('child_process');
+const common = require('coinstac-common');
+const { compact } = require('lodash');
 
 class UIAdapter {
   /**
@@ -7,20 +8,19 @@ class UIAdapter {
    * @param {string} payload.img
    * @param {Object} window - for UI calls only
    */
-  pullImage(payload) {  // eslint-disable-line class-methods-use-this
-    return new Promise((res) => {
-      const sp = spawn('docker', ['pull', payload.img]);
+  pullImageWrapper(payload) {  // eslint-disable-line class-methods-use-this
+    common.services.dockerManager.pullImage(payload.img)
+    .then((stream) => {
+      return new Promise((res) => {
+        stream.on('data', (data) => {
+          let output = compact(data.toString().split('\r\n'));
+          output = output.map(JSON.parse);
+          payload.window.webContents.send('docker-out', output);
+        });
 
-      sp.stdout.on('data', (data) => {
-        payload.window.webContents.send('docker-out', data.toString());
-      });
-
-      sp.stderr.on('data', (data) => {
-        payload.window.webContents.send('docker-out', data.toString());
-      });
-
-      sp.on('close', (code) => {
-        res(code);
+        stream.on('close', (code) => {
+          res(code);
+        });
       });
     })
     .catch(console.log);

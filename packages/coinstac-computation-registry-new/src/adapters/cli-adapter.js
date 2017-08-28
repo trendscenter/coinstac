@@ -1,4 +1,4 @@
-const { spawn } = require('child_process');
+const common = require('coinstac-common');
 
 class CLIAdapter {
   /**
@@ -6,12 +6,15 @@ class CLIAdapter {
    * @param {Object} payload
    * @param {string} payload.img
    */
-  pullImage(payload) { // eslint-disable-line class-methods-use-this
-    return new Promise((res) => {
-      const sp = spawn('docker', ['pull', payload.img], { stdio: 'inherit' });
+  pullImageWrapper(payload) { // eslint-disable-line class-methods-use-this
+    common.services.dockerManager.pullImage(payload.img)
+    .then((stream) => {
+      return new Promise((res) => {
+        stream.pipe(process.stdout);
 
-      sp.on('close', (code) => {
-        res(code);
+        stream.on('close', (code) => {
+          res(code);
+        });
       });
     })
     .catch(console.log);

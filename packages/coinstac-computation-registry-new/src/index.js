@@ -1,7 +1,9 @@
 'use strict';
 
+const axios = require('axios');
+const { compact } = require('lodash');
 const CLIAdapter = require('./adapters/cli-adapter');
-const TestAdapter = require('./adapters/test-adapter');
+// const TestAdapter = require('./adapters/test-adapter');
 const UIAdapter = require('./adapters/ui-adapter');
 
 /**
@@ -21,7 +23,7 @@ class ComputationRegistry {
   /**
    * Client
    */
-  
+
   /**
    * Generate array of docker pull promises and wait until aa resolved to return
    * @param {Object} payload
@@ -29,17 +31,15 @@ class ComputationRegistry {
    * @param {Object} payload.window UI Calls Only
    * @return {Promise<array>} Resolves to array of success flags for each computation in comps array
    */
-  pullPipelineComputations(payload) {
-    /*
-    const compsP = payload.comps.reduce((arr, img) => {
-      arr.push(this.adapter.pullImage(Object.assign({}, payload, { img })));
+  pullPipelineComputations(payload) { // eslint-disable-line class-methods-use-this
+    const compsP = compact(payload.comps).reduce((arr, img) => {
+      arr.push(this.adapter.pullImageWrapper(Object.assign({}, payload, { img })));
       return arr;
     }, []);
 
     return Promise.all(compsP)
     .then(res => res)
     .catch(console.log);
-    */
   }
 
   validateComputation(id) {
@@ -58,8 +58,11 @@ class ComputationRegistry {
    * @return {Promise<string>} Success flag
    */
   serverStart() {
-    // TODO: comps = DB Pull of approved computations
-    return this.pullPipelineComputations({ comps });
+    axios.get('http://localhost:3100/graphql?query={fetchAllComputations{meta{dockerImage}}}')
+    .then((res) => {
+      const comps = res.data.data.fetchAllComputations.map(comp => comp.meta.dockerImage);
+      return this.pullPipelineComputations({ comps });
+    });
   }
 }
 
