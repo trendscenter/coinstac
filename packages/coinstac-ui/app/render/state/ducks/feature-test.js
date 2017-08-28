@@ -27,7 +27,7 @@ export const pullComputations = applyAsyncLoading((computations) => {
 export const updateDockerOutput = output => ({ payload: output, type: UPDATE_DOCKER_OUTPUT });
 
 const INITIAL_STATE = {
-  dockerOut: '',
+  dockerOut: [],
   dlComplete: false,
   localImages: [],
 };
@@ -36,11 +36,30 @@ const INITIAL_STATE = {
 export default function reducer(state = INITIAL_STATE, action) {
   switch (action.type) {
     case CLEAR_DOCKER_OUTPUT:
-      return { ...state, dockerOut: '' };
+      return { ...state, dockerOut: [] };
     case PULL_COMPUTATIONS:
       return { ...state, dlComplete: action.payload };
-    case UPDATE_DOCKER_OUTPUT:
-      return { ...state, dockerOut: state.dockerOut.concat(action.payload) };
+    case UPDATE_DOCKER_OUTPUT: {
+      const newDockerOut = [...state.dockerOut];
+      action.payload.forEach((newOut) => {
+        let elemIndex = -1;
+
+        if (newOut.id) {
+          elemIndex = newDockerOut.findIndex(currentOut => newOut.id === currentOut.id);
+        }
+
+        if (elemIndex === -1 && !newOut.id) {
+          elemIndex = newDockerOut.findIndex(currentOut => newOut.status === currentOut.status);
+        }
+
+        if (elemIndex === -1 || newOut.id === 'latest') {
+          newDockerOut.push(newOut);
+        } else {
+          newDockerOut[elemIndex] = newOut;
+        }
+      });
+      return { ...state, dockerOut: newDockerOut };
+    }
     default:
       return state;
   }
