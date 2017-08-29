@@ -4,7 +4,21 @@ import {
 
 export const addComputationMetadata = gql`
   mutation AddJsonSchema($computationSchema: ComputationInput!) {
-    addComputation(computationSchema: $computationSchema)
+    addComputation(computationSchema: $computationSchema) {
+      id
+      meta {
+        name
+        description
+        version
+        dockerImage
+      }
+    }
+  }
+`;
+
+export const deleteAllComputations = gql`
+  mutation DeleteAllJsonSchema {
+    removeAllComputations
   }
 `;
 

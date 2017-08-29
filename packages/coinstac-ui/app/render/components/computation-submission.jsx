@@ -3,15 +3,13 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { graphql } from 'react-apollo';
 import {
-  Form,
-  FormGroup,
-  FormControl,
-  Col,
+  Alert,
   Button,
-  Panel,
-  Table
 } from 'react-bootstrap';
-import { addComputationMetadata } from '../state/graphql-queries';
+import {
+  addComputationMetadata,
+  fetchComputationMetadata,
+} from '../state/graphql-queries';
 
 const styles = {
   topMargin: { marginTop: 10 },
@@ -21,8 +19,9 @@ class ComputationSubmission extends Component { // eslint-disable-line
   constructor(props) {
     super(props);
 
-    this.state = { activeSchema: {} };
+    this.state = { activeSchema: {}, submissionSuccess: null };
     this.getComputationSchema = this.getComputationSchema.bind(this);
+    this.submitSchema = this.submitSchema.bind(this);
   }
 
   getComputationSchema(e) {
@@ -38,16 +37,26 @@ class ComputationSubmission extends Component { // eslint-disable-line
       .catch(console.log);
   }
 
-  render() {
-    const { dockerOut, computations, submitSchema } = this.props;
+  submitSchema() {
+    this.props.submitSchema(this.state.activeSchema)
+    .then((res) => {
+      this.setState({ activeSchema: {} });
+      if (res.data.addComputation) {
+        this.setState({ submissionSuccess: true });
+      } else {
+        this.setState({ submissionSuccess: false });
+      }
+    });
+  }
 
+  render() {
     return (
       <div style={styles.topMargin}>
         <h1 className="h2">Computation Submission:</h1>
         <p>
-          Use the button below to upload your schema for review. Prior to submission, your schema will be
-          validated. Please fix any errors found therein to unlock the
-          <span style={{fontWeight: 'bold'}}> Submit</span> for review.
+          Use the button below to upload your schema for review. Prior to submission,
+          your schema will be validated. Please fix any errors found therein to unlock the
+          <span style={{ fontWeight: 'bold' }}> Submit</span> for review.
         </p>
         <Button
           bsStyle="primary"
@@ -61,10 +70,23 @@ class ComputationSubmission extends Component { // eslint-disable-line
           type="button"
           className={'pull-right'}
           disabled={!this.state.activeSchema.meta}
-          onClick={() => submitSchema(this.state.activeSchema)}
+          onClick={this.submitSchema}
         >
           Submit
         </Button>
+
+        {!this.state.activeSchema.meta && this.state.submissionSuccess &&
+          <Alert bsStyle="success" style={styles.topMargin}>
+            <strong>Success!</strong> Try another?
+          </Alert>
+        }
+
+        {!this.state.activeSchema.meta && this.state.submissionSuccess === false && 
+          <Alert bsStyle="danger" style={styles.topMargin}>
+            <strong>Error!</strong> Try again?
+          </Alert>
+        }
+
         {this.state.activeSchema.meta &&
           <pre style={styles.topMargin}>
             {JSON.stringify(this.state.activeSchema, null, 2)}
@@ -75,8 +97,20 @@ class ComputationSubmission extends Component { // eslint-disable-line
   }
 }
 
+ComputationSubmission.propTypes = {
+  submitSchema: PropTypes.func.isRequired,
+};
+
+// http://dev.apollodata.com/react/cache-updates.html
 export default graphql(addComputationMetadata, {
   props: ({ mutate }) => ({
-    submitSchema: (computationSchema) => mutate({ variables: { computationSchema } }),
+    submitSchema: computationSchema => mutate({
+      variables: { computationSchema },
+      update: (store, { data: { addComputation } }) => {
+        const data = store.readQuery({ query: fetchComputationMetadata });
+        data.fetchAllComputations.push(addComputation);
+        store.writeQuery({ query: fetchComputationMetadata, data });
+      },
+    }),
   }),
 })(ComputationSubmission);

@@ -2,17 +2,16 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { ipcRenderer } from 'electron';
-import { graphql } from 'react-apollo';
+import { graphql, compose } from 'react-apollo';
 import {
   Form,
   FormGroup,
   FormControl,
   Col,
   Button,
-  Panel,
-  Table
+  Table,
 } from 'react-bootstrap';
-import { fetchComputationMetadata } from '../state/graphql-queries'; 
+import { fetchComputationMetadata, deleteAllComputations } from '../state/graphql-queries';
 import {
   getCompIO,
   pullComputations,
@@ -38,7 +37,7 @@ class FeatureTest extends Component { // eslint-disable-line
     this.pullComps = this.pullComps.bind(this);
     this.setActiveComp = this.setActiveComp.bind(this);
   }
-  
+
   setActiveComp(comp) {
     this.setState({ activeComp: comp });
   }
@@ -55,11 +54,11 @@ class FeatureTest extends Component { // eslint-disable-line
   }
 
   render() {
-    const { dockerOut, computations } = this.props;
+    const { dockerOut, computations, deleteAllComputations } = this.props;
 
     return (
       <div style={styles.topMargin}>
-        {computations &&
+        {computations.length > 0 &&
           <Table striped bordered condensed style={styles.topMargin}>
             <thead>
               <tr>
@@ -72,12 +71,28 @@ class FeatureTest extends Component { // eslint-disable-line
                 return (
                   <tr key={`${comp.id}-row`}>
                     <td>{comp.meta.name}</td>
-                    <td><Button bsStyle="primary" onClick={() => this.setActiveComp(comp)}>Get IO</Button></td>
+                    <td>
+                      <Button bsStyle="primary" onClick={() => this.setActiveComp(comp)}>
+                        Get IO
+                      </Button>
+                    </td>
                   </tr>
-                )
+                );
               })}
             </tbody>
           </Table>
+        }
+
+        {computations.length > 0 &&
+          <div className={'clearfix'}>
+            <Button
+              bsStyle="danger"
+              onClick={() => deleteAllComputations()}
+              className={'pull-right'}
+            >
+              Delete All Computations
+            </Button>
+          </div>
         }
 
         {this.state.activeComp &&
@@ -148,6 +163,7 @@ class FeatureTest extends Component { // eslint-disable-line
 
 FeatureTest.propTypes = {
   computations: PropTypes.array.isRequired,
+  deleteAllComputations: PropTypes.func.isRequired,
   dockerOut: PropTypes.array.isRequired,
   pullComputations: PropTypes.func.isRequired,
   updateDockerOutput: PropTypes.func.isRequired,
@@ -157,12 +173,26 @@ function mapStateToProps({ featureTest: { dockerOut } }) {
   return { dockerOut };
 }
 
-const FeatureTestWithData = graphql(fetchComputationMetadata, {
-  props: ({ ownProps, data: { loading, fetchAllComputations } }) => ({
-    loading,
-    computations: fetchAllComputations,
+const FeatureTestWithData = compose(
+  graphql(fetchComputationMetadata, {
+    props: ({ ownProps, data: { loading, fetchAllComputations } }) => ({
+      loading,
+      computations: fetchAllComputations,
+    }),
   }),
-})(FeatureTest);
+  graphql(deleteAllComputations, {
+    props: ({ mutate }) => ({
+      deleteAllComputations: () => mutate({
+        update: (store) => {
+          const data = store.readQuery({ query: fetchComputationMetadata });
+          data.fetchAllComputations.length = 0;
+          store.writeQuery({ query: fetchComputationMetadata, data });
+        },
+      }),
+    }),
+  })
+)(FeatureTest);
+
 
 export default connect(mapStateToProps, {
   getCompIO,
