@@ -66,8 +66,9 @@ const typeDefs = `
   # This is the general mutation description
   type Mutation {
     # Stringify incoming computation, parse prior to insertion call
-    addComputation(computationSchema: ComputationInput): String
-    removeComputation(compId: ID): String
+    addComputation(computationSchema: ComputationInput): Computation
+    removeComputation(compId: ID): JSON
+    removeAllComputations: JSON
     deleteConsortiumById(consortiumId: ID): String
     joinConsortium(username: String, consortiumId: ID): Consortium
     setActiveComputation(computationId: ID, consortiumId: ID): String

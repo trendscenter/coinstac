@@ -57,9 +57,23 @@ const resolvers = {
     addComputation: (_, args) => {
       return new Promise ((res, rej) =>
         rethink.table('Computations').insert(
-          args.computationSchema
+          args.computationSchema,
+          { 
+            conflict: "replace",
+            returnChanges: true,
+          }
         )
-          .run(connection)
+          .run(connection, (error, result) => {
+            res(result.changes[0].new_val);
+          })
+      )
+    },
+    removeAllComputations: () => {
+      return new Promise ((res, rej) =>
+        rethink.table('Computations').delete()
+          .run(connection, (error, result) => {
+            res(result);
+          })
       )
     },
     removeComputation: (_, args) => {
