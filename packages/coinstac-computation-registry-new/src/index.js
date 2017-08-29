@@ -9,7 +9,7 @@ const UIAdapter = require('./adapters/ui-adapter');
 /**
  * ComputationRegistry
  * @class
- * @param string adapter Determines which adapter to use: cli or ui (Server uses cli)
+ * @param {string} adapter Determines which adapter to use: cli or ui (Server uses cli)
  */
 class ComputationRegistry {
   constructor(adapter) {
@@ -25,7 +25,7 @@ class ComputationRegistry {
    */
 
   /**
-   * Generate array of docker pull promises and wait until aa resolved to return
+   * Generate array of docker pull promises and wait until resolved to return
    * @param {Object} payload
    * @param {Array} payload.comps
    * @param {Object} payload.window UI Calls Only

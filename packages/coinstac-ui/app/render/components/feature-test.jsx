@@ -150,7 +150,10 @@ class FeatureTest extends Component { // eslint-disable-line
         {dockerOut &&
           <pre style={styles.outputBox}>
             {dockerOut.map(elem => (
-              <div key={elem.id && elem.id !== 'latest' ? elem.id : elem.status}>
+              <div
+                key={elem.id && elem.id !== 'latest' ? elem.id : elem.status}
+                style={elem.isErr ? { color: 'red' } : {}}
+              >
                 {elem.id ? `${elem.id}: ` : ''}{elem.status} {elem.progress}
               </div>
             ))}

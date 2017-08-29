@@ -6,21 +6,26 @@ class UIAdapter {
    * Wrap single docker pull command in a promise
    * @param {Object} payload
    * @param {string} payload.img
-   * @param {Object} window - for UI calls only
+   * @param {Object} payload.window - for UI calls only
    */
   pullImageWrapper(payload) {  // eslint-disable-line class-methods-use-this
     common.services.dockerManager.pullImage(payload.img)
-    .then((stream) => {
+    .then((result) => {
       return new Promise((res) => {
-        stream.on('data', (data) => {
-          let output = compact(data.toString().split('\r\n'));
-          output = output.map(JSON.parse);
-          payload.window.webContents.send('docker-out', output);
-        });
+        if (result.err) {
+          payload.window.webContents.send('docker-out', [{ status: result.err, isErr: true }]);
+          res(result.err);
+        } else {
+          result.stream.on('data', (data) => {
+            let output = compact(data.toString().split('\r\n'));
+            output = output.map(JSON.parse);
+            payload.window.webContents.send('docker-out', output);
+          });
 
-        stream.on('close', (code) => {
-          res(code);
-        });
+          result.stream.on('close', (code) => {
+            res(code);
+          });
+        }
       });
     })
     .catch(console.log);

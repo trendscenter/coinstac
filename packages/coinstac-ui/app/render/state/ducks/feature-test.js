@@ -14,6 +14,7 @@ export const pullComputations = applyAsyncLoading((computations) => {
     dispatch({ payload: '', type: CLEAR_DOCKER_OUTPUT });
     return ipcPromise.send('download-comps', computations)
     .then((res) => {
+      console.log(res);
       dispatch({ payload: true, type: PULL_COMPUTATIONS });
       return res;
     })

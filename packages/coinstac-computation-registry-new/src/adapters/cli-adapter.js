@@ -8,13 +8,17 @@ class CLIAdapter {
    */
   pullImageWrapper(payload) { // eslint-disable-line class-methods-use-this
     common.services.dockerManager.pullImage(payload.img)
-    .then((stream) => {
+    .then((result) => {
       return new Promise((res) => {
-        stream.pipe(process.stdout);
+        if (result.err) {
+          res(result.err);
+        } else {
+          result.stream.pipe(process.stdout);
 
-        stream.on('close', (code) => {
-          res(code);
-        });
+          result.stream.on('close', (code) => {
+            res(code);
+          });
+        }
       });
     })
     .catch(console.log);
