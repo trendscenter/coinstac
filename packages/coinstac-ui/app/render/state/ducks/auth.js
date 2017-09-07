@@ -1,5 +1,6 @@
 import { pick } from 'lodash';
 import app from 'ampersand-app';
+import axios from 'axios';
 import * as util from './util';
 import { applyAsyncLoading } from './loading';
 import { teardownPrivateBackgroundServices } from './bg-services';
@@ -9,12 +10,21 @@ const setUser = user => ({ type: SET_USER, user });
 
 export const login = applyAsyncLoading((reqUser) => {
   return (dispatch) => {
-    return app.core.initialize(pick(reqUser, ['password', 'username']))
-    .then((user) => {
-      dispatch(setUser(user));
-      return user;
-    })
-    .catch(util.notifyAndThrow);
+    return axios.post('http://localhost:3100/authenticate', reqUser)
+      .then(({ data: { id_token } }) => {
+        const user = { ...reqUser, email: `${reqUser.username}@coinstac.org`, label: reqUser.username };
+        localStorage.setItem('id_token', id_token);
+        dispatch(setUser(user));
+        return user;
+        // return app.core.initialize(pick(reqUser, ['password', 'username']))
+      });
+      /*
+      .then((user) => {
+        dispatch(setUser(user));
+        return user;
+      })
+      */
+      // .catch(util.notifyAndThrow);
   };
 });
 

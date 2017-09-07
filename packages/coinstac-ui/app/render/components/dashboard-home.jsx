@@ -9,10 +9,12 @@ import {
 } from 'react-apollo';
 import StatusItem from './status-item';
 // import { fetchComputations } from '../state/ducks/computations';
-import { fetchComputationMetadata } from '../state/graphql-queries'; 
-import {
+import { fetchComputationMetadata } from '../state/graphql-queries';
+
+/* import {
   fetchRemoteResultsForUser,
 } from '../state/ducks/results';
+*/
 
 class DashboardHome extends Component {
   constructor(props) {
@@ -23,16 +25,18 @@ class DashboardHome extends Component {
     };
   }
 
+/*
   componentWillMount() {
     const {
-      computations,
-      fetchRemoteResultsForUser,
+      // fetchRemoteResultsForUser,
       username,
     } = this.props;
 
     this.interval = setInterval(() => fetchRemoteResultsForUser(username), 2000);
   }
+*/
 
+/*
   componentWillUpdate() {
     const {
       computations,
@@ -52,6 +56,7 @@ class DashboardHome extends Component {
       });
     }
   }
+  */
 
   componentWillUnmount() {
     if (this.interval) {
@@ -93,7 +98,7 @@ DashboardHome.propTypes = {
     owners: PropTypes.arrayOf(PropTypes.string).isRequired,
     users: PropTypes.arrayOf(PropTypes.string).isRequired,
   })),
-  fetchRemoteResultsForUser: PropTypes.func.isRequired,
+  // fetchRemoteResultsForUser: PropTypes.func.isRequired,
   remoteResults: PropTypes.arrayOf(PropTypes.object),
   username: PropTypes.string,
 };
@@ -127,6 +132,4 @@ const DashHomeWithData = graphql(fetchComputationMetadata, {
   }),
 })(DashboardHome);
 
-export default connect(mapStateToProps, {
-  fetchRemoteResultsForUser,
-})(DashHomeWithData);
+export default connect(mapStateToProps)(DashHomeWithData);

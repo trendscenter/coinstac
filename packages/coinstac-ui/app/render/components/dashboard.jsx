@@ -4,7 +4,7 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import DashboardNav from './dashboard-nav';
 import UserAccountController from './user-account-controller';
-import { initPrivateBackgroundServices } from '../state/ducks/bg-services';
+// import { initPrivateBackgroundServices } from '../state/ducks/bg-services';
 import CoinstacAbbr from './coinstac-abbr';
 
 class Dashboard extends Component {
@@ -18,7 +18,7 @@ class Dashboard extends Component {
         app.logger.verbose('Redirecting login (no authorized user)');
         router.push('/login');
       } else {
-        this.props.initPrivateBackgroundServices();
+        // this.props.initPrivateBackgroundServices();
       }
     });
   }
@@ -61,7 +61,7 @@ Dashboard.contextTypes = {
 Dashboard.propTypes = {
   auth: PropTypes.object.isRequired,
   children: PropTypes.node.isRequired,
-  initPrivateBackgroundServices: PropTypes.func.isRequired,
+  // initPrivateBackgroundServices: PropTypes.func.isRequired,
 };
 
 function mapStateToProps({ auth }) {
@@ -70,6 +70,4 @@ function mapStateToProps({ auth }) {
   };
 }
 
-export default connect(mapStateToProps, {
-  initPrivateBackgroundServices,
-})(Dashboard);
+export default connect(mapStateToProps)(Dashboard);

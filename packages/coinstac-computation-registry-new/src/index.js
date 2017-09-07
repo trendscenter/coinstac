@@ -18,6 +18,18 @@ class ComputationRegistry {
     } else {
       this.adapter = new UIAdapter();
     }
+
+    this.id_token = '';
+  }
+
+  authenticateServer() {
+    // TODO: Make server user
+    return axios.post('http://localhost:3100/authenticate', { username: 'server', password: 'password' })
+    .then((token) => {
+      this.id_token = token.data.id_token;
+      axios.defaults.headers.common['Authorization'] = `Bearer ${this.id_token}`;
+      return this.id_token;
+    });
   }
 
   /**
@@ -58,7 +70,10 @@ class ComputationRegistry {
    * @return {Promise<string>} Success flag
    */
   serverStart() {
-    axios.get('http://localhost:3100/graphql?query={fetchAllComputations{meta{dockerImage}}}')
+    this.authenticateServer()
+    .then(() =>
+      axios.get('http://localhost:3100/graphql?query={fetchAllComputations{meta{dockerImage}}}')
+    )
     .then((res) => {
       const comps = res.data.data.fetchAllComputations.map(comp => comp.meta.dockerImage);
       return this.pullPipelineComputations({ comps });
