@@ -1,13 +1,12 @@
 import { Button, ControlLabel, FormControl, FormGroup } from 'react-bootstrap';
-import { findDOMNode } from 'react-dom';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 
 class FormLogin extends Component {
   data() {
     return {
-      username: findDOMNode(this.formUsername).value,
-      password: findDOMNode(this.formPassword).value,
+      username: this.formUsername.value,
+      password: this.formPassword.value,
     };
   }
   render() {
@@ -34,14 +33,14 @@ class FormLogin extends Component {
               <FormGroup controlId="login-username">
                 <ControlLabel>Username:</ControlLabel>
                 <FormControl
-                  ref={(c) => { this.formUsername = c; }}
+                  inputRef={(c) => { this.formUsername = c; }}
                   type="text"
                 />
               </FormGroup>
               <FormGroup controlId="login-password">
                 <ControlLabel>Password:</ControlLabel>
                 <FormControl
-                  ref={(c) => { this.formPassword = c; }}
+                  inputRef={(c) => { this.formPassword = c; }}
                   type="password"
                 />
               </FormGroup>
