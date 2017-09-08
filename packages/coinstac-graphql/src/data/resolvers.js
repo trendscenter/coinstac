@@ -1,81 +1,19 @@
 const rethink = require('rethinkdb');
 const GraphQLJSON = require('graphql-type-json');
-
-// let connection = null;
-
-function getConnection() {
-  return new Promise((res, rej) => {
-    rethink.connect({
-      host: 'localhost',
-      port: 28015,
-      db: 'coinstac',
-      user: 'admin',
-      password: 'admin',
-    },
-    (err, conn) => {
-      if (err) {
-        rej(err);
-      }
-
-      res(conn);
-    });
-  });
-}
-
-function isUserPermitted(tables, requestedTable, requestedPerms) {
-  return tables.findIndex(
-    ({ table, permissions }) => {
-      let isPermitted;
-
-      // Determine access to requested table
-      if (table === requestedTable) {
-        isPermitted = true;
-      } else {
-        return false;
-      }
-
-      // Determine permissions to requested table
-      for (let p = 0; p < requestedPerms.length; p += 1) {
-        if (permissions[requestedPerms[p]]) {
-          isPermitted = true;
-        } else {
-          isPermitted = false;
-          break;
-        }
-      }
-
-      return isPermitted;
-    }
-  );
-}
-
-/*
-rethink.connect({
-  host: 'localhost',
-  port: 28015,
-  db: 'coinstac',
-  user: 'admin',
-  password: 'admin',
-},
-  (err, conn) => {
-    if (err) throw err;
-    connection = conn;
-  });
-*/
+const helperFunctions = require('../auth-helpers');
 
 /* eslint-disable */
 const resolvers = {
   JSON: GraphQLJSON,
   Query: {
-    fetchAllComputations: ({ auth: { credentials } }, _) => {
-      console.log('rootValue', credentials);
-      if (isUserPermitted(credentials.tables, 'Computations', ['read']) === -1) {
+    fetchAllComputations: ({ auth: { credentials: { permissions } } }, _) => {
+      if (!permissions.computations || !permissions.computations.read) {
         return { error: 'User not permitted'};
       }
 
-      return getConnection()
+      return helperFunctions.getRethinkConnection()
         .then((connection) =>
-          rethink.table('Computations').run(connection)
+          rethink.table('computations').run(connection)
         )
         .then((cursor) => {
           return cursor.toArray(function(err, result) {
@@ -87,7 +25,7 @@ const resolvers = {
     },
     fetchComputationMetadataByName: (_, args) => {
       return new Promise ((res, rej) =>
-        rethink.table('Computations').filter({ meta: { name: args.computationName } })
+        rethink.table('computations').filter({ meta: { name: args.computationName } })
           .run(connection, (error, cursor) => {
             if (error) throw error;
             return cursor.toArray(function(err, result) {
@@ -117,7 +55,7 @@ const resolvers = {
   Mutation: {
     addComputation: (_, args) => {
       return new Promise ((res, rej) =>
-        rethink.table('Computations').insert(
+        rethink.table('computations').insert(
           args.computationSchema,
           { 
             conflict: "replace",
@@ -131,7 +69,7 @@ const resolvers = {
     },
     removeAllComputations: () => {
       return new Promise ((res, rej) =>
-        rethink.table('Computations').delete()
+        rethink.table('computations').delete()
           .run(connection, (error, result) => {
             res(result);
           })
