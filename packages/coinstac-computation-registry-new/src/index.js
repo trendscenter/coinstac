@@ -23,7 +23,6 @@ class ComputationRegistry {
   }
 
   authenticateServer() {
-    // TODO: Make server user
     return axios.post('http://localhost:3100/authenticate', { username: 'server', password: 'password' })
     .then((token) => {
       this.id_token = token.data.id_token;
