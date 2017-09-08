@@ -5,7 +5,14 @@ const helperFunctions = require('../src/auth-helpers');
 
 helperFunctions.getRethinkConnection()
 .then((connection) => {
-  return rethink.dbDrop('coinstac').run(connection)
+  return rethink.dbList().contains('coinstac')
+  .do((exists) => {
+    return rethink.branch(
+      exists,
+      rethink.dbDrop('coinstac'),
+      { dbs_dropped: 0 }
+    );
+  }).run(connection)
   .then(() => rethink.dbCreate('coinstac').run(connection))
   .then(() => rethink.tableCreate('computations').run(connection))
   .then(() => rethink.table('computations').insert([singleShot, multiShot]).run(connection))
@@ -20,6 +27,9 @@ helperFunctions.getRethinkConnection()
     .then(() => {
       passwordHash = helperFunctions.hashPassword('password');
       return helperFunctions.createUser({ username: 'server', institution: 'mrn', email: 'server@mrn.org' }, passwordHash);
+    })
+    .then(() => {
+      process.exit();
     });
 })
 .catch(console.log);
