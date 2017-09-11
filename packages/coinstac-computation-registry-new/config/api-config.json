@@ -1,0 +1,12 @@
+{
+  "algo": "sha512",
+  "cstacDB": "coinstac",
+  "encoding": "base64",
+  "hapiPort": 3100,
+  "hashBytes": 64,
+  "host": "localhost",
+  "iterations": 500000,
+  "jwtSecret": "SFcCAGze1vu7JKVnKqnAa0eZYlobluLs1kPBUYuH76sIfrqGrBUYSDOYGgtRdKeesU13i80HOA1XBVF4D8LqqhckZoaGQ/9oL/wY+QzHvFW8J4/OMLotnQBdbsiM8Xti7oWBKuo2gqGbs/NWPP5avmjjPEMNzJxuKHnkEBdEjyyDREVR2I6HQ3E5kITXRBDgiCvNkxKJkKhzLjidf7F2O40PW6hSRo39rxnzwbKmqOgcguIlGlJmF968BjmLEO1wY13QDhOiqhCf2DyTanZbZvl+VVOfMQzVF8I53WaWWO8RycjzSNX7LvdRWliopk1LM92loKgntrmJ+UGHJziuiA==",
+  "rethinkPort": 28015,
+  "saltBytes": 16
+}

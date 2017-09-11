@@ -29,6 +29,20 @@ helperFunctions.getRethinkConnection()
       return helperFunctions.createUser({ username: 'server', institution: 'mrn', email: 'server@mrn.org' }, passwordHash);
     })
     .then(() => {
+      passwordHash = helperFunctions.hashPassword('password');
+      return helperFunctions.createUser({
+        username: 'author',
+        institution: 'mrn',
+        email: 'server@mrn.org',
+        permissions: {
+          computations: {
+            read: true,
+            write: true,
+          },
+        },
+      }, passwordHash);
+    })
+    .then(() => {
       process.exit();
     });
 })

@@ -9,6 +9,7 @@ import LayoutNoauth from './layout-noauth';
 class FormLoginController extends Component {
   constructor(props) {
     super(props);
+
     this.hotRoute = this.hotRoute.bind(this);
     this.submit = this.submit.bind(this);
   }
@@ -32,18 +33,21 @@ class FormLoginController extends Component {
 
     this.props.login(userCred)
       .then(() => {
-        // TODO: Figure why `nextTick` is needed
-        process.nextTick(() => router.push('/'));
+        if (!this.props.auth.user.error) {
+          // TODO: Figure why `nextTick` is needed
+          process.nextTick(() => router.push('/'));
+        }
       });
   }
   render() {
-    const { loading } = this.props;
+    const { auth, loading } = this.props;
     const showHotRoute = app.config.get('env') === 'development';
 
     return (
       <LayoutNoauth>
         <FormLogin
           ref={(c) => { this.formLogon = c; }}
+          auth={auth}
           loading={loading}
           hotRoute={this.hotRoute}
           showHotRoute={showHotRoute}
@@ -61,6 +65,7 @@ FormLoginController.contextTypes = {
 FormLoginController.displayName = 'FormLoginController';
 
 FormLoginController.propTypes = {
+  auth: PropTypes.object.isRequired,
   hotRoute: PropTypes.func.isRequired,
   loading: PropTypes.object.isRequired,
   login: PropTypes.func.isRequired,

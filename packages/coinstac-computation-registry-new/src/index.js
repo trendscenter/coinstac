@@ -2,9 +2,13 @@
 
 const axios = require('axios');
 const { compact } = require('lodash');
+const dbmap = require('/coins/config/dbmap');
+const config = require('../config/api-config');
 const CLIAdapter = require('./adapters/cli-adapter');
 // const TestAdapter = require('./adapters/test-adapter');
 const UIAdapter = require('./adapters/ui-adapter');
+
+const DB_URL = 'http://localhost:3100';
 
 /**
  * ComputationRegistry
@@ -23,7 +27,13 @@ class ComputationRegistry {
   }
 
   authenticateServer() {
-    return axios.post('http://localhost:3100/authenticate', { username: 'server', password: 'password' })
+    return axios.post(
+      `${DB_URL}/authenticate`,
+      {
+        username: 'server',
+        password: 'password',
+      }
+    )
     .then((token) => {
       this.id_token = token.data.id_token;
       axios.defaults.headers.common['Authorization'] = `Bearer ${this.id_token}`;
@@ -71,7 +81,7 @@ class ComputationRegistry {
   serverStart() {
     this.authenticateServer()
     .then(() =>
-      axios.get('http://localhost:3100/graphql?query={fetchAllComputations{meta{dockerImage}}}')
+      axios.get(`${DB_URL}/graphql?query={fetchAllComputations{meta{dockerImage}}}`)
     )
     .then((res) => {
       const comps = res.data.data.fetchAllComputations.map(comp => comp.meta.dockerImage);

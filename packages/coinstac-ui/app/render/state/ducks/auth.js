@@ -11,20 +11,14 @@ const setUser = user => ({ type: SET_USER, user });
 export const login = applyAsyncLoading((reqUser) => {
   return (dispatch) => {
     return axios.post('http://localhost:3100/authenticate', reqUser)
-      .then(({ data: { id_token } }) => {
-        const user = { ...reqUser, email: `${reqUser.username}@coinstac.org`, label: reqUser.username };
-        localStorage.setItem('id_token', id_token);
+      .then(({ data }) => {
+        const user = { ...data.user, label: reqUser.username };
+        localStorage.setItem('id_token', data.id_token);
         dispatch(setUser(user));
-        return user;
-        // return app.core.initialize(pick(reqUser, ['password', 'username']))
-      });
-      /*
-      .then((user) => {
-        dispatch(setUser(user));
-        return user;
       })
-      */
-      // .catch(util.notifyAndThrow);
+      .catch(() => {
+        dispatch(setUser({ error: 'Username and/or Password Incorrect' }));
+      });
   };
 });
 
