@@ -10,7 +10,7 @@ class FormLogin extends Component {
     };
   }
   render() {
-    const { loading, submit, showHotRoute } = this.props;
+    const { auth, loading, submit, showHotRoute } = this.props;
     let devButtons;
 
     if (showHotRoute) {
@@ -30,6 +30,8 @@ class FormLogin extends Component {
         <div className="panel panel-default">
           <div className="panel-body">
             <form onSubmit={submit}>
+              {auth.user && auth.user.error &&
+                <p style={{ color: 'red', textAlign: 'center' }}>{auth.user.error}</p>}
               <FormGroup controlId="login-username">
                 <ControlLabel>Username:</ControlLabel>
                 <FormControl
@@ -61,6 +63,7 @@ class FormLogin extends Component {
 }
 
 FormLogin.propTypes = {
+  auth: PropTypes.object.isRequired,
   hotRoute: PropTypes.func,
   loading: PropTypes.object,
   showHotRoute: PropTypes.bool.isRequired,

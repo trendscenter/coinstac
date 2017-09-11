@@ -3,24 +3,31 @@ const Boom = require('boom');
 const jwt = require('jsonwebtoken');
 const rethink = require('rethinkdb');
 const config = require('../config/api-config');
+const dbmap = require('/coins/config/dbmap');
 
 const helperFunctions = {
   createToken(user) {
     return jwt.sign({ username: user }, config.jwtSecret, { algorithm: 'HS256', expiresIn: '12h' });
   },
-  createUser(userDetails, passwordHash) {
+  createUser(user, passwordHash) {
     return helperFunctions.getRethinkConnection()
     .then((connection) => {
-      return rethink.table('users')
-        .insert({
-          id: userDetails.username,
-          email: userDetails.email,
-          institution: userDetails.institution,
-          passwordHash,
-          permissions: {
-            computations: { read: true },
-          },
+      const userDetails = {
+        id: user.username,
+        email: user.email,
+        institution: user.institution,
+        passwordHash,
+        permissions: {
+          computations: { read: true },
         },
+      };
+
+      if (user.permissions) {
+        userDetails.permissions = user.permissions;
+      }
+
+      return rethink.table('users')
+        .insert(userDetails,
         { returnChanges: true }
         )
         .run(connection);
@@ -29,25 +36,26 @@ const helperFunctions = {
     .catch(err => Boom.badRequest(err.name));
   },
   getRethinkConnection() {
-    return rethink.connect({
+    const connectionConfig = {
       host: config.host,
       port: config.rethinkPort,
       db: config.cstacDB,
-      user: config.adminUser,
-      password: config.adminPassword,
-    });
+    };
+
+    if (process.env.NODE_ENV === 'production') {
+      connectionConfig.user = dbmap.rethinkdbAdmin.user;
+      connectionConfig.password = dbmap.rethinkdbAdmin.password;
+    }
+
+    return rethink.connect(connectionConfig);
   },
   getUserDetails(credentials) {
     return helperFunctions.getRethinkConnection()
     .then(connection => rethink.table('users').get(credentials.username).run(connection))
-    .then((user) => {
-      if (!user) {
-        return Boom.badRequest('Username does not exist');
-      }
-
-      return user;
-    })
-    .catch((err) => { return Boom.badRequest(err.name); });
+    .then(user => user)
+    .catch((err) => {
+      return Boom.badRequest(err.name);
+    });
   },
   hashPassword(password) {
     const salt = crypto.randomBytes(config.saltBytes);
@@ -117,13 +125,18 @@ const helperFunctions = {
   validateUser(req, res) {
     return helperFunctions.getUserDetails(req.payload)
     .then((user) => {
-      const passwordMatch = helperFunctions.verifyPassword(req.payload.password, user.passwordHash);
+      if (!user || !user.passwordHash) {
+        res(Boom.badRequest('Username does not exist'));
+      } else {
+        const passwordMatch = helperFunctions
+          .verifyPassword(req.payload.password, user.passwordHash);
 
-      if (!passwordMatch) {
-        res(Boom.badRequest('Incorrect password'));
+        if (!passwordMatch) {
+          res(Boom.badRequest('Incorrect password'));
+        } else {
+          res(user);
+        }
       }
-
-      res(user);
     })
     .catch((err) => { res(Boom.badRequest(err.name)); });
   },
@@ -141,7 +154,7 @@ const helperFunctions = {
       return true;
     }
 
-    return Boom.badRequest('Password incorrect');
+    return false;
   },
 };
 
