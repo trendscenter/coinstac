@@ -164,8 +164,8 @@ class CoinstacClient {
       .then(() => this._initDBRegistry(username))
       .then(() => this._initSubAPIs())
       .then(() => this._initComputationRegistry())
-      .then(() => this._initPool())
-      .then(() => this.auth.getUser().serialize());
+      .then(() => this._initPool());
+      // .then(() => this.auth.getUser().serialize());
   }
 
   /**
@@ -215,6 +215,9 @@ class CoinstacClient {
    * @returns {Promise}
    */
   _initAuthorization(credentials) {
+    // this.auth.setDatabaseCredentials(response.data.data[0].coinstac);
+    // this.auth.setUser(response.data.data[0].user);
+    
     const doLogin = () => this.auth.login(credentials);
 
     return credentials.email && credentials.name ?
@@ -386,14 +389,13 @@ class CoinstacClient {
       delete this.projects;
     };
 
-    return this.auth.logout()
-      .then(() => {
-        if (this.pool) {
-          return this.pool.destroy({ deleteDBs: options.deleteDBs });
-        }
-        return this.dbRegistry.destroy({ deleteDBs: options.deleteDBs });
-      })
-      .then(deleteProps, deleteProps);
+    return (() => {
+      if (this.pool) {
+        return this.pool.destroy({ deleteDBs: options.deleteDBs });
+      }
+      return this.dbRegistry.destroy({ deleteDBs: options.deleteDBs });
+    })
+    .then(deleteProps, deleteProps);
   }
 }
 

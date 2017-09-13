@@ -184,6 +184,7 @@ export const teardownPrivateBackgroundServices = applyAsyncLoading(() => {
   each(alreadyRan, (value, key) => {
     alreadyRan[key] = undefined;
   });
+
   return () => app.core.teardown();
 });
 

@@ -34,12 +34,20 @@ class FeatureTest extends Component { // eslint-disable-line
       this.props.updateDockerOutput(arg);
     });
 
+    this.deleteAllComputations = this.deleteAllComputations.bind(this);
     this.pullComps = this.pullComps.bind(this);
     this.setActiveComp = this.setActiveComp.bind(this);
   }
 
   setActiveComp(comp) {
     this.setState({ activeComp: comp });
+  }
+
+  deleteAllComputations() {
+    this.props.deleteAllComputations()
+    .catch(({ graphQLErrors }) => {
+      console.log(graphQLErrors[0].message);
+    });
   }
 
   pullComps(e) {
@@ -54,7 +62,7 @@ class FeatureTest extends Component { // eslint-disable-line
   }
 
   render() {
-    const { dockerOut, computations, deleteAllComputations } = this.props;
+    const { auth, dockerOut, computations } = this.props;
 
     return (
       <div style={styles.topMargin}>
@@ -83,11 +91,11 @@ class FeatureTest extends Component { // eslint-disable-line
           </Table>
         }
 
-        {computations.length > 0 &&
+        {computations.length > 0 && auth.user.permissions.computations.write &&
           <div className={'clearfix'}>
             <Button
               bsStyle="danger"
-              onClick={() => deleteAllComputations()}
+              onClick={this.deleteAllComputations}
               className={'pull-right'}
             >
               Delete All Computations
@@ -165,6 +173,7 @@ class FeatureTest extends Component { // eslint-disable-line
 }
 
 FeatureTest.propTypes = {
+  auth: PropTypes.object.isRequired,
   computations: PropTypes.array.isRequired,
   deleteAllComputations: PropTypes.func.isRequired,
   dockerOut: PropTypes.array.isRequired,
@@ -172,8 +181,8 @@ FeatureTest.propTypes = {
   updateDockerOutput: PropTypes.func.isRequired,
 };
 
-function mapStateToProps({ featureTest: { dockerOut } }) {
-  return { dockerOut };
+function mapStateToProps({ auth, featureTest: { dockerOut } }) {
+  return { auth, dockerOut };
 }
 
 const FeatureTestWithData = compose(

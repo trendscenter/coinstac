@@ -16,8 +16,11 @@ export const login = applyAsyncLoading((reqUser) => {
         localStorage.setItem('id_token', data.id_token);
         dispatch(setUser(user));
       })
-      .catch(() => {
-        dispatch(setUser({ error: 'Username and/or Password Incorrect' }));
+      .then(() => app.core.initialize(pick(reqUser, ['password', 'username'])))
+      .catch((err) => {
+        if (err.response.status === 401) {
+          dispatch(setUser({ error: 'Username and/or Password Incorrect' }));
+        }
       });
   };
 });

@@ -49,6 +49,10 @@ server.register([
     console.log(err);
   }
 
+  /**
+   * JWT middleware validates token on each /graphql request
+   * User object with permissions returned from validateToken function
+   */
   server.auth.strategy('jwt', 'jwt',
     {
       key: config.jwtSecret,
