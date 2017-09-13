@@ -14,7 +14,7 @@ const typeDefs = `
   }
 
   type Computation {
-    id: ID!
+    id: ID
     meta: ComputationMeta
     local: JSON
     remote: JSON

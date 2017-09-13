@@ -37,7 +37,7 @@ export const fetchComputationMetadata = gql`
 `;
 
 export const fetchComputationLocalIO = gql`
-  query ComputationInput ($computationName: String!) {
+  query ComputationIOQuery ($computationName: String!) {
     fetchComputationMetadataByName (computationName: $computationName) {
       id
       local

@@ -6,9 +6,18 @@ const config = require('../config/api-config');
 const dbmap = require('/coins/config/dbmap');
 
 const helperFunctions = {
+  /**
+   * Create JWT for user signing in to application
+   * @param {string} user username of authenticating user passed in from route handler
+   */
   createToken(user) {
     return jwt.sign({ username: user }, config.jwtSecret, { algorithm: 'HS256', expiresIn: '12h' });
   },
+  /**
+   * Create new user account
+   * @param {string} user authenticating user's username
+   * @param {string} passwordHash string of hashed password
+   */
   createUser(user, passwordHash) {
     return helperFunctions.getRethinkConnection()
     .then((connection) => {
@@ -32,9 +41,11 @@ const helperFunctions = {
         )
         .run(connection);
     })
-    .then(result => result.changes[0].new_val)
-    .catch(err => Boom.badRequest(err.name));
+    .then(result => result.changes[0].new_val);
   },
+  /**
+   * Returns RethinkDB connection
+   */
   getRethinkConnection() {
     const connectionConfig = {
       host: config.host,
@@ -49,14 +60,19 @@ const helperFunctions = {
 
     return rethink.connect(connectionConfig);
   },
+  /**
+   * Returns user table object for requested user
+   * @param {object} credentials credentials of requested user
+   */
   getUserDetails(credentials) {
     return helperFunctions.getRethinkConnection()
     .then(connection => rethink.table('users').get(credentials.username).run(connection))
-    .then(user => user)
-    .catch((err) => {
-      return Boom.badRequest(err.name);
-    });
+    .then(user => user);
   },
+  /**
+   * Hashes password for storage in database
+   * @param {string} password user password from client
+   */
   hashPassword(password) {
     const salt = crypto.randomBytes(config.saltBytes);
     const hash = crypto.pbkdf2Sync(
@@ -75,6 +91,27 @@ const helperFunctions = {
     hash.copy(hashframe, salt.length + 8);
     return hashframe.toString(config.encoding);
   },
+  /**
+   * Validates JWT from authenticated user
+   * @param {object} decoded token contents
+   * @param {object} request original request from client
+   * @param {function} callback function signature (err, isValid, alternative credentials)
+   */
+  validateToken(decoded, request, callback) {
+    helperFunctions.getUserDetails({ username: decoded.username })
+    .then((user) => {
+      if (user.id) {
+        callback(null, true, user);
+      } else {
+        callback(Boom.unauthorized('Invalid Token'), false);
+      }
+    });
+  },
+  /**
+   * Confirms that submitted username & email are new
+   * @param {object} req request
+   * @param {object} res response
+   */
   validateUniqueUser(req, res) {
     return helperFunctions.getRethinkConnection()
     .then((connection) => {
@@ -100,46 +137,36 @@ const helperFunctions = {
           } else {
             res(Boom.badRequest('Email taken'));
           }
-        })
-        .catch((err) => {
-          res(Boom.badRequest(err.name));
         });
-    })
-    .catch((err) => {
-      res(Boom.badRequest(err.name));
     });
   },
-  validateToken(decoded, request, callback) {
-    helperFunctions.getUserDetails({ username: decoded.username })
-    .then((user) => {
-      if (user.id) {
-        callback(null, true, user);
-      } else {
-        callback(Boom.badRequest('Invalid Token'), false);
-      }
-    })
-    .catch((err) => {
-      callback(Boom.badRequest(err.name), false);
-    });
-  },
+  /**
+   * Validate that authenticating user is using correct credentials
+   * @param {object} req request
+   * @param {object} res response
+   */
   validateUser(req, res) {
     return helperFunctions.getUserDetails(req.payload)
     .then((user) => {
       if (!user || !user.passwordHash) {
-        res(Boom.badRequest('Username does not exist'));
+        res(Boom.unauthorized('Username does not exist'));
       } else {
         const passwordMatch = helperFunctions
           .verifyPassword(req.payload.password, user.passwordHash);
 
         if (!passwordMatch) {
-          res(Boom.badRequest('Incorrect password'));
+          res(Boom.unauthorized('Incorrect password'));
         } else {
           res(user);
         }
       }
-    })
-    .catch((err) => { res(Boom.badRequest(err.name)); });
+    });
   },
+  /**
+   * Verify that authenticating user is using correct password
+   * @param {string} password user password
+   * @param {string} hashframe user passwordHash from DB
+   */
   verifyPassword(password, hashframe) {
     // decode and extract hashing parameters
     hashframe = Buffer.from(hashframe, config.encoding);

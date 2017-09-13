@@ -46,6 +46,10 @@ class ComputationSubmission extends Component { // eslint-disable-line
       } else {
         this.setState({ submissionSuccess: false });
       }
+    })
+    .catch(({ graphQLErrors }) => {
+      console.log(graphQLErrors);
+      this.setState({ submissionSuccess: false });
     });
   }
 
@@ -81,7 +85,7 @@ class ComputationSubmission extends Component { // eslint-disable-line
           </Alert>
         }
 
-        {!this.state.activeSchema.meta && this.state.submissionSuccess === false && 
+        {!this.state.activeSchema.meta && this.state.submissionSuccess === false &&
           <Alert bsStyle="danger" style={styles.topMargin}>
             <strong>Error!</strong> Try again?
           </Alert>
