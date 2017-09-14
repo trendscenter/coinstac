@@ -20,8 +20,8 @@ export default class FieldPassword extends Component {
   }
 
   handleChange() {
-    const password = findDOMNode(this.formPassword).value;
-    const confirmPassword = findDOMNode(this.formConfirm).value;
+    const password = this.formPassword.value;
+    const confirmPassword = this.formConfirm.value;
     const state = {};
 
     if (password && password === confirmPassword) {
@@ -61,7 +61,7 @@ export default class FieldPassword extends Component {
           <ControlLabel>Password:</ControlLabel>
           <FormControl
             onChange={this.handleChange}
-            ref={(c) => { this.formPassword = c; }}
+            inputRef={(c) => { this.formPassword = c; }}
             type="password"
           />
         </FormGroup>
@@ -72,7 +72,7 @@ export default class FieldPassword extends Component {
           <ControlLabel>Confirm Password:</ControlLabel>
           <FormControl
             onChange={this.handleChange}
-            ref={(c) => { this.formConfirm = c; }}
+            inputRef={(c) => { this.formConfirm = c; }}
             type="password"
           />
           {helpBlock}

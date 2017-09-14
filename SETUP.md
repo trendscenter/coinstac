@@ -59,7 +59,8 @@ Follow the general steps above before continuing.
 ## Additional Required Software
 
 1. **CouchDB** On OSX, using [Homebrew](https://brew.sh/) will likely be the easiest way to install [CouchDB](http://couchdb.apache.org/) in a manner compatible with setup scripts: `brew install couchdb`. Installing from the binary is another viable option, just be sure to add it to your path.
-2. **VSCode** There are no shortage of options when it comes to an editor, but [VSCode](https://code.visualstudio.com/) offers some great [debugging functionality](https://code.visualstudio.com/Docs/editor/debugging). You'll need to create a `launch.json` file as outlined [here](https://code.visualstudio.com/Docs/editor/debugging#_launch-configurations), with the following contents:
+2. **RethinkDB** On OSX, using [Homebrew](https://brew.sh/), use: `brew update && brew install rethinkdb`. Other options [here](https://rethinkdb.com/docs/install/).
+3. **VSCode** There are no shortage of options when it comes to an editor, but [VSCode](https://code.visualstudio.com/) offers some great [debugging functionality](https://code.visualstudio.com/Docs/editor/debugging). You'll need to create a `launch.json` file as outlined [here](https://code.visualstudio.com/Docs/editor/debugging#_launch-configurations), with the following contents:
 
    ```json
    {
@@ -95,7 +96,7 @@ Follow the general steps above before continuing.
    }
    ``` 
 
-3. **tmux & Tmuxinator** To ease the process of initializing the development environment, we use [tmux](https://github.com/tmux/tmux) and [Tmuxinator](https://github.com/tmuxinator/tmuxinator) to automate things like starting CouchDB, creating a test user, creating a database, starting the webpack server and more. tmux can be installed via Homebrew `brew install tmux`. Tmuxinator can be installed via `gem install tmuxinator`. You'll also need to setup a couple environment variables for Tmuxinator, which you can find in their README linked above.
+4. **tmux & Tmuxinator** To ease the process of initializing the development environment, we use [tmux](https://github.com/tmux/tmux) and [Tmuxinator](https://github.com/tmuxinator/tmuxinator) to automate things like starting CouchDB, creating a test user, creating a database, starting the webpack server and more. tmux can be installed via Homebrew `brew install tmux`. Tmuxinator can be installed via `gem install tmuxinator`. You'll also need to setup a couple environment variables for Tmuxinator, which you can find in their README linked above.
 
    // TODO: Bring this into VSCode?
 
@@ -156,6 +157,11 @@ root: ~/coinstac/
 
 # Runs before everything. Use it to start daemons etc.
 pre:
+  # Init RethinkDB
+  - rethinkdb --daemon
+  - cd ~/coinstac/packages/coinstac-graphql
+  - npm run test-setup
+
   - couchdb -b
 
   # Add CouchDB security
@@ -179,8 +185,13 @@ startup_window: editor
 post:
   - curl -X DELETE localhost:5984/_config/admins/coinstac --user coinstac:test
   - couchdb -d
+  - pkill -9 "rethinkdb"
 
 windows:
+  - dbapi:
+      root: ~/coinstac/packages/coinstac-graphql
+      panes:
+        - npm run start
   - steelpenny:
       root: ~/mock-steelpenny
       panes:

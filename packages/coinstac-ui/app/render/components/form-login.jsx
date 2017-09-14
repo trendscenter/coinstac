@@ -1,14 +1,19 @@
-import { Button, ControlLabel, FormControl, FormGroup } from 'react-bootstrap';
+import { Alert, Button, ControlLabel, FormControl, FormGroup } from 'react-bootstrap';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
+
+const styles = {
+  bottomMargin: { marginBottom: 10 },
+};
 
 class FormLogin extends Component {
   data() {
     return {
-      username: this.formUsername.value,
-      password: this.formPassword.value,
+      username: this.formUsername.value.trim(),
+      password: this.formPassword.value.trim(),
     };
   }
+  
   render() {
     const { auth, loading, submit, showHotRoute } = this.props;
     let devButtons;
@@ -31,7 +36,10 @@ class FormLogin extends Component {
           <div className="panel-body">
             <form onSubmit={submit}>
               {auth.user && auth.user.error &&
-                <p style={{ color: 'red', textAlign: 'center' }}>{auth.user.error}</p>}
+                <Alert bsStyle="danger" style={styles.bottomMargin}>
+                  <strong>Error!</strong> {auth.user.error}
+                </Alert>
+              }
               <FormGroup controlId="login-username">
                 <ControlLabel>Username:</ControlLabel>
                 <FormControl

@@ -114,8 +114,8 @@ const helperFunctions = {
    */
   validateUniqueUser(req, res) {
     return helperFunctions.getRethinkConnection()
-    .then((connection) => {
-      return rethink.table('users')
+    .then(connection =>
+      rethink.table('users')
         .getAll(req.payload.username)
         .count()
         .eq(0)
@@ -123,22 +123,23 @@ const helperFunctions = {
         .then((isUniqueUsername) => {
           if (isUniqueUsername) {
             return rethink.table('users')
-              .getAll(req.payload.email, { index: 'email' })
+              .filter({ email: req.payload.email })
               .count()
               .eq(0)
               .run(connection);
           }
 
           res(Boom.badRequest('Username taken'));
+          return null;
         })
         .then((isUniqueEmail) => {
           if (isUniqueEmail) {
             res(req.payload);
-          } else {
+          } else if (isUniqueEmail === false) {
             res(Boom.badRequest('Email taken'));
           }
-        });
-    });
+        })
+    );
   },
   /**
    * Validate that authenticating user is using correct credentials

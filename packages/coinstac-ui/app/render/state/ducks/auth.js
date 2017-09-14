@@ -6,24 +6,29 @@ import { applyAsyncLoading } from './loading';
 import { teardownPrivateBackgroundServices } from './bg-services';
 
 const SET_USER = 'SET_USER';
-const setUser = user => ({ type: SET_USER, user });
+const setUser = user => ({ type: SET_USER, payload: user });
 
-export const login = applyAsyncLoading((reqUser) => {
-  return (dispatch) => {
-    return axios.post('http://localhost:3100/authenticate', reqUser)
-      .then(({ data }) => {
-        const user = { ...data.user, label: reqUser.username };
-        localStorage.setItem('id_token', data.id_token);
-        dispatch(setUser(user));
-      })
-      .then(() => app.core.initialize(pick(reqUser, ['password', 'username'])))
-      .catch((err) => {
-        if (err.response.status === 401) {
-          dispatch(setUser({ error: 'Username and/or Password Incorrect' }));
-        }
-      });
-  };
-});
+const CLEAR_USER = 'CLEAR_USER';
+export const clearUser = () => ({ type: CLEAR_USER, payload: null });
+
+const setTokenAndInitialize = (reqUser, data, dispatch) => {
+  const user = { ...data.user, label: reqUser.username };
+  localStorage.setItem('id_token', data.id_token);
+  dispatch(setUser(user));
+
+  return app.core.initialize(pick(reqUser, ['password', 'username']));
+};
+
+export const login = applyAsyncLoading(reqUser =>
+  dispatch =>
+    axios.post('http://localhost:3100/authenticate', reqUser)
+    .then(({ data }) => setTokenAndInitialize(reqUser, data, dispatch))
+    .catch((err) => {
+      if (err.response.status === 401) {
+        dispatch(setUser({ error: 'Username and/or Password Incorrect' }));
+      }
+    })
+);
 
 export const logout = applyAsyncLoading(() => {
   return (dispatch) => {
@@ -32,12 +37,16 @@ export const logout = applyAsyncLoading(() => {
   };
 });
 
-export const signUp = applyAsyncLoading(user => dispatch => app.core
-  .initialize(user)
-  .then((user) => {
-    dispatch(setUser(user));
-    return user;
-  })
+export const signUp = applyAsyncLoading(user =>
+  dispatch =>
+    axios.post('http://localhost:3100/createAccount', user)
+    .then(({ data }) => setTokenAndInitialize(user, data, dispatch))
+    .catch(({ response: { data: { message } } }) => {
+      if (message === 'Username taken'
+          || message === 'Email taken') {
+        dispatch(setUser({ error: message }));
+      }
+    })
 );
 
 export const hotRoute = () => {
@@ -56,9 +65,10 @@ export const hotRoute = () => {
 
 export default function reducer(state = { user: null }, action) {
   switch (action.type) {
+    case CLEAR_USER:
+      return { ...state, user: null };
     case SET_USER:
-      if (!action.user) { return null; }
-      return Object.assign({}, state, { user: action.user || {} });
+      return { ...state, user: action.payload };
     default:
       return state;
   }

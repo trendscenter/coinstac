@@ -4,13 +4,17 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import FormSignup from './form-signup';
 import LayoutNoauth from './layout-noauth';
-import { signUp } from '../state/ducks/auth';
+import { clearUser, signUp } from '../state/ducks/auth';
 
 class FormSignupController extends Component {
 
   constructor(props) {
     super(props);
     this.onSubmit = this.onSubmit.bind(this);
+  }
+
+  componentWillMount() {
+    this.props.clearUser();
   }
 
   /**
@@ -50,11 +54,13 @@ class FormSignupController extends Component {
 
     return this.props.signUp(formData)
       .then(() => {
-        app.notify({
-          level: 'success',
-          message: 'Account created',
-        });
-        process.nextTick(() => router.push('/'));
+        if (!this.props.auth.user.error) {
+          app.notify({
+            level: 'success',
+            message: 'Account created',
+          });
+          process.nextTick(() => router.push('/'));
+        }
       })
       .catch((error) => {
         app.notify({
@@ -97,7 +103,13 @@ FormSignupController.contextTypes = {
 FormSignupController.displayName = 'FormSignupController';
 
 FormSignupController.propTypes = {
-  signUp: PropTypes.func,
+  auth: PropTypes.object.isRequired,
+  clearUser: PropTypes.func.isRequired,
+  signUp: PropTypes.func.isRequired,
 };
 
-export default connect(null, { signUp })(FormSignupController);
+const mapStateToProps = ({ auth }) => {
+  return { auth };
+};
+
+export default connect(mapStateToProps, { clearUser, signUp })(FormSignupController);

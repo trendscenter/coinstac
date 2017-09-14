@@ -27,15 +27,15 @@ export default (
     <Route path="signup" component={Signup} />
     <Route path="/" component={Dashboard} >
       <IndexRoute component={DashboardHome} />
-      <Route path="/consortia" component={DashboardConsortia} />
-      <Route path="/consortia/new" component={ConsortiumController} />
-      <Route path="/consortia/:consortiumId(/:resultId)" component={ConsortiumController} />
-      <Route path="/my-files" component={DashboardProjects}>
+      <Route path="consortia" component={DashboardConsortia} />
+      <Route path="consortia/new" component={ConsortiumController} />
+      <Route path="consortia/:consortiumId(/:resultId)" component={ConsortiumController} />
+      <Route path="my-files" component={DashboardProjects}>
         <IndexRoute component={ProjectsList} />
         <Route path="new" component={FormProjectController} />
         <Route path=":projectId" component={FormProjectController} />
       </Route>
-      <Route path="/settings" component={Settings} />
+      <Route path="settings" component={Settings} />
       <Route path="submit-computation" component={ComputationSubmission} />
       <Route path="test" component={Test} />
     </Route>

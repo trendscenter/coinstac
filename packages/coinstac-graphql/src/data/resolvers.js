@@ -12,25 +12,22 @@ const resolvers = {
      */
     fetchAllComputations: ({ auth: { credentials: { permissions } } }, _) => {
       if (!permissions.computations.read) {
-        return Boom.unauthorized('Action not permitted');
+        return Boom.forbidden('Action not permitted');
       }
 
       return helperFunctions.getRethinkConnection()
         .then((connection) =>
           rethink.table('computations').run(connection)
         )
-        .then((cursor) => {
-          return cursor.toArray((err, result) => {
-            return result;
-          });
-        })
+        .then((cursor) => cursor.toArray())
+        .then((result) => result);
     },
     /**
      * Returns metadata for specific computation name
      */
     fetchComputationMetadataByName: ({ auth: { credentials: { permissions } } }, args) => {
       if (!permissions.computations.read) {
-        return Boom.unauthorized('Action not permitted');
+        return Boom.forbidden('Action not permitted');
       }
 
       return helperFunctions.getRethinkConnection()
@@ -38,11 +35,8 @@ const resolvers = {
           rethink.table('computations').filter({ meta: { name: args.computationName } })
             .run(connection)
         )
-        .then((cursor) => {
-          return cursor.toArray((err, result) => {
-            return result[0];
-          });
-        })
+        .then((cursor) => cursor.toArray())
+        .then((result) => result[0]);
     },
     validateComputation: (_, args) => {
       return new Promise();
@@ -66,7 +60,7 @@ const resolvers = {
      */
     addComputation: ({ auth: { credentials: { permissions } } }, args) => {
       if (!permissions.computations.write) {
-        return Boom.unauthorized('Action not permitted');
+        return Boom.forbidden('Action not permitted');
       }
 
       return helperFunctions.getRethinkConnection()
@@ -89,7 +83,7 @@ const resolvers = {
      */
     removeAllComputations: ({ auth: { credentials: { permissions } } }, _) => {
       if (!permissions.computations.write) {
-        return Boom.unauthorized('Action not permitted');
+        return Boom.forbidden('Action not permitted');
       }
 
       return helperFunctions.getRethinkConnection()
@@ -97,9 +91,7 @@ const resolvers = {
           rethink.table('computations').delete()
             .run(connection)
         )
-        .then((result) => {
-          return result;
-        })
+        .then((result) => result);
     },
     removeComputation: (_, args) => {
       return new Promise();
