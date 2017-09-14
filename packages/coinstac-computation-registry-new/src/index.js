@@ -3,7 +3,7 @@
 const axios = require('axios');
 const { compact } = require('lodash');
 const dbmap = require('/coins/config/dbmap');
-const config = require('../config/api-config');
+const config = require('../config/comp-reg-config');
 const CLIAdapter = require('./adapters/cli-adapter');
 // const TestAdapter = require('./adapters/test-adapter');
 const UIAdapter = require('./adapters/ui-adapter');
@@ -30,8 +30,8 @@ class ComputationRegistry {
     return axios.post(
       `${DB_URL}/authenticate`,
       {
-        username: 'server',
-        password: 'password',
+        username: config.serverUser,
+        password: config.serverPassword,
       }
     )
     .then((token) => {

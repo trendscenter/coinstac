@@ -1,13 +1,16 @@
 /*
 
 {
-  "adminUser": "",
-  "adminPassword": "",
-  "hashBytes": ,
-  "saltBytes": ,
-  "iterations": ,
-  "algo": "",
-  "encoding": ""
+  "algo": "sha512",
+  "cstacDB": "coinstac",
+  "encoding": "base64",
+  "hapiPort": 3100,
+  "hashBytes": 64,
+  "host": "localhost",
+  "iterations": 500000,
+  "jwtSecret": "",
+  "rethinkPort": 28015,
+  "saltBytes": 16
 }
 
 */
