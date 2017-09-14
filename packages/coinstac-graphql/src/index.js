@@ -90,10 +90,10 @@ server.register([
         ],
         handler: (req, res) => {
           const passwordHash = helperFunctions.hashPassword(req.payload.password);
-          helperFunctions.createUser(req.payload.username, passwordHash)
+          helperFunctions.createUser(req.payload, passwordHash)
             .then(({ id, institution, email, permissions }) => {
               res({
-                id_token: helperFunctions.createToken(req.pre.user.id),
+                id_token: helperFunctions.createToken(id),
                 user: { id, institution, email, permissions },
               }).code(201);
             });

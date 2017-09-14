@@ -2,7 +2,7 @@ import app from 'ampersand-app';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { hotRoute, login } from '../state/ducks/auth';
+import { clearUser, hotRoute, login } from '../state/ducks/auth';
 import FormLogin from './form-login';
 import LayoutNoauth from './layout-noauth';
 
@@ -12,6 +12,10 @@ class FormLoginController extends Component {
 
     this.hotRoute = this.hotRoute.bind(this);
     this.submit = this.submit.bind(this);
+  }
+
+  componentWillMount() {
+    this.props.clearUser();
   }
 
   hotRoute() {
@@ -66,6 +70,7 @@ FormLoginController.displayName = 'FormLoginController';
 
 FormLoginController.propTypes = {
   auth: PropTypes.object.isRequired,
+  clearUser: PropTypes.func.isRequired,
   hotRoute: PropTypes.func.isRequired,
   loading: PropTypes.object.isRequired,
   login: PropTypes.func.isRequired,
@@ -77,6 +82,7 @@ const mapStateToProps = (state) => {
 };
 
 export default connect(mapStateToProps, {
+  clearUser,
   hotRoute,
   login,
 })(FormLoginController);
