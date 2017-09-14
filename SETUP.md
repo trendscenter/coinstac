@@ -113,7 +113,8 @@ Follow the general steps above before continuing.
      "coinstac": {
        "user": "coinstac",
        "password": "test"
-     }
+     },
+     
    }
    ```
 
