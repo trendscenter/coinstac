@@ -6,11 +6,11 @@ const typeDefs = `
   scalar JSON
 
   type ComputationMeta {
-    ${compFields.computationMetaFields()}
+    ${compFields.computationMetaFields}
   }
 
   input ComputationMetaInput {
-    ${compFields.computationMetaFields()}
+    ${compFields.computationMetaFields}
   }
 
   type Computation {

@@ -233,7 +233,7 @@ class CoinstacClient {
 
     this.logger.info('initializing ComputationRegistry');
 
-    this.computationRegistryNew = new ComputationRegistryNew('ui');
+    this.computationRegistryNew = new ComputationRegistryNew();
 
     return bluebird.promisify(mkdirp)(computationsDirectory)
       .then(() => computationRegistryFactory({

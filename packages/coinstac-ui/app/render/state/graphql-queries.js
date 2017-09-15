@@ -1,19 +1,11 @@
 import {
   gql,
 } from 'react-apollo';
+import graphqlSchema from 'coinstac-graphql-schema';
 
 export const addComputationMetadata = gql`
-  mutation AddJsonSchema($computationSchema: ComputationInput!) {
-    addComputation(computationSchema: $computationSchema) {
-      id
-      meta {
-        name
-        description
-        version
-        dockerImage
-      }
-    }
-  }
+  mutation AddJsonSchema($computationSchema: ComputationInput!) 
+    ${graphqlSchema.addComputation}
 `;
 
 export const deleteAllComputations = gql`
@@ -23,24 +15,11 @@ export const deleteAllComputations = gql`
 `;
 
 export const fetchComputationMetadata = gql`
-  query ComputationMetadataQuery {
-    fetchAllComputations {
-      id
-      meta {
-        name
-        description
-        version
-        dockerImage
-      }
-    }
-  }
+  query ComputationMetadataQuery
+    ${graphqlSchema.allMetadata}
 `;
 
 export const fetchComputationLocalIO = gql`
-  query ComputationInput ($computationName: String!) {
-    fetchComputationMetadataByName (computationName: $computationName) {
-      id
-      local
-    }
-  }
+  query ComputationInput ($computationName: String!)
+    ${graphqlSchema.localIOByName}
 `;
