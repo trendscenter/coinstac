@@ -15,7 +15,7 @@ const resolvers = {
   Query: {
     fetchAllComputations: () => {
       return new Promise ((res, rej) => 
-        rethink.table('Computations').run(connection, (error, cursor) => {
+        rethink.table('computations').run(connection, (error, cursor) => {
           if (error) throw error;
           return cursor.toArray(function(err, result) {
             if (err) throw err;
@@ -26,7 +26,7 @@ const resolvers = {
     },
     fetchComputationMetadataByName: (_, args) => {
       return new Promise ((res, rej) =>
-        rethink.table('Computations').filter({ meta: { name: args.computationName } })
+        rethink.table('computations').filter({ meta: { name: args.computationName } })
           .run(connection, (error, cursor) => {
             if (error) throw error;
             return cursor.toArray(function(err, result) {
@@ -56,7 +56,7 @@ const resolvers = {
   Mutation: {
     addComputation: (_, args) => {
       return new Promise ((res, rej) =>
-        rethink.table('Computations').insert(
+        rethink.table('computations').insert(
           args.computationSchema,
           { 
             conflict: "replace",
@@ -70,7 +70,7 @@ const resolvers = {
     },
     removeAllComputations: () => {
       return new Promise ((res, rej) =>
-        rethink.table('Computations').delete()
+        rethink.table('computations').delete()
           .run(connection, (error, result) => {
             res(result);
           })
