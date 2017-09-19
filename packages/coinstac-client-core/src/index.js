@@ -217,7 +217,7 @@ class CoinstacClient {
   _initAuthorization(credentials) {
     // this.auth.setDatabaseCredentials(response.data.data[0].coinstac);
     // this.auth.setUser(response.data.data[0].user);
-    
+
     const doLogin = () => this.auth.login(credentials);
 
     return credentials.email && credentials.name ?

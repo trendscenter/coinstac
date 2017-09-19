@@ -44,3 +44,18 @@ export const fetchComputationLocalIO = gql`
     }
   }
 `;
+
+export const fetchAllConsortia = gql`
+  query FetchAllConsortiaQuery {
+    fetchAllConsortia {
+      id
+      activeComputationId
+      activeComputationInputs
+      description
+      label
+      tags
+      owners
+      users
+    }
+  }
+`;

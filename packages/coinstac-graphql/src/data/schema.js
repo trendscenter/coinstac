@@ -32,10 +32,10 @@ const typeDefs = `
     activeComputationId: ID
     activeComputationInputs: [String]
     description: String!
-    label: String!
+    name: String!
     tags: [String]
-    owners: [String]
-    users: [String]
+    owners: [ID]
+    users: [ID]
   }
 
   input ConsortiumInput {
@@ -82,6 +82,7 @@ const typeDefs = `
     # This is a description of the fetchAllComputations query
     fetchAllComputations: [Computation]
     fetchComputationMetadataByName(computationName: String): Computation
+    fetchAllConsortia: [Consortium]
     validateComputation(compId: ID): Boolean
     fetchConsortiumById(consortiumId: ID): Consortium
     fetchRunForConsortium(consortiumId: ID): [Run]
