@@ -20,7 +20,7 @@ function getUser() {
     password: 'bobbobbob',
     passwordExpDate: Date.now(),
     passwordResetExpiration: undefined,
-    passwordResetKey: undefined,
+    passwordResetHash: undefined,
     passwordResetSessionId: undefined,
     siteId: '7',
     username: 'bob',
