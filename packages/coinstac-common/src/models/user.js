@@ -29,7 +29,7 @@ User.schema = Object.assign({
   password: joi.string().min(5),
   passwordExpDate: joi.any(),
   passwordResetExpiration: joi.date().allow(null),
-  passwordResetKey: joi.string().allow(null),
+  passwordResetHash: joi.string().allow(null),
   passwordResetSessionId: joi.string().allow(null),
   siteId: joi.any(),
   username: joi.string().min(3).regex(/^[^-]+$/)
