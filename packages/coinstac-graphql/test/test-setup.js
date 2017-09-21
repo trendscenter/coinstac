@@ -43,6 +43,9 @@ helperFunctions.getRethinkConnection()
     institution: 'mrn',
     email: 'test@mrn.org',
     permissions: {
+      computations: {
+        read: true,
+      },
       consortia: {
         read: true,
         'test-cons-2': {
