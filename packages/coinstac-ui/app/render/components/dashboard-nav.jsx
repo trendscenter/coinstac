@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import { Nav, NavItem } from 'react-bootstrap';
 import { IndexLinkContainer, LinkContainer } from 'react-router-bootstrap';
 
-const DashboardNav = ({ auth }) => {
+const DashboardNav = ({ auth: { user } }) => {
   return (
     <Nav bsStyle="pills" stacked>
       <IndexLinkContainer to="/">
@@ -28,7 +28,7 @@ const DashboardNav = ({ auth }) => {
           My Files
         </NavItem>
       </LinkContainer>
-      {auth.user.permissions.computations.write &&
+      {user.permissions.computations.write &&
         <LinkContainer to="/submit-computation">
           <NavItem eventKey={4}>
             <span aria-hidden="true" className="glyphicon glyphicon-export" />

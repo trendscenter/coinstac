@@ -4,9 +4,7 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { Alert } from 'react-bootstrap';
 import { connect } from 'react-redux';
-import {
-  graphql,
-} from 'react-apollo';
+import { graphql } from 'react-apollo';
 import StatusItem from './status-item';
 // import { fetchComputations } from '../state/ducks/computations';
 import { fetchComputationMetadata } from '../state/graphql-queries';
@@ -71,7 +69,9 @@ class DashboardHome extends Component {
 
     return (
       <div className="dashboard-home">
-        <h1 className="h2">Computation statuses:</h1>
+        <div className="page-header clearfix">
+          <h1 className="pull-left">Computation Statuses</h1>
+        </div>
         {!remoteResults.length &&
           <Alert>No computation results</Alert>
         }
@@ -126,7 +126,7 @@ function mapStateToProps({
 }
 
 const DashHomeWithData = graphql(fetchComputationMetadata, {
-  props: ({ ownProps, data: { loading, fetchAllComputations } }) => ({
+  props: ({ data: { loading, fetchAllComputations } }) => ({
     loading,
     computations: fetchAllComputations,
   }),

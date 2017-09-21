@@ -16,6 +16,18 @@ export const addComputationMetadata = gql`
   }
 `;
 
+export const saveConsortiumFunc = gql`
+  mutation SaveConsortiumMutation($consortium: ConsortiumInput!) {
+    saveConsortium(consortium: $consortium) {
+      id
+      name
+      description
+      pipelines
+      results
+    }
+  }
+`;
+
 export const deleteAllComputations = gql`
   mutation DeleteAllJsonSchema {
     removeAllComputations
@@ -45,14 +57,14 @@ export const fetchComputationLocalIO = gql`
   }
 `;
 
-export const fetchAllConsortia = gql`
+export const fetchAllConsortiaFunc = gql`
   query FetchAllConsortiaQuery {
     fetchAllConsortia {
       id
       activeComputationId
       activeComputationInputs
       description
-      label
+      name
       tags
       owners
       users

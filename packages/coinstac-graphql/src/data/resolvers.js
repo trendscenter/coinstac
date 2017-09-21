@@ -8,6 +8,21 @@ const resolvers = {
   JSON: GraphQLJSON,
   Query: {
     /**
+     * Returns all consortia. Checks user permissions retrieved from JWT middleware validateFunc.
+     */
+    fetchAllConsortia: ({ auth: { credentials: { permissions } } }, _) => {
+      if (!permissions.consortia.read) {
+        return Boom.forbidden('Action not permitted');
+      }
+
+      return helperFunctions.getRethinkConnection()
+        .then((connection) =>
+          rethink.table('consortia').run(connection)
+        )
+        .then((cursor) => cursor.toArray())
+        .then((result) => result);
+    },
+    /**
      * Returns all computations. Checks user permissions retrieved from JWT middleware validateFunc.
      */
     fetchAllComputations: ({ auth: { credentials: { permissions } } }, _) => {
@@ -93,6 +108,31 @@ const resolvers = {
         )
         .then((result) => result);
     },
+    /**
+     * Saves consortia
+     */
+    saveConsortium: ({ auth: { credentials: { permissions } } }, args) => {
+      if (!permissions.consortia.write
+          && args.consortium.id
+          && !permissions.consortia[args.consortium.id].write) {
+            return Boom.forbidden('Action not permitted');
+      }
+
+      return helperFunctions.getRethinkConnection()
+        .then((connection) =>
+          rethink.table('consortia').insert(
+            args.consortium,
+            { 
+              conflict: "replace",
+              returnChanges: true,
+            }
+          )
+          .run(connection)
+        )
+        .then((result) => {
+          return result.changes[0].new_val;
+        })
+    },
     removeComputation: (_, args) => {
       return new Promise();
     },
@@ -109,9 +149,6 @@ const resolvers = {
       return new Promise();
     },
     leaveConsortium: (_, args) => {
-      return new Promise();
-    },
-    saveConsortium: (_, args) => {
       return new Promise();
     },
   },

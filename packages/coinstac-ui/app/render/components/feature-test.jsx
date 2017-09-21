@@ -65,7 +65,7 @@ class FeatureTest extends Component { // eslint-disable-line
     const { auth, dockerOut, computations } = this.props;
 
     return (
-      <div style={styles.topMargin}>
+      <div>
         {computations.length > 0 &&
           <Table striped bordered condensed style={styles.topMargin}>
             <thead>
@@ -187,7 +187,7 @@ function mapStateToProps({ auth, featureTest: { dockerOut } }) {
 
 const FeatureTestWithData = compose(
   graphql(fetchComputationMetadata, {
-    props: ({ ownProps, data: { loading, fetchAllComputations } }) => ({
+    props: ({ data: { loading, fetchAllComputations } }) => ({
       loading,
       computations: fetchAllComputations,
     }),
