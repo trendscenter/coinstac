@@ -1,7 +1,6 @@
 import { pick } from 'lodash';
 import app from 'ampersand-app';
 import axios from 'axios';
-import * as util from './util';
 import { applyAsyncLoading } from './loading';
 import { teardownPrivateBackgroundServices } from './bg-services';
 

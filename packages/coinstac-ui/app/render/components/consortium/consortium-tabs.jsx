@@ -88,6 +88,7 @@ class ConsortiumTabs extends Component {
           >
             <ConsortiumPipeline
               consortium={this.state.consortium}
+              owner={this.state.owner}
             />
           </Tab>
           <Tab
