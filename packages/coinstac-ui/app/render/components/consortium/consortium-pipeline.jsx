@@ -18,6 +18,15 @@ const newController = () => (
   }
 );
 
+const newComputation = () => (
+  {
+    id: shortid.generate(),
+    meta: {
+      name: shortid.generate(),
+    },
+  }
+);
+
 const consortiumTarget = {
   drop() {
   },
@@ -41,7 +50,10 @@ class ConsortiumPipeline extends Component {
         ],
       },
     };
+
+    this.addComputation = this.addComputation.bind(this);
     this.addController = this.addController.bind(this);
+    this.moveComputation = this.moveComputation.bind(this);
     this.moveController = this.moveController.bind(this);
   }
 
@@ -57,8 +69,46 @@ class ConsortiumPipeline extends Component {
     });
   }
 
+  addComputation(controllerIndex) {
+    const controllers = this.state.pipeline.controllers;
+    controllers[controllerIndex].computations.push(newComputation());
+
+    this.setState({
+      pipeline: {
+        ...this.state.pipeline,
+        controllers,
+      },
+    });
+  }
+
+  moveComputation(fromId, toId, fromController, toController) {
+    let index;
+    const controllers = [...this.state.pipeline.controllers];
+    const computation = this.state.pipeline.controllers[fromController].computations
+      .find(c => c.id === fromId);
+
+    if (toId !== null) {
+      index = this.state.pipeline.controllers[toController].computations
+        .findIndex(c => c.id === toId);
+    } else {
+      index = this.state.pipeline.controllers[fromController].computations
+        .findIndex(c => c.id === fromId);
+    }
+
+    controllers[fromController].computations = controllers[fromController].computations
+      .filter(c => c.id !== fromId);
+    controllers[toController].computations.splice(index, 0, computation);
+
+    this.setState({
+      pipeline: {
+        ...this.state.pipeline,
+        controllers,
+      },
+    });
+  }
+
   moveController(id, swapId) {
-    let index = 0;
+    let index;
     const controller = this.state.pipeline.controllers.find(c => c.id === id);
 
     if (swapId !== null) {
@@ -95,10 +145,12 @@ class ConsortiumPipeline extends Component {
 
         {this.state.pipeline.controllers.map((controller, index) => (
           <Controller
-            key={controller.id}
             id={controller.id}
-            originalIndex={index}
+            key={controller.id}
             controller={controller}
+            controllerIndex={index}
+            addComputation={this.addComputation}
+            moveComputation={this.moveComputation}
             moveController={this.moveController}
           />
         ))}
