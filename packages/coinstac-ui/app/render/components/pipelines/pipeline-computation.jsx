@@ -2,26 +2,36 @@ import React from 'react';
 import { DragSource, DropTarget } from 'react-dnd';
 import PropTypes from 'prop-types';
 import { compose } from 'redux';
+import { Well } from 'react-bootstrap';
 import ItemTypes from './pipeline-item-types';
 
-const style = {
-  border: '1px solid black',
-  padding: '0.5rem 1rem',
-  marginBottom: '.5rem',
-  backgroundColor: 'green',
-  cursor: 'move',
-  color: 'white',
+const styles = {
+  container: {
+    border: '1px solid black',
+    padding: '0.5rem 1rem',
+    marginBottom: '.5rem',
+    backgroundColor: 'green',
+    cursor: 'move',
+    color: 'white',
+  },
+  placeholderContainer: {
+    marginBottom: '.5rem',
+    padding: '0.5rem 1rem',
+  },
 };
 
 const computationSource = {
   beginDrag(props) {
-    return { id: props.id, controllerIndex: props.controllerIndex };
+    return { idInPipeline: props.idInPipeline, controllerIndex: props.controllerIndex };
+  },
+  canDrag(props) {
+    return !props.placeholder;
   },
   isDragging(props, monitor) {
-    return props.id === monitor.getItem().id;
+    return props.idInPipeline === monitor.getItem().idInPipeline;
   },
   endDrag(props, monitor) {
-    const { id: droppedId, controllerIndex } = monitor.getItem();
+    const { idInPipeline: droppedId, controllerIndex } = monitor.getItem();
     const didDrop = monitor.didDrop();
 
     if (!didDrop) {
@@ -36,8 +46,8 @@ const computationTarget = {
   },
 
   hover(props, monitor) {
-    const { id: draggedId, controllerIndex: draggedController } = monitor.getItem();
-    const { id: overId, controllerIndex: swapController } = props;
+    const { idInPipeline: draggedId, controllerIndex: draggedController } = monitor.getItem();
+    const { idInPipeline: overId, controllerIndex: swapController } = props;
 
     if (draggedId !== overId) {
       props.moveComputation(draggedId, overId, draggedController, swapController);
@@ -58,20 +68,41 @@ const collectDrag = (connect, monitor) => {
 const collectDrop = connect =>
   ({ connectDropTarget: connect.dropTarget() });
 
-const PipelineComputation = ({ computation, isDragging, connectDragSource, connectDropTarget }) =>
+const PipelineComputation = ({
+  computation,
+  connectDragSource,
+  connectDropTarget,
+  isDragging,
+  placeholder,
+}) =>
   connectDragSource(connectDropTarget(
-    <div style={{ ...style, opacity: isDragging ? 0 : 1 }}>
-      <p style={{ marginTop: 0, fontWeight: 'bold' }}>{computation.meta.name}</p>
+    <div>
+      {placeholder &&
+        <Well bsSize="small" style={styles.placeholderContainer}>
+          <p><em>{computation.meta.name}</em></p>
+        </Well>
+      }
+
+      {!placeholder &&
+        <div style={{ ...styles.container, opacity: isDragging ? 0 : 1 }}>
+          <p>{computation.meta.name}</p>
+        </div>
+      }
     </div>
   ));
+
+PipelineComputation.defaultProps = {
+  placeholder: false,
+};
 
 PipelineComputation.propTypes = {
   connectDragSource: PropTypes.func.isRequired,
   connectDropTarget: PropTypes.func.isRequired,
-  id: PropTypes.string.isRequired,
+  idInPipeline: PropTypes.string.isRequired,
   isDragging: PropTypes.bool.isRequired,
   computation: PropTypes.object.isRequired,
   moveComputation: PropTypes.func.isRequired,
+  placeholder: PropTypes.bool,
 };
 
 export default compose(

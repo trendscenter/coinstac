@@ -2,7 +2,7 @@ import React from 'react';
 import { DragSource, DropTarget } from 'react-dnd';
 import PropTypes from 'prop-types';
 import { compose } from 'redux';
-import { Button } from 'react-bootstrap';
+import { Button, DropdownButton, MenuItem } from 'react-bootstrap';
 import ItemTypes from './pipeline-item-types';
 import PipelineComputation from './pipeline-computation';
 
@@ -56,6 +56,7 @@ const collectDrop = connect =>
 
 const PipelineController = (
   {
+    allComputations,
     addComputation,
     controller,
     isDragging,
@@ -67,31 +68,57 @@ const PipelineController = (
 ) =>
   connectDragSource(connectDropTarget(
     <div style={{ ...style, opacity: isDragging ? 0 : 1 }}>
-      <p style={{ marginTop: 0, fontWeight: 'bold' }}>{controller.options.iterations}</p>
-      <Button
-        bsStyle="primary"
-        type="button"
-        onClick={() => addComputation(controllerIndex)}
-      >
-        <span aria-hidden="true" className="glphicon glyphicon-plus" />
-        {' '}
-        Add Computation
-      </Button>
+      <div className="clearfix" style={{ marginBottom: 20 }}>
+        <span style={{ marginTop: 0, fontWeight: 'bold' }}>{controller.options.iterations}</span>
+        <div className="pull-right">
+          <DropdownButton
+            bsStyle="primary"
+            id="computation-dropdown"
+            pullRight
+            title={
+              <span>
+                <span aria-hidden="true" className="glphicon glyphicon-plus" /> Add Computation
+              </span>
+            }
+          >
+            {allComputations.map(comp => (
+              <MenuItem
+                eventKey={comp.id}
+                key={comp.id}
+                onClick={() => addComputation({ ...comp, idInPipeline: `${Date.now()}-${comp.id}` }, controllerIndex)}
+              >
+                {comp.meta.name}
+              </MenuItem>
+            ))}
+          </DropdownButton>
+        </div>
+      </div>
       {controller.computations &&
         controller.computations.map(computation => (
           <PipelineComputation
-            id={computation.id}
-            key={computation.id}
+            idInPipeline={computation.idInPipeline}
+            key={computation.idInPipeline}
             computation={computation}
             controllerIndex={controllerIndex}
             moveComputation={moveComputation}
           />
         ))
       }
+      {!controller.computations.length &&
+        <PipelineComputation
+          idInPipeline={'placeholder'}
+          key={'placeholder'}
+          placeholder
+          computation={{ meta: { name: 'No computations listed!' } }}
+          controllerIndex={controllerIndex}
+          moveComputation={moveComputation}
+        />
+      }
     </div>
   ));
 
 PipelineController.propTypes = {
+  allComputations: PropTypes.array.isRequired,
   connectDragSource: PropTypes.func.isRequired,
   connectDropTarget: PropTypes.func.isRequired,
   id: PropTypes.string.isRequired,
