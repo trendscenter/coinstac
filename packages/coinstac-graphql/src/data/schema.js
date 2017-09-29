@@ -88,6 +88,7 @@ const typeDefs = `
     fetchAllComputations: [Computation]
     fetchComputationMetadataByName(computationName: String): Computation
     fetchAllConsortia: [Consortium]
+    fetchComputationIO(computationID: ID): Computation
     validateComputation(compId: ID): Boolean
     fetchConsortiumById(consortiumId: ID): Consortium
     fetchRunForConsortium(consortiumId: ID): [Run]

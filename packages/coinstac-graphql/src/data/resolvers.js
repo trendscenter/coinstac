@@ -53,6 +53,22 @@ const resolvers = {
         .then((cursor) => cursor.toArray())
         .then((result) => result[0]);
     },
+    /**
+     * Returns IO for given computation ID
+     */
+    fetchComputationIO: ({ auth: { credentials: { permissions } } }, args) => {
+      if (!permissions.computations.read) {
+        return Boom.forbidden('Action not permitted');
+      }
+
+      return helperFunctions.getRethinkConnection()
+        .then((connection) =>
+          rethink.table('computations').filter({ meta: { name: args.computationId } })
+            .run(connection)
+        )
+        .then((cursor) => cursor.toArray())
+        .then((result) => result[0]);
+    },
     validateComputation: (_, args) => {
       return new Promise();
     },
