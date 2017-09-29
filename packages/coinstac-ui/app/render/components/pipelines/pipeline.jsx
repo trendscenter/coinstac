@@ -4,41 +4,27 @@ import { compose } from 'redux';
 import { DragDropContext, DropTarget } from 'react-dnd';
 import HTML5Backend from 'react-dnd-html5-backend';
 import PropTypes from 'prop-types';
-import shortid from 'shortid';
 import { graphql } from 'react-apollo';
+import shortid from 'shortid';
+import update from 'immutability-helper';
 import {
-  Button,
+  Accordion,
   Checkbox,
+  Col,
   ControlLabel,
+  DropdownButton,
   Form,
   FormControl,
   FormGroup,
+  MenuItem,
+  Row,
 } from 'react-bootstrap';
 import ApolloClient from '../../state/apollo-client';
-import Controller from './pipeline-controller';
+import PipelineStep from './pipeline-step';
 import ItemTypes from './pipeline-item-types';
 import { fetchAllConsortiaFunc, fetchComputationMetadata } from '../../state/graphql-queries';
 
-const newController = () => (
-  {
-    id: shortid.generate(),
-    options: {
-      iterations: Math.floor(Math.random() * 10) + 1,
-    },
-    computations: [],
-  }
-);
-
-const newComputation = () => (
-  {
-    id: shortid.generate(),
-    meta: {
-      name: shortid.generate(),
-    },
-  }
-);
-
-const consortiumTarget = {
+const computationTarget = {
   drop() {
   },
 };
@@ -63,93 +49,70 @@ class Pipeline extends Component {
     }
 
     this.state = {
-      consortium,
+      owner: !props.params.consortiumId || consortium.owners.indexOf(props.auth.user.id) !== -1,
       pipeline: {
-        controllers: [
-          newController(),
-        ],
+        steps: [],
       },
     };
 
-    this.addComputation = this.addComputation.bind(this);
-    this.addController = this.addController.bind(this);
-    this.moveComputation = this.moveComputation.bind(this);
-    this.moveController = this.moveController.bind(this);
+    this.addStep = this.addStep.bind(this);
+    this.moveStep = this.moveStep.bind(this);
+    this.updateStep = this.updateStep.bind(this);
   }
 
-  addController() {
-    this.setState({
+  addStep(computation) {
+    this.setState(prevState => ({
       pipeline: {
-        ...this.state.pipeline,
-        controllers: [
-          ...this.state.pipeline.controllers,
-          newController(),
+        ...prevState.pipeline,
+        steps: [
+          ...prevState.pipeline.steps,
+          {
+            id: shortid.generate(),
+            controller: { type: 'single', options: {} },
+            computations: [
+              { ...computation },
+            ],
+          },
         ],
       },
-    });
+    }));
   }
 
-  addComputation(computation, controllerIndex) {
-    const controllers = this.state.pipeline.controllers;
-    controllers[controllerIndex].computations.push(computation);
-
-    this.setState({
-      pipeline: {
-        ...this.state.pipeline,
-        controllers,
-      },
-    });
-  }
-
-  moveComputation(fromId, toId, fromController, toController) {
+  moveStep(id, swapId) {
     let index;
-    const controllers = [...this.state.pipeline.controllers];
-    const computation = this.state.pipeline.controllers[fromController].computations
-      .find(c => c.idInPipeline === fromId);
 
-    if (toId !== null) {
-      index = this.state.pipeline.controllers[toController].computations
-        .findIndex(c => c.idInPipeline === toId);
-    } else {
-      index = this.state.pipeline.controllers[fromController].computations
-        .findIndex(c => c.idInPipeline === fromId);
-    }
-
-    controllers[fromController].computations = controllers[fromController].computations
-      .filter(c => c.idInPipeline !== fromId);
-    controllers[toController].computations.splice(index, 0, computation);
-
-    this.setState({
-      pipeline: {
-        ...this.state.pipeline,
-        controllers,
-      },
-    });
-  }
-
-  moveController(id, swapId) {
-    let index;
-    const controller = this.state.pipeline.controllers.find(c => c.id === id);
+    const movedStep = this.state.pipeline.steps.find(step => step.id === id);
 
     if (swapId !== null) {
-      index = this.state.pipeline.controllers.findIndex(c => c.id === swapId);
+      index = this.state.pipeline.steps.findIndex(step => step.id === swapId);
     } else {
-      index = this.state.pipeline.controllers.findIndex(c => c.id === id);
+      index = this.state.pipeline.steps.findIndex(step => step.id === id);
     }
 
-    const newArr = this.state.pipeline.controllers.filter(c => c.id !== id);
-    newArr.splice(index, 0, controller);
+    const newArr = this.state.pipeline.steps.filter(step => step.id !== id);
+    newArr.splice(index, 0, movedStep);
 
-    this.setState({
+    this.setState(prevState => ({
       pipeline: {
-        ...this.state.pipeline,
-        controllers: newArr,
+        ...prevState.pipeline,
+        steps: newArr,
       },
-    });
+    }));
+  }
+
+  updateStep(stepId, step) {
+    this.setState(prevState => ({
+      pipeline: {
+        ...prevState.pipeline,
+        steps: update(prevState.pipeline.steps, {
+          $splice: [[prevState.pipeline.steps.findIndex(s => s.id === stepId), 1, step]],
+        }),
+      },
+    }));
   }
 
   render() {
-    const { computations, connectDropTarget } = this.props;
+    const { allComputations, connectDropTarget } = this.props;
 
     const title = 'New Pipeline';
 
@@ -170,7 +133,7 @@ class Pipeline extends Component {
           <FormGroup controlId="description">
             <ControlLabel>Description</ControlLabel>
             <FormControl
-              type="input"
+              componentClass="textarea"
               inputRef={(input) => { this.description = input; }}
             />
           </FormGroup>
@@ -178,36 +141,59 @@ class Pipeline extends Component {
           <Checkbox inline>Share this pipeline with other consortia</Checkbox>
 
           <p style={{ padding: '30px 0 10px 0' }}>
-            Build your pipelines by adding controllers in the space below.
-            Controllers allow users to carry out actions on a computation or group of
-            computations. Next, add computations to your controllers. Arrange
-            controllers/computations vertically to determine their order from first
+            Build your pipelines by adding computation steps in the space below.
+            Arrange computations vertically to determine their order from first
             (highest) to last (lowest):
           </p>
 
-          <Button
+          <DropdownButton
             bsStyle="primary"
-            type="button"
-            onClick={this.addController}
-            style={{ marginBottom: 10 }}
+            id="computation-dropdown"
+            pullRight
+            title={
+              <span>
+                <span aria-hidden="true" className="glphicon glyphicon-plus" /> Add Computation Step
+              </span>
+            }
           >
-            <span aria-hidden="true" className="glphicon glyphicon-plus" />
-            {' '}
-            Add Controller
-          </Button>
+            {allComputations.map(comp => (
+              <MenuItem
+                eventKey={comp.id}
+                key={comp.id}
+                onClick={() => this.addStep(comp)}
+              >
+                {comp.meta.name}
+              </MenuItem>
+            ))}
+          </DropdownButton>
 
-          {this.state.pipeline.controllers.map((controller, index) => (
-            <Controller
-              id={controller.id}
-              key={controller.id}
-              controller={controller}
-              controllerIndex={index}
-              allComputations={computations}
-              addComputation={this.addComputation}
-              moveComputation={this.moveComputation}
-              moveController={this.moveController}
-            />
-          ))}
+          <Row>
+            <Col sm={6}>
+              <Accordion>
+                {this.state.pipeline.steps.map(step => (
+                  <PipelineStep
+                    computationName={step.computations[0].meta.name}
+                    eventKey={step.id}
+                    id={step.id}
+                    key={step.id}
+                    moveStep={this.moveStep}
+                    owner={this.state.owner}
+                    step={step}
+                    updateStep={this.updateStep}
+                  />
+                ))}
+                {!this.state.pipeline.steps.length &&
+                  <PipelineStep
+                    id={'placeholder'}
+                    key={'placeholder'}
+                    placeholder
+                    step={{ computations: [{ meta: { name: 'No computations listed!' } }] }}
+                    moveStep={this.moveStep}
+                  />
+                }
+              </Accordion>
+            </Col>
+          </Row>
         </Form>
       </div>
     );
@@ -216,7 +202,7 @@ class Pipeline extends Component {
 
 Pipeline.propTypes = {
   auth: PropTypes.object.isRequired,
-  computations: PropTypes.array.isRequired,
+  allComputations: PropTypes.array.isRequired,
   connectDropTarget: PropTypes.func.isRequired,
   params: PropTypes.object.isRequired,
 };
@@ -228,32 +214,12 @@ function mapStateToProps({ auth }) {
 const PipelineWithData = graphql(fetchComputationMetadata, {
   props: ({ data: { loading, fetchAllComputations } }) => ({
     loading,
-    computations: fetchAllComputations,
+    allComputations: fetchAllComputations,
   }),
 })(Pipeline);
-
-/*
-const PipelineWithData = graphql(saveConsortiumFunc, {
-  props: ({ mutate }) => ({
-    saveConsortium: consortium => mutate({
-      variables: { consortium },
-      update: (store, { data: { saveConsortium } }) => {
-        const data = store.readQuery({ query: fetchAllConsortiaFunc });
-        const index = data.fetchAllConsortia.findIndex(cons => cons.id === saveConsortium.id);
-        if (index > -1) {
-          data.fetchAllConsortia[index] = { ...saveConsortium };
-        } else {
-          data.fetchAllConsortia.push(saveConsortium);
-        }
-        store.writeQuery({ query: fetchAllConsortiaFunc, data });
-      },
-    }),
-  }),
-})(Pipeline);
-*/
 
 export default compose(
   connect(mapStateToProps),
   DragDropContext(HTML5Backend),
-  DropTarget(ItemTypes.CONTROLLER, consortiumTarget, collect)
+  DropTarget(ItemTypes.COMPUTATION, computationTarget, collect)
 )(PipelineWithData);

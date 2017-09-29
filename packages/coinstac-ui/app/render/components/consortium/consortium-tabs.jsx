@@ -44,7 +44,9 @@ class ConsortiumTabs extends Component {
     e.preventDefault();
 
     if (this.state.consortium.owners.indexOf(this.props.auth.user.id) === -1) {
-      this.setState({ consortium: this.state.consortium.owners.push(this.props.auth.user.id) });
+      this.setState(prevState => ({
+        consortium: prevState.consortium.owners.push(this.props.auth.user.id),
+      }));
     }
 
     this.props.saveConsortium(this.state.consortium)
@@ -58,7 +60,9 @@ class ConsortiumTabs extends Component {
   }
 
   updateConsortium(update) {
-    this.setState({ consortium: { ...this.state.consortium, [update.param]: update.value } });
+    this.setState(prevState => ({
+      consortium: { ...prevState.consortium, [update.param]: update.value },
+    }));
   }
 
   render() {

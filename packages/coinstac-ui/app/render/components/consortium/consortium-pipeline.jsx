@@ -1,11 +1,6 @@
 import React from 'react';
-import { connect } from 'react-redux';
-import PropTypes from 'prop-types';
 import { Button, Col, DropdownButton, MenuItem, Row, Well } from 'react-bootstrap';
 import { LinkContainer } from 'react-router-bootstrap';
-import { graphql } from 'react-apollo';
-import ApolloClient from '../../state/apollo-client';
-import { fetchAllConsortiaFunc, saveConsortiumFunc } from '../../state/graphql-queries';
 
 const styles = {
   activePipelineButton: { margin: '0 5px 0 0' },
@@ -13,13 +8,7 @@ const styles = {
   textCenter: { textAlign: 'center' },
 };
 
-const ConsortiumPipeline = (
-  {
-    addComputation,
-    controller,
-    moveComputation,
-  }
-) =>
+const ConsortiumPipeline = () =>
   (
     <div>
       <h3>Active Pipeline</h3>
@@ -69,25 +58,5 @@ const ConsortiumPipeline = (
       </Row>
     </div>
   );
-
-/*
-const ConsortiumPipelineWithData = graphql(saveConsortiumFunc, {
-  props: ({ mutate }) => ({
-    saveConsortium: consortium => mutate({
-      variables: { consortium },
-      update: (store, { data: { saveConsortium } }) => {
-        const data = store.readQuery({ query: fetchAllConsortiaFunc });
-        const index = data.fetchAllConsortia.findIndex(cons => cons.id === saveConsortium.id);
-        if (index > -1) {
-          data.fetchAllConsortia[index] = { ...saveConsortium };
-        } else {
-          data.fetchAllConsortia.push(saveConsortium);
-        }
-        store.writeQuery({ query: fetchAllConsortiaFunc, data });
-      },
-    }),
-  }),
-})(ConsortiumPipeline);
-*/
 
 export default ConsortiumPipeline;
