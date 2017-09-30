@@ -15,7 +15,6 @@
       "input": {
         "freeSurferRegion":
         {
-          "type": "array",
           "defaultValue": [
             "Right-Cerebellum-Cortex", "Left-Cerebellum-Cortex"
           ],
@@ -110,8 +109,6 @@
         }
       },
       "output": {
-        "type": "function",
-        "command": "src/remote.js",
         "betaVector": {
           "type": "array",
           "label": "Beta Vector",

@@ -3,15 +3,14 @@ import { DragSource, DropTarget } from 'react-dnd';
 import PropTypes from 'prop-types';
 import { compose } from 'redux';
 import { graphql } from 'react-apollo';
-import { ControlLabel, FormGroup, FormControl, Panel, Well } from 'react-bootstrap';
+import { ControlLabel, FormGroup, FormControl, Panel } from 'react-bootstrap';
 import ItemTypes from './pipeline-item-types';
+import PipelineStepInput from './pipeline-step-input';
 import { fetchComputationLocalIO } from '../../state/graphql-queries';
 
 const styles = {
   container: {
     margin: '10px 0',
-  },
-  draggable: {
     cursor: 'move',
   },
 };
@@ -65,12 +64,12 @@ class PipelineStep extends Component {
   render() {
     const {
       compIO,
+      computationName,
       connectDragSource,
       connectDropTarget,
       isDragging,
       moveStep,
       owner,
-      placeholder,
       step,
       updateStep,
       ...other
@@ -78,57 +77,61 @@ class PipelineStep extends Component {
 
     const { id, computations, controller } = step;
 
-    console.log(compIO);
-
     return connectDragSource(connectDropTarget(
       <div style={styles.container}>
-        {placeholder &&
-          <Well bsSize="small" style={styles.placeholderContainer}>
-            <em>{computations[0].meta.name}</em>
-          </Well>
-        }
-
-        {!placeholder &&
-          <Panel
-            header={computations[0].meta.name}
-            style={{ ...styles.draggable, opacity: isDragging ? 0 : 1 }}
-            {...other}
-          >
-            <h4>Step Options:</h4>
-            <FormGroup controlId={`${id}-iterations`}>
-              <ControlLabel>Iterations</ControlLabel>
-              <FormControl
-                disabled={!owner}
-                inputRef={(input) => { this.iterations = input; }}
-                onChange={() => updateStep(id, { ...step, iterations: this.iterations.value })}
-                type="number"
-                value={controller.options.iterations}
-              />
-            </FormGroup>
-            <hr />
-            <h4>Input Mappings:</h4>
-          </Panel>
-        }
+        <Panel
+          header={computations[0].meta.name}
+          style={{ ...styles.draggable, opacity: isDragging ? 0 : 1 }}
+          {...other}
+        >
+          <h4>Step Options:</h4>
+          <FormGroup controlId={`${id}-iterations`}>
+            <ControlLabel>Iterations</ControlLabel>
+            <FormControl
+              disabled={!owner}
+              inputRef={(input) => { this.iterations = input; }}
+              onChange={() => updateStep(id, { ...step, iterations: this.iterations.value })}
+              type="number"
+              value={controller.options.iterations}
+            />
+          </FormGroup>
+          <hr />
+          <h4>Input Mappings:</h4>
+          {compIO !== null && Object.entries(compIO.local.input).map(localInput => (
+            <PipelineStepInput
+              objKey={localInput[0]}
+              objParams={localInput[1]}
+              key={`${id}-${localInput[0]}-input`}
+              owner={owner}
+              parentKey={`${id}-${localInput[0]}-input`}
+              step={step}
+              updateStep={updateStep}
+            />
+          ))}
+          <h4>Output:</h4>
+          {compIO !== null && Object.entries(compIO.local.output).map(localOutput => (
+            <p key={`${id}-${localOutput.label}-output`}>{localOutput.label}</p>
+          ))}
+        </Panel>
       </div>
     ));
   }
 }
 
 PipelineStep.defaultProps = {
+  compIO: null,
   owner: false,
-  placeholder: false,
   updateStep: null,
 };
 
 PipelineStep.propTypes = {
-  compIO: PropTypes.object.isRequired,
+  compIO: PropTypes.object,
   connectDragSource: PropTypes.func.isRequired,
   connectDropTarget: PropTypes.func.isRequired,
   id: PropTypes.string.isRequired,
   isDragging: PropTypes.bool.isRequired,
   moveStep: PropTypes.func.isRequired,
   owner: PropTypes.bool,
-  placeholder: PropTypes.bool,
   step: PropTypes.object.isRequired,
   updateStep: PropTypes.func,
 };
