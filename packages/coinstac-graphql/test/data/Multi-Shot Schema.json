@@ -116,8 +116,6 @@
       }
     },
     "output": {
-      "type": "function",
-      "command": "src/remote.js",
       "betaVector": {
         "type": "array",
         "label": "Beta Vector",

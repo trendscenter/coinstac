@@ -18,6 +18,7 @@ import {
   FormGroup,
   MenuItem,
   Row,
+  Well,
 } from 'react-bootstrap';
 import ApolloClient from '../../state/apollo-client';
 import PipelineStep from './pipeline-step';
@@ -72,6 +73,7 @@ class Pipeline extends Component {
             computations: [
               { ...computation },
             ],
+            ioMap: [],
           },
         ],
       },
@@ -168,30 +170,29 @@ class Pipeline extends Component {
           </DropdownButton>
 
           <Row>
-            <Col sm={6}>
-              <Accordion>
-                {this.state.pipeline.steps.map(step => (
-                  <PipelineStep
-                    computationName={step.computations[0].meta.name}
-                    eventKey={step.id}
-                    id={step.id}
-                    key={step.id}
-                    moveStep={this.moveStep}
-                    owner={this.state.owner}
-                    step={step}
-                    updateStep={this.updateStep}
-                  />
-                ))}
-                {!this.state.pipeline.steps.length &&
-                  <PipelineStep
-                    id={'placeholder'}
-                    key={'placeholder'}
-                    placeholder
-                    step={{ computations: [{ meta: { name: 'No computations listed!' } }] }}
-                    moveStep={this.moveStep}
-                  />
-                }
-              </Accordion>
+            <Col sm={12}>
+              {this.state.pipeline.steps.length > 0 &&
+                <Accordion>
+                  {this.state.pipeline.steps.map(step => (
+                    <PipelineStep
+                      computationName={step.computations[0].meta.name}
+                      eventKey={step.id}
+                      id={step.id}
+                      key={step.id}
+                      moveStep={this.moveStep}
+                      owner={this.state.owner}
+                      step={step}
+                      updateStep={this.updateStep}
+                    />
+                  ))}
+                  
+                </Accordion>
+              }
+              {!this.state.pipeline.steps.length &&
+                <Well bsSize="small" style={{ margin: '10px 0' }}>
+                  <em>No computations added</em>
+                </Well>
+              }
             </Col>
           </Row>
         </Form>
