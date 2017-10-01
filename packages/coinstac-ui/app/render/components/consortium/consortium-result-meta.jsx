@@ -59,6 +59,10 @@ export default function ConsortiumResultMeta({
 
 ConsortiumResultMeta.displayName = 'ConsortiumResultMeta';
 
+ConsortiumResultMeta.defaultProps = {
+  computationInputs: [],
+};
+
 ConsortiumResultMeta.propTypes = {
   computation: PropTypes.shape({
     meta: PropTypes.shape({
@@ -72,7 +76,7 @@ ConsortiumResultMeta.propTypes = {
       PropTypes.arrayOf(PropTypes.object),
       PropTypes.number,
     ])
-  )).isRequired,
+  )),
   step: PropTypes.number.isRequired,
   usernames: PropTypes.arrayOf(PropTypes.string).isRequired,
 };

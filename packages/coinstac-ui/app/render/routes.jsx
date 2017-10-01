@@ -12,6 +12,8 @@ import DashboardHome from './components/dashboard-home';
 import DashboardConsortia from './components/dashboard-consortia';
 import Login from './components/form-login-controller';
 import Signup from './components/form-signup-controller';
+import Test from './components/feature-test';
+import ComputationSubmission from './components/computation-submission';
 import DashboardProjects from './components/projects/dashboard-projects';
 import ProjectsList from './components/projects/projects-list';
 import ConsortiumController from './components/consortium/consortium-controller';
@@ -34,6 +36,8 @@ export default (
         <Route path=":projectId" component={FormProjectController} />
       </Route>
       <Route path="/settings" component={Settings} />
+      <Route path="submit-computation" component={ComputationSubmission} />
+      <Route path="test" component={Test} />
     </Route>
   </Route>
 );
