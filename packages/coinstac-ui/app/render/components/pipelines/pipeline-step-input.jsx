@@ -11,71 +11,88 @@ import {
   MenuItem,
   Row,
 } from 'react-bootstrap';
-import update from 'immutability-helper';
 
 export default class PipelineStepInput extends Component {
   constructor(props) {
     super(props);
 
-    if (props.objKey === 'covariates') {
-      this.state = { covariates: [] };
-    }
-
     this.addCovariate = this.addCovariate.bind(this);
-    this.updateCovariate = this.updateCovariate.bind(this);
+    this.getNewObj = this.getNewObj.bind(this);
   }
 
-  getNewObj(ioMap, objKey, value, isCovariate) { // eslint-disable-line class-methods-use-this
+  getNewObj(objKey, value, covarIndex) { // eslint-disable-line class-methods-use-this
+    const { isCovariate, step: { ioMap } } = this.props;
+
     if (!isCovariate) {
       return { ...ioMap, [objKey]: value };
     }
 
-    const covariates = [...ioMap.covariates];
-    covariates.splice(objKey, 1, value);
-    return { ...ioMap, covariates: [...covariates] };
+    const covars = [...ioMap.covariates];
+    covars.splice(covarIndex, 1, { ...covars[covarIndex], [objKey]: value });
+    return { ...ioMap, covariates: [...covars] };
+  }
+
+  getSelectList(array, value) { // eslint-disable-line class-methods-use-this
+    if (array) {
+      const index = array.indexOf(value);
+      if (index > -1) {
+        return [...array.splice(index, 1)];
+      }
+      return [...array, value];
+    }
+
+    return [value];
   }
 
   addCovariate() {
-    this.setState(prevState => ({
-      covariates: [...prevState.covariates, { type: '', value: '' }],
-    }));
-  }
+    const { step, updateStep } = this.props;
 
-  updateCovariate(index, item) {
-    this.setState(prevState => ({
-      covariates: update(prevState.covariates, {
-        $splice: [[index, 1, item]],
-      }),
-    }));
+    updateStep({
+      ...step,
+      ioMap: {
+        ...step.ioMap,
+        covariates:
+        [
+          ...step.ioMap.covariates,
+          {
+            type: '',
+          },
+        ],
+      },
+    });
   }
 
   render() {
-    const { isCovariate, objKey, objParams, parentKey, owner, step, updateStep } = this.props;
+    const { objKey, objParams, parentKey, owner, step, updateStep } = this.props;
 
     return (
       <div>
         {objKey === 'covariates' &&
           <div>
-            <h4>Covariates</h4>
+            <p style={{ fontWeight: 'bold' }}>Covariates</p>
             <Button
               bsStyle="primary"
               onClick={this.addCovariate}
+              style={{ marginBottom: 10 }}
             >
               <span aria-hidden="true" className="glphicon glyphicon-plus" /> Add Covariate
             </Button>
-            {this.state.covariates.map((cov, index) => (
+            {step.ioMap.covariates.map((cov, index) => (
               <Row key={`covariate-${index}`}>
-                <Col sm={6}>
+                <Col sm={4}>
                   <DropdownButton
-                    bsStyle="primary"
+                    bsStyle="info"
                     id={`covariate-${index}-dropdown`}
-                    title="Covariate Type"
+                    title={cov.type || 'Covariate Type'}
                   >
                     {objParams.items.map(item => (
                       <MenuItem
                         eventKey={`${item}-menuitem`}
                         key={`${item}-menuitem`}
-                        onClick={() => this.updateCovariate(index, { ...cov, type: item })}
+                        onClick={() => updateStep({
+                          ...step,
+                          ioMap: this.getNewObj('type', item, index),
+                        })}
                       >
                         {item}
                       </MenuItem>
@@ -83,17 +100,30 @@ export default class PipelineStepInput extends Component {
                   </DropdownButton>
                 </Col>
                 {cov.type &&
-                  <Col sm={6}>
-                    <PipelineStepInput
-                      objKey={index}
-                      isCovariate
-                      objParams={{ type: cov.type, defaultValue: this.state.covariates.defaultValue || null }}
-                      owner={owner}
-                      step={step}
-                      updateStep={updateStep}
-                    />
-                  </Col>
+                  <div>
+                    <Col sm={4}>
+                      <FormGroup controlId={`${parentKey}-form-group`}>
+                        <FormControl
+                          disabled={!owner}
+                          placeholder="Covariate Label"
+                          type="input"
+                          value={cov.name || ''}
+                          inputRef={(input) => { this[index] = input; }}
+                          onChange={() => updateStep({
+                            ...step,
+                            ioMap: this.getNewObj('name', this[index].value, index),
+                          })}
+                        />
+                      </FormGroup>
+                    </Col>
+                    <Col sm={4}>
+                      <Button bsStyle="danger">
+                        Remove
+                      </Button>
+                    </Col>
+                  </div>
                 }
+
               </Row>
             ))}
           </div>
@@ -109,12 +139,12 @@ export default class PipelineStepInput extends Component {
               <FormControl
                 disabled={!owner}
                 inputRef={(input) => { this[objKey] = input; }}
-                onChange={() => updateStep(step.id, {
+                onChange={() => updateStep({
                   ...step,
-                  ioMap: this.getNewObj(step.ioMap, objKey, this[objKey].value, isCovariate),
+                  ioMap: this.getNewObj(objKey, this[objKey].value),
                 })}
                 type="number"
-                value={objParams.defaultValue || ''}
+                value={step.ioMap[objKey] || ''}
               />
             }
 
@@ -124,14 +154,15 @@ export default class PipelineStepInput extends Component {
                 disabled={!owner}
                 inputRef={(input) => { this[objKey] = input; }}
                 multiple
-                onChange={() => updateStep(step.id, {
+                onChange={() => updateStep({
                   ...step,
-                  ioMap: this.getNewObj(step.ioMap, objKey, this[objKey].value, isCovariate),
+                  ioMap: this.getNewObj(objKey, this.getSelectList(step.ioMap[objKey], this[objKey].value)),
                 })}
-                value={objParams.defaultValue || ''}
+                value={step.ioMap[objKey] || []}
               >
-                <option value="select">select (multiple)</option>
-                <option value="other">...</option>
+                {objParams.values.map(val =>
+                  <option key={`${val}-select-option`} value={val}>{val}</option>
+                )}
               </FormControl>
             }
 
@@ -139,11 +170,11 @@ export default class PipelineStepInput extends Component {
               <Checkbox
                 disabled={!owner}
                 inputRef={(input) => { this[objKey] = input; }}
-                onChange={() => updateStep(step.id, {
+                onChange={() => updateStep({
                   ...step,
-                  ioMap: this.getNewObj(step.ioMap, objKey, this[objKey].value, isCovariate),
+                  ioMap: this.getNewObj(objKey, this[objKey].value),
                 })}
-                value={objParams.defaultValue || ''}
+                value={step.ioMap[objKey] || ''}
               >
                 True?
               </Checkbox>
@@ -156,14 +187,13 @@ export default class PipelineStepInput extends Component {
 }
 
 PipelineStepInput.defaultProps = {
-  isCovariate: false,
   parentKey: '',
   owner: false,
   updateStep: null,
 };
 
 PipelineStepInput.propTypes = {
-  isCovariate: PropTypes.bool,
+  isCovariate: PropTypes.bool.isRequired,
   parentKey: PropTypes.string,
   objKey: PropTypes.string.isRequired,
   objParams: PropTypes.object.isRequired,

@@ -17,7 +17,7 @@ import {
   pullComputations,
   updateDockerOutput,
 } from '../state/ducks/feature-test';
-import ComputationIO from './computation-io';
+import ComputationIO from './computations/computation-io';
 
 const styles = {
   outputBox: { marginTop: 10, height: 400, overflowY: 'scroll' },

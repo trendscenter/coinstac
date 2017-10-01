@@ -9,7 +9,7 @@ import {
 import {
   addComputationMetadata,
   fetchComputationMetadata,
-} from '../state/graphql-queries';
+} from '../../state/graphql-queries';
 
 const styles = {
   topMargin: { marginTop: 10 },

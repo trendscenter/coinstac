@@ -14,31 +14,36 @@ const DashboardNav = ({ auth: { user } }) => {
           Home
         </NavItem>
       </IndexLinkContainer>
-      <LinkContainer to="/consortia">
+      <LinkContainer to="/computations">
         <NavItem eventKey={2}>
+          <span aria-hidden="true" className="glyphicon glyphicon-hdd" />
+          {' '}
+          Computations
+        </NavItem>
+      </LinkContainer>
+      <LinkContainer to="/consortia">
+        <NavItem eventKey={3}>
           <span aria-hidden="true" className="glyphicon glyphicon-list" />
           {' '}
           Consortia
         </NavItem>
       </LinkContainer>
       <LinkContainer to="/my-files">
-        <NavItem eventKey={3}>
-          <span aria-hidden="true" className="glyphicon glyphicon-list-alt" />
+        <NavItem eventKey={4}>
+          <span aria-hidden="true" className="glyphicon glyphicon-duplicate" />
           {' '}
           My Files
         </NavItem>
       </LinkContainer>
-      {user.permissions.computations.write &&
-        <LinkContainer to="/submit-computation">
-          <NavItem eventKey={4}>
-            <span aria-hidden="true" className="glyphicon glyphicon-export" />
-            {' '}
-            Submit Computation
-          </NavItem>
-        </LinkContainer>
-      }
-      <LinkContainer to="/test">
+      <LinkContainer to="/pipelines">
         <NavItem eventKey={5}>
+          <span aria-hidden="true" className="glyphicon glyphicon-tasks" />
+          {' '}
+          Pipelines
+        </NavItem>
+      </LinkContainer>
+      <LinkContainer to="/test">
+        <NavItem eventKey={7}>
           <span aria-hidden="true" className="glyphicon glyphicon-sunglasses" />
           {' '}
           Feature Test

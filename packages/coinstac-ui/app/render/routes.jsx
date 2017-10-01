@@ -7,7 +7,8 @@
 import { Route, IndexRoute } from 'react-router';
 import React from 'react';
 import App from './components/app';
-import ComputationSubmission from './components/computation-submission';
+import ComputationSubmission from './components/computations/computation-submission';
+import ComputationsList from './components/computations/computations-list';
 import ConsortiaList from './components/consortium/consortia-list';
 import ConsortiumTabs from './components/consortium/consortium-tabs';
 import Dashboard from './components/dashboard';
@@ -43,6 +44,10 @@ export default (
         <IndexRoute component={PipelinesList} />
         <Route path="new(/:consortiumId)" component={Pipeline} />
         <Route path=":pipelineId" component={Pipeline} />
+      </Route>
+      <Route path="computations" component={RouteContainer}>
+        <IndexRoute component={ComputationsList} />
+        <Route path="new" component={ComputationSubmission} />
       </Route>
       <Route path="settings" component={Settings} />
       <Route path="submit-computation" component={ComputationSubmission} />

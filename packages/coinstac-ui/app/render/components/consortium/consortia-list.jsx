@@ -33,7 +33,7 @@ const ConsortiaList = ({ auth: { user }, consortia }) => (
     ))}
     {!consortia &&
       <Alert bsStyle="info">
-        No consortia listed
+        No consortia found
       </Alert>
     }
   </div>

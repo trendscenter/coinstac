@@ -90,7 +90,7 @@ class PipelineStep extends Component {
             <FormControl
               disabled={!owner}
               inputRef={(input) => { this.iterations = input; }}
-              onChange={() => updateStep(id, { ...step, iterations: this.iterations.value })}
+              onChange={() => updateStep({ ...step, iterations: this.iterations.value })}
               type="number"
               value={controller.options.iterations}
             />
@@ -99,6 +99,7 @@ class PipelineStep extends Component {
           <h4>Input Mappings:</h4>
           {compIO !== null && Object.entries(compIO.local.input).map(localInput => (
             <PipelineStepInput
+              isCovariate={localInput[0] === 'covariates'}
               objKey={localInput[0]}
               objParams={localInput[1]}
               key={`${id}-${localInput[0]}-input`}
@@ -110,7 +111,7 @@ class PipelineStep extends Component {
           ))}
           <h4>Output:</h4>
           {compIO !== null && Object.entries(compIO.local.output).map(localOutput => (
-            <p key={`${id}-${localOutput.label}-output`}>{localOutput.label}</p>
+            <p key={`${id}-${localOutput[0]}-output`}>{localOutput[1].label}</p>
           ))}
         </Panel>
       </div>

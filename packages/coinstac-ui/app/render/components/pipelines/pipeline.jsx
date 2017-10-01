@@ -73,7 +73,7 @@ class Pipeline extends Component {
             computations: [
               { ...computation },
             ],
-            ioMap: [],
+            ioMap: { covariates: [] },
           },
         ],
       },
@@ -102,12 +102,12 @@ class Pipeline extends Component {
     }));
   }
 
-  updateStep(stepId, step) {
+  updateStep(step) {
     this.setState(prevState => ({
       pipeline: {
         ...prevState.pipeline,
         steps: update(prevState.pipeline.steps, {
-          $splice: [[prevState.pipeline.steps.findIndex(s => s.id === stepId), 1, step]],
+          $splice: [[prevState.pipeline.steps.findIndex(s => s.id === step.id), 1, step]],
         }),
       },
     }));
