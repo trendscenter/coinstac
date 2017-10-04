@@ -1,15 +1,18 @@
 import React from 'react';
+import { graphql } from 'react-apollo';
 import PropTypes from 'prop-types';
+import { ConsortiaListWithData } from './consortia-list';
+import { deleteConsortiumByIdFunc, fetchAllConsortiaFunc } from '../../state/graphql-queries';
 import { Button, Panel } from 'react-bootstrap';
 import { LinkContainer } from 'react-router-bootstrap';
 
-const ConsortiaListItem = ({ owner, user, consortium }) => (
+const ConsortiaListItem = ({ owner, user, consortium, submit}) => (
   <Panel header={<h3>{consortium.name}</h3>}>
     <p>{consortium.description}</p>
     <LinkContainer to={`/consortia/${consortium.id}`}>
       <Button bsStyle="info">View Details</Button>
     </LinkContainer>
-    {owner && <Button bsStyle="danger" className="pull-right">Delete Consortium</Button>}
+    {owner && <Button bsStyle="danger" onClick={() => submit(`${consortium.id}`)} className="pull-right">Delete Consortium</Button>}
     {user && !owner && <Button bsStyle="warning" className="pull-right">Leave Consortium</Button>}
     {!user && !owner && <Button bsStyle="primary" className="pull-right">Join Consortium</Button>}
   </Panel>
@@ -19,6 +22,23 @@ ConsortiaListItem.propTypes = {
   consortium: PropTypes.object.isRequired,
   owner: PropTypes.bool.isRequired,
   user: PropTypes.bool.isRequired,
+  submit: PropTypes.func.isRequired,
 };
 
-export default ConsortiaListItem;
+const ConsortiaListItemWithData = graphql(deleteConsortiumByIdFunc, {
+  props: ({ mutate }) => ({
+    submit: (consortiumId) => mutate({
+      variables: { consortiumId },
+      update: (store, { data: { deleteConsortiumById } }) => {
+        const data = store.readQuery({ query: fetchAllConsortiaFunc });
+        const index = data.fetchAllConsortia.findIndex(con => con.id === deleteConsortiumById.id);
+        if (index > -1) {
+          data.fetchAllConsortia.splice(index, 1);
+        }
+        store.writeQuery({ query: fetchAllConsortiaFunc, data });
+      }
+    }),
+  }),
+})(ConsortiaListItem);
+
+export default ConsortiaListItemWithData;
