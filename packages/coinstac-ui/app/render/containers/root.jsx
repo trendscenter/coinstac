@@ -1,14 +1,15 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Provider } from 'react-redux';
 import { Router } from 'react-router';
 
+import { ApolloProvider } from 'react-apollo';
+import client from '../state/apollo-client';
 import routes from '../routes';
 
 const Root = ({ history, store }) => (
-  <Provider store={store}>
+  <ApolloProvider store={store} client={client}>
     <Router history={history} routes={routes} />
-  </Provider>
+  </ApolloProvider>
 );
 
 Root.propTypes = {
