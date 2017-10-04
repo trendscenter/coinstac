@@ -36,6 +36,25 @@ module.exports = {
   },
 
   /**
+   * Get a schema file.
+   *
+   * @returns {Promise} Resolves to a string representing the schema file's full
+   * path.
+   */
+  getSchemaFile: () => {
+    return getMainWindow().then(mainWindow => new Promise((resolve) => {
+      const files = dialog.showOpenDialog(mainWindow, {
+        filters: [{
+          name: 'JSON',
+          extensions: ['json'],
+        }],
+        properties: ['openFile'],
+      });
+      resolve(files ? files[0] : undefined);
+    }));
+  },
+
+  /**
    * Select files.
    *
    * Use Electron's dialog to show a native file selector

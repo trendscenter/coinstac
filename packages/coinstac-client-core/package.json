@@ -38,6 +38,7 @@
     "coins-deposit-box": "^5.1.0",
     "coinstac-common": "^2.6.0",
     "coinstac-computation-registry": "^2.6.0",
+    "coinstac-computation-registry-new": "^2.6.0",
     "commander": "^2.9.0",
     "convict": "^1.5.0",
     "csv-parse": "^1.2.0",

@@ -23,6 +23,7 @@ const common = require('coinstac-common');
 const LocalPipelineRunnerPool = common.models.pipeline.runner.pool.LocalPipelineRunnerPool;
 const computationRegistryFactory =
   require('coinstac-computation-registry').factory;
+const ComputationRegistryNew = require('coinstac-computation-registry-new');
 const registryFactory = require('coinstac-common').services.dbRegistry;
 
 const AuthenticationService = require('./sub-api/authentication-service.js');
@@ -99,6 +100,7 @@ class CoinstacClient {
     this.consortia = {};
     this.computations = {};
     this.dbRegistry = {};
+    this.computationRegistryNew = {};
     this.projects = {};
     this.pool = {};
 
@@ -230,6 +232,8 @@ class CoinstacClient {
     const computationsDirectory = this.getComputationsDirectory();
 
     this.logger.info('initializing ComputationRegistry');
+
+    this.computationRegistryNew = new ComputationRegistryNew();
 
     return bluebird.promisify(mkdirp)(computationsDirectory)
       .then(() => computationRegistryFactory({
