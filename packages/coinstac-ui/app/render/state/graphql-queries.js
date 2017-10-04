@@ -28,6 +28,14 @@ export const saveConsortiumFunc = gql`
   }
 `;
 
+export const deleteConsortiumByIdFunc = gql`
+  mutation DeleteConsortiumMutation($consortiumId: ID!) {
+    deleteConsortiumById(consortiumId: $consortiumId){
+      id
+    }
+  }
+`;
+
 export const deleteAllComputations = gql`
   mutation DeleteAllJsonSchema {
     removeAllComputations

@@ -137,7 +137,15 @@ const resolvers = {
       return new Promise();
     },
     deleteConsortiumById: (_, args) => {
-      return new Promise();
+      return helperFunctions.getRethinkConnection()
+        .then((connection) =>
+          rethink.table('consortia').get(args.consortiumId)
+          .delete({returnChanges: true})
+          .run(connection)
+        )
+        .then((result) => {
+          return result.changes[0].old_val;
+        })
     },
     joinConsortium: (_, args) => {
       return new Promise();
