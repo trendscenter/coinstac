@@ -7,7 +7,7 @@ import {
   Button,
   Table,
 } from 'react-bootstrap';
-import { fetchComputationMetadata } from '../../state/graphql-queries';
+import { fetchAllComputationsFunc } from '../../state/graphql-queries';
 import ComputationIO from './computation-io';
 
 const styles = {
@@ -73,7 +73,7 @@ class ComputationsList extends Component { // eslint-disable-line
         {this.state.activeComp &&
           <div>
             {this.state.activeComp.meta.name}
-            <ComputationIO computationName={this.state.activeComp.meta.name} />
+            <ComputationIO computationId={this.state.activeComp.id} />
           </div>
         }
       </div>
@@ -90,7 +90,7 @@ function mapStateToProps({ auth, featureTest: { dockerOut } }) {
   return { auth, dockerOut };
 }
 
-const ComputationsListWithData = graphql(fetchComputationMetadata, {
+const ComputationsListWithData = graphql(fetchAllComputationsFunc, {
   props: ({ data: { loading, fetchAllComputations } }) => ({
     loading,
     computations: fetchAllComputations,

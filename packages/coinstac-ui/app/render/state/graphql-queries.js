@@ -34,7 +34,7 @@ export const deleteAllComputations = gql`
   }
 `;
 
-export const fetchComputationMetadata = gql`
+export const fetchAllComputationsFunc = gql`
   query ComputationMetadataQuery {
     fetchAllComputations {
       id
@@ -48,9 +48,9 @@ export const fetchComputationMetadata = gql`
   }
 `;
 
-export const fetchComputationLocalIO = gql`
-  query ComputationIOQuery ($computationName: String!) {
-    fetchComputationMetadataByName (computationName: $computationName) {
+export const fetchComputationDetailsFunc = gql`
+  query ComputationIOQuery ($computationIds: [ID]) {
+    fetchComputationDetails (computationIds: $computationIds) {
       id
       local
     }

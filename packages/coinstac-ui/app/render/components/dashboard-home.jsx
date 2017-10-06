@@ -7,7 +7,7 @@ import { connect } from 'react-redux';
 import { graphql } from 'react-apollo';
 import StatusItem from './status-item';
 // import { fetchComputations } from '../state/ducks/computations';
-import { fetchComputationMetadata } from '../state/graphql-queries';
+import { fetchAllComputationsFunc } from '../state/graphql-queries';
 
 /* import {
   fetchRemoteResultsForUser,
@@ -125,7 +125,7 @@ function mapStateToProps({
   };
 }
 
-const DashHomeWithData = graphql(fetchComputationMetadata, {
+const DashHomeWithData = graphql(fetchAllComputationsFunc, {
   props: ({ data: { loading, fetchAllComputations } }) => ({
     loading,
     computations: fetchAllComputations,

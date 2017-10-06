@@ -6,7 +6,7 @@ import { graphql } from 'react-apollo';
 import { ControlLabel, FormGroup, FormControl, Panel } from 'react-bootstrap';
 import ItemTypes from './pipeline-item-types';
 import PipelineStepInput from './pipeline-step-input';
-import { fetchComputationLocalIO } from '../../state/graphql-queries';
+import { fetchComputationDetailsFunc } from '../../state/graphql-queries';
 
 const styles = {
   container: {
@@ -64,9 +64,12 @@ class PipelineStep extends Component {
   render() {
     const {
       compIO,
-      computationName,
+      computationId,
       connectDragSource,
       connectDropTarget,
+      pipelineIndex,
+      possibleInputs,
+      previousComputationIds,
       isDragging,
       moveStep,
       owner,
@@ -102,9 +105,13 @@ class PipelineStep extends Component {
               isCovariate={localInput[0] === 'covariates'}
               objKey={localInput[0]}
               objParams={localInput[1]}
+              pipelineIndex={pipelineIndex}
               key={`${id}-${localInput[0]}-input`}
               owner={owner}
               parentKey={`${id}-${localInput[0]}-input`}
+              possibleInputs={possibleInputs.map((prevComp, possibleInputIndex) =>
+                ({ inputs: prevComp.local.output, possibleInputIndex })
+              )}
               step={step}
               updateStep={updateStep}
             />
@@ -122,6 +129,7 @@ class PipelineStep extends Component {
 PipelineStep.defaultProps = {
   compIO: null,
   owner: false,
+  possibleInputs: [],
   updateStep: null,
 };
 
@@ -133,16 +141,26 @@ PipelineStep.propTypes = {
   isDragging: PropTypes.bool.isRequired,
   moveStep: PropTypes.func.isRequired,
   owner: PropTypes.bool,
+  possibleInputs: PropTypes.array,
   step: PropTypes.object.isRequired,
   updateStep: PropTypes.func,
 };
 
-const PipelineStepWithData = graphql(fetchComputationLocalIO, {
-  props: ({ data: { fetchComputationMetadataByName } }) => ({
-    compIO: fetchComputationMetadataByName,
+const PipelineStepWithData = compose(
+  graphql(fetchComputationDetailsFunc, {
+    props: ({ data: { fetchComputationDetails } }) => ({
+      compIO: fetchComputationDetails ? fetchComputationDetails[0] : null,
+    }),
+    options: ({ computationId }) => ({ variables: { computationIds: [computationId] } }),
   }),
-  options: ({ computationName }) => ({ variables: { computationName } }),
-})(PipelineStep);
+  graphql(fetchComputationDetailsFunc, {
+    props: ({ data: { fetchComputationDetails } }) => ({
+      possibleInputs: fetchComputationDetails,
+    }),
+    options: ({ previousComputationIds }) =>
+      ({ variables: { computationIds: previousComputationIds } }),
+  })
+)(PipelineStep);
 
 export default compose(
   DropTarget(ItemTypes.COMPUTATION, stepTarget, collectDrop),

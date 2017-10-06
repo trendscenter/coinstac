@@ -11,7 +11,7 @@ import {
   Button,
   Table,
 } from 'react-bootstrap';
-import { fetchComputationMetadata, deleteAllComputations } from '../state/graphql-queries';
+import { fetchAllComputationsFunc, deleteAllComputations } from '../state/graphql-queries';
 import {
   getCompIO,
   pullComputations,
@@ -186,7 +186,7 @@ function mapStateToProps({ auth, featureTest: { dockerOut } }) {
 }
 
 const FeatureTestWithData = compose(
-  graphql(fetchComputationMetadata, {
+  graphql(fetchAllComputationsFunc, {
     props: ({ data: { loading, fetchAllComputations } }) => ({
       loading,
       computations: fetchAllComputations,
@@ -196,9 +196,9 @@ const FeatureTestWithData = compose(
     props: ({ mutate }) => ({
       deleteAllComputations: () => mutate({
         update: (store) => {
-          const data = store.readQuery({ query: fetchComputationMetadata });
+          const data = store.readQuery({ query: fetchAllComputationsFunc });
           data.fetchAllComputations.length = 0;
-          store.writeQuery({ query: fetchComputationMetadata, data });
+          store.writeQuery({ query: fetchAllComputationsFunc, data });
         },
       }),
     }),
