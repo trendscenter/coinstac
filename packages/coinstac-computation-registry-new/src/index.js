@@ -48,9 +48,9 @@ class ComputationRegistry {
    * @return {Promise<string>} Success flag
    */
   serverStart() {
-    axios.get(`http://localhost:3100/graphql?query=${graphqlSchema.allDockerImages}`)
+    axios.get(`http://localhost:3100/graphql?query=${graphqlSchema.queries.allDockerImages}`)
     .then(({ data: { data: { fetchAllComputations } } }) => {
-      const comps = fetchAllComputations.map(comp => comp.meta.dockerImage);
+      const comps = fetchAllComputations.map(comp => comp.computation.dockerImage);
       return this.pullPipelineComputations({ comps });
     })
     .then((pullStreams) => {
