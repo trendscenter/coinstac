@@ -8,7 +8,7 @@ import {
 } from 'react-bootstrap';
 import {
   addComputationMetadata,
-  fetchComputationMetadata,
+  fetchAllComputationsFunc,
 } from '../../state/graphql-queries';
 
 const styles = {
@@ -111,9 +111,9 @@ export default graphql(addComputationMetadata, {
     submitSchema: computationSchema => mutate({
       variables: { computationSchema },
       update: (store, { data: { addComputation } }) => {
-        const data = store.readQuery({ query: fetchComputationMetadata });
+        const data = store.readQuery({ query: fetchAllComputationsFunc });
         data.fetchAllComputations.push(addComputation);
-        store.writeQuery({ query: fetchComputationMetadata, data });
+        store.writeQuery({ query: fetchAllComputationsFunc, data });
       },
     }),
   }),

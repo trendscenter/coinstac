@@ -86,7 +86,7 @@ const typeDefs = `
   type Query {
     # This is a description of the fetchAllComputations query
     fetchAllComputations: [Computation]
-    fetchComputationMetadataByName(computationName: String): Computation
+    fetchComputationDetails(computationIds: [ID]): [Computation]
     fetchAllConsortia: [Consortium]
     validateComputation(compId: ID): Boolean
     fetchConsortiumById(consortiumId: ID): Consortium
