@@ -11,7 +11,8 @@ import {
   Button,
   Table,
 } from 'react-bootstrap';
-import { fetchComputationMetadata, deleteAllComputations } from '../state/graphql-queries';
+import { fetchAllComputationsMetadataFunc, removeAllComputationsFunc } from '../state/graphql/functions';
+import { computationsProp } from '../state/graphql/props';
 import {
   getCompIO,
   pullComputations,
@@ -54,7 +55,7 @@ class FeatureTest extends Component { // eslint-disable-line
   }
 
   render() {
-    const { dockerOut, computations, deleteAllComputations } = this.props;
+    const { dockerOut, computations, removeAllComputations } = this.props;
 
     return (
       <div style={styles.topMargin}>
@@ -87,7 +88,7 @@ class FeatureTest extends Component { // eslint-disable-line
           <div className={'clearfix'}>
             <Button
               bsStyle="danger"
-              onClick={() => deleteAllComputations()}
+              onClick={() => removeAllComputations()}
               className={'pull-right'}
             >
               Delete All Computations
@@ -166,9 +167,9 @@ class FeatureTest extends Component { // eslint-disable-line
 
 FeatureTest.propTypes = {
   computations: PropTypes.array.isRequired,
-  deleteAllComputations: PropTypes.func.isRequired,
   dockerOut: PropTypes.array.isRequired,
   pullComputations: PropTypes.func.isRequired,
+  removeAllComputations: PropTypes.func.isRequired,
   updateDockerOutput: PropTypes.func.isRequired,
 };
 
@@ -177,19 +178,14 @@ function mapStateToProps({ featureTest: { dockerOut } }) {
 }
 
 const FeatureTestWithData = compose(
-  graphql(fetchComputationMetadata, {
-    props: ({ ownProps, data: { loading, fetchAllComputations } }) => ({
-      loading,
-      computations: fetchAllComputations,
-    }),
-  }),
-  graphql(deleteAllComputations, {
+  graphql(fetchAllComputationsMetadataFunc, computationsProp),
+  graphql(removeAllComputationsFunc, {
     props: ({ mutate }) => ({
-      deleteAllComputations: () => mutate({
+      removeAllComputations: () => mutate({
         update: (store) => {
-          const data = store.readQuery({ query: fetchComputationMetadata });
+          const data = store.readQuery({ query: fetchAllComputationsMetadataFunc });
           data.fetchAllComputations.length = 0;
-          store.writeQuery({ query: fetchComputationMetadata, data });
+          store.writeQuery({ query: fetchAllComputationsMetadataFunc, data });
         },
       }),
     }),
