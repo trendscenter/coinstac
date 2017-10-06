@@ -1,47 +1,9 @@
-const graphqlSchema = {
-  addComputation: `
-    {
-      addComputation(computationSchema: $computationSchema) {
-        id
-        meta {
-          name
-          description
-          version
-          dockerImage
-        }
-      }
-    }
-  `,
-  allDockerImages: `
-    {
-      fetchAllComputations {
-        meta {
-          dockerImage
-        }
-      }
-    }
-  `,
-  allMetadata: `
-    {
-      fetchAllComputations {
-        id
-        meta {
-          name
-          description
-          version
-          dockerImage
-        }
-      }
-    }
-  `,
-  localIOByName: `
-    {
-      fetchComputationMetadataByName (computationName: $computationName) {
-        id
-        local
-      }
-    }
-  `,
-};
+'use strict';
 
-module.exports = graphqlSchema;
+const mutations = require('./mutations');
+const queries = require('./queries');
+
+module.exports = {
+  queries,
+  mutations,
+};

@@ -24,7 +24,7 @@ const resolvers = {
         })
       )
     },
-    fetchComputationMetadataByName: (_, args) => {
+    fetchComputationDetails: (_, args) => {
       return new Promise ((res, rej) =>
         rethink.table('computations').filter({ meta: { name: args.computationName } })
           .run(connection, (error, cursor) => {
