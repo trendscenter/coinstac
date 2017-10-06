@@ -92,6 +92,7 @@ class Pipeline extends Component {
       index = this.state.pipeline.steps.findIndex(step => step.id === id);
     }
 
+    // Remap covariates to new indices if required
     const newArr = this.state.pipeline.steps
       .map((step, stepIndex) => {
         return {
@@ -100,15 +101,8 @@ class Pipeline extends Component {
             ...step.ioMap,
             covariates: step.ioMap.covariates.map((cov) => {
               if (index >= stepIndex && movedStepIndex < stepIndex) {
-                console.log('first');
-                console.log('stepIndex', stepIndex);
-                console.log('index', index);
                 return { ...cov, source: {} };
               } else if (movedStepIndex === cov.source.pipelineIndex) {
-                console.log('second');
-                console.log('movedStepIndex', movedStepIndex);
-                console.log('cov.source.pipelineIndex', cov.source.pipelineIndex);
-                console.log('index', index);
                 return {
                   ...cov,
                   source: {
@@ -117,10 +111,8 @@ class Pipeline extends Component {
                     inputLabel: cov.source.inputLabel.replace(`Computation ${cov.source.pipelineIndex + 1}`, `Computation ${index + 1}`),
                   },
                 };
-              } else if (index <= cov.source.pipelineIndex && movedStepIndex > cov.source.pipelineIndex) {
-                console.log('third');
-                console.log('cov.source.pipelineIndex', cov.source.pipelineIndex);
-                console.log('index', index);
+              } else if (index <= cov.source.pipelineIndex
+                          && movedStepIndex > cov.source.pipelineIndex) {
                 return {
                   ...cov,
                   source: {
@@ -130,9 +122,8 @@ class Pipeline extends Component {
                   },
                 };
               } else if (movedStepIndex < cov.source.pipelineIndex
-                          && index >= cov.source.pipelineIndex
+                          && index >= cov.source.pipeligitneIndex
                           && index < stepIndex) {
-                console.log('fourth');
                 return {
                   ...cov,
                   source: {
