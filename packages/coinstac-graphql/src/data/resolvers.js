@@ -136,7 +136,13 @@ const resolvers = {
     removeComputation: (_, args) => {
       return new Promise();
     },
-    deleteConsortiumById: (_, args) => {
+    deleteConsortiumById: ({ auth: { credentials: { permissions } } }, args) => {
+      if (!permissions.consortia.write
+          && args.consortium.id
+          && !permissions.consortia[args.consortium.id].write) {
+            return Boom.forbidden('Action not permitted');
+      }
+
       return helperFunctions.getRethinkConnection()
         .then((connection) =>
           rethink.table('consortia').get(args.consortiumId)
