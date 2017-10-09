@@ -1,5 +1,4 @@
 /*
-
 {
   "algo": "sha512",
   "cstacDB": "coinstac",
@@ -8,9 +7,8 @@
   "hashBytes": 64,
   "host": "localhost",
   "iterations": 500000,
-  "jwtSecret": "",
+  "jwtSecret": "friends",
   "rethinkPort": 28015,
   "saltBytes": 16
 }
-
 */
