@@ -53,11 +53,13 @@ jsconfig.json
 # Built files
 packages/coinstac-ui/app/render/build
 
+packages/coinstac-api-server/rethinkdb_data
+
 # Configuration files
 packages/coinstac-simulator/config/*
 !packages/coinstac-simulator/config/default.json
 packages/coinstac-ui/config/*local.json
-packages/coinstac-graphql/config/api-config.json
+packages/coinstac-api-server/config/api-config.json
 packages/coinstac-computation-registry-new/config/comp-reg-config.json
 
 # Built electron binaries

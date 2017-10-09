@@ -23,7 +23,8 @@ import {
 import ApolloClient from '../../state/apollo-client';
 import PipelineStep from './pipeline-step';
 import ItemTypes from './pipeline-item-types';
-import { fetchAllConsortiaFunc, fetchAllComputationsFunc } from '../../state/graphql-queries';
+import { fetchAllConsortiaFunc, fetchAllComputationsMetadataFunc } from '../../state/graphql/functions';
+import { computationsProp } from '../../state/graphql/props';
 
 const computationTarget = {
   drop() {
@@ -179,7 +180,7 @@ class Pipeline extends Component {
   }
 
   render() {
-    const { allComputations, connectDropTarget } = this.props;
+    const { computations, connectDropTarget } = this.props;
 
     const title = 'New Pipeline';
 
@@ -223,7 +224,7 @@ class Pipeline extends Component {
               </span>
             }
           >
-            {allComputations.map(comp => (
+            {computations.map(comp => (
               <MenuItem
                 eventKey={comp.id}
                 key={comp.id}
@@ -256,7 +257,6 @@ class Pipeline extends Component {
                       updateStep={this.updateStep}
                     />
                   ))}
-                  
                 </Accordion>
               }
               {!this.state.pipeline.steps.length &&
@@ -274,7 +274,7 @@ class Pipeline extends Component {
 
 Pipeline.propTypes = {
   auth: PropTypes.object.isRequired,
-  allComputations: PropTypes.array.isRequired,
+  computations: PropTypes.array.isRequired,
   connectDropTarget: PropTypes.func.isRequired,
   params: PropTypes.object.isRequired,
 };
@@ -283,12 +283,7 @@ function mapStateToProps({ auth }) {
   return { auth };
 }
 
-const PipelineWithData = graphql(fetchAllComputationsFunc, {
-  props: ({ data: { loading, fetchAllComputations } }) => ({
-    loading,
-    allComputations: fetchAllComputations,
-  }),
-})(Pipeline);
+const PipelineWithData = graphql(fetchAllComputationsMetadataFunc, computationsProp)(Pipeline);
 
 export default compose(
   connect(mapStateToProps),

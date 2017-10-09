@@ -7,9 +7,9 @@ import {
   Button,
 } from 'react-bootstrap';
 import {
-  addComputationMetadata,
-  fetchAllComputationsFunc,
-} from '../../state/graphql-queries';
+  addComputationFunc,
+  fetchAllComputationsMetadataFunc,
+} from '../../state/graphql/functions';
 
 const styles = {
   topMargin: { marginTop: 10 },
@@ -106,14 +106,14 @@ ComputationSubmission.propTypes = {
 };
 
 // http://dev.apollodata.com/react/cache-updates.html
-export default graphql(addComputationMetadata, {
+export default graphql(addComputationFunc, {
   props: ({ mutate }) => ({
     submitSchema: computationSchema => mutate({
       variables: { computationSchema },
       update: (store, { data: { addComputation } }) => {
-        const data = store.readQuery({ query: fetchAllComputationsFunc });
+        const data = store.readQuery({ query: fetchAllComputationsMetadataFunc });
         data.fetchAllComputations.push(addComputation);
-        store.writeQuery({ query: fetchAllComputationsFunc, data });
+        store.writeQuery({ query: fetchAllComputationsMetadataFunc, data });
       },
     }),
   }),

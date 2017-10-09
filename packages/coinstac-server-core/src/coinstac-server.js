@@ -291,7 +291,7 @@ class CoinstacServer {
       .then(([computationRegistry, dbRegistry]) => {
         this.computationRegistry = computationRegistry;
         this.dbRegistry = dbRegistry;
-        this.computationRegistryNew = new ComputationRegistryNew('cli');
+        this.computationRegistryNew = new ComputationRegistryNew();
 
         return Promise.all([
           coinstacCommon.utils.getSyncedDatabase(dbRegistry, 'computations'),

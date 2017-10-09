@@ -1,6 +1,6 @@
 import React from 'react';
 import { graphql } from 'react-apollo';
-import { fetchComputationDetailsFunc } from '../../state/graphql-queries';
+import { fetchComputationDetailsFunc } from '../../state/graphql/functions';
 
 const ComputationIO = ({ compIO }) => (
   <pre>

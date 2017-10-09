@@ -6,13 +6,8 @@ import { Alert } from 'react-bootstrap';
 import { connect } from 'react-redux';
 import { graphql } from 'react-apollo';
 import StatusItem from './status-item';
-// import { fetchComputations } from '../state/ducks/computations';
-import { fetchAllComputationsFunc } from '../state/graphql-queries';
-
-/* import {
-  fetchRemoteResultsForUser,
-} from '../state/ducks/results';
-*/
+import { fetchAllComputationsMetadataFunc } from '../state/graphql/functions';
+import { computationsProp } from '../state/graphql/props';
 
 class DashboardHome extends Component {
   constructor(props) {
@@ -125,11 +120,6 @@ function mapStateToProps({
   };
 }
 
-const DashHomeWithData = graphql(fetchAllComputationsFunc, {
-  props: ({ data: { loading, fetchAllComputations } }) => ({
-    loading,
-    computations: fetchAllComputations,
-  }),
-})(DashboardHome);
+const DashHomeWithData = graphql(fetchAllComputationsMetadataFunc, computationsProp)(DashboardHome);
 
 export default connect(mapStateToProps)(DashHomeWithData);
