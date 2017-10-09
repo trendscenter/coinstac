@@ -39,7 +39,7 @@ class Dashboard extends Component {
               <h1 className="logo text-center">
                 <CoinstacAbbr />
               </h1>
-              <DashboardNav />
+              <DashboardNav auth={auth} />
               <UserAccountController push={router.push} />
             </nav>
           </div>

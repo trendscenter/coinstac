@@ -7,11 +7,17 @@
       "regression"
     ],
     "version": "3.1.11",
-    "dockerImage": "mongo:latest"
+    "controller": "decentralized"
   },
-  "local": {
-    "type": "function",
-    "command": "src/local.js",
+  "computation": {
+    "type": "docker",
+    "dockerImage": "mongo:latest",
+    "command": ["python", "/computation/comp1.py"],
+    "remote": {
+      "type": "docker",
+      "dockerImage": "spanta28/vbm_ynipype",
+      "command": ["python", "/computation/comp2.py"]
+    },
     "input": {
       "freeSurferRegion":
       {
@@ -116,8 +122,6 @@
       }
     },
     "output": {
-      "type": "function",
-      "command": "src/remote.js",
       "betaVector": {
         "type": "array",
         "label": "Beta Vector",
@@ -151,51 +155,6 @@
       "y": {
         "type": "number",
         "label": "Y"
-      }
-    }
-  },
-  "remote": {
-    "input": {
-      "betaCount": {
-        "type": "number",
-        "label": "Beta Count",
-        "help": "Beta Vector size"
-      },
-      "userCount": {
-        "type": "number",
-        "label": "User Count",
-        "help": "Number of Users"
-
-      },
-      "localMeanY": {
-        "type": "number",
-        "label": "Local Mean Y"
-      },
-      "yLabel": {
-        "type": "number",
-        "label": "Y Label"
-      },
-      "xLabel": {
-        "type": "number",
-        "label": "X Label"
-      }
-    },
-    "output": {
-      "averageBetaVector": {
-        "type": "array",
-        "label": "Average Beta Vector"
-      },
-      "globalMeanY": {
-        "type": "number",
-        "label": "Global Mean Y"
-      },
-      "xLabel": {
-        "type": "string",
-        "label": "X Label"
-      },
-      "yLabel": {
-        "type": "string",
-        "label": "Y Label"
       }
     }
   }

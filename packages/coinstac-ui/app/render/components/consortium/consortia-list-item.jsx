@@ -1,19 +1,22 @@
 import React from 'react';
 import { graphql } from 'react-apollo';
 import PropTypes from 'prop-types';
-import { ConsortiaListWithData } from './consortia-list';
-import { deleteConsortiumByIdFunc, fetchAllConsortiaFunc } from '../../state/graphql-queries';
 import { Button, Panel } from 'react-bootstrap';
 import { LinkContainer } from 'react-router-bootstrap';
+import { deleteConsortiumByIdFunc, fetchAllConsortiaFunc } from '../../state/graphql/functions';
 
-const ConsortiaListItem = ({ owner, user, consortium, deleteConsortium}) => (
+const ConsortiaListItem = ({ owner, user, consortium, deleteConsortium }) => (
   <Panel header={<h3>{consortium.name}</h3>}>
     <p>{consortium.description}</p>
     <LinkContainer to={`/consortia/${consortium.id}`}>
       <Button bsStyle="info">View Details</Button>
     </LinkContainer>
-    {owner && 
-      <Button bsStyle="danger" onClick={() => deleteConsortium(`${consortium.id}`)} className="pull-right">
+    {owner &&
+      <Button
+        bsStyle="danger"
+        onClick={() => deleteConsortium(consortium.id)}
+        className="pull-right"
+      >
         Delete Consortium
       </Button>
     }
@@ -31,7 +34,7 @@ ConsortiaListItem.propTypes = {
 
 const ConsortiaListItemWithData = graphql(deleteConsortiumByIdFunc, {
   props: ({ mutate }) => ({
-    deleteConsortium: (consortiumId) => mutate({
+    deleteConsortium: consortiumId => mutate({
       variables: { consortiumId },
       update: (store, { data: { deleteConsortiumById } }) => {
         const data = store.readQuery({ query: fetchAllConsortiaFunc });
@@ -40,7 +43,7 @@ const ConsortiaListItemWithData = graphql(deleteConsortiumByIdFunc, {
           data.fetchAllConsortia.splice(index, 1);
         }
         store.writeQuery({ query: fetchAllConsortiaFunc, data });
-      }
+      },
     }),
   }),
 })(ConsortiaListItem);
