@@ -141,8 +141,24 @@ const resolvers = {
     removeComputation: (_, args) => {
       return new Promise();
     },
-    deleteConsortiumById: (_, args) => {
-      return new Promise();
+    deleteConsortiumById: ({ auth: { credentials: { permissions } } }, args) => {
+      if (!permissions.consortia.write
+          && (!permissions.consortia[args.consortiumId]
+              || (args.consortiumId
+                  && !permissions.consortia[args.consortiumId].write)
+      )) {
+            return Boom.forbidden('Action not permitted');
+      }
+
+      return helperFunctions.getRethinkConnection()
+        .then((connection) =>
+          rethink.table('consortia').get(args.consortiumId)
+          .delete({returnChanges: true})
+          .run(connection)
+        )
+        .then((result) => {
+          return result.changes[0].old_val;
+        })
     },
     joinConsortium: (_, args) => {
       return new Promise();
