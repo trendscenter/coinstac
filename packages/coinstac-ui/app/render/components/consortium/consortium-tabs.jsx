@@ -51,7 +51,16 @@ class ConsortiumTabs extends Component {
 
     this.props.saveConsortium(this.state.consortium)
     .then((res) => {
-      this.setState({ consortium: { ...res.data.saveConsortium } });
+      this.setState({ 
+        consortium: 
+        {
+          id: res.data.saveConsortium.id,
+          name: res.data.saveConsortium.name,
+          description: res.data.saveConsortium.name,
+          users: res.data.saveConsortium.users,
+          owners: res.data.saveConsortium.owners, 
+        } 
+      });
       // TODO: Use redux to display success/failure messages after mutations
     })
     .catch(({ graphQLErrors }) => {

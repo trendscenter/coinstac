@@ -22,6 +22,7 @@ export const saveConsortiumFunc = gql`
       id
       name
       description
+      owners
       pipelines
       results
     }

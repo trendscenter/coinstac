@@ -123,11 +123,14 @@ const resolvers = {
           rethink.table('consortia').insert(
             args.consortium,
             { 
-              conflict: "replace",
+              conflict: "update",
               returnChanges: true,
             }
           )
           .run(connection)
+          .then((result) => {
+            
+          })
         )
         .then((result) => {
           return result.changes[0].new_val;
