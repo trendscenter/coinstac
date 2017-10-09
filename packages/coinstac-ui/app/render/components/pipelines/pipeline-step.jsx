@@ -6,7 +6,7 @@ import { graphql } from 'react-apollo';
 import { ControlLabel, FormGroup, FormControl, Panel } from 'react-bootstrap';
 import ItemTypes from './pipeline-item-types';
 import PipelineStepInput from './pipeline-step-input';
-import { fetchComputationDetailsFunc } from '../../state/graphql-queries';
+import { fetchComputationDetailsFunc } from '../../state/graphql/functions';
 
 const styles = {
   container: {
@@ -100,7 +100,7 @@ class PipelineStep extends Component {
           </FormGroup>
           <hr />
           <h4>Input Mappings:</h4>
-          {compIO !== null && Object.entries(compIO.local.input).map(localInput => (
+          {compIO !== null && Object.entries(compIO.computation.input).map(localInput => (
             <PipelineStepInput
               isCovariate={localInput[0] === 'covariates'}
               objKey={localInput[0]}
@@ -110,14 +110,14 @@ class PipelineStep extends Component {
               owner={owner}
               parentKey={`${id}-${localInput[0]}-input`}
               possibleInputs={possibleInputs.map((prevComp, possibleInputIndex) =>
-                ({ inputs: prevComp.local.output, possibleInputIndex })
+                ({ inputs: prevComp.computation.output, possibleInputIndex })
               )}
               step={step}
               updateStep={updateStep}
             />
           ))}
           <h4>Output:</h4>
-          {compIO !== null && Object.entries(compIO.local.output).map(localOutput => (
+          {compIO !== null && Object.entries(compIO.computation.output).map(localOutput => (
             <p key={`${id}-${localOutput[0]}-output`}>{localOutput[1].label}</p>
           ))}
         </Panel>

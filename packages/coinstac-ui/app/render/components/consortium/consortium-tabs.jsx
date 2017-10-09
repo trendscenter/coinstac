@@ -7,7 +7,7 @@ import ConsortiumAbout from './consortium-about';
 import ConsortiumPipeline from './consortium-pipeline';
 import ConsortiumResults from './consortium-results';
 import ApolloClient from '../../state/apollo-client';
-import { fetchAllConsortiaFunc, saveConsortiumFunc } from '../../state/graphql-queries';
+import { fetchAllConsortiaFunc, saveConsortiumFunc } from '../../state/graphql/functions';
 
 const styles = {
   tab: {

@@ -7,7 +7,7 @@ import {
   Button,
   Table,
 } from 'react-bootstrap';
-import { fetchAllComputationsFunc } from '../../state/graphql-queries';
+import { fetchAllComputationsMetadataFunc } from '../../state/graphql/functions';
 import ComputationIO from './computation-io';
 
 const styles = {
@@ -90,7 +90,7 @@ function mapStateToProps({ auth, featureTest: { dockerOut } }) {
   return { auth, dockerOut };
 }
 
-const ComputationsListWithData = graphql(fetchAllComputationsFunc, {
+const ComputationsListWithData = graphql(fetchAllComputationsMetadataFunc, {
   props: ({ data: { loading, fetchAllComputations } }) => ({
     loading,
     computations: fetchAllComputations,

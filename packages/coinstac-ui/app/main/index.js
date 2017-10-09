@@ -7,6 +7,7 @@
 
 'use strict';
 
+const { compact } = require('lodash');
 const mock = require('../../test/e2e/mocks');
 const electron = require('electron');
 const ipcPromise = require('ipc-promise');
@@ -60,6 +61,21 @@ loadConfig()
 
   ipcPromise.on('download-comps', (params) => {
     return app.core.computationRegistryNew
-      .pullPipelineComputations({ window: app.mainWindow, comps: params });
+      .pullPipelineComputations({ comps: params })
+      .then((pullStreams) => {
+        pullStreams.on('data', (data) => {
+          let output = compact(data.toString().split('\r\n'));
+          output = output.map(JSON.parse);
+          app.mainWindow.webContents.send('docker-out', output);
+        });
+
+        pullStreams.on('close', (code) => {
+          return code;
+        });
+
+        pullStreams.on('error', (err) => {
+          return err;
+        });
+      });
   });
 });

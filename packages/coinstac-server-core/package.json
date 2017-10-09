@@ -36,7 +36,7 @@
     "async": "^2.4.1",
     "coinstac-common": "^2.6.0",
     "coinstac-computation-registry": "^2.6.0",
-    "coinstac-computation-registry-new": "file:///Users/aramirez/coinstac/packages/coinstac-computation-registry-new",
+    "coinstac-computation-registry-new": "^2.6.0",
     "commander": "^2.9.0",
     "lodash": "^4.17.4",
     "memdown": "^1.2.4",
