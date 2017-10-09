@@ -25,7 +25,7 @@ const resolvers = {
     /**
      * Returns metadata for specific computation name
      */
-    fetchComputationMetadataByName: ({ auth: { credentials: { permissions } } }, args) => {
+    fetchComputationDetails: ({ auth: { credentials: { permissions } } }, args) => {
       if (!permissions.computations.read) {
         return Boom.forbidden('Action not permitted');
       }

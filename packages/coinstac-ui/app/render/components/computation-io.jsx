@@ -1,6 +1,6 @@
 import React from 'react';
 import { graphql } from 'react-apollo';
-import { fetchComputationLocalIO } from '../state/graphql-queries';
+import { fetchComputationDetailsFunc } from '../state/graphql/functions';
 
 const ComputationIO = ({ compIO }) => (
   <pre>
@@ -8,9 +8,9 @@ const ComputationIO = ({ compIO }) => (
   </pre>
 );
 
-const ComputationIOWithData = graphql(fetchComputationLocalIO, {
-  props: ({ data: { fetchComputationMetadataByName } }) => ({
-    compIO: fetchComputationMetadataByName,
+const ComputationIOWithData = graphql(fetchComputationDetailsFunc, {
+  props: ({ data: { loading, fetchComputationDetails } }) => ({
+    compIO: fetchComputationDetails,
   }),
   options: ({ computationName }) => ({ variables: { computationName } }),
 })(ComputationIO);
