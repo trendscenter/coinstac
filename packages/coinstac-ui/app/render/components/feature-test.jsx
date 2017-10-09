@@ -18,7 +18,7 @@ import {
   pullComputations,
   updateDockerOutput,
 } from '../state/ducks/feature-test';
-import ComputationIO from './computation-io';
+import ComputationIO from './computations/computation-io';
 
 const styles = {
   outputBox: { marginTop: 10, height: 400, overflowY: 'scroll' },
@@ -35,20 +35,12 @@ class FeatureTest extends Component { // eslint-disable-line
       this.props.updateDockerOutput(arg);
     });
 
-    this.deleteAllComputations = this.deleteAllComputations.bind(this);
     this.pullComps = this.pullComps.bind(this);
     this.setActiveComp = this.setActiveComp.bind(this);
   }
 
   setActiveComp(comp) {
     this.setState({ activeComp: comp });
-  }
-
-  deleteAllComputations() {
-    this.props.deleteAllComputations()
-    .catch(({ graphQLErrors }) => {
-      console.log(graphQLErrors[0].message);
-    });
   }
 
   pullComps(e) {
@@ -66,7 +58,7 @@ class FeatureTest extends Component { // eslint-disable-line
     const { auth, dockerOut, computations, removeAllComputations } = this.props;
 
     return (
-      <div style={styles.topMargin}>
+      <div>
         {computations.length > 0 &&
           <Table striped bordered condensed style={styles.topMargin}>
             <thead>

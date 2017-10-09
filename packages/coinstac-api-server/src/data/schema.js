@@ -34,7 +34,7 @@ const typeDefs = `
   }
 
   type Computation {
-    id: ID
+    id: ID!
     meta: ComputationMeta
     computation: ComputationField
   }
@@ -51,21 +51,25 @@ const typeDefs = `
     activeComputationId: ID
     activeComputationInputs: [String]
     description: String!
-    label: String!
+    name: String!
     tags: [String]
-    owners: [String]
-    users: [String]
+    owners: [ID]
+    users: [ID]
+    pipelines: [ID]
+    results: [ID]
   }
 
   input ConsortiumInput {
-    id: ID!
+    id: ID
     activeComputationId: ID
     activeComputationInputs: [String]
     description: String!
-    label: String!
+    name: String!
     tags: [String]
     owners: [String]
     users: [String]
+    pipelines: [ID]
+    results: [ID]
   }
 
   type Run {
@@ -93,14 +97,15 @@ const typeDefs = `
     setActiveComputation(computationId: ID, consortiumId: ID): String
     setComputationInputs(consortiumId: ID, fieldIndex: Int, values: String ): String
     leaveConsortium(username: String, consortiumId: ID): String
-    saveConsortium(consortium: ConsortiumInput): String
+    saveConsortium(consortium: ConsortiumInput): Consortium
   }
 
   # This is a description of the queries
   type Query {
     # This is a description of the fetchAllComputations query
     fetchAllComputations: [Computation]
-    fetchComputationDetails(computationName: String): Computation
+    fetchComputationDetails(computationIds: [ID]): [Computation]
+    fetchAllConsortia: [Consortium]
     validateComputation(compId: ID): Boolean
     fetchConsortiumById(consortiumId: ID): Consortium
     fetchRunForConsortium(consortiumId: ID): [Run]

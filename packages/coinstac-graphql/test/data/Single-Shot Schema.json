@@ -1,28 +1,22 @@
 {
   "meta": {
-    "repository": "https://github.com/MRN-Code/decentralized-laplacian-ridge-regression",
-    "description": "Iterative decentralized ridge regression.",
-    "name": "Multi-Shot Ridge Regression",
+    "repository": "https://github.com/MRN-Code/decentralized-single-shot-ridge-regression",
+    "description": "Decentralized ridge regression.",
+    "name": "Single-Shot Ridge Regression",
     "tags": [
       "regression"
     ],
-    "version": "3.1.11",
-    "controller": "decentralized"
+    "version": "v1.1.10",
+    "dockerImage": "mysql:latest"
   },
-  "computation": {
-    "type": "docker",
-    "dockerImage": "mongo:latest",
-    "command": ["python", "/computation/comp1.py"],
-    "remote": {
-      "type": "docker",
-      "dockerImage": "spanta28/vbm_ynipype",
-      "command": ["python", "/computation/comp2.py"]
-    },
+  "local": {
+    "type": "function",
+    "command": "src/local.js",
     "input": {
       "freeSurferRegion":
       {
         "defaultValue": [
-          "Right-Cerebellum-Cortex"
+          "Right-Cerebellum-Cortex", "Left-Cerebellum-Cortex"
         ],
         "help": "Select Freesurfer region(s) of interest",
         "label": "Freesurfer ROI",
@@ -98,12 +92,6 @@
         ]
         
       },
-      "iterationCount":
-      {
-        "defaultValue": 250,
-        "label": "Iteration count",
-        "type": "number"
-      },
       "lambda":
       {
         "defaultValue": 0,
@@ -115,7 +103,6 @@
       },
       "covariates":
       {
-        "defaultValue": "[{'name': 'Is Control?','type': 'boolean'}]",
         "label": "Covariates",
         "type": "array",
         "items": ["boolean", "number"]
@@ -155,6 +142,51 @@
       "y": {
         "type": "number",
         "label": "Y"
+      }
+    }
+  },
+  "remote": {
+    "input": {
+      "betaCount": {
+        "type": "number",
+        "label": "Beta Count",
+        "help": "Beta Vector size"
+      },
+      "userCount": {
+        "type": "number",
+        "label": "User Count",
+        "help": "Number of Users"
+
+      },
+      "localMeanY": {
+        "type": "number",
+        "label": "Local Mean Y"
+      },
+      "yLabel": {
+        "type": "number",
+        "label": "Y Label"
+      },
+      "xLabel": {
+        "type": "number",
+        "label": "X Label"
+      }
+    },
+    "output": {
+      "averageBetaVector": {
+        "type": "array",
+        "label": "Average Beta Vector"
+      },
+      "globalMeanY": {
+        "type": "number",
+        "label": "Global Mean Y"
+      },
+      "xLabel": {
+        "type": "string",
+        "label": "X Label"
+      },
+      "yLabel": {
+        "type": "string",
+        "label": "Y Label"
       }
     }
   }

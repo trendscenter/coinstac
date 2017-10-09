@@ -9,7 +9,7 @@ import {
 import {
   addComputationFunc,
   fetchAllComputationsMetadataFunc,
-} from '../state/graphql/functions';
+} from '../../state/graphql/functions';
 
 const styles = {
   topMargin: { marginTop: 10 },

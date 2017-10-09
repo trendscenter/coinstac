@@ -4,3 +4,9 @@ export const computationsProp = {
     computations: fetchAllComputations,
   }),
 };
+
+export const consortiaProp = {
+  props: ({ data: { fetchAllConsortia } }) => ({
+    consortia: fetchAllConsortia,
+  }),
+};

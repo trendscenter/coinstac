@@ -18,32 +18,68 @@ helperFunctions.getRethinkConnection()
   .then(() => rethink.table('computations').insert([singleShot, multiShot]).run(connection))
   // .then(() => rethink.db('rethinkdb').table('users').insert({ id: 'server', password: 'password' }).run(connection))
   // .then(() => rethink.db('coinstac').grant('server', { read: true }).run(connection))
-  .then(() => rethink.db('coinstac').tableCreate('users').run(connection))
+  .then(() => rethink.tableCreate('users').run(connection))
+  .then(() => rethink.tableCreate('consortia').run(connection))
+  .then(() => rethink.table('consortia').insert({
+    id: 'test-cons-1',
+    name: 'Test Consortia 1',
+    description: 'This consortia is for testing.',
+    owners: ['author'],
+    users: ['author'],
+  }).run(connection))
+  .then(() => rethink.table('consortia').insert({
+    id: 'test-cons-2',
+    name: 'Test Consortia 2',
+    description: 'This consortia is for testing too.',
+    owners: ['test'],
+    users: ['test'],
+  }).run(connection))
   .then(() => connection.close());
 })
 .then(() => {
   let passwordHash = helperFunctions.hashPassword('password');
-  return helperFunctions.createUser({ username: 'test', institution: 'mrn', email: 'test@mrn.org' }, passwordHash)
-    .then(() => {
-      passwordHash = helperFunctions.hashPassword('password');
-      return helperFunctions.createUser({ username: 'server', institution: 'mrn', email: 'server@mrn.org' }, passwordHash);
-    })
-    .then(() => {
-      passwordHash = helperFunctions.hashPassword('password');
-      return helperFunctions.createUser({
-        username: 'author',
-        institution: 'mrn',
-        email: 'server@mrn.org',
-        permissions: {
-          computations: {
-            read: true,
+  return helperFunctions.createUser({
+    username: 'test',
+    institution: 'mrn',
+    email: 'test@mrn.org',
+    permissions: {
+      computations: {
+        read: true,
+      },
+      consortia: {
+        read: true,
+        'test-cons-2': {
+          write: true,
+        },
+      },
+    },
+  }, passwordHash)
+  .then(() => {
+    passwordHash = helperFunctions.hashPassword('password');
+    return helperFunctions.createUser({ username: 'server', institution: 'mrn', email: 'server@mrn.org' }, passwordHash);
+  })
+  .then(() => {
+    passwordHash = helperFunctions.hashPassword('password');
+    return helperFunctions.createUser({
+      username: 'author',
+      institution: 'mrn',
+      email: 'server@mrn.org',
+      permissions: {
+        computations: {
+          read: true,
+          write: true,
+        },
+        consortia: {
+          read: true,
+          'test-cons-1': {
             write: true,
           },
         },
-      }, passwordHash);
-    })
-    .then(() => {
-      process.exit();
-    });
+      },
+    }, passwordHash);
+  })
+  .then(() => {
+    process.exit();
+  });
 })
 .catch(console.log);

@@ -8,6 +8,13 @@ const mutations = {
       }
     }
   `,
+  saveConsortium: `
+    {
+      saveConsortium(consortium: $consortium) {
+        ${sharedFields.consortiaInBrief}
+      }
+    }
+  `,
 };
 
 module.exports = mutations;

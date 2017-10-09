@@ -73,30 +73,43 @@ $icon-font-path: "~bootstrap-sass/assets/fonts/bootstrap/";
   position: relative;
 }
 
+.navigation-pane {
+  background: $gray-lighter;
+}
+
 .navigation {
-    background: $gray-lighter;
+  background: $gray-lighter;
 
-    > nav .glyphicon {
-        display: inline-block;
-        margin-right: 1rem;
-    }
-    @media (min-width: $screen-sm) {
-        display: flex;
-        flex-direction: column;
-        height: 100vh;
-        left: 0;
-        padding: $grid-gutter-width / 2;
-        position: fixed;
-        top: 0;
-        width: 33.33%;
+  > nav .glyphicon {
+    display: inline-block;
+    margin-right: 1rem;
+  }
+  @media (min-width: $screen-sm) {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    left: 0;
+    padding: $grid-gutter-width / 2;
+    position: fixed;
+    top: 0;
+    width: 33.33%;
 
-        .logo {
-            margin-bottom: 2rem;
-        }
-        > nav {
-            flex-grow: 1;
-        }
+    .logo {
+        margin-bottom: 2rem;
     }
+    > nav {
+        flex-grow: 1;
+    }
+  }
+}
+
+/**
+ * Content pane
+ */
+.content-pane {
+  @media (min-width: $screen-sm) {
+    padding: $grid-gutter-width / 2;
+  }
 }
 
 

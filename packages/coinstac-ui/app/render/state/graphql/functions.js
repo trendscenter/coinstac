@@ -8,18 +8,28 @@ export const addComputationFunc = gql`
     ${mutations.addComputation}
 `;
 
+export const fetchAllComputationsMetadataFunc = gql`
+  query FetchAllComputationsMetadataQuery
+    ${queries.fetchAllComputationsMetadata}
+`;
+
+export const fetchAllConsortiaFunc = gql`
+  query FetchAllConsortiaQuery
+    ${queries.fetchAllConsortia}
+`;
+
+export const fetchComputationDetailsFunc = gql`
+  query FetchComputationDetailsQuery ($computationIds: [ID])
+    ${queries.fetchComputationDetails}
+`;
+
 export const removeAllComputationsFunc = gql`
   mutation RemoveAllComputationsMutation {
     removeAllComputations
   }
 `;
 
-export const fetchAllComputationsMetadataFunc = gql`
-  query FetchAllComputationsMetadataQuery
-    ${queries.fetchAllComputationsMetadata}
-`;
-
-export const fetchComputationDetailsFunc = gql`
-  query FetchComputationDetailsQuery ($computationName: String!)
-    ${queries.fetchComputationDetails}
+export const saveConsortiumFunc = gql`
+  mutation SaveConsortiumMutation($consortium: ConsortiumInput!)
+    ${mutations.saveConsortium}
 `;
