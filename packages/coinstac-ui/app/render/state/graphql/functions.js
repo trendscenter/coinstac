@@ -8,6 +8,14 @@ export const addComputationFunc = gql`
     ${mutations.addComputation}
 `;
 
+export const deleteConsortiumByIdFunc = gql`
+  mutation DeleteConsortiumMutation($consortiumId: ID!) {
+    deleteConsortiumById(consortiumId: $consortiumId){
+      id
+    }
+  }
+`;
+
 export const fetchAllComputationsMetadataFunc = gql`
   query FetchAllComputationsMetadataQuery
     ${queries.fetchAllComputationsMetadata}

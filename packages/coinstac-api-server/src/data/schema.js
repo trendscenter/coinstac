@@ -92,7 +92,7 @@ const typeDefs = `
     addComputation(computationSchema: ComputationInput): Computation
     removeComputation(compId: ID): JSON
     removeAllComputations: JSON
-    deleteConsortiumById(consortiumId: ID): String
+    deleteConsortiumById(consortiumId: ID): Consortium
     joinConsortium(username: String, consortiumId: ID): Consortium
     setActiveComputation(computationId: ID, consortiumId: ID): String
     setComputationInputs(consortiumId: ID, fieldIndex: Int, values: String ): String
