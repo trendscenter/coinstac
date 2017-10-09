@@ -8,13 +8,8 @@ import {
   graphql,
 } from 'react-apollo';
 import StatusItem from './status-item';
-// import { fetchComputations } from '../state/ducks/computations';
-import { fetchComputationMetadata } from '../state/graphql-queries';
-
-/* import {
-  fetchRemoteResultsForUser,
-} from '../state/ducks/results';
-*/
+import { fetchAllComputationsMetadataFunc } from '../state/graphql/functions';
+import { computationsProp } from '../state/graphql/props';
 
 class DashboardHome extends Component {
   constructor(props) {
@@ -125,11 +120,6 @@ function mapStateToProps({
   };
 }
 
-const DashHomeWithData = graphql(fetchComputationMetadata, {
-  props: ({ ownProps, data: { loading, fetchAllComputations } }) => ({
-    loading,
-    computations: fetchAllComputations,
-  }),
-})(DashboardHome);
+const DashHomeWithData = graphql(fetchAllComputationsMetadataFunc, computationsProp)(DashboardHome);
 
 export default connect(mapStateToProps)(DashHomeWithData);

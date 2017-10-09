@@ -1,0 +1,405 @@
+r.db('coinstac').table('Computations').insert([
+  {
+    meta: {
+      "repository": 'https://github.com/MRN-Code/decentralized-laplacian-ridge-regression',
+      "description": "Iterative decentralized ridge regression.",
+      "name": "Multi-Shot Ridge Regression",
+      "tags": [
+        "regression"
+      ],
+      "version": "3.1.11",
+      "dockerImage": "mongo"
+    },
+    local: {
+      "type": "function",
+      "command": "src/local.js",
+      "input": {
+        "freeSurferRegion":
+        {
+          "defaultValue": [
+            "Right-Cerebellum-Cortex"
+          ],
+          "help": "Select Freesurfer region(s) of interest",
+          "label": "Freesurfer ROI",
+          "type": "select",
+          "items": "string",
+          "values": [
+               "3rd-Ventricle",
+               "4th-Ventricle",
+               "5th-Ventricle",
+               "Brain-Stem",
+               "BrainSegVol",
+               "BrainSegVol-to-eTIV",
+               "BrainSegVolNotVent",
+               "BrainSegVolNotVentSurf",
+               "CC_Anterior",
+               "CC_Central",
+               "CC_Mid_Anterior",
+               "CC_Mid_Posterior",
+               "CC_Posterior",
+               "CortexVol",
+               "CorticalWhiteMatterVol",
+               "CSF",
+               "EstimatedTotalIntraCranialVol",
+               "Left-Accumbens-area",
+               "Left-Amygdala",
+               "Left-Caudate",
+               "Left-Cerebellum-Cortex",
+               "Left-Cerebellum-White-Matter",
+               "Left-choroid-plexus",
+               "Left-Hippocampus",
+               "Left-Inf-Lat-Vent",
+               "Left-Lateral-Ventricle",
+               "Left-non-WM-hypointensities",
+               "Left-Pallidum",
+               "Left-Putamen",
+               "Left-Thalamus-Proper",
+               "Left-VentralDC",
+               "Left-vessel",
+               "Left-WM-hypointensities",
+               "lhCortexVol",
+               "lhCorticalWhiteMatterVol",
+               "lhSurfaceHoles",
+               "MaskVol",
+               "MaskVol-to-eTIV",
+               "non-WM-hypointensities",
+               "Optic-Chiasm",
+               "rhCortexVol",
+               "rhCorticalWhiteMatterVol",
+               "rhSurfaceHoles",
+               "Right-Accumbens-area",
+               "Right-Amygdala",
+               "Right-Caudate",
+               "Right-Cerebellum-Cortex",
+               "Right-Cerebellum-White-Matter",
+               "Right-choroid-plexus",
+               "Right-Hippocampus",
+               "Right-Inf-Lat-Vent",
+               "Right-Lateral-Ventricle",
+               "Right-non-WM-hypointensities",
+               "Right-Pallidum",
+               "Right-Putamen",
+               "Right-Thalamus-Proper",
+               "Right-VentralDC",
+               "Right-vessel",
+               "Right-WM-hypointensities",
+               "SubCortGrayVol",
+               "SupraTentorialVol",
+               "SupraTentorialVolNotVent",
+               "SupraTentorialVolNotVentVox",
+               "SurfaceHoles",
+               "TotalGrayVol",
+               "WM-hypointensities"
+          ]
+          
+        },
+        "iterationCount":
+        {
+          "defaultValue": 250,
+          "label": "Iteration count",
+          "type": "number"
+        },
+        "lambda":
+        {
+          "defaultValue": 0,
+          "label": "Lambda",
+          "max": 1,
+          "min": 0,
+          "step": 0.05,
+          "type": "number"
+        },
+        "covariates":
+        {
+          "defaultValue": '[{"name": "Is Control?","type": "boolean"}]',
+          "label": "Covariates",
+          "type": "array",
+          "items": ["boolean", "number"]
+        }
+      },
+      "output": {
+        "type": "function",
+        "command": "src/remote.js",
+        "betaVector": {
+          "type": "array",
+          "label": "Beta Vector",
+          "items": "number"
+        },
+        "localCount": {
+          "type": "array",
+          "label": "Local Count",
+          "items": "number"
+        },
+        "localMeanY": {
+          "type": "number",
+          "label": "Local Mean Y",
+        },
+        "rSquared": {
+          "type": "number",
+          "label": "R squared"
+        },
+        "tValue": {
+          "type": "number",
+          "label": "T value",
+        },
+        "pValue": {
+          "type": "number",
+          "label": "P Value",
+        },
+        "biasedX": {
+          "type": "number",
+          "label": "Biased Xs",
+        },
+        "y": {
+          "type": "number",
+          "label": "Y",
+        }
+      }
+    },
+    "remote": {
+      "input": {
+        "betaCount": {
+          "type": "number",
+          "label": "Beta Count",
+          "help": "Beta Vector size"
+        },
+        "userCount": {
+          "type": "number",
+          "label": "User Count",
+          "help": "Number of Users"
+
+        },
+        "localMeanY": {
+          "type": "number",
+          "label": "Local Mean Y",
+        },
+        "yLabel": {
+          "type": "number",
+          "label": "Y Label",
+        },
+        "xLabel": {
+          "type": "number",
+          "label": "X Label",
+        }
+      },
+      "output": {
+        "averageBetaVector": {
+          "type": "array",
+          "label": "Average Beta Vector",
+        },
+        "globalMeanY": {
+          "type": "number",
+          "label": "Global Mean Y",
+        },
+        "xLabel": {
+          "type": "string",
+          "label": "X Label",
+        },
+        "yLabel": {
+          "type": "string",
+          "label": "Y Label",
+        }
+      }
+    }
+  }
+])
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+r.db('coinstac').table('Computations').insert([
+  {
+    meta: {
+      "repository": "https://github.com/MRN-Code/decentralized-single-shot-ridge-regression",
+      "description": "Decentralized ridge regression.",
+      "name": "Single-Shot Ridge Regression",
+      "tags": [
+        "regression"
+      ],
+      "version": "v1.1.10",
+      "dockerImage": "cstac-ssrr"
+    },
+    local: {
+      "type": "function",
+      "command": "src/local.js",
+      "input": {
+        "freeSurferRegion":
+        {
+          "type": "array",
+          "defaultValue": [
+            "Right-Cerebellum-Cortex", "Left-Cerebellum-Cortex"
+          ],
+          "help": "Select Freesurfer region(s) of interest",
+          "label": "Freesurfer ROI",
+          "type": "select",
+          "items": "string",
+          "values": [
+               "3rd-Ventricle",
+               "4th-Ventricle",
+               "5th-Ventricle",
+               "Brain-Stem",
+               "BrainSegVol",
+               "BrainSegVol-to-eTIV",
+               "BrainSegVolNotVent",
+               "BrainSegVolNotVentSurf",
+               "CC_Anterior",
+               "CC_Central",
+               "CC_Mid_Anterior",
+               "CC_Mid_Posterior",
+               "CC_Posterior",
+               "CortexVol",
+               "CorticalWhiteMatterVol",
+               "CSF",
+               "EstimatedTotalIntraCranialVol",
+               "Left-Accumbens-area",
+               "Left-Amygdala",
+               "Left-Caudate",
+               "Left-Cerebellum-Cortex",
+               "Left-Cerebellum-White-Matter",
+               "Left-choroid-plexus",
+               "Left-Hippocampus",
+               "Left-Inf-Lat-Vent",
+               "Left-Lateral-Ventricle",
+               "Left-non-WM-hypointensities",
+               "Left-Pallidum",
+               "Left-Putamen",
+               "Left-Thalamus-Proper",
+               "Left-VentralDC",
+               "Left-vessel",
+               "Left-WM-hypointensities",
+               "lhCortexVol",
+               "lhCorticalWhiteMatterVol",
+               "lhSurfaceHoles",
+               "MaskVol",
+               "MaskVol-to-eTIV",
+               "non-WM-hypointensities",
+               "Optic-Chiasm",
+               "rhCortexVol",
+               "rhCorticalWhiteMatterVol",
+               "rhSurfaceHoles",
+               "Right-Accumbens-area",
+               "Right-Amygdala",
+               "Right-Caudate",
+               "Right-Cerebellum-Cortex",
+               "Right-Cerebellum-White-Matter",
+               "Right-choroid-plexus",
+               "Right-Hippocampus",
+               "Right-Inf-Lat-Vent",
+               "Right-Lateral-Ventricle",
+               "Right-non-WM-hypointensities",
+               "Right-Pallidum",
+               "Right-Putamen",
+               "Right-Thalamus-Proper",
+               "Right-VentralDC",
+               "Right-vessel",
+               "Right-WM-hypointensities",
+               "SubCortGrayVol",
+               "SupraTentorialVol",
+               "SupraTentorialVolNotVent",
+               "SupraTentorialVolNotVentVox",
+               "SurfaceHoles",
+               "TotalGrayVol",
+               "WM-hypointensities"
+          ]
+          
+        },
+        "lambda":
+        {
+          "defaultValue": 0,
+          "label": "Lambda",
+          "max": 1,
+          "min": 0,
+          "step": 0.05,
+          "type": "number"
+        },
+        "covariates":
+        {
+          "label": "Covariates",
+          "type": "array",
+          "items": ["boolean", "number"]
+        }
+      },
+      "output": {
+        "type": "function",
+        "command": "src/remote.js",
+        "betaVector": {
+          "type": "array",
+          "label": "Beta Vector",
+          "items": "number"
+        },
+        "localCount": {
+          "type": "array",
+          "label": "Local Count",
+          "items": "number"
+        },
+        "localMeanY": {
+          "type": "number",
+          "label": "Local Mean Y",
+        },
+        "rSquared": {
+          "type": "number",
+          "label": "R squared"
+        },
+        "tValue": {
+          "type": "number",
+          "label": "T value",
+        },
+        "pValue": {
+          "type": "number",
+          "label": "P Value",
+        },
+        "biasedX": {
+          "type": "number",
+          "label": "Biased Xs",
+        },
+        "y": {
+          "type": "number",
+          "label": "Y",
+        }
+      }
+    },
+    "remote": {
+      "input": {
+        "betaCount": {
+          "type": "number",
+          "label": "Beta Count",
+          "help": "Beta Vector size"
+        },
+        "userCount": {
+          "type": "number",
+          "label": "User Count",
+          "help": "Number of Users"
+
+        },
+        "localMeanY": {
+          "type": "number",
+          "label": "Local Mean Y",
+        },
+        "yLabel": {
+          "type": "number",
+          "label": "Y Label",
+        },
+        "xLabel": {
+          "type": "number",
+          "label": "X Label",
+        }
+      },
+      "output": {
+        "averageBetaVector": {
+          "type": "array",
+          "label": "Average Beta Vector",
+        },
+        "globalMeanY": {
+          "type": "number",
+          "label": "Global Mean Y",
+        },
+        "xLabel": {
+          "type": "string",
+          "label": "X Label",
+        },
+        "yLabel": {
+          "type": "string",
+          "label": "Y Label",
+        }
+      }
+    }
+  }
+])

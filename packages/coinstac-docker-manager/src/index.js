@@ -72,13 +72,13 @@ const queueJob = (jobId, input, opts) => {
 };
 
 const pullImage = (computation) => {
-  return new Promise((res) => {
+  return new Promise((resolve, reject) => {
     docker.pull(computation, (err, stream) => {
       if (err) {
-        res({ err: `${computation} does not exist`, stream: null });
-      } else {
-        res({ err: null, stream });
+        reject(err);
       }
+
+      resolve(stream);
     });
   });
 };
