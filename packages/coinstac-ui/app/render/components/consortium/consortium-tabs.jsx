@@ -45,7 +45,7 @@ class ConsortiumTabs extends Component {
 
     if (this.state.consortium.owners.indexOf(this.props.auth.user.id) === -1) {
       this.setState(prevState => ({
-        consortium: prevState.consortium.owners.push(this.props.auth.user.id),
+          owners: prevState.consortium.owners.push(this.props.auth.user.id),
       }));
     }
 
@@ -56,7 +56,7 @@ class ConsortiumTabs extends Component {
         {
           id: res.data.saveConsortium.id,
           name: res.data.saveConsortium.name,
-          description: res.data.saveConsortium.name,
+          description: res.data.saveConsortium.description,
           users: res.data.saveConsortium.users,
           owners: res.data.saveConsortium.owners, 
         } 
