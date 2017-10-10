@@ -51,6 +51,7 @@ class ConsortiumTabs extends Component {
 
     this.props.saveConsortium(this.state.consortium)
     .then((res) => {
+      // TODO: hook activeComputationId and Inputs
       this.setState({ 
         consortium: 
         {
@@ -59,6 +60,10 @@ class ConsortiumTabs extends Component {
           description: res.data.saveConsortium.description,
           users: res.data.saveConsortium.users,
           owners: res.data.saveConsortium.owners, 
+          activeComputationId: null,
+          activeComputationInputs: null,
+          tags: null,
+
         } 
       });
       // TODO: Use redux to display success/failure messages after mutations
