@@ -159,7 +159,7 @@ class ComputationService extends ModelService {
    */
   static getJSONSchema(filename) {
     return bluebird.promisify(fs.readFile)(filename)
-      .then((data) => { return JSON.parse(data.toString()); });
+      .then(data => JSON.parse(data.toString()));
   }
 
   /**

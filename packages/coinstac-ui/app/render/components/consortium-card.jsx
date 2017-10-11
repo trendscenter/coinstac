@@ -89,7 +89,7 @@ export default function ConsortiumCard(props) {
           </div>
           <ButtonToolbar className="pull-right">
             {membershipButton}
-            <LinkContainer to={`/consortia/${id}`}>
+            <LinkContainer to={`/dashboard/consortia/${id}`}>
               <Button bsSize="small">
                 <span
                   aria-hidden="true"

@@ -12,10 +12,22 @@ class FormLoginController extends Component {
 
     this.hotRoute = this.hotRoute.bind(this);
     this.submit = this.submit.bind(this);
+    this.checkForUser = this.checkForUser.bind(this);
   }
 
   componentWillMount() {
-    this.props.clearUser();
+    this.checkForUser();
+  }
+
+  componentWillUpdate() {
+    this.checkForUser();
+  }
+
+  checkForUser() {
+    const { router } = this.context;
+    if (this.props.auth.user.email.length) {
+      router.push('/dashboard');
+    }
   }
 
   hotRoute() {
@@ -25,24 +37,18 @@ class FormLoginController extends Component {
     // data will not be persisted/honored
     return this.props.hotRoute()
     .then(() => {
-      process.nextTick(() => router.push('/'));
+      process.nextTick(() => router.push('/dashboard'));
     });
   }
 
   submit(evt) {
-    const { router } = this.context;
     const userCred = this.formLogon.data();
 
     evt.preventDefault();
 
-    this.props.login(userCred)
-      .then(() => {
-        if (!this.props.auth.user.error) {
-          // TODO: Figure why `nextTick` is needed
-          process.nextTick(() => router.push('/'));
-        }
-      });
+    this.props.login(userCred);
   }
+
   render() {
     const { auth, loading } = this.props;
     const showHotRoute = app.config.get('env') === 'development';
@@ -76,8 +82,7 @@ FormLoginController.propTypes = {
   login: PropTypes.func.isRequired,
 };
 
-const mapStateToProps = (state) => {
-  const { auth, loading } = state;
+const mapStateToProps = ({ auth, loading }) => {
   return { auth, loading };
 };
 

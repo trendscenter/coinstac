@@ -82,6 +82,19 @@ server.register([
     },
     {
       method: 'POST',
+      path: '/authenticateByToken',
+      config: {
+        auth: 'jwt',
+        handler: ({ auth: { credentials: { email, id, institution, permissions } } }, res) => {
+          res({
+            id_token: helperFunctions.createToken(id),
+            user: { email, id, institution, permissions },
+          }).code(201);
+        },
+      },
+    },
+    {
+      method: 'POST',
       path: '/createAccount',
       config: {
         auth: false,

@@ -40,18 +40,23 @@ const resolvers = {
     /**
      * Returns metadata for specific computation name
      */
-    fetchComputationMetadataByName: ({ auth: { credentials: { permissions } } }, args) => {
+    fetchComputationDetails: ({ auth: { credentials: { permissions } } }, args) => {
       if (!permissions.computations.read) {
         return Boom.forbidden('Action not permitted');
       }
 
+      if (!args.computationIds) return;
+
       return helperFunctions.getRethinkConnection()
         .then((connection) =>
-          rethink.table('computations').filter({ meta: { name: args.computationName } })
+          rethink.table('computations').getAll(...args.computationIds)
             .run(connection)
         )
         .then((cursor) => cursor.toArray())
-        .then((result) => result[0]);
+        .then((result) => {
+          console.log(result);
+          return result;
+        });
     },
     validateComputation: (_, args) => {
       return new Promise();
@@ -141,8 +146,24 @@ const resolvers = {
     removeComputation: (_, args) => {
       return new Promise();
     },
-    deleteConsortiumById: (_, args) => {
-      return new Promise();
+    deleteConsortiumById: ({ auth: { credentials: { permissions } } }, args) => {
+      if (!permissions.consortia.write
+          && (!permissions.consortia[args.consortiumId]
+              || (args.consortiumId
+                  && !permissions.consortia[args.consortiumId].write)
+      )) {
+            return Boom.forbidden('Action not permitted');
+      }
+
+      return helperFunctions.getRethinkConnection()
+        .then((connection) =>
+          rethink.table('consortia').get(args.consortiumId)
+          .delete({returnChanges: true})
+          .run(connection)
+        )
+        .then((result) => {
+          return result.changes[0].old_val;
+        })
     },
     joinConsortium: (_, args) => {
       return new Promise();
