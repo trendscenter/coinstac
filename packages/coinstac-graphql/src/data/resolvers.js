@@ -130,9 +130,9 @@ const resolvers = {
           .run(connection)
           .then((result) => {
             //r.db('coinstac').table('users').filter({id: 'test'}).update({'permissions': {'consortia': {'some-new-id': {'write': true}}}})
-            let crazything = {};
-            crazything[result.changes[0].new_val.id] = {'write': true};
-            rethink.table('users').filter({id: 'test'}).update({'permissions': {'consortia': crazything}})
+            let consortium = {};
+            consortium[result.changes[0].new_val.id] = {'write': true};
+            rethink.table('users').filter({id: 'test'}).update({'permissions': {'consortia': consortium}})
             .run(connection)
             return result.changes[0].new_val;
           })
