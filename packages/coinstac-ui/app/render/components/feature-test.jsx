@@ -99,7 +99,7 @@ class FeatureTest extends Component { // eslint-disable-line
         {this.state.activeComp &&
           <div>
             {this.state.activeComp.meta.name}
-            <ComputationIO computationName={this.state.activeComp.meta.name} />
+            <ComputationIO computationId={this.state.activeComp.id} />
           </div>
         }
 

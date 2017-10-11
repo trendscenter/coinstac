@@ -37,6 +37,10 @@ export default class FieldPassword extends Component {
     this.setState(state);
   }
 
+  password() {
+    return this.state.password;
+  }
+
   render() {
     const { help, validationClass } = this.state;
     let helpBlock;

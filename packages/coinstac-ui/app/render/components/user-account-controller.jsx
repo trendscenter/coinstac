@@ -57,6 +57,7 @@ const mapStateToProps = ({ auth }) => {
   let user = auth.user;
 
   // if auth is gone, we're probably logging out, use prev state
+  /*
   if (typeof app.core.auth === 'object') {
     if ('getUser' in app.core.auth) {
       if (app.core.auth.getUser instanceof Function) {
@@ -64,6 +65,7 @@ const mapStateToProps = ({ auth }) => {
       }
     }
   }
+  */
 
   return {
     auth,

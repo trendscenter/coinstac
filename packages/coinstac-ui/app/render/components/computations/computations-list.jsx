@@ -8,6 +8,7 @@ import {
   Table,
 } from 'react-bootstrap';
 import { fetchAllComputationsMetadataFunc } from '../../state/graphql/functions';
+import { computationsProp } from '../../state/graphql/props';
 import ComputationIO from './computation-io';
 
 const styles = {
@@ -36,7 +37,7 @@ class ComputationsList extends Component { // eslint-disable-line
         <div className="page-header clearfix">
           <h1 className="pull-left">Computations</h1>
           {user.permissions.computations.write &&
-            <LinkContainer className="pull-right" to="/computations/new">
+            <LinkContainer className="pull-right" to="/dashboard/computations/new">
               <Button bsStyle="primary" className="pull-right">
                 <span aria-hidden="true" className="glphicon glyphicon-plus" />
                 {' '}
@@ -90,12 +91,10 @@ function mapStateToProps({ auth, featureTest: { dockerOut } }) {
   return { auth, dockerOut };
 }
 
-const ComputationsListWithData = graphql(fetchAllComputationsMetadataFunc, {
-  props: ({ data: { loading, fetchAllComputations } }) => ({
-    loading,
-    computations: fetchAllComputations,
-  }),
-})(ComputationsList);
+const ComputationsListWithData = graphql(
+  fetchAllComputationsMetadataFunc,
+  computationsProp
+)(ComputationsList);
 
 
 export default connect(mapStateToProps)(ComputationsListWithData);

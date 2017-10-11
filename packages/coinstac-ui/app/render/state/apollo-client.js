@@ -15,8 +15,14 @@ client.networkInterface.use([{
     if (!req.options.headers) {
       req.options.headers = {};  // Create the header object if needed.
     }
+
     // get the authentication token from local storage if it exists
-    const token = localStorage.getItem('id_token');
+    let token = localStorage.getItem('id_token');
+
+    if (!token || token === 'null' || token === 'undefined') {
+      token = sessionStorage.getItem('id_token');
+    }
+
     req.options.headers.authorization = token ? `Bearer ${token}` : null;
     next();
   },
