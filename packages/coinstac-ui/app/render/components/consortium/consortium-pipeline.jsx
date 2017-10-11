@@ -47,7 +47,7 @@ const ConsortiumPipeline = () =>
       <Row style={{ marginTop: 50 }}>
         <Col xs={12} style={styles.textCenter}>
           <p><em>Or create a new pipeline</em></p>
-          <LinkContainer to="/pipelines/new">
+          <LinkContainer to="/dashboard/pipelines/new">
             <Button bsStyle="success">
               <span aria-hidden="true" className="glphicon glyphicon-plus" />
               {' '}

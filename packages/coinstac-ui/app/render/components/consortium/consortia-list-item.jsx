@@ -8,7 +8,7 @@ import { deleteConsortiumByIdFunc, fetchAllConsortiaFunc } from '../../state/gra
 const ConsortiaListItem = ({ owner, user, consortium, deleteConsortium }) => (
   <Panel header={<h3>{consortium.name}</h3>}>
     <p>{consortium.description}</p>
-    <LinkContainer to={`/consortia/${consortium.id}`}>
+    <LinkContainer to={`/dashboard/consortia/${consortium.id}`}>
       <Button bsStyle="info">View Details</Button>
     </LinkContainer>
     {owner &&

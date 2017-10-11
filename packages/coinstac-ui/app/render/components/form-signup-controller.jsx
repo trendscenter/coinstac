@@ -17,6 +17,10 @@ class FormSignupController extends Component {
     this.props.clearUser();
   }
 
+  componentWillUnmount() {
+    this.props.clearUser();
+  }
+
   /**
    * Handle new user form submits.
    *
@@ -54,12 +58,12 @@ class FormSignupController extends Component {
 
     return this.props.signUp(formData)
       .then(() => {
-        if (!this.props.auth.user.error) {
+        if (!this.props.auth.error) {
           app.notify({
             level: 'success',
             message: 'Account created',
           });
-          process.nextTick(() => router.push('/'));
+          process.nextTick(() => router.push('/dashboard'));
         }
       })
       .catch((error) => {
