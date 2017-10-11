@@ -22,7 +22,7 @@ class FormSignup extends Component {
       email: this.formEmail.value.trim(),
       institution: 'mrn',
       name: this.formSignupName.value.trim(),
-      password: this.formPassword.state.password.trim(),
+      password: this.formPassword.password().trim(),
       username: this.formSignupUsername.value.trim(),
     });
   }
@@ -34,9 +34,9 @@ class FormSignup extends Component {
       <div className="panel panel-default">
         <div className="panel-body">
           <form onSubmit={this.handleSubmit}>
-            {auth.user && auth.user.error &&
+            {auth.error &&
               <Alert bsStyle="danger" style={styles.bottomMargin}>
-                <strong>Error!</strong> {auth.user.error}
+                <strong>Error!</strong> {auth.error}
               </Alert>
             }
 

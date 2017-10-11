@@ -14,7 +14,7 @@ class Dashboard extends Component {
     const { router } = this.context;
 
     process.nextTick(() => {
-      if (!user) {
+      if (!user.email.length) {
         app.logger.verbose('Redirecting login (no authorized user)');
         router.push('/login');
       } else {
@@ -27,9 +27,10 @@ class Dashboard extends Component {
     const { auth, children } = this.props;
     const { router } = this.context;
 
-    if (!auth || !auth.user) {
+    if (!auth || !auth.user.email.length) {
       return (<p>Redirecting to login...</p>);
     }
+
     // @TODO don't render primary content whilst still loading/bg-services
     return (
       <div className="dashboard container-fluid">

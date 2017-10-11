@@ -116,7 +116,7 @@ function mapStateToProps({
     // computations: allComputations || [],
     projects: allProjects || [],
     remoteResults: remoteResults || [],
-    username: auth.user.username,
+    username: auth.user.username || '',
   };
 }
 
