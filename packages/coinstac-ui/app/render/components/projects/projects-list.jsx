@@ -74,7 +74,7 @@ class ProjectsList extends Component {
       <div>
         <div className="page-header clearfix">
           <h1 className="pull-left">My Files</h1>
-          <LinkContainer className="pull-right" to="/my-files/new">
+          <LinkContainer className="pull-right" to="/dashboard/my-files/new">
             <Button bsStyle="primary" className="pull-right">
               <span aria-hidden="true" className="glphicon glyphicon-plus" />
               {' '}
@@ -148,12 +148,13 @@ ProjectsList.propTypes = {
   removeProject: PropTypes.func.isRequired,
   runComputation: PropTypes.func.isRequired,
   setProjects: PropTypes.func.isRequired,
-  username: PropTypes.string.isRequired,
+  username: PropTypes.string,
 };
 
 
 ProjectsList.defaultProps = {
   projects: null,
+  username: '',
 };
 
 function mapStateToProps({

@@ -45,7 +45,11 @@ export default class PipelineStepInput extends Component {
   }
 
   addCovariate() {
-    const { step, updateStep } = this.props;
+    const {
+      pipelineIndex,
+      step,
+      updateStep,
+    } = this.props;
 
     updateStep({
       ...step,
@@ -56,6 +60,11 @@ export default class PipelineStepInput extends Component {
           ...step.ioMap.covariates,
           {
             type: '',
+            source: {
+              pipelineIndex: -1,
+              inputKey: pipelineIndex === 0 ? 'file' : '',
+              inputLabel: pipelineIndex === 0 ? 'File' : '',
+            },
           },
         ],
       },
@@ -63,7 +72,16 @@ export default class PipelineStepInput extends Component {
   }
 
   render() {
-    const { objKey, objParams, parentKey, owner, step, updateStep } = this.props;
+    const {
+      objKey,
+      objParams,
+      parentKey,
+      pipelineIndex,
+      possibleInputs,
+      owner,
+      step,
+      updateStep,
+    } = this.props;
 
     return (
       <div>
@@ -79,7 +97,7 @@ export default class PipelineStepInput extends Component {
             </Button>
             {step.ioMap.covariates.map((cov, index) => (
               <Row key={`covariate-${index}`}>
-                <Col sm={4}>
+                <Col sm={3}>
                   <DropdownButton
                     bsStyle="info"
                     id={`covariate-${index}-dropdown`}
@@ -101,7 +119,7 @@ export default class PipelineStepInput extends Component {
                 </Col>
                 {cov.type &&
                   <div>
-                    <Col sm={4}>
+                    <Col sm={3}>
                       <FormGroup controlId={`${parentKey}-form-group`}>
                         <FormControl
                           disabled={!owner}
@@ -116,8 +134,53 @@ export default class PipelineStepInput extends Component {
                         />
                       </FormGroup>
                     </Col>
-                    <Col sm={4}>
-                      <Button bsStyle="danger">
+                    <Col sm={3}>
+                      <DropdownButton
+                        id={`input-source-${index}-dropdown`}
+                        title={cov.source.inputLabel || 'Data Source'}
+                      >
+                        <MenuItem
+                          eventKey={'covariate-file-inputs-menuitem'}
+                          key={'covariate-file-inputs-menuitem'}
+                          onClick={() => updateStep({
+                            ...step,
+                            ioMap: this.getNewObj(
+                              'source',
+                              { pipelineIndex: -1, inputKey: 'file', inputLabel: 'File' },
+                              index
+                            ),
+                          })}
+                        >
+                          File
+                        </MenuItem>
+                        {possibleInputs.map(itemObj => (
+                          Object.entries(itemObj.inputs)
+                            .filter(filterIn => filterIn[1].type === cov.type)
+                            .map(itemInput => (
+                              <MenuItem
+                                eventKey={`${itemInput[1].label}-Computation-${itemObj.possibleInputIndex + 1}-inputs-menuitem`}
+                                key={`${itemInput[1].label}-Computation-${itemObj.possibleInputIndex + 1}-inputs-menuitem`}
+                                onClick={() => updateStep({
+                                  ...step,
+                                  ioMap: this.getNewObj(
+                                    'source',
+                                    {
+                                      pipelineIndex: itemObj.possibleInputIndex,
+                                      inputKey: itemInput[0],
+                                      inputLabel: `Computation ${itemObj.possibleInputIndex + 1}: ${itemInput[1].label}`,
+                                    },
+                                    index
+                                  ),
+                                })}
+                              >
+                                {`Computation ${itemObj.possibleInputIndex + 1}: ${itemInput[1].label}`}
+                              </MenuItem>
+                            ))
+                        ))}
+                      </DropdownButton>
+                    </Col>
+                    <Col sm={3}>
+                      <Button className="pull-right" bsStyle="danger">
                         Remove
                       </Button>
                     </Col>
@@ -189,12 +252,15 @@ export default class PipelineStepInput extends Component {
 PipelineStepInput.defaultProps = {
   parentKey: '',
   owner: false,
+  possibleInputs: [],
   updateStep: null,
 };
 
 PipelineStepInput.propTypes = {
   isCovariate: PropTypes.bool.isRequired,
   parentKey: PropTypes.string,
+  pipelineIndex: PropTypes.number.isRequired,
+  possibleInputs: PropTypes.array,
   objKey: PropTypes.string.isRequired,
   objParams: PropTypes.object.isRequired,
   owner: PropTypes.bool,

@@ -7,7 +7,7 @@ import ConsortiumAbout from './consortium-about';
 import ConsortiumPipeline from './consortium-pipeline';
 import ConsortiumResults from './consortium-results';
 import ApolloClient from '../../state/apollo-client';
-import { fetchAllConsortiaFunc, saveConsortiumFunc } from '../../state/graphql-queries';
+import { fetchAllConsortiaFunc, saveConsortiumFunc } from '../../state/graphql/functions';
 
 const styles = {
   tab: {
@@ -24,6 +24,9 @@ class ConsortiumTabs extends Component {
       description: '',
       users: [],
       owners: [],
+      activeComputationId: '',
+      activeComputationInputs: [],
+      tags: [],
     };
 
     if (props.params.consortiumId) {
@@ -45,26 +48,26 @@ class ConsortiumTabs extends Component {
 
     if (this.state.consortium.owners.indexOf(this.props.auth.user.id) === -1) {
       this.setState(prevState => ({
-          owners: prevState.consortium.owners.push(this.props.auth.user.id),
+        owners: prevState.consortium.owners.push(this.props.auth.user.id),
       }));
     }
 
     this.props.saveConsortium(this.state.consortium)
     .then((res) => {
       // TODO: hook activeComputationId and Inputs
-      this.setState({ 
-        consortium: 
+      this.setState({
+        consortium:
         {
           id: res.data.saveConsortium.id,
           name: res.data.saveConsortium.name,
           description: res.data.saveConsortium.description,
           users: res.data.saveConsortium.users,
-          owners: res.data.saveConsortium.owners, 
+          owners: res.data.saveConsortium.owners,
           activeComputationId: null,
           activeComputationInputs: null,
           tags: null,
 
-        } 
+        },
       });
       // TODO: Use redux to display success/failure messages after mutations
     })

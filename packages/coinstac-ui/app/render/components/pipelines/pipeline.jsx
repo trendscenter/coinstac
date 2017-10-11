@@ -23,7 +23,8 @@ import {
 import ApolloClient from '../../state/apollo-client';
 import PipelineStep from './pipeline-step';
 import ItemTypes from './pipeline-item-types';
-import { fetchAllConsortiaFunc, fetchComputationMetadata } from '../../state/graphql-queries';
+import { fetchAllConsortiaFunc, fetchAllComputationsMetadataFunc } from '../../state/graphql/functions';
+import { computationsProp } from '../../state/graphql/props';
 
 const computationTarget = {
   drop() {
@@ -83,7 +84,8 @@ class Pipeline extends Component {
   moveStep(id, swapId) {
     let index;
 
-    const movedStep = this.state.pipeline.steps.find(step => step.id === id);
+    const movedStepIndex = this.state.pipeline.steps.findIndex(step => step.id === id);
+    const movedStep = this.state.pipeline.steps[movedStepIndex];
 
     if (swapId !== null) {
       index = this.state.pipeline.steps.findIndex(step => step.id === swapId);
@@ -91,8 +93,72 @@ class Pipeline extends Component {
       index = this.state.pipeline.steps.findIndex(step => step.id === id);
     }
 
-    const newArr = this.state.pipeline.steps.filter(step => step.id !== id);
-    newArr.splice(index, 0, movedStep);
+    // Remap covariates to new indices if required
+    const newArr = this.state.pipeline.steps
+      .map((step, stepIndex) => {
+        return {
+          ...step,
+          ioMap: {
+            ...step.ioMap,
+            covariates: step.ioMap.covariates.map((cov) => {
+              if (index >= stepIndex && movedStepIndex < stepIndex) {
+                return { ...cov, source: {} };
+              } else if (movedStepIndex === cov.source.pipelineIndex) {
+                return {
+                  ...cov,
+                  source: {
+                    ...cov.source,
+                    pipelineIndex: index,
+                    inputLabel: cov.source.inputLabel.replace(`Computation ${cov.source.pipelineIndex + 1}`, `Computation ${index + 1}`),
+                  },
+                };
+              } else if (index <= cov.source.pipelineIndex
+                          && movedStepIndex > cov.source.pipelineIndex) {
+                return {
+                  ...cov,
+                  source: {
+                    ...cov.source,
+                    pipelineIndex: cov.source.pipelineIndex + 1,
+                    inputLabel: cov.source.inputLabel.replace(`Computation ${cov.source.pipelineIndex + 1}`, `Computation ${cov.source.pipelineIndex + 2}`),
+                  },
+                };
+              } else if (movedStepIndex < cov.source.pipelineIndex
+                          && index >= cov.source.pipeligitneIndex
+                          && index < stepIndex) {
+                return {
+                  ...cov,
+                  source: {
+                    ...cov.source,
+                    pipelineIndex: cov.source.pipelineIndex - 1,
+                    inputLabel: cov.source.inputLabel.replace(`Computation ${cov.source.pipelineIndex + 1}`, `Computation ${cov.source.pipelineIndex}`),
+                  },
+                };
+              }
+
+              return cov;
+            }),
+          },
+        };
+      })
+      .filter(step => step.id !== id);
+
+    newArr.splice(
+      index,
+      0,
+      {
+        ...movedStep,
+        ioMap: {
+          ...movedStep.ioMap,
+          covariates: movedStep.ioMap.covariates.map((cov) => {
+            if (cov.source.pipelineIndex >= index) {
+              return { ...cov, source: {} };
+            }
+
+            return cov;
+          }),
+        },
+      }
+    );
 
     this.setState(prevState => ({
       pipeline: {
@@ -114,7 +180,7 @@ class Pipeline extends Component {
   }
 
   render() {
-    const { allComputations, connectDropTarget } = this.props;
+    const { computations, connectDropTarget } = this.props;
 
     const title = 'New Pipeline';
 
@@ -158,7 +224,7 @@ class Pipeline extends Component {
               </span>
             }
           >
-            {allComputations.map(comp => (
+            {computations.map(comp => (
               <MenuItem
                 eventKey={comp.id}
                 key={comp.id}
@@ -173,19 +239,24 @@ class Pipeline extends Component {
             <Col sm={12}>
               {this.state.pipeline.steps.length > 0 &&
                 <Accordion>
-                  {this.state.pipeline.steps.map(step => (
+                  {this.state.pipeline.steps.map((step, index) => (
                     <PipelineStep
-                      computationName={step.computations[0].meta.name}
+                      computationId={step.computations[0].id}
                       eventKey={step.id}
                       id={step.id}
                       key={step.id}
                       moveStep={this.moveStep}
                       owner={this.state.owner}
+                      pipelineIndex={index}
+                      previousComputationIds={
+                        this.state.pipeline.steps
+                          .filter((s, i) => i < index)
+                          .map(s => s.computations[0].id)
+                      }
                       step={step}
                       updateStep={this.updateStep}
                     />
                   ))}
-                  
                 </Accordion>
               }
               {!this.state.pipeline.steps.length &&
@@ -203,7 +274,7 @@ class Pipeline extends Component {
 
 Pipeline.propTypes = {
   auth: PropTypes.object.isRequired,
-  allComputations: PropTypes.array.isRequired,
+  computations: PropTypes.array.isRequired,
   connectDropTarget: PropTypes.func.isRequired,
   params: PropTypes.object.isRequired,
 };
@@ -212,12 +283,7 @@ function mapStateToProps({ auth }) {
   return { auth };
 }
 
-const PipelineWithData = graphql(fetchComputationMetadata, {
-  props: ({ data: { loading, fetchAllComputations } }) => ({
-    loading,
-    allComputations: fetchAllComputations,
-  }),
-})(Pipeline);
+const PipelineWithData = graphql(fetchAllComputationsMetadataFunc, computationsProp)(Pipeline);
 
 export default compose(
   connect(mapStateToProps),

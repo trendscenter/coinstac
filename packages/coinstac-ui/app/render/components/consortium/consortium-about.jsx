@@ -25,7 +25,7 @@ export default class ConsortiumAbout extends Component {
             <FormControl
               disabled={!owner}
               type="input"
-              value={consortium.name}
+              value={consortium.name || ''}
               inputRef={(input) => { this.name = input; }}
               onChange={() => updateConsortium({ param: 'name', value: this.name.value })}
             />
@@ -36,7 +36,7 @@ export default class ConsortiumAbout extends Component {
             <FormControl
               disabled={!owner}
               componentClass="textarea"
-              value={consortium.description}
+              value={consortium.description || ''}
               inputRef={(input) => { this.description = input; }}
               onChange={() => updateConsortium({ param: 'description', value: this.description.value })}
             />

@@ -7,7 +7,8 @@ import {
   Button,
   Table,
 } from 'react-bootstrap';
-import { fetchComputationMetadata } from '../../state/graphql-queries';
+import { fetchAllComputationsMetadataFunc } from '../../state/graphql/functions';
+import { computationsProp } from '../../state/graphql/props';
 import ComputationIO from './computation-io';
 
 const styles = {
@@ -36,7 +37,7 @@ class ComputationsList extends Component { // eslint-disable-line
         <div className="page-header clearfix">
           <h1 className="pull-left">Computations</h1>
           {user.permissions.computations.write &&
-            <LinkContainer className="pull-right" to="/computations/new">
+            <LinkContainer className="pull-right" to="/dashboard/computations/new">
               <Button bsStyle="primary" className="pull-right">
                 <span aria-hidden="true" className="glphicon glyphicon-plus" />
                 {' '}
@@ -73,7 +74,7 @@ class ComputationsList extends Component { // eslint-disable-line
         {this.state.activeComp &&
           <div>
             {this.state.activeComp.meta.name}
-            <ComputationIO computationName={this.state.activeComp.meta.name} />
+            <ComputationIO computationId={this.state.activeComp.id} />
           </div>
         }
       </div>
@@ -90,12 +91,10 @@ function mapStateToProps({ auth, featureTest: { dockerOut } }) {
   return { auth, dockerOut };
 }
 
-const ComputationsListWithData = graphql(fetchComputationMetadata, {
-  props: ({ data: { loading, fetchAllComputations } }) => ({
-    loading,
-    computations: fetchAllComputations,
-  }),
-})(ComputationsList);
+const ComputationsListWithData = graphql(
+  fetchAllComputationsMetadataFunc,
+  computationsProp
+)(ComputationsList);
 
 
 export default connect(mapStateToProps)(ComputationsListWithData);
