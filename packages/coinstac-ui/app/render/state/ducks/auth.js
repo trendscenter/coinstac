@@ -11,31 +11,87 @@ const setUser = user => ({ type: SET_USER, payload: user });
 const CLEAR_USER = 'CLEAR_USER';
 export const clearUser = () => ({ type: CLEAR_USER, payload: null });
 
-const setTokenAndInitialize = (reqUser, data, dispatch) => {
-  const user = { ...data.user, label: reqUser.username };
-  localStorage.setItem('id_token', data.id_token);
-  dispatch(setUser(user));
-
-  return app.core.initialize(pick(reqUser, ['password', 'username']));
+const INITIAL_STATE = {
+  user: {
+    id: '',
+    username: '',
+    permissions: {},
+    email: '',
+    institution: '',
+  },
 };
 
-export const login = applyAsyncLoading(reqUser =>
-  dispatch =>
-    axios.post('http://localhost:3100/authenticate', reqUser)
-    .then(({ data }) => setTokenAndInitialize(reqUser, data, dispatch))
+
+const setTokenAndInitialize = (reqUser, data, dispatch) => {
+  const user = { ...data.user, label: reqUser.username };
+
+  if (reqUser.saveLogin) {
+    localStorage.setItem('id_token', data.id_token);
+  } else {
+    sessionStorage.setItem('id_token', data.id_token);
+  }
+
+  return dispatch(setUser({ user }))
+    .then(() => app.core.initialize(pick(reqUser, ['password', 'username'])));
+};
+
+export const autoLogin = applyAsyncLoading(() =>
+  (dispatch) => {
+    let token = localStorage.getItem('id_token');
+    let saveLogin = true;
+
+    if (!token || token === 'null' || token === 'undefined') {
+      token = sessionStorage.getItem('id_token');
+      saveLogin = false;
+    }
+
+    if (!token || token === 'null' || token === 'undefined') {
+      return;
+    }
+
+    return axios.post(
+      'http://localhost:3100/authenticateByToken',
+      null,
+      { headers: { Authorization: `Bearer ${token}` } }
+    )
+    .then(({ data }) => setTokenAndInitialize(
+      { username: data.user.id, saveLogin, password: 'GET_RID_OF_CORE_INIT_AT_LOGIN' },
+      data,
+      dispatch
+    ))
     .catch((err) => {
-      if (err.response.status === 401) {
-        dispatch(setUser({ error: 'Username and/or Password Incorrect' }));
+      if (err.response && err.response.status === 401) {
+        localStorage.setItem('id_token', null);
+        dispatch(setUser({ ...INITIAL_STATE, error: 'Please Login Again' }));
+      }
+    });
+  }
+);
+
+export const login = applyAsyncLoading(({ username, password, saveLogin }) =>
+  dispatch =>
+    axios.post('http://localhost:3100/authenticate', { username, password })
+    .then(({ data }) => setTokenAndInitialize({ username, password, saveLogin }, data, dispatch))
+    .catch((err) => {
+      if (err.response && err.response.status === 401) {
+        dispatch(setUser({ ...INITIAL_STATE, error: 'Username and/or Password Incorrect' }));
       }
     })
 );
 
-export const logout = applyAsyncLoading(() => {
+export const logout = applyAsyncLoading(() =>
+  (dispatch) => {
+    localStorage.setItem('id_token', null);
+    sessionStorage.setItem('id_token', null);
+    dispatch(clearUser());
+  }
+  /*
   return (dispatch) => {
     return dispatch(teardownPrivateBackgroundServices()) // does app.core.logout*
     .then(() => dispatch(setUser({ email: '' })));
   };
-});
+  */
+);
 
 export const signUp = applyAsyncLoading(user =>
   dispatch =>
@@ -44,7 +100,7 @@ export const signUp = applyAsyncLoading(user =>
     .catch(({ response: { data: { message } } }) => {
       if (message === 'Username taken'
           || message === 'Email taken') {
-        dispatch(setUser({ error: message }));
+        dispatch(setUser({ ...INITIAL_STATE, error: message }));
       }
     })
 );
@@ -59,16 +115,16 @@ export const hotRoute = () => {
       email: 'test@test.com',
       label: 'test test',
     };
-    return dispatch(login(user));
+    dispatch(login(user));
   };
 };
 
-export default function reducer(state = { user: null }, action) {
+export default function reducer(state = INITIAL_STATE, action) {
   switch (action.type) {
     case CLEAR_USER:
-      return { ...state, user: null };
+      return { ...INITIAL_STATE };
     case SET_USER:
-      return { ...state, user: action.payload };
+      return { ...action.payload };
     default:
       return state;
   }
