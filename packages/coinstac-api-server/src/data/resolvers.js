@@ -116,7 +116,8 @@ const resolvers = {
     /**
      * Saves consortia
      */
-    saveConsortium: ({ auth: { credentials: { permissions } } }, args) => {
+    saveConsortium: ({ auth: { credentials } }, args) => {
+      const { permissions } = credentials;
       if (!permissions.consortia.write
           && args.consortium.id
           && !permissions.consortia[args.consortium.id].write) {
@@ -128,15 +129,19 @@ const resolvers = {
           rethink.table('consortia').insert(
             args.consortium,
             { 
-              conflict: "replace",
+              conflict: "update",
               returnChanges: true,
             }
           )
           .run(connection)
+          .then((result) => {
+            let consortia = {};
+            consortia[result.changes[0].new_val.id] = { 'write': true };
+            rethink.table('users').filter({id: credentials.id}).update({ 'permissions': { consortia } })
+            .run(connection)
+            return result.changes[0].new_val;
+          })
         )
-        .then((result) => {
-          return result.changes[0].new_val;
-        })
     },
     removeComputation: (_, args) => {
       return new Promise();
