@@ -11,7 +11,7 @@
   "devDependencies": {},
   "dependencies": {
     "axios": "^0.16.2",
-    "coinstac-common": "file:///Users/aramirez/coinstac/packages/coinstac-common",
+    "coinstac-common": "file:///Users/torrankahleck/coinstac/packages/coinstac-common",
     "lodash": "^4.17.4"
   }
 }

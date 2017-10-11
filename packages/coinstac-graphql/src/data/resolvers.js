@@ -111,7 +111,8 @@ const resolvers = {
     /**
      * Saves consortia
      */
-    saveConsortium: ({ auth: { credentials: { permissions } } }, args) => {
+    saveConsortium: ({ auth: { credentials } }, args) => {
+      const { permissions } = credentials;
       if (!permissions.consortia.write
           && args.consortium.id
           && !permissions.consortia[args.consortium.id].write) {
@@ -129,10 +130,9 @@ const resolvers = {
           )
           .run(connection)
           .then((result) => {
-            //r.db('coinstac').table('users').filter({id: 'test'}).update({'permissions': {'consortia': {'some-new-id': {'write': true}}}})
-            let consortium = {};
-            consortium[result.changes[0].new_val.id] = {'write': true};
-            rethink.table('users').filter({id: 'test'}).update({'permissions': {'consortia': consortium}})
+            let consortia = {};
+            consortia[result.changes[0].new_val.id] = { 'write': true };
+            rethink.table('users').filter({id: credentials.id}).update({ 'permissions': { consortia } })
             .run(connection)
             return result.changes[0].new_val;
           })
