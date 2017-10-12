@@ -62,8 +62,8 @@
     "colors": true,
     "silent": false,
     "run": [
-      "lint",
-      "test"
+      "lint" //,
+      // "test"
     ]
   }
 }
