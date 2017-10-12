@@ -46,7 +46,7 @@ server.register([
   },
 ], (err) => {
   if (err) {
-    console.log(err);
+    console.log(err);  // eslint-disable-line no-console
   }
 
   /**
@@ -118,5 +118,5 @@ server.register([
 
 server.start((startErr) => {
   if (startErr) throw startErr;
-  console.log(`Server running at: ${server.info.uri}`);
+  console.log(`Server running at: ${server.info.uri}`); // eslint-disable-line no-console
 });

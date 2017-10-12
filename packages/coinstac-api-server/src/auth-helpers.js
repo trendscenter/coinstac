@@ -3,7 +3,7 @@ const Boom = require('boom');
 const jwt = require('jsonwebtoken');
 const rethink = require('rethinkdb');
 const config = require('../config/api-config');
-const dbmap = require('/coins/config/dbmap');
+const dbmap = require('/coins/config/dbmap'); // eslint-disable-line import/no-absolute-path
 
 const helperFunctions = {
   /**

@@ -24,7 +24,7 @@ class ComputationRegistry {
     )
     .then((token) => {
       this.id_token = token.data.id_token;
-      axios.defaults.headers.common['Authorization'] = `Bearer ${this.id_token}`;
+      axios.defaults.headers.common.Authorization = `Bearer ${this.id_token}`;
       return this.id_token;
     });
   }
@@ -37,7 +37,7 @@ class ComputationRegistry {
    * Generate array of docker pull promises and wait until resolved to return merged output streams
    * @param {Object} payload
    * @param {Array} [payload.comps] array of computation images to download
-   * @return {Object} Returns merged streams docker pull output 
+   * @return {Object} Returns merged streams docker pull output
    */
   pullPipelineComputations(payload) { // eslint-disable-line class-methods-use-this
     const merged = mergeStream();
@@ -51,9 +51,9 @@ class ComputationRegistry {
     .then(res => merged.add(res));
   }
 
-  validateComputation(id) {
+  validateComputation(id) { // eslint-disable-line class-methods-use-this, no-unused-vars
     // TODO: Return boolean for whether or not computation is approved
-    console.log('validate');
+    console.log('validate'); // eslint-disable-line no-console
   }
 
   /**
