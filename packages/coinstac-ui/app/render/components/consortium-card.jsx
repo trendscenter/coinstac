@@ -44,7 +44,7 @@ export default function ConsortiumCard(props) {
   } else {
     membershipButton = isMember ?
     (
-      <Button bsSize="small" bsStyle="danger" onClick={leaveConsortium}>
+      <Button bsSize="small" bsStyle="warning" onClick={leaveConsortium}>
         <span
           aria-hidden="true"
           className="glyphicon glyphicon glyphicon-minus"
