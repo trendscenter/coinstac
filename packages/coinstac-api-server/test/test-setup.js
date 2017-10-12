@@ -16,8 +16,6 @@ helperFunctions.getRethinkConnection()
   .then(() => rethink.dbCreate('coinstac').run(connection))
   .then(() => rethink.tableCreate('computations').run(connection))
   .then(() => rethink.table('computations').insert([singleShot, multiShot]).run(connection))
-  // .then(() => rethink.db('rethinkdb').table('users').insert({ id: 'server', password: 'password' }).run(connection))
-  // .then(() => rethink.db('coinstac').grant('server', { read: true }).run(connection))
   .then(() => rethink.tableCreate('users').run(connection))
   .then(() => rethink.tableCreate('consortia').run(connection))
   .then(() => rethink.table('consortia').insert({
@@ -82,4 +80,4 @@ helperFunctions.getRethinkConnection()
     process.exit();
   });
 })
-.catch(console.log);
+.catch(console.log);  // eslint-disable-line no-console

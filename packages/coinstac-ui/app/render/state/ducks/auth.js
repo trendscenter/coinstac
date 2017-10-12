@@ -2,7 +2,7 @@ import { pick } from 'lodash';
 import app from 'ampersand-app';
 import axios from 'axios';
 import { applyAsyncLoading } from './loading';
-import { teardownPrivateBackgroundServices } from './bg-services';
+// import { teardownPrivateBackgroundServices } from './bg-services';
 
 const SET_USER = 'SET_USER';
 const setUser = user => ({ type: SET_USER, payload: user });
