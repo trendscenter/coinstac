@@ -165,8 +165,18 @@ const resolvers = {
           return result.changes[0].old_val;
         })
     },
-    joinConsortium: (_, args) => {
-      return new Promise();
+    joinConsortium: ({ auth: { credentials } }, args) => {
+      const { permissions } = credentials;
+
+      return helperFunctions.getRethinkConnection()
+        .then((connection) =>
+          rethink.table('consortia').get(args.consortiumId)
+          .update({"users": rethink.row("users").append(credentials.id)}, {returnChanges: true,})
+          .run(connection)
+        )
+        .then((result) => {
+          return result.changes[0].new_val;
+        })
     },
     setActiveComputation: (_, args) => {
       return new Promise();
@@ -174,8 +184,21 @@ const resolvers = {
     setComputationInputs: (_, args) => {
       return new Promise();
     },
-    leaveConsortium: (_, args) => {
-      return new Promise();
+    leaveConsortium: ({ auth: { credentials } }, args) => {
+      const { permissions } = credentials;
+      return helperFunctions.getRethinkConnection()
+        .then((connection) =>
+          rethink.table('consortia').get(args.consortiumId)
+          .update(function(row){
+            return{
+              "users": row("users").setDifference([credentials.id]),
+            }
+          }, {returnChanges: true})
+          .run(connection)
+        )
+        .then((result) => {
+          return result.changes[0].new_val;
+        })
     },
   },
 };
