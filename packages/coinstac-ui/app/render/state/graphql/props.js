@@ -10,3 +10,9 @@ export const consortiaProp = {
     consortia: fetchAllConsortia,
   }),
 };
+
+export const pipelinesProp = {
+  props: ({ data: { fetchAllPipelines } }) => ({
+    pipelines: fetchAllPipelines,
+  }),
+};

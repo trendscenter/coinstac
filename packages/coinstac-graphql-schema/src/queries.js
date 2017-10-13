@@ -24,6 +24,13 @@ const queries = {
       }
     }
   `,
+  fetchAllPipelines: `
+    {
+      fetchAllPipelines {
+        ${sharedFields.pipelineFields}
+      }
+    }
+  `,
   fetchComputationDetails: `
     {
       fetchComputationDetails (computationIds: $computationIds) {
