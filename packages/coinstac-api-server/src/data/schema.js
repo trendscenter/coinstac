@@ -48,28 +48,32 @@ const typeDefs = `
   # Should owners/users be an array of user objects?
   type Consortium {
     id: ID!
-    activeComputationId: ID
-    activeComputationInputs: [String]
-    description: String!
-    name: String!
-    tags: [String]
-    owners: [ID]
-    users: [ID]
-    pipelines: [ID]
-    results: [ID]
+    ${sharedFields.consortiumFields}
   }
 
   input ConsortiumInput {
     id: ID
-    activeComputationId: ID
-    activeComputationInputs: [String]
-    description: String!
-    name: String!
-    tags: [String]
-    owners: [String]
-    users: [String]
-    pipelines: [ID]
-    results: [ID]
+    ${sharedFields.consortiumFields}
+  }
+
+  type PipelineController {
+    ${sharedFields.pipelineControllerFields}
+  }
+
+  input PipelineControllerInput {
+    ${sharedFields.pipelineControllerFields}
+  }
+
+  type Pipeline {
+    id: ID!
+    controller: PipelineController
+    ${sharedFields.pipelineFields}
+  }
+
+  input PipelineInput {
+    id: ID
+    controller: PipelineControllerInput
+    ${sharedFields.pipelineFields}
   }
 
   type Run {
@@ -106,6 +110,7 @@ const typeDefs = `
     fetchAllComputations: [Computation]
     fetchComputationDetails(computationIds: [ID]): [Computation]
     fetchAllConsortia: [Consortium]
+    fetchAllPipelines: [Pipeline]
     validateComputation(compId: ID): Boolean
     fetchConsortiumById(consortiumId: ID): Consortium
     fetchRunForConsortium(consortiumId: ID): [Run]

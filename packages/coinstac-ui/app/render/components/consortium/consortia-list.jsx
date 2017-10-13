@@ -1,18 +1,38 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { graphql } from 'react-apollo';
+import { compose, graphql } from 'react-apollo';
 import { Alert, Button } from 'react-bootstrap';
 import { LinkContainer } from 'react-router-bootstrap';
 import PropTypes from 'prop-types';
-import ConsortiaListItem from './consortia-list-item';
-import { fetchAllConsortiaFunc } from '../../state/graphql/functions';
+import ListItem from '../common/list-item';
+import { deleteConsortiumByIdFunc, fetchAllConsortiaFunc } from '../../state/graphql/functions';
 import { consortiaProp } from '../../state/graphql/props';
 
 const isUserA = (userId, groupArr) => {
   return groupArr.indexOf(userId) !== -1;
 };
 
-const ConsortiaList = ({ auth: { user }, consortia }) => (
+const getOptions = (user, owner) => {
+  const options = [];
+
+  if (user && !owner) {
+    options.push(
+      <Button key="leave-cons-button" bsStyle="warning" className="pull-right">
+        Leave Consortium
+      </Button>
+    );
+  } else if (!user && !owner) {
+    options.push(
+      <Button key="join-cons-button" bsStyle="primary" className="pull-right">
+        Join Consortium
+      </Button>
+    );
+  }
+
+  return options;
+};
+
+const ConsortiaList = ({ auth: { user }, consortia, deleteConsortium }) => (
   <div>
     <div className="page-header clearfix">
       <h1 className="pull-left">Consortia</h1>
@@ -25,11 +45,15 @@ const ConsortiaList = ({ auth: { user }, consortia }) => (
       </LinkContainer>
     </div>
     {consortia && consortia.map(consortium => (
-      <ConsortiaListItem
+      <ListItem
         key={`${consortium.name}-list-item`}
-        consortium={consortium}
+        itemObject={consortium}
+        deleteItem={deleteConsortium}
         owner={isUserA(user.id, consortium.owners)}
-        user={isUserA(user.id, consortium.users)}
+        itemOptions={
+          getOptions(isUserA(user.id, consortium.users), isUserA(user.id, consortium.owners))
+        }
+        itemRoute={'/dashboard/consortia'}
       />
     ))}
     {!consortia &&
@@ -43,6 +67,7 @@ const ConsortiaList = ({ auth: { user }, consortia }) => (
 ConsortiaList.propTypes = {
   auth: PropTypes.object.isRequired,
   consortia: PropTypes.array,
+  deleteConsortium: PropTypes.func.isRequired,
 };
 
 ConsortiaList.defaultProps = {
@@ -53,6 +78,23 @@ const mapStateToProps = ({ auth }) => {
   return { auth };
 };
 
-const ConsortiaListWithData = graphql(fetchAllConsortiaFunc, consortiaProp)(ConsortiaList);
+const ConsortiaListWithData = compose(
+  graphql(fetchAllConsortiaFunc, consortiaProp),
+  graphql(deleteConsortiumByIdFunc, {
+    props: ({ mutate }) => ({
+      deleteConsortium: consortiumId => mutate({
+        variables: { consortiumId },
+        update: (store, { data: { deleteConsortiumById } }) => {
+          const data = store.readQuery({ query: fetchAllConsortiaFunc });
+          const index = data.fetchAllConsortia.findIndex(con => con.id === deleteConsortiumById.id);
+          if (index > -1) {
+            data.fetchAllConsortia.splice(index, 1);
+          }
+          store.writeQuery({ query: fetchAllConsortiaFunc, data });
+        },
+      }),
+    }),
+  })
+)(ConsortiaList);
 
 export default connect(mapStateToProps)(ConsortiaListWithData);

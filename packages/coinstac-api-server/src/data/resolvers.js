@@ -3,6 +3,15 @@ const Boom = require('boom');
 const GraphQLJSON = require('graphql-type-json');
 const helperFunctions = require('../auth-helpers');
 
+function fetchAll(table) {
+  return helperFunctions.getRethinkConnection()
+    .then(connection =>
+      rethink.table(table).run(connection)
+    )
+    .then(cursor => cursor.toArray())
+    .then(result => result);
+}
+
 /* eslint-disable */
 const resolvers = {
   JSON: GraphQLJSON,
@@ -15,12 +24,7 @@ const resolvers = {
         return Boom.forbidden('Action not permitted');
       }
 
-      return helperFunctions.getRethinkConnection()
-        .then((connection) =>
-          rethink.table('consortia').run(connection)
-        )
-        .then((cursor) => cursor.toArray())
-        .then((result) => result);
+      return fetchAll('consortia');
     },
     /**
      * Returns all computations. Checks user permissions retrieved from JWT middleware validateFunc.
@@ -30,12 +34,17 @@ const resolvers = {
         return Boom.forbidden('Action not permitted');
       }
 
-      return helperFunctions.getRethinkConnection()
-        .then((connection) =>
-          rethink.table('computations').run(connection)
-        )
-        .then((cursor) => cursor.toArray())
-        .then((result) => result);
+      return fetchAll('computations');
+    },
+    /**
+     * Returns all pipelines. Checks user permissions retrieved from JWT middleware validateFunc.
+     */
+    fetchAllPipelines: ({ auth: { credentials: { permissions } } }, _) => {
+      if (!permissions.pipelines.read) {
+        return Boom.forbidden('Action not permitted');
+      }
+
+      return fetchAll('pipelines');
     },
     /**
      * Returns metadata for specific computation name

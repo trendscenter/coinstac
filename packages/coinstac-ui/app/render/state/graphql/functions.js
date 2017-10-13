@@ -26,6 +26,11 @@ export const fetchAllConsortiaFunc = gql`
     ${queries.fetchAllConsortia}
 `;
 
+export const fetchAllPipelinesFunc = gql`
+  query FetchAllPipelinesQuery
+    ${queries.fetchAllPipelines}
+`;
+
 export const fetchComputationDetailsFunc = gql`
   query FetchComputationDetailsQuery ($computationIds: [ID])
     ${queries.fetchComputationDetails}

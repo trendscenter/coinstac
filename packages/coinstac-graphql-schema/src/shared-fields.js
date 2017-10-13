@@ -17,6 +17,16 @@ const sharedFields = {
     owners
     users
   `,
+  pipelineFields: `
+    id
+    computations
+    controller {
+      options
+      id
+    }
+    name
+    description
+  `,
 };
 
 module.exports = sharedFields;

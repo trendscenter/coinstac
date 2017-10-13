@@ -14,8 +14,63 @@ helperFunctions.getRethinkConnection()
     );
   }).run(connection)
   .then(() => rethink.dbCreate('coinstac').run(connection))
+  .then(() => rethink.tableCreate('pipelines').run(connection))
   .then(() => rethink.tableCreate('computations').run(connection))
-  .then(() => rethink.table('computations').insert([singleShot, multiShot]).run(connection))
+  .then(() => rethink.table('computations').insert([singleShot, multiShot], { returnChanges: true }).run(connection))
+  .then(compInsertResult => rethink.table('pipelines').insert({
+    name: 'Test Pipeline',
+    description: 'Test description',
+    steps: [
+      {
+        computations: [
+          compInsertResult.changes[0].new_val.id,
+        ],
+        controller: {
+          options: { type: 'single' },
+          id: 'test-id',
+        },
+        id: 'HJwMOMTh-',
+        ioMap: {
+          covariates: [
+            {
+              name: 'isControl',
+              source: { inputKey: 'file', inputLabel: 'File', pipelineIndex: -1 },
+              type: 'boolean',
+            },
+            {
+              name: 'age',
+              source: { inputKey: 'file', inputLabel: 'File', pipelineIndex: -1 },
+              type: 'number',
+            },
+          ],
+          freeSurferRegion: ['3rd-Ventricle'],
+          lambda: '4',
+        },
+      },
+      {
+        computations: [
+          compInsertResult.changes[1].new_val.id,
+        ],
+        controller: {
+          options: { type: 'single' },
+          id: 'test-id',
+        },
+        id: 'HyLfdfanb',
+        ioMap: {
+          covariates: [
+            {
+              name: 'biased xs',
+              source: { inputKey: 'biasedX', inputLabel: 'Computation 1: Biased Xs', pipelineIndex: 0 },
+              type: 'number',
+            },
+          ],
+          freeSurferRegion: ['5th-Ventricle'],
+          iterationCount: '3',
+          lambda: '4',
+        },
+      },
+    ],
+  }).run(connection))
   .then(() => rethink.tableCreate('users').run(connection))
   .then(() => rethink.tableCreate('consortia').run(connection))
   .then(() => rethink.table('consortia').insert({
@@ -50,6 +105,7 @@ helperFunctions.getRethinkConnection()
           write: true,
         },
       },
+      pipelines: { read: true },
     },
   }, passwordHash)
   .then(() => {
@@ -73,6 +129,7 @@ helperFunctions.getRethinkConnection()
             write: true,
           },
         },
+        pipelines: { read: true },
       },
     }, passwordHash);
   })

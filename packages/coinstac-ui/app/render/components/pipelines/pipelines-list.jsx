@@ -4,6 +4,9 @@ import { graphql } from 'react-apollo';
 import { Alert, Button } from 'react-bootstrap';
 import { LinkContainer } from 'react-router-bootstrap';
 import PropTypes from 'prop-types';
+import ListItem from '../common/list-item';
+import { fetchAllPipelinesFunc } from '../../state/graphql/functions';
+import { pipelinesProp } from '../../state/graphql/props';
 
 const isUserA = (userId, groupArr) => {
   return groupArr.indexOf(userId) !== -1;
@@ -23,7 +26,14 @@ const PipelinesList = ({ auth: { user }, pipelines }) => (
     </div>
     {pipelines && pipelines.map(pipeline => (
       <div>
-        {pipeline.name}
+        <ListItem
+          key={`${pipeline.name}-list-item`}
+          itemObject={pipeline}
+          deleteItem={() => { return null; }}
+          owner={false}
+          itemOptions={[]}
+          itemRoute={'/dashboard/pipelines'}
+        />
       </div>
     ))}
     {!pipelines &&
@@ -47,12 +57,6 @@ const mapStateToProps = ({ auth }) => {
   return { auth };
 };
 
-/*
-const PipelinesListWithData = graphql(fetchAllConsortiaFunc, {
-  props: ({ data: { fetchAllConsortia } }) => ({
-    consortia: fetchAllConsortia,
-  }),
-})(PipelinesList);
-*/
+const PipelinesListWithData = graphql(fetchAllPipelinesFunc, pipelinesProp)(PipelinesList);
 
-export default connect(mapStateToProps)(PipelinesList);
+export default connect(mapStateToProps)(PipelinesListWithData);

@@ -28,6 +28,8 @@ const helperFunctions = {
         passwordHash,
         permissions: {
           computations: { read: true },
+          consortia: { read: true },
+          pipelines: { read: true },
         },
       };
 
