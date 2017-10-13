@@ -97,10 +97,10 @@ const typeDefs = `
     removeComputation(compId: ID): JSON
     removeAllComputations: JSON
     deleteConsortiumById(consortiumId: ID): Consortium
-    joinConsortium(username: String, consortiumId: ID): Consortium
+    joinConsortium(consortiumId: ID): Consortium
     setActiveComputation(computationId: ID, consortiumId: ID): String
     setComputationInputs(consortiumId: ID, fieldIndex: Int, values: String ): String
-    leaveConsortium(username: String, consortiumId: ID): String
+    leaveConsortium(consortiumId: ID): Consortium
     saveConsortium(consortium: ConsortiumInput): Consortium
   }
 
