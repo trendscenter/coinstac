@@ -2,7 +2,7 @@ const crypto = require('crypto');
 const Boom = require('boom');
 const jwt = require('jsonwebtoken');
 const rethink = require('rethinkdb');
-const config = require('../config/api-config');
+const config = require('../config/default');
 const dbmap = require('/coins/config/dbmap');
 
 const helperFunctions = {
@@ -11,7 +11,7 @@ const helperFunctions = {
    * @param {string} user username of authenticating user passed in from route handler
    */
   createToken(user) {
-    return jwt.sign({ username: user }, config.jwtSecret, { algorithm: 'HS256', expiresIn: '12h' });
+    return jwt.sign({ username: user }, dbmap.cstacJWTSecret, { algorithm: 'HS256', expiresIn: '12h' });
   },
   /**
    * Create new user account
@@ -74,22 +74,22 @@ const helperFunctions = {
    * @param {string} password user password from client
    */
   hashPassword(password) {
-    const salt = crypto.randomBytes(config.saltBytes);
+    const salt = crypto.randomBytes(16);
     const hash = crypto.pbkdf2Sync(
       password,
       salt,
-      config.iterations,
-      config.hashBytes,
-      config.algo
+      500000,
+      64,
+      'sha512'
     );
     const array = new ArrayBuffer(hash.length + salt.length + 8);
     const hashframe = Buffer.from(array);
     // extract parameters from buffer
     hashframe.writeUInt32BE(salt.length, 0, true);
-    hashframe.writeUInt32BE(config.iterations, 4, true);
+    hashframe.writeUInt32BE(500000, 4, true);
     salt.copy(hashframe, 8);
     hash.copy(hashframe, salt.length + 8);
-    return hashframe.toString(config.encoding);
+    return hashframe.toString('base64');
   },
   /**
    * Validates JWT from authenticated user
@@ -170,14 +170,14 @@ const helperFunctions = {
    */
   verifyPassword(password, hashframe) {
     // decode and extract hashing parameters
-    hashframe = Buffer.from(hashframe, config.encoding);
+    hashframe = Buffer.from(hashframe, 'base64');
     const saltBytes = hashframe.readUInt32BE(0);
     const hashBytes = hashframe.length - saltBytes - 8;
     const iterations = hashframe.readUInt32BE(4);
     const salt = hashframe.slice(8, saltBytes + 8);
     const hash = hashframe.slice(8 + saltBytes, saltBytes + hashBytes + 8);
     // verify the salt and hash against the password
-    const verify = crypto.pbkdf2Sync(password, salt, iterations, hashBytes, config.algo);
+    const verify = crypto.pbkdf2Sync(password, salt, iterations, hashBytes, 'sha512');
     if (verify.equals(hash)) {
       return true;
     }

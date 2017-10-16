@@ -159,19 +159,18 @@ root: ~/coinstac/
 # Runs before everything. Use it to start daemons etc.
 pre:
   # Init RethinkDB
-  - rethinkdb --daemon
-  - cd ~/coinstac/packages/coinstac-graphql
+  - rethinkdb --daemon --directory ~/rethinkdb_data
+  - cd ~/coinstac/packages/coinstac-api-server
   - npm run test-setup
 
   - couchdb -b
 
   # Add CouchDB security
-  - sleep 2 && curl -X PUT localhost:5984/_config/admins/coinstac -d '"test"'
+  # - sleep 2 && curl -X PUT localhost:5984/_config/admins/coinstac -d '"test"'
 
   # Init database
   - cd ~/coinstac/packages/coinstac-server-core
   - npm run clean:db
-  - bin/coinstac-server-core --nohang
   - cd ~/coinstac/packages/coinstac-ui
   - npm run clean:db
   - cd ~/coinstac/
@@ -184,13 +183,13 @@ startup_window: editor
 
 # Runs after everything. Use it to attach to tmux with custom options etc.
 post:
-  - curl -X DELETE localhost:5984/_config/admins/coinstac --user coinstac:test
+  # - curl -X DELETE localhost:5984/_config/admins/coinstac --user coinstac:test
   - couchdb -d
-  - pkill -9 "rethinkdb"
+  - pkill -2 "rethinkdb"
 
 windows:
   - dbapi:
-      root: ~/coinstac/packages/coinstac-graphql
+      root: ~/coinstac/packages/coinstac-api-server
       panes:
         - npm run start
   - steelpenny:
