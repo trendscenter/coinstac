@@ -3,12 +3,13 @@ const Boom = require('boom');
 const jwt = require('jsonwebtoken');
 const rethink = require('rethinkdb');
 const config = require('../config/default');
-const dbmap = require('/coins/config/dbmap');
+const dbmap = require('/cstacDBMap');
 
 const helperFunctions = {
   /**
    * Create JWT for user signing in to application
    * @param {string} user username of authenticating user passed in from route handler
+   * @return {string} A JWT for the requested user
    */
   createToken(user) {
     return jwt.sign({ username: user }, dbmap.cstacJWTSecret, { algorithm: 'HS256', expiresIn: '12h' });
@@ -17,6 +18,7 @@ const helperFunctions = {
    * Create new user account
    * @param {string} user authenticating user's username
    * @param {string} passwordHash string of hashed password
+   * @return {object} The updated user object
    */
   createUser(user, passwordHash) {
     return helperFunctions.getRethinkConnection()
@@ -36,15 +38,14 @@ const helperFunctions = {
       }
 
       return rethink.table('users')
-        .insert(userDetails,
-        { returnChanges: true }
-        )
+        .insert(userDetails, { returnChanges: true })
         .run(connection);
     })
     .then(result => result.changes[0].new_val);
   },
   /**
    * Returns RethinkDB connection
+   * @return {object} A connection to RethinkDB
    */
   getRethinkConnection() {
     const connectionConfig = {
@@ -63,6 +64,7 @@ const helperFunctions = {
   /**
    * Returns user table object for requested user
    * @param {object} credentials credentials of requested user
+   * @return {object} The requested user object
    */
   getUserDetails(credentials) {
     return helperFunctions.getRethinkConnection()
@@ -72,6 +74,7 @@ const helperFunctions = {
   /**
    * Hashes password for storage in database
    * @param {string} password user password from client
+   * @return {string} The hashed password
    */
   hashPassword(password) {
     const salt = crypto.randomBytes(16);
@@ -111,6 +114,7 @@ const helperFunctions = {
    * Confirms that submitted username & email are new
    * @param {object} req request
    * @param {object} res response
+   * @return {object} The submitted user information
    */
   validateUniqueUser(req, res) {
     return helperFunctions.getRethinkConnection()
@@ -145,6 +149,7 @@ const helperFunctions = {
    * Validate that authenticating user is using correct credentials
    * @param {object} req request
    * @param {object} res response
+   * @return {object} The requested user object
    */
   validateUser(req, res) {
     return helperFunctions.getUserDetails(req.payload)
@@ -167,6 +172,7 @@ const helperFunctions = {
    * Verify that authenticating user is using correct password
    * @param {string} password user password
    * @param {string} hashframe user passwordHash from DB
+   * @return {boolean} Is password valid?
    */
   verifyPassword(password, hashframe) {
     // decode and extract hashing parameters

@@ -3,7 +3,7 @@ const { graphiqlHapi, graphqlHapi } = require('apollo-server-hapi');
 const jwt2 = require('hapi-auth-jwt2');
 
 const config = require('../config/default');
-const dbmap = require('/coins/config/dbmap');
+const dbmap = require('/cstacDBMap');
 const schema = require('./data/schema');
 const helperFunctions = require('./auth-helpers');
 
