@@ -87,14 +87,6 @@ class DashboardHome extends Component {
 }
 
 DashboardHome.propTypes = {
-  computations: PropTypes.arrayOf(PropTypes.object),
-  consortia: PropTypes.arrayOf(PropTypes.shape({
-    _id: PropTypes.string.isRequired,
-    owners: PropTypes.arrayOf(PropTypes.string).isRequired,
-    users: PropTypes.arrayOf(PropTypes.string).isRequired,
-  })),
-  // fetchRemoteResultsForUser: PropTypes.func.isRequired,
-  remoteResults: PropTypes.arrayOf(PropTypes.object),
   username: PropTypes.string,
 };
 
@@ -106,16 +98,8 @@ DashboardHome.defaultProps = {
 
 function mapStateToProps({
   auth,
-  consortia: { allConsortia },
-  // computations: { allComputations },
-  results: { remoteResults },
-  projects: { allProjects },
 }) {
   return {
-    consortia: allConsortia || [],
-    // computations: allComputations || [],
-    projects: allProjects || [],
-    remoteResults: remoteResults || [],
     username: auth.user.username || '',
   };
 }

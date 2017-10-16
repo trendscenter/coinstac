@@ -15,7 +15,7 @@ class FormLoginController extends Component {
     this.checkForUser = this.checkForUser.bind(this);
   }
 
-  componentWillMount() {
+  componentDidMount() {
     this.checkForUser();
   }
 
