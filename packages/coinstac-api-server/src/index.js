@@ -2,7 +2,8 @@ const hapi = require('hapi');
 const { graphiqlHapi, graphqlHapi } = require('apollo-server-hapi');
 const jwt2 = require('hapi-auth-jwt2');
 
-const config = require('../config/api-config');
+const config = require('../config/default');
+const dbmap = require('/coins/config/dbmap');
 const schema = require('./data/schema');
 const helperFunctions = require('./auth-helpers');
 
@@ -55,7 +56,7 @@ server.register([
    */
   server.auth.strategy('jwt', 'jwt',
     {
-      key: config.jwtSecret,
+      key: dbmap.cstacJWTSecret,
       validateFunc: helperFunctions.validateToken,
       verifyOptions: { algorithms: ['HS256'] },
     }

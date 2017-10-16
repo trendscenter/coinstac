@@ -5,7 +5,7 @@ const { pullImage } = require('coinstac-docker-manager');
 const graphqlSchema = require('coinstac-graphql-schema');
 const mergeStream = require('merge-stream');
 const { compact } = require('lodash');
-const config = require('../config/comp-reg-config');
+const dbmap = require('/coins/config/dbmap');
 
 const DB_URL = 'http://localhost:3100';
 
@@ -17,14 +17,11 @@ class ComputationRegistry {
   authenticateServer() {
     return axios.post(
       `${DB_URL}/authenticate`,
-      {
-        username: config.serverUser,
-        password: config.serverPassword,
-      }
+      dbmap.rethinkdbServer
     )
     .then((token) => {
       this.id_token = token.data.id_token;
-      axios.defaults.headers.common['Authorization'] = `Bearer ${this.id_token}`;
+      axios.defaults.headers.common.Authorization = `Bearer ${this.id_token}`;
       return this.id_token;
     });
   }
