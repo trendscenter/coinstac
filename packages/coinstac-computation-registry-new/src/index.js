@@ -5,7 +5,7 @@ const { pullImage } = require('coinstac-docker-manager');
 const graphqlSchema = require('coinstac-graphql-schema');
 const mergeStream = require('merge-stream');
 const { compact } = require('lodash');
-const dbmap = require('/coins/config/dbmap');
+const dbmap = require('/cstacDBMap');
 
 const DB_URL = 'http://localhost:3100';
 
