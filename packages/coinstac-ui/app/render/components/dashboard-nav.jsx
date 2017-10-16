@@ -27,11 +27,11 @@ const DashboardNav = () => {
           Consortia
         </NavItem>
       </LinkContainer>
-      <LinkContainer to="/dashboard/my-files">
+      <LinkContainer to="/dashboard/collections">
         <NavItem>
           <span aria-hidden="true" className="glyphicon glyphicon-list-alt" />
           {' '}
-          My Files
+          Collections
         </NavItem>
       </LinkContainer>
       <LinkContainer to="/dashboard/pipelines">

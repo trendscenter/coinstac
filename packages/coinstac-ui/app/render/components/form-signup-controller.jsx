@@ -7,13 +7,12 @@ import LayoutNoauth from './layout-noauth';
 import { clearUser, signUp } from '../state/ducks/auth';
 
 class FormSignupController extends Component {
-
   constructor(props) {
     super(props);
     this.onSubmit = this.onSubmit.bind(this);
   }
 
-  componentWillMount() {
+  componentDidMount() {
     this.props.clearUser();
   }
 

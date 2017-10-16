@@ -4,12 +4,6 @@ import axios from 'axios';
 import { applyAsyncLoading } from './loading';
 // import { teardownPrivateBackgroundServices } from './bg-services';
 
-const SET_USER = 'SET_USER';
-const setUser = user => ({ type: SET_USER, payload: user });
-
-const CLEAR_USER = 'CLEAR_USER';
-export const clearUser = () => ({ type: CLEAR_USER, payload: null });
-
 const INITIAL_STATE = {
   user: {
     id: '',
@@ -20,7 +14,15 @@ const INITIAL_STATE = {
   },
 };
 
+// Actions
+const SET_USER = 'SET_USER';
+const CLEAR_USER = 'CLEAR_USER';
 
+// Action Creators
+const setUser = user => ({ type: SET_USER, payload: user });
+export const clearUser = () => ({ type: CLEAR_USER, payload: null });
+
+// Helpers
 const setTokenAndInitialize = (reqUser, data, dispatch) => {
   const user = { ...data.user, label: reqUser.username };
 
