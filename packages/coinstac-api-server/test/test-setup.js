@@ -1,6 +1,6 @@
 const rethink = require('rethinkdb');
-const singleShot = require('./data/Single-Shot Schema');
-const multiShot = require('./data/Multi-Shot Schema');
+const singleShot = require('./data/single-shot-schema');
+const multiShot = require('./data/multi-shot-schema');
 const helperFunctions = require('../src/auth-helpers');
 
 helperFunctions.getRethinkConnection()
@@ -22,15 +22,13 @@ helperFunctions.getRethinkConnection()
   .then(() => connection.close());
 })
 .then(() => {
-  let passwordHash = helperFunctions.hashPassword('password');
-  return helperFunctions.createUser({ username: 'test', institution: 'mrn', email: 'test@mrn.org' }, passwordHash)
-    .then(() => {
-      passwordHash = helperFunctions.hashPassword('password');
-      return helperFunctions.createUser({ username: 'server', institution: 'mrn', email: 'server@mrn.org' }, passwordHash);
-    })
-    .then(() => {
-      passwordHash = helperFunctions.hashPassword('password');
-      return helperFunctions.createUser({
+  helperFunctions.hashPassword('password')
+    .then(passwordHash => helperFunctions.createUser({ username: 'test', institution: 'mrn', email: 'test@mrn.org' }, passwordHash))
+    .then(() => helperFunctions.hashPassword('password'))
+    .then(passwordHash => helperFunctions.createUser({ username: 'server', institution: 'mrn', email: 'server@mrn.org' }, passwordHash))
+    .then(() => helperFunctions.hashPassword('password'))
+    .then(passwordHash =>
+      helperFunctions.createUser({
         username: 'author',
         institution: 'mrn',
         email: 'server@mrn.org',
@@ -40,8 +38,7 @@ helperFunctions.getRethinkConnection()
             write: true,
           },
         },
-      }, passwordHash);
-    })
+      }, passwordHash))
     .then(() => {
       process.exit();
     });

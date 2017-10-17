@@ -1,15 +1,18 @@
 import { pick } from 'lodash';
 import app from 'ampersand-app';
 import axios from 'axios';
-import * as util from './util';
 import { applyAsyncLoading } from './loading';
-import { teardownPrivateBackgroundServices } from './bg-services';
+import { apiServer } from '../../../../config/local';
 
+const API_URL = `${apiServer.protocol}//${apiServer.hostname}:${apiServer.port}`;
 const SET_USER = 'SET_USER';
 const setUser = user => ({ type: SET_USER, payload: user });
 
 const CLEAR_USER = 'CLEAR_USER';
 export const clearUser = () => ({ type: CLEAR_USER, payload: null });
+
+const CLEAR_ERROR = 'CLEAR_ERROR';
+export const clearError = () => ({ type: CLEAR_ERROR, payload: null });
 
 const INITIAL_STATE = {
   user: {
@@ -23,6 +26,7 @@ const INITIAL_STATE = {
 
 
 const setTokenAndInitialize = (reqUser, data, dispatch) => {
+  console.log(reqUser);
   const user = { ...data.user, label: reqUser.username };
 
   if (reqUser.saveLogin) {
@@ -31,8 +35,8 @@ const setTokenAndInitialize = (reqUser, data, dispatch) => {
     sessionStorage.setItem('id_token', data.id_token);
   }
 
-  return dispatch(setUser({ user }))
-    .then(() => app.core.initialize(pick(reqUser, ['password', 'username'])));
+  dispatch(setUser({ user }));
+  return app.core.initialize(pick(reqUser, ['password', 'username']));
 };
 
 export const autoLogin = applyAsyncLoading(() =>
@@ -50,7 +54,7 @@ export const autoLogin = applyAsyncLoading(() =>
     }
 
     return axios.post(
-      'http://localhost:3100/authenticateByToken',
+      `${API_URL}/authenticateByToken`,
       null,
       { headers: { Authorization: `Bearer ${token}` } }
     )
@@ -70,7 +74,7 @@ export const autoLogin = applyAsyncLoading(() =>
 
 export const login = applyAsyncLoading(({ username, password, saveLogin }) =>
   dispatch =>
-    axios.post('http://localhost:3100/authenticate', { username, password })
+    axios.post(`${API_URL}/authenticate`, { username, password })
     .then(({ data }) => setTokenAndInitialize({ username, password, saveLogin }, data, dispatch))
     .catch((err) => {
       if (err.response && err.response.status === 401) {
@@ -95,12 +99,13 @@ export const logout = applyAsyncLoading(() =>
 
 export const signUp = applyAsyncLoading(user =>
   dispatch =>
-    axios.post('http://localhost:3100/createAccount', user)
+    axios.post(`${API_URL}/createAccount`, user)
     .then(({ data }) => setTokenAndInitialize(user, data, dispatch))
-    .catch(({ response: { data: { message } } }) => {
-      if (message === 'Username taken'
-          || message === 'Email taken') {
-        dispatch(setUser({ ...INITIAL_STATE, error: message }));
+    .catch((err) => {
+      console.log(err);
+      if (err.response && err.response.data && (err.response.data.message === 'Username taken'
+          || err.response.data.message === 'Email taken')) {
+        dispatch(setUser({ ...INITIAL_STATE, error: err.response.data.message }));
       }
     })
 );
@@ -123,6 +128,8 @@ export default function reducer(state = INITIAL_STATE, action) {
   switch (action.type) {
     case CLEAR_USER:
       return { ...INITIAL_STATE };
+    case CLEAR_ERROR:
+      return { user: state.user };
     case SET_USER:
       return { ...action.payload };
     default:

@@ -87,7 +87,6 @@ const typeDefs = `
     # Stringify incoming computation, parse prior to insertion call
     addComputation(computationSchema: ComputationInput): Computation
     removeComputation(compId: ID): JSON
-    removeAllComputations: JSON
     deleteConsortiumById(consortiumId: ID): String
     joinConsortium(username: String, consortiumId: ID): Consortium
     setActiveComputation(computationId: ID, consortiumId: ID): String
@@ -100,7 +99,7 @@ const typeDefs = `
   type Query {
     # This is a description of the fetchAllComputations query
     fetchAllComputations: [Computation]
-    fetchComputationDetails(computationName: String): Computation
+    fetchComputation(computationName: String): Computation
     validateComputation(compId: ID): Boolean
     fetchConsortiumById(consortiumId: ID): Consortium
     fetchRunForConsortium(consortiumId: ID): [Run]

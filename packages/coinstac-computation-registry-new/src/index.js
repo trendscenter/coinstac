@@ -6,8 +6,7 @@ const graphqlSchema = require('coinstac-graphql-schema');
 const mergeStream = require('merge-stream');
 const { compact } = require('lodash');
 const dbmap = require('/cstacDBMap');
-
-const DB_URL = 'http://localhost:3100';
+const config = require('../config/default');
 
 /**
  * ComputationRegistry
@@ -16,7 +15,7 @@ const DB_URL = 'http://localhost:3100';
 class ComputationRegistry {
   authenticateServer() {
     return axios.post(
-      `${DB_URL}/authenticate`,
+      `${config.DB_URL}/authenticate`,
       dbmap.rethinkdbServer
     )
     .then((token) => {
@@ -64,7 +63,7 @@ class ComputationRegistry {
   serverStart() {
     this.authenticateServer()
     .then(() =>
-      axios.get(`${DB_URL}/graphql?query=${graphqlSchema.queries.allDockerImages}`)
+      axios.get(`${config.DB_URL}/graphql?query=${graphqlSchema.queries.allDockerImages}`)
     )
     .then(({ data: { data: { fetchAllComputations } } }) => {
       const comps = fetchAllComputations.map(comp => comp.computation.dockerImage);

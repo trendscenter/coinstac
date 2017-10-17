@@ -28,7 +28,7 @@ const DashboardNav = ({ auth }) => {
           My Files
         </NavItem>
       </LinkContainer>
-      {auth.user.permissions.computation && auth.user.permissions.computations.write &&
+      {auth.user.permissions.computations && auth.user.permissions.computations.write &&
         <LinkContainer to="/dashboard/submit-computation">
           <NavItem eventKey={4}>
             <span aria-hidden="true" className="glyphicon glyphicon-export" />
