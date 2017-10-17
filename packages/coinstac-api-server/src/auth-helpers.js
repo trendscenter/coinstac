@@ -118,10 +118,10 @@ const helperFunctions = {
     });
   },
   /**
-   * Confirms that submitted username & email are new
+   * Confirms that submitted email is new
    * @param {object} req request
-   * @param {object} res response
-   * @return {object} The submitted user information
+   * @param {object} connection GraphQL connection
+   * @return {boolean} Is the email unique?
    */
   validateUniqueEmail(req, connection) {
     return rethink.table('users')
@@ -158,10 +158,10 @@ const helperFunctions = {
     );
   },
   /**
-   * Confirms that submitted username & email are new
+   * Confirms that submitted username is new
    * @param {object} req request
-   * @param {object} res response
-   * @return {object} The submitted user information
+   * @param {object} connection GraphQL connection
+   * @return {boolean} Is the username unique?
    */
   validateUniqueUsername(req, connection) {
     return rethink.table('users')
