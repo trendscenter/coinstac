@@ -3,23 +3,17 @@ import {
 } from 'react-apollo';
 import { mutations, queries } from 'coinstac-graphql-schema';
 
-export const addComputationFunc = gql`
-  mutation AddComputationMutation($computationSchema: ComputationInput!) 
+export const ADD_COMPUTATION_MUTATION = gql`
+  mutation addComputation($computationSchema: ComputationInput!) 
     ${mutations.addComputation}
 `;
 
-export const removeAllComputationsFunc = gql`
-  mutation RemoveAllComputationsMutation {
-    removeAllComputations
-  }
-`;
-
-export const fetchAllComputationsMetadataFunc = gql`
-  query FetchAllComputationsMetadataQuery
+export const FETCH_ALL_COMPUTATIONS_METADATA_QUERY = gql`
+  query fetchAllComputationsMetadata
     ${queries.fetchAllComputationsMetadata}
 `;
 
-export const fetchComputationDetailsFunc = gql`
-  query FetchComputationDetailsQuery ($computationName: String!)
-    ${queries.fetchComputationDetails}
+export const FETCH_COMPUTATION_QUERY = gql`
+  query fetchComputation ($computationName: String!)
+    ${queries.fetchComputation}
 `;

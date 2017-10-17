@@ -25,7 +25,7 @@ const resolvers = {
     /**
      * Returns metadata for specific computation name
      */
-    fetchComputationDetails: ({ auth: { credentials: { permissions } } }, args) => {
+    fetchComputation: ({ auth: { credentials: { permissions } } }, args) => {
       if (!permissions.computations.read) {
         return Boom.forbidden('Action not permitted');
       }
@@ -77,21 +77,6 @@ const resolvers = {
         .then((result) => {
           return result.changes[0].new_val;
         })
-    },
-    /**
-     * Remove all computations from DB
-     */
-    removeAllComputations: ({ auth: { credentials: { permissions } } }, _) => {
-      if (!permissions.computations.write) {
-        return Boom.forbidden('Action not permitted');
-      }
-
-      return helperFunctions.getRethinkConnection()
-        .then((connection) =>
-          rethink.table('computations').delete()
-            .run(connection)
-        )
-        .then((result) => result);
     },
     removeComputation: (_, args) => {
       return new Promise();

@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { ipcRenderer } from 'electron';
-import { graphql, compose } from 'react-apollo';
+import { graphql } from 'react-apollo';
 import {
   Form,
   FormGroup,
@@ -11,7 +11,7 @@ import {
   Button,
   Table,
 } from 'react-bootstrap';
-import { fetchAllComputationsMetadataFunc, removeAllComputationsFunc } from '../state/graphql/functions';
+import { FETCH_ALL_COMPUTATIONS_METADATA_QUERY } from '../state/graphql/functions';
 import { computationsProp } from '../state/graphql/props';
 import {
   getCompIO,
@@ -35,20 +35,12 @@ class FeatureTest extends Component { // eslint-disable-line
       this.props.updateDockerOutput(arg);
     });
 
-    this.deleteAllComputations = this.deleteAllComputations.bind(this);
     this.pullComps = this.pullComps.bind(this);
     this.setActiveComp = this.setActiveComp.bind(this);
   }
 
   setActiveComp(comp) {
     this.setState({ activeComp: comp });
-  }
-
-  deleteAllComputations() {
-    this.props.deleteAllComputations()
-    .catch(({ graphQLErrors }) => {
-      console.log(graphQLErrors[0].message);
-    });
   }
 
   pullComps(e) {
@@ -63,7 +55,7 @@ class FeatureTest extends Component { // eslint-disable-line
   }
 
   render() {
-    const { auth, dockerOut, computations, removeAllComputations } = this.props;
+    const { auth, dockerOut, computations } = this.props;
 
     return (
       <div style={styles.topMargin}>
@@ -90,18 +82,6 @@ class FeatureTest extends Component { // eslint-disable-line
               })}
             </tbody>
           </Table>
-        }
-
-        {computations.length > 0 && auth.user.permissions.computations.write &&
-          <div className={'clearfix'}>
-            <Button
-              bsStyle="danger"
-              onClick={() => removeAllComputations()}
-              className={'pull-right'}
-            >
-              Delete All Computations
-            </Button>
-          </div>
         }
 
         {this.state.activeComp &&
@@ -178,7 +158,6 @@ FeatureTest.propTypes = {
   computations: PropTypes.array.isRequired,
   dockerOut: PropTypes.array.isRequired,
   pullComputations: PropTypes.func.isRequired,
-  removeAllComputations: PropTypes.func.isRequired,
   updateDockerOutput: PropTypes.func.isRequired,
 };
 
@@ -186,20 +165,8 @@ function mapStateToProps({ auth, featureTest: { dockerOut } }) {
   return { auth, dockerOut };
 }
 
-const FeatureTestWithData = compose(
-  graphql(fetchAllComputationsMetadataFunc, computationsProp),
-  graphql(removeAllComputationsFunc, {
-    props: ({ mutate }) => ({
-      removeAllComputations: () => mutate({
-        update: (store) => {
-          const data = store.readQuery({ query: fetchAllComputationsMetadataFunc });
-          data.fetchAllComputations.length = 0;
-          store.writeQuery({ query: fetchAllComputationsMetadataFunc, data });
-        },
-      }),
-    }),
-  })
-)(FeatureTest);
+const FeatureTestWithData =
+  graphql(FETCH_ALL_COMPUTATIONS_METADATA_QUERY, computationsProp)(FeatureTest);
 
 
 export default connect(mapStateToProps, {

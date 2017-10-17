@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const rethink = require('rethinkdb');
 const config = require('../config/default');
 const dbmap = require('/cstacDBMap');
+const Promise = require('bluebird');
 
 const helperFunctions = {
   /**
@@ -78,21 +79,29 @@ const helperFunctions = {
    */
   hashPassword(password) {
     const salt = crypto.randomBytes(16);
-    const hash = crypto.pbkdf2Sync(
-      password,
-      salt,
-      500000,
-      64,
-      'sha512'
-    );
-    const array = new ArrayBuffer(hash.length + salt.length + 8);
-    const hashframe = Buffer.from(array);
-    // extract parameters from buffer
-    hashframe.writeUInt32BE(salt.length, 0, true);
-    hashframe.writeUInt32BE(500000, 4, true);
-    salt.copy(hashframe, 8);
-    hash.copy(hashframe, salt.length + 8);
-    return hashframe.toString('base64');
+    return new Promise((res, rej) => {
+      crypto.pbkdf2(
+        password,
+        salt,
+        500000,
+        64,
+        'sha512',
+        (err, hash) => {
+          if (err) {
+            rej(err);
+          }
+
+          const array = new ArrayBuffer(hash.length + salt.length + 8);
+          const hashframe = Buffer.from(array);
+          // extract parameters from buffer
+          hashframe.writeUInt32BE(salt.length, 0, true);
+          hashframe.writeUInt32BE(500000, 4, true);
+          salt.copy(hashframe, 8);
+          hash.copy(hashframe, salt.length + 8);
+          res(hashframe.toString('base64'));
+        }
+      );
+    });
   },
   /**
    * Validates JWT from authenticated user
@@ -105,10 +114,21 @@ const helperFunctions = {
     .then((user) => {
       if (user.id) {
         callback(null, true, user);
-      } else {
-        callback(Boom.unauthorized('Invalid Token'), false);
       }
     });
+  },
+  /**
+   * Confirms that submitted username & email are new
+   * @param {object} req request
+   * @param {object} res response
+   * @return {object} The submitted user information
+   */
+  validateUniqueEmail(req, connection) {
+    return rethink.table('users')
+      .filter({ email: req.payload.email })
+      .count()
+      .eq(0)
+      .run(connection);
   },
   /**
    * Confirms that submitted username & email are new
@@ -119,31 +139,36 @@ const helperFunctions = {
   validateUniqueUser(req, res) {
     return helperFunctions.getRethinkConnection()
     .then(connection =>
-      rethink.table('users')
-        .getAll(req.payload.username)
-        .count()
-        .eq(0)
-        .run(connection)
-        .then((isUniqueUsername) => {
-          if (isUniqueUsername) {
-            return rethink.table('users')
-              .filter({ email: req.payload.email })
-              .count()
-              .eq(0)
-              .run(connection);
-          }
+      helperFunctions.validateUniqueUsername(req, connection)
+      .then((isUniqueUsername) => {
+        if (isUniqueUsername) {
+          return helperFunctions.validateUniqueEmail(req, connection);
+        }
 
-          res(Boom.badRequest('Username taken'));
-          return null;
-        })
-        .then((isUniqueEmail) => {
-          if (isUniqueEmail) {
-            res(req.payload);
-          } else if (isUniqueEmail === false) {
-            res(Boom.badRequest('Email taken'));
-          }
-        })
+        res(Boom.badRequest('Username taken'));
+        return null;
+      })
+      .then((isUniqueEmail) => {
+        if (isUniqueEmail) {
+          res(req.payload);
+        } else if (isUniqueEmail === false) {
+          res(Boom.badRequest('Email taken'));
+        }
+      })
     );
+  },
+  /**
+   * Confirms that submitted username & email are new
+   * @param {object} req request
+   * @param {object} res response
+   * @return {object} The submitted user information
+   */
+  validateUniqueUsername(req, connection) {
+    return rethink.table('users')
+      .getAll(req.payload.username)
+      .count()
+      .eq(0)
+      .run(connection);
   },
   /**
    * Validate that authenticating user is using correct credentials
@@ -154,18 +179,14 @@ const helperFunctions = {
   validateUser(req, res) {
     return helperFunctions.getUserDetails(req.payload)
     .then((user) => {
-      if (!user || !user.passwordHash) {
-        res(Boom.unauthorized('Username does not exist'));
-      } else {
-        const passwordMatch = helperFunctions
-          .verifyPassword(req.payload.password, user.passwordHash);
-
-        if (!passwordMatch) {
-          res(Boom.unauthorized('Incorrect password'));
-        } else {
-          res(user);
-        }
-      }
+      helperFunctions.verifyPassword(req.payload.password, user.passwordHash)
+        .then((passwordMatch) => {
+          if (user && user.passwordHash && passwordMatch) {
+            res(user);
+          } else {
+            res(Boom.unauthorized('Incorrect username or password.'));
+          }
+        });
     });
   },
   /**
@@ -175,6 +196,10 @@ const helperFunctions = {
    * @return {boolean} Is password valid?
    */
   verifyPassword(password, hashframe) {
+    if (!hashframe) {
+      return false;
+    }
+
     // decode and extract hashing parameters
     hashframe = Buffer.from(hashframe, 'base64');
     const saltBytes = hashframe.readUInt32BE(0);
@@ -183,12 +208,19 @@ const helperFunctions = {
     const salt = hashframe.slice(8, saltBytes + 8);
     const hash = hashframe.slice(8 + saltBytes, saltBytes + hashBytes + 8);
     // verify the salt and hash against the password
-    const verify = crypto.pbkdf2Sync(password, salt, iterations, hashBytes, 'sha512');
-    if (verify.equals(hash)) {
-      return true;
-    }
+    return new Promise((res, rej) => {
+      crypto.pbkdf2(password, salt, iterations, hashBytes, 'sha512', (err, verify) => {
+        if (err) {
+          rej(err);
+        }
 
-    return false;
+        if (verify.equals(hash)) {
+          res(true);
+        }
+
+        res(false);
+      });
+    });
   },
 };
 

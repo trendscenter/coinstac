@@ -106,6 +106,19 @@ Follow the general steps above before continuing.
 
    Once cloned, enter the directory and install its dependencies: `cd mock-steelpenny`, `npm install`.
 
+   Add a couple more users to `mock-steelpenny/api.js` as follows:
+   ```js
+    const validAuthentications = [
+      [/^demo.*/, /.*/],
+      [/^mochatest$/, /^mochapassword/],
+      [/^test$/, /^password/],
+      [/^author$/, /^password/],
+      [/^server$/, /^password/],
+      [/^(account|password)-will-expire$/, /.*/],
+    ]
+   ```
+
+
 2. **COINS** Next, create a directory in your root directory called **coins**. Alternatively, clone the [COINS](https://github.com/MRN-Code/coins) repo there. Once you have the directory, create a subdirectory called **config**. Lastly create a file at `/coins/config/dbmap.json` and copy into it the following:
 
    ```json
