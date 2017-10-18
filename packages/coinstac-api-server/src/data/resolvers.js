@@ -158,8 +158,7 @@ const resolvers = {
     deleteConsortiumById: ({ auth: { credentials: { permissions } } }, args) => {
       if (!permissions.consortia.write
           && (!permissions.consortia[args.consortiumId]
-              || (args.consortiumId
-                  && !permissions.consortia[args.consortiumId].write)
+              || !permissions.consortia[args.consortiumId].write
       )) {
             return Boom.forbidden('Action not permitted');
       }
