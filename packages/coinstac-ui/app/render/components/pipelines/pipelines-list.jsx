@@ -57,6 +57,7 @@ const mapStateToProps = ({ auth }) => {
   return { auth };
 };
 
-const PipelinesListWithData = graphql(fetchAllPipelinesFunc, pipelinesProp)(PipelinesList);
+const PipelinesListWithData = PipelinesList;
+//const PipelinesListWithData = graphql(fetchAllPipelinesFunc, pipelinesProp)(PipelinesList);
 
 export default connect(mapStateToProps)(PipelinesListWithData);
