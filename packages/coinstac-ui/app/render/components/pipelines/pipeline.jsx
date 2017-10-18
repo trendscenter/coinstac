@@ -18,13 +18,14 @@ import {
   FormGroup,
   MenuItem,
   Row,
+  SplitButton,
   Well,
 } from 'react-bootstrap';
 import ApolloClient from '../../state/apollo-client';
 import PipelineStep from './pipeline-step';
 import ItemTypes from './pipeline-item-types';
 import { fetchAllConsortiaFunc, fetchAllComputationsMetadataFunc } from '../../state/graphql/functions';
-import { computationsProp } from '../../state/graphql/props';
+import { computationsProp, consortiaProp } from '../../state/graphql/props';
 
 const computationTarget = {
   drop() {
@@ -50,16 +51,19 @@ class Pipeline extends Component {
       delete consortium.__typename;
     }
 
+
     this.state = {
       owner: !props.params.consortiumId || consortium.owners.indexOf(props.auth.user.id) !== -1,
       pipeline: {
         steps: [],
       },
+      btnTitle: "Consortia",
     };
 
     this.addStep = this.addStep.bind(this);
     this.moveStep = this.moveStep.bind(this);
     this.updateStep = this.updateStep.bind(this);
+    this.handleChange = this.handleChange.bind(this);
   }
 
   addStep(computation) {
@@ -179,6 +183,11 @@ class Pipeline extends Component {
     }));
   }
 
+  handleChange(evt){
+    console.log(this.props.consortia);
+    this.setState({btnTitle: evt});  
+  }
+
   render() {
     const { computations, connectDropTarget } = this.props;
 
@@ -206,7 +215,12 @@ class Pipeline extends Component {
             />
           </FormGroup>
 
-          <Checkbox inline>Share this pipeline with other consortia</Checkbox>
+          <SplitButton bsStyle="primary" title={this.state.btnTitle} key={this.state.btnTitle} id="pipelineconsortia" onSelect={this.handleChange}>
+            <MenuItem eventKey="Action" active={this.state.btnTitle == "Action"}>Action</MenuItem>
+            <MenuItem eventKey="Another action" active={this.state.btnTitle == "Another action"}>Another action</MenuItem>
+            <MenuItem eventKey="Something else here" active={this.state.btnTitle == "Something else here"}>Something else here</MenuItem>
+            <MenuItem eventKey="Separated link" active={this.state.btnTitle == "Separated link"}>Separated link</MenuItem>
+          </SplitButton>
 
           <p style={{ padding: '30px 0 10px 0' }}>
             Build your pipelines by adding computation steps in the space below.
@@ -283,7 +297,9 @@ function mapStateToProps({ auth }) {
   return { auth };
 }
 
-const PipelineWithData = graphql(fetchAllComputationsMetadataFunc, computationsProp)(Pipeline);
+const PipelineWithData = compose(
+  graphql(fetchAllComputationsMetadataFunc, computationsProp), 
+  graphql(fetchAllConsortiaFunc, consortiaProp))(Pipeline);
 
 export default compose(
   connect(mapStateToProps),
