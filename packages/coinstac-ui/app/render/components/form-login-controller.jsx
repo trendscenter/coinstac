@@ -2,15 +2,32 @@ import app from 'ampersand-app';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { hotRoute, login } from '../state/ducks/auth';
+import { clearUser, hotRoute, login } from '../state/ducks/auth';
 import FormLogin from './form-login';
 import LayoutNoauth from './layout-noauth';
 
 class FormLoginController extends Component {
   constructor(props) {
     super(props);
+
     this.hotRoute = this.hotRoute.bind(this);
     this.submit = this.submit.bind(this);
+    this.checkForUser = this.checkForUser.bind(this);
+  }
+
+  componentWillMount() {
+    this.checkForUser();
+  }
+
+  componentDidUpdate() {
+    this.checkForUser();
+  }
+
+  checkForUser() {
+    const { router } = this.context;
+    if (this.props.auth.user.email.length) {
+      router.push('/dashboard');
+    }
   }
 
   hotRoute() {
@@ -20,30 +37,27 @@ class FormLoginController extends Component {
     // data will not be persisted/honored
     return this.props.hotRoute()
     .then(() => {
-      process.nextTick(() => router.push('/'));
+      process.nextTick(() => router.push('/dashboard'));
     });
   }
 
   submit(evt) {
-    const { router } = this.context;
     const userCred = this.formLogon.data();
 
     evt.preventDefault();
 
-    this.props.login(userCred)
-      .then(() => {
-        // TODO: Figure why `nextTick` is needed
-        process.nextTick(() => router.push('/'));
-      });
+    this.props.login(userCred);
   }
+
   render() {
-    const { loading } = this.props;
+    const { auth, loading } = this.props;
     const showHotRoute = app.config.get('env') === 'development';
 
     return (
       <LayoutNoauth>
         <FormLogin
           ref={(c) => { this.formLogon = c; }}
+          auth={auth}
           loading={loading}
           hotRoute={this.hotRoute}
           showHotRoute={showHotRoute}
@@ -61,17 +75,19 @@ FormLoginController.contextTypes = {
 FormLoginController.displayName = 'FormLoginController';
 
 FormLoginController.propTypes = {
+  auth: PropTypes.object.isRequired,
+  clearUser: PropTypes.func.isRequired,
   hotRoute: PropTypes.func.isRequired,
   loading: PropTypes.object.isRequired,
   login: PropTypes.func.isRequired,
 };
 
-const mapStateToProps = (state) => {
-  const { auth, loading } = state;
+const mapStateToProps = ({ auth, loading }) => {
   return { auth, loading };
 };
 
 export default connect(mapStateToProps, {
+  clearUser,
   hotRoute,
   login,
 })(FormLoginController);

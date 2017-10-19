@@ -1,36 +1,113 @@
 import { pick } from 'lodash';
 import app from 'ampersand-app';
-import * as util from './util';
+import axios from 'axios';
 import { applyAsyncLoading } from './loading';
-import { teardownPrivateBackgroundServices } from './bg-services';
+import { apiServer } from '../../../../config/local';
 
+const API_URL = `${apiServer.protocol}//${apiServer.hostname}:${apiServer.port}`;
 const SET_USER = 'SET_USER';
-const setUser = user => ({ type: SET_USER, user });
+const setUser = user => ({ type: SET_USER, payload: user });
 
-export const login = applyAsyncLoading((reqUser) => {
-  return (dispatch) => {
-    return app.core.initialize(pick(reqUser, ['password', 'username']))
-    .then((user) => {
-      dispatch(setUser(user));
-      return user;
+const CLEAR_USER = 'CLEAR_USER';
+export const clearUser = () => ({ type: CLEAR_USER, payload: null });
+
+const CLEAR_ERROR = 'CLEAR_ERROR';
+export const clearError = () => ({ type: CLEAR_ERROR, payload: null });
+
+const INITIAL_STATE = {
+  user: {
+    id: '',
+    username: '',
+    permissions: {},
+    email: '',
+    institution: '',
+  },
+};
+
+
+const setTokenAndInitialize = (reqUser, data, dispatch) => {
+  console.log(reqUser);
+  const user = { ...data.user, label: reqUser.username };
+
+  if (reqUser.saveLogin) {
+    localStorage.setItem('id_token', data.id_token);
+  } else {
+    sessionStorage.setItem('id_token', data.id_token);
+  }
+
+  dispatch(setUser({ user }));
+  return app.core.initialize(pick(reqUser, ['password', 'username']));
+};
+
+export const autoLogin = applyAsyncLoading(() =>
+  (dispatch) => {
+    let token = localStorage.getItem('id_token');
+    let saveLogin = true;
+
+    if (!token || token === 'null' || token === 'undefined') {
+      token = sessionStorage.getItem('id_token');
+      saveLogin = false;
+    }
+
+    if (!token || token === 'null' || token === 'undefined') {
+      return;
+    }
+
+    return axios.post(
+      `${API_URL}/authenticateByToken`,
+      null,
+      { headers: { Authorization: `Bearer ${token}` } }
+    )
+    .then(({ data }) => setTokenAndInitialize(
+      { username: data.user.id, saveLogin, password: 'GET_RID_OF_CORE_INIT_AT_LOGIN' },
+      data,
+      dispatch
+    ))
+    .catch((err) => {
+      if (err.response && err.response.status === 401) {
+        localStorage.setItem('id_token', null);
+        dispatch(setUser({ ...INITIAL_STATE, error: 'Please Login Again' }));
+      }
+    });
+  }
+);
+
+export const login = applyAsyncLoading(({ username, password, saveLogin }) =>
+  dispatch =>
+    axios.post(`${API_URL}/authenticate`, { username, password })
+    .then(({ data }) => setTokenAndInitialize({ username, password, saveLogin }, data, dispatch))
+    .catch((err) => {
+      if (err.response && err.response.status === 401) {
+        dispatch(setUser({ ...INITIAL_STATE, error: 'Username and/or Password Incorrect' }));
+      }
     })
-    .catch(util.notifyAndThrow);
-  };
-});
+);
 
-export const logout = applyAsyncLoading(() => {
+export const logout = applyAsyncLoading(() =>
+  (dispatch) => {
+    localStorage.setItem('id_token', null);
+    sessionStorage.setItem('id_token', null);
+    dispatch(clearUser());
+  }
+  /*
   return (dispatch) => {
     return dispatch(teardownPrivateBackgroundServices()) // does app.core.logout*
     .then(() => dispatch(setUser({ email: '' })));
   };
-});
+  */
+);
 
-export const signUp = applyAsyncLoading(user => dispatch => app.core
-  .initialize(user)
-  .then((user) => {
-    dispatch(setUser(user));
-    return user;
-  })
+export const signUp = applyAsyncLoading(user =>
+  dispatch =>
+    axios.post(`${API_URL}/createAccount`, user)
+    .then(({ data }) => setTokenAndInitialize(user, data, dispatch))
+    .catch((err) => {
+      console.log(err);
+      if (err.response && err.response.data && (err.response.data.message === 'Username taken'
+          || err.response.data.message === 'Email taken')) {
+        dispatch(setUser({ ...INITIAL_STATE, error: err.response.data.message }));
+      }
+    })
 );
 
 export const hotRoute = () => {
@@ -43,15 +120,18 @@ export const hotRoute = () => {
       email: 'test@test.com',
       label: 'test test',
     };
-    return dispatch(login(user));
+    dispatch(login(user));
   };
 };
 
-export default function reducer(state = { user: null }, action) {
+export default function reducer(state = INITIAL_STATE, action) {
   switch (action.type) {
+    case CLEAR_USER:
+      return { ...INITIAL_STATE };
+    case CLEAR_ERROR:
+      return { user: state.user };
     case SET_USER:
-      if (!action.user) { return null; }
-      return Object.assign({}, state, { user: action.user || {} });
+      return { ...action.payload };
     default:
       return state;
   }

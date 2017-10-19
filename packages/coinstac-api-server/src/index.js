@@ -1,40 +1,38 @@
 const hapi = require('hapi');
-const { graphiqlHapi, graphqlHapi } = require('apollo-server-hapi');
-const schema = require('./data/schema');
+const config = require('../config/default');
+const dbmap = require('/cstacDBMap');
+const helperFunctions = require('./auth-helpers');
+const plugins = require('./plugins');
+const routes = require('./routes');
 
 const server = new hapi.Server();
 server.connection({
-  host: 'localhost',
-  port: 3100,
+  host: config.host,
+  port: config.hapiPort,
 });
 
-server.register([
-  {
-    register: graphiqlHapi,
-    options: {
-      path: '/graphiql',
-      graphiqlOptions: {
-        endpointURL: '/graphql',
-      },
-    },
-  },
-  {
-    register: graphqlHapi,
-    options: {
-      path: '/graphql',
-      graphqlOptions: {
-        schema,
-        pretty: true,
-        graphiql: true,
-      },
-      route: {
-        cors: true,
-      },
-    },
-  },
-], () =>
-  server.start((err) => {
-    if (err) throw err;
-    console.log(`Server running at: ${server.info.uri}`);
-  })
-);
+server.register(plugins, (err) => {
+  if (err) {
+    console.log(err);
+  }
+
+  /**
+   * JWT middleware validates token on each /graphql request
+   * User object with permissions returned from validateToken function
+   */
+  server.auth.strategy('jwt', 'jwt',
+    {
+      key: dbmap.cstacJWTSecret,
+      validateFunc: helperFunctions.validateToken,
+      verifyOptions: { algorithms: ['HS256'] },
+    }
+  );
+
+  server.auth.default('jwt');
+  server.route(routes);
+});
+
+server.start((startErr) => {
+  if (startErr) throw startErr;
+  console.log(`Server running at: ${server.info.uri}`);
+});

@@ -5,17 +5,22 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "test-setup": "node test/test-setup.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "apollo-server-hapi": "^1.0.2",
+    "bluebird": "^3.5.1",
+    "boom": "^5.2.0",
     "coinstac-graphql-schema": "^2.6.0",
     "graphql": "^0.10.5",
     "graphql-tools": "^1.1.0",
     "graphql-type-json": "^0.1.4",
     "hapi": "^16.5.0",
+    "hapi-auth-jwt2": "^7.3.0",
+    "jsonwebtoken": "^7.4.3",
     "rethinkdb": "^2.3.3"
   }
 }

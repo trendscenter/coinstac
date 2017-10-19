@@ -2,8 +2,22 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import Notify from './notification';
+import { autoLogin } from '../state/ducks/auth';
 
 class App extends Component { // eslint-disable-line react/prefer-stateless-function
+  constructor(props) {
+    super(props);
+
+    this.state = { checkJWT: false };
+  }
+
+  componentWillMount() {
+    this.props.autoLogin()
+    .then(() => {
+      this.setState({ checkJWT: true });
+    });
+  }
+
   render() {
     const { children, loading: { isLoading, wip } } = this.props;
 
@@ -16,7 +30,7 @@ class App extends Component { // eslint-disable-line react/prefer-stateless-func
           <li />
         </ul>
 
-        {children}
+        {this.state.checkJWT && children}
 
         <ul id="loading_list">
           {Object.keys(wip).map(loadingKey =>
@@ -33,6 +47,7 @@ class App extends Component { // eslint-disable-line react/prefer-stateless-func
 App.displayName = 'App';
 
 App.propTypes = {
+  autoLogin: PropTypes.func.isRequired,
   children: PropTypes.node.isRequired,
   loading: PropTypes.object.isRequired,
 };
@@ -43,4 +58,4 @@ function mapStateToProps({ loading }) {
   };
 }
 
-export default connect(mapStateToProps)(App);
+export default connect(mapStateToProps, { autoLogin })(App);

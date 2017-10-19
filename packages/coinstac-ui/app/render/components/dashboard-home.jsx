@@ -8,11 +8,8 @@ import {
   graphql,
 } from 'react-apollo';
 import StatusItem from './status-item';
-// import { fetchComputations } from '../state/ducks/computations';
-import { fetchComputationMetadata } from '../state/graphql-queries'; 
-import {
-  fetchRemoteResultsForUser,
-} from '../state/ducks/results';
+import { FETCH_ALL_COMPUTATIONS_METADATA_QUERY } from '../state/graphql/functions';
+import { computationsProp } from '../state/graphql/props';
 
 class DashboardHome extends Component {
   constructor(props) {
@@ -21,36 +18,6 @@ class DashboardHome extends Component {
     this.state = {
       didInitResults: false,
     };
-  }
-
-  componentWillMount() {
-    const {
-      computations,
-      fetchRemoteResultsForUser,
-      username,
-    } = this.props;
-
-    this.interval = setInterval(() => fetchRemoteResultsForUser(username), 2000);
-  }
-
-  componentWillUpdate() {
-    const {
-      computations,
-      consortia,
-      fetchRemoteResultsForUser,
-      username,
-    } = this.props;
-
-    if (
-      !this.state.didInitResults &&
-      computations.length &&
-      consortia.length &&
-      username
-    ) {
-      this.setState({ didInitResults: true }, () => { // eslint-disable-line
-        fetchRemoteResultsForUser(username);
-      });
-    }
   }
 
   componentWillUnmount() {
@@ -93,7 +60,7 @@ DashboardHome.propTypes = {
     owners: PropTypes.arrayOf(PropTypes.string).isRequired,
     users: PropTypes.arrayOf(PropTypes.string).isRequired,
   })),
-  fetchRemoteResultsForUser: PropTypes.func.isRequired,
+  // fetchRemoteResultsForUser: PropTypes.func.isRequired,
   remoteResults: PropTypes.arrayOf(PropTypes.object),
   username: PropTypes.string,
 };
@@ -116,17 +83,10 @@ function mapStateToProps({
     // computations: allComputations || [],
     projects: allProjects || [],
     remoteResults: remoteResults || [],
-    username: auth.user.username,
+    username: auth.user.username || '',
   };
 }
 
-const DashHomeWithData = graphql(fetchComputationMetadata, {
-  props: ({ ownProps, data: { loading, fetchAllComputations } }) => ({
-    loading,
-    computations: fetchAllComputations,
-  }),
-})(DashboardHome);
+const DashHomeWithData = graphql(FETCH_ALL_COMPUTATIONS_METADATA_QUERY, computationsProp)(DashboardHome);
 
-export default connect(mapStateToProps, {
-  fetchRemoteResultsForUser,
-})(DashHomeWithData);
+export default connect(mapStateToProps)(DashHomeWithData);
