@@ -59,7 +59,8 @@ Follow the general steps above before continuing.
 ## Additional Required Software
 
 1. **CouchDB** On OSX, using [Homebrew](https://brew.sh/) will likely be the easiest way to install [CouchDB](http://couchdb.apache.org/) in a manner compatible with setup scripts: `brew install couchdb`. Installing from the binary is another viable option, just be sure to add it to your path.
-2. **VSCode** There are no shortage of options when it comes to an editor, but [VSCode](https://code.visualstudio.com/) offers some great [debugging functionality](https://code.visualstudio.com/Docs/editor/debugging). You'll need to create a `launch.json` file as outlined [here](https://code.visualstudio.com/Docs/editor/debugging#_launch-configurations), with the following contents:
+2. **RethinkDB** On OSX, using [Homebrew](https://brew.sh/), use: `brew update && brew install rethinkdb`. Other options [here](https://rethinkdb.com/docs/install/).
+3. **VSCode** There are no shortage of options when it comes to an editor, but [VSCode](https://code.visualstudio.com/) offers some great [debugging functionality](https://code.visualstudio.com/Docs/editor/debugging). You'll need to create a `launch.json` file as outlined [here](https://code.visualstudio.com/Docs/editor/debugging#_launch-configurations), with the following contents:
 
    ```json
    {
@@ -95,7 +96,7 @@ Follow the general steps above before continuing.
    }
    ``` 
 
-3. **tmux & Tmuxinator** To ease the process of initializing the development environment, we use [tmux](https://github.com/tmux/tmux) and [Tmuxinator](https://github.com/tmuxinator/tmuxinator) to automate things like starting CouchDB, creating a test user, creating a database, starting the webpack server and more. tmux can be installed via Homebrew `brew install tmux`. Tmuxinator can be installed via `gem install tmuxinator`. You'll also need to setup a couple environment variables for Tmuxinator, which you can find in their README linked above.
+4. **tmux & Tmuxinator** To ease the process of initializing the development environment, we use [tmux](https://github.com/tmux/tmux) and [Tmuxinator](https://github.com/tmuxinator/tmuxinator) to automate things like starting CouchDB, creating a test user, creating a database, starting the webpack server and more. tmux can be installed via Homebrew `brew install tmux`. Tmuxinator can be installed via `gem install tmuxinator`. You'll also need to setup a couple environment variables for Tmuxinator, which you can find in their README linked above.
 
    // TODO: Bring this into VSCode?
 
@@ -105,6 +106,19 @@ Follow the general steps above before continuing.
 
    Once cloned, enter the directory and install its dependencies: `cd mock-steelpenny`, `npm install`.
 
+   Add a couple more users to `mock-steelpenny/api.js` as follows:
+   ```js
+    const validAuthentications = [
+      [/^demo.*/, /.*/],
+      [/^mochatest$/, /^mochapassword/],
+      [/^test$/, /^password/],
+      [/^author$/, /^password/],
+      [/^server$/, /^password/],
+      [/^(account|password)-will-expire$/, /.*/],
+    ]
+   ```
+
+
 2. **COINS** Next, create a directory in your root directory called **coins**. Alternatively, clone the [COINS](https://github.com/MRN-Code/coins) repo there. Once you have the directory, create a subdirectory called **config**. Lastly create a file at `/coins/config/dbmap.json` and copy into it the following:
 
    ```json
@@ -112,9 +126,25 @@ Follow the general steps above before continuing.
      "coinstac": {
        "user": "coinstac",
        "password": "test"
-     }
+     },
+     
    }
    ```
+3. **CSTAC DB** Next, create a file called `cstacDBMap.json` on your root directory with the following contents:
+
+   ```json
+    {
+      "rethinkdbAdmin": {
+        "user": "coinstac",
+        "password": "test"
+      },
+      "rethinkdbServer": {
+        "username": "server",
+        "password": "password"
+      },
+      "cstacJWTSecret": "friends"
+    }
+
 
 ## Configuration
 
@@ -156,15 +186,19 @@ root: ~/coinstac/
 
 # Runs before everything. Use it to start daemons etc.
 pre:
+  # Init RethinkDB
+  - rethinkdb --daemon --directory ~/rethinkdb_data
+  - cd ~/coinstac/packages/coinstac-api-server
+  - npm run test-setup
+
   - couchdb -b
 
   # Add CouchDB security
-  - sleep 2 && curl -X PUT localhost:5984/_config/admins/coinstac -d '"test"'
+  # - sleep 2 && curl -X PUT localhost:5984/_config/admins/coinstac -d '"test"'
 
   # Init database
   - cd ~/coinstac/packages/coinstac-server-core
   - npm run clean:db
-  - bin/coinstac-server-core --nohang
   - cd ~/coinstac/packages/coinstac-ui
   - npm run clean:db
   - cd ~/coinstac/
@@ -177,10 +211,15 @@ startup_window: editor
 
 # Runs after everything. Use it to attach to tmux with custom options etc.
 post:
-  - curl -X DELETE localhost:5984/_config/admins/coinstac --user coinstac:test
+  # - curl -X DELETE localhost:5984/_config/admins/coinstac --user coinstac:test
   - couchdb -d
+  - pkill -2 "rethinkdb"
 
 windows:
+  - dbapi:
+      root: ~/coinstac/packages/coinstac-api-server
+      panes:
+        - npm run start
   - steelpenny:
       root: ~/mock-steelpenny
       panes:
