@@ -5,9 +5,6 @@ import { OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { remote } from 'electron';
 import path from 'path';
 
-const APP_PATH = remote.app.getAppPath();
-const ENVIRONMENT = remote.process.env.NODE_ENV;
-
 export default function UserList(props) {
   const { size, users } = props;
   const className = classNames(['user-list', 'list-inline'], {
