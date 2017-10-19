@@ -18,17 +18,7 @@ export default function UserList(props) {
     <ul className={className}>
       {users.map((username, i) => {
         const tooltip = <Tooltip id={`user-item-${i}`}>{username}</Tooltip>;
-        let src = '';
-        if(ENVIRONMENT === "development")
-        {
-          src = `../render/images/avatar-${(i % 3) + 1}.jpg`;
-        }
-        else{
-          src = path.join(
-            APP_PATH,
-            `/app/render/images/avatar-${(i % 3) + 1}.jpg`
-          );
-        }
+        const src = `../render/images/avatar-${(i % 3) + 1}.jpg`;
         // TODO: Use users' actual avatars
         return (
           <li className="user-list-item" key={username}>
