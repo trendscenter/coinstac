@@ -45,7 +45,6 @@ const typeDefs = `
     computation: ComputationFieldInput
   }
 
-  # Should owners/users be an array of user objects?
   type Consortium {
     id: ID!
     activeComputationId: ID
@@ -54,7 +53,7 @@ const typeDefs = `
     name: String!
     tags: [String]
     owners: [ID]
-    users: [ID]
+    members: [ID]
     pipelines: [ID]
     results: [ID]
   }
@@ -67,7 +66,7 @@ const typeDefs = `
     name: String!
     tags: [String]
     owners: [String]
-    users: [String]
+    members: [String]
     pipelines: [ID]
     results: [ID]
   }

@@ -14,8 +14,8 @@ const sharedFields = {
     description
     name
     tags
+    members
     owners
-    users
   `,
 };
 

@@ -11,10 +11,6 @@ const resolvers = {
      * Returns all consortia. Checks user permissions retrieved from JWT middleware validateFunc.
      */
     fetchAllConsortia: ({ auth: { credentials: { permissions } } }, _) => {
-      if (!permissions.consortia.read) {
-        return Boom.forbidden('Action not permitted');
-      }
-
       return helperFunctions.getRethinkConnection()
         .then((connection) =>
           rethink.table('consortia').run(connection)
@@ -26,10 +22,6 @@ const resolvers = {
      * Returns all computations. Checks user permissions retrieved from JWT middleware validateFunc.
      */
     fetchAllComputations: ({ auth: { credentials: { permissions } } }, _) => {
-      if (!permissions.computations.read) {
-        return Boom.forbidden('Action not permitted');
-      }
-
       return helperFunctions.getRethinkConnection()
         .then((connection) =>
           rethink.table('computations').run(connection)
@@ -41,10 +33,6 @@ const resolvers = {
      * Returns metadata for specific computation name
      */
     fetchComputationDetails: ({ auth: { credentials: { permissions } } }, args) => {
-      if (!permissions.computations.read) {
-        return Boom.forbidden('Action not permitted');
-      }
-
       if (!args.computationIds) return;
 
       return helperFunctions.getRethinkConnection()
@@ -79,10 +67,6 @@ const resolvers = {
      * Add computation to RethinkDB
      */
     addComputation: ({ auth: { credentials: { permissions } } }, args) => {
-      if (!permissions.computations.write) {
-        return Boom.forbidden('Action not permitted');
-      }
-
       return helperFunctions.getRethinkConnection()
         .then((connection) =>
           rethink.table('computations').insert(
@@ -102,10 +86,6 @@ const resolvers = {
      * Remove all computations from DB
      */
     removeAllComputations: ({ auth: { credentials: { permissions } } }, _) => {
-      if (!permissions.computations.write) {
-        return Boom.forbidden('Action not permitted');
-      }
-
       return helperFunctions.getRethinkConnection()
         .then((connection) =>
           rethink.table('computations').delete()
@@ -134,13 +114,18 @@ const resolvers = {
             }
           )
           .run(connection)
-          .then((result) => {
-            let consortia = {};
-            consortia[result.changes[0].new_val.id] = { 'write': true };
-            rethink.table('users').filter({id: credentials.id}).update({ 'permissions': { consortia } })
-            .run(connection)
-            return result.changes[0].new_val;
-          })
+          .then((result) =>
+            helperFunctions.addRoleToUser(
+              permissions,
+              credentials.id,
+              'consortia',
+              result.changes[0].new_val.id,
+              'owner',
+              connection
+            ).then(perms => (
+              { consortium: result.changes[0].new_val, userPerms: perms }
+            ))
+          )
         )
     },
     removeComputation: (_, args) => {
@@ -169,14 +154,25 @@ const resolvers = {
       const { permissions } = credentials;
 
       return helperFunctions.getRethinkConnection()
-        .then((connection) =>
-          rethink.table('consortia').get(args.consortiumId)
-          .update({"users": rethink.row("users").append(credentials.id)}, {returnChanges: true,})
-          .run(connection)
+        .then(connection =>
+          helperFunctions.addRoleToUser(
+            permissions,
+            credentials.id,
+            'consortia',
+            args.consortiumId,
+            'member',
+            connection
+          )
+          .then((perms) => rethink.table('consortia').get(args.consortiumId)
+            .update(
+              { "members": rethink.row("members").append(credentials.id)}, { returnChanges: true }
+            ).run(connection)
+            .then((result) => {
+              return { consortium: result.changes[0].new_val, userPerms: perms };
+            })
+          )
         )
-        .then((result) => {
-          return result.changes[0].new_val;
-        })
+        
     },
     setActiveComputation: (_, args) => {
       return new Promise();
@@ -191,7 +187,7 @@ const resolvers = {
           rethink.table('consortia').get(args.consortiumId)
           .update(function(row){
             return{
-              "users": row("users").setDifference([credentials.id]),
+              "members": row("members").setDifference([credentials.id]),
             }
           }, {returnChanges: true})
           .run(connection)

@@ -29,7 +29,7 @@ const ConsortiaList = ({ auth: { user }, consortia }) => (
         key={`${consortium.name}-list-item`}
         consortium={consortium}
         owner={isUserA(user.id, consortium.owners)}
-        user={isUserA(user.id, consortium.users)}
+        member={isUserA(user.id, consortium.members)}
       />
     ))}
     {!consortia &&

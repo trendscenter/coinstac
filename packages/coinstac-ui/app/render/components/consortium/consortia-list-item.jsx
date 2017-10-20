@@ -1,11 +1,18 @@
 import React from 'react';
-import { graphql , compose} from 'react-apollo';
+import { graphql, compose } from 'react-apollo';
 import PropTypes from 'prop-types';
 import { Button, Panel } from 'react-bootstrap';
 import { LinkContainer } from 'react-router-bootstrap';
 import { deleteConsortiumByIdFunc, fetchAllConsortiaFunc, joinConsortiumFunc, leaveConsortiumFunc } from '../../state/graphql/functions';
 
-const ConsortiaListItem = ({ owner, user, consortium, deleteConsortium, joinConsortium, leaveConsortium }) => (
+const ConsortiaListItem = ({
+  owner,
+  member,
+  consortium,
+  deleteConsortium,
+  joinConsortium,
+  leaveConsortium,
+}) => (
   <Panel header={<h3>{consortium.name}</h3>}>
     <p>{consortium.description}</p>
     <LinkContainer to={`/dashboard/consortia/${consortium.id}`}>
@@ -20,20 +27,22 @@ const ConsortiaListItem = ({ owner, user, consortium, deleteConsortium, joinCons
         Delete Consortium
       </Button>
     }
-    {user && !owner &&
-      <Button 
-        bsStyle="warning" 
+    {member && !owner &&
+      <Button
+        bsStyle="warning"
         onClick={() => leaveConsortium(consortium.id)}
         className="pull-right"
       >
         Leave Consortium
       </Button>
     }
-    {!user && !owner && 
-      <Button 
-        bsStyle="primary" 
+    {!member && !owner &&
+      <Button
+        bsStyle="primary"
         onClick={() => joinConsortium(consortium.id)}
-        className="pull-right">Join Consortium
+        className="pull-right"
+      >
+        Join Consortium
       </Button>
     }
   </Panel>
@@ -42,7 +51,7 @@ const ConsortiaListItem = ({ owner, user, consortium, deleteConsortium, joinCons
 ConsortiaListItem.propTypes = {
   consortium: PropTypes.object.isRequired,
   owner: PropTypes.bool.isRequired,
-  user: PropTypes.bool.isRequired,
+  member: PropTypes.bool.isRequired,
   deleteConsortium: PropTypes.func.isRequired,
   joinConsortium: PropTypes.func.isRequired,
   leaveConsortium: PropTypes.func.isRequired,
@@ -72,7 +81,7 @@ const ConsortiaListItemWithData = compose(
           const data = store.readQuery({ query: fetchAllConsortiaFunc });
           const index = data.fetchAllConsortia.findIndex(con => con.id === joinConsortium.id);
           if (index > -1) {
-            data.fetchAllConsortia[index].users = joinConsortium.users;
+            data.fetchAllConsortia[index].members = joinConsortium.members;
           }
           store.writeQuery({ query: fetchAllConsortiaFunc, data });
         },
@@ -87,13 +96,13 @@ const ConsortiaListItemWithData = compose(
           const data = store.readQuery({ query: fetchAllConsortiaFunc });
           const index = data.fetchAllConsortia.findIndex(con => con.id === leaveConsortium.id);
           if (index > -1) {
-            data.fetchAllConsortia[index].users = leaveConsortium.users;
+            data.fetchAllConsortia[index].members = leaveConsortium.members;
           }
           store.writeQuery({ query: fetchAllConsortiaFunc, data });
         },
       }),
     }),
-  }))
-(ConsortiaListItem);
+  })
+)(ConsortiaListItem);
 
 export default ConsortiaListItemWithData;

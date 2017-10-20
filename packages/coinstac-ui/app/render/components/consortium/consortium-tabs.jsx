@@ -22,7 +22,7 @@ class ConsortiumTabs extends Component {
     let consortium = {
       name: '',
       description: '',
-      users: [],
+      members: [],
       owners: [],
       activeComputationId: '',
       activeComputationInputs: [],
@@ -61,7 +61,7 @@ class ConsortiumTabs extends Component {
           id: res.data.saveConsortium.id,
           name: res.data.saveConsortium.name,
           description: res.data.saveConsortium.description,
-          users: res.data.saveConsortium.users,
+          members: res.data.saveConsortium.members,
           owners: res.data.saveConsortium.owners,
           activeComputationId: null,
           activeComputationInputs: null,
