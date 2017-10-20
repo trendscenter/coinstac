@@ -20,7 +20,7 @@ export const leaveConsortiumFunc = gql`
   mutation LeaveConsortiumMutation($consortiumId: ID!) {
     leaveConsortium(consortiumId: $consortiumId){
       id
-      users
+      members
     }
   }
 `;
@@ -29,7 +29,7 @@ export const joinConsortiumFunc = gql`
   mutation JoinConsortiumMutation($consortiumId: ID!) {
     joinConsortium(consortiumId: $consortiumId){
       id
-      users
+      members
     }
   }
 `;

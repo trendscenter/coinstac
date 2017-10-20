@@ -1,4 +1,5 @@
 {
+  "id": "single-shot-test-id",
   "meta": {
     "repository": "https://github.com/MRN-Code/decentralized-single-shot-ridge-regression",
     "description": "Decentralized ridge regression.",
