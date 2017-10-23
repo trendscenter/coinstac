@@ -8,6 +8,16 @@ export const addComputationFunc = gql`
     ${mutations.addComputation}
 `;
 
+export const ADD_USER_ROLE_MUTATION = gql`
+  mutation AddUserRoleMutation($userId: ID!, $table: String!, $doc: String!, $role: String!)
+    ${mutations.addUserRole}
+`;
+
+export const REMOVE_USER_ROLE_MUTATION = gql`
+  mutation RemoveUserRoleMutation($userId: ID!, $table: String!, $doc: String!, $role: String!)
+    ${mutations.removeUserRole}
+`;
+
 export const deleteConsortiumByIdFunc = gql`
   mutation DeleteConsortiumMutation($consortiumId: ID!) {
     deleteConsortiumById(consortiumId: $consortiumId){

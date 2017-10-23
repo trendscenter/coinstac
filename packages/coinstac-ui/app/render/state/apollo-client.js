@@ -1,17 +1,20 @@
 import {
   ApolloClient,
   addTypeName,
-  createNetworkInterface,
+  createBatchingNetworkInterface,
 } from 'react-apollo';
 
 const client = new ApolloClient({
-  networkInterface: createNetworkInterface({ uri: 'http://localhost:3100/graphql' }),
+  networkInterface: createBatchingNetworkInterface({
+    uri: 'http://localhost:3100/graphql',
+    batchInterval: 10,
+  }),
   queryTransformer: addTypeName,
   dataIdFromObject: o => o.id,
 });
 
 client.networkInterface.use([{
-  applyMiddleware(req, next) {
+  applyBatchMiddleware(req, next) {
     if (!req.options.headers) {
       req.options.headers = {};  // Create the header object if needed.
     }

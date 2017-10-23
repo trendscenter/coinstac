@@ -17,6 +17,13 @@ const sharedFields = {
     members
     owners
   `,
+  userMetadata: `
+    id
+    email
+    institution
+    passwordHash
+    permissions
+  `,
 };
 
 module.exports = sharedFields;

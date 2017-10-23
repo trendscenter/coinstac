@@ -6,22 +6,6 @@ const config = require('../config/api-config');
 const dbmap = require('/coins/config/dbmap'); // eslint-disable-line import/no-absolute-path
 
 const helperFunctions = {
-  addRoleToUser(username, table, doc, role, connection) {
-    return rethink.get(username)('permissions').run(connection)
-    .then((perms) => {
-      console.log(perms);
-      let newRoles = [role];
-
-      // Grab existing roles if present
-      if (perms.consortia[doc]) {
-        newRoles = newRoles.concat(perms.consortia[doc]);
-      }
-
-      return rethink.table('users').get(username).update(
-        { permissions: { consortia: { [doc]: newRoles } } }, { returnChanges: true }
-      ).run(connection);
-    });
-  },
   /**
    * Create JWT for user signing in to application
    * @param {string} user username of authenticating user passed in from route handler
@@ -128,14 +112,6 @@ const helperFunctions = {
     salt.copy(hashframe, 8);
     hash.copy(hashframe, salt.length + 8);
     return hashframe.toString(config.encoding);
-  },
-  removeRoleFromUser(username, table, doc, role, connection) {
-    return rethink.table('users')
-      .get(username).update({
-        permissions: { table: {
-          [doc]: rethink.table('users').get(username)('permissions')(table)(doc).filter(rethink.row.ne(role)),
-        } },
-      }).run(connection);
   },
   /**
    * Validates JWT from authenticated user
