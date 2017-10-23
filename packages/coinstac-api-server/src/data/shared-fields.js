@@ -16,6 +16,12 @@ const computationFields = {
     dockerImage: String
     command: [String]
   `,
+  userFields: `
+    email: String!
+    institution: String
+    passwordHash: String!
+    permissions: JSON
+  `,
 };
 
 module.exports = computationFields;

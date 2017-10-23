@@ -10,6 +10,9 @@ const setUser = user => ({ type: SET_USER, payload: user });
 const CLEAR_USER = 'CLEAR_USER';
 export const clearUser = () => ({ type: CLEAR_USER, payload: null });
 
+const UPDATE_USER_PERMS = 'UPDATE_USER_PERMS';
+export const updateUserPerms = perms => ({ type: UPDATE_USER_PERMS, payload: perms });
+
 const INITIAL_STATE = {
   user: {
     id: '',
@@ -124,6 +127,8 @@ export default function reducer(state = INITIAL_STATE, action) {
       return { ...INITIAL_STATE };
     case SET_USER:
       return { ...action.payload };
+    case UPDATE_USER_PERMS:
+      return { user: { ...state.user, permissions: action.payload } };
     default:
       return state;
   }
