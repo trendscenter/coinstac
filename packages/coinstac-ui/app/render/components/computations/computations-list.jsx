@@ -36,15 +36,13 @@ class ComputationsList extends Component { // eslint-disable-line
       <div>
         <div className="page-header clearfix">
           <h1 className="pull-left">Computations</h1>
-          {user.permissions.computations.write &&
-            <LinkContainer className="pull-right" to="/dashboard/computations/new">
-              <Button bsStyle="primary" className="pull-right">
-                <span aria-hidden="true" className="glphicon glyphicon-plus" />
-                {' '}
-                Create Computation
-              </Button>
-            </LinkContainer>
-          }
+          <LinkContainer className="pull-right" to="/dashboard/computations/new">
+            <Button bsStyle="primary" className="pull-right">
+              <span aria-hidden="true" className="glphicon glyphicon-plus" />
+              {' '}
+              Create Computation
+            </Button>
+          </LinkContainer>
         </div>
         {computations.length > 0 &&
           <Table striped bordered condensed style={styles.topMargin}>
