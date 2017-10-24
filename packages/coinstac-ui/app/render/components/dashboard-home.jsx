@@ -6,7 +6,7 @@ import { Alert } from 'react-bootstrap';
 import { connect } from 'react-redux';
 import { graphql } from 'react-apollo';
 import StatusItem from './status-item';
-import { fetchAllComputationsMetadataFunc } from '../state/graphql/functions';
+import { FETCH_ALL_COMPUTATIONS_METADATA_QUERY } from '../state/graphql/functions';
 import { computationsProp } from '../state/graphql/props';
 
 class DashboardHome extends Component {
@@ -17,39 +17,6 @@ class DashboardHome extends Component {
       didInitResults: false,
     };
   }
-
-/*
-  componentWillMount() {
-    const {
-      // fetchRemoteResultsForUser,
-      username,
-    } = this.props;
-
-    this.interval = setInterval(() => fetchRemoteResultsForUser(username), 2000);
-  }
-*/
-
-/*
-  componentWillUpdate() {
-    const {
-      computations,
-      consortia,
-      fetchRemoteResultsForUser,
-      username,
-    } = this.props;
-
-    if (
-      !this.state.didInitResults &&
-      computations.length &&
-      consortia.length &&
-      username
-    ) {
-      this.setState({ didInitResults: true }, () => { // eslint-disable-line
-        fetchRemoteResultsForUser(username);
-      });
-    }
-  }
-  */
 
   componentWillUnmount() {
     if (this.interval) {
@@ -120,6 +87,6 @@ function mapStateToProps({
   };
 }
 
-const DashHomeWithData = graphql(fetchAllComputationsMetadataFunc, computationsProp)(DashboardHome);
+const DashHomeWithData = graphql(FETCH_ALL_COMPUTATIONS_METADATA_QUERY, computationsProp)(DashboardHome);
 
 export default connect(mapStateToProps)(DashHomeWithData);

@@ -24,9 +24,9 @@ const queries = {
       }
     }
   `,
-  fetchComputationDetails: `
+  fetchComputation: `
     {
-      fetchComputationDetails (computationIds: $computationIds) {
+      fetchComputation (computationName: $computationName) {
         id
         computation {
           input

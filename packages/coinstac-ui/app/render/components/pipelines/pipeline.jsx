@@ -23,7 +23,10 @@ import {
 import ApolloClient from '../../state/apollo-client';
 import PipelineStep from './pipeline-step';
 import ItemTypes from './pipeline-item-types';
-import { fetchAllConsortiaFunc, fetchAllComputationsMetadataFunc } from '../../state/graphql/functions';
+import {
+  FETCH_ALL_CONSORTIA_QUERY,
+  FETCH_ALL_COMPUTATIONS_METADATA_QUERY,
+} from '../../state/graphql/functions';
 import { computationsProp } from '../../state/graphql/props';
 
 const computationTarget = {
@@ -45,7 +48,7 @@ class Pipeline extends Component {
     let consortium = null;
 
     if (props.params.consortiumId) {
-      const data = ApolloClient.readQuery({ query: fetchAllConsortiaFunc });
+      const data = ApolloClient.readQuery({ query: FETCH_ALL_CONSORTIA_QUERY });
       consortium = data.fetchAllConsortia.find(cons => cons.id === props.params.consortiumId);
       delete consortium.__typename;
     }
@@ -283,7 +286,7 @@ function mapStateToProps({ auth }) {
   return { auth };
 }
 
-const PipelineWithData = graphql(fetchAllComputationsMetadataFunc, computationsProp)(Pipeline);
+const PipelineWithData = graphql(FETCH_ALL_COMPUTATIONS_METADATA_QUERY, computationsProp)(Pipeline);
 
 export default compose(
   connect(mapStateToProps),

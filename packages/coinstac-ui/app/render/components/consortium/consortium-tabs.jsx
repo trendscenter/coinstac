@@ -11,8 +11,8 @@ import { updateUserPerms } from '../../state/ducks/auth';
 import { userRolesProp } from '../../state/graphql/props';
 import {
   ADD_USER_ROLE_MUTATION,
-  fetchAllConsortiaFunc,
-  saveConsortiumFunc,
+  FETCH_ALL_CONSORTIA_QUERY,
+  SAVE_CONSORTIUM_MUTATION,
 } from '../../state/graphql/functions';
 
 const styles = {
@@ -149,19 +149,19 @@ function mapStateToProps({ auth }) {
 
 const ConsortiumTabsWithData = compose(
   graphql(ADD_USER_ROLE_MUTATION, userRolesProp('addUserRole')),
-  graphql(saveConsortiumFunc, {
+  graphql(SAVE_CONSORTIUM_MUTATION, {
     props: ({ mutate }) => ({
       saveConsortium: consortium => mutate({
         variables: { consortium },
         update: (store, { data: { saveConsortium } }) => {
-          const data = store.readQuery({ query: fetchAllConsortiaFunc });
+          const data = store.readQuery({ query: FETCH_ALL_CONSORTIA_QUERY });
           const index = data.fetchAllConsortia.findIndex(cons => cons.id === saveConsortium.id);
           if (index > -1) {
             data.fetchAllConsortia[index] = { ...saveConsortium };
           } else {
             data.fetchAllConsortia.push(saveConsortium);
           }
-          store.writeQuery({ query: fetchAllConsortiaFunc, data });
+          store.writeQuery({ query: FETCH_ALL_CONSORTIA_QUERY, data });
         },
       }),
     }),

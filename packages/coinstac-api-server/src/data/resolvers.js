@@ -33,9 +33,7 @@ const resolvers = {
     /**
      * Returns metadata for specific computation name
      */
-    fetchComputationDetails: ({ auth: { credentials: { permissions } } }, args) => {
-      if (!args.computationIds) return;
-
+    fetchComputation: ({ auth: { credentials: { permissions } } }, args) => {
       return helperFunctions.getRethinkConnection()
         .then((connection) =>
           rethink.table('computations').getAll(...args.computationIds)
