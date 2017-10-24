@@ -22,8 +22,16 @@ class ConsortiaListItem extends Component {
   constructor(props) {
     super(props);
 
+    this.deleteConsortium = this.deleteConsortium.bind(this);
     this.joinConsortium = this.joinConsortium.bind(this);
     this.leaveConsortium = this.leaveConsortium.bind(this);
+  }
+
+  deleteConsortium() {
+    const { auth: { user }, consortium } = this.props;
+
+    this.props.deleteConsortium(consortium.id);
+    this.props.removeUserRole(user.id, 'consortia', consortium.id, 'owner');
   }
 
   joinConsortium() {
@@ -45,7 +53,6 @@ class ConsortiaListItem extends Component {
       owner,
       member,
       consortium,
-      deleteConsortium,
     } = this.props;
 
     return (
@@ -57,7 +64,7 @@ class ConsortiaListItem extends Component {
         {owner &&
           <Button
             bsStyle="danger"
-            onClick={() => deleteConsortium(consortium.id)}
+            onClick={this.deleteConsortium}
             className="pull-right"
           >
             Delete Consortium

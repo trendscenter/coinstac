@@ -26,7 +26,7 @@ const queries = {
   `,
   fetchComputation: `
     {
-      fetchComputation (computationName: $computationName) {
+      fetchComputation (computationIds: $computationIds) {
         id
         computation {
           input

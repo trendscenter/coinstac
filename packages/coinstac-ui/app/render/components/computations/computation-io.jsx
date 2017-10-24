@@ -10,8 +10,12 @@ const ComputationIO = ({ compIO }) => (
   </pre>
 );
 
+ComputationIO.defaultProps = {
+  compIO: null,
+};
+
 ComputationIO.propTypes = {
-  compIO: PropTypes.object.isRequired,
+  compIO: PropTypes.object,
 };
 
 const ComputationIOWithData = graphql(FETCH_COMPUTATION_QUERY, compIOProp)(ComputationIO);

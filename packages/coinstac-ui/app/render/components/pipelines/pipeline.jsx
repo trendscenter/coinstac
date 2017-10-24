@@ -126,7 +126,7 @@ class Pipeline extends Component {
                   },
                 };
               } else if (movedStepIndex < cov.source.pipelineIndex
-                          && index >= cov.source.pipeligitneIndex
+                          && index >= cov.source.pipelineIndex
                           && index < stepIndex) {
                 return {
                   ...cov,

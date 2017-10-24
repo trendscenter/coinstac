@@ -150,8 +150,8 @@ PipelineStep.propTypes = {
 const PipelineStepWithData = compose(
   graphql(FETCH_COMPUTATION_QUERY, compIOProp),
   graphql(FETCH_COMPUTATION_QUERY, {
-    props: ({ data: { fetchComputationDetails } }) => ({
-      possibleInputs: fetchComputationDetails,
+    props: ({ data: { fetchComputation } }) => ({
+      possibleInputs: fetchComputation,
     }),
     options: ({ previousComputationIds }) =>
       ({ variables: { computationIds: previousComputationIds } }),

@@ -41,7 +41,6 @@ const resolvers = {
         )
         .then((cursor) => cursor.toArray())
         .then((result) => {
-          console.log(result);
           return result;
         });
     },
