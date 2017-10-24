@@ -5,7 +5,7 @@ import { Alert, Button } from 'react-bootstrap';
 import { LinkContainer } from 'react-router-bootstrap';
 import PropTypes from 'prop-types';
 import ConsortiaListItem from './consortia-list-item';
-import { fetchAllConsortiaFunc } from '../../state/graphql/functions';
+import { FETCH_ALL_CONSORTIA_QUERY } from '../../state/graphql/functions';
 import { consortiaProp } from '../../state/graphql/props';
 
 const isUserA = (userId, groupArr) => {
@@ -53,6 +53,6 @@ const mapStateToProps = ({ auth }) => {
   return { auth };
 };
 
-const ConsortiaListWithData = graphql(fetchAllConsortiaFunc, consortiaProp)(ConsortiaList);
+const ConsortiaListWithData = graphql(FETCH_ALL_CONSORTIA_QUERY, consortiaProp)(ConsortiaList);
 
 export default connect(mapStateToProps)(ConsortiaListWithData);

@@ -1,6 +1,6 @@
 const rethink = require('rethinkdb');
-const singleShot = require('./data/Single-Shot Schema');
-const multiShot = require('./data/Multi-Shot Schema');
+const singleShot = require('./data/single-shot-schema');
+const multiShot = require('./data/multi-shot-schema');
 const helperFunctions = require('../src/auth-helpers');
 
 helperFunctions.getRethinkConnection()
@@ -39,9 +39,9 @@ helperFunctions.getRethinkConnection()
   }).run(connection))
   .then(() => connection.close());
 })
-.then(() => {
-  let passwordHash = helperFunctions.hashPassword('password');
-  return helperFunctions.createUser({
+.then(() => helperFunctions.hashPassword('password'))
+.then(passwordHash =>
+  helperFunctions.createUser({
     username: 'test',
     institution: 'mrn',
     email: 'test@mrn.org',
@@ -53,38 +53,38 @@ helperFunctions.getRethinkConnection()
       },
     },
   }, passwordHash)
-  .then(() => {
-    passwordHash = helperFunctions.hashPassword('password');
-    return helperFunctions.createUser({
-      username: 'server',
-      institution: 'mrn',
-      email: 'server@mrn.org',
-      permissions: {
-        computations: {},
-        consortia: {},
+)
+.then(() => helperFunctions.hashPassword('password'))
+.then(passwordHash =>
+  helperFunctions.createUser({
+    username: 'server',
+    institution: 'mrn',
+    email: 'server@mrn.org',
+    permissions: {
+      computations: {},
+      consortia: {},
+    },
+  }, passwordHash)
+)
+.then(() => helperFunctions.hashPassword('password'))
+.then(passwordHash =>
+  helperFunctions.createUser({
+    username: 'author',
+    institution: 'mrn',
+    email: 'server@mrn.org',
+    permissions: {
+      computations: {
+        'single-shot-test-id': ['owner'],
+        'multi-shot-test-id': ['owner'],
       },
-    }, passwordHash);
-  })
-  .then(() => {
-    passwordHash = helperFunctions.hashPassword('password');
-    return helperFunctions.createUser({
-      username: 'author',
-      institution: 'mrn',
-      email: 'server@mrn.org',
-      permissions: {
-        computations: {
-          'single-shot-test-id': ['owner'],
-          'multi-shot-test-id': ['owner'],
-        },
-        consortia: {
-          'test-cons-1': ['owner'],
-          'test-cons-2': ['member'],
-        },
+      consortia: {
+        'test-cons-1': ['owner'],
+        'test-cons-2': ['member'],
       },
-    }, passwordHash);
-  })
-  .then(() => {
-    process.exit();
-  });
+    },
+  }, passwordHash)
+)
+.then(() => {
+  process.exit();
 })
 .catch(console.log);  // eslint-disable-line no-console

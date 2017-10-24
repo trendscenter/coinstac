@@ -7,7 +7,7 @@ import {
   Button,
   Table,
 } from 'react-bootstrap';
-import { fetchAllComputationsMetadataFunc } from '../../state/graphql/functions';
+import { FETCH_ALL_COMPUTATIONS_METADATA_QUERY } from '../../state/graphql/functions';
 import { computationsProp } from '../../state/graphql/props';
 import ComputationIO from './computation-io';
 
@@ -92,7 +92,7 @@ function mapStateToProps({ auth, featureTest: { dockerOut } }) {
 }
 
 const ComputationsListWithData = graphql(
-  fetchAllComputationsMetadataFunc,
+  FETCH_ALL_COMPUTATIONS_METADATA_QUERY,
   computationsProp
 )(ComputationsList);
 

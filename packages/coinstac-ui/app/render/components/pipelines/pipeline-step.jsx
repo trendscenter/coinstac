@@ -6,7 +6,8 @@ import { graphql } from 'react-apollo';
 import { ControlLabel, FormGroup, FormControl, Panel } from 'react-bootstrap';
 import ItemTypes from './pipeline-item-types';
 import PipelineStepInput from './pipeline-step-input';
-import { fetchComputationDetailsFunc } from '../../state/graphql/functions';
+import { FETCH_COMPUTATION_QUERY } from '../../state/graphql/functions';
+import { compIOProp } from '../../state/graphql/props';
 
 const styles = {
   container: {
@@ -147,13 +148,8 @@ PipelineStep.propTypes = {
 };
 
 const PipelineStepWithData = compose(
-  graphql(fetchComputationDetailsFunc, {
-    props: ({ data: { fetchComputationDetails } }) => ({
-      compIO: fetchComputationDetails ? fetchComputationDetails[0] : null,
-    }),
-    options: ({ computationId }) => ({ variables: { computationIds: [computationId] } }),
-  }),
-  graphql(fetchComputationDetailsFunc, {
+  graphql(FETCH_COMPUTATION_QUERY, compIOProp),
+  graphql(FETCH_COMPUTATION_QUERY, {
     props: ({ data: { fetchComputationDetails } }) => ({
       possibleInputs: fetchComputationDetails,
     }),
