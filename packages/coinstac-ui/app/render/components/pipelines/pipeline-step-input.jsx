@@ -11,6 +11,7 @@ import {
   MenuItem,
   Row,
 } from 'react-bootstrap';
+import update from 'immutability-helper';
 
 export default class PipelineStepInput extends Component {
   constructor(props) {
@@ -18,6 +19,28 @@ export default class PipelineStepInput extends Component {
 
     this.addCovariate = this.addCovariate.bind(this);
     this.getNewObj = this.getNewObj.bind(this);
+  }
+
+  componentWillMount() {
+    const { objKey, objParams, step, updateStep } = this.props;
+
+    // Initialize array of length input min if array of inputs required
+    if (!step.ioMap[objKey] && objParams.type === 'array' &&
+        !objParams.values && objParams.items === 'number') {
+      let initArray = [];
+
+      if (objParams.defaultValue && Array.isArray(objParams.defaultValue)) {
+        initArray = Array.from({ length: objParams.min }, (v, i) => objParams.defaultValue[i]);
+      }
+
+      updateStep({
+        ...step,
+        ioMap: this.getNewObj(
+          objKey,
+          initArray
+        ),
+      });
+    }
   }
 
   getNewObj(objKey, value, covarIndex) { // eslint-disable-line class-methods-use-this
@@ -198,6 +221,10 @@ export default class PipelineStepInput extends Component {
               <ControlLabel>{objParams.label}</ControlLabel>
             }
 
+            {objParams.description &&
+              <p>{objParams.description}</p>
+            }
+
             {objParams.type === 'number' &&
               <FormControl
                 disabled={!owner}
@@ -211,7 +238,7 @@ export default class PipelineStepInput extends Component {
               />
             }
 
-            {objParams.type === 'select' &&
+            {objParams.type === 'array' && objParams.values &&
               <FormControl
                 componentClass="select"
                 disabled={!owner}
@@ -219,7 +246,10 @@ export default class PipelineStepInput extends Component {
                 multiple
                 onChange={() => updateStep({
                   ...step,
-                  ioMap: this.getNewObj(objKey, this.getSelectList(step.ioMap[objKey], this[objKey].value)),
+                  ioMap: this.getNewObj(
+                    objKey,
+                    this.getSelectList(step.ioMap[objKey], this[objKey].value)
+                  ),
                 })}
                 value={step.ioMap[objKey] || []}
               >
@@ -227,6 +257,25 @@ export default class PipelineStepInput extends Component {
                   <option key={`${val}-select-option`} value={val}>{val}</option>
                 )}
               </FormControl>
+            }
+
+            {objParams.type === 'array' && !objParams.values && objParams.items === 'number' &&
+              step.ioMap[objKey] && step.ioMap[objKey].map((val, i) => (
+                <FormControl
+                  disabled={!owner}
+                  inputRef={(input) => { this[i] = input; }}
+                  onChange={() => updateStep({
+                    ...step,
+                    ioMap: {
+                      [objKey]: update(step.ioMap[objKey], {
+                        $splice: [[i, 1, this[i].value]],
+                      }),
+                    },
+                  })}
+                  type="number"
+                  value={step.ioMap[objKey][i] || ''}
+                />
+              ))
             }
 
             {objParams.type === 'boolean' &&

@@ -1,6 +1,7 @@
 const rethink = require('rethinkdb');
 const singleShot = require('./data/single-shot-schema');
 const multiShot = require('./data/multi-shot-schema');
+const vbm = require('./data/vbm-schema');
 const helperFunctions = require('../src/auth-helpers');
 
 helperFunctions.getRethinkConnection()
@@ -20,7 +21,7 @@ helperFunctions.getRethinkConnection()
     { role: 'member', verbs: { subscribe: true } },
   ]).run(connection))
   .then(() => rethink.tableCreate('computations').run(connection))
-  .then(() => rethink.table('computations').insert([singleShot, multiShot]).run(connection))
+  .then(() => rethink.table('computations').insert([singleShot, multiShot, vbm]).run(connection))
   .then(() => rethink.tableCreate('users').run(connection))
   .then(() => rethink.tableCreate('consortia').run(connection))
   .then(() => rethink.table('consortia').insert({
