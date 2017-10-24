@@ -36,7 +36,7 @@ class ConsortiumTabs extends Component {
     };
 
     if (props.params.consortiumId) {
-      const data = ApolloClient.readQuery({ query: fetchAllConsortiaFunc });
+      const data = ApolloClient.readQuery({ query: FETCH_ALL_CONSORTIA_QUERY });
       consortium = data.fetchAllConsortia.find(cons => cons.id === props.params.consortiumId);
       delete consortium.__typename;
     }
