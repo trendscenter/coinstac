@@ -81,17 +81,6 @@ const resolvers = {
         })
     },
     /**
-     * Remove all computations from DB
-     */
-    removeAllComputations: ({ auth: { credentials: { permissions } } }, _) => {
-      return helperFunctions.getRethinkConnection()
-        .then((connection) =>
-          rethink.table('computations').delete()
-            .run(connection)
-        )
-        .then((result) => result);
-    },
-    /**
      * Saves consortia
      */
     saveConsortium: ({ auth: { credentials } }, args) => {
