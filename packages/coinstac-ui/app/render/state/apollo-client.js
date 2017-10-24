@@ -3,10 +3,13 @@ import {
   addTypeName,
   createBatchingNetworkInterface,
 } from 'react-apollo';
+import { apiServer } from '../../../config/local';
+
+const API_URL = `${apiServer.protocol}//${apiServer.hostname}:${apiServer.port}`;
 
 const client = new ApolloClient({
   networkInterface: createBatchingNetworkInterface({
-    uri: 'http://localhost:3100/graphql',
+    uri: `${API_URL}/graphql`,
     batchInterval: 10,
   }),
   queryTransformer: addTypeName,
