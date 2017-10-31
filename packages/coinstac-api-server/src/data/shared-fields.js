@@ -30,8 +30,8 @@ const computationFields = {
   pipelineFields: `
     name: String
     description: String
-    computations: [ID]
-    ioMap: JSON
+    owningConsortia: String
+    steps: [JSON]
   `,
   pipelineControllerFields: `
     id: ID
