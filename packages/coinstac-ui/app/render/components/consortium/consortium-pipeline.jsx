@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Component } from 'react';
 import { Button, Col, DropdownButton, MenuItem, Row, Well } from 'react-bootstrap';
 import { LinkContainer } from 'react-router-bootstrap';
 
@@ -8,9 +8,14 @@ const styles = {
   textCenter: { textAlign: 'center' },
 };
 
-const ConsortiumPipeline = () =>
-  (
-    <div>
+class ConsortiumPipeline extends Component{
+  constructor(props) {
+    super(props);
+  }
+  render(){
+    let { consortium } = this.props;
+    return(
+      <div>
       <h3>Active Pipeline</h3>
       <Well><em>No active pipeline</em></Well>
       <div className="clearfix">
@@ -47,7 +52,7 @@ const ConsortiumPipeline = () =>
       <Row style={{ marginTop: 50 }}>
         <Col xs={12} style={styles.textCenter}>
           <p><em>Or create a new pipeline</em></p>
-          <LinkContainer to="/dashboard/pipelines/new">
+          <LinkContainer to={`/dashboard/pipelines/new/${consortium.id}`}>
             <Button bsStyle="success">
               <span aria-hidden="true" className="glphicon glyphicon-plus" />
               {' '}
@@ -57,6 +62,8 @@ const ConsortiumPipeline = () =>
         </Col>
       </Row>
     </div>
-  );
+    );
+  }
+}
 
 export default ConsortiumPipeline;

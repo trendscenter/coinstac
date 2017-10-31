@@ -25,16 +25,14 @@ const PipelinesList = ({ auth: { user }, pipelines }) => (
       </LinkContainer>
     </div>
     {pipelines && pipelines.map(pipeline => (
-      <div>
-        <ListItem
-          key={`${pipeline.name}-list-item`}
-          itemObject={pipeline}
-          deleteItem={() => { return null; }}
-          owner={false}
-          itemOptions={[]}
-          itemRoute={'/dashboard/pipelines'}
-        />
-      </div>
+      <ListItem
+        key={`${pipeline.name}-list-item`}
+        itemObject={pipeline}
+        deleteItem={() => { return null; }}
+        owner={false}
+        itemOptions={[]}
+        itemRoute={'/dashboard/pipelines'}
+      />
     ))}
     {!pipelines &&
       <Alert bsStyle="info">
@@ -57,7 +55,6 @@ const mapStateToProps = ({ auth }) => {
   return { auth };
 };
 
-const PipelinesListWithData = PipelinesList;
-//const PipelinesListWithData = graphql(fetchAllPipelinesFunc, pipelinesProp)(PipelinesList);
+const PipelinesListWithData = graphql(fetchAllPipelinesFunc, pipelinesProp)(PipelinesList);
 
 export default connect(mapStateToProps)(PipelinesListWithData);

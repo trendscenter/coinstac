@@ -19,13 +19,14 @@ const sharedFields = {
   `,
   pipelineFields: `
     id
-    computations
+    name
+    description
+    owningConsortia
+    steps
     controller {
       options
       id
     }
-    name
-    description
   `,
 };
 

@@ -63,7 +63,6 @@ const resolvers = {
         )
         .then((cursor) => cursor.toArray())
         .then((result) => {
-          console.log(result);
           return result;
         });
     },
@@ -151,6 +150,31 @@ const resolvers = {
             return result.changes[0].new_val;
           })
         )
+    },
+
+    savePipeline: ({ auth: { credentials } }, args) => {
+      const { permissions } = credentials;
+      /*
+      if (!permissions.consortia.write
+          && args.consortium.id
+          && !permissions.consortia[args.consortium.id].write) {
+            return Boom.forbidden('Action not permitted');
+      }*/
+      return helperFunctions.getRethinkConnection()
+        .then((connection) =>
+          rethink.table('pipelines').insert(
+            args.pipeline,
+            {
+              conflict: "update",
+              returnChanges: true,
+            }
+          )
+          .run(connection)
+        )
+        .then((result) => {
+          return result.changes[0].new_val;
+        })
+
     },
     removeComputation: (_, args) => {
       return new Promise();

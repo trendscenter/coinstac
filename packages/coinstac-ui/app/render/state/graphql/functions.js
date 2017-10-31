@@ -49,6 +49,11 @@ export const fetchAllPipelinesFunc = gql`
     ${queries.fetchAllPipelines}
 `;
 
+export const savePipelineFunc = gql`
+  mutation SavePipelineMutation($pipeline: PipelineInput!)
+    ${mutations.savePipeline}
+`;
+
 export const fetchComputationDetailsFunc = gql`
   query FetchComputationDetailsQuery ($computationIds: [ID])
     ${queries.fetchComputationDetails}

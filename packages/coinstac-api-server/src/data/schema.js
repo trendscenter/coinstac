@@ -102,6 +102,7 @@ const typeDefs = `
     setComputationInputs(consortiumId: ID, fieldIndex: Int, values: String ): String
     leaveConsortium(consortiumId: ID): Consortium
     saveConsortium(consortium: ConsortiumInput): Consortium
+    savePipeline(pipeline: PipelineInput): Pipeline
   }
 
   # This is a description of the queries
