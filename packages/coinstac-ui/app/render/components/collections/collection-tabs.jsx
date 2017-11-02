@@ -2,8 +2,10 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { Tab, Tabs } from 'react-bootstrap';
-// import CollectionAbout from './consortium-about';
-// import { fetchAllConsortiaFunc, saveConsortiumFunc } from '../../state/graphql/functions';
+import CollectionAbout from './collection-about';
+import CollectionFiles from './collection-files';
+import CollectionConsortia from './collection-consortia';
+import { saveCollection } from '../../state/ducks/collections';
 
 const styles = {
   tab: {
@@ -15,18 +17,15 @@ class CollectionTabs extends Component {
   constructor(props) {
     super(props);
 
+    const { collections, params } = props;
     let collection = {
       name: '',
       description: '',
     };
 
-    /*
-    if (props.params.collectionId) {
-      const data = ApolloClient.readQuery({ query: fetchAllConsortiaFunc });
-      collection = data.fetchAllConsortia.find(cons => cons.id === props.params.consortiumId);
-      delete consortium.__typename;
+    if (params.collectionId) {
+      collection = collections.find(col => col.id.toString() === params.collectionId);
     }
-    */
 
     this.state = {
       collection,
@@ -37,38 +36,21 @@ class CollectionTabs extends Component {
   }
 
   saveCollection(e) {
-    e.preventDefault();
+    if (e) {
+      e.preventDefault();
+    }
 
-    /*
-    this.props.saveCollection(this.state.consortium)
-    .then((res) => {
-      // TODO: hook activeComputationId and Inputs
-      this.setState({
-        consortium:
-        {
-          id: res.data.saveConsortium.id,
-          name: res.data.saveConsortium.name,
-          description: res.data.saveConsortium.description,
-          users: res.data.saveConsortium.users,
-          owners: res.data.saveConsortium.owners,
-          activeComputationId: null,
-          activeComputationInputs: null,
-          tags: null,
-
-        },
-      });
-      // TODO: Use redux to display success/failure messages after mutations
-    })
+    this.props.saveCollection(this.state.collection)
+    // TODO: Use redux to display success/failure messages after mutations
     .catch(({ graphQLErrors }) => {
       console.log(graphQLErrors);
     });
-    */
   }
 
-  updateCollection(update) {
+  updateCollection(update, callback) {
     this.setState(prevState => ({
       collection: { ...prevState.collection, [update.param]: update.value },
-    }));
+    }), callback);
   }
 
   render() {
@@ -81,54 +63,52 @@ class CollectionTabs extends Component {
         <div className="page-header clearfix">
           <h1 className="pull-left">{title}</h1>
         </div>
-        <Tabs defaultActiveKey={1} id="consortium-tabs">
-          <Tab eventKey={1} title="About" style={styles.tab} />
+        <Tabs defaultActiveKey={1} id="collection-tabs">
+          <Tab eventKey={1} title="About" style={styles.tab}>
+            <CollectionAbout
+              collection={this.state.collection}
+              saveCollection={this.saveCollection}
+              updateCollection={this.updateCollection}
+            />
+          </Tab>
           <Tab
             eventKey={2}
-            title="Consortia"
-            disabled={typeof this.state.collection.id === 'undefined'}
-            style={styles.tab}
-          />
-          <Tab
-            eventKey={3}
             title="Files"
             disabled={typeof this.state.collection.id === 'undefined'}
             style={styles.tab}
-          />
+          >
+            <CollectionFiles
+              collection={this.state.collection}
+              saveCollection={this.saveCollection}
+              updateCollection={this.updateCollection}
+            />
+          </Tab>
+          <Tab
+            eventKey={3}
+            title="Consortia"
+            disabled={typeof this.state.collection.id === 'undefined'}
+            style={styles.tab}
+          >
+            <CollectionConsortia
+              collection={this.state.collection}
+              saveCollection={this.saveCollection}
+              updateCollection={this.updateCollection}
+            />
+          </Tab>
         </Tabs>
       </div>
     );
   }
 }
 
-/*
-ConsortiumTabs.propTypes = {
-  auth: PropTypes.object.isRequired,
+CollectionTabs.propTypes = {
+  collections: PropTypes.array.isRequired,
   params: PropTypes.object.isRequired,
-  saveConsortium: PropTypes.func.isRequired,
+  saveCollection: PropTypes.func.isRequired,
 };
 
-function mapStateToProps({ auth }) {
-  return { auth };
+function mapStateToProps({ collections: { collections } }) {
+  return { collections };
 }
 
-const ConsortiumTabsWithData = graphql(saveConsortiumFunc, {
-  props: ({ mutate }) => ({
-    saveConsortium: consortium => mutate({
-      variables: { consortium },
-      update: (store, { data: { saveConsortium } }) => {
-        const data = store.readQuery({ query: fetchAllConsortiaFunc });
-        const index = data.fetchAllConsortia.findIndex(cons => cons.id === saveConsortium.id);
-        if (index > -1) {
-          data.fetchAllConsortia[index] = { ...saveConsortium };
-        } else {
-          data.fetchAllConsortia.push(saveConsortium);
-        }
-        store.writeQuery({ query: fetchAllConsortiaFunc, data });
-      },
-    }),
-  }),
-})(ConsortiumTabs);
-*/
-
-export default CollectionTabs; // connect(mapStateToProps)(ConsortiumTabsWithData);
+export default connect(mapStateToProps, { saveCollection })(CollectionTabs);

@@ -78,4 +78,25 @@ loadConfig()
         });
       });
   });
+
+  // TODO: Assumption is CSV meta file. Need to change.
+  ipcPromise.on('add-files', org => {
+    return app.main.services.files.getMetaFile()
+      .then(metaFilePath => Promise.all([
+        metaFilePath,
+        app.core.projects.constructor.getCSV(metaFilePath),
+      ]))
+      .then(([metaFilePath, rawMetaFile]) => {
+        const metaFile = JSON.parse(rawMetaFile);
+        return Promise.all([
+          metaFilePath,
+          metaFile,
+          app.core.projects.constructor.getFilesFromMetadata(
+            metaFilePath,
+            metaFile
+          ),
+        ]);
+      })
+      .then(([metaFilePath, metaFile, files]) => ({ metaFilePath, metaFile, files }));
+  });
 });

@@ -3,8 +3,9 @@ import localDB from '../local-db';
 import testData from '../../../../test/data/test-collection';
 
 // Actions
+const INIT_TEST_COLLECTION = 'INIT_TEST_COLLECTION';
+const SAVE_COLLECTION = 'SAVE_COLLECTION';
 const SET_COLLECTIONS = 'GET_ALL_COLLECTIONS';
-const INIT_TEST_DATA = 'INIT_TEST_DATA';
 
 // Action Creators
 export const getAllCollections = applyAsyncLoading(() =>
@@ -21,13 +22,25 @@ export const getAllCollections = applyAsyncLoading(() =>
 
 export const initTestData = (() =>
   dispatch =>
-    localDB.collections.put(testData, 'test-collection')
+    localDB.collections.put(testData)
     .then(() => {
       dispatch(({
-        type: INIT_TEST_DATA,
+        type: INIT_TEST_COLLECTION,
         payload: null,
       }));
     })
+    .catch(console.log)
+);
+
+export const saveCollection = applyAsyncLoading(collection =>
+  dispatch =>
+    localDB.collections.put(collection)
+      .then(() => {
+        dispatch(({
+          type: SAVE_COLLECTION,
+          payload: collection,
+        }));
+      })
 );
 
 const INITIAL_STATE = {
@@ -36,10 +49,21 @@ const INITIAL_STATE = {
 
 export default function reducer(state = INITIAL_STATE, action) {
   switch (action.type) {
-    case INIT_TEST_DATA:
-      return { collections: [...state.collections, action.payload] };
+    case SAVE_COLLECTION: {
+      const newCollections = [...state.collections];
+      const index = state.collections.findIndex(col => col.id === action.payload.id);
+
+      if (index === -1) {
+        newCollections.push(action.payload);
+      } else {
+        newCollections.splice(index, 1, action.payload);
+      }
+
+      return { collections: newCollections };
+    }
     case SET_COLLECTIONS:
       return { collections: action.payload };
+    case INIT_TEST_COLLECTION:
     default:
       return state;
   }

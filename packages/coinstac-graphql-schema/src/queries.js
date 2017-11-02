@@ -28,6 +28,7 @@ const queries = {
     {
       fetchAllPipelines {
         ${sharedFields.pipelineFields}
+        ${sharedFields.pipelineOutputFields}
       }
     }
   `,
@@ -39,6 +40,13 @@ const queries = {
           input
           output
         }
+      }
+    }
+  `,
+  fetchPipeline: `
+    {
+      fetchPipeline (pipelineId: $pipelineId) {
+        ${sharedFields.pipelineFields}
       }
     }
   `,

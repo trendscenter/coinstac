@@ -64,15 +64,29 @@ const typeDefs = `
     ${sharedFields.pipelineControllerFields}
   }
 
-  type Pipeline {
+  type PipelineStep {
     id: ID!
     controller: PipelineController
+    computations: [Computation]
+    ${sharedFields.pipelineStepFields} 
+  }
+
+  input PipelineStepInput {
+    id: ID
+    controller: PipelineControllerInput
+    computations: [ID]
+    ${sharedFields.pipelineStepFields} 
+  }
+
+  type Pipeline {
+    id: ID!
+    steps: [PipelineStep]
     ${sharedFields.pipelineFields}
   }
 
   input PipelineInput {
     id: ID
-    controller: PipelineControllerInput
+    steps: [PipelineStepInput]
     ${sharedFields.pipelineFields}
   }
 
@@ -110,6 +124,7 @@ const typeDefs = `
     fetchAllComputations: [Computation]
     fetchComputationDetails(computationIds: [ID]): [Computation]
     fetchAllConsortia: [Consortium]
+    fetchPipeline(pipelineId: ID): Pipeline
     fetchAllPipelines: [Pipeline]
     validateComputation(compId: ID): Boolean
     fetchConsortiumById(consortiumId: ID): Consortium

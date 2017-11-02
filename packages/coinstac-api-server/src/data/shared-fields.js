@@ -1,6 +1,6 @@
-const computationFields = {
+const schemaFields = {
   consortiumFields: `
-    activeComputationId: ID
+    activePipelineId: ID
     activeComputationInputs: [String]
     description: String!
     name: String!
@@ -30,13 +30,17 @@ const computationFields = {
   pipelineFields: `
     name: String
     description: String
-    computations: [ID]
-    ioMap: JSON
+    owningConsortium: ID
   `,
   pipelineControllerFields: `
     id: ID
     options: JSON
+    type: String
+  `,
+  pipelineStepFields: `
+    ioMap: JSON 
+    id: ID!
   `,
 };
 
-module.exports = computationFields;
+module.exports = schemaFields;

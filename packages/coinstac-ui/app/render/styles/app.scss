@@ -18,6 +18,10 @@ $icon-font-path: "~bootstrap-sass/assets/fonts/bootstrap/";
 @import "./user-account";
 @import "./user-list";
 
+.bold {
+  font-weight: bold;
+}
+
 .screen {
   min-height: 100vh;
   padding-top: $grid-gutter-width / 2;

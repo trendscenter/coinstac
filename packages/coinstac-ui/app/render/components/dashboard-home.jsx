@@ -8,6 +8,7 @@ import { graphql } from 'react-apollo';
 import StatusItem from './status-item';
 import { fetchAllComputationsMetadataFunc } from '../state/graphql/functions';
 import { computationsProp } from '../state/graphql/props';
+import { initTestData } from '../state/ducks/collections';
 
 class DashboardHome extends Component {
   constructor(props) {
@@ -16,6 +17,10 @@ class DashboardHome extends Component {
     this.state = {
       didInitResults: false,
     };
+  }
+
+  componentDidMount() {
+    this.props.initTestData();
   }
 
 /*
@@ -87,6 +92,7 @@ class DashboardHome extends Component {
 }
 
 DashboardHome.propTypes = {
+  initTestData: PropTypes.func.isRequired,
   username: PropTypes.string,
 };
 
@@ -106,4 +112,4 @@ function mapStateToProps({
 
 const DashHomeWithData = graphql(fetchAllComputationsMetadataFunc, computationsProp)(DashboardHome);
 
-export default connect(mapStateToProps)(DashHomeWithData);
+export default connect(mapStateToProps, { initTestData })(DashHomeWithData);

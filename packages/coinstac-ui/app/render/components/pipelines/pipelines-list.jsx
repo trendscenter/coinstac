@@ -25,16 +25,14 @@ const PipelinesList = ({ auth: { user }, pipelines }) => (
       </LinkContainer>
     </div>
     {pipelines && pipelines.map(pipeline => (
-      <div>
-        <ListItem
-          key={`${pipeline.name}-list-item`}
-          itemObject={pipeline}
-          deleteItem={() => { return null; }}
-          owner={false}
-          itemOptions={[]}
-          itemRoute={'/dashboard/pipelines'}
-        />
-      </div>
+      <ListItem
+        key={`${pipeline.name}-list-item`}
+        itemObject={pipeline}
+        deleteItem={() => { return null; }}
+        owner={false}
+        itemOptions={[]}
+        itemRoute={'/dashboard/pipelines'}
+      />
     ))}
     {!pipelines &&
       <Alert bsStyle="info">

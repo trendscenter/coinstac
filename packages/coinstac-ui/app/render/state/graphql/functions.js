@@ -54,6 +54,11 @@ export const fetchComputationDetailsFunc = gql`
     ${queries.fetchComputationDetails}
 `;
 
+export const FETCH_PIPELINE_QUERY = gql`
+  query fetchPipeline ($pipelineId: ID)
+    ${queries.fetchPipeline}
+`;
+
 export const removeAllComputationsFunc = gql`
   mutation RemoveAllComputationsMutation {
     removeAllComputations
