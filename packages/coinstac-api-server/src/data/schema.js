@@ -64,15 +64,29 @@ const typeDefs = `
     ${sharedFields.pipelineControllerFields}
   }
 
-  type Pipeline {
+  type PipelineStep {
     id: ID!
     controller: PipelineController
+    computations: [Computation]
+    ${sharedFields.pipelineStepFields} 
+  }
+
+  input PipelineStepInput {
+    id: ID
+    controller: PipelineControllerInput
+    computations: [ID]
+    ${sharedFields.pipelineStepFields} 
+  }
+
+  type Pipeline {
+    id: ID!
+    steps: [PipelineStep]
     ${sharedFields.pipelineFields}
   }
 
   input PipelineInput {
     id: ID
-    controller: PipelineControllerInput
+    steps: [PipelineStepInput]
     ${sharedFields.pipelineFields}
   }
 

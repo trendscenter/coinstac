@@ -6,6 +6,7 @@ import HTML5Backend from 'react-dnd-html5-backend';
 import PropTypes from 'prop-types';
 import { graphql } from 'react-apollo';
 import shortid from 'shortid';
+import { isEqual } from 'lodash';
 import update from 'immutability-helper';
 import {
   Accordion,
@@ -61,7 +62,7 @@ class Pipeline extends Component {
       pipeline ={
         name: "",
         description: "",
-        owningConsortia: "",
+        owningConsortium: "",
         steps: [],
       }
     }
@@ -71,14 +72,14 @@ class Pipeline extends Component {
       const data = ApolloClient.readQuery({ query: fetchAllConsortiaFunc });
       consortium = data.fetchAllConsortia.find(cons => cons.id === props.params.consortiumId);
       delete consortium.__typename;
-      pipeline.owningConsortia = consortium.id;
+      pipeline.owningConsortium = consortium.id;
     }
 
     this.state = {
       owner: !props.params.consortiumId || consortium.owners.indexOf(props.auth.user.id) !== -1,
       pipeline: pipeline,
-      currentTitle: pipeline.name,
       consortium: consortium,
+      startingPipeline: pipeline,
     };
 
     this.addStep = this.addStep.bind(this);
@@ -88,6 +89,8 @@ class Pipeline extends Component {
     this.updatePipeline = this.updatePipeline.bind(this);
     this.open = this.open.bind(this);
     this.close = this.close.bind(this);
+    this.savePipeline = this.savePipeline.bind(this);
+    this.checkPipeline = this.checkPipeline.bind(this);
   }
 
   addStep(computation) {
@@ -209,10 +212,23 @@ class Pipeline extends Component {
 
   componentWillReceiveProps(nextProps) {
     if (!this.state.consortium && nextProps.consortia) {
-      this.setState(prevState => ({
-        consortium: nextProps.consortia[0],
-        pipeline: { ...prevState.pipeline, owningConsortia: nextProps.consortia[0].id },
-      }));
+      if(nextProps.consortia.length){
+        let consortiumId = this.state.pipeline.owningConsortium;
+        let consortium = nextProps.consortia[0];
+        if(!consortiumId.length){
+          consortiumId = nextProps.consortia[0].id;
+        }
+        else{
+          const data = ApolloClient.readQuery({ query: fetchAllConsortiaFunc });
+          consortium = data.fetchAllConsortia.find(cons => cons.id === consortiumId);
+          delete consortium.__typename;
+        }
+        this.setState(prevState => ({
+          consortium: consortium,
+          pipeline: { ...prevState.pipeline, owningConsortium: consortiumId},
+          startingPipeline: { ...prevState.pipeline, owningConsortium: consortiumId},
+        }));
+      }
     }
   }
 
@@ -240,17 +256,55 @@ class Pipeline extends Component {
   }
 
   updatePipeline(update) {
-    if(update.param == 'owningConsortia')
-      this.setState({ consortium: { id: update.value, name: update.corsortiaName }});
+    if(update.param == 'owningConsortium')
+      this.setState({ consortium: { id: update.value, name: update.consortiumName }});
     this.setState(prevState => ({
       pipeline: { ...prevState.pipeline, [update.param]: update.value },
     }));
   }
 
+  checkPipeline(){
+    return isEqual(this.state.startingPipeline, this.state.pipeline);
+  }
+
+  savePipeline(e) {
+    e.preventDefault();
+
+    this.props.savePipeline({
+      ...this.state.pipeline,
+      steps: this.state.pipeline.steps.map(step =>
+        ({
+          id: step.id,
+          computations: step.computations.map(comp => comp.id),
+          ioMap: step.ioMap,
+          controller: {type: step.controller.type, options: step.controller.options},
+        })
+      )
+    })
+    .then((res) => {
+      let pipeline = {
+        id: res.data.savePipeline.id,
+        name: res.data.savePipeline.name,
+        description: res.data.savePipeline.description,
+        owningConsortium: res.data.savePipeline.owningConsortium,
+        steps: res.data.savePipeline.steps,
+      }
+      this.setState({
+        pipeline: pipeline,
+        startingPipeline: pipeline,
+      });
+      this.setState({ })
+      // TODO: Use redux to display success/failure messages after mutations
+    })
+    .catch(( error ) => {
+      console.log(error);
+    });
+  }
+
   render() {
     const { computations, connectDropTarget, consortia, savePipeline } = this.props;
-    const { consortium, pipeline, currentTitle } = this.state;
-    const title = currentTitle != "" ? "Pipeline Edit" : 'Pipeline Creation';
+    const { consortium, pipeline } = this.state;
+    const title = pipeline.id ? "Pipeline Edit" : 'Pipeline Creation';
 
     return connectDropTarget(
       <div>
@@ -278,7 +332,7 @@ class Pipeline extends Component {
 
           <Row>
             <Col sm={12}>
-              <ControlLabel>Owning Consortia</ControlLabel>
+              <ControlLabel>Owning Consortium</ControlLabel>
             </Col>
           </Row>
 
@@ -289,16 +343,18 @@ class Pipeline extends Component {
                 bsStyle="info" 
                 title={consortium ? consortium.name : "Consortia"} 
                 id="pipelineconsortia" 
-                onSelect={(value, e) => this.updatePipeline({ param: 'owningConsortia', value: value, corsortiaName: e.target.innerHTML })}>
+                onSelect={(value, e) => this.updatePipeline({ param: 'owningConsortium', value: value, consortiumName: e.target.innerHTML })}>
 
-                {consortia.map(con => (
+                {consortia.map(con => {
+                  return con.owners.includes(this.props.auth.user.id) ?
                   <MenuItem 
                     eventKey={con.id}
                     key={con.id}
                   >
                     {con.name}
                   </MenuItem>
-                ))}
+                  : 0
+                }).filter(con => {return con}) }
               </SplitButton>}
             </Col>
           </Row>
@@ -309,7 +365,10 @@ class Pipeline extends Component {
                 key="save-pipeline-button"
                 bsStyle="success"
                 className="pull-right"
-                onClick={() => savePipeline(pipeline)}>
+                disabled={!this.state.pipeline.name.length || 
+                  !this.state.pipeline.description.length || 
+                  !consortium || this.checkPipeline()}
+                onClick={this.savePipeline}>
                 Save Pipeline
               </Button>
             </Col>

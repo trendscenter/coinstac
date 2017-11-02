@@ -83,9 +83,9 @@ class ConsortiumTabs extends Component {
   }
 
   render() {
-    const title = this.state.consortium.name
-      ? this.state.consortium.name
-      : 'New Consortium';
+    const title = this.state.consortium.id
+      ? 'Consortium Edit'
+      : 'Consortium Creation';
 
     return (
       <div>

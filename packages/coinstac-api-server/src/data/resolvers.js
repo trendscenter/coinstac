@@ -40,11 +40,27 @@ const resolvers = {
      * Returns all pipelines. Checks user permissions retrieved from JWT middleware validateFunc.
      */
     fetchAllPipelines: ({ auth: { credentials: { permissions } } }, _) => {
-      if (!permissions.pipelines.read) {
-        return Boom.forbidden('Action not permitted');
-      }
-
-      return fetchAll('pipelines');
+      
+      return helperFunctions.getRethinkConnection()
+        .then(connection =>
+          rethink.table('pipelines')
+            .map(pipeline =>
+              pipeline.merge(pipeline =>
+                ({
+                  steps: pipeline('steps').map(step =>
+                    step.merge({
+                      computations: step('computations').map(compId =>
+                        rethink.table('computations').get(compId)
+                      )
+                    })
+                  )
+                })
+              )
+            )
+            .run(connection)
+        )
+        .then(cursor => cursor.toArray())
+        .then(result => result);
     },
     /**
      * Returns metadata for specific computation name
@@ -154,7 +170,7 @@ const resolvers = {
 
     savePipeline: ({ auth: { credentials } }, args) => {
       const { permissions } = credentials;
-      /*
+      /* TODO: Add permissions
       if (!permissions.consortia.write
           && args.consortium.id
           && !permissions.consortia[args.consortium.id].write) {
@@ -170,10 +186,23 @@ const resolvers = {
             }
           )
           .run(connection)
-        )
-        .then((result) => {
-          return result.changes[0].new_val;
-        })
+          .then((result) => rethink.table('pipelines')
+            .get(result.changes[0].new_val.id)
+            // Populate computations subfield with computation meta information
+            .merge(pipeline =>
+              ({
+                steps: pipeline('steps').map(step =>
+                  step.merge({
+                    computations: step('computations').map(compId =>
+                      rethink.table('computations').get(compId)
+                    )
+                  })
+                )
+              })
+            )
+            .run(connection)
+        ))
+        .then(result => result)
 
     },
     removeComputation: (_, args) => {
