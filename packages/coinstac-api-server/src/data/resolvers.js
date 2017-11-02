@@ -44,7 +44,47 @@ const resolvers = {
         return Boom.forbidden('Action not permitted');
       }
 
-      return fetchAll('pipelines');
+      return helperFunctions.getRethinkConnection()
+        .then(connection =>
+          rethink.table('pipelines')
+            .map(pipeline =>
+              pipeline.merge(pipeline =>
+                ({
+                  steps: pipeline('steps').map(step =>
+                    step.merge({
+                      computations: step('computations').map(compId =>
+                        rethink.table('computations').get(compId)
+                      )
+                    })
+                  )
+                })
+              )
+            )
+            .run(connection)
+        )
+        .then(cursor => cursor.toArray())
+        .then(result => result);
+    },
+    fetchPipeline: ({ auth }, args) => {
+      return helperFunctions.getRethinkConnection()
+        .then(connection =>
+          rethink.table('pipelines')
+            .get('test-pipeline')
+            // Populate computations subfield with computation meta information
+            .merge(pipeline =>
+              ({
+                steps: pipeline('steps').map(step =>
+                  step.merge({
+                    computations: step('computations').map(compId =>
+                      rethink.table('computations').get(compId)
+                    )
+                  })
+                )
+              })
+            )
+            .run(connection)
+        )
+        .then(result => result);
     },
     /**
      * Returns metadata for specific computation name

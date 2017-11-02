@@ -18,8 +18,10 @@ helperFunctions.getRethinkConnection()
   .then(() => rethink.tableCreate('computations').run(connection))
   .then(() => rethink.table('computations').insert([singleShot, multiShot], { returnChanges: true }).run(connection))
   .then(compInsertResult => rethink.table('pipelines').insert({
+    id: 'test-pipeline',
     name: 'Test Pipeline',
     description: 'Test description',
+    owningConsortium: 'test-cons-2',
     steps: [
       {
         computations: [
@@ -75,13 +77,15 @@ helperFunctions.getRethinkConnection()
   .then(() => rethink.tableCreate('consortia').run(connection))
   .then(() => rethink.table('consortia').insert({
     id: 'test-cons-1',
+    activePipelineId: 'test-pipeline',
     name: 'Test Consortia 1',
     description: 'This consortia is for testing.',
     owners: ['author'],
-    users: ['author'],
+    users: ['author', 'test'],
   }).run(connection))
   .then(() => rethink.table('consortia').insert({
     id: 'test-cons-2',
+    activePipelineId: 'test-pipeline',
     name: 'Test Consortia 2',
     description: 'This consortia is for testing too.',
     owners: ['test'],
@@ -92,6 +96,7 @@ helperFunctions.getRethinkConnection()
 .then(() => {
   let passwordHash = helperFunctions.hashPassword('password');
   return helperFunctions.createUser({
+    id: 'test',
     username: 'test',
     institution: 'mrn',
     email: 'test@mrn.org',
@@ -115,6 +120,7 @@ helperFunctions.getRethinkConnection()
   .then(() => {
     passwordHash = helperFunctions.hashPassword('password');
     return helperFunctions.createUser({
+      id: 'author',
       username: 'author',
       institution: 'mrn',
       email: 'server@mrn.org',

@@ -87,19 +87,7 @@ class PipelineStep extends Component {
           style={{ ...styles.draggable, opacity: isDragging ? 0 : 1 }}
           {...other}
         >
-          <h4>Step Options:</h4>
-          <FormGroup controlId={`${id}-iterations`}>
-            <ControlLabel>Iterations</ControlLabel>
-            <FormControl
-              disabled={!owner}
-              inputRef={(input) => { this.iterations = input; }}
-              onChange={() => updateStep({ ...step, iterations: this.iterations.value })}
-              type="number"
-              value={controller.options.iterations}
-            />
-          </FormGroup>
-          <hr />
-          <h4>Input Mappings:</h4>
+          <h4>Input Parameters:</h4>
           {compIO !== null && Object.entries(compIO.computation.input).map(localInput => (
             <PipelineStepInput
               isCovariate={localInput[0] === 'covariates'}

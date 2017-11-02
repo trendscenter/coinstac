@@ -1,4 +1,5 @@
 {
+  "id": "multi-shot-test-id",
   "meta": {
     "repository": "https://github.com/MRN-Code/decentralized-laplacian-ridge-regression",
     "description": "Iterative decentralized ridge regression.",
