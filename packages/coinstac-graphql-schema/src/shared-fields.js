@@ -19,13 +19,24 @@ const sharedFields = {
   `,
   pipelineFields: `
     id
-    name
     description
-    owningConsortia
-    steps
-    controller {
-      options
+    name
+    owningConsortium
+    steps {
       id
+      computations {
+        id
+        meta {
+          name
+          description
+          version
+        }
+      }
+      controller {
+        id
+        options
+      }
+      ioMap
     }
   `,
 };

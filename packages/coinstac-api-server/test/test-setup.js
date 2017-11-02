@@ -20,6 +20,7 @@ helperFunctions.getRethinkConnection()
   .then(compInsertResult => rethink.table('pipelines').insert({
     name: 'Test Pipeline',
     description: 'Test description',
+    owningConsortium: 'test-cons-1',
     steps: [
       {
         computations: [

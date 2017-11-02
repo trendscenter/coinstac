@@ -30,12 +30,15 @@ const computationFields = {
   pipelineFields: `
     name: String
     description: String
-    owningConsortia: String
-    steps: [JSON]
+    owningConsortium: ID
   `,
   pipelineControllerFields: `
     id: ID
     options: JSON
+    type: String
+  `,
+  pipelineStepFields: `
+    ioMap: JSON 
   `,
 };
 
