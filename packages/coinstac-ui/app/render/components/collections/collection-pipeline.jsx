@@ -7,7 +7,7 @@ import {
 import CollectionPipelineInput from './collection-pipeline-input';
 import { FETCH_PIPELINE_QUERY } from '../../state/graphql/functions';
 
-const CollectionPipeline = ({ activePipeline, collectionFiles }) => (
+const CollectionPipeline = ({ activePipeline, collectionFiles, updateConsortiumCovars }) => (
   <div>
     {activePipeline &&
       <div>
@@ -23,6 +23,7 @@ const CollectionPipeline = ({ activePipeline, collectionFiles }) => (
                 key={`${input[0]}-collection-input`}
                 objKey={input[0]}
                 objValue={input[1]}
+                updateConsortiumCovars={updateConsortiumCovars}
               />
             ))}
           </Panel>
@@ -40,6 +41,7 @@ CollectionPipeline.defaultProps = {
 CollectionPipeline.propTypes = {
   activePipeline: PropTypes.object,
   collectionFiles: PropTypes.array,
+  updateConsortiumCovars: PropTypes.func.isRequired,
 };
 
 const CollectionPipelineWithData = graphql(FETCH_PIPELINE_QUERY, {
