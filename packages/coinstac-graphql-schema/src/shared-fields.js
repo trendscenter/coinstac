@@ -17,7 +17,11 @@ const sharedFields = {
     owners
     users
   `,
-  pipelineOutputFields: `
+  pipelineFields: `
+    id
+    description
+    name
+    owningConsortium
     steps {
       id
       computations {
@@ -34,23 +38,6 @@ const sharedFields = {
       }
       ioMap
     }
-  `,
-  pipelineInputFields: `
-    steps {
-      id
-      computations
-      controller {
-        id
-        options
-      }
-      ioMap
-    }
-  `,
-  pipelineFields: `
-    id
-    description
-    name
-    owningConsortium
   `,
 };
 

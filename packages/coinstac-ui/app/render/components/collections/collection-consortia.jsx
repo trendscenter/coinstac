@@ -9,6 +9,7 @@ import {
 } from 'react-bootstrap';
 import { graphql } from 'react-apollo';
 import PropTypes from 'prop-types';
+import update from 'immutability-helper';
 import {
   fetchAllConsortiaFunc,
 } from '../../state/graphql/functions';
@@ -24,25 +25,29 @@ class CollectionConsortia extends Component {
     };
 
     this.setActivePipeline = this.setActivePipeline.bind(this);
-    this.updateCollectionConsortia = this.updateCollectionConsortia.bind(this);
+    this.updateConsortiumCovars = this.updateConsortiumCovars.bind(this);
   }
 
   setActivePipeline(consId) {
     const consortium = this.props.consortia.find(c => consId === c.id);
-    this.setState({ activeConsortium: consortium });
+    this.setState({ activeConsortium: consortium }, console.log(consortium));
   }
 
-  updateCollectionConsortia(pipelineStepIndex, value) {
+  updateConsortiumCovars(pipelineStepIndex, covariateIndex, covarArray) {
     const { collection, updateCollection } = this.props;
     const assocIndex =
       collection.associatedConsortia.findIndex(c => c.id === this.state.activeConsortium.id);
     const newAssocCons = [...collection.associatedConsortia];
+    // const stepCovariates = [...this.state.activeConsortium.pipelineIO.steps[pipelineStepIndex]];
+    // stepCovariates.splice(covariateIndex, 1, value);
 
     this.setState(prevState => ({
       activeConsortium: {
         ...prevState.activeConsortium,
         pipelineIO: {
-          covariates: {},
+          steps: update(prevState.pipelineIO.steps, {
+            $splice: [[pipelineStepIndex, 1, [...covarArray]]],
+          }),
         },
       },
     }), (() => {
@@ -118,6 +123,7 @@ class CollectionConsortia extends Component {
             <CollectionPipeline
               collectionFiles={collection.files}
               pipelineId={this.state.activeConsortium.activePipelineId}
+              updateConsortiumCovars={this.updateConsortiumCovars}
             />
           }
           <Button
