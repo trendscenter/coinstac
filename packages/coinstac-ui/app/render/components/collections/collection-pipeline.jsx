@@ -7,22 +7,30 @@ import {
 import CollectionPipelineInput from './collection-pipeline-input';
 import { FETCH_PIPELINE_QUERY } from '../../state/graphql/functions';
 
-const CollectionPipeline = ({ activePipeline, collectionFiles, updateConsortiumCovars }) => (
+const CollectionPipeline = ({
+  activePipeline,
+  collection,
+  consortiumId,
+  consortiumName,
+  updateConsortiumCovars,
+}) => (
   <div>
     {activePipeline &&
       <div>
-        <h3>{activePipeline.name}</h3>
-        {activePipeline.steps.map(step => (
+        <h3>{consortiumName}: {activePipeline.name}</h3>
+        {activePipeline.steps.map((step, stepIndex) => (
           <Panel
             header={<h3>{step.computations[0].meta.name}</h3>}
             key={step.id}
           >
             {Object.entries(step.ioMap).map(input => (
               <CollectionPipelineInput
-                collectionFiles={collectionFiles}
+                collection={collection}
+                consortiumId={consortiumId}
                 key={`${input[0]}-collection-input`}
                 objKey={input[0]}
                 objValue={input[1]}
+                stepIndex={stepIndex}
                 updateConsortiumCovars={updateConsortiumCovars}
               />
             ))}
@@ -35,12 +43,13 @@ const CollectionPipeline = ({ activePipeline, collectionFiles, updateConsortiumC
 
 CollectionPipeline.defaultProps = {
   activePipeline: null,
-  collectionFiles: [],
 };
 
 CollectionPipeline.propTypes = {
   activePipeline: PropTypes.object,
-  collectionFiles: PropTypes.array,
+  collection: PropTypes.object.isRequired,
+  consortiumId: PropTypes.string.isRequired,
+  consortiumName: PropTypes.string.isRequired,
   updateConsortiumCovars: PropTypes.func.isRequired,
 };
 
