@@ -5,10 +5,5 @@
   "studyName": "A Study of Studies",
   "studyDescription": "Meta study of studies",
   "files": [],
-  "associatedConsortia": [
-    {
-      "id": "test-cons-1",
-      "runs": 20
-    }
-  ]
+  "associatedConsortia": []
 }

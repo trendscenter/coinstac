@@ -1,20 +1,34 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import update from 'immutability-helper';
-import { saveCollection } from '../../state/ducks/collections';
 
 class CollectionPipelineInput extends Component {
   constructor(props) {
     super(props);
 
+    const consIndex = props.collection.associatedConsortia
+      .findIndex(cons => cons.id === props.consortiumId);
+
     if (props.objKey === 'covariates') {
-      this.state = {
-        sources: Array(props.objValue.length)
+      const sources = Array(props.objValue.length)
           .fill({
             filePath: '',
             column: '',
             fileIndex: -1,
-          }),
+          });
+
+      // Populate state with existing mappings if they exist
+      if (consIndex > -1 && // Is an associated consortia
+          props.collection.associatedConsortia[consIndex].stepIO[props.stepIndex] &&
+          props.collection.associatedConsortia[consIndex].stepIO[props.stepIndex].length) {
+        props.collection.associatedConsortia[consIndex]
+          .stepIO[props.stepIndex].forEach((step, sIndex) => {
+            sources[sIndex] = { ...step };
+          });
+      }
+
+      this.state = {
+        sources,
       };
     }
 
@@ -23,7 +37,7 @@ class CollectionPipelineInput extends Component {
   }
 
   setSourceColumn(covarIndex) {
-    const { updateConsortiumCovars } = this.props;
+    const { stepIndex, updateConsortiumCovars } = this.props;
     return ({ target: { value } }) => {
       this.setState(prevState =>
         ({
@@ -33,16 +47,19 @@ class CollectionPipelineInput extends Component {
               column: value,
             }]],
           }),
-        }), () => {
-          // updateConsortiumCovars(...);
-      });
+        }),
+        () => {
+          updateConsortiumCovars(stepIndex, covarIndex, this.state.sources);
+        }
+      );
     };
   }
 
   setSourceFile(covarIndex) {
+    const { collection, objValue, stepIndex, updateConsortiumCovars } = this.props;
     // Closure to get event and index var
     return ({ target: { value } }) => {
-      const fileIndex = this.props.collectionFiles.findIndex(file => file.metaFilePath === value);
+      const fileIndex = collection.files.findIndex(file => file.metaFilePath === value);
       this.setState(prevState =>
         ({
           sources: update(prevState.sources, {
@@ -52,13 +69,31 @@ class CollectionPipelineInput extends Component {
               column: '',
             }]],
           }),
-        })
+        }),
+        () => {
+          // Automap if columns exist matching preset names
+          if (collection
+              .files[fileIndex]
+              .metaFile[0].indexOf(objValue[covarIndex].name) > -1) {
+            this.setState(prevState =>
+              ({
+                sources: update(prevState.sources, {
+                  $splice: [[covarIndex, 1, {
+                    ...prevState.sources[covarIndex],
+                    column: objValue[covarIndex].name,
+                  }]],
+                }),
+              })
+            );
+            updateConsortiumCovars(stepIndex, covarIndex, this.state.sources);
+          }
+        }
       );
     };
   }
 
   render() {
-    const { collectionFiles, objKey, objValue } = this.props;
+    const { collection, objKey, objValue } = this.props;
 
     return (
       <div>
@@ -79,7 +114,7 @@ class CollectionPipelineInput extends Component {
                           onChange={this.setSourceFile(covarIndex)}
                         >
                           <option disabled value="">Select a File</option>
-                          {collectionFiles.map(file =>
+                          {collection.files.map(file =>
                             (
                               <option
                                 key={file.metaFilePath}
@@ -103,7 +138,7 @@ class CollectionPipelineInput extends Component {
                       onChange={this.setSourceColumn(covarIndex)}
                     >
                       <option disabled value="">Select a Column</option>
-                      {collectionFiles[parseInt(this.state.sources[covarIndex].fileIndex, 10)]
+                      {collection.files[parseInt(this.state.sources[covarIndex].fileIndex, 10)]
                         .metaFile[0].map(col =>
                         (
                           <option
@@ -133,7 +168,8 @@ class CollectionPipelineInput extends Component {
 }
 
 CollectionPipelineInput.propTypes = {
-  collectionFiles: PropTypes.array,
+  collection: PropTypes.object.isRequired,
+  consortiumId: PropTypes.string.isRequired,
   objKey: PropTypes.string.isRequired,
   objValue: PropTypes.oneOfType([
     PropTypes.string,
@@ -141,11 +177,8 @@ CollectionPipelineInput.propTypes = {
     PropTypes.object,
     PropTypes.array,
   ]).isRequired,
+  stepIndex: PropTypes.number.isRequired,
   updateConsortiumCovars: PropTypes.func.isRequired,
-};
-
-CollectionPipelineInput.defaultProps = {
-  collectionFiles: [],
 };
 
 export default CollectionPipelineInput;

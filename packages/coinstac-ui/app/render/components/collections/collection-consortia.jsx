@@ -7,6 +7,7 @@ import {
   Panel,
   Button,
 } from 'react-bootstrap';
+import { LinkContainer } from 'react-router-bootstrap';
 import { graphql } from 'react-apollo';
 import PropTypes from 'prop-types';
 import update from 'immutability-helper';
@@ -21,7 +22,7 @@ class CollectionConsortia extends Component {
     super(props);
 
     this.state = {
-      activeConsortium: {},
+      activeConsortium: { stepIO: [], runs: 0 },
     };
 
     this.setActivePipeline = this.setActivePipeline.bind(this);
@@ -29,8 +30,26 @@ class CollectionConsortia extends Component {
   }
 
   setActivePipeline(consId) {
-    const consortium = this.props.consortia.find(c => consId === c.id);
-    this.setState({ activeConsortium: consortium }, console.log(consortium));
+    let consortium = {};
+    const consIndex = this.props.collection.associatedConsortia
+      .findIndex(cons => cons.id === consId);
+
+    if (consIndex === -1) {
+      consortium = {
+        ...this.props.consortia.find(c => consId === c.id),
+        stepIO: [],
+        runs: 0,
+      };
+    } else {
+      consortium = { ...this.props.collection.associatedConsortia[consIndex] };
+    }
+
+    this.setState({
+      activeConsortium: {
+        ...consortium,
+        stepIO: [...consortium.stepIO],
+      },
+    });
   }
 
   updateConsortiumCovars(pipelineStepIndex, covariateIndex, covarArray) {
@@ -38,17 +57,13 @@ class CollectionConsortia extends Component {
     const assocIndex =
       collection.associatedConsortia.findIndex(c => c.id === this.state.activeConsortium.id);
     const newAssocCons = [...collection.associatedConsortia];
-    // const stepCovariates = [...this.state.activeConsortium.pipelineIO.steps[pipelineStepIndex]];
-    // stepCovariates.splice(covariateIndex, 1, value);
 
     this.setState(prevState => ({
       activeConsortium: {
         ...prevState.activeConsortium,
-        pipelineIO: {
-          steps: update(prevState.pipelineIO.steps, {
-            $splice: [[pipelineStepIndex, 1, [...covarArray]]],
-          }),
-        },
+        stepIO: update(prevState.activeConsortium.stepIO, {
+          $splice: [[pipelineStepIndex, 1, [...covarArray]]],
+        }),
       },
     }), (() => {
       if (assocIndex > -1) {
@@ -75,7 +90,10 @@ class CollectionConsortia extends Component {
     return (
       <div>
         <Form onSubmit={saveCollection}>
-          {consortia.length && <h3>Associated Consortia</h3>}
+          {consortia.length > 0 &&
+            collection.associatedConsortia.length > 0 &&
+            <h3>Associated Consortia</h3>
+          }
           {consortia.length && consortia.map((cons) => {
             const associatedIndex = collection.associatedConsortia.findIndex(c => c.id === cons.id);
             if (associatedIndex > -1) {
@@ -83,6 +101,22 @@ class CollectionConsortia extends Component {
                 <Panel key={`${cons.id}-list-item`}>
                   <h4>{cons.name}</h4>
                   <p>Runs: {collection.associatedConsortia[associatedIndex].runs}</p>
+                  <LinkContainer className="pull-right" to={`/dashboard/consortia/${cons.id}`}>
+                    <Button
+                      bsStyle="info"
+                      type="submit"
+                      className="pull-right"
+                    >
+                      View Consortium
+                    </Button>
+                  </LinkContainer>
+                  <Button
+                    bsStyle="primary"
+                    type="submit"
+                    onClick={() => this.setActivePipeline(cons.id)}
+                  >
+                    View File Mappings
+                  </Button>
                 </Panel>
               );
             }
@@ -92,7 +126,7 @@ class CollectionConsortia extends Component {
           <DropdownButton
             bsStyle="info"
             id="member-consortia-dropdown"
-            title={this.state.activeConsortium.name || 'Select Consortia'}
+            title="Select Consortia"
           >
             {consortia.map((cons) => {
               if ((cons.users.indexOf(user.id) > -1 || cons.owners.indexOf(user.id) > -1) &&
@@ -121,7 +155,10 @@ class CollectionConsortia extends Component {
           </DropdownButton>
           {this.state.activeConsortium.name &&
             <CollectionPipeline
-              collectionFiles={collection.files}
+              key={`${this.state.activeConsortium.id}-pipeline`}
+              collection={collection}
+              consortiumName={this.state.activeConsortium.name}
+              consortiumId={this.state.activeConsortium.id}
               pipelineId={this.state.activeConsortium.activePipelineId}
               updateConsortiumCovars={this.updateConsortiumCovars}
             />
