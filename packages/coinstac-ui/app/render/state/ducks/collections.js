@@ -1,6 +1,6 @@
 import { applyAsyncLoading } from './loading';
 import localDB from '../local-db';
-import testData from '../../../../test/data/test-collection';
+import testData from '../../../../test/data/test-collection.json';
 
 // Actions
 const INIT_TEST_COLLECTION = 'INIT_TEST_COLLECTION';
@@ -29,7 +29,6 @@ export const initTestData = (() =>
         payload: null,
       }));
     })
-    .catch(console.log)
 );
 
 export const saveCollection = applyAsyncLoading(collection =>

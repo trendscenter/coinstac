@@ -23,39 +23,6 @@ class DashboardHome extends Component {
     this.props.initTestData();
   }
 
-/*
-  componentWillMount() {
-    const {
-      // fetchRemoteResultsForUser,
-      username,
-    } = this.props;
-
-    this.interval = setInterval(() => fetchRemoteResultsForUser(username), 2000);
-  }
-*/
-
-/*
-  componentWillUpdate() {
-    const {
-      computations,
-      consortia,
-      fetchRemoteResultsForUser,
-      username,
-    } = this.props;
-
-    if (
-      !this.state.didInitResults &&
-      computations.length &&
-      consortia.length &&
-      username
-    ) {
-      this.setState({ didInitResults: true }, () => { // eslint-disable-line
-        fetchRemoteResultsForUser(username);
-      });
-    }
-  }
-  */
-
   componentWillUnmount() {
     if (this.interval) {
       clearInterval(this.interval);

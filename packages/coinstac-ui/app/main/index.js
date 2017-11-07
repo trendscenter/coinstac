@@ -80,7 +80,7 @@ loadConfig()
   });
 
   // TODO: Assumption is CSV meta file. Need to change.
-  ipcPromise.on('add-files', org => {
+  ipcPromise.on('add-files', () => {
     return app.main.services.files.getMetaFile()
       .then(metaFilePath => Promise.all([
         metaFilePath,
