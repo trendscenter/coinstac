@@ -83,9 +83,11 @@ class CollectionPipelineInput extends Component {
                     column: objValue[covarIndex].name,
                   }]],
                 }),
-              })
+              }),
+              () => {
+                updateConsortiumCovars(stepIndex, covarIndex, this.state.sources);
+              }
             );
-            updateConsortiumCovars(stepIndex, covarIndex, this.state.sources);
           }
         }
       );

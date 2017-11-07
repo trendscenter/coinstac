@@ -20,10 +20,12 @@ const INITIAL_STATE = {
 const SET_USER = 'SET_USER';
 const CLEAR_USER = 'CLEAR_USER';
 const CLEAR_ERROR = 'CLEAR_ERROR';
+const UPDATE_USER_PERMS = 'UPDATE_USER_PERMS';
 
 // Action Creators
 const setUser = user => ({ type: SET_USER, payload: user });
 export const clearError = () => ({ type: CLEAR_ERROR, payload: null });
+export const updateUserPerms = perms => ({ type: UPDATE_USER_PERMS, payload: perms });
 export const clearUser = () => ({ type: CLEAR_USER, payload: null });
 
 // Helpers
@@ -59,8 +61,9 @@ export const autoLogin = applyAsyncLoading(() =>
       null,
       { headers: { Authorization: `Bearer ${token}` } }
     )
+    // TODO: GET RID OF CORE INIT
     .then(({ data }) => setTokenAndInitialize(
-      { username: data.user.id, saveLogin, password: 'GET_RID_OF_CORE_INIT_AT_LOGIN' },
+      { username: data.user.id, saveLogin, password: 'password' },
       data,
       dispatch
     ))
@@ -132,6 +135,8 @@ export default function reducer(state = INITIAL_STATE, action) {
       return { user: state.user };
     case SET_USER:
       return { ...action.payload };
+    case UPDATE_USER_PERMS:
+      return { user: { ...state.user, permissions: action.payload } };
     default:
       return state;
   }

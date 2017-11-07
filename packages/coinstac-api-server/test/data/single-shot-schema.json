@@ -28,7 +28,6 @@
         ],
         "help": "Select Freesurfer region(s) of interest",
         "label": "Freesurfer ROI",
-        "type": "select",
         "items": "string",
         "values": [
               "3rd-Ventricle",

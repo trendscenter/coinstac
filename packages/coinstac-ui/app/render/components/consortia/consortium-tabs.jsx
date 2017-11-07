@@ -2,12 +2,18 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { Tab, Tabs } from 'react-bootstrap';
-import { graphql } from 'react-apollo';
+import { graphql, compose } from 'react-apollo';
 import ConsortiumAbout from './consortium-about';
 import ConsortiumPipeline from './consortium-pipeline';
 import ConsortiumResults from './consortium-results';
 import ApolloClient from '../../state/apollo-client';
-import { fetchAllConsortiaFunc, saveConsortiumFunc } from '../../state/graphql/functions';
+import { updateUserPerms } from '../../state/ducks/auth';
+import { userRolesProp } from '../../state/graphql/props';
+import {
+  ADD_USER_ROLE_MUTATION,
+  FETCH_ALL_CONSORTIA_QUERY,
+  SAVE_CONSORTIUM_MUTATION,
+} from '../../state/graphql/functions';
 
 const styles = {
   tab: {
@@ -22,15 +28,15 @@ class ConsortiumTabs extends Component {
     let consortium = {
       name: '',
       description: '',
-      users: [],
+      members: [],
       owners: [],
-      activeComputationId: '',
+      activePipelineId: '',
       activeComputationInputs: [],
       tags: [],
     };
 
     if (props.params.consortiumId) {
-      const data = ApolloClient.readQuery({ query: fetchAllConsortiaFunc });
+      const data = ApolloClient.readQuery({ query: FETCH_ALL_CONSORTIA_QUERY });
       consortium = data.fetchAllConsortia.find(cons => cons.id === props.params.consortiumId);
       delete consortium.__typename;
     }
@@ -53,17 +59,19 @@ class ConsortiumTabs extends Component {
     }
 
     this.props.saveConsortium(this.state.consortium)
-    .then((res) => {
-      // TODO: hook activeComputationId and Inputs
+    .then(({ data: { saveConsortium } }) => {
+      this.props.addUserRole(this.props.auth.user.id, 'consortia', saveConsortium.id, 'owner');
+
+      // TODO: hook activePipelineId and Inputs
       this.setState({
         consortium:
         {
-          id: res.data.saveConsortium.id,
-          name: res.data.saveConsortium.name,
-          description: res.data.saveConsortium.description,
-          users: res.data.saveConsortium.users,
-          owners: res.data.saveConsortium.owners,
-          activeComputationId: null,
+          id: saveConsortium.id,
+          name: saveConsortium.name,
+          description: saveConsortium.description,
+          members: saveConsortium.members,
+          owners: saveConsortium.owners,
+          activePipelineId: null,
           activeComputationInputs: null,
           tags: null,
 
@@ -129,6 +137,7 @@ class ConsortiumTabs extends Component {
 }
 
 ConsortiumTabs.propTypes = {
+  addUserRole: PropTypes.func.isRequired,
   auth: PropTypes.object.isRequired,
   params: PropTypes.object.isRequired,
   saveConsortium: PropTypes.func.isRequired,
@@ -138,22 +147,25 @@ function mapStateToProps({ auth }) {
   return { auth };
 }
 
-const ConsortiumTabsWithData = graphql(saveConsortiumFunc, {
-  props: ({ mutate }) => ({
-    saveConsortium: consortium => mutate({
-      variables: { consortium },
-      update: (store, { data: { saveConsortium } }) => {
-        const data = store.readQuery({ query: fetchAllConsortiaFunc });
-        const index = data.fetchAllConsortia.findIndex(cons => cons.id === saveConsortium.id);
-        if (index > -1) {
-          data.fetchAllConsortia[index] = { ...saveConsortium };
-        } else {
-          data.fetchAllConsortia.push(saveConsortium);
-        }
-        store.writeQuery({ query: fetchAllConsortiaFunc, data });
-      },
+const ConsortiumTabsWithData = compose(
+  graphql(ADD_USER_ROLE_MUTATION, userRolesProp('addUserRole')),
+  graphql(SAVE_CONSORTIUM_MUTATION, {
+    props: ({ mutate }) => ({
+      saveConsortium: consortium => mutate({
+        variables: { consortium },
+        update: (store, { data: { saveConsortium } }) => {
+          const data = store.readQuery({ query: FETCH_ALL_CONSORTIA_QUERY });
+          const index = data.fetchAllConsortia.findIndex(cons => cons.id === saveConsortium.id);
+          if (index > -1) {
+            data.fetchAllConsortia[index] = { ...saveConsortium };
+          } else {
+            data.fetchAllConsortia.push(saveConsortium);
+          }
+          store.writeQuery({ query: FETCH_ALL_CONSORTIA_QUERY, data });
+        },
+      }),
     }),
-  }),
-})(ConsortiumTabs);
+  })
+)(ConsortiumTabs);
 
-export default connect(mapStateToProps)(ConsortiumTabsWithData);
+export default connect(mapStateToProps, { updateUserPerms })(ConsortiumTabsWithData);

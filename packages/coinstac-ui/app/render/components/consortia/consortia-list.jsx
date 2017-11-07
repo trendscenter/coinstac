@@ -1,102 +1,142 @@
-import React from 'react';
+import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { compose, graphql } from 'react-apollo';
 import { Alert, Button } from 'react-bootstrap';
 import { LinkContainer } from 'react-router-bootstrap';
 import PropTypes from 'prop-types';
 import ListItem from '../common/list-item';
+import { updateUserPerms } from '../../state/ducks/auth';
 import {
-  deleteConsortiumByIdFunc,
-  joinConsortiumFunc,
-  leaveConsortiumFunc,
-  fetchAllConsortiaFunc,
+  DELETE_CONSORTIUM_MUTATION,
+  JOIN_CONSORTIUM_MUTATION,
+  LEAVE_CONSORTIUM_MUTATION,
+  FETCH_ALL_CONSORTIA_QUERY,
+  ADD_USER_ROLE_MUTATION,
+  REMOVE_USER_ROLE_MUTATION,
 } from '../../state/graphql/functions';
-import { consortiaProp } from '../../state/graphql/props';
+import {
+  consortiaMembershipProp,
+  consortiaProp,
+  userRolesProp,
+} from '../../state/graphql/props';
 
 const isUserA = (userId, groupArr) => {
   return groupArr.indexOf(userId) !== -1;
 };
 
-const getOptions = (user, owner, id, joinConsortium, leaveConsortium) => {
-  const options = [];
+class ConsortiaList extends Component {
+  constructor(props) {
+    super(props);
 
-  if (user && !owner) {
-    options.push(
-      <Button
-        key="leave-cons-button"
-        bsStyle="warning"
-        className="pull-right"
-        onClick={() => leaveConsortium(id)}
-      >
-        Leave Consortium
-      </Button>
-    );
-  } else if (!user && !owner) {
-    options.push(
-      <Button
-        key="join-cons-button"
-        bsStyle="primary"
-        className="pull-right"
-        onClick={() => joinConsortium(id)}
-      >
-        Join Consortium
-      </Button>
-    );
+    this.getOptions = this.getOptions.bind(this);
+    this.deleteConsortium = this.deleteConsortium.bind(this);
+    this.joinConsortium = this.joinConsortium.bind(this);
+    this.leaveConsortium = this.leaveConsortium.bind(this);
   }
 
-  return options;
-};
+  getOptions(member, owner, id) {
+    const options = [];
 
-const ConsortiaList = ({
-  auth: { user },
-  consortia,
-  deleteConsortium,
-  joinConsortium,
-  leaveConsortium,
-}) => (
-  <div>
-    <div className="page-header clearfix">
-      <h1 className="pull-left">Consortia</h1>
-      <LinkContainer className="pull-right" to="/dashboard/consortia/new">
-        <Button bsStyle="primary" className="pull-right">
-          <span aria-hidden="true" className="glphicon glyphicon-plus" />
-          {' '}
-          Create Consortium
+    if (member && !owner) {
+      options.push(
+        <Button
+          key="leave-cons-button"
+          bsStyle="warning"
+          className="pull-right"
+          onClick={() => this.leaveConsortium(id)}
+        >
+          Leave Consortium
         </Button>
-      </LinkContainer>
-    </div>
-    {consortia && consortia.map(consortium => (
-      <ListItem
-        key={`${consortium.name}-list-item`}
-        itemObject={consortium}
-        deleteItem={deleteConsortium}
-        owner={isUserA(user.id, consortium.owners)}
-        itemOptions={
-          getOptions(
-            isUserA(user.id, consortium.users),
-            isUserA(user.id, consortium.owners),
-            consortium.id,
-            joinConsortium,
-            leaveConsortium
-          )
-        }
-        itemRoute={'/dashboard/consortia'}
-      />
-    ))}
-    {!consortia &&
-      <Alert bsStyle="info">
-        No consortia found
-      </Alert>
+      );
+    } else if (!member && !owner) {
+      options.push(
+        <Button
+          key="join-cons-button"
+          bsStyle="primary"
+          className="pull-right"
+          onClick={() => this.joinConsortium(id)}
+        >
+          Join Consortium
+        </Button>
+      );
     }
-  </div>
-);
+
+    return options;
+  }
+
+  deleteConsortium(consortiumId) {
+    const { auth: { user } } = this.props;
+
+    this.props.deleteConsortium(consortiumId);
+    this.props.removeUserRole(user.id, 'consortia', consortiumId, 'owner');
+  }
+
+  joinConsortium(consortiumId) {
+    const { auth: { user } } = this.props;
+
+    this.props.joinConsortium(consortiumId);
+    this.props.addUserRole(user.id, 'consortia', consortiumId, 'member');
+  }
+
+  leaveConsortium(consortiumId) {
+    const { auth: { user } } = this.props;
+
+    this.props.leaveConsortium(consortiumId);
+    this.props.removeUserRole(user.id, 'consortia', consortiumId, 'member');
+  }
+
+  render() {
+    const {
+      auth: { user },
+      consortia,
+    } = this.props;
+
+    return (
+      <div>
+        <div className="page-header clearfix">
+          <h1 className="pull-left">Consortia</h1>
+          <LinkContainer className="pull-right" to="/dashboard/consortia/new">
+            <Button bsStyle="primary" className="pull-right">
+              <span aria-hidden="true" className="glphicon glyphicon-plus" />
+              {' '}
+              Create Consortium
+            </Button>
+          </LinkContainer>
+        </div>
+        {consortia && consortia.map(consortium => (
+          <ListItem
+            key={`${consortium.name}-list-item`}
+            itemObject={consortium}
+            deleteItem={this.deleteConsortium}
+            owner={isUserA(user.id, consortium.owners)}
+            itemOptions={
+              this.getOptions(
+                isUserA(user.id, consortium.members),
+                isUserA(user.id, consortium.owners),
+                consortium.id
+              )
+            }
+            itemRoute={'/dashboard/consortia'}
+          />
+        ))}
+        {!consortia &&
+          <Alert bsStyle="info">
+            No consortia found
+          </Alert>
+        }
+      </div>
+    );
+  }
+}
 
 ConsortiaList.propTypes = {
+  addUserRole: PropTypes.func.isRequired,
   auth: PropTypes.object.isRequired,
   consortia: PropTypes.array,
   deleteConsortium: PropTypes.func.isRequired,
   joinConsortium: PropTypes.func.isRequired,
   leaveConsortium: PropTypes.func.isRequired,
+  removeUserRole: PropTypes.func.isRequired,
 };
 
 ConsortiaList.defaultProps = {
@@ -108,52 +148,26 @@ const mapStateToProps = ({ auth }) => {
 };
 
 const ConsortiaListWithData = compose(
-  graphql(fetchAllConsortiaFunc, consortiaProp),
-  graphql(deleteConsortiumByIdFunc, {
+  graphql(FETCH_ALL_CONSORTIA_QUERY, consortiaProp),
+  graphql(DELETE_CONSORTIUM_MUTATION, {
     props: ({ mutate }) => ({
       deleteConsortium: consortiumId => mutate({
         variables: { consortiumId },
         update: (store, { data: { deleteConsortiumById } }) => {
-          const data = store.readQuery({ query: fetchAllConsortiaFunc });
+          const data = store.readQuery({ query: FETCH_ALL_CONSORTIA_QUERY });
           const index = data.fetchAllConsortia.findIndex(con => con.id === deleteConsortiumById.id);
           if (index > -1) {
             data.fetchAllConsortia.splice(index, 1);
           }
-          store.writeQuery({ query: fetchAllConsortiaFunc, data });
+          store.writeQuery({ query: FETCH_ALL_CONSORTIA_QUERY, data });
         },
       }),
     }),
   }),
-  graphql(joinConsortiumFunc, {
-    props: ({ mutate }) => ({
-      joinConsortium: consortiumId => mutate({
-        variables: { consortiumId },
-        update: (store, { data: { joinConsortium } }) => {
-          const data = store.readQuery({ query: fetchAllConsortiaFunc });
-          const index = data.fetchAllConsortia.findIndex(con => con.id === joinConsortium.id);
-          if (index > -1) {
-            data.fetchAllConsortia[index].users = joinConsortium.users;
-          }
-          store.writeQuery({ query: fetchAllConsortiaFunc, data });
-        },
-      }),
-    }),
-  }),
-  graphql(leaveConsortiumFunc, {
-    props: ({ mutate }) => ({
-      leaveConsortium: consortiumId => mutate({
-        variables: { consortiumId },
-        update: (store, { data: { leaveConsortium } }) => {
-          const data = store.readQuery({ query: fetchAllConsortiaFunc });
-          const index = data.fetchAllConsortia.findIndex(con => con.id === leaveConsortium.id);
-          if (index > -1) {
-            data.fetchAllConsortia[index].users = leaveConsortium.users;
-          }
-          store.writeQuery({ query: fetchAllConsortiaFunc, data });
-        },
-      }),
-    }),
-  })
+  graphql(JOIN_CONSORTIUM_MUTATION, consortiaMembershipProp('joinConsortium')),
+  graphql(LEAVE_CONSORTIUM_MUTATION, consortiaMembershipProp('leaveConsortium')),
+  graphql(ADD_USER_ROLE_MUTATION, userRolesProp('addUserRole')),
+  graphql(REMOVE_USER_ROLE_MUTATION, userRolesProp('removeUserRole'))
 )(ConsortiaList);
 
-export default connect(mapStateToProps)(ConsortiaListWithData);
+export default connect(mapStateToProps, { updateUserPerms })(ConsortiaListWithData);

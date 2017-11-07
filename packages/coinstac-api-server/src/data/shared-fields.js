@@ -6,7 +6,7 @@ const schemaFields = {
     name: String!
     tags: [String]
     owners: [ID]
-    users: [ID]
+    members: [ID]
     pipelines: [ID]
     results: [ID]
   `,
@@ -40,6 +40,12 @@ const schemaFields = {
   pipelineStepFields: `
     ioMap: JSON 
     id: ID!
+  `,
+  userFields: `
+    email: String!
+    institution: String
+    passwordHash: String!
+    permissions: JSON
   `,
 };
 

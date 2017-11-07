@@ -28,13 +28,12 @@ const queries = {
     {
       fetchAllPipelines {
         ${sharedFields.pipelineFields}
-        ${sharedFields.pipelineOutputFields}
       }
     }
   `,
   fetchComputation: `
     {
-      fetchComputation (computationName: $computationName) {
+      fetchComputation (computationIds: $computationIds) {
         id
         computation {
           input

@@ -3,10 +3,11 @@ import { DragSource, DropTarget } from 'react-dnd';
 import PropTypes from 'prop-types';
 import { compose } from 'redux';
 import { graphql } from 'react-apollo';
-import { ControlLabel, FormGroup, FormControl, Panel } from 'react-bootstrap';
+import { Panel } from 'react-bootstrap';
 import ItemTypes from './pipeline-item-types';
 import PipelineStepInput from './pipeline-step-input';
-import { fetchComputationDetailsFunc } from '../../state/graphql/functions';
+import { FETCH_COMPUTATION_QUERY } from '../../state/graphql/functions';
+import { compIOProp } from '../../state/graphql/props';
 
 const styles = {
   container: {
@@ -78,7 +79,7 @@ class PipelineStep extends Component {
       ...other
     } = this.props;
 
-    const { id, computations, controller } = step;
+    const { id, computations } = step;
 
     return connectDragSource(connectDropTarget(
       <div style={styles.container}>
@@ -135,15 +136,10 @@ PipelineStep.propTypes = {
 };
 
 const PipelineStepWithData = compose(
-  graphql(fetchComputationDetailsFunc, {
-    props: ({ data: { fetchComputationDetails } }) => ({
-      compIO: fetchComputationDetails ? fetchComputationDetails[0] : null,
-    }),
-    options: ({ computationId }) => ({ variables: { computationIds: [computationId] } }),
-  }),
-  graphql(fetchComputationDetailsFunc, {
-    props: ({ data: { fetchComputationDetails } }) => ({
-      possibleInputs: fetchComputationDetails,
+  graphql(FETCH_COMPUTATION_QUERY, compIOProp),
+  graphql(FETCH_COMPUTATION_QUERY, {
+    props: ({ data: { fetchComputation } }) => ({
+      possibleInputs: fetchComputation,
     }),
     options: ({ previousComputationIds }) =>
       ({ variables: { computationIds: previousComputationIds } }),
