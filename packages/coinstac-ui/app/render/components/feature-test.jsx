@@ -55,7 +55,7 @@ class FeatureTest extends Component { // eslint-disable-line
   }
 
   render() {
-    const { auth, dockerOut, computations } = this.props;
+    const { dockerOut, computations } = this.props;
 
     return (
       <div>
@@ -153,16 +153,19 @@ class FeatureTest extends Component { // eslint-disable-line
   }
 }
 
+FeatureTest.defaultProps = {
+  computations: [],
+};
+
 FeatureTest.propTypes = {
-  auth: PropTypes.object.isRequired,
-  computations: PropTypes.array.isRequired,
+  computations: PropTypes.array,
   dockerOut: PropTypes.array.isRequired,
   pullComputations: PropTypes.func.isRequired,
   updateDockerOutput: PropTypes.func.isRequired,
 };
 
-function mapStateToProps({ auth, featureTest: { dockerOut } }) {
-  return { auth, dockerOut };
+function mapStateToProps({ featureTest: { dockerOut } }) {
+  return { dockerOut };
 }
 
 const FeatureTestWithData =

@@ -2,6 +2,7 @@ import React from 'react';
 import { graphql } from 'react-apollo';
 import PropTypes from 'prop-types';
 import { FETCH_COMPUTATION_QUERY } from '../../state/graphql/functions';
+import { compIOProp } from '../../state/graphql/props';
 
 const ComputationIO = ({ compIO }) => (
   <pre>
@@ -17,11 +18,6 @@ ComputationIO.propTypes = {
   compIO: PropTypes.object,
 };
 
-const ComputationIOWithData = graphql(FETCH_COMPUTATION_QUERY, {
-  props: ({ data: { fetchComputation } }) => ({
-    compIO: fetchComputation ? fetchComputation[0] : null,
-  }),
-  options: ({ computationId }) => ({ variables: { computationIds: [computationId] } }),
-})(ComputationIO);
+const ComputationIOWithData = graphql(FETCH_COMPUTATION_QUERY, compIOProp)(ComputationIO);
 
 export default ComputationIOWithData;

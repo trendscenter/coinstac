@@ -45,7 +45,6 @@ const typeDefs = `
     computation: ComputationFieldInput
   }
 
-  # Should owners/users be an array of user objects?
   type Consortium {
     id: ID!
     ${sharedFields.consortiumFields}
@@ -101,7 +100,13 @@ const typeDefs = `
   }
 
   type User {
-    username: String!
+    id: ID!
+    ${sharedFields.userFields}
+  }
+
+  type UserInput {
+    id: ID
+    ${sharedFields.userFields}
   }
 
   # This is the general mutation description
@@ -115,6 +120,8 @@ const typeDefs = `
     setComputationInputs(consortiumId: ID, fieldIndex: Int, values: String ): String
     leaveConsortium(consortiumId: ID): Consortium
     saveConsortium(consortium: ConsortiumInput): Consortium
+    addUserRole(userId: ID, table: String, doc: String, role: String): User
+    removeUserRole(userId: ID, table: String, doc: String, role: String): User
   }
 
   # This is a description of the queries

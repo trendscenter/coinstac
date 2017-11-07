@@ -12,7 +12,7 @@ import { graphql } from 'react-apollo';
 import PropTypes from 'prop-types';
 import update from 'immutability-helper';
 import {
-  fetchAllConsortiaFunc,
+  FETCH_ALL_CONSORTIA_QUERY,
 } from '../../state/graphql/functions';
 import { consortiaProp } from '../../state/graphql/props';
 import CollectionPipeline from './collection-pipeline';
@@ -129,7 +129,7 @@ class CollectionConsortia extends Component {
             title="Select Consortia"
           >
             {consortia.map((cons) => {
-              if ((cons.users.indexOf(user.id) > -1 || cons.owners.indexOf(user.id) > -1) &&
+              if ((cons.members.indexOf(user.id) > -1 || cons.owners.indexOf(user.id) > -1) &&
                   collection.associatedConsortia.findIndex(c => c.id === cons.id) === -1) {
                 return (
                   <MenuItem
@@ -190,7 +190,7 @@ CollectionConsortia.defaultProps = {
 };
 
 const CollectionConsortiaWithData =
-  graphql(fetchAllConsortiaFunc, consortiaProp)(CollectionConsortia);
+  graphql(FETCH_ALL_CONSORTIA_QUERY, consortiaProp)(CollectionConsortia);
 
 function mapStateToProps({ auth }) {
   return { auth };

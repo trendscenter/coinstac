@@ -14,8 +14,15 @@ const sharedFields = {
     description
     name
     tags
+    members
     owners
-    users
+  `,
+  userMetadata: `
+    id
+    email
+    institution
+    passwordHash
+    permissions
   `,
   pipelineFields: `
     id

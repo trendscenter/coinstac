@@ -80,7 +80,6 @@ class FormSignupController extends Component {
   }
 
   checkForUser() {
-    console.log(this.props.auth);
     const { router } = this.context;
     if (this.props.auth.user.email.length) {
       router.push('/dashboard');
