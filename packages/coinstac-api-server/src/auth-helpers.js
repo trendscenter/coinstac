@@ -30,9 +30,9 @@ const helperFunctions = {
         institution: user.institution,
         passwordHash,
         permissions: {
-          computations: { read: true },
-          consortia: { read: true },
-          pipelines: { read: true },
+          computations: {},
+          consortia: {},
+          pipelines: {},
         },
       };
 
