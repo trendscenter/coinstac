@@ -1,4 +1,3 @@
-/*
 {
   "algo": "sha512",
   "cstacDB": "coinstac",
@@ -11,4 +10,3 @@
   "rethinkPort": 28015,
   "saltBytes": 16
 }
-*/
