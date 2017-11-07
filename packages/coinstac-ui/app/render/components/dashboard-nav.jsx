@@ -1,5 +1,4 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 import { Nav, NavItem } from 'react-bootstrap';
 import { IndexLinkContainer, LinkContainer } from 'react-router-bootstrap';
 
@@ -50,10 +49,6 @@ const DashboardNav = () => {
       </LinkContainer>
     </Nav>
   );
-};
-
-DashboardNav.propTypes = {
-  auth: PropTypes.object.isRequired,
 };
 
 export default DashboardNav;

@@ -6,7 +6,7 @@ import { Alert } from 'react-bootstrap';
 import { connect } from 'react-redux';
 import { graphql } from 'react-apollo';
 import StatusItem from './status-item';
-import { fetchAllComputationsMetadataFunc } from '../state/graphql/functions';
+import { FETCH_ALL_COMPUTATIONS_METADATA_QUERY } from '../state/graphql/functions';
 import { computationsProp } from '../state/graphql/props';
 import { initTestData } from '../state/ducks/collections';
 
@@ -77,6 +77,7 @@ function mapStateToProps({
   };
 }
 
-const DashHomeWithData = graphql(fetchAllComputationsMetadataFunc, computationsProp)(DashboardHome);
+const DashHomeWithData =
+  graphql(FETCH_ALL_COMPUTATIONS_METADATA_QUERY, computationsProp)(DashboardHome);
 
 export default connect(mapStateToProps, { initTestData })(DashHomeWithData);

@@ -1,6 +1,6 @@
 const rethink = require('rethinkdb');
-const singleShot = require('./data/Single-Shot Schema');
-const multiShot = require('./data/Multi-Shot Schema');
+const singleShot = require('./data/single-shot-schema');
+const multiShot = require('./data/multi-shot-schema');
 const helperFunctions = require('../src/auth-helpers');
 
 helperFunctions.getRethinkConnection()
@@ -93,54 +93,52 @@ helperFunctions.getRethinkConnection()
   }).run(connection))
   .then(() => connection.close());
 })
-.then(() => {
-  let passwordHash = helperFunctions.hashPassword('password');
-  return helperFunctions.createUser({
-    id: 'test',
-    username: 'test',
-    institution: 'mrn',
-    email: 'test@mrn.org',
-    permissions: {
-      computations: {
-        read: true,
-      },
-      consortia: {
-        read: true,
-        'test-cons-2': {
-          write: true,
-        },
-      },
-      pipelines: { read: true },
+.then(() => helperFunctions.hashPassword('password'))
+.then(passwordHash => helperFunctions.createUser({
+  id: 'test',
+  username: 'test',
+  institution: 'mrn',
+  email: 'test@mrn.org',
+  permissions: {
+    computations: {},
+    consortia: {
+      'test-cons-1': ['member'],
+      'test-cons-2': ['owner'],
     },
-  }, passwordHash)
-  .then(() => {
-    passwordHash = helperFunctions.hashPassword('password');
-    return helperFunctions.createUser({ username: 'server', institution: 'mrn', email: 'server@mrn.org' }, passwordHash);
-  })
-  .then(() => {
-    passwordHash = helperFunctions.hashPassword('password');
-    return helperFunctions.createUser({
-      id: 'author',
-      username: 'author',
-      institution: 'mrn',
-      email: 'server@mrn.org',
-      permissions: {
-        computations: {
-          read: true,
-          write: true,
-        },
-        consortia: {
-          read: true,
-          'test-cons-1': {
-            write: true,
-          },
-        },
-        pipelines: { read: true },
-      },
-    }, passwordHash);
-  })
-  .then(() => {
-    process.exit();
-  });
+    pipelines: {},
+  },
+}, passwordHash))
+.then(() => helperFunctions.hashPassword('password'))
+.then(passwordHash => helperFunctions.createUser({
+  id: 'server',
+  username: 'server',
+  institution: 'mrn',
+  email: 'server@mrn.org',
+  permissions: {
+    computations: {},
+    consortia: {},
+    pipelines: {},
+  },
+}, passwordHash))
+.then(() => helperFunctions.hashPassword('password'))
+.then(passwordHash => helperFunctions.createUser({
+  id: 'author',
+  username: 'author',
+  institution: 'mrn',
+  email: 'server@mrn.org',
+  permissions: {
+    computations: {
+      'single-shot-test-id': ['owner'],
+      'multi-shot-test-id': ['owner'],
+    },
+    consortia: {
+      'test-cons-1': ['owner'],
+      'test-cons-2': ['member'],
+    },
+    pipelines: {},
+  },
+}, passwordHash))
+.then(() => {
+  process.exit();
 })
 .catch(console.log);  // eslint-disable-line no-console

@@ -19,7 +19,7 @@ class FormLoginController extends Component {
     this.checkForUser();
   }
 
-  componentWillUpdate() {
+  componentDidUpdate() {
     this.checkForUser();
   }
 
