@@ -11,6 +11,7 @@ const sharedFields = {
     id
     activeComputationId
     activeComputationInputs
+    activePipeline
     description
     name
     tags
@@ -22,6 +23,7 @@ const sharedFields = {
     description
     name
     owningConsortium
+    shared
     steps {
       id
       computations {

@@ -10,8 +10,9 @@ import {
   joinConsortiumFunc,
   leaveConsortiumFunc,
   fetchAllConsortiaFunc,
+  fetchAllPipelinesFunc,
 } from '../../state/graphql/functions';
-import { consortiaProp } from '../../state/graphql/props';
+import { consortiaProp, pipelinesProp } from '../../state/graphql/props';
 
 const isUserA = (userId, groupArr) => {
   return groupArr.indexOf(userId) !== -1;
@@ -50,6 +51,7 @@ const getOptions = (user, owner, id, joinConsortium, leaveConsortium) => {
 const ConsortiaList = ({
   auth: { user },
   consortia,
+  pipelines,
   deleteConsortium,
   joinConsortium,
   leaveConsortium,
@@ -94,6 +96,7 @@ const ConsortiaList = ({
 ConsortiaList.propTypes = {
   auth: PropTypes.object.isRequired,
   consortia: PropTypes.array,
+  pipelines: PropTypes.array,
   deleteConsortium: PropTypes.func.isRequired,
   joinConsortium: PropTypes.func.isRequired,
   leaveConsortium: PropTypes.func.isRequired,
@@ -101,6 +104,7 @@ ConsortiaList.propTypes = {
 
 ConsortiaList.defaultProps = {
   consortia: null,
+  pipelines: null,
 };
 
 const mapStateToProps = ({ auth }) => {
@@ -109,6 +113,7 @@ const mapStateToProps = ({ auth }) => {
 
 const ConsortiaListWithData = compose(
   graphql(fetchAllConsortiaFunc, consortiaProp),
+  graphql(fetchAllPipelinesFunc, pipelinesProp),
   graphql(deleteConsortiumByIdFunc, {
     props: ({ mutate }) => ({
       deleteConsortium: consortiumId => mutate({

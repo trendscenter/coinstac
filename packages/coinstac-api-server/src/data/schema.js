@@ -117,6 +117,7 @@ const typeDefs = `
     leaveConsortium(consortiumId: ID): Consortium
     saveConsortium(consortium: ConsortiumInput): Consortium
     savePipeline(pipeline: PipelineInput): Pipeline
+    saveActivePipeline(consortiumId: ID, activePipeline: ID): String
   }
 
   # This is a description of the queries

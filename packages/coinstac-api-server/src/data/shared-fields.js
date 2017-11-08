@@ -2,6 +2,7 @@ const computationFields = {
   consortiumFields: `
     activeComputationId: ID
     activeComputationInputs: [String]
+    activePipeline: ID
     description: String!
     name: String!
     tags: [String]
@@ -31,6 +32,7 @@ const computationFields = {
     name: String
     description: String
     owningConsortium: ID
+    shared: Boolean
   `,
   pipelineControllerFields: `
     id: ID

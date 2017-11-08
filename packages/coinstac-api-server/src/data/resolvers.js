@@ -167,6 +167,21 @@ const resolvers = {
           })
         )
     },
+    //r.db('coinstac').table('consortia').get("test-cons-2").update({activePipeline: "somecrazyid"})
+    saveActivePipeline: ({ auth: { credentials } }, args) => {
+      const { permissions } = credentials;
+      /* TODO: Add permissions
+      if (!permissions.consortia.write
+          && args.consortium.id
+          && !permissions.consortia[args.consortium.id].write) {
+            return Boom.forbidden('Action not permitted');
+      }*/
+      return helperFunctions.getRethinkConnection()
+        .then((connection) =>
+          rethink.table('consortia').get(args.consortiumId).update({activePipeline: args.activePipeline})
+          .run(connection)
+        )
+    },
 
     savePipeline: ({ auth: { credentials } }, args) => {
       const { permissions } = credentials;
