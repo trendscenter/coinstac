@@ -1,30 +1,78 @@
 'use strict';
 
 const Docker = require('dockerode');
+const { promisify } = require('util');
+const request = require('request-promise-native');
+
+const setTimeoutPromise = promisify(setTimeout);
 
 // TODO: ENV specific socket
 const docker = new Docker({ socketPath: '/var/run/docker.sock' });
 const streamPool = {};
 const jobPool = {};
+let services = {};
+
+// TODO: check if port is in use
+const generateServicePort = (serviceId) => {
+  const takenPorts = Object.keys(services).map((service) => {
+    return services[service].port;
+  });
+
+  let newPort = 8100;
+  takenPorts.sort((a, b) => (a - b));
+
+  for (let i = 0; i < takenPorts.length; i += 1) {
+    if (takenPorts[i] === newPort) {
+      newPort += 1;
+    } else {
+      break;
+    }
+  }
+
+  // set the port now, to avoid race-port conditions
+  services[serviceId].port = newPort;
+  return newPort;
+};
 
 const manageStream = (stream, jobId) => {
-  streamPool[jobId] = { stream, data: '' };
+  streamPool[jobId] = { stream, data: '', error: '' };
 
-  stream.on('data', (chunk) => {
-    streamPool[jobId].data += chunk;
+  let header = null;
+  stream.on('readable', () => {
+    // Demux streams, docker puts stdout/err together
+    header = header || stream.read(8);
+    while (header !== null) {
+      const type = header.readUInt8(0);
+      const payload = stream.read(header.readUInt32BE(4));
+      if (payload === null) break;
+      if (type === 2) {
+        streamPool[jobId].error += payload;
+      } else {
+        streamPool[jobId].data += payload;
+      }
+      header = stream.read(8);
+    }
   });
 
   return new Promise((resolve, reject) => {
     stream.on('end', () => {
       const container = jobPool[jobId];
+      if (streamPool[jobId].error) {
+        container.remove()
+        .then(() => {
+          jobPool[jobId] = undefined;
+        });
+        reject(streamPool[jobId].error);
+        streamPool[jobId] = undefined;
+      } else {
+        resolve(streamPool[jobId].data);
+        streamPool[jobId] = undefined;
 
-      resolve(streamPool[jobId].data);
-      streamPool[jobId] = undefined;
-
-      container.remove()
-      .then(() => {
-        jobPool[jobId] = undefined;
-      });
+        container.remove()
+        .then(() => {
+          jobPool[jobId] = undefined;
+        });
+      }
     });
     stream.on('error', (err) => {
       const container = jobPool[jobId];
@@ -47,7 +95,7 @@ const queueJob = (jobId, input, opts) => {
       AttachStdin: true,
       AttachStdout: true,
       AttachStderr: true,
-      Cmd: ['python', '/computation/computation.py', `${JSON.stringify(input)}`],
+      Cmd: input,
     },
     opts
   );
@@ -71,19 +119,87 @@ const queueJob = (jobId, input, opts) => {
   });
 };
 
+const startService = (serviceId, opts) => {
+  const createService = () => {
+    let proxRes;
+    let proxRej;
+    services[serviceId] = {};
+    services[serviceId].state = 'starting';
+    services[serviceId].service = new Promise((res, rej) => {
+      proxRes = res;
+      proxRej = rej;
+    });
+    const jobOpts = Object.assign(
+      {
+        Tty: true,
+        ExposedPorts: { '8881/tcp': {} },
+        HostConfig: {
+          PortBindings: { '8881/tcp': [{ HostPort: `${generateServicePort(serviceId)}`, HostIp: '127.0.0.1' }] },
+        },
+      },
+      opts
+    );
+    return docker.createContainer(jobOpts)
+    .then((container) => {
+      services[serviceId].container = container;
+      return container.start();
+    })
+    // timeout for server startup
+    .then(() => setTimeoutPromise(5000))
+    .then(() => {
+      services[serviceId].service = (data) => {
+        return request({
+          url: `http://127.0.0.1:${services[serviceId].port}/run`,
+          method: 'POST',
+          json: true,
+          body: { command: data },
+        });
+      };
+      services[serviceId].state = 'running';
+      // fulfill to waiting consumers
+      proxRes(services[serviceId].service);
+      return services[serviceId].service;
+    })
+    .catch((err) => {
+      proxRej(err);
+      throw err;
+    });
+  };
+
+  if (services[serviceId]) {
+    return Promise.resolve(services[serviceId].service);
+  }
+
+  return createService();
+};
+
 const pullImage = (computation) => {
   return new Promise((resolve, reject) => {
     docker.pull(computation, (err, stream) => {
       if (err) {
         reject(err);
       }
-
       resolve(stream);
     });
   });
 };
 
+/**
+ * On a orderly exit the manager will clean up its containers
+ * Note this is not possible on events that do not trigger 'beforeExit'
+ */
+process.on('beforeExit', () => {
+  Promise.all(
+    Object.keys(services)
+    .map(service => services[service].container.stop()))
+    .then(() => {
+      services = {};
+    }
+  );
+});
+
 module.exports = {
   pullImage,
   queueJob,
+  startService,
 };
