@@ -69,3 +69,9 @@ export const saveConsortiumFunc = gql`
   mutation SaveConsortiumMutation($consortium: ConsortiumInput!)
     ${mutations.saveConsortium}
 `;
+
+export const saveActivePipelineFunc = gql`
+  mutation SaveActivePipelineMutation($consortiumId: ID, $activePipeline: ID){
+    saveActivePipeline(consortiumId: $consortiumId, activePipeline: $activePipeline)
+  }
+`

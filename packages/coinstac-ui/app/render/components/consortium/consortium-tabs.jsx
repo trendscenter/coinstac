@@ -24,7 +24,8 @@ class ConsortiumTabs extends Component {
       description: '',
       users: [],
       owners: [],
-      activeComputationId: '',
+      activePipeline: '',
+      activeComputationId:'',
       activeComputationInputs: [],
       tags: [],
     };
@@ -63,6 +64,7 @@ class ConsortiumTabs extends Component {
           description: res.data.saveConsortium.description,
           users: res.data.saveConsortium.users,
           owners: res.data.saveConsortium.owners,
+          activePipeline: res.data.saveConsortium.activePipeline,
           activeComputationId: null,
           activeComputationInputs: null,
           tags: null,

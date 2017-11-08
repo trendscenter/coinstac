@@ -63,6 +63,7 @@ class Pipeline extends Component {
         name: "",
         description: "",
         owningConsortium: "",
+        shared: false,
         steps: [],
       }
     }
@@ -287,6 +288,7 @@ class Pipeline extends Component {
         name: res.data.savePipeline.name,
         description: res.data.savePipeline.description,
         owningConsortium: res.data.savePipeline.owningConsortium,
+        shared: res.data.savePipeline.shared,
         steps: res.data.savePipeline.steps,
       }
       this.setState({
@@ -371,6 +373,17 @@ class Pipeline extends Component {
                 onClick={this.savePipeline}>
                 Save Pipeline
               </Button>
+            </Col>
+          </Row>
+
+          <Row>
+            <Col sm={12}>
+              <Checkbox
+                defaultChecked={this.state.pipeline.shared}
+                onChange={(evt) => this.updatePipeline({ param: 'shared', value: evt.target.checked })} 
+                inline>
+                Share this pipeline with other consortia
+              </Checkbox>
             </Col>
           </Row>
           
