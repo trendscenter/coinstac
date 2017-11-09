@@ -15,7 +15,7 @@ const ListItem = ({ owner, itemObject, itemOptions, itemRoute, deleteItem }) => 
         onClick={() => deleteItem(itemObject.id)}
         className="pull-right"
       >
-        Delete Item
+        Delete Consortium
       </Button>
     }
     {itemOptions}
