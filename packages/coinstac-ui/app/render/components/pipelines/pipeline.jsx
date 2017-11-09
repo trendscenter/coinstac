@@ -81,8 +81,6 @@ class Pipeline extends Component {
       startingPipeline: pipeline,
     };
 
-    console.log(this.state.consortium);
-
     this.addStep = this.addStep.bind(this);
     this.moveStep = this.moveStep.bind(this);
     this.updateStep = this.updateStep.bind(this);
