@@ -167,7 +167,7 @@ const resolvers = {
           })
         )
     },
-    //r.db('coinstac').table('consortia').get("test-cons-2").update({activePipeline: "somecrazyid"})
+    
     saveActivePipeline: ({ auth: { credentials } }, args) => {
       const { permissions } = credentials;
       /* TODO: Add permissions

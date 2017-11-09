@@ -8,11 +8,7 @@ import ListItem from '../common/list-item';
 import { fetchAllPipelinesFunc } from '../../state/graphql/functions';
 import { pipelinesProp } from '../../state/graphql/props';
 
-const isUserA = (userId, groupArr) => {
-  return groupArr.indexOf(userId) !== -1;
-};
-
-const PipelinesList = ({ auth: { user }, pipelines }) => (
+const PipelinesList = ({ pipelines }) => (
   <div>
     <div className="page-header clearfix">
       <h1 className="pull-left">Pipelines</h1>
@@ -43,7 +39,6 @@ const PipelinesList = ({ auth: { user }, pipelines }) => (
 );
 
 PipelinesList.propTypes = {
-  auth: PropTypes.object.isRequired,
   pipelines: PropTypes.array,
 };
 

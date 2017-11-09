@@ -76,7 +76,6 @@ export default class PipelineStepInput extends Component {
       objKey,
       objParams,
       parentKey,
-      pipelineIndex,
       possibleInputs,
       owner,
       step,
@@ -219,7 +218,8 @@ export default class PipelineStepInput extends Component {
                 multiple
                 onChange={() => updateStep({
                   ...step,
-                  ioMap: this.getNewObj(objKey, this.getSelectList(step.ioMap[objKey], this[objKey].value)),
+                  ioMap: this.getNewObj(
+                    objKey, this.getSelectList(step.ioMap[objKey], this[objKey].value)),
                 })}
                 value={step.ioMap[objKey] || []}
               >
