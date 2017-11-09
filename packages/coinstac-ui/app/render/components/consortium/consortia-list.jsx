@@ -51,7 +51,6 @@ const getOptions = (user, owner, id, joinConsortium, leaveConsortium) => {
 const ConsortiaList = ({
   auth: { user },
   consortia,
-  pipelines,
   deleteConsortium,
   joinConsortium,
   leaveConsortium,
@@ -96,7 +95,6 @@ const ConsortiaList = ({
 ConsortiaList.propTypes = {
   auth: PropTypes.object.isRequired,
   consortia: PropTypes.array,
-  pipelines: PropTypes.array,
   deleteConsortium: PropTypes.func.isRequired,
   joinConsortium: PropTypes.func.isRequired,
   leaveConsortium: PropTypes.func.isRequired,
@@ -104,7 +102,6 @@ ConsortiaList.propTypes = {
 
 ConsortiaList.defaultProps = {
   consortia: null,
-  pipelines: null,
 };
 
 const mapStateToProps = ({ auth }) => {

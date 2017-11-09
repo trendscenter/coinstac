@@ -25,7 +25,7 @@ class ConsortiumTabs extends Component {
       users: [],
       owners: [],
       activePipeline: '',
-      activeComputationId:'',
+      activeComputationId: '',
       activeComputationInputs: [],
       tags: [],
     };

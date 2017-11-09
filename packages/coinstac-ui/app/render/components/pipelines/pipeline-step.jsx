@@ -88,12 +88,12 @@ class PipelineStep extends Component {
           style={{ ...styles.draggable, opacity: isDragging ? 0 : 1 }}
           {...other}
         >
-        <Button 
-          key={`delete-step-button-${step.id}`}
-          bsStyle="danger"
-          className="pull-right"
-          onClick={() => deleteStep(step.id)}
-        >
+          <Button
+            key={`delete-step-button-${step.id}`}
+            bsStyle="danger"
+            className="pull-right"
+            onClick={() => deleteStep(step.id)}
+          >
           Delete
         </Button>
           <h4>Step Options:</h4>
