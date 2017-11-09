@@ -6,7 +6,7 @@ import HTML5Backend from 'react-dnd-html5-backend';
 import PropTypes from 'prop-types';
 import { graphql } from 'react-apollo';
 import shortid from 'shortid';
-import { isEqual } from 'lodash';
+import { isEqual, isEmpty } from 'lodash';
 import update from 'immutability-helper';
 import {
   Accordion,
@@ -70,7 +70,6 @@ class Pipeline extends Component {
     if (props.params.consortiumId) {
       const data = ApolloClient.readQuery({ query: fetchAllConsortiaFunc });
       consortium = data.fetchAllConsortia.find(cons => cons.id === props.params.consortiumId);
-      delete consortium.__typename;
       pipeline.owningConsortium = consortium.id;
     }
 
@@ -93,7 +92,7 @@ class Pipeline extends Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    if (!this.state.consortium && nextProps.consortia) {
+    if (isEmpty(this.state.consortium) && nextProps.consortia) {
       if (nextProps.consortia.length) {
         let consortiumId = this.state.pipeline.owningConsortium;
         let consortium = nextProps.consortia[0];
@@ -367,7 +366,7 @@ class Pipeline extends Component {
                 className="pull-right"
                 disabled={!this.state.pipeline.name.length ||
                   !this.state.pipeline.description.length ||
-                  !consortium || this.checkPipeline()}
+                  !consortium || this.checkPipeline() || !this.state.pipeline.steps.length}
                 onClick={this.savePipeline}
               >
                 Save Pipeline
@@ -472,7 +471,6 @@ Pipeline.propTypes = {
   auth: PropTypes.object.isRequired,
   computations: PropTypes.array.isRequired,
   connectDropTarget: PropTypes.func.isRequired,
-  consortia: PropTypes.array.isRequired,
   params: PropTypes.object.isRequired,
   savePipeline: PropTypes.func.isRequired,
 };
