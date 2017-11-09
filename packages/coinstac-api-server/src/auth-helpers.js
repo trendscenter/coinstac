@@ -2,6 +2,7 @@ const crypto = require('crypto');
 const Boom = require('boom');
 const jwt = require('jsonwebtoken');
 const rethink = require('rethinkdb');
+const { pubsub } = require('./data/schema');
 const config = require('../config/default');
 const dbmap = require('/etc/coinstac/cstacDBMap'); // eslint-disable-line import/no-absolute-path
 const Promise = require('bluebird');
@@ -126,6 +127,17 @@ const helperFunctions = {
         }
       );
     });
+  },
+  initChangefeeds() {
+    return helperFunctions.getRethinkConnection()
+    .then(connection =>
+      rethink.table('consortia').changes().run(connection)
+    )
+    .then(feed =>
+      feed.each((err, change) =>
+        pubsub.publish('consortiumChanged', { consortiumChanged: change })
+      )
+    );
   },
   /**
    * Validates JWT from authenticated user
