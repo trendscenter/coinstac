@@ -1,5 +1,5 @@
 const { makeExecutableSchema } = require('graphql-tools');
-const resolvers = require('./resolvers');
+const { pubsub, resolvers } = require('./resolvers');
 const sharedFields = require('./shared-fields');
 
 const typeDefs = `
@@ -138,8 +138,15 @@ const typeDefs = `
     fetchRunForUser(username: String): [Run]
     fetchRunById: Run
   }
+
+  type Subscription {
+    consortiumChanged: Consortium 
+  }
 `;
 
 const schema = makeExecutableSchema({ typeDefs, resolvers });
 
-module.exports = schema;
+module.exports = {
+  schema,
+  pubsub,
+};

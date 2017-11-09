@@ -1,8 +1,11 @@
 const rethink = require('rethinkdb');
 const Boom = require('boom');
 const GraphQLJSON = require('graphql-type-json');
-const helperFunctions = require('../auth-helpers');
 const Promise = require('bluebird');
+const { PubSub } = require('graphql-subscriptions');
+const helperFunctions = require('../auth-helpers');
+
+const pubsub = new PubSub();
 
 function fetchAll(table) {
   return helperFunctions.getRethinkConnection()
@@ -257,6 +260,15 @@ const resolvers = {
         .then(result => result)
     }
   },
+  Subscription: {
+    consortiumChanged: {
+      subscribe: () =>
+        pubsub.asyncIterator('consortiumChanged')
+    },
+  },
 };
 
-module.exports = resolvers;
+module.exports = {
+  resolvers,
+  pubsub,
+};
