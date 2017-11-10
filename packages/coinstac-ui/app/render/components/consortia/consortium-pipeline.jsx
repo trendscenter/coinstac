@@ -4,7 +4,7 @@ import { LinkContainer } from 'react-router-bootstrap';
 import { graphql } from 'react-apollo';
 import ApolloClient from '../../state/apollo-client';
 import PropTypes from 'prop-types';
-import { fetchAllConsortiaFunc, fetchAllPipelinesFunc, saveActivePipelineFunc } from '../../state/graphql/functions';
+import { FETCH_ALL_CONSORTIA_QUERY, FETCH_ALL_PIPELINES_QUERY, SAVE_ACTIVE_PIPELINE_MUTATION } from '../../state/graphql/functions';
 
 const styles = {
   activePipelineButton: { margin: '0 5px 0 0' },
@@ -118,7 +118,7 @@ ConsortiumPipeline.propTypes = {
   saveActivePipeline: PropTypes.func.isRequired,
 };
 
-const ConsortiumPipelineWithData = graphql(saveActivePipelineFunc, {
+const ConsortiumPipelineWithData = graphql(SAVE_ACTIVE_PIPELINE_MUTATION, {
     props: ({ mutate }) => ({
       saveActivePipeline: (consortiumId, activePipeline) => mutate({
         variables: { consortiumId, activePipeline },

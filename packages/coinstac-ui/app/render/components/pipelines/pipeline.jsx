@@ -21,7 +21,6 @@ import {
   FormGroup,
   MenuItem,
   Modal,
-  Panel,
   Row,
   SplitButton,
   Well,
@@ -29,8 +28,13 @@ import {
 import ApolloClient from '../../state/apollo-client';
 import PipelineStep from './pipeline-step';
 import ItemTypes from './pipeline-item-types';
-import { fetchAllConsortiaFunc, fetchAllComputationsMetadataFunc, fetchAllPipelinesFunc, savePipelineFunc } from '../../state/graphql/functions';
-import { computationsProp, consortiaProp, pipelineProp } from '../../state/graphql/props';
+import {
+  FETCH_ALL_CONSORTIA_QUERY,
+  FETCH_ALL_COMPUTATIONS_METADATA_QUERY,
+  FETCH_ALL_PIPELINES_QUERY,
+  SAVE_PIPELINE_MUTATION,
+} from '../../state/graphql/functions';
+import { computationsProp, consortiaProp } from '../../state/graphql/props';
 
 const computationTarget = {
   drop() {
@@ -49,28 +53,27 @@ class Pipeline extends Component {
     super(props);
 
     let consortium = null;
-    let stepToDelete = null;
     let pipeline = null;
 
-    if(props.params.pipelineId){
-      const data = ApolloClient.readQuery({ query: fetchAllPipelinesFunc });
+    if (props.params.pipelineId) {
+      const data = ApolloClient.readQuery({ query: FETCH_ALL_PIPELINES_QUERY });
       pipeline = data.fetchAllPipelines.find(cons => cons.id === props.params.pipelineId);
       delete pipeline.__typename;
     }
 
-    if(!pipeline){
-      pipeline ={
-        name: "",
-        description: "",
-        owningConsortium: "",
+    if (!pipeline) {
+      pipeline = {
+        name: '',
+        description: '',
+        owningConsortium: '',
         shared: false,
         steps: [],
-      }
+      };
     }
 
-    //if routed from New Pipeline button on consortium page
+    // if routed from New Pipeline button on consortium page
     if (props.params.consortiumId) {
-      const data = ApolloClient.readQuery({ query: fetchAllConsortiaFunc });
+      const data = ApolloClient.readQuery({ query: FETCH_ALL_CONSORTIA_QUERY });
       consortium = data.fetchAllConsortia.find(cons => cons.id === props.params.consortiumId);
       delete consortium.__typename;
       pipeline.owningConsortium = consortium.id;
@@ -78,8 +81,8 @@ class Pipeline extends Component {
 
     this.state = {
       owner: !props.params.consortiumId || consortium.owners.indexOf(props.auth.user.id) !== -1,
-      pipeline: pipeline,
-      consortium: consortium,
+      pipeline,
+      consortium,
       startingPipeline: pipeline,
     };
 
@@ -92,6 +95,27 @@ class Pipeline extends Component {
     this.close = this.close.bind(this);
     this.savePipeline = this.savePipeline.bind(this);
     this.checkPipeline = this.checkPipeline.bind(this);
+  }
+
+  componentWillReceiveProps(nextProps) {
+    if (!this.state.consortium && nextProps.consortia) {
+      if (nextProps.consortia.length) {
+        let consortiumId = this.state.pipeline.owningConsortium;
+        let consortium = nextProps.consortia[0];
+        if (!consortiumId.length) {
+          consortiumId = nextProps.consortia[0].id;
+        } else {
+          const data = ApolloClient.readQuery({ query: FETCH_ALL_CONSORTIA_QUERY });
+          consortium = data.fetchAllConsortia.find(cons => cons.id === consortiumId);
+          delete consortium.__typename;
+        }
+        this.setState(prevState => ({
+          consortium,
+          pipeline: { ...prevState.pipeline, owningConsortium: consortiumId },
+          startingPipeline: { ...prevState.pipeline, owningConsortium: consortiumId },
+        }));
+      }
+    }
   }
 
   addStep(computation) {
@@ -155,7 +179,7 @@ class Pipeline extends Component {
                   },
                 };
               } else if (movedStepIndex < cov.source.pipelineIndex
-                          && index >= cov.source.pipeligitneIndex
+                          && index >= cov.source.pipelineIndex
                           && index < stepIndex) {
                 return {
                   ...cov,
@@ -211,29 +235,7 @@ class Pipeline extends Component {
     }));
   }
 
-  componentWillReceiveProps(nextProps) {
-    if (!this.state.consortium && nextProps.consortia) {
-      if(nextProps.consortia.length){
-        let consortiumId = this.state.pipeline.owningConsortium;
-        let consortium = nextProps.consortia[0];
-        if(!consortiumId.length){
-          consortiumId = nextProps.consortia[0].id;
-        }
-        else{
-          const data = ApolloClient.readQuery({ query: fetchAllConsortiaFunc });
-          consortium = data.fetchAllConsortia.find(cons => cons.id === consortiumId);
-          delete consortium.__typename;
-        }
-        this.setState(prevState => ({
-          consortium: consortium,
-          pipeline: { ...prevState.pipeline, owningConsortium: consortiumId},
-          startingPipeline: { ...prevState.pipeline, owningConsortium: consortiumId},
-        }));
-      }
-    }
-  }
-
-  deleteStep(){
+  deleteStep() {
     this.setState(prevState => ({
       pipeline: {
         ...prevState.pipeline,
@@ -250,21 +252,23 @@ class Pipeline extends Component {
   }
 
   open(stepId) {
-    this.setState({ 
+    this.setState({
       showModal: true,
       stepToDelete: stepId,
     });
   }
 
   updatePipeline(update) {
-    if(update.param == 'owningConsortium')
-      this.setState({ consortium: { id: update.value, name: update.consortiumName }});
+    if (update.param === 'owningConsortium') {
+      this.setState({ consortium: { id: update.value, name: update.consortiumName } });
+    }
+
     this.setState(prevState => ({
       pipeline: { ...prevState.pipeline, [update.param]: update.value },
     }));
   }
 
-  checkPipeline(){
+  checkPipeline() {
     return isEqual(this.state.startingPipeline, this.state.pipeline);
   }
 
@@ -278,27 +282,27 @@ class Pipeline extends Component {
           id: step.id,
           computations: step.computations.map(comp => comp.id),
           ioMap: step.ioMap,
-          controller: {type: step.controller.type, options: step.controller.options},
+          controller: { type: step.controller.type, options: step.controller.options },
         })
-      )
+      ),
     })
     .then((res) => {
-      let pipeline = {
+      const pipeline = {
         id: res.data.savePipeline.id,
         name: res.data.savePipeline.name,
         description: res.data.savePipeline.description,
         owningConsortium: res.data.savePipeline.owningConsortium,
         shared: res.data.savePipeline.shared,
         steps: res.data.savePipeline.steps,
-      }
+      };
+
       this.setState({
-        pipeline: pipeline,
+        pipeline,
         startingPipeline: pipeline,
       });
-      this.setState({ })
       // TODO: Use redux to display success/failure messages after mutations
     })
-    .catch(( error ) => {
+    .catch((error) => {
       console.log(error);
     });
   }
@@ -306,7 +310,7 @@ class Pipeline extends Component {
   render() {
     const { computations, connectDropTarget, consortia, savePipeline } = this.props;
     const { consortium, pipeline } = this.state;
-    const title = pipeline.id ? "Pipeline Edit" : 'Pipeline Creation';
+    const title = pipeline.id ? 'Pipeline Edit' : 'Pipeline Creation';
 
     return connectDropTarget(
       <div>
@@ -318,8 +322,8 @@ class Pipeline extends Component {
             <ControlLabel>Name</ControlLabel>
             <FormControl
               type="input"
-              onChange={(evt) => this.updatePipeline({ param: 'name', value: evt.target.value })}
-              defaultValue={ pipeline.name }
+              onChange={evt => this.updatePipeline({ param: 'name', value: evt.target.value })}
+              defaultValue={pipeline.name}
             />
           </FormGroup>
 
@@ -327,8 +331,8 @@ class Pipeline extends Component {
             <ControlLabel>Description</ControlLabel>
             <FormControl
               componentClass="textarea"
-              onChange={(evt) => this.updatePipeline({ param: 'description', value: evt.target.value })}
-              defaultValue={ pipeline.description }
+              onChange={evt => this.updatePipeline({ param: 'description', value: evt.target.value })}
+              defaultValue={pipeline.description}
             />
           </FormGroup>
 
@@ -341,36 +345,40 @@ class Pipeline extends Component {
           <Row>
             <Col sm={12}>
               {consortia &&
-              <SplitButton 
-                bsStyle="info" 
-                title={consortium ? consortium.name : "Consortia"} 
-                id="pipelineconsortia" 
-                onSelect={(value, e) => this.updatePipeline({ param: 'owningConsortium', value: value, consortiumName: e.target.innerHTML })}>
-
-                {consortia.map(con => {
+              <SplitButton
+                bsStyle="info"
+                title={consortium ? consortium.name : 'Consortia'}
+                id="pipelineconsortia"
+                onSelect={(value, e) => this.updatePipeline({
+                  param: 'owningConsortium',
+                  value,
+                  consortiumName: e.target.innerHTML,
+                })}
+              >
+                {consortia.map((con) => {
                   return con.owners.includes(this.props.auth.user.id) ?
-                  <MenuItem 
-                    eventKey={con.id}
-                    key={con.id}
-                  >
-                    {con.name}
-                  </MenuItem>
-                  : 0
-                }).filter(con => {return con}) }
+                    <MenuItem
+                      eventKey={con.id}
+                      key={con.id}
+                    >
+                      {con.name}
+                    </MenuItem>
+                    : 0;
+                }).filter(con => con) }
               </SplitButton>}
             </Col>
           </Row>
-          
           <Row>
             <Col sm={12}>
               <Button
                 key="save-pipeline-button"
                 bsStyle="success"
                 className="pull-right"
-                disabled={!this.state.pipeline.name.length || 
-                  !this.state.pipeline.description.length || 
+                disabled={!this.state.pipeline.name.length ||
+                  !this.state.pipeline.description.length ||
                   !consortium || this.checkPipeline()}
-                onClick={this.savePipeline}>
+                onClick={this.savePipeline}
+              >
                 Save Pipeline
               </Button>
             </Col>
@@ -380,14 +388,14 @@ class Pipeline extends Component {
             <Col sm={12}>
               <Checkbox
                 defaultChecked={this.state.pipeline.shared}
-                onChange={(evt) => this.updatePipeline({ param: 'shared', value: evt.target.checked })} 
-                inline>
+                onChange={evt => this.updatePipeline({ param: 'shared', value: evt.target.checked })}
+                inline
+              >
                 Share this pipeline with other consortia
               </Checkbox>
             </Col>
           </Row>
-          
-          <Row style={{ padding: '10px 0px 10px'}}>
+          <Row style={{ padding: '10px 0px 10px' }}>
             <Col sm={12}>
               <Alert bsStyle="warning">
                 Build your pipelines by adding computation steps in the space below.
@@ -468,10 +476,16 @@ class Pipeline extends Component {
   }
 }
 
+Pipeline.defaultProps = {
+  computations: [],
+  consortia: [],
+};
+
 Pipeline.propTypes = {
   auth: PropTypes.object.isRequired,
-  computations: PropTypes.array.isRequired,
+  computations: PropTypes.array,
   connectDropTarget: PropTypes.func.isRequired,
+  consortia: PropTypes.array,
   params: PropTypes.object.isRequired,
   savePipeline: PropTypes.func.isRequired,
 };
@@ -481,21 +495,21 @@ function mapStateToProps({ auth }) {
 }
 
 const PipelineWithData = compose(
-  graphql(fetchAllComputationsMetadataFunc, computationsProp), 
-  graphql(fetchAllConsortiaFunc, consortiaProp),
-  graphql(savePipelineFunc, {
+  graphql(FETCH_ALL_COMPUTATIONS_METADATA_QUERY, computationsProp),
+  graphql(FETCH_ALL_CONSORTIA_QUERY, consortiaProp),
+  graphql(SAVE_PIPELINE_MUTATION, {
     props: ({ mutate }) => ({
       savePipeline: pipeline => mutate({
         variables: { pipeline },
         update: (store, { data: { savePipeline } }) => {
-          const data = store.readQuery({ query: fetchAllPipelinesFunc });
+          const data = store.readQuery({ query: FETCH_ALL_PIPELINES_QUERY });
           const index = data.fetchAllPipelines.findIndex(cons => cons.id === savePipeline.id);
           if (index > -1) {
             data.fetchAllPipelines[index] = { ...savePipeline };
           } else {
             data.fetchAllPipelines.push(savePipeline);
           }
-          store.writeQuery({ query: fetchAllPipelinesFunc, data });
+          store.writeQuery({ query: FETCH_ALL_PIPELINES_QUERY, data });
         },
       }),
     }),

@@ -31,14 +31,21 @@ const queries = {
       }
     }
   `,
-  fetchComputationDetails: `
+  fetchComputation: `
     {
-      fetchComputationDetails (computationIds: $computationIds) {
+      fetchComputation (computationIds: $computationIds) {
         id
         computation {
           input
           output
         }
+      }
+    }
+  `,
+  fetchPipeline: `
+    {
+      fetchPipeline (pipelineId: $pipelineId) {
+        ${sharedFields.pipelineFields}
       }
     }
   `,

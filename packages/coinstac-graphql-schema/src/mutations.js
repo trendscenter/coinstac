@@ -8,6 +8,20 @@ const mutations = {
       }
     }
   `,
+  addUserRole: `
+    {
+      addUserRole(userId: $userId, table: $table, doc: $doc, role: $role) {
+        ${sharedFields.userMetadata}
+      }
+    }
+  `,
+  removeUserRole: `
+    {
+      removeUserRole(userId: $userId, table: $table, doc: $doc, role: $role) {
+        ${sharedFields.userMetadata}
+      }
+    }
+  `,
   saveConsortium: `
     {
       saveConsortium(consortium: $consortium) {

@@ -12,6 +12,7 @@
   "license": "ISC",
   "dependencies": {
     "apollo-server-hapi": "^1.0.2",
+    "bluebird": "^3.5.1",
     "boom": "^5.2.0",
     "coinstac-graphql-schema": "^2.6.0",
     "graphql": "^0.10.5",

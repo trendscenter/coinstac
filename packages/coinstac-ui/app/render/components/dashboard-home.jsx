@@ -6,8 +6,9 @@ import { Alert } from 'react-bootstrap';
 import { connect } from 'react-redux';
 import { graphql } from 'react-apollo';
 import StatusItem from './status-item';
-import { fetchAllComputationsMetadataFunc } from '../state/graphql/functions';
+import { FETCH_ALL_COMPUTATIONS_METADATA_QUERY } from '../state/graphql/functions';
 import { computationsProp } from '../state/graphql/props';
+import { initTestData } from '../state/ducks/collections';
 
 class DashboardHome extends Component {
   constructor(props) {
@@ -18,38 +19,9 @@ class DashboardHome extends Component {
     };
   }
 
-/*
-  componentWillMount() {
-    const {
-      // fetchRemoteResultsForUser,
-      username,
-    } = this.props;
-
-    this.interval = setInterval(() => fetchRemoteResultsForUser(username), 2000);
+  componentDidMount() {
+    this.props.initTestData();
   }
-*/
-
-/*
-  componentWillUpdate() {
-    const {
-      computations,
-      consortia,
-      fetchRemoteResultsForUser,
-      username,
-    } = this.props;
-
-    if (
-      !this.state.didInitResults &&
-      computations.length &&
-      consortia.length &&
-      username
-    ) {
-      this.setState({ didInitResults: true }, () => { // eslint-disable-line
-        fetchRemoteResultsForUser(username);
-      });
-    }
-  }
-  */
 
   componentWillUnmount() {
     if (this.interval) {
@@ -87,14 +59,7 @@ class DashboardHome extends Component {
 }
 
 DashboardHome.propTypes = {
-  computations: PropTypes.arrayOf(PropTypes.object),
-  consortia: PropTypes.arrayOf(PropTypes.shape({
-    _id: PropTypes.string.isRequired,
-    owners: PropTypes.arrayOf(PropTypes.string).isRequired,
-    users: PropTypes.arrayOf(PropTypes.string).isRequired,
-  })),
-  // fetchRemoteResultsForUser: PropTypes.func.isRequired,
-  remoteResults: PropTypes.arrayOf(PropTypes.object),
+  initTestData: PropTypes.func.isRequired,
   username: PropTypes.string,
 };
 
@@ -106,20 +71,13 @@ DashboardHome.defaultProps = {
 
 function mapStateToProps({
   auth,
-  consortia: { allConsortia },
-  // computations: { allComputations },
-  results: { remoteResults },
-  projects: { allProjects },
 }) {
   return {
-    consortia: allConsortia || [],
-    // computations: allComputations || [],
-    projects: allProjects || [],
-    remoteResults: remoteResults || [],
     username: auth.user.username || '',
   };
 }
 
-const DashHomeWithData = graphql(fetchAllComputationsMetadataFunc, computationsProp)(DashboardHome);
+const DashHomeWithData =
+  graphql(FETCH_ALL_COMPUTATIONS_METADATA_QUERY, computationsProp)(DashboardHome);
 
-export default connect(mapStateToProps)(DashHomeWithData);
+export default connect(mapStateToProps, { initTestData })(DashHomeWithData);

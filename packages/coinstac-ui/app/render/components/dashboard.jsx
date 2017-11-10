@@ -8,7 +8,6 @@ import UserAccountController from './user-account-controller';
 import CoinstacAbbr from './coinstac-abbr';
 
 class Dashboard extends Component {
-
   componentDidMount() {
     const { auth: { user } } = this.props;
     const { router } = this.context;

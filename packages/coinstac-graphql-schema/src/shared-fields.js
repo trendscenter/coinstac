@@ -9,14 +9,20 @@ const sharedFields = {
   `,
   consortiaInBrief: `
     id
-    activeComputationId
+    activePipelineId
     activeComputationInputs
-    activePipeline
     description
     name
     tags
+    members
     owners
-    users
+  `,
+  userMetadata: `
+    id
+    email
+    institution
+    passwordHash
+    permissions
   `,
   pipelineFields: `
     id

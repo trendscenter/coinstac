@@ -78,7 +78,6 @@ class FormLogin extends Component {
                 disabled={loading.isLoading}
                 block
               >Log In</Button>
-              {devButtons}
             </form>
           </div>
         </div>
