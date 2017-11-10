@@ -24,7 +24,7 @@ helperFunctions.getRethinkConnection()
     description: 'Test description',
     owningConsortium: 'test-cons-1',
     activePipelineId: '',
-    shared: false,
+    shared: true,
     steps: [
       {
         computations: [

@@ -20,7 +20,7 @@ class ConsortiumPipeline extends Component {
     let sharedPipelines = {};
     let activePipelineRef = {};
 
-    const data = ApolloClient.readQuery({ query: fetchAllPipelinesFunc });
+    const data = ApolloClient.readQuery({ query: FETCH_ALL_PIPELINES_QUERY });
     ownedPipelines = data.fetchAllPipelines.filter(
       pipe => pipe.owningConsortium === props.consortium.id
     );
@@ -46,7 +46,7 @@ class ConsortiumPipeline extends Component {
   }
 
   updateActivePipeline(val) {
-    const data = ApolloClient.readQuery({ query: fetchAllPipelinesFunc });
+    const data = ApolloClient.readQuery({ query: FETCH_ALL_PIPELINES_QUERY });
     const activePipelineRef = data.fetchAllPipelines.find(pipe => pipe.id === val);
 
     this.setState(prevState => ({
