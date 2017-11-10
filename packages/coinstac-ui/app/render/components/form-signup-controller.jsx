@@ -4,21 +4,28 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import FormSignup from './form-signup';
 import LayoutNoauth from './layout-noauth';
-import { clearUser, signUp } from '../state/ducks/auth';
+import { clearError, clearUser, signUp } from '../state/ducks/auth';
 
 class FormSignupController extends Component {
-
   constructor(props) {
     super(props);
     this.onSubmit = this.onSubmit.bind(this);
+    this.checkForUser = this.checkForUser.bind(this);
   }
 
-  componentWillMount() {
+  componentDidMount() {
     this.props.clearUser();
+  }
+
+  componentDidUpdate() {
+    this.checkForUser();
   }
 
   componentWillUnmount() {
-    this.props.clearUser();
+    const { auth, clearError } = this.props;
+    if (auth.error) {
+      clearError();
+    }
   }
 
   /**
@@ -35,7 +42,6 @@ class FormSignupController extends Component {
    * @return {undefined}
    */
   onSubmit(formData) {
-    const { router } = this.context;
     let error;
 
     if (!formData.name) {
@@ -63,7 +69,6 @@ class FormSignupController extends Component {
             level: 'success',
             message: 'Account created',
           });
-          process.nextTick(() => router.push('/dashboard'));
         }
       })
       .catch((error) => {
@@ -72,6 +77,13 @@ class FormSignupController extends Component {
           message: error.message,
         });
       });
+  }
+
+  checkForUser() {
+    const { router } = this.context;
+    if (this.props.auth.user.email.length) {
+      router.push('/dashboard');
+    }
   }
 
   render() {
@@ -108,6 +120,7 @@ FormSignupController.displayName = 'FormSignupController';
 
 FormSignupController.propTypes = {
   auth: PropTypes.object.isRequired,
+  clearError: PropTypes.func.isRequired,
   clearUser: PropTypes.func.isRequired,
   signUp: PropTypes.func.isRequired,
 };
@@ -116,4 +129,4 @@ const mapStateToProps = ({ auth }) => {
   return { auth };
 };
 
-export default connect(mapStateToProps, { clearUser, signUp })(FormSignupController);
+export default connect(mapStateToProps, { clearError, clearUser, signUp })(FormSignupController);

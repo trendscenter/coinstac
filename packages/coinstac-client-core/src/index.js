@@ -100,7 +100,7 @@ class CoinstacClient {
     this.consortia = {};
     this.computations = {};
     this.dbRegistry = {};
-    this.computationRegistryNew = {};
+    this.computationRegistryNew = new ComputationRegistryNew();
     this.projects = {};
     this.pool = {};
 
@@ -165,7 +165,6 @@ class CoinstacClient {
       .then(() => this._initSubAPIs())
       .then(() => this._initComputationRegistry())
       .then(() => this._initPool());
-      // .then(() => this.auth.getUser().serialize());
   }
 
   /**
@@ -215,9 +214,6 @@ class CoinstacClient {
    * @returns {Promise}
    */
   _initAuthorization(credentials) {
-    // this.auth.setDatabaseCredentials(response.data.data[0].coinstac);
-    // this.auth.setUser(response.data.data[0].user);
-
     const doLogin = () => this.auth.login(credentials);
 
     return credentials.email && credentials.name ?
@@ -235,8 +231,6 @@ class CoinstacClient {
     const computationsDirectory = this.getComputationsDirectory();
 
     this.logger.info('initializing ComputationRegistry');
-
-    this.computationRegistryNew = new ComputationRegistryNew();
 
     return bluebird.promisify(mkdirp)(computationsDirectory)
       .then(() => computationRegistryFactory({

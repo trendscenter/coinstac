@@ -1,9 +1,6 @@
-import { cloneDeep, each } from 'lodash';
+import { each } from 'lodash';
 import app from 'ampersand-app';
 import { applyAsyncLoading } from './loading';
-import { updateConsortia } from './consortia';
-import { updateComputations } from './computations';
-import { updateProjectStatus } from './projects';
 
 import {
   computationCompleteNotification,
@@ -103,54 +100,13 @@ export const addConsortiumComputationListener = (consortium) => {
 * @returns {function}
 */
 export const initPrivateBackgroundServices = applyAsyncLoading(() => {
-  return (dispatch) => {
-    // set background event listeners
-    // @NOTE: "change" document shape differences in computations & consortia attributed
-    // to different replication configs (e.g. sync both dirs vs sync on dir)
-    const tiaDB = app.core.dbRegistry.get('consortia');
-    tiaDB.syncEmitter.on('change', (change) => {
-      const toUpdate = change.change.docs.map((changed) => {
-        const cloned = cloneDeep(changed); // de-ref main memory
-        delete cloned._revisions; // gross. pouchy maybe can save the day?
-        return cloned;
-      });
-      dispatch(updateConsortia(toUpdate));
-    });
-
-    const compsDB = app.core.dbRegistry.get('computations');
-    compsDB.syncEmitter.on('change', (change) => {
-      const toUpdate = change.docs.map((changed) => {
-        const cloned = cloneDeep(changed); // de-ref main memory
-        delete cloned._revisions; // gross. pouchy maybe can save the day?
-        return cloned;
-      });
-      updateComputations({ dispatch, toUpdate, isBg: true });
-    });
-    const appUser = app.core.auth.getUser().username;
-    app.core.consortia.all()
-    .then((consortia) => {
-      dispatch(updateConsortia(consortia));
-
-      const userConsortia = consortia.filter((c) => {
-        return c.users.indexOf(appUser) > -1;
-      });
-
-      userConsortia.forEach((consortium) => {
-        // this is called twice, once on startup
-        // second time inside change listener
-        joinSlaveComputation(consortium);
-        addConsortiumComputationListener(consortium);
-      });
-    });
-
+  return () => {
     /**
      * Listen to project changes and update the renderer's state tree.
      *
      * @todo Refactor into service? Something?
      */
-    app.core.projects.initializeListeners((error, { doc, projectId }) => {
-      let status;
-
+    app.core.projects.initializeListeners((error) => {
       if (error) {
         app.logger.error(error);
         app.notify({
@@ -161,22 +117,7 @@ export const initPrivateBackgroundServices = applyAsyncLoading(() => {
         // TODO: attempt to recover?
         throw error;
       }
-
-      if (doc.userErrors.length) {
-        status = 'error';
-      } else if (doc.complete) {
-        status = 'complete';
-      } else {
-        status = 'active';
-      }
-
-      dispatch(updateProjectStatus({ id: projectId, status }));
     });
-
-    return Promise.all([
-      tiaDB.all().then(docs => dispatch(updateConsortia(docs))),
-      compsDB.all().then(docs => updateComputations({ dispatch, toUpdate: docs, isBg: true })),
-    ]);
   };
 });
 

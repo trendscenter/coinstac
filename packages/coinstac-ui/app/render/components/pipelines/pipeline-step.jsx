@@ -3,10 +3,11 @@ import { DragSource, DropTarget } from 'react-dnd';
 import PropTypes from 'prop-types';
 import { compose } from 'redux';
 import { graphql } from 'react-apollo';
-import { Button, ControlLabel, FormGroup, FormControl, Panel } from 'react-bootstrap';
+import { Button, Panel } from 'react-bootstrap';
 import ItemTypes from './pipeline-item-types';
 import PipelineStepInput from './pipeline-step-input';
-import { fetchComputationDetailsFunc } from '../../state/graphql/functions';
+import { FETCH_COMPUTATION_QUERY } from '../../state/graphql/functions';
+import { compIOProp } from '../../state/graphql/props';
 
 const styles = {
   container: {
@@ -79,7 +80,7 @@ class PipelineStep extends Component {
       ...other
     } = this.props;
 
-    const { id, computations, controller } = step;
+    const { id, computations } = step;
 
     return connectDragSource(connectDropTarget(
       <div style={styles.container}>
@@ -88,27 +89,15 @@ class PipelineStep extends Component {
           style={{ ...styles.draggable, opacity: isDragging ? 0 : 1 }}
           {...other}
         >
-        <Button 
-          key={`delete-step-button-${step.id}`}
-          bsStyle="danger"
-          className="pull-right"
-          onClick={() => deleteStep(step.id)}
-        >
-          Delete
-        </Button>
-          <h4>Step Options:</h4>
-          <FormGroup controlId={`${id}-iterations`}>
-            <ControlLabel>Iterations</ControlLabel>
-            <FormControl
-              disabled={!owner}
-              inputRef={(input) => { this.iterations = input; }}
-              onChange={() => updateStep({ ...step, iterations: this.iterations.value })}
-              type="number"
-              value={controller.options.iterations}
-            />
-          </FormGroup>
-          <hr />
-          <h4>Input Mappings:</h4>
+          <Button
+            key={`delete-step-button-${step.id}`}
+            bsStyle="danger"
+            className="pull-right"
+            onClick={() => deleteStep(step.id)}
+          >
+            Delete
+          </Button>
+          <h4>Input Parameters:</h4>
           {compIO !== null && Object.entries(compIO.computation.input).map(localInput => (
             <PipelineStepInput
               isCovariate={localInput[0] === 'covariates'}
@@ -157,15 +146,10 @@ PipelineStep.propTypes = {
 };
 
 const PipelineStepWithData = compose(
-  graphql(fetchComputationDetailsFunc, {
-    props: ({ data: { fetchComputationDetails } }) => ({
-      compIO: fetchComputationDetails ? fetchComputationDetails[0] : null,
-    }),
-    options: ({ computationId }) => ({ variables: { computationIds: [computationId] } }),
-  }),
-  graphql(fetchComputationDetailsFunc, {
-    props: ({ data: { fetchComputationDetails } }) => ({
-      possibleInputs: fetchComputationDetails,
+  graphql(FETCH_COMPUTATION_QUERY, compIOProp),
+  graphql(FETCH_COMPUTATION_QUERY, {
+    props: ({ data: { fetchComputation } }) => ({
+      possibleInputs: fetchComputation,
     }),
     options: ({ previousComputationIds }) =>
       ({ variables: { computationIds: previousComputationIds } }),

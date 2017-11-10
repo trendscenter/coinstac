@@ -106,6 +106,19 @@ Follow the general steps above before continuing.
 
    Once cloned, enter the directory and install its dependencies: `cd mock-steelpenny`, `npm install`.
 
+   Add a couple more users to `mock-steelpenny/api.js` as follows:
+   ```js
+    const validAuthentications = [
+      [/^demo.*/, /.*/],
+      [/^mochatest$/, /^mochapassword/],
+      [/^test$/, /^password/],
+      [/^author$/, /^password/],
+      [/^server$/, /^password/],
+      [/^(account|password)-will-expire$/, /.*/],
+    ]
+   ```
+
+
 2. **COINS** Next, create a directory in your root directory called **coins**. Alternatively, clone the [COINS](https://github.com/MRN-Code/coins) repo there. Once you have the directory, create a subdirectory called **config**. Lastly create a file at `/coins/config/dbmap.json` and copy into it the following:
 
    ```json
@@ -117,6 +130,21 @@ Follow the general steps above before continuing.
      
    }
    ```
+3. **CSTAC DB** Next, create a new directory and file at `/etc/coinstac/cstacDBMap.json` with the following contents:
+
+   ```json
+    {
+      "rethinkdbAdmin": {
+        "user": "coinstac",
+        "password": "test"
+      },
+      "rethinkdbServer": {
+        "username": "server",
+        "password": "password"
+      },
+      "cstacJWTSecret": "friends"
+    }
+
 
 ## Configuration
 
@@ -159,19 +187,18 @@ root: ~/coinstac/
 # Runs before everything. Use it to start daemons etc.
 pre:
   # Init RethinkDB
-  - rethinkdb --daemon
-  - cd ~/coinstac/packages/coinstac-graphql
+  - rethinkdb --daemon --directory ~/rethinkdb_data
+  - cd ~/coinstac/packages/coinstac-api-server
   - npm run test-setup
 
   - couchdb -b
 
   # Add CouchDB security
-  - sleep 2 && curl -X PUT localhost:5984/_config/admins/coinstac -d '"test"'
+  # - sleep 2 && curl -X PUT localhost:5984/_config/admins/coinstac -d '"test"'
 
   # Init database
   - cd ~/coinstac/packages/coinstac-server-core
   - npm run clean:db
-  - bin/coinstac-server-core --nohang
   - cd ~/coinstac/packages/coinstac-ui
   - npm run clean:db
   - cd ~/coinstac/
@@ -184,13 +211,13 @@ startup_window: editor
 
 # Runs after everything. Use it to attach to tmux with custom options etc.
 post:
-  - curl -X DELETE localhost:5984/_config/admins/coinstac --user coinstac:test
+  # - curl -X DELETE localhost:5984/_config/admins/coinstac --user coinstac:test
   - couchdb -d
-  - pkill -9 "rethinkdb"
+  - pkill -2 "rethinkdb"
 
 windows:
   - dbapi:
-      root: ~/coinstac/packages/coinstac-graphql
+      root: ~/coinstac/packages/coinstac-api-server
       panes:
         - npm run start
   - steelpenny:

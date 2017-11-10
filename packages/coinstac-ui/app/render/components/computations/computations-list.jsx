@@ -7,7 +7,7 @@ import {
   Button,
   Table,
 } from 'react-bootstrap';
-import { fetchAllComputationsMetadataFunc } from '../../state/graphql/functions';
+import { FETCH_ALL_COMPUTATIONS_METADATA_QUERY } from '../../state/graphql/functions';
 import { computationsProp } from '../../state/graphql/props';
 import ComputationIO from './computation-io';
 
@@ -30,21 +30,19 @@ class ComputationsList extends Component { // eslint-disable-line
   }
 
   render() {
-    const { auth: { user }, computations } = this.props;
+    const { computations } = this.props;
 
     return (
       <div>
         <div className="page-header clearfix">
           <h1 className="pull-left">Computations</h1>
-          {user.permissions.computations.write &&
-            <LinkContainer className="pull-right" to="/dashboard/computations/new">
-              <Button bsStyle="primary" className="pull-right">
-                <span aria-hidden="true" className="glphicon glyphicon-plus" />
-                {' '}
-                Create Computation
-              </Button>
-            </LinkContainer>
-          }
+          <LinkContainer className="pull-right" to="/dashboard/computations/new">
+            <Button bsStyle="primary" className="pull-right">
+              <span aria-hidden="true" className="glphicon glyphicon-plus" />
+              {' '}
+              Create Computation
+            </Button>
+          </LinkContainer>
         </div>
         {computations.length > 0 &&
           <Table striped bordered condensed style={styles.topMargin}>
@@ -83,16 +81,15 @@ class ComputationsList extends Component { // eslint-disable-line
 }
 
 ComputationsList.propTypes = {
-  auth: PropTypes.object.isRequired,
   computations: PropTypes.array.isRequired,
 };
 
-function mapStateToProps({ auth, featureTest: { dockerOut } }) {
-  return { auth, dockerOut };
+function mapStateToProps({ featureTest: { dockerOut } }) {
+  return { dockerOut };
 }
 
 const ComputationsListWithData = graphql(
-  fetchAllComputationsMetadataFunc,
+  FETCH_ALL_COMPUTATIONS_METADATA_QUERY,
   computationsProp
 )(ComputationsList);
 

@@ -1,13 +1,12 @@
-const computationFields = {
+const schemaFields = {
   consortiumFields: `
-    activeComputationId: ID
+    activePipelineId: ID
     activeComputationInputs: [String]
-    activePipeline: ID
     description: String!
     name: String!
     tags: [String]
     owners: [ID]
-    users: [ID]
+    members: [ID]
     pipelines: [ID]
     results: [ID]
   `,
@@ -41,7 +40,14 @@ const computationFields = {
   `,
   pipelineStepFields: `
     ioMap: JSON 
+    id: ID!
+  `,
+  userFields: `
+    email: String!
+    institution: String
+    passwordHash: String!
+    permissions: JSON
   `,
 };
 
-module.exports = computationFields;
+module.exports = schemaFields;
