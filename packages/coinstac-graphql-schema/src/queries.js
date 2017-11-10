@@ -24,7 +24,7 @@ const queries = {
       }
     }
   `,
- fetchAllPipelines: `
+  fetchAllPipelines: `
     {
       fetchAllPipelines {
         ${sharedFields.pipelineFields}
