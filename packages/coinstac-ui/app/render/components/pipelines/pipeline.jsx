@@ -6,7 +6,7 @@ import HTML5Backend from 'react-dnd-html5-backend';
 import PropTypes from 'prop-types';
 import { graphql } from 'react-apollo';
 import shortid from 'shortid';
-import { isEqual } from 'lodash';
+import { isEqual, isEmpty } from 'lodash';
 import update from 'immutability-helper';
 import {
   Accordion,
@@ -75,7 +75,6 @@ class Pipeline extends Component {
     if (props.params.consortiumId) {
       const data = ApolloClient.readQuery({ query: FETCH_ALL_CONSORTIA_QUERY });
       consortium = data.fetchAllConsortia.find(cons => cons.id === props.params.consortiumId);
-      delete consortium.__typename;
       pipeline.owningConsortium = consortium.id;
     }
 
@@ -91,14 +90,14 @@ class Pipeline extends Component {
     this.updateStep = this.updateStep.bind(this);
     this.deleteStep = this.deleteStep.bind(this);
     this.updatePipeline = this.updatePipeline.bind(this);
-    this.open = this.open.bind(this);
-    this.close = this.close.bind(this);
+    this.openModal = this.openModal.bind(this);
+    this.closeModal = this.closeModal.bind(this);
     this.savePipeline = this.savePipeline.bind(this);
     this.checkPipeline = this.checkPipeline.bind(this);
   }
 
   componentWillReceiveProps(nextProps) {
-    if (!this.state.consortium && nextProps.consortia) {
+    if (isEmpty(this.state.consortium) && nextProps.consortia) {
       if (nextProps.consortia.length) {
         let consortiumId = this.state.pipeline.owningConsortium;
         let consortium = nextProps.consortia[0];
@@ -244,14 +243,14 @@ class Pipeline extends Component {
         }),
       },
     }));
-    this.close();
+    this.closeModal();
   }
 
-  close() {
+  closeModal() {
     this.setState({ showModal: false });
   }
 
-  open(stepId) {
+  openModal(stepId) {
     this.setState({
       showModal: true,
       stepToDelete: stepId,
@@ -262,7 +261,7 @@ class Pipeline extends Component {
     if (update.param === 'owningConsortium') {
       this.setState({ consortium: { id: update.value, name: update.consortiumName } });
     }
-
+    
     this.setState(prevState => ({
       pipeline: { ...prevState.pipeline, [update.param]: update.value },
     }));
@@ -308,7 +307,7 @@ class Pipeline extends Component {
   }
 
   render() {
-    const { computations, connectDropTarget, consortia, savePipeline } = this.props;
+    const { computations, connectDropTarget, consortia } = this.props;
     const { consortium, pipeline } = this.state;
     const title = pipeline.id ? 'Pipeline Edit' : 'Pipeline Creation';
 
@@ -376,7 +375,7 @@ class Pipeline extends Component {
                 className="pull-right"
                 disabled={!this.state.pipeline.name.length ||
                   !this.state.pipeline.description.length ||
-                  !consortium || this.checkPipeline()}
+                  !consortium || this.checkPipeline() || !this.state.pipeline.steps.length}
                 onClick={this.savePipeline}
               >
                 Save Pipeline
@@ -425,7 +424,7 @@ class Pipeline extends Component {
             ))}
           </DropdownButton>
 
-          <Modal show={this.state.showModal} onHide={this.close}>
+          <Modal show={this.state.showModal} onHide={this.closeModal}>
             <Modal.Header closeButton>
               <Modal.Title>Delete</Modal.Title>
             </Modal.Header>
@@ -433,7 +432,7 @@ class Pipeline extends Component {
               <h4>Are you sure you want to delete this step?</h4>
             </Modal.Body>
             <Modal.Footer>
-              <Button className="pull-left" onClick={this.close}>Cancel</Button>
+              <Button className="pull-left" onClick={this.closeModal}>Cancel</Button>
               <Button bsStyle="danger" onClick={this.deleteStep}>Delete</Button>
             </Modal.Footer>
           </Modal>
@@ -445,7 +444,7 @@ class Pipeline extends Component {
                   {this.state.pipeline.steps.map((step, index) => (
                     <PipelineStep
                       computationId={step.computations[0].id}
-                      deleteStep={this.open}
+                      deleteStep={this.openModal}
                       eventKey={step.id}
                       id={step.id}
                       key={step.id}

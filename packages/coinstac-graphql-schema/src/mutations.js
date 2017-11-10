@@ -35,7 +35,7 @@ const mutations = {
         ${sharedFields.pipelineFields}
       }
     }
-  `
+  `,
 };
 
 module.exports = mutations;
