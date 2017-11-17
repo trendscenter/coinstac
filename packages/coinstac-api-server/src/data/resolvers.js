@@ -2,11 +2,15 @@ const rethink = require('rethinkdb');
 const Boom = require('boom');
 const GraphQLJSON = require('graphql-type-json');
 const Promise = require('bluebird');
-const { PubSub } = require('graphql-subscriptions');
+const { PubSub, withFilter } = require('graphql-subscriptions');
 const helperFunctions = require('../auth-helpers');
+const initSubscriptions = require('./subscriptions');
 
-const pubsub = new PubSub();
-
+/**
+ * Helper function to retrieve all members of given table
+ * @param {string} table - The table name
+ * @return {array} The contents of the requested table
+ */
 function fetchAll(table) {
   return helperFunctions.getRethinkConnection()
     .then(connection =>
@@ -16,26 +20,57 @@ function fetchAll(table) {
     .then(result => result);
 }
 
+/**
+ * Helper function to retrieve a single entry in a table
+ * @param {string} table - The table name
+ * @param {string} id - The entry id
+ * @return {object} The requested table entry
+ */
+function fetchOne(table, id) {
+  return helperFunctions.getRethinkConnection()
+    .then(connection =>
+      rethink.table(table).get(id).run(connection)
+    )
+    .then(result => result);
+}
+
+const pubsub = new PubSub();
+
+initSubscriptions(pubsub);
+
 /* eslint-disable */
 const resolvers = {
   JSON: GraphQLJSON,
   Query: {
     /**
-     * Returns all consortia. Checks user permissions retrieved from JWT middleware validateFunc.
+     * Returns all consortia.
+     * @return {array} All consortia
      */
-    fetchAllConsortia: ({ auth: { credentials: { permissions } } }, _) => {
-      return helperFunctions.getRethinkConnection()
-        .then((connection) =>
-          rethink.table('consortia').run(connection)
-        )
-        .then((cursor) => cursor.toArray())
-        .then((result) => result);
-    },
+    fetchAllConsortia: () => fetchAll('consortia'),
+    /**
+     * Returns single consortium.
+     * @param {object} args
+     * @param {string} args.id
+     * @return {object} Requested consortium if id present, null otherwise
+     */
+    fetchConsortium: (_, args) => args.consortiumId ? fetchOne('consortia', args.consortiumId) : null,
     /**
      * Returns all computations. Checks user permissions retrieved from JWT middleware validateFunc.
      */
-    fetchAllComputations: ({ auth: { credentials: { permissions } } }, _) => {
-      return fetchAll('computations');
+    fetchAllComputations: () => fetchAll('computations'),
+    /**
+     * Returns metadata for specific computation name
+     */
+    fetchComputation: ({ auth: { credentials: { permissions } } }, args) => {
+      return helperFunctions.getRethinkConnection()
+        .then((connection) =>
+          rethink.table('computations').getAll(...args.computationIds)
+            .run(connection)
+        )
+        .then((cursor) => cursor.toArray())
+        .then((result) => {
+          return result;
+        });
     },
     /**
      * Returns all pipelines. Checks user permissions retrieved from JWT middleware validateFunc.
@@ -83,33 +118,7 @@ const resolvers = {
         )
         .then(result => result);
     },
-    /**
-     * Returns metadata for specific computation name
-     */
-    fetchComputation: ({ auth: { credentials: { permissions } } }, args) => {
-      return helperFunctions.getRethinkConnection()
-        .then((connection) =>
-          rethink.table('computations').getAll(...args.computationIds)
-            .run(connection)
-        )
-        .then((cursor) => cursor.toArray())
-        .then((result) => {
-          return result;
-        });
-    },
     validateComputation: (_, args) => {
-      return new Promise();
-    },
-    fetchConsortiumById: (_, args) => {
-      return new Promise();
-    },
-    fetchRunForConsortium: (_, args) => {
-      return new Promise();
-    },
-    fetchRunForUser: (_, args) => {
-      return new Promise();
-    },
-    fetchRunById: () => {
       return new Promise();
     },
   },
@@ -261,9 +270,23 @@ const resolvers = {
     }
   },
   Subscription: {
+    computationChanged: {
+      subscribe: withFilter(
+        () => pubsub.asyncIterator('computationChanged'),
+        (payload, variables) => (!variables.computationId || payload.computationId === variables.computationId)
+      )
+    },
     consortiumChanged: {
-      subscribe: () =>
-        pubsub.asyncIterator('consortiumChanged')
+      subscribe: withFilter(
+        () => pubsub.asyncIterator('consortiumChanged'),
+        (payload, variables) => (!variables.consortiumId || payload.consortiumId === variables.consortiumId)
+      )
+    },
+    pipelineChanged: {
+      subscribe: withFilter(
+        () => pubsub.asyncIterator('pipelineChanged'),
+        (payload, variables) => (!variables.pipelineId || payload.pipelineId === variables.pipelineId)
+      )
     },
   },
 };

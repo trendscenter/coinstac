@@ -2,6 +2,7 @@ const schemaFields = {
   consortiumFields: `
     activePipelineId: ID
     activeComputationInputs: [String]
+    delete: Boolean
     description: String!
     name: String!
     tags: [String]
@@ -31,6 +32,7 @@ const schemaFields = {
     name: String
     description: String
     owningConsortium: ID
+    delete: Boolean
   `,
   pipelineControllerFields: `
     id: ID

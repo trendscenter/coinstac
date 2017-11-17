@@ -4,6 +4,7 @@
   "description": "COINSTAC desktop application.",
   "main": "app/main/index.js",
   "dependencies": {
+    "add-graphql-subscriptions": "^1.0.1",
     "ampersand-app": "^2.0.0",
     "app-module-path": "^1.1.0",
     "async": "^2.4.1",
@@ -51,6 +52,7 @@
     "serialize-error": "^2.1.0",
     "sha-1": "^0.1.1",
     "shortid": "^2.2.8",
+    "subscriptions-transport-ws": "0.8.3",
     "tail": "^1.2.1",
     "winston": "^2.3.1"
   },

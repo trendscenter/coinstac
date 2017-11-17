@@ -6,12 +6,16 @@ import { graphql, compose } from 'react-apollo';
 import ConsortiumAbout from './consortium-about';
 import ConsortiumPipeline from './consortium-pipeline';
 import ConsortiumResults from './consortium-results';
-import ApolloClient from '../../state/apollo-client';
 import { updateUserPerms } from '../../state/ducks/auth';
-import { userRolesProp } from '../../state/graphql/props';
+import {
+  getSelectAndSubProp,
+  saveConsortiumProp,
+  userRolesProp,
+} from '../../state/graphql/props';
 import {
   ADD_USER_ROLE_MUTATION,
-  FETCH_ALL_CONSORTIA_QUERY,
+  CONSORTIUM_CHANGED_SUBSCRIPTION,
+  FETCH_CONSORTIUM_QUERY,
   SAVE_CONSORTIUM_MUTATION,
 } from '../../state/graphql/functions';
 
@@ -25,7 +29,7 @@ class ConsortiumTabs extends Component {
   constructor(props) {
     super(props);
 
-    let consortium = {
+    const consortium = {
       name: '',
       description: '',
       members: [],
@@ -35,18 +39,31 @@ class ConsortiumTabs extends Component {
       tags: [],
     };
 
-    if (props.params.consortiumId) {
-      const data = ApolloClient.readQuery({ query: FETCH_ALL_CONSORTIA_QUERY });
-      consortium = data.fetchAllConsortia.find(cons => cons.id === props.params.consortiumId);
-      delete consortium.__typename;
-    }
-
     this.state = {
       consortium,
-      owner: !props.params.consortiumId || consortium.owners.indexOf(props.auth.user.id) !== -1,
+      unsubscribeConsortia: null,
     };
     this.saveConsortium = this.saveConsortium.bind(this);
     this.updateConsortium = this.updateConsortium.bind(this);
+  }
+
+  componentWillReceiveProps(nextProps) {
+    if (this.state.consortium.id && !this.state.unsubscribeConsortia) {
+      this.setState({
+        unsubscribeConsortia: this.props.subscribeToConsortia(this.state.consortium.id),
+      });
+    }
+
+    if (nextProps.activeConsortium) {
+      const { activeConsortium: { __typename, ...other } } = nextProps;
+      this.setState({ consortium: { ...other } });
+    }
+  }
+
+  componentWillUnmount() {
+    if (this.state.unsubscribeConsortia) {
+      this.state.unsubscribeConsortia();
+    }
   }
 
   saveConsortium(e) {
@@ -59,24 +76,11 @@ class ConsortiumTabs extends Component {
     }
 
     this.props.saveConsortium(this.state.consortium)
-    .then(({ data: { saveConsortium } }) => {
-      this.props.addUserRole(this.props.auth.user.id, 'consortia', saveConsortium.id, 'owner');
+    .then(({ data: { saveConsortium: { __typename, ...other } } }) => {
+      this.props.addUserRole(this.props.auth.user.id, 'consortia', other.id, 'owner');
 
       // TODO: hook activePipelineId and Inputs
-      this.setState({
-        consortium:
-        {
-          id: saveConsortium.id,
-          name: saveConsortium.name,
-          description: saveConsortium.description,
-          members: saveConsortium.members,
-          owners: saveConsortium.owners,
-          activePipelineId: null,
-          activeComputationInputs: null,
-          tags: null,
-
-        },
-      });
+      this.setState({ consortium: { ...other } });
       // TODO: Use redux to display success/failure messages after mutations
     })
     .catch(({ graphQLErrors }) => {
@@ -106,7 +110,10 @@ class ConsortiumTabs extends Component {
               consortium={this.state.consortium}
               saveConsortium={this.saveConsortium}
               updateConsortium={this.updateConsortium}
-              owner={this.state.owner}
+              owner={
+                !this.props.params.consortiumId ||
+                this.state.consortium.owners.indexOf(this.props.auth.user.id) !== -1
+              }
             />
           </Tab>
           <Tab
@@ -117,7 +124,10 @@ class ConsortiumTabs extends Component {
           >
             <ConsortiumPipeline
               consortium={this.state.consortium}
-              owner={this.state.owner}
+              owner={
+                !this.props.params.consortiumId ||
+                this.state.consortium.owners.indexOf(this.props.auth.user.id) !== -1
+              }
             />
           </Tab>
           <Tab
@@ -136,11 +146,16 @@ class ConsortiumTabs extends Component {
   }
 }
 
+ConsortiumTabs.defaultProps = {
+  subscribeToConsortia: null,
+};
+
 ConsortiumTabs.propTypes = {
   addUserRole: PropTypes.func.isRequired,
   auth: PropTypes.object.isRequired,
   params: PropTypes.object.isRequired,
   saveConsortium: PropTypes.func.isRequired,
+  subscribeToConsortia: PropTypes.func,
 };
 
 function mapStateToProps({ auth }) {
@@ -148,24 +163,16 @@ function mapStateToProps({ auth }) {
 }
 
 const ConsortiumTabsWithData = compose(
+  graphql(FETCH_CONSORTIUM_QUERY, getSelectAndSubProp(
+    'activeConsortium',
+    CONSORTIUM_CHANGED_SUBSCRIPTION,
+    'consortiumId',
+    'subscribeToConsortia',
+    'consortiumChanged',
+    'fetchConsortium'
+  )),
   graphql(ADD_USER_ROLE_MUTATION, userRolesProp('addUserRole')),
-  graphql(SAVE_CONSORTIUM_MUTATION, {
-    props: ({ mutate }) => ({
-      saveConsortium: consortium => mutate({
-        variables: { consortium },
-        update: (store, { data: { saveConsortium } }) => {
-          const data = store.readQuery({ query: FETCH_ALL_CONSORTIA_QUERY });
-          const index = data.fetchAllConsortia.findIndex(cons => cons.id === saveConsortium.id);
-          if (index > -1) {
-            data.fetchAllConsortia[index] = { ...saveConsortium };
-          } else {
-            data.fetchAllConsortia.push(saveConsortium);
-          }
-          store.writeQuery({ query: FETCH_ALL_CONSORTIA_QUERY, data });
-        },
-      }),
-    }),
-  })
+  graphql(SAVE_CONSORTIUM_MUTATION, saveConsortiumProp)
 )(ConsortiumTabs);
 
 export default connect(mapStateToProps, { updateUserPerms })(ConsortiumTabsWithData);

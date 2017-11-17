@@ -25,7 +25,7 @@ const mutations = {
   saveConsortium: `
     {
       saveConsortium(consortium: $consortium) {
-        ${sharedFields.consortiaInBrief}
+        ${sharedFields.consortiaFields}
       }
     }
   `,

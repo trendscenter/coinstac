@@ -7,10 +7,11 @@ const sharedFields = {
       version
     }
   `,
-  consortiaInBrief: `
+  consortiaFields: `
     id
     activePipelineId
     activeComputationInputs
+    delete
     description
     name
     tags
@@ -26,6 +27,7 @@ const sharedFields = {
   `,
   pipelineFields: `
     id
+    delete
     description
     name
     owningConsortium
