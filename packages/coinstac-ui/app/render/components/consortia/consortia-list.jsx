@@ -7,6 +7,7 @@ import PropTypes from 'prop-types';
 import ListItem from '../common/list-item';
 import { updateUserPerms } from '../../state/ducks/auth';
 import {
+  CONSORTIUM_CHANGED_SUBSCRIPTION,
   DELETE_CONSORTIUM_MUTATION,
   JOIN_CONSORTIUM_MUTATION,
   LEAVE_CONSORTIUM_MUTATION,
@@ -16,7 +17,8 @@ import {
 } from '../../state/graphql/functions';
 import {
   consortiaMembershipProp,
-  consortiaProp,
+  deleteConsortiumProp,
+  getAllAndSubProp,
   userRolesProp,
 } from '../../state/graphql/props';
 
@@ -28,10 +30,22 @@ class ConsortiaList extends Component {
   constructor(props) {
     super(props);
 
+    this.state = { unsubscribeConsortia: null };
+
     this.getOptions = this.getOptions.bind(this);
     this.deleteConsortium = this.deleteConsortium.bind(this);
     this.joinConsortium = this.joinConsortium.bind(this);
     this.leaveConsortium = this.leaveConsortium.bind(this);
+  }
+
+  componentWillReceiveProps(nextProps) {
+    if (nextProps.consortia && !this.state.unsubscribeConsortia) {
+      this.setState({ unsubscribeConsortia: this.props.subscribeToConsortia(null) });
+    }
+  }
+
+  componentWillUnmount() {
+    this.state.unsubscribeConsortia();
   }
 
   getOptions(member, owner, id) {
@@ -137,6 +151,7 @@ ConsortiaList.propTypes = {
   joinConsortium: PropTypes.func.isRequired,
   leaveConsortium: PropTypes.func.isRequired,
   removeUserRole: PropTypes.func.isRequired,
+  subscribeToConsortia: PropTypes.func.isRequired,
 };
 
 ConsortiaList.defaultProps = {
@@ -148,22 +163,14 @@ const mapStateToProps = ({ auth }) => {
 };
 
 const ConsortiaListWithData = compose(
-  graphql(FETCH_ALL_CONSORTIA_QUERY, consortiaProp),
-  graphql(DELETE_CONSORTIUM_MUTATION, {
-    props: ({ mutate }) => ({
-      deleteConsortium: consortiumId => mutate({
-        variables: { consortiumId },
-        update: (store, { data: { deleteConsortiumById } }) => {
-          const data = store.readQuery({ query: FETCH_ALL_CONSORTIA_QUERY });
-          const index = data.fetchAllConsortia.findIndex(con => con.id === deleteConsortiumById.id);
-          if (index > -1) {
-            data.fetchAllConsortia.splice(index, 1);
-          }
-          store.writeQuery({ query: FETCH_ALL_CONSORTIA_QUERY, data });
-        },
-      }),
-    }),
-  }),
+  graphql(FETCH_ALL_CONSORTIA_QUERY, getAllAndSubProp(
+    CONSORTIUM_CHANGED_SUBSCRIPTION,
+    'consortia',
+    'fetchAllConsortia',
+    'subscribeToConsortia',
+    'consortiumChanged'
+  )),
+  graphql(DELETE_CONSORTIUM_MUTATION, deleteConsortiumProp),
   graphql(JOIN_CONSORTIUM_MUTATION, consortiaMembershipProp('joinConsortium')),
   graphql(LEAVE_CONSORTIUM_MUTATION, consortiaMembershipProp('leaveConsortium')),
   graphql(ADD_USER_ROLE_MUTATION, userRolesProp('addUserRole')),

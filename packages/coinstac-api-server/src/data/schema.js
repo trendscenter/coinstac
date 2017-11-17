@@ -130,17 +130,16 @@ const typeDefs = `
     fetchAllComputations: [Computation]
     fetchComputation(computationIds: [ID]): [Computation]
     fetchAllConsortia: [Consortium]
+    fetchConsortium(consortiumId: ID): Consortium
     fetchPipeline(pipelineId: ID): Pipeline
     fetchAllPipelines: [Pipeline]
     validateComputation(compId: ID): Boolean
-    fetchConsortiumById(consortiumId: ID): Consortium
-    fetchRunForConsortium(consortiumId: ID): [Run]
-    fetchRunForUser(username: String): [Run]
-    fetchRunById: Run
   }
 
   type Subscription {
-    consortiumChanged: Consortium 
+    computationChanged(computationId: ID): Computation
+    consortiumChanged(consortiumId: ID): Consortium
+    pipelineChanged(pipelineId: ID): Pipeline
   }
 `;
 

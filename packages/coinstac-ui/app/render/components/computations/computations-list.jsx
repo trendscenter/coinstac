@@ -7,8 +7,11 @@ import {
   Button,
   Table,
 } from 'react-bootstrap';
-import { FETCH_ALL_COMPUTATIONS_METADATA_QUERY } from '../../state/graphql/functions';
-import { computationsProp } from '../../state/graphql/props';
+import {
+  COMPUTATION_CHANGED_SUBSCRIPTION,
+  FETCH_ALL_COMPUTATIONS_METADATA_QUERY,
+} from '../../state/graphql/functions';
+import { getAllAndSubProp } from '../../state/graphql/props';
 import ComputationIO from './computation-io';
 
 const styles = {
@@ -88,10 +91,13 @@ function mapStateToProps({ featureTest: { dockerOut } }) {
   return { dockerOut };
 }
 
-const ComputationsListWithData = graphql(
-  FETCH_ALL_COMPUTATIONS_METADATA_QUERY,
-  computationsProp
-)(ComputationsList);
+const ComputationsListWithData = graphql(FETCH_ALL_COMPUTATIONS_METADATA_QUERY, getAllAndSubProp(
+  COMPUTATION_CHANGED_SUBSCRIPTION,
+  'computations',
+  'fetchAllComputations',
+  'subscribeToComputations',
+  'computationChanged'
+))(ComputationsList);
 
 
 export default connect(mapStateToProps)(ComputationsListWithData);

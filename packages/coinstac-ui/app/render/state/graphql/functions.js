@@ -11,6 +11,16 @@ export const ADD_USER_ROLE_MUTATION = gql`
     ${mutations.addUserRole}
 `;
 
+export const COMPUTATION_CHANGED_SUBSCRIPTION = gql`
+  subscription computationChanged($computationId: ID)
+    ${queries.fetchAllComputationsMetadata}
+`;
+
+export const CONSORTIUM_CHANGED_SUBSCRIPTION = gql`
+  subscription consortiumChanged($consortiumId: ID)
+    ${queries.consortiumChanged}
+`;
+
 export const DELETE_CONSORTIUM_MUTATION = gql`
   mutation deleteConsortiumById($consortiumId: ID!) {
     deleteConsortiumById(consortiumId: $consortiumId){
@@ -32,6 +42,11 @@ export const FETCH_ALL_COMPUTATIONS_METADATA_QUERY = gql`
 export const FETCH_ALL_CONSORTIA_QUERY = gql`
   query fetchAllConsortia
     ${queries.fetchAllConsortia}
+`;
+
+export const FETCH_CONSORTIUM_QUERY = gql`
+  query fetchConsortium ($consortiumId: ID)
+    ${queries.fetchConsortium}
 `;
 
 export const FETCH_COMPUTATION_QUERY = gql`

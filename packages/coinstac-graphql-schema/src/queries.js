@@ -20,7 +20,21 @@ const queries = {
   fetchAllConsortia: `
     {
       fetchAllConsortia {
-        ${sharedFields.consortiaInBrief}
+        ${sharedFields.consortiaFields}
+      }
+    }
+  `,
+  fetchConsortium: `
+    {
+      fetchConsortium(consortiumId: $consortiumId) {
+        ${sharedFields.consortiaFields}
+      }
+    }
+  `,
+  fetchPipeline: `
+    {
+      fetchPipeline(pipelineId: $pipelineId) {
+        ${sharedFields.pipelineFields}
       }
     }
   `,
@@ -33,7 +47,7 @@ const queries = {
   `,
   fetchComputation: `
     {
-      fetchComputation (computationIds: $computationIds) {
+      fetchComputation(computationIds: $computationIds) {
         id
         computation {
           input
@@ -42,12 +56,12 @@ const queries = {
       }
     }
   `,
-  fetchPipeline: `
-    {
-      fetchPipeline (pipelineId: $pipelineId) {
-        ${sharedFields.pipelineFields}
-      }
+  consortiumChanged: `
+  {
+    consortiumChanged(consortiumId: $consortiumId) {
+      ${sharedFields.consortiaFields}
     }
+  }
   `,
 };
 

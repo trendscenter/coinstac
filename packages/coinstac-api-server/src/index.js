@@ -38,5 +38,4 @@ server.start((startErr) => {
   console.log(`Server running at: ${server.info.uri}`); // eslint-disable-line no-console
 
   wsServer.activate(server);
-  helperFunctions.initChangefeeds();
 });
