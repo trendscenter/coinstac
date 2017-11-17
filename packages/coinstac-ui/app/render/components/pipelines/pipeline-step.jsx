@@ -3,7 +3,7 @@ import { DragSource, DropTarget } from 'react-dnd';
 import PropTypes from 'prop-types';
 import { compose } from 'redux';
 import { graphql } from 'react-apollo';
-import { Panel } from 'react-bootstrap';
+import { Button, Panel } from 'react-bootstrap';
 import ItemTypes from './pipeline-item-types';
 import PipelineStepInput from './pipeline-step-input';
 import { FETCH_COMPUTATION_QUERY } from '../../state/graphql/functions';
@@ -68,6 +68,7 @@ class PipelineStep extends Component {
       computationId,
       connectDragSource,
       connectDropTarget,
+      deleteStep,
       pipelineIndex,
       possibleInputs,
       previousComputationIds,
@@ -88,6 +89,14 @@ class PipelineStep extends Component {
           style={{ ...styles.draggable, opacity: isDragging ? 0 : 1 }}
           {...other}
         >
+          <Button
+            key={`delete-step-button-${step.id}`}
+            bsStyle="danger"
+            className="pull-right"
+            onClick={() => deleteStep(step.id)}
+          >
+            Delete
+          </Button>
           <h4>Input Parameters:</h4>
           {compIO !== null && Object.entries(compIO.computation.input).map(localInput => (
             <PipelineStepInput
@@ -126,6 +135,7 @@ PipelineStep.propTypes = {
   compIO: PropTypes.object,
   connectDragSource: PropTypes.func.isRequired,
   connectDropTarget: PropTypes.func.isRequired,
+  deleteStep: PropTypes.func.isRequired,
   id: PropTypes.string.isRequired,
   isDragging: PropTypes.bool.isRequired,
   moveStep: PropTypes.func.isRequired,

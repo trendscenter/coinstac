@@ -12,6 +12,7 @@ import {
   JOIN_CONSORTIUM_MUTATION,
   LEAVE_CONSORTIUM_MUTATION,
   FETCH_ALL_CONSORTIA_QUERY,
+  FETCH_ALL_PIPELINES_QUERY,
   ADD_USER_ROLE_MUTATION,
   REMOVE_USER_ROLE_MUTATION,
 } from '../../state/graphql/functions';
@@ -19,6 +20,7 @@ import {
   consortiaMembershipProp,
   deleteConsortiumProp,
   getAllAndSubProp,
+  pipelinesProp,
   userRolesProp,
 } from '../../state/graphql/props';
 
@@ -174,7 +176,8 @@ const ConsortiaListWithData = compose(
   graphql(JOIN_CONSORTIUM_MUTATION, consortiaMembershipProp('joinConsortium')),
   graphql(LEAVE_CONSORTIUM_MUTATION, consortiaMembershipProp('leaveConsortium')),
   graphql(ADD_USER_ROLE_MUTATION, userRolesProp('addUserRole')),
-  graphql(REMOVE_USER_ROLE_MUTATION, userRolesProp('removeUserRole'))
+  graphql(REMOVE_USER_ROLE_MUTATION, userRolesProp('removeUserRole')),
+  graphql(FETCH_ALL_PIPELINES_QUERY, pipelinesProp)
 )(ConsortiaList);
 
 export default connect(mapStateToProps, { updateUserPerms })(ConsortiaListWithData);

@@ -33,6 +33,7 @@ const schemaFields = {
     description: String
     owningConsortium: ID
     delete: Boolean
+    shared: Boolean
   `,
   pipelineControllerFields: `
     id: ID

@@ -10,7 +10,7 @@ const queries = {
       }
     }
   `,
-  fetchAllComputationsMetadata: `
+  fetchAllComputations: `
     {
       fetchAllComputations {
         ${sharedFields.computationMetadata}
