@@ -29,6 +29,13 @@ const mutations = {
       }
     }
   `,
+  savePipeline: `
+    {
+      savePipeline(pipeline: $pipeline) {
+        ${sharedFields.pipelineFields}
+      }
+    }
+  `,
 };
 
 module.exports = mutations;

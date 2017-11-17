@@ -99,7 +99,6 @@ export default class PipelineStepInput extends Component {
       objKey,
       objParams,
       parentKey,
-      pipelineIndex,
       possibleInputs,
       owner,
       step,

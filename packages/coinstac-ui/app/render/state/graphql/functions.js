@@ -34,9 +34,9 @@ export const FETCH_ALL_PIPELINES_QUERY = gql`
     ${queries.fetchAllPipelines}
 `;
 
-export const FETCH_ALL_COMPUTATIONS_METADATA_QUERY = gql`
-  query fetchAllComputationsMetadata
-    ${queries.fetchAllComputationsMetadata}
+export const FETCH_ALL_COMPUTATIONS_QUERY = gql`
+  query fetchAllComputations
+    ${queries.fetchAllComputations}
 `;
 
 export const FETCH_ALL_CONSORTIA_QUERY = gql`
@@ -57,6 +57,11 @@ export const FETCH_COMPUTATION_QUERY = gql`
 export const FETCH_PIPELINE_QUERY = gql`
   query fetchPipeline ($pipelineId: ID)
     ${queries.fetchPipeline}
+`;
+
+export const SAVE_PIPELINE_MUTATION = gql`
+  mutation savePipeline($pipeline: PipelineInput!)
+    ${mutations.savePipeline}
 `;
 
 export const JOIN_CONSORTIUM_MUTATION = gql`
@@ -91,4 +96,10 @@ export const REMOVE_USER_ROLE_MUTATION = gql`
 export const SAVE_CONSORTIUM_MUTATION = gql`
   mutation saveConsortium($consortium: ConsortiumInput!)
     ${mutations.saveConsortium}
+`;
+
+export const SAVE_ACTIVE_PIPELINE_MUTATION = gql`
+  mutation saveActivePipeline($consortiumId: ID, $activePipeline: ID){
+    saveActivePipeline(consortiumId: $consortiumId, activePipeline: $activePipeline)
+  }
 `;

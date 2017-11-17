@@ -23,9 +23,22 @@ class ComputationsList extends Component { // eslint-disable-line
   constructor(props) {
     super(props);
 
-    this.state = { activeComp: null };
+    this.state = {
+      activeComp: null,
+      unsubscribeComputations: null,
+    };
 
     this.setActiveComp = this.setActiveComp.bind(this);
+  }
+
+  componentWillReceiveProps(nextProps) {
+    if (nextProps.computations && !this.state.unsubscribeComputations) {
+      this.setState({ unsubscribeComputations: this.props.subscribeToComputations(null) });
+    }
+  }
+
+  componentWillUnmount() {
+    this.state.unsubscribeComputations();
   }
 
   setActiveComp(comp) {
@@ -83,8 +96,12 @@ class ComputationsList extends Component { // eslint-disable-line
   }
 }
 
+ComputationsList.defaultProps = {
+  computations: null,
+};
+
 ComputationsList.propTypes = {
-  computations: PropTypes.array.isRequired,
+  computations: PropTypes.array,
 };
 
 function mapStateToProps({ featureTest: { dockerOut } }) {
