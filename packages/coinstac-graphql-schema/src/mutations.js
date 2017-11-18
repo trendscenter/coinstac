@@ -15,6 +15,13 @@ const mutations = {
       }
     }
   `,
+  removeComputation: `
+    {
+      removeComputation(computationId) {
+        ${sharedFields.computationMetadata}
+      }
+    }
+  `,
   removeUserRole: `
     {
       removeUserRole(userId: $userId, table: $table, doc: $doc, role: $role) {

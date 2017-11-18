@@ -6,6 +6,8 @@ const sharedFields = {
       description
       version
     }
+    delete
+    submittedBy
   `,
   consortiaFields: `
     id

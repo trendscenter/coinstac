@@ -17,7 +17,11 @@ helperFunctions.getRethinkConnection()
   .then(() => rethink.dbCreate('coinstac').run(connection))
   .then(() => rethink.tableCreate('pipelines').run(connection))
   .then(() => rethink.tableCreate('computations').run(connection))
-  .then(() => rethink.table('computations').insert([singleShot, multiShot, vbm], { returnChanges: true }).run(connection))
+  .then(() => rethink.table('computations').insert([
+    Object.assign({}, singleShot, { submittedBy: 'test' }),
+    Object.assign({}, multiShot, { submittedBy: 'test' }),
+    Object.assign({}, vbm, { submittedBy: 'author' }),
+  ], { returnChanges: true }).run(connection))
   .then(compInsertResult => rethink.table('pipelines').insert({
     id: 'test-pipeline',
     name: 'Test Pipeline',
