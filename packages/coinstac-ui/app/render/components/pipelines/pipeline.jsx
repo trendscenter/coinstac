@@ -29,12 +29,13 @@ import ApolloClient from '../../state/apollo-client';
 import PipelineStep from './pipeline-step';
 import ItemTypes from './pipeline-item-types';
 import {
+  COMPUTATION_CHANGED_SUBSCRIPTION,
   FETCH_ALL_CONSORTIA_QUERY,
-  FETCH_ALL_COMPUTATIONS_METADATA_QUERY,
+  FETCH_ALL_COMPUTATIONS_QUERY,
   FETCH_ALL_PIPELINES_QUERY,
   SAVE_PIPELINE_MUTATION,
 } from '../../state/graphql/functions';
-import { computationsProp, consortiaProp } from '../../state/graphql/props';
+import { consortiaProp, getAllAndSubProp, savePipelineProp } from '../../state/graphql/props';
 
 const computationTarget = {
   drop() {
@@ -115,6 +116,14 @@ class Pipeline extends Component {
         }));
       }
     }
+
+    if (nextProps.computations && !this.state.unsubscribeComputations) {
+      this.setState({ unsubscribeComputations: this.props.subscribeToComputations(null) });
+    }
+  }
+
+  componentWillUnmount() {
+    this.state.unsubscribeComputations();
   }
 
   addStep(computation) {
@@ -261,7 +270,7 @@ class Pipeline extends Component {
     if (update.param === 'owningConsortium') {
       this.setState({ consortium: { id: update.value, name: update.consortiumName } });
     }
-    
+
     this.setState(prevState => ({
       pipeline: { ...prevState.pipeline, [update.param]: update.value },
     }));
@@ -476,8 +485,9 @@ class Pipeline extends Component {
 }
 
 Pipeline.defaultProps = {
-  computations: [],
+  computations: null,
   consortia: [],
+  subscribeToComputations: null,
 };
 
 Pipeline.propTypes = {
@@ -487,6 +497,7 @@ Pipeline.propTypes = {
   consortia: PropTypes.array,
   params: PropTypes.object.isRequired,
   savePipeline: PropTypes.func.isRequired,
+  subscribeToComputations: PropTypes.func,
 };
 
 function mapStateToProps({ auth }) {
@@ -494,26 +505,16 @@ function mapStateToProps({ auth }) {
 }
 
 const PipelineWithData = compose(
-  graphql(FETCH_ALL_COMPUTATIONS_METADATA_QUERY, computationsProp),
+  graphql(FETCH_ALL_COMPUTATIONS_QUERY, getAllAndSubProp(
+    COMPUTATION_CHANGED_SUBSCRIPTION,
+    'computations',
+    'fetchAllComputations',
+    'subscribeToComputations',
+    'computationChanged'
+  )),
   graphql(FETCH_ALL_CONSORTIA_QUERY, consortiaProp),
-  graphql(SAVE_PIPELINE_MUTATION, {
-    props: ({ mutate }) => ({
-      savePipeline: pipeline => mutate({
-        variables: { pipeline },
-        update: (store, { data: { savePipeline } }) => {
-          const data = store.readQuery({ query: FETCH_ALL_PIPELINES_QUERY });
-          const index = data.fetchAllPipelines.findIndex(cons => cons.id === savePipeline.id);
-          if (index > -1) {
-            data.fetchAllPipelines[index] = { ...savePipeline };
-          } else {
-            data.fetchAllPipelines.push(savePipeline);
-          }
-          store.writeQuery({ query: FETCH_ALL_PIPELINES_QUERY, data });
-        },
-      }),
-    }),
-  }
-))(Pipeline);
+  graphql(SAVE_PIPELINE_MUTATION, savePipelineProp)
+)(Pipeline);
 
 export default compose(
   connect(mapStateToProps),

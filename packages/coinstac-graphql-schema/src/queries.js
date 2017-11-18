@@ -10,6 +10,20 @@ const queries = {
       }
     }
   `,
+  computationChanged: `
+  {
+    computationChanged(computationId: $computationId) {
+      ${sharedFields.computationMetadata}
+    }
+  }
+  `,
+  consortiumChanged: `
+  {
+    consortiumChanged(consortiumId: $consortiumId) {
+      ${sharedFields.consortiaFields}
+    }
+  }
+  `,
   fetchAllComputations: `
     {
       fetchAllComputations {
@@ -55,13 +69,6 @@ const queries = {
         }
       }
     }
-  `,
-  consortiumChanged: `
-  {
-    consortiumChanged(consortiumId: $consortiumId) {
-      ${sharedFields.consortiaFields}
-    }
-  }
   `,
 };
 

@@ -3,9 +3,9 @@ import app from 'ampersand-app';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import DashboardNav from './dashboard-nav';
-import UserAccountController from './user-account-controller';
+import UserAccountController from '../user/user-account-controller';
 // import { initPrivateBackgroundServices } from '../state/ducks/bg-services';
-import CoinstacAbbr from './coinstac-abbr';
+import CoinstacAbbr from '../coinstac-abbr';
 
 class Dashboard extends Component {
   componentDidMount() {

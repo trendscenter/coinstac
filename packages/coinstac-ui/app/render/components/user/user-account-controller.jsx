@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 
-import { logout } from '../state/ducks/auth';
+import { logout } from '../../state/ducks/auth';
 import UserAccount from './user-account';
 
 

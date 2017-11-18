@@ -18,9 +18,9 @@ import {
 } from '../../state/graphql/functions';
 import {
   consortiaMembershipProp,
-  deleteConsortiumProp,
   getAllAndSubProp,
   pipelinesProp,
+  removeDocFromTableProp,
   userRolesProp,
 } from '../../state/graphql/props';
 
@@ -83,7 +83,7 @@ class ConsortiaList extends Component {
   deleteConsortium(consortiumId) {
     const { auth: { user } } = this.props;
 
-    this.props.deleteConsortium(consortiumId);
+    this.props.deleteConsortiumById(consortiumId);
     this.props.removeUserRole(user.id, 'consortia', consortiumId, 'owner');
   }
 
@@ -149,7 +149,7 @@ ConsortiaList.propTypes = {
   addUserRole: PropTypes.func.isRequired,
   auth: PropTypes.object.isRequired,
   consortia: PropTypes.array,
-  deleteConsortium: PropTypes.func.isRequired,
+  deleteConsortiumById: PropTypes.func.isRequired,
   joinConsortium: PropTypes.func.isRequired,
   leaveConsortium: PropTypes.func.isRequired,
   removeUserRole: PropTypes.func.isRequired,
@@ -172,7 +172,13 @@ const ConsortiaListWithData = compose(
     'subscribeToConsortia',
     'consortiumChanged'
   )),
-  graphql(DELETE_CONSORTIUM_MUTATION, deleteConsortiumProp),
+  // docId, mutation, query, dataQuery
+  graphql(DELETE_CONSORTIUM_MUTATION, removeDocFromTableProp(
+    'consortiumId',
+    'deleteConsortiumById',
+    FETCH_ALL_CONSORTIA_QUERY,
+    'fetchAllConsortia'
+  )),
   graphql(JOIN_CONSORTIUM_MUTATION, consortiaMembershipProp('joinConsortium')),
   graphql(LEAVE_CONSORTIUM_MUTATION, consortiaMembershipProp('leaveConsortium')),
   graphql(ADD_USER_ROLE_MUTATION, userRolesProp('addUserRole')),

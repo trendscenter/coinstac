@@ -13,7 +13,7 @@ export const ADD_USER_ROLE_MUTATION = gql`
 
 export const COMPUTATION_CHANGED_SUBSCRIPTION = gql`
   subscription computationChanged($computationId: ID)
-    ${queries.fetchAllComputationsMetadata}
+    ${queries.computationChanged}
 `;
 
 export const CONSORTIUM_CHANGED_SUBSCRIPTION = gql`
@@ -59,11 +59,6 @@ export const FETCH_PIPELINE_QUERY = gql`
     ${queries.fetchPipeline}
 `;
 
-export const SAVE_PIPELINE_MUTATION = gql`
-  mutation savePipeline($pipeline: PipelineInput!)
-    ${mutations.savePipeline}
-`;
-
 export const JOIN_CONSORTIUM_MUTATION = gql`
   mutation joinConsortium($consortiumId: ID!) {
     joinConsortium(consortiumId: $consortiumId){
@@ -82,9 +77,11 @@ export const LEAVE_CONSORTIUM_MUTATION = gql`
   }
 `;
 
-export const REMOVE_ALL_COMPUTATIONS_MUTATION = gql`
-  mutation removeAllComputations {
-    removeAllComputations
+export const REMOVE_COMPUTATION_MUTATION = gql`
+  mutation removeComputation($computationId: ID!) {
+    removeComputation(computationId: $computationId){
+      id
+    }
   }
 `;
 
@@ -93,13 +90,18 @@ export const REMOVE_USER_ROLE_MUTATION = gql`
     ${mutations.removeUserRole}
 `;
 
+export const SAVE_ACTIVE_PIPELINE_MUTATION = gql`
+  mutation saveActivePipeline($consortiumId: ID, $activePipeline: ID){
+    saveActivePipeline(consortiumId: $consortiumId, activePipeline: $activePipeline)
+  }
+`;
+
 export const SAVE_CONSORTIUM_MUTATION = gql`
   mutation saveConsortium($consortium: ConsortiumInput!)
     ${mutations.saveConsortium}
 `;
 
-export const SAVE_ACTIVE_PIPELINE_MUTATION = gql`
-  mutation saveActivePipeline($consortiumId: ID, $activePipeline: ID){
-    saveActivePipeline(consortiumId: $consortiumId, activePipeline: $activePipeline)
-  }
+export const SAVE_PIPELINE_MUTATION = gql`
+  mutation savePipeline($pipeline: PipelineInput!)
+    ${mutations.savePipeline}
 `;

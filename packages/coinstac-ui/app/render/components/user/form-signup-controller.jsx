@@ -3,8 +3,8 @@ import { connect } from 'react-redux';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import FormSignup from './form-signup';
-import LayoutNoauth from './layout-noauth';
-import { clearError, clearUser, signUp } from '../state/ducks/auth';
+import LayoutNoauth from '../layout-noauth';
+import { clearError, clearUser, signUp } from '../../state/ducks/auth';
 
 class FormSignupController extends Component {
   constructor(props) {

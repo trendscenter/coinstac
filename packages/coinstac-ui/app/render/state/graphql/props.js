@@ -1,7 +1,22 @@
 import update from 'immutability-helper';
 import {
+  FETCH_ALL_COMPUTATIONS_QUERY,
   FETCH_ALL_CONSORTIA_QUERY,
+  FETCH_ALL_PIPELINES_QUERY,
 } from './functions';
+
+export const addComputationProp = {
+  props: ({ mutate }) => ({
+    submitSchema: computationSchema => mutate({
+      variables: { computationSchema },
+      update: (store, { data: { addComputation } }) => {
+        const data = store.readQuery({ query: FETCH_ALL_COMPUTATIONS_QUERY });
+        data.fetchAllComputations.push(addComputation);
+        store.writeQuery({ query: FETCH_ALL_COMPUTATIONS_QUERY, data });
+      },
+    }),
+  }),
+};
 
 export const compIOProp = {
   props: ({ data: { fetchComputation } }) => ({
@@ -34,22 +49,6 @@ export const consortiaMembershipProp = (name) => {
       }),
     }),
   };
-};
-
-export const deleteConsortiumProp = {
-  props: ({ mutate }) => ({
-    deleteConsortium: consortiumId => mutate({
-      variables: { consortiumId },
-      update: (store, { data: { deleteConsortiumById } }) => {
-        const data = store.readQuery({ query: FETCH_ALL_CONSORTIA_QUERY });
-        const index = data.fetchAllConsortia.findIndex(con => con.id === deleteConsortiumById.id);
-        if (index > -1) {
-          data.fetchAllConsortia.splice(index, 1);
-        }
-        store.writeQuery({ query: FETCH_ALL_CONSORTIA_QUERY, data });
-      },
-    }),
-  }),
 };
 
 export const getAllAndSubProp = (document, listProp, query, subProp, subscription) => ({
@@ -125,10 +124,46 @@ export const pipelinesProp = {
   }),
 };
 
+export const removeDocFromTableProp = (docId, mutation, query, dataQuery) => {
+  return {
+    props: ({ mutate }) => ({
+      [mutation]: theId => mutate({
+        variables: { [docId]: theId },
+        update: (store, { data }) => {
+          const d = store.readQuery({ query });
+          const index = d[dataQuery].findIndex(con => con.id === data[mutation].id);
+          if (index > -1) {
+            d[dataQuery].splice(index, 1);
+          }
+          store.writeQuery({ query, data: d });
+        },
+      }),
+    }),
+  };
+};
+
 export const saveConsortiumProp = {
   props: ({ mutate }) => ({
     saveConsortium: consortium => mutate({
       variables: { consortium },
+    }),
+  }),
+};
+
+export const savePipelineProp = {
+  props: ({ mutate }) => ({
+    savePipeline: pipeline => mutate({
+      variables: { pipeline },
+      update: (store, { data: { savePipeline } }) => {
+        const data = store.readQuery({ query: FETCH_ALL_PIPELINES_QUERY });
+        const index = data.fetchAllPipelines.findIndex(cons => cons.id === savePipeline.id);
+        if (index > -1) {
+          data.fetchAllPipelines[index] = { ...savePipeline };
+        } else {
+          data.fetchAllPipelines.push(savePipeline);
+        }
+        store.writeQuery({ query: FETCH_ALL_PIPELINES_QUERY, data });
+      },
     }),
   }),
 };

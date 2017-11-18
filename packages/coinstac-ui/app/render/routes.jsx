@@ -11,18 +11,17 @@ import ComputationsList from './components/computations/computations-list';
 import ComputationSubmission from './components/computations/computation-submission';
 import ConsortiaList from './components/consortia/consortia-list';
 import ConsortiumTabs from './components/consortia/consortium-tabs';
-import Dashboard from './components/dashboard';
-import DashboardHome from './components/dashboard-home';
+import Dashboard from './components/dashboard/dashboard';
+import DashboardHome from './components/dashboard/dashboard-home';
 import RouteContainer from './containers/route-container';
-import Login from './components/form-login-controller';
-import Signup from './components/form-signup-controller';
+import Login from './components/user/form-login-controller';
+import Signup from './components/user/form-signup-controller';
 import Test from './components/feature-test';
 import PipelinesList from './components/pipelines/pipelines-list';
 import Pipeline from './components/pipelines/pipeline';
 import CollectionsList from './components/collections/collections-list';
 import CollectionTabs from './components/collections/collection-tabs';
-
-import Settings from './components/settings';
+import Settings from './components/user/settings';
 
 export default (
   <Route path="/" component={App}>
