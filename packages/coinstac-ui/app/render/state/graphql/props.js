@@ -100,7 +100,6 @@ export const getSelectAndSubProp = (activeProp, document, objId, subProp, subscr
         document,
         variables: { [objId]: theId },
         updateQuery: (prevResult, { subscriptionData: { data } }) => {
-          console.log('data', data);
           if (data[subscription].delete) {
             return { [query]: null };
           }
