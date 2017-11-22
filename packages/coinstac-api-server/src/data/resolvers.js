@@ -109,25 +109,29 @@ const resolvers = {
      * @return {object} Requested pipeline if id present, null otherwise
      */
     fetchPipeline: (_, args) => {
-      return helperFunctions.getRethinkConnection()
-        .then(connection =>
-          rethink.table('pipelines')
-            .get(args.pipelineId)
-            // Populate computations subfield with computation meta information
-            .merge(pipeline =>
-              ({
-                steps: pipeline('steps').map(step =>
-                  step.merge({
-                    computations: step('computations').map(compId =>
-                      rethink.table('computations').get(compId)
-                    )
-                  })
-                )
-              })
-            )
-            .run(connection)
-        )
-        .then(result => result);
+      if (!args.pipelineId) {
+        return null;
+      } else {
+        return helperFunctions.getRethinkConnection()
+          .then(connection =>
+            rethink.table('pipelines')
+              .get(args.pipelineId)
+              // Populate computations subfield with computation meta information
+              .merge(pipeline =>
+                ({
+                  steps: pipeline('steps').map(step =>
+                    step.merge({
+                      computations: step('computations').map(compId =>
+                        rethink.table('computations').get(compId)
+                      )
+                    })
+                  )
+                })
+              )
+              .run(connection)
+          )
+          .then(result => result);
+      }
     },
     validateComputation: (_, args) => {
       return new Promise();
@@ -200,11 +204,10 @@ const resolvers = {
      * @return {object} Deleted consortium
      */
     deleteConsortiumById: ({ auth: { credentials: { permissions } } }, args) => {
-      if (!permissions.consortia.write
-          && (!permissions.consortia[args.consortiumId]
-              || !permissions.consortia[args.consortiumId].write
-      )) {
-            return Boom.forbidden('Action not permitted');
+      if (!permissions.consortia[args.consortiumId]
+          || !permissions.consortia[args.consortiumId].write
+      ) {
+        return Boom.forbidden('Action not permitted');
       }
 
       return helperFunctions.getRethinkConnection()
@@ -219,6 +222,35 @@ const resolvers = {
           ])
         )
         .then(([consortium]) => consortium.changes[0].old_val)
+    },
+    /**
+     * Deletes pipeline
+     * @param {object} auth User object from JWT middleware validateFunc
+     * @param {object} args
+     * @param {string} args.pipelineId Pipeline id to delete
+     * @return {object} Deleted pipeline
+     */
+    deletePipeline: ({ auth: { credentials: { permissions } } }, args) => {
+      return helperFunctions.getRethinkConnection()
+        .then(connection =>
+          new Promise.all([
+            connection,
+            rethink.table('pipelines').get(args.pipelineId)
+              .run(connection)
+          ])
+        )
+        .then(([connection, pipeline]) => {
+          if (!permissions.consortia[pipeline.owningConsortium] ||
+              !permissions.consortia[pipeline.owningConsortium].write
+          ) {
+            return Boom.forbidden('Action not permitted');
+          } else {
+            return rethink.table('pipelines').get(args.pipelineId)
+              .delete({ returnChanges: true })
+              .run(connection)
+          }
+        })
+        .then((pipeline) => pipeline.changes[0].old_val)
     },
     /**
      * Add user id to consortium members list

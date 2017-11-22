@@ -29,6 +29,14 @@ export const DELETE_CONSORTIUM_MUTATION = gql`
   }
 `;
 
+export const DELETE_PIPELINE_MUTATION = gql`
+  mutation deletePipeline($pipelineId: ID!) {
+    deletePipeline(pipelineId: $pipelineId){
+      id
+    }
+  }
+`;
+
 export const FETCH_ALL_PIPELINES_QUERY = gql`
   query fetchAllPipelines
     ${queries.fetchAllPipelines}
@@ -75,6 +83,11 @@ export const LEAVE_CONSORTIUM_MUTATION = gql`
       members
     }
   }
+`;
+
+export const PIPELINE_CHANGED_SUBSCRIPTION = gql`
+  subscription pipelineChanged($pipelineId: ID)
+    ${queries.pipelineChanged}
 `;
 
 export const REMOVE_COMPUTATION_MUTATION = gql`

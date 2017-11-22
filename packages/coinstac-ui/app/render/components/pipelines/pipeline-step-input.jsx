@@ -111,6 +111,7 @@ export default class PipelineStepInput extends Component {
           <div>
             <p style={{ fontWeight: 'bold' }}>Covariates</p>
             <Button
+              disabled={!owner}
               bsStyle="primary"
               onClick={this.addCovariate}
               style={{ marginBottom: 10 }}
@@ -160,6 +161,7 @@ export default class PipelineStepInput extends Component {
                       <DropdownButton
                         id={`input-source-${index}-dropdown`}
                         title={cov.source.inputLabel || 'Data Source'}
+                        disabled={!owner}
                       >
                         <MenuItem
                           eventKey={'covariate-file-inputs-menuitem'}
@@ -180,6 +182,7 @@ export default class PipelineStepInput extends Component {
                             .filter(filterIn => filterIn[1].type === cov.type)
                             .map(itemInput => (
                               <MenuItem
+                                disabled={!owner}
                                 eventKey={`${itemInput[1].label}-Computation-${itemObj.possibleInputIndex + 1}-inputs-menuitem`}
                                 key={`${itemInput[1].label}-Computation-${itemObj.possibleInputIndex + 1}-inputs-menuitem`}
                                 onClick={() => updateStep({
@@ -202,7 +205,20 @@ export default class PipelineStepInput extends Component {
                       </DropdownButton>
                     </Col>
                     <Col sm={3}>
-                      <Button className="pull-right" bsStyle="danger">
+                      <Button
+                        disabled={!owner}
+                        className="pull-right"
+                        bsStyle="danger"
+                        onClick={() => updateStep({
+                          ...step,
+                          ioMap: {
+                            ...step.ioMap,
+                            covariates: update(step.ioMap[objKey], {
+                              $splice: [[index, 1]],
+                            }),
+                          },
+                        })}
+                      >
                         Remove
                       </Button>
                     </Col>

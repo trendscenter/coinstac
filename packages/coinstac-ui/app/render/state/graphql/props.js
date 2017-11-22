@@ -2,7 +2,6 @@ import update from 'immutability-helper';
 import {
   FETCH_ALL_COMPUTATIONS_QUERY,
   FETCH_ALL_CONSORTIA_QUERY,
-  FETCH_ALL_PIPELINES_QUERY,
 } from './functions';
 
 export const addComputationProp = {
@@ -23,13 +22,6 @@ export const compIOProp = {
     compIO: fetchComputation ? fetchComputation[0] : null,
   }),
   options: ({ computationId }) => ({ variables: { computationIds: [computationId] } }),
-};
-
-export const computationsProp = {
-  props: ({ data: { loading, fetchAllComputations } }) => ({
-    loading,
-    computations: fetchAllComputations,
-  }),
 };
 
 export const consortiaMembershipProp = (name) => {
@@ -108,6 +100,7 @@ export const getSelectAndSubProp = (activeProp, document, objId, subProp, subscr
         document,
         variables: { [objId]: theId },
         updateQuery: (prevResult, { subscriptionData: { data } }) => {
+          console.log('data', data);
           if (data[subscription].delete) {
             return { [query]: null };
           }
@@ -142,30 +135,14 @@ export const removeDocFromTableProp = (docId, mutation, query, dataQuery) => {
   };
 };
 
-export const saveConsortiumProp = {
-  props: ({ mutate }) => ({
-    saveConsortium: consortium => mutate({
-      variables: { consortium },
+export const saveDocumentProp = (funcName, objVar) => {
+  return {
+    props: ({ mutate }) => ({
+      [funcName]: obj => mutate({
+        variables: { [objVar]: obj },
+      }),
     }),
-  }),
-};
-
-export const savePipelineProp = {
-  props: ({ mutate }) => ({
-    savePipeline: pipeline => mutate({
-      variables: { pipeline },
-      update: (store, { data: { savePipeline } }) => {
-        const data = store.readQuery({ query: FETCH_ALL_PIPELINES_QUERY });
-        const index = data.fetchAllPipelines.findIndex(cons => cons.id === savePipeline.id);
-        if (index > -1) {
-          data.fetchAllPipelines[index] = { ...savePipeline };
-        } else {
-          data.fetchAllPipelines.push(savePipeline);
-        }
-        store.writeQuery({ query: FETCH_ALL_PIPELINES_QUERY, data });
-      },
-    }),
-  }),
+  };
 };
 
 export const userRolesProp = (name) => {

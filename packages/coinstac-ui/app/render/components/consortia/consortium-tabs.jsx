@@ -9,7 +9,7 @@ import ConsortiumResults from './consortium-results';
 import { updateUserPerms } from '../../state/ducks/auth';
 import {
   getSelectAndSubProp,
-  saveConsortiumProp,
+  saveDocumentProp,
   userRolesProp,
 } from '../../state/graphql/props';
 import {
@@ -147,10 +147,12 @@ class ConsortiumTabs extends Component {
 }
 
 ConsortiumTabs.defaultProps = {
+  activeConsortium: null,
   subscribeToConsortia: null,
 };
 
 ConsortiumTabs.propTypes = {
+  activeConsortium: PropTypes.object,
   addUserRole: PropTypes.func.isRequired,
   auth: PropTypes.object.isRequired,
   params: PropTypes.object.isRequired,
@@ -172,7 +174,7 @@ const ConsortiumTabsWithData = compose(
     'fetchConsortium'
   )),
   graphql(ADD_USER_ROLE_MUTATION, userRolesProp('addUserRole')),
-  graphql(SAVE_CONSORTIUM_MUTATION, saveConsortiumProp)
+  graphql(SAVE_CONSORTIUM_MUTATION, saveDocumentProp('saveConsortium', 'consortium'))
 )(ConsortiumTabs);
 
 export default connect(mapStateToProps, { updateUserPerms })(ConsortiumTabsWithData);
