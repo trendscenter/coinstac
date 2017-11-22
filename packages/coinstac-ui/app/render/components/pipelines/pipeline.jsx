@@ -98,7 +98,9 @@ class Pipeline extends Component {
 
   componentWillReceiveProps(nextProps) {
     if (nextProps.computations && !this.state.unsubscribeComputations) {
-      this.setState({ unsubscribeComputations: this.props.subscribeToComputations(null) });
+      this.setState({
+        unsubscribeComputations: this.props.subscribeToComputations(null),
+      });
     }
 
     if (nextProps.activePipeline && !this.state.unsubscribePipelines) {
@@ -322,10 +324,16 @@ class Pipeline extends Component {
     })
     .then(({ data: { savePipeline: { __typename, ...other } } }) => {
       const pipeline = { ...this.state.pipeline, ...other };
+      let unsubscribePipelines = this.state.unsubscribePipelines;
+
+      if (!unsubscribePipelines) {
+        unsubscribePipelines = this.props.subscribeToPipelines(pipeline.id);
+      }
 
       this.setState({
         pipeline,
         startingPipeline: pipeline,
+        unsubscribePipelines,
       });
       // TODO: Use redux to display success/failure messages after mutations
     })

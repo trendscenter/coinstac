@@ -78,9 +78,17 @@ class ConsortiumTabs extends Component {
     this.props.saveConsortium(this.state.consortium)
     .then(({ data: { saveConsortium: { __typename, ...other } } }) => {
       this.props.addUserRole(this.props.auth.user.id, 'consortia', other.id, 'owner');
+      let unsubscribeConsortia = this.state.unsubscribeConsortia;
+
+      if (!unsubscribeConsortia) {
+        unsubscribeConsortia = this.props.subscribeToConsortia(other.id);
+      }
 
       // TODO: hook activePipelineId and Inputs
-      this.setState({ consortium: { ...other } });
+      this.setState({
+        consortium: { ...other },
+        unsubscribeConsortia,
+      });
       // TODO: Use redux to display success/failure messages after mutations
     })
     .catch(({ graphQLErrors }) => {

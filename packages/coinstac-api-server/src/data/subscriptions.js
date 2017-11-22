@@ -21,6 +21,7 @@ const initSubscriptions = (pubsub) => {
     .then(feed =>
       feed.each((err, change) => {
         let val = {};
+        console.log(change);
 
         if (!change.new_val) {
           val = Object.assign({}, change.old_val, { delete: true });
