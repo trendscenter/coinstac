@@ -118,6 +118,7 @@ const typeDefs = `
     addComputation(computationSchema: ComputationInput): Computation
     addUserRole(userId: ID, table: String, doc: String, role: String): User
     deleteConsortiumById(consortiumId: ID): Consortium
+    deletePipeline(pipelineId: ID): Pipeline
     joinConsortium(consortiumId: ID): Consortium
     leaveConsortium(consortiumId: ID): Consortium
     removeComputation(computationId: ID): Computation

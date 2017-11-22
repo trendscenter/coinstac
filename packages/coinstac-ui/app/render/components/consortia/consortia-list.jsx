@@ -7,19 +7,19 @@ import PropTypes from 'prop-types';
 import ListItem from '../common/list-item';
 import { updateUserPerms } from '../../state/ducks/auth';
 import {
+  ADD_USER_ROLE_MUTATION,
   CONSORTIUM_CHANGED_SUBSCRIPTION,
   DELETE_CONSORTIUM_MUTATION,
-  JOIN_CONSORTIUM_MUTATION,
-  LEAVE_CONSORTIUM_MUTATION,
   FETCH_ALL_CONSORTIA_QUERY,
   FETCH_ALL_PIPELINES_QUERY,
-  ADD_USER_ROLE_MUTATION,
+  JOIN_CONSORTIUM_MUTATION,
+  LEAVE_CONSORTIUM_MUTATION,
+  PIPELINE_CHANGED_SUBSCRIPTION,
   REMOVE_USER_ROLE_MUTATION,
 } from '../../state/graphql/functions';
 import {
   consortiaMembershipProp,
   getAllAndSubProp,
-  pipelinesProp,
   removeDocFromTableProp,
   userRolesProp,
 } from '../../state/graphql/props';
@@ -32,7 +32,7 @@ class ConsortiaList extends Component {
   constructor(props) {
     super(props);
 
-    this.state = { unsubscribeConsortia: null };
+    this.state = { unsubscribeConsortia: null, unsubscribePipelines: null };
 
     this.getOptions = this.getOptions.bind(this);
     this.deleteConsortium = this.deleteConsortium.bind(this);
@@ -44,10 +44,15 @@ class ConsortiaList extends Component {
     if (nextProps.consortia && !this.state.unsubscribeConsortia) {
       this.setState({ unsubscribeConsortia: this.props.subscribeToConsortia(null) });
     }
+
+    if (nextProps.pipelines && !this.state.unsubscribePipelines) {
+      this.setState({ unsubscribePipelines: this.props.subscribeToPipelines(null) });
+    }
   }
 
   componentWillUnmount() {
     this.state.unsubscribeConsortia();
+    this.state.unsubscribePipelines();
   }
 
   getOptions(member, owner, id) {
@@ -152,12 +157,15 @@ ConsortiaList.propTypes = {
   deleteConsortiumById: PropTypes.func.isRequired,
   joinConsortium: PropTypes.func.isRequired,
   leaveConsortium: PropTypes.func.isRequired,
+  pipelines: PropTypes.array,
   removeUserRole: PropTypes.func.isRequired,
   subscribeToConsortia: PropTypes.func.isRequired,
+  subscribeToPipelines: PropTypes.func.isRequired,
 };
 
 ConsortiaList.defaultProps = {
   consortia: null,
+  pipelines: null,
 };
 
 const mapStateToProps = ({ auth }) => {
@@ -172,7 +180,6 @@ const ConsortiaListWithData = compose(
     'subscribeToConsortia',
     'consortiumChanged'
   )),
-  // docId, mutation, query, dataQuery
   graphql(DELETE_CONSORTIUM_MUTATION, removeDocFromTableProp(
     'consortiumId',
     'deleteConsortiumById',
@@ -183,7 +190,13 @@ const ConsortiaListWithData = compose(
   graphql(LEAVE_CONSORTIUM_MUTATION, consortiaMembershipProp('leaveConsortium')),
   graphql(ADD_USER_ROLE_MUTATION, userRolesProp('addUserRole')),
   graphql(REMOVE_USER_ROLE_MUTATION, userRolesProp('removeUserRole')),
-  graphql(FETCH_ALL_PIPELINES_QUERY, pipelinesProp)
+  graphql(FETCH_ALL_PIPELINES_QUERY, getAllAndSubProp(
+    PIPELINE_CHANGED_SUBSCRIPTION,
+    'pipelines',
+    'fetchAllPipelines',
+    'subscribeToPipelines',
+    'pipelineChanged'
+  ))
 )(ConsortiaList);
 
 export default connect(mapStateToProps, { updateUserPerms })(ConsortiaListWithData);

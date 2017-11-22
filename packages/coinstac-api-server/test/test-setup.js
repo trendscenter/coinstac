@@ -36,7 +36,7 @@ helperFunctions.getRethinkConnection()
         ],
         controller: {
           options: { type: 'single' },
-          id: 'test-id',
+          id: 'test-controller-1',
         },
         id: 'HJwMOMTh-',
         ioMap: {
@@ -62,7 +62,7 @@ helperFunctions.getRethinkConnection()
         ],
         controller: {
           options: { type: 'single' },
-          id: 'test-id',
+          id: 'test-controller-2',
         },
         id: 'HyLfdfanb',
         ioMap: {

@@ -70,6 +70,13 @@ const queries = {
       }
     }
   `,
+  pipelineChanged: `
+  {
+    pipelineChanged(pipelineId: $pipelineId) {
+      ${sharedFields.pipelineFields}
+    }
+  }
+  `,
 };
 
 module.exports = queries;
