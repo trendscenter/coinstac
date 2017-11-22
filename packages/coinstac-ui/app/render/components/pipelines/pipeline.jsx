@@ -94,6 +94,7 @@ class Pipeline extends Component {
     this.setConsortium = this.setConsortium.bind(this);
     this.updatePipeline = this.updatePipeline.bind(this);
     this.updateStep = this.updateStep.bind(this);
+    this.updateStorePipeline = this.updateStorePipeline.bind(this);
   }
 
   componentWillReceiveProps(nextProps) {
@@ -170,7 +171,8 @@ class Pipeline extends Component {
           },
         ],
       },
-    }));
+    }),
+    () => this.updateStorePipeline());
   }
 
   moveStep(id, swapId) {
@@ -257,7 +259,15 @@ class Pipeline extends Component {
         ...prevState.pipeline,
         steps: newArr,
       },
-    }));
+    }),
+    () => this.updateStorePipeline());
+  }
+
+  updateStorePipeline() {
+    const data = ApolloClient.readQuery({ query: FETCH_ALL_CONSORTIA_QUERY });
+    console.log(data);
+    data.fetchPipeline = { ...this.state.pipeline, __typename: 'Pipeline' };
+    ApolloClient.writeQuery({ query: FETCH_PIPELINE_QUERY, data });
   }
 
   updateStep(step) {
@@ -268,7 +278,8 @@ class Pipeline extends Component {
           $splice: [[prevState.pipeline.steps.findIndex(s => s.id === step.id), 1, step]],
         }),
       },
-    }));
+    }),
+    () => this.updateStorePipeline());
   }
 
   deleteStep() {
@@ -279,7 +290,8 @@ class Pipeline extends Component {
           $splice: [[prevState.pipeline.steps.findIndex(s => s.id === prevState.stepToDelete), 1]],
         }),
       },
-    }));
+    }),
+    () => this.updateStorePipeline());
     this.closeModal();
   }
 
@@ -301,7 +313,8 @@ class Pipeline extends Component {
 
     this.setState(prevState => ({
       pipeline: { ...prevState.pipeline, [update.param]: update.value },
-    }));
+    }),
+    this.updateStorePipeline());
   }
 
   checkPipeline() {
@@ -415,7 +428,7 @@ class Pipeline extends Component {
                 className="pull-right"
                 disabled={!this.state.owner || !this.state.pipeline.name.length ||
                   !this.state.pipeline.description.length ||
-                  !consortium || this.checkPipeline() || !this.state.pipeline.steps.length}
+                  !consortium}
                 onClick={this.savePipeline}
               >
                 Save Pipeline
