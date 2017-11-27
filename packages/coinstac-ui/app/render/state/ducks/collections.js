@@ -19,7 +19,6 @@ export const deleteCollection = applyAsyncLoading(collectionId =>
           payload: collectionId,
         }));
       })
-      .catch(err => console.log(err))
 );
 
 export const getAllCollections = applyAsyncLoading(() =>
