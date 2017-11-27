@@ -1,10 +1,11 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { graphql, compose } from 'react-apollo';
-import { Alert, Button } from 'react-bootstrap';
+import { Alert, Button, Modal } from 'react-bootstrap';
 import { LinkContainer } from 'react-router-bootstrap';
 import PropTypes from 'prop-types';
 import ListItem from '../common/list-item';
+import ListDeleteModal from '../common/list-delete-modal';
 import {
   DELETE_PIPELINE_MUTATION,
   FETCH_ALL_PIPELINES_QUERY,
@@ -19,12 +20,19 @@ class PipelinesList extends Component {
   constructor(props) {
     super(props);
 
-    this.state = { unsubscribePipelines: null };
+    this.state = {
+      pipelineToDelete: -1,
+      showModal: false,
+      unsubscribePipelines: null,
+    };
 
     this.deletePipeline = this.deletePipeline.bind(this);
+    this.closeModal = this.closeModal.bind(this);
+    this.openModal = this.openModal.bind(this);
   }
 
   componentWillReceiveProps(nextProps) {
+    console.log(nextProps);
     if (nextProps.pipelines && !this.state.unsubscribePipelines) {
       this.setState({ unsubscribePipelines: this.props.subscribeToPipelines(null) });
     }
@@ -34,8 +42,22 @@ class PipelinesList extends Component {
     this.state.unsubscribePipelines();
   }
 
-  deletePipeline(pipelineId) {
-    this.props.deletePipeline(pipelineId);
+  closeModal() {
+    this.setState({ showModal: false });
+  }
+
+  openModal(pipelineId) {
+    return () => {
+      this.setState({
+        showModal: true,
+        pipelineToDelete: pipelineId,
+      });
+    };
+  }
+
+  deletePipeline() {
+    this.props.deletePipeline(this.state.pipelineToDelete);
+    this.closeModal();
   }
 
   render() {
@@ -57,7 +79,7 @@ class PipelinesList extends Component {
           <ListItem
             key={`${pipeline.name}-list-item`}
             itemObject={pipeline}
-            deleteItem={this.deletePipeline}
+            deleteItem={this.openModal}
             owner={
               user.permissions.consortia[pipeline.owningConsortium] &&
               user.permissions.consortia[pipeline.owningConsortium].write
@@ -66,11 +88,17 @@ class PipelinesList extends Component {
             itemRoute={'/dashboard/pipelines'}
           />
         ))}
-        {!pipelines &&
+        {(!pipelines || !pipelines.length) &&
           <Alert bsStyle="info">
             No pipelines found
           </Alert>
         }
+        <ListDeleteModal
+          close={this.closeModal}
+          deleteItem={this.deletePipeline}
+          itemName={'pipeline'}
+          show={this.state.showModal}
+        />
       </div>
     );
   }

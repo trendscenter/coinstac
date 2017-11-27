@@ -12,9 +12,10 @@ import { graphql } from 'react-apollo';
 import PropTypes from 'prop-types';
 import update from 'immutability-helper';
 import {
+  CONSORTIUM_CHANGED_SUBSCRIPTION,
   FETCH_ALL_CONSORTIA_QUERY,
 } from '../../state/graphql/functions';
-import { consortiaProp } from '../../state/graphql/props';
+import { getAllAndSubProp } from '../../state/graphql/props';
 import CollectionPipeline from './collection-pipeline';
 
 class CollectionConsortia extends Component {
@@ -129,6 +130,7 @@ class CollectionConsortia extends Component {
             title="Select Consortia"
           >
             {consortia.map((cons) => {
+              console.log('cons', cons);
               if ((cons.members.indexOf(user.id) > -1 || cons.owners.indexOf(user.id) > -1) &&
                   collection.associatedConsortia.findIndex(c => c.id === cons.id) === -1) {
                 return (
@@ -189,8 +191,13 @@ CollectionConsortia.defaultProps = {
   consortia: [],
 };
 
-const CollectionConsortiaWithData =
-  graphql(FETCH_ALL_CONSORTIA_QUERY, consortiaProp)(CollectionConsortia);
+const CollectionConsortiaWithData = graphql(FETCH_ALL_CONSORTIA_QUERY, getAllAndSubProp(
+  CONSORTIUM_CHANGED_SUBSCRIPTION,
+  'consortia',
+  'fetchAllConsortia',
+  'subscribeToConsortia',
+  'consortiumChanged'
+))(CollectionConsortia);
 
 function mapStateToProps({ auth }) {
   return { auth };

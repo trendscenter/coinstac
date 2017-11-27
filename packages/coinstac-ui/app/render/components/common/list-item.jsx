@@ -12,7 +12,7 @@ const ListItem = ({ owner, itemObject, itemOptions, itemRoute, deleteItem }) => 
     {owner &&
       <Button
         bsStyle="danger"
-        onClick={() => deleteItem(itemObject.id)}
+        onClick={deleteItem(itemObject.id)}
         className="pull-right"
       >
         Delete
