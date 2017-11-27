@@ -5,6 +5,7 @@ import { Alert, Button } from 'react-bootstrap';
 import { LinkContainer } from 'react-router-bootstrap';
 import PropTypes from 'prop-types';
 import ListItem from '../common/list-item';
+import ListDeleteModal from '../common/list-delete-modal';
 import { updateUserPerms } from '../../state/ducks/auth';
 import {
   ADD_USER_ROLE_MUTATION,
@@ -32,12 +33,19 @@ class ConsortiaList extends Component {
   constructor(props) {
     super(props);
 
-    this.state = { unsubscribeConsortia: null, unsubscribePipelines: null };
+    this.state = {
+      consortiumToDelete: -1,
+      showModal: false,
+      unsubscribeConsortia: null,
+      unsubscribePipelines: null,
+    };
 
     this.getOptions = this.getOptions.bind(this);
     this.deleteConsortium = this.deleteConsortium.bind(this);
     this.joinConsortium = this.joinConsortium.bind(this);
     this.leaveConsortium = this.leaveConsortium.bind(this);
+    this.closeModal = this.closeModal.bind(this);
+    this.openModal = this.openModal.bind(this);
   }
 
   componentWillReceiveProps(nextProps) {
@@ -85,11 +93,25 @@ class ConsortiaList extends Component {
     return options;
   }
 
-  deleteConsortium(consortiumId) {
+  closeModal() {
+    this.setState({ showModal: false });
+  }
+
+  openModal(consortiumId) {
+    return () => {
+      this.setState({
+        showModal: true,
+        consortiumToDelete: consortiumId,
+      });
+    };
+  }
+
+  deleteConsortium() {
     const { auth: { user } } = this.props;
 
-    this.props.deleteConsortiumById(consortiumId);
-    this.props.removeUserRole(user.id, 'consortia', consortiumId, 'owner');
+    this.props.deleteConsortiumById(this.state.consortiumToDelete);
+    this.props.removeUserRole(user.id, 'consortia', this.state.consortiumToDelete, 'owner');
+    this.closeModal();
   }
 
   joinConsortium(consortiumId) {
@@ -128,7 +150,7 @@ class ConsortiaList extends Component {
           <ListItem
             key={`${consortium.name}-list-item`}
             itemObject={consortium}
-            deleteItem={this.deleteConsortium}
+            deleteItem={this.openModal}
             owner={isUserA(user.id, consortium.owners)}
             itemOptions={
               this.getOptions(
@@ -140,11 +162,17 @@ class ConsortiaList extends Component {
             itemRoute={'/dashboard/consortia'}
           />
         ))}
-        {!consortia &&
+        {(!consortia || !consortia.length) &&
           <Alert bsStyle="info">
             No consortia found
           </Alert>
         }
+        <ListDeleteModal
+          close={this.closeModal}
+          deleteItem={this.deleteConsortium}
+          itemName={'consortium'}
+          show={this.state.showModal}
+        />
       </div>
     );
   }
