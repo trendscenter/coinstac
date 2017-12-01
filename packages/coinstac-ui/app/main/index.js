@@ -36,7 +36,7 @@ parseCLIInput();
 require('./utils/boot/configure-dev-services.js');
 
 // Load the UI
-const mainWindow = require('./utils/boot/configure-browser-window.js');
+const getWindow = require('./utils/boot/configure-browser-window.js');
 
 // Set up error handling
 const logUnhandledError = require('../common/utils/log-unhandled-error.js');
@@ -69,6 +69,7 @@ loadConfig()
   ])
 )
 .then(([logger, core]) => {
+  const mainWindow = getWindow();
   logger.verbose('main process booted');
 
   ipcMain.on('write-log', (event, { type, message }) => {
@@ -80,7 +81,6 @@ loadConfig()
       .pullPipelineComputations({ comps: params })
       .then((pullStreams) => {
         pullStreams.on('data', (data) => {
-          console.log(mainWindow);
           let output = compact(data.toString().split('\r\n'));
           output = output.map(JSON.parse);
           mainWindow.webContents.send('docker-out', output);
