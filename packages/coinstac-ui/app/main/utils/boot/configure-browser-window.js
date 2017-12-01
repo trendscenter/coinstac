@@ -98,4 +98,4 @@ electronApp.on('activate', () => {
   }
 });
 
-module.exports = mainWindow;
+module.exports = function getWindow() { return mainWindow; };
