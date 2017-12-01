@@ -1,59 +1,14 @@
 'use strict';
 
-const computationsDatabaseSyncer =
-  require('./services/computations-database-syncer.js');
-const cloneDeep = require('lodash/cloneDeep');
 const coinstacCommon = require('coinstac-common');
-const coinstacComputationRegistry = require('coinstac-computation-registry');
-const ComputationRegistryNew = require('coinstac-computation-registry-new');
+const ComputationRegistry = require('coinstac-computation-registry');
 const logger = require('./services/logger.js');
-const mkdirp = require('mkdirp');
 const os = require('os');
 const path = require('path');
-const pify = require('pify');
-const pouchDbAdapterLevelDB = require('pouchdb-adapter-leveldb');
-const pouchDBAdapterMemory = require('pouchdb-adapter-memory');
 const touch = require('touch');
-const url = require('url');
 const winston = require('winston');
 
-/**
- * @todo Don't depend on dbmap.json for secrets.
- *
- * {@link https://github.com/MRN-Code/coinstac/issues/163}
- */
-let dbmap;
-
-try {
-  /* eslint-disable import/no-unresolved,global-require, import/no-absolute-path */
-  dbmap = require('/coins/config/dbmap.json');
-  /* eslint-enable import/no-unresolved,global-require, import/no-absolute-path */
-} catch (error) {
-  dbmap = {
-    coinstac: {
-      user: '',
-      password: '',
-    },
-  };
-}
-
 const BASE_PATH = path.join(os.tmpdir(), 'coinstac-server-core');
-const DB_REGISTRY_DEFAULTS = {
-  isRemote: true,
-  localStores: null,
-  pouchConfig: {},
-  remote: {
-    db: {
-      auth: dbmap.coinstac ? `${dbmap.coinstac.user}:${dbmap.coinstac.password}` : '',
-      protocol: 'http',
-      hostname: 'localhost',
-      port: 5984,
-    },
-  },
-  remoteStoresSyncOut: null,
-  verbose: true,
-};
-const mkdirpAsync = pify(mkdirp);
 
 /**
  * COINSTAC Server.
@@ -87,7 +42,7 @@ class CoinstacServer {
 
     this.config = config;
 
-    this.computationRegistry = null;
+    this.computationRegistry = new ComputationRegistry();
     this.dbRegistry = null;
     this.remotePipelineRunnerPool = null;
 
@@ -102,63 +57,6 @@ class CoinstacServer {
         filename: this.config.logFile,
       });
     }
-  }
-
-  /**
-   * Get configured ComputationRegistry.
-   * @private
-   *
-   * @returns {Promise<ComputationRegistry>}
-   */
-  getComputationRegistry() {
-    this.logger.info('Initializing computation registry...');
-
-    return mkdirpAsync(CoinstacServer.COMPUTATIONS_PATH)
-      .then(() => coinstacComputationRegistry.factory({
-        path: CoinstacServer.COMPUTATIONS_PATH,
-      }))
-      .then((computationRegistry) => {
-        this.logger.info('Computation registry initialized');
-        return computationRegistry;
-      });
-  }
-
-  /**
-   * Get configured DBRegistry.
-   * @private
-   *
-   * @returns {Promise<DBRegistry>}
-   */
-  getDBRegistry() {
-    // Unfortunately necessary for sinon spying
-    const dbRegistryFactory = coinstacCommon.services.dbRegistry;
-    const dbRegistryOptions = cloneDeep(DB_REGISTRY_DEFAULTS);
-
-    this.logger.info('Initializing DB registry...');
-
-    if (this.config.dbUrl) {
-      dbRegistryOptions.remote.db = url.parse(this.config.dbUrl);
-    }
-
-    if (this.config.inMemory) {
-      dbRegistryFactory.DBRegistry.Pouchy.plugin(pouchDBAdapterMemory);
-      dbRegistryOptions.pouchConfig.adapter = 'memory';
-    } else {
-      dbRegistryFactory.DBRegistry.Pouchy.plugin(pouchDbAdapterLevelDB);
-      dbRegistryOptions.pouchConfig.adapter = 'leveldb';
-    }
-
-    dbRegistryOptions.path = CoinstacServer.DB_PATH;
-
-    const factoryProxy = () => {
-      const dbRegistry = dbRegistryFactory(dbRegistryOptions);
-      this.logger.info('DB registry initialized');
-      return dbRegistry;
-    };
-
-    return this.config.inMemory ?
-      Promise.resolve(factoryProxy()) :
-      mkdirpAsync(CoinstacServer.DB_PATH).then(factoryProxy);
   }
 
   /**
@@ -287,39 +185,10 @@ class CoinstacServer {
   start() {
     this.logger.info('Starting server...');
 
-    return Promise.all([this.getComputationRegistry(), this.getDBRegistry()])
-      .then(([computationRegistry, dbRegistry]) => {
-        this.computationRegistry = computationRegistry;
-        this.dbRegistry = dbRegistry;
-        this.computationRegistryNew = new ComputationRegistryNew();
-
-        return Promise.all([
-          coinstacCommon.utils.getSyncedDatabase(dbRegistry, 'computations'),
-          computationRegistry.all(),
-          this.computationRegistryNew.serverStart(),
-        ]);
-      })
-      .then(([computationDatabase, decentralizedComputations]) =>
-        computationsDatabaseSyncer.sync(
-          computationDatabase,
-          decentralizedComputations
-        )
-      )
-      .then(() => this.getRemotePipelineRunnerPool())
-      .then((remotePipelineRunnerPool) => {
-        this.remotePipelineRunnerPool = remotePipelineRunnerPool;
-        return Promise.all([
-          remotePipelineRunnerPool,
-          this.maybeSeedConsortia(),
-        ]);
-      })
-      .then(([remotePipelineRunnerPool]) => {
-        this.logger.info('Server ready');
-        return remotePipelineRunnerPool;
-      })
-      .catch(error => this.stop().then(() => {
+    return this.computationRegistry.serverStart()
+      .catch((error) => {
         throw error;
-      }));
+      });
   }
 
   /**
@@ -334,27 +203,6 @@ class CoinstacServer {
 
     if (this.computationRegistry) {
       this.computationRegistry = null;
-    }
-
-    if (this.dbRegistry) {
-      this.logger.info('destroying DBRegistry...');
-      responses.push(this.dbRegistry.destroy());
-      this.dbRegistry = null;
-    }
-
-    if (this.remotePipelineRunnerPool) {
-      this.logger.info('destroying RemotePipelineRunnerPool...');
-
-      if (
-        this.remotePipelineRunnerPool.isInitialized ||
-        this.remotePipelineRunnerPool.isInitializing
-      ) {
-        responses.push(this.remotePipelineRunnerPool.destroy());
-      } else {
-        this.remotePipelineRunnerPool.events.removeAllListeners();
-      }
-
-      this.remotePipelineRunnerPool = null;
     }
 
     return Promise.all(responses);

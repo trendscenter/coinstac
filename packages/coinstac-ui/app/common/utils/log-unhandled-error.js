@@ -1,5 +1,3 @@
-const { get } = require('lodash');
-const app = require('ampersand-app');
 const mkdirpSync = require('mkdirp').sync;
 const fs = require('fs');
 const path = require('path');
@@ -71,11 +69,11 @@ const unhandledBootLogger = () => {
  * @param {*}
  * @returns {undefined}
  */
-module.exports = function logUnhandledError(opts) {
+module.exports = function logUnhandledError(opts, logr) {
   opts = opts || {};
   const errorLogger = unhandledBootLogger();
   return (err) => {
-    const logger = get(app, 'logger') || unfinishedBootLog;
+    const logger = logr || unfinishedBootLog;
     if (logger === unfinishedBootLog) {
       errorLogger('error occurred before application had finished booting');
       errorLogger(err);

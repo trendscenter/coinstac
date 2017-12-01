@@ -45,7 +45,6 @@ const typeDefs = `
     id: ID
     meta: ComputationMetaInput
     computation: ComputationFieldInput
-    submittedBy: ID!
   }
 
   type Consortium {

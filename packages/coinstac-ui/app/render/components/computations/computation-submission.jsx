@@ -1,4 +1,3 @@
-import app from 'ampersand-app';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { graphql } from 'react-apollo';
@@ -6,10 +5,11 @@ import {
   Alert,
   Button,
 } from 'react-bootstrap';
+import ipcPromise from 'ipc-promise';
 import {
   ADD_COMPUTATION_MUTATION,
 } from '../../state/graphql/functions';
-import { addComputationProp } from '../../state/graphql/props';
+import { saveDocumentProp } from '../../state/graphql/props';
 
 const styles = {
   topMargin: { marginTop: 10 },
@@ -26,13 +26,9 @@ class ComputationSubmission extends Component { // eslint-disable-line
 
   getComputationSchema(e) {
     e.preventDefault();
-    app.main.services.files.getSchemaFile()
-      .then(metaFilePath => Promise.all([
-        metaFilePath,
-        app.core.computations.constructor.getJSONSchema(metaFilePath),
-      ]))
+    ipcPromise.send('get-computation-schema')
       .then((res) => {
-        this.setState({ activeSchema: res[1] });
+        this.setState({ activeSchema: res });
       })
       .catch(console.log);
   }
@@ -105,4 +101,4 @@ ComputationSubmission.propTypes = {
   submitSchema: PropTypes.func.isRequired,
 };
 
-export default graphql(ADD_COMPUTATION_MUTATION, addComputationProp)(ComputationSubmission);
+export default graphql(ADD_COMPUTATION_MUTATION, saveDocumentProp('submitSchema', 'computationSchema'))(ComputationSubmission);

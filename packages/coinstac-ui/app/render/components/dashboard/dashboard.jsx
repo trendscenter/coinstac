@@ -1,10 +1,9 @@
 import { connect } from 'react-redux';
-import app from 'ampersand-app';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import DashboardNav from './dashboard-nav';
 import UserAccountController from '../user/user-account-controller';
-// import { initPrivateBackgroundServices } from '../state/ducks/bg-services';
+import { writeLog } from '../../state/ducks/notifyAndLog';
 import CoinstacAbbr from '../coinstac-abbr';
 
 class Dashboard extends Component {
@@ -14,7 +13,7 @@ class Dashboard extends Component {
 
     process.nextTick(() => {
       if (!user.email.length) {
-        app.logger.verbose('Redirecting login (no authorized user)');
+        this.props.writeLog({ type: 'verbose', message: 'Redirecting login (no authorized user)' });
         router.push('/login');
       } else {
         // this.props.initPrivateBackgroundServices();
@@ -61,7 +60,7 @@ Dashboard.contextTypes = {
 Dashboard.propTypes = {
   auth: PropTypes.object.isRequired,
   children: PropTypes.node.isRequired,
-  // initPrivateBackgroundServices: PropTypes.func.isRequired,
+  writeLog: PropTypes.func.isRequired,
 };
 
 function mapStateToProps({ auth }) {
@@ -70,4 +69,4 @@ function mapStateToProps({ auth }) {
   };
 }
 
-export default connect(mapStateToProps)(Dashboard);
+export default connect(mapStateToProps, { writeLog })(Dashboard);

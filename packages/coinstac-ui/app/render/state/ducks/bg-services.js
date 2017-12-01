@@ -2,12 +2,6 @@ import { each } from 'lodash';
 import app from 'ampersand-app';
 import { applyAsyncLoading } from './loading';
 
-import {
-  computationCompleteNotification,
-  computationStartNotification,
-  getRunErrorNotifier,
-} from '../../utils/notifications';
-
 export const listenToConsortia = (tia) => {
   app.core.pool.listenToConsortia(tia);
 };
@@ -45,15 +39,6 @@ export const joinSlaveComputation = (consortium) => {
     const proceedWithRun = (doRun) => {
       let runProm;
       if (doRun) {
-        const onRunError = getRunErrorNotifier(consortium);
-
-        computationStartNotification(consortium);
-        app.core.pool.events.on('error', onRunError);
-        app.core.pool.events.once('computation:complete', () => {
-          computationCompleteNotification(consortium);
-          app.core.pool.events.removeListener('error', onRunError);
-        });
-
         if (alreadyRan[runId]) {
           runProm = app.core.computations.joinRun({
             consortiumId,
@@ -109,10 +94,6 @@ export const initPrivateBackgroundServices = applyAsyncLoading(() => {
     app.core.projects.initializeListeners((error) => {
       if (error) {
         app.logger.error(error);
-        app.notify({
-          level: 'error',
-          message: `Project listener error: ${error.message}`,
-        });
 
         // TODO: attempt to recover?
         throw error;
@@ -143,16 +124,7 @@ export const runComputation = applyAsyncLoading(
     return () => {
       // Unfortunately, requires we `get` the document for its label
       app.core.dbRegistry.get('consortia').get(consortiumId)
-        .then((consortium) => {
-          const onRunError = getRunErrorNotifier(consortium);
-
-          computationStartNotification(consortium);
-          app.core.pool.events.on('error', onRunError);
-          app.core.pool.events.once('computation:complete', () => {
-            computationCompleteNotification(consortium);
-            app.core.pool.events.removeListener('error', onRunError);
-          });
-
+        .then(() => {
           return app.core.computations.kickoff({ consortiumId, projectId });
         });
     };

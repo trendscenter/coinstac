@@ -32,7 +32,6 @@ class PipelinesList extends Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    console.log(nextProps);
     if (nextProps.pipelines && !this.state.unsubscribePipelines) {
       this.setState({ unsubscribePipelines: this.props.subscribeToPipelines(null) });
     }
