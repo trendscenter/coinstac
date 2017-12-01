@@ -27,20 +27,7 @@ class FormLogin extends Component {
   }
 
   render() {
-    const { auth, loading, submit, showHotRoute } = this.props;
-    let devButtons;
-
-    if (showHotRoute) {
-      devButtons = (
-        <Button
-          bsStyle="warning"
-          type="button"
-          disabled={loading.isLoading}
-          onClick={this.props.hotRoute}
-          block
-        >Hot Route</Button>
-      );
-    }
+    const { auth, loading, submit } = this.props;
 
     return (
       <div>
@@ -89,14 +76,11 @@ class FormLogin extends Component {
 
 FormLogin.propTypes = {
   auth: PropTypes.object.isRequired,
-  hotRoute: PropTypes.func,
   loading: PropTypes.object,
-  showHotRoute: PropTypes.bool.isRequired,
   submit: PropTypes.func.isRequired,
 };
 
 FormLogin.defaultProps = {
-  hotRoute: null,
   loading: null,
 };
 

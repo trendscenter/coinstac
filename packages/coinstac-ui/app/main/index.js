@@ -12,6 +12,8 @@ const mock = require('../../test/e2e/mocks');
 const electron = require('electron');
 const ipcPromise = require('ipc-promise');
 
+const { ipcMain } = electron;
+
 // if no env set prd
 process.env.NODE_ENV = process.env.NODE_ENV || 'production';
 
@@ -21,9 +23,6 @@ process.env.NODE_ENV = process.env.NODE_ENV || 'production';
 if (process.env.NODE_ENV === 'test') {
   mock(electron.dialog);
 }
-
-// Set up error handling
-require('./utils/boot/configure-uncaught-exceptions.js');
 
 // Set up root paths
 require('../common/utils/add-root-require-path.js');
@@ -36,37 +35,55 @@ parseCLIInput();
 // Add dev mode specific services
 require('./utils/boot/configure-dev-services.js');
 
-// Set up logging
-const configureLogger = require('./utils/boot/configure-logger.js');
-require('./utils/boot/configure-unhandled-rejections.js');
-
-
 // Load the UI
-require('./utils/boot/configure-browser-window.js');
+const mainWindow = require('./utils/boot/configure-browser-window.js');
 
-const app = require('ampersand-app');
+// Set up error handling
+const logUnhandledError = require('../common/utils/log-unhandled-error.js');
 const configureCore = require('./utils/boot/configure-core.js');
-const configureServices = require('./utils/boot/configure-services.js');
+const configureLogger = require('./utils/boot/configure-logger.js');
 const upsertCoinstacUserDir = require('./utils/boot/upsert-coinstac-user-dir.js');
-const loadConfig = require('./utils/boot/load-config.js');
+const loadConfig = require('../config.js');
+const fileFunctions = require('./services/files.js');
 
 // Boot up the main process
 loadConfig()
-.then(configureCore)
-.then(configureLogger)
-.then(upsertCoinstacUserDir)
-.then(configureServices)
-.then(() => {
-  app.logger.verbose('main process booted');
+.then(config =>
+  Promise.all([
+    config,
+    configureLogger(config),
+  ])
+)
+.then(([config, logger]) => {
+  process.on('uncaughtException', logUnhandledError(null, logger));
+  return Promise.all([
+    logger,
+    configureCore(config, logger),
+  ]);
+})
+.then(([logger, core]) =>
+  Promise.all([
+    logger,
+    core,
+    upsertCoinstacUserDir(core),
+  ])
+)
+.then(([logger, core]) => {
+  logger.verbose('main process booted');
+
+  ipcMain.on('write-log', (event, { type, message }) => {
+    logger[type](`process: render - ${message}`);
+  });
 
   ipcPromise.on('download-comps', (params) => {
-    return app.core.computationRegistryNew
+    return core.computationRegistry
       .pullPipelineComputations({ comps: params })
       .then((pullStreams) => {
         pullStreams.on('data', (data) => {
+          console.log(mainWindow);
           let output = compact(data.toString().split('\r\n'));
           output = output.map(JSON.parse);
-          app.mainWindow.webContents.send('docker-out', output);
+          mainWindow.webContents.send('docker-out', output);
         });
 
         pullStreams.on('close', (code) => {
@@ -81,22 +98,29 @@ loadConfig()
 
   // TODO: Assumption is CSV meta file. Need to change.
   ipcPromise.on('add-files', () => {
-    return app.main.services.files.getMetaFile()
+    return fileFunctions.getMetaFile(mainWindow)
       .then(metaFilePath => Promise.all([
         metaFilePath,
-        app.core.projects.constructor.getCSV(metaFilePath),
+        core.constructor.getCSV(metaFilePath),
       ]))
       .then(([metaFilePath, rawMetaFile]) => {
         const metaFile = JSON.parse(rawMetaFile);
         return Promise.all([
           metaFilePath,
           metaFile,
-          app.core.projects.constructor.getFilesFromMetadata(
+          core.constructor.getFilesFromMetadata(
             metaFilePath,
             metaFile
           ),
         ]);
       })
       .then(([metaFilePath, metaFile, files]) => ({ metaFilePath, metaFile, files }));
+  });
+
+  ipcPromise.on('get-computation-schema', () => {
+    return fileFunctions.getMetaFile(mainWindow)
+      .then(metaFilePath =>
+        core.constructor.getJSONSchema(metaFilePath)
+      );
   });
 });

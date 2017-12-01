@@ -1,21 +1,7 @@
 import update from 'immutability-helper';
 import {
-  FETCH_ALL_COMPUTATIONS_QUERY,
   FETCH_ALL_CONSORTIA_QUERY,
 } from './functions';
-
-export const addComputationProp = {
-  props: ({ mutate }) => ({
-    submitSchema: computationSchema => mutate({
-      variables: { computationSchema },
-      update: (store, { data: { addComputation } }) => {
-        const data = store.readQuery({ query: FETCH_ALL_COMPUTATIONS_QUERY });
-        data.fetchAllComputations.push(addComputation);
-        store.writeQuery({ query: FETCH_ALL_COMPUTATIONS_QUERY, data });
-      },
-    }),
-  }),
-};
 
 export const compIOProp = {
   props: ({ data: { fetchComputation } }) => ({

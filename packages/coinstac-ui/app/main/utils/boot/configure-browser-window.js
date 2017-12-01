@@ -6,7 +6,6 @@
 
 'use strict';
 
-const app = require('ampersand-app');
 const electron = require('electron');
 const electronDefaultMenu = require('electron-default-menu');
 const path = require('path');
@@ -14,6 +13,7 @@ const url = require('url');
 
 const BrowserWindow = electron.BrowserWindow;
 const electronApp = electron.app;
+let mainWindow = null;
 
 /**
  * Create a `BrowserWindow`
@@ -28,19 +28,19 @@ function createWindow() {
    * reference of the window object, if you don't, the window will be closed
    * automatically when the javascript object is GCed.
    */
-  app.mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: size.width,
     height: size.height,
   });
 
-  app.mainWindow.loadURL(`file://${renderIndexPath}`);
+  mainWindow.loadURL(`file://${renderIndexPath}`);
 
   // Emitted when the window is closed.
-  app.mainWindow.on('closed', () => {
+  mainWindow.on('closed', () => {
     // Dereference the window object, usually you would store windows
     // in an array if your app supports multi windows, this is the time
     // when you should delete the corresponding element.
-    app.mainWindow = null;
+    mainWindow = null;
   });
 
   // Set app's menu
@@ -93,7 +93,9 @@ electronApp.on('window-all-closed', () => {
 electronApp.on('activate', () => {
   // On OS X it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
-  if (app.mainWindow === null) {
+  if (mainWindow === null) {
     createWindow();
   }
 });
+
+module.exports = mainWindow;
