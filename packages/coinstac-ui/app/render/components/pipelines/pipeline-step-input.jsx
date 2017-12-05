@@ -13,6 +13,10 @@ import {
 } from 'react-bootstrap';
 import update from 'immutability-helper';
 
+const styles = {
+  covariateColumns: { textAlign: 'center' },
+};
+
 export default class PipelineStepInput extends Component {
   constructor(props) {
     super(props);
@@ -109,7 +113,7 @@ export default class PipelineStepInput extends Component {
       <div>
         {objKey === 'covariates' &&
           <div>
-            <p style={{ fontWeight: 'bold' }}>Covariates</p>
+            <p className="bold">Covariates</p>
             <Button
               disabled={!owner}
               bsStyle="primary"
@@ -118,9 +122,22 @@ export default class PipelineStepInput extends Component {
             >
               <span aria-hidden="true" className="glphicon glyphicon-plus" /> Add Covariate
             </Button>
+            {step.ioMap.covariates &&
+              <Row>
+                <Col sm={3} style={styles.covariateColumns}>
+                  <p><em>Type</em></p>
+                </Col>
+                <Col sm={3} style={styles.covariateColumns}>
+                  <p><em>Name</em></p>
+                </Col>
+                <Col sm={3} style={styles.covariateColumns}>
+                  <p><em>Source</em></p>
+                </Col>
+              </Row>
+            }
             {step.ioMap.covariates.map((cov, index) => (
               <Row key={`covariate-${index}`}>
-                <Col sm={3}>
+                <Col sm={3} style={styles.covariateColumns}>
                   <DropdownButton
                     bsStyle="info"
                     id={`covariate-${index}-dropdown`}
@@ -142,7 +159,7 @@ export default class PipelineStepInput extends Component {
                 </Col>
                 {cov.type &&
                   <div>
-                    <Col sm={3}>
+                    <Col sm={3} style={styles.covariateColumns}>
                       <FormGroup controlId={`${parentKey}-form-group`}>
                         <FormControl
                           disabled={!owner}
@@ -157,7 +174,7 @@ export default class PipelineStepInput extends Component {
                         />
                       </FormGroup>
                     </Col>
-                    <Col sm={3}>
+                    <Col sm={3} style={styles.covariateColumns}>
                       <DropdownButton
                         id={`input-source-${index}-dropdown`}
                         title={cov.source.inputLabel || 'Data Source'}
