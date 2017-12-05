@@ -16,6 +16,8 @@ import {
 import { getAllAndSubProp, removeDocFromTableProp } from '../../state/graphql/props';
 import ComputationIO from './computation-io';
 
+const MAX_LENGTH_COMPUTATIONS = 5;
+
 const styles = {
   outputBox: { marginTop: 10, height: 400, overflowY: 'scroll' },
   topMargin: { marginTop: 10 },
@@ -27,14 +29,31 @@ class ComputationsList extends Component { // eslint-disable-line
 
     this.state = {
       activeComp: null,
+      ownedComputations: [],
+      otherComputations: [],
       unsubscribeComputations: null,
     };
 
+    this.getTable = this.getTable.bind(this);
     this.removeComputation = this.removeComputation.bind(this);
     this.setActiveComp = this.setActiveComp.bind(this);
   }
 
   componentWillReceiveProps(nextProps) {
+    const { user } = this.props.auth;
+    const ownedComputations = [];
+    const otherComputations = [];
+    if (nextProps.computations && nextProps.computations.length > MAX_LENGTH_COMPUTATIONS) {
+      nextProps.computations.forEach((comp) => {
+        if (user.id === comp.submittedBy) {
+          ownedComputations.push(comp);
+        } else {
+          otherComputations.push(comp);
+        }
+      });
+    }
+    this.setState({ ownedComputations, otherComputations });
+
     if (nextProps.computations && !this.state.unsubscribeComputations) {
       this.setState({ unsubscribeComputations: this.props.subscribeToComputations(null) });
     }
@@ -42,6 +61,42 @@ class ComputationsList extends Component { // eslint-disable-line
 
   componentWillUnmount() {
     this.state.unsubscribeComputations();
+  }
+
+  getTable(computations) {
+    const { auth: { user } } = this.props;
+    return (
+      <Table striped bordered condensed style={styles.topMargin}>
+        <thead>
+          <tr>
+            <th>Computation Name</th>
+            <th>Get IO</th>
+            <th>Delete</th>
+          </tr>
+        </thead>
+        <tbody>
+          {computations.map((comp) => {
+            return (
+              <tr key={`${comp.id}-row`}>
+                <td>{comp.meta.name}</td>
+                <td>
+                  <Button bsStyle="primary" onClick={this.setActiveComp(comp)}>
+                    Get IO
+                  </Button>
+                </td>
+                {user.id === comp.submittedBy &&
+                  <td>
+                    <Button bsStyle="primary" onClick={this.removeComputation(comp)}>
+                      Delete
+                    </Button>
+                  </td>
+                }
+              </tr>
+            );
+          })}
+        </tbody>
+      </Table>
+    );
   }
 
   setActiveComp(comp) {
@@ -57,7 +112,8 @@ class ComputationsList extends Component { // eslint-disable-line
   }
 
   render() {
-    const { auth: { user }, computations } = this.props;
+    const { computations } = this.props;
+    const { ownedComputations, otherComputations } = this.state;
 
     return (
       <div>
@@ -71,38 +127,14 @@ class ComputationsList extends Component { // eslint-disable-line
             </Button>
           </LinkContainer>
         </div>
+
         {computations && computations.length > 0 &&
-          <Table striped bordered condensed style={styles.topMargin}>
-            <thead>
-              <tr>
-                <th>Computation Name</th>
-                <th>Get IO</th>
-                <th>Delete</th>
-              </tr>
-            </thead>
-            <tbody>
-              {computations.map((comp) => {
-                return (
-                  <tr key={`${comp.id}-row`}>
-                    <td>{comp.meta.name}</td>
-                    <td>
-                      <Button bsStyle="primary" onClick={this.setActiveComp(comp)}>
-                        Get IO
-                      </Button>
-                    </td>
-                    {user.id === comp.submittedBy &&
-                      <td>
-                        <Button bsStyle="primary" onClick={this.removeComputation(comp)}>
-                          Delete
-                        </Button>
-                      </td>
-                    }
-                  </tr>
-                );
-              })}
-            </tbody>
-          </Table>
+          computations.length <= MAX_LENGTH_COMPUTATIONS && this.getTable(computations)
         }
+        {ownedComputations.length > 0 && <h4>Owned Computations</h4>}
+        {ownedComputations.length > 0 && this.getTable(ownedComputations)}
+        {otherComputations.length > 0 && <h4>Other Computations</h4>}
+        {otherComputations.length > 0 && this.getTable(otherComputations)}
 
         {(!computations || !computations.length) &&
           <Alert bsStyle="info">
