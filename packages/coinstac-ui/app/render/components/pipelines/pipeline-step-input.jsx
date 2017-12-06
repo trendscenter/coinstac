@@ -122,7 +122,7 @@ export default class PipelineStepInput extends Component {
             >
               <span aria-hidden="true" className="glphicon glyphicon-plus" /> Add Covariate
             </Button>
-            {step.ioMap.covariates &&
+            {step.ioMap.covariates && step.ioMap.covariates.length > 0 &&
               <Row>
                 <Col sm={3} style={styles.covariateColumns}>
                   <p><em>Type</em></p>
