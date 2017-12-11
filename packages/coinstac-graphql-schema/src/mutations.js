@@ -39,7 +39,7 @@ const mutations = {
   savePipeline: `
     {
       savePipeline(pipeline: $pipeline) {
-        ${sharedFields.pipelineSaveFields}
+        ${sharedFields.pipelineFields}
       }
     }
   `,

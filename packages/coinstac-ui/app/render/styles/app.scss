@@ -77,26 +77,17 @@ $icon-font-path: "~bootstrap-sass/assets/fonts/bootstrap/";
   position: relative;
 }
 
-.navigation-pane {
+.dashboard {
   background: $gray-lighter;
 }
 
 .navigation {
-  background: $gray-lighter;
-
   > nav .glyphicon {
     display: inline-block;
     margin-right: 1rem;
   }
   @media (min-width: $screen-sm) {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    left: 0;
-    padding: $grid-gutter-width / 2;
-    position: fixed;
-    top: 0;
-    width: 33.33%;
+    padding: $grid-gutter-width / 2 0;
 
     .logo {
         margin-bottom: 2rem;
@@ -111,6 +102,8 @@ $icon-font-path: "~bootstrap-sass/assets/fonts/bootstrap/";
  * Content pane
  */
 .content-pane {
+  background: white;
+  min-height: 100vh;
   @media (min-width: $screen-sm) {
     padding: $grid-gutter-width / 2;
   }

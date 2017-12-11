@@ -265,7 +265,6 @@ class Pipeline extends Component {
 
   updateStorePipeline() {
     const data = ApolloClient.readQuery({ query: FETCH_ALL_CONSORTIA_QUERY });
-    console.log(data);
     data.fetchPipeline = { ...this.state.pipeline, __typename: 'Pipeline' };
     ApolloClient.writeQuery({ query: FETCH_PIPELINE_QUERY, data });
   }
@@ -331,7 +330,11 @@ class Pipeline extends Component {
           id: step.id,
           computations: step.computations.map(comp => comp.id),
           ioMap: step.ioMap,
-          controller: { type: step.controller.type, options: step.controller.options },
+          controller: {
+            id: step.controller.id,
+            type: step.controller.type,
+            options: step.controller.options,
+          },
         })
       ),
     })

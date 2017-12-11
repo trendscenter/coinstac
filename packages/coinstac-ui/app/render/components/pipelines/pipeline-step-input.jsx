@@ -2,16 +2,14 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import {
   Button,
-  Col,
   ControlLabel,
   Checkbox,
-  DropdownButton,
   FormGroup,
   FormControl,
   MenuItem,
-  Row,
 } from 'react-bootstrap';
 import update from 'immutability-helper';
+import PipelineStepVariableTable from './pipeline-step-variable-table';
 
 const styles = {
   covariateColumns: { textAlign: 'center' },
@@ -23,6 +21,7 @@ export default class PipelineStepInput extends Component {
 
     this.addCovariate = this.addCovariate.bind(this);
     this.getNewObj = this.getNewObj.bind(this);
+    this.getSourceMenuItem = this.getSourceMenuItem.bind(this);
   }
 
   componentWillMount() {
@@ -71,6 +70,29 @@ export default class PipelineStepInput extends Component {
     return [value];
   }
 
+  getSourceMenuItem(type, step, index) {
+    // Make Camel Case
+    let typeNoSpace = type.split(' ');
+    typeNoSpace = typeNoSpace[0].toLowerCase() + typeNoSpace.slice(1).join('');
+
+    return (
+      <MenuItem
+        eventKey={`covariate-${typeNoSpace}-inputs-menuitem`}
+        key={`covariate-${typeNoSpace}-inputs-menuitem`}
+        onClick={() => this.props.updateStep({
+          ...step,
+          ioMap: this.getNewObj(
+            'source',
+            { pipelineIndex: -1, inputKey: typeNoSpace, inputLabel: type },
+            index
+          ),
+        })}
+      >
+        {type}
+      </MenuItem>
+    );
+  }
+
   addCovariate() {
     const {
       pipelineIndex,
@@ -113,137 +135,26 @@ export default class PipelineStepInput extends Component {
       <div>
         {objKey === 'covariates' &&
           <div>
-            <p className="bold">Covariates</p>
+            <p className="bold">Variables</p>
             <Button
               disabled={!owner}
               bsStyle="primary"
               onClick={this.addCovariate}
               style={{ marginBottom: 10 }}
             >
-              <span aria-hidden="true" className="glphicon glyphicon-plus" /> Add Covariate
+              <span aria-hidden="true" className="glphicon glyphicon-plus" /> Add Variable
             </Button>
-            {step.ioMap.covariates && step.ioMap.covariates.length > 0 &&
-              <Row>
-                <Col sm={3} style={styles.covariateColumns}>
-                  <p><em>Type</em></p>
-                </Col>
-                <Col sm={3} style={styles.covariateColumns}>
-                  <p><em>Name</em></p>
-                </Col>
-                <Col sm={3} style={styles.covariateColumns}>
-                  <p><em>Source</em></p>
-                </Col>
-              </Row>
-            }
-            {step.ioMap.covariates.map((cov, index) => (
-              <Row key={`covariate-${index}`}>
-                <Col sm={3} style={styles.covariateColumns}>
-                  <DropdownButton
-                    bsStyle="info"
-                    id={`covariate-${index}-dropdown`}
-                    title={cov.type || 'Covariate Type'}
-                  >
-                    {objParams.items.map(item => (
-                      <MenuItem
-                        eventKey={`${item}-menuitem`}
-                        key={`${item}-menuitem`}
-                        onClick={() => updateStep({
-                          ...step,
-                          ioMap: this.getNewObj('type', item, index),
-                        })}
-                      >
-                        {item}
-                      </MenuItem>
-                    ))}
-                  </DropdownButton>
-                </Col>
-                {cov.type &&
-                  <div>
-                    <Col sm={3} style={styles.covariateColumns}>
-                      <FormGroup controlId={`${parentKey}-form-group`}>
-                        <FormControl
-                          disabled={!owner}
-                          placeholder="Covariate Label"
-                          type="input"
-                          value={cov.name || ''}
-                          inputRef={(input) => { this[index] = input; }}
-                          onChange={() => updateStep({
-                            ...step,
-                            ioMap: this.getNewObj('name', this[index].value, index),
-                          })}
-                        />
-                      </FormGroup>
-                    </Col>
-                    <Col sm={3} style={styles.covariateColumns}>
-                      <DropdownButton
-                        id={`input-source-${index}-dropdown`}
-                        title={cov.source.inputLabel || 'Data Source'}
-                        disabled={!owner}
-                      >
-                        <MenuItem
-                          eventKey={'covariate-file-inputs-menuitem'}
-                          key={'covariate-file-inputs-menuitem'}
-                          onClick={() => updateStep({
-                            ...step,
-                            ioMap: this.getNewObj(
-                              'source',
-                              { pipelineIndex: -1, inputKey: 'file', inputLabel: 'File' },
-                              index
-                            ),
-                          })}
-                        >
-                          File
-                        </MenuItem>
-                        {possibleInputs.map(itemObj => (
-                          Object.entries(itemObj.inputs)
-                            .filter(filterIn => filterIn[1].type === cov.type)
-                            .map(itemInput => (
-                              <MenuItem
-                                disabled={!owner}
-                                eventKey={`${itemInput[1].label}-Computation-${itemObj.possibleInputIndex + 1}-inputs-menuitem`}
-                                key={`${itemInput[1].label}-Computation-${itemObj.possibleInputIndex + 1}-inputs-menuitem`}
-                                onClick={() => updateStep({
-                                  ...step,
-                                  ioMap: this.getNewObj(
-                                    'source',
-                                    {
-                                      pipelineIndex: itemObj.possibleInputIndex,
-                                      inputKey: itemInput[0],
-                                      inputLabel: `Computation ${itemObj.possibleInputIndex + 1}: ${itemInput[1].label}`,
-                                    },
-                                    index
-                                  ),
-                                })}
-                              >
-                                {`Computation ${itemObj.possibleInputIndex + 1}: ${itemInput[1].label}`}
-                              </MenuItem>
-                            ))
-                        ))}
-                      </DropdownButton>
-                    </Col>
-                    <Col sm={3}>
-                      <Button
-                        disabled={!owner}
-                        className="pull-right"
-                        bsStyle="danger"
-                        onClick={() => updateStep({
-                          ...step,
-                          ioMap: {
-                            ...step.ioMap,
-                            covariates: update(step.ioMap[objKey], {
-                              $splice: [[index, 1]],
-                            }),
-                          },
-                        })}
-                      >
-                        Remove
-                      </Button>
-                    </Col>
-                  </div>
-                }
-
-              </Row>
-            ))}
+            <PipelineStepVariableTable
+              getNewObj={this.getNewObj}
+              getSourceMenuItem={this.getSourceMenuItem}
+              objKey={objKey}
+              objParams={objParams}
+              owner={owner}
+              parentKey={parentKey}
+              possibleInputs={possibleInputs}
+              step={step}
+              updateStep={updateStep}
+            />
           </div>
         }
 
