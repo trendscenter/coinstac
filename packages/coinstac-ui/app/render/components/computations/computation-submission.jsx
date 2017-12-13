@@ -71,7 +71,7 @@ class ComputationSubmission extends Component { // eslint-disable-line
           bsStyle="success"
           type="button"
           className={'pull-right'}
-          disabled={!this.state.activeSchema.meta}
+          disabled={!this.state.activeSchema.meta || this.state.validationErrors.length > 0}
           onClick={this.submitSchema}
         >
           Submit
