@@ -96,7 +96,7 @@ class CoinstacClient {
   }
 
   /**
-   * Get a JSON schema contents.
+   * Get JSON schema contents.
    *
    * @param {string} filename Full file path to JSON Schema
    * @returns {Promise<Project>}

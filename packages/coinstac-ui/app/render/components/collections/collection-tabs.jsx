@@ -21,9 +21,11 @@ class CollectionTabs extends Component {
     let collection = {
       name: '',
       description: '',
+      fileGroups: [],
+      associatedConsortia: [],
     };
 
-    if (params.collectionId) {
+    if (collections.length > 0 && params.collectionId) {
       collection = collections.find(col => col.id.toString() === params.collectionId);
     }
 

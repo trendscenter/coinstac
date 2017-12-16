@@ -1,14 +1,12 @@
 import React, { Component } from 'react';
 import {
+  Accordion,
+  Alert,
   Button,
-  Col,
-  ControlLabel,
   Form,
   FormGroup,
-  FormControl,
   Panel,
   Radio,
-  Row,
 } from 'react-bootstrap';
 import PropTypes from 'prop-types';
 import ipcPromise from 'ipc-promise';
@@ -22,31 +20,96 @@ export default class CollectionFiles extends Component {
     super(props);
 
     this.state = {
+      filesError: null,
       newFile: {
         open: false,
         org: '',
       },
+      showFiles: {},
     };
 
-    this.addFiles = this.addFiles.bind(this);
+    this.addFileGroup = this.addFileGroup.bind(this);
+    this.removeFileGroup = this.removeFileGroup.bind(this);
+    this.removeFileInGroup = this.removeFileInGroup.bind(this);
     this.updateNewFileOrg = this.updateNewFileOrg.bind(this);
   }
 
-  addFiles() {
-    ipcPromise.send('add-files', this.state.org)
+  addFileGroup() {
+    ipcPromise.send('open-dialog', this.state.newFile.org)
     .then((obj) => {
+      console.log(obj);
+      let newFiles;
+
+      if (obj.error) {
+        this.setState({ filesError: obj.error });
+      } else {
+        if (this.state.newFile.org === 'metafile') {
+          newFiles = {
+            ...obj,
+            extension: 'csv',
+            date: new Date().getTime(),
+            firstRow: obj.metaFile[0].join(', '),
+            org: this.state.newFile.org,
+          };
+        } else {
+          newFiles = {
+            extension: obj.extension,
+            files: [...obj.paths.sort()],
+            date: new Date().getTime(),
+            org: this.state.newFile.org,
+          };
+
+          this.setState({ showFiles: { [newFiles.date]: false } });
+        }
+
+        this.setState({ filesError: null });
+        this.props.updateCollection(
+          {
+            param: 'fileGroups',
+            value: [
+              ...this.props.collection.fileGroups,
+              newFiles,
+            ],
+          },
+          this.props.saveCollection
+        );
+      }
+    })
+    .catch(console.log);
+  }
+
+  removeFileInGroup(groupIndex, fileIndex) {
+    return () => {
+      const groups = [...this.props.collection.fileGroups];
+      groups[groupIndex].files.splice(fileIndex, 1);
+
       this.props.updateCollection(
         {
-          param: 'files',
+          param: 'fileGroups',
           value: [
-            ...this.props.collection.files,
-            { ...obj, extension: 'csv', date: new Date().getTime(), firstRow: obj.metaFile[0].join(', ') },
+            ...groups,
           ],
         },
         this.props.saveCollection
       );
-    })
-    .catch(console.log);
+    };
+  }
+
+  removeFileGroup(groupIndex) {
+    return () => {
+      const groups = [...this.props.collection.fileGroups];
+      groups.splice(groupIndex);
+
+      this.props.updateCollection(
+        {
+          param: 'fileGroups',
+          value: [
+            ...groups,
+          ],
+        },
+        this.props.saveCollection
+      );
+    };
   }
 
   updateNewFileOrg(ev) {
@@ -57,7 +120,6 @@ export default class CollectionFiles extends Component {
     const {
       collection,
       saveCollection,
-      updateCollection,
     } = this.props;
 
     return (
@@ -88,11 +150,11 @@ export default class CollectionFiles extends Component {
               </Radio>
               <Radio
                 name="radioGroup"
-                checked={this.state.newFile.org === 'directory'}
+                checked={this.state.newFile.org === 'manual'}
                 onChange={this.updateNewFileOrg}
-                value="directory"
+                value="manual"
               >
-                Directory structure
+                Maually Select Files
               </Radio>
             </FormGroup>
 
@@ -100,28 +162,85 @@ export default class CollectionFiles extends Component {
               block
               bsStyle="primary"
               disabled={!this.state.newFile.org}
-              onClick={this.addFiles}
+              onClick={this.addFileGroup}
             >
               Add Files to Collection
             </Button>
           </Panel>
 
-          {collection.files.map(file => (
-            <Panel key={`${file.date}-${file.extension}-${file.firstRow}`}>
-              {file.metaFilePath &&
-                <p style={styles.fileLabelRow}>
-                  <span className="bold">Meta File Path:</span> {file.metaFilePath}
-                </p>
+          {this.state.filesError &&
+            <Alert bsStyle="danger" style={{ ...styles.topMargin, textAlign: 'left' }}>
+              <h4 style={{ fontStyle: 'normal' }}>File Error</h4>
+              {this.state.filesError}
+            </Alert>
+          }
+
+          {collection.fileGroups.map((group, groupIndex) => (
+            <Panel key={`${group.date}-${group.extension}-${group.firstRow}`}>
+              {group.org === 'metafile' &&
+                <div>
+                  <Button
+                    bsStyle="danger"
+                    className="pull-right"
+                    onClick={this.removeFileGroup(groupIndex)}
+                  >
+                    <span aria-hidden="true" className="glyphicon glyphicon-trash" />
+                    {' '}
+                    Remove File Group
+                  </Button>
+                  <p style={styles.fileLabelRow}>
+                    <span className="bold">Date:</span> {new Date(group.date).toUTCString()}
+                  </p>
+                  <p style={styles.fileLabelRow}>
+                    <span className="bold">Extension:</span> {group.extension}
+                  </p>
+                  <p style={styles.fileLabelRow}>
+                    <span className="bold">Meta File Path:</span> {group.metaFilePath}
+                  </p>
+                  <p style={styles.fileLabelRow}>
+                    <span className="bold">First Row:</span> {group.firstRow}
+                  </p>
+                </div>
               }
-              <p style={styles.fileLabelRow}>
-                <span className="bold">Extension:</span> {file.extension}
-              </p>
-              <p style={styles.fileLabelRow}>
-                <span className="bold">Date:</span> {file.date}
-              </p>
-              <p style={styles.fileLabelRow}>
-                <span className="bold">First Row:</span> {file.firstRow}
-              </p>
+              {group.org === 'manual' &&
+                <div>
+                  <Button
+                    bsStyle="danger"
+                    className="pull-right"
+                    onClick={this.removeFileGroup(groupIndex)}
+                  >
+                    <span aria-hidden="true" className="glyphicon glyphicon-trash" />
+                    {' '}
+                    Remove File Group
+                  </Button>
+                  <p style={styles.fileLabelRow}>
+                    <span className="bold">Date:</span> {new Date(group.date).toUTCString()}
+                  </p>
+                  <p style={styles.fileLabelRow}>
+                    <span className="bold">Extension:</span> {group.extension}
+                  </p>
+                  <Accordion>
+                    <Panel
+                      header={`Files (${group.files.length}):`}
+                      style={{ marginTop: 10 }}
+                    >
+                      {group.files.map((file, fileIndex) =>
+                        (<div key={file} style={{ marginBottom: 5 }}>
+                          <button
+                            aria-label="Delete"
+                            style={{ border: 'none', background: 'none' }}
+                            type="button"
+                            onClick={this.removeFileInGroup(groupIndex, fileIndex)}
+                          >
+                            <span aria-hidden="true" className="glyphicon glyphicon-remove" style={{ color: 'red' }} />
+                          </button>
+                          {file}
+                        </div>)
+                      )}
+                    </Panel>
+                  </Accordion>
+                </div>
+              }
             </Panel>
           ))}
         </Form>
