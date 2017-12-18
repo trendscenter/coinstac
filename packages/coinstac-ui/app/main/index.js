@@ -128,7 +128,7 @@ loadConfig()
         },
       ];
       properties = ['openDirectory', 'openFile', 'multiSelections'];
-      postDialogFunc = ipcFunctions.fileALaCarte;
+      postDialogFunc = ipcFunctions.manualFileSelection;
     }
 
     return fileFunctions.showDialog(
