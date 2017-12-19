@@ -3,20 +3,21 @@
 const Controller = require('./controller');
 
 module.exports = {
-  create({ steps, inputMap }, runId) {
-    let stepIndex;
-    steps = steps.map(step => Controller.create(step, runId));
+  create({ steps, inputMap, mode }, runId) {
+    let currentStep;
+    steps = steps.map(step => Controller.create(step, runId, mode));
     return {
-      stepIndex,
-      steps,
+      id: runId,
       inputMap,
-      run() {
+      mode,
+      currentStep,
+      steps,
+      run(remoteHandler) {
         let runInput;
-        // TODO: remote n stuff
         return steps.reduce((prom, step, index) => {
-          stepIndex = index;
+          this.currentStep = index;
           runInput = index > 0 ? runInput : inputMap[index];
-          return prom.then(() => step.start(runInput))
+          return prom.then(() => step.start(runInput, remoteHandler))
           .then((output) => {
             runInput = output;
             return output;
