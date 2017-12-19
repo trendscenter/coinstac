@@ -5,23 +5,25 @@ const Emitter = require('events');
 
 const controllers = {};
 controllers.single = require('./control-boxes/single');
+controllers.decentralized = require('./control-boxes/decentralized');
 
 module.exports = {
-  create({ controller, computations }, runId) {
+  create({ controller, computations }, runId, mode) {
     let cache = {};
-    const currentComputations = computations.map(comp => Computation.create(comp));
+    const currentComputations = computations.map(comp => Computation.create(comp, mode));
     const activeControlBox = controllers[controller];
     const computationStep = 0;
     const iterationEmitter = new Emitter();
     const controllerState = {
-      initialized: false,
-      runMode: 'sequential',
       activeComputations: [],
-      computationIndex: undefined,
-      iteration: undefined,
-      currentOutput: undefined,
       currentBoxCommand: undefined,
       currentComputations,
+      currentOutput: undefined,
+      initialized: false,
+      iteration: undefined,
+      mode,
+      runType: 'sequential',
+      state: undefined,
     };
     const setIteration = (iteration) => {
       controllerState.iteration = iteration;
@@ -33,14 +35,16 @@ module.exports = {
       cache,
       computationStep,
       controllerState,
+      mode,
       runId,
       iterationEmitter,
       setIteration,
-      start: (input) => {
+      start: (input, remoteHandler) => {
         const queue = [];
-
+        controllerState.state = 'started';
+        controllerState.remoteInitial = controllerState.mode === 'remote' ? true : undefined;
         if (!controllerState.initialized) {
-          controllerState.runMode = activeControlBox.runMode || controllerState.runMode;
+          controllerState.runType = activeControlBox.runType || controllerState.runType;
           controllerState.initialized = true;
           controllerState.computationIndex = 0;
           controllerState.activeComputations[controllerState.computationIndex] =
@@ -55,16 +59,18 @@ module.exports = {
          * @return {[type]}             [description]
          */
         const iterateComp = (compInput, cb) => {
-          // TODO: logic for different runModes (single, parallel, etc)
+          // TODO: logic for different runTypes (single, parallel, etc)
           switch (controllerState.currentBoxCommand) {
             case 'nextIteration':
               setIteration(controllerState.iteration + 1);
+              controllerState.state = 'waiting on computation';
 
               return controllerState.activeComputations[controllerState.computationIndex]
-              .start(Object.assign({}, compInput, { cache, state: controllerState }))
+              .start(Object.assign({}, compInput, { cache }))
               .then((output) => {
                 cache = Object.assign(cache, output.cache);
                 controllerState.currentOutput = { output: output.output, success: output.success };
+                controllerState.state = 'finished iteration';
                 cb({ input: output.output });
               });
             case 'nextComputation':
@@ -77,12 +83,26 @@ module.exports = {
               //   .start(input);
               break;
             case 'remote':
-              break;
+              controllerState.state = 'waiting on remote';
+              return remoteHandler(controllerState.currentOutput)
+              .then((output) => {
+                controllerState.state = 'finished remote iteration';
+                cb({ input: output.output });
+              });
+            case 'firstServerRemote':
+              // TODO: not ideal, figure out better remote start
+              // remove noop need
+              controllerState.state = 'waiting on remote';
+              return remoteHandler(controllerState.currentOutput, true)
+              .then((output) => {
+                controllerState.state = 'finished remote iteration';
+                cb({ input: output.output });
+              });
             case 'done':
               cb(compInput);
               break;
             default:
-              throw new Error('unknown controller runMode');
+              throw new Error('unknown controller runType');
           }
         };
         queue.push(iterateComp);
@@ -110,6 +130,7 @@ module.exports = {
          * @return {[type]}         [description]
          */
         const waterfall = (input, steps, done) => {
+          controllerState.state = 'running';
           steps.push(done);
           trampoline(() => {
             return steps.length ?
@@ -118,7 +139,8 @@ module.exports = {
               const fn = steps.shift();
               controllerState.currentBoxCommand = activeControlBox.preIteration(controllerState);
 
-              if (controllerState.iteration === 0) {
+              if ((controllerState.mode === 'local' && controllerState.iteration === 0) ||
+                (controllerState.mode === 'remote' && controllerState.remoteInitial)) {
                 // add initial input to first iteration
                 argsArray.unshift(input);
               }
@@ -128,7 +150,10 @@ module.exports = {
                 steps.push(iterateComp);
                 steps.push(lastCallback);
               }
+              // necessary if this function call turns out synchronous
+              // the stack won't clear and overflow, has limited perf impact
               process.nextTick(() => fn.apply(this, argsArray.concat(_cb)));
+              controllerState.remoteInitial = controllerState.mode === 'remote' ? false : undefined;
             } :
             undefined;  // steps complete
           })(input);
@@ -136,6 +161,7 @@ module.exports = {
 
         const p = new Promise((res) => {
           waterfall(input, queue, (result) => {
+            controllerState.state = 'stopped';
             res(result.input);
           });
         });

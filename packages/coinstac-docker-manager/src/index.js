@@ -3,6 +3,7 @@
 const Docker = require('dockerode');
 const { promisify } = require('util');
 const request = require('request-promise-native');
+const exitHook = require('async-exit-hook');
 
 const setTimeoutPromise = promisify(setTimeout);
 
@@ -131,11 +132,11 @@ const startService = (serviceId, opts) => {
     });
     const jobOpts = Object.assign(
       {
-        Tty: true,
         ExposedPorts: { '8881/tcp': {} },
         HostConfig: {
           PortBindings: { '8881/tcp': [{ HostPort: `${generateServicePort(serviceId)}`, HostIp: '127.0.0.1' }] },
         },
+        Tty: true,
       },
       opts
     );
@@ -186,16 +187,19 @@ const pullImage = (computation) => {
 
 /**
  * On a orderly exit the manager will clean up its containers
- * Note this is not possible on events that do not trigger 'beforeExit'
  */
-process.on('beforeExit', () => {
+exitHook((cb) => {
   Promise.all(
     Object.keys(services)
     .map(service => services[service].container.stop()))
     .then(() => {
       services = {};
     }
-  );
+  ).then(() => cb())
+  .catch((err) => {
+    console.log(`ERROR failed docker manager shutdown: ${err}`); // eslint-disable-line no-console
+    cb();
+  });
 });
 
 module.exports = {
