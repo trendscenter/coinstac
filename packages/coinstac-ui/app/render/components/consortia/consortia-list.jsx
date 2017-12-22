@@ -4,13 +4,17 @@ import { compose, graphql } from 'react-apollo';
 import { Alert, Button } from 'react-bootstrap';
 import { LinkContainer } from 'react-router-bootstrap';
 import PropTypes from 'prop-types';
+import ApolloClient from '../../state/apollo-client';
 import ListItem from '../common/list-item';
 import ListDeleteModal from '../common/list-delete-modal';
 import { updateUserPerms } from '../../state/ducks/auth';
+import { pullComputations } from '../../state/ducks/docker';
 import {
   ADD_USER_ROLE_MUTATION,
+  COMPUTATION_CHANGED_SUBSCRIPTION,
   CONSORTIUM_CHANGED_SUBSCRIPTION,
   DELETE_CONSORTIUM_MUTATION,
+  FETCH_ALL_COMPUTATIONS_QUERY,
   FETCH_ALL_CONSORTIA_QUERY,
   FETCH_ALL_PIPELINES_QUERY,
   JOIN_CONSORTIUM_MUTATION,
@@ -81,7 +85,7 @@ class ConsortiaList extends Component {
     this.state.unsubscribePipelines();
   }
 
-  getOptions(member, owner, id) {
+  getOptions(member, owner, id, activePipelineId) {
     const options = [];
 
     if (member && !owner) {
@@ -101,7 +105,7 @@ class ConsortiaList extends Component {
           key="join-cons-button"
           bsStyle="primary"
           className="pull-right"
-          onClick={() => this.joinConsortium(id)}
+          onClick={() => this.joinConsortium(id, activePipelineId)}
         >
           Join Consortium
         </Button>
@@ -123,7 +127,8 @@ class ConsortiaList extends Component {
           this.getOptions(
             isUserA(user.id, consortium.members),
             isUserA(user.id, consortium.owners),
-            consortium.id
+            consortium.id,
+            consortium.activePipelineId
           )
         }
         itemRoute={'/dashboard/consortia'}
@@ -152,8 +157,23 @@ class ConsortiaList extends Component {
     this.closeModal();
   }
 
-  joinConsortium(consortiumId) {
+  joinConsortium(consortiumId, activePipelineId) {
     const { auth: { user } } = this.props;
+
+    if (activePipelineId) {
+      const computationData = ApolloClient.readQuery({ query: FETCH_ALL_COMPUTATIONS_QUERY });
+      const pipelineData = ApolloClient.readQuery({ query: FETCH_ALL_PIPELINES_QUERY });
+      const pipeline = pipelineData.fetchAllPipelines.find(cons => cons.id === activePipelineId);
+
+      const computations = [];
+      pipeline.steps.forEach((step) => {
+        const compObject = computationData.fetchAllComputations
+          .find(comp => comp.id === step.computations[0]);
+        computations.push(compObject.computation.dockerImage);
+      });
+
+      this.props.pullComputations(computations);
+    }
 
     this.props.joinConsortium(consortiumId);
     this.props.addUserRole(user.id, 'consortia', consortiumId, 'member');
@@ -224,6 +244,7 @@ ConsortiaList.propTypes = {
   joinConsortium: PropTypes.func.isRequired,
   leaveConsortium: PropTypes.func.isRequired,
   pipelines: PropTypes.array,
+  pullComputations: PropTypes.func.isRequired,
   removeUserRole: PropTypes.func.isRequired,
   subscribeToConsortia: PropTypes.func.isRequired,
   subscribeToPipelines: PropTypes.func.isRequired,
@@ -239,6 +260,13 @@ const mapStateToProps = ({ auth }) => {
 };
 
 const ConsortiaListWithData = compose(
+  graphql(FETCH_ALL_COMPUTATIONS_QUERY, getAllAndSubProp(
+    COMPUTATION_CHANGED_SUBSCRIPTION,
+    'computations',
+    'fetchAllComputations',
+    'subscribeToComputations',
+    'computationChanged'
+  )),
   graphql(FETCH_ALL_CONSORTIA_QUERY, getAllAndSubProp(
     CONSORTIUM_CHANGED_SUBSCRIPTION,
     'consortia',
@@ -265,4 +293,6 @@ const ConsortiaListWithData = compose(
   ))
 )(ConsortiaList);
 
-export default connect(mapStateToProps, { updateUserPerms })(ConsortiaListWithData);
+export default connect(mapStateToProps,
+  { pullComputations, updateUserPerms }
+)(ConsortiaListWithData);

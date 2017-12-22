@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { ipcRenderer } from 'electron';
+import ipcPromise from 'ipc-promise';
 import {
   Form,
   FormGroup,
@@ -12,7 +13,7 @@ import {
 import {
   pullComputations,
   updateDockerOutput,
-} from '../state/ducks/feature-test';
+} from '../state/ducks/docker';
 
 const styles = {
   outputBox: { marginTop: 10, height: 400, overflowY: 'scroll' },
@@ -28,6 +29,7 @@ class FeatureTest extends Component { // eslint-disable-line
     });
 
     this.pullComps = this.pullComps.bind(this);
+    this.startPipeline = this.startPipeline.bind(this);
   }
 
   pullComps(e) {
@@ -41,13 +43,41 @@ class FeatureTest extends Component { // eslint-disable-line
     .catch(console.log);
   }
 
+  startPipeline() {
+    const { collections: { collections, associatedConsortia } } = this.props;
+    let filesArray = [];
+    const cons1 = associatedConsortia.find(cons => cons.id === 'test-cons-1');
+
+    // Loop through all steps in consortia mapping
+    cons1.stepIO.forEach((step) => {
+      // Loop through all inputs in a given step
+      step.forEach((stepInput) => {
+        // Find the correct collection corresponding to the input group
+        const col = collections.find(lection => lection.id === stepInput.collectionId);
+        // Find the correct collection group and join its files with all others
+        const colGroup = col.fileGroups.find(gr => gr.id === stepInput.groupId);
+        filesArray = filesArray.concat(colGroup.files);
+      });
+    });
+
+    ipcPromise.send('start-pipeline', ({
+      consortium: { id: 'test-cons-1', pipelineSteps: [] },
+      filesArray,
+      run: { id: 'test-run-1', pipelineSteps: [] },
+    }));
+  }
+
   render() {
     const { dockerOut } = this.props;
 
     return (
       <div>
+        <Button
+          onClick={this.startPipeline}
+        >
+          {'"Start Pipeline"'}
+        </Button>
         <p style={{ fontWeight: 'bold' }}>Be sure to include tags (eg: ':latest') or you'll be downloading all versions.</p>
-
         <Form horizontal onSubmit={this.pullComps}>
           <FormGroup controlId="img1">
             <Col sm={2}>
@@ -109,13 +139,14 @@ class FeatureTest extends Component { // eslint-disable-line
 }
 
 FeatureTest.propTypes = {
+  collections: PropTypes.object.isRequired,
   dockerOut: PropTypes.array.isRequired,
   pullComputations: PropTypes.func.isRequired,
   updateDockerOutput: PropTypes.func.isRequired,
 };
 
-function mapStateToProps({ featureTest: { dockerOut } }) {
-  return { dockerOut };
+function mapStateToProps({ collections, featureTest: { dockerOut } }) {
+  return { collections, dockerOut };
 }
 
 export default connect(mapStateToProps, {
