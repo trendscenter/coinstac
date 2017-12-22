@@ -6,7 +6,7 @@ class CollectionPipelineInput extends Component {
   constructor(props) {
     super(props);
 
-    const consIndex = props.collection.associatedConsortia
+    const consIndex = props.associatedConsortia
       .findIndex(cons => cons.id === props.consortiumId);
 
     if (props.objKey === 'covariates') {
@@ -19,9 +19,9 @@ class CollectionPipelineInput extends Component {
 
       // Populate state with existing mappings if they exist
       if (consIndex > -1 && // Is an associated consortia
-          props.collection.associatedConsortia[consIndex].stepIO[props.stepIndex] &&
-          props.collection.associatedConsortia[consIndex].stepIO[props.stepIndex].length) {
-        props.collection.associatedConsortia[consIndex]
+          props.associatedConsortia[consIndex].stepIO[props.stepIndex] &&
+          props.associatedConsortia[consIndex].stepIO[props.stepIndex].length) {
+        props.associatedConsortia[consIndex]
           .stepIO[props.stepIndex].forEach((step, sIndex) => {
             sources[sIndex] = { ...step };
           });
@@ -64,6 +64,7 @@ class CollectionPipelineInput extends Component {
         ({
           sources: update(prevState.sources, {
             $splice: [[covarIndex, 1, {
+              collectionId: collection.id,
               groupId: value,
               fileIndex,
               column: '',
@@ -177,6 +178,7 @@ class CollectionPipelineInput extends Component {
 }
 
 CollectionPipelineInput.propTypes = {
+  associatedConsortia: PropTypes.array.isRequired,
   collection: PropTypes.object.isRequired,
   consortiumId: PropTypes.string.isRequired,
   objKey: PropTypes.string.isRequired,

@@ -77,6 +77,12 @@ loadConfig()
     logger[type](`process: render - ${message}`);
   });
 
+  ipcPromise.on('start-pipeline', ({ consortium, filesArray, run }) => {
+    return core.constructor.startPipeline(
+      consortium.id, consortium.pipelineSteps, filesArray, run.id, run.pipelineSteps
+    );
+  });
+
   ipcPromise.on('download-comps', (params) => {
     return core.computationRegistry
       .pullPipelineComputations({ comps: params })
