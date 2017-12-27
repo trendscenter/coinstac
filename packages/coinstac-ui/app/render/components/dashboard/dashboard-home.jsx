@@ -17,7 +17,7 @@ class DashboardHome extends Component {
   }
 
   componentDidMount() {
-    // this.props.initTestData();
+    this.props.initTestData();
   }
 
   componentWillUnmount() {

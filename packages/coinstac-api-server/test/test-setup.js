@@ -88,7 +88,6 @@ helperFunctions.getRethinkConnection()
   .then(() => rethink.tableCreate('consortia').run(connection))
   .then(() => rethink.table('consortia').insert({
     id: 'test-cons-1',
-    activePipelineId: 'test-pipeline',
     name: 'Test Consortia 1',
     description: 'This consortia is for testing.',
     owners: ['author'],

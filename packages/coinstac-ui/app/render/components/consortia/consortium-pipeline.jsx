@@ -4,7 +4,11 @@ import { LinkContainer } from 'react-router-bootstrap';
 import { graphql } from 'react-apollo';
 import PropTypes from 'prop-types';
 import ApolloClient from '../../state/apollo-client';
-import { FETCH_ALL_CONSORTIA_QUERY, FETCH_ALL_PIPELINES_QUERY, SAVE_ACTIVE_PIPELINE_MUTATION } from '../../state/graphql/functions';
+import {
+  FETCH_ALL_CONSORTIA_QUERY,
+  FETCH_ALL_PIPELINES_QUERY,
+  SAVE_ACTIVE_PIPELINE_MUTATION,
+} from '../../state/graphql/functions';
 
 const styles = {
   activePipelineButton: { margin: '0 5px 0 0' },

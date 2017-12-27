@@ -145,7 +145,7 @@ FeatureTest.propTypes = {
   updateDockerOutput: PropTypes.func.isRequired,
 };
 
-function mapStateToProps({ collections, featureTest: { dockerOut } }) {
+function mapStateToProps({ collections, docker: { dockerOut } }) {
   return { collections, dockerOut };
 }
 

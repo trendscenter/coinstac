@@ -1,12 +1,40 @@
 import { connect } from 'react-redux';
+import { compose, graphql } from 'react-apollo';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
+import { ipcRenderer } from 'electron';
 import DashboardNav from './dashboard-nav';
 import UserAccountController from '../user/user-account-controller';
-import { writeLog } from '../../state/ducks/notifyAndLog';
+import { notifyInfo, writeLog } from '../../state/ducks/notifyAndLog';
+import ApolloClient from '../../state/apollo-client';
 import CoinstacAbbr from '../coinstac-abbr';
+import {
+  pullComputations,
+  updateDockerOutput,
+} from '../../state/ducks/docker';
+import {
+  COMPUTATION_CHANGED_SUBSCRIPTION,
+  CONSORTIUM_CHANGED_SUBSCRIPTION,
+  FETCH_ALL_COMPUTATIONS_QUERY,
+  FETCH_ALL_CONSORTIA_QUERY,
+  FETCH_ALL_PIPELINES_QUERY,
+  PIPELINE_CHANGED_SUBSCRIPTION,
+} from '../../state/graphql/functions';
+import {
+  getAllAndSubProp,
+} from '../../state/graphql/props';
 
 class Dashboard extends Component {
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      unsubscribeComputations: null,
+      unsubscribeConsortia: null,
+      unsubscribePipelines: null,
+    };
+  }
+
   componentDidMount() {
     const { auth: { user } } = this.props;
     const { router } = this.context;
@@ -19,11 +47,75 @@ class Dashboard extends Component {
         // this.props.initPrivateBackgroundServices();
       }
     });
+
+    ipcRenderer.on('docker-out', (event, arg) => {
+      this.props.updateDockerOutput(arg);
+    });
+  }
+
+  componentWillReceiveProps(nextProps) {
+    const { auth: { user } } = this.props;
+    const { router } = this.context;
+
+    if (nextProps.computations && !this.state.unsubscribeComputations) {
+      this.setState({ unsubscribeComputations: this.props.subscribeToComputations(null) });
+    }
+
+    if (nextProps.consortia && !this.state.unsubscribeConsortia) {
+      this.setState({ unsubscribeConsortia: this.props.subscribeToConsortia(null) });
+    }
+
+    if (nextProps.pipelines && !this.state.unsubscribePipelines) {
+      this.setState({ unsubscribePipelines: this.props.subscribeToPipelines(null) });
+    }
+
+    if (nextProps.consortia && this.props.consortia.length > 0) {
+      for (let i = 0; i < nextProps.consortia.length; i += 1) {
+        if (nextProps.consortia[i].id === this.props.consortia[i].id &&
+            nextProps.consortia[i].activePipelineId &&
+            !this.props.consortia[i].activePipelineId &&
+            nextProps.consortia[i].members.indexOf(user.id) > -1) {
+          const computationData = ApolloClient.readQuery({ query: FETCH_ALL_COMPUTATIONS_QUERY });
+          const pipelineData = ApolloClient.readQuery({ query: FETCH_ALL_PIPELINES_QUERY });
+          const pipeline = pipelineData.fetchAllPipelines.find(cons => cons.id === activePipelineId);
+
+          const computations = [];
+          pipeline.steps.forEach((step) => {
+            const compObject = computationData.fetchAllComputations
+              .find(comp => comp.id === step.computations[0].id);
+            computations.push(compObject.computation.dockerImage);
+          });
+
+          this.props.pullComputations(computations);
+          this.props.notifyInfo({
+            message: 'Pipeline computations downloading via Docker.',
+            autoDismiss: 5,
+            action: {
+              label: 'View Docker Download Progress',
+              callback: () => {
+                router.push('/dashboard/docker');
+              },
+            },
+          });
+          break;
+        }
+      }
+    }
+  }
+
+  componentWillUnmount() {
+    this.state.unsubscribeComputations();
+    this.state.unsubscribeConsortia();
+    this.state.unsubscribePipelines();
   }
 
   render() {
-    const { auth, children } = this.props;
+    const { auth, children, computations, consortia, pipelines } = this.props;
     const { router } = this.context;
+
+    const childrenWithProps = React.cloneElement(children, {
+      computations, consortia, pipelines,
+    });
 
     if (!auth || !auth.user.email.length) {
       return (<p>Redirecting to login...</p>);
@@ -43,7 +135,7 @@ class Dashboard extends Component {
             </nav>
           </div>
           <div className="col-xs-12 col-sm-9 content-pane">
-            {children}
+            {childrenWithProps}
           </div>
         </div>
       </div>
@@ -57,9 +149,24 @@ Dashboard.contextTypes = {
   router: PropTypes.object,
 };
 
+Dashboard.defaultProps = {
+  computations: [],
+  consortia: [],
+  pipelines: [],
+};
+
 Dashboard.propTypes = {
   auth: PropTypes.object.isRequired,
   children: PropTypes.node.isRequired,
+  computations: PropTypes.array,
+  consortia: PropTypes.array,
+  notifyInfo: PropTypes.func.isRequired,
+  pipelines: PropTypes.array,
+  pullComputations: PropTypes.func.isRequired,
+  subscribeToComputations: PropTypes.func.isRequired,
+  subscribeToConsortia: PropTypes.func.isRequired,
+  subscribeToPipelines: PropTypes.func.isRequired,
+  updateDockerOutput: PropTypes.func.isRequired,
   writeLog: PropTypes.func.isRequired,
 };
 
@@ -69,4 +176,30 @@ function mapStateToProps({ auth }) {
   };
 }
 
-export default connect(mapStateToProps, { writeLog })(Dashboard);
+const DashboardWithData = compose(
+  graphql(FETCH_ALL_COMPUTATIONS_QUERY, getAllAndSubProp(
+    COMPUTATION_CHANGED_SUBSCRIPTION,
+    'computations',
+    'fetchAllComputations',
+    'subscribeToComputations',
+    'computationChanged'
+  )),
+  graphql(FETCH_ALL_CONSORTIA_QUERY, getAllAndSubProp(
+    CONSORTIUM_CHANGED_SUBSCRIPTION,
+    'consortia',
+    'fetchAllConsortia',
+    'subscribeToConsortia',
+    'consortiumChanged'
+  )),
+  graphql(FETCH_ALL_PIPELINES_QUERY, getAllAndSubProp(
+    PIPELINE_CHANGED_SUBSCRIPTION,
+    'pipelines',
+    'fetchAllPipelines',
+    'subscribeToPipelines',
+    'pipelineChanged'
+  ))
+)(Dashboard);
+
+export default connect(mapStateToProps,
+  { notifyInfo, pullComputations, updateDockerOutput, writeLog }
+)(DashboardWithData);

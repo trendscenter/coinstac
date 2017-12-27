@@ -8,14 +8,8 @@ import {
   Button,
 } from 'react-bootstrap';
 import { LinkContainer } from 'react-router-bootstrap';
-import { graphql } from 'react-apollo';
 import PropTypes from 'prop-types';
 import update from 'immutability-helper';
-import {
-  CONSORTIUM_CHANGED_SUBSCRIPTION,
-  FETCH_ALL_CONSORTIA_QUERY,
-} from '../../state/graphql/functions';
-import { getAllAndSubProp } from '../../state/graphql/props';
 import CollectionPipeline from './collection-pipeline';
 
 class CollectionConsortia extends Component {
@@ -195,16 +189,8 @@ CollectionConsortia.defaultProps = {
   consortia: [],
 };
 
-const CollectionConsortiaWithData = graphql(FETCH_ALL_CONSORTIA_QUERY, getAllAndSubProp(
-  CONSORTIUM_CHANGED_SUBSCRIPTION,
-  'consortia',
-  'fetchAllConsortia',
-  'subscribeToConsortia',
-  'consortiumChanged'
-))(CollectionConsortia);
-
 function mapStateToProps({ auth }) {
   return { auth };
 }
 
-export default connect(mapStateToProps)(CollectionConsortiaWithData);
+export default connect(mapStateToProps)(CollectionConsortia);
