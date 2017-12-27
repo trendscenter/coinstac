@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import { graphql, compose } from 'react-apollo';
+import { graphql } from 'react-apollo';
 import { LinkContainer } from 'react-router-bootstrap';
 import {
   Alert,
@@ -9,11 +9,10 @@ import {
   Table,
 } from 'react-bootstrap';
 import {
-  COMPUTATION_CHANGED_SUBSCRIPTION,
   FETCH_ALL_COMPUTATIONS_QUERY,
   REMOVE_COMPUTATION_MUTATION,
 } from '../../state/graphql/functions';
-import { getAllAndSubProp, removeDocFromTableProp } from '../../state/graphql/props';
+import { removeDocFromTableProp } from '../../state/graphql/props';
 import ComputationIO from './computation-io';
 
 const MAX_LENGTH_COMPUTATIONS = 5;
@@ -31,7 +30,6 @@ class ComputationsList extends Component { // eslint-disable-line
       activeComp: null,
       ownedComputations: [],
       otherComputations: [],
-      unsubscribeComputations: null,
     };
 
     this.getTable = this.getTable.bind(this);
@@ -53,14 +51,6 @@ class ComputationsList extends Component { // eslint-disable-line
       });
     }
     this.setState({ ownedComputations, otherComputations });
-
-    if (nextProps.computations && !this.state.unsubscribeComputations) {
-      this.setState({ unsubscribeComputations: this.props.subscribeToComputations(null) });
-    }
-  }
-
-  componentWillUnmount() {
-    this.state.unsubscribeComputations();
   }
 
   getTable(computations) {
@@ -118,7 +108,7 @@ class ComputationsList extends Component { // eslint-disable-line
     return (
       <div>
         <div className="page-header clearfix">
-          <h1 className="pull-left">Computations</h1>
+          <h1 className="nav-item-page-title">Computations</h1>
           <LinkContainer className="pull-right" to="/dashboard/computations/new">
             <Button bsStyle="primary" className="pull-right">
               <span aria-hidden="true" className="glphicon glyphicon-plus" />
@@ -154,36 +144,26 @@ class ComputationsList extends Component { // eslint-disable-line
 }
 
 ComputationsList.defaultProps = {
-  computations: null,
   removeComputation: null,
-  subscribeToComputations: null,
 };
 
 ComputationsList.propTypes = {
   auth: PropTypes.object.isRequired,
-  computations: PropTypes.array,
+  computations: PropTypes.array.isRequired,
   removeComputation: PropTypes.func,
-  subscribeToComputations: PropTypes.func,
 };
 
-function mapStateToProps({ auth, featureTest: { dockerOut } }) {
-  return { auth, dockerOut };
+function mapStateToProps({ auth }) {
+  return { auth };
 }
 
-const ComputationsListWithData = compose(
-  graphql(FETCH_ALL_COMPUTATIONS_QUERY, getAllAndSubProp(
-    COMPUTATION_CHANGED_SUBSCRIPTION,
-    'computations',
-    'fetchAllComputations',
-    'subscribeToComputations',
-    'computationChanged'
-  )),
-  graphql(REMOVE_COMPUTATION_MUTATION, removeDocFromTableProp(
+const ComputationsListWithData = graphql(REMOVE_COMPUTATION_MUTATION,
+  removeDocFromTableProp(
     'computationId',
     'removeComputation',
     FETCH_ALL_COMPUTATIONS_QUERY,
     'fetchAllComputations'
-  ))
+  )
 )(ComputationsList);
 
 

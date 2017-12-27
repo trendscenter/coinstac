@@ -1,6 +1,9 @@
 const sharedFields = {
   computationMetadata: `
     id
+    computation {
+      dockerImage
+    }
     meta {
       name
       description

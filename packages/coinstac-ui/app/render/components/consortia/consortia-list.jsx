@@ -11,23 +11,20 @@ import { updateUserPerms } from '../../state/ducks/auth';
 import { pullComputations } from '../../state/ducks/docker';
 import {
   ADD_USER_ROLE_MUTATION,
-  COMPUTATION_CHANGED_SUBSCRIPTION,
-  CONSORTIUM_CHANGED_SUBSCRIPTION,
   DELETE_CONSORTIUM_MUTATION,
   FETCH_ALL_COMPUTATIONS_QUERY,
   FETCH_ALL_CONSORTIA_QUERY,
   FETCH_ALL_PIPELINES_QUERY,
   JOIN_CONSORTIUM_MUTATION,
   LEAVE_CONSORTIUM_MUTATION,
-  PIPELINE_CHANGED_SUBSCRIPTION,
   REMOVE_USER_ROLE_MUTATION,
 } from '../../state/graphql/functions';
 import {
   consortiaMembershipProp,
-  getAllAndSubProp,
   removeDocFromTableProp,
   userRolesProp,
 } from '../../state/graphql/props';
+import { notifyInfo } from '../../state/ducks/notifyAndLog';
 
 const MAX_LENGTH_CONSORTIA = 5;
 
@@ -44,8 +41,6 @@ class ConsortiaList extends Component {
       otherConsortia: [],
       consortiumToDelete: -1,
       showModal: false,
-      unsubscribeConsortia: null,
-      unsubscribePipelines: null,
     };
 
     this.getOptions = this.getOptions.bind(this);
@@ -70,19 +65,6 @@ class ConsortiaList extends Component {
       });
     }
     this.setState({ ownedConsortia, otherConsortia });
-
-    if (nextProps.consortia && !this.state.unsubscribeConsortia) {
-      this.setState({ unsubscribeConsortia: this.props.subscribeToConsortia(null) });
-    }
-
-    if (nextProps.pipelines && !this.state.unsubscribePipelines) {
-      this.setState({ unsubscribePipelines: this.props.subscribeToPipelines(null) });
-    }
-  }
-
-  componentWillUnmount() {
-    this.state.unsubscribeConsortia();
-    this.state.unsubscribePipelines();
   }
 
   getOptions(member, owner, id, activePipelineId) {
@@ -168,11 +150,21 @@ class ConsortiaList extends Component {
       const computations = [];
       pipeline.steps.forEach((step) => {
         const compObject = computationData.fetchAllComputations
-          .find(comp => comp.id === step.computations[0]);
+          .find(comp => comp.id === step.computations[0].id);
         computations.push(compObject.computation.dockerImage);
       });
 
       this.props.pullComputations(computations);
+      this.props.notifyInfo({
+        message: 'Pipeline computations downloading via Docker.',
+        autoDismiss: 5,
+        action: {
+          label: 'View Docker Download Progress',
+          callback: () => {
+            this.props.router.push('/dashboard/docker');
+          },
+        },
+      });
     }
 
     this.props.joinConsortium(consortiumId);
@@ -198,7 +190,7 @@ class ConsortiaList extends Component {
     return (
       <div>
         <div className="page-header clearfix">
-          <h1 className="pull-left">Consortia</h1>
+          <h1 className="nav-item-page-title">Consortia</h1>
           <LinkContainer className="pull-right" to="/dashboard/consortia/new">
             <Button bsStyle="primary" className="pull-right">
               <span aria-hidden="true" className="glphicon glyphicon-plus" />
@@ -239,20 +231,14 @@ class ConsortiaList extends Component {
 ConsortiaList.propTypes = {
   addUserRole: PropTypes.func.isRequired,
   auth: PropTypes.object.isRequired,
-  consortia: PropTypes.array,
+  consortia: PropTypes.array.isRequired,
   deleteConsortiumById: PropTypes.func.isRequired,
   joinConsortium: PropTypes.func.isRequired,
   leaveConsortium: PropTypes.func.isRequired,
-  pipelines: PropTypes.array,
+  notifyInfo: PropTypes.func.isRequired,
   pullComputations: PropTypes.func.isRequired,
   removeUserRole: PropTypes.func.isRequired,
-  subscribeToConsortia: PropTypes.func.isRequired,
-  subscribeToPipelines: PropTypes.func.isRequired,
-};
-
-ConsortiaList.defaultProps = {
-  consortia: null,
-  pipelines: null,
+  router: PropTypes.object.isRequired,
 };
 
 const mapStateToProps = ({ auth }) => {
@@ -260,20 +246,6 @@ const mapStateToProps = ({ auth }) => {
 };
 
 const ConsortiaListWithData = compose(
-  graphql(FETCH_ALL_COMPUTATIONS_QUERY, getAllAndSubProp(
-    COMPUTATION_CHANGED_SUBSCRIPTION,
-    'computations',
-    'fetchAllComputations',
-    'subscribeToComputations',
-    'computationChanged'
-  )),
-  graphql(FETCH_ALL_CONSORTIA_QUERY, getAllAndSubProp(
-    CONSORTIUM_CHANGED_SUBSCRIPTION,
-    'consortia',
-    'fetchAllConsortia',
-    'subscribeToConsortia',
-    'consortiumChanged'
-  )),
   graphql(DELETE_CONSORTIUM_MUTATION, removeDocFromTableProp(
     'consortiumId',
     'deleteConsortiumById',
@@ -283,16 +255,9 @@ const ConsortiaListWithData = compose(
   graphql(JOIN_CONSORTIUM_MUTATION, consortiaMembershipProp('joinConsortium')),
   graphql(LEAVE_CONSORTIUM_MUTATION, consortiaMembershipProp('leaveConsortium')),
   graphql(ADD_USER_ROLE_MUTATION, userRolesProp('addUserRole')),
-  graphql(REMOVE_USER_ROLE_MUTATION, userRolesProp('removeUserRole')),
-  graphql(FETCH_ALL_PIPELINES_QUERY, getAllAndSubProp(
-    PIPELINE_CHANGED_SUBSCRIPTION,
-    'pipelines',
-    'fetchAllPipelines',
-    'subscribeToPipelines',
-    'pipelineChanged'
-  ))
+  graphql(REMOVE_USER_ROLE_MUTATION, userRolesProp('removeUserRole'))
 )(ConsortiaList);
 
 export default connect(mapStateToProps,
-  { pullComputations, updateUserPerms }
+  { notifyInfo, pullComputations, updateUserPerms }
 )(ConsortiaListWithData);

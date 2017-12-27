@@ -109,6 +109,7 @@ class CollectionTabs extends Component {
             <CollectionConsortia
               associatedConsortia={this.props.associatedConsortia}
               collection={this.state.collection}
+              consortia={this.props.consortia}
               saveCollection={this.saveCollection}
               updateAssociatedConsortia={this.updateAssociatedConsortia}
               updateCollection={this.updateCollection}
@@ -127,6 +128,7 @@ CollectionTabs.defaultProps = {
 CollectionTabs.propTypes = {
   associatedConsortia: PropTypes.array,
   collections: PropTypes.array.isRequired,
+  consortia: PropTypes.array.isRequired,
   getAssociatedConsortia: PropTypes.func.isRequired,
   params: PropTypes.object.isRequired,
   saveAssociatedConsortia: PropTypes.func.isRequired,

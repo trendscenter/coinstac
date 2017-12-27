@@ -22,6 +22,7 @@ import Pipeline from './components/pipelines/pipeline';
 import CollectionsList from './components/collections/collections-list';
 import CollectionTabs from './components/collections/collection-tabs';
 import Settings from './components/user/settings';
+import Docker from './components/docker';
 
 export default (
   <Route path="/" component={App}>
@@ -49,6 +50,7 @@ export default (
         <IndexRoute component={ComputationsList} />
         <Route path="new" component={ComputationSubmission} />
       </Route>
+      <Route path="docker" component={Docker} />
       <Route path="settings" component={Settings} />
       <Route path="test" component={Test} />
     </Route>

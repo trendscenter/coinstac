@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { graphql, compose } from 'react-apollo';
+import { graphql } from 'react-apollo';
 import { Alert, Button } from 'react-bootstrap';
 import { LinkContainer } from 'react-router-bootstrap';
 import PropTypes from 'prop-types';
@@ -9,10 +9,8 @@ import ListDeleteModal from '../common/list-delete-modal';
 import {
   DELETE_PIPELINE_MUTATION,
   FETCH_ALL_PIPELINES_QUERY,
-  PIPELINE_CHANGED_SUBSCRIPTION,
 } from '../../state/graphql/functions';
 import {
-  getAllAndSubProp,
   removeDocFromTableProp,
 } from '../../state/graphql/props';
 
@@ -27,7 +25,6 @@ class PipelinesList extends Component {
       otherPipelines: [],
       pipelineToDelete: -1,
       showModal: false,
-      unsubscribePipelines: null,
     };
 
     this.deletePipeline = this.deletePipeline.bind(this);
@@ -51,14 +48,6 @@ class PipelinesList extends Component {
       });
     }
     this.setState({ ownedPipelines, otherPipelines });
-
-    if (nextProps.pipelines && !this.state.unsubscribePipelines) {
-      this.setState({ unsubscribePipelines: this.props.subscribeToPipelines(null) });
-    }
-  }
-
-  componentWillUnmount() {
-    this.state.unsubscribePipelines();
   }
 
   getListItem(pipeline) {
@@ -103,7 +92,7 @@ class PipelinesList extends Component {
     return (
       <div>
         <div className="page-header clearfix">
-          <h1 className="pull-left">Pipelines</h1>
+          <h1 className="nav-item-page-title">Pipelines</h1>
           <LinkContainer className="pull-right" to="/dashboard/pipelines/new">
             <Button bsStyle="primary" className="pull-right">
               <span aria-hidden="true" className="glphicon glyphicon-plus" />
@@ -141,7 +130,6 @@ PipelinesList.propTypes = {
   auth: PropTypes.object.isRequired,
   deletePipeline: PropTypes.func.isRequired,
   pipelines: PropTypes.array,
-  subscribeToPipelines: PropTypes.func.isRequired,
 };
 
 PipelinesList.defaultProps = {
@@ -152,20 +140,13 @@ const mapStateToProps = ({ auth }) => {
   return { auth };
 };
 
-const PipelinesListWithData = compose(
-  graphql(DELETE_PIPELINE_MUTATION, removeDocFromTableProp(
+const PipelinesListWithData = graphql(DELETE_PIPELINE_MUTATION,
+  removeDocFromTableProp(
     'pipelineId',
     'deletePipeline',
     FETCH_ALL_PIPELINES_QUERY,
     'fetchAllPipelines'
-  )),
-  graphql(FETCH_ALL_PIPELINES_QUERY, getAllAndSubProp(
-    PIPELINE_CHANGED_SUBSCRIPTION,
-    'pipelines',
-    'fetchAllPipelines',
-    'subscribeToPipelines',
-    'pipelineChanged'
-  ))
+  )
 )(PipelinesList);
 
 export default connect(mapStateToProps)(PipelinesListWithData);
