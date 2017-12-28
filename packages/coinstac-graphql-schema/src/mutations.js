@@ -43,6 +43,13 @@ const mutations = {
       }
     }
   `,
+  updateUserConsortiumStatus: `
+    {
+      updateUserConsortiumStatus(consortiumId: $consortiumId, status: $status) {
+        ${sharedFields.userMetadata}
+      }
+    }
+  `,
 };
 
 module.exports = mutations;

@@ -16,7 +16,6 @@ import DashboardHome from './components/dashboard/dashboard-home';
 import RouteContainer from './containers/route-container';
 import Login from './components/user/form-login-controller';
 import Signup from './components/user/form-signup-controller';
-import Test from './components/feature-test';
 import PipelinesList from './components/pipelines/pipelines-list';
 import Pipeline from './components/pipelines/pipeline';
 import CollectionsList from './components/collections/collections-list';
@@ -52,7 +51,6 @@ export default (
       </Route>
       <Route path="docker" component={Docker} />
       <Route path="settings" component={Settings} />
-      <Route path="test" component={Test} />
     </Route>
   </Route>
 );

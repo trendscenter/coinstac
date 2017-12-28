@@ -29,6 +29,7 @@ const sharedFields = {
     institution
     passwordHash
     permissions
+    consortiaStatuses
   `,
   pipelineFields: `
     id

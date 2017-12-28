@@ -34,10 +34,17 @@ const helperFunctions = {
           consortia: {},
           pipelines: {},
         },
+        consortiaStatuses: {
+
+        },
       };
 
       if (user.permissions) {
         userDetails.permissions = user.permissions;
+      }
+
+      if (user.consortiaStatuses) {
+        userDetails.consortiaStatuses = user.consortiaStatuses;
       }
 
       return rethink.table('users')

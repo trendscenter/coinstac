@@ -9,10 +9,10 @@ export const PULL_COMPUTATIONS = 'PULL_COMPUTATIONS';
 export const UPDATE_DOCKER_OUTPUT = 'UPDATE_DOCKER_OUTPUT';
 
 // Action Creators
-export const pullComputations = applyAsyncLoading((computations) => {
+export const pullComputations = applyAsyncLoading((compsAndConsortiumId) => {
   return (dispatch) => {
     dispatch({ payload: '', type: CLEAR_DOCKER_OUTPUT });
-    return ipcPromise.send('download-comps', computations)
+    return ipcPromise.send('download-comps', compsAndConsortiumId)
     .then((res) => {
       dispatch({ payload: true, type: PULL_COMPUTATIONS });
       return res;
@@ -44,15 +44,19 @@ export default function reducer(state = INITIAL_STATE, action) {
       action.payload.forEach((newOut) => {
         let elemIndex = -1;
 
-        if (newOut.id) {
+        if (newOut.id && newOut.id !== 'latest') {
           elemIndex = newDockerOut.findIndex(currentOut => newOut.id === currentOut.id);
+        } else if (newOut.id && newOut.id === 'latest') {
+          elemIndex = newDockerOut.findIndex(currentOut =>
+            newOut.id === currentOut.id && newOut.status === currentOut.status
+          );
         }
 
         if (elemIndex === -1 && !newOut.id) {
           elemIndex = newDockerOut.findIndex(currentOut => newOut.status === currentOut.status);
         }
 
-        if (elemIndex === -1 || newOut.id === 'latest') {
+        if (elemIndex === -1) {
           newDockerOut.push(newOut);
         } else {
           newDockerOut[elemIndex] = newOut;

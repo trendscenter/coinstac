@@ -5,13 +5,14 @@ import PropTypes from 'prop-types';
 import { ipcRenderer } from 'electron';
 import DashboardNav from './dashboard-nav';
 import UserAccountController from '../user/user-account-controller';
-import { notifyInfo, writeLog } from '../../state/ducks/notifyAndLog';
+import { notifyInfo, notifySuccess, writeLog } from '../../state/ducks/notifyAndLog';
 import ApolloClient from '../../state/apollo-client';
 import CoinstacAbbr from '../coinstac-abbr';
 import {
   pullComputations,
   updateDockerOutput,
 } from '../../state/ducks/docker';
+import { updateUserConsortiaStatuses } from '../../state/ducks/auth';
 import {
   COMPUTATION_CHANGED_SUBSCRIPTION,
   CONSORTIUM_CHANGED_SUBSCRIPTION,
@@ -19,6 +20,7 @@ import {
   FETCH_ALL_CONSORTIA_QUERY,
   FETCH_ALL_PIPELINES_QUERY,
   PIPELINE_CHANGED_SUBSCRIPTION,
+  UPDATE_USER_CONSORTIUM_STATUS_MUTATION,
 } from '../../state/graphql/functions';
 import {
   getAllAndSubProp,
@@ -51,6 +53,13 @@ class Dashboard extends Component {
     ipcRenderer.on('docker-out', (event, arg) => {
       this.props.updateDockerOutput(arg);
     });
+
+    ipcRenderer.on('docker-pull-complete', (event, arg) => {
+      this.props.updateUserConsortiumStatus(arg, 'pipeline-computations-downloaded');
+      this.props.notifySuccess({
+        message: `${arg} Pipeline Computations Downloaded`,
+      });
+    });
   }
 
   componentWillReceiveProps(nextProps) {
@@ -77,7 +86,8 @@ class Dashboard extends Component {
             nextProps.consortia[i].members.indexOf(user.id) > -1) {
           const computationData = ApolloClient.readQuery({ query: FETCH_ALL_COMPUTATIONS_QUERY });
           const pipelineData = ApolloClient.readQuery({ query: FETCH_ALL_PIPELINES_QUERY });
-          const pipeline = pipelineData.fetchAllPipelines.find(cons => cons.id === activePipelineId);
+          const pipeline = pipelineData.fetchAllPipelines
+            .find(cons => cons.id === nextProps.consortia[i].activePipelineId);
 
           const computations = [];
           pipeline.steps.forEach((step) => {
@@ -86,7 +96,7 @@ class Dashboard extends Component {
             computations.push(compObject.computation.dockerImage);
           });
 
-          this.props.pullComputations(computations);
+          this.props.pullComputations({ consortiumId: nextProps.consortia[i].id, computations });
           this.props.notifyInfo({
             message: 'Pipeline computations downloading via Docker.',
             autoDismiss: 5,
@@ -161,12 +171,14 @@ Dashboard.propTypes = {
   computations: PropTypes.array,
   consortia: PropTypes.array,
   notifyInfo: PropTypes.func.isRequired,
+  notifySuccess: PropTypes.func.isRequired,
   pipelines: PropTypes.array,
   pullComputations: PropTypes.func.isRequired,
   subscribeToComputations: PropTypes.func.isRequired,
   subscribeToConsortia: PropTypes.func.isRequired,
   subscribeToPipelines: PropTypes.func.isRequired,
   updateDockerOutput: PropTypes.func.isRequired,
+  updateUserConsortiumStatus: PropTypes.func.isRequired,
   writeLog: PropTypes.func.isRequired,
 };
 
@@ -197,9 +209,26 @@ const DashboardWithData = compose(
     'fetchAllPipelines',
     'subscribeToPipelines',
     'pipelineChanged'
-  ))
+  )),
+  graphql(UPDATE_USER_CONSORTIUM_STATUS_MUTATION, {
+    props: ({ ownProps, mutate }) => ({
+      updateUserConsortiumStatus: (consortiumId, status) => mutate({
+        variables: { consortiumId, status },
+      })
+      .then(({ data: { updateUserConsortiumStatus: { consortiaStatuses } } }) => {
+        return ownProps.updateUserConsortiaStatuses(consortiaStatuses);
+      }),
+    }),
+  })
 )(Dashboard);
 
 export default connect(mapStateToProps,
-  { notifyInfo, pullComputations, updateDockerOutput, writeLog }
+  {
+    notifyInfo,
+    notifySuccess,
+    pullComputations,
+    updateDockerOutput,
+    updateUserConsortiaStatuses,
+    writeLog,
+  }
 )(DashboardWithData);
