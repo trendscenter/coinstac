@@ -14,7 +14,6 @@ import {
   DELETE_CONSORTIUM_MUTATION,
   FETCH_ALL_COMPUTATIONS_QUERY,
   FETCH_ALL_CONSORTIA_QUERY,
-  FETCH_ALL_PIPELINES_QUERY,
   JOIN_CONSORTIUM_MUTATION,
   LEAVE_CONSORTIUM_MUTATION,
   REMOVE_USER_ROLE_MUTATION,
@@ -140,12 +139,12 @@ class ConsortiaList extends Component {
   }
 
   joinConsortium(consortiumId, activePipelineId) {
-    const { auth: { user } } = this.props;
+    const { auth: { user }, pipelines } = this.props;
 
     if (activePipelineId) {
+      console.log('wtf');
       const computationData = ApolloClient.readQuery({ query: FETCH_ALL_COMPUTATIONS_QUERY });
-      const pipelineData = ApolloClient.readQuery({ query: FETCH_ALL_PIPELINES_QUERY });
-      const pipeline = pipelineData.fetchAllPipelines.find(cons => cons.id === activePipelineId);
+      const pipeline = pipelines.find(cons => cons.id === activePipelineId);
 
       const computations = [];
       pipeline.steps.forEach((step) => {
@@ -154,7 +153,7 @@ class ConsortiaList extends Component {
         computations.push(compObject.computation.dockerImage);
       });
 
-      this.props.pullComputations(computations);
+      this.props.pullComputations({ consortiumId, computations });
       this.props.notifyInfo({
         message: 'Pipeline computations downloading via Docker.',
         autoDismiss: 5,
@@ -236,6 +235,7 @@ ConsortiaList.propTypes = {
   joinConsortium: PropTypes.func.isRequired,
   leaveConsortium: PropTypes.func.isRequired,
   notifyInfo: PropTypes.func.isRequired,
+  pipelines: PropTypes.array.isRequired,
   pullComputations: PropTypes.func.isRequired,
   removeUserRole: PropTypes.func.isRequired,
   router: PropTypes.object.isRequired,

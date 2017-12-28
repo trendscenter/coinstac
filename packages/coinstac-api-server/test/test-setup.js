@@ -117,6 +117,10 @@ helperFunctions.getRethinkConnection()
     },
     pipelines: {},
   },
+  consortiaStatuses: {
+    'test-cons-1': 'none',
+    'test-cons-2': 'none',
+  },
 }, passwordHash))
 .then(() => helperFunctions.hashPassword('password'))
 .then(passwordHash => helperFunctions.createUser({
@@ -128,6 +132,10 @@ helperFunctions.getRethinkConnection()
     computations: {},
     consortia: {},
     pipelines: {},
+  },
+  consortiaStatuses: {
+    'test-cons-1': 'none',
+    'test-cons-2': 'none',
   },
 }, passwordHash))
 .then(() => helperFunctions.hashPassword('password'))

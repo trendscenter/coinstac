@@ -85,7 +85,7 @@ loadConfig()
 
   ipcPromise.on('download-comps', (params) => {
     return core.computationRegistry
-      .pullPipelineComputations({ comps: params })
+      .pullPipelineComputations({ comps: params.computations })
       .then((pullStreams) => {
         pullStreams.on('data', (data) => {
           let output = compact(data.toString().split('\r\n'));
@@ -93,8 +93,8 @@ loadConfig()
           mainWindow.webContents.send('docker-out', output);
         });
 
-        pullStreams.on('close', (code) => {
-          return code;
+        pullStreams.on('end', () => {
+          mainWindow.webContents.send('docker-pull-complete', params.consortiumId);
         });
 
         pullStreams.on('error', (err) => {

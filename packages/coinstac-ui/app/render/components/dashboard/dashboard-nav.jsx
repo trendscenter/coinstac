@@ -47,13 +47,6 @@ const DashboardNav = () => {
           Docker
         </NavItem>
       </LinkContainer>
-      <LinkContainer to="/dashboard/test">
-        <NavItem>
-          <span aria-hidden="true" className="glyphicon glyphicon-sunglasses" />
-          {' '}
-          Feature Test
-        </NavItem>
-      </LinkContainer>
     </Nav>
   );
 };
