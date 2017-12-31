@@ -10,16 +10,13 @@ const mkdirp = promisify(require('mkdirp'));
 
 module.exports = {
 
-  create({ mode, clientId, server, operatingDirectory = './' }) {
+  create({ mode, clientId, operatingDirectory = './' }) {
     const activePipelines = {};
     let io;
     let socket;
-    let missedCache;
     let remoteClients = {};
+    const missedCache = {};
 
-    // if (server && mode === 'remote') {
-    //   server.start();
-    // }
     const waitingOn = (runId) => {
       const waiters = [];
       for (let [key, val] of Object.entries(remoteClients)) { // eslint-disable-line no-restricted-syntax, max-len, prefer-const
@@ -60,6 +57,7 @@ module.exports = {
           if (remoteClients[data.id]) {
             remoteClients[data.id].status = 'connected';
             remoteClients[data.id].socketId = socket.id;
+            remoteClients[data.id].lastSeen = Date.getTime();
           }
         });
 
@@ -67,6 +65,7 @@ module.exports = {
           // TODO: probably put in a 'pre-run' route?
           socket.join(data.runId);
           remoteClients[data.id][data.runId].currentOutput = data.output.output;
+          remoteClients[data.id].lastSeen = Date.getTime();
           if (waitingOn(data.runId).length === 0) {
             activePipelines[data.runId].remote.resolve({ output: aggregateRun(data.runId) });
           }
@@ -106,7 +105,7 @@ module.exports = {
       startPipeline({ spec: { steps, inputMap }, clients = [], runId }) {
         activePipelines[runId] = {
           state: 'created',
-          pipeline: Pipeline.create({ steps, inputMap, mode }, runId),
+          pipeline: Pipeline.create({ steps, inputMap }, runId, { mode, operatingDirectory }),
         };
         remoteClients = Object.assign(
           clients.reduce((memo, client) => {
@@ -118,16 +117,15 @@ module.exports = {
           }, {}),
           remoteClients
         );
-
         const communicate = (pipeline, message) => {
+          // hold the last step for drops, this only works for one step out
+          missedCache[pipeline.id] = {
+            pipelineStep: pipeline.step,
+            controllerStep: pipeline.steps[pipeline.currentStep].controllerState.iteration,
+            output: message,
+          };
           if (mode === 'remote') {
             io.of('/').to(pipeline.id).emit('run', { runId: pipeline.id, output: message });
-            // hold the last step for clients who may drop, this only works for one step out
-            missedCache[pipeline.id] = {
-              pipelineStep: pipeline.step,
-              controllerStep: pipeline.steps[pipeline.currentStep].controllerState.iteration,
-              output: message,
-            };
           } else {
             socket.emit('run', { id: clientId, runId: pipeline.id, output: message });
           }
@@ -163,7 +161,7 @@ module.exports = {
           throw new Error(`Unable to create pipeline directories: ${err}`);
         })
         .then(() => {
-          pipelineProm
+          return pipelineProm
           .then((res) => {
             activePipelines[runId].state = 'finished';
             return res;

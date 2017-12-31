@@ -15,10 +15,21 @@ module.exports = {
       computation,
       meta,
       mode,
-      start(input) {
-        return docker.startService(meta.id, { Image: computation.dockerImage })
+      start(input, { baseDirectory }) {
+        return docker.startService(
+          meta.id,
+          {
+            Image: computation.dockerImage,
+            HostConfig: {
+              Binds: [
+                `${baseDirectory}:/input:ro`,
+                `${baseDirectory}/output:/output:rw`,
+                `${baseDirectory}/cache:/cache:rw`,
+              ],
+            },
+          }
+        )
         .then((service) => {
-          console.log(`${mode} RUN`);
           return service(computation.command.concat([`${JSON.stringify(input)}`]));
         });
       },
