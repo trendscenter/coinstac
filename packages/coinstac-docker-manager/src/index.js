@@ -130,15 +130,25 @@ const startService = (serviceId, opts) => {
       proxRes = res;
       proxRej = rej;
     });
-    const jobOpts = Object.assign(
-      {
-        ExposedPorts: { '8881/tcp': {} },
-        HostConfig: {
-          PortBindings: { '8881/tcp': [{ HostPort: `${generateServicePort(serviceId)}`, HostIp: '127.0.0.1' }] },
-        },
-        Tty: true,
+
+    const defaultOpts = {
+      ExposedPorts: { '8881/tcp': {} },
+      HostConfig: {
+        PortBindings: { '8881/tcp': [{ HostPort: `${generateServicePort(serviceId)}`, HostIp: '127.0.0.1' }] },
       },
-      opts
+      Tty: true,
+    };
+
+    // merge opts one level deep
+    const memo = {};
+    for (let [key] of Object.entries(defaultOpts)) { // eslint-disable-line no-restricted-syntax, max-len, prefer-const
+      memo[key] = Object.assign(defaultOpts[key], opts[key] ? opts[key] : {});
+    }
+
+    const jobOpts = Object.assign(
+      {},
+      opts,
+      memo
     );
     return docker.createContainer(jobOpts)
     .then((container) => {

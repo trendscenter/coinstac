@@ -3,9 +3,9 @@
 const Controller = require('./controller');
 
 module.exports = {
-  create({ steps, inputMap, mode }, runId) {
+  create({ steps, inputMap }, runId, { mode, operatingDirectory }) {
     let currentStep;
-    steps = steps.map(step => Controller.create(step, runId, mode));
+    steps = steps.map(step => Controller.create(step, runId, { mode, operatingDirectory }));
     return {
       id: runId,
       inputMap,

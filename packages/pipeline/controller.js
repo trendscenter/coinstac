@@ -8,7 +8,16 @@ controllers.single = require('./control-boxes/single');
 controllers.decentralized = require('./control-boxes/decentralized');
 
 module.exports = {
-  create({ controller, computations }, runId, mode) {
+  /**
+   * Factory for controller instances
+   * @param  {Object} step   pipeline step object
+   * @param  {string} runId  unique id for the run
+   * @param  {string} opts   options consisting of:
+   *                            mode - local or remote
+   *                            operatingDirectory - base directory for file operations
+   * @return {Object}        a controller instance
+   */
+  create({ controller, computations }, runId, { operatingDirectory, mode }) {
     let cache = {};
     const currentComputations = computations.map(comp => Computation.create(comp, mode));
     const activeControlBox = controllers[controller];
@@ -16,6 +25,9 @@ module.exports = {
     const iterationEmitter = new Emitter();
     const controllerState = {
       activeComputations: [],
+      baseDirectory: `/input/${runId}`,
+      outputDirectory: `/output/${runId}`,
+      cacheDirectory: `/cache/${runId}`,
       currentBoxCommand: undefined,
       currentComputations,
       currentOutput: undefined,
@@ -38,6 +50,7 @@ module.exports = {
       mode,
       runId,
       iterationEmitter,
+      operatingDirectory,
       setIteration,
       start: (input, remoteHandler) => {
         const queue = [];
@@ -66,7 +79,7 @@ module.exports = {
               controllerState.state = 'waiting on computation';
 
               return controllerState.activeComputations[controllerState.computationIndex]
-              .start(Object.assign({}, compInput, { cache }))
+              .start(Object.assign({}, compInput, { cache }), { baseDirectory: operatingDirectory })
               .then((output) => {
                 cache = Object.assign(cache, output.cache);
                 controllerState.currentOutput = { output: output.output, success: output.success };
