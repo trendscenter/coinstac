@@ -17,7 +17,7 @@ module.exports = {
    *                            operatingDirectory - base directory for file operations
    * @return {Object}        a controller instance
    */
-  create({ controller, computations }, runId, { operatingDirectory, mode }) {
+  create({ controller, computations, inputMap }, runId, { operatingDirectory, mode }) {
     let cache = {};
     const currentComputations = computations.map(comp => Computation.create(comp, mode));
     const activeControlBox = controllers[controller];
@@ -50,6 +50,7 @@ module.exports = {
       mode,
       runId,
       iterationEmitter,
+      inputMap,
       operatingDirectory,
       setIteration,
       start: (input, remoteHandler) => {
@@ -71,7 +72,7 @@ module.exports = {
          * @param  {Function} cb        [description]
          * @return {[type]}             [description]
          */
-        const iterateComp = (compInput, cb) => {
+        const iterateComp = (input, cb) => {
           // TODO: logic for different runTypes (single, parallel, etc)
           switch (controllerState.currentBoxCommand) {
             case 'nextIteration':
@@ -79,12 +80,15 @@ module.exports = {
               controllerState.state = 'waiting on computation';
 
               return controllerState.activeComputations[controllerState.computationIndex]
-              .start(Object.assign({}, compInput, { cache }), { baseDirectory: operatingDirectory })
+              .start(
+                { input, cache, state: controllerState },
+                { baseDirectory: operatingDirectory }
+               )
               .then((output) => {
                 cache = Object.assign(cache, output.cache);
                 controllerState.currentOutput = { output: output.output, success: output.success };
                 controllerState.state = 'finished iteration';
-                cb({ input: output.output });
+                cb(output.output);
               });
             case 'nextComputation':
               // TODO: code for multiple comps on one controller
@@ -100,7 +104,7 @@ module.exports = {
               return remoteHandler(controllerState.currentOutput)
               .then((output) => {
                 controllerState.state = 'finished remote iteration';
-                cb({ input: output.output });
+                cb(output.output);
               });
             case 'firstServerRemote':
               // TODO: not ideal, figure out better remote start
@@ -109,10 +113,10 @@ module.exports = {
               return remoteHandler(controllerState.currentOutput, true)
               .then((output) => {
                 controllerState.state = 'finished remote iteration';
-                cb({ input: output.output });
+                cb(output.output);
               });
             case 'done':
-              cb(compInput);
+              cb(input);
               break;
             default:
               throw new Error('unknown controller runType');
@@ -137,12 +141,12 @@ module.exports = {
 
         /**
          * [waterfall description]
-         * @param  {[type]}   input [description]
-         * @param  {[type]}   steps [description]
-         * @param  {Function} done  [description]
-         * @return {[type]}         [description]
+         * @param  {[type]}   initialInput [description]
+         * @param  {[type]}   steps        [description]
+         * @param  {Function} done         [description]
+         * @return {[type]}                [description]
          */
-        const waterfall = (input, steps, done) => {
+        const waterfall = (initialInput, steps, done) => {
           controllerState.state = 'running';
           steps.push(done);
           trampoline(() => {
@@ -175,7 +179,7 @@ module.exports = {
         const p = new Promise((res) => {
           waterfall(input, queue, (result) => {
             controllerState.state = 'stopped';
-            res(result.input);
+            res(result);
           });
         });
 

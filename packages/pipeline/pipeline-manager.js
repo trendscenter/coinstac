@@ -7,6 +7,7 @@ const socketIOClient = require('socket.io-client');
 const _ = require('lodash');
 const { promisify } = require('util');
 const mkdirp = promisify(require('mkdirp'));
+const path = require('path');
 
 module.exports = {
 
@@ -102,10 +103,10 @@ module.exports = {
       operatingDirectory,
       remoteClients,
       socket,
-      startPipeline({ spec: { steps, inputMap }, clients = [], runId }) {
+      startPipeline({ spec, clients = [], runId }) {
         activePipelines[runId] = {
           state: 'created',
-          pipeline: Pipeline.create({ steps, inputMap }, runId, { mode, operatingDirectory }),
+          pipeline: Pipeline.create(spec, runId, { mode, operatingDirectory }),
         };
         remoteClients = Object.assign(
           clients.reduce((memo, client) => {
@@ -153,9 +154,9 @@ module.exports = {
         activePipelines[runId].state = 'running';
 
         return Promise.all([
-          mkdirp(`${operatingDirectory}/${runId}`),
-          mkdirp(`${operatingDirectory}/${runId}/output`),
-          mkdirp(`${operatingDirectory}/${runId}/cache`),
+          mkdirp(path.resolve(operatingDirectory, runId)),
+          mkdirp(path.resolve(operatingDirectory, 'output', runId)),
+          mkdirp(path.resolve(operatingDirectory, 'cache', runId)),
         ])
         .catch((err) => {
           throw new Error(`Unable to create pipeline directories: ${err}`);
