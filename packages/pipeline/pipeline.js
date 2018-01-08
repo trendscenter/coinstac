@@ -13,7 +13,7 @@ module.exports = {
 
     const prepCache = (pipelineSpec) => {
       pipelineSpec.forEach((step) => {
-        for (let [key, val] of Object.entries(step.inputMap)) { // eslint-disable-line no-restricted-syntax, max-len, prefer-const
+        for (let [key, val] of Object.entries(step.inputMap)) { // eslint-disable-line no-restricted-syntax, no-unused-vars, max-len, prefer-const
           if (val.fromCache) {
             cache[val.fromCache.step] = Object.assign(
               {},

@@ -11,7 +11,25 @@ const path = require('path');
 
 module.exports = {
 
-  create({ mode, clientId, operatingDirectory = './' }) {
+  /**
+   * A pipeline manager factory, returns a manager in either a remote or local operating
+   * mode that then can run and manipulate pipelines.
+   * @param  {String} mode                     either local or remote
+   * @param  {String} clientId                 the unique ID that identifies this manager
+   * @param  {String} [operatingDirectory='./' }] the operating directory
+   *                                              for results and other file IO
+   * @return {Object}                          A pipeline manager
+   */
+  create({
+    mode,
+    clientId,
+    operatingDirectory = './',
+    remotePort = 3000,
+    remoteURL = 'http://localhost',
+    authPlugin,
+    authOpts,
+    unauthHandler,
+  }) {
     const activePipelines = {};
     let io;
     let socket;
@@ -42,7 +60,7 @@ module.exports = {
       const app = http.createServer();
       io = socketIO(app);
 
-      app.listen(3000);
+      app.listen(remotePort);
       io.on('connection', (socket) => {
         // TODO: not the way to do this, as runs would have to
         // always start before clients connected....
@@ -79,8 +97,7 @@ module.exports = {
         });
       });
     } else {
-      // TODO: conffffiiiiigggg
-      socket = socketIOClient(`http://localhost:3000?id=${clientId}`);
+      socket = socketIOClient(`${remoteURL}:${remotePort}?id=${clientId}`);
       socket.on('hello', () => {
         socket.emit('register', { id: clientId });
       });
@@ -103,6 +120,18 @@ module.exports = {
       operatingDirectory,
       remoteClients,
       socket,
+
+      /**
+       * Starts a pipeline given a pipeline spec, client list and unique ID
+       * for that pipeline. The return object is that pipeline and a promise that
+       * resolves to the final output of the pipeline.
+       * @param  {Object} spec         a valid pipeline specification
+       * @param  {Array}  [clients=[]] a list of client IDs particapating in pipeline
+       *                               only necessary for decentralized runs
+       * @param  {String} runId        unique ID for the pipeline
+       * @return {Object}              an object containing the active pipeline and
+       *                               Promise for its results
+       */
       startPipeline({ spec, clients = [], runId }) {
         activePipelines[runId] = {
           state: 'created',
@@ -150,10 +179,8 @@ module.exports = {
           }
           return prom;
         };
-        const pipelineProm = activePipelines[runId].pipeline.run(remoteHandler);
-        activePipelines[runId].state = 'running';
 
-        return Promise.all([
+        const pipelineProm = Promise.all([
           mkdirp(path.resolve(operatingDirectory, runId)),
           mkdirp(path.resolve(operatingDirectory, 'output', runId)),
           mkdirp(path.resolve(operatingDirectory, 'cache', runId)),
@@ -162,12 +189,15 @@ module.exports = {
           throw new Error(`Unable to create pipeline directories: ${err}`);
         })
         .then(() => {
-          return pipelineProm
+          activePipelines[runId].state = 'running';
+          return activePipelines[runId].pipeline.run(remoteHandler)
           .then((res) => {
             activePipelines[runId].state = 'finished';
             return res;
           });
         });
+
+        return { pipeline: activePipelines[runId].pipeline, results: pipelineProm };
       },
       waitingOn,
     };
