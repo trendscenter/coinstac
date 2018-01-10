@@ -83,22 +83,46 @@ loadConfig()
     );
   });
 
+  ipcPromise.on('get-all-images', () => {
+    return core.computationRegistry.getImages()
+      .then((data) => {
+        return data;
+      });
+  });
+
   ipcPromise.on('download-comps', (params) => {
     return core.computationRegistry
-      .pullPipelineComputations({ comps: params.computations })
-      .then((pullStreams) => {
-        pullStreams.on('data', (data) => {
-          let output = compact(data.toString().split('\r\n'));
-          output = output.map(JSON.parse);
-          mainWindow.webContents.send('docker-out', output);
-        });
+      .pullComputations(params.computations)
+      .then((compStreams) => {
+        let streamsComplete = 0;
 
-        pullStreams.on('end', () => {
-          mainWindow.webContents.send('docker-pull-complete', params.consortiumId);
-        });
+        compStreams.forEach(({ compId, compName, stream }) => {
+          stream.on('data', (data) => {
+            let output = compact(data.toString().split('\r\n'));
+            output = output.map(JSON.parse);
+            mainWindow.webContents.send('docker-out', { output, compId, compName });
+          });
 
-        pullStreams.on('error', (err) => {
-          return err;
+          stream.on('end', () => {
+            mainWindow.webContents.send('docker-out',
+              {
+                output: [{ id: `${compId}-complete`, status: 'complete' }],
+                compId,
+                compName,
+              }
+            );
+
+            streamsComplete += 1;
+
+            if (params.consortiumId && streamsComplete === params.computations.length) {
+              mainWindow.webContents
+                .send('docker-pull-complete', params.consortiumId);
+            }
+          });
+
+          stream.on('error', (err) => {
+            return err;
+          });
         });
       });
   });
@@ -143,5 +167,12 @@ loadConfig()
       properties
     )
       .then(filePaths => postDialogFunc(filePaths, core));
+  });
+
+  ipcPromise.on('remove-image', (imgId) => {
+    return core.computationRegistry.removeDockerImage(imgId)
+      .then((data) => {
+        return data;
+      });
   });
 });

@@ -40,13 +40,6 @@ const DashboardNav = () => {
           Pipelines
         </NavItem>
       </LinkContainer>
-      <LinkContainer to="/dashboard/docker">
-        <NavItem>
-          <span aria-hidden="true" className="glyphicon glyphicon-save" />
-          {' '}
-          Docker
-        </NavItem>
-      </LinkContainer>
     </Nav>
   );
 };

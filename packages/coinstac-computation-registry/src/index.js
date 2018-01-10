@@ -1,10 +1,10 @@
 'use strict';
 
 const axios = require('axios');
-const { pullImage } = require('coinstac-docker-manager');
+const { getAllImages, pullImage, removeImage } = require('coinstac-docker-manager');
 const graphqlSchema = require('coinstac-graphql-schema');
 const mergeStream = require('merge-stream');
-const { compact } = require('lodash');
+const { compact, reduce } = require('lodash');
 const dbmap = require('/etc/coinstac/cstacDBMap'); // eslint-disable-line import/no-absolute-path
 const config = require('../config/default');
 
@@ -29,6 +29,10 @@ class ComputationRegistry {
    * Client
    */
 
+  getImages() { // eslint-disable-line class-methods-use-this
+    return getAllImages();
+  }
+
   /**
    * Generate array of docker pull promises and wait until resolved to return merged output streams
    * @param {Object} payload
@@ -45,6 +49,24 @@ class ComputationRegistry {
 
     return Promise.all(compsP)
     .then(res => merged.add(res));
+  }
+
+  pullComputations(comps) { // eslint-disable-line class-methods-use-this
+    const compsP = reduce(comps, (arr, comp) => {
+      arr.push(pullImage(comp.img));
+      return arr;
+    }, []);
+
+    return Promise.all(compsP)
+    .then((res) => {
+      return comps.map((val, index) =>
+        ({ stream: res[index], compId: val.compId, compName: val.compName })
+      );
+    });
+  }
+
+  removeDockerImage(imgId) { // eslint-disable-line class-methods-use-this
+    return removeImage(imgId);
   }
 
   validateComputation(id) { // eslint-disable-line class-methods-use-this, no-unused-vars

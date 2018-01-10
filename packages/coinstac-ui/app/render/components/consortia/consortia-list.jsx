@@ -142,7 +142,6 @@ class ConsortiaList extends Component {
     const { auth: { user }, pipelines } = this.props;
 
     if (activePipelineId) {
-      console.log('wtf');
       const computationData = ApolloClient.readQuery({ query: FETCH_ALL_COMPUTATIONS_QUERY });
       const pipeline = pipelines.find(cons => cons.id === activePipelineId);
 
@@ -150,7 +149,11 @@ class ConsortiaList extends Component {
       pipeline.steps.forEach((step) => {
         const compObject = computationData.fetchAllComputations
           .find(comp => comp.id === step.computations[0].id);
-        computations.push(compObject.computation.dockerImage);
+        computations.push({
+          img: compObject.computation.dockerImage,
+          compId: compObject.id,
+          compName: compObject.meta.name,
+        });
       });
 
       this.props.pullComputations({ consortiumId, computations });
@@ -160,7 +163,7 @@ class ConsortiaList extends Component {
         action: {
           label: 'View Docker Download Progress',
           callback: () => {
-            this.props.router.push('/dashboard/docker');
+            this.props.router.push('/dashboard/computations');
           },
         },
       });
