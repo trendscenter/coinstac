@@ -3,7 +3,6 @@
 const Docker = require('dockerode');
 const { promisify } = require('util');
 const request = require('request-promise-native');
-const exitHook = require('async-exit-hook');
 
 const setTimeoutPromise = promisify(setTimeout);
 
@@ -196,24 +195,22 @@ const pullImage = (computation) => {
 };
 
 /**
- * On a orderly exit the manager will clean up its containers
+ * Stops all currently running containers
+ * @return {Promise} resolved when all services are stopped
  */
-exitHook((cb) => {
-  Promise.all(
+const stopAllServices = () => {
+  return Promise.all(
     Object.keys(services)
     .map(service => services[service].container.stop()))
     .then(() => {
       services = {};
     }
-  ).then(() => cb())
-  .catch((err) => {
-    console.log(`ERROR failed docker manager shutdown: ${err}`); // eslint-disable-line no-console
-    cb();
-  });
-});
+  );
+};
 
 module.exports = {
   pullImage,
   queueJob,
   startService,
+  stopAllServices,
 };

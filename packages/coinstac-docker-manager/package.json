@@ -9,7 +9,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "async-exit-hook": "^2.0.1",
     "dockerode": "^2.5.1",
     "request": "^2.83.0",
     "request-promise-native": "^1.0.5"

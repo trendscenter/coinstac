@@ -4,7 +4,7 @@ const Computation = require('./computation');
 const Emitter = require('events');
 
 const controllers = {};
-controllers.single = require('./control-boxes/single');
+controllers.local = require('./control-boxes/local');
 controllers.decentralized = require('./control-boxes/decentralized');
 
 module.exports = {
@@ -53,6 +53,13 @@ module.exports = {
       inputMap,
       operatingDirectory,
       setIteration,
+      /**
+       * Starts a controller, which in turn starts a computation, given the correct
+       * conditions.
+       * @param  {Object}   input         initial input for the computation
+       * @param  {Function} remoteHandler a funciton to handle decentralized steps
+       * @return {Promise}                resolves to the final computation output
+       */
       start: (input, remoteHandler) => {
         const queue = [];
         controllerState.state = 'started';
@@ -67,12 +74,13 @@ module.exports = {
         }
 
         /**
-         * [iterateComp description]
-         * @param  {[type]}   compInput [description]
-         * @param  {Function} cb        [description]
-         * @return {[type]}             [description]
+         * Churns a comp iterartion based on current controller state and box output.
+         * This can mean a normal iteration, a remote iteration, skipping, etc...
+         * @param  {Object}   compInput input for the computation
+         * @param  {Function} cb        callback called with results
+         * @param  {Function} err       error callback for async operations
          */
-        const iterateComp = (input, cb) => {
+        const iterateComp = (input, cb, err) => {
           // TODO: logic for different runTypes (single, parallel, etc)
           switch (controllerState.currentBoxCommand) {
             case 'nextIteration':
@@ -89,7 +97,7 @@ module.exports = {
                 controllerState.currentOutput = { output: output.output, success: output.success };
                 controllerState.state = 'finished iteration';
                 cb(output.output);
-              });
+              }).catch(error => err(error));
             case 'nextComputation':
               // TODO: code for multiple comps on one controller
               // controllerState.computationIndex =
@@ -101,20 +109,31 @@ module.exports = {
               break;
             case 'remote':
               controllerState.state = 'waiting on remote';
-              return remoteHandler(controllerState.currentOutput)
+              return remoteHandler({ input: controllerState.currentOutput })
               .then((output) => {
                 controllerState.state = 'finished remote iteration';
+                controllerState.currentOutput = { output: output.output, success: output.success };
                 cb(output.output);
-              });
+              }).catch(error => err(error));
             case 'firstServerRemote':
               // TODO: not ideal, figure out better remote start
               // remove noop need
               controllerState.state = 'waiting on remote';
-              return remoteHandler(controllerState.currentOutput, true)
+              return remoteHandler({ input: controllerState.currentOutput, noop: true })
               .then((output) => {
                 controllerState.state = 'finished remote iteration';
+                controllerState.currentOutput = { output: output.output, success: output.success };
                 cb(output.output);
-              });
+              }).catch(error => err(error));
+            case 'doneRemote':
+              controllerState.state = 'waiting on remote';
+              // we want the success output, grabbing the last currentOutput is fine
+              // Note that input arg === controllerState.currentOutput.output at this point
+              return remoteHandler({ input: controllerState.currentOutput, transmitOnly: true })
+              .then(() => {
+                controllerState.state = 'finished final remote iteration';
+                cb(input);
+              }).catch(error => err(error));
             case 'done':
               cb(input);
               break;
@@ -125,9 +144,12 @@ module.exports = {
         queue.push(iterateComp);
 
         /**
-         * [trampoline description]
-         * @param  {Function} fn [description]
-         * @return {[type]}      [description]
+         * The trampoline works by continuously bouncing calls on and off the stack
+         * until a result that is not a funciton is returned, ending the fun. This avoids
+         * dedicating stack space for successive calls.
+         * Credit to Dave's blog: http://www.datchley.name/asynchronous-in-the-browser/
+         * @param  {Function} fn function to trampoline
+         * @return {Object}      the final result of the funciton calls
          */
         const trampoline = (fn) => {
           return (...args) => {
@@ -140,13 +162,15 @@ module.exports = {
         };
 
         /**
-         * [waterfall description]
-         * @param  {[type]}   initialInput [description]
-         * @param  {[type]}   steps        [description]
-         * @param  {Function} done         [description]
-         * @return {[type]}                [description]
+         * The waterfall allows for running async code in a sequential manner, combined
+         * with the trampoline this allows an unlimited number of steps without stack issues.
+         * Credit to Dave's blog: http://www.datchley.name/asynchronous-in-the-browser/
+         * @param  {Object}   initialInput the object to pass to computation
+         * @param  {Array}    steps        the dynamic array for the waterfall
+         * @param  {Function} done         callback
+         * @return {Object}                computation's result
          */
-        const waterfall = (initialInput, steps, done) => {
+        const waterfall = (initialInput, steps, done, err) => {
           controllerState.state = 'running';
           steps.push(done);
           trampoline(() => {
@@ -161,26 +185,25 @@ module.exports = {
                 // add initial input to first iteration
                 argsArray.unshift(input);
               }
-
-              if (controllerState.currentBoxCommand !== 'done') {
+              if (controllerState.currentBoxCommand !== 'done' && controllerState.currentBoxCommand !== 'doneRemote') {
                 const lastCallback = steps.pop();
                 steps.push(iterateComp);
                 steps.push(lastCallback);
               }
               // necessary if this function call turns out synchronous
               // the stack won't clear and overflow, has limited perf impact
-              process.nextTick(() => fn.apply(this, argsArray.concat(_cb)));
+              process.nextTick(() => fn.apply(this, argsArray.concat([_cb, err])));
               controllerState.remoteInitial = controllerState.mode === 'remote' ? false : undefined;
             } :
             undefined;  // steps complete
           })(input);
         };
 
-        const p = new Promise((res) => {
+        const p = new Promise((res, rej) => {
           waterfall(input, queue, (result) => {
             controllerState.state = 'stopped';
             res(result);
-          });
+          }, rej);
         });
 
         return p;

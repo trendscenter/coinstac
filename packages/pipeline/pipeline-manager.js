@@ -61,7 +61,8 @@ module.exports = {
       io = socketIO(app);
 
       app.listen(remotePort);
-      io.on('connection', (socket) => {
+
+      const socketServer = (socket) => {
         // TODO: not the way to do this, as runs would have to
         // always start before clients connected....
         // need proper auth
@@ -76,17 +77,21 @@ module.exports = {
           if (remoteClients[data.id]) {
             remoteClients[data.id].status = 'connected';
             remoteClients[data.id].socketId = socket.id;
-            remoteClients[data.id].lastSeen = Date.getTime();
+            remoteClients[data.id].lastSeen = Math.floor(Date.now() / 1000);
           }
         });
 
         socket.on('run', (data) => {
           // TODO: probably put in a 'pre-run' route?
-          socket.join(data.runId);
-          remoteClients[data.id][data.runId].currentOutput = data.output.output;
-          remoteClients[data.id].lastSeen = Date.getTime();
-          if (waitingOn(data.runId).length === 0) {
-            activePipelines[data.runId].remote.resolve({ output: aggregateRun(data.runId) });
+          if (remoteClients[data.id]) {
+            socket.join(data.runId);
+            remoteClients[data.id][data.runId].currentOutput = data.output.output;
+            remoteClients[data.id].lastSeen = Math.floor(Date.now() / 1000);
+            activePipelines[data.runId].state = 'recieved client data';
+            if (waitingOn(data.runId).length === 0) {
+              activePipelines[data.runId].state = 'recieved all clients data';
+              activePipelines[data.runId].remote.resolve({ output: aggregateRun(data.runId) });
+            }
           }
         });
 
@@ -95,7 +100,14 @@ module.exports = {
           client.status = 'disconnected';
           client.error = reason;
         });
-      });
+      };
+
+      if (authPlugin) {
+        io.on('connection', authPlugin.authorize(authOpts))
+        .on('authenticated', socketServer);
+      } else {
+        io.on('connection', socketServer);
+      }
     } else {
       socket = socketIOClient(`${remoteURL}:${remotePort}?id=${clientId}`);
       socket.on('hello', () => {
@@ -104,8 +116,10 @@ module.exports = {
       socket.on('run', (data) => {
         // TODO: step check?
         if (!data.error) {
+          activePipelines[data.runId].state = 'recieved data';
           activePipelines[data.runId].remote.resolve(data.output);
         } else {
+          activePipelines[data.runId].state = 'recieved error';
           activePipelines[data.runId].remote.reject(data.error);
         }
       });
@@ -130,7 +144,7 @@ module.exports = {
        *                               only necessary for decentralized runs
        * @param  {String} runId        unique ID for the pipeline
        * @return {Object}              an object containing the active pipeline and
-       *                               Promise for its results
+       *                               Promise for its result
        */
       startPipeline({ spec, clients = [], runId }) {
         activePipelines[runId] = {
@@ -150,8 +164,8 @@ module.exports = {
         const communicate = (pipeline, message) => {
           // hold the last step for drops, this only works for one step out
           missedCache[pipeline.id] = {
-            pipelineStep: pipeline.step,
-            controllerStep: pipeline.steps[pipeline.currentStep].controllerState.iteration,
+            pipelineStep: pipeline.currentStep,
+            controllerStep: pipeline.pipelineSteps[pipeline.currentStep].controllerState.iteration,
             output: message,
           };
           if (mode === 'remote') {
@@ -161,7 +175,7 @@ module.exports = {
           }
         };
 
-        const remoteHandler = (input, noop) => {
+        const remoteHandler = ({ input, noop, transmitOnly }) => {
           let proxRes;
           let proxRej;
 
@@ -175,6 +189,9 @@ module.exports = {
             error: proxRej,
           };
           if (!noop) {
+            if (transmitOnly) {
+              proxRes();
+            }
             communicate(activePipelines[runId].pipeline, input);
           }
           return prom;
@@ -197,7 +214,7 @@ module.exports = {
           });
         });
 
-        return { pipeline: activePipelines[runId].pipeline, results: pipelineProm };
+        return { pipeline: activePipelines[runId].pipeline, result: pipelineProm };
       },
       waitingOn,
     };

@@ -15,6 +15,7 @@
     "blessed-contrib": "^4.8.5",
     "lodash": "^4.17.4",
     "mkdirp": "^0.5.1",
+    "nyc": "^11.4.1",
     "request": "^2.83.0",
     "request-promise": "^4.2.2",
     "socket.io": "^2.0.4",
@@ -23,8 +24,8 @@
   },
   "description": "Computation registry service for COINSTAC.",
   "devDependencies": {
-    "nyc": "^10.3.2",
-    "tape": "^4.6.3"
+    "ava": "^0.24.0",
+    "rimraf-promise": "^2.0.0"
   },
   "homepage": "https://github.com/MRN-Code/coinstac#readme",
   "keywords": [
@@ -39,7 +40,7 @@
     "url": "git+https://github.com/MRN-Code/coinstac.git"
   },
   "scripts": {
-    "test": "nyc --reporter=lcov node test/index.js"
+    "test": "nyc ava test/**.test.js"
   },
   "version": "0.0.1"
 }
