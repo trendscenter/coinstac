@@ -3,6 +3,7 @@
 const Docker = require('dockerode');
 const { promisify } = require('util');
 const request = require('request-promise-native');
+const portscanner = require('portscanner');
 
 const setTimeoutPromise = promisify(setTimeout);
 
@@ -12,26 +13,12 @@ const streamPool = {};
 const jobPool = {};
 let services = {};
 
-// TODO: check if port is in use
 const generateServicePort = (serviceId) => {
-  const takenPorts = Object.keys(services).map((service) => {
-    return services[service].port;
+  return portscanner.findAPortNotInUse(8100, 49151, '127.0.0.1')
+  .then((newPort) => {
+    services[serviceId].port = newPort;
+    return newPort;
   });
-
-  let newPort = 8100;
-  takenPorts.sort((a, b) => (a - b));
-
-  for (let i = 0; i < takenPorts.length; i += 1) {
-    if (takenPorts[i] === newPort) {
-      newPort += 1;
-    } else {
-      break;
-    }
-  }
-
-  // set the port now, to avoid race-port conditions
-  services[serviceId].port = newPort;
-  return newPort;
 };
 
 const manageStream = (stream, jobId) => {
@@ -129,27 +116,29 @@ const startService = (serviceId, opts) => {
       proxRes = res;
       proxRej = rej;
     });
+    return generateServicePort(serviceId)
+    .then((port) => {
+      const defaultOpts = {
+        ExposedPorts: { '8881/tcp': {} },
+        HostConfig: {
+          PortBindings: { '8881/tcp': [{ HostPort: `${port}`, HostIp: '127.0.0.1' }] },
+        },
+        Tty: true,
+      };
 
-    const defaultOpts = {
-      ExposedPorts: { '8881/tcp': {} },
-      HostConfig: {
-        PortBindings: { '8881/tcp': [{ HostPort: `${generateServicePort(serviceId)}`, HostIp: '127.0.0.1' }] },
-      },
-      Tty: true,
-    };
+      // merge opts one level deep
+      const memo = {};
+      for (let [key] of Object.entries(defaultOpts)) { // eslint-disable-line no-restricted-syntax, max-len, prefer-const
+        memo[key] = Object.assign(defaultOpts[key], opts[key] ? opts[key] : {});
+      }
 
-    // merge opts one level deep
-    const memo = {};
-    for (let [key] of Object.entries(defaultOpts)) { // eslint-disable-line no-restricted-syntax, max-len, prefer-const
-      memo[key] = Object.assign(defaultOpts[key], opts[key] ? opts[key] : {});
-    }
-
-    const jobOpts = Object.assign(
-      {},
-      opts,
-      memo
-    );
-    return docker.createContainer(jobOpts)
+      const jobOpts = Object.assign(
+        {},
+        opts,
+        memo
+      );
+      return docker.createContainer(jobOpts);
+    })
     .then((container) => {
       services[serviceId].container = container;
       return container.start();
@@ -213,4 +202,5 @@ module.exports = {
   queueJob,
   startService,
   stopAllServices,
+  Docker,
 };
