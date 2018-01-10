@@ -4,7 +4,7 @@
  * @{@link  http://rackt.github.io/react-router/}
  * @{@link  https://github.com/rackt/react-router}
  */
-import { Route, IndexRoute } from 'react-router';
+import { Route, IndexRoute, IndexRedirect } from 'react-router';
 import React from 'react';
 import App from './components/app';
 import Dashboard from './components/dashboard';
@@ -22,20 +22,21 @@ import FormProjectController from './components/projects/form-project-controller
 import Settings from './components/settings';
 
 export default (
-  <Route component={App}>
+  <Route path="/" component={App}>
+    <IndexRedirect to="/login" />
     <Route path="login" component={Login} />
     <Route path="signup" component={Signup} />
-    <Route path="/" component={Dashboard} >
+    <Route path="dashboard" component={Dashboard} >
       <IndexRoute component={DashboardHome} />
-      <Route path="/consortia" component={DashboardConsortia} />
-      <Route path="/consortia/new" component={ConsortiumController} />
-      <Route path="/consortia/:consortiumId(/:resultId)" component={ConsortiumController} />
-      <Route path="/my-files" component={DashboardProjects}>
+      <Route path="consortia" component={DashboardConsortia} />
+      <Route path="consortia/new" component={ConsortiumController} />
+      <Route path="consortia/:consortiumId(/:resultId)" component={ConsortiumController} />
+      <Route path="my-files" component={DashboardProjects}>
         <IndexRoute component={ProjectsList} />
         <Route path="new" component={FormProjectController} />
         <Route path=":projectId" component={FormProjectController} />
       </Route>
-      <Route path="/settings" component={Settings} />
+      <Route path="settings" component={Settings} />
       <Route path="submit-computation" component={ComputationSubmission} />
       <Route path="test" component={Test} />
     </Route>

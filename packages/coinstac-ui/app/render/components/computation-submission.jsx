@@ -7,9 +7,9 @@ import {
   Button,
 } from 'react-bootstrap';
 import {
-  addComputationMetadata,
-  fetchComputationMetadata,
-} from '../state/graphql-queries';
+  ADD_COMPUTATION_MUTATION,
+  FETCH_ALL_COMPUTATIONS_METADATA_QUERY,
+} from '../state/graphql/functions';
 
 const styles = {
   topMargin: { marginTop: 10 },
@@ -46,6 +46,10 @@ class ComputationSubmission extends Component { // eslint-disable-line
       } else {
         this.setState({ submissionSuccess: false });
       }
+    })
+    .catch(({ graphQLErrors }) => {
+      console.log(graphQLErrors);
+      this.setState({ submissionSuccess: false });
     });
   }
 
@@ -81,7 +85,7 @@ class ComputationSubmission extends Component { // eslint-disable-line
           </Alert>
         }
 
-        {!this.state.activeSchema.meta && this.state.submissionSuccess === false && 
+        {!this.state.activeSchema.meta && this.state.submissionSuccess === false &&
           <Alert bsStyle="danger" style={styles.topMargin}>
             <strong>Error!</strong> Try again?
           </Alert>
@@ -102,14 +106,14 @@ ComputationSubmission.propTypes = {
 };
 
 // http://dev.apollodata.com/react/cache-updates.html
-export default graphql(addComputationMetadata, {
+export default graphql(ADD_COMPUTATION_MUTATION, {
   props: ({ mutate }) => ({
     submitSchema: computationSchema => mutate({
       variables: { computationSchema },
       update: (store, { data: { addComputation } }) => {
-        const data = store.readQuery({ query: fetchComputationMetadata });
+        const data = store.readQuery({ query: FETCH_ALL_COMPUTATIONS_METADATA_QUERY });
         data.fetchAllComputations.push(addComputation);
-        store.writeQuery({ query: fetchComputationMetadata, data });
+        store.writeQuery({ query: FETCH_ALL_COMPUTATIONS_METADATA_QUERY, data });
       },
     }),
   }),

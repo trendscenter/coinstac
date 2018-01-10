@@ -1,41 +1,42 @@
 const rethink = require('rethinkdb');
+const Boom = require('boom');
 const GraphQLJSON = require('graphql-type-json');
-
-let connection = null;
-
-rethink.connect({ host: 'localhost', port: 28015, db: 'coinstac' },
-  (err, conn) => {
-    if (err) throw err;
-    connection = conn;
-  });
+const helperFunctions = require('../auth-helpers');
 
 /* eslint-disable */
 const resolvers = {
   JSON: GraphQLJSON,
   Query: {
-    fetchAllComputations: () => {
-      return new Promise ((res, rej) => 
-        rethink.table('computations').run(connection, (error, cursor) => {
-          if (error) throw error;
-          return cursor.toArray(function(err, result) {
-            if (err) throw err;
-            res(result);
-          });
-        })
-      )
+    /**
+     * Returns all computations. Checks user permissions retrieved from JWT middleware validateFunc.
+     */
+    fetchAllComputations: ({ auth: { credentials: { permissions } } }, _) => {
+      if (!permissions.computations.read) {
+        return Boom.forbidden('Action not permitted');
+      }
+
+      return helperFunctions.getRethinkConnection()
+        .then((connection) =>
+          rethink.table('computations').run(connection)
+        )
+        .then((cursor) => cursor.toArray())
+        .then((result) => result);
     },
-    fetchComputationMetadataByName: (_, args) => {
-      return new Promise ((res, rej) =>
-        rethink.table('computations').filter({ meta: { name: args.computationName } })
-          .run(connection, (error, cursor) => {
-            if (error) throw error;
-            return cursor.toArray(function(err, result) {
-              if (err) throw err;
-              console.log(result);
-              res(result[0]);
-            });
-          })
-      )
+    /**
+     * Returns metadata for specific computation name
+     */
+    fetchComputation: ({ auth: { credentials: { permissions } } }, args) => {
+      if (!permissions.computations.read) {
+        return Boom.forbidden('Action not permitted');
+      }
+
+      return helperFunctions.getRethinkConnection()
+        .then((connection) =>
+          rethink.table('computations').filter({ meta: { name: args.computationName } })
+            .run(connection)
+        )
+        .then((cursor) => cursor.toArray())
+        .then((result) => result[0]);
     },
     validateComputation: (_, args) => {
       return new Promise();
@@ -54,27 +55,28 @@ const resolvers = {
     },
   },
   Mutation: {
-    addComputation: (_, args) => {
-      return new Promise ((res, rej) =>
-        rethink.table('computations').insert(
-          args.computationSchema,
-          { 
-            conflict: "replace",
-            returnChanges: true,
-          }
+    /**
+     * Add computation to RethinkDB
+     */
+    addComputation: ({ auth: { credentials: { permissions } } }, args) => {
+      if (!permissions.computations.write) {
+        return Boom.forbidden('Action not permitted');
+      }
+
+      return helperFunctions.getRethinkConnection()
+        .then((connection) =>
+          rethink.table('computations').insert(
+            args.computationSchema,
+            { 
+              conflict: "replace",
+              returnChanges: true,
+            }
+          )
+          .run(connection)
         )
-          .run(connection, (error, result) => {
-            res(result.changes[0].new_val);
-          })
-      )
-    },
-    removeAllComputations: () => {
-      return new Promise ((res, rej) =>
-        rethink.table('computations').delete()
-          .run(connection, (error, result) => {
-            res(result);
-          })
-      )
+        .then((result) => {
+          return result.changes[0].new_val;
+        })
     },
     removeComputation: (_, args) => {
       return new Promise();

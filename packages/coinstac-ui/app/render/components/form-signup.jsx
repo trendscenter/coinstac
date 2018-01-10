@@ -1,8 +1,12 @@
-import { Button, ControlLabel, FormControl, FormGroup } from 'react-bootstrap';
-import { findDOMNode } from 'react-dom';
+import { Alert, Button, ControlLabel, FormControl, FormGroup } from 'react-bootstrap';
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import FieldPassword from './field-password';
+
+const styles = {
+  bottomMargin: { marginBottom: 10 },
+};
 
 class FormSignup extends Component {
 
@@ -15,30 +19,38 @@ class FormSignup extends Component {
     evt.preventDefault();
     /** @todo  Remove hard-coded institution. */
     this.props.onSubmit({
-      email: findDOMNode(this.formEmail).value,
+      email: this.formEmail.value.trim(),
       institution: 'mrn',
-      name: findDOMNode(this.formSignupName).value,
-      password: this.formPassword.state.password,
-      username: findDOMNode(this.formSignupUsername).value,
+      name: this.formSignupName.value.trim(),
+      password: this.formPassword.password().trim(),
+      username: this.formSignupUsername.value.trim(),
     });
   }
 
   render() {
+    const { auth } = this.props;
+
     return (
       <div className="panel panel-default">
         <div className="panel-body">
           <form onSubmit={this.handleSubmit}>
+            {auth.error &&
+              <Alert bsStyle="danger" style={styles.bottomMargin}>
+                <strong>Error!</strong> {auth.error}
+              </Alert>
+            }
+
             <FormGroup controlId="signup-name">
               <ControlLabel>Name:</ControlLabel>
-              <FormControl ref={(c) => { this.formSignupName = c; }} type="text" />
+              <FormControl inputRef={(c) => { this.formSignupName = c; }} type="text" />
             </FormGroup>
             <FormGroup controlId="signup-username">
               <ControlLabel>Username:</ControlLabel>
-              <FormControl ref={(c) => { this.formSignupUsername = c; }} type="text" />
+              <FormControl inputRef={(c) => { this.formSignupUsername = c; }} type="text" />
             </FormGroup>
             <FormGroup controlId="signup-email">
               <ControlLabel>Email:</ControlLabel>
-              <FormControl ref={(c) => { this.formEmail = c; }} type="email" />
+              <FormControl inputRef={(c) => { this.formEmail = c; }} type="email" />
             </FormGroup>
             <FieldPassword ref={(c) => { this.formPassword = c; }} />
             <Button
@@ -56,7 +68,12 @@ class FormSignup extends Component {
 FormSignup.displayName = 'FormSignup';
 
 FormSignup.propTypes = {
+  auth: PropTypes.object.isRequired,
   onSubmit: PropTypes.func.isRequired,
 };
 
-export default FormSignup;
+const mapStateToProps = ({ auth }) => {
+  return { auth };
+};
+
+export default connect(mapStateToProps)(FormSignup);

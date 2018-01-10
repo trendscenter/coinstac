@@ -1,0 +1,7 @@
+{
+  "cstacDB": "coinstac",
+  "hapiPort": 3100,
+  "hashBytes": 64,
+  "host": "localhost",
+  "rethinkPort": 28015
+}

@@ -5,12 +5,25 @@ const { pullImage } = require('coinstac-docker-manager');
 const graphqlSchema = require('coinstac-graphql-schema');
 const mergeStream = require('merge-stream');
 const { compact } = require('lodash');
+const dbmap = require('/cstacDBMap');
+const config = require('../config/default');
 
 /**
  * ComputationRegistry
  * @class
  */
 class ComputationRegistry {
+  authenticateServer() {
+    return axios.post(
+      `${config.DB_URL}/authenticate`,
+      dbmap.rethinkdbServer
+    )
+    .then((token) => {
+      this.id_token = token.data.id_token;
+      axios.defaults.headers.common.Authorization = `Bearer ${this.id_token}`;
+      return this.id_token;
+    });
+  }
 
   /**
    * Client
@@ -48,9 +61,12 @@ class ComputationRegistry {
    * @return {Promise<string>} Success flag
    */
   serverStart() {
-    axios.get(`http://localhost:3100/graphql?query=${graphqlSchema.allDockerImages}`)
+    this.authenticateServer()
+    .then(() =>
+      axios.get(`${config.DB_URL}/graphql?query=${graphqlSchema.queries.allDockerImages}`)
+    )
     .then(({ data: { data: { fetchAllComputations } } }) => {
-      const comps = fetchAllComputations.map(comp => comp.meta.dockerImage);
+      const comps = fetchAllComputations.map(comp => comp.computation.dockerImage);
       return this.pullPipelineComputations({ comps });
     })
     .then((pullStreams) => {
