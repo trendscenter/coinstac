@@ -39,7 +39,38 @@ const remotePipelineSpec = {
   ],
 };
 
-test((t) => {
+test.before(() => {
+  const proms = [];
+  const docker = new dockerManager.Docker();
+  const pullImage = (image) => {
+    let proxRej;
+    let proxRes;
+    const prom = new Promise((res, rej) => {
+      proxRes = res;
+      proxRej = rej;
+    });
+    docker.pull(image, (err, stream) => {
+      docker.modem.followProgress(stream, (err) => {
+        if (!err) {
+          proxRes();
+        } else {
+          proxRej(err);
+        }
+      });
+    });
+    return prom;
+  };
+
+  Object.keys(computationSpecs).forEach((key) => {
+    proms.push(pullImage(computationSpecs[key].computation.dockerImage));
+    if (computationSpecs[key].computation.remote) {
+      proms.push(pullImage(computationSpecs[key].computation.remote.dockerImage));
+    }
+  });
+  return Promise.all(proms);
+});
+
+test.serial((t) => {
   const remote = PipelineManager.create({
     mode: 'remote',
     clientId: 'remote',
@@ -70,7 +101,7 @@ test((t) => {
   ]);
 });
 
-test((t) => {
+test.serial((t) => {
   const local = PipelineManager.create({
     mode: 'local',
     clientId: 'two',
@@ -87,7 +118,7 @@ test((t) => {
 
 test.after.always('cleanup', () => {
   return Promise.all([
-    dockerManager.stopAllServices(),
+    dockerManager.stopAllServices().catch(), // already stopped containers can err out
     rimraf('./local'),
     rimraf('./remote'),
   ]);

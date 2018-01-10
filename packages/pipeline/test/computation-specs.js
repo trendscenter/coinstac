@@ -9,7 +9,7 @@ module.exports = {
     },
     computation: {
       type: 'docker',
-      dockerImage: 'coinstac-local-test',
+      dockerImage: 'coinstac/coinstac-local-test',
       command: ['python', '/computation/local.py'],
       input: {
         start: {
@@ -33,11 +33,11 @@ module.exports = {
     },
     computation: {
       type: 'docker',
-      dockerImage: 'coinstac-decentralized-test',
+      dockerImage: 'coinstac/coinstac-decentralized-test',
       command: ['python', '/computation/local.py'],
       remote: {
         type: 'docker',
-        dockerImage: 'coinstac-decentralized-test',
+        dockerImage: 'coinstac/coinstac-decentralized-test',
         command: ['python', '/computation/remote.py'],
       },
       input: {
