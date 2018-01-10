@@ -93,7 +93,11 @@ class Dashboard extends Component {
           pipeline.steps.forEach((step) => {
             const compObject = computationData.fetchAllComputations
               .find(comp => comp.id === step.computations[0].id);
-            computations.push(compObject.computation.dockerImage);
+            computations.push({
+              img: compObject.computation.dockerImage,
+              compId: compObject.id,
+              compName: compObject.meta.name,
+            });
           });
 
           this.props.pullComputations({ consortiumId: nextProps.consortia[i].id, computations });
@@ -103,7 +107,7 @@ class Dashboard extends Component {
             action: {
               label: 'View Docker Download Progress',
               callback: () => {
-                router.push('/dashboard/docker');
+                router.push('/dashboard/computations');
               },
             },
           });

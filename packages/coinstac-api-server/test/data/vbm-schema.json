@@ -7,7 +7,7 @@
   },
   "computation": {
     "type": "docker",
-    "dockerImage": "mysql:latest",
+    "dockerImage": "nginx:latest",
     "command": "python3 /root/vbm_scripts/run_vbm_bids.py",
     "input": {
       "smoothingValue":{
