@@ -28,7 +28,7 @@ module.exports = function buildNative() {
           'leveldown',
           '--depth=0',
           '--runtime=electron',
-          `--target=${electronVersion}`,
+          `--target=${electronVersion}-beta.3`,
           '--disturl=https://atom.io/download/atom-shell',
           `--abi=${electronABI}`,
         ]);
