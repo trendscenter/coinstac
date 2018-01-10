@@ -1,29 +1,48 @@
 const { makeExecutableSchema } = require('graphql-tools');
 const resolvers = require('./resolvers');
-const compFields = require('./computation-fields');
+const sharedFields = require('./shared-fields');
 
 const typeDefs = `
   scalar JSON
 
   type ComputationMeta {
-    ${compFields.computationMetaFields}
+    ${sharedFields.computationMetaFields}
   }
 
   input ComputationMetaInput {
-    ${compFields.computationMetaFields}
+    ${sharedFields.computationMetaFields}
+  }
+
+  type ComputationRemote {
+    ${sharedFields.computationRemoteFields}
+  }
+
+  input ComputationRemoteInput {
+    ${sharedFields.computationRemoteFields}
+  }
+
+  type ComputationField {
+    ${sharedFields.computationRemoteFields}
+    ${sharedFields.computationFields}
+    remote: ComputationRemote
+  }
+
+  input ComputationFieldInput {
+    ${sharedFields.computationRemoteFields}
+    ${sharedFields.computationFields}
+    remote: ComputationRemoteInput
   }
 
   type Computation {
-    id: ID!
+    id: ID
     meta: ComputationMeta
-    local: JSON
-    remote: JSON
+    computation: ComputationField
   }
 
   input ComputationInput {
+    id: ID
     meta: ComputationMetaInput
-    local: JSON
-    remote: JSON
+    computation: ComputationFieldInput
   }
 
   # Should owners/users be an array of user objects?
@@ -68,7 +87,6 @@ const typeDefs = `
     # Stringify incoming computation, parse prior to insertion call
     addComputation(computationSchema: ComputationInput): Computation
     removeComputation(compId: ID): JSON
-    removeAllComputations: JSON
     deleteConsortiumById(consortiumId: ID): String
     joinConsortium(username: String, consortiumId: ID): Consortium
     setActiveComputation(computationId: ID, consortiumId: ID): String
@@ -81,7 +99,7 @@ const typeDefs = `
   type Query {
     # This is a description of the fetchAllComputations query
     fetchAllComputations: [Computation]
-    fetchComputationMetadataByName(computationName: String): Computation
+    fetchComputation(computationName: String): Computation
     validateComputation(compId: ID): Boolean
     fetchConsortiumById(consortiumId: ID): Consortium
     fetchRunForConsortium(consortiumId: ID): [Run]
