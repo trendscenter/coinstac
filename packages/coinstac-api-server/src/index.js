@@ -1,9 +1,10 @@
 const hapi = require('hapi');
 const config = require('../config/default');
-const dbmap = require('/cstacDBMap');
+const dbmap = require('/etc/coinstac/cstacDBMap'); // eslint-disable-line import/no-absolute-path
 const helperFunctions = require('./auth-helpers');
 const plugins = require('./plugins');
 const routes = require('./routes');
+const wsServer = require('./ws-server');
 
 const server = new hapi.Server();
 server.connection({
@@ -13,7 +14,7 @@ server.connection({
 
 server.register(plugins, (err) => {
   if (err) {
-    console.log(err);
+    console.log(err);  // eslint-disable-line no-console
   }
 
   /**
@@ -34,5 +35,7 @@ server.register(plugins, (err) => {
 
 server.start((startErr) => {
   if (startErr) throw startErr;
-  console.log(`Server running at: ${server.info.uri}`);
+  console.log(`Server running at: ${server.info.uri}`); // eslint-disable-line no-console
+
+  wsServer.activate(server);
 });

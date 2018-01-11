@@ -22,9 +22,10 @@ const RemotePipelineRunner = require('./models/pipeline/runner/remote-pipeline-r
 const RemotePipelineRunnerPool =
   require('./models/pipeline/runner/pool/remote-pipeline-runner-pool');
 const User = require('./models/user');
+const getSyncedDatabase = require('./utils/get-synced-database');
 const dbRegistry = require('./services/db-registry');
 const dockerManager = require('coinstac-docker-manager');
-const getSyncedDatabase = require('./utils/get-synced-database');
+const validator = require('./services/validator');
 
 
 module.exports = {
@@ -64,6 +65,7 @@ module.exports = {
   services: {
     dbRegistry,
     dockerManager,
+    validator,
   },
   utils: {
     getSyncedDatabase,

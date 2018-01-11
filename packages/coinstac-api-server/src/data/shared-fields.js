@@ -1,4 +1,16 @@
-const computationFields = {
+const schemaFields = {
+  consortiumFields: `
+    activePipelineId: ID
+    activeComputationInputs: [String]
+    delete: Boolean
+    description: String!
+    name: String!
+    tags: [String]
+    owners: [ID]
+    members: [ID]
+    pipelines: [ID]
+    results: [ID]
+  `,
   computationFields: `
     input: JSON
     output: JSON
@@ -16,6 +28,29 @@ const computationFields = {
     dockerImage: String
     command: [String]
   `,
+  pipelineFields: `
+    name: String
+    description: String
+    owningConsortium: ID
+    delete: Boolean
+    shared: Boolean
+  `,
+  pipelineControllerFields: `
+    id: ID
+    options: JSON
+    type: String
+  `,
+  pipelineStepFields: `
+    ioMap: JSON 
+    id: ID!
+  `,
+  userFields: `
+    consortiaStatuses: JSON
+    email: String!
+    institution: String
+    passwordHash: String!
+    permissions: JSON
+  `,
 };
 
-module.exports = computationFields;
+module.exports = schemaFields;

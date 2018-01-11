@@ -33,30 +33,29 @@
   },
   "homepage": "https://github.com/MRN-Code/coinstac#readme",
   "dependencies": {
-    "async": "^2.4.1",
+    "async": "^2.6.0",
     "coinstac-common": "^2.6.0",
     "coinstac-computation-registry": "^2.6.0",
-    "coinstac-computation-registry-new": "^2.6.0",
-    "commander": "^2.9.0",
+    "commander": "^2.12.2",
     "lodash": "^4.17.4",
-    "memdown": "^1.2.4",
+    "memdown": "^1.4.1",
     "mkdirp": "^0.5.1",
     "pify": "^2.3.0",
     "pouchdb-adapter-leveldb": "^5.4.5",
     "pouchdb-adapter-memory": "^5.4.5",
-    "rimraf": "^2.6.1",
+    "rimraf": "^2.6.2",
     "superagent": "^2.3.0",
     "touch": "^1.0.0",
-    "winston": "^2.3.1"
+    "winston": "^2.4.0"
   },
   "devDependencies": {
     "concat-stream": "^1.6.0",
     "gh-pages": "^0.11.0",
-    "jsdoc": "^3.4.3",
+    "jsdoc": "^3.5.5",
     "minami": "^1.2.3",
     "nyc": "^6.6.1",
     "sinon": "^1.17.7",
     "spawn-pouchdb-server": "^3.3.3",
-    "tape": "^4.6.3"
+    "tape": "^4.8.0"
   }
 }

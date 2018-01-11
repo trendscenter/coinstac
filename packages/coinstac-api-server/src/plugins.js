@@ -1,4 +1,4 @@
-const schema = require('./data/schema');
+const { schema } = require('./data/schema');
 const jwt2 = require('hapi-auth-jwt2');
 const { graphiqlHapi, graphqlHapi } = require('apollo-server-hapi');
 
@@ -14,9 +14,9 @@ module.exports = [
       graphiqlOptions: {
         endpointURL: '/graphql',
       },
-    },
-    route: {
-      auth: false,
+      route: {
+        auth: false,
+      },
     },
   },
   {

@@ -3,7 +3,7 @@ const Boom = require('boom');
 const jwt = require('jsonwebtoken');
 const rethink = require('rethinkdb');
 const config = require('../config/default');
-const dbmap = require('/cstacDBMap');
+const dbmap = require('/etc/coinstac/cstacDBMap'); // eslint-disable-line import/no-absolute-path
 const Promise = require('bluebird');
 
 const helperFunctions = {
@@ -30,12 +30,21 @@ const helperFunctions = {
         institution: user.institution,
         passwordHash,
         permissions: {
-          computations: { read: true },
+          computations: {},
+          consortia: {},
+          pipelines: {},
+        },
+        consortiaStatuses: {
+
         },
       };
 
       if (user.permissions) {
         userDetails.permissions = user.permissions;
+      }
+
+      if (user.consortiaStatuses) {
+        userDetails.consortiaStatuses = user.consortiaStatuses;
       }
 
       return rethink.table('users')
@@ -69,7 +78,29 @@ const helperFunctions = {
    */
   getUserDetails(credentials) {
     return helperFunctions.getRethinkConnection()
-    .then(connection => rethink.table('users').get(credentials.username).run(connection))
+    .then(connection => rethink.table('users').get(credentials.username).merge(user =>
+      ({
+        permissions: user('permissions').coerceTo('array')
+        .map(table =>
+          table.map(tableArr =>
+            rethink.branch(
+              tableArr.typeOf().eq('OBJECT'),
+              tableArr.coerceTo('array').map(doc =>
+                doc.map(docArr =>
+                  rethink.branch(
+                    docArr.typeOf().eq('ARRAY'),
+                    docArr.fold({}, (acc, row) =>
+                      acc.merge(rethink.table('roles').get(row)('verbs'))
+                    ),
+                    docArr
+                  )
+                )
+              ).coerceTo('object'),
+              tableArr
+            )
+          )
+        ).coerceTo('object'),
+      })).run(connection))
     .then(user => user);
   },
   /**

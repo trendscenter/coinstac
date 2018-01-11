@@ -1,17 +1,32 @@
 import {
   ApolloClient,
   addTypeName,
-  createNetworkInterface,
+  createBatchingNetworkInterface,
 } from 'react-apollo';
+import { SubscriptionClient, addGraphQLSubscriptions } from 'subscriptions-transport-ws';
+import { apiServer, subApiServer } from '../../../config/local.json';
+
+const API_URL = `${apiServer.protocol}//${apiServer.hostname}:${apiServer.port}`;
+const networkInterface = createBatchingNetworkInterface({
+  uri: `${API_URL}/graphql`,
+  batchInterval: 10,
+});
+
+const SUB_URL = `${subApiServer.protocol}//${subApiServer.hostname}:${subApiServer.port}`;
+const wsClient = new SubscriptionClient(`${SUB_URL}/subscriptions`, { reconnect: true });
+const networkInterfaceWithSubscriptions = addGraphQLSubscriptions(
+  networkInterface,
+  wsClient
+);
 
 const client = new ApolloClient({
-  networkInterface: createNetworkInterface({ uri: 'http://localhost:3100/graphql' }),
+  networkInterface: networkInterfaceWithSubscriptions,
   queryTransformer: addTypeName,
   dataIdFromObject: o => o.id,
 });
 
 client.networkInterface.use([{
-  applyMiddleware(req, next) {
+  applyBatchMiddleware(req, next) {
     if (!req.options.headers) {
       req.options.headers = {};  // Create the header object if needed.
     }

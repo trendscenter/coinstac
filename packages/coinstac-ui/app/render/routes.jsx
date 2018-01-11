@@ -7,19 +7,20 @@
 import { Route, IndexRoute, IndexRedirect } from 'react-router';
 import React from 'react';
 import App from './components/app';
-import Dashboard from './components/dashboard';
-import DashboardHome from './components/dashboard-home';
-import DashboardConsortia from './components/dashboard-consortia';
-import Login from './components/form-login-controller';
-import Signup from './components/form-signup-controller';
-import Test from './components/feature-test';
-import ComputationSubmission from './components/computation-submission';
-import DashboardProjects from './components/projects/dashboard-projects';
-import ProjectsList from './components/projects/projects-list';
-import ConsortiumController from './components/consortium/consortium-controller';
-import FormProjectController from './components/projects/form-project-controller';
-
-import Settings from './components/settings';
+import ComputationsList from './components/computations/computations-list';
+import ComputationSubmission from './components/computations/computation-submission';
+import ConsortiaList from './components/consortia/consortia-list';
+import ConsortiumTabs from './components/consortia/consortium-tabs';
+import Dashboard from './components/dashboard/dashboard';
+import DashboardHome from './components/dashboard/dashboard-home';
+import RouteContainer from './containers/route-container';
+import Login from './components/user/form-login-controller';
+import Signup from './components/user/form-signup-controller';
+import PipelinesList from './components/pipelines/pipelines-list';
+import Pipeline from './components/pipelines/pipeline';
+import CollectionsList from './components/collections/collections-list';
+import CollectionTabs from './components/collections/collection-tabs';
+import Settings from './components/user/settings';
 
 export default (
   <Route path="/" component={App}>
@@ -28,17 +29,26 @@ export default (
     <Route path="signup" component={Signup} />
     <Route path="dashboard" component={Dashboard} >
       <IndexRoute component={DashboardHome} />
-      <Route path="consortia" component={DashboardConsortia} />
-      <Route path="consortia/new" component={ConsortiumController} />
-      <Route path="consortia/:consortiumId(/:resultId)" component={ConsortiumController} />
-      <Route path="my-files" component={DashboardProjects}>
-        <IndexRoute component={ProjectsList} />
-        <Route path="new" component={FormProjectController} />
-        <Route path=":projectId" component={FormProjectController} />
+      <Route path="consortia" component={RouteContainer}>
+        <IndexRoute component={ConsortiaList} />
+        <Route path="new" component={ConsortiumTabs} />
+        <Route path=":consortiumId" component={ConsortiumTabs} />
+      </Route>
+      <Route path="collections" component={RouteContainer}>
+        <IndexRoute component={CollectionsList} />
+        <Route path="new" component={CollectionTabs} />
+        <Route path=":collectionId" component={CollectionTabs} />
+      </Route>
+      <Route path="pipelines" component={RouteContainer}>
+        <IndexRoute component={PipelinesList} />
+        <Route path="new(/:consortiumId)" component={Pipeline} />
+        <Route path=":pipelineId" component={Pipeline} />
+      </Route>
+      <Route path="computations" component={RouteContainer}>
+        <IndexRoute component={ComputationsList} />
+        <Route path="new" component={ComputationSubmission} />
       </Route>
       <Route path="settings" component={Settings} />
-      <Route path="submit-computation" component={ComputationSubmission} />
-      <Route path="test" component={Test} />
     </Route>
   </Route>
 );

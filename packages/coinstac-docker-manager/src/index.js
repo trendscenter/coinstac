@@ -71,6 +71,10 @@ const queueJob = (jobId, input, opts) => {
   });
 };
 
+const getAllImages = () => {
+  return docker.listImages();
+};
+
 const pullImage = (computation) => {
   return new Promise((resolve, reject) => {
     docker.pull(computation, (err, stream) => {
@@ -83,7 +87,13 @@ const pullImage = (computation) => {
   });
 };
 
+const removeImage = (imageId) => {
+  return docker.getImage(imageId).remove();
+};
+
 module.exports = {
+  getAllImages,
   pullImage,
+  removeImage,
   queueJob,
 };

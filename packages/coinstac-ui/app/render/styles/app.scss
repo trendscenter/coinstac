@@ -18,6 +18,10 @@ $icon-font-path: "~bootstrap-sass/assets/fonts/bootstrap/";
 @import "./user-account";
 @import "./user-list";
 
+.bold {
+  font-weight: bold;
+}
+
 .screen {
   min-height: 100vh;
   padding-top: $grid-gutter-width / 2;
@@ -73,30 +77,40 @@ $icon-font-path: "~bootstrap-sass/assets/fonts/bootstrap/";
   position: relative;
 }
 
+.dashboard {
+  background: $gray-lighter;
+}
+
 .navigation {
-    background: $gray-lighter;
+  > nav .glyphicon {
+    display: inline-block;
+    margin-right: 1rem;
+  }
+  @media (min-width: $screen-sm) {
+    padding: $grid-gutter-width / 2 0;
 
-    > nav .glyphicon {
-        display: inline-block;
-        margin-right: 1rem;
+    .logo {
+        margin-bottom: 2rem;
     }
-    @media (min-width: $screen-sm) {
-        display: flex;
-        flex-direction: column;
-        height: 100vh;
-        left: 0;
-        padding: $grid-gutter-width / 2;
-        position: fixed;
-        top: 0;
-        width: 33.33%;
+    > nav {
+        flex-grow: 1;
+    }
+  }
+}
 
-        .logo {
-            margin-bottom: 2rem;
-        }
-        > nav {
-            flex-grow: 1;
-        }
-    }
+.nav-item-page-title {
+  display: inline-block;
+}
+
+/**
+ * Content pane
+ */
+.content-pane {
+  background: white;
+  min-height: 100vh;
+  @media (min-width: $screen-sm) {
+    padding: $grid-gutter-width / 2;
+  }
 }
 
 
