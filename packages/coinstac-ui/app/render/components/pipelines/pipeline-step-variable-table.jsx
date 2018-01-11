@@ -49,6 +49,7 @@ export default class PipelineStepVariableTable extends Component {
                   bsStyle="info"
                   id={`covariate-${index}-data-dropdown`}
                   title={cov.type || 'Data Type'}
+                  disabled={!owner}
                 >
                   {objParams.items.map(item => (
                     <MenuItem
@@ -83,6 +84,7 @@ export default class PipelineStepVariableTable extends Component {
                 <DropdownButton
                   id={`covariate-${index}-vartype-dropdown`}
                   title={cov.varType || 'Variable Type'}
+                  disabled={!owner}
                 >
                   {['Dependent', 'Independent'].map(name => (
                     <MenuItem
