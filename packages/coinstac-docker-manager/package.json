@@ -9,6 +9,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "dockerode": "^2.5.1"
+    "dockerode": "^2.5.1",
+    "portscanner": "^2.1.1",
+    "request": "^2.83.0",
+    "request-promise-native": "^1.0.5"
   }
 }
