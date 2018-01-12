@@ -11,7 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "apollo-server-hapi": "^1.3.2",
+    "apollo-server-hapi": "1.2.0",
     "bluebird": "^3.5.1",
     "boom": "^5.2.0",
     "coinstac-graphql-schema": "^2.6.0",
