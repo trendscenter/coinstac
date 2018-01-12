@@ -73,16 +73,38 @@ loadConfig()
   const mainWindow = getWindow();
   logger.verbose('main process booted');
 
+  /**
+   * IPC Listener to write logs
+   * @param {String} message The message to write out to log
+   * @param {String} type The type of log to write out
+   */
   ipcMain.on('write-log', (event, { type, message }) => {
     logger[type](`process: render - ${message}`);
   });
 
+  /**
+   * IPC Listener to start pipeline
+   * @param {Object} consortium
+   * @param {String} consortium.id The id of the consortium starting the pipeline
+   * @param {Object[]} consortium.pipelineSteps An array of the steps involved in
+   *  this pipeline run according to the consortium
+   * @param {String[]} filesArray An array of all the file locations used by this run
+   * @param {Object} run
+   * @param {String} run.id The id of the current run
+   * @param {Object[]} run.pipelineSteps An array of the steps involved in this pipeline run
+   *  according to the run
+   * @return {Promise<String>} Status message
+   */
   ipcPromise.on('start-pipeline', ({ consortium, filesArray, run }) => {
     return core.constructor.startPipeline(
       consortium.id, consortium.pipelineSteps, filesArray, run.id, run.pipelineSteps
     );
   });
 
+  /**
+   * IPC listener to return a list of all local Docker images
+   * @return {Promise<String[]>} An array of all local Docker image names
+   */
   ipcPromise.on('get-all-images', () => {
     return core.computationRegistry.getImages()
       .then((data) => {
@@ -90,6 +112,14 @@ loadConfig()
       });
   });
 
+  /**
+   * IPC Listener to download a list of computations
+   * @param {Object} params
+   * @param {String[]} params.computations An array of docker image names
+   * @param {String} params.consortiumId ID of the consortium, if relevant,
+   *  associated with the computations being retrieved
+   * @return {Promise}
+   */
   ipcPromise.on('download-comps', (params) => {
     return core.computationRegistry
       .pullComputations(params.computations)
@@ -127,6 +157,11 @@ loadConfig()
       });
   });
 
+  /**
+   * IPC Listener to open a dialog in Electron
+   * @param {String} org How the files being retrieved are organized
+   * @return {String[]} List of file paths being retrieved
+   */
   ipcPromise.on('open-dialog', (org) => {
     let filters;
     let properties;
@@ -169,10 +204,11 @@ loadConfig()
       .then(filePaths => postDialogFunc(filePaths, core));
   });
 
+  /**
+   * IPC Listener to remove a Docker image
+   * @param {String} imgId ID of the image to remove
+   */
   ipcPromise.on('remove-image', (imgId) => {
-    return core.computationRegistry.removeDockerImage(imgId)
-      .then((data) => {
-        return data;
-      });
+    return core.computationRegistry.removeDockerImage(imgId);
   });
 });
