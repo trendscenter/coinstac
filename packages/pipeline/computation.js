@@ -1,6 +1,6 @@
 'use strict';
 
-const docker = require('../coinstac-docker-manager/src/index');
+const docker = require('coinstac-docker-manager');
 
 module.exports = {
   create(spec, mode) {
