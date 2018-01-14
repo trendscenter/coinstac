@@ -34,7 +34,7 @@
   ],
   "license": "MIT",
   "main": "src/index.js",
-  "name": "pipeline",
+  "name": "coinstac-pipeline",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/MRN-Code/coinstac.git"
