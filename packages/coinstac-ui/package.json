@@ -16,7 +16,7 @@
     "coinstac-common": "^2.6.0",
     "coinstac-computation-registry": "^2.6.0",
     "coinstac-graphql-schema": "^2.6.0",
-    "commander": "^2.12.2",
+    "commander": "^2.13.0",
     "convict": "^1.5.0",
     "deep-equal": "^1.0.1",
     "dexie": "^2.0.1",
@@ -96,7 +96,7 @@
     "url-loader": "^0.5.9",
     "webpack": "^2.7.0",
     "webpack-dashboard": "^0.3.0",
-    "webpack-dev-server": "^2.10.1"
+    "webpack-dev-server": "^2.11.0"
   },
   "scripts": {
     "build:webpack": "cross-env NODE_ENV=production webpack",
