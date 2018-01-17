@@ -120,6 +120,8 @@ const typeDefs = `
     setComputationInputs(consortiumId: ID, fieldIndex: Int, values: String ): String
     leaveConsortium(consortiumId: ID): Consortium
     saveConsortium(consortium: ConsortiumInput): Consortium
+    savePipeline(pipeline: PipelineInput): Pipeline
+    saveActivePipeline(consortiumId: ID, activePipeline: ID): String
     addUserRole(userId: ID, table: String, doc: String, role: String): User
     removeUserRole(userId: ID, table: String, doc: String, role: String): User
   }

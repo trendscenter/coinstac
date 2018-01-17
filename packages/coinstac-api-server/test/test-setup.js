@@ -22,7 +22,9 @@ helperFunctions.getRethinkConnection()
     id: 'test-pipeline',
     name: 'Test Pipeline',
     description: 'Test description',
-    owningConsortium: 'test-cons-2',
+    owningConsortium: 'test-cons-1',
+    activePipelineId: '',
+    shared: true,
     steps: [
       {
         computations: [
