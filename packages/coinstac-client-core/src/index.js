@@ -100,7 +100,7 @@ class CoinstacClient {
     this.consortia = {};
     this.computations = {};
     this.dbRegistry = {};
-    this.computationRegistryNew = {};
+    this.computationRegistryNew = new ComputationRegistryNew();
     this.projects = {};
     this.pool = {};
 
@@ -231,8 +231,6 @@ class CoinstacClient {
     const computationsDirectory = this.getComputationsDirectory();
 
     this.logger.info('initializing ComputationRegistry');
-
-    this.computationRegistryNew = new ComputationRegistryNew();
 
     return bluebird.promisify(mkdirp)(computationsDirectory)
       .then(() => computationRegistryFactory({

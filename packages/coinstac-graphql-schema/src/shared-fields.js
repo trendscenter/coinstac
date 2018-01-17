@@ -7,6 +7,23 @@ const sharedFields = {
       version
     }
   `,
+  consortiaInBrief: `
+    id
+    activeComputationId
+    activeComputationInputs
+    description
+    name
+    tags
+    members
+    owners
+  `,
+  userMetadata: `
+    id
+    email
+    institution
+    passwordHash
+    permissions
+  `,
 };
 
 module.exports = sharedFields;

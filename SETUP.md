@@ -130,7 +130,7 @@ Follow the general steps above before continuing.
      
    }
    ```
-3. **CSTAC DB** Next, create a file called `cstacDBMap.json` on your root directory with the following contents:
+3. **CSTAC DB** Next, create a new directory and file at `/etc/coinstac/cstacDBMap.json` with the following contents:
 
    ```json
     {

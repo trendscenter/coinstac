@@ -1,44 +1,48 @@
 import React from 'react';
-import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { Nav, NavItem } from 'react-bootstrap';
 import { IndexLinkContainer, LinkContainer } from 'react-router-bootstrap';
 
-const DashboardNav = ({ auth }) => {
+const DashboardNav = () => {
   return (
     <Nav bsStyle="pills" stacked>
       <IndexLinkContainer to="/dashboard">
-        <NavItem eventKey={1}>
+        <NavItem>
           <span aria-hidden="true" className="glyphicon glyphicon-home" />
           {' '}
           Home
         </NavItem>
       </IndexLinkContainer>
+      <LinkContainer to="/dashboard/computations">
+        <NavItem>
+          <span aria-hidden="true" className="glyphicon glyphicon-hdd" />
+          {' '}
+          Computations
+        </NavItem>
+      </LinkContainer>
       <LinkContainer to="/dashboard/consortia">
-        <NavItem eventKey={2}>
+        <NavItem>
           <span aria-hidden="true" className="glyphicon glyphicon-list" />
           {' '}
           Consortia
         </NavItem>
       </LinkContainer>
       <LinkContainer to="/dashboard/my-files">
-        <NavItem eventKey={3}>
+        <NavItem>
           <span aria-hidden="true" className="glyphicon glyphicon-list-alt" />
           {' '}
           My Files
         </NavItem>
       </LinkContainer>
-      {auth.user.permissions.computations && auth.user.permissions.computations.write &&
-        <LinkContainer to="/dashboard/submit-computation">
-          <NavItem eventKey={4}>
-            <span aria-hidden="true" className="glyphicon glyphicon-export" />
-            {' '}
-            Submit Computation
-          </NavItem>
-        </LinkContainer>
-      }
+      <LinkContainer to="/dashboard/pipelines">
+        <NavItem>
+          <span aria-hidden="true" className="glyphicon glyphicon-tasks" />
+          {' '}
+          Pipelines
+        </NavItem>
+      </LinkContainer>
       <LinkContainer to="/dashboard/test">
-        <NavItem eventKey={5}>
+        <NavItem>
           <span aria-hidden="true" className="glyphicon glyphicon-sunglasses" />
           {' '}
           Feature Test
@@ -52,9 +56,5 @@ DashboardNav.propTypes = {
   auth: PropTypes.object.isRequired,
 };
 
-const mapStateToProps = ({ auth }) => {
-  return { auth };
-};
-
-export default connect(mapStateToProps)(DashboardNav);
+export default DashboardNav;
 
