@@ -2,18 +2,9 @@ import { pick } from 'lodash';
 import app from 'ampersand-app';
 import axios from 'axios';
 import { applyAsyncLoading } from './loading';
-import { apiServer } from '../../../../config/local';
+import { apiServer } from '../../../../config/local.json';
 
 const API_URL = `${apiServer.protocol}//${apiServer.hostname}:${apiServer.port}`;
-const CLEAR_ERROR = 'CLEAR_ERROR';
-const CLEAR_USER = 'CLEAR_USER';
-const SET_USER = 'SET_USER';
-const UPDATE_USER_PERMS = 'UPDATE_USER_PERMS';
-
-const setUser = user => ({ type: SET_USER, payload: user });
-export const clearUser = () => ({ type: CLEAR_USER, payload: null });
-export const updateUserPerms = perms => ({ type: UPDATE_USER_PERMS, payload: perms });
-export const clearError = () => ({ type: CLEAR_ERROR, payload: null });
 
 const INITIAL_STATE = {
   user: {
@@ -25,7 +16,19 @@ const INITIAL_STATE = {
   },
 };
 
+// Actions
+const SET_USER = 'SET_USER';
+const CLEAR_USER = 'CLEAR_USER';
+const CLEAR_ERROR = 'CLEAR_ERROR';
+const UPDATE_USER_PERMS = 'UPDATE_USER_PERMS';
 
+// Action Creators
+const setUser = user => ({ type: SET_USER, payload: user });
+export const clearError = () => ({ type: CLEAR_ERROR, payload: null });
+export const updateUserPerms = perms => ({ type: UPDATE_USER_PERMS, payload: perms });
+export const clearUser = () => ({ type: CLEAR_USER, payload: null });
+
+// Helpers
 const setTokenAndInitialize = (reqUser, data, dispatch) => {
   const user = { ...data.user, label: reqUser.username };
 
@@ -58,8 +61,9 @@ export const autoLogin = applyAsyncLoading(() =>
       null,
       { headers: { Authorization: `Bearer ${token}` } }
     )
+    // TODO: GET RID OF CORE INIT
     .then(({ data }) => setTokenAndInitialize(
-      { username: data.user.id, saveLogin, password: 'GET_RID_OF_CORE_INIT_AT_LOGIN' },
+      { username: data.user.id, saveLogin, password: 'password' },
       data,
       dispatch
     ))

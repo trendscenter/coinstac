@@ -39,6 +39,12 @@ export const consortiaProp = {
   }),
 };
 
+export const pipelinesProp = {
+  props: ({ data: { fetchAllPipelines } }) => ({
+    pipelines: fetchAllPipelines,
+  }),
+};
+
 export const userRolesProp = (name) => {
   return {
     props: ({ ownProps, mutate }) => ({

@@ -9,7 +9,7 @@ const sharedFields = {
   `,
   consortiaInBrief: `
     id
-    activeComputationId
+    activePipelineId
     activeComputationInputs
     description
     name
@@ -23,6 +23,28 @@ const sharedFields = {
     institution
     passwordHash
     permissions
+  `,
+  pipelineFields: `
+    id
+    description
+    name
+    owningConsortium
+    steps {
+      id
+      computations {
+        id
+        meta {
+          name
+          description
+          version
+        }
+      }
+      controller {
+        id
+        options
+      }
+      ioMap
+    }
   `,
 };
 

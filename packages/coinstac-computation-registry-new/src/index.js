@@ -5,7 +5,7 @@ const { pullImage } = require('coinstac-docker-manager');
 const graphqlSchema = require('coinstac-graphql-schema');
 const mergeStream = require('merge-stream');
 const { compact } = require('lodash');
-const dbmap = require('/etc/coinstac/cstacDBMap');
+const dbmap = require('/etc/coinstac/cstacDBMap'); // eslint-disable-line import/no-absolute-path
 const config = require('../config/default');
 
 /**

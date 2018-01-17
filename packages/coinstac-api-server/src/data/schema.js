@@ -47,28 +47,46 @@ const typeDefs = `
 
   type Consortium {
     id: ID!
-    activeComputationId: ID
-    activeComputationInputs: [String]
-    description: String!
-    name: String!
-    tags: [String]
-    owners: [ID]
-    members: [ID]
-    pipelines: [ID]
-    results: [ID]
+    ${sharedFields.consortiumFields}
   }
 
   input ConsortiumInput {
     id: ID
-    activeComputationId: ID
-    activeComputationInputs: [String]
-    description: String!
-    name: String!
-    tags: [String]
-    owners: [String]
-    members: [String]
-    pipelines: [ID]
-    results: [ID]
+    ${sharedFields.consortiumFields}
+  }
+
+  type PipelineController {
+    ${sharedFields.pipelineControllerFields}
+  }
+
+  input PipelineControllerInput {
+    ${sharedFields.pipelineControllerFields}
+  }
+
+  type PipelineStep {
+    id: ID!
+    controller: PipelineController
+    computations: [Computation]
+    ${sharedFields.pipelineStepFields} 
+  }
+
+  input PipelineStepInput {
+    id: ID
+    controller: PipelineControllerInput
+    computations: [ID]
+    ${sharedFields.pipelineStepFields} 
+  }
+
+  type Pipeline {
+    id: ID!
+    steps: [PipelineStep]
+    ${sharedFields.pipelineFields}
+  }
+
+  input PipelineInput {
+    id: ID
+    steps: [PipelineStepInput]
+    ${sharedFields.pipelineFields}
   }
 
   type Run {
@@ -96,7 +114,6 @@ const typeDefs = `
     # Stringify incoming computation, parse prior to insertion call
     addComputation(computationSchema: ComputationInput): Computation
     removeComputation(compId: ID): JSON
-    removeAllComputations: JSON
     deleteConsortiumById(consortiumId: ID): Consortium
     joinConsortium(consortiumId: ID): Consortium
     setActiveComputation(computationId: ID, consortiumId: ID): String
@@ -113,6 +130,8 @@ const typeDefs = `
     fetchAllComputations: [Computation]
     fetchComputation(computationIds: [ID]): [Computation]
     fetchAllConsortia: [Consortium]
+    fetchPipeline(pipelineId: ID): Pipeline
+    fetchAllPipelines: [Pipeline]
     validateComputation(compId: ID): Boolean
     fetchConsortiumById(consortiumId: ID): Consortium
     fetchRunForConsortium(consortiumId: ID): [Run]

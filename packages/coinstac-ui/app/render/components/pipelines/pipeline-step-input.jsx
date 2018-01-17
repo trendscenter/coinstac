@@ -262,6 +262,7 @@ export default class PipelineStepInput extends Component {
             {objParams.type === 'array' && !objParams.values && objParams.items === 'number' &&
               step.ioMap[objKey] && step.ioMap[objKey].map((val, i) => (
                 <FormControl
+                  key={`${objKey}-${i}`}
                   disabled={!owner}
                   inputRef={(input) => { this[i] = input; }}
                   onChange={() => updateStep({

@@ -24,6 +24,13 @@ const queries = {
       }
     }
   `,
+  fetchAllPipelines: `
+    {
+      fetchAllPipelines {
+        ${sharedFields.pipelineFields}
+      }
+    }
+  `,
   fetchComputation: `
     {
       fetchComputation (computationIds: $computationIds) {
@@ -32,6 +39,13 @@ const queries = {
           input
           output
         }
+      }
+    }
+  `,
+  fetchPipeline: `
+    {
+      fetchPipeline (pipelineId: $pipelineId) {
+        ${sharedFields.pipelineFields}
       }
     }
   `,
