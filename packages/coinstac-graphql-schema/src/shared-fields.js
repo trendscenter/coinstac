@@ -29,6 +29,7 @@ const sharedFields = {
     description
     name
     owningConsortium
+    shared
     steps {
       id
       computations {

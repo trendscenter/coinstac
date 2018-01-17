@@ -154,6 +154,59 @@ const resolvers = {
         )
         .then(result => result.changes[0].new_val)
     },
+    
+    saveActivePipeline: ({ auth: { credentials } }, args) => {
+      const { permissions } = credentials;
+      /* TODO: Add permissions
+      if (!permissions.consortia.write
+          && args.consortium.id
+          && !permissions.consortia[args.consortium.id].write) {
+            return Boom.forbidden('Action not permitted');
+      }*/
+      return helperFunctions.getRethinkConnection()
+        .then((connection) =>
+          rethink.table('consortia').get(args.consortiumId).update({activePipeline: args.activePipeline})
+          .run(connection)
+        )
+    },
+
+    savePipeline: ({ auth: { credentials } }, args) => {
+      const { permissions } = credentials;
+      /* TODO: Add permissions
+      if (!permissions.consortia.write
+          && args.consortium.id
+          && !permissions.consortia[args.consortium.id].write) {
+            return Boom.forbidden('Action not permitted');
+      }*/
+      return helperFunctions.getRethinkConnection()
+        .then((connection) =>
+          rethink.table('pipelines').insert(
+            args.pipeline,
+            {
+              conflict: "update",
+              returnChanges: true,
+            }
+          )
+          .run(connection)
+          .then((result) => rethink.table('pipelines')
+            .get(result.changes[0].new_val.id)
+            // Populate computations subfield with computation meta information
+            .merge(pipeline =>
+              ({
+                steps: pipeline('steps').map(step =>
+                  step.merge({
+                    computations: step('computations').map(compId =>
+                      rethink.table('computations').get(compId)
+                    )
+                  })
+                )
+              })
+            )
+            .run(connection)
+        ))
+        .then(result => result)
+
+    },
     removeComputation: (_, args) => {
       return new Promise();
     },
