@@ -96,7 +96,7 @@
     "url-loader": "^0.5.9",
     "webpack": "^2.7.0",
     "webpack-dashboard": "^0.3.0",
-    "webpack-dev-server": "^2.10.1"
+    "webpack-dev-server": "^2.11.0"
   },
   "scripts": {
     "build:webpack": "cross-env NODE_ENV=production webpack",
