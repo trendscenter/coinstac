@@ -17,9 +17,16 @@ const queries = {
       }
     }
   `,
+  fetchAllConsortia: `
+    {
+      fetchAllConsortia {
+        ${sharedFields.consortiaInBrief}
+      }
+    }
+  `,
   fetchComputation: `
     {
-      fetchComputation (computationName: $computationName) {
+      fetchComputation (computationIds: $computationIds) {
         id
         computation {
           input

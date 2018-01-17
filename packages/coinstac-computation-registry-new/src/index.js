@@ -5,7 +5,7 @@ const { pullImage } = require('coinstac-docker-manager');
 const graphqlSchema = require('coinstac-graphql-schema');
 const mergeStream = require('merge-stream');
 const { compact } = require('lodash');
-const dbmap = require('/cstacDBMap');
+const dbmap = require('/etc/coinstac/cstacDBMap');
 const config = require('../config/default');
 
 /**
@@ -33,7 +33,7 @@ class ComputationRegistry {
    * Generate array of docker pull promises and wait until resolved to return merged output streams
    * @param {Object} payload
    * @param {Array} [payload.comps] array of computation images to download
-   * @return {Object} Returns merged streams docker pull output 
+   * @return {Object} Returns merged streams docker pull output
    */
   pullPipelineComputations(payload) { // eslint-disable-line class-methods-use-this
     const merged = mergeStream();
@@ -47,9 +47,9 @@ class ComputationRegistry {
     .then(res => merged.add(res));
   }
 
-  validateComputation(id) {
+  validateComputation(id) { // eslint-disable-line class-methods-use-this, no-unused-vars
     // TODO: Return boolean for whether or not computation is approved
-    console.log('validate');
+    console.log('validate'); // eslint-disable-line no-console
   }
 
   /**

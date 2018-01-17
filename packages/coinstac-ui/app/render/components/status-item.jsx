@@ -6,7 +6,7 @@ import { Link } from 'react-router';
 import { LinkContainer } from 'react-router-bootstrap';
 import moment from 'moment';
 
-import ConsortiumResultMeta from './consortium/consortium-result-meta';
+// import ConsortiumResultMeta from './consortium/consortium-result-meta';
 
 function getWaitingOnUsers({
   usernames: allUsernames,
@@ -43,7 +43,7 @@ export default function StatusItem({
   } else if (remoteResult.complete) {
     indicator = <Label bsStyle="success">Complete</Label>;
     resultButton = (
-      <LinkContainer to={`/consortia/${consortium._id}/${remoteResult._id}`}>
+      <LinkContainer to={`/dashboard/consortia/${consortium._id}/${remoteResult._id}`}>
         <Button
           bsStyle="default"
           className="pull-right"
@@ -95,12 +95,6 @@ export default function StatusItem({
           </li>
           {waitingOn}
         </ul>
-        <ConsortiumResultMeta
-          computation={computation}
-          computationInputs={remoteResult.computationInputs}
-          step={remoteResult.pluginState['group-step'].step}
-          usernames={remoteResult.usernames}
-        />
         {resultButton}
       </div>
     </div>

@@ -125,7 +125,7 @@ export default class ProjectCard extends Component {
                 Delete
               </Button>
               <LinkContainer
-                to={`/my-files/${id}`}
+                to={`/dashboard/my-files/${id}`}
               >
                 <Button bsSize="small">
                   <span
