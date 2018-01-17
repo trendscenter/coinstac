@@ -3,7 +3,7 @@ const Boom = require('boom');
 const jwt = require('jsonwebtoken');
 const rethink = require('rethinkdb');
 const config = require('../config/default');
-const dbmap = require('/etc/coinstac/cstacDBMap');
+const dbmap = require('/etc/coinstac/cstacDBMap'); // eslint-disable-line import/no-absolute-path
 const Promise = require('bluebird');
 
 const helperFunctions = {
@@ -30,7 +30,9 @@ const helperFunctions = {
         institution: user.institution,
         passwordHash,
         permissions: {
-          computations: { read: true },
+          computations: {},
+          consortia: {},
+          pipelines: {},
         },
       };
 

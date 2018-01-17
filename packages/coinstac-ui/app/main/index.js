@@ -60,7 +60,6 @@ loadConfig()
   app.logger.verbose('main process booted');
 
   ipcPromise.on('download-comps', (params) => {
-    console.log(app.core);
     return app.core.computationRegistryNew
       .pullPipelineComputations({ comps: params })
       .then((pullStreams) => {
@@ -78,5 +77,26 @@ loadConfig()
           return err;
         });
       });
+  });
+
+  // TODO: Assumption is CSV meta file. Need to change.
+  ipcPromise.on('add-files', () => {
+    return app.main.services.files.getMetaFile()
+      .then(metaFilePath => Promise.all([
+        metaFilePath,
+        app.core.projects.constructor.getCSV(metaFilePath),
+      ]))
+      .then(([metaFilePath, rawMetaFile]) => {
+        const metaFile = JSON.parse(rawMetaFile);
+        return Promise.all([
+          metaFilePath,
+          metaFile,
+          app.core.projects.constructor.getFilesFromMetadata(
+            metaFilePath,
+            metaFile
+          ),
+        ]);
+      })
+      .then(([metaFilePath, metaFile, files]) => ({ metaFilePath, metaFile, files }));
   });
 });

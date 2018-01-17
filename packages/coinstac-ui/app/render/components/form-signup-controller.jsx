@@ -7,14 +7,13 @@ import LayoutNoauth from './layout-noauth';
 import { clearError, clearUser, signUp } from '../state/ducks/auth';
 
 class FormSignupController extends Component {
-
   constructor(props) {
     super(props);
     this.onSubmit = this.onSubmit.bind(this);
     this.checkForUser = this.checkForUser.bind(this);
   }
 
-  componentWillMount() {
+  componentDidMount() {
     this.props.clearUser();
   }
 
@@ -81,7 +80,6 @@ class FormSignupController extends Component {
   }
 
   checkForUser() {
-    console.log(this.props.auth);
     const { router } = this.context;
     if (this.props.auth.user.email.length) {
       router.push('/dashboard');

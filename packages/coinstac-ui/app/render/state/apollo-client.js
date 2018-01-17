@@ -3,7 +3,7 @@ import {
   addTypeName,
   createBatchingNetworkInterface,
 } from 'react-apollo';
-import { apiServer } from '../../../config/local';
+import { apiServer } from '../../../config/local.json';
 
 const API_URL = `${apiServer.protocol}//${apiServer.hostname}:${apiServer.port}`;
 

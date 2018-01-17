@@ -30,7 +30,7 @@ class ComputationsList extends Component { // eslint-disable-line
   }
 
   render() {
-    const { auth: { user }, computations } = this.props;
+    const { computations } = this.props;
 
     return (
       <div>
@@ -81,12 +81,11 @@ class ComputationsList extends Component { // eslint-disable-line
 }
 
 ComputationsList.propTypes = {
-  auth: PropTypes.object.isRequired,
   computations: PropTypes.array.isRequired,
 };
 
-function mapStateToProps({ auth, featureTest: { dockerOut } }) {
-  return { auth, dockerOut };
+function mapStateToProps({ featureTest: { dockerOut } }) {
+  return { dockerOut };
 }
 
 const ComputationsListWithData = graphql(

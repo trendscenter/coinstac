@@ -1,6 +1,4 @@
-import {
-  gql,
-} from 'react-apollo';
+import { gql } from 'react-apollo';
 import { mutations, queries } from 'coinstac-graphql-schema';
 
 export const ADD_COMPUTATION_MUTATION = gql`
@@ -13,13 +11,17 @@ export const ADD_USER_ROLE_MUTATION = gql`
     ${mutations.addUserRole}
 `;
 
-
 export const DELETE_CONSORTIUM_MUTATION = gql`
   mutation deleteConsortiumById($consortiumId: ID!) {
     deleteConsortiumById(consortiumId: $consortiumId){
       id
     }
   }
+`;
+
+export const FETCH_ALL_PIPELINES_QUERY = gql`
+  query fetchAllPipelines
+    ${queries.fetchAllPipelines}
 `;
 
 export const FETCH_ALL_COMPUTATIONS_METADATA_QUERY = gql`
@@ -35,6 +37,11 @@ export const FETCH_ALL_CONSORTIA_QUERY = gql`
 export const FETCH_COMPUTATION_QUERY = gql`
   query fetchComputation ($computationIds: [ID])
     ${queries.fetchComputation}
+`;
+
+export const FETCH_PIPELINE_QUERY = gql`
+  query fetchPipeline ($pipelineId: ID)
+    ${queries.fetchPipeline}
 `;
 
 export const JOIN_CONSORTIUM_MUTATION = gql`
