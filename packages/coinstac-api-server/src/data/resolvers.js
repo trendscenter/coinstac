@@ -4,6 +4,15 @@ const GraphQLJSON = require('graphql-type-json');
 const helperFunctions = require('../auth-helpers');
 const Promise = require('bluebird');
 
+function fetchAll(table) {
+  return helperFunctions.getRethinkConnection()
+    .then(connection =>
+      rethink.table(table).run(connection)
+    )
+    .then(cursor => cursor.toArray())
+    .then(result => result);
+}
+
 /* eslint-disable */
 const resolvers = {
   JSON: GraphQLJSON,
@@ -23,12 +32,53 @@ const resolvers = {
      * Returns all computations. Checks user permissions retrieved from JWT middleware validateFunc.
      */
     fetchAllComputations: ({ auth: { credentials: { permissions } } }, _) => {
+      return fetchAll('computations');
+    },
+    /**
+     * Returns all pipelines. Checks user permissions retrieved from JWT middleware validateFunc.
+     */
+    fetchAllPipelines: ({ auth: { credentials: { permissions } } }, _) => {
       return helperFunctions.getRethinkConnection()
-        .then((connection) =>
-          rethink.table('computations').run(connection)
+        .then(connection =>
+          rethink.table('pipelines')
+            .map(pipeline =>
+              pipeline.merge(pipeline =>
+                ({
+                  steps: pipeline('steps').map(step =>
+                    step.merge({
+                      computations: step('computations').map(compId =>
+                        rethink.table('computations').get(compId)
+                      )
+                    })
+                  )
+                })
+              )
+            )
+            .run(connection)
         )
-        .then((cursor) => cursor.toArray())
-        .then((result) => result);
+        .then(cursor => cursor.toArray())
+        .then(result => result);
+    },
+    fetchPipeline: ({ auth }, args) => {
+      return helperFunctions.getRethinkConnection()
+        .then(connection =>
+          rethink.table('pipelines')
+            .get('test-pipeline')
+            // Populate computations subfield with computation meta information
+            .merge(pipeline =>
+              ({
+                steps: pipeline('steps').map(step =>
+                  step.merge({
+                    computations: step('computations').map(compId =>
+                      rethink.table('computations').get(compId)
+                    )
+                  })
+                )
+              })
+            )
+            .run(connection)
+        )
+        .then(result => result);
     },
     /**
      * Returns metadata for specific computation name
@@ -110,8 +160,7 @@ const resolvers = {
     deleteConsortiumById: ({ auth: { credentials: { permissions } } }, args) => {
       if (!permissions.consortia.write
           && (!permissions.consortia[args.consortiumId]
-              || (args.consortiumId
-                  && !permissions.consortia[args.consortiumId].write)
+              || !permissions.consortia[args.consortiumId].write
       )) {
             return Boom.forbidden('Action not permitted');
       }
