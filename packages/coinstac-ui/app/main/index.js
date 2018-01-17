@@ -60,6 +60,7 @@ loadConfig()
   app.logger.verbose('main process booted');
 
   ipcPromise.on('download-comps', (params) => {
+    console.log(app.core);
     return app.core.computationRegistryNew
       .pullPipelineComputations({ comps: params })
       .then((pullStreams) => {

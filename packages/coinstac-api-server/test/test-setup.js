@@ -1,6 +1,7 @@
 const rethink = require('rethinkdb');
 const singleShot = require('./data/single-shot-schema');
 const multiShot = require('./data/multi-shot-schema');
+const vbm = require('./data/vbm-schema');
 const helperFunctions = require('../src/auth-helpers');
 
 helperFunctions.getRethinkConnection()
@@ -14,33 +15,77 @@ helperFunctions.getRethinkConnection()
     );
   }).run(connection)
   .then(() => rethink.dbCreate('coinstac').run(connection))
+  .then(() => rethink.tableCreate('roles', { primaryKey: 'role' }).run(connection))
+  .then(() => rethink.table('roles').insert([
+    { role: 'owner', verbs: { write: true, read: true } },
+    { role: 'member', verbs: { subscribe: true } },
+  ]).run(connection))
   .then(() => rethink.tableCreate('computations').run(connection))
-  .then(() => rethink.table('computations').insert([singleShot, multiShot]).run(connection))
-  // .then(() => rethink.db('rethinkdb').table('users').insert({ id: 'server', password: 'password' }).run(connection))
-  // .then(() => rethink.db('coinstac').grant('server', { read: true }).run(connection))
-  .then(() => rethink.db('coinstac').tableCreate('users').run(connection))
+  .then(() => rethink.table('computations').insert([singleShot, multiShot, vbm]).run(connection))
+  .then(() => rethink.tableCreate('users').run(connection))
+  .then(() => rethink.tableCreate('consortia').run(connection))
+  .then(() => rethink.table('consortia').insert({
+    id: 'test-cons-1',
+    name: 'Test Consortia 1',
+    description: 'This consortia is for testing.',
+    owners: ['author'],
+    members: ['test'],
+  }).run(connection))
+  .then(() => rethink.table('consortia').insert({
+    id: 'test-cons-2',
+    name: 'Test Consortia 2',
+    description: 'This consortia is for testing too.',
+    owners: ['test'],
+    members: ['author'],
+  }).run(connection))
   .then(() => connection.close());
 })
+.then(() => helperFunctions.hashPassword('password'))
+.then(passwordHash =>
+  helperFunctions.createUser({
+    username: 'test',
+    institution: 'mrn',
+    email: 'test@mrn.org',
+    permissions: {
+      computations: {},
+      consortia: {
+        'test-cons-1': ['member'],
+        'test-cons-2': ['owner'],
+      },
+    },
+  }, passwordHash)
+)
+.then(() => helperFunctions.hashPassword('password'))
+.then(passwordHash =>
+  helperFunctions.createUser({
+    username: 'server',
+    institution: 'mrn',
+    email: 'server@mrn.org',
+    permissions: {
+      computations: {},
+      consortia: {},
+    },
+  }, passwordHash)
+)
+.then(() => helperFunctions.hashPassword('password'))
+.then(passwordHash =>
+  helperFunctions.createUser({
+    username: 'author',
+    institution: 'mrn',
+    email: 'server@mrn.org',
+    permissions: {
+      computations: {
+        'single-shot-test-id': ['owner'],
+        'multi-shot-test-id': ['owner'],
+      },
+      consortia: {
+        'test-cons-1': ['owner'],
+        'test-cons-2': ['member'],
+      },
+    },
+  }, passwordHash)
+)
 .then(() => {
-  helperFunctions.hashPassword('password')
-    .then(passwordHash => helperFunctions.createUser({ username: 'test', institution: 'mrn', email: 'test@mrn.org' }, passwordHash))
-    .then(() => helperFunctions.hashPassword('password'))
-    .then(passwordHash => helperFunctions.createUser({ username: 'server', institution: 'mrn', email: 'server@mrn.org' }, passwordHash))
-    .then(() => helperFunctions.hashPassword('password'))
-    .then(passwordHash =>
-      helperFunctions.createUser({
-        username: 'author',
-        institution: 'mrn',
-        email: 'server@mrn.org',
-        permissions: {
-          computations: {
-            read: true,
-            write: true,
-          },
-        },
-      }, passwordHash))
-    .then(() => {
-      process.exit();
-    });
+  process.exit();
 })
-.catch(console.log);
+.catch(console.log);  // eslint-disable-line no-console

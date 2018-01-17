@@ -3,7 +3,7 @@ const Boom = require('boom');
 const jwt = require('jsonwebtoken');
 const rethink = require('rethinkdb');
 const config = require('../config/default');
-const dbmap = require('/cstacDBMap');
+const dbmap = require('/etc/coinstac/cstacDBMap');
 const Promise = require('bluebird');
 
 const helperFunctions = {
@@ -69,7 +69,29 @@ const helperFunctions = {
    */
   getUserDetails(credentials) {
     return helperFunctions.getRethinkConnection()
-    .then(connection => rethink.table('users').get(credentials.username).run(connection))
+    .then(connection => rethink.table('users').get(credentials.username).merge(user =>
+      ({
+        permissions: user('permissions').coerceTo('array')
+        .map(table =>
+          table.map(tableArr =>
+            rethink.branch(
+              tableArr.typeOf().eq('OBJECT'),
+              tableArr.coerceTo('array').map(doc =>
+                doc.map(docArr =>
+                  rethink.branch(
+                    docArr.typeOf().eq('ARRAY'),
+                    docArr.fold({}, (acc, row) =>
+                      acc.merge(rethink.table('roles').get(row)('verbs'))
+                    ),
+                    docArr
+                  )
+                )
+              ).coerceTo('object'),
+              tableArr
+            )
+          )
+        ).coerceTo('object'),
+      })).run(connection))
     .then(user => user);
   },
   /**

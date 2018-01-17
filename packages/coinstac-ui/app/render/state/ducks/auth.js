@@ -5,13 +5,14 @@ import { applyAsyncLoading } from './loading';
 import { apiServer } from '../../../../config/local';
 
 const API_URL = `${apiServer.protocol}//${apiServer.hostname}:${apiServer.port}`;
-const SET_USER = 'SET_USER';
-const setUser = user => ({ type: SET_USER, payload: user });
-
-const CLEAR_USER = 'CLEAR_USER';
-export const clearUser = () => ({ type: CLEAR_USER, payload: null });
-
 const CLEAR_ERROR = 'CLEAR_ERROR';
+const CLEAR_USER = 'CLEAR_USER';
+const SET_USER = 'SET_USER';
+const UPDATE_USER_PERMS = 'UPDATE_USER_PERMS';
+
+const setUser = user => ({ type: SET_USER, payload: user });
+export const clearUser = () => ({ type: CLEAR_USER, payload: null });
+export const updateUserPerms = perms => ({ type: UPDATE_USER_PERMS, payload: perms });
 export const clearError = () => ({ type: CLEAR_ERROR, payload: null });
 
 const INITIAL_STATE = {
@@ -26,7 +27,6 @@ const INITIAL_STATE = {
 
 
 const setTokenAndInitialize = (reqUser, data, dispatch) => {
-  console.log(reqUser);
   const user = { ...data.user, label: reqUser.username };
 
   if (reqUser.saveLogin) {
@@ -102,7 +102,6 @@ export const signUp = applyAsyncLoading(user =>
     axios.post(`${API_URL}/createAccount`, user)
     .then(({ data }) => setTokenAndInitialize(user, data, dispatch))
     .catch((err) => {
-      console.log(err);
       if (err.response && err.response.data && (err.response.data.message === 'Username taken'
           || err.response.data.message === 'Email taken')) {
         dispatch(setUser({ ...INITIAL_STATE, error: err.response.data.message }));
@@ -132,6 +131,8 @@ export default function reducer(state = INITIAL_STATE, action) {
       return { user: state.user };
     case SET_USER:
       return { ...action.payload };
+    case UPDATE_USER_PERMS:
+      return { user: { ...state.user, permissions: action.payload } };
     default:
       return state;
   }

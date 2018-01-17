@@ -34,7 +34,7 @@ const typeDefs = `
   }
 
   type Computation {
-    id: ID
+    id: ID!
     meta: ComputationMeta
     computation: ComputationField
   }
@@ -45,27 +45,30 @@ const typeDefs = `
     computation: ComputationFieldInput
   }
 
-  # Should owners/users be an array of user objects?
   type Consortium {
     id: ID!
     activeComputationId: ID
     activeComputationInputs: [String]
     description: String!
-    label: String!
+    name: String!
     tags: [String]
-    owners: [String]
-    users: [String]
+    owners: [ID]
+    members: [ID]
+    pipelines: [ID]
+    results: [ID]
   }
 
   input ConsortiumInput {
-    id: ID!
+    id: ID
     activeComputationId: ID
     activeComputationInputs: [String]
     description: String!
-    label: String!
+    name: String!
     tags: [String]
     owners: [String]
-    users: [String]
+    members: [String]
+    pipelines: [ID]
+    results: [ID]
   }
 
   type Run {
@@ -79,7 +82,13 @@ const typeDefs = `
   }
 
   type User {
-    username: String!
+    id: ID!
+    ${sharedFields.userFields}
+  }
+
+  type UserInput {
+    id: ID
+    ${sharedFields.userFields}
   }
 
   # This is the general mutation description
@@ -87,19 +96,23 @@ const typeDefs = `
     # Stringify incoming computation, parse prior to insertion call
     addComputation(computationSchema: ComputationInput): Computation
     removeComputation(compId: ID): JSON
-    deleteConsortiumById(consortiumId: ID): String
-    joinConsortium(username: String, consortiumId: ID): Consortium
+    removeAllComputations: JSON
+    deleteConsortiumById(consortiumId: ID): Consortium
+    joinConsortium(consortiumId: ID): Consortium
     setActiveComputation(computationId: ID, consortiumId: ID): String
     setComputationInputs(consortiumId: ID, fieldIndex: Int, values: String ): String
-    leaveConsortium(username: String, consortiumId: ID): String
-    saveConsortium(consortium: ConsortiumInput): String
+    leaveConsortium(consortiumId: ID): Consortium
+    saveConsortium(consortium: ConsortiumInput): Consortium
+    addUserRole(userId: ID, table: String, doc: String, role: String): User
+    removeUserRole(userId: ID, table: String, doc: String, role: String): User
   }
 
   # This is a description of the queries
   type Query {
     # This is a description of the fetchAllComputations query
     fetchAllComputations: [Computation]
-    fetchComputation(computationName: String): Computation
+    fetchComputation(computationIds: [ID]): [Computation]
+    fetchAllConsortia: [Consortium]
     validateComputation(compId: ID): Boolean
     fetchConsortiumById(consortiumId: ID): Consortium
     fetchRunForConsortium(consortiumId: ID): [Run]
