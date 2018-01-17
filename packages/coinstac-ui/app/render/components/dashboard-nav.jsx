@@ -1,5 +1,4 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 import { Nav, NavItem } from 'react-bootstrap';
 import { IndexLinkContainer, LinkContainer } from 'react-router-bootstrap';
 
@@ -27,11 +26,11 @@ const DashboardNav = () => {
           Consortia
         </NavItem>
       </LinkContainer>
-      <LinkContainer to="/dashboard/my-files">
+      <LinkContainer to="/dashboard/collections">
         <NavItem>
           <span aria-hidden="true" className="glyphicon glyphicon-list-alt" />
           {' '}
-          My Files
+          Collections
         </NavItem>
       </LinkContainer>
       <LinkContainer to="/dashboard/pipelines">
@@ -50,10 +49,6 @@ const DashboardNav = () => {
       </LinkContainer>
     </Nav>
   );
-};
-
-DashboardNav.propTypes = {
-  auth: PropTypes.object.isRequired,
 };
 
 export default DashboardNav;

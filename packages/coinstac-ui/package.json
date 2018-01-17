@@ -19,6 +19,7 @@
     "commander": "^2.9.0",
     "convict": "^1.5.0",
     "deep-equal": "^1.0.1",
+    "dexie": "^2.0.1",
     "electron-default-menu": "^1.0.1",
     "immutability-helper": "^2.4.0",
     "ipc-promise": "^0.1.4",
@@ -104,6 +105,7 @@
     "clean:db": "node scripts/clean-db.js",
     "docs": "mkdir -p docs && jsdoc -t ./node_modules/minami -d docs -R README.md -r src/",
     "test": "nyc --reporter=lcov --check-coverage --lines=1 --functions=1 --branches=1 babel-node test/",
+    "test:seed-dexie": "node ./test/data/seed-collection-data.js",
     "test:e2e": "npm run build && mocha --timeout=120000 test/e2e/test.js",
     "watch": "webpack-dashboard -p 3001 -- node webpack-dev-server.js"
   },

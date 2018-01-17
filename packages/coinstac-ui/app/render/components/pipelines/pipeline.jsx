@@ -275,9 +275,13 @@ class Pipeline extends Component {
   }
 }
 
+Pipeline.defaultProps = {
+  computations: [],
+};
+
 Pipeline.propTypes = {
   auth: PropTypes.object.isRequired,
-  computations: PropTypes.array.isRequired,
+  computations: PropTypes.array,
   connectDropTarget: PropTypes.func.isRequired,
   params: PropTypes.object.isRequired,
 };

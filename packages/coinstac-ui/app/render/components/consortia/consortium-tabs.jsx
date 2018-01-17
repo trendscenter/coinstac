@@ -30,7 +30,7 @@ class ConsortiumTabs extends Component {
       description: '',
       members: [],
       owners: [],
-      activeComputationId: '',
+      activePipelineId: '',
       activeComputationInputs: [],
       tags: [],
     };
@@ -62,7 +62,7 @@ class ConsortiumTabs extends Component {
     .then(({ data: { saveConsortium } }) => {
       this.props.addUserRole(this.props.auth.user.id, 'consortia', saveConsortium.id, 'owner');
 
-      // TODO: hook activeComputationId and Inputs
+      // TODO: hook activePipelineId and Inputs
       this.setState({
         consortium:
         {
@@ -71,7 +71,7 @@ class ConsortiumTabs extends Component {
           description: saveConsortium.description,
           members: saveConsortium.members,
           owners: saveConsortium.owners,
-          activeComputationId: null,
+          activePipelineId: null,
           activeComputationInputs: null,
           tags: null,
 

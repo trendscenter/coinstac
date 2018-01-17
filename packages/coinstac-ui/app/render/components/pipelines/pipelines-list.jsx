@@ -1,15 +1,13 @@
 import React from 'react';
-import { connect } from 'react-redux';
 import { graphql } from 'react-apollo';
 import { Alert, Button } from 'react-bootstrap';
 import { LinkContainer } from 'react-router-bootstrap';
 import PropTypes from 'prop-types';
+import ListItem from '../common/list-item';
+import { FETCH_ALL_PIPELINES_QUERY } from '../../state/graphql/functions';
+import { pipelinesProp } from '../../state/graphql/props';
 
-const isUserA = (userId, groupArr) => {
-  return groupArr.indexOf(userId) !== -1;
-};
-
-const PipelinesList = ({ auth: { user }, pipelines }) => (
+const PipelinesList = ({ pipelines }) => (
   <div>
     <div className="page-header clearfix">
       <h1 className="pull-left">Pipelines</h1>
@@ -22,9 +20,14 @@ const PipelinesList = ({ auth: { user }, pipelines }) => (
       </LinkContainer>
     </div>
     {pipelines && pipelines.map(pipeline => (
-      <div>
-        {pipeline.name}
-      </div>
+      <ListItem
+        key={`${pipeline.name}-list-item`}
+        itemObject={pipeline}
+        deleteItem={() => { return null; }}
+        owner={false}
+        itemOptions={[]}
+        itemRoute={'/dashboard/pipelines'}
+      />
     ))}
     {!pipelines &&
       <Alert bsStyle="info">
@@ -35,7 +38,6 @@ const PipelinesList = ({ auth: { user }, pipelines }) => (
 );
 
 PipelinesList.propTypes = {
-  auth: PropTypes.object.isRequired,
   pipelines: PropTypes.array,
 };
 
@@ -43,16 +45,6 @@ PipelinesList.defaultProps = {
   pipelines: null,
 };
 
-const mapStateToProps = ({ auth }) => {
-  return { auth };
-};
+const PipelinesListWithData = graphql(FETCH_ALL_PIPELINES_QUERY, pipelinesProp)(PipelinesList);
 
-/*
-const PipelinesListWithData = graphql(fetchAllConsortiaFunc, {
-  props: ({ data: { fetchAllConsortia } }) => ({
-    consortia: fetchAllConsortia,
-  }),
-})(PipelinesList);
-*/
-
-export default connect(mapStateToProps)(PipelinesList);
+export default PipelinesListWithData;

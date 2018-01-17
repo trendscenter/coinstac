@@ -1,6 +1,6 @@
 const hapi = require('hapi');
 const config = require('../config/default');
-const dbmap = require('/etc/coinstac/cstacDBMap');
+const dbmap = require('/etc/coinstac/cstacDBMap'); // eslint-disable-line import/no-absolute-path
 const helperFunctions = require('./auth-helpers');
 const plugins = require('./plugins');
 const routes = require('./routes');
