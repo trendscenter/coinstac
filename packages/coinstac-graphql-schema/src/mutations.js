@@ -15,6 +15,13 @@ const mutations = {
       }
     }
   `,
+  removeComputation: `
+    {
+      removeComputation(computationId) {
+        ${sharedFields.computationMetadata}
+      }
+    }
+  `,
   removeUserRole: `
     {
       removeUserRole(userId: $userId, table: $table, doc: $doc, role: $role) {
@@ -25,14 +32,14 @@ const mutations = {
   saveConsortium: `
     {
       saveConsortium(consortium: $consortium) {
-        ${sharedFields.consortiaInBrief}
+        ${sharedFields.consortiaFields}
       }
     }
   `,
   savePipeline: `
     {
       savePipeline(pipeline: $pipeline) {
-        ${sharedFields.pipelineFields}
+        ${sharedFields.pipelineSaveFields}
       }
     }
   `,

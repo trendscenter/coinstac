@@ -4,11 +4,8 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { Alert } from 'react-bootstrap';
 import { connect } from 'react-redux';
-import { graphql } from 'react-apollo';
-import StatusItem from './status-item';
-import { FETCH_ALL_COMPUTATIONS_METADATA_QUERY } from '../state/graphql/functions';
-import { computationsProp } from '../state/graphql/props';
-import { initTestData } from '../state/ducks/collections';
+import StatusItem from '../status-item';
+import { initTestData } from '../../state/ducks/collections';
 
 class DashboardHome extends Component {
   constructor(props) {
@@ -77,7 +74,4 @@ function mapStateToProps({
   };
 }
 
-const DashHomeWithData =
-  graphql(FETCH_ALL_COMPUTATIONS_METADATA_QUERY, computationsProp)(DashboardHome);
-
-export default connect(mapStateToProps, { initTestData })(DashHomeWithData);
+export default connect(mapStateToProps, { initTestData })(DashboardHome);

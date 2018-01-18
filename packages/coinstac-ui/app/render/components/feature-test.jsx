@@ -2,23 +2,17 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { ipcRenderer } from 'electron';
-import { graphql } from 'react-apollo';
 import {
   Form,
   FormGroup,
   FormControl,
   Col,
   Button,
-  Table,
 } from 'react-bootstrap';
-import { FETCH_ALL_COMPUTATIONS_METADATA_QUERY } from '../state/graphql/functions';
-import { computationsProp } from '../state/graphql/props';
 import {
-  getCompIO,
   pullComputations,
   updateDockerOutput,
 } from '../state/ducks/feature-test';
-import ComputationIO from './computations/computation-io';
 
 const styles = {
   outputBox: { marginTop: 10, height: 400, overflowY: 'scroll' },
@@ -29,18 +23,11 @@ class FeatureTest extends Component { // eslint-disable-line
   constructor(props) {
     super(props);
 
-    this.state = { activeComp: null };
-
     ipcRenderer.on('docker-out', (event, arg) => {
       this.props.updateDockerOutput(arg);
     });
 
     this.pullComps = this.pullComps.bind(this);
-    this.setActiveComp = this.setActiveComp.bind(this);
-  }
-
-  setActiveComp(comp) {
-    this.setState({ activeComp: comp });
   }
 
   pullComps(e) {
@@ -55,42 +42,10 @@ class FeatureTest extends Component { // eslint-disable-line
   }
 
   render() {
-    const { dockerOut, computations } = this.props;
+    const { dockerOut } = this.props;
 
     return (
       <div>
-        {computations.length > 0 &&
-          <Table striped bordered condensed style={styles.topMargin}>
-            <thead>
-              <tr>
-                <th>Computation Name</th>
-                <th>Get IO</th>
-              </tr>
-            </thead>
-            <tbody>
-              {computations.map((comp) => {
-                return (
-                  <tr key={`${comp.id}-row`}>
-                    <td>{comp.meta.name}</td>
-                    <td>
-                      <Button bsStyle="primary" onClick={() => this.setActiveComp(comp)}>
-                        Get IO
-                      </Button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </Table>
-        }
-
-        {this.state.activeComp &&
-          <div>
-            {this.state.activeComp.meta.name}
-            <ComputationIO computationId={this.state.activeComp.id} />
-          </div>
-        }
-
         <p style={{ fontWeight: 'bold' }}>Be sure to include tags (eg: ':latest') or you'll be downloading all versions.</p>
 
         <Form horizontal onSubmit={this.pullComps}>
@@ -153,12 +108,7 @@ class FeatureTest extends Component { // eslint-disable-line
   }
 }
 
-FeatureTest.defaultProps = {
-  computations: [],
-};
-
 FeatureTest.propTypes = {
-  computations: PropTypes.array,
   dockerOut: PropTypes.array.isRequired,
   pullComputations: PropTypes.func.isRequired,
   updateDockerOutput: PropTypes.func.isRequired,
@@ -168,12 +118,7 @@ function mapStateToProps({ featureTest: { dockerOut } }) {
   return { dockerOut };
 }
 
-const FeatureTestWithData =
-  graphql(FETCH_ALL_COMPUTATIONS_METADATA_QUERY, computationsProp)(FeatureTest);
-
-
 export default connect(mapStateToProps, {
-  getCompIO,
   pullComputations,
   updateDockerOutput,
-})(FeatureTestWithData);
+})(FeatureTest);

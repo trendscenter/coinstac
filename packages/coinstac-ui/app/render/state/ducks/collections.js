@@ -3,11 +3,24 @@ import localDB from '../local-db';
 import testData from '../../../../test/data/test-collection.json';
 
 // Actions
+const DELETE_COLLECTION = 'DELETE_COLLECTION';
 const INIT_TEST_COLLECTION = 'INIT_TEST_COLLECTION';
 const SAVE_COLLECTION = 'SAVE_COLLECTION';
 const SET_COLLECTIONS = 'GET_ALL_COLLECTIONS';
 
 // Action Creators
+export const deleteCollection = applyAsyncLoading(collectionId =>
+  dispatch =>
+    localDB.collections
+      .delete(collectionId)
+      .then(() => {
+        dispatch(({
+          type: DELETE_COLLECTION,
+          payload: collectionId,
+        }));
+      })
+);
+
 export const getAllCollections = applyAsyncLoading(() =>
   dispatch =>
     localDB.collections
@@ -48,6 +61,13 @@ const INITIAL_STATE = {
 
 export default function reducer(state = INITIAL_STATE, action) {
   switch (action.type) {
+    case DELETE_COLLECTION: {
+      const newCollections = [...state.collections];
+      const index = state.collections.findIndex(col => col.id === action.payload);
+      newCollections.splice(index, 1);
+
+      return { collections: newCollections };
+    }
     case SAVE_COLLECTION: {
       const newCollections = [...state.collections];
       const index = state.collections.findIndex(col => col.id === action.payload.id);
