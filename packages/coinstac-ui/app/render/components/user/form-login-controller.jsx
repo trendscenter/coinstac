@@ -2,9 +2,9 @@ import app from 'ampersand-app';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { clearUser, hotRoute, login } from '../state/ducks/auth';
+import { clearUser, hotRoute, login } from '../../state/ducks/auth';
 import FormLogin from './form-login';
-import LayoutNoauth from './layout-noauth';
+import LayoutNoauth from '../layout-noauth';
 
 class FormLoginController extends Component {
   constructor(props) {

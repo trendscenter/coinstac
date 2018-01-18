@@ -1,5 +1,5 @@
 const { makeExecutableSchema } = require('graphql-tools');
-const resolvers = require('./resolvers');
+const { pubsub, resolvers } = require('./resolvers');
 const sharedFields = require('./shared-fields');
 
 const typeDefs = `
@@ -35,14 +35,17 @@ const typeDefs = `
 
   type Computation {
     id: ID!
+    delete: Boolean
     meta: ComputationMeta
     computation: ComputationField
+    submittedBy: ID!
   }
 
   input ComputationInput {
     id: ID
     meta: ComputationMetaInput
     computation: ComputationFieldInput
+    submittedBy: ID!
   }
 
   type Consortium {
@@ -113,35 +116,42 @@ const typeDefs = `
   type Mutation {
     # Stringify incoming computation, parse prior to insertion call
     addComputation(computationSchema: ComputationInput): Computation
-    removeComputation(compId: ID): JSON
+    addUserRole(userId: ID, table: String, doc: String, role: String): User
     deleteConsortiumById(consortiumId: ID): Consortium
+    deletePipeline(pipelineId: ID): Pipeline
     joinConsortium(consortiumId: ID): Consortium
-    setActiveComputation(computationId: ID, consortiumId: ID): String
-    setComputationInputs(consortiumId: ID, fieldIndex: Int, values: String ): String
     leaveConsortium(consortiumId: ID): Consortium
+    removeComputation(computationId: ID): Computation
+    removeUserRole(userId: ID, table: String, doc: String, role: String): User
+    saveActivePipeline(consortiumId: ID, activePipeline: ID): String
     saveConsortium(consortium: ConsortiumInput): Consortium
     savePipeline(pipeline: PipelineInput): Pipeline
-    saveActivePipeline(consortiumId: ID, activePipeline: ID): String
-    addUserRole(userId: ID, table: String, doc: String, role: String): User
-    removeUserRole(userId: ID, table: String, doc: String, role: String): User
+    setActiveComputation(computationId: ID, consortiumId: ID): String
+    setComputationInputs(consortiumId: ID, fieldIndex: Int, values: String ): String
   }
 
   # This is a description of the queries
   type Query {
     # This is a description of the fetchAllComputations query
     fetchAllComputations: [Computation]
-    fetchComputation(computationIds: [ID]): [Computation]
     fetchAllConsortia: [Consortium]
-    fetchPipeline(pipelineId: ID): Pipeline
     fetchAllPipelines: [Pipeline]
+    fetchComputation(computationIds: [ID]): [Computation]
+    fetchConsortium(consortiumId: ID): Consortium
+    fetchPipeline(pipelineId: ID): Pipeline
     validateComputation(compId: ID): Boolean
-    fetchConsortiumById(consortiumId: ID): Consortium
-    fetchRunForConsortium(consortiumId: ID): [Run]
-    fetchRunForUser(username: String): [Run]
-    fetchRunById: Run
+  }
+
+  type Subscription {
+    computationChanged(computationId: ID): Computation
+    consortiumChanged(consortiumId: ID): Consortium
+    pipelineChanged(pipelineId: ID): Pipeline
   }
 `;
 
 const schema = makeExecutableSchema({ typeDefs, resolvers });
 
-module.exports = schema;
+module.exports = {
+  schema,
+  pubsub,
+};

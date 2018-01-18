@@ -29,12 +29,19 @@ import ApolloClient from '../../state/apollo-client';
 import PipelineStep from './pipeline-step';
 import ItemTypes from './pipeline-item-types';
 import {
+  COMPUTATION_CHANGED_SUBSCRIPTION,
+  CONSORTIUM_CHANGED_SUBSCRIPTION,
   FETCH_ALL_CONSORTIA_QUERY,
-  FETCH_ALL_COMPUTATIONS_METADATA_QUERY,
-  FETCH_ALL_PIPELINES_QUERY,
+  FETCH_ALL_COMPUTATIONS_QUERY,
+  FETCH_PIPELINE_QUERY,
+  PIPELINE_CHANGED_SUBSCRIPTION,
   SAVE_PIPELINE_MUTATION,
 } from '../../state/graphql/functions';
-import { computationsProp, consortiaProp } from '../../state/graphql/props';
+import {
+  getAllAndSubProp,
+  getSelectAndSubProp,
+  saveDocumentProp,
+} from '../../state/graphql/props';
 
 const computationTarget = {
   drop() {
@@ -53,23 +60,13 @@ class Pipeline extends Component {
     super(props);
 
     let consortium = null;
-    let pipeline = null;
-
-    if (props.params.pipelineId) {
-      const data = ApolloClient.readQuery({ query: FETCH_ALL_PIPELINES_QUERY });
-      pipeline = data.fetchAllPipelines.find(cons => cons.id === props.params.pipelineId);
-      delete pipeline.__typename;
-    }
-
-    if (!pipeline) {
-      pipeline = {
-        name: '',
-        description: '',
-        owningConsortium: '',
-        shared: false,
-        steps: [],
-      };
-    }
+    const pipeline = {
+      name: '',
+      description: '',
+      owningConsortium: '',
+      shared: false,
+      steps: [],
+    };
 
     // if routed from New Pipeline button on consortium page
     if (props.params.consortiumId) {
@@ -79,42 +76,83 @@ class Pipeline extends Component {
     }
 
     this.state = {
-      owner: !props.params.consortiumId || consortium.owners.indexOf(props.auth.user.id) !== -1,
+      owner: true,
       pipeline,
       consortium,
       startingPipeline: pipeline,
+      unsubscribeComputations: null,
+      unsubscribePipelines: null,
     };
 
     this.addStep = this.addStep.bind(this);
-    this.moveStep = this.moveStep.bind(this);
-    this.updateStep = this.updateStep.bind(this);
-    this.deleteStep = this.deleteStep.bind(this);
-    this.updatePipeline = this.updatePipeline.bind(this);
-    this.openModal = this.openModal.bind(this);
-    this.closeModal = this.closeModal.bind(this);
-    this.savePipeline = this.savePipeline.bind(this);
     this.checkPipeline = this.checkPipeline.bind(this);
+    this.closeModal = this.closeModal.bind(this);
+    this.deleteStep = this.deleteStep.bind(this);
+    this.moveStep = this.moveStep.bind(this);
+    this.openModal = this.openModal.bind(this);
+    this.savePipeline = this.savePipeline.bind(this);
+    this.setConsortium = this.setConsortium.bind(this);
+    this.updatePipeline = this.updatePipeline.bind(this);
+    this.updateStep = this.updateStep.bind(this);
+    this.updateStorePipeline = this.updateStorePipeline.bind(this);
   }
 
   componentWillReceiveProps(nextProps) {
-    if (isEmpty(this.state.consortium) && nextProps.consortia) {
-      if (nextProps.consortia.length) {
-        let consortiumId = this.state.pipeline.owningConsortium;
-        let consortium = nextProps.consortia[0];
-        if (!consortiumId.length) {
-          consortiumId = nextProps.consortia[0].id;
-        } else {
-          const data = ApolloClient.readQuery({ query: FETCH_ALL_CONSORTIA_QUERY });
-          consortium = data.fetchAllConsortia.find(cons => cons.id === consortiumId);
-          delete consortium.__typename;
-        }
-        this.setState(prevState => ({
-          consortium,
-          pipeline: { ...prevState.pipeline, owningConsortium: consortiumId },
-          startingPipeline: { ...prevState.pipeline, owningConsortium: consortiumId },
-        }));
-      }
+    if (nextProps.computations && !this.state.unsubscribeComputations) {
+      this.setState({
+        unsubscribeComputations: this.props.subscribeToComputations(null),
+      });
     }
+
+    if (nextProps.activePipeline && !this.state.unsubscribePipelines) {
+      this.setState({
+        unsubscribePipelines: this.props.subscribeToPipelines(this.state.pipeline.id),
+      });
+    }
+
+    if (isEmpty(this.state.consortium) && nextProps.consortia.length && this.state.pipeline.id) {
+      this.setConsortium();
+    }
+
+    if (nextProps.activePipeline) {
+      const { activePipeline: { __typename, ...other } } = nextProps;
+      this.setState(
+        { pipeline: { ...other }, startingPipeline: { ...other } },
+        () => {
+          if (nextProps.consortia.length) {
+            this.setConsortium();
+          }
+        }
+      );
+    }
+  }
+
+  componentWillUnmount() {
+    if (this.state.unsubscribeComputations) {
+      this.state.unsubscribeComputations();
+    }
+
+    if (this.state.unsubscribePipelines) {
+      this.state.unsubscribePipelines();
+    }
+  }
+
+  setConsortium() {
+    const { auth: { user } } = this.props;
+    const owner = user.permissions.consortia[this.state.pipeline.owningConsortium] &&
+      user.permissions.consortia[this.state.pipeline.owningConsortium].write;
+
+    const consortiumId = this.state.pipeline.owningConsortium;
+    const data = ApolloClient.readQuery({ query: FETCH_ALL_CONSORTIA_QUERY });
+    const consortium = data.fetchAllConsortia.find(cons => cons.id === consortiumId);
+    delete consortium.__typename;
+
+    this.setState(prevState => ({
+      owner,
+      consortium,
+      pipeline: { ...prevState.pipeline, owningConsortium: consortiumId },
+      startingPipeline: { ...prevState.pipeline, owningConsortium: consortiumId },
+    }));
   }
 
   addStep(computation) {
@@ -133,7 +171,8 @@ class Pipeline extends Component {
           },
         ],
       },
-    }));
+    }),
+    () => this.updateStorePipeline());
   }
 
   moveStep(id, swapId) {
@@ -220,7 +259,15 @@ class Pipeline extends Component {
         ...prevState.pipeline,
         steps: newArr,
       },
-    }));
+    }),
+    () => this.updateStorePipeline());
+  }
+
+  updateStorePipeline() {
+    const data = ApolloClient.readQuery({ query: FETCH_ALL_CONSORTIA_QUERY });
+    console.log(data);
+    data.fetchPipeline = { ...this.state.pipeline, __typename: 'Pipeline' };
+    ApolloClient.writeQuery({ query: FETCH_PIPELINE_QUERY, data });
   }
 
   updateStep(step) {
@@ -231,7 +278,8 @@ class Pipeline extends Component {
           $splice: [[prevState.pipeline.steps.findIndex(s => s.id === step.id), 1, step]],
         }),
       },
-    }));
+    }),
+    () => this.updateStorePipeline());
   }
 
   deleteStep() {
@@ -242,7 +290,8 @@ class Pipeline extends Component {
           $splice: [[prevState.pipeline.steps.findIndex(s => s.id === prevState.stepToDelete), 1]],
         }),
       },
-    }));
+    }),
+    () => this.updateStorePipeline());
     this.closeModal();
   }
 
@@ -261,10 +310,11 @@ class Pipeline extends Component {
     if (update.param === 'owningConsortium') {
       this.setState({ consortium: { id: update.value, name: update.consortiumName } });
     }
-    
+
     this.setState(prevState => ({
       pipeline: { ...prevState.pipeline, [update.param]: update.value },
-    }));
+    }),
+    this.updateStorePipeline());
   }
 
   checkPipeline() {
@@ -285,19 +335,18 @@ class Pipeline extends Component {
         })
       ),
     })
-    .then((res) => {
-      const pipeline = {
-        id: res.data.savePipeline.id,
-        name: res.data.savePipeline.name,
-        description: res.data.savePipeline.description,
-        owningConsortium: res.data.savePipeline.owningConsortium,
-        shared: res.data.savePipeline.shared,
-        steps: res.data.savePipeline.steps,
-      };
+    .then(({ data: { savePipeline: { __typename, ...other } } }) => {
+      const pipeline = { ...this.state.pipeline, ...other };
+      let unsubscribePipelines = this.state.unsubscribePipelines;
+
+      if (!unsubscribePipelines) {
+        unsubscribePipelines = this.props.subscribeToPipelines(pipeline.id);
+      }
 
       this.setState({
         pipeline,
         startingPipeline: pipeline,
+        unsubscribePipelines,
       });
       // TODO: Use redux to display success/failure messages after mutations
     })
@@ -320,18 +369,20 @@ class Pipeline extends Component {
           <FormGroup controlId="name">
             <ControlLabel>Name</ControlLabel>
             <FormControl
+              disabled={!this.state.owner}
               type="input"
               onChange={evt => this.updatePipeline({ param: 'name', value: evt.target.value })}
-              defaultValue={pipeline.name}
+              value={pipeline.name || ''}
             />
           </FormGroup>
 
           <FormGroup controlId="description">
             <ControlLabel>Description</ControlLabel>
             <FormControl
+              disabled={!this.state.owner}
               componentClass="textarea"
               onChange={evt => this.updatePipeline({ param: 'description', value: evt.target.value })}
-              defaultValue={pipeline.description}
+              value={pipeline.description || ''}
             />
           </FormGroup>
 
@@ -344,27 +395,29 @@ class Pipeline extends Component {
           <Row>
             <Col sm={12}>
               {consortia &&
-              <SplitButton
-                bsStyle="info"
-                title={consortium ? consortium.name : 'Consortia'}
-                id="pipelineconsortia"
-                onSelect={(value, e) => this.updatePipeline({
-                  param: 'owningConsortium',
-                  value,
-                  consortiumName: e.target.innerHTML,
-                })}
-              >
-                {consortia.map((con) => {
-                  return con.owners.includes(this.props.auth.user.id) ?
-                    <MenuItem
-                      eventKey={con.id}
-                      key={con.id}
-                    >
-                      {con.name}
-                    </MenuItem>
-                    : 0;
-                }).filter(con => con) }
-              </SplitButton>}
+                <SplitButton
+                  disabled={!this.state.owner}
+                  bsStyle="info"
+                  title={consortium ? consortium.name : 'Consortia'}
+                  id="pipelineconsortia"
+                  onSelect={(value, e) => this.updatePipeline({
+                    param: 'owningConsortium',
+                    value,
+                    consortiumName: e.target.innerHTML,
+                  })}
+                >
+                  {consortia.map((con) => {
+                    return con.owners.includes(this.props.auth.user.id) ?
+                      <MenuItem
+                        eventKey={con.id}
+                        key={con.id}
+                      >
+                        {con.name}
+                      </MenuItem>
+                      : 0;
+                  }).filter(con => con) }
+                </SplitButton>
+              }
             </Col>
           </Row>
           <Row>
@@ -373,9 +426,9 @@ class Pipeline extends Component {
                 key="save-pipeline-button"
                 bsStyle="success"
                 className="pull-right"
-                disabled={!this.state.pipeline.name.length ||
+                disabled={!this.state.owner || !this.state.pipeline.name.length ||
                   !this.state.pipeline.description.length ||
-                  !consortium || this.checkPipeline() || !this.state.pipeline.steps.length}
+                  !consortium}
                 onClick={this.savePipeline}
               >
                 Save Pipeline
@@ -386,7 +439,8 @@ class Pipeline extends Component {
           <Row>
             <Col sm={12}>
               <Checkbox
-                defaultChecked={this.state.pipeline.shared}
+                disabled={!this.state.owner}
+                checked={this.state.pipeline.shared}
                 onChange={evt => this.updatePipeline({ param: 'shared', value: evt.target.checked })}
                 inline
               >
@@ -405,6 +459,7 @@ class Pipeline extends Component {
           </Row>
 
           <DropdownButton
+            disabled={!this.state.owner}
             bsStyle="primary"
             id="computation-dropdown"
             title={
@@ -476,17 +531,23 @@ class Pipeline extends Component {
 }
 
 Pipeline.defaultProps = {
+  activePipeline: null,
   computations: [],
   consortia: [],
+  subscribeToComputations: null,
+  subscribeToPipelines: null,
 };
 
 Pipeline.propTypes = {
+  activePipeline: PropTypes.object,
   auth: PropTypes.object.isRequired,
   computations: PropTypes.array,
   connectDropTarget: PropTypes.func.isRequired,
   consortia: PropTypes.array,
   params: PropTypes.object.isRequired,
   savePipeline: PropTypes.func.isRequired,
+  subscribeToComputations: PropTypes.func,
+  subscribeToPipelines: PropTypes.func,
 };
 
 function mapStateToProps({ auth }) {
@@ -494,26 +555,30 @@ function mapStateToProps({ auth }) {
 }
 
 const PipelineWithData = compose(
-  graphql(FETCH_ALL_COMPUTATIONS_METADATA_QUERY, computationsProp),
-  graphql(FETCH_ALL_CONSORTIA_QUERY, consortiaProp),
-  graphql(SAVE_PIPELINE_MUTATION, {
-    props: ({ mutate }) => ({
-      savePipeline: pipeline => mutate({
-        variables: { pipeline },
-        update: (store, { data: { savePipeline } }) => {
-          const data = store.readQuery({ query: FETCH_ALL_PIPELINES_QUERY });
-          const index = data.fetchAllPipelines.findIndex(cons => cons.id === savePipeline.id);
-          if (index > -1) {
-            data.fetchAllPipelines[index] = { ...savePipeline };
-          } else {
-            data.fetchAllPipelines.push(savePipeline);
-          }
-          store.writeQuery({ query: FETCH_ALL_PIPELINES_QUERY, data });
-        },
-      }),
-    }),
-  }
-))(Pipeline);
+  graphql(FETCH_PIPELINE_QUERY, getSelectAndSubProp(
+    'activePipeline',
+    PIPELINE_CHANGED_SUBSCRIPTION,
+    'pipelineId',
+    'subscribeToPipelines',
+    'pipelineChanged',
+    'fetchPipeline'
+  )),
+  graphql(FETCH_ALL_COMPUTATIONS_QUERY, getAllAndSubProp(
+    COMPUTATION_CHANGED_SUBSCRIPTION,
+    'computations',
+    'fetchAllComputations',
+    'subscribeToComputations',
+    'computationChanged'
+  )),
+  graphql(FETCH_ALL_CONSORTIA_QUERY, getAllAndSubProp(
+    CONSORTIUM_CHANGED_SUBSCRIPTION,
+    'consortia',
+    'fetchAllConsortia',
+    'subscribeToConsortia',
+    'consortiumChanged'
+  )),
+  graphql(SAVE_PIPELINE_MUTATION, saveDocumentProp('savePipeline', 'pipeline'))
+)(Pipeline);
 
 export default compose(
   connect(mapStateToProps),

@@ -90,6 +90,7 @@ class PipelineStep extends Component {
           {...other}
         >
           <Button
+            disabled={!owner}
             key={`delete-step-button-${step.id}`}
             bsStyle="danger"
             className="pull-right"

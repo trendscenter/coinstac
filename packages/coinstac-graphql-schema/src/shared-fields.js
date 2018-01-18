@@ -6,11 +6,14 @@ const sharedFields = {
       description
       version
     }
+    delete
+    submittedBy
   `,
-  consortiaInBrief: `
+  consortiaFields: `
     id
     activePipelineId
     activeComputationInputs
+    delete
     description
     name
     tags
@@ -26,6 +29,7 @@ const sharedFields = {
   `,
   pipelineFields: `
     id
+    delete
     description
     name
     owningConsortium
@@ -46,6 +50,14 @@ const sharedFields = {
       }
       ioMap
     }
+  `,
+  pipelineSaveFields: `
+    id
+    delete
+    description
+    name
+    owningConsortium
+    shared
   `,
 };
 
