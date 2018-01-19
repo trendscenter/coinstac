@@ -25,6 +25,8 @@ import {
   userRolesProp,
 } from '../../state/graphql/props';
 
+const MAX_LENGTH_CONSORTIA = 5;
+
 const isUserA = (userId, groupArr) => {
   return groupArr.indexOf(userId) !== -1;
 };
@@ -34,6 +36,8 @@ class ConsortiaList extends Component {
     super(props);
 
     this.state = {
+      ownedConsortia: [],
+      otherConsortia: [],
       consortiumToDelete: -1,
       showModal: false,
       unsubscribeConsortia: null,
@@ -41,6 +45,7 @@ class ConsortiaList extends Component {
     };
 
     this.getOptions = this.getOptions.bind(this);
+    this.getListItem = this.getListItem.bind(this);
     this.deleteConsortium = this.deleteConsortium.bind(this);
     this.joinConsortium = this.joinConsortium.bind(this);
     this.leaveConsortium = this.leaveConsortium.bind(this);
@@ -49,6 +54,19 @@ class ConsortiaList extends Component {
   }
 
   componentWillReceiveProps(nextProps) {
+    const ownedConsortia = [];
+    const otherConsortia = [];
+    if (nextProps.consortia && nextProps.consortia.length > MAX_LENGTH_CONSORTIA) {
+      nextProps.consortia.forEach((cons) => {
+        if (cons.owners.indexOf(this.props.auth.user.id) > -1) {
+          ownedConsortia.push(cons);
+        } else {
+          otherConsortia.push(cons);
+        }
+      });
+    }
+    this.setState({ ownedConsortia, otherConsortia });
+
     if (nextProps.consortia && !this.state.unsubscribeConsortia) {
       this.setState({ unsubscribeConsortia: this.props.subscribeToConsortia(null) });
     }
@@ -93,6 +111,26 @@ class ConsortiaList extends Component {
     return options;
   }
 
+  getListItem(consortium) {
+    const { user } = this.props.auth;
+    return (
+      <ListItem
+        key={`${consortium.name}-list-item`}
+        itemObject={consortium}
+        deleteItem={this.openModal}
+        owner={isUserA(user.id, consortium.owners)}
+        itemOptions={
+          this.getOptions(
+            isUserA(user.id, consortium.members),
+            isUserA(user.id, consortium.owners),
+            consortium.id
+          )
+        }
+        itemRoute={'/dashboard/consortia'}
+      />
+    );
+  }
+
   closeModal() {
     this.setState({ showModal: false });
   }
@@ -130,9 +168,12 @@ class ConsortiaList extends Component {
 
   render() {
     const {
-      auth: { user },
       consortia,
     } = this.props;
+    const {
+      ownedConsortia,
+      otherConsortia,
+    } = this.state;
 
     return (
       <div>
@@ -146,22 +187,19 @@ class ConsortiaList extends Component {
             </Button>
           </LinkContainer>
         </div>
-        {consortia && consortia.map(consortium => (
-          <ListItem
-            key={`${consortium.name}-list-item`}
-            itemObject={consortium}
-            deleteItem={this.openModal}
-            owner={isUserA(user.id, consortium.owners)}
-            itemOptions={
-              this.getOptions(
-                isUserA(user.id, consortium.members),
-                isUserA(user.id, consortium.owners),
-                consortium.id
-              )
-            }
-            itemRoute={'/dashboard/consortia'}
-          />
-        ))}
+
+        {consortia && consortia.length && consortia.length <= MAX_LENGTH_CONSORTIA
+          && consortia.map(consortium => this.getListItem(consortium))
+        }
+        {ownedConsortia.length > 0 && <h4>Owned Consortia</h4>}
+        {ownedConsortia.length > 0 &&
+          ownedConsortia.map(consortium => this.getListItem(consortium))
+        }
+        {otherConsortia.length > 0 && <h4>Other Consortia</h4>}
+        {otherConsortia.length > 0 &&
+          otherConsortia.map(consortium => this.getListItem(consortium))
+        }
+
         {(!consortia || !consortia.length) &&
           <Alert bsStyle="info">
             No consortia found

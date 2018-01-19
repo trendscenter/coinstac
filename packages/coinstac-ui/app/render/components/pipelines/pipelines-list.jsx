@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { graphql, compose } from 'react-apollo';
-import { Alert, Button, Modal } from 'react-bootstrap';
+import { Alert, Button } from 'react-bootstrap';
 import { LinkContainer } from 'react-router-bootstrap';
 import PropTypes from 'prop-types';
 import ListItem from '../common/list-item';
@@ -16,11 +16,15 @@ import {
   removeDocFromTableProp,
 } from '../../state/graphql/props';
 
+const MAX_LENGTH_PIPELINES = 5;
+
 class PipelinesList extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
+      ownedPipelines: [],
+      otherPipelines: [],
       pipelineToDelete: -1,
       showModal: false,
       unsubscribePipelines: null,
@@ -28,10 +32,26 @@ class PipelinesList extends Component {
 
     this.deletePipeline = this.deletePipeline.bind(this);
     this.closeModal = this.closeModal.bind(this);
+    this.getListItem = this.getListItem.bind(this);
     this.openModal = this.openModal.bind(this);
   }
 
   componentWillReceiveProps(nextProps) {
+    const { user } = this.props.auth;
+    const ownedPipelines = [];
+    const otherPipelines = [];
+    if (nextProps.pipelines && nextProps.pipelines.length > MAX_LENGTH_PIPELINES) {
+      nextProps.pipelines.forEach((pipeline) => {
+        if (user.permissions.consortia[pipeline.owningConsortium] &&
+          user.permissions.consortia[pipeline.owningConsortium].write) {
+          ownedPipelines.push(pipeline);
+        } else {
+          otherPipelines.push(pipeline);
+        }
+      });
+    }
+    this.setState({ ownedPipelines, otherPipelines });
+
     if (nextProps.pipelines && !this.state.unsubscribePipelines) {
       this.setState({ unsubscribePipelines: this.props.subscribeToPipelines(null) });
     }
@@ -39,6 +59,23 @@ class PipelinesList extends Component {
 
   componentWillUnmount() {
     this.state.unsubscribePipelines();
+  }
+
+  getListItem(pipeline) {
+    const { user } = this.props.auth;
+    return (
+      <ListItem
+        key={`${pipeline.name}-list-item`}
+        itemObject={pipeline}
+        deleteItem={this.openModal}
+        owner={
+          user.permissions.consortia[pipeline.owningConsortium] &&
+          user.permissions.consortia[pipeline.owningConsortium].write
+        }
+        itemOptions={[]}
+        itemRoute={'/dashboard/pipelines'}
+      />
+    );
   }
 
   closeModal() {
@@ -60,7 +97,8 @@ class PipelinesList extends Component {
   }
 
   render() {
-    const { auth: { user }, pipelines } = this.props;
+    const { pipelines } = this.props;
+    const { ownedPipelines, otherPipelines } = this.state;
 
     return (
       <div>
@@ -74,19 +112,15 @@ class PipelinesList extends Component {
             </Button>
           </LinkContainer>
         </div>
-        {pipelines && pipelines.map(pipeline => (
-          <ListItem
-            key={`${pipeline.name}-list-item`}
-            itemObject={pipeline}
-            deleteItem={this.openModal}
-            owner={
-              user.permissions.consortia[pipeline.owningConsortium] &&
-              user.permissions.consortia[pipeline.owningConsortium].write
-            }
-            itemOptions={[]}
-            itemRoute={'/dashboard/pipelines'}
-          />
-        ))}
+
+        {pipelines && pipelines.length && pipelines.length <= MAX_LENGTH_PIPELINES
+          && pipelines.map(pipeline => this.getListItem(pipeline))
+        }
+        {ownedPipelines.length > 0 && <h4>Owned Pipelines</h4>}
+        {ownedPipelines.length > 0 && ownedPipelines.map(pipeline => this.getListItem(pipeline))}
+        {otherPipelines.length > 0 && <h4>Other Pipelines</h4>}
+        {otherPipelines.length > 0 && otherPipelines.map(pipeline => this.getListItem(pipeline))}
+
         {(!pipelines || !pipelines.length) &&
           <Alert bsStyle="info">
             No pipelines found
@@ -104,6 +138,7 @@ class PipelinesList extends Component {
 }
 
 PipelinesList.propTypes = {
+  auth: PropTypes.object.isRequired,
   deletePipeline: PropTypes.func.isRequired,
   pipelines: PropTypes.array,
   subscribeToPipelines: PropTypes.func.isRequired,
