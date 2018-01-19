@@ -1,21 +1,20 @@
 'use strict';
 
-const app = require('ampersand-app');
 const path = require('path');
 const cliOpts = require('./parse-cli-input.js').get();
 const winston = require('winston');
 const promisify = require('bluebird').promisify;
 const mkdirp = promisify(require('mkdirp'));
 
-module.exports = function configureLogger() {
+module.exports = function configureLogger(config) {
   const logLocation = path.join(
     process.env.HOME || process.env.TEMP,
-    app.config.get('logLocations')[process.platform]
-    );
+    config.get('logLocations')[process.platform]
+  );
 
   return mkdirp(logLocation, 0o0775)
   .then(() => {
-    const logFilePath = path.join(logLocation, app.config.get('logFile'));
+    const logFilePath = path.join(logLocation, config.get('logFile'));
     const logger = new winston.Logger({
       transports: [
         new winston.transports.Console(),
@@ -30,7 +29,7 @@ module.exports = function configureLogger() {
       logger.verbose(`logLevel set to \`${cliOpts.loglevel}\``);
     }
 
-    app.logger = logger;
+    return logger;
   })
   .catch((err) => {
     /* eslint-disable no-console */
@@ -49,6 +48,6 @@ module.exports = function configureLogger() {
       logger.verbose(`logLevel set to \`${cliOpts.loglevel}\``);
     }
 
-    app.logger = logger;
+    return logger;
   });
 };

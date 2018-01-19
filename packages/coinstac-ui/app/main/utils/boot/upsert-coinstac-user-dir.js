@@ -1,6 +1,5 @@
 'use strict';
 
-const app = require('ampersand-app');
 const mkdirp = require('mkdirp');
 const { promisify } = require('bluebird');
 
@@ -11,7 +10,7 @@ const promisifiedMkdirp = promisify(mkdirp);
  *
  * @returns {Promise}
  */
-module.exports = function upsertCoinstacUserDir() {
-  return promisifiedMkdirp(app.core.appDirectory);
+module.exports = function upsertCoinstacUserDir(core) {
+  return promisifiedMkdirp(core.appDirectory);
 };
 
