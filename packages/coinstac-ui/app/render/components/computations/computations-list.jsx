@@ -142,6 +142,12 @@ class ComputationsList extends Component { // eslint-disable-line
           </Alert>
         }
 
+        {(!computations || !computations.length) &&
+          <Alert bsStyle="info">
+            No computations found
+          </Alert>
+        }
+
         {this.state.activeComp &&
           <div>
             {this.state.activeComp.meta.name}
