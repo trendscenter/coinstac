@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import Notify from './notification';
+import Notifications from 'react-notification-system-redux';
+// import Notify from './notification';
 import { autoLogin } from '../state/ducks/auth';
 
 class App extends Component { // eslint-disable-line react/prefer-stateless-function
@@ -19,7 +20,7 @@ class App extends Component { // eslint-disable-line react/prefer-stateless-func
   }
 
   render() {
-    const { children, loading: { isLoading, wip } } = this.props;
+    const { children, loading: { isLoading, wip }, notifications } = this.props;
 
     return (
       <div className="app">
@@ -38,7 +39,9 @@ class App extends Component { // eslint-disable-line react/prefer-stateless-func
           )}
         </ul>
 
-        <Notify />
+        <Notifications
+          notifications={notifications}
+        />
       </div>
     );
   }
@@ -46,15 +49,21 @@ class App extends Component { // eslint-disable-line react/prefer-stateless-func
 
 App.displayName = 'App';
 
+App.defaultProps = {
+  notifications: null,
+};
+
 App.propTypes = {
   autoLogin: PropTypes.func.isRequired,
   children: PropTypes.node.isRequired,
   loading: PropTypes.object.isRequired,
+  notifications: PropTypes.array,
 };
 
-function mapStateToProps({ loading }) {
+function mapStateToProps({ loading, notifications }) {
   return {
     loading,
+    notifications,
   };
 }
 

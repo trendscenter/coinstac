@@ -7,7 +7,7 @@
   },
   "computation": {
     "type": "docker",
-    "dockerImage": "spanta28/coinstac/vbmv1.0",
+    "dockerImage": "mysql:latest",
     "command": "python3 /root/vbm_scripts/run_vbm_bids.py",
     "input": {
       "smoothingValue":{

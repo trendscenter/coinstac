@@ -130,7 +130,6 @@ class CollectionConsortia extends Component {
             title="Select Consortia"
           >
             {consortia.map((cons) => {
-              console.log('cons', cons);
               if ((cons.members.indexOf(user.id) > -1 || cons.owners.indexOf(user.id) > -1) &&
                   collection.associatedConsortia.findIndex(c => c.id === cons.id) === -1) {
                 return (
