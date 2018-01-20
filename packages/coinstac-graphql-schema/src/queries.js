@@ -4,8 +4,12 @@ const queries = {
   allDockerImages: `
     {
       fetchAllComputations {
+        id
         computation {
           dockerImage
+        }
+        meta {
+          name
         }
       }
     }
@@ -71,11 +75,18 @@ const queries = {
     }
   `,
   pipelineChanged: `
-  {
-    pipelineChanged(pipelineId: $pipelineId) {
-      ${sharedFields.pipelineFields}
+    {
+      pipelineChanged(pipelineId: $pipelineId) {
+        ${sharedFields.pipelineFields}
+      }
     }
-  }
+  `,
+  runChanged: `
+    {
+      runChanged(runId: $runId) {
+        ${sharedFields.runFields}
+      }
+    }
   `,
 };
 

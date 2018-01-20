@@ -1,4 +1,5 @@
 import axios from 'axios';
+import ipcPromise from 'ipc-promise';
 import { applyAsyncLoading } from './loading';
 import { apiServer } from '../../../../config/local.json';
 
@@ -31,16 +32,19 @@ export const updateUserConsortiaStatuses = statuses =>
 export const clearUser = () => ({ type: CLEAR_USER, payload: null });
 
 // Helpers
-const setToken = (reqUser, data, dispatch) => {
-  const user = { ...data.user, label: reqUser.username };
+const initCoreAndSetToken = (reqUser, data, dispatch) => {
+  return ipcPromise.send('login-init', reqUser.username)
+    .then(() => {
+      const user = { ...data.user, label: reqUser.username };
 
-  if (reqUser.saveLogin) {
-    localStorage.setItem('id_token', data.id_token);
-  } else {
-    sessionStorage.setItem('id_token', data.id_token);
-  }
+      if (reqUser.saveLogin) {
+        localStorage.setItem('id_token', data.id_token);
+      } else {
+        sessionStorage.setItem('id_token', data.id_token);
+      }
 
-  dispatch(setUser({ user }));
+      dispatch(setUser({ user }));
+    });
 };
 
 export const autoLogin = applyAsyncLoading(() =>
@@ -63,7 +67,7 @@ export const autoLogin = applyAsyncLoading(() =>
       { headers: { Authorization: `Bearer ${token}` } }
     )
     // TODO: GET RID OF CORE INIT
-    .then(({ data }) => setToken(
+    .then(({ data }) => initCoreAndSetToken(
       { username: data.user.id, saveLogin, password: 'password' },
       data,
       dispatch
@@ -80,7 +84,7 @@ export const autoLogin = applyAsyncLoading(() =>
 export const login = applyAsyncLoading(({ username, password, saveLogin }) =>
   dispatch =>
     axios.post(`${API_URL}/authenticate`, { username, password })
-    .then(({ data }) => setToken({ username, password, saveLogin }, data, dispatch))
+    .then(({ data }) => initCoreAndSetToken({ username, password, saveLogin }, data, dispatch))
     .catch((err) => {
       if (err.response && err.response.status === 401) {
         dispatch(setUser({ ...INITIAL_STATE, error: 'Username and/or Password Incorrect' }));
@@ -99,7 +103,7 @@ export const logout = applyAsyncLoading(() =>
 export const signUp = applyAsyncLoading(user =>
   dispatch =>
     axios.post(`${API_URL}/createAccount`, user)
-    .then(({ data }) => setToken(user, data, dispatch))
+    .then(({ data }) => initCoreAndSetToken(user, data, dispatch))
     .catch((err) => {
       if (err.response && err.response.data && (err.response.data.message === 'Username taken'
           || err.response.data.message === 'Email taken')) {

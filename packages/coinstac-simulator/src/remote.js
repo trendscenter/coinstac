@@ -8,7 +8,6 @@
 require('./utils/handle-errors');
 
 const Consortium = require('coinstac-common').models.Consortium;
-const CoinstacServer = require('coinstac-server-core/src/coinstac-server.js');
 const config = require('./utils/config.js');
 const getComputationRegistryStub =
   require('./utils/get-computation-registry-stub.js');

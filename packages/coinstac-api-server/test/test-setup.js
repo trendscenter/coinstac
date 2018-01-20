@@ -15,6 +15,7 @@ helperFunctions.getRethinkConnection()
     );
   }).run(connection)
   .then(() => rethink.dbCreate('coinstac').run(connection))
+  .then(() => rethink.tableCreate('runs').run(connection))
   .then(() => rethink.tableCreate('pipelines').run(connection))
   .then(() => rethink.tableCreate('computations').run(connection))
   .then(() => rethink.table('computations').insert([

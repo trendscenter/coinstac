@@ -92,12 +92,17 @@ class ComputationRegistry {
       axios.get(`${config.DB_URL}/graphql?query=${graphqlSchema.queries.allDockerImages}`)
     )
     .then(({ data: { data: { fetchAllComputations } } }) => {
-      const comps = fetchAllComputations.map(comp => comp.computation.dockerImage);
-      return this.pullPipelineComputations({ comps });
+      const comps = fetchAllComputations.map(comp => ({
+        img: comp.computation.dockerImage,
+        compId: comp.id,
+        compName: comp.meta.name,
+      }));
+      return this.pullComputations(comps);
     })
     .then((pullStreams) => {
-      pullStreams.pipe(process.stdout);
-    });
+      pullStreams.forEach(({ stream }) => stream.pipe(process.stdout));
+    })
+    .catch(console.log);
   }
 }
 

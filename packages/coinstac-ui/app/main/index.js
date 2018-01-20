@@ -57,20 +57,9 @@ loadConfig()
 )
 .then(([config, logger]) => {
   process.on('uncaughtException', logUnhandledError(null, logger));
-  return Promise.all([
-    logger,
-    configureCore(config, logger),
-  ]);
-})
-.then(([logger, core]) =>
-  Promise.all([
-    logger,
-    core,
-    upsertCoinstacUserDir(core),
-  ])
-)
-.then(([logger, core]) => {
+
   const mainWindow = getWindow();
+  let core = null;
   logger.verbose('main process booted');
 
   /**
@@ -80,6 +69,14 @@ loadConfig()
    */
   ipcMain.on('write-log', (event, { type, message }) => {
     logger[type](`process: render - ${message}`);
+  });
+
+  ipcPromise.on('login-init', (userId) => {
+    return new Promise(res => res(configureCore(config, logger, userId)))
+      .then((c) => {
+        core = c;
+        return upsertCoinstacUserDir(core);
+      });
   });
 
   /**
@@ -97,7 +94,12 @@ loadConfig()
    */
   ipcPromise.on('start-pipeline', ({ consortium, filesArray, run }) => {
     return core.constructor.startPipeline(
-      consortium.id, consortium.pipelineSteps, filesArray, run.id, run.pipelineSteps
+      [...consortium.members, ...consortium.owners],
+      consortium.id,
+      consortium.pipelineSteps,
+      filesArray,
+      run.id,
+      run.pipelineSteps
     );
   });
 
