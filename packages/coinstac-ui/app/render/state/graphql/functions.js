@@ -21,6 +21,11 @@ export const CONSORTIUM_CHANGED_SUBSCRIPTION = gql`
     ${queries.consortiumChanged}
 `;
 
+export const CREATE_RUN_MUTATION = gql`
+  mutation createRun($consortiumId: ID!)
+    ${mutations.createRun}
+`;
+
 export const DELETE_CONSORTIUM_MUTATION = gql`
   mutation deleteConsortiumById($consortiumId: ID!) {
     deleteConsortiumById(consortiumId: $consortiumId){
@@ -101,6 +106,11 @@ export const REMOVE_COMPUTATION_MUTATION = gql`
 export const REMOVE_USER_ROLE_MUTATION = gql`
   mutation removeUserRole($userId: ID!, $table: String!, $doc: String!, $role: String!)
     ${mutations.removeUserRole}
+`;
+
+export const RUN_CHANGED_SUBSCRIPTION = gql`
+  subscription runChanged($runId: ID)
+    ${queries.runChanged}
 `;
 
 export const SAVE_ACTIVE_PIPELINE_MUTATION = gql`

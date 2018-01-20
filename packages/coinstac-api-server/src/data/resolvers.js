@@ -16,8 +16,7 @@ function fetchAll(table) {
     .then(connection =>
       rethink.table(table).run(connection)
     )
-    .then(cursor => cursor.toArray())
-    .then(result => result);
+    .then(cursor => cursor.toArray());
 }
 
 /**
@@ -30,8 +29,7 @@ function fetchOne(table, id) {
   return helperFunctions.getRethinkConnection()
     .then(connection =>
       rethink.table(table).get(id).run(connection)
-    )
-    .then(result => result);
+    );
 }
 
 const pubsub = new PubSub();
@@ -133,6 +131,9 @@ const resolvers = {
           .then(result => result);
       }
     },
+    fetchRunsForConsortium: (_, args) => {
+      return new Promise();
+    },
     validateComputation: (_, args) => {
       return new Promise();
     },
@@ -203,6 +204,42 @@ const resolvers = {
           helperFunctions.getUserDetails({ username: credentials.id })
         )
         .then(result => result)
+    },
+    /**
+     * Add run to RethinkDB
+     * @param {String} consortiumId Run object to add/update
+     * @return {object} New/updated run object
+     */
+    createRun: ({ auth }, { consortiumId }) => {
+      if (!auth || !auth.credentials) {
+        // No authorized user, reject
+        return Boom.unauthorized('User not authenticated');
+      }
+
+      return fetchOne('consortia', consortiumId)
+        .then(consortium => Promise.all([
+          consortium,
+          fetchOne('pipelines', consortium.activePipelineId),
+          helperFunctions.getRethinkConnection()
+        ]))
+        .then(([consortium, pipelineSnapshot, connection]) =>
+          rethink.table('runs').insert(
+            {
+              clients: [...consortium.members, ...consortium.owners],
+              consortiumId,
+              pipelineSnapshot,
+              startDate: Date.now(),
+            },
+            { 
+              conflict: "replace",
+              returnChanges: true,
+            }
+          )
+          .run(connection)
+        )
+        .then((run) => {
+          return result.changes[0].new_val;
+        })
     },
     /**
      * Deletes consortium
@@ -517,6 +554,19 @@ const resolvers = {
       subscribe: withFilter(
         () => pubsub.asyncIterator('pipelineChanged'),
         (payload, variables) => (!variables.pipelineId || payload.pipelineId === variables.pipelineId)
+      )
+    },
+    /**
+     * Run subscription
+     * @param {object} payload
+     * @param {string} payload.runId The run changed
+     * @param {object} variables
+     * @param {string} variables.runId The run listened for
+     */
+    runChanged: {
+      subscribe: withFilter(
+        () => pubsub.asyncIterator('runChanged'),
+        (payload, variables) => (!variables.runId || payload.runId === variables.runId)
       )
     },
   },

@@ -1,0 +1,46 @@
+{
+  "author": "NI Development - The Mind Research Network <nidev@mrn.org> (http://coins.mrn.org)",
+  "bugs": {
+    "url": "https://github.com/MRN-Code/coinstac/issues"
+  },
+  "contributors": [
+    "Chris Dieringer <cdaringe@gmail.org>",
+    "Cory Reed <swashcap@gmail.com>",
+    "Ross Kelly <rkelly@mrn.org>",
+    "Drew Landis <landis.d@gmail.com>",
+    "Sergey Plis <splis@mrn.org>"
+  ],
+  "dependencies": {
+    "blessed": "^0.1.81",
+    "blessed-contrib": "^4.8.5",
+    "lodash": "^4.17.4",
+    "mkdirp": "^0.5.1",
+    "nyc": "^11.4.1",
+    "request": "^2.83.0",
+    "request-promise": "^4.2.2",
+    "socket.io": "^2.0.4",
+    "socket.io-client": "^2.0.4",
+    "socketio-jwt": "github:root-core/socketio-jwt"
+  },
+  "description": "Computation registry service for COINSTAC.",
+  "devDependencies": {
+    "ava": "^0.24.0",
+    "rimraf-promise": "^2.0.0"
+  },
+  "homepage": "https://github.com/MRN-Code/coinstac#readme",
+  "keywords": [
+    "coinstac",
+    "computations"
+  ],
+  "license": "MIT",
+  "main": "src/index.js",
+  "name": "coinstac-pipeline",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MRN-Code/coinstac.git"
+  },
+  "scripts": {
+    "test": "nyc ava test/**.test.js"
+  },
+  "version": "2.6.0"
+}

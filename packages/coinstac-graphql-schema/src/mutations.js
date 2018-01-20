@@ -15,6 +15,13 @@ const mutations = {
       }
     }
   `,
+  createRun: `
+    {
+      createRun(consortiumId: $consortiumId) {
+        ${sharedFields.runFields}
+      }
+    }
+  `,
   removeComputation: `
     {
       removeComputation(computationId) {

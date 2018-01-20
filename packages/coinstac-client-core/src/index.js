@@ -14,6 +14,7 @@ const winston = require('winston');
 const Logger = winston.Logger;
 const Console = winston.transports.Console;
 const ComputationRegistry = require('coinstac-computation-registry');
+const PipelineManager = require('../../coinstac-pipeline');
 
 /**
  * Create a user client for COINSTAC
@@ -56,6 +57,12 @@ class CoinstacClient {
     if (opts.logLevel) {
       this.logger.level = opts.logLevel;
     }
+
+    this.pipelineManager = PipelineManager.create({
+      mode: 'local',
+      clientId: opts.userId,
+      operatingDirectory: this.appDirectory,
+    });
   }
 
   /**
@@ -188,6 +195,7 @@ class CoinstacClient {
    * @param {*} runPipeline The run's copy of the current pipeline
    */
   static startPipeline(
+    clients,
     consortiumId,
     clientPipeline,
     filesArray,
@@ -195,18 +203,23 @@ class CoinstacClient {
     runPipeline // eslint-disable-line no-unused-vars
   ) {
     // TODO: validate runPipeline against clientPipeline
-    const homeDir = this.getDefaultAppDirectory();
     const linkPromises = [];
 
     for (let i = 0; i < filesArray.length; i += 1) {
       linkPromises.push(
         fs.link(
           filesArray[i],
-          `${homeDir}/${filesArray[i].replace(/\//g, '-')}`,
+          `${this.appDirectory}/${filesArray[i].replace(/\//g, '-')}`,
           err => console.log(err)
         )
       );
     }
+
+    this.pipelineManager.startPipeline({
+      spec: clientPipeline,
+      clients,
+      runId,
+    });
 
     return Promise.all(linkPromises);
   }

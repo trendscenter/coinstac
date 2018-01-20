@@ -27,14 +27,6 @@ const sharedFields = {
     members
     owners
   `,
-  userMetadata: `
-    id
-    email
-    institution
-    passwordHash
-    permissions
-    consortiaStatuses
-  `,
   pipelineFields: `
     id
     delete
@@ -58,6 +50,25 @@ const sharedFields = {
       }
       ioMap
     }
+  `,
+  runFields: `
+    id
+    clients
+    consortiumId
+    startDate
+    endDate
+    pipelineSnapshot
+    userErrors
+    globalResults
+    userResults
+  `,
+  userMetadata: `
+    id
+    email
+    institution
+    passwordHash
+    permissions
+    consortiaStatuses
   `,
 };
 

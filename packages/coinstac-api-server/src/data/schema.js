@@ -93,9 +93,11 @@ const typeDefs = `
 
   type Run {
     id: ID!,
+    clients: [String]
     consortiumId: ID!
     startDate: String
     endDate: String
+    pipelineSnapshot: JSON
     userErrors: String
     globalResults: String
     userResults: String
@@ -116,6 +118,7 @@ const typeDefs = `
     # Stringify incoming computation, parse prior to insertion call
     addComputation(computationSchema: ComputationInput): Computation
     addUserRole(userId: ID, table: String, doc: String, role: String): User
+    createRun(consortiumId: ID): Run
     deleteConsortiumById(consortiumId: ID): Consortium
     deletePipeline(pipelineId: ID): Pipeline
     joinConsortium(consortiumId: ID): Consortium
@@ -139,6 +142,7 @@ const typeDefs = `
     fetchComputation(computationIds: [ID]): [Computation]
     fetchConsortium(consortiumId: ID): Consortium
     fetchPipeline(pipelineId: ID): Pipeline
+    fetchRunsForConsortium(runId: ID): [Run]
     validateComputation(compId: ID): Boolean
   }
 
@@ -146,6 +150,7 @@ const typeDefs = `
     computationChanged(computationId: ID): Computation
     consortiumChanged(consortiumId: ID): Consortium
     pipelineChanged(pipelineId: ID): Pipeline
+    runChanged(runId: ID): Run
   }
 `;
 

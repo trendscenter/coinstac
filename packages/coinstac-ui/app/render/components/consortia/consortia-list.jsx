@@ -11,6 +11,7 @@ import { updateUserPerms } from '../../state/ducks/auth';
 import { pullComputations } from '../../state/ducks/docker';
 import {
   ADD_USER_ROLE_MUTATION,
+  CREATE_RUN_MUTATION,
   DELETE_CONSORTIUM_MUTATION,
   FETCH_ALL_COMPUTATIONS_QUERY,
   FETCH_ALL_CONSORTIA_QUERY,
@@ -21,6 +22,7 @@ import {
 import {
   consortiaMembershipProp,
   removeDocFromTableProp,
+  saveDocumentProp,
   userRolesProp,
 } from '../../state/graphql/props';
 import { notifyInfo } from '../../state/ducks/notifyAndLog';
@@ -49,6 +51,7 @@ class ConsortiaList extends Component {
     this.leaveConsortium = this.leaveConsortium.bind(this);
     this.closeModal = this.closeModal.bind(this);
     this.openModal = this.openModal.bind(this);
+    this.startPipeline = this.startPipeline.bind(this);
   }
 
   componentWillReceiveProps(nextProps) {
@@ -68,6 +71,17 @@ class ConsortiaList extends Component {
 
   getOptions(member, owner, id, activePipelineId) {
     const options = [];
+
+    if (owner && activePipelineId) {
+      options.push(
+        <Button
+          bsStyle="success"
+          onClick={this.startPipeline(id)}
+        >
+          Start Pipeline
+        </Button>
+      );
+    }
 
     if (member && !owner) {
       options.push(
@@ -180,6 +194,12 @@ class ConsortiaList extends Component {
     this.props.removeUserRole(user.id, 'consortia', consortiumId, 'member');
   }
 
+  startPipeline(consortiumId) {
+    return () => {
+      this.props.createRun(consortiumId);
+    };
+  }
+
   render() {
     const {
       consortia,
@@ -234,6 +254,7 @@ ConsortiaList.propTypes = {
   addUserRole: PropTypes.func.isRequired,
   auth: PropTypes.object.isRequired,
   consortia: PropTypes.array.isRequired,
+  createRun: PropTypes.func.isRequired,
   deleteConsortiumById: PropTypes.func.isRequired,
   joinConsortium: PropTypes.func.isRequired,
   leaveConsortium: PropTypes.func.isRequired,
@@ -249,6 +270,7 @@ const mapStateToProps = ({ auth }) => {
 };
 
 const ConsortiaListWithData = compose(
+  graphql(CREATE_RUN_MUTATION, saveDocumentProp('createRun', 'lastRun')),
   graphql(DELETE_CONSORTIUM_MUTATION, removeDocFromTableProp(
     'consortiumId',
     'deleteConsortiumById',
