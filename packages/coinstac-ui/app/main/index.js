@@ -11,6 +11,9 @@ const { compact } = require('lodash');
 const mock = require('../../test/e2e/mocks');
 const electron = require('electron');
 const ipcPromise = require('ipc-promise');
+const ipcFunctions = require('./utils/ipc-functions');
+
+const { ipcMain } = electron;
 
 const { ipcMain } = electron;
 
@@ -96,25 +99,46 @@ loadConfig()
       });
   });
 
-  // TODO: Assumption is CSV meta file. Need to change.
-  ipcPromise.on('add-files', () => {
-    return fileFunctions.getMetaFile(mainWindow)
-      .then(metaFilePath => Promise.all([
-        metaFilePath,
-        core.constructor.getCSV(metaFilePath),
-      ]))
-      .then(([metaFilePath, rawMetaFile]) => {
-        const metaFile = JSON.parse(rawMetaFile);
-        return Promise.all([
-          metaFilePath,
-          metaFile,
-          core.constructor.getFilesFromMetadata(
-            metaFilePath,
-            metaFile
-          ),
-        ]);
-      })
-      .then(([metaFilePath, metaFile, files]) => ({ metaFilePath, metaFile, files }));
+  ipcPromise.on('open-dialog', (org) => {
+    let filters;
+    let properties;
+    let postDialogFunc;
+
+    if (org === 'metafile') {
+      filters = [{
+        name: 'CSV',
+        extensions: ['csv', 'txt'],
+      }];
+      properties = ['openFile'];
+      postDialogFunc = ipcFunctions.parseCSVMetafile;
+    } else if (org === 'jsonschema') {
+      filters = [{
+        name: 'JSON Schema',
+        extensions: ['json'],
+      }];
+      properties = ['openFile'];
+      postDialogFunc = ipcFunctions.returnFileAsJSON;
+    } else {
+      filters = [
+        {
+          name: 'Images',
+          extensions: ['jpeg', 'jpg', 'png'],
+        },
+        {
+          name: 'Files',
+          extensions: ['csv', 'txt', 'rtf'],
+        },
+      ];
+      properties = ['openDirectory', 'openFile', 'multiSelections'];
+      postDialogFunc = ipcFunctions.manualFileSelection;
+    }
+
+    return fileFunctions.showDialog(
+      mainWindow,
+      filters,
+      properties
+    )
+      .then(filePaths => postDialogFunc(filePaths, core));
   });
 
   ipcPromise.on('get-computation-schema', () => {

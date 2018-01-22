@@ -27,7 +27,7 @@ class ComputationSubmission extends Component { // eslint-disable-line
 
   getComputationSchema(e) {
     e.preventDefault();
-    ipcPromise.send('get-computation-schema')
+    ipcPromise.send('open-dialog', 'jsonschema')
       .then((res) => {
         const { error: { details } } = services.validator.validate(res, 'computation');
         this.setState({ activeSchema: res, validationErrors: details });

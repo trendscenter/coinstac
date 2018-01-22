@@ -173,6 +173,24 @@ class Pipeline extends Component {
     }));
   }
 
+  setConsortium() {
+    const { auth: { user } } = this.props;
+    const owner = user.permissions.consortia[this.state.pipeline.owningConsortium] &&
+      user.permissions.consortia[this.state.pipeline.owningConsortium].write;
+
+    const consortiumId = this.state.pipeline.owningConsortium;
+    const data = ApolloClient.readQuery({ query: FETCH_ALL_CONSORTIA_QUERY });
+    const consortium = data.fetchAllConsortia.find(cons => cons.id === consortiumId);
+    delete consortium.__typename;
+
+    this.setState(prevState => ({
+      owner,
+      consortium,
+      pipeline: { ...prevState.pipeline, owningConsortium: consortiumId },
+      startingPipeline: { ...prevState.pipeline, owningConsortium: consortiumId },
+    }));
+  }
+
   addStep(computation) {
     this.setState(prevState => ({
       pipeline: {

@@ -4,42 +4,22 @@ const dialog = require('electron').dialog;
 
 module.exports = {
   /**
-   * Get a meta file.
+   * Show dialog with options.
    *
-   * @todo Find a way for the computation to specify the need for a 'meta' file.
-   *
+   * @param {object} mainWindow - reference to application window
+   * @param {string} name - filter name
+   * @param {array} extensions - file extensions allowed
+   * @param {array} properties - selection properties
    * @returns {Promise} Resolves to a string representing the meta file's full
    * path.
    */
-  getMetaFile: (mainWindow) => {
+  showDialog: (mainWindow, filters, properties) => {
     return new Promise((resolve) => {
       const files = dialog.showOpenDialog(mainWindow, {
-        filters: [{
-          name: 'CSV',
-          extensions: ['csv', 'txt'],
-        }],
-        properties: ['openFile'],
+        filters,
+        properties,
       });
-      resolve(files ? files[0] : undefined);
-    });
-  },
-
-  /**
-   * Get a schema file.
-   *
-   * @returns {Promise} Resolves to a string representing the schema file's full
-   * path.
-   */
-  getSchemaFile: (mainWindow) => {
-    return new Promise((resolve) => {
-      const files = dialog.showOpenDialog(mainWindow, {
-        filters: [{
-          name: 'JSON',
-          extensions: ['json'],
-        }],
-        properties: ['openFile'],
-      });
-      resolve(files ? files[0] : undefined);
+      resolve(files);
     });
   },
 

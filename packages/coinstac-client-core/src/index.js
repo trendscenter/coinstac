@@ -96,7 +96,7 @@ class CoinstacClient {
   }
 
   /**
-   * Get a JSON schema contents.
+   * Get JSON schema contents.
    *
    * @param {string} filename Full file path to JSON Schema
    * @returns {Promise<Project>}
@@ -104,6 +104,67 @@ class CoinstacClient {
   static getJSONSchema(filename) {
     return bluebird.promisify(fs.readFile)(filename)
       .then(data => JSON.parse(data.toString()));
+  }
+
+  static getSubPathsAndGroupExtension(group) {
+    let pathsArray = [];
+    let extension = null;
+
+    // Empty subdirectory
+    if (group.paths.length === 0) {
+      return null;
+    }
+
+    // Return error
+    if (group.error) {
+      return group;
+    }
+
+    // Iterate through all paths
+    for (let i = 0; i < group.paths.length; i += 1) {
+      let p = group.paths[i];
+
+      // Combine path with parent dir to get absolute path
+      if (group.parentDir) {
+        p = group.parentDir.concat(`/${p}`);
+      }
+
+      const stats = fs.statSync(p);
+
+      if (stats.isDirectory()) {
+        // Recursively retrieve path contents of directory
+        const subGroup = this.getSubPathsAndGroupExtension({
+          paths: [...fs.readdirSync(p).filter(item => !(/(^|\/)\.[^\/\.]/g).test(item))], // eslint-disable-line no-useless-escape
+          extension: group.extension,
+          parentDir: p,
+        });
+
+        if (subGroup) {
+          if (subGroup.error) {
+            return subGroup;
+          }
+
+          if (extension && subGroup.extension && extension !== subGroup.extension) {
+            return { error: `Group contains multiple extensions - ${extension} & ${subGroup.extension}.` };
+          }
+
+          extension = subGroup.extension;
+          pathsArray = pathsArray.concat(subGroup.paths);
+        }
+      } else {
+        const thisExtension = path.extname(p);
+
+        if ((group.extension && thisExtension !== group.extension) ||
+            (extension && extension !== thisExtension)) {
+          return { error: `Group contains multiple extensions - ${thisExtension} & ${group.extension ? group.extension : extension}.` };
+        }
+
+        extension = thisExtension;
+        pathsArray.push(p);
+      }
+    }
+
+    return { paths: pathsArray, extension };
   }
 }
 
