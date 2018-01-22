@@ -44,6 +44,13 @@ const schemaFields = {
     ioMap: JSON 
     id: ID!
   `,
+  resultFields: `
+    id: ID!
+    title: String
+    pipelineId: ID
+    date: String
+    results: JSON
+  `,
   userFields: `
     email: String!
     institution: String

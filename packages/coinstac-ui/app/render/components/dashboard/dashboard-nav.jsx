@@ -40,6 +40,13 @@ const DashboardNav = () => {
           Pipelines
         </NavItem>
       </LinkContainer>
+      <LinkContainer to="/dashboard/results">
+        <NavItem>
+          <span aria-hidden="true" className="glyphicon glyphicon-equalizer" />
+          {' '}
+          Results
+        </NavItem>
+      </LinkContainer>
       <LinkContainer to="/dashboard/test">
         <NavItem>
           <span aria-hidden="true" className="glyphicon glyphicon-sunglasses" />

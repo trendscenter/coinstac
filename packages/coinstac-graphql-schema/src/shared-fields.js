@@ -59,6 +59,13 @@ const sharedFields = {
     owningConsortium
     shared
   `,
+  resultFields: `
+    id
+    title
+    pipelineId
+    date
+    results
+  `,
 };
 
 module.exports = sharedFields;
