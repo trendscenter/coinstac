@@ -155,6 +155,34 @@ class Pipeline extends Component {
     }));
   }
 
+  componentWillUnmount() {
+    if (this.state.unsubscribeComputations) {
+      this.state.unsubscribeComputations();
+    }
+
+    if (this.state.unsubscribePipelines) {
+      this.state.unsubscribePipelines();
+    }
+  }
+
+  setConsortium() {
+    const { auth: { user } } = this.props;
+    const owner = user.permissions.consortia[this.state.pipeline.owningConsortium] &&
+      user.permissions.consortia[this.state.pipeline.owningConsortium].write;
+
+    const consortiumId = this.state.pipeline.owningConsortium;
+    const data = ApolloClient.readQuery({ query: FETCH_ALL_CONSORTIA_QUERY });
+    const consortium = data.fetchAllConsortia.find(cons => cons.id === consortiumId);
+    delete consortium.__typename;
+
+    this.setState(prevState => ({
+      owner,
+      consortium,
+      pipeline: { ...prevState.pipeline, owningConsortium: consortiumId },
+      startingPipeline: { ...prevState.pipeline, owningConsortium: consortiumId },
+    }));
+  }
+
   addStep(computation) {
     this.setState(prevState => ({
       pipeline: {
@@ -265,7 +293,6 @@ class Pipeline extends Component {
 
   updateStorePipeline() {
     const data = ApolloClient.readQuery({ query: FETCH_ALL_CONSORTIA_QUERY });
-    console.log(data);
     data.fetchPipeline = { ...this.state.pipeline, __typename: 'Pipeline' };
     ApolloClient.writeQuery({ query: FETCH_PIPELINE_QUERY, data });
   }
@@ -331,7 +358,11 @@ class Pipeline extends Component {
           id: step.id,
           computations: step.computations.map(comp => comp.id),
           ioMap: step.ioMap,
-          controller: { type: step.controller.type, options: step.controller.options },
+          controller: {
+            id: step.controller.id,
+            type: step.controller.type,
+            options: step.controller.options,
+          },
         })
       ),
     })
