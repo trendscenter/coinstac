@@ -206,7 +206,7 @@ class CoinstacClient {
         fs.link(
           filesArray[i],
           `${this.appDirectory}/${filesArray[i].replace(/\//g, '-')}`,
-          err => console.log(err)
+          err => console.log(err) // eslint-disable-line no-console
         )
       );
     }

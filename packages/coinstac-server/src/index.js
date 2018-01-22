@@ -1,7 +1,6 @@
 const hapi = require('hapi');
 const CoinstacComputationRegistry = require('coinstac-computation-registry');
 const config = require('../config/default');
-const dbmap = require('/etc/coinstac/cstacDBMap'); // eslint-disable-line import/no-absolute-path
 const routes = require('./routes');
 
 // Download computations on remote server on server start
