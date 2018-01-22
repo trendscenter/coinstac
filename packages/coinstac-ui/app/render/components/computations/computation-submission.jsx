@@ -6,6 +6,7 @@ import {
   Button,
 } from 'react-bootstrap';
 import ipcPromise from 'ipc-promise';
+import { services } from 'coinstac-common';
 import {
   ADD_COMPUTATION_MUTATION,
 } from '../../state/graphql/functions';
@@ -19,7 +20,7 @@ class ComputationSubmission extends Component { // eslint-disable-line
   constructor(props) {
     super(props);
 
-    this.state = { activeSchema: {}, submissionSuccess: null };
+    this.state = { activeSchema: {}, submissionSuccess: null, validationErrors: null };
     this.getComputationSchema = this.getComputationSchema.bind(this);
     this.submitSchema = this.submitSchema.bind(this);
   }
@@ -28,7 +29,8 @@ class ComputationSubmission extends Component { // eslint-disable-line
     e.preventDefault();
     ipcPromise.send('get-computation-schema')
       .then((res) => {
-        this.setState({ activeSchema: res });
+        const { error: { details } } = services.validator.validate(res, 'computation');
+        this.setState({ activeSchema: res, validationErrors: details });
       })
       .catch(console.log);
   }
@@ -69,11 +71,22 @@ class ComputationSubmission extends Component { // eslint-disable-line
           bsStyle="success"
           type="button"
           className={'pull-right'}
-          disabled={!this.state.activeSchema.meta}
+          disabled={!this.state.activeSchema.meta || this.state.validationErrors.length > 0}
           onClick={this.submitSchema}
         >
           Submit
         </Button>
+
+        {this.state.validationErrors &&
+          (<Alert bsStyle="danger" style={{ ...styles.topMargin, textAlign: 'left' }}>
+            <h4 style={{ fontStyle: 'normal' }}>Validation Error</h4>
+            <ul>
+              {this.state.validationErrors.map(error =>
+                <li key={error.path}>Error at {error.path}: {error.message}</li>
+              )}
+            </ul>
+          </Alert>)
+        }
 
         {!this.state.activeSchema.meta && this.state.submissionSuccess &&
           <Alert bsStyle="success" style={styles.topMargin}>

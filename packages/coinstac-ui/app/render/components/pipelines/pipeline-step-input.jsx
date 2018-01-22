@@ -15,10 +15,6 @@ const styles = {
   covariateColumns: { textAlign: 'center' },
 };
 
-const styles = {
-  covariateColumns: { textAlign: 'center' },
-};
-
 export default class PipelineStepInput extends Component {
   constructor(props) {
     super(props);

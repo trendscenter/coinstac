@@ -155,16 +155,6 @@ class Pipeline extends Component {
     }));
   }
 
-  componentWillUnmount() {
-    if (this.state.unsubscribeComputations) {
-      this.state.unsubscribeComputations();
-    }
-
-    if (this.state.unsubscribePipelines) {
-      this.state.unsubscribePipelines();
-    }
-  }
-
   setConsortium() {
     const { auth: { user } } = this.props;
     const owner = user.permissions.consortia[this.state.pipeline.owningConsortium] &&
