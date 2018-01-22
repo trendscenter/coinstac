@@ -102,7 +102,7 @@ class ComputationRegistry {
     .then((pullStreams) => {
       pullStreams.forEach(({ stream }) => stream.pipe(process.stdout));
     })
-    .catch(console.log);
+    .catch(console.log); // eslint-disable-line no-console
   }
 }
 

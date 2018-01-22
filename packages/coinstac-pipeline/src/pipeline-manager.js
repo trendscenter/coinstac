@@ -28,7 +28,7 @@ module.exports = {
     remoteURL = 'http://localhost',
     authPlugin,
     authOpts,
-    unauthHandler,
+    unauthHandler, // eslint-disable-line no-unused-vars
   }) {
     const activePipelines = {};
     let io;
