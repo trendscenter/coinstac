@@ -53,6 +53,10 @@ const typeDefs = `
     ${sharedFields.consortiumFields}
   }
 
+  type Result {
+    ${sharedFields.resultFields}
+  }
+
   input ConsortiumInput {
     id: ID
     ${sharedFields.consortiumFields}
@@ -136,9 +140,11 @@ const typeDefs = `
     fetchAllComputations: [Computation]
     fetchAllConsortia: [Consortium]
     fetchAllPipelines: [Pipeline]
+    fetchAllResults: [Result]
     fetchComputation(computationIds: [ID]): [Computation]
     fetchConsortium(consortiumId: ID): Consortium
     fetchPipeline(pipelineId: ID): Pipeline
+    fetchResult(resultId: ID): Result
     validateComputation(compId: ID): Boolean
   }
 
@@ -146,6 +152,7 @@ const typeDefs = `
     computationChanged(computationId: ID): Computation
     consortiumChanged(consortiumId: ID): Consortium
     pipelineChanged(pipelineId: ID): Pipeline
+    resultChanged(resultId: ID): Result
   }
 `;
 
