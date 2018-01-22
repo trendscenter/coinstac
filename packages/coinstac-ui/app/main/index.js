@@ -15,6 +15,8 @@ const ipcFunctions = require('./utils/ipc-functions');
 
 const { ipcMain } = electron;
 
+const { ipcMain } = electron;
+
 // if no env set prd
 process.env.NODE_ENV = process.env.NODE_ENV || 'production';
 
@@ -137,5 +139,12 @@ loadConfig()
       properties
     )
       .then(filePaths => postDialogFunc(filePaths, core));
+  });
+
+  ipcPromise.on('get-computation-schema', () => {
+    return fileFunctions.getSchemaFile(mainWindow)
+      .then(metaFilePath =>
+        core.constructor.getJSONSchema(metaFilePath)
+      );
   });
 });
