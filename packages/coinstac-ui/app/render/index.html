@@ -10,9 +10,9 @@
     <script>
       // Add application bundle based on environment
       if (process.env.NODE_ENV === 'development') {
-        document.write('<script src="http://localhost:3000/bundle.js"><\/script>');
+        document.write('<script src="http://localhost:3000/bundle.js" async><\/script>');
       } else {
-        document.write('<script src="build/bundle.js"><\/script>');
+        document.write('<script src="build/bundle.js" async><\/script>');
       }
     </script>
   </body>

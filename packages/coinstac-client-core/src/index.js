@@ -32,10 +32,6 @@ const PipelineManager = require('../../coinstac-pipeline');
  * used for testing.
  * @param {Winston} [opts.logger] permit user injected logger vs default logger
  * @param {string} [opts.logLevel] npm log levels, e.g. 'verbose', 'error', etc
- * @param {object} [opts.db] coinstac-common dbRegistry service configuration
- * @param {string} [opts.hp] URL configutation for Halfpenny's `baseUrl`
- * @property {DBRegistry} dbRegistry
- * @property {object} dbConfig db registry configuration stashed for late initialization
  * @property {Winston} logger
  * @property {string} appDirectory
  * @property {Auth} auth

@@ -1,4 +1,4 @@
 {
-  "hapiPort": 3200,
+  "hapiPort": 5100,
   "host": "localhost"
 }

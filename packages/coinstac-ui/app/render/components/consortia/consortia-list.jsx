@@ -77,6 +77,7 @@ class ConsortiaList extends Component {
         <Button
           bsStyle="success"
           onClick={this.startPipeline(id)}
+          style={{ marginLeft: 10 }}
         >
           Start Pipeline
         </Button>
@@ -114,7 +115,7 @@ class ConsortiaList extends Component {
     const { user } = this.props.auth;
     return (
       <ListItem
-        key={`${consortium.name}-list-item`}
+        key={`${consortium.id}-list-item`}
         itemObject={consortium}
         deleteItem={this.openModal}
         owner={isUserA(user.id, consortium.owners)}
@@ -270,7 +271,7 @@ const mapStateToProps = ({ auth }) => {
 };
 
 const ConsortiaListWithData = compose(
-  graphql(CREATE_RUN_MUTATION, saveDocumentProp('createRun', 'lastRun')),
+  graphql(CREATE_RUN_MUTATION, saveDocumentProp('createRun', 'consortiumId')),
   graphql(DELETE_CONSORTIUM_MUTATION, removeDocFromTableProp(
     'consortiumId',
     'deleteConsortiumById',
