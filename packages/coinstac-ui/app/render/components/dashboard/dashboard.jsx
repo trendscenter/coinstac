@@ -33,7 +33,7 @@ class Dashboard extends Component {
     return (
       <div className="dashboard container-fluid">
         <div className="row">
-          <div className="col-xs-12 col-sm-4 navigation-pane">
+          <div className="col-xs-12 col-sm-3 navigation-pane">
             <nav className="navigation">
               <h1 className="logo text-center">
                 <CoinstacAbbr />
@@ -42,7 +42,7 @@ class Dashboard extends Component {
               <UserAccountController push={router.push} />
             </nav>
           </div>
-          <div className="col-xs-12 col-sm-8 content-pane">
+          <div className="col-xs-12 col-sm-9 content-pane">
             {children}
           </div>
         </div>
