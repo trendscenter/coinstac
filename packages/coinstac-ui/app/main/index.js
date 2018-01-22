@@ -118,7 +118,7 @@ loadConfig()
   });
 
   ipcPromise.on('get-computation-schema', () => {
-    return fileFunctions.getMetaFile(mainWindow)
+    return fileFunctions.getSchemaFile(mainWindow)
       .then(metaFilePath =>
         core.constructor.getJSONSchema(metaFilePath)
       );
