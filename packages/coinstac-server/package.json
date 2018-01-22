@@ -1,6 +1,6 @@
 {
   "name": "coinstac-server",
-  "version": "1.0.0",
+  "version": "2.6.0",
   "description": "<img src=\"https://raw.githubusercontent.com/MRN-Code/coinstac/master/img/coinstac.png\" height=\"75px\">",
   "main": "src/index.js",
   "scripts": {
@@ -10,8 +10,8 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "hapi": "^16.6.2",
     "coinstac-computation-registry": "^2.6.0",
-    "coinstac-pipeline": "^2.6.0"
+    "coinstac-pipeline": "^2.6.0",
+    "hapi": "^16.6.2"
   }
 }
