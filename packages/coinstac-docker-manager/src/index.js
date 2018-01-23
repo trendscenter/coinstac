@@ -106,6 +106,10 @@ const queueJob = (jobId, input, opts) => {
   });
 };
 
+const getAllImages = () => {
+  return docker.listImages();
+}
+
 const startService = (serviceId, opts) => {
   const createService = () => {
     let proxRes;
@@ -183,6 +187,9 @@ const pullImage = (computation) => {
   });
 };
 
+const removeImage = (imageId) => {
+  return docker.getImage(imageId).remove();
+  
 /**
  * Stops all currently running containers
  * @return {Promise} resolved when all services are stopped
@@ -198,7 +205,9 @@ const stopAllServices = () => {
 };
 
 module.exports = {
+  getAllImages,
   pullImage,
+  removeImage,
   queueJob,
   startService,
   stopAllServices,

@@ -88,7 +88,6 @@ helperFunctions.getRethinkConnection()
   .then(() => rethink.tableCreate('consortia').run(connection))
   .then(() => rethink.table('consortia').insert({
     id: 'test-cons-1',
-    activePipelineId: 'test-pipeline',
     name: 'Test Consortia 1',
     description: 'This consortia is for testing.',
     owners: ['author'],
@@ -118,6 +117,10 @@ helperFunctions.getRethinkConnection()
     },
     pipelines: {},
   },
+  consortiaStatuses: {
+    'test-cons-1': 'none',
+    'test-cons-2': 'none',
+  },
 }, passwordHash))
 .then(() => helperFunctions.hashPassword('password'))
 .then(passwordHash => helperFunctions.createUser({
@@ -129,6 +132,10 @@ helperFunctions.getRethinkConnection()
     computations: {},
     consortia: {},
     pipelines: {},
+  },
+  consortiaStatuses: {
+    'test-cons-1': 'none',
+    'test-cons-2': 'none',
   },
 }, passwordHash))
 .then(() => helperFunctions.hashPassword('password'))

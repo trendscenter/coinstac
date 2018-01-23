@@ -15,8 +15,6 @@ const ipcFunctions = require('./utils/ipc-functions');
 
 const { ipcMain } = electron;
 
-const { ipcMain } = electron;
-
 // if no env set prd
 process.env.NODE_ENV = process.env.NODE_ENV || 'production';
 
@@ -79,22 +77,52 @@ loadConfig()
     logger[type](`process: render - ${message}`);
   });
 
+  ipcPromise.on('start-pipeline', ({ consortium, filesArray, run }) => {
+    return core.constructor.startPipeline(
+      consortium.id, consortium.pipelineSteps, filesArray, run.id, run.pipelineSteps
+    );
+  });
+
+  ipcPromise.on('get-all-images', () => {
+    return core.computationRegistry.getImages()
+      .then((data) => {
+        return data;
+      });
+  });
+
   ipcPromise.on('download-comps', (params) => {
     return core.computationRegistry
-      .pullPipelineComputations({ comps: params })
-      .then((pullStreams) => {
-        pullStreams.on('data', (data) => {
-          let output = compact(data.toString().split('\r\n'));
-          output = output.map(JSON.parse);
-          mainWindow.webContents.send('docker-out', output);
-        });
+      .pullComputations(params.computations)
+      .then((compStreams) => {
+        let streamsComplete = 0;
 
-        pullStreams.on('close', (code) => {
-          return code;
-        });
+        compStreams.forEach(({ compId, compName, stream }) => {
+          stream.on('data', (data) => {
+            let output = compact(data.toString().split('\r\n'));
+            output = output.map(JSON.parse);
+            mainWindow.webContents.send('docker-out', { output, compId, compName });
+          });
 
-        pullStreams.on('error', (err) => {
-          return err;
+          stream.on('end', () => {
+            mainWindow.webContents.send('docker-out',
+              {
+                output: [{ id: `${compId}-complete`, status: 'complete' }],
+                compId,
+                compName,
+              }
+            );
+
+            streamsComplete += 1;
+
+            if (params.consortiumId && streamsComplete === params.computations.length) {
+              mainWindow.webContents
+                .send('docker-pull-complete', params.consortiumId);
+            }
+          });
+
+          stream.on('error', (err) => {
+            return err;
+          });
         });
       });
   });
@@ -141,10 +169,10 @@ loadConfig()
       .then(filePaths => postDialogFunc(filePaths, core));
   });
 
-  ipcPromise.on('get-computation-schema', () => {
-    return fileFunctions.getSchemaFile(mainWindow)
-      .then(metaFilePath =>
-        core.constructor.getJSONSchema(metaFilePath)
-      );
+  ipcPromise.on('remove-image', (imgId) => {
+    return core.computationRegistry.removeDockerImage(imgId)
+      .then((data) => {
+        return data;
+      });
   });
 });
