@@ -106,11 +106,10 @@ const queueJob = (jobId, input, opts) => {
   });
 };
 
-
 const getAllImages = () => {
   return docker.listImages();
 }
-  
+
 const startService = (serviceId, opts) => {
   const createService = () => {
     let proxRes;
