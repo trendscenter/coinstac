@@ -42,6 +42,13 @@ const queries = {
       }
     }
   `,
+  fetchAllUserRuns: `
+    {
+      fetchAllUserRuns {
+        ${sharedFields.runFields}
+      }
+    }
+  `,
   fetchConsortium: `
     {
       fetchConsortium(consortiumId: $consortiumId) {
@@ -81,9 +88,9 @@ const queries = {
       }
     }
   `,
-  runChanged: `
+  userRunChanged: `
     {
-      runChanged(runId: $runId) {
+      userRunChanged(userId: $userId) {
         ${sharedFields.runFields}
       }
     }
