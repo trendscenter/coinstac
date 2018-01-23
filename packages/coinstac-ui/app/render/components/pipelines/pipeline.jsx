@@ -72,9 +72,9 @@ class Pipeline extends Component {
     }
 
     this.state = {
+      consortium,
       owner: true,
       pipeline,
-      consortium,
       startingPipeline: pipeline,
       unsubscribePipelines: null,
     };
@@ -340,7 +340,6 @@ class Pipeline extends Component {
         startingPipeline: pipeline,
         unsubscribePipelines,
       });
-      // TODO: Use redux to display success/failure messages after mutations
     })
     .catch((error) => {
       console.log(error);

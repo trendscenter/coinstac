@@ -190,7 +190,7 @@ const pullImage = (computation) => {
 const removeImage = (imageId) => {
   return docker.getImage(imageId).remove();
 }
-  
+
 /**
  * Stops all currently running containers
  * @return {Promise} resolved when all services are stopped
