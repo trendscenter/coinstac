@@ -21,7 +21,7 @@ const stepSource = {
     return { id: props.id };
   },
   canDrag(props) {
-    return !props.placeholder;
+    return props.owner && !props.placeholder;
   },
   isDragging(props, monitor) {
     return props.id === monitor.getItem().id;
