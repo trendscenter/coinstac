@@ -6,7 +6,7 @@ const tables = [
   { tableName: 'computations', idVar: 'computationId', subVar: 'computationChanged' },
   { tableName: 'consortia', idVar: 'consortiumId', subVar: 'consortiumChanged' },
   { tableName: 'pipelines', idVar: 'pipelineId', subVar: 'pipelineChanged' },
-  { tableName: 'runs', idVar: 'runId', subVar: 'runChanged' },
+  { tableName: 'runs', idVar: 'runId', subVar: 'userRunChanged' },
 ];
 
 /**

@@ -29,9 +29,15 @@ export const consortiaMembershipProp = (name) => {
   };
 };
 
-export const getAllAndSubProp = (document, listProp, query, subProp, subscription) => ({
-  options: {
-    fetchPolicy: 'cache-and-network',
+export const getAllAndSubProp = (document, listProp, query, subProp, subscription, filter) => ({
+  options: (props) => {
+    const opts = { fetchPolicy: 'cache-and-network' };
+
+    if (filter && filter === 'userId') {
+      opts.variables = { [filter]: props.auth.user.id };
+    }
+
+    return opts;
   },
   props: props => ({
     [listProp]: props.data[query],

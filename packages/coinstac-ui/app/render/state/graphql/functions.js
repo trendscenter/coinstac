@@ -57,6 +57,11 @@ export const FETCH_ALL_CONSORTIA_QUERY = gql`
     ${queries.fetchAllConsortia}
 `;
 
+export const FETCH_ALL_USER_RUNS_QUERY = gql`
+  query fetchAllUserRuns
+    ${queries.fetchAllUserRuns}
+`;
+
 export const FETCH_CONSORTIUM_QUERY = gql`
   query fetchConsortium ($consortiumId: ID)
     ${queries.fetchConsortium}
@@ -108,9 +113,9 @@ export const REMOVE_USER_ROLE_MUTATION = gql`
     ${mutations.removeUserRole}
 `;
 
-export const RUN_CHANGED_SUBSCRIPTION = gql`
-  subscription runChanged($runId: ID)
-    ${queries.runChanged}
+export const USER_RUN_CHANGED_SUBSCRIPTION = gql`
+  subscription userRunChanged($userId: ID)
+    ${queries.userRunChanged}
 `;
 
 export const SAVE_ACTIVE_PIPELINE_MUTATION = gql`

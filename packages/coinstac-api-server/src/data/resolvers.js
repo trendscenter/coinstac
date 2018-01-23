@@ -131,8 +131,14 @@ const resolvers = {
           .then(result => result);
       }
     },
-    fetchRunsForConsortium: (_, args) => {
-      return new Promise();
+    fetchAllUserRuns: ({ auth: { credentials } }, args) => {
+      return helperFunctions.getRethinkConnection()
+        .then(connection =>
+          rethink.table('runs')
+            .filter(rethink.row('clients').contains(credentials.id))
+            .run(connection)
+        )
+        .then(cursor => cursor.toArray());
     },
     validateComputation: (_, args) => {
       return new Promise();
@@ -237,7 +243,7 @@ const resolvers = {
           )
           .run(connection)
         )
-        .then((run) => {
+        .then((result) => {
           return result.changes[0].new_val;
         })
     },
@@ -561,12 +567,24 @@ const resolvers = {
      * @param {object} payload
      * @param {string} payload.runId The run changed
      * @param {object} variables
-     * @param {string} variables.runId The run listened for
+     * @param {string} variables.userId The user listened for
      */
-    runChanged: {
+    userRunChanged: {
       subscribe: withFilter(
-        () => pubsub.asyncIterator('runChanged'),
-        (payload, variables) => (!variables.runId || payload.runId === variables.runId)
+        (rootValue, args, context, info) => {
+          console.log('async rootValue', rootValue);
+          console.log('async args', args);
+          console.log('async context', context);
+          console.log('async info', info);
+          return pubsub.asyncIterator('userRunChanged');
+        },
+        (payload, variables, context, info) => {
+          console.log('variables', variables);
+          console.log('payload', payload);
+          console.log('context', context);
+          console.log('info', info);
+          return (payload.userRunChanged.clients.indexOf(variables.userId) > -1);
+        }
       )
     },
   },

@@ -19,11 +19,14 @@ import {
   FETCH_ALL_COMPUTATIONS_QUERY,
   FETCH_ALL_CONSORTIA_QUERY,
   FETCH_ALL_PIPELINES_QUERY,
+  FETCH_ALL_USER_RUNS_QUERY,
   PIPELINE_CHANGED_SUBSCRIPTION,
+  USER_RUN_CHANGED_SUBSCRIPTION,
   UPDATE_USER_CONSORTIUM_STATUS_MUTATION,
 } from '../../state/graphql/functions';
 import {
   getAllAndSubProp,
+  getSelectAndSubProp,
 } from '../../state/graphql/props';
 
 class Dashboard extends Component {
@@ -34,6 +37,7 @@ class Dashboard extends Component {
       unsubscribeComputations: null,
       unsubscribeConsortia: null,
       unsubscribePipelines: null,
+      unsubscribeRuns: null,
     };
   }
 
@@ -76,6 +80,10 @@ class Dashboard extends Component {
 
     if (nextProps.pipelines && !this.state.unsubscribePipelines) {
       this.setState({ unsubscribePipelines: this.props.subscribeToPipelines(null) });
+    }
+
+    if (nextProps.runs && !this.state.unsubscribeRuns) {
+      this.setState({ unsubscribeRuns: this.props.subscribeToUserRuns(null) });
     }
 
     if (nextProps.consortia && this.props.consortia.length > 0) {
@@ -121,6 +129,7 @@ class Dashboard extends Component {
     this.state.unsubscribeComputations();
     this.state.unsubscribeConsortia();
     this.state.unsubscribePipelines();
+    this.state.unsubscribeRuns();
   }
 
   render() {
@@ -167,6 +176,7 @@ Dashboard.defaultProps = {
   computations: [],
   consortia: [],
   pipelines: [],
+  runs: [],
 };
 
 Dashboard.propTypes = {
@@ -178,9 +188,11 @@ Dashboard.propTypes = {
   notifySuccess: PropTypes.func.isRequired,
   pipelines: PropTypes.array,
   pullComputations: PropTypes.func.isRequired,
+  runs: PropTypes.array,
   subscribeToComputations: PropTypes.func.isRequired,
   subscribeToConsortia: PropTypes.func.isRequired,
   subscribeToPipelines: PropTypes.func.isRequired,
+  subscribeToUserRuns: PropTypes.func.isRequired,
   updateDockerOutput: PropTypes.func.isRequired,
   updateUserConsortiumStatus: PropTypes.func.isRequired,
   writeLog: PropTypes.func.isRequired,
@@ -213,6 +225,14 @@ const DashboardWithData = compose(
     'fetchAllPipelines',
     'subscribeToPipelines',
     'pipelineChanged'
+  )),
+  graphql(FETCH_ALL_USER_RUNS_QUERY, getAllAndSubProp(
+    USER_RUN_CHANGED_SUBSCRIPTION,
+    'runs',
+    'fetchAllUserRuns',
+    'subscribeToUserRuns',
+    'userRunChanged',
+    'userId'
   )),
   graphql(UPDATE_USER_CONSORTIUM_STATUS_MUTATION, {
     props: ({ ownProps, mutate }) => ({
