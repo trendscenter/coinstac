@@ -196,6 +196,10 @@ const pullImage = (computation) => {
   });
 };
 
+const removeImage = (imageId) => {
+  return docker.getImage(imageId).remove();
+}
+
 /**
  * Remove the Docker image associated with the image id
  * @param {string} imgId ID of image to remove
