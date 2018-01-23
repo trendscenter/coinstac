@@ -3,8 +3,7 @@
 const axios = require('axios');
 const { getAllImages, pullImage, removeImage } = require('coinstac-docker-manager');
 const graphqlSchema = require('coinstac-graphql-schema');
-const mergeStream = require('merge-stream');
-const { compact, reduce } = require('lodash');
+const { reduce } = require('lodash');
 const dbmap = require('/etc/coinstac/cstacDBMap'); // eslint-disable-line import/no-absolute-path
 const config = require('../config/default');
 
@@ -13,6 +12,10 @@ const config = require('../config/default');
  * @class
  */
 class ComputationRegistry {
+  /**
+   * Connects to API Server to get a JSON token
+   * @return {string} JSON web token
+   */
   authenticateServer() {
     return axios.post(
       `${config.DB_URL}/authenticate`,
@@ -29,28 +32,23 @@ class ComputationRegistry {
    * Client
    */
 
+  /**
+   * Retrieve list of all local Docker images from docker-manager package
+   * @return {Object[]} Array of objects containing locally stored Docker images
+   */
   getImages() { // eslint-disable-line class-methods-use-this
     return getAllImages();
   }
 
   /**
    * Generate array of docker pull promises and wait until resolved to return merged output streams
-   * @param {Object} payload
-   * @param {Array} [payload.comps] array of computation images to download
-   * @return {Object} Returns merged streams docker pull output
+   * pulls from docker-manager package
+   * @param {Object[]} comps array of computation objects to download
+   * @param {String} comps.img Docker image name
+   * @param {String} comp.compId Computation ID from app DB
+   * @param {String} comp.compName Computation name from DB
+   * @return {Object} Returns array of objects containing stream and computation parameters
    */
-  pullPipelineComputations(payload) { // eslint-disable-line class-methods-use-this
-    const merged = mergeStream();
-
-    const compsP = compact(payload.comps).reduce((arr, img) => {
-      arr.push(pullImage(img));
-      return arr;
-    }, []);
-
-    return Promise.all(compsP)
-    .then(res => merged.add(res));
-  }
-
   pullComputations(comps) { // eslint-disable-line class-methods-use-this
     const compsP = reduce(comps, (arr, comp) => {
       arr.push(pullImage(comp.img));
@@ -65,6 +63,12 @@ class ComputationRegistry {
     });
   }
 
+  /**
+   * Remove the Docker image associated with the image id
+   * calls to docker-manager package
+   * @param {string} imgId ID of image to remove
+   * @return {Promise}
+   */
   removeDockerImage(imgId) { // eslint-disable-line class-methods-use-this
     return removeImage(imgId);
   }
