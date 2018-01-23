@@ -1,3 +1,7 @@
+/**
+ * GraphQL schema fields that can be used by multiple queries or mutations
+ */
+
 const sharedFields = {
   computationMetadata: `
     id

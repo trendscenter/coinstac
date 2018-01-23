@@ -106,10 +106,19 @@ const queueJob = (jobId, input, opts) => {
   });
 };
 
+/**
+ * Retrieve list of all local Docker images
+ * @return {Object[]} Array of objects containing locally stored Docker images
+ */
 const getAllImages = () => {
   return docker.listImages();
-}
+};
 
+/**
+ * Pull individual image from Docker hub
+ * @param {String} computation Docker image name
+ * @return {Object} Returns stream of docker pull output
+ */
 const startService = (serviceId, opts) => {
   const createService = () => {
     let proxRes;
@@ -187,6 +196,15 @@ const pullImage = (computation) => {
   });
 };
 
+const removeImage = (imageId) => {
+  return docker.getImage(imageId).remove();
+}
+
+/**
+ * Remove the Docker image associated with the image id
+ * @param {string} imgId ID of image to remove
+ * @return {Promise}
+ */
 const removeImage = (imageId) => {
   return docker.getImage(imageId).remove();
 }
