@@ -14,9 +14,9 @@ module.exports = [
       graphiqlOptions: {
         endpointURL: '/graphql',
       },
-    },
-    route: {
-      auth: false,
+      route: {
+        auth: false,
+      },
     },
   },
   {

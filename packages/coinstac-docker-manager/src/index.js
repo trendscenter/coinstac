@@ -189,6 +189,7 @@ const pullImage = (computation) => {
 
 const removeImage = (imageId) => {
   return docker.getImage(imageId).remove();
+}
   
 /**
  * Stops all currently running containers
