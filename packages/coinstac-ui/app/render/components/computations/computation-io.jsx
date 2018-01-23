@@ -5,7 +5,7 @@ import { FETCH_COMPUTATION_QUERY } from '../../state/graphql/functions';
 import { compIOProp } from '../../state/graphql/props';
 
 const ComputationIO = ({ compIO }) => (
-  <pre>
+  <pre style={{ marginTop: 15 }}>
     {JSON.stringify(compIO, null, 2)}
   </pre>
 );

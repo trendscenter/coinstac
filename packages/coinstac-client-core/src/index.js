@@ -106,6 +106,14 @@ class CoinstacClient {
       .then(data => JSON.parse(data.toString()));
   }
 
+  /**
+   * Get array of file paths recursively
+   *
+   * @param {object} group
+   * @param {array} group.paths the paths to traverse
+   * @param {string} group.parentDir parent directory if diving into subdir
+   * @param {string} group.error present if error found
+   */
   static getSubPathsAndGroupExtension(group) {
     let pathsArray = [];
     let extension = null;
@@ -165,6 +173,42 @@ class CoinstacClient {
     }
 
     return { paths: pathsArray, extension };
+  }
+
+  /**
+   * Validate client pipeline against run pipeline snapshot before link data files
+   *
+   * TODO: Create cleanup function to unlink files after run
+   *
+   * @param {string} consortiumId The id of the consortium running this pipeline
+   * @param {*} clientPipeline The client's copy of the consortium's active pipeline
+   * @param {*} filesArray An array of all the files used by the client's data mapping
+   *                        for this pipeline
+   * @param {*} runId The id if this particular pipeline run
+   * @param {*} runPipeline The run's copy of the current pipeline
+   */
+  static startPipeline(
+    consortiumId,
+    clientPipeline,
+    filesArray,
+    runId,
+    runPipeline // eslint-disable-line no-unused-vars
+  ) {
+    // TODO: validate runPipeline against clientPipeline
+    const homeDir = this.getDefaultAppDirectory();
+    const linkPromises = [];
+
+    for (let i = 0; i < filesArray.length; i += 1) {
+      linkPromises.push(
+        fs.link(
+          filesArray[i],
+          `${homeDir}/${filesArray[i].replace(/\//g, '-')}`,
+          err => console.log(err)
+        )
+      );
+    }
+
+    return Promise.all(linkPromises);
   }
 }
 

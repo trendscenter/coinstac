@@ -39,7 +39,14 @@ const mutations = {
   savePipeline: `
     {
       savePipeline(pipeline: $pipeline) {
-        ${sharedFields.pipelineSaveFields}
+        ${sharedFields.pipelineFields}
+      }
+    }
+  `,
+  updateUserConsortiumStatus: `
+    {
+      updateUserConsortiumStatus(consortiumId: $consortiumId, status: $status) {
+        ${sharedFields.userMetadata}
       }
     }
   `,

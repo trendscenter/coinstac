@@ -1,19 +1,27 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import { graphql, compose } from 'react-apollo';
+import { graphql } from 'react-apollo';
 import { LinkContainer } from 'react-router-bootstrap';
 import {
   Alert,
   Button,
-  Table,
+  Col,
+  Grid,
+  Panel,
+  Row,
 } from 'react-bootstrap';
+import ListDeleteModal from '../common/list-delete-modal';
 import {
-  COMPUTATION_CHANGED_SUBSCRIPTION,
   FETCH_ALL_COMPUTATIONS_QUERY,
   REMOVE_COMPUTATION_MUTATION,
 } from '../../state/graphql/functions';
-import { getAllAndSubProp, removeDocFromTableProp } from '../../state/graphql/props';
+import {
+  getDockerImages,
+  pullComputations,
+  removeImage,
+} from '../../state/ducks/docker';
+import { removeDocFromTableProp } from '../../state/graphql/props';
 import ComputationIO from './computation-io';
 
 const MAX_LENGTH_COMPUTATIONS = 5;
@@ -29,14 +37,23 @@ class ComputationsList extends Component { // eslint-disable-line
 
     this.state = {
       activeComp: null,
+      computationToDelete: -1,
       ownedComputations: [],
       otherComputations: [],
-      unsubscribeComputations: null,
+      showModal: false,
     };
 
     this.getTable = this.getTable.bind(this);
+    this.pullComputations = this.pullComputations.bind(this);
     this.removeComputation = this.removeComputation.bind(this);
+    this.removeImage = this.removeImage.bind(this);
     this.setActiveComp = this.setActiveComp.bind(this);
+    this.closeModal = this.closeModal.bind(this);
+    this.openModal = this.openModal.bind(this);
+  }
+
+  componentDidMount() {
+    this.props.getDockerImages();
   }
 
   componentWillReceiveProps(nextProps) {
@@ -53,61 +70,133 @@ class ComputationsList extends Component { // eslint-disable-line
       });
     }
     this.setState({ ownedComputations, otherComputations });
-
-    if (nextProps.computations && !this.state.unsubscribeComputations) {
-      this.setState({ unsubscribeComputations: this.props.subscribeToComputations(null) });
-    }
-  }
-
-  componentWillUnmount() {
-    this.state.unsubscribeComputations();
   }
 
   getTable(computations) {
-    const { auth: { user } } = this.props;
+    const { auth: { user }, docker } = this.props;
     return (
-      <Table striped bordered condensed style={styles.topMargin}>
-        <thead>
-          <tr>
-            <th>Computation Name</th>
-            <th>Get IO</th>
-            <th>Delete</th>
-          </tr>
-        </thead>
-        <tbody>
-          {computations.map((comp) => {
-            return (
-              <tr key={`${comp.id}-row`}>
-                <td>{comp.meta.name}</td>
-                <td>
-                  <Button bsStyle="primary" onClick={this.setActiveComp(comp)}>
-                    Get IO
-                  </Button>
-                </td>
-                {user.id === comp.submittedBy &&
-                  <td>
-                    <Button bsStyle="primary" onClick={this.removeComputation(comp)}>
-                      Delete
+      <div style={styles.topMargin}>
+        {computations.map((comp) => {
+          const title = (<h1>{comp.meta.name}</h1>);
+
+          return (
+            <Panel header={title} key={`${comp.id}-panel`}>
+              <Grid>
+                <Row>
+                  <Col xs={4}>
+                    <Button bsStyle="primary" onClick={this.setActiveComp(comp)}>
+                      {this.state.activeComp &&
+                        this.state.activeComp.meta.name === comp.meta.name &&
+                        'Hide IO'
+                      }
+                      {(!this.state.activeComp ||
+                        (this.state.activeComp &&
+                          this.state.activeComp.meta.name !== comp.meta.name)
+                        ) &&
+                        'Get IO'
+                      }
                     </Button>
-                  </td>
-                }
-              </tr>
-            );
-          })}
-        </tbody>
-      </Table>
+                  </Col>
+                  <Col xs={4}>
+                    {!docker.localImages[comp.computation.dockerImage.split(':')[0]] &&
+                      <Button
+                        bsStyle="success"
+                        onClick={
+                          this.pullComputations([{
+                            img: comp.computation.dockerImage,
+                            compId: comp.id,
+                            compName: comp.meta.name,
+                          }])
+                        }
+                      >
+                        Download Image
+                      </Button>
+                    }
+                    {docker.localImages[comp.computation.dockerImage.split(':')[0]] &&
+                      <Button
+                        bsStyle="warning"
+                        onClick={
+                          this.removeImage(
+                            comp.computation.dockerImage.split(':')[0],
+                            docker.localImages[comp.computation.dockerImage.split(':')[0]]
+                          )
+                        }
+                      >
+                        Remove Image
+                      </Button>
+                    }
+                  </Col>
+                  {user.id === comp.submittedBy &&
+                    <Col xs={4}>
+                      <Button bsStyle="danger" onClick={this.openModal(comp.id)}>
+                        Delete
+                      </Button>
+                    </Col>
+                  }
+                </Row>
+              </Grid>
+              {docker.dockerOut[comp.id] &&
+                <pre style={{ marginTop: 15 }}>
+                  {docker.dockerOut[comp.id].map(elem => (
+                    <div
+                      key={elem.id && elem.id !== 'latest' ? elem.id : elem.status}
+                      style={elem.isErr ? { color: 'red' } : {}}
+                    >
+                      {elem.id ? `${elem.id}: ` : ''}{elem.status} {elem.progress}
+                    </div>
+                  ))}
+                </pre>
+              }
+              {this.state.activeComp && this.state.activeComp.meta.name === comp.meta.name &&
+                <ComputationIO computationId={this.state.activeComp.id} />
+              }
+            </Panel>
+          );
+        })}
+      </div>
     );
   }
 
   setActiveComp(comp) {
     return () => {
-      this.setState({ activeComp: comp });
+      if (!this.state.activeComp || this.state.activeComp.meta.name !== comp.meta.name) {
+        this.setState({ activeComp: comp });
+      } else {
+        this.setState({ activeComp: null });
+      }
     };
   }
 
-  removeComputation(comp) {
+  closeModal() {
+    this.setState({ showModal: false });
+  }
+
+  openModal(computationId) {
     return () => {
-      this.props.removeComputation(comp.id);
+      this.setState({
+        showModal: true,
+        computationToDelete: computationId,
+      });
+    };
+  }
+
+  pullComputations(comps) {
+    return () => {
+      this.props.pullComputations({ computations: comps });
+    };
+  }
+
+  removeComputation() {
+    this.props.removeComputation(this.state.computationToDelete);
+    this.closeModal();
+  }
+
+  removeImage(imgId, imgName) {
+    return () => {
+      this.props.removeImage(imgId, imgName)
+        .then(() => {
+          this.props.getDockerImages();
+        });
     };
   }
 
@@ -118,7 +207,7 @@ class ComputationsList extends Component { // eslint-disable-line
     return (
       <div>
         <div className="page-header clearfix">
-          <h1 className="pull-left">Computations</h1>
+          <h1 className="nav-item-page-title">Computations</h1>
           <LinkContainer className="pull-right" to="/dashboard/computations/new">
             <Button bsStyle="primary" className="pull-right">
               <span aria-hidden="true" className="glphicon glyphicon-plus" />
@@ -127,6 +216,21 @@ class ComputationsList extends Component { // eslint-disable-line
             </Button>
           </LinkContainer>
         </div>
+
+        {computations && computations.length > 0 &&
+          <Button
+            bsStyle="primary"
+            onClick={this.pullComputations(
+              computations.map(comp => ({
+                img: comp.computation.dockerImage,
+                compId: comp.id,
+                compName: comp.meta.name,
+              }))
+            )}
+          >
+            Download All
+          </Button>
+        }
 
         {computations && computations.length > 0 &&
           computations.length <= MAX_LENGTH_COMPUTATIONS && this.getTable(computations)
@@ -142,49 +246,45 @@ class ComputationsList extends Component { // eslint-disable-line
           </Alert>
         }
 
-        {this.state.activeComp &&
-          <div>
-            {this.state.activeComp.meta.name}
-            <ComputationIO computationId={this.state.activeComp.id} />
-          </div>
-        }
+        <ListDeleteModal
+          close={this.closeModal}
+          deleteItem={this.removeComputation}
+          itemName={'computation'}
+          show={this.state.showModal}
+        />
       </div>
     );
   }
 }
 
 ComputationsList.defaultProps = {
-  computations: null,
   removeComputation: null,
-  subscribeToComputations: null,
 };
 
 ComputationsList.propTypes = {
   auth: PropTypes.object.isRequired,
-  computations: PropTypes.array,
+  computations: PropTypes.array.isRequired,
+  docker: PropTypes.object.isRequired,
+  getDockerImages: PropTypes.func.isRequired,
+  pullComputations: PropTypes.func.isRequired,
   removeComputation: PropTypes.func,
-  subscribeToComputations: PropTypes.func,
+  removeImage: PropTypes.func.isRequired,
 };
 
-function mapStateToProps({ auth, featureTest: { dockerOut } }) {
-  return { auth, dockerOut };
+function mapStateToProps({ auth, docker }) {
+  return { auth, docker };
 }
 
-const ComputationsListWithData = compose(
-  graphql(FETCH_ALL_COMPUTATIONS_QUERY, getAllAndSubProp(
-    COMPUTATION_CHANGED_SUBSCRIPTION,
-    'computations',
-    'fetchAllComputations',
-    'subscribeToComputations',
-    'computationChanged'
-  )),
-  graphql(REMOVE_COMPUTATION_MUTATION, removeDocFromTableProp(
+const ComputationsListWithData = graphql(REMOVE_COMPUTATION_MUTATION,
+  removeDocFromTableProp(
     'computationId',
     'removeComputation',
     FETCH_ALL_COMPUTATIONS_QUERY,
     'fetchAllComputations'
-  ))
+  )
 )(ComputationsList);
 
 
-export default connect(mapStateToProps)(ComputationsListWithData);
+export default connect(mapStateToProps,
+  { getDockerImages, pullComputations, removeImage }
+)(ComputationsListWithData);
