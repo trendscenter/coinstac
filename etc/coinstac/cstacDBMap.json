@@ -1,0 +1,11 @@
+{
+  "rethinkdbAdmin": {
+    "user": "coinstac",
+    "password": "test"
+  },
+  "rethinkdbServer": {
+    "username": "server",
+    "password": "password"
+  },
+  "cstacJWTSecret": "friends"
+}
