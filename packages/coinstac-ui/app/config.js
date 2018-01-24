@@ -5,7 +5,7 @@ const bluebird = require('bluebird');
 const access = bluebird.promisify(require('fs').access);
 const path = require('path');
 
-const localConfig = path.resolve(__dirname, '..', 'config', 'local.json');
+const localConfig = path.resolve(__dirname, '../..', 'config', 'local.json');
 
 const fileExists = (fPath) => {
   return access(fPath).then(() => true, () => false);
@@ -18,12 +18,12 @@ const conf = convict({
     default: 'production',
     env: 'NODE_ENV',
   },
-  api: {
+  apiServer: {
     hostname: 'coins-api.mrn.org',
     pathname: '/api/v1.3.0',
     protocol: 'https:',
   },
-  db: {
+  subApiServer: {
     remote: {
       db: {
         hostname: 'coinstac.mrn.org',

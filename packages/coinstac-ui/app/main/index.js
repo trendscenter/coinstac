@@ -106,7 +106,7 @@ loadConfig()
    * @return {Promise<String[]>} An array of all local Docker image names
    */
   ipcPromise.on('get-all-images', () => {
-    return core.computationRegistry.getImages()
+    return core.computationRegistry.constructor.getImages()
       .then((data) => {
         return data;
       });
@@ -121,7 +121,7 @@ loadConfig()
    * @return {Promise}
    */
   ipcPromise.on('download-comps', (params) => {
-    return core.computationRegistry
+    return core.computationRegistry.constructor
       .pullComputations(params.computations)
       .then((compStreams) => {
         let streamsComplete = 0;
@@ -209,6 +209,6 @@ loadConfig()
    * @param {String} imgId ID of the image to remove
    */
   ipcPromise.on('remove-image', (imgId) => {
-    return core.computationRegistry.removeDockerImage(imgId);
+    return core.computationRegistry.constructor.removeDockerImage(imgId);
   });
 });

@@ -32,7 +32,6 @@ const ComputationRegistry = require('coinstac-computation-registry');
  * @param {Winston} [opts.logger] permit user injected logger vs default logger
  * @param {string} [opts.logLevel] npm log levels, e.g. 'verbose', 'error', etc
  * @param {object} [opts.db] coinstac-common dbRegistry service configuration
- * @param {string} [opts.hp] URL configutation for Halfpenny's `baseUrl`
  * @property {DBRegistry} dbRegistry
  * @property {object} dbConfig db registry configuration stashed for late initialization
  * @property {Winston} logger
@@ -50,7 +49,7 @@ class CoinstacClient {
       CoinstacClient.getDefaultAppDirectory();
 
     // hack for electron-remote. generate full API, even if it's dead.
-    this.computationRegistry = new ComputationRegistry();
+    this.computationRegistry = new ComputationRegistry({});
 
     /* istanbul ignore if */
     if (opts.logLevel) {
