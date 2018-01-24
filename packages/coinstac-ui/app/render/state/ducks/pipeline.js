@@ -2,6 +2,6 @@
 
 import ipcPromise from 'ipc-promise';
 
-export const startPipeline = (consortium) =>
-  dispatch =>
-    ipcPromise.send('start-pipeline', compsAndConsortiumId)
+export const startPipeline = (consortium) => // eslint-disable-line
+  () =>
+    ipcPromise.send('start-pipeline', consortium);
