@@ -100,8 +100,7 @@ const helperFunctions = {
             )
           )
         ).coerceTo('object'),
-      })).run(connection))
-    .then(user => user);
+      })).run(connection));
   },
   /**
    * Hashes password for storage in database

@@ -571,20 +571,8 @@ const resolvers = {
      */
     userRunChanged: {
       subscribe: withFilter(
-        (rootValue, args, context, info) => {
-          console.log('async rootValue', rootValue);
-          console.log('async args', args);
-          console.log('async context', context);
-          console.log('async info', info);
-          return pubsub.asyncIterator('userRunChanged');
-        },
-        (payload, variables, context, info) => {
-          console.log('variables', variables);
-          console.log('payload', payload);
-          console.log('context', context);
-          console.log('info', info);
-          return (payload.userRunChanged.clients.indexOf(variables.userId) > -1);
-        }
+        () => pubsub.asyncIterator('userRunChanged'),
+        (payload, variables) => (payload.userRunChanged.clients.indexOf(variables.userId) > -1)
       )
     },
   },

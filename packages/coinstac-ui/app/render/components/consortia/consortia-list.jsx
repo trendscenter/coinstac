@@ -75,6 +75,7 @@ class ConsortiaList extends Component {
     if (owner && activePipelineId) {
       options.push(
         <Button
+          key={`${id}-start-pipeline-button`}
           bsStyle="success"
           onClick={this.startPipeline(id)}
           style={{ marginLeft: 10 }}
@@ -87,7 +88,7 @@ class ConsortiaList extends Component {
     if (member && !owner) {
       options.push(
         <Button
-          key="leave-cons-button"
+          key={`${id}-leave-cons-button`}
           bsStyle="warning"
           className="pull-right"
           onClick={() => this.leaveConsortium(id)}
@@ -98,7 +99,7 @@ class ConsortiaList extends Component {
     } else if (!member && !owner) {
       options.push(
         <Button
-          key="join-cons-button"
+          key={`${id}-join-cons-button`}
           bsStyle="primary"
           className="pull-right"
           onClick={() => this.joinConsortium(id, activePipelineId)}
