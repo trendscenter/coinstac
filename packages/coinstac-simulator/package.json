@@ -45,7 +45,7 @@
     "csv-load-sync": "^1.0.0",
     "glob": "^7.1.2",
     "lodash": "^4.17.4",
-    "pouchdb-adapter-memory": "^6.4.1",
+    "pouchdb-adapter-memory": "^6.4.2",
     "retry": "^0.10.1",
     "spawn-pouchdb-server": "^3.3.3",
     "winston": "^2.4.0"
