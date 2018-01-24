@@ -1,6 +1,13 @@
+/**
+ * GraphQL schema fields that can be used by multiple queries or mutations
+ */
+
 const sharedFields = {
   computationMetadata: `
     id
+    computation {
+      dockerImage
+    }
     meta {
       name
       description
@@ -26,6 +33,7 @@ const sharedFields = {
     institution
     passwordHash
     permissions
+    consortiaStatuses
   `,
   pipelineFields: `
     id
@@ -50,14 +58,6 @@ const sharedFields = {
       }
       ioMap
     }
-  `,
-  pipelineSaveFields: `
-    id
-    delete
-    description
-    name
-    owningConsortium
-    shared
   `,
   resultFields: `
     id

@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { graphql, compose } from 'react-apollo';
-import { Alert, Button, Modal } from 'react-bootstrap';
+import { graphql } from 'react-apollo';
+import { Alert, Button } from 'react-bootstrap';
 import { LinkContainer } from 'react-router-bootstrap';
 import PropTypes from 'prop-types';
 import ListItem from '../common/list-item';
@@ -9,37 +9,62 @@ import ListDeleteModal from '../common/list-delete-modal';
 import {
   DELETE_PIPELINE_MUTATION,
   FETCH_ALL_PIPELINES_QUERY,
-  PIPELINE_CHANGED_SUBSCRIPTION,
 } from '../../state/graphql/functions';
 import {
-  getAllAndSubProp,
   removeDocFromTableProp,
 } from '../../state/graphql/props';
+
+const MAX_LENGTH_PIPELINES = 5;
 
 class PipelinesList extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
+      ownedPipelines: [],
+      otherPipelines: [],
       pipelineToDelete: -1,
       showModal: false,
-      unsubscribePipelines: null,
     };
 
     this.deletePipeline = this.deletePipeline.bind(this);
     this.closeModal = this.closeModal.bind(this);
+    this.getListItem = this.getListItem.bind(this);
     this.openModal = this.openModal.bind(this);
   }
 
   componentWillReceiveProps(nextProps) {
-    console.log(nextProps);
-    if (nextProps.pipelines && !this.state.unsubscribePipelines) {
-      this.setState({ unsubscribePipelines: this.props.subscribeToPipelines(null) });
+    const { user } = this.props.auth;
+    const ownedPipelines = [];
+    const otherPipelines = [];
+    if (nextProps.pipelines && nextProps.pipelines.length > MAX_LENGTH_PIPELINES) {
+      nextProps.pipelines.forEach((pipeline) => {
+        if (user.permissions.consortia[pipeline.owningConsortium] &&
+          user.permissions.consortia[pipeline.owningConsortium].write) {
+          ownedPipelines.push(pipeline);
+        } else {
+          otherPipelines.push(pipeline);
+        }
+      });
     }
+    this.setState({ ownedPipelines, otherPipelines });
   }
 
-  componentWillUnmount() {
-    this.state.unsubscribePipelines();
+  getListItem(pipeline) {
+    const { user } = this.props.auth;
+    return (
+      <ListItem
+        key={`${pipeline.name}-list-item`}
+        itemObject={pipeline}
+        deleteItem={this.openModal}
+        owner={
+          user.permissions.consortia[pipeline.owningConsortium] &&
+          user.permissions.consortia[pipeline.owningConsortium].write
+        }
+        itemOptions={[]}
+        itemRoute={'/dashboard/pipelines'}
+      />
+    );
   }
 
   closeModal() {
@@ -61,12 +86,13 @@ class PipelinesList extends Component {
   }
 
   render() {
-    const { auth: { user }, pipelines } = this.props;
+    const { pipelines } = this.props;
+    const { ownedPipelines, otherPipelines } = this.state;
 
     return (
       <div>
         <div className="page-header clearfix">
-          <h1 className="pull-left">Pipelines</h1>
+          <h1 className="nav-item-page-title">Pipelines</h1>
           <LinkContainer className="pull-right" to="/dashboard/pipelines/new">
             <Button bsStyle="primary" className="pull-right">
               <span aria-hidden="true" className="glphicon glyphicon-plus" />
@@ -75,19 +101,15 @@ class PipelinesList extends Component {
             </Button>
           </LinkContainer>
         </div>
-        {pipelines && pipelines.map(pipeline => (
-          <ListItem
-            key={`${pipeline.name}-list-item`}
-            itemObject={pipeline}
-            deleteItem={this.openModal}
-            owner={
-              user.permissions.consortia[pipeline.owningConsortium] &&
-              user.permissions.consortia[pipeline.owningConsortium].write
-            }
-            itemOptions={[]}
-            itemRoute={'/dashboard/pipelines'}
-          />
-        ))}
+
+        {pipelines && pipelines.length && pipelines.length <= MAX_LENGTH_PIPELINES
+          && pipelines.map(pipeline => this.getListItem(pipeline))
+        }
+        {ownedPipelines.length > 0 && <h4>Owned Pipelines</h4>}
+        {ownedPipelines.length > 0 && ownedPipelines.map(pipeline => this.getListItem(pipeline))}
+        {otherPipelines.length > 0 && <h4>Other Pipelines</h4>}
+        {otherPipelines.length > 0 && otherPipelines.map(pipeline => this.getListItem(pipeline))}
+
         {(!pipelines || !pipelines.length) &&
           <Alert bsStyle="info">
             No pipelines found
@@ -105,9 +127,9 @@ class PipelinesList extends Component {
 }
 
 PipelinesList.propTypes = {
+  auth: PropTypes.object.isRequired,
   deletePipeline: PropTypes.func.isRequired,
   pipelines: PropTypes.array,
-  subscribeToPipelines: PropTypes.func.isRequired,
 };
 
 PipelinesList.defaultProps = {
@@ -118,20 +140,13 @@ const mapStateToProps = ({ auth }) => {
   return { auth };
 };
 
-const PipelinesListWithData = compose(
-  graphql(DELETE_PIPELINE_MUTATION, removeDocFromTableProp(
+const PipelinesListWithData = graphql(DELETE_PIPELINE_MUTATION,
+  removeDocFromTableProp(
     'pipelineId',
     'deletePipeline',
     FETCH_ALL_PIPELINES_QUERY,
     'fetchAllPipelines'
-  )),
-  graphql(FETCH_ALL_PIPELINES_QUERY, getAllAndSubProp(
-    PIPELINE_CHANGED_SUBSCRIPTION,
-    'pipelines',
-    'fetchAllPipelines',
-    'subscribeToPipelines',
-    'pipelineChanged'
-  ))
+  )
 )(PipelinesList);
 
 export default connect(mapStateToProps)(PipelinesListWithData);

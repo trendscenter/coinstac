@@ -1,37 +1,14 @@
-import app from 'ampersand-app';
 import { Button } from 'react-bootstrap';
 import { connect } from 'react-redux';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
+import { notifyError, notifyInfo } from '../../state/ducks/notifyAndLog';
 
 class Settings extends Component {
   constructor(props) {
     super(props);
 
     this.deleteUserData = this.deleteUserData.bind(this);
-  }
-
-  deleteUserData(event) {
-    event.preventDefault();
-
-    app.main.services.clean.userData(this.props.username)
-      .then((didDelete) => {
-        if (didDelete) {
-          app.notify({
-            message: 'Logged out',
-          });
-
-          // TODO: Figure why `nextTick` is needed
-          process.nextTick(() => this.context.router.push('/login'));
-        }
-      })
-      .catch((error) => {
-        app.logger.error(error);
-        app.notify({
-          level: 'error',
-          message: `Could not remove user data: ${error.message}`,
-        });
-      });
   }
 
   render() {
@@ -61,6 +38,8 @@ Settings.contextTypes = {
 };
 
 Settings.propTypes = {
+  notifyError: PropTypes.func.isRequired,
+  notifyInfo: PropTypes.func.isRequired,
   username: PropTypes.string.isRequired,
 };
 
@@ -70,4 +49,4 @@ function mapStateToProps(state) {
   };
 }
 
-export default connect(mapStateToProps)(Settings);
+export default connect(mapStateToProps, { notifyError, notifyInfo })(Settings);

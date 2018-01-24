@@ -1,16 +1,17 @@
-import app from 'ampersand-app';
 import { connect } from 'react-redux';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import FormSignup from './form-signup';
 import LayoutNoauth from '../layout-noauth';
 import { clearError, clearUser, signUp } from '../../state/ducks/auth';
+import { notifyError, notifySuccess } from '../../state/ducks/notifyAndLog';
 
 class FormSignupController extends Component {
   constructor(props) {
     super(props);
     this.onSubmit = this.onSubmit.bind(this);
     this.checkForUser = this.checkForUser.bind(this);
+    this.handleSignupError = this.handleSignupError.bind(this);
   }
 
   componentDidMount() {
@@ -65,15 +66,13 @@ class FormSignupController extends Component {
     return this.props.signUp(formData)
       .then(() => {
         if (!this.props.auth.error) {
-          app.notify({
-            level: 'success',
+          this.props.notifySuccess({
             message: 'Account created',
           });
         }
       })
       .catch((error) => {
-        app.notify({
-          level: 'error',
+        this.props.notifyError({
           message: error.message,
         });
       });
@@ -86,6 +85,22 @@ class FormSignupController extends Component {
     }
   }
 
+  handleSignupError(error) {
+    let message;
+
+    if (error.message) {
+      message = error.message;
+    } else if (typeof error === 'string') {
+      message = error;
+    } else {
+      message = 'Signup error occurred. Please try again.';
+    }
+
+    this.props.notifyError({
+      message,
+    });
+  }
+
   render() {
     return (
       <LayoutNoauth>
@@ -94,23 +109,6 @@ class FormSignupController extends Component {
     );
   }
 }
-
-FormSignupController.handleSignupError = function _(error) {
-  let message;
-
-  if (error.message) {
-    message = error.message;
-  } else if (typeof error === 'string') {
-    message = error;
-  } else {
-    message = 'Signup error occurred. Please try again.';
-  }
-
-  app.notify({
-    level: 'error',
-    message,
-  });
-};
 
 FormSignupController.contextTypes = {
   router: PropTypes.object.isRequired,
@@ -122,6 +120,8 @@ FormSignupController.propTypes = {
   auth: PropTypes.object.isRequired,
   clearError: PropTypes.func.isRequired,
   clearUser: PropTypes.func.isRequired,
+  notifyError: PropTypes.func.isRequired,
+  notifySuccess: PropTypes.func.isRequired,
   signUp: PropTypes.func.isRequired,
 };
 
@@ -129,4 +129,6 @@ const mapStateToProps = ({ auth }) => {
   return { auth };
 };
 
-export default connect(mapStateToProps, { clearError, clearUser, signUp })(FormSignupController);
+export default connect(mapStateToProps,
+  { clearError, clearUser, notifyError, notifySuccess, signUp }
+)(FormSignupController);

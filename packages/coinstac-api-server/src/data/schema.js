@@ -45,7 +45,6 @@ const typeDefs = `
     id: ID
     meta: ComputationMetaInput
     computation: ComputationFieldInput
-    submittedBy: ID!
   }
 
   type Consortium {
@@ -127,11 +126,12 @@ const typeDefs = `
     leaveConsortium(consortiumId: ID): Consortium
     removeComputation(computationId: ID): Computation
     removeUserRole(userId: ID, table: String, doc: String, role: String): User
-    saveActivePipeline(consortiumId: ID, activePipeline: ID): String
+    saveActivePipeline(consortiumId: ID, activePipelineId: ID): String
     saveConsortium(consortium: ConsortiumInput): Consortium
     savePipeline(pipeline: PipelineInput): Pipeline
     setActiveComputation(computationId: ID, consortiumId: ID): String
     setComputationInputs(consortiumId: ID, fieldIndex: Int, values: String ): String
+    updateUserConsortiumStatus(consortiumId: ID, status: String): User
   }
 
   # This is a description of the queries

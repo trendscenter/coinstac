@@ -210,8 +210,16 @@ const resolvers = {
               newRoles = perms[args.table][args.doc];
             }
 
+            const updateObj = { permissions: { [args.table]: { [args.doc]: newRoles } } };
+
+            // Add entry to user statuses object
+            if (args.table === 'consortia') {
+              updateObj.consortiaStatuses = {};
+              updateObj.consortiaStatuses[args.doc] = 'none';
+            }
+
             return rethink.table('users').get(credentials.id).update(
-              { permissions: { [args.table]: { [args.doc]: newRoles } } }, { returnChanges: true }
+              updateObj, { returnChanges: true }
             ).run(connection);
           })
         )
@@ -349,17 +357,25 @@ const resolvers = {
      */
     removeUserRole: ({ auth: { credentials } }, args) => {
       const { permissions } = credentials
+      let updateObj = {
+        permissions: { [args.table]: {
+          [args.doc]: rethink.table('users')
+            .get(credentials.id)('permissions')(args.table)(args.doc)
+            .filter(role => role.ne(args.role)),
+        } },
+      };
+
+      // Remove entry from user statuses object if updating consortia
+      if (args.table === 'consortia') {
+        const statuses = Object.assign({}, credentials.consortiaStatuses);
+        delete statuses[args.doc];
+        updateObj.consortiaStatuses = statuses;
+      }
 
       return helperFunctions.getRethinkConnection()
         .then(connection =>
           rethink.table('users')
-          .get(credentials.id).update({
-            permissions: { [args.table]: {
-              [args.doc]: rethink.table('users')
-                .get(credentials.id)('permissions')(args.table)(args.doc)
-                .filter(role => role.ne(args.role)),
-            } },
-          }, { nonAtomic: true }).run(connection)
+          .get(credentials.id).update(updateObj, { nonAtomic: true }).run(connection)
         )
         .then(result =>
           helperFunctions.getUserDetails({ username: credentials.id })
@@ -371,7 +387,7 @@ const resolvers = {
      * @param {object} auth User object from JWT middleware validateFunc
      * @param {object} args
      * @param {string} args.consortiumId Consortium to update
-     * @param {string} args.activePipeline Pipeline ID to mark as active
+     * @param {string} args.activePipelineId Pipeline ID to mark as active
      */
     saveActivePipeline: ({ auth: { credentials } }, args) => {
       const { permissions } = credentials;
@@ -383,7 +399,7 @@ const resolvers = {
       }*/
       return helperFunctions.getRethinkConnection()
         .then((connection) =>
-          rethink.table('consortia').get(args.consortiumId).update({activePipeline: args.activePipeline})
+          rethink.table('consortia').get(args.consortiumId).update({activePipelineId: args.activePipelineId})
           .run(connection)
         )
     },
@@ -463,7 +479,29 @@ const resolvers = {
     },
     setComputationInputs: (_, args) => {
       return new Promise();
-    }
+    },
+    /**
+     * Saves consortium
+     * @param {object} auth User object from JWT middleware validateFunc
+     * @param {object} args
+     * @param {string} args.consortiumId Consortium id to update
+     * @param {string} args.status New status
+     * @return {object} Updated user object
+     */
+    updateUserConsortiumStatus: ({ auth: { credentials } }, { consortiumId, status }) =>
+      helperFunctions.getRethinkConnection()
+        .then(connection =>
+          rethink.table('users')
+          .get(credentials.id).update({
+            consortiaStatuses: {
+              [consortiumId]: status,
+            },
+          }).run(connection)
+        )
+        .then(result =>
+          helperFunctions.getUserDetails({ username: credentials.id })
+        )
+        .then(result => result)
   },
   Subscription: {
     /**

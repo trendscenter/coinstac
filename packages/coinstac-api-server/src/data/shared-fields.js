@@ -52,6 +52,7 @@ const schemaFields = {
     results: JSON
   `,
   userFields: `
+    consortiaStatuses: JSON
     email: String!
     institution: String
     passwordHash: String!

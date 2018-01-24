@@ -8,14 +8,8 @@ import {
   Button,
 } from 'react-bootstrap';
 import { LinkContainer } from 'react-router-bootstrap';
-import { graphql } from 'react-apollo';
 import PropTypes from 'prop-types';
 import update from 'immutability-helper';
-import {
-  CONSORTIUM_CHANGED_SUBSCRIPTION,
-  FETCH_ALL_CONSORTIA_QUERY,
-} from '../../state/graphql/functions';
-import { getAllAndSubProp } from '../../state/graphql/props';
 import CollectionPipeline from './collection-pipeline';
 
 class CollectionConsortia extends Component {
@@ -23,16 +17,17 @@ class CollectionConsortia extends Component {
     super(props);
 
     this.state = {
-      activeConsortium: { stepIO: [], runs: 0 },
+      activeConsortium: { stepIO: [], runs: 0, pipelineSteps: [] },
     };
 
     this.setActivePipeline = this.setActivePipeline.bind(this);
+    this.setPipelineSteps = this.setPipelineSteps.bind(this);
     this.updateConsortiumCovars = this.updateConsortiumCovars.bind(this);
   }
 
   setActivePipeline(consId) {
     let consortium = {};
-    const consIndex = this.props.collection.associatedConsortia
+    const consIndex = this.props.associatedConsortia
       .findIndex(cons => cons.id === consId);
 
     if (consIndex === -1) {
@@ -40,9 +35,10 @@ class CollectionConsortia extends Component {
         ...this.props.consortia.find(c => consId === c.id),
         stepIO: [],
         runs: 0,
+        pipelineSteps: [],
       };
     } else {
-      consortium = { ...this.props.collection.associatedConsortia[consIndex] };
+      consortium = { ...this.props.associatedConsortia[consIndex] };
     }
 
     this.setState({
@@ -53,11 +49,17 @@ class CollectionConsortia extends Component {
     });
   }
 
+  setPipelineSteps(steps) {
+    this.setState(prevState => ({
+      activeConsortium: {
+        ...prevState.activeConsortium,
+        pipelineSteps: steps,
+      },
+    }));
+  }
+
   updateConsortiumCovars(pipelineStepIndex, covariateIndex, covarArray) {
-    const { collection, updateCollection } = this.props;
-    const assocIndex =
-      collection.associatedConsortia.findIndex(c => c.id === this.state.activeConsortium.id);
-    const newAssocCons = [...collection.associatedConsortia];
+    const { updateAssociatedConsortia } = this.props;
 
     this.setState(prevState => ({
       activeConsortium: {
@@ -67,21 +69,13 @@ class CollectionConsortia extends Component {
         }),
       },
     }), (() => {
-      if (assocIndex > -1) {
-        newAssocCons.splice(assocIndex, 1, this.state.activeConsortium);
-      } else {
-        newAssocCons.push(this.state.activeConsortium);
-      }
-
-      updateCollection({
-        param: 'associatedConsortia',
-        value: newAssocCons,
-      });
+      updateAssociatedConsortia(this.state.activeConsortium);
     }));
   }
 
   render() {
     const {
+      associatedConsortia,
       auth: { user },
       consortia,
       collection,
@@ -92,16 +86,16 @@ class CollectionConsortia extends Component {
       <div>
         <Form onSubmit={saveCollection}>
           {consortia.length > 0 &&
-            collection.associatedConsortia.length > 0 &&
+            associatedConsortia.length > 0 &&
             <h3>Associated Consortia</h3>
           }
           {consortia.length && consortia.map((cons) => {
-            const associatedIndex = collection.associatedConsortia.findIndex(c => c.id === cons.id);
+            const associatedIndex = associatedConsortia.findIndex(c => c.id === cons.id);
             if (associatedIndex > -1) {
               return (
                 <Panel key={`${cons.id}-list-item`}>
                   <h4>{cons.name}</h4>
-                  <p>Runs: {collection.associatedConsortia[associatedIndex].runs}</p>
+                  <p>Runs: {associatedConsortia[associatedIndex].runs}</p>
                   <LinkContainer className="pull-right" to={`/dashboard/consortia/${cons.id}`}>
                     <Button
                       bsStyle="info"
@@ -130,9 +124,8 @@ class CollectionConsortia extends Component {
             title="Select Consortia"
           >
             {consortia.map((cons) => {
-              console.log('cons', cons);
               if ((cons.members.indexOf(user.id) > -1 || cons.owners.indexOf(user.id) > -1) &&
-                  collection.associatedConsortia.findIndex(c => c.id === cons.id) === -1) {
+                  associatedConsortia.findIndex(c => c.id === cons.id) === -1) {
                 return (
                   <MenuItem
                     eventKey={cons.id}
@@ -158,10 +151,13 @@ class CollectionConsortia extends Component {
           {this.state.activeConsortium.name &&
             <CollectionPipeline
               key={`${this.state.activeConsortium.id}-pipeline`}
+              associatedConsortia={associatedConsortia}
               collection={collection}
               consortiumName={this.state.activeConsortium.name}
               consortiumId={this.state.activeConsortium.id}
               pipelineId={this.state.activeConsortium.activePipelineId}
+              pipelineSteps={this.state.activeConsortium.pipelineSteps}
+              setPipelineSteps={this.setPipelineSteps}
               updateConsortiumCovars={this.updateConsortiumCovars}
             />
           }
@@ -180,27 +176,21 @@ class CollectionConsortia extends Component {
 
 CollectionConsortia.propTypes = {
   auth: PropTypes.object.isRequired,
+  associatedConsortia: PropTypes.array,
   collection: PropTypes.object,
   consortia: PropTypes.array,
   saveCollection: PropTypes.func.isRequired,
-  updateCollection: PropTypes.func.isRequired,
+  updateAssociatedConsortia: PropTypes.func.isRequired,
 };
 
 CollectionConsortia.defaultProps = {
+  associatedConsortia: [],
   collection: null,
   consortia: [],
 };
-
-const CollectionConsortiaWithData = graphql(FETCH_ALL_CONSORTIA_QUERY, getAllAndSubProp(
-  CONSORTIUM_CHANGED_SUBSCRIPTION,
-  'consortia',
-  'fetchAllConsortia',
-  'subscribeToConsortia',
-  'consortiumChanged'
-))(CollectionConsortia);
 
 function mapStateToProps({ auth }) {
   return { auth };
 }
 
-export default connect(mapStateToProps)(CollectionConsortiaWithData);
+export default connect(mapStateToProps)(CollectionConsortia);

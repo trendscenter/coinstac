@@ -29,16 +29,12 @@ import ApolloClient from '../../state/apollo-client';
 import PipelineStep from './pipeline-step';
 import ItemTypes from './pipeline-item-types';
 import {
-  COMPUTATION_CHANGED_SUBSCRIPTION,
-  CONSORTIUM_CHANGED_SUBSCRIPTION,
   FETCH_ALL_CONSORTIA_QUERY,
-  FETCH_ALL_COMPUTATIONS_QUERY,
   FETCH_PIPELINE_QUERY,
   PIPELINE_CHANGED_SUBSCRIPTION,
   SAVE_PIPELINE_MUTATION,
 } from '../../state/graphql/functions';
 import {
-  getAllAndSubProp,
   getSelectAndSubProp,
   saveDocumentProp,
 } from '../../state/graphql/props';
@@ -76,11 +72,10 @@ class Pipeline extends Component {
     }
 
     this.state = {
+      consortium,
       owner: true,
       pipeline,
-      consortium,
       startingPipeline: pipeline,
-      unsubscribeComputations: null,
       unsubscribePipelines: null,
     };
 
@@ -98,12 +93,6 @@ class Pipeline extends Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    if (nextProps.computations && !this.state.unsubscribeComputations) {
-      this.setState({
-        unsubscribeComputations: this.props.subscribeToComputations(null),
-      });
-    }
-
     if (nextProps.activePipeline && !this.state.unsubscribePipelines) {
       this.setState({
         unsubscribePipelines: this.props.subscribeToPipelines(this.state.pipeline.id),
@@ -265,7 +254,6 @@ class Pipeline extends Component {
 
   updateStorePipeline() {
     const data = ApolloClient.readQuery({ query: FETCH_ALL_CONSORTIA_QUERY });
-    console.log(data);
     data.fetchPipeline = { ...this.state.pipeline, __typename: 'Pipeline' };
     ApolloClient.writeQuery({ query: FETCH_PIPELINE_QUERY, data });
   }
@@ -331,7 +319,11 @@ class Pipeline extends Component {
           id: step.id,
           computations: step.computations.map(comp => comp.id),
           ioMap: step.ioMap,
-          controller: { type: step.controller.type, options: step.controller.options },
+          controller: {
+            id: step.controller.id,
+            type: step.controller.type,
+            options: step.controller.options,
+          },
         })
       ),
     })
@@ -348,7 +340,6 @@ class Pipeline extends Component {
         startingPipeline: pipeline,
         unsubscribePipelines,
       });
-      // TODO: Use redux to display success/failure messages after mutations
     })
     .catch((error) => {
       console.log(error);
@@ -532,8 +523,6 @@ class Pipeline extends Component {
 
 Pipeline.defaultProps = {
   activePipeline: null,
-  computations: [],
-  consortia: [],
   subscribeToComputations: null,
   subscribeToPipelines: null,
 };
@@ -541,12 +530,11 @@ Pipeline.defaultProps = {
 Pipeline.propTypes = {
   activePipeline: PropTypes.object,
   auth: PropTypes.object.isRequired,
-  computations: PropTypes.array,
+  computations: PropTypes.array.isRequired,
   connectDropTarget: PropTypes.func.isRequired,
-  consortia: PropTypes.array,
+  consortia: PropTypes.array.isRequired,
   params: PropTypes.object.isRequired,
   savePipeline: PropTypes.func.isRequired,
-  subscribeToComputations: PropTypes.func,
   subscribeToPipelines: PropTypes.func,
 };
 
@@ -562,20 +550,6 @@ const PipelineWithData = compose(
     'subscribeToPipelines',
     'pipelineChanged',
     'fetchPipeline'
-  )),
-  graphql(FETCH_ALL_COMPUTATIONS_QUERY, getAllAndSubProp(
-    COMPUTATION_CHANGED_SUBSCRIPTION,
-    'computations',
-    'fetchAllComputations',
-    'subscribeToComputations',
-    'computationChanged'
-  )),
-  graphql(FETCH_ALL_CONSORTIA_QUERY, getAllAndSubProp(
-    CONSORTIUM_CHANGED_SUBSCRIPTION,
-    'consortia',
-    'fetchAllConsortia',
-    'subscribeToConsortia',
-    'consortiumChanged'
   )),
   graphql(SAVE_PIPELINE_MUTATION, saveDocumentProp('savePipeline', 'pipeline'))
 )(Pipeline);

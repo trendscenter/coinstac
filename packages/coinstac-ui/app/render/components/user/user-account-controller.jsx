@@ -1,8 +1,7 @@
-import app from 'ampersand-app';
 import { connect } from 'react-redux';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-
+import { notifySuccess, notifyError, writeLog } from '../../state/ducks/notifyAndLog';
 import { logout } from '../../state/ducks/auth';
 import UserAccount from './user-account';
 
@@ -21,15 +20,13 @@ class UserAccountController extends Component {
     this.props.logout()
     .then(() => {
       router.push('/login');
-      app.notify({
-        level: 'success',
+      this.props.notifySuccess({
         message: 'Successfully logged out',
       });
     })
     .catch((err) => {
-      app.logger.error(err);
-      app.notify({
-        level: 'error',
+      this.props.writeLog({ type: 'error', message: err });
+      this.props.notifyError({
         message: 'Error logging out',
       });
     });
@@ -51,28 +48,20 @@ UserAccountController.displayName = 'UserAccountController';
 
 UserAccountController.propTypes = {
   logout: PropTypes.func.isRequired,
+  notifyError: PropTypes.func.isRequired,
+  notifySuccess: PropTypes.func.isRequired,
+  writeLog: PropTypes.func.isRequired,
 };
 
-const mapStateToProps = ({ auth }) => {
-  let user = auth.user;
-
-  // if auth is gone, we're probably logging out, use prev state
-  /*
-  if (typeof app.core.auth === 'object') {
-    if ('getUser' in app.core.auth) {
-      if (app.core.auth.getUser instanceof Function) {
-        user = app.core.auth.getUser();
-      }
-    }
-  }
-  */
-
+const mapStateToProps = ({ auth: { user } }) => {
   return {
-    auth,
     user,
   };
 };
 
 export default connect(mapStateToProps, {
   logout,
+  notifyError,
+  notifySuccess,
+  writeLog,
 })(UserAccountController);

@@ -16,7 +16,6 @@ import DashboardHome from './components/dashboard/dashboard-home';
 import RouteContainer from './containers/route-container';
 import Login from './components/user/form-login-controller';
 import Signup from './components/user/form-signup-controller';
-import Test from './components/feature-test';
 import PipelinesList from './components/pipelines/pipelines-list';
 import Pipeline from './components/pipelines/pipeline';
 import ResultsList from './components/results/results-list';
@@ -56,7 +55,6 @@ export default (
         <Route path="new" component={ComputationSubmission} />
       </Route>
       <Route path="settings" component={Settings} />
-      <Route path="test" component={Test} />
     </Route>
   </Route>
 );

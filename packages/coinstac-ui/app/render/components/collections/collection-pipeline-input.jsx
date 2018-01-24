@@ -6,22 +6,22 @@ class CollectionPipelineInput extends Component {
   constructor(props) {
     super(props);
 
-    const consIndex = props.collection.associatedConsortia
+    const consIndex = props.associatedConsortia
       .findIndex(cons => cons.id === props.consortiumId);
 
     if (props.objKey === 'covariates') {
       const sources = Array(props.objValue.length)
           .fill({
-            filePath: '',
+            groupId: '',
             column: '',
             fileIndex: -1,
           });
 
       // Populate state with existing mappings if they exist
       if (consIndex > -1 && // Is an associated consortia
-          props.collection.associatedConsortia[consIndex].stepIO[props.stepIndex] &&
-          props.collection.associatedConsortia[consIndex].stepIO[props.stepIndex].length) {
-        props.collection.associatedConsortia[consIndex]
+          props.associatedConsortia[consIndex].stepIO[props.stepIndex] &&
+          props.associatedConsortia[consIndex].stepIO[props.stepIndex].length) {
+        props.associatedConsortia[consIndex]
           .stepIO[props.stepIndex].forEach((step, sIndex) => {
             sources[sIndex] = { ...step };
           });
@@ -59,12 +59,13 @@ class CollectionPipelineInput extends Component {
     const { collection, objValue, stepIndex, updateConsortiumCovars } = this.props;
     // Closure to get event and index var
     return ({ target: { value } }) => {
-      const fileIndex = collection.files.findIndex(file => file.metaFilePath === value);
+      const fileIndex = collection.fileGroups.findIndex(file => file.id === value);
       this.setState(prevState =>
         ({
           sources: update(prevState.sources, {
             $splice: [[covarIndex, 1, {
-              filePath: value,
+              collectionId: collection.id,
+              groupId: value,
               fileIndex,
               column: '',
             }]],
@@ -72,8 +73,9 @@ class CollectionPipelineInput extends Component {
         }),
         () => {
           // Automap if columns exist matching preset names
-          if (collection
-              .files[fileIndex]
+          if (collection.fileGroups[fileIndex].metaFile &&
+              collection
+              .fileGroups[fileIndex]
               .metaFile[0].indexOf(objValue[covarIndex].name) > -1) {
             this.setState(prevState =>
               ({
@@ -88,6 +90,8 @@ class CollectionPipelineInput extends Component {
                 updateConsortiumCovars(stepIndex, covarIndex, this.state.sources);
               }
             );
+          } else {
+            updateConsortiumCovars(stepIndex, covarIndex, this.state.sources);
           }
         }
       );
@@ -111,18 +115,18 @@ class CollectionPipelineInput extends Component {
                       <span>
                         <em>Source File: </em>
                         <select
-                          value={this.state.sources[covarIndex].filePath}
+                          value={this.state.sources[covarIndex].groupId}
                           required
                           onChange={this.setSourceFile(covarIndex)}
                         >
-                          <option disabled value="">Select a File</option>
-                          {collection.files.map(file =>
+                          <option disabled value="" key="file-select-none">Select a File</option>
+                          {collection.fileGroups.map(group =>
                             (
                               <option
-                                key={file.metaFilePath}
-                                value={file.metaFilePath}
+                                key={`${new Date(group.date).toUTCString()} (${group.extension})`}
+                                value={group.id}
                               >
-                                {file.metaFilePath}
+                                {`${new Date(group.date).toUTCString()} (${group.extension})`}
                               </option>
                             )
                           )}
@@ -131,28 +135,32 @@ class CollectionPipelineInput extends Component {
                     )
                   : (<span><em>Source: </em> {val.source.inputLabel}</span>)
                 }
-                {this.state.sources[covarIndex].filePath.length > 0 &&
-                  <span>
-                    <em>File Column: </em>
-                    <select
-                      value={this.state.sources[covarIndex].column}
-                      required
-                      onChange={this.setSourceColumn(covarIndex)}
-                    >
-                      <option disabled value="">Select a Column</option>
-                      {collection.files[parseInt(this.state.sources[covarIndex].fileIndex, 10)]
-                        .metaFile[0].map(col =>
-                        (
-                          <option
-                            key={col}
-                            value={col}
-                          >
-                            {col}
-                          </option>
-                        )
-                      )}
-                    </select>
-                  </span>
+                {this.state.sources[covarIndex].groupId.length > 0 &&
+                  collection.fileGroups[
+                    parseInt(this.state.sources[covarIndex].fileIndex, 10)
+                  ].metaFile &&
+                    <span>
+                      <em>File Column: </em>
+                      <select
+                        value={this.state.sources[covarIndex].column}
+                        required
+                        onChange={this.setSourceColumn(covarIndex)}
+                      >
+                        <option disabled value="">Select a Column</option>
+                        {collection.fileGroups[
+                          parseInt(this.state.sources[covarIndex].fileIndex, 10)
+                        ].metaFile[0].map(col =>
+                          (
+                            <option
+                              key={col}
+                              value={col}
+                            >
+                              {col}
+                            </option>
+                          )
+                        )}
+                      </select>
+                    </span>
                 }
               </li>
             ))}
@@ -170,6 +178,7 @@ class CollectionPipelineInput extends Component {
 }
 
 CollectionPipelineInput.propTypes = {
+  associatedConsortia: PropTypes.array.isRequired,
   collection: PropTypes.object.isRequired,
   consortiumId: PropTypes.string.isRequired,
   objKey: PropTypes.string.isRequired,

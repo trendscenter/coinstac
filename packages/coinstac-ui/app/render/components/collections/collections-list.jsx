@@ -49,10 +49,10 @@ class CollectionsList extends Component {
     return (
       <div>
         <div className="page-header clearfix">
-          <h1 className="pull-left">File Collections</h1>
+          <h1 className="nav-item-page-title">File Collections</h1>
           <LinkContainer className="pull-right" to="/dashboard/pipelines/new">
             <Button bsStyle="primary" className="pull-right">
-              <span aria-hidden="true" className="glphicon glyphicon-plus" />
+              <span aria-hidden="true" className="glyphicon glyphicon-plus" />
               {' '}
               Create File Collection
             </Button>

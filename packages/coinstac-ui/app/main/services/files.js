@@ -1,57 +1,26 @@
 'use strict';
 
-const app = require('ampersand-app');
 const dialog = require('electron').dialog;
-
-function getMainWindow() {
-  const mainWindow = app.mainWindow;
-
-  if (!mainWindow) {
-    return Promise.reject(new Error('No application window exists'));
-  }
-
-  return Promise.resolve(mainWindow);
-}
 
 module.exports = {
   /**
-   * Get a meta file.
+   * Show dialog with options.
    *
-   * @todo Find a way for the computation to specify the need for a 'meta' file.
-   *
+   * @param {object} mainWindow - reference to application window
+   * @param {string} name - filter name
+   * @param {array} extensions - file extensions allowed
+   * @param {array} properties - selection properties
    * @returns {Promise} Resolves to a string representing the meta file's full
    * path.
    */
-  getMetaFile: () => {
-    return getMainWindow().then(mainWindow => new Promise((resolve) => {
+  showDialog: (mainWindow, filters, properties) => {
+    return new Promise((resolve) => {
       const files = dialog.showOpenDialog(mainWindow, {
-        filters: [{
-          name: 'CSV',
-          extensions: ['csv', 'txt'],
-        }],
-        properties: ['openFile'],
+        filters,
+        properties,
       });
-      resolve(files ? files[0] : undefined);
-    }));
-  },
-
-  /**
-   * Get a schema file.
-   *
-   * @returns {Promise} Resolves to a string representing the schema file's full
-   * path.
-   */
-  getSchemaFile: () => {
-    return getMainWindow().then(mainWindow => new Promise((resolve) => {
-      const files = dialog.showOpenDialog(mainWindow, {
-        filters: [{
-          name: 'JSON',
-          extensions: ['json'],
-        }],
-        properties: ['openFile'],
-      });
-      resolve(files ? files[0] : undefined);
-    }));
+      resolve(files);
+    });
   },
 
   /**
@@ -62,18 +31,17 @@ module.exports = {
    *
    * @returns {Promise} Always resolves to an JSON string
    */
-  select: function selectFiles() {
-    return getMainWindow()
-      .then(mainWindow => new Promise((resolve) => {
-        dialog.showOpenDialog(
-          mainWindow,
-          {
-            properties: ['openDirectory', 'openFile', 'multiSelections'],
-          },
-          files => resolve(files || [])
-        );
-      }))
-      .then(app.core.projects.getFileStats)
-      .then(JSON.stringify);
+  select: function selectFiles(mainWindow, core) {
+    return new Promise((resolve) => {
+      dialog.showOpenDialog(
+        mainWindow,
+        {
+          properties: ['openDirectory', 'openFile', 'multiSelections'],
+        },
+        files => resolve(files || [])
+      );
+    })
+    .then(core.projects.getFileStats)
+    .then(JSON.stringify);
   },
 };

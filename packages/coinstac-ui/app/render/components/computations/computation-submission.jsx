@@ -1,4 +1,3 @@
-import app from 'ampersand-app';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { graphql } from 'react-apollo';
@@ -6,10 +5,12 @@ import {
   Alert,
   Button,
 } from 'react-bootstrap';
+import ipcPromise from 'ipc-promise';
+import { services } from 'coinstac-common';
 import {
   ADD_COMPUTATION_MUTATION,
 } from '../../state/graphql/functions';
-import { addComputationProp } from '../../state/graphql/props';
+import { saveDocumentProp } from '../../state/graphql/props';
 
 const styles = {
   topMargin: { marginTop: 10 },
@@ -19,20 +20,17 @@ class ComputationSubmission extends Component { // eslint-disable-line
   constructor(props) {
     super(props);
 
-    this.state = { activeSchema: {}, submissionSuccess: null };
+    this.state = { activeSchema: {}, submissionSuccess: null, validationErrors: null };
     this.getComputationSchema = this.getComputationSchema.bind(this);
     this.submitSchema = this.submitSchema.bind(this);
   }
 
   getComputationSchema(e) {
     e.preventDefault();
-    app.main.services.files.getSchemaFile()
-      .then(metaFilePath => Promise.all([
-        metaFilePath,
-        app.core.computations.constructor.getJSONSchema(metaFilePath),
-      ]))
+    ipcPromise.send('open-dialog', 'jsonschema')
       .then((res) => {
-        this.setState({ activeSchema: res[1] });
+        const { error: { details } } = services.validator.validate(res, 'computation');
+        this.setState({ activeSchema: res, validationErrors: details });
       })
       .catch(console.log);
   }
@@ -73,11 +71,22 @@ class ComputationSubmission extends Component { // eslint-disable-line
           bsStyle="success"
           type="button"
           className={'pull-right'}
-          disabled={!this.state.activeSchema.meta}
+          disabled={!this.state.activeSchema.meta || this.state.validationErrors.length > 0}
           onClick={this.submitSchema}
         >
           Submit
         </Button>
+
+        {this.state.validationErrors &&
+          (<Alert bsStyle="danger" style={{ ...styles.topMargin, textAlign: 'left' }}>
+            <h4 style={{ fontStyle: 'normal' }}>Validation Error</h4>
+            <ul>
+              {this.state.validationErrors.map(error =>
+                <li key={error.path}>Error at {error.path}: {error.message}</li>
+              )}
+            </ul>
+          </Alert>)
+        }
 
         {!this.state.activeSchema.meta && this.state.submissionSuccess &&
           <Alert bsStyle="success" style={styles.topMargin}>
@@ -105,4 +114,4 @@ ComputationSubmission.propTypes = {
   submitSchema: PropTypes.func.isRequired,
 };
 
-export default graphql(ADD_COMPUTATION_MUTATION, addComputationProp)(ComputationSubmission);
+export default graphql(ADD_COMPUTATION_MUTATION, saveDocumentProp('submitSchema', 'computationSchema'))(ComputationSubmission);
