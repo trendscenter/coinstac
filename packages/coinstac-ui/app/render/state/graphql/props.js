@@ -41,9 +41,15 @@ export const getAllAndSubProp = (document, listProp, query, subProp, subscriptio
   },
   props: props => ({
     [listProp]: props.data[query],
-    [subProp]: () =>
-      props.data.subscribeToMore({
+    [subProp]: () => {
+      const variables = {};
+      if (filter && filter === 'userId') {
+        variables.userId = props.ownProps.auth.user.id;
+      }
+
+      return props.data.subscribeToMore({
         document,
+        variables,
         updateQuery: (prevResult, { subscriptionData: { data } }) => {
           const index =
             prevResult[query].findIndex(c => c.id === data[subscription].id);
@@ -66,7 +72,8 @@ export const getAllAndSubProp = (document, listProp, query, subProp, subscriptio
             [query]: [...prevResult[query], data[subscription]],
           };
         },
-      }),
+      });
+    },
   }),
 });
 
