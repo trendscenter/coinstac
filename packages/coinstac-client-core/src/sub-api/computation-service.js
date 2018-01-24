@@ -3,8 +3,6 @@
 /**
  * @module computation-service
  */
-const bluebird = require('bluebird');
-const fs = require('fs');
 const common = require('coinstac-common');
 
 const Computation = common.models.computation.Computation;
@@ -149,17 +147,6 @@ class ComputationService extends ModelService {
 
       return pool.triggerRunner(result, project);
     });
-  }
-
-  /**
-   * Get a JSON schema contents.
-   *
-   * @param {string} filename Full file path to JSON Schema
-   * @returns {Promise<Project>}
-   */
-  static getJSONSchema(filename) {
-    return bluebird.promisify(fs.readFile)(filename)
-      .then(data => JSON.parse(data.toString()));
   }
 
   /**

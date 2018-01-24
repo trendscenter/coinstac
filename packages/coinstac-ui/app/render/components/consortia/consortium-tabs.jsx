@@ -136,6 +136,7 @@ class ConsortiumTabs extends Component {
                 !this.props.params.consortiumId ||
                 this.state.consortium.owners.indexOf(this.props.auth.user.id) !== -1
               }
+              pipelines={this.props.pipelines}
             />
           </Tab>
           <Tab
@@ -164,6 +165,7 @@ ConsortiumTabs.propTypes = {
   addUserRole: PropTypes.func.isRequired,
   auth: PropTypes.object.isRequired,
   params: PropTypes.object.isRequired,
+  pipelines: PropTypes.array.isRequired,
   saveConsortium: PropTypes.func.isRequired,
   subscribeToConsortia: PropTypes.func,
 };

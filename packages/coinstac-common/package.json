@@ -48,7 +48,7 @@
     "sinon": "^1.17.7",
     "spawn-pouchdb-server": "^3.3.3",
     "tape": "^4.8.0",
-    "trace": "^2.4.1"
+    "trace": "^3.1.0"
   },
   "scripts": {
     "docs": "mkdir -p docs && jsdoc -t ./node_modules/minami -d docs -R README.md -r src/",

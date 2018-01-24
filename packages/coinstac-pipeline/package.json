@@ -13,6 +13,7 @@
   "dependencies": {
     "blessed": "^0.1.81",
     "blessed-contrib": "^4.8.5",
+    "coinstac-docker-manager": "^2.6.0",
     "lodash": "^4.17.4",
     "mkdirp": "^0.5.1",
     "nyc": "^11.4.1",

@@ -119,8 +119,8 @@ export const REMOVE_USER_ROLE_MUTATION = gql`
 `;
 
 export const SAVE_ACTIVE_PIPELINE_MUTATION = gql`
-  mutation saveActivePipeline($consortiumId: ID, $activePipeline: ID){
-    saveActivePipeline(consortiumId: $consortiumId, activePipeline: $activePipeline)
+  mutation saveActivePipeline($consortiumId: ID, $activePipelineId: ID){
+    saveActivePipeline(consortiumId: $consortiumId, activePipelineId: $activePipelineId)
   }
 `;
 
@@ -132,4 +132,9 @@ export const SAVE_CONSORTIUM_MUTATION = gql`
 export const SAVE_PIPELINE_MUTATION = gql`
   mutation savePipeline($pipeline: PipelineInput!)
     ${mutations.savePipeline}
+`;
+
+export const UPDATE_USER_CONSORTIUM_STATUS_MUTATION = gql`
+  mutation updateUserConsortiumStatus($consortiumId: ID, $status: String)
+    ${mutations.updateUserConsortiumStatus}
 `;

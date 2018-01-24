@@ -1,4 +1,4 @@
-# coinstac-computation-registry-new
+# coinstac-computation-registry
 
 <img src="https://raw.githubusercontent.com/MRN-Code/coinstac/master/img/coinstac.png" height="75px">
 

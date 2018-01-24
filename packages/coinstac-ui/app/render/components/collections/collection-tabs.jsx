@@ -5,7 +5,7 @@ import { Tab, Tabs } from 'react-bootstrap';
 import CollectionAbout from './collection-about';
 import CollectionFiles from './collection-files';
 import CollectionConsortia from './collection-consortia';
-import { saveCollection } from '../../state/ducks/collections';
+import { getAssociatedConsortia, saveAssociatedConsortia, saveCollection } from '../../state/ducks/collections';
 
 const styles = {
   tab: {
@@ -21,10 +21,13 @@ class CollectionTabs extends Component {
     let collection = {
       name: '',
       description: '',
+      fileGroups: [],
+      associatedConsortia: [],
     };
 
-    if (params.collectionId) {
+    if (collections.length > 0 && params.collectionId) {
       collection = collections.find(col => col.id.toString() === params.collectionId);
+      this.props.getAssociatedConsortia(collection.associatedConsortia);
     }
 
     this.state = {
@@ -32,6 +35,7 @@ class CollectionTabs extends Component {
     };
 
     this.saveCollection = this.saveCollection.bind(this);
+    this.updateAssociatedConsortia = this.updateAssociatedConsortia.bind(this);
     this.updateCollection = this.updateCollection.bind(this);
   }
 
@@ -45,6 +49,19 @@ class CollectionTabs extends Component {
     .catch(({ graphQLErrors }) => {
       console.log(graphQLErrors);
     });
+  }
+
+  updateAssociatedConsortia(cons) {
+    this.props.saveAssociatedConsortia(cons);
+
+    if (this.state.collection.associatedConsortia.indexOf(cons.id) === -1) {
+      this.setState(prevState => ({
+        collection: {
+          ...prevState.collection,
+          associatedConsortia: [...prevState.collection.associatedConsortia, cons.id],
+        },
+      }));
+    }
   }
 
   updateCollection(update, callback) {
@@ -90,8 +107,11 @@ class CollectionTabs extends Component {
             style={styles.tab}
           >
             <CollectionConsortia
+              associatedConsortia={this.props.associatedConsortia}
               collection={this.state.collection}
+              consortia={this.props.consortia}
               saveCollection={this.saveCollection}
+              updateAssociatedConsortia={this.updateAssociatedConsortia}
               updateCollection={this.updateCollection}
             />
           </Tab>
@@ -101,14 +121,24 @@ class CollectionTabs extends Component {
   }
 }
 
+CollectionTabs.defaultProps = {
+  associatedConsortia: [],
+};
+
 CollectionTabs.propTypes = {
+  associatedConsortia: PropTypes.array,
   collections: PropTypes.array.isRequired,
+  consortia: PropTypes.array.isRequired,
+  getAssociatedConsortia: PropTypes.func.isRequired,
   params: PropTypes.object.isRequired,
+  saveAssociatedConsortia: PropTypes.func.isRequired,
   saveCollection: PropTypes.func.isRequired,
 };
 
-function mapStateToProps({ collections: { collections } }) {
-  return { collections };
+function mapStateToProps({ collections: { associatedConsortia, collections } }) {
+  return { associatedConsortia, collections };
 }
 
-export default connect(mapStateToProps, { saveCollection })(CollectionTabs);
+export default connect(mapStateToProps,
+  { getAssociatedConsortia, saveAssociatedConsortia, saveCollection }
+)(CollectionTabs);

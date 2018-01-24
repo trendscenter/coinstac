@@ -1,10 +1,12 @@
 import React, { Component } from 'react';
-import { Button, Col, DropdownButton, MenuItem, NavItem, Row, Well } from 'react-bootstrap';
-import { LinkContainer } from 'react-router-bootstrap';
+import { Button, Col, DropdownButton, MenuItem, Row, Well } from 'react-bootstrap';
+import { Link } from 'react-router';
 import { graphql } from 'react-apollo';
 import PropTypes from 'prop-types';
-import ApolloClient from '../../state/apollo-client';
-import { FETCH_ALL_CONSORTIA_QUERY, FETCH_ALL_PIPELINES_QUERY, SAVE_ACTIVE_PIPELINE_MUTATION } from '../../state/graphql/functions';
+import {
+  FETCH_ALL_CONSORTIA_QUERY,
+  SAVE_ACTIVE_PIPELINE_MUTATION,
+} from '../../state/graphql/functions';
 
 const styles = {
   activePipelineButton: { margin: '0 5px 0 0' },
@@ -15,65 +17,55 @@ const styles = {
 class ConsortiumPipeline extends Component {
   constructor(props) {
     super(props);
+    const { pipelines } = this.props;
 
     let ownedPipelines = {};
     let sharedPipelines = {};
-    let activePipelineRef = {};
 
-    const data = ApolloClient.readQuery({ query: FETCH_ALL_PIPELINES_QUERY });
-    ownedPipelines = data.fetchAllPipelines.filter(
+    ownedPipelines = pipelines.filter(
       pipe => pipe.owningConsortium === props.consortium.id
     );
 
-    sharedPipelines = data.fetchAllPipelines.filter(
+    sharedPipelines = pipelines.filter(
       pipe => pipe.shared
     );
 
-    if (this.props.consortium.activePipeline) {
-      activePipelineRef = data.fetchAllPipelines.find(
-        pipe => pipe.id === this.props.consortium.activePipeline
-      );
-    }
-
     this.state = {
+      activePipeline: {},
       ownedPipelines: [...ownedPipelines],
       sharedPipelines: [...sharedPipelines],
-      activePipelineRef: { ...activePipelineRef },
-      activePipeline: this.props.consortium.activePipeline,
     };
-
-    this.updateActivePipeline = this.updateActivePipeline.bind(this);
   }
 
-  updateActivePipeline(val) {
-    const data = ApolloClient.readQuery({ query: FETCH_ALL_PIPELINES_QUERY });
-    const activePipelineRef = data.fetchAllPipelines.find(pipe => pipe.id === val);
-
-    this.setState(prevState => ({
-      ownedPipelines: prevState.ownedPipelines,
-      sharedPipelines: prevState.sharedPipelines,
-      activePipeline: val,
-      activePipelineRef: { ...activePipelineRef },
-    }));
-
-    this.props.saveActivePipeline(this.props.consortium.id, val);
+  componentWillReceiveProps(nextProps) {
+    if (this.props.pipelines.length > 0 &&
+        !this.state.activePipeline.id && nextProps.consortium.activePipelineId) {
+      const activePipeline = this.props.pipelines
+        .find(cons => cons.id === nextProps.consortium.activePipelineId);
+      this.setState({ activePipeline });
+    }
   }
 
   render() {
     const { consortium } = this.props;
-    const { ownedPipelines, sharedPipelines } = this.state;
+    const { activePipeline, ownedPipelines, sharedPipelines } = this.state;
     return (
       <div>
         <h3>Active Pipeline</h3>
         <Well>
-          {this.state.activePipeline &&
-          <LinkContainer
-            to={`/dashboard/pipelines/${this.state.activePipeline}`}
-          >
-            <NavItem>
-              {this.state.activePipelineRef.name}
-            </NavItem>
-          </LinkContainer>}
+          {activePipeline.id &&
+            <div>
+              <Link
+                to={`/dashboard/pipelines/${consortium.activePipelineId}`}
+              >
+                <h4>{activePipeline.name}</h4>
+              </Link>
+              {activePipeline.description}
+            </div>
+          }
+          {!activePipeline.id &&
+            <em>No active pipeline</em>
+          }
         </Well>
         <h4 style={styles.activePipelineParagraph}>Activate a pipeline from...</h4>
         <Row>
@@ -82,7 +74,7 @@ class ConsortiumPipeline extends Component {
               id="owned-pipelines-dropdown"
               title={'Owned Pipelines'}
               bsStyle="primary"
-              onSelect={value => this.updateActivePipeline(value)}
+              onSelect={value => this.props.saveActivePipeline(consortium.id, value)}
             >
               {ownedPipelines.map(pipe => (
                 <MenuItem
@@ -98,7 +90,7 @@ class ConsortiumPipeline extends Component {
               id="shared-pipelines-dropdown"
               title={'Shared Pipelines'}
               bsStyle="primary"
-              onSelect={value => this.updateActivePipeline(value)}
+              onSelect={value => this.props.saveActivePipeline(consortium.id, value)}
             >
               {sharedPipelines.map(pipe => (
                 <MenuItem
@@ -113,7 +105,7 @@ class ConsortiumPipeline extends Component {
         <Row style={{ marginTop: 50 }}>
           <Col xs={12} style={styles.textCenter}>
             <p><em>Or create a new pipeline</em></p>
-            <LinkContainer
+            <Link
               to={`/dashboard/pipelines/new/${consortium.id}`}
             >
               <Button bsStyle="success">
@@ -121,7 +113,7 @@ class ConsortiumPipeline extends Component {
                 {' '}
                 New Pipeline
               </Button>
-            </LinkContainer>
+            </Link>
           </Col>
         </Row>
       </div>
@@ -131,18 +123,19 @@ class ConsortiumPipeline extends Component {
 
 ConsortiumPipeline.propTypes = {
   consortium: PropTypes.object.isRequired,
+  pipelines: PropTypes.array.isRequired,
   saveActivePipeline: PropTypes.func.isRequired,
 };
 
 const ConsortiumPipelineWithData = graphql(SAVE_ACTIVE_PIPELINE_MUTATION, {
   props: ({ mutate }) => ({
-    saveActivePipeline: (consortiumId, activePipeline) => mutate({
-      variables: { consortiumId, activePipeline },
+    saveActivePipeline: (consortiumId, activePipelineId) => mutate({
+      variables: { consortiumId, activePipelineId },
       update: (store) => {
         const data = store.readQuery({ query: FETCH_ALL_CONSORTIA_QUERY });
         const index = data.fetchAllConsortia.findIndex(con => con.id === consortiumId);
         if (index > -1) {
-          data.fetchAllConsortia[index].activePipeline = activePipeline;
+          data.fetchAllConsortia[index].activePipelineId = activePipelineId;
         }
         store.writeQuery({ query: FETCH_ALL_CONSORTIA_QUERY, data });
       },
