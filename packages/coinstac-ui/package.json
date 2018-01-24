@@ -65,9 +65,9 @@
     "chai": "^4.1.2",
     "chai-as-promised": "^7.1.1",
     "cross-env": "^2.0.1",
-    "css-loader": "^0.28.8",
+    "css-loader": "^0.28.9",
     "devtron": "^1.4.0",
-    "electron": "^1.8.2-beta.3",
+    "electron": "^1.8.2-beta.4",
     "electron-debug": "^1.5.0",
     "electron-packager": "^8.7.2",
     "file-loader": "^0.11.2",
@@ -94,7 +94,7 @@
     "url-loader": "^0.5.9",
     "webpack": "^2.7.0",
     "webpack-dashboard": "^0.3.0",
-    "webpack-dev-server": "^2.10.1"
+    "webpack-dev-server": "^2.11.1"
   },
   "scripts": {
     "build:webpack": "cross-env NODE_ENV=production webpack",

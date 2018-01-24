@@ -8,6 +8,7 @@ import UserAccountController from '../user/user-account-controller';
 import { notifyInfo, notifySuccess, writeLog } from '../../state/ducks/notifyAndLog';
 import ApolloClient from '../../state/apollo-client';
 import CoinstacAbbr from '../coinstac-abbr';
+import { bulkSaveLocalRuns, getLocalRuns, saveLocalRuns } from '../../state/ducks/local-runs';
 import {
   pullComputations,
   updateDockerOutput,
@@ -26,7 +27,6 @@ import {
 } from '../../state/graphql/functions';
 import {
   getAllAndSubProp,
-  getSelectAndSubProp,
 } from '../../state/graphql/props';
 
 class Dashboard extends Component {
@@ -88,7 +88,7 @@ class Dashboard extends Component {
 
     if (nextProps.consortia && this.props.consortia.length > 0) {
       for (let i = 0; i < nextProps.consortia.length; i += 1) {
-        if (nextProps.consortia[i].id === this.props.consortia[i].id &&
+        if (this.props.consortia[i] && nextProps.consortia[i].id === this.props.consortia[i].id &&
             nextProps.consortia[i].activePipelineId &&
             !this.props.consortia[i].activePipelineId &&
             nextProps.consortia[i].members.indexOf(user.id) > -1) {
@@ -181,6 +181,7 @@ Dashboard.defaultProps = {
 
 Dashboard.propTypes = {
   auth: PropTypes.object.isRequired,
+  bulkSaveLocalRuns: PropTypes.func.isRequired,
   children: PropTypes.node.isRequired,
   computations: PropTypes.array,
   consortia: PropTypes.array,
@@ -189,6 +190,7 @@ Dashboard.propTypes = {
   pipelines: PropTypes.array,
   pullComputations: PropTypes.func.isRequired,
   runs: PropTypes.array,
+  saveLocalRuns: PropTypes.func.isRequired,
   subscribeToComputations: PropTypes.func.isRequired,
   subscribeToConsortia: PropTypes.func.isRequired,
   subscribeToPipelines: PropTypes.func.isRequired,
