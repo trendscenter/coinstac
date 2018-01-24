@@ -12,6 +12,7 @@
     "dockerode": "^2.5.3",
     "portscanner": "^2.1.1",
     "request": "^2.83.0",
-    "request-promise-native": "^1.0.5"
+    "request-promise-native": "^1.0.5",
+    "util": "^0.10.3"
   }
 }
