@@ -43,6 +43,30 @@ const resolvers = {
   JSON: GraphQLJSON,
   Query: {
     /**
+     * Returns all results.
+     * @return {array} All results
+     */
+    fetchAllResults: () => fetchAll('run'),
+    /**
+     * Returns single pipeline
+     * @param {object} args
+     * @param {string} args.resultId  Requested pipeline ID
+     * @return {object} Requested pipeline if id present, null otherwise
+     */
+    fetchResult: (_, args) => {
+      if (!args.resultId) {
+        return null;
+      } else {
+        return helperFunctions.getRethinkConnection()
+          .then(connection =>
+            rethink.table('run')
+              .get(args.resultId)
+              .run(connection)
+          )
+          .then(result => result);
+      }
+    },
+    /**
      * Returns all consortia.
      * @return {array} All consortia
      */
@@ -504,6 +528,19 @@ const resolvers = {
       subscribe: withFilter(
         () => pubsub.asyncIterator('consortiumChanged'),
         (payload, variables) => (!variables.consortiumId || payload.consortiumId === variables.consortiumId)
+      )
+    },
+    /**
+     * Result subscription
+     * @param {object} payload
+     * @param {string} payload.resultId The consortium changed
+     * @param {object} variables
+     * @param {string} variables.resultId The consortium listened for
+     */
+    resultChanged: {
+      subscribe: withFilter(
+        () => pubsub.asyncIterator('resultChanged'),
+        (payload, variables) => (!variables.resultId || payload.resultId === variables.resultId)
       )
     },
     /**

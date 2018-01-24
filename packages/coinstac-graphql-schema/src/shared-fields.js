@@ -59,6 +59,13 @@ const sharedFields = {
       ioMap
     }
   `,
+  resultFields: `
+    id
+    title
+    pipelineId
+    date
+    results
+  `,
 };
 
 module.exports = sharedFields;

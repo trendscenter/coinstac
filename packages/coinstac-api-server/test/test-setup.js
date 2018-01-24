@@ -85,6 +85,191 @@ helperFunctions.getRethinkConnection()
     { role: 'member', verbs: { subscribe: true } },
   ]).run(connection))
   .then(() => rethink.tableCreate('users').run(connection))
+  .then(() => rethink.tableCreate('run').run(connection))
+  .then(() => rethink.table('run').insert([
+    {
+      id: 'results-1',
+      title: 'TSNE',
+      pipelineId: 'test-pipeline',
+      date: '1/22/2018',
+      results: {
+        type: 'scatter_plot',
+        label: '',
+        x_labels: ['-100', '80'],
+        y_labels: ['-80', '80'],
+        plots: [
+          {
+            title: '0',
+            coordinates: [
+              {
+                x: 12.098,
+                y: -72.356,
+              },
+              {
+                x: 7.0038,
+                y: -54.051,
+              },
+              {
+                x: 8.7711,
+                y: -57.018,
+              },
+              {
+                x: -5.372,
+                y: -82.911,
+              },
+              {
+                x: -18.65,
+                y: -94.955,
+              },
+              {
+                x: -0.43827,
+                y: -78.434,
+              },
+            ],
+          },
+          {
+            title: '1',
+            coordinates: [
+              {
+                x: 1.4987,
+                y: -101.38,
+              },
+              {
+                x: 0.96424,
+                y: -102.25,
+              },
+              {
+                x: -17.659,
+                y: -95.997,
+              },
+              {
+                x: -5.0453,
+                y: -69.168,
+              },
+              {
+                x: 12.593,
+                y: -89.655,
+              },
+              {
+                x: 8.6105,
+                y: -91.641,
+              },
+            ],
+          },
+          {
+            title: '2',
+            coordinates: [
+              {
+                x: 48.988,
+                y: -24.481,
+              },
+              {
+                x: 30.156,
+                y: -3.7403,
+              },
+              {
+                x: 22.191,
+                y: -12.257,
+              },
+              {
+                x: 19.628,
+                y: -13.65,
+              },
+              {
+                x: 48.778,
+                y: -21.647,
+              },
+              {
+                x: 19.768,
+                y: -11.083,
+              },
+            ],
+          },
+          {
+            title: '9',
+            coordinates: [
+              {
+                x: -58.108,
+                y: -13.587,
+              },
+              {
+                x: -47.321,
+                y: 53.963,
+              },
+              {
+                x: -56.119,
+                y: -11.41,
+              },
+              {
+                x: -51.595,
+                y: 54.788,
+              },
+              {
+                x: -60.736,
+                y: 3.9981,
+              },
+              {
+                x: -43.288,
+                y: -5.1986,
+              },
+            ],
+          },
+        ],
+      },
+    },
+    {
+      id: 'results-2',
+      title: 'MRI QC',
+      pipelineId: 'test-pipeline',
+      date: '1/23/2018',
+      results: {
+        type: 'box_plot',
+        label: '',
+        x: [
+          {
+            label: 'fwhm_x',
+            values: [
+              2.440704,
+              2.4548064,
+              2.3936447,
+              2.5057568,
+              2.4331584,
+              2.4189439,
+              2.391568,
+              2.5149056,
+            ],
+          },
+          {
+            label: 'fwhm_y',
+            values: [
+              2.7808607,
+              2.9629952,
+              2.7132992,
+              2.9282688,
+              2.852704,
+              2.93376,
+              2.88102,
+              2.8415712,
+            ],
+          },
+          {
+            label: 'fwhm_z',
+            values: [
+              2.2223925,
+              2.254465,
+              2.0552725,
+              2.31188,
+              2.1533875,
+              2.1320375,
+              2.189615,
+              2.26769,
+            ],
+          },
+        ],
+        y_range: [2, 3.2],
+      },
+    },
+  ]).run(connection))
   .then(() => rethink.tableCreate('consortia').run(connection))
   .then(() => rethink.table('consortia').insert({
     id: 'test-cons-1',
