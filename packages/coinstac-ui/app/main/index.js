@@ -57,9 +57,10 @@ loadConfig()
 )
 .then(([config, logger]) => {
   process.on('uncaughtException', logUnhandledError(null, logger));
+  global.config = config;
   return Promise.all([
     logger,
-    configureCore(config, logger),
+    configureCore(global.config, logger),
   ]);
 })
 .then(([logger, core]) =>

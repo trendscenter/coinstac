@@ -2,7 +2,7 @@
 import React from 'react';
 import { render } from 'react-dom';
 import { hashHistory } from 'react-router';
-import { ipcRenderer } from 'electron';
+import { ipcRenderer, remote } from 'electron';
 import { ApolloProvider } from 'react-apollo';
 import getApolloClient from './state/apollo-client';
 import configureStore from './state/store';
@@ -25,6 +25,7 @@ const rootEl = document.getElementById('app');
 
 getApolloClient()
 .then((client) => {
+  global.config = remote.getGlobal('config');
   const store = configureStore(client);
 
   render(
