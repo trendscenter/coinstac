@@ -22,32 +22,30 @@ startErrorHandling();
 require('./styles/app.scss');
 
 const rootEl = document.getElementById('app');
+global.config = remote.getGlobal('config');
 
-getApolloClient()
-.then((client) => {
-  global.config = remote.getGlobal('config');
-  const store = configureStore(client);
+const client = getApolloClient(global.config);
+const store = configureStore(client);
 
-  render(
-    <ApolloProvider store={store} client={client}>
-      <Root history={hashHistory} store={store} />
-    </ApolloProvider>,
-    rootEl
-  );
+render(
+  <ApolloProvider store={store} client={client}>
+    <Root history={hashHistory} store={store} />
+  </ApolloProvider>,
+  rootEl
+);
 
-  ipcRenderer.send('write-log', { type: 'info', message: 'renderer process up' });
+ipcRenderer.send('write-log', { type: 'info', message: 'renderer process up' });
 
-  if (module.hot) {
-    module.hot.accept('./containers/root', () => {
-      /* eslint-disable global-require */
-      const NextRoot = require('./containers/root').default;
-      /* eslint-enable global-require */
-      render(
-        <ApolloProvider store={store} client={client}>
-          <NextRoot history={hashHistory} store={store} />
-        </ApolloProvider>,
-        rootEl
-      );
-    });
-  }
-});
+if (module.hot) {
+  module.hot.accept('./containers/root', () => {
+    /* eslint-disable global-require */
+    const NextRoot = require('./containers/root').default;
+    /* eslint-enable global-require */
+    render(
+      <ApolloProvider store={store} client={client}>
+        <NextRoot history={hashHistory} store={store} />
+      </ApolloProvider>,
+      rootEl
+    );
+  });
+}
