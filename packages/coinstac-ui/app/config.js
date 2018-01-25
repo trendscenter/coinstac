@@ -5,7 +5,7 @@ const bluebird = require('bluebird');
 const access = bluebird.promisify(require('fs').access);
 const path = require('path');
 
-const localConfig = path.resolve(__dirname, '../..', 'config', 'local.json');
+const localConfig = path.resolve(__dirname, '..', 'config', 'local.json');
 
 const fileExists = (fPath) => {
   return access(fPath).then(() => true, () => false);
@@ -24,15 +24,9 @@ const conf = convict({
     protocol: 'https:',
   },
   subApiServer: {
-    remote: {
-      db: {
-        hostname: 'coinstac.mrn.org',
-        pathname: '',
-        port: '',
-        protocol: 'https:',
-      },
-    },
-    noURLPrefix: true,
+    hostname: 'coinstac.mrn.org/ws',
+    port: '443',
+    protocol: 'ws:',
   },
   logFile: 'coinstac-log.json',
   logFileBoot: 'coinstac-boot-error-log.txt',

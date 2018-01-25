@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { applyAsyncLoading } from './loading';
-import { apiServer } from '../../../../config/local.json';
 
+const apiServer = global.config.get('apiServer');
 const API_URL = `${apiServer.protocol}//${apiServer.hostname}:${apiServer.port}`;
 
 const INITIAL_STATE = {
