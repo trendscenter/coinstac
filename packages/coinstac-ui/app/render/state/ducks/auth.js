@@ -1,7 +1,8 @@
 import axios from 'axios';
+import { remote } from 'electron';
 import { applyAsyncLoading } from './loading';
-import { apiServer } from '../../../../config/local.json';
 
+const apiServer = remote.getGlobal('config').get('apiServer');
 const API_URL = `${apiServer.protocol}//${apiServer.hostname}:${apiServer.port}`;
 
 const INITIAL_STATE = {

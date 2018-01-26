@@ -1,12 +1,11 @@
 import { connect } from 'react-redux';
-import { compose, graphql } from 'react-apollo';
+import { compose, graphql, withApollo } from 'react-apollo';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { ipcRenderer } from 'electron';
 import DashboardNav from './dashboard-nav';
 import UserAccountController from '../user/user-account-controller';
 import { notifyInfo, notifySuccess, writeLog } from '../../state/ducks/notifyAndLog';
-import ApolloClient from '../../state/apollo-client';
 import CoinstacAbbr from '../coinstac-abbr';
 import {
   pullComputations,
@@ -63,7 +62,7 @@ class Dashboard extends Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    const { auth: { user } } = this.props;
+    const { auth: { user }, client } = this.props;
     const { router } = this.context;
 
     if (nextProps.computations && !this.state.unsubscribeComputations) {
@@ -84,8 +83,8 @@ class Dashboard extends Component {
             nextProps.consortia[i].activePipelineId &&
             !this.props.consortia[i].activePipelineId &&
             nextProps.consortia[i].members.indexOf(user.id) > -1) {
-          const computationData = ApolloClient.readQuery({ query: FETCH_ALL_COMPUTATIONS_QUERY });
-          const pipelineData = ApolloClient.readQuery({ query: FETCH_ALL_PIPELINES_QUERY });
+          const computationData = client.readQuery({ query: FETCH_ALL_COMPUTATIONS_QUERY });
+          const pipelineData = client.readQuery({ query: FETCH_ALL_PIPELINES_QUERY });
           const pipeline = pipelineData.fetchAllPipelines
             .find(cons => cons.id === nextProps.consortia[i].activePipelineId);
 
@@ -172,6 +171,7 @@ Dashboard.defaultProps = {
 Dashboard.propTypes = {
   auth: PropTypes.object.isRequired,
   children: PropTypes.node.isRequired,
+  client: PropTypes.object.isRequired,
   computations: PropTypes.array,
   consortia: PropTypes.array,
   notifyInfo: PropTypes.func.isRequired,
@@ -223,7 +223,8 @@ const DashboardWithData = compose(
         return ownProps.updateUserConsortiaStatuses(consortiaStatuses);
       }),
     }),
-  })
+  }),
+  withApollo
 )(Dashboard);
 
 export default connect(mapStateToProps,
