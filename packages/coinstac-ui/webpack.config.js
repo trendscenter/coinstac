@@ -96,6 +96,9 @@ const config = {
       test: /\.png/,
     }],
   },
+  node: {
+    __dirname: false,
+  },
   output: {
     filename: 'bundle.js',
     libraryTarget: 'commonjs2',

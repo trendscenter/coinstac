@@ -4,7 +4,7 @@ import { compose } from 'redux';
 import { DragDropContext, DropTarget } from 'react-dnd';
 import HTML5Backend from 'react-dnd-html5-backend';
 import PropTypes from 'prop-types';
-import { graphql } from 'react-apollo';
+import { graphql, withApollo } from 'react-apollo';
 import shortid from 'shortid';
 import { isEqual, isEmpty } from 'lodash';
 import update from 'immutability-helper';
@@ -25,7 +25,6 @@ import {
   SplitButton,
   Well,
 } from 'react-bootstrap';
-import ApolloClient from '../../state/apollo-client';
 import PipelineStep from './pipeline-step';
 import ItemTypes from './pipeline-item-types';
 import {
@@ -66,7 +65,7 @@ class Pipeline extends Component {
 
     // if routed from New Pipeline button on consortium page
     if (props.params.consortiumId) {
-      const data = ApolloClient.readQuery({ query: FETCH_ALL_CONSORTIA_QUERY });
+      const data = props.client.readQuery({ query: FETCH_ALL_CONSORTIA_QUERY });
       consortium = data.fetchAllConsortia.find(cons => cons.id === props.params.consortiumId);
       pipeline.owningConsortium = consortium.id;
     }
@@ -127,12 +126,12 @@ class Pipeline extends Component {
   }
 
   setConsortium() {
-    const { auth: { user } } = this.props;
+    const { auth: { user }, client } = this.props;
     const owner = user.permissions.consortia[this.state.pipeline.owningConsortium] &&
       user.permissions.consortia[this.state.pipeline.owningConsortium].write;
 
     const consortiumId = this.state.pipeline.owningConsortium;
-    const data = ApolloClient.readQuery({ query: FETCH_ALL_CONSORTIA_QUERY });
+    const data = client.readQuery({ query: FETCH_ALL_CONSORTIA_QUERY });
     const consortium = data.fetchAllConsortia.find(cons => cons.id === consortiumId);
     delete consortium.__typename;
 
@@ -253,9 +252,10 @@ class Pipeline extends Component {
   }
 
   updateStorePipeline() {
-    const data = ApolloClient.readQuery({ query: FETCH_ALL_CONSORTIA_QUERY });
+    const { client } = this.props;
+    const data = client.readQuery({ query: FETCH_ALL_CONSORTIA_QUERY });
     data.fetchPipeline = { ...this.state.pipeline, __typename: 'Pipeline' };
-    ApolloClient.writeQuery({ query: FETCH_PIPELINE_QUERY, data });
+    client.writeQuery({ query: FETCH_PIPELINE_QUERY, data });
   }
 
   updateStep(step) {
@@ -530,6 +530,7 @@ Pipeline.defaultProps = {
 Pipeline.propTypes = {
   activePipeline: PropTypes.object,
   auth: PropTypes.object.isRequired,
+  client: PropTypes.object.isRequired,
   computations: PropTypes.array.isRequired,
   connectDropTarget: PropTypes.func.isRequired,
   consortia: PropTypes.array.isRequired,
@@ -557,5 +558,6 @@ const PipelineWithData = compose(
 export default compose(
   connect(mapStateToProps),
   DragDropContext(HTML5Backend),
-  DropTarget(ItemTypes.COMPUTATION, computationTarget, collect)
+  DropTarget(ItemTypes.COMPUTATION, computationTarget, collect),
+  withApollo
 )(PipelineWithData);
