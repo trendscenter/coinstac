@@ -5,10 +5,11 @@ import testData from '../../../../test/data/test-collection.json';
 // Actions
 const DELETE_ASSOCIATED_CONSORTIA = 'DELETE_ASSOCIATED_CONSORTIA';
 const DELETE_COLLECTION = 'DELETE_COLLECTION';
+const GET_COLLECTION_FILES = 'GET_COLLECTION_FILES';
 const INIT_TEST_COLLECTION = 'INIT_TEST_COLLECTION';
 const SAVE_ASSOCIATED_CONSORTIA = 'SAVE_ASSOCIATED_CONSORTIA';
 const SAVE_COLLECTION = 'SAVE_COLLECTION';
-const SET_ASSOCIATED_CONSORTIA = 'SET_ASSOCIATED_CONSORTIA';
+const GET_ASSOCIATED_CONSORTIA = 'GET_ASSOCIATED_CONSORTIA';
 const SET_COLLECTIONS = 'GET_ALL_COLLECTIONS';
 
 // Action Creators
@@ -48,13 +49,78 @@ export const getAllCollections = applyAsyncLoading(() =>
       })
 );
 
+export const getCollectionFiles = applyAsyncLoading(consortiumId =>
+  dispatch =>
+    localDB.associatedConsortia.get(consortiumId)
+    .then((consortium) => {
+      const collections = [];
+      let mappingIncomplete = false;
+
+      /* Get step covariates and compare against local file mapping to ensure mapping is complete
+         Add local files groups to array in order to grab files to pass to pipeline */
+      for (let sIndex = 0; sIndex < consortium.pipelineSteps.length; sIndex += 1) {
+        const step = consortium.pipelineSteps[sIndex];
+        for (let cIndex = 0; cIndex < step.inputMap.covariates.length; cIndex += 1) {
+          const covar = step.inputMap.covariates[cIndex];
+          if (covar.source.inputKey === 'file' &&
+              consortium.stepIO[sIndex] && consortium.stepIO[sIndex][cIndex]) {
+            const { groupId, collectionId } = consortium.stepIO[sIndex][cIndex];
+            collections.push({ groupId, collectionId });
+          } else if (covar.source.inputKey === 'file' &&
+              (!consortium.stepIO[sIndex] || !consortium.stepIO[sIndex][cIndex])) {
+            mappingIncomplete = true;
+          }
+
+          if (mappingIncomplete) {
+            break;
+          }
+        }
+
+        if (mappingIncomplete) {
+          break;
+        }
+      }
+
+      if (mappingIncomplete) {
+        const error = { error: 'Mapping incomplete' };
+        dispatch(({
+          type: GET_COLLECTION_FILES,
+          payload: error,
+        }));
+        return error;
+      }
+
+      return localDB.collections
+        .filter(collection => collections.findIndex(c => c.collectionId === collection.id) > -1)
+        .toArray()
+        .then((localDBCols) => {
+          let runFiles = [];
+          // TODO: Ick. At least try to make fileGroups an object with ids as params
+          localDBCols.forEach((localDB) => {
+            localDB.fileGroups.forEach((group) => {
+              if (collections.findIndex(c => c.groupId === group.id) > -1) {
+                runFiles = runFiles.concat(group.files);
+              }
+            });
+          });
+
+          dispatch(({
+            type: GET_COLLECTION_FILES,
+            payload: runFiles,
+          }));
+          return runFiles;
+        });
+    })
+);
+
 export const getAssociatedConsortia = applyAsyncLoading(consortiaIds =>
   dispatch =>
-    localDB.associatedConsortia.filter(cons => consortiaIds.indexOf(cons.id) > -1)
+    localDB.associatedConsortia
+      .filter(cons => consortiaIds.indexOf(cons.id) > -1)
       .toArray()
       .then((consortia) => {
         dispatch(({
-          type: SET_ASSOCIATED_CONSORTIA,
+          type: GET_ASSOCIATED_CONSORTIA,
           payload: consortia,
         }));
       })
@@ -94,8 +160,9 @@ export const saveAssociatedConsortia = applyAsyncLoading(cons =>
 );
 
 const INITIAL_STATE = {
-  collections: [],
   associatedConsortia: [],
+  collections: [],
+  runFiles: [],
 };
 
 export default function reducer(state = INITIAL_STATE, action) {
@@ -114,6 +181,8 @@ export default function reducer(state = INITIAL_STATE, action) {
 
       return { ...state, collections: newCollections };
     }
+    case GET_COLLECTION_FILES:
+      return { ...state, runFiles: [...action.payload] };
     case SAVE_ASSOCIATED_CONSORTIA: {
       const newCons = [...state.associatedConsortia];
       const index = state.associatedConsortia.findIndex(cons => cons.id === action.payload.id);
@@ -140,7 +209,7 @@ export default function reducer(state = INITIAL_STATE, action) {
     }
     case SET_COLLECTIONS:
       return { ...state, collections: action.payload };
-    case SET_ASSOCIATED_CONSORTIA:
+    case GET_ASSOCIATED_CONSORTIA:
       return { ...state, associatedConsortia: action.payload };
     case INIT_TEST_COLLECTION:
     default:

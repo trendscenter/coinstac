@@ -21,7 +21,7 @@ module.exports = {
             type: Joi.string(),
           }),
         }).required(),
-        ioMap: Joi.any().required(),
+        inputMap: Joi.any().required(),
       })
     ).min(1).required(),
   }),

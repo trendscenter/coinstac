@@ -92,11 +92,12 @@ loadConfig()
    *  according to the run
    * @return {Promise<String>} Status message
    */
-  ipcPromise.on('start-pipeline', ({ consortium, filesArray, run }) => {
-    return core.constructor.startPipeline(
+  ipcMain.on('start-pipeline', (event, { consortium, pipeline, filesArray, run }) => {
+    console.log(pipeline);
+    core.startPipeline(
       [...consortium.members, ...consortium.owners],
       consortium.id,
-      consortium.pipelineSteps,
+      pipeline,
       filesArray,
       run.id,
       run.pipelineSteps

@@ -48,7 +48,7 @@ const sharedFields = {
         id
         options
       }
-      ioMap
+      inputMap
     }
   `,
   runFields: `

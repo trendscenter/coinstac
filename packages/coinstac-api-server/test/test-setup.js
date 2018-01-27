@@ -35,11 +35,11 @@ helperFunctions.getRethinkConnection()
           compInsertResult.changes[0].new_val.id,
         ],
         controller: {
-          options: { type: 'single' },
+          options: { type: 'local' },
           id: 'test-controller-1',
         },
         id: 'HJwMOMTh-',
-        ioMap: {
+        inputMap: {
           covariates: [
             {
               name: 'isControl',
@@ -65,7 +65,7 @@ helperFunctions.getRethinkConnection()
           id: 'test-controller-2',
         },
         id: 'HyLfdfanb',
-        ioMap: {
+        inputMap: {
           covariates: [
             {
               name: 'biased xs',

@@ -152,11 +152,11 @@ class Pipeline extends Component {
           ...prevState.pipeline.steps,
           {
             id: shortid.generate(),
-            controller: { type: 'single', options: {} },
+            controller: { type: 'local', options: {} },
             computations: [
               { ...computation },
             ],
-            ioMap: { covariates: [] },
+            inputMap: { covariates: [] },
           },
         ],
       },
@@ -181,9 +181,9 @@ class Pipeline extends Component {
       .map((step, stepIndex) => {
         return {
           ...step,
-          ioMap: {
-            ...step.ioMap,
-            covariates: step.ioMap.covariates.map((cov) => {
+          inputMap: {
+            ...step.inputMap,
+            covariates: step.inputMap.covariates.map((cov) => {
               if (index >= stepIndex && movedStepIndex < stepIndex) {
                 return { ...cov, source: {} };
               } else if (movedStepIndex === cov.source.pipelineIndex) {
@@ -230,9 +230,9 @@ class Pipeline extends Component {
       0,
       {
         ...movedStep,
-        ioMap: {
-          ...movedStep.ioMap,
-          covariates: movedStep.ioMap.covariates.map((cov) => {
+        inputMap: {
+          ...movedStep.inputMap,
+          covariates: movedStep.inputMap.covariates.map((cov) => {
             if (cov.source.pipelineIndex >= index) {
               return { ...cov, source: {} };
             }
@@ -318,7 +318,7 @@ class Pipeline extends Component {
         ({
           id: step.id,
           computations: step.computations.map(comp => comp.id),
-          ioMap: step.ioMap,
+          inputMap: step.inputMap,
           controller: {
             id: step.controller.id,
             type: step.controller.type,
