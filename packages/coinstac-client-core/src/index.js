@@ -59,6 +59,9 @@ class CoinstacClient {
       clientId: opts.userId,
       operatingDirectory: this.appDirectory,
     });
+
+    console.log('client const');
+    console.log(this.pipelineManager);
   }
 
   /**
@@ -90,12 +93,11 @@ class CoinstacClient {
    * @returns {File[]} Collection of files
    */
   static getFilesFromMetadata(metaFilePath, metaFile) {
-    return tail(metaFile).map(([filename]) => ({
-      filename: path.isAbsolute(filename) ?
+    return tail(metaFile).map(([filename]) => (
+      path.isAbsolute(filename) ?
         filename :
-        path.resolve(path.join(path.dirname(metaFilePath), filename)),
-      tags: {},
-    }));
+        path.resolve(path.join(path.dirname(metaFilePath), filename))
+    ));
   }
 
   /**
@@ -190,7 +192,7 @@ class CoinstacClient {
    * @param {*} runId The id if this particular pipeline run
    * @param {*} runPipeline The run's copy of the current pipeline
    */
-  static startPipeline(
+  startPipeline(
     clients,
     consortiumId,
     clientPipeline,
@@ -210,6 +212,8 @@ class CoinstacClient {
         )
       );
     }
+
+    console.log('start pipeline client');
 
     this.pipelineManager.startPipeline({
       spec: clientPipeline,

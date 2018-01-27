@@ -14,7 +14,7 @@ const initSubscriptions = require('./subscriptions');
 function fetchAll(table) {
   return helperFunctions.getRethinkConnection()
     .then(connection =>
-      rethink.table(table).run(connection)
+      rethink.table(table).orderBy({ index: 'id' }).run(connection)
     )
     .then(cursor => cursor.toArray());
 }
@@ -82,6 +82,7 @@ const resolvers = {
       return helperFunctions.getRethinkConnection()
         .then(connection =>
           rethink.table('pipelines')
+            .orderBy({ index: 'id' })
             .map(pipeline =>
               pipeline.merge(pipeline =>
                 ({
@@ -135,6 +136,7 @@ const resolvers = {
       return helperFunctions.getRethinkConnection()
         .then(connection =>
           rethink.table('runs')
+            .orderBy({ index: 'id' })
             .filter(rethink.row('clients').contains(credentials.id))
             .run(connection)
         )

@@ -8,7 +8,8 @@ import UserAccountController from '../user/user-account-controller';
 import { notifyInfo, notifySuccess, writeLog } from '../../state/ducks/notifyAndLog';
 import ApolloClient from '../../state/apollo-client';
 import CoinstacAbbr from '../coinstac-abbr';
-import { bulkSaveLocalRuns, getLocalRuns, saveLocalRuns } from '../../state/ducks/local-runs';
+import { getCollectionFiles } from '../../state/ducks/collections';
+import { bulkSaveLocalRuns, getLocalRuns, saveLocalRun } from '../../state/ducks/local-runs';
 import {
   pullComputations,
   updateDockerOutput,
@@ -28,6 +29,23 @@ import {
 import {
   getAllAndSubProp,
 } from '../../state/graphql/props';
+
+// Binary search sorted object array
+function sortedAscObjectIndex(array, obj, param) {
+  const index = Math.ceil(array.length / 2) - 1;
+
+  const arrayObj = array[index];
+
+  if (arrayObj[param] === obj[param]) {
+    return index;
+  } else if (array.length === 1 || (index === 0 && arrayObj[param] > obj[param])) {
+    return -1;
+  } else if (arrayObj[param] > obj[param]) {
+    return sortedAscObjectIndex(array.slice(0, index), obj, param);
+  } else if (arrayObj[param] < obj[param]) {
+    return sortedAscObjectIndex(array.slice(index + 1), obj, param);
+  }
+}
 
 class Dashboard extends Component {
   constructor(props) {
@@ -84,6 +102,24 @@ class Dashboard extends Component {
 
     if (nextProps.runs && !this.state.unsubscribeRuns) {
       this.setState({ unsubscribeRuns: this.props.subscribeToUserRuns(null) });
+      this.props.bulkSaveLocalRuns(nextProps.runs);
+    }
+
+    if (nextProps.runs && this.props.consortia.length) {
+      for (let i = 0; i < nextProps.runs.length; i += 1) {
+        if (this.props.runs.length === 0 ||
+            sortedAscObjectIndex(this.props.runs, nextProps.runs[i], 'id') === -1) {
+          this.props.getCollectionFiles(nextProps.runs[i].consortiumId)
+          .then((filesArray) => {
+            const run = nextProps.runs[i];
+            const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
+            const pipeline =
+              this.props.pipelines.find(obj => obj.id === consortium.activePipelineId);
+            this.props.saveLocalRun({ ...run, status: 'started' });
+            ipcRenderer.send('start-pipeline', { consortium, pipeline, filesArray, run });
+          });
+        }
+      }
     }
 
     if (nextProps.consortia && this.props.consortia.length > 0) {
@@ -133,11 +169,11 @@ class Dashboard extends Component {
   }
 
   render() {
-    const { auth, children, computations, consortia, pipelines } = this.props;
+    const { auth, children, computations, consortia, pipelines, runs } = this.props;
     const { router } = this.context;
 
     const childrenWithProps = React.cloneElement(children, {
-      computations, consortia, pipelines,
+      computations, consortia, pipelines, runs,
     });
 
     if (!auth || !auth.user.email.length) {
@@ -185,12 +221,13 @@ Dashboard.propTypes = {
   children: PropTypes.node.isRequired,
   computations: PropTypes.array,
   consortia: PropTypes.array,
+  getCollectionFiles: PropTypes.func.isRequired,
   notifyInfo: PropTypes.func.isRequired,
   notifySuccess: PropTypes.func.isRequired,
   pipelines: PropTypes.array,
   pullComputations: PropTypes.func.isRequired,
   runs: PropTypes.array,
-  saveLocalRuns: PropTypes.func.isRequired,
+  saveLocalRun: PropTypes.func.isRequired,
   subscribeToComputations: PropTypes.func.isRequired,
   subscribeToConsortia: PropTypes.func.isRequired,
   subscribeToPipelines: PropTypes.func.isRequired,
@@ -250,9 +287,13 @@ const DashboardWithData = compose(
 
 export default connect(mapStateToProps,
   {
+    bulkSaveLocalRuns,
+    getCollectionFiles,
+    getLocalRuns,
     notifyInfo,
     notifySuccess,
     pullComputations,
+    saveLocalRun,
     updateDockerOutput,
     updateUserConsortiaStatuses,
     writeLog,

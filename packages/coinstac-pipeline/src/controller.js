@@ -20,7 +20,7 @@ module.exports = {
   create({ controller, computations, inputMap }, runId, { operatingDirectory, mode }) {
     let cache = {};
     const currentComputations = computations.map(comp => Computation.create(comp, mode));
-    const activeControlBox = controllers[controller];
+    const activeControlBox = controllers[controller.options.type];
     const computationStep = 0;
     const iterationEmitter = new Emitter();
     const controllerState = {

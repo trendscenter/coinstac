@@ -39,7 +39,7 @@ class CollectionPipeline extends Component {
                 header={<h3>{step.computations[0].meta.name}</h3>}
                 key={step.id}
               >
-                {Object.entries(step.ioMap).map(input => (
+                {Object.entries(step.inputMap).map(input => (
                   <CollectionPipelineInput
                     associatedConsortia={associatedConsortia}
                     collection={collection}
