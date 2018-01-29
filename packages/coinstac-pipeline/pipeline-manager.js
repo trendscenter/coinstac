@@ -108,6 +108,7 @@ module.exports = {
       } else {
         io.on('connection', socketServer);
       }
+    // local socket code
     } else {
       socket = socketIOClient(`${remoteURL}:${remotePort}?id=${clientId}`);
       socket.on('hello', () => {
@@ -141,7 +142,7 @@ module.exports = {
        * resolves to the final output of the pipeline.
        * @param  {Object} spec         a valid pipeline specification
        * @param  {Array}  [clients=[]] a list of client IDs particapating in pipeline
-       *                               only necessary for decentralized runs
+       *                               only necessary for decentralized runs as remote
        * @param  {String} runId        unique ID for the pipeline
        * @return {Object}              an object containing the active pipeline and
        *                               Promise for its result
