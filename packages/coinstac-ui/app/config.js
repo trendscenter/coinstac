@@ -18,21 +18,15 @@ const conf = convict({
     default: 'production',
     env: 'NODE_ENV',
   },
-  api: {
+  apiServer: {
     hostname: 'coins-api.mrn.org',
     pathname: '/api/v1.3.0',
     protocol: 'https:',
   },
-  db: {
-    remote: {
-      db: {
-        hostname: 'coinstac.mrn.org',
-        pathname: '',
-        port: '',
-        protocol: 'https:',
-      },
-    },
-    noURLPrefix: true,
+  subApiServer: {
+    hostname: 'coinstac.mrn.org/ws',
+    port: '443',
+    protocol: 'ws:',
   },
   logFile: 'coinstac-log.json',
   logFileBoot: 'coinstac-boot-error-log.txt',
