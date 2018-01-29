@@ -1,4 +1,6 @@
 {
+  "name": "coinstac-pipeline",
+  "version": "2.6.0",
   "author": "NI Development - The Mind Research Network <nidev@mrn.org> (http://coins.mrn.org)",
   "bugs": {
     "url": "https://github.com/MRN-Code/coinstac/issues"
@@ -13,6 +15,7 @@
   "dependencies": {
     "blessed": "^0.1.81",
     "blessed-contrib": "^4.8.5",
+    "coinstac-docker-manager": "^2.6.0",
     "lodash": "^4.17.4",
     "mkdirp": "^0.5.1",
     "nyc": "^11.4.1",
@@ -34,13 +37,11 @@
   ],
   "license": "MIT",
   "main": "src/index.js",
-  "name": "coinstac-pipeline",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/MRN-Code/coinstac.git"
   },
   "scripts": {
     "test": "nyc ava test/**.test.js"
-  },
-  "version": "2.6.0"
+  }
 }
