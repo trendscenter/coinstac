@@ -576,19 +576,6 @@ const resolvers = {
       )
     },
     /**
-     * Result subscription
-     * @param {object} payload
-     * @param {string} payload.resultId The consortium changed
-     * @param {object} variables
-     * @param {string} variables.resultId The consortium listened for
-     */
-    resultChanged: {
-      subscribe: withFilter(
-        () => pubsub.asyncIterator('resultChanged'),
-        (payload, variables) => (!variables.resultId || payload.resultId === variables.resultId)
-      )
-    },
-    /**
      * Pipeline subscription
      * @param {object} payload
      * @param {string} payload.pipelineId The pipeline changed
