@@ -3,7 +3,7 @@ const Boom = require('boom');
 const jwt = require('jsonwebtoken');
 const rethink = require('rethinkdb');
 const config = require('../config/default');
-const dbmap = require('/etc/coinstac/cstacDBMap'); // eslint-disable-line import/no-absolute-path
+const dbmap = require('/etc/coinstac/cstacDBMap'); // eslint-disable-line import/no-absolute-path, import/no-unresolved
 const Promise = require('bluebird');
 
 const helperFunctions = {
@@ -253,6 +253,7 @@ const helperFunctions = {
       });
     });
   },
+  JWTSecret: dbmap.cstacJWTSecret,
 };
 
 module.exports = helperFunctions;

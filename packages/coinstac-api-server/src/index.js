@@ -1,6 +1,5 @@
 const hapi = require('hapi');
 const config = require('../config/default');
-const dbmap = require('/etc/coinstac/cstacDBMap'); // eslint-disable-line import/no-absolute-path
 const helperFunctions = require('./auth-helpers');
 const plugins = require('./plugins');
 const routes = require('./routes');
@@ -23,7 +22,7 @@ server.register(plugins, (err) => {
    */
   server.auth.strategy('jwt', 'jwt',
     {
-      key: dbmap.cstacJWTSecret,
+      key: helperFunctions.JWTSecret,
       validateFunc: helperFunctions.validateToken,
       verifyOptions: { algorithms: ['HS256'] },
     }
