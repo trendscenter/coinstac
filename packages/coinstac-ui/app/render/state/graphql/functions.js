@@ -77,6 +77,16 @@ export const FETCH_PIPELINE_QUERY = gql`
     ${queries.fetchPipeline}
 `;
 
+export const FETCH_ALL_RESULTS_QUERY = gql`
+  query fetchAllResults
+    ${queries.fetchAllResults}
+`;
+
+export const FETCH_RESULT_QUERY = gql`
+  query fetchResult ($resultId: ID)
+    ${queries.fetchResult}
+`;
+
 export const JOIN_CONSORTIUM_MUTATION = gql`
   mutation joinConsortium($consortiumId: ID!) {
     joinConsortium(consortiumId: $consortiumId){
@@ -93,6 +103,11 @@ export const LEAVE_CONSORTIUM_MUTATION = gql`
       members
     }
   }
+`;
+
+export const RESULT_CHANGED_SUBSCRIPTION = gql`
+  subscription resultChanged($resultId: ID)
+    ${queries.resultChanged}
 `;
 
 export const PIPELINE_CHANGED_SUBSCRIPTION = gql`

@@ -115,6 +115,12 @@ export const pipelinesProp = {
   }),
 };
 
+export const resultsProp = {
+  props: ({ data: { fetchAllResults } }) => ({
+    results: fetchAllResults,
+  }),
+};
+
 export const removeDocFromTableProp = (docId, mutation, query, dataQuery) => {
   return {
     props: ({ mutate }) => ({

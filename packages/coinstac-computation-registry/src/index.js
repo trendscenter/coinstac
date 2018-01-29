@@ -4,7 +4,6 @@ const axios = require('axios');
 const { getAllImages, pullImage, removeImage } = require('coinstac-docker-manager');
 const graphqlSchema = require('coinstac-graphql-schema');
 const { reduce } = require('lodash');
-const dbmap = require('/etc/coinstac/cstacDBMap'); // eslint-disable-line import/no-absolute-path
 const config = require('../config/default');
 
 /**
@@ -12,6 +11,12 @@ const config = require('../config/default');
  * @class
  */
 class ComputationRegistry {
+  constructor(params) {
+    if (params.credentials) {
+      this.credentials = params.credentials;
+    }
+  }
+
   /**
    * Connects to API Server to get a JSON token
    * @return {string} JSON web token
@@ -19,7 +24,7 @@ class ComputationRegistry {
   authenticateServer() {
     return axios.post(
       `${config.DB_URL}/authenticate`,
-      dbmap.rethinkdbServer
+      this.credentials
     )
     .then((token) => {
       this.id_token = token.data.id_token;
@@ -36,7 +41,7 @@ class ComputationRegistry {
    * Retrieve list of all local Docker images from docker-manager package
    * @return {Object[]} Array of objects containing locally stored Docker images
    */
-  getImages() { // eslint-disable-line class-methods-use-this
+  static getImages() {
     return getAllImages();
   }
 
@@ -49,7 +54,7 @@ class ComputationRegistry {
    * @param {String} comp.compName Computation name from DB
    * @return {Object} Returns array of objects containing stream and computation parameters
    */
-  pullComputations(comps) { // eslint-disable-line class-methods-use-this
+  static pullComputations(comps) {
     const compsP = reduce(comps, (arr, comp) => {
       arr.push(pullImage(comp.img));
       return arr;
@@ -69,7 +74,7 @@ class ComputationRegistry {
    * @param {string} imgId ID of image to remove
    * @return {Promise}
    */
-  removeDockerImage(imgId) { // eslint-disable-line class-methods-use-this
+  static removeDockerImage(imgId) {
     return removeImage(imgId);
   }
 

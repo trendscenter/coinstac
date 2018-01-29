@@ -18,6 +18,8 @@ import Login from './components/user/form-login-controller';
 import Signup from './components/user/form-signup-controller';
 import PipelinesList from './components/pipelines/pipelines-list';
 import Pipeline from './components/pipelines/pipeline';
+import ResultsList from './components/results/results-list';
+import Result from './components/results/result';
 import CollectionsList from './components/collections/collections-list';
 import CollectionTabs from './components/collections/collection-tabs';
 import Settings from './components/user/settings';
@@ -43,6 +45,10 @@ export default (
         <IndexRoute component={PipelinesList} />
         <Route path="new(/:consortiumId)" component={Pipeline} />
         <Route path=":pipelineId" component={Pipeline} />
+      </Route>
+      <Route path="results" component={RouteContainer}>
+        <IndexRoute component={ResultsList} />
+        <Route path=":resultId" component={Result} />
       </Route>
       <Route path="computations" component={RouteContainer}>
         <IndexRoute component={ComputationsList} />

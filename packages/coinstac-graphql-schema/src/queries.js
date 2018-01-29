@@ -28,6 +28,13 @@ const queries = {
     }
   }
   `,
+  resultChanged: `
+  {
+    resultChanged(resultId: $resultId) {
+      ${sharedFields.resultFields}
+    }
+  }
+  `,
   fetchAllComputations: `
     {
       fetchAllComputations {
@@ -63,10 +70,24 @@ const queries = {
       }
     }
   `,
+  fetchResult: `
+    {
+      fetchResult(resultId: $resultId) {
+        ${sharedFields.resultFields}
+      }
+    }
+  `,
   fetchAllPipelines: `
     {
       fetchAllPipelines {
         ${sharedFields.pipelineFields}
+      }
+    }
+  `,
+  fetchAllResults: `
+    {
+      fetchAllResults {
+        ${sharedFields.resultFields}
       }
     }
   `,
