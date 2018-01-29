@@ -10,6 +10,13 @@ export const compIOProp = {
   options: ({ computationId }) => ({ variables: { computationIds: [computationId] } }),
 };
 
+export const singleResultProp = {
+  props: ({ data: { fetchResult } }) => ({
+    activeResult: fetchResult,
+  }),
+  options: ({ params: { resultId } }) => ({ variables: { resultId } }),
+};
+
 export const consortiaMembershipProp = (name) => {
   return {
     props: ({ mutate }) => ({

@@ -59,9 +59,6 @@ class CoinstacClient {
       clientId: opts.userId,
       operatingDirectory: this.appDirectory,
     });
-
-    console.log('client const');
-    console.log(this.pipelineManager);
   }
 
   /**
@@ -212,8 +209,6 @@ class CoinstacClient {
         )
       );
     }
-
-    console.log('start pipeline client');
 
     this.pipelineManager.startPipeline({
       spec: clientPipeline,
