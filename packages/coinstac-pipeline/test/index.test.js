@@ -1,8 +1,8 @@
 const test = require('ava').test;
 const computationSpecs = require('./computation-specs');
 const path = require('path');
-const PipelineManager = require('../pipeline-manager');
-const dockerManager = require('../../coinstac-docker-manager/src/index');
+const PipelineManager = require('../src/pipeline-manager');
+const dockerManager = require('coinstac-docker-manager');
 const rimraf = require('rimraf-promise');
 
 const localCompSpec = computationSpecs.local;
