@@ -47,7 +47,7 @@ class CoinstacClient {
       CoinstacClient.getDefaultAppDirectory();
 
     // hack for electron-remote. generate full API, even if it's dead.
-    this.computationRegistry = new ComputationRegistry();
+    this.computationRegistry = new ComputationRegistry({});
 
     /* istanbul ignore if */
     if (opts.logLevel) {

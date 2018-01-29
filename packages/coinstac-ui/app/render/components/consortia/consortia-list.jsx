@@ -1,10 +1,9 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { compose, graphql } from 'react-apollo';
+import { compose, graphql, withApollo } from 'react-apollo';
 import { Alert, Button } from 'react-bootstrap';
 import { LinkContainer } from 'react-router-bootstrap';
 import PropTypes from 'prop-types';
-import ApolloClient from '../../state/apollo-client';
 import ListItem from '../common/list-item';
 import ListDeleteModal from '../common/list-delete-modal';
 import { updateUserPerms } from '../../state/ducks/auth';
@@ -155,10 +154,10 @@ class ConsortiaList extends Component {
   }
 
   joinConsortium(consortiumId, activePipelineId) {
-    const { auth: { user }, pipelines } = this.props;
+    const { auth: { user }, client, pipelines } = this.props;
 
     if (activePipelineId) {
-      const computationData = ApolloClient.readQuery({ query: FETCH_ALL_COMPUTATIONS_QUERY });
+      const computationData = client.readQuery({ query: FETCH_ALL_COMPUTATIONS_QUERY });
       const pipeline = pipelines.find(cons => cons.id === activePipelineId);
 
       const computations = [];
@@ -255,6 +254,7 @@ class ConsortiaList extends Component {
 ConsortiaList.propTypes = {
   addUserRole: PropTypes.func.isRequired,
   auth: PropTypes.object.isRequired,
+  client: PropTypes.object.isRequired,
   consortia: PropTypes.array.isRequired,
   createRun: PropTypes.func.isRequired,
   deleteConsortiumById: PropTypes.func.isRequired,
@@ -282,7 +282,8 @@ const ConsortiaListWithData = compose(
   graphql(JOIN_CONSORTIUM_MUTATION, consortiaMembershipProp('joinConsortium')),
   graphql(LEAVE_CONSORTIUM_MUTATION, consortiaMembershipProp('leaveConsortium')),
   graphql(ADD_USER_ROLE_MUTATION, userRolesProp('addUserRole')),
-  graphql(REMOVE_USER_ROLE_MUTATION, userRolesProp('removeUserRole'))
+  graphql(REMOVE_USER_ROLE_MUTATION, userRolesProp('removeUserRole')),
+  withApollo
 )(ConsortiaList);
 
 export default connect(mapStateToProps,

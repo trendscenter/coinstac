@@ -91,6 +91,10 @@ const typeDefs = `
     ${sharedFields.pipelineFields}
   }
 
+  type Result {
+    ${sharedFields.resultFields}
+  }
+
   type Run {
     id: ID!,
     clients: [String]
@@ -139,10 +143,12 @@ const typeDefs = `
     fetchAllComputations: [Computation]
     fetchAllConsortia: [Consortium]
     fetchAllPipelines: [Pipeline]
+    fetchAllResults: [Result]
     fetchAllUserRuns: [Run]
     fetchComputation(computationIds: [ID]): [Computation]
     fetchConsortium(consortiumId: ID): Consortium
     fetchPipeline(pipelineId: ID): Pipeline
+    fetchResult(resultId: ID): Result
     validateComputation(compId: ID): Boolean
   }
 

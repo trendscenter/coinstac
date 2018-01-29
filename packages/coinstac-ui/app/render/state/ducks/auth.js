@@ -1,8 +1,9 @@
 import axios from 'axios';
 import ipcPromise from 'ipc-promise';
+import { remote } from 'electron';
 import { applyAsyncLoading } from './loading';
-import { apiServer } from '../../../config.js';
 
+const apiServer = remote.getGlobal('config').get('apiServer');
 const API_URL = `${apiServer.protocol}//${apiServer.hostname}:${apiServer.port}`;
 
 const INITIAL_STATE = {

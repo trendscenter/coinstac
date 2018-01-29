@@ -70,6 +70,13 @@ const sharedFields = {
     permissions
     consortiaStatuses
   `,
+  resultFields: `
+    id
+    title
+    pipelineId
+    date
+    results
+  `,
 };
 
 module.exports = sharedFields;
