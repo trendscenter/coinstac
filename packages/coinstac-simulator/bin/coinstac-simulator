@@ -9,27 +9,31 @@ const sim = require('../src/');
 
 program
   .version(pkg.version)
-  .option('-d, --declaration [path]', '/path/to/declaration');
+  .option('-s, --spec [path]', '/path/to/pipelineSpec')
+  .option('-c, --clientNumber [number]', 'number of clients ex: 4')
+  .option('-d, --directory [path]', ' path to where results and cache is stored')
+  .option('-m, --mode [mode]', 'local or remote');
 
 program.on('--help', () => {
   console.log([ // eslint-disable-line
-    '\tTest a DecentralizedComputation in a COINSTAC simulated environment.\n\n',
-    '\tPlease provide a `declaration` specifying how to run your simulation.',
-    '\tFor examples on how to define a declaration, see:\n',
-    `\t${pkg.homepage}/tree/master/test/declarations.\n\n`,
+    '\tTest a computation in a COINSTAC simulated environment.\n\n',
+    '\tPlease provide a pipeline specification specifying how to run your simulation.',
+    '\tFor examples on how to define a specification, see:\n',
+    `\t${pkg.homepage}/tree/master/test/pipeline-specs.\n\n`,
     '\tExample:\n\n',
-    '\t  coinstac-sim -d my-delcaration.js',
+    '\t  coinstac-sim -s pipelineSpec.json -c 2 -m remote -d ~/myUsername/foo',
   ].join(' '));
 });
 
 program.parse(process.argv);
 
-if (!program.declaration) {
-  console.error('ERROR: declaration path required (-d)'); // eslint-disable-line
+if (!program.spec) {
+  console.error('ERROR: spec path required (-s)'); // eslint-disable-line
   process.exit(1);
 }
 
-const declPath = path.resolve(process.cwd(), program.declaration);
 
-sim.run(declPath);
-
+sim.startRun(program)
+.then(() => {
+  // deal with results
+});
