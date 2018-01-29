@@ -1,7 +1,7 @@
 import axios from 'axios';
 import ipcPromise from 'ipc-promise';
 import { applyAsyncLoading } from './loading';
-import { apiServer } from '../../../../config/local.json';
+import { apiServer } from '../../../config.js';
 
 const API_URL = `${apiServer.protocol}//${apiServer.hostname}:${apiServer.port}`;
 
