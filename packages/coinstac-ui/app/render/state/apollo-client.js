@@ -4,7 +4,7 @@ import {
   createBatchingNetworkInterface,
 } from 'react-apollo';
 import { SubscriptionClient, addGraphQLSubscriptions } from 'subscriptions-transport-ws';
-import { apiServer, subApiServer } from '../../../config/local.json';
+import { apiServer, subApiServer } from '../../config.js';
 
 const API_URL = `${apiServer.protocol}//${apiServer.hostname}:${apiServer.port}`;
 const networkInterface = createBatchingNetworkInterface({

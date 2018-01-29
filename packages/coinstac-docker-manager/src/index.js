@@ -1,5 +1,3 @@
-'use strict';
-
 const Docker = require('dockerode');
 const { promisify } = require('util');
 const request = require('request-promise-native');
@@ -196,7 +194,6 @@ const pullImage = (computation) => {
       if (err) {
         reject(err);
       }
-
       resolve(stream);
     });
   });
