@@ -5,7 +5,7 @@ module.exports = {
       id: 'coinstac-local-test',
       version: 'v1.0.0',
       repository: 'github.com/user/computation.git',
-      description: 'a tes that sums the last two numbers together for the next',
+      description: 'a test that sums the last two numbers together for the next',
     },
     computation: {
       type: 'docker',
