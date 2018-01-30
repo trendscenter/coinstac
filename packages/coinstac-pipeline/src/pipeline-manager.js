@@ -24,7 +24,7 @@ module.exports = {
     mode,
     clientId,
     operatingDirectory = './',
-    remotePort = 3000,
+    remotePort = 3500,
     remoteURL = 'http://localhost',
     authPlugin,
     authOpts,
