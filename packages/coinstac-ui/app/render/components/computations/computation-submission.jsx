@@ -29,8 +29,14 @@ class ComputationSubmission extends Component { // eslint-disable-line
     e.preventDefault();
     ipcPromise.send('open-dialog', 'jsonschema')
       .then((res) => {
-        const { error: { details } } = services.validator.validate(res, 'computation');
-        this.setState({ activeSchema: res, validationErrors: details });
+        let error = null;
+        const validationReults = services.validator.validate(res, 'computation');
+
+        if (validationReults.error) {
+          error = validationReults.error.details;
+        }
+
+        this.setState({ activeSchema: res, validationErrors: error });
       })
       .catch(console.log);
   }
@@ -71,7 +77,7 @@ class ComputationSubmission extends Component { // eslint-disable-line
           bsStyle="success"
           type="button"
           className={'pull-right'}
-          disabled={!this.state.activeSchema.meta || this.state.validationErrors.length > 0}
+          disabled={!this.state.activeSchema.meta || this.state.validationErrors !== null}
           onClick={this.submitSchema}
         >
           Submit

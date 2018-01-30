@@ -12,7 +12,7 @@
   },
   "computation": {
     "type": "docker",
-    "dockerImage": "mongo:latest",
+    "dockerImage": "mongo",
     "command": ["python", "/computation/comp1.py"],
     "remote": {
       "type": "docker",

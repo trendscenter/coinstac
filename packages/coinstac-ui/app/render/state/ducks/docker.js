@@ -67,7 +67,7 @@ export default function reducer(state = INITIAL_STATE, action) {
       const localImages = {};
       action.payload.forEach((image) => {
         const name = image.RepoTags[0].split(':')[0];
-        localImages[name] = image.Id;
+        localImages[name] = { id: image.Id, size: image.Size };
       });
       return { ...state, localImages };
     }
