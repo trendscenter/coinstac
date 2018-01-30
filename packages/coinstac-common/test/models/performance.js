@@ -37,17 +37,6 @@ function validOps() {
   };
 }
 
-test('perf - reality check', (t) => {
-  const begin = now();
-  const end = now();
-  const noTimeDiff = parseFloat((end - begin).toFixed(2), 10);
-  t.ok(
-      noTimeDiff > 0 && noTimeDiff < 1,
-      'no time diff takes more than 0 ms and less than 1ms'
-    );
-  t.end();
-});
-
 test('perf - pojo model time diff', (t) => {
   /* eslint-disable no-unused-vars,no-redeclare,prefer-const */
   let pojoTime;

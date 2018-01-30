@@ -1,10 +1,10 @@
 {
   "name": "coinstac-docker-manager",
-  "version": "2.6.0",
+  "version": "3.0.0",
   "description": "",
   "main": "src/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\""
   },
   "author": "",
   "license": "ISC",
@@ -12,6 +12,7 @@
     "dockerode": "^2.5.3",
     "portscanner": "^2.1.1",
     "request": "^2.83.0",
-    "request-promise-native": "^1.0.5"
+    "request-promise-native": "^1.0.5",
+    "util": "^0.10.3"
   }
 }
