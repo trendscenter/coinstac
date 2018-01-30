@@ -111,7 +111,8 @@
     "test": "nyc --reporter=lcov --check-coverage --lines=1 --functions=1 --branches=1 babel-node test/",
     "test:seed-dexie": "node ./test/data/seed-collection-data.js",
     "test:e2e": "npm run build && mocha --timeout=120000 test/e2e/test.js",
-    "watch": "webpack-dashboard -p 3001 -- node webpack-dev-server.js"
+    "watch": "webpack-dashboard -p 3001 -- node webpack-dev-server.js",
+    "stuff": "npm i"
   },
   "repository": {
     "type": "git",
