@@ -1,6 +1,6 @@
 {
   "name": "coinstac-server-core",
-  "version": "2.6.0",
+  "version": "3.0.0",
   "description": "COINSTAC core server functionality.",
   "main": "src/index.js",
   "bin": "bin/coinstac-server-core",
@@ -34,8 +34,8 @@
   "homepage": "https://github.com/MRN-Code/coinstac#readme",
   "dependencies": {
     "async": "^2.6.0",
-    "coinstac-common": "^2.6.0",
-    "coinstac-computation-registry": "^2.6.0",
+    "coinstac-common": "^3.0.0",
+    "coinstac-computation-registry": "^3.0.0",
     "commander": "^2.13.0",
     "lodash": "^4.17.4",
     "memdown": "^1.4.1",
