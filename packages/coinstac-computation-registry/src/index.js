@@ -102,7 +102,7 @@ class ComputationRegistry {
         compId: comp.id,
         compName: comp.meta.name,
       }));
-      return this.pullComputations(comps);
+      return this.constructor.pullComputations(comps);
     })
     .then((pullStreams) => {
       pullStreams.forEach(({ stream }) => stream.pipe(process.stdout));
