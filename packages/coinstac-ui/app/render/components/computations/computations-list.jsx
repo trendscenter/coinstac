@@ -81,6 +81,7 @@ class ComputationsList extends Component { // eslint-disable-line
 
           return (
             <Panel header={title} key={`${comp.id}-panel`}>
+              <p>{comp.meta.description}</p>
               <Grid>
                 <Row>
                   <Col xs={4}>
@@ -98,7 +99,7 @@ class ComputationsList extends Component { // eslint-disable-line
                     </Button>
                   </Col>
                   <Col xs={4}>
-                    {!docker.localImages[comp.computation.dockerImage.split(':')[0]] &&
+                    {!docker.localImages[comp.computation.dockerImage] &&
                       <Button
                         bsStyle="success"
                         onClick={
@@ -112,17 +113,18 @@ class ComputationsList extends Component { // eslint-disable-line
                         Download Image
                       </Button>
                     }
-                    {docker.localImages[comp.computation.dockerImage.split(':')[0]] &&
+                    {docker.localImages[comp.computation.dockerImage] &&
                       <Button
                         bsStyle="warning"
                         onClick={
                           this.removeImage(
-                            comp.computation.dockerImage.split(':')[0],
-                            docker.localImages[comp.computation.dockerImage.split(':')[0]]
+                            comp.computation.dockerImage,
+                            docker.localImages[comp.computation.dockerImage].id
                           )
                         }
                       >
-                        Remove Image
+                        Remove Image (
+                        <em>{docker.localImages[comp.computation.dockerImage].size.toString().slice(0, -6)} MB</em>)
                       </Button>
                     }
                   </Col>

@@ -56,7 +56,7 @@ class ComputationRegistry {
    */
   static pullComputations(comps) {
     const compsP = reduce(comps, (arr, comp) => {
-      arr.push(pullImage(comp.img));
+      arr.push(pullImage(`${comp.img}:latest`));
       return arr;
     }, []);
 
