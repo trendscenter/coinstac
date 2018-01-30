@@ -8,6 +8,48 @@ const mutations = {
       }
     }
   `,
+  addUserRole: `
+    {
+      addUserRole(userId: $userId, table: $table, doc: $doc, role: $role) {
+        ${sharedFields.userMetadata}
+      }
+    }
+  `,
+  removeComputation: `
+    {
+      removeComputation(computationId) {
+        ${sharedFields.computationMetadata}
+      }
+    }
+  `,
+  removeUserRole: `
+    {
+      removeUserRole(userId: $userId, table: $table, doc: $doc, role: $role) {
+        ${sharedFields.userMetadata}
+      }
+    }
+  `,
+  saveConsortium: `
+    {
+      saveConsortium(consortium: $consortium) {
+        ${sharedFields.consortiaFields}
+      }
+    }
+  `,
+  savePipeline: `
+    {
+      savePipeline(pipeline: $pipeline) {
+        ${sharedFields.pipelineFields}
+      }
+    }
+  `,
+  updateUserConsortiumStatus: `
+    {
+      updateUserConsortiumStatus(consortiumId: $consortiumId, status: $status) {
+        ${sharedFields.userMetadata}
+      }
+    }
+  `,
 };
 
 module.exports = mutations;

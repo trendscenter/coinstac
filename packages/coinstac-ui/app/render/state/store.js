@@ -13,18 +13,18 @@ import { createLogger } from 'redux-logger';
 import promiseMiddleware from 'redux-promise';
 import thunkMiddleware from 'redux-thunk';
 
-import client from './apollo-client';
 import rootReducer from './root-reducer';
 
-const finalCreateStore = applyMiddleware(
-  client.middleware(),
-  thunkMiddleware,
-  promiseMiddleware,
-  createLogger({ collapsed: true })
-)(createStore);
-
-export default function (initialState) {
-  const store = finalCreateStore(rootReducer, initialState);
+export default function (apolloClient) {
+  const store = createStore(
+    rootReducer(apolloClient),
+    applyMiddleware(
+      apolloClient.middleware(),
+      thunkMiddleware,
+      promiseMiddleware,
+      createLogger({ collapsed: true })
+    )
+  );
 
   if (module.hot) {
     // Enable Webpack hot module replacement for reducers

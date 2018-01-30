@@ -1,24 +1,19 @@
 import { combineReducers } from 'redux';
 import { reducer as form } from 'redux-form';
-import client from './apollo-client';
+import { reducer as notifications } from 'react-notification-system-redux';
 import auth from './ducks/auth';
-import computations from './ducks/computations';
-import consortia from './ducks/consortia';
-import featureTest from './ducks/feature-test';
+import collections from './ducks/collections';
+import docker from './ducks/docker';
 import loading from './ducks/loading';
-import projects from './ducks/projects';
-import results from './ducks/results';
 
-const rootReducer = combineReducers({
+const rootReducer = client => combineReducers({
   apollo: client.reducer(),
   auth,
-  computations,
-  consortia,
-  featureTest,
+  collections,
+  docker,
   form,
   loading,
-  projects,
-  results,
+  notifications,
 });
 
 export default rootReducer;

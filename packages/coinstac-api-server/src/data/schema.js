@@ -1,5 +1,5 @@
 const { makeExecutableSchema } = require('graphql-tools');
-const resolvers = require('./resolvers');
+const { pubsub, resolvers } = require('./resolvers');
 const sharedFields = require('./shared-fields');
 
 const typeDefs = `
@@ -34,9 +34,11 @@ const typeDefs = `
   }
 
   type Computation {
-    id: ID
+    id: ID!
+    delete: Boolean
     meta: ComputationMeta
     computation: ComputationField
+    submittedBy: ID!
   }
 
   input ComputationInput {
@@ -45,27 +47,52 @@ const typeDefs = `
     computation: ComputationFieldInput
   }
 
-  # Should owners/users be an array of user objects?
   type Consortium {
     id: ID!
-    activeComputationId: ID
-    activeComputationInputs: [String]
-    description: String!
-    label: String!
-    tags: [String]
-    owners: [String]
-    users: [String]
+    ${sharedFields.consortiumFields}
+  }
+
+  type Result {
+    ${sharedFields.resultFields}
   }
 
   input ConsortiumInput {
+    id: ID
+    ${sharedFields.consortiumFields}
+  }
+
+  type PipelineController {
+    ${sharedFields.pipelineControllerFields}
+  }
+
+  input PipelineControllerInput {
+    ${sharedFields.pipelineControllerFields}
+  }
+
+  type PipelineStep {
     id: ID!
-    activeComputationId: ID
-    activeComputationInputs: [String]
-    description: String!
-    label: String!
-    tags: [String]
-    owners: [String]
-    users: [String]
+    controller: PipelineController
+    computations: [Computation]
+    ${sharedFields.pipelineStepFields} 
+  }
+
+  input PipelineStepInput {
+    id: ID
+    controller: PipelineControllerInput
+    computations: [ID]
+    ${sharedFields.pipelineStepFields} 
+  }
+
+  type Pipeline {
+    id: ID!
+    steps: [PipelineStep]
+    ${sharedFields.pipelineFields}
+  }
+
+  input PipelineInput {
+    id: ID
+    steps: [PipelineStepInput]
+    ${sharedFields.pipelineFields}
   }
 
   type Run {
@@ -79,35 +106,59 @@ const typeDefs = `
   }
 
   type User {
-    username: String!
+    id: ID!
+    ${sharedFields.userFields}
+  }
+
+  type UserInput {
+    id: ID
+    ${sharedFields.userFields}
   }
 
   # This is the general mutation description
   type Mutation {
     # Stringify incoming computation, parse prior to insertion call
     addComputation(computationSchema: ComputationInput): Computation
-    removeComputation(compId: ID): JSON
-    deleteConsortiumById(consortiumId: ID): String
-    joinConsortium(username: String, consortiumId: ID): Consortium
+    addUserRole(userId: ID, table: String, doc: String, role: String): User
+    deleteConsortiumById(consortiumId: ID): Consortium
+    deletePipeline(pipelineId: ID): Pipeline
+    joinConsortium(consortiumId: ID): Consortium
+    leaveConsortium(consortiumId: ID): Consortium
+    removeComputation(computationId: ID): Computation
+    removeUserRole(userId: ID, table: String, doc: String, role: String): User
+    saveActivePipeline(consortiumId: ID, activePipelineId: ID): String
+    saveConsortium(consortium: ConsortiumInput): Consortium
+    savePipeline(pipeline: PipelineInput): Pipeline
     setActiveComputation(computationId: ID, consortiumId: ID): String
     setComputationInputs(consortiumId: ID, fieldIndex: Int, values: String ): String
-    leaveConsortium(username: String, consortiumId: ID): String
-    saveConsortium(consortium: ConsortiumInput): String
+    updateUserConsortiumStatus(consortiumId: ID, status: String): User
   }
 
   # This is a description of the queries
   type Query {
     # This is a description of the fetchAllComputations query
     fetchAllComputations: [Computation]
-    fetchComputation(computationName: String): Computation
+    fetchAllConsortia: [Consortium]
+    fetchAllPipelines: [Pipeline]
+    fetchAllResults: [Result]
+    fetchComputation(computationIds: [ID]): [Computation]
+    fetchConsortium(consortiumId: ID): Consortium
+    fetchPipeline(pipelineId: ID): Pipeline
+    fetchResult(resultId: ID): Result
     validateComputation(compId: ID): Boolean
-    fetchConsortiumById(consortiumId: ID): Consortium
-    fetchRunForConsortium(consortiumId: ID): [Run]
-    fetchRunForUser(username: String): [Run]
-    fetchRunById: Run
+  }
+
+  type Subscription {
+    computationChanged(computationId: ID): Computation
+    consortiumChanged(consortiumId: ID): Consortium
+    pipelineChanged(pipelineId: ID): Pipeline
+    resultChanged(resultId: ID): Result
   }
 `;
 
 const schema = makeExecutableSchema({ typeDefs, resolvers });
 
-module.exports = schema;
+module.exports = {
+  schema,
+  pubsub,
+};

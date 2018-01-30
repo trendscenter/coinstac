@@ -2,14 +2,17 @@
  * Configure render-process error handling.
  */
 
-import app from 'ampersand-app';
+import { ipcRenderer } from 'electron';
 
 function onError(error) {
-  app.logger.error('Unhandled error:', error);
+  ipcRenderer.send('write-log', { type: 'error', message: `Unhandled error: ${error}` });
 }
 
 function onUnhandledRejection(event) {
-  app.logger.error('Unhandled rejection:', event.promise, event.reason);
+  ipcRenderer.send('write-log', {
+    type: 'error',
+    message: `Unhandled rejection: ${event.promise} ${event.reason}`,
+  });
 }
 
 export function start() {

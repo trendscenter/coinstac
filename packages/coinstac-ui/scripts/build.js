@@ -4,7 +4,6 @@ const archiver = require('archiver');
 const fs = require('fs');
 const rm = require('rimraf');
 const os = require('os');
-const buildNative = require('./utils/build-native.js');
 const bb = require('bluebird');
 const path = require('path');
 
@@ -32,7 +31,6 @@ if (platform === 'darwin') {
 
 // TODO: build mult arch when possible
 bb.promisify(rm)(zipOutput)
-.then(() => buildNative())
 .then(() => {
   options.arch = os.arch();
   options.platform = platform;
