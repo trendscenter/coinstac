@@ -31,7 +31,7 @@
     "joi": "^10.6.0",
     "json-parse-helpfulerror": "^1.0.3",
     "lodash": "^4.17.4",
-    "pouchy": "^11.0.3"
+    "pouchy": "^12.3.0"
   },
   "homepage": "http://mrn-code.github.io/coinstac#readme",
   "devDependencies": {
