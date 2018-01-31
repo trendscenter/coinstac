@@ -1,6 +1,6 @@
 {
   "name": "coinstac-ui",
-  "version": "2.6.0",
+  "version": "3.0.0",
   "description": "COINSTAC desktop application.",
   "main": "app/main/index.js",
   "dependencies": {
@@ -12,10 +12,10 @@
     "bluebird": "^3.5.1",
     "bootstrap-sass": "^3.3.7",
     "classnames": "^2.2.5",
-    "coinstac-client-core": "^2.6.0",
-    "coinstac-common": "^2.6.0",
-    "coinstac-computation-registry": "^2.6.0",
-    "coinstac-graphql-schema": "^2.6.0",
+    "coinstac-client-core": "^3.0.0",
+    "coinstac-common": "^3.0.0",
+    "coinstac-computation-registry": "^3.0.0",
+    "coinstac-graphql-schema": "^3.0.0",
     "commander": "^2.13.0",
     "convict": "^1.5.0",
     "deep-equal": "^1.0.1",
@@ -111,7 +111,8 @@
     "test": "nyc --reporter=lcov --check-coverage --lines=1 --functions=1 --branches=1 babel-node test/",
     "test:seed-dexie": "node ./test/data/seed-collection-data.js",
     "test:e2e": "npm run build && mocha --timeout=120000 test/e2e/test.js",
-    "watch": "webpack-dashboard -p 3001 -- node webpack-dev-server.js"
+    "watch": "webpack-dashboard -p 3001 -- node webpack-dev-server.js",
+    "stuff": "npm i"
   },
   "repository": {
     "type": "git",
