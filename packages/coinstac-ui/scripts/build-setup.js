@@ -5,6 +5,7 @@ const ncp = bluebird.promisify(require('ncp'));
 const path = require('path');
 
 rmrf('./node_modules/coinstac-*(common|client-core|computation-registry)')
+.then(() => rmrf('./node_modules/.bin/coinstac-*(common|client-core|computation-registry)'))
 .then(() => Promise.all([
   mkdirp(path.join('node_modules', 'coinstac-common')),
   mkdirp(path.join('node_modules', 'coinstac-client-core')),
