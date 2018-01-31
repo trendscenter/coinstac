@@ -17,32 +17,35 @@ const styles = {
 class ConsortiumPipeline extends Component {
   constructor(props) {
     super(props);
-    const { pipelines } = this.props;
-
-    let ownedPipelines = {};
-    let sharedPipelines = {};
-
-    ownedPipelines = pipelines.filter(
-      pipe => pipe.owningConsortium === props.consortium.id
-    );
-
-    sharedPipelines = pipelines.filter(
-      pipe => pipe.shared
-    );
 
     this.state = {
       activePipeline: {},
-      ownedPipelines: [...ownedPipelines],
-      sharedPipelines: [...sharedPipelines],
+      ownedPipelines: [],
+      sharedPipelines: [],
     };
   }
 
   componentWillReceiveProps(nextProps) {
-    if (this.props.pipelines.length > 0 &&
-        !this.state.activePipeline.id && nextProps.consortium.activePipelineId) {
+    if (this.props.pipelines.length > 0 && nextProps.consortium.activePipelineId) {
       const activePipeline = this.props.pipelines
         .find(cons => cons.id === nextProps.consortium.activePipelineId);
       this.setState({ activePipeline });
+    }
+
+    if (nextProps.pipelines) {
+      // TODO: refit owned and shared pipelines
+      let ownedPipelines = [];
+      let sharedPipelines = [];
+
+      ownedPipelines = nextProps.pipelines.filter(
+        pipe => pipe.owningConsortium === nextProps.consortium.id
+      );
+
+      sharedPipelines = nextProps.pipelines.filter(
+        pipe => pipe.shared
+      );
+
+      this.setState({ ownedPipelines, sharedPipelines });
     }
   }
 

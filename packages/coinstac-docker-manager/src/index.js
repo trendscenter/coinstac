@@ -5,6 +5,8 @@ const portscanner = require('portscanner');
 
 const setTimeoutPromise = promisify(setTimeout);
 
+console.log(setTimeoutPromise);
+
 // TODO: ENV specific socket
 const docker = new Docker({ socketPath: '/var/run/docker.sock' });
 const streamPool = {};

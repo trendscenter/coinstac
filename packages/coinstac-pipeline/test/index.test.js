@@ -11,14 +11,14 @@ const decentralizedCompSpec = computationSpecs.decentralized;
 const localPipelineSpec = {
   steps: [
     {
-      controller: 'local',
+      controller: { type: 'local' },
       computations: [localCompSpec],
       inputMap: {
         start: { value: 1 },
       },
     },
     {
-      controller: 'local',
+      controller: { type: 'local' },
       computations: [localCompSpec],
       inputMap: {
         start: { fromCache: { step: 0, variable: 'sum' } },
@@ -30,7 +30,7 @@ const localPipelineSpec = {
 const remotePipelineSpec = {
   steps: [
     {
-      controller: 'decentralized',
+      controller: { type: 'decentralized' },
       computations: [decentralizedCompSpec],
       inputMap: {
         start: { value: 1 },

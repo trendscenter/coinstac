@@ -35,8 +35,9 @@ helperFunctions.getRethinkConnection()
           compInsertResult.changes[0].new_val.id,
         ],
         controller: {
-          options: { type: 'local' },
+          options: {},
           id: 'test-controller-1',
+          type: 'local',
         },
         id: 'HJwMOMTh-',
         inputMap: {

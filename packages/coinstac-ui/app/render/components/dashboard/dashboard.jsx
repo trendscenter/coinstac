@@ -115,6 +115,11 @@ class Dashboard extends Component {
             const pipeline =
               this.props.pipelines.find(obj => obj.id === consortium.activePipelineId);
             this.props.saveLocalRun({ ...run, status: 'started' });
+
+            if (filesArray.error) {
+              filesArray = [];
+            }
+
             ipcRenderer.send('start-pipeline', { consortium, pipeline, filesArray, run });
           });
         }

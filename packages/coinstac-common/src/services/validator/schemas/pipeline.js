@@ -17,9 +17,8 @@ module.exports = {
           .required(),
         controller: Joi.object().keys({
           id: Joi.string().required(),
-          options: Joi.object().keys({
-            type: Joi.string(),
-          }),
+          options: Joi.object().keys({}),
+          type: Joi.string(),
         }).required(),
         inputMap: Joi.any().required(),
       })
