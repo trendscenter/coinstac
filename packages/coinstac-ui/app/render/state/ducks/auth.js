@@ -77,6 +77,8 @@ export const autoLogin = applyAsyncLoading(() =>
       if (err.response && err.response.status === 401) {
         localStorage.setItem('id_token', null);
         dispatch(setUser({ ...INITIAL_STATE, error: 'Please Login Again' }));
+      } else if (err.request && err.request.status === 0) {
+        dispatch(setUser({ ...INITIAL_STATE, error: 'Server not responding' }));
       }
     });
   }
@@ -89,6 +91,8 @@ export const login = applyAsyncLoading(({ username, password, saveLogin }) =>
     .catch((err) => {
       if (err.response && err.response.status === 401) {
         dispatch(setUser({ ...INITIAL_STATE, error: 'Username and/or Password Incorrect' }));
+      } else if (err.request && err.request.status === 0) {
+        dispatch(setUser({ ...INITIAL_STATE, error: 'Server not responding' }));
       }
     })
 );
