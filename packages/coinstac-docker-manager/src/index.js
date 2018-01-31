@@ -1,9 +1,12 @@
 const Docker = require('dockerode');
-const { promisify } = require('util');
 const request = require('request-promise-native');
 const portscanner = require('portscanner');
 
-const setTimeoutPromise = promisify(setTimeout);
+const setTimeoutPromise = (delay) => {
+  return new Promise((resolve) => {
+    setTimeout(resolve, delay);
+  });
+};
 
 console.log(setTimeoutPromise);
 
