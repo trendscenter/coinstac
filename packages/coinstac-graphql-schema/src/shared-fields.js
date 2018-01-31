@@ -43,10 +43,18 @@ const sharedFields = {
           description
           version
         }
+        computation {
+          type
+          dockerImage
+          command
+          input
+          output
+        }
       }
       controller {
         id
         options
+        type
       }
       inputMap
     }

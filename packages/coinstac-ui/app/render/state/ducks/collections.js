@@ -53,6 +53,14 @@ export const getCollectionFiles = applyAsyncLoading(consortiumId =>
   dispatch =>
     localDB.associatedConsortia.get(consortiumId)
     .then((consortium) => {
+      if (!consortium) {
+        const error = { error: 'No associated consortia in local db' };
+        dispatch(({
+          type: GET_COLLECTION_FILES,
+          payload: error,
+        }));
+        return error;
+      }
       const collections = [];
       let mappingIncomplete = false;
 
