@@ -50,7 +50,7 @@ export default class PipelineStepInput extends Component {
     const { isCovariate, step: { inputMap } } = this.props;
 
     if (!isCovariate) {
-      return { ...inputMap, [objKey]: value };
+      return { ...inputMap, [objKey]: { value } };
     }
 
     const covars = [...inputMap.covariates];
@@ -174,10 +174,10 @@ export default class PipelineStepInput extends Component {
                 inputRef={(input) => { this[objKey] = input; }}
                 onChange={() => updateStep({
                   ...step,
-                  inputMap: this.getNewObj(objKey, this[objKey].value),
+                  inputMap: this.getNewObj(objKey, parseFloat(this[objKey].value)),
                 })}
                 type="number"
-                value={step.inputMap[objKey] || ''}
+                value={step.inputMap[objKey] ? step.inputMap[objKey].value : ''}
               />
             }
 
@@ -191,10 +191,10 @@ export default class PipelineStepInput extends Component {
                   ...step,
                   inputMap: this.getNewObj(
                     objKey,
-                    this.getSelectList(step.inputMap[objKey], this[objKey].value)
+                    this.getSelectList(step.inputMap[objKey].value, this[objKey].value)
                   ),
                 })}
-                value={step.inputMap[objKey] || []}
+                value={step.inputMap[objKey] ? step.inputMap[objKey].value : []}
               >
                 {objParams.values.map(val =>
                   <option key={`${val}-select-option`} value={val}>{val}</option>
@@ -203,7 +203,7 @@ export default class PipelineStepInput extends Component {
             }
 
             {objParams.type === 'array' && !objParams.values && objParams.items === 'number' &&
-              step.inputMap[objKey] && step.inputMap[objKey].map((val, i) => (
+              step.inputMap[objKey] && step.inputMap[objKey].value.map((val, i) => (
                 <FormControl
                   key={`${objKey}-${i}`}
                   disabled={!owner}
@@ -211,13 +211,15 @@ export default class PipelineStepInput extends Component {
                   onChange={() => updateStep({
                     ...step,
                     inputMap: {
-                      [objKey]: update(step.inputMap[objKey], {
-                        $splice: [[i, 1, this[i].value]],
-                      }),
+                      [objKey]: {
+                        value: update(step.inputMap[objKey].value, {
+                          $splice: [[i, 1, parseFloat(this[i].value)]],
+                        }),
+                      },
                     },
                   })}
                   type="number"
-                  value={step.inputMap[objKey][i] || ''}
+                  value={step.inputMap[objKey][i] ? step.inputMap[objKey][i].value : ''}
                 />
               ))
             }
@@ -230,7 +232,7 @@ export default class PipelineStepInput extends Component {
                   ...step,
                   inputMap: this.getNewObj(objKey, this[objKey].value),
                 })}
-                value={step.inputMap[objKey] || ''}
+                value={step.inputMap[objKey] ? step.inputMap[objKey].value : ''}
               >
                 True?
               </Checkbox>

@@ -17,11 +17,13 @@
     },
     "input": {
       "start": {
+        "label": "Start",
         "type": "number"
       }
     },
     "output": {
       "sum": {
+        "label": "Sum",
         "type": "number"
       }
     }
