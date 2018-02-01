@@ -27,16 +27,18 @@ const authenticateServer = () => {
 const connectionStart = (id, result) => {
   return authenticateServer()
   .then(() =>
-    axios.post(`${config.DB_URL}/graphql`,
-      {
-        operationName: 'saveResults',
-        query: `mutation ${graphqlSchema.mutations.saveResults}`,
+    axios({
+      method: 'post',
+      url: `${config.DB_URL}/graphql`,
+      data: {
+        query: `mutation($runId: ID!, $results: JSON) ${graphqlSchema.mutations.saveResults.replace(/\s{2,10}/g, ' ')}`,
         variables: {
           runId: id,
           results: result,
         },
-      }
-  ))
+      },
+    })
+  )
   .catch((error) => {
     console.log(error);
   });
