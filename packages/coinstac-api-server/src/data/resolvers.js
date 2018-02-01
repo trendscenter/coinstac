@@ -295,7 +295,7 @@ const resolvers = {
         )
         .then((result) => {
           return axios.post(
-            `http://${config.host}:${config.hapiServer}/startPipeline`,{ run: result.changes[0].new_val }
+            `http://${config.host}:${config.hapiServer}/startPipeline`, { run: result.changes[0].new_val }
           ).then(() => {
               return result.changes[0].new_val;
           })

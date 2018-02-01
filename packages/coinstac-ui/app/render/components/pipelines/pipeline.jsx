@@ -155,7 +155,7 @@ class Pipeline extends Component {
             computations: [
               { ...computation },
             ],
-            inputMap: { covariates: [] },
+            inputMap: { },
           },
         ],
       },
@@ -182,43 +182,43 @@ class Pipeline extends Component {
           ...step,
           inputMap: {
             ...step.inputMap,
-            covariates: step.inputMap.covariates.map((cov) => {
-              if (index >= stepIndex && movedStepIndex < stepIndex) {
-                return { ...cov, source: {} };
-              } else if (movedStepIndex === cov.source.pipelineIndex) {
-                return {
-                  ...cov,
-                  source: {
-                    ...cov.source,
-                    pipelineIndex: index,
-                    inputLabel: cov.source.inputLabel.replace(`Computation ${cov.source.pipelineIndex + 1}`, `Computation ${index + 1}`),
-                  },
-                };
-              } else if (index <= cov.source.pipelineIndex
-                          && movedStepIndex > cov.source.pipelineIndex) {
-                return {
-                  ...cov,
-                  source: {
-                    ...cov.source,
-                    pipelineIndex: cov.source.pipelineIndex + 1,
-                    inputLabel: cov.source.inputLabel.replace(`Computation ${cov.source.pipelineIndex + 1}`, `Computation ${cov.source.pipelineIndex + 2}`),
-                  },
-                };
-              } else if (movedStepIndex < cov.source.pipelineIndex
-                          && index >= cov.source.pipelineIndex
-                          && index < stepIndex) {
-                return {
-                  ...cov,
-                  source: {
-                    ...cov.source,
-                    pipelineIndex: cov.source.pipelineIndex - 1,
-                    inputLabel: cov.source.inputLabel.replace(`Computation ${cov.source.pipelineIndex + 1}`, `Computation ${cov.source.pipelineIndex}`),
-                  },
-                };
-              }
+            // covariates: step.inputMap.covariates.map((cov) => {
+            //   if (index >= stepIndex && movedStepIndex < stepIndex) {
+            //     return { ...cov, source: {} };
+            //   } else if (movedStepIndex === cov.source.pipelineIndex) {
+            //     return {
+            //       ...cov,
+            //       source: {
+            //         ...cov.source,
+            //         pipelineIndex: index,
+            //         inputLabel: cov.source.inputLabel.replace(`Computation ${cov.source.pipelineIndex + 1}`, `Computation ${index + 1}`),
+            //       },
+            //     };
+            //   } else if (index <= cov.source.pipelineIndex
+            //               && movedStepIndex > cov.source.pipelineIndex) {
+            //     return {
+            //       ...cov,
+            //       source: {
+            //         ...cov.source,
+            //         pipelineIndex: cov.source.pipelineIndex + 1,
+            //         inputLabel: cov.source.inputLabel.replace(`Computation ${cov.source.pipelineIndex + 1}`, `Computation ${cov.source.pipelineIndex + 2}`),
+            //       },
+            //     };
+            //   } else if (movedStepIndex < cov.source.pipelineIndex
+            //               && index >= cov.source.pipelineIndex
+            //               && index < stepIndex) {
+            //     return {
+            //       ...cov,
+            //       source: {
+            //         ...cov.source,
+            //         pipelineIndex: cov.source.pipelineIndex - 1,
+            //         inputLabel: cov.source.inputLabel.replace(`Computation ${cov.source.pipelineIndex + 1}`, `Computation ${cov.source.pipelineIndex}`),
+            //       },
+            //     };
+            //   }
 
-              return cov;
-            }),
+            //   return cov;
+            // }),
           },
         };
       })
@@ -231,13 +231,13 @@ class Pipeline extends Component {
         ...movedStep,
         inputMap: {
           ...movedStep.inputMap,
-          covariates: movedStep.inputMap.covariates.map((cov) => {
-            if (cov.source.pipelineIndex >= index) {
-              return { ...cov, source: {} };
-            }
+          // covariates: movedStep.inputMap.covariates.map((cov) => {
+          //   if (cov.source.pipelineIndex >= index) {
+          //     return { ...cov, source: {} };
+          //   }
 
-            return cov;
-          }),
+          //   return cov;
+          // }),
         },
       }
     );

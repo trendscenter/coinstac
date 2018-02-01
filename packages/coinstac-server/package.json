@@ -9,7 +9,8 @@
     "clean:db": "node scripts/clean-db.js",
     "clean:computations": "node scripts/clean-computations.js",
     "test": "echo Refactor tests",
-    "docs": "mkdir -p docs && jsdoc -c .jsdoc.json src/"
+    "docs": "mkdir -p docs && jsdoc -c .jsdoc.json src/",
+    "start": "node src/index.js"
   },
   "repository": {
     "type": "git",

@@ -120,7 +120,7 @@ class Dashboard extends Component {
               filesArray = [];
             }
 
-            ipcRenderer.send('start-pipeline', { consortium, pipeline, filesArray, run });
+            setTimeout(() => { ipcRenderer.send('start-pipeline', { consortium, pipeline, filesArray, run }); }, 5000);
           });
         }
       }
