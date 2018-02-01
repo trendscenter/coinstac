@@ -91,7 +91,7 @@ helperFunctions.getRethinkConnection()
     steps: [
       {
         id: 'UIKDl-',
-        controller: { type: 'local' },
+        controller: { type: 'decentralized' },
         computations: [
           compInsertResult.changes[1].new_val.id,
         ],
