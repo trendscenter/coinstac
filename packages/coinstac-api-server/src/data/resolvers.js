@@ -5,6 +5,8 @@ const Promise = require('bluebird');
 const { PubSub, withFilter } = require('graphql-subscriptions');
 const helperFunctions = require('../auth-helpers');
 const initSubscriptions = require('./subscriptions');
+const config = require('../../config/default');
+const axios = require('axios');
 
 /**
  * Helper function to retrieve all members of given table
@@ -30,6 +32,28 @@ function fetchOne(table, id) {
     .then(connection =>
       rethink.table(table).get(id).run(connection)
     );
+}
+
+function fetchOnePipeline(table, id) {
+  return helperFunctions.getRethinkConnection()
+    .then(connection =>
+      rethink.table('pipelines')
+        .get(id)
+        // Populate computations subfield with computation meta information
+        .merge(pipeline =>
+          ({
+            steps: pipeline('steps').map(step =>
+              step.merge({
+                computations: step('computations').map(compId =>
+                  rethink.table('computations').get(compId)
+                ),
+              })
+            ),
+          })
+        )
+        .run(connection)
+    )
+    .then(result => result);
 }
 
 const pubsub = new PubSub();
@@ -251,7 +275,7 @@ const resolvers = {
       return fetchOne('consortia', consortiumId)
         .then(consortium => Promise.all([
           consortium,
-          fetchOne('pipelines', consortium.activePipelineId),
+          fetchOnePipeline('pipelines', consortium.activePipelineId),
           helperFunctions.getRethinkConnection()
         ]))
         .then(([consortium, pipelineSnapshot, connection]) =>
@@ -270,8 +294,15 @@ const resolvers = {
           .run(connection)
         )
         .then((result) => {
-          return result.changes[0].new_val;
+          return axios.post(
+            `http://${config.host}:${config.hapiServer}/startPipeline`,{ run: result.changes[0].new_val }
+          ).then(() => {
+              return result.changes[0].new_val;
+          })
         })
+        .catch(error => {
+              console.log(error)
+        });
     },
     /**
      * Deletes consortium
@@ -518,6 +549,15 @@ const resolvers = {
             .run(connection)
         ))
         .then(result => result)
+    },
+    saveResults: (_, args) => {
+      console.log("save results was called");
+      const { permissions } = credentials;
+      return helperFunctions.getRethinkConnection()
+        .then((connection) =>
+          rethink.table('runs').get(args.runId).update({results: args.results})
+          .run(connection))
+          .then(result => result.changes[0].new_val)
     },
     setActiveComputation: (_, args) => {
       return new Promise();

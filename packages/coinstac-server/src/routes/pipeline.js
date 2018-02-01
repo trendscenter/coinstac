@@ -1,54 +1,45 @@
 // const helperFunctions = require('../auth-helpers');
 const PipelineManager = require('coinstac-pipeline');
 const path = require('path');
+const axios = require('axios');
+const config = require('../../config/default');
+const graphqlSchema = require('coinstac-graphql-schema');
+const dbmap = require('/etc/coinstac/cstacDBMap'); // eslint-disable-line import/no-absolute-path, import/no-unresolved
 
-this.pipelineManager = PipelineManager.create({
+this.remotePipelineManager = PipelineManager.create({
   mode: 'remote',
   clientId: 'remote',
   operatingDirectory: path.resolve(__dirname, 'remote'),
 });
 
-const decentralized = {
-  meta: {
-    name: 'decentralized test',
-    id: 'coinstac-decentralized-test',
-    version: 'v1.0.0',
-    repository: 'github.com/user/computation.git',
-    description: 'a test that sums the last two numbers together for the next',
-  },
-  computation: {
-    type: 'docker',
-    dockerImage: 'coinstac/coinstac-decentralized-test',
-    command: ['python', '/computation/local.py'],
-    remote: {
-      type: 'docker',
-      dockerImage: 'coinstac/coinstac-decentralized-test',
-      command: ['python', '/computation/remote.py'],
-    },
-    input: {
-      start: {
-        type: 'number',
-      },
-    },
-    output: {
-      sum: {
-        type: 'number',
-      },
-    },
-  },
+const authenticateServer = () => {
+  return axios.post(
+    `${config.DB_URL}/authenticate`,
+    dbmap.rethinkdbServer
+  )
+  .then((token) => {
+    this.id_token = token.data.id_token;
+    axios.defaults.headers.common.Authorization = `Bearer ${this.id_token}`;
+    return this.id_token;
+  });
 };
 
-
-const remotePipelineSpec = {
-  steps: [
-    {
-      controller: 'decentralized',
-      computations: [decentralized],
-      inputMap: {
-        start: { value: 1 },
-      },
-    },
-  ],
+const connectionStart = (id, result) => {
+  return authenticateServer()
+  .then(() =>
+    axios.post(`${config.DB_URL}/graphql`,
+      {
+        operationName: 'saveResults',
+        query: `mutation ${graphqlSchema.mutations.saveResults}`,
+        variables: {
+          runId: id,
+          results: result,
+        },
+      }
+  ))
+  .catch((error) => {
+    console.log(error);
+  });
 };
 
 module.exports = [
@@ -57,14 +48,25 @@ module.exports = [
     path: '/startPipeline',
     config: {
       // auth: 'jwt',
-      handler: ({ run }, res) => {
-        this.pipelineManager.startPipeline({
-          spec: remotePipelineSpec,
-          runId: 'remotetest1',
+      handler: (req, res) => {
+        console.log('Pipeline is starting');
+
+        const run = req.payload.run;
+        const remotePipeline = this.remotePipelineManager.startPipeline({
+          clients: run.clients,
+          spec: run.pipelineSnapshot,
+          runId: run.id,
         });
 
-        // TODO: What to return
         res({}).code(201);
+
+        remotePipeline.result.then((result) => {
+          console.log('Pipeline is done. Sending results...');
+          connectionStart(run.id, result);
+        })
+        .catch((error) => {
+          console.log(error);
+        });
       },
     },
   },
