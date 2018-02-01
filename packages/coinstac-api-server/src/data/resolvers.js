@@ -550,14 +550,14 @@ const resolvers = {
         ))
         .then(result => result)
     },
-    saveResults: (_, args) => {
+    saveResults: ({ auth: { credentials } }, args) => {
       console.log("save results was called");
       const { permissions } = credentials;
       return helperFunctions.getRethinkConnection()
         .then((connection) =>
           rethink.table('runs').get(args.runId).update({results: args.results})
           .run(connection))
-          .then(result => result.changes[0].new_val)
+          // .then(result => result.changes[0].new_val)
     },
     setActiveComputation: (_, args) => {
       return new Promise();
