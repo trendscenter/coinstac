@@ -65,7 +65,7 @@ helperFunctions.getRethinkConnection()
         computations: [
           compInsertResult.changes[1].new_val.id,
         ],
-        controller: 'decentralized',
+        controller: { type: 'decentralized' },
         id: 'HyLfdfanb',
         inputMap: {
           covariates: [
@@ -84,29 +84,19 @@ helperFunctions.getRethinkConnection()
   },
   {
     id: 'test-pipeline',
-    name: 'Test Pipeline',
+    name: 'Decentralized Pipeline',
     description: 'Test description',
     owningConsortium: 'test-cons-1',
     shared: true,
     steps: [
       {
         id: 'UIKDl-',
-        controller: 'local',
+        controller: { type: 'local' },
         computations: [
-          compInsertResult.changes[0].new_val.id,
+          compInsertResult.changes[1].new_val.id,
         ],
         inputMap: {
           start: { value: 1 },
-        },
-      },
-      {
-        id: 'UIKDk-',
-        controller: 'local',
-        computations: [
-          compInsertResult.changes[0].new_val.id,
-        ],
-        inputMap: {
-          start: { fromCache: { step: 0, variable: 'sum' } },
         },
       },
     ],
