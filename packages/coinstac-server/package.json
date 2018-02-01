@@ -35,6 +35,8 @@
   "dependencies": {
     "coinstac-computation-registry": "^3.0.0",
     "coinstac-pipeline": "^3.0.0",
+    "axios": "^0.17.1",
+    "coinstac-graphql-schema": "^3.0.0",
     "hapi": "^16.6.2"
   }
 }
