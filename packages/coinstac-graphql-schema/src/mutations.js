@@ -50,6 +50,11 @@ const mutations = {
       }
     }
   `,
+  saveResults: `
+    {
+      saveResults(runId: $runId, results: $results)
+    }
+  `,
   updateUserConsortiumStatus: `
     {
       updateUserConsortiumStatus(consortiumId: $consortiumId, status: $status) {

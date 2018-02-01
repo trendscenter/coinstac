@@ -10,7 +10,9 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "axios": "^0.17.1",
     "coinstac-computation-registry": "^2.6.0",
+    "coinstac-graphql-schema": "^2.6.0",
     "coinstac-pipeline": "^2.6.0",
     "hapi": "^16.6.2"
   }
