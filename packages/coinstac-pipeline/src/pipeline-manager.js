@@ -33,7 +33,7 @@ module.exports = {
     const activePipelines = {};
     let io;
     let socket;
-    let remoteClients = {};
+    const remoteClients = {};
     const missedCache = {};
 
     const waitingOn = (runId) => {
@@ -74,11 +74,12 @@ module.exports = {
         socket.emit('hello', { status: 'connected' });
 
         socket.on('register', (data) => {
-          if (remoteClients[data.id]) {
-            remoteClients[data.id].status = 'connected';
-            remoteClients[data.id].socketId = socket.id;
-            remoteClients[data.id].lastSeen = Math.floor(Date.now() / 1000);
+          if (!remoteClients[data.id]) {
+            remoteClients[data.id] = {};
           }
+          remoteClients[data.id].status = 'connected';
+          remoteClients[data.id].socketId = socket.id;
+          remoteClients[data.id].lastSeen = Math.floor(Date.now() / 1000);
         });
 
         socket.on('run', (data) => {
@@ -97,8 +98,10 @@ module.exports = {
 
         socket.on('disconnect', (reason) => {
           const client = _.find(remoteClients, { socketId: socket.id });
-          client.status = 'disconnected';
-          client.error = reason;
+          if (client) {
+            client.status = 'disconnected';
+            client.error = reason;
+          }
         });
       };
 
@@ -151,17 +154,16 @@ module.exports = {
           state: 'created',
           pipeline: Pipeline.create(spec, runId, { mode, operatingDirectory }),
         };
-        remoteClients = Object.assign(
-          clients.reduce((memo, client) => {
-            memo[client] = {
+
+        clients.forEach((client) => {
+          remoteClients[client] = Object.assign(
+            {
               status: 'unregistered',
               [runId]: {},
-            };
-            return memo;
-          }, {}),
-          remoteClients
-        );
-
+            },
+            remoteClients[client]
+          );
+        });
         const communicate = (pipeline, message) => {
           // hold the last step for drops, this only works for one step out
           missedCache[pipeline.id] = {
@@ -198,7 +200,6 @@ module.exports = {
           return prom;
         };
 
-        debugger;
         const pipelineProm = Promise.all([
           mkdirp(path.resolve(operatingDirectory, runId)),
           mkdirp(path.resolve(operatingDirectory, 'output', runId)),
