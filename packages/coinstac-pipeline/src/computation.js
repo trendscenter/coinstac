@@ -16,6 +16,7 @@ module.exports = {
       meta,
       mode,
       start(input, { baseDirectory }) {
+        debugger;
         return docker.startService(
           meta.id,
           {

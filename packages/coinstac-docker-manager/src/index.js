@@ -8,8 +8,6 @@ const setTimeoutPromise = (delay) => {
   });
 };
 
-console.log(setTimeoutPromise);
-
 // TODO: ENV specific socket
 const docker = new Docker({ socketPath: '/var/run/docker.sock' });
 const streamPool = {};
