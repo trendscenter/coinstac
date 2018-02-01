@@ -77,6 +77,10 @@ const sharedFields = {
     date
     results
   `,
+  resultsFields: `
+    runId
+    results
+  `,
 };
 
 module.exports = sharedFields;

@@ -2,6 +2,8 @@ const rethink = require('rethinkdb');
 const singleShot = require('./data/single-shot-schema');
 const multiShot = require('./data/multi-shot-schema');
 const vbm = require('./data/vbm-schema');
+const decentralized = require('./data/coinstac-decentralized-test');
+const local = require('./data/coinstac-local-test');
 const helperFunctions = require('../src/auth-helpers');
 
 helperFunctions.getRethinkConnection()
@@ -19,13 +21,15 @@ helperFunctions.getRethinkConnection()
   .then(() => rethink.tableCreate('pipelines').run(connection))
   .then(() => rethink.tableCreate('computations').run(connection))
   .then(() => rethink.table('computations').insert([
+    Object.assign({}, local, { submittedBy: 'test' }),
+    Object.assign({}, decentralized, { submittedBy: 'test' }),
     Object.assign({}, singleShot, { submittedBy: 'test' }),
     Object.assign({}, multiShot, { submittedBy: 'test' }),
     Object.assign({}, vbm, { submittedBy: 'author' }),
   ], { returnChanges: true }).run(connection))
-  .then(compInsertResult => rethink.table('pipelines').insert({
-    id: 'test-pipeline',
-    name: 'Test Pipeline',
+  .then(compInsertResult => rethink.table('pipelines').insert([{
+    id: 'test-pipeline-2',
+    name: 'Test Pipeline 2',
     description: 'Test description',
     owningConsortium: 'test-cons-1',
     shared: true,
@@ -34,10 +38,7 @@ helperFunctions.getRethinkConnection()
         computations: [
           compInsertResult.changes[0].new_val.id,
         ],
-        controller: {
-          options: { type: 'local' },
-          id: 'test-controller-1',
-        },
+        controller: 'local',
         id: 'HJwMOMTh-',
         inputMap: {
           covariates: [
@@ -60,10 +61,7 @@ helperFunctions.getRethinkConnection()
         computations: [
           compInsertResult.changes[1].new_val.id,
         ],
-        controller: {
-          options: { type: 'single' },
-          id: 'test-controller-2',
-        },
+        controller: 'decentralized',
         id: 'HyLfdfanb',
         inputMap: {
           covariates: [
@@ -79,7 +77,37 @@ helperFunctions.getRethinkConnection()
         },
       },
     ],
-  }).run(connection))
+  },
+  {
+    id: 'test-pipeline',
+    name: 'Test Pipeline',
+    description: 'Test description',
+    owningConsortium: 'test-cons-1',
+    shared: true,
+    steps: [
+      {
+        id: 'UIKDl-',
+        controller: 'local',
+        computations: [
+          compInsertResult.changes[0].new_val.id,
+        ],
+        inputMap: {
+          start: { value: 1 },
+        },
+      },
+      {
+        id: 'UIKDk-',
+        controller: 'local',
+        computations: [
+          compInsertResult.changes[0].new_val.id,
+        ],
+        inputMap: {
+          start: { fromCache: { step: 0, variable: 'sum' } },
+        },
+      },
+    ],
+  },
+  ]).run(connection))
   .then(() => rethink.tableCreate('roles', { primaryKey: 'role' }).run(connection))
   .then(() => rethink.table('roles').insert([
     { role: 'owner', verbs: { write: true, read: true } },

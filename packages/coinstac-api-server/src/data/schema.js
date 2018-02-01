@@ -132,6 +132,7 @@ const typeDefs = `
     saveActivePipeline(consortiumId: ID, activePipelineId: ID): String
     saveConsortium(consortium: ConsortiumInput): Consortium
     savePipeline(pipeline: PipelineInput): Pipeline
+    saveResults(runId: ID, results: JSON): JSON
     setActiveComputation(computationId: ID, consortiumId: ID): String
     setComputationInputs(consortiumId: ID, fieldIndex: Int, values: String ): String
     updateUserConsortiumStatus(consortiumId: ID, status: String): User
