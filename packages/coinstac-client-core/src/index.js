@@ -210,11 +210,12 @@ class CoinstacClient {
       );
     }
 
-    const newPipeline = this.pipelineManager.startPipeline({
-      spec: clientPipeline,
-      clients,
-      runId,
-    });
+    const runObj = { spec: clientPipeline, runId };
+    if (clients) {
+      runObj.clients = clients;
+    }
+
+    const newPipeline = this.pipelineManager.startPipeline(runObj);
 
     return Promise.all([newPipeline, linkPromises]);
   }

@@ -47,6 +47,11 @@ const sharedFields = {
           type
           dockerImage
           command
+          remote {
+            type
+            dockerImage
+            command
+          }
           input
           output
         }

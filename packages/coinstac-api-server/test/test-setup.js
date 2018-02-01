@@ -31,7 +31,7 @@ helperFunctions.getRethinkConnection()
     id: 'test-pipeline-2',
     name: 'Test Pipeline 2',
     description: 'Test description',
-    owningConsortium: 'test-cons-1',
+    owningConsortium: 'test-cons-2',
     shared: true,
     steps: [
       {
@@ -86,12 +86,12 @@ helperFunctions.getRethinkConnection()
     id: 'test-pipeline',
     name: 'Decentralized Pipeline',
     description: 'Test description',
-    owningConsortium: 'test-cons-1',
+    owningConsortium: 'test-cons-2',
     shared: true,
     steps: [
       {
         id: 'UIKDl-',
-        controller: { type: 'local' },
+        controller: { type: 'decentralized' },
         computations: [
           compInsertResult.changes[1].new_val.id,
         ],
@@ -298,8 +298,8 @@ helperFunctions.getRethinkConnection()
     id: 'test-cons-1',
     name: 'Test Consortia 1',
     description: 'This consortia is for testing.',
-    owners: ['author'],
-    members: ['test'],
+    owners: ['test'],
+    members: [''],
   }).run(connection))
   .then(() => rethink.table('consortia').insert({
     id: 'test-cons-2',
@@ -307,7 +307,7 @@ helperFunctions.getRethinkConnection()
     name: 'Test Consortia 2',
     description: 'This consortia is for testing too.',
     owners: ['test'],
-    members: ['author'],
+    members: [''],
   }).run(connection))
   .then(() => connection.close());
 })

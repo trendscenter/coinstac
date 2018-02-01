@@ -140,7 +140,7 @@ module.exports = {
        * for that pipeline. The return object is that pipeline and a promise that
        * resolves to the final output of the pipeline.
        * @param  {Object} spec         a valid pipeline specification
-       * @param  {Array}  [clients=[]] a list of client IDs particapating in pipeline
+       * @param  {Array}  [clients=[]] a list of client IDs participating in pipeline
        *                               only necessary for decentralized runs
        * @param  {String} runId        unique ID for the pipeline
        * @return {Object}              an object containing the active pipeline and
@@ -161,6 +161,7 @@ module.exports = {
           }, {}),
           remoteClients
         );
+
         const communicate = (pipeline, message) => {
           // hold the last step for drops, this only works for one step out
           missedCache[pipeline.id] = {
@@ -197,6 +198,7 @@ module.exports = {
           return prom;
         };
 
+        debugger;
         const pipelineProm = Promise.all([
           mkdirp(path.resolve(operatingDirectory, runId)),
           mkdirp(path.resolve(operatingDirectory, 'output', runId)),
