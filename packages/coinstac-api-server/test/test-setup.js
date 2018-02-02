@@ -17,7 +17,6 @@ helperFunctions.getRethinkConnection()
     );
   }).run(connection)
   .then(() => rethink.dbCreate('coinstac').run(connection))
-  .then(() => rethink.tableCreate('runs').run(connection))
   .then(() => rethink.tableCreate('pipelines').run(connection))
   .then(() => rethink.tableCreate('computations').run(connection))
   .then(() => rethink.table('computations').insert([
@@ -108,8 +107,8 @@ helperFunctions.getRethinkConnection()
     { role: 'member', verbs: { subscribe: true } },
   ]).run(connection))
   .then(() => rethink.tableCreate('users').run(connection))
-  .then(() => rethink.tableCreate('run').run(connection))
-  .then(() => rethink.table('run').insert([
+  .then(() => rethink.tableCreate('runs').run(connection))
+  .then(() => rethink.table('runs').insert([
     {
       id: 'results-1',
       title: 'TSNE',
@@ -299,7 +298,7 @@ helperFunctions.getRethinkConnection()
     name: 'Test Consortia 1',
     description: 'This consortia is for testing.',
     owners: ['test'],
-    members: [''],
+    members: [],
   }).run(connection))
   .then(() => rethink.table('consortia').insert({
     id: 'test-cons-2',
@@ -307,7 +306,7 @@ helperFunctions.getRethinkConnection()
     name: 'Test Consortia 2',
     description: 'This consortia is for testing too.',
     owners: ['test'],
-    members: [''],
+    members: [],
   }).run(connection))
   .then(() => connection.close());
 })

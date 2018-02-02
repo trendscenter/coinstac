@@ -68,7 +68,7 @@ const resolvers = {
      * Returns all results.
      * @return {array} All results
      */
-    fetchAllResults: () => fetchAll('run'),
+    fetchAllResults: () => fetchAll('runs'),
     /**
      * Returns single pipeline
      * @param {object} args
@@ -81,7 +81,7 @@ const resolvers = {
       } else {
         return helperFunctions.getRethinkConnection()
           .then(connection =>
-            rethink.table('run')
+            rethink.table('runs')
               .get(args.resultId)
               .run(connection)
           )

@@ -40,7 +40,7 @@ const connectionStart = (id, result) => {
     })
   )
   .catch((error) => {
-    console.log(error);
+    console.log(error); // eslint-disable-line no-console
   });
 };
 
@@ -67,7 +67,7 @@ module.exports = [
           connectionStart(run.id, result);
         })
         .catch((error) => {
-          console.log(error);
+          console.log(error); // eslint-disable-line no-console
         });
       },
     },
