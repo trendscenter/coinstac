@@ -25,6 +25,7 @@ class Result extends Component {
   }
 
   componentWillReceiveProps(nextProps) {
+    console.log(nextProps);
     if (nextProps.activeResult) {
       if (nextProps.activeResult.results.plots) {
         nextProps.activeResult.results.plots.map(result => (
@@ -55,7 +56,7 @@ class Result extends Component {
     const { activeResult } = this.props;
     return (
       <div>
-        {(activeResult && activeResult.results.type === 'scatter_plot') &&
+        {(activeResult && activeResult.results && activeResult.results.type === 'scatter_plot') &&
         <ScatterChart
           legend
           data={this.state.plotData}
@@ -66,7 +67,7 @@ class Result extends Component {
           title={activeResult.title}
         />
       }
-        {activeResult && activeResult.results.type === 'box_plot' &&
+        {activeResult && activeResult.results && activeResult.results.type === 'box_plot' &&
           <Chart {...this.props}>
             <Grid type="x" {...this.props} {...this.state} xScale="linear" yScale="linear" />
             <Grid type="y" {...this.props} {...this.state} yScale="linear" xScale="linear" />
@@ -89,7 +90,8 @@ class Result extends Component {
             />
           </Chart>
         }
-        {!activeResult.type && <pre>{JSON.stringify(activeResult.results)}</pre>}
+        {activeResult && activeResult.results && !activeResult.results.type &&
+          <pre>{JSON.stringify(activeResult.results)}</pre>}
       </div>
     );
   }

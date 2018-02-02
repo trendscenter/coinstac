@@ -104,10 +104,53 @@ class Dashboard extends Component {
       this.props.bulkSaveLocalRuns(nextProps.runs);
     }
 
+    // if (nextProps.runs && this.props.consortia.length && this.props.runs.length > 0) {
+    //   for (let i = 0; i < nextProps.runs.length; i += 1) {
+    //     const runIndexInProps = sortedAscObjectIndex(this.props.runs, nextProps.runs[i], 'id');
+    //     // Run not in local props, start a pipeline (runs already filtered by member)
+    //     if (runIndexInProps === -1) {
+    //       this.props.getCollectionFiles(nextProps.runs[i].consortiumId)
+    //       .then((filesArray) => {
+    //         const run = nextProps.runs[i];
+    //         const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
+    //         const pipeline =
+    //           this.props.pipelines.find(obj => obj.id === consortium.activePipelineId);
+    //         this.props.saveLocalRun({ ...run, status: 'started' });
+
+    //         if (filesArray.error) {
+    //           filesArray = [];
+    //         }
+
+    //         setTimeout(() => {
+    //           this.props.notifyInfo({
+    //             message: `Local Pipeline Starting for ${consortium.name}.`,
+    //           });
+    //           ipcRenderer.send('start-pipeline', { consortium, pipeline, filesArray, run });
+    //         }, 5000);
+    //       });
+    //     // Run already in props but results are incoming
+    //     } else if (runIndexInProps > -1 && nextProps.runs[i].results
+    //       && !this.props.runs[runIndexInProps].results) {
+    //       const run = nextProps.runs[i];
+    //       const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
+    //       this.props.saveLocalRun({ ...run, status: 'complete' });
+    //       this.props.notifySuccess({
+    //         message: `${consortium.name} Pipeline Complete.`,
+    //         autoDismiss: 5,
+    //         action: {
+    //           label: 'View Results',
+    //           callback: () => {
+    //             router.push('/results');
+    //           },
+    //         },
+    //       });
+    //     }
+    //   }
+    // }
+
     if (nextProps.runs && this.props.consortia.length) {
       for (let i = 0; i < nextProps.runs.length; i += 1) {
-        if (this.props.runs.length === 0 ||
-            sortedAscObjectIndex(this.props.runs, nextProps.runs[i], 'id') === -1) {
+        if (sortedAscObjectIndex(this.props.runs, nextProps.runs[i], 'id') === -1) {
           this.props.getCollectionFiles(nextProps.runs[i].consortiumId)
           .then((filesArray) => {
             const run = nextProps.runs[i];
