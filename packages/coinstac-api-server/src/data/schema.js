@@ -103,6 +103,7 @@ const typeDefs = `
     endDate: String
     pipelineSnapshot: JSON
     userErrors: String
+    results: JSON
     globalResults: String
     userResults: String
   }

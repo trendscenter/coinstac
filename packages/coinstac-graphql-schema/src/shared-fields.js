@@ -73,6 +73,7 @@ const sharedFields = {
     pipelineSnapshot
     userErrors
     globalResults
+    results
     userResults
   `,
   userMetadata: `

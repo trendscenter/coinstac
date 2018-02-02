@@ -113,6 +113,8 @@ helperFunctions.getRethinkConnection()
       id: 'results-1',
       title: 'TSNE',
       pipelineId: 'test-pipeline',
+      clients: ['test'],
+      consortiumId: 'test-cons-2',
       date: '1/22/2018',
       results: {
         type: 'scatter_plot',
@@ -243,6 +245,8 @@ helperFunctions.getRethinkConnection()
       id: 'results-2',
       title: 'MRI QC',
       pipelineId: 'test-pipeline',
+      clients: ['test'],
+      consortiumId: 'test-cons-2',
       date: '1/23/2018',
       results: {
         type: 'box_plot',
