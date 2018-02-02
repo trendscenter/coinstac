@@ -89,6 +89,7 @@ class Result extends Component {
             />
           </Chart>
         }
+        {!activeResult.type && <pre>{JSON.stringify(activeResult.results)}</pre>}
       </div>
     );
   }

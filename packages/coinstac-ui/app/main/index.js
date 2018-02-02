@@ -94,7 +94,6 @@ loadConfig()
    * @return {Promise<String>} Status message
    */
   ipcMain.on('start-pipeline', (event, { consortium, pipeline, filesArray, run }) => {
-    console.log(pipeline);
     core.startPipeline(
       null, // [...consortium.members, ...consortium.owners],
       consortium.id,
@@ -105,8 +104,8 @@ loadConfig()
     )
     .then(([newPipeline]) => {
       newPipeline.result.then((result) => {
-        console.log('Pipeline is done. Result:');
-        console.log(result);
+        console.log('Pipeline is done. Result:'); // eslint-disable-line no-console
+        console.log(result); // eslint-disable-line no-console
       });
     });
   });

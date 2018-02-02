@@ -21,7 +21,7 @@ const ResultsList = ({ results }) =>
       <Panel key={result.id} header={<h3>{result.title}</h3>}>
         <p>{result.date}</p>
         <p>{result.pipelineId}</p>
-        <p>{result.results.type}</p>
+        <p>{result.results.type ? result.results.type : 'none'}</p>
         <LinkContainer
           to={`dashboard/results/${result.id}`}
         >
