@@ -45,10 +45,10 @@ const startRun = (spec, runMode = 'local', clientCount = 1, operatingDirectory =
   }))
   .then(() => {
     debugger;
-    if (mode === 'remote') {
+    if (runMode === 'remote') {
       return pipelines.remote.pipeline.result;
     }
-  })
+  });
 };
 module.exports = {
   startRun,
