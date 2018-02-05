@@ -1,4 +1,5 @@
 {
+  "name": "coinstac-pipeline",
   "author": "NI Development - The Mind Research Network <nidev@mrn.org> (http://coins.mrn.org)",
   "bugs": {
     "url": "https://github.com/MRN-Code/coinstac/issues"

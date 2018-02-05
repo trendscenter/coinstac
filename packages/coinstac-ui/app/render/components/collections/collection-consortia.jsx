@@ -124,7 +124,8 @@ class CollectionConsortia extends Component {
             title="Select Consortia"
           >
             {consortia.map((cons) => {
-              if ((cons.members.indexOf(user.id) > -1 || cons.owners.indexOf(user.id) > -1) &&
+              if (cons.activePipelineId &&
+                  (cons.members.indexOf(user.id) > -1 || cons.owners.indexOf(user.id) > -1) &&
                   associatedConsortia.findIndex(c => c.id === cons.id) === -1) {
                 return (
                   <MenuItem

@@ -7,6 +7,8 @@ import DashboardNav from './dashboard-nav';
 import UserAccountController from '../user/user-account-controller';
 import { notifyInfo, notifySuccess, writeLog } from '../../state/ducks/notifyAndLog';
 import CoinstacAbbr from '../coinstac-abbr';
+import { getCollectionFiles } from '../../state/ducks/collections';
+import { bulkSaveLocalRuns, getLocalRuns, saveLocalRun } from '../../state/ducks/local-runs';
 import {
   pullComputations,
   updateDockerOutput,
@@ -18,12 +20,31 @@ import {
   FETCH_ALL_COMPUTATIONS_QUERY,
   FETCH_ALL_CONSORTIA_QUERY,
   FETCH_ALL_PIPELINES_QUERY,
+  FETCH_ALL_USER_RUNS_QUERY,
   PIPELINE_CHANGED_SUBSCRIPTION,
+  USER_RUN_CHANGED_SUBSCRIPTION,
   UPDATE_USER_CONSORTIUM_STATUS_MUTATION,
 } from '../../state/graphql/functions';
 import {
   getAllAndSubProp,
 } from '../../state/graphql/props';
+
+// Binary search sorted object array
+function sortedAscObjectIndex(array, obj, param) {
+  const index = Math.ceil(array.length / 2) - 1;
+
+  const arrayObj = array[index];
+
+  if (arrayObj[param] === obj[param]) {
+    return index;
+  } else if (array.length === 1 || (index === 0 && arrayObj[param] > obj[param])) {
+    return -1;
+  } else if (arrayObj[param] > obj[param]) {
+    return sortedAscObjectIndex(array.slice(0, index), obj, param);
+  } else if (arrayObj[param] < obj[param]) {
+    return sortedAscObjectIndex(array.slice(index + 1), obj, param);
+  }
+}
 
 class Dashboard extends Component {
   constructor(props) {
@@ -33,6 +54,7 @@ class Dashboard extends Component {
       unsubscribeComputations: null,
       unsubscribeConsortia: null,
       unsubscribePipelines: null,
+      unsubscribeRuns: null,
     };
   }
 
@@ -77,9 +99,82 @@ class Dashboard extends Component {
       this.setState({ unsubscribePipelines: this.props.subscribeToPipelines(null) });
     }
 
+    if (nextProps.runs && !this.state.unsubscribeRuns) {
+      this.setState({ unsubscribeRuns: this.props.subscribeToUserRuns(null) });
+      this.props.bulkSaveLocalRuns(nextProps.runs);
+    }
+
+    if (nextProps.runs && this.props.consortia.length && this.props.runs.length > 0) {
+      for (let i = 0; i < nextProps.runs.length; i += 1) {
+        const runIndexInProps = sortedAscObjectIndex(this.props.runs, nextProps.runs[i], 'id');
+        // Run not in local props, start a pipeline (runs already filtered by member)
+        if (runIndexInProps === -1) {
+          this.props.getCollectionFiles(nextProps.runs[i].consortiumId)
+           .then((filesArray) => {
+             const run = nextProps.runs[i];
+             const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
+             const pipeline =
+               this.props.pipelines.find(obj => obj.id === consortium.activePipelineId);
+             this.props.saveLocalRun({ ...run, status: 'started' });
+
+             if (filesArray.error) {
+               filesArray = [];
+             }
+
+             setTimeout(() => {
+               this.props.notifyInfo({
+                 message: `Local Pipeline Starting for ${consortium.name}.`,
+               });
+               ipcRenderer.send('start-pipeline', { consortium, pipeline, filesArray, run });
+             }, 5000);
+           });
+         // Run already in props but results are incoming
+        } else if (runIndexInProps > -1 && nextProps.runs[i].results
+           && !this.props.runs[runIndexInProps].results) {
+          const run = nextProps.runs[i];
+          const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
+          this.props.saveLocalRun({ ...run, status: 'complete' });
+          if (!this.props.notifyShow[run.id]) {
+            this.props.notifySuccess({
+              message: `${consortium.name} Pipeline Complete.`,
+              autoDismiss: 5,
+              action: {
+                label: 'View Results',
+                callback: () => {
+                  router.push(`/results/${run.id}`);
+                },
+              },
+            });
+            this.props.notifyShow[run.id] = true;
+          }
+        }
+      }
+    }
+
+    if (nextProps.runs && this.props.consortia.length) {
+      for (let i = 0; i < nextProps.runs.length; i += 1) {
+        if (sortedAscObjectIndex(this.props.runs, nextProps.runs[i], 'id') === -1) {
+          this.props.getCollectionFiles(nextProps.runs[i].consortiumId)
+          .then((filesArray) => {
+            const run = nextProps.runs[i];
+            const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
+            const pipeline =
+              this.props.pipelines.find(obj => obj.id === consortium.activePipelineId);
+            this.props.saveLocalRun({ ...run, status: 'started' });
+
+            if (filesArray.error) {
+              filesArray = [];
+            }
+
+            setTimeout(() => { ipcRenderer.send('start-pipeline', { consortium, pipeline, filesArray, run }); }, 5000);
+          });
+        }
+      }
+    }
+
     if (nextProps.consortia && this.props.consortia.length > 0) {
       for (let i = 0; i < nextProps.consortia.length; i += 1) {
-        if (nextProps.consortia[i].id === this.props.consortia[i].id &&
+        if (this.props.consortia[i] && nextProps.consortia[i].id === this.props.consortia[i].id &&
             nextProps.consortia[i].activePipelineId &&
             !this.props.consortia[i].activePipelineId &&
             nextProps.consortia[i].members.indexOf(user.id) > -1) {
@@ -120,14 +215,15 @@ class Dashboard extends Component {
     this.state.unsubscribeComputations();
     this.state.unsubscribeConsortia();
     this.state.unsubscribePipelines();
+    this.state.unsubscribeRuns();
   }
 
   render() {
-    const { auth, children, computations, consortia, pipelines } = this.props;
+    const { auth, children, computations, consortia, pipelines, runs } = this.props;
     const { router } = this.context;
 
     const childrenWithProps = React.cloneElement(children, {
-      computations, consortia, pipelines,
+      computations, consortia, pipelines, runs,
     });
 
     if (!auth || !auth.user.email.length) {
@@ -165,22 +261,30 @@ Dashboard.contextTypes = {
 Dashboard.defaultProps = {
   computations: [],
   consortia: [],
+  notifyShow: [],
   pipelines: [],
+  runs: [],
 };
 
 Dashboard.propTypes = {
   auth: PropTypes.object.isRequired,
+  bulkSaveLocalRuns: PropTypes.func.isRequired,
   children: PropTypes.node.isRequired,
   client: PropTypes.object.isRequired,
   computations: PropTypes.array,
   consortia: PropTypes.array,
+  getCollectionFiles: PropTypes.func.isRequired,
   notifyInfo: PropTypes.func.isRequired,
+  notifyShow: PropTypes.array,
   notifySuccess: PropTypes.func.isRequired,
   pipelines: PropTypes.array,
   pullComputations: PropTypes.func.isRequired,
+  runs: PropTypes.array,
+  saveLocalRun: PropTypes.func.isRequired,
   subscribeToComputations: PropTypes.func.isRequired,
   subscribeToConsortia: PropTypes.func.isRequired,
   subscribeToPipelines: PropTypes.func.isRequired,
+  subscribeToUserRuns: PropTypes.func.isRequired,
   updateDockerOutput: PropTypes.func.isRequired,
   updateUserConsortiumStatus: PropTypes.func.isRequired,
   writeLog: PropTypes.func.isRequired,
@@ -214,6 +318,14 @@ const DashboardWithData = compose(
     'subscribeToPipelines',
     'pipelineChanged'
   )),
+  graphql(FETCH_ALL_USER_RUNS_QUERY, getAllAndSubProp(
+    USER_RUN_CHANGED_SUBSCRIPTION,
+    'runs',
+    'fetchAllUserRuns',
+    'subscribeToUserRuns',
+    'userRunChanged',
+    'userId'
+  )),
   graphql(UPDATE_USER_CONSORTIUM_STATUS_MUTATION, {
     props: ({ ownProps, mutate }) => ({
       updateUserConsortiumStatus: (consortiumId, status) => mutate({
@@ -229,9 +341,13 @@ const DashboardWithData = compose(
 
 export default connect(mapStateToProps,
   {
+    bulkSaveLocalRuns,
+    getCollectionFiles,
+    getLocalRuns,
     notifyInfo,
     notifySuccess,
     pullComputations,
+    saveLocalRun,
     updateDockerOutput,
     updateUserConsortiaStatuses,
     writeLog,

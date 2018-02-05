@@ -4,8 +4,12 @@ const queries = {
   allDockerImages: `
     {
       fetchAllComputations {
+        id
         computation {
           dockerImage
+        }
+        meta {
+          name
         }
       }
     }
@@ -42,6 +46,13 @@ const queries = {
     {
       fetchAllConsortia {
         ${sharedFields.consortiaFields}
+      }
+    }
+  `,
+  fetchAllUserRuns: `
+    {
+      fetchAllUserRuns {
+        ${sharedFields.runFields}
       }
     }
   `,
@@ -92,11 +103,18 @@ const queries = {
     }
   `,
   pipelineChanged: `
-  {
-    pipelineChanged(pipelineId: $pipelineId) {
-      ${sharedFields.pipelineFields}
+    {
+      pipelineChanged(pipelineId: $pipelineId) {
+        ${sharedFields.pipelineFields}
+      }
     }
-  }
+  `,
+  userRunChanged: `
+    {
+      userRunChanged(userId: $userId) {
+        ${sharedFields.runFields}
+      }
+    }
   `,
 };
 

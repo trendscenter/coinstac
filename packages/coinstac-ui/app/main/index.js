@@ -58,20 +58,9 @@ loadConfig()
 .then(([config, logger]) => {
   process.on('uncaughtException', logUnhandledError(null, logger));
   global.config = config;
-  return Promise.all([
-    logger,
-    configureCore(global.config, logger),
-  ]);
-})
-.then(([logger, core]) =>
-  Promise.all([
-    logger,
-    core,
-    upsertCoinstacUserDir(core),
-  ])
-)
-.then(([logger, core]) => {
+
   const mainWindow = getWindow();
+  let core = null;
   logger.verbose('main process booted');
 
   /**
@@ -81,6 +70,14 @@ loadConfig()
    */
   ipcMain.on('write-log', (event, { type, message }) => {
     logger[type](`process: render - ${message}`);
+  });
+
+  ipcPromise.on('login-init', (userId) => {
+    return new Promise(res => res(configureCore(config, logger, userId)))
+      .then((c) => {
+        core = c;
+        return upsertCoinstacUserDir(core);
+      });
   });
 
   /**
@@ -96,10 +93,21 @@ loadConfig()
    *  according to the run
    * @return {Promise<String>} Status message
    */
-  ipcPromise.on('start-pipeline', ({ consortium, filesArray, run }) => {
-    return core.constructor.startPipeline(
-      consortium.id, consortium.pipelineSteps, filesArray, run.id, run.pipelineSteps
-    );
+  ipcMain.on('start-pipeline', (event, { consortium, pipeline, filesArray, run }) => {
+    core.startPipeline(
+      null, // [...consortium.members, ...consortium.owners],
+      consortium.id,
+      pipeline,
+      filesArray,
+      run.id,
+      run.pipelineSteps
+    )
+    .then(([newPipeline]) => {
+      newPipeline.result.then((result) => {
+        console.log('Pipeline is done. Result:'); // eslint-disable-line no-console
+        console.log(result); // eslint-disable-line no-console
+      });
+    });
   });
 
   /**

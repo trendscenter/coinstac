@@ -5,6 +5,8 @@ const Promise = require('bluebird');
 const { PubSub, withFilter } = require('graphql-subscriptions');
 const helperFunctions = require('../auth-helpers');
 const initSubscriptions = require('./subscriptions');
+const config = require('../../config/default');
+const axios = require('axios');
 
 /**
  * Helper function to retrieve all members of given table
@@ -14,10 +16,9 @@ const initSubscriptions = require('./subscriptions');
 function fetchAll(table) {
   return helperFunctions.getRethinkConnection()
     .then(connection =>
-      rethink.table(table).run(connection)
+      rethink.table(table).orderBy({ index: 'id' }).run(connection)
     )
-    .then(cursor => cursor.toArray())
-    .then(result => result);
+    .then(cursor => cursor.toArray());
 }
 
 /**
@@ -30,6 +31,27 @@ function fetchOne(table, id) {
   return helperFunctions.getRethinkConnection()
     .then(connection =>
       rethink.table(table).get(id).run(connection)
+    );
+}
+
+function fetchOnePipeline(table, id) {
+  return helperFunctions.getRethinkConnection()
+    .then(connection =>
+      rethink.table('pipelines')
+        .get(id)
+        // Populate computations subfield with computation meta information
+        .merge(pipeline =>
+          ({
+            steps: pipeline('steps').map(step =>
+              step.merge({
+                computations: step('computations').map(compId =>
+                  rethink.table('computations').get(compId)
+                ),
+              })
+            ),
+          })
+        )
+        .run(connection)
     )
     .then(result => result);
 }
@@ -46,7 +68,7 @@ const resolvers = {
      * Returns all results.
      * @return {array} All results
      */
-    fetchAllResults: () => fetchAll('run'),
+    fetchAllResults: () => fetchAll('runs'),
     /**
      * Returns single pipeline
      * @param {object} args
@@ -59,7 +81,7 @@ const resolvers = {
       } else {
         return helperFunctions.getRethinkConnection()
           .then(connection =>
-            rethink.table('run')
+            rethink.table('runs')
               .get(args.resultId)
               .run(connection)
           )
@@ -108,6 +130,7 @@ const resolvers = {
       return helperFunctions.getRethinkConnection()
         .then(connection =>
           rethink.table('pipelines')
+            .orderBy({ index: 'id' })
             .map(pipeline =>
               pipeline.merge(pipeline =>
                 ({
@@ -156,6 +179,16 @@ const resolvers = {
           )
           .then(result => result);
       }
+    },
+    fetchAllUserRuns: ({ auth: { credentials } }, args) => {
+      return helperFunctions.getRethinkConnection()
+        .then(connection =>
+          rethink.table('runs')
+            .orderBy({ index: 'id' })
+            .filter(rethink.row('clients').contains(credentials.id))
+            .run(connection)
+        )
+        .then(cursor => cursor.toArray());
     },
     validateComputation: (_, args) => {
       return new Promise();
@@ -227,6 +260,49 @@ const resolvers = {
           helperFunctions.getUserDetails({ username: credentials.id })
         )
         .then(result => result)
+    },
+    /**
+     * Add run to RethinkDB
+     * @param {String} consortiumId Run object to add/update
+     * @return {object} New/updated run object
+     */
+    createRun: ({ auth }, { consortiumId }) => {
+      if (!auth || !auth.credentials) {
+        // No authorized user, reject
+        return Boom.unauthorized('User not authenticated');
+      }
+
+      return fetchOne('consortia', consortiumId)
+        .then(consortium => Promise.all([
+          consortium,
+          fetchOnePipeline('pipelines', consortium.activePipelineId),
+          helperFunctions.getRethinkConnection()
+        ]))
+        .then(([consortium, pipelineSnapshot, connection]) =>
+          rethink.table('runs').insert(
+            {
+              clients: [...consortium.members, ...consortium.owners],
+              consortiumId,
+              pipelineSnapshot,
+              startDate: Date.now(),
+            },
+            { 
+              conflict: "replace",
+              returnChanges: true,
+            }
+          )
+          .run(connection)
+        )
+        .then((result) => {
+          return axios.post(
+            `http://${config.host}:${config.hapiServer}/startPipeline`, { run: result.changes[0].new_val }
+          ).then(() => {
+              return result.changes[0].new_val;
+          })
+        })
+        .catch(error => {
+              console.log(error)
+        });
     },
     /**
      * Deletes consortium
@@ -474,6 +550,15 @@ const resolvers = {
         ))
         .then(result => result)
     },
+    saveResults: ({ auth: { credentials } }, args) => {
+      console.log("save results was called");
+      const { permissions } = credentials;
+      return helperFunctions.getRethinkConnection()
+        .then((connection) =>
+          rethink.table('runs').get(args.runId).update({results: args.results})
+          .run(connection))
+          // .then(result => result.changes[0].new_val)
+    },
     setActiveComputation: (_, args) => {
       return new Promise();
     },
@@ -531,19 +616,6 @@ const resolvers = {
       )
     },
     /**
-     * Result subscription
-     * @param {object} payload
-     * @param {string} payload.resultId The consortium changed
-     * @param {object} variables
-     * @param {string} variables.resultId The consortium listened for
-     */
-    resultChanged: {
-      subscribe: withFilter(
-        () => pubsub.asyncIterator('resultChanged'),
-        (payload, variables) => (!variables.resultId || payload.resultId === variables.resultId)
-      )
-    },
-    /**
      * Pipeline subscription
      * @param {object} payload
      * @param {string} payload.pipelineId The pipeline changed
@@ -554,6 +626,19 @@ const resolvers = {
       subscribe: withFilter(
         () => pubsub.asyncIterator('pipelineChanged'),
         (payload, variables) => (!variables.pipelineId || payload.pipelineId === variables.pipelineId)
+      )
+    },
+    /**
+     * Run subscription
+     * @param {object} payload
+     * @param {string} payload.runId The run changed
+     * @param {object} variables
+     * @param {string} variables.userId The user listened for
+     */
+    userRunChanged: {
+      subscribe: withFilter(
+        () => pubsub.asyncIterator('userRunChanged'),
+        (payload, variables) => (payload.userRunChanged.clients.indexOf(variables.userId) > -1)
       )
     },
   },

@@ -27,14 +27,6 @@ const sharedFields = {
     members
     owners
   `,
-  userMetadata: `
-    id
-    email
-    institution
-    passwordHash
-    permissions
-    consortiaStatuses
-  `,
   pipelineFields: `
     id
     delete
@@ -51,19 +43,56 @@ const sharedFields = {
           description
           version
         }
+        computation {
+          type
+          dockerImage
+          command
+          remote {
+            type
+            dockerImage
+            command
+          }
+          input
+          output
+        }
       }
       controller {
         id
         options
+        type
       }
-      ioMap
+      inputMap
     }
+  `,
+  runFields: `
+    id
+    clients
+    consortiumId
+    startDate
+    endDate
+    pipelineSnapshot
+    userErrors
+    globalResults
+    results
+    userResults
+  `,
+  userMetadata: `
+    id
+    email
+    institution
+    passwordHash
+    permissions
+    consortiaStatuses
   `,
   resultFields: `
     id
     title
     pipelineId
     date
+    results
+  `,
+  resultsFields: `
+    runId
     results
   `,
 };

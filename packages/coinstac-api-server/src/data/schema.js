@@ -52,10 +52,6 @@ const typeDefs = `
     ${sharedFields.consortiumFields}
   }
 
-  type Result {
-    ${sharedFields.resultFields}
-  }
-
   input ConsortiumInput {
     id: ID
     ${sharedFields.consortiumFields}
@@ -95,12 +91,19 @@ const typeDefs = `
     ${sharedFields.pipelineFields}
   }
 
+  type Result {
+    ${sharedFields.resultFields}
+  }
+
   type Run {
     id: ID!,
+    clients: [String]
     consortiumId: ID!
     startDate: String
     endDate: String
+    pipelineSnapshot: JSON
     userErrors: String
+    results: JSON
     globalResults: String
     userResults: String
   }
@@ -120,6 +123,7 @@ const typeDefs = `
     # Stringify incoming computation, parse prior to insertion call
     addComputation(computationSchema: ComputationInput): Computation
     addUserRole(userId: ID, table: String, doc: String, role: String): User
+    createRun(consortiumId: ID): Run
     deleteConsortiumById(consortiumId: ID): Consortium
     deletePipeline(pipelineId: ID): Pipeline
     joinConsortium(consortiumId: ID): Consortium
@@ -129,6 +133,7 @@ const typeDefs = `
     saveActivePipeline(consortiumId: ID, activePipelineId: ID): String
     saveConsortium(consortium: ConsortiumInput): Consortium
     savePipeline(pipeline: PipelineInput): Pipeline
+    saveResults(runId: ID, results: JSON): JSON
     setActiveComputation(computationId: ID, consortiumId: ID): String
     setComputationInputs(consortiumId: ID, fieldIndex: Int, values: String ): String
     updateUserConsortiumStatus(consortiumId: ID, status: String): User
@@ -141,6 +146,7 @@ const typeDefs = `
     fetchAllConsortia: [Consortium]
     fetchAllPipelines: [Pipeline]
     fetchAllResults: [Result]
+    fetchAllUserRuns: [Run]
     fetchComputation(computationIds: [ID]): [Computation]
     fetchConsortium(consortiumId: ID): Consortium
     fetchPipeline(pipelineId: ID): Pipeline
@@ -152,7 +158,7 @@ const typeDefs = `
     computationChanged(computationId: ID): Computation
     consortiumChanged(consortiumId: ID): Consortium
     pipelineChanged(pipelineId: ID): Pipeline
-    resultChanged(resultId: ID): Result
+    userRunChanged(userId: ID): Run
   }
 `;
 
