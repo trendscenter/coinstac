@@ -97,7 +97,7 @@ module.exports = {
                 controllerState.currentOutput = { output: output.output, success: output.success };
                 controllerState.state = 'finished iteration';
                 cb(output.output);
-              }).catch(error => err(error));
+              }).catch(error => console.log(error));
             case 'nextComputation':
               // TODO: code for multiple comps on one controller
               // controllerState.computationIndex =
