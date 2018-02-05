@@ -41,7 +41,7 @@ const schemaFields = {
     type: String
   `,
   pipelineStepFields: `
-    ioMap: JSON 
+    inputMap: JSON 
     id: ID!
   `,
   resultFields: `

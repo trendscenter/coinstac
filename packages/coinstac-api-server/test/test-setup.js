@@ -2,6 +2,8 @@ const rethink = require('rethinkdb');
 const singleShot = require('./data/single-shot-schema');
 const multiShot = require('./data/multi-shot-schema');
 const vbm = require('./data/vbm-schema');
+const decentralized = require('./data/coinstac-decentralized-test');
+const local = require('./data/coinstac-local-test');
 const helperFunctions = require('../src/auth-helpers');
 
 helperFunctions.getRethinkConnection()
@@ -18,15 +20,17 @@ helperFunctions.getRethinkConnection()
   .then(() => rethink.tableCreate('pipelines').run(connection))
   .then(() => rethink.tableCreate('computations').run(connection))
   .then(() => rethink.table('computations').insert([
+    Object.assign({}, local, { submittedBy: 'test' }),
+    Object.assign({}, decentralized, { submittedBy: 'test' }),
     Object.assign({}, singleShot, { submittedBy: 'test' }),
     Object.assign({}, multiShot, { submittedBy: 'test' }),
     Object.assign({}, vbm, { submittedBy: 'author' }),
   ], { returnChanges: true }).run(connection))
-  .then(compInsertResult => rethink.table('pipelines').insert({
-    id: 'test-pipeline',
-    name: 'Test Pipeline',
+  .then(compInsertResult => rethink.table('pipelines').insert([{
+    id: 'test-pipeline-2',
+    name: 'Test Pipeline 2',
     description: 'Test description',
-    owningConsortium: 'test-cons-1',
+    owningConsortium: 'test-cons-2',
     shared: true,
     steps: [
       {
@@ -34,11 +38,12 @@ helperFunctions.getRethinkConnection()
           compInsertResult.changes[0].new_val.id,
         ],
         controller: {
-          options: { type: 'single' },
+          options: {},
           id: 'test-controller-1',
+          type: 'local',
         },
         id: 'HJwMOMTh-',
-        ioMap: {
+        inputMap: {
           covariates: [
             {
               name: 'isControl',
@@ -51,20 +56,17 @@ helperFunctions.getRethinkConnection()
               type: 'number',
             },
           ],
-          freeSurferRegion: ['3rd-Ventricle'],
-          lambda: '4',
+          freeSurferRegion: { value: ['3rd-Ventricle'] },
+          lambda: { value: 4 },
         },
       },
       {
         computations: [
           compInsertResult.changes[1].new_val.id,
         ],
-        controller: {
-          options: { type: 'single' },
-          id: 'test-controller-2',
-        },
+        controller: { type: 'decentralized' },
         id: 'HyLfdfanb',
-        ioMap: {
+        inputMap: {
           covariates: [
             {
               name: 'biased xs',
@@ -72,25 +74,47 @@ helperFunctions.getRethinkConnection()
               type: 'number',
             },
           ],
-          freeSurferRegion: ['5th-Ventricle'],
-          iterationCount: '3',
-          lambda: '4',
+          freeSurferRegion: { value: ['5th-Ventricle'] },
+          iterationCount: { value: 3 },
+          lambda: { value: 4 },
         },
       },
     ],
-  }).run(connection))
+  },
+  {
+    id: 'test-pipeline',
+    name: 'Decentralized Pipeline',
+    description: 'Test description',
+    owningConsortium: 'test-cons-2',
+    shared: true,
+    steps: [
+      {
+        id: 'UIKDl-',
+        controller: { type: 'decentralized' },
+        computations: [
+          compInsertResult.changes[1].new_val.id,
+        ],
+        inputMap: {
+          start: { value: 1 },
+        },
+      },
+    ],
+  },
+  ]).run(connection))
   .then(() => rethink.tableCreate('roles', { primaryKey: 'role' }).run(connection))
   .then(() => rethink.table('roles').insert([
     { role: 'owner', verbs: { write: true, read: true } },
     { role: 'member', verbs: { subscribe: true } },
   ]).run(connection))
   .then(() => rethink.tableCreate('users').run(connection))
-  .then(() => rethink.tableCreate('run').run(connection))
-  .then(() => rethink.table('run').insert([
+  .then(() => rethink.tableCreate('runs').run(connection))
+  .then(() => rethink.table('runs').insert([
     {
       id: 'results-1',
       title: 'TSNE',
       pipelineId: 'test-pipeline',
+      clients: ['test'],
+      consortiumId: 'test-cons-2',
       date: '1/22/2018',
       results: {
         type: 'scatter_plot',
@@ -221,6 +245,8 @@ helperFunctions.getRethinkConnection()
       id: 'results-2',
       title: 'MRI QC',
       pipelineId: 'test-pipeline',
+      clients: ['test'],
+      consortiumId: 'test-cons-2',
       date: '1/23/2018',
       results: {
         type: 'box_plot',
@@ -275,8 +301,8 @@ helperFunctions.getRethinkConnection()
     id: 'test-cons-1',
     name: 'Test Consortia 1',
     description: 'This consortia is for testing.',
-    owners: ['author'],
-    members: ['test'],
+    owners: ['test'],
+    members: [],
   }).run(connection))
   .then(() => rethink.table('consortia').insert({
     id: 'test-cons-2',
@@ -284,7 +310,7 @@ helperFunctions.getRethinkConnection()
     name: 'Test Consortia 2',
     description: 'This consortia is for testing too.',
     owners: ['test'],
-    members: ['author'],
+    members: [],
   }).run(connection))
   .then(() => connection.close());
 })

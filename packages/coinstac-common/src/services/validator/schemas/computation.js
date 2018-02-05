@@ -11,11 +11,22 @@ module.exports = {
       version: Joi.string().required(),
     }).required(),
     computation: Joi.object().keys({
-      command: Joi.string().required(),
+      command: Joi.array()
+        .items(Joi.string().required())
+        .min(1)
+        .required(),
       dockerImage: Joi.string().required(),
       input: Joi.any().required(),
       output: Joi.any().required(),
       type: Joi.string().required(),
+      remote: Joi.object().keys({
+        command: Joi.array()
+          .items(Joi.string().required())
+          .min(1)
+          .required(),
+        dockerImage: Joi.string().required(),
+        type: Joi.string().required(),
+      }),
     }).required(),
   }),
 };

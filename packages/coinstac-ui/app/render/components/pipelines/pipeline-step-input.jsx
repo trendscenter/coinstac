@@ -28,7 +28,7 @@ export default class PipelineStepInput extends Component {
     const { objKey, objParams, step, updateStep } = this.props;
 
     // Initialize array of length input min if array of inputs required
-    if (!step.ioMap[objKey] && objParams.type === 'array' &&
+    if (!step.inputMap[objKey] && objParams.type === 'array' &&
         !objParams.values && objParams.items === 'number') {
       let initArray = [];
 
@@ -38,7 +38,7 @@ export default class PipelineStepInput extends Component {
 
       updateStep({
         ...step,
-        ioMap: this.getNewObj(
+        inputMap: this.getNewObj(
           objKey,
           initArray
         ),
@@ -47,15 +47,15 @@ export default class PipelineStepInput extends Component {
   }
 
   getNewObj(objKey, value, covarIndex) { // eslint-disable-line class-methods-use-this
-    const { isCovariate, step: { ioMap } } = this.props;
+    const { isCovariate, step: { inputMap } } = this.props;
 
     if (!isCovariate) {
-      return { ...ioMap, [objKey]: value };
+      return { ...inputMap, [objKey]: { value } };
     }
 
-    const covars = [...ioMap.covariates];
+    const covars = [...inputMap.covariates];
     covars.splice(covarIndex, 1, { ...covars[covarIndex], [objKey]: value });
-    return { ...ioMap, covariates: [...covars] };
+    return { ...inputMap, covariates: [...covars] };
   }
 
   getSelectList(array, value) { // eslint-disable-line class-methods-use-this
@@ -81,7 +81,7 @@ export default class PipelineStepInput extends Component {
         key={`covariate-${typeNoSpace}-inputs-menuitem`}
         onClick={() => this.props.updateStep({
           ...step,
-          ioMap: this.getNewObj(
+          inputMap: this.getNewObj(
             'source',
             { pipelineIndex: -1, inputKey: typeNoSpace, inputLabel: type },
             index
@@ -102,11 +102,11 @@ export default class PipelineStepInput extends Component {
 
     updateStep({
       ...step,
-      ioMap: {
-        ...step.ioMap,
+      inputMap: {
+        ...step.inputMap,
         covariates:
         [
-          ...step.ioMap.covariates,
+          ...step.inputMap.covariates,
           {
             type: '',
             source: {
@@ -174,10 +174,10 @@ export default class PipelineStepInput extends Component {
                 inputRef={(input) => { this[objKey] = input; }}
                 onChange={() => updateStep({
                   ...step,
-                  ioMap: this.getNewObj(objKey, this[objKey].value),
+                  inputMap: this.getNewObj(objKey, parseFloat(this[objKey].value)),
                 })}
                 type="number"
-                value={step.ioMap[objKey] || ''}
+                value={step.inputMap[objKey] ? step.inputMap[objKey].value : ''}
               />
             }
 
@@ -189,12 +189,12 @@ export default class PipelineStepInput extends Component {
                 multiple
                 onChange={() => updateStep({
                   ...step,
-                  ioMap: this.getNewObj(
+                  inputMap: this.getNewObj(
                     objKey,
-                    this.getSelectList(step.ioMap[objKey], this[objKey].value)
+                    this.getSelectList(step.inputMap[objKey].value, this[objKey].value)
                   ),
                 })}
-                value={step.ioMap[objKey] || []}
+                value={step.inputMap[objKey] ? step.inputMap[objKey].value : []}
               >
                 {objParams.values.map(val =>
                   <option key={`${val}-select-option`} value={val}>{val}</option>
@@ -203,21 +203,23 @@ export default class PipelineStepInput extends Component {
             }
 
             {objParams.type === 'array' && !objParams.values && objParams.items === 'number' &&
-              step.ioMap[objKey] && step.ioMap[objKey].map((val, i) => (
+              step.inputMap[objKey] && step.inputMap[objKey].value.map((val, i) => (
                 <FormControl
                   key={`${objKey}-${i}`}
                   disabled={!owner}
                   inputRef={(input) => { this[i] = input; }}
                   onChange={() => updateStep({
                     ...step,
-                    ioMap: {
-                      [objKey]: update(step.ioMap[objKey], {
-                        $splice: [[i, 1, this[i].value]],
-                      }),
+                    inputMap: {
+                      [objKey]: {
+                        value: update(step.inputMap[objKey].value, {
+                          $splice: [[i, 1, parseFloat(this[i].value)]],
+                        }),
+                      },
                     },
                   })}
                   type="number"
-                  value={step.ioMap[objKey][i] || ''}
+                  value={step.inputMap[objKey][i] ? step.inputMap[objKey][i].value : ''}
                 />
               ))
             }
@@ -228,9 +230,9 @@ export default class PipelineStepInput extends Component {
                 inputRef={(input) => { this[objKey] = input; }}
                 onChange={() => updateStep({
                   ...step,
-                  ioMap: this.getNewObj(objKey, this[objKey].value),
+                  inputMap: this.getNewObj(objKey, this[objKey].value),
                 })}
-                value={step.ioMap[objKey] || ''}
+                value={step.inputMap[objKey] ? step.inputMap[objKey].value : ''}
               >
                 True?
               </Checkbox>

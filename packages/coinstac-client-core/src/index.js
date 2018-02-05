@@ -14,6 +14,7 @@ const winston = require('winston');
 const Logger = winston.Logger;
 const Console = winston.transports.Console;
 const ComputationRegistry = require('coinstac-computation-registry');
+const PipelineManager = require('../../coinstac-pipeline');
 
 /**
  * Create a user client for COINSTAC
@@ -31,9 +32,6 @@ const ComputationRegistry = require('coinstac-computation-registry');
  * used for testing.
  * @param {Winston} [opts.logger] permit user injected logger vs default logger
  * @param {string} [opts.logLevel] npm log levels, e.g. 'verbose', 'error', etc
- * @param {object} [opts.db] coinstac-common dbRegistry service configuration
- * @property {DBRegistry} dbRegistry
- * @property {object} dbConfig db registry configuration stashed for late initialization
  * @property {Winston} logger
  * @property {string} appDirectory
  * @property {Auth} auth
@@ -55,6 +53,12 @@ class CoinstacClient {
     if (opts.logLevel) {
       this.logger.level = opts.logLevel;
     }
+
+    this.pipelineManager = PipelineManager.create({
+      mode: 'local',
+      clientId: opts.userId,
+      operatingDirectory: this.appDirectory,
+    });
   }
 
   /**
@@ -86,12 +90,11 @@ class CoinstacClient {
    * @returns {File[]} Collection of files
    */
   static getFilesFromMetadata(metaFilePath, metaFile) {
-    return tail(metaFile).map(([filename]) => ({
-      filename: path.isAbsolute(filename) ?
+    return tail(metaFile).map(([filename]) => (
+      path.isAbsolute(filename) ?
         filename :
-        path.resolve(path.join(path.dirname(metaFilePath), filename)),
-      tags: {},
-    }));
+        path.resolve(path.join(path.dirname(metaFilePath), filename))
+    ));
   }
 
   /**
@@ -186,7 +189,8 @@ class CoinstacClient {
    * @param {*} runId The id if this particular pipeline run
    * @param {*} runPipeline The run's copy of the current pipeline
    */
-  static startPipeline(
+  startPipeline(
+    clients,
     consortiumId,
     clientPipeline,
     filesArray,
@@ -194,20 +198,26 @@ class CoinstacClient {
     runPipeline // eslint-disable-line no-unused-vars
   ) {
     // TODO: validate runPipeline against clientPipeline
-    const homeDir = this.getDefaultAppDirectory();
     const linkPromises = [];
 
     for (let i = 0; i < filesArray.length; i += 1) {
       linkPromises.push(
         fs.link(
           filesArray[i],
-          `${homeDir}/${filesArray[i].replace(/\//g, '-')}`,
+          `${this.appDirectory}/${filesArray[i].replace(/\//g, '-')}`,
           err => console.log(err) // eslint-disable-line no-console
         )
       );
     }
 
-    return Promise.all(linkPromises);
+    const runObj = { spec: clientPipeline, runId };
+    if (clients) {
+      runObj.clients = clients;
+    }
+
+    const newPipeline = this.pipelineManager.startPipeline(runObj);
+
+    return Promise.all([newPipeline, linkPromises]);
   }
 }
 

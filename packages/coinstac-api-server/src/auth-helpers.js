@@ -78,30 +78,36 @@ const helperFunctions = {
    */
   getUserDetails(credentials) {
     return helperFunctions.getRethinkConnection()
-    .then(connection => rethink.table('users').get(credentials.username).merge(user =>
-      ({
-        permissions: user('permissions').coerceTo('array')
-        .map(table =>
-          table.map(tableArr =>
-            rethink.branch(
-              tableArr.typeOf().eq('OBJECT'),
-              tableArr.coerceTo('array').map(doc =>
-                doc.map(docArr =>
-                  rethink.branch(
-                    docArr.typeOf().eq('ARRAY'),
-                    docArr.fold({}, (acc, row) =>
-                      acc.merge(rethink.table('roles').get(row)('verbs'))
-                    ),
-                    docArr
-                  )
+    .then(connection => Promise.all([connection, rethink.table('users').get(credentials.username).run(connection)]))
+    .then(([connection, user]) => {
+      if (user) {
+        return rethink.table('users').get(credentials.username).merge(user =>
+          ({
+            permissions: user('permissions').coerceTo('array')
+            .map(table =>
+              table.map(tableArr =>
+                rethink.branch(
+                  tableArr.typeOf().eq('OBJECT'),
+                  tableArr.coerceTo('array').map(doc =>
+                    doc.map(docArr =>
+                      rethink.branch(
+                        docArr.typeOf().eq('ARRAY'),
+                        docArr.fold({}, (acc, row) =>
+                          acc.merge(rethink.table('roles').get(row)('verbs'))
+                        ),
+                        docArr
+                      )
+                    )
+                  ).coerceTo('object'),
+                  tableArr
                 )
-              ).coerceTo('object'),
-              tableArr
-            )
-          )
-        ).coerceTo('object'),
-      })).run(connection))
-    .then(user => user);
+              )
+            ).coerceTo('object'),
+          })).run(connection);
+      }
+
+      return null;
+    });
   },
   /**
    * Hashes password for storage in database
@@ -145,6 +151,8 @@ const helperFunctions = {
     .then((user) => {
       if (user.id) {
         callback(null, true, user);
+      } else {
+        callback(null, false, null);
       }
     });
   },
@@ -210,14 +218,18 @@ const helperFunctions = {
   validateUser(req, res) {
     return helperFunctions.getUserDetails(req.payload)
     .then((user) => {
-      helperFunctions.verifyPassword(req.payload.password, user.passwordHash)
-        .then((passwordMatch) => {
-          if (user && user.passwordHash && passwordMatch) {
-            res(user);
-          } else {
-            res(Boom.unauthorized('Incorrect username or password.'));
-          }
-        });
+      if (user) {
+        helperFunctions.verifyPassword(req.payload.password, user.passwordHash)
+          .then((passwordMatch) => {
+            if (user && user.passwordHash && passwordMatch) {
+              res(user);
+            } else {
+              res(Boom.unauthorized('Incorrect username or password.'));
+            }
+          });
+      } else {
+        res(Boom.unauthorized('Incorrect username or password.'));
+      }
     });
   },
   /**

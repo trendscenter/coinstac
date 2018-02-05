@@ -12,11 +12,11 @@
   },
   "computation": {
     "type": "docker",
-    "dockerImage": "mysql:latest",
+    "dockerImage": "mysql",
     "command": ["python", "/computation/comp1.py"],
     "remote": {
       "type": "docker",
-      "dockerImage": "spanta28/vbm_ynipype",
+      "dockerImage": "coinstac/coinstac-decentralized-test",
       "command": ["python", "/computation/comp2.py"]
     },
     "input": {

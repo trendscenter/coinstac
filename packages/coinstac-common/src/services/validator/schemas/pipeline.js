@@ -17,11 +17,10 @@ module.exports = {
           .required(),
         controller: Joi.object().keys({
           id: Joi.string().required(),
-          options: Joi.object().keys({
-            type: Joi.string(),
-          }),
+          options: Joi.object().keys({}),
+          type: Joi.string(),
         }).required(),
-        ioMap: Joi.any().required(),
+        inputMap: Joi.any().required(),
       })
     ).min(1).required(),
   }),
