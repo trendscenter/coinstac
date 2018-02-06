@@ -118,7 +118,7 @@ test.serial((t) => {
 
 test.after.always('cleanup', () => {
   return Promise.all([
-    dockerManager.stopAllServices().catch(), // already stopped containers can err out
+//    dockerManager.stopAllServices().catch(), // already stopped containers can err out
     rimraf('./local'),
     rimraf('./remote'),
   ]);
