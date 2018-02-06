@@ -316,16 +316,10 @@ class Pipeline extends Component {
     })
     .then(({ data: { savePipeline: { __typename, ...other } } }) => {
       const pipeline = { ...this.state.pipeline, ...other };
-      let unsubscribePipelines = this.state.unsubscribePipelines;
-
-      if (!unsubscribePipelines) {
-        unsubscribePipelines = this.props.subscribeToPipelines(pipeline.id);
-      }
 
       this.setState({
         pipeline,
         startingPipeline: pipeline,
-        unsubscribePipelines,
       });
     })
     .catch(console.log);
@@ -521,7 +515,6 @@ Pipeline.propTypes = {
   consortia: PropTypes.array.isRequired,
   params: PropTypes.object.isRequired,
   savePipeline: PropTypes.func.isRequired,
-  subscribeToPipelines: PropTypes.func,
 };
 
 function mapStateToProps({ auth }) {

@@ -116,9 +116,11 @@ class PipelineStep extends Component {
             />
           ))}
           <h4>Output:</h4>
-          {compIO !== null && Object.entries(compIO.computation.output).map(localOutput => (
-            <p key={`${id}-${localOutput[0]}-output`}>{localOutput[1].label}</p>
-          ))}
+          <div style={{ paddingLeft: 10 }}>
+            {compIO !== null && Object.entries(compIO.computation.output).map(localOutput => (
+              <p key={`${id}-${localOutput[0]}-output`}>{localOutput[1].label} ({localOutput[1].type})</p>
+            ))}
+          </div>
         </Panel>
       </div>
     ));
