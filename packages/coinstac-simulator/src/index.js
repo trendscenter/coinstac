@@ -3,12 +3,20 @@
 const Pipeline = require('coinstac-pipeline');
 const path = require('path');
 
-const startRun = (spec, runMode = 'local', clientCount = 1, operatingDirectory = './') => {
+/**
+ * Starts a simulator run with the given pipeline spec
+ *
+ * @param  {Object} spec                       a valid pipeline spec
+ * @param  {String} [runMode='local']          wether to run in local or decentralized mode
+ * @param  {Number} [clientCount=1]            [description]
+ * @param  {String} [operatingDirectory='test' }]            [description]
+ * @return {[type]}                            [description]
+ */
+const startRun = ({ spec, runMode = 'local', clientCount = 1, operatingDirectory = 'test' }) => {
   const pipelines = {
     locals: [],
-    remote: {},
   };
-  if (runMode === 'remote') {
+  if (runMode === 'decentralized') {
     const remoteManager = Pipeline.create({
       clientId: 'remote',
       mode: 'remote',
@@ -16,9 +24,10 @@ const startRun = (spec, runMode = 'local', clientCount = 1, operatingDirectory =
     });
     pipelines.remote = {
       manager: remoteManager,
-      pipeline: remoteManager.start({
+      pipeline: remoteManager.startPipeline({
         spec,
         runId: 'simulatorRun',
+        clients: Array.from(Array(clientCount)).map((val, idx) => `local${idx}`),
       }),
     };
   }
@@ -30,7 +39,7 @@ const startRun = (spec, runMode = 'local', clientCount = 1, operatingDirectory =
     });
     pipelines.locals.push({
       manager: localPipelineManager,
-      pipeline: localPipelineManager.start({
+      pipeline: localPipelineManager.startPipeline({
         spec,
         runId: 'simulatorRun',
       }),
@@ -39,15 +48,19 @@ const startRun = (spec, runMode = 'local', clientCount = 1, operatingDirectory =
 
   return Promise.all(Object.keys(pipelines).map((key) => {
     if (key === 'locals') {
-      return Promise.all(pipelines[key].map(() => key.pipeline.result));
+      return Promise.all(pipelines[key].map(
+        (localP, index) => localP.pipeline.result
+          .then((res) => { pipelines[key][index].pipeline.result = res; })
+      ));
     }
-    return pipelines.remote.pipeline.result;
+    return pipelines.remote.pipeline.result
+      .then((res) => { pipelines[key].pipeline.result = res; });
   }))
   .then(() => {
-    debugger;
-    if (runMode === 'remote') {
-      return pipelines.remote.pipeline.result;
+    if (runMode === 'decentralized') {
+      return { remote: pipelines.remote.pipeline.result };
     }
+    return { locals: pipelines.locals.map(local => local.pipeline.result) };
   });
 };
 module.exports = {

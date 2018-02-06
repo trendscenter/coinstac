@@ -120,11 +120,11 @@ const getAllImages = () => {
  * @param {String} computation Docker image name
  * @return {Object} Returns stream of docker pull output
  */
-const startService = (serviceId, opts) => {
+const startService = (serviceId, serviceUserId, opts) => {
   const createService = () => {
     let proxRes;
     let proxRej;
-    services[serviceId] = {};
+    services[serviceId] = { users: [serviceUserId] };
     services[serviceId].state = 'starting';
     services[serviceId].service = new Promise((res, rej) => {
       proxRes = res;
@@ -180,6 +180,9 @@ const startService = (serviceId, opts) => {
   };
 
   if (services[serviceId]) {
+    if (services[serviceId].users.indexOf(serviceUserId) === -1) {
+      services[serviceId].users.push(serviceUserId);
+    }
     return Promise.resolve(services[serviceId].service);
   }
 
@@ -212,6 +215,33 @@ const removeImage = (imageId) => {
 };
 
 /**
+ * Attempts to stop a given service
+ * If there are no other users, the service stops
+ * Otherwise the user is removed from service usage
+ *
+ * @param  {String} serviceId     the service to stop
+ * @param  {String} serviceUserId the user asking
+ * @return {Promise}              A promise that resovles on success
+ */
+const stopService = (serviceId, serviceUserId) => {
+  if (services[serviceId].users.indexOf(serviceUserId) > -1) {
+    services[serviceId].users.splice(services[serviceId].users.indexOf(serviceUserId), 1);
+  }
+  if (services[serviceId].users.length === 0) {
+    return services[serviceId].container.stop()
+    .then(() => {
+      delete services[serviceId];
+    }).catch((err) => {
+      // TODO: boxes don't always shutdown well, however that shouldn't crash a valid run
+      // figure out a way to cleanup
+      services[serviceId].state = 'zombie';
+      services[serviceId].error = err;
+    });
+  }
+  return Promise.resolve();
+};
+
+/**
  * Stops all currently running containers
  * @return {Promise} resolved when all services are stopped
  */
@@ -231,6 +261,7 @@ module.exports = {
   removeImage,
   queueJob,
   startService,
+  stopService,
   stopAllServices,
   Docker,
 };

@@ -5,72 +5,131 @@
 const pkg = require('../package.json');
 const util = require('util');
 const readFile = util.promisify(require('fs').readFile);
+const writeFile = util.promisify(require('fs').writeFile);
 const program = require('commander');
 const sim = require('../src/');
 const inquirer = require('inquirer');
 const glob = util.promisify(require('glob'));
+const path = require('path');
 
+const pipeSpec = {
+  steps: [
+    {
+      controller: { type: 'local' },
+      computations: [],
+      inputMap: {},
+    },
+  ],
+};
 program
   .version(pkg.version)
   .option('-i, --inputspec [path]', '/path/to/inputSpec, defaults to ./test/inputspec.json, will interactively create one if none found')
   .option('-s, --compspec [path]', '/path/to/compSpec optional, defaults to cwd')
-  .option('-c, --clientNumber <number>', 'number of clients ex: 4')
+  .option('-c, --clientNumber [number]', 'number of clients, defaults to 1 not included the remote in decentralized mode. In local mode this creates separate runs')
   .option('-d, --directory [path]', ' path to where input, output, and cache is stored. Defaults to ./test/[input|cache|output]');
 
 program.on('--help', () => {
   console.log([ // eslint-disable-line
+    '\n',
     '\tTest a computation in a COINSTAC simulated environment.\n\n',
-    '\tPlease provide a pipeline specification specifying how to run your simulation.',
-    '\tFor examples on how to define a specification, see:\n',
-    `\t${pkg.homepage}/tree/master/test/pipeline-specs.\n\n`,
+    '\tThe simulator is meant to run in your computation\'s directory',
+    '\tand requires a valid compspec and with the specified docker image\n',
+    '\tin your docker image library.\n\n',
+    '\tIf you do not have an input map for your computation, a prompt will.\n',
+    '\tguide you through creating one.\n\n',
     '\tExample:\n\n',
-    '\t  coinstac-sim -i inputSpec.json -c 2 -d ~/myUsername/foo',
+    '\t  coinstac-sim -i ./inputSpec.json -c 2\n',
   ].join(' '));
 });
 
 program.parse(process.argv);
 
+let mode;
+const inSpecPath = program.directory ? path.join(program.directory, 'inputspec.json') : path.join('.', 'test', 'inputspec.json');
+
 readFile(program.compspec ? program.compspec : 'compspec.json')
-.then(compSpec => Promise.all([compSpec, readFile(program.inputspec ? program.inputspec : 'inputspec.json')]))
-.catch(err => {
-  debugger;
-})
-.then((compSpec) => {
-  const comp = JSON.parse(compSpec);
+.then(compSpec => Promise.all([
+  Promise.resolve(compSpec),
+  readFile(program.inputspec ? program.inputspec : inSpecPath),
+].map(p => p.catch(error => error))))
+.then((specs) => {
+  const comp = JSON.parse(specs[0]);
+  mode = comp.computation.remote ? 'decentralized' : 'local';
   const createInputSpec = (variable, key) => {
     return inquirer.prompt({
       type: 'input',
-      name: 'Create an input spec',
+      name: `${key}`,
       message: `Please give a ${variable.type} input for variable: ${key}
       Files can use glob paterns to resolve to multiple file paths from the input dir
       ie: **/*.txt`,
     }).then((value) => {
-      Promise.all([
-        variable.type === 'files' ? glob(value) : value,
+      return Promise.all([
+        variable.type === 'files' ? glob(value[key]) : value[key],
       ]).then((resolvedVal) => {
+        const coerce = variable.type === 'number' ? parseFloat(resolvedVal[0]) : resolvedVal[0];
         return {
-          [key]: { value: resolvedVal[0] },
+          [key]: { value: coerce },
         };
       });
     });
   };
 
   let specProm;
-  if (!program.inputspec) {
+  if (specs[1].code === 'ENOENT') {
+    const memo = {};
     specProm = Object.keys(comp.computation.input).reduce((prom, variable) => {
-      debugger;
-      return createInputSpec(comp.computation.input[variable], variable);
-    }, Promise.resolve());
+      return prom.then(() => {
+        return createInputSpec(comp.computation.input[variable], variable);
+      }).then(res => Object.assign(memo, res));
+    }, Promise.resolve())
+    .then((res) => {
+      return inquirer.prompt({
+        type: 'confirm',
+        name: 'write',
+        message: `Write out the input spec just entered? This WILL overwrite any spec in
+        ${inSpecPath}`,
+      }).then((response) => {
+        const prom = Promise.resolve(res);
+        if (response.write) {
+          prom.then(res => writeFile(inSpecPath, JSON.stringify(res))
+          .then(res => res));
+        }
+        return prom;
+      });
+    });
+  } else {
+    specProm = JSON.parse(specs[1]);
   }
 
   return Promise.all([specProm])
-  .then(() => {
-    debugger;
+  .then((inputSpec) => {
+    pipeSpec.steps[0].controller.type = mode;
+    pipeSpec.steps[0].computations.push(comp);
+    pipeSpec.steps[0].inputMap = inputSpec[0];
+
+    return pipeSpec;
   });
-});
-
-
-sim.startRun(program)
-.then(() => {
-  // deal with results
-});
+})
+.then((pipelineSpec) => {
+  console.log(`Starting ${mode} simulator run with ${program.clientNumber ? program.clientNumber : 1} client(s)`); // eslint-disable-line no-console
+  return sim.startRun({
+    spec: pipelineSpec,
+    runMode: mode,
+    clientCount: program.clientNumber,
+    operatingDirectory: program.directory,
+  });
+})
+.then((results) => {
+  /* eslint-disable no-console */
+  console.log('Simulator run finished');
+  if (mode === 'decentralized') {
+    console.log(`Decentralized results:\n ${JSON.stringify(results.remote, null, 2)}`);
+  } else {
+    console.log('Local run(s) finished');
+    results.locals.forEach((res, idx) => console.log(`Client ${idx} results:\n${JSON.stringify(res, null, 2)}\n`));
+  }
+  // TODO: should not be necessary, something is holding the loop up
+  process.exit();
+})
+.catch(err => console.log(`Simulator run failed!\n ${err}`));
+/* eslint-enable no-console */
