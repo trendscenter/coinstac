@@ -14,7 +14,7 @@
   "dependencies": {
     "blessed": "^0.1.81",
     "blessed-contrib": "^4.8.5",
-    "coinstac-docker-manager": "^3.0.0",
+    "coinstac-docker-manager": "^3.0.1",
     "lodash": "^4.17.4",
     "mkdirp": "^0.5.1",
     "nyc": "^11.4.1",
@@ -36,7 +36,6 @@
   ],
   "license": "MIT",
   "main": "src/index.js",
-  "name": "coinstac-pipeline",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/MRN-Code/coinstac.git"
@@ -44,5 +43,5 @@
   "scripts": {
     "test": "nyc ava test/**.test.js"
   },
-  "version": "3.0.0"
+  "version": "3.0.1"
 }
