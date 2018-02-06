@@ -1,0 +1,5 @@
+{
+  "hapiPort": 5100,
+  "host": "localhost",
+  "DB_URL": "http://localhost:3100"
+}

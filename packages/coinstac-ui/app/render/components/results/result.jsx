@@ -5,15 +5,12 @@ import Boxplot from 'react-boxplot';
 import { ScatterChart } from 'react-d3';
 import { Chart, Grid, Xaxis, Yaxis } from 'react-d3-core';
 import computeBoxplotStats from 'react-boxplot/dist/stats';
-import { graphql, compose } from 'react-apollo';
+import { graphql } from 'react-apollo';
 import {
-  FETCH_ALL_RESULTS_QUERY,
   FETCH_RESULT_QUERY,
-  RESULT_CHANGED_SUBSCRIPTION,
 } from '../../state/graphql/functions';
 import {
-  getAllAndSubProp,
-  getSelectAndSubProp,
+  getDocumentByParam,
 } from '../../state/graphql/props';
 
 class Result extends Component {
@@ -28,7 +25,8 @@ class Result extends Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    if (nextProps.activeResult && !this.state.unsubscribeResults) {
+    console.log(nextProps);
+    if (nextProps.activeResult) {
       if (nextProps.activeResult.results.plots) {
         nextProps.activeResult.results.plots.map(result => (
           this.state.plotData.push({
@@ -45,15 +43,6 @@ class Result extends Component {
           })
         )); */
       }
-      this.setState({
-        unsubscribeResults: this.props.subscribeToResults(this.state.activeResult),
-      });
-    }
-  }
-
-  componentWillUnmount() {
-    if (this.state.unsubscribeResults) {
-      this.state.unsubscribeResults();
     }
   }
 
@@ -61,9 +50,9 @@ class Result extends Component {
     const { activeResult } = this.props;
     return (
       <div>
-        {(activeResult && activeResult.results.type === 'scatter_plot') &&
+        {(activeResult && activeResult.results && activeResult.results.type === 'scatter_plot') &&
         <ScatterChart
-          legend={true}
+          legend
           data={this.state.plotData}
           width={850}
           height={475}
@@ -72,12 +61,12 @@ class Result extends Component {
           title={activeResult.title}
         />
       }
-        {activeResult && activeResult.results.type === 'box_plot' &&
+        {activeResult && activeResult.results && activeResult.results.type === 'box_plot' &&
           <Chart {...this.props}>
             <Grid type="x" {...this.props} {...this.state} xScale="linear" yScale="linear" />
             <Grid type="y" {...this.props} {...this.state} yScale="linear" xScale="linear" />
             <Boxplot
-              className=''
+              className=""
               style={{ paddingLeft: 100 }}
               width={25}
               height={300}
@@ -95,6 +84,8 @@ class Result extends Component {
             />
           </Chart>
         }
+        {activeResult && activeResult.results && !activeResult.results.type &&
+          <pre>{JSON.stringify(activeResult.results)}</pre>}
       </div>
     );
   }
@@ -102,7 +93,6 @@ class Result extends Component {
 
 Result.propTypes = {
   activeResult: PropTypes.object,
-  subscribeToResults: PropTypes.func.isRequired,
 };
 
 Result.defaultProps = {
@@ -113,22 +103,7 @@ const mapStateToProps = ({ auth }) => {
   return { auth };
 };
 
-const ResultsWithData = compose(
-  graphql(FETCH_ALL_RESULTS_QUERY, getAllAndSubProp(
-    RESULT_CHANGED_SUBSCRIPTION,
-    'results',
-    'fetchAllResults',
-    'subscribeToResults',
-    'resultChanged'
-  )),
-  graphql(FETCH_RESULT_QUERY, getSelectAndSubProp(
-    'activeResult',
-    RESULT_CHANGED_SUBSCRIPTION,
-    'resultId',
-    'subscribeToResults',
-    'resultChanged',
-    'fetchResult'
-  ))
-)(Result);
+const ResultWithData =
+  graphql(FETCH_RESULT_QUERY, getDocumentByParam('resultId', 'activeResult', 'fetchResult'))(Result);
 
-export default connect(mapStateToProps)(ResultsWithData);
+export default connect(mapStateToProps)(ResultWithData);

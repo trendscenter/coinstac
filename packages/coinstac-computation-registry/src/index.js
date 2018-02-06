@@ -56,7 +56,7 @@ class ComputationRegistry {
    */
   static pullComputations(comps) {
     const compsP = reduce(comps, (arr, comp) => {
-      arr.push(pullImage(comp.img));
+      arr.push(pullImage(`${comp.img}:latest`));
       return arr;
     }, []);
 
@@ -97,12 +97,17 @@ class ComputationRegistry {
       axios.get(`${config.DB_URL}/graphql?query=${graphqlSchema.queries.allDockerImages}`)
     )
     .then(({ data: { data: { fetchAllComputations } } }) => {
-      const comps = fetchAllComputations.map(comp => comp.computation.dockerImage);
-      return this.pullPipelineComputations({ comps });
+      const comps = fetchAllComputations.map(comp => ({
+        img: comp.computation.dockerImage,
+        compId: comp.id,
+        compName: comp.meta.name,
+      }));
+      return this.constructor.pullComputations(comps);
     })
     .then((pullStreams) => {
-      pullStreams.pipe(process.stdout);
-    });
+      pullStreams.forEach(({ stream }) => stream.pipe(process.stdout));
+    })
+    .catch(console.log); // eslint-disable-line no-console
   }
 }
 

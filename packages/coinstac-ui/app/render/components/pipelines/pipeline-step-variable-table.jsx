@@ -28,7 +28,7 @@ export default class PipelineStepVariableTable extends Component {
 
     return (
       <Table>
-        {step.ioMap.covariates && step.ioMap.covariates.length > 0 &&
+        {step.inputMap.covariates && step.inputMap.covariates.length > 0 &&
           <thead>
             <tr>
               <th>Data Type</th>
@@ -41,7 +41,7 @@ export default class PipelineStepVariableTable extends Component {
             </tr>
           </thead>
         }
-        {step.ioMap.covariates.map((cov, index) => (
+        {step.inputMap.covariates.map((cov, index) => (
           <tbody style={{ border: 'none' }} key={`covariate-${index}`}>
             <tr>
               <td>
@@ -57,7 +57,7 @@ export default class PipelineStepVariableTable extends Component {
                       key={`${item}-menuitem`}
                       onClick={() => updateStep({
                         ...step,
-                        ioMap: getNewObj('type', item, index),
+                        inputMap: getNewObj('type', item, index),
                       })}
                     >
                       {item}
@@ -75,7 +75,7 @@ export default class PipelineStepVariableTable extends Component {
                     inputRef={(input) => { this[`${index}-name`] = input; }}
                     onChange={() => updateStep({
                       ...step,
-                      ioMap: getNewObj('name', this[`${index}-name`].value, index),
+                      inputMap: getNewObj('name', this[`${index}-name`].value, index),
                     })}
                   />
                 </FormGroup>
@@ -92,7 +92,7 @@ export default class PipelineStepVariableTable extends Component {
                       key={`${name}-vartype-menuitem`}
                       onClick={() => updateStep({
                         ...step,
-                        ioMap: getNewObj('varType', name, index),
+                        inputMap: getNewObj('varType', name, index),
                       })}
                     >
                       {name}
@@ -111,7 +111,7 @@ export default class PipelineStepVariableTable extends Component {
                     key={'none-operation-menuitem'}
                     onClick={() => updateStep({
                       ...step,
-                      ioMap: getNewObj('operation', '', index),
+                      inputMap: getNewObj('operation', '', index),
                     })}
                   >
                     None
@@ -122,7 +122,7 @@ export default class PipelineStepVariableTable extends Component {
                       key={`${name}-operation-menuitem`}
                       onClick={() => updateStep({
                         ...step,
-                        ioMap: getNewObj('operation', name, index),
+                        inputMap: getNewObj('operation', name, index),
                       })}
                     >
                       {name}
@@ -140,7 +140,7 @@ export default class PipelineStepVariableTable extends Component {
                     inputRef={(input) => { this[`${index}-operator`] = input; }}
                     onChange={() => updateStep({
                       ...step,
-                      ioMap: getNewObj('operator', this[`${index}-operator`].value, index),
+                      inputMap: getNewObj('operator', this[`${index}-operator`].value, index),
                     })}
                   />
                 </FormGroup>
@@ -164,7 +164,7 @@ export default class PipelineStepVariableTable extends Component {
                           key={`${itemInput[1].label}-Computation-${itemObj.possibleInputIndex + 1}-inputs-menuitem`}
                           onClick={() => updateStep({
                             ...step,
-                            ioMap: getNewObj(
+                            inputMap: getNewObj(
                               'source',
                               {
                                 pipelineIndex: itemObj.possibleInputIndex,
@@ -187,9 +187,9 @@ export default class PipelineStepVariableTable extends Component {
                   bsStyle="danger"
                   onClick={() => updateStep({
                     ...step,
-                    ioMap: {
-                      ...step.ioMap,
-                      covariates: update(step.ioMap[objKey], {
+                    inputMap: {
+                      ...step.inputMap,
+                      covariates: update(step.inputMap[objKey], {
                         $splice: [[index, 1]],
                       }),
                     },
@@ -210,7 +210,7 @@ export default class PipelineStepVariableTable extends Component {
                     value={cov.freesurferROI || ''}
                     onChange={() => updateStep({
                       ...step,
-                      ioMap: getNewObj('freesurferROI', this.freesurferROI.value, index),
+                      inputMap: getNewObj('freesurferROI', this.freesurferROI.value, index),
                     })}
                   >
                     {variableOptions.freesurferROIs.map(name => (
