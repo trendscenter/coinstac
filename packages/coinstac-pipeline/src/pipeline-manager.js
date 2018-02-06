@@ -154,9 +154,7 @@ module.exports = {
           state: 'created',
           pipeline: Pipeline.create(spec, runId, { mode, operatingDirectory }),
         };
-        debugger;
         clients.forEach((client) => {
-          debugger;
           remoteClients[client] = Object.assign(
             {
               status: 'unregistered',
@@ -165,7 +163,6 @@ module.exports = {
             remoteClients[client]
           );
         });
-        debugger;
         const communicate = (pipeline, message) => {
           // hold the last step for drops, this only works for one step out
           missedCache[pipeline.id] = {
