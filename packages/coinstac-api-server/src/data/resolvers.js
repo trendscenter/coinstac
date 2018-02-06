@@ -638,7 +638,7 @@ const resolvers = {
     userRunChanged: {
       subscribe: withFilter(
         () => pubsub.asyncIterator('userRunChanged'),
-        (payload, variables) => (payload.userRunChanged.clients.indexOf(variables.userId) > -1)
+        (payload, variables) => (variables.userId && payload.userRunChanged.clients.indexOf(variables.userId) > -1)
       )
     },
   },

@@ -10,7 +10,7 @@ import {
   FETCH_RESULT_QUERY,
 } from '../../state/graphql/functions';
 import {
-  singleResultProp,
+  getDocumentByParam,
 } from '../../state/graphql/props';
 
 class Result extends Component {
@@ -43,12 +43,6 @@ class Result extends Component {
           })
         )); */
       }
-    }
-  }
-
-  componentWillUnmount() {
-    if (this.state.unsubscribeResults) {
-      this.state.unsubscribeResults();
     }
   }
 
@@ -110,6 +104,6 @@ const mapStateToProps = ({ auth }) => {
 };
 
 const ResultWithData =
-  graphql(FETCH_RESULT_QUERY, singleResultProp)(Result);
+  graphql(FETCH_RESULT_QUERY, getDocumentByParam('resultId', 'activeResult', 'fetchResult'))(Result);
 
 export default connect(mapStateToProps)(ResultWithData);

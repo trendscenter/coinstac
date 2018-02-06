@@ -30,11 +30,10 @@ import ItemTypes from './pipeline-item-types';
 import {
   FETCH_ALL_CONSORTIA_QUERY,
   FETCH_PIPELINE_QUERY,
-  PIPELINE_CHANGED_SUBSCRIPTION,
   SAVE_PIPELINE_MUTATION,
 } from '../../state/graphql/functions';
 import {
-  getSelectAndSubProp,
+  getDocumentByParam,
   saveDocumentProp,
 } from '../../state/graphql/props';
 
@@ -75,7 +74,6 @@ class Pipeline extends Component {
       owner: true,
       pipeline,
       startingPipeline: pipeline,
-      unsubscribePipelines: null,
     };
 
     this.addStep = this.addStep.bind(this);
@@ -92,12 +90,6 @@ class Pipeline extends Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    if (nextProps.activePipeline && !this.state.unsubscribePipelines) {
-      this.setState({
-        unsubscribePipelines: this.props.subscribeToPipelines(this.state.pipeline.id),
-      });
-    }
-
     if (isEmpty(this.state.consortium) && nextProps.consortia.length && this.state.pipeline.id) {
       this.setConsortium();
     }
@@ -112,16 +104,6 @@ class Pipeline extends Component {
           }
         }
       );
-    }
-  }
-
-  componentWillUnmount() {
-    if (this.state.unsubscribeComputations) {
-      this.state.unsubscribeComputations();
-    }
-
-    if (this.state.unsubscribePipelines) {
-      this.state.unsubscribePipelines();
     }
   }
 
@@ -144,6 +126,11 @@ class Pipeline extends Component {
   }
 
   addStep(computation) {
+    let controllerType = 'local';
+    if (computation.computation.remote) {
+      controllerType = 'decentralized';
+    }
+
     this.setState(prevState => ({
       pipeline: {
         ...prevState.pipeline,
@@ -151,7 +138,7 @@ class Pipeline extends Component {
           ...prevState.pipeline.steps,
           {
             id: shortid.generate(),
-            controller: { type: 'local', options: {} },
+            controller: { type: controllerType, options: {} },
             computations: [
               { ...computation },
             ],
@@ -341,9 +328,7 @@ class Pipeline extends Component {
         unsubscribePipelines,
       });
     })
-    .catch((error) => {
-      console.log(error);
-    });
+    .catch(console.log);
   }
 
   render() {
@@ -544,12 +529,9 @@ function mapStateToProps({ auth }) {
 }
 
 const PipelineWithData = compose(
-  graphql(FETCH_PIPELINE_QUERY, getSelectAndSubProp(
-    'activePipeline',
-    PIPELINE_CHANGED_SUBSCRIPTION,
+  graphql(FETCH_PIPELINE_QUERY, getDocumentByParam(
     'pipelineId',
-    'subscribeToPipelines',
-    'pipelineChanged',
+    'activePipeline',
     'fetchPipeline'
   )),
   graphql(SAVE_PIPELINE_MUTATION, saveDocumentProp('savePipeline', 'pipeline'))

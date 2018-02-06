@@ -18,6 +18,14 @@ export const bulkSaveLocalRuns = applyAsyncLoading(runs =>
       })
 );
 
+export const getLocalRun = applyAsyncLoading(runId =>
+  () =>
+    localDB.run.get(runId)
+      .then((run) => {
+        return run;
+      })
+);
+
 export const getLocalRuns = applyAsyncLoading(() =>
   dispatch =>
     localDB.runs

@@ -29,7 +29,7 @@ export default class PipelineStepInput extends Component {
 
     // Initialize array of length input min if array of inputs required
     if (!step.inputMap[objKey] && objParams.type === 'array' &&
-        !objParams.values && objParams.items === 'number') {
+        !objParams.values) {
       let initArray = [];
 
       if (objParams.defaultValue && Array.isArray(objParams.defaultValue)) {

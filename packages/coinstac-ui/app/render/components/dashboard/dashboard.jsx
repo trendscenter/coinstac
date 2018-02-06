@@ -8,7 +8,7 @@ import UserAccountController from '../user/user-account-controller';
 import { notifyInfo, notifySuccess, writeLog } from '../../state/ducks/notifyAndLog';
 import CoinstacAbbr from '../coinstac-abbr';
 import { getCollectionFiles } from '../../state/ducks/collections';
-import { bulkSaveLocalRuns, getLocalRuns, saveLocalRun } from '../../state/ducks/local-runs';
+import { bulkSaveLocalRuns, getLocalRun, getLocalRuns, saveLocalRun } from '../../state/ducks/local-runs';
 import {
   pullComputations,
   updateDockerOutput,
@@ -28,23 +28,6 @@ import {
 import {
   getAllAndSubProp,
 } from '../../state/graphql/props';
-
-// Binary search sorted object array
-function sortedAscObjectIndex(array, obj, param) {
-  const index = Math.ceil(array.length / 2) - 1;
-
-  const arrayObj = array[index];
-
-  if (arrayObj[param] === obj[param]) {
-    return index;
-  } else if (array.length === 1 || (index === 0 && arrayObj[param] > obj[param])) {
-    return -1;
-  } else if (arrayObj[param] > obj[param]) {
-    return sortedAscObjectIndex(array.slice(0, index), obj, param);
-  } else if (arrayObj[param] < obj[param]) {
-    return sortedAscObjectIndex(array.slice(index + 1), obj, param);
-  }
-}
 
 class Dashboard extends Component {
   constructor(props) {
@@ -104,66 +87,57 @@ class Dashboard extends Component {
       this.props.bulkSaveLocalRuns(nextProps.runs);
     }
 
-    // if (nextProps.runs && this.props.consortia.length && this.props.runs.length > 0) {
-    //   for (let i = 0; i < nextProps.runs.length; i += 1) {
-    //     const runIndexInProps = sortedAscObjectIndex(this.props.runs, nextProps.runs[i], 'id');
-    //     // Run not in local props, start a pipeline (runs already filtered by member)
-    //     if (runIndexInProps === -1) {
-    //       this.props.getCollectionFiles(nextProps.runs[i].consortiumId)
-    //       .then((filesArray) => {
-    //         const run = nextProps.runs[i];
-    //         const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
-    //         const pipeline =
-    //           this.props.pipelines.find(obj => obj.id === consortium.activePipelineId);
-    //         this.props.saveLocalRun({ ...run, status: 'started' });
-
-    //         if (filesArray.error) {
-    //           filesArray = [];
-    //         }
-
-    //         setTimeout(() => {
-    //           this.props.notifyInfo({
-    //             message: `Local Pipeline Starting for ${consortium.name}.`,
-    //           });
-    //           ipcRenderer.send('start-pipeline', { consortium, pipeline, filesArray, run });
-    //         }, 5000);
-    //       });
-    //     // Run already in props but results are incoming
-    //     } else if (runIndexInProps > -1 && nextProps.runs[i].results
-    //       && !this.props.runs[runIndexInProps].results) {
-    //       const run = nextProps.runs[i];
-    //       const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
-    //       this.props.saveLocalRun({ ...run, status: 'complete' });
-    //       this.props.notifySuccess({
-    //         message: `${consortium.name} Pipeline Complete.`,
-    //         autoDismiss: 5,
-    //         action: {
-    //           label: 'View Results',
-    //           callback: () => {
-    //             router.push('/results');
-    //           },
-    //         },
-    //       });
-    //     }
-    //   }
-    // }
-
     if (nextProps.runs && this.props.consortia.length) {
       for (let i = 0; i < nextProps.runs.length; i += 1) {
-        if (sortedAscObjectIndex(this.props.runs, nextProps.runs[i], 'id') === -1) {
+        let runIndexInProps = -1;
+
+        // Find run in local props if it's there
+        if (this.props.runs.length > 0) {
+          runIndexInProps = this.props.runs.findIndex(run => run.id === nextProps.runs[i].id);
+        }
+
+        // Run not in local props, start a pipeline if (runs already filtered by member)
+        if (runIndexInProps === -1) {
           this.props.getCollectionFiles(nextProps.runs[i].consortiumId)
           .then((filesArray) => {
             const run = nextProps.runs[i];
             const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
             const pipeline =
               this.props.pipelines.find(obj => obj.id === consortium.activePipelineId);
+
+            // Save run status to localDB
             this.props.saveLocalRun({ ...run, status: 'started' });
 
             if (filesArray.error) {
               filesArray = [];
             }
 
-            setTimeout(() => { ipcRenderer.send('start-pipeline', { consortium, pipeline, filesArray, run }); }, 5000);
+            // 5 second timeout to ensure no port conflicts in
+            //   development env between remote and client pipelines
+            setTimeout(() => {
+              this.props.notifyInfo({
+                message: `Local Pipeline Starting for ${consortium.name}.`,
+              });
+              ipcRenderer.send('start-pipeline', { consortium, pipeline, filesArray, run });
+            }, 5000);
+          });
+        // Run already in props but results are incoming
+        } else if (runIndexInProps > -1 && nextProps.runs[i].results
+          && !this.props.runs[runIndexInProps].results) {
+          const run = nextProps.runs[i];
+          const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
+
+          // Update status of run in localDB
+          this.props.saveLocalRun({ ...run, status: 'complete' });
+          this.props.notifySuccess({
+            message: `${consortium.name} Pipeline Complete.`,
+            autoDismiss: 5,
+            action: {
+              label: 'View Results',
+              callback: () => {
+                router.push(`dashboard/results/${run.id}`);
+              },
+            },
           });
         }
       }
@@ -338,6 +312,7 @@ export default connect(mapStateToProps,
   {
     bulkSaveLocalRuns,
     getCollectionFiles,
+    getLocalRun,
     getLocalRuns,
     notifyInfo,
     notifySuccess,
