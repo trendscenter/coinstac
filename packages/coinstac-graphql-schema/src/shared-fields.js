@@ -7,6 +7,11 @@ const sharedFields = {
     id
     computation {
       dockerImage
+      remote {
+        type
+        dockerImage
+        command
+      }
     }
     meta {
       name
