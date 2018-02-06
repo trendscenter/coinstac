@@ -60,8 +60,8 @@ module.exports = [
         remotePipeline.result.then((result) => {
           connectionStart(run.id, result);
         })
-        .catch((error) => {
-	  // TODO: save pipeline errors!
+        .catch(() => {
+          // TODO: save pipeline errors!
         });
       },
     },
