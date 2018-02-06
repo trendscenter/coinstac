@@ -37,6 +37,8 @@ program.on('--help', () => {
     '\tin your docker image library.\n\n',
     '\tIf you do not have an input map for your computation, a prompt will.\n',
     '\tguide you through creating one.\n\n',
+    '\tFurther help can be found in the Readme:\n',
+    '\thttps://github.com/MRN-Code/coinstac/blob/master/packages/coinstac-simulator/README.md\n\n',
     '\tExample:\n\n',
     '\t  coinstac-sim -i ./inputSpec.json -c 2\n',
   ].join(' '));
