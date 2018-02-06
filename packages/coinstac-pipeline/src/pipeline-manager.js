@@ -143,7 +143,7 @@ module.exports = {
        * for that pipeline. The return object is that pipeline and a promise that
        * resolves to the final output of the pipeline.
        * @param  {Object} spec         a valid pipeline specification
-       * @param  {Array}  [clients=[]] a list of client IDs participating in pipeline
+       * @param  {Array}  [clients=[]] a list of client IDs particapating in pipeline
        *                               only necessary for decentralized runs
        * @param  {String} runId        unique ID for the pipeline
        * @return {Object}              an object containing the active pipeline and
@@ -154,8 +154,9 @@ module.exports = {
           state: 'created',
           pipeline: Pipeline.create(spec, runId, { mode, operatingDirectory }),
         };
-
+        debugger;
         clients.forEach((client) => {
+          debugger;
           remoteClients[client] = Object.assign(
             {
               status: 'unregistered',
@@ -164,6 +165,7 @@ module.exports = {
             remoteClients[client]
           );
         });
+        debugger;
         const communicate = (pipeline, message) => {
           // hold the last step for drops, this only works for one step out
           missedCache[pipeline.id] = {

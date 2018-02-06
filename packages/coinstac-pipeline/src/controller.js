@@ -19,7 +19,7 @@ module.exports = {
    */
   create({ controller, computations, inputMap }, runId, { operatingDirectory, mode }) {
     let cache = {};
-    const currentComputations = computations.map(comp => Computation.create(comp, mode));
+    const currentComputations = computations.map(comp => Computation.create(comp, mode, runId));
     const activeControlBox = controllers[controller.type];
     const computationStep = 0;
     const iterationEmitter = new Emitter();
@@ -200,10 +200,16 @@ module.exports = {
         };
 
         const p = new Promise((res, rej) => {
+          const errCb = (err) => {
+            controllerState.activeComputations[controllerState.computationIndex].stop()
+            .then(() => rej(err));
+          };
+
           waterfall(input, queue, (result) => {
             controllerState.state = 'stopped';
-            res(result);
-          }, rej);
+            controllerState.activeComputations[controllerState.computationIndex].stop()
+            .then(() => res(result));
+          }, errCb);
         });
 
         return p;
