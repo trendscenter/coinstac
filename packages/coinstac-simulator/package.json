@@ -40,7 +40,6 @@
     "coinstac-client-core": "^3.0.0",
     "coinstac-common": "^3.0.0",
     "coinstac-computation-registry": "^3.0.0",
-    "coinstac-server-core": "^3.0.0",
     "commander": "^2.13.0",
     "convict": "^1.5.0",
     "csv-load-sync": "^1.0.0",

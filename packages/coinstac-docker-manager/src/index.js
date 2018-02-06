@@ -1,5 +1,3 @@
-'use strict';
-
 const Docker = require('dockerode');
 const request = require('request-promise-native');
 const portscanner = require('portscanner');
@@ -188,6 +186,11 @@ const startService = (serviceId, opts) => {
   return createService();
 };
 
+/**
+ * Pull individual image from Docker hub
+ * @param {String} computation Docker image name
+ * @return {Object} Returns stream of docker pull output
+ */
 const pullImage = (computation) => {
   return new Promise((resolve, reject) => {
     docker.pull(computation, (err, stream) => {

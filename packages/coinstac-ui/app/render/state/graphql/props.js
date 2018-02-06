@@ -10,6 +10,13 @@ export const compIOProp = {
   options: ({ computationId }) => ({ variables: { computationIds: [computationId] } }),
 };
 
+export const getDocumentByParam = (param, prop, query) => ({
+  props: ({ data }) => ({
+    [prop]: data[query],
+  }),
+  options: ({ params }) => ({ variables: { [param]: params[param] } }),
+});
+
 export const consortiaMembershipProp = (name) => {
   return {
     props: ({ mutate }) => ({
@@ -29,14 +36,25 @@ export const consortiaMembershipProp = (name) => {
   };
 };
 
-export const getAllAndSubProp = (document, listProp, query, subProp, subscription) => ({
-  options: {
-    fetchPolicy: 'cache-and-network',
+export const getAllAndSubProp = (document, listProp, query, subProp, subscription, filter) => ({
+  options: (props) => {
+    const opts = { fetchPolicy: 'cache-and-network' };
+
+    if (filter && filter === 'userId' && props.auth.user.id) {
+      opts.variables = { [filter]: props.auth.user.id };
+    }
+
+    return opts;
   },
   props: props => ({
     [listProp]: props.data[query],
-    [subProp]: () =>
-      props.data.subscribeToMore({
+    [subProp]: () => {
+      const variables = {};
+      if (filter && filter === 'userId' && props.ownProps.auth.user.id) {
+        variables.userId = props.ownProps.auth.user.id;
+      }
+
+      return props.data.subscribeToMore({
         document,
         updateQuery: (prevResult, { subscriptionData: { data } }) => {
           const index =
@@ -60,7 +78,8 @@ export const getAllAndSubProp = (document, listProp, query, subProp, subscriptio
             [query]: [...prevResult[query], data[subscription]],
           };
         },
-      }),
+      });
+    },
   }),
 });
 

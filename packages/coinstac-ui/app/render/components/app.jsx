@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import Notifications from 'react-notification-system-redux';
-// import Notify from './notification';
 import { autoLogin } from '../state/ducks/auth';
 
 class App extends Component { // eslint-disable-line react/prefer-stateless-function

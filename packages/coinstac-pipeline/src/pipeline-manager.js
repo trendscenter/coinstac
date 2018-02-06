@@ -24,7 +24,7 @@ module.exports = {
     mode,
     clientId,
     operatingDirectory = './',
-    remotePort = 3000,
+    remotePort = 3500,
     remoteURL = 'http://localhost',
     authPlugin,
     authOpts,
@@ -33,7 +33,7 @@ module.exports = {
     const activePipelines = {};
     let io;
     let socket;
-    let remoteClients = {};
+    const remoteClients = {};
     const missedCache = {};
 
     const waitingOn = (runId) => {
@@ -74,11 +74,12 @@ module.exports = {
         socket.emit('hello', { status: 'connected' });
 
         socket.on('register', (data) => {
-          if (remoteClients[data.id]) {
-            remoteClients[data.id].status = 'connected';
-            remoteClients[data.id].socketId = socket.id;
-            remoteClients[data.id].lastSeen = Math.floor(Date.now() / 1000);
+          if (!remoteClients[data.id]) {
+            remoteClients[data.id] = {};
           }
+          remoteClients[data.id].status = 'connected';
+          remoteClients[data.id].socketId = socket.id;
+          remoteClients[data.id].lastSeen = Math.floor(Date.now() / 1000);
         });
 
         socket.on('run', (data) => {
@@ -97,8 +98,10 @@ module.exports = {
 
         socket.on('disconnect', (reason) => {
           const client = _.find(remoteClients, { socketId: socket.id });
-          client.status = 'disconnected';
-          client.error = reason;
+          if (client) {
+            client.status = 'disconnected';
+            client.error = reason;
+          }
         });
       };
 
@@ -108,7 +111,6 @@ module.exports = {
       } else {
         io.on('connection', socketServer);
       }
-    // local socket code
     } else {
       socket = socketIOClient(`${remoteURL}:${remotePort}?id=${clientId}`);
       socket.on('hello', () => {
@@ -141,8 +143,8 @@ module.exports = {
        * for that pipeline. The return object is that pipeline and a promise that
        * resolves to the final output of the pipeline.
        * @param  {Object} spec         a valid pipeline specification
-       * @param  {Array}  [clients=[]] a list of client IDs particapating in pipeline
-       *                               only necessary for decentralized runs as remote
+       * @param  {Array}  [clients=[]] a list of client IDs participating in pipeline
+       *                               only necessary for decentralized runs
        * @param  {String} runId        unique ID for the pipeline
        * @return {Object}              an object containing the active pipeline and
        *                               Promise for its result
@@ -152,16 +154,16 @@ module.exports = {
           state: 'created',
           pipeline: Pipeline.create(spec, runId, { mode, operatingDirectory }),
         };
-        remoteClients = Object.assign(
-          clients.reduce((memo, client) => {
-            memo[client] = {
+
+        clients.forEach((client) => {
+          remoteClients[client] = Object.assign(
+            {
               status: 'unregistered',
               [runId]: {},
-            };
-            return memo;
-          }, {}),
-          remoteClients
-        );
+            },
+            remoteClients[client]
+          );
+        });
         const communicate = (pipeline, message) => {
           // hold the last step for drops, this only works for one step out
           missedCache[pipeline.id] = {

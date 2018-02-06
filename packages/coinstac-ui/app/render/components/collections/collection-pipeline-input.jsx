@@ -167,10 +167,10 @@ class CollectionPipelineInput extends Component {
           </ul>
         }
         {Array.isArray(objValue) && objKey !== 'covariates' &&
-          <span>{objValue.join(', ')}</span>
+          <span>{objValue.value.join(', ')}</span>
         }
-        {(typeof objValue === 'number' || typeof objValue === 'string') &&
-          <span>{objValue}</span>
+        {(typeof objValue.value === 'number' || typeof objValue.value === 'string') &&
+          <span>{objValue.value}</span>
         }
       </div>
     );
