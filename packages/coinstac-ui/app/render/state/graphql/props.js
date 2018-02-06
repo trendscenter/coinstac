@@ -56,6 +56,7 @@ export const getAllAndSubProp = (document, listProp, query, subProp, subscriptio
 
       return props.data.subscribeToMore({
         document,
+        variables,
         updateQuery: (prevResult, { subscriptionData: { data } }) => {
           const index =
             prevResult[query].findIndex(c => c.id === data[subscription].id);
