@@ -82,7 +82,7 @@ helperFunctions.getRethinkConnection()
     ],
   },
   {
-    id: 'test-pipeline',
+    id: 'test-pipeline-decentralized',
     name: 'Decentralized Pipeline',
     description: 'Test description',
     owningConsortium: 'test-cons-2',
@@ -96,6 +96,35 @@ helperFunctions.getRethinkConnection()
         ],
         inputMap: {
           start: { value: 1 },
+        },
+      },
+    ],
+  },
+  {
+    id: 'test-pipeline-local',
+    name: 'Local Pipeline',
+    description: 'Local Test description',
+    owningConsortium: 'test-cons-2',
+    shared: true,
+    steps: [
+      {
+        id: 'UIKDl-local1',
+        controller: { type: 'local' },
+        computations: [
+          compInsertResult.changes[0].new_val.id,
+        ],
+        inputMap: {
+          start: { value: 1 },
+        },
+      },
+      {
+        id: 'UIKDl-local2',
+        controller: { type: 'local' },
+        computations: [
+          compInsertResult.changes[0].new_val.id,
+        ],
+        inputMap: {
+          start: { fromCache: { step: 0, variable: 'sum' } },
         },
       },
     ],
@@ -116,6 +145,7 @@ helperFunctions.getRethinkConnection()
       clients: ['test'],
       consortiumId: 'test-cons-2',
       date: '1/22/2018',
+      type: 'decentralized',
       results: {
         type: 'scatter_plot',
         label: '',
@@ -248,6 +278,7 @@ helperFunctions.getRethinkConnection()
       clients: ['test'],
       consortiumId: 'test-cons-2',
       date: '1/23/2018',
+      type: 'decentralized',
       results: {
         type: 'box_plot',
         label: '',
@@ -306,7 +337,7 @@ helperFunctions.getRethinkConnection()
   }).run(connection))
   .then(() => rethink.table('consortia').insert({
     id: 'test-cons-2',
-    activePipelineId: 'test-pipeline',
+    activePipelineId: 'test-pipeline-decentralized',
     name: 'Test Consortia 2',
     description: 'This consortia is for testing too.',
     owners: ['test'],

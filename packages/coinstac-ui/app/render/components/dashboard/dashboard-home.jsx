@@ -6,6 +6,7 @@ import { Alert } from 'react-bootstrap';
 import { connect } from 'react-redux';
 import StatusItem from '../status-item';
 import { initTestData } from '../../state/ducks/collections';
+import { clearRuns } from '../../state/ducks/runs';
 
 class DashboardHome extends Component {
   constructor(props) {
@@ -16,9 +17,10 @@ class DashboardHome extends Component {
     };
   }
 
-  componentDidMount() {
-    // this.props.initTestData();
-  }
+  // componentDidMount() {
+  //   this.props.clearRuns();
+  //   this.props.initTestData();
+  // }
 
   componentWillUnmount() {
     if (this.interval) {
@@ -56,6 +58,7 @@ class DashboardHome extends Component {
 }
 
 DashboardHome.propTypes = {
+  clearRuns: PropTypes.func.isRequired,
   initTestData: PropTypes.func.isRequired,
   username: PropTypes.string,
 };
@@ -74,4 +77,4 @@ function mapStateToProps({
   };
 }
 
-export default connect(mapStateToProps, { initTestData })(DashboardHome);
+export default connect(mapStateToProps, { clearRuns, initTestData })(DashboardHome);

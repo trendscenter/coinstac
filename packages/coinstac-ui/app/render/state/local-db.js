@@ -2,6 +2,12 @@ import Dexie from 'dexie';
 
 const db = new Dexie('coinstac');
 
+db.version(4).stores({
+  collections: '++id',
+  associatedConsortia: 'id',
+  runs: 'id,type',
+});
+
 db.version(3).stores({
   collections: '++id',
   associatedConsortia: 'id',

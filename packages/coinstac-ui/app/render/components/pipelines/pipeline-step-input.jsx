@@ -51,18 +51,24 @@ export default class PipelineStepInput extends Component {
 
   getNewObj(objKey, value, covarIndex) { // eslint-disable-line class-methods-use-this
     const { isCovariate, step: { inputMap } } = this.props;
+    const inputCopy = { ...inputMap };
+
+    if (value.fromCache) {
+      delete inputCopy.value;
+    } else if (value.value) {
+      delete inputCopy.fromCache;
+    }
 
     if (!isCovariate && value === 'DELETE_VAR') {
-      const inputCopy = { inputMap };
       delete inputCopy[objKey];
       return { ...inputCopy };
     } else if (!isCovariate) {
-      return { ...inputMap, [objKey]: value };
+      return { ...inputCopy, [objKey]: value };
     }
 
-    const covars = [...inputMap.covariates];
+    const covars = [...inputCopy.covariates];
     covars.splice(covarIndex, 1, { ...covars[covarIndex], [objKey]: value });
-    return { ...inputMap, covariates: [...covars] };
+    return { ...inputCopy, covariates: [...covars] };
   }
 
   getSelectList(array, value) { // eslint-disable-line class-methods-use-this
@@ -136,11 +142,6 @@ export default class PipelineStepInput extends Component {
     let sourceDropDownLabel = null;
     let isValue = false;
     let isFromCache;
-
-    console.log(step.inputMap[objKey]);
-    console.log('PI', possibleInputs);
-    console.log('step', step);
-    console.log('parentKey', parentKey);
 
     if (step.inputMap[objKey] && step.inputMap[objKey].fromCache) {
       sourceDropDownLabel = `Computation ${step.inputMap[objKey].fromCache.step + 1}: ${step.inputMap[objKey].fromCache.label}`;

@@ -164,6 +164,7 @@ module.exports = {
             remoteClients[client]
           );
         });
+
         const communicate = (pipeline, message) => {
           // hold the last step for drops, this only works for one step out
           missedCache[pipeline.id] = {

@@ -285,6 +285,7 @@ const resolvers = {
               consortiumId,
               pipelineSnapshot,
               startDate: Date.now(),
+              type: 'decentralized',
             },
             { 
               conflict: "replace",
@@ -555,7 +556,7 @@ const resolvers = {
       const { permissions } = credentials;
       return helperFunctions.getRethinkConnection()
         .then((connection) =>
-          rethink.table('runs').get(args.runId).update({results: args.results})
+          rethink.table('runs').get(args.runId).update({ results: Object.assign({}, args.results), endDate: Date.now() })
           .run(connection))
           // .then(result => result.changes[0].new_val)
     },

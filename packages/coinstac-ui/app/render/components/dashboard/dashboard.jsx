@@ -8,7 +8,7 @@ import UserAccountController from '../user/user-account-controller';
 import { notifyInfo, notifySuccess, writeLog } from '../../state/ducks/notifyAndLog';
 import CoinstacAbbr from '../coinstac-abbr';
 import { getCollectionFiles } from '../../state/ducks/collections';
-import { bulkSaveLocalRuns, getLocalRun, getLocalRuns, saveLocalRun } from '../../state/ducks/local-runs';
+import { getLocalRun, getDBRuns, saveLocalRun } from '../../state/ducks/runs';
 import {
   pullComputations,
   updateDockerOutput,
@@ -32,6 +32,8 @@ import {
 class Dashboard extends Component {
   constructor(props) {
     super(props);
+
+    this.props.getDBRuns();
 
     this.state = {
       unsubscribeComputations: null,
@@ -64,6 +66,21 @@ class Dashboard extends Component {
         message: `${arg} Pipeline Computations Downloaded`,
       });
     });
+
+    ipcRenderer.on('local-run-complete', (event, arg) => {
+      this.props.notifySuccess({
+        message: `${arg.consName} Pipeline Complete.`,
+        autoDismiss: 5,
+        action: {
+          label: 'View Results',
+          callback: () => {
+            router.push(`dashboard/results/${arg.run.id}`);
+          },
+        },
+      });
+
+      this.props.saveLocalRun({ ...arg.run, status: 'complete' });
+    });
   }
 
   componentWillReceiveProps(nextProps) {
@@ -82,31 +99,31 @@ class Dashboard extends Component {
       this.setState({ unsubscribePipelines: this.props.subscribeToPipelines(null) });
     }
 
-    if (nextProps.runs && !this.state.unsubscribeRuns) {
+    if (nextProps.remoteRuns && !this.state.unsubscribeRuns) {
       this.setState({ unsubscribeRuns: this.props.subscribeToUserRuns(null) });
-      this.props.bulkSaveLocalRuns(nextProps.runs);
     }
 
-    if (nextProps.runs && this.props.consortia.length) {
-      for (let i = 0; i < nextProps.runs.length; i += 1) {
+    if (nextProps.remoteRuns && this.props.consortia.length) {
+      // TODO: Speed this up by moving to subscription prop (n vs n^2)?
+      for (let i = 0; i < nextProps.remoteRuns.length; i += 1) {
         let runIndexInProps = -1;
 
         // Find run in local props if it's there
-        if (this.props.runs.length > 0) {
-          runIndexInProps = this.props.runs.findIndex(run => run.id === nextProps.runs[i].id);
+        if (this.props.remoteRuns.length > 0) {
+          runIndexInProps = this.props.remoteRuns
+            .findIndex(run => run.id === nextProps.remoteRuns[i].id);
         }
 
-        // Run not in local props, start a pipeline if (runs already filtered by member)
-        if (runIndexInProps === -1) {
-          this.props.getCollectionFiles(nextProps.runs[i].consortiumId)
+        // Run not in local props, start a pipeline (runs already filtered by member)
+        if (runIndexInProps === -1 && !nextProps.remoteRuns[i].results) {
+          // Save run status to localDB
+          this.props.saveLocalRun({ ...nextProps.remoteRuns[i], status: 'started' });
+          this.props.getCollectionFiles(nextProps.remoteRuns[i].consortiumId)
           .then((filesArray) => {
-            const run = nextProps.runs[i];
+            const run = nextProps.remoteRuns[i];
             const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
             const pipeline =
               this.props.pipelines.find(obj => obj.id === consortium.activePipelineId);
-
-            // Save run status to localDB
-            this.props.saveLocalRun({ ...run, status: 'started' });
 
             if (filesArray.error) {
               filesArray = [];
@@ -116,15 +133,17 @@ class Dashboard extends Component {
             //   development env between remote and client pipelines
             setTimeout(() => {
               this.props.notifyInfo({
-                message: `Local Pipeline Starting for ${consortium.name}.`,
+                message: `Decentralized Pipeline Starting for ${consortium.name}.`,
               });
               ipcRenderer.send('start-pipeline', { consortium, pipeline, filesArray, run });
             }, 5000);
           });
+        } else if (runIndexInProps === -1 && nextProps.remoteRuns[i].results) {
+          this.props.saveLocalRun({ ...nextProps.remoteRuns[i], status: 'complete' });
         // Run already in props but results are incoming
-        } else if (runIndexInProps > -1 && nextProps.runs[i].results
-          && !this.props.runs[runIndexInProps].results) {
-          const run = nextProps.runs[i];
+        } else if (runIndexInProps > -1 && nextProps.remoteRuns[i].results
+          && !this.props.remoteRuns[runIndexInProps].results) {
+          const run = nextProps.remoteRuns[i];
           const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
 
           // Update status of run in localDB
@@ -233,21 +252,23 @@ Dashboard.defaultProps = {
   computations: [],
   consortia: [],
   pipelines: [],
+  remoteRuns: [],
   runs: [],
 };
 
 Dashboard.propTypes = {
   auth: PropTypes.object.isRequired,
-  bulkSaveLocalRuns: PropTypes.func.isRequired,
   children: PropTypes.node.isRequired,
   client: PropTypes.object.isRequired,
   computations: PropTypes.array,
   consortia: PropTypes.array,
   getCollectionFiles: PropTypes.func.isRequired,
+  getDBRuns: PropTypes.func.isRequired,
   notifyInfo: PropTypes.func.isRequired,
   notifySuccess: PropTypes.func.isRequired,
   pipelines: PropTypes.array,
   pullComputations: PropTypes.func.isRequired,
+  remoteRuns: PropTypes.array,
   runs: PropTypes.array,
   saveLocalRun: PropTypes.func.isRequired,
   subscribeToComputations: PropTypes.func.isRequired,
@@ -259,9 +280,10 @@ Dashboard.propTypes = {
   writeLog: PropTypes.func.isRequired,
 };
 
-function mapStateToProps({ auth }) {
+function mapStateToProps({ auth, runs: { runs } }) {
   return {
     auth,
+    runs,
   };
 }
 
@@ -289,7 +311,7 @@ const DashboardWithData = compose(
   )),
   graphql(FETCH_ALL_USER_RUNS_QUERY, getAllAndSubProp(
     USER_RUN_CHANGED_SUBSCRIPTION,
-    'runs',
+    'remoteRuns',
     'fetchAllUserRuns',
     'subscribeToUserRuns',
     'userRunChanged',
@@ -310,10 +332,9 @@ const DashboardWithData = compose(
 
 export default connect(mapStateToProps,
   {
-    bulkSaveLocalRuns,
     getCollectionFiles,
     getLocalRun,
-    getLocalRuns,
+    getDBRuns,
     notifyInfo,
     notifySuccess,
     pullComputations,
