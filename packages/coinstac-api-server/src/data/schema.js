@@ -104,8 +104,7 @@ const typeDefs = `
     pipelineSnapshot: JSON
     userErrors: String
     results: JSON
-    globalResults: String
-    userResults: String
+    type: String
   }
 
   type User {
