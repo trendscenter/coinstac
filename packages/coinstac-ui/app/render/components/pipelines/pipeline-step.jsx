@@ -101,7 +101,6 @@ class PipelineStep extends Component {
           <h4>Input Parameters:</h4>
           {compIO !== null && Object.entries(compIO.computation.input).map(localInput => (
             <PipelineStepInput
-              isCovariate={localInput[0] === 'covariates'}
               objKey={localInput[0]}
               objParams={localInput[1]}
               pipelineIndex={pipelineIndex}

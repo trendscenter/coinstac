@@ -50,8 +50,10 @@ export default class PipelineStepInput extends Component {
   }
 
   getNewObj(objKey, value, covarIndex) { // eslint-disable-line class-methods-use-this
-    const { isCovariate, step: { inputMap } } = this.props;
+    const { step: { inputMap } } = this.props;
     const inputCopy = { ...inputMap };
+
+    const isCovariate = objKey === 'covariates';
 
     if (value.fromCache) {
       delete inputCopy.value;
@@ -83,15 +85,15 @@ export default class PipelineStepInput extends Component {
     return [value];
   }
 
-  getSourceMenuItem(type, step) {
+  getSourceMenuItem(type, value, step) {
     // Make Camel Case
     let typeNoSpace = type.split(' ');
     typeNoSpace = typeNoSpace[0].toLowerCase() + typeNoSpace.slice(1).join('');
 
     return (
       <MenuItem
-        eventKey={`covariate-${typeNoSpace}-inputs-menuitem`}
-        key={`covariate-${typeNoSpace}-inputs-menuitem`}
+        eventKey={`variable-${typeNoSpace}-inputs-menuitem`}
+        key={`variable-${typeNoSpace}-inputs-menuitem`}
         onClick={() => this.props.updateStep({
           ...step,
           inputMap: { type },
@@ -205,7 +207,10 @@ export default class PipelineStepInput extends Component {
                       ),
                     })}
                     type="number"
-                    value={step.inputMap[objKey] ? step.inputMap[objKey].value : ''}
+                    value={
+                      step.inputMap[objKey] && 'value' in step.inputMap[objKey] ?
+                      step.inputMap[objKey].value : ''
+                    }
                   />
                 }
 
@@ -286,7 +291,19 @@ export default class PipelineStepInput extends Component {
                     None
                   </MenuItem>
                 }
-                {this.getSourceMenuItem('File', step)}
+                {
+                  <MenuItem
+                    disabled={!owner}
+                    eventKey={`file-Computation-${objKey}-inputs-menuitem`}
+                    key={`file-Computation-${objKey}-inputs-menuitem`}
+                    onClick={() => updateStep({
+                      ...step,
+                      inputMap: this.getNewObj(objKey, { value: 'File' }),
+                    })}
+                  >
+                    File
+                  </MenuItem>
+                }
                 {possibleInputs.map(itemObj => (
                   // Iterate over possible computation inputs
                   Object.entries(itemObj.inputs)
@@ -331,7 +348,6 @@ PipelineStepInput.defaultProps = {
 };
 
 PipelineStepInput.propTypes = {
-  isCovariate: PropTypes.bool.isRequired,
   parentKey: PropTypes.string,
   pipelineIndex: PropTypes.number.isRequired,
   possibleInputs: PropTypes.array,
