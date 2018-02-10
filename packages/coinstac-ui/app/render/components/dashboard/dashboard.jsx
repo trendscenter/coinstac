@@ -206,6 +206,8 @@ class Dashboard extends Component {
     this.state.unsubscribeConsortia();
     this.state.unsubscribePipelines();
     this.state.unsubscribeRuns();
+
+    ipcRenderer.removeAllListeners();
   }
 
   render() {
