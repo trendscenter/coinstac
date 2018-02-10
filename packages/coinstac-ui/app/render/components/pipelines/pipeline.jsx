@@ -60,6 +60,7 @@ class Pipeline extends Component {
       owningConsortium: '',
       shared: false,
       steps: [],
+      delete: false,
     };
 
     // if routed from New Pipeline button on consortium page
@@ -90,16 +91,17 @@ class Pipeline extends Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    if (isEmpty(this.state.consortium) && nextProps.consortia.length && this.state.pipeline.id) {
+    if (isEmpty(this.state.consortium) && nextProps.consortia.length
+      && this.state.pipeline.id && this.state.pipeline.owningConsortium) {
       this.setConsortium();
     }
 
-    if (nextProps.activePipeline) {
+    if (nextProps.activePipeline && !this.state.pipeline.id) {
       const { activePipeline: { __typename, ...other } } = nextProps;
       this.setState(
         { pipeline: { ...other }, startingPipeline: { ...other } },
         () => {
-          if (nextProps.consortia.length) {
+          if (nextProps.consortia.length && this.state.pipeline.owningConsortium) {
             this.setConsortium();
           }
         }
@@ -146,8 +148,8 @@ class Pipeline extends Component {
           },
         ],
       },
-    }),
-    () => this.updateStorePipeline());
+    }));
+    // () => this.updateStorePipeline());
   }
 
   moveStep(id, swapId) {
@@ -162,7 +164,7 @@ class Pipeline extends Component {
       index = this.state.pipeline.steps.findIndex(step => step.id === id);
     }
 
-    // Remap covariates to new indices if required
+    // Remap inputMap props to new indices if required
     const newArr = this.state.pipeline.steps
       .map((step, stepIndex) => {
         let inputMap = { ...step.inputMap };
@@ -283,8 +285,8 @@ class Pipeline extends Component {
         ...prevState.pipeline,
         steps: newArr,
       },
-    }),
-    () => this.updateStorePipeline());
+    }));
+    // () => this.updateStorePipeline());
   }
 
   updateStorePipeline() {
@@ -302,8 +304,8 @@ class Pipeline extends Component {
           $splice: [[prevState.pipeline.steps.findIndex(s => s.id === step.id), 1, step]],
         }),
       },
-    }),
-    () => this.updateStorePipeline());
+    }));
+    // () => this.updateStorePipeline());
   }
 
   deleteStep() {
@@ -337,8 +339,8 @@ class Pipeline extends Component {
 
     this.setState(prevState => ({
       pipeline: { ...prevState.pipeline, [update.param]: update.value },
-    }),
-    this.updateStorePipeline());
+    }));
+    // this.updateStorePipeline());
   }
 
   checkPipeline() {

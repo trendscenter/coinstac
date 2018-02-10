@@ -22,6 +22,10 @@ export default class PipelineStepInput extends Component {
   constructor(props) {
     super(props);
 
+    this.state = {
+      isCovariate: props.objKey === 'covariates',
+    };
+
     this.addCovariate = this.addCovariate.bind(this);
     this.getNewObj = this.getNewObj.bind(this);
     this.getSourceMenuItem = this.getSourceMenuItem.bind(this);
@@ -53,23 +57,26 @@ export default class PipelineStepInput extends Component {
     const { step: { inputMap } } = this.props;
     const inputCopy = { ...inputMap };
 
-    const isCovariate = objKey === 'covariates';
-
     if (value.fromCache) {
       delete inputCopy.value;
     } else if (value.value) {
       delete inputCopy.fromCache;
     }
 
-    if (!isCovariate && value === 'DELETE_VAR') {
+    if (!this.state.isCovariate && value === 'DELETE_VAR') {
       delete inputCopy[objKey];
       return { ...inputCopy };
-    } else if (!isCovariate) {
+    } else if (!this.state.isCovariate) {
       return { ...inputCopy, [objKey]: value };
     }
 
-    const covars = [...inputCopy.covariates];
-    covars.splice(covarIndex, 1, { ...covars[covarIndex], [objKey]: value });
+    let covars = [];
+
+    if (inputCopy.covariates) {
+      covars = [...inputCopy.covariates];
+      covars.splice(covarIndex, 1, { ...covars[covarIndex], [objKey]: value });
+    }
+
     return { ...inputCopy, covariates: [...covars] };
   }
 
@@ -85,7 +92,7 @@ export default class PipelineStepInput extends Component {
     return [value];
   }
 
-  getSourceMenuItem(type, value, step) {
+  getSourceMenuItem(type, step) {
     // Make Camel Case
     let typeNoSpace = type.split(' ');
     typeNoSpace = typeNoSpace[0].toLowerCase() + typeNoSpace.slice(1).join('');
@@ -160,7 +167,7 @@ export default class PipelineStepInput extends Component {
     return (
       <div>
         {objKey === 'covariates' &&
-          <div>
+          <div style={{ paddingLeft: 10 }}>
             <p className="bold">Variables</p>
             <Button
               disabled={!owner}
@@ -224,10 +231,14 @@ export default class PipelineStepInput extends Component {
                       ...step,
                       inputMap: this.getNewObj(
                         objKey,
-                        this.getSelectList(step.inputMap[objKey].value, this[objKey].value)
+                        this[objKey].value ?
+                          { value: this.getSelectList(step.inputMap[objKey].value, this[objKey].value) } : 'DELETE_VAR'
                       ),
                     })}
-                    value={step.inputMap[objKey] ? step.inputMap[objKey].value : []}
+                    value={
+                      step.inputMap[objKey] && 'value' in step.inputMap[objKey] ?
+                      step.inputMap[objKey].value : []
+                    }
                   >
                     {objParams.values.map(val =>
                       <option key={`${val}-select-option`} value={val}>{val}</option>
@@ -252,7 +263,10 @@ export default class PipelineStepInput extends Component {
                         },
                       })}
                       type="number"
-                      value={step.inputMap[objKey][i] ? step.inputMap[objKey][i].value : ''}
+                      value={
+                        step.inputMap[objKey] && step.inputMap[objKey][i] && 'value' in step.inputMap[objKey][i] ?
+                        step.inputMap[objKey][i].value : ''
+                      }
                     />
                   ))
                 }
@@ -263,9 +277,14 @@ export default class PipelineStepInput extends Component {
                     inputRef={(input) => { this[objKey] = input; }}
                     onChange={() => updateStep({
                       ...step,
-                      inputMap: this.getNewObj(objKey, this[objKey].value),
+                      inputMap: this.getNewObj(objKey,
+                        this[objKey].value ? { value: this[objKey].value } : 'DELETE_VAR'
+                      ),
                     })}
-                    value={step.inputMap[objKey] ? step.inputMap[objKey].value : ''}
+                    value={
+                      step.inputMap[objKey] && 'value' in step.inputMap[objKey] ?
+                      step.inputMap[objKey].value : ''
+                    }
                   >
                     True?
                   </Checkbox>
