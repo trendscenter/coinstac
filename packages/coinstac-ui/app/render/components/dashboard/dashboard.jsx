@@ -207,7 +207,9 @@ class Dashboard extends Component {
     this.state.unsubscribePipelines();
     this.state.unsubscribeRuns();
 
-    ipcRenderer.removeAllListeners();
+    ipcRenderer.removeAllListeners('docker-out');
+    ipcRenderer.removeAllListeners('docker-pull-complete');
+    ipcRenderer.removeAllListeners('local-run-complete');
   }
 
   render() {

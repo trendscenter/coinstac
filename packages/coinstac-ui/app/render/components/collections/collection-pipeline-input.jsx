@@ -59,23 +59,21 @@ class CollectionPipelineInput extends Component {
     const { collection, objValue, stepIndex, updateConsortiumCovars } = this.props;
     // Closure to get event and index var
     return ({ target: { value } }) => {
-      const fileIndex = collection.fileGroups.findIndex(file => file.id === value);
       this.setState(prevState =>
         ({
           sources: update(prevState.sources, {
             $splice: [[covarIndex, 1, {
               collectionId: collection.id,
               groupId: value,
-              fileIndex,
               column: '',
             }]],
           }),
         }),
         () => {
           // Automap if columns exist matching preset names
-          if (collection.fileGroups[fileIndex].metaFile &&
+          if (collection.fileGroups[value].metaFile &&
               collection
-              .fileGroups[fileIndex]
+              .fileGroups[value]
               .metaFile[0].indexOf(objValue[covarIndex].name) > -1) {
             this.setState(prevState =>
               ({
@@ -120,7 +118,7 @@ class CollectionPipelineInput extends Component {
                           onChange={this.setSourceFile(covarIndex)}
                         >
                           <option disabled value="" key="file-select-none">Select a File</option>
-                          {collection.fileGroups.map(group =>
+                          {Object.values(collection.fileGroups).map(group =>
                             (
                               <option
                                 key={`${new Date(group.date).toUTCString()} (${group.extension})`}
@@ -137,7 +135,7 @@ class CollectionPipelineInput extends Component {
                 }
                 {this.state.sources[covarIndex].groupId.length > 0 &&
                   collection.fileGroups[
-                    parseInt(this.state.sources[covarIndex].fileIndex, 10)
+                    this.state.sources[covarIndex].groupId
                   ].metaFile &&
                     <span>
                       <em>File Column: </em>
@@ -148,7 +146,7 @@ class CollectionPipelineInput extends Component {
                       >
                         <option disabled value="">Select a Column</option>
                         {collection.fileGroups[
-                          parseInt(this.state.sources[covarIndex].fileIndex, 10)
+                          this.state.sources[covarIndex].groupId
                         ].metaFile[0].map(col =>
                           (
                             <option
