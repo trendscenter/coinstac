@@ -16,6 +16,8 @@ const startRun = ({ spec, runMode = 'local', clientCount = 1, operatingDirectory
   const pipelines = {
     locals: [],
   };
+  clientCount = parseInt(clientCount, 10);
+
   if (runMode === 'decentralized') {
     const remoteManager = Pipeline.create({
       clientId: 'remote',
