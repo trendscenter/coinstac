@@ -29,7 +29,7 @@
     "clean:comps": "rm -rf packages/coinstac-computation-registry/node_modules/{laplacian-noise,decentralized-single-shot}-ridge-regression",
     "lint": "eslint '**/*.js' '**/bin/*'",
     "lintfix": "eslint --fix **/*.js",
-    "publish": "lerna publish && node scripts/docs.js",
+    "publish": "lerna publish",
     "test": "lerna run test --concurrency=1"
   },
   "repository": {

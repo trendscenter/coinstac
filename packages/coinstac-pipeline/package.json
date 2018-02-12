@@ -14,15 +14,14 @@
   "dependencies": {
     "blessed": "^0.1.81",
     "blessed-contrib": "^4.8.5",
-    "coinstac-docker-manager": "^3.0.0",
+    "coinstac-docker-manager": "^3.0.1",
     "lodash": "^4.17.4",
     "mkdirp": "^0.5.1",
     "nyc": "^11.4.1",
     "request": "^2.83.0",
     "request-promise": "^4.2.2",
     "socket.io": "^2.0.4",
-    "socket.io-client": "^2.0.4",
-    "socketio-jwt": "github:root-core/socketio-jwt"
+    "socket.io-client": "^2.0.4"
   },
   "description": "Computation registry service for COINSTAC.",
   "devDependencies": {
@@ -36,7 +35,6 @@
   ],
   "license": "MIT",
   "main": "src/index.js",
-  "name": "coinstac-pipeline",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/MRN-Code/coinstac.git"
@@ -44,5 +42,5 @@
   "scripts": {
     "test": "nyc ava test/**.test.js"
   },
-  "version": "3.0.0"
+  "version": "3.0.2"
 }

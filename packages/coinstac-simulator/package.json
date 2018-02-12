@@ -1,6 +1,6 @@
 {
   "name": "coinstac-simulator",
-  "version": "3.0.0",
+  "version": "3.0.2",
   "description": "COINSTAC simulator for computation runs.",
   "main": "src/index.js",
   "bin": "bin/coinstac-simulator",
@@ -34,29 +34,14 @@
   },
   "homepage": "https://github.com/MRN-Code/coinstac#readme",
   "dependencies": {
-    "axios": "^0.13.1",
-    "bluebird": "^3.5.1",
     "chalk": "^1.1.3",
-    "coinstac-client-core": "^3.0.0",
-    "coinstac-common": "^3.0.0",
-    "coinstac-computation-registry": "^3.0.0",
+    "coinstac-pipeline": "^3.0.2",
     "commander": "^2.13.0",
     "convict": "^1.5.0",
-    "csv-load-sync": "^1.0.0",
     "glob": "^7.1.2",
-    "lodash": "^4.17.4",
-    "pouchdb-adapter-memory": "^6.4.2",
-    "retry": "^0.10.1",
-    "spawn-pouchdb-server": "^3.3.3",
-    "winston": "^2.4.0"
+    "inquirer": "^5.0.1"
   },
   "devDependencies": {
-    "gh-pages": "^0.11.0",
-    "jsdoc": "^3.5.5",
-    "minami": "^1.2.3",
-    "mockery": "^1.7.0",
-    "nyc": "^8.4.0",
-    "sinon": "^2.4.1",
-    "tape": "^4.8.0"
+    "nyc": "^8.4.0"
   }
 }
