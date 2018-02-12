@@ -38,10 +38,7 @@ const connectionStart = (id, result) => {
         },
       },
     })
-  )
-  .catch((error) => {
-    console.log(error); // eslint-disable-line no-console
-  });
+  );
 };
 
 module.exports = [
@@ -51,8 +48,6 @@ module.exports = [
     config: {
       // auth: 'jwt',
       handler: (req, res) => {
-        console.log('Pipeline is starting'); // eslint-disable-line no-console
-
         const run = req.payload.run;
         const remotePipeline = this.remotePipelineManager.startPipeline({
           clients: run.clients,
@@ -63,11 +58,10 @@ module.exports = [
         res({}).code(201);
 
         remotePipeline.result.then((result) => {
-          console.log('Pipeline is done. Sending results...'); // eslint-disable-line no-console
           connectionStart(run.id, result);
         })
-        .catch((error) => {
-          console.log(error); // eslint-disable-line no-console
+        .catch(() => {
+          // TODO: save pipeline errors!
         });
       },
     },

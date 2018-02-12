@@ -1,3 +1,4 @@
+import { uniqBy } from 'lodash';
 import { applyAsyncLoading } from './loading';
 import localDB from '../local-db';
 
@@ -86,7 +87,7 @@ export default function reducer(state = INITIAL_STATE, action) {
       });
 
       return {
-        ...state, localRuns, remoteRuns, runs: [...remoteRuns, ...localRuns],
+        ...state, localRuns, remoteRuns, runs: uniqBy([...localRuns, ...remoteRuns], 'id'),
       };
     }
     case SAVE_LOCAL_RUN: {
@@ -99,7 +100,7 @@ export default function reducer(state = INITIAL_STATE, action) {
         localRuns.splice(index, 1, action.payload);
       }
 
-      return { ...state, localRuns, runs: [...state.remoteRuns, ...localRuns] };
+      return { ...state, localRuns, runs: uniqBy([...localRuns, ...state.remoteRuns], 'id') };
     }
     case SAVE_REMOTE_RUNS_LOCALLY: {
       const remoteRuns = [...state.remoteRuns];
@@ -110,7 +111,7 @@ export default function reducer(state = INITIAL_STATE, action) {
         }
       });
 
-      return { ...state, remoteRuns, runs: [...remoteRuns, ...state.localRuns] };
+      return { ...state, remoteRuns, runs: uniqBy([...state.localRuns, ...remoteRuns], 'id') };
     }
     default:
       return state;
