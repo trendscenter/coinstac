@@ -102,7 +102,6 @@ export default function reducer(state = INITIAL_STATE, action) {
       return { ...state, localRuns, runs: [...state.remoteRuns, ...localRuns] };
     }
     case SAVE_REMOTE_RUNS_LOCALLY: {
-      console.log('redux coming in', action.payload);
       const remoteRuns = [...state.remoteRuns];
       action.payload.forEach((payloadRun) => {
         const index = remoteRuns.findIndex(localRun => localRun.id === payloadRun.id);
@@ -110,8 +109,6 @@ export default function reducer(state = INITIAL_STATE, action) {
           remoteRuns.push(payloadRun);
         }
       });
-
-      console.log('redux remoteRuns', remoteRuns);
 
       return { ...state, remoteRuns, runs: [...remoteRuns, ...state.localRuns] };
     }

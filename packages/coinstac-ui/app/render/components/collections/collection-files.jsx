@@ -42,13 +42,15 @@ export default class CollectionFiles extends Component {
     .then((obj) => {
       let newFiles;
 
+      const fileGroupId = shortid.generate();
+
       if (obj.error) {
         this.setState({ filesError: obj.error });
       } else {
         if (this.state.newFile.org === 'metafile') {
           newFiles = {
             ...obj,
-            id: shortid.generate(),
+            id: fileGroupId,
             extension: '.csv',
             date: new Date().getTime(),
             firstRow: obj.metaFile[0].join(', '),
@@ -56,7 +58,7 @@ export default class CollectionFiles extends Component {
           };
         } else {
           newFiles = {
-            id: shortid.generate(),
+            id: fileGroupId,
             extension: obj.extension,
             files: [...obj.paths.sort()],
             date: new Date().getTime(),
@@ -70,10 +72,10 @@ export default class CollectionFiles extends Component {
         this.props.updateCollection(
           {
             param: 'fileGroups',
-            value: [
+            value: {
               ...this.props.collection.fileGroups,
-              newFiles,
-            ],
+              [fileGroupId]: newFiles,
+            },
           },
           this.props.saveCollection
         );
@@ -82,7 +84,7 @@ export default class CollectionFiles extends Component {
     .catch(console.log);
   }
 
-  addFilesToGroup(groupIndex, extension) {
+  addFilesToGroup(groupId, extension) {
     return () => {
       ipcPromise.send('open-dialog', this.state.newFile.org)
       .then((obj) => {
@@ -95,17 +97,17 @@ export default class CollectionFiles extends Component {
           }
           this.setState({ filesError });
         } else {
-          const groups = [...this.props.collection.fileGroups];
-          groups[groupIndex].files = groups[groupIndex].files.concat(obj.paths);
-          groups[groupIndex].files.sort();
-          groups[groupIndex].files = sortedUniq(groups[groupIndex].files);
+          const groups = { ...this.props.collection.fileGroups };
+          groups[groupId].files = groups[groupId].files.concat(obj.paths);
+          groups[groupId].files.sort();
+          groups[groupId].files = sortedUniq(groups[groupId].files);
 
           this.props.updateCollection(
             {
               param: 'fileGroups',
-              value: [
+              value: {
                 ...groups,
-              ],
+              },
             },
             this.props.saveCollection
           );
@@ -115,34 +117,34 @@ export default class CollectionFiles extends Component {
     };
   }
 
-  removeFileInGroup(groupIndex, fileIndex) {
+  removeFileInGroup(groupId, fileIndex) {
     return () => {
-      const groups = [...this.props.collection.fileGroups];
-      groups[groupIndex].files.splice(fileIndex, 1);
+      const groups = { ...this.props.collection.fileGroups };
+      groups[groupId].files.splice(fileIndex, 1);
 
       this.props.updateCollection(
         {
           param: 'fileGroups',
-          value: [
+          value: {
             ...groups,
-          ],
+          },
         },
         this.props.saveCollection
       );
     };
   }
 
-  removeFileGroup(groupIndex) {
+  removeFileGroup(groupId) {
     return () => {
-      const groups = [...this.props.collection.fileGroups];
-      groups.splice(groupIndex);
+      const groups = { ...this.props.collection.fileGroups };
+      delete groups[groupId];
 
       this.props.updateCollection(
         {
           param: 'fileGroups',
-          value: [
+          value: {
             ...groups,
-          ],
+          },
         },
         this.props.saveCollection
       );
@@ -212,14 +214,14 @@ export default class CollectionFiles extends Component {
             </Alert>
           }
 
-          {collection.fileGroups.map((group, groupIndex) => (
+          {Object.values(collection.fileGroups).map(group => (
             <Panel key={`${group.date}-${group.extension}-${group.firstRow}`}>
               {group.org === 'metafile' &&
                 <div>
                   <Button
                     bsStyle="danger"
                     className="pull-right"
-                    onClick={this.removeFileGroup(groupIndex)}
+                    onClick={this.removeFileGroup(group.id)}
                   >
                     <span aria-hidden="true" className="glyphicon glyphicon-trash" />
                     {' '}
@@ -244,7 +246,7 @@ export default class CollectionFiles extends Component {
                   <Button
                     bsStyle="danger"
                     className="pull-right"
-                    onClick={this.removeFileGroup(groupIndex)}
+                    onClick={this.removeFileGroup(group.id)}
                   >
                     <span aria-hidden="true" className="glyphicon glyphicon-trash" />
                     {' '}
@@ -263,7 +265,7 @@ export default class CollectionFiles extends Component {
                     >
                       <Button
                         bsStyle="success"
-                        onClick={this.addFilesToGroup(groupIndex, group.extension)}
+                        onClick={this.addFilesToGroup(group.id, group.extension)}
                         style={{ marginBottom: 10 }}
                       >
                         Add More Files to Group
@@ -274,7 +276,7 @@ export default class CollectionFiles extends Component {
                             aria-label="Delete"
                             style={{ border: 'none', background: 'none' }}
                             type="button"
-                            onClick={this.removeFileInGroup(groupIndex, fileIndex)}
+                            onClick={this.removeFileInGroup(group.id, fileIndex)}
                           >
                             <span aria-hidden="true" className="glyphicon glyphicon-remove" style={{ color: 'red' }} />
                           </button>

@@ -35,7 +35,7 @@ helperFunctions.getRethinkConnection()
     steps: [
       {
         computations: [
-          compInsertResult.changes[0].new_val.id,
+          compInsertResult.changes[2].new_val.id,
         ],
         controller: {
           options: {},
@@ -62,7 +62,7 @@ helperFunctions.getRethinkConnection()
       },
       {
         computations: [
-          compInsertResult.changes[1].new_val.id,
+          compInsertResult.changes[3].new_val.id,
         ],
         controller: { type: 'decentralized' },
         id: 'HyLfdfanb',

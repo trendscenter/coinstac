@@ -51,7 +51,7 @@ module.exports = [
     config: {
       // auth: 'jwt',
       handler: (req, res) => {
-        console.log('Pipeline is starting');
+        console.log('Pipeline is starting'); // eslint-disable-line no-console
 
         const run = req.payload.run;
         const remotePipeline = this.remotePipelineManager.startPipeline({
@@ -63,7 +63,7 @@ module.exports = [
         res({}).code(201);
 
         remotePipeline.result.then((result) => {
-          console.log('Pipeline is done. Sending results...');
+          console.log('Pipeline is done. Sending results...'); // eslint-disable-line no-console
           connectionStart(run.id, result);
         })
         .catch((error) => {

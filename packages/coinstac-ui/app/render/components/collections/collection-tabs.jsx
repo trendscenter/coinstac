@@ -21,7 +21,7 @@ class CollectionTabs extends Component {
     let collection = {
       name: '',
       description: '',
-      fileGroups: [],
+      fileGroups: {},
       associatedConsortia: [],
     };
 
@@ -44,6 +44,8 @@ class CollectionTabs extends Component {
       e.preventDefault();
     }
 
+    console.log('collection', this.state.collection);
+
     this.props.saveCollection(this.state.collection)
     // TODO: Use redux to display success/failure messages after mutations
     .catch(({ graphQLErrors }) => {
@@ -53,6 +55,8 @@ class CollectionTabs extends Component {
 
   updateAssociatedConsortia(cons) {
     this.props.saveAssociatedConsortia(cons);
+
+    console.log('assocCons', cons);
 
     if (this.state.collection.associatedConsortia.indexOf(cons.id) === -1) {
       this.setState(prevState => ({
