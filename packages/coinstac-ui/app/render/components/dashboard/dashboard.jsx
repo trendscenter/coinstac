@@ -103,19 +103,20 @@ class Dashboard extends Component {
       this.setState({ unsubscribeRuns: this.props.subscribeToUserRuns(null) });
     }
 
-    if (nextProps.remoteRuns && this.props.consortia.length) {
+    if (nextProps.remoteRuns) {
       // TODO: Speed this up by moving to subscription prop (n vs n^2)?
       for (let i = 0; i < nextProps.remoteRuns.length; i += 1) {
-        let runIndexInProps = -1;
+        let runIndexInRemoteRuns = -1;
 
         // Find run in local props if it's there
         if (this.props.remoteRuns.length > 0) {
-          runIndexInProps = this.props.remoteRuns
+          runIndexInRemoteRuns = this.props.remoteRuns
             .findIndex(run => run.id === nextProps.remoteRuns[i].id);
         }
 
         // Run not in local props, start a pipeline (runs already filtered by member)
-        if (runIndexInProps === -1 && !nextProps.remoteRuns[i].results) {
+        if (runIndexInRemoteRuns === -1 && !nextProps.remoteRuns[i].results
+          && this.props.consortia.length) {
           // Save run status to localDB
           this.props.saveLocalRun({ ...nextProps.remoteRuns[i], status: 'started' });
           this.props.getCollectionFiles(nextProps.remoteRuns[i].consortiumId)
@@ -138,11 +139,11 @@ class Dashboard extends Component {
               ipcRenderer.send('start-pipeline', { consortium, pipeline, filesArray, run });
             }, 5000);
           });
-        } else if (runIndexInProps === -1 && nextProps.remoteRuns[i].results) {
+        } else if (runIndexInRemoteRuns === -1 && nextProps.remoteRuns[i].results) {
           this.props.saveLocalRun({ ...nextProps.remoteRuns[i], status: 'complete' });
         // Run already in props but results are incoming
-        } else if (runIndexInProps > -1 && nextProps.remoteRuns[i].results
-          && !this.props.remoteRuns[runIndexInProps].results) {
+        } else if (runIndexInRemoteRuns > -1 && nextProps.remoteRuns[i].results
+          && !this.props.remoteRuns[runIndexInRemoteRuns].results && this.props.consortia.length) {
           const run = nextProps.remoteRuns[i];
           const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
 

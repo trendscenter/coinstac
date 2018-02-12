@@ -4,6 +4,6 @@
   "description": "This is a test description",
   "studyName": "A Study of Studies",
   "studyDescription": "Meta study of studies",
-  "fileGroups": [],
+  "fileGroups": {},
   "associatedConsortia": []
 }
