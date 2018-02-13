@@ -1,5 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
+import TimeStamp from 'react-timestamp';
 import { Alert, Button, Panel } from 'react-bootstrap';
 import { LinkContainer } from 'react-router-bootstrap';
 import PropTypes from 'prop-types';
@@ -15,14 +16,49 @@ const ResultsList = ({ runs }) => {
       {runs && runs.map((run) => {
         if (run.results) {
           return (
-            <Panel key={run.id} header={<h3>{run.title}</h3>}>
-              <p>{run.date}</p>
-              <p>{run.pipelineId}</p>
-              <p>{run.results && run.results.type ? run.results.type : 'none'}</p>
+            <Panel key={run.id} header={<h3>{run.id}</h3>}>
+              <p>Consortium id: {run.consortiumId}</p>
+              {run.startDate &&
+              <p>Started:
+                <pre>
+                  <TimeStamp
+                    time={run.startDate / 1000}
+                    precision={4}
+                    autoUpdate={10}
+                    format="ago"
+                  />
+                </pre>
+              </p>}
+              {run.endDate &&
+              <p>Ended:
+                <pre>
+                  <TimeStamp
+                    time={run.endDate / 1000}
+                    precision={4}
+                    autoUpdate={10}
+                    format="ago"
+                  />
+                </pre>
+              </p>}
+              {run.clients &&
+              <p>Clients: {run.clients}</p>
+              }
+              {run.pipelineSnapshot &&
+              <p>Steps:
+                <pre>{JSON.stringify(run.pipelineSnapshot.steps, null, ' ')}</pre>
+              </p>}
+              {run.pipelineSnapshot &&
               <LinkContainer
+                to={`dashboard/pipelines/${run.pipelineSnapshot.id}`}
+              >
+                <Button bsStyle="info">View Pipeline</Button>
+              </LinkContainer>
+              }
+              <LinkContainer
+                className="pull-right"
                 to={`dashboard/results/${run.id}`}
               >
-                <Button bsStyle="info">View Results</Button>
+                <Button bsStyle="success">View Results</Button>
               </LinkContainer>
             </Panel>
           );
