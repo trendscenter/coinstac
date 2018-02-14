@@ -1,8 +1,10 @@
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
 import { Button, Col, DropdownButton, MenuItem, Row, Well } from 'react-bootstrap';
 import { Link } from 'react-router';
 import { graphql } from 'react-apollo';
 import PropTypes from 'prop-types';
+import { removeCollectionsFromAssociatedConsortia } from '../../state/ducks/collections';
 import {
   FETCH_ALL_CONSORTIA_QUERY,
   SAVE_ACTIVE_PIPELINE_MUTATION,
@@ -23,6 +25,9 @@ class ConsortiumPipeline extends Component {
       ownedPipelines: [],
       sharedPipelines: [],
     };
+
+    this.removeCollectionsFromAssociatedConsortia =
+      this.removeCollectionsFromAssociatedConsortia.bind(this);
   }
 
   componentWillReceiveProps(nextProps) {
@@ -47,6 +52,11 @@ class ConsortiumPipeline extends Component {
 
       this.setState({ ownedPipelines, sharedPipelines });
     }
+  }
+
+  removeCollectionsFromAssociatedConsortia(consortiumId, value) {
+    this.props.removeCollectionsFromAssociatedConsortia(consortiumId);
+    this.props.saveActivePipeline(consortiumId, value);
   }
 
   render() {
@@ -77,7 +87,8 @@ class ConsortiumPipeline extends Component {
               id="owned-pipelines-dropdown"
               title={'Owned Pipelines'}
               bsStyle="primary"
-              onSelect={value => this.props.saveActivePipeline(consortium.id, value)}
+              onSelect={value =>
+                this.removeCollectionsFromAssociatedConsortia(consortium.id, value)}
             >
               {ownedPipelines.map(pipe => (
                 <MenuItem
@@ -93,7 +104,8 @@ class ConsortiumPipeline extends Component {
               id="shared-pipelines-dropdown"
               title={'Shared Pipelines'}
               bsStyle="primary"
-              onSelect={value => this.props.saveActivePipeline(consortium.id, value)}
+              onSelect={value =>
+                this.removeCollectionsFromAssociatedConsortia(consortium.id, value)}
             >
               {sharedPipelines.map(pipe => (
                 <MenuItem
@@ -127,9 +139,11 @@ class ConsortiumPipeline extends Component {
 ConsortiumPipeline.propTypes = {
   consortium: PropTypes.object.isRequired,
   pipelines: PropTypes.array.isRequired,
+  removeCollectionsFromAssociatedConsortia: PropTypes.func.isRequired,
   saveActivePipeline: PropTypes.func.isRequired,
 };
 
+// TODO: Move this to shared props?
 const ConsortiumPipelineWithData = graphql(SAVE_ACTIVE_PIPELINE_MUTATION, {
   props: ({ mutate }) => ({
     saveActivePipeline: (consortiumId, activePipelineId) => mutate({
@@ -146,4 +160,6 @@ const ConsortiumPipelineWithData = graphql(SAVE_ACTIVE_PIPELINE_MUTATION, {
   }),
 })(ConsortiumPipeline);
 
-export default ConsortiumPipelineWithData;
+export default connect(null,
+  { removeCollectionsFromAssociatedConsortia }
+)(ConsortiumPipelineWithData);

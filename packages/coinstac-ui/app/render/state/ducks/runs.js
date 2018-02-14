@@ -31,6 +31,16 @@ export const clearRuns = applyAsyncLoading(() =>
       })
 );
 
+export const getRunsForConsortium = applyAsyncLoading(consId =>
+  () =>
+    localDB.runs
+      .filter(run => run.consortiumId === consId)
+      .sortBy('startDate')
+      .then((runs) => {
+        return runs;
+      })
+);
+
 export const getLocalRun = applyAsyncLoading(runId =>
   () =>
     localDB.runs.get(runId)
