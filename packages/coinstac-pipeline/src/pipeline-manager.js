@@ -50,6 +50,8 @@ module.exports = {
       return _.reduce(remoteClients, (memo, client, id) => {
         if (client[runId]) {
           memo[id] = client[runId].currentOutput;
+          client[runId].previousOutput = client[runId].currentOutput;
+          client[runId].currentOutput = undefined;
         }
         return memo;
       }, {});
