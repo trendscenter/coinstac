@@ -10,6 +10,7 @@ const INIT_TEST_COLLECTION = 'INIT_TEST_COLLECTION';
 const SAVE_ASSOCIATED_CONSORTIA = 'SAVE_ASSOCIATED_CONSORTIA';
 const SAVE_COLLECTION = 'SAVE_COLLECTION';
 const GET_ASSOCIATED_CONSORTIA = 'GET_ASSOCIATED_CONSORTIA';
+const REMOVE_COLLECTIONS_FROM_CONS = 'REMOVE_COLLECTIONS_FROM_CONS';
 const SET_COLLECTIONS = 'GET_ALL_COLLECTIONS';
 
 // Action Creators
@@ -49,18 +50,44 @@ export const getAllCollections = applyAsyncLoading(() =>
       })
 );
 
-export const getCollectionFiles = applyAsyncLoading(consortiumId =>
-  dispatch =>
-    localDB.associatedConsortia.get(consortiumId)
+export const getCollectionFiles = applyAsyncLoading((consortiumId, consortiumName, steps) =>
+  (dispatch) => {
+    let needsFiles = false;
+
+    // TODO: Revisit when its decided if client may be in charge of
+    //   supplying values to non-covariate vars
+    for (let i = 0; i < steps.length; i += 1) {
+      if ('covariates' in steps[i].inputMap) {
+        for (let q = 0; q < steps[i].inputMap.covariates.length; q += 1) {
+          if (steps[i].inputMap.covariates[q].source.inputKey === 'file') {
+            needsFiles = true;
+            break;
+          }
+        }
+      }
+      if (needsFiles) {
+        break;
+      }
+    }
+
+    // Doesn't need local file paths, so return an empty array
+    if (!needsFiles) {
+      return [];
+    }
+
+    return localDB.associatedConsortia.get(consortiumId)
     .then((consortium) => {
       if (!consortium) {
-        const error = { error: 'No associated consortia in local db' };
+        const error = {
+          error: `No associated consortia in local db. Please visit Collections and map variables for ${consortiumName}.`,
+        };
         dispatch(({
           type: GET_COLLECTION_FILES,
           payload: error,
         }));
         return error;
       }
+
       const collections = [];
       let mappingIncomplete = false;
 
@@ -70,16 +97,15 @@ export const getCollectionFiles = applyAsyncLoading(consortiumId =>
         const step = consortium.pipelineSteps[sIndex];
         for (let cIndex = 0; cIndex < step.inputMap.covariates.length; cIndex += 1) {
           const covar = step.inputMap.covariates[cIndex];
-          if (covar.source.inputKey === 'file' &&
-              consortium.stepIO[sIndex] && consortium.stepIO[sIndex][cIndex]) {
+          if (covar.source.inputKey === 'file'
+              && consortium.stepIO[sIndex] && consortium.stepIO[sIndex][cIndex]
+              && consortium.stepIO[sIndex][cIndex].collectionId) {
             const { groupId, collectionId } = consortium.stepIO[sIndex][cIndex];
             collections.push({ groupId, collectionId });
-          } else if (covar.source.inputKey === 'file' &&
-              (!consortium.stepIO[sIndex] || !consortium.stepIO[sIndex][cIndex])) {
+          } else if (covar.source.inputKey === 'file'
+              && (!consortium.stepIO[sIndex] || !consortium.stepIO[sIndex][cIndex]
+              || !consortium.stepIO[sIndex][cIndex].collectionId)) {
             mappingIncomplete = true;
-          }
-
-          if (mappingIncomplete) {
             break;
           }
         }
@@ -90,7 +116,9 @@ export const getCollectionFiles = applyAsyncLoading(consortiumId =>
       }
 
       if (mappingIncomplete) {
-        const error = { error: 'Mapping incomplete' };
+        const error = {
+          error: `Mapping incomplete for new run from ${consortium.name}. Please complete variable mapping before continuing.`,
+        };
         dispatch(({
           type: GET_COLLECTION_FILES,
           payload: error,
@@ -115,7 +143,8 @@ export const getCollectionFiles = applyAsyncLoading(consortiumId =>
           }));
           return runFiles;
         });
-    })
+    });
+  }
 );
 
 export const getAssociatedConsortia = applyAsyncLoading(consortiaIds =>
@@ -133,7 +162,8 @@ export const getAssociatedConsortia = applyAsyncLoading(consortiaIds =>
 
 export const initTestData = (() =>
   dispatch =>
-    localDB.collections.put(testData)
+    localDB.associatedConsortia.clear()
+    .then(() => localDB.collections.put(testData))
     .then(() => {
       dispatch(({
         type: INIT_TEST_COLLECTION,
@@ -141,6 +171,51 @@ export const initTestData = (() =>
       }));
     })
 );
+
+export const removeCollectionsFromAssociatedConsortia = applyAsyncLoading(consId =>
+  dispatch =>
+    localDB.associatedConsortia.get(consId)
+      .then((consortium) => {
+        if (!consortium || !consortium.stepIO) {
+          return [];
+        }
+
+        const collectionIds = [];
+
+        consortium.stepIO.forEach((step) => {
+          step.forEach((obj) => {
+            collectionIds.push(obj.collectionId);
+          });
+        });
+
+        return collectionIds;
+      })
+      .then((collectionIds) => {
+        if (collectionIds.length === 0) {
+          return;
+        }
+
+        return Promise.all([
+          localDB.collections
+            .filter(col => collectionIds.indexOf(col.id) > -1)
+            .modify((col) => {
+              const index = col.associatedConsortia.indexOf(consId);
+              col.associatedConsortia.splice(index, 1);
+            }),
+          localDB.associatedConsortia.delete(consId),
+        ]);
+      })
+      .then(() => {
+        return localDB.collections
+          .toArray();
+      })
+      .then((collections) => {
+        dispatch(({
+          type: REMOVE_COLLECTIONS_FROM_CONS,
+          payload: { collections, consId },
+        }));
+      })
+  );
 
 export const saveCollection = applyAsyncLoading(collection =>
   dispatch =>
@@ -199,6 +274,13 @@ export default function reducer(state = INITIAL_STATE, action) {
       }
 
       return { ...state, associatedConsortia: newCons };
+    }
+    case REMOVE_COLLECTIONS_FROM_CONS: {
+      const newCons = [...state.associatedConsortia];
+      const index = state.associatedConsortia.findIndex(cons => cons.id === action.payload.consId);
+      newCons.splice(index, 1);
+
+      return { ...state, collections: action.payload.collections, associatedConsortia: newCons };
     }
     case SAVE_COLLECTION: {
       const newCollections = [...state.collections];
