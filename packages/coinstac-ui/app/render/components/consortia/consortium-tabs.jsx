@@ -43,6 +43,7 @@ class ConsortiumTabs extends Component {
       consortium,
       unsubscribeConsortia: null,
     };
+    this.getConsortiumRuns = this.getConsortiumRuns.bind(this);
     this.saveConsortium = this.saveConsortium.bind(this);
     this.updateConsortium = this.updateConsortium.bind(this);
   }
@@ -64,6 +65,12 @@ class ConsortiumTabs extends Component {
     if (this.state.unsubscribeConsortia) {
       this.state.unsubscribeConsortia();
     }
+  }
+
+  getConsortiumRuns() {
+    return (
+      this.props.runs.filter(run => run.consortiumId === this.state.consortium.id)
+    );
   }
 
   saveConsortium(e) {
@@ -146,7 +153,8 @@ class ConsortiumTabs extends Component {
             style={styles.tab}
           >
             <ConsortiumResults
-              consortium={this.state.consortium}
+              runs={this.getConsortiumRuns()}
+              consortia={this.props.consortia}
             />
           </Tab>
         </Tabs>
@@ -157,6 +165,8 @@ class ConsortiumTabs extends Component {
 
 ConsortiumTabs.defaultProps = {
   activeConsortium: null,
+  consortia: null,
+  runs: null,
   subscribeToConsortia: null,
 };
 
@@ -164,8 +174,10 @@ ConsortiumTabs.propTypes = {
   activeConsortium: PropTypes.object,
   addUserRole: PropTypes.func.isRequired,
   auth: PropTypes.object.isRequired,
+  consortia: PropTypes.array,
   params: PropTypes.object.isRequired,
   pipelines: PropTypes.array.isRequired,
+  runs: PropTypes.array,
   saveConsortium: PropTypes.func.isRequired,
   subscribeToConsortia: PropTypes.func,
 };
