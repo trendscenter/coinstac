@@ -27,7 +27,7 @@ export default class PipelineStepVariableTable extends Component {
     } = this.props;
 
     return (
-      <Table>
+      <Table style={{ marginLeft: 10 }}>
         {step.inputMap.covariates && step.inputMap.covariates.length > 0 &&
           <thead>
             <tr>
@@ -41,7 +41,7 @@ export default class PipelineStepVariableTable extends Component {
             </tr>
           </thead>
         }
-        {step.inputMap.covariates.map((cov, index) => (
+        {step.inputMap.covariates && step.inputMap.covariates.map((cov, index) => (
           <tbody style={{ border: 'none' }} key={`covariate-${index}`}>
             <tr>
               <td>

@@ -50,10 +50,16 @@ class CollectionConsortia extends Component {
   }
 
   setPipelineSteps(steps) {
+    // Prepopulate stepIO with same number of steps as pipeline to ensure indices match
+    // TODO: Add section specifically for covars and prepopulate empty values for all params?
+    const stepIO = Array(steps.length)
+      .fill([]);
+
     this.setState(prevState => ({
       activeConsortium: {
         ...prevState.activeConsortium,
         pipelineSteps: steps,
+        stepIO,
       },
     }));
   }
