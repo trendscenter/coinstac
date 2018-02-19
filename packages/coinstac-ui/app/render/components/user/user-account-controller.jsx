@@ -25,7 +25,6 @@ class UserAccountController extends Component {
       });
     })
     .catch((err) => {
-      console.log(err);
       this.props.writeLog({ type: 'error', message: err });
       this.props.notifyError({
         message: 'Error logging out',

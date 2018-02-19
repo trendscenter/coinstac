@@ -191,8 +191,26 @@ export default class PipelineStepMemberTable extends Component {
                 <DropdownButton
                   id={`input-source-${index}-dropdown`}
                   title={obj.source.inputLabel || 'Data Source'}
-                  disabled={!owner || !obj.type}
+                  disabled={!owner || !obj.type || !obj.name}
                 >
+                  <MenuItem
+                    eventKey={`${obj.name}-file-source-menuitem`}
+                    key={`${obj.name}-file-source-menuitem`}
+                    onClick={() => this.props.updateStep({
+                      ...step,
+                      inputMap: getNewObj(
+                        'source',
+                        {
+                          pipelineIndex: itemObj.possibleInputIndex,
+                          inputKey: itemInput[0],
+                          inputLabel: `Computation ${itemObj.possibleInputIndex + 1}: ${itemInput[1].label}`,
+                        },
+                        index
+                      ),
+                    })}
+                  >
+                    {type}
+                  </MenuItem>
                   {getSourceMenuItem('File', step, index)}
                   {possibleInputs.map(itemObj => (
                     Object.entries(itemObj.inputs)
