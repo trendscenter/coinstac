@@ -103,12 +103,9 @@ export const getCollectionFiles = applyAsyncLoading(consortiumId =>
         .toArray()
         .then((localDBCols) => {
           let runFiles = [];
-          // TODO: Ick. At least try to make fileGroups an object with ids as params
-          localDBCols.forEach((localDB) => {
-            localDB.fileGroups.forEach((group) => {
-              if (collections.findIndex(c => c.groupId === group.id) > -1) {
-                runFiles = runFiles.concat(group.files);
-              }
+          localDBCols.forEach((coll) => {
+            Object.values(coll.fileGroups).forEach((group) => {
+              runFiles = runFiles.concat(coll.fileGroups[group.id].files);
             });
           });
 

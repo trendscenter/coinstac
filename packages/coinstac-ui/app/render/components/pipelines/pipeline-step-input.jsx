@@ -2,11 +2,14 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import {
   Button,
+  Col,
   ControlLabel,
   Checkbox,
+  DropdownButton,
   FormGroup,
   FormControl,
   MenuItem,
+  Row,
 } from 'react-bootstrap';
 import update from 'immutability-helper';
 import PipelineStepVariableTable from './pipeline-step-variable-table';
@@ -18,6 +21,10 @@ const styles = {
 export default class PipelineStepInput extends Component {
   constructor(props) {
     super(props);
+
+    this.state = {
+      isCovariate: props.objKey === 'covariates',
+    };
 
     this.addCovariate = this.addCovariate.bind(this);
     this.getNewObj = this.getNewObj.bind(this);
@@ -47,15 +54,30 @@ export default class PipelineStepInput extends Component {
   }
 
   getNewObj(objKey, value, covarIndex) { // eslint-disable-line class-methods-use-this
-    const { isCovariate, step: { inputMap } } = this.props;
+    const { step: { inputMap } } = this.props;
+    const inputCopy = { ...inputMap };
 
-    if (!isCovariate) {
-      return { ...inputMap, [objKey]: { value } };
+    if (value.fromCache) {
+      delete inputCopy.value;
+    } else if (value.value) {
+      delete inputCopy.fromCache;
     }
 
-    const covars = [...inputMap.covariates];
-    covars.splice(covarIndex, 1, { ...covars[covarIndex], [objKey]: value });
-    return { ...inputMap, covariates: [...covars] };
+    if (!this.state.isCovariate && value === 'DELETE_VAR') {
+      delete inputCopy[objKey];
+      return { ...inputCopy };
+    } else if (!this.state.isCovariate) {
+      return { ...inputCopy, [objKey]: value };
+    }
+
+    let covars = [];
+
+    if (inputCopy.covariates) {
+      covars = [...inputCopy.covariates];
+      covars.splice(covarIndex, 1, { ...covars[covarIndex], [objKey]: value });
+    }
+
+    return { ...inputCopy, covariates: [...covars] };
   }
 
   getSelectList(array, value) { // eslint-disable-line class-methods-use-this
@@ -70,22 +92,18 @@ export default class PipelineStepInput extends Component {
     return [value];
   }
 
-  getSourceMenuItem(type, step, index) {
+  getSourceMenuItem(type, step) {
     // Make Camel Case
     let typeNoSpace = type.split(' ');
     typeNoSpace = typeNoSpace[0].toLowerCase() + typeNoSpace.slice(1).join('');
 
     return (
       <MenuItem
-        eventKey={`covariate-${typeNoSpace}-inputs-menuitem`}
-        key={`covariate-${typeNoSpace}-inputs-menuitem`}
+        eventKey={`variable-${typeNoSpace}-inputs-menuitem`}
+        key={`variable-${typeNoSpace}-inputs-menuitem`}
         onClick={() => this.props.updateStep({
           ...step,
-          inputMap: this.getNewObj(
-            'source',
-            { pipelineIndex: -1, inputKey: typeNoSpace, inputLabel: type },
-            index
-          ),
+          inputMap: { type },
         })}
       >
         {type}
@@ -130,11 +148,26 @@ export default class PipelineStepInput extends Component {
       step,
       updateStep,
     } = this.props;
+    let sourceDropDownLabel = null;
+    let isValue = false;
+    let isFromCache;
+
+    if (step.inputMap[objKey] && step.inputMap[objKey].fromCache) {
+      sourceDropDownLabel = `Computation ${step.inputMap[objKey].fromCache.step + 1}: ${step.inputMap[objKey].fromCache.label}`;
+    }
+
+    if (step.inputMap[objKey] && step.inputMap[objKey].value) {
+      isValue = true;
+    }
+
+    if (step.inputMap[objKey] && step.inputMap[objKey].fromCache) {
+      isFromCache = true;
+    }
 
     return (
       <div>
         {objKey === 'covariates' &&
-          <div>
+          <div style={{ paddingLeft: 10 }}>
             <p className="bold">Variables</p>
             <Button
               disabled={!owner}
@@ -159,85 +192,167 @@ export default class PipelineStepInput extends Component {
         }
 
         {objKey !== 'covariates' &&
-          <FormGroup controlId={`${parentKey}-form-group`}>
-            {objParams.label &&
-              <ControlLabel>{objParams.label}</ControlLabel>
-            }
+          <Row style={{ paddingLeft: 10 }}>
+            <Col xs={6}>
+              <FormGroup controlId={`${parentKey}-form-group`}>
+                {objParams.label &&
+                  <ControlLabel>{objParams.label}</ControlLabel>
+                }
 
-            {objParams.description &&
-              <p>{objParams.description}</p>
-            }
+                {objParams.description &&
+                  <p>{objParams.description}</p>
+                }
 
-            {objParams.type === 'number' &&
-              <FormControl
-                disabled={!owner}
-                inputRef={(input) => { this[objKey] = input; }}
-                onChange={() => updateStep({
-                  ...step,
-                  inputMap: this.getNewObj(objKey, parseFloat(this[objKey].value)),
-                })}
-                type="number"
-                value={step.inputMap[objKey] ? step.inputMap[objKey].value : ''}
-              />
-            }
+                {objParams.type === 'number' &&
+                  <FormControl
+                    disabled={!owner || isFromCache}
+                    inputRef={(input) => { this[objKey] = input; }}
+                    onChange={() => updateStep({
+                      ...step,
+                      inputMap: this.getNewObj(objKey,
+                        this[objKey].value ? { value: parseFloat(this[objKey].value) } : 'DELETE_VAR'
+                      ),
+                    })}
+                    type="number"
+                    value={
+                      step.inputMap[objKey] && 'value' in step.inputMap[objKey] ?
+                      step.inputMap[objKey].value : ''
+                    }
+                  />
+                }
 
-            {objParams.type === 'array' && objParams.values &&
-              <FormControl
-                componentClass="select"
-                disabled={!owner}
-                inputRef={(input) => { this[objKey] = input; }}
-                multiple
-                onChange={() => updateStep({
-                  ...step,
-                  inputMap: this.getNewObj(
-                    objKey,
-                    this.getSelectList(step.inputMap[objKey].value, this[objKey].value)
-                  ),
-                })}
-                value={step.inputMap[objKey] ? step.inputMap[objKey].value : []}
+                {objParams.type === 'array' && objParams.values &&
+                  <FormControl
+                    componentClass="select"
+                    disabled={!owner}
+                    inputRef={(input) => { this[objKey] = input; }}
+                    multiple
+                    onChange={() => updateStep({
+                      ...step,
+                      inputMap: this.getNewObj(
+                        objKey,
+                        this[objKey].value ?
+                          { value: this.getSelectList(step.inputMap[objKey].value, this[objKey].value) } : 'DELETE_VAR'
+                      ),
+                    })}
+                    value={
+                      step.inputMap[objKey] && 'value' in step.inputMap[objKey] ?
+                      step.inputMap[objKey].value : []
+                    }
+                  >
+                    {objParams.values.map(val =>
+                      <option key={`${val}-select-option`} value={val}>{val}</option>
+                    )}
+                  </FormControl>
+                }
+
+                {objParams.type === 'array' && !objParams.values && objParams.items === 'number' &&
+                  step.inputMap[objKey] && step.inputMap[objKey].value.map((val, i) => (
+                    <FormControl
+                      key={`${objKey}-${i}`}
+                      disabled={!owner}
+                      inputRef={(input) => { this[i] = input; }}
+                      onChange={() => updateStep({
+                        ...step,
+                        inputMap: {
+                          [objKey]: {
+                            value: update(step.inputMap[objKey].value, {
+                              $splice: [[i, 1, parseFloat(this[i].value)]],
+                            }),
+                          },
+                        },
+                      })}
+                      type="number"
+                      value={
+                        step.inputMap[objKey] && step.inputMap[objKey][i] && 'value' in step.inputMap[objKey][i] ?
+                        step.inputMap[objKey][i].value : ''
+                      }
+                    />
+                  ))
+                }
+
+                {objParams.type === 'boolean' &&
+                  <Checkbox
+                    disabled={!owner}
+                    inputRef={(input) => { this[objKey] = input; }}
+                    onChange={() => updateStep({
+                      ...step,
+                      inputMap: this.getNewObj(objKey,
+                        this[objKey].value ? { value: this[objKey].value } : 'DELETE_VAR'
+                      ),
+                    })}
+                    value={
+                      step.inputMap[objKey] && 'value' in step.inputMap[objKey] ?
+                      step.inputMap[objKey].value : ''
+                    }
+                  >
+                    True?
+                  </Checkbox>
+                }
+              </FormGroup>
+            </Col>
+            <Col xs={6} style={{ paddingTop: 25 }}>
+              <DropdownButton
+                id={`input-source-${objKey}-dropdown`}
+                title={(!isValue && !isFromCache) ? 'Data Source' : (sourceDropDownLabel || 'Owner Defined Value')}
+                disabled={!owner || !objParams.type || isValue}
               >
-                {objParams.values.map(val =>
-                  <option key={`${val}-select-option`} value={val}>{val}</option>
-                )}
-              </FormControl>
-            }
-
-            {objParams.type === 'array' && !objParams.values && objParams.items === 'number' &&
-              step.inputMap[objKey] && step.inputMap[objKey].value.map((val, i) => (
-                <FormControl
-                  key={`${objKey}-${i}`}
-                  disabled={!owner}
-                  inputRef={(input) => { this[i] = input; }}
-                  onChange={() => updateStep({
-                    ...step,
-                    inputMap: {
-                      [objKey]: {
-                        value: update(step.inputMap[objKey].value, {
-                          $splice: [[i, 1, parseFloat(this[i].value)]],
-                        }),
-                      },
-                    },
-                  })}
-                  type="number"
-                  value={step.inputMap[objKey][i] ? step.inputMap[objKey][i].value : ''}
-                />
-              ))
-            }
-
-            {objParams.type === 'boolean' &&
-              <Checkbox
-                disabled={!owner}
-                inputRef={(input) => { this[objKey] = input; }}
-                onChange={() => updateStep({
-                  ...step,
-                  inputMap: this.getNewObj(objKey, this[objKey].value),
-                })}
-                value={step.inputMap[objKey] ? step.inputMap[objKey].value : ''}
-              >
-                True?
-              </Checkbox>
-            }
-          </FormGroup>
+                {
+                  <MenuItem
+                    disabled={!owner}
+                    eventKey={`clear-Computation-${objKey}-inputs-menuitem`}
+                    key={`clear-Computation-${objKey}-inputs-menuitem`}
+                    onClick={() => updateStep({
+                      ...step,
+                      inputMap: this.getNewObj(objKey, 'DELETE_VAR'),
+                    })}
+                  >
+                    None
+                  </MenuItem>
+                }
+                {
+                  <MenuItem
+                    disabled={!owner}
+                    eventKey={`file-Computation-${objKey}-inputs-menuitem`}
+                    key={`file-Computation-${objKey}-inputs-menuitem`}
+                    onClick={() => updateStep({
+                      ...step,
+                      inputMap: this.getNewObj(objKey, { value: 'File' }),
+                    })}
+                  >
+                    File
+                  </MenuItem>
+                }
+                {possibleInputs.map(itemObj => (
+                  // Iterate over possible computation inputs
+                  Object.entries(itemObj.inputs)
+                    // Filter out inputs that don't match type
+                    .filter(filterIn => filterIn[1].type === objParams.type)
+                    .map(itemInput => (
+                      <MenuItem
+                        disabled={!owner}
+                        eventKey={`${itemInput[1].label}-Computation-${itemObj.possibleInputIndex + 1}-inputs-menuitem`}
+                        key={`${itemInput[1].label}-Computation-${itemObj.possibleInputIndex + 1}-inputs-menuitem`}
+                        onClick={() => updateStep({
+                          ...step,
+                          inputMap: this.getNewObj(objKey,
+                            {
+                              fromCache: {
+                                step: itemObj.possibleInputIndex,
+                                variable: itemInput[0],
+                                label: itemInput[1].label,
+                              },
+                            }
+                          ),
+                        })}
+                      >
+                        {`Computation ${itemObj.possibleInputIndex + 1}: ${itemInput[1].label}`}
+                      </MenuItem>
+                    ))
+                ))}
+              </DropdownButton>
+            </Col>
+          </Row>
         }
       </div>
     );
@@ -252,7 +367,6 @@ PipelineStepInput.defaultProps = {
 };
 
 PipelineStepInput.propTypes = {
-  isCovariate: PropTypes.bool.isRequired,
   parentKey: PropTypes.string,
   pipelineIndex: PropTypes.number.isRequired,
   possibleInputs: PropTypes.array,

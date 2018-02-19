@@ -5,49 +5,44 @@ import Boxplot from 'react-boxplot';
 import { ScatterChart } from 'react-d3';
 import { Chart, Grid, Xaxis, Yaxis } from 'react-d3-core';
 import computeBoxplotStats from 'react-boxplot/dist/stats';
-import { graphql } from 'react-apollo';
-import {
-  FETCH_RESULT_QUERY,
-} from '../../state/graphql/functions';
-import {
-  getDocumentByParam,
-} from '../../state/graphql/props';
+import { getLocalRun } from '../../state/ducks/runs';
 
 class Result extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
+      activeResult: {},
       plotData: [],
-      dummyData: [14, 15, 16, 16, 17, 17, 17, 17, 17, 18, 18, 18, 18, 18, 18, 19,
-        19, 19, 20, 20, 20, 20, 20, 20, 21, 21, 22, 23, 24, 24, 29],
+      dummyData: [],
     };
   }
 
-  componentWillReceiveProps(nextProps) {
-    console.log(nextProps);
-    if (nextProps.activeResult) {
-      if (nextProps.activeResult.results.plots) {
-        nextProps.activeResult.results.plots.map(result => (
-          this.state.plotData.push({
-            name: result.title,
-            values: result.coordinates,
-          })
-        ));
-      } else if (nextProps.activeResult.results.type === 'box_plot') {
-          /*
-        nextProps.activeResult.results.x.map(result => (
-          this.state.plotData.push({
-            values: result.values,
-            name: result.label,
-          })
-        )); */
-      }
-    }
+  componentDidMount() {
+    this.props.getLocalRun(this.props.params.resultId)
+      .then((run) => {
+        const plotData = [];
+
+        if (run.results.plots) {
+          run.results.plots.map(result => (
+            plotData.push({
+              name: result.title,
+              values: result.coordinates,
+            })
+          ));
+        }
+
+        this.setState({
+          activeResult: run,
+          plotData,
+          dummyData: [14, 15, 16, 16, 17, 17, 17, 17, 17, 18, 18, 18, 18, 18, 18, 19,
+            19, 19, 20, 20, 20, 20, 20, 20, 21, 21, 22, 23, 24, 24, 29],
+        });
+      });
   }
 
   render() {
-    const { activeResult } = this.props;
+    const { activeResult } = this.state;
     return (
       <div>
         {(activeResult && activeResult.results && activeResult.results.type === 'scatter_plot') &&
@@ -93,6 +88,8 @@ class Result extends Component {
 
 Result.propTypes = {
   activeResult: PropTypes.object,
+  getLocalRun: PropTypes.func.isRequired,
+  params: PropTypes.object.isRequired,
 };
 
 Result.defaultProps = {
@@ -103,7 +100,4 @@ const mapStateToProps = ({ auth }) => {
   return { auth };
 };
 
-const ResultWithData =
-  graphql(FETCH_RESULT_QUERY, getDocumentByParam('resultId', 'activeResult', 'fetchResult'))(Result);
-
-export default connect(mapStateToProps)(ResultWithData);
+export default connect(mapStateToProps, { getLocalRun })(Result);

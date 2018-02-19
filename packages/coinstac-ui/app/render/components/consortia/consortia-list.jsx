@@ -3,9 +3,13 @@ import { connect } from 'react-redux';
 import { compose, graphql, withApollo } from 'react-apollo';
 import { Alert, Button } from 'react-bootstrap';
 import { LinkContainer } from 'react-router-bootstrap';
+import { ipcRenderer } from 'electron';
 import PropTypes from 'prop-types';
+import shortid from 'shortid';
+import { getCollectionFiles } from '../../state/ducks/collections';
 import ListItem from '../common/list-item';
 import ListDeleteModal from '../common/list-delete-modal';
+import { saveLocalRun } from '../../state/ducks/runs';
 import { updateUserPerms } from '../../state/ducks/auth';
 import { pullComputations } from '../../state/ducks/docker';
 import {
@@ -14,6 +18,7 @@ import {
   DELETE_CONSORTIUM_MUTATION,
   FETCH_ALL_COMPUTATIONS_QUERY,
   FETCH_ALL_CONSORTIA_QUERY,
+  FETCH_ALL_PIPELINES_QUERY,
   JOIN_CONSORTIUM_MUTATION,
   LEAVE_CONSORTIUM_MUTATION,
   REMOVE_USER_ROLE_MUTATION,
@@ -76,7 +81,7 @@ class ConsortiaList extends Component {
         <Button
           key={`${id}-start-pipeline-button`}
           bsStyle="success"
-          onClick={this.startPipeline(id)}
+          onClick={this.startPipeline(id, activePipelineId)}
           style={{ marginLeft: 10 }}
         >
           Start Pipeline
@@ -195,8 +200,54 @@ class ConsortiaList extends Component {
     this.props.removeUserRole(user.id, 'consortia', consortiumId, 'member');
   }
 
-  startPipeline(consortiumId) {
+  startPipeline(consortiumId, activePipelineId) {
     return () => {
+      const { client } = this.props;
+      let isLocalPipeline = false;
+      const pipelineData = client.readQuery({ query: FETCH_ALL_PIPELINES_QUERY });
+      const pipeline = pipelineData.fetchAllPipelines
+        .find(pipe => pipe.id === activePipelineId);
+
+      for (let i = 0; i < pipeline.steps.length; i += 1) {
+        if (pipeline.steps[i].controller.type === 'local') {
+          isLocalPipeline = true;
+          break;
+        }
+      }
+
+      // Don't send local pipelines to Rethink
+      if (isLocalPipeline) {
+        const data = client.readQuery({ query: FETCH_ALL_CONSORTIA_QUERY });
+        const consortium = data.fetchAllConsortia.find(cons => cons.id === consortiumId);
+        const run = {
+          id: `local-${shortid.generate()}`,
+          clients: [...consortium.members, ...consortium.owners],
+          consortiumId,
+          pipelineSnapshot: pipeline,
+          startDate: Date.now(),
+          type: 'local',
+          results: null,
+          endDate: null,
+          userErrors: null,
+          __typename: 'Run',
+        };
+
+        return this.props.getCollectionFiles(consortiumId)
+          .then((filesArray) => {
+            return Promise.all([
+              filesArray,
+              this.props.saveLocalRun({ ...run, status: 'started' }),
+            ]);
+          })
+          .then(([filesArray]) => {
+            this.props.notifyInfo({
+              message: `Local Pipeline Starting for ${consortium.name}.`,
+            });
+            ipcRenderer.send('start-pipeline', { consortium, pipeline, filesArray, run: { ...run } });
+          });
+      }
+
+      // If remote pipeline, call GraphQL to create new pipeline
       this.props.createRun(consortiumId);
     };
   }
@@ -258,6 +309,7 @@ ConsortiaList.propTypes = {
   consortia: PropTypes.array.isRequired,
   createRun: PropTypes.func.isRequired,
   deleteConsortiumById: PropTypes.func.isRequired,
+  getCollectionFiles: PropTypes.func.isRequired,
   joinConsortium: PropTypes.func.isRequired,
   leaveConsortium: PropTypes.func.isRequired,
   notifyInfo: PropTypes.func.isRequired,
@@ -265,6 +317,7 @@ ConsortiaList.propTypes = {
   pullComputations: PropTypes.func.isRequired,
   removeUserRole: PropTypes.func.isRequired,
   router: PropTypes.object.isRequired,
+  saveLocalRun: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = ({ auth }) => {
@@ -287,5 +340,5 @@ const ConsortiaListWithData = compose(
 )(ConsortiaList);
 
 export default connect(mapStateToProps,
-  { notifyInfo, pullComputations, updateUserPerms }
+  { getCollectionFiles, notifyInfo, pullComputations, saveLocalRun, updateUserPerms }
 )(ConsortiaListWithData);

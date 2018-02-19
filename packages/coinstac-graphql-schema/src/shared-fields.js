@@ -77,9 +77,8 @@ const sharedFields = {
     endDate
     pipelineSnapshot
     userErrors
-    globalResults
     results
-    userResults
+    type
   `,
   userMetadata: `
     id

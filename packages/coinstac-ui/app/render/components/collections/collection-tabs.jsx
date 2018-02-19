@@ -21,7 +21,7 @@ class CollectionTabs extends Component {
     let collection = {
       name: '',
       description: '',
-      fileGroups: [],
+      fileGroups: {},
       associatedConsortia: [],
     };
 

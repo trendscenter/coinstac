@@ -62,6 +62,32 @@ const collectDrop = connect =>
   ({ connectDropTarget: connect.dropTarget() });
 
 class PipelineStep extends Component {
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      orderedInputs: [],
+    };
+  }
+
+  componentWillReceiveProps(nextProps) {
+    let orderedInputs = [];
+
+    // TODO: Find another way to force possibleInputs array to
+    //   always match order of previousComputationIds, nested loop not good
+    if (nextProps.possibleInputs) {
+      orderedInputs = this.props.previousComputationIds.map((prevComp, possibleInputIndex) => {
+        const comp = nextProps.possibleInputs.find(pI => pI.id === prevComp);
+        return {
+          inputs: comp ? comp.computation.output : [],
+          possibleInputIndex,
+        };
+      });
+
+      this.setState({ orderedInputs });
+    }
+  }
+
   render() {
     const {
       compIO,
@@ -101,24 +127,29 @@ class PipelineStep extends Component {
           <h4>Input Parameters:</h4>
           {compIO !== null && Object.entries(compIO.computation.input).map(localInput => (
             <PipelineStepInput
-              isCovariate={localInput[0] === 'covariates'}
               objKey={localInput[0]}
               objParams={localInput[1]}
               pipelineIndex={pipelineIndex}
               key={`${id}-${localInput[0]}-input`}
               owner={owner}
               parentKey={`${id}-${localInput[0]}-input`}
-              possibleInputs={possibleInputs.map((prevComp, possibleInputIndex) =>
-                ({ inputs: prevComp.computation.output, possibleInputIndex })
-              )}
+              possibleInputs={this.state.orderedInputs}
               step={step}
               updateStep={updateStep}
             />
           ))}
           <h4>Output:</h4>
-          {compIO !== null && Object.entries(compIO.computation.output).map(localOutput => (
-            <p key={`${id}-${localOutput[0]}-output`}>{localOutput[1].label}</p>
-          ))}
+          <div style={{ paddingLeft: 10 }}>
+            {compIO !== null && Object.entries(compIO.computation.output).map((localOutput) => {
+              if (typeof localOutput[1] === 'object') {
+                return (
+                  <p key={`${id}-${localOutput[0]}-output`}>{localOutput[1].label} ({localOutput[1].type})</p>
+                );
+              }
+
+              return null;
+            })}
+          </div>
         </Panel>
       </div>
     ));
@@ -142,6 +173,7 @@ PipelineStep.propTypes = {
   moveStep: PropTypes.func.isRequired,
   owner: PropTypes.bool,
   possibleInputs: PropTypes.array,
+  previousComputationIds: PropTypes.array.isRequired,
   step: PropTypes.object.isRequired,
   updateStep: PropTypes.func,
 };

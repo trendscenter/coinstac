@@ -95,7 +95,7 @@ loadConfig()
    */
   ipcMain.on('start-pipeline', (event, { consortium, pipeline, filesArray, run }) => {
     core.startPipeline(
-      null, // [...consortium.members, ...consortium.owners],
+      null,
       consortium.id,
       pipeline,
       filesArray,
@@ -103,9 +103,15 @@ loadConfig()
       run.pipelineSteps
     )
     .then(([newPipeline]) => {
-      newPipeline.result.then((result) => {
+      newPipeline.result.then((results) => {
         console.log('Pipeline is done. Result:'); // eslint-disable-line no-console
-        console.log(result); // eslint-disable-line no-console
+        console.log(results); // eslint-disable-line no-console
+        if (run.type === 'local') {
+          mainWindow.webContents.send('local-run-complete', {
+            consName: consortium.name,
+            run: Object.assign(run, { results, endDate: Date.now() }),
+          });
+        }
       });
     });
   });

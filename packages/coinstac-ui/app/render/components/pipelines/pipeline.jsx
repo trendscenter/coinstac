@@ -60,6 +60,7 @@ class Pipeline extends Component {
       owningConsortium: '',
       shared: false,
       steps: [],
+      delete: false,
     };
 
     // if routed from New Pipeline button on consortium page
@@ -90,16 +91,17 @@ class Pipeline extends Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    if (isEmpty(this.state.consortium) && nextProps.consortia.length && this.state.pipeline.id) {
+    if (isEmpty(this.state.consortium) && nextProps.consortia.length
+      && this.state.pipeline.id && this.state.pipeline.owningConsortium) {
       this.setConsortium();
     }
 
-    if (nextProps.activePipeline) {
+    if (nextProps.activePipeline && !this.state.pipeline.id) {
       const { activePipeline: { __typename, ...other } } = nextProps;
       this.setState(
         { pipeline: { ...other }, startingPipeline: { ...other } },
         () => {
-          if (nextProps.consortia.length) {
+          if (nextProps.consortia.length && this.state.pipeline.owningConsortium) {
             this.setConsortium();
           }
         }
@@ -146,8 +148,8 @@ class Pipeline extends Component {
           },
         ],
       },
-    }),
-    () => this.updateStorePipeline());
+    }));
+    // () => this.updateStorePipeline());
   }
 
   moveStep(id, swapId) {
@@ -162,51 +164,89 @@ class Pipeline extends Component {
       index = this.state.pipeline.steps.findIndex(step => step.id === id);
     }
 
-    // Remap covariates to new indices if required
+    // Remap inputMap props to new indices if required
     const newArr = this.state.pipeline.steps
       .map((step, stepIndex) => {
+        let inputMap = { ...step.inputMap };
+
+        inputMap = Object.assign({},
+          ...Object.keys(inputMap).map((key) => {
+            if (key !== 'covariates' && 'fromCache' in inputMap[key]) {
+              const cacheStep = inputMap[key].fromCache.step;
+              const variable = inputMap[key].fromCache.variable;
+              const label = inputMap[key].fromCache.label;
+
+              if (index >= stepIndex && movedStepIndex < stepIndex) {
+                return { [key]: {} };
+              } else if (movedStepIndex === cacheStep) {
+                return { [key]: { fromCache: { step: index, variable, label } } };
+              } else if (index <= cacheStep && movedStepIndex > cacheStep) {
+                return {
+                  [key]: { fromCache: { step: cacheStep + 1, variable, label } },
+                };
+              } else if (movedStepIndex < cacheStep
+                          && index >= cacheStep
+                          && index < stepIndex) {
+                return {
+                  [key]: { fromCache: { step: cacheStep - 1, variable, label } },
+                };
+              }
+            }
+
+            return { [key]: inputMap[key] };
+          })
+        );
+
+        if ('covariates' in inputMap) {
+          let covariates = [...inputMap.covariates];
+
+          covariates = inputMap.covariates.map((cov) => {
+            if (index >= stepIndex && movedStepIndex < stepIndex) {
+              return { ...cov, source: {} };
+            } else if (movedStepIndex === cov.source.pipelineIndex) {
+              return {
+                ...cov,
+                source: {
+                  ...cov.source,
+                  pipelineIndex: index,
+                  inputLabel: cov.source.inputLabel.replace(`Computation ${cov.source.pipelineIndex + 1}`, `Computation ${index + 1}`),
+                },
+              };
+            } else if (index <= cov.source.pipelineIndex
+                        && movedStepIndex > cov.source.pipelineIndex) {
+              return {
+                ...cov,
+                source: {
+                  ...cov.source,
+                  pipelineIndex: cov.source.pipelineIndex + 1,
+                  inputLabel: cov.source.inputLabel.replace(`Computation ${cov.source.pipelineIndex + 1}`, `Computation ${cov.source.pipelineIndex + 2}`),
+                },
+              };
+            } else if (movedStepIndex < cov.source.pipelineIndex
+                        && index >= cov.source.pipelineIndex
+                        && index < stepIndex) {
+              return {
+                ...cov,
+                source: {
+                  ...cov.source,
+                  pipelineIndex: cov.source.pipelineIndex - 1,
+                  inputLabel: cov.source.inputLabel.replace(`Computation ${cov.source.pipelineIndex + 1}`, `Computation ${cov.source.pipelineIndex}`),
+                },
+              };
+            }
+
+            return cov;
+          });
+
+          inputMap = {
+            ...inputMap,
+            covariates,
+          };
+        }
+
         return {
           ...step,
-          inputMap: {
-            ...step.inputMap,
-            // covariates: step.inputMap.covariates.map((cov) => {
-            //   if (index >= stepIndex && movedStepIndex < stepIndex) {
-            //     return { ...cov, source: {} };
-            //   } else if (movedStepIndex === cov.source.pipelineIndex) {
-            //     return {
-            //       ...cov,
-            //       source: {
-            //         ...cov.source,
-            //         pipelineIndex: index,
-            //         inputLabel: cov.source.inputLabel.replace(`Computation ${cov.source.pipelineIndex + 1}`, `Computation ${index + 1}`),
-            //       },
-            //     };
-            //   } else if (index <= cov.source.pipelineIndex
-            //               && movedStepIndex > cov.source.pipelineIndex) {
-            //     return {
-            //       ...cov,
-            //       source: {
-            //         ...cov.source,
-            //         pipelineIndex: cov.source.pipelineIndex + 1,
-            //         inputLabel: cov.source.inputLabel.replace(`Computation ${cov.source.pipelineIndex + 1}`, `Computation ${cov.source.pipelineIndex + 2}`),
-            //       },
-            //     };
-            //   } else if (movedStepIndex < cov.source.pipelineIndex
-            //               && index >= cov.source.pipelineIndex
-            //               && index < stepIndex) {
-            //     return {
-            //       ...cov,
-            //       source: {
-            //         ...cov.source,
-            //         pipelineIndex: cov.source.pipelineIndex - 1,
-            //         inputLabel: cov.source.inputLabel.replace(`Computation ${cov.source.pipelineIndex + 1}`, `Computation ${cov.source.pipelineIndex}`),
-            //       },
-            //     };
-            //   }
-
-            //   return cov;
-            // }),
-          },
+          inputMap,
         };
       })
       .filter(step => step.id !== id);
@@ -216,16 +256,27 @@ class Pipeline extends Component {
       0,
       {
         ...movedStep,
-        inputMap: {
-          ...movedStep.inputMap,
-          // covariates: movedStep.inputMap.covariates.map((cov) => {
-          //   if (cov.source.pipelineIndex >= index) {
-          //     return { ...cov, source: {} };
-          //   }
+        inputMap: Object.assign(
+          {},
+          ...Object.keys(movedStep.inputMap).map((key) => {
+            if (key !== 'covariates' && 'fromCache' in movedStep.inputMap[key] &&
+              movedStep.inputMap[key].step >= index) {
+              return { [key]: {} };
+            } else if (key === 'covariates') {
+              return {
+                [key]: movedStep.inputMap.covariates.map((cov) => {
+                  if (cov.source.pipelineIndex >= index) {
+                    return { ...cov, source: {} };
+                  }
 
-          //   return cov;
-          // }),
-        },
+                  return cov;
+                }),
+              };
+            }
+
+            return { [key]: { ...movedStep.inputMap[key] } };
+          })
+        ),
       }
     );
 
@@ -234,8 +285,8 @@ class Pipeline extends Component {
         ...prevState.pipeline,
         steps: newArr,
       },
-    }),
-    () => this.updateStorePipeline());
+    }));
+    // () => this.updateStorePipeline());
   }
 
   updateStorePipeline() {
@@ -253,8 +304,8 @@ class Pipeline extends Component {
           $splice: [[prevState.pipeline.steps.findIndex(s => s.id === step.id), 1, step]],
         }),
       },
-    }),
-    () => this.updateStorePipeline());
+    }));
+    // () => this.updateStorePipeline());
   }
 
   deleteStep() {
@@ -288,8 +339,8 @@ class Pipeline extends Component {
 
     this.setState(prevState => ({
       pipeline: { ...prevState.pipeline, [update.param]: update.value },
-    }),
-    this.updateStorePipeline());
+    }));
+    // this.updateStorePipeline());
   }
 
   checkPipeline() {
@@ -316,16 +367,10 @@ class Pipeline extends Component {
     })
     .then(({ data: { savePipeline: { __typename, ...other } } }) => {
       const pipeline = { ...this.state.pipeline, ...other };
-      let unsubscribePipelines = this.state.unsubscribePipelines;
-
-      if (!unsubscribePipelines) {
-        unsubscribePipelines = this.props.subscribeToPipelines(pipeline.id);
-      }
 
       this.setState({
         pipeline,
         startingPipeline: pipeline,
-        unsubscribePipelines,
       });
     })
     .catch(console.log);
@@ -521,7 +566,6 @@ Pipeline.propTypes = {
   consortia: PropTypes.array.isRequired,
   params: PropTypes.object.isRequired,
   savePipeline: PropTypes.func.isRequired,
-  subscribeToPipelines: PropTypes.func,
 };
 
 function mapStateToProps({ auth }) {
