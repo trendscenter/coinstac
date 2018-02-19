@@ -54,7 +54,7 @@ class Pipeline extends Component {
     super(props);
 
     let consortium = null;
-    const pipeline = {
+    let pipeline = {
       name: '',
       description: '',
       owningConsortium: '',
@@ -67,6 +67,12 @@ class Pipeline extends Component {
       const data = props.client.readQuery({ query: FETCH_ALL_CONSORTIA_QUERY });
       consortium = data.fetchAllConsortia.find(cons => cons.id === props.params.consortiumId);
       pipeline.owningConsortium = consortium.id;
+    }
+
+    if (props.params.runId) {
+      const runs = props.runs;
+      runs.filter(run => run.id === props.params.runId);
+      pipeline = runs[0].pipelineSnapshot;
     }
 
     this.state = {
@@ -109,9 +115,13 @@ class Pipeline extends Component {
 
   setConsortium() {
     const { auth: { user }, client } = this.props;
-    const owner = user.permissions.consortia[this.state.pipeline.owningConsortium] &&
+    let owner;
+    if (this.props.params.runId) {
+      owner = false;
+    } else {
+      owner = user.permissions.consortia[this.state.pipeline.owningConsortium] &&
       user.permissions.consortia[this.state.pipeline.owningConsortium].write;
-
+    }
     const consortiumId = this.state.pipeline.owningConsortium;
     const data = client.readQuery({ query: FETCH_ALL_CONSORTIA_QUERY });
     const consortium = data.fetchAllConsortia.find(cons => cons.id === consortiumId);
@@ -508,6 +518,7 @@ class Pipeline extends Component {
 
 Pipeline.defaultProps = {
   activePipeline: null,
+  runs: null,
   subscribeToComputations: null,
   subscribeToPipelines: null,
 };
@@ -520,6 +531,7 @@ Pipeline.propTypes = {
   connectDropTarget: PropTypes.func.isRequired,
   consortia: PropTypes.array.isRequired,
   params: PropTypes.object.isRequired,
+  runs: PropTypes.array,
   savePipeline: PropTypes.func.isRequired,
   subscribeToPipelines: PropTypes.func,
 };

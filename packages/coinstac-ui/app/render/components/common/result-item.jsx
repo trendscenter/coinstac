@@ -9,24 +9,38 @@ const ResultItem = ({ runObject, consortia }) => (
     key={runObject.id}
     header={<h3>{`
       ${consortia.filter(con => con.id === runObject.consortiumId)[0].name}`}
-      {' - Started: '}
       {runObject.startDate &&
+      <div className="pull-right">{'Created: '}
         <TimeStamp
           time={runObject.startDate / 1000}
           precision={2}
           autoUpdate={10}
-          format="full"
-        />}
-      {' - Ended: '}
-      {runObject.endDate &&
-        <TimeStamp
-          time={runObject.endDate / 1000}
-          precision={2}
-          autoUpdate={10}
-          format="full"
-        />}
+          format="ago"
+        />
+        </div>}
     </h3>}
   >
+    {runObject.startDate &&
+    <div>Start date:
+      <TimeStamp
+        time={runObject.startDate / 1000}
+        precision={2}
+        autoUpdate={10}
+        format="date"
+      />
+    </div>}
+    {runObject.endDate &&
+    <div>End date:
+      <TimeStamp
+        time={runObject.endDate / 1000}
+        precision={2}
+        autoUpdate={10}
+        format="date"
+      />
+    </div>}
+    {!runObject.endDate &&
+      <div>In Progress</div>
+    }
     {runObject.clients &&
     <p>Clients: {runObject.clients}</p>
     }
@@ -40,7 +54,7 @@ const ResultItem = ({ runObject, consortia }) => (
     </Panel>}
     {runObject.pipelineSnapshot &&
     <LinkContainer
-      to={`dashboard/pipelines/${runObject.pipelineSnapshot.id}`}
+      to={`dashboard/pipelines/snapShot/${runObject.pipelineSnapshot.id}`}
     >
       <Button bsStyle="info">View Pipeline</Button>
     </LinkContainer>
