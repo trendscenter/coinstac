@@ -124,7 +124,7 @@ helperFunctions.getRethinkConnection()
           compInsertResult.changes[0].new_val.id,
         ],
         inputMap: {
-          start: { fromCache: { step: 0, variable: 'sum', label: 'Sum' } },
+          start: { fromCache: { step: 0, variable: 'sum' } },
         },
       },
     ],
