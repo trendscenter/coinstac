@@ -45,6 +45,7 @@ export default (
         <IndexRoute component={PipelinesList} />
         <Route path="new(/:consortiumId)" component={Pipeline} />
         <Route path=":pipelineId" component={Pipeline} />
+        <Route path="snapShot(/:runId)" component={Pipeline} />
       </Route>
       <Route path="results" component={RouteContainer}>
         <IndexRoute component={ResultsList} />
