@@ -1,11 +1,14 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
+import { ipcRenderer } from 'electron';
 import PropTypes from 'prop-types';
 import { Tab, Tabs } from 'react-bootstrap';
 import CollectionAbout from './collection-about';
 import CollectionFiles from './collection-files';
 import CollectionConsortia from './collection-consortia';
-import { getAssociatedConsortia, saveAssociatedConsortia, saveCollection } from '../../state/ducks/collections';
+import { getAssociatedConsortia, getCollectionFiles, saveAssociatedConsortia, saveCollection } from '../../state/ducks/collections';
+import { getRunsForConsortium, saveLocalRun } from '../../state/ducks/runs';
+import { notifyInfo } from '../../state/ducks/notifyAndLog';
 
 const styles = {
   tab: {
@@ -44,11 +47,7 @@ class CollectionTabs extends Component {
       e.preventDefault();
     }
 
-    this.props.saveCollection(this.state.collection)
-    // TODO: Use redux to display success/failure messages after mutations
-    .catch(({ graphQLErrors }) => {
-      console.log(graphQLErrors);
-    });
+    this.props.saveCollection(this.state.collection);
   }
 
   updateAssociatedConsortia(cons) {
@@ -60,8 +59,35 @@ class CollectionTabs extends Component {
           ...prevState.collection,
           associatedConsortia: [...prevState.collection.associatedConsortia, cons.id],
         },
-      }));
+      }),
+      () => {
+        this.props.saveCollection(this.state.collection);
+      });
     }
+
+    // Grab runs for consortium, check if most recent is waiting for mapping,
+    //   start pipeline if mapping complete
+    this.props.getRunsForConsortium(cons.id)
+      .then((runs) => {
+        if (runs[runs.length - 1].status === 'needs-map') {
+          const run = runs[runs.length - 1];
+          const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
+          const pipeline =
+            this.props.pipelines.find(obj => obj.id === consortium.activePipelineId);
+
+          return this.props.getCollectionFiles(cons.id, consortium.name, pipeline.steps)
+            .then((filesArray) => {
+              // Incomplete mapping will return an object rather than an array
+              if (Array.isArray(filesArray)) {
+                this.props.notifyInfo({
+                  message: `Pipeline Starting for ${consortium.name}.`,
+                });
+                ipcRenderer.send('start-pipeline', { consortium, pipeline, filesArray, run });
+                this.props.saveLocalRun({ ...run, status: 'started' });
+              }
+            });
+        }
+      });
   }
 
   updateCollection(update, callback) {
@@ -130,9 +156,14 @@ CollectionTabs.propTypes = {
   collections: PropTypes.array.isRequired,
   consortia: PropTypes.array.isRequired,
   getAssociatedConsortia: PropTypes.func.isRequired,
+  getCollectionFiles: PropTypes.func.isRequired,
+  getRunsForConsortium: PropTypes.func.isRequired,
+  notifyInfo: PropTypes.func.isRequired,
   params: PropTypes.object.isRequired,
+  pipelines: PropTypes.array.isRequired,
   saveAssociatedConsortia: PropTypes.func.isRequired,
   saveCollection: PropTypes.func.isRequired,
+  saveLocalRun: PropTypes.func.isRequired,
 };
 
 function mapStateToProps({ collections: { associatedConsortia, collections } }) {
@@ -140,5 +171,13 @@ function mapStateToProps({ collections: { associatedConsortia, collections } }) 
 }
 
 export default connect(mapStateToProps,
-  { getAssociatedConsortia, saveAssociatedConsortia, saveCollection }
+  {
+    getAssociatedConsortia,
+    getCollectionFiles,
+    getRunsForConsortium,
+    notifyInfo,
+    saveAssociatedConsortia,
+    saveCollection,
+    saveLocalRun,
+  }
 )(CollectionTabs);

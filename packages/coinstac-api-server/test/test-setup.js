@@ -140,6 +140,8 @@ helperFunctions.getRethinkConnection()
   .then(() => rethink.table('runs').insert([
     {
       id: 'results-1',
+      startDate: '1518559440668',
+      endDate: '1518559440670',
       title: 'TSNE',
       pipelineId: 'test-pipeline',
       clients: ['test'],
@@ -275,6 +277,8 @@ helperFunctions.getRethinkConnection()
       id: 'results-2',
       title: 'MRI QC',
       pipelineId: 'test-pipeline',
+      startDate: '1518559440672',
+      endDate: '1518559440674',
       clients: ['test'],
       consortiumId: 'test-cons-2',
       date: '1/23/2018',
