@@ -1,6 +1,6 @@
 {
   "name": "coinstac-ui",
-  "version": "3.0.2",
+  "version": "3.0.4",
   "description": "COINSTAC desktop application.",
   "main": "app/main/index.js",
   "dependencies": {
@@ -12,7 +12,7 @@
     "bluebird": "^3.5.1",
     "bootstrap-sass": "^3.3.7",
     "classnames": "^2.2.5",
-    "coinstac-client-core": "^3.0.2",
+    "coinstac-client-core": "^3.0.4",
     "coinstac-common": "^3.0.1",
     "coinstac-computation-registry": "^3.0.1",
     "coinstac-graphql-schema": "^3.0.1",
