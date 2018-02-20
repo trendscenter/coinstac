@@ -12,7 +12,7 @@ import {
   Row,
 } from 'react-bootstrap';
 import update from 'immutability-helper';
-import PipelineStepMemberTable from './pipeline-step-covar-table';
+import PipelineStepMemberTable from './pipeline-step-member-table';
 
 const styles = {
   covariateColumns: { textAlign: 'center' },
@@ -28,7 +28,6 @@ export default class PipelineStepInput extends Component {
 
     this.addMemberProp = this.addMemberProp.bind(this);
     this.getNewObj = this.getNewObj.bind(this);
-    this.getSourceMenuItem = this.getSourceMenuItem.bind(this);
   }
 
   componentWillMount() {
@@ -53,7 +52,9 @@ export default class PipelineStepInput extends Component {
     }
   }
 
-  getNewObj(prop, value, memberPropIndex, isValueArray) { // eslint-disable-line class-methods-use-this
+  getNewObj(
+    prop, value, memberPropIndex, isValueArray
+  ) { // eslint-disable-line class-methods-use-this
     console.log(value);
     const { objKey, step: { inputMap } } = this.props;
     const inputCopy = { ...inputMap };
@@ -182,7 +183,6 @@ export default class PipelineStepInput extends Component {
             </Button>
             <PipelineStepMemberTable
               getNewObj={this.getNewObj}
-              getSourceMenuItem={this.getSourceMenuItem}
               objKey={objKey}
               objParams={objParams}
               owner={owner}

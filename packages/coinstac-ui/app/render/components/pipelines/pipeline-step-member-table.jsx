@@ -16,7 +16,6 @@ export default class PipelineStepMemberTable extends Component {
   render() {
     const {
       getNewObj,
-      getSourceMenuItem,
       objKey,
       objParams,
       owner,
@@ -201,17 +200,16 @@ export default class PipelineStepMemberTable extends Component {
                       inputMap: getNewObj(
                         'source',
                         {
-                          pipelineIndex: itemObj.possibleInputIndex,
-                          inputKey: itemInput[0],
-                          inputLabel: `Computation ${itemObj.possibleInputIndex + 1}: ${itemInput[1].label}`,
+                          pipelineIndex: -1,
+                          inputKey: 'file',
+                          inputLabel: 'File',
                         },
                         index
                       ),
                     })}
                   >
-                    {type}
+                    File
                   </MenuItem>
-                  {getSourceMenuItem('File', step, index)}
                   {possibleInputs.map(itemObj => (
                     Object.entries(itemObj.inputs)
                       .filter(filterIn => filterIn[1].type === obj.type)
@@ -266,7 +264,6 @@ export default class PipelineStepMemberTable extends Component {
 
 PipelineStepMemberTable.propTypes = {
   getNewObj: PropTypes.func.isRequired,
-  getSourceMenuItem: PropTypes.func.isRequired,
   objKey: PropTypes.string.isRequired,
   objParams: PropTypes.object.isRequired,
   owner: PropTypes.bool.isRequired,
