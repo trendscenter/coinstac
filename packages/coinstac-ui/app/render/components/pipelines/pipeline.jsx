@@ -304,7 +304,7 @@ class Pipeline extends Component {
           $splice: [[prevState.pipeline.steps.findIndex(s => s.id === step.id), 1, step]],
         }),
       },
-    }));
+    }), () => console.log(this.state.pipeline));
     // () => this.updateStorePipeline());
   }
 
