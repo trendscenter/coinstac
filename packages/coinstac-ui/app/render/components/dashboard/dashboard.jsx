@@ -5,7 +5,7 @@ import PropTypes from 'prop-types';
 import { ipcRenderer } from 'electron';
 import DashboardNav from './dashboard-nav';
 import UserAccountController from '../user/user-account-controller';
-import { notifyInfo, notifySuccess, writeLog } from '../../state/ducks/notifyAndLog';
+import { notifyInfo, notifySuccess, notifyWarning, writeLog } from '../../state/ducks/notifyAndLog';
 import CoinstacAbbr from '../coinstac-abbr';
 import { getCollectionFiles } from '../../state/ducks/collections';
 import { getLocalRun, getDBRuns, saveLocalRun } from '../../state/ducks/runs';
@@ -117,27 +117,36 @@ class Dashboard extends Component {
         // Run not in local props, start a pipeline (runs already filtered by member)
         if (runIndexInRemoteRuns === -1 && !nextProps.remoteRuns[i].results
           && this.props.consortia.length) {
-          // Save run status to localDB
-          this.props.saveLocalRun({ ...nextProps.remoteRuns[i], status: 'started' });
-          this.props.getCollectionFiles(nextProps.remoteRuns[i].consortiumId)
-          .then((filesArray) => {
-            const run = nextProps.remoteRuns[i];
-            const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
-            const pipeline =
-              this.props.pipelines.find(obj => obj.id === consortium.activePipelineId);
+          const run = nextProps.remoteRuns[i];
+          const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
+          const pipeline =
+            this.props.pipelines.find(obj => obj.id === consortium.activePipelineId);
 
-            if (filesArray.error) {
-              filesArray = [];
+          this.props.getCollectionFiles(
+            nextProps.remoteRuns[i].consortiumId, consortium.name, pipeline.steps
+          )
+          .then((filesArray) => {
+            let status = 'started';
+
+            if (typeof filesArray === 'object' && 'error' in filesArray) {
+              status = 'needs-map';
+              this.props.notifyWarning({
+                message: filesArray.error,
+                autoDismiss: 5,
+              });
+            } else {
+              // 5 second timeout to ensure no port conflicts in
+              //  development env between remote and client pipelines
+              setTimeout(() => {
+                this.props.notifyInfo({
+                  message: `Decentralized Pipeline Starting for ${consortium.name}.`,
+                });
+                ipcRenderer.send('start-pipeline', { consortium, pipeline, filesArray, run });
+              }, 5000);
             }
 
-            // 5 second timeout to ensure no port conflicts in
-            //   development env between remote and client pipelines
-            setTimeout(() => {
-              this.props.notifyInfo({
-                message: `Decentralized Pipeline Starting for ${consortium.name}.`,
-              });
-              ipcRenderer.send('start-pipeline', { consortium, pipeline, filesArray, run });
-            }, 5000);
+            // Save run status to localDB
+            this.props.saveLocalRun({ ...nextProps.remoteRuns[i], status });
           });
         } else if (runIndexInRemoteRuns === -1 && nextProps.remoteRuns[i].results) {
           this.props.saveLocalRun({ ...nextProps.remoteRuns[i], status: 'complete' });
@@ -271,6 +280,7 @@ Dashboard.propTypes = {
   getDBRuns: PropTypes.func.isRequired,
   notifyInfo: PropTypes.func.isRequired,
   notifySuccess: PropTypes.func.isRequired,
+  notifyWarning: PropTypes.func.isRequired,
   pipelines: PropTypes.array,
   pullComputations: PropTypes.func.isRequired,
   remoteRuns: PropTypes.array,
@@ -342,6 +352,7 @@ export default connect(mapStateToProps,
     getDBRuns,
     notifyInfo,
     notifySuccess,
+    notifyWarning,
     pullComputations,
     saveLocalRun,
     updateDockerOutput,

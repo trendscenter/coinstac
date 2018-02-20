@@ -29,7 +29,7 @@ import {
   saveDocumentProp,
   userRolesProp,
 } from '../../state/graphql/props';
-import { notifyInfo } from '../../state/ducks/notifyAndLog';
+import { notifyInfo, notifyWarning } from '../../state/ducks/notifyAndLog';
 
 const MAX_LENGTH_CONSORTIA = 5;
 
@@ -203,20 +203,20 @@ class ConsortiaList extends Component {
   startPipeline(consortiumId, activePipelineId) {
     return () => {
       const { client } = this.props;
-      let isLocalPipeline = false;
+      let isRemotePipeline = false;
       const pipelineData = client.readQuery({ query: FETCH_ALL_PIPELINES_QUERY });
       const pipeline = pipelineData.fetchAllPipelines
         .find(pipe => pipe.id === activePipelineId);
 
       for (let i = 0; i < pipeline.steps.length; i += 1) {
-        if (pipeline.steps[i].controller.type === 'local') {
-          isLocalPipeline = true;
+        if (pipeline.steps[i].controller.type === 'decentralized') {
+          isRemotePipeline = true;
           break;
         }
       }
 
       // Don't send local pipelines to Rethink
-      if (isLocalPipeline) {
+      if (!isRemotePipeline) {
         const data = client.readQuery({ query: FETCH_ALL_CONSORTIA_QUERY });
         const consortium = data.fetchAllConsortia.find(cons => cons.id === consortiumId);
         const run = {
@@ -232,18 +232,23 @@ class ConsortiaList extends Component {
           __typename: 'Run',
         };
 
-        return this.props.getCollectionFiles(consortiumId)
+        let status = 'started';
+        return this.props.getCollectionFiles(consortiumId, consortium.name, pipeline.steps)
           .then((filesArray) => {
-            return Promise.all([
-              filesArray,
-              this.props.saveLocalRun({ ...run, status: 'started' }),
-            ]);
-          })
-          .then(([filesArray]) => {
-            this.props.notifyInfo({
-              message: `Local Pipeline Starting for ${consortium.name}.`,
-            });
-            ipcRenderer.send('start-pipeline', { consortium, pipeline, filesArray, run: { ...run } });
+            if (typeof filesArray === 'object' && 'error' in filesArray) {
+              status = 'needs-map';
+              this.props.notifyWarning({
+                message: filesArray.error,
+                autoDismiss: 5,
+              });
+            } else {
+              this.props.notifyInfo({
+                message: `Local Pipeline Starting for ${consortium.name}.`,
+              });
+              ipcRenderer.send('start-pipeline', { consortium, pipeline, filesArray, run: { ...run } });
+            }
+
+            this.props.saveLocalRun({ ...run, status });
           });
       }
 
@@ -313,6 +318,7 @@ ConsortiaList.propTypes = {
   joinConsortium: PropTypes.func.isRequired,
   leaveConsortium: PropTypes.func.isRequired,
   notifyInfo: PropTypes.func.isRequired,
+  notifyWarning: PropTypes.func.isRequired,
   pipelines: PropTypes.array.isRequired,
   pullComputations: PropTypes.func.isRequired,
   removeUserRole: PropTypes.func.isRequired,
@@ -340,5 +346,5 @@ const ConsortiaListWithData = compose(
 )(ConsortiaList);
 
 export default connect(mapStateToProps,
-  { getCollectionFiles, notifyInfo, pullComputations, saveLocalRun, updateUserPerms }
+  { getCollectionFiles, notifyInfo, notifyWarning, pullComputations, saveLocalRun, updateUserPerms }
 )(ConsortiaListWithData);
