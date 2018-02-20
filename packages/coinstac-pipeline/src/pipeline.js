@@ -24,7 +24,11 @@ module.exports = {
         }
       });
     };
-    prepCache(steps);
+
+    // remote doesn't get any step input, happens all client side
+    if (mode !== 'remote') {
+      prepCache(steps);
+    }
     return {
       cache,
       currentStep,
@@ -52,8 +56,7 @@ module.exports = {
         };
         return pipelineSteps.reduce((prom, step, index) => {
           this.currentStep = index;
-          // runInput = index > 0 ? runInput : inputMap[index];
-          return prom.then(() => step.start(loadInput(step), remoteHandler))
+          return prom.then(() => step.start(this.mode === 'remote' ? {} : loadInput(step), remoteHandler))
           .then((output) => {
             loadCache(output, index);
             return output;
