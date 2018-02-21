@@ -76,9 +76,9 @@ class CollectionTabs extends Component {
             this.props.pipelines.find(obj => obj.id === consortium.activePipelineId);
 
           return this.props.getCollectionFiles(cons.id, consortium.name, pipeline.steps)
-            .then((filesArray) => {
+            .then((collectionFiles) => {
               // Incomplete mapping will return an object rather than an array
-              if (Array.isArray(filesArray)) {
+              if ('allFiles' in collectionFiles) {
                 this.props.notifyInfo({
                   message: `Pipeline Starting for ${consortium.name}.`,
                 });
