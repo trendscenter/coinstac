@@ -1,3 +1,6 @@
+
+
+
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import update from 'immutability-helper';
@@ -37,7 +40,7 @@ class CollectionPipelineInput extends Component {
   }
 
   setSourceColumn(covarIndex) {
-    const { stepIndex, updateConsortiumCovars } = this.props;
+    const { stepIndex, updateConsortiumClientProps } = this.props;
     return ({ target: { value } }) => {
       this.setState(prevState =>
         ({
@@ -49,14 +52,14 @@ class CollectionPipelineInput extends Component {
           }),
         }),
         () => {
-          updateConsortiumCovars(stepIndex, covarIndex, this.state.sources);
+          updateConsortiumClientProps(stepIndex, 'covariates', covarIndex, this.state.sources);
         }
       );
     };
   }
 
   setSourceFile(covarIndex) {
-    const { collection, objValue, stepIndex, updateConsortiumCovars } = this.props;
+    const { collection, objValue, stepIndex, updateConsortiumClientProps } = this.props;
     // Closure to get event and index var
     return ({ target: { value } }) => {
       this.setState(prevState =>
@@ -85,11 +88,11 @@ class CollectionPipelineInput extends Component {
                 }),
               }),
               () => {
-                updateConsortiumCovars(stepIndex, covarIndex, this.state.sources);
+                updateConsortiumClientProps(stepIndex, 'covariates', covarIndex, this.state.sources);
               }
             );
           } else {
-            updateConsortiumCovars(stepIndex, covarIndex, this.state.sources);
+            updateConsortiumCovars(stepIndex, 'covariates', covarIndex, this.state.sources);
           }
         }
       );

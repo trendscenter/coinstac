@@ -24,7 +24,7 @@ function iteratePipelineSteps(consortium, filesByGroup) {
     const step = consortium.pipelineSteps[sIndex];
 
     // Look through covariates
-    const covariates = [];
+    const covariates = [[], []];
     for (let cIndex = 0; cIndex < step.inputMap.covariates.length; cIndex += 1) {
       const covar = step.inputMap.covariates[cIndex];
       if (covar.source.inputKey === 'file'
@@ -32,6 +32,12 @@ function iteratePipelineSteps(consortium, filesByGroup) {
           && consortium.stepIO[sIndex][cIndex].collectionId) {
         const { groupId, collectionId } = consortium.stepIO[sIndex][cIndex];
         collections.push({ groupId, collectionId });
+
+        // This changes by how the parser is reading in
+        if (filesByGroup) {
+          covariates[0].push(filesByGroup[consortium.stepIO[sIndex][cIndex]].groupId);
+          covariates[1].push(consortium.stepIO[sIndex][cIndex]);
+        }
       } else if (covar.source.inputKey === 'file'
           && (!consortium.stepIO[sIndex] || !consortium.stepIO[sIndex][cIndex]
           || !consortium.stepIO[sIndex][cIndex].collectionId)) {
