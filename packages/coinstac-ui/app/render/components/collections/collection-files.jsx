@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import naturalSort from 'javascript-natural-sort';
 import {
   Accordion,
   Alert,
@@ -10,7 +11,6 @@ import {
 } from 'react-bootstrap';
 import PropTypes from 'prop-types';
 import ipcPromise from 'ipc-promise';
-import { sortedUniq } from 'lodash';
 import shortid from 'shortid';
 
 const styles = {
@@ -60,7 +60,7 @@ export default class CollectionFiles extends Component {
           newFiles = {
             id: fileGroupId,
             extension: obj.extension,
-            files: [...obj.paths.sort()],
+            files: [...obj.paths.sort(naturalSort)],
             date: new Date().getTime(),
             org: this.state.newFile.org,
           };
@@ -99,8 +99,7 @@ export default class CollectionFiles extends Component {
         } else {
           const groups = { ...this.props.collection.fileGroups };
           groups[groupId].files = groups[groupId].files.concat(obj.paths);
-          groups[groupId].files.sort();
-          groups[groupId].files = sortedUniq(groups[groupId].files);
+          groups[groupId].files.sort(naturalSort);
 
           this.props.updateCollection(
             {

@@ -25,9 +25,11 @@ export default class PipelineStepMemberTable extends Component {
       updateStep,
     } = this.props;
 
+    console.log('mappings', step.inputMap[objKey]);
+
     return (
       <Table style={{ marginLeft: 10 }}>
-        {step.inputMap[objKey] && step.inputMap[objKey].length > 0 &&
+        {step.inputMap[objKey] && step.inputMap[objKey].ownerMappings.length > 0 &&
           <thead>
             {objKey === 'covariates' &&
               <tr>
@@ -50,7 +52,7 @@ export default class PipelineStepMemberTable extends Component {
             }
           </thead>
         }
-        {step.inputMap[objKey] && step.inputMap[objKey].map((obj, index) => (
+        {step.inputMap[objKey] && step.inputMap[objKey].ownerMappings.map((obj, index) => (
           <tbody style={{ border: 'none' }} key={`${objKey}-${index}`}>
             <tr>
               <td>
