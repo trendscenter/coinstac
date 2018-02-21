@@ -79,8 +79,8 @@ export default class PipelineStepInput extends Component {
     if (isValueArray) {
       const newValue = value;
 
-      if (inputCopy[objKey][memberPropIndex][prop]) {
-        value = [...inputCopy[objKey][memberPropIndex][prop]];
+      if (inputCopy[objKey].ownerMappings[memberPropIndex][prop]) {
+        value = [...inputCopy[objKey].ownerMappings[memberPropIndex][prop]];
       } else {
         value = [];
       }
@@ -94,11 +94,11 @@ export default class PipelineStepInput extends Component {
     }
 
     if (inputCopy[objKey]) {
-      newArr = [...inputCopy[objKey]];
+      newArr = [...inputCopy[objKey].ownerMappings];
       newArr.splice(memberPropIndex, 1, { ...newArr[memberPropIndex], [prop]: value });
     }
 
-    return { ...inputCopy, [objKey]: [...newArr] };
+    return { ...inputCopy, [objKey]: { ownerMappings: [...newArr] } };
   }
 
   getSelectList(array, value) { // eslint-disable-line class-methods-use-this
@@ -126,18 +126,19 @@ export default class PipelineStepInput extends Component {
       ...step,
       inputMap: {
         ...step.inputMap,
-        [objKey]:
-        [
-          ...step.inputMap[objKey],
-          {
-            type: '',
-            source: {
-              pipelineIndex: -1,
-              inputKey: pipelineIndex === 0 ? 'file' : '',
-              inputLabel: pipelineIndex === 0 ? 'File' : '',
+        [objKey]: {
+          ownerMappings: [
+            ...step.inputMap[objKey].ownerMappings,
+            {
+              type: '',
+              source: {
+                pipelineIndex: -1,
+                inputKey: pipelineIndex === 0 ? 'file' : '',
+                inputLabel: pipelineIndex === 0 ? 'File' : '',
+              },
             },
-          },
-        ],
+          ],
+        },
       },
     });
   }

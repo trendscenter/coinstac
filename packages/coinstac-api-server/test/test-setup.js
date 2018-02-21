@@ -44,18 +44,20 @@ helperFunctions.getRethinkConnection()
         },
         id: 'HJwMOMTh-',
         inputMap: {
-          covariates: [
-            {
-              name: 'isControl',
-              source: { inputKey: 'file', inputLabel: 'File', pipelineIndex: -1 },
-              type: 'boolean',
-            },
-            {
-              name: 'age',
-              source: { inputKey: 'file', inputLabel: 'File', pipelineIndex: -1 },
-              type: 'number',
-            },
-          ],
+          covariates: {
+            ownerMappings: [
+              {
+                name: 'isControl',
+                source: { inputKey: 'file', inputLabel: 'File', pipelineIndex: -1 },
+                type: 'boolean',
+              },
+              {
+                name: 'age',
+                source: { inputKey: 'file', inputLabel: 'File', pipelineIndex: -1 },
+                type: 'number',
+              },
+            ],
+          },
           lambda: { value: 4 },
         },
       },
@@ -66,13 +68,15 @@ helperFunctions.getRethinkConnection()
         controller: { type: 'decentralized' },
         id: 'HyLfdfanb',
         inputMap: {
-          covariates: [
-            {
-              name: 'biased xs',
-              source: { inputKey: 'biasedX', inputLabel: 'Computation 1: Biased Xs', pipelineIndex: 0 },
-              type: 'number',
-            },
-          ],
+          covariates: {
+            ownerMappings: [
+              {
+                name: 'biased xs',
+                source: { inputKey: 'biasedX', inputLabel: 'Computation 1: Biased Xs', pipelineIndex: 0 },
+                type: 'number',
+              },
+            ],
+          },
           iterationCount: { value: 3 },
           lambda: { value: 4 },
         },

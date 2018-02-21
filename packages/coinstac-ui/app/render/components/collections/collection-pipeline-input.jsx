@@ -9,8 +9,8 @@ class CollectionPipelineInput extends Component {
     const consIndex = props.associatedConsortia
       .findIndex(cons => cons.id === props.consortiumId);
 
-    if (props.objKey === 'covariates') {
-      const sources = Array(props.objValue.length)
+    if (props.objKey === 'covariates' || props.objKey === 'data') {
+      const sources = Array(props.objValue.ownerMappings.length)
           .fill({
             groupId: '',
             column: '',
@@ -74,13 +74,13 @@ class CollectionPipelineInput extends Component {
           if (collection.fileGroups[value].metaFile &&
               collection
               .fileGroups[value]
-              .metaFile[0].indexOf(objValue[covarIndex].name) > -1) {
+              .metaFile[0].indexOf(objValue.ownerMappings[covarIndex].name) > -1) {
             this.setState(prevState =>
               ({
                 sources: update(prevState.sources, {
                   $splice: [[covarIndex, 1, {
                     ...prevState.sources[covarIndex],
-                    column: objValue[covarIndex].name,
+                    column: objValue.ownerMappings[covarIndex].name,
                   }]],
                 }),
               }),
@@ -102,13 +102,15 @@ class CollectionPipelineInput extends Component {
     return (
       <div>
         <span className="bold">{objKey}: </span>
-        {objKey === 'covariates' &&
+        {'ownerMappings' in objValue &&
           <ul>
-            {objValue.map((val, covarIndex) => (
-              <li key={val.name} style={{ marginBottom: 5 }}>
-                <em>Name: </em>{val.name}<br />
+            {objValue.ownerMappings.map((val, covarIndex) => (
+              <li key={val.name ? val.name : val.type} style={{ marginBottom: 5 }}>
+                {objKey === 'covariates' &&
+                  (<span><em>Name: </em>{val.name}<br /></span>)
+                }
                 <em>Type: </em>{val.type}<br />
-                {val.source.inputKey === 'file' ?
+                {val.source.inputKey === 'file' || val.type === 'FreeSurfer' ?
                     (
                       <span>
                         <em>Source File: </em>
@@ -164,7 +166,7 @@ class CollectionPipelineInput extends Component {
             ))}
           </ul>
         }
-        {Array.isArray(objValue) && objKey !== 'covariates' &&
+        {'value' in objValue && Array.isArray(objValue) &&
           <span>{objValue.value.join(', ')}</span>
         }
         {(typeof objValue.value === 'number' || typeof objValue.value === 'string') &&

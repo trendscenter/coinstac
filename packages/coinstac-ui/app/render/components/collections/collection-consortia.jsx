@@ -22,7 +22,7 @@ class CollectionConsortia extends Component {
 
     this.setActivePipeline = this.setActivePipeline.bind(this);
     this.setPipelineSteps = this.setPipelineSteps.bind(this);
-    this.updateConsortiumCovars = this.updateConsortiumCovars.bind(this);
+    this.updateConsortiumClientProps = this.updateConsortiumClientProps.bind(this);
   }
 
   setActivePipeline(consId) {
@@ -55,6 +55,21 @@ class CollectionConsortia extends Component {
     const stepIO = Array(steps.length)
       .fill([]);
 
+    steps.forEach((step, index) => {
+      if ('covariates' in step) {
+        stepIO[index] = {
+          covariates: Array(steps.covariates.length).fill([]),
+        };
+      }
+
+      if ('data' in step) {
+        stepIO[index] = {
+          ...stepIO[index],
+          data: Array(steps.data.length).fill([]),
+        };
+      }
+    });
+
     this.setState(prevState => ({
       activeConsortium: {
         ...prevState.activeConsortium,
@@ -64,14 +79,17 @@ class CollectionConsortia extends Component {
     }));
   }
 
-  updateConsortiumCovars(pipelineStepIndex, covariateIndex, covarArray) {
+  updateConsortiumClientProps(pipelineStepIndex, prop, propIndex, propArray) {
     const { updateAssociatedConsortia } = this.props;
 
     this.setState(prevState => ({
       activeConsortium: {
         ...prevState.activeConsortium,
         stepIO: update(prevState.activeConsortium.stepIO, {
-          $splice: [[pipelineStepIndex, 1, [...covarArray]]],
+          $splice: [[
+            pipelineStepIndex,
+            1,
+            { ...prevState.activeConsortium.stepIO[pipelineStepIndex], [prop]: [...propArray] }]],
         }),
       },
     }), (() => {
@@ -165,7 +183,7 @@ class CollectionConsortia extends Component {
               pipelineId={this.state.activeConsortium.activePipelineId}
               pipelineSteps={this.state.activeConsortium.pipelineSteps}
               setPipelineSteps={this.setPipelineSteps}
-              updateConsortiumCovars={this.updateConsortiumCovars}
+              updateConsortiumClientProps={this.updateConsortiumClientProps}
             />
           }
           <Button
