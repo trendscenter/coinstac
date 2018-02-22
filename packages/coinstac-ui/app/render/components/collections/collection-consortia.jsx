@@ -56,16 +56,16 @@ class CollectionConsortia extends Component {
       .fill([]);
 
     steps.forEach((step, index) => {
-      if ('covariates' in step) {
+      if ('covariates' in step.inputMap) {
         stepIO[index] = {
-          covariates: Array(steps.covariates.length).fill([]),
+          covariates: Array(step.inputMap.covariates.ownerMappings.length).fill([]),
         };
       }
 
-      if ('data' in step) {
+      if ('data' in step.inputMap) {
         stepIO[index] = {
           ...stepIO[index],
-          data: Array(steps.data.length).fill([]),
+          data: Array(step.inputMap.data.ownerMappings.length).fill([]),
         };
       }
     });
@@ -89,7 +89,8 @@ class CollectionConsortia extends Component {
           $splice: [[
             pipelineStepIndex,
             1,
-            { ...prevState.activeConsortium.stepIO[pipelineStepIndex], [prop]: [...propArray] }]],
+            { ...prevState.activeConsortium.stepIO[pipelineStepIndex], [prop]: [...propArray] },
+          ]],
         }),
       },
     }), (() => {

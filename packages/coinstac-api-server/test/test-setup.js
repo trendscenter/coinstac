@@ -48,12 +48,12 @@ helperFunctions.getRethinkConnection()
             ownerMappings: [
               {
                 name: 'isControl',
-                source: { inputKey: 'file', inputLabel: 'File', pipelineIndex: -1 },
+                source: 'file',
                 type: 'boolean',
               },
               {
                 name: 'age',
-                source: { inputKey: 'file', inputLabel: 'File', pipelineIndex: -1 },
+                source: 'file',
                 type: 'number',
               },
             ],
@@ -71,9 +71,7 @@ helperFunctions.getRethinkConnection()
           covariates: {
             ownerMappings: [
               {
-                name: 'biased xs',
-                source: { inputKey: 'biasedX', inputLabel: 'Computation 1: Biased Xs', pipelineIndex: 0 },
-                type: 'number',
+                fromCache: { variable: 'biasedX', step: 0 },
               },
             ],
           },
