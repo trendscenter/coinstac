@@ -1,11 +1,14 @@
-
-
-
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import update from 'immutability-helper';
 
 class CollectionPipelineInput extends Component {
+  static getUserPropKey(val) {
+    if (val.name) return val.name;
+    if (val.fromCache) return val.fromCache.variable;
+    if (val.type) return val.type;
+  }
+
   constructor(props) {
     super(props);
 
@@ -23,9 +26,9 @@ class CollectionPipelineInput extends Component {
       // Populate state with existing mappings if they exist
       if (consIndex > -1 && // Is an associated consortia
           props.associatedConsortia[consIndex].stepIO[props.stepIndex] &&
-          props.associatedConsortia[consIndex].stepIO[props.stepIndex].length) {
+          props.associatedConsortia[consIndex].stepIO[props.stepIndex][props.objKey]) {
         props.associatedConsortia[consIndex]
-          .stepIO[props.stepIndex].forEach((step, sIndex) => {
+          .stepIO[props.stepIndex][props.objKey].forEach((step, sIndex) => {
             sources[sIndex] = { ...step };
           });
       }
@@ -40,7 +43,7 @@ class CollectionPipelineInput extends Component {
   }
 
   setSourceColumn(covarIndex) {
-    const { stepIndex, updateConsortiumClientProps } = this.props;
+    const { objKey, stepIndex, updateConsortiumClientProps } = this.props;
     return ({ target: { value } }) => {
       this.setState(prevState =>
         ({
@@ -52,14 +55,14 @@ class CollectionPipelineInput extends Component {
           }),
         }),
         () => {
-          updateConsortiumClientProps(stepIndex, 'covariates', covarIndex, this.state.sources);
+          updateConsortiumClientProps(stepIndex, objKey, covarIndex, this.state.sources);
         }
       );
     };
   }
 
   setSourceFile(covarIndex) {
-    const { collection, objValue, stepIndex, updateConsortiumClientProps } = this.props;
+    const { collection, objKey, objValue, stepIndex, updateConsortiumClientProps } = this.props;
     // Closure to get event and index var
     return ({ target: { value } }) => {
       this.setState(prevState =>
@@ -88,11 +91,11 @@ class CollectionPipelineInput extends Component {
                 }),
               }),
               () => {
-                updateConsortiumClientProps(stepIndex, 'covariates', covarIndex, this.state.sources);
+                updateConsortiumClientProps(stepIndex, objKey, covarIndex, this.state.sources);
               }
             );
           } else {
-            updateConsortiumCovars(stepIndex, 'covariates', covarIndex, this.state.sources);
+            updateConsortiumClientProps(stepIndex, objKey, covarIndex, this.state.sources);
           }
         }
       );
@@ -100,7 +103,7 @@ class CollectionPipelineInput extends Component {
   }
 
   render() {
-    const { collection, objKey, objValue } = this.props;
+    const { collection, objKey, objValue, pipelineSteps } = this.props;
 
     return (
       <div>
@@ -108,15 +111,31 @@ class CollectionPipelineInput extends Component {
         {'ownerMappings' in objValue &&
           <ul>
             {objValue.ownerMappings.map((val, covarIndex) => (
-              <li key={val.name ? val.name : val.type} style={{ marginBottom: 5 }}>
-                {objKey === 'covariates' &&
+              <li key={this.constructor.getUserPropKey(val)} style={{ marginBottom: 5 }}>
+                {objKey === 'covariates' && 'name' in val &&
                   (<span><em>Name: </em>{val.name}<br /></span>)
                 }
-                <em>Type: </em>{val.type}<br />
-                {val.source.inputKey === 'file' || val.type === 'FreeSurfer' ?
+                {objKey === 'covariates' && 'fromCache' in val &&
+                  (
+                    <span>
+                      <em>Name: </em>
+                      {pipelineSteps[val.fromCache.step].computations[0]
+                        .computation.output[val.fromCache.variable].label}
+                      <br />
+                    </span>
+                  )
+                }
+                <em>Type: </em>
+                {'type' in val && val.type}
+                {'fromCache' in val &&
+                    pipelineSteps[val.fromCache.step].computations[0]
+                        .computation.output[val.fromCache.variable].type
+                }
+                <br />
+                {val.source === 'file' || val.type === 'FreeSurfer' ?
                     (
                       <span>
-                        <em>Source File: </em>
+                        <em>Source Group: </em>
                         <select
                           value={this.state.sources[covarIndex].groupId}
                           required
@@ -136,9 +155,14 @@ class CollectionPipelineInput extends Component {
                         </select><br />
                       </span>
                     )
-                  : (<span><em>Source: </em> {val.source.inputLabel}</span>)
+                  : (
+                    <span>
+                      <em>Source: </em>{`Step ${val.fromCache.step + 1} Output`}
+                    </span>
+                  )
                 }
-                {this.state.sources[covarIndex].groupId.length > 0 &&
+                {this.state.sources[covarIndex].groupId
+                  && this.state.sources[covarIndex].groupId.length > 0 &&
                   collection.fileGroups[
                     this.state.sources[covarIndex].groupId
                   ].metaFile &&
@@ -191,8 +215,9 @@ CollectionPipelineInput.propTypes = {
     PropTypes.object,
     PropTypes.array,
   ]).isRequired,
+  pipelineSteps: PropTypes.array.isRequired,
   stepIndex: PropTypes.number.isRequired,
-  updateConsortiumCovars: PropTypes.func.isRequired,
+  updateConsortiumClientProps: PropTypes.func.isRequired,
 };
 
 export default CollectionPipelineInput;

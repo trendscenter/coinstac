@@ -23,10 +23,10 @@ export default class PipelineStepInput extends Component {
     super(props);
 
     this.state = {
-      isMemberProp: props.objKey === 'covariates' || props.objKey === 'data',
+      isClientProp: props.objKey === 'covariates' || props.objKey === 'data',
     };
 
-    this.addMemberProp = this.addMemberProp.bind(this);
+    this.addClientProp = this.addClientProp.bind(this);
     this.getNewObj = this.getNewObj.bind(this);
   }
 
@@ -50,13 +50,22 @@ export default class PipelineStepInput extends Component {
         ),
       });
     }
+
+    if (!step.inputMap[objKey] && (objKey === 'covariates' || objKey === 'data')) {
+      updateStep({
+        ...step,
+        inputMap: this.getNewObj(
+          objKey,
+          { ownerMappings: [] }
+        ),
+      });
+    }
   }
 
   getNewObj(
-    prop, value, memberPropIndex, isValueArray
+    prop, value, clientPropIndex, isValueArray
   ) { // eslint-disable-line class-methods-use-this
-    console.log(value);
-    const { objKey, step: { inputMap } } = this.props;
+    const { objKey, possibleInputs, step: { inputMap } } = this.props;
     const inputCopy = { ...inputMap };
 
     // Remove alternate source prop
@@ -66,10 +75,10 @@ export default class PipelineStepInput extends Component {
       delete inputCopy.fromCache;
     }
 
-    if (!this.state.isMemberProp && value === 'DELETE_VAR') {
+    if (!this.state.isClientProp && value === 'DELETE_VAR') {
       delete inputCopy[prop];
       return { ...inputCopy };
-    } else if (!this.state.isMemberProp) {
+    } else if (!this.state.isClientProp) {
       return { ...inputCopy, [prop]: value };
     }
 
@@ -79,8 +88,8 @@ export default class PipelineStepInput extends Component {
     if (isValueArray) {
       const newValue = value;
 
-      if (inputCopy[objKey].ownerMappings[memberPropIndex][prop]) {
-        value = [...inputCopy[objKey].ownerMappings[memberPropIndex][prop]];
+      if (inputCopy[objKey].ownerMappings[clientPropIndex][prop]) {
+        value = [...inputCopy[objKey].ownerMappings[clientPropIndex][prop]];
       } else {
         value = [];
       }
@@ -95,7 +104,16 @@ export default class PipelineStepInput extends Component {
 
     if (inputCopy[objKey]) {
       newArr = [...inputCopy[objKey].ownerMappings];
-      newArr.splice(memberPropIndex, 1, { ...newArr[memberPropIndex], [prop]: value });
+
+      let newObj = { ...newArr[clientPropIndex], [prop]: value };
+      if (prop === 'fromCache') {
+        newObj = { [prop]: value };
+      } else if ('fromCache' in newObj) {
+        newObj.type = possibleInputs[newObj.fromCache.step].inputs[newObj.fromCache.variable].type;
+        delete newObj.fromCache;
+      }
+
+      newArr.splice(clientPropIndex, 1, newObj);
     }
 
     return { ...inputCopy, [objKey]: { ownerMappings: [...newArr] } };
@@ -114,30 +132,27 @@ export default class PipelineStepInput extends Component {
   }
 
   // Covars or data items
-  addMemberProp() {
+  addClientProp() {
     const {
       objKey,
-      pipelineIndex,
       step,
       updateStep,
     } = this.props;
+
+    let ownerMappings = [{}];
+    if ('ownerMappings' in step.inputMap[objKey]) {
+      ownerMappings = [
+        ...step.inputMap[objKey].ownerMappings,
+        {},
+      ];
+    }
 
     updateStep({
       ...step,
       inputMap: {
         ...step.inputMap,
         [objKey]: {
-          ownerMappings: [
-            ...step.inputMap[objKey].ownerMappings,
-            {
-              type: '',
-              source: {
-                pipelineIndex: -1,
-                inputKey: pipelineIndex === 0 ? 'file' : '',
-                inputLabel: pipelineIndex === 0 ? 'File' : '',
-              },
-            },
-          ],
+          ownerMappings,
         },
       },
     });
@@ -177,7 +192,7 @@ export default class PipelineStepInput extends Component {
             <Button
               disabled={!owner}
               bsStyle="primary"
-              onClick={this.addMemberProp}
+              onClick={this.addClientProp}
               style={{ marginBottom: 10, marginLeft: 10 }}
             >
               <span aria-hidden="true" className="glphicon glyphicon-plus" /> Add {objParams.label}
@@ -331,7 +346,6 @@ export default class PipelineStepInput extends Component {
                               fromCache: {
                                 step: itemObj.possibleInputIndex,
                                 variable: itemInput[0],
-                                label: itemInput[1].label,
                               },
                             }
                           ),

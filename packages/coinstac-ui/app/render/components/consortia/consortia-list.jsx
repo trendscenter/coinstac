@@ -235,7 +235,7 @@ class ConsortiaList extends Component {
         let status = 'started';
         return this.props.getCollectionFiles(consortiumId, consortium.name, pipeline.steps)
           .then((filesArray) => {
-            if (typeof filesArray === 'object' && 'error' in filesArray) {
+            if ('error' in filesArray) {
               status = 'needs-map';
               this.props.notifyWarning({
                 message: filesArray.error,
@@ -245,10 +245,11 @@ class ConsortiaList extends Component {
               this.props.notifyInfo({
                 message: `Local Pipeline Starting for ${consortium.name}.`,
               });
-              ipcRenderer.send('start-pipeline', { consortium, pipeline, filesArray, run: { ...run } });
+              console.log(filesArray);
+              // ipcRenderer.send('start-pipeline', { consortium, pipeline, filesArray, run: { ...run } });
             }
 
-            this.props.saveLocalRun({ ...run, status });
+            // this.props.saveLocalRun({ ...run, status });
           });
       }
 

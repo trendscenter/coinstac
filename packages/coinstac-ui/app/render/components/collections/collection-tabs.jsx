@@ -77,13 +77,13 @@ class CollectionTabs extends Component {
 
           return this.props.getCollectionFiles(cons.id, consortium.name, pipeline.steps)
             .then((collectionFiles) => {
-              // Incomplete mapping will return an object rather than an array
               if ('allFiles' in collectionFiles) {
                 this.props.notifyInfo({
                   message: `Pipeline Starting for ${consortium.name}.`,
                 });
-                ipcRenderer.send('start-pipeline', { consortium, pipeline, filesArray, run });
-                this.props.saveLocalRun({ ...run, status: 'started' });
+                console.log(collectionFiles);
+                // ipcRenderer.send('start-pipeline', { consortium, pipeline, filesArray: collectionFiles.allFiles, run });
+                // this.props.saveLocalRun({ ...run, status: 'started' });
               }
             });
         }

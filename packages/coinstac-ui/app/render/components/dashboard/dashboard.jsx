@@ -128,7 +128,7 @@ class Dashboard extends Component {
           .then((filesArray) => {
             let status = 'started';
 
-            if (typeof filesArray === 'object' && 'error' in filesArray) {
+            if ('error' in filesArray) {
               status = 'needs-map';
               this.props.notifyWarning({
                 message: filesArray.error,
@@ -137,16 +137,17 @@ class Dashboard extends Component {
             } else {
               // 5 second timeout to ensure no port conflicts in
               //  development env between remote and client pipelines
-              setTimeout(() => {
-                this.props.notifyInfo({
-                  message: `Decentralized Pipeline Starting for ${consortium.name}.`,
-                });
-                ipcRenderer.send('start-pipeline', { consortium, pipeline, filesArray, run });
-              }, 5000);
+              // setTimeout(() => {
+              //   this.props.notifyInfo({
+              //     message: `Decentralized Pipeline Starting for ${consortium.name}.`,
+              //   });
+              //   ipcRenderer.send('start-pipeline', { consortium, pipeline, filesArray, run });
+              // }, 5000);
+              console.log(filesArray);
             }
 
             // Save run status to localDB
-            this.props.saveLocalRun({ ...nextProps.remoteRuns[i], status });
+            // this.props.saveLocalRun({ ...nextProps.remoteRuns[i], status });
           });
         } else if (runIndexInRemoteRuns === -1 && nextProps.remoteRuns[i].results) {
           this.props.saveLocalRun({ ...nextProps.remoteRuns[i], status: 'complete' });
