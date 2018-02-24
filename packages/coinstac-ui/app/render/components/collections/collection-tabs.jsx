@@ -70,20 +70,30 @@ class CollectionTabs extends Component {
     this.props.getRunsForConsortium(cons.id)
       .then((runs) => {
         if (runs[runs.length - 1].status === 'needs-map') {
-          const run = runs[runs.length - 1];
+          let run = runs[runs.length - 1];
           const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
-          const pipeline =
-            this.props.pipelines.find(obj => obj.id === consortium.activePipelineId);
 
-          return this.props.getCollectionFiles(cons.id, consortium.name, pipeline.steps)
-            .then((collectionFiles) => {
-              if ('allFiles' in collectionFiles) {
+          return this.props.getCollectionFiles(cons.id, consortium.name, run.pipelineSnapshot.steps)
+            .then((filesArray) => {
+              if ('allFiles' in filesArray) {
                 this.props.notifyInfo({
                   message: `Pipeline Starting for ${consortium.name}.`,
                 });
-                console.log(collectionFiles);
-                // ipcRenderer.send('start-pipeline', { consortium, pipeline, filesArray: collectionFiles.allFiles, run });
-                // this.props.saveLocalRun({ ...run, status: 'started' });
+
+                if ('steps' in filesArray) {
+                  run = {
+                    ...run,
+                    pipelineSnapshot: {
+                      ...run.pipelineSnapshot,
+                      steps: filesArray.steps,
+                    },
+                  };
+                }
+
+                ipcRenderer.send('start-pipeline', {
+                  consortium, pipeline: run.pipelineSnapshot, filesArray: filesArray.allFiles, run,
+                });
+                this.props.saveLocalRun({ ...run, status: 'started' });
               }
             });
         }
