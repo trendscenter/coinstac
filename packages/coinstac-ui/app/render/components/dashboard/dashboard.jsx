@@ -117,13 +117,11 @@ class Dashboard extends Component {
         // Run not in local props, start a pipeline (runs already filtered by member)
         if (runIndexInRemoteRuns === -1 && !nextProps.remoteRuns[i].results
           && this.props.consortia.length) {
-          const run = nextProps.remoteRuns[i];
+          let run = nextProps.remoteRuns[i];
           const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
-          const pipeline =
-            this.props.pipelines.find(obj => obj.id === consortium.activePipelineId);
 
           this.props.getCollectionFiles(
-            nextProps.remoteRuns[i].consortiumId, consortium.name, pipeline.steps
+            run.consortiumId, consortium.name, run.pipelineSnapshot.steps
           )
           .then((filesArray) => {
             let status = 'started';
@@ -135,19 +133,33 @@ class Dashboard extends Component {
                 autoDismiss: 5,
               });
             } else {
+              if ('steps' in filesArray) {
+                run = {
+                  ...run,
+                  pipelineSnapshot: {
+                    ...run.pipelineSnapshot,
+                    steps: filesArray.steps,
+                  },
+                };
+              }
+
               // 5 second timeout to ensure no port conflicts in
               //  development env between remote and client pipelines
-              // setTimeout(() => {
-              //   this.props.notifyInfo({
-              //     message: `Decentralized Pipeline Starting for ${consortium.name}.`,
-              //   });
-              //   ipcRenderer.send('start-pipeline', { consortium, pipeline, filesArray, run });
-              // }, 5000);
-              console.log(filesArray);
+              setTimeout(() => {
+                this.props.notifyInfo({
+                  message: `Decentralized Pipeline Starting for ${consortium.name}.`,
+                });
+                ipcRenderer.send('start-pipeline', {
+                  consortium,
+                  pipeline: run.pipelineSnapshot,
+                  filesArray: filesArray.allFiles,
+                  run,
+                });
+              }, 5000);
             }
 
             // Save run status to localDB
-            // this.props.saveLocalRun({ ...nextProps.remoteRuns[i], status });
+            this.props.saveLocalRun({ ...run, status });
           });
         } else if (runIndexInRemoteRuns === -1 && nextProps.remoteRuns[i].results) {
           this.props.saveLocalRun({ ...nextProps.remoteRuns[i], status: 'complete' });

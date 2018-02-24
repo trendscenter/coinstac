@@ -219,7 +219,7 @@ class ConsortiaList extends Component {
       if (!isRemotePipeline) {
         const data = client.readQuery({ query: FETCH_ALL_CONSORTIA_QUERY });
         const consortium = data.fetchAllConsortia.find(cons => cons.id === consortiumId);
-        const run = {
+        let run = {
           id: `local-${shortid.generate()}`,
           clients: [...consortium.members, ...consortium.owners],
           consortiumId,
@@ -233,7 +233,11 @@ class ConsortiaList extends Component {
         };
 
         let status = 'started';
-        return this.props.getCollectionFiles(consortiumId, consortium.name, pipeline.steps)
+        return this.props.getCollectionFiles(
+          consortiumId,
+          consortium.name,
+          run.pipelineSnapshot.steps
+        )
           .then((filesArray) => {
             if ('error' in filesArray) {
               status = 'needs-map';
@@ -245,11 +249,21 @@ class ConsortiaList extends Component {
               this.props.notifyInfo({
                 message: `Local Pipeline Starting for ${consortium.name}.`,
               });
-              console.log(filesArray);
-              // ipcRenderer.send('start-pipeline', { consortium, pipeline, filesArray, run: { ...run } });
+
+              if ('steps' in filesArray) {
+                run = {
+                  ...run,
+                  pipelineSnapshot: {
+                    ...run.pipelineSnapshot,
+                    steps: filesArray.steps,
+                  },
+                };
+              }
+
+              ipcRenderer.send('start-pipeline', { consortium, pipeline, filesArray: filesArray.allFiles, run });
             }
 
-            // this.props.saveLocalRun({ ...run, status });
+            this.props.saveLocalRun({ ...run, status });
           });
       }
 
