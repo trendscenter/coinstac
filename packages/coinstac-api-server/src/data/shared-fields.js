@@ -12,6 +12,7 @@ const schemaFields = {
     results: [ID]
   `,
   computationFields: `
+    display: JSON
     input: JSON
     output: JSON
   `,
