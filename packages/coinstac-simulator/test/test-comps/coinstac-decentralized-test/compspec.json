@@ -30,6 +30,9 @@
       "sum": {
         "type": "number"
       }
+    },
+    "display": {
+      "type": "table"
     }
   }
 }

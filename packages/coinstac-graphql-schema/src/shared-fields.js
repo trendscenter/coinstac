@@ -59,6 +59,7 @@ const sharedFields = {
           }
           input
           output
+          display
         }
       }
       controller {
