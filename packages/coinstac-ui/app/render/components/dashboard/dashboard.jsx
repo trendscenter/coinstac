@@ -106,16 +106,16 @@ class Dashboard extends Component {
     if (nextProps.remoteRuns) {
       // TODO: Speed this up by moving to subscription prop (n vs n^2)?
       for (let i = 0; i < nextProps.remoteRuns.length; i += 1) {
-        let runIndexInRemoteRuns = -1;
+        let runIndexInLocalRuns = -1;
 
         // Find run in local props if it's there
-        if (this.props.remoteRuns.length > 0) {
-          runIndexInRemoteRuns = this.props.remoteRuns
+        if (this.props.runs.length > 0) {
+          runIndexInLocalRuns = this.props.runs
             .findIndex(run => run.id === nextProps.remoteRuns[i].id);
         }
 
         // Run not in local props, start a pipeline (runs already filtered by member)
-        if (runIndexInRemoteRuns === -1 && !nextProps.remoteRuns[i].results
+        if (runIndexInLocalRuns === -1 && !nextProps.remoteRuns[i].results
           && this.props.consortia.length) {
           let run = nextProps.remoteRuns[i];
           const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
@@ -161,11 +161,11 @@ class Dashboard extends Component {
             // Save run status to localDB
             this.props.saveLocalRun({ ...run, status });
           });
-        } else if (runIndexInRemoteRuns === -1 && nextProps.remoteRuns[i].results) {
+        } else if (runIndexInLocalRuns === -1 && nextProps.remoteRuns[i].results) {
           this.props.saveLocalRun({ ...nextProps.remoteRuns[i], status: 'complete' });
         // Run already in props but results are incoming
-        } else if (runIndexInRemoteRuns > -1 && nextProps.remoteRuns[i].results
-          && !this.props.remoteRuns[runIndexInRemoteRuns].results && this.props.consortia.length) {
+        } else if (runIndexInLocalRuns > -1 && nextProps.remoteRuns[i].results
+          && !this.props.runs[runIndexInLocalRuns].results && this.props.consortia.length) {
           const run = nextProps.remoteRuns[i];
           const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
 
@@ -186,25 +186,26 @@ class Dashboard extends Component {
     }
 
     if (nextProps.pipelines) {
-      // Check associated consortia to see if activepipelineid matches. if so check if pipeline steps match
-      //   yes, leave it. no, clear steps, delete stepIO, remove assocCons in collections
-
-      // if clearing and owner mappings present, then mapping not complete
+      // Check associated consortia to see if activepipelineid matches.
+      //  If so check if pipeline steps match. If they don't, clear.
       for (let i = 0; i < nextProps.pipelines.length; i += 1) {
         this.props.syncRemoteLocalPipelines(nextProps.pipelines[i]);
       }
     }
 
-    // Call getCollectionFiles here at set flag on assocCons? DO the same in Join cons with active pipeline id?
-    // Would flipping flag whenever delete happens and setting to true where currently looking to see if mapping complete
-    //   in collection mapping
     if (nextProps.consortia) {
-      // If member or owner, check consortia activePipeline against localDB assocCons activePipelineId, if same, leave it.
-      //  if different, clear steps & activePipelineId, delete stepIO, remove assocCons in collections
+      // If member or owner, check consortia activePipeline against
+      //  localDB assocCons activePipelineId. If different, clear steps
+      //  & activePipelineId, delete stepIO, remove assocCons in collections
       for (let i = 0; i < nextProps.consortia.length; i += 1) {
         if (nextProps.consortia[i].members.indexOf(user.id) > -1
             || nextProps.consortia[i].owners.indexOf(user.id) > -1) {
-          this.props.syncRemoteLocalConsortia(nextProps.consortia[i]);
+          let steps = [];
+          if (nextProps.consortia[i].activePipelineId) {
+            steps = this.props.pipelines
+              .find(p => p.id === nextProps.consortia[i].activePipelineId).steps;
+          }
+          this.props.syncRemoteLocalConsortia(nextProps.consortia[i], steps);
         }
       }
     }

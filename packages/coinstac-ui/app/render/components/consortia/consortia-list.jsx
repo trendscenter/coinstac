@@ -92,9 +92,11 @@ class ConsortiaList extends Component {
     const options = [];
     let isMapped = false;
 
-    if (owner) {
-      const consIndex = this.props.associatedConsortia.findIndex(c => c.id === id);
-      isMapped = this.props.associatedConsortia[consIndex].isMapped;
+    if (owner && this.props.associatedConsortia.length > 0) {
+      const assocCons = this.props.associatedConsortia.find(c => c.id === id);
+      if (assocCons && assocCons.isMapped) {
+        isMapped = assocCons.isMapped;
+      }
     }
 
     if (owner && activePipelineId && isMapped) {
@@ -111,9 +113,17 @@ class ConsortiaList extends Component {
     }
 
     if (owner && !activePipelineId) {
-      options.push(<span style={styles.listItemWarning}>Active Pipeline Not Set</span>);
+      options.push(
+        <span key={`${id}-no-active-pipeline`} style={styles.listItemWarning}>
+          Active Pipeline Not Set
+        </span>
+      );
     } else if (!isMapped) {
-      options.push(<span style={styles.listItemWarning}>Local Collection Not Mapped</span>);
+      options.push(
+        <span key={`${id}-pipeline-not-mapped`} style={styles.listItemWarning}>
+          Local Collection Not Mapped
+        </span>
+      );
     }
 
     if (member && !owner) {

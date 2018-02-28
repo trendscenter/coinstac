@@ -17,10 +17,10 @@ class DashboardHome extends Component {
     };
   }
 
-  componentDidMount() {
-    this.props.clearRuns();
-    this.props.initTestData();
-  }
+  // componentDidMount() {
+  //   this.props.clearRuns();
+  //   this.props.initTestData();
+  // }
 
   componentWillUnmount() {
     if (this.interval) {
