@@ -55,8 +55,10 @@ class ConsortiumPipeline extends Component {
   }
 
   removeCollectionsFromAssociatedConsortia(consortiumId, value) {
-    this.props.removeCollectionsFromAssociatedConsortia(consortiumId);
-    this.props.saveActivePipeline(consortiumId, value);
+    this.props.removeCollectionsFromAssociatedConsortia(consortiumId)
+    .then(() => {
+      this.props.saveActivePipeline(consortiumId, value);
+    });
   }
 
   render() {

@@ -29,6 +29,7 @@ class CollectionTabs extends Component {
     };
 
     if (collections.length > 0 && params.collectionId) {
+      console.log(collections);
       collection = collections.find(col => col.id.toString() === params.collectionId);
       this.props.getAssociatedConsortia(collection.associatedConsortia);
     }
@@ -69,7 +70,7 @@ class CollectionTabs extends Component {
     //   start pipeline if mapping complete
     this.props.getRunsForConsortium(cons.id)
       .then((runs) => {
-        if (runs[runs.length - 1].status === 'needs-map') {
+        if (runs.length && runs[runs.length - 1].status === 'needs-map') {
           let run = runs[runs.length - 1];
           const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
 
