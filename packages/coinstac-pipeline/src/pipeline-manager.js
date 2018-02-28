@@ -221,6 +221,13 @@ module.exports = {
 
         return { pipeline: activePipelines[runId].pipeline, result: pipelineProm };
       },
+      getPipelineStateListener(runId) {
+        if (!this.activePipelines[runId]) {
+          throw new Error('invalid pipeline ID');
+        }
+
+        return this.activePipelines[runId].pipeline.stateEmitter;
+      },
       waitingOn,
     };
   },

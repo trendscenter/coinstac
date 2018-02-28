@@ -48,7 +48,7 @@ const startRun = ({ spec, runMode = 'local', clientCount = 1, operatingDirectory
     });
   }
 
-  return Promise.all(Object.keys(pipelines).map((key) => {
+  const allResults = Promise.all(Object.keys(pipelines).map((key) => {
     if (key === 'locals') {
       return Promise.all(pipelines[key].map(
         (localP, index) => localP.pipeline.result
@@ -64,6 +64,8 @@ const startRun = ({ spec, runMode = 'local', clientCount = 1, operatingDirectory
     }
     return { locals: pipelines.locals.map(local => local.pipeline.result) };
   });
+
+  return { pipelines, allResults };
 };
 module.exports = {
   startRun,
