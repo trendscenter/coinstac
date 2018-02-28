@@ -107,6 +107,8 @@ class CollectionConsortia extends Component {
       saveCollection,
     } = this.props;
 
+    console.log(associatedConsortia);
+
     return (
       <div>
         <Form onSubmit={saveCollection}>

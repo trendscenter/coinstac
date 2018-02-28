@@ -7,7 +7,7 @@ import DashboardNav from './dashboard-nav';
 import UserAccountController from '../user/user-account-controller';
 import { notifyInfo, notifySuccess, notifyWarning, writeLog } from '../../state/ducks/notifyAndLog';
 import CoinstacAbbr from '../coinstac-abbr';
-import { getCollectionFiles } from '../../state/ducks/collections';
+import { getCollectionFiles, syncRemoteLocalConsortia, syncRemoteLocalPipelines } from '../../state/ducks/collections';
 import { getLocalRun, getDBRuns, saveLocalRun } from '../../state/ducks/runs';
 import {
   pullComputations,
@@ -185,12 +185,37 @@ class Dashboard extends Component {
       }
     }
 
+    if (nextProps.pipelines) {
+      // Check associated consortia to see if activepipelineid matches. if so check if pipeline steps match
+      //   yes, leave it. no, clear steps, delete stepIO, remove assocCons in collections
+
+      // if clearing and owner mappings present, then mapping not complete
+      for (let i = 0; i < nextProps.pipelines.length; i += 1) {
+        this.props.syncRemoteLocalPipelines(nextProps.pipelines[i]);
+      }
+    }
+
+    // Call getCollectionFiles here at set flag on assocCons? DO the same in Join cons with active pipeline id?
+    // Would flipping flag whenever delete happens and setting to true where currently looking to see if mapping complete
+    //   in collection mapping
+    if (nextProps.consortia) {
+      // If member or owner, check consortia activePipeline against localDB assocCons activePipelineId, if same, leave it.
+      //  if different, clear steps & activePipelineId, delete stepIO, remove assocCons in collections
+      for (let i = 0; i < nextProps.consortia.length; i += 1) {
+        if (nextProps.consortia[i].members.indexOf(user.id) > -1
+            || nextProps.consortia[i].owners.indexOf(user.id) > -1) {
+          this.props.syncRemoteLocalConsortia(nextProps.consortia[i]);
+        }
+      }
+    }
+
     if (nextProps.consortia && this.props.consortia.length > 0) {
       for (let i = 0; i < nextProps.consortia.length; i += 1) {
-        if (this.props.consortia[i] && nextProps.consortia[i].id === this.props.consortia[i].id &&
-            nextProps.consortia[i].activePipelineId &&
-            !this.props.consortia[i].activePipelineId &&
-            nextProps.consortia[i].members.indexOf(user.id) > -1) {
+        // Download Docker images for consortia activePipeline if user is a member
+        if (this.props.consortia[i] && nextProps.consortia[i].id === this.props.consortia[i].id
+            && nextProps.consortia[i].activePipelineId
+            && !this.props.consortia[i].activePipelineId
+            && nextProps.consortia[i].members.indexOf(user.id) > -1) {
           const computationData = client.readQuery({ query: FETCH_ALL_COMPUTATIONS_QUERY });
           const pipelineData = client.readQuery({ query: FETCH_ALL_PIPELINES_QUERY });
           const pipeline = pipelineData.fetchAllPipelines
@@ -218,7 +243,6 @@ class Dashboard extends Component {
               },
             },
           });
-          break;
         }
       }
     }
@@ -303,6 +327,8 @@ Dashboard.propTypes = {
   subscribeToConsortia: PropTypes.func.isRequired,
   subscribeToPipelines: PropTypes.func.isRequired,
   subscribeToUserRuns: PropTypes.func.isRequired,
+  syncRemoteLocalConsortia: PropTypes.func.isRequired,
+  syncRemoteLocalPipelines: PropTypes.func.isRequired,
   updateDockerOutput: PropTypes.func.isRequired,
   updateUserConsortiumStatus: PropTypes.func.isRequired,
   writeLog: PropTypes.func.isRequired,
@@ -368,6 +394,8 @@ export default connect(mapStateToProps,
     notifyWarning,
     pullComputations,
     saveLocalRun,
+    syncRemoteLocalConsortia,
+    syncRemoteLocalPipelines,
     updateDockerOutput,
     updateUserConsortiaStatuses,
     writeLog,

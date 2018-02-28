@@ -1,3 +1,4 @@
+import { isEqual } from 'lodash';
 import { applyAsyncLoading } from './loading';
 import localDB from '../local-db';
 import testData from '../../../../test/data/test-collection.json';
@@ -125,47 +126,11 @@ export const getAllCollections = applyAsyncLoading(() =>
       })
 );
 
-export const getCollectionFiles = applyAsyncLoading((consortiumId, consortiumName, steps) =>
+export const getCollectionFiles = applyAsyncLoading((consortiumId, consortiumName) =>
   (dispatch) => {
-    let needsFiles = false;
-
-    // TODO: Revisit when its decided if client may be in charge of
-    //   supplying values to non-covariate vars
-
-    // Iterate through steps to determine if files are needed
-    //   If files aren't needed, then no local DB associated consortia entry is needed
-    for (let i = 0; i < steps.length; i += 1) {
-      const step = steps[i];
-      const stepKeys = Object.keys(step.inputMap);
-      // Iterate through step keys
-      for (let keyIndex = 0; keyIndex < stepKeys.length; keyIndex += 1) {
-        const key = stepKeys[keyIndex];
-        if ('ownerMappings' in step.inputMap[key]) {
-          const mappings = step.inputMap[key].ownerMappings;
-          // Iterate through mappings in step key
-          for (let mappingIndex = 0; mappingIndex < mappings.length; mappingIndex += 1) {
-            if (mappings[mappingIndex].source === 'file') {
-              needsFiles = true;
-              break;
-            }
-          }
-        }
-        if (needsFiles) {
-          break;
-        }
-      }
-      if (needsFiles) {
-        break;
-      }
-    }
-
-    // Doesn't need local file paths, so return an empty array
-    if (!needsFiles) {
-      return { allFiles: [] };
-    }
-
     return localDB.associatedConsortia.get(consortiumId)
     .then((consortium) => {
+      // Should never be thrown. Associated Consortia should always exist for cons user is member of
       if (!consortium) {
         const error = {
           error: `No associated consortia in local db. Please visit Collections and map variables for ${consortiumName}.`,
@@ -177,15 +142,24 @@ export const getCollectionFiles = applyAsyncLoading((consortiumId, consortiumNam
         return error;
       }
 
-      const collections = iteratePipelineSteps(consortium);
+      let collections = { collections: [] };
+      if (consortium.pipelineSteps) {
+        collections = iteratePipelineSteps(consortium);
+      }
 
       if ('error' in collections) {
-        dispatch(({
-          type: GET_COLLECTION_FILES,
-          payload: collections,
-        }));
-        return collections;
-      } else if (collections.collections.length === 0) {
+        localDB.associatedConsortia.update(consortium.id, { isMapped: false })
+        .then(() => {
+          dispatch(({
+            type: GET_COLLECTION_FILES,
+            payload: collections,
+          }));
+          return collections;
+        });
+      }
+
+      localDB.associatedConsortia.update(consortium.id, { isMapped: true });
+      if (collections.collections.length === 0) {
         return { allFiles: collections.collections };
       }
 
@@ -223,6 +197,18 @@ export const getCollectionFiles = applyAsyncLoading((consortiumId, consortiumNam
   }
 );
 
+export const getAllAssociatedConsortia = applyAsyncLoading(() =>
+  dispatch =>
+    localDB.associatedConsortia
+      .toArray()
+      .then((consortia) => {
+        dispatch(({
+          type: GET_ASSOCIATED_CONSORTIA,
+          payload: consortia,
+        }));
+      })
+);
+
 export const getAssociatedConsortia = applyAsyncLoading(consortiaIds =>
   dispatch =>
     localDB.associatedConsortia
@@ -240,6 +226,8 @@ export const initTestData = (() =>
   dispatch =>
     localDB.associatedConsortia.clear()
     .then(() => localDB.collections.put(testData))
+    .then(() => localDB.associatedConsortia.put({ id: 'test-cons-2', activePipelineId: 'test-pipeline-decentralized', isMapped: false }))
+    .then(() => localDB.associatedConsortia.put({ id: 'test-cons-1', activePipelineId: 'nada' }))
     .then(() => {
       dispatch(({
         type: INIT_TEST_COLLECTION,
@@ -248,12 +236,18 @@ export const initTestData = (() =>
     })
 );
 
-export const removeCollectionsFromAssociatedConsortia = applyAsyncLoading(consId =>
+export const isAssocConsortiumMapped = applyAsyncLoading(consId =>
+  () =>
+    localDB.associatedConsortia.get(consId)
+    .then(cons => cons.isMapped)
+);
+
+export const removeCollectionsFromAssociatedConsortia = applyAsyncLoading((consId, deleteCons) =>
   dispatch =>
     localDB.associatedConsortia.get(consId)
       .then((consortium) => {
         if (!consortium || !consortium.stepIO) {
-          return [];
+          return { consortium, collectionIds: [] };
         }
 
         const collectionIds = [];
@@ -264,9 +258,9 @@ export const removeCollectionsFromAssociatedConsortia = applyAsyncLoading(consId
           });
         });
 
-        return collectionIds;
+        return { consortium, collectionIds };
       })
-      .then((collectionIds) => {
+      .then(({ consortium, collectionIds }) => {
         if (collectionIds.length === 0) {
           return;
         }
@@ -278,17 +272,27 @@ export const removeCollectionsFromAssociatedConsortia = applyAsyncLoading(consId
               const index = col.associatedConsortia.indexOf(consId);
               col.associatedConsortia.splice(index, 1);
             }),
-          localDB.associatedConsortia.delete(consId),
+          deleteCons ? localDB.associatedConsortia.delete(consId)
+            : localDB.associatedConsortia.update(consortium.id, {
+              activePipelineId: null, isMapped: false, stepIO: null,
+            }),
         ]);
       })
-      .then(() => {
-        return localDB.collections
-          .toArray();
-      })
-      .then((collections) => {
+      .then(() =>
+        Promise.all([
+          localDB.collections.toArray(),
+          localDB.associatedConsortia.toArray(),
+        ])
+      )
+      .then(([collections, associatedConsortia]) => {
+        const payload = { associatedConsortia, collections, consId };
+        if (deleteCons) {
+          payload.deleteCons = true;
+        }
+
         dispatch(({
           type: REMOVE_COLLECTIONS_FROM_CONS,
-          payload: { collections, consId },
+          payload,
         }));
       })
   );
@@ -305,13 +309,43 @@ export const saveCollection = applyAsyncLoading(collection =>
 );
 
 export const saveAssociatedConsortia = applyAsyncLoading(cons =>
-  dispatch =>
-    localDB.associatedConsortia.put(cons)
+  (dispatch) => {
+    getCollectionFiles(cons.id);
+
+    return localDB.associatedConsortia.put(cons)
       .then(() => {
         dispatch(({
           type: SAVE_ASSOCIATED_CONSORTIA,
           payload: cons,
         }));
+      });
+  }
+);
+
+export const syncRemoteLocalConsortia = applyAsyncLoading(remoteCons =>
+  () =>
+    localDB.associatedConsortia.get(remoteCons.id)
+      .then((localCons) => {
+        if (localCons
+          && (localCons.activePipelineId !== remoteCons.activePipelineId)) {
+          removeCollectionsFromAssociatedConsortia(remoteCons.id, false);
+          getCollectionFiles(localCons.id, localCons.name);
+        }
+      })
+);
+
+export const syncRemoteLocalPipelines = applyAsyncLoading(remotePipeline =>
+  () =>
+    localDB.associatedConsortia.where('activePipelineId').equals(remotePipeline.id).toArray()
+      .then((localConsortia) => {
+        if (localConsortia) {
+          localConsortia.forEach((localCons) => {
+            if (!isEqual(localCons.pipelineSteps, remotePipeline.steps)) {
+              removeCollectionsFromAssociatedConsortia(localCons.id, false);
+              getCollectionFiles(localCons.id, localCons.name);
+            }
+          });
+        }
       })
 );
 
@@ -365,9 +399,11 @@ export default function reducer(state = INITIAL_STATE, action) {
       return { ...state, associatedConsortia: newCons };
     }
     case REMOVE_COLLECTIONS_FROM_CONS: {
-      const newCons = [...state.associatedConsortia];
-      const index = state.associatedConsortia.findIndex(cons => cons.id === action.payload.consId);
-      newCons.splice(index, 1);
+      const newCons = [...action.payload.associatedConsortia];
+      const index = newCons.findIndex(cons => cons.id === action.payload.consId);
+      if (action.payload.deleteCons) {
+        newCons.splice(index, 1);
+      }
 
       return { ...state, collections: action.payload.collections, associatedConsortia: newCons };
     }

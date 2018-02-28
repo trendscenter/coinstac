@@ -7,6 +7,7 @@ import ConsortiumAbout from './consortium-about';
 import ConsortiumPipeline from './consortium-pipeline';
 import ConsortiumResults from './consortium-results';
 import { updateUserPerms } from '../../state/ducks/auth';
+import { saveAssociatedConsortia } from '../../state/ducks/collections';
 import {
   getSelectAndSubProp,
   saveDocumentProp,
@@ -87,16 +88,16 @@ class ConsortiumTabs extends Component {
       this.props.addUserRole(this.props.auth.user.id, 'consortia', other.id, 'owner');
       let unsubscribeConsortia = this.state.unsubscribeConsortia;
 
+      this.props.saveAssociatedConsortia({ ...other });
+
       if (!unsubscribeConsortia) {
         unsubscribeConsortia = this.props.subscribeToConsortia(other.id);
       }
 
-      // TODO: hook activePipelineId and Inputs
       this.setState({
         consortium: { ...other },
         unsubscribeConsortia,
       });
-      // TODO: Use redux to display success/failure messages after mutations
     })
     .catch(({ graphQLErrors }) => {
       console.log(graphQLErrors);
@@ -178,6 +179,7 @@ ConsortiumTabs.propTypes = {
   params: PropTypes.object.isRequired,
   pipelines: PropTypes.array.isRequired,
   runs: PropTypes.array,
+  saveAssociatedConsortia: PropTypes.func.isRequired,
   saveConsortium: PropTypes.func.isRequired,
   subscribeToConsortia: PropTypes.func,
 };
@@ -199,4 +201,4 @@ const ConsortiumTabsWithData = compose(
   graphql(SAVE_CONSORTIUM_MUTATION, saveDocumentProp('saveConsortium', 'consortium'))
 )(ConsortiumTabs);
 
-export default connect(mapStateToProps, { updateUserPerms })(ConsortiumTabsWithData);
+export default connect(mapStateToProps, { saveAssociatedConsortia, updateUserPerms })(ConsortiumTabsWithData);
