@@ -7,8 +7,8 @@ import DashboardNav from './dashboard-nav';
 import UserAccountController from '../user/user-account-controller';
 import { notifyInfo, notifySuccess, notifyWarning, writeLog } from '../../state/ducks/notifyAndLog';
 import CoinstacAbbr from '../coinstac-abbr';
-import { getCollectionFiles, syncRemoteLocalConsortia, syncRemoteLocalPipelines } from '../../state/ducks/collections';
-import { getLocalRun, getDBRuns, saveLocalRun } from '../../state/ducks/runs';
+import { getCollectionFiles, initTestData, syncRemoteLocalConsortia, syncRemoteLocalPipelines } from '../../state/ducks/collections';
+import { clearRuns, getLocalRun, getDBRuns, saveLocalRun } from '../../state/ducks/runs';
 import {
   pullComputations,
   updateDockerOutput,
@@ -46,6 +46,10 @@ class Dashboard extends Component {
   componentDidMount() {
     const { auth: { user } } = this.props;
     const { router } = this.context;
+
+    // Uncomment to clear local data
+    // this.props.clearRuns();
+    // this.props.initTestData();
 
     process.nextTick(() => {
       if (!user.email.length) {
@@ -107,6 +111,7 @@ class Dashboard extends Component {
       // TODO: Speed this up by moving to subscription prop (n vs n^2)?
       for (let i = 0; i < nextProps.remoteRuns.length; i += 1) {
         let runIndexInLocalRuns = -1;
+        let runIndexInPropsRemote = -1;
 
         // Find run in local props if it's there
         if (this.props.runs.length > 0) {
@@ -114,9 +119,16 @@ class Dashboard extends Component {
             .findIndex(run => run.id === nextProps.remoteRuns[i].id);
         }
 
+        if (runIndexInLocalRuns > -1
+          || (runIndexInLocalRuns === -1 && !nextProps.remoteRuns[i].results
+          && this.props.consortia.length)) {
+          runIndexInPropsRemote = this.props.remoteRuns
+            .findIndex(run => run.id === nextProps.remoteRuns[i].id);
+        }
+
         // Run not in local props, start a pipeline (runs already filtered by member)
         if (runIndexInLocalRuns === -1 && !nextProps.remoteRuns[i].results
-          && this.props.consortia.length) {
+          && this.props.consortia.length && runIndexInPropsRemote === -1) {
           let run = nextProps.remoteRuns[i];
           const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
 
@@ -312,10 +324,12 @@ Dashboard.propTypes = {
   auth: PropTypes.object.isRequired,
   children: PropTypes.node.isRequired,
   client: PropTypes.object.isRequired,
+  clearRuns: PropTypes.func.isRequired,
   computations: PropTypes.array,
   consortia: PropTypes.array,
   getCollectionFiles: PropTypes.func.isRequired,
   getDBRuns: PropTypes.func.isRequired,
+  initTestData: PropTypes.func.isRequired,
   notifyInfo: PropTypes.func.isRequired,
   notifySuccess: PropTypes.func.isRequired,
   notifyWarning: PropTypes.func.isRequired,
@@ -387,9 +401,11 @@ const DashboardWithData = compose(
 
 export default connect(mapStateToProps,
   {
+    clearRuns,
     getCollectionFiles,
     getLocalRun,
     getDBRuns,
+    initTestData,
     notifyInfo,
     notifySuccess,
     notifyWarning,

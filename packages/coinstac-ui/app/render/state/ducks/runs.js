@@ -81,7 +81,7 @@ const INITIAL_STATE = {
 };
 
 function runSort(a, b) {
-  return b.endDate - a.endDate;
+  return b.startDate - a.startDate;
 }
 
 export default function reducer(state = INITIAL_STATE, action) {
