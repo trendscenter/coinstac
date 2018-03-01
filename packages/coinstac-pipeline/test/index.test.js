@@ -27,8 +27,15 @@ const localPipelineSpec = {
   ],
 };
 
-const remotePipelineSpec = {
+const mixedPipelineSpec = {
   steps: [
+    {
+      controller: { type: 'local' },
+      computations: [localCompSpec],
+      inputMap: {
+        start: { value: 2 },
+      },
+    },
     {
       controller: { type: 'decentralized' },
       computations: [decentralizedCompSpec],
@@ -70,36 +77,36 @@ test.before(() => {
   return Promise.all(proms);
 });
 
-test.serial((t) => {
-  const remote = PipelineManager.create({
-    mode: 'remote',
-    clientId: 'remote',
-    operatingDirectory: path.resolve(__dirname, 'remote'),
-  });
-  const remotePipeline = remote.startPipeline({
-    clients: ['one'],
-    spec: remotePipelineSpec,
-    runId: 'remotetest1',
-  });
-
-  const local = PipelineManager.create({
-    mode: 'local',
-    clientId: 'one',
-    operatingDirectory: path.resolve(__dirname, 'local'),
-  });
-  const localPipeline = local.startPipeline({
-    spec: remotePipelineSpec,
-    runId: 'remotetest1',
-  });
-  return Promise.all([
-    localPipeline.result.then((result) => {
-      t.is(result.sum, 5);
-    }),
-    remotePipeline.result.then((result) => {
-      t.is(result.sum, 5);
-    }),
-  ]);
-});
+// test.serial((t) => {
+//   const remote = PipelineManager.create({
+//     mode: 'remote',
+//     clientId: 'remote',
+//     operatingDirectory: path.resolve(__dirname, 'remote'),
+//   });
+//   const remotePipeline = remote.startPipeline({
+//     clients: ['one'],
+//     spec: mixedPipelineSpec,
+//     runId: 'remotetest1',
+//   });
+//
+//   const local = PipelineManager.create({
+//     mode: 'local',
+//     clientId: 'one',
+//     operatingDirectory: path.resolve(__dirname, 'local'),
+//   });
+//   const localPipeline = local.startPipeline({
+//     spec: mixedPipelineSpec,
+//     runId: 'remotetest1',
+//   });
+//   return Promise.all([
+//     localPipeline.result.then((result) => {
+//       t.is(result.sum, 5);
+//     }),
+//     remotePipeline.result.then((result) => {
+//       t.is(result.sum, 5);
+//     }),
+//   ]);
+// });
 
 test.serial((t) => {
   const local = PipelineManager.create({
