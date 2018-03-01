@@ -121,6 +121,7 @@ const getAllImages = () => {
  * @return {Object} Returns stream of docker pull output
  */
 const startService = (serviceId, serviceUserId, opts) => {
+  let recurseLimit = 0;
   const createService = () => {
     let proxRes;
     let proxRej;
@@ -130,53 +131,63 @@ const startService = (serviceId, serviceUserId, opts) => {
       proxRes = res;
       proxRej = rej;
     });
-    return generateServicePort(serviceId)
-    .then((port) => {
-      const defaultOpts = {
-        ExposedPorts: { '8881/tcp': {} },
-        HostConfig: {
-          PortBindings: { '8881/tcp': [{ HostPort: `${port}`, HostIp: '127.0.0.1' }] },
-        },
-        Tty: true,
-      };
+    const tryStartService = () => {
+      return generateServicePort(serviceId)
+      .then((port) => {
+        const defaultOpts = {
+          ExposedPorts: { '8881/tcp': {} },
+          HostConfig: {
+            PortBindings: { '8881/tcp': [{ HostPort: `${port}`, HostIp: '127.0.0.1' }] },
+          },
+          Tty: true,
+        };
 
-      // merge opts one level deep
-      const memo = {};
-      for (let [key] of Object.entries(defaultOpts)) { // eslint-disable-line no-restricted-syntax, max-len, prefer-const
-        memo[key] = Object.assign(defaultOpts[key], opts[key] ? opts[key] : {});
-      }
+        // merge opts one level deep
+        const memo = {};
+        for (let [key] of Object.entries(defaultOpts)) { // eslint-disable-line no-restricted-syntax, max-len, prefer-const
+          memo[key] = Object.assign(defaultOpts[key], opts[key] ? opts[key] : {});
+        }
 
-      const jobOpts = Object.assign(
-        {},
-        opts,
-        memo
-      );
-      return docker.createContainer(jobOpts);
-    })
-    .then((container) => {
-      services[serviceId].container = container;
-      return container.start();
-    })
-    // timeout for server startup
-    .then(() => setTimeoutPromise(5000))
-    .then(() => {
-      services[serviceId].service = (data) => {
-        return request({
-          url: `http://127.0.0.1:${services[serviceId].port}/run`,
-          method: 'POST',
-          json: true,
-          body: { command: data },
-        });
-      };
-      services[serviceId].state = 'running';
-      // fulfill to waiting consumers
-      proxRes(services[serviceId].service);
-      return services[serviceId].service;
-    })
-    .catch((err) => {
-      proxRej(err);
-      throw err;
-    });
+        const jobOpts = Object.assign(
+          {},
+          opts,
+          memo
+        );
+        return docker.createContainer(jobOpts);
+      })
+      .then((container) => {
+        services[serviceId].container = container;
+        return container.start();
+      })
+      // timeout for server startup
+      .then(() => setTimeoutPromise(5000))
+      .then(() => {
+        services[serviceId].service = (data) => {
+          return request({
+            url: `http://127.0.0.1:${services[serviceId].port}/run`,
+            method: 'POST',
+            json: true,
+            body: { command: data },
+          });
+        };
+        services[serviceId].state = 'running';
+        // fulfill to waiting consumers
+        proxRes(services[serviceId].service);
+        return services[serviceId].service;
+      })
+      .catch((err) => {
+        if (err.statusCode === 500 && err.message.includes('port is already allocated') && recurseLimit < 500) {
+          recurseLimit += 1;
+          // this problem mostly occurs when started several boxes quickly
+          // add some delay to give them breathing room to setup ports
+          return setTimeoutPromise(Math.floor(Math.random() * Math.floor(200)))
+          .then(() => tryStartService());
+        }
+        proxRej(err);
+        throw err;
+      });
+    };
+    return tryStartService();
   };
 
   if (services[serviceId]) {
