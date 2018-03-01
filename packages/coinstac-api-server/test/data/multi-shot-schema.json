@@ -24,7 +24,8 @@
       {
         "defaultValue": 250,
         "label": "Iteration count",
-        "type": "number"
+        "type": "number",
+        "source": "owner"
       },
       "lambda":
       {
@@ -33,7 +34,8 @@
         "max": 1,
         "min": 0,
         "step": 0.05,
-        "type": "number"
+        "type": "number",
+        "source": "owner"
       },
       "covariates":
       {
@@ -41,6 +43,11 @@
         "label": "Covariates",
         "type": "array",
         "items": ["boolean", "number"]
+      },
+      "data": {
+        "label": "Data",
+        "type": "array",
+        "items": ["FreeSurfer"]
       }
     },
     "output": {

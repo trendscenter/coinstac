@@ -12,7 +12,7 @@ import {
   Row,
 } from 'react-bootstrap';
 import update from 'immutability-helper';
-import PipelineStepVariableTable from './pipeline-step-variable-table';
+import PipelineStepMemberTable from './pipeline-step-member-table';
 
 const styles = {
   covariateColumns: { textAlign: 'center' },
@@ -23,12 +23,11 @@ export default class PipelineStepInput extends Component {
     super(props);
 
     this.state = {
-      isCovariate: props.objKey === 'covariates',
+      isClientProp: props.objKey === 'covariates' || props.objKey === 'data',
     };
 
-    this.addCovariate = this.addCovariate.bind(this);
+    this.addClientProp = this.addClientProp.bind(this);
     this.getNewObj = this.getNewObj.bind(this);
-    this.getSourceMenuItem = this.getSourceMenuItem.bind(this);
   }
 
   componentWillMount() {
@@ -51,33 +50,73 @@ export default class PipelineStepInput extends Component {
         ),
       });
     }
+
+    if (!step.inputMap[objKey] && (objKey === 'covariates' || objKey === 'data')) {
+      updateStep({
+        ...step,
+        inputMap: this.getNewObj(
+          objKey,
+          { ownerMappings: [] }
+        ),
+      });
+    }
   }
 
-  getNewObj(objKey, value, covarIndex) { // eslint-disable-line class-methods-use-this
-    const { step: { inputMap } } = this.props;
+  getNewObj(
+    prop, value, clientPropIndex, isValueArray
+  ) { // eslint-disable-line class-methods-use-this
+    const { objKey, possibleInputs, step: { inputMap } } = this.props;
     const inputCopy = { ...inputMap };
 
+    // Remove alternate source prop
     if (value.fromCache) {
       delete inputCopy.value;
     } else if (value.value) {
       delete inputCopy.fromCache;
     }
 
-    if (!this.state.isCovariate && value === 'DELETE_VAR') {
-      delete inputCopy[objKey];
+    if (!this.state.isClientProp && value === 'DELETE_VAR') {
+      delete inputCopy[prop];
       return { ...inputCopy };
-    } else if (!this.state.isCovariate) {
-      return { ...inputCopy, [objKey]: value };
+    } else if (!this.state.isClientProp) {
+      return { ...inputCopy, [prop]: value };
     }
 
-    let covars = [];
+    let newArr = [];
 
-    if (inputCopy.covariates) {
-      covars = [...inputCopy.covariates];
-      covars.splice(covarIndex, 1, { ...covars[covarIndex], [objKey]: value });
+    // Prop to change is an array type, add or remove new value to/from existing array
+    if (isValueArray) {
+      const newValue = value;
+
+      if (inputCopy[objKey].ownerMappings[clientPropIndex][prop]) {
+        value = [...inputCopy[objKey].ownerMappings[clientPropIndex][prop]];
+      } else {
+        value = [];
+      }
+
+      const index = value.indexOf(newValue);
+      if (index > -1) {
+        value.splice(index, 1);
+      } else {
+        value.push(newValue);
+      }
     }
 
-    return { ...inputCopy, covariates: [...covars] };
+    if (inputCopy[objKey]) {
+      newArr = [...inputCopy[objKey].ownerMappings];
+
+      let newObj = { ...newArr[clientPropIndex], [prop]: value };
+      if (prop === 'fromCache') {
+        newObj = { [prop]: value };
+      } else if ('fromCache' in newObj) {
+        newObj.type = possibleInputs[newObj.fromCache.step].inputs[newObj.fromCache.variable].type;
+        delete newObj.fromCache;
+      }
+
+      newArr.splice(clientPropIndex, 1, newObj);
+    }
+
+    return { ...inputCopy, [objKey]: { ownerMappings: [...newArr] } };
   }
 
   getSelectList(array, value) { // eslint-disable-line class-methods-use-this
@@ -92,48 +131,29 @@ export default class PipelineStepInput extends Component {
     return [value];
   }
 
-  getSourceMenuItem(type, step) {
-    // Make Camel Case
-    let typeNoSpace = type.split(' ');
-    typeNoSpace = typeNoSpace[0].toLowerCase() + typeNoSpace.slice(1).join('');
-
-    return (
-      <MenuItem
-        eventKey={`variable-${typeNoSpace}-inputs-menuitem`}
-        key={`variable-${typeNoSpace}-inputs-menuitem`}
-        onClick={() => this.props.updateStep({
-          ...step,
-          inputMap: { type },
-        })}
-      >
-        {type}
-      </MenuItem>
-    );
-  }
-
-  addCovariate() {
+  // Covars or data items
+  addClientProp() {
     const {
-      pipelineIndex,
+      objKey,
       step,
       updateStep,
     } = this.props;
+
+    let ownerMappings = [{}];
+    if ('ownerMappings' in step.inputMap[objKey]) {
+      ownerMappings = [
+        ...step.inputMap[objKey].ownerMappings,
+        {},
+      ];
+    }
 
     updateStep({
       ...step,
       inputMap: {
         ...step.inputMap,
-        covariates:
-        [
-          ...step.inputMap.covariates,
-          {
-            type: '',
-            source: {
-              pipelineIndex: -1,
-              inputKey: pipelineIndex === 0 ? 'file' : '',
-              inputLabel: pipelineIndex === 0 ? 'File' : '',
-            },
-          },
-        ],
+        [objKey]: {
+          ownerMappings,
+        },
       },
     });
   }
@@ -166,20 +186,19 @@ export default class PipelineStepInput extends Component {
 
     return (
       <div>
-        {objKey === 'covariates' &&
+        {(objKey === 'covariates' || objKey === 'data') &&
           <div style={{ paddingLeft: 10 }}>
-            <p className="bold">Variables</p>
+            <p className="bold">{objParams.label}</p>
             <Button
               disabled={!owner}
               bsStyle="primary"
-              onClick={this.addCovariate}
-              style={{ marginBottom: 10 }}
+              onClick={this.addClientProp}
+              style={{ marginBottom: 10, marginLeft: 10 }}
             >
-              <span aria-hidden="true" className="glphicon glyphicon-plus" /> Add Variable
+              <span aria-hidden="true" className="glphicon glyphicon-plus" /> Add {objParams.label}
             </Button>
-            <PipelineStepVariableTable
+            <PipelineStepMemberTable
               getNewObj={this.getNewObj}
-              getSourceMenuItem={this.getSourceMenuItem}
               objKey={objKey}
               objParams={objParams}
               owner={owner}
@@ -191,7 +210,7 @@ export default class PipelineStepInput extends Component {
           </div>
         }
 
-        {objKey !== 'covariates' &&
+        {objKey !== 'covariates' && objKey !== 'data' &&
           <Row style={{ paddingLeft: 10 }}>
             <Col xs={6}>
               <FormGroup controlId={`${parentKey}-form-group`}>
@@ -310,19 +329,6 @@ export default class PipelineStepInput extends Component {
                     None
                   </MenuItem>
                 }
-                {
-                  <MenuItem
-                    disabled={!owner}
-                    eventKey={`file-Computation-${objKey}-inputs-menuitem`}
-                    key={`file-Computation-${objKey}-inputs-menuitem`}
-                    onClick={() => updateStep({
-                      ...step,
-                      inputMap: this.getNewObj(objKey, { value: 'File' }),
-                    })}
-                  >
-                    File
-                  </MenuItem>
-                }
                 {possibleInputs.map(itemObj => (
                   // Iterate over possible computation inputs
                   Object.entries(itemObj.inputs)
@@ -340,7 +346,6 @@ export default class PipelineStepInput extends Component {
                               fromCache: {
                                 step: itemObj.possibleInputIndex,
                                 variable: itemInput[0],
-                                label: itemInput[1].label,
                               },
                             }
                           ),

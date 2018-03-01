@@ -80,6 +80,10 @@ const INITIAL_STATE = {
   runs: [],
 };
 
+function runSort(a, b) {
+  return b.endDate - a.endDate;
+}
+
 export default function reducer(state = INITIAL_STATE, action) {
   switch (action.type) {
     case CLEAR_RUNS:
@@ -97,7 +101,7 @@ export default function reducer(state = INITIAL_STATE, action) {
       });
 
       return {
-        ...state, localRuns, remoteRuns, runs: uniqBy([...localRuns, ...remoteRuns], 'id'),
+        ...state, localRuns, remoteRuns, runs: uniqBy([...localRuns, ...remoteRuns].sort(runSort), 'id'),
       };
     }
     case SAVE_LOCAL_RUN: {
@@ -110,7 +114,7 @@ export default function reducer(state = INITIAL_STATE, action) {
         localRuns.splice(index, 1, action.payload);
       }
 
-      return { ...state, localRuns, runs: uniqBy([...localRuns, ...state.remoteRuns], 'id') };
+      return { ...state, localRuns, runs: uniqBy([...localRuns, ...state.remoteRuns].sort(runSort), 'id') };
     }
     case SAVE_REMOTE_RUNS_LOCALLY: {
       const remoteRuns = [...state.remoteRuns];
@@ -121,7 +125,7 @@ export default function reducer(state = INITIAL_STATE, action) {
         }
       });
 
-      return { ...state, remoteRuns, runs: uniqBy([...state.localRuns, ...remoteRuns], 'id') };
+      return { ...state, remoteRuns, runs: uniqBy([...state.localRuns, ...remoteRuns].sort(runSort), 'id') };
     }
     default:
       return state;
