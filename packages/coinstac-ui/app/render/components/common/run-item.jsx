@@ -39,7 +39,16 @@ const ResultItem = ({ consortiumName, runObject }) => (
       <span className="bold">Status: </span>
       {runObject.status === 'complete' && <span style={{ color: 'green' }}>Complete</span>}
       {runObject.status === 'started' && <span style={{ color: 'orange' }}>In Progress</span>}
-      {runObject.status === 'needs-map' && <span style={{ color: 'red' }}>Missing Data Mappings</span>}
+      {runObject.status === 'needs-map' &&
+        <div>
+          <span style={{ color: 'red' }}>Missing Data Mappings</span>
+          <LinkContainer
+            to={'dashboard/collections'}
+          >
+            <Button bsStyle="warning">Map Now</Button>
+          </LinkContainer>
+        </div>
+      }
     </div>
     {runObject.startDate &&
       <div>
