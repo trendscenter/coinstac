@@ -74,7 +74,7 @@ class PipelineStep extends Component {
     let orderedInputs = [];
 
     // TODO: Find another way to force possibleInputs array to
-    //   always match order of previousComputationIds, nested loop not good
+    //   always match order of previousComputationId
     if (nextProps.possibleInputs) {
       orderedInputs = this.props.previousComputationIds.map((prevComp, possibleInputIndex) => {
         const comp = nextProps.possibleInputs.find(pI => pI.id === prevComp);

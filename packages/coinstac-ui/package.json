@@ -23,6 +23,7 @@
     "electron-default-menu": "^1.0.1",
     "immutability-helper": "^2.6.4",
     "ipc-promise": "^0.1.4",
+    "javascript-natural-sort": "^0.7.1",
     "lodash": "^4.17.4",
     "md5": "^2.2.1",
     "mkdirp": "^0.5.1",

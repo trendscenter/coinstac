@@ -13,6 +13,81 @@ const GET_ASSOCIATED_CONSORTIA = 'GET_ASSOCIATED_CONSORTIA';
 const REMOVE_COLLECTIONS_FROM_CONS = 'REMOVE_COLLECTIONS_FROM_CONS';
 const SET_COLLECTIONS = 'GET_ALL_COLLECTIONS';
 
+function iteratePipelineSteps(consortium, filesByGroup) {
+  let mappingIncomplete = false;
+  const collections = [];
+  const steps = [];
+
+  /* Get step covariates and compare against local file mapping to ensure mapping is complete
+      Add local files groups to array in order to grab files to pass to pipeline */
+  for (let sIndex = 0; sIndex < consortium.pipelineSteps.length; sIndex += 1) {
+    const step = consortium.pipelineSteps[sIndex];
+    const inputMap = { ...step.inputMap };
+
+    const inputKeys = Object.keys(inputMap);
+
+    for (let keyIndex = 0; keyIndex < inputKeys.length; keyIndex += 1) {
+      const key = inputKeys[keyIndex];
+      if ('ownerMappings' in step.inputMap[key]) {
+        const keyArray = [[], [], []]; // [[values], [labels], [type (if present)]]
+
+        for (let mappingIndex = 0;
+            mappingIndex < step.inputMap[key].ownerMappings.length;
+            mappingIndex += 1) {
+          const mappingObj = step.inputMap[key].ownerMappings[mappingIndex];
+          if (mappingObj.source === 'file'
+              && consortium.stepIO[sIndex] && consortium.stepIO[sIndex][key][mappingIndex]
+              && consortium.stepIO[sIndex][key][mappingIndex].collectionId) {
+            const { groupId, collectionId } = consortium.stepIO[sIndex][key][mappingIndex];
+            collections.push({ groupId, collectionId });
+
+            // This changes by how the parser is reading in files - concat or push
+            if (filesByGroup) {
+              keyArray[0].push(filesByGroup[consortium.stepIO[sIndex][key][mappingIndex].groupId]);
+              keyArray[1].push(consortium.stepIO[sIndex][key][mappingIndex].column);
+
+              if ('type' in mappingObj) {
+                keyArray[2].push(mappingObj.type);
+              }
+            }
+          } else if (mappingObj.source === 'file'
+              && (!consortium.stepIO[sIndex] || !consortium.stepIO[sIndex][key][mappingIndex]
+              || !consortium.stepIO[sIndex][key][mappingIndex].collectionId)) {
+            mappingIncomplete = true;
+            break;
+          } else if (filesByGroup && mappingObj.type === 'FreeSurfer') {
+            keyArray[0].push(filesByGroup[consortium.stepIO[sIndex][key][mappingIndex].groupId]);
+            keyArray[1].push(mappingObj.value);
+            keyArray[2].push(mappingObj.type);
+          } else if (filesByGroup) {
+            // TODO: Handle keys fromCache if need be
+          }
+        }
+        inputMap[key] = { value: keyArray };
+      }
+
+      if (mappingIncomplete) {
+        break;
+      }
+    }
+
+    if (mappingIncomplete) {
+      break;
+    }
+
+    steps.push({ ...step, inputMap });
+  }
+
+
+  if (mappingIncomplete) {
+    return {
+      error: `Mapping incomplete for new run from ${consortium.name}. Please complete variable mapping before continuing.`,
+    };
+  }
+
+  return { collections, steps };
+}
+
 // Action Creators
 export const deleteAssociatedConsortia = applyAsyncLoading(consId =>
   dispatch =>
@@ -56,13 +131,27 @@ export const getCollectionFiles = applyAsyncLoading((consortiumId, consortiumNam
 
     // TODO: Revisit when its decided if client may be in charge of
     //   supplying values to non-covariate vars
+
+    // Iterate through steps to determine if files are needed
+    //   If files aren't needed, then no local DB associated consortia entry is needed
     for (let i = 0; i < steps.length; i += 1) {
-      if ('covariates' in steps[i].inputMap) {
-        for (let q = 0; q < steps[i].inputMap.covariates.length; q += 1) {
-          if (steps[i].inputMap.covariates[q].source.inputKey === 'file') {
-            needsFiles = true;
-            break;
+      const step = steps[i];
+      const stepKeys = Object.keys(step.inputMap);
+      // Iterate through step keys
+      for (let keyIndex = 0; keyIndex < stepKeys.length; keyIndex += 1) {
+        const key = stepKeys[keyIndex];
+        if ('ownerMappings' in step.inputMap[key]) {
+          const mappings = step.inputMap[key].ownerMappings;
+          // Iterate through mappings in step key
+          for (let mappingIndex = 0; mappingIndex < mappings.length; mappingIndex += 1) {
+            if (mappings[mappingIndex].source === 'file') {
+              needsFiles = true;
+              break;
+            }
           }
+        }
+        if (needsFiles) {
+          break;
         }
       }
       if (needsFiles) {
@@ -72,7 +161,7 @@ export const getCollectionFiles = applyAsyncLoading((consortiumId, consortiumNam
 
     // Doesn't need local file paths, so return an empty array
     if (!needsFiles) {
-      return [];
+      return { allFiles: [] };
     }
 
     return localDB.associatedConsortia.get(consortiumId)
@@ -88,60 +177,47 @@ export const getCollectionFiles = applyAsyncLoading((consortiumId, consortiumNam
         return error;
       }
 
-      const collections = [];
-      let mappingIncomplete = false;
+      const collections = iteratePipelineSteps(consortium);
 
-      /* Get step covariates and compare against local file mapping to ensure mapping is complete
-         Add local files groups to array in order to grab files to pass to pipeline */
-      for (let sIndex = 0; sIndex < consortium.pipelineSteps.length; sIndex += 1) {
-        const step = consortium.pipelineSteps[sIndex];
-        for (let cIndex = 0; cIndex < step.inputMap.covariates.length; cIndex += 1) {
-          const covar = step.inputMap.covariates[cIndex];
-          if (covar.source.inputKey === 'file'
-              && consortium.stepIO[sIndex] && consortium.stepIO[sIndex][cIndex]
-              && consortium.stepIO[sIndex][cIndex].collectionId) {
-            const { groupId, collectionId } = consortium.stepIO[sIndex][cIndex];
-            collections.push({ groupId, collectionId });
-          } else if (covar.source.inputKey === 'file'
-              && (!consortium.stepIO[sIndex] || !consortium.stepIO[sIndex][cIndex]
-              || !consortium.stepIO[sIndex][cIndex].collectionId)) {
-            mappingIncomplete = true;
-            break;
-          }
-        }
-
-        if (mappingIncomplete) {
-          break;
-        }
-      }
-
-      if (mappingIncomplete) {
-        const error = {
-          error: `Mapping incomplete for new run from ${consortium.name}. Please complete variable mapping before continuing.`,
-        };
+      if ('error' in collections) {
         dispatch(({
           type: GET_COLLECTION_FILES,
-          payload: error,
+          payload: collections,
         }));
-        return error;
+        return collections;
+      } else if (collections.collections.length === 0) {
+        return { allFiles: collections.collections };
       }
 
       return localDB.collections
-        .filter(collection => collections.findIndex(c => c.collectionId === collection.id) > -1)
+        .filter(collection =>
+          collections.collections.findIndex(c => c.collectionId === collection.id) > -1
+        )
         .toArray()
         .then((localDBCols) => {
-          let runFiles = [];
+          let allFiles = [];
+          const filesByGroup = {};
+
           localDBCols.forEach((coll) => {
             Object.values(coll.fileGroups).forEach((group) => {
-              runFiles = runFiles.concat(coll.fileGroups[group.id].files);
+              allFiles = allFiles.concat(coll.fileGroups[group.id].files);
+
+              if ('metaFile' in group) {
+                filesByGroup[group.id] = coll.fileGroups[group.id].metaFile;
+              } else {
+                filesByGroup[group.id] = coll.fileGroups[group.id].files;
+              }
             });
           });
 
+          // TODO: Reconsider how to get updated steps
+          const { steps } = iteratePipelineSteps(consortium, filesByGroup);
+
           dispatch(({
             type: GET_COLLECTION_FILES,
-            payload: runFiles,
+            payload: { allFiles, steps },
           }));
-          return runFiles;
+          return { allFiles, steps };
         });
     });
   }
@@ -183,8 +259,8 @@ export const removeCollectionsFromAssociatedConsortia = applyAsyncLoading(consId
         const collectionIds = [];
 
         consortium.stepIO.forEach((step) => {
-          step.forEach((obj) => {
-            collectionIds.push(obj.collectionId);
+          Object.values(step).forEach((val) => {
+            val.forEach((obj) => { collectionIds.push(obj.collectionId); });
           });
         });
 
@@ -242,7 +318,9 @@ export const saveAssociatedConsortia = applyAsyncLoading(cons =>
 const INITIAL_STATE = {
   associatedConsortia: [],
   collections: [],
+  error: '',
   runFiles: [],
+  runSteps: [],
 };
 
 export default function reducer(state = INITIAL_STATE, action) {
@@ -262,7 +340,18 @@ export default function reducer(state = INITIAL_STATE, action) {
       return { ...state, collections: newCollections };
     }
     case GET_COLLECTION_FILES:
-      return { ...state, runFiles: [...action.payload] };
+      if ('error' in action.payload) {
+        return {
+          ...state,
+          error: action.payload.error,
+        };
+      }
+
+      return {
+        ...state,
+        runFiles: [...action.payload.allFiles],
+        runSteps: [...action.payload.steps],
+      };
     case SAVE_ASSOCIATED_CONSORTIA: {
       const newCons = [...state.associatedConsortia];
       const index = state.associatedConsortia.findIndex(cons => cons.id === action.payload.id);
