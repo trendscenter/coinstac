@@ -44,6 +44,9 @@ const styles = {
     marginLeft: 10,
     fontWeight: 'bold',
   },
+  optionalButton: {
+    marginLeft: 10,
+  },
 };
 
 const isUserA = (userId, groupArr) => {
@@ -105,7 +108,7 @@ class ConsortiaList extends Component {
           key={`${id}-start-pipeline-button`}
           bsStyle="success"
           onClick={this.startPipeline(id, activePipelineId)}
-          style={{ marginLeft: 10 }}
+          style={styles.optionalButton}
         >
           Start Pipeline
         </Button>
@@ -114,15 +117,29 @@ class ConsortiaList extends Component {
 
     if (owner && !activePipelineId) {
       options.push(
-        <span key={`${id}-no-active-pipeline`} style={styles.listItemWarning}>
-          Active Pipeline Not Set
-        </span>
+        <LinkContainer
+          to={`dashboard/consortia/${id}`}
+        >
+          <Button
+            bsStyle="warning"
+            style={styles.optionalButton}
+          >
+            Set Active Pipeline
+          </Button>
+        </LinkContainer>
       );
     } else if (!isMapped) {
       options.push(
-        <span key={`${id}-pipeline-not-mapped`} style={styles.listItemWarning}>
-          Local Collection Not Mapped
-        </span>
+        <LinkContainer
+          to={'dashboard/collections'}
+        >
+          <Button
+            bsStyle="warning"
+            style={styles.optionalButton}
+          >
+            Map Local Data
+          </Button>
+        </LinkContainer>
       );
     }
 
