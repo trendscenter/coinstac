@@ -20,8 +20,12 @@
     },
     "output": {
       "sum": {
-        "type": "number"
+        "type": "number",
+        "label": "Local Sum"
       }
+    },
+    "display": {
+      "type": "table"
     }
   }
 }

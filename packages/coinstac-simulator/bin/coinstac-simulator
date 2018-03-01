@@ -11,6 +11,8 @@ const sim = require('../src/');
 const inquirer = require('inquirer');
 const glob = util.promisify(require('glob'));
 const path = require('path');
+const blessed = require('blessed');
+const bc = require('blessed-contrib');
 
 const pipeSpec = {
   steps: [
@@ -21,6 +23,27 @@ const pipeSpec = {
     },
   ],
 };
+
+const screen = blessed.screen({
+  smartCSR: true,
+});
+
+const tableData = [];
+
+const table = bc.table({
+  keys: true,
+  fg: 'white',
+  selectedFg: 'white',
+  selectedBg: 'blue',
+  interactive: true,
+  label: 'Active Run',
+  width: '100%',
+  height: '100%',
+  border: { type: 'line', fg: 'cyan' },
+  columnSpacing: 5,
+  columnWidth: [12, 12, 30, 6],
+});
+
 program
   .version(pkg.version)
   .option('-i, --inputspec [path]', '/path/to/inputSpec, defaults to ./test/inputspec.json, will interactively create one if none found')
@@ -113,16 +136,69 @@ readFile(program.compspec ? program.compspec : 'compspec.json')
   });
 })
 .then((pipelineSpec) => {
-  console.log(`Starting ${mode} simulator run with ${program.clientNumber ? program.clientNumber : 1} client(s)`); // eslint-disable-line no-console
-  return sim.startRun({
+  /* eslint-disable no-console */
+  console.log(`Starting ${mode} simulator run with ${program.clientNumber ? program.clientNumber : 1} client(s)`);
+  const simRun = sim.startRun({
     spec: pipelineSpec,
     runMode: mode,
     clientCount: program.clientNumber,
     operatingDirectory: program.directory,
   });
+
+  const updateTable = (node, data) => {
+    let foundNode = false;
+    let state = data.controllerState ? data.controllerState : 'initilizing';
+    state = state === 'stopped' ? 'shutting down docker...' : state;
+
+    tableData.forEach((row, index) => {
+      if (row[0] === node) {
+        tableData[index] = [
+          node,
+          data.currentIteration ? data.currentIteration : 'initilizing',
+          state,
+          data.mode,
+        ];
+        foundNode = true;
+      }
+    });
+    if (!foundNode) {
+      tableData.push([
+        node,
+        data.currentIteration ? data.currentIteration : 'initilizing',
+        state,
+        data.mode,
+      ]);
+    }
+
+    table.setData({
+      headers: ['node', 'iteration', 'state', 'mode'],
+      data: tableData,
+    });
+    screen.render();
+  };
+
+  if (simRun.pipelines.remote) {
+    simRun.pipelines.remote.manager.getPipelineStateListener('simulatorRun')
+    .on('update', (data) => {
+      updateTable('remote', data);
+    });
+  }
+  simRun.pipelines.locals.forEach((local, index) => {
+    local.manager.getPipelineStateListener('simulatorRun').on('update', (data) => {
+      updateTable(`local-${index}`, data);
+    });
+  });
+
+  screen.key(['escape', 'q', 'C-c'], () => process.exit(0));
+  table.focus();
+
+  screen.append(table);
+  screen.render();
+
+  return simRun.allResults;
 })
 .then((results) => {
-  /* eslint-disable no-console */
+  screen.destroy();
   console.log('Simulator run finished');
   if (mode === 'decentralized') {
     console.log(`Decentralized results:\n ${JSON.stringify(results.remote, null, 2)}`);
@@ -133,5 +209,10 @@ readFile(program.compspec ? program.compspec : 'compspec.json')
   // TODO: should not be necessary, something is holding the loop up
   process.exit();
 })
-.catch(err => console.log(`Simulator run failed!\n ${err}`));
+.catch((err) => {
+  screen.destroy();
+  console.log(`Simulator run failed!\n ${err.message}`);
+  console.log(`Fun error details:\n ${err.stack}`);
+  process.exit(1);
+});
 /* eslint-enable no-console */
