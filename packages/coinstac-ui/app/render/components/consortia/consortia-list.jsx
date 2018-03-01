@@ -92,7 +92,7 @@ class ConsortiaList extends Component {
     const options = [];
     let isMapped = false;
 
-    if (owner && this.props.associatedConsortia.length > 0) {
+    if (this.props.associatedConsortia.length > 0) {
       const assocCons = this.props.associatedConsortia.find(c => c.id === id);
       if (assocCons && assocCons.isMapped) {
         isMapped = assocCons.isMapped;
