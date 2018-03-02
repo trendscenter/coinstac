@@ -137,24 +137,25 @@ Create a new file at `coinstac/packages/coinstac-ui/config/local.json` and copy 
 
 ## Run Development Environment
 
-Four services need to be run in the following order to start COINSTAC in development mode:
+Five services need to be run in the following order to start COINSTAC in development mode:
 
-1. **RethinkDB**:
+1. **Docker**
+2. **RethinkDB**:
   ```shell
   rethinkdb
   ```
-2. **COINSTAC-API-SERVER**:
+3. **COINSTAC-API-SERVER**:
   The GraphQL and DB server.
   ```shell
   cd ~/coinstac/packages/coinstac-api-server && npm run start
   ```
   * If it's your first time running, you'll need to seed your DB: `npm run test-setup` before starting in the `coinstac-api-server` directory.
-3. **COINSTAC-SERVER**:
+4. **COINSTAC-SERVER**:
   The "pipeline" server. Runs remote pipelines and sends result to the api-server.
   ```shell
   cd ~/coinstac/packages/coinstac-server && npm run start
   ```
-4. **WEBPACK SERVER**:
+5. **WEBPACK SERVER**:
   ```shell
   NODE_ENV=development && cd ~/coinstac/packages/coinstac-ui && node webpack-dev-server.js
   ```
