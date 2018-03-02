@@ -10,10 +10,10 @@ You’ll need some software installed:
   * OS X: The easiest way to install Xcode through Apple’s App Store. (You can try [installing the command line tools](https://www.maketecheasier.com/install-command-line-tools-without-xcode/))
   * Linux: `apt-get install build-essential` for Ubuntu-flavored versions. Check your distro for details.
 2. **Install git.** See https://git-scm.com/download. You may also try [GitHub’s desktop client](https://desktop.github.com/): see [their post for CLI instructions](https://github.com/blog/1510-installing-git-from-github-for-mac).
-3. **Install Node.js**, specifically version 6.1.0. You can enter `node -v` to find out which version you have.
-  * Consider [using n](https://www.npmjs.com/package/n) for easy Node.js version management if you already have a version of Node.js installed.
-  * Linux: See the [official installation instructions](https://nodejs.org/en/download/package-manager/#debian-and-ubuntu-based-linux-distributions)
-  * OS X: Download https://nodejs.org/dist/v6.1.0/node-v6.1.0.pkg and run the installer
+3. **Install Node.js**, specifically version 8.2.1. You can enter `node -v` to find out which version you have.
+   * Consider [using n](https://www.npmjs.com/package/n) for easy Node.js version management if you already have a version of Node.js installed.
+   * Linux: See the [official installation instructions](https://nodejs.org/en/download/package-manager/#debian-and-ubuntu-based-linux-distributions)
+   * OS X: Download the [package](https://nodejs.org/download/release/v8.2.1/node-v8.2.1.pkg) and run the installer
 
 ## Downloading Source Code
 
@@ -35,9 +35,11 @@ npm run build
 ```
 
 ## Updating Source Code
-
+Any time you pull in new code, you'll need to rebuild the application.
 1. `git pull` to get the latest source code
 2. `npm run build` from the root _coinstac_ directory to install dependencies and link packages
+
+*If the above leaves you with errors, try first cleaning the repo (`npm run clean` in root directory) and also reinstalling the root directory's dependencies (`npm i`).*
 
 ## Running the UI
 
@@ -58,9 +60,8 @@ Follow the general steps above before continuing.
 
 ## Additional Required Software
 
-1. **CouchDB** On OSX, using [Homebrew](https://brew.sh/) will likely be the easiest way to install [CouchDB](http://couchdb.apache.org/) in a manner compatible with setup scripts: `brew install couchdb`. Installing from the binary is another viable option, just be sure to add it to your path.
-2. **RethinkDB** On OSX, using [Homebrew](https://brew.sh/), use: `brew update && brew install rethinkdb`. Other options [here](https://rethinkdb.com/docs/install/).
-3. **VSCode** There are no shortage of options when it comes to an editor, but [VSCode](https://code.visualstudio.com/) offers some great [debugging functionality](https://code.visualstudio.com/Docs/editor/debugging). You'll need to create a `launch.json` file as outlined [here](https://code.visualstudio.com/Docs/editor/debugging#_launch-configurations), with the following contents:
+1. **RethinkDB** On OSX, using [Homebrew](https://brew.sh/), use: `brew update && brew install rethinkdb`. Other options [here](https://rethinkdb.com/docs/install/).
+2. **VSCode** There are no shortage of options when it comes to an editor, but [VSCode](https://code.visualstudio.com/) offers some great [debugging functionality](https://code.visualstudio.com/Docs/editor/debugging). You'll need to create a `launch.json` file as outlined [here](https://code.visualstudio.com/Docs/editor/debugging#_launch-configurations), with the following contents:
 
    ```json
    {
@@ -94,43 +95,11 @@ Follow the general steps above before continuing.
           }
       ]
    }
-   ``` 
-
-4. **tmux & Tmuxinator** To ease the process of initializing the development environment, we use [tmux](https://github.com/tmux/tmux) and [Tmuxinator](https://github.com/tmuxinator/tmuxinator) to automate things like starting CouchDB, creating a test user, creating a database, starting the webpack server and more. tmux can be installed via Homebrew `brew install tmux`. Tmuxinator can be installed via `gem install tmuxinator`. You'll also need to setup a couple environment variables for Tmuxinator, which you can find in their README linked above.
-
-   // TODO: Bring this into VSCode?
+   ```
 
 ## Additional Source Code
 
-1. **mock-steelpenny** To mock the steelpenny authentication for COINSTAC development, you can clone the [mock-steelpenny](https://github.com/swashcap/mock-steelpenny) repo: `git clone https://github.com/swashcap/mock-steelpenny.git`. Just like the COINSTAC repo, the Tmuxinator script is going to assume you have this cloned in your HOME directory: `cd ~`.
-
-   Once cloned, enter the directory and install its dependencies: `cd mock-steelpenny`, `npm install`.
-
-   Add a couple more users to `mock-steelpenny/api.js` as follows:
-   ```js
-    const validAuthentications = [
-      [/^demo.*/, /.*/],
-      [/^mochatest$/, /^mochapassword/],
-      [/^test$/, /^password/],
-      [/^author$/, /^password/],
-      [/^server$/, /^password/],
-      [/^(account|password)-will-expire$/, /.*/],
-    ]
-   ```
-
-
-2. **COINS** Next, create a directory in your root directory called **coins**. Alternatively, clone the [COINS](https://github.com/MRN-Code/coins) repo there. Once you have the directory, create a subdirectory called **config**. Lastly create a file at `/coins/config/dbmap.json` and copy into it the following:
-
-   ```json
-   {
-     "coinstac": {
-       "user": "coinstac",
-       "password": "test"
-     },
-     
-   }
-   ```
-3. **CSTAC DB** Next, create a new directory and file at `/etc/coinstac/cstacDBMap.json` with the following contents:
+1. **CSTAC DB** Next, create a new directory and file at `/etc/coinstac/cstacDBMap.json` with the following contents:
 
    ```json
     {
@@ -151,93 +120,50 @@ Follow the general steps above before continuing.
 Create a new file at `coinstac/packages/coinstac-ui/config/local.json` and copy into it the following:
 
    ```json
-   {
-      "api": {
-        "hostname": "localhost",
-        "pathname": "/api/v1.3.0",
-        "port": 8800,
-        "protocol": "http:"
-      },
-      "db": {
-        "remote": {
-          "db": {
-            "hostname": "localhost",
-            "pathname": "",
-            "port": 5984,
-            "protocol": "http:"
-          }
-        }
-      }
-   }
+  {
+    "apiServer": {
+      "hostname": "localhost",
+      "port": "3100",
+      "protocol": "http:"
+    },
+    "subApiServer": {
+      "hostname": "localhost",
+      "port": "3100",
+      "protocol": "ws:"
+    }
+  }
    ```
-
-## Tmuxinator Script
-
-Copy the following into a file at `~/.tmuxinator/coinstac.yml`:
-
-```yml
-# ~/.tmuxinator/coinstac.yml
-
-name: coinstac
-root: ~/coinstac/
-
-# Optional tmux socket
-# socket_name: foo
-
-# Runs before everything. Use it to start daemons etc.
-pre:
-  # Init RethinkDB
-  - rethinkdb --daemon --directory ~/rethinkdb_data
-  - cd ~/coinstac/packages/coinstac-api-server
-  - npm run test-setup
-
-  - couchdb -b
-
-  # Add CouchDB security
-  # - sleep 2 && curl -X PUT localhost:5984/_config/admins/coinstac -d '"test"'
-
-  # Init database
-  - cd ~/coinstac/packages/coinstac-server-core
-  - npm run clean:db
-  - cd ~/coinstac/packages/coinstac-ui
-  - npm run clean:db
-  - cd ~/coinstac/
-
-# Specifies (by name or index) which window will be selected on project startup. If not set, the first window is used.
-startup_window: editor
-
-# Controls whether the tmux session should be attached to automatically. Defaults to true.
-# attach: false
-
-# Runs after everything. Use it to attach to tmux with custom options etc.
-post:
-  # - curl -X DELETE localhost:5984/_config/admins/coinstac --user coinstac:test
-  - couchdb -d
-  - pkill -2 "rethinkdb"
-
-windows:
-  - dbapi:
-      root: ~/coinstac/packages/coinstac-api-server
-      panes:
-        - npm run start
-  - steelpenny:
-      root: ~/mock-steelpenny
-      panes:
-        - npm start
-  - server:
-      root: ~/coinstac/packages/coinstac-server-core
-      panes:
-        - bin/coinstac-server-core --loglevel verbose
-  - webpack:
-      root: ~/coinstac/packages/coinstac-ui
-      panes:
-        - npm run watch
-```
 
 ## Run Development Environment
 
-The last step is to start your development environment: `tmuxinator start coinstac`.
+Four services need to be run in the following order to start COINSTAC in development mode:
 
-Next, open the COINSTAC repo in VSCode and click on the debugging icon, which is the fourth icon down on the left-hand side of the screen. At the top of the left-hand side panel should be a *DEBUG* dropdown. Select `Debug` in the dropdown and hit the play button to begin debugging.
+1. **RethinkDB**:
+  ```shell
+  rethinkdb
+  ```
+2. **COINSTAC-API-SERVER**:
+  The GraphQL and DB server.
+  ```shell
+  cd ~/coinstac/packages/coinstac-api-server && npm run start
+  ```
+  * If it's your first time running, you'll need to seed your DB: `npm run test-setup` before starting in the `coinstac-api-server` directory.
+3. **COINSTAC-SERVER**:
+  The "pipeline" server. Runs remote pipelines and sends result to the api-server.
+  ```shell
+  cd ~/coinstac/packages/coinstac-server && npm run start
+  ```
+4. **WEBPACK SERVER**:
+  ```shell
+  NODE_ENV=development && cd ~/coinstac/packages/coinstac-ui && node webpack-dev-server.js
+  ```
+Next, you'll need to start the application. You can do this from the command line or via VSCode.
 
-**Test data will also be required to create and run computations**
+* **Command Line**:
+  ```shell
+  cd ~/coinstac/packages/coinstac-ui && npm run start
+  ```
+* **VSCode**:
+Open the COINSTAC repo in VSCode and click on the debugging icon, which is the fourth icon down on the left-hand side of the screen. At the top of the left-hand side panel should be a *DEBUG* dropdown. Select `Debug` in the dropdown and hit the play button to begin debugging.
+
+**Test data for collections mapping can be found in `coinstac-ui/test/e2e/test_files/site1/`**
