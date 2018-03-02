@@ -96,6 +96,7 @@ Follow the general steps above before continuing.
       ]
    }
    ```
+3. **Docker** Download [here](https://www.docker.com/get-docker)
 
 ## Additional Source Code
 
