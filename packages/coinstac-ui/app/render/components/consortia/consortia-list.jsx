@@ -119,6 +119,7 @@ class ConsortiaList extends Component {
       options.push(
         <LinkContainer
           to={`dashboard/consortia/${id}`}
+          key={`${id}-set-active-pipeline-button`}
         >
           <Button
             bsStyle="warning"
@@ -132,6 +133,7 @@ class ConsortiaList extends Component {
       options.push(
         <LinkContainer
           to={'dashboard/collections'}
+          key={`${id}-set-map-local-button`}
         >
           <Button
             bsStyle="warning"
@@ -316,6 +318,8 @@ class ConsortiaList extends Component {
                   },
                 };
               }
+
+              run.status = status;
 
               ipcRenderer.send('start-pipeline', { consortium, pipeline, filesArray: filesArray.allFiles, run });
             }

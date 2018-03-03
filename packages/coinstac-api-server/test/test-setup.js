@@ -278,7 +278,7 @@ helperFunctions.getRethinkConnection()
       title: 'MRI QC',
       pipelineId: 'test-pipeline',
       startDate: '1518559440672',
-      endDate: '151855944066',
+      endDate: '1518559440685',
       clients: ['test'],
       consortiumId: 'test-cons-2',
       date: '1/23/2018',

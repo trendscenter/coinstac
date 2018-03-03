@@ -8,7 +8,7 @@ import UserAccountController from '../user/user-account-controller';
 import { notifyInfo, notifySuccess, notifyWarning, writeLog } from '../../state/ducks/notifyAndLog';
 import CoinstacAbbr from '../coinstac-abbr';
 import { getCollectionFiles, initTestData, syncRemoteLocalConsortia, syncRemoteLocalPipelines } from '../../state/ducks/collections';
-import { clearRuns, getLocalRun, getDBRuns, saveLocalRun } from '../../state/ducks/runs';
+import { clearRuns, getLocalRun, getDBRuns, saveLocalRun, updateLocalRun } from '../../state/ducks/runs';
 import {
   pullComputations,
   updateDockerOutput,
@@ -48,8 +48,8 @@ class Dashboard extends Component {
     const { router } = this.context;
 
     // Uncomment to clear local data
-    // this.props.clearRuns();
-    // this.props.initTestData();
+    this.props.clearRuns();
+    this.props.initTestData();
 
     process.nextTick(() => {
       if (!user.email.length) {
@@ -69,6 +69,14 @@ class Dashboard extends Component {
       this.props.notifySuccess({
         message: `${arg} Pipeline Computations Downloaded`,
       });
+    });
+
+    ipcRenderer.on('local-pipeline-state-update', (event, arg) => {
+      this.props.updateLocalRun(
+        arg.run.id,
+        'localPipelineState',
+        arg.data
+      );
     });
 
     ipcRenderer.on('local-run-complete', (event, arg) => {
@@ -165,7 +173,7 @@ class Dashboard extends Component {
                   consortium,
                   pipeline: run.pipelineSnapshot,
                   filesArray: filesArray.allFiles,
-                  run,
+                  run: { ...run, status },
                 });
               }, 5000);
             }
@@ -177,7 +185,8 @@ class Dashboard extends Component {
           this.props.saveLocalRun({ ...nextProps.remoteRuns[i], status: 'complete' });
         // Run already in props but results are incoming
         } else if (runIndexInLocalRuns > -1 && nextProps.remoteRuns[i].results
-          && !this.props.runs[runIndexInLocalRuns].results && this.props.consortia.length) {
+          && !this.props.runs[runIndexInLocalRuns].results && this.props.consortia.length
+          && !this.props.remoteRuns[runIndexInPropsRemote].results) {
           const run = nextProps.remoteRuns[i];
           const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
 
@@ -193,6 +202,23 @@ class Dashboard extends Component {
               },
             },
           });
+        // Looking for remote run state changes
+        } else if (runIndexInLocalRuns > -1 && nextProps.remoteRuns[i].remotePipelineState
+          && (!this.props.remoteRuns[runIndexInPropsRemote].remotePipelineState
+          || (nextProps.remoteRuns[i].remotePipelineState.currentIteration
+          !== this.props.remoteRuns[runIndexInPropsRemote].remotePipelineState.currentIteration
+          || nextProps.remoteRuns[i].remotePipelineState.controllerState
+          !== this.props.remoteRuns[runIndexInPropsRemote].remotePipelineState.controllerState
+          || nextProps.remoteRuns[i].remotePipelineState.pipelineStep
+          !== this.props.remoteRuns[runIndexInPropsRemote].remotePipelineState.pipelineStep))) {
+          const run = nextProps.remoteRuns[i];
+
+          // Update status of run in localDB
+          this.props.updateLocalRun(
+            run.id,
+            'remotePipelineState',
+            run.remotePipelineState
+          );
         }
       }
     }
@@ -345,6 +371,7 @@ Dashboard.propTypes = {
   syncRemoteLocalConsortia: PropTypes.func.isRequired,
   syncRemoteLocalPipelines: PropTypes.func.isRequired,
   updateDockerOutput: PropTypes.func.isRequired,
+  updateLocalRun: PropTypes.func.isRequired,
   updateUserConsortiumStatus: PropTypes.func.isRequired,
   writeLog: PropTypes.func.isRequired,
 };
@@ -414,6 +441,7 @@ export default connect(mapStateToProps,
     syncRemoteLocalConsortia,
     syncRemoteLocalPipelines,
     updateDockerOutput,
+    updateLocalRun,
     updateUserConsortiaStatuses,
     writeLog,
   }
