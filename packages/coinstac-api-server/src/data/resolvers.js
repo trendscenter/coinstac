@@ -584,7 +584,6 @@ const resolvers = {
       const { permissions } = credentials;
       return helperFunctions.getRethinkConnection()
         .then((connection) => {
-          console.log(args.data);
           return rethink.table('runs').get(args.runId).update({ remotePipelineState: args.data })
           .run(connection);
         });

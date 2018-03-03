@@ -4,6 +4,43 @@ import { Button, Col, Panel, ProgressBar, Row, Well } from 'react-bootstrap';
 import { LinkContainer } from 'react-router-bootstrap';
 import PropTypes from 'prop-types';
 
+function getStateWell(runObject, stateName, stateKey) {
+  return (
+    <Col xs={12} sm={4}>
+      <Well bsSize="small">
+        <div style={{ marginBottom: 5 }}>
+          <span className="bold" style={{ textDecoration: 'underline' }}>{stateName} Pipeline State: </span>
+        </div>
+        {runObject[stateKey].mode &&
+          <div>
+            <span className="bold">Mode: </span>
+            {runObject[stateKey].mode}
+          </div>
+        }
+        {runObject[stateKey].controllerState &&
+          <div>
+            <span className="bold">Controller State: </span>
+            {runObject[stateKey].controllerState}
+          </div>
+        }
+        {runObject[stateKey].currentIteration >= 0 &&
+          <div>
+            <span className="bold">Current Iteration: </span>
+            {runObject[stateKey].currentIteration}
+          </div>
+        }
+        {runObject[stateKey].pipelineStep >= 0 &&
+          <div>
+            <span className="bold">Step Count: </span>
+            {`${runObject[stateKey].pipelineStep + 1} /
+              ${runObject[stateKey].totalSteps}`}
+          </div>
+        }
+      </Well>
+    </Col>
+  );
+}
+
 const RunItem = ({ consortiumName, runObject }) => (
   <Panel
     key={runObject.id}
@@ -96,72 +133,10 @@ const RunItem = ({ consortiumName, runObject }) => (
         }
       </Col>
       {runObject.localPipelineState && runObject.status === 'started' &&
-        <Col xs={12} sm={4}>
-          <Well bsSize="small">
-            <div style={{ marginBottom: 5 }}>
-              <span className="bold" style={{ textDecoration: 'underline' }}>Local Pipeline State: </span>
-            </div>
-            {runObject.localPipelineState.mode &&
-              <div>
-                <span className="bold">Mode: </span>
-                {runObject.localPipelineState.mode}
-              </div>
-            }
-            {runObject.localPipelineState.controllerState &&
-              <div>
-                <span className="bold">Controller State: </span>
-                {runObject.localPipelineState.controllerState}
-              </div>
-            }
-            {runObject.localPipelineState.currentIteration >= 0 &&
-              <div>
-                <span className="bold">Current Iteration: </span>
-                {runObject.localPipelineState.currentIteration}
-              </div>
-            }
-            {runObject.localPipelineState.pipelineStep >= 0 &&
-              <div>
-                <span className="bold">Step Count: </span>
-                {`${runObject.localPipelineState.pipelineStep + 1} /
-                  ${runObject.localPipelineState.totalSteps}`}
-              </div>
-            }
-          </Well>
-        </Col>
+        getStateWell(runObject, 'Local', 'localPipelineState')
       }
       {runObject.remotePipelineState && runObject.status === 'started' &&
-        <Col xs={12} sm={4}>
-          <Well bsSize="small">
-            <div style={{ marginBottom: 5 }}>
-              <span className="bold" style={{ textDecoration: 'underline' }}>Remote Pipeline State: </span>
-            </div>
-            {runObject.remotePipelineState.mode &&
-              <div>
-                <span className="bold">Mode: </span>
-                {runObject.remotePipelineState.mode}
-              </div>
-            }
-            {runObject.remotePipelineState.controllerState &&
-              <div>
-                <span className="bold">Controller State: </span>
-                {runObject.remotePipelineState.controllerState}
-              </div>
-            }
-            {runObject.remotePipelineState.currentIteration >= 0 &&
-              <div>
-                <span className="bold">Current Iteration: </span>
-                {runObject.remotePipelineState.currentIteration}
-              </div>
-            }
-            {runObject.remotePipelineState.pipelineStep >= 0 &&
-              <div>
-                <span className="bold">Step Count: </span>
-                {`${runObject.remotePipelineState.pipelineStep + 1} /
-                  ${runObject.remotePipelineState.totalSteps}`}
-              </div>
-            }
-          </Well>
-        </Col>
+        getStateWell(runObject, 'Remote', 'remotePipelineState')
       }
     </Row>
     <Row>

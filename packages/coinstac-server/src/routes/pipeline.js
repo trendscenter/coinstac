@@ -69,7 +69,6 @@ module.exports = [
           res({}).code(201);
 
           remotePipeline.pipeline.stateEmitter.on('update', (data) => {
-            console.log(data);
             updateRunState(run.id, data);
           });
 
