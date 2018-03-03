@@ -551,6 +551,13 @@ const resolvers = {
         ))
         .then(result => result)
     },
+    /**
+     * Saves run results
+     * @param {object} auth User object from JWT middleware validateFunc
+     * @param {object} args
+     * @param {string} args.runId Run id to update
+     * @param {string} args.results Results
+     */
     saveResults: ({ auth: { credentials } }, args) => {
       console.log("save results was called");
       const { permissions } = credentials;
@@ -565,6 +572,23 @@ const resolvers = {
     },
     setComputationInputs: (_, args) => {
       return new Promise();
+    },
+    /**
+     * Updates run remote state
+     * @param {object} auth User object from JWT middleware validateFunc
+     * @param {object} args
+     * @param {string} args.runId Run id to update
+     * @param {string} args.data State data
+     */
+    updateRunState: ({ auth: { credentials } }, args) => {
+      const { permissions } = credentials;
+      return helperFunctions.getRethinkConnection()
+        .then((connection) => {
+          console.log(args.data);
+          return rethink.table('runs').get(args.runId).update({ remotePipelineState: args.data })
+          .run(connection);
+        });
+          // .then(result => result.changes[0].new_val)
     },
     /**
      * Saves consortium

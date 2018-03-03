@@ -24,22 +24,31 @@ const authenticateServer = () => {
   });
 };
 
-const connectionStart = (id, result) => {
-  return authenticateServer()
-  .then(() =>
-    axios({
-      method: 'post',
-      url: `${config.DB_URL}/graphql`,
-      data: {
-        query: `mutation($runId: ID!, $results: JSON) ${graphqlSchema.mutations.saveResults.replace(/\s{2,10}/g, ' ')}`,
-        variables: {
-          runId: id,
-          results: result,
-        },
+const updateRunState = (runId, data) =>
+  axios({
+    method: 'post',
+    url: `${config.DB_URL}/graphql`,
+    data: {
+      query: `mutation($runId: ID!, $data: JSON) ${graphqlSchema.mutations.updateRunState.replace(/\s{2,10}/g, ' ')}`,
+      variables: {
+        runId,
+        data,
       },
-    })
-  );
-};
+    },
+  });
+
+const saveResults = (runId, results) =>
+  axios({
+    method: 'post',
+    url: `${config.DB_URL}/graphql`,
+    data: {
+      query: `mutation($runId: ID!, $results: JSON) ${graphqlSchema.mutations.saveResults.replace(/\s{2,10}/g, ' ')}`,
+      variables: {
+        runId,
+        results,
+      },
+    },
+  });
 
 module.exports = [
   {
@@ -48,20 +57,28 @@ module.exports = [
     config: {
       // auth: 'jwt',
       handler: (req, res) => {
-        const run = req.payload.run;
-        const remotePipeline = this.remotePipelineManager.startPipeline({
-          clients: run.clients,
-          spec: run.pipelineSnapshot,
-          runId: run.id,
-        });
+        authenticateServer()
+        .then(() => {
+          const run = req.payload.run;
+          const remotePipeline = this.remotePipelineManager.startPipeline({
+            clients: run.clients,
+            spec: run.pipelineSnapshot,
+            runId: run.id,
+          });
 
-        res({}).code(201);
+          res({}).code(201);
 
-        remotePipeline.result.then((result) => {
-          connectionStart(run.id, result);
-        })
-        .catch(() => {
-          // TODO: save pipeline errors!
+          remotePipeline.pipeline.stateEmitter.on('update', (data) => {
+            console.log(data);
+            updateRunState(run.id, data);
+          });
+
+          remotePipeline.result.then((result) => {
+            saveResults(run.id, result);
+          })
+          .catch(() => {
+            // TODO: save pipeline errors!
+          });
         });
       },
     },
