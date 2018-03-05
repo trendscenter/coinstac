@@ -7,7 +7,7 @@ import DashboardNav from './dashboard-nav';
 import UserAccountController from '../user/user-account-controller';
 import { notifyInfo, notifySuccess, notifyWarning, writeLog } from '../../state/ducks/notifyAndLog';
 import CoinstacAbbr from '../coinstac-abbr';
-import { getCollectionFiles, initTestData, syncRemoteLocalConsortia, syncRemoteLocalPipelines } from '../../state/ducks/collections';
+import { getCollectionFiles, incrementRunCount, initTestData, syncRemoteLocalConsortia, syncRemoteLocalPipelines } from '../../state/ducks/collections';
 import { clearRuns, getLocalRun, getDBRuns, saveLocalRun, updateLocalRun } from '../../state/ducks/runs';
 import {
   pullComputations,
@@ -91,6 +91,7 @@ class Dashboard extends Component {
         },
       });
 
+      this.props.incrementRunCount(arg.run.consortiumId);
       this.props.saveLocalRun({ ...arg.run, status: 'complete' });
     });
   }
@@ -182,6 +183,7 @@ class Dashboard extends Component {
             this.props.saveLocalRun({ ...run, status });
           });
         } else if (runIndexInLocalRuns === -1 && nextProps.remoteRuns[i].results) {
+          this.props.incrementRunCount(nextProps.remoteRuns[i].consortiumId);
           this.props.saveLocalRun({ ...nextProps.remoteRuns[i], status: 'complete' });
         // Run already in props but results are incoming
         } else if (runIndexInLocalRuns > -1 && nextProps.remoteRuns[i].results
@@ -191,6 +193,7 @@ class Dashboard extends Component {
           const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
 
           // Update status of run in localDB
+          this.props.incrementRunCount(run.consortiumId);
           this.props.saveLocalRun({ ...run, status: 'complete' });
           this.props.notifySuccess({
             message: `${consortium.name} Pipeline Complete.`,
@@ -355,6 +358,7 @@ Dashboard.propTypes = {
   consortia: PropTypes.array,
   getCollectionFiles: PropTypes.func.isRequired,
   getDBRuns: PropTypes.func.isRequired,
+  incrementRunCount: PropTypes.func.isRequired,
   initTestData: PropTypes.func.isRequired,
   notifyInfo: PropTypes.func.isRequired,
   notifySuccess: PropTypes.func.isRequired,
@@ -432,6 +436,7 @@ export default connect(mapStateToProps,
     getCollectionFiles,
     getLocalRun,
     getDBRuns,
+    incrementRunCount,
     initTestData,
     notifyInfo,
     notifySuccess,
