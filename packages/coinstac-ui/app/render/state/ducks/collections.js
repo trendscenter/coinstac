@@ -341,6 +341,11 @@ export const syncRemoteLocalPipelines = remotePipeline =>
         }
       });
 
+export const incrementRunCount = consId =>
+  () =>
+    localDB.associatedConsortia.get(consId)
+      .then(cons => localDB.associatedConsortia.update(consId, { runs: cons.runs + 1 }));
+
 const INITIAL_STATE = {
   activeAssociatedConsortia: [],
   associatedConsortia: [],
