@@ -91,7 +91,6 @@ class Dashboard extends Component {
         },
       });
 
-      this.props.incrementRunCount(arg.run.consortiumId);
       this.props.saveLocalRun({ ...arg.run, status: 'complete' });
     });
   }
@@ -167,6 +166,7 @@ class Dashboard extends Component {
               // 5 second timeout to ensure no port conflicts in
               //  development env between remote and client pipelines
               setTimeout(() => {
+                this.props.incrementRunCount(consortium.id);
                 this.props.notifyInfo({
                   message: `Decentralized Pipeline Starting for ${consortium.name}.`,
                 });
@@ -183,7 +183,6 @@ class Dashboard extends Component {
             this.props.saveLocalRun({ ...run, status });
           });
         } else if (runIndexInLocalRuns === -1 && nextProps.remoteRuns[i].results) {
-          this.props.incrementRunCount(nextProps.remoteRuns[i].consortiumId);
           this.props.saveLocalRun({ ...nextProps.remoteRuns[i], status: 'complete' });
         // Run already in props but results are incoming
         } else if (runIndexInLocalRuns > -1 && nextProps.remoteRuns[i].results
@@ -193,7 +192,6 @@ class Dashboard extends Component {
           const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
 
           // Update status of run in localDB
-          this.props.incrementRunCount(run.consortiumId);
           this.props.saveLocalRun({ ...run, status: 'complete' });
           this.props.notifySuccess({
             message: `${consortium.name} Pipeline Complete.`,
