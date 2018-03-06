@@ -74,6 +74,9 @@
         "type": "number",
         "label": "Y"
       }
+    },
+    "display": {
+      "type": "table"
     }
   }
 }

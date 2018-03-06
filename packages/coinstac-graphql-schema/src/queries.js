@@ -96,6 +96,7 @@ const queries = {
       fetchComputation(computationIds: $computationIds) {
         id
         computation {
+          display
           input
           output
         }
