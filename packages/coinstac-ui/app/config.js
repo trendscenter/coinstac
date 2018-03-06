@@ -19,8 +19,8 @@ const conf = convict({
     env: 'NODE_ENV',
   },
   apiServer: {
-    hostname: 'coins-api.mrn.org',
-    pathname: '/api/v1.3.0',
+    hostname: 'coinstac.mrn.org',
+    pathname: '/api',
     protocol: 'https:',
   },
   subApiServer: {
