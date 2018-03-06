@@ -30,6 +30,9 @@
       "success": {
         "type": "boolean"
       }
+    },
+    "display": {
+      "type": "table"
     }
   }
 }

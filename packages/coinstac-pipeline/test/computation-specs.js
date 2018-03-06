@@ -21,6 +21,9 @@ module.exports = {
           type: 'number',
         },
       },
+      display: {
+        type: 'table',
+      },
     },
   },
   decentralized: {
@@ -49,6 +52,9 @@ module.exports = {
         sum: {
           type: 'number',
         },
+      },
+      display: {
+        type: 'table',
       },
     },
   },

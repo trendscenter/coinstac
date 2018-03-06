@@ -1,10 +1,10 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import Boxplot from 'react-boxplot';
-import { ScatterChart } from 'react-d3';
-import { Chart, Grid, Xaxis, Yaxis } from 'react-d3-core';
-import computeBoxplotStats from 'react-boxplot/dist/stats';
+import { Tabs, Tab } from 'react-bootstrap';
+import Box from './displays/box-plot';
+import Scatter from './displays/scatter-plot';
+import Table from './displays/result-table';
 import { getLocalRun } from '../../state/ducks/runs';
 
 class Result extends Component {
@@ -22,16 +22,25 @@ class Result extends Component {
     this.props.getLocalRun(this.props.params.resultId)
       .then((run) => {
         const plotData = [];
-
-        if (run.results.plots) {
+        if (run.pipelineSnapshot) {
+          // Checking display type of computation
+          plotData.push(run.results);
+        }
+        if (run.results.type === 'scatter_plot') {
           run.results.plots.map(result => (
-            plotData.push({
-              name: result.title,
-              values: result.coordinates,
-            })
+            result.coordinates.map(val => (
+              plotData.push({
+                name: result.title,
+                x: val.x,
+                y: val.y,
+              })
+            )
+          )));
+        } else if (run.results.type === 'box_plot') {
+          run.results.x.map(val => (
+            plotData.push(val)
           ));
         }
-
         this.setState({
           activeResult: run,
           plotData,
@@ -45,49 +54,49 @@ class Result extends Component {
     const { activeResult } = this.state;
     return (
       <div>
-        {(activeResult && activeResult.results && activeResult.results.type === 'scatter_plot') &&
-        <ScatterChart
-          legend
-          data={this.state.plotData}
-          width={850}
-          height={475}
-          xAxisOffset={+20}
-          yAxisOffset={-20}
-          title={activeResult.title}
-        />
+        {(activeResult && activeResult.results && activeResult.results.type === 'box_plot') &&
+          <Tabs defaultActiveKey={1} id="uncontrolled-tab-example">
+            <Tab eventKey={1} title="Box-Plot View">
+              <Box
+                plotData={this.state.plotData}
+              />
+            </Tab>
+            <Tab eventKey={2} title="Table View">
+              <Table
+                plotData={this.state.plotData}
+              />
+            </Tab>
+          </Tabs>
       }
-        {activeResult && activeResult.results && activeResult.results.type === 'box_plot' &&
-          <Chart {...this.props}>
-            <Grid type="x" {...this.props} {...this.state} xScale="linear" yScale="linear" />
-            <Grid type="y" {...this.props} {...this.state} yScale="linear" xScale="linear" />
-            <Boxplot
-              className=""
-              style={{ paddingLeft: 100 }}
-              width={25}
-              height={300}
-              min={0}
-              max={30}
-              stats={computeBoxplotStats(this.state.dummyData)}
-            />
-            <Xaxis
-              {...this.props}
-              {...this.state}
-            />
-            <Yaxis
-              {...this.props}
-              {...this.state}
-            />
-          </Chart>
+        {activeResult && activeResult.results && activeResult.results.type === 'scatter_plot' &&
+          <Tabs defaultActiveKey={1} id="uncontrolled-tab-example">
+            <Tab eventKey={1} title="Scatter-Plot View">
+              <Scatter
+                plotData={this.state.plotData}
+              />
+            </Tab>
+            <Tab eventKey={2} title="Table View">
+              <Table
+                plotData={this.state.plotData}
+              />
+            </Tab>
+          </Tabs>
         }
         {activeResult && activeResult.results && !activeResult.results.type &&
-          <pre>{JSON.stringify(activeResult.results)}</pre>}
+          <Tabs defaultActiveKey={1} id="uncontrolled-tab-example">
+            <Tab eventKey={1} title="Table View">
+              <Table
+                plotData={this.state.plotData}
+              />
+            </Tab>
+          </Tabs>
+        }
       </div>
     );
   }
 }
 
 Result.propTypes = {
-  activeResult: PropTypes.object,
   getLocalRun: PropTypes.func.isRequired,
   params: PropTypes.object.isRequired,
 };
