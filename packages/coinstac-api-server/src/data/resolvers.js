@@ -206,7 +206,7 @@ const resolvers = {
         .then((connection) =>
           rethink.table('computations').insert(
             Object.assign({}, args.computationSchema, { submittedBy: credentials.id }),
-            { 
+            {
               conflict: "replace",
               returnChanges: true,
             }
@@ -287,7 +287,7 @@ const resolvers = {
               startDate: Date.now(),
               type: 'decentralized',
             },
-            { 
+            {
               conflict: "replace",
               returnChanges: true,
             }
@@ -296,7 +296,7 @@ const resolvers = {
         )
         .then((result) => {
           return axios.post(
-            `http://${config.host}:${config.hapiServer}/startPipeline`, { run: result.changes[0].new_val }
+            `http://${config.host}:${config.pipelineServer}/startPipeline`, { run: result.changes[0].new_val }
           ).then(() => {
               return result.changes[0].new_val;
           })
@@ -499,7 +499,7 @@ const resolvers = {
         .then(connection =>
           rethink.table('consortia').insert(
             args.consortium,
-            { 
+            {
               conflict: "update",
               returnChanges: true,
             }
