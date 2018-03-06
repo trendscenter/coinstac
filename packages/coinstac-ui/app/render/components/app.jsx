@@ -32,12 +32,6 @@ class App extends Component { // eslint-disable-line react/prefer-stateless-func
 
         {this.state.checkJWT && children}
 
-        <ul id="loading_list">
-          {Object.keys(wip).map(loadingKey =>
-            (<li key={loadingKey}>{loadingKey}</li>)
-          )}
-        </ul>
-
         <Notifications
           notifications={notifications}
         />
