@@ -31,6 +31,8 @@ class CollectionTabs extends Component {
     if (collections.length > 0 && params.collectionId) {
       collection = collections.find(col => col.id.toString() === params.collectionId);
       this.props.getAssociatedConsortia(collection.associatedConsortia);
+    } else {
+      this.props.getAssociatedConsortia([]);
     }
 
     this.state = {
@@ -51,8 +53,6 @@ class CollectionTabs extends Component {
   }
 
   updateAssociatedConsortia(cons) {
-    this.props.saveAssociatedConsortia(cons);
-
     if (this.state.collection.associatedConsortia.indexOf(cons.id) === -1) {
       this.setState(prevState => ({
         collection: {
@@ -67,36 +67,36 @@ class CollectionTabs extends Component {
 
     // Grab runs for consortium, check if most recent is waiting for mapping,
     //   start pipeline if mapping complete
-    this.props.getRunsForConsortium(cons.id)
+    this.props.saveAssociatedConsortia(cons)
+      .then(() => { this.props.getRunsForConsortium(cons.id); })
       .then((runs) => {
-        if (runs[runs.length - 1].status === 'needs-map') {
-          let run = runs[runs.length - 1];
-          const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
+        return this.props.getCollectionFiles(cons.id)
+        .then((filesArray) => {
+          if (runs && runs.length && runs[runs.length - 1].status === 'needs-map') {
+            let run = runs[runs.length - 1];
+            const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
+            if ('allFiles' in filesArray) {
+              this.props.notifyInfo({
+                message: `Pipeline Starting for ${consortium.name}.`,
+              });
 
-          return this.props.getCollectionFiles(cons.id, consortium.name, run.pipelineSnapshot.steps)
-            .then((filesArray) => {
-              if ('allFiles' in filesArray) {
-                this.props.notifyInfo({
-                  message: `Pipeline Starting for ${consortium.name}.`,
-                });
-
-                if ('steps' in filesArray) {
-                  run = {
-                    ...run,
-                    pipelineSnapshot: {
-                      ...run.pipelineSnapshot,
-                      steps: filesArray.steps,
-                    },
-                  };
-                }
-
-                ipcRenderer.send('start-pipeline', {
-                  consortium, pipeline: run.pipelineSnapshot, filesArray: filesArray.allFiles, run,
-                });
-                this.props.saveLocalRun({ ...run, status: 'started' });
+              if ('steps' in filesArray) {
+                run = {
+                  ...run,
+                  pipelineSnapshot: {
+                    ...run.pipelineSnapshot,
+                    steps: filesArray.steps,
+                  },
+                };
               }
-            });
-        }
+
+              ipcRenderer.send('start-pipeline', {
+                consortium, pipeline: run.pipelineSnapshot, filesArray: filesArray.allFiles, run,
+              });
+              this.props.saveLocalRun({ ...run, status: 'started' });
+            }
+          }
+        });
       });
   }
 
@@ -143,7 +143,7 @@ class CollectionTabs extends Component {
             style={styles.tab}
           >
             <CollectionConsortia
-              associatedConsortia={this.props.associatedConsortia}
+              associatedConsortia={this.props.activeAssociatedConsortia}
               collection={this.state.collection}
               consortia={this.props.consortia}
               saveCollection={this.saveCollection}
@@ -158,11 +158,11 @@ class CollectionTabs extends Component {
 }
 
 CollectionTabs.defaultProps = {
-  associatedConsortia: [],
+  activeAssociatedConsortia: [],
 };
 
 CollectionTabs.propTypes = {
-  associatedConsortia: PropTypes.array,
+  activeAssociatedConsortia: PropTypes.array,
   collections: PropTypes.array.isRequired,
   consortia: PropTypes.array.isRequired,
   getAssociatedConsortia: PropTypes.func.isRequired,
@@ -170,14 +170,13 @@ CollectionTabs.propTypes = {
   getRunsForConsortium: PropTypes.func.isRequired,
   notifyInfo: PropTypes.func.isRequired,
   params: PropTypes.object.isRequired,
-  pipelines: PropTypes.array.isRequired,
   saveAssociatedConsortia: PropTypes.func.isRequired,
   saveCollection: PropTypes.func.isRequired,
   saveLocalRun: PropTypes.func.isRequired,
 };
 
-function mapStateToProps({ collections: { associatedConsortia, collections } }) {
-  return { associatedConsortia, collections };
+function mapStateToProps({ collections: { activeAssociatedConsortia, collections } }) {
+  return { activeAssociatedConsortia, collections };
 }
 
 export default connect(mapStateToProps,
