@@ -19,14 +19,19 @@ const conf = convict({
     env: 'NODE_ENV',
   },
   apiServer: {
-    hostname: 'coinstac.mrn.org',
-    pathname: '/api',
+    hostname: 'coinstac.mrn.org/api',
+    port: '443',
     protocol: 'https:',
   },
   subApiServer: {
     hostname: 'coinstac.mrn.org/ws',
     port: '443',
     protocol: 'ws:',
+  },
+  pipelineWSServer: {
+    hostname: 'coinstac.mrn.org/run',
+    port: '443',
+    protocol: 'https:',
   },
   logFile: 'coinstac-log.json',
   logFileBoot: 'coinstac-boot-error-log.txt',
