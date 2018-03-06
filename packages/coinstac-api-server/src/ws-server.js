@@ -2,7 +2,7 @@ const { SubscriptionServer } = require('subscriptions-transport-ws');
 const { execute, subscribe } = require('graphql');
 const { schema } = require('./data/schema');
 
-const activate = (hapiServer) => {
+const activate = (pipelineServer) => {
   const subServer = SubscriptionServer.create(
     {
       schema,
@@ -10,7 +10,7 @@ const activate = (hapiServer) => {
       subscribe,
     },
     {
-      server: hapiServer.listener,
+      server: pipelineServer.listener,
       path: '/subscriptions',
     }
   );
