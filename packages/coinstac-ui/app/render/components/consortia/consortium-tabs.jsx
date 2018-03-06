@@ -5,7 +5,7 @@ import { Tab, Tabs } from 'react-bootstrap';
 import { graphql, compose } from 'react-apollo';
 import ConsortiumAbout from './consortium-about';
 import ConsortiumPipeline from './consortium-pipeline';
-import ConsortiumResults from './consortium-results';
+import ConsortiumRuns from './consortium-runs';
 import { updateUserPerms } from '../../state/ducks/auth';
 import { saveAssociatedConsortia } from '../../state/ducks/collections';
 import {
@@ -149,11 +149,11 @@ class ConsortiumTabs extends Component {
           </Tab>
           <Tab
             eventKey={3}
-            title="Results"
+            title="Runs"
             disabled={typeof this.state.consortium.id === 'undefined'}
             style={styles.tab}
           >
-            <ConsortiumResults
+            <ConsortiumRuns
               runs={this.getConsortiumRuns()}
               consortia={this.props.consortia}
             />
@@ -201,4 +201,7 @@ const ConsortiumTabsWithData = compose(
   graphql(SAVE_CONSORTIUM_MUTATION, saveDocumentProp('saveConsortium', 'consortium'))
 )(ConsortiumTabs);
 
-export default connect(mapStateToProps, { saveAssociatedConsortia, updateUserPerms })(ConsortiumTabsWithData);
+export default connect(
+  mapStateToProps,
+  { saveAssociatedConsortia, updateUserPerms }
+)(ConsortiumTabsWithData);

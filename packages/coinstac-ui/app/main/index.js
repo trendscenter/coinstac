@@ -102,8 +102,14 @@ loadConfig()
       run.id,
       run.pipelineSteps
     )
-    .then(([newPipeline]) => {
-      newPipeline.result.then((results) => {
+    .then(([{ pipeline, result }]) => {
+      // Listen for local pipeline state updates
+      pipeline.stateEmitter.on('update', (data) => {
+        mainWindow.webContents.send('local-pipeline-state-update', { run, data });
+      });
+
+      // Listen for results
+      result.then((results) => {
         console.log('Pipeline is done. Result:'); // eslint-disable-line no-console
         console.log(results); // eslint-disable-line no-console
         if (run.type === 'local') {
