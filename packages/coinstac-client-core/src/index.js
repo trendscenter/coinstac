@@ -57,7 +57,7 @@ class CoinstacClient {
     this.pipelineManager = PipelineManager.create({
       mode: 'local',
       clientId: opts.userId,
-      operatingDirectory: this.appDirectory,
+      operatingDirectory: path.join(this.appDirectory, opts.userId),
     });
   }
 
