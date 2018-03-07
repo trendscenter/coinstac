@@ -30,37 +30,50 @@ export default class PipelineStepInput extends Component {
     this.getNewObj = this.getNewObj.bind(this);
   }
 
-  componentWillMount() {
-    const { objKey, objParams, step, updateStep } = this.props;
+  // TODO: This overwrites other objects in state inputMap, init arrays on in call to getNewObj?
+  // componentWillMount() {
+  //   const { objKey, objParams, step, updateStep } = this.props;
 
-    // Initialize array of length input min if array of inputs required
-    if (!step.inputMap[objKey] && objParams.type === 'array' &&
-        !objParams.values) {
-      let initArray = [];
+  //   // Initialize array of length input min if array of inputs required
+  //   if (!step.inputMap[objKey] && objParams.type === 'array' &&
+  //       !objParams.values && !(objKey === 'covariates' || objKey === 'data')) {
+  //     let initArray = [];
 
-      if (objParams.defaultValue && Array.isArray(objParams.defaultValue)) {
-        initArray = Array.from({ length: objParams.min }, (v, i) => objParams.defaultValue[i]);
-      }
+  //     if (objParams.defaultValue && Array.isArray(objParams.defaultValue)) {
+  //       initArray = Array.from({ length: objParams.min }, (v, i) => objParams.defaultValue[i]);
+  //     }
 
-      updateStep({
-        ...step,
-        inputMap: this.getNewObj(
-          objKey,
-          initArray
-        ),
-      });
-    }
+  //     console.log({
+  //       ...step,
+  //       inputMap: {
+  //         ...step.inputMap,
+  //         [objKey]: initArray,
+  //       },
+  //     });
 
-    if (!step.inputMap[objKey] && (objKey === 'covariates' || objKey === 'data')) {
-      updateStep({
-        ...step,
-        inputMap: this.getNewObj(
-          objKey,
-          { ownerMappings: [] }
-        ),
-      });
-    }
-  }
+  //     updateStep({
+  //       ...step,
+  //       inputMap: {
+  //         ...step.inputMap,
+  //         [objKey]: initArray,
+  //       },
+  //     });
+  //   }
+
+  //   // console.log(objKey);
+
+  //   // if (!step.inputMap[objKey] && (objKey === 'covariates' || objKey === 'data')) {
+  //   //   updateStep({
+  //   //     ...step,
+  //   //     inputMap: {
+          
+  //   //     }this.getNewObj(
+  //   //       objKey,
+  //   //       { ownerMappings: [] }
+  //   //     ),
+  //   //   });
+  //   // }
+  // }
 
   getNewObj(
     prop, value, clientPropIndex, isValueArray
@@ -140,7 +153,7 @@ export default class PipelineStepInput extends Component {
     } = this.props;
 
     let ownerMappings = [{}];
-    if ('ownerMappings' in step.inputMap[objKey]) {
+    if (step.inputMap[objKey] && 'ownerMappings' in step.inputMap[objKey]) {
       ownerMappings = [
         ...step.inputMap[objKey].ownerMappings,
         {},

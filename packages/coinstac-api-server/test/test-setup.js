@@ -26,109 +26,55 @@ helperFunctions.getRethinkConnection()
     Object.assign({}, multiShot, { submittedBy: 'test' }),
     Object.assign({}, vbm, { submittedBy: 'author' }),
   ], { returnChanges: true }).run(connection))
-  .then(compInsertResult => rethink.table('pipelines').insert([{
-    id: 'test-pipeline-2',
-    name: 'Test Pipeline 2',
-    description: 'Test description',
-    owningConsortium: 'test-cons-2',
-    shared: true,
-    steps: [
-      {
-        computations: [
-          compInsertResult.changes[2].new_val.id,
-        ],
-        controller: {
-          options: {},
-          id: 'test-controller-1',
-          type: 'local',
-        },
-        id: 'HJwMOMTh-',
-        inputMap: {
-          covariates: {
-            ownerMappings: [
-              {
-                name: 'isControl',
-                source: 'file',
-                type: 'boolean',
-              },
-              {
-                name: 'age',
-                source: 'file',
-                type: 'number',
-              },
-            ],
+  .then(compInsertResult => rethink.table('pipelines').insert([
+    {
+      id: 'test-pipeline-decentralized',
+      name: 'Decentralized Pipeline',
+      description: 'Test description',
+      owningConsortium: 'test-cons-2',
+      shared: true,
+      steps: [
+        {
+          id: 'UIKDl-',
+          controller: { type: 'decentralized' },
+          computations: [
+            compInsertResult.changes[1].new_val.id,
+          ],
+          inputMap: {
+            start: { value: 1 },
           },
-          lambda: { value: 4 },
         },
-      },
-      {
-        computations: [
-          compInsertResult.changes[3].new_val.id,
-        ],
-        controller: { type: 'decentralized' },
-        id: 'HyLfdfanb',
-        inputMap: {
-          covariates: {
-            ownerMappings: [
-              {
-                fromCache: { variable: 'biasedX', step: 0 },
-              },
-            ],
+      ],
+    },
+    {
+      id: 'test-pipeline-local',
+      name: 'Local Pipeline',
+      description: 'Local Test description',
+      owningConsortium: 'test-cons-2',
+      shared: true,
+      steps: [
+        {
+          id: 'UIKDl-local1',
+          controller: { type: 'local' },
+          computations: [
+            compInsertResult.changes[0].new_val.id,
+          ],
+          inputMap: {
+            start: { value: 1 },
           },
-          iterationCount: { value: 3 },
-          lambda: { value: 4 },
         },
-      },
-    ],
-  },
-  {
-    id: 'test-pipeline-decentralized',
-    name: 'Decentralized Pipeline',
-    description: 'Test description',
-    owningConsortium: 'test-cons-2',
-    shared: true,
-    steps: [
-      {
-        id: 'UIKDl-',
-        controller: { type: 'decentralized' },
-        computations: [
-          compInsertResult.changes[1].new_val.id,
-        ],
-        inputMap: {
-          start: { value: 1 },
+        {
+          id: 'UIKDl-local2',
+          controller: { type: 'local' },
+          computations: [
+            compInsertResult.changes[0].new_val.id,
+          ],
+          inputMap: {
+            start: { fromCache: { step: 0, variable: 'sum' } },
+          },
         },
-      },
-    ],
-  },
-  {
-    id: 'test-pipeline-local',
-    name: 'Local Pipeline',
-    description: 'Local Test description',
-    owningConsortium: 'test-cons-2',
-    shared: true,
-    steps: [
-      {
-        id: 'UIKDl-local1',
-        controller: { type: 'local' },
-        computations: [
-          compInsertResult.changes[0].new_val.id,
-        ],
-        inputMap: {
-          start: { value: 1 },
-        },
-      },
-      {
-        id: 'UIKDl-local2',
-        controller: { type: 'local' },
-        computations: [
-          compInsertResult.changes[0].new_val.id,
-        ],
-        inputMap: {
-          start: { fromCache: { step: 0, variable: 'sum' } },
-        },
-      },
-    ],
-  },
+      ],
+    },
   ]).run(connection))
   .then(() => rethink.tableCreate('roles', { primaryKey: 'role' }).run(connection))
   .then(() => rethink.table('roles').insert([
@@ -391,10 +337,7 @@ helperFunctions.getRethinkConnection()
   institution: 'mrn',
   email: 'server@mrn.org',
   permissions: {
-    computations: {
-      'single-shot-test-id': ['owner'],
-      'multi-shot-test-id': ['owner'],
-    },
+    computations: {},
     consortia: {
       'test-cons-1': ['owner'],
       'test-cons-2': ['member'],

@@ -72,12 +72,13 @@ module.exports = [
             updateRunState(run.id, data);
           });
 
-          remotePipeline.result.then((result) => {
-            saveResults(run.id, result);
-          })
-          .catch(() => {
-            // TODO: save pipeline errors!
-          });
+          remotePipeline.result
+            .then((result) => {
+              saveResults(run.id, result);
+            })
+            .catch((err) => {
+              console.log(err);
+            });
         });
       },
     },

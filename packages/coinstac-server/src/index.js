@@ -6,7 +6,9 @@ const routes = require('./routes');
 
 // Download computations on remote server on server start
 const computationRegistry = new CoinstacComputationRegistry({ credentials: dbmap.rethinkdbServer });
-computationRegistry.serverStart();
+
+// TODO: Uncomment below when SSR and MSR are on docker hub
+// computationRegistry.serverStart();
 
 const server = new hapi.Server();
 server.connection({
