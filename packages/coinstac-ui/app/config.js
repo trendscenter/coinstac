@@ -26,7 +26,7 @@ const conf = convict({
   subApiServer: {
     hostname: 'coinstac.mrn.org/ws',
     port: '443',
-    protocol: 'ws:',
+    protocol: 'https:',
   },
   pipelineWSServer: {
     hostname: 'coinstac.mrn.org/run',
