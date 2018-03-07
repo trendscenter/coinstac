@@ -4,7 +4,7 @@ import { remote } from 'electron';
 import { applyAsyncLoading } from './loading';
 
 const apiServer = remote.getGlobal('config').get('apiServer');
-const API_URL = `${apiServer.protocol}//${apiServer.hostname}:${apiServer.port}`;
+const API_URL = `${apiServer.protocol}//${apiServer.hostname}${apiServer.port ? `:${apiServer.port}` : ''}${apiServer.pathname}`;
 
 const INITIAL_STATE = {
   user: {
