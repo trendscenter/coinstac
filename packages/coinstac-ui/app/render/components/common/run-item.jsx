@@ -91,7 +91,7 @@ const RunItem = ({ consortiumName, runObject }) => (
         <div>
           <span className="bold">Status: </span>
           {runObject.status === 'complete' && <span style={{ color: 'green' }}>Complete</span>}
-          {runObject.status === 'started' && <span style={{ color: 'orange' }}>In Progress</span>}
+          {runObject.status === 'started' && <span style={{ color: 'cornflowerblue' }}>In Progress</span>}
           {runObject.status === 'error' && <span style={{ color: 'red' }}>Error</span>}
           {runObject.status === 'needs-map' &&
             <div>

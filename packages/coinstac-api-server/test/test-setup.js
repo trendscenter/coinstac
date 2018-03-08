@@ -28,6 +28,52 @@ helperFunctions.getRethinkConnection()
   ], { returnChanges: true }).run(connection))
   .then(compInsertResult => rethink.table('pipelines').insert([
     {
+      delete: false,
+      description: 'ssr',
+      id: 'test-pipeline-ssr',
+      name: 'ssr test',
+      owningConsortium: 'test-cons-2',
+      shared: false,
+      steps: [
+        {
+          computations: [
+            compInsertResult.changes[2].new_val.id,
+          ],
+          controller: {
+            id: null,
+            options: {},
+            type: 'decentralized',
+          },
+          id: 'HJKRyjTuM',
+          inputMap: {
+            covariates: {
+              ownerMappings: [
+                {
+                  name: 'isControl',
+                  source: 'file',
+                  type: 'boolean',
+                },
+                {
+                  name: 'age',
+                  source: 'file',
+                  type: 'number',
+                },
+              ],
+            },
+            data: {
+              ownerMappings: [
+                {
+                  type: 'FreeSurfer',
+                  value: ['3rd-Ventricle'],
+                },
+              ],
+            },
+            lambda: { value: 2 },
+          },
+        },
+      ],
+    },
+    {
       id: 'test-pipeline-decentralized',
       name: 'Decentralized Pipeline',
       description: 'Test description',
@@ -287,7 +333,7 @@ helperFunctions.getRethinkConnection()
   }).run(connection))
   .then(() => rethink.table('consortia').insert({
     id: 'test-cons-2',
-    activePipelineId: 'test-pipeline-decentralized',
+    activePipelineId: 'test-pipeline-ssr',
     name: 'Test Consortia 2',
     description: 'This consortia is for testing too.',
     owners: ['test'],

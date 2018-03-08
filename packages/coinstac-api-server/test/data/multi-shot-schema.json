@@ -46,8 +46,24 @@
       }
     },
     "output": {
-      "Beta": {
-        "label": "Beta",
+      "avg_beta_vector": {
+        "label": "Avg Beta Vector",
+        "type": "array"
+      },
+      "r_2_global": {
+        "label": "R2 Global",
+        "type": "number"
+      },
+      "ts_global": {
+        "label": "TS Global",
+        "type": "array"
+      },
+      "ps_global": {
+        "label": "PS Global",
+        "type": "number"
+      },
+      "dof_global": {
+        "label": "DOF Global",
         "type": "array"
       }
     },
