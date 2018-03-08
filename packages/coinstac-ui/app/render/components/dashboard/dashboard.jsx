@@ -5,7 +5,13 @@ import PropTypes from 'prop-types';
 import { ipcRenderer } from 'electron';
 import DashboardNav from './dashboard-nav';
 import UserAccountController from '../user/user-account-controller';
-import { notifyInfo, notifySuccess, notifyWarning, writeLog } from '../../state/ducks/notifyAndLog';
+import {
+  notifyError,
+  notifyInfo,
+  notifySuccess,
+  notifyWarning,
+  writeLog,
+} from '../../state/ducks/notifyAndLog';
 import CoinstacAbbr from '../coinstac-abbr';
 import { getCollectionFiles, incrementRunCount, initTestData, syncRemoteLocalConsortia, syncRemoteLocalPipelines } from '../../state/ducks/collections';
 import { clearRuns, getLocalRun, getDBRuns, saveLocalRun, updateLocalRun } from '../../state/ducks/runs';
@@ -93,6 +99,21 @@ class Dashboard extends Component {
 
       this.props.saveLocalRun({ ...arg.run, status: 'complete' });
     });
+
+    ipcRenderer.on('local-run-error', (event, arg) => {
+      this.props.notifyError({
+        message: `${arg.consName} Pipeline Error.`,
+        autoDismiss: 5,
+        action: {
+          label: 'View Error',
+          callback: () => {
+            router.push(`dashboard/results/${arg.run.id}`);
+          },
+        },
+      });
+
+      this.props.saveLocalRun({ ...arg.run, status: 'error' });
+    });
   }
 
   componentWillReceiveProps(nextProps) {
@@ -163,13 +184,14 @@ class Dashboard extends Component {
                 };
               }
 
+              this.props.incrementRunCount(consortium.id);
+              this.props.notifyInfo({
+                message: `Decentralized Pipeline Starting for ${consortium.name}.`,
+              });
+
               // 5 second timeout to ensure no port conflicts in
               //  development env between remote and client pipelines
               setTimeout(() => {
-                this.props.incrementRunCount(consortium.id);
-                this.props.notifyInfo({
-                  message: `Decentralized Pipeline Starting for ${consortium.name}.`,
-                });
                 ipcRenderer.send('start-pipeline', {
                   consortium,
                   pipeline: run.pipelineSnapshot,
@@ -183,7 +205,32 @@ class Dashboard extends Component {
             this.props.saveLocalRun({ ...run, status });
           });
         } else if (runIndexInLocalRuns === -1 && nextProps.remoteRuns[i].results) {
+          ipcRenderer.send('clean-remote-pipeline', nextProps.remoteRuns[i].id);
           this.props.saveLocalRun({ ...nextProps.remoteRuns[i], status: 'complete' });
+        } else if (runIndexInLocalRuns === -1 && nextProps.remoteRuns[i].error) {
+          ipcRenderer.send('clean-remote-pipeline', nextProps.remoteRuns[i].id);
+          this.props.saveLocalRun({ ...nextProps.remoteRuns[i], status: 'error' });
+        // Run already in props but error is incoming
+        } else if (runIndexInLocalRuns > -1 && nextProps.remoteRuns[i].error
+          && !this.props.runs[runIndexInLocalRuns].error && this.props.consortia.length
+          && !this.props.remoteRuns[runIndexInPropsRemote].error) {
+          const run = nextProps.remoteRuns[i];
+          const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
+
+          // Update status of run in localDB
+          ipcRenderer.send('clean-remote-pipeline', nextProps.remoteRuns[i].id);
+          this.props.saveLocalRun({ ...run, status: 'error' });
+          this.props.notifyError({
+            message: `${consortium.name} Pipeline Error.`,
+            autoDismiss: 5,
+            action: {
+              label: 'View Error',
+              callback: () => {
+                router.push(`dashboard/results/${run.id}`);
+              },
+            },
+          });
+
         // Run already in props but results are incoming
         } else if (runIndexInLocalRuns > -1 && nextProps.remoteRuns[i].results
           && !this.props.runs[runIndexInLocalRuns].results && this.props.consortia.length
@@ -192,6 +239,7 @@ class Dashboard extends Component {
           const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
 
           // Update status of run in localDB
+          ipcRenderer.send('clean-remote-pipeline', nextProps.remoteRuns[i].id);
           this.props.saveLocalRun({ ...run, status: 'complete' });
           this.props.notifySuccess({
             message: `${consortium.name} Pipeline Complete.`,
@@ -358,6 +406,7 @@ Dashboard.propTypes = {
   getDBRuns: PropTypes.func.isRequired,
   incrementRunCount: PropTypes.func.isRequired,
   initTestData: PropTypes.func.isRequired,
+  notifyError: PropTypes.func.isRequired,
   notifyInfo: PropTypes.func.isRequired,
   notifySuccess: PropTypes.func.isRequired,
   notifyWarning: PropTypes.func.isRequired,
@@ -436,6 +485,7 @@ export default connect(mapStateToProps,
     getDBRuns,
     incrementRunCount,
     initTestData,
+    notifyError,
     notifyInfo,
     notifySuccess,
     notifyWarning,
