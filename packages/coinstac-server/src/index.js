@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 const hapi = require('hapi');
 const CoinstacComputationRegistry = require('coinstac-computation-registry');
 const dbmap = require('/etc/coinstac/cstacDBMap'); // eslint-disable-line import/no-absolute-path, import/no-unresolved

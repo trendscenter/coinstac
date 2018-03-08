@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import { Tabs, Tab } from 'react-bootstrap';
+import { Tabs, Tab, Well } from 'react-bootstrap';
 import Box from './displays/box-plot';
 import Scatter from './displays/scatter-plot';
 import Table from './displays/result-table';
@@ -92,7 +92,9 @@ class Result extends Component {
           </Tabs>
         }
         {activeResult && activeResult.error &&
-          <p style={{ color: 'red' }}>{JSON.stringify(activeResult.error.error, null, 2)}</p>
+          <Well style={{ color: 'red' }}>
+            {JSON.stringify(activeResult.error.error.error, null, 2)}
+          </Well>
         }
       </div>
     );

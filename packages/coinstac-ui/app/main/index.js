@@ -7,7 +7,7 @@
 
 'use strict';
 
-const { compact } = require('lodash');
+const { compact } = require('lodash'); // eslint-disable-line no-unused-vars
 const mock = require('../../test/e2e/mocks');
 const electron = require('electron');
 const ipcPromise = require('ipc-promise');
@@ -156,7 +156,7 @@ loadConfig()
    *  associated with the computations being retrieved
    * @return {Promise}
    */
-  ipcPromise.on('download-comps', (params) => {
+  ipcPromise.on('download-comps', (params) => { // eslint-disable-line no-unused-vars
     return null;
 
     // TODO: Uncomment below when SSR and MSR are on docker hub

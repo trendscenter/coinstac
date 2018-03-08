@@ -60,8 +60,6 @@ class CoinstacClient {
 
     this.clientId = opts.userId;
 
-    console.log(path.join(this.appDirectory, opts.userId));
-
     this.pipelineManager = PipelineManager.create({
       mode: 'local',
       clientId: opts.userId,
@@ -214,7 +212,7 @@ class CoinstacClient {
         linkPromises.push(
           fs.link(
             filesArray[i],
-            `${this.appDirectory}/${this.clientId}/${runId}/${filesArray[i].replace(/\//g, '--')}`,
+            `${this.appDirectory}/${this.clientId}/${runId}/${filesArray[i].replace(/\//g, '-')}`,
             err => console.log(err) // eslint-disable-line no-console
           )
         );
@@ -265,7 +263,8 @@ class CoinstacClient {
         );
       }
       return Promise.all(unlinkPromises);
-    });
+    })
+    .catch(console.log); // eslint-disable-line no-console
   }
 }
 

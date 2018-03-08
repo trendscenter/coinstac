@@ -252,7 +252,7 @@ class Dashboard extends Component {
             },
           });
         // Looking for remote run state changes
-        } else if (runIndexInLocalRuns > -1 && nextProps.remoteRuns[i].remotePipelineState
+        } else if (runIndexInPropsRemote > -1 && nextProps.remoteRuns[i].remotePipelineState
           && (!this.props.remoteRuns[runIndexInPropsRemote].remotePipelineState
           || (nextProps.remoteRuns[i].remotePipelineState.currentIteration
           !== this.props.remoteRuns[runIndexInPropsRemote].remotePipelineState.currentIteration
