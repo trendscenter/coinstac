@@ -7,8 +7,8 @@ import DashboardNav from './dashboard-nav';
 import UserAccountController from '../user/user-account-controller';
 import { notifyInfo, notifySuccess, notifyWarning, writeLog } from '../../state/ducks/notifyAndLog';
 import CoinstacAbbr from '../coinstac-abbr';
-import { getCollectionFiles, syncRemoteLocalConsortia, syncRemoteLocalPipelines } from '../../state/ducks/collections';
-import { getLocalRun, getDBRuns, saveLocalRun } from '../../state/ducks/runs';
+import { getCollectionFiles, initTestData, syncRemoteLocalConsortia, syncRemoteLocalPipelines } from '../../state/ducks/collections';
+import { clearRuns, getLocalRun, getDBRuns, saveLocalRun, updateLocalRun } from '../../state/ducks/runs';
 import {
   pullComputations,
   updateDockerOutput,
@@ -47,6 +47,10 @@ class Dashboard extends Component {
     const { auth: { user } } = this.props;
     const { router } = this.context;
 
+    // Uncomment to clear local data
+    this.props.clearRuns();
+    this.props.initTestData();
+
     process.nextTick(() => {
       if (!user.email.length) {
         this.props.writeLog({ type: 'verbose', message: 'Redirecting login (no authorized user)' });
@@ -65,6 +69,14 @@ class Dashboard extends Component {
       this.props.notifySuccess({
         message: `${arg} Pipeline Computations Downloaded`,
       });
+    });
+
+    ipcRenderer.on('local-pipeline-state-update', (event, arg) => {
+      this.props.updateLocalRun(
+        arg.run.id,
+        'localPipelineState',
+        arg.data
+      );
     });
 
     ipcRenderer.on('local-run-complete', (event, arg) => {
@@ -107,6 +119,7 @@ class Dashboard extends Component {
       // TODO: Speed this up by moving to subscription prop (n vs n^2)?
       for (let i = 0; i < nextProps.remoteRuns.length; i += 1) {
         let runIndexInLocalRuns = -1;
+        let runIndexInPropsRemote = -1;
 
         // Find run in local props if it's there
         if (this.props.runs.length > 0) {
@@ -114,9 +127,16 @@ class Dashboard extends Component {
             .findIndex(run => run.id === nextProps.remoteRuns[i].id);
         }
 
+        if (runIndexInLocalRuns > -1
+          || (runIndexInLocalRuns === -1 && !nextProps.remoteRuns[i].results
+          && this.props.consortia.length)) {
+          runIndexInPropsRemote = this.props.remoteRuns
+            .findIndex(run => run.id === nextProps.remoteRuns[i].id);
+        }
+
         // Run not in local props, start a pipeline (runs already filtered by member)
         if (runIndexInLocalRuns === -1 && !nextProps.remoteRuns[i].results
-          && this.props.consortia.length) {
+          && this.props.consortia.length && runIndexInPropsRemote === -1) {
           let run = nextProps.remoteRuns[i];
           const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
 
@@ -153,7 +173,7 @@ class Dashboard extends Component {
                   consortium,
                   pipeline: run.pipelineSnapshot,
                   filesArray: filesArray.allFiles,
-                  run,
+                  run: { ...run, status },
                 });
               }, 5000);
             }
@@ -165,7 +185,8 @@ class Dashboard extends Component {
           this.props.saveLocalRun({ ...nextProps.remoteRuns[i], status: 'complete' });
         // Run already in props but results are incoming
         } else if (runIndexInLocalRuns > -1 && nextProps.remoteRuns[i].results
-          && !this.props.runs[runIndexInLocalRuns].results && this.props.consortia.length) {
+          && !this.props.runs[runIndexInLocalRuns].results && this.props.consortia.length
+          && !this.props.remoteRuns[runIndexInPropsRemote].results) {
           const run = nextProps.remoteRuns[i];
           const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
 
@@ -181,6 +202,23 @@ class Dashboard extends Component {
               },
             },
           });
+        // Looking for remote run state changes
+        } else if (runIndexInLocalRuns > -1 && nextProps.remoteRuns[i].remotePipelineState
+          && (!this.props.remoteRuns[runIndexInPropsRemote].remotePipelineState
+          || (nextProps.remoteRuns[i].remotePipelineState.currentIteration
+          !== this.props.remoteRuns[runIndexInPropsRemote].remotePipelineState.currentIteration
+          || nextProps.remoteRuns[i].remotePipelineState.controllerState
+          !== this.props.remoteRuns[runIndexInPropsRemote].remotePipelineState.controllerState
+          || nextProps.remoteRuns[i].remotePipelineState.pipelineStep
+          !== this.props.remoteRuns[runIndexInPropsRemote].remotePipelineState.pipelineStep))) {
+          const run = nextProps.remoteRuns[i];
+
+          // Update status of run in localDB
+          this.props.updateLocalRun(
+            run.id,
+            'remotePipelineState',
+            run.remotePipelineState
+          );
         }
       }
     }
@@ -312,10 +350,12 @@ Dashboard.propTypes = {
   auth: PropTypes.object.isRequired,
   children: PropTypes.node.isRequired,
   client: PropTypes.object.isRequired,
+  clearRuns: PropTypes.func.isRequired,
   computations: PropTypes.array,
   consortia: PropTypes.array,
   getCollectionFiles: PropTypes.func.isRequired,
   getDBRuns: PropTypes.func.isRequired,
+  initTestData: PropTypes.func.isRequired,
   notifyInfo: PropTypes.func.isRequired,
   notifySuccess: PropTypes.func.isRequired,
   notifyWarning: PropTypes.func.isRequired,
@@ -331,6 +371,7 @@ Dashboard.propTypes = {
   syncRemoteLocalConsortia: PropTypes.func.isRequired,
   syncRemoteLocalPipelines: PropTypes.func.isRequired,
   updateDockerOutput: PropTypes.func.isRequired,
+  updateLocalRun: PropTypes.func.isRequired,
   updateUserConsortiumStatus: PropTypes.func.isRequired,
   writeLog: PropTypes.func.isRequired,
 };
@@ -387,9 +428,11 @@ const DashboardWithData = compose(
 
 export default connect(mapStateToProps,
   {
+    clearRuns,
     getCollectionFiles,
     getLocalRun,
     getDBRuns,
+    initTestData,
     notifyInfo,
     notifySuccess,
     notifyWarning,
@@ -398,6 +441,7 @@ export default connect(mapStateToProps,
     syncRemoteLocalConsortia,
     syncRemoteLocalPipelines,
     updateDockerOutput,
+    updateLocalRun,
     updateUserConsortiaStatuses,
     writeLog,
   }

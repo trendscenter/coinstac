@@ -55,6 +55,11 @@ const mutations = {
       saveResults(runId: $runId, results: $results)
     }
   `,
+  updateRunState: `
+    {
+      updateRunState(runId: $runId, data: $data)
+    }
+  `,
   updateUserConsortiumStatus: `
     {
       updateUserConsortiumStatus(consortiumId: $consortiumId, status: $status) {
