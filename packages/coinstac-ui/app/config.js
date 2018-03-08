@@ -27,7 +27,7 @@ const conf = convict({
     hostname: 'coinstac.mrn.org',
     pathname: '/ws',
     port: '443',
-    protocol: 'ws:',
+    protocol: 'wss:',
   },
   pipelineWSServer: {
     hostname: 'coinstac.mrn.org',
