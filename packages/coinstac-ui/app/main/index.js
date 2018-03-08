@@ -63,6 +63,12 @@ loadConfig()
   let core = null;
   logger.verbose('main process booted');
 
+  ipcMain.on('clean-remote-pipeline', (event, runId) => {
+    if (core) {
+      core.unlinkFiles(runId);
+    }
+  });
+
   /**
    * IPC Listener to write logs
    * @param {String} message The message to write out to log
@@ -103,10 +109,6 @@ loadConfig()
       run.pipelineSteps
     )
     .then(([{ pipeline, result }]) => {
-      pipeline.catch((err) => {
-        console.log(err);
-      });
-
       // Listen for local pipeline state updates
       pipeline.stateEmitter.on('update', (data) => {
         mainWindow.webContents.send('local-pipeline-state-update', { run, data });
@@ -116,6 +118,7 @@ loadConfig()
       result.then((results) => {
         console.log('Pipeline is done. Result:'); // eslint-disable-line no-console
         console.log(results); // eslint-disable-line no-console
+        core.unlinkFiles(run.id);
         if (run.type === 'local') {
           mainWindow.webContents.send('local-run-complete', {
             consName: consortium.name,
@@ -124,8 +127,12 @@ loadConfig()
         }
       });
 
-      result.catch((err) => {
-        console.log(err);
+      result.catch((error) => {
+        core.unlinkFiles(run.id);
+        mainWindow.webContents.send('local-run-error', {
+          consName: consortium.name,
+          run: Object.assign(run, { error, endDate: Date.now() }),
+        });
       });
     });
   });

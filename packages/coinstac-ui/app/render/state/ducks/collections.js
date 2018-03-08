@@ -71,9 +71,9 @@ function iteratePipelineSteps(consortium, filesByGroup) {
           }
         }
 
-        if (key === 'data') {
-          keyArray[0].push(keyArray[0][0]);
-        }
+        // if (key === 'data') {
+        //   keyArray[0].push(keyArray[0][0]);
+        // }
 
         inputMap[key] = { value: keyArray };
       }

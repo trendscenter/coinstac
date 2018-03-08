@@ -26,7 +26,7 @@ class Result extends Component {
           // Checking display type of computation
           plotData.push(run.results);
         }
-        if (run.results.type === 'scatter_plot') {
+        if (run.results && run.results.type === 'scatter_plot') {
           run.results.plots.map(result => (
             result.coordinates.map(val => (
               plotData.push({
@@ -36,7 +36,7 @@ class Result extends Component {
               })
             )
           )));
-        } else if (run.results.type === 'box_plot') {
+        } else if (run.results && run.results.type === 'box_plot') {
           run.results.x.map(val => (
             plotData.push(val)
           ));
@@ -90,6 +90,9 @@ class Result extends Component {
               />
             </Tab>
           </Tabs>
+        }
+        {activeResult && activeResult.error &&
+          <p style={{ color: 'red' }}>{JSON.stringify(activeResult.error.error, null, 2)}</p>
         }
       </div>
     );

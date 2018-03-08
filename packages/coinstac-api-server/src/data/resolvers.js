@@ -509,6 +509,21 @@ const resolvers = {
         .then(result => result.changes[0].new_val)
     },
     /**
+     * Saves run error
+     * @param {object} auth User object from JWT middleware validateFunc
+     * @param {object} args
+     * @param {string} args.runId Run id to update
+     * @param {string} args.error Error
+     */
+    saveError: ({ auth: { credentials } }, args) => {
+      const { permissions } = credentials;
+      return helperFunctions.getRethinkConnection()
+        .then((connection) =>
+          rethink.table('runs').get(args.runId).update({ error: Object.assign({}, args.error), endDate: Date.now() })
+          .run(connection))
+          // .then(result => result.changes[0].new_val)
+    },
+    /**
      * Saves pipeline
      * @param {object} auth User object from JWT middleware validateFunc
      * @param {object} args

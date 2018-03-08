@@ -92,9 +92,9 @@ const RunItem = ({ consortiumName, runObject }) => (
           <span className="bold">Status: </span>
           {runObject.status === 'complete' && <span style={{ color: 'green' }}>Complete</span>}
           {runObject.status === 'started' && <span style={{ color: 'orange' }}>In Progress</span>}
+          {runObject.status === 'error' && <span style={{ color: 'red' }}>Error</span>}
           {runObject.status === 'needs-map' &&
             <div>
-              <span style={{ color: 'red' }}>Missing Data Mappings</span>
               <LinkContainer
                 to={'dashboard/collections'}
               >
@@ -146,6 +146,13 @@ const RunItem = ({ consortiumName, runObject }) => (
             to={`dashboard/results/${runObject.id}`}
           >
             <Button bsStyle="success">View Results</Button>
+          </LinkContainer>
+        }
+        {runObject.error &&
+          <LinkContainer
+            to={`dashboard/results/${runObject.id}`}
+          >
+            <Button bsStyle="danger">View Error</Button>
           </LinkContainer>
         }
         {runObject.pipelineSnapshot &&
