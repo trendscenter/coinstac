@@ -103,7 +103,7 @@ class CollectionPipelineInput extends Component {
   }
 
   render() {
-    const { collection, objKey, objValue, pipelineSteps } = this.props;
+    const { collection, objKey, objValue, pipelineSteps, stepIndex } = this.props;
 
     return (
       <div>
@@ -142,13 +142,25 @@ class CollectionPipelineInput extends Component {
                           onChange={this.setSourceFile(covarIndex)}
                         >
                           <option disabled value="" key="file-select-none">Select a File</option>
-                          {Object.values(collection.fileGroups).map(group =>
+                          {Object.values(collection.fileGroups)
+                            .filter((group) => {
+                              return (
+                                objKey === 'data'
+                                ? pipelineSteps[stepIndex].computations[0]
+                                  .computation.input.data.extensions[
+                                    pipelineSteps[stepIndex].computations[0]
+                                    .computation.input.data.items.indexOf(val.type)
+                                  ].indexOf(group.extension.substring(1)) > -1
+                                : true
+                              );
+                            })
+                            .map(group =>
                             (
                               <option
-                                key={`${new Date(group.date).toUTCString()} (${group.extension})`}
+                                key={group.name}
                                 value={group.id}
                               >
-                                {`${new Date(group.date).toUTCString()} (${group.extension})`}
+                                {group.name}
                               </option>
                             )
                           )}

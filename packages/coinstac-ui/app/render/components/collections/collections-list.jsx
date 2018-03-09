@@ -64,7 +64,7 @@ class CollectionsList extends Component {
             itemObject={collection}
             deleteItem={this.openModal}
             owner
-            itemOptions={[]}
+            itemOptions={{ actions: [], text: [] }}
             itemRoute={'/dashboard/collections'}
           />
         ))}
