@@ -27,7 +27,7 @@ const authenticateServer = () => {
 const updateRunState = (runId, data) =>
   axios({
     method: 'post',
-    url: `${config.DB_URL}/graphql`,
+    url: `${config.apiServer}/graphql`,
     data: {
       query: `mutation($runId: ID!, $data: JSON) ${graphqlSchema.mutations.updateRunState.replace(/\s{2,10}/g, ' ')}`,
       variables: {
@@ -40,7 +40,7 @@ const updateRunState = (runId, data) =>
 const saveResults = (runId, results) =>
   axios({
     method: 'post',
-    url: `${config.DB_URL}/graphql`,
+    url: `${config.apiServer}/graphql`,
     data: {
       query: `mutation($runId: ID!, $results: JSON) ${graphqlSchema.mutations.saveResults.replace(/\s{2,10}/g, ' ')}`,
       variables: {
