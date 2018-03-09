@@ -21,13 +21,15 @@ module.exports = {
    * @return {Object}                          A pipeline manager
    */
   create({
-    mode,
-    clientId,
-    operatingDirectory = './',
-    remotePort = 3300,
-    remoteURL = 'http://localhost',
     authPlugin,
     authOpts,
+    clientId,
+    operatingDirectory = './',
+    mode,
+    remotePathname = '',
+    remotePort = 3300,
+    remoteProtocol = 'http:',
+    remoteURL = 'localhost',
     unauthHandler, // eslint-disable-line no-unused-vars
   }) {
     const activePipelines = {};
@@ -114,7 +116,7 @@ module.exports = {
         io.on('connection', socketServer);
       }
     } else {
-      socket = socketIOClient(`${remoteURL}:${remotePort}?id=${clientId}`);
+      socket = socketIOClient(`${remoteProtocol}//${remoteURL}:${remotePort}${remotePathname ? `/${remotePathname}` : ''}?id=${clientId}`);
       socket.on('hello', () => {
         socket.emit('register', { id: clientId });
       });

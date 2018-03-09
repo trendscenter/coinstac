@@ -59,7 +59,9 @@ class CoinstacClient {
       clientId: opts.userId,
       operatingDirectory: this.appDirectory,
       remotePort: opts.pipelineWSServer.port,
-      remoteURL: `${opts.pipelineWSServer.protocol}//${opts.pipelineWSServer.hostname}${opts.pipelineWSServer.port ? `:${opts.pipelineWSServer.port}` : ''}${opts.pipelineWSServer.pathname}`,
+      remoteProtocol: opts.pipelineWSServer.protocol,
+      remotePathname: opts.pipelineWSServer.pathname,
+      remoteURL: opts.pipelineWSServer.hostname,
     });
   }
 
