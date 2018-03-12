@@ -116,7 +116,7 @@ module.exports = {
         io.on('connection', socketServer);
       }
     } else {
-      socket = socketIOClient(`${remoteProtocol}//${remoteURL}:${remotePort}${remotePathname ? `/${remotePathname}` : ''}?id=${clientId}`);
+      socket = socketIOClient(`${remoteProtocol}//${remoteURL}:${remotePort}${remotePathname}?id=${clientId}`);
       socket.on('hello', () => {
         socket.emit('register', { id: clientId });
       });
