@@ -362,6 +362,82 @@ helperFunctions.getRethinkConnection()
 }, passwordHash))
 .then(() => helperFunctions.hashPassword('password'))
 .then(passwordHash => helperFunctions.createUser({
+  id: 'test2',
+  username: 'test2',
+  institution: 'mrn',
+  email: 'test2@mrn.org',
+  permissions: {
+    computations: {},
+    consortia: {
+      'test-cons-1': ['member'],
+      'test-cons-2': ['member'],
+    },
+    pipelines: {},
+  },
+  consortiaStatuses: {
+    'test-cons-1': 'none',
+    'test-cons-2': 'none',
+  },
+}, passwordHash))
+.then(() => helperFunctions.hashPassword('password'))
+.then(passwordHash => helperFunctions.createUser({
+  id: 'test3',
+  username: 'test3',
+  institution: 'mrn',
+  email: 'test3@mrn.org',
+  permissions: {
+    computations: {},
+    consortia: {
+      'test-cons-1': ['member'],
+      'test-cons-2': ['member'],
+    },
+    pipelines: {},
+  },
+  consortiaStatuses: {
+    'test-cons-1': 'none',
+    'test-cons-2': 'none',
+  },
+}, passwordHash))
+.then(() => helperFunctions.hashPassword('password'))
+.then(passwordHash => helperFunctions.createUser({
+  id: 'test4',
+  username: 'test4',
+  institution: 'mrn',
+  email: 'test4@mrn.org',
+  permissions: {
+    computations: {},
+    consortia: {
+      'test-cons-1': ['member'],
+      'test-cons-2': ['member'],
+    },
+    pipelines: {},
+  },
+  consortiaStatuses: {
+    'test-cons-1': 'none',
+    'test-cons-2': 'none',
+  },
+}, passwordHash))
+.then(() => helperFunctions.hashPassword('password'))
+.then(passwordHash => helperFunctions.createUser({
+  id: 'test5',
+  username: 'test5',
+  institution: 'mrn',
+  email: 'test5@mrn.org',
+  permissions: {
+    computations: {},
+    consortia: {
+      'test-cons-1': ['member'],
+      'test-cons-2': ['member'],
+    },
+    pipelines: {},
+  },
+  consortiaStatuses: {
+    'test-cons-1': 'none',
+    'test-cons-2': 'none',
+  },
+}, passwordHash))
+.then(() => helperFunctions.hashPassword('password'))
+.then(passwordHash => helperFunctions.createUser({
   id: 'server',
   username: 'server',
   institution: 'mrn',
