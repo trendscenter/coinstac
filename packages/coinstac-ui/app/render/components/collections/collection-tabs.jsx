@@ -6,7 +6,7 @@ import { Tab, Tabs } from 'react-bootstrap';
 import CollectionAbout from './collection-about';
 import CollectionFiles from './collection-files';
 import CollectionConsortia from './collection-consortia';
-import { getAssociatedConsortia, getCollectionFiles, saveAssociatedConsortia, saveCollection } from '../../state/ducks/collections';
+import { getAssociatedConsortia, getCollectionFiles, incrementRunCount, saveAssociatedConsortia, saveCollection } from '../../state/ducks/collections';
 import { getRunsForConsortium, saveLocalRun } from '../../state/ducks/runs';
 import { notifyInfo } from '../../state/ducks/notifyAndLog';
 
@@ -90,6 +90,7 @@ class CollectionTabs extends Component {
                 };
               }
 
+              this.props.incrementRunCount(consortium.id);
               ipcRenderer.send('start-pipeline', {
                 consortium, pipeline: run.pipelineSnapshot, filesArray: filesArray.allFiles, run,
               });
@@ -168,6 +169,7 @@ CollectionTabs.propTypes = {
   getAssociatedConsortia: PropTypes.func.isRequired,
   getCollectionFiles: PropTypes.func.isRequired,
   getRunsForConsortium: PropTypes.func.isRequired,
+  incrementRunCount: PropTypes.func.isRequired,
   notifyInfo: PropTypes.func.isRequired,
   params: PropTypes.object.isRequired,
   saveAssociatedConsortia: PropTypes.func.isRequired,
@@ -184,6 +186,7 @@ export default connect(mapStateToProps,
     getAssociatedConsortia,
     getCollectionFiles,
     getRunsForConsortium,
+    incrementRunCount,
     notifyInfo,
     saveAssociatedConsortia,
     saveCollection,

@@ -11,6 +11,7 @@ import ListDeleteModal from '../common/list-delete-modal';
 import {
   getCollectionFiles,
   getAllAssociatedConsortia,
+  incrementRunCount,
   removeCollectionsFromAssociatedConsortia,
   saveAssociatedConsortia,
 } from '../../state/ducks/collections';
@@ -321,6 +322,7 @@ class ConsortiaList extends Component {
 
               run.status = status;
 
+              this.props.incrementRunCount(consortiumId);
               ipcRenderer.send('start-pipeline', { consortium, pipeline, filesArray: filesArray.allFiles, run });
             }
 
@@ -393,6 +395,7 @@ ConsortiaList.propTypes = {
   deleteConsortiumById: PropTypes.func.isRequired,
   getCollectionFiles: PropTypes.func.isRequired,
   getAllAssociatedConsortia: PropTypes.func.isRequired,
+  incrementRunCount: PropTypes.func.isRequired,
   joinConsortium: PropTypes.func.isRequired,
   leaveConsortium: PropTypes.func.isRequired,
   notifyInfo: PropTypes.func.isRequired,
@@ -429,6 +432,7 @@ export default connect(mapStateToProps,
   {
     getCollectionFiles,
     getAllAssociatedConsortia,
+    incrementRunCount,
     notifyInfo,
     notifyWarning,
     pullComputations,

@@ -7,7 +7,7 @@ import DashboardNav from './dashboard-nav';
 import UserAccountController from '../user/user-account-controller';
 import { notifyInfo, notifySuccess, notifyWarning, writeLog } from '../../state/ducks/notifyAndLog';
 import CoinstacAbbr from '../coinstac-abbr';
-import { getCollectionFiles, initTestData, syncRemoteLocalConsortia, syncRemoteLocalPipelines } from '../../state/ducks/collections';
+import { getCollectionFiles, incrementRunCount, initTestData, syncRemoteLocalConsortia, syncRemoteLocalPipelines } from '../../state/ducks/collections';
 import { clearRuns, getLocalRun, getDBRuns, saveLocalRun, updateLocalRun } from '../../state/ducks/runs';
 import {
   pullComputations,
@@ -166,6 +166,7 @@ class Dashboard extends Component {
               // 5 second timeout to ensure no port conflicts in
               //  development env between remote and client pipelines
               setTimeout(() => {
+                this.props.incrementRunCount(consortium.id);
                 this.props.notifyInfo({
                   message: `Decentralized Pipeline Starting for ${consortium.name}.`,
                 });
@@ -355,6 +356,7 @@ Dashboard.propTypes = {
   consortia: PropTypes.array,
   getCollectionFiles: PropTypes.func.isRequired,
   getDBRuns: PropTypes.func.isRequired,
+  incrementRunCount: PropTypes.func.isRequired,
   initTestData: PropTypes.func.isRequired,
   notifyInfo: PropTypes.func.isRequired,
   notifySuccess: PropTypes.func.isRequired,
@@ -432,6 +434,7 @@ export default connect(mapStateToProps,
     getCollectionFiles,
     getLocalRun,
     getDBRuns,
+    incrementRunCount,
     initTestData,
     notifyInfo,
     notifySuccess,
