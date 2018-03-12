@@ -43,6 +43,11 @@ const mutations = {
       }
     }
   `,
+  saveError: `
+    {
+      saveError(runId: $runId, error: $error)
+    }
+  `,
   savePipeline: `
     {
       savePipeline(pipeline: $pipeline) {

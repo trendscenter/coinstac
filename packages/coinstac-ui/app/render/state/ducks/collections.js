@@ -57,13 +57,24 @@ function iteratePipelineSteps(consortium, filesByGroup) {
             mappingIncomplete = true;
             break;
           } else if (filesByGroup && mappingObj.type === 'FreeSurfer') {
-            keyArray[0].push(filesByGroup[consortium.stepIO[sIndex][key][mappingIndex].groupId]);
+            let filepaths = filesByGroup[consortium.stepIO[sIndex][key][mappingIndex].groupId];
+
+            if (filepaths) {
+              filepaths = filepaths.map(path => path.replace(/\//g, '-'));
+            }
+
+            keyArray[0].push(filepaths);
             keyArray[1].push(mappingObj.value);
             keyArray[2].push(mappingObj.type);
           } else if (filesByGroup) {
             // TODO: Handle keys fromCache if need be
           }
         }
+
+        // if (key === 'data') {
+        //   keyArray[0].push(keyArray[0][0]);
+        // }
+
         inputMap[key] = { value: keyArray };
       }
 

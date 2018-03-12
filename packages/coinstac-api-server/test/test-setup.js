@@ -26,109 +26,101 @@ helperFunctions.getRethinkConnection()
     Object.assign({}, multiShot, { submittedBy: 'test' }),
     Object.assign({}, vbm, { submittedBy: 'author' }),
   ], { returnChanges: true }).run(connection))
-  .then(compInsertResult => rethink.table('pipelines').insert([{
-    id: 'test-pipeline-2',
-    name: 'Test Pipeline 2',
-    description: 'Test description',
-    owningConsortium: 'test-cons-2',
-    shared: true,
-    steps: [
-      {
-        computations: [
-          compInsertResult.changes[2].new_val.id,
-        ],
-        controller: {
-          options: {},
-          id: 'test-controller-1',
-          type: 'local',
-        },
-        id: 'HJwMOMTh-',
-        inputMap: {
-          covariates: {
-            ownerMappings: [
-              {
-                name: 'isControl',
-                source: 'file',
-                type: 'boolean',
-              },
-              {
-                name: 'age',
-                source: 'file',
-                type: 'number',
-              },
-            ],
+  .then(compInsertResult => rethink.table('pipelines').insert([
+    {
+      delete: false,
+      description: 'ssr',
+      id: 'test-pipeline-ssr',
+      name: 'ssr test',
+      owningConsortium: 'test-cons-2',
+      shared: false,
+      steps: [
+        {
+          computations: [
+            compInsertResult.changes[2].new_val.id,
+          ],
+          controller: {
+            id: null,
+            options: {},
+            type: 'decentralized',
           },
-          lambda: { value: 4 },
-        },
-      },
-      {
-        computations: [
-          compInsertResult.changes[3].new_val.id,
-        ],
-        controller: { type: 'decentralized' },
-        id: 'HyLfdfanb',
-        inputMap: {
-          covariates: {
-            ownerMappings: [
-              {
-                fromCache: { variable: 'biasedX', step: 0 },
-              },
-            ],
+          id: 'HJKRyjTuM',
+          inputMap: {
+            covariates: {
+              ownerMappings: [
+                {
+                  name: 'isControl',
+                  source: 'file',
+                  type: 'boolean',
+                },
+                {
+                  name: 'age',
+                  source: 'file',
+                  type: 'number',
+                },
+              ],
+            },
+            data: {
+              ownerMappings: [
+                {
+                  type: 'FreeSurfer',
+                  value: ['3rd-Ventricle'],
+                },
+              ],
+            },
+            lambda: { value: 2 },
           },
-          iterationCount: { value: 3 },
-          lambda: { value: 4 },
         },
-      },
-    ],
-  },
-  {
-    id: 'test-pipeline-decentralized',
-    name: 'Decentralized Pipeline',
-    description: 'Test description',
-    owningConsortium: 'test-cons-2',
-    shared: true,
-    steps: [
-      {
-        id: 'UIKDl-',
-        controller: { type: 'decentralized' },
-        computations: [
-          compInsertResult.changes[1].new_val.id,
-        ],
-        inputMap: {
-          start: { value: 1 },
+      ],
+    },
+    {
+      id: 'test-pipeline-decentralized',
+      name: 'Decentralized Pipeline',
+      description: 'Test description',
+      owningConsortium: 'test-cons-2',
+      shared: true,
+      steps: [
+        {
+          id: 'UIKDl-',
+          controller: { type: 'decentralized' },
+          computations: [
+            compInsertResult.changes[1].new_val.id,
+          ],
+          inputMap: {
+            start: { value: 1 },
+          },
         },
-      },
-    ],
-  },
-  {
-    id: 'test-pipeline-local',
-    name: 'Local Pipeline',
-    description: 'Local Test description',
-    owningConsortium: 'test-cons-2',
-    shared: true,
-    steps: [
-      {
-        id: 'UIKDl-local1',
-        controller: { type: 'local' },
-        computations: [
-          compInsertResult.changes[0].new_val.id,
-        ],
-        inputMap: {
-          start: { value: 1 },
+      ],
+    },
+    {
+      id: 'test-pipeline-local',
+      name: 'Local Pipeline',
+      description: 'Local Test description',
+      owningConsortium: 'test-cons-2',
+      shared: true,
+      steps: [
+        {
+          id: 'UIKDl-local1',
+          controller: { type: 'local' },
+          computations: [
+            compInsertResult.changes[0].new_val.id,
+          ],
+          inputMap: {
+            start: { value: 1 },
+          },
         },
-      },
-      {
-        id: 'UIKDl-local2',
-        controller: { type: 'local' },
-        computations: [
-          compInsertResult.changes[0].new_val.id,
-        ],
-        inputMap: {
-          start: { fromCache: { step: 0, variable: 'sum' } },
+        {
+          id: 'UIKDl-local2',
+          controller: { type: 'local' },
+          computations: [
+            compInsertResult.changes[0].new_val.id,
+          ],
+          inputMap: {
+            start: { fromCache: { step: 0, variable: 'sum' } },
+          },
         },
-      },
-    ],
-  },
+      ],
+    },
   ]).run(connection))
   .then(() => rethink.tableCreate('roles', { primaryKey: 'role' }).run(connection))
   .then(() => rethink.table('roles').insert([
@@ -341,7 +333,7 @@ helperFunctions.getRethinkConnection()
   }).run(connection))
   .then(() => rethink.table('consortia').insert({
     id: 'test-cons-2',
-    activePipelineId: 'test-pipeline-decentralized',
+    activePipelineId: 'test-pipeline-ssr',
     name: 'Test Consortia 2',
     description: 'This consortia is for testing too.',
     owners: ['test'],
@@ -391,10 +383,7 @@ helperFunctions.getRethinkConnection()
   institution: 'mrn',
   email: 'server@mrn.org',
   permissions: {
-    computations: {
-      'single-shot-test-id': ['owner'],
-      'multi-shot-test-id': ['owner'],
-    },
+    computations: {},
     consortia: {
       'test-cons-1': ['owner'],
       'test-cons-2': ['member'],

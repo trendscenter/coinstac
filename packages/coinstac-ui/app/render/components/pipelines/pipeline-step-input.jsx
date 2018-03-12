@@ -30,38 +30,6 @@ export default class PipelineStepInput extends Component {
     this.getNewObj = this.getNewObj.bind(this);
   }
 
-  componentWillMount() {
-    const { objKey, objParams, step, updateStep } = this.props;
-
-    // Initialize array of length input min if array of inputs required
-    if (!step.inputMap[objKey] && objParams.type === 'array' &&
-        !objParams.values) {
-      let initArray = [];
-
-      if (objParams.defaultValue && Array.isArray(objParams.defaultValue)) {
-        initArray = Array.from({ length: objParams.min }, (v, i) => objParams.defaultValue[i]);
-      }
-
-      updateStep({
-        ...step,
-        inputMap: this.getNewObj(
-          objKey,
-          initArray
-        ),
-      });
-    }
-
-    if (!step.inputMap[objKey] && (objKey === 'covariates' || objKey === 'data')) {
-      updateStep({
-        ...step,
-        inputMap: this.getNewObj(
-          objKey,
-          { ownerMappings: [] }
-        ),
-      });
-    }
-  }
-
   getNewObj(
     prop, value, clientPropIndex, isValueArray
   ) { // eslint-disable-line class-methods-use-this
@@ -140,7 +108,7 @@ export default class PipelineStepInput extends Component {
     } = this.props;
 
     let ownerMappings = [{}];
-    if ('ownerMappings' in step.inputMap[objKey]) {
+    if (step.inputMap[objKey] && 'ownerMappings' in step.inputMap[objKey]) {
       ownerMappings = [
         ...step.inputMap[objKey].ownerMappings,
         {},
