@@ -2,6 +2,8 @@
 
 <img src="https://raw.githubusercontent.com/MRN-Code/coinstac/master/img/coinstac.png" height="75px">
 
+**This package is unused as of COINSTAC v3**
+
 COINSTAC distributed analysis synchronization and testing. [Documentation](http://mrn-code.github.io/coinstac/).
 
 ## what

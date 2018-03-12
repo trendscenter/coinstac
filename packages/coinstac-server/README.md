@@ -2,11 +2,13 @@
 
 <img src="https://raw.githubusercontent.com/MRN-Code/coinstac/master/img/coinstac.png" height="75px">
 
-COINSTAC core server functionality. [Documentation](http://mrn-code.github.io/coinstac/).
+COINSTAC server is a separate service responsible for starting remote pipelines as well as writing out run state and results. [Documentation](http://mrn-code.github.io/coinstac/).
 
-## Usage
+## Installing/Running
 
-Official API documentation may be found [here](http://mrn-code.github.io/coinstac-server-core/).
+  * Install and Start [Docker](https://www.docker.com/get-docker)
+  * Navigate into `packages/coinstac-server` and run `npm i`
+  * Start server: `npm run start`
 
 ## License
 
