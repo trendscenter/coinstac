@@ -45,7 +45,7 @@ class ConsortiumPipeline extends Component {
       );
 
       sharedPipelines = nextProps.pipelines.filter(
-        pipe => pipe.shared
+        pipe => pipe.shared && pipe.owningConsortium !== nextProps.consortium.id
       );
 
       this.setState({ ownedPipelines, sharedPipelines });
@@ -99,7 +99,7 @@ class ConsortiumPipeline extends Component {
           <Col xs={6} style={styles.textCenter}>
             <DropdownButton
               id="shared-pipelines-dropdown"
-              title={'Shared Pipelines'}
+              title={'Pipelines Shared With Me'}
               bsStyle="primary"
               onSelect={value =>
                 this.removeCollectionsFromAssociatedConsortia(consortium.id, value)}

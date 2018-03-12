@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 const hapi = require('hapi');
 const CoinstacComputationRegistry = require('coinstac-computation-registry');
 const dbmap = require('/etc/coinstac/cstacDBMap'); // eslint-disable-line import/no-absolute-path, import/no-unresolved
@@ -6,7 +7,9 @@ const routes = require('./routes');
 
 // Download computations on remote server on server start
 const computationRegistry = new CoinstacComputationRegistry({ credentials: dbmap.rethinkdbServer });
-computationRegistry.serverStart();
+
+// TODO: Uncomment below when SSR and MSR are on docker hub
+// computationRegistry.serverStart();
 
 const server = new hapi.Server();
 server.connection({

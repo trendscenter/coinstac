@@ -7,6 +7,8 @@ COINSTAC hapi plugin for securing CouchDB. [Documentation](http://mrn-code.githu
 A [hapi](http://hapijs.com) plugin that registers HTTP endpoints to perform authentication and
 authorization of requests to the COINSTAC storage service (CouchDB).
 
+**This package is unused as of COINSTAC v3**
+
 ## Installation
 
 ```

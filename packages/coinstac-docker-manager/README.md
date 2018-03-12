@@ -1,9 +1,9 @@
-# coinstac-client-core
+# coinstac-docker-manager
 
 <img src="https://raw.githubusercontent.com/MRN-Code/coinstac/master/img/coinstac.png" height="75px">
 
-COINSTAC shared business logic for clients. [Documentation](http://mrn-code.github.io/coinstac/).
+Docker Manager is used by other packages to interact directly with Docker's Node API.
 
-## License
+# License
 
 MIT. See [LICENSE](./LICENSE) for details.

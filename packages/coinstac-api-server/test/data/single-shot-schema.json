@@ -1,23 +1,25 @@
 {
-  "id": "single-shot-test-id",
   "meta": {
-    "repository": "https://github.com/MRN-Code/decentralized-single-shot-ridge-regression",
-    "description": "Decentralized ridge regression.",
-    "name": "Single-Shot Ridge Regression",
-    "tags": [
-      "regression"
-    ],
-    "version": "v1.1.10",
-    "controller": "single"
+    "name": "single shot regression demo",
+    "id": "ssr_test",
+    "version": "v1.0.0",
+    "repository": "https:\/\/github.com\/MRN-Code\/ssr_test",
+    "description": "a test from single shot regresssion"
   },
   "computation": {
     "type": "docker",
-    "dockerImage": "mysql",
-    "command": ["python", "/computation/comp1.py"],
+    "dockerImage": "ssr_test",
+    "command": [
+      "python",
+      "\/computation\/local.py"
+    ],
     "remote": {
       "type": "docker",
-      "dockerImage": "coinstac/coinstac-decentralized-test",
-      "command": ["python", "/computation/comp2.py"]
+      "dockerImage": "ssr_test",
+      "command": [
+        "python",
+        "\/computation\/remote.py"
+      ]
     },
     "input": {
       "lambda":
@@ -35,44 +37,34 @@
         "label": "Covariates",
         "type": "array",
         "items": ["boolean", "number"]
+      },
+      "data": {
+        "label": "Data",
+        "type": "array",
+        "items": ["FreeSurfer"],
+        "extensions": [["csv", "txt"]]
       }
     },
     "output": {
-      "type": "function",
-      "command": "src/remote.js",
-      "betaVector": {
-        "type": "array",
-        "label": "Beta Vector",
-        "items": "number"
+      "avg_beta_vector": {
+        "label": "Avg Beta Vector",
+        "type": "array"
       },
-      "localCount": {
-        "type": "array",
-        "label": "Local Count",
-        "items": "number"
+      "r_2_global": {
+        "label": "R2 Global",
+        "type": "number"
       },
-      "localMeanY": {
-        "type": "number",
-        "label": "Local Mean Y"
+      "ts_global": {
+        "label": "TS Global",
+        "type": "array"
       },
-      "rSquared": {
-        "type": "number",
-        "label": "R squared"
+      "ps_global": {
+        "label": "PS Global",
+        "type": "number"
       },
-      "tValue": {
-        "type": "number",
-        "label": "T value"
-      },
-      "pValue": {
-        "type": "number",
-        "label": "P Value"
-      },
-      "biasedX": {
-        "type": "number",
-        "label": "Biased Xs"
-      },
-      "y": {
-        "type": "number",
-        "label": "Y"
+      "dof_global": {
+        "label": "DOF Global",
+        "type": "array"
       }
     },
     "display": {

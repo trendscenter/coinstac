@@ -57,13 +57,24 @@ function iteratePipelineSteps(consortium, filesByGroup) {
             mappingIncomplete = true;
             break;
           } else if (filesByGroup && mappingObj.type === 'FreeSurfer') {
-            keyArray[0].push(filesByGroup[consortium.stepIO[sIndex][key][mappingIndex].groupId]);
+            let filepaths = filesByGroup[consortium.stepIO[sIndex][key][mappingIndex].groupId];
+
+            if (filepaths) {
+              filepaths = filepaths.map(path => path.replace(/\//g, '-'));
+            }
+
+            keyArray[0].push(filepaths);
             keyArray[1].push(mappingObj.value);
             keyArray[2].push(mappingObj.type);
           } else if (filesByGroup) {
             // TODO: Handle keys fromCache if need be
           }
         }
+
+        // if (key === 'data') {
+        //   keyArray[0].push(keyArray[0][0]);
+        // }
+
         inputMap[key] = { value: keyArray };
       }
 
@@ -339,6 +350,23 @@ export const syncRemoteLocalPipelines = remotePipeline =>
             }
           });
         }
+      });
+
+export const incrementRunCount = consId =>
+  dispatch =>
+    localDB.associatedConsortia.get(consId)
+      .then((cons) => {
+        let runs = 1;
+
+        if (cons.runs) {
+          runs += cons.runs;
+        }
+
+        localDB.associatedConsortia.update(consId, { runs });
+        dispatch(({
+          type: SAVE_ASSOCIATED_CONSORTIA,
+          payload: { ...cons, runs },
+        }));
       });
 
 const INITIAL_STATE = {
