@@ -11,6 +11,7 @@ import ListDeleteModal from '../common/list-delete-modal';
 import {
   getCollectionFiles,
   getAllAssociatedConsortia,
+  incrementRunCount,
   removeCollectionsFromAssociatedConsortia,
   saveAssociatedConsortia,
 } from '../../state/ducks/collections';
@@ -92,7 +93,8 @@ class ConsortiaList extends Component {
   }
 
   getOptions(member, owner, id, activePipelineId) {
-    const options = [];
+    const actions = [];
+    const text = [];
     let isMapped = false;
 
     if (this.props.associatedConsortia.length > 0) {
@@ -102,8 +104,19 @@ class ConsortiaList extends Component {
       }
     }
 
+    text.push(
+      <p>
+        <span className="bold">Active Pipeline: </span>
+        {
+          activePipelineId
+          ? <span style={{ color: 'green' }}>{this.props.pipelines.find(pipe => pipe.id === activePipelineId).name}</span>
+          : <span style={{ color: 'red' }}> None</span>
+        }
+      </p>
+    );
+
     if (owner && activePipelineId && isMapped) {
-      options.push(
+      actions.push(
         <Button
           key={`${id}-start-pipeline-button`}
           bsStyle="success"
@@ -116,7 +129,7 @@ class ConsortiaList extends Component {
     }
 
     if (owner && !activePipelineId) {
-      options.push(
+      actions.push(
         <LinkContainer
           to={`dashboard/consortia/${id}`}
           key={`${id}-set-active-pipeline-button`}
@@ -130,7 +143,7 @@ class ConsortiaList extends Component {
         </LinkContainer>
       );
     } else if (!isMapped) {
-      options.push(
+      actions.push(
         <LinkContainer
           to={'dashboard/collections'}
           key={`${id}-set-map-local-button`}
@@ -146,7 +159,7 @@ class ConsortiaList extends Component {
     }
 
     if (member && !owner) {
-      options.push(
+      actions.push(
         <Button
           key={`${id}-leave-cons-button`}
           bsStyle="warning"
@@ -157,7 +170,7 @@ class ConsortiaList extends Component {
         </Button>
       );
     } else if (!member && !owner) {
-      options.push(
+      actions.push(
         <Button
           key={`${id}-join-cons-button`}
           bsStyle="primary"
@@ -169,7 +182,7 @@ class ConsortiaList extends Component {
       );
     }
 
-    return options;
+    return { actions, text };
   }
 
   getListItem(consortium) {
@@ -321,6 +334,7 @@ class ConsortiaList extends Component {
 
               run.status = status;
 
+              this.props.incrementRunCount(consortiumId);
               ipcRenderer.send('start-pipeline', { consortium, pipeline, filesArray: filesArray.allFiles, run });
             }
 
@@ -393,6 +407,7 @@ ConsortiaList.propTypes = {
   deleteConsortiumById: PropTypes.func.isRequired,
   getCollectionFiles: PropTypes.func.isRequired,
   getAllAssociatedConsortia: PropTypes.func.isRequired,
+  incrementRunCount: PropTypes.func.isRequired,
   joinConsortium: PropTypes.func.isRequired,
   leaveConsortium: PropTypes.func.isRequired,
   notifyInfo: PropTypes.func.isRequired,
@@ -429,6 +444,7 @@ export default connect(mapStateToProps,
   {
     getCollectionFiles,
     getAllAssociatedConsortia,
+    incrementRunCount,
     notifyInfo,
     notifyWarning,
     pullComputations,

@@ -47,17 +47,19 @@ export default class CollectionFiles extends Component {
       if (obj.error) {
         this.setState({ filesError: obj.error });
       } else {
+        const name = `Group ${Object.keys(this.props.collection.fileGroups).length + 1} (${obj.extension.toUpperCase()})`;
         if (this.state.newFile.org === 'metafile') {
           newFiles = {
             ...obj,
+            name,
             id: fileGroupId,
-            extension: '.csv',
             date: new Date().getTime(),
             firstRow: obj.metaFile[0].join(', '),
             org: this.state.newFile.org,
           };
         } else {
           newFiles = {
+            name,
             id: fileGroupId,
             extension: obj.extension,
             files: [...obj.paths.sort(naturalSort)],
@@ -192,7 +194,7 @@ export default class CollectionFiles extends Component {
                 onChange={this.updateNewFileOrg}
                 value="manual"
               >
-                Maually Select Files
+                Manually Select Files
               </Radio>
             </FormGroup>
 
@@ -227,6 +229,9 @@ export default class CollectionFiles extends Component {
                     Remove File Group
                   </Button>
                   <p style={styles.fileLabelRow}>
+                    <span className="bold">Name:</span> {group.name}
+                  </p>
+                  <p style={styles.fileLabelRow}>
                     <span className="bold">Date:</span> {new Date(group.date).toUTCString()}
                   </p>
                   <p style={styles.fileLabelRow}>
@@ -251,6 +256,9 @@ export default class CollectionFiles extends Component {
                     {' '}
                     Remove File Group
                   </Button>
+                  <p style={styles.fileLabelRow}>
+                    <span className="bold">Name:</span> {group.name}
+                  </p>
                   <p style={styles.fileLabelRow}>
                     <span className="bold">Date:</span> {new Date(group.date).toUTCString()}
                   </p>

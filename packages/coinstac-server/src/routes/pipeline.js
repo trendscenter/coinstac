@@ -37,6 +37,19 @@ const updateRunState = (runId, data) =>
     },
   });
 
+const saveError = (runId, error) =>
+  axios({
+    method: 'post',
+    url: `${config.DB_URL}/graphql`,
+    data: {
+      query: `mutation($runId: ID!, $error: JSON) ${graphqlSchema.mutations.saveError.replace(/\s{2,10}/g, ' ')}`,
+      variables: {
+        runId,
+        error,
+      },
+    },
+  });
+
 const saveResults = (runId, results) =>
   axios({
     method: 'post',
@@ -72,12 +85,13 @@ module.exports = [
             updateRunState(run.id, data);
           });
 
-          remotePipeline.result.then((result) => {
-            saveResults(run.id, result);
-          })
-          .catch(() => {
-            // TODO: save pipeline errors!
-          });
+          remotePipeline.result
+            .then((result) => {
+              saveResults(run.id, result);
+            })
+            .catch((error) => {
+              saveError(run.id, error);
+            });
         });
       },
     },
