@@ -50,7 +50,7 @@ class CollectionsList extends Component {
       <div>
         <div className="page-header clearfix">
           <h1 className="nav-item-page-title">File Collections</h1>
-          <LinkContainer className="pull-right" to="/dashboard/pipelines/new">
+          <LinkContainer className="pull-right" to="/dashboard/collections/new">
             <Button bsStyle="primary" className="pull-right">
               <span aria-hidden="true" className="glyphicon glyphicon-plus" />
               {' '}
