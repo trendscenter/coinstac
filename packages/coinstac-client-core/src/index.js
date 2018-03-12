@@ -17,7 +17,7 @@ const winston = require('winston');
 const Logger = winston.Logger;
 const Console = winston.transports.Console;
 const ComputationRegistry = require('coinstac-computation-registry');
-const PipelineManager = require('../../coinstac-pipeline');
+const PipelineManager = require('coinstac-pipeline');
 
 /**
  * Create a user client for COINSTAC
@@ -64,6 +64,10 @@ class CoinstacClient {
       mode: 'local',
       clientId: opts.userId,
       operatingDirectory: path.join(this.appDirectory, opts.userId),
+      remotePort: opts.pipelineWSServer.port,
+      remoteProtocol: opts.pipelineWSServer.protocol,
+      remotePathname: opts.pipelineWSServer.pathname,
+      remoteURL: opts.pipelineWSServer.hostname,
     });
   }
 

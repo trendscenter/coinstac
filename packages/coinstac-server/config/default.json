@@ -1,5 +1,6 @@
 {
-  "hapiPort": 5100,
+  "hapiPort": 3200,
   "host": "localhost",
-  "DB_URL": "http://localhost:3100"
+  "apiServer": "http://localhost:3100",
+  "operatingDirectory": "/tmp/"
 }
