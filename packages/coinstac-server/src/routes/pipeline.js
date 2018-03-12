@@ -9,12 +9,12 @@ const dbmap = require('/etc/coinstac/cstacDBMap'); // eslint-disable-line import
 this.remotePipelineManager = PipelineManager.create({
   mode: 'remote',
   clientId: 'remote',
-  operatingDirectory: path.resolve(__dirname, 'remote'),
+  operatingDirectory: path.resolve(config.operatingDirectory, 'remote'),
 });
 
 const authenticateServer = () => {
   return axios.post(
-    `${config.DB_URL}/authenticate`,
+    `${config.apiServer}/authenticate`,
     dbmap.rethinkdbServer
   )
   .then((token) => {
@@ -27,7 +27,7 @@ const authenticateServer = () => {
 const updateRunState = (runId, data) =>
   axios({
     method: 'post',
-    url: `${config.DB_URL}/graphql`,
+    url: `${config.apiServer}/graphql`,
     data: {
       query: `mutation($runId: ID!, $data: JSON) ${graphqlSchema.mutations.updateRunState.replace(/\s{2,10}/g, ' ')}`,
       variables: {
@@ -53,7 +53,7 @@ const saveError = (runId, error) =>
 const saveResults = (runId, results) =>
   axios({
     method: 'post',
-    url: `${config.DB_URL}/graphql`,
+    url: `${config.apiServer}/graphql`,
     data: {
       query: `mutation($runId: ID!, $results: JSON) ${graphqlSchema.mutations.saveResults.replace(/\s{2,10}/g, ' ')}`,
       variables: {

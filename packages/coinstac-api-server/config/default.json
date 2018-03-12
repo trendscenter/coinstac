@@ -1,7 +1,7 @@
 {
   "cstacDB": "coinstac",
   "hapiPort": 3100,
-  "hapiServer": 5100,
+  "pipelineServer": 3200,
   "hashBytes": 64,
   "host": "localhost",
   "rethinkPort": 28015
