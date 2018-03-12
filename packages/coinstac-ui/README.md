@@ -13,15 +13,11 @@ This repository holds the user interface source code, binary executable build pr
 
 ## Download
 
-Production-ready binaries are not yet released. COINSTAC is only available to be run in developer-mode. Please see [CONTRIBUTING](./CONTRIBUTING.md) for details on how to setup a development environment.
+Production-ready binaries are not yet released. COINSTAC is only available to be run in developer-mode. Please see [SETUP document](https://github.com/MRN-Code/coinstac/blob/master/SETUP.md) for details on how to setup a development environment.
 
 ### Development
 
 See [CONTRIBUTING](./CONTRIBUTING.md) for development contribution
-
-## Testing
-
-End-to-end testing can be run via `npm run test:e2e`. COINSTAC must be setup for development, including a local CouchDB instance, as detailed in the [SETUP document](https://github.com/MRN-Code/coinstac/blob/master/SETUP.md) of the base project.
 
 ## License
 

@@ -2,12 +2,9 @@
 
 <img src="https://raw.githubusercontent.com/MRN-Code/coinstac/master/img/coinstac.png" height="75px">
 
-Revisiting coinstac-computation-registry using Docker and a new pipeline.
+The computation registry provides some convenience methods for dealing with Docker images and Dockerode's command line output.
 
-## Installing/Running
+## TODO:
 
-  * Adding "Metadata" to CouchDB will work best if using the `tmuxinator` setup
-
-  * Install [Docker](https://www.docker.com/community-edition)
-  * Clone
+* Consider combining with coinstac-docker-manager
   
