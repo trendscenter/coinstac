@@ -3,9 +3,10 @@ import PropTypes from 'prop-types';
 import { Button, Panel } from 'react-bootstrap';
 import { LinkContainer } from 'react-router-bootstrap';
 
-const ListItem = ({ owner, itemObject, itemOptions, itemRoute, deleteItem }) => (
+const ListItem = ({ owner, itemOptions, itemObject, itemRoute, deleteItem }) => (
   <Panel header={<h3>{itemObject.name}</h3>}>
     <p>{itemObject.description}</p>
+    {itemOptions.text}
     <LinkContainer to={`${itemRoute}/${itemObject.id}`}>
       <Button bsStyle="info">View Details</Button>
     </LinkContainer>
@@ -18,7 +19,7 @@ const ListItem = ({ owner, itemObject, itemOptions, itemRoute, deleteItem }) => 
         Delete
       </Button>
     }
-    {itemOptions}
+    {itemOptions.actions}
   </Panel>
 );
 
@@ -28,7 +29,7 @@ ListItem.defaultProps = {
 
 ListItem.propTypes = {
   itemObject: PropTypes.object.isRequired,
-  itemOptions: PropTypes.array.isRequired,
+  itemOptions: PropTypes.object.isRequired,
   itemRoute: PropTypes.string.isRequired,
   owner: PropTypes.bool,
   deleteItem: PropTypes.func.isRequired,
