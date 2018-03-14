@@ -54,8 +54,8 @@ class Dashboard extends Component {
     const { router } = this.context;
 
     // Uncomment to clear local data
-    this.props.clearRuns();
-    this.props.initTestData();
+    // this.props.clearRuns();
+    // this.props.initTestData();
 
     process.nextTick(() => {
       if (!user.email.length) {
