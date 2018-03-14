@@ -1,4 +1,5 @@
 import { isEqual } from 'lodash';
+import { dirname, resolve, extname } from 'path';
 import { applyAsyncLoading } from './loading';
 import localDB from '../local-db';
 import testData from '../../../../test/data/test-collection.json';
@@ -14,7 +15,7 @@ const GET_ASSOCIATED_CONSORTIA = 'GET_ASSOCIATED_CONSORTIA';
 const REMOVE_COLLECTIONS_FROM_CONS = 'REMOVE_COLLECTIONS_FROM_CONS';
 const SET_COLLECTIONS = 'GET_ALL_COLLECTIONS';
 
-function iteratePipelineSteps(consortium, filesByGroup) {
+function iteratePipelineSteps(consortium, filesByGroup, baseDirectory) {
   let mappingIncomplete = false;
   const collections = [];
   const steps = [];
@@ -60,7 +61,12 @@ function iteratePipelineSteps(consortium, filesByGroup) {
             let filepaths = filesByGroup[consortium.stepIO[sIndex][key][mappingIndex].groupId];
 
             if (filepaths) {
-              filepaths = filepaths.map(path => path.replace(/\//g, '-'));
+              filepaths = filepaths.map((path) => {
+                if (extname(path[0]) !== '') {
+                  return resolve(baseDirectory, path[0]).replace(/\//g, '-');
+                }
+                return '';
+              });
             }
 
             keyArray[0].push(filepaths);
@@ -171,12 +177,12 @@ export const getCollectionFiles = consortiumId =>
           .then((localDBCols) => {
             let allFiles = [];
             const filesByGroup = {};
-
+            let metaDir;
             localDBCols.forEach((coll) => {
               Object.values(coll.fileGroups).forEach((group) => {
                 allFiles = allFiles.concat(coll.fileGroups[group.id].files);
-
                 if ('metaFile' in group) {
+                  metaDir = dirname(group.metaFilePath);
                   filesByGroup[group.id] = coll.fileGroups[group.id].metaFile;
                 } else {
                   filesByGroup[group.id] = coll.fileGroups[group.id].files;
@@ -185,7 +191,7 @@ export const getCollectionFiles = consortiumId =>
             });
 
             // TODO: Reconsider how to get updated steps
-            const { steps } = iteratePipelineSteps(consortium, filesByGroup);
+            const { steps } = iteratePipelineSteps(consortium, filesByGroup, metaDir);
 
             dispatch(({
               type: GET_COLLECTION_FILES,
