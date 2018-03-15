@@ -1,31 +1,26 @@
 table { 
-		width: 100%; 
+		width: 50%; 
 		border-collapse: collapse; 
 	}
 	/* Zebra striping */
-	tr:nth-of-type(odd) { 
-		background: #eee; 
+	tr:nth-of-type(odd) {  
 	}
 	th { 
-		background: #333; 
-		color: white; 
 		font-weight: bold; 
 		cursor: s-resize;
-		background-repeat: no-repeat;
-        background-position: 3% center;
 	}
-	td, th { 
+	td, th{ 
 		padding: 6px; 
-		border: 1px solid #ccc; 
+		border-bottom: 1px solid #ccc; 
 		text-align: left; 
 	}
 	
 	th.des:after {
-      content: "\21E9";
+      //content: "\21E9";
     }
     
     th.aes:after {
-      content: "\21E7";
+      //content: "\21E7";
     }
 	
 	/* 
@@ -54,7 +49,7 @@ table {
 		td { 
 			/* Behave  like a "row" */
 			border: none;
-			border-bottom: 1px solid #eee; 
+			border-top: 1px solid #ccc; 
 			position: relative;
 			padding-left: 50%; 
 		}
