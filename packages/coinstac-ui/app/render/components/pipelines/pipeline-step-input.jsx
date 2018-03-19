@@ -141,9 +141,7 @@ export default class PipelineStepInput extends Component {
     let isFromCache;
 
     if (step.inputMap[objKey] && step.inputMap[objKey].fromCache) {
-      const cacheLabel = possibleInputs[step.inputMap[objKey].fromCache.step]
-        .inputs[step.inputMap[objKey].fromCache.variable].label;
-      sourceDropDownLabel = `Computation ${step.inputMap[objKey].fromCache.step + 1}: ${cacheLabel}`;
+      sourceDropDownLabel = `Computation ${step.inputMap[objKey].fromCache.step + 1}: ${step.inputMap[objKey].fromCache.label}`;
     }
 
     if (step.inputMap[objKey] && step.inputMap[objKey].value) {
