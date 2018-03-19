@@ -1,5 +1,6 @@
 import Dexie from 'dexie';
 
+// Dexie.delete('coinstac');
 const db = new Dexie('coinstac');
 
 db.version(1).stores({
