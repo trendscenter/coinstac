@@ -185,6 +185,12 @@ class Dashboard extends Component {
               this.props.incrementRunCount(consortium.id);
               this.props.notifyInfo({
                 message: `Decentralized Pipeline Starting for ${consortium.name}.`,
+                action: {
+                  label: 'Watch Progress',
+                  callback: () => {
+                    router.push('dashboard');
+                  },
+                },
               });
 
               // 5 second timeout to ensure no port conflicts in
