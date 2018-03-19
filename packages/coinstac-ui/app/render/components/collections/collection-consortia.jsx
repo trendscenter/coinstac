@@ -40,7 +40,6 @@ class CollectionConsortia extends Component {
     } else {
       consortium = { ...this.props.associatedConsortia[consIndex] };
     }
-
     this.setState({
       activeConsortium: {
         ...consortium,

@@ -201,6 +201,7 @@ module.exports = {
 
         const p = new Promise((res, rej) => {
           const errCb = (err) => {
+            setStateProp('state', 'error');
             controllerState.activeComputations[controllerState.computationIndex].stop()
             .then(() => rej(err));
           };
