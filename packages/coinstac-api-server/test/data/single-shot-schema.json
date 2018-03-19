@@ -15,7 +15,7 @@
     ],
     "remote": {
       "type": "docker",
-      "dockerImage": "constac/ssr",
+      "dockerImage": "coinstac/ssr",
       "command": [
         "python",
         "\/computation\/remote.py"
