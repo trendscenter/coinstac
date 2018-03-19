@@ -22,6 +22,7 @@ import {
   MenuItem,
   Modal,
   Row,
+  SplitButton,
   Well,
 } from 'react-bootstrap';
 import PipelineStep from './pipeline-step';
@@ -79,11 +80,9 @@ class Pipeline extends Component {
       consortium,
       owner: true,
       pipeline,
-      selectedId: pipeline.steps.length ? pipeline.steps[0].id : null,
       startingPipeline: pipeline,
     };
 
-    this.accordionSelect = this.accordionSelect.bind(this);
     this.addStep = this.addStep.bind(this);
     this.checkPipeline = this.checkPipeline.bind(this);
     this.closeModal = this.closeModal.bind(this);
@@ -103,17 +102,10 @@ class Pipeline extends Component {
       this.setConsortium();
     }
 
-    let selectedId = null;
-    if (this.state.selectedId) {
-      selectedId = this.state.selectedId;
-    } else if (nextProps.activePipeline.steps.length) {
-      selectedId = nextProps.activePipeline.steps[0].id;
-    }
-
     if (nextProps.activePipeline && !this.state.pipeline.id) {
       const { activePipeline: { __typename, ...other } } = nextProps;
       this.setState(
-        { pipeline: { ...other }, selectedId, startingPipeline: { ...other } },
+        { pipeline: { ...other }, startingPipeline: { ...other } },
         () => {
           if (nextProps.consortia.length && this.state.pipeline.owningConsortium) {
             this.setConsortium();
@@ -151,17 +143,13 @@ class Pipeline extends Component {
       controllerType = 'decentralized';
     }
 
-    const id = shortid.generate();
-
-    this.accordionSelect(id);
-
     this.setState(prevState => ({
       pipeline: {
         ...prevState.pipeline,
         steps: [
           ...prevState.pipeline.steps,
           {
-            id,
+            id: shortid.generate(),
             controller: { type: controllerType, options: {} },
             computations: [
               { ...computation },
@@ -172,10 +160,6 @@ class Pipeline extends Component {
       },
     }));
     // () => this.updateStorePipeline());
-  }
-
-  accordionSelect(selectedId) {
-    this.setState({ selectedId });
   }
 
   moveStep(id, swapId) {
@@ -386,7 +370,6 @@ class Pipeline extends Component {
     .catch(console.log);
   }
 
-
   render() {
     const { computations, connectDropTarget, consortia } = this.props;
     const { consortium, pipeline } = this.state;
@@ -427,7 +410,7 @@ class Pipeline extends Component {
           <Row>
             <Col sm={12}>
               {consortia &&
-                <DropdownButton
+                <SplitButton
                   disabled={!this.state.owner}
                   bsStyle="info"
                   title={consortium ? consortium.name : 'Consortia'}
@@ -448,7 +431,7 @@ class Pipeline extends Component {
                       </MenuItem>
                       : 0;
                   }).filter(con => con) }
-                </DropdownButton>
+                </SplitButton>
               }
             </Col>
           </Row>
@@ -527,13 +510,12 @@ class Pipeline extends Component {
           <Row>
             <Col sm={12}>
               {this.state.pipeline.steps.length > 0 &&
-                <Accordion onSelect={this.accordionSelect}>
+                <Accordion>
                   {this.state.pipeline.steps.map((step, index) => (
                     <PipelineStep
                       computationId={step.computations[0].id}
                       deleteStep={this.openModal}
                       eventKey={step.id}
-                      isExpanded={step.id === this.state.selectedId}
                       id={step.id}
                       key={step.id}
                       moveStep={this.moveStep}
