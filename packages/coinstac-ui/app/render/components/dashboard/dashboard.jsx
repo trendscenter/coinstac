@@ -61,8 +61,6 @@ class Dashboard extends Component {
       if (!user.email.length) {
         this.props.writeLog({ type: 'verbose', message: 'Redirecting login (no authorized user)' });
         router.push('/login');
-      } else {
-        // this.props.initPrivateBackgroundServices();
       }
     });
 
