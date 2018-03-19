@@ -5,8 +5,11 @@ const tail = require('lodash/tail');
 const bluebird = require('bluebird');
 const csvParse = require('csv-parse');
 const mkdirp = bluebird.promisify(require('mkdirp'));
+const util = require('util');
 const fs = require('fs');
 
+const unlinkAsync = util.promisify(fs.unlink);
+const linkAsync = util.promisify(fs.link);
 const statAsync = bluebird.promisify(fs.stat);
 
 bluebird.config({ warnings: false });
@@ -214,11 +217,7 @@ class CoinstacClient {
 
       for (let i = 0; i < filesArray.length; i += 1) {
         linkPromises.push(
-          fs.link(
-            filesArray[i],
-            `${this.appDirectory}/${this.clientId}/${runId}/${filesArray[i].replace(/\//g, '-')}`,
-            err => console.log(err) // eslint-disable-line no-console
-          )
+          linkAsync(filesArray[i], `${this.appDirectory}/${this.clientId}/${runId}/${filesArray[i].replace(/\//g, '-')}`)
         );
       }
 
@@ -260,10 +259,7 @@ class CoinstacClient {
       const unlinkPromises = [];
       for (let i = 0; i < filesArray.length; i += 1) {
         unlinkPromises.push(
-          fs.unlink(
-            filesArray[i],
-            err => console.log(err) // eslint-disable-line no-console
-          )
+          unlinkAsync(filesArray[i])
         );
       }
       return Promise.all(unlinkPromises);

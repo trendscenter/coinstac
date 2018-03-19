@@ -95,7 +95,6 @@ class PipelineStep extends Component {
       connectDragSource,
       connectDropTarget,
       deleteStep,
-      expanded,
       pipelineIndex,
       possibleInputs,
       previousComputationIds,
@@ -112,7 +111,6 @@ class PipelineStep extends Component {
     return connectDragSource(connectDropTarget(
       <div style={styles.container}>
         <Panel
-          expanded={other.isExpanded}
           header={computations[0].meta.name}
           style={{ ...styles.draggable, opacity: isDragging ? 0 : 1 }}
           {...other}
