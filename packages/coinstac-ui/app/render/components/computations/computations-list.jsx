@@ -144,7 +144,7 @@ class ComputationsList extends Component { // eslint-disable-line
                       key={elem.id && elem.id !== 'latest' ? elem.id : elem.status}
                       style={elem.isErr ? { color: 'red' } : {}}
                     >
-                      {elem.id ? `${elem.id}: ` : ''}{elem.status} {elem.progress}
+                      {elem.id ? `${elem.id}: ` : ''}{elem.status} {elem.statusCode} {elem.progress}
                     </div>
                   ))}
                 </pre>
