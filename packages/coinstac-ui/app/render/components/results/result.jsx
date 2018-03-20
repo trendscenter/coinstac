@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import { Tabs, Tab, Well } from 'react-bootstrap';
+import { Button, Glyphicon, Tabs, Tab, Well } from 'react-bootstrap';
+import BrowserHistory from 'react-router/lib/browserHistory';
 import Box from './displays/box-plot';
 import Scatter from './displays/scatter-plot';
 import Table from './displays/result-table';
@@ -54,6 +55,9 @@ class Result extends Component {
     const { activeResult } = this.state;
     return (
       <div>
+        <Button className="custom" onClick={BrowserHistory.goBack}>
+          <Glyphicon glyph="glyphicon glyphicon-arrow-left" />
+        </Button>
         {(activeResult && activeResult.results && activeResult.results.type === 'box_plot') &&
           <Tabs defaultActiveKey={1} id="uncontrolled-tab-example">
             <Tab eventKey={1} title="Box-Plot View">
@@ -83,13 +87,9 @@ class Result extends Component {
           </Tabs>
         }
         {activeResult && activeResult.results && !activeResult.results.type &&
-          <Tabs defaultActiveKey={1} id="uncontrolled-tab-example">
-            <Tab eventKey={1} title="Table View">
-              <Table
-                plotData={this.state.plotData}
-              />
-            </Tab>
-          </Tabs>
+          <Table
+            plotData={this.state.plotData}
+          />
         }
         {activeResult && activeResult.error &&
           <Well style={{ color: 'red' }}>

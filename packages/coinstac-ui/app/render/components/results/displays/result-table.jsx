@@ -21,6 +21,15 @@ class Table extends Component {
     rows.selectAll('td')
       .data((d) => {
         return titles.map((k) => {
+          if (d[k].constructor === Array) {
+            d[k] = d[k].map((v) => {
+              v = parseFloat(v).toFixed(5);
+              if (v > 999 || v < 0.001) {
+                return parseFloat(v).toExponential(5);
+              }
+              return v;
+            });
+          }
           return { value: d[k], name: k };
         });
       }).enter()
@@ -29,14 +38,17 @@ class Table extends Component {
         return d.name;
       })
       .text((d) => {
-        return d.value;
+        return d.value.toString().replace(/,/g, ', ');
       });
     const headers = table.append('thead').append('tr')
     .selectAll('th')
     .data(titles)
     .enter()
     .append('th')
-    .text((d) => {
+    .text((d, i) => {
+      if (i === -1) {
+        return ' ';
+      }
       return d;
     })
     .on('click', (d) => {
