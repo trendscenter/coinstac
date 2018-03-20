@@ -105,7 +105,13 @@ class ComputationRegistry {
       return this.constructor.pullComputations(comps);
     })
     .then((pullStreams) => {
-      pullStreams.forEach(({ stream }) => stream.pipe(process.stdout));
+      pullStreams.forEach(({ stream }) => {
+        if (typeof stream.pipe !== 'function') {
+          console.log(stream);
+        } else {
+          stream.pipe(process.stdout);
+        }
+      });
     })
     .catch(console.log); // eslint-disable-line no-console
   }
