@@ -2,11 +2,10 @@
 
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { Alert } from 'react-bootstrap';
 import { connect } from 'react-redux';
-import StatusItem from '../status-item';
-import { initTestData } from '../../state/ducks/collections';
-import { clearRuns } from '../../state/ducks/runs';
+import RunsList from '../common/runs-list';
+
+const HOURS_SINCE_ACTIVE = 72;
 
 class DashboardHome extends Component {
   constructor(props) {
@@ -17,11 +16,6 @@ class DashboardHome extends Component {
     };
   }
 
-  // componentDidMount() {
-  //   this.props.clearRuns();
-  //   this.props.initTestData();
-  // }
-
   componentWillUnmount() {
     if (this.interval) {
       clearInterval(this.interval);
@@ -30,51 +24,38 @@ class DashboardHome extends Component {
 
   render() {
     const {
-      remoteResults,
+      consortia, runs, userId,
     } = this.props;
 
     return (
-      <div className="dashboard-home">
+      <div>
         <div className="page-header clearfix">
-          <h1 className="pull-left">Computation Statuses</h1>
+          <h1 className="pull-left">{userId}'s Home</h1>
         </div>
-        {!remoteResults.length &&
-          <Alert>No computation results</Alert>
-        }
-        <ul className="list-unstyled">
-          {remoteResults.map(res => (
-            <li key={res.startDate}>
-              <StatusItem
-                computation={res.computation}
-                consortium={res.consortium}
-                remoteResult={res}
-              />
-            </li>
-          ))}
-        </ul>
+        <h3>Run Activity in the Last {HOURS_SINCE_ACTIVE} Hours</h3>
+        <RunsList
+          consortia={consortia}
+          hoursSinceActive={HOURS_SINCE_ACTIVE}
+          limitToComplete={false}
+          runs={runs}
+        />
       </div>
     );
   }
 }
 
 DashboardHome.propTypes = {
-  clearRuns: PropTypes.func.isRequired,
-  initTestData: PropTypes.func.isRequired,
-  username: PropTypes.string,
+  consortia: PropTypes.array.isRequired,
+  runs: PropTypes.array.isRequired,
+  userId: PropTypes.string.isRequired,
 };
 
 DashboardHome.defaultProps = {
-  computations: [],
-  username: null,
-  remoteResults: [],
+  userId: '',
 };
 
-function mapStateToProps({
-  auth,
-}) {
-  return {
-    username: auth.user.username || '',
-  };
+function mapStateToProps({ auth: { user: { id } }, runs: { runs } }) {
+  return { runs, userId: id };
 }
 
-export default connect(mapStateToProps, { clearRuns, initTestData })(DashboardHome);
+export default connect(mapStateToProps)(DashboardHome);

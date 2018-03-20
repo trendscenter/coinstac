@@ -26,109 +26,101 @@ helperFunctions.getRethinkConnection()
     Object.assign({}, multiShot, { submittedBy: 'test' }),
     Object.assign({}, vbm, { submittedBy: 'author' }),
   ], { returnChanges: true }).run(connection))
-  .then(compInsertResult => rethink.table('pipelines').insert([{
-    id: 'test-pipeline-2',
-    name: 'Test Pipeline 2',
-    description: 'Test description',
-    owningConsortium: 'test-cons-2',
-    shared: true,
-    steps: [
-      {
-        computations: [
-          compInsertResult.changes[2].new_val.id,
-        ],
-        controller: {
-          options: {},
-          id: 'test-controller-1',
-          type: 'local',
-        },
-        id: 'HJwMOMTh-',
-        inputMap: {
-          covariates: [
-            {
-              name: 'isControl',
-              source: { inputKey: 'file', inputLabel: 'File', pipelineIndex: -1 },
-              type: 'boolean',
-            },
-            {
-              name: 'age',
-              source: { inputKey: 'file', inputLabel: 'File', pipelineIndex: -1 },
-              type: 'number',
-            },
+  .then(compInsertResult => rethink.table('pipelines').insert([
+    {
+      delete: false,
+      description: 'ssr',
+      id: 'test-pipeline-ssr',
+      name: 'ssr test',
+      owningConsortium: 'test-cons-2',
+      shared: false,
+      steps: [
+        {
+          computations: [
+            compInsertResult.changes[2].new_val.id,
           ],
-          freeSurferRegion: { value: ['3rd-Ventricle'] },
-          lambda: { value: 4 },
-        },
-      },
-      {
-        computations: [
-          compInsertResult.changes[3].new_val.id,
-        ],
-        controller: { type: 'decentralized' },
-        id: 'HyLfdfanb',
-        inputMap: {
-          covariates: [
-            {
-              name: 'biased xs',
-              source: { inputKey: 'biasedX', inputLabel: 'Computation 1: Biased Xs', pipelineIndex: 0 },
-              type: 'number',
+          controller: {
+            id: null,
+            options: {},
+            type: 'decentralized',
+          },
+          id: 'HJKRyjTuM',
+          inputMap: {
+            covariates: {
+              ownerMappings: [
+                {
+                  name: 'isControl',
+                  source: 'file',
+                  type: 'boolean',
+                },
+                {
+                  name: 'age',
+                  source: 'file',
+                  type: 'number',
+                },
+              ],
             },
+            data: {
+              ownerMappings: [
+                {
+                  type: 'FreeSurfer',
+                  value: ['3rd-Ventricle'],
+                },
+              ],
+            },
+            lambda: { value: 2 },
+          },
+        },
+      ],
+    },
+    {
+      id: 'test-pipeline-decentralized',
+      name: 'Decentralized Pipeline',
+      description: 'Test description',
+      owningConsortium: 'test-cons-2',
+      shared: true,
+      steps: [
+        {
+          id: 'UIKDl-',
+          controller: { type: 'decentralized' },
+          computations: [
+            compInsertResult.changes[1].new_val.id,
           ],
-          freeSurferRegion: { value: ['5th-Ventricle'] },
-          iterationCount: { value: 3 },
-          lambda: { value: 4 },
+          inputMap: {
+            start: { value: 1 },
+          },
         },
-      },
-    ],
-  },
-  {
-    id: 'test-pipeline-decentralized',
-    name: 'Decentralized Pipeline',
-    description: 'Test description',
-    owningConsortium: 'test-cons-2',
-    shared: true,
-    steps: [
-      {
-        id: 'UIKDl-',
-        controller: { type: 'decentralized' },
-        computations: [
-          compInsertResult.changes[1].new_val.id,
-        ],
-        inputMap: {
-          start: { value: 1 },
+      ],
+    },
+    {
+      id: 'test-pipeline-local',
+      name: 'Local Pipeline',
+      description: 'Local Test description',
+      owningConsortium: 'test-cons-2',
+      shared: true,
+      steps: [
+        {
+          id: 'UIKDl-local1',
+          controller: { type: 'local' },
+          computations: [
+            compInsertResult.changes[0].new_val.id,
+          ],
+          inputMap: {
+            start: { value: 1 },
+          },
         },
-      },
-    ],
-  },
-  {
-    id: 'test-pipeline-local',
-    name: 'Local Pipeline',
-    description: 'Local Test description',
-    owningConsortium: 'test-cons-2',
-    shared: true,
-    steps: [
-      {
-        id: 'UIKDl-local1',
-        controller: { type: 'local' },
-        computations: [
-          compInsertResult.changes[0].new_val.id,
-        ],
-        inputMap: {
-          start: { value: 1 },
+        {
+          id: 'UIKDl-local2',
+          controller: { type: 'local' },
+          computations: [
+            compInsertResult.changes[0].new_val.id,
+          ],
+          inputMap: {
+            start: { fromCache: { step: 0, variable: 'sum' } },
+          },
         },
-      },
-      {
-        id: 'UIKDl-local2',
-        controller: { type: 'local' },
-        computations: [
-          compInsertResult.changes[0].new_val.id,
-        ],
-        inputMap: {
-          start: { fromCache: { step: 0, variable: 'sum' } },
-        },
-      },
-    ],
-  },
+      ],
+    },
   ]).run(connection))
   .then(() => rethink.tableCreate('roles', { primaryKey: 'role' }).run(connection))
   .then(() => rethink.table('roles').insert([
@@ -141,7 +133,7 @@ helperFunctions.getRethinkConnection()
     {
       id: 'results-1',
       startDate: '1518559440668',
-      endDate: '1518559440670',
+      endDate: Date.now(),
       title: 'TSNE',
       pipelineId: 'test-pipeline',
       clients: ['test'],
@@ -278,7 +270,7 @@ helperFunctions.getRethinkConnection()
       title: 'MRI QC',
       pipelineId: 'test-pipeline',
       startDate: '1518559440672',
-      endDate: '1518559440674',
+      endDate: '1518559440685',
       clients: ['test'],
       consortiumId: 'test-cons-2',
       date: '1/23/2018',
@@ -341,7 +333,7 @@ helperFunctions.getRethinkConnection()
   }).run(connection))
   .then(() => rethink.table('consortia').insert({
     id: 'test-cons-2',
-    activePipelineId: 'test-pipeline-decentralized',
+    activePipelineId: 'test-pipeline-ssr',
     name: 'Test Consortia 2',
     description: 'This consortia is for testing too.',
     owners: ['test'],
@@ -360,6 +352,82 @@ helperFunctions.getRethinkConnection()
     consortia: {
       'test-cons-1': ['member'],
       'test-cons-2': ['owner'],
+    },
+    pipelines: {},
+  },
+  consortiaStatuses: {
+    'test-cons-1': 'none',
+    'test-cons-2': 'none',
+  },
+}, passwordHash))
+.then(() => helperFunctions.hashPassword('password'))
+.then(passwordHash => helperFunctions.createUser({
+  id: 'test2',
+  username: 'test2',
+  institution: 'mrn',
+  email: 'test2@mrn.org',
+  permissions: {
+    computations: {},
+    consortia: {
+      'test-cons-1': ['member'],
+      'test-cons-2': ['member'],
+    },
+    pipelines: {},
+  },
+  consortiaStatuses: {
+    'test-cons-1': 'none',
+    'test-cons-2': 'none',
+  },
+}, passwordHash))
+.then(() => helperFunctions.hashPassword('password'))
+.then(passwordHash => helperFunctions.createUser({
+  id: 'test3',
+  username: 'test3',
+  institution: 'mrn',
+  email: 'test3@mrn.org',
+  permissions: {
+    computations: {},
+    consortia: {
+      'test-cons-1': ['member'],
+      'test-cons-2': ['member'],
+    },
+    pipelines: {},
+  },
+  consortiaStatuses: {
+    'test-cons-1': 'none',
+    'test-cons-2': 'none',
+  },
+}, passwordHash))
+.then(() => helperFunctions.hashPassword('password'))
+.then(passwordHash => helperFunctions.createUser({
+  id: 'test4',
+  username: 'test4',
+  institution: 'mrn',
+  email: 'test4@mrn.org',
+  permissions: {
+    computations: {},
+    consortia: {
+      'test-cons-1': ['member'],
+      'test-cons-2': ['member'],
+    },
+    pipelines: {},
+  },
+  consortiaStatuses: {
+    'test-cons-1': 'none',
+    'test-cons-2': 'none',
+  },
+}, passwordHash))
+.then(() => helperFunctions.hashPassword('password'))
+.then(passwordHash => helperFunctions.createUser({
+  id: 'test5',
+  username: 'test5',
+  institution: 'mrn',
+  email: 'test5@mrn.org',
+  permissions: {
+    computations: {},
+    consortia: {
+      'test-cons-1': ['member'],
+      'test-cons-2': ['member'],
     },
     pipelines: {},
   },
@@ -391,10 +459,7 @@ helperFunctions.getRethinkConnection()
   institution: 'mrn',
   email: 'server@mrn.org',
   permissions: {
-    computations: {
-      'single-shot-test-id': ['owner'],
-      'multi-shot-test-id': ['owner'],
-    },
+    computations: {},
     consortia: {
       'test-cons-1': ['owner'],
       'test-cons-2': ['member'],

@@ -22,7 +22,7 @@ module.exports = {
     const currentComputations = computations.map(comp => Computation.create(comp, mode, runId));
     const activeControlBox = controllers[controller.type];
     const computationStep = 0;
-    const iterationEmitter = new Emitter();
+    const stateEmitter = new Emitter();
     const controllerState = {
       activeComputations: [],
       baseDirectory: `/input/${runId}`,
@@ -37,9 +37,9 @@ module.exports = {
       runType: 'sequential',
       state: undefined,
     };
-    const setIteration = (iteration) => {
-      controllerState.iteration = iteration;
-      iterationEmitter.emit('update', iteration, cache, controllerState.currentOutput);
+    const setStateProp = (prop, val) => {
+      controllerState[prop] = val;
+      stateEmitter.emit('update', controllerState);
     };
 
     return {
@@ -49,10 +49,10 @@ module.exports = {
       controllerState,
       mode,
       runId,
-      iterationEmitter,
+      stateEmitter,
       inputMap,
       operatingDirectory,
-      setIteration,
+      setStateProp,
       /**
        * Starts a controller, which in turn starts a computation, given the correct
        * conditions.
@@ -62,7 +62,7 @@ module.exports = {
        */
       start: (input, remoteHandler) => {
         const queue = [];
-        controllerState.state = 'started';
+        setStateProp('state', 'started');
         controllerState.remoteInitial = controllerState.mode === 'remote' ? true : undefined;
         if (!controllerState.initialized) {
           controllerState.runType = activeControlBox.runType || controllerState.runType;
@@ -70,7 +70,7 @@ module.exports = {
           controllerState.computationIndex = 0;
           controllerState.activeComputations[controllerState.computationIndex] =
             controllerState.currentComputations[controllerState.computationIndex];
-          setIteration(0);
+          setStateProp('iteration', 0);
         }
 
         /**
@@ -84,8 +84,8 @@ module.exports = {
           // TODO: logic for different runTypes (single, parallel, etc)
           switch (controllerState.currentBoxCommand) {
             case 'nextIteration':
-              setIteration(controllerState.iteration + 1);
-              controllerState.state = 'waiting on computation';
+              setStateProp('iteration', controllerState.iteration + 1);
+              setStateProp('state', 'waiting on computation');
 
               return controllerState.activeComputations[controllerState.computationIndex]
               .start(
@@ -95,7 +95,7 @@ module.exports = {
               .then((output) => {
                 cache = Object.assign(cache, output.cache);
                 controllerState.currentOutput = { output: output.output, success: output.success };
-                controllerState.state = 'finished iteration';
+                setStateProp('state', 'finished iteration');
                 cb(output.output);
               }).catch(error => err(error));
             case 'nextComputation':
@@ -108,30 +108,30 @@ module.exports = {
               //   .start(input);
               break;
             case 'remote':
-              controllerState.state = 'waiting on remote';
+              setStateProp('state', 'waiting on remote');
               return remoteHandler({ input: controllerState.currentOutput })
               .then((output) => {
-                controllerState.state = 'finished remote iteration';
+                setStateProp('state', 'finished remote iteration');
                 controllerState.currentOutput = { output: output.output, success: output.success };
                 cb(output.output);
               }).catch(error => err(error));
             case 'firstServerRemote':
               // TODO: not ideal, figure out better remote start
               // remove noop need
-              controllerState.state = 'waiting on remote';
+              setStateProp('state', 'waiting on remote');
               return remoteHandler({ input: controllerState.currentOutput, noop: true })
               .then((output) => {
-                controllerState.state = 'finished remote iteration';
+                setStateProp('state', 'finished remote iteration');
                 controllerState.currentOutput = { output: output.output, success: output.success };
                 cb(output.output);
               }).catch(error => err(error));
             case 'doneRemote':
-              controllerState.state = 'waiting on remote';
+              setStateProp('state', 'waiting on remote');
               // we want the success output, grabbing the last currentOutput is fine
               // Note that input arg === controllerState.currentOutput.output at this point
               return remoteHandler({ input: controllerState.currentOutput, transmitOnly: true })
               .then(() => {
-                controllerState.state = 'finished final remote iteration';
+                setStateProp('state', 'finished final remote iteration');
                 cb(input);
               }).catch(error => err(error));
             case 'done':
@@ -171,7 +171,7 @@ module.exports = {
          * @return {Object}                computation's result
          */
         const waterfall = (initialInput, steps, done, err) => {
-          controllerState.state = 'running';
+          setStateProp('state', 'running');
           steps.push(done);
           trampoline(() => {
             return steps.length ?
@@ -201,12 +201,13 @@ module.exports = {
 
         const p = new Promise((res, rej) => {
           const errCb = (err) => {
+            setStateProp('state', 'error');
             controllerState.activeComputations[controllerState.computationIndex].stop()
             .then(() => rej(err));
           };
 
           waterfall(input, queue, (result) => {
-            controllerState.state = 'stopped';
+            setStateProp('state', 'stopped');
             controllerState.activeComputations[controllerState.computationIndex].stop()
             .then(() => res(result));
           }, errCb);

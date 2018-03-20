@@ -4,7 +4,13 @@
 const tail = require('lodash/tail');
 const bluebird = require('bluebird');
 const csvParse = require('csv-parse');
+const mkdirp = bluebird.promisify(require('mkdirp'));
+const util = require('util');
 const fs = require('fs');
+
+const unlinkAsync = util.promisify(fs.unlink);
+const linkAsync = util.promisify(fs.link);
+const statAsync = bluebird.promisify(fs.stat);
 
 bluebird.config({ warnings: false });
 const osHomedir = require('os-homedir');
@@ -14,7 +20,7 @@ const winston = require('winston');
 const Logger = winston.Logger;
 const Console = winston.transports.Console;
 const ComputationRegistry = require('coinstac-computation-registry');
-const PipelineManager = require('../../coinstac-pipeline');
+const PipelineManager = require('coinstac-pipeline');
 
 /**
  * Create a user client for COINSTAC
@@ -32,6 +38,7 @@ const PipelineManager = require('../../coinstac-pipeline');
  * used for testing.
  * @param {Winston} [opts.logger] permit user injected logger vs default logger
  * @param {string} [opts.logLevel] npm log levels, e.g. 'verbose', 'error', etc
+ * @param {string} [opts.userId] Currently logged-in user
  * @property {Winston} logger
  * @property {string} appDirectory
  * @property {Auth} auth
@@ -54,10 +61,16 @@ class CoinstacClient {
       this.logger.level = opts.logLevel;
     }
 
+    this.clientId = opts.userId;
+
     this.pipelineManager = PipelineManager.create({
       mode: 'local',
       clientId: opts.userId,
-      operatingDirectory: this.appDirectory,
+      operatingDirectory: path.join(this.appDirectory, opts.userId),
+      remotePort: opts.pipelineWSServer.port,
+      remoteProtocol: opts.pipelineWSServer.protocol,
+      remotePathname: opts.pipelineWSServer.pathname,
+      remoteURL: opts.pipelineWSServer.hostname,
     });
   }
 
@@ -197,27 +210,61 @@ class CoinstacClient {
     runId,
     runPipeline // eslint-disable-line no-unused-vars
   ) {
-    // TODO: validate runPipeline against clientPipeline
-    const linkPromises = [];
+    return mkdirp(path.join(this.appDirectory, this.clientId, runId))
+    .then(() => {
+      // TODO: validate runPipeline against clientPipeline
+      const linkPromises = [];
 
-    for (let i = 0; i < filesArray.length; i += 1) {
-      linkPromises.push(
-        fs.link(
-          filesArray[i],
-          `${this.appDirectory}/${filesArray[i].replace(/\//g, '-')}`,
-          err => console.log(err) // eslint-disable-line no-console
-        )
-      );
-    }
+      for (let i = 0; i < filesArray.length; i += 1) {
+        linkPromises.push(
+          linkAsync(filesArray[i], `${this.appDirectory}/${this.clientId}/${runId}/${filesArray[i].replace(/\//g, '-')}`)
+        );
+      }
 
-    const runObj = { spec: clientPipeline, runId };
-    if (clients) {
-      runObj.clients = clients;
-    }
+      const runObj = { spec: clientPipeline, runId };
+      if (clients) {
+        runObj.clients = clients;
+      }
 
-    const newPipeline = this.pipelineManager.startPipeline(runObj);
+      const newPipeline = this.pipelineManager.startPipeline(runObj);
 
-    return Promise.all([newPipeline, linkPromises]);
+      return Promise.all([newPipeline, linkPromises]);
+    });
+  }
+
+  unlinkFiles(runId) {
+    const fullPath = path.join(this.appDirectory, this.clientId, runId);
+
+    return statAsync(fullPath).then((stats) => {
+      return stats.isDirectory();
+    })
+    .then((exists) => {
+      if (!exists) {
+        return [];
+      }
+
+      return new Promise((res, rej) => {
+        return fs.readdir(fullPath,
+          (error, filesArray) => {
+            if (error) {
+              rej(error);
+            } else {
+              res(filesArray);
+            }
+          }
+        );
+      });
+    })
+    .then((filesArray) => {
+      const unlinkPromises = [];
+      for (let i = 0; i < filesArray.length; i += 1) {
+        unlinkPromises.push(
+          unlinkAsync(filesArray[i])
+        );
+      }
+      return Promise.all(unlinkPromises);
+    })
+    .catch(console.log); // eslint-disable-line no-console
   }
 }
 

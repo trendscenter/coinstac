@@ -206,7 +206,7 @@ const resolvers = {
         .then((connection) =>
           rethink.table('computations').insert(
             Object.assign({}, args.computationSchema, { submittedBy: credentials.id }),
-            { 
+            {
               conflict: "replace",
               returnChanges: true,
             }
@@ -287,7 +287,7 @@ const resolvers = {
               startDate: Date.now(),
               type: 'decentralized',
             },
-            { 
+            {
               conflict: "replace",
               returnChanges: true,
             }
@@ -296,7 +296,7 @@ const resolvers = {
         )
         .then((result) => {
           return axios.post(
-            `http://${config.host}:${config.hapiServer}/startPipeline`, { run: result.changes[0].new_val }
+            `http://${config.host}:${config.pipelineServer}/startPipeline`, { run: result.changes[0].new_val }
           ).then(() => {
               return result.changes[0].new_val;
           })
@@ -499,7 +499,7 @@ const resolvers = {
         .then(connection =>
           rethink.table('consortia').insert(
             args.consortium,
-            { 
+            {
               conflict: "update",
               returnChanges: true,
             }
@@ -507,6 +507,21 @@ const resolvers = {
           .run(connection)
         )
         .then(result => result.changes[0].new_val)
+    },
+    /**
+     * Saves run error
+     * @param {object} auth User object from JWT middleware validateFunc
+     * @param {object} args
+     * @param {string} args.runId Run id to update
+     * @param {string} args.error Error
+     */
+    saveError: ({ auth: { credentials } }, args) => {
+      const { permissions } = credentials;
+      return helperFunctions.getRethinkConnection()
+        .then((connection) =>
+          rethink.table('runs').get(args.runId).update({ error: Object.assign({}, args.error), endDate: Date.now() })
+          .run(connection))
+          // .then(result => result.changes[0].new_val)
     },
     /**
      * Saves pipeline
@@ -551,6 +566,13 @@ const resolvers = {
         ))
         .then(result => result)
     },
+    /**
+     * Saves run results
+     * @param {object} auth User object from JWT middleware validateFunc
+     * @param {object} args
+     * @param {string} args.runId Run id to update
+     * @param {string} args.results Results
+     */
     saveResults: ({ auth: { credentials } }, args) => {
       console.log("save results was called");
       const { permissions } = credentials;
@@ -565,6 +587,22 @@ const resolvers = {
     },
     setComputationInputs: (_, args) => {
       return new Promise();
+    },
+    /**
+     * Updates run remote state
+     * @param {object} auth User object from JWT middleware validateFunc
+     * @param {object} args
+     * @param {string} args.runId Run id to update
+     * @param {string} args.data State data
+     */
+    updateRunState: ({ auth: { credentials } }, args) => {
+      const { permissions } = credentials;
+      return helperFunctions.getRethinkConnection()
+        .then((connection) => {
+          return rethink.table('runs').get(args.runId).update({ remotePipelineState: args.data })
+          .run(connection);
+        });
+          // .then(result => result.changes[0].new_val)
     },
     /**
      * Saves consortium

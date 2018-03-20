@@ -1,3 +1,5 @@
+import { isEqual } from 'lodash';
+import { dirname, resolve, extname } from 'path';
 import { applyAsyncLoading } from './loading';
 import localDB from '../local-db';
 import testData from '../../../../test/data/test-collection.json';
@@ -12,6 +14,97 @@ const SAVE_COLLECTION = 'SAVE_COLLECTION';
 const GET_ASSOCIATED_CONSORTIA = 'GET_ASSOCIATED_CONSORTIA';
 const REMOVE_COLLECTIONS_FROM_CONS = 'REMOVE_COLLECTIONS_FROM_CONS';
 const SET_COLLECTIONS = 'GET_ALL_COLLECTIONS';
+
+function iteratePipelineSteps(consortium, filesByGroup, baseDirectory) {
+  let mappingIncomplete = false;
+  const collections = [];
+  const steps = [];
+
+  /* Get step covariates and compare against local file mapping to ensure mapping is complete
+      Add local files groups to array in order to grab files to pass to pipeline */
+  for (let sIndex = 0; sIndex < consortium.pipelineSteps.length; sIndex += 1) {
+    const step = consortium.pipelineSteps[sIndex];
+    const inputMap = { ...step.inputMap };
+
+    const inputKeys = Object.keys(inputMap);
+
+    for (let keyIndex = 0; keyIndex < inputKeys.length; keyIndex += 1) {
+      const key = inputKeys[keyIndex];
+      if ('ownerMappings' in step.inputMap[key]) {
+        const keyArray = [[], [], []]; // [[values], [labels], [type (if present)]]
+
+        for (let mappingIndex = 0;
+            mappingIndex < step.inputMap[key].ownerMappings.length;
+            mappingIndex += 1) {
+          const mappingObj = step.inputMap[key].ownerMappings[mappingIndex];
+          if (mappingObj.source === 'file'
+              && consortium.stepIO[sIndex] && consortium.stepIO[sIndex][key][mappingIndex]
+              && consortium.stepIO[sIndex][key][mappingIndex].collectionId) {
+            const { groupId, collectionId } = consortium.stepIO[sIndex][key][mappingIndex];
+            collections.push({ groupId, collectionId });
+
+            // This changes by how the parser is reading in files - concat or push
+            if (filesByGroup) {
+              keyArray[0].push(filesByGroup[consortium.stepIO[sIndex][key][mappingIndex].groupId]);
+              keyArray[1].push(consortium.stepIO[sIndex][key][mappingIndex].column);
+
+              if ('type' in mappingObj) {
+                keyArray[2].push(mappingObj.type);
+              }
+            }
+          } else if (mappingObj.source === 'file'
+              && (!consortium.stepIO[sIndex] || !consortium.stepIO[sIndex][key][mappingIndex]
+              || !consortium.stepIO[sIndex][key][mappingIndex].collectionId)) {
+            mappingIncomplete = true;
+            break;
+          } else if (filesByGroup && mappingObj.type === 'FreeSurfer') {
+            let filepaths = filesByGroup[consortium.stepIO[sIndex][key][mappingIndex].groupId];
+
+            if (filepaths) {
+              filepaths = filepaths.map((path) => {
+                if (extname(path[0]) !== '') {
+                  return resolve(baseDirectory, path[0]).replace(/\//g, '-');
+                }
+                return '';
+              });
+            }
+
+            keyArray[0].push(filepaths);
+            keyArray[1].push(mappingObj.value);
+            keyArray[2].push(mappingObj.type);
+          } else if (filesByGroup) {
+            // TODO: Handle keys fromCache if need be
+          }
+        }
+
+        // if (key === 'data') {
+        //   keyArray[0].push(keyArray[0][0]);
+        // }
+
+        inputMap[key] = { value: keyArray };
+      }
+
+      if (mappingIncomplete) {
+        break;
+      }
+    }
+
+    if (mappingIncomplete) {
+      break;
+    }
+
+    steps.push({ ...step, inputMap });
+  }
+
+
+  if (mappingIncomplete) {
+    return {
+      error: `Mapping incomplete for new run from ${consortium.name}. Please complete variable mapping before continuing.`,
+    };
+  }
+
+  return { collections, steps };
+}
 
 // Action Creators
 export const deleteAssociatedConsortia = applyAsyncLoading(consId =>
@@ -50,101 +143,75 @@ export const getAllCollections = applyAsyncLoading(() =>
       })
 );
 
-export const getCollectionFiles = applyAsyncLoading((consortiumId, consortiumName, steps) =>
-  (dispatch) => {
-    let needsFiles = false;
-
-    // TODO: Revisit when its decided if client may be in charge of
-    //   supplying values to non-covariate vars
-    for (let i = 0; i < steps.length; i += 1) {
-      if ('covariates' in steps[i].inputMap) {
-        for (let q = 0; q < steps[i].inputMap.covariates.length; q += 1) {
-          if (steps[i].inputMap.covariates[q].source.inputKey === 'file') {
-            needsFiles = true;
-            break;
-          }
-        }
-      }
-      if (needsFiles) {
-        break;
-      }
-    }
-
-    // Doesn't need local file paths, so return an empty array
-    if (!needsFiles) {
-      return [];
-    }
-
-    return localDB.associatedConsortia.get(consortiumId)
+export const getCollectionFiles = consortiumId =>
+  dispatch =>
+    localDB.associatedConsortia.get(consortiumId)
     .then((consortium) => {
-      if (!consortium) {
-        const error = {
-          error: `No associated consortia in local db. Please visit Collections and map variables for ${consortiumName}.`,
-        };
-        dispatch(({
-          type: GET_COLLECTION_FILES,
-          payload: error,
-        }));
-        return error;
+      let collections = { collections: [] };
+      if (consortium.pipelineSteps) {
+        collections = iteratePipelineSteps(consortium);
       }
 
-      const collections = [];
-      let mappingIncomplete = false;
-
-      /* Get step covariates and compare against local file mapping to ensure mapping is complete
-         Add local files groups to array in order to grab files to pass to pipeline */
-      for (let sIndex = 0; sIndex < consortium.pipelineSteps.length; sIndex += 1) {
-        const step = consortium.pipelineSteps[sIndex];
-        for (let cIndex = 0; cIndex < step.inputMap.covariates.length; cIndex += 1) {
-          const covar = step.inputMap.covariates[cIndex];
-          if (covar.source.inputKey === 'file'
-              && consortium.stepIO[sIndex] && consortium.stepIO[sIndex][cIndex]
-              && consortium.stepIO[sIndex][cIndex].collectionId) {
-            const { groupId, collectionId } = consortium.stepIO[sIndex][cIndex];
-            collections.push({ groupId, collectionId });
-          } else if (covar.source.inputKey === 'file'
-              && (!consortium.stepIO[sIndex] || !consortium.stepIO[sIndex][cIndex]
-              || !consortium.stepIO[sIndex][cIndex].collectionId)) {
-            mappingIncomplete = true;
-            break;
-          }
-        }
-
-        if (mappingIncomplete) {
-          break;
-        }
-      }
-
-      if (mappingIncomplete) {
-        const error = {
-          error: `Mapping incomplete for new run from ${consortium.name}. Please complete variable mapping before continuing.`,
-        };
-        dispatch(({
-          type: GET_COLLECTION_FILES,
-          payload: error,
-        }));
-        return error;
-      }
-
-      return localDB.collections
-        .filter(collection => collections.findIndex(c => c.collectionId === collection.id) > -1)
-        .toArray()
-        .then((localDBCols) => {
-          let runFiles = [];
-          localDBCols.forEach((coll) => {
-            Object.values(coll.fileGroups).forEach((group) => {
-              runFiles = runFiles.concat(coll.fileGroups[group.id].files);
-            });
-          });
-
+      if ('error' in collections) {
+        return localDB.associatedConsortia.update(consortium.id, { isMapped: false })
+        .then(() => {
           dispatch(({
             type: GET_COLLECTION_FILES,
-            payload: runFiles,
+            payload: collections,
           }));
-          return runFiles;
+          return collections;
         });
+      }
+
+      return localDB.associatedConsortia.update(consortium.id, { isMapped: true })
+      .then(() => {
+        if (collections.collections.length === 0) {
+          return { allFiles: collections.collections };
+        }
+
+        return localDB.collections
+          .filter(collection =>
+            collections.collections.findIndex(c => c.collectionId === collection.id) > -1
+          )
+          .toArray()
+          .then((localDBCols) => {
+            let allFiles = [];
+            const filesByGroup = {};
+            let metaDir;
+            localDBCols.forEach((coll) => {
+              Object.values(coll.fileGroups).forEach((group) => {
+                allFiles = allFiles.concat(coll.fileGroups[group.id].files);
+                if ('metaFile' in group) {
+                  metaDir = dirname(group.metaFilePath);
+                  filesByGroup[group.id] = coll.fileGroups[group.id].metaFile;
+                } else {
+                  filesByGroup[group.id] = coll.fileGroups[group.id].files;
+                }
+              });
+            });
+
+            // TODO: Reconsider how to get updated steps
+            const { steps } = iteratePipelineSteps(consortium, filesByGroup, metaDir);
+
+            dispatch(({
+              type: GET_COLLECTION_FILES,
+              payload: { allFiles, steps },
+            }));
+            return { allFiles, steps };
+          });
+      });
     });
-  }
+
+export const getAllAssociatedConsortia = applyAsyncLoading(() =>
+  dispatch =>
+    localDB.associatedConsortia
+      .toArray()
+      .then((consortia) => {
+        dispatch(({
+          type: GET_ASSOCIATED_CONSORTIA,
+          payload: consortia,
+        }));
+      })
 );
 
 export const getAssociatedConsortia = applyAsyncLoading(consortiaIds =>
@@ -164,6 +231,8 @@ export const initTestData = (() =>
   dispatch =>
     localDB.associatedConsortia.clear()
     .then(() => localDB.collections.put(testData))
+    .then(() => localDB.associatedConsortia.put({ id: 'test-cons-2', activePipelineId: 'test-pipeline-decentralized', isMapped: false }))
+    .then(() => localDB.associatedConsortia.put({ id: 'test-cons-1', activePipelineId: 'nada' }))
     .then(() => {
       dispatch(({
         type: INIT_TEST_COLLECTION,
@@ -172,47 +241,66 @@ export const initTestData = (() =>
     })
 );
 
-export const removeCollectionsFromAssociatedConsortia = applyAsyncLoading(consId =>
+export const isAssocConsortiumMapped = applyAsyncLoading(consId =>
+  () =>
+    localDB.associatedConsortia.get(consId)
+    .then(cons => cons.isMapped)
+);
+
+export const removeCollectionsFromAssociatedConsortia
+  = applyAsyncLoading((consId, deleteCons, pipelineSteps, activePipelineId) =>
   dispatch =>
     localDB.associatedConsortia.get(consId)
       .then((consortium) => {
-        if (!consortium || !consortium.stepIO) {
-          return [];
-        }
-
         const collectionIds = [];
 
-        consortium.stepIO.forEach((step) => {
-          step.forEach((obj) => {
-            collectionIds.push(obj.collectionId);
+        if (consortium.stepIO) {
+          consortium.stepIO.forEach((step) => {
+            Object.values(step).forEach((val) => {
+              val.forEach((obj) => { collectionIds.push(obj.collectionId); });
+            });
           });
-        });
-
-        return collectionIds;
-      })
-      .then((collectionIds) => {
-        if (collectionIds.length === 0) {
-          return;
         }
 
+        return { consortium, collectionIds };
+      })
+      .then(({ consortium, collectionIds }) => {
         return Promise.all([
-          localDB.collections
-            .filter(col => collectionIds.indexOf(col.id) > -1)
-            .modify((col) => {
-              const index = col.associatedConsortia.indexOf(consId);
-              col.associatedConsortia.splice(index, 1);
+          consortium,
+          collectionIds.length > 0 ? localDB.collections
+              .filter(col => collectionIds.indexOf(col.id) > -1)
+              .modify((col) => {
+                const index = col.associatedConsortia.indexOf(consId);
+                col.associatedConsortia.splice(index, 1);
+              })
+            : null,
+          deleteCons ? localDB.associatedConsortia.delete(consId)
+            : localDB.associatedConsortia.update(consortium.id, {
+              activePipelineId, isMapped: false, stepIO: [], pipelineSteps,
             }),
-          localDB.associatedConsortia.delete(consId),
         ]);
       })
-      .then(() => {
-        return localDB.collections
-          .toArray();
-      })
-      .then((collections) => {
+      .then(([consortium]) =>
+        Promise.all([
+          consortium,
+          getCollectionFiles(consortium.id)(dispatch),
+        ])
+      )
+      .then(() =>
+        Promise.all([
+          localDB.collections.toArray(),
+          localDB.associatedConsortia.toArray(),
+        ])
+      )
+      .then(([collections, associatedConsortia]) => {
+        const payload = { associatedConsortia, collections, consId };
+        if (deleteCons) {
+          payload.deleteCons = true;
+        }
+
         dispatch(({
           type: REMOVE_COLLECTIONS_FROM_CONS,
-          payload: { collections, consId },
+          payload,
         }));
       })
   );
@@ -229,20 +317,71 @@ export const saveCollection = applyAsyncLoading(collection =>
 );
 
 export const saveAssociatedConsortia = applyAsyncLoading(cons =>
-  dispatch =>
-    localDB.associatedConsortia.put(cons)
+  (dispatch) => {
+    return localDB.associatedConsortia.put(cons)
       .then(() => {
         dispatch(({
           type: SAVE_ASSOCIATED_CONSORTIA,
           payload: cons,
         }));
-      })
+      });
+  }
 );
 
+export const syncRemoteLocalConsortia = (remoteCons, pipelineSteps) =>
+  dispatch =>
+    localDB.associatedConsortia.get(remoteCons.id)
+      .then((localCons) => {
+        if (localCons
+          && (localCons.activePipelineId !== remoteCons.activePipelineId)) {
+          removeCollectionsFromAssociatedConsortia(
+            remoteCons.id,
+            false,
+            pipelineSteps,
+            remoteCons.activePipelineId
+          )(dispatch);
+        }
+      });
+
+export const syncRemoteLocalPipelines = remotePipeline =>
+  dispatch =>
+    localDB.associatedConsortia.where('activePipelineId').equals(remotePipeline.id).toArray()
+      .then((localConsortia) => {
+        if (localConsortia) {
+          localConsortia.forEach((localCons) => {
+            if (!isEqual(localCons.pipelineSteps, remotePipeline.steps)) {
+              removeCollectionsFromAssociatedConsortia(
+                localCons.id, false, remotePipeline.steps, remotePipeline.id
+              )(dispatch);
+            }
+          });
+        }
+      });
+
+export const incrementRunCount = consId =>
+  dispatch =>
+    localDB.associatedConsortia.get(consId)
+      .then((cons) => {
+        let runs = 1;
+
+        if (cons.runs) {
+          runs += cons.runs;
+        }
+
+        localDB.associatedConsortia.update(consId, { runs });
+        dispatch(({
+          type: SAVE_ASSOCIATED_CONSORTIA,
+          payload: { ...cons, runs },
+        }));
+      });
+
 const INITIAL_STATE = {
+  activeAssociatedConsortia: [],
   associatedConsortia: [],
   collections: [],
+  error: '',
   runFiles: [],
+  runSteps: [],
 };
 
 export default function reducer(state = INITIAL_STATE, action) {
@@ -262,23 +401,45 @@ export default function reducer(state = INITIAL_STATE, action) {
       return { ...state, collections: newCollections };
     }
     case GET_COLLECTION_FILES:
-      return { ...state, runFiles: [...action.payload] };
-    case SAVE_ASSOCIATED_CONSORTIA: {
-      const newCons = [...state.associatedConsortia];
-      const index = state.associatedConsortia.findIndex(cons => cons.id === action.payload.id);
-
-      if (index === -1) {
-        newCons.push(action.payload);
-      } else {
-        newCons.splice(index, 1, action.payload);
+      if ('error' in action.payload) {
+        return {
+          ...state,
+          error: action.payload.error,
+        };
       }
 
-      return { ...state, associatedConsortia: newCons };
+      return {
+        ...state,
+        runFiles: [...action.payload.allFiles],
+        runSteps: [...action.payload.steps],
+      };
+    case SAVE_ASSOCIATED_CONSORTIA: {
+      const allCons = [...state.associatedConsortia];
+      const allIndex = state.associatedConsortia.findIndex(cons => cons.id === action.payload.id);
+      const activeCons = [...state.activeAssociatedConsortia];
+      const activeIndex = state.activeAssociatedConsortia
+        .findIndex(cons => cons.id === action.payload.id);
+
+      if (allIndex === -1) {
+        allCons.push(action.payload);
+      } else {
+        allCons.splice(allIndex, 1, action.payload);
+      }
+
+      if (activeIndex === -1) {
+        activeCons.push(action.payload);
+      } else {
+        activeCons.splice(activeIndex, 1, action.payload);
+      }
+
+      return { ...state, activeAssociatedConsortia: activeCons, associatedConsortia: allCons };
     }
     case REMOVE_COLLECTIONS_FROM_CONS: {
-      const newCons = [...state.associatedConsortia];
-      const index = state.associatedConsortia.findIndex(cons => cons.id === action.payload.consId);
-      newCons.splice(index, 1);
+      const newCons = [...action.payload.associatedConsortia];
+      const index = newCons.findIndex(cons => cons.id === action.payload.consId);
+      if (action.payload.deleteCons) {
+        newCons.splice(index, 1);
+      }
 
       return { ...state, collections: action.payload.collections, associatedConsortia: newCons };
     }
@@ -297,7 +458,11 @@ export default function reducer(state = INITIAL_STATE, action) {
     case SET_COLLECTIONS:
       return { ...state, collections: action.payload };
     case GET_ASSOCIATED_CONSORTIA:
-      return { ...state, associatedConsortia: action.payload };
+      return {
+        ...state,
+        activeAssociatedConsortia: action.payload,
+        associatedConsortia: action.payload,
+      };
     case INIT_TEST_COLLECTION:
     default:
       return state;

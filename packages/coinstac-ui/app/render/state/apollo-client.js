@@ -7,13 +7,13 @@ import { SubscriptionClient, addGraphQLSubscriptions } from 'subscriptions-trans
 
 export default function getApolloClient(config) {
   const { apiServer, subApiServer } = config.getProperties();
-  const API_URL = `${apiServer.protocol}//${apiServer.hostname}:${apiServer.port}`;
+  const API_URL = `${apiServer.protocol}//${apiServer.hostname}${apiServer.port ? `:${apiServer.port}` : ''}${apiServer.pathname}`;
   const networkInterface = createBatchingNetworkInterface({
     uri: `${API_URL}/graphql`,
     batchInterval: 10,
   });
 
-  const SUB_URL = `${subApiServer.protocol}//${subApiServer.hostname}:${subApiServer.port}`;
+  const SUB_URL = `${subApiServer.protocol}//${subApiServer.hostname}${subApiServer.port ? `:${subApiServer.port}` : ''}${subApiServer.pathname}`;
   const wsClient = new SubscriptionClient(`${SUB_URL}/subscriptions`, { reconnect: true });
   const networkInterfaceWithSubscriptions = addGraphQLSubscriptions(
     networkInterface,
@@ -46,4 +46,3 @@ export default function getApolloClient(config) {
 
   return client;
 }
-

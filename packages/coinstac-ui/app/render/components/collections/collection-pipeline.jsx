@@ -26,7 +26,7 @@ class CollectionPipeline extends Component {
       collection,
       consortiumId,
       consortiumName,
-      updateConsortiumCovars,
+      updateConsortiumClientProps,
     } = this.props;
 
     return (
@@ -47,8 +47,9 @@ class CollectionPipeline extends Component {
                     key={`${input[0]}-collection-input`}
                     objKey={input[0]}
                     objValue={input[1]}
+                    pipelineSteps={activePipeline.steps}
                     stepIndex={stepIndex}
-                    updateConsortiumCovars={updateConsortiumCovars}
+                    updateConsortiumClientProps={updateConsortiumClientProps}
                   />
                 ))}
               </Panel>
@@ -72,7 +73,7 @@ CollectionPipeline.propTypes = {
   consortiumName: PropTypes.string.isRequired,
   pipelineSteps: PropTypes.array.isRequired,
   setPipelineSteps: PropTypes.func.isRequired,
-  updateConsortiumCovars: PropTypes.func.isRequired,
+  updateConsortiumClientProps: PropTypes.func.isRequired,
 };
 
 const CollectionPipelineWithData = graphql(FETCH_PIPELINE_QUERY, getSelectAndSubProp(

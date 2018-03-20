@@ -28,7 +28,8 @@
     },
     "output": {
       "sum": {
-        "type": "number"
+        "type": "number",
+        "label": "Decentralized Sum"
       }
     },
     "display": {

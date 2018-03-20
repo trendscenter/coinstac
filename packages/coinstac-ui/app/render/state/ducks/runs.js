@@ -7,6 +7,7 @@ const CLEAR_RUNS = 'CLEAR_RUNS';
 const GET_DB_RUNS = 'GET_DB_RUNS';
 const SAVE_LOCAL_RUN = 'SAVE_LOCAL_RUN';
 const SAVE_REMOTE_RUNS_LOCALLY = 'SAVE_REMOTE_RUNS_LOCALLY';
+const UPDATE_LOCAL_RUN = 'UPDATE_LOCAL_RUN';
 
 // Action Creators
 export const saveRemoteRunsLocally = applyAsyncLoading(runs =>
@@ -74,11 +75,27 @@ export const saveLocalRun = applyAsyncLoading(run =>
       })
 );
 
+export const updateLocalRun = applyAsyncLoading((runId, objKey, obj) =>
+  dispatch =>
+    localDB.runs.update(runId, { [objKey]: obj })
+      .then((key) => {
+        dispatch(({
+          type: UPDATE_LOCAL_RUN,
+          payload: { runId, objKey, obj },
+        }));
+        return key;
+      })
+);
+
 const INITIAL_STATE = {
   localRuns: [],
   remoteRuns: [],
   runs: [],
 };
+
+function runSort(a, b) {
+  return b.startDate - a.startDate;
+}
 
 export default function reducer(state = INITIAL_STATE, action) {
   switch (action.type) {
@@ -97,7 +114,7 @@ export default function reducer(state = INITIAL_STATE, action) {
       });
 
       return {
-        ...state, localRuns, remoteRuns, runs: uniqBy([...localRuns, ...remoteRuns], 'id'),
+        ...state, localRuns, remoteRuns, runs: uniqBy([...localRuns, ...remoteRuns].sort(runSort), 'id'),
       };
     }
     case SAVE_LOCAL_RUN: {
@@ -110,7 +127,7 @@ export default function reducer(state = INITIAL_STATE, action) {
         localRuns.splice(index, 1, action.payload);
       }
 
-      return { ...state, localRuns, runs: uniqBy([...localRuns, ...state.remoteRuns], 'id') };
+      return { ...state, localRuns, runs: uniqBy([...localRuns, ...state.remoteRuns].sort(runSort), 'id') };
     }
     case SAVE_REMOTE_RUNS_LOCALLY: {
       const remoteRuns = [...state.remoteRuns];
@@ -121,7 +138,14 @@ export default function reducer(state = INITIAL_STATE, action) {
         }
       });
 
-      return { ...state, remoteRuns, runs: uniqBy([...state.localRuns, ...remoteRuns], 'id') };
+      return { ...state, remoteRuns, runs: uniqBy([...state.localRuns, ...remoteRuns].sort(runSort), 'id') };
+    }
+    case UPDATE_LOCAL_RUN: {
+      const localRuns = [...state.localRuns];
+      const index = localRuns.findIndex(run => run.id === action.payload.runId);
+      localRuns[index][action.payload.objKey] = action.payload.obj;
+
+      return { ...state, localRuns, runs: uniqBy([...localRuns, ...state.remoteRuns].sort(runSort), 'id') };
     }
     default:
       return state;

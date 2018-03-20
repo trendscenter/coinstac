@@ -6,9 +6,15 @@ import { LinkContainer } from 'react-router-bootstrap';
 import { ipcRenderer } from 'electron';
 import PropTypes from 'prop-types';
 import shortid from 'shortid';
-import { getCollectionFiles } from '../../state/ducks/collections';
 import ListItem from '../common/list-item';
 import ListDeleteModal from '../common/list-delete-modal';
+import {
+  getCollectionFiles,
+  getAllAssociatedConsortia,
+  incrementRunCount,
+  removeCollectionsFromAssociatedConsortia,
+  saveAssociatedConsortia,
+} from '../../state/ducks/collections';
 import { saveLocalRun } from '../../state/ducks/runs';
 import { updateUserPerms } from '../../state/ducks/auth';
 import { pullComputations } from '../../state/ducks/docker';
@@ -33,6 +39,17 @@ import { notifyInfo, notifyWarning } from '../../state/ducks/notifyAndLog';
 
 const MAX_LENGTH_CONSORTIA = 5;
 
+const styles = {
+  listItemWarning: {
+    color: 'orange',
+    marginLeft: 10,
+    fontWeight: 'bold',
+  },
+  optionalButton: {
+    marginLeft: 10,
+  },
+};
+
 const isUserA = (userId, groupArr) => {
   return groupArr.indexOf(userId) !== -1;
 };
@@ -47,6 +64,8 @@ class ConsortiaList extends Component {
       consortiumToDelete: -1,
       showModal: false,
     };
+
+    this.props.getAllAssociatedConsortia();
 
     this.getOptions = this.getOptions.bind(this);
     this.getListItem = this.getListItem.bind(this);
@@ -74,23 +93,73 @@ class ConsortiaList extends Component {
   }
 
   getOptions(member, owner, id, activePipelineId) {
-    const options = [];
+    const actions = [];
+    const text = [];
+    let isMapped = false;
 
-    if (owner && activePipelineId) {
-      options.push(
+    if (this.props.associatedConsortia.length > 0) {
+      const assocCons = this.props.associatedConsortia.find(c => c.id === id);
+      if (assocCons && assocCons.isMapped) {
+        isMapped = assocCons.isMapped;
+      }
+    }
+
+    text.push(
+      <p>
+        <span className="bold">Active Pipeline: </span>
+        {
+          activePipelineId
+          ? <span style={{ color: 'green' }}>{this.props.pipelines.find(pipe => pipe.id === activePipelineId).name}</span>
+          : <span style={{ color: 'red' }}> None</span>
+        }
+      </p>
+    );
+
+    if (owner && activePipelineId && isMapped) {
+      actions.push(
         <Button
           key={`${id}-start-pipeline-button`}
           bsStyle="success"
           onClick={this.startPipeline(id, activePipelineId)}
-          style={{ marginLeft: 10 }}
+          style={styles.optionalButton}
         >
           Start Pipeline
         </Button>
       );
     }
 
+    if (owner && !activePipelineId) {
+      actions.push(
+        <LinkContainer
+          to={`dashboard/consortia/${id}`}
+          key={`${id}-set-active-pipeline-button`}
+        >
+          <Button
+            bsStyle="warning"
+            style={styles.optionalButton}
+          >
+            Set Active Pipeline
+          </Button>
+        </LinkContainer>
+      );
+    } else if (!isMapped) {
+      actions.push(
+        <LinkContainer
+          to={'dashboard/collections'}
+          key={`${id}-set-map-local-button`}
+        >
+          <Button
+            bsStyle="warning"
+            style={styles.optionalButton}
+          >
+            Map Local Data
+          </Button>
+        </LinkContainer>
+      );
+    }
+
     if (member && !owner) {
-      options.push(
+      actions.push(
         <Button
           key={`${id}-leave-cons-button`}
           bsStyle="warning"
@@ -101,7 +170,7 @@ class ConsortiaList extends Component {
         </Button>
       );
     } else if (!member && !owner) {
-      options.push(
+      actions.push(
         <Button
           key={`${id}-join-cons-button`}
           bsStyle="primary"
@@ -113,7 +182,7 @@ class ConsortiaList extends Component {
       );
     }
 
-    return options;
+    return { actions, text };
   }
 
   getListItem(consortium) {
@@ -155,6 +224,7 @@ class ConsortiaList extends Component {
 
     this.props.deleteConsortiumById(this.state.consortiumToDelete);
     this.props.removeUserRole(user.id, 'consortia', this.state.consortiumToDelete, 'owner');
+    this.props.removeCollectionsFromAssociatedConsortia(this.state.consortiumToDelete, true);
     this.closeModal();
   }
 
@@ -189,6 +259,7 @@ class ConsortiaList extends Component {
       });
     }
 
+    this.props.saveAssociatedConsortia({ id: consortiumId, activePipelineId });
     this.props.joinConsortium(consortiumId);
     this.props.addUserRole(user.id, 'consortia', consortiumId, 'member');
   }
@@ -198,6 +269,7 @@ class ConsortiaList extends Component {
 
     this.props.leaveConsortium(consortiumId);
     this.props.removeUserRole(user.id, 'consortia', consortiumId, 'member');
+    this.props.removeCollectionsFromAssociatedConsortia(consortiumId, true);
   }
 
   startPipeline(consortiumId, activePipelineId) {
@@ -219,7 +291,7 @@ class ConsortiaList extends Component {
       if (!isRemotePipeline) {
         const data = client.readQuery({ query: FETCH_ALL_CONSORTIA_QUERY });
         const consortium = data.fetchAllConsortia.find(cons => cons.id === consortiumId);
-        const run = {
+        let run = {
           id: `local-${shortid.generate()}`,
           clients: [...consortium.members, ...consortium.owners],
           consortiumId,
@@ -233,9 +305,13 @@ class ConsortiaList extends Component {
         };
 
         let status = 'started';
-        return this.props.getCollectionFiles(consortiumId, consortium.name, pipeline.steps)
+        return this.props.getCollectionFiles(
+          consortiumId,
+          consortium.name,
+          run.pipelineSnapshot.steps
+        )
           .then((filesArray) => {
-            if (typeof filesArray === 'object' && 'error' in filesArray) {
+            if ('error' in filesArray) {
               status = 'needs-map';
               this.props.notifyWarning({
                 message: filesArray.error,
@@ -245,7 +321,21 @@ class ConsortiaList extends Component {
               this.props.notifyInfo({
                 message: `Local Pipeline Starting for ${consortium.name}.`,
               });
-              ipcRenderer.send('start-pipeline', { consortium, pipeline, filesArray, run: { ...run } });
+
+              if ('steps' in filesArray) {
+                run = {
+                  ...run,
+                  pipelineSnapshot: {
+                    ...run.pipelineSnapshot,
+                    steps: filesArray.steps,
+                  },
+                };
+              }
+
+              run.status = status;
+
+              this.props.incrementRunCount(consortiumId);
+              ipcRenderer.send('start-pipeline', { consortium, pipeline, filesArray: filesArray.allFiles, run });
             }
 
             this.props.saveLocalRun({ ...run, status });
@@ -309,25 +399,30 @@ class ConsortiaList extends Component {
 
 ConsortiaList.propTypes = {
   addUserRole: PropTypes.func.isRequired,
+  associatedConsortia: PropTypes.array.isRequired,
   auth: PropTypes.object.isRequired,
   client: PropTypes.object.isRequired,
   consortia: PropTypes.array.isRequired,
   createRun: PropTypes.func.isRequired,
   deleteConsortiumById: PropTypes.func.isRequired,
   getCollectionFiles: PropTypes.func.isRequired,
+  getAllAssociatedConsortia: PropTypes.func.isRequired,
+  incrementRunCount: PropTypes.func.isRequired,
   joinConsortium: PropTypes.func.isRequired,
   leaveConsortium: PropTypes.func.isRequired,
   notifyInfo: PropTypes.func.isRequired,
   notifyWarning: PropTypes.func.isRequired,
   pipelines: PropTypes.array.isRequired,
   pullComputations: PropTypes.func.isRequired,
+  removeCollectionsFromAssociatedConsortia: PropTypes.func.isRequired,
   removeUserRole: PropTypes.func.isRequired,
   router: PropTypes.object.isRequired,
+  saveAssociatedConsortia: PropTypes.func.isRequired,
   saveLocalRun: PropTypes.func.isRequired,
 };
 
-const mapStateToProps = ({ auth }) => {
-  return { auth };
+const mapStateToProps = ({ auth, collections: { associatedConsortia } }) => {
+  return { auth, associatedConsortia };
 };
 
 const ConsortiaListWithData = compose(
@@ -346,5 +441,16 @@ const ConsortiaListWithData = compose(
 )(ConsortiaList);
 
 export default connect(mapStateToProps,
-  { getCollectionFiles, notifyInfo, notifyWarning, pullComputations, saveLocalRun, updateUserPerms }
+  {
+    getCollectionFiles,
+    getAllAssociatedConsortia,
+    incrementRunCount,
+    notifyInfo,
+    notifyWarning,
+    pullComputations,
+    removeCollectionsFromAssociatedConsortia,
+    saveAssociatedConsortia,
+    saveLocalRun,
+    updateUserPerms,
+  }
 )(ConsortiaListWithData);
