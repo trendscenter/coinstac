@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import naturalSort from 'javascript-natural-sort';
 import {
   Accordion,
   Alert,
@@ -10,7 +11,6 @@ import {
 } from 'react-bootstrap';
 import PropTypes from 'prop-types';
 import ipcPromise from 'ipc-promise';
-import { sortedUniq } from 'lodash';
 import shortid from 'shortid';
 
 const styles = {
@@ -47,20 +47,22 @@ export default class CollectionFiles extends Component {
       if (obj.error) {
         this.setState({ filesError: obj.error });
       } else {
+        const name = `Group ${Object.keys(this.props.collection.fileGroups).length + 1} (${obj.extension.toUpperCase()})`;
         if (this.state.newFile.org === 'metafile') {
           newFiles = {
             ...obj,
+            name,
             id: fileGroupId,
-            extension: '.csv',
             date: new Date().getTime(),
             firstRow: obj.metaFile[0].join(', '),
             org: this.state.newFile.org,
           };
         } else {
           newFiles = {
+            name,
             id: fileGroupId,
             extension: obj.extension,
-            files: [...obj.paths.sort()],
+            files: [...obj.paths.sort(naturalSort)],
             date: new Date().getTime(),
             org: this.state.newFile.org,
           };
@@ -99,8 +101,7 @@ export default class CollectionFiles extends Component {
         } else {
           const groups = { ...this.props.collection.fileGroups };
           groups[groupId].files = groups[groupId].files.concat(obj.paths);
-          groups[groupId].files.sort();
-          groups[groupId].files = sortedUniq(groups[groupId].files);
+          groups[groupId].files.sort(naturalSort);
 
           this.props.updateCollection(
             {
@@ -193,7 +194,7 @@ export default class CollectionFiles extends Component {
                 onChange={this.updateNewFileOrg}
                 value="manual"
               >
-                Maually Select Files
+                Manually Select Files
               </Radio>
             </FormGroup>
 
@@ -228,6 +229,9 @@ export default class CollectionFiles extends Component {
                     Remove File Group
                   </Button>
                   <p style={styles.fileLabelRow}>
+                    <span className="bold">Name:</span> {group.name}
+                  </p>
+                  <p style={styles.fileLabelRow}>
                     <span className="bold">Date:</span> {new Date(group.date).toUTCString()}
                   </p>
                   <p style={styles.fileLabelRow}>
@@ -252,6 +256,9 @@ export default class CollectionFiles extends Component {
                     {' '}
                     Remove File Group
                   </Button>
+                  <p style={styles.fileLabelRow}>
+                    <span className="bold">Name:</span> {group.name}
+                  </p>
                   <p style={styles.fileLabelRow}>
                     <span className="bold">Date:</span> {new Date(group.date).toUTCString()}
                   </p>

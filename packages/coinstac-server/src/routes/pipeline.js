@@ -9,12 +9,12 @@ const dbmap = require('/etc/coinstac/cstacDBMap'); // eslint-disable-line import
 this.remotePipelineManager = PipelineManager.create({
   mode: 'remote',
   clientId: 'remote',
-  operatingDirectory: path.resolve(__dirname, 'remote'),
+  operatingDirectory: path.resolve(config.operatingDirectory, 'remote'),
 });
 
 const authenticateServer = () => {
   return axios.post(
-    `${config.DB_URL}/authenticate`,
+    `${config.apiServer}/authenticate`,
     dbmap.rethinkdbServer
   )
   .then((token) => {
@@ -24,22 +24,44 @@ const authenticateServer = () => {
   });
 };
 
-const connectionStart = (id, result) => {
-  return authenticateServer()
-  .then(() =>
-    axios({
-      method: 'post',
-      url: `${config.DB_URL}/graphql`,
-      data: {
-        query: `mutation($runId: ID!, $results: JSON) ${graphqlSchema.mutations.saveResults.replace(/\s{2,10}/g, ' ')}`,
-        variables: {
-          runId: id,
-          results: result,
-        },
+const updateRunState = (runId, data) =>
+  axios({
+    method: 'post',
+    url: `${config.apiServer}/graphql`,
+    data: {
+      query: `mutation($runId: ID!, $data: JSON) ${graphqlSchema.mutations.updateRunState.replace(/\s{2,10}/g, ' ')}`,
+      variables: {
+        runId,
+        data,
       },
-    })
-  );
-};
+    },
+  });
+
+const saveError = (runId, error) =>
+  axios({
+    method: 'post',
+    url: `${config.apiServer}/graphql`,
+    data: {
+      query: `mutation($runId: ID!, $error: JSON) ${graphqlSchema.mutations.saveError.replace(/\s{2,10}/g, ' ')}`,
+      variables: {
+        runId,
+        error,
+      },
+    },
+  });
+
+const saveResults = (runId, results) =>
+  axios({
+    method: 'post',
+    url: `${config.apiServer}/graphql`,
+    data: {
+      query: `mutation($runId: ID!, $results: JSON) ${graphqlSchema.mutations.saveResults.replace(/\s{2,10}/g, ' ')}`,
+      variables: {
+        runId,
+        results,
+      },
+    },
+  });
 
 module.exports = [
   {
@@ -48,20 +70,29 @@ module.exports = [
     config: {
       // auth: 'jwt',
       handler: (req, res) => {
-        const run = req.payload.run;
-        const remotePipeline = this.remotePipelineManager.startPipeline({
-          clients: run.clients,
-          spec: run.pipelineSnapshot,
-          runId: run.id,
-        });
+        authenticateServer()
+        .then(() => {
+          const run = req.payload.run;
+          const remotePipeline = this.remotePipelineManager.startPipeline({
+            clients: run.clients,
+            spec: run.pipelineSnapshot,
+            runId: run.id,
+          });
 
-        res({}).code(201);
+          res({}).code(201);
 
-        remotePipeline.result.then((result) => {
-          connectionStart(run.id, result);
-        })
-        .catch(() => {
-          // TODO: save pipeline errors!
+          remotePipeline.pipeline.stateEmitter.on('update', (data) => {
+            updateRunState(run.id, data);
+          });
+
+          remotePipeline.result
+            .then((result) => {
+              saveResults(run.id, result);
+            })
+            .catch((error) => {
+              console.log(error);
+              saveError(run.id, error);
+            });
         });
       },
     },

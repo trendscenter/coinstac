@@ -2,10 +2,13 @@ import Dexie from 'dexie';
 
 const db = new Dexie('coinstac');
 
-db.version(4).stores({
+db.version(1).stores({
+  collections: '++id',
+});
+
+db.version(2).stores({
   collections: '++id',
   associatedConsortia: 'id',
-  runs: 'id,type',
 });
 
 db.version(3).stores({
@@ -14,13 +17,16 @@ db.version(3).stores({
   runs: 'id',
 });
 
-db.version(2).stores({
+db.version(4).stores({
   collections: '++id',
   associatedConsortia: 'id',
+  runs: 'id,type',
 });
 
-db.version(1).stores({
+db.version(5).stores({
   collections: '++id',
+  associatedConsortia: 'id,activePipelineId',
+  runs: 'id,type',
 });
 
 export default db;

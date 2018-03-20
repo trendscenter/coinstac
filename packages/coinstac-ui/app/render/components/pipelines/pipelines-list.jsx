@@ -61,7 +61,7 @@ class PipelinesList extends Component {
           user.permissions.consortia[pipeline.owningConsortium] &&
           user.permissions.consortia[pipeline.owningConsortium].write
         }
-        itemOptions={[]}
+        itemOptions={{ actions: [], text: [] }}
         itemRoute={'/dashboard/pipelines'}
       />
     );

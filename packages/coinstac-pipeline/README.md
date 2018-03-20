@@ -1,9 +1,9 @@
-# coinstac-client-core
+# coinstac-pipeline
 
 <img src="https://raw.githubusercontent.com/MRN-Code/coinstac/master/img/coinstac.png" height="75px">
 
-COINSTAC shared business logic for clients. [Documentation](http://mrn-code.github.io/coinstac/).
+The pipeline package runs and manages pipelines both on client and server-side environments. 
 
-## License
+# License
 
 MIT. See [LICENSE](./LICENSE) for details.

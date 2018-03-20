@@ -1,10 +1,8 @@
 import React, { Component } from 'react';
-import { connect } from 'react-redux';
 import { Button, Col, DropdownButton, MenuItem, Row, Well } from 'react-bootstrap';
 import { Link } from 'react-router';
 import { graphql } from 'react-apollo';
 import PropTypes from 'prop-types';
-import { removeCollectionsFromAssociatedConsortia } from '../../state/ducks/collections';
 import {
   FETCH_ALL_CONSORTIA_QUERY,
   SAVE_ACTIVE_PIPELINE_MUTATION,
@@ -47,7 +45,7 @@ class ConsortiumPipeline extends Component {
       );
 
       sharedPipelines = nextProps.pipelines.filter(
-        pipe => pipe.shared
+        pipe => pipe.shared && pipe.owningConsortium !== nextProps.consortium.id
       );
 
       this.setState({ ownedPipelines, sharedPipelines });
@@ -55,7 +53,6 @@ class ConsortiumPipeline extends Component {
   }
 
   removeCollectionsFromAssociatedConsortia(consortiumId, value) {
-    this.props.removeCollectionsFromAssociatedConsortia(consortiumId);
     this.props.saveActivePipeline(consortiumId, value);
   }
 
@@ -102,7 +99,7 @@ class ConsortiumPipeline extends Component {
           <Col xs={6} style={styles.textCenter}>
             <DropdownButton
               id="shared-pipelines-dropdown"
-              title={'Shared Pipelines'}
+              title={'Pipelines Shared With Me'}
               bsStyle="primary"
               onSelect={value =>
                 this.removeCollectionsFromAssociatedConsortia(consortium.id, value)}
@@ -139,7 +136,6 @@ class ConsortiumPipeline extends Component {
 ConsortiumPipeline.propTypes = {
   consortium: PropTypes.object.isRequired,
   pipelines: PropTypes.array.isRequired,
-  removeCollectionsFromAssociatedConsortia: PropTypes.func.isRequired,
   saveActivePipeline: PropTypes.func.isRequired,
 };
 
@@ -160,6 +156,4 @@ const ConsortiumPipelineWithData = graphql(SAVE_ACTIVE_PIPELINE_MUTATION, {
   }),
 })(ConsortiumPipeline);
 
-export default connect(null,
-  { removeCollectionsFromAssociatedConsortia }
-)(ConsortiumPipelineWithData);
+export default ConsortiumPipelineWithData;

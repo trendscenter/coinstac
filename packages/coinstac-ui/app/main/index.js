@@ -7,7 +7,7 @@
 
 'use strict';
 
-const { compact } = require('lodash');
+const { compact } = require('lodash'); // eslint-disable-line no-unused-vars
 const mock = require('../../test/e2e/mocks');
 const electron = require('electron');
 const ipcPromise = require('ipc-promise');
@@ -63,6 +63,12 @@ loadConfig()
   let core = null;
   logger.verbose('main process booted');
 
+  ipcMain.on('clean-remote-pipeline', (event, runId) => {
+    if (core) {
+      core.unlinkFiles(runId);
+    }
+  });
+
   /**
    * IPC Listener to write logs
    * @param {String} message The message to write out to log
@@ -102,16 +108,31 @@ loadConfig()
       run.id,
       run.pipelineSteps
     )
-    .then(([newPipeline]) => {
-      newPipeline.result.then((results) => {
+    .then(([{ pipeline, result }]) => {
+      // Listen for local pipeline state updates
+      pipeline.stateEmitter.on('update', (data) => {
+        mainWindow.webContents.send('local-pipeline-state-update', { run, data });
+      });
+
+      // Listen for results
+      result.then((results) => {
         console.log('Pipeline is done. Result:'); // eslint-disable-line no-console
         console.log(results); // eslint-disable-line no-console
+        core.unlinkFiles(run.id);
         if (run.type === 'local') {
           mainWindow.webContents.send('local-run-complete', {
             consName: consortium.name,
             run: Object.assign(run, { results, endDate: Date.now() }),
           });
         }
+      });
+
+      result.catch((error) => {
+        core.unlinkFiles(run.id);
+        mainWindow.webContents.send('local-run-error', {
+          consName: consortium.name,
+          run: Object.assign(run, { error, endDate: Date.now() }),
+        });
       });
     });
   });
@@ -135,41 +156,44 @@ loadConfig()
    *  associated with the computations being retrieved
    * @return {Promise}
    */
-  ipcPromise.on('download-comps', (params) => {
-    return core.computationRegistry.constructor
-      .pullComputations(params.computations)
-      .then((compStreams) => {
-        let streamsComplete = 0;
+  ipcPromise.on('download-comps', (params) => { // eslint-disable-line no-unused-vars
+    return null;
 
-        compStreams.forEach(({ compId, compName, stream }) => {
-          stream.on('data', (data) => {
-            let output = compact(data.toString().split('\r\n'));
-            output = output.map(JSON.parse);
-            mainWindow.webContents.send('docker-out', { output, compId, compName });
-          });
+    // TODO: Uncomment below when SSR and MSR are on docker hub
+    // return core.computationRegistry.constructor
+    //   .pullComputations(params.computations)
+    //   .then((compStreams) => {
+    //     let streamsComplete = 0;
 
-          stream.on('end', () => {
-            mainWindow.webContents.send('docker-out',
-              {
-                output: [{ id: `${compId}-complete`, status: 'complete' }],
-                compId,
-                compName,
-              }
-            );
+    //     compStreams.forEach(({ compId, compName, stream }) => {
+    //       stream.on('data', (data) => {
+    //         let output = compact(data.toString().split('\r\n'));
+    //         output = output.map(JSON.parse);
+    //         mainWindow.webContents.send('docker-out', { output, compId, compName });
+    //       });
 
-            streamsComplete += 1;
+    //       stream.on('end', () => {
+    //         mainWindow.webContents.send('docker-out',
+    //           {
+    //             output: [{ id: `${compId}-complete`, status: 'complete' }],
+    //             compId,
+    //             compName,
+    //           }
+    //         );
 
-            if (params.consortiumId && streamsComplete === params.computations.length) {
-              mainWindow.webContents
-                .send('docker-pull-complete', params.consortiumId);
-            }
-          });
+    //         streamsComplete += 1;
 
-          stream.on('error', (err) => {
-            return err;
-          });
-        });
-      });
+    //         if (params.consortiumId && streamsComplete === params.computations.length) {
+    //           mainWindow.webContents
+    //             .send('docker-pull-complete', params.consortiumId);
+    //         }
+    //       });
+
+    //       stream.on('error', (err) => {
+    //         return err;
+    //       });
+    //     });
+    //   });
   });
 
   /**

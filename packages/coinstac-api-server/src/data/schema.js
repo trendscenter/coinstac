@@ -104,6 +104,7 @@ const typeDefs = `
     pipelineSnapshot: JSON
     userErrors: String
     results: JSON
+    remotePipelineState: JSON
     type: String
   }
 
@@ -131,10 +132,12 @@ const typeDefs = `
     removeUserRole(userId: ID, table: String, doc: String, role: String): User
     saveActivePipeline(consortiumId: ID, activePipelineId: ID): String
     saveConsortium(consortium: ConsortiumInput): Consortium
+    saveError(runId: ID, error: JSON): JSON
     savePipeline(pipeline: PipelineInput): Pipeline
     saveResults(runId: ID, results: JSON): JSON
     setActiveComputation(computationId: ID, consortiumId: ID): String
     setComputationInputs(consortiumId: ID, fieldIndex: Int, values: String ): String
+    updateRunState(runId: ID, data: JSON): JSON
     updateUserConsortiumStatus(consortiumId: ID, status: String): User
   }
 
