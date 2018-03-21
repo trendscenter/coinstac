@@ -4,7 +4,7 @@ const Controller = require('./controller');
 const Emitter = require('events');
 
 module.exports = {
-  create({ steps }, runId, { mode, operatingDirectory }) {
+  create({ steps }, runId, { mode, operatingDirectory, clientId }) {
     const cache = {};
     let currentStep;
 
@@ -12,7 +12,7 @@ module.exports = {
 
 
     const pipelineSteps = steps.map(step =>
-      Controller.create(step, runId, { mode, operatingDirectory }));
+      Controller.create(step, runId, { mode, operatingDirectory, clientId }));
 
     const prepCache = (pipelineSpec) => {
       pipelineSpec.forEach((step) => {
