@@ -8,6 +8,7 @@ const mkdirp = bluebird.promisify(require('mkdirp'));
 const util = require('util');
 const fs = require('fs');
 
+const unlinkAsync = util.promisify(fs.unlink);
 const linkAsync = util.promisify(fs.link);
 const statAsync = bluebird.promisify(fs.stat);
 
@@ -258,10 +259,7 @@ class CoinstacClient {
       const unlinkPromises = [];
       for (let i = 0; i < filesArray.length; i += 1) {
         unlinkPromises.push(
-          fs.unlink(
-            filesArray[i],
-            err => console.log(err) // eslint-disable-line no-console
-          )
+          unlinkAsync(filesArray[i])
         );
       }
       return Promise.all(unlinkPromises);

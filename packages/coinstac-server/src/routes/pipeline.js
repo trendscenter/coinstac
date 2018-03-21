@@ -40,7 +40,7 @@ const updateRunState = (runId, data) =>
 const saveError = (runId, error) =>
   axios({
     method: 'post',
-    url: `${config.apiServerL}/graphql`,
+    url: `${config.apiServer}/graphql`,
     data: {
       query: `mutation($runId: ID!, $error: JSON) ${graphqlSchema.mutations.saveError.replace(/\s{2,10}/g, ' ')}`,
       variables: {
