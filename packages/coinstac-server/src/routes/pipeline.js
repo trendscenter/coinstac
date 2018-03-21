@@ -9,7 +9,7 @@ const dbmap = require('/etc/coinstac/cstacDBMap'); // eslint-disable-line import
 this.remotePipelineManager = PipelineManager.create({
   mode: 'remote',
   clientId: 'remote',
-  operatingDirectory: path.resolve(config.operatingDirectory, 'remote'),
+  operatingDirectory: path.resolve(config.operatingDirectory, 'coinstac'),
 });
 
 const authenticateServer = () => {

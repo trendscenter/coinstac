@@ -156,7 +156,7 @@ module.exports = {
       startPipeline({ spec, clients = [], runId }) {
         activePipelines[runId] = {
           state: 'created',
-          pipeline: Pipeline.create(spec, runId, { mode, operatingDirectory }),
+          pipeline: Pipeline.create(spec, runId, { mode, operatingDirectory, clientId }),
         };
         clients.forEach((client) => {
           remoteClients[client] = Object.assign(
@@ -205,9 +205,9 @@ module.exports = {
         };
 
         const pipelineProm = Promise.all([
-          mkdirp(path.resolve(operatingDirectory, runId)),
-          mkdirp(path.resolve(operatingDirectory, 'output', runId)),
-          mkdirp(path.resolve(operatingDirectory, 'cache', runId)),
+          mkdirp(path.resolve(operatingDirectory, clientId, runId)),
+          mkdirp(path.resolve(operatingDirectory, clientId, 'output', runId)),
+          mkdirp(path.resolve(operatingDirectory, clientId, 'cache', runId)),
         ])
         .catch((err) => {
           throw new Error(`Unable to create pipeline directories: ${err}`);
