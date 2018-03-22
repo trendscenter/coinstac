@@ -54,15 +54,13 @@ class Dashboard extends Component {
     const { router } = this.context;
 
     // Uncomment to clear local data
-    // this.props.clearRuns();
-    // this.props.initTestData();
+    this.props.clearRuns();
+    this.props.initTestData();
 
     process.nextTick(() => {
       if (!user.email.length) {
         this.props.writeLog({ type: 'verbose', message: 'Redirecting login (no authorized user)' });
         router.push('/login');
-      } else {
-        // this.props.initPrivateBackgroundServices();
       }
     });
 
@@ -187,6 +185,12 @@ class Dashboard extends Component {
               this.props.incrementRunCount(consortium.id);
               this.props.notifyInfo({
                 message: `Decentralized Pipeline Starting for ${consortium.name}.`,
+                action: {
+                  label: 'Watch Progress',
+                  callback: () => {
+                    router.push('dashboard');
+                  },
+                },
               });
 
               // 5 second timeout to ensure no port conflicts in
