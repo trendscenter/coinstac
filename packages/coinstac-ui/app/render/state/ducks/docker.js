@@ -2,7 +2,7 @@
 
 import ipcPromise from 'ipc-promise';
 import { applyAsyncLoading } from './loading';
-import { notifySuccess } from './notifyAndLog';
+import { notifyError, notifySuccess } from './notifyAndLog';
 
 // Actions
 export const CLEAR_DOCKER_OUTPUT = 'CLEAR_DOCKER_OUTPUT';
@@ -43,7 +43,9 @@ export const removeImage = applyAsyncLoading((imgName, imgId) =>
 
 export const updateDockerOutput = (output =>
   (dispatch) => {
-    if (output.output[0].id && output.output[0].id.indexOf('-complete') > -1) {
+    if (output.output[0].status && output.output[0].status === 'error') {
+      dispatch(notifyError({ message: `Error Downloading ${output.compName}` }));
+    } else if (output.output[0].id && output.output[0].id.indexOf('-complete') > -1) {
       dispatch(notifySuccess({ message: `${output.compName} Download Complete` }));
       dispatch(getDockerImages());
     }
