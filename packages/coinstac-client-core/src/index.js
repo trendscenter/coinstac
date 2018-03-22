@@ -66,7 +66,7 @@ class CoinstacClient {
     this.pipelineManager = PipelineManager.create({
       mode: 'local',
       clientId: opts.userId,
-      operatingDirectory: path.join(this.appDirectory, opts.userId),
+      operatingDirectory: path.join(this.appDirectory),
       remotePort: opts.pipelineWSServer.port,
       remoteProtocol: opts.pipelineWSServer.protocol,
       remotePathname: opts.pipelineWSServer.pathname,
