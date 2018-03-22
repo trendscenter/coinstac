@@ -7,6 +7,7 @@ import {
   Button,
 } from 'react-bootstrap';
 import PropTypes from 'prop-types';
+import MemberAvatar from '../common/member-avatar';
 
 export default class ConsortiumAbout extends Component {
   render() {
@@ -41,6 +42,29 @@ export default class ConsortiumAbout extends Component {
               onChange={() => updateConsortium({ param: 'description', value: this.description.value })}
             />
           </FormGroup>
+
+          {consortium.id &&
+            <div>
+              <FormGroup controlId="owners">
+                <ControlLabel>Owner(s)</ControlLabel>
+                <div>
+                  {consortium.owners.map(member =>
+                    <MemberAvatar name={member} width={50} />
+                  )}
+                </div>
+              </FormGroup>
+
+              <FormGroup controlId="owners">
+                <ControlLabel>Members</ControlLabel>
+                <div>
+                  {consortium.members.map(member =>
+                    <MemberAvatar name={member} width={50} />
+                  )}
+                  {!consortium.members.length && <em>No members have joined</em>}
+                </div>
+              </FormGroup>
+            </div>
+          }
 
           {owner &&
             <Button

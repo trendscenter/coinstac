@@ -92,35 +92,41 @@ class ConsortiaList extends Component {
     this.setState({ ownedConsortia, otherConsortia });
   }
 
-  getOptions(member, owner, id, activePipelineId) {
+  getOptions(member, owner, consortium) {
     const actions = [];
     const text = [];
     let isMapped = false;
 
     if (this.props.associatedConsortia.length > 0) {
-      const assocCons = this.props.associatedConsortia.find(c => c.id === id);
+      const assocCons = this.props.associatedConsortia.find(c => c.id === consortium.id);
       if (assocCons && assocCons.isMapped) {
         isMapped = assocCons.isMapped;
       }
     }
 
+    // Add pipeline text
     text.push(
-      <p key={`${id}-active-pipeline-text`}>
+      <p key={`${consortium.id}-active-pipeline-text`}>
         <span className="bold">Active Pipeline: </span>
         {
-          activePipelineId
-          ? <span style={{ color: 'green' }}>{this.props.pipelines.find(pipe => pipe.id === activePipelineId).name}</span>
+          consortium.activePipelineId
+          ? <span style={{ color: 'green' }}>{this.props.pipelines.find(pipe => pipe.id === consortium.activePipelineId).name}</span>
           : <span style={{ color: 'red' }}> None</span>
         }
       </p>
     );
 
-    if (owner && activePipelineId && isMapped) {
+    // Add owner/member list
+    text.push(
+
+    );
+
+    if (owner && consortium.activePipelineId && isMapped) {
       actions.push(
         <Button
-          key={`${id}-start-pipeline-button`}
+          key={`${consortium.id}-start-pipeline-button`}
           bsStyle="success"
-          onClick={this.startPipeline(id, activePipelineId)}
+          onClick={this.startPipeline(consortium.id, consortium.activePipelineId)}
           style={styles.optionalButton}
         >
           Start Pipeline
@@ -128,11 +134,11 @@ class ConsortiaList extends Component {
       );
     }
 
-    if (owner && !activePipelineId) {
+    if (owner && !consortium.activePipelineId) {
       actions.push(
         <LinkContainer
-          to={`dashboard/consortia/${id}`}
-          key={`${id}-set-active-pipeline-button`}
+          to={`dashboard/consortia/${consortium.id}`}
+          key={`${consortium.id}-set-active-pipeline-button`}
         >
           <Button
             bsStyle="warning"
@@ -146,7 +152,7 @@ class ConsortiaList extends Component {
       actions.push(
         <LinkContainer
           to={'dashboard/collections'}
-          key={`${id}-set-map-local-button`}
+          key={`${consortium.id}-set-map-local-button`}
         >
           <Button
             bsStyle="warning"
@@ -161,10 +167,10 @@ class ConsortiaList extends Component {
     if (member && !owner) {
       actions.push(
         <Button
-          key={`${id}-leave-cons-button`}
+          key={`${consortium.id}-leave-cons-button`}
           bsStyle="warning"
           className="pull-right"
-          onClick={() => this.leaveConsortium(id)}
+          onClick={() => this.leaveConsortium(consortium.id)}
         >
           Leave Consortium
         </Button>
@@ -172,10 +178,10 @@ class ConsortiaList extends Component {
     } else if (!member && !owner) {
       actions.push(
         <Button
-          key={`${id}-join-cons-button`}
+          key={`${consortium.id}-join-cons-button`}
           bsStyle="primary"
           className="pull-right"
-          onClick={() => this.joinConsortium(id, activePipelineId)}
+          onClick={() => this.joinConsortium(consortium.id, consortium.activePipelineId)}
         >
           Join Consortium
         </Button>
@@ -197,8 +203,7 @@ class ConsortiaList extends Component {
           this.getOptions(
             isUserA(user.id, consortium.members),
             isUserA(user.id, consortium.owners),
-            consortium.id,
-            consortium.activePipelineId
+            consortium
           )
         }
         itemRoute={'/dashboard/consortia'}
