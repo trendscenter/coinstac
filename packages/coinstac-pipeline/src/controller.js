@@ -46,6 +46,7 @@ module.exports = {
       activeControlBox,
       cache,
       computationStep,
+      controller,
       controllerState,
       mode,
       runId,

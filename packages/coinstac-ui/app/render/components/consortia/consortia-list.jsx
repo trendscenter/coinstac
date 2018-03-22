@@ -105,7 +105,7 @@ class ConsortiaList extends Component {
     }
 
     text.push(
-      <p>
+      <p key={`${id}-active-pipeline-text`}>
         <span className="bold">Active Pipeline: </span>
         {
           activePipelineId
@@ -126,9 +126,7 @@ class ConsortiaList extends Component {
           Start Pipeline
         </Button>
       );
-    }
-
-    if (owner && !activePipelineId) {
+    } else if (owner && !activePipelineId) {
       actions.push(
         <LinkContainer
           to={`dashboard/consortia/${id}`}
@@ -142,7 +140,7 @@ class ConsortiaList extends Component {
           </Button>
         </LinkContainer>
       );
-    } else if (!isMapped) {
+    } else if ((owner || member) && !isMapped) {
       actions.push(
         <LinkContainer
           to={'dashboard/collections'}
@@ -222,10 +220,12 @@ class ConsortiaList extends Component {
   deleteConsortium() {
     const { auth: { user } } = this.props;
 
-    this.props.deleteConsortiumById(this.state.consortiumToDelete);
-    this.props.removeUserRole(user.id, 'consortia', this.state.consortiumToDelete, 'owner');
-    this.props.removeCollectionsFromAssociatedConsortia(this.state.consortiumToDelete, true);
-    this.closeModal();
+    this.props.removeCollectionsFromAssociatedConsortia(this.state.consortiumToDelete, true)
+    .then(() => {
+      this.props.removeUserRole(user.id, 'consortia', this.state.consortiumToDelete, 'owner');
+      this.props.deleteConsortiumById(this.state.consortiumToDelete);
+      this.closeModal();
+    });
   }
 
   joinConsortium(consortiumId, activePipelineId) {
@@ -274,7 +274,7 @@ class ConsortiaList extends Component {
 
   startPipeline(consortiumId, activePipelineId) {
     return () => {
-      const { client } = this.props;
+      const { client, router } = this.props;
       let isRemotePipeline = false;
       const pipelineData = client.readQuery({ query: FETCH_ALL_PIPELINES_QUERY });
       const pipeline = pipelineData.fetchAllPipelines
@@ -320,6 +320,12 @@ class ConsortiaList extends Component {
             } else {
               this.props.notifyInfo({
                 message: `Local Pipeline Starting for ${consortium.name}.`,
+                action: {
+                  label: 'Watch Progress',
+                  callback: () => {
+                    router.push('dashboard');
+                  },
+                },
               });
 
               if ('steps' in filesArray) {
