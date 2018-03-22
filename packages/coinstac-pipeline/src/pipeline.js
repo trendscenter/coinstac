@@ -83,6 +83,10 @@ module.exports = {
         };
         return pipelineSteps.reduce((prom, step, index) => {
           setStateProp('currentStep', index);
+          // remote doesn't execute local steps but shares the same spec
+          if (this.mode === 'remote' && step.controller.type === 'local') {
+            return Promise.resolve();
+          }
           return prom.then(() => step.start(this.mode === 'remote' ? {} : loadInput(step), remoteHandler))
           .then((output) => {
             loadCache(output, index);
