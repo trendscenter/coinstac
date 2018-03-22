@@ -253,7 +253,6 @@ export const removeCollectionsFromAssociatedConsortia
     localDB.associatedConsortia.get(consId)
       .then((consortium) => {
         const collectionIds = [];
-
         if (consortium.stepIO) {
           consortium.stepIO.forEach((step) => {
             Object.values(step).forEach((val) => {
@@ -283,7 +282,7 @@ export const removeCollectionsFromAssociatedConsortia
       .then(([consortium]) =>
         Promise.all([
           consortium,
-          getCollectionFiles(consortium.id)(dispatch),
+          deleteCons ? null : getCollectionFiles(consortium.id)(dispatch),
         ])
       )
       .then(() =>
@@ -340,6 +339,8 @@ export const syncRemoteLocalConsortia = (remoteCons, pipelineSteps) =>
             pipelineSteps,
             remoteCons.activePipelineId
           )(dispatch);
+        } else if (!localCons) {
+          localDB.associatedConsortia.put(remoteCons);
         }
       });
 
