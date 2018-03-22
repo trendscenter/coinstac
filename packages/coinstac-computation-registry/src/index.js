@@ -55,16 +55,24 @@ class ComputationRegistry {
    * @return {Object} Returns array of objects containing stream and computation parameters
    */
   static pullComputations(comps) {
+    const errors = new Array(comps.length);
     const compsP = reduce(comps, (arr, comp) => {
       arr.push(pullImage(`${comp.img}:latest`));
       return arr;
     }, []);
 
     // Set promise catches to undefined so that failures can be handled as successes: https://davidwalsh.name/promises-results
-    return Promise.all(compsP.map(p => p.catch(() => undefined)))
+    return Promise.all(compsP.map((prom, index) => prom.catch((err) => {
+      errors[index] = err;
+      return undefined;
+    })))
     .then((res) => {
       return comps.map((val, index) =>
-        ({ stream: res[index], compId: val.compId, compName: val.compName })
+        ({
+          stream: res[index] ? res[index] : errors[index],
+          compId: val.compId,
+          compName: val.compName,
+        })
       );
     });
   }
@@ -107,10 +115,10 @@ class ComputationRegistry {
     })
     .then((pullStreams) => {
       pullStreams.forEach((obj) => {
-        if (obj.stream) {
+        if (typeof obj.stream.pipe === 'function') {
           obj.stream.pipe(process.stdout);
         } else {
-          console.log(`Error downloading ${obj.compName} from Docker Hub`); // eslint-disable-line no-console
+          console.log(obj); // eslint-disable-line no-console
         }
       });
     })
