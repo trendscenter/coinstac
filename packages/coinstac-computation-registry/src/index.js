@@ -55,21 +55,17 @@ class ComputationRegistry {
    * @return {Object} Returns array of objects containing stream and computation parameters
    */
   static pullComputations(comps) {
-    const errors = new Array(comps.length);
     const compsP = reduce(comps, (arr, comp) => {
       arr.push(pullImage(`${comp.img}:latest`));
       return arr;
     }, []);
 
     // Set promise catches to undefined so that failures can be handled as successes: https://davidwalsh.name/promises-results
-    return Promise.all(compsP.map((prom, index) => prom.catch((err) => {
-      errors[index] = err;
-      return undefined;
-    })))
+    return Promise.all(compsP.map(prom => prom.catch(err => err)))
     .then((res) => {
       return comps.map((val, index) =>
         ({
-          stream: res[index] ? res[index] : errors[index],
+          stream: res[index],
           compId: val.compId,
           compName: val.compName,
         })
