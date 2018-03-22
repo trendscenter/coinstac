@@ -17,7 +17,7 @@ module.exports = {
    *                            operatingDirectory - base directory for file operations
    * @return {Object}        a controller instance
    */
-  create({ controller, computations, inputMap }, runId, { operatingDirectory, mode }) {
+  create({ controller, computations, inputMap }, runId, { operatingDirectory, mode, clientId }) {
     let cache = {};
     const currentComputations = computations.map(comp => Computation.create(comp, mode, runId));
     const activeControlBox = controllers[controller.type];
@@ -25,9 +25,9 @@ module.exports = {
     const stateEmitter = new Emitter();
     const controllerState = {
       activeComputations: [],
-      baseDirectory: `/input/${runId}`,
-      outputDirectory: `/output/${runId}`,
-      cacheDirectory: `/cache/${runId}`,
+      baseDirectory: `/input/${clientId}/${runId}`,
+      outputDirectory: `/output/${clientId}/${runId}`,
+      cacheDirectory: `/cache/${clientId}/${runId}`,
       currentBoxCommand: undefined,
       currentComputations,
       currentOutput: undefined,
