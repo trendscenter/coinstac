@@ -60,7 +60,8 @@ class ComputationRegistry {
       return arr;
     }, []);
 
-    return Promise.all(compsP)
+    // Set promise catches to undefined so that failures can be handled as successes: https://davidwalsh.name/promises-results
+    return Promise.all(compsP.map(p => p.catch(() => undefined)))
     .then((res) => {
       return comps.map((val, index) =>
         ({ stream: res[index], compId: val.compId, compName: val.compName })
@@ -105,11 +106,11 @@ class ComputationRegistry {
       return this.constructor.pullComputations(comps);
     })
     .then((pullStreams) => {
-      pullStreams.forEach(({ stream }) => {
-        if (typeof stream.pipe !== 'function') {
-          console.log(stream);
+      pullStreams.forEach((obj) => {
+        if (obj.stream) {
+          obj.stream.pipe(process.stdout);
         } else {
-          stream.pipe(process.stdout);
+          console.log(`Error downloading ${obj.compName} from Docker Hub`); // eslint-disable-line no-console
         }
       });
     })

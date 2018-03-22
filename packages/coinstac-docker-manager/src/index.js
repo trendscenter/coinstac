@@ -195,10 +195,10 @@ const startService = (serviceId, serviceUserId, opts) => {
  * @return {Object} Returns stream of docker pull output
  */
 const pullImage = (computation) => {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     docker.pull(computation, (err, stream) => {
       if (err) {
-        resolve(err);
+        reject(err);
       }
       resolve(stream);
     });

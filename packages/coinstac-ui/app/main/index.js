@@ -163,8 +163,8 @@ loadConfig()
         let streamsComplete = 0;
 
         compStreams.forEach(({ compId, compName, stream }) => {
-          if (typeof stream.on !== 'function') {
-            const output = [Object.assign({}, stream, { status: 'error', isErr: true })];
+          if (!stream) {
+            const output = [{ status: 'error', isErr: true, errorMsg: 'Not found on Docker Hub' }];
             mainWindow.webContents.send('docker-out', { output, compId, compName });
           } else {
             stream.on('data', (data) => {
