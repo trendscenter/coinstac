@@ -105,7 +105,7 @@ class ConsortiaList extends Component {
     }
 
     text.push(
-      <p>
+      <p key={`${id}-active-pipeline-text`}>
         <span className="bold">Active Pipeline: </span>
         {
           activePipelineId
@@ -274,7 +274,7 @@ class ConsortiaList extends Component {
 
   startPipeline(consortiumId, activePipelineId) {
     return () => {
-      const { client } = this.props;
+      const { client, router } = this.props;
       let isRemotePipeline = false;
       const pipelineData = client.readQuery({ query: FETCH_ALL_PIPELINES_QUERY });
       const pipeline = pipelineData.fetchAllPipelines
@@ -320,6 +320,12 @@ class ConsortiaList extends Component {
             } else {
               this.props.notifyInfo({
                 message: `Local Pipeline Starting for ${consortium.name}.`,
+                action: {
+                  label: 'Watch Progress',
+                  callback: () => {
+                    router.push('dashboard');
+                  },
+                },
               });
 
               if ('steps' in filesArray) {

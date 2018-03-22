@@ -259,12 +259,11 @@ class CoinstacClient {
       const unlinkPromises = [];
       for (let i = 0; i < filesArray.length; i += 1) {
         unlinkPromises.push(
-          unlinkAsync(filesArray[i])
+          unlinkAsync(path.resolve(fullPath, filesArray[i]))
         );
       }
       return Promise.all(unlinkPromises);
-    })
-    .catch(console.log); // eslint-disable-line no-console
+    });
   }
 }
 

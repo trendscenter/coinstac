@@ -157,43 +157,45 @@ loadConfig()
    * @return {Promise}
    */
   ipcPromise.on('download-comps', (params) => { // eslint-disable-line no-unused-vars
-    return null;
+    return core.computationRegistry.constructor
+      .pullComputations(params.computations)
+      .then((compStreams) => {
+        let streamsComplete = 0;
 
-    // TODO: Uncomment below when SSR and MSR are on docker hub
-    // return core.computationRegistry.constructor
-    //   .pullComputations(params.computations)
-    //   .then((compStreams) => {
-    //     let streamsComplete = 0;
+        compStreams.forEach(({ compId, compName, stream }) => {
+          if (typeof stream.on !== 'function') {
+            const output = [{ message: stream.message, status: 'error', statusCode: stream.statusCode, isErr: true }];
+            mainWindow.webContents.send('docker-out', { output, compId, compName });
+          } else {
+            stream.on('data', (data) => {
+              let output = compact(data.toString().split('\r\n'));
+              output = output.map(JSON.parse);
+              mainWindow.webContents.send('docker-out', { output, compId, compName });
+            });
 
-    //     compStreams.forEach(({ compId, compName, stream }) => {
-    //       stream.on('data', (data) => {
-    //         let output = compact(data.toString().split('\r\n'));
-    //         output = output.map(JSON.parse);
-    //         mainWindow.webContents.send('docker-out', { output, compId, compName });
-    //       });
+            stream.on('end', () => {
+              mainWindow.webContents.send('docker-out',
+                {
+                  output: [{ id: `${compId}-complete`, status: 'complete' }],
+                  compId,
+                  compName,
+                }
+              );
 
-    //       stream.on('end', () => {
-    //         mainWindow.webContents.send('docker-out',
-    //           {
-    //             output: [{ id: `${compId}-complete`, status: 'complete' }],
-    //             compId,
-    //             compName,
-    //           }
-    //         );
+              streamsComplete += 1;
 
-    //         streamsComplete += 1;
+              if (params.consortiumId && streamsComplete === params.computations.length) {
+                mainWindow.webContents
+                  .send('docker-pull-complete', params.consortiumId);
+              }
+            });
 
-    //         if (params.consortiumId && streamsComplete === params.computations.length) {
-    //           mainWindow.webContents
-    //             .send('docker-pull-complete', params.consortiumId);
-    //         }
-    //       });
-
-    //       stream.on('error', (err) => {
-    //         return err;
-    //       });
-    //     });
-    //   });
+            stream.on('error', (err) => {
+              mainWindow.webContents.send('docker-out', { output: { Error: err }, compId, compName });
+            });
+          }
+        });
+      });
   });
 
   /**
