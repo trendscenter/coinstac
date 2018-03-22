@@ -111,9 +111,15 @@ class ConsortiumTabs extends Component {
   }
 
   render() {
+    const { user } = this.props.auth;
     const title = this.state.consortium.id
       ? 'Consortium Edit'
       : 'Consortium Creation';
+
+    let isOwner = false;
+    if (this.state.consortium.owners.indexOf(user.id) > -1 || !this.props.params.consortiumId) {
+      isOwner = true;
+    }
 
     return (
       <div>
@@ -126,10 +132,7 @@ class ConsortiumTabs extends Component {
               consortium={this.state.consortium}
               saveConsortium={this.saveConsortium}
               updateConsortium={this.updateConsortium}
-              owner={
-                !this.props.params.consortiumId ||
-                this.state.consortium.owners.indexOf(this.props.auth.user.id) !== -1
-              }
+              owner={isOwner}
             />
           </Tab>
           <Tab
@@ -140,24 +143,24 @@ class ConsortiumTabs extends Component {
           >
             <ConsortiumPipeline
               consortium={this.state.consortium}
-              owner={
-                !this.props.params.consortiumId ||
-                this.state.consortium.owners.indexOf(this.props.auth.user.id) !== -1
-              }
+              owner={isOwner}
               pipelines={this.props.pipelines}
             />
           </Tab>
-          <Tab
-            eventKey={3}
-            title="Runs"
-            disabled={typeof this.state.consortium.id === 'undefined'}
-            style={styles.tab}
-          >
-            <ConsortiumRuns
-              runs={this.getConsortiumRuns()}
-              consortia={this.props.consortia}
-            />
-          </Tab>
+          {isOwner &&
+            <Tab
+              eventKey={3}
+              title="Runs"
+              disabled={typeof this.state.consortium.id === 'undefined'}
+              style={styles.tab}
+            >
+              <ConsortiumRuns
+                runs={this.getConsortiumRuns()}
+                consortia={this.props.consortia}
+                owner={isOwner}
+              />
+            </Tab>
+          }
         </Tabs>
       </div>
     );
