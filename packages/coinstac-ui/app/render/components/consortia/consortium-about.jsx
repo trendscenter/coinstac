@@ -48,8 +48,8 @@ export default class ConsortiumAbout extends Component {
               <FormGroup controlId="owners">
                 <ControlLabel>Owner(s)</ControlLabel>
                 <div>
-                  {consortium.owners.map(member =>
-                    <MemberAvatar name={member} width={50} />
+                  {consortium.owners.map(owner =>
+                    <MemberAvatar key={owner} name={owner} width={50} />
                   )}
                 </div>
               </FormGroup>
@@ -58,7 +58,7 @@ export default class ConsortiumAbout extends Component {
                 <ControlLabel>Members</ControlLabel>
                 <div>
                   {consortium.members.map(member =>
-                    <MemberAvatar name={member} width={50} />
+                    <MemberAvatar key={member} name={member} width={50} />
                   )}
                   {!consortium.members.length && <em>No members have joined</em>}
                 </div>
