@@ -3,31 +3,36 @@ import Avatar from 'react-avatar';
 import PropTypes from 'prop-types';
 
 const styles = {
+  containerStyles: {
+    display: 'inline-block',
+    margin: 5,
+  },
   textStyles: {
+    marginBottom: 0,
     textAlign: 'center',
     fontSize: 12,
   },
 };
 
-const MemberAvatar = ({ name, role, width }) =>
+const MemberAvatar = ({ name, consRole, width }) =>
   (
-    <div key={`${name}-avatar`} style={{ width }}>
+    <div key={`${name}-avatar`} style={{ ...styles.containerStyles, width }}>
       <Avatar name={name} size={width} />
-      {role &&
-        <p className="bold" style={styles.textStyles}><em>{name}</em></p>
+      <p className={consRole ? 'bold' : null} style={styles.textStyles}>{name}</p>
+      {consRole &&
+        <p style={styles.textStyles}>{consRole}</p>
       }
-      <p style={styles.textStyles}><em>{name}</em></p>
     </div>
   );
 
 MemberAvatar.propTypes = {
   name: PropTypes.string.isRequired,
-  role: PropTypes.string,
+  consRole: PropTypes.string,
   width: PropTypes.number.isRequired,
 };
 
 MemberAvatar.defaultProps = {
-  role: null,
+  consRole: null,
 };
 
 export default MemberAvatar;
