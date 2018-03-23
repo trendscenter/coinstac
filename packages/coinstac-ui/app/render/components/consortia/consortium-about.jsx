@@ -60,10 +60,9 @@ export default class ConsortiumAbout extends Component {
                 <tbody>
                   {consortium.owners.map(user =>
                     (
-                      <tr>
+                      <tr key={`${user}-row`}>
                         <td>
                           <MemberAvatar
-                            key={`${user}-avatar`}
                             isOwner={owner}
                             consRole="Member"
                             name={user}
@@ -86,10 +85,9 @@ export default class ConsortiumAbout extends Component {
                   )}
                   {consortium.members.map(user =>
                     (
-                      <tr>
+                      <tr key={`${user}-row`}>
                         <td>
                           <MemberAvatar
-                            key={`${user}-avatar`}
                             isOwner={owner}
                             consRole="Member"
                             name={user}
