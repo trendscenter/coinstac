@@ -6,6 +6,8 @@ const styles = {
   containerStyles: {
     display: 'inline-block',
     margin: 5,
+    verticalAlign: 'top',
+    textAlign: 'center',
   },
   textStyles: {
     marginBottom: 0,
@@ -14,25 +16,27 @@ const styles = {
   },
 };
 
-const MemberAvatar = ({ name, consRole, width }) =>
+const MemberAvatar = ({ name, consRole, showDetails, width }) =>
   (
     <div key={`${name}-avatar`} style={{ ...styles.containerStyles, width }}>
       <Avatar name={name} size={width} />
-      <p className={consRole ? 'bold' : null} style={styles.textStyles}>{name}</p>
-      {consRole &&
-        <p style={styles.textStyles}>{consRole}</p>
+      {consRole && showDetails &&
+        <p className="bold" style={styles.textStyles}>{consRole}</p>
       }
+      {showDetails && <p style={styles.textStyles}><em>{name}</em></p>}
     </div>
   );
 
 MemberAvatar.propTypes = {
   name: PropTypes.string.isRequired,
   consRole: PropTypes.string,
+  showDetails: PropTypes.bool,
   width: PropTypes.number.isRequired,
 };
 
 MemberAvatar.defaultProps = {
   consRole: null,
+  showDetails: false,
 };
 
 export default MemberAvatar;

@@ -5,6 +5,7 @@ import {
   FormGroup,
   FormControl,
   Button,
+  Table,
 } from 'react-bootstrap';
 import PropTypes from 'prop-types';
 import MemberAvatar from '../common/member-avatar';
@@ -14,6 +15,7 @@ export default class ConsortiumAbout extends Component {
     const {
       consortium,
       owner,
+      removeMemberFromConsortium,
       saveConsortium,
       updateConsortium,
     } = this.props;
@@ -44,25 +46,84 @@ export default class ConsortiumAbout extends Component {
           </FormGroup>
 
           {consortium.id &&
-            <div>
-              <FormGroup controlId="owners">
-                <ControlLabel>Owner(s)</ControlLabel>
-                <div>
-                  {consortium.owners.map(owner =>
-                    <MemberAvatar key={owner} name={owner} width={50} />
+            <div key="avatar-container">
+              <span className="bold">Owner(s)/Members: </span><br />
+              <Table striped condensed>
+                <thead>
+                  <tr>
+                    <th>Username</th>
+                    <th>Owner</th>
+                    <th>Member</th>
+                    {owner && <th />}
+                  </tr>
+                </thead>
+                <tbody>
+                  {consortium.owners.map(user =>
+                    (
+                      <tr>
+                        <td>
+                          <MemberAvatar
+                            key={`${user}-avatar`}
+                            isOwner={owner}
+                            consRole="Member"
+                            name={user}
+                            removeFunction={removeMemberFromConsortium}
+                            width={30}
+                          />
+                          <span>{user}</span>
+                        </td>
+                        <td>
+                          <span
+                            aria-hidden="true"
+                            className="glyphicon glyphicon-ok-circle"
+                            style={{ color: 'green' }}
+                          />
+                        </td>
+                        <td />
+                        {owner && <td />}
+                      </tr>
+                    )
                   )}
-                </div>
-              </FormGroup>
-
-              <FormGroup controlId="owners">
-                <ControlLabel>Members</ControlLabel>
-                <div>
-                  {consortium.members.map(member =>
-                    <MemberAvatar key={member} name={member} width={50} />
+                  {consortium.members.map(user =>
+                    (
+                      <tr>
+                        <td>
+                          <MemberAvatar
+                            key={`${user}-avatar`}
+                            isOwner={owner}
+                            consRole="Member"
+                            name={user}
+                            removeFunction={removeMemberFromConsortium}
+                            width={30}
+                          />
+                          <span>{user}</span>
+                        </td>
+                        <td />
+                        <td>
+                          <span
+                            aria-hidden="true"
+                            className="glyphicon glyphicon-ok-circle"
+                            style={{ color: 'green' }}
+                          />
+                        </td>
+                        {owner &&
+                          <td>
+                            <Button
+                              bsStyle="danger"
+                              onClick={removeMemberFromConsortium(user)}
+                            >
+                              <span
+                                aria-hidden="true"
+                                className="glyphicon glyphicon-remove"
+                              /> Remove
+                            </Button>
+                          </td>
+                        }
+                      </tr>
+                    )
                   )}
-                  {!consortium.members.length && <em>No members have joined</em>}
-                </div>
-              </FormGroup>
+                </tbody>
+              </Table>
             </div>
           }
 
@@ -84,6 +145,7 @@ export default class ConsortiumAbout extends Component {
 ConsortiumAbout.propTypes = {
   consortium: PropTypes.object,
   owner: PropTypes.bool.isRequired,
+  removeMemberFromConsortium: PropTypes.func.isRequired,
   saveConsortium: PropTypes.func.isRequired,
   updateConsortium: PropTypes.func.isRequired,
 };

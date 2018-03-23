@@ -369,17 +369,33 @@ const resolvers = {
      * @return {object} Updated consortium
      */
     joinConsortium: ({ auth: { credentials } }, args) => {
+      const { permissions } = credentials;
+      let userId = credentials.id;
+
+      // If adding another person to consortium, check perms
+      if (args.userId &&
+          permissions.consortia[args.consortiumId] &&
+          permissions.consortia[args.consortiumId].write
+      ) {
+        userId = args.userId;
+      } else if (args.userId &&
+          (!permissions.consortia[args.consortiumId] ||
+          !permissions.consortia[args.consortiumId].write)
+      ) {
+        return Boom.forbidden('Action not permitted');
+      }
+
       return helperFunctions.getRethinkConnection()
         .then(connection =>
           rethink.table('consortia').get(args.consortiumId)
             .update(
-              { "members": rethink.row("members").append(credentials.id)}, { returnChanges: true }
+              { "members": rethink.row("members").append(userId)}, { returnChanges: true }
             ).run(connection)
         )
         .then(result => result.changes[0].new_val)
     },
     /**
-     * Add user id to consortium members list
+     * Remove user id to consortium members list
      * @param {object} auth User object from JWT middleware validateFunc
      * @param {object} args
      * @param {string} args.consortiumId Consortium id to join
@@ -387,12 +403,28 @@ const resolvers = {
      */
     leaveConsortium: ({ auth: { credentials } }, args) => {
       const { permissions } = credentials;
+      let userId = credentials.id;
+
+      // If removing another person from consortium, check perms
+      if (args.userId &&
+          permissions.consortia[args.consortiumId] &&
+          permissions.consortia[args.consortiumId].write
+      ) {
+        userId = args.userId;
+      } else if (args.userId &&
+          (!permissions.consortia[args.consortiumId] ||
+          !permissions.consortia[args.consortiumId].write)
+      ) {
+        return Boom.forbidden('Action not permitted');
+      }
+
+      
       return helperFunctions.getRethinkConnection()
         .then((connection) =>
           rethink.table('consortia').get(args.consortiumId)
           .update(function(row){
             return{
-              "members": row("members").setDifference([credentials.id]),
+              "members": row("members").setDifference([userId]),
             }
           }, {returnChanges: true})
           .run(connection)
