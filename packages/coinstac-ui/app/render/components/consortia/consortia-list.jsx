@@ -119,15 +119,15 @@ class ConsortiaList extends Component {
 
     // Add owner/member list
     const memberAvatars = consortium.members.map(member =>
-      <MemberAvatar key={`${member}-avatar`} consRole="Member" name={member} width={40} />
+      <MemberAvatar key={`${member}-avatar`} consRole="Member" name={member} showDetails width={40} />
     );
     const ownerAvatars = consortium.owners.map(owner =>
-      <MemberAvatar key={`${owner}-avatar`} consRole="Owner" name={owner} width={40} />
+      <MemberAvatar key={`${owner}-avatar`} consRole="Owner" name={owner} showDetails width={40} />
     );
 
     text.push(
-      <div>
-        <span className="bold">Owners/Members: </span><br />
+      <div key="avatar-container">
+        <span className="bold">Owner(s)/Members: </span><br />
         {ownerAvatars.concat(memberAvatars)}
       </div>
     );
@@ -283,9 +283,11 @@ class ConsortiaList extends Component {
   leaveConsortium(consortiumId) {
     const { auth: { user } } = this.props;
 
-    this.props.leaveConsortium(consortiumId);
-    this.props.removeUserRole(user.id, 'consortia', consortiumId, 'member');
-    this.props.removeCollectionsFromAssociatedConsortia(consortiumId, true);
+    this.props.removeCollectionsFromAssociatedConsortia(consortiumId, true)
+    .then(() => {
+      this.props.leaveConsortium(consortiumId);
+      this.props.removeUserRole(user.id, 'consortia', consortiumId, 'member');
+    });
   }
 
   startPipeline(consortiumId, activePipelineId) {
