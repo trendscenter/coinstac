@@ -4,7 +4,7 @@ const Controller = require('./controller');
 const Emitter = require('events');
 
 module.exports = {
-  create({ steps }, runId, { mode, operatingDirectory }) {
+  create({ steps }, runId, { mode, operatingDirectory, clientId }) {
     const cache = {};
     let currentStep;
 
@@ -12,7 +12,7 @@ module.exports = {
 
 
     const pipelineSteps = steps.map(step =>
-      Controller.create(step, runId, { mode, operatingDirectory }));
+      Controller.create(step, runId, { mode, operatingDirectory, clientId }));
 
     const prepCache = (pipelineSpec) => {
       pipelineSpec.forEach((step) => {
@@ -83,6 +83,10 @@ module.exports = {
         };
         return pipelineSteps.reduce((prom, step, index) => {
           setStateProp('currentStep', index);
+          // remote doesn't execute local steps but shares the same spec
+          if (this.mode === 'remote' && step.controller.type === 'local') {
+            return Promise.resolve();
+          }
           return prom.then(() => step.start(this.mode === 'remote' ? {} : loadInput(step), remoteHandler))
           .then((output) => {
             loadCache(output, index);

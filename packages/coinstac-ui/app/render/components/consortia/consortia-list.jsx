@@ -143,9 +143,7 @@ class ConsortiaList extends Component {
           Start Pipeline
         </Button>
       );
-    }
-
-    if (owner && !consortium.activePipelineId) {
+    } else if (owner && !consortium.activePipelineId) {
       actions.push(
         <LinkContainer
           to={`dashboard/consortia/${consortium.id}`}
@@ -159,7 +157,7 @@ class ConsortiaList extends Component {
           </Button>
         </LinkContainer>
       );
-    } else if (!isMapped) {
+    } else if ((owner || member) && !isMapped) {
       actions.push(
         <LinkContainer
           to={'dashboard/collections'}
@@ -238,10 +236,12 @@ class ConsortiaList extends Component {
   deleteConsortium() {
     const { auth: { user } } = this.props;
 
-    this.props.deleteConsortiumById(this.state.consortiumToDelete);
-    this.props.removeUserRole(user.id, 'consortia', this.state.consortiumToDelete, 'owner');
-    this.props.removeCollectionsFromAssociatedConsortia(this.state.consortiumToDelete, true);
-    this.closeModal();
+    this.props.removeCollectionsFromAssociatedConsortia(this.state.consortiumToDelete, true)
+    .then(() => {
+      this.props.removeUserRole(user.id, 'consortia', this.state.consortiumToDelete, 'owner');
+      this.props.deleteConsortiumById(this.state.consortiumToDelete);
+      this.closeModal();
+    });
   }
 
   joinConsortium(consortiumId, activePipelineId) {

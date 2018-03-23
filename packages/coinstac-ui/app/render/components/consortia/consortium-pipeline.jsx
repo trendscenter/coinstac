@@ -57,8 +57,9 @@ class ConsortiumPipeline extends Component {
   }
 
   render() {
-    const { consortium } = this.props;
+    const { consortium, owner } = this.props;
     const { activePipeline, ownedPipelines, sharedPipelines } = this.state;
+
     return (
       <div>
         <h3>Active Pipeline</h3>
@@ -77,57 +78,61 @@ class ConsortiumPipeline extends Component {
             <em>No active pipeline</em>
           }
         </Well>
-        <h4 style={styles.activePipelineParagraph}>Activate a pipeline from...</h4>
-        <Row>
-          <Col xs={6} style={styles.textCenter}>
-            <DropdownButton
-              id="owned-pipelines-dropdown"
-              title={'Owned Pipelines'}
-              bsStyle="primary"
-              onSelect={value =>
-                this.removeCollectionsFromAssociatedConsortia(consortium.id, value)}
-            >
-              {ownedPipelines.map(pipe => (
-                <MenuItem
-                  eventKey={pipe.id}
-                  key={`owned-${pipe.id}`}
+        {owner &&
+          <div>
+            <h4 style={styles.activePipelineParagraph}>Activate a pipeline from...</h4>
+            <Row>
+              <Col xs={6} style={styles.textCenter}>
+                <DropdownButton
+                  id="owned-pipelines-dropdown"
+                  title={'Owned Pipelines'}
+                  bsStyle="primary"
+                  onSelect={value =>
+                    this.removeCollectionsFromAssociatedConsortia(consortium.id, value)}
                 >
-                  {pipe.name}
-                </MenuItem>))}
-            </DropdownButton>
-          </Col>
-          <Col xs={6} style={styles.textCenter}>
-            <DropdownButton
-              id="shared-pipelines-dropdown"
-              title={'Pipelines Shared With Me'}
-              bsStyle="primary"
-              onSelect={value =>
-                this.removeCollectionsFromAssociatedConsortia(consortium.id, value)}
-            >
-              {sharedPipelines.map(pipe => (
-                <MenuItem
-                  eventKey={pipe.id}
-                  key={`shared-${pipe.id}`}
+                  {ownedPipelines.map(pipe => (
+                    <MenuItem
+                      eventKey={pipe.id}
+                      key={`owned-${pipe.id}`}
+                    >
+                      {pipe.name}
+                    </MenuItem>))}
+                </DropdownButton>
+              </Col>
+              <Col xs={6} style={styles.textCenter}>
+                <DropdownButton
+                  id="shared-pipelines-dropdown"
+                  title={'Pipelines Shared With Me'}
+                  bsStyle="primary"
+                  onSelect={value =>
+                    this.removeCollectionsFromAssociatedConsortia(consortium.id, value)}
                 >
-                  {pipe.name}
-                </MenuItem>))}
-            </DropdownButton>
-          </Col>
-        </Row>
-        <Row style={{ marginTop: 50 }}>
-          <Col xs={12} style={styles.textCenter}>
-            <p><em>Or create a new pipeline</em></p>
-            <Link
-              to={`/dashboard/pipelines/new/${consortium.id}`}
-            >
-              <Button bsStyle="success">
-                <span aria-hidden="true" className="glphicon glyphicon-plus" />
-                {' '}
-                New Pipeline
-              </Button>
-            </Link>
-          </Col>
-        </Row>
+                  {sharedPipelines.map(pipe => (
+                    <MenuItem
+                      eventKey={pipe.id}
+                      key={`shared-${pipe.id}`}
+                    >
+                      {pipe.name}
+                    </MenuItem>))}
+                </DropdownButton>
+              </Col>
+            </Row>
+            <Row style={{ marginTop: 50 }}>
+              <Col xs={12} style={styles.textCenter}>
+                <p><em>Or create a new pipeline</em></p>
+                <Link
+                  to={`/dashboard/pipelines/new/${consortium.id}`}
+                >
+                  <Button bsStyle="success">
+                    <span aria-hidden="true" className="glphicon glyphicon-plus" />
+                    {' '}
+                    New Pipeline
+                  </Button>
+                </Link>
+              </Col>
+            </Row>
+          </div>
+        }
       </div>
     );
   }
@@ -135,6 +140,7 @@ class ConsortiumPipeline extends Component {
 
 ConsortiumPipeline.propTypes = {
   consortium: PropTypes.object.isRequired,
+  owner: PropTypes.bool.isRequired,
   pipelines: PropTypes.array.isRequired,
   saveActivePipeline: PropTypes.func.isRequired,
 };
