@@ -60,10 +60,15 @@ class ComputationRegistry {
       return arr;
     }, []);
 
-    return Promise.all(compsP)
+    // Set promise catches to undefined so that failures can be handled as successes: https://davidwalsh.name/promises-results
+    return Promise.all(compsP.map(prom => prom.catch(err => err)))
     .then((res) => {
       return comps.map((val, index) =>
-        ({ stream: res[index], compId: val.compId, compName: val.compName })
+        ({
+          stream: res[index],
+          compId: val.compId,
+          compName: val.compName,
+        })
       );
     });
   }
@@ -105,7 +110,13 @@ class ComputationRegistry {
       return this.constructor.pullComputations(comps);
     })
     .then((pullStreams) => {
-      pullStreams.forEach(({ stream }) => stream.pipe(process.stdout));
+      pullStreams.forEach((obj) => {
+        if (typeof obj.stream.pipe === 'function') {
+          obj.stream.pipe(process.stdout);
+        } else {
+          console.log(obj); // eslint-disable-line no-console
+        }
+      });
     })
     .catch(console.log); // eslint-disable-line no-console
   }
