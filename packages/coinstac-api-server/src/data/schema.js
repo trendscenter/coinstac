@@ -126,8 +126,8 @@ const typeDefs = `
     createRun(consortiumId: ID): Run
     deleteConsortiumById(consortiumId: ID): Consortium
     deletePipeline(pipelineId: ID): Pipeline
-    joinConsortium(consortiumId: ID): Consortium
-    leaveConsortium(consortiumId: ID): Consortium
+    joinConsortium(consortiumId: ID, userId: ID): Consortium
+    leaveConsortium(consortiumId: ID, userId: ID): Consortium
     removeComputation(computationId: ID): Computation
     removeUserRole(userId: ID, table: String, doc: String, role: String): User
     saveActivePipeline(consortiumId: ID, activePipelineId: ID): String

@@ -337,7 +337,7 @@ helperFunctions.getRethinkConnection()
     name: 'Test Consortia 2',
     description: 'This consortia is for testing too.',
     owners: ['test'],
-    members: [],
+    members: ['author'],
   }).run(connection))
   .then(() => connection.close());
 })
