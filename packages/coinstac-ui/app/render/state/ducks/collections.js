@@ -227,20 +227,6 @@ export const getAssociatedConsortia = applyAsyncLoading(consortiaIds =>
       })
 );
 
-export const initTestData = (() =>
-  dispatch =>
-    localDB.associatedConsortia.clear()
-    .then(() => localDB.collections.put(testData))
-    .then(() => localDB.associatedConsortia.put({ id: 'test-cons-2', activePipelineId: 'test-pipeline-decentralized', isMapped: false }))
-    .then(() => localDB.associatedConsortia.put({ id: 'test-cons-1', activePipelineId: 'nada' }))
-    .then(() => {
-      dispatch(({
-        type: INIT_TEST_COLLECTION,
-        payload: null,
-      }));
-    })
-);
-
 export const isAssocConsortiumMapped = applyAsyncLoading(consId =>
   () =>
     localDB.associatedConsortia.get(consId)

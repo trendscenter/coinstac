@@ -53,10 +53,6 @@ class Dashboard extends Component {
     const { auth: { user } } = this.props;
     const { router } = this.context;
 
-    // Uncomment to clear local data
-    this.props.clearRuns();
-    this.props.initTestData();
-
     process.nextTick(() => {
       if (!user.email.length) {
         this.props.writeLog({ type: 'verbose', message: 'Redirecting login (no authorized user)' });

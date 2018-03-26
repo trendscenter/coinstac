@@ -9,6 +9,7 @@ import ConsortiumRuns from './consortium-runs';
 import { updateUserPerms } from '../../state/ducks/auth';
 import { saveAssociatedConsortia } from '../../state/ducks/collections';
 import {
+  consortiaMembershipProp,
   getSelectAndSubProp,
   saveDocumentProp,
   userRolesProp,
@@ -17,6 +18,8 @@ import {
   ADD_USER_ROLE_MUTATION,
   CONSORTIUM_CHANGED_SUBSCRIPTION,
   FETCH_CONSORTIUM_QUERY,
+  LEAVE_CONSORTIUM_MUTATION,
+  REMOVE_USER_ROLE_MUTATION,
   SAVE_CONSORTIUM_MUTATION,
 } from '../../state/graphql/functions';
 
@@ -45,6 +48,7 @@ class ConsortiumTabs extends Component {
       unsubscribeConsortia: null,
     };
     this.getConsortiumRuns = this.getConsortiumRuns.bind(this);
+    this.removeMemberFromConsortium = this.removeMemberFromConsortium.bind(this);
     this.saveConsortium = this.saveConsortium.bind(this);
     this.updateConsortium = this.updateConsortium.bind(this);
   }
@@ -72,6 +76,13 @@ class ConsortiumTabs extends Component {
     return (
       this.props.runs.filter(run => run.consortiumId === this.state.consortium.id)
     );
+  }
+
+  removeMemberFromConsortium(userId) {
+    return () => {
+      this.props.leaveConsortium(this.state.consortium.id, userId);
+      this.props.removeUserRole(userId, 'consortia', this.state.consortium.id, 'member');
+    };
   }
 
   saveConsortium(e) {
@@ -130,6 +141,7 @@ class ConsortiumTabs extends Component {
           <Tab eventKey={1} title="About" style={styles.tab}>
             <ConsortiumAbout
               consortium={this.state.consortium}
+              removeMemberFromConsortium={this.removeMemberFromConsortium}
               saveConsortium={this.saveConsortium}
               updateConsortium={this.updateConsortium}
               owner={isOwner}
@@ -179,8 +191,10 @@ ConsortiumTabs.propTypes = {
   addUserRole: PropTypes.func.isRequired,
   auth: PropTypes.object.isRequired,
   consortia: PropTypes.array,
+  leaveConsortium: PropTypes.func.isRequired,
   params: PropTypes.object.isRequired,
   pipelines: PropTypes.array.isRequired,
+  removeUserRole: PropTypes.func.isRequired,
   runs: PropTypes.array,
   saveAssociatedConsortia: PropTypes.func.isRequired,
   saveConsortium: PropTypes.func.isRequired,
@@ -200,8 +214,10 @@ const ConsortiumTabsWithData = compose(
     'consortiumChanged',
     'fetchConsortium'
   )),
+  graphql(LEAVE_CONSORTIUM_MUTATION, consortiaMembershipProp('leaveConsortium')),
   graphql(ADD_USER_ROLE_MUTATION, userRolesProp('addUserRole')),
-  graphql(SAVE_CONSORTIUM_MUTATION, saveDocumentProp('saveConsortium', 'consortium'))
+  graphql(SAVE_CONSORTIUM_MUTATION, saveDocumentProp('saveConsortium', 'consortium')),
+  graphql(REMOVE_USER_ROLE_MUTATION, userRolesProp('removeUserRole'))
 )(ConsortiumTabs);
 
 export default connect(
