@@ -9,11 +9,7 @@ class UserAccount extends Component {
     super(props);
     this.getAvatarUrl = this.getAvatarUrl.bind(this);
   }
-  getAvatarUrl() {
-    const { user: { email } } = this.props;
 
-    return `http://www.gravatar.com/avatar/${md5(email)}?s=200`;
-  }
   render() {
     const { logoutUser, user } = this.props;
 
@@ -38,7 +34,7 @@ class UserAccount extends Component {
               aria-label="settings"
               className="user-account-settings btn btn-link btn-block"
               title="Settings"
-              to="/settings"
+              to="/dashboard/settings"
             >
               <span
                 aria-hidden="true"
