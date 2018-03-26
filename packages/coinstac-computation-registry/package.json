@@ -1,6 +1,6 @@
 {
   "name": "coinstac-computation-registry",
-  "version": "3.1.0",
+  "version": "3.1.1",
   "description": "",
   "main": "src/index.js",
   "scripts": {
@@ -10,7 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "axios": "^0.16.2",
-    "coinstac-docker-manager": "^3.1.0",
+    "coinstac-docker-manager": "^3.1.1",
     "coinstac-graphql-schema": "^3.1.0",
     "lodash": "^4.17.4",
     "merge-stream": "^1.0.1"

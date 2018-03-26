@@ -27,8 +27,15 @@ const localPipelineSpec = {
   ],
 };
 
-const remotePipelineSpec = {
+const mixedPipelineSpec = {
   steps: [
+    {
+      controller: { type: 'local' },
+      computations: [localCompSpec],
+      inputMap: {
+        start: { value: 2 },
+      },
+    },
     {
       controller: { type: 'decentralized' },
       computations: [decentralizedCompSpec],
@@ -78,7 +85,7 @@ test.serial((t) => {
   });
   const remotePipeline = remote.startPipeline({
     clients: ['one'],
-    spec: remotePipelineSpec,
+    spec: mixedPipelineSpec,
     runId: 'remotetest1',
   });
 
@@ -88,7 +95,7 @@ test.serial((t) => {
     operatingDirectory: path.resolve(__dirname, 'local'),
   });
   const localPipeline = local.startPipeline({
-    spec: remotePipelineSpec,
+    spec: mixedPipelineSpec,
     runId: 'remotetest1',
   });
   return Promise.all([
