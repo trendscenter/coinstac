@@ -3,12 +3,21 @@ import { connect } from 'react-redux';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { notifyError, notifyInfo } from '../../state/ducks/notifyAndLog';
+import { clearCollectionsAndConsortia } from '../../state/ducks/collections';
+import { clearRuns } from '../../state/ducks/runs';
 
 class Settings extends Component {
   constructor(props) {
     super(props);
 
-    this.deleteUserData = this.deleteUserData.bind(this);
+    this.clearData = this.clearData.bind(this);
+  }
+
+  clearData(e) {
+    e.preventDefault();
+    this.props.clearRuns();
+    this.props.clearCollectionsAndConsortia();
+    this.props.notifyInfo({ message: 'Local data cleared' });
   }
 
   render() {
@@ -18,14 +27,14 @@ class Settings extends Component {
           <h1>Settings</h1>
         </div>
         <h2>Remove Data</h2>
-        <form method="post" onSubmit={this.deleteUserData}>
-          <h3 className="h4">Clear user data</h3>
+        <form method="post" onSubmit={this.clearData}>
+          <h3 className="h4">Clear local data</h3>
           <p>
-            Remove stored data for your user, including your projects.
+            Remove stored data on your machine, including your collections.
             <strong>This action is permanent.</strong>
           </p>
           <Button bsStyle="danger" type="submit">
-            Delete User Data
+            Delete Local Data
           </Button>
         </form>
       </div>
@@ -33,20 +42,19 @@ class Settings extends Component {
   }
 }
 
+Settings.propTypes = {
+  clearCollectionsAndConsortia: PropTypes.func.isRequired,
+  clearRuns: PropTypes.func.isRequired,
+  notifyInfo: PropTypes.func.isRequired,
+};
+
 Settings.contextTypes = {
   router: PropTypes.object.isRequired,
 };
 
-Settings.propTypes = {
-  notifyError: PropTypes.func.isRequired,
-  notifyInfo: PropTypes.func.isRequired,
-  username: PropTypes.string.isRequired,
-};
-
-function mapStateToProps(state) {
-  return {
-    username: state.auth.user.username,
-  };
-}
-
-export default connect(mapStateToProps, { notifyError, notifyInfo })(Settings);
+export default connect(null, {
+  clearCollectionsAndConsortia,
+  clearRuns,
+  notifyError,
+  notifyInfo,
+})(Settings);
