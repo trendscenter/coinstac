@@ -6,6 +6,7 @@ import { LinkContainer } from 'react-router-bootstrap';
 import { ipcRenderer } from 'electron';
 import PropTypes from 'prop-types';
 import shortid from 'shortid';
+import MemberAvatar from '../common/member-avatar';
 import ListItem from '../common/list-item';
 import ListDeleteModal from '../common/list-delete-modal';
 import {
@@ -117,8 +118,18 @@ class ConsortiaList extends Component {
     );
 
     // Add owner/member list
-    text.push(
+    const memberAvatars = consortium.members.map(member =>
+      <MemberAvatar key={`${member}-avatar`} consRole="Member" name={member} showDetails width={40} />
+    );
+    const ownerAvatars = consortium.owners.map(owner =>
+      <MemberAvatar key={`${owner}-avatar`} consRole="Owner" name={owner} showDetails width={40} />
+    );
 
+    text.push(
+      <div key="avatar-container">
+        <span className="bold">Owner(s)/Members: </span><br />
+        {ownerAvatars.concat(memberAvatars)}
+      </div>
     );
 
     if (owner && consortium.activePipelineId && isMapped) {
@@ -272,9 +283,11 @@ class ConsortiaList extends Component {
   leaveConsortium(consortiumId) {
     const { auth: { user } } = this.props;
 
-    this.props.leaveConsortium(consortiumId);
-    this.props.removeUserRole(user.id, 'consortia', consortiumId, 'member');
-    this.props.removeCollectionsFromAssociatedConsortia(consortiumId, true);
+    this.props.removeCollectionsFromAssociatedConsortia(consortiumId, true)
+    .then(() => {
+      this.props.leaveConsortium(consortiumId);
+      this.props.removeUserRole(user.id, 'consortia', consortiumId, 'member');
+    });
   }
 
   startPipeline(consortiumId, activePipelineId) {

@@ -20,8 +20,8 @@ export const getDocumentByParam = (param, prop, query) => ({
 export const consortiaMembershipProp = (name) => {
   return {
     props: ({ mutate }) => ({
-      [name]: consortiumId => mutate({
-        variables: { consortiumId },
+      [name]: (consortiumId, userId) => mutate({
+        variables: { consortiumId, userId },
         update: (store, { data }) => {
           const consQuery = store.readQuery({ query: FETCH_ALL_CONSORTIA_QUERY });
           const index = consQuery.fetchAllConsortia
