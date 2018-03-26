@@ -22,7 +22,7 @@ const startRun = ({ spec, runMode = 'local', clientCount = 1, operatingDirectory
     const remoteManager = Pipeline.create({
       clientId: 'remote',
       mode: 'remote',
-      operatingDirectory: path.resolve(operatingDirectory, 'remote'),
+      operatingDirectory: path.resolve(operatingDirectory),
     });
     pipelines.remote = {
       manager: remoteManager,
@@ -37,7 +37,7 @@ const startRun = ({ spec, runMode = 'local', clientCount = 1, operatingDirectory
     const localPipelineManager = Pipeline.create({
       clientId: `local${i}`,
       mode: 'local',
-      operatingDirectory: path.resolve(operatingDirectory, `local${i}`),
+      operatingDirectory: path.resolve(operatingDirectory),
     });
     pipelines.locals.push({
       manager: localPipelineManager,
