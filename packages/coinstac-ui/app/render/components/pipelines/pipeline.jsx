@@ -106,7 +106,7 @@ class Pipeline extends Component {
     let selectedId = null;
     if (this.state.selectedId) {
       selectedId = this.state.selectedId;
-    } else if (nextProps.activePipeline.steps.length) {
+    } else if (nextProps.activePipeline && nextProps.activePipeline.steps.length) {
       selectedId = nextProps.activePipeline.steps[0].id;
     }
 
@@ -533,7 +533,6 @@ class Pipeline extends Component {
                       computationId={step.computations[0].id}
                       deleteStep={this.openModal}
                       eventKey={step.id}
-                      isExpanded={step.id === this.state.selectedId}
                       id={step.id}
                       key={step.id}
                       moveStep={this.moveStep}
