@@ -26,7 +26,7 @@ export default class CollectionAbout extends Component {
               type="input"
               value={collection.name || ''}
               inputRef={(input) => { this.name = input; }}
-              onChange={() => updateCollection({ param: 'name', value: this.name.value })}
+              onChange={() => updateCollection({ name: this.name.value })}
             />
           </FormGroup>
 
@@ -36,7 +36,7 @@ export default class CollectionAbout extends Component {
               componentClass="textarea"
               value={collection.description || ''}
               inputRef={(input) => { this.description = input; }}
-              onChange={() => updateCollection({ param: 'description', value: this.description.value })}
+              onChange={() => updateCollection({ description: this.description.value })}
             />
           </FormGroup>
 
@@ -50,7 +50,7 @@ export default class CollectionAbout extends Component {
               type="input"
               value={collection.studyName || ''}
               inputRef={(input) => { this.studyName = input; }}
-              onChange={() => updateCollection({ param: 'studyName', value: this.studyName.value })}
+              onChange={() => updateCollection({ studyName: this.studyName.value })}
             />
           </FormGroup>
 
@@ -60,7 +60,7 @@ export default class CollectionAbout extends Component {
               componentClass="textarea"
               value={collection.studyDescription || ''}
               inputRef={(input) => { this.studyDescription = input; }}
-              onChange={() => updateCollection({ param: 'studyDescription', value: this.studyDescription.value })}
+              onChange={() => updateCollection({ studyDescription: this.studyDescription.value })}
             />
           </FormGroup>
 

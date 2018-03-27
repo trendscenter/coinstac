@@ -14,6 +14,7 @@ const SAVE_COLLECTION = 'SAVE_COLLECTION';
 const GET_ASSOCIATED_CONSORTIA = 'GET_ASSOCIATED_CONSORTIA';
 const REMOVE_COLLECTIONS_FROM_CONS = 'REMOVE_COLLECTIONS_FROM_CONS';
 const SET_COLLECTIONS = 'GET_ALL_COLLECTIONS';
+const UNMAP_ASSOCIATED_CONSORTIA = 'UNMAP_ASSOCIATED_CONSORTIA';
 
 function iteratePipelineSteps(consortium, filesByGroup, baseDirectory) {
   let mappingIncomplete = false;
@@ -45,7 +46,37 @@ function iteratePipelineSteps(consortium, filesByGroup, baseDirectory) {
 
             // This changes by how the parser is reading in files - concat or push
             if (filesByGroup) {
-              keyArray[0].push(filesByGroup[consortium.stepIO[sIndex][key][mappingIndex].groupId]);
+              // Cast col types
+              const parsedRows = filesByGroup[consortium.stepIO[sIndex][key][mappingIndex].groupId];
+              // Get typed indices from header (first row)
+              const indices = [];
+              parsedRows[0].forEach((col) => {
+                for (let index = 0; index < step.inputMap[key].ownerMappings.length; index += 1) {
+                  if (step.inputMap[key].ownerMappings[index].name === col) {
+                    indices.push({ index, type: step.inputMap[key].ownerMappings[index].type });
+                    break;
+                  }
+                }
+              });
+              // Cast types to row col indices
+              parsedRows.map((row, rowIndex) => {
+                if (rowIndex === 0) {
+                  return row;
+                }
+
+                indices.forEach((col) => {
+                  if (col.type === 'boolean' && row[col.index].toLowerCase() === 'true') {
+                    row[col.index] = true;
+                  } else if (col.type === 'boolean' && row[col.index].toLowerCase() === 'false') {
+                    row[col.index] = false;
+                  } else if (col.type === 'number') {
+                    row[col.index] = parseFloat(row[col.index]);
+                  }
+                });
+
+                return row;
+              });
+              keyArray[0].push(parsedRows);
               keyArray[1].push(consortium.stepIO[sIndex][key][mappingIndex].column);
 
               if ('type' in mappingObj) {
@@ -69,17 +100,14 @@ function iteratePipelineSteps(consortium, filesByGroup, baseDirectory) {
               });
             }
 
-            keyArray[0].push(filepaths);
-            keyArray[1].push(mappingObj.value);
-            keyArray[2].push(mappingObj.type);
+            // There will only ever be one single data object. Don't nest arrays, use concat.
+            keyArray[0].concat(filepaths);
+            keyArray[1].concat(mappingObj.value);
+            keyArray[2].concat(mappingObj.type);
           } else if (filesByGroup) {
             // TODO: Handle keys fromCache if need be
           }
         }
-
-        // if (key === 'data') {
-        //   keyArray[0].push(keyArray[0][0]);
-        // }
 
         inputMap[key] = { value: keyArray };
       }
@@ -231,6 +259,31 @@ export const isAssocConsortiumMapped = applyAsyncLoading(consId =>
   () =>
     localDB.associatedConsortia.get(consId)
     .then(cons => cons.isMapped)
+);
+
+export const unmapAssociatedConsortia = applyAsyncLoading(consortia =>
+  (dispatch) => {
+    const updatePromises = [];
+    const consortiaChanged = [];
+    consortia.forEach((consId) => {
+      consortiaChanged.push(consId);
+      updatePromises.push(
+        localDB.associatedConsortia.update(consId, { stepIO: [], isMapped: false })
+      );
+    });
+
+    return Promise.all(updatePromises)
+    .then(() =>
+      localDB.associatedConsortia
+      .toArray()
+    )
+    .then((allConsortia) => {
+      dispatch(({
+        type: UNMAP_ASSOCIATED_CONSORTIA,
+        payload: { allConsortia, consortiaChanged },
+      }));
+    });
+  }
 );
 
 export const removeCollectionsFromAssociatedConsortia
@@ -403,6 +456,32 @@ export default function reducer(state = INITIAL_STATE, action) {
 
       return { ...state, collections: newCollections };
     }
+    case GET_ASSOCIATED_CONSORTIA:
+      return {
+        ...state,
+        activeAssociatedConsortia: action.payload,
+        associatedConsortia: action.payload,
+      };
+    case UNMAP_ASSOCIATED_CONSORTIA: {
+      const activeAssociatedConsortia = [...state.activeAssociatedConsortia];
+      activeAssociatedConsortia.map((aCons) => {
+        for (let i = 0; i < action.payload.consortiaChanged.length; i += 1) {
+          if (aCons.id === action.payload.consortiaChanged[i]) {
+            aCons.stepIO = [];
+            aCons.isMapped = false;
+            break;
+          }
+        }
+
+        return aCons;
+      });
+
+      return {
+        ...state,
+        activeAssociatedConsortia,
+        associatedConsortia: action.payload.allConsortia,
+      };
+    }
     case GET_COLLECTION_FILES:
       if ('error' in action.payload) {
         return {
@@ -460,12 +539,6 @@ export default function reducer(state = INITIAL_STATE, action) {
     }
     case SET_COLLECTIONS:
       return { ...state, collections: action.payload };
-    case GET_ASSOCIATED_CONSORTIA:
-      return {
-        ...state,
-        activeAssociatedConsortia: action.payload,
-        associatedConsortia: action.payload,
-      };
     case INIT_TEST_COLLECTION:
     default:
       return state;
