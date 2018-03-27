@@ -2,9 +2,9 @@ import { isEqual } from 'lodash';
 import { dirname, resolve, extname } from 'path';
 import { applyAsyncLoading } from './loading';
 import localDB from '../local-db';
-import testData from '../../../../test/data/test-collection.json';
 
 // Actions
+const CLEAR_COLLECTIONS_CONSORTIA = 'CLEAR_COLLECTIONS_CONSORTIA';
 const DELETE_ASSOCIATED_CONSORTIA = 'DELETE_ASSOCIATED_CONSORTIA';
 const DELETE_COLLECTION = 'DELETE_COLLECTION';
 const GET_COLLECTION_FILES = 'GET_COLLECTION_FILES';
@@ -290,6 +290,20 @@ export const removeCollectionsFromAssociatedConsortia
       })
   );
 
+export const clearCollectionsAndConsortia = applyAsyncLoading(() =>
+  dispatch =>
+    Promise.all([
+      localDB.associatedConsortia.clear(),
+      localDB.collections.clear(),
+    ])
+    .then(() => {
+      dispatch(({
+        type: CLEAR_COLLECTIONS_CONSORTIA,
+        payload: null,
+      }));
+    })
+);
+
 export const saveCollection = applyAsyncLoading(collection =>
   dispatch =>
     localDB.collections.put(collection)
@@ -373,6 +387,8 @@ const INITIAL_STATE = {
 
 export default function reducer(state = INITIAL_STATE, action) {
   switch (action.type) {
+    case CLEAR_COLLECTIONS_CONSORTIA:
+      return INITIAL_STATE;
     case DELETE_ASSOCIATED_CONSORTIA: {
       const newCons = [...state.associatedConsortia];
       const index = state.associatedConsortia.findIndex(cons => cons.id === action.payload);

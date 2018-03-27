@@ -13,8 +13,8 @@ import {
   writeLog,
 } from '../../state/ducks/notifyAndLog';
 import CoinstacAbbr from '../coinstac-abbr';
-import { getCollectionFiles, incrementRunCount, initTestData, syncRemoteLocalConsortia, syncRemoteLocalPipelines } from '../../state/ducks/collections';
-import { clearRuns, getLocalRun, getDBRuns, saveLocalRun, updateLocalRun } from '../../state/ducks/runs';
+import { getCollectionFiles, incrementRunCount, syncRemoteLocalConsortia, syncRemoteLocalPipelines } from '../../state/ducks/collections';
+import { getLocalRun, getDBRuns, saveLocalRun, updateLocalRun } from '../../state/ducks/runs';
 import {
   pullComputations,
   updateDockerOutput,
@@ -403,13 +403,11 @@ Dashboard.propTypes = {
   auth: PropTypes.object.isRequired,
   children: PropTypes.node.isRequired,
   client: PropTypes.object.isRequired,
-  clearRuns: PropTypes.func.isRequired,
   computations: PropTypes.array,
   consortia: PropTypes.array,
   getCollectionFiles: PropTypes.func.isRequired,
   getDBRuns: PropTypes.func.isRequired,
   incrementRunCount: PropTypes.func.isRequired,
-  initTestData: PropTypes.func.isRequired,
   notifyError: PropTypes.func.isRequired,
   notifyInfo: PropTypes.func.isRequired,
   notifySuccess: PropTypes.func.isRequired,
@@ -483,12 +481,10 @@ const DashboardWithData = compose(
 
 export default connect(mapStateToProps,
   {
-    clearRuns,
     getCollectionFiles,
     getLocalRun,
     getDBRuns,
     incrementRunCount,
-    initTestData,
     notifyError,
     notifyInfo,
     notifySuccess,
