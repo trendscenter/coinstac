@@ -9,7 +9,7 @@ const setTimeoutPromise = (delay) => {
 };
 
 // TODO: ENV specific socket
-const docker = new Docker({ socketPath: process.env === 'win32' ? '//./pipe/docker_engine' : '/var/run/docker.sock' });
+const docker = new Docker({ socketPath: process.platform === 'win32' ? '//./pipe/docker_engine' : '/var/run/docker.sock' });
 const streamPool = {};
 const jobPool = {};
 let services = {};
