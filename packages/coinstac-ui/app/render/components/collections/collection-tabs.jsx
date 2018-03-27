@@ -101,9 +101,9 @@ class CollectionTabs extends Component {
       });
   }
 
-  updateCollection(update, callback) {
+  updateCollection(updateObj, callback) {
     this.setState(prevState => ({
-      collection: { ...prevState.collection, [update.param]: update.value },
+      collection: { ...prevState.collection, ...updateObj },
     }), callback);
   }
 
