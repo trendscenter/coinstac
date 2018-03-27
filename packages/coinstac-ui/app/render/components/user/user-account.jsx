@@ -1,34 +1,24 @@
 import { Button } from 'react-bootstrap';
-import md5 from 'md5';
+import { connect } from 'react-redux';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { Link } from 'react-router';
+import MemberAvatar from '../common/member-avatar';
 
 class UserAccount extends Component {
-  constructor(props) {
-    super(props);
-    this.getAvatarUrl = this.getAvatarUrl.bind(this);
-  }
-  getAvatarUrl() {
-    const { user: { email } } = this.props;
-
-    return `http://www.gravatar.com/avatar/${md5(email)}?s=200`;
-  }
   render() {
-    const { logoutUser, user } = this.props;
+    const { logoutUser, auth } = this.props;
 
-    if (user) {
-      const { label, email } = user;
+    if (auth.user) {
+      const { id, label, email } = auth.user;
 
       return (
         <div className="user-account media">
           <div className="media-left">
-            <img
-              alt={label}
-              className="media-object img-rounded"
-              height="50"
-              src={this.getAvatarUrl()}
-              width="50"
+            <MemberAvatar
+              consRole="Member"
+              name={id}
+              width={40}
             />
           </div>
           <div className="media-body">
@@ -38,7 +28,7 @@ class UserAccount extends Component {
               aria-label="settings"
               className="user-account-settings btn btn-link btn-block"
               title="Settings"
-              to="/settings"
+              to="dashboard/settings"
             >
               <span
                 aria-hidden="true"
@@ -74,14 +64,11 @@ UserAccount.displayName = 'UserAccount';
 
 UserAccount.propTypes = {
   logoutUser: PropTypes.func.isRequired,
-  user: PropTypes.shape({
-    email: PropTypes.string,
-    label: PropTypes.string,
-  }),
+  auth: PropTypes.object.isRequired,
 };
 
-UserAccount.defaultProps = {
-  user: null,
+const mapStateToProps = ({ auth }) => {
+  return { auth };
 };
 
-export default UserAccount;
+export default connect(mapStateToProps)(UserAccount);
