@@ -43,8 +43,6 @@ class CollectionPipelineInput extends Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    console.log('new props');
-    console.log(nextProps);
     const cons = nextProps.associatedConsortia
       .find(cons => cons.id === this.props.consortiumId);
 

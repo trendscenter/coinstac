@@ -50,10 +50,17 @@ function iteratePipelineSteps(consortium, filesByGroup, baseDirectory) {
               const parsedRows = filesByGroup[consortium.stepIO[sIndex][key][mappingIndex].groupId];
               // Get typed indices from header (first row)
               const indices = [];
-              parsedRows[0].forEach((col) => {
-                for (let index = 0; index < step.inputMap[key].ownerMappings.length; index += 1) {
-                  if (step.inputMap[key].ownerMappings[index].name === col) {
-                    indices.push({ index, type: step.inputMap[key].ownerMappings[index].type });
+              parsedRows[0].forEach((col, colIndex) => { // eslint-disable-line no-loop-func
+                for (
+                  let mapIndex = 0;
+                  mapIndex < step.inputMap[key].ownerMappings.length;
+                  mapIndex += 1
+                ) {
+                  if (step.inputMap[key].ownerMappings[mapIndex].name === col) {
+                    indices.push({
+                      index: colIndex,
+                      type: step.inputMap[key].ownerMappings[mapIndex].type,
+                    });
                     break;
                   }
                 }
@@ -65,12 +72,14 @@ function iteratePipelineSteps(consortium, filesByGroup, baseDirectory) {
                 }
 
                 indices.forEach((col) => {
-                  if (col.type === 'boolean' && row[col.index].toLowerCase() === 'true') {
-                    row[col.index] = true;
-                  } else if (col.type === 'boolean' && row[col.index].toLowerCase() === 'false') {
-                    row[col.index] = false;
-                  } else if (col.type === 'number') {
-                    row[col.index] = parseFloat(row[col.index]);
+                  if (typeof row[col.index] === 'string') {
+                    if (col.type === 'boolean' && row[col.index].toLowerCase() === 'true') {
+                      row[col.index] = true;
+                    } else if (col.type === 'boolean' && row[col.index].toLowerCase() === 'false') {
+                      row[col.index] = false;
+                    } else if (col.type === 'number') {
+                      row[col.index] = parseFloat(row[col.index]);
+                    }
                   }
                 });
 
@@ -101,9 +110,9 @@ function iteratePipelineSteps(consortium, filesByGroup, baseDirectory) {
             }
 
             // There will only ever be one single data object. Don't nest arrays, use concat.
-            keyArray[0].concat(filepaths);
-            keyArray[1].concat(mappingObj.value);
-            keyArray[2].concat(mappingObj.type);
+            keyArray[0] = keyArray[0].concat(filepaths);
+            keyArray[1] = keyArray[1].concat(mappingObj.value);
+            keyArray[2].push(mappingObj.type);
           } else if (filesByGroup) {
             // TODO: Handle keys fromCache if need be
           }
