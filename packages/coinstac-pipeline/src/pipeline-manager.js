@@ -206,8 +206,8 @@ module.exports = {
 
         const pipelineProm = Promise.all([
           mkdirp(path.resolve(operatingDirectory, clientId, runId)),
-          mkdirp(path.resolve(operatingDirectory, clientId, 'output', runId)),
-          mkdirp(path.resolve(operatingDirectory, clientId, 'cache', runId)),
+          mkdirp(path.resolve(operatingDirectory, 'output', clientId, runId)),
+          mkdirp(path.resolve(operatingDirectory, 'cache', clientId, runId)),
         ])
         .catch((err) => {
           throw new Error(`Unable to create pipeline directories: ${err}`);
