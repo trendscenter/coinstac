@@ -94,25 +94,38 @@ class CollectionPipelineInput extends Component {
           }),
         }),
         () => {
+          let colIndex = -1;
           // Automap if columns exist matching preset names
-          if (collection.fileGroups[value].metaFile &&
-              collection
+          if (collection.fileGroups[value].metaFile) {
+            colIndex = collection
               .fileGroups[value]
-              .metaFile[0].indexOf(objValue.ownerMappings[covarIndex].name) > -1) {
-            this.setState(prevState =>
-              ({
-                sources: update(prevState.sources, {
-                  $splice: [[covarIndex, 1, {
-                    ...prevState.sources[covarIndex],
-                    column: objValue.ownerMappings[covarIndex].name,
-                  }]],
+              .metaFile[0].findIndex(col =>
+                col.toLowerCase().includes(
+                  objValue.ownerMappings[covarIndex].name
+                  ? objValue.ownerMappings[covarIndex].name.toLowerCase()
+                  : objValue.ownerMappings[covarIndex].type.toLowerCase()
+                )
+              );
+
+            if (colIndex > -1) {
+              this.setState(prevState =>
+                ({
+                  sources: update(prevState.sources, {
+                    $splice: [[covarIndex, 1, {
+                      ...prevState.sources[covarIndex],
+                      column: collection.fileGroups[value].metaFile[0][colIndex],
+                    }]],
+                  }),
                 }),
-              }),
-              () => {
-                updateConsortiumClientProps(stepIndex, objKey, covarIndex, this.state.sources);
-              }
-            );
-          } else {
+                () => {
+                  updateConsortiumClientProps(stepIndex, objKey, covarIndex, this.state.sources);
+                }
+              );
+            }
+          }
+
+          // Failed above conditions
+          if (colIndex === -1) {
             updateConsortiumClientProps(stepIndex, objKey, covarIndex, this.state.sources);
           }
         }
