@@ -130,7 +130,7 @@ class Dashboard extends Component {
       this.setState({ unsubscribeRuns: this.props.subscribeToUserRuns(null) });
     }
 
-    if (nextProps.remoteRuns && this.props.consortia.length) {
+    if (nextProps.remoteRuns) {
       // TODO: Speed this up by moving to subscription prop (n vs n^2)?
       for (let i = 0; i < nextProps.remoteRuns.length; i += 1) {
         let runIndexInLocalRuns = -1;
@@ -149,7 +149,7 @@ class Dashboard extends Component {
           runIndexInPropsRemote = this.props.remoteRuns
             .findIndex(run => run.id === nextProps.remoteRuns[i].id);
         }
-
+        
         // Run not in local props, start a pipeline (runs already filtered by member)
         if (runIndexInLocalRuns === -1 && !nextProps.remoteRuns[i].results
           && this.props.consortia.length && runIndexInPropsRemote === -1
@@ -446,6 +446,14 @@ const DashboardWithData = compose(
     'subscribeToComputations',
     'computationChanged'
   )),
+  graphql(FETCH_ALL_USER_RUNS_QUERY, getAllAndSubProp(
+    USER_RUN_CHANGED_SUBSCRIPTION,
+    'remoteRuns',
+    'fetchAllUserRuns',
+    'subscribeToUserRuns',
+    'userRunChanged',
+    'userId'
+  )),
   graphql(FETCH_ALL_CONSORTIA_QUERY, getAllAndSubProp(
     CONSORTIUM_CHANGED_SUBSCRIPTION,
     'consortia',
@@ -459,14 +467,6 @@ const DashboardWithData = compose(
     'fetchAllPipelines',
     'subscribeToPipelines',
     'pipelineChanged'
-  )),
-  graphql(FETCH_ALL_USER_RUNS_QUERY, getAllAndSubProp(
-    USER_RUN_CHANGED_SUBSCRIPTION,
-    'remoteRuns',
-    'fetchAllUserRuns',
-    'subscribeToUserRuns',
-    'userRunChanged',
-    'userId'
   )),
   graphql(UPDATE_USER_CONSORTIUM_STATUS_MUTATION, {
     props: ({ ownProps, mutate }) => ({
