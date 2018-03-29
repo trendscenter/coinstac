@@ -6,7 +6,7 @@
   },
   "subApiServer": {
     "hostname": "localhost",
-    "port": "3200",
+    "port": "3100",
     "protocol": "ws:"
   },
   "pipelineWSServer": {

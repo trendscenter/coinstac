@@ -57,6 +57,7 @@ class CollectionTabs extends Component {
       this.setState(prevState => ({
         collection: {
           ...prevState.collection,
+          error: '',
           associatedConsortia: [...prevState.collection.associatedConsortia, cons.id],
         },
       }),
@@ -68,7 +69,7 @@ class CollectionTabs extends Component {
     // Grab runs for consortium, check if most recent is waiting for mapping,
     //   start pipeline if mapping complete
     this.props.saveAssociatedConsortia(cons)
-      .then(() => { this.props.getRunsForConsortium(cons.id); })
+      .then(() => this.props.getRunsForConsortium(cons.id))
       .then((runs) => {
         return this.props.getCollectionFiles(cons.id)
         .then((filesArray) => {
@@ -78,6 +79,12 @@ class CollectionTabs extends Component {
             if ('allFiles' in filesArray) {
               this.props.notifyInfo({
                 message: `Pipeline Starting for ${consortium.name}.`,
+                action: {
+                  label: 'Watch Progress',
+                  callback: () => {
+                    this.props.router.push('dashboard');
+                  },
+                },
               });
 
               if ('steps' in filesArray) {
@@ -172,6 +179,7 @@ CollectionTabs.propTypes = {
   incrementRunCount: PropTypes.func.isRequired,
   notifyInfo: PropTypes.func.isRequired,
   params: PropTypes.object.isRequired,
+  router: PropTypes.object.isRequired,
   saveAssociatedConsortia: PropTypes.func.isRequired,
   saveCollection: PropTypes.func.isRequired,
   saveLocalRun: PropTypes.func.isRequired,

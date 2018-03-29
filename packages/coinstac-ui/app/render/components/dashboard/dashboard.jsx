@@ -130,18 +130,19 @@ class Dashboard extends Component {
       this.setState({ unsubscribeRuns: this.props.subscribeToUserRuns(null) });
     }
 
-    if (nextProps.remoteRuns) {
+    if (nextProps.remoteRuns && this.props.consortia.length) {
       // TODO: Speed this up by moving to subscription prop (n vs n^2)?
       for (let i = 0; i < nextProps.remoteRuns.length; i += 1) {
         let runIndexInLocalRuns = -1;
         let runIndexInPropsRemote = -1;
 
-        // Find run in local props if it's there
+        // Find run in redux runs if it's there
         if (this.props.runs.length > 0) {
           runIndexInLocalRuns = this.props.runs
             .findIndex(run => run.id === nextProps.remoteRuns[i].id);
         }
 
+        // Redux state seems to be behind a cycle, so also check component props
         if (runIndexInLocalRuns > -1
           || (runIndexInLocalRuns === -1 && !nextProps.remoteRuns[i].results
           && this.props.consortia.length)) {
@@ -151,7 +152,9 @@ class Dashboard extends Component {
 
         // Run not in local props, start a pipeline (runs already filtered by member)
         if (runIndexInLocalRuns === -1 && !nextProps.remoteRuns[i].results
-          && this.props.consortia.length && runIndexInPropsRemote === -1) {
+          && this.props.consortia.length && runIndexInPropsRemote === -1
+          && !nextProps.remoteRuns[i].error
+        ) {
           let run = nextProps.remoteRuns[i];
           const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
 
@@ -193,9 +196,6 @@ class Dashboard extends Component {
               //  development env between remote and client pipelines
               setTimeout(() => {
                 this.props.incrementRunCount(consortium.id);
-                this.props.notifyInfo({
-                  message: `Decentralized Pipeline Starting for ${consortium.name}.`,
-                });
                 ipcRenderer.send('start-pipeline', {
                   consortium,
                   pipeline: run.pipelineSnapshot,
@@ -208,9 +208,11 @@ class Dashboard extends Component {
             // Save run status to localDB
             this.props.saveLocalRun({ ...run, status });
           });
+        // Not saved locally, but results signify complete
         } else if (runIndexInLocalRuns === -1 && nextProps.remoteRuns[i].results) {
           ipcRenderer.send('clean-remote-pipeline', nextProps.remoteRuns[i].id);
           this.props.saveLocalRun({ ...nextProps.remoteRuns[i], status: 'complete' });
+        // Not saved locally, but error signify complete
         } else if (runIndexInLocalRuns === -1 && nextProps.remoteRuns[i].error) {
           ipcRenderer.send('clean-remote-pipeline', nextProps.remoteRuns[i].id);
           this.props.saveLocalRun({ ...nextProps.remoteRuns[i], status: 'error' });
