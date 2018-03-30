@@ -35,7 +35,7 @@
   "homepage": "https://github.com/MRN-Code/coinstac#readme",
   "dependencies": {
     "axios": "^0.17.1",
-    "coinstac-computation-registry": "^3.1.1",
+    "coinstac-docker-manager": "^3.1.1",
     "coinstac-graphql-schema": "^3.1.0",
     "coinstac-pipeline": "^3.1.1",
     "hapi": "^16.6.2"
