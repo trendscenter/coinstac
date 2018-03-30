@@ -4,7 +4,7 @@ const path = require('path');
 const axios = require('axios');
 const config = require('../../config/default');
 const graphqlSchema = require('coinstac-graphql-schema');
-const dbmap = require('/etc/coinstac/cstacDBMap'); // eslint-disable-line import/no-absolute-path, import/no-unresolved
+//const dbmap = require('/etc/coinstac/cstacDBMap'); // eslint-disable-line import/no-absolute-path, import/no-unresolved
 
 this.remotePipelineManager = PipelineManager.create({
   mode: 'remote',
@@ -15,7 +15,7 @@ this.remotePipelineManager = PipelineManager.create({
 const authenticateServer = () => {
   return axios.post(
     `${config.apiServer}/authenticate`,
-    dbmap.rethinkdbServer
+	  {username: 'server', password: 'password'}
   )
   .then((token) => {
     this.id_token = token.data.id_token;

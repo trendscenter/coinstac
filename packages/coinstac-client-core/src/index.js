@@ -221,7 +221,7 @@ class CoinstacClient {
       };
 
       for (let i = 0; i < filesArray.length; i += 1) {
-        const pathsep = new RegExp(escape(path.sep), 'g');
+        const pathsep = new RegExp(`${escape(path.sep)}|:`, 'g');
         linkPromises.push(
           linkAsync(filesArray[i], path.resolve(this.appDirectory, this.clientId, runId, filesArray[i].replace(pathsep, '-')))
         );
