@@ -19,7 +19,7 @@ const winston = require('winston');
 
 const Logger = winston.Logger;
 const Console = winston.transports.Console;
-const ComputationRegistry = require('coinstac-computation-registry');
+const DockerManager = require('coinstac-docker-manager');
 const PipelineManager = require('coinstac-pipeline');
 
 /**
@@ -53,8 +53,7 @@ class CoinstacClient {
     this.appDirectory = opts.appDirectory ||
       CoinstacClient.getDefaultAppDirectory();
 
-    // hack for electron-remote. generate full API, even if it's dead.
-    this.computationRegistry = new ComputationRegistry({});
+    this.dockerManager = DockerManager;
 
     /* istanbul ignore if */
     if (opts.logLevel) {

@@ -37,7 +37,7 @@
     "btoa": "^1.1.2",
     "coins-deposit-box": "^5.2.0",
     "coinstac-common": "^3.1.1",
-    "coinstac-computation-registry": "^3.1.1",
+    "coinstac-docker-manager": "^3.1.1",
     "coinstac-pipeline": "^3.1.1",
     "commander": "^2.13.0",
     "convict": "^1.5.0",

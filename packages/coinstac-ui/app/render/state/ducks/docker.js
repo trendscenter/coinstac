@@ -33,9 +33,9 @@ export const pullComputations = applyAsyncLoading(compsAndConsortiumId =>
     })
 );
 
-export const removeImage = applyAsyncLoading((imgName, imgId) =>
+export const removeImage = applyAsyncLoading((compId, imgName, imgId) =>
   dispatch =>
-    ipcPromise.send('remove-image', imgId)
+    ipcPromise.send('remove-image', { compId, imgId, imgName })
     .then(() => {
       dispatch({ payload: imgName, type: REMOVE_IMAGE });
     })
@@ -44,7 +44,7 @@ export const removeImage = applyAsyncLoading((imgName, imgId) =>
 export const updateDockerOutput = (output =>
   (dispatch) => {
     if (output.output[0].status && output.output[0].status === 'error') {
-      dispatch(notifyError({ message: `Error Downloading ${output.compName}` }));
+      dispatch(notifyError({ message: `Docker Error with ${output.compName}` }));
     } else if (output.output[0].id && output.output[0].id.indexOf('-complete') > -1) {
       dispatch(notifySuccess({ message: `${output.compName} Download Complete` }));
       dispatch(getDockerImages());

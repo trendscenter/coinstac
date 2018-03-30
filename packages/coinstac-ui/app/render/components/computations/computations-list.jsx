@@ -118,6 +118,7 @@ class ComputationsList extends Component { // eslint-disable-line
                         bsStyle="warning"
                         onClick={
                           this.removeImage(
+                            comp.id,
                             comp.computation.dockerImage,
                             docker.localImages[comp.computation.dockerImage].id
                           )
@@ -193,9 +194,9 @@ class ComputationsList extends Component { // eslint-disable-line
     this.closeModal();
   }
 
-  removeImage(imgId, imgName) {
+  removeImage(compId, imgId, imgName) {
     return () => {
-      this.props.removeImage(imgId, imgName)
+      this.props.removeImage(compId, imgId, imgName)
         .then(() => {
           this.props.getDockerImages();
         });

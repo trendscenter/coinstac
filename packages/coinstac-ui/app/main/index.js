@@ -142,7 +142,7 @@ loadConfig()
    * @return {Promise<String[]>} An array of all local Docker image names
    */
   ipcPromise.on('get-all-images', () => {
-    return core.computationRegistry.constructor.getImages()
+    return core.dockerManager.getImages()
       .then((data) => {
         return data;
       });
@@ -157,8 +157,8 @@ loadConfig()
    * @return {Promise}
    */
   ipcPromise.on('download-comps', (params) => { // eslint-disable-line no-unused-vars
-    return core.computationRegistry.constructor
-      .pullComputations(params.computations)
+    return core.dockerManager
+      .pullImages(params.computations)
       .then((compStreams) => {
         let streamsComplete = 0;
 
@@ -191,10 +191,15 @@ loadConfig()
             });
 
             stream.on('error', (err) => {
-              mainWindow.webContents.send('docker-out', { output: { Error: err }, compId, compName });
+              const output = [{ message: err.json, status: 'error', statusCode: err.statusCode, isErr: true }];
+              mainWindow.webContents.send('docker-out', { output, compId, compName });
             });
           }
         });
+      })
+      .catch((err) => {
+        const output = [{ message: err.json, status: 'error', statusCode: err.statusCode, isErr: true }];
+        mainWindow.webContents.send('docker-out', { output });
       });
   });
 
@@ -249,7 +254,11 @@ loadConfig()
    * IPC Listener to remove a Docker image
    * @param {String} imgId ID of the image to remove
    */
-  ipcPromise.on('remove-image', (imgId) => {
-    return core.computationRegistry.constructor.removeDockerImage(imgId);
+  ipcPromise.on('remove-image', ({ compId, imgId, imgName }) => {
+    return core.dockerManager.removeImage(imgId)
+    .catch((err) => {
+      const output = [{ message: err.message, status: 'error', statusCode: err.statusCode, isErr: true }];
+      mainWindow.webContents.send('docker-out', { output, compId, compName: imgName });
+    });
   });
 });
