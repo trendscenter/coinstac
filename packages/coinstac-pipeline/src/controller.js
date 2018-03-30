@@ -28,6 +28,7 @@ module.exports = {
       baseDirectory: `/input/${clientId}/${runId}`,
       outputDirectory: `/output/${clientId}/${runId}`,
       cacheDirectory: `/cache/${clientId}/${runId}`,
+      clientId,
       currentBoxCommand: undefined,
       currentComputations,
       currentOutput: undefined,

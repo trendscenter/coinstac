@@ -215,9 +215,15 @@ class CoinstacClient {
       // TODO: validate runPipeline against clientPipeline
       const linkPromises = [];
 
+      const e = new RegExp(/[-\/\\^$*+?.()|[\]{}]/g); // eslint-disable-line no-useless-escape
+      const escape = (string) => {
+        return string.replace(e, '\\$&');
+      };
+
       for (let i = 0; i < filesArray.length; i += 1) {
+        const pathsep = new RegExp(`${escape(path.sep)}|:`, 'g');
         linkPromises.push(
-          linkAsync(filesArray[i], `${this.appDirectory}/${this.clientId}/${runId}/${filesArray[i].replace(/\//g, '-')}`)
+          linkAsync(filesArray[i], path.resolve(this.appDirectory, this.clientId, runId, filesArray[i].replace(pathsep, '-')))
         );
       }
 

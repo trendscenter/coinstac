@@ -239,6 +239,7 @@ class Dashboard extends Component {
 
         // Run already in props but results are incoming
         } else if (runIndexInLocalRuns > -1 && nextProps.remoteRuns[i].results
+          && runIndexInPropsRemote > -1
           && !this.props.runs[runIndexInLocalRuns].results && this.props.consortia.length
           && !this.props.remoteRuns[runIndexInPropsRemote].results) {
           const run = nextProps.remoteRuns[i];
