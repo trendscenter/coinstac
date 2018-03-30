@@ -170,6 +170,7 @@ loadConfig()
             stream.on('data', (data) => {
               let output = compact(data.toString().split('\r\n'));
               output = output.map(JSON.parse);
+
               mainWindow.webContents.send('docker-out', { output, compId, compName });
             });
 
