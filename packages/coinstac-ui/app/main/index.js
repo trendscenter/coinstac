@@ -170,10 +170,14 @@ loadConfig()
             stream.on('data', (data) => {
               let output = compact(data.toString().split('\r\n'));
               output = output.map(JSON.parse);
-              mainWindow.webContents.send('docker-out', { output, compId, compName });
+              if (output[0].error) {
+                mainWindow.webContents.send('docker-out', { output: { Error: output[0].errorDetail.message }, compId, compName });
+              } else {
+                mainWindow.webContents.send('docker-out', { output, compId, compName });
+              }
             });
 
-            stream.on('end', () => {
+            stream.on('close', () => {
               mainWindow.webContents.send('docker-out',
                 {
                   output: [{ id: `${compId}-complete`, status: 'complete' }],
@@ -189,6 +193,26 @@ loadConfig()
                   .send('docker-pull-complete', params.consortiumId);
               }
             });
+
+            // TODO: may need to be removed once windows docker pulls no longer use plain http req
+            if (process.platform === 'win32') {
+              stream.on('end', () => {
+                mainWindow.webContents.send('docker-out',
+                  {
+                    output: [{ id: `${compId}-complete`, status: 'complete' }],
+                    compId,
+                    compName,
+                  }
+                );
+
+                streamsComplete += 1;
+
+                if (params.consortiumId && streamsComplete === params.computations.length) {
+                  mainWindow.webContents
+                    .send('docker-pull-complete', params.consortiumId);
+                }
+              });
+            }
 
             stream.on('error', (err) => {
               mainWindow.webContents.send('docker-out', { output: { Error: err }, compId, compName });

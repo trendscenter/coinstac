@@ -71,7 +71,7 @@ function iteratePipelineSteps(consortium, filesByGroup, baseDirectory) {
             if (filepaths) {
               filepaths = filepaths.map((path) => {
                 if (extname(path[0]) !== '') {
-                  const pathsep = new RegExp(escape(sep), 'g');
+                  const pathsep = new RegExp(`${escape(sep)}|:`, 'g');
                   return resolve(baseDirectory, path[0]).replace(pathsep, '-');
                 }
                 return '';
