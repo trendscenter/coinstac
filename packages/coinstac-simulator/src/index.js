@@ -19,6 +19,7 @@ const startRun = ({ spec, runMode = 'local', clientCount = 1, operatingDirectory
   clientCount = parseInt(clientCount, 10);
 
   if (runMode === 'decentralized') {
+    const remoteSpec = Array.isArray(spec) ? spec[0] : spec;
     const remoteManager = Pipeline.create({
       clientId: 'remote',
       mode: 'remote',
@@ -27,13 +28,14 @@ const startRun = ({ spec, runMode = 'local', clientCount = 1, operatingDirectory
     pipelines.remote = {
       manager: remoteManager,
       pipeline: remoteManager.startPipeline({
-        spec,
+        spec: remoteSpec,
         runId: 'simulatorRun',
         clients: Array.from(Array(clientCount)).map((val, idx) => `local${idx}`),
       }),
     };
   }
   for (let i = 0; i < clientCount; i += 1) {
+    const localSpec = Array.isArray(spec) ? spec[i] : spec;
     const localPipelineManager = Pipeline.create({
       clientId: `local${i}`,
       mode: 'local',
@@ -42,7 +44,7 @@ const startRun = ({ spec, runMode = 'local', clientCount = 1, operatingDirectory
     pipelines.locals.push({
       manager: localPipelineManager,
       pipeline: localPipelineManager.startPipeline({
-        spec,
+        spec: localSpec,
         runId: 'simulatorRun',
       }),
     });

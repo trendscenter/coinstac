@@ -14,14 +14,16 @@ const path = require('path');
 const blessed = require('blessed');
 const bc = require('blessed-contrib');
 
-const pipeSpec = {
-  steps: [
-    {
-      controller: { type: 'local' },
-      computations: [],
-      inputMap: {},
-    },
-  ],
+const pipeSpecFactory = (inputSpec, mode, comp) => {
+  return {
+    steps: [
+      {
+        controller: { type: mode },
+        computations: [comp],
+        inputMap: inputSpec,
+      },
+    ],
+  };
 };
 
 const screen = blessed.screen({
@@ -128,33 +130,37 @@ readFile(program.compspec ? program.compspec : 'compspec.json')
 
   return Promise.all([specProm])
   .then((inputSpec) => {
-    pipeSpec.steps[0].controller.type = mode;
-    pipeSpec.steps[0].computations.push(comp);
-    pipeSpec.steps[0].inputMap = inputSpec[0];
+    let generatedPipeSpec;
+    if (Array.isArray(inputSpec[0])) {
+      generatedPipeSpec = inputSpec[0].map(spec => pipeSpecFactory(spec, mode, comp));
+    } else {
+      generatedPipeSpec = pipeSpecFactory(inputSpec[0], mode, comp);
+    }
 
-    return pipeSpec;
+    return generatedPipeSpec;
   });
 })
 .then((pipelineSpec) => {
   /* eslint-disable no-console */
   console.log(`Starting ${mode} simulator run with ${program.clientNumber ? program.clientNumber : 1} client(s)`);
+  const count = Array.isArray(pipelineSpec) ? pipelineSpec.length : program.clientNumber;
   const simRun = sim.startRun({
     spec: pipelineSpec,
     runMode: mode,
-    clientCount: program.clientNumber,
+    clientCount: count,
     operatingDirectory: program.directory,
   });
 
   const updateTable = (node, data) => {
     let foundNode = false;
-    let state = data.controllerState ? data.controllerState : 'initilizing';
+    let state = data.controllerState ? data.controllerState : 'initializing';
     state = state === 'stopped' ? 'shutting down docker...' : state;
 
     tableData.forEach((row, index) => {
       if (row[0] === node) {
         tableData[index] = [
           node,
-          data.currentIteration ? data.currentIteration : 'initilizing',
+          data.currentIteration ? data.currentIteration : 'initializing',
           state,
           data.mode,
         ];
@@ -164,7 +170,7 @@ readFile(program.compspec ? program.compspec : 'compspec.json')
     if (!foundNode) {
       tableData.push([
         node,
-        data.currentIteration ? data.currentIteration : 'initilizing',
+        data.currentIteration ? data.currentIteration : 'initializing',
         state,
         data.mode,
       ]);
