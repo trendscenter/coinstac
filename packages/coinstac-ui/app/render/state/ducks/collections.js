@@ -40,7 +40,8 @@ function iteratePipelineSteps(consortium, filesByGroup, baseDirectory) {
           const mappingObj = step.inputMap[key].ownerMappings[mappingIndex];
           if (mappingObj.source === 'file'
               && consortium.stepIO[sIndex] && consortium.stepIO[sIndex][key][mappingIndex]
-              && consortium.stepIO[sIndex][key][mappingIndex].collectionId) {
+              && consortium.stepIO[sIndex][key][mappingIndex].collectionId
+              && consortium.stepIO[sIndex][key][mappingIndex].column) {
             const { groupId, collectionId } = consortium.stepIO[sIndex][key][mappingIndex];
             collections.push({ groupId, collectionId });
 
@@ -94,10 +95,13 @@ function iteratePipelineSteps(consortium, filesByGroup, baseDirectory) {
             }
           } else if (mappingObj.source === 'file'
               && (!consortium.stepIO[sIndex] || !consortium.stepIO[sIndex][key][mappingIndex]
-              || !consortium.stepIO[sIndex][key][mappingIndex].collectionId)) {
+              || !consortium.stepIO[sIndex][key][mappingIndex].collectionId
+              || !consortium.stepIO[sIndex][key][mappingIndex].column)) {
             mappingIncomplete = true;
             break;
-          } else if (filesByGroup && mappingObj.type === 'FreeSurfer') {
+          } else if (filesByGroup && mappingObj.type === 'FreeSurfer'
+              && consortium.stepIO[sIndex][key][mappingIndex].groupId
+              && consortium.stepIO[sIndex][key][mappingIndex].column) {
             let filepaths = filesByGroup[consortium.stepIO[sIndex][key][mappingIndex].groupId];
 
             if (filepaths) {
@@ -113,6 +117,11 @@ function iteratePipelineSteps(consortium, filesByGroup, baseDirectory) {
             keyArray[0] = keyArray[0].concat(filepaths);
             keyArray[1] = keyArray[1].concat(mappingObj.value);
             keyArray[2].push(mappingObj.type);
+          } else if (mappingObj.type === 'FreeSurfer'
+              && (!consortium.stepIO[sIndex][key][mappingIndex].groupId
+                || !consortium.stepIO[sIndex][key][mappingIndex].column)) {
+            mappingIncomplete = true;
+            break;
           } else if (filesByGroup) {
             // TODO: Handle keys fromCache if need be
           }
