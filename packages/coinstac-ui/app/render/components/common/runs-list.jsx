@@ -8,7 +8,7 @@ function getActiveTime(hoursSinceActive) {
   return Date.now() - (hoursSinceActive * 60 * 60 * 1000);
 }
 
-const RunsList = ({ consortia, limitToComplete, hoursSinceActive, runs }) => {
+const RunsList = ({ auth, consortia, limitToComplete, hoursSinceActive, runs }) => {
   let runNoResultsCount = 0;
 
   return (
@@ -16,9 +16,15 @@ const RunsList = ({ consortia, limitToComplete, hoursSinceActive, runs }) => {
       {runs && runs.map((run) => {
         const activeTime = hoursSinceActive === 0
           ? hoursSinceActive : getActiveTime(hoursSinceActive);
+        const consortium = consortia.filter(con => con.id === run.consortiumId)[0];
+
         if ((!limitToComplete || (limitToComplete && run.status === 'complete'))
-          && (run.startDate > activeTime || run.endDate > activeTime)) {
-          const consortium = consortia.filter(con => con.id === run.consortiumId)[0];
+          && (run.startDate > activeTime || run.endDate > activeTime)
+          && consortium
+          && (consortium.owners.indexOf(auth.user.id) > -1
+            || consortium.members.indexOf(auth.user.id) > -1
+          )
+        ) {
           return (
             <RunItem
               key={`${run.id}-list-item`}
@@ -50,6 +56,7 @@ const RunsList = ({ consortia, limitToComplete, hoursSinceActive, runs }) => {
 };
 
 RunsList.propTypes = {
+  auth: PropTypes.object.isRequired,
   hoursSinceActive: PropTypes.number.isRequired,
   limitToComplete: PropTypes.bool.isRequired,
   runs: PropTypes.array.isRequired,
