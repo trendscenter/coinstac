@@ -1,6 +1,7 @@
 const Docker = require('dockerode');
 const request = require('request-promise-native');
 const portscanner = require('portscanner');
+const http = require('http');
 
 const setTimeoutPromise = (delay) => {
   return new Promise((resolve) => {
@@ -9,7 +10,7 @@ const setTimeoutPromise = (delay) => {
 };
 
 // TODO: ENV specific socket
-const docker = new Docker({ socketPath: process.platform === 'win32' ? '//./pipe/docker_engine' : '/var/run/docker.sock' });
+const docker = new Docker();
 const streamPool = {};
 const jobPool = {};
 let services = {};
@@ -207,12 +208,30 @@ const startService = (serviceId, serviceUserId, opts) => {
  */
 const pullImage = (computation) => {
   return new Promise((resolve, reject) => {
-    docker.pull(computation, (err, stream) => {
-      if (err) {
-        reject(err);
-      }
-      resolve(stream);
-    });
+    if (process.platform === 'win32') {
+      // NOTE: this uses a fixed api version, while this should be respected in docker
+      // a better solution should be found
+      const options = {
+        socketPath: '//./pipe/docker_engine',
+        path: `/v1.37/images/create?fromImage=${encodeURIComponent(computation)}`,
+        method: 'POST',
+      };
+
+      const callback = (res) => {
+        res.setEncoding('utf8');
+        resolve(res);
+      };
+
+      const clientRequest = http.request(options, callback);
+      clientRequest.end();
+    } else {
+      docker.pull(computation, (err, stream) => {
+        if (err) {
+          reject(err);
+        }
+        resolve(stream);
+      });
+    }
   });
 };
 
