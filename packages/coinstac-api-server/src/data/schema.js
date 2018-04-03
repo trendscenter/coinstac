@@ -102,7 +102,7 @@ const typeDefs = `
     startDate: String
     endDate: String
     pipelineSnapshot: JSON
-    userErrors: String
+    error: JSON
     results: JSON
     remotePipelineState: JSON
     type: String

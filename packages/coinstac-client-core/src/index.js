@@ -218,6 +218,7 @@ class CoinstacClient {
       for (let i = 0; i < filesArray.length; i += 1) {
         linkPromises.push(
           linkAsync(filesArray[i], `${this.appDirectory}/${this.clientId}/${runId}/${filesArray[i].replace(/\//g, '-')}`)
+          .catch(err => err)
         );
       }
 

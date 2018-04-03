@@ -114,7 +114,7 @@ function iteratePipelineSteps(consortium, filesByGroup, baseDirectory) {
             }
 
             // There will only ever be one single data object. Don't nest arrays, use concat.
-            keyArray[0] = keyArray[0].concat(filepaths);
+            keyArray[0] = keyArray[0].concat(filepaths).filter(Boolean);
             keyArray[1] = keyArray[1].concat(mappingObj.value);
             keyArray[2].push(mappingObj.type);
           } else if (mappingObj.type === 'FreeSurfer'
