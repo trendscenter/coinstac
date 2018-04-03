@@ -78,7 +78,7 @@ const sharedFields = {
     endDate
     pipelineSnapshot
     remotePipelineState
-    userErrors
+    error
     results
     type
   `,
