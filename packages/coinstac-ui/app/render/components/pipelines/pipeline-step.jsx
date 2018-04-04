@@ -68,6 +68,8 @@ class PipelineStep extends Component {
     this.state = {
       orderedInputs: [],
     };
+
+    this.showOutput = this.showOutput.bind(this);
   }
 
   componentWillReceiveProps(nextProps) {
@@ -86,6 +88,25 @@ class PipelineStep extends Component {
 
       this.setState({ orderedInputs });
     }
+  }
+
+  showOutput(paddingLeft, id, output) {
+    return (
+      <div style={{ paddingLeft }}>
+        {Object.entries(output).map((localOutput) => {
+          if (typeof localOutput[1] === 'object') {
+            const output = [<p key={`${id}-${localOutput[0]}-output`}>{localOutput[1].label} ({localOutput[1].type})</p>];
+            if (localOutput[1].items) {
+              output.push(this.showOutput(paddingLeft + 5, id, localOutput[1].items));
+            }
+
+            return output;
+          }
+
+          return null;
+        })}
+      </div>
+    );
   }
 
   render() {
@@ -141,17 +162,7 @@ class PipelineStep extends Component {
             />
           ))}
           <h4>Output:</h4>
-          <div style={{ paddingLeft: 10 }}>
-            {compIO !== null && Object.entries(compIO.computation.output).map((localOutput) => {
-              if (typeof localOutput[1] === 'object') {
-                return (
-                  <p key={`${id}-${localOutput[0]}-output`}>{localOutput[1].label} ({localOutput[1].type})</p>
-                );
-              }
-
-              return null;
-            })}
-          </div>
+          {compIO !== null && this.showOutput(10, id, compIO.computation.output)}
         </Panel>
       </div>
     ));

@@ -14,6 +14,8 @@ class Result extends Component {
 
     this.state = {
       activeResult: {},
+      computationOutput: {},
+      displayTypes: [],
       plotData: [],
       dummyData: [],
     };
@@ -22,12 +24,19 @@ class Result extends Component {
   componentDidMount() {
     this.props.getLocalRun(this.props.params.resultId)
       .then((run) => {
-        const plotData = [];
-        if (run.pipelineSnapshot) {
-          // Checking display type of computation
-          plotData.push(run.results);
-        }
-        if (run.results && run.results.type === 'scatter_plot') {
+        let plotData = [];
+
+        // Checking display type of computation
+        const stepsLength = run.pipelineSnapshot.steps.length;
+        const displayTypes = run.pipelineSnapshot.steps[stepsLength - 1]
+            .computations[0].computation.display;
+        this.setState({
+          computationOutput: run.pipelineSnapshot.steps[stepsLength - 1]
+            .computations[0].computation.output,
+          displayTypes,
+        });
+
+        if (displayTypes.findIndex(disp => disp.type === 'scatter_plot') > -1) {
           run.results.plots.map(result => (
             result.coordinates.map(val => (
               plotData.push({
@@ -37,13 +46,16 @@ class Result extends Component {
               })
             )
           )));
-        } else if (run.results && run.results.type === 'box_plot') {
+        } else if (displayTypes.findIndex(disp => disp.type === 'box_plot') > -1) {
           run.results.x.map(val => (
             plotData.push(val)
           ));
+        } else {
+          plotData = run.results;
         }
+
         this.setState({
-          activeResult: run,
+          run,
           plotData,
           dummyData: [14, 15, 16, 16, 17, 17, 17, 17, 17, 18, 18, 18, 18, 18, 18, 19,
             19, 19, 20, 20, 20, 20, 20, 20, 21, 21, 22, 23, 24, 24, 29],
@@ -52,48 +64,48 @@ class Result extends Component {
   }
 
   render() {
-    const { activeResult } = this.state;
+    const { displayTypes, run } = this.state;
+
     return (
       <div>
         <Button className="custom" onClick={BrowserHistory.goBack}>
           <Glyphicon glyph="glyphicon glyphicon-arrow-left" />
         </Button>
-        {(activeResult && activeResult.results && activeResult.results.type === 'box_plot') &&
-          <Tabs defaultActiveKey={1} id="uncontrolled-tab-example">
-            <Tab eventKey={1} title="Box-Plot View">
-              <Box
-                plotData={this.state.plotData}
-              />
-            </Tab>
-            <Tab eventKey={2} title="Table View">
-              <Table
-                plotData={this.state.plotData}
-              />
-            </Tab>
-          </Tabs>
-      }
-        {activeResult && activeResult.results && activeResult.results.type === 'scatter_plot' &&
-          <Tabs defaultActiveKey={1} id="uncontrolled-tab-example">
-            <Tab eventKey={1} title="Scatter-Plot View">
-              <Scatter
-                plotData={this.state.plotData}
-              />
-            </Tab>
-            <Tab eventKey={2} title="Table View">
-              <Table
-                plotData={this.state.plotData}
-              />
-            </Tab>
-          </Tabs>
-        }
-        {activeResult && activeResult.results && !activeResult.results.type &&
-          <Table
-            plotData={this.state.plotData}
-          />
-        }
-        {activeResult && activeResult.error &&
+
+        <Tabs defaultActiveKey={0} id="uncontrolled-tab-example">
+          {run && run.results && displayTypes.map((disp, index) => {
+            const title = disp.type.replace('_', ' ').replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+            return (
+              <Tab
+                key={disp.type}
+                eventKey={index}
+                title={`${title} View`}
+              >
+                {disp.type === 'box_plot' &&
+                  <Box
+                    plotData={this.state.plotData}
+                  />
+                }
+                {disp.type === 'scatter_plot' &&
+                  <Scatter
+                    plotData={this.state.plotData}
+                  />
+                }
+                {disp.type === 'table' &&
+                  <Table
+                    computationOutput={this.state.computationOutput}
+                    plotData={this.state.plotData}
+                    tables={disp.tables ? disp.tables : null}
+                  />
+                }
+              </Tab>
+            );
+          })}
+        </Tabs>
+
+        {run && run.error &&
           <Well style={{ color: 'red' }}>
-            {JSON.stringify(activeResult.error.error.error, null, 2)}
+            {JSON.stringify(run.error.error.error, null, 2)}
           </Well>
         }
       </div>
