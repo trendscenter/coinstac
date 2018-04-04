@@ -122,6 +122,7 @@
               },
               {
                 "source": "local_stats",
+                "subtitle": "ROI",
                 "subtables": "by-key"
               }
             ]

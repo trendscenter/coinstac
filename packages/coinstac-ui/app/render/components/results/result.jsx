@@ -24,7 +24,7 @@ class Result extends Component {
   componentDidMount() {
     this.props.getLocalRun(this.props.params.resultId)
       .then((run) => {
-        let plotData = [];
+        let plotData = {};
 
         // Checking display type of computation
         const stepsLength = run.pipelineSnapshot.steps.length;
@@ -37,9 +37,10 @@ class Result extends Component {
         });
 
         if (displayTypes.findIndex(disp => disp.type === 'scatter_plot') > -1) {
+          plotData.testData = [];
           run.results.plots.map(result => (
             result.coordinates.map(val => (
-              plotData.push({
+              plotData.testData.push({
                 name: result.title,
                 x: val.x,
                 y: val.y,
@@ -47,8 +48,9 @@ class Result extends Component {
             )
           )));
         } else if (displayTypes.findIndex(disp => disp.type === 'box_plot') > -1) {
+          plotData.testData = [];
           run.results.x.map(val => (
-            plotData.push(val)
+            plotData.testData.push(val)
           ));
         } else {
           plotData = run.results;
@@ -83,12 +85,12 @@ class Result extends Component {
               >
                 {disp.type === 'box_plot' &&
                   <Box
-                    plotData={this.state.plotData}
+                    plotData={this.state.plotData.testData}
                   />
                 }
                 {disp.type === 'scatter_plot' &&
                   <Scatter
-                    plotData={this.state.plotData}
+                    plotData={this.state.plotData.testData}
                   />
                 }
                 {disp.type === 'table' &&
