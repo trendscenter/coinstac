@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { Button, Glyphicon, Tabs, Tab, Well } from 'react-bootstrap';
+import TimeStamp from 'react-timestamp';
 import BrowserHistory from 'react-router/lib/browserHistory';
 import Box from './displays/box-plot';
 import Scatter from './displays/scatter-plot';
@@ -13,7 +14,7 @@ class Result extends Component {
     super(props);
 
     this.state = {
-      activeResult: {},
+      run: {},
       computationOutput: {},
       displayTypes: [],
       plotData: [],
@@ -67,6 +68,18 @@ class Result extends Component {
 
   render() {
     const { displayTypes, run } = this.state;
+    const { consortia } = this.props;
+    const consortium = consortia.find(c => c.id === run.consortiumId);
+    let stepsLength = -1;
+    let covariates = [];
+    if (run.pipelineSnapshot) {
+      stepsLength = run.pipelineSnapshot.steps.length;
+    }
+
+    if (stepsLength > 0 && run.pipelineSnapshot.steps[stepsLength - 1].inputMap) {
+      covariates = run.pipelineSnapshot.steps[stepsLength - 1]
+        .inputMap.covariates.ownerMappings.map(m => m.name);
+    }
 
     return (
       <div>
@@ -74,14 +87,52 @@ class Result extends Component {
           <Glyphicon glyph="glyphicon glyphicon-arrow-left" />
         </Button>
 
+        <Well bsSize="small" style={{ marginTop: 10 }}>
+          <h2 style={{ marginTop: 0 }}>
+            {consortium && run.pipelineSnapshot && (
+              <span>{`Results: ${consortium.name} || ${run.pipelineSnapshot.name}`}</span>
+            )}
+          </h2>
+          {run.startDate &&
+            <div>
+              <span className="bold">Start date: </span>
+              <TimeStamp
+                time={run.startDate / 1000}
+                precision={2}
+                autoUpdate={10}
+                format="full"
+              />
+            </div>
+          }
+          {run.endDate &&
+            <div>
+              <span className="bold">End date: </span>
+              <TimeStamp
+                time={run.endDate / 1000}
+                precision={2}
+                autoUpdate={10}
+                format="full"
+              />
+            </div>
+          }
+          {stepsLength > -1 && covariates.length > 0 &&
+            <div>
+              <span className="bold">Covariates: </span>
+              {covariates.join(', ')}
+            </div>
+          }
+        </Well>
+
         <Tabs defaultActiveKey={0} id="uncontrolled-tab-example">
           {run && run.results && displayTypes.map((disp, index) => {
-            const title = disp.type.replace('_', ' ').replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+            const title = disp.type.replace('_', ' ')
+              .replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
             return (
               <Tab
                 key={disp.type}
                 eventKey={index}
                 title={`${title} View`}
+                style={{ padding: 10 }}
               >
                 {disp.type === 'box_plot' &&
                   <Box
@@ -116,12 +167,9 @@ class Result extends Component {
 }
 
 Result.propTypes = {
+  consortia: PropTypes.array.isRequired,
   getLocalRun: PropTypes.func.isRequired,
   params: PropTypes.object.isRequired,
-};
-
-Result.defaultProps = {
-  activeResult: null,
 };
 
 const mapStateToProps = ({ auth }) => {

@@ -137,10 +137,10 @@ class TableResult extends Component {
             plotData[t.source],
             computationOutput[t.source],
             computationOutput[t.source].label,
-            5
+            0
           )
         )}
-        {!tables && this.makeTable(null, plotData.testData, null, 'Test Data', 5)}
+        {!tables && this.makeTable(null, plotData.testData, null, 'Test Data', 0)}
       </div>
     );
   }
