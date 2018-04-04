@@ -42,6 +42,24 @@ class CollectionPipelineInput extends Component {
     this.setSourceFile = this.setSourceFile.bind(this);
   }
 
+  componentWillReceiveProps(nextProps) {
+    const cons = nextProps.associatedConsortia
+      .find(cons => cons.id === this.props.consortiumId);
+
+    if (cons && cons.stepIO.length === 0
+      && (nextProps.objKey === 'covariates' || nextProps.objKey === 'data')
+    ) {
+      this.setState({
+        sources: Array(nextProps.objValue.ownerMappings.length)
+          .fill({
+            groupId: '',
+            column: '',
+            fileIndex: -1,
+          }),
+      });
+    }
+  }
+
   setSourceColumn(covarIndex) {
     const { objKey, stepIndex, updateConsortiumClientProps } = this.props;
     return ({ target: { value } }) => {
@@ -76,25 +94,38 @@ class CollectionPipelineInput extends Component {
           }),
         }),
         () => {
+          let colIndex = -1;
           // Automap if columns exist matching preset names
-          if (collection.fileGroups[value].metaFile &&
-              collection
+          if (collection.fileGroups[value].metaFile) {
+            colIndex = collection
               .fileGroups[value]
-              .metaFile[0].indexOf(objValue.ownerMappings[covarIndex].name) > -1) {
-            this.setState(prevState =>
-              ({
-                sources: update(prevState.sources, {
-                  $splice: [[covarIndex, 1, {
-                    ...prevState.sources[covarIndex],
-                    column: objValue.ownerMappings[covarIndex].name,
-                  }]],
+              .metaFile[0].findIndex(col =>
+                col.toLowerCase().includes(
+                  objValue.ownerMappings[covarIndex].name
+                  ? objValue.ownerMappings[covarIndex].name.toLowerCase()
+                  : objValue.ownerMappings[covarIndex].type.toLowerCase()
+                )
+              );
+
+            if (colIndex > -1) {
+              this.setState(prevState =>
+                ({
+                  sources: update(prevState.sources, {
+                    $splice: [[covarIndex, 1, {
+                      ...prevState.sources[covarIndex],
+                      column: collection.fileGroups[value].metaFile[0][colIndex],
+                    }]],
+                  }),
                 }),
-              }),
-              () => {
-                updateConsortiumClientProps(stepIndex, objKey, covarIndex, this.state.sources);
-              }
-            );
-          } else {
+                () => {
+                  updateConsortiumClientProps(stepIndex, objKey, covarIndex, this.state.sources);
+                }
+              );
+            }
+          }
+
+          // Failed above conditions
+          if (colIndex === -1) {
             updateConsortiumClientProps(stepIndex, objKey, covarIndex, this.state.sources);
           }
         }
@@ -188,16 +219,33 @@ class CollectionPipelineInput extends Component {
                         <option disabled value="">Select a Column</option>
                         {collection.fileGroups[
                           this.state.sources[covarIndex].groupId
-                        ].metaFile[0].map(col =>
-                          (
-                            <option
-                              key={col}
-                              value={col}
-                            >
-                              {col}
-                            </option>
-                          )
-                        )}
+                        ].metaFile[0]
+                        .map((col, fileRowIndex) => {
+                          const colVal = collection.fileGroups[
+                            this.state.sources[covarIndex].groupId
+                          ].metaFile[1][fileRowIndex];
+
+                          const colValIsBool = (colVal.toLowerCase() === 'true' || colVal.toLowerCase() === 'false');
+                          const colValIsNumber = !isNaN(colVal);
+
+                          // Filter out column values of the wrong type
+                          if (
+                            (objValue.ownerMappings[covarIndex].type === 'boolean' && colValIsBool)
+                            || (objValue.ownerMappings[covarIndex].type === 'number' && colValIsNumber)
+                            || ((objValue.ownerMappings[covarIndex].type === 'string' || objKey === 'data')
+                            && !colValIsBool && !colValIsNumber)) {
+                            return (
+                              <option
+                                key={col}
+                                value={col}
+                              >
+                                {col}
+                              </option>
+                            );
+                          }
+
+                          return null;
+                        })}
                       </select>
                     </span>
                 }

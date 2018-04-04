@@ -15,7 +15,7 @@ this.remotePipelineManager = PipelineManager.create({
 const authenticateServer = () => {
   return axios.post(
     `${config.apiServer}/authenticate`,
-	  dbmap.rethinkdbServer
+    dbmap.rethinkdbServer
   )
   .then((token) => {
     this.id_token = token.data.id_token;

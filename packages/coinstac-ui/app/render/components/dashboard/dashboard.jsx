@@ -149,7 +149,7 @@ class Dashboard extends Component {
           runIndexInPropsRemote = this.props.remoteRuns
             .findIndex(run => run.id === nextProps.remoteRuns[i].id);
         }
-        
+
         // Run not in local props, start a pipeline (runs already filtered by member)
         if (runIndexInLocalRuns === -1 && !nextProps.remoteRuns[i].results
           && this.props.consortia.length && runIndexInPropsRemote === -1
@@ -219,7 +219,10 @@ class Dashboard extends Component {
         // Run already in props but error is incoming
         } else if (runIndexInLocalRuns > -1 && nextProps.remoteRuns[i].error
           && !this.props.runs[runIndexInLocalRuns].error && this.props.consortia.length
-          && !this.props.remoteRuns[runIndexInPropsRemote].error) {
+          && (
+            !this.props.remoteRuns.length ||
+            (runIndexInPropsRemote > -1 && !this.props.remoteRuns[runIndexInPropsRemote].error)
+          )) {
           const run = nextProps.remoteRuns[i];
           const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
 
@@ -241,7 +244,10 @@ class Dashboard extends Component {
         } else if (runIndexInLocalRuns > -1 && nextProps.remoteRuns[i].results
           && runIndexInPropsRemote > -1
           && !this.props.runs[runIndexInLocalRuns].results && this.props.consortia.length
-          && !this.props.remoteRuns[runIndexInPropsRemote].results) {
+          && (
+            !this.props.remoteRuns.length ||
+            (runIndexInPropsRemote > -1 && !this.props.remoteRuns[runIndexInPropsRemote].results)
+          )) {
           const run = nextProps.remoteRuns[i];
           const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
 
@@ -352,6 +358,8 @@ class Dashboard extends Component {
     ipcRenderer.removeAllListeners('docker-out');
     ipcRenderer.removeAllListeners('docker-pull-complete');
     ipcRenderer.removeAllListeners('local-run-complete');
+    ipcRenderer.removeAllListeners('local-run-error');
+    ipcRenderer.removeAllListeners('local-pipeline-state-update');
   }
 
   render() {

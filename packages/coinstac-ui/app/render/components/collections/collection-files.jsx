@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
 import naturalSort from 'javascript-natural-sort';
 import {
   Accordion,
@@ -12,12 +13,13 @@ import {
 import PropTypes from 'prop-types';
 import ipcPromise from 'ipc-promise';
 import shortid from 'shortid';
+import { unmapAssociatedConsortia } from '../../state/ducks/collections';
 
 const styles = {
   fileLabelRow: { margin: 0 },
 };
 
-export default class CollectionFiles extends Component {
+class CollectionFiles extends Component {
   constructor(props) {
     super(props);
 
@@ -73,8 +75,7 @@ export default class CollectionFiles extends Component {
         this.setState({ filesError: null });
         this.props.updateCollection(
           {
-            param: 'fileGroups',
-            value: {
+            fileGroups: {
               ...this.props.collection.fileGroups,
               [fileGroupId]: newFiles,
             },
@@ -105,8 +106,7 @@ export default class CollectionFiles extends Component {
 
           this.props.updateCollection(
             {
-              param: 'fileGroups',
-              value: {
+              fileGroups: {
                 ...groups,
               },
             },
@@ -125,8 +125,7 @@ export default class CollectionFiles extends Component {
 
       this.props.updateCollection(
         {
-          param: 'fileGroups',
-          value: {
+          fileGroups: {
             ...groups,
           },
         },
@@ -140,15 +139,17 @@ export default class CollectionFiles extends Component {
       const groups = { ...this.props.collection.fileGroups };
       delete groups[groupId];
 
-      this.props.updateCollection(
-        {
-          param: 'fileGroups',
-          value: {
-            ...groups,
+      // Props delete assocCons featuring groupId
+      this.props.unmapAssociatedConsortia(this.props.collection.associatedConsortia)
+      .then(() => {
+        this.props.updateCollection(
+          {
+            fileGroups: { ...groups },
+            associatedConsortia: [],
           },
-        },
-        this.props.saveCollection
-      );
+          this.props.saveCollection
+        );
+      });
     };
   }
 
@@ -305,6 +306,7 @@ export default class CollectionFiles extends Component {
 CollectionFiles.propTypes = {
   collection: PropTypes.object,
   saveCollection: PropTypes.func.isRequired,
+  unmapAssociatedConsortia: PropTypes.func.isRequired,
   updateCollection: PropTypes.func.isRequired,
 };
 
@@ -312,3 +314,4 @@ CollectionFiles.defaultProps = {
   collection: null,
 };
 
+export default connect(null, { unmapAssociatedConsortia })(CollectionFiles);

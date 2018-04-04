@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { Button, Glyphicon, Tabs, Tab, Well } from 'react-bootstrap';
+import TimeStamp from 'react-timestamp';
 import BrowserHistory from 'react-router/lib/browserHistory';
 import Box from './displays/box-plot';
 import Scatter from './displays/scatter-plot';
@@ -13,7 +14,9 @@ class Result extends Component {
     super(props);
 
     this.state = {
-      activeResult: {},
+      run: {},
+      computationOutput: {},
+      displayTypes: [],
       plotData: [],
       dummyData: [],
     };
@@ -22,28 +25,40 @@ class Result extends Component {
   componentDidMount() {
     this.props.getLocalRun(this.props.params.resultId)
       .then((run) => {
-        const plotData = [];
-        if (run.pipelineSnapshot) {
-          // Checking display type of computation
-          plotData.push(run.results);
-        }
-        if (run.results && run.results.type === 'scatter_plot') {
+        let plotData = {};
+
+        // Checking display type of computation
+        const stepsLength = run.pipelineSnapshot.steps.length;
+        const displayTypes = run.pipelineSnapshot.steps[stepsLength - 1]
+            .computations[0].computation.display;
+        this.setState({
+          computationOutput: run.pipelineSnapshot.steps[stepsLength - 1]
+            .computations[0].computation.output,
+          displayTypes,
+        });
+
+        if (displayTypes.findIndex(disp => disp.type === 'scatter_plot') > -1) {
+          plotData.testData = [];
           run.results.plots.map(result => (
             result.coordinates.map(val => (
-              plotData.push({
+              plotData.testData.push({
                 name: result.title,
                 x: val.x,
                 y: val.y,
               })
             )
           )));
-        } else if (run.results && run.results.type === 'box_plot') {
+        } else if (displayTypes.findIndex(disp => disp.type === 'box_plot') > -1) {
+          plotData.testData = [];
           run.results.x.map(val => (
-            plotData.push(val)
+            plotData.testData.push(val)
           ));
+        } else {
+          plotData = run.results;
         }
+
         this.setState({
-          activeResult: run,
+          run,
           plotData,
           dummyData: [14, 15, 16, 16, 17, 17, 17, 17, 17, 18, 18, 18, 18, 18, 18, 19,
             19, 19, 20, 20, 20, 20, 20, 20, 21, 21, 22, 23, 24, 24, 29],
@@ -52,48 +67,98 @@ class Result extends Component {
   }
 
   render() {
-    const { activeResult } = this.state;
+    const { displayTypes, run } = this.state;
+    const { consortia } = this.props;
+    const consortium = consortia.find(c => c.id === run.consortiumId);
+    let stepsLength = -1;
+    let covariates = [];
+    if (run.pipelineSnapshot) {
+      stepsLength = run.pipelineSnapshot.steps.length;
+    }
+
+    if (stepsLength > 0 && run.pipelineSnapshot.steps[stepsLength - 1].inputMap) {
+      covariates = run.pipelineSnapshot.steps[stepsLength - 1]
+        .inputMap.covariates.ownerMappings.map(m => m.name);
+    }
+
     return (
       <div>
         <Button className="custom" onClick={BrowserHistory.goBack}>
           <Glyphicon glyph="glyphicon glyphicon-arrow-left" />
         </Button>
-        {(activeResult && activeResult.results && activeResult.results.type === 'box_plot') &&
-          <Tabs defaultActiveKey={1} id="uncontrolled-tab-example">
-            <Tab eventKey={1} title="Box-Plot View">
-              <Box
-                plotData={this.state.plotData}
+
+        <Well bsSize="small" style={{ marginTop: 10 }}>
+          <h2 style={{ marginTop: 0 }}>
+            {consortium && run.pipelineSnapshot && (
+              <span>{`Results: ${consortium.name} || ${run.pipelineSnapshot.name}`}</span>
+            )}
+          </h2>
+          {run.startDate &&
+            <div>
+              <span className="bold">Start date: </span>
+              <TimeStamp
+                time={run.startDate / 1000}
+                precision={2}
+                autoUpdate={10}
+                format="full"
               />
-            </Tab>
-            <Tab eventKey={2} title="Table View">
-              <Table
-                plotData={this.state.plotData}
+            </div>
+          }
+          {run.endDate &&
+            <div>
+              <span className="bold">End date: </span>
+              <TimeStamp
+                time={run.endDate / 1000}
+                precision={2}
+                autoUpdate={10}
+                format="full"
               />
-            </Tab>
-          </Tabs>
-      }
-        {activeResult && activeResult.results && activeResult.results.type === 'scatter_plot' &&
-          <Tabs defaultActiveKey={1} id="uncontrolled-tab-example">
-            <Tab eventKey={1} title="Scatter-Plot View">
-              <Scatter
-                plotData={this.state.plotData}
-              />
-            </Tab>
-            <Tab eventKey={2} title="Table View">
-              <Table
-                plotData={this.state.plotData}
-              />
-            </Tab>
-          </Tabs>
-        }
-        {activeResult && activeResult.results && !activeResult.results.type &&
-          <Table
-            plotData={this.state.plotData}
-          />
-        }
-        {activeResult && activeResult.error &&
+            </div>
+          }
+          {stepsLength > -1 && covariates.length > 0 &&
+            <div>
+              <span className="bold">Covariates: </span>
+              {covariates.join(', ')}
+            </div>
+          }
+        </Well>
+
+        <Tabs defaultActiveKey={0} id="uncontrolled-tab-example">
+          {run && run.results && displayTypes.map((disp, index) => {
+            const title = disp.type.replace('_', ' ')
+              .replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+            return (
+              <Tab
+                key={disp.type}
+                eventKey={index}
+                title={`${title} View`}
+                style={{ padding: 10 }}
+              >
+                {disp.type === 'box_plot' &&
+                  <Box
+                    plotData={this.state.plotData.testData}
+                  />
+                }
+                {disp.type === 'scatter_plot' &&
+                  <Scatter
+                    plotData={this.state.plotData.testData}
+                  />
+                }
+                {disp.type === 'table' &&
+                  <Table
+                    computationOutput={this.state.computationOutput}
+                    plotData={this.state.plotData}
+                    tables={disp.tables ? disp.tables : null}
+                  />
+                }
+              </Tab>
+            );
+          })}
+        </Tabs>
+
+        {run && run.error &&
           <Well style={{ color: 'red' }}>
-            {JSON.stringify(activeResult.error.error.error, null, 2)}
+            {JSON.stringify(run.error.error.error, null, 2)}
           </Well>
         }
       </div>
@@ -102,12 +167,9 @@ class Result extends Component {
 }
 
 Result.propTypes = {
+  consortia: PropTypes.array.isRequired,
   getLocalRun: PropTypes.func.isRequired,
   params: PropTypes.object.isRequired,
-};
-
-Result.defaultProps = {
-  activeResult: null,
 };
 
 const mapStateToProps = ({ auth }) => {
