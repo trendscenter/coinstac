@@ -358,6 +358,8 @@ class Dashboard extends Component {
     ipcRenderer.removeAllListeners('docker-out');
     ipcRenderer.removeAllListeners('docker-pull-complete');
     ipcRenderer.removeAllListeners('local-run-complete');
+    ipcRenderer.removeAllListeners('local-run-error');
+    ipcRenderer.removeAllListeners('local-pipeline-state-update');
   }
 
   render() {

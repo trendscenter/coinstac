@@ -140,8 +140,24 @@ helperFunctions.getRethinkConnection()
       consortiumId: 'test-cons-2',
       date: '1/22/2018',
       type: 'decentralized',
+      pipelineSnapshot: {
+        name: 'Scatter Plot Test',
+        steps: [
+          {
+            computations: [
+              {
+                computation: {
+                  display: [
+                    { type: 'scatter_plot' },
+                    { type: 'table' },
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+      },
       results: {
-        type: 'scatter_plot',
         label: '',
         x_labels: ['-100', '80'],
         y_labels: ['-80', '80'],
@@ -275,8 +291,24 @@ helperFunctions.getRethinkConnection()
       consortiumId: 'test-cons-2',
       date: '1/23/2018',
       type: 'decentralized',
+      pipelineSnapshot: {
+        name: 'Box Plot Test',
+        steps: [
+          {
+            computations: [
+              {
+                computation: {
+                  display: [
+                    { type: 'box_plot' },
+                    { type: 'table' },
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+      },
       results: {
-        type: 'box_plot',
         label: '',
         x: [
           {

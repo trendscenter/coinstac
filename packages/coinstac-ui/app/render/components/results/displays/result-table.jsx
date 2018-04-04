@@ -1,13 +1,15 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import * as d3 from 'd3';
-import ReactFauxDOM from 'react-faux-dom';
+import {
+  Table,
+} from 'react-bootstrap';
 
-class Table extends Component {
+class TableResult extends Component {
   constructor(props) {
     super(props);
     this.drawTable = this.drawTable.bind(this);
   }
+
   drawTable() {
     const { plotData } = this.props;
     let sortAscending = true;
@@ -66,22 +68,106 @@ class Table extends Component {
     return el.toReact();
   }
 
+  makeTable(table, data, outputProps, heading) {
+    const tableContents = [];
+    if (heading) {
+      tableContents.push(<h3 key={heading}>{heading}</h3>);
+    }
+
+    if ((table && table.subtables && Array.isArray(data))) {
+      data.forEach((d) => {
+        tableContents.push(
+          this.makeTable(table, d, outputProps, null)
+        );
+      });
+    } else if (table && table.subtables && typeof table.subtables === 'object') {
+      table.subtables.forEach(t =>
+        tableContents.push(
+          this.makeTable(t, data[t.source], outputProps.items[t.source], outputProps.items[t.source].label)
+        )
+      );
+    } else if (table && table.subtables && table.subtables === 'by-key') {
+      Object.entries(data).forEach((keyValPair) => {
+        tableContents.push(
+          this.makeTable(null, keyValPair[1], outputProps, keyValPair[0])
+        );
+      });
+    } else if (!table || (table && !table.subtables)) {
+      const keyValPairs = Object.entries(data);
+      let keys = [];
+
+      if (Array.isArray(data)) {
+        keys = Object.entries(data[0]);
+      }
+
+      tableContents.push(
+        <Table responsive key={`${heading}-table`}>
+          {Array.isArray(data) &&
+            <thead>
+              {keys.map(key => <th>{key[0]}</th>)}
+            </thead>
+          }
+          <tbody>
+            {Array.isArray(data) &&
+              data.map((d, index) => {
+                return (
+                  <tr key={`${index}-row`}>
+                    {keys.map(key =>
+                    (
+                      <td>{d[key[0]]}</td>
+                    ))}
+                  </tr>
+                );
+              })
+            }
+            {!Array.isArray(data) &&
+              keyValPairs.map(pair =>
+                (
+                  <tr key={`${pair[0]}-row`}>
+                    <td className="bold">
+                      {outputProps ? outputProps.items[pair[0]].label : pair[0]}
+                    </td>
+                    <td>{pair[1]}</td>
+                  </tr>
+                )
+              )
+            }
+          </tbody>
+        </Table>
+      );
+    }
+
+    return tableContents;
+  }
+
   render() {
+    const { computationOutput, plotData, tables } = this.props;
+
     return (
-      <div id="d3-Table">
-        {this.drawTable()}
+      <div>
+        {tables && tables.map(t =>
+          this.makeTable(
+            t,
+            plotData[t.source],
+            computationOutput[t.source],
+            computationOutput[t.source].label
+          )
+        )}
+        {!tables && this.makeTable(null, plotData, null, 'Test Data')}
       </div>
     );
   }
 }
 
-Table.propTypes = {
-  plotData: PropTypes.array,
+TableResult.propTypes = {
+  computationOutput: PropTypes.object,
+  plotData: PropTypes.array.isRequired,
+  tables: PropTypes.array,
 };
 
-Table.defaultProps = {
-  plotData: null,
+TableResult.defaultProps = {
+  computationOutput: null,
+  tables: null,
 };
 
-export default Table;
-
+export default TableResult;
