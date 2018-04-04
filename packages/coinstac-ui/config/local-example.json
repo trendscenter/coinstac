@@ -1,11 +1,13 @@
 {
   "apiServer": {
     "hostname": "localhost",
+    "pathname": "",
     "port": "3100",
     "protocol": "http:"
   },
   "subApiServer": {
     "hostname": "localhost",
+    "pathname": "",
     "port": "3100",
     "protocol": "ws:"
   },
