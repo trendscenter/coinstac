@@ -1,5 +1,5 @@
 import { isEqual } from 'lodash';
-import { dirname, resolve, extname } from 'path';
+import { dirname, resolve, extname, sep } from 'path';
 import { applyAsyncLoading } from './loading';
 import localDB from '../local-db';
 
@@ -64,10 +64,15 @@ function iteratePipelineSteps(consortium, filesByGroup, baseDirectory) {
               && consortium.stepIO[sIndex][key][mappingIndex].column) {
             let filepaths = filesByGroup[consortium.stepIO[sIndex][key][mappingIndex].groupId];
 
+            const e = new RegExp(/[-\/\\^$*+?.()|[\]{}]/g); // eslint-disable-line no-useless-escape
+            const escape = (string) => {
+              return string.replace(e, '\\$&');
+            };
             if (filepaths) {
               filepaths = filepaths.map((path) => {
                 if (extname(path[0]) !== '') {
-                  return resolve(baseDirectory, path[0]).replace(/\//g, '-');
+                  const pathsep = new RegExp(`${escape(sep)}|:`, 'g');
+                  return resolve(baseDirectory, path[0]).replace(pathsep, '-');
                 }
                 return '';
               });
