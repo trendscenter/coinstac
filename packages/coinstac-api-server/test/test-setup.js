@@ -64,7 +64,7 @@ helperFunctions.getRethinkConnection()
               ownerMappings: [
                 {
                   type: 'FreeSurfer',
-                  value: ['3rd-Ventricle'],
+                  value: ['3rd-Ventricle', '4th-Ventricle', '5th-Ventricle'],
                 },
               ],
             },
