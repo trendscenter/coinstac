@@ -1,4 +1,5 @@
 const Docker = require('dockerode');
+const { reduce } = require('lodash');
 const request = require('request-promise-native');
 const portscanner = require('portscanner');
 const http = require('http');
@@ -112,7 +113,7 @@ const queueJob = (jobId, input, opts) => {
  * Retrieve list of all local Docker images
  * @return {Object[]} Array of objects containing locally stored Docker images
  */
-const getAllImages = () => {
+const getImages = () => {
   return docker.listImages();
 };
 
@@ -236,6 +237,33 @@ const pullImage = (computation) => {
 };
 
 /**
+ * Generate array of docker pull promises and wait until resolved to return merged output streams
+ * @param {Object[]} comps array of computation objects to download
+ * @param {String} comps.img Docker image name
+ * @param {String} comp.compId Computation ID from app DB
+ * @param {String} comp.compName Computation name from DB
+ * @return {Object} Returns array of objects containing stream and computation parameters
+ */
+const pullImages = (comps) => {
+  const compsP = reduce(comps, (arr, comp) => {
+    arr.push(pullImage(`${comp.img}:latest`));
+    return arr;
+  }, []);
+
+  // Set promise catches to undefined so that failures can be handled as successes: https://davidwalsh.name/promises-results
+  return Promise.all(compsP.map(prom => prom.catch(err => err)))
+  .then((res) => {
+    return comps.map((val, index) =>
+      ({
+        stream: res[index],
+        compId: val.compId,
+        compName: val.compName,
+      })
+    );
+  });
+};
+
+/**
  * Remove the Docker image associated with the image id
  * @param {string} imgId ID of image to remove
  * @return {Promise}
@@ -286,8 +314,8 @@ const stopAllServices = () => {
 };
 
 module.exports = {
-  getAllImages,
-  pullImage,
+  getImages,
+  pullImages,
   removeImage,
   queueJob,
   startService,
