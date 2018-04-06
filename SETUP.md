@@ -46,7 +46,8 @@ Any time you pull in new code, you'll need to rebuild the application.
 The user interface is an [Electron application](http://electron.atom.io/). To run it:
 
 1. Make sure you’re in the _coinstac/packages/coinstac-ui/_ directory.
-2. Run `npm start` to start the UI
+2. If running for the first time: Run `npm install` to make sure all the necessary packages are installed.
+3. Run `npm start` to start the UI
 
 ## Troubleshooting
 
@@ -121,18 +122,26 @@ Follow the general steps above before continuing.
 Create a new file at `coinstac/packages/coinstac-ui/config/local.json` and copy into it the following:
 
    ```json
-  {
-    "apiServer": {
-      "hostname": "localhost",
-      "port": "3100",
-      "protocol": "http:"
-    },
-    "subApiServer": {
-      "hostname": "localhost",
-      "port": "3100",
-      "protocol": "ws:"
-    }
-  }
+   {
+     "apiServer": {
+       "hostname": "localhost",
+       "pathname": "",
+       "port": "3100",
+       "protocol": "http:"
+     },
+     "subApiServer": {
+       "hostname": "localhost",
+       "pathname": "",
+       "port": "3100",
+       "protocol": "ws:"
+     },
+     "pipelineWSServer": {
+       "hostname": "localhost",
+       "pathname": "",
+       "port": "3300",
+       "protocol": "http:"
+     }
+   }
    ```
 
 ## Run Development Environment
