@@ -77,6 +77,20 @@ const queries = {
       }
     }
   `,
+  fetchUser: `
+    {
+      fetchUser(userId: $userId) {
+        ${sharedFields.userMetadata}
+      }
+    }
+  `,
+  fetchAllUsers: `
+    {
+      fetchAllUsers {
+        ${sharedFields.userEmailIds}
+      }
+    }
+  `,
   fetchAllPipelines: `
     {
       fetchAllPipelines {
@@ -107,6 +121,13 @@ const queries = {
     {
       pipelineChanged(pipelineId: $pipelineId) {
         ${sharedFields.pipelineFields}
+      }
+    }
+  `,
+  userChanged: `
+    {
+      userChanged(userId: $userId) {
+        ${sharedFields.userEmailIds}
       }
     }
   `,

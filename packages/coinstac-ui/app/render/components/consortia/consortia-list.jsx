@@ -94,6 +94,7 @@ class ConsortiaList extends Component {
   }
 
   getOptions(member, owner, consortium) {
+    const { auth: { user } } = this.props;
     const actions = [];
     const text = [];
     let isMapped = false;
@@ -190,7 +191,7 @@ class ConsortiaList extends Component {
           key={`${consortium.id}-join-cons-button`}
           bsStyle="primary"
           className="pull-right"
-          onClick={() => this.joinConsortium(consortium.id, consortium.activePipelineId)}
+          onClick={() => this.joinConsortium(consortium.id, consortium.activePipelineId, user.id)}
         >
           Join Consortium
         </Button>
@@ -276,8 +277,8 @@ class ConsortiaList extends Component {
     }
 
     this.props.saveAssociatedConsortia({ id: consortiumId, activePipelineId });
-    this.props.joinConsortium(consortiumId);
     this.props.addUserRole(user.id, 'consortia', consortiumId, 'member');
+    this.props.joinConsortium(consortiumId);
   }
 
   leaveConsortium(consortiumId) {

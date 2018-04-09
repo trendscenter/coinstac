@@ -180,6 +180,20 @@ const resolvers = {
           .then(result => result);
       }
     },
+    /**
+     * Returns single user.
+     * @param {object} args
+     * @param {string} args.userId Requested user ID, restricted to authenticated user for time being
+     * @return {object} Requested user if id present, null otherwise
+     */
+    fetchUser: ({ auth: { credentials } }, args) => {
+      if (args.userId !== credentials.id) {
+        return Boom.unauthorized('Unauthorized action');
+      }
+      
+      return fetchOne('users', credentials.id);
+    },
+    fetchAllUsers: () => fetchAll('users'),
     fetchAllUserRuns: ({ auth: { credentials } }, args) => {
       return helperFunctions.getRethinkConnection()
         .then(connection =>
@@ -372,7 +386,7 @@ const resolvers = {
       const { permissions } = credentials;
       let userId = credentials.id;
 
-      // If adding another person to consortium, check perms
+      // If adding another person from consortium, check perms
       if (args.userId &&
           permissions.consortia[args.consortiumId] &&
           permissions.consortia[args.consortiumId].write
@@ -697,6 +711,19 @@ const resolvers = {
       subscribe: withFilter(
         () => pubsub.asyncIterator('pipelineChanged'),
         (payload, variables) => (!variables.pipelineId || payload.pipelineId === variables.pipelineId)
+      )
+    },
+    /**
+     * User subscription
+     * @param {object} payload
+     * @param {string} payload.userId The user changed
+     * @param {object} variables
+     * @param {string} variables.userId The user listened for
+     */
+    userChanged: {
+      subscribe: withFilter(
+        () => pubsub.asyncIterator('userChanged'),
+        (payload, variables) => (variables.userId || payload.userId === variables.userId)
       )
     },
     /**

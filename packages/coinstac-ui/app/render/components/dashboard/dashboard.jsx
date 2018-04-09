@@ -3,6 +3,7 @@ import { compose, graphql, withApollo } from 'react-apollo';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { ipcRenderer } from 'electron';
+import { isEqual } from 'lodash';
 import DashboardNav from './dashboard-nav';
 import UserAccountController from '../user/user-account-controller';
 import {
@@ -19,20 +20,23 @@ import {
   pullComputations,
   updateDockerOutput,
 } from '../../state/ducks/docker';
-import { updateUserConsortiaStatuses } from '../../state/ducks/auth';
+import { updateUserPerms, updateUserConsortiaStatuses } from '../../state/ducks/auth';
 import {
   COMPUTATION_CHANGED_SUBSCRIPTION,
   CONSORTIUM_CHANGED_SUBSCRIPTION,
   FETCH_ALL_COMPUTATIONS_QUERY,
   FETCH_ALL_CONSORTIA_QUERY,
   FETCH_ALL_PIPELINES_QUERY,
+  FETCH_USER_QUERY,
   FETCH_ALL_USER_RUNS_QUERY,
   PIPELINE_CHANGED_SUBSCRIPTION,
+  USER_CHANGED_SUBSCRIPTION,
   USER_RUN_CHANGED_SUBSCRIPTION,
   UPDATE_USER_CONSORTIUM_STATUS_MUTATION,
 } from '../../state/graphql/functions';
 import {
   getAllAndSubProp,
+  getSelectAndSubProp,
 } from '../../state/graphql/props';
 
 class Dashboard extends Component {
@@ -46,12 +50,15 @@ class Dashboard extends Component {
       unsubscribeConsortia: null,
       unsubscribePipelines: null,
       unsubscribeRuns: null,
+      unsubscribeUsers: null,
     };
   }
 
   componentDidMount() {
     const { auth: { user } } = this.props;
     const { router } = this.context;
+
+    this.setState({ unsubscribeUsers: this.props.subscribeToUsers(user.id) });
 
     process.nextTick(() => {
       if (!user.email.length) {
@@ -128,6 +135,10 @@ class Dashboard extends Component {
 
     if (nextProps.remoteRuns && !this.state.unsubscribeRuns) {
       this.setState({ unsubscribeRuns: this.props.subscribeToUserRuns(null) });
+    }
+
+    if (nextProps.activeUser && !isEqual(nextProps.activeUser.perms, user.perms)) {
+      this.props.updateUserPerms({ user: nextProps.activeUser });
     }
 
     if (nextProps.remoteRuns) {
@@ -354,6 +365,7 @@ class Dashboard extends Component {
     this.state.unsubscribeConsortia();
     this.state.unsubscribePipelines();
     this.state.unsubscribeRuns();
+    this.state.unsubscribeUsers();
 
     ipcRenderer.removeAllListeners('docker-out');
     ipcRenderer.removeAllListeners('docker-pull-complete');
@@ -431,6 +443,7 @@ Dashboard.propTypes = {
   subscribeToComputations: PropTypes.func.isRequired,
   subscribeToConsortia: PropTypes.func.isRequired,
   subscribeToPipelines: PropTypes.func.isRequired,
+  subscribeToUsers: PropTypes.func.isRequired,
   subscribeToUserRuns: PropTypes.func.isRequired,
   syncRemoteLocalConsortia: PropTypes.func.isRequired,
   syncRemoteLocalPipelines: PropTypes.func.isRequired,
@@ -477,6 +490,14 @@ const DashboardWithData = compose(
     'subscribeToPipelines',
     'pipelineChanged'
   )),
+  graphql(FETCH_USER_QUERY, getSelectAndSubProp(
+    'activeUser',
+    USER_CHANGED_SUBSCRIPTION,
+    'userId',
+    'subscribeToUsers',
+    'userChanged',
+    'fetchUser'
+  )),
   graphql(UPDATE_USER_CONSORTIUM_STATUS_MUTATION, {
     props: ({ ownProps, mutate }) => ({
       updateUserConsortiumStatus: (consortiumId, status) => mutate({
@@ -502,6 +523,7 @@ export default connect(mapStateToProps,
     notifyWarning,
     pullComputations,
     saveLocalRun,
+    updateUserPerms,
     syncRemoteLocalConsortia,
     syncRemoteLocalPipelines,
     updateDockerOutput,

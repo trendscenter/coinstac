@@ -90,6 +90,10 @@ const sharedFields = {
     permissions
     consortiaStatuses
   `,
+  userEmailIds: `
+    id
+    email
+  `,
   resultFields: `
     id
     title
