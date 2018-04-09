@@ -25,7 +25,7 @@ const UPDATE_USER_CONSORTIA_STATUSES = 'UPDATE_USER_CONSORTIA_STATUSES';
 const UPDATE_USER_PERMS = 'UPDATE_USER_PERMS';
 
 // Action Creators
-const setUser = user => ({ type: SET_USER, payload: user });
+export const setUser = user => ({ type: SET_USER, payload: user });
 export const clearError = () => ({ type: CLEAR_ERROR, payload: null });
 export const updateUserPerms = perms => ({ type: UPDATE_USER_PERMS, payload: perms });
 export const updateUserConsortiaStatuses = statuses =>

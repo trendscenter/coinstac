@@ -33,6 +33,7 @@
     "react-apollo": "^1.4.16",
     "react-avatar": "^2.5.1",
     "react-bootstrap": "^0.31.5",
+    "react-bootstrap-typeahead": "^3.0.1",
     "react-dnd": "^2.6.0",
     "react-dnd-html5-backend": "^2.6.0",
     "react-dom": "^15.6.2",
