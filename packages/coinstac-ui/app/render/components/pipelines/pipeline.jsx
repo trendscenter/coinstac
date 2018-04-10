@@ -35,6 +35,7 @@ import {
   getDocumentByParam,
   saveDocumentProp,
 } from '../../state/graphql/props';
+import { notifySuccess } from '../../state/ducks/notifyAndLog';
 
 const computationTarget = {
   drop() {
@@ -382,6 +383,10 @@ class Pipeline extends Component {
         pipeline,
         startingPipeline: pipeline,
       });
+
+      this.props.notifySuccess({
+        message: `Pipeline Saved.`
+      });
     })
     .catch(console.log);
   }
@@ -576,6 +581,7 @@ Pipeline.propTypes = {
   computations: PropTypes.array.isRequired,
   connectDropTarget: PropTypes.func.isRequired,
   consortia: PropTypes.array.isRequired,
+  notifySuccess: PropTypes.func.isRequired,
   params: PropTypes.object.isRequired,
   runs: PropTypes.array,
   savePipeline: PropTypes.func.isRequired,
@@ -594,9 +600,11 @@ const PipelineWithData = compose(
   graphql(SAVE_PIPELINE_MUTATION, saveDocumentProp('savePipeline', 'pipeline'))
 )(Pipeline);
 
-export default compose(
+const PipelineWithAlert = compose(
   connect(mapStateToProps),
   DragDropContext(HTML5Backend),
   DropTarget(ItemTypes.COMPUTATION, computationTarget, collect),
   withApollo
 )(PipelineWithData);
+
+export default connect(mapStateToProps,{ notifySuccess })(PipelineWithAlert);
