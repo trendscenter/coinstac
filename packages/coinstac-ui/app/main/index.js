@@ -232,7 +232,7 @@ loadConfig()
       filters = [
         {
           name: 'Images',
-          extensions: ['jpeg', 'jpg', 'png'],
+          extensions: ['jpeg', 'jpg', 'png', 'nii'],
         },
         {
           name: 'Files',

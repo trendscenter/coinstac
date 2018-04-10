@@ -1,20 +1,20 @@
 {
   "meta": {
-    "name": "MSR FreeSurfer",
+    "name": "Single Shot Regression VBM MCIC",
     "version": "v1.0.0",
     "repository": "https:\/\/github.com\/MRN-Code\/ssr_test",
-    "description": "Multi-shot Regression on FreeSurfer Data"
+    "description": "Single Shot Regression with Data from Multiple Sites"
   },
   "computation": {
     "type": "docker",
-    "dockerImage": "msr_fsl",
+    "dockerImage": "ssr_vbm_mcic",
     "command": [
       "python",
       "\/computation\/local.py"
     ],
     "remote": {
       "type": "docker",
-      "dockerImage": "msr_fsl",
+      "dockerImage": "ssr_vbm_mcic",
       "command": [
         "python",
         "\/computation\/remote.py"
@@ -35,12 +35,12 @@
       {
         "label": "Covariates",
         "type": "array",
-        "items": ["boolean", "number"]
+        "items": ["boolean", "number", "string"]
       },
       "data": {
         "label": "Data",
         "type": "array",
-        "items": ["FreeSurfer"],
+        "items": ["NIfTI"],
         "extensions": [["csv", "txt"]]
       }
     },
@@ -100,10 +100,6 @@
                 "type": "array"
               }
             }
-          },
-          "ROI": {
-            "label": "Region of Interest",
-            "type": "string"
           }
         }
       }
@@ -116,12 +112,10 @@
             "source": "regressions",
             "subtables": [
               {
-                "source": "global_stats",
-                "subtitle": "ROI"
+                "source": "global_stats"
               },
               {
                 "source": "local_stats",
-                "subtitle": "ROI",
                 "subtables": "by-key"
               }
             ]

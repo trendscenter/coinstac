@@ -15,6 +15,8 @@ module.exports = {
         .items(Joi.string().required())
         .min(1)
         .required(),
+      display: Joi.array()
+        .items(Joi.object()).required(),
       dockerImage: Joi.string().required(),
       input: Joi.any().required(),
       output: Joi.any().required(),
