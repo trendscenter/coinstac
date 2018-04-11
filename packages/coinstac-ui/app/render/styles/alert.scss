@@ -16,16 +16,3 @@
     border: none;
   }
 }
-
-/**
- * Notifications.
- *
- * Override react-notification-system-redux component styles.
- */
-
-.notification {
-  border-radius: 0 !important;
-  border: none !important;
-  opacity: 0.75 !important;
-  box-shadow: none !important;
-}
