@@ -1,34 +1,53 @@
-#!/usr/bin/python
+import tornado.ioloop
+import tornado.web
+import tornado.process
+from tornado.gen import Return, coroutine
+from tornado.concurrent import Future
+import json, cgi
 
-from gevent import monkey
-# monkey patching subprocess is borked for non-blocking file reads
-# https://github.com/gevent/gevent/issues/222
-monkey.patch_all(subprocess=False)
-from bottle import route, run, app, request, response, abort, error
-from subprocess import Popen, PIPE, STDOUT
-import json, fcntl, select, os
 
-app().catchall = False
+class MainHandler(tornado.web.RequestHandler):
+    @coroutine
+    def post(self):
+        params = tornado.escape.json_decode(self.request.body)
+        cmd = params["command"]
+        code, output, error = yield self.callCommand(cmd)
+        if code == 0:
+            self.write(output)
+        else:
+            raise tornado.web.HTTPError(status_code=499, reason=error)
 
-@route('/run', method='POST')
-def runCommand():
-    cmd = request.json['command']
-    p = Popen(cmd, stdin=False, stdout=PIPE, stderr=PIPE)
-    fcntl.fcntl(p.stdout, fcntl.F_SETFL, os.O_NONBLOCK)
-    select.select([p.stdout], [], [])
-    fcntl.fcntl(p.stderr, fcntl.F_SETFL, os.O_NONBLOCK)
-    select.select([p.stderr], [], [])
-    output = p.stdout.read()
-    error = p.stderr.read()
-    if not error:
-       # status is overwritten on a mult reqs if one fails :-(
-       response.status = 200
-       return output
-    else:
-       abort(499, error)
+    @coroutine
+    def callCommand(self, cmd):
+        subProc = tornado.process.Subprocess(
+          [cmd[0], cmd[1]],
+          stdin=tornado.process.Subprocess.STREAM,
+          stdout=tornado.process.Subprocess.STREAM,
+          stderr=tornado.process.Subprocess.STREAM
+        )
 
-@error(499)
-def kaput(error):
-    return json.dumps({ 'error': error.body.decode("utf-8")  })
+        yield subProc.stdin.write(bytes(cmd[2], 'UTF-8'))
+        subProc.stdin.close()
 
-run(host='0.0.0.0', port=8881, server='gevent')
+        code, result, error = yield [
+          subProc.wait_for_exit(raise_error=False),
+          subProc.stdout.read_until_close(),
+          subProc.stderr.read_until_close()
+        ]
+        message = cgi.escape(str(error, 'UTF-8'), quote=True).\
+           replace(u'\n', u'<br />').\
+           replace(u'\t', u'&emsp;').\
+           replace(u'  ', u' &nbsp;')
+        raise Return((code, result, message))
+
+
+def make_app():
+    return tornado.web.Application([
+        (r"/run", MainHandler),
+    ])
+
+if __name__ == "__main__":
+    app = make_app()
+    app.listen(8881)
+    print('compuation server starting')
+    tornado.ioloop.IOLoop.current().start()
