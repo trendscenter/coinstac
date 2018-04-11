@@ -119,17 +119,25 @@ class ConsortiaList extends Component {
     );
 
     // Add owner/member list
-    const memberAvatars = consortium.members.map(member =>
-      <MemberAvatar key={`${member}-avatar`} consRole="Member" name={member} showDetails width={40} />
-    );
-    const ownerAvatars = consortium.owners.map(owner =>
-      <MemberAvatar key={`${owner}-avatar`} consRole="Owner" name={owner} showDetails width={40} />
+    const consortiumUsers = [];
+    consortium.owners.forEach(user => consortiumUsers.push({id: user, owner: true, member: true }));
+    consortium.members
+      .filter(user => consortiumUsers.findIndex(consUser => consUser.id === user) === -1)
+      .forEach(user => consortiumUsers.push({ id: user, member: true }));
+    const avatars = consortiumUsers.map(user =>
+      <MemberAvatar
+        key={`${user.id}-avatar`}
+        consRole={user.owner ? "Owner" : "Member"}
+        name={user.id}
+        showDetails
+        width={40}
+      />
     );
 
     text.push(
       <div key="avatar-container">
         <span className="bold">Owner(s)/Members: </span><br />
-        {ownerAvatars.concat(memberAvatars)}
+        {avatars}
       </div>
     );
 

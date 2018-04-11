@@ -75,7 +75,9 @@ class ConsortiumTabs extends Component {
       const { activeConsortium: { __typename, ...other } } = nextProps;
       const consortiumUsers = [];
       nextProps.activeConsortium.owners.forEach(user => consortiumUsers.push({ id: user, owner: true, member: true }));
-      nextProps.activeConsortium.members.forEach(user => consortiumUsers.push({ id: user, member: true }));
+      nextProps.activeConsortium.members
+        .filter(user => consortiumUsers.findIndex(consUser => consUser.id === user) === -1)
+        .forEach(user => consortiumUsers.push({ id: user, member: true }));
 
       this.setState({ consortium: { ...other }, consortiumUsers });
     }
@@ -103,6 +105,7 @@ class ConsortiumTabs extends Component {
     return () => {
       this.props.leaveConsortium(this.state.consortium.id, user.id);
       this.props.removeUserRole(user.id, 'consortia', this.state.consortium.id, 'member');
+      this.props.removeUserRole(user.id, 'consortia', this.state.consortium.id, 'owner');
     };
   }
 
@@ -162,6 +165,8 @@ class ConsortiumTabs extends Component {
         <Tabs defaultActiveKey={1} id="consortium-tabs">
           <Tab eventKey={1} title="About" style={styles.tab}>
             <ConsortiumAbout
+              addUserRole={this.props.addUserRole}
+              removeUserRole={this.props.removeUserRole}
               consortium={this.state.consortium}
               consortiumUsers={this.state.consortiumUsers}
               addMemberToConsortium={this.addMemberToConsortium}
@@ -169,6 +174,7 @@ class ConsortiumTabs extends Component {
               saveConsortium={this.saveConsortium}
               updateConsortium={this.updateConsortium}
               owner={isOwner}
+              user={user}
               users={users}
             />
           </Tab>
