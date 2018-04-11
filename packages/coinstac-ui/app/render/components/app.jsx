@@ -4,6 +4,20 @@ import { connect } from 'react-redux';
 import Notifications from 'react-notification-system-redux';
 import { autoLogin } from '../state/ducks/auth';
 
+const styles = {
+  notifications: {
+    NotificationItem: {
+      DefaultStyle: {
+        borderRadius: 0,
+        border: 'none',
+        opacity: 0.75,
+        boxShadow: 'none',
+        fontWeight: 'bold', // This might not be necessary. Use your judgement.
+      },
+    }
+  }
+};
+
 class App extends Component { // eslint-disable-line react/prefer-stateless-function
   constructor(props) {
     super(props);
@@ -34,6 +48,7 @@ class App extends Component { // eslint-disable-line react/prefer-stateless-func
 
         <Notifications
           notifications={notifications}
+          style={styles.notifications}
         />
       </div>
     );

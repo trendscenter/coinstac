@@ -8,7 +8,7 @@ import CollectionFiles from './collection-files';
 import CollectionConsortia from './collection-consortia';
 import { getAssociatedConsortia, getCollectionFiles, incrementRunCount, saveAssociatedConsortia, saveCollection } from '../../state/ducks/collections';
 import { getRunsForConsortium, saveLocalRun } from '../../state/ducks/runs';
-import { notifyInfo } from '../../state/ducks/notifyAndLog';
+import { notifyInfo, notifySuccess } from '../../state/ducks/notifyAndLog';
 
 const styles = {
   tab: {
@@ -50,6 +50,9 @@ class CollectionTabs extends Component {
     }
 
     this.props.saveCollection(this.state.collection);
+    this.props.notifySuccess({
+      message: `Collection Saved.`
+    });
   }
 
   updateAssociatedConsortia(cons) {
@@ -178,6 +181,7 @@ CollectionTabs.propTypes = {
   getRunsForConsortium: PropTypes.func.isRequired,
   incrementRunCount: PropTypes.func.isRequired,
   notifyInfo: PropTypes.func.isRequired,
+  notifySuccess: PropTypes.func.isRequired,
   params: PropTypes.object.isRequired,
   router: PropTypes.object.isRequired,
   saveAssociatedConsortia: PropTypes.func.isRequired,
@@ -196,6 +200,7 @@ export default connect(mapStateToProps,
     getRunsForConsortium,
     incrementRunCount,
     notifyInfo,
+    notifySuccess,
     saveAssociatedConsortia,
     saveCollection,
     saveLocalRun,
