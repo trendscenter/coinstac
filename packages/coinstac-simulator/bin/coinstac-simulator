@@ -13,6 +13,7 @@ const glob = util.promisify(require('glob'));
 const path = require('path');
 const blessed = require('blessed');
 const bc = require('blessed-contrib');
+const hermit = require('hermit');
 
 const pipeSpecFactory = (inputSpec, mode, comp) => {
   return {
@@ -217,8 +218,11 @@ readFile(program.compspec ? program.compspec : 'compspec.json')
 })
 .catch((err) => {
   screen.destroy();
-  console.log(`Simulator run failed!\n ${err.message}`);
-  console.log(`Fun error details:\n ${err.stack}`);
-  process.exit(1);
+  hermit(err.error, (err, res) => {
+    console.log('Simulator run failed!');
+    console.log('Fun error details:\n');
+    console.log(res);
+    process.exit(1);
+  });
 });
 /* eslint-enable no-console */
