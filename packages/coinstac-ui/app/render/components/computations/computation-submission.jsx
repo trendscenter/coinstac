@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import { graphql } from 'react-apollo';
+import { compose, graphql, withApollo } from 'react-apollo';
 import {
   Alert,
   Button,
@@ -11,6 +12,7 @@ import {
   ADD_COMPUTATION_MUTATION,
 } from '../../state/graphql/functions';
 import { saveDocumentProp } from '../../state/graphql/props';
+import { notifySuccess } from '../../state/ducks/notifyAndLog';
 
 const styles = {
   topMargin: { marginTop: 10 },
@@ -47,6 +49,11 @@ class ComputationSubmission extends Component { // eslint-disable-line
       this.setState({ activeSchema: {} });
       if (res.data.addComputation) {
         this.setState({ submissionSuccess: true });
+        this.props.router.push('/dashboard/computations');
+        this.props.notifySuccess({
+          message: 'Computation Submission Successful',
+          autoDismiss: 5,
+        });
       } else {
         this.setState({ submissionSuccess: false });
       }
@@ -94,12 +101,6 @@ class ComputationSubmission extends Component { // eslint-disable-line
           </Alert>)
         }
 
-        {!this.state.activeSchema.meta && this.state.submissionSuccess &&
-          <Alert bsStyle="success" style={styles.topMargin}>
-            <strong>Success!</strong> Try another?
-          </Alert>
-        }
-
         {!this.state.activeSchema.meta && this.state.submissionSuccess === false &&
           <Alert bsStyle="danger" style={styles.topMargin}>
             <strong>Error!</strong> Try again?
@@ -117,7 +118,21 @@ class ComputationSubmission extends Component { // eslint-disable-line
 }
 
 ComputationSubmission.propTypes = {
+  notifySuccess: PropTypes.func.isRequired,
   submitSchema: PropTypes.func.isRequired,
 };
 
-export default graphql(ADD_COMPUTATION_MUTATION, saveDocumentProp('submitSchema', 'computationSchema'))(ComputationSubmission);
+const mapStateToProps = ({ notifySuccess, submitSchema }) => {
+  return { notifySuccess, submitSchema };
+};
+
+const ComputationSubmissionWithAlert = compose(
+graphql(ADD_COMPUTATION_MUTATION, saveDocumentProp('submitSchema', 'computationSchema')),
+withApollo
+)(ComputationSubmission);
+
+export default connect(mapStateToProps,
+  {
+    notifySuccess
+  }
+)(ComputationSubmissionWithAlert);

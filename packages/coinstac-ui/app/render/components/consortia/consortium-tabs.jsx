@@ -22,6 +22,7 @@ import {
   REMOVE_USER_ROLE_MUTATION,
   SAVE_CONSORTIUM_MUTATION,
 } from '../../state/graphql/functions';
+import { notifySuccess } from '../../state/ducks/notifyAndLog';
 
 const styles = {
   tab: {
@@ -109,6 +110,18 @@ class ConsortiumTabs extends Component {
         consortium: { ...other },
         unsubscribeConsortia,
       });
+
+      this.props.notifySuccess({
+        message: 'Consortium Saved',
+        autoDismiss: 5,
+        action: {
+          label: 'View Consortia List',
+          callback: () => {
+            this.props.router.push('/dashboard/consortia/');
+          },
+        },
+      });
+
     })
     .catch(({ graphQLErrors }) => {
       console.log(graphQLErrors);
@@ -192,6 +205,7 @@ ConsortiumTabs.propTypes = {
   auth: PropTypes.object.isRequired,
   consortia: PropTypes.array,
   leaveConsortium: PropTypes.func.isRequired,
+  notifySuccess: PropTypes.func.isRequired,
   params: PropTypes.object.isRequired,
   pipelines: PropTypes.array.isRequired,
   removeUserRole: PropTypes.func.isRequired,
@@ -222,5 +236,9 @@ const ConsortiumTabsWithData = compose(
 
 export default connect(
   mapStateToProps,
-  { saveAssociatedConsortia, updateUserPerms }
+  {
+    notifySuccess,
+    saveAssociatedConsortia,
+    updateUserPerms,
+  }
 )(ConsortiumTabsWithData);
