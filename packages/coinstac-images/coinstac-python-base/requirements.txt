@@ -1,2 +1,1 @@
-bottle==0.12.13
-gevent==1.2.2
+tornado==5.0.2
