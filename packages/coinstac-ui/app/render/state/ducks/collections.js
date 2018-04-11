@@ -123,7 +123,7 @@ function iteratePipelineSteps(consortium, filesByGroup, baseDirectory) {
             keyArray[0] = keyArray[0].concat(filepaths).filter(Boolean);
             keyArray[1].push(mappingObj.type);
             if ('value' in mappingObj) {
-              keyArray[1] = keyArray[1].concat(mappingObj.value);
+              keyArray[2] = keyArray[2].concat(mappingObj.value);
             }
           } else if (inputDataTypes.indexOf(mappingObj.type) > -1
               && (!consortium.stepIO[sIndex][key][mappingIndex].groupId
