@@ -1,20 +1,20 @@
 {
   "meta": {
-    "name": "MSR FreeSurfer",
+    "name": "DRNE FreeSurfer",
     "version": "v1.0.0",
-    "repository": "https:\/\/github.com\/MRN-Code\/coinstac_msr_fsl",
-    "description": "Multi-shot Regression on FreeSurfer Data"
+    "repository": "https:\/\/github.com\/MRN-Code\/coinstac_drne_fsl",
+    "description": "Decentralized Regression with Normal Equation on FreeSurfer Data"
   },
   "computation": {
     "type": "docker",
-    "dockerImage": "msr_fsl",
+    "dockerImage": "drne_fsl",
     "command": [
       "python",
       "\/computation\/local.py"
     ],
     "remote": {
       "type": "docker",
-      "dockerImage": "msr_fsl",
+      "dockerImage": "drne_fsl",
       "command": [
         "python",
         "\/computation\/remote.py"

@@ -278,6 +278,8 @@ export const getAssociatedConsortia = applyAsyncLoading(consortiaIds =>
           type: GET_ASSOCIATED_CONSORTIA,
           payload: consortia,
         }));
+
+        return consortia;
       })
 );
 
@@ -317,18 +319,21 @@ export const removeCollectionsFromAssociatedConsortia
   dispatch =>
     localDB.associatedConsortia.get(consId)
       .then((consortium) => {
-        const collectionIds = [];
-        if (consortium.stepIO) {
-          consortium.stepIO.forEach((step) => {
-            Object.values(step).forEach((val) => {
-              val.forEach((obj) => { collectionIds.push(obj.collectionId); });
+        return Promise.all([
+          consortium,
+          localDB.collections.toArray()
+          .then((collections) => {
+            const collectionIds = [];
+            collections.forEach((col) => {
+              if (col.associatedConsortia.indexOf(consId) > -1) {
+                collectionIds.push(col.id);
+              }
             });
-          });
-        }
-
-        return { consortium, collectionIds };
+            return collectionIds;
+          }),
+        ]);
       })
-      .then(({ consortium, collectionIds }) => {
+      .then(([consortium, collectionIds]) => {
         return Promise.all([
           consortium,
           collectionIds.length > 0 ? localDB.collections
@@ -340,7 +345,7 @@ export const removeCollectionsFromAssociatedConsortia
             : null,
           deleteCons ? localDB.associatedConsortia.delete(consId)
             : localDB.associatedConsortia.update(consortium.id, {
-              activePipelineId, isMapped: false, stepIO: [], pipelineSteps,
+              activePipelineId, isMapped: false, stepIO: [], pipelineSteps, runs: 0,
             }),
         ]);
       })
