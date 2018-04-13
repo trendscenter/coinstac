@@ -224,5 +224,10 @@ readFile(program.compspec ? program.compspec : 'compspec.json')
     console.log(res);
     process.exit(1);
   });
+})
+.catch((err) => {
+  console.log('Simulator run failed!');
+  console.log('This may be an internal simulator issue\n If you suspect this, please leave an issue on github.com/MRN-Code/coinstac/issues with the error details');
+  console.log(err);
 });
 /* eslint-enable no-console */
