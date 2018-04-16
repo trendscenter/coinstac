@@ -92,6 +92,8 @@ export const getSelectAndSubProp = (activeProp, document, objId, subProp, subscr
       theId = props[objId];
     } else if (props.params[objId]) {
       theId = props.params[objId];
+    } else if (objId === 'userId') {
+      theId = props.auth.user.id;
     }
 
     return {
