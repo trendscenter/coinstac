@@ -72,11 +72,11 @@ class Result extends Component {
     const consortium = consortia.find(c => c.id === run.consortiumId);
     let stepsLength = -1;
     let covariates = [];
-    if (run.pipelineSnapshot) {
+    if (run && run.pipelineSnapshot) {
       stepsLength = run.pipelineSnapshot.steps.length;
     }
 
-    if (stepsLength > 0 && run.pipelineSnapshot.steps[stepsLength - 1].inputMap) {
+    if (stepsLength > 0 && run.pipelineSnapshot.steps[stepsLength - 1].inputMap && run.pipelineSnapshot.steps[stepsLength - 1].inputMap.covariates) {
       covariates = run.pipelineSnapshot.steps[stepsLength - 1]
         .inputMap.covariates.ownerMappings.map(m => m.name);
     }
@@ -158,7 +158,7 @@ class Result extends Component {
 
         {run && run.error &&
           <Well style={{ color: 'red' }}>
-            {JSON.stringify(run.error.error.error, null, 2)}
+            {JSON.stringify(run.error.error, null, 2)}
           </Well>
         }
       </div>

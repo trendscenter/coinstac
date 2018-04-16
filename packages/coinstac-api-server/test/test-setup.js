@@ -360,7 +360,7 @@ helperFunctions.getRethinkConnection()
     id: 'test-cons-1',
     name: 'Test Consortia 1',
     description: 'This consortia is for testing.',
-    owners: ['test'],
+    owners: ['author'],
     members: [],
   }).run(connection))
   .then(() => rethink.table('consortia').insert({

@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import update from 'immutability-helper';
+import inputDataTypes from '../../state/input-data-types';
 
 class CollectionPipelineInput extends Component {
   static getUserPropKey(val) {
@@ -163,7 +164,7 @@ class CollectionPipelineInput extends Component {
                         .computation.output[val.fromCache.variable].type
                 }
                 <br />
-                {val.source === 'file' || val.type === 'FreeSurfer' ?
+                {val.source === 'file' || inputDataTypes.indexOf(val.type) > -1 ?
                     (
                       <span>
                         <em>Source Group: </em>

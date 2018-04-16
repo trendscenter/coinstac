@@ -2,6 +2,7 @@ import { isEqual } from 'lodash';
 import { dirname, resolve, extname, sep } from 'path';
 import { applyAsyncLoading } from './loading';
 import localDB from '../local-db';
+import inputDataTypes from '../input-data-types.json';
 
 // Actions
 const CLEAR_COLLECTIONS_CONSORTIA = 'CLEAR_COLLECTIONS_CONSORTIA';
@@ -99,7 +100,7 @@ function iteratePipelineSteps(consortium, filesByGroup, baseDirectory) {
               || !consortium.stepIO[sIndex][key][mappingIndex].column)) {
             mappingIncomplete = true;
             break;
-          } else if (filesByGroup && mappingObj.type === 'FreeSurfer'
+          } else if (filesByGroup && inputDataTypes.indexOf(mappingObj.type) > -1
               && consortium.stepIO[sIndex][key][mappingIndex].groupId
               && consortium.stepIO[sIndex][key][mappingIndex].column) {
             let filepaths = filesByGroup[consortium.stepIO[sIndex][key][mappingIndex].groupId];
@@ -120,9 +121,11 @@ function iteratePipelineSteps(consortium, filesByGroup, baseDirectory) {
 
             // There will only ever be one single data object. Don't nest arrays, use concat.
             keyArray[0] = keyArray[0].concat(filepaths).filter(Boolean);
-            keyArray[1] = keyArray[1].concat(mappingObj.value);
-            keyArray[2].push(mappingObj.type);
-          } else if (mappingObj.type === 'FreeSurfer'
+            keyArray[1].push(mappingObj.type);
+            if ('value' in mappingObj) {
+              keyArray[2] = keyArray[2].concat(mappingObj.value);
+            }
+          } else if (inputDataTypes.indexOf(mappingObj.type) > -1
               && (!consortium.stepIO[sIndex][key][mappingIndex].groupId
                 || !consortium.stepIO[sIndex][key][mappingIndex].column)) {
             mappingIncomplete = true;
@@ -275,6 +278,8 @@ export const getAssociatedConsortia = applyAsyncLoading(consortiaIds =>
           type: GET_ASSOCIATED_CONSORTIA,
           payload: consortia,
         }));
+
+        return consortia;
       })
 );
 
@@ -314,18 +319,21 @@ export const removeCollectionsFromAssociatedConsortia
   dispatch =>
     localDB.associatedConsortia.get(consId)
       .then((consortium) => {
-        const collectionIds = [];
-        if (consortium.stepIO) {
-          consortium.stepIO.forEach((step) => {
-            Object.values(step).forEach((val) => {
-              val.forEach((obj) => { collectionIds.push(obj.collectionId); });
+        return Promise.all([
+          consortium,
+          localDB.collections.toArray()
+          .then((collections) => {
+            const collectionIds = [];
+            collections.forEach((col) => {
+              if (col.associatedConsortia.indexOf(consId) > -1) {
+                collectionIds.push(col.id);
+              }
             });
-          });
-        }
-
-        return { consortium, collectionIds };
+            return collectionIds;
+          }),
+        ]);
       })
-      .then(({ consortium, collectionIds }) => {
+      .then(([consortium, collectionIds]) => {
         return Promise.all([
           consortium,
           collectionIds.length > 0 ? localDB.collections
@@ -337,7 +345,7 @@ export const removeCollectionsFromAssociatedConsortia
             : null,
           deleteCons ? localDB.associatedConsortia.delete(consId)
             : localDB.associatedConsortia.update(consortium.id, {
-              activePipelineId, isMapped: false, stepIO: [], pipelineSteps,
+              activePipelineId, isMapped: false, stepIO: [], pipelineSteps, runs: 0,
             }),
         ]);
       })

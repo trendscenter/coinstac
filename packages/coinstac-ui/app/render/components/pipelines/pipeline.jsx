@@ -464,7 +464,6 @@ class Pipeline extends Component {
                 bsStyle="success"
                 className="pull-right"
                 disabled={!this.state.owner || !this.state.pipeline.name.length ||
-                  !this.state.pipeline.description.length ||
                   !consortium}
                 onClick={this.savePipeline}
               >
