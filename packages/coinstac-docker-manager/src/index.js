@@ -170,7 +170,7 @@ const startService = (serviceId, serviceUserId, opts) => {
             method: 'POST',
             json: true,
             body: { command: data },
-          });
+          }).then((res) => { debugger; return res; })
         };
         services[serviceId].state = 'running';
         // fulfill to waiting consumers

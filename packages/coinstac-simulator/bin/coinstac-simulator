@@ -15,6 +15,8 @@ const blessed = require('blessed');
 const bc = require('blessed-contrib');
 const hermit = require('hermit');
 
+const DEBUG_MODE = process.execArgv.includes('--inspect-brk=9229');
+
 const pipeSpecFactory = (inputSpec, mode, comp) => {
   return {
     steps: [
@@ -27,25 +29,30 @@ const pipeSpecFactory = (inputSpec, mode, comp) => {
   };
 };
 
-const screen = blessed.screen({
-  smartCSR: true,
-});
+let table;
+let screen;
+let tableData;
+if (!DEBUG_MODE) {
+  screen = blessed.screen({
+    smartCSR: true,
+  });
 
-const tableData = [];
+  tableData = [];
 
-const table = bc.table({
-  keys: true,
-  fg: 'white',
-  selectedFg: 'white',
-  selectedBg: 'blue',
-  interactive: true,
-  label: 'Active Run',
-  width: '100%',
-  height: '100%',
-  border: { type: 'line', fg: 'cyan' },
-  columnSpacing: 5,
-  columnWidth: [12, 12, 30, 6],
-});
+  table = bc.table({
+    keys: true,
+    fg: 'white',
+    selectedFg: 'white',
+    selectedBg: 'blue',
+    interactive: true,
+    label: 'Active Run',
+    width: '100%',
+    height: '100%',
+    border: { type: 'line', fg: 'cyan' },
+    columnSpacing: 5,
+    columnWidth: [12, 12, 30, 6],
+  });
+}
 
 program
   .version(pkg.version)
@@ -157,31 +164,35 @@ readFile(program.compspec ? program.compspec : 'compspec.json')
     let state = data.controllerState ? data.controllerState : 'initializing';
     state = state === 'stopped' ? 'shutting down docker...' : state;
 
-    tableData.forEach((row, index) => {
-      if (row[0] === node) {
-        tableData[index] = [
+    if (!DEBUG_MODE) {
+      tableData.forEach((row, index) => {
+        if (row[0] === node) {
+          tableData[index] = [
+            node,
+            data.currentIteration ? data.currentIteration : 'initializing',
+            state,
+            data.mode,
+          ];
+          foundNode = true;
+        }
+      });
+      if (!foundNode) {
+        tableData.push([
           node,
           data.currentIteration ? data.currentIteration : 'initializing',
           state,
           data.mode,
-        ];
-        foundNode = true;
+        ]);
       }
-    });
-    if (!foundNode) {
-      tableData.push([
-        node,
-        data.currentIteration ? data.currentIteration : 'initializing',
-        state,
-        data.mode,
-      ]);
-    }
 
-    table.setData({
-      headers: ['node', 'iteration', 'state', 'mode'],
-      data: tableData,
-    });
-    screen.render();
+      table.setData({
+        headers: ['node', 'iteration', 'state', 'mode'],
+        data: tableData,
+      });
+      screen.render();
+    } else {
+      console.log(`${node} ---- ${JSON.stringify(data)}`);
+    }
   };
 
   if (simRun.pipelines.remote) {
@@ -196,11 +207,13 @@ readFile(program.compspec ? program.compspec : 'compspec.json')
     });
   });
 
-  screen.key(['escape', 'q', 'C-c'], () => process.exit(0));
-  table.focus();
+  if (!DEBUG_MODE) {
+    screen.key(['escape', 'q', 'C-c'], () => process.exit(0));
+    table.focus();
 
-  screen.append(table);
-  screen.render();
+    screen.append(table);
+    screen.render();
+  }
 
   return simRun.allResults;
 })
@@ -217,7 +230,9 @@ readFile(program.compspec ? program.compspec : 'compspec.json')
   process.exit();
 })
 .catch((err) => {
-  screen.destroy();
+  if (!DEBUG_MODE) {
+    screen.destroy();
+  }
   hermit(err.error, (err, res) => {
     console.log('Simulator run failed!');
     console.log('Fun error details:\n');
@@ -226,8 +241,12 @@ readFile(program.compspec ? program.compspec : 'compspec.json')
   });
 })
 .catch((err) => {
+  if (!DEBUG_MODE) {
+    screen.destroy();
+  }
   console.log('Simulator run failed!');
   console.log('This may be an internal simulator issue\n If you suspect this, please leave an issue on github.com/MRN-Code/coinstac/issues with the error details');
   console.log(err);
+  process.exit(1);
 });
 /* eslint-enable no-console */

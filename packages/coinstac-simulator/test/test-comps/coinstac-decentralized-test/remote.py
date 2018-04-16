@@ -3,7 +3,7 @@
 import sys
 import json
 
-doc = json.loads(sys.argv[1])
+doc = json.loads(sys.stdin.read())
 sums = 0
 for site, output in doc['input'].items():
     sums = sums + output['sum'];

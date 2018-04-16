@@ -1,10 +1,12 @@
 import tornado.ioloop
 import tornado.web
 import tornado.process
+import tornado.options
 from tornado.gen import Return, coroutine
 from tornado.concurrent import Future
 import json, cgi
 
+tornado.options.parse_command_line()
 
 class MainHandler(tornado.web.RequestHandler):
     @coroutine
@@ -49,5 +51,5 @@ def make_app():
 if __name__ == "__main__":
     app = make_app()
     app.listen(8881)
-    print('compuation server starting')
+    print('computation server starting')
     tornado.ioloop.IOLoop.current().start()
