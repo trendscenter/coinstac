@@ -148,11 +148,13 @@ const typeDefs = `
     fetchAllConsortia: [Consortium]
     fetchAllPipelines: [Pipeline]
     fetchAllResults: [Result]
+    fetchAllUsers: [User]
     fetchAllUserRuns: [Run]
     fetchComputation(computationIds: [ID]): [Computation]
     fetchConsortium(consortiumId: ID): Consortium
     fetchPipeline(pipelineId: ID): Pipeline
     fetchResult(resultId: ID): Result
+    fetchUser(userId: ID): User
     validateComputation(compId: ID): Boolean
   }
 
@@ -161,6 +163,7 @@ const typeDefs = `
     consortiumChanged(consortiumId: ID): Consortium
     pipelineChanged(pipelineId: ID): Pipeline
     userRunChanged(userId: ID): Run
+    userChanged(userId: ID): User
   }
 `;
 

@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import {
+  Checkbox,
   ControlLabel,
   Form,
   FormGroup,
@@ -7,10 +8,59 @@ import {
   Button,
   Table,
 } from 'react-bootstrap';
+import { Typeahead } from 'react-bootstrap-typeahead';
 import PropTypes from 'prop-types';
+import update from 'immutability-helper';
 import MemberAvatar from '../common/member-avatar';
 
 export default class ConsortiumAbout extends Component {
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      consortiumUsers: [],
+      newMember: null,
+    };
+
+    this.addMember = this.addMember.bind(this);
+    this.toggleOwner = this.toggleOwner.bind(this);
+  }
+
+  componentWillReceiveProps(nextProps) {
+    if (nextProps.consortiumUsers) {
+      const users = this.state.consortiumUsers.filter((stateUser) => {
+        nextProps.consortiumUsers.findIndex(propsUser => propsUser.id === stateUser.id) > -1
+      });
+      nextProps.consortiumUsers.forEach((propsUser) => {
+        const stateIndex = this.state.consortiumUsers.findIndex(stateUser => stateUser.id === propsUser.id);
+
+        if (stateIndex === -1) {
+          users.push(propsUser);
+        } else {
+          users[stateIndex] = propsUser;
+        }
+      });
+      this.setState({ consortiumUsers: users });
+    }
+  }
+
+  addMember() {
+    this.props.addMemberToConsortium(this.state.newMember[0].id);
+  }
+
+  toggleOwner(consUser) {
+    const { addUserRole, consortium, owner, removeUserRole, user } = this.props;
+    return () => {
+      if (owner && consUser.id !== user.id) {
+        if (consUser.owner) {
+          removeUserRole(consUser.id, 'consortia', consortium.id, 'owner');
+        } else {
+          addUserRole(consUser.id, 'consortia', consortium.id, 'owner');
+        }
+      }
+    };
+  }
+
   render() {
     const {
       consortium,
@@ -18,7 +68,11 @@ export default class ConsortiumAbout extends Component {
       removeMemberFromConsortium,
       saveConsortium,
       updateConsortium,
+      user,
+      users,
     } = this.props;
+
+    const { consortiumUsers } = this.state;
 
     return (
       <div>
@@ -47,7 +101,29 @@ export default class ConsortiumAbout extends Component {
 
           {consortium.id &&
             <div key="avatar-container">
-              <span className="bold">Owner(s)/Members: </span><br />
+              <div className="bold" style={{ marginBottom: 15 }}>Owner(s)/Members: </div>
+              {owner &&
+                <div>
+                  <div style={{ width: '50%', display: 'inline-block', marginRight: 15 }}>
+                    <Typeahead
+                      filterBy={(option, props) =>
+                        consortiumUsers.findIndex(consUser => consUser.id === option.id) === -1
+                      }
+                      onChange={(selected) => this.setState({ newMember: selected })}
+                      labelKey="id"
+                      options={users}
+                      selected={this.state.newMember}
+                      selectHintOnEnter
+                    />
+                  </div>
+                  <Button
+                    bsStyle="info"
+                    onClick={this.addMember}
+                  >
+                    Add Member
+                  </Button>
+                </div>
+              }
               <Table striped condensed>
                 <thead>
                   <tr>
@@ -58,57 +134,34 @@ export default class ConsortiumAbout extends Component {
                   </tr>
                 </thead>
                 <tbody>
-                  {consortium.owners.map(user =>
+                  {consortiumUsers.map(consUser =>
                     (
-                      <tr key={`${user}-row`}>
+                      <tr key={`${consUser.id}-row`}>
                         <td>
                           <MemberAvatar
                             isOwner={owner}
                             consRole="Member"
-                            name={user}
+                            name={consUser.id}
                             removeFunction={removeMemberFromConsortium}
                             width={30}
                           />
-                          <span>{user}</span>
+                          <span>{consUser.id}</span>
                         </td>
                         <td>
-                          <span
-                            aria-hidden="true"
-                            className="glyphicon glyphicon-ok-circle"
-                            style={{ color: 'green' }}
+                          <Checkbox
+                            onChange={this.toggleOwner(consUser)}
+                            checked={consUser.owner ? true : false}
+                            disabled={!owner || consUser.id === user.id}
                           />
                         </td>
-                        <td />
-                        {owner && <td />}
-                      </tr>
-                    )
-                  )}
-                  {consortium.members.map(user =>
-                    (
-                      <tr key={`${user}-row`}>
                         <td>
-                          <MemberAvatar
-                            isOwner={owner}
-                            consRole="Member"
-                            name={user}
-                            removeFunction={removeMemberFromConsortium}
-                            width={30}
-                          />
-                          <span>{user}</span>
-                        </td>
-                        <td />
-                        <td>
-                          <span
-                            aria-hidden="true"
-                            className="glyphicon glyphicon-ok-circle"
-                            style={{ color: 'green' }}
-                          />
+                          <Checkbox disabled checked={consUser.member} />
                         </td>
                         {owner &&
                           <td>
                             <Button
                               bsStyle="danger"
-                              onClick={removeMemberFromConsortium(user)}
+                              onClick={removeMemberFromConsortium(consUser)}
                             >
                               <span
                                 aria-hidden="true"

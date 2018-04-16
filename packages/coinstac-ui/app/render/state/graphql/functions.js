@@ -77,9 +77,19 @@ export const FETCH_PIPELINE_QUERY = gql`
     ${queries.fetchPipeline}
 `;
 
+export const FETCH_USER_QUERY = gql`
+  query fetchUser ($userId: ID)
+    ${queries.fetchUser}
+`;
+
 export const FETCH_ALL_RESULTS_QUERY = gql`
   query fetchAllResults
     ${queries.fetchAllResults}
+`;
+
+export const FETCH_ALL_USERS_QUERY = gql`
+  query fetchAllUsers
+    ${queries.fetchAllUsers}
 `;
 
 export const FETCH_RESULT_QUERY = gql`
@@ -121,6 +131,11 @@ export const REMOVE_COMPUTATION_MUTATION = gql`
       id
     }
   }
+`;
+
+export const USER_CHANGED_SUBSCRIPTION = gql`
+  subscription userChanged($userId: ID)
+    ${queries.userChanged}
 `;
 
 export const REMOVE_USER_ROLE_MUTATION = gql`

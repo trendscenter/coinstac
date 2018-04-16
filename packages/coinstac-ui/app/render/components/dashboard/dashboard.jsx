@@ -3,6 +3,7 @@ import { compose, graphql, withApollo } from 'react-apollo';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { ipcRenderer } from 'electron';
+import { isEqual } from 'lodash';
 import DashboardNav from './dashboard-nav';
 import UserAccountController from '../user/user-account-controller';
 import {
@@ -28,11 +29,13 @@ import {
   FETCH_ALL_PIPELINES_QUERY,
   FETCH_ALL_USER_RUNS_QUERY,
   PIPELINE_CHANGED_SUBSCRIPTION,
+  USER_CHANGED_SUBSCRIPTION,
   USER_RUN_CHANGED_SUBSCRIPTION,
   UPDATE_USER_CONSORTIUM_STATUS_MUTATION,
 } from '../../state/graphql/functions';
 import {
   getAllAndSubProp,
+  getSelectAndSubProp,
 } from '../../state/graphql/props';
 
 class Dashboard extends Component {
@@ -46,6 +49,7 @@ class Dashboard extends Component {
       unsubscribeConsortia: null,
       unsubscribePipelines: null,
       unsubscribeRuns: null,
+      unsubscribeUsers: null,
     };
   }
 
@@ -301,7 +305,7 @@ class Dashboard extends Component {
         if (nextProps.consortia[i].members.indexOf(user.id) > -1
             || nextProps.consortia[i].owners.indexOf(user.id) > -1) {
           let steps = [];
-          if (nextProps.consortia[i].activePipelineId) {
+          if (nextProps.consortia[i].activePipelineId && this.props.pipelines.length) {
             steps = this.props.pipelines
               .find(p => p.id === nextProps.consortia[i].activePipelineId).steps;
           }
