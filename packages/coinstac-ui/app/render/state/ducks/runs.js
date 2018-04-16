@@ -75,13 +75,13 @@ export const saveLocalRun = applyAsyncLoading(run =>
       })
 );
 
-export const updateLocalRun = applyAsyncLoading((runId, objKey, obj) =>
+export const updateLocalRun = applyAsyncLoading((runId, object) =>
   dispatch =>
-    localDB.runs.update(runId, { [objKey]: obj })
+    localDB.runs.update(runId, { ...object })
       .then((key) => {
         dispatch(({
           type: UPDATE_LOCAL_RUN,
-          payload: { runId, objKey, obj },
+          payload: { runId, object },
         }));
         return key;
       })
@@ -143,7 +143,7 @@ export default function reducer(state = INITIAL_STATE, action) {
     case UPDATE_LOCAL_RUN: {
       const localRuns = [...state.localRuns];
       const index = localRuns.findIndex(run => run.id === action.payload.runId);
-      localRuns[index][action.payload.objKey] = action.payload.obj;
+      localRuns[index] = { ...localRuns[index], ...action.payload.object };
 
       return { ...state, localRuns, runs: uniqBy([...localRuns, ...state.remoteRuns].sort(runSort), 'id') };
     }

@@ -78,8 +78,7 @@ class Dashboard extends Component {
     ipcRenderer.on('local-pipeline-state-update', (event, arg) => {
       this.props.updateLocalRun(
         arg.run.id,
-        'localPipelineState',
-        arg.data
+        { localPipelineState: arg.data }
       );
     });
 
@@ -95,7 +94,7 @@ class Dashboard extends Component {
         },
       });
 
-      this.props.saveLocalRun({ ...arg.run, status: 'complete' });
+      this.props.updateLocalRun(arg.run.id, { results: arg.run.results, status: 'complete' });
     });
 
     ipcRenderer.on('local-run-error', (event, arg) => {
@@ -110,7 +109,7 @@ class Dashboard extends Component {
         },
       });
 
-      this.props.saveLocalRun({ ...arg.run, status: 'error' });
+      this.props.updateLocalRun(arg.run.id, { error: arg.run.error, status: 'error' });
     });
   }
 
@@ -175,6 +174,9 @@ class Dashboard extends Component {
                 autoDismiss: 5,
               });
             } else {
+              // Save run status to localDB
+              this.props.saveLocalRun({ ...run, status });
+
               if ('steps' in filesArray) {
                 run = {
                   ...run,
@@ -208,9 +210,6 @@ class Dashboard extends Component {
                 });
               }, 5000);
             }
-
-            // Save run status to localDB
-            this.props.saveLocalRun({ ...run, status });
           });
         // Not saved locally, but results signify complete
         } else if (runIndexInLocalRuns === -1 && nextProps.remoteRuns[i].results) {
@@ -232,7 +231,7 @@ class Dashboard extends Component {
 
           // Update status of run in localDB
           ipcRenderer.send('clean-remote-pipeline', nextProps.remoteRuns[i].id);
-          this.props.saveLocalRun({ ...run, status: 'error' });
+          this.props.updateLocalRun(run.id, { error: run.error, status: 'error' });
           this.props.notifyError({
             message: `${consortium.name} Pipeline Error.`,
             autoDismiss: 5,
@@ -282,8 +281,7 @@ class Dashboard extends Component {
           // Update status of run in localDB
           this.props.updateLocalRun(
             run.id,
-            'remotePipelineState',
-            run.remotePipelineState
+            { remotePipelineState: run.remotePipelineState }
           );
         }
       }
