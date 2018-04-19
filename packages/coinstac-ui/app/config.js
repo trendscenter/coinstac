@@ -1,8 +1,8 @@
 'use strict';
 
 const convict = require('convict');
-const bluebird = require('bluebird');
-const access = bluebird.promisify(require('fs').access);
+const pify = require('util').promisify;
+const access = pify(require('fs').access);
 const path = require('path');
 
 const localConfig = path.resolve(__dirname, '..', 'config', 'local.json');
