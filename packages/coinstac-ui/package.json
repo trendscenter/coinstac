@@ -9,7 +9,6 @@
     "async": "^2.6.0",
     "axios": "^0.16.2",
     "babel-polyfill": "^6.26.0",
-    "bluebird": "^3.5.1",
     "bootstrap-sass": "^3.3.7",
     "classnames": "^2.2.5",
     "coinstac-client-core": "^3.1.5",

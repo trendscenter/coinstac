@@ -3,8 +3,8 @@
 const path = require('path');
 const cliOpts = require('./parse-cli-input.js').get();
 const winston = require('winston');
-const promisify = require('bluebird').promisify;
-const mkdirp = promisify(require('mkdirp'));
+const pify = require('util').promisify;
+const mkdirp = pify(require('mkdirp'));
 
 module.exports = function configureLogger(config) {
   const logLocation = path.join(

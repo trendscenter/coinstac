@@ -5,9 +5,9 @@ const os = require('os');
 const path = require('path');
 const readLastLines = require('read-last-lines');
 const { Tail } = require('tail');
-const bluebird = require('bluebird');
 const serializeError = require('serialize-error');
-const access = bluebird.promisify(require('fs').access);
+const pify = require('util').promisify;
+const access = pify(require('fs').access);
 
 const outputEl = typeof document !== 'undefined' ?
   document.getElementById('output') :
@@ -92,4 +92,3 @@ loadConfig()
     tail.on('error', errorLogger);
   }))
   .catch(getErrorLogger());
-

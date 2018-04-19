@@ -1,9 +1,9 @@
 'use strict';
 
 const mkdirp = require('mkdirp');
-const { promisify } = require('bluebird');
+const pify = require('util').promisify;
 
-const promisifiedMkdirp = promisify(mkdirp);
+const promisifiedMkdirp = pify(mkdirp);
 
 /**
  * Upsert COINSTAC user directory.
@@ -13,4 +13,3 @@ const promisifiedMkdirp = promisify(mkdirp);
 module.exports = function upsertCoinstacUserDir(core) {
   return promisifiedMkdirp(core.appDirectory);
 };
-

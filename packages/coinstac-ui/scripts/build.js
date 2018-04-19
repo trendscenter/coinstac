@@ -1,18 +1,12 @@
-const prom = require('bluebird').promisify;
-const packager = prom(require('electron-packager'));
+const pify = require('util').promisify;
+const packager = pify(require('electron-packager'));
 const archiver = require('archiver');
 const fs = require('fs');
-const rm = require('rimraf');
+const rm = pify(require('rimraf'));
 const os = require('os');
-const bb = require('bluebird');
 const path = require('path');
 
-const platform = os.platform();
-const dirName = `coinstac-${platform}-${os.arch()}`;
-const outputDir = `${__dirname}/../${dirName}`;
-const zip = platform === 'win32' ?
-  archiver.create('zip') : archiver.create('tar', { gzip: true });
-const zipOutput = platform === 'win32' ? `${outputDir}.zip` : `${outputDir}.tar.gz`;
+const platform = ['linux', 'win32', 'darwin']; // os.platform();
 const options = {
   asar: true,
   dir: `${__dirname}/../`,
@@ -29,28 +23,30 @@ if (platform === 'darwin') {
   options.icon = path.resolve(__dirname, '../img/icons/png/256x256.png');
 }
 
-// TODO: build mult arch when possible
-bb.promisify(rm)(zipOutput)
+rm('coinstac-*')
 .then(() => {
   options.arch = os.arch();
   options.platform = platform;
   return packager(options);
 })
-.then((appPath) => {
-  console.log(`Finished building at: ${appPath}`); // eslint-disable-line no-console
-  console.log('Now archiving...'); // eslint-disable-line no-console
+.then((appPaths) => {
+  appPaths.forEach((appPath) => {
+    const zip = archiver.create('zip');
+    console.log(`Finished building at: ${appPath}`); // eslint-disable-line no-console
+    console.log('Now archiving...'); // eslint-disable-line no-console
 
-  const write = fs.createWriteStream(zipOutput);
+    const write = fs.createWriteStream(`${appPath}.zip`);
 
-  zip.pipe(write);
-  zip.on('error', (err) => {
-    throw err;
-  });
-  zip.directory(outputDir, dirName)
-  .finalize();
+    zip.pipe(write);
+    zip.on('error', (err) => {
+      throw err;
+    });
+    zip.directory(appPath, false)
+    .finalize();
 
-  write.on('close', () => {
-    console.log(`Finished zipping ${outputDir}`); // eslint-disable-line no-console
+    write.on('close', () => {
+      console.log(`Finished zipping ${appPath}.zip`); // eslint-disable-line no-console
+    });
   });
 })
 .catch((err) => {
