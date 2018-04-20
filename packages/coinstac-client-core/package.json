@@ -1,6 +1,6 @@
 {
   "name": "coinstac-client-core",
-  "version": "3.1.5",
+  "version": "3.1.6",
   "description": "COINSTAC business logic for clients.",
   "main": "src/index.js",
   "bin": "./bin/coinstac-client-core",
@@ -36,7 +36,7 @@
     "bluebird": "^3.5.1",
     "btoa": "^1.2.1",
     "coins-deposit-box": "^5.2.0",
-    "coinstac-common": "^3.1.5",
+    "coinstac-common": "^3.1.6",
     "coinstac-docker-manager": "^3.1.5",
     "coinstac-pipeline": "^3.1.5",
     "commander": "^2.15.1",
