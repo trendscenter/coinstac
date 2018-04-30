@@ -134,6 +134,7 @@ class PipelineStep extends Component {
       <div style={styles.container}>
         <Panel
           expanded={other.isExpanded}
+          defaultExpanded
           header={computations[0].meta.name}
           style={{ ...styles.draggable, opacity: isDragging ? 0 : 1 }}
           {...other}
