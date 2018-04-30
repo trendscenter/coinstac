@@ -8,6 +8,14 @@ import {
 } from 'react-bootstrap';
 import PropTypes from 'prop-types';
 
+const styles = {
+  fieldset: {
+    padding: '2rem',
+    background: '#f8f9fa',
+    marginBottom: '1rem',
+  },
+};
+
 export default class CollectionAbout extends Component {
   render() {
     const {
@@ -19,6 +27,13 @@ export default class CollectionAbout extends Component {
     return (
       <div>
         <Form onSubmit={saveCollection}>
+          <Button
+            bsStyle="success"
+            type="submit"
+            className="pull-right"
+          >
+            Save
+          </Button>
           <h3>About Collection</h3>
           <FormGroup controlId="name">
             <ControlLabel>Collection Name</ControlLabel>
@@ -39,38 +54,31 @@ export default class CollectionAbout extends Component {
               onChange={() => updateCollection({ description: this.description.value })}
             />
           </FormGroup>
+          <fieldset style={styles.fieldset} className={'highlight'}>
+            <h3>Study Details</h3>
+            <p>
+              <strong>Optional:</strong> Leave these fields blank if there are no details to share.
+            </p>
+            <FormGroup controlId="name">
+              <ControlLabel>Study Name</ControlLabel>
+              <FormControl
+                type="input"
+                value={collection.studyName || ''}
+                inputRef={(input) => { this.studyName = input; }}
+                onChange={() => updateCollection({ studyName: this.studyName.value })}
+              />
+            </FormGroup>
 
-          <h3>Study Details</h3>
-          <p>
-            Leave these fields blank if there are no details to share.
-          </p>
-          <FormGroup controlId="name">
-            <ControlLabel>Study Name</ControlLabel>
-            <FormControl
-              type="input"
-              value={collection.studyName || ''}
-              inputRef={(input) => { this.studyName = input; }}
-              onChange={() => updateCollection({ studyName: this.studyName.value })}
-            />
-          </FormGroup>
-
-          <FormGroup controlId="description">
-            <ControlLabel>Study Description</ControlLabel>
-            <FormControl
-              componentClass="textarea"
-              value={collection.studyDescription || ''}
-              inputRef={(input) => { this.studyDescription = input; }}
-              onChange={() => updateCollection({ studyDescription: this.studyDescription.value })}
-            />
-          </FormGroup>
-
-          <Button
-            bsStyle="success"
-            type="submit"
-            className="pull-right"
-          >
-            Save
-          </Button>
+            <FormGroup controlId="description">
+              <ControlLabel>Study Description</ControlLabel>
+              <FormControl
+                componentClass="textarea"
+                value={collection.studyDescription || ''}
+                inputRef={(input) => { this.studyDescription = input; }}
+                onChange={() => updateCollection({ studyDescription: this.studyDescription.value })}
+              />
+            </FormGroup>
+          </fieldset>
         </Form>
       </div>
     );
@@ -86,4 +94,3 @@ CollectionAbout.propTypes = {
 CollectionAbout.defaultProps = {
   collection: null,
 };
-
