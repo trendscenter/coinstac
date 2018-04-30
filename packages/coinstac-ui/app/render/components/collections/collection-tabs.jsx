@@ -51,7 +51,7 @@ class CollectionTabs extends Component {
 
     this.props.saveCollection(this.state.collection);
     this.props.notifySuccess({
-      message: `Collection Saved.`
+      message: 'Collection Saved.',
     });
   }
 
@@ -135,33 +135,35 @@ class CollectionTabs extends Component {
               updateCollection={this.updateCollection}
             />
           </Tab>
-          <Tab
-            eventKey={2}
-            title="Files"
-            disabled={typeof this.state.collection.id === 'undefined'}
-            style={styles.tab}
-          >
-            <CollectionFiles
-              collection={this.state.collection}
-              saveCollection={this.saveCollection}
-              updateCollection={this.updateCollection}
-            />
-          </Tab>
-          <Tab
-            eventKey={3}
-            title="Consortia"
-            disabled={typeof this.state.collection.id === 'undefined'}
-            style={styles.tab}
-          >
-            <CollectionConsortia
-              associatedConsortia={this.props.activeAssociatedConsortia}
-              collection={this.state.collection}
-              consortia={this.props.consortia}
-              saveCollection={this.saveCollection}
-              updateAssociatedConsortia={this.updateAssociatedConsortia}
-              updateCollection={this.updateCollection}
-            />
-          </Tab>
+          {typeof this.state.collection.id !== 'undefined' ?
+            <Tab
+              eventKey={2}
+              title="Files"
+              style={styles.tab}
+            >
+              <CollectionFiles
+                collection={this.state.collection}
+                saveCollection={this.saveCollection}
+                updateCollection={this.updateCollection}
+              />
+            </Tab>
+          : ''}
+          {typeof this.state.collection.id !== 'undefined' ?
+            <Tab
+              eventKey={3}
+              title="Consortia"
+              style={styles.tab}
+            >
+              <CollectionConsortia
+                associatedConsortia={this.props.activeAssociatedConsortia}
+                collection={this.state.collection}
+                consortia={this.props.consortia}
+                saveCollection={this.saveCollection}
+                updateAssociatedConsortia={this.updateAssociatedConsortia}
+                updateCollection={this.updateCollection}
+              />
+            </Tab>
+          : ''}
         </Tabs>
       </div>
     );
