@@ -1,0 +1,26 @@
+/**
+ * Pipeline Step.
+ */
+
+.panel-heading {
+  .panel-title {
+    position: relative;
+    a:after {
+      content: '';
+      position: absolute;
+      border-style: solid;
+    	border-width: 0.25em 0.25em 0 0;
+    	display: inline-block;
+    	height: 0.75em;
+    	right: 0.5rem;
+    	top: 0.25em;
+    	transform: rotate(-45deg);
+    	vertical-align: top;
+    	width: 0.75em;
+    }
+    a.collapsed:after {
+    	transform: rotate(135deg);
+      top: 0;     
+    }
+  }
+}
