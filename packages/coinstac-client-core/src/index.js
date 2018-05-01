@@ -209,7 +209,6 @@ class CoinstacClient {
     runId,
     runPipeline // eslint-disable-line no-unused-vars
   ) {
-    debugger;
     return mkdirp(path.join(this.appDirectory, this.clientId, runId))
     .then(() => {
       // TODO: validate runPipeline against clientPipeline
