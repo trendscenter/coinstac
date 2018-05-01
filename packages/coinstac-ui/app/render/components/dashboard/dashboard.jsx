@@ -198,28 +198,24 @@ class Dashboard extends Component {
                 },
               });
 
-              // 5 second timeout to ensure no port conflicts in
-              //  development env between remote and client pipelines
-              setTimeout(() => {
-                this.props.incrementRunCount(consortium.id);
-                ipcRenderer.send('start-pipeline', {
-                  consortium,
-                  pipeline: run.pipelineSnapshot,
-                  filesArray: filesArray.allFiles,
-                  run: { ...run, status },
-                });
-              }, 5000);
+              this.props.incrementRunCount(consortium.id);
+              ipcRenderer.send('start-pipeline', {
+                consortium,
+                pipeline: run.pipelineSnapshot,
+                filesArray: filesArray.allFiles,
+                run: { ...run, status },
+              });
             }
           });
-        // Not saved locally, but results signify complete
+          // Not saved locally, but results signify complete
         } else if (runIndexInLocalRuns === -1 && nextProps.remoteRuns[i].results) {
           ipcRenderer.send('clean-remote-pipeline', nextProps.remoteRuns[i].id);
           this.props.saveLocalRun({ ...nextProps.remoteRuns[i], status: 'complete' });
-        // Not saved locally, but error signify complete
+          // Not saved locally, but error signify complete
         } else if (runIndexInLocalRuns === -1 && nextProps.remoteRuns[i].error) {
           ipcRenderer.send('clean-remote-pipeline', nextProps.remoteRuns[i].id);
           this.props.saveLocalRun({ ...nextProps.remoteRuns[i], status: 'error' });
-        // Run already in props but error is incoming
+          // Run already in props but error is incoming
         } else if (runIndexInLocalRuns > -1 && nextProps.remoteRuns[i].error
           && !this.props.runs[runIndexInLocalRuns].error && this.props.consortia.length
           && (

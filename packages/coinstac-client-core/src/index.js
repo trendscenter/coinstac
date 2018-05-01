@@ -209,6 +209,7 @@ class CoinstacClient {
     runId,
     runPipeline // eslint-disable-line no-unused-vars
   ) {
+    debugger;
     return mkdirp(path.join(this.appDirectory, this.clientId, runId))
     .then(() => {
       // TODO: validate runPipeline against clientPipeline
@@ -233,7 +234,7 @@ class CoinstacClient {
 
       const newPipeline = this.pipelineManager.startPipeline(runObj);
 
-      return Promise.all([newPipeline, linkPromises]);
+      return Promise.all([newPipeline, ...linkPromises]);
     });
   }
 

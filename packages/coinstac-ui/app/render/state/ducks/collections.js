@@ -58,7 +58,9 @@ function iteratePipelineSteps(consortium, filesByGroup, baseDirectory) {
                   mapIndex < step.inputMap[key].ownerMappings.length;
                   mapIndex += 1
                 ) {
-                  if (step.inputMap[key].ownerMappings[mapIndex].name === col) {
+                  // TODO: using use entered names as keys or equality for the raw columns in the
+                  // csv is a bad idea, fix this and clean up this whole function
+                  if (col.toLowerCase().includes(step.inputMap[key].ownerMappings[mapIndex].name)) {
                     indices.push({
                       index: colIndex,
                       type: step.inputMap[key].ownerMappings[mapIndex].type,
