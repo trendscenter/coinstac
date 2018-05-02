@@ -77,6 +77,17 @@ export default class ConsortiumAbout extends Component {
     return (
       <div>
         <Form onSubmit={saveConsortium}>
+
+          {owner &&
+            <Button
+              bsStyle="success"
+              type="submit"
+              className="pull-right"
+            >
+              Save
+            </Button>
+          }
+          <h3>About Consortium</h3>
           <FormGroup controlId="name">
             <ControlLabel>Name</ControlLabel>
             <FormControl
@@ -176,16 +187,6 @@ export default class ConsortiumAbout extends Component {
                 </tbody>
               </Table>
             </div>
-          }
-
-          {owner &&
-            <Button
-              bsStyle="success"
-              type="submit"
-              className="pull-right"
-            >
-              Save
-            </Button>
           }
         </Form>
       </div>
