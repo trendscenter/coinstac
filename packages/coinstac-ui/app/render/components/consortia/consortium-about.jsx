@@ -89,7 +89,7 @@ export default class ConsortiumAbout extends Component {
           </FormGroup>
 
           <FormGroup controlId="description">
-            <ControlLabel>Description</ControlLabel>
+            <ControlLabel>Description</ControlLabel> (Optional)
             <FormControl
               disabled={!owner}
               componentClass="textarea"
@@ -204,4 +204,3 @@ ConsortiumAbout.propTypes = {
 ConsortiumAbout.defaultProps = {
   consortium: null,
 };
-

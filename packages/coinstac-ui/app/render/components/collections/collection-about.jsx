@@ -70,7 +70,7 @@ export default class CollectionAbout extends Component {
             </FormGroup>
 
             <FormGroup controlId="description">
-              <ControlLabel>Study Description</ControlLabel>
+              <ControlLabel>Study Description</ControlLabel> (Optional)
               <FormControl
                 componentClass="textarea"
                 value={collection.studyDescription || ''}
