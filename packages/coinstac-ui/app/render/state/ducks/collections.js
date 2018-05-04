@@ -23,7 +23,7 @@ function iteratePipelineSteps(consortium, filesByGroup, baseDirectory) {
   const steps = [];
 
   /* Get step covariates and compare against local file mapping to ensure mapping is complete
-      Add local files groups to array in order to grab files to pass to pipeline */
+  Add local files groups to array in order to grab files to pass to pipeline */
   for (let sIndex = 0; sIndex < consortium.pipelineSteps.length; sIndex += 1) {
     const step = consortium.pipelineSteps[sIndex];
     const inputMap = { ...step.inputMap };
@@ -34,109 +34,105 @@ function iteratePipelineSteps(consortium, filesByGroup, baseDirectory) {
       const key = inputKeys[keyIndex];
       if ('ownerMappings' in step.inputMap[key]) {
         const keyArray = [[], [], []]; // [[values], [labels], [type (if present)]]
+        const mappingIndex = 0;
+        const mappingObj = step.inputMap[key].ownerMappings[mappingIndex];
+        if (mappingObj.source === 'file'
+        && consortium.stepIO[sIndex] && consortium.stepIO[sIndex][key][mappingIndex]
+        && consortium.stepIO[sIndex][key][mappingIndex].collectionId
+        && consortium.stepIO[sIndex][key][mappingIndex].column) {
+          const { groupId, collectionId } = consortium.stepIO[sIndex][key][mappingIndex];
+          collections.push({ groupId, collectionId });
 
-        for (let mappingIndex = 0;
-            mappingIndex < step.inputMap[key].ownerMappings.length;
-            mappingIndex += 1) {
-          const mappingObj = step.inputMap[key].ownerMappings[mappingIndex];
-          if (mappingObj.source === 'file'
-              && consortium.stepIO[sIndex] && consortium.stepIO[sIndex][key][mappingIndex]
-              && consortium.stepIO[sIndex][key][mappingIndex].collectionId
-              && consortium.stepIO[sIndex][key][mappingIndex].column) {
-            const { groupId, collectionId } = consortium.stepIO[sIndex][key][mappingIndex];
-            collections.push({ groupId, collectionId });
-
-            // This changes by how the parser is reading in files - concat or push
-            if (filesByGroup) {
-              // Cast col types
-              const parsedRows = filesByGroup[consortium.stepIO[sIndex][key][mappingIndex].groupId];
-              // Get typed indices from header (first row)
-              const indices = [];
-              parsedRows[0].forEach((col, colIndex) => { // eslint-disable-line no-loop-func
-                for (
-                  let mapIndex = 0;
-                  mapIndex < step.inputMap[key].ownerMappings.length;
-                  mapIndex += 1
-                ) {
-                  // TODO: using use entered names as keys or equality for the raw columns in the
-                  // csv is a bad idea, fix this and clean up this whole function
-                  if (col.toLowerCase().includes(
-                    step.inputMap[key].ownerMappings[mapIndex].name.toLowerCase()
-                  )) {
-                    indices.push({
-                      index: colIndex,
-                      type: step.inputMap[key].ownerMappings[mapIndex].type,
-                    });
-                    break;
-                  }
+          // This changes by how the parser is reading in files - concat or push
+          if (filesByGroup) {
+            // Cast col types
+            const parsedRows = filesByGroup[consortium.stepIO[sIndex][key][mappingIndex].groupId];
+            // Get typed indices from header (first row)
+            const indices = [];
+            parsedRows[0].forEach((col, colIndex) => { // eslint-disable-line no-loop-func
+              for (
+                let mapIndex = 0;
+                mapIndex < step.inputMap[key].ownerMappings.length;
+                mapIndex += 1
+              ) {
+                // TODO: using use entered names as keys or equality for the raw columns in the
+                // csv is a bad idea, fix this and clean up this whole function
+                if (col.toLowerCase().includes(
+                  step.inputMap[key].ownerMappings[mapIndex].name.toLowerCase()
+                )) {
+                  indices.push({
+                    index: colIndex,
+                    type: step.inputMap[key].ownerMappings[mapIndex].type,
+                  });
+                  break;
                 }
-              });
-              // Cast types to row col indices
-              parsedRows.map((row, rowIndex) => {
-                if (rowIndex === 0) {
-                  return row;
-                }
-
-                indices.forEach((col) => {
-                  if (typeof row[col.index] === 'string') {
-                    if (col.type === 'boolean' && row[col.index].toLowerCase() === 'true') {
-                      row[col.index] = true;
-                    } else if (col.type === 'boolean' && row[col.index].toLowerCase() === 'false') {
-                      row[col.index] = false;
-                    } else if (col.type === 'number') {
-                      row[col.index] = parseFloat(row[col.index]);
-                    }
-                  }
-                });
-
-                return row;
-              });
-              keyArray[0].push(parsedRows);
-              keyArray[1].push(consortium.stepIO[sIndex][key][mappingIndex].column);
-
-              if ('type' in mappingObj) {
-                keyArray[2].push(mappingObj.type);
               }
-            }
-          } else if (mappingObj.source === 'file'
-              && (!consortium.stepIO[sIndex] || !consortium.stepIO[sIndex][key][mappingIndex]
-              || !consortium.stepIO[sIndex][key][mappingIndex].collectionId
-              || !consortium.stepIO[sIndex][key][mappingIndex].column)) {
-            mappingIncomplete = true;
-            break;
-          } else if (filesByGroup && inputDataTypes.indexOf(mappingObj.type) > -1
-              && consortium.stepIO[sIndex][key][mappingIndex].groupId
-              && consortium.stepIO[sIndex][key][mappingIndex].column) {
-            let filepaths = filesByGroup[consortium.stepIO[sIndex][key][mappingIndex].groupId];
+            });
+            // Cast types to row col indices
+            parsedRows.map((row, rowIndex) => {
+              if (rowIndex === 0) {
+                return row;
+              }
 
-            const e = new RegExp(/[-\/\\^$*+?.()|[\]{}]/g); // eslint-disable-line no-useless-escape
-            const escape = (string) => {
-              return string.replace(e, '\\$&');
-            };
-            if (filepaths) {
-              filepaths = filepaths.map((path) => {
-                if (extname(path[0]) !== '') {
-                  const pathsep = new RegExp(`${escape(sep)}|:`, 'g');
-                  return resolve(baseDirectory, path[0]).replace(pathsep, '-');
+              indices.forEach((col) => {
+                if (typeof row[col.index] === 'string') {
+                  if (col.type === 'boolean' && row[col.index].toLowerCase() === 'true') {
+                    row[col.index] = true;
+                  } else if (col.type === 'boolean' && row[col.index].toLowerCase() === 'false') {
+                    row[col.index] = false;
+                  } else if (col.type === 'number') {
+                    row[col.index] = parseFloat(row[col.index]);
+                  }
                 }
-                return '';
               });
-            }
 
-            // There will only ever be one single data object. Don't nest arrays, use concat.
-            keyArray[0] = keyArray[0].concat(filepaths).filter(Boolean);
-            keyArray[1].push(mappingObj.type);
-            if ('value' in mappingObj) {
-              keyArray[2] = keyArray[2].concat(mappingObj.value);
+              return row;
+            });
+            keyArray[0].push(parsedRows);
+            keyArray[1].push(consortium.stepIO[sIndex][key].map(val => val.column));
+
+            if (step.inputMap[key].ownerMappings.every(val => !(val.type === undefined))) {
+              keyArray[2].push(step.inputMap[key].ownerMappings.map(val => val.type));
             }
-          } else if (inputDataTypes.indexOf(mappingObj.type) > -1
-              && (!consortium.stepIO[sIndex][key][mappingIndex].groupId
-                || !consortium.stepIO[sIndex][key][mappingIndex].column)) {
-            mappingIncomplete = true;
-            break;
-          } else if (filesByGroup) {
-            // TODO: Handle keys fromCache if need be
           }
+        } else if (mappingObj.source === 'file'
+          && (!consortium.stepIO[sIndex] || !consortium.stepIO[sIndex][key][mappingIndex]
+          || !consortium.stepIO[sIndex][key][mappingIndex].collectionId
+          || !consortium.stepIO[sIndex][key][mappingIndex].column)) {
+          mappingIncomplete = true;
+          break;
+        } else if (filesByGroup && inputDataTypes.indexOf(mappingObj.type) > -1
+        && consortium.stepIO[sIndex][key][mappingIndex].groupId
+        && consortium.stepIO[sIndex][key][mappingIndex].column) {
+          let filepaths = filesByGroup[consortium.stepIO[sIndex][key][mappingIndex].groupId];
+
+          const e = new RegExp(/[-\/\\^$*+?.()|[\]{}]/g); // eslint-disable-line no-useless-escape
+          const escape = (string) => {
+            return string.replace(e, '\\$&');
+          };
+          if (filepaths) {
+            filepaths = filepaths.map((path) => {
+              if (extname(path[0]) !== '') {
+                const pathsep = new RegExp(`${escape(sep)}|:`, 'g');
+                return resolve(baseDirectory, path[0]).replace(pathsep, '-');
+              }
+              return '';
+            });
+          }
+
+          // There will only ever be one single data object. Don't nest arrays, use concat.
+          keyArray[0] = keyArray[0].concat(filepaths).filter(Boolean);
+          keyArray[1].push(mappingObj.type);
+          if ('value' in mappingObj) {
+            keyArray[2] = keyArray[2].concat(mappingObj.value);
+          }
+        } else if (inputDataTypes.indexOf(mappingObj.type) > -1
+        && (!consortium.stepIO[sIndex][key][mappingIndex].groupId
+          || !consortium.stepIO[sIndex][key][mappingIndex].column)) {
+          mappingIncomplete = true;
+          break;
+        } else if (filesByGroup) {
+          // TODO: Handle keys fromCache if need be
         }
 
         inputMap[key] = { value: keyArray };
@@ -150,7 +146,6 @@ function iteratePipelineSteps(consortium, filesByGroup, baseDirectory) {
     if (mappingIncomplete) {
       break;
     }
-
     steps.push({ ...step, inputMap });
   }
 
@@ -167,130 +162,130 @@ function iteratePipelineSteps(consortium, filesByGroup, baseDirectory) {
 // Action Creators
 export const deleteAssociatedConsortia = applyAsyncLoading(consId =>
   dispatch =>
-    localDB.associatedConsortia
-      .delete(consId)
-      .then(() => {
-        dispatch(({
-          type: DELETE_ASSOCIATED_CONSORTIA,
-          payload: consId,
-        }));
-      })
-  );
+  localDB.associatedConsortia
+  .delete(consId)
+  .then(() => {
+    dispatch(({
+      type: DELETE_ASSOCIATED_CONSORTIA,
+      payload: consId,
+    }));
+  })
+);
 
 export const deleteCollection = applyAsyncLoading(collectionId =>
   dispatch =>
-    localDB.collections
-      .delete(collectionId)
-      .then(() => {
-        dispatch(({
-          type: DELETE_COLLECTION,
-          payload: collectionId,
-        }));
-      })
-  );
+  localDB.collections
+  .delete(collectionId)
+  .then(() => {
+    dispatch(({
+      type: DELETE_COLLECTION,
+      payload: collectionId,
+    }));
+  })
+);
 
 export const getAllCollections = applyAsyncLoading(() =>
-  dispatch =>
-    localDB.collections
-      .toArray()
-      .then((collections) => {
-        dispatch(({
-          type: SET_COLLECTIONS,
-          payload: collections,
-        }));
-      })
+dispatch =>
+localDB.collections
+.toArray()
+.then((collections) => {
+  dispatch(({
+    type: SET_COLLECTIONS,
+    payload: collections,
+  }));
+})
 );
 
 export const getCollectionFiles = consortiumId =>
-  dispatch =>
-    localDB.associatedConsortia.get(consortiumId)
-    .then((consortium) => {
-      let collections = { collections: [] };
-      if (consortium.pipelineSteps) {
-        collections = iteratePipelineSteps(consortium);
-      }
+dispatch =>
+localDB.associatedConsortia.get(consortiumId)
+.then((consortium) => {
+  let collections = { collections: [] };
+  if (consortium.pipelineSteps) {
+    collections = iteratePipelineSteps(consortium);
+  }
 
-      if ('error' in collections) {
-        return localDB.associatedConsortia.update(consortium.id, { isMapped: false })
-        .then(() => {
-          dispatch(({
-            type: GET_COLLECTION_FILES,
-            payload: collections,
-          }));
-          return collections;
-        });
-      }
-
-      return localDB.associatedConsortia.update(consortium.id, { isMapped: true })
-      .then(() => {
-        if (collections.collections.length === 0) {
-          return { allFiles: collections.collections };
-        }
-
-        return localDB.collections
-          .filter(collection =>
-            collections.collections.findIndex(c => c.collectionId === collection.id) > -1
-          )
-          .toArray()
-          .then((localDBCols) => {
-            let allFiles = [];
-            const filesByGroup = {};
-            let metaDir;
-            localDBCols.forEach((coll) => {
-              Object.values(coll.fileGroups).forEach((group) => {
-                allFiles = allFiles.concat(coll.fileGroups[group.id].files);
-                if ('metaFile' in group) {
-                  metaDir = dirname(group.metaFilePath);
-                  filesByGroup[group.id] = coll.fileGroups[group.id].metaFile;
-                } else {
-                  filesByGroup[group.id] = coll.fileGroups[group.id].files;
-                }
-              });
-            });
-
-            // TODO: Reconsider how to get updated steps
-            const { steps } = iteratePipelineSteps(consortium, filesByGroup, metaDir);
-
-            dispatch(({
-              type: GET_COLLECTION_FILES,
-              payload: { allFiles, steps },
-            }));
-            return { allFiles, steps };
-          });
-      });
+  if ('error' in collections) {
+    return localDB.associatedConsortia.update(consortium.id, { isMapped: false })
+    .then(() => {
+      dispatch(({
+        type: GET_COLLECTION_FILES,
+        payload: collections,
+      }));
+      return collections;
     });
+  }
+
+  return localDB.associatedConsortia.update(consortium.id, { isMapped: true })
+  .then(() => {
+    if (collections.collections.length === 0) {
+      return { allFiles: collections.collections };
+    }
+
+    return localDB.collections
+    .filter(collection =>
+      collections.collections.findIndex(c => c.collectionId === collection.id) > -1
+    )
+    .toArray()
+    .then((localDBCols) => {
+      let allFiles = [];
+      const filesByGroup = {};
+      let metaDir;
+      localDBCols.forEach((coll) => {
+        Object.values(coll.fileGroups).forEach((group) => {
+          allFiles = allFiles.concat(coll.fileGroups[group.id].files);
+          if ('metaFile' in group) {
+            metaDir = dirname(group.metaFilePath);
+            filesByGroup[group.id] = coll.fileGroups[group.id].metaFile;
+          } else {
+            filesByGroup[group.id] = coll.fileGroups[group.id].files;
+          }
+        });
+      });
+
+      // TODO: Reconsider how to get updated steps
+      const { steps } = iteratePipelineSteps(consortium, filesByGroup, metaDir);
+
+      dispatch(({
+        type: GET_COLLECTION_FILES,
+        payload: { allFiles, steps },
+      }));
+      return { allFiles, steps };
+    });
+  });
+});
 
 export const getAllAssociatedConsortia = applyAsyncLoading(() =>
-  dispatch =>
-    localDB.associatedConsortia
-      .toArray()
-      .then((consortia) => {
-        dispatch(({
-          type: GET_ASSOCIATED_CONSORTIA,
-          payload: consortia,
-        }));
-      })
+dispatch =>
+localDB.associatedConsortia
+.toArray()
+.then((consortia) => {
+  dispatch(({
+    type: GET_ASSOCIATED_CONSORTIA,
+    payload: consortia,
+  }));
+})
 );
 
 export const getAssociatedConsortia = applyAsyncLoading(consortiaIds =>
   dispatch =>
-    localDB.associatedConsortia
-      .filter(cons => consortiaIds.indexOf(cons.id) > -1)
-      .toArray()
-      .then((consortia) => {
-        dispatch(({
-          type: GET_ASSOCIATED_CONSORTIA,
-          payload: consortia,
-        }));
+  localDB.associatedConsortia
+  .filter(cons => consortiaIds.indexOf(cons.id) > -1)
+  .toArray()
+  .then((consortia) => {
+    dispatch(({
+      type: GET_ASSOCIATED_CONSORTIA,
+      payload: consortia,
+    }));
 
-        return consortia;
-      })
+    return consortia;
+  })
 );
 
 export const isAssocConsortiumMapped = applyAsyncLoading(consId =>
   () =>
-    localDB.associatedConsortia.get(consId)
-    .then(cons => cons.isMapped)
+  localDB.associatedConsortia.get(consId)
+  .then(cons => cons.isMapped)
 );
 
 export const unmapAssociatedConsortia = applyAsyncLoading(consortia =>
@@ -306,70 +301,70 @@ export const unmapAssociatedConsortia = applyAsyncLoading(consortia =>
 
     return Promise.all(updatePromises)
     .then(() =>
-      localDB.associatedConsortia
-      .toArray()
-    )
-    .then((allConsortia) => {
-      dispatch(({
-        type: UNMAP_ASSOCIATED_CONSORTIA,
-        payload: { allConsortia, consortiaChanged },
-      }));
-    });
-  }
+    localDB.associatedConsortia
+    .toArray()
+  )
+  .then((allConsortia) => {
+    dispatch(({
+      type: UNMAP_ASSOCIATED_CONSORTIA,
+      payload: { allConsortia, consortiaChanged },
+    }));
+  });
+}
 );
 
 export const removeCollectionsFromAssociatedConsortia
-  = applyAsyncLoading((consId, deleteCons, pipelineSteps, activePipelineId) =>
-  dispatch =>
-    localDB.associatedConsortia.get(consId)
-      .then((consortium) => {
-        return Promise.all([
-          consortium,
-          localDB.collections.toArray()
-          .then((collections) => {
-            const collectionIds = [];
-            collections.forEach((col) => {
-              if (col.associatedConsortia.indexOf(consId) > -1) {
-                collectionIds.push(col.id);
-              }
-            });
-            return collectionIds;
-          }),
-        ]);
-      })
-      .then(([consortium, collectionIds]) => {
-        return Promise.all([
-          consortium,
-          collectionIds.length > 0 ? localDB.collections
-              .filter(col => collectionIds.indexOf(col.id) > -1)
-              .modify((col) => {
-                const index = col.associatedConsortia.indexOf(consId);
-                col.associatedConsortia.splice(index, 1);
-              })
-            : null,
-          deleteCons ? localDB.associatedConsortia.delete(consId)
-            : localDB.associatedConsortia.update(consortium.id, {
-              activePipelineId, isMapped: false, stepIO: [], pipelineSteps, runs: 0,
-            }),
-        ]);
-      })
-      .then(([consortium]) =>
-        Promise.all([
-          consortium,
-          deleteCons ? null : getCollectionFiles(consortium.id)(dispatch),
-        ])
-      )
-      .then(() =>
-        Promise.all([
-          localDB.collections.toArray(),
-          localDB.associatedConsortia.toArray(),
-        ])
-      )
-      .then(([collections, associatedConsortia]) => {
-        const payload = { associatedConsortia, collections, consId };
-        if (deleteCons) {
-          payload.deleteCons = true;
+= applyAsyncLoading((consId, deleteCons, pipelineSteps, activePipelineId) =>
+dispatch =>
+localDB.associatedConsortia.get(consId)
+.then((consortium) => {
+  return Promise.all([
+    consortium,
+    localDB.collections.toArray()
+    .then((collections) => {
+      const collectionIds = [];
+      collections.forEach((col) => {
+        if (col.associatedConsortia.indexOf(consId) > -1) {
+          collectionIds.push(col.id);
         }
+      });
+      return collectionIds;
+    }),
+  ]);
+})
+.then(([consortium, collectionIds]) => {
+  return Promise.all([
+    consortium,
+    collectionIds.length > 0 ? localDB.collections
+    .filter(col => collectionIds.indexOf(col.id) > -1)
+    .modify((col) => {
+      const index = col.associatedConsortia.indexOf(consId);
+      col.associatedConsortia.splice(index, 1);
+    })
+    : null,
+    deleteCons ? localDB.associatedConsortia.delete(consId)
+    : localDB.associatedConsortia.update(consortium.id, {
+      activePipelineId, isMapped: false, stepIO: [], pipelineSteps, runs: 0,
+    }),
+  ]);
+})
+.then(([consortium]) =>
+Promise.all([
+  consortium,
+  deleteCons ? null : getCollectionFiles(consortium.id)(dispatch),
+])
+)
+.then(() =>
+Promise.all([
+  localDB.collections.toArray(),
+  localDB.associatedConsortia.toArray(),
+])
+)
+.then(([collections, associatedConsortia]) => {
+  const payload = { associatedConsortia, collections, consId };
+  if (deleteCons) {
+    payload.deleteCons = true;
+  }
 
         dispatch(({
           type: REMOVE_COLLECTIONS_FROM_CONS,
