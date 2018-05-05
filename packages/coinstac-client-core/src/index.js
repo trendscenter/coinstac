@@ -232,7 +232,7 @@ class CoinstacClient {
       }
 
       const newPipeline = this.pipelineManager.startPipeline(runObj);
-      
+
       return Promise.all([newPipeline, ...linkPromises]);
     });
   }

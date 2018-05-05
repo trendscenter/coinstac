@@ -89,10 +89,10 @@ function iteratePipelineSteps(consortium, filesByGroup, baseDirectory) {
               return row;
             });
             keyArray[0].push(parsedRows);
-            keyArray[1].push(consortium.stepIO[sIndex][key].map(val => val.column));
+            keyArray[1] = consortium.stepIO[sIndex][key].map(val => val.column);
 
             if (step.inputMap[key].ownerMappings.every(val => !(val.type === undefined))) {
-              keyArray[2].push(step.inputMap[key].ownerMappings.map(val => val.type));
+              keyArray[2] = step.inputMap[key].ownerMappings.map(val => val.type);
             }
           }
         } else if (mappingObj.source === 'file'
