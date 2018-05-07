@@ -87,7 +87,7 @@ const queueJob = (jobId, input, opts) => {
       AttachStderr: true,
       Cmd: input,
     },
-    opts
+    Object.assign({}, opts, opts.Image.includes(':') ? {} : { Image: `${opts.Image}:latest` })
   );
   return docker.createContainer(jobOpts).then((container) => {
     jobPool[jobId] = container;
