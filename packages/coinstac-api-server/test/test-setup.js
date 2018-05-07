@@ -4,6 +4,7 @@ const multiShot = require('./data/multi-shot-schema');
 const vbm = require('./data/vbm-schema');
 const decentralized = require('./data/coinstac-decentralized-test');
 const local = require('./data/coinstac-local-test');
+const drneFsl = require('./data/drne_fsl_schema');
 const helperFunctions = require('../src/auth-helpers');
 
 helperFunctions.getRethinkConnection()
@@ -25,6 +26,7 @@ helperFunctions.getRethinkConnection()
     Object.assign({}, singleShot, { submittedBy: 'test' }),
     Object.assign({}, multiShot, { submittedBy: 'test' }),
     Object.assign({}, vbm, { submittedBy: 'author' }),
+    Object.assign({}, drneFsl, { submittedBy: 'author' }),
   ], { returnChanges: true }).run(connection))
   .then(compInsertResult => rethink.table('pipelines').insert([
     {
