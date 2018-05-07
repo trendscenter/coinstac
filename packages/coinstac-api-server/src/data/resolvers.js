@@ -190,7 +190,7 @@ const resolvers = {
       if (args.userId !== credentials.id) {
         return Boom.unauthorized('Unauthorized action');
       }
-      
+
       return fetchOne('users', credentials.id);
     },
     fetchAllUsers: () => fetchAll('users'),
@@ -245,20 +245,21 @@ const resolvers = {
       const { permissions } = credentials
       let userId = credentials.id;
 
-      // If adding role for another person from consortium, check perms
-      if (args.userId &&
-          permissions[args.table][args.doc] &&
-          permissions[args.table][args.doc].write &&
-          (args.role !== 'owner' || args.userId !== credentials.id)
-      ) {
-        userId = args.userId;
-      } else if (args.userId &&
-          (!permissions[args.table][args.doc] ||
-          !permissions[args.table][args.doc].write ||
-          (args.role === 'owner' && args.userId === credentials.id))
-      ) {
-        return Boom.forbidden('Action not permitted');
-      }
+      // TODO: perm update
+      // // If adding role for another person from consortium, check perms
+      // if (args.userId &&
+      //     permissions[args.table][args.doc] &&
+      //     permissions[args.table][args.doc].write &&
+      //     (args.role !== 'owner' || args.userId !== credentials.id)
+      // ) {
+      //   userId = args.userId;
+      // } else if (args.userId &&
+      //     (!permissions[args.table][args.doc] ||
+      //     !permissions[args.table][args.doc].write ||
+      //     (args.role === 'owner' && args.userId === credentials.id))
+      // ) {
+      //   return Boom.forbidden('Action not permitted');
+      // }
 
       return helperFunctions.getRethinkConnection()
         .then(connection =>
@@ -276,7 +277,7 @@ const resolvers = {
 
             const updateObj = { permissions: { [args.table]: { [args.doc]: newRoles } } };
 
-            // Add entry to user statuses object && 
+            // Add entry to user statuses object &&
             if (args.table === 'consortia') {
               updateObj.consortiaStatuses = {};
               updateObj.consortiaStatuses[args.doc] = 'none';
@@ -356,11 +357,12 @@ const resolvers = {
      * @return {object} Deleted consortium
      */
     deleteConsortiumById: ({ auth: { credentials: { permissions } } }, args) => {
-      if (!permissions.consortia[args.consortiumId]
-          || !permissions.consortia[args.consortiumId].write
-      ) {
-        return Boom.forbidden('Action not permitted');
-      }
+      // TODO: perm update
+      // if (!permissions.consortia[args.consortiumId]
+      //     || !permissions.consortia[args.consortiumId].write
+      // ) {
+      //   return Boom.forbidden('Action not permitted');
+      // }
 
       return helperFunctions.getRethinkConnection()
         .then(connection =>
@@ -415,18 +417,19 @@ const resolvers = {
       const { permissions } = credentials;
       let userId = credentials.id;
 
-      // If adding another person from consortium, check perms
-      if (args.userId &&
-          permissions.consortia[args.consortiumId] &&
-          permissions.consortia[args.consortiumId].write
-      ) {
-        userId = args.userId;
-      } else if (args.userId &&
-          (!permissions.consortia[args.consortiumId] ||
-          !permissions.consortia[args.consortiumId].write)
-      ) {
-        return Boom.forbidden('Action not permitted');
-      }
+      // TODO: perm update
+      // // If adding another person from consortium, check perms
+      // if (args.userId &&
+      //     permissions.consortia[args.consortiumId] &&
+      //     permissions.consortia[args.consortiumId].write
+      // ) {
+      //   userId = args.userId;
+      // } else if (args.userId &&
+      //     (!permissions.consortia[args.consortiumId] ||
+      //     !permissions.consortia[args.consortiumId].write)
+      // ) {
+      //   return Boom.forbidden('Action not permitted');
+      // }
 
       return helperFunctions.getRethinkConnection()
         .then(connection =>
@@ -448,20 +451,21 @@ const resolvers = {
       const { permissions } = credentials;
       let userId = credentials.id;
 
-      // If removing another person from consortium, check perms
-      if (args.userId &&
-          permissions.consortia[args.consortiumId] &&
-          permissions.consortia[args.consortiumId].write
-      ) {
-        userId = args.userId;
-      } else if (args.userId &&
-          (!permissions.consortia[args.consortiumId] ||
-          !permissions.consortia[args.consortiumId].write)
-      ) {
-        return Boom.forbidden('Action not permitted');
-      }
+      // TODO: perm update
+      // // If removing another person from consortium, check perms
+      // if (args.userId &&
+      //     permissions.consortia[args.consortiumId] &&
+      //     permissions.consortia[args.consortiumId].write
+      // ) {
+      //   userId = args.userId;
+      // } else if (args.userId &&
+      //     (!permissions.consortia[args.consortiumId] ||
+      //     !permissions.consortia[args.consortiumId].write)
+      // ) {
+      //   return Boom.forbidden('Action not permitted');
+      // }
 
-      
+
       return helperFunctions.getRethinkConnection()
         .then((connection) =>
           rethink.table('consortia').get(args.consortiumId)
@@ -512,20 +516,21 @@ const resolvers = {
       const { permissions } = credentials
       let userId = credentials.id;
 
-      // If adding role for another person from consortium, check perms
-      if (args.userId &&
-          permissions[args.table][args.doc] &&
-          permissions[args.table][args.doc].write &&
-          (args.role !== 'owner' || args.userId !== credentials.id)
-      ) {
-        userId = args.userId;
-      } else if (args.userId &&
-          (!permissions[args.table][args.doc] ||
-          !permissions[args.table][args.doc].write ||
-          (args.role === 'owner' && args.userId === credentials.id))
-      ) {
-        return Boom.forbidden('Action not permitted');
-      }
+      // TODO: perm update
+      // // If adding role for another person from consortium, check perms
+      // if (args.userId &&
+      //     permissions[args.table][args.doc] &&
+      //     permissions[args.table][args.doc].write &&
+      //     (args.role !== 'owner' || args.userId !== credentials.id)
+      // ) {
+      //   userId = args.userId;
+      // } else if (args.userId &&
+      //     (!permissions[args.table][args.doc] ||
+      //     !permissions[args.table][args.doc].write ||
+      //     (args.role === 'owner' && args.userId === credentials.id))
+      // ) {
+      //   return Boom.forbidden('Action not permitted');
+      // }
 
       let updateObj = {
         permissions: { [args.table]: {
@@ -594,11 +599,13 @@ const resolvers = {
      */
     saveConsortium: ({ auth: { credentials } }, args) => {
       const { permissions } = credentials;
-      if (!permissions.consortia.write
-          && args.consortium.id
-          && !permissions.consortia[args.consortium.id].write) {
-            return Boom.forbidden('Action not permitted');
-      }
+
+      // TODO: perm update
+      // if (!permissions.consortia.write
+      //     && args.consortium.id
+      //     && !permissions.consortia[args.consortium.id].write) {
+      //       return Boom.forbidden('Action not permitted');
+      // }
 
       return helperFunctions.getRethinkConnection()
         .then(connection =>
