@@ -191,23 +191,23 @@ class ConsortiumTabs extends Component {
               users={users}
             />
           </Tab>
-          <Tab
-            eventKey={2}
-            title="Pipelines"
-            disabled={typeof this.state.consortium.id === 'undefined'}
-            style={styles.tab}
-          >
-            <ConsortiumPipeline
-              consortium={this.state.consortium}
-              owner={isOwner}
-              pipelines={this.props.pipelines}
-            />
-          </Tab>
-          {isOwner &&
+          {typeof this.state.consortium.id !== 'undefined' ?
+            <Tab
+              eventKey={2}
+              title="Pipelines"
+              style={styles.tab}
+            >
+              <ConsortiumPipeline
+                consortium={this.state.consortium}
+                owner={isOwner}
+                pipelines={this.props.pipelines}
+              />
+            </Tab>
+          : ''}
+          {isOwner && typeof this.state.consortium.id !== 'undefined' ?
             <Tab
               eventKey={3}
               title="Runs"
-              disabled={typeof this.state.consortium.id === 'undefined'}
               style={styles.tab}
             >
               <ConsortiumRuns
@@ -216,7 +216,7 @@ class ConsortiumTabs extends Component {
                 owner={isOwner}
               />
             </Tab>
-          }
+          : ''}
         </Tabs>
       </div>
     );

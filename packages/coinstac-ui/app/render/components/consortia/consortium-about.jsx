@@ -77,6 +77,17 @@ export default class ConsortiumAbout extends Component {
     return (
       <div>
         <Form onSubmit={saveConsortium}>
+
+          {owner &&
+            <Button
+              bsStyle="success"
+              type="submit"
+              className="pull-right"
+            >
+              Save
+            </Button>
+          }
+          <h3>About Consortium</h3>
           <FormGroup controlId="name">
             <ControlLabel>Name</ControlLabel>
             <FormControl
@@ -89,7 +100,7 @@ export default class ConsortiumAbout extends Component {
           </FormGroup>
 
           <FormGroup controlId="description">
-            <ControlLabel>Description</ControlLabel>
+            <ControlLabel>Description</ControlLabel> (Optional)
             <FormControl
               disabled={!owner}
               componentClass="textarea"
@@ -177,16 +188,6 @@ export default class ConsortiumAbout extends Component {
               </Table>
             </div>
           }
-
-          {owner &&
-            <Button
-              bsStyle="success"
-              type="submit"
-              className="pull-right"
-            >
-              Save
-            </Button>
-          }
         </Form>
       </div>
     );
@@ -204,4 +205,3 @@ ConsortiumAbout.propTypes = {
 ConsortiumAbout.defaultProps = {
   consortium: null,
 };
-
