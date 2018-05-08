@@ -178,3 +178,7 @@ Next, you'll need to start the application. You can do this from the command lin
 Open the COINSTAC repo in VSCode and click on the debugging icon, which is the fourth icon down on the left-hand side of the screen. At the top of the left-hand side panel should be a *DEBUG* dropdown. Select `Debug` in the dropdown and hit the play button to begin debugging.
 
 **Test data for collections mapping can be found in `coinstac-ui/test/e2e/test_files/site1/`**
+
+## Setup Pipeline
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/QL95M74usAA" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
