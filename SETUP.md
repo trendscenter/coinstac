@@ -179,6 +179,8 @@ Open the COINSTAC repo in VSCode and click on the debugging icon, which is the f
 
 **Test data for collections mapping can be found in `coinstac-ui/test/e2e/test_files/site1/`**
 
-## Setup Pipeline
+## Steps to Setup Pipeline 
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/QL95M74usAA" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+A YouTube video showing the basic steps for creating a Consortia, adding Collection files, and running a Pipeline. 
+
+[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/QL95M74usAA/0.jpg)](https://www.youtube.com/watch?v=QL95M74usAA)
