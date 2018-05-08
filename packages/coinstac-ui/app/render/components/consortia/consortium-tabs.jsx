@@ -79,8 +79,9 @@ class ConsortiumTabs extends Component {
       nextProps.activeConsortium.members
         .filter(user => consortiumUsers.findIndex(consUser => consUser.id === user) === -1)
         .forEach(user => consortiumUsers.push({ id: user, member: true }));
-
-      this.setState({ consortium: { ...other }, consortiumUsers });
+      if(this.props.router.routes[3].path !== 'new'){
+        this.setState({ consortium: { ...other }, consortiumUsers });
+      }
     }
   }
 
