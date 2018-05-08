@@ -1,6 +1,6 @@
 {
   "name": "coinstac-ui",
-  "version": "3.1.8",
+  "version": "3.1.9",
   "description": "COINSTAC desktop application.",
   "main": "app/main/index.js",
   "dependencies": {
@@ -11,8 +11,8 @@
     "babel-polyfill": "^6.26.0",
     "bootstrap-sass": "^3.3.7",
     "classnames": "^2.2.5",
-    "coinstac-client-core": "^3.1.7",
-    "coinstac-common": "^3.1.7",
+    "coinstac-client-core": "^3.1.9",
+    "coinstac-common": "^3.1.9",
     "coinstac-graphql-schema": "^3.1.6",
     "commander": "^2.15.1",
     "convict": "^1.5.0",
