@@ -10,6 +10,7 @@ import {
 } from 'react-bootstrap';
 import update from 'immutability-helper';
 import variableOptions from './pipeline-variable-data-options.json';
+import MultiSelectField from '../common/react-select';
 
 export default class PipelineStepMemberTable extends Component {
   static getCovarSourceTitle(obj) {
@@ -87,24 +88,17 @@ export default class PipelineStepMemberTable extends Component {
               {objKey === 'data' &&
                 <td>
                   {obj.type === 'FreeSurfer' &&
-                    <FormControl
-                      componentClass="select"
-                      multiple
-                      disabled={!owner}
-                      inputRef={(input) => { this[obj.type] = input; }}
-                      value={obj.value || []}
-                      onChange={() => updateStep({
-                        ...step,
-                        inputMap: getNewObj('value', this[obj.type].value, index, true),
-                      })}
-                    >
-                      <option key="none-select-option" value="none">None</option>
-                      {variableOptions.freesurferROIs.map(name => (
-                        <option key={`${name}-select-option`} value={name}>
-                          {name}
-                        </option>
-                      ))}
-                    </FormControl>
+                    <div>
+                      {console.log(obj)}
+                      <MultiSelectField
+                        placeholder={'Select Area(s) of Interest'}
+                        options={variableOptions.freesurferROIs}
+                        change={(value) => updateStep({
+                          ...step,
+                          inputMap: getNewObj('value', value, index, true),
+                        })}
+                      />
+                    </div>
                   }
                   {obj.type !== 'FreeSurfer' && <span>-</span>}
                 </td>
