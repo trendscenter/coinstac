@@ -430,15 +430,23 @@ const resolvers = {
       // ) {
       //   return Boom.forbidden('Action not permitted');
       // }
-
-      return helperFunctions.getRethinkConnection()
+      //
+      const userexists = helperFunctions.getRethinkConnection()
         .then(connection =>
-          rethink.table('consortia').get(args.consortiumId)
-            .update(
-              { "members": rethink.row("members").append(userId)}, { returnChanges: true }
-            ).run(connection)
-        )
-        .then(result => result.changes[0].new_val)
+          rethink.table('consortia').get(args.consortiumId)('members')
+          .contains(userId).run(connection)
+        ).then((result) => { result });
+
+      if(!userexists){
+        return helperFunctions.getRethinkConnection()
+          .then(connection =>
+            rethink.table('consortia').get(args.consortiumId)
+              .update(
+                { "members": rethink.row("members").append(userId)}, { returnChanges: true }
+              ).run(connection)
+          )
+          .then(result => result.changes[0].new_val)
+      }
     },
     /**
      * Remove user id to consortium members list

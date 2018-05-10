@@ -121,17 +121,18 @@ class ConsortiaList extends Component {
     // Add owner/member list
     const consortiumUsers = [];
     consortium.owners.forEach(user => consortiumUsers.push({id: user, owner: true, member: true }));
-    consortium.members
-      .filter(user => consortiumUsers.findIndex(consUser => consUser.id === user) === -1)
-      .forEach(user => consortiumUsers.push({ id: user, member: true }));
-    const avatars = consortiumUsers.map(user =>
-      <MemberAvatar
-        key={`${user.id}-avatar`}
-        consRole={user.owner ? "Owner" : "Member"}
-        name={user.id}
-        showDetails
-        width={40}
-      />
+    consortium.members.forEach(user => consortiumUsers.push({ id: user, member: true }));
+    const avatars = consortiumUsers
+      .filter(function(v, i, a){ return i == a.indexOf(v); })
+      .map((user, index) => {
+        return <MemberAvatar
+          key={`${user.id}-avatar-${index}`}
+          consRole={user.owner ? "Owner" : 'Member'}
+          name={user.id}
+          showDetails
+          width={40}
+        />
+      }
     );
 
     text.push(
