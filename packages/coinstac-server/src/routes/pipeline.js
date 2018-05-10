@@ -90,7 +90,6 @@ module.exports = [
               saveResults(run.id, result);
             })
             .catch((error) => {
-              console.log(error);
               saveError(run.id, error);
             });
         });
