@@ -416,7 +416,7 @@ const resolvers = {
      */
     joinConsortium: ({ auth: { credentials } }, args) => {
       const { permissions } = credentials;
-      let userId = args.userId;
+      const userId = args.userId;
       // TODO: perm update
       // // If adding another person from consortium, check perms
       // if (args.userId &&
@@ -431,21 +431,23 @@ const resolvers = {
       //   return Boom.forbidden('Action not permitted');
       // }
       //
-    return helperFunctions.getRethinkConnection()
-      .then(connection =>
-        rethink.table('consortia').get(args.consortiumId)('members')
-        .contains(userId).run(connection)
-      ).then((result) => {
-        if(!result){
-          helperFunctions.getRethinkConnection().then((connection) => {
-            rethink.table('consortia').get(args.consortiumId)
-              .update(
-                { "members": rethink.row("members").append(userId)}, { returnChanges: true }
-              ).run(connection)
-          })
-          .then(result => result.changes[0].new_val)
-        }
-      })
+    if(userId){
+      return helperFunctions.getRethinkConnection()
+        .then(connection =>
+          rethink.table('consortia').get(args.consortiumId)('members')
+          .contains(userId).run(connection)
+        ).then((result) => {
+          if(!result){
+            helperFunctions.getRethinkConnection().then((connection) => {
+              rethink.table('consortia').get(args.consortiumId)
+                .update(
+                  { "members": rethink.row("members").append(userId)}, { returnChanges: true }
+                ).run(connection)
+            })
+            .then(result => result.changes[0].new_val)
+          }
+        })
+      }
     },
     /**
      * Remove user id to consortium members list
@@ -457,8 +459,10 @@ const resolvers = {
      */
     leaveConsortium: ({ auth: { credentials } }, args) => {
       const { permissions } = credentials;
-      let userId = args.userId;
-
+      let userId = credentials.id;
+      if( args.userId ){
+        userId = args.userId;
+      }
       // TODO: perm update
       // // If removing another person from consortium, check perms
       // if (args.userId &&
