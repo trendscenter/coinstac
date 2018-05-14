@@ -435,7 +435,7 @@ const resolvers = {
         .then(connection =>
           rethink.table('consortia').get(args.consortiumId)('members')
           .contains(userId).run(connection)
-        ).then((result) => { result });
+        ).then((result) => { return result });
 
       if(!userexists){
         return helperFunctions.getRethinkConnection()
