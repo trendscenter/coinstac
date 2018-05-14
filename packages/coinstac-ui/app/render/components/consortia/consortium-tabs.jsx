@@ -107,8 +107,8 @@ class ConsortiumTabs extends Component {
   removeMemberFromConsortium(user) {
     return () => {
       this.props.leaveConsortium(this.state.consortium.id, user.id);
-      this.props.removeUserRole(user.id, 'consortia', this.state.consortium.id, 'member');
-      this.props.removeUserRole(user.id, 'consortia', this.state.consortium.id, 'owner');
+      //this.props.removeUserRole(user.id, 'consortia', this.state.consortium.id, 'member');
+      //this.props.removeUserRole(user.id, 'consortia', this.state.consortium.id, 'owner');
     };
   }
 

@@ -31,6 +31,7 @@ export default class ConsortiumAbout extends Component {
       const users = this.state.consortiumUsers.filter((stateUser) => {
         nextProps.consortiumUsers.findIndex(propsUser => propsUser.id === stateUser.id) > -1
       });
+      console.log(users);
       nextProps.consortiumUsers.forEach((propsUser) => {
         const stateIndex = this.state.consortiumUsers.findIndex(stateUser => stateUser.id === propsUser.id);
 
@@ -45,19 +46,20 @@ export default class ConsortiumAbout extends Component {
   }
 
   addMember() {
-    this.props.addMemberToConsortium(this.state.newMember[0].id);
+    const newMember = this.state.newMember;
+    this.props.addMemberToConsortium(newMember[0].id);
   }
 
   toggleOwner(consUser) {
     const { addUserRole, consortium, owner, removeUserRole, user } = this.props;
     return () => {
-      if (owner && consUser.id !== user.id) {
-        if (consUser.owner) {
-          removeUserRole(consUser.id, 'consortia', consortium.id, 'owner');
-        } else {
+      // if (owner && consUser.id !== user.id) {
+      //   if (consUser.owner) {
+      //     removeUserRole(consUser.id, 'consortia', consortium.id, 'owner');
+      //   } else {
           addUserRole(consUser.id, 'consortia', consortium.id, 'owner');
-        }
-      }
+      //   }
+      // }
     };
   }
 
@@ -162,7 +164,7 @@ export default class ConsortiumAbout extends Component {
                           <Checkbox
                             onChange={this.toggleOwner(consUser)}
                             checked={consUser.owner ? true : false}
-                            disabled={!owner || consUser.id === user.id}
+                            //disabled={!owner || consUser.id === user.id}
                           />
                         </td>
                         <td>
@@ -170,6 +172,8 @@ export default class ConsortiumAbout extends Component {
                         </td>
                         {owner &&
                           <td>
+                            {console.log(user.id+'='+consUser.id)}
+                            { user.id !== consUser.id ?
                             <Button
                               bsStyle="danger"
                               onClick={removeMemberFromConsortium(consUser)}
@@ -179,6 +183,7 @@ export default class ConsortiumAbout extends Component {
                                 className="glyphicon glyphicon-remove"
                               /> Remove
                             </Button>
+                            : ''}
                           </td>
                         }
                       </tr>
