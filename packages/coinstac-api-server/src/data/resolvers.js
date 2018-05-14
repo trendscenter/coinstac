@@ -411,12 +411,12 @@ const resolvers = {
      * @param {object} auth User object from JWT middleware validateFunc
      * @param {object} args
      * @param {string} args.consortiumId Consortium id to join
+     * @param {string} args.userId Consortium id to join
      * @return {object} Updated consortium
      */
     joinConsortium: ({ auth: { credentials } }, args) => {
       const { permissions } = credentials;
-      let userId = credentials.id;
-
+      let userId = args.userId;
       // TODO: perm update
       // // If adding another person from consortium, check perms
       // if (args.userId &&
@@ -431,33 +431,33 @@ const resolvers = {
       //   return Boom.forbidden('Action not permitted');
       // }
       //
-      const userexists = helperFunctions.getRethinkConnection()
-        .then(connection =>
-          rethink.table('consortia').get(args.consortiumId)('members')
-          .contains(userId).run(connection)
-        ).then((result) => { return result });
-
-      if(!userexists){
-        return helperFunctions.getRethinkConnection()
-          .then(connection =>
+    return helperFunctions.getRethinkConnection()
+      .then(connection =>
+        rethink.table('consortia').get(args.consortiumId)('members')
+        .contains(userId).run(connection)
+      ).then((result) => {
+        if(!result){
+          helperFunctions.getRethinkConnection().then((connection) => {
             rethink.table('consortia').get(args.consortiumId)
               .update(
                 { "members": rethink.row("members").append(userId)}, { returnChanges: true }
               ).run(connection)
-          )
+          })
           .then(result => result.changes[0].new_val)
-      }
+        }
+      })
     },
     /**
      * Remove user id to consortium members list
      * @param {object} auth User object from JWT middleware validateFunc
      * @param {object} args
      * @param {string} args.consortiumId Consortium id to join
+     * @param {string} args.userId Consortium id to join
      * @return {object} Updated consortium
      */
     leaveConsortium: ({ auth: { credentials } }, args) => {
       const { permissions } = credentials;
-      let userId = credentials.id;
+      let userId = args.userId;
 
       // TODO: perm update
       // // If removing another person from consortium, check perms
