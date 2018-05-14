@@ -18,22 +18,27 @@ export const getDocumentByParam = (param, prop, query) => ({
 });
 
 export const consortiaMembershipProp = (name) => {
-  return {
-    props: ({ mutate }) => ({
-      [name]: (consortiumId, userId) => mutate({
-        variables: { consortiumId, userId },
-        update: (store, { data }) => {
-          const consQuery = store.readQuery({ query: FETCH_ALL_CONSORTIA_QUERY });
-          const index = consQuery.fetchAllConsortia
-            .findIndex(con => con.id === data[name].id);
-          if (index > -1) {
-            consQuery.fetchAllConsortia[index].members = data[name].members;
-          }
-          store.writeQuery({ query: FETCH_ALL_CONSORTIA_QUERY, data: consQuery });
-        },
+  if (name) {
+    return {
+      props: ({ mutate }) => ({
+        [name]: (consortiumId, userId) => mutate({
+          variables: { consortiumId, userId },
+          update: (store, { data }) => {
+            const consQuery = store.readQuery({ query: FETCH_ALL_CONSORTIA_QUERY });
+            const index = consQuery.fetchAllConsortia.findIndex((cons) => {
+              if (cons && data[name]) {
+                cons.id === data[name].id;
+              }
+            });
+            if (index > -1) {
+              consQuery.fetchAllConsortia[index].members = data[name].members;
+            }
+            store.writeQuery({ query: FETCH_ALL_CONSORTIA_QUERY, data: consQuery });
+          },
+        }),
       }),
-    }),
-  };
+    };
+  }
 };
 
 export const getAllAndSubProp = (document, listProp, query, subProp, subscription, filter) => ({
