@@ -7,7 +7,7 @@ class MultiSelectField extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      value: [],
+      value: this.props.value,
     };
     this.handleSelectChange = this.handleSelectChange.bind(this);
   }
@@ -40,9 +40,10 @@ class MultiSelectField extends Component {
 }
 
 MultiSelectField.propTypes = {
+  change: PropTypes.func.isRequired,
   options: PropTypes.array.isRequired,
   placeholder: PropTypes.string.isRequired,
-  change: PropTypes.func.isRequired,
+  value: PropTypes.string.isRequired,
 };
 
 export default MultiSelectField;
