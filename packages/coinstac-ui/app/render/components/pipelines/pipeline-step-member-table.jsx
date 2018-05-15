@@ -89,13 +89,13 @@ export default class PipelineStepMemberTable extends Component {
                 <td>
                   {obj.type === 'FreeSurfer' &&
                     <div>
-                      {console.log(obj)}
                       <MultiSelectField
+                        value={obj.value}
                         placeholder={'Select Area(s) of Interest'}
                         options={variableOptions.freesurferROIs}
                         change={(value) => updateStep({
                           ...step,
-                          inputMap: getNewObj('value', value, index, true),
+                          inputMap: getNewObj('value', value, index, false),
                         })}
                       />
                     </div>
