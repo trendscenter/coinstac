@@ -193,7 +193,7 @@ class ConsortiaList extends Component {
           Leave Consortium
         </Button>
       );
-    } else if (!member && !owner) {
+    } else if (!member && !owner && consortium.activePipelineId) {
       actions.push(
         <Button
           key={`${consortium.id}-join-cons-button`}
