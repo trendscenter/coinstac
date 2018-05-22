@@ -88,14 +88,36 @@ module.exports = {
 
         socket.on('run', (data) => {
           // TODO: probably put in a 'pre-run' route?
-          if (remoteClients[data.id]) {
+          if (remoteClients[data.id] && remoteClients[data.id][data.runId]) {
             socket.join(data.runId);
-            remoteClients[data.id][data.runId].currentOutput = data.output.output;
             remoteClients[data.id].lastSeen = Math.floor(Date.now() / 1000);
-            activePipelines[data.runId].state = 'recieved client data';
-            if (waitingOn(data.runId).length === 0) {
-              activePipelines[data.runId].state = 'recieved all clients data';
-              activePipelines[data.runId].remote.resolve({ output: aggregateRun(data.runId) });
+
+            // is the client giving us an error?
+            if (!data.error) {
+              // has this pipeline error'd out?
+              if (!activePipelines[data.runId].error) {
+                remoteClients[data.id][data.runId].currentOutput = data.output.output;
+                activePipelines[data.runId].state = 'recieved client data';
+                if (waitingOn(data.runId).length === 0) {
+                  activePipelines[data.runId].state = 'recieved all clients data';
+                  activePipelines[data.runId].remote.resolve({ output: aggregateRun(data.runId) });
+                }
+              } else {
+                io.of('/').to(data.runId).emit('run', { runId: data.runId, error: activePipelines[data.runId].error });
+              }
+            } else {
+              const runError = Object.assign(
+                new Error(),
+                data.error,
+                {
+                  error: `Pipeline error from user: ${data.id}\n Error details: ${data.error.error}`,
+                  message: `Pipeline error from user: ${data.id}\n Error details: ${data.error.message}`,
+                }
+              );
+              activePipelines[data.runId].state = 'recieved client error';
+              activePipelines[data.runId].error = runError;
+              io.of('/').to(data.runId).emit('run', { runId: data.runId, error: runError });
+              activePipelines[data.runId].remote.reject(runError);
             }
           }
         });
@@ -122,12 +144,12 @@ module.exports = {
       });
       socket.on('run', (data) => {
         // TODO: step check?
-        if (!data.error) {
-          activePipelines[data.runId].state = 'recieved data';
+        if (!data.error && activePipelines[data.runId]) {
+          activePipelines[data.runId].state = 'recieved central node data';
           activePipelines[data.runId].remote.resolve(data.output);
-        } else {
+        } else if (data.error && activePipelines[data.runId]) {
           activePipelines[data.runId].state = 'recieved error';
-          activePipelines[data.runId].remote.reject(data.error);
+          activePipelines[data.runId].remote.reject(Object.assign(new Error(), data.error));
         }
       });
     }
@@ -176,9 +198,27 @@ module.exports = {
             output: message,
           };
           if (mode === 'remote') {
-            io.of('/').to(pipeline.id).emit('run', { runId: pipeline.id, output: message });
+            if (message instanceof Error) {
+              io.of('/').to(pipeline.id).emit('run', { runId: pipeline.id, error: message });
+              const runError = Object.assign(
+                message,
+                {
+                  error: `Pipeline error from central node\n Error details: ${message.error}`,
+                  message: `Pipeline error from central node\n Error details: ${message.message}`,
+                }
+              );
+              activePipelines[pipeline.id].state = 'central node error';
+              activePipelines[pipeline.id].error = runError;
+              activePipelines[pipeline.id].remote.reject(runError);
+            } else {
+              io.of('/').to(pipeline.id).emit('run', { runId: pipeline.id, output: message });
+            }
           } else {
-            socket.emit('run', { id: clientId, runId: pipeline.id, output: message });
+            if (message instanceof Error) {
+              socket.emit('run', { id: clientId, runId: pipeline.id, error: message });
+            } else {
+              socket.emit('run', { id: clientId, runId: pipeline.id, output: message });
+            }
           }
         };
 
@@ -193,7 +233,7 @@ module.exports = {
           activePipelines[runId].state = 'waiting for remote';
           activePipelines[runId].remote = {
             resolve: proxRes,
-            error: proxRej,
+            reject: proxRej,
           };
           if (!noop) {
             if (transmitOnly) {

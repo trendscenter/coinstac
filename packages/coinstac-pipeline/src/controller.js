@@ -99,7 +99,19 @@ module.exports = {
                 controllerState.currentOutput = { output: output.output, success: output.success };
                 setStateProp('state', 'finished iteration');
                 cb(output.output);
-              }).catch(error => err(error));
+              }).catch(({ statusCode, message, error, name, stack, input }) => {
+                const iterationError = Object.assign(
+                  new Error(),
+                  { statusCode, message, error, name, stack, input: input.input }
+                );
+                if (controller.type === 'local') {
+                  err(iterationError);
+                } else {
+                  controllerState.currentOutput = iterationError;
+                  setStateProp('state', 'finished iteration with error');
+                  cb(iterationError);
+                }
+              });
             case 'nextComputation':
               // TODO: code for multiple comps on one controller
               // controllerState.computationIndex =
@@ -110,7 +122,7 @@ module.exports = {
               //   .start(input);
               break;
             case 'remote':
-              setStateProp('state', 'waiting on remote');
+              setStateProp('state', controllerState.mode === 'remote' ? 'waiting on local users' : 'waiting on central node');
               return remoteHandler({ input: controllerState.currentOutput })
               .then((output) => {
                 setStateProp('state', 'finished remote iteration');
@@ -120,7 +132,7 @@ module.exports = {
             case 'firstServerRemote':
               // TODO: not ideal, figure out better remote start
               // remove noop need
-              setStateProp('state', 'waiting on remote');
+              setStateProp('state', 'waiting on local users');
               return remoteHandler({ input: controllerState.currentOutput, noop: true })
               .then((output) => {
                 setStateProp('state', 'finished remote iteration');
@@ -128,7 +140,7 @@ module.exports = {
                 cb(output.output);
               }).catch(error => err(error));
             case 'doneRemote':
-              setStateProp('state', 'waiting on remote');
+              setStateProp('state', 'waiting on local users');
               // we want the success output, grabbing the last currentOutput is fine
               // Note that input arg === controllerState.currentOutput.output at this point
               return remoteHandler({ input: controllerState.currentOutput, transmitOnly: true })
