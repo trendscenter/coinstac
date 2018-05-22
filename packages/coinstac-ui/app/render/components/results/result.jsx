@@ -37,7 +37,7 @@ class Result extends Component {
           displayTypes,
         });
 
-        if (displayTypes.findIndex(disp => disp.type === 'scatter_plot') > -1) {
+        if (displayTypes && displayTypes.findIndex(disp => disp.type === 'scatter_plot') > -1) {
           plotData.testData = [];
           run.results.plots.map(result => (
             result.coordinates.map(val => (
@@ -48,7 +48,7 @@ class Result extends Component {
               })
             )
           )));
-        } else if (displayTypes.findIndex(disp => disp.type === 'box_plot') > -1) {
+        } else if (displayTypes && displayTypes.findIndex(disp => disp.type === 'box_plot') > -1) {
           plotData.testData = [];
           run.results.x.map(val => (
             plotData.testData.push(val)
@@ -76,7 +76,8 @@ class Result extends Component {
       stepsLength = run.pipelineSnapshot.steps.length;
     }
 
-    if (stepsLength > 0 && run.pipelineSnapshot.steps[stepsLength - 1].inputMap && run.pipelineSnapshot.steps[stepsLength - 1].inputMap.covariates) {
+    if (stepsLength > 0 && run.pipelineSnapshot.steps[stepsLength - 1].inputMap
+      && run.pipelineSnapshot.steps[stepsLength - 1].inputMap.covariates) {
       covariates = run.pipelineSnapshot.steps[stepsLength - 1]
         .inputMap.covariates.ownerMappings.map(m => m.name);
     }
@@ -158,7 +159,7 @@ class Result extends Component {
 
         {run && run.error &&
           <Well style={{ color: 'red' }}>
-            {JSON.stringify(run.error.error, null, 2)}
+            {JSON.stringify(run.error.message, null, 2)}
           </Well>
         }
       </div>

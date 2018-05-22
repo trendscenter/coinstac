@@ -3,7 +3,9 @@ const singleShot = require('./data/single-shot-schema');
 const multiShot = require('./data/multi-shot-schema');
 const vbm = require('./data/vbm-schema');
 const decentralized = require('./data/coinstac-decentralized-test');
+const decentralizedError = require('./data/coinstac-decentralized-error');
 const local = require('./data/coinstac-local-test');
+const localError = require('./data/coinstac-local-error');
 const drneFsl = require('./data/drne_fsl_schema');
 const helperFunctions = require('../src/auth-helpers');
 
@@ -22,7 +24,9 @@ helperFunctions.getRethinkConnection()
   .then(() => rethink.tableCreate('computations').run(connection))
   .then(() => rethink.table('computations').insert([
     Object.assign({}, local, { submittedBy: 'test' }),
+    Object.assign({}, localError, { submittedBy: 'test' }),
     Object.assign({}, decentralized, { submittedBy: 'test' }),
+    Object.assign({}, decentralizedError, { submittedBy: 'test' }),
     Object.assign({}, singleShot, { submittedBy: 'test' }),
     Object.assign({}, multiShot, { submittedBy: 'test' }),
     Object.assign({}, vbm, { submittedBy: 'author' }),
