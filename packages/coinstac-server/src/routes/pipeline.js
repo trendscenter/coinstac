@@ -82,6 +82,8 @@ module.exports = [
           res({}).code(201);
 
           remotePipeline.pipeline.stateEmitter.on('update', (data) => {
+            // TODO:  most likely should be removed post proto development
+            console.log(data); // eslint-disable-line no-console
             updateRunState(run.id, data);
           });
 
@@ -90,7 +92,7 @@ module.exports = [
               saveResults(run.id, result);
             })
             .catch((error) => {
-              console.log(error);
+              console.log(error); // eslint-disable-line no-console
               saveError(run.id, error);
             });
         });
