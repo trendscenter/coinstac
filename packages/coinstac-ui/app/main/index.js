@@ -131,7 +131,10 @@ loadConfig()
         core.unlinkFiles(run.id);
         mainWindow.webContents.send('local-run-error', {
           consName: consortium.name,
-          run: Object.assign(run, { error, endDate: Date.now() }),
+          run: Object.assign(
+            run,
+            { error: { message: error.message, stack: error.stack, error: error.error, input: error.input }, endDate: Date.now() }
+          ),
         });
       });
     });
