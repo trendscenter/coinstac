@@ -124,6 +124,7 @@ const getImages = () => {
  */
 const startService = (serviceId, serviceUserId, opts) => {
   let recurseLimit = 0;
+  let serviceStartedRecurseLimit = 0;
   const createService = () => {
     let proxRes;
     let proxRej;
@@ -161,8 +162,33 @@ const startService = (serviceId, serviceUserId, opts) => {
         services[serviceId].container = container;
         return container.start();
       })
-      // timeout for server startup
-      .then(() => setTimeoutPromise(5000))
+      // is the container service ready?
+      .then(() => {
+        const checkServicePort = () => {
+          return request({
+            url: `http://127.0.0.1:${services[serviceId].port}/run`,
+            method: 'POST',
+            json: true,
+            body: { command: ['echo', 'test', ''] },
+          })
+          .catch((status) => {
+            if (status.message === 'Error: socket hang up') {
+              serviceStartedRecurseLimit += 1;
+              if (serviceStartedRecurseLimit < 500) {
+                return setTimeoutPromise(100)
+                .then(() => checkServicePort());
+              }
+              // met limit, fallback to timeout
+              return setTimeoutPromise(5000);
+            }
+
+            // not a socket error, throw
+            throw status;
+          });
+        };
+
+        return checkServicePort();
+      })
       .then(() => {
         services[serviceId].service = (data) => {
           return request({
@@ -182,7 +208,7 @@ const startService = (serviceId, serviceUserId, opts) => {
           recurseLimit += 1;
           // this problem mostly occurs when started several boxes quickly
           // add some delay to give them breathing room to setup ports
-          return setTimeoutPromise(Math.floor(Math.random() * Math.floor(200)))
+          return setTimeoutPromise(200)
           .then(() => tryStartService());
         }
         proxRej(err);
@@ -192,7 +218,7 @@ const startService = (serviceId, serviceUserId, opts) => {
     return tryStartService();
   };
 
-  if (services[serviceId]) {
+  if (services[serviceId] && (services[serviceId] !== 'shutting down')) {
     if (services[serviceId].users.indexOf(serviceUserId) === -1) {
       services[serviceId].users.push(serviceUserId);
     }
@@ -286,6 +312,7 @@ const stopService = (serviceId, serviceUserId) => {
     services[serviceId].users.splice(services[serviceId].users.indexOf(serviceUserId), 1);
   }
   if (services[serviceId].users.length === 0) {
+    services[serviceId].state = 'shutting down';
     return services[serviceId].container.stop()
     .then(() => {
       delete services[serviceId];
