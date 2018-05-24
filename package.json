@@ -3,10 +3,7 @@
   "version": "2.0.0",
   "description": "Decentralized Analyses Made Easy",
   "main": "index.js",
-  "dependencies": {
-    "bluebird": "^3.5.1",
-    "hermit": "^0.2.2"
-  },
+  "dependencies": {},
   "devDependencies": {
     "cross-spawn": "^4.0.2",
     "eslint": "^3.19.0",
