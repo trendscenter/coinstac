@@ -32,7 +32,20 @@ module.exports = {
           }
         )
         .then((service) => {
-          return service(computation.command.concat([`${JSON.stringify(input)}`]));
+          return service(computation.command.concat([`${JSON.stringify(input)}`]))
+          .catch((error) => {
+            // decorate w/ input
+            error.input = input;
+            throw error;
+          })
+          .then((data) => {
+            if (typeof data === 'string') {
+              const err = new Error(`Computation output serialization failed with value: ${data}`);
+              err.input = input;
+              throw err;
+            }
+            return data;
+          });
         });
       },
       stop() {
