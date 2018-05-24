@@ -46,19 +46,20 @@ export default class ConsortiumAbout extends Component {
 
   addMember() {
     const newMember = this.state.newMember;
+    console.log(newMember[0].id);
     this.props.addMemberToConsortium(newMember[0].id);
   }
 
   toggleOwner(consUser) {
     const { addUserRole, consortium, owner, removeUserRole, user } = this.props;
     return () => {
-      // if (owner && consUser.id !== user.id) {
-      //   if (consUser.owner) {
-      //     removeUserRole(consUser.id, 'consortia', consortium.id, 'owner');
-      //   } else {
+      if (owner && consUser.id !== user.id) {
+        if (consUser.owner) {
+          removeUserRole(consUser.id, 'consortia', consortium.id, 'owner');
+        } else {
           addUserRole(consUser.id, 'consortia', consortium.id, 'owner');
-      //   }
-      // }
+        }
+      }
     };
   }
 
@@ -163,7 +164,7 @@ export default class ConsortiumAbout extends Component {
                           <Checkbox
                             onChange={this.toggleOwner(consUser)}
                             checked={consUser.owner ? true : false}
-                            //disabled={!owner || consUser.id === user.id}
+                            disabled={!owner || consUser.id === user.id}
                           />
                         </td>
                         <td>

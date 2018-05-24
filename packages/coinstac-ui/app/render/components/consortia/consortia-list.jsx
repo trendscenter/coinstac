@@ -189,7 +189,7 @@ class ConsortiaList extends Component {
           key={`${consortium.id}-leave-cons-button`}
           bsStyle="warning"
           className="pull-right"
-          onClick={() => this.leaveConsortium(consortium.id)}
+          onClick={() => this.leaveConsortium(consortium.id, user.id)}
         >
           Leave Consortium
         </Button>
@@ -254,7 +254,7 @@ class ConsortiaList extends Component {
     });
   }
 
-  joinConsortium(consortiumId, activePipelineId) {
+  joinConsortium(consortiumId, activePipelineId, userId) {
     const { auth: { user }, client, pipelines } = this.props;
 
     if (activePipelineId) {
@@ -286,17 +286,19 @@ class ConsortiaList extends Component {
     }
 
     this.props.saveAssociatedConsortia({ id: consortiumId, activePipelineId });
-    this.props.addUserRole(user.id, 'consortia', consortiumId, 'member');
-    this.props.joinConsortium(consortiumId);
+    //this.props.addUserRole(user.id, 'consortia', consortiumId, 'member');
+    //not needed. handled by resolver.
+    this.props.joinConsortium(consortiumId, userId);
   }
 
-  leaveConsortium(consortiumId) {
+  leaveConsortium(consortiumId, userId) {
     const { auth: { user } } = this.props;
 
     this.props.removeCollectionsFromAssociatedConsortia(consortiumId, true)
     .then(() => {
-      this.props.leaveConsortium(consortiumId);
-      this.props.removeUserRole(user.id, 'consortia', consortiumId, 'member');
+      this.props.leaveConsortium(consortiumId, userId);
+      //Not needed since the consortia permissions are handled in the resolver
+      //this.props.removeUserRole(user.id, 'consortia', consortiumId, 'member');
     });
   }
 
