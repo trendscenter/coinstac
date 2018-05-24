@@ -416,7 +416,7 @@ const resolvers = {
      */
     joinConsortium: ({ auth: { credentials } }, args) => {
       const { permissions } = credentials;
-      const userId = args.userId;
+      let userId = args.userId;
       // TODO: perm update
       // // If adding another person from consortium, check perms
       // if (args.userId &&
@@ -437,6 +437,7 @@ const resolvers = {
           rethink.table('consortia').get(args.consortiumId)('members')
           .contains(userId).run(connection)
         ).then((result) => {
+          console.log(result);
           if(!result){
             helperFunctions.getRethinkConnection().then((connection) => {
               rethink.table('consortia').get(args.consortiumId)
@@ -444,7 +445,7 @@ const resolvers = {
                   { "members": rethink.row("members").append(userId)}, { returnChanges: true }
                 ).run(connection)
             })
-            .then(result => result.changes[0].new_val)
+            .then(result => result)
           }
         })
       }
@@ -459,10 +460,7 @@ const resolvers = {
      */
     leaveConsortium: ({ auth: { credentials } }, args) => {
       const { permissions } = credentials;
-      let userId = credentials.id;
-      if( args.userId ){
-        userId = args.userId;
-      }
+      userId = args.userId;
       // TODO: perm update
       // // If removing another person from consortium, check perms
       // if (args.userId &&
