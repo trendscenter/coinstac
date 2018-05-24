@@ -286,8 +286,8 @@ class ConsortiaList extends Component {
     }
 
     this.props.saveAssociatedConsortia({ id: consortiumId, activePipelineId });
-    //this.props.addUserRole(user.id, 'consortia', consortiumId, 'member');
     //not needed. handled by resolver.
+    //this.props.addUserRole(user.id, 'consortia', consortiumId, 'member');
     this.props.joinConsortium(consortiumId, userId);
   }
 

@@ -46,7 +46,6 @@ export default class ConsortiumAbout extends Component {
 
   addMember() {
     const newMember = this.state.newMember;
-    console.log(newMember[0].id);
     this.props.addMemberToConsortium(newMember[0].id);
   }
 
