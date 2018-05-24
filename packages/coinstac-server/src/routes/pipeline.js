@@ -92,6 +92,7 @@ module.exports = [
               saveResults(run.id, result);
             })
             .catch((error) => {
+              console.log(error); // eslint-disable-line no-console
               saveError(run.id, error);
             });
         });
