@@ -7,8 +7,15 @@ import {
 
 function parseTableColumnOutput(output) {
   if (Array.isArray(output)) {
-    output = output.map(o => parseTableColumnOutput(o));
-    return output.join(', ');
+      let cols = [];
+      output.map((o) => {
+        o = parseFloat(o).toFixed(5);
+        if (o > 999 || o < 0.001) {
+          o = parseFloat(o).toExponential(5);
+        }
+        cols.push(<td>{o}</td>);
+      })
+      return cols;
   } else if (!isNaN(output) && typeof output !== 'boolean') {
     output = parseFloat(output).toFixed(5);
     if (output > 999 || output < 0.001) {
@@ -74,26 +81,41 @@ class TableResult extends Component {
         keys = Object.entries(data[0]);
       }
 
+      let labels = [];
+
+      if( heading.includes('Global') ){
+        //console.log(data.covariate_labels[0]);
+        labels = data.covariate_labels[0];
+      }else{
+        labels = data.covariate_labels;
+      }
+
       tableContents.push(
+        <div>
         <Table
           responsive
           bordered
           condensed
-          key={`${heading}-table`}
+          key={`${heading}-table-objects`}
           style={{ marginLeft, width: '60%' }}
         >
-          {Array.isArray(data) &&
-            <thead>
-              <tr>
-                {keys.map(key => <th key={`${key[0]}-heading`}>{key[0]}</th>)}
-              </tr>
-            </thead>
-          }
+          <thead>
+            <tr>
+              <th>&nbsp;</th>
+              {labels.map((label, index) => {
+                if( heading.includes('Global') && index === labels.length-1 ){
+                  return <th>{`${label}`}</th>
+                }else{
+                  return <th>&beta;{`${index} (${label})`}</th>
+                }
+              })}
+            </tr>
+          </thead>
           <tbody>
             {Array.isArray(data) &&
               data.map((d, index) => {
                 return (
-                  <tr key={`${index}-row`}>
+                  <tr key={`${index}-objects-row`}>
                     {keys.map(key =>
                     (
                       <td style={{ fontFamily: 'Courier' }} key={`${key[0]}-column`}>
@@ -105,21 +127,67 @@ class TableResult extends Component {
               })
             }
             {!Array.isArray(data) &&
-              keyValPairs.map(pair =>
-                (
-                  <tr key={`${pair[0]}-row`}>
-                    <td className="bold">
-                      {outputProps ? outputProps.items[pair[0]].label : pair[0]}
-                    </td>
-                    <td style={{ fontFamily: 'Courier' }}>
+              keyValPairs.map((pair) => {
+                  if(typeof pair[1] === 'object' && pair[0] !== 'covariate_labels') {
+                    return <tr key={`${pair[0]}-objects-row`}>
+                      <td className="bold">
+                        {outputProps.items[pair[0]] ? outputProps.items[pair[0]].label : pair[0]}
+                      </td>
                       {parseTableColumnOutput(pair[1])}
-                    </td>
-                  </tr>
-                )
+                    </tr>;
+                  }
+                }
               )
             }
           </tbody>
         </Table>
+        <Table
+          responsive
+          bordered
+          condensed
+          key={`${heading}-table-numbers`}
+          style={{ marginLeft, width: '60%' }}
+        >
+          {Array.isArray(data) &&
+            <thead>
+              <tr>
+                {keys.map(key => <th key={`${key[0]}-numbers-heading`}>{key[0]}</th>)}
+              </tr>
+            </thead>
+          }
+          <tbody>
+            {Array.isArray(data) &&
+              data.map((d, index) => {
+                return (
+                  <tr key={`${index}-objects-row`}>
+                    {keys.map(key =>
+                    (
+                      <td style={{ fontFamily: 'Courier' }} key={`${key[0]}-column`}>
+                        {parseTableColumnOutput(d[key[0]])}
+                      </td>
+                    ))}
+                  </tr>
+                );
+              })
+            }
+            {!Array.isArray(data) &&
+              keyValPairs.map((pair) => {
+                  if(typeof pair[1] === 'number') {
+                    return <tr key={`${pair[0]}-numbers-row`}>
+                      <td className="bold">
+                      {outputProps.items[pair[0]] ? outputProps.items[pair[0]].label : pair[0]}
+                      </td>
+                      <td style={{ fontFamily: 'Courier' }}>
+                        {parseTableColumnOutput(pair[1])}
+                      </td>
+                    </tr>;
+                  }
+                }
+              )
+            }
+          </tbody>
+        </Table>
+        </div>
       );
     }
 
