@@ -32,6 +32,12 @@ function iteratePipelineSteps(consortium, filesByGroup, baseDirectory) {
 
     for (let keyIndex = 0; keyIndex < inputKeys.length; keyIndex += 1) {
       const key = inputKeys[keyIndex];
+      const e = new RegExp(/[-\/\\^$*+?.()|[\]{}]/g); // eslint-disable-line no-useless-escape
+      const escape = (string) => {
+        return string.replace(e, '\\$&');
+      };
+      const pathsep = new RegExp(`${escape(sep)}|:`, 'g');
+
       if ('ownerMappings' in step.inputMap[key]) {
         const keyArray = [[], [], []]; // [[values], [labels], [type (if present)]]
         const mappingIndex = 0;
@@ -46,7 +52,7 @@ function iteratePipelineSteps(consortium, filesByGroup, baseDirectory) {
           // This changes by how the parser is reading in files - concat or push
           if (filesByGroup) {
             // Cast col types
-            const parsedRows = filesByGroup[consortium.stepIO[sIndex][key][mappingIndex].groupId];
+            let parsedRows = filesByGroup[consortium.stepIO[sIndex][key][mappingIndex].groupId];
             // Get typed indices from header (first row)
             const indices = [];
             parsedRows[0].forEach((col, colIndex) => { // eslint-disable-line no-loop-func
@@ -88,6 +94,15 @@ function iteratePipelineSteps(consortium, filesByGroup, baseDirectory) {
 
               return row;
             });
+
+            parsedRows = parsedRows.map((path) => {
+              if (extname(path[0]) !== '') {
+                path[0] = resolve(baseDirectory, path[0]).replace(pathsep, '-');
+                return path;
+              }
+              return path;
+            });
+
             keyArray[0].push(parsedRows);
             keyArray[1] = consortium.stepIO[sIndex][key].map(val => val.column);
 
@@ -106,22 +121,13 @@ function iteratePipelineSteps(consortium, filesByGroup, baseDirectory) {
         && consortium.stepIO[sIndex][key][mappingIndex].column) {
           let filepaths = filesByGroup[consortium.stepIO[sIndex][key][mappingIndex].groupId];
 
-          const e = new RegExp(/[-\/\\^$*+?.()|[\]{}]/g); // eslint-disable-line no-useless-escape
-          const escape = (string) => {
-            return string.replace(e, '\\$&');
-          };
           if (filepaths) {
-            filepaths = filepaths.map((path) => {
-              if (extname(path[0]) !== '') {
-                const pathsep = new RegExp(`${escape(sep)}|:`, 'g');
-                return resolve(baseDirectory, path[0]).replace(pathsep, '-');
-              }
-              return '';
-            });
+            filepaths = filepaths.map(path => (extname(path[0]) !== '' ? path[0] : undefined))
+              .filter(elem => elem !== undefined);
           }
 
           // There will only ever be one single data object. Don't nest arrays, use concat.
-          keyArray[0] = keyArray[0].concat(filepaths).filter(Boolean);
+          keyArray[0] = keyArray[0].concat(filepaths);
           keyArray[1].push(mappingObj.type);
           if ('value' in mappingObj) {
             keyArray[2] = keyArray[2].concat(mappingObj.value);

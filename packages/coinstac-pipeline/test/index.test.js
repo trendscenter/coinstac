@@ -2,7 +2,7 @@ const test = require('ava').test;
 const computationSpecs = require('./computation-specs');
 const path = require('path');
 const PipelineManager = require('../src/pipeline-manager');
-const dockerManager = require('coinstac-docker-manager');
+const DockerManager = require('coinstac-docker-manager');
 const rimraf = require('rimraf-promise');
 
 const localCompSpec = computationSpecs.local;
@@ -94,7 +94,7 @@ let local4;
 
 test.before(() => {
   const proms = [];
-  const docker = new dockerManager.Docker();
+  const docker = new DockerManager.Docker();
   const pullImage = (image) => {
     let proxRej;
     let proxRes;
