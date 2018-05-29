@@ -199,7 +199,6 @@ module.exports = {
           };
           if (mode === 'remote') {
             if (message instanceof Error) {
-              io.of('/').to(pipeline.id).emit('run', { runId: pipeline.id, error: message });
               const runError = Object.assign(
                 message,
                 {
@@ -210,11 +209,12 @@ module.exports = {
               activePipelines[pipeline.id].state = 'central node error';
               activePipelines[pipeline.id].error = runError;
               activePipelines[pipeline.id].remote.reject(runError);
+              io.of('/').to(pipeline.id).emit('run', { runId: pipeline.id, error: runError });
             } else {
               io.of('/').to(pipeline.id).emit('run', { runId: pipeline.id, output: message });
             }
           } else {
-            if (message instanceof Error) {
+            if (message instanceof Error) { // eslint-disable-line no-lonely-if
               socket.emit('run', { id: clientId, runId: pipeline.id, error: message });
             } else {
               socket.emit('run', { id: clientId, runId: pipeline.id, output: message });
