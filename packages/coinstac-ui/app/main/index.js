@@ -133,7 +133,15 @@ loadConfig()
           consName: consortium.name,
           run: Object.assign(
             run,
-            { error: { message: error.message, stack: error.stack, error: error.error, input: error.input }, endDate: Date.now() }
+            {
+              error: {
+                message: error.message,
+                stack: error.stack,
+                error: error.error,
+                input: error.input,
+              },
+              endDate: Date.now(),
+            }
           ),
         });
       });
