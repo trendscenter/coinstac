@@ -24,13 +24,13 @@ helperFunctions.getRethinkConnection()
   .then(() => rethink.tableCreate('computations').run(connection))
   .then(() => rethink.table('computations').insert([
     Object.assign({}, local, { submittedBy: 'test' }),
-    Object.assign({}, localError, { submittedBy: 'test' }),
     Object.assign({}, decentralized, { submittedBy: 'test' }),
-    Object.assign({}, decentralizedError, { submittedBy: 'test' }),
     Object.assign({}, singleShot, { submittedBy: 'test' }),
     Object.assign({}, multiShot, { submittedBy: 'test' }),
     Object.assign({}, vbm, { submittedBy: 'author' }),
     Object.assign({}, drneFsl, { submittedBy: 'author' }),
+    Object.assign({}, decentralizedError, { submittedBy: 'test' }),
+    Object.assign({}, localError, { submittedBy: 'test' }),
   ], { returnChanges: true }).run(connection))
   .then(compInsertResult => rethink.table('pipelines').insert([
     {
