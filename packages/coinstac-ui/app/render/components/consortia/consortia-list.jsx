@@ -286,9 +286,9 @@ class ConsortiaList extends Component {
     }
 
     this.props.saveAssociatedConsortia({ id: consortiumId, activePipelineId });
-    //not needed. handled by resolver.
-    //this.props.addUserRole(user.id, 'consortia', consortiumId, 'member');
-    this.props.joinConsortium(consortiumId, userId);
+    this.props.addUserRole(user.id, 'consortia', consortiumId, 'member');
+    //not needed. handled by addUserRole.
+    //this.props.joinConsortium(consortiumId, userId);
   }
 
   leaveConsortium(consortiumId, userId) {
@@ -297,8 +297,7 @@ class ConsortiaList extends Component {
     this.props.removeCollectionsFromAssociatedConsortia(consortiumId, true)
     .then(() => {
       this.props.leaveConsortium(consortiumId, userId);
-      //Not needed since the consortia permissions are handled in the resolver
-      //this.props.removeUserRole(user.id, 'consortia', consortiumId, 'member');
+      this.props.removeUserRole(user.id, 'consortia', consortiumId, 'member');
     });
   }
 
