@@ -161,126 +161,128 @@ class Dashboard extends Component {
           let run = nextProps.remoteRuns[i];
           const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
 
-          if (consortium) {
-            this.props.getCollectionFiles(
-              run.consortiumId, consortium.name, run.pipelineSnapshot.steps
-            )
-            .then((filesArray) => {
-              let status = 'started';
+          this.props.getCollectionFiles(
+            run.consortiumId, consortium.name, run.pipelineSnapshot.steps
+          )
+          .then((filesArray) => {
+            let status = 'started';
 
-              if ('error' in filesArray) {
-                status = 'needs-map';
-                this.props.notifyWarning({
-                  message: filesArray.error,
-                  autoDismiss: 5,
-                });
-              } else {
-                // Save run status to localDB
-                this.props.saveLocalRun({ ...run, status });
+            if ('error' in filesArray) {
+              status = 'needs-map';
+              this.props.notifyWarning({
+                message: filesArray.error,
+                autoDismiss: 5,
+              });
+            } else {
+              // Save run status to localDB
+              this.props.saveLocalRun({ ...run, status });
 
-                if ('steps' in filesArray) {
-                  run = {
-                    ...run,
-                    pipelineSnapshot: {
-                      ...run.pipelineSnapshot,
-                      steps: filesArray.steps,
-                    },
-                  };
-                }
-
-                this.props.incrementRunCount(consortium.id);
-                this.props.notifyInfo({
-                  message: `Decentralized Pipeline Starting for ${consortium.name}.`,
-                  action: {
-                    label: 'Watch Progress',
-                    callback: () => {
-                      router.push('dashboard');
-                    },
+              if ('steps' in filesArray) {
+                run = {
+                  ...run,
+                  pipelineSnapshot: {
+                    ...run.pipelineSnapshot,
+                    steps: filesArray.steps,
                   },
-                });
-
-                this.props.incrementRunCount(consortium.id);
-                ipcRenderer.send('start-pipeline', {
-                  consortium,
-                  pipeline: run.pipelineSnapshot,
-                  filesArray: filesArray.allFiles,
-                  run: { ...run, status },
-                });
+                };
               }
-            });
-            // Not saved locally, but results signify complete
-          } else if (runIndexInLocalRuns === -1 && nextProps.remoteRuns[i].results) {
-            ipcRenderer.send('clean-remote-pipeline', nextProps.remoteRuns[i].id);
-            this.props.saveLocalRun({ ...nextProps.remoteRuns[i], status: 'complete' });
-            // Not saved locally, but error signify complete
-          } else if (runIndexInLocalRuns === -1 && nextProps.remoteRuns[i].error) {
-            ipcRenderer.send('clean-remote-pipeline', nextProps.remoteRuns[i].id);
-            this.props.saveLocalRun({ ...nextProps.remoteRuns[i], status: 'error' });
-            // Run already in props but error is incoming
-          } else if (runIndexInLocalRuns > -1 && nextProps.remoteRuns[i].error
-            && !this.props.runs[runIndexInLocalRuns].error && this.props.consortia.length
-            && (
-              !this.props.remoteRuns.length ||
-              (runIndexInPropsRemote > -1 && !this.props.remoteRuns[runIndexInPropsRemote].error)
-            )) {
-            const run = nextProps.remoteRuns[i];
-            const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
 
-            // Update status of run in localDB
-            ipcRenderer.send('clean-remote-pipeline', nextProps.remoteRuns[i].id);
-            this.props.updateLocalRun(run.id, { error: run.error, status: 'error' });
-            this.props.notifyError({
-              message: `${consortium.name} Pipeline Error.`,
-              autoDismiss: 5,
-              action: {
-                label: 'View Error',
-                callback: () => {
-                  router.push(`dashboard/results/${run.id}`);
+              this.props.incrementRunCount(consortium.id);
+              this.props.notifyInfo({
+                message: `Decentralized Pipeline Starting for ${consortium.name}.`,
+                action: {
+                  label: 'Watch Progress',
+                  callback: () => {
+                    router.push('dashboard');
+                  },
                 },
+              });
+
+              this.props.incrementRunCount(consortium.id);
+              ipcRenderer.send('start-pipeline', {
+                consortium,
+                pipeline: run.pipelineSnapshot,
+                filesArray: filesArray.allFiles,
+                run: { ...run, status },
+              });
+            }
+          });
+          // Not saved locally, but results signify complete
+        } else if (runIndexInLocalRuns === -1 && nextProps.remoteRuns[i].results) {
+          ipcRenderer.send('clean-remote-pipeline', nextProps.remoteRuns[i].id);
+          this.props.saveLocalRun({ ...nextProps.remoteRuns[i], status: 'complete' });
+          // Not saved locally, but error signify complete
+        } else if (runIndexInLocalRuns === -1 && nextProps.remoteRuns[i].error) {
+          ipcRenderer.send('clean-remote-pipeline', nextProps.remoteRuns[i].id);
+          this.props.saveLocalRun({ ...nextProps.remoteRuns[i], status: 'error' });
+          // Run already in props but error is incoming
+        } else if (runIndexInLocalRuns > -1 && nextProps.remoteRuns[i].error
+          && !this.props.runs[runIndexInLocalRuns].error && this.props.consortia.length
+          && (!this.props.remoteRuns.length ||
+            (runIndexInPropsRemote > -1 && !this.props.remoteRuns[runIndexInPropsRemote].error)
+          )
+        ) {
+          const run = nextProps.remoteRuns[i];
+          const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
+
+          // Update status of run in localDB
+          ipcRenderer.send('clean-remote-pipeline', nextProps.remoteRuns[i].id);
+          this.props.updateLocalRun(run.id, { error: run.error, status: 'error' });
+          this.props.notifyError({
+            message: `${consortium.name} Pipeline Error.`,
+            autoDismiss: 5,
+            action: {
+              label: 'View Error',
+              callback: () => {
+                router.push(`dashboard/results/${run.id}`);
               },
-            });
+            },
+          });
 
           // Run already in props but results are incoming
-          } else if (runIndexInLocalRuns > -1 && nextProps.remoteRuns[i].results
-            && runIndexInPropsRemote > -1
-            && !this.props.runs[runIndexInLocalRuns].results && this.props.consortia.length
-            && (
-              !this.props.remoteRuns.length ||
-              (runIndexInPropsRemote > -1 && !this.props.remoteRuns[runIndexInPropsRemote].results)
-            )) {
-            const run = nextProps.remoteRuns[i];
-            const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
+        } else if (runIndexInLocalRuns > -1 && nextProps.remoteRuns[i].results
+          && runIndexInPropsRemote > -1
+          && !this.props.runs[runIndexInLocalRuns].results && this.props.consortia.length
+          && (!this.props.remoteRuns.length ||
+            (runIndexInPropsRemote > -1 && !this.props.remoteRuns[runIndexInPropsRemote].results)
+          )
+        ) {
+          const run = nextProps.remoteRuns[i];
+          const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
 
-            // Update status of run in localDB
-            ipcRenderer.send('clean-remote-pipeline', nextProps.remoteRuns[i].id);
-            this.props.saveLocalRun({ ...run, status: 'complete' });
-            this.props.notifySuccess({
-              message: `${consortium.name} Pipeline Complete.`,
-              autoDismiss: 5,
-              action: {
-                label: 'View Results',
-                callback: () => {
-                  router.push(`dashboard/results/${run.id}`);
-                },
+          // Update status of run in localDB
+          ipcRenderer.send('clean-remote-pipeline', nextProps.remoteRuns[i].id);
+          this.props.saveLocalRun({ ...run, status: 'complete' });
+          this.props.notifySuccess({
+            message: `${consortium.name} Pipeline Complete.`,
+            autoDismiss: 5,
+            action: {
+              label: 'View Results',
+              callback: () => {
+                router.push(`dashboard/results/${run.id}`);
               },
-            });
+            },
+          });
           // Looking for remote run state changes
-          } else if (runIndexInPropsRemote > -1 && nextProps.remoteRuns[i].remotePipelineState
-            && (!this.props.remoteRuns[runIndexInPropsRemote].remotePipelineState
-            || (nextProps.remoteRuns[i].remotePipelineState.currentIteration
-            !== this.props.remoteRuns[runIndexInPropsRemote].remotePipelineState.currentIteration
-            || nextProps.remoteRuns[i].remotePipelineState.controllerState
-            !== this.props.remoteRuns[runIndexInPropsRemote].remotePipelineState.controllerState
-            || nextProps.remoteRuns[i].remotePipelineState.pipelineStep
-            !== this.props.remoteRuns[runIndexInPropsRemote].remotePipelineState.pipelineStep))) {
-            const run = nextProps.remoteRuns[i];
+        } else if (runIndexInPropsRemote > -1 && nextProps.remoteRuns[i].remotePipelineState
+          && (!this.props.remoteRuns[runIndexInPropsRemote].remotePipelineState ||
+            (
+              nextProps.remoteRuns[i].remotePipelineState.currentIteration
+              !== this.props.remoteRuns[runIndexInPropsRemote].remotePipelineState.currentIteration
+              || nextProps.remoteRuns[i].remotePipelineState.controllerState
+              !== this.props.remoteRuns[runIndexInPropsRemote].remotePipelineState.controllerState
+              || nextProps.remoteRuns[i].remotePipelineState.pipelineStep
+              !== this.props.remoteRuns[runIndexInPropsRemote].remotePipelineState.pipelineStep
+            )
+          )
+        ) {
+          const run = nextProps.remoteRuns[i];
 
-            // Update status of run in localDB
-            this.props.updateLocalRun(
-              run.id,
-              { remotePipelineState: run.remotePipelineState }
-            );
-          }
+          // Update status of run in localDB
+          this.props.updateLocalRun(
+            run.id,
+            { remotePipelineState: run.remotePipelineState }
+          );
         }
       }
     }

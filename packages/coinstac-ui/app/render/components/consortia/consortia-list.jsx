@@ -340,42 +340,42 @@ class ConsortiaList extends Component {
           consortium.name,
           run.pipelineSnapshot.steps
         )
-          .then((filesArray) => {
-            if ('error' in filesArray) {
-              status = 'needs-map';
-              this.props.notifyWarning({
-                message: filesArray.error,
-                autoDismiss: 5,
-              });
-            } else {
-              this.props.notifyInfo({
-                message: `Local Pipeline Starting for ${consortium.name}.`,
-                action: {
-                  label: 'Watch Progress',
-                  callback: () => {
-                    router.push('dashboard');
-                  },
+        .then((filesArray) => {
+          if ('error' in filesArray) {
+            status = 'needs-map';
+            this.props.notifyWarning({
+              message: filesArray.error,
+              autoDismiss: 5,
+            });
+          } else {
+            this.props.notifyInfo({
+              message: `Local Pipeline Starting for ${consortium.name}.`,
+              action: {
+                label: 'Watch Progress',
+                callback: () => {
+                  router.push('dashboard');
                 },
-              });
+              },
+            });
 
-              if ('steps' in filesArray) {
-                run = {
-                  ...run,
-                  pipelineSnapshot: {
-                    ...run.pipelineSnapshot,
-                    steps: filesArray.steps,
-                  },
-                };
-              }
-
-              run.status = status;
-
-              this.props.incrementRunCount(consortiumId);
-              ipcRenderer.send('start-pipeline', { consortium, pipeline, filesArray: filesArray.allFiles, run });
+            if ('steps' in filesArray) {
+              run = {
+                ...run,
+                pipelineSnapshot: {
+                  ...run.pipelineSnapshot,
+                  steps: filesArray.steps,
+                },
+              };
             }
 
-            this.props.saveLocalRun({ ...run, status });
-          });
+            run.status = status;
+
+            this.props.incrementRunCount(consortiumId);
+            ipcRenderer.send('start-pipeline', { consortium, pipeline, filesArray: filesArray.allFiles, run });
+          }
+
+          this.props.saveLocalRun({ ...run, status });
+        });
       }
 
       // If remote pipeline, call GraphQL to create new pipeline
