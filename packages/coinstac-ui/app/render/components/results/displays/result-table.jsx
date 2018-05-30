@@ -92,6 +92,7 @@ class TableResult extends Component {
 
       tableContents.push(
         <div>
+        {data.covariate_labels && data.covariate_labels.length > 0 &&
         <Table
           responsive
           bordered
@@ -99,7 +100,7 @@ class TableResult extends Component {
           key={`${heading}-table-objects`}
           style={{ marginLeft, width: '60%' }}
         >
-          <thead>
+        <thead>
             <tr>
               <th>&nbsp;</th>
               {labels.map((label, index) => {
@@ -141,6 +142,7 @@ class TableResult extends Component {
             }
           </tbody>
         </Table>
+        }
         <Table
           responsive
           bordered
