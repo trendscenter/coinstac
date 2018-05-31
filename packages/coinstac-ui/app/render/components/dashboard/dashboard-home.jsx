@@ -30,7 +30,7 @@ class DashboardHome extends Component {
     return (
       <div>
         <div className="page-header clearfix">
-          <h1 className="pull-left">{userId}'s Home</h1>
+          <h1 className="pull-left">{userId}&apos;s Home</h1>
         </div>
         <h3>Run Activity in the Last {HOURS_SINCE_ACTIVE} Hours</h3>
         <RunsList

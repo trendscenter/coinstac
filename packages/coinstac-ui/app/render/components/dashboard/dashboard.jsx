@@ -218,10 +218,10 @@ class Dashboard extends Component {
           // Run already in props but error is incoming
         } else if (runIndexInLocalRuns > -1 && nextProps.remoteRuns[i].error
           && !this.props.runs[runIndexInLocalRuns].error && this.props.consortia.length
-          && (
-            !this.props.remoteRuns.length ||
+          && (!this.props.remoteRuns.length ||
             (runIndexInPropsRemote > -1 && !this.props.remoteRuns[runIndexInPropsRemote].error)
-          )) {
+          )
+        ) {
           const run = nextProps.remoteRuns[i];
           const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
 
@@ -239,14 +239,14 @@ class Dashboard extends Component {
             },
           });
 
-        // Run already in props but results are incoming
+          // Run already in props but results are incoming
         } else if (runIndexInLocalRuns > -1 && nextProps.remoteRuns[i].results
           && runIndexInPropsRemote > -1
           && !this.props.runs[runIndexInLocalRuns].results && this.props.consortia.length
-          && (
-            !this.props.remoteRuns.length ||
+          && (!this.props.remoteRuns.length ||
             (runIndexInPropsRemote > -1 && !this.props.remoteRuns[runIndexInPropsRemote].results)
-          )) {
+          )
+        ) {
           const run = nextProps.remoteRuns[i];
           const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
 
@@ -263,15 +263,19 @@ class Dashboard extends Component {
               },
             },
           });
-        // Looking for remote run state changes
+          // Looking for remote run state changes
         } else if (runIndexInPropsRemote > -1 && nextProps.remoteRuns[i].remotePipelineState
-          && (!this.props.remoteRuns[runIndexInPropsRemote].remotePipelineState
-          || (nextProps.remoteRuns[i].remotePipelineState.currentIteration
-          !== this.props.remoteRuns[runIndexInPropsRemote].remotePipelineState.currentIteration
-          || nextProps.remoteRuns[i].remotePipelineState.controllerState
-          !== this.props.remoteRuns[runIndexInPropsRemote].remotePipelineState.controllerState
-          || nextProps.remoteRuns[i].remotePipelineState.pipelineStep
-          !== this.props.remoteRuns[runIndexInPropsRemote].remotePipelineState.pipelineStep))) {
+          && (!this.props.remoteRuns[runIndexInPropsRemote].remotePipelineState ||
+            (
+              nextProps.remoteRuns[i].remotePipelineState.currentIteration
+              !== this.props.remoteRuns[runIndexInPropsRemote].remotePipelineState.currentIteration
+              || nextProps.remoteRuns[i].remotePipelineState.controllerState
+              !== this.props.remoteRuns[runIndexInPropsRemote].remotePipelineState.controllerState
+              || nextProps.remoteRuns[i].remotePipelineState.pipelineStep
+              !== this.props.remoteRuns[runIndexInPropsRemote].remotePipelineState.pipelineStep
+            )
+          )
+        ) {
           const run = nextProps.remoteRuns[i];
 
           // Update status of run in localDB
