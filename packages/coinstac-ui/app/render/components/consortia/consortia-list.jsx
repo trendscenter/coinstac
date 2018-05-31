@@ -121,17 +121,18 @@ class ConsortiaList extends Component {
     // Add owner/member list
     const consortiumUsers = [];
     consortium.owners.forEach(user => consortiumUsers.push({id: user, owner: true, member: true }));
-    consortium.members
-      .filter(user => consortiumUsers.findIndex(consUser => consUser.id === user) === -1)
-      .forEach(user => consortiumUsers.push({ id: user, member: true }));
-    const avatars = consortiumUsers.map(user =>
-      <MemberAvatar
-        key={`${user.id}-avatar`}
-        consRole={user.owner ? "Owner" : "Member"}
-        name={user.id}
-        showDetails
-        width={40}
-      />
+    consortium.members.forEach(user => consortiumUsers.push({ id: user, member: true }));
+    const avatars = consortiumUsers
+      .filter(function(v, i, a){ return i == a.indexOf(v); })
+      .map((user, index) => {
+        return <MemberAvatar
+          key={`${user.id}-avatar-${index}`}
+          consRole={user.owner ? "Owner" : 'Member'}
+          name={user.id}
+          showDetails
+          width={40}
+        />
+      }
     );
 
     text.push(
@@ -188,7 +189,7 @@ class ConsortiaList extends Component {
           key={`${consortium.id}-leave-cons-button`}
           bsStyle="warning"
           className="pull-right"
-          onClick={() => this.leaveConsortium(consortium.id)}
+          onClick={() => this.leaveConsortium(consortium.id, user.id)}
         >
           Leave Consortium
         </Button>
@@ -253,7 +254,7 @@ class ConsortiaList extends Component {
     });
   }
 
-  joinConsortium(consortiumId, activePipelineId) {
+  joinConsortium(consortiumId, activePipelineId, userId) {
     const { auth: { user }, client, pipelines } = this.props;
 
     if (activePipelineId) {
@@ -286,15 +287,16 @@ class ConsortiaList extends Component {
 
     this.props.saveAssociatedConsortia({ id: consortiumId, activePipelineId });
     this.props.addUserRole(user.id, 'consortia', consortiumId, 'member');
-    this.props.joinConsortium(consortiumId);
+    //not needed. handled by addUserRole.
+    //this.props.joinConsortium(consortiumId, userId);
   }
 
-  leaveConsortium(consortiumId) {
+  leaveConsortium(consortiumId, userId) {
     const { auth: { user } } = this.props;
 
     this.props.removeCollectionsFromAssociatedConsortia(consortiumId, true)
     .then(() => {
-      this.props.leaveConsortium(consortiumId);
+      this.props.leaveConsortium(consortiumId, userId);
       this.props.removeUserRole(user.id, 'consortia', consortiumId, 'member');
     });
   }
@@ -337,42 +339,42 @@ class ConsortiaList extends Component {
           consortium.name,
           run.pipelineSnapshot.steps
         )
-          .then((filesArray) => {
-            if ('error' in filesArray) {
-              status = 'needs-map';
-              this.props.notifyWarning({
-                message: filesArray.error,
-                autoDismiss: 5,
-              });
-            } else {
-              this.props.notifyInfo({
-                message: `Local Pipeline Starting for ${consortium.name}.`,
-                action: {
-                  label: 'Watch Progress',
-                  callback: () => {
-                    router.push('dashboard');
-                  },
+        .then((filesArray) => {
+          if ('error' in filesArray) {
+            status = 'needs-map';
+            this.props.notifyWarning({
+              message: filesArray.error,
+              autoDismiss: 5,
+            });
+          } else {
+            this.props.notifyInfo({
+              message: `Local Pipeline Starting for ${consortium.name}.`,
+              action: {
+                label: 'Watch Progress',
+                callback: () => {
+                  router.push('dashboard');
                 },
-              });
+              },
+            });
 
-              if ('steps' in filesArray) {
-                run = {
-                  ...run,
-                  pipelineSnapshot: {
-                    ...run.pipelineSnapshot,
-                    steps: filesArray.steps,
-                  },
-                };
-              }
-
-              run.status = status;
-
-              this.props.incrementRunCount(consortiumId);
-              ipcRenderer.send('start-pipeline', { consortium, pipeline, filesArray: filesArray.allFiles, run });
+            if ('steps' in filesArray) {
+              run = {
+                ...run,
+                pipelineSnapshot: {
+                  ...run.pipelineSnapshot,
+                  steps: filesArray.steps,
+                },
+              };
             }
 
-            this.props.saveLocalRun({ ...run, status });
-          });
+            run.status = status;
+
+            this.props.incrementRunCount(consortiumId);
+            ipcRenderer.send('start-pipeline', { consortium, pipeline, filesArray: filesArray.allFiles, run });
+          }
+
+          this.props.saveLocalRun({ ...run, status });
+        });
       }
 
       // If remote pipeline, call GraphQL to create new pipeline

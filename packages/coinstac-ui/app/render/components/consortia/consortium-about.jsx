@@ -45,7 +45,8 @@ export default class ConsortiumAbout extends Component {
   }
 
   addMember() {
-    this.props.addMemberToConsortium(this.state.newMember[0].id);
+    const newMember = this.state.newMember;
+    this.props.addMemberToConsortium(newMember[0].id);
   }
 
   toggleOwner(consUser) {
@@ -170,6 +171,7 @@ export default class ConsortiumAbout extends Component {
                         </td>
                         {owner &&
                           <td>
+                            { user.id !== consUser.id ?
                             <Button
                               bsStyle="danger"
                               onClick={removeMemberFromConsortium(consUser)}
@@ -179,6 +181,7 @@ export default class ConsortiumAbout extends Component {
                                 className="glyphicon glyphicon-remove"
                               /> Remove
                             </Button>
+                            : ''}
                           </td>
                         }
                       </tr>

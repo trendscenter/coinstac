@@ -75,11 +75,12 @@ class ConsortiumTabs extends Component {
     if (nextProps.activeConsortium) {
       const { activeConsortium: { __typename, ...other } } = nextProps;
       const consortiumUsers = [];
-      nextProps.activeConsortium.owners.forEach(user => consortiumUsers.push({ id: user, owner: true, member: true }));
-      nextProps.activeConsortium.members
-        .filter(user => consortiumUsers.findIndex(consUser => consUser.id === user) === -1)
-        .forEach(user => consortiumUsers.push({ id: user, member: true }));
-      if(this.props.router.routes[3].path !== 'new'){
+      if (this.props.router.routes[3].path !== 'new') {
+        nextProps.activeConsortium.owners.forEach(user => consortiumUsers
+          .push({ id: user, owner: true, member: true }));
+        nextProps.activeConsortium.members
+          .filter(user => consortiumUsers.findIndex(consUser => consUser.id === user) === -1)
+          .forEach(user => consortiumUsers.push({ id: user, member: true }));
         this.setState({ consortium: { ...other }, consortiumUsers });
       }
     }
@@ -106,19 +107,24 @@ class ConsortiumTabs extends Component {
   removeMemberFromConsortium(user) {
     return () => {
       this.props.leaveConsortium(this.state.consortium.id, user.id);
-      this.props.removeUserRole(user.id, 'consortia', this.state.consortium.id, 'member');
-      this.props.removeUserRole(user.id, 'consortia', this.state.consortium.id, 'owner');
+      //These are not needed since the consortia permissions are handled in the resolver
+      //this.props.removeUserRole(user.id, 'consortia', this.state.consortium.id, 'member');
+      //this.props.removeUserRole(user.id, 'consortia', this.state.consortium.id, 'owner');
     };
   }
 
   saveConsortium(e) {
     e.preventDefault();
 
+    /* This is creating a duplicate consortia owner. Why is this here?
+    //
     if (this.state.consortium.owners.indexOf(this.props.auth.user.id) === -1) {
       this.setState(prevState => ({
         owners: prevState.consortium.owners.push(this.props.auth.user.id),
       }));
     }
+    //
+    */
 
     this.props.saveConsortium(this.state.consortium)
     .then(({ data: { saveConsortium: { __typename, ...other } } }) => {
