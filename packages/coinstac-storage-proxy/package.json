@@ -1,6 +1,6 @@
 {
   "name": "coinstac-storage-proxy",
-  "version": "3.1.10",
+  "version": "3.1.11",
   "description": "COINSTAC hapi plugin for securing CouchDB.",
   "main": "src/index.js",
   "scripts": {
@@ -36,7 +36,7 @@
   "dependencies": {
     "axios": "^0.11.1",
     "boom": "^3.2.2",
-    "coinstac-common": "^3.1.10",
+    "coinstac-common": "^3.1.11",
     "joi": "^7.3.0"
   }
 }
