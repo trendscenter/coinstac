@@ -172,7 +172,7 @@ const startService = (serviceId, serviceUserId, opts) => {
             body: { command: ['echo', 'test', ''] },
           })
           .catch((status) => {
-            if (status.message === 'Error: socket hang up') {
+            if (status.message === 'Error: socket hang up' || status.message === 'Error: read ECONNRESET') {
               serviceStartedRecurseLimit += 1;
               if (serviceStartedRecurseLimit < 500) {
                 return setTimeoutPromise(100)

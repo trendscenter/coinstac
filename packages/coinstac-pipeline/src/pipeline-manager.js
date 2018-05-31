@@ -149,7 +149,6 @@ module.exports = {
           activePipelines[data.runId].remote.resolve(data.output);
         } else if (data.error && activePipelines[data.runId]) {
           activePipelines[data.runId].state = 'recieved error';
-          debugger
           activePipelines[data.runId].remote.reject(Object.assign(new Error(), data.error));
         }
       });
