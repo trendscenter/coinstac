@@ -102,7 +102,7 @@ module.exports = {
               }).catch(({ statusCode, message, error, name, stack, input }) => {
                 const iterationError = Object.assign(
                   new Error(),
-                  { statusCode, message, error, name, stack, input: input.input }
+                  { statusCode, message, error, name, stack, input: input ? input.input : input }
                 );
                 if (controller.type === 'local') {
                   err(iterationError);
