@@ -251,10 +251,11 @@ const pruneImages = () => {
     });
   }).then((images) => {
     return Promise.all(images.map((image) => {
-      return new Promise((resolve, reject) => {
+      return new Promise((resolve) => {
         docker.getImage(image.Id).remove({ force: { true: 'true' } }, (err, res) => {
           if (err) {
-            reject(err);
+            // remove can fail for serveral benign reasons, just resolve with the reason
+            resolve(err);
           }
           resolve(res);
         });
