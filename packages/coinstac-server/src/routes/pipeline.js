@@ -75,7 +75,7 @@ module.exports = [
         .then(() => {
           const run = req.payload.run;
 
-          const computationImageList = run.steps
+          const computationImageList = run.pipelineSnapshot.steps
           .map(step => step.computations
             .map(comp => comp.computation.dockerImage))
             .reduce((acc, val) => acc.concat(val), []);
