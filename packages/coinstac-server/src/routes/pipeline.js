@@ -83,28 +83,27 @@ module.exports = [
           pullImagesFromList(computationImageList)
           .then(() => pruneImages())
           .then(() => {
-            return this.remotePipelineManager.startPipeline({
+            const { pipeline, result } = this.remotePipelineManager.startPipeline({
               clients: run.clients,
               spec: run.pipelineSnapshot,
               runId: run.id,
-            }).then(({ pipeline, result }) => {
-              res({}).code(201);
+            });
+            res({}).code(201);
 
-              pipeline.stateEmitter.on('update', (data) => {
-                // TODO:  console most likely should be removed post proto development
-                // or made less noisy
-                console.log(data); // eslint-disable-line no-console
-                updateRunState(run.id, data);
-              });
+            pipeline.stateEmitter.on('update', (data) => {
+              // TODO:  console most likely should be removed post proto development
+              // or made less noisy
+              console.log(data); // eslint-disable-line no-console
+              updateRunState(run.id, data);
+            });
 
-              return result
-              .then((result) => {
-                saveResults(run.id, result);
-              })
-              .catch((error) => {
-                console.log(error); // eslint-disable-line no-console
-                saveError(run.id, error);
-              });
+            return result
+            .then((result) => {
+              saveResults(run.id, result);
+            })
+            .catch((error) => {
+              console.log(error); // eslint-disable-line no-console
+              saveError(run.id, error);
             });
           });
         });
