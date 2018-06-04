@@ -3,6 +3,7 @@ const { reduce } = require('lodash');
 const request = require('request-promise-native');
 const portscanner = require('portscanner');
 const http = require('http');
+const pify = require('util').promisify;
 
 const setTimeoutPromise = (delay) => {
   return new Promise((resolve) => {
@@ -229,6 +230,40 @@ const startService = (serviceId, serviceUserId, opts) => {
 };
 
 /**
+ * Finds dangling coinstac images and deletes them
+ * @return {Promise} list of deleted images and tags
+ */
+const pruneImages = () => {
+  return new Promise((resolve, reject) => {
+    docker.listImages({ filters: { dangling: { true: true } } }, (err, res) => {
+      if (err) {
+        reject(err);
+      }
+      resolve(res.filter(((elem) => {
+        // TODO: find better way, make docker api 'reference' work?
+        if (elem.RepoTags) {
+          return elem.RepoTags[0].includes('coinstac');
+        } else if (elem.RepoDigests) {
+          return elem.RepoDigests[0].includes('coinstac');
+        }
+        return false;
+      })));
+    });
+  }).then((images) => {
+    return Promise.all(images.map((image) => {
+      return new Promise((resolve, reject) => {
+        docker.getImage(image.Id).remove({ force: { true: 'true' } }, (err, res) => {
+          if (err) {
+            reject(err);
+          }
+          resolve(res);
+        });
+      });
+    }));
+  });
+};
+
+/**
  * Pull individual image from Docker hub
  * @param {String} computation Docker image name
  * @return {Object} Returns stream of docker pull output
@@ -264,6 +299,8 @@ const pullImage = (computation) => {
 
 /**
  * Generate array of docker pull promises and wait until resolved to return merged output streams
+ * TODO: this function should be depricated for pullImagesFromList,
+ *  as it couples too closely w/ the UI
  * @param {Object[]} comps array of computation objects to download
  * @param {String} comps.img Docker image name
  * @param {String} comp.compId Computation ID from app DB
@@ -288,6 +325,15 @@ const pullImages = (comps) => {
     );
   });
 };
+
+/**
+ * Generate array of docker pull promises and wait until resolved to return merged output streams
+ * @param {Object[]} comps array of computation id's to download
+ * @return {Object} Returns array of objects containing stream and computation parameters
+ */
+const pullImagesFromList = comps =>
+    Promise.all(comps.map(image => pullImage(`${image}:latest`)))
+    .then(streams => streams.map((stream, index) => ({ stream, compId: comps[index] })));
 
 /**
  * Remove the Docker image associated with the image id
@@ -343,6 +389,8 @@ const stopAllServices = () => {
 module.exports = {
   getImages,
   pullImages,
+  pullImagesFromList,
+  pruneImages,
   removeImage,
   queueJob,
   startService,

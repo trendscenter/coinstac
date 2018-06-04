@@ -53,7 +53,7 @@ const RunItem = ({ consortiumName, runObject }) => (
             <TimeStamp
               time={runObject.startDate / 1000}
               precision={2}
-              autoUpdate={10}
+              autoUpdate={60}
               format="ago"
             />
           </div>
@@ -63,7 +63,7 @@ const RunItem = ({ consortiumName, runObject }) => (
             <TimeStamp
               time={runObject.endDate / 1000}
               precision={2}
-              autoUpdate={10}
+              autoUpdate={60}
               format="ago"
             />
           </div>
