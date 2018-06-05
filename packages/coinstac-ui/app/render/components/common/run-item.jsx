@@ -20,7 +20,7 @@ function getStateWell(runObject, stateName, stateKey) {
         {runObject[stateKey].waitingOn &&
           <div>
             <span className="bold">Waiting on Users: </span>
-            {runObject[stateKey].waitingOn.join(', ').slice(0, -1)}
+            {runObject[stateKey].controllerState.includes('waiting on') ? runObject[stateKey].waitingOn.join(', ') : ''}
           </div>
         }
         {runObject[stateKey].controllerState &&
