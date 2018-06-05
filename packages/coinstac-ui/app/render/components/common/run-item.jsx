@@ -17,6 +17,12 @@ function getStateWell(runObject, stateName, stateKey) {
             {runObject[stateKey].mode}
           </div>
         }
+        {runObject[stateKey].waitingOn &&
+          <div>
+            <span className="bold">Waiting on Users: </span>
+            {runObject[stateKey].waitingOn.join(', ').slice(0, -1)}
+          </div>
+        }
         {runObject[stateKey].controllerState &&
           <div>
             <span className="bold">Controller State: </span>
