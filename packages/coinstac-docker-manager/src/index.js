@@ -3,7 +3,6 @@ const { reduce } = require('lodash');
 const request = require('request-promise-native');
 const portscanner = require('portscanner');
 const http = require('http');
-const pify = require('util').promisify;
 
 const setTimeoutPromise = (delay) => {
   return new Promise((resolve) => {
