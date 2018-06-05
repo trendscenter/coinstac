@@ -17,6 +17,12 @@ function getStateWell(runObject, stateName, stateKey) {
             {runObject[stateKey].mode}
           </div>
         }
+        {runObject[stateKey].waitingOn &&
+          <div>
+            <span className="bold">Waiting on Users: </span>
+            {runObject[stateKey].controllerState.includes('waiting on') ? runObject[stateKey].waitingOn.join(', ') : ''}
+          </div>
+        }
         {runObject[stateKey].controllerState &&
           <div>
             <span className="bold">Controller State: </span>
@@ -53,7 +59,7 @@ const RunItem = ({ consortiumName, runObject }) => (
             <TimeStamp
               time={runObject.startDate / 1000}
               precision={2}
-              autoUpdate={10}
+              autoUpdate={60}
               format="ago"
             />
           </div>
@@ -63,7 +69,7 @@ const RunItem = ({ consortiumName, runObject }) => (
             <TimeStamp
               time={runObject.endDate / 1000}
               precision={2}
-              autoUpdate={10}
+              autoUpdate={60}
               format="ago"
             />
           </div>
