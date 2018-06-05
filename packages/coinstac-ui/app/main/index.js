@@ -100,126 +100,195 @@ loadConfig()
    * @return {Promise<String>} Status message
    */
   ipcMain.on('start-pipeline', (event, { consortium, pipeline, filesArray, run }) => {
-    core.startPipeline(
-      null,
-      consortium.id,
-      pipeline,
-      filesArray,
-      run.id,
-      run.pipelineSteps
-    )
-    .then(([{ pipeline, result }]) => {
-      // Listen for local pipeline state updates
-      pipeline.stateEmitter.on('update', (data) => {
-        mainWindow.webContents.send('local-pipeline-state-update', { run, data });
-      });
+    const computationImageList = pipeline.steps
+    .map(step => step.computations
+      .map(comp => comp.computation.dockerImage))
+      .reduce((acc, val) => acc.concat(val), []);
 
-      // Listen for results
-      result.then((results) => {
-        console.log('Pipeline is done. Result:'); // eslint-disable-line no-console
-        console.log(results); // eslint-disable-line no-console
-        core.unlinkFiles(run.id);
-        if (run.type === 'local') {
-          mainWindow.webContents.send('local-run-complete', {
-            consName: consortium.name,
-            run: Object.assign(run, { results, endDate: Date.now() }),
+    return core.dockerManager.pullImagesFromList(computationImageList)
+    .then((compStreams) => {
+      const streamProms = [];
+
+      compStreams.forEach(({ stream }) => {
+        let proxRes;
+        let proxRej;
+
+        streamProms.push(new Promise((resolve, reject) => {
+          proxRej = reject;
+          proxRes = resolve;
+        }));
+        if (typeof stream.on !== 'function') {
+          proxRej(stream.message);
+        } else {
+          mainWindow.webContents.send('local-pipeline-state-update', {
+            run,
+            data: { controllerState: 'Downloading required docker images' },
+          });
+
+          stream.on('data', (data) => {
+            mainWindow.webContents.send('local-pipeline-state-update', {
+              run,
+              data: { controllerState: `Downloading required docker images\n ${data.toString()}` },
+            });
+          });
+
+          stream.on('end', () => {
+            proxRes();
+          });
+
+          stream.on('error', (err) => {
+            proxRej(err);
           });
         }
       });
 
-      result.catch((error) => {
-        core.unlinkFiles(run.id);
+      return Promise.all(streamProms);
+    })
+    .catch((err) => {
+      return core.unlinkFiles(run.id)
+      .then(() => {
         mainWindow.webContents.send('local-run-error', {
           consName: consortium.name,
           run: Object.assign(
             run,
             {
               error: {
-                message: error.message,
-                stack: error.stack,
-                error: error.error,
-                input: error.input,
+                message: err.message,
+                stack: err.stack,
+                error: err.error,
               },
               endDate: Date.now(),
             }
           ),
         });
       });
+    })
+    .then(() => core.dockerManager.pruneImages())
+    .then(() => {
+      return core.startPipeline(
+        null,
+        consortium.id,
+        pipeline,
+        filesArray,
+        run.id,
+        run.pipelineSteps
+      )
+      .then(([{ pipeline, result }]) => {
+        // Listen for local pipeline state updates
+        pipeline.stateEmitter.on('update', (data) => {
+          mainWindow.webContents.send('local-pipeline-state-update', { run, data });
+        });
+
+        // Listen for results
+        return result.then((results) => {
+          console.log('Pipeline is done. Result:'); // eslint-disable-line no-console
+          console.log(results); // eslint-disable-line no-console
+          return core.unlinkFiles(run.id)
+          .then(() => {
+            if (run.type === 'local') {
+              mainWindow.webContents.send('local-run-complete', {
+                consName: consortium.name,
+                run: Object.assign(run, { results, endDate: Date.now() }),
+              });
+            }
+          });
+        })
+        .catch((error) => {
+          return core.unlinkFiles(run.id)
+          .then(() => {
+            mainWindow.webContents.send('local-run-error', {
+              consName: consortium.name,
+              run: Object.assign(
+                run,
+                {
+                  error: {
+                    message: error.message,
+                    stack: error.stack,
+                    error: error.error,
+                    input: error.input,
+                  },
+                  endDate: Date.now(),
+                }
+              ),
+            });
+          });
+        });
+      });
     });
   });
 
   /**
-   * IPC listener to return a list of all local Docker images
-   * @return {Promise<String[]>} An array of all local Docker image names
-   */
+  * IPC listener to return a list of all local Docker images
+  * @return {Promise<String[]>} An array of all local Docker image names
+  */
   ipcPromise.on('get-all-images', () => {
     return core.dockerManager.getImages()
-      .then((data) => {
-        return data;
-      });
+    .then((data) => {
+      return data;
+    });
   });
 
   /**
-   * IPC Listener to download a list of computations
-   * @param {Object} params
-   * @param {String[]} params.computations An array of docker image names
-   * @param {String} params.consortiumId ID of the consortium, if relevant,
-   *  associated with the computations being retrieved
-   * @return {Promise}
-   */
+  * IPC Listener to download a list of computations
+  * @param {Object} params
+  * @param {String[]} params.computations An array of docker image names
+  * @param {String} params.consortiumId ID of the consortium, if relevant,
+  *  associated with the computations being retrieved
+  * @return {Promise}
+  */
   ipcPromise.on('download-comps', (params) => { // eslint-disable-line no-unused-vars
     return core.dockerManager
-      .pullImages(params.computations)
-      .then((compStreams) => {
-        let streamsComplete = 0;
+    .pullImages(params.computations)
+    .then((compStreams) => {
+      let streamsComplete = 0;
 
-        compStreams.forEach(({ compId, compName, stream }) => {
-          if (typeof stream.on !== 'function') {
-            const output = [{ message: stream.message, status: 'error', statusCode: stream.statusCode, isErr: true }];
+      compStreams.forEach(({ compId, compName, stream }) => {
+        if (typeof stream.on !== 'function') {
+          const output = [{ message: stream.message, status: 'error', statusCode: stream.statusCode, isErr: true }];
+          mainWindow.webContents.send('docker-out', { output, compId, compName });
+        } else {
+          stream.on('data', (data) => {
+            let output = compact(data.toString().split('\r\n'));
+            output = output.map(JSON.parse);
+
             mainWindow.webContents.send('docker-out', { output, compId, compName });
-          } else {
-            stream.on('data', (data) => {
-              let output = compact(data.toString().split('\r\n'));
-              output = output.map(JSON.parse);
+          });
 
-              mainWindow.webContents.send('docker-out', { output, compId, compName });
-            });
-
-            stream.on('end', () => {
-              mainWindow.webContents.send('docker-out',
-                {
-                  output: [{ id: `${compId}-complete`, status: 'complete' }],
-                  compId,
-                  compName,
-                }
-              );
-
-              streamsComplete += 1;
-
-              if (params.consortiumId && streamsComplete === params.computations.length) {
-                mainWindow.webContents
-                  .send('docker-pull-complete', params.consortiumId);
+          stream.on('end', () => {
+            mainWindow.webContents.send('docker-out',
+              {
+                output: [{ id: `${compId}-complete`, status: 'complete' }],
+                compId,
+                compName,
               }
-            });
+            );
 
-            stream.on('error', (err) => {
-              const output = [{ message: err.json, status: 'error', statusCode: err.statusCode, isErr: true }];
-              mainWindow.webContents.send('docker-out', { output, compId, compName });
-            });
-          }
-        });
-      })
-      .catch((err) => {
-        const output = [{ message: err.json, status: 'error', statusCode: err.statusCode, isErr: true }];
-        mainWindow.webContents.send('docker-out', { output });
+            streamsComplete += 1;
+
+            if (params.consortiumId && streamsComplete === params.computations.length) {
+              mainWindow.webContents
+              .send('docker-pull-complete', params.consortiumId);
+            }
+          });
+
+          stream.on('error', (err) => {
+            const output = [{ message: err.json, status: 'error', statusCode: err.statusCode, isErr: true }];
+            mainWindow.webContents.send('docker-out', { output, compId, compName });
+          });
+        }
       });
+    })
+    .catch((err) => {
+      const output = [{ message: err.json, status: 'error', statusCode: err.statusCode, isErr: true }];
+      mainWindow.webContents.send('docker-out', { output });
+    });
   });
 
   /**
    * IPC Listener to open a dialog in Electron
    * @param {String} org How the files being retrieved are organized
    * @return {String[]} List of file paths being retrieved
-   */
+  */
   ipcPromise.on('open-dialog', (org) => {
     let filters;
     let properties;
@@ -259,7 +328,7 @@ loadConfig()
       filters,
       properties
     )
-      .then(filePaths => postDialogFunc(filePaths, core));
+    .then(filePaths => postDialogFunc(filePaths, core));
   });
 
   /**

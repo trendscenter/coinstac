@@ -8,6 +8,8 @@ const _ = require('lodash');
 const { promisify } = require('util');
 const mkdirp = promisify(require('mkdirp'));
 const path = require('path');
+const Emitter = require('events');
+
 
 module.exports = {
 
@@ -179,6 +181,7 @@ module.exports = {
         activePipelines[runId] = {
           state: 'created',
           pipeline: Pipeline.create(spec, runId, { mode, operatingDirectory, clientId }),
+          stateEmitter: new Emitter(),
         };
         clients.forEach((client) => {
           remoteClients[client] = Object.assign(
@@ -254,6 +257,11 @@ module.exports = {
         })
         .then(() => {
           activePipelines[runId].state = 'running';
+
+          this.activePipelines[runId].pipeline.stateEmitter.on('update',
+            data => this.activePipelines[runId].stateEmitter
+              .emit('update', Object.assign({}, data, { waitingOn: waitingOn(runId) })));
+
           return activePipelines[runId].pipeline.run(remoteHandler)
           .then((res) => {
             activePipelines[runId].state = 'finished';
@@ -261,14 +269,18 @@ module.exports = {
           });
         });
 
-        return { pipeline: activePipelines[runId].pipeline, result: pipelineProm };
+        return {
+          pipeline: activePipelines[runId].pipeline,
+          result: pipelineProm,
+          stateEmitter: activePipelines[runId].stateEmitter,
+        };
       },
       getPipelineStateListener(runId) {
         if (!this.activePipelines[runId]) {
           throw new Error('invalid pipeline ID');
         }
 
-        return this.activePipelines[runId].pipeline.stateEmitter;
+        return this.activePipelines[runId].stateEmitter;
       },
       waitingOn,
     };

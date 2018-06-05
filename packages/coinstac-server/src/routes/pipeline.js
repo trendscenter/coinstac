@@ -4,6 +4,7 @@ const path = require('path');
 const axios = require('axios');
 const config = require('../../config/default');
 const graphqlSchema = require('coinstac-graphql-schema');
+const { pullImagesFromList, pruneImages } = require('coinstac-docker-manager');
 const dbmap = require('/etc/coinstac/cstacDBMap'); // eslint-disable-line import/no-absolute-path, import/no-unresolved
 
 this.remotePipelineManager = PipelineManager.create({
@@ -73,21 +74,30 @@ module.exports = [
         authenticateServer()
         .then(() => {
           const run = req.payload.run;
-          const remotePipeline = this.remotePipelineManager.startPipeline({
-            clients: run.clients,
-            spec: run.pipelineSnapshot,
-            runId: run.id,
-          });
 
-          res({}).code(201);
+          const computationImageList = run.pipelineSnapshot.steps
+          .map(step => step.computations
+            .map(comp => comp.computation.dockerImage))
+            .reduce((acc, val) => acc.concat(val), []);
 
-          remotePipeline.pipeline.stateEmitter.on('update', (data) => {
-            // TODO:  most likely should be removed post proto development
-            console.log(data); // eslint-disable-line no-console
-            updateRunState(run.id, data);
-          });
+          pullImagesFromList(computationImageList)
+          .then(() => pruneImages())
+          .then(() => {
+            const { pipeline, result, stateEmitter } = this.remotePipelineManager.startPipeline({
+              clients: run.clients,
+              spec: run.pipelineSnapshot,
+              runId: run.id,
+            });
+            res({}).code(201);
 
-          remotePipeline.result
+            stateEmitter.on('update', (data) => {
+              // TODO:  console most likely should be removed post proto development
+              // or made less noisy
+              console.log(data); // eslint-disable-line no-console
+              updateRunState(run.id, data);
+            });
+
+            return result
             .then((result) => {
               saveResults(run.id, result);
             })
@@ -95,6 +105,7 @@ module.exports = [
               console.log(error); // eslint-disable-line no-console
               saveError(run.id, error);
             });
+          });
         });
       },
     },
