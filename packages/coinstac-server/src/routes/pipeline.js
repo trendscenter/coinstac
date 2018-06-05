@@ -83,14 +83,14 @@ module.exports = [
           pullImagesFromList(computationImageList)
           .then(() => pruneImages())
           .then(() => {
-            const { pipeline, result } = this.remotePipelineManager.startPipeline({
+            const { pipeline, result, stateEmitter } = this.remotePipelineManager.startPipeline({
               clients: run.clients,
               spec: run.pipelineSnapshot,
               runId: run.id,
             });
             res({}).code(201);
 
-            pipeline.stateEmitter.on('update', (data) => {
+            stateEmitter.on('update', (data) => {
               // TODO:  console most likely should be removed post proto development
               // or made less noisy
               console.log(data); // eslint-disable-line no-console
