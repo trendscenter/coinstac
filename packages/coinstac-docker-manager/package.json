@@ -1,6 +1,6 @@
 {
   "name": "coinstac-docker-manager",
-  "version": "3.1.12",
+  "version": "3.1.13",
   "description": "",
   "main": "src/index.js",
   "scripts": {

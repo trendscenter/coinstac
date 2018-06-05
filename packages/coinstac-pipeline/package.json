@@ -14,7 +14,7 @@
   "dependencies": {
     "blessed": "^0.1.81",
     "blessed-contrib": "^4.8.5",
-    "coinstac-docker-manager": "^3.1.12",
+    "coinstac-docker-manager": "^3.1.13",
     "dockerode": "^2.5.4",
     "lodash": "^4.17.5",
     "mkdirp": "^0.5.1",
@@ -43,5 +43,5 @@
   "scripts": {
     "test": "nyc ava test/**.test.js"
   },
-  "version": "3.1.12"
+  "version": "3.1.13"
 }
