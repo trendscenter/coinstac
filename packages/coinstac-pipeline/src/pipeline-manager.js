@@ -269,7 +269,11 @@ module.exports = {
           });
         });
 
-        return { pipeline: activePipelines[runId].pipeline, result: pipelineProm };
+        return {
+          pipeline: activePipelines[runId].pipeline,
+          result: pipelineProm,
+          stateEmitter: activePipelines[runId].stateEmitter,
+        };
       },
       getPipelineStateListener(runId) {
         if (!this.activePipelines[runId]) {
