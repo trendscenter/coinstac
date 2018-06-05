@@ -181,7 +181,7 @@ module.exports = {
         activePipelines[runId] = {
           state: 'created',
           pipeline: Pipeline.create(spec, runId, { mode, operatingDirectory, clientId }),
-          masterEmitter: new Emitter(),
+          stateEmitter: new Emitter(),
         };
         clients.forEach((client) => {
           remoteClients[client] = Object.assign(
@@ -259,7 +259,7 @@ module.exports = {
           activePipelines[runId].state = 'running';
 
           this.activePipelines[runId].pipeline.stateEmitter.on('update',
-            data => this.activePipelines[runId].masterEmitter
+            data => this.activePipelines[runId].stateEmitter
               .emit('update', Object.assign({}, data, { waitingOn: waitingOn(runId) })));
 
           return activePipelines[runId].pipeline.run(remoteHandler)
@@ -276,7 +276,7 @@ module.exports = {
           throw new Error('invalid pipeline ID');
         }
 
-        return this.activePipelines[runId].masterEmitter;
+        return this.activePipelines[runId].stateEmitter;
       },
       waitingOn,
     };
