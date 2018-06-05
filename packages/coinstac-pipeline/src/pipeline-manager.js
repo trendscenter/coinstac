@@ -254,6 +254,7 @@ module.exports = {
         })
         .then(() => {
           activePipelines[runId].state = 'running';
+          this.activePipelines[runId].pipeline.stateEmitter.on('update', data => Object.assign({}, data, { waitingOn: waitingOn(runId) }));
           return activePipelines[runId].pipeline.run(remoteHandler)
           .then((res) => {
             activePipelines[runId].state = 'finished';
