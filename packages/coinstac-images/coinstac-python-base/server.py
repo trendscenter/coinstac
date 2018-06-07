@@ -50,6 +50,8 @@ def make_app():
 
 if __name__ == "__main__":
     app = make_app()
-    app.listen(8881)
+    # set buffer to 230 MB
+    server = tornado.httpserver.HTTPServer(app, max_buffer_size=230000000)
+    server.listen(8881)
     print('computation server starting')
     tornado.ioloop.IOLoop.current().start()

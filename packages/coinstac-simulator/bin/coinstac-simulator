@@ -13,7 +13,6 @@ const glob = util.promisify(require('glob'));
 const path = require('path');
 const blessed = require('blessed');
 const bc = require('blessed-contrib');
-const hermit = require('hermit');
 
 const DEBUG_MODE = process.execArgv.includes('--inspect-brk=9229');
 
@@ -80,7 +79,6 @@ program.on('--help', () => {
 program.parse(process.argv);
 
 let mode;
-let compError;
 const inSpecPath = program.directory ? path.join(program.directory, 'inputspec.json') : path.join('.', 'test', 'inputspec.json');
 
 readFile(program.compspec ? program.compspec : 'compspec.json')
@@ -231,26 +229,11 @@ readFile(program.compspec ? program.compspec : 'compspec.json')
   process.exit();
 })
 .catch((err) => {
-  compError = err;
-  if (!DEBUG_MODE) {
-    screen.destroy();
-  }
-  hermit(err.error, (err, res) => {
-    console.log('Simulator run failed!');
-    console.log('Fun error details:\n');
-    console.log(res);
-    process.exit(1);
-  });
-})
-.catch((err) => {
   if (!DEBUG_MODE) {
     screen.destroy();
   }
   console.log('Simulator run failed!');
-  console.log('This may be an internal simulator issue\n If you suspect this, please leave an issue on github.com/MRN-Code/coinstac/issues with the error details\n');
-  console.log('Here is the error from the simulator run, if any');
-  console.log(compError);
-  console.log('\n\nHere is the internal error from the simulator');
+  console.log('Fun error details:\n');
   console.log(err);
   process.exit(1);
 });
