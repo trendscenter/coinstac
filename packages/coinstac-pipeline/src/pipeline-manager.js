@@ -89,6 +89,7 @@ module.exports = {
         });
 
         socket.on('run', (data) => {
+	  console.log(JSON.stringify(data, null, 2));
           // TODO: probably put in a 'pre-run' route?
           if (remoteClients[data.id] && remoteClients[data.id][data.runId]) {
             socket.join(data.runId);
@@ -102,7 +103,11 @@ module.exports = {
                 activePipelines[data.runId].state = 'recieved client data';
                 if (waitingOn(data.runId).length === 0) {
                   activePipelines[data.runId].state = 'recieved all clients data';
-                  activePipelines[data.runId].remote.resolve({ output: aggregateRun(data.runId) });
+		  console.log('############ AGG');
+		  const agg = aggregateRun(data.runId);
+                  console.log(JSON.stringify(agg, null, 2))
+                  console.log('############ END AGG');
+                  activePipelines[data.runId].remote.resolve({ output: agg });
                 }
               } else {
                 io.of('/').to(data.runId).emit('run', { runId: data.runId, error: activePipelines[data.runId].error });
@@ -214,6 +219,9 @@ module.exports = {
               activePipelines[pipeline.id].remote.reject(runError);
               io.of('/').to(pipeline.id).emit('run', { runId: pipeline.id, error: runError });
             } else {
+		  console.log('############ REMOTE OUT');
+                  console.log(JSON.stringify(message, null, 2))
+                  console.log('############ END REMOTE OUT');
               io.of('/').to(pipeline.id).emit('run', { runId: pipeline.id, output: message });
             }
           } else {
