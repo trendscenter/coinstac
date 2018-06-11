@@ -103,7 +103,7 @@ class TableResult extends Component {
             <tr>
               <th>&nbsp;</th>
               {labels.map((label, index) => {
-                if( heading.includes('Global') && index === labels.length ){
+                if( heading.includes('Global') && label.includes("site") ){
                   return <th>{`${label}`}</th>
                 }else{
                   return <th>&beta;{`${index} (${label})`}</th>
