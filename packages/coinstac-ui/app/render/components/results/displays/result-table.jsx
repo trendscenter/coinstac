@@ -86,17 +86,10 @@ class TableResult extends Component {
       }
 
       let labels = [];
-
-      if( heading.includes('Global') ){
-        //console.log(data.covariate_labels[0]);
-        labels = data.covariate_labels[0];
-      }else{
-        labels = data.covariate_labels;
-      }
+      labels = data.covariate_labels;
 
       tableContents.push(
         <div>
-        {data.covariate_labels && data.covariate_labels.length > 0 &&
         <Table
           responsive
           bordered
@@ -104,6 +97,8 @@ class TableResult extends Component {
           key={`${heading}-table-objects`}
           style={{ marginLeft, width: '60%' }}
         >
+        {console.log(labels)}
+        {labels !== 'const' ?
         <thead>
             <tr>
               <th>&nbsp;</th>
@@ -116,6 +111,7 @@ class TableResult extends Component {
               })}
             </tr>
           </thead>
+          : ''}
           <tbody>
             {Array.isArray(data) &&
               data.map((d, index) => {
@@ -146,7 +142,6 @@ class TableResult extends Component {
             }
           </tbody>
         </Table>
-        }
         <Table
           responsive
           bordered
