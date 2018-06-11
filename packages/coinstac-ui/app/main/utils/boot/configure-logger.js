@@ -23,6 +23,7 @@ module.exports = function configureLogger(config) {
         }),
       ],
     });
+    logger.level = 'silly';
 
     if (cliOpts.loglevel) {
       logger.level = cliOpts.loglevel;
@@ -42,6 +43,7 @@ module.exports = function configureLogger(config) {
         new winston.transports.Console(),
       ],
     });
+    logger.level = 'silly';
 
     if (cliOpts.loglevel) {
       logger.level = cliOpts.loglevel;

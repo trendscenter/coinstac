@@ -23,14 +23,14 @@ helperFunctions.getRethinkConnection()
   .then(() => rethink.tableCreate('pipelines').run(connection))
   .then(() => rethink.tableCreate('computations').run(connection))
   .then(() => rethink.table('computations').insert([
-    Object.assign({}, local, { submittedBy: 'test' }),
-    Object.assign({}, decentralized, { submittedBy: 'test' }),
-    Object.assign({}, singleShot, { submittedBy: 'test' }),
-    Object.assign({}, multiShot, { submittedBy: 'test' }),
+    Object.assign({}, local, { submittedBy: 'test1' }),
+    Object.assign({}, decentralized, { submittedBy: 'test1' }),
+    Object.assign({}, singleShot, { submittedBy: 'test1' }),
+    Object.assign({}, multiShot, { submittedBy: 'test1' }),
     Object.assign({}, vbm, { submittedBy: 'author' }),
     Object.assign({}, drneFsl, { submittedBy: 'author' }),
-    Object.assign({}, decentralizedError, { submittedBy: 'test' }),
-    Object.assign({}, localError, { submittedBy: 'test' }),
+    Object.assign({}, decentralizedError, { submittedBy: 'test1' }),
+    Object.assign({}, localError, { submittedBy: 'test1' }),
   ], { returnChanges: true }).run(connection))
   .then(compInsertResult => rethink.table('pipelines').insert([
     {
@@ -142,7 +142,7 @@ helperFunctions.getRethinkConnection()
       endDate: Date.now(),
       title: 'TSNE',
       pipelineId: 'test-pipeline',
-      clients: ['test'],
+      clients: ['test1'],
       consortiumId: 'test-cons-2',
       date: '1/22/2018',
       type: 'decentralized',
@@ -293,7 +293,7 @@ helperFunctions.getRethinkConnection()
       pipelineId: 'test-pipeline',
       startDate: '1518559440672',
       endDate: '1518559440685',
-      clients: ['test'],
+      clients: ['test1'],
       consortiumId: 'test-cons-2',
       date: '1/23/2018',
       type: 'decentralized',
@@ -374,15 +374,15 @@ helperFunctions.getRethinkConnection()
     activePipelineId: 'test-pipeline-ssr',
     name: 'Test Consortia 2',
     description: 'This consortia is for testing too.',
-    owners: ['test'],
+    owners: ['test1'],
     members: ['author'],
   }).run(connection))
   .then(() => connection.close());
 })
 .then(() => helperFunctions.hashPassword('password'))
 .then(passwordHash => helperFunctions.createUser({
-  id: 'test',
-  username: 'test',
+  id: 'test1',
+  username: 'test1',
   institution: 'mrn',
   email: 'test@mrn.org',
   permissions: {
