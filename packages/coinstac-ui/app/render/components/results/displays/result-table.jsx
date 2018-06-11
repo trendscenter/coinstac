@@ -97,8 +97,7 @@ class TableResult extends Component {
           key={`${heading}-table-objects`}
           style={{ marginLeft, width: '60%' }}
         >
-        {console.log(labels)}
-        {labels !== 'const' ?
+        {labels && labels.length > 0 ?
         <thead>
             <tr>
               <th>&nbsp;</th>
