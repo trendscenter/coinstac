@@ -7,6 +7,7 @@ module.exports = {
   create({ steps }, runId, { mode, operatingDirectory, clientId }) {
     const cache = {};
     let currentStep;
+    let currentState;
 
     const stateEmitter = new Emitter();
 
@@ -35,6 +36,7 @@ module.exports = {
     }
     return {
       cache,
+      currentState,
       currentStep,
       id: runId,
       mode,
@@ -43,13 +45,15 @@ module.exports = {
       run(remoteHandler) {
         const packageState = () => {
           const ctrs = this.pipelineSteps[this.currentStep].controllerState;
-          return {
+          this.currentState = {
             currentIteration: ctrs.iteration,
             controllerState: ctrs.state,
             pipelineStep: this.currentStep,
             mode: this.mode,
             totalSteps: this.pipelineSteps.length,
           };
+
+          return this.currentState;
         };
 
         const setStateProp = (prop, val) => {
