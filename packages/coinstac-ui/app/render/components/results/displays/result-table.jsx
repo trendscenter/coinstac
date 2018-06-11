@@ -97,13 +97,12 @@ class TableResult extends Component {
           key={`${heading}-table-objects`}
           style={{ marginLeft, width: '60%' }}
         >
-        {console.log(labels)}
-        {labels !== 'const' ?
+        {labels && labels.length > 0 ?
         <thead>
             <tr>
               <th>&nbsp;</th>
               {labels.map((label, index) => {
-                if( heading.includes('Global') && index === labels.length ){
+                if( heading.includes('Global') && label.includes("site") ){
                   return <th>{`${label}`}</th>
                 }else{
                   return <th>&beta;{`${index} (${label})`}</th>
