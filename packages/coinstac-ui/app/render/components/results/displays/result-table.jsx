@@ -9,17 +9,21 @@ function parseTableColumnOutput(output) {
   if (Array.isArray(output)) {
       let cols = [];
       output.map((o) => {
-        o = parseFloat(o).toFixed(5);
-        if (o > 999 || o < 0.001) {
-          o = parseFloat(o).toExponential(5);
+        o = parseFloat(o).toFixed(4);
+        if(o == 0){
+          o = 0;
+        }else if (Math.abs(o) > 999 || Math.abs(o) < 0.001) {
+          o = parseFloat(o).toExponential(4);
         }
         cols.push(<td>{o}</td>);
       })
       return cols;
   } else if (!isNaN(output) && typeof output !== 'boolean') {
-    output = parseFloat(output).toFixed(5);
-    if (output > 999 || output < 0.001) {
-      return parseFloat(output).toExponential(5);
+    //output = parseFloat(output).toFixed(4);
+    if(output == 0){
+      output = 0;
+    }else if (Math.abs(output) > 999 || Math.abs(output) < 0.001) {
+      return parseFloat(output).toExponential(4);
     }
     return output;
   }
