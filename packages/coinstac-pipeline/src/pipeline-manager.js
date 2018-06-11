@@ -40,7 +40,7 @@ module.exports = {
     const remoteClients = {};
     const missedCache = {};
 
-    const waitingOn = (runId) => {
+    const waitingOnForRun = (runId) => {
       const waiters = [];
       for (let [key, val] of Object.entries(remoteClients)) { // eslint-disable-line no-restricted-syntax, max-len, prefer-const
         if (val[runId] && !val[runId].currentOutput) {
@@ -89,7 +89,7 @@ module.exports = {
         });
 
         socket.on('run', (data) => {
-	  console.log(JSON.stringify(data, null, 2));
+          console.log(JSON.stringify(data, null, 2));
           // TODO: probably put in a 'pre-run' route?
           if (remoteClients[data.id] && remoteClients[data.id][data.runId]) {
             socket.join(data.runId);
@@ -101,10 +101,15 @@ module.exports = {
               if (!activePipelines[data.runId].error) {
                 remoteClients[data.id][data.runId].currentOutput = data.output.output;
                 activePipelines[data.runId].state = 'recieved client data';
-                if (waitingOn(data.runId).length === 0) {
+
+                const waitingOn = waitingOnForRun(data.runId);
+                activePipelines[data.runId].stateEmitter
+                  .emit('update', Object.assign({}, activePipelines[data.runId].pipeline.currentState, { waitingOn }));
+
+                if (waitingOn.length === 0) {
                   activePipelines[data.runId].state = 'recieved all clients data';
-		  console.log('############ AGG');
-		  const agg = aggregateRun(data.runId);
+                  console.log('############ AGG');
+                  const agg = aggregateRun(data.runId);
                   console.log(JSON.stringify(agg, null, 2))
                   console.log('############ END AGG');
                   activePipelines[data.runId].remote.resolve({ output: agg });
@@ -219,9 +224,9 @@ module.exports = {
               activePipelines[pipeline.id].remote.reject(runError);
               io.of('/').to(pipeline.id).emit('run', { runId: pipeline.id, error: runError });
             } else {
-		  console.log('############ REMOTE OUT');
-                  console.log(JSON.stringify(message, null, 2))
-                  console.log('############ END REMOTE OUT');
+              console.log('############ REMOTE OUT');
+              console.log(JSON.stringify(message, null, 2))
+              console.log('############ END REMOTE OUT');
               io.of('/').to(pipeline.id).emit('run', { runId: pipeline.id, output: message });
             }
           } else {
@@ -268,7 +273,7 @@ module.exports = {
 
           this.activePipelines[runId].pipeline.stateEmitter.on('update',
             data => this.activePipelines[runId].stateEmitter
-              .emit('update', Object.assign({}, data, { waitingOn: waitingOn(runId) })));
+              .emit('update', data));
 
           return activePipelines[runId].pipeline.run(remoteHandler)
           .then((res) => {
@@ -290,7 +295,7 @@ module.exports = {
 
         return this.activePipelines[runId].stateEmitter;
       },
-      waitingOn,
+      waitingOnForRun,
     };
   },
 };
