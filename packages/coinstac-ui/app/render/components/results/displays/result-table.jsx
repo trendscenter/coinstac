@@ -9,21 +9,17 @@ function parseTableColumnOutput(output) {
   if (Array.isArray(output)) {
       let cols = [];
       output.map((o) => {
-        o = parseFloat(o).toFixed(4);
-        if(o == 0){
-          o = 0;
-        }else if (Math.abs(o) > 999 || Math.abs(o) < 0.001) {
-          o = parseFloat(o).toExponential(4);
+        o = parseFloat(o).toFixed(5);
+        if (o > 999 || o < 0.001) {
+          o = parseFloat(o).toExponential(5);
         }
         cols.push(<td>{o}</td>);
       })
       return cols;
   } else if (!isNaN(output) && typeof output !== 'boolean') {
-    //output = parseFloat(output).toFixed(4);
-    if(output == 0){
-      output = 0;
-    }else if (Math.abs(output) > 999 || Math.abs(output) < 0.001) {
-      return parseFloat(output).toExponential(4);
+    output = parseFloat(output).toFixed(5);
+    if (output > 999 || output < 0.001) {
+      return parseFloat(output).toExponential(5);
     }
     return output;
   }
@@ -86,31 +82,30 @@ class TableResult extends Component {
       }
 
       let labels = [];
-      labels = data.covariate_labels;
+
+      if( heading.includes('Global') && Array.isArray(data.covariate_labels[0]) ){
+        labels = data.covariate_labels[0];
+      }else{
+        labels = data.covariate_labels;
+      }
 
       tableContents.push(
         <div>
+        {data.covariate_labels && data.covariate_labels.length > 0 &&
         <Table
           responsive
           bordered
-          condensed
           key={`${heading}-table-objects`}
           style={{ marginLeft, width: '60%' }}
         >
-        {labels && labels.length > 0 ?
         <thead>
             <tr>
               <th>&nbsp;</th>
               {labels.map((label, index) => {
-                if( heading.includes('Global') && label.includes("site") ){
-                  return <th>{`${label}`}</th>
-                }else{
-                  return <th>&beta;{`${index} (${label})`}</th>
-                }
+                  return <th className={'text-nowrap'}>&beta;{`${index} (${label})`}</th>
               })}
             </tr>
           </thead>
-          : ''}
           <tbody>
             {Array.isArray(data) &&
               data.map((d, index) => {
@@ -141,6 +136,7 @@ class TableResult extends Component {
             }
           </tbody>
         </Table>
+        }
         <Table
           responsive
           bordered
@@ -173,18 +169,13 @@ class TableResult extends Component {
             {!Array.isArray(data) &&
               keyValPairs.map((pair) => {
                   if(typeof pair[1] === 'number') {
-                    let o = parseTableColumnOutput(pair[1]);
-                    o = parseFloat(o).toFixed(4);
-                    if(o == 0){
-                      o = 0;
-                    }else if (Math.abs(o) > 999 || Math.abs(o) < 0.001) {
-                      o = parseFloat(o).toExponential(4);
-                    }
                     return <tr key={`${pair[0]}-numbers-row`}>
                       <td className="bold">
                       {outputProps.items[pair[0]] ? outputProps.items[pair[0]].label : pair[0]}
                       </td>
-                      <td style={{ fontFamily: 'Courier' }}>{o}</td>
+                      <td style={{ fontFamily: 'Courier' }}>
+                        {parseTableColumnOutput(pair[1])}
+                      </td>
                     </tr>;
                   }
                 }
