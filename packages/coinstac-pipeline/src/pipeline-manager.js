@@ -103,8 +103,15 @@ module.exports = {
                 activePipelines[data.runId].state = 'recieved client data';
 
                 const waitingOn = waitingOnForRun(data.runId);
+                activePipelines[data.runId].currentState.waitingOn = waitingOn;
                 activePipelines[data.runId].stateEmitter
-                  .emit('update', Object.assign({}, activePipelines[data.runId].pipeline.currentState, { waitingOn }));
+                .emit('update',
+                  Object.assign(
+                    {},
+                    activePipelines[data.runId].pipeline.currentState,
+                    activePipelines[data.runId].currentState
+                  )
+                );
 
                 if (waitingOn.length === 0) {
                   activePipelines[data.runId].state = 'recieved all clients data';
@@ -192,6 +199,7 @@ module.exports = {
           state: 'created',
           pipeline: Pipeline.create(spec, runId, { mode, operatingDirectory, clientId }),
           stateEmitter: new Emitter(),
+          currentState: {},
         };
         clients.forEach((client) => {
           remoteClients[client] = Object.assign(
@@ -273,7 +281,7 @@ module.exports = {
 
           this.activePipelines[runId].pipeline.stateEmitter.on('update',
             data => this.activePipelines[runId].stateEmitter
-              .emit('update', data));
+              .emit('update', Object.assign({}, data, activePipelines[runId].currentState)));
 
           return activePipelines[runId].pipeline.run(remoteHandler)
           .then((res) => {
