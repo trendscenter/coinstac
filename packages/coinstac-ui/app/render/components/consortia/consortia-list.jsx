@@ -59,8 +59,6 @@ class ConsortiaList extends Component {
   constructor(props) {
     super(props);
 
-    const { params } = props;
-
     this.state = {
       ownedConsortia: [],
       otherConsortia: [],
