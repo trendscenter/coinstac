@@ -35,6 +35,7 @@ export default (
         <IndexRoute component={ConsortiaList} />
         <Route path="new" component={ConsortiumTabs} />
         <Route path=":consortiumId" component={ConsortiumTabs} />
+        <Route path=":consortiumId/:tabId" component={ConsortiumTabs} />
       </Route>
       <Route path="collections" component={RouteContainer}>
         <IndexRoute component={CollectionsList} />
