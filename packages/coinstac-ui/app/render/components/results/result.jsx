@@ -7,6 +7,7 @@ import BrowserHistory from 'react-router/lib/browserHistory';
 import Box from './displays/box-plot';
 import Scatter from './displays/scatter-plot';
 import Table from './displays/result-table';
+import Images from './displays/images';
 import { getLocalRun } from '../../state/ducks/runs';
 
 class Result extends Component {
@@ -29,13 +30,19 @@ class Result extends Component {
 
         // Checking display type of computation
         const stepsLength = run.pipelineSnapshot.steps.length;
-        const displayTypes = run.pipelineSnapshot.steps[stepsLength - 1]
+        let displayTypes = run.pipelineSnapshot.steps[stepsLength - 1]
             .computations[0].computation.display;
         this.setState({
           computationOutput: run.pipelineSnapshot.steps[stepsLength - 1]
             .computations[0].computation.output,
           displayTypes,
         });
+
+        if(!displayTypes.length){
+          let array = [];
+          array[0] = displayTypes;
+          displayTypes = array;
+        }
 
         if (displayTypes && displayTypes.findIndex(disp => disp.type === 'scatter_plot') > -1) {
           plotData.testData = [];
@@ -67,9 +74,10 @@ class Result extends Component {
   }
 
   render() {
-    const { displayTypes, run } = this.state;
+    const { run } = this.state;
     const { consortia } = this.props;
     const consortium = consortia.find(c => c.id === run.consortiumId);
+    let displayTypes = this.state.displayTypes;
     let stepsLength = -1;
     let covariates = [];
     if (run && run.pipelineSnapshot) {
@@ -80,6 +88,12 @@ class Result extends Component {
       && run.pipelineSnapshot.steps[stepsLength - 1].inputMap.covariates) {
       covariates = run.pipelineSnapshot.steps[stepsLength - 1]
         .inputMap.covariates.ownerMappings.map(m => m.name);
+    }
+
+    if(!displayTypes.length){
+      let array = [];
+      array[0] = displayTypes;
+      displayTypes = array;
     }
 
     return (
@@ -126,6 +140,7 @@ class Result extends Component {
 
         <Tabs defaultActiveKey={0} id="uncontrolled-tab-example">
           {run && run.results && displayTypes.map((disp, index) => {
+            console.log(disp.type);
             const title = disp.type.replace('_', ' ')
               .replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
             return (
@@ -150,6 +165,11 @@ class Result extends Component {
                     computationOutput={this.state.computationOutput}
                     plotData={this.state.plotData}
                     tables={disp.tables ? disp.tables : null}
+                  />
+                }
+                {disp.type === 'images' &&
+                  <Images
+                    plotData={this.state.plotData}
                   />
                 }
               </Tab>
