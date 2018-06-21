@@ -140,7 +140,6 @@ class Result extends Component {
 
         <Tabs defaultActiveKey={0} id="uncontrolled-tab-example">
           {run && run.results && displayTypes.map((disp, index) => {
-            console.log(disp.type);
             const title = disp.type.replace('_', ' ')
               .replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
             return (
