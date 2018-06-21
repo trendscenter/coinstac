@@ -19,7 +19,6 @@ class Images extends Component {
   }
 
   drawImageResults = (obj) => {
-    //console.log(plotData);
     var output = [];
     for (const [key, value] of Object.entries(obj)) {
       if( key.includes('global') ){
@@ -37,7 +36,6 @@ class Images extends Component {
           output.push(<img src={`data:image/png;base64,${v}`} />);
         }else{
           for (const [l, w] of Object.entries(v)) {
-            console.log(l);
             output.push(<h4 key={`image-${k}-${l}`}>{this.humanize(l).replace('.png','')}</h4>);
             if(typeof w === 'string'){
               output.push(<img src={`data:image/png;base64,${w}`} />);
