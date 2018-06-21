@@ -156,7 +156,7 @@ class ConsortiaList extends Component {
     } else if (owner && !consortium.activePipelineId) {
       actions.push(
         <LinkContainer
-          to={`dashboard/consortia/${consortium.id}`}
+          to={`dashboard/consortia/${consortium.id}/2`}
           key={`${consortium.id}-set-active-pipeline-button`}
         >
           <Button
