@@ -8,6 +8,14 @@ class Images extends Component {
     this.drawImageResults = this.drawImageResults.bind(this);
   }
 
+  /**
+   * humanize
+   * Converts underscored lowercase string to human readable Title
+   * Also converts 'Beta' to symbol β
+   * @param  {string} str Input String to Convert
+   * @return {string}     Converted String to Title
+   */
+
   humanize = (str) => {
     var frags = str.split('_');
     for (var i=0; i<frags.length; i++) {
@@ -18,6 +26,13 @@ class Images extends Component {
     return string;
   }
 
+  /**
+   * drawImageResults
+   * Takes computation Result Object and displays list of Images
+   * @param  {Object} obj Result Object
+   * @return {Object}     JSX of Global and Local Results with Images
+   */
+  
   drawImageResults = (obj) => {
     var output = [];
     for (const [key, value] of Object.entries(obj)) {
