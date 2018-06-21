@@ -1,0 +1,74 @@
+{
+  "meta": {
+    "name": "Single-shot Regression for MCIC Data",
+    "id": "ssr_vbm",
+    "version": "v1.0.0",
+    "repository": "https:\/\/github.com\/MRN-Code\/coinstac_ssr_vbm_mcic",
+    "description": "This repository contains code for single-shot regression (ssr) that was shown to successfully work with the MCIC dataset on coinstac-simulator"
+  },
+  "computation": {
+    "type": "docker",
+    "dockerImage": "coinstac/ssr_vbm",
+    "command": [
+      "python",
+      "\/computation\/local.py"
+    ],
+    "remote": {
+      "type": "docker",
+      "dockerImage": "coinstac/ssr_vbm",
+      "command": [
+        "python",
+        "\/computation\/remote.py"
+      ]
+    },
+    "input": {
+      "lambda":
+      {
+        "defaultValue": 0,
+        "label": "Lambda",
+        "max": 1,
+        "min": 0,
+        "step": 0.05,
+        "type": "number",
+        "source": "owner"
+      },
+      "covariates":
+      {
+        "label": "Covariates",
+        "type": "array",
+        "items": ["boolean", "number"]
+      },
+      "data": {
+        "label": "Data",
+        "type": "array",
+        "items": ["NIfTI"],
+        "extensions": [["csv", "txt"]]
+      }
+    },
+    "output": {
+      "avg_beta_vector": {
+        "label": "Avg Beta Vector",
+        "type": "array"
+      },
+      "r_2_global": {
+        "label": "R2 Global",
+        "type": "number"
+      },
+      "ts_global": {
+        "label": "TS Global",
+        "type": "array"
+      },
+      "ps_global": {
+        "label": "PS Global",
+        "type": "number"
+      },
+      "dof_global": {
+        "label": "DOF Global",
+        "type": "array"
+      }
+    },
+    "display": {
+      "type": "images"
+    }
+  }
+}
