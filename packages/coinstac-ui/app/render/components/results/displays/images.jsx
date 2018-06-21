@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import ReactDOMServer from 'react-dom/server';
 import PropTypes from 'prop-types';
 
 class Images extends Component {
@@ -16,15 +15,17 @@ class Images extends Component {
    * @return {string}     Converted String to Title
    */
 
-  humanize = (str) => {
-    var frags = str.split('_');
-    for (var i=0; i<frags.length; i++) {
-      frags[i] = frags[i].charAt(0).toUpperCase() + frags[i].slice(1);
+   // ignore weird class-methods-use-this lint error
+   // eslint-disable-next-line
+    humanize(str) {
+      const frags = str.split('_');
+      for (let i = 0; i < frags.length; i += 1) {
+        frags[i] = frags[i].charAt(0).toUpperCase() + frags[i].slice(1);
+      }
+      let string = frags.join(' ');
+      string = string.replace('Beta', 'β ');
+      return string;
     }
-    var string = frags.join(' ');
-    string = string.replace('Beta','β ');
-    return string;
-  }
 
   /**
    * drawImageResults
@@ -32,38 +33,38 @@ class Images extends Component {
    * @param  {Object} obj Result Object
    * @return {Object}     JSX of Global and Local Results with Images
    */
-  
-  drawImageResults = (obj) => {
-    var output = [];
-    for (const [key, value] of Object.entries(obj)) {
-      if( key.includes('global') ){
-        output.push(<span><h2>{this.humanize(key)}</h2><hr /></span>);
-      }else{
+
+  drawImageResults(obj) {
+    const output = [];
+    Object.entries(obj).forEach(([key, value]) => {
+      if (key.includes('global')) {
+        output.push(<span key={`span-global-${key}`}><h2>{this.humanize(key)}</h2><hr /></span>);
+      } else {
         output.push(<h2>{this.humanize(key)}</h2>);
       }
-      for (const [k, v] of Object.entries(value)) {
-        if( key.includes('global') ){
-          output.push(<h3 key={`image-${k}`}>{this.humanize(k).replace('.png','')}</h3>);
-        }else{
-          output.push(<span><hr /><h3 key={`image-${k}`}>{this.humanize(k).replace('.png','')}</h3></span>);
+      Object.entries(value).forEach(([k, v]) => {
+        if (key.includes('global')) {
+          output.push(<h3 key={`image-${k}`}>{this.humanize(k).replace('.png', '')}</h3>);
+        } else {
+          output.push(<span key={`span-${k}`}><hr /><h3 key={`image-${k}`}>{this.humanize(k).replace('.png', '')}</h3></span>);
         }
-        if(typeof v === 'string'){
-          output.push(<img src={`data:image/png;base64,${v}`} />);
-        }else{
-          for (const [l, w] of Object.entries(v)) {
-            output.push(<h4 key={`image-${k}-${l}`}>{this.humanize(l).replace('.png','')}</h4>);
-            if(typeof w === 'string'){
-              output.push(<img src={`data:image/png;base64,${w}`} />);
+        if (typeof v === 'string') {
+          output.push(<img alt={`${v}-img`} src={`data:image/png;base64, ${v}`} />);
+        } else {
+          Object.entries(v).forEach(([l, w]) => {
+            output.push(<h4 key={`image-${k}-${l}`}>{this.humanize(l).replace('.png', '')}</h4>);
+            if (typeof w === 'string') {
+              output.push(<img alt={`${w}-img`} src={`data:image/png;base64, ${w}`} />);
             }
-          }
+          });
         }
-      }
-    }
+      });
+    });
     return output;
   }
 
   render() {
-    const { computationOutput, plotData } = this.props;
+    const { plotData } = this.props;
     return (
       <div id="images">
         {plotData && this.drawImageResults(plotData)}
@@ -74,6 +75,10 @@ class Images extends Component {
 
 Images.propTypes = {
   plotData: PropTypes.object,
+};
+
+Images.defaultProps = {
+  plotData: null,
 };
 
 export default Images;
