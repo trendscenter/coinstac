@@ -2,6 +2,7 @@ const rethink = require('rethinkdb');
 const singleShot = require('./data/single-shot-schema');
 const multiShot = require('./data/multi-shot-schema');
 const vbm = require('./data/vbm-schema');
+const vbmMcic = require('./data/coinstac-ssr-vbm-mcic');
 const decentralized = require('./data/coinstac-decentralized-test');
 const decentralizedError = require('./data/coinstac-decentralized-error');
 const local = require('./data/coinstac-local-test');
@@ -28,6 +29,7 @@ helperFunctions.getRethinkConnection()
     Object.assign({}, singleShot, { submittedBy: 'test1' }),
     Object.assign({}, multiShot, { submittedBy: 'test1' }),
     Object.assign({}, vbm, { submittedBy: 'author' }),
+    Object.assign({}, vbmMcic, { submittedBy: 'test1' }),
     Object.assign({}, drneFsl, { submittedBy: 'author' }),
     Object.assign({}, decentralizedError, { submittedBy: 'test1' }),
     Object.assign({}, localError, { submittedBy: 'test1' }),
