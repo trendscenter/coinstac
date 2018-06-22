@@ -15,7 +15,7 @@ function parseTableColumnOutput(output) {
         }else if (Math.abs(o) > 999 || Math.abs(o) < 0.001) {
           o = parseFloat(o).toExponential(4);
         }
-        cols.push(<td>{o}</td>);
+        cols.push(<td key={`value-${o}`}>{o}&nbsp;</td>);
       })
       return cols;
   } else if (!isNaN(output) && typeof output !== 'boolean') {
@@ -174,10 +174,10 @@ class TableResult extends Component {
               keyValPairs.map((pair) => {
                   if(typeof pair[1] === 'number') {
                     return <tr key={`${pair[0]}-numbers-row`}>
-                      <td className="bold">
+                      <td className="bold" key={`${pair[0]}-numbers-column`}>
                       {outputProps.items[pair[0]] ? outputProps.items[pair[0]].label : pair[0]}
                       </td>
-                      <td style={{ fontFamily: 'Courier' }}>
+                      <td style={{ fontFamily: 'Courier' }} key={`${pair[0]}-numbers-column-output`}>
                         {parseTableColumnOutput(pair[1])}
                       </td>
                     </tr>;
