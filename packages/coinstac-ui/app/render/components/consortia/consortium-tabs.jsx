@@ -52,16 +52,29 @@ class ConsortiumTabs extends Component {
       consortium,
       unsubscribeConsortia: null,
       unsubscribeUsers: null,
-    };
+      key: 1
+    };;
 
     this.getConsortiumRuns = this.getConsortiumRuns.bind(this);
     this.addMemberToConsortium = this.addMemberToConsortium.bind(this);
     this.removeMemberFromConsortium = this.removeMemberFromConsortium.bind(this);
     this.saveConsortium = this.saveConsortium.bind(this);
     this.updateConsortium = this.updateConsortium.bind(this);
+    this.handleSelect = this.handleSelect.bind(this);
+  }
+
+  handleSelect(key) {
+    this.setState({ key });
   }
 
   componentWillReceiveProps(nextProps) {
+
+    let newKey = parseInt(this.props.params.tabId);
+    if(this.props.params.tabId && newKey !== this.state.key){
+      this.handleSelect(this.props.params.tabId);
+      this.setState({key: newKey});
+    }
+
     if (this.state.consortium.id && !this.state.unsubscribeConsortia) {
       this.setState({
         unsubscribeConsortia: this.props.subscribeToConsortia(this.state.consortium.id),
@@ -182,7 +195,10 @@ class ConsortiumTabs extends Component {
         <div className="page-header clearfix">
           <h1 className="pull-left">{title}</h1>
         </div>
-        <Tabs defaultActiveKey={1} id="consortium-tabs">
+        <Tabs
+          activeKey={this.state.key}
+          onSelect={this.handleSelect}
+          id="consortium-tabs">
           <Tab eventKey={1} title="About" style={styles.tab}>
             <ConsortiumAbout
               addUserRole={this.props.addUserRole}
