@@ -6,6 +6,7 @@ const path = require('path');
 
 rmrf('./node_modules/coinstac-*(common|client-core|graphql-schema)')
 .then(() => rmrf('./node_modules/.bin/coinstac-*(common|client-core|graphql-schema)'))
+.then(() => rmrf('./config/local.json'))
 .then(() => Promise.all([
   mkdirp(path.join('node_modules', 'coinstac-common')),
   mkdirp(path.join('node_modules', 'coinstac-client-core')),
