@@ -164,12 +164,13 @@ class Result extends Component {
                     computationOutput={this.state.computationOutput}
                     plotData={this.state.plotData}
                     tables={disp.tables ? disp.tables : null}
+                    title={`${consortium.name}_${run.pipelineSnapshot.name}`}
                   />
                 }
                 {disp.type === 'images' &&
                   <Images
-                    title={`${consortium.name}_${run.pipelineSnapshot.name}`}
                     plotData={this.state.plotData}
+                    title={`${consortium.name}_${run.pipelineSnapshot.name}`}
                   />
                 }
               </Tab>
