@@ -4,6 +4,44 @@ import {
   Table,
 } from 'react-bootstrap';
 
+function downloadCSV(csv, filename) {
+  // CSV FILE
+  const csvFile = new Blob([csv], { type: 'text/csv' });
+  // Download link
+  const downloadLink = document.createElement('a');
+  // File name
+  downloadLink.download = filename;
+  // We have to create a link to the file
+  downloadLink.href = window.URL.createObjectURL(csvFile);
+  // Make sure that the link is not displayed
+  downloadLink.style.display = 'none';
+  // Add the link to your DOM
+  document.body.appendChild(downloadLink);
+  // Lanzamos
+  downloadLink.click();
+}
+
+function exportTableToCSV(html, filename) {
+  const csv = [];
+  const rows = document.querySelectorAll('table tr');
+
+  for (let i = 0; i < rows.length; i++) {
+    const row = [];
+    const cols = rows[i].querySelectorAll('td, th');
+    console.log(cols.length);
+    for (let j = 0; j < cols.length; j = j + 1) {
+      row.push(cols[j].innerText);
+      csv.push(row.join(','));
+    }
+  }
+  // Download CSV
+  downloadCSV(csv.join('\n'), filename);
+}
+
+function saveFileCSV() {
+  const html = document.querySelector('table').outerHTML;
+  exportTableToCSV(html, 'results.csv');
+}
 
 function parseTableColumnOutput(output) {
   if (Array.isArray(output)) {
@@ -199,6 +237,7 @@ class TableResult extends Component {
 
     return (
       <div>
+        <button onClick={saveFileCSV}>Download to CSV</button>
         {tables && tables.map(t =>
           this.makeTable(
             t,
