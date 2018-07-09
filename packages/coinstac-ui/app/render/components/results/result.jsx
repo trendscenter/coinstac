@@ -168,6 +168,7 @@ class Result extends Component {
                 }
                 {disp.type === 'images' &&
                   <Images
+                    title={`${consortium.name}_${run.pipelineSnapshot.name}`}
                     plotData={this.state.plotData}
                   />
                 }
