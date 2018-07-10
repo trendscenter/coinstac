@@ -162,14 +162,17 @@ class Images extends Component {
   			canvas.getContext('2d');
   		  let doc = new jsPDF();
         let globalImg = canvas.toDataURL("image/jpg", 1.0);
-  		  doc.addImage(globalImg, 'jpg', 5, 5, 200, 200);
+        let global_items = Object.keys(plotData.global_stats).length;
+        let height = 0;
+        height = global_items * 25;
+  		  doc.addImage(globalImg, 'jpg', 5, 5, 200, height);
         Object.entries(plotData.local_stats).forEach(([key, value]) => {
             let canvas = key + '_canvas';
             let page = 'page-' + key;
             let key_canvas = ReactDOM.findDOMNode(this.refs[canvas]);
             let canvasImg = key_canvas.toDataURL("image/jpg", 1.0);
             doc.addPage();
-      		  doc.addImage(canvasImg, 'jpg', 5, 5, 200, 200);
+      		  doc.addImage(canvasImg, 'jpg', 5, 5, 200, height);
         });
   		  doc.save(this.slugify(this.props.title) + ".pdf");
   		 } catch(e) {
@@ -183,7 +186,6 @@ class Images extends Component {
     let global_items = Object.keys(plotData.global_stats).length;
     let local_items = Object.keys(plotData.local_stats).length;
     let height = 0;
-    //let items = global_items + (global_items * local_items);
     height = global_items * 105;
     let local_canvas = [];
     Object.entries(plotData.local_stats).forEach(([key, value]) => {
