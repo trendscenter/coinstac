@@ -7,7 +7,7 @@ import { Button } from 'react-bootstrap';
 
 const styles = {
   print: { display: 'none', visibility: 'hidden' },
-  imgItem: { position: 'relative', float: 'left', width: '45%', marginRight: '5%' },
+  column: { position: 'relative', float: 'left', width: '45%', marginRight: '5%' },
   image: { width: '100%', height: 'auto' },
   pdfButton: { position: 'absolute', top: '20rem', right: '2rem' },
   page: { position: 'relative', float: 'left', width: '95%', marginRight: '5%' },
@@ -71,12 +71,17 @@ class Images extends Component {
     Object.entries(obj).forEach(([key, value]) => {
       const page = [];
       const subitem = [];
+      const col1 = [];
+      const col2 = [];
+      let subcol1 = [];
+      let subcol2 = [];
       if (key.includes('global')) {
         page.push(
           <span key={`span-global-${key}`}><h2>{this.humanize(key)}</h2>
           <hr /></span>);
       }
-      Object.entries(value).forEach(([k, v]) => {
+      Object.entries(value).forEach(([k, v], i) => {
+        let itemsLength = Object.entries(value).length;
         let item = [];
         if (key.includes('global')) {
           item.push(
@@ -97,8 +102,10 @@ class Images extends Component {
             style={styles.image} />
           );
         } else {
-          Object.entries(v).forEach(([l, w]) => {
-            let subitem = [];
+          Object.entries(v).forEach(([l, w], h) => {
+            let subItemsLength = Object.entries(v).length;
+            console.log(subItemsLength);
+            const subitem = [];
             subitem.push(
               <h4 key={`image-${k}-${l}`}>{this.humanize(l).replace('.png', '')}
               </h4>
@@ -109,21 +116,47 @@ class Images extends Component {
                   style={styles.image} />
               );
             }
-            item.push(
-              <div className={'item'} key={`image-item-${key}-${k}-${l}`} style={styles.imgItem}>{subitem}</div>
-            );
+            if (h + 1 <= subItemsLength/2 && subcol1.length < subItemsLength/2) {
+              subcol1.push(
+                <div className={'item'} key={`image-item-${key}-${k}-${l}`} style={styles.imgItem}>{subitem}</div>
+              );
+            }
+            if (h + 1 > subItemsLength/2  && subcol2.length < subItemsLength/2) {
+              subcol2.push(
+                <div className={'item'} key={`image-item-${key}-${k}-${l}`} style={styles.imgItem}>{subitem}</div>
+              );
+            }
           });
-        }
+        };
         if (key.includes('global')) {
-          page.push(
-            <div className={'item'} key={`page-${key}-${k}`} style={styles.imgItem}>{item}</div>
-          );
+          if (i + 1 <= itemsLength/2) {
+            col1.push(
+              <div className={'item'} key={`page-${key}-${k}`} style={styles.imgItem}>{item}</div>
+            );
+          }
+          if (i + 1 > itemsLength/2) {
+            col2.push(
+              <div className={'item'} key={`page-${key}-${k}`} style={styles.imgItem}>{item}</div>
+            );
+          }
         }else{
           page.push(
-            <div className={`page-${k}`} ref={`page-${k}`} key={`page-${k}`} style={styles.subpage}>{item}</div>
+            <div className={`page-${k}`} ref={`page-${k}`} key={`page-${k}`} style={styles.subpage}>
+              {item}
+              <div style={styles.column}>{subcol1}</div>
+              <div style={styles.column}>{subcol2}</div>
+            </div>
           );
+          subcol1 = [];
+          subcol2 = [];
         }
       });
+      page.push(
+        <div style={styles.column}>{col1}</div>
+      );
+      page.push(
+        <div style={styles.column}>{col2}</div>
+      );
       if (key.includes('global')) {
         output.push(
           <div key={`page-${key}`} className={`page-${key}`} ref={'global_page'} style={styles.page}>{page}</div>
