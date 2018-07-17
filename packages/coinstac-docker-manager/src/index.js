@@ -118,6 +118,17 @@ const getImages = () => {
 };
 
 /**
+ * Retrieve Docker status
+ * @return {boolean} is Docker running?
+ */
+const getStatus = () => {
+  return true;
+  // setInterval(() => {
+  //   return docker.ping();
+  // }, 1000);
+};
+
+/**
  * Pull individual image from Docker hub
  * @param {String} computation Docker image name
  * @return {Object} Returns stream of docker pull output
@@ -388,6 +399,7 @@ const stopAllServices = () => {
 
 module.exports = {
   getImages,
+  getStatus,
   pullImages,
   pullImagesFromList,
   pruneImages,
