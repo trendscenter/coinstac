@@ -238,8 +238,8 @@ loadConfig()
   */
   ipcPromise.on('get-status', () => {
     return core.dockerManager.getStatus()
-    .then((result) => {
-      return result;
+    .then((data) => {
+      return data;
     });
   });
 
