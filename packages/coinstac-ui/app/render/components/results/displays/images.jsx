@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
+import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
+import { notifySuccess, notifyError, writeLog } from '../../../state/ducks/notifyAndLog';
 import RasterizeHTML from 'rasterizehtml';
 import jsPDF from 'jspdf';
 import { Button } from 'react-bootstrap';
@@ -104,7 +106,6 @@ class Images extends Component {
         } else {
           Object.entries(v).forEach(([l, w], h) => {
             let subItemsLength = Object.entries(v).length;
-            console.log(subItemsLength);
             const subitem = [];
             subitem.push(
               <h4 key={`image-${k}-${l}`}>{this.humanize(l).replace('.png', '')}
@@ -189,30 +190,32 @@ class Images extends Component {
   }
 
   savePDF = () => {
-       const { plotData } = this.props;
-       let canvas = ReactDOM.findDOMNode(this.refs.global_canvas);
-  		 try {
-  			canvas.getContext('2d');
-  		  let doc = new jsPDF();
-        let globalImg = canvas.toDataURL("image/jpg", 1.0);
-        let global_items = Object.keys(plotData.global_stats).length;
-        let height = 0;
-        height = global_items * 25;
-  		  doc.addImage(globalImg, 'jpg', 5, 5, 200, height);
-        Object.entries(plotData.local_stats).forEach(([key, value]) => {
-            let canvas = key + '_canvas';
-            let page = 'page-' + key;
-            let key_canvas = ReactDOM.findDOMNode(this.refs[canvas]);
-            let canvasImg = key_canvas.toDataURL("image/jpg", 1.0);
-            doc.addPage();
-      		  doc.addImage(canvasImg, 'jpg', 5, 5, 200, height);
-        });
-  		  doc.save(this.slugify(this.props.title) + ".pdf");
-  		 } catch(e) {
-  			 alert("Error description: " + e.message);
-  		 }
-
-  	}
+     const { plotData } = this.props;
+     let canvas = ReactDOM.findDOMNode(this.refs.global_canvas);
+		 try {
+			canvas.getContext('2d');
+		  let doc = new jsPDF();
+      let globalImg = canvas.toDataURL("image/jpg", 1.0);
+      let global_items = Object.keys(plotData.global_stats).length;
+      let height = 0;
+      height = global_items * 25;
+		  doc.addImage(globalImg, 'jpg', 5, 5, 200, height);
+      Object.entries(plotData.local_stats).forEach(([key, value]) => {
+          let canvas = key + '_canvas';
+          let page = 'page-' + key;
+          let key_canvas = ReactDOM.findDOMNode(this.refs[canvas]);
+          let canvasImg = key_canvas.toDataURL("image/jpg", 1.0);
+          doc.addPage();
+    		  doc.addImage(canvasImg, 'jpg', 5, 5, 200, height);
+      });
+		  doc.save(this.slugify(this.props.title) + ".pdf");
+    } catch(err) {
+     this.props.writeLog({ type: 'error', message: err });
+     this.props.notifyError({
+       message: err
+     });
+	 }
+	}
 
   render() {
     const { plotData } = this.props;
@@ -246,10 +249,21 @@ class Images extends Component {
 
 Images.propTypes = {
   plotData: PropTypes.object,
+  notifyError: PropTypes.func.isRequired,
+  writeLog: PropTypes.func.isRequired,
 };
 
 Images.defaultProps = {
   plotData: null,
 };
 
-export default Images;
+const mapStateToProps = ({ auth: { user } }) => {
+  return {
+    user,
+  };
+};
+
+export default connect(mapStateToProps, {
+  notifyError,
+  writeLog,
+})(Images);
