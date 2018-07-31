@@ -27,7 +27,9 @@
   "description": "Computation registry service for COINSTAC.",
   "devDependencies": {
     "ava": "^0.24.0",
-    "rimraf-promise": "^2.0.0"
+    "clarify": "^2.1.0",
+    "rimraf-promise": "^2.0.0",
+    "trace": "^3.1.0"
   },
   "homepage": "https://github.com/MRN-Code/coinstac#readme",
   "keywords": [

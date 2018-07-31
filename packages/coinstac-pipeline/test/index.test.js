@@ -1,3 +1,7 @@
+'use strict';
+
+require('trace');
+require('clarify');
 const test = require('ava').test;
 const computationSpecs = require('./computation-specs');
 const path = require('path');
@@ -9,6 +13,8 @@ const localCompSpec = computationSpecs.local;
 const localErrorCompSpec = computationSpecs.localError;
 const decentralizedCompSpec = computationSpecs.decentralized;
 const decentralizedErrorCompSpec = computationSpecs.decentralizedError;
+Error.stackTraceLimit = Infinity;
+
 
 const localPipelineSpec = {
   steps: [
@@ -49,6 +55,18 @@ const mixedPipelineSpec = {
         start: { value: 2 },
       },
     },
+    {
+      controller: { type: 'decentralized' },
+      computations: [decentralizedCompSpec],
+      inputMap: {
+        start: { value: 1 },
+      },
+    },
+  ],
+};
+
+const decentralizedPipelineSpec = {
+  steps: [
     {
       controller: { type: 'decentralized' },
       computations: [decentralizedCompSpec],
@@ -245,6 +263,76 @@ test('test local error', (t) => {
   return pipeline.result.catch((error) => {
     t.true(error.message.includes('local only throws error'));
   });
+});
+
+test('test pre remote start data preservation', (t) => {
+  const localPipeline = local.startPipeline({
+    spec: decentralizedPipelineSpec,
+    runId: 'prePipe',
+  });
+  const localPipeline2 = local.startPipeline({
+    spec: decentralizedPipelineSpec,
+    runId: 'prePipeMultUser',
+  });
+
+
+  let once = true;
+  let proxRej;
+  let proxRes;
+  const prom = new Promise((resolve, reject) => {
+    proxRes = resolve;
+    proxRej = reject;
+  });
+  let once2 = true;
+  let proxRej2;
+  let proxRes2;
+  const prom2 = new Promise((resolve, reject) => {
+    proxRes2 = resolve;
+    proxRej2 = reject;
+  });
+
+  localPipeline.stateEmitter.on('update', (data) => {
+    // allow time for remote server to get first iteration
+    if (data.controllerState === 'waiting on central node' && once) {
+      setTimeout(() => {
+        once = false;
+        const remotePipeline = remote.startPipeline({
+          clients: ['one'],
+          spec: decentralizedPipelineSpec,
+          runId: 'prePipe',
+        });
+        remotePipeline.result
+        .then((result) => {
+          t.is(result.sum, 5);
+          proxRes(result);
+        }).catch(err => proxRej(err));
+      }, 5000);
+    }
+  });
+  localPipeline2.stateEmitter.on('update', (data) => {
+    // allow time for remote server to get first iteration
+    if (data.controllerState === 'waiting on central node' && once2) {
+      setTimeout(() => {
+        once2 = false;
+        const remotePipeline = remote.startPipeline({
+          clients: ['one', 'two'],
+          spec: decentralizedPipelineSpec,
+          runId: 'prePipeMultUser',
+        });
+        local2.startPipeline({
+          spec: decentralizedPipelineSpec,
+          runId: 'prePipeMultUser',
+        });
+        remotePipeline.result
+        .then((result) => {
+          t.is(result.sum, 5);
+          proxRes2(result);
+        }).catch(err => proxRej2(err));
+      }, 5000);
+    }
+  });
+
+  return Promise.all([prom, prom2]);
 });
 
 test.after.always('cleanup', () => {

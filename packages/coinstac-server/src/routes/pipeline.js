@@ -83,7 +83,7 @@ module.exports = [
           pullImagesFromList(computationImageList)
           .then(() => pruneImages())
           .then(() => {
-            const { pipeline, result, stateEmitter } = this.remotePipelineManager.startPipeline({
+            const { result, stateEmitter } = this.remotePipelineManager.startPipeline({
               clients: run.clients,
               spec: run.pipelineSnapshot,
               runId: run.id,
