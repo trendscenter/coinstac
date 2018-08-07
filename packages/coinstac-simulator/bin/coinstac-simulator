@@ -16,6 +16,10 @@ const bc = require('blessed-contrib');
 
 const DEBUG_MODE = process.execArgv.includes('--inspect-brk=9229');
 
+process.on('unhandledRejection', (error) => {
+  console.log('unhandledRejection', error); // eslint-disable-line no-console
+});
+
 const pipeSpecFactory = (inputSpec, mode, comp) => {
   return {
     steps: [
@@ -58,7 +62,8 @@ program
   .option('-i, --inputspec [path]', '/path/to/inputSpec, defaults to ./test/inputspec.json, will interactively create one if none found')
   .option('-s, --compspec [path]', '/path/to/compSpec optional, defaults to cwd')
   .option('-c, --clientNumber [number]', 'number of clients, defaults to 1 not included the remote in decentralized mode. In local mode this creates separate runs')
-  .option('-d, --directory [path]', ' path to where input, output, and cache is stored. Defaults to ./test/[input|cache|output]');
+  .option('-d, --directory [path]', ' path to where input, output, and cache is stored. Defaults to ./test/[input|cache|output]')
+  .option('-p, --showinput', ' on errors show comp input that computation failed with');
 
 program.on('--help', () => {
   console.log([ // eslint-disable-line
@@ -234,7 +239,11 @@ readFile(program.compspec ? program.compspec : 'compspec.json')
   }
   console.log('Simulator run failed!');
   console.log('Fun error details:\n');
-  console.log(err);
+  console.log(err.error);
+  if (program.showinput) {
+    console.log('Input given to the comp on failure:\n');
+    console.log(err.input);
+  }
   process.exit(1);
 });
 /* eslint-enable no-console */
