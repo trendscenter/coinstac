@@ -1,10 +1,13 @@
+import json, cgi, sys, traceback
+
+sys.path.append("./local")
+
 import tornado.ioloop
 import tornado.web
 import tornado.process
 import tornado.options
 from tornado.gen import Return, coroutine
 from tornado.concurrent import Future
-import json, cgi
 
 tornado.options.parse_command_line()
 
@@ -27,7 +30,7 @@ class MainHandler(tornado.web.RequestHandler):
           stdout=tornado.process.Subprocess.STREAM,
           stderr=tornado.process.Subprocess.STREAM
         )
-
+        print(cmd)
         yield subProc.stdin.write(bytes(cmd[2], 'UTF-8'))
         subProc.stdin.close()
 
@@ -36,17 +39,33 @@ class MainHandler(tornado.web.RequestHandler):
           subProc.stdout.read_until_close(),
           subProc.stderr.read_until_close()
         ]
-        message = cgi.escape(str(error, 'UTF-8'), quote=True).\
-           replace(u'\n', u'<br />').\
-           replace(u'\t', u'&emsp;').\
-           replace(u'  ', u' &nbsp;')
-        raise Return((code, result, message))
+        raise Return((code, result, error))
+
+    def write_error(self, status_code, **kwargs):
+        # self.set_header('Content-Type', 'text/plain')
+        self.set_header('Content-Type', 'text/plain')
+        if self.settings.get("serve_traceback") and "exc_info" in kwargs:
+            # in debug mode, try to send a traceback
+            print("Server internal stack:")
+            for line in traceback.format_exception(*kwargs["exc_info"]):
+                print(line)
+
+        compError = "Computation failed " + str(status_code) + ": " + self._reason
+        print("Computation error message:")
+        print(compError)
+        self.write(compError)
+        # oh hey a magic line of code, what does it do?
+        # the server tries to write _reason to the headers, causing issues
+        # since it contains newlines etc... :(
+        self._reason = '';
 
 
 def make_app():
     return tornado.web.Application([
-        (r"/run", MainHandler),
-    ])
+            (r"/run", MainHandler),
+        ],
+        **{ "serve_traceback": True }
+    )
 
 if __name__ == "__main__":
     app = make_app()

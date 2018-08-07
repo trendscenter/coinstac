@@ -1,0 +1,16 @@
+{
+  "name": "coinstac-python-base-stream",
+  "version": "1.0.0",
+  "description": "Base coinstac server",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "ava": "^0.25.0",
+    "request-stream": "^1.2.2"
+  }
+}
