@@ -2,15 +2,22 @@
   "name": "coinstac-python-base-stream",
   "version": "1.0.0",
   "description": "Base coinstac server",
-  "main": "server.js",
+  "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "test": "nyc ava test/**.test.js",
+    "start": "node index.js"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "ava": "^0.25.0",
-    "request-stream": "^1.2.2"
+    "get-stdin": "^6.0.0",
+    "nyc": "^12.0.2",
+    "request-stream": "^1.2.2",
+    "unzip": "^0.1.11"
+  },
+  "dependencies": {
+    "clarify": "^2.1.0",
+    "trace": "^3.1.0"
   }
 }
