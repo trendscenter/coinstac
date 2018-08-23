@@ -186,9 +186,9 @@ class TableResult extends Component {
         >
         <thead>
             <tr>
-              <th style={styles.theading}>{heading}</th>
+              <th key={`${heading}-table-heading`} style={styles.theading}>{heading}</th>
               {labels.map((label, index) => {
-                  return <th className={'text-nowrap'}>&beta;{`${index} (${label})`}</th>
+                  return <th key={`${index}-table-label`} className={'text-nowrap'}>&beta;{`${index} (${label})`}</th>
               })}
             </tr>
           </thead>
