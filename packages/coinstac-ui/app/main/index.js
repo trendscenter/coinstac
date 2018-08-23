@@ -231,6 +231,18 @@ loadConfig()
     });
   });
 
+
+  /**
+  * IPC listener to return status of Docker
+  * @return {Promise<boolean[]>} Docker running?
+  */
+  ipcPromise.on('get-status', () => {
+    return core.dockerManager.getStatus()
+    .then((result) => {
+      return result;
+    });
+  });
+
   /**
   * IPC Listener to download a list of computations
   * @param {Object} params
