@@ -6,6 +6,8 @@ import { notifySuccess, notifyError, writeLog } from '../../../state/ducks/notif
 import RasterizeHTML from 'rasterizehtml';
 import jsPDF from 'jspdf';
 import { Button } from 'react-bootstrap';
+import _ from 'lodash';
+import kebabcase from 'lodash.kebabcase';
 
 const styles = {
   print: { display: 'none', visibility: 'hidden' },
@@ -41,24 +43,6 @@ class Images extends Component {
       let string = frags.join(' ');
       string = string.replace('Beta', 'β ');
       return string;
-    }
-
-    /**
-     * slugify
-     * Converts human readable string to a slug
-     * @param  {string} text Input String to Convert
-     * @return {string}     Converted String to Slug
-     */
-
-     // ignore weird class-methods-use-this lint error
-     // eslint-disable-next-line
-    slugify(text) {
-      return text.toString().toLowerCase()
-        .replace(/\s+/g, '-')           // Replace spaces with -
-        .replace(/[^\w\-]+/g, '')       // Remove all non-word chars
-        .replace(/\-\-+/g, '-')         // Replace multiple - with single -
-        .replace(/^-+/, '')             // Trim - from start of text
-        .replace(/-+$/, '');            // Trim - from end of text
     }
 
   /**
@@ -100,7 +84,7 @@ class Images extends Component {
         }
         if (typeof v === 'string') {
           item.push(
-            <img alt={`${v}-img`} src={`data:image/png;base64, ${v}`}
+            <img key={`${v}-img`} alt={`${v}-img`} src={`data:image/png;base64, ${v}`}
             style={styles.image} />
           );
         } else {
@@ -113,18 +97,18 @@ class Images extends Component {
             );
             if (typeof w === 'string') {
               subitem.push(
-                <img alt={`${w}-img`} src={`data:image/png;base64, ${w}`}
+                <img alt={`${w}-img`} alt={`${w}-img`} src={`data:image/png;base64, ${w}`}
                   style={styles.image} />
               );
             }
             if (h + 1 <= subItemsLength/2 && subcol1.length < subItemsLength/2) {
               subcol1.push(
-                <div className={'item'} key={`image-item-${key}-${k}-${l}`} style={styles.imgItem}>{subitem}</div>
+                <div className={'item'} key={`image-sub1-${key}-${k}-${l}`} style={styles.imgItem}>{subitem}</div>
               );
             }
             if (h + 1 > subItemsLength/2  && subcol2.length < subItemsLength/2) {
               subcol2.push(
-                <div className={'item'} key={`image-item-${key}-${k}-${l}`} style={styles.imgItem}>{subitem}</div>
+                <div className={'item'} key={`image-sub2-${key}-${k}-${l}`} style={styles.imgItem}>{subitem}</div>
               );
             }
           });
@@ -208,7 +192,7 @@ class Images extends Component {
           doc.addPage();
     		  doc.addImage(canvasImg, 'jpg', 5, 5, 200, height);
       });
-		  doc.save(this.slugify(this.props.title) + ".pdf");
+		  doc.save(kebabcase(this.props.title) + ".pdf");
     } catch(err) {
      this.props.writeLog({ type: 'error', message: err });
      this.props.notifyError({
