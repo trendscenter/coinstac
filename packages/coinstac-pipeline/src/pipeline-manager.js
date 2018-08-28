@@ -9,6 +9,16 @@ const { promisify } = require('util');
 const mkdirp = promisify(require('mkdirp'));
 const path = require('path');
 const Emitter = require('events');
+const winston = require('winston');
+
+const logger = winston.createLogger({
+  level: 'info',
+  transports: [
+    new winston.transports.Console({ format: winston.format.cli() }),
+  ],
+});
+
+logger.level = process.LOGLEVEL ? process.LOGLEVEL : 'info';
 
 
 module.exports = {
@@ -91,7 +101,9 @@ module.exports = {
         });
 
         socket.on('run', (data) => {
-          console.log(JSON.stringify(data, null, 2)); // eslint-disable-line no-console
+          logger.silly(`############ CLIENT ${data.id}`);
+          logger.silly(JSON.stringify(data, null, 2));
+          logger.silly(`############ END CLIENT ${data.id}`);
           // client run started before remote
           if (!activePipelines[data.runId]) {
             activePipelines[data.runId] = {
@@ -133,10 +145,8 @@ module.exports = {
 
                   if (waitingOn.length === 0) {
                     activePipelines[data.runId].state = 'recieved all clients data';
-                    console.log('############ AGG'); // eslint-disable-line no-console
                     const agg = aggregateRun(data.runId);
-                    console.log(JSON.stringify(agg, null, 2)); // eslint-disable-line no-console
-                    console.log('############ END AGG'); // eslint-disable-line no-console
+                    logger.silly('Received all client data');
                     activePipelines[data.runId].remote.resolve({ output: agg });
                   }
                 }
@@ -258,9 +268,9 @@ module.exports = {
               activePipelines[pipeline.id].remote.reject(runError);
               io.of('/').to(pipeline.id).emit('run', { runId: pipeline.id, error: runError });
             } else {
-              console.log('############ REMOTE OUT'); // eslint-disable-line no-console
-              console.log(JSON.stringify(message, null, 2)); // eslint-disable-line no-console
-              console.log('############ END REMOTE OUT'); // eslint-disable-line no-console
+              logger.silly('############ REMOTE OUT');
+              logger.silly(JSON.stringify(message, null, 2));
+              logger.silly('############ END REMOTE OUT');
               io.of('/').to(pipeline.id).emit('run', { runId: pipeline.id, output: message });
             }
           } else {
