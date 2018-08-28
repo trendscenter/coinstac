@@ -24,7 +24,7 @@ test('test run route', (t) => {
     const req = request('localhost:3223/run', { method: 'POST' }, (err, res) => {
       let buf = '';
       if (err) {
-        reject(err);
+        return reject(err);
       }
 
       res.on('data', (chunk) => {

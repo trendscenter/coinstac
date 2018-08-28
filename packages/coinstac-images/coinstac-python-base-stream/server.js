@@ -5,21 +5,22 @@ require('trace');
 require('clarify');
 const Transform = require('stream').Transform;
 const { spawn } = require('child_process');
+const winston = require('winston');
 
+const logger = winston.createLogger({
+  level: 'info',
+  transports: [
+    new winston.transports.Console({ format: winston.format.cli() }),
+  ],
+});
 process.on('uncaughtException', (err) => {
-  debugger
-  console.log('Server Error:'); // eslint-disable-line no-console
-  console.log(err); // eslint-disable-line no-console
-  console.log(err.stack); // eslint-disable-line no-console
+  logger.error(`Server Error: ${err.stack}`);
 });
 
 const createWebServer = (requestHandler) => {
-  const server = net.createServer();
-
-  server.on('error', (e) => {
-    console.log('Server Error'); // eslint-disable-line no-console
-    console.log(e); // eslint-disable-line no-console
-    console.log(e.stack); // eslint-disable-line no-console
+  const server = net.createServer()
+  .on('error', (err) => {
+    logger.error(`Server Error: ${err.stack}`);
   });
 
   const handleConnection = (socket) => {
@@ -29,6 +30,7 @@ const createWebServer = (requestHandler) => {
       console.log(e); // eslint-disable-line no-console
     });
     socket.once('readable', () => {
+      logger.debug('Received incoming connection');
       // Parse headers out of socket
       let reqBuffer = Buffer.alloc(0);
       const parseHeaders = (chunk) => {
@@ -55,6 +57,7 @@ const createWebServer = (requestHandler) => {
               [key.trim().toLowerCase()]: value.trim(),
             };
           }, {});
+          logger.debug(`Parsed header: ${JSON.stringify(headers)}`);
           // This object will be sent to the handleRequest callback.
           const request = {
             method: reqLine[0],
@@ -84,6 +87,7 @@ const createWebServer = (requestHandler) => {
               setHeader('date', new Date().toGMTString());
               // Send the status line
               socket.write(`HTTP/1.1 ${status} ${statusText}\r\n`);
+              logger.info(`Response header: HTTP/1.1 ${status} ${statusText}\r\n`);
               // Send each following header
               Object.keys(responseHeaders).forEach((headerKey) => {
                 socket.write(`${headerKey}: ${responseHeaders[headerKey]}\r\n`);
@@ -107,9 +111,11 @@ const createWebServer = (requestHandler) => {
                 const size = chunk.length.toString(16);
                 socket.write(`${size}\r\n`);
                 socket.write(chunk);
+                logger.silly(`Socket data: ${chunk}`);
                 socket.write('\r\n');
               } else {
                 socket.write(chunk);
+                logger.silly(`Socket data: ${chunk}`);
               }
             },
             end(chunk) {
@@ -126,28 +132,19 @@ const createWebServer = (requestHandler) => {
                   const size = (chunk.length).toString(16);
                   socket.write(`${size}\r\n`);
                   socket.write(chunk);
+                  logger.silly(`Socket data: ${chunk}`);
                   socket.write('\r\n');
                 }
                 socket.end('0\r\n\r\n');
               } else {
                 socket.end(chunk);
+                logger.silly(`Socket end: ${chunk}`);
               }
             },
             setHeader,
             setStatus(newStatus, newStatusText) {
               status = newStatus;
               statusText = newStatusText;
-            },
-            // Convenience method to send JSON through server
-            json(data) {
-              if (headersSent) {
-                throw new Error('Headers sent, cannot proceed to send JSON');
-              }
-              const json = new Buffer(JSON.stringify(data));
-              setHeader('content-type', 'application/json; charset=utf-8');
-              setHeader('content-length', json.length);
-              sendHeaders();
-              socket.end(json);
             },
           };
 
@@ -167,6 +164,7 @@ const createWebServer = (requestHandler) => {
 };
 
 const callCommand = (control, inputStream, res) => {
+  logger.debug(`Command: ${JSON.stringify(control)}`);
   const cmd = spawn(control.command, control.args);
   if (inputStream) {
     inputStream.pipe(cmd.stdin);
@@ -177,14 +175,18 @@ const callCommand = (control, inputStream, res) => {
 
   cmd.stderr.on('data', (data) => {
     res.write(`stderrSTART\n${data}stderrEND\n`);
-    console.log(`stderr:\n${data}`); // eslint-disable-line no-console
+    logger.error(`stderr:\n${data}`); // eslint-disable-line no-console
   });
 
   cmd.on('close', (code) => {
     res.end(`exitcodeSTART\n${code}exitcodeEND\n`);
     if (code !== 0) {
-      console.log(`${control.command} exited with code ${code}`); // eslint-disable-line no-console
+      logger.error(`${control.command} exited with code ${code}`); // eslint-disable-line no-console
     }
+  });
+  cmd.on('error', (err) => {
+    res.end(`stderrSTART\n${err}stderrEND\n`);
+    logger.error(`Process failed to start:\n${err}`); // eslint-disable-line no-console
   });
 };
 
@@ -202,74 +204,80 @@ const webServer = createWebServer((req, res) => {
     // do we have the control and first part of the
     // data stream? This makes shifting it back to the socket
     // easier
-    if (count !== 3) {
-      let idx;
-      // we want to parse the first three delims
-      // go until there are no more occurances
-      // or until we've found all we want
-      while (idx !== -1 && count < 3) {
-        idx = reqBuffer.indexOf('\r\n');
-        if (idx !== -1) {
-          count += 1;
-          if (count === 2) {
-            // after first byte counter lies the control string
-            control = JSON.parse(reqBuffer.slice(0, idx).toString());
-          } else {
-            // take off chunked delim until data stream
-            reqBuffer = reqBuffer.slice(idx + 2);
-          }
-        }
-      }
-    }
-    // found last delim, cleanup and remove listener
-    if (count === 3) {
-      req.socket.pause();
-      req.socket.removeListener('data', parseCommand);
-      req.socket.unshift(reqBuffer);
-
-      const streamProxy = Transform();
-
-      // keep track of our pos in the data stream
-      let sepCount = 0;
-      let last = false;
-      streamProxy._transform = (chunk, encoding, cb) => {
-        const endMarker = chunk.indexOf('0\r\n\r\n');
-        if (endMarker !== -1) {
-          chunk = chunk.slice(0, endMarker);
-          last = true;
-        }
-        let sep;
-        let container = Buffer.alloc(0);
-        while (sep !== -1) {
-          sep = chunk.indexOf('\r\n');
-          if (sep !== -1) {
-            sepCount += 1;
-            if (sepCount & 1) { // eslint-disable-line no-bitwise
-              // odd
+    if (req.headers['transfer-encoding'] && req.headers['transfer-encoding'] === 'chunked') {
+      if (count !== 3) {
+        let idx;
+        // we want to parse the first three delims
+        // go until there are no more occurances
+        // or until we've found all we want
+        while (idx !== -1 && count < 3) {
+          idx = reqBuffer.indexOf('\r\n');
+          if (idx !== -1) {
+            count += 1;
+            if (count === 2) {
               // after first byte counter lies the control string
-              chunk = chunk.slice(sep + 2);
-              if (chunk.indexOf('\r\n') === -1) {
-                // either data or nothing left, concat
-                container = Buffer.concat([container, chunk]);
-              }
+              control = JSON.parse(reqBuffer.slice(0, idx).toString());
             } else {
-              // even
               // take off chunked delim until data stream
-              container = Buffer.concat([container, chunk.slice(0, sep)]);
-              chunk = chunk.slice(sep + 2);
+              reqBuffer = reqBuffer.slice(idx + 2);
             }
           }
         }
-        streamProxy.push(container);
-        if (last) {
-          // manually end the stream
-          streamProxy.push(null);
-        }
-        cb();
-      };
-      req.socket.pipe(streamProxy);
-      callCommand(control, streamProxy, res);
-      req.socket.resume();
+      }
+      // found last delim, cleanup and remove listener
+      if (count === 3) {
+        req.socket.pause();
+        req.socket.removeListener('data', parseCommand);
+        req.socket.unshift(reqBuffer);
+
+        const streamProxy = Transform();
+
+        // keep track of our pos in the data stream
+        let sepCount = 0;
+        let last = false;
+        streamProxy._transform = (chunk, encoding, cb) => {
+          const endMarker = chunk.indexOf('0\r\n\r\n');
+          if (endMarker !== -1) {
+            chunk = chunk.slice(0, endMarker);
+            last = true;
+          }
+          let sep;
+          let container = Buffer.alloc(0);
+          while (sep !== -1) {
+            sep = chunk.indexOf('\r\n');
+            if (sep !== -1) {
+              sepCount += 1;
+              if (sepCount & 1) { // eslint-disable-line no-bitwise
+                // odd
+                // after first byte counter lies the control string
+                chunk = chunk.slice(sep + 2);
+                if (chunk.indexOf('\r\n') === -1) {
+                  // either data or nothing left, concat
+                  container = Buffer.concat([container, chunk]);
+                }
+              } else {
+                // even
+                // take off chunked delim until data stream
+                container = Buffer.concat([container, chunk.slice(0, sep)]);
+                chunk = chunk.slice(sep + 2);
+              }
+            }
+          }
+          logger.silly(`Input data: ${container.toString()}`);
+          streamProxy.push(container);
+          if (last) {
+            // manually end the stream
+            streamProxy.push(null);
+          }
+          cb();
+        };
+        req.socket.pipe(streamProxy);
+        callCommand(control, streamProxy, res);
+        req.socket.resume();
+      }
+    } else if (reqBuffer.length === parseInt(req.headers['content-length'], 10)) {
+      req.socket.removeListener('data', parseCommand);
+      callCommand(JSON.parse(reqBuffer.toString()), undefined, res);
     }
   };
   req.socket.on('data', parseCommand);
@@ -278,9 +286,10 @@ const webServer = createWebServer((req, res) => {
 /**
 * start the coinstac docker server
 * @param  {Object} opts opts passed to net.listen
- * @return {Promise}      resolves on listening
- */
+* @return {Promise}      resolves on listening
+*/
 const start = (opts) => {
+  logger.level = opts.level ? opts.level : 'info';
   return new Promise((resolve) => {
     webServer.listen(opts, () => {
       resolve();

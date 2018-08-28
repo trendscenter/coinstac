@@ -39,12 +39,13 @@
     "chalk": "^1.1.3",
     "coinstac-pipeline": "^3.1.13",
     "commander": "^2.15.1",
-    "convict": "^1.5.0",
+    "convict": "^4.3.2",
     "glob": "^7.1.2",
     "hermit": "^0.2.2",
-    "inquirer": "^5.2.0"
+    "inquirer": "^5.2.0",
+    "winston": "^3.0.0"
   },
   "devDependencies": {
-    "nyc": "^8.4.0"
+    "nyc": "^13.0.1"
   }
 }

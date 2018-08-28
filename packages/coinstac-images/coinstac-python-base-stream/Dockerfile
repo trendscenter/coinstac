@@ -183,5 +183,7 @@ RUN set -ex; \
     && ln -s /opt/yarn-v$YARN_VERSION/bin/yarnpkg /usr/local/bin/yarnpkg \
     && rm yarn-v$YARN_VERSION.tar.gz.asc yarn-v$YARN_VERSION.tar.gz
 
-CMD ["python3"]
-CMD [ "node" ]
+ADD . /server
+WORKDIR /server
+RUN npm i --production
+CMD ["node", "/server/index.js"]

@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "clarify": "^2.1.0",
-    "trace": "^3.1.0"
+    "trace": "^3.1.0",
+    "winston": "^3.0.0"
   }
 }

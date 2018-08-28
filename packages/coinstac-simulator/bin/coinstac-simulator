@@ -13,11 +13,19 @@ const glob = util.promisify(require('glob'));
 const path = require('path');
 const blessed = require('blessed');
 const bc = require('blessed-contrib');
+const winston = require('winston');
 
-const DEBUG_MODE = process.execArgv.includes('--inspect-brk=9229');
+const logger = winston.createLogger({
+  level: 'info',
+  transports: [
+    new winston.transports.Console({ format: winston.format.cli() }),
+  ],
+});
+
+let DEBUG_MODE = process.execArgv.includes('--inspect-brk=9229');
 
 process.on('unhandledRejection', (error) => {
-  console.log('unhandledRejection', error); // eslint-disable-line no-console
+  logger.error('unhandledRejection', error); // eslint-disable-line no-console
 });
 
 const pipeSpecFactory = (inputSpec, mode, comp) => {
@@ -63,10 +71,12 @@ program
   .option('-s, --compspec [path]', '/path/to/compSpec optional, defaults to cwd')
   .option('-c, --clientNumber [number]', 'number of clients, defaults to 1 not included the remote in decentralized mode. In local mode this creates separate runs')
   .option('-d, --directory [path]', ' path to where input, output, and cache is stored. Defaults to ./test/[input|cache|output]')
-  .option('-p, --showinput', ' on errors show comp input that computation failed with');
+  .option('-p, --showinput', ' on errors show comp input that computation failed with')
+  .option('-e, --debug', ' enter debug mode, displays extra info including input')
+  .option('-x, --silly', ' enter silly logging, everything in debug mode + even more');
 
 program.on('--help', () => {
-  console.log([ // eslint-disable-line
+  logger.info([ // eslint-disable-line
     '\n',
     '\tTest a computation in a COINSTAC simulated environment.\n\n',
     '\tThe simulator is meant to run in your computation\'s directory',
@@ -85,6 +95,12 @@ program.parse(process.argv);
 
 let mode;
 const inSpecPath = program.directory ? path.join(program.directory, 'inputspec.json') : path.join('.', 'test', 'inputspec.json');
+
+if (program.debug || program.silly) {
+  DEBUG_MODE = true;
+  process.LOGLEVEL = program.silly ? 'silly' : 'debug';
+  logger.level = process.LOGLEVEL;
+}
 
 readFile(program.compspec ? program.compspec : 'compspec.json')
 .then(compSpec => Promise.all([
@@ -154,7 +170,7 @@ readFile(program.compspec ? program.compspec : 'compspec.json')
 })
 .then((pipelineSpec) => {
   /* eslint-disable no-console */
-  console.log(`Starting ${mode} simulator run with ${program.clientNumber ? program.clientNumber : 1} client(s)`);
+  logger.debug(`Starting ${mode} simulator run with ${program.clientNumber ? program.clientNumber : 1} client(s)`);
   const count = Array.isArray(pipelineSpec) ? pipelineSpec.length : program.clientNumber;
   const simRun = sim.startRun({
     spec: pipelineSpec,
@@ -195,7 +211,7 @@ readFile(program.compspec ? program.compspec : 'compspec.json')
       });
       screen.render();
     } else {
-      console.log(`${node} ---- ${JSON.stringify(data)}`);
+      logger.debug(`${node} ---- ${JSON.stringify(data)}`);
     }
   };
 
@@ -222,13 +238,15 @@ readFile(program.compspec ? program.compspec : 'compspec.json')
   return simRun.allResults;
 })
 .then((results) => {
-  screen.destroy();
-  console.log('Simulator run finished');
+  if (!DEBUG_MODE) {
+    screen.destroy();
+  }
+  logger.info('Simulator run finished');
   if (mode === 'decentralized') {
-    console.log(`Decentralized results:\n ${JSON.stringify(results.remote, null, 2)}`);
+    logger.info(`Decentralized results:\n ${JSON.stringify(results.remote, null, 2)}`);
   } else {
-    console.log('Local run(s) finished');
-    results.locals.forEach((res, idx) => console.log(`Client ${idx} results:\n${JSON.stringify(res, null, 2)}\n`));
+    logger.info('Local run(s) finished');
+    results.locals.forEach((res, idx) => logger.info(`Client ${idx} results:\n${JSON.stringify(res, null, 2)}\n`));
   }
   // TODO: should not be necessary, something is holding the loop up
   process.exit();
@@ -237,12 +255,12 @@ readFile(program.compspec ? program.compspec : 'compspec.json')
   if (!DEBUG_MODE) {
     screen.destroy();
   }
-  console.log('Simulator run failed!');
-  console.log('Fun error details:\n');
-  console.log(err.error);
-  if (program.showinput) {
-    console.log('Input given to the comp on failure:\n');
-    console.log(err.input);
+  logger.error('Simulator run failed!');
+  logger.error('Fun error details:\n');
+  logger.error(err.stack);
+  if (program.showinput || DEBUG_MODE) {
+    logger.error('Input given to the comp on failure:\n');
+    logger.error(err.input);
   }
   process.exit(1);
 });
