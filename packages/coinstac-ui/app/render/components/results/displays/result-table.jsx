@@ -9,17 +9,21 @@ function parseTableColumnOutput(output) {
   if (Array.isArray(output)) {
       let cols = [];
       output.map((o) => {
-        o = parseFloat(o).toFixed(5);
-        if (o > 999 || o < 0.001) {
-          o = parseFloat(o).toExponential(5);
+        o = parseFloat(o).toFixed(4);
+        if(o == 0){
+          o = 0;
+        }else if (Math.abs(o) > 999 || Math.abs(o) < 0.001) {
+          o = parseFloat(o).toExponential(4);
         }
-        cols.push(<td>{o}</td>);
+        cols.push(<td key={`value-${o}`}>{o}&nbsp;</td>);
       })
       return cols;
   } else if (!isNaN(output) && typeof output !== 'boolean') {
-    output = parseFloat(output).toFixed(5);
-    if (output > 999 || output < 0.001) {
-      return parseFloat(output).toExponential(5);
+    //output = parseFloat(output).toFixed(4);
+    if(output == 0){
+      output = 0;
+    }else if (Math.abs(output) > 999 || Math.abs(output) < 0.001) {
+      return parseFloat(output).toExponential(4);
     }
     return output;
   }
@@ -83,8 +87,7 @@ class TableResult extends Component {
 
       let labels = [];
 
-      if( heading.includes('Global') ){
-        //console.log(data.covariate_labels[0]);
+      if( heading.includes('Global') && Array.isArray(data.covariate_labels[0]) ){
         labels = data.covariate_labels[0];
       }else{
         labels = data.covariate_labels;
@@ -96,7 +99,6 @@ class TableResult extends Component {
         <Table
           responsive
           bordered
-          condensed
           key={`${heading}-table-objects`}
           style={{ marginLeft, width: '60%' }}
         >
@@ -104,11 +106,7 @@ class TableResult extends Component {
             <tr>
               <th>&nbsp;</th>
               {labels.map((label, index) => {
-                if( heading.includes('Global') && index === labels.length-1 ){
-                  return <th>{`${label}`}</th>
-                }else{
-                  return <th>&beta;{`${index} (${label})`}</th>
-                }
+                  return <th className={'text-nowrap'}>&beta;{`${index} (${label})`}</th>
               })}
             </tr>
           </thead>
@@ -176,10 +174,10 @@ class TableResult extends Component {
               keyValPairs.map((pair) => {
                   if(typeof pair[1] === 'number') {
                     return <tr key={`${pair[0]}-numbers-row`}>
-                      <td className="bold">
+                      <td className="bold" key={`${pair[0]}-numbers-column`}>
                       {outputProps.items[pair[0]] ? outputProps.items[pair[0]].label : pair[0]}
                       </td>
-                      <td style={{ fontFamily: 'Courier' }}>
+                      <td style={{ fontFamily: 'Courier' }} key={`${pair[0]}-numbers-column-output`}>
                         {parseTableColumnOutput(pair[1])}
                       </td>
                     </tr>;

@@ -165,6 +165,9 @@ loadConfig()
     })
     .then(() => core.dockerManager.pruneImages())
     .then(() => {
+      logger.verbose('############ CLIENT INPUT');
+      logger.verbose(pipeline);
+      logger.verbose('############ END CLIENT INPUT');
       return core.startPipeline(
         null,
         consortium.id,
@@ -181,8 +184,8 @@ loadConfig()
 
         // Listen for results
         return result.then((results) => {
-          console.log('Pipeline is done. Result:'); // eslint-disable-line no-console
-          console.log(results); // eslint-disable-line no-console
+          logger.verbose('Pipeline is done. Result:'); // eslint-disable-line no-console
+          logger.verbose(results); // eslint-disable-line no-console
           return core.unlinkFiles(run.id)
           .then(() => {
             if (run.type === 'local') {
@@ -225,6 +228,18 @@ loadConfig()
     return core.dockerManager.getImages()
     .then((data) => {
       return data;
+    });
+  });
+
+
+  /**
+  * IPC listener to return status of Docker
+  * @return {Promise<boolean[]>} Docker running?
+  */
+  ipcPromise.on('get-status', () => {
+    return core.dockerManager.getStatus()
+    .then((result) => {
+      return result;
     });
   });
 

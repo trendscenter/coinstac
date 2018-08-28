@@ -1,6 +1,6 @@
 {
   "name": "coinstac-common",
-  "version": "3.1.13",
+  "version": "3.1.14",
   "description": "COINSTAC core functionality.",
   "main": "src/index.js",
   "directories": {
@@ -24,13 +24,13 @@
   },
   "dependencies": {
     "bluebird": "^3.5.1",
-    "coinstac-docker-manager": "^3.1.13",
+    "coinstac-docker-manager": "^3.1.14",
     "debug": "^3.1.0",
-    "dockerode": "^2.5.4",
+    "dockerode": "^2.5.5",
     "indent-string": "^3.2.0",
     "joi": "^10.6.0",
     "json-parse-helpfulerror": "^1.0.3",
-    "lodash": "^4.17.5",
+    "lodash": "^4.17.10",
     "pouchy": "^12.3.0"
   },
   "homepage": "http://mrn-code.github.io/coinstac#readme",

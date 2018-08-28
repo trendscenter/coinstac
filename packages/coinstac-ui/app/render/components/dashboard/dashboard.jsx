@@ -17,6 +17,7 @@ import CoinstacAbbr from '../coinstac-abbr';
 import { getCollectionFiles, incrementRunCount, syncRemoteLocalConsortia, syncRemoteLocalPipelines } from '../../state/ducks/collections';
 import { getLocalRun, getDBRuns, saveLocalRun, updateLocalRun } from '../../state/ducks/runs';
 import {
+  getDockerStatus,
   pullComputations,
   updateDockerOutput,
 } from '../../state/ducks/docker';
@@ -56,6 +57,8 @@ class Dashboard extends Component {
   componentDidMount() {
     const { auth: { user } } = this.props;
     const { router } = this.context;
+
+    //console.log(this.props.getDockerStatus());
 
     process.nextTick(() => {
       if (!user.email.length) {
@@ -420,6 +423,7 @@ Dashboard.propTypes = {
   consortia: PropTypes.array,
   getCollectionFiles: PropTypes.func.isRequired,
   getDBRuns: PropTypes.func.isRequired,
+  getDockerStatus: PropTypes.func.isRequired,
   incrementRunCount: PropTypes.func.isRequired,
   notifyError: PropTypes.func.isRequired,
   notifyInfo: PropTypes.func.isRequired,
@@ -497,6 +501,7 @@ export default connect(mapStateToProps,
     getCollectionFiles,
     getLocalRun,
     getDBRuns,
+    getDockerStatus,
     incrementRunCount,
     notifyError,
     notifyInfo,

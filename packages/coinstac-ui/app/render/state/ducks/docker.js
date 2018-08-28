@@ -12,6 +12,15 @@ export const REMOVE_IMAGE = 'REMOVE_IMAGE';
 export const UPDATE_DOCKER_OUTPUT = 'UPDATE_DOCKER_OUTPUT';
 
 // Action Creators
+export const getDockerStatus = applyAsyncLoading(() =>
+  dispatch =>
+    ipcPromise.send('get-status')
+      .then((res) => {
+        dispatch({ status: res });
+        return res;
+      })
+);
+
 export const getDockerImages = applyAsyncLoading(() =>
   dispatch =>
     ipcPromise.send('get-all-images')

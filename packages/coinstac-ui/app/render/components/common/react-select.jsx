@@ -13,6 +13,7 @@ class MultiSelectField extends Component {
   }
 
   handleSelectChange(value) {
+    value = value.split(',');
     this.setState({ value });
     this.props.change(value);
   }
