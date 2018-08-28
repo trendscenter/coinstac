@@ -3,7 +3,7 @@
 import sys
 import json
 
-doc = json.loads(sys.argv[1])
+doc = json.loads(sys.stdin.read())
 if 'start' in doc['input']:
     sums = doc['input']['start']
     finish = sums + 1

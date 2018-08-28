@@ -1,6 +1,6 @@
 const Docker = require('dockerode');
 const { reduce } = require('lodash');
-const request = require('request-promise-native');
+const request = require('request-stream');
 const portscanner = require('portscanner');
 const http = require('http');
 
@@ -125,6 +125,15 @@ const getImages = () => {
 const startService = (serviceId, serviceUserId, opts) => {
   let recurseLimit = 0;
   let serviceStartedRecurseLimit = 0;
+
+  // better way than global?
+  if (process.LOGLEVEL) {
+    if (opts.CMD) {
+      opts.CMD.push(process.LOGLEVEL);
+    } else {
+      opts.CMD = ['node', '/server/index.js', process.LOGLEVEL];
+    }
+  }
   const createService = () => {
     let proxRes;
     let proxRej;
@@ -138,6 +147,7 @@ const startService = (serviceId, serviceUserId, opts) => {
       return generateServicePort(serviceId)
       .then((port) => {
         const defaultOpts = {
+          // this port is coupled w/ the internal base server image FYI
           ExposedPorts: { '8881/tcp': {} },
           HostConfig: {
             PortBindings: { '8881/tcp': [{ HostPort: `${port}`, HostIp: '127.0.0.1' }] },
@@ -165,14 +175,27 @@ const startService = (serviceId, serviceUserId, opts) => {
       // is the container service ready?
       .then(() => {
         const checkServicePort = () => {
-          return request({
-            url: `http://127.0.0.1:${services[serviceId].port}/run`,
-            method: 'POST',
-            json: true,
-            body: { command: ['echo', 'test', ''] },
-          })
-          .catch((status) => {
-            if (status.message === 'Error: socket hang up' || status.message === 'Error: read ECONNRESET') {
+          return new Promise((resolve, reject) => {
+            const req = request(`http://127.0.0.1:${services[serviceId].port}/run`, { method: 'POST' }, (err, res) => {
+              let buf = '';
+              if (err) {
+                return reject(err);
+              }
+
+              res.on('data', (chunk) => {
+                buf += chunk;
+              });
+              res.on('end', () => resolve(buf));
+              res.on('error', e => reject(e));
+            });
+
+            const control = {
+              command: 'echo',
+              args: ['test'],
+            };
+            req.end(JSON.stringify(control));
+          }).catch((status) => {
+            if (status.message === 'socket hang up' || status.message === 'read ECONNRESET') {
               serviceStartedRecurseLimit += 1;
               if (serviceStartedRecurseLimit < 500) {
                 return setTimeoutPromise(100)
@@ -191,11 +214,66 @@ const startService = (serviceId, serviceUserId, opts) => {
       })
       .then(() => {
         services[serviceId].service = (data) => {
-          return request({
-            url: `http://127.0.0.1:${services[serviceId].port}/run`,
-            method: 'POST',
-            json: true,
-            body: { command: data },
+          return new Promise((resolve, reject) => {
+            const req = request(`http://127.0.0.1:${services[serviceId].port}/run`, { method: 'POST' }, (err, res) => {
+              let buf = '';
+              if (err) {
+                return reject(err);
+              }
+              // TODO: hey this is a stream, be cool to use that
+              res.on('data', (chunk) => {
+                buf += chunk;
+              });
+              res.on('end', () => resolve(buf));
+              res.on('error', e => reject(e));
+            });
+            req.write(JSON.stringify({
+              command: data[0],
+              args: data.slice(1, 2),
+            }));
+            req.end(data[2]);
+          }).then((inData) => {
+            let errMatch;
+            let outMatch;
+            let codeMatch;
+            let endMatch;
+            let errData = Buffer.alloc(0);
+            let outData = Buffer.alloc(0);
+            let code = Buffer.alloc(0);
+
+            let data = Buffer.from(inData);
+            while (outMatch !== -1 || errMatch !== -1 || codeMatch !== -1) {
+              outMatch = data.indexOf('stdoutSTART\n');
+              endMatch = data.indexOf('stdoutEND\n');
+              if (outMatch !== -1 && endMatch !== -1) {
+                outData = Buffer.concat([outData, data.slice(outMatch + 'stdoutSTART\n'.length, endMatch)]);
+                data = Buffer.concat([data.slice(0, outMatch), data.slice(endMatch + 'stdoutEND\n'.length)]);
+              }
+              errMatch = data.indexOf('stderrSTART\n');
+              endMatch = data.indexOf('stderrEND\n');
+              if (errMatch !== -1 && endMatch !== -1) {
+                errData = Buffer.concat([errData, data.slice(errMatch + 'stderrSTART\n'.length, endMatch)]);
+                data = Buffer.concat([data.slice(0, errMatch), data.slice(endMatch + 'stderrEND\n'.length)]);
+              }
+              codeMatch = data.indexOf('exitcodeSTART\n');
+              endMatch = data.indexOf('exitcodeEND\n');
+              if (codeMatch !== -1 && endMatch !== -1) {
+                code = Buffer.concat([code, data.slice(codeMatch + 'exitcodeSTART\n'.length, endMatch)]);
+                data = Buffer.concat([data.slice(0, codeMatch), data.slice(endMatch + 'exitcodeEND\n'.length)]);
+              }
+            }
+
+            if (errData.length > 0) {
+              throw new Error(`Computation failed with exitcode ${code.toString()}\n Error message:\n${errData.toString()}}`);
+            }
+            // NOTE: limited to sub 256mb
+            let parsed;
+            try {
+              parsed = JSON.parse(outData.toString());
+            } catch (e) {
+              parsed = outData.toString();
+            }
+            return parsed;
           });
         };
         services[serviceId].state = 'running';

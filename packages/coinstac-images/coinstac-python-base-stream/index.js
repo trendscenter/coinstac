@@ -1,8 +1,8 @@
 const server = require('./server');
 
-
 const opts = {
-  port: 3000,
+  port: 8881,
+  level: process.argv[2],
 };
 
 server.start(opts)
