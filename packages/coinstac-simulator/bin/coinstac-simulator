@@ -7,7 +7,6 @@ const util = require('util');
 const readFile = util.promisify(require('fs').readFile);
 const writeFile = util.promisify(require('fs').writeFile);
 const program = require('commander');
-const sim = require('../src/');
 const inquirer = require('inquirer');
 const glob = util.promisify(require('glob'));
 const path = require('path');
@@ -100,7 +99,12 @@ if (program.debug || program.silly) {
   DEBUG_MODE = true;
   process.LOGLEVEL = program.silly ? 'silly' : 'debug';
   logger.level = process.LOGLEVEL;
+} else if (DEBUG_MODE) {
+  process.LOGLEVEL = 'debug';
+  logger.level = 'debug';
 }
+// require after LOGLEVEL set
+const sim = require('../src/');
 
 readFile(program.compspec ? program.compspec : 'compspec.json')
 .then(compSpec => Promise.all([
