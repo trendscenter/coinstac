@@ -39,30 +39,6 @@ const pipeSpecFactory = (inputSpec, mode, comp) => {
   };
 };
 
-let table;
-let screen;
-let tableData;
-if (!DEBUG_MODE) {
-  screen = blessed.screen({
-    smartCSR: true,
-  });
-
-  tableData = [];
-
-  table = bc.table({
-    keys: true,
-    fg: 'white',
-    selectedFg: 'white',
-    selectedBg: 'blue',
-    interactive: true,
-    label: 'Active Run',
-    width: '100%',
-    height: '100%',
-    border: { type: 'line', fg: 'cyan' },
-    columnSpacing: 5,
-    columnWidth: [12, 12, 30, 6],
-  });
-}
 
 program
   .version(pkg.version)
@@ -105,6 +81,32 @@ if (program.debug || program.silly) {
 }
 // require after LOGLEVEL set
 const sim = require('../src/');
+
+let table;
+let screen;
+let tableData;
+if (!DEBUG_MODE) {
+  screen = blessed.screen({
+    smartCSR: true,
+  });
+
+  tableData = [];
+
+  table = bc.table({
+    keys: true,
+    fg: 'white',
+    selectedFg: 'white',
+    selectedBg: 'blue',
+    interactive: true,
+    label: 'Active Run',
+    width: '100%',
+    height: '100%',
+    border: { type: 'line', fg: 'cyan' },
+    columnSpacing: 5,
+    columnWidth: [12, 12, 30, 6],
+  });
+}
+
 
 readFile(program.compspec ? program.compspec : 'compspec.json')
 .then(compSpec => Promise.all([
@@ -264,8 +266,7 @@ readFile(program.compspec ? program.compspec : 'compspec.json')
   logger.error(err.stack);
   if (program.showinput || DEBUG_MODE) {
     logger.error('Input given to the comp on failure:\n');
-    logger.error(err.input);
+    logger.error(JSON.stringify(err.input));
   }
-  process.exit(1);
+  process.exit(0);
 });
-/* eslint-enable no-console */
