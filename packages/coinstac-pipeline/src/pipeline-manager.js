@@ -99,9 +99,9 @@ module.exports = {
         });
 
         socket.on('run', (data) => {
-          logger.info(`############ CLIENT ${data.id}`);
-          logger.info(JSON.stringify(data, null, 2));
-          logger.info(`############ END CLIENT ${data.id}`);
+          logger.silly(`############ CLIENT ${data.id}`);
+          logger.silly(JSON.stringify(data, null, 2));
+          logger.silly(`############ END CLIENT ${data.id}`);
           // client run started before remote
           if (!activePipelines[data.runId]) {
             activePipelines[data.runId] = {
@@ -144,7 +144,7 @@ module.exports = {
                   if (waitingOn.length === 0) {
                     activePipelines[data.runId].state = 'recieved all clients data';
                     const agg = aggregateRun(data.runId);
-                    logger.info('Received all client data');
+                    logger.silly('Received all client data');
                     activePipelines[data.runId].remote.resolve({ output: agg });
                   }
                 }
@@ -266,9 +266,9 @@ module.exports = {
               activePipelines[pipeline.id].remote.reject(runError);
               io.of('/').to(pipeline.id).emit('run', { runId: pipeline.id, error: runError });
             } else {
-              logger.info('############ REMOTE OUT');
-              logger.info(JSON.stringify(message, null, 2));
-              logger.info('############ END REMOTE OUT');
+              logger.silly('############ REMOTE OUT');
+              logger.silly(JSON.stringify(message, null, 2));
+              logger.silly('############ END REMOTE OUT');
               io.of('/').to(pipeline.id).emit('run', { runId: pipeline.id, output: message });
             }
           } else {
