@@ -232,38 +232,51 @@ const webServer = createWebServer((req, res) => {
 
         const streamProxy = Transform();
 
-        // keep track of our pos in the data stream
-        let sepCount = 0;
+        /*
+        Parse out the data using the given byte-length in the chunked stream
+         */
+        let byteCounter = 0;
+        let byteTemp;
+        let parseCounter = true;
         let last = false;
         streamProxy._transform = (chunk, encoding, cb) => {
+          let sep;
+          let container = Buffer.alloc(0);
+
           const endMarker = chunk.indexOf('0\r\n\r\n');
           if (endMarker !== -1) {
             chunk = chunk.slice(0, endMarker);
             last = true;
           }
-          let sep;
-          let container = Buffer.alloc(0);
           while (sep !== -1) {
-            sep = chunk.indexOf('\r\n');
-            if (sep !== -1) {
-              sepCount += 1;
-              if (sepCount & 1) { // eslint-disable-line no-bitwise
-                // odd
-                // after first byte counter lies the control string
-                chunk = chunk.slice(sep + 2);
-                if (chunk.indexOf('\r\n') === -1) {
-                  // either data or nothing left, concat
-                  container = Buffer.concat([container, chunk]);
-                }
+            if (parseCounter) {
+              sep = chunk.indexOf('\r\n');
+              byteCounter = parseInt(byteTemp ?
+                byteTemp + chunk.slice(0, sep).toString : chunk.slice(0, sep).toString(), 16);
+              byteTemp = undefined;
+              chunk = chunk.slice(sep + 2);
+              parseCounter = false;
+            }
+            // + 2 for the next delim to make parsing easier
+            if (chunk.length < byteCounter + 2) {
+              container = Buffer.concat([container, chunk]);
+              byteCounter -= chunk.length;
+              break;
+            } else {
+              container = Buffer.concat([container, chunk.slice(0, byteCounter)]);
+              chunk = chunk.slice(byteCounter + 2);
+              sep = chunk.indexOf('\r\n');
+              if (sep === -1) {
+                byteTemp = chunk.toString();
+                parseCounter = true;
               } else {
-                // even
-                // take off chunked delim until data stream
-                container = Buffer.concat([container, chunk.slice(0, sep)]);
+                byteCounter = parseInt(chunk.slice(0, sep).toString(), 16);
                 chunk = chunk.slice(sep + 2);
+                parseCounter = false;
               }
             }
           }
-          logger.silly(`Input data: ${container.toString()}`);
+          logger.silly(`Input data parsed: ${container.toString()}`);
           streamProxy.push(container);
           if (last) {
             // manually end the stream
