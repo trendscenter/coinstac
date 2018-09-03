@@ -1,6 +1,6 @@
 {
   "name": "coinstac-distributed-algorithm-integration",
-  "version": "3.1.16",
+  "version": "3.1.19",
   "description": "COINSTAC distributed analysis synchronization and testing.",
   "main": "src/runner/run.js",
   "scripts": {
@@ -25,7 +25,7 @@
   },
   "homepage": "https://github.com/MRN-Code/coinstac#readme",
   "devDependencies": {
-    "coinstac-simulator": "^3.1.16",
+    "coinstac-simulator": "^3.1.19",
     "cross-env": "^2.0.1",
     "gh-pages": "^0.9.0",
     "jsdoc": "^3.5.5",
