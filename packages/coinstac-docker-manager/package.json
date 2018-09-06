@@ -13,6 +13,8 @@
     "lodash": "^4.17.10",
     "portscanner": "^2.2.0",
     "request-stream": "^1.2.2",
+    "socket.io-client": "^2.1.1",
+    "socket.io-stream": "^0.9.1",
     "util": "^0.10.4"
   }
 }

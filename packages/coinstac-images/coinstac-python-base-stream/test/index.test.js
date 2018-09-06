@@ -1,11 +1,12 @@
 'use strict';
 
 const test = require('ava').test;
-const request = require('request-stream');
-const server = require('../server');
+const server = require('../server-ws');
 const { createReadStream, readFileSync, unlink } = require('fs');
 const resolvePath = require('path').resolve;
 const unzip = require('unzip');
+const ss = require('socket.io-stream');
+const socketIOClient = require('socket.io-client');
 
 test.before(() => {
   return server.start({ port: 3223 })
@@ -20,64 +21,49 @@ test.before(() => {
 });
 
 test('test run route', (t) => {
-  return new Promise((resolve, reject) => {
-    const req = request('localhost:3223/run', { method: 'POST' }, (err, res) => {
-      let buf = '';
-      if (err) {
-        return reject(err);
-      }
+  const fsStream = createReadStream(resolvePath(__dirname, 'large.json'));
+  const control = {
+    command: 'node',
+    args: [resolvePath(__dirname, 'check.js')],
+  };
+  const socket = socketIOClient('http://localhost:3223');
 
-      res.on('data', (chunk) => {
-        buf += chunk;
+  const stream = ss.createStream();
+  ss(socket).emit('run', stream, { control });
+  fsStream.pipe(stream);
+
+  const stdoutProm = new Promise((resolve, reject) => {
+    let stdout = '';
+    ss(socket).on('stdout', (stream) => {
+      stream.on('data', (chunk) => {
+        stdout += chunk;
       });
-      res.on('end', () => resolve(buf));
-      res.on('error', e => reject(e));
+      stream.on('end', () => resolve(stdout));
+      stream.on('err', err => reject(err));
     });
+  });
 
-    const fsStream = createReadStream(resolvePath(__dirname, 'large.json'));
-    const control = {
-      command: 'node',
-      args: [resolvePath(__dirname, 'check.js')],
-    };
-    req.write(JSON.stringify(control));
-    fsStream.on('data', (chunk) => {
-      req.write(chunk);
+  const stderrProm = new Promise((resolve, reject) => {
+    let stderr = '';
+    ss(socket).on('stderr', (stream) => {
+      stream.on('data', (chunk) => {
+        stderr += chunk;
+      });
+      stream.on('end', () => resolve(stderr));
+      stream.on('err', err => reject(err));
     });
-    fsStream.on('end', () => {
-      req.end();
-    });
-  }).then((inData) => {
-    let errMatch;
-    let outMatch;
-    let codeMatch;
-    let endMatch;
-    let errData = Buffer.alloc(0);
-    let outData = Buffer.alloc(0);
-    let code = Buffer.alloc(0);
+  });
 
-    const orig = readFileSync(resolvePath(__dirname, './large.json'));
-    let data = Buffer.from(inData);
-    while (outMatch !== -1 || errMatch !== -1 || codeMatch !== -1) {
-      outMatch = data.indexOf('stdoutSTART\n');
-      endMatch = data.indexOf('stdoutEND\n');
-      if (outMatch !== -1 && endMatch !== -1) {
-        outData = Buffer.concat([outData, data.slice(outMatch + 'stdoutSTART\n'.length, endMatch)]);
-        data = Buffer.concat([data.slice(0, outMatch), data.slice(endMatch + 'stdoutEND\n'.length)]);
-      }
-      errMatch = data.indexOf('stderrSTART\n');
-      endMatch = data.indexOf('stderrEND\n');
-      if (errMatch !== -1 && endMatch !== -1) {
-        errData = Buffer.concat([errData, data.slice(errMatch + 'stderrSTART\n'.length, endMatch)]);
-        data = Buffer.concat([data.slice(0, errMatch), data.slice(endMatch + 'stderrEND\n'.length)]);
-      }
-      codeMatch = data.indexOf('exitcodeSTART\n');
-      endMatch = data.indexOf('exitcodeEND\n');
-      if (codeMatch !== -1 && endMatch !== -1) {
-        code = Buffer.concat([code, data.slice(codeMatch + 'exitcodeSTART\n'.length, endMatch)]);
-        data = Buffer.concat([data.slice(0, codeMatch), data.slice(endMatch + 'exitcodeEND\n'.length)]);
-      }
-    }
-    t.true(orig.compare(outData) && orig.compare(errData) && code.toString() === '0');
+  const endProm = new Promise((resolve) => {
+    socket.on('exit', (data) => {
+      resolve(data);
+    });
+  });
+  return Promise.all([stdoutProm, stderrProm, endProm])
+  .then((inData) => {
+    if (inData[2].error) throw new Error(inData[2].error);
+    const orig = readFileSync(resolvePath(__dirname, './large.json')).toString();
+    t.true(orig === inData[0] && orig === inData[1] && inData[2].code === 0);
   });
 });
 
