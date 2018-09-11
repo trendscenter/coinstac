@@ -176,8 +176,9 @@ readFile(program.compspec ? program.compspec : 'compspec.json')
 })
 .then((pipelineSpec) => {
   /* eslint-disable no-console */
+  const count = program.clientNumber ? program.clientNumber : // eslint-disable-line no-nested-ternary, max-len
+    (Array.isArray(pipelineSpec) ? pipelineSpec.length : 1); // eslint-disable-line no-nested-ternary, max-len
   logger.debug(`Starting ${mode} simulator run with ${program.clientNumber ? program.clientNumber : 1} client(s)`);
-  const count = Array.isArray(pipelineSpec) ? pipelineSpec.length : program.clientNumber;
   const simRun = sim.startRun({
     spec: pipelineSpec,
     runMode: mode,

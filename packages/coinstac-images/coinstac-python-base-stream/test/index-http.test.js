@@ -2,13 +2,13 @@
 
 const test = require('ava').test;
 const request = require('request-stream');
-const server = require('../server');
+const server = require('../server-http');
 const { createReadStream, readFileSync, unlink } = require('fs');
 const resolvePath = require('path').resolve;
 const unzip = require('unzip');
 
 test.before(() => {
-  return server.start({ port: 3223 })
+  return server.start({ port: 3224 })
   .then(() => {
     return new Promise((resolve, reject) => {
       createReadStream(resolvePath(__dirname, 'large.json.zip'))
@@ -21,7 +21,7 @@ test.before(() => {
 
 test('test run route', (t) => {
   return new Promise((resolve, reject) => {
-    const req = request('localhost:3223/run', { method: 'POST' }, (err, res) => {
+    const req = request('localhost:3224/run', { method: 'POST' }, (err, res) => {
       let buf = '';
       if (err) {
         return reject(err);

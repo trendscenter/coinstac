@@ -31,6 +31,12 @@ const start = (opts) => {
     const io = socketIO(app, { pingTimeout: 360000, maxHttpBufferSize: 23E7 });
 
     const socketServer = (socket) => {
+      socket.on('connection', (data) => {
+        logger.debug(`Connected to a client: ${data}`);
+      });
+      socket.on('disconnect', (reason) => {
+        logger.debug(`Disconnected from a client: ${reason}`);
+      });
       socket.on('error', (error) => {
         logger.error(`Socket error:\n${error}`);
       });
@@ -64,7 +70,7 @@ const start = (opts) => {
 
     io.on('connection', socketServer);
 
-    app.listen(3223, () => {
+    app.listen(opts.port, () => {
       resolve();
     });
   });
