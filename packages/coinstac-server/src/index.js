@@ -7,6 +7,8 @@ const config = require('../config/default');
 const routes = require('./routes');
 
 let idToken = '';
+// set w/ config etc post release
+process.LOGLEVEL = 'silly';
 
 /**
  * On server start, pull in comps from DB whitelist and download via docker

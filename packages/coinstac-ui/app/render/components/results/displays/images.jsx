@@ -7,7 +7,7 @@ import RasterizeHTML from 'rasterizehtml';
 import jsPDF from 'jspdf';
 import { Button } from 'react-bootstrap';
 import _ from 'lodash';
-import kebabcase from 'lodash.kebabcase';
+import kebabcase from 'lodash';
 
 const styles = {
   print: { display: 'none', visibility: 'hidden' },
