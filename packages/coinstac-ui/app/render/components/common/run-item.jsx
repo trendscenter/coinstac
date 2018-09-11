@@ -7,7 +7,7 @@ import PropTypes from 'prop-types';
 function getStateWell(runObject, stateName, stateKey) {
   return (
     <Col xs={12} sm={4}>
-      <Well bsSize="small">
+      <Well bsSize="small" style={{ overflow: 'hidden', height: '166px' }}>
         <div style={{ marginBottom: 5 }}>
           <span className="bold" style={{ textDecoration: 'underline' }}>{stateName} Pipeline State: </span>
         </div>
