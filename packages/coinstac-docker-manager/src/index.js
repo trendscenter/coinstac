@@ -148,7 +148,7 @@ const startService = (serviceId, serviceUserId, opts) => {
     if (opts.docker.CMD) {
       opts.docker.CMD.push(process.LOGLEVEL);
     } else {
-      opts.docker.CMD = ['node', '/server/index.js', JSON.stringify({ level: process.LOGLEVEL })];
+      opts.docker.CMD = ['node', '/server/index.js', JSON.stringify({ level: process.LOGLEVEL, server: opts.http ? 'http' : 'ws' })];
     }
   }
   const createService = () => {
@@ -175,7 +175,7 @@ const startService = (serviceId, serviceUserId, opts) => {
         // merge opts one level deep
         const memo = {};
         for (let [key] of Object.entries(defaultOpts)) { // eslint-disable-line no-restricted-syntax, max-len, prefer-const
-          memo[key] = Object.assign(defaultOpts[key], opts[key] ? opts[key] : {});
+          memo[key] = Object.assign(defaultOpts[key], opts.docker[key] ? opts.docker[key] : {});
         }
 
         const jobOpts = Object.assign(
@@ -298,64 +298,73 @@ const startService = (serviceId, serviceUserId, opts) => {
             });
           }
 
-          const socket = socketIOClient('http://localhost:3223');
-
-          const stream = ss.createStream();
-          ss(socket).emit('run', stream, {
-            control: {
-              command: data[0],
-              args: data.slice(1, 2),
-            },
+          let proxR;
+          let proxRj;
+          const prox = new Promise((resolve, reject) => {
+            proxR = resolve;
+            proxRj = reject;
           });
-          const dataStream = new Readable({ read() {
-            this.push(data);
-            this.push(null);
-          } });
-          dataStream.pipe(stream);
+          const socket = socketIOClient(`http://127.0.0.1:${services[serviceId].port}`);
+          socket.on('connect', () => {
+            const stream = ss.createStream();
+            ss(socket).emit('run', stream, {
+              control: {
+                command: data[0],
+                args: data.slice(1, 2),
+              },
+            });
+            const dataStream = new Readable({ read() {
+              this.push(data[2]);
+              this.push(null);
+            } });
+            dataStream.pipe(stream);
 
-          const stdoutProm = new Promise((resolve, reject) => {
-            let stdout = '';
-            ss(socket).on('stdout', (stream) => {
-              stream.on('data', (chunk) => {
-                stdout += chunk;
+            const stdoutProm = new Promise((resolve, reject) => {
+              let stdout = '';
+              ss(socket).on('stdout', (stream) => {
+                stream.on('data', (chunk) => {
+                  stdout += chunk;
+                });
+                stream.on('end', () => resolve(stdout));
+                stream.on('err', err => reject(err));
               });
-              stream.on('end', () => resolve(stdout));
-              stream.on('err', err => reject(err));
             });
-          });
 
-          const stderrProm = new Promise((resolve, reject) => {
-            let stderr = '';
-            ss(socket).on('stderr', (stream) => {
-              stream.on('data', (chunk) => {
-                stderr += chunk;
+            const stderrProm = new Promise((resolve, reject) => {
+              let stderr = '';
+              ss(socket).on('stderr', (stream) => {
+                stream.on('data', (chunk) => {
+                  stderr += chunk;
+                });
+                stream.on('end', () => resolve(stderr));
+                stream.on('err', err => reject(err));
               });
-              stream.on('end', () => resolve(stderr));
-              stream.on('err', err => reject(err));
             });
+
+            const endProm = new Promise((resolve) => {
+              socket.on('exit', (data) => {
+                resolve(data);
+              });
+            });
+            Promise.all([stdoutProm, stderrProm, endProm])
+            .then((data) => {
+              if (data[1] || data[2].code !== 0) {
+                throw new Error(`Computation failed with exitcode ${data[2].code}\n Error message:\n${data[1]}}`);
+              } else if (data[2].error) {
+                throw new Error(`Computation failed to start\n Error message:\n${data[2].error}}`);
+              }
+              // NOTE: limited to sub 256mb
+              let parsed;
+              try {
+                parsed = JSON.parse(data[0]);
+              } catch (e) {
+                parsed = data[0];
+              }
+              proxR(parsed);
+            }).catch(error => proxRj(error));
           });
 
-          const endProm = new Promise((resolve) => {
-            socket.on('exit', (data) => {
-              resolve(data);
-            });
-          });
-          return Promise.all([stdoutProm, stderrProm, endProm])
-          .then((data) => {
-            if (data[1]) {
-              throw new Error(`Computation failed with exitcode ${data[2].code}\n Error message:\n${data[1]}}`);
-            } else if (data[2].error) {
-              throw new Error(`Computation failed to start\n Error message:\n${data[2].error}}`);
-            }
-            // NOTE: limited to sub 256mb
-            let parsed;
-            try {
-              parsed = JSON.parse(data[0]);
-            } catch (e) {
-              parsed = data[0];
-            }
-            return parsed;
-          });
+          return prox;
         };
         services[serviceId].state = 'running';
         // fulfill to waiting consumers
@@ -388,9 +397,9 @@ const startService = (serviceId, serviceUserId, opts) => {
 };
 
 /**
- * Finds dangling coinstac images and deletes them
- * @return {Promise} list of deleted images and tags
- */
+* Finds dangling coinstac images and deletes them
+* @return {Promise} list of deleted images and tags
+*/
 const pruneImages = () => {
   return new Promise((resolve, reject) => {
     docker.listImages({ filters: { dangling: { true: true } } }, (err, res) => {
