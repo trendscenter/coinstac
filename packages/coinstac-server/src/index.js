@@ -1,5 +1,7 @@
 const hapi = require('hapi');
 const axios = require('axios');
+// set w/ config etc post release
+process.LOGLEVEL = 'silly';
 const { pullImages } = require('coinstac-docker-manager');
 const graphqlSchema = require('coinstac-graphql-schema');
 const dbmap = require('/etc/coinstac/cstacDBMap'); // eslint-disable-line import/no-absolute-path, import/no-unresolved
@@ -7,8 +9,7 @@ const config = require('../config/default');
 const routes = require('./routes');
 
 let idToken = '';
-// set w/ config etc post release
-process.LOGLEVEL = 'silly';
+
 
 /**
  * On server start, pull in comps from DB whitelist and download via docker
