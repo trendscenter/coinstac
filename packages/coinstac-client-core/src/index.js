@@ -16,14 +16,14 @@ bluebird.config({ warnings: false });
 const osHomedir = require('os-homedir');
 const path = require('path');
 const winston = require('winston');
+// set w/ config etc post release
+process.LOGLEVEL = 'silly';
 
 const Logger = winston.Logger;
 const Console = winston.transports.Console;
 const DockerManager = require('coinstac-docker-manager');
 const PipelineManager = require('coinstac-pipeline');
 
-// set w/ config etc post release
-process.LOGLEVEL = 'silly';
 
 /**
  * Create a user client for COINSTAC
