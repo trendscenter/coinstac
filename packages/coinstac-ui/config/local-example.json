@@ -1,0 +1,20 @@
+{
+  "apiServer": {
+    "hostname": "localhost",
+    "pathname": "",
+    "port": "3100",
+    "protocol": "http:"
+  },
+  "subApiServer": {
+    "hostname": "localhost",
+    "pathname": "",
+    "port": "3100",
+    "protocol": "ws:"
+  },
+  "pipelineWSServer": {
+    "hostname": "localhost",
+    "pathname": "",
+    "port": "3300",
+    "protocol": "http:"
+  }
+}
