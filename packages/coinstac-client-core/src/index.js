@@ -22,6 +22,9 @@ const Console = winston.transports.Console;
 const DockerManager = require('coinstac-docker-manager');
 const PipelineManager = require('coinstac-pipeline');
 
+// set w/ config etc post release
+process.LOGLEVEL = 'silly';
+
 /**
  * Create a user client for COINSTAC
  * @example <caption>construction and initialization</caption>
