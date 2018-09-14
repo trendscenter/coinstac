@@ -98,10 +98,17 @@ module.exports = {
                 controllerState.currentOutput = { output: output.output, success: output.success };
                 setStateProp('state', 'finished iteration');
                 cb(output.output);
-              }).catch(({ statusCode, message, error, name, stack, input }) => {
+              }).catch(({ statusCode, message, name, stack, input }) => {
                 const iterationError = Object.assign(
                   new Error(),
-                  { statusCode, message, error, name, stack, input: input ? input.input : input }
+                  {
+                    statusCode,
+                    message,
+                    error: message,
+                    name,
+                    stack,
+                    input: input ? input.input : input,
+                  }
                 );
                 if (controller.type === 'local') {
                   err(iterationError);

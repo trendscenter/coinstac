@@ -21,13 +21,15 @@ module.exports = {
           this.meta.id,
           this.runId,
           {
-            Image: computation.dockerImage,
-            HostConfig: {
-              Binds: [
-                `${baseDirectory}:/input:ro`,
-                `${baseDirectory}/output:/output:rw`,
-                `${baseDirectory}/cache:/cache:rw`,
-              ],
+            docker: {
+              Image: computation.dockerImage,
+              HostConfig: {
+                Binds: [
+                  `${baseDirectory}:/input:ro`,
+                  `${baseDirectory}/output:/output:rw`,
+                  `${baseDirectory}/cache:/cache:rw`,
+                ],
+              },
             },
           }
         )

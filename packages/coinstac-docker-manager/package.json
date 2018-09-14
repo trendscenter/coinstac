@@ -1,6 +1,6 @@
 {
   "name": "coinstac-docker-manager",
-  "version": "3.1.14",
+  "version": "3.1.19",
   "description": "",
   "main": "src/index.js",
   "scripts": {
@@ -12,8 +12,9 @@
     "dockerode": "^2.5.5",
     "lodash": "^4.17.10",
     "portscanner": "^2.2.0",
-    "request": "^2.87.0",
-    "request-promise-native": "^1.0.5",
+    "request-stream": "^1.2.2",
+    "socket.io-client": "^2.1.1",
+    "socket.io-stream": "^0.9.1",
     "util": "^0.10.4"
   }
 }

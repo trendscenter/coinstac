@@ -7,15 +7,25 @@ const util = require('util');
 const readFile = util.promisify(require('fs').readFile);
 const writeFile = util.promisify(require('fs').writeFile);
 const program = require('commander');
-const sim = require('../src/');
 const inquirer = require('inquirer');
 const glob = util.promisify(require('glob'));
 const path = require('path');
 const blessed = require('blessed');
 const bc = require('blessed-contrib');
-const hermit = require('hermit');
+const winston = require('winston');
 
-const DEBUG_MODE = process.execArgv.includes('--inspect-brk=9229');
+const logger = winston.createLogger({
+  level: 'info',
+  transports: [
+    new winston.transports.Console({ format: winston.format.cli() }),
+  ],
+});
+
+let DEBUG_MODE = process.execArgv.includes('--inspect-brk=9229');
+
+process.on('unhandledRejection', (error) => {
+  logger.error('unhandledRejection', error); // eslint-disable-line no-console
+});
 
 const pipeSpecFactory = (inputSpec, mode, comp) => {
   return {
@@ -28,6 +38,49 @@ const pipeSpecFactory = (inputSpec, mode, comp) => {
     ],
   };
 };
+
+
+program
+  .version(pkg.version)
+  .option('-i, --inputspec [path]', '/path/to/inputSpec, defaults to ./test/inputspec.json, will interactively create one if none found')
+  .option('-s, --compspec [path]', '/path/to/compSpec optional, defaults to cwd')
+  .option('-c, --clientNumber [number]', 'number of clients, defaults to 1 not included the remote in decentralized mode. In local mode this creates separate runs')
+  .option('-d, --directory [path]', ' path to where input, output, and cache is stored. Defaults to ./test/[input|cache|output]')
+  .option('-p, --showinput', ' on errors show comp input that computation failed with')
+  .option('-e, --debug', ' enter debug mode, displays extra info including input')
+  .option('-x, --silly', ' enter silly logging, everything in debug mode + even more');
+
+program.on('--help', () => {
+  logger.info([ // eslint-disable-line
+    '\n',
+    '\tTest a computation in a COINSTAC simulated environment.\n\n',
+    '\tThe simulator is meant to run in your computation\'s directory',
+    '\tand requires a valid compspec and with the specified docker image\n',
+    '\tin your docker image library.\n\n',
+    '\tIf you do not have an input map for your computation, a prompt will.\n',
+    '\tguide you through creating one.\n\n',
+    '\tFurther help can be found in the Readme:\n',
+    '\thttps://github.com/MRN-Code/coinstac/blob/master/packages/coinstac-simulator/README.md\n\n',
+    '\tExample:\n\n',
+    '\t  coinstac-sim -i ./inputSpec.json -c 2\n',
+  ].join(' '));
+});
+
+program.parse(process.argv);
+
+let mode;
+const inSpecPath = program.directory ? path.join(program.directory, 'inputspec.json') : path.join('.', 'test', 'inputspec.json');
+
+if (program.debug || program.silly) {
+  DEBUG_MODE = true;
+  process.LOGLEVEL = program.silly ? 'silly' : 'debug';
+  logger.level = process.LOGLEVEL;
+} else if (DEBUG_MODE) {
+  process.LOGLEVEL = 'debug';
+  logger.level = 'debug';
+}
+// require after LOGLEVEL set
+const sim = require('../src/');
 
 let table;
 let screen;
@@ -54,34 +107,6 @@ if (!DEBUG_MODE) {
   });
 }
 
-program
-  .version(pkg.version)
-  .option('-i, --inputspec [path]', '/path/to/inputSpec, defaults to ./test/inputspec.json, will interactively create one if none found')
-  .option('-s, --compspec [path]', '/path/to/compSpec optional, defaults to cwd')
-  .option('-c, --clientNumber [number]', 'number of clients, defaults to 1 not included the remote in decentralized mode. In local mode this creates separate runs')
-  .option('-d, --directory [path]', ' path to where input, output, and cache is stored. Defaults to ./test/[input|cache|output]');
-
-program.on('--help', () => {
-  console.log([ // eslint-disable-line
-    '\n',
-    '\tTest a computation in a COINSTAC simulated environment.\n\n',
-    '\tThe simulator is meant to run in your computation\'s directory',
-    '\tand requires a valid compspec and with the specified docker image\n',
-    '\tin your docker image library.\n\n',
-    '\tIf you do not have an input map for your computation, a prompt will.\n',
-    '\tguide you through creating one.\n\n',
-    '\tFurther help can be found in the Readme:\n',
-    '\thttps://github.com/MRN-Code/coinstac/blob/master/packages/coinstac-simulator/README.md\n\n',
-    '\tExample:\n\n',
-    '\t  coinstac-sim -i ./inputSpec.json -c 2\n',
-  ].join(' '));
-});
-
-program.parse(process.argv);
-
-let mode;
-let compError;
-const inSpecPath = program.directory ? path.join(program.directory, 'inputspec.json') : path.join('.', 'test', 'inputspec.json');
 
 readFile(program.compspec ? program.compspec : 'compspec.json')
 .then(compSpec => Promise.all([
@@ -151,8 +176,9 @@ readFile(program.compspec ? program.compspec : 'compspec.json')
 })
 .then((pipelineSpec) => {
   /* eslint-disable no-console */
-  console.log(`Starting ${mode} simulator run with ${program.clientNumber ? program.clientNumber : 1} client(s)`);
-  const count = Array.isArray(pipelineSpec) ? pipelineSpec.length : program.clientNumber;
+  const count = program.clientNumber ? program.clientNumber : // eslint-disable-line no-nested-ternary, max-len
+    (Array.isArray(pipelineSpec) ? pipelineSpec.length : 1); // eslint-disable-line no-nested-ternary, max-len
+  logger.debug(`Starting ${mode} simulator run with ${program.clientNumber ? program.clientNumber : 1} client(s)`);
   const simRun = sim.startRun({
     spec: pipelineSpec,
     runMode: mode,
@@ -192,7 +218,7 @@ readFile(program.compspec ? program.compspec : 'compspec.json')
       });
       screen.render();
     } else {
-      console.log(`${node} ---- ${JSON.stringify(data)}`);
+      logger.debug(`${node} ---- ${JSON.stringify(data)}`);
     }
   };
 
@@ -219,39 +245,29 @@ readFile(program.compspec ? program.compspec : 'compspec.json')
   return simRun.allResults;
 })
 .then((results) => {
-  screen.destroy();
-  console.log('Simulator run finished');
+  if (!DEBUG_MODE) {
+    screen.destroy();
+  }
+  logger.info('Simulator run finished');
   if (mode === 'decentralized') {
-    console.log(`Decentralized results:\n ${JSON.stringify(results.remote, null, 2)}`);
+    logger.info(`Decentralized results:\n ${JSON.stringify(results.remote, null, 2)}`);
   } else {
-    console.log('Local run(s) finished');
-    results.locals.forEach((res, idx) => console.log(`Client ${idx} results:\n${JSON.stringify(res, null, 2)}\n`));
+    logger.info('Local run(s) finished');
+    results.locals.forEach((res, idx) => logger.info(`Client ${idx} results:\n${JSON.stringify(res, null, 2)}\n`));
   }
   // TODO: should not be necessary, something is holding the loop up
   process.exit();
 })
 .catch((err) => {
-  compError = err;
   if (!DEBUG_MODE) {
     screen.destroy();
   }
-  hermit(err.error, (err, res) => {
-    console.log('Simulator run failed!');
-    console.log('Fun error details:\n');
-    console.log(res);
-    process.exit(1);
-  });
-})
-.catch((err) => {
-  if (!DEBUG_MODE) {
-    screen.destroy();
+  logger.error('Simulator run failed!');
+  logger.error('Fun error details:\n');
+  logger.error(err.stack);
+  if (program.showinput || DEBUG_MODE) {
+    logger.error('Input given to the comp on failure:\n');
+    logger.error(JSON.stringify(err.input));
   }
-  console.log('Simulator run failed!');
-  console.log('This may be an internal simulator issue\n If you suspect this, please leave an issue on github.com/MRN-Code/coinstac/issues with the error details\n');
-  console.log('Here is the error from the simulator run, if any');
-  console.log(compError);
-  console.log('\n\nHere is the internal error from the simulator');
-  console.log(err);
-  process.exit(1);
+  process.exit(0);
 });
-/* eslint-enable no-console */
