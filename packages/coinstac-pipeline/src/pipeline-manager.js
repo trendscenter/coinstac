@@ -8,8 +8,11 @@ const _ = require('lodash');
 const { promisify } = require('util');
 const mkdirp = promisify(require('mkdirp'));
 const path = require('path');
+const readdir = promisify(require('fs').readdir);
 const Emitter = require('events');
 const winston = require('winston');
+const ss = require('socket.io-stream');
+const { createReadStream, createWriteStream } = require('fs');
 
 const logger = winston.createLogger({
   level: 'info',
@@ -95,6 +98,7 @@ module.exports = {
           }
           remoteClients[data.id].status = 'connected';
           remoteClients[data.id].socketId = socket.id;
+          remoteClients[data.id].socket = socket;
           remoteClients[data.id].lastSeen = Math.floor(Date.now() / 1000);
         });
 
@@ -198,6 +202,17 @@ module.exports = {
           activePipelines[data.runId].remote.reject(Object.assign(new Error(), data.error));
         }
       });
+      ss(socket).on('stderr', (stream, data) => {
+        const wStream = createWriteStream(activePipelines[data.runId].baseDirectory);
+        stream.pipe(wStream)
+        wStream.on('close', () => {
+          // mark off and start run?
+        });
+        wStream.on('error', () => {
+          // reject pipe
+        })
+
+      });
     }
 
 
@@ -229,6 +244,9 @@ module.exports = {
           {
             state: 'created',
             pipeline: Pipeline.create(spec, runId, { mode, operatingDirectory, clientId }),
+            baseDirectory: path.resolve(operatingDirectory, clientId, runId),
+            outputDirectory: path.resolve(operatingDirectory, 'output', clientId, runId),
+            cacheDirectory: path.resolve(operatingDirectory, 'cache', clientId, runId),
             stateEmitter: new Emitter(),
             currentState: {},
             clients,
@@ -269,7 +287,28 @@ module.exports = {
               logger.silly('############ REMOTE OUT');
               logger.silly(JSON.stringify(message, null, 2));
               logger.silly('############ END REMOTE OUT');
-              io.of('/').to(pipeline.id).emit('run', { runId: pipeline.id, output: message });
+              io.of('/').in(pipeline.id).clients((error, clients) => {
+                if (error) throw error;
+                readdir(activePipelines[pipeline.id].base)
+                .then((files) => {
+                  if (files) {
+                    io.of('/').to(pipeline.id).emit('run', { runId: pipeline.id, output: message, files });
+                    Object.keys(remoteClients).forEach((key) => {
+                      if (clients.includes(remoteClients[key].socketId)) {
+                        files.forEach((file) => {
+                          const fsStream = createReadStream(file);
+
+                          const stream = ss.createStream();
+                          ss(remoteClients[key].socket).emit('file', stream, { file, runId: pipeline.id });
+                          fsStream.pipe(stream);
+                        });
+                      }
+                    });
+                  } else {
+                    io.of('/').to(pipeline.id).emit('run', { runId: pipeline.id, output: message });
+                  }
+                });
+              });
             }
           } else {
             if (message instanceof Error) { // eslint-disable-line no-lonely-if
@@ -321,9 +360,9 @@ module.exports = {
         };
 
         const pipelineProm = Promise.all([
-          mkdirp(path.resolve(operatingDirectory, clientId, runId)),
-          mkdirp(path.resolve(operatingDirectory, 'output', clientId, runId)),
-          mkdirp(path.resolve(operatingDirectory, 'cache', clientId, runId)),
+          mkdirp(this.activePipelines[runId].baseDirectory),
+          mkdirp(this.activePipelines[runId].outputDirectory),
+          mkdirp(this.activePipelines[runId].cacheDirectory),
         ])
         .catch((err) => {
           throw new Error(`Unable to create pipeline directories: ${err}`);
