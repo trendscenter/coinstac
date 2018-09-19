@@ -196,22 +196,54 @@ module.exports = {
         // TODO: step check?
         if (!data.error && activePipelines[data.runId]) {
           activePipelines[data.runId].state = 'recieved central node data';
-          activePipelines[data.runId].remote.resolve(data.output);
+          if (data.files) {
+            // we've already recieved the files
+            if (activePipelines[data.runId].files
+              && activePipelines[data.runId].files.recieved === data.files) {
+              activePipelines[data.runId].remote.resolve(data.output);
+              activePipelines[data.runId].currentInput = undefined;
+              activePipelines[data.runId].files = undefined;
+            } else {
+              activePipelines[data.runId].files =
+                Object.assign({}, { expected: data.files }, activePipelines[data.runId].files);
+              activePipelines[data.runId].currentInput = data.output;
+            }
+          } else {
+            activePipelines[data.runId].remote.resolve(data.output);
+          }
         } else if (data.error && activePipelines[data.runId]) {
           activePipelines[data.runId].state = 'recieved error';
           activePipelines[data.runId].remote.reject(Object.assign(new Error(), data.error));
         }
       });
       ss(socket).on('stderr', (stream, data) => {
-        const wStream = createWriteStream(activePipelines[data.runId].baseDirectory);
-        stream.pipe(wStream)
-        wStream.on('close', () => {
-          // mark off and start run?
-        });
-        wStream.on('error', () => {
-          // reject pipe
-        })
+        if (activePipelines[data.runId]) {
+          const wStream = createWriteStream(activePipelines[data.runId].baseDirectory);
+          stream.pipe(wStream);
+          wStream.on('close', () => {
+            // mark off and start run?
+            if (activePipelines[data.runId].files && activePipelines[data.runId].files.recieved) {
+              activePipelines[data.runId].files.recieved.push(data.file);
+            } else if (activePipelines[data.runId].files) {
+              activePipelines[data.runId].files.recieved = [data.file];
+            } else {
+              activePipelines[data.runId].files = { recieved: [data.file] };
+            }
 
+            if (activePipelines[data.runId].files.expected
+              && activePipelines[data.runId].currentInput
+              && (activePipelines[data.runId].files.expected
+              === activePipelines[data.runId].files.recieved)) {
+              activePipelines[data.runId].remote.resolve(activePipelines[data.runId].currentInput);
+              activePipelines[data.runId].currentInput = undefined;
+              activePipelines[data.runId].files = undefined;
+            }
+          });
+          wStream.on('error', (error) => {
+            // reject pipe
+            activePipelines[data.runId].remote.reject(error);
+          });
+        }
       });
     }
 
