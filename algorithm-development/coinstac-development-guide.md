@@ -245,11 +245,11 @@ Now in the **root* directory of your project run:
 coinstac-simulator
 ```
 You should see the computation start
-![compstart](https://github.com/MRN-Code/coinstac/raw/master/algorithm-development/compstart.jpg)
+![compstart](https://github.com/MRN-Code/coinstac/raw/master/algorithm-development/compstart.png)
 End
 ![compend](https://github.com/MRN-Code/coinstac/raw/master/algorithm-development/compend.png)
 And finally the output as JSON
-![compoutput](https://github.com/MRN-Code/coinstac/raw/master/algorithm-development/compoutput.jpg)
+![compoutput](https://github.com/MRN-Code/coinstac/raw/master/algorithm-development/compoutput.png)
 
 ##### local vs decentralized
 local and decentralized computations are made nearly the same, except for two key differences: Decentralized computations **_always_** are ended by the remote, and decentralized computations have a `"remote"` section in their compspec.
