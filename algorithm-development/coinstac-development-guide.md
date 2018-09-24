@@ -245,9 +245,9 @@ Now in the **root* directory of your project run:
 coinstac-simulator
 ```
 You should see the computation start
-![compstart](https://github.com/MRN-Code/coinstac/raw/master//algorithm-development/compstart.jpg)
+![compstart](https://github.com/MRN-Code/coinstac/raw/master/algorithm-development/compstart.jpg)
 End
-![compend](https://github.com/MRN-Code/coinstac/raw/master/algorithm-development/compend.jpg)
+![compend](https://github.com/MRN-Code/coinstac/raw/master/algorithm-development/compend.png)
 And finally the output as JSON
 ![compoutput](https://github.com/MRN-Code/coinstac/raw/master/algorithm-development/compoutput.jpg)
 
