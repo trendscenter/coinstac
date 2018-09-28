@@ -30,7 +30,7 @@ This will place COINSTAC into a new folder named “coinstac” and check out th
 Move into the _coinstac_ directory (`cd coinstac`) and run the following commands:
 
 ```shell
-npm install
+npm install // needed only for initial top level setup
 npm run build
 ```
 
@@ -62,7 +62,7 @@ Follow the general steps above before continuing.
 ## Additional Required Software
 
 1. **RethinkDB** On OSX, using [Homebrew](https://brew.sh/), use: `brew update && brew install rethinkdb`. Other options [here](https://rethinkdb.com/docs/install/).
-2. **VSCode** There are no shortage of options when it comes to an editor, but [VSCode](https://code.visualstudio.com/) offers some great [debugging functionality](https://code.visualstudio.com/Docs/editor/debugging). You'll need to create a `launch.json` file as outlined [here](https://code.visualstudio.com/Docs/editor/debugging#_launch-configurations), with the following contents:
+2. **VSCode** There are no shortage of options when it comes to an editor, but [VSCode](https://code.visualstudio.com/) offers some great [debugging functionality](https://code.visualstudio.com/Docs/editor/debugging). The root directory has a `launch.json` as outlined [here](https://code.visualstudio.com/Docs/editor/debugging#_launch-configurations), with the following contents:
 
    ```json
    {
@@ -119,7 +119,7 @@ Follow the general steps above before continuing.
 
 ## Configuration
 
-Create a new file at `coinstac/packages/coinstac-ui/config/local.json` and copy into it the following:
+Create a new file at `coinstac/packages/coinstac-ui/config/local.json` and copy into it the following, conversely there is a `local-example.json` that cointains the local defualts that work for local development work. Just copy that file to `local.json` in the `config` directory. 
 
    ```json
    {
@@ -151,9 +151,13 @@ Five services need to be run in the following order to start COINSTAC in develop
 1. **Docker**
 2. **RethinkDB**:
   ```shell
-  rethinkdb
+  rethinkdb --daemon
   ```
 3. **COINSTAC-API-SERVER**:
+  If it's the first time the app has been started, or you want to clear back to base data run:
+  ```shell
+  cd ~/coinstac/packages/coinstac-api-server && npm run test-setup
+  ```
   The GraphQL and DB server.
   ```shell
   cd ~/coinstac/packages/coinstac-api-server && npm run start
@@ -177,7 +181,7 @@ Next, you'll need to start the application. You can do this from the command lin
 * **VSCode**:
 Open the COINSTAC repo in VSCode and click on the debugging icon, which is the fourth icon down on the left-hand side of the screen. At the top of the left-hand side panel should be a *DEBUG* dropdown. Select `Debug` in the dropdown and hit the play button to begin debugging.
 
-**Test data for collections mapping can be found in `coinstac-ui/test/e2e/test_files/site1/`**
+**Test data for collections mapping can be found in `coinstac/algorithm-development/test-data/`**
 
 ## Steps to Setup Pipeline 
 
