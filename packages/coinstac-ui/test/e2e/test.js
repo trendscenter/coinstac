@@ -8,8 +8,8 @@ const appPath = path.join(__dirname, '../..');
 const mocksPath = path.join(__dirname, 'mocks.js');
 
 const EXIST_TIMEOUT = 4000;
-const USER_ID = 'test';
-const PASS = 'test';
+const USER_ID = 'test1';
+const PASS = 'password';
 const CONS_NAME = 'e2e-consortium';
 const CONS_DESC = 'e2e-description';
 const PROJECT_NAME = 'e2e-files';
