@@ -46,7 +46,7 @@ export default class CollectionAbout extends Component {
           </FormGroup>
 
           <FormGroup controlId="description">
-            <ControlLabel>Collection Description</ControlLabel>
+            <ControlLabel>Collection Description</ControlLabel> (Optional)
             <FormControl
               componentClass="textarea"
               value={collection.description || ''}
@@ -56,11 +56,8 @@ export default class CollectionAbout extends Component {
           </FormGroup>
           <fieldset style={styles.fieldset} className={'highlight'}>
             <h3>Study Details</h3>
-            <p>
-              <strong>Optional:</strong> Leave these fields blank if there are no details to share.
-            </p>
             <FormGroup controlId="name">
-              <ControlLabel>Study Name</ControlLabel>
+              <ControlLabel>Study Name</ControlLabel> (Optional)
               <FormControl
                 type="input"
                 value={collection.studyName || ''}
