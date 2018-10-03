@@ -8,10 +8,13 @@ const appPath = path.join(__dirname, '../..');
 const mocksPath = path.join(__dirname, 'mocks.js');
 
 const EXIST_TIMEOUT = 4000;
-const USER_ID = 'test';
-const PASS = 'test';
+const NOTIFICATION_DISMISS_TIMEOUT = 6000;
+const USER_ID = 'test1';
+const PASS = 'password';
 const CONS_NAME = 'e2e-consortium';
 const CONS_DESC = 'e2e-description';
+const PIPE_NAME = 'e2e-pipeline';
+const PIPE_DESC = 'e2e-pipeline-description';
 const PROJECT_NAME = 'e2e-files';
 
 chai.should();
@@ -54,34 +57,86 @@ describe('Testing::e2e', () => {
   it('accesses the Add Consortium page', () => (
     app.client
       .click('a=Consortia')
-      .waitForExist('a=Add Consortium', EXIST_TIMEOUT)
-      .click('a=Add Consortium')
-      .isVisible('h1=Add New Consortium').should.eventually.equal(true)
+      .waitForExist('a=Create Consortium', EXIST_TIMEOUT)
+      .click('a=Create Consortium')
+      .isVisible('h1=Consortium Creation').should.eventually.equal(true)
   ));
 
   it('creates a consortium', () => (
     app.client
-      .setValue("[name='label']", CONS_NAME)
-      .setValue("[name='description']", CONS_DESC)
-      .click('p=Decentralized ridge regression.')
-      .getValue("[name='activeComputationInputs[0]']")
-      .then((res) => {
-        if (res !== 'Right-Cerebellum-Cortex') {
-          return app.client
-            .selectByValue("[name='activeComputationInputs[0]']", 'Right-Cerebellum-Cortex');
-        }
-      })
-      .click('button=New')
-      .setValue('#computation-field-map-name-0', 'isControl')
-      .selectByValue('#computation-field-map-type-0', 'boolean')
-      .click('button=New')
-      .setValue('#computation-field-map-name-1', 'age')
-      .selectByValue('#computation-field-map-type-1', 'number')
-      .click('button=Create')
-      .waitForExist('div.panel-heading h4.panel-title', EXIST_TIMEOUT)
-      .getText('div.panel-heading h4.panel-title a').should.eventually.include(CONS_NAME)
+      .setValue('#name', CONS_NAME)
+      .setValue('#description', CONS_DESC)
+      .click('button=Save')
+      .waitForText('.notification-message', EXIST_TIMEOUT)
+      .getText('.notification-message')
+      .then(notificationMessage => notificationMessage.should.equal('Consortium Saved'))
+      .then(() =>
+        // wait for the notification message to disappear
+        app.client.waitForVisible('.notification-message', NOTIFICATION_DISMISS_TIMEOUT, true)
+      )
   ));
 
+  it('accesses the Add Pipeline page', () => (
+    app.client
+      .click('a=Pipelines')
+      .waitForExist('a=Create Pipeline', EXIST_TIMEOUT)
+      .click('a=Create Pipeline')
+      .isVisible('h1=Pipeline Creation').should.eventually.equal(true)
+  ));
+
+  it('creates a pipeline', () => (
+    app.client
+      .setValue('#name', PIPE_NAME)
+      .setValue('#description', PIPE_DESC)
+      .click('#pipelineconsortia')
+      .waitForExist('.dropdown-menu[aria-labelledby="pipelineconsortia"]', EXIST_TIMEOUT)
+      .click(`a=${CONS_NAME}`)
+      .click('#computation-dropdown')
+      .waitForExist('.dropdown-menu[aria-labelledby="computation-dropdown"]', EXIST_TIMEOUT)
+      .click('a=single shot regression demo')
+      .waitForExist('button=Add Covariates')
+      .click('button=Add Covariates')
+      .click('#covariates-0-data-dropdown')
+      .waitForExist('.dropdown-menu[aria-labelledby="covariates-0-data-dropdown"]', EXIST_TIMEOUT)
+      .element('.dropdown-menu[aria-labelledby="covariates-0-data-dropdown"]')
+      .click('a=boolean')
+      .click('#input-source-0-dropdown')
+      .waitForExist('.dropdown-menu[aria-labelledby="input-source-0-dropdown"]', EXIST_TIMEOUT)
+      .element('.dropdown-menu[aria-labelledby="input-source-0-dropdown"]')
+      .click('a=File')
+      .setValue('#covariates-0-input-name', 'isControl')
+      .click('button=Add Covariates')
+      .click('#covariates-1-data-dropdown')
+      .waitForExist('.dropdown-menu[aria-labelledby="covariates-1-data-dropdown"]', EXIST_TIMEOUT)
+      .element('.dropdown-menu[aria-labelledby="covariates-1-data-dropdown"]')
+      .click('a=number')
+      .click('#input-source-1-dropdown')
+      .waitForExist('.dropdown-menu[aria-labelledby="input-source-1-dropdown"]', EXIST_TIMEOUT)
+      .element('.dropdown-menu[aria-labelledby="input-source-1-dropdown"]')
+      .click('a=File')
+      .setValue('#covariates-1-input-name', 'age')
+      .click('button=Add Data')
+      .click('#data-0-data-dropdown')
+      .waitForExist('.dropdown-menu[aria-labelledby="data-0-data-dropdown"]', EXIST_TIMEOUT)
+      .element('.dropdown-menu[aria-labelledby="data-0-data-dropdown"]')
+      .click('a=FreeSurfer')
+      .click('#data-0-area .Select-control')
+      .waitForExist('#data-0-area .Select-menu-outer', EXIST_TIMEOUT)
+      .element('#data-0-area .Select-menu-outer')
+      .click('div=5th-Ventricle', EXIST_TIMEOUT)
+      .click('div=BrainSegVol', EXIST_TIMEOUT)
+      .setValue('[name="step-lambda"]', '0')
+      .click('button=Save Pipeline')
+      .waitForExist('.notification-message', EXIST_TIMEOUT)
+      .getText('.notification-message')
+      .then(notificationMessage => notificationMessage.should.equal('Pipeline Saved.'))
+      .then(() =>
+        // wait for the notification message to disappear
+        app.client
+          .waitForVisible('.notification-message', NOTIFICATION_DISMISS_TIMEOUT, true)
+      )
+  ));
+/*
   it('accesses the New Files Collection page', () => (
     app.client
       .click('a=My Files')
@@ -131,7 +186,7 @@ describe('Testing::e2e', () => {
       .waitForExist('a=Add Consortium', EXIST_TIMEOUT)
       .click(`#delete-${CONS_NAME}`)
       .isVisible(`a=${CONS_NAME}`).should.eventually.equal(false)
-  ));
+  ));*/
 
   it('logs out', () => (
     app.client
