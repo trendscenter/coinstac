@@ -8,7 +8,7 @@ const path = require('path');
 
 const platform = ['linux', 'win32', 'darwin'];
 const options = {
-  // asar: true,
+  asar: true,
   dir: `${__dirname}/../`,
   name: 'coinstac',
   overwrite: true,
