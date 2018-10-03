@@ -1,6 +1,6 @@
 {
   "name": "coinstac-ui",
-  "version": "4.0.1",
+  "version": "4.0.2",
   "description": "COINSTAC desktop application.",
   "main": "app/main/index.js",
   "dependencies": {
@@ -12,11 +12,11 @@
     "bootstrap-sass": "^3.3.7",
     "clarify": "^2.1.0",
     "classnames": "^2.2.5",
-    "coinstac-client-core": "^4.0.1",
-    "coinstac-common": "^4.0.1",
-    "coinstac-docker-manager": "^4.0.1",
+    "coinstac-client-core": "^4.0.2",
+    "coinstac-common": "^4.0.2",
+    "coinstac-docker-manager": "^4.0.2",
     "coinstac-graphql-schema": "^3.1.6",
-    "coinstac-pipeline": "^4.0.1",
+    "coinstac-pipeline": "^4.0.2",
     "commander": "^2.15.1",
     "convict": "^1.5.0",
     "create-react-class": "^15.6.3",
