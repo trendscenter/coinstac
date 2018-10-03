@@ -318,27 +318,34 @@ const startService = (serviceId, serviceUserId, opts) => {
               this.push(null);
             } });
             dataStream.pipe(stream);
-
+            let outRes;
+            let outRej;
+            let stdout = '';
             const stdoutProm = new Promise((resolve, reject) => {
-              let stdout = '';
-              ss(socket).on('stdout', (stream) => {
-                stream.on('data', (chunk) => {
-                  stdout += chunk;
-                });
-                stream.on('end', () => resolve(stdout));
-                stream.on('err', err => reject(err));
+              outRes = resolve;
+              outRej = reject;
+            });
+            ss(socket).on('stdout', (stream) => {
+              stream.on('data', (chunk) => {
+                stdout += chunk;
               });
+              stream.on('end', () => outRes(stdout));
+              stream.on('err', err => outRej(err));
             });
 
+            let errRes;
+            let errRej;
+            let stderr = '';
             const stderrProm = new Promise((resolve, reject) => {
-              let stderr = '';
-              ss(socket).on('stderr', (stream) => {
-                stream.on('data', (chunk) => {
-                  stderr += chunk;
-                });
-                stream.on('end', () => resolve(stderr));
-                stream.on('err', err => reject(err));
+              errRes = resolve;
+              errRej = reject;
+            });
+            ss(socket).on('stderr', (stream) => {
+              stream.on('data', (chunk) => {
+                stderr += chunk;
               });
+              stream.on('end', () => errRes(stderr));
+              stream.on('err', err => errRej(err));
             });
 
             const endProm = new Promise((resolve) => {
