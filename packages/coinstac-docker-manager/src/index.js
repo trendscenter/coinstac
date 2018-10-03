@@ -4,7 +4,7 @@ const request = require('request-stream');
 const portscanner = require('portscanner');
 const http = require('http');
 const Readable = require('stream').Readable;
-const ss = require('socket.io-stream');
+const ss = require('coinstac-socket.io-stream');
 const socketIOClient = require('socket.io-client');
 
 const setTimeoutPromise = (delay) => {
