@@ -12,7 +12,7 @@ const config = {
   devServer: {
     historyApiFallback: true,
     hot: true,
-    port
+    port,
   },
   entry: [
     path.join(__dirname, 'app', 'render', 'index.js'),
