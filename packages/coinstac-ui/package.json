@@ -87,7 +87,6 @@
     "html-loader": "^0.5.5",
     "istanbul": "^0.4.5",
     "jsdoc": "^3.5.5",
-    "json-loader": "^0.5.7",
     "minami": "^1.2.3",
     "mocha": "^3.5.3",
     "mockery": "^2.1.0",

@@ -32,9 +32,6 @@ const config = {
       test: /\.eot(\?v: \d+\.\d+\.\d+)?$/,
       use: ['file-loader'],
     }, {
-      test: /\.json$/,
-      use: ['json-loader'],
-    }, {
       include: path.join(__dirname, 'app', 'render'),
       test: /\.(js|jsx)$/,
       use: [{
