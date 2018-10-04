@@ -48,5 +48,5 @@ rm('coinstac-*')
   });
 })
 .catch((err) => {
-  console.log(`Build failed with: ${err}`); // eslint-disable-line no-console
+  console.error('Build failed with:', err); // eslint-disable-line no-console
 });
