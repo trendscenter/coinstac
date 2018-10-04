@@ -6,12 +6,14 @@ const rm = pify(require('rimraf'));
 const os = require('os');
 const path = require('path');
 
-const platform = ['linux', 'win32', 'darwin'];
+const platform = os.platform();
 const options = {
+  arch: os.arch(),
   asar: true,
   dir: `${__dirname}/../`,
   name: 'coinstac',
   overwrite: true,
+  platform,
   prune: true,
 };
 
@@ -24,11 +26,7 @@ if (platform === 'darwin') {
 }
 
 rm('coinstac-*')
-.then(() => {
-  options.arch = os.arch();
-  options.platform = platform;
-  return packager(options);
-})
+.then(() => packager(options))
 .then((appPaths) => {
   appPaths.forEach((appPath) => {
     const zip = archiver.create('zip');
