@@ -130,10 +130,6 @@ if (process.env.NODE_ENV === 'development') {
    */
   const pattern = /react|redux/;
   config.externals = config.externals.filter(name => !pattern.test(name));
-} else {
-  config.plugins.push(
-    new webpack.optimize.UglifyJsPlugin({ sourceMap: false })
-  );
 }
 
 module.exports = config;
