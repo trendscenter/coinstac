@@ -104,6 +104,7 @@
     "tape": "^4.9.0",
     "url-loader": "^0.5.9",
     "webpack": "^4.20.2",
+    "webpack-cli": "^3.1.2",
     "webpack-dashboard": "^2.0.0",
     "webpack-dev-middleware": "^3.4.0",
     "webpack-dev-server": "^3.1.9"
