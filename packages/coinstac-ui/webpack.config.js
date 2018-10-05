@@ -102,7 +102,7 @@ const config = {
   output: {
     filename: 'bundle.js',
     libraryTarget: 'commonjs2',
-    path: path.join(__dirname, 'app', 'render', 'build'),
+    path: path.join(__dirname, 'build', 'render'),
     publicPath: './build/',
   },
   plugins: [new webpack.optimize.OccurrenceOrderPlugin()],
