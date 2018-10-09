@@ -6,8 +6,8 @@ const rm = pify(require('rimraf'));
 const os = require('os');
 const path = require('path');
 
-const platform = 'darwin'; // ['linux', 'win32', 'darwin'];
 const options = {
+  all: true,
   asar: true,
   dir: `${__dirname}/../`,
   name: 'coinstac',
