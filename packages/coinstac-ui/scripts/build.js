@@ -11,6 +11,7 @@ const options = {
   dir: `${__dirname}/../`,
   icon: path.resolve(__dirname, '../img/icons/coinstac'),
   name: 'coinstac',
+  out: path.join(__dirname, '..', 'build', 'apps'),
   overwrite: true,
   prune: true,
 };
