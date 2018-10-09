@@ -6,7 +6,7 @@ const rm = pify(require('rimraf'));
 const os = require('os');
 const path = require('path');
 
-const platform = ['linux', 'win32', 'darwin']; // os.platform();
+const platform = ['linux', 'win32', 'darwin'];
 const options = {
   asar: true,
   dir: `${__dirname}/../`,

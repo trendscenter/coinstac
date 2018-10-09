@@ -7,6 +7,11 @@
 
 'use strict';
 
+require('trace');
+require('clarify');
+
+Error.stackTraceLimit = 100;
+
 const { compact } = require('lodash'); // eslint-disable-line no-unused-vars
 const mock = require('../../test/e2e/mocks');
 const electron = require('electron');
