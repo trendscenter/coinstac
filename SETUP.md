@@ -170,7 +170,7 @@ Five services need to be run in the following order to start COINSTAC in develop
   ```
 5. **WEBPACK SERVER**:
   ```shell
-  NODE_ENV=development && cd ~/coinstac/packages/coinstac-ui && node webpack-dev-server.js
+  NODE_ENV=development && cd ~/coinstac/packages/coinstac-ui && npm run watch
   ```
 Next, you'll need to start the application. You can do this from the command line or via VSCode.
 
