@@ -9,13 +9,13 @@ const mocksPath = path.join(__dirname, 'mocks.js');
 
 const EXIST_TIMEOUT = 4000;
 const NOTIFICATION_DISMISS_TIMEOUT = 6000;
+const COMPUTATION_TIMEOUT = 60000;
 const USER_ID = 'test1';
 const PASS = 'password';
 const CONS_NAME = 'e2e-consortium';
 const CONS_DESC = 'e2e-description';
 const PIPE_NAME = 'e2e-pipeline';
 const PIPE_DESC = 'e2e-pipeline-description';
-const PROJECT_NAME = 'e2e-files';
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -92,42 +92,42 @@ describe('Testing::e2e', () => {
       .waitForExist('.dropdown-menu[aria-labelledby="pipelineconsortia"]', EXIST_TIMEOUT)
       .click(`a=${CONS_NAME}`)
       .click('#computation-dropdown')
-      .waitForExist('.dropdown-menu[aria-labelledby="computation-dropdown"]', EXIST_TIMEOUT)
+      .waitForVisible('.dropdown-menu[aria-labelledby="computation-dropdown"]', EXIST_TIMEOUT)
       .click('a=single shot regression demo')
       .waitForExist('button=Add Covariates')
       .click('button=Add Covariates')
       .click('#covariates-0-data-dropdown')
-      .waitForExist('.dropdown-menu[aria-labelledby="covariates-0-data-dropdown"]', EXIST_TIMEOUT)
+      .waitForVisible('.dropdown-menu[aria-labelledby="covariates-0-data-dropdown"]', EXIST_TIMEOUT)
       .element('.dropdown-menu[aria-labelledby="covariates-0-data-dropdown"]')
       .click('a=boolean')
       .click('#input-source-0-dropdown')
-      .waitForExist('.dropdown-menu[aria-labelledby="input-source-0-dropdown"]', EXIST_TIMEOUT)
+      .waitForVisible('.dropdown-menu[aria-labelledby="input-source-0-dropdown"]', EXIST_TIMEOUT)
       .element('.dropdown-menu[aria-labelledby="input-source-0-dropdown"]')
       .click('a=File')
       .setValue('#covariates-0-input-name', 'isControl')
       .click('button=Add Covariates')
       .click('#covariates-1-data-dropdown')
-      .waitForExist('.dropdown-menu[aria-labelledby="covariates-1-data-dropdown"]', EXIST_TIMEOUT)
+      .waitForVisible('.dropdown-menu[aria-labelledby="covariates-1-data-dropdown"]', EXIST_TIMEOUT)
       .element('.dropdown-menu[aria-labelledby="covariates-1-data-dropdown"]')
       .click('a=number')
       .click('#input-source-1-dropdown')
-      .waitForExist('.dropdown-menu[aria-labelledby="input-source-1-dropdown"]', EXIST_TIMEOUT)
+      .waitForVisible('.dropdown-menu[aria-labelledby="input-source-1-dropdown"]', EXIST_TIMEOUT)
       .element('.dropdown-menu[aria-labelledby="input-source-1-dropdown"]')
       .click('a=File')
       .setValue('#covariates-1-input-name', 'age')
       .click('button=Add Data')
       .click('#data-0-data-dropdown')
-      .waitForExist('.dropdown-menu[aria-labelledby="data-0-data-dropdown"]', EXIST_TIMEOUT)
+      .waitForVisible('.dropdown-menu[aria-labelledby="data-0-data-dropdown"]', EXIST_TIMEOUT)
       .element('.dropdown-menu[aria-labelledby="data-0-data-dropdown"]')
       .click('a=FreeSurfer')
       .click('#data-0-area .Select-control')
-      .waitForExist('#data-0-area .Select-menu-outer', EXIST_TIMEOUT)
+      .waitForVisible('#data-0-area .Select-menu-outer', EXIST_TIMEOUT)
       .element('#data-0-area .Select-menu-outer')
       .click('div=5th-Ventricle', EXIST_TIMEOUT)
       .click('div=BrainSegVol', EXIST_TIMEOUT)
       .setValue('[name="step-lambda"]', '0')
       .click('button=Save Pipeline')
-      .waitForExist('.notification-message', EXIST_TIMEOUT)
+      .waitForVisible('.notification-message', EXIST_TIMEOUT)
       .getText('.notification-message')
       .then(notificationMessage => notificationMessage.should.equal('Pipeline Saved.'))
       .then(() =>
@@ -136,57 +136,115 @@ describe('Testing::e2e', () => {
           .waitForVisible('.notification-message', NOTIFICATION_DISMISS_TIMEOUT, true)
       )
   ));
-/*
-  it('accesses the New Files Collection page', () => (
+
+  it('sets the created pipeline to the consortium', () => (
     app.client
-      .click('a=My Files')
-      .waitForExist('a=Add Files Collection', EXIST_TIMEOUT)
-      .click('a=Add Files Collection')
-      .isVisible('h1=New Files Collection').should.eventually.equal(true)
+      .click('a=Consortia')
+      .waitForExist(`a[name="${CONS_NAME}"]`, EXIST_TIMEOUT)
+      .click(`a[name="${CONS_NAME}"]`)
+      .waitForExist('#consortium-tabs #consortium-tabs-tab-2', EXIST_TIMEOUT)
+      .element('#consortium-tabs')
+      .click('a=Pipelines')
+      .waitForVisible('#owned-pipelines-dropdown', EXIST_TIMEOUT)
+      .click('#owned-pipelines-dropdown')
+      .waitForVisible('.dropdown-menu[aria-labelledby="owned-pipelines-dropdown"]', EXIST_TIMEOUT)
+      .element('.dropdown-menu[aria-labelledby="owned-pipelines-dropdown"]')
+      .click(`a=${PIPE_NAME}`)
+      .waitForVisible(`h4=${PIPE_NAME}`, EXIST_TIMEOUT)
   ));
 
-  it('adds files to a consortium', () => (
+  it('creates a file collection', () => (
     app.client
-      .setValue('#form-project-name', PROJECT_NAME)
-      .selectByVisibleText('#form-project-consortium-id', CONS_NAME)
-      .click('button=Add File')
-      .waitForExist('#project-covariates-mapper-1', EXIST_TIMEOUT)
-      .selectByValue('#project-covariates-mapper-1', '0')
-      .selectByValue('#project-covariates-mapper-2', '1')
+      .click('a=Collections')
+      .waitForExist('h1=File Collections', EXIST_TIMEOUT)
+      .click('a=Create File Collection')
+      .waitForExist('h1=New Collection', EXIST_TIMEOUT)
+      .setValue('#name', CONS_NAME)
+      .setValue('#description', CONS_DESC)
       .click('button=Save')
-      .waitForExist('div.panel-heading h4.panel-title', EXIST_TIMEOUT)
-      .getText('div.panel-heading h4.panel-title a').should.eventually.include(PROJECT_NAME)
+      .waitForText('.notification-message', EXIST_TIMEOUT)
+      .getText('.notification-message')
+      .then(notificationMessage => notificationMessage.should.equal('Collection Saved.'))
+      .then(() =>
+        // wait for the notification message to disappear
+        app.client.waitForVisible('.notification-message', NOTIFICATION_DISMISS_TIMEOUT, true)
+      )
+  ));
+
+  it('sets the data set into the file collection', () => (
+    app.client
+      .element('#collection-tabs')
+      .click('a=Files')
+      .waitForVisible('h3=Collection Files', EXIST_TIMEOUT)
+      .click('button=Add Group')
+      .waitForVisible('button=Add Files Group', EXIST_TIMEOUT)
+      .click('label=A metadata file containing file paths and covariates.')
+      .click('button=Add Files Group')
+      .waitForVisible('button=Remove File Group', EXIST_TIMEOUT)
+      .element('#collection-tabs')
+      .click('a=Consortia')
+      .waitForVisible('h3=Add to Consortia', EXIST_TIMEOUT)
+      .click('#member-consortia-dropdown')
+      .waitForVisible('.dropdown-menu[aria-labelledby="member-consortia-dropdown"]', EXIST_TIMEOUT)
+      .element('.dropdown-menu[aria-labelledby="member-consortia-dropdown"]')
+      .click(`a=${CONS_NAME}`)
+      .waitForVisible('div.panel', EXIST_TIMEOUT)
+      .element('.tab-pane.active .panel-body li')
+      .click('select')
+      .element('.tab-pane.active .panel-body li')
+      .click('option=Group 1 (.CSV)')
+      .element('.tab-pane.active .panel-body li:nth-child(2)')
+      .click('select')
+      .element('.tab-pane.active .panel-body li:nth-child(2)')
+      .click('option=Group 1 (.CSV)')
+      .element('.tab-pane.active .panel-body > div:nth-child(2)')
+      .click('select')
+      .element('.tab-pane.active .panel-body > div:nth-child(2)')
+      .click('option=Group 1 (.CSV)')
+      .element('.tab-pane.active')
+      .click('button=Save')
+      .waitForText('.notification-message', EXIST_TIMEOUT)
+      .getText('.notification-message')
+      .then(notificationMessage => notificationMessage.should.equal('Collection Saved.'))
+      .then(() =>
+        // wait for the notification message to disappear
+        app.client.waitForVisible('.notification-message', NOTIFICATION_DISMISS_TIMEOUT, true)
+      )
   ));
 
   it('runs a computation', () => (
     app.client
-      .click(`#run-${CONS_NAME}`)
-      .waitForExist('span=Complete', EXIST_TIMEOUT)
+      .click('a=Consortia')
+      .waitForExist('h1=Consortia', EXIST_TIMEOUT)
+      .click('button=Start Pipeline')
+      .waitForText('.notification-message', EXIST_TIMEOUT)
+      .getText('.notification-message')
+      .then(notificationMessage => notificationMessage.should.equal(`Decentralized Pipeline Starting for ${CONS_NAME}.`))
+      .then(() =>
+        // wait for the notification message to disappear
+        app.client.waitForVisible('.notification-message', NOTIFICATION_DISMISS_TIMEOUT, true)
+      )
+  ));
+
+  it('displays computation progress', () => (
+    app.client
+      .click('a=Home')
+      .waitForVisible('div.panel:first-child', EXIST_TIMEOUT)
+      .element('div.panel:first-child')
+      .isVisible('span=In Progress').should.eventually.equal(true)
   ));
 
   it('displays results', () => (
     app.client
-      .waitForExist(`#results-${CONS_NAME}`)
-      .click(`#results-${CONS_NAME}`)
-      .waitForExist('#results', EXIST_TIMEOUT)
-      .waitForExist('span=Complete!', EXIST_TIMEOUT)
+      .click('a=Home')
+      .waitForVisible('div.panel:first-child', EXIST_TIMEOUT)
+      .element('div.panel:first-child')
+      .waitForExist('a=View Results', COMPUTATION_TIMEOUT)
+      .element('div.panel:first-child')
+      .click('a=View Results')
+      .waitForVisible('h3=Regressions', EXIST_TIMEOUT)
+      .isVisible(`span=Results: ${CONS_NAME} || ${PIPE_NAME}`).should.eventually.equal(true)
   ));
-
-  it('deletes files', () => (
-    app.client
-      .click('a=My Files')
-      .waitForExist('a=Add Files Collection', EXIST_TIMEOUT)
-      .click(`#delete-${CONS_NAME}`)
-      .isVisible(`#delete-${CONS_NAME}`).should.eventually.equal(false)
-  ));
-
-  it('deletes a consortium', () => (
-    app.client
-      .click('a=Consortia')
-      .waitForExist('a=Add Consortium', EXIST_TIMEOUT)
-      .click(`#delete-${CONS_NAME}`)
-      .isVisible(`a=${CONS_NAME}`).should.eventually.equal(false)
-  ));*/
 
   it('logs out', () => (
     app.client
