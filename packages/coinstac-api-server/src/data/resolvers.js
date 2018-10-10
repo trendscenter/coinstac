@@ -238,6 +238,7 @@ const resolvers = {
      * @param {object} args
      * @param {string} args.doc Id of the document to add role to
      * @param {string} args.role Role to add to perms
+     * @param {string} args.userId Id of the user to be added
      * @return {object} Updated user object
      */
     addUserRole: ({ auth: { credentials } }, args) => {
@@ -285,7 +286,7 @@ const resolvers = {
               promises.push(
                 rethink.table('consortia').get(args.doc).update(
                   {
-                    [`${args.role}s`]: rethink.row(`${args.role}s`).append(userId)
+                    [`${args.role}s`]: rethink.row(`${args.role}s`).append(args.userId)
                   }
                 ).run(connection)
               );
@@ -519,6 +520,7 @@ const resolvers = {
      * @param {object} args
      * @param {string} args.doc Id of the document to add role to
      * @param {string} args.role Role to add to perms
+     * @param {string} args.userId Id of the user to be removed
      * @return {object} Updated user object
      */
     removeUserRole: ({ auth: { credentials } }, args) => {
@@ -566,7 +568,7 @@ const resolvers = {
           promises.push(
             rethink.table('consortia').get(args.doc).update(
               {
-                [`${args.role}s`]: rethink.row(`${args.role}s`).difference([userId])
+                [`${args.role}s`]: rethink.row(`${args.role}s`).difference([args.userId])
               }
             ).run(connection)
           );
