@@ -43,7 +43,7 @@ class CollectionPipelineInput extends Component {
     this.setSourceFile = this.setSourceFile.bind(this);
   }
 
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     const cons = nextProps.associatedConsortia
       .find(cons => cons.id === this.props.consortiumId);
 

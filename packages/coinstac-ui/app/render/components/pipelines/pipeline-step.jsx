@@ -72,7 +72,7 @@ class PipelineStep extends Component {
     this.showOutput = this.showOutput.bind(this);
   }
 
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     let orderedInputs = [];
 
     // TODO: Find another way to force possibleInputs array to

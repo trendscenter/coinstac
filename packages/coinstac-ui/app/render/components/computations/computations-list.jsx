@@ -56,12 +56,12 @@ class ComputationsList extends Component { // eslint-disable-line
     this.props.getDockerImages();
   }
 
-  componentWillReceiveProps(nextProps) {
-    const { user } = this.props.auth;
+  static getDerivedStateFromProps(props) {
+    const { computations, user } = props;
     const ownedComputations = [];
     const otherComputations = [];
-    if (nextProps.computations && nextProps.computations.length > MAX_LENGTH_COMPUTATIONS) {
-      nextProps.computations.forEach((comp) => {
+    if (computations && computations.length > MAX_LENGTH_COMPUTATIONS) {
+      computations.forEach((comp) => {
         if (user.id === comp.submittedBy) {
           ownedComputations.push(comp);
         } else {
@@ -69,7 +69,7 @@ class ComputationsList extends Component { // eslint-disable-line
         }
       });
     }
-    this.setState({ ownedComputations, otherComputations });
+    return { ownedComputations, otherComputations };
   }
 
   getTable(computations) {

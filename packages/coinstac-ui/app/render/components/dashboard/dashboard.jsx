@@ -116,7 +116,7 @@ class Dashboard extends Component {
     });
   }
 
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     const { auth: { user }, client } = this.props;
     const { router } = this.context;
 
