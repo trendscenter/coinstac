@@ -15,6 +15,7 @@ const ListItem = ({ owner, itemOptions, itemObject, itemRoute, deleteItem }) => 
         bsStyle="danger"
         onClick={deleteItem(itemObject.id)}
         className="pull-right"
+        name={`${itemObject.name}-delete`}
       >
         Delete
       </Button>

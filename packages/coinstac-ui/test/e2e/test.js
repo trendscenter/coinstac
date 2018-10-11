@@ -246,6 +246,16 @@ describe('Testing::e2e', () => {
       .isVisible(`span=Results: ${CONS_NAME} || ${PIPE_NAME}`).should.eventually.equal(true)
   ));
 
+  it('deletes consortium', () => (
+    app.client
+      .click('a=Consortia')
+      .waitForVisible(`button[name="${CONS_NAME}-delete"]`, EXIST_TIMEOUT)
+      .click(`button[name="${CONS_NAME}-delete"]`)
+      .element('.modal-dialog')
+      .click('button=Delete')
+      .waitForVisible(`h3=${CONS_NAME}`, EXIST_TIMEOUT, true)
+  ));
+
   it('logs out', () => (
     app.client
       .click('button=Log Out')
