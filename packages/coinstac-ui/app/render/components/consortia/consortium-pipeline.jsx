@@ -28,7 +28,7 @@ class ConsortiumPipeline extends Component {
       this.removeCollectionsFromAssociatedConsortia.bind(this);
   }
 
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     if (this.props.pipelines.length > 0 && nextProps.consortium.activePipelineId) {
       const activePipeline = this.props.pipelines
         .find(cons => cons.id === nextProps.consortium.activePipelineId);

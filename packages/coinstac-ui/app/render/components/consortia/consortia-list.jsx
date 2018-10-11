@@ -78,19 +78,20 @@ class ConsortiaList extends Component {
     this.startPipeline = this.startPipeline.bind(this);
   }
 
-  componentWillReceiveProps(nextProps) {
+  static getDerivedStateFromProps(props) {
+    const { auth, consortia } = props;
     const ownedConsortia = [];
     const otherConsortia = [];
-    if (nextProps.consortia && nextProps.consortia.length > MAX_LENGTH_CONSORTIA) {
-      nextProps.consortia.forEach((cons) => {
-        if (cons.owners.indexOf(this.props.auth.user.id) > -1) {
+    if (consortia && consortia.length > MAX_LENGTH_CONSORTIA) {
+      consortia.forEach((cons) => {
+        if (cons.owners.indexOf(auth.user.id) > -1) {
           ownedConsortia.push(cons);
         } else {
           otherConsortia.push(cons);
         }
       });
     }
-    this.setState({ ownedConsortia, otherConsortia });
+    return { ownedConsortia, otherConsortia };
   }
 
   getOptions(member, owner, consortium) {
