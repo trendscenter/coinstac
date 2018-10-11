@@ -9,7 +9,7 @@ const mocksPath = path.join(__dirname, 'mocks.js');
 
 const EXIST_TIMEOUT = 4000;
 const NOTIFICATION_DISMISS_TIMEOUT = 6000;
-const COMPUTATION_TIMEOUT = 60000;
+const COMPUTATION_TIMEOUT = 120000;
 const USER_ID = 'test1';
 const PASS = 'password';
 const CONS_NAME = 'e2e-consortium';
