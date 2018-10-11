@@ -47,6 +47,7 @@ describe('Testing::e2e', () => {
 
   it('authenticates demo user', () => (
     app.client
+      .waitForVisible('#login-username', EXIST_TIMEOUT)
       .setValue('#login-username', USER_ID)
       .setValue('#login-password', PASS)
       .click('button=Log In')
