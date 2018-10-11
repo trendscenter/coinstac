@@ -4,4 +4,4 @@
 .vscode
 coverage
 node_modules
-packages/coinstac-ui/app/render/build/
+packages/coinstac-ui/build/
