@@ -27,8 +27,9 @@ export const consortiaMembershipProp = (name) => {
             const consQuery = store.readQuery({ query: FETCH_ALL_CONSORTIA_QUERY });
             const index = consQuery.fetchAllConsortia.findIndex((cons) => {
               if (cons && data[name]) {
-                cons.id === data[name].id;
+                return cons.id === data[name].id;
               }
+              return false;
             });
             if (index > -1) {
               consQuery.fetchAllConsortia[index].members = data[name].members;
