@@ -1,9 +1,9 @@
 'use strict';
 
 const common = require('coinstac-common');
-const ComputationService = require('../../src/sub-api/computation-service');
 const sinon = require('sinon');
 const tape = require('tape');
+const ComputationService = require('../../src/sub-api/computation-service');
 
 const Computation = common.models.computation.Computation;
 const RemoteComputationResult = common.models.computation.RemoteComputationResult;
@@ -249,8 +249,8 @@ tape('ComputationService :: doTriggerRunner', (t) => {
       );
 
       t.ok(
-        args[0].computationId === 'the-most-active-id-evar' &&
-        args[0].consortiumId === consortiumId,
+        args[0].computationId === 'the-most-active-id-evar'
+        && args[0].consortiumId === consortiumId,
         'sets computation and consortium IDs on remote computation result'
       );
 

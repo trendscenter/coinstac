@@ -2,9 +2,9 @@
 
 // Conditionally load development services if run from CLI
 if (
-  process.defaultApp &&
-  process.env.NODE_ENV !== 'production' &&
-  process.env.NODE_ENV !== 'test'
+  process.defaultApp
+  && process.env.NODE_ENV !== 'production'
+  && process.env.NODE_ENV !== 'test'
 ) {
   // active long stack trace
   require('trace'); // eslint-disable-line global-require
@@ -18,12 +18,12 @@ if (
     return frames.filter((callSite) => {
       const name = callSite && callSite.getFileName();
       const include = !(
-        !name ||
-        name.indexOf(sep) === -1 ||
-        name.match(/internal\//) ||
-        name.match(/tick/) ||
-        name.match(/electron-preb/)
-     );
+        !name
+        || name.indexOf(sep) === -1
+        || name.match(/internal\//)
+        || name.match(/tick/)
+        || name.match(/electron-preb/)
+      );
       return include;
     });
   });

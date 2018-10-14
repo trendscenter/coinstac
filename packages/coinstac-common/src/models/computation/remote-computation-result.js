@@ -1,7 +1,7 @@
 'use strict';
 
-const ComputationResult = require('./computation-result');
 const joi = require('joi');
+const ComputationResult = require('./computation-result');
 
 /* istanbul ignore next */
 /**

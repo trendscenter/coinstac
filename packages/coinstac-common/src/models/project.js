@@ -1,7 +1,7 @@
 'use strict';
 
-const PouchDocument = require('./pouch-document');
 const joi = require('joi');
+const PouchDocument = require('./pouch-document');
 
 /**
  * @class Project

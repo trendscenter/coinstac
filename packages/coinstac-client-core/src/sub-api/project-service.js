@@ -4,11 +4,9 @@
  * @module project-service
  */
 
-const ModelService = require('../model-service');
 const Project = require('coinstac-common').models.Project;
 const bluebird = require('bluebird');
 const coinstacCommon = require('coinstac-common');
-const fileStats = require('../utils/file-stats');
 const fs = require('fs');
 const path = require('path');
 const camelCase = require('lodash/camelCase');
@@ -16,6 +14,8 @@ const difference = require('lodash/difference');
 const find = require('lodash/find');
 const includes = require('lodash/includes');
 const findKey = require('lodash/findKey');
+const fileStats = require('../utils/file-stats');
+const ModelService = require('../model-service');
 
 /**
  * @class
@@ -119,8 +119,8 @@ class ProjectService extends ModelService {
             ), 10);
 
             if (
-              typeof metaColumnIndex !== 'number' ||
-              Number.isNaN(metaColumnIndex)
+              typeof metaColumnIndex !== 'number'
+              || Number.isNaN(metaColumnIndex)
             ) {
               throw new Error(`Couldn't find covariate mapping for "${name}"`);
             }
@@ -166,9 +166,9 @@ class ProjectService extends ModelService {
            * the base.
            */
           const metaRow = metaFile.find(([metaFilename]) => (
-            path.isAbsolute(metaFilename) ?
-              filename === metaFilename :
-              filename === path.resolve(
+            path.isAbsolute(metaFilename)
+              ? filename === metaFilename
+              : filename === path.resolve(
                 path.dirname(project.metaFilePath),
                 metaFilename
               )
@@ -331,7 +331,9 @@ class ProjectService extends ModelService {
    * @param {Object} options.doc
    * @param {string} options.projectId
    */
-  static handleRemoteResultChange({ callback, consortiumId, doc, projectId }) {
+  static handleRemoteResultChange({
+    callback, consortiumId, doc, projectId,
+  }) {
     callback(null, { consortiumId, doc, projectId });
   }
 
@@ -345,7 +347,9 @@ class ProjectService extends ModelService {
    * @param {Object} options.doc
    * @param {string} options.projectId
    */
-  static handleRemoteResultDelete({ callback, consortiumId, doc, projectId }) {
+  static handleRemoteResultDelete({
+    callback, consortiumId, doc, projectId,
+  }) {
     callback(null, { consortiumId, doc, projectId });
   }
 
@@ -445,8 +449,8 @@ class ProjectService extends ModelService {
       return !includes(toRemove, existing.filename);
     });
     return this.save(project)
-    .then(doc => Object.assign(project, doc))
-    .then(() => project.files);
+      .then(doc => Object.assign(project, doc))
+      .then(() => project.files);
   }
 
   /**

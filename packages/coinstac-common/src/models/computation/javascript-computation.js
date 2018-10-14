@@ -1,7 +1,7 @@
 'use strict';
 
-const Computation = require('./computation.js');
 const joi = require('joi');
+const Computation = require('./computation.js');
 
 /**
  * @class JavascriptComputation

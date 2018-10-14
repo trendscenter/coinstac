@@ -33,7 +33,7 @@ function buildBasicStat(filepath, recurse = false) {
       return readdirAsync(filepath).then(files => Promise.all(
         files.map(f => buildBasicStat(path.join(filepath, f)))
       ));
-    } else if (stats.isFile() && path.basename(filepath)[0] !== '.') {
+    } if (stats.isFile() && path.basename(filepath)[0] !== '.') {
       return {
         filename: filepath,
         modified: stats.mtime.getTime(),
@@ -58,7 +58,7 @@ module.exports = {
    */
   _appendSha(fileMeta) {
     return shaAsync(fileMeta.filename)
-    .then(rSha => Object.assign(fileMeta, { sha: rSha }));
+      .then(rSha => Object.assign(fileMeta, { sha: rSha }));
   },
 
   /**

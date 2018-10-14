@@ -1,8 +1,8 @@
 'use strict';
 
 require('../../../helpers/boot');
-const common = require('../../../../');
 const test = require('tape');
+const common = require('../../../../');
 const runnerUtils = require('./.test-runner-utils');
 
 const RemotePipelineRunner = common.models.pipeline.runner.RemotePipelineRunner;
@@ -22,43 +22,43 @@ test('RemotePipelineRunner::run - basic', (t) => {
 
   // seed user results db with a result
   runner.localDB.save(localResult.serialize())
-  .then((doc) => { localResult._rev = doc._rev; })
+    .then((doc) => { localResult._rev = doc._rev; })
   // run, then assert runner state is per expectation
-  .then(() => runner.run(localResult))
-  .then((result) => {
-    t.ok(result.pipelineState, 'serialized pipeline state persists');
-    t.equal(runner.userResultState.length, 1, 'user results state cached');
-    t.deepEqual(
-      runner.userResultState[0],
-      { _id: localResult._id, _rev: localResult._rev },
-      'user state updated ok, composed of _id, _rev'
-    );
-  })
+    .then(() => runner.run(localResult))
+    .then((result) => {
+      t.ok(result.pipelineState, 'serialized pipeline state persists');
+      t.equal(runner.userResultState.length, 1, 'user results state cached');
+      t.deepEqual(
+        runner.userResultState[0],
+        { _id: localResult._id, _rev: localResult._rev },
+        'user state updated ok, composed of _id, _rev'
+      );
+    })
   // assert userResultState not updated, and duplicate pipeline run
   // has been prevented (reduce friv computation runs)
-  .then(() => {
-    const prevUserResultState = cloneDeep(runner.userResultState);
-    const pipelineRunStub = () => {
+    .then(() => {
+      const prevUserResultState = cloneDeep(runner.userResultState);
+      const pipelineRunStub = () => {
       // sinon stub is freaking out, so self-stub
-      pipelineRunStub.called = true;
-      runner.pipeline.run(...arguments);
-    };
-    runner.pipeline.run = pipelineRunStub;
-    runner.events.on('noop:noStateChange', () => {
-      t.deepEqual(
-        runner.userResultState,
-        prevUserResultState,
-        'result states match'
-      );
-      t.notOk(
-        pipelineRunStub.called,
-        'pipeline _not_ re-run when results user results unchanged'
-      );
-      t.end();
-    });
-    return runner.run(localResult);
-  })
-  .catch(t.end);
+        pipelineRunStub.called = true;
+        runner.pipeline.run(...arguments);
+      };
+      runner.pipeline.run = pipelineRunStub;
+      runner.events.on('noop:noStateChange', () => {
+        t.deepEqual(
+          runner.userResultState,
+          prevUserResultState,
+          'result states match'
+        );
+        t.notOk(
+          pipelineRunStub.called,
+          'pipeline _not_ re-run when results user results unchanged'
+        );
+        t.end();
+      });
+      return runner.run(localResult);
+    })
+    .catch(t.end);
 });
 
 test('RemotePipelineRunner::run - basic - input errors', (t) => {

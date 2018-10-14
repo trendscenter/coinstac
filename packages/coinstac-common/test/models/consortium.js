@@ -1,8 +1,8 @@
 'use strict';
 
-const Consortium = require('../../').models.Consortium;
 const test = require('tape');
 const _ = require('lodash');
+const Consortium = require('../../').models.Consortium;
 
 const validOpts = () => ({
   _id: 'testConsortiumId',

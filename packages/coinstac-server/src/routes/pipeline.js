@@ -18,51 +18,48 @@ const authenticateServer = () => {
     `${config.apiServer}/authenticate`,
     dbmap.rethinkdbServer
   )
-  .then((token) => {
-    this.id_token = token.data.id_token;
-    axios.defaults.headers.common.Authorization = `Bearer ${this.id_token}`;
-    return this.id_token;
-  });
+    .then((token) => {
+      this.id_token = token.data.id_token;
+      axios.defaults.headers.common.Authorization = `Bearer ${this.id_token}`;
+      return this.id_token;
+    });
 };
 
-const updateRunState = (runId, data) =>
-  axios({
-    method: 'post',
-    url: `${config.apiServer}/graphql`,
-    data: {
-      query: `mutation($runId: ID!, $data: JSON) ${graphqlSchema.mutations.updateRunState.replace(/\s{2,10}/g, ' ')}`,
-      variables: {
-        runId,
-        data,
-      },
+const updateRunState = (runId, data) => axios({
+  method: 'post',
+  url: `${config.apiServer}/graphql`,
+  data: {
+    query: `mutation($runId: ID!, $data: JSON) ${graphqlSchema.mutations.updateRunState.replace(/\s{2,10}/g, ' ')}`,
+    variables: {
+      runId,
+      data,
     },
-  });
+  },
+});
 
-const saveError = (runId, error) =>
-  axios({
-    method: 'post',
-    url: `${config.apiServer}/graphql`,
-    data: {
-      query: `mutation($runId: ID!, $error: JSON) ${graphqlSchema.mutations.saveError.replace(/\s{2,10}/g, ' ')}`,
-      variables: {
-        runId,
-        error,
-      },
+const saveError = (runId, error) => axios({
+  method: 'post',
+  url: `${config.apiServer}/graphql`,
+  data: {
+    query: `mutation($runId: ID!, $error: JSON) ${graphqlSchema.mutations.saveError.replace(/\s{2,10}/g, ' ')}`,
+    variables: {
+      runId,
+      error,
     },
-  });
+  },
+});
 
-const saveResults = (runId, results) =>
-  axios({
-    method: 'post',
-    url: `${config.apiServer}/graphql`,
-    data: {
-      query: `mutation($runId: ID!, $results: JSON) ${graphqlSchema.mutations.saveResults.replace(/\s{2,10}/g, ' ')}`,
-      variables: {
-        runId,
-        results,
-      },
+const saveResults = (runId, results) => axios({
+  method: 'post',
+  url: `${config.apiServer}/graphql`,
+  data: {
+    query: `mutation($runId: ID!, $results: JSON) ${graphqlSchema.mutations.saveResults.replace(/\s{2,10}/g, ' ')}`,
+    variables: {
+      runId,
+      results,
     },
-  });
+  },
+});
 
 module.exports = [
   {
@@ -72,41 +69,41 @@ module.exports = [
       // auth: 'jwt',
       handler: (req, res) => {
         authenticateServer()
-        .then(() => {
-          const run = req.payload.run;
-
-          const computationImageList = run.pipelineSnapshot.steps
-          .map(step => step.computations
-            .map(comp => comp.computation.dockerImage))
-            .reduce((acc, val) => acc.concat(val), []);
-
-          pullImagesFromList(computationImageList)
-          .then(() => pruneImages())
           .then(() => {
-            const { result, stateEmitter } = this.remotePipelineManager.startPipeline({
-              clients: run.clients,
-              spec: run.pipelineSnapshot,
-              runId: run.id,
-            });
-            res({}).code(201);
+            const run = req.payload.run;
 
-            stateEmitter.on('update', (data) => {
-              // TODO:  console most likely should be removed post proto development
-              // or made less noisy
-              console.log(data); // eslint-disable-line no-console
-              updateRunState(run.id, data);
-            });
+            const computationImageList = run.pipelineSnapshot.steps
+              .map(step => step.computations
+                .map(comp => comp.computation.dockerImage))
+              .reduce((acc, val) => acc.concat(val), []);
 
-            return result
-            .then((result) => {
-              saveResults(run.id, result);
-            })
-            .catch((error) => {
-              console.log(error); // eslint-disable-line no-console
-              saveError(run.id, error);
-            });
+            pullImagesFromList(computationImageList)
+              .then(() => pruneImages())
+              .then(() => {
+                const { result, stateEmitter } = this.remotePipelineManager.startPipeline({
+                  clients: run.clients,
+                  spec: run.pipelineSnapshot,
+                  runId: run.id,
+                });
+                res({}).code(201);
+
+                stateEmitter.on('update', (data) => {
+                  // TODO:  console most likely should be removed post proto development
+                  // or made less noisy
+                  console.log(data); // eslint-disable-line no-console
+                  updateRunState(run.id, data);
+                });
+
+                return result
+                  .then((result) => {
+                    saveResults(run.id, result);
+                  })
+                  .catch((error) => {
+                    console.log(error); // eslint-disable-line no-console
+                    saveError(run.id, error);
+                  });
+              });
           });
-        });
       },
     },
   },

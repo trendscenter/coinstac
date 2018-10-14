@@ -13,7 +13,6 @@ const getSyncedDatabase = common.utils.getSyncedDatabase;
  * @property {Function} this.ModelType
  */
 class ModelService {
-
   /**
    * model-service base class. abstracts common model methods
    * @param {object} opts
@@ -172,7 +171,6 @@ class ModelService {
       return Promise.reject(error);
     }
   }
-
 }
 
 module.exports = ModelService;

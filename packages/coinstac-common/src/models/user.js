@@ -1,7 +1,7 @@
 'use strict';
 
-const Base = require('./base.js');
 const joi = require('joi');
+const Base = require('./base.js');
 
 /**
  * @class User

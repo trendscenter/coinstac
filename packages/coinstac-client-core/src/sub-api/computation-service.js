@@ -119,34 +119,34 @@ class ComputationService extends ModelService {
     const { pool } = this.client;
     if (!consortiumId) {
       return Promise.reject(new Error('Consortium ID required'));
-    } else if (!projectId) {
+    } if (!projectId) {
       return Promise.reject(new Error('Project ID required'));
-    } else if (!runId) {
+    } if (!runId) {
       return Promise.reject(new Error('Computation run ID required'));
     }
 
     return this.checkProjectCompInputs({ consortiumId, projectId })
-    .then(([consortium, project]) => {
-      const options = {
-        _id: runId,
-        computationId: consortium.activeComputationId,
-        computationInputs: consortium.activeComputationInputs,
-        consortiumId,
-      };
-
-      if (
-        consortium.activeComputationInputs &&
-        Array.isArray(consortium.activeComputationInputs)
-      ) {
-        options.pluginState = {
-          inputs: consortium.activeComputationInputs,
+      .then(([consortium, project]) => {
+        const options = {
+          _id: runId,
+          computationId: consortium.activeComputationId,
+          computationInputs: consortium.activeComputationInputs,
+          consortiumId,
         };
-      }
 
-      const result = new RemoteComputationResult(options);
+        if (
+          consortium.activeComputationInputs
+        && Array.isArray(consortium.activeComputationInputs)
+        ) {
+          options.pluginState = {
+            inputs: consortium.activeComputationInputs,
+          };
+        }
 
-      return pool.triggerRunner(result, project);
-    });
+        const result = new RemoteComputationResult(options);
+
+        return pool.triggerRunner(result, project);
+      });
   }
 
   /**
@@ -192,29 +192,29 @@ class ComputationService extends ModelService {
   joinSlavedRun({ consortiumId, projectId, runId }) {
     const { pool } = this.client;
     this.checkProjectCompInputs({ consortiumId, projectId })
-    .then(([consortium, project]) => {
-      return Promise.all([
-        consortium,
-        project,
-        this.client.dbRegistry.get(`remote-consortium-${consortiumId}`).get(runId),
-      ]);
-    })
-    .then(([consortium, project, resultDoc]) => {
-      const options = {};
-      if (
-        consortium.activeComputationInputs &&
-        Array.isArray(consortium.activeComputationInputs) &&
-        !resultDoc.pluginState.inputs
-      ) {
-        options.pluginState = {
-          inputs: consortium.activeComputationInputs,
-        };
-      }
+      .then(([consortium, project]) => {
+        return Promise.all([
+          consortium,
+          project,
+          this.client.dbRegistry.get(`remote-consortium-${consortiumId}`).get(runId),
+        ]);
+      })
+      .then(([consortium, project, resultDoc]) => {
+        const options = {};
+        if (
+          consortium.activeComputationInputs
+        && Array.isArray(consortium.activeComputationInputs)
+        && !resultDoc.pluginState.inputs
+        ) {
+          options.pluginState = {
+            inputs: consortium.activeComputationInputs,
+          };
+        }
 
-      const result = new RemoteComputationResult(Object.assign({}, resultDoc, options));
+        const result = new RemoteComputationResult(Object.assign({}, resultDoc, options));
 
-      return pool.triggerRunner(result, project);
-    });
+        return pool.triggerRunner(result, project);
+      });
   }
 
   /**

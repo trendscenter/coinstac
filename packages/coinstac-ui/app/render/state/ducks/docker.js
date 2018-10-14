@@ -12,55 +12,40 @@ export const REMOVE_IMAGE = 'REMOVE_IMAGE';
 export const UPDATE_DOCKER_OUTPUT = 'UPDATE_DOCKER_OUTPUT';
 
 // Action Creators
-export const getDockerStatus = applyAsyncLoading(() =>
-  dispatch =>
-    ipcPromise.send('get-status')
-      .then((res) => {
-        dispatch({ status: res });
-        return res;
-      })
-);
+export const getDockerStatus = applyAsyncLoading(() => dispatch => ipcPromise.send('get-status')
+  .then((res) => {
+    dispatch({ status: res });
+    return res;
+  }));
 
-export const getDockerImages = applyAsyncLoading(() =>
-  dispatch =>
-    ipcPromise.send('get-all-images')
-      .then(res =>
-        dispatch({ payload: res, type: GET_LOCAL_IMAGES })
-      )
-);
+export const getDockerImages = applyAsyncLoading(() => dispatch => ipcPromise.send('get-all-images')
+  .then(res => dispatch({ payload: res, type: GET_LOCAL_IMAGES })));
 
-export const pullComputations = applyAsyncLoading(compsAndConsortiumId =>
-  dispatch =>
-    ipcPromise.send('download-comps', compsAndConsortiumId)
-    .then((res) => {
-      dispatch({ payload: true, type: PULL_COMPUTATIONS });
-      return res;
-    })
-    .catch((err) => {
-      dispatch({ payload: false, type: PULL_COMPUTATIONS });
-      return err;
-    })
-);
+export const pullComputations = applyAsyncLoading(compsAndConsortiumId => dispatch => ipcPromise.send('download-comps', compsAndConsortiumId)
+  .then((res) => {
+    dispatch({ payload: true, type: PULL_COMPUTATIONS });
+    return res;
+  })
+  .catch((err) => {
+    dispatch({ payload: false, type: PULL_COMPUTATIONS });
+    return err;
+  }));
 
-export const removeImage = applyAsyncLoading((compId, imgName, imgId) =>
-  dispatch =>
-    ipcPromise.send('remove-image', { compId, imgId, imgName })
-    .then(() => {
-      dispatch({ payload: imgName, type: REMOVE_IMAGE });
-    })
-);
+export const removeImage = applyAsyncLoading((compId, imgName, imgId) => dispatch => ipcPromise.send('remove-image', { compId, imgId, imgName })
+  .then(() => {
+    dispatch({ payload: imgName, type: REMOVE_IMAGE });
+  }));
 
-export const updateDockerOutput = (output =>
-  (dispatch) => {
-    if (output.output[0].status && output.output[0].status === 'error') {
-      dispatch(notifyError({ message: `Docker Error with ${output.compName}` }));
-    } else if (output.output[0].id && output.output[0].id.indexOf('-complete') > -1) {
-      dispatch(notifySuccess({ message: `${output.compName} Download Complete` }));
-      dispatch(getDockerImages());
-    }
-
-    dispatch({ payload: output, type: UPDATE_DOCKER_OUTPUT });
+export const updateDockerOutput = (output => (dispatch) => {
+  if (output.output[0].status && output.output[0].status === 'error') {
+    dispatch(notifyError({ message: `Docker Error with ${output.compName}` }));
+  } else if (output.output[0].id && output.output[0].id.indexOf('-complete') > -1) {
+    dispatch(notifySuccess({ message: `${output.compName} Download Complete` }));
+    dispatch(getDockerImages());
   }
+
+  dispatch({ payload: output, type: UPDATE_DOCKER_OUTPUT });
+}
 );
 
 const INITIAL_STATE = {
@@ -109,9 +94,7 @@ export default function reducer(state = INITIAL_STATE, action) {
         if (newOut.id && newOut.id !== 'latest') {
           elemIndex = outputCopy.findIndex(currentOut => newOut.id === currentOut.id);
         } else if (newOut.id && newOut.id === 'latest') {
-          elemIndex = outputCopy.findIndex(currentOut =>
-            newOut.id === currentOut.id && newOut.status === currentOut.status
-          );
+          elemIndex = outputCopy.findIndex(currentOut => newOut.id === currentOut.id && newOut.status === currentOut.status);
         }
 
         if (elemIndex === -1 && !newOut.id) {

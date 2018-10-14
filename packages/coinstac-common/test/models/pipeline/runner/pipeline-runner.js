@@ -1,9 +1,9 @@
 'use strict';
 
 require('../../../helpers/boot');
+const test = require('tape');
 const runnerUtils = require('./.test-runner-utils');
 const common = require('../../../../');
-const test = require('tape');
 
 const Runner = common.models.pipeline.runner.PipelineRunner;
 
@@ -19,14 +19,14 @@ test('saveResult - basic', (t) => {
   const db = runnerUtils.getDB('testdb'); // use for local and remote
   t.plan(3);
   runner.saveResult(db, { bananas: 1 })
-  .then(() => db.all().then(docs => docs[0]))
-  .then((doc) => {
-    t.ok(doc.pipelineState, 'serialized pipeline state persists');
-    t.deepEqual(doc.data, { bananas: 1 }, 'computation result stashed to `.data`');
-  })
-  .then(() => db.destroy())
-  .then(() => t.pass('db destroyed'))
-  .then(() => t.end(), t.end);
+    .then(() => db.all().then(docs => docs[0]))
+    .then((doc) => {
+      t.ok(doc.pipelineState, 'serialized pipeline state persists');
+      t.deepEqual(doc.data, { bananas: 1 }, 'computation result stashed to `.data`');
+    })
+    .then(() => db.destroy())
+    .then(() => t.pass('db destroyed'))
+    .then(() => t.end(), t.end);
 });
 
 test('saveResult - basic - noop\'s on empty save', (t) => {
@@ -34,16 +34,16 @@ test('saveResult - basic - noop\'s on empty save', (t) => {
   const db = runnerUtils.getDB('testdb'); // use for local and remote
   t.plan(2);
   runner.saveResult(db, null, null)
-  .then(() => {
-    return new Promise((res) => {
-      runner.events.on('noop:noData', res);
-      runner.saveResult(db, null, null);
-    });
-  })
-  .then(() => t.pass('noop:noData occurs when computation saves empty result'))
-  .then(() => db.destroy())
-  .then(() => t.pass('db destroyed'))
-  .then(() => t.end(), t.end);
+    .then(() => {
+      return new Promise((res) => {
+        runner.events.on('noop:noData', res);
+        runner.saveResult(db, null, null);
+      });
+    })
+    .then(() => t.pass('noop:noData occurs when computation saves empty result'))
+    .then(() => db.destroy())
+    .then(() => t.pass('db destroyed'))
+    .then(() => t.end(), t.end);
 });
 
 test('saveResult - basic - error', (t) => {
@@ -62,8 +62,8 @@ test('saveResult - basic - error', (t) => {
     return null;
   });
   runner.saveResult(db, { bananas: 2 })
-  .catch(() => t.pass('rejected on error'))
-  .then(t.end, t.end);
+    .catch(() => t.pass('rejected on error'))
+    .then(t.end, t.end);
 });
 
 test('getPreviousResult', (t) => {
@@ -75,24 +75,24 @@ test('getPreviousResult', (t) => {
 
   const hasNoPrevResultPreAdd = () => {
     return runner.getPreviousResult(db)
-    .then(prev => t.notOk(prev.prevData, 'has no prev result'))
-    .catch(t.end);
+      .then(prev => t.notOk(prev.prevData, 'has no prev result'))
+      .catch(t.end);
   };
 
   const addResult = () => runner.saveResult(db, toAdd);
 
   const hasPrevResult = () => {
     return runner.getPreviousResult(db)
-    .then((prev) => {
-      t.deepEqual(prev.prevData, toAdd, 'has prev result');
-      // TODO: Determine how to better test `pluginState` retrieval
-      t.ok('pluginState' in prev, 'has plugin state');
-    })
-    .catch(t.end);
+      .then((prev) => {
+        t.deepEqual(prev.prevData, toAdd, 'has prev result');
+        // TODO: Determine how to better test `pluginState` retrieval
+        t.ok('pluginState' in prev, 'has plugin state');
+      })
+      .catch(t.end);
   };
 
   hasNoPrevResultPreAdd()
-  .then(addResult)
-  .then(hasPrevResult)
-  .then(t.end, t.end);
+    .then(addResult)
+    .then(hasPrevResult)
+    .then(t.end, t.end);
 });

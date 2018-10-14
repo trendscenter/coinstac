@@ -1,7 +1,7 @@
 'use strict';
 
-const pkg = require('../package.json');
 const joi = require('joi');
+const pkg = require('../package.json');
 const Bouncer = require('./bouncer.js');
 
 const optionSchema = joi.object().keys({

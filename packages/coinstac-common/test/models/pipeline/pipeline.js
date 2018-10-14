@@ -29,39 +29,39 @@ test('model::Pipeline run - basic (single, `run` error)', (t) => {
   const p = pipelines.basicError();
 
   p.run({}, {})
-  .catch((err) => {
-    t.ok(err instanceof Error, 'run error propogated, p1');
-    t.ok(err.message.match('test-run-error'), 'run error propogated, p2');
-    t.end();
-  });
+    .catch((err) => {
+      t.ok(err instanceof Error, 'run error propogated, p1');
+      t.ok(err.message.match('test-run-error'), 'run error propogated, p2');
+      t.end();
+    });
 });
 
 test('model::Pipeline run - basic (single comp, error, invalid opts)', (t) => {
   t.plan(1);
   const p = pipelines.basic();
   p.run(null, {})
-  .then(() => t.end('should error without `run` opts'))
-  .catch((err) => {
-    t.ok(err instanceof Error, 'errors without `run` opts');
-    t.end();
-  });
+    .then(() => t.end('should error without `run` opts'))
+    .catch((err) => {
+      t.ok(err instanceof Error, 'errors without `run` opts');
+      t.end();
+    });
 });
 
 test('model::Pipeline run - basic (forbid parallel running)', (t) => {
   t.plan(2);
   const p = pipelines.basicAsync();
   p.run({ async: 'is-happening-now, baby' }, {})
-  .catch(() => t.end('should error without `run` opts'));
+    .catch(() => t.end('should error without `run` opts'));
   p.run({}, {})
-  .then(() => t.end('should error when running pipeline instance .run concurrently'))
-  .catch((err) => {
-    t.ok(err instanceof Error, 'concurrent pipeline running forbidden');
-    t.ok(
-      err.message.match(/concurrency/),
-      'inProgress error explains concurrency'
-    );
-    return t.end();
-  });
+    .then(() => t.end('should error when running pipeline instance .run concurrently'))
+    .catch((err) => {
+      t.ok(err instanceof Error, 'concurrent pipeline running forbidden');
+      t.ok(
+        err.message.match(/concurrency/),
+        'inProgress error explains concurrency'
+      );
+      return t.end();
+    });
 });
 
 test('model::Pipeline run - basic (single)', (t) => {
@@ -70,8 +70,8 @@ test('model::Pipeline run - basic (single)', (t) => {
   const serial = p.serialize();
   t.notOk(serial.computations, 'computations not serialized');
   p.run({}, {})
-  .then(rslt => t.equal(rslt, 0, 'basic run returns computation result'))
-  .then(t.end, t.end);
+    .then(rslt => t.equal(rslt, 0, 'basic run returns computation result'))
+    .then(t.end, t.end);
 });
 
 test('model::Pipeline run - basic (double, immediate stepping w/out next)', (t) => {
@@ -92,7 +92,7 @@ test('model::Pipeline run - basic (double, immediate stepping w/out next)', (t) 
     t.end();
   });
   p.run({}, {})
-  .catch(t.end);
+    .catch(t.end);
 });
 
 test('model::Pipeline run - basic (double, immediate stepping w/ next)', (t) => {
@@ -109,52 +109,52 @@ test('model::Pipeline run - basic (double, immediate stepping w/ next)', (t) => 
     t.end();
   });
   p.run({}, {})
-  .catch(err => t.end(err && err.message));
+    .catch(err => t.end(err && err.message));
 });
 
 test('model::Pipeline maybeIncrementStep - basic (double, `next` errors pre-run)', (t) => {
   const p = pipelines.invalidOptsNextPreRunError();
   t.plan(2);
   p.run({}, {})
-  .then(() => t.end('error should have occurred'))
-  .catch((err) => {
-    t.ok(err instanceof Error, '`next` errors propogated, p1');
-    t.ok(err.message.match(/test-next-error-pre-run/), '`next` errors propogated, p2');
-    t.end();
-  });
+    .then(() => t.end('error should have occurred'))
+    .catch((err) => {
+      t.ok(err instanceof Error, '`next` errors propogated, p1');
+      t.ok(err.message.match(/test-next-error-pre-run/), '`next` errors propogated, p2');
+      t.end();
+    });
 });
 
 test('model::Pipeline maybeIncrementStep - basic (double, `next` errors post-run)', (t) => {
   const p = pipelines.invalidOptsNextPostRunError();
   t.plan(2);
   p.run({}, {})
-  .then(() => t.end('error should have occurred'))
+    .then(() => t.end('error should have occurred'))
   .catch((err) => { // eslint-disable-line
-    t.ok(err instanceof Error, '`next` errors propogated post-run, p1');
-    t.ok(
-      err.message.match(/test-next-post-run-error/),
-      '`next` errors propogated post-run, p2'
-    );
-    t.end();
-  });
+      t.ok(err instanceof Error, '`next` errors propogated post-run, p1');
+      t.ok(
+        err.message.match(/test-next-post-run-error/),
+        '`next` errors propogated post-run, p2'
+      );
+      t.end();
+    });
 });
 
 test('model::Pipeline run - intermediate (double, user event stepping)', (t) => {
   t.plan(4);
   const p = pipelines.userTriggeredStepping();
   p.run({}, {})
-  .then((rslt) => {
-    t.equal(p.step, 0, 'pipeline does not progress when `next` returns falsy');
-    t.equal(rslt, 1, 'result correct even when user does not trigger `next`');
+    .then((rslt) => {
+      t.equal(p.step, 0, 'pipeline does not progress when `next` returns falsy');
+      t.equal(rslt, 1, 'result correct even when user does not trigger `next`');
 
-    // simulate async activity, like responding to network events from dbs
-    setTimeout(() => {
-      p.run({ proceed: true }, {})
-      .then((rslt) => {
-        t.equal(p.step, 1, 'pipeline steps after user intent triggers `next`');
-        t.equal(rslt, 2, 'result is as expected after user triggers pipeline `next`');
-        t.end();
-      }, t.end);
-    }, 1);
-  }, t.end);
+      // simulate async activity, like responding to network events from dbs
+      setTimeout(() => {
+        p.run({ proceed: true }, {})
+          .then((rslt) => {
+            t.equal(p.step, 1, 'pipeline steps after user intent triggers `next`');
+            t.equal(rslt, 2, 'result is as expected after user triggers pipeline `next`');
+            t.end();
+          }, t.end);
+      }, 1);
+    }, t.end);
 });

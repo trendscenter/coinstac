@@ -44,7 +44,7 @@ test('builds & execs runners in response to db events', (t) => {
       .then(() => poolUtils.stubBasicComputation(compId))
       .then(() => {
         return pool.dbRegistry.get('computations')
-        .put({ _id: compId, name: compId, version: compId });
+          .put({ _id: compId, name: compId, version: compId });
       })
       .then(() => pool.init())
       .then(() => {
@@ -57,7 +57,7 @@ test('builds & execs runners in response to db events', (t) => {
         });
         const localResult = new LocalComputationResult(opts);
         return pool.dbRegistry.get(`local-consortium-${consortium._id}`)
-        .save(localResult.serialize());
+          .save(localResult.serialize());
       })
       .catch(t.end);
 
@@ -77,9 +77,9 @@ test('builds & execs runners in response to db events', (t) => {
     pool.events.on('queue:start', () => t.pass('queue executing on `staticRun`'));
     pool.events.on('queue:end', () => {
       pool.destroy({ deleteDBs: true })
-      .then(() => teardownServer())
-      .then(() => t.pass('pool tore-down ok'))
-      .then(t.end, t.end);
+        .then(() => teardownServer())
+        .then(() => t.pass('pool tore-down ok'))
+        .then(t.end, t.end);
     });
   });
 });
@@ -102,16 +102,16 @@ test('builds new listeners when new a new consortium is added', (t) => {
       });
     });
     pool.init()
-    .then(() => {
-      const rawConsortium = consortium.serialize();
-      // do _not_ return save P. we will halt on listenerCreatedP
-      pool.dbRegistry.get('consortia').save(rawConsortium);
-    })
-    .then(() => listenerCreatedP)
-    .then(() => pool.destroy({ deleteDBs: true }))
-    .then(() => teardownServer())
-    .then(() => t.pass('teardown ok'))
-    .then(t.end, t.end);
+      .then(() => {
+        const rawConsortium = consortium.serialize();
+        // do _not_ return save P. we will halt on listenerCreatedP
+        pool.dbRegistry.get('consortia').save(rawConsortium);
+      })
+      .then(() => listenerCreatedP)
+      .then(() => pool.destroy({ deleteDBs: true }))
+      .then(() => teardownServer())
+      .then(() => t.pass('teardown ok'))
+      .then(t.end, t.end);
   });
 });
 
@@ -125,25 +125,25 @@ test('fetch or seed computation results on init', (t) => {
 
     // seed a result
     return resultDB.save(remoteResult.serialize())
-    .then(() => pool.init())
+      .then(() => pool.init())
     // fetch latest result, just seeded
-    .then(() => RemotePipelineRunnerPool.getLatestResult(resultDB, remoteResult.runId))
-    .then(rslt => t.ok(
-      rslt instanceof RemoteComputationResult,
-      'can fetch latest remote computation result'
-    ))
+      .then(() => RemotePipelineRunnerPool.getLatestResult(resultDB, remoteResult.runId))
+      .then(rslt => t.ok(
+        rslt instanceof RemoteComputationResult,
+        'can fetch latest remote computation result'
+      ))
     // fetch it again using higher level method (albeit this one will also
     // instantiate a result if none found--tested in integration)
     // @note really, we shoul be passing a local result ¯\_(LOC)_/¯
-    .then(() => pool.getRemoteResult(resultDB, remoteResult))
-    .then(rslt => t.ok(
-      rslt instanceof RemoteComputationResult,
-      'can fetch latest remote computation result'
-    ))
-    .then(() => pool.destroy({ deleteDBs: true }))
-    .then(() => teardownServer())
-    .then(() => t.pass('teardown ok'))
-    .then(t.end, t.end);
+      .then(() => pool.getRemoteResult(resultDB, remoteResult))
+      .then(rslt => t.ok(
+        rslt instanceof RemoteComputationResult,
+        'can fetch latest remote computation result'
+      ))
+      .then(() => pool.destroy({ deleteDBs: true }))
+      .then(() => teardownServer())
+      .then(() => t.pass('teardown ok'))
+      .then(t.end, t.end);
   });
 });
 
@@ -164,8 +164,8 @@ test('marks completed computations', (t) => {
       resultDB.get(runId).then(
         (doc) => {
           t.ok(
-            typeof doc.endDate === 'number' &&
-            Date.now() - doc.endDate < 200,
+            typeof doc.endDate === 'number'
+            && Date.now() - doc.endDate < 200,
             'sets end date'
           );
           t.equal(doc.complete, true, 'sets "completed" to true');

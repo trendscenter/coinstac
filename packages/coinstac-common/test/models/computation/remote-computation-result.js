@@ -24,20 +24,20 @@ test('constructor - runId', (t) => {
   const validOpts = genOpts();
   const invalidOpts = genOpts({ _id: `${wildRunId}-garbage` });
 
-    // test valid
+  // test valid
   try {
     const result = new RemoteComputationResult(validOpts); // eslint-disable-line no-unused-vars
     t.pass('valid constructor options ok');
     t.pass(
-      typeof result.startDate === 'number' &&
-      Date.now() - result.startDate < 100,
+      typeof result.startDate === 'number'
+      && Date.now() - result.startDate < 100,
       'sets start date'
     );
   } catch (err) {
     return t.end(err.message);
   }
 
-    // test invalid
+  // test invalid
   t.throws(
     () => (new RemoteComputationResult(invalidOpts)),
     /Error/,

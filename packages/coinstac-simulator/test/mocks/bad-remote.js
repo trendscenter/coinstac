@@ -23,4 +23,3 @@ module.exports = {
     y: Promise.reject('pikachu'),
   },
 };
-

@@ -31,7 +31,6 @@ const Computation = require('../computation/computation.js');
  * @property {EventEmitter} events
  */
 class Pipeline extends Base {
-
   constructor(opts) {
     super(opts);
     this.events = new EventEmitter();
@@ -114,7 +113,7 @@ class Pipeline extends Base {
       return Promise.reject(new Error(
         'Run inputs and ComputationResult required to pass to computations'
       ));
-    } else if (this.inProgress) {
+    } if (this.inProgress) {
       return Promise.reject(new Error(
         /* eslint-disable max-len */
         'Pipelines do not permit concurrent running. Please spawn a new pipeline instance if concurrency is required.'
@@ -208,23 +207,23 @@ class Pipeline extends Base {
 
     this.events.emit('computation:end', runInputs);
     const postRunInputs = assign({}, runInputs, { previousData: runOutput });
-    return (runCancelled ?
-      Promise.resolve(false) :
-      this.maybeIncrementStep(postRunInputs, false)
+    return (runCancelled
+      ? Promise.resolve(false)
+      : this.maybeIncrementStep(postRunInputs, false)
     )
-    .then((didIncrementStep) => {
+      .then((didIncrementStep) => {
       // set `inProgress` to represent whether we are about to be inProgress
       // again (e.g. if pipeline will run again). in this regard cb()s get
       // accurate depiction of state
-      this.inProgress = !!didIncrementStep;
-      this.events.emit('save-request', runOutput, null, forceSave);
-      this.inProgress = false; // reset
-      if (didIncrementStep) {
-        this.events.emit('inProgress', runOutput);
-        return this.run(postRunInputs, compResult);
-      }
-      return runOutput;
-    });
+        this.inProgress = !!didIncrementStep;
+        this.events.emit('save-request', runOutput, null, forceSave);
+        this.inProgress = false; // reset
+        if (didIncrementStep) {
+          this.events.emit('inProgress', runOutput);
+          return this.run(postRunInputs, compResult);
+        }
+        return runOutput;
+      });
   }
 
   /**
@@ -277,7 +276,7 @@ class Pipeline extends Base {
 
     if (this.computation.next) {
       return this.computation.next.run(opts).then(handleNextComplete);
-    } else if (isPreRun) {
+    } if (isPreRun) {
       // do not auto-progress w/out .next fn on-pre-run
       return Promise.resolve(false);
     }

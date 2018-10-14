@@ -69,14 +69,14 @@ test('PipelineRunnerPool - handles new dbs', (t) => {
     );
     const pool = new PipelineRunnerPool(poolOpts);
     pool._handleCreatedDB = function _handleCreatedDB(dbName) {
-          // see above issue for early return justification
+      // see above issue for early return justification
       if (this.createdHandlerCalled) { return; }
       this.createdHandlerCalled = true;
       t.ok(dbName, 'created db handler called');
       pool.destroy({ deleteDBs: true })
-      .then(() => teardownServer())
-      .then(() => t.pass('teardown ok'))
-      .then(t.end, t.end);
+        .then(() => teardownServer())
+        .then(() => t.pass('teardown ok'))
+        .then(t.end, t.end);
     };
     pool.init().catch(t.end);
   });
@@ -122,14 +122,14 @@ test('queues processing for rapid succession database events', (t) => {
     // manually `triggerRunner`, whereas db events generally exec this
     // behavior
     pool.init()
-    .then(() => {
-      pool.triggerRunner(localResult1); // fire the requests ~concurrently
-      return pool.triggerRunner(localResult2);
-    })
-    .then(() => pool.destroy({ deleteDBs: true }))
-    .then(() => teardownServer())
-    .then(() => t.pass('teardown ok'))
-    .then(() => t.end(), t.end);
+      .then(() => {
+        pool.triggerRunner(localResult1); // fire the requests ~concurrently
+        return pool.triggerRunner(localResult2);
+      })
+      .then(() => pool.destroy({ deleteDBs: true }))
+      .then(() => teardownServer())
+      .then(() => t.pass('teardown ok'))
+      .then(() => t.end(), t.end);
   });
 });
 
@@ -161,30 +161,30 @@ test('does not proceed queue whilst pipeline is `inProgress`', (t) => {
       const queueLen = getQueLen();
       if (requestComplete === 1) {
         return t.equal(queueLen, 2, 'two jobs queued');
-      } else if (requestComplete === 2) {
+      } if (requestComplete === 2) {
         return t.equal(queueLen, 1, 'one jobs queued');
-      } else if (requestComplete === 3) {
+      } if (requestComplete === 3) {
         return t.equal(queueLen, 0, 'zero jobs queued');
       }
       return t.fail('bogu run:end occurred');
     });
     pool.events.on('queue:end', () => {
       pool.destroy({ deleteDBs: true })
-      .then(() => teardownServer())
-      .then(() => {
-        t.equal(requestComplete, 3, 'three jobs run');
-        t.end();
-      }, t.end);
+        .then(() => teardownServer())
+        .then(() => {
+          t.equal(requestComplete, 3, 'three jobs run');
+          t.end();
+        }, t.end);
     });
 
     // go.
     pool.init()
-    .then(() => {
-      pool.triggerRunner(remoteResult1);
-      pool.triggerRunner(remoteResult2);
-      pool.triggerRunner(remoteResult3);
-      t.equal(getQueLen(), 3, 'three jobs queued');
-    });
+      .then(() => {
+        pool.triggerRunner(remoteResult1);
+        pool.triggerRunner(remoteResult2);
+        pool.triggerRunner(remoteResult3);
+        t.equal(getQueLen(), 3, 'three jobs queued');
+      });
   });
 });
 
@@ -211,8 +211,8 @@ test('Pool emits queue and run event activity', (t) => {
     };
     const confirmEndRunEvents = (result) => {
       if (
-        result.username === localResult1.username ||
-        result.username === localResult2.username
+        result.username === localResult1.username
+        || result.username === localResult2.username
       ) {
         return t.ok(result instanceof ComputationResult, 'ComputationResult emitted');
       }
@@ -224,9 +224,9 @@ test('Pool emits queue and run event activity', (t) => {
     pool.events.on('queue:end', (qRunId) => {
       t.equal(qRunId, runId, 'queue on ends');
       pool.destroy({ deleteDBs: true })
-      .then(() => teardownServer())
-      .then(() => t.pass('pool teardown ok'))
-      .then(t.end, t.end);
+        .then(() => teardownServer())
+        .then(() => t.pass('pool teardown ok'))
+        .then(t.end, t.end);
     });
     t.throws(
       () => pool.handleResultChange(),
@@ -234,11 +234,11 @@ test('Pool emits queue and run event activity', (t) => {
       'ComputationResult instance required'
     );
     pool.init()
-    .then(() => {
-      pool.handleResultChange(localResult1);
-      pool.handleResultChange(localResult2);
-    })
-    .catch(t.err);
+      .then(() => {
+        pool.handleResultChange(localResult1);
+        pool.handleResultChange(localResult2);
+      })
+      .catch(t.err);
   });
 });
 
@@ -246,8 +246,8 @@ test('abstract methods', (t) => {
   t.plan(1);
   const pool = new PipelineRunnerPool(poolUtils.getPoolOpts({ dbRegistry: { isLocal: true } }));
   pool.createNewRunner(null)
-  .catch(err => t.ok(err.message.match(/abstract/), 'illegal createNewRunner call'))
-  .then(t.end, t.end);
+    .catch(err => t.ok(err.message.match(/abstract/), 'illegal createNewRunner call'))
+    .then(t.end, t.end);
 });
 
 test('consortia has DBListeners on pool.init()', (t) => {
@@ -270,22 +270,22 @@ test('consortia has DBListeners on pool.init()', (t) => {
       owners: [],
     });
     dbRegistry.get('consortia')
-    .save(dummyConsortium.serialize())
-    .then(() => {
-      pool = new PipelineRunnerPool(poolUtils.getPoolOpts({ dbRegistry: { isLocal: true } }));
-      pool.dbRegistry = dbRegistry; // swap seeded registry
-      poolUtils.suppressCreateDestroyHandlers(pool);
-      pool.listenToRemote = true;
-      return pool.init();
-    })
-    .then(() => {
-      const cachedListener = pool.resultsListeners[`remote-consortium-${testId}`];
-      t.ok(cachedListener instanceof EventEmitter, 'listener ok');
-    })
-    .then(() => pool.destroy({ deleteDBs: true }))
-    .then(() => teardownServer())
-    .then(() => t.pass('pool teardown ok'))
-    .then(t.end, t.end);
+      .save(dummyConsortium.serialize())
+      .then(() => {
+        pool = new PipelineRunnerPool(poolUtils.getPoolOpts({ dbRegistry: { isLocal: true } }));
+        pool.dbRegistry = dbRegistry; // swap seeded registry
+        poolUtils.suppressCreateDestroyHandlers(pool);
+        pool.listenToRemote = true;
+        return pool.init();
+      })
+      .then(() => {
+        const cachedListener = pool.resultsListeners[`remote-consortium-${testId}`];
+        t.ok(cachedListener instanceof EventEmitter, 'listener ok');
+      })
+      .then(() => pool.destroy({ deleteDBs: true }))
+      .then(() => teardownServer())
+      .then(() => t.pass('pool teardown ok'))
+      .then(t.end, t.end);
   });
 });
 
@@ -319,34 +319,34 @@ test('pool selectively listens to consortia when using `listenTo`', (t) => {
     const selectiveListenerPoolOpts = poolUtils.getPoolOpts({ dbRegistry: { isLocal: true } });
     selectiveListenerPoolOpts.listenTo = [testId1];
     dbRegistry.get('consortia')
-    .save(con1.serialize())
-    .then(() => {
-      pool = new PipelineRunnerPool(selectiveListenerPoolOpts);
-      pool.dbRegistry = dbRegistry; // swap seeded registry
-      poolUtils.suppressCreateDestroyHandlers(pool);
-      pool.listenToRemote = true;
-      return pool.init();
-    })
-    .then(() => {
-      t.ok(
-        pool.resultsListeners[`remote-consortium-${testId1}`],
-        'listener created on limited listen set'
-      );
-      t.equals(
-        pool._shouldListenToConsortium(con1),
-        true,
-        'should listen to listenTo consortium'
-      );
-      t.equals(
-        pool._shouldListenToConsortium(con2),
-        false,
-        'should not listen to non-listenTo consortium'
-      );
-    })
-    .then(() => pool.destroy({ deleteDBs: true }))
-    .then(() => teardownServer())
-    .then(() => t.pass('pool teardown ok'))
-    .then(t.end, t.end);
+      .save(con1.serialize())
+      .then(() => {
+        pool = new PipelineRunnerPool(selectiveListenerPoolOpts);
+        pool.dbRegistry = dbRegistry; // swap seeded registry
+        poolUtils.suppressCreateDestroyHandlers(pool);
+        pool.listenToRemote = true;
+        return pool.init();
+      })
+      .then(() => {
+        t.ok(
+          pool.resultsListeners[`remote-consortium-${testId1}`],
+          'listener created on limited listen set'
+        );
+        t.equals(
+          pool._shouldListenToConsortium(con1),
+          true,
+          'should listen to listenTo consortium'
+        );
+        t.equals(
+          pool._shouldListenToConsortium(con2),
+          false,
+          'should not listen to non-listenTo consortium'
+        );
+      })
+      .then(() => pool.destroy({ deleteDBs: true }))
+      .then(() => teardownServer())
+      .then(() => t.pass('pool teardown ok'))
+      .then(t.end, t.end);
   });
 });
 

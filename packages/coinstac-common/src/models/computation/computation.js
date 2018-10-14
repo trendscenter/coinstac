@@ -1,9 +1,9 @@
 'use strict';
 
-const Base = require('../base.js');
 const joi = require('joi');
 const isArray = require('lodash/isArray');
 const assign = require('lodash/assign');
+const Base = require('../base.js');
 
 /**
  * @abstract

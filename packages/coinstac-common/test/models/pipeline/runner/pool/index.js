@@ -4,7 +4,7 @@ const path = require('path');
 const glob = require('glob');
 
 const files = glob.sync(path.join(__dirname, '/*.js')).filter((f) => {
-    // filter this file!
+  // filter this file!
   return !f.match(/index.js/);
 });
 

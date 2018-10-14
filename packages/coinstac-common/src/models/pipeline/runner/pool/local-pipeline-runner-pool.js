@@ -1,5 +1,6 @@
 'use strict';
 
+const joi = require('joi');
 const Computation = require('../../../computation/computation');
 const LocalComputationResult = require('../../../computation/local-computation-result');
 const PipelineRunnerPool = require('./pipeline-runner-pool');
@@ -7,7 +8,6 @@ const Pipeline = require('../../pipeline');
 const PipelineRunner = require('../pipeline-runner');
 const LocalPipelineRunner = require('../local-pipeline-runner');
 const User = require('../../../user');
-const joi = require('joi');
 
 /**
  * @abstract
@@ -17,7 +17,6 @@ const joi = require('joi');
  * @description tailors a PipelineRunnerPool for execution on a client machine
  */
 class LocalPipelineRunnerPool extends PipelineRunnerPool {
-
   /**
    * @protected
    * @description create a new PipelineRunner for the run proposed by the passed
@@ -36,28 +35,28 @@ class LocalPipelineRunnerPool extends PipelineRunnerPool {
       this.getLocalResult(localDB, runId, rResult),
       this.getDecentralizedComputation(rResult.computationId),
     ])
-    .then(([localResult, decentralizedComputation]) => {
-      const pipelineOptions = {
-        computations: Computation.factory(
-          decentralizedComputation.local,
-          { cwd: decentralizedComputation.cwd }
-        ),
-        plugins: PipelineRunnerPool.getPipelinePlugins({
-          comp: decentralizedComputation,
-          env: 'local',
-        }),
-      };
+      .then(([localResult, decentralizedComputation]) => {
+        const pipelineOptions = {
+          computations: Computation.factory(
+            decentralizedComputation.local,
+            { cwd: decentralizedComputation.cwd }
+          ),
+          plugins: PipelineRunnerPool.getPipelinePlugins({
+            comp: decentralizedComputation,
+            env: 'local',
+          }),
+        };
 
-      if (localResult.pipelineState && localResult.pipelineState.step) {
-        pipelineOptions.step = localResult.pipelineState.step;
-      }
+        if (localResult.pipelineState && localResult.pipelineState.step) {
+          pipelineOptions.step = localResult.pipelineState.step;
+        }
 
-      return new LocalPipelineRunner({
-        db: localDB,
-        pipeline: new Pipeline(pipelineOptions),
-        result: localResult,
+        return new LocalPipelineRunner({
+          db: localDB,
+          pipeline: new Pipeline(pipelineOptions),
+          result: localResult,
+        });
       });
-    });
   }
 
   /**
@@ -69,11 +68,11 @@ class LocalPipelineRunnerPool extends PipelineRunnerPool {
    */
   static getLatestResult(db, runId) {
     return PipelineRunner.findResultByRunId(db, runId)
-    .then((doc) => {
+      .then((doc) => {
       /* istanbul ignore next */
-      if (doc) { return new LocalComputationResult(doc); }
-      return null;
-    });
+        if (doc) { return new LocalComputationResult(doc); }
+        return null;
+      });
   }
 
   /**
@@ -86,17 +85,17 @@ class LocalPipelineRunnerPool extends PipelineRunnerPool {
    */
   getLocalResult(db, runId, rResult) {
     return LocalPipelineRunnerPool.getLatestResult(db, runId)
-    .then((localResult) => {
+      .then((localResult) => {
       /* istanbul ignore next */
-      if (localResult) { return localResult; }
-      /* istanbul ignore next */
-      return new LocalComputationResult({
-        _id: `${runId}-${this.user.username}`,
-        computationId: rResult.computationId,
-        consortiumId: rResult.consortiumId,
-        username: this.user.username,
+        if (localResult) { return localResult; }
+        /* istanbul ignore next */
+        return new LocalComputationResult({
+          _id: `${runId}-${this.user.username}`,
+          computationId: rResult.computationId,
+          consortiumId: rResult.consortiumId,
+          username: this.user.username,
+        });
       });
-    });
   }
 
   /**

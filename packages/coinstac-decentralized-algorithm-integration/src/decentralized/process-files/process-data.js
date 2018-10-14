@@ -30,7 +30,7 @@ const doFilewiseComputation = (filename) => {
 // extract passed data from passed args
 // we recommend using a formal argument parser!
 process.argv.forEach((arg, ndx) => {
-    // e.g. -run { "filenames": [ ... ] }
+  // e.g. -run { "filenames": [ ... ] }
   if (arg.indexOf('--') === 0) {
     const passed = JSON.parse(process.argv[ndx + 1]);
     if (passed.previousData) { return process.exit(0); }

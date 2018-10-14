@@ -21,10 +21,10 @@ let services = {};
 
 const generateServicePort = (serviceId) => {
   return portscanner.findAPortNotInUse(8100, 49151, '127.0.0.1')
-  .then((newPort) => {
-    services[serviceId].port = newPort;
-    return newPort;
-  });
+    .then((newPort) => {
+      services[serviceId].port = newPort;
+      return newPort;
+    });
 };
 
 const manageStream = (stream, jobId) => {
@@ -52,9 +52,9 @@ const manageStream = (stream, jobId) => {
       const container = jobPool[jobId];
       if (streamPool[jobId].error) {
         container.remove()
-        .then(() => {
-          jobPool[jobId] = undefined;
-        });
+          .then(() => {
+            jobPool[jobId] = undefined;
+          });
         reject(streamPool[jobId].error);
         streamPool[jobId] = undefined;
       } else {
@@ -62,9 +62,9 @@ const manageStream = (stream, jobId) => {
         streamPool[jobId] = undefined;
 
         container.remove()
-        .then(() => {
-          jobPool[jobId] = undefined;
-        });
+          .then(() => {
+            jobPool[jobId] = undefined;
+          });
       }
     });
     stream.on('error', (err) => {
@@ -73,10 +73,10 @@ const manageStream = (stream, jobId) => {
       streamPool[jobId] = undefined;
 
       container.stop()
-      .then(() => container.remove())
-      .then(() => {
-        jobPool[jobId] = undefined;
-      });
+        .then(() => container.remove())
+        .then(() => {
+          jobPool[jobId] = undefined;
+        });
       reject(err);
     });
   });
@@ -108,7 +108,7 @@ const queueJob = (jobId, input, opts) => {
     });
 
     return container.start()
-    .then(() => dataFinished);
+      .then(() => dataFinished);
   });
 };
 
@@ -162,233 +162,235 @@ const startService = (serviceId, serviceUserId, opts) => {
     });
     const tryStartService = () => {
       return generateServicePort(serviceId)
-      .then((port) => {
-        const defaultOpts = {
+        .then((port) => {
+          const defaultOpts = {
           // this port is coupled w/ the internal base server image FYI
-          ExposedPorts: { '8881/tcp': {} },
-          HostConfig: {
-            PortBindings: { '8881/tcp': [{ HostPort: `${port}`, HostIp: '127.0.0.1' }] },
-          },
-          Tty: true,
-        };
+            ExposedPorts: { '8881/tcp': {} },
+            HostConfig: {
+              PortBindings: { '8881/tcp': [{ HostPort: `${port}`, HostIp: '127.0.0.1' }] },
+            },
+            Tty: true,
+          };
 
-        // merge opts one level deep
-        const memo = {};
-        for (let [key] of Object.entries(defaultOpts)) { // eslint-disable-line no-restricted-syntax, max-len, prefer-const
-          memo[key] = Object.assign(defaultOpts[key], opts.docker[key] ? opts.docker[key] : {});
-        }
+          // merge opts one level deep
+          const memo = {};
+          for (let [key] of Object.entries(defaultOpts)) { // eslint-disable-line no-restricted-syntax, max-len, prefer-const
+            memo[key] = Object.assign(defaultOpts[key], opts.docker[key] ? opts.docker[key] : {});
+          }
 
-        const jobOpts = Object.assign(
-          {},
-          opts.docker,
-          memo
-        );
-        return docker.createContainer(jobOpts);
-      })
-      .then((container) => {
-        services[serviceId].container = container;
-        return container.start();
-      })
+          const jobOpts = Object.assign(
+            {},
+            opts.docker,
+            memo
+          );
+          return docker.createContainer(jobOpts);
+        })
+        .then((container) => {
+          services[serviceId].container = container;
+          return container.start();
+        })
       // is the container service ready?
-      .then(() => {
-        const checkServicePort = () => {
-          if (opts.http) {
-            return new Promise((resolve, reject) => {
-              const req = request(`http://127.0.0.1:${services[serviceId].port}/run`, { method: 'POST' }, (err, res) => {
-                let buf = '';
-                if (err) {
-                  return reject(err);
-                }
+        .then(() => {
+          const checkServicePort = () => {
+            if (opts.http) {
+              return new Promise((resolve, reject) => {
+                const req = request(`http://127.0.0.1:${services[serviceId].port}/run`, { method: 'POST' }, (err, res) => {
+                  let buf = '';
+                  if (err) {
+                    return reject(err);
+                  }
 
-                res.on('data', (chunk) => {
-                  buf += chunk;
+                  res.on('data', (chunk) => {
+                    buf += chunk;
+                  });
+                  res.on('end', () => resolve(buf));
+                  res.on('error', e => reject(e));
                 });
-                res.on('end', () => resolve(buf));
-                res.on('error', e => reject(e));
+
+                const control = {
+                  command: 'echo',
+                  args: ['test'],
+                };
+                req.end(JSON.stringify(control));
+              }).catch((status) => {
+                if (status.message === 'socket hang up' || status.message === 'read ECONNRESET') {
+                  serviceStartedRecurseLimit += 1;
+                  if (serviceStartedRecurseLimit < 500) {
+                    return setTimeoutPromise(100)
+                      .then(() => checkServicePort());
+                  }
+                  // met limit, fallback to timeout
+                  return setTimeoutPromise(5000);
+                }
+
+                // not a socket error, throw
+                throw status;
               });
+            }
+            return Promise.resolve();
+          };
 
-              const control = {
-                command: 'echo',
-                args: ['test'],
-              };
-              req.end(JSON.stringify(control));
-            }).catch((status) => {
-              if (status.message === 'socket hang up' || status.message === 'read ECONNRESET') {
-                serviceStartedRecurseLimit += 1;
-                if (serviceStartedRecurseLimit < 500) {
-                  return setTimeoutPromise(100)
-                  .then(() => checkServicePort());
-                }
-                // met limit, fallback to timeout
-                return setTimeoutPromise(5000);
-              }
-
-              // not a socket error, throw
-              throw status;
-            });
-          }
-          return Promise.resolve();
-        };
-
-        return checkServicePort();
-      })
-      .then(() => {
-        services[serviceId].service = (data) => {
-          if (opts.http) {
-            return new Promise((resolve, reject) => {
-              const req = request(`http://127.0.0.1:${services[serviceId].port}/run`, { method: 'POST' }, (err, res) => {
-                let buf = '';
-                if (err) {
-                  return reject(err);
-                }
-                // TODO: hey this is a stream, be cool to use that
-                res.on('data', (chunk) => {
-                  buf += chunk;
+          return checkServicePort();
+        })
+        .then(() => {
+          services[serviceId].service = (data) => {
+            if (opts.http) {
+              return new Promise((resolve, reject) => {
+                const req = request(`http://127.0.0.1:${services[serviceId].port}/run`, { method: 'POST' }, (err, res) => {
+                  let buf = '';
+                  if (err) {
+                    return reject(err);
+                  }
+                  // TODO: hey this is a stream, be cool to use that
+                  res.on('data', (chunk) => {
+                    buf += chunk;
+                  });
+                  res.on('end', () => resolve(buf));
+                  res.on('error', e => reject(e));
                 });
-                res.on('end', () => resolve(buf));
-                res.on('error', e => reject(e));
+                req.write(JSON.stringify({
+                  command: data[0],
+                  args: data.slice(1, 2),
+                }));
+                req.end(data[2]);
+              }).then((inData) => {
+                let errMatch;
+                let outMatch;
+                let codeMatch;
+                let endMatch;
+                let errData = Buffer.alloc(0);
+                let outData = Buffer.alloc(0);
+                let code = Buffer.alloc(0);
+
+                let data = Buffer.from(inData);
+                while (outMatch !== -1 || errMatch !== -1 || codeMatch !== -1) {
+                  outMatch = data.indexOf('stdoutSTART\n');
+                  endMatch = data.indexOf('stdoutEND\n');
+                  if (outMatch !== -1 && endMatch !== -1) {
+                    outData = Buffer.concat([outData, data.slice(outMatch + 'stdoutSTART\n'.length, endMatch)]);
+                    data = Buffer.concat([data.slice(0, outMatch), data.slice(endMatch + 'stdoutEND\n'.length)]);
+                  }
+                  errMatch = data.indexOf('stderrSTART\n');
+                  endMatch = data.indexOf('stderrEND\n');
+                  if (errMatch !== -1 && endMatch !== -1) {
+                    errData = Buffer.concat([errData, data.slice(errMatch + 'stderrSTART\n'.length, endMatch)]);
+                    data = Buffer.concat([data.slice(0, errMatch), data.slice(endMatch + 'stderrEND\n'.length)]);
+                  }
+                  codeMatch = data.indexOf('exitcodeSTART\n');
+                  endMatch = data.indexOf('exitcodeEND\n');
+                  if (codeMatch !== -1 && endMatch !== -1) {
+                    code = Buffer.concat([code, data.slice(codeMatch + 'exitcodeSTART\n'.length, endMatch)]);
+                    data = Buffer.concat([data.slice(0, codeMatch), data.slice(endMatch + 'exitcodeEND\n'.length)]);
+                  }
+                }
+
+                if (errData.length > 0) {
+                  throw new Error(`Computation failed with exitcode ${code.toString()}\n Error message:\n${errData.toString()}}`);
+                }
+                // NOTE: limited to sub 256mb
+                let parsed;
+                try {
+                  parsed = JSON.parse(outData.toString());
+                } catch (e) {
+                  parsed = outData.toString();
+                }
+                return parsed;
               });
-              req.write(JSON.stringify({
-                command: data[0],
-                args: data.slice(1, 2),
-              }));
-              req.end(data[2]);
-            }).then((inData) => {
-              let errMatch;
-              let outMatch;
-              let codeMatch;
-              let endMatch;
-              let errData = Buffer.alloc(0);
-              let outData = Buffer.alloc(0);
-              let code = Buffer.alloc(0);
+            }
 
-              let data = Buffer.from(inData);
-              while (outMatch !== -1 || errMatch !== -1 || codeMatch !== -1) {
-                outMatch = data.indexOf('stdoutSTART\n');
-                endMatch = data.indexOf('stdoutEND\n');
-                if (outMatch !== -1 && endMatch !== -1) {
-                  outData = Buffer.concat([outData, data.slice(outMatch + 'stdoutSTART\n'.length, endMatch)]);
-                  data = Buffer.concat([data.slice(0, outMatch), data.slice(endMatch + 'stdoutEND\n'.length)]);
-                }
-                errMatch = data.indexOf('stderrSTART\n');
-                endMatch = data.indexOf('stderrEND\n');
-                if (errMatch !== -1 && endMatch !== -1) {
-                  errData = Buffer.concat([errData, data.slice(errMatch + 'stderrSTART\n'.length, endMatch)]);
-                  data = Buffer.concat([data.slice(0, errMatch), data.slice(endMatch + 'stderrEND\n'.length)]);
-                }
-                codeMatch = data.indexOf('exitcodeSTART\n');
-                endMatch = data.indexOf('exitcodeEND\n');
-                if (codeMatch !== -1 && endMatch !== -1) {
-                  code = Buffer.concat([code, data.slice(codeMatch + 'exitcodeSTART\n'.length, endMatch)]);
-                  data = Buffer.concat([data.slice(0, codeMatch), data.slice(endMatch + 'exitcodeEND\n'.length)]);
-                }
-              }
-
-              if (errData.length > 0) {
-                throw new Error(`Computation failed with exitcode ${code.toString()}\n Error message:\n${errData.toString()}}`);
-              }
-              // NOTE: limited to sub 256mb
-              let parsed;
-              try {
-                parsed = JSON.parse(outData.toString());
-              } catch (e) {
-                parsed = outData.toString();
-              }
-              return parsed;
+            let proxR;
+            let proxRj;
+            const prox = new Promise((resolve, reject) => {
+              proxR = resolve;
+              proxRj = reject;
             });
+            const socket = socketIOClient(`http://127.0.0.1:${services[serviceId].port}`);
+            socket.on('connect', () => {
+              const stream = ss.createStream();
+              ss(socket).emit('run', stream, {
+                control: {
+                  command: data[0],
+                  args: data.slice(1, 2),
+                },
+              });
+              const dataStream = new Readable({
+                read() {
+                  this.push(data[2]);
+                  this.push(null);
+                },
+              });
+              dataStream.pipe(stream);
+              let outRes;
+              let outRej;
+              let stdout = '';
+              const stdoutProm = new Promise((resolve, reject) => {
+                outRes = resolve;
+                outRej = reject;
+              });
+              ss(socket).on('stdout', (stream) => {
+                stream.on('data', (chunk) => {
+                  stdout += chunk;
+                });
+                stream.on('end', () => outRes(stdout));
+                stream.on('err', err => outRej(err));
+              });
+
+              let errRes;
+              let errRej;
+              let stderr = '';
+              const stderrProm = new Promise((resolve, reject) => {
+                errRes = resolve;
+                errRej = reject;
+              });
+              ss(socket).on('stderr', (stream) => {
+                stream.on('data', (chunk) => {
+                  stderr += chunk;
+                });
+                stream.on('end', () => errRes(stderr));
+                stream.on('err', err => errRej(err));
+              });
+
+              const endProm = new Promise((resolve) => {
+                socket.on('exit', (data) => {
+                  resolve(data);
+                });
+              });
+              Promise.all([stdoutProm, stderrProm, endProm])
+                .then((data) => {
+                  if (data[1] || data[2].code !== 0) {
+                    throw new Error(`Computation failed with exitcode ${data[2].code}\n Error message:\n${data[1]}}`);
+                  } else if (data[2].error) {
+                    throw new Error(`Computation failed to start\n Error message:\n${data[2].error}}`);
+                  }
+                  // NOTE: limited to sub 256mb
+                  let parsed;
+                  try {
+                    parsed = JSON.parse(data[0]);
+                  } catch (e) {
+                    parsed = data[0];
+                  }
+                  proxR(parsed);
+                }).catch(error => proxRj(error));
+            });
+
+            return prox;
+          };
+          services[serviceId].state = 'running';
+          // fulfill to waiting consumers
+          proxRes(services[serviceId].service);
+          return services[serviceId].service;
+        })
+        .catch((err) => {
+          if (err.statusCode === 500 && err.message.includes('port is already allocated') && recurseLimit < 500) {
+            recurseLimit += 1;
+            // this problem mostly occurs when started several boxes quickly
+            // add some delay to give them breathing room to setup ports
+            return setTimeoutPromise(200)
+              .then(() => tryStartService());
           }
-
-          let proxR;
-          let proxRj;
-          const prox = new Promise((resolve, reject) => {
-            proxR = resolve;
-            proxRj = reject;
-          });
-          const socket = socketIOClient(`http://127.0.0.1:${services[serviceId].port}`);
-          socket.on('connect', () => {
-            const stream = ss.createStream();
-            ss(socket).emit('run', stream, {
-              control: {
-                command: data[0],
-                args: data.slice(1, 2),
-              },
-            });
-            const dataStream = new Readable({ read() {
-              this.push(data[2]);
-              this.push(null);
-            } });
-            dataStream.pipe(stream);
-            let outRes;
-            let outRej;
-            let stdout = '';
-            const stdoutProm = new Promise((resolve, reject) => {
-              outRes = resolve;
-              outRej = reject;
-            });
-            ss(socket).on('stdout', (stream) => {
-              stream.on('data', (chunk) => {
-                stdout += chunk;
-              });
-              stream.on('end', () => outRes(stdout));
-              stream.on('err', err => outRej(err));
-            });
-
-            let errRes;
-            let errRej;
-            let stderr = '';
-            const stderrProm = new Promise((resolve, reject) => {
-              errRes = resolve;
-              errRej = reject;
-            });
-            ss(socket).on('stderr', (stream) => {
-              stream.on('data', (chunk) => {
-                stderr += chunk;
-              });
-              stream.on('end', () => errRes(stderr));
-              stream.on('err', err => errRej(err));
-            });
-
-            const endProm = new Promise((resolve) => {
-              socket.on('exit', (data) => {
-                resolve(data);
-              });
-            });
-            Promise.all([stdoutProm, stderrProm, endProm])
-            .then((data) => {
-              if (data[1] || data[2].code !== 0) {
-                throw new Error(`Computation failed with exitcode ${data[2].code}\n Error message:\n${data[1]}}`);
-              } else if (data[2].error) {
-                throw new Error(`Computation failed to start\n Error message:\n${data[2].error}}`);
-              }
-              // NOTE: limited to sub 256mb
-              let parsed;
-              try {
-                parsed = JSON.parse(data[0]);
-              } catch (e) {
-                parsed = data[0];
-              }
-              proxR(parsed);
-            }).catch(error => proxRj(error));
-          });
-
-          return prox;
-        };
-        services[serviceId].state = 'running';
-        // fulfill to waiting consumers
-        proxRes(services[serviceId].service);
-        return services[serviceId].service;
-      })
-      .catch((err) => {
-        if (err.statusCode === 500 && err.message.includes('port is already allocated') && recurseLimit < 500) {
-          recurseLimit += 1;
-          // this problem mostly occurs when started several boxes quickly
-          // add some delay to give them breathing room to setup ports
-          return setTimeoutPromise(200)
-          .then(() => tryStartService());
-        }
-        proxRej(err);
-        throw err;
-      });
+          proxRej(err);
+          throw err;
+        });
     };
     return tryStartService();
   };
@@ -417,7 +419,7 @@ const pruneImages = () => {
         // TODO: find better way, make docker api 'reference' work?
         if (elem.RepoTags) {
           return elem.RepoTags[0].includes('coinstac');
-        } else if (elem.RepoDigests) {
+        } if (elem.RepoDigests) {
           return elem.RepoDigests[0].includes('coinstac');
         }
         return false;
@@ -490,15 +492,13 @@ const pullImages = (comps) => {
 
   // Set promise catches to undefined so that failures can be handled as successes: https://davidwalsh.name/promises-results
   return Promise.all(compsP.map(prom => prom.catch(err => err)))
-  .then((res) => {
-    return comps.map((val, index) =>
-      ({
+    .then((res) => {
+      return comps.map((val, index) => ({
         stream: res[index],
         compId: val.compId,
         compName: val.compName,
-      })
-    );
-  });
+      }));
+    });
 };
 
 /**
@@ -506,9 +506,8 @@ const pullImages = (comps) => {
  * @param {Object[]} comps array of computation id's to download
  * @return {Object} Returns array of objects containing stream and computation parameters
  */
-const pullImagesFromList = comps =>
-    Promise.all(comps.map(image => pullImage(`${image}:latest`)))
-    .then(streams => streams.map((stream, index) => ({ stream, compId: comps[index] })));
+const pullImagesFromList = comps => Promise.all(comps.map(image => pullImage(`${image}:latest`)))
+  .then(streams => streams.map((stream, index) => ({ stream, compId: comps[index] })));
 
 /**
  * Remove the Docker image associated with the image id
@@ -535,14 +534,14 @@ const stopService = (serviceId, serviceUserId) => {
   if (services[serviceId].users.length === 0) {
     services[serviceId].state = 'shutting down';
     return services[serviceId].container.stop()
-    .then(() => {
-      delete services[serviceId];
-    }).catch((err) => {
+      .then(() => {
+        delete services[serviceId];
+      }).catch((err) => {
       // TODO: boxes don't always shutdown well, however that shouldn't crash a valid run
       // figure out a way to cleanup
-      services[serviceId].state = 'zombie';
-      services[serviceId].error = err;
-    });
+        services[serviceId].state = 'zombie';
+        services[serviceId].error = err;
+      });
   }
   return Promise.resolve();
 };
@@ -554,11 +553,11 @@ const stopService = (serviceId, serviceUserId) => {
 const stopAllServices = () => {
   return Promise.all(
     Object.keys(services)
-    .map(service => services[service].container.stop()))
+      .map(service => services[service].container.stop())
+  )
     .then(() => {
       services = {};
-    }
-  );
+    });
 };
 
 module.exports = {

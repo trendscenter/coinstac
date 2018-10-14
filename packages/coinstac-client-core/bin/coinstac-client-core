@@ -5,7 +5,6 @@
 const assign = require('lodash/assign');
 const bluebird = require('bluebird');
 const common = require('coinstac-common');
-const CoinstacClient = require('../src/index');
 const { compact, flatten } = require('lodash');
 const DBRegistry = require('coinstac-common').services.dbRegistry.DBRegistry;
 const dropRight = require('lodash/dropRight');
@@ -14,13 +13,14 @@ const glob = require('glob');
 const inquirer = require('inquirer');
 const last = require('lodash/last');
 const path = require('path');
-const pkg = require('../package.json');
 const pouchDBAdapterMemory = require('pouchdb-adapter-memory');
 const program = require('commander');
 const Project = require('coinstac-common').models.Project;
 const Storage = require('dom-storage');
 const url = require('url');
 const winston = require('winston');
+const pkg = require('../package.json');
+const CoinstacClient = require('../src/index');
 
 const getSyncedDatabase = common.utils.getSyncedDatabase;
 
@@ -79,12 +79,12 @@ program
   .parse(process.argv);
 
 (
-  program.password && program.username ?
-    Promise.resolve({
+  program.password && program.username
+    ? Promise.resolve({
       password: program.password,
       username: program.username,
-    }) :
-    inquirer.prompt([{
+    })
+    : inquirer.prompt([{
       message: 'Username:',
       name: 'username',
     }, {
@@ -108,17 +108,17 @@ program
       protocol: 'https:',
     };
 
-    const hpConfig = program.api ?
-      program.api :
-      'https://coins-api.mrn.org/api/v1.3.0';
-    const remoteDbConfig = program.database ?
-      assign(defaultDb, url.parse(program.database)) :
-      defaultDb;
+    const hpConfig = program.api
+      ? program.api
+      : 'https://coins-api.mrn.org/api/v1.3.0';
+    const remoteDbConfig = program.database
+      ? assign(defaultDb, url.parse(program.database))
+      : defaultDb;
 
     // TODO: Figure out DBRegistryFactory configuration
     if (
-      last(remoteDbConfig.path) === '/' &&
-      last(remoteDbConfig.pathname) === '/'
+      last(remoteDbConfig.path) === '/'
+      && last(remoteDbConfig.pathname) === '/'
     ) {
       remoteDbConfig.path = dropRight(remoteDbConfig.path, 1).join('');
       remoteDbConfig.pathname = dropRight(remoteDbConfig.pathname, 1).join('');

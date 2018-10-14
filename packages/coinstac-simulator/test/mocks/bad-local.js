@@ -19,4 +19,3 @@ module.exports = {
     y: Promise.reject('bye'),
   }],
 };
-

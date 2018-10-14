@@ -1,12 +1,12 @@
 'use strict';
 
+const joi = require('joi');
 const RemoteComputationResult = require('../../../computation/remote-computation-result');
 const RemotePipelineRunner = require('../remote-pipeline-runner');
 const PipelineRunnerPool = require('./pipeline-runner-pool');
 const PipelineRunner = require('../pipeline-runner');
 const Pipeline = require('../../pipeline');
 const Computation = require('../../../computation/computation');
-const joi = require('joi');
 
 /**
  * @abstract
@@ -41,25 +41,25 @@ class RemotePipelineRunnerPool extends PipelineRunnerPool {
     const localDB = this.dbRegistry.get(localResultDBName);
     const remoteDB = this.dbRegistry.get(remoteResultDBName);
 
-      // get RemoteComputationResult & DecentralizedComputation as inputs
-      // to generate new RemotePipelineRunner instance
+    // get RemoteComputationResult & DecentralizedComputation as inputs
+    // to generate new RemotePipelineRunner instance
     return Promise.all([
       this.getRemoteResult(remoteDB, lResult),
       this.getDecentralizedComputation(lResult.computationId),
     ])
-    .then((rslts) => {
-      const rResult = rslts[0];
-      const dComp = rslts[1];
-      const computations = Computation.factory(dComp.remote, { cwd: dComp.cwd });
-      const plugins = PipelineRunnerPool.getPipelinePlugins({ comp: dComp, env: 'remote' });
-      const runner = new RemotePipelineRunner({
-        pipeline: new Pipeline({ computations, plugins }),
-        result: rResult,
-        localDB,
-        remoteDB,
+      .then((rslts) => {
+        const rResult = rslts[0];
+        const dComp = rslts[1];
+        const computations = Computation.factory(dComp.remote, { cwd: dComp.cwd });
+        const plugins = PipelineRunnerPool.getPipelinePlugins({ comp: dComp, env: 'remote' });
+        const runner = new RemotePipelineRunner({
+          pipeline: new Pipeline({ computations, plugins }),
+          result: rResult,
+          localDB,
+          remoteDB,
+        });
+        return runner;
       });
-      return runner;
-    });
   }
 
   /**
@@ -71,10 +71,10 @@ class RemotePipelineRunnerPool extends PipelineRunnerPool {
    */
   static getLatestResult(db, runId) {
     return PipelineRunner.findResultByRunId(db, runId)
-    .then((doc) => {
-      if (doc) { return new RemoteComputationResult(doc); }
-      return null;
-    });
+      .then((doc) => {
+        if (doc) { return new RemoteComputationResult(doc); }
+        return null;
+      });
   }
 
   /**
@@ -87,10 +87,10 @@ class RemotePipelineRunnerPool extends PipelineRunnerPool {
   getRemoteResult(db, lResult) {
     const runId = lResult.runId;
     return RemotePipelineRunnerPool.getLatestResult(db, runId)
-    .then((rResult) => {
-      if (rResult) { return rResult; }
-      return this.buildNewRemoteResult(lResult);
-    });
+      .then((rResult) => {
+        if (rResult) { return rResult; }
+        return this.buildNewRemoteResult(lResult);
+      });
   }
 
   /**
@@ -141,20 +141,20 @@ class RemotePipelineRunnerPool extends PipelineRunnerPool {
     const consortiumId = lResult.consortiumId;
     const computationId = lResult.computationId;
     return this.dbRegistry.get('consortia').get(consortiumId)
-    .then(({ activeComputationInputs, users }) => new RemoteComputationResult({
-      _id: runId,
-      computationId,
-      computationInputs: activeComputationInputs,
-      consortiumId,
-      usernames: users,
-    }));
+      .then(({ activeComputationInputs, users }) => new RemoteComputationResult({
+        _id: runId,
+        computationId,
+        computationInputs: activeComputationInputs,
+        consortiumId,
+        usernames: users,
+      }));
   }
 }
 
 RemotePipelineRunnerPool.schema = Object.assign(
-    {},
-    PipelineRunnerPool.schema,
-    { listenToLocal: joi.boolean().default(true) }
+  {},
+  PipelineRunnerPool.schema,
+  { listenToLocal: joi.boolean().default(true) }
 );
 
 module.exports = RemotePipelineRunnerPool;

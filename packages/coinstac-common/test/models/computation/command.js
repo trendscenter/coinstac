@@ -1,10 +1,10 @@
 'use strict';
 
-const CommandComputation = require('../../../').models.computation.CommandComputation;
 const cp = require('child_process');
 const EventEmitter = require('events');
 const sinon = require('sinon');
 const tape = require('tape');
+const CommandComputation = require('../../../').models.computation.CommandComputation;
 
 tape('model::CommandComputation constructor', (t) => {
   t.throws(() => {
@@ -218,4 +218,3 @@ tape('CommandComputation#run errors', (t) => {
     })
     .then(spawnStub.restore);
 });
-
