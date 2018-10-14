@@ -10,13 +10,15 @@ const SAVE_REMOTE_RUNS_LOCALLY = 'SAVE_REMOTE_RUNS_LOCALLY';
 const UPDATE_LOCAL_RUN = 'UPDATE_LOCAL_RUN';
 
 // Action Creators
-export const saveRemoteRunsLocally = applyAsyncLoading(runs => dispatch => localDB.runs.bulkPut(runs)
-  .then(() => {
-    dispatch(({
-      type: SAVE_REMOTE_RUNS_LOCALLY,
-      payload: runs,
-    }));
-  }));
+export const saveRemoteRunsLocally = applyAsyncLoading(
+  runs => dispatch => localDB.runs.bulkPut(runs)
+    .then(() => {
+      dispatch(({
+        type: SAVE_REMOTE_RUNS_LOCALLY,
+        payload: runs,
+      }));
+    })
+);
 
 export const clearRuns = applyAsyncLoading(() => dispatch => localDB.runs.clear()
   .then(() => {
@@ -38,7 +40,8 @@ export const getLocalRun = applyAsyncLoading(runId => () => localDB.runs.get(run
     return run;
   }));
 
-export const getDBRuns = applyAsyncLoading(() => dispatch => localDB.runs // .where('id').startsWith('local')
+export const getDBRuns = applyAsyncLoading(() => dispatch => localDB.runs
+  // .where('id').startsWith('local')
   .toArray()
   .then((runs) => {
     dispatch(({
@@ -57,14 +60,16 @@ export const saveLocalRun = applyAsyncLoading(run => dispatch => localDB.runs.pu
     return key;
   }));
 
-export const updateLocalRun = applyAsyncLoading((runId, object) => dispatch => localDB.runs.update(runId, { ...object })
-  .then((key) => {
-    dispatch(({
-      type: UPDATE_LOCAL_RUN,
-      payload: { runId, object },
-    }));
-    return key;
-  }));
+export const updateLocalRun = applyAsyncLoading(
+  (runId, object) => dispatch => localDB.runs.update(runId, { ...object })
+    .then((key) => {
+      dispatch(({
+        type: UPDATE_LOCAL_RUN,
+        payload: { runId, object },
+      }));
+      return key;
+    })
+);
 
 const INITIAL_STATE = {
   localRuns: [],

@@ -1,10 +1,13 @@
 'use strict';
 
 const _ = require('lodash');
-const computations = require('../../../').models.computation;
-
-const Computation = computations.Computation;
 const test = require('tape');
+const {
+  models: {
+    computations,
+    computations: { Computation },
+  },
+} = require('../../../');
 
 test('model::Computation', (t) => {
   t.throws(() => {

@@ -11,8 +11,10 @@ const electronDefaultMenu = require('electron-default-menu');
 const path = require('path');
 const url = require('url');
 
-const BrowserWindow = electron.BrowserWindow;
-const electronApp = electron.app;
+const {
+  app: electronApp,
+  BrowserWindow,
+} = electron;
 let mainWindow = null;
 
 /**

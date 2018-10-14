@@ -3,7 +3,7 @@ const { reduce } = require('lodash');
 const request = require('request-stream');
 const portscanner = require('portscanner');
 const http = require('http');
-const Readable = require('stream').Readable;
+const { Readable } = require('stream');
 const ss = require('coinstac-socket.io-stream');
 const socketIOClient = require('socket.io-client');
 
@@ -367,7 +367,7 @@ const startService = (serviceId, serviceUserId, opts) => {
                   try {
                     parsed = JSON.parse(data[0]);
                   } catch (e) {
-                    parsed = data[0];
+                    parsed = data[0]; // eslint-disable-line prefer-destructuring
                   }
                   proxR(parsed);
                 }).catch(error => proxRj(error));

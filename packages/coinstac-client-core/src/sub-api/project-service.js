@@ -4,7 +4,7 @@
  * @module project-service
  */
 
-const Project = require('coinstac-common').models.Project;
+const { models: { Project } } = require('coinstac-common');
 const bluebird = require('bluebird');
 const coinstacCommon = require('coinstac-common');
 const fs = require('fs');
@@ -101,7 +101,7 @@ class ProjectService extends ModelService {
          *   [4, 5, 6],
          * ]
          */
-        const metaFile = project.metaFile;
+        const { metaFile } = project;
 
         /**
          * {
@@ -110,7 +110,7 @@ class ProjectService extends ModelService {
          *   // ...
          * }
          */
-        const metaCovariateMapping = project.metaCovariateMapping;
+        const { metaCovariateMapping } = project;
 
         function getTags(metaRow) {
           return covariates.reduce((tags, { name, type }, covariateIndex) => {
@@ -154,7 +154,7 @@ class ProjectService extends ModelService {
         }
 
         project.files.forEach((file) => {
-          const filename = file.filename;
+          const { filename } = file;
 
           /**
            * Find the `file`'s corresponding row in the CSV metaFile.

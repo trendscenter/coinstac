@@ -1,6 +1,6 @@
 'use strict';
 
-const test = require('ava').test;
+const { test } = require('ava');
 const { createReadStream, readFileSync, unlink } = require('fs');
 const resolvePath = require('path').resolve;
 const unzip = require('unzip');

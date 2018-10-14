@@ -2,13 +2,13 @@
 
 const assign = require('lodash/assign');
 const bluebird = require('bluebird');
+const nock = require('nock');
+const pouchDBAdapterMemory = require('pouchdb-adapter-memory');
+const { services: { dbRegistry: { DBRegistry } } } = require('coinstac-common');
 const CoinstacClient = require('../../');
 const conf = require('./load-config');
 const config = require('../../config.js');
-const DBRegistry = require('coinstac-common').services.dbRegistry.DBRegistry;
 const getLoginResponse = require('./get-login-response.js');
-const nock = require('nock');
-const pouchDBAdapterMemory = require('pouchdb-adapter-memory');
 const testDirectory = require('./test-directory.js');
 const userFactory = require('./user-factory');
 

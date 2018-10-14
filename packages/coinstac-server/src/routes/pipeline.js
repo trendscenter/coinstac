@@ -70,7 +70,7 @@ module.exports = [
       handler: (req, res) => {
         authenticateServer()
           .then(() => {
-            const run = req.payload.run;
+            const { payload: { run } } = req;
 
             const computationImageList = run.pipelineSnapshot.steps
               .map(step => step.computations

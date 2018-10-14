@@ -11,14 +11,18 @@ const defaultNotification = { autoDismiss: 2 };
 export const writeLog = (message => () => ipcRenderer.send('write-log', message)
 );
 
-export const notifyError = (message => dispatch => dispatch(error({ ...defaultNotification, ...message }))
+export const notifyError = message => dispatch => dispatch(
+  error({ ...defaultNotification, ...message })
 );
 
-export const notifyInfo = (message => dispatch => dispatch(info({ ...defaultNotification, ...message }))
+export const notifyInfo = message => dispatch => dispatch(
+  info({ ...defaultNotification, ...message })
 );
 
-export const notifySuccess = (message => dispatch => dispatch(success({ ...defaultNotification, ...message }))
+export const notifySuccess = message => dispatch => dispatch(
+  success({ ...defaultNotification, ...message })
 );
 
-export const notifyWarning = (message => dispatch => dispatch(warning({ ...defaultNotification, ...message }))
+export const notifyWarning = message => dispatch => dispatch(
+  warning({ ...defaultNotification, ...message })
 );

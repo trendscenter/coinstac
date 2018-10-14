@@ -3,9 +3,9 @@
 const url = require('url');
 const joi = require('joi');
 const boom = require('boom');
+const { models: { Consortium } } = require('coinstac-common');
 const utils = require('./utils');
 const AuthorizationError = require('./authorization-error.js');
-const Consortium = require('coinstac-common').models.Consortium;
 
 const bouncerConfigSchema = joi.object().keys({
   allowEverybody: joi.boolean(),

@@ -25,7 +25,7 @@ class LocalPipelineRunnerPool extends PipelineRunnerPool {
    * @returns {Promise}
    */
   createNewRunner(rResult) {
-    const runId = rResult.runId;
+    const { runId } = rResult;
     const localResultDBName = `local-consortium-${rResult.consortiumId}`;
     const localDB = this.dbRegistry.get(localResultDBName);
 

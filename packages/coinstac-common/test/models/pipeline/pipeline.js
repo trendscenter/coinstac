@@ -1,11 +1,10 @@
 'use strict';
 
 require('../../helpers/boot');
-const common = require('../../../');
-
-const Pipeline = common.models.pipeline.Pipeline;
-const pipelines = require('./.test-pipelines');
 const test = require('tape');
+const { models: { pipeline: { Pipeline } } } = require('../../../');
+
+const pipelines = require('./.test-pipelines');
 
 test('model::Pipeline constructor - basics', (t) => {
   t.throws(

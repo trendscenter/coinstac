@@ -75,7 +75,7 @@ export default function reducer(state = INITIAL_STATE, action) {
     case PULL_COMPUTATIONS:
       return { ...state, dlComplete: action.payload };
     case REMOVE_IMAGE: {
-      const localImages = state.localImages;
+      const { localImages } = state;
       delete localImages[action.payload];
       return { ...state, localImages };
     }
@@ -94,7 +94,9 @@ export default function reducer(state = INITIAL_STATE, action) {
         if (newOut.id && newOut.id !== 'latest') {
           elemIndex = outputCopy.findIndex(currentOut => newOut.id === currentOut.id);
         } else if (newOut.id && newOut.id === 'latest') {
-          elemIndex = outputCopy.findIndex(currentOut => newOut.id === currentOut.id && newOut.status === currentOut.status);
+          elemIndex = outputCopy.findIndex(
+            currentOut => newOut.id === currentOut.id && newOut.status === currentOut.status
+          );
         }
 
         if (elemIndex === -1 && !newOut.id) {

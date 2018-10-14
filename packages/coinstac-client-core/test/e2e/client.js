@@ -5,18 +5,20 @@ const fs = require('fs');
 const glob = require('glob');
 const path = require('path');
 const PouchDBAdapterMemory = require('pouchdb-adapter-memory');
-const Project = require('coinstac-common').models.Project;
 const { promisify } = require('bluebird');
 const Storage = require('dom-storage');
 const winston = require('winston');
 const ProjectService = require('../../src/sub-api/project-service.js');
 const CoinstacClient = require('../../src/index.js');
 
+const {
+  models: { Project },
+  utils: { getSyncedDatabase },
+} = coinstacCommon;
+
 coinstacCommon.services.dbRegistry.DBRegistry.Pouchy.PouchDB.plugin(
   PouchDBAdapterMemory
 );
-
-const getSyncedDatabase = coinstacCommon.utils.getSyncedDatabase;
 
 const logger = new winston.Logger({
   level: 'info',

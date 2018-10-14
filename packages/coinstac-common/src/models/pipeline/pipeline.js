@@ -64,9 +64,7 @@ class Pipeline extends Base {
    * @returns {Promise}
    */
   _postRunPlugins(opts) {
-    const runOutput = opts.runOutput;
-    const compResult = opts.compResult;
-    const pluginHooks = opts.pluginHooks;
+    const { compResult, pluginHooks, runOutput } = opts;
     if (!this._postRunTasks.length) { return Promise.resolve(); }
     return Promise.all(
       this._postRunTasks.map(fn => fn(runOutput, compResult, pluginHooks))
@@ -83,9 +81,7 @@ class Pipeline extends Base {
    * @returns {Promise}
    */
   _preRunPlugins(opts) {
-    const runInputs = opts.runInputs;
-    const compResult = opts.compResult;
-    const pluginHooks = opts.pluginHooks;
+    const { compResult, pluginHooks, runInputs } = opts;
     if (!this._preRunTasks.length) { return Promise.resolve(); }
     return Promise.all(
       this._preRunTasks.map((fn) => {
@@ -199,11 +195,9 @@ class Pipeline extends Base {
    * @returns {Promise}
    */
   _postRun(opts) {
-    const runInputs = opts.runInputs;
-    const runOutput = opts.runOutput;
-    const compResult = opts.compResult;
-    const forceSave = opts.forceSave;
-    const runCancelled = opts.runCancelled;
+    const {
+      compResult, forceSave, runCancelled, runInputs, runOutput,
+    } = opts;
 
     this.events.emit('computation:end', runInputs);
     const postRunInputs = assign({}, runInputs, { previousData: runOutput });

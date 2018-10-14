@@ -2,7 +2,7 @@
 
 const axios = require('axios');
 const tape = require('tape');
-const Consortium = require('coinstac-common').models.Consortium;
+const { models: { Consortium } } = require('coinstac-common');
 const url = require('url');
 const utils = require('../src/utils');
 

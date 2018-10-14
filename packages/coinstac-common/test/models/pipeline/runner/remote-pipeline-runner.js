@@ -1,12 +1,16 @@
 'use strict';
 
 require('../../../helpers/boot');
-const test = require('tape');
-const common = require('../../../../');
-const runnerUtils = require('./.test-runner-utils');
-
-const RemotePipelineRunner = common.models.pipeline.runner.RemotePipelineRunner;
 const cloneDeep = require('lodash/cloneDeep');
+const test = require('tape');
+const {
+  models: {
+    pipeline: {
+      runner: { RemotePipelineRunner },
+    },
+  },
+} = require('../../../../');
+const runnerUtils = require('./.test-runner-utils');
 
 test('RemotePipelineRunner::constructor', (t) => {
   const runner = new RemotePipelineRunner(runnerUtils.remoteOpts());
@@ -38,10 +42,10 @@ test('RemotePipelineRunner::run - basic', (t) => {
   // has been prevented (reduce friv computation runs)
     .then(() => {
       const prevUserResultState = cloneDeep(runner.userResultState);
-      const pipelineRunStub = () => {
+      const pipelineRunStub = (...args) => {
       // sinon stub is freaking out, so self-stub
         pipelineRunStub.called = true;
-        runner.pipeline.run(...arguments);
+        runner.pipeline.run(...args);
       };
       runner.pipeline.run = pipelineRunStub;
       runner.events.on('noop:noStateChange', () => {

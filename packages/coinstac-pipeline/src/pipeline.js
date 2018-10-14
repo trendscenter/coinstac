@@ -12,7 +12,9 @@ module.exports = {
     const stateEmitter = new Emitter();
 
 
-    const pipelineSteps = steps.map(step => Controller.create(step, runId, { mode, operatingDirectory, clientId }));
+    const pipelineSteps = steps.map(
+      step => Controller.create(step, runId, { mode, operatingDirectory, clientId })
+    );
 
     const prepCache = (pipelineSpec) => {
       pipelineSpec.forEach((step) => {

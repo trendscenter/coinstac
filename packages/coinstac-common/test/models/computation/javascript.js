@@ -1,9 +1,11 @@
 'use strict';
 
-const computations = require('../../../').models.computation;
-
-const JavascriptComputation = computations.JavascriptComputation;
 const test = require('tape');
+const {
+  models: {
+    computation: { JavascriptComputation },
+  },
+} = require('../../../');
 
 test('model::JavascriptComputation constructor', (t) => {
   t.throws(() => {

@@ -1,8 +1,7 @@
 'use strict';
 
-const common = require('coinstac-common');
+const { models: { User } } = require('coinstac-common');
 
-const User = common.models.User;
 const assign = require('lodash/assign');
 
 module.exports = function userFactory(opts) {

@@ -6,22 +6,29 @@
  * MUST be assert if it's async.
  */
 require('../../../../helpers/boot');
-const test = require('tape');
-const poolUtils = require('./.test-pool-utils');
-const EventEmitter = require('events').EventEmitter;
-const common = require('../../../../../');
-
-const computation = common.models.computation;
-const Consortium = common.models.Consortium;
-const Pouchy = require('pouchy');
-
-const PipelineRunnerPool = common.models.pipeline.runner.pool.PipelineRunnerPool;
-const ComputationResult = computation.ComputationResult;
-const LocalComputationResult = computation.LocalComputationResult;
-const RemoteComputationResult = computation.RemoteComputationResult;
-const LocalPipelineRunner = common.models.pipeline.runner.LocalPipelineRunner;
-const pipelines = require('../../.test-pipelines');
 const assign = require('lodash/assign');
+const test = require('tape');
+const Pouchy = require('pouchy');
+const EventEmitter = require('events');
+const poolUtils = require('./.test-pool-utils');
+const {
+  models: {
+    computation: {
+      ComputationResult,
+      LocalComputationResult,
+      RemoteComputationResult,
+    },
+    Consortium,
+    pipeline: {
+      runner: {
+        LocalPipelineRunner,
+        pool: { PipelineRunnerPool },
+      },
+    },
+  },
+} = require('../../../../../');
+
+const pipelines = require('../../.test-pipelines');
 
 /**
  * @function remoteResultOpts

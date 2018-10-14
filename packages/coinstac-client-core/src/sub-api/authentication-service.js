@@ -6,7 +6,7 @@ const btoa = require('btoa');
 const coinsDepositBox = require('coins-deposit-box');
 const DomStorage = require('dom-storage');
 const Halfpenny = require('halfpenny');
-const User = require('coinstac-common').models.User;
+const { models: { User } } = require('coinstac-common');
 const conf = require('./../../config.js');
 
 /**
@@ -110,7 +110,9 @@ class AuthenticationService extends Halfpenny {
    * @returns {(Object|null)}
    */
   setDatabaseCredentials(credentials) {
-    this.storage[AuthenticationService.DATABASE_CREDENTIALS_KEY] = btoa(JSON.stringify(credentials));
+    this.storage[AuthenticationService.DATABASE_CREDENTIALS_KEY] = btoa(
+      JSON.stringify(credentials)
+    );
     return this.getDatabaseCredentials();
   }
 

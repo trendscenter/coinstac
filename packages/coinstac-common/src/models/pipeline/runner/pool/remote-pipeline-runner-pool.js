@@ -85,7 +85,7 @@ class RemotePipelineRunnerPool extends PipelineRunnerPool {
    * @returns {Promise}
    */
   getRemoteResult(db, lResult) {
-    const runId = lResult.runId;
+    const { runId } = lResult;
     return RemotePipelineRunnerPool.getLatestResult(db, runId)
       .then((rResult) => {
         if (rResult) { return rResult; }
@@ -137,9 +137,7 @@ class RemotePipelineRunnerPool extends PipelineRunnerPool {
    * @returns {Promise}
    */
   buildNewRemoteResult(lResult) {
-    const runId = lResult.runId;
-    const consortiumId = lResult.consortiumId;
-    const computationId = lResult.computationId;
+    const { computationId, consortiumId, runId } = lResult;
     return this.dbRegistry.get('consortia').get(consortiumId)
       .then(({ activeComputationInputs, users }) => new RemoteComputationResult({
         _id: runId,

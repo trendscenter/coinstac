@@ -69,7 +69,9 @@ module.exports = {
           controllerState.runType = activeControlBox.runType || controllerState.runType;
           controllerState.initialized = true;
           controllerState.computationIndex = 0;
+          /* eslint-disable max-len */
           controllerState.activeComputations[controllerState.computationIndex] = controllerState.currentComputations[controllerState.computationIndex];
+          /* eslint-enable max-len */
           setStateProp('iteration', 0);
         }
 
@@ -94,7 +96,10 @@ module.exports = {
                 )
                 .then((output) => {
                   cache = Object.assign(cache, output.cache);
-                  controllerState.currentOutput = { output: output.output, success: output.success };
+                  controllerState.currentOutput = {
+                    output: output.output,
+                    success: output.success,
+                  };
                   setStateProp('state', 'finished iteration');
                   cb(output.output);
                 }).catch(({
@@ -133,7 +138,10 @@ module.exports = {
               return remoteHandler({ input: controllerState.currentOutput })
                 .then((output) => {
                   setStateProp('state', 'finished remote iteration');
-                  controllerState.currentOutput = { output: output.output, success: output.success };
+                  controllerState.currentOutput = {
+                    output: output.output,
+                    success: output.success,
+                  };
                   cb(output.output);
                 }).catch(error => err(error));
             case 'firstServerRemote':
@@ -143,7 +151,10 @@ module.exports = {
               return remoteHandler({ input: controllerState.currentOutput, noop: true })
                 .then((output) => {
                   setStateProp('state', 'finished remote iteration');
-                  controllerState.currentOutput = { output: output.output, success: output.success };
+                  controllerState.currentOutput = {
+                    output: output.output,
+                    success: output.success,
+                  };
                   cb(output.output);
                 }).catch(error => err(error));
             case 'doneRemote':

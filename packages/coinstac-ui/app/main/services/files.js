@@ -1,6 +1,6 @@
 'use strict';
 
-const dialog = require('electron').dialog;
+const { dialog } = require('electron');
 
 module.exports = {
   /**

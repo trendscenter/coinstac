@@ -1,7 +1,7 @@
 'use strict';
 
-const Base = require('../../').models.Base;
 const test = require('tape');
+const { models: { Base } } = require('../../');
 
 test('model::base - constructor', (t) => {
   let bm = new Base();

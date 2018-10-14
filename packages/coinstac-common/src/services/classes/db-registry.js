@@ -220,7 +220,7 @@ class DBRegistry {
     }
     /* istanbul ignore if */
     if (!db) {
-      throw new ReferenceError(`db "${name}" not found. unable to remove`);
+      throw new ReferenceError(`db "${db}" not found. unable to remove`);
     }
     /* istanbul ignore else */
     if (db.syncEmitter) { db.syncEmitter.cancel(); }
@@ -238,7 +238,9 @@ class DBRegistry {
     const options = opts || {};
     return Promise.all(this.all.map(this.cleanUpDB.bind(this, options.deleteDBs)))
       .then((destroyed) => {
-        const notDestroyed = destroyed.filter(confirmation => (confirmation[0] ? !confirmation[0].ok : false));
+        const notDestroyed = destroyed.filter(
+          confirmation => (confirmation[0] ? !confirmation[0].ok : false)
+        );
         /* istanbul ignore if */
         if (notDestroyed.length) {
           throw new Error('unable to destroy all dbs');

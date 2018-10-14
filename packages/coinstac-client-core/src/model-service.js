@@ -4,7 +4,7 @@ const common = require('coinstac-common');
 const find = require('lodash/find');
 const matchesProperty = require('lodash/matchesProperty');
 
-const getSyncedDatabase = common.utils.getSyncedDatabase;
+const { utils: { getSyncedDatabase } } = common;
 
 /**
  * @abstract

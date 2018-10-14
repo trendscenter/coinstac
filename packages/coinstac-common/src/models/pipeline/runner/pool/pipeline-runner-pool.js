@@ -1,6 +1,6 @@
 'use strict';
 
-const EventEmitter = require('events').EventEmitter;
+const EventEmitter = require('events');
 const Pouchy = require('pouchy');
 const joi = require('joi');
 const values = require('lodash/values');
@@ -232,8 +232,7 @@ class PipelineRunnerPool extends Base {
    * @property {Function[]} postRun
    */
   static getPipelinePlugins(opts) {
-    const plugins = opts.comp.plugins;
-    const env = opts.env;
+    const { env, comp: { plugins } } = opts;
     /* istanbul ignore if */
     if (!env || !(env === 'local' || env === 'remote')) {
       throw new ReferenceError('expected local or remote env');
@@ -478,8 +477,10 @@ class PipelineRunnerPool extends Base {
    * @returns {Promise}
    */
   upsertListener(opts) {
-    const dbStr = opts.dbStr;
-    const prefix = opts.listenToPrefix;
+    const {
+      dbStr,
+      listenToPrefix: prefix,
+    } = opts;
     const doListenRE = new RegExp(`${prefix}-consortium-([^-]+)$`);
     if (!dbStr.match(doListenRE)) { return Promise.resolve(); }
     const _id = dbStr.match(doListenRE)[1];
@@ -546,7 +547,7 @@ class PipelineRunnerPool extends Base {
    * @returns {undefined}
    */
   triggerRunner(result, userData) {
-    const runId = result.runId;
+    const { runId } = result;
 
     // instantiate a processing queue for a decentralized computation run
     if (!this.runQueue[runId]) {
@@ -612,8 +613,7 @@ class PipelineRunnerPool extends Base {
    */
   _run(input) {
     let hasHalted = false;
-    const result = input.result;
-    const userData = input.userData;
+    const { result, userData } = input;
     const runner = this.runners[result.runId];
     /* istanbul ignore if */
     if (!result) { throw new ReferenceError('missing result'); }

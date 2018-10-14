@@ -3,7 +3,7 @@
 const net = require('net');
 require('trace');
 require('clarify');
-const Transform = require('stream').Transform;
+const { Transform } = require('stream');
 const { spawn } = require('child_process');
 const winston = require('winston');
 

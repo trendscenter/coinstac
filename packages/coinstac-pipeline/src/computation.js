@@ -9,7 +9,7 @@ module.exports = {
       spec.computation,
       mode === 'remote' ? spec.computation.remote : {}
     );
-    const meta = spec.meta;
+    const { meta } = spec;
 
     return {
       computation,

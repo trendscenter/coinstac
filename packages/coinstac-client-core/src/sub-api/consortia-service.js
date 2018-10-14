@@ -3,11 +3,10 @@
 /**
  * @module consortia-service
  */
-const common = require('coinstac-common');
+const { models: { Consortium } } = require('coinstac-common');
 const uuid = require('uuid');
 const toArray = require('lodash/toArray');
 
-const Consortium = common.models.Consortium;
 const ModelService = require('../model-service');
 
 class ConsortiaService extends ModelService {

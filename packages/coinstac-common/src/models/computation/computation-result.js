@@ -59,7 +59,7 @@ ComputationResult.prototype._extractRunId = memoize(function _extractRunId(_id) 
   // enable abstract class testing by enabling loose _id runId extraction
   const runRegex = this._idRegex || /(^[^-]+)-?/;
   try {
-    runId = _id.match(runRegex)[1];
+    [, runId] = _id.match(runRegex);
   } catch (err) {
     /* istanbul ignore next */
     if (err instanceof TypeError) {
