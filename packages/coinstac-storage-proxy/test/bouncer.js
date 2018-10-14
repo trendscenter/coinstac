@@ -101,7 +101,9 @@ tape('Bouncer: mapUri', (t) => {
     allow: getMockFn(),
     valConOwn: getMockFn(() => { return Promise.resolve(true); }),
     valConMem: getMockFn(() => { return Promise.resolve(true); }),
-    valConMemThrow: getMockFn(() => { return Promise.reject(false); }),
+    valConMemThrow: getMockFn(() => {
+      return Promise.reject(false); // eslint-disable-line prefer-promise-reject-errors
+    }),
     handleAuthRejection: getMockFn(),
     testPathRegExp: getMockFn(() => { return true; }),
   };

@@ -28,7 +28,10 @@ const UPDATE_USER_PERMS = 'UPDATE_USER_PERMS';
 export const setUser = user => ({ type: SET_USER, payload: user });
 export const clearError = () => ({ type: CLEAR_ERROR, payload: null });
 export const updateUserPerms = perms => ({ type: UPDATE_USER_PERMS, payload: perms });
-export const updateUserConsortiaStatuses = statuses => ({ type: UPDATE_USER_CONSORTIA_STATUSES, payload: statuses });
+export const updateUserConsortiaStatuses = statuses => ({
+  type: UPDATE_USER_CONSORTIA_STATUSES,
+  payload: statuses,
+});
 export const clearUser = () => ({ type: CLEAR_USER, payload: null });
 
 // Helpers

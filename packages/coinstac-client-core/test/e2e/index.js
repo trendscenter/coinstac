@@ -1,6 +1,6 @@
 'use strict';
 
-const fork = require('child_process').fork;
+const { fork } = require('child_process');
 const os = require('os');
 const path = require('path');
 const winston = require('winston');

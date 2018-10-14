@@ -3,10 +3,12 @@
 require('../pipeline/.test-pipelines');
 
 const assign = require('lodash/assign');
-const computations = require('../../../').models.computation;
-
-const ComputationResult = computations.ComputationResult;
 const test = require('tape');
+const {
+  models: {
+    computations: { ComputationResult },
+  },
+} = require('../../../');
 
 const genOpts = (opts) => {
   return assign({}, {

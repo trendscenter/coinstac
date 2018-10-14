@@ -2,7 +2,7 @@
 
 const test = require('tape');
 const _ = require('lodash');
-const Consortium = require('../../').models.Consortium;
+const { models: { Consortium } } = require('../../');
 
 const validOpts = () => ({
   _id: 'testConsortiumId',

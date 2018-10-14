@@ -1,12 +1,17 @@
 'use strict';
 
 require('../../../helpers/boot');
+const noop = require('lodash/noop');
 const test = require('tape');
-const common = require('../../../../');
 const runnerUtils = require('./.test-runner-utils');
 
-const LocalPipelineRunner = common.models.pipeline.runner.LocalPipelineRunner;
-const noop = require('lodash/noop');
+const {
+  models: {
+    pipeline: {
+      runner: { LocalPipelineRunner },
+    },
+  },
+} = require('../../../../');
 
 test('LocalPipelineRunner constructor - basic', (t) => {
   const runner = new LocalPipelineRunner(runnerUtils.localOpts());

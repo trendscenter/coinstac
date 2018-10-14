@@ -1,6 +1,6 @@
 'use strict';
 
-const EventEmitter = require('events').EventEmitter;
+const EventEmitter = require('events');
 const joi = require('joi');
 const assign = require('lodash/assign');
 const get = require('lodash/get');

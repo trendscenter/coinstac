@@ -19,8 +19,7 @@ const winston = require('winston');
 // set w/ config etc post release
 process.LOGLEVEL = 'silly';
 
-const Logger = winston.Logger;
-const Console = winston.transports.Console;
+const { Logger, transports: { Console } } = winston;
 const DockerManager = require('coinstac-docker-manager');
 const PipelineManager = require('coinstac-pipeline');
 
@@ -173,7 +172,7 @@ class CoinstacClient {
             return { error: `Group contains multiple extensions - ${extension} & ${subGroup.extension}.` };
           }
 
-          extension = subGroup.extension;
+          extension = subGroup.extension; // eslint-disable-line prefer-destructuring
           pathsArray = pathsArray.concat(subGroup.paths);
         }
       } else {

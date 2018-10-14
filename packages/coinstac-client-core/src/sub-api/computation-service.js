@@ -3,16 +3,19 @@
 /**
  * @module computation-service
  */
-const common = require('coinstac-common');
-
-const Computation = common.models.computation.Computation;
+const {
+  models: {
+    computation: {
+      Computation,
+      RemoteComputationResult,
+    },
+  },
+  utils: { getSyncedDatabase },
+} = require('coinstac-common');
 const crypto = require('crypto');
 const deepEqual = require('deep-equal');
 
-const getSyncedDatabase = common.utils.getSyncedDatabase;
 const ModelService = require('../model-service');
-
-const RemoteComputationResult = common.models.computation.RemoteComputationResult;
 
 /**
  * @extends ModelService
@@ -33,7 +36,7 @@ class ComputationService extends ModelService {
    * error if a computation *can not* start.
    */
   canStartComputation(consortiumId) {
-    const client = this.client;
+    const { client } = this;
 
     return getSyncedDatabase(
       client.dbRegistry,
@@ -48,7 +51,7 @@ class ComputationService extends ModelService {
         }),
       ]))
       .then(([consortium, docs]) => {
-        const activeComputationId = consortium.activeComputationId;
+        const { activeComputationId } = consortium;
         const isConsortiumOwner = consortium.owners.indexOf(client.auth.getUser().username) > -1;
 
         if (!activeComputationId) {

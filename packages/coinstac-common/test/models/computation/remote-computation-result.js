@@ -1,10 +1,12 @@
 'use strict';
 
 const assign = require('lodash/assign');
-const computations = require('../../../').models.computation;
-
-const RemoteComputationResult = computations.RemoteComputationResult;
 const test = require('tape');
+const {
+  models: {
+    computation: { RemoteComputationResult },
+  },
+} = require('../../../');
 
 const genOpts = (opts) => {
   return assign({}, {

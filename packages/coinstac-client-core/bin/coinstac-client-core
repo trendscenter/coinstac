@@ -4,9 +4,14 @@
 
 const assign = require('lodash/assign');
 const bluebird = require('bluebird');
-const common = require('coinstac-common');
 const { compact, flatten } = require('lodash');
-const DBRegistry = require('coinstac-common').services.dbRegistry.DBRegistry;
+const {
+  models: { Project },
+  services: {
+    dbRegistry: { DBRegistry },
+  },
+  utils: { getSyncedDatabase },
+} = require('coinstac-common');
 const dropRight = require('lodash/dropRight');
 const fs = require('fs');
 const glob = require('glob');
@@ -15,14 +20,11 @@ const last = require('lodash/last');
 const path = require('path');
 const pouchDBAdapterMemory = require('pouchdb-adapter-memory');
 const program = require('commander');
-const Project = require('coinstac-common').models.Project;
 const Storage = require('dom-storage');
 const url = require('url');
 const winston = require('winston');
 const pkg = require('../package.json');
 const CoinstacClient = require('../src/index');
-
-const getSyncedDatabase = common.utils.getSyncedDatabase;
 
 // PouchDB 5.4.x requires the memory plugin
 DBRegistry.Pouchy.plugin(pouchDBAdapterMemory);
@@ -151,7 +153,7 @@ program
 
     client = new CoinstacClient(clientOptions);
 
-    username = answers.username;
+    username = answers.username; // eslint-disable-line prefer-destructuring
 
     logger.info('Logging in...');
 

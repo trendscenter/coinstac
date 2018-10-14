@@ -8,7 +8,7 @@
  */
 
 /* eslint-disable no-console */
-const Consortium = require('coinstac-common').models.Consortium;
+const { models: { Consortium } } = require('coinstac-common');
 
 const config = {
   _id: 'thisisonlyatest',

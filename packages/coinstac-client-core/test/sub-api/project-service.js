@@ -35,7 +35,7 @@ test('ProjectService#getCSV', (t) => {
     ['./M101.txt', '18', 'false'],
     ['./M102.txt', '65', 'true'],
   ];
-  readFileStub.yields(null, new Buffer(data.map(r => r.join(',')).join('\n')));
+  readFileStub.yields(null, Buffer.from(data.map(r => r.join(',')).join('\n')));
 
   t.plan(2);
 

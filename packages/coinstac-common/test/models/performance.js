@@ -4,7 +4,7 @@ const _ = require('lodash');
 const joi = require('joi');
 const test = require('tape');
 const now = require('performance-now');
-const Base = require('../../').models.Base;
+const { models: { Base } } = require('../../');
 
 // define SimpleModel, pure JS class, no validation
 function SimpleModel(attrs) {

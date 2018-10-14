@@ -5,8 +5,14 @@ const sinon = require('sinon');
 const tape = require('tape');
 const ComputationService = require('../../src/sub-api/computation-service');
 
-const Computation = common.models.computation.Computation;
-const RemoteComputationResult = common.models.computation.RemoteComputationResult;
+const {
+  models: {
+    computation: {
+      Computation,
+      RemoteComputationResult,
+    },
+  },
+} = common;
 
 /**
  * Get stubbed params fro `ComputationService#kickoff`.
@@ -240,8 +246,8 @@ tape('ComputationService :: doTriggerRunner', (t) => {
         'retrieves project via projectId'
       );
 
-      const triggerRunnerStub = params.client.pool.triggerRunner;
-      const args = triggerRunnerStub.firstCall.args;
+      const { client: { pool: { triggerRunnerStub } } } = params;
+      const { firstCall: { args } } = triggerRunnerStub;
 
       t.ok(
         args[0] instanceof RemoteComputationResult,

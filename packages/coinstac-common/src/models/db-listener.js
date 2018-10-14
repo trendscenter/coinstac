@@ -22,7 +22,7 @@ class DBListener extends EventEmitter {
       include_docs: true,
     })
       .on('change', (info) => {
-        const doc = info.doc;
+        const { doc } = info;
         /* istanbul ignore if */
         if (info.deleted) {
           this.emit('delete', { doc, name: this.name });

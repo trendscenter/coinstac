@@ -3,8 +3,8 @@
 'use strict';
 
 require('../helpers/boot');
-const registryFactory = require('../../').services.dbRegistry;
 const test = require('tape');
+const registryFactory = require('../../').services.dbRegistry;
 
 test('registry - construction', (t) => {
   t.throws(() => {

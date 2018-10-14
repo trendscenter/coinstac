@@ -1,16 +1,24 @@
 'use strict';
 
 require('../../../../helpers/boot');
+const assign = require('lodash/assign');
 const test = require('tape');
 const poolUtils = require('./.test-pool-utils');
-const common = require('../../../../../');
-
-const runner = common.models.pipeline.runner;
-const computation = common.models.computation;
-const RemotePipelineRunnerPool = runner.pool.RemotePipelineRunnerPool;
-const RemoteComputationResult = computation.RemoteComputationResult;
-const LocalComputationResult = computation.LocalComputationResult;
-const assign = require('lodash/assign');
+const {
+  models: {
+    computation: {
+      LocalComputationResult,
+      RemoteComputationResult,
+    },
+    pipeline: {
+      runner: {
+        pool: {
+          RemotePipelineRunnerPool,
+        },
+      },
+    },
+  },
+} = require('../../../../../');
 
 /**
  * @function localResultOpts
