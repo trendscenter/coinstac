@@ -2,8 +2,8 @@ module.exports = {
   parserOptions: {
     ecmaVersion: 6,
     ecmaFeatures: {
-      jsx: true,
-      experimentalObjectRestSpread: true
+      experimentalObjectRestSpread: true,
+      jsx: true
     },
   },
   extends: 'airbnb',
