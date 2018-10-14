@@ -20,7 +20,7 @@ module.exports = {
     };
     const notIgnored = (filepath) => {
       const IGNORE_API = [
-            //    __filename
+        //    __filename
       ];
       return IGNORE_API.some(txt => filepath.match(txt));
     };

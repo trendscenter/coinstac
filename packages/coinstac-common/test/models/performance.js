@@ -2,9 +2,9 @@
 
 const _ = require('lodash');
 const joi = require('joi');
-const Base = require('../../').models.Base;
 const test = require('tape');
 const now = require('performance-now');
+const Base = require('../../').models.Base;
 
 // define SimpleModel, pure JS class, no validation
 function SimpleModel(attrs) {
@@ -46,7 +46,7 @@ test('perf - pojo model time diff', (t) => {
   let model;
   const modelGenCount = 2000;
 
-    // pojo time
+  // pojo time
   let begin = now();
   for (let i = 0; i < _.times(modelGenCount).length; i += 1) {
     model = validOps();
@@ -56,7 +56,7 @@ test('perf - pojo model time diff', (t) => {
 
   pojoTime = parseFloat((end - begin).toFixed(2), 10);
 
-    // simple model time
+  // simple model time
   begin = now();
   for (let i = 0; i < _.times(modelGenCount).length; i += 1) {
     model = new SimpleModel(validOps());
@@ -66,7 +66,7 @@ test('perf - pojo model time diff', (t) => {
 
   simpleModelTime = parseFloat((end - begin).toFixed(2), 10);
 
-    // heavy model time
+  // heavy model time
   begin = now();
   for (let i = 0; i < _.times(modelGenCount).length; i += 1) {
     model = new HeavyModel(validOps());
@@ -76,7 +76,7 @@ test('perf - pojo model time diff', (t) => {
 
   heavyModelTime = parseFloat((end - begin).toFixed(2), 10);
 
-    // heavy model no validation time
+  // heavy model no validation time
   begin = now();
   for (let i = 0; i < _.times(modelGenCount).length; i += 1) {
     model = new HeavyModelNoValidation(validOps());
@@ -86,11 +86,11 @@ test('perf - pojo model time diff', (t) => {
 
   heavyModelNoValidationTime = parseFloat((end - begin).toFixed(2), 10);
 
-    // console.log(`Generated ${modelGenCount} models.  Results in ms:`);
-    // console.log('pojo model', pojoTime);
-    // console.log('basic no validation js class model', simpleModelTime);
-    // console.log('heavy model with validation', heavyModelTime);
-    // console.log('heavy model, no validation', heavyModelNoValidationTime);
+  // console.log(`Generated ${modelGenCount} models.  Results in ms:`);
+  // console.log('pojo model', pojoTime);
+  // console.log('basic no validation js class model', simpleModelTime);
+  // console.log('heavy model with validation', heavyModelTime);
+  // console.log('heavy model, no validation', heavyModelNoValidationTime);
 
   t.ok(heavyModelTime / modelGenCount < 5, 'heavy models generated in < 5ms');
   t.end();

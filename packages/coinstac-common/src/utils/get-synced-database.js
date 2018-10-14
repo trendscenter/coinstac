@@ -12,7 +12,7 @@
 module.exports = function getSyncDatabase(dbRegistry, name) {
   if (!dbRegistry) {
     return Promise.reject(new Error('Requires DBRegistry instance'));
-  } else if (!name) {
+  } if (!name) {
     return Promise.reject(new Error('Requires database name'));
   }
 

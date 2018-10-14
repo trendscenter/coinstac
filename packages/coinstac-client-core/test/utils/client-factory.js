@@ -48,8 +48,8 @@ module.exports = function clientFactory(opts) {
     password: clientOpts.user.password,
     username: clientOpts.user.username,
   })
-  .then(() => {
-    cc.auth.logout = () => Promise.resolve();
-    return cc;
-  });
+    .then(() => {
+      cc.auth.logout = () => Promise.resolve();
+      return cc;
+    });
 };

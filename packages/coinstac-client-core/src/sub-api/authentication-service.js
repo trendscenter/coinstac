@@ -4,10 +4,10 @@ const atob = require('atob');
 const axios = require('axios');
 const btoa = require('btoa');
 const coinsDepositBox = require('coins-deposit-box');
-const conf = require('./../../config.js');
 const DomStorage = require('dom-storage');
 const Halfpenny = require('halfpenny');
 const User = require('coinstac-common').models.User;
+const conf = require('./../../config.js');
 
 /**
  * Authentication Service
@@ -110,8 +110,7 @@ class AuthenticationService extends Halfpenny {
    * @returns {(Object|null)}
    */
   setDatabaseCredentials(credentials) {
-    this.storage[AuthenticationService.DATABASE_CREDENTIALS_KEY] =
-      btoa(JSON.stringify(credentials));
+    this.storage[AuthenticationService.DATABASE_CREDENTIALS_KEY] = btoa(JSON.stringify(credentials));
     return this.getDatabaseCredentials();
   }
 
@@ -138,12 +137,12 @@ class AuthenticationService extends Halfpenny {
   static factory(config) {
     return new AuthenticationService({
       authCookieName: coinsDepositBox.cookieName,
-      baseUrl: typeof config === 'object' && config.baseUrl ?
-        config.baseUrl :
-        conf.get('baseUrl'),
-      storage: typeof config === 'object' && config.storage ?
-        config.storage :
-        new DomStorage(),
+      baseUrl: typeof config === 'object' && config.baseUrl
+        ? config.baseUrl
+        : conf.get('baseUrl'),
+      storage: typeof config === 'object' && config.storage
+        ? config.storage
+        : new DomStorage(),
       requestEngine: axios,
     });
   }

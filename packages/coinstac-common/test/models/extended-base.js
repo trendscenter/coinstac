@@ -1,9 +1,9 @@
 'use strict';
 
-const Base = require('../../src/models/base.js');
 const test = require('tape');
 const joi = require('joi');
 const sinon = require('sinon');
+const Base = require('../../src/models/base.js');
 
 class ExtendedBase extends Base {
 }
@@ -30,19 +30,19 @@ test('model::base - extended class', (t) => {
   let extbm = new ExtendedBase({ dummyField: 'abc' });
   t.ok(extbm, 'constructs with valid input');
 
-    // test serialize/toJSON with full attrs
+  // test serialize/toJSON with full attrs
   let dummyAttrs = { dummyField: 'xyz', testField: '12' };
   extbm = new ExtendedBase(dummyAttrs);
   t.deepEquals(
-        dummyAttrs,
-        extbm.serialize(),
-        'base serialize ok (only schema attrs copied) (full attr set)'
-    );
+    dummyAttrs,
+    extbm.serialize(),
+    'base serialize ok (only schema attrs copied) (full attr set)'
+  );
   t.deepEquals(
-        dummyAttrs,
-        extbm.toJSON(),
-        'base .toJSON ok (full attr set)'
-    );
+    dummyAttrs,
+    extbm.toJSON(),
+    'base .toJSON ok (full attr set)'
+  );
 
   // test serialize/toJSON with incomplete but valid attrs
   dummyAttrs = { dummyField: 'xyz' };
@@ -77,7 +77,7 @@ test('model::base - extended class', (t) => {
       'called with partial model values, { attrKey: attrValue }',
       'when validating only fields',
     ].join(' ')
-    );
+  );
   t.deepEquals(
     { fields: true },
     extbm._validate.getCall(0).args[1],

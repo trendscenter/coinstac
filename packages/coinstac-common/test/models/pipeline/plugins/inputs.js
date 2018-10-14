@@ -1,9 +1,9 @@
 'use strict';
 
-const inputs = require('../../../../src/models/pipeline/plugins/inputs');
 const { noop } = require('lodash');
 const { spy } = require('sinon');
 const tape = require('tape');
+const inputs = require('../../../../src/models/pipeline/plugins/inputs');
 
 function getHooks() {
   return {

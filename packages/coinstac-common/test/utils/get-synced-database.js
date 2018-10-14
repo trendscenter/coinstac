@@ -1,9 +1,9 @@
 'use strict';
 
 const EventEmitter = require('events');
-const getSyncedDatabase = require('../../src/utils/get-synced-database');
 const sinon = require('sinon');
 const tape = require('tape');
+const getSyncedDatabase = require('../../src/utils/get-synced-database');
 
 function getMockDBRegistry(pouchy) {
   return {

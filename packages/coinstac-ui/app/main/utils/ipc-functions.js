@@ -18,7 +18,9 @@ module.exports = {
           ),
         ]);
       })
-      .then(([metaFilePath, metaFile, files]) => ({ metaFilePath, metaFile, files, extension: '.csv' }));
+      .then(([metaFilePath, metaFile, files]) => ({
+        metaFilePath, metaFile, files, extension: '.csv',
+      }));
   },
   returnFileAsJSON(filePath, core) {
     return core.constructor.getJSONSchema(filePath[0]);

@@ -9,11 +9,11 @@ let appOpts;
 function parse() {
   if (process.defaultApp) {
     const opts = program
-    .allowUnknownOption()
-    .option('-dev, --development', 'run in development mode (NODE_ENV === "development")')
-    .option('-w, --webpack', 'boot webpack dev server as child process')
-    .option('--log-level [level]', 'set log level (silly/verbose/info/warn/error)')
-    .parse(process.argv);
+      .allowUnknownOption()
+      .option('-dev, --development', 'run in development mode (NODE_ENV === "development")')
+      .option('-w, --webpack', 'boot webpack dev server as child process')
+      .option('--log-level [level]', 'set log level (silly/verbose/info/warn/error)')
+      .parse(process.argv);
     appOpts = opts;
 
     if (opts.development) {

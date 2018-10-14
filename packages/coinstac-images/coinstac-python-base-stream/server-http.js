@@ -19,9 +19,9 @@ process.on('uncaughtException', (err) => {
 
 const createWebServer = (requestHandler) => {
   const server = net.createServer()
-  .on('error', (err) => {
-    logger.error(`Server Error: ${err.stack}`);
-  });
+    .on('error', (err) => {
+      logger.error(`Server Error: ${err.stack}`);
+    });
 
   const handleConnection = (socket) => {
     // Subscribe to the readable event once so we can start calling .read()
@@ -251,8 +251,8 @@ const webServer = createWebServer((req, res) => {
           while (sep !== -1) {
             if (parseCounter) {
               sep = chunk.indexOf('\r\n');
-              byteCounter = parseInt(byteTemp ?
-                byteTemp + chunk.slice(0, sep).toString : chunk.slice(0, sep).toString(), 16);
+              byteCounter = parseInt(byteTemp
+                ? byteTemp + chunk.slice(0, sep).toString : chunk.slice(0, sep).toString(), 16);
               byteTemp = undefined;
               chunk = chunk.slice(sep + 2);
               parseCounter = false;

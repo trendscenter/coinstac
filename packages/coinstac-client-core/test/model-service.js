@@ -1,9 +1,9 @@
 'use strict';
 
 const BaseModel = require('coinstac-common').models.Base;
-const ModelService = require('../src/model-service.js');
 const sinon = require('sinon');
 const test = require('tape');
+const ModelService = require('../src/model-service.js');
 
 class DummyModel extends BaseModel {}
 

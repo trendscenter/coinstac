@@ -1,23 +1,23 @@
 'use strict';
 
 const test = require('ava').test;
-const server = require('../server-ws');
 const { createReadStream, readFileSync, unlink } = require('fs');
 const resolvePath = require('path').resolve;
 const unzip = require('unzip');
 const ss = require('socket.io-stream');
 const socketIOClient = require('socket.io-client');
+const server = require('../server-ws');
 
 test.before(() => {
   return server.start({ port: 3223 })
-  .then(() => {
-    return new Promise((resolve, reject) => {
-      createReadStream(resolvePath(__dirname, 'large.json.zip'))
-      .pipe(unzip.Extract({ path: __dirname }))
-      .on('close', () => resolve())
-      .on('error', e => reject(e));
+    .then(() => {
+      return new Promise((resolve, reject) => {
+        createReadStream(resolvePath(__dirname, 'large.json.zip'))
+          .pipe(unzip.Extract({ path: __dirname }))
+          .on('close', () => resolve())
+          .on('error', e => reject(e));
+      });
     });
-  });
 });
 
 test('test run route', (t) => {
@@ -60,11 +60,11 @@ test('test run route', (t) => {
     });
   });
   return Promise.all([stdoutProm, stderrProm, endProm])
-  .then((inData) => {
-    if (inData[2].error) throw new Error(inData[2].error);
-    const orig = readFileSync(resolvePath(__dirname, './large.json')).toString();
-    t.true(orig === inData[0] && orig === inData[1] && inData[2].code === 0);
-  });
+    .then((inData) => {
+      if (inData[2].error) throw new Error(inData[2].error);
+      const orig = readFileSync(resolvePath(__dirname, './large.json')).toString();
+      t.true(orig === inData[0] && orig === inData[1] && inData[2].code === 0);
+    });
 });
 
 test.after.always('cleanup', () => {

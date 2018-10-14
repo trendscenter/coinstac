@@ -55,10 +55,10 @@ module.exports = function loadConfig() {
   }
 
   return fileExists(localConfig)
-  .then((exists) => {
-    if (exists) {
-      conf.loadFile(localConfig);
-    }
-    return conf;
-  });
+    .then((exists) => {
+      if (exists) {
+        conf.loadFile(localConfig);
+      }
+      return conf;
+    });
 };

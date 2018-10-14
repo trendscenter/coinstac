@@ -71,8 +71,7 @@ function createWindow() {
           logWindow = null;
         });
       },
-    }
-  );
+    });
   electron.Menu.setApplicationMenu(electron.Menu.buildFromTemplate(menu));
 }
 

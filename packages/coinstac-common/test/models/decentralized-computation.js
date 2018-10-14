@@ -1,8 +1,7 @@
 'use strict';
 
-const DecentralizedComputation =
-    require('../../src/models/decentralized-computation.js');
 const tape = require('tape');
+const DecentralizedComputation = require('../../src/models/decentralized-computation.js');
 
 function getValidOpts() {
   return {
@@ -97,4 +96,3 @@ tape('model::DecentralizedComputation - getComputationDocument', (t) => {
   );
   t.end();
 });
-

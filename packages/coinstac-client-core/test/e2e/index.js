@@ -22,7 +22,8 @@ function getChild() {
     const child = fork(
       path.join(__dirname, 'client.js'), {
         silent: true,
-      });
+      }
+    );
     const logger = getLogger(child.pid);
     const errorLogger = getLogger(child.pid, 'error');
 
@@ -57,7 +58,9 @@ function getChild() {
 
 function startChild(
   child,
-  { consortiumId, files, initiate, metaFilePath, username }
+  {
+    consortiumId, files, initiate, metaFilePath, username,
+  }
 ) {
   return new Promise((resolve) => {
     child.on('message', (m) => {
@@ -98,4 +101,3 @@ Promise.all(usernames.map(getChild))
     })));
   })
   .catch(winston.error);
-

@@ -1,11 +1,11 @@
 'use strict';
 
-const PipelineRunner = require('./pipeline-runner.js');
-const RemoteComputationResult = require('../../computation/remote-computation-result');
 const Pouchy = require('pouchy');
 const joi = require('joi');
 const isEqual = require('lodash/isEqual');
 const cloneDeep = require('lodash/cloneDeep');
+const RemoteComputationResult = require('../../computation/remote-computation-result');
+const PipelineRunner = require('./pipeline-runner.js');
 
 /**
  * @class RemotePipelineRunner
@@ -20,7 +20,6 @@ const cloneDeep = require('lodash/cloneDeep');
  *                                   run, so as to prevent redundant computation
  */
 class RemotePipelineRunner extends PipelineRunner {
-
   /**
    * PipelineRunner does not run the pipeline because user results have not
    * changed since last run.  This occurs because results appear in the result
@@ -58,27 +57,27 @@ class RemotePipelineRunner extends PipelineRunner {
       this.getResultDocs(this.localDB, lResult.runId),
       this.getPreviousResult(this.remoteDB),
     ])
-    .then(([userResults, { prevData, pluginState }]) => {
+      .then(([userResults, { prevData, pluginState }]) => {
       // // test for run conditions, prevent frivolous runs
       // /* istanbul ignore if */
       // if (userResults.some((d) => d.pipelineState.inProgress)) {
       //   return this.events.emit('noop:noStateChange', this.result);
       // }
-      const resultState = userResults.map(d => ({ _id: d._id, _rev: d._rev })).sort();
-      if (isEqual(this.userResultState, resultState)) {
+        const resultState = userResults.map(d => ({ _id: d._id, _rev: d._rev })).sort();
+        if (isEqual(this.userResultState, resultState)) {
         // no state change, don't rerun pipeline
-        return this.events.emit('noop:noStateChange', this.result);
-      }
-      this.userResultState = resultState;
+          return this.events.emit('noop:noStateChange', this.result);
+        }
+        this.userResultState = resultState;
 
-      this.result.userErrors = RemotePipelineRunner.getUserErrors(userResults);
-      if (this.result.userErrors.length) {
-        return this.saveResult(this.remoteDB, null, null, true)
-        .then(this._flush.bind(this));
-      }
+        this.result.userErrors = RemotePipelineRunner.getUserErrors(userResults);
+        if (this.result.userErrors.length) {
+          return this.saveResult(this.remoteDB, null, null, true)
+            .then(this._flush.bind(this));
+        }
 
-      return this._run({ userResults, pluginState, prevData });
-    });
+        return this._run({ userResults, pluginState, prevData });
+      });
   }
 
   /**

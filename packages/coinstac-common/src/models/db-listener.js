@@ -21,19 +21,19 @@ class DBListener extends EventEmitter {
       since: 'now',
       include_docs: true,
     })
-    .on('change', (info) => {
-      const doc = info.doc;
-      /* istanbul ignore if */
-      if (info.deleted) {
-        this.emit('delete', { doc, name: this.name });
-      } else {
-        this.emit('change', { doc, name: this.name });
-      }
-    })
-    .on('error', (error) => {
+      .on('change', (info) => {
+        const doc = info.doc;
+        /* istanbul ignore if */
+        if (info.deleted) {
+          this.emit('delete', { doc, name: this.name });
+        } else {
+          this.emit('change', { doc, name: this.name });
+        }
+      })
+      .on('error', (error) => {
       /* istanbul ignore next */
-      this.emit('error', error);
-    });
+        this.emit('error', error);
+      });
   }
 
   /**

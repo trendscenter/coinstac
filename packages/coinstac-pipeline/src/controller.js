@@ -1,7 +1,7 @@
 'use strict';
 
-const Computation = require('./computation');
 const Emitter = require('events');
+const Computation = require('./computation');
 
 const controllers = {};
 controllers.local = require('./control-boxes/local');
@@ -69,8 +69,7 @@ module.exports = {
           controllerState.runType = activeControlBox.runType || controllerState.runType;
           controllerState.initialized = true;
           controllerState.computationIndex = 0;
-          controllerState.activeComputations[controllerState.computationIndex] =
-            controllerState.currentComputations[controllerState.computationIndex];
+          controllerState.activeComputations[controllerState.computationIndex] = controllerState.currentComputations[controllerState.computationIndex];
           setStateProp('iteration', 0);
         }
 
@@ -89,35 +88,37 @@ module.exports = {
               setStateProp('state', 'waiting on computation');
 
               return controllerState.activeComputations[controllerState.computationIndex]
-              .start(
-                { input, cache, state: controllerState },
-                { baseDirectory: operatingDirectory }
-               )
-              .then((output) => {
-                cache = Object.assign(cache, output.cache);
-                controllerState.currentOutput = { output: output.output, success: output.success };
-                setStateProp('state', 'finished iteration');
-                cb(output.output);
-              }).catch(({ statusCode, message, name, stack, input }) => {
-                const iterationError = Object.assign(
-                  new Error(),
-                  {
-                    statusCode,
-                    message,
-                    error: message,
-                    name,
-                    stack,
-                    input: input ? input.input : input,
+                .start(
+                  { input, cache, state: controllerState },
+                  { baseDirectory: operatingDirectory }
+                )
+                .then((output) => {
+                  cache = Object.assign(cache, output.cache);
+                  controllerState.currentOutput = { output: output.output, success: output.success };
+                  setStateProp('state', 'finished iteration');
+                  cb(output.output);
+                }).catch(({
+                  statusCode, message, name, stack, input,
+                }) => {
+                  const iterationError = Object.assign(
+                    new Error(),
+                    {
+                      statusCode,
+                      message,
+                      error: message,
+                      name,
+                      stack,
+                      input: input ? input.input : input,
+                    }
+                  );
+                  if (controller.type === 'local') {
+                    err(iterationError);
+                  } else {
+                    controllerState.currentOutput = iterationError;
+                    setStateProp('state', 'finished iteration with error');
+                    cb(iterationError);
                   }
-                );
-                if (controller.type === 'local') {
-                  err(iterationError);
-                } else {
-                  controllerState.currentOutput = iterationError;
-                  setStateProp('state', 'finished iteration with error');
-                  cb(iterationError);
-                }
-              });
+                });
             case 'nextComputation':
               // TODO: code for multiple comps on one controller
               // controllerState.computationIndex =
@@ -130,30 +131,30 @@ module.exports = {
             case 'remote':
               setStateProp('state', controllerState.mode === 'remote' ? 'waiting on local users' : 'waiting on central node');
               return remoteHandler({ input: controllerState.currentOutput })
-              .then((output) => {
-                setStateProp('state', 'finished remote iteration');
-                controllerState.currentOutput = { output: output.output, success: output.success };
-                cb(output.output);
-              }).catch(error => err(error));
+                .then((output) => {
+                  setStateProp('state', 'finished remote iteration');
+                  controllerState.currentOutput = { output: output.output, success: output.success };
+                  cb(output.output);
+                }).catch(error => err(error));
             case 'firstServerRemote':
               // TODO: not ideal, figure out better remote start
               // remove noop need
               setStateProp('state', 'waiting on local users');
               return remoteHandler({ input: controllerState.currentOutput, noop: true })
-              .then((output) => {
-                setStateProp('state', 'finished remote iteration');
-                controllerState.currentOutput = { output: output.output, success: output.success };
-                cb(output.output);
-              }).catch(error => err(error));
+                .then((output) => {
+                  setStateProp('state', 'finished remote iteration');
+                  controllerState.currentOutput = { output: output.output, success: output.success };
+                  cb(output.output);
+                }).catch(error => err(error));
             case 'doneRemote':
               setStateProp('state', 'waiting on local users');
               // we want the success output, grabbing the last currentOutput is fine
               // Note that input arg === controllerState.currentOutput.output at this point
               return remoteHandler({ input: controllerState.currentOutput, transmitOnly: true })
-              .then(() => {
-                setStateProp('state', 'finished final remote iteration');
-                cb(input);
-              }).catch(error => err(error));
+                .then(() => {
+                  setStateProp('state', 'finished final remote iteration');
+                  cb(input);
+                }).catch(error => err(error));
             case 'done':
               cb(input);
               break;
@@ -196,29 +197,29 @@ module.exports = {
           queue.push(done);
 
           trampoline(() => {
-            return queue.length ?
-            function _cb(...args) {
-              const argsArray = [].slice.call(args);
-              const fn = queue.shift();
-              controllerState.currentBoxCommand = activeControlBox.preIteration(controllerState);
+            return queue.length
+              ? function _cb(...args) {
+                const argsArray = [].slice.call(args);
+                const fn = queue.shift();
+                controllerState.currentBoxCommand = activeControlBox.preIteration(controllerState);
 
-              if ((controllerState.mode === 'local' && controllerState.iteration === 0) ||
-                (controllerState.mode === 'remote' && controllerState.remoteInitial)) {
+                if ((controllerState.mode === 'local' && controllerState.iteration === 0)
+                || (controllerState.mode === 'remote' && controllerState.remoteInitial)) {
                 // add initial input to first iteration
-                argsArray.unshift(input);
-              }
-              if (controllerState.currentBoxCommand !== 'done' && controllerState.currentBoxCommand !== 'doneRemote') {
-                const lastCallback = queue.pop();
-                queue.push(iterateComp);
-                queue.push(lastCallback);
-              }
+                  argsArray.unshift(input);
+                }
+                if (controllerState.currentBoxCommand !== 'done' && controllerState.currentBoxCommand !== 'doneRemote') {
+                  const lastCallback = queue.pop();
+                  queue.push(iterateComp);
+                  queue.push(lastCallback);
+                }
 
-              // necessary if this function call turns out synchronous
-              // the stack won't clear and overflow, has limited perf impact
-              process.nextTick(() => fn.apply(this, argsArray.concat([_cb, err])));
-              controllerState.remoteInitial = controllerState.mode === 'remote' ? false : undefined;
-            } :
-            undefined;  // steps complete
+                // necessary if this function call turns out synchronous
+                // the stack won't clear and overflow, has limited perf impact
+                process.nextTick(() => fn.apply(this, argsArray.concat([_cb, err])));
+                controllerState.remoteInitial = controllerState.mode === 'remote' ? false : undefined;
+              }
+              : undefined; // steps complete
           })(input);
         };
 
@@ -226,13 +227,13 @@ module.exports = {
           const errCb = (err) => {
             setStateProp('state', 'error');
             controllerState.activeComputations[controllerState.computationIndex].stop()
-            .then(() => rej(err));
+              .then(() => rej(err));
           };
 
           waterfall(input, (result) => {
             setStateProp('state', 'stopped');
             controllerState.activeComputations[controllerState.computationIndex].stop()
-            .then(() => res(result));
+              .then(() => res(result));
           }, errCb);
         });
 

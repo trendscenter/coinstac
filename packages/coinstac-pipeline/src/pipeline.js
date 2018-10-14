@@ -1,7 +1,7 @@
 'use strict';
 
-const Controller = require('./controller');
 const Emitter = require('events');
+const Controller = require('./controller');
 
 module.exports = {
   create({ steps }, runId, { mode, operatingDirectory, clientId }) {
@@ -12,8 +12,7 @@ module.exports = {
     const stateEmitter = new Emitter();
 
 
-    const pipelineSteps = steps.map(step =>
-      Controller.create(step, runId, { mode, operatingDirectory, clientId }));
+    const pipelineSteps = steps.map(step => Controller.create(step, runId, { mode, operatingDirectory, clientId }));
 
     const prepCache = (pipelineSpec) => {
       pipelineSpec.forEach((step) => {
@@ -91,10 +90,10 @@ module.exports = {
             return Promise.resolve();
           }
           return prom.then(() => step.start(this.mode === 'remote' ? {} : loadInput(step), remoteHandler))
-          .then((output) => {
-            loadCache(output, index);
-            return output;
-          });
+            .then((output) => {
+              loadCache(output, index);
+              return output;
+            });
         }, Promise.resolve());
       },
     };

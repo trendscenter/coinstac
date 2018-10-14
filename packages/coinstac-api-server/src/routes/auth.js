@@ -22,10 +22,18 @@ module.exports = [
     path: '/authenticateByToken',
     config: {
       auth: 'jwt',
-      handler: ({ auth: { credentials: { email, id, institution, permissions } } }, res) => {
+      handler: ({
+        auth: {
+          credentials: {
+            email, id, institution, permissions,
+          },
+        },
+      }, res) => {
         res({
           id_token: helperFunctions.createToken(id),
-          user: { email, id, institution, permissions },
+          user: {
+            email, id, institution, permissions,
+          },
         }).code(201);
       },
     },
@@ -40,14 +48,17 @@ module.exports = [
       ],
       handler: (req, res) => {
         helperFunctions.hashPassword(req.payload.password)
-        .then(passwordHash =>
-          helperFunctions.createUser(req.payload, passwordHash))
-        .then(({ id, institution, email, permissions }) => {
-          res({
-            id_token: helperFunctions.createToken(id),
-            user: { id, institution, email, permissions },
-          }).code(201);
-        });
+          .then(passwordHash => helperFunctions.createUser(req.payload, passwordHash))
+          .then(({
+            id, institution, email, permissions,
+          }) => {
+            res({
+              id_token: helperFunctions.createToken(id),
+              user: {
+                id, institution, email, permissions,
+              },
+            }).code(201);
+          });
       },
     },
   },

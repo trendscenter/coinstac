@@ -10,13 +10,13 @@
  * @returns {Object}
  */
 module.exports = function getLoginResponse(user) {
-  const localUser = (!user || !(user instanceof Object)) ?
-  {
-    email: 'test@nidev.mrn.org',
-    label: 'Test User',
-    username: 'testuser',
-  } :
-  user;
+  const localUser = (!user || !(user instanceof Object))
+    ? {
+      email: 'test@nidev.mrn.org',
+      label: 'Test User',
+      username: 'testuser',
+    }
+    : user;
 
   return {
     data: [{

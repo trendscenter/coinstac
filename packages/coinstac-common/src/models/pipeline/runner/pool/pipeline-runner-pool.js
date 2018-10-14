@@ -1,13 +1,6 @@
 'use strict';
 
 const EventEmitter = require('events').EventEmitter;
-const Base = require('../../../base');
-const DBRegistry = require('../../../../services/classes/db-registry');
-const DBListener = require('../../../db-listener');
-const Consortium = require('../../../consortium');
-const ComputationResult = require('../../../computation/computation-result');
-const RemoteComputationResult = require('../../../computation/remote-computation-result');
-const LocalComputationResult = require('../../../computation/local-computation-result');
 const Pouchy = require('pouchy');
 const joi = require('joi');
 const values = require('lodash/values');
@@ -15,6 +8,13 @@ const find = require('lodash/find');
 const without = require('lodash/without');
 const get = require('lodash/get');
 const bluebird = require('bluebird');
+const Base = require('../../../base');
+const DBRegistry = require('../../../../services/classes/db-registry');
+const DBListener = require('../../../db-listener');
+const Consortium = require('../../../consortium');
+const ComputationResult = require('../../../computation/computation-result');
+const RemoteComputationResult = require('../../../computation/remote-computation-result');
+const LocalComputationResult = require('../../../computation/local-computation-result');
 const PLUGINS = require('../../plugins');
 
 /**
@@ -114,7 +114,6 @@ const PLUGINS = require('../../plugins');
  * @property {function} on/emit/off basic EventEmitter functions
  */
 class PipelineRunnerPool extends Base {
-
   /**
    * Build a runner pool.
    * @param {object} [opts]
@@ -138,8 +137,8 @@ class PipelineRunnerPool extends Base {
 
   get isActive() {
     return (
-      !(this.isDestroying || this.isDestroyed) &&
-      (this.isInitialized || this.isInitializing)
+      !(this.isDestroying || this.isDestroyed)
+      && (this.isInitialized || this.isInitializing)
     );
   }
 
@@ -178,39 +177,39 @@ class PipelineRunnerPool extends Base {
     this.isDestroying = true;
 
     return (
-      !this.isInitialized ?
+      !this.isInitialized
         // wait for init completion before destroying
         // listen for the pool to come up, and only permit destroy sequence
         // once init complete
-        new Promise((resolve, reject) => {
+        ? new Promise((resolve, reject) => {
           this.events.on('ready', resolve);
           /* istanbul ignore next */
           this.events.on('error', reject);
-        }) :
-        Promise.resolve()
+        })
+        : Promise.resolve()
     )
-    .then(() => { // purge all listeners
-      this.events.removeAllListeners();
-      Pouchy.PouchDB.removeAllListeners();
+      .then(() => { // purge all listeners
+        this.events.removeAllListeners();
+        Pouchy.PouchDB.removeAllListeners();
 
-      /* istanbul ignore else */
-      if (this.consortiaListener) {
-        return this.consortiaListener.destroy();
-      }
-    })
-    .then(() => Promise.all(values(this.resultsListeners).map((listener) => {
-      return listener.destroy();
-    })))
-    .then(() => {
-      delete this.resultsListeners;
-    })
-    .then(() => this.dbRegistry.destroy({ deleteDBs: options.deleteDBs }))
-    .then(() => {
-      this.isInitialized = false;
-      this.isInitializing = false;
-      this.isDestroying = false;
-      this.isDestroyed = true;
-    });
+        /* istanbul ignore else */
+        if (this.consortiaListener) {
+          return this.consortiaListener.destroy();
+        }
+      })
+      .then(() => Promise.all(values(this.resultsListeners).map((listener) => {
+        return listener.destroy();
+      })))
+      .then(() => {
+        delete this.resultsListeners;
+      })
+      .then(() => this.dbRegistry.destroy({ deleteDBs: options.deleteDBs }))
+      .then(() => {
+        this.isInitialized = false;
+        this.isInitializing = false;
+        this.isDestroying = false;
+        this.isDestroyed = true;
+      });
   }
 
   /**
@@ -267,16 +266,16 @@ class PipelineRunnerPool extends Base {
   _initConsortiumListeners() {
     const tiaDB = this.dbRegistry.get('consortia');
     return tiaDB.all() // { include_docs: false }
-    .then((docs) => {
-      let willListenTo = docs;
-      if (this.listenTo) {
-        willListenTo = willListenTo.filter(doc => find(this.listenTo, d => d === doc._id));
-      }
-      return tiaDB.bulkGet(willListenTo);
-    })
-    .then((tia) => {
-      this.listenToConsortia(tia);
-    });
+      .then((docs) => {
+        let willListenTo = docs;
+        if (this.listenTo) {
+          willListenTo = willListenTo.filter(doc => find(this.listenTo, d => d === doc._id));
+        }
+        return tiaDB.bulkGet(willListenTo);
+      })
+      .then((tia) => {
+        this.listenToConsortia(tia);
+      });
   }
 
   /**
@@ -338,19 +337,19 @@ class PipelineRunnerPool extends Base {
 
     // open up DB connections, eventing begins immediately
     return this._syncDB('consortia')
-    .then(() => this._syncDB('computations'))
-    .then(() => {
-      return this._initConsortiumListeners();
-    })
-    .then(() => {
-      return this._listenForNewConsortia();
-    })
-    .then(() => {
-      this.isInitializing = false;
-      this.isInitialized = true;
-      this.events.emit('ready');
-      return this;
-    });
+      .then(() => this._syncDB('computations'))
+      .then(() => {
+        return this._initConsortiumListeners();
+      })
+      .then(() => {
+        return this._listenForNewConsortia();
+      })
+      .then(() => {
+        this.isInitializing = false;
+        this.isInitialized = true;
+        this.events.emit('ready');
+        return this;
+      });
   }
 
   /**
@@ -392,9 +391,9 @@ class PipelineRunnerPool extends Base {
    */
   _listenToConsortium(consortium) {
     let db;
-    const ResultDocType = this.listenToRemote ?
-      RemoteComputationResult :
-      LocalComputationResult;
+    const ResultDocType = this.listenToRemote
+      ? RemoteComputationResult
+      : LocalComputationResult;
     if (this.listenToRemote) {
       db = this.dbRegistry.get(`remote-consortium-${consortium._id}`);
     } else if (this.listenToLocal) {
@@ -487,18 +486,18 @@ class PipelineRunnerPool extends Base {
     /* istanbul ignore if */
     if (!this.isActive) { return Promise.resolve(); }
     return this.dbRegistry.get('consortia').all()
-    .then((consortia) => {
+      .then((consortia) => {
       // PouchDBs created/destroyed events are broken.
       // Early detect if a DBListener is created (or in processes)
       // @ref https://github.com/pouchdb/pouchdb/issues/4922
       /* istanbul ignore if */
-      if (!consortia.length || !this.isActive) { return; }
-      /* istanbul ignore else */
-      if (this.resultsListeners[`${prefix}-consortium-${_id}`]) { return; }
-      this.resultsListeners[`${prefix}-consortium-${_id}`] = 'constructing';
-      const consortium = consortia.find(tium => tium._id.match(_id));
-      this.listenToConsortia(consortium);
-    });
+        if (!consortia.length || !this.isActive) { return; }
+        /* istanbul ignore else */
+        if (this.resultsListeners[`${prefix}-consortium-${_id}`]) { return; }
+        this.resultsListeners[`${prefix}-consortium-${_id}`] = 'constructing';
+        const consortium = consortia.find(tium => tium._id.match(_id));
+        this.listenToConsortia(consortium);
+      });
   }
 
   /**
@@ -559,16 +558,16 @@ class PipelineRunnerPool extends Base {
     // enter computation result into processing queue
     this.runQueueSize[runId] += 1;
     this.runQueue[runId] = this.runQueue[runId]
-    .then(() => {
-      this.runQueueSize[runId] -= 1;
-      return bluebird.resolve(this._triggerRun({ result, userData }))
-      .finally(() => {
-        if (!this.runQueueSize[runId]) {
-          this.events.emit('queue:end', runId);
-          delete this.runQueue[runId];
-        }
+      .then(() => {
+        this.runQueueSize[runId] -= 1;
+        return bluebird.resolve(this._triggerRun({ result, userData }))
+          .finally(() => {
+            if (!this.runQueueSize[runId]) {
+              this.events.emit('queue:end', runId);
+              delete this.runQueue[runId];
+            }
+          });
       });
-    });
     return this.runQueue[runId];
   }
 
@@ -582,7 +581,7 @@ class PipelineRunnerPool extends Base {
    */
   _triggerRun(input) {
     return this._prepareRunner(input.result)
-    .then(() => this._run(input));
+      .then(() => this._run(input));
   }
 
   /**
@@ -595,10 +594,10 @@ class PipelineRunnerPool extends Base {
     const existingRunner = this.runners[result.runId];
     if (!existingRunner) {
       return this.createNewRunner(result)
-      .then((runner) => {
-        this.runners[result.runId] = runner;
-        return runner;
-      });
+        .then((runner) => {
+          this.runners[result.runId] = runner;
+          return runner;
+        });
     }
     return Promise.resolve(existingRunner);
   }
@@ -655,10 +654,10 @@ class PipelineRunnerPool extends Base {
     configureRunBindings('addListener');
     this.events.emit('run:start', result);
     return runner.run(result, userData)
-    .then((rslt) => {
-      if (!hasHalted) { throw new Error('run exited, but pipleine has not halted'); }
-      return rslt;
-    });
+      .then((rslt) => {
+        if (!hasHalted) { throw new Error('run exited, but pipleine has not halted'); }
+        return rslt;
+      });
   }
 
   /**

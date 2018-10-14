@@ -80,26 +80,26 @@ test('local-runner-pool builds & execs runners in response to db events', (t) =>
 
       // add in a consortium for pool to listen to events on
       pool.dbRegistry.get('consortia')
-      .save(consortium.serialize())
+        .save(consortium.serialize())
 
       // add computation to computations db
-      .then(() => {
-        return pool.dbRegistry.get('computations')
-        .save({ _id: compId, name: compId, version: compId });
-      })
+        .then(() => {
+          return pool.dbRegistry.get('computations')
+            .save({ _id: compId, name: compId, version: compId });
+        })
 
       // initialize pool
       // `.init` after consortia has docs s.t. listeners are auto created
-      .then(() => pool.init())
+        .then(() => pool.init())
 
       // create new database for remote results, sync a remote result, which
       // will trigger LocalPipeLineRunnerPool to start a new LocalPipeLineRunner
-      .then(() => {
-        return pool.dbRegistry.get(`remote-consortium-${consortium._id}`)
-        .save(remoteResult.serialize());
-      })
+        .then(() => {
+          return pool.dbRegistry.get(`remote-consortium-${consortium._id}`)
+            .save(remoteResult.serialize());
+        })
 
-      .catch(t.end);
+        .catch(t.end);
 
       // listen for the run to begin as consequence of seeing a new document
       // @note fired twice in this test. first from the saved consortium,
@@ -122,9 +122,9 @@ test('local-runner-pool builds & execs runners in response to db events', (t) =>
       });
       pool.events.on('queue:end', () => {
         pool.destroy({ deleteDBs: true })
-        .then(() => teardownServer())
-        .then(() => t.pass('pool teardown'))
-        .then(t.end, t.end);
+          .then(() => teardownServer())
+          .then(() => t.pass('pool teardown'))
+          .then(t.end, t.end);
       });
     });
 });

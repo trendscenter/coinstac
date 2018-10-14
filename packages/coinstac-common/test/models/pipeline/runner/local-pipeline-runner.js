@@ -1,8 +1,8 @@
 'use strict';
 
 require('../../../helpers/boot');
-const common = require('../../../../');
 const test = require('tape');
+const common = require('../../../../');
 const runnerUtils = require('./.test-runner-utils');
 
 const LocalPipelineRunner = common.models.pipeline.runner.LocalPipelineRunner;
@@ -69,8 +69,8 @@ test('run - basic - bogus pipeline handling', (t) => {
     t.ok(result.error.message.match(/test-error/), 'pipeline errors propogated');
   });
   runner.run(remoteResult)
-  .then(() => {
-    t.pass('run completes even w/ error');
-    t.end();
-  });
+    .then(() => {
+      t.pass('run completes even w/ error');
+      t.end();
+    });
 });

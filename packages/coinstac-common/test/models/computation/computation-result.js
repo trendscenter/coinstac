@@ -28,17 +28,17 @@ test('constructor - basic', (t) => {
   const errorOptsPatch2 = { pipelineState: null };
 
   t.ok(
-        new ComputationResult(genOpts(minFullOptsPatch)),
-        'fully loaded ComputationResult ok, 1'
-    );
+    new ComputationResult(genOpts(minFullOptsPatch)),
+    'fully loaded ComputationResult ok, 1'
+  );
   t.ok(
-        new ComputationResult(genOpts(richFullOptsPatch)),
-        'fully loaded ComputationResult ok, 2'
-    );
+    new ComputationResult(genOpts(richFullOptsPatch)),
+    'fully loaded ComputationResult ok, 2'
+  );
   t.throws(
-        () => (new ComputationResult(genOpts(errorOptsPatch2))),
-        'bogus data rejected (.pipeline)'
-    );
+    () => (new ComputationResult(genOpts(errorOptsPatch2))),
+    'bogus data rejected (.pipeline)'
+  );
   t.end();
 });
 

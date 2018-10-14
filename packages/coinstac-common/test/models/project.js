@@ -1,7 +1,7 @@
 'use strict';
 
-const File = require('../../src/models/file.js');
 const test = require('tape');
+const File = require('../../src/models/file.js');
 
 test('model::project', (t) => {
   const f1 = new File({

@@ -40,9 +40,9 @@ test('model::Computation.factory', (t) => {
 
   t.ok(_.isArray(comps), 'computations generated from single, raw comp');
   t.throws(
-        () => Computation.factory({}),
-        /ReferenceError/,
-        'errors when invalid raw computation set requested'
-    );
+    () => Computation.factory({}),
+    /ReferenceError/,
+    'errors when invalid raw computation set requested'
+  );
   t.end();
 });

@@ -17,11 +17,8 @@ const tables = [
 const initSubscriptions = (pubsub) => {
   tables.forEach((table) => {
     helperFunctions.getRethinkConnection()
-    .then(connection =>
-      rethink.table(table.tableName).changes().run(connection)
-    )
-    .then(feed =>
-      feed.each((err, change) => {
+      .then(connection => rethink.table(table.tableName).changes().run(connection))
+      .then(feed => feed.each((err, change) => {
         let val = {};
 
         if (!change.new_val) {
@@ -33,37 +30,28 @@ const initSubscriptions = (pubsub) => {
 
         if (table.tableName === 'pipelines' && !val.delete) {
           return helperFunctions.getRethinkConnection()
-          .then(connection =>
-            rethink.table('pipelines')
+            .then(connection => rethink.table('pipelines')
               .get(val.id)
-              // Populate computations subfield with computation meta information
-              .merge(pipeline =>
-                ({
-                  steps: pipeline('steps').map(step =>
-                    step.merge({
-                      computations: step('computations').map(compId =>
-                        rethink.table('computations').get(compId)
-                      ),
-                    })
-                  ),
-                })
-              )
-              .run(connection)
-          )
-          .then((result) => {
-            pubsub.publish(table.subVar, {
-              [table.subVar]: result,
-              [table.idVar]: result.id,
+            // Populate computations subfield with computation meta information
+              .merge(pipeline => ({
+                steps: pipeline('steps').map(step => step.merge({
+                  computations: step('computations').map(compId => rethink.table('computations').get(compId)),
+                })),
+              }))
+              .run(connection))
+            .then((result) => {
+              pubsub.publish(table.subVar, {
+                [table.subVar]: result,
+                [table.idVar]: result.id,
+              });
             });
-          });
         }
 
         pubsub.publish(table.subVar, {
           [table.subVar]: val,
           [table.idVar]: val.id,
         });
-      })
-    );
+      }));
   });
 };
 

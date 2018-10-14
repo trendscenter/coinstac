@@ -41,7 +41,7 @@ module.exports = {
         files => resolve(files || [])
       );
     })
-    .then(core.projects.getFileStats)
-    .then(JSON.stringify);
+      .then(core.projects.getFileStats)
+      .then(JSON.stringify);
   },
 };

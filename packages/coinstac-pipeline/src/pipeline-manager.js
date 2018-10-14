@@ -1,6 +1,5 @@
 'use strict';
 
-const Pipeline = require('./pipeline');
 const http = require('http');
 const socketIO = require('socket.io');
 const socketIOClient = require('socket.io-client');
@@ -10,6 +9,7 @@ const mkdirp = promisify(require('mkdirp'));
 const path = require('path');
 const Emitter = require('events');
 const winston = require('winston');
+const Pipeline = require('./pipeline');
 
 const logger = winston.createLogger({
   level: 'info',
@@ -133,13 +133,12 @@ module.exports = {
                   const waitingOn = waitingOnForRun(data.runId);
                   activePipelines[data.runId].currentState.waitingOn = waitingOn;
                   activePipelines[data.runId].stateEmitter
-                  .emit('update',
-                    Object.assign(
-                      {},
-                      activePipelines[data.runId].pipeline.currentState,
-                      activePipelines[data.runId].currentState
-                    )
-                  );
+                    .emit('update',
+                      Object.assign(
+                        {},
+                        activePipelines[data.runId].pipeline.currentState,
+                        activePipelines[data.runId].currentState
+                      ));
 
                   if (waitingOn.length === 0) {
                     activePipelines[data.runId].state = 'recieved all clients data';
@@ -179,7 +178,7 @@ module.exports = {
 
       if (authPlugin) {
         io.on('connection', authPlugin.authorize(authOpts))
-        .on('authenticated', socketServer);
+          .on('authenticated', socketServer);
       } else {
         io.on('connection', socketServer);
       }
@@ -304,13 +303,12 @@ module.exports = {
             const waitingOn = waitingOnForRun(runId);
             activePipelines[runId].currentState.waitingOn = waitingOn;
             activePipelines[runId].stateEmitter
-            .emit('update',
-              Object.assign(
-                {},
-                activePipelines[runId].pipeline.currentState,
-                activePipelines[runId].currentState
-              )
-            );
+              .emit('update',
+                Object.assign(
+                  {},
+                  activePipelines[runId].pipeline.currentState,
+                  activePipelines[runId].currentState
+                ));
 
             if (waitingOn.length === 0) {
               proxRes({ output: aggregateRun(runId) });
@@ -325,28 +323,28 @@ module.exports = {
           mkdirp(path.resolve(operatingDirectory, 'output', clientId, runId)),
           mkdirp(path.resolve(operatingDirectory, 'cache', clientId, runId)),
         ])
-        .catch((err) => {
-          throw new Error(`Unable to create pipeline directories: ${err}`);
-        })
-        .then(() => {
-          this.activePipelines[runId].pipeline.stateEmitter.on('update',
-            data => this.activePipelines[runId].stateEmitter
-              .emit('update', Object.assign({}, data, activePipelines[runId].currentState)));
+          .catch((err) => {
+            throw new Error(`Unable to create pipeline directories: ${err}`);
+          })
+          .then(() => {
+            this.activePipelines[runId].pipeline.stateEmitter.on('update',
+              data => this.activePipelines[runId].stateEmitter
+                .emit('update', Object.assign({}, data, activePipelines[runId].currentState)));
 
-          return activePipelines[runId].pipeline.run(remoteHandler)
-          .then((res) => {
-            activePipelines[runId].state = 'finished';
+            return activePipelines[runId].pipeline.run(remoteHandler)
+              .then((res) => {
+                activePipelines[runId].state = 'finished';
+                return res;
+              });
+          }).then((res) => {
+            delete activePipelines[runId];
+            Object.keys(remoteClients).forEach((key) => {
+              if (remoteClients[key][runId]) {
+                delete remoteClients[key][runId];
+              }
+            });
             return res;
           });
-        }).then((res) => {
-          delete activePipelines[runId];
-          Object.keys(remoteClients).forEach((key) => {
-            if (remoteClients[key][runId]) {
-              delete remoteClients[key][runId];
-            }
-          });
-          return res;
-        });
 
         return {
           pipeline: activePipelines[runId].pipeline,

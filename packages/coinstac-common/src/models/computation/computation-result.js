@@ -1,8 +1,8 @@
 'use strict';
 
-const PouchDocument = require('../pouch-document');
 const joi = require('joi');
 const memoize = require('lodash/memoize');
+const PouchDocument = require('../pouch-document');
 
 /**
  * @abstract
@@ -61,7 +61,7 @@ ComputationResult.prototype._extractRunId = memoize(function _extractRunId(_id) 
   try {
     runId = _id.match(runRegex)[1];
   } catch (err) {
-        /* istanbul ignore next */
+    /* istanbul ignore next */
     if (err instanceof TypeError) {
       throw new ReferenceError([
         'runId could not be extracted out of result id:',

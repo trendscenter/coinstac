@@ -1,10 +1,9 @@
 'use strict';
 
-const AuthenticationService =
-  require('../../src/sub-api/authentication-service.js');
 const Halfpenny = require('halfpenny');
 const sinon = require('sinon');
 const tape = require('tape');
+const AuthenticationService = require('../../src/sub-api/authentication-service.js');
 
 function getUser() {
   return {

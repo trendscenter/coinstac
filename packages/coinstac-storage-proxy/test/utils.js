@@ -2,9 +2,9 @@
 
 const axios = require('axios');
 const tape = require('tape');
-const utils = require('../src/utils');
 const Consortium = require('coinstac-common').models.Consortium;
 const url = require('url');
+const utils = require('../src/utils');
 
 const mockUrl = url.parse('http://localhost:5984');
 const mockConsortium = new Consortium({
@@ -37,9 +37,9 @@ const mockAxiosResponse = () => {
 
   const requestInterceptor = axios.interceptors.request.use(setRequestUrl);
   const responseInterceptor = axios.interceptors.response.use(
-        returnMockConsortium,
-        returnMockConsortium
-    );
+    returnMockConsortium,
+    returnMockConsortium
+  );
 
   const removeInterceptor = () => {
     axios.interceptors.request.eject(requestInterceptor);
@@ -100,13 +100,13 @@ tape('Utils: getConsortium', (t) => {
   const removeInterceptor = mockAxiosResponse();
   t.plan(1);
   utils.getConsortium(mockUrl, { path: 'consortia/foo' })
-        .then((consortium) => {
-          t.deepEquals(consortium, mockConsortium, 'returns a consortium');
-        })
-        .catch((error) => {
-          t.fail(error.message);
-        })
-        .then(removeInterceptor);
+    .then((consortium) => {
+      t.deepEquals(consortium, mockConsortium, 'returns a consortium');
+    })
+    .catch((error) => {
+      t.fail(error.message);
+    })
+    .then(removeInterceptor);
 });
 
 tape('Utils: getConsortiumIdFromRequest', (t) => {

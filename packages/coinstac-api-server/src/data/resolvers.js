@@ -3,10 +3,10 @@ const Boom = require('boom');
 const GraphQLJSON = require('graphql-type-json');
 const Promise = require('bluebird');
 const { PubSub, withFilter } = require('graphql-subscriptions');
+const axios = require('axios');
 const helperFunctions = require('../auth-helpers');
 const initSubscriptions = require('./subscriptions');
 const config = require('../../config/default');
-const axios = require('axios');
 
 /**
  * Helper function to retrieve all members of given table
@@ -15,9 +15,7 @@ const axios = require('axios');
  */
 function fetchAll(table) {
   return helperFunctions.getRethinkConnection()
-    .then(connection =>
-      rethink.table(table).orderBy({ index: 'id' }).run(connection)
-    )
+    .then(connection => rethink.table(table).orderBy({ index: 'id' }).run(connection))
     .then(cursor => cursor.toArray());
 }
 
@@ -29,30 +27,20 @@ function fetchAll(table) {
  */
 function fetchOne(table, id) {
   return helperFunctions.getRethinkConnection()
-    .then(connection =>
-      rethink.table(table).get(id).run(connection)
-    );
+    .then(connection => rethink.table(table).get(id).run(connection));
 }
 
 function fetchOnePipeline(table, id) {
   return helperFunctions.getRethinkConnection()
-    .then(connection =>
-      rethink.table('pipelines')
-        .get(id)
-        // Populate computations subfield with computation meta information
-        .merge(pipeline =>
-          ({
-            steps: pipeline('steps').map(step =>
-              step.merge({
-                computations: step('computations').map(compId =>
-                  rethink.table('computations').get(compId)
-                ),
-              })
-            ),
-          })
-        )
-        .run(connection)
-    )
+    .then(connection => rethink.table('pipelines')
+      .get(id)
+    // Populate computations subfield with computation meta information
+      .merge(pipeline => ({
+        steps: pipeline('steps').map(step => step.merge({
+          computations: step('computations').map(compId => rethink.table('computations').get(compId)),
+        })),
+      }))
+      .run(connection))
     .then(result => result);
 }
 
