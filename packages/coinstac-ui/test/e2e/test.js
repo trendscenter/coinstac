@@ -58,7 +58,7 @@ describe('Testing::e2e', () => {
   it('accesses the Add Consortium page', () => (
     app.client
       .click('a=Consortia')
-      .waitForExist('a=Create Consortium', EXIST_TIMEOUT)
+      .waitForVisible('a=Create Consortium', EXIST_TIMEOUT)
       .click('a=Create Consortium')
       .isVisible('h1=Consortium Creation').should.eventually.equal(true)
   ));
@@ -72,15 +72,19 @@ describe('Testing::e2e', () => {
       .getText('.notification-message')
       .then(notificationMessage => notificationMessage.should.equal('Consortium Saved'))
       .then(() =>
-        // wait for the notification message to disappear
-        app.client.waitForVisible('.notification-message', NOTIFICATION_DISMISS_TIMEOUT, true)
+        // wait for the notification message to disappear and check if the consortium shows up
+        // in the consortia list
+        app.client
+          .waitForVisible('.notification-message', NOTIFICATION_DISMISS_TIMEOUT, true)
+          .click('a=Consortia')
+          .waitForVisible(`h3=${CONS_NAME}`)
       )
   ));
 
   it('accesses the Add Pipeline page', () => (
     app.client
       .click('a=Pipelines')
-      .waitForExist('a=Create Pipeline', EXIST_TIMEOUT)
+      .waitForVisible('a=Create Pipeline', EXIST_TIMEOUT)
       .click('a=Create Pipeline')
       .isVisible('h1=Pipeline Creation').should.eventually.equal(true)
   ));
@@ -90,12 +94,12 @@ describe('Testing::e2e', () => {
       .setValue('#name', PIPE_NAME)
       .setValue('#description', PIPE_DESC)
       .click('#pipelineconsortia')
-      .waitForExist('.dropdown-menu[aria-labelledby="pipelineconsortia"]', EXIST_TIMEOUT)
+      .waitForVisible('.dropdown-menu[aria-labelledby="pipelineconsortia"]', EXIST_TIMEOUT)
       .click(`a=${CONS_NAME}`)
       .click('#computation-dropdown')
       .waitForVisible('.dropdown-menu[aria-labelledby="computation-dropdown"]', EXIST_TIMEOUT)
       .click('a=single shot regression demo')
-      .waitForExist('button=Add Covariates')
+      .waitForVisible('button=Add Covariates')
       .click('button=Add Covariates')
       .click('#covariates-0-data-dropdown')
       .waitForVisible('.dropdown-menu[aria-labelledby="covariates-0-data-dropdown"]', EXIST_TIMEOUT)
@@ -141,7 +145,7 @@ describe('Testing::e2e', () => {
   it('sets the created pipeline to the consortium', () => (
     app.client
       .click('a=Consortia')
-      .waitForExist(`a[name="${CONS_NAME}"]`, EXIST_TIMEOUT)
+      .waitForVisible(`a[name="${CONS_NAME}"]`, EXIST_TIMEOUT)
       .click(`a[name="${CONS_NAME}"]`)
       .waitForExist('#consortium-tabs #consortium-tabs-tab-2', EXIST_TIMEOUT)
       .element('#consortium-tabs')
@@ -157,9 +161,9 @@ describe('Testing::e2e', () => {
   it('creates a file collection', () => (
     app.client
       .click('a=Collections')
-      .waitForExist('h1=File Collections', EXIST_TIMEOUT)
+      .waitForVisible('h1=File Collections', EXIST_TIMEOUT)
       .click('a=Create File Collection')
-      .waitForExist('h1=New Collection', EXIST_TIMEOUT)
+      .waitForVisible('h1=New Collection', EXIST_TIMEOUT)
       .setValue('#name', CONS_NAME)
       .setValue('#description', CONS_DESC)
       .click('button=Save')
@@ -216,7 +220,7 @@ describe('Testing::e2e', () => {
   it('runs a computation', () => (
     app.client
       .click('a=Consortia')
-      .waitForExist('h1=Consortia', EXIST_TIMEOUT)
+      .waitForVisible('h1=Consortia', EXIST_TIMEOUT)
       .click('button=Start Pipeline')
       .waitForText('.notification-message', EXIST_TIMEOUT)
       .getText('.notification-message')
@@ -240,7 +244,7 @@ describe('Testing::e2e', () => {
       .click('a=Home')
       .waitForVisible('div.panel:first-child', EXIST_TIMEOUT)
       .element('div.panel:first-child')
-      .waitForExist('a=View Results', COMPUTATION_TIMEOUT)
+      .waitForVisible('a=View Results', COMPUTATION_TIMEOUT)
       .element('div.panel:first-child')
       .click('a=View Results')
       .waitForVisible('h3=Regressions', EXIST_TIMEOUT)
@@ -260,6 +264,6 @@ describe('Testing::e2e', () => {
   it('logs out', () => (
     app.client
       .click('button=Log Out')
-      .waitForExist('button=Log In', EXIST_TIMEOUT)
+      .waitForVisible('button=Log In', EXIST_TIMEOUT)
   ));
 });
