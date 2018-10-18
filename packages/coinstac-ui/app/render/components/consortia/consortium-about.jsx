@@ -55,8 +55,10 @@ export default class ConsortiumAbout extends Component {
       if (owner && consUser.id !== user.id) {
         if (consUser.owner) {
           removeUserRole(consUser.id, 'consortia', consortium.id, 'owner');
+          addUserRole(consUser.id, 'consortia', consortium.id, 'member');
         } else {
           addUserRole(consUser.id, 'consortia', consortium.id, 'owner');
+          removeUserRole(consUser.id, 'consortia', consortium.id, 'member');
         }
       }
     };
