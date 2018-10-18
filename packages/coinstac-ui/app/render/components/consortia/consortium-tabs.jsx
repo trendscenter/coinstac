@@ -150,9 +150,14 @@ class ConsortiumTabs extends Component {
         unsubscribeConsortia = this.props.subscribeToConsortia(other.id);
       }
 
+      // Update consortiumUsers to display the owner user in users list
+      let consortiumUsers = [];
+      consortiumUsers.push({ id: this.props.auth.user.id, owner: true, member: true });
+
       this.setState({
         consortium: { ...other },
         unsubscribeConsortia,
+        consortiumUsers
       });
 
       this.props.notifySuccess({
