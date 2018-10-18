@@ -88,7 +88,7 @@ export default class PipelineStepMemberTable extends Component {
               {objKey === 'data' &&
                 <td>
                   {obj.type === 'FreeSurfer' &&
-                    <div>
+                    <div id={`data-${index}-area`}>
                       <MultiSelectField
                         value={obj.value}
                         placeholder={'Select Area(s) of Interest'}
@@ -156,7 +156,7 @@ export default class PipelineStepMemberTable extends Component {
               {objKey === 'covariates' &&
                 <td>
                   {!obj.fromCache &&
-                    <FormGroup controlId={`${parentKey}-form-group`}>
+                    <FormGroup controlId={`covariates-${index}-input-name`}>
                       <FormControl
                         disabled={!owner}
                         placeholder="Variable Name"
