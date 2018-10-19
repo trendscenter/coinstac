@@ -88,7 +88,7 @@ class ConsortiumTabs extends Component {
     if (nextProps.activeConsortium) {
       const { activeConsortium: { __typename, ...other } } = nextProps;
       const consortiumUsers = [];
-      if (this.props.router.routes[3].path !== 'new') {
+      if (this.props.routes[3].path !== 'new' || (this.props.routes[3].path === 'new' && this.state.consortium.id) ) {
         nextProps.activeConsortium.owners.forEach(user => consortiumUsers
           .push({ id: user, owner: true, member: true }));
         nextProps.activeConsortium.members
@@ -150,14 +150,10 @@ class ConsortiumTabs extends Component {
         unsubscribeConsortia = this.props.subscribeToConsortia(other.id);
       }
 
-      // Update consortiumUsers to display the owner user in users list
-      let consortiumUsers = [];
-      consortiumUsers.push({ id: this.props.auth.user.id, owner: true, member: true });
 
       this.setState({
         consortium: { ...other },
-        unsubscribeConsortia,
-        consortiumUsers
+        unsubscribeConsortia
       });
 
       this.props.notifySuccess({
