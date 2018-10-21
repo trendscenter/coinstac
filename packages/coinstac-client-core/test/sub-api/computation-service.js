@@ -246,7 +246,13 @@ tape('ComputationService :: doTriggerRunner', (t) => {
         'retrieves project via projectId'
       );
 
-      const { client: { pool: { triggerRunnerStub } } } = params;
+      const {
+        client: {
+          pool: {
+            triggerRunner: triggerRunnerStub,
+          },
+        },
+      } = params;
       const { firstCall: { args } } = triggerRunnerStub;
 
       t.ok(
