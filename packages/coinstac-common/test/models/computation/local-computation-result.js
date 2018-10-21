@@ -4,7 +4,7 @@ const assign = require('lodash/assign');
 const test = require('tape');
 const {
   models: {
-    computations: { LocalComputationResult },
+    computation: { LocalComputationResult },
   },
 } = require('../../../');
 
