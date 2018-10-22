@@ -53,6 +53,7 @@
     "read-last-lines": "^1.4.0",
     "redux": "^3.7.2",
     "redux-devtools": "^3.4.1",
+    "redux-form": "^7.4.2",
     "redux-logger": "^3.0.6",
     "redux-promise": "^0.5.3",
     "redux-thunk": "^2.3.0",
@@ -116,7 +117,7 @@
     "docs": "mkdir -p docs && jsdoc -t ./node_modules/minami -d docs -R README.md -r src/",
     "test": "nyc --reporter=lcov --check-coverage --lines=1 --functions=1 --branches=1 babel-node test/",
     "test:seed-dexie": "node ./test/data/seed-collection-data.js",
-    "test:e2e": "npm run build && mocha --timeout=120000 test/e2e/test.js",
+    "test:e2e": "npm run build:webpack && mocha --timeout=120000 test/e2e/test.js",
     "watch": "webpack-dev-server --mode=development",
     "stuff": "npm i"
   },
