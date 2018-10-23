@@ -22,34 +22,43 @@ class ConsortiumPipeline extends Component {
       activePipeline: {},
       ownedPipelines: [],
       sharedPipelines: [],
+      prevPipelines: []
     };
 
     this.removeCollectionsFromAssociatedConsortia =
       this.removeCollectionsFromAssociatedConsortia.bind(this);
   }
 
-  UNSAFE_componentWillReceiveProps(nextProps) {
-    if (this.props.pipelines.length > 0 && nextProps.consortium.activePipelineId) {
-      const activePipeline = this.props.pipelines
-        .find(cons => cons.id === nextProps.consortium.activePipelineId);
-      this.setState({ activePipeline });
+  static getDerivedStateFromProps(props, state) {
+    const derivedState = {}
+
+    if (props.pipelines.length > 0 &&
+      props.consortium.activePipelineId &&
+      (!state.activePipeline || state.activePipeline.id !== props.consortium.activePipelineId)
+    ) {
+      const activePipeline = props.pipelines
+        .find(cons => cons.id === props.consortium.activePipelineId);
+      derivedState.activePipeline = activePipeline;
     }
 
-    if (nextProps.pipelines) {
-      // TODO: refit owned and shared pipelines
+    if (props.pipelines !== state.prevPipelines) {
       let ownedPipelines = [];
       let sharedPipelines = [];
 
-      ownedPipelines = nextProps.pipelines.filter(
-        pipe => pipe.owningConsortium === nextProps.consortium.id
+      ownedPipelines = props.pipelines.filter(
+        pipe => pipe.owningConsortium === props.consortium.id
       );
 
-      sharedPipelines = nextProps.pipelines.filter(
-        pipe => pipe.shared && pipe.owningConsortium !== nextProps.consortium.id
+      sharedPipelines = props.pipelines.filter(
+        pipe => pipe.shared && pipe.owningConsortium !== props.consortium.id
       );
 
-      this.setState({ ownedPipelines, sharedPipelines });
+      derivedState.prevPipelines = props.pipelines;
+      derivedState.ownedPipelines = ownedPipelines;
+      derivedState.sharedPipelines = sharedPipelines;
     }
+
+    return Object.keys(derivedState).length > 0 ? derivedState : null;
   }
 
   removeCollectionsFromAssociatedConsortia(consortiumId, value) {
