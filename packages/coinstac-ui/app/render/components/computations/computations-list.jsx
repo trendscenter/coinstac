@@ -57,12 +57,12 @@ class ComputationsList extends Component { // eslint-disable-line
   }
 
   static getDerivedStateFromProps(props) {
-    const { computations, user } = props;
+    const { computations, auth } = props;
     const ownedComputations = [];
     const otherComputations = [];
     if (computations && computations.length > MAX_LENGTH_COMPUTATIONS) {
       computations.forEach((comp) => {
-        if (user.id === comp.submittedBy) {
+        if (auth.user.id === comp.submittedBy) {
           ownedComputations.push(comp);
         } else {
           otherComputations.push(comp);
