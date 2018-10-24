@@ -11,7 +11,7 @@ import {
 } from '../../state/graphql/props';
 
 class CollectionPipeline extends Component {
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     if (nextProps.activePipeline &&
       nextProps.activePipeline.steps &&
       this.props.pipelineSteps.length === 0) {
