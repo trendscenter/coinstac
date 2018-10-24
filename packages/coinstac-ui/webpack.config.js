@@ -9,6 +9,11 @@ const port = 3000;
 const config = {
   bail: true,
   devtool: 'eval',
+  devServer: {
+    historyApiFallback: true,
+    hot: true,
+    port,
+  },
   entry: [
     path.join(__dirname, 'app', 'render', 'index.js'),
   ],
@@ -31,9 +36,6 @@ const config = {
     }, {
       test: /\.eot(\?v: \d+\.\d+\.\d+)?$/,
       use: ['file-loader'],
-    }, {
-      test: /\.json$/,
-      use: ['json-loader'],
     }, {
       include: path.join(__dirname, 'app', 'render'),
       test: /\.(js|jsx)$/,
@@ -102,7 +104,7 @@ const config = {
   output: {
     filename: 'bundle.js',
     libraryTarget: 'commonjs2',
-    path: path.join(__dirname, 'app', 'render', 'build'),
+    path: path.join(__dirname, 'build', 'render'),
     publicPath: './build/',
   },
   plugins: [new webpack.optimize.OccurrenceOrderPlugin()],
@@ -115,20 +117,11 @@ if (process.env.NODE_ENV === 'development') {
   config.bail = false;
   // config.plugins.push(new webpack.NoErrorsPlugin());
 
-  config.devServer = {
-    inline: true,
-  };
-
   // Massage configuration for hot module replacement:
   config.output.publicPath = `http://localhost:${port}/`;
   config.plugins.push(
     new webpack.HotModuleReplacementPlugin(),
     new webpack.NamedModulesPlugin()
-  );
-
-  config.entry.unshift(
-    `${require.resolve('webpack-dev-server/client')}?http://localhost:${port}`,
-    require.resolve('webpack/hot/dev-server')
   );
 
   /**
@@ -137,10 +130,6 @@ if (process.env.NODE_ENV === 'development') {
    */
   const pattern = /react|redux/;
   config.externals = config.externals.filter(name => !pattern.test(name));
-} else {
-  config.plugins.push(
-    new webpack.optimize.UglifyJsPlugin({ sourceMap: false })
-  );
 }
 
 module.exports = config;

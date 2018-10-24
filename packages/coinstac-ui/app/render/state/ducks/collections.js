@@ -316,7 +316,7 @@ export const unmapAssociatedConsortia = applyAsyncLoading(consortia =>
       payload: { allConsortia, consortiaChanged },
     }));
   });
-}
+  }
 );
 
 export const removeCollectionsFromAssociatedConsortia
@@ -372,11 +372,11 @@ Promise.all([
     payload.deleteCons = true;
   }
 
-        dispatch(({
-          type: REMOVE_COLLECTIONS_FROM_CONS,
-          payload,
-        }));
-      })
+  dispatch(({
+    type: REMOVE_COLLECTIONS_FROM_CONS,
+    payload,
+  }));
+})
   );
 
 export const clearCollectionsAndConsortia = applyAsyncLoading(() =>

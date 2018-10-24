@@ -60,7 +60,6 @@ module.exports = {
           this[prop] = val;
           stateEmitter.emit('update', packageState());
         };
-
         pipelineSteps.forEach(
           (step) => {
             step.stateEmitter.on('update', () => stateEmitter.emit('update', packageState()));

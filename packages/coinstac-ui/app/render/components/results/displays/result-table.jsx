@@ -1,28 +1,73 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import {
-  Table,
-} from 'react-bootstrap';
+import { Table, Button } from 'react-bootstrap';
 
+const styles = {
+  csvButton: { position: 'absolute', top: '20rem', right: '2rem' },
+  theading: { color: 'white', fontSize: '0' },
+};
+
+/**
+ * downloadCSV
+ * Create a named empty CSV file inject string blob and download
+ * @param {string} csv Table values
+ * @param {string} filename The name of the file
+ */
+function downloadCSV(csv, filename) {
+  const csvFile = new Blob([csv], { type: 'text/csv' });
+  const downloadLink = document.createElement('a');
+  downloadLink.download = filename;
+  downloadLink.href = window.URL.createObjectURL(csvFile);
+  downloadLink.style.display = 'none';
+  document.body.appendChild(downloadLink);
+  downloadLink.click();
+}
+
+/**
+ * exportTableToCSV
+ * Convert HTML Table to CSV formatted string
+ * @param {string} html Table hypertext
+ * @param {string} filename The name of the file
+ */
+function exportTableToCSV(html, filename) {
+  const csv = [];
+  const rows = document.querySelectorAll('table tr');
+
+  for (let i = 0; i < rows.length; i += 1) {
+    const row = [];
+    let cols = rows[i].querySelectorAll('th');
+    if (cols.length === 0) {
+      cols = rows[i].querySelectorAll('td');
+    }
+    for (let j = 0; j < cols.length; j += 1) {
+      row.push(cols[j].innerText);
+      if (j === cols.length - 1) {
+        csv.push(row.join(','));
+      }
+    }
+  }
+  // Download CSV
+  downloadCSV(csv.join('\n'), filename);
+}
 
 function parseTableColumnOutput(output) {
   if (Array.isArray(output)) {
-      let cols = [];
-      output.map((o) => {
-        o = parseFloat(o).toFixed(4);
-        if(o == 0){
-          o = 0;
-        }else if (Math.abs(o) > 999 || Math.abs(o) < 0.001) {
-          o = parseFloat(o).toExponential(4);
-        }
-        cols.push(<td key={`value-${o}`}>{o}&nbsp;</td>);
-      })
-      return cols;
+    const cols = [];
+    // eslint-disable-next-line
+    output.map((o) => {
+      o = parseFloat(o).toFixed(4);
+      if (o === 0) {
+        o = 0;
+      } else if (Math.abs(o) > 999 || Math.abs(o) < 0.001) {
+        o = parseFloat(o).toExponential(4);
+      }
+      cols.push(<td key={`value-${o}`}>{o}&nbsp;</td>);
+    });
+    return cols;
   } else if (!isNaN(output) && typeof output !== 'boolean') {
-    //output = parseFloat(output).toFixed(4);
-    if(output == 0){
+    if (output === 0) {
       output = 0;
-    }else if (Math.abs(output) > 999 || Math.abs(output) < 0.001) {
+    } else if (Math.abs(output) > 999 || Math.abs(output) < 0.001) {
       return parseFloat(output).toExponential(4);
     }
     return output;
@@ -32,6 +77,37 @@ function parseTableColumnOutput(output) {
 }
 
 class TableResult extends Component {
+
+  /**
+   * slugify
+   * Converts human readable string to a slug
+   * @param  {string} text Input String to Convert
+   * @return {string}     Converted String to Slug
+   */
+
+   // ignore weird class-methods-use-this lint error
+   // eslint-disable-next-line
+  slugify(text) {
+    return text.toString().toLowerCase()
+      .replace(/\s+/g, '-')           // Replace spaces with -
+      .replace(/[^\w\-]+/g, '')       // Remove all non-word chars
+      .replace(/\-\-+/g, '-')         // Replace multiple - with single -
+      .replace(/^-+/, '')             // Trim - from start of text
+      .replace(/-+$/, '');            // Trim - from end of text
+  }
+
+  /**
+   * saveFileCSV
+   * OnClick function to convert Table HTML to csv, save, and download file
+   * @param {string} filename The name of the file
+   */
+  saveFileCSV = () => {
+    const { title } = this.props;
+    const html = document.querySelector('table').outerHTML;
+    const filename = this.slugify(title);
+    exportTableToCSV(html, `${filename}.csv`);
+  }
+
   makeTable(table, data, outputProps, heading, marginLeft) {
     const tableContents = [];
     if (heading) {
@@ -87,10 +163,16 @@ class TableResult extends Component {
 
       let labels = [];
 
-      if( heading.includes('Global') && Array.isArray(data.covariate_labels[0]) ){
+      if (heading.includes('Global') && Array.isArray(data.covariate_labels[0])) {
         labels = data.covariate_labels[0];
-      }else{
+      } else {
         labels = data.covariate_labels;
+      }
+
+      if (heading.includes('Global')) {
+        // do nothing
+      } else {
+        heading = `Local - ${heading}`;
       }
 
       tableContents.push(
@@ -104,9 +186,9 @@ class TableResult extends Component {
         >
         <thead>
             <tr>
-              <th>&nbsp;</th>
+              <th key={`${heading}-table-heading`} style={styles.theading}>{heading}</th>
               {labels.map((label, index) => {
-                  return <th className={'text-nowrap'}>&beta;{`${index} (${label})`}</th>
+                  return <th key={`${index}-table-label`} className={'text-nowrap'}>&beta;{`${index} (${label})`}</th>
               })}
             </tr>
           </thead>
@@ -114,10 +196,10 @@ class TableResult extends Component {
             {Array.isArray(data) &&
               data.map((d, index) => {
                 return (
-                  <tr key={`${index}-objects-row`}>
+                  <tr key={`${heading}-${index}-${key[0]}-objects-row`}>
                     {keys.map(key =>
                     (
-                      <td style={{ fontFamily: 'Courier' }} key={`${key[0]}-column`}>
+                      <td style={{ fontFamily: 'Courier' }} key={`${heading}-${index}-${key[0]}-column`}>
                         {parseTableColumnOutput(d[key[0]])}
                       </td>
                     ))}
@@ -128,8 +210,8 @@ class TableResult extends Component {
             {!Array.isArray(data) &&
               keyValPairs.map((pair) => {
                   if(typeof pair[1] === 'object' && pair[0] !== 'covariate_labels') {
-                    return <tr key={`${pair[0]}-objects-row`}>
-                      <td className="bold">
+                    return <tr key={`${heading}-${pair[0]}-objects-row`}>
+                      <td className="bold"  key={`${heading}-${pair[0]}-}-column`}>
                         {outputProps.items[pair[0]] ? outputProps.items[pair[0]].label : pair[0]}
                       </td>
                       {parseTableColumnOutput(pair[1])}
@@ -199,6 +281,13 @@ class TableResult extends Component {
 
     return (
       <div>
+        <Button
+          bsStyle="primary"
+          onClick={this.saveFileCSV}
+          style={styles.csvButton}
+        >
+          Download to CSV
+        </Button>
         {tables && tables.map(t =>
           this.makeTable(
             t,
