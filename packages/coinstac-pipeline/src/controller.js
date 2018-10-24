@@ -63,7 +63,6 @@ module.exports = {
        * @return {Promise}                resolves to the final computation output
        */
       start: (input, remoteHandler) => {
-        const queue = [];
         setStateProp('state', 'started');
         controllerState.remoteInitial = controllerState.mode === 'remote' ? true : undefined;
         if (!controllerState.initialized) {
@@ -99,10 +98,17 @@ module.exports = {
                 controllerState.currentOutput = { output: output.output, success: output.success };
                 setStateProp('state', 'finished iteration');
                 cb(output.output);
-              }).catch(({ statusCode, message, error, name, stack, input }) => {
+              }).catch(({ statusCode, message, name, stack, input }) => {
                 const iterationError = Object.assign(
                   new Error(),
-                  { statusCode, message, error, name, stack, input: input ? input.input : input }
+                  {
+                    statusCode,
+                    message,
+                    error: message,
+                    name,
+                    stack,
+                    input: input ? input.input : input,
+                  }
                 );
                 if (controller.type === 'local') {
                   err(iterationError);
@@ -155,7 +161,6 @@ module.exports = {
               throw new Error('unknown controller runType');
           }
         };
-        queue.push(iterateComp);
 
         /**
          * The trampoline works by continuously bouncing calls on and off the stack
@@ -180,18 +185,21 @@ module.exports = {
          * with the trampoline this allows an unlimited number of steps without stack issues.
          * Credit to Dave's blog: http://www.datchley.name/asynchronous-in-the-browser/
          * @param  {Object}   initialInput the object to pass to computation
-         * @param  {Array}    steps        the dynamic array for the waterfall
          * @param  {Function} done         callback
          * @return {Object}                computation's result
          */
-        const waterfall = (initialInput, steps, done, err) => {
+        const waterfall = (initialInput, done, err) => {
+          const queue = [];
+
           setStateProp('state', 'running');
-          steps.push(done);
+          queue.push(iterateComp);
+          queue.push(done);
+
           trampoline(() => {
-            return steps.length ?
+            return queue.length ?
             function _cb(...args) {
               const argsArray = [].slice.call(args);
-              const fn = steps.shift();
+              const fn = queue.shift();
               controllerState.currentBoxCommand = activeControlBox.preIteration(controllerState);
 
               if ((controllerState.mode === 'local' && controllerState.iteration === 0) ||
@@ -200,10 +208,11 @@ module.exports = {
                 argsArray.unshift(input);
               }
               if (controllerState.currentBoxCommand !== 'done' && controllerState.currentBoxCommand !== 'doneRemote') {
-                const lastCallback = steps.pop();
-                steps.push(iterateComp);
-                steps.push(lastCallback);
+                const lastCallback = queue.pop();
+                queue.push(iterateComp);
+                queue.push(lastCallback);
               }
+
               // necessary if this function call turns out synchronous
               // the stack won't clear and overflow, has limited perf impact
               process.nextTick(() => fn.apply(this, argsArray.concat([_cb, err])));
@@ -220,7 +229,7 @@ module.exports = {
             .then(() => rej(err));
           };
 
-          waterfall(input, queue, (result) => {
+          waterfall(input, (result) => {
             setStateProp('state', 'stopped');
             controllerState.activeComputations[controllerState.computationIndex].stop()
             .then(() => res(result));

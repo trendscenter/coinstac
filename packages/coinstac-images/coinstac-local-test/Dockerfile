@@ -1,4 +1,4 @@
-FROM coinstac/coinstac-base
+FROM test
 
 # Set the working directory to /app
 WORKDIR /computation

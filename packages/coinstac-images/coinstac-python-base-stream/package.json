@@ -1,0 +1,27 @@
+{
+  "name": "coinstac-python-base-stream",
+  "version": "1.0.0",
+  "description": "Base coinstac server",
+  "main": "index.js",
+  "scripts": {
+    "test": "nyc ava test/**.test.js",
+    "start": "node index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "ava": "^0.25.0",
+    "get-stdin": "^6.0.0",
+    "nyc": "^12.0.2",
+    "request-stream": "^1.2.2",
+    "socket.io-client": "^2.1.1",
+    "unzip": "^0.1.11"
+  },
+  "dependencies": {
+    "clarify": "^2.1.0",
+    "socket.io": "^2.1.1",
+    "socket.io-stream": "^0.9.1",
+    "trace": "^3.1.0",
+    "winston": "^3.0.0"
+  }
+}

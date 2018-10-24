@@ -9,7 +9,15 @@ const { promisify } = require('util');
 const mkdirp = promisify(require('mkdirp'));
 const path = require('path');
 const Emitter = require('events');
+const winston = require('winston');
 
+const logger = winston.createLogger({
+  level: 'info',
+  transports: [
+    new winston.transports.Console({ format: winston.format.cli() }),
+  ],
+});
+logger.level = process.LOGLEVEL ? process.LOGLEVEL : 'info';
 
 module.exports = {
 
@@ -42,11 +50,12 @@ module.exports = {
 
     const waitingOnForRun = (runId) => {
       const waiters = [];
-      for (let [key, val] of Object.entries(remoteClients)) { // eslint-disable-line no-restricted-syntax, max-len, prefer-const
-        if (val[runId] && !val[runId].currentOutput) {
-          waiters.push(key);
+      activePipelines[runId].clients.forEach((client) => {
+        if (remoteClients[client][runId] && !remoteClients[client][runId].currentOutput) {
+          waiters.push(client);
         }
-      }
+      });
+
       return waiters;
     };
 
@@ -64,7 +73,8 @@ module.exports = {
     // TODO: secure socket layer
     if (mode === 'remote') {
       const app = http.createServer();
-      io = socketIO(app);
+      // these options are passed down to engineIO, both allow larger transport sizes
+      io = socketIO(app, { pingTimeout: 360000, maxHttpBufferSize: 23E7 });
 
       app.listen(remotePort);
 
@@ -89,8 +99,26 @@ module.exports = {
         });
 
         socket.on('run', (data) => {
-          console.log(JSON.stringify(data, null, 2));
-          // TODO: probably put in a 'pre-run' route?
+          logger.silly(`############ CLIENT ${data.id}`);
+          logger.silly(JSON.stringify(data, null, 2));
+          logger.silly(`############ END CLIENT ${data.id}`);
+          // client run started before remote
+          if (!activePipelines[data.runId]) {
+            activePipelines[data.runId] = {
+              state: 'pre-pipeline',
+              currentState: {},
+            };
+          }
+          if (activePipelines[data.runId].state === 'pre-pipeline' && remoteClients[data.id][data.runId] === undefined) {
+            remoteClients[data.id] = Object.assign(
+              {
+                [data.runId]: {},
+              },
+              remoteClients[data.id]
+            );
+          }
+
+          // normal pipeline operation
           if (remoteClients[data.id] && remoteClients[data.id][data.runId]) {
             socket.join(data.runId);
             remoteClients[data.id].lastSeen = Math.floor(Date.now() / 1000);
@@ -100,26 +128,25 @@ module.exports = {
               // has this pipeline error'd out?
               if (!activePipelines[data.runId].error) {
                 remoteClients[data.id][data.runId].currentOutput = data.output.output;
-                activePipelines[data.runId].state = 'recieved client data';
 
-                const waitingOn = waitingOnForRun(data.runId);
-                activePipelines[data.runId].currentState.waitingOn = waitingOn;
-                activePipelines[data.runId].stateEmitter
-                .emit('update',
-                  Object.assign(
-                    {},
-                    activePipelines[data.runId].pipeline.currentState,
-                    activePipelines[data.runId].currentState
-                  )
-                );
+                if (activePipelines[data.runId].state !== 'pre-pipeline') {
+                  const waitingOn = waitingOnForRun(data.runId);
+                  activePipelines[data.runId].currentState.waitingOn = waitingOn;
+                  activePipelines[data.runId].stateEmitter
+                  .emit('update',
+                    Object.assign(
+                      {},
+                      activePipelines[data.runId].pipeline.currentState,
+                      activePipelines[data.runId].currentState
+                    )
+                  );
 
-                if (waitingOn.length === 0) {
-                  activePipelines[data.runId].state = 'recieved all clients data';
-                  console.log('############ AGG');
-                  const agg = aggregateRun(data.runId);
-                  console.log(JSON.stringify(agg, null, 2))
-                  console.log('############ END AGG');
-                  activePipelines[data.runId].remote.resolve({ output: agg });
+                  if (waitingOn.length === 0) {
+                    activePipelines[data.runId].state = 'recieved all clients data';
+                    const agg = aggregateRun(data.runId);
+                    logger.silly('Received all client data');
+                    activePipelines[data.runId].remote.resolve({ output: agg });
+                  }
                 }
               } else {
                 io.of('/').to(data.runId).emit('run', { runId: data.runId, error: activePipelines[data.runId].error });
@@ -195,12 +222,19 @@ module.exports = {
        *                               Promise for its result
        */
       startPipeline({ spec, clients = [], runId }) {
-        activePipelines[runId] = {
-          state: 'created',
-          pipeline: Pipeline.create(spec, runId, { mode, operatingDirectory, clientId }),
-          stateEmitter: new Emitter(),
-          currentState: {},
-        };
+        if (activePipelines[runId] && activePipelines[runId].state !== 'pre-pipeline') {
+          throw new Error('Duplicate pipeline started');
+        }
+        activePipelines[runId] = Object.assign(
+          {
+            state: 'created',
+            pipeline: Pipeline.create(spec, runId, { mode, operatingDirectory, clientId }),
+            stateEmitter: new Emitter(),
+            currentState: {},
+            clients,
+          },
+          activePipelines[runId]
+        );
         clients.forEach((client) => {
           remoteClients[client] = Object.assign(
             {
@@ -232,9 +266,9 @@ module.exports = {
               activePipelines[pipeline.id].remote.reject(runError);
               io.of('/').to(pipeline.id).emit('run', { runId: pipeline.id, error: runError });
             } else {
-              console.log('############ REMOTE OUT');
-              console.log(JSON.stringify(message, null, 2))
-              console.log('############ END REMOTE OUT');
+              logger.silly('############ REMOTE OUT');
+              logger.silly(JSON.stringify(message, null, 2));
+              logger.silly('############ END REMOTE OUT');
               io.of('/').to(pipeline.id).emit('run', { runId: pipeline.id, output: message });
             }
           } else {
@@ -254,16 +288,34 @@ module.exports = {
             proxRes = resolve;
             proxRej = reject;
           });
-          activePipelines[runId].state = 'waiting for remote';
           activePipelines[runId].remote = {
             resolve: proxRes,
             reject: proxRej,
           };
           if (!noop) {
+            // only send out results, don't wait
+            // this allows the last remote iteration to just finish
             if (transmitOnly) {
               proxRes();
             }
             communicate(activePipelines[runId].pipeline, input);
+            activePipelines[runId].state = 'running';
+          } else if (activePipelines[runId].state === 'pre-pipeline') {
+            const waitingOn = waitingOnForRun(runId);
+            activePipelines[runId].currentState.waitingOn = waitingOn;
+            activePipelines[runId].stateEmitter
+            .emit('update',
+              Object.assign(
+                {},
+                activePipelines[runId].pipeline.currentState,
+                activePipelines[runId].currentState
+              )
+            );
+
+            if (waitingOn.length === 0) {
+              proxRes({ output: aggregateRun(runId) });
+            }
+            activePipelines[runId].state = 'running';
           }
           return prom;
         };
@@ -277,8 +329,6 @@ module.exports = {
           throw new Error(`Unable to create pipeline directories: ${err}`);
         })
         .then(() => {
-          activePipelines[runId].state = 'running';
-
           this.activePipelines[runId].pipeline.stateEmitter.on('update',
             data => this.activePipelines[runId].stateEmitter
               .emit('update', Object.assign({}, data, activePipelines[runId].currentState)));
@@ -288,6 +338,14 @@ module.exports = {
             activePipelines[runId].state = 'finished';
             return res;
           });
+        }).then((res) => {
+          delete activePipelines[runId];
+          Object.keys(remoteClients).forEach((key) => {
+            if (remoteClients[key][runId]) {
+              delete remoteClients[key][runId];
+            }
+          });
+          return res;
         });
 
         return {
