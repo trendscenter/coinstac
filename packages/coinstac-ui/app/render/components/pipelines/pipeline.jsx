@@ -98,7 +98,7 @@ class Pipeline extends Component {
     this.updateStorePipeline = this.updateStorePipeline.bind(this);
   }
 
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     if (isEmpty(this.state.consortium) && nextProps.consortia.length
       && this.state.pipeline.id && this.state.pipeline.owningConsortium) {
       this.setConsortium();

@@ -27,7 +27,7 @@ class App extends Component { // eslint-disable-line react/prefer-stateless-func
     this.state = { checkJWT: false };
   }
 
-  componentWillMount() {
+  componentDidMount() {
     this.props.autoLogin()
     .then(() => {
       this.setState({ checkJWT: true });
