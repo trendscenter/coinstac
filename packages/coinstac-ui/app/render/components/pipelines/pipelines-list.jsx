@@ -33,12 +33,12 @@ class PipelinesList extends Component {
     this.openModal = this.openModal.bind(this);
   }
 
-  componentWillReceiveProps(nextProps) {
-    const { user } = this.props.auth;
+  static getDerivedStateFromProps(props) {
+    const { pipelines, user } = props;
     const ownedPipelines = [];
     const otherPipelines = [];
-    if (nextProps.pipelines && nextProps.pipelines.length > MAX_LENGTH_PIPELINES) {
-      nextProps.pipelines.forEach((pipeline) => {
+    if (pipelines && pipelines.length > MAX_LENGTH_PIPELINES) {
+      pipelines.forEach((pipeline) => {
         if (user.permissions.consortia[pipeline.owningConsortium] &&
           user.permissions.consortia[pipeline.owningConsortium].write) {
           ownedPipelines.push(pipeline);
@@ -47,7 +47,7 @@ class PipelinesList extends Component {
         }
       });
     }
-    this.setState({ ownedPipelines, otherPipelines });
+    return { ownedPipelines, otherPipelines };
   }
 
   getListItem(pipeline) {

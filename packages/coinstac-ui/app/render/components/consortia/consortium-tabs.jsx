@@ -67,7 +67,7 @@ class ConsortiumTabs extends Component {
     this.setState({ key });
   }
 
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
 
     let newKey = parseInt(this.props.params.tabId);
     if(this.props.params.tabId && newKey !== this.state.key){
