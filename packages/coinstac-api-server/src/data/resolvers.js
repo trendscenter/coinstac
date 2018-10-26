@@ -372,7 +372,10 @@ const resolvers = {
               .run(connection),
             rethink.table('users').replace(user =>
               user.without({ permissions: { consortia: args.consortiumId } })
-            ).run(connection)
+            ).run(connection),
+            rethink.table('pipelines').filter({ owningConsortium: args.consortiumId })
+              .delete()
+              .run(connection)
           ])
         )
         .then(([consortium]) => consortium.changes[0].old_val)
