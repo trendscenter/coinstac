@@ -127,15 +127,15 @@ test('model::Pipeline maybeIncrementStep - basic (double, `next` errors post-run
   const p = pipelines.invalidOptsNextPostRunError();
   t.plan(2);
   p.run({}, {})
-  .then(() => t.end('error should have occurred'))
-  .catch((err) => { // eslint-disable-line
-    t.ok(err instanceof Error, '`next` errors propogated post-run, p1');
-    t.ok(
-      err.message.match(/test-next-post-run-error/),
-      '`next` errors propogated post-run, p2'
-    );
-    t.end();
-  });
+    .then(() => t.end('error should have occurred'))
+    .catch((err) => { // eslint-disable-line
+      t.ok(err instanceof Error, '`next` errors propogated post-run, p1');
+      t.ok(
+        err.message.match(/test-next-post-run-error/),
+        '`next` errors propogated post-run, p2'
+      );
+      t.end();
+    });
 });
 
 test('model::Pipeline run - intermediate (double, user event stepping)', (t) => {
