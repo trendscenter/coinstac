@@ -56,7 +56,7 @@ function parseTableColumnOutput(output) {
     // eslint-disable-next-line
     output.map((o) => {
       o = parseFloat(o).toFixed(4);
-      if (o === 0) {
+      if (parseFloat(o) === 0) {
         o = 0;
       } else if (Math.abs(o) > 999 || Math.abs(o) < 0.001) {
         o = parseFloat(o).toExponential(4);
