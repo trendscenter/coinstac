@@ -26,13 +26,13 @@ export default class ConsortiumAbout extends Component {
     this.toggleOwner = this.toggleOwner.bind(this);
   }
 
-  componentWillReceiveProps(nextProps) {
-    if (nextProps.consortiumUsers) {
-      const users = this.state.consortiumUsers.filter((stateUser) => {
-        nextProps.consortiumUsers.findIndex(propsUser => propsUser.id === stateUser.id) > -1
+  static getDerivedStateFromProps(props, state) {
+    if (props.consortiumUsers) {
+      const users = state.consortiumUsers.filter((stateUser) => {
+        props.consortiumUsers.findIndex(propsUser => propsUser.id === stateUser.id) > -1
       });
-      nextProps.consortiumUsers.forEach((propsUser) => {
-        const stateIndex = this.state.consortiumUsers.findIndex(stateUser => stateUser.id === propsUser.id);
+      props.consortiumUsers.forEach((propsUser) => {
+        const stateIndex = state.consortiumUsers.findIndex(stateUser => stateUser.id === propsUser.id);
 
         if (stateIndex === -1) {
           users.push(propsUser);
@@ -40,7 +40,7 @@ export default class ConsortiumAbout extends Component {
           users[stateIndex] = propsUser;
         }
       });
-      this.setState({ consortiumUsers: users });
+      return { consortiumUsers: users };
     }
   }
 
