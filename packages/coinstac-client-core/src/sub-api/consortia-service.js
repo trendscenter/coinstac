@@ -59,9 +59,9 @@ class ConsortiaService extends ModelService {
     .then((consortia) => { // eslint-disable-line
       return consortia.filter((consortium) => { // eslint-disable-line
         // users is arr of [ usernames ]. :/
-          return consortium.users.some(uname => (uname === username));
-        });
+        return consortium.users.some(uname => (uname === username));
       });
+    });
   }
 
   /**
