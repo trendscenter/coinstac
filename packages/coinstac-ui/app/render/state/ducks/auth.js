@@ -75,10 +75,14 @@ export const autoLogin = applyAsyncLoading(() => (dispatch) => {
       dispatch
     ))
     .catch((err) => {
-      if (err.response && err.response.status === 401) {
+      if (err.response) {
         localStorage.setItem('id_token', null);
-        dispatch(setUser({ ...INITIAL_STATE, error: 'Please Login Again' }));
-      } else if (err.request && err.request.status === 0) {
+        if (err.response.status === 401) {
+          dispatch(setUser({ ...INITIAL_STATE, error: 'Please Login Again' }));
+        } else {
+          dispatch(setUser({ ...INITIAL_STATE, error: 'An unexpected error has occurred' }));
+        }
+      } else {
         dispatch(setUser({ ...INITIAL_STATE, error: 'Server not responding' }));
       }
     });
@@ -87,9 +91,13 @@ export const autoLogin = applyAsyncLoading(() => (dispatch) => {
 export const login = applyAsyncLoading(({ username, password, saveLogin }) => dispatch => axios.post(`${API_URL}/authenticate`, { username, password })
   .then(({ data }) => initCoreAndSetToken({ username, password, saveLogin }, data, dispatch))
   .catch((err) => {
-    if (err.response && err.response.status === 401) {
-      dispatch(setUser({ ...INITIAL_STATE, error: 'Username and/or Password Incorrect' }));
-    } else if (err.request && err.request.status === 0) {
+    if (err.response) {
+      if (err.response.status === 401) {
+        dispatch(setUser({ ...INITIAL_STATE, error: 'Username and/or Password Incorrect' }));
+      } else {
+        dispatch(setUser({ ...INITIAL_STATE, error: 'An unexpected error has occurred' }));
+      }
+    } else {
       dispatch(setUser({ ...INITIAL_STATE, error: 'Server not responding' }));
     }
   }));

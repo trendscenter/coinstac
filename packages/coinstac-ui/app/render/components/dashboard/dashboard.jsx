@@ -39,6 +39,42 @@ import {
   getSelectAndSubProp,
 } from '../../state/graphql/props';
 
+const styles = {
+
+  status: {
+    display: 'inline-block',
+    fontSize: '1.25rem',
+    position: 'relative',
+    width: '100%',
+  },
+
+  statusGood: {
+    marginLeft: '6.5rem',
+  },
+
+  statusUp: {
+    display: 'inline-block',
+    width: '1rem',
+    height: '1rem',
+    background: '#5cb85c',
+    borderRadius: '50%',
+    marginLeft: '0.5rem',
+  },
+
+  statusDown: {
+    display: 'inline-block',
+    width: '100%',
+    background: '#d9534f',
+    borderRadius: '0.5rem',
+    marginLeft: '0.5rem',
+    padding: '1rem',
+    color: 'white',
+    fontSize: '2rem',
+    textAlign: 'center',
+    textShadow: '1px 1px 0px rgba(0, 0, 0, 1)',
+  },
+};
+
 class Dashboard extends Component {
   constructor(props) {
     super(props);
@@ -46,6 +82,7 @@ class Dashboard extends Component {
     this.props.getDBRuns();
 
     this.state = {
+      dockerStatus: true,
       unsubscribeComputations: null,
       unsubscribeConsortia: null,
       unsubscribePipelines: null,
@@ -58,7 +95,16 @@ class Dashboard extends Component {
     const { auth: { user } } = this.props;
     const { router } = this.context;
 
-    //console.log(this.props.getDockerStatus());
+    setInterval(() => {
+      let status = this.props.getDockerStatus();
+      status.then((result) => {
+        if( result == 'OK' ){
+          this.setState({dockerStatus: true});
+        }
+      }, (err) => {
+        this.setState({dockerStatus: false});
+      });
+    }, 5000);
 
     process.nextTick(() => {
       if (!user.email.length) {
@@ -116,7 +162,7 @@ class Dashboard extends Component {
     });
   }
 
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     const { auth: { user }, client } = this.props;
     const { router } = this.context;
 
@@ -391,6 +437,12 @@ class Dashboard extends Component {
               <DashboardNav auth={auth} />
               <UserAccountController push={router.push} />
             </nav>
+            <div style={styles.status}>
+              { this.state.dockerStatus
+              ? <span style={styles.statusGood}><strong>Docker Status:</strong><span style={styles.statusUp} /></span>
+              : <span style={styles.statusDown}>Docker Is Not Running!</span>
+              }
+            </div>
           </div>
           <div className="col-xs-12 col-sm-9 content-pane">
             {childrenWithProps}
