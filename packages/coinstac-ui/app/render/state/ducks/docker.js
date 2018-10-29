@@ -6,6 +6,7 @@ import { notifyError, notifySuccess } from './notifyAndLog';
 
 // Actions
 export const CLEAR_DOCKER_OUTPUT = 'CLEAR_DOCKER_OUTPUT';
+export const GET_DOCKER_STATUS = 'GET_DOCKER_STATUS';
 export const GET_LOCAL_IMAGES = 'GET_LOCAL_IMAGES';
 export const PULL_COMPUTATIONS = 'PULL_COMPUTATIONS';
 export const REMOVE_IMAGE = 'REMOVE_IMAGE';
@@ -16,7 +17,7 @@ export const getDockerStatus = applyAsyncLoading(() =>
   dispatch =>
     ipcPromise.send('get-status')
       .then((res) => {
-        dispatch({ status: res });
+        dispatch({ payload: res, type: GET_DOCKER_STATUS });
         return res;
       })
 );

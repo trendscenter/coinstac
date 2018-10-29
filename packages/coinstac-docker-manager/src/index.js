@@ -125,10 +125,7 @@ const getImages = () => {
  * @return {boolean} is Docker running?
  */
 const getStatus = () => {
-  return true;
-  // setInterval(() => {
-  //   return docker.ping();
-  // }, 1000);
+  return docker.ping();
 };
 
 /**
