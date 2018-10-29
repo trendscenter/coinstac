@@ -14,9 +14,9 @@ const config = {
     hot: true,
     port,
   },
-  entry: [
-    path.join(__dirname, 'app', 'render', 'index.js'),
-  ],
+  entry: {
+    app: path.join(__dirname, 'app', 'render', 'index.js'),
+  },
 
   /**
    * Don't bundle anything in node_modules and ensure Webpack doesn't resolve
@@ -105,9 +105,10 @@ const config = {
     filename: 'bundle.js',
     libraryTarget: 'commonjs2',
     path: path.join(__dirname, 'build', 'render'),
-    publicPath: './build/',
+    // relative to entry path
+    publicPath: '../../build/render/',
   },
-  plugins: [new webpack.optimize.OccurrenceOrderPlugin()],
+  plugins: [new webpack.optimize.OccurrenceOrderPlugin(), new webpack.HotModuleReplacementPlugin()],
   resolve: {
     extensions: ['.json', '.js', '.jsx'],
   },
