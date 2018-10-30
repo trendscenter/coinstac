@@ -1,5 +1,6 @@
 'use strict';
 
+const dockerManager = require('coinstac-docker-manager');
 const Base = require('./models/base');
 const CommandComputation = require('./models/computation/command-computation');
 const Computation = require('./models/computation/computation');
@@ -19,12 +20,10 @@ const PouchDocument = require('./models/pouch-document');
 const Project = require('./models/project');
 const RemoteComputationResult = require('./models/computation/remote-computation-result');
 const RemotePipelineRunner = require('./models/pipeline/runner/remote-pipeline-runner');
-const RemotePipelineRunnerPool =
-  require('./models/pipeline/runner/pool/remote-pipeline-runner-pool');
+const RemotePipelineRunnerPool = require('./models/pipeline/runner/pool/remote-pipeline-runner-pool');
 const User = require('./models/user');
 const getSyncedDatabase = require('./utils/get-synced-database');
 const dbRegistry = require('./services/db-registry');
-const dockerManager = require('coinstac-docker-manager');
 const validator = require('./services/validator');
 
 

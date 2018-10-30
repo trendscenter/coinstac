@@ -1,9 +1,9 @@
 'use strict';
 
-const DBListener = require('../../src/models/db-listener');
 const Pouchy = require('pouchy');
 const tape = require('tape');
 const PouchDBAdapterMemory = require('pouchdb-adapter-memory');
+const DBListener = require('../../src/models/db-listener');
 
 Pouchy.plugin(PouchDBAdapterMemory);
 

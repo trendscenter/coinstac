@@ -2,8 +2,8 @@
 
 const tape = require('tape');
 
-const Bouncer = require('../src/bouncer.js');
 const url = require('url');
+const Bouncer = require('../src/bouncer.js');
 
 const AuthorizationError = require('../src/authorization-error.js');
 
@@ -50,33 +50,33 @@ tape('Bouncer: constructor', (t) => {
 
   const bouncer = factory({ targetBaseUrl: 'http://foo.com' });
   t.deepEquals(
-        bouncer.targetBaseUrl,
-        url.parse('http://foo.com'),
-        'has a targetBaseUrl property'
-    );
+    bouncer.targetBaseUrl,
+    url.parse('http://foo.com'),
+    'has a targetBaseUrl property'
+  );
   t.equals(
-        typeof bouncer.handler.proxy.mapUri,
-        'function',
-        'has a handler property'
-    );
+    typeof bouncer.handler.proxy.mapUri,
+    'function',
+    'has a handler property'
+  );
   t.ok(
-        bouncer.consortiumHasMember instanceof Function,
-        'has consortiumHasMember method'
-    );
+    bouncer.consortiumHasMember instanceof Function,
+    'has consortiumHasMember method'
+  );
   t.ok(
-        bouncer.consortiumIsOwnedBy instanceof Function,
-        'has consortiumIsOwnedBy method'
-    );
+    bouncer.consortiumIsOwnedBy instanceof Function,
+    'has consortiumIsOwnedBy method'
+  );
   t.ok(
-        bouncer.consortiumHasMember instanceof Function,
-        'has consortiumHasMember method'
-    );
+    bouncer.consortiumHasMember instanceof Function,
+    'has consortiumHasMember method'
+  );
 
   t.throws(
-        badFactory,
-        /.*/,
-        'fails without targetBaseUrl'
-    );
+    badFactory,
+    /.*/,
+    'fails without targetBaseUrl'
+  );
 });
 
 tape('Bouncer: testPathRegExp', (t) => {
@@ -95,13 +95,15 @@ tape('Bouncer: testPathRegExp', (t) => {
 tape('Bouncer: mapUri', (t) => {
   t.plan(11);
 
-    // Create mock methods
+  // Create mock methods
   const mocks = {
     reject: getMockFn(),
     allow: getMockFn(),
     valConOwn: getMockFn(() => { return Promise.resolve(true); }),
     valConMem: getMockFn(() => { return Promise.resolve(true); }),
-    valConMemThrow: getMockFn(() => { return Promise.reject(false); }),
+    valConMemThrow: getMockFn(() => {
+      return Promise.reject(false); // eslint-disable-line prefer-promise-reject-errors
+    }),
     handleAuthRejection: getMockFn(),
     testPathRegExp: getMockFn(() => { return true; }),
   };
@@ -132,13 +134,13 @@ tape('Bouncer: mapUri', (t) => {
         handleAuthRejection: mocks.handleAuthRejection,
         testPathRegExp: mocks.testPathRegExp,
       }
-        ).mapUri().then(() => {
-          t.equals(mocks.valConMem.callCount, 1, 'calls valConMem');
-          t.equals(mocks.valConOwn.callCount, 1, 'calls valConOwn');
-          t.equals(mocks.allow.callCount, 1, 'calls allow');
-          t.equals(mocks.handleAuthRejection.callCount, 0, 'does not reject');
-          t.equals(mocks.testPathRegExp.callCount, 1, 'calls testPathRegExp');
-        });
+    ).mapUri().then(() => {
+      t.equals(mocks.valConMem.callCount, 1, 'calls valConMem');
+      t.equals(mocks.valConOwn.callCount, 1, 'calls valConOwn');
+      t.equals(mocks.allow.callCount, 1, 'calls allow');
+      t.equals(mocks.handleAuthRejection.callCount, 0, 'does not reject');
+      t.equals(mocks.testPathRegExp.callCount, 1, 'calls testPathRegExp');
+    });
   };
 
   const testValidationErr = () => {
@@ -154,12 +156,12 @@ tape('Bouncer: mapUri', (t) => {
         validateConsortiumOwnership: mocks.valConOwn,
         handleAuthRejection: mocks.handleAuthRejection,
       }
-        ).mapUri().then(() => {
-          t.equals(mocks.valConMemThrow.callCount, 1, 'calls valConMemThrow');
-          t.equals(mocks.valConOwn.callCount, 0, 'does not call valConOwn');
-          t.equals(mocks.allow.callCount, 0, 'does not call allow');
-          t.equals(mocks.handleAuthRejection.callCount, 1, 'calls reject');
-        });
+    ).mapUri().then(() => {
+      t.equals(mocks.valConMemThrow.callCount, 1, 'calls valConMemThrow');
+      t.equals(mocks.valConOwn.callCount, 0, 'does not call valConOwn');
+      t.equals(mocks.allow.callCount, 0, 'does not call allow');
+      t.equals(mocks.handleAuthRejection.callCount, 1, 'calls reject');
+    });
   };
 
   testValidationOK().then(testValidationErr);
@@ -193,23 +195,23 @@ tape('Bouncer: validateConsortiumOwnership', (t) => {
     };
 
     factory({}, mockThis).validateConsortiumOwnership(mockRequest)
-            .then((result) => {
-              t.equals(
-                    mockThis.utils.getConsortium.callCount,
-                    1,
-                    'calls getConsortium during update request'
-                );
-              t.equals(
-                    mockThis.consortiumIsOwnedBy.callCount,
-                    1,
-                    'calls consortiumIsOwnedBy'
-                );
-              t.equals(
-                    result,
-                    mockRequest.payload,
-                    'promises are chained properly'
-                );
-            });
+      .then((result) => {
+        t.equals(
+          mockThis.utils.getConsortium.callCount,
+          1,
+          'calls getConsortium during update request'
+        );
+        t.equals(
+          mockThis.consortiumIsOwnedBy.callCount,
+          1,
+          'calls consortiumIsOwnedBy'
+        );
+        t.equals(
+          result,
+          mockRequest.payload,
+          'promises are chained properly'
+        );
+      });
   });
 
   t.test('Valid insert request', (t) => {
@@ -232,14 +234,14 @@ tape('Bouncer: validateConsortiumOwnership', (t) => {
     };
 
     factory({}, mockThis).validateConsortiumOwnership(mockRequest)
-            .then((result) => {
-              t.equals(
-                    mockThis.consortiumIsOwnedBy.callCount,
-                    1,
-                    'calls consortiumIsOwnedBy'
-                );
-              t.equals(result, mockRequest.payload, 'promises chained ok');
-            });
+      .then((result) => {
+        t.equals(
+          mockThis.consortiumIsOwnedBy.callCount,
+          1,
+          'calls consortiumIsOwnedBy'
+        );
+        t.equals(result, mockRequest.payload, 'promises chained ok');
+      });
   });
 
   t.test('Invalid Update Request', (t) => {
@@ -268,25 +270,25 @@ tape('Bouncer: validateConsortiumOwnership', (t) => {
     };
 
     factory({}, mockThis).validateConsortiumOwnership(mockRequest)
-            .then(() => {
-              t.fail('Should reject with AuthorizationError');
-            })
-            .catch((result) => {
-              t.equals(
-                    mockThis.utils.getConsortium.callCount,
-                    1,
-                    'calls getConsortium during update request'
-                );
-              t.equals(
-                    mockThis.consortiumIsOwnedBy.callCount,
-                    1,
-                    'calls consortiumIsOwnedBy'
-                );
-              t.ok(
-                    result instanceof AuthorizationError,
-                    'Should reject with AuthorizationError'
-                );
-            });
+      .then(() => {
+        t.fail('Should reject with AuthorizationError');
+      })
+      .catch((result) => {
+        t.equals(
+          mockThis.utils.getConsortium.callCount,
+          1,
+          'calls getConsortium during update request'
+        );
+        t.equals(
+          mockThis.consortiumIsOwnedBy.callCount,
+          1,
+          'calls consortiumIsOwnedBy'
+        );
+        t.ok(
+          result instanceof AuthorizationError,
+          'Should reject with AuthorizationError'
+        );
+      });
   });
 
   t.test('Invalid insert request', (t) => {
@@ -309,20 +311,20 @@ tape('Bouncer: validateConsortiumOwnership', (t) => {
     };
 
     factory({}, mockThis).validateConsortiumOwnership(mockRequest)
-            .then(() => {
-              t.fail('Should reject with AuthorizationError');
-            })
-            .catch((result) => {
-              t.equals(
-                    mockThis.consortiumIsOwnedBy.callCount,
-                    1,
-                    'calls consortiumIsOwnedBy'
-                );
-              t.ok(
-                    result instanceof AuthorizationError,
-                    'Should reject with AuthorizationError'
-                );
-            });
+      .then(() => {
+        t.fail('Should reject with AuthorizationError');
+      })
+      .catch((result) => {
+        t.equals(
+          mockThis.consortiumIsOwnedBy.callCount,
+          1,
+          'calls consortiumIsOwnedBy'
+        );
+        t.ok(
+          result instanceof AuthorizationError,
+          'Should reject with AuthorizationError'
+        );
+      });
   });
 
   t.test('Skip validation', (t) => {
@@ -339,22 +341,22 @@ tape('Bouncer: validateConsortiumOwnership', (t) => {
     };
 
     factory({}, mockThis).validateConsortiumOwnership(mockRequest)
-            .then((result) => {
-              t.equals(
-                    mockThis.utils.getConsortium.callCount,
-                    0,
-                    'does not call getConsortium'
-                );
-              t.equals(
-                    mockThis.consortiumIsOwnedBy.callCount,
-                    0,
-                    'does not call isOwnedBy'
-                );
-              t.equals(result, true, 'Resolves to true');
-            })
-            .catch(() => {
-              t.fail('Should allow request');
-            });
+      .then((result) => {
+        t.equals(
+          mockThis.utils.getConsortium.callCount,
+          0,
+          'does not call getConsortium'
+        );
+        t.equals(
+          mockThis.consortiumIsOwnedBy.callCount,
+          0,
+          'does not call isOwnedBy'
+        );
+        t.equals(result, true, 'Resolves to true');
+      })
+      .catch(() => {
+        t.fail('Should allow request');
+      });
   });
   t.end();
 });
@@ -387,23 +389,23 @@ tape('Bouncer: validateConsortiumMembership', (t) => {
     };
 
     factory({}, mockThis).validateConsortiumMembership(mockRequest)
-            .then((result) => {
-              t.equals(
-                    mockThis.utils.getConsortium.callCount,
-                    1,
-                    'calls getConsortium during update request'
-                );
-              t.equals(
-                    mockThis.consortiumHasMember.callCount,
-                    1,
-                    'calls consortiumHasMember'
-                );
-              t.equals(
-                    result,
-                    mockRequest.payload,
-                    'promises are chained properly'
-                );
-            });
+      .then((result) => {
+        t.equals(
+          mockThis.utils.getConsortium.callCount,
+          1,
+          'calls getConsortium during update request'
+        );
+        t.equals(
+          mockThis.consortiumHasMember.callCount,
+          1,
+          'calls consortiumHasMember'
+        );
+        t.equals(
+          result,
+          mockRequest.payload,
+          'promises are chained properly'
+        );
+      });
   });
 
   t.test('Invalid Update Request', (t) => {
@@ -432,25 +434,25 @@ tape('Bouncer: validateConsortiumMembership', (t) => {
     };
 
     factory({}, mockThis).validateConsortiumMembership(mockRequest)
-            .then(() => {
-              t.fail('Should reject with AuthorizationError');
-            })
-            .catch((result) => {
-              t.equals(
-                    mockThis.utils.getConsortium.callCount,
-                    1,
-                    'calls getConsortium during update request'
-                );
-              t.equals(
-                    mockThis.consortiumHasMember.callCount,
-                    1,
-                    'calls consortiumHasMember'
-                );
-              t.ok(
-                    result instanceof AuthorizationError,
-                    'Should reject with AuthorizationError'
-                );
-            });
+      .then(() => {
+        t.fail('Should reject with AuthorizationError');
+      })
+      .catch((result) => {
+        t.equals(
+          mockThis.utils.getConsortium.callCount,
+          1,
+          'calls getConsortium during update request'
+        );
+        t.equals(
+          mockThis.consortiumHasMember.callCount,
+          1,
+          'calls consortiumHasMember'
+        );
+        t.ok(
+          result instanceof AuthorizationError,
+          'Should reject with AuthorizationError'
+        );
+      });
   });
 
   t.test('Skip validation', (t) => {
@@ -467,22 +469,22 @@ tape('Bouncer: validateConsortiumMembership', (t) => {
     };
 
     factory({}, mockThis).validateConsortiumMembership(mockRequest)
-            .then((result) => {
-              t.equals(
-                    mockThis.utils.getConsortium.callCount,
-                    0,
-                    'does not call getConsortium'
-                );
-              t.equals(
-                    mockThis.consortiumHasMember.callCount,
-                    0,
-                    'does not call isOwnedBy'
-                );
-              t.equals(result, true, 'Resolves to true');
-            })
-            .catch(() => {
-              t.fail('Should allow request');
-            });
+      .then((result) => {
+        t.equals(
+          mockThis.utils.getConsortium.callCount,
+          0,
+          'does not call getConsortium'
+        );
+        t.equals(
+          mockThis.consortiumHasMember.callCount,
+          0,
+          'does not call isOwnedBy'
+        );
+        t.equals(result, true, 'Resolves to true');
+      })
+      .catch(() => {
+        t.fail('Should allow request');
+      });
   });
   t.end();
 });
@@ -497,27 +499,27 @@ tape('Bouncer: reject', (t) => {
   };
   const mockGetUnauthorizedUrl = getMockFn((request, msg) => {
     t.deepEquals(
-            request,
-            mockRequest,
-            'passes request to getUnauthorizedUrl'
-        );
+      request,
+      mockRequest,
+      'passes request to getUnauthorizedUrl'
+    );
     t.equals(
-            msg,
-            'Not authorized to make GET requests',
-            'passes msg to getUnauthorizedUrl'
-        );
+      msg,
+      'Not authorized to make GET requests',
+      'passes msg to getUnauthorizedUrl'
+    );
     return 'foo';
   });
   const mockCallback = (err, url) => {
     t.equals(
-            url,
-            'foo',
-            'Calls callback with url from getUnauthorizedUrl'
-        );
+      url,
+      'foo',
+      'Calls callback with url from getUnauthorizedUrl'
+    );
   };
 
   factory({}, { utils: { getUnauthorizedUrl: mockGetUnauthorizedUrl } })
-        .reject(mockRequest, mockCallback);
+    .reject(mockRequest, mockCallback);
 });
 
 tape('Bouncer: handleAuthRejection', (t) => {
@@ -530,24 +532,24 @@ tape('Bouncer: handleAuthRejection', (t) => {
   };
   const mockGetUnauthorizedUrl = getMockFn((request, msg) => {
     t.deepEquals(
-            request,
-            mockRequest,
-            'passes request to getUnauthorizedUrl'
-        );
+      request,
+      mockRequest,
+      'passes request to getUnauthorizedUrl'
+    );
     t.equals(
-            msg,
-            'test msg',
-            'passes msg to getUnauthorizedUrl'
-        );
+      msg,
+      'test msg',
+      'passes msg to getUnauthorizedUrl'
+    );
     return 'foo';
   });
 
   const mockAuthCallback = (err, url) => {
     t.equals(
-            url,
-            'foo',
-            'Calls callback with url from getUnauthorizedUrl'
-        );
+      url,
+      'foo',
+      'Calls callback with url from getUnauthorizedUrl'
+    );
   };
 
   const mockErrCallback = () => {
@@ -559,17 +561,17 @@ tape('Bouncer: handleAuthRejection', (t) => {
 
   const handleUnexpectedError = () => {
     factory({}, { utils: { getUnauthorizedUrl: mockGetUnauthorizedUrl } })
-            .handleAuthRejection(mockRequest, mockErrCallback, mockError);
+      .handleAuthRejection(mockRequest, mockErrCallback, mockError);
   };
 
   factory({}, { utils: { getUnauthorizedUrl: mockGetUnauthorizedUrl } })
-        .handleAuthRejection(mockRequest, mockAuthCallback, mockAuthError);
+    .handleAuthRejection(mockRequest, mockAuthCallback, mockAuthError);
 
   t.throws(
-        handleUnexpectedError,
-        mockError.msg,
-        'throws non-auth errors up stack'
-    );
+    handleUnexpectedError,
+    mockError.msg,
+    'throws non-auth errors up stack'
+  );
 });
 
 tape('Bouncer: unauthorizedRoute', (t) => {

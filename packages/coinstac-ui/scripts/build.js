@@ -17,27 +17,27 @@ const options = {
 };
 
 rm('coinstac-*')
-.then(() => packager(options))
-.then((appPaths) => {
-  appPaths.forEach((appPath) => {
-    const zip = archiver.create('zip');
-    console.log(`Finished building at: ${appPath}`); // eslint-disable-line no-console
-    console.log('Now archiving...'); // eslint-disable-line no-console
+  .then(() => packager(options))
+  .then((appPaths) => {
+    appPaths.forEach((appPath) => {
+      const zip = archiver.create('zip');
+      console.log(`Finished building at: ${appPath}`); // eslint-disable-line no-console
+      console.log('Now archiving...'); // eslint-disable-line no-console
 
-    const write = fs.createWriteStream(`${appPath}.zip`);
+      const write = fs.createWriteStream(`${appPath}.zip`);
 
-    zip.pipe(write);
-    zip.on('error', (err) => {
-      throw err;
+      zip.pipe(write);
+      zip.on('error', (err) => {
+        throw err;
+      });
+      zip.directory(appPath, false)
+        .finalize();
+
+      write.on('close', () => {
+        console.log(`Finished zipping ${appPath}.zip`); // eslint-disable-line no-console
+      });
     });
-    zip.directory(appPath, false)
-    .finalize();
-
-    write.on('close', () => {
-      console.log(`Finished zipping ${appPath}.zip`); // eslint-disable-line no-console
-    });
+  })
+  .catch((err) => {
+    console.error('Build failed with:', err); // eslint-disable-line no-console
   });
-})
-.catch((err) => {
-  console.error('Build failed with:', err); // eslint-disable-line no-console
-});

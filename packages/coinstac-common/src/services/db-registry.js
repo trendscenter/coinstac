@@ -33,7 +33,7 @@ function dbRegistryFactory(opts) {
   }
 
   if (!opts.remote || !opts.remote.db) {
-        // @note local.db is not required -- no connection info relevant
+    // @note local.db is not required -- no connection info relevant
     throw new ReferenceError([
       'db-registry requires `remote.db` as',
       '`url.format(opts.remote.db)`\'able configuration',

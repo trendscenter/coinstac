@@ -9,10 +9,10 @@ Pouchy.plugin(require('pouchdb-adapter-memory'));
 function fail(err) {
   const isLikelyBecausePouchDBServerHasNoTeardownHooks = (
     err && (
-      err.code === 'ECONNREFUSED' ||
-      err.code === 'ECONNRESET' ||
-      err.message.match(/destroyed/) ||
-      (err.message.match(/hang up/) && err.status === 400)
+      err.code === 'ECONNREFUSED'
+      || err.code === 'ECONNRESET'
+      || err.message.match(/destroyed/)
+      || (err.message.match(/hang up/) && err.status === 400)
     )
   );
   if (isLikelyBecausePouchDBServerHasNoTeardownHooks) {

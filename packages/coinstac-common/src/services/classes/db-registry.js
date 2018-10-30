@@ -52,7 +52,6 @@ const arrHasEmbeddedMatch = (arr, str) => arr.some(toMatch => str.match(toMatch)
  * @property {array} names convenience prop to access list of current db names
  */
 class DBRegistry {
-
   constructor(opts) {
     assign(this, opts);
     this.all = [];
@@ -92,8 +91,8 @@ class DBRegistry {
    */
   isBidirectionalSyncStore(connStr) {
     return (
-      this.remoteStoresSyncBoth &&
-      arrHasEmbeddedMatch(this.remoteStoresSyncBoth, connStr)
+      this.remoteStoresSyncBoth
+      && arrHasEmbeddedMatch(this.remoteStoresSyncBoth, connStr)
     );
   }
 
@@ -109,8 +108,8 @@ class DBRegistry {
    */
   isSyncInStore(connStr) {
     return (
-      this.remoteStoresSyncIn &&
-      arrHasEmbeddedMatch(this.remoteStoresSyncIn, connStr)
+      this.remoteStoresSyncIn
+      && arrHasEmbeddedMatch(this.remoteStoresSyncIn, connStr)
     );
   }
 
@@ -119,8 +118,8 @@ class DBRegistry {
    */
   isSyncOutStore(connStr) {
     return (
-      this.remoteStoresSyncOut &&
-      arrHasEmbeddedMatch(this.remoteStoresSyncOut, connStr)
+      this.remoteStoresSyncOut
+      && arrHasEmbeddedMatch(this.remoteStoresSyncOut, connStr)
     );
   }
 
@@ -194,8 +193,8 @@ class DBRegistry {
      * {@link https://github.com/MRN-Code/coinstac/issues/155}
      */
     if (
-      this.localStores &&
-      conf.pouchConfig.getAdapter instanceof Function
+      this.localStores
+      && conf.pouchConfig.getAdapter instanceof Function
     ) {
       conf.pouchConfig.adapter = conf.pouchConfig.getAdapter(connStr);
     }
@@ -221,7 +220,7 @@ class DBRegistry {
     }
     /* istanbul ignore if */
     if (!db) {
-      throw new ReferenceError(`db "${name}" not found. unable to remove`);
+      throw new ReferenceError(`db "${db}" not found. unable to remove`);
     }
     /* istanbul ignore else */
     if (db.syncEmitter) { db.syncEmitter.cancel(); }
@@ -238,16 +237,17 @@ class DBRegistry {
   destroy(opts) {
     const options = opts || {};
     return Promise.all(this.all.map(this.cleanUpDB.bind(this, options.deleteDBs)))
-    .then((destroyed) => {
-      const notDestroyed = destroyed.filter(confirmation =>
-        (confirmation[0] ? !confirmation[0].ok : false));
-      /* istanbul ignore if */
-      if (notDestroyed.length) {
-        throw new Error('unable to destroy all dbs');
-      }
-      this.destroyed = true;
-      return destroyed;
-    });
+      .then((destroyed) => {
+        const notDestroyed = destroyed.filter(
+          confirmation => (confirmation[0] ? !confirmation[0].ok : false)
+        );
+        /* istanbul ignore if */
+        if (notDestroyed.length) {
+          throw new Error('unable to destroy all dbs');
+        }
+        this.destroyed = true;
+        return destroyed;
+      });
   }
 }
 

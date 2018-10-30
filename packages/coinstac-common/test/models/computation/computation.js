@@ -1,10 +1,13 @@
 'use strict';
 
 const _ = require('lodash');
-const computations = require('../../../').models.computation;
-
-const Computation = computations.Computation;
 const test = require('tape');
+const {
+  models: {
+    computation,
+    computation: { Computation },
+  },
+} = require('../../../');
 
 test('model::Computation', (t) => {
   t.throws(() => {
@@ -36,13 +39,13 @@ test('model::Computation.factory', (t) => {
     { type: 'cmd', cmd: 'test-command', cwd: './test-dir' },
   ]);
   t.ok(_.isArray(comps), 'computations generated from arr of raw comps');
-  t.ok(comps[0] instanceof computations.JavascriptComputation, 'subtypes generated');
+  t.ok(comps[0] instanceof computation.JavascriptComputation, 'subtypes generated');
 
   t.ok(_.isArray(comps), 'computations generated from single, raw comp');
   t.throws(
-        () => Computation.factory({}),
-        /ReferenceError/,
-        'errors when invalid raw computation set requested'
-    );
+    () => Computation.factory({}),
+    /ReferenceError/,
+    'errors when invalid raw computation set requested'
+  );
   t.end();
 });

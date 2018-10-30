@@ -1,9 +1,9 @@
 'use strict';
 
-const Base = require('../base.js');
 const joi = require('joi');
 const isArray = require('lodash/isArray');
 const assign = require('lodash/assign');
+const Base = require('../base.js');
 
 /**
  * @abstract
@@ -39,7 +39,7 @@ class Computation extends Base {
     /* eslint-enable global-require */
 
     return rawComps.map((comp) => {
-      const type = comp.type;
+      const { type } = comp;
       switch (type) {
         case 'function':
           return new JavascriptComputation(comp);

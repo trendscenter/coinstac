@@ -4,7 +4,7 @@ const common = require('coinstac-common');
 const find = require('lodash/find');
 const matchesProperty = require('lodash/matchesProperty');
 
-const getSyncedDatabase = common.utils.getSyncedDatabase;
+const { utils: { getSyncedDatabase } } = common;
 
 /**
  * @abstract
@@ -13,7 +13,6 @@ const getSyncedDatabase = common.utils.getSyncedDatabase;
  * @property {Function} this.ModelType
  */
 class ModelService {
-
   /**
    * model-service base class. abstracts common model methods
    * @param {object} opts
@@ -172,7 +171,6 @@ class ModelService {
       return Promise.reject(error);
     }
   }
-
 }
 
 module.exports = ModelService;

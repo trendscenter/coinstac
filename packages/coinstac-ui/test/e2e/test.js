@@ -1,4 +1,4 @@
-const Application = require('spectron').Application;
+const { Application } = require('spectron');
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 const path = require('path');
@@ -71,14 +71,10 @@ describe('Testing::e2e', () => {
       .waitForText('.notification-message', EXIST_TIMEOUT)
       .getText('.notification-message')
       .then(notificationMessage => notificationMessage.should.equal('Consortium Saved'))
-      .then(() =>
-        // wait for the notification message to disappear and check if the consortium shows up
-        // in the consortia list
-        app.client
-          .waitForVisible('.notification-message', NOTIFICATION_DISMISS_TIMEOUT, true)
-          .click('a=Consortia')
-          .waitForVisible(`h3=${CONS_NAME}`)
-      )
+      .then(() => app.client
+        .waitForVisible('.notification-message', NOTIFICATION_DISMISS_TIMEOUT, true)
+        .click('a=Consortia')
+        .waitForVisible(`h3=${CONS_NAME}`))
   ));
 
   it('accesses the Add Pipeline page', () => (
@@ -138,11 +134,8 @@ describe('Testing::e2e', () => {
       .waitForVisible('.notification-message', EXIST_TIMEOUT)
       .getText('.notification-message')
       .then(notificationMessage => notificationMessage.should.equal('Pipeline Saved.'))
-      .then(() =>
-        // wait for the notification message to disappear
-        app.client
-          .waitForVisible('.notification-message', NOTIFICATION_DISMISS_TIMEOUT, true)
-      )
+      .then(() => app.client
+        .waitForVisible('.notification-message', NOTIFICATION_DISMISS_TIMEOUT, true))
   ));
 
   it('sets the created pipeline to the consortium', () => (
@@ -173,10 +166,7 @@ describe('Testing::e2e', () => {
       .waitForText('.notification-message', EXIST_TIMEOUT)
       .getText('.notification-message')
       .then(notificationMessage => notificationMessage.should.equal('Collection Saved.'))
-      .then(() =>
-        // wait for the notification message to disappear
-        app.client.waitForVisible('.notification-message', NOTIFICATION_DISMISS_TIMEOUT, true)
-      )
+      .then(() => app.client.waitForVisible('.notification-message', NOTIFICATION_DISMISS_TIMEOUT, true))
   ));
 
   it('sets the data set into the file collection', () => (
@@ -216,10 +206,7 @@ describe('Testing::e2e', () => {
       .waitForText('.notification-message', EXIST_TIMEOUT)
       .getText('.notification-message')
       .then(notificationMessage => notificationMessage.should.equal('Collection Saved.'))
-      .then(() =>
-        // wait for the notification message to disappear
-        app.client.waitForVisible('.notification-message', NOTIFICATION_DISMISS_TIMEOUT, true)
-      )
+      .then(() => app.client.waitForVisible('.notification-message', NOTIFICATION_DISMISS_TIMEOUT, true))
   ));
 
   it('runs a computation', () => (
@@ -230,10 +217,7 @@ describe('Testing::e2e', () => {
       .waitForText('.notification-message', EXIST_TIMEOUT)
       .getText('.notification-message')
       .then(notificationMessage => notificationMessage.should.equal(`Decentralized Pipeline Starting for ${CONS_NAME}.`))
-      .then(() =>
-        // wait for the notification message to disappear
-        app.client.waitForVisible('.notification-message', NOTIFICATION_DISMISS_TIMEOUT, true)
-      )
+      .then(() => app.client.waitForVisible('.notification-message', NOTIFICATION_DISMISS_TIMEOUT, true))
   ));
 
   it('displays computation progress', () => (

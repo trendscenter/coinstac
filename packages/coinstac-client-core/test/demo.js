@@ -49,13 +49,12 @@ async.series([
     .then(docs => console.log('# DOCS:', docs.length))
     .then(() => {
       consortiaDB.syncEmitter
-      .on('change', arg => console.log('change', arg))
+        .on('change', arg => console.log('change', arg))
       // .on('paused', () => console.log('paused', arguments[0]))
       // .on('active', () => console.log('active', arguments[0]))
-      .on('denied', () => console.log('denied', arguments[0]))
-      .on('complete', () => console.log('complete', arguments[0]))
-      .on('error', () => console.log('error', arguments[0]));
+        .on('denied', arg => console.log('denied', arg))
+        .on('complete', arg => console.log('complete', arg))
+        .on('error', arg => console.log('error', arg));
     });
-}
-);
+});
 /* eslint-enable no-console */

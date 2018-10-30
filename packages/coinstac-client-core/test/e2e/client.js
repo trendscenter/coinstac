@@ -1,22 +1,24 @@
 'use strict';
 
 const coinstacCommon = require('coinstac-common');
-const CoinstacClient = require('../../src/index.js');
 const fs = require('fs');
 const glob = require('glob');
 const path = require('path');
 const PouchDBAdapterMemory = require('pouchdb-adapter-memory');
-const Project = require('coinstac-common').models.Project;
-const ProjectService = require('../../src/sub-api/project-service.js');
 const { promisify } = require('bluebird');
 const Storage = require('dom-storage');
 const winston = require('winston');
+const ProjectService = require('../../src/sub-api/project-service.js');
+const CoinstacClient = require('../../src/index.js');
+
+const {
+  models: { Project },
+  utils: { getSyncedDatabase },
+} = coinstacCommon;
 
 coinstacCommon.services.dbRegistry.DBRegistry.Pouchy.PouchDB.plugin(
   PouchDBAdapterMemory
 );
-
-const getSyncedDatabase = coinstacCommon.utils.getSyncedDatabase;
 
 const logger = new winston.Logger({
   level: 'info',
@@ -63,7 +65,9 @@ function getQueueEndStopper(count, fn) {
   };
 }
 
-function start({ consortiumId, files, metaFilePath, username }) {
+function start({
+  consortiumId, files, metaFilePath, username,
+}) {
   const client = new CoinstacClient({
     appDirectory: STORAGE_DIR,
     db: {
@@ -186,4 +190,3 @@ process.on('message', (message) => {
       return messageSender('UNKNOWN COMMAND');
   }
 });
-

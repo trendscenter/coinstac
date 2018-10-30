@@ -27,23 +27,23 @@ test('ConsortiaService - Model Service methods', (t) => {
   t.plan(4);
 
   clientFactory()
-  .then((client) => {
-    c1 = client;
-    return c1.consortia.save(con1);
-  })
-  .then(() => c1.consortia.all())
-  .then(docs => t.equals(docs.length, 1, 'service persists models'))
-  .then(() => c1.consortia.getBy('_id', con1._id))
-  .then(doc => t.equals(doc.description, con1.description, 'getBy proxy'))
-  .then(() => {
-    return c1.consortia.save(con2);
-  })
-  .then((doc) => {
-    t.ok(doc._id, 'doc generated');
-  })
-  .then(() => c1.teardown({ deleteDBs: true }))
-  .then(() => t.pass('teardown'))
-  .catch(handleTeardown);
+    .then((client) => {
+      c1 = client;
+      return c1.consortia.save(con1);
+    })
+    .then(() => c1.consortia.all())
+    .then(docs => t.equals(docs.length, 1, 'service persists models'))
+    .then(() => c1.consortia.getBy('_id', con1._id))
+    .then(doc => t.equals(doc.description, con1.description, 'getBy proxy'))
+    .then(() => {
+      return c1.consortia.save(con2);
+    })
+    .then((doc) => {
+      t.ok(doc._id, 'doc generated');
+    })
+    .then(() => c1.teardown({ deleteDBs: true }))
+    .then(() => t.pass('teardown'))
+    .catch(handleTeardown);
 });
 
 test('ConsortiaService - getUserConsortia', (t) => {
@@ -59,13 +59,13 @@ test('ConsortiaService - getUserConsortia', (t) => {
   t.plan(2);
 
   clientFactory()
-  .then((client) => {
-    c1 = client;
-    return c1.consortia.save(con1);
-  })
-  .then(() => c1.consortia.getUserConsortia(userFactory().username))
-  .then(docs => t.equals(docs.length, 1, 'getUserConsortia'))
-  .then(() => c1.teardown({ deleteDBs: true }))
-  .then(() => t.pass('teardown'))
-  .catch(handleTeardown);
+    .then((client) => {
+      c1 = client;
+      return c1.consortia.save(con1);
+    })
+    .then(() => c1.consortia.getUserConsortia(userFactory().username))
+    .then(docs => t.equals(docs.length, 1, 'getUserConsortia'))
+    .then(() => c1.teardown({ deleteDBs: true }))
+    .then(() => t.pass('teardown'))
+    .catch(handleTeardown);
 });

@@ -7,7 +7,7 @@
 'use strict';
 
 const _ = require('lodash');
- // @note - see docs on how to use external libs
+// @note - see docs on how to use external libs
 module.exports = {
   name: 'group-add',
   version: '0.0.1',

@@ -12,13 +12,13 @@
 module.exports = function getSyncDatabase(dbRegistry, name) {
   if (!dbRegistry) {
     return Promise.reject(new Error('Requires DBRegistry instance'));
-  } else if (!name) {
+  } if (!name) {
     return Promise.reject(new Error('Requires database name'));
   }
 
   return new Promise((resolve, reject) => {
     const pouchy = dbRegistry.get(name);
-    const syncEmitter = pouchy.syncEmitter;
+    const { syncEmitter } = pouchy;
 
     function onSync() {
       /* eslint-disable no-use-before-define */

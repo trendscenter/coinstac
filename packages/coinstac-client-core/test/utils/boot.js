@@ -1,5 +1,5 @@
 'use strict';
 
-const DBRegistry = require('coinstac-common').services.dbRegistry.DBRegistry;
+const { services: { dbRegistry: { DBRegistry } } } = require('coinstac-common');
 
 DBRegistry.Pouchy.plugin(require('pouchdb-adapter-memory'));
