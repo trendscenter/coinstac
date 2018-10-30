@@ -1,12 +1,12 @@
 'use strict';
 
-const Base = require('../../base');
-const EventEmitter = require('events').EventEmitter;
-const Pipeline = require('../pipeline');
-const ComputationResult = require('../../computation/computation-result');
+const EventEmitter = require('events');
 const joi = require('joi');
 const assign = require('lodash/assign');
 const get = require('lodash/get');
+const ComputationResult = require('../../computation/computation-result');
+const Pipeline = require('../pipeline');
+const Base = require('../../base');
 
 const extractRunId = ComputationResult.prototype._extractRunId;
 
@@ -54,12 +54,12 @@ class PipelineRunner extends Base {
     if (!db) { throw new ReferenceError('missing db'); }
     const runId = extractRunId(this.result._id);
     return PipelineRunner.findResultByRunId(db, runId)
-    .then((doc) => {
-      return {
-        pluginState: get(doc, 'pluginState', null),
-        prevData: get(doc, 'data', null),
-      };
-    });
+      .then((doc) => {
+        return {
+          pluginState: get(doc, 'pluginState', null),
+          prevData: get(doc, 'data', null),
+        };
+      });
   }
 
   /**
@@ -78,7 +78,7 @@ class PipelineRunner extends Base {
     // .catch(cb);
     // @TODO get bulkGet ^^ working for improved efficency (`.all()` ==> heavy)
     return db.all()
-    .then(docs => docs.filter(doc => doc._id.match(re)));
+      .then(docs => docs.filter(doc => doc._id.match(re)));
   }
 
   /**
@@ -106,10 +106,10 @@ class PipelineRunner extends Base {
    */
   _flush() {
     return (this._saveQueue || Promise.resolve()) // wait for saves to settle out
-    .then(() => {
-      this.events.emit('halt', this.result);
-      return this.result;
-    });
+      .then(() => {
+        this.events.emit('halt', this.result);
+        return this.result;
+      });
   }
 
   /**
@@ -122,11 +122,11 @@ class PipelineRunner extends Base {
    */
   static findResultByRunId(db, runId) {
     return db.all({ include_docs: false })
-    .then(docs => docs.find(doc => doc._id.match(runId)))
-    .then((doc) => {
-      if (!doc) { return Promise.resolve(); }
-      return db.get(doc._id);
-    });
+      .then(docs => docs.find(doc => doc._id.match(runId)))
+      .then((doc) => {
+        if (!doc) { return Promise.resolve(); }
+        return db.get(doc._id);
+      });
   }
 
   _generateResultPatch(runData, runError) {
@@ -207,11 +207,11 @@ class PipelineRunner extends Base {
     // find DB copy of our result document, then patch it
     const runId = extractRunId(this.result._id);
     return PipelineRunner.findResultByRunId(db, runId)
-    .then(doc => this._updateResult(db, patch, doc))
-    .catch((err) => {
-      this.events.emit('error', err);
-      throw err;
-    });
+      .then(doc => this._updateResult(db, patch, doc))
+      .catch((err) => {
+        this.events.emit('error', err);
+        throw err;
+      });
   }
 
   /**
@@ -249,10 +249,10 @@ class PipelineRunner extends Base {
    */
   _persistResult(db) {
     return db.save(this.result.serialize())
-    .then((doc) => {
-      this.result._rev = doc._rev; // update our cached result
-      return this.result;
-    });
+      .then((doc) => {
+        this.result._rev = doc._rev; // update our cached result
+        return this.result;
+      });
   }
 
   /**
@@ -307,13 +307,13 @@ class PipelineRunner extends Base {
    */
   _runPipeline(payload) {
     return this.pipeline.run(payload, this.result)
-    .catch((err) => {
+      .catch((err) => {
       // @note `err` in a pipeline run shouldn't kill our process
       // instead, we sync it into our result
-      this.events.emit('error', err);
-      return this.saveResult(this.db || this.remoteDB, null, err);
-    })
-    .then(this._flush.bind(this));
+        this.events.emit('error', err);
+        return this.saveResult(this.db || this.remoteDB, null, err);
+      })
+      .then(this._flush.bind(this));
   }
 }
 

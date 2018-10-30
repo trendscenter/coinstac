@@ -14,17 +14,17 @@ const marked = require('marked');
 
 // get packages to doc'ify.
 const packages = fs.readdirSync(packagesPath)
-.filter(p => p.match(/coinstac/))
-.map((p) => {
-  const pkgRoot = path.resolve(packagesPath, p);
-  return {
-    name: p,
-    path: pkgRoot,
-    /* eslint-disable global-require, import/no-dynamic-require */
-    packageJSON: require(path.resolve(pkgRoot, 'package.json')),
+  .filter(p => p.match(/coinstac/))
+  .map((p) => {
+    const pkgRoot = path.resolve(packagesPath, p);
+    return {
+      name: p,
+      path: pkgRoot,
+      /* eslint-disable global-require, import/no-dynamic-require */
+      packageJSON: require(path.resolve(pkgRoot, 'package.json')),
     /* eslint-enable global-require, import/no-dynamic-require  */
-  };
-});
+    };
+  });
 
 // clean && create docs folder.
 rmdir(docsPath);

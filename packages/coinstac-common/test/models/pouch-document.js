@@ -1,7 +1,7 @@
 'use strict';
 
-const PD = require('../../src/models/pouch-document');
 const test = require('tape');
+const PD = require('../../src/models/pouch-document');
 
 const factory = opts => (new PD(opts));
 

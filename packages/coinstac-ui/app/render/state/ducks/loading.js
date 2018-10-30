@@ -33,14 +33,14 @@ export const applyAsyncLoading = function applyAsyncLoading(fn) {
       dispatch(start(`${fnName}-${currCount}`));
       const dispatchComplete = () => dispatch(finish(`${fnName}-${currCount}`));
       return Promise.resolve(fn(...args)(dispatch))
-      .then((rslt) => {
-        dispatchComplete();
-        return rslt;
-      })
-      .catch((err) => {
-        dispatchComplete();
-        throw err;
-      });
+        .then((rslt) => {
+          dispatchComplete();
+          return rslt;
+        })
+        .catch((err) => {
+          dispatchComplete();
+          throw err;
+        });
     };
   };
 };

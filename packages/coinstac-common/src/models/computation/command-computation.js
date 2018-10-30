@@ -1,10 +1,10 @@
 'use strict';
 
-const Computation = require('./computation.js');
 const cp = require('child_process');
 const indentString = require('indent-string');
 const joi = require('joi');
 const jph = require('json-parse-helpfulerror');
+const Computation = require('./computation.js');
 
 /**
  * @class CommandComputation
@@ -23,7 +23,6 @@ const jph = require('json-parse-helpfulerror');
  * })
  */
 class CommandComputation extends Computation {
-
   /**
    * @description run a computation via making a shell call
    * @param {object} opts (no current opts supported)

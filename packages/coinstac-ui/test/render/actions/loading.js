@@ -19,6 +19,6 @@ test('applyAsyncLoading properly wraps and dispatches', (t) => {
   // be deployed, in that sequence
   // simulate redux calling th action w/ dispatch
   wrappedAsyncActionCreator()(_dispatch)
-  .then(() => t.equal(dispatchCount, 3, 'loading start, loading finish dispatched'))
-  .catch(t.fail);
+    .then(() => t.equal(dispatchCount, 3, 'loading start, loading finish dispatched'))
+    .catch(t.fail);
 });

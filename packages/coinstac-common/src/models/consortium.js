@@ -1,7 +1,7 @@
 'use strict';
 
-const PouchDocument = require('./pouch-document.js');
 const joi = require('joi');
+const PouchDocument = require('./pouch-document.js');
 
 /**
  * @constructor
@@ -16,7 +16,6 @@ const joi = require('joi');
  *                          and manage consortium properties
  */
 class Consortium extends PouchDocument {
-
   /**
    * @description Test whether username is a member of consortium (case insensitive)
    * @param  {string} username

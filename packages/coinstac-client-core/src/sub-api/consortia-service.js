@@ -3,15 +3,13 @@
 /**
  * @module consortia-service
  */
-const common = require('coinstac-common');
+const { models: { Consortium } } = require('coinstac-common');
 const uuid = require('uuid');
 const toArray = require('lodash/toArray');
 
-const Consortium = common.models.Consortium;
 const ModelService = require('../model-service');
 
 class ConsortiaService extends ModelService {
-
   constructor(opts) {
     super(opts);
     this.auth = opts.client.auth;
@@ -61,9 +59,9 @@ class ConsortiaService extends ModelService {
     .then((consortia) => { // eslint-disable-line
       return consortia.filter((consortium) => { // eslint-disable-line
         // users is arr of [ usernames ]. :/
-        return consortium.users.some(uname => (uname === username));
+          return consortium.users.some(uname => (uname === username));
+        });
       });
-    });
   }
 
   /**
@@ -78,7 +76,6 @@ class ConsortiaService extends ModelService {
     }
     return ModelService.prototype.save.apply(this, args);
   }
-
 }
 
 module.exports = ConsortiaService;

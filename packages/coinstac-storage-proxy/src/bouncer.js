@@ -2,10 +2,10 @@
 
 const url = require('url');
 const joi = require('joi');
-const utils = require('./utils');
 const boom = require('boom');
+const { models: { Consortium } } = require('coinstac-common');
+const utils = require('./utils');
 const AuthorizationError = require('./authorization-error.js');
-const Consortium = require('coinstac-common').models.Consortium;
 
 const bouncerConfigSchema = joi.object().keys({
   allowEverybody: joi.boolean(),
@@ -86,9 +86,9 @@ class Bouncer {
       }
 
       return this.validateConsortiumMembership(request)
-      .then(this.validateConsortiumOwnership.bind(this, request))
-      .then(this.allow.bind(this, request, callback))
-      .catch(this.handleAuthRejection.bind(this, request, callback));
+        .then(this.validateConsortiumOwnership.bind(this, request))
+        .then(this.allow.bind(this, request, callback))
+        .catch(this.handleAuthRejection.bind(this, request, callback));
     }
     const err = new AuthorizationError('Invalid URI path');
     return this.handleAuthRejection(request, callback, err);
@@ -126,28 +126,28 @@ class Bouncer {
       return Promise.resolve(true);
     }
 
-        /**
+    /**
          * call the consortium.hasMember method on a raw consortium object
          * @param  {object} rawConsortium a plain object
          * @return {boolean}              see coinstac-common/models/consortium
          */
     const callHasMember = (rawConsortium) => {
       return this.consortiumHasMember.call(
-                rawConsortium,
-                request.auth.credentials.username
-            );
+        rawConsortium,
+        request.auth.credentials.username
+      );
     };
 
     return this.utils.getConsortium(this.targetUrl, request)
-            .then(callHasMember)
-            .then((isMember) => {
-              if (!isMember) {
-                const msg = `Only consortium members may ${request.method}`;
-                throw new AuthorizationError(msg);
-              }
+      .then(callHasMember)
+      .then((isMember) => {
+        if (!isMember) {
+          const msg = `Only consortium members may ${request.method}`;
+          throw new AuthorizationError(msg);
+        }
 
-              return isMember;
-            });
+        return isMember;
+      });
   }
 
   validateConsortiumOwnership(request) {
@@ -155,16 +155,16 @@ class Bouncer {
       return Promise.resolve(true);
     }
 
-        /**
+    /**
          * call the consortium.isOwnedBy method on a raw consortium object
          * @param  {object} rawConsortium a plain object
          * @return {boolean}              see coinstac-common/models/consortium
          */
     const callIsOwnedBy = (rawConsortium) => {
       return this.consortiumIsOwnedBy.call(
-                rawConsortium,
-                request.auth.credentials.username
-            );
+        rawConsortium,
+        request.auth.credentials.username
+      );
     };
 
     const doc = request.payload;
@@ -194,9 +194,9 @@ class Bouncer {
   handleAuthRejection(request, callback, error) {
     if (error instanceof AuthorizationError) {
       return callback(
-                null,
-                this.utils.getUnauthorizedUrl(request, error.message)
-            );
+        null,
+        this.utils.getUnauthorizedUrl(request, error.message)
+      );
     }
 
     throw error;

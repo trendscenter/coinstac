@@ -1,8 +1,6 @@
 'use strict';
 
-const common = require('coinstac-common');
-
-const Project = common.models.Project;
+const { models: { Project } } = require('coinstac-common');
 
 module.exports = function userFactory(opts) {
   return Object.assign(new Project({

@@ -97,7 +97,7 @@ const getConsortium = (targetUrl, request) => {
   const urlPath = path.join(targetUrl.pathname, 'consortia', consortiumId);
   const uri = url.format(Object.assign({}, targetUrl, { pathname: urlPath }));
   return axios.get(uri)
-  .then(response => response.data);
+    .then(response => response.data);
 };
 
 module.exports = {

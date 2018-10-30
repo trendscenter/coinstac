@@ -1,7 +1,7 @@
 'use strict';
 
-const Base = require('./base.js');
 const joi = require('joi');
+const Base = require('./base.js');
 
 /**
  * @class DecentralizedComputation
@@ -31,8 +31,12 @@ class DecentralizedComputation extends Base {
    * @property {string} version
    */
   getComputationDocument() {
-    const { meta, name, repository: { url }, version } = this.serialize();
-    const doc = { meta, name, url, version };
+    const {
+      meta, name, repository: { url }, version,
+    } = this.serialize();
+    const doc = {
+      meta, name, url, version,
+    };
 
     /**
      * Gather pipeline items' `inputs` arrays and save them in the computation

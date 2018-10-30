@@ -1,10 +1,10 @@
 'use strict';
 
-const PipelineRunner = require('./pipeline-runner.js');
-const LocalComputationResult = require('../../computation/local-computation-result');
 const Pouchy = require('pouchy');
 const joi = require('joi');
 const cloneDeep = require('lodash/cloneDeep');
+const LocalComputationResult = require('../../computation/local-computation-result');
+const PipelineRunner = require('./pipeline-runner.js');
 
 /**
  * @class LocalPipelineRunner
@@ -16,7 +16,6 @@ const cloneDeep = require('lodash/cloneDeep');
  * result store with pipeline state & computation results
  */
 class LocalPipelineRunner extends PipelineRunner {
-
   /**
    * @example
    * The following key-value pairs are passed into _each_ local computation:

@@ -1,9 +1,11 @@
 'use strict';
 
-const computations = require('../../../').models.computation;
-
-const JavascriptComputation = computations.JavascriptComputation;
 const test = require('tape');
+const {
+  models: {
+    computation: { JavascriptComputation },
+  },
+} = require('../../../');
 
 test('model::JavascriptComputation constructor', (t) => {
   t.throws(() => {
@@ -21,8 +23,8 @@ test('model::JavascriptComputation run (basic-1)', (t) => {
     cwd: __dirname,
   });
   comp.run()
-  .then(rslt => t.equal(12345, rslt, 'computation result passed per expectation'))
-  .then(t.end, t.end);
+    .then(rslt => t.equal(12345, rslt, 'computation result passed per expectation'))
+    .then(t.end, t.end);
 });
 
 test('model::JavascriptComputation run (basic-2)', (t) => {
@@ -33,6 +35,6 @@ test('model::JavascriptComputation run (basic-2)', (t) => {
     cwd: __dirname,
   });
   comp.run({ definition: { seed: 1 } })
-  .then(rslt => t.equal(rslt, 2, 'computation inputs passed per expectation'))
-  .then(t.end, t.end);
+    .then(rslt => t.equal(rslt, 2, 'computation inputs passed per expectation'))
+    .then(t.end, t.end);
 });

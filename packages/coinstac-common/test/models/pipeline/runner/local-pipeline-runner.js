@@ -1,12 +1,17 @@
 'use strict';
 
 require('../../../helpers/boot');
-const common = require('../../../../');
+const noop = require('lodash/noop');
 const test = require('tape');
 const runnerUtils = require('./.test-runner-utils');
 
-const LocalPipelineRunner = common.models.pipeline.runner.LocalPipelineRunner;
-const noop = require('lodash/noop');
+const {
+  models: {
+    pipeline: {
+      runner: { LocalPipelineRunner },
+    },
+  },
+} = require('../../../../');
 
 test('LocalPipelineRunner constructor - basic', (t) => {
   const runner = new LocalPipelineRunner(runnerUtils.localOpts());
@@ -69,8 +74,8 @@ test('run - basic - bogus pipeline handling', (t) => {
     t.ok(result.error.message.match(/test-error/), 'pipeline errors propogated');
   });
   runner.run(remoteResult)
-  .then(() => {
-    t.pass('run completes even w/ error');
-    t.end();
-  });
+    .then(() => {
+      t.pass('run completes even w/ error');
+      t.end();
+    });
 });

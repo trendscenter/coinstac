@@ -1,17 +1,17 @@
 'use strict';
 
-const clientFactory = require('../utils/client-factory');
 const cloneDeep = require('lodash/cloneDeep');
 const coinstacCommon = require('coinstac-common');
 const EventEmitter = require('events');
 const fs = require('fs');
-const fileStats = require('../../src/utils/file-stats');
 const noop = require('lodash/noop');
 const path = require('path');
-const projectFactory = require('../utils/project-factory');
-const ProjectService = require('../../src/sub-api/project-service');
 const sinon = require('sinon');
 const test = require('tape');
+const projectFactory = require('../utils/project-factory');
+const ProjectService = require('../../src/sub-api/project-service');
+const fileStats = require('../../src/utils/file-stats');
+const clientFactory = require('../utils/client-factory');
 
 function getNextTick(callback) {
   return new Promise((resolve, reject) => {
@@ -35,7 +35,7 @@ test('ProjectService#getCSV', (t) => {
     ['./M101.txt', '18', 'false'],
     ['./M102.txt', '65', 'true'],
   ];
-  readFileStub.yields(null, new Buffer(data.map(r => r.join(',')).join('\n')));
+  readFileStub.yields(null, Buffer.from(data.map(r => r.join(',')).join('\n')));
 
   t.plan(2);
 
@@ -89,29 +89,29 @@ test('ProjectService#setMetaContents errors', (t) => {
 
     if (name === 'computations') {
       doc = {
-        inputs: dbGetSpy.callCount <= 1 ?
-          [[]] :
-        [[
-          'wat',
-          'wat',
-          {
-            type: 'covariates',
-          },
-        ]],
+        inputs: dbGetSpy.callCount <= 1
+          ? [[]]
+          : [[
+            'wat',
+            'wat',
+            {
+              type: 'covariates',
+            },
+          ]],
       };
     } else {
       doc = {
         _id: consortiumId,
-        activeComputationInputs: dbGetSpy.callCount <= 2 ?
-          [['wat', 'wat', 'wat']] :
-        [[
-          'wat',
-          'wat',
-          [{
-            name: 'Is Control',
-            type: 'boolean',
-          }],
-        ]],
+        activeComputationInputs: dbGetSpy.callCount <= 2
+          ? [['wat', 'wat', 'wat']]
+          : [[
+            'wat',
+            'wat',
+            [{
+              name: 'Is Control',
+              type: 'boolean',
+            }],
+          ]],
       };
     }
 
@@ -381,32 +381,32 @@ test('ProjectService - addFiles/removeFiles', (t) => {
   t.plan(6);
 
   clientFactory()
-  .then((client) => {
-    c1 = client;
-    return c1.projects.save(p1);
-  })
-  .then(doc => Object.assign(p1, doc)) // update p1 w/ latest attrs, e.g. _rev
-  .then(() => t.equals(p1.files.length, 0, 'files empty on first persist'))
+    .then((client) => {
+      c1 = client;
+      return c1.projects.save(p1);
+    })
+    .then(doc => Object.assign(p1, doc)) // update p1 w/ latest attrs, e.g. _rev
+    .then(() => t.equals(p1.files.length, 0, 'files empty on first persist'))
   // pretend to add some files
-  .then(() => c1.projects.addFiles(p1, []))
-  .then(files => t.equals(files.length, 0, 'no files added'))
+    .then(() => c1.projects.addFiles(p1, []))
+    .then(files => t.equals(files.length, 0, 'no files added'))
   // add some files
-  .then(() => c1.projects.addFiles(p1, __filename))
-  .then((files) => {
-    t.equals(files.length, 1, 'files added');
-    Object.assign(p1.files, files);
-  })
+    .then(() => c1.projects.addFiles(p1, __filename))
+    .then((files) => {
+      t.equals(files.length, 1, 'files added');
+      Object.assign(p1.files, files);
+    })
   // attempt to add the same file again
-  .then(() => c1.projects.addFiles(p1, __filename))
-  .then((files) => {
-    t.equals(files.length, 1, 'file add request ignored on duplicate filename');
-  })
+    .then(() => c1.projects.addFiles(p1, __filename))
+    .then((files) => {
+      t.equals(files.length, 1, 'file add request ignored on duplicate filename');
+    })
   // remove files
-  .then(() => c1.projects.removeFiles(p1, __filename))
-  .then(files => t.equals(files.length, 0, 'file removed'))
-  .then(() => c1.teardown())
-  .then(() => t.pass('teardown'))
-  .then(t.end, t.end);
+    .then(() => c1.projects.removeFiles(p1, __filename))
+    .then(files => t.equals(files.length, 0, 'file removed'))
+    .then(() => c1.teardown())
+    .then(() => t.pass('teardown'))
+    .then(t.end, t.end);
 });
 
 test('ProjectSerice - gets stats', (t) => {
@@ -521,8 +521,8 @@ test('ProjectService - database listeners', (t) => {
       );
       t.ok(
         (
-          !projectService.projects.has(projects[1]._id) &&
-          projectService.listeners.size === 2
+          !projectService.projects.has(projects[1]._id)
+          && projectService.listeners.size === 2
         ),
         'Doesn’t add project without consortium ID'
       );
@@ -554,9 +554,9 @@ test('ProjectService - database listener events', (t) => {
     ({ name }) => {
       if (name === 'projects') {
         return projectEmitter;
-      } else if (name.indexOf(projects[0].consortiumId) > -1) {
+      } if (name.indexOf(projects[0].consortiumId) > -1) {
         return consortiumEmitter1;
-      } else if (name.indexOf(projects[1].consortiumId) > -1) {
+      } if (name.indexOf(projects[1].consortiumId) > -1) {
         return consortiumEmitter2;
       }
 
@@ -619,11 +619,11 @@ test('ProjectService - database listener events', (t) => {
         t.ok(
           // Has projects listener and first consortium listnener:
           (
-            projectService.listeners.size === 2 &&
-            Array.from(projectService.listeners.keys()).indexOf(
+            projectService.listeners.size === 2
+            && Array.from(projectService.listeners.keys()).indexOf(
               projects[0].consortiumId
-            ) > -1 &&
-            projectService.projects.size === 1
+            ) > -1
+            && projectService.projects.size === 1
           ),
           'doesn’t alter internal store'
         );
@@ -631,16 +631,16 @@ test('ProjectService - database listener events', (t) => {
         t.equal(callbackSpy.callCount, 2, 'only fires callback once per event');
 
         t.ok(
-          firstCallArgs.consortiumId === projects[0].consortiumId &&
-          firstCallArgs.doc === doc1 &&
-          firstCallArgs.projectId === projects[0]._id,
+          firstCallArgs.consortiumId === projects[0].consortiumId
+          && firstCallArgs.doc === doc1
+          && firstCallArgs.projectId === projects[0]._id,
           'fires callback upon change'
         );
 
         t.ok(
-          secondCallArgs.consortiumId === projects[0].consortiumId &&
-          secondCallArgs.doc === doc2 &&
-          secondCallArgs.projectId === projects[0]._id,
+          secondCallArgs.consortiumId === projects[0].consortiumId
+          && secondCallArgs.doc === doc2
+          && secondCallArgs.projectId === projects[0]._id,
           'fires callback upon delete'
         );
       });
@@ -669,11 +669,11 @@ test('ProjectService - database listener events', (t) => {
     .then(() => {
       t.ok(
         (
-          projectService.listeners.size === 3 &&
-          Array.from(projectService.listeners.keys()).indexOf(
+          projectService.listeners.size === 3
+          && Array.from(projectService.listeners.keys()).indexOf(
             projects[1].consortiumId
-          ) > -1 &&
-          callbackSpy.thirdCall.args[1].doc === consortium2ChangeDoc
+          ) > -1
+          && callbackSpy.thirdCall.args[1].doc === consortium2ChangeDoc
         ),
         'adds project’s consortium db listener'
       );

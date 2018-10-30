@@ -6,11 +6,11 @@ module.exports = {
       && controllerState.currentOutput.success
       && controllerState.mode === 'remote') {
       return 'doneRemote';
-    } else if (controllerState.currentOutput && controllerState.currentOutput.success) {
+    } if (controllerState.currentOutput && controllerState.currentOutput.success) {
       return 'done';
-    } else if (controllerState.remoteInitial) {
+    } if (controllerState.remoteInitial) {
       return 'firstServerRemote';
-    } else if (controllerState.state === 'finished iteration'
+    } if (controllerState.state === 'finished iteration'
     || controllerState.state === 'finished iteration with error') {
       return 'remote';
     }
