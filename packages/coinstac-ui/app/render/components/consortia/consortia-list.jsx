@@ -398,7 +398,7 @@ class ConsortiaList extends Component {
           <h1 className="nav-item-page-title">Consortia</h1>
           <LinkContainer className="pull-right" to="/dashboard/consortia/new">
             <Button bsStyle="primary" className="pull-right">
-              <span aria-hidden="true" className="glphicon glyphicon-plus" />
+              <span aria-hidden="true" className="glyphicon glyphicon-plus" />
               {' '}
               Create Consortium
             </Button>
@@ -425,8 +425,9 @@ class ConsortiaList extends Component {
         <ListDeleteModal
           close={this.closeModal}
           deleteItem={this.deleteConsortium}
-          itemName={'consortium'}
+          itemName="consortium"
           show={this.state.showModal}
+          warningMessage="All pipelines associated with this consortium will also be deleted"
         />
       </div>
     );
