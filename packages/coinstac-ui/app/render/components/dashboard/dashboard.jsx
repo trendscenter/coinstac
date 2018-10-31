@@ -31,8 +31,10 @@ import {
   FETCH_ALL_USER_RUNS_QUERY,
   PIPELINE_CHANGED_SUBSCRIPTION,
   USER_CHANGED_SUBSCRIPTION,
+  USER_METADATA_CHANGED_SUBSCRIPTION,
   USER_RUN_CHANGED_SUBSCRIPTION,
   UPDATE_USER_CONSORTIUM_STATUS_MUTATION,
+  FETCH_USER_QUERY,
 } from '../../state/graphql/functions';
 import {
   getAllAndSubProp,
@@ -88,6 +90,7 @@ class Dashboard extends Component {
       unsubscribePipelines: null,
       unsubscribeRuns: null,
       unsubscribeUsers: null,
+      unsubscribeToUserMetadata: null,
     };
   }
 
@@ -180,6 +183,10 @@ class Dashboard extends Component {
 
     if (nextProps.remoteRuns && !this.state.unsubscribeRuns) {
       this.setState({ unsubscribeRuns: this.props.subscribeToUserRuns(null) });
+    }
+
+    if (nextProps.currentUser && !this.state.unsubscribeToUserMetadata) {
+      this.setState({ unsubscribeToUserMetadata: this.props.subscribeToUserMetaData(this.props.auth.user.id) });
     }
 
     if (nextProps.remoteRuns) {
@@ -405,6 +412,7 @@ class Dashboard extends Component {
     this.state.unsubscribeConsortia();
     this.state.unsubscribePipelines();
     this.state.unsubscribeRuns();
+    this.state.unsubscribeToUserMetadata();
 
     ipcRenderer.removeAllListeners('docker-out');
     ipcRenderer.removeAllListeners('docker-pull-complete');
@@ -534,6 +542,14 @@ const DashboardWithData = compose(
     'fetchAllPipelines',
     'subscribeToPipelines',
     'pipelineChanged'
+  )),
+  graphql(FETCH_USER_QUERY, getSelectAndSubProp(
+    'currentUser',
+    USER_METADATA_CHANGED_SUBSCRIPTION,
+    'userId',
+    'subscribeToUserMetaData',
+    'userMetadataChanged',
+    'fetchUser'
   )),
   graphql(UPDATE_USER_CONSORTIUM_STATUS_MUTATION, {
     props: ({ ownProps, mutate }) => ({
