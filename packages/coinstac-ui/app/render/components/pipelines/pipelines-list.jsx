@@ -34,10 +34,11 @@ class PipelinesList extends Component {
   }
 
   static getDerivedStateFromProps(props) {
-    const { pipelines, user } = props;
+    const { pipelines, auth } = props;
     const ownedPipelines = [];
     const otherPipelines = [];
     if (pipelines && pipelines.length > MAX_LENGTH_PIPELINES) {
+      const { user } = auth;
       pipelines.forEach((pipeline) => {
         if (user.permissions.consortia[pipeline.owningConsortium] &&
           user.permissions.consortia[pipeline.owningConsortium].write) {
