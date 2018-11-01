@@ -27,20 +27,8 @@ export default class ConsortiumAbout extends Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    if (nextProps.consortiumUsers) {
-      const users = this.state.consortiumUsers.filter((stateUser) => {
-        nextProps.consortiumUsers.findIndex(propsUser => propsUser.id === stateUser.id) > -1
-      });
-      nextProps.consortiumUsers.forEach((propsUser) => {
-        const stateIndex = this.state.consortiumUsers.findIndex(stateUser => stateUser.id === propsUser.id);
-
-        if (stateIndex === -1) {
-          users.push(propsUser);
-        } else {
-          users[stateIndex] = propsUser;
-        }
-      });
-      this.setState({ consortiumUsers: users });
+    if(nextProps.consortiumUsers){
+      this.setState({ consortiumUsers: nextProps.consortiumUsers.sort(function(a,b){ return a.id.localeCompare(b.id); }) });
     }
   }
 
