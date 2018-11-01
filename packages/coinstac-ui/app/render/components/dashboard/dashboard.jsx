@@ -21,7 +21,7 @@ import {
   pullComputations,
   updateDockerOutput,
 } from '../../state/ducks/docker';
-import { updateUserConsortiaStatuses } from '../../state/ducks/auth';
+import { updateUserConsortiaStatuses, updateUserPerms } from '../../state/ducks/auth';
 import {
   COMPUTATION_CHANGED_SUBSCRIPTION,
   CONSORTIUM_CHANGED_SUBSCRIPTION,
@@ -407,6 +407,14 @@ class Dashboard extends Component {
     }
   }
 
+  componentDidUpdate(prevProps) {
+    if (this.props.currentUser &&
+      (!prevProps.currentUser || prevProps.currentUser.permissions !== this.props.currentUser.permissions)
+    ) {
+      this.props.updateUserPerms(this.props.currentUser.permissions);
+    }
+  }
+
   componentWillUnmount() {
     this.state.unsubscribeComputations();
     this.state.unsubscribeConsortia();
@@ -504,6 +512,7 @@ Dashboard.propTypes = {
   updateLocalRun: PropTypes.func.isRequired,
   updateUserConsortiumStatus: PropTypes.func.isRequired,
   writeLog: PropTypes.func.isRequired,
+  updateUserPerms: PropTypes.func.isRequired
 };
 
 function mapStateToProps({ auth, runs: { runs } }) {
@@ -583,5 +592,6 @@ export default connect(mapStateToProps,
     updateLocalRun,
     updateUserConsortiaStatuses,
     writeLog,
+    updateUserPerms
   }
 )(DashboardWithData);
