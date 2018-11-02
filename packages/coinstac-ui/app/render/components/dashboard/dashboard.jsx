@@ -163,6 +163,8 @@ class Dashboard extends Component {
 
       this.props.updateLocalRun(arg.run.id, { error: arg.run.error, status: 'error' });
     });
+
+    this.unsubscribeToUserMetadata = this.props.subscribeToUserMetaData(user.id);
   }
 
   UNSAFE_componentWillReceiveProps(nextProps) {
@@ -183,10 +185,6 @@ class Dashboard extends Component {
 
     if (nextProps.remoteRuns && !this.state.unsubscribeRuns) {
       this.setState({ unsubscribeRuns: this.props.subscribeToUserRuns(null) });
-    }
-
-    if (nextProps.currentUser && !this.state.unsubscribeToUserMetadata) {
-      this.setState({ unsubscribeToUserMetadata: this.props.subscribeToUserMetaData(this.props.auth.user.id) });
     }
 
     if (nextProps.remoteRuns) {
@@ -420,7 +418,10 @@ class Dashboard extends Component {
     this.state.unsubscribeConsortia();
     this.state.unsubscribePipelines();
     this.state.unsubscribeRuns();
-    this.state.unsubscribeToUserMetadata();
+
+    if (typeof this.unsubscribeToUserMetadata === 'function') {
+      this.unsubscribeToUserMetadata();
+    }
 
     ipcRenderer.removeAllListeners('docker-out');
     ipcRenderer.removeAllListeners('docker-pull-complete');
@@ -552,14 +553,25 @@ const DashboardWithData = compose(
     'subscribeToPipelines',
     'pipelineChanged'
   )),
-  graphql(FETCH_USER_QUERY, getSelectAndSubProp(
-    'currentUser',
-    USER_METADATA_CHANGED_SUBSCRIPTION,
-    'userId',
-    'subscribeToUserMetaData',
-    'userMetadataChanged',
-    'fetchUser'
-  )),
+  graphql(FETCH_USER_QUERY, {
+    options: props => ({
+      fetchPolicy: 'cache-and-network',
+      variables: { userId: props.auth.user.id },
+    }),
+    props: props => ({
+      currentUser: props.data.fetchUser,
+      subscribeToUserMetaData: userId => props.data.subscribeToMore({
+        document: USER_METADATA_CHANGED_SUBSCRIPTION,
+        variables: { userId },
+        updateQuery: (prevResult, { subscriptionData: { data } }) => {
+          if (data.userMetadataChanged.delete) {
+            return { fetchUser: null };
+          }
+          return { fetchUser: data.userMetadataChanged };
+        },
+      })
+    }),
+  }),
   graphql(UPDATE_USER_CONSORTIUM_STATUS_MUTATION, {
     props: ({ ownProps, mutate }) => ({
       updateUserConsortiumStatus: (consortiumId, status) => mutate({
