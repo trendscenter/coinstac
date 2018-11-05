@@ -1,3 +1,4 @@
+const rethink = require('rethinkdb');
 const helperFunctions = require('../../auth-helpers');
 
 function preprocessPipelineChangedSubs(pipeline) {
@@ -6,7 +7,7 @@ function preprocessPipelineChangedSubs(pipeline) {
   if (pipeline.delete) {
     return Promise.resolve(pipeline);
   }
-  
+
   return helperFunctions.getRethinkConnection()
     .then(connection => rethink.table('pipelines')
       .get(pipeline.id)
