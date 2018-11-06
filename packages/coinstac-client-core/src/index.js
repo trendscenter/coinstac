@@ -2,17 +2,15 @@
 
 // app package deps
 const tail = require('lodash/tail');
-const bluebird = require('bluebird');
+const pify = require('util').promisify;
 const csvParse = require('csv-parse');
-const mkdirp = bluebird.promisify(require('mkdirp'));
-const util = require('util');
+const mkdirp = pify(require('mkdirp'));
 const fs = require('fs');
 
-const unlinkAsync = util.promisify(fs.unlink);
-const linkAsync = util.promisify(fs.link);
-const statAsync = bluebird.promisify(fs.stat);
+const unlinkAsync = pify(fs.unlink);
+const linkAsync = pify(fs.link);
+const statAsync = pify(fs.stat);
 
-bluebird.config({ warnings: false });
 const osHomedir = require('os-homedir');
 const path = require('path');
 const winston = require('winston');
@@ -82,8 +80,8 @@ class CoinstacClient {
    * @returns {Promise<Project>}
    */
   static getCSV(filename) {
-    return bluebird.promisify(fs.readFile)(filename)
-      .then(data => bluebird.promisify(csvParse)(data.toString()))
+    return pify(fs.readFile)(filename)
+      .then(data => pify(csvParse)(data.toString()))
       .then(JSON.stringify);
   }
 
@@ -118,7 +116,7 @@ class CoinstacClient {
    * @returns {Promise<Project>}
    */
   static getJSONSchema(filename) {
-    return bluebird.promisify(fs.readFile)(filename)
+    return pify(fs.readFile)(filename)
       .then(data => JSON.parse(data.toString()));
   }
 
