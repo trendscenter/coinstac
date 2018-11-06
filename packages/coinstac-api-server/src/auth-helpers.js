@@ -34,9 +34,7 @@ const helperFunctions = {
             consortia: {},
             pipelines: {},
           },
-          consortiaStatuses: {
-
-          },
+          consortiaStatuses: {},
         };
 
         if (user.permissions) {

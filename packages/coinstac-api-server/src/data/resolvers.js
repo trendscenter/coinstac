@@ -44,6 +44,52 @@ function fetchOnePipeline(table, id) {
     .then(result => result);
 }
 
+/**
+ * Helper function for updating a user permissions
+ * @param {object} connection - Existing db connection
+ * @param {string} userId - Id of the user which will have permissions changed
+ * @param {object} args - Update object
+ */
+async function updateUserPermissions(connection, userId, args) {
+  const perms = await rethink.table('users').get(userId)('permissions').run(connection);
+
+  const { role, doc, table } = args;
+
+  let newRoles = [role];
+  const promises = [];
+
+  // Grab existing roles if present
+  if (perms[table][doc] && perms[table][doc].indexOf(role) === -1) {
+    newRoles = newRoles.concat(perms[table][doc]);
+  } else if (perms[table][doc]) {
+    newRoles = perms[table][doc];
+  }
+
+  const updateObj = { permissions: { [table]: { [doc]: newRoles } } };
+
+  // Add entry to user statuses object &&
+  if (table === 'consortia') {
+    updateObj.consortiaStatuses = {};
+    updateObj.consortiaStatuses[doc] = 'none';
+
+    promises.push(
+      rethink.table('consortia').get(doc).update(
+        {
+          [`${role}s`]: rethink.row(`${role}s`).append(userId)
+        }
+      ).run(connection)
+    );
+  }
+
+  promises.push(
+    rethink.table('users').get(userId).update(
+      updateObj, { returnChanges: true }
+    ).run(connection)
+  );
+
+  return Promise.all(promises);
+}
+
 const pubsub = new PubSub();
 
 initSubscriptions(pubsub);
@@ -228,70 +274,17 @@ const resolvers = {
      * @param {string} args.role Role to add to perms
      * @return {object} Updated user object
      */
-    addUserRole: ({ auth: { credentials } }, args) => {
-      // UserID arg could be used by admin to add/remove roles, ignored for now
+    addUserRole: async ({ auth: { credentials } }, args) => {
       const { permissions } = credentials
-      let userId = credentials.id;
 
-      // TODO: perm update
-      // // If adding role for another person from consortium, check perms
-      // if (args.userId &&
-      //     permissions[args.table][args.doc] &&
-      //     permissions[args.table][args.doc].write &&
-      //     (args.role !== 'owner' || args.userId !== credentials.id)
-      // ) {
-      //   userId = args.userId;
-      // } else if (args.userId &&
-      //     (!permissions[args.table][args.doc] ||
-      //     !permissions[args.table][args.doc].write ||
-      //     (args.role === 'owner' && args.userId === credentials.id))
-      // ) {
-      //   return Boom.forbidden('Action not permitted');
-      // }
+      if (!permissions[args.table][args.doc] || !permissions[args.table][args.doc].write) {
+        return Boom.forbidden('Action not permitted');
+      }
 
-      return helperFunctions.getRethinkConnection()
-        .then(connection =>
-          rethink.table('users').get(userId)('permissions').run(connection)
-          .then((perms) => {
-            let newRoles = [args.role];
-            const promises = [];
+      const connection = await helperFunctions.getRethinkConnection();
+      await updateUserPermissions(connection, args);
 
-            // Grab existing roles if present
-            if (perms[args.table][args.doc] && perms[args.table][args.doc].indexOf(args.role) === -1) {
-              newRoles = newRoles.concat(perms[args.table][args.doc]);
-            } else if (perms[args.table][args.doc]) {
-              newRoles = perms[args.table][args.doc];
-            }
-
-            const updateObj = { permissions: { [args.table]: { [args.doc]: newRoles } } };
-
-            // Add entry to user statuses object &&
-            if (args.table === 'consortia') {
-              updateObj.consortiaStatuses = {};
-              updateObj.consortiaStatuses[args.doc] = 'none';
-
-              promises.push(
-                rethink.table('consortia').get(args.doc).update(
-                  {
-                    [`${args.role}s`]: rethink.row(`${args.role}s`).append(userId)
-                  }
-                ).run(connection)
-              );
-            }
-
-            promises.push(
-              rethink.table('users').get(userId).update(
-                updateObj, { returnChanges: true }
-              ).run(connection)
-            );
-
-            return Promise.all(promises);
-          })
-        )
-        .then(result =>
-          helperFunctions.getUserDetails({ username: userId })
-        )
-        .then(result => result)
+      return helperFunctions.getUserDetails({ username: userId });
     },
     /**
      * Add run to RethinkDB
@@ -597,28 +590,32 @@ const resolvers = {
      * @param {object} args.consortium Consortium object to add/update
      * @return {object} New/updated consortium object
      */
-    saveConsortium: ({ auth: { credentials } }, args) => {
+    saveConsortium: async ({ auth: { credentials } }, args) => {
       const { permissions } = credentials;
 
-      // TODO: perm update
-      // if (!permissions.consortia.write
-      //     && args.consortium.id
-      //     && !permissions.consortia[args.consortium.id].write) {
-      //       return Boom.forbidden('Action not permitted');
-      // }
+      const isInsert = !!args.consortium.id;
 
-      return helperFunctions.getRethinkConnection()
-        .then(connection =>
-          rethink.table('consortia').insert(
-            args.consortium,
-            {
-              conflict: "update",
-              returnChanges: true,
-            }
-          )
-          .run(connection)
+      if (!isInsert && !permissions.consortia[args.consortium.id].write) {
+        return Boom.forbidden('Action not permitted');
+      }
+
+      const connection = await helperFunctions.getRethinkConnection();
+      const result = await rethink.table('consortia').insert(
+          args.consortium,
+          {
+            conflict: "update",
+            returnChanges: true,
+          }
         )
-        .then(result => result.changes[0].new_val)
+        .run(connection);
+
+      const consortium = result.changes[0].new_val
+
+      if (isInsert) {
+        await updateUserPermissions(connection, credentials.id, { role: 'owner', doc: consortium.id, table: 'consortia' });
+      }
+
+      return consortium;
     },
     /**
      * Saves run error
