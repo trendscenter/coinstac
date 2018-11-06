@@ -1,20 +1,3 @@
 'use strict';
 
-require('./utils/boot');
-
-const fail = (err) => {
-  console.error(err); // eslint-disable-line
-  console.error(err.stack); // eslint-disable-line
-  process.exit(1);
-};
-
-process.on('uncaughtExpection', fail);
-process.on('unhandledRejection', fail);
-
-require('./model-service');
-require('./sub-api/authentication-service.js');
-require('./sub-api/computation-service');
-// TODO: fix tests with new code and put back coverage check!
-// require('./sub-api/consortia-service');
-// require('./sub-api/project-service');
-// require('./coinstac-client');
+// TODO: unit test client-core pipe funcs
