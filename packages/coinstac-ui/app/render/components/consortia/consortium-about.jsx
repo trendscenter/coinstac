@@ -78,8 +78,8 @@ export default class ConsortiumAbout extends Component {
     return (
       <div>
         <Form onSubmit={saveConsortium}>
-
-          {owner &&
+          {
+            owner &&
             <Button
               bsStyle="success"
               type="submit"

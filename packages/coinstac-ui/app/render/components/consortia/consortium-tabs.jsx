@@ -165,7 +165,6 @@ class ConsortiumTabs extends Component {
           },
         },
       });
-
     })
     .catch(({ graphQLErrors }) => {
       console.log(graphQLErrors);
@@ -185,10 +184,9 @@ class ConsortiumTabs extends Component {
       ? 'Consortium Edit'
       : 'Consortium Creation';
 
-    let isOwner = false;
-    if (this.state.consortium.owners.indexOf(user.id) > -1 || !this.props.params.consortiumId) {
-      isOwner = true;
-    }
+    const isOwner =
+      this.state.consortium.owners.indexOf(user.id) > -1 ||
+      !this.props.params.consortiumId;
 
     return (
       <div>
