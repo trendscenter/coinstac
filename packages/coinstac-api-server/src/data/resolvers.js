@@ -282,9 +282,9 @@ const resolvers = {
       }
 
       const connection = await helperFunctions.getRethinkConnection();
-      await updateUserPermissions(connection, args);
+      await updateUserPermissions(connection, args.userId, args);
 
-      return helperFunctions.getUserDetails({ username: userId });
+      return helperFunctions.getUserDetails({ username: credentials.id });
     },
     /**
      * Add run to RethinkDB
@@ -593,9 +593,9 @@ const resolvers = {
     saveConsortium: async ({ auth: { credentials } }, args) => {
       const { permissions } = credentials;
 
-      const isInsert = !!args.consortium.id;
+      const isUpdate = !!args.consortium.id;
 
-      if (!isInsert && !permissions.consortia[args.consortium.id].write) {
+      if (isUpdate && !permissions.consortia[args.consortium.id].write) {
         return Boom.forbidden('Action not permitted');
       }
 
@@ -611,7 +611,7 @@ const resolvers = {
 
       const consortium = result.changes[0].new_val
 
-      if (isInsert) {
+      if (!isUpdate) {
         await updateUserPermissions(connection, credentials.id, { role: 'owner', doc: consortium.id, table: 'consortia' });
       }
 
