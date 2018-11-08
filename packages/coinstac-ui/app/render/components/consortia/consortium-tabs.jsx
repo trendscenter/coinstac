@@ -108,7 +108,7 @@ class ConsortiumTabs extends Component {
   }
 
   addMemberToConsortium(userId) {
-    this.props.joinConsortium(this.state.consortium.id, userId);
+    this.props.addUserRole(userId, 'consortia', this.state.consortium.id, 'member');
   }
 
   getConsortiumRuns() {
@@ -119,10 +119,8 @@ class ConsortiumTabs extends Component {
 
   removeMemberFromConsortium(user) {
     return () => {
-      this.props.leaveConsortium(this.state.consortium.id, user.id);
-      //These are not needed since the consortia permissions are handled in the resolver
-      //this.props.removeUserRole(user.id, 'consortia', this.state.consortium.id, 'member');
-      //this.props.removeUserRole(user.id, 'consortia', this.state.consortium.id, 'owner');
+      this.props.removeUserRole(user.id, 'consortia', this.state.consortium.id, 'owner');
+      this.props.removeUserRole(user.id, 'consortia', this.state.consortium.id, 'member');
     };
   }
 
@@ -141,7 +139,6 @@ class ConsortiumTabs extends Component {
 
     this.props.saveConsortium(this.state.consortium)
     .then(({ data: { saveConsortium: { __typename, ...other } } }) => {
-      this.props.addUserRole(this.props.auth.user.id, 'consortia', other.id, 'owner');
       let unsubscribeConsortia = this.state.unsubscribeConsortia;
 
       this.props.saveAssociatedConsortia({ ...other });
@@ -257,8 +254,6 @@ ConsortiumTabs.propTypes = {
   addUserRole: PropTypes.func.isRequired,
   auth: PropTypes.object.isRequired,
   consortia: PropTypes.array,
-  joinConsortium: PropTypes.func.isRequired,
-  leaveConsortium: PropTypes.func.isRequired,
   notifySuccess: PropTypes.func.isRequired,
   params: PropTypes.object.isRequired,
   pipelines: PropTypes.array.isRequired,
@@ -290,8 +285,6 @@ const ConsortiumTabsWithData = compose(
     'subscribeToUsers',
     'userChanged'
   )),
-  graphql(JOIN_CONSORTIUM_MUTATION, consortiaMembershipProp('joinConsortium')),
-  graphql(LEAVE_CONSORTIUM_MUTATION, consortiaMembershipProp('leaveConsortium')),
   graphql(ADD_USER_ROLE_MUTATION, userRolesProp('addUserRole')),
   graphql(SAVE_CONSORTIUM_MUTATION, saveDocumentProp('saveConsortium', 'consortium')),
   graphql(REMOVE_USER_ROLE_MUTATION, userRolesProp('removeUserRole'))
