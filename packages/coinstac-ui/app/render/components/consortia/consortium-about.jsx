@@ -27,21 +27,25 @@ export default class ConsortiumAbout extends Component {
   }
 
   static getDerivedStateFromProps(props, state) {
-    if (props.consortiumUsers) {
-      const users = state.consortiumUsers.filter((stateUser) => {
-        props.consortiumUsers.findIndex(propsUser => propsUser.id === stateUser.id) > -1
-      });
-      props.consortiumUsers.forEach((propsUser) => {
-        const stateIndex = state.consortiumUsers.findIndex(stateUser => stateUser.id === propsUser.id);
-
-        if (stateIndex === -1) {
-          users.push(propsUser);
-        } else {
-          users[stateIndex] = propsUser;
-        }
-      });
-      return { consortiumUsers: users };
+    if (!props.consortiumUsers) {
+      return null;
     }
+
+    const users = state.consortiumUsers.filter(stateUser =>
+      props.consortiumUsers.findIndex(propsUser => propsUser.id === stateUser.id) > -1
+    );
+    props.consortiumUsers.forEach((propsUser) => {
+      const stateIndex = state.consortiumUsers.findIndex(stateUser =>
+        stateUser.id === propsUser.id
+      );
+
+      if (stateIndex === -1) {
+        users.push(propsUser);
+      } else {
+        users[stateIndex] = propsUser;
+      }
+    });
+    return { consortiumUsers: users };
   }
 
   addMember() {
@@ -154,7 +158,6 @@ export default class ConsortiumAbout extends Component {
                             isOwner={owner}
                             consRole="Member"
                             name={consUser.id}
-                            removeFunction={removeMemberFromConsortium}
                             width={30}
                           />
                           <span>{consUser.id}</span>

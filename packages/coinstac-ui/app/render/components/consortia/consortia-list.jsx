@@ -20,7 +20,6 @@ import { saveLocalRun } from '../../state/ducks/runs';
 import { updateUserPerms } from '../../state/ducks/auth';
 import { pullComputations } from '../../state/ducks/docker';
 import {
-  ADD_USER_ROLE_MUTATION,
   CREATE_RUN_MUTATION,
   DELETE_CONSORTIUM_MUTATION,
   FETCH_ALL_COMPUTATIONS_QUERY,
@@ -28,13 +27,11 @@ import {
   FETCH_ALL_PIPELINES_QUERY,
   JOIN_CONSORTIUM_MUTATION,
   LEAVE_CONSORTIUM_MUTATION,
-  REMOVE_USER_ROLE_MUTATION,
 } from '../../state/graphql/functions';
 import {
   consortiaMembershipProp,
   removeDocFromTableProp,
   saveDocumentProp,
-  userRolesProp,
 } from '../../state/graphql/props';
 import { notifyInfo, notifyWarning } from '../../state/ducks/notifyAndLog';
 
@@ -95,7 +92,6 @@ class ConsortiaList extends Component {
   }
 
   getOptions(member, owner, consortium) {
-    const { auth: { user } } = this.props;
     const actions = [];
     const text = [];
     let isMapped = false;
@@ -121,7 +117,7 @@ class ConsortiaList extends Component {
 
     // Add owner/member list
     const consortiumUsers = [];
-    consortium.owners.forEach(user => consortiumUsers.push({id: user, owner: true, member: true }));
+    consortium.owners.forEach(user => consortiumUsers.push({ id: user, owner: true, member: true }));
     consortium.members.forEach(user => consortiumUsers.push({ id: user, member: true }));
     const avatars = consortiumUsers
       .filter(function(v, i, a){ return i == a.indexOf(v); })
@@ -190,7 +186,7 @@ class ConsortiaList extends Component {
           key={`${consortium.id}-leave-cons-button`}
           bsStyle="warning"
           className="pull-right"
-          onClick={() => this.leaveConsortium(consortium.id, user.id)}
+          onClick={() => this.leaveConsortium(consortium.id)}
         >
           Leave Consortium
         </Button>
@@ -201,7 +197,7 @@ class ConsortiaList extends Component {
           key={`${consortium.id}-join-cons-button`}
           bsStyle="primary"
           className="pull-right"
-          onClick={() => this.joinConsortium(consortium.id, consortium.activePipelineId, user.id)}
+          onClick={() => this.joinConsortium(consortium.id, consortium.activePipelineId)}
         >
           Join Consortium
         </Button>
@@ -245,18 +241,15 @@ class ConsortiaList extends Component {
   }
 
   deleteConsortium() {
-    const { auth: { user } } = this.props;
-
     this.props.removeCollectionsFromAssociatedConsortia(this.state.consortiumToDelete, true)
     .then(() => {
-      this.props.removeUserRole(user.id, 'consortia', this.state.consortiumToDelete, 'owner');
       this.props.deleteConsortiumById(this.state.consortiumToDelete);
       this.closeModal();
     });
   }
 
-  joinConsortium(consortiumId, activePipelineId, userId) {
-    const { auth: { user }, client, pipelines } = this.props;
+  joinConsortium(consortiumId, activePipelineId) {
+    const { client, pipelines } = this.props;
 
     if (activePipelineId) {
       const computationData = client.readQuery({ query: FETCH_ALL_COMPUTATIONS_QUERY });
@@ -287,18 +280,13 @@ class ConsortiaList extends Component {
     }
 
     this.props.saveAssociatedConsortia({ id: consortiumId, activePipelineId });
-    this.props.addUserRole(user.id, 'consortia', consortiumId, 'member');
-    //not needed. handled by addUserRole.
-    //this.props.joinConsortium(consortiumId, userId);
+    this.props.joinConsortium(consortiumId);
   }
 
-  leaveConsortium(consortiumId, userId) {
-    const { auth: { user } } = this.props;
-
+  leaveConsortium(consortiumId) {
     this.props.removeCollectionsFromAssociatedConsortia(consortiumId, true)
     .then(() => {
-      this.props.leaveConsortium(consortiumId, userId);
-      this.props.removeUserRole(user.id, 'consortia', consortiumId, 'member');
+      this.props.leaveConsortium(consortiumId);
     });
   }
 
@@ -435,7 +423,6 @@ class ConsortiaList extends Component {
 }
 
 ConsortiaList.propTypes = {
-  addUserRole: PropTypes.func.isRequired,
   associatedConsortia: PropTypes.array.isRequired,
   auth: PropTypes.object.isRequired,
   client: PropTypes.object.isRequired,
@@ -452,7 +439,6 @@ ConsortiaList.propTypes = {
   pipelines: PropTypes.array.isRequired,
   pullComputations: PropTypes.func.isRequired,
   removeCollectionsFromAssociatedConsortia: PropTypes.func.isRequired,
-  removeUserRole: PropTypes.func.isRequired,
   router: PropTypes.object.isRequired,
   saveAssociatedConsortia: PropTypes.func.isRequired,
   saveLocalRun: PropTypes.func.isRequired,
@@ -472,8 +458,6 @@ const ConsortiaListWithData = compose(
   )),
   graphql(JOIN_CONSORTIUM_MUTATION, consortiaMembershipProp('joinConsortium')),
   graphql(LEAVE_CONSORTIUM_MUTATION, consortiaMembershipProp('leaveConsortium')),
-  graphql(ADD_USER_ROLE_MUTATION, userRolesProp('addUserRole')),
-  graphql(REMOVE_USER_ROLE_MUTATION, userRolesProp('removeUserRole')),
   withApollo
 )(ConsortiaList);
 
