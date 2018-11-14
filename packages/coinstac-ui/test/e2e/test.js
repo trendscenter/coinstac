@@ -252,6 +252,7 @@ describe('Testing::e2e', () => {
 
   it('logs out', () => (
     app.client
+      .waitForVisible('button=Log Out', EXIST_TIMEOUT)
       .click('button=Log Out')
       .waitForVisible('button=Log In', EXIST_TIMEOUT)
   ));
