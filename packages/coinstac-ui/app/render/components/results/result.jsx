@@ -19,7 +19,6 @@ class Result extends Component {
       computationOutput: {},
       displayTypes: [],
       plotData: [],
-      dummyData: [],
     };
   }
 
@@ -31,15 +30,16 @@ class Result extends Component {
         // Checking display type of computation
         const stepsLength = run.pipelineSnapshot.steps.length;
         let displayTypes = run.pipelineSnapshot.steps[stepsLength - 1]
-            .computations[0].computation.display;
+          .computations[0].computation.display;
+
         this.setState({
           computationOutput: run.pipelineSnapshot.steps[stepsLength - 1]
             .computations[0].computation.output,
           displayTypes,
         });
 
-        if(!displayTypes.length){
-          let array = [];
+        if (displayTypes && !displayTypes.length) {
+          const array = [];
           array[0] = displayTypes;
           displayTypes = array;
         }
@@ -74,7 +74,7 @@ class Result extends Component {
   }
 
   render() {
-    const { run } = this.state;
+    const { run, plotData, computationOutput } = this.state;
     const { consortia } = this.props;
     const consortium = consortia.find(c => c.id === run.consortiumId);
     let displayTypes = this.state.displayTypes;
@@ -90,8 +90,8 @@ class Result extends Component {
         .inputMap.covariates.ownerMappings.map(m => m.name);
     }
 
-    if(!displayTypes.length){
-      let array = [];
+    if (displayTypes && !displayTypes.length) {
+      const array = [];
       array[0] = displayTypes;
       displayTypes = array;
     }
@@ -108,80 +108,98 @@ class Result extends Component {
               <span>{`Results: ${consortium.name} || ${run.pipelineSnapshot.name}`}</span>
             )}
           </h2>
-          {run.startDate &&
-            <div>
-              <span className="bold">Start date: </span>
-              <TimeStamp
-                time={run.startDate / 1000}
-                precision={2}
-                autoUpdate={10}
-                format="full"
-              />
-            </div>
+          {
+            run.startDate && (
+              <div>
+                <span className="bold">Start date: </span>
+                <TimeStamp
+                  time={run.startDate / 1000}
+                  precision={2}
+                  autoUpdate={10}
+                  format="full"
+                />
+              </div>
+            )
           }
-          {run.endDate &&
-            <div>
-              <span className="bold">End date: </span>
-              <TimeStamp
-                time={run.endDate / 1000}
-                precision={2}
-                autoUpdate={10}
-                format="full"
-              />
-            </div>
+          {
+            run.endDate && (
+              <div>
+                <span className="bold">End date: </span>
+                <TimeStamp
+                  time={run.endDate / 1000}
+                  precision={2}
+                  autoUpdate={10}
+                  format="full"
+                />
+              </div>
+            )
           }
-          {stepsLength > -1 && covariates.length > 0 &&
-            <div>
-              <span className="bold">Covariates: </span>
-              {covariates.join(', ')}
-            </div>
+          {
+            stepsLength > -1 && covariates.length > 0 && (
+              <div>
+                <span className="bold">Covariates: </span>
+                {covariates.join(', ')}
+              </div>
+            )
           }
         </Well>
 
         <Tabs defaultActiveKey={0} id="uncontrolled-tab-example">
-          {run && run.results && displayTypes.map((disp, index) => {
-            const title = disp.type.replace('_', ' ')
-              .replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
-            return (
-              <Tab
-                key={disp.type}
-                eventKey={index}
-                title={`${title} View`}
-                style={{ padding: 10 }}
-              >
-                {disp.type === 'box_plot' &&
-                  <Box
-                    plotData={this.state.plotData.testData}
-                  />
-                }
-                {disp.type === 'scatter_plot' &&
-                  <Scatter
-                    plotData={this.state.plotData.testData}
-                  />
-                }
-                {disp.type === 'table' &&
-                  <Table
-                    computationOutput={this.state.computationOutput}
-                    plotData={this.state.plotData}
-                    tables={disp.tables ? disp.tables : null}
-                    title={`${consortium.name}_${run.pipelineSnapshot.name}`}
-                  />
-                }
-                {disp.type === 'images' &&
-                  <Images
-                    plotData={this.state.plotData}
-                    title={`${consortium.name}_${run.pipelineSnapshot.name}`}
-                  />
-                }
-              </Tab>
-            );
-          })}
+          {
+            run && run.results && displayTypes
+            && displayTypes.map((disp, index) => {
+              const title = disp.type.replace('_', ' ')
+                .replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+              return (
+                <Tab
+                  key={disp.type}
+                  eventKey={index}
+                  title={`${title} View`}
+                  style={{ padding: 10 }}
+                >
+                  {
+                    disp.type === 'box_plot' && (
+                      <Box
+                        plotData={plotData.testData}
+                      />
+                    )
+                  }
+                  {
+                    disp.type === 'scatter_plot' && (
+                      <Scatter
+                        plotData={plotData.testData}
+                      />
+                    )
+                  }
+                  {
+                    disp.type === 'table' && (
+                      <Table
+                        computationOutput={computationOutput}
+                        plotData={plotData}
+                        tables={disp.tables ? disp.tables : null}
+                        title={`${consortium.name}_${run.pipelineSnapshot.name}`}
+                      />
+                    )
+                  }
+                  {
+                    disp.type === 'images' && (
+                      <Images
+                        plotData={plotData}
+                        title={`${consortium.name}_${run.pipelineSnapshot.name}`}
+                      />
+                    )
+                  }
+                </Tab>
+              );
+            })
+          }
         </Tabs>
-
-        {run && run.error &&
-          <Well style={{ color: 'red' }}>
-            {JSON.stringify(run.error.message, null, 2)}
-          </Well>
+        {
+          run && run.error && (
+            <Well style={{ color: 'red' }}>
+              {JSON.stringify(run.error.message, null, 2)}
+            </Well>
+          )
         }
       </div>
     );
