@@ -12,7 +12,9 @@ const path = require('path');
  * @param  {String} [operatingDirectory='test' }]            [description]
  * @return {[type]}                            [description]
  */
-const startRun = ({ spec, runMode = 'local', clientCount = 1, operatingDirectory = 'test' }) => {
+const startRun = ({
+  spec, runMode = 'local', clientCount = 1, operatingDirectory = 'test',
+}) => {
   const pipelines = {
     locals: [],
   };
@@ -60,12 +62,12 @@ const startRun = ({ spec, runMode = 'local', clientCount = 1, operatingDirectory
     return pipelines.remote.pipeline.result
       .then((res) => { pipelines[key].pipeline.result = res; });
   }))
-  .then(() => {
-    if (runMode === 'decentralized') {
-      return { remote: pipelines.remote.pipeline.result };
-    }
-    return { locals: pipelines.locals.map(local => local.pipeline.result) };
-  });
+    .then(() => {
+      if (runMode === 'decentralized') {
+        return { remote: pipelines.remote.pipeline.result };
+      }
+      return { locals: pipelines.locals.map(local => local.pipeline.result) };
+    });
 
   return { pipelines, allResults };
 };

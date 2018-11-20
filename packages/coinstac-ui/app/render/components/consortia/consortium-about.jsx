@@ -26,9 +26,11 @@ export default class ConsortiumAbout extends Component {
     this.toggleOwner = this.toggleOwner.bind(this);
   }
 
-  componentWillReceiveProps(nextProps) {
-    if(nextProps.consortiumUsers){
-      this.setState({ consortiumUsers: nextProps.consortiumUsers.sort(function(a,b){ return a.id.localeCompare(b.id); }) });
+  static getDerivedStateFromProps(props) {
+    if (props.consortiumUsers) {
+      return {
+        consortiumUsers: props.consortiumUsers.sort((a, b) => a.id.localeCompare(b.id)),
+      };
     }
   }
 

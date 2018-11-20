@@ -98,7 +98,7 @@ class Pipeline extends Component {
     this.updateStorePipeline = this.updateStorePipeline.bind(this);
   }
 
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     if (isEmpty(this.state.consortium) && nextProps.consortia.length
       && this.state.pipeline.id && this.state.pipeline.owningConsortium) {
       this.setConsortium();
@@ -136,7 +136,10 @@ class Pipeline extends Component {
     const consortiumId = this.state.pipeline.owningConsortium;
     const data = client.readQuery({ query: FETCH_ALL_CONSORTIA_QUERY });
     const consortium = data.fetchAllConsortia.find(cons => cons.id === consortiumId);
-    delete consortium.__typename;
+
+    if (consortium) {
+      delete consortium.__typename;
+    }
 
     this.setState(prevState => ({
       owner,
