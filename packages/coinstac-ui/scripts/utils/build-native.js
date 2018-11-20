@@ -2,7 +2,7 @@
 
 const cp = require('child_process');
 const electron = require('electron');
-const promisify = require('util').promisify;
+const { promisify } = require('util');
 const os = require('os');
 
 module.exports = function buildNative() {

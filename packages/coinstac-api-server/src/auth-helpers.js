@@ -2,9 +2,9 @@ const crypto = require('crypto');
 const Boom = require('boom');
 const jwt = require('jsonwebtoken');
 const rethink = require('rethinkdb');
+const Promise = require('bluebird');
 const config = require('../config/default');
 const dbmap = require('/etc/coinstac/cstacDBMap'); // eslint-disable-line import/no-absolute-path, import/no-unresolved
-const Promise = require('bluebird');
 
 const helperFunctions = {
   /**
@@ -23,35 +23,35 @@ const helperFunctions = {
    */
   createUser(user, passwordHash) {
     return helperFunctions.getRethinkConnection()
-    .then((connection) => {
-      const userDetails = {
-        id: user.username,
-        email: user.email,
-        institution: user.institution,
-        passwordHash,
-        permissions: {
-          computations: {},
-          consortia: {},
-          pipelines: {},
-        },
-        consortiaStatuses: {
+      .then((connection) => {
+        const userDetails = {
+          id: user.username,
+          email: user.email,
+          institution: user.institution,
+          passwordHash,
+          permissions: {
+            computations: {},
+            consortia: {},
+            pipelines: {},
+          },
+          consortiaStatuses: {
 
-        },
-      };
+          },
+        };
 
-      if (user.permissions) {
-        userDetails.permissions = user.permissions;
-      }
+        if (user.permissions) {
+          userDetails.permissions = user.permissions;
+        }
 
-      if (user.consortiaStatuses) {
-        userDetails.consortiaStatuses = user.consortiaStatuses;
-      }
+        if (user.consortiaStatuses) {
+          userDetails.consortiaStatuses = user.consortiaStatuses;
+        }
 
-      return rethink.table('users')
-        .insert(userDetails, { returnChanges: true })
-        .run(connection);
-    })
-    .then(result => result.changes[0].new_val);
+        return rethink.table('users')
+          .insert(userDetails, { returnChanges: true })
+          .run(connection);
+      })
+      .then(result => result.changes[0].new_val);
   },
   /**
    * Returns RethinkDB connection
@@ -78,36 +78,25 @@ const helperFunctions = {
    */
   getUserDetails(credentials) {
     return helperFunctions.getRethinkConnection()
-    .then(connection => Promise.all([connection, rethink.table('users').get(credentials.username).run(connection)]))
-    .then(([connection, user]) => {
-      if (user) {
-        return rethink.table('users').get(credentials.username).merge(user =>
-          ({
+      .then(connection => Promise.all([connection, rethink.table('users').get(credentials.username).run(connection)]))
+      .then(([connection, user]) => {
+        if (user) {
+          return rethink.table('users').get(credentials.username).merge(user => ({
             permissions: user('permissions').coerceTo('array')
-            .map(table =>
-              table.map(tableArr =>
-                rethink.branch(
-                  tableArr.typeOf().eq('OBJECT'),
-                  tableArr.coerceTo('array').map(doc =>
-                    doc.map(docArr =>
-                      rethink.branch(
-                        docArr.typeOf().eq('ARRAY'),
-                        docArr.fold({}, (acc, row) =>
-                          acc.merge(rethink.table('roles').get(row)('verbs'))
-                        ),
-                        docArr
-                      )
-                    )
-                  ).coerceTo('object'),
-                  tableArr
-                )
-              )
-            ).coerceTo('object'),
+              .map(table => table.map(tableArr => rethink.branch(
+                tableArr.typeOf().eq('OBJECT'),
+                tableArr.coerceTo('array').map(doc => doc.map(docArr => rethink.branch(
+                  docArr.typeOf().eq('ARRAY'),
+                  docArr.fold({}, (acc, row) => acc.merge(rethink.table('roles').get(row)('verbs'))),
+                  docArr
+                ))).coerceTo('object'),
+                tableArr
+              ))).coerceTo('object'),
           })).run(connection);
-      }
+        }
 
-      return null;
-    });
+        return null;
+      });
   },
   /**
    * Hashes password for storage in database
@@ -148,13 +137,13 @@ const helperFunctions = {
    */
   validateToken(decoded, request, callback) {
     helperFunctions.getUserDetails({ username: decoded.username })
-    .then((user) => {
-      if (user.id) {
-        callback(null, true, user);
-      } else {
-        callback(null, false, null);
-      }
-    });
+      .then((user) => {
+        if (user.id) {
+          callback(null, true, user);
+        } else {
+          callback(null, false, null);
+        }
+      });
   },
   /**
    * Confirms that submitted email is new
@@ -177,24 +166,22 @@ const helperFunctions = {
    */
   validateUniqueUser(req, res) {
     return helperFunctions.getRethinkConnection()
-    .then(connection =>
-      helperFunctions.validateUniqueUsername(req, connection)
-      .then((isUniqueUsername) => {
-        if (isUniqueUsername) {
-          return helperFunctions.validateUniqueEmail(req, connection);
-        }
+      .then(connection => helperFunctions.validateUniqueUsername(req, connection)
+        .then((isUniqueUsername) => {
+          if (isUniqueUsername) {
+            return helperFunctions.validateUniqueEmail(req, connection);
+          }
 
-        res(Boom.badRequest('Username taken'));
-        return null;
-      })
-      .then((isUniqueEmail) => {
-        if (isUniqueEmail) {
-          res(req.payload);
-        } else if (isUniqueEmail === false) {
-          res(Boom.badRequest('Email taken'));
-        }
-      })
-    );
+          res(Boom.badRequest('Username taken'));
+          return null;
+        })
+        .then((isUniqueEmail) => {
+          if (isUniqueEmail) {
+            res(req.payload);
+          } else if (isUniqueEmail === false) {
+            res(Boom.badRequest('Email taken'));
+          }
+        }));
   },
   /**
    * Confirms that submitted username is new
@@ -217,20 +204,20 @@ const helperFunctions = {
    */
   validateUser(req, res) {
     return helperFunctions.getUserDetails(req.payload)
-    .then((user) => {
-      if (user) {
-        helperFunctions.verifyPassword(req.payload.password, user.passwordHash)
-          .then((passwordMatch) => {
-            if (user && user.passwordHash && passwordMatch) {
-              res(user);
-            } else {
-              res(Boom.unauthorized('Incorrect username or password.'));
-            }
-          });
-      } else {
-        res(Boom.unauthorized('Incorrect username or password.'));
-      }
-    });
+      .then((user) => {
+        if (user) {
+          helperFunctions.verifyPassword(req.payload.password, user.passwordHash)
+            .then((passwordMatch) => {
+              if (user && user.passwordHash && passwordMatch) {
+                res(user);
+              } else {
+                res(Boom.unauthorized('Incorrect username or password.'));
+              }
+            });
+        } else {
+          res(Boom.unauthorized('Incorrect username or password.'));
+        }
+      });
   },
   /**
    * Verify that authenticating user is using correct password

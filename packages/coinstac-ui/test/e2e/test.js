@@ -1,4 +1,4 @@
-const Application = require('spectron').Application;
+const { Application } = require('spectron');
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 const path = require('path');
@@ -71,14 +71,10 @@ describe('Testing::e2e', () => {
       .waitForText('.notification-message', EXIST_TIMEOUT)
       .getText('.notification-message')
       .then(notificationMessage => notificationMessage.should.equal('Consortium Saved'))
-      .then(() =>
-        // wait for the notification message to disappear and check if the consortium shows up
-        // in the consortia list
-        app.client
-          .waitForVisible('.notification-message', NOTIFICATION_DISMISS_TIMEOUT, true)
-          .click('a=Consortia')
-          .waitForVisible(`h3=${CONS_NAME}`)
-      )
+      .then(() => app.client
+        .waitForVisible('.notification-message', NOTIFICATION_DISMISS_TIMEOUT, true)
+        .click('a=Consortia')
+        .waitForVisible(`h3=${CONS_NAME}`))
   ));
 
   it('accesses the Add Pipeline page', () => (
@@ -129,17 +125,17 @@ describe('Testing::e2e', () => {
       .waitForVisible('#data-0-area .Select-menu-outer', EXIST_TIMEOUT)
       .element('#data-0-area .Select-menu-outer')
       .click('div=5th-Ventricle', EXIST_TIMEOUT)
+      .click('#data-0-area .Select-control')
+      .waitForVisible('#data-0-area .Select-menu-outer', EXIST_TIMEOUT)
+      .element('#data-0-area .Select-menu-outer')
       .click('div=BrainSegVol', EXIST_TIMEOUT)
       .setValue('[name="step-lambda"]', '0')
       .click('button=Save Pipeline')
       .waitForVisible('.notification-message', EXIST_TIMEOUT)
       .getText('.notification-message')
       .then(notificationMessage => notificationMessage.should.equal('Pipeline Saved.'))
-      .then(() =>
-        // wait for the notification message to disappear
-        app.client
-          .waitForVisible('.notification-message', NOTIFICATION_DISMISS_TIMEOUT, true)
-      )
+      .then(() => app.client
+        .waitForVisible('.notification-message', NOTIFICATION_DISMISS_TIMEOUT, true))
   ));
 
   it('sets the created pipeline to the consortium', () => (
@@ -170,10 +166,7 @@ describe('Testing::e2e', () => {
       .waitForText('.notification-message', EXIST_TIMEOUT)
       .getText('.notification-message')
       .then(notificationMessage => notificationMessage.should.equal('Collection Saved.'))
-      .then(() =>
-        // wait for the notification message to disappear
-        app.client.waitForVisible('.notification-message', NOTIFICATION_DISMISS_TIMEOUT, true)
-      )
+      .then(() => app.client.waitForVisible('.notification-message', NOTIFICATION_DISMISS_TIMEOUT, true))
   ));
 
   it('sets the data set into the file collection', () => (
@@ -186,6 +179,8 @@ describe('Testing::e2e', () => {
       .click('label=A metadata file containing file paths and covariates.')
       .click('button=Add Files Group')
       .waitForVisible('button=Remove File Group', EXIST_TIMEOUT)
+      .waitForVisible('.notification-message', EXIST_TIMEOUT)
+      .waitForVisible('.notification-message', NOTIFICATION_DISMISS_TIMEOUT, true)
       .element('#collection-tabs')
       .click('a=Consortia')
       .waitForVisible('h3=Add to Consortia', EXIST_TIMEOUT)
@@ -211,10 +206,7 @@ describe('Testing::e2e', () => {
       .waitForText('.notification-message', EXIST_TIMEOUT)
       .getText('.notification-message')
       .then(notificationMessage => notificationMessage.should.equal('Collection Saved.'))
-      .then(() =>
-        // wait for the notification message to disappear
-        app.client.waitForVisible('.notification-message', NOTIFICATION_DISMISS_TIMEOUT, true)
-      )
+      .then(() => app.client.waitForVisible('.notification-message', NOTIFICATION_DISMISS_TIMEOUT, true))
   ));
 
   it('runs a computation', () => (
@@ -225,10 +217,7 @@ describe('Testing::e2e', () => {
       .waitForText('.notification-message', EXIST_TIMEOUT)
       .getText('.notification-message')
       .then(notificationMessage => notificationMessage.should.equal(`Decentralized Pipeline Starting for ${CONS_NAME}.`))
-      .then(() =>
-        // wait for the notification message to disappear
-        app.client.waitForVisible('.notification-message', NOTIFICATION_DISMISS_TIMEOUT, true)
-      )
+      .then(() => app.client.waitForVisible('.notification-message', NOTIFICATION_DISMISS_TIMEOUT, true))
   ));
 
   it('displays computation progress', () => (
@@ -263,6 +252,7 @@ describe('Testing::e2e', () => {
 
   it('logs out', () => (
     app.client
+      .waitForVisible('button=Log Out', EXIST_TIMEOUT)
       .click('button=Log Out')
       .waitForVisible('button=Log In', EXIST_TIMEOUT)
   ));
