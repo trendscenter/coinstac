@@ -21,7 +21,7 @@ import {
   pullComputations,
   updateDockerOutput,
 } from '../../state/ducks/docker';
-import { updateUserConsortiaStatuses } from '../../state/ducks/auth';
+import { updateUserConsortiaStatuses, updateUserPerms } from '../../state/ducks/auth';
 import {
   COMPUTATION_CHANGED_SUBSCRIPTION,
   CONSORTIUM_CHANGED_SUBSCRIPTION,
@@ -31,8 +31,10 @@ import {
   FETCH_ALL_USER_RUNS_QUERY,
   PIPELINE_CHANGED_SUBSCRIPTION,
   USER_CHANGED_SUBSCRIPTION,
+  USER_METADATA_CHANGED_SUBSCRIPTION,
   USER_RUN_CHANGED_SUBSCRIPTION,
   UPDATE_USER_CONSORTIUM_STATUS_MUTATION,
+  FETCH_USER_QUERY,
 } from '../../state/graphql/functions';
 import {
   getAllAndSubProp,
@@ -88,6 +90,7 @@ class Dashboard extends Component {
       unsubscribePipelines: null,
       unsubscribeRuns: null,
       unsubscribeUsers: null,
+      unsubscribeToUserMetadata: null,
     };
   }
 
@@ -160,6 +163,8 @@ class Dashboard extends Component {
 
       this.props.updateLocalRun(arg.run.id, { error: arg.run.error, status: 'error' });
     });
+
+    this.unsubscribeToUserMetadata = this.props.subscribeToUserMetaData(user.id);
   }
 
   UNSAFE_componentWillReceiveProps(nextProps) {
@@ -400,11 +405,23 @@ class Dashboard extends Component {
     }
   }
 
+  componentDidUpdate(prevProps) {
+    if (this.props.currentUser &&
+      (!prevProps.currentUser || prevProps.currentUser.permissions !== this.props.currentUser.permissions)
+    ) {
+      this.props.updateUserPerms(this.props.currentUser.permissions);
+    }
+  }
+
   componentWillUnmount() {
     this.state.unsubscribeComputations();
     this.state.unsubscribeConsortia();
     this.state.unsubscribePipelines();
     this.state.unsubscribeRuns();
+
+    if (typeof this.unsubscribeToUserMetadata === 'function') {
+      this.unsubscribeToUserMetadata();
+    }
 
     ipcRenderer.removeAllListeners('docker-out');
     ipcRenderer.removeAllListeners('docker-pull-complete');
@@ -496,6 +513,7 @@ Dashboard.propTypes = {
   updateLocalRun: PropTypes.func.isRequired,
   updateUserConsortiumStatus: PropTypes.func.isRequired,
   writeLog: PropTypes.func.isRequired,
+  updateUserPerms: PropTypes.func.isRequired
 };
 
 function mapStateToProps({ auth, runs: { runs } }) {
@@ -535,6 +553,25 @@ const DashboardWithData = compose(
     'subscribeToPipelines',
     'pipelineChanged'
   )),
+  graphql(FETCH_USER_QUERY, {
+    options: props => ({
+      fetchPolicy: 'cache-and-network',
+      variables: { userId: props.auth.user.id },
+    }),
+    props: props => ({
+      currentUser: props.data.fetchUser,
+      subscribeToUserMetaData: userId => props.data.subscribeToMore({
+        document: USER_METADATA_CHANGED_SUBSCRIPTION,
+        variables: { userId },
+        updateQuery: (prevResult, { subscriptionData: { data } }) => {
+          if (data.userMetadataChanged.delete) {
+            return { fetchUser: null };
+          }
+          return { fetchUser: data.userMetadataChanged };
+        },
+      })
+    }),
+  }),
   graphql(UPDATE_USER_CONSORTIUM_STATUS_MUTATION, {
     props: ({ ownProps, mutate }) => ({
       updateUserConsortiumStatus: (consortiumId, status) => mutate({
@@ -567,5 +604,6 @@ export default connect(mapStateToProps,
     updateLocalRun,
     updateUserConsortiaStatuses,
     writeLog,
+    updateUserPerms
   }
 )(DashboardWithData);
