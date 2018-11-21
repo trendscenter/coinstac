@@ -164,6 +164,7 @@ const typeDefs = `
     pipelineChanged(pipelineId: ID): Pipeline
     userRunChanged(userId: ID): Run
     userChanged(userId: ID): User
+    userMetadataChanged(userId: ID): User
   }
 `;
 

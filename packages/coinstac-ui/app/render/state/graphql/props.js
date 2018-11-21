@@ -169,10 +169,7 @@ export const userRolesProp = (name) => {
         variables: {
           userId, table, doc, role,
         },
-      })
-        .then(({ data: { [name]: { permissions } } }) => {
-          return ownProps.updateUserPerms(permissions);
-        }),
+      }),
     }),
   };
 };
