@@ -26,21 +26,11 @@ export default class ConsortiumAbout extends Component {
     this.toggleOwner = this.toggleOwner.bind(this);
   }
 
-  static getDerivedStateFromProps(props, state) {
+  static getDerivedStateFromProps(props) {
     if (props.consortiumUsers) {
-      const users = state.consortiumUsers.filter((stateUser) => {
-        props.consortiumUsers.findIndex(propsUser => propsUser.id === stateUser.id) > -1
-      });
-      props.consortiumUsers.forEach((propsUser) => {
-        const stateIndex = state.consortiumUsers.findIndex(stateUser => stateUser.id === propsUser.id);
-
-        if (stateIndex === -1) {
-          users.push(propsUser);
-        } else {
-          users[stateIndex] = propsUser;
-        }
-      });
-      return { consortiumUsers: users };
+      return {
+        consortiumUsers: props.consortiumUsers.sort((a, b) => a.id.localeCompare(b.id)),
+      };
     }
   }
 
@@ -55,8 +45,10 @@ export default class ConsortiumAbout extends Component {
       if (owner && consUser.id !== user.id) {
         if (consUser.owner) {
           removeUserRole(consUser.id, 'consortia', consortium.id, 'owner');
+          addUserRole(consUser.id, 'consortia', consortium.id, 'member');
         } else {
           addUserRole(consUser.id, 'consortia', consortium.id, 'owner');
+          removeUserRole(consUser.id, 'consortia', consortium.id, 'member');
         }
       }
     };

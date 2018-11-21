@@ -243,6 +243,10 @@ class CoinstacClient {
     return statAsync(fullPath).then((stats) => {
       return stats.isDirectory();
     })
+      .catch((err) => {
+        if (err.code === 'ENOENT') return false;
+        throw err;
+      })
       .then((exists) => {
         if (!exists) {
           return [];
