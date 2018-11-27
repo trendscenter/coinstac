@@ -188,6 +188,7 @@ class ConsortiaList extends Component {
       actions.push(
         <Button
           key={`${consortium.id}-leave-cons-button`}
+          name={`${consortium.name}-leave-cons-button`}
           bsStyle="warning"
           className="pull-right"
           onClick={() => this.leaveConsortium(consortium.id, user.id)}
@@ -199,6 +200,7 @@ class ConsortiaList extends Component {
       actions.push(
         <Button
           key={`${consortium.id}-join-cons-button`}
+          name={`${consortium.name}-join-cons-button`}
           bsStyle="primary"
           className="pull-right"
           onClick={() => this.joinConsortium(consortium.id, consortium.activePipelineId, user.id)}

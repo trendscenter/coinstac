@@ -10,53 +10,83 @@ const mocksPath = path.join(__dirname, 'mocks.js');
 const EXIST_TIMEOUT = 4000;
 const NOTIFICATION_DISMISS_TIMEOUT = 6000;
 const COMPUTATION_TIMEOUT = 120000;
-const USER_ID = 'test1';
+const COMPUTATION_DOWNLOAD_TIMEOUT = 30000;
+const USER_ID_1 = 'test1';
+const USER_ID_2 = 'test2';
 const PASS = 'password';
 const CONS_NAME = 'e2e-consortium';
 const CONS_DESC = 'e2e-description';
 const PIPE_NAME = 'e2e-pipeline';
 const PIPE_DESC = 'e2e-pipeline-description';
+const COMPUTATION_NAME = 'single shot regression demo';
 
 chai.should();
 chai.use(chaiAsPromised);
 
-const app = new Application({
+const app1 = new Application({
   path: electronPath,
-  env: { NODE_ENV: 'test' },
+  env: { NODE_ENV: 'test', TEST_INSTANCE: 'test-1' },
+  args: [appPath, '-r', mocksPath],
+});
+
+const app2 = new Application({
+  path: electronPath,
+  env: { NODE_ENV: 'test', TEST_INSTANCE: 'test-2' },
   args: [appPath, '-r', mocksPath],
 });
 
 describe('Testing::e2e', () => {
-  before(() => app.start());
+  before(() => (
+    Promise.all([
+      app1.start(),
+      app2.start(),
+    ])
+  ));
 
-  after(() => {
-    if (app && app.isRunning()) {
-      return app.stop();
-    }
-  });
+  after(() => (
+    Promise.all([
+      app1.stop(),
+      app2.browserWindow.close(),
+    ])
+  ));
 
-  it('opens a single window', () => (
-    app.client.waitUntilWindowLoaded()
+  it('opens a single window on first instance', () => (
+    app1.client.waitUntilWindowLoaded()
+      .getWindowCount().should.eventually.equal(1)
+  ));
+
+  it('opens a single window on second instance', () => (
+    app2.client.waitUntilWindowLoaded()
       .getWindowCount().should.eventually.equal(1)
   ));
 
   it('displays the correct title', () => (
-    app.client.waitUntilWindowLoaded()
+    app1.client.waitUntilWindowLoaded()
       .getTitle().should.eventually.equal('COINSTAC')
   ));
 
-  it('authenticates demo user', () => (
-    app.client
+  it('authenticates demo user on first instance', () => (
+    app1.client
       .waitForVisible('#login-username', EXIST_TIMEOUT)
-      .setValue('#login-username', USER_ID)
+      .setValue('#login-username', USER_ID_1)
       .setValue('#login-password', PASS)
       .click('button=Log In')
       .waitForExist('.user-account-name', EXIST_TIMEOUT)
-      .getText('.user-account-name').should.eventually.equal(USER_ID)
+      .getText('.user-account-name').should.eventually.equal(USER_ID_1)
+  ));
+
+  it('authenticates demo user on second instance', () => (
+    app2.client
+      .waitForVisible('#login-username', EXIST_TIMEOUT)
+      .setValue('#login-username', USER_ID_2)
+      .setValue('#login-password', PASS)
+      .click('button=Log In')
+      .waitForExist('.user-account-name', EXIST_TIMEOUT)
+      .getText('.user-account-name').should.eventually.equal(USER_ID_2)
   ));
 
   it('accesses the Add Consortium page', () => (
-    app.client
+    app1.client
       .click('a=Consortia')
       .waitForVisible('a=Create Consortium', EXIST_TIMEOUT)
       .click('a=Create Consortium')
@@ -64,21 +94,21 @@ describe('Testing::e2e', () => {
   ));
 
   it('creates a consortium', () => (
-    app.client
+    app1.client
       .setValue('#name', CONS_NAME)
       .setValue('#description', CONS_DESC)
       .click('button=Save')
       .waitForText('.notification-message', EXIST_TIMEOUT)
       .getText('.notification-message')
       .then(notificationMessage => notificationMessage.should.equal('Consortium Saved'))
-      .then(() => app.client
+      .then(() => app1.client
         .waitForVisible('.notification-message', NOTIFICATION_DISMISS_TIMEOUT, true)
         .click('a=Consortia')
         .waitForVisible(`h3=${CONS_NAME}`))
   ));
 
   it('accesses the Add Pipeline page', () => (
-    app.client
+    app1.client
       .click('a=Pipelines')
       .waitForVisible('a=Create Pipeline', EXIST_TIMEOUT)
       .click('a=Create Pipeline')
@@ -86,7 +116,7 @@ describe('Testing::e2e', () => {
   ));
 
   it('creates a pipeline', () => (
-    app.client
+    app1.client
       .setValue('#name', PIPE_NAME)
       .setValue('#description', PIPE_DESC)
       .click('#pipelineconsortia')
@@ -94,7 +124,7 @@ describe('Testing::e2e', () => {
       .click(`a=${CONS_NAME}`)
       .click('#computation-dropdown')
       .waitForVisible('.dropdown-menu[aria-labelledby="computation-dropdown"]', EXIST_TIMEOUT)
-      .click('a=single shot regression demo')
+      .click(`a=${COMPUTATION_NAME}`)
       .waitForVisible('button=Add Covariates')
       .click('button=Add Covariates')
       .click('#covariates-0-data-dropdown')
@@ -134,12 +164,12 @@ describe('Testing::e2e', () => {
       .waitForVisible('.notification-message', EXIST_TIMEOUT)
       .getText('.notification-message')
       .then(notificationMessage => notificationMessage.should.equal('Pipeline Saved.'))
-      .then(() => app.client
-        .waitForVisible('.notification-message', NOTIFICATION_DISMISS_TIMEOUT, true))
+      .then(() => app1.client
+        .click('.notification .notification-dismiss')) // Click on dismiss notification button
   ));
 
   it('sets the created pipeline to the consortium', () => (
-    app.client
+    app1.client
       .click('a=Consortia')
       .waitForVisible(`a[name="${CONS_NAME}"]`, EXIST_TIMEOUT)
       .click(`a[name="${CONS_NAME}"]`)
@@ -154,10 +184,27 @@ describe('Testing::e2e', () => {
       .waitForVisible(`h4=${PIPE_NAME}`, EXIST_TIMEOUT)
   ));
 
-  it('creates a file collection', () => (
-    app.client
+  it('joins a consortium', () => (
+    app2.client
+      .click('a=Consortia')
+      .waitForVisible(`button[name="${CONS_NAME}-join-cons-button"]`, EXIST_TIMEOUT)
+      .click(`button[name="${CONS_NAME}-join-cons-button"]`)
+      .waitForVisible(`button[name="${CONS_NAME}-leave-cons-button"]`, EXIST_TIMEOUT)
+      .waitForVisible('div=Pipeline computations downloading via Docker.', EXIST_TIMEOUT)
+      .click('.notification .notification-dismiss')
+      .waitForVisible('div=Pipeline computations downloading via Docker.', EXIST_TIMEOUT, true)
+      .waitForVisible(`div=${COMPUTATION_NAME} Download Complete`, COMPUTATION_DOWNLOAD_TIMEOUT) // Dismiss computation download notification
+      .click('.notification .notification-dismiss')
+      .waitForVisible(`div=${COMPUTATION_NAME} Download Complete`, NOTIFICATION_DISMISS_TIMEOUT, true)
+      .waitForVisible('.notification', COMPUTATION_DOWNLOAD_TIMEOUT)
+      .click('.notification .notification-dismiss')
+      .waitForVisible('.notification', NOTIFICATION_DISMISS_TIMEOUT, true)
+  ));
+
+  it('creates a file collection for instance 1', () => (
+    app1.client
       .click('a=Collections')
-      .waitForVisible('h1=File Collections', EXIST_TIMEOUT)
+      .waitForVisible('a=Create File Collection', EXIST_TIMEOUT)
       .click('a=Create File Collection')
       .waitForVisible('h1=New Collection', EXIST_TIMEOUT)
       .setValue('#name', CONS_NAME)
@@ -166,11 +213,11 @@ describe('Testing::e2e', () => {
       .waitForText('.notification-message', EXIST_TIMEOUT)
       .getText('.notification-message')
       .then(notificationMessage => notificationMessage.should.equal('Collection Saved.'))
-      .then(() => app.client.waitForVisible('.notification-message', NOTIFICATION_DISMISS_TIMEOUT, true))
+      .then(() => app1.client.waitForVisible('.notification-message', NOTIFICATION_DISMISS_TIMEOUT, true))
   ));
 
-  it('sets the data set into the file collection', () => (
-    app.client
+  it('sets the data set into the file collection for instance 1', () => (
+    app1.client
       .element('#collection-tabs')
       .click('a=Files')
       .waitForVisible('h3=Collection Files', EXIST_TIMEOUT)
@@ -206,22 +253,77 @@ describe('Testing::e2e', () => {
       .waitForText('.notification-message', EXIST_TIMEOUT)
       .getText('.notification-message')
       .then(notificationMessage => notificationMessage.should.equal('Collection Saved.'))
-      .then(() => app.client.waitForVisible('.notification-message', NOTIFICATION_DISMISS_TIMEOUT, true))
+      .then(() => app1.client.waitForVisible('.notification-message', NOTIFICATION_DISMISS_TIMEOUT, true))
+  ));
+
+  it('creates a file collection for instance 2', () => (
+    app2.client
+      .click('a=Collections')
+      .waitForVisible('a=Create File Collection', EXIST_TIMEOUT)
+      .click('a=Create File Collection')
+      .waitForVisible('h1=New Collection', EXIST_TIMEOUT)
+      .setValue('#name', CONS_NAME)
+      .setValue('#description', CONS_DESC)
+      .click('button=Save')
+      .waitForText('.notification-message', EXIST_TIMEOUT)
+      .getText('.notification-message')
+      .then(notificationMessage => notificationMessage.should.equal('Collection Saved.'))
+      .then(() => app2.client.waitForVisible('.notification-message', NOTIFICATION_DISMISS_TIMEOUT, true))
+  ));
+
+  it('sets the data set into the file collection for instance 2', () => (
+    app2.client
+      .element('#collection-tabs')
+      .click('a=Files')
+      .waitForVisible('h3=Collection Files', EXIST_TIMEOUT)
+      .click('button=Add Group')
+      .waitForVisible('button=Add Files Group', EXIST_TIMEOUT)
+      .click('label=A metadata file containing file paths and covariates.')
+      .click('button=Add Files Group')
+      .waitForVisible('button=Remove File Group', EXIST_TIMEOUT)
+      .waitForVisible('.notification-message', EXIST_TIMEOUT)
+      .waitForVisible('.notification-message', NOTIFICATION_DISMISS_TIMEOUT, true)
+      .element('#collection-tabs')
+      .click('a=Consortia')
+      .waitForVisible('h3=Add to Consortia', EXIST_TIMEOUT)
+      .click('#member-consortia-dropdown')
+      .waitForVisible('.dropdown-menu[aria-labelledby="member-consortia-dropdown"]', EXIST_TIMEOUT)
+      .element('.dropdown-menu[aria-labelledby="member-consortia-dropdown"]')
+      .click(`a=${CONS_NAME}`)
+      .waitForVisible('div.panel', EXIST_TIMEOUT)
+      .element('.tab-pane.active .panel-body li')
+      .click('select')
+      .element('.tab-pane.active .panel-body li')
+      .click('option=Group 1 (.CSV)')
+      .element('.tab-pane.active .panel-body li:nth-child(2)')
+      .click('select')
+      .element('.tab-pane.active .panel-body li:nth-child(2)')
+      .click('option=Group 1 (.CSV)')
+      .element('.tab-pane.active .panel-body > div:nth-child(2)')
+      .click('select')
+      .element('.tab-pane.active .panel-body > div:nth-child(2)')
+      .click('option=Group 1 (.CSV)')
+      .element('.tab-pane.active')
+      .click('button=Save')
+      .waitForText('.notification-message', EXIST_TIMEOUT)
+      .getText('.notification-message')
+      .then(notificationMessage => notificationMessage.should.equal('Collection Saved.'))
+      .then(() => app2.client.waitForVisible('.notification-message', NOTIFICATION_DISMISS_TIMEOUT, true))
   ));
 
   it('runs a computation', () => (
-    app.client
+    app1.client
       .click('a=Consortia')
       .waitForVisible('h1=Consortia', EXIST_TIMEOUT)
       .click('button=Start Pipeline')
       .waitForText('.notification-message', EXIST_TIMEOUT)
       .getText('.notification-message')
       .then(notificationMessage => notificationMessage.should.equal(`Decentralized Pipeline Starting for ${CONS_NAME}.`))
-      .then(() => app.client.waitForVisible('.notification-message', NOTIFICATION_DISMISS_TIMEOUT, true))
+      .then(() => app1.client.waitForVisible('.notification-message', NOTIFICATION_DISMISS_TIMEOUT, true))
   ));
 
   it('displays computation progress', () => (
-    app.client
+    app1.client
       .click('a=Home')
       .waitForVisible('div.panel:first-child', EXIST_TIMEOUT)
       .element('div.panel:first-child')
@@ -229,7 +331,7 @@ describe('Testing::e2e', () => {
   ));
 
   it('displays results', () => (
-    app.client
+    app1.client
       .click('a=Home')
       .waitForVisible('div.panel:first-child', EXIST_TIMEOUT)
       .element('div.panel:first-child')
@@ -241,7 +343,7 @@ describe('Testing::e2e', () => {
   ));
 
   it('deletes consortium', () => (
-    app.client
+    app1.client
       .click('a=Consortia')
       .waitForVisible(`button[name="${CONS_NAME}-delete"]`, EXIST_TIMEOUT)
       .click(`button[name="${CONS_NAME}-delete"]`)
@@ -251,9 +353,15 @@ describe('Testing::e2e', () => {
   ));
 
   it('logs out', () => (
-    app.client
-      .waitForVisible('button=Log Out', EXIST_TIMEOUT)
-      .click('button=Log Out')
-      .waitForVisible('button=Log In', EXIST_TIMEOUT)
+    Promise.all([
+      app1.client
+        .waitForVisible('button=Log Out', EXIST_TIMEOUT)
+        .click('button=Log Out')
+        .waitForVisible('button=Log In', EXIST_TIMEOUT),
+      app2.client
+        .waitForVisible('button=Log Out', EXIST_TIMEOUT)
+        .click('button=Log Out')
+        .waitForVisible('button=Log In', EXIST_TIMEOUT),
+    ])
   ));
 });
