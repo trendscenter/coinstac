@@ -322,6 +322,7 @@ const resolvers = {
      * @param {object} args
      * @param {string} args.doc Id of the document to add role to
      * @param {string} args.role Role to add to perms
+     * @param {string} args.userId Id of the user to be added
      * @return {object} Updated user object
      */
     addUserRole: async ({ auth: { credentials } }, args) => {
@@ -499,6 +500,7 @@ const resolvers = {
      * @param {string} args.table Table of the document to add role to
      * @param {string} args.doc Id of the document to add role to
      * @param {string} args.role Role to add to perms
+     * @param {string} args.userId Id of the user to be removed
      * @return {object} Updated user object
      */
     removeUserRole: async ({ auth: { credentials } }, args) => {
