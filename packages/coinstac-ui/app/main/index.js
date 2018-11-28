@@ -18,14 +18,6 @@ const ipcPromise = require('ipc-promise');
 const mock = require('../../test/e2e/mocks');
 const ipcFunctions = require('./utils/ipc-functions');
 
-// Require winston logger to log docker issues 
-const winston = require('winston');
-
-const winstonLogger = new winston.Logger({
-  level: 'verbose',
-  transports: [new winston.transports.Console()],
-});
-
 const { ipcMain } = electron;
 
 // if no env set prd
@@ -243,7 +235,7 @@ loadConfig()
           return data;
         })
         .catch((err) => {
-          winstonLogger.error(err);
+          logger.verbose(err);
           mainWindow.webContents.send('docker-error', {
             err: {
               message: err.message,
@@ -264,7 +256,7 @@ loadConfig()
           return result;
         })
         .catch((err) => {
-          winstonLogger.error(err);
+          logger.verbose(err);
           mainWindow.webContents.send('docker-error', {
             err: {
               message: err.message,
