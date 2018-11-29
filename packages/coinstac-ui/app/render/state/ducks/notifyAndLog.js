@@ -5,7 +5,7 @@ import {
 } from 'react-notification-system-redux';
 import { ipcRenderer } from 'electron';
 
-const defaultNotification = { autoDismiss: 2 };
+const defaultNotification = { autoDismiss: 2, position: 'bl' };
 
 // Action Creators
 export const writeLog = (message => () => ipcRenderer.send('write-log', message)
