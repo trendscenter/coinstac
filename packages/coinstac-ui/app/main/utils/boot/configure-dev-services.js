@@ -34,5 +34,5 @@ if (
   * {@link https://github.com/sindresorhus/electron-debug#usage}
   * {@link https://github.com/electron/devtron}
   */
-  require('electron-debug')({ showDevTools: true }); // eslint-disable-line global-require
+  require('electron-debug')({ showDevTools: true, devToolsMode: 'previous' }); // eslint-disable-line global-require
 }
