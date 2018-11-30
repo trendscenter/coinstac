@@ -235,7 +235,7 @@ loadConfig()
           return data;
         })
         .catch((err) => {
-          logger.verbose(err);
+          logger.error(err);
           mainWindow.webContents.send('docker-error', {
             err: {
               message: err.message,
@@ -256,7 +256,7 @@ loadConfig()
           return result;
         })
         .catch((err) => {
-          logger.verbose(err);
+          logger.error(err);
           mainWindow.webContents.send('docker-error', {
             err: {
               message: err.message,
