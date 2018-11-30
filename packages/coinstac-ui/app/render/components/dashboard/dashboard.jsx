@@ -406,10 +406,11 @@ class Dashboard extends Component {
   }
 
   componentDidUpdate(prevProps) {
-    if (this.props.currentUser &&
-      (!prevProps.currentUser || prevProps.currentUser.permissions !== this.props.currentUser.permissions)
+    const { currentUser } = this.props;
+    if (currentUser &&
+      (!prevProps.currentUser || prevProps.currentUser.permissions !== currentUser.permissions)
     ) {
-      this.props.updateUserPerms(this.props.currentUser.permissions);
+      this.props.updateUserPerms(currentUser.permissions);
     }
   }
 
@@ -482,6 +483,7 @@ Dashboard.defaultProps = {
   pipelines: [],
   remoteRuns: [],
   runs: [],
+  currentUser: null,
 };
 
 Dashboard.propTypes = {
@@ -513,7 +515,8 @@ Dashboard.propTypes = {
   updateLocalRun: PropTypes.func.isRequired,
   updateUserConsortiumStatus: PropTypes.func.isRequired,
   writeLog: PropTypes.func.isRequired,
-  updateUserPerms: PropTypes.func.isRequired
+  updateUserPerms: PropTypes.func.isRequired,
+  currentUser: PropTypes.object,
 };
 
 function mapStateToProps({ auth, runs: { runs } }) {
