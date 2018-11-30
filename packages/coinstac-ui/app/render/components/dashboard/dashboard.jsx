@@ -165,6 +165,13 @@ class Dashboard extends Component {
     });
 
     this.unsubscribeToUserMetadata = this.props.subscribeToUserMetaData(user.id);
+    
+    ipcRenderer.on('docker-error', (event, arg) => {
+      this.props.notifyError({
+        message: `Docker Error: ${arg.err.message}`,
+        autoDismiss: 5
+      });
+    });
   }
 
   UNSAFE_componentWillReceiveProps(nextProps) {
@@ -429,6 +436,7 @@ class Dashboard extends Component {
     ipcRenderer.removeAllListeners('local-run-complete');
     ipcRenderer.removeAllListeners('local-run-error');
     ipcRenderer.removeAllListeners('local-pipeline-state-update');
+    ipcRenderer.removeAllListeners('docker-error');
   }
 
   render() {
