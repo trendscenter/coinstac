@@ -32,6 +32,7 @@ export default class ConsortiumAbout extends Component {
         consortiumUsers: props.consortiumUsers.sort((a, b) => a.id.localeCompare(b.id)),
       };
     }
+    return null;
   }
 
   addMember() {
@@ -70,8 +71,8 @@ export default class ConsortiumAbout extends Component {
     return (
       <div>
         <Form onSubmit={saveConsortium}>
-
-          {owner &&
+          {
+            owner &&
             <Button
               bsStyle="success"
               type="submit"
@@ -146,7 +147,6 @@ export default class ConsortiumAbout extends Component {
                             isOwner={owner}
                             consRole="Member"
                             name={consUser.id}
-                            removeFunction={removeMemberFromConsortium}
                             width={30}
                           />
                           <span>{consUser.id}</span>

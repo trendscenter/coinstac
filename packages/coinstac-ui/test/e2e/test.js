@@ -182,6 +182,18 @@ describe('Testing::e2e', () => {
       .element('.dropdown-menu[aria-labelledby="owned-pipelines-dropdown"]')
       .click(`a=${PIPE_NAME}`)
       .waitForVisible(`h4=${PIPE_NAME}`, EXIST_TIMEOUT)
+      .waitForVisible('.notification-message=Pipeline computations downloading via Docker.', EXIST_TIMEOUT)
+      .element('.notification:last-child')
+      .click('.notification-dismiss')
+      .waitForVisible('.notification-message=Pipeline computations downloading via Docker.', EXIST_TIMEOUT, true)
+      .waitForVisible(`.notification-message=${COMPUTATION_NAME} Download Complete`, COMPUTATION_DOWNLOAD_TIMEOUT)
+      .element('.notification:last-child')
+      .click('.notification-dismiss')
+      .waitForVisible(`.notification-message=${COMPUTATION_NAME} Download Complete`, EXIST_TIMEOUT, true)
+      .waitForVisible('.notification-message*=Pipeline Computations Downloaded', COMPUTATION_DOWNLOAD_TIMEOUT)
+      .element('.notification:last-child')
+      .click('.notification-dismiss')
+      .waitForVisible('.notification-message*=Pipeline Computations Downloaded', EXIST_TIMEOUT, true)
   ));
 
   it('joins a consortium', () => (

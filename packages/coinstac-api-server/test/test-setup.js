@@ -371,7 +371,7 @@ helperFunctions.getRethinkConnection()
         name: 'Test Consortia 1',
         description: 'This consortia is for testing.',
         owners: ['author'],
-        members: [],
+        members: ['author'],
       }).run(connection))
       .then(() => rethink.table('consortia').insert({
         id: 'test-cons-2',
@@ -379,7 +379,7 @@ helperFunctions.getRethinkConnection()
         name: 'Test Consortia 2',
         description: 'This consortia is for testing too.',
         owners: ['test1'],
-        members: ['author'],
+        members: ['author', 'test1'],
       }).run(connection))
       .then(() => connection.close());
   })
@@ -393,7 +393,7 @@ helperFunctions.getRethinkConnection()
       computations: {},
       consortia: {
         'test-cons-1': ['member'],
-        'test-cons-2': ['owner'],
+        'test-cons-2': ['owner', 'member'],
       },
       pipelines: {},
     },
@@ -503,7 +503,7 @@ helperFunctions.getRethinkConnection()
     permissions: {
       computations: {},
       consortia: {
-        'test-cons-1': ['owner'],
+        'test-cons-1': ['owner', 'member'],
         'test-cons-2': ['member'],
       },
       pipelines: {},
