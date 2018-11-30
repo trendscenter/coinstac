@@ -10,12 +10,14 @@ const mocksPath = path.join(__dirname, 'mocks.js');
 const EXIST_TIMEOUT = 4000;
 const NOTIFICATION_DISMISS_TIMEOUT = 6000;
 const COMPUTATION_TIMEOUT = 120000;
+const COMPUTATION_DOWNLOAD_TIMEOUT = 30000;
 const USER_ID = 'test1';
 const PASS = 'password';
 const CONS_NAME = 'e2e-consortium';
 const CONS_DESC = 'e2e-description';
 const PIPE_NAME = 'e2e-pipeline';
 const PIPE_DESC = 'e2e-pipeline-description';
+const PIPELINE_COMPUTATION_STEP_NAME = 'single shot regression demo';
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -94,7 +96,7 @@ describe('Testing::e2e', () => {
       .click(`a=${CONS_NAME}`)
       .click('#computation-dropdown')
       .waitForVisible('.dropdown-menu[aria-labelledby="computation-dropdown"]', EXIST_TIMEOUT)
-      .click('a=single shot regression demo')
+      .click(`a=${PIPELINE_COMPUTATION_STEP_NAME}`)
       .waitForVisible('button=Add Covariates')
       .click('button=Add Covariates')
       .click('#covariates-0-data-dropdown')
@@ -152,6 +154,18 @@ describe('Testing::e2e', () => {
       .element('.dropdown-menu[aria-labelledby="owned-pipelines-dropdown"]')
       .click(`a=${PIPE_NAME}`)
       .waitForVisible(`h4=${PIPE_NAME}`, EXIST_TIMEOUT)
+      .waitForVisible('.notification-message=Pipeline computations downloading via Docker.', EXIST_TIMEOUT)
+      .element('.notification:last-child')
+      .click('.notification-dismiss')
+      .waitForVisible('.notification-message=Pipeline computations downloading via Docker.', EXIST_TIMEOUT, true)
+      .waitForVisible(`.notification-message=${PIPELINE_COMPUTATION_STEP_NAME} Download Complete`, COMPUTATION_DOWNLOAD_TIMEOUT)
+      .element('.notification:last-child')
+      .click('.notification-dismiss')
+      .waitForVisible(`.notification-message=${PIPELINE_COMPUTATION_STEP_NAME} Download Complete`, EXIST_TIMEOUT, true)
+      .waitForVisible('.notification-message*=Pipeline Computations Downloaded', COMPUTATION_DOWNLOAD_TIMEOUT)
+      .element('.notification:last-child')
+      .click('.notification-dismiss')
+      .waitForVisible('.notification-message*=Pipeline Computations Downloaded', EXIST_TIMEOUT, true)
   ));
 
   it('creates a file collection', () => (
