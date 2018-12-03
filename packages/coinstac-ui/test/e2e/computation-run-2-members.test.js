@@ -35,7 +35,7 @@ const app2 = new Application({
   args: [appPath, '-r', mocksPath],
 });
 
-describe('Testing::e2e', () => {
+describe('e2e run computation with 2 members', () => {
   before(() => (
     Promise.all([
       app1.start(),
@@ -202,15 +202,18 @@ describe('Testing::e2e', () => {
       .waitForVisible(`button[name="${CONS_NAME}-join-cons-button"]`, EXIST_TIMEOUT)
       .click(`button[name="${CONS_NAME}-join-cons-button"]`)
       .waitForVisible(`button[name="${CONS_NAME}-leave-cons-button"]`, EXIST_TIMEOUT)
-      .waitForVisible('div=Pipeline computations downloading via Docker.', EXIST_TIMEOUT)
+      .waitForVisible('.notification-message=Pipeline computations downloading via Docker.', EXIST_TIMEOUT)
+      .element('.notification:last-child')
       .click('.notification .notification-dismiss')
-      .waitForVisible('div=Pipeline computations downloading via Docker.', EXIST_TIMEOUT, true)
-      .waitForVisible(`div=${COMPUTATION_NAME} Download Complete`, COMPUTATION_DOWNLOAD_TIMEOUT) // Dismiss computation download notification
+      .waitForVisible('.notification-message=Pipeline computations downloading via Docker.', EXIST_TIMEOUT, true)
+      .waitForVisible(`.notification-message=${COMPUTATION_NAME} Download Complete`, COMPUTATION_DOWNLOAD_TIMEOUT) // Dismiss computation download notification
+      .element('.notification:last-child')
       .click('.notification .notification-dismiss')
-      .waitForVisible(`div=${COMPUTATION_NAME} Download Complete`, NOTIFICATION_DISMISS_TIMEOUT, true)
-      .waitForVisible('.notification', COMPUTATION_DOWNLOAD_TIMEOUT)
+      .waitForVisible(`.notification-message=${COMPUTATION_NAME} Download Complete`, NOTIFICATION_DISMISS_TIMEOUT, true)
+      .waitForVisible('.notification-message*=Pipeline Computations Downloaded', COMPUTATION_DOWNLOAD_TIMEOUT)
+      .element('.notification:last-child')
       .click('.notification .notification-dismiss')
-      .waitForVisible('.notification', NOTIFICATION_DISMISS_TIMEOUT, true)
+      .waitForVisible('.notification-message*=Pipeline Computations Downloaded', EXIST_TIMEOUT, true)
   ));
 
   it('creates a file collection for instance 1', () => (
