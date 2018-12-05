@@ -227,7 +227,7 @@ module.exports = {
 
                 // necessary if this function call turns out synchronous
                 // the stack won't clear and overflow, has limited perf impact
-                process.nextTick(() => fn.apply(this, argsArray.concat([_cb, err])));
+                setImmediate(() => fn.apply(this, argsArray.concat([_cb, err])));
                 controllerState.remoteInitial = controllerState.mode === 'remote' ? false : undefined;
               }
               : undefined; // steps complete
