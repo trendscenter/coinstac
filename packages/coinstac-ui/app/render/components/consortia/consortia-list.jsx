@@ -170,7 +170,7 @@ class ConsortiaList extends Component {
     } else if ((owner || member) && !isMapped) {
       actions.push(
         <LinkContainer
-          to={'dashboard/collections'}
+          to={`dashboard/maps/${consortium.id}`}
           key={`${consortium.id}-set-map-local-button`}
         >
           <Button

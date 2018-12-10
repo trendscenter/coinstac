@@ -12,6 +12,13 @@ const DashboardNav = () => {
           Home
         </NavItem>
       </IndexLinkContainer>
+      <LinkContainer to="/dashboard/maps">
+        <NavItem>
+          <span aria-hidden="true" className="glyphicon glyphicon-hdd" />
+          {' '}
+          Maps
+        </NavItem>
+      </LinkContainer>
       <LinkContainer to="/dashboard/computations">
         <NavItem>
           <span aria-hidden="true" className="glyphicon glyphicon-hdd" />
@@ -52,4 +59,3 @@ const DashboardNav = () => {
 };
 
 export default DashboardNav;
-
