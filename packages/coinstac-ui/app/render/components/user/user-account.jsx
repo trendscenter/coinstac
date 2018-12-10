@@ -60,7 +60,7 @@ const UserAccount = (props) => {
             }}
           >
             <ListItemText disableTypography>
-              <Typography variant="subtitle2">
+              <Typography variant="subtitle2" className="user-account-name">
                 { label }
               </Typography>
             </ListItemText>
