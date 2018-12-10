@@ -1,6 +1,5 @@
 'use strict';
 
-const loadConfig = require('../config.js');
 const os = require('os');
 const path = require('path');
 const readLastLines = require('read-last-lines');
@@ -8,10 +7,11 @@ const { Tail } = require('tail');
 const serializeError = require('serialize-error');
 const pify = require('util').promisify;
 const access = pify(require('fs').access);
+const loadConfig = require('../config.js');
 
-const outputEl = typeof document !== 'undefined' ?
-  document.getElementById('output') :
-  undefined;
+const outputEl = typeof document !== 'undefined'
+  ? document.getElementById('output')
+  : undefined;
 
 function maybeAddOutput(output, logName, className) {
   if (outputEl) {
@@ -70,12 +70,12 @@ loadConfig()
     )));
   })
   .then(targets => Promise.all(targets.reduce((memo, target) => (
-    target.exists ?
-      memo.concat(
+    target.exists
+      ? memo.concat(
         readLastLines.read(target.filename, 50)
           .then(lines => Object.assign({}, target, { lines }))
-      ) :
-      memo
+      )
+      : memo
   ), [])))
   .then(targets => targets.forEach((target) => {
     const dataLogger = getDataLogger(target.name, target.className);

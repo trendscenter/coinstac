@@ -196,6 +196,7 @@ export default class PipelineStepInput extends Component {
                   <FormControl
                     disabled={!owner || isFromCache}
                     inputRef={(input) => { this[objKey] = input; }}
+                    name={`step-${objKey}`}
                     onChange={() => updateStep({
                       ...step,
                       inputMap: this.getNewObj(objKey,
