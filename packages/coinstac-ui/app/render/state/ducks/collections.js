@@ -74,6 +74,10 @@ function parseFilesByGroup(
     return row;
   });
 
+  const e = new RegExp(/[-\/\\^$*+?.()|[\]{}]/g); // eslint-disable-line no-useless-escape
+  const escape = (string) => {
+    return string.replace(e, '\\$&');
+  };
   const pathsep = new RegExp(`${escape(sep)}|:`, 'g');
   parsedRows = parsedRows.map((path) => {
     if (extname(path[0]) !== '') {
@@ -106,16 +110,11 @@ function iteratePipelineSteps(consortium, filesByGroup, baseDirectory) {
 
     for (let keyIndex = 0; keyIndex < inputKeys.length; keyIndex += 1) {
       const key = inputKeys[keyIndex];
-      const e = new RegExp(/[-\/\\^$*+?.()|[\]{}]/g); // eslint-disable-line no-useless-escape
-      const escape = (string) => {
-        return string.replace(e, '\\$&');
-      };
 
       if ('ownerMappings' in step.inputMap[key]) {
         const keyArray = [[], [], []]; // [[values], [labels], [type (if present)]]
         const mappingIndex = 0;
         const mappingObj = step.inputMap[key].ownerMappings[mappingIndex];
-        console.log(mappingObj);
         if (mappingObj.source === 'file'
         && consortium.stepIO[sIndex] && consortium.stepIO[sIndex][key][mappingIndex]
         && consortium.stepIO[sIndex][key][mappingIndex].collectionId
@@ -313,8 +312,8 @@ export const getConsortium = applyAsyncLoading(consortiumId =>
         payload: consortium,
       }));
 
-    return consortium;
-  })
+      return consortium;
+    })
 );
 
 export const isAssocConsortiumMapped = applyAsyncLoading(consId =>
