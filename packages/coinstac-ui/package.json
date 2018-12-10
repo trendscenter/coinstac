@@ -4,6 +4,8 @@
   "description": "COINSTAC desktop application.",
   "main": "app/main/index.js",
   "dependencies": {
+    "@material-ui/core": "^3.6.1",
+    "@material-ui/icons": "^3.0.1",
     "add-graphql-subscriptions": "^1.0.1",
     "app-module-path": "^1.1.0",
     "async": "^2.6.1",

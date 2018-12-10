@@ -1,55 +1,44 @@
 import React from 'react';
-import { Nav, NavItem } from 'react-bootstrap';
-import { IndexLinkContainer, LinkContainer } from 'react-router-bootstrap';
+import List from '@material-ui/core/List';
+import ListItem from '@material-ui/core/ListItem';
+import ListItemIcon from '@material-ui/core/ListItemIcon';
+import ListItemText from '@material-ui/core/ListItemText';
+import HomeIcon from '@material-ui/icons/Home';
+import StorageIcon from '@material-ui/icons/Storage';
+import ViewListIcon from '@material-ui/icons/ViewList';
+import ListAltIcon from '@material-ui/icons/ListAlt';
+import AssignmentIcon from '@material-ui/icons/Assignment';
+import EqualizerIcon from '@material-ui/icons/Equalizer';
 
 const DashboardNav = () => {
   return (
-    <Nav bsStyle="pills" stacked>
-      <IndexLinkContainer to="/dashboard">
-        <NavItem>
-          <span aria-hidden="true" className="glyphicon glyphicon-home" />
-          {' '}
-          Home
-        </NavItem>
-      </IndexLinkContainer>
-      <LinkContainer to="/dashboard/computations">
-        <NavItem>
-          <span aria-hidden="true" className="glyphicon glyphicon-hdd" />
-          {' '}
-          Computations
-        </NavItem>
-      </LinkContainer>
-      <LinkContainer to="/dashboard/consortia">
-        <NavItem>
-          <span aria-hidden="true" className="glyphicon glyphicon-list" />
-          {' '}
-          Consortia
-        </NavItem>
-      </LinkContainer>
-      <LinkContainer to="/dashboard/collections">
-        <NavItem>
-          <span aria-hidden="true" className="glyphicon glyphicon-list-alt" />
-          {' '}
-          Collections
-        </NavItem>
-      </LinkContainer>
-      <LinkContainer to="/dashboard/pipelines">
-        <NavItem>
-          <span aria-hidden="true" className="glyphicon glyphicon-tasks" />
-          {' '}
-          Pipelines
-        </NavItem>
-      </LinkContainer>
-      <LinkContainer to="/dashboard/results">
-        <NavItem>
-          <span aria-hidden="true" className="glyphicon glyphicon-equalizer" />
-          {' '}
-          Results
-        </NavItem>
-      </LinkContainer>
-    </Nav>
+    <List>
+      <ListItem button component="a" href="#/dashboard">
+        <ListItemIcon><HomeIcon /></ListItemIcon>
+        <ListItemText primary="Home" />
+      </ListItem>
+      <ListItem button component="a" href="#/dashboard/computations">
+        <ListItemIcon><StorageIcon /></ListItemIcon>
+        <ListItemText primary="Computations" />
+      </ListItem>
+      <ListItem button component="a" href="#/dashboard/consortia">
+        <ListItemIcon><ViewListIcon /></ListItemIcon>
+        <ListItemText primary="Consortia" />
+      </ListItem>
+      <ListItem button component="a" href="#/dashboard/collections">
+        <ListItemIcon><ListAltIcon /></ListItemIcon>
+        <ListItemText primary="Collections" />
+      </ListItem>
+      <ListItem button component="a" href="#/dashboard/pipelines">
+        <ListItemIcon><AssignmentIcon /></ListItemIcon>
+        <ListItemText primary="Pipelines" />
+      </ListItem>
+      <ListItem button component="a" href="#/dashboard/results">
+        <ListItemIcon><EqualizerIcon /></ListItemIcon>
+        <ListItemText primary="Results" />
+      </ListItem>
+    </List>
   );
 };
 
 export default DashboardNav;
-

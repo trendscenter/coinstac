@@ -1,6 +1,7 @@
-$icon-font-path: "~bootstrap-sass/assets/fonts/bootstrap/";
+@import "./variables";
+@import "./mixins";
+@import "./classes";
 
-@import "~bootstrap-sass/assets/stylesheets/_bootstrap.scss";
 @import "./alert";
 @import "./computation-field";
 @import "./computation-select";
@@ -10,6 +11,7 @@ $icon-font-path: "~bootstrap-sass/assets/fonts/bootstrap/";
 @import "./consortium-result";
 @import "./consortium-result-list";
 @import "./consortium-result-table";
+@import "./list-item";
 @import "./pipeline-step";
 @import "./page-header";
 @import "./project-card";
@@ -40,23 +42,27 @@ $icon-font-path: "~bootstrap-sass/assets/fonts/bootstrap/";
  * Logo
  */
 .logo {
-    margin: 0 0 2rem;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem 0;
+  flex: 0 0 auto;
 
-    &:before {
-        background: url(../../../img/icons/png/256x256.png) no-repeat;
-        background-size: contain;
-        content: '';
-        display: inline-block;
-        height: 4rem;
-        margin: 0 .75rem 0 0;
-        width: 4rem;
-        vertical-align: top;
-    }
+  &__image {
+    background: url(../../../img/icons/png/256x256.png) no-repeat;
+    background-size: contain;
+    content: '';
+    height: 4rem;
+    margin: 0 .75rem 0 0;
+    width: 4rem;
+    vertical-align: top;
+  }
 
-    abbr[title] {
-        border: none;
-        text-decoration: none;
-    }
+  abbr[title] {
+    border: none;
+    text-decoration: none;
+  }
 }
 
 /**

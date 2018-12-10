@@ -1,8 +1,10 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { compose, graphql, withApollo } from 'react-apollo';
-import { Alert, Button } from 'react-bootstrap';
-import { LinkContainer } from 'react-router-bootstrap';
+import { Alert } from 'react-bootstrap';
+import Button from '@material-ui/core/Button';
+import AddIcon from '@material-ui/icons/Add';
+import { withStyles } from '@material-ui/core/styles';
 import { ipcRenderer } from 'electron';
 import PropTypes from 'prop-types';
 import shortid from 'shortid';
@@ -47,6 +49,12 @@ const styles = {
     marginLeft: 10,
   },
 };
+
+const materialStyles = theme => ({
+  button: {
+    margin: theme.spacing.unit,
+  },
+});
 
 const isUserA = (userId, groupArr) => {
   return groupArr.indexOf(userId) !== -1;
@@ -95,6 +103,7 @@ class ConsortiaList extends Component {
     const actions = [];
     const text = [];
     let isMapped = false;
+    const { classes } = this.props;
 
     if (this.props.associatedConsortia.length > 0) {
       const assocCons = this.props.associatedConsortia.find(c => c.id === consortium.id);
@@ -153,40 +162,37 @@ class ConsortiaList extends Component {
       actions.push(
         <Button
           key={`${consortium.id}-start-pipeline-button`}
-          bsStyle="success"
+          variant="contained"
+          color="secondary"
+          className={classes.button}
           onClick={this.startPipeline(consortium.id, consortium.activePipelineId)}
-          style={styles.optionalButton}
         >
           Start Pipeline
         </Button>
       );
     } else if (owner && !consortium.activePipelineId) {
       actions.push(
-        <LinkContainer
-          to={`dashboard/consortia/${consortium.id}/2`}
+        <Button
           key={`${consortium.id}-set-active-pipeline-button`}
+          variant="contained"
+          color="secondary"
+          href={`dashboard/consortia/${consortium.id}/2`}
+          className={classes.button}
         >
-          <Button
-            bsStyle="warning"
-            style={styles.optionalButton}
-          >
-            Set Active Pipeline
-          </Button>
-        </LinkContainer>
+          Set Active Pipeline
+        </Button>
       );
     } else if ((owner || member) && !isMapped) {
       actions.push(
-        <LinkContainer
-          to={'dashboard/collections'}
+        <Button
+          variant="contained"
+          color="secondary"
+          className={classes.button}
+          href="dashboard/collections"
           key={`${consortium.id}-set-map-local-button`}
         >
-          <Button
-            bsStyle="warning"
-            style={styles.optionalButton}
-          >
-            Map Local Data
-          </Button>
-        </LinkContainer>
+          Map Local Data
+        </Button>
       );
     }
 
@@ -194,8 +200,9 @@ class ConsortiaList extends Component {
       actions.push(
         <Button
           key={`${consortium.id}-leave-cons-button`}
-          bsStyle="warning"
-          className="pull-right"
+          variant="contained"
+          color="secondary"
+          className={classes.button}
           onClick={() => this.leaveConsortium(consortium.id)}
         >
           Leave Consortium
@@ -205,8 +212,9 @@ class ConsortiaList extends Component {
       actions.push(
         <Button
           key={`${consortium.id}-join-cons-button`}
-          bsStyle="primary"
-          className="pull-right"
+          variant="contained"
+          color="secondary"
+          className={classes.button}
           onClick={() => this.joinConsortium(consortium.id, consortium.activePipelineId)}
         >
           Join Consortium
@@ -384,6 +392,7 @@ class ConsortiaList extends Component {
   render() {
     const {
       consortia,
+      classes,
     } = this.props;
     const {
       ownedConsortia,
@@ -392,15 +401,17 @@ class ConsortiaList extends Component {
 
     return (
       <div>
-        <div className="page-header clearfix">
+        <div className="page-header">
           <h1 className="nav-item-page-title">Consortia</h1>
-          <LinkContainer className="pull-right" to="/dashboard/consortia/new">
-            <Button bsStyle="primary" className="pull-right">
-              <span aria-hidden="true" className="glyphicon glyphicon-plus" />
-              {' '}
-              Create Consortium
-            </Button>
-          </LinkContainer>
+          <Button
+            variant="fab"
+            color="primary"
+            aria-label="Add"
+            href="/dashboard/consortia/new"
+            className={classes.button}
+          >
+            <AddIcon />
+          </Button>
         </div>
 
         {consortia && consortia.length && consortia.length <= MAX_LENGTH_CONSORTIA
@@ -471,17 +482,18 @@ const ConsortiaListWithData = compose(
   withApollo
 )(ConsortiaList);
 
-export default connect(mapStateToProps,
-  {
-    getCollectionFiles,
-    getAllAssociatedConsortia,
-    incrementRunCount,
-    notifyInfo,
-    notifyWarning,
-    pullComputations,
-    removeCollectionsFromAssociatedConsortia,
-    saveAssociatedConsortia,
-    saveLocalRun,
-    updateUserPerms,
-  }
-)(ConsortiaListWithData);
+export default withStyles(materialStyles)(
+  connect(mapStateToProps,
+    {
+      getCollectionFiles,
+      getAllAssociatedConsortia,
+      incrementRunCount,
+      notifyInfo,
+      notifyWarning,
+      pullComputations,
+      removeCollectionsFromAssociatedConsortia,
+      saveAssociatedConsortia,
+      saveLocalRun,
+      updateUserPerms,
+    })(ConsortiaListWithData)
+);
