@@ -12,9 +12,7 @@ export default function LayoutNoAuth({ children }) {
         <div className="row">
           <div className="col-xs-12 col-sm-6 col-sm-offset-3 col-md-4 col-md-offset-4">
             <div className="screen__content">
-              <h1 className="logo text-center">
-                <CoinstacAbbr />
-              </h1>
+              <CoinstacAbbr />
               <Nav bsStyle="pills" justified>
                 <LinkContainer to="/login">
                   <NavItem>Log In</NavItem>
