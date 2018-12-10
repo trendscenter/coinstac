@@ -1,0 +1,21 @@
+///
+/// Maps List
+///
+///
+
+.mapped {
+  display: inline-block;
+  margin-top: 1rem;
+  float: right;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+}
+
+.true {
+  background: #5cb85c;
+}
+
+.false {
+  background: #d73d32;
+}
