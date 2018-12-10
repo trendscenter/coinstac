@@ -2,12 +2,12 @@
 
 require('trace');
 require('clarify');
-const test = require('ava').test;
-const computationSpecs = require('./computation-specs');
+const { test } = require('ava');
 const path = require('path');
-const PipelineManager = require('../src/pipeline-manager');
 const DockerManager = require('coinstac-docker-manager');
 const rimraf = require('rimraf-promise');
+const PipelineManager = require('../src/pipeline-manager');
+const computationSpecs = require('./computation-specs');
 
 const localCompSpec = computationSpecs.local;
 const localErrorCompSpec = computationSpecs.localError;
@@ -302,10 +302,10 @@ test('test pre remote start data preservation', (t) => {
           runId: 'prePipe',
         });
         remotePipeline.result
-        .then((result) => {
-          t.is(result.sum, 5);
-          proxRes(result);
-        }).catch(err => proxRej(err));
+          .then((result) => {
+            t.is(result.sum, 5);
+            proxRes(result);
+          }).catch(err => proxRej(err));
       }, 5000);
     }
   });
@@ -324,10 +324,10 @@ test('test pre remote start data preservation', (t) => {
           runId: 'prePipeMultUser',
         });
         remotePipeline.result
-        .then((result) => {
-          t.is(result.sum, 5);
-          proxRes2(result);
-        }).catch(err => proxRej2(err));
+          .then((result) => {
+            t.is(result.sum, 5);
+            proxRes2(result);
+          }).catch(err => proxRej2(err));
       }, 5000);
     }
   });

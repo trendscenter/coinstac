@@ -13,7 +13,7 @@ server.connection({
 
 server.register(plugins, (err) => {
   if (err) {
-    console.log(err);  // eslint-disable-line no-console
+    console.log(err); // eslint-disable-line no-console
   }
 
   /**
@@ -25,8 +25,7 @@ server.register(plugins, (err) => {
       key: helperFunctions.JWTSecret,
       validateFunc: helperFunctions.validateToken,
       verifyOptions: { algorithms: ['HS256'] },
-    }
-  );
+    });
 
   server.auth.default('jwt');
   server.route(routes);

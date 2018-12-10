@@ -13,4 +13,3 @@ if (process.argv[2] === '--remote') {
 }
 
 console.log(JSON.stringify(output)); // eslint-disable-line no-console
-

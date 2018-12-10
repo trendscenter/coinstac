@@ -2,25 +2,22 @@
 
 // app package deps
 const tail = require('lodash/tail');
-const bluebird = require('bluebird');
+const pify = require('util').promisify;
 const csvParse = require('csv-parse');
-const mkdirp = bluebird.promisify(require('mkdirp'));
-const util = require('util');
+const mkdirp = pify(require('mkdirp'));
 const fs = require('fs');
 
-const unlinkAsync = util.promisify(fs.unlink);
-const linkAsync = util.promisify(fs.link);
-const statAsync = bluebird.promisify(fs.stat);
+const unlinkAsync = pify(fs.unlink);
+const linkAsync = pify(fs.link);
+const statAsync = pify(fs.stat);
 
-bluebird.config({ warnings: false });
 const osHomedir = require('os-homedir');
 const path = require('path');
 const winston = require('winston');
 // set w/ config etc post release
 process.LOGLEVEL = 'silly';
 
-const Logger = winston.Logger;
-const Console = winston.transports.Console;
+const { Logger, transports: { Console } } = winston;
 const DockerManager = require('coinstac-docker-manager');
 const PipelineManager = require('coinstac-pipeline');
 
@@ -53,8 +50,8 @@ class CoinstacClient {
       throw new TypeError('coinstac-client requires configuration opts');
     }
     this.logger = opts.logger || new Logger({ transports: [new Console()] });
-    this.appDirectory = opts.appDirectory ||
-      CoinstacClient.getDefaultAppDirectory();
+    this.appDirectory = opts.appDirectory
+      || CoinstacClient.getDefaultAppDirectory();
 
     this.dockerManager = DockerManager;
 
@@ -83,8 +80,8 @@ class CoinstacClient {
    * @returns {Promise<Project>}
    */
   static getCSV(filename) {
-    return bluebird.promisify(fs.readFile)(filename)
-      .then(data => bluebird.promisify(csvParse)(data.toString()))
+    return pify(fs.readFile)(filename)
+      .then(data => pify(csvParse)(data.toString()))
       .then(JSON.stringify);
   }
 
@@ -106,9 +103,9 @@ class CoinstacClient {
    */
   static getFilesFromMetadata(metaFilePath, metaFile) {
     return tail(metaFile).map(([filename]) => (
-      path.isAbsolute(filename) ?
-        filename :
-        path.resolve(path.join(path.dirname(metaFilePath), filename))
+      path.isAbsolute(filename)
+        ? filename
+        : path.resolve(path.join(path.dirname(metaFilePath), filename))
     ));
   }
 
@@ -119,7 +116,7 @@ class CoinstacClient {
    * @returns {Promise<Project>}
    */
   static getJSONSchema(filename) {
-    return bluebird.promisify(fs.readFile)(filename)
+    return pify(fs.readFile)(filename)
       .then(data => JSON.parse(data.toString()));
   }
 
@@ -173,14 +170,14 @@ class CoinstacClient {
             return { error: `Group contains multiple extensions - ${extension} & ${subGroup.extension}.` };
           }
 
-          extension = subGroup.extension;
+          extension = subGroup.extension; // eslint-disable-line prefer-destructuring
           pathsArray = pathsArray.concat(subGroup.paths);
         }
       } else {
         const thisExtension = path.extname(p);
 
-        if ((group.extension && thisExtension !== group.extension) ||
-            (extension && extension !== thisExtension)) {
+        if ((group.extension && thisExtension !== group.extension)
+            || (extension && extension !== thisExtension)) {
           return { error: `Group contains multiple extensions - ${thisExtension} & ${group.extension ? group.extension : extension}.` };
         }
 
@@ -213,31 +210,31 @@ class CoinstacClient {
     runPipeline // eslint-disable-line no-unused-vars
   ) {
     return mkdirp(path.join(this.appDirectory, this.clientId, runId))
-    .then(() => {
+      .then(() => {
       // TODO: validate runPipeline against clientPipeline
-      const linkPromises = [];
+        const linkPromises = [];
 
-      const e = new RegExp(/[-\/\\^$*+?.()|[\]{}]/g); // eslint-disable-line no-useless-escape
-      const escape = (string) => {
-        return string.replace(e, '\\$&');
-      };
+        const e = new RegExp(/[-\/\\^$*+?.()|[\]{}]/g); // eslint-disable-line no-useless-escape
+        const escape = (string) => {
+          return string.replace(e, '\\$&');
+        };
 
-      for (let i = 0; i < filesArray.length; i += 1) {
-        const pathsep = new RegExp(`${escape(path.sep)}|:`, 'g');
-        linkPromises.push(
-          linkAsync(filesArray[i], path.resolve(this.appDirectory, this.clientId, runId, filesArray[i].replace(pathsep, '-')))
-        );
-      }
+        for (let i = 0; i < filesArray.length; i += 1) {
+          const pathsep = new RegExp(`${escape(path.sep)}|:`, 'g');
+          linkPromises.push(
+            linkAsync(filesArray[i], path.resolve(this.appDirectory, this.clientId, runId, filesArray[i].replace(pathsep, '-')))
+          );
+        }
 
-      const runObj = { spec: clientPipeline, runId };
-      if (clients) {
-        runObj.clients = clients;
-      }
+        const runObj = { spec: clientPipeline, runId };
+        if (clients) {
+          runObj.clients = clients;
+        }
 
-      const newPipeline = this.pipelineManager.startPipeline(runObj);
+        const newPipeline = this.pipelineManager.startPipeline(runObj);
 
-      return Promise.all([newPipeline, ...linkPromises]);
-    });
+        return Promise.all([newPipeline, ...linkPromises]);
+      });
   }
 
   unlinkFiles(runId) {
@@ -246,32 +243,35 @@ class CoinstacClient {
     return statAsync(fullPath).then((stats) => {
       return stats.isDirectory();
     })
-    .then((exists) => {
-      if (!exists) {
-        return [];
-      }
+      .catch((err) => {
+        if (err.code === 'ENOENT') return false;
+        throw err;
+      })
+      .then((exists) => {
+        if (!exists) {
+          return [];
+        }
 
-      return new Promise((res, rej) => {
-        return fs.readdir(fullPath,
-          (error, filesArray) => {
-            if (error) {
-              rej(error);
-            } else {
-              res(filesArray);
-            }
-          }
-        );
+        return new Promise((res, rej) => {
+          return fs.readdir(fullPath,
+            (error, filesArray) => {
+              if (error) {
+                rej(error);
+              } else {
+                res(filesArray);
+              }
+            });
+        });
+      })
+      .then((filesArray) => {
+        const unlinkPromises = [];
+        for (let i = 0; i < filesArray.length; i += 1) {
+          unlinkPromises.push(
+            unlinkAsync(path.resolve(fullPath, filesArray[i]))
+          );
+        }
+        return Promise.all(unlinkPromises);
       });
-    })
-    .then((filesArray) => {
-      const unlinkPromises = [];
-      for (let i = 0; i < filesArray.length; i += 1) {
-        unlinkPromises.push(
-          unlinkAsync(path.resolve(fullPath, filesArray[i]))
-        );
-      }
-      return Promise.all(unlinkPromises);
-    });
   }
 }
 

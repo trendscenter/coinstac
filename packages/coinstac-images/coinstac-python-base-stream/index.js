@@ -10,8 +10,8 @@ const opts = Object.assign(
 );
 if (opts.server && opts.server === 'http') {
   serverHttp.start(opts)
-  .then(() => console.log(`Coinstac HTTP server listening on port ${opts.port}`)); // eslint-disable-line no-console
+    .then(() => console.log(`Coinstac HTTP server listening on port ${opts.port}`)); // eslint-disable-line no-console
 } else {
   server.start(opts)
-  .then(() => console.log(`Coinstac WS server listening on port ${opts.port}`)); // eslint-disable-line no-console
+    .then(() => console.log(`Coinstac WS server listening on port ${opts.port}`)); // eslint-disable-line no-console
 }
