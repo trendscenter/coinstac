@@ -1,74 +1,122 @@
-import { Alert, Button, Checkbox, ControlLabel, FormControl, FormGroup } from 'react-bootstrap';
+import { Alert, ControlLabel, FormControl, FormGroup } from 'react-bootstrap';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
+import { withStyles } from '@material-ui/core/styles';
+import Paper from '@material-ui/core/Paper';
+import Button from '@material-ui/core/Button';
+import TextField from '@material-ui/core/TextField';
+import Checkbox from '@material-ui/core/Checkbox';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
 
-const styles = {
-  bottomMargin: { marginBottom: 10 },
-};
+const styles = theme => ({
+  loginFormContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+  },
+  paper: {
+    padding: theme.spacing.unit * 2,
+    maxWidth: 300,
+    marginBottom: theme.spacing.unit * 2,
+  },
+  bottomMargin: {
+    marginBottom: 10,
+  },
+  formControl: {
+    marginBottom: theme.spacing.unit * 2,
+  },
+});
 
 class FormLogin extends Component {
   constructor(props) {
     super(props);
 
-    this.state = { saveLogin: false };
-    this.toggleSaveLogin = this.toggleSaveLogin.bind(this);
-  }
-
-  data() {
-    return {
-      username: this.formUsername.value.trim(),
-      password: this.formPassword.value.trim(),
-      saveLogin: this.state.saveLogin,
+    this.state = {
+      username: '',
+      password: '',
+      saveLogin: false,
     };
   }
 
-  toggleSaveLogin() {
-    this.setState(prevState => ({ saveLogin: !prevState.saveLogin }));
+  onSubmit = (e) => {
+    e.preventDefault();
+
+    const { username, password, saveLogin } = this.state;
+
+    const data = {
+      username: username.trim(),
+      password: password.trim(),
+      saveLogin,
+    };
+
+    this.props.submit(data);
   }
 
+  handleChange = name => event => {
+    this.setState({
+      [name]: event.target.value,
+    });
+  };
+
+  handleChangeCheckbox = name => event => {
+    this.setState({
+      [name]: event.target.checked,
+    });
+  };
+
   render() {
-    const { auth, loading, submit } = this.props;
+    const { auth, loading, classes } = this.props;
+    const { username, password, saveLogin } = this.state;
 
     return (
-      <div>
-        <div className="panel panel-default">
-          <div className="panel-body">
-            <form onSubmit={submit}>
-              {auth.error &&
-                <Alert bsStyle="danger" style={styles.bottomMargin}>
+      <div className={classes.loginFormContainer}>
+        <Paper className={classes.paper}>
+          <form onSubmit={this.onSubmit}>
+            {
+              auth.error
+              && (
+                <Alert bsStyle="danger" className={classes.bottomMargin}>
                   <strong>Error!</strong> {auth.error}
                 </Alert>
+              )
+            }
+            <TextField
+              label="Username"
+              value={username}
+              onChange={this.handleChange('username')}
+              fullWidth
+              className={classes.formControl}
+            />
+            <TextField
+              label="Password"
+              value={password}
+              onChange={this.handleChange('password')}
+              type="password"
+              fullWidth
+              className={classes.formControl}
+            />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={saveLogin}
+                  onChange={this.handleChangeCheckbox('saveLogin')}
+                />
               }
-              <FormGroup controlId="login-username">
-                <ControlLabel>Username:</ControlLabel>
-                <FormControl
-                  inputRef={(c) => { this.formUsername = c; }}
-                  type="text"
-                />
-              </FormGroup>
-              <FormGroup controlId="login-password">
-                <ControlLabel>Password:</ControlLabel>
-                <FormControl
-                  inputRef={(c) => { this.formPassword = c; }}
-                  type="password"
-                />
-              </FormGroup>
-              <Checkbox
-                checked={this.state.saveLogin}
-                onChange={this.toggleSaveLogin}
-              >
-                Keep me logged in
-              </Checkbox>
-              <Button
-                bsStyle="primary"
-                type="submit"
-                disabled={loading.isLoading}
-                block
-              >Log In</Button>
-            </form>
-          </div>
-        </div>
-        <Button bsStyle="link" block>Forgot Password?</Button>
+              label="Keep me logged in"
+              className={classes.formControl}
+            />
+            <Button
+              variant="contained"
+              color="primary"
+              type="submit"
+              fullWidth
+              disabled={loading.isLoading}
+            >
+              Log In
+            </Button>
+          </form>
+        </Paper>
+        <Button>Forgot Password?</Button>
       </div>
     );
   }
@@ -78,10 +126,11 @@ FormLogin.propTypes = {
   auth: PropTypes.object.isRequired,
   loading: PropTypes.object,
   submit: PropTypes.func.isRequired,
+  classes: PropTypes.object.isRequired,
 };
 
 FormLogin.defaultProps = {
   loading: null,
 };
 
-export default FormLogin;
+export default withStyles(styles)(FormLogin);
