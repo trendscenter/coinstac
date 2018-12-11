@@ -42,7 +42,7 @@
     "react-bootstrap-typeahead": "^3.1.4",
     "react-dnd": "^2.6.0",
     "react-dnd-html5-backend": "^2.6.0",
-    "react-dom": "^15.6.2",
+    "react-dom": "^16.5.2",
     "react-dragula": "^1.1.17",
     "react-faux-dom": "^4.1.0",
     "react-notification-system": "^0.2.17",
