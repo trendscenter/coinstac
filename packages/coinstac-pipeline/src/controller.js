@@ -91,7 +91,16 @@ module.exports = {
 
               return controllerState.activeComputations[controllerState.computationIndex]
                 .start(
-                  { input, cache, state: controllerState },
+                  {
+                    input,
+                    cache,
+                    // picks only relevant attribs for comp
+                    state: (({
+                      baseDirectory, outputDirectory, cacheDirectory, clientId, iteration,
+                    }) => ({
+                      baseDirectory, outputDirectory, cacheDirectory, clientId, iteration,
+                    }))(controllerState),
+                  },
                   { baseDirectory: operatingDirectory }
                 )
                 .then((output) => {
@@ -101,7 +110,8 @@ module.exports = {
                     success: output.success,
                   };
                   setStateProp('state', 'finished iteration');
-                  cb(output.output);
+                  output = undefined;
+                  cb(controllerState.currentOutput.output);
                 }).catch(({
                   statusCode, message, name, stack, input,
                 }) => {
@@ -142,7 +152,8 @@ module.exports = {
                     output: output.output,
                     success: output.success,
                   };
-                  cb(output.output);
+                  output = undefined;
+                  cb(controllerState.currentOutput.output);
                 }).catch(error => err(error));
             case 'firstServerRemote':
               // TODO: not ideal, figure out better remote start
@@ -155,7 +166,8 @@ module.exports = {
                     output: output.output,
                     success: output.success,
                   };
-                  cb(output.output);
+                  output = undefined;
+                  cb(controllerState.currentOutput.output);
                 }).catch(error => err(error));
             case 'doneRemote':
               setStateProp('state', 'waiting on local users');
