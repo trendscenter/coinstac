@@ -245,7 +245,7 @@ loadConfig()
         })
         .catch((err) => {
           logger.error(err);
-          mainWindow.webContents.send('Can\'t list current images', {
+          mainWindow.webContents.send('docker-error', {
             err: {
               message: err.message,
               stack: err.stack,
@@ -266,7 +266,7 @@ loadConfig()
         })
         .catch((err) => {
           logger.error(err);
-          mainWindow.webContents.send('Can\'t get current docker status', {
+          mainWindow.webContents.send('docker-error', {
             err: {
               message: err.message,
               stack: err.stack,
