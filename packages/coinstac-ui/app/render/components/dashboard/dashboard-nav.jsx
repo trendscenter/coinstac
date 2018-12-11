@@ -33,13 +33,6 @@ const DashboardNav = () => {
           Consortia
         </NavItem>
       </LinkContainer>
-      <LinkContainer to="/dashboard/collections">
-        <NavItem>
-          <span aria-hidden="true" className="glyphicon glyphicon-list-alt" />
-          {' '}
-          Collections
-        </NavItem>
-      </LinkContainer>
       <LinkContainer to="/dashboard/pipelines">
         <NavItem>
           <span aria-hidden="true" className="glyphicon glyphicon-tasks" />
