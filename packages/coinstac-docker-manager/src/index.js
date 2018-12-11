@@ -6,6 +6,17 @@ const http = require('http');
 const { Readable } = require('stream');
 const ss = require('coinstac-socket.io-stream');
 const socketIOClient = require('socket.io-client');
+const { performance } = require('perf_hooks');
+const winston = require('winston');
+
+winston.loggers.add('docker-manager', {
+  level: 'info',
+  transports: [
+    new winston.transports.Console({ format: winston.format.cli() }),
+  ],
+});
+const logger = winston.loggers.get('docker-manager');
+logger.level = process.LOGLEVEL ? process.LOGLEVEL : 'info';
 
 const setTimeoutPromise = (delay) => {
   return new Promise((resolve) => {
@@ -312,23 +323,25 @@ const startService = (serviceId, serviceUserId, opts) => {
                 },
               });
               let start = 0;
-              let dBuff = Buffer.from(data[2]);
-              console.log(dBuff.length);
+              const dBuff = Buffer.from(data[2]);
+              logger.debug(`Input data size: ${dBuff.length}`);
               const dataStream = new Readable();
               dataStream._read = () => {
                 setImmediate(() => {
                   if (start !== dBuff.length) {
-                    dataStream.push(dBuff.slice(start, start + 16000));
-                    if (start + 16000 > dBuff.length) {
+                    dataStream.push(dBuff.slice(start, start + 10000000));
+                    if (start + 10000000 > dBuff.length) {
                       start += dBuff.length - start;
                     } else {
-                      start += 16000;
+                      start += 10000000;
                     }
                   } else {
                     dataStream.push(null);
                   }
                 });
               };
+              stream.on('end', () => performance.mark('transmit-end'));
+              performance.mark('transmit-start');
               dataStream.pipe(stream);
               let outRes;
               let outRej;
@@ -339,9 +352,14 @@ const startService = (serviceId, serviceUserId, opts) => {
               });
               ss(socket).on('stdout', (stream) => {
                 stream.on('data', (chunk) => {
+                  performance.mark('receive-start');
                   stdout += chunk;
                 });
-                stream.on('end', () => outRes(stdout));
+                stream.on('end', () => {
+                  performance.mark('receive-end');
+                  outRes(stdout);
+                  logger.debug(`Output size: ${stdout.length}`);
+                });
                 stream.on('err', err => outRej(err));
               });
 
@@ -354,9 +372,13 @@ const startService = (serviceId, serviceUserId, opts) => {
               });
               ss(socket).on('stderr', (stream) => {
                 stream.on('data', (chunk) => {
+                  performance.mark('receive-start');
                   stderr += chunk;
                 });
-                stream.on('end', () => errRes(stderr));
+                stream.on('end', () => {
+                  performance.mark('receive-end');
+                  errRes(stderr);
+                });
                 stream.on('err', err => errRej(err));
               });
 
@@ -367,6 +389,14 @@ const startService = (serviceId, serviceUserId, opts) => {
               });
               Promise.all([stdoutProm, stderrProm, endProm])
                 .then((output) => {
+                  performance.measure('transmit-time', 'transmit-start', 'transmit-end');
+                  performance.measure('comp-time', 'transmit-end', 'receive-start');
+                  performance.measure('receive-time', 'receive-start', 'receive-end');
+                  logger.debug(`Transmit time: ${performance.getEntriesByName('transmit-time')[0].duration / 1000}`);
+                  logger.debug(`Approx comp time: ${performance.getEntriesByName('comp-time')[0].duration / 1000}`);
+                  logger.debug(`Receive time: ${performance.getEntriesByName('receive-time')[0].duration / 1000}`);
+                  performance.clearMarks();
+                  performance.clearMeasures();
                   socket.disconnect();
                   if (output[1] || output[2].code !== 0) {
                     throw new Error(`Computation failed with exitcode ${output[2].code}\n Error message:\n${output[1]}}`);
