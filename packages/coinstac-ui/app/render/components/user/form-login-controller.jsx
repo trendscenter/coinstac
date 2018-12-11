@@ -28,12 +28,8 @@ class FormLoginController extends Component {
     }
   }
 
-  submit(evt) {
-    const userCred = this.formLogon.data();
-
-    evt.preventDefault();
-
-    this.props.login(userCred);
+  submit(data) {
+    this.props.login(data);
   }
 
   render() {
@@ -42,7 +38,6 @@ class FormLoginController extends Component {
     return (
       <LayoutNoauth>
         <FormLogin
-          ref={(c) => { this.formLogon = c; }}
           auth={auth}
           loading={loading}
           submit={this.submit}

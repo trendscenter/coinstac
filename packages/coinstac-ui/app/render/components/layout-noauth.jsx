@@ -1,11 +1,27 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { LinkContainer } from 'react-router-bootstrap';
-import { Nav, NavItem } from 'react-bootstrap';
-
+import { Link } from 'react-router';
+import classNames from 'classnames';
+import { withStyles } from '@material-ui/core/styles';
+import Button from '@material-ui/core/Button';
 import CoinstacAbbr from './coinstac-abbr';
 
-export default function LayoutNoAuth({ children }) {
+const styles = theme => ({
+  navButtonsContainer: {
+    display: 'flex',
+    justifyContent: 'center',
+    marginBottom: theme.spacing.unit * 2,
+  },
+  navButton: {
+    paddingLeft: theme.spacing.unit * 4,
+    paddingRight: theme.spacing.unit * 4,
+  },
+  lastNavButton: {
+    marginLeft: theme.spacing.unit * 2,
+  },
+});
+
+function LayoutNoAuth({ children, classes }) {
   return (
     <div className="screen account">
       <div className="container-fluid">
@@ -13,14 +29,14 @@ export default function LayoutNoAuth({ children }) {
           <div className="col-xs-12 col-sm-6 col-sm-offset-3 col-md-4 col-md-offset-4">
             <div className="screen__content">
               <CoinstacAbbr />
-              <Nav bsStyle="pills" justified>
-                <LinkContainer to="/login">
-                  <NavItem>Log In</NavItem>
-                </LinkContainer>
-                <LinkContainer to="/signup">
-                  <NavItem>Sign Up</NavItem>
-                </LinkContainer>
-              </Nav>
+              <div className={classes.navButtonsContainer}>
+                <Button component={Link} variant="contained" color="primary" to="/login" className={classes.navButton}>
+                  Log In
+                </Button>
+                <Button component={Link} to="/signup" className={classNames(classes.navButton, classes.lastNavButton)}>
+                  Sign Up
+                </Button>
+              </div>
               {children}
             </div>
           </div>
@@ -34,4 +50,7 @@ LayoutNoAuth.displayName = 'LayoutNoAuth';
 
 LayoutNoAuth.propTypes = {
   children: PropTypes.node.isRequired,
+  classes: PropTypes.object.isRequired,
 };
+
+export default withStyles(styles)(LayoutNoAuth);

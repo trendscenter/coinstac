@@ -21,6 +21,10 @@
 @import "./table.scss";
 @import "./user-list";
 
+body {
+  margin: 0;
+}
+
 .bold {
   font-weight: bold;
 }
@@ -35,6 +39,7 @@
   min-height: 100vh;
   flex-direction: column;
   justify-content: center;
+  align-items: center;
 }
 
 /**
