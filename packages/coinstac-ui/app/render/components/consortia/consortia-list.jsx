@@ -57,7 +57,6 @@ class ConsortiaList extends Component {
     super(props);
 
     this.state = {
-      ownedConsortia: [],
       memberConsortia: [],
       otherConsortia: [],
       consortiumToDelete: -1,
@@ -78,21 +77,18 @@ class ConsortiaList extends Component {
 
   static getDerivedStateFromProps(props) {
     const { auth, consortia } = props;
-    const ownedConsortia = [];
     const memberConsortia = [];
     const otherConsortia = [];
     if (consortia && consortia.length <= MAX_LENGTH_CONSORTIA) {
       consortia.forEach((cons) => {
-        if (cons.owners.indexOf(auth.user.id) > -1) {
-          ownedConsortia.push(cons);
-        } else if(cons.members.indexOf(auth.user.id) > -1) {
+        if (cons.owners.indexOf(auth.user.id) > -1 || cons.members.indexOf(auth.user.id) > -1) {
           memberConsortia.push(cons);
         } else {
           otherConsortia.push(cons);
         }
       });
     }
-    return { ownedConsortia, memberConsortia, otherConsortia };
+    return { memberConsortia, otherConsortia };
   }
 
   getOptions(member, owner, consortium) {
@@ -152,6 +148,18 @@ class ConsortiaList extends Component {
         {avatars}
       </div>
     );
+
+    if (owner) {
+      actions.push(
+        <Button
+          bsStyle="success"
+          style={styles.optionalButton}
+          disabled
+        >
+          Owner
+        </Button>
+      );
+    }
 
     if (owner && consortium.activePipelineId && isMapped) {
       actions.push(
@@ -390,7 +398,6 @@ class ConsortiaList extends Component {
       consortia,
     } = this.props;
     const {
-      ownedConsortia,
       memberConsortia,
       otherConsortia,
     } = this.state;
@@ -410,10 +417,6 @@ class ConsortiaList extends Component {
 
         {consortia && consortia.length && consortia.length > MAX_LENGTH_CONSORTIA
           && consortia.map(consortium => this.getListItem(consortium))
-        }
-        {ownedConsortia.length > 0 && <h4>Owned Consortia</h4>}
-        {ownedConsortia.length > 0 &&
-          ownedConsortia.map(consortium => this.getListItem(consortium))
         }
         {memberConsortia.length > 0 && <h4>Member Consortia</h4>}
         {memberConsortia.length > 0 &&
