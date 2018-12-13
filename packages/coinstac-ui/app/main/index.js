@@ -72,7 +72,16 @@ loadConfig()
 
     ipcMain.on('clean-remote-pipeline', (event, runId) => {
       if (core) {
-        core.unlinkFiles(runId);
+        core.unlinkFiles(runId)
+          .catch((err) => {
+            logger.error(err);
+            mainWindow.webContents.send('docker-error', {
+              err: {
+                message: err.message,
+                stack: err.stack,
+              },
+            });
+          });
       }
     });
 
@@ -237,6 +246,15 @@ loadConfig()
       return core.dockerManager.getImages()
         .then((data) => {
           return data;
+        })
+        .catch((err) => {
+          logger.error(err);
+          mainWindow.webContents.send('docker-error', {
+            err: {
+              message: err.message,
+              stack: err.stack,
+            },
+          });
         });
     });
 
@@ -247,8 +265,17 @@ loadConfig()
   */
     ipcPromise.on('get-status', () => {
       return core.dockerManager.getStatus()
-        .then((data) => {
-          return data;
+        .then((result) => {
+          return result;
+        })
+        .catch((err) => {
+          logger.error(err);
+          mainWindow.webContents.send('docker-error', {
+            err: {
+              message: err.message,
+              stack: err.stack,
+            },
+          });
         });
     });
 

@@ -9,15 +9,17 @@ const mkdirp = promisify(require('mkdirp'));
 const path = require('path');
 const Emitter = require('events');
 const winston = require('winston');
-const Pipeline = require('./pipeline');
 
-const logger = winston.createLogger({
+winston.loggers.add('pipeline', {
   level: 'info',
   transports: [
     new winston.transports.Console({ format: winston.format.cli() }),
   ],
 });
+const logger = winston.loggers.get('pipeline');
 logger.level = process.LOGLEVEL ? process.LOGLEVEL : 'info';
+
+const Pipeline = require('./pipeline');
 
 module.exports = {
 
@@ -63,7 +65,6 @@ module.exports = {
       return _.reduce(remoteClients, (memo, client, id) => {
         if (client[runId]) {
           memo[id] = client[runId].currentOutput;
-          client[runId].previousOutput = client[runId].currentOutput;
           client[runId].currentOutput = undefined;
         }
         return memo;
@@ -245,12 +246,13 @@ module.exports = {
         });
 
         const communicate = (pipeline, message) => {
-          // hold the last step for drops, this only works for one step out
-          missedCache[pipeline.id] = {
-            pipelineStep: pipeline.currentStep,
-            controllerStep: pipeline.pipelineSteps[pipeline.currentStep].controllerState.iteration,
-            output: message,
-          };
+          // TODO: hold the last step for drops, this only works for one step out
+          // missedCache[pipeline.id] = {
+          //   pipelineStep: pipeline.currentStep,
+          //   controllerStep:
+          // pipeline.pipelineSteps[pipeline.currentStep].controllerState.iteration,
+          //   output: message,
+          // };
           if (mode === 'remote') {
             if (message instanceof Error) {
               const runError = Object.assign(
