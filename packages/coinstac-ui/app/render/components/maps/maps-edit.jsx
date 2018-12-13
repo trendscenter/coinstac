@@ -10,18 +10,19 @@ import {
   getConsortium,
   getAllCollections,
   getCollectionFiles,
+  incrementRunCount,
   saveAssociatedConsortia,
   saveCollection,
   updateCollection
 } from '../../state/ducks/collections';
 import {
   getRunsForConsortium,
-  //saveLocalRun
+  saveLocalRun
 } from '../../state/ducks/runs';
 import {
   getSelectAndSubProp,
 } from '../../state/graphql/props';
-import { notifyInfo, notifySuccess } from '../../state/ducks/notifyAndLog';
+import { notifyInfo } from '../../state/ducks/notifyAndLog';
 import { Alert, Button, Panel } from 'react-bootstrap';
 import MapsStep from './maps-step';
 import MapsCollection from './maps-collection';
@@ -67,7 +68,7 @@ class MapsEdit extends Component {
     };
 
     this.state = {
-      activeConsortium: { stepIO: [] },
+      activeConsortium: { stepIO: [], runs: 0, pipelineSteps: [] },
       consortium: {},
       containers: [],
       collection,
@@ -252,15 +253,43 @@ class MapsEdit extends Component {
   saveAndCheckConsortiaMapping = () => {
     const cons = this.state.activeConsortium;
     this.props.saveAssociatedConsortia(cons)
-      .then(() => this.props.getRunsForConsortium(cons.id))
-      .then((runs) => {
-        return this.props.getCollectionFiles(cons.id)
-        .then((filesArray) => {
-          if ('allFiles' in filesArray) {
-            this.setState({isMapped: true});
+    return this.props.getCollectionFiles(cons.id)
+    .then((filesArray) => {
+      this.setState({isMapped: true});
+      let runs = this.props.runs;
+      debugger;
+      if (runs && runs.length && runs[runs.length - 1].status === 'started') {
+        let run = runs[runs.length - 1];
+        const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
+        if ('allFiles' in filesArray) {
+          this.props.notifyInfo({
+            message: `Pipeline Starting for ${cons.name}.`,
+            action: {
+              label: 'Watch Progress',
+              callback: () => {
+                this.props.router.push('dashboard');
+              },
+            },
+          });
+
+          if ('steps' in filesArray) {
+            run = {
+              ...run,
+              pipelineSnapshot: {
+                ...run.pipelineSnapshot,
+                steps: filesArray.steps,
+              },
+            };
           }
-        });
-      });
+
+          this.props.incrementRunCount(cons.id);
+          ipcRenderer.send('start-pipeline', {
+            cons, pipeline: run.pipelineSnapshot, filesArray: filesArray.allFiles, run,
+          });
+          this.props.saveLocalRun({ ...run, status: 'started' });
+        }
+      }
+    });
   }
 
   setPipelineSteps(steps) {
@@ -404,7 +433,8 @@ MapsEdit.propTypes = {
   getConsortium: PropTypes.func.isRequired,
   getAllCollections: PropTypes.func.isRequired,
   getRunsForConsortium: PropTypes.func.isRequired,
-  //saveLocalRun: PropTypes.func.isRequired,
+  runs: PropTypes.array.isRequired,
+  saveLocalRun: PropTypes.func.isRequired,
 };
 
 function mapStateToProps({ auth, collections: { activeAssociatedConsortia, collections } }) {
@@ -417,7 +447,10 @@ export default connect(mapStateToProps,
     getCollectionFiles,
     getAllCollections,
     getRunsForConsortium,
+    incrementRunCount,
+    notifyInfo,
     saveAssociatedConsortia,
     saveCollection,
+    saveLocalRun,
   }
 )(MapsEdit);

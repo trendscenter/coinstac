@@ -93,6 +93,8 @@ MapsTabs.defaultProps = {
 
 MapsTabs.propTypes = {
   consortia: PropTypes.array.isRequired,
+  notifyInfo: PropTypes.func.isRequired,
+  notifySuccess: PropTypes.func.isRequired,
 };
 
 function mapStateToProps({ auth }) {
@@ -105,5 +107,8 @@ const MapsTabsWithData = compose(
 
 
 export default connect(mapStateToProps,
-  {}
+  {
+    notifyInfo,
+    notifySuccess,
+  }
 )(MapsTabsWithData);
