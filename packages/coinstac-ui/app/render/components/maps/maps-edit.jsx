@@ -22,6 +22,9 @@ import {
 import {
   getSelectAndSubProp,
 } from '../../state/graphql/props';
+import {
+  FETCH_ALL_USER_RUNS_QUERY,
+} from '../../state/graphql/functions';
 import { notifyInfo } from '../../state/ducks/notifyAndLog';
 import { Alert, Button, Panel } from 'react-bootstrap';
 import MapsStep from './maps-step';
@@ -85,7 +88,6 @@ class MapsEdit extends Component {
     this.updateCollection = this.updateCollection.bind(this);
     this.getContainers = this.getContainers.bind(this);
     this.getDropAction = this.getDropAction.bind(this);
-    this.saveAndCheckConsortiaMapping = this.saveAndCheckConsortiaMapping.bind(this);
     this.saveAndCheckConsortiaMapping = this.saveAndCheckConsortiaMapping.bind(this);
     this.updateAssociatedConsortia = this.updateAssociatedConsortia.bind(this);
     this.updateConsortiumClientProps = this.updateConsortiumClientProps.bind(this);
@@ -254,16 +256,14 @@ class MapsEdit extends Component {
   saveAndCheckConsortiaMapping = () => {
     const cons = this.state.activeConsortium;
     this.props.saveAssociatedConsortia(cons)
-    .then(() => this.props.getRunsForConsortium(cons.id))
-    .then((runs) => {
-      return this.props.getCollectionFiles(cons.id)
+    const runs = this.props.userRuns;
+
+    this.props.getCollectionFiles(cons.id)
       .then((filesArray) => {
 
-          this.setState({isMapped: true});
-          debugger;
+        this.setState({isMapped: true});
 
-          if (runs && runs.length && runs[runs.length - 1].status === 'started') {
-
+        if (runs && runs.length && !runs[runs.length - 1].endDate) {
           let run = runs[runs.length - 1];
           const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
           if ('allFiles' in filesArray) {
@@ -295,7 +295,6 @@ class MapsEdit extends Component {
           }
         }
       });
-    });
   }
 
   setPipelineSteps(steps) {
@@ -447,6 +446,19 @@ function mapStateToProps({ auth,
   return { auth, activeAssociatedConsortia, collections };
 }
 
+const ComponentWithData = compose(
+  graphql(FETCH_ALL_USER_RUNS_QUERY, {
+    props: ({ data }) => ({
+      userRuns: data.fetchAllUserRuns,
+      refetchUserRuns: data.refetch,
+    }),
+    options: props => ({
+      variables: { userId: props.auth.user.id },
+    }),
+  }),
+  withApollo
+)(MapsEdit);
+
 export default connect(mapStateToProps,
   {
     getConsortium,
@@ -459,4 +471,4 @@ export default connect(mapStateToProps,
     saveCollection,
     saveLocalRun,
   }
-)(MapsEdit);
+)(ComponentWithData);
