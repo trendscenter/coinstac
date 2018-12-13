@@ -97,7 +97,6 @@ class MapsEdit extends Component {
   updateMapsStep = (val) => this.setState({ updateMapsStep: val });
 
   componentDidMount = () => {
-    console.log(this.props.consortium);
     let getCon = this.props.getConsortium(this.props.consortium.id);
     getCon.then( result => {
          this.setState({
@@ -260,12 +259,12 @@ class MapsEdit extends Component {
 
     this.props.getCollectionFiles(cons.id)
       .then((filesArray) => {
-
         this.setState({isMapped: true});
 
         if (runs && runs.length && !runs[runs.length - 1].endDate) {
           let run = runs[runs.length - 1];
           const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
+
           if ('allFiles' in filesArray) {
             this.props.notifyInfo({
               message: `Pipeline Starting for ${cons.name}.`,
@@ -289,7 +288,7 @@ class MapsEdit extends Component {
 
             this.props.incrementRunCount(cons.id);
             ipcRenderer.send('start-pipeline', {
-              cons, pipeline: run.pipelineSnapshot, filesArray: filesArray.allFiles, run,
+              consortium, pipeline: run.pipelineSnapshot, filesArray: filesArray.allFiles, run,
             });
             this.props.saveLocalRun({ ...run, status: 'started' });
           }
