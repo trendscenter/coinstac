@@ -6,6 +6,20 @@ const http = require('http');
 const { Readable } = require('stream');
 const ss = require('coinstac-socket.io-stream');
 const socketIOClient = require('socket.io-client');
+const winston = require('winston');
+
+const perfTime = () => {
+  const t = process.hrtime();
+  return t[0] * 1000 + t[1] / 1000000;
+};
+winston.loggers.add('docker-manager', {
+  level: 'info',
+  transports: [
+    new winston.transports.Console({ format: winston.format.cli() }),
+  ],
+});
+const logger = winston.loggers.get('docker-manager');
+logger.level = process.LOGLEVEL ? process.LOGLEVEL : 'info';
 
 const setTimeoutPromise = (delay) => {
   return new Promise((resolve) => {
@@ -295,6 +309,7 @@ const startService = (serviceId, serviceUserId, opts) => {
               });
             }
 
+            // no http opt use WS
             let proxR;
             let proxRj;
             const prox = new Promise((resolve, reject) => {
@@ -310,12 +325,27 @@ const startService = (serviceId, serviceUserId, opts) => {
                   args: data.slice(1, 2),
                 },
               });
-              const dataStream = new Readable({
-                read() {
-                  this.push(data[2]);
-                  this.push(null);
-                },
-              });
+              let start = 0;
+              const dBuff = Buffer.from(data[2]);
+              logger.debug(`Input data size: ${dBuff.length}`);
+              const dataStream = new Readable();
+              dataStream._read = () => {
+                setImmediate(() => {
+                  if (start !== dBuff.length) {
+                    dataStream.push(dBuff.slice(start, start + 10000000));
+                    if (start + 10000000 > dBuff.length) {
+                      start += dBuff.length - start;
+                    } else {
+                      start += 10000000;
+                    }
+                  } else {
+                    dataStream.push(null);
+                  }
+                });
+              };
+              let transmitEnd;
+              stream.on('end', () => { transmitEnd = perfTime(); });
+              const transmitStart = perfTime();
               dataStream.pipe(stream);
               let outRes;
               let outRej;
@@ -324,11 +354,18 @@ const startService = (serviceId, serviceUserId, opts) => {
                 outRes = resolve;
                 outRej = reject;
               });
+              let receiveStart;
+              let receiveEnd;
               ss(socket).on('stdout', (stream) => {
                 stream.on('data', (chunk) => {
+                  receiveStart = perfTime();
                   stdout += chunk;
                 });
-                stream.on('end', () => outRes(stdout));
+                stream.on('end', () => {
+                  receiveEnd = perfTime();
+                  outRes(stdout);
+                  logger.debug(`Output size: ${stdout.length}`);
+                });
                 stream.on('err', err => outRej(err));
               });
 
@@ -341,30 +378,38 @@ const startService = (serviceId, serviceUserId, opts) => {
               });
               ss(socket).on('stderr', (stream) => {
                 stream.on('data', (chunk) => {
+                  receiveStart = perfTime();
                   stderr += chunk;
                 });
-                stream.on('end', () => errRes(stderr));
+                stream.on('end', () => {
+                  receiveEnd = perfTime();
+                  errRes(stderr);
+                });
                 stream.on('err', err => errRej(err));
               });
 
               const endProm = new Promise((resolve) => {
-                socket.on('exit', (data) => {
-                  resolve(data);
+                socket.on('exit', (compOutput) => {
+                  resolve(compOutput);
                 });
               });
               Promise.all([stdoutProm, stderrProm, endProm])
-                .then((data) => {
-                  if (data[1] || data[2].code !== 0) {
-                    throw new Error(`Computation failed with exitcode ${data[2].code}\n Error message:\n${data[1]}}`);
-                  } else if (data[2].error) {
-                    throw new Error(`Computation failed to start\n Error message:\n${data[2].error}}`);
+                .then((output) => {
+                  logger.debug(`Transmit time: ${(transmitEnd - transmitStart) / 1000}`);
+                  logger.debug(`Approx comp time: ${(receiveStart - transmitEnd) / 1000}`);
+                  logger.debug(`Receive time: ${(receiveEnd - receiveStart) / 1000}`);
+                  socket.disconnect();
+                  if (output[1] || output[2].code !== 0) {
+                    throw new Error(`Computation failed with exitcode ${output[2].code}\n Error message:\n${output[1]}}`);
+                  } else if (output[2].error) {
+                    throw new Error(`Computation failed to start\n Error message:\n${output[2].error}}`);
                   }
                   // NOTE: limited to sub 256mb
                   let parsed;
                   try {
-                    parsed = JSON.parse(data[0]);
+                    parsed = JSON.parse(output[0]);
                   } catch (e) {
-                    parsed = data[0]; // eslint-disable-line prefer-destructuring
+                    parsed = output[0]; // eslint-disable-line prefer-destructuring
                   }
                   proxR(parsed);
                 }).catch(error => proxRj(error));
