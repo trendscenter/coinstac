@@ -27,10 +27,6 @@ class MapsList extends Component {
     this.setConsortium = this.setConsortium.bind(this);
   }
 
-  componentDidMount = () => {
-    console.log(this.props);
-  }
-
   setConsortium = (consortium) => {
     this.setState({ consortium });
   }
@@ -92,6 +88,7 @@ class MapsList extends Component {
       <div>
       {this.state.consortium ?
         <MapsEdit
+          consortia={consortia}
           consortium={this.state.consortium}
           pipelines={this.props.pipeline}
           runs={this.props.runs}
