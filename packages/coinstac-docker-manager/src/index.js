@@ -6,9 +6,12 @@ const http = require('http');
 const { Readable } = require('stream');
 const ss = require('coinstac-socket.io-stream');
 const socketIOClient = require('socket.io-client');
-const { performance } = require('perf_hooks');
 const winston = require('winston');
 
+const perfTime = () => {
+  const t = process.hrtime();
+  return t[0] * 1000 + t[1] / 1000000;
+};
 winston.loggers.add('docker-manager', {
   level: 'info',
   transports: [
@@ -340,8 +343,9 @@ const startService = (serviceId, serviceUserId, opts) => {
                   }
                 });
               };
-              stream.on('end', () => performance.mark('transmit-end'));
-              performance.mark('transmit-start');
+              let transmitEnd;
+              stream.on('end', () => { transmitEnd = perfTime(); });
+              const transmitStart = perfTime();
               dataStream.pipe(stream);
               let outRes;
               let outRej;
@@ -350,13 +354,15 @@ const startService = (serviceId, serviceUserId, opts) => {
                 outRes = resolve;
                 outRej = reject;
               });
+              let receiveStart;
+              let receiveEnd;
               ss(socket).on('stdout', (stream) => {
                 stream.on('data', (chunk) => {
-                  performance.mark('receive-start');
+                  receiveStart = perfTime();
                   stdout += chunk;
                 });
                 stream.on('end', () => {
-                  performance.mark('receive-end');
+                  receiveEnd = perfTime();
                   outRes(stdout);
                   logger.debug(`Output size: ${stdout.length}`);
                 });
@@ -372,11 +378,11 @@ const startService = (serviceId, serviceUserId, opts) => {
               });
               ss(socket).on('stderr', (stream) => {
                 stream.on('data', (chunk) => {
-                  performance.mark('receive-start');
+                  receiveStart = perfTime();
                   stderr += chunk;
                 });
                 stream.on('end', () => {
-                  performance.mark('receive-end');
+                  receiveEnd = perfTime();
                   errRes(stderr);
                 });
                 stream.on('err', err => errRej(err));
@@ -389,14 +395,9 @@ const startService = (serviceId, serviceUserId, opts) => {
               });
               Promise.all([stdoutProm, stderrProm, endProm])
                 .then((output) => {
-                  performance.measure('transmit-time', 'transmit-start', 'transmit-end');
-                  performance.measure('comp-time', 'transmit-end', 'receive-start');
-                  performance.measure('receive-time', 'receive-start', 'receive-end');
-                  logger.debug(`Transmit time: ${performance.getEntriesByName('transmit-time')[0].duration / 1000}`);
-                  logger.debug(`Approx comp time: ${performance.getEntriesByName('comp-time')[0].duration / 1000}`);
-                  logger.debug(`Receive time: ${performance.getEntriesByName('receive-time')[0].duration / 1000}`);
-                  performance.clearMarks();
-                  performance.clearMeasures();
+                  logger.debug(`Transmit time: ${(transmitEnd - transmitStart) / 1000}`);
+                  logger.debug(`Approx comp time: ${(receiveStart - transmitEnd) / 1000}`);
+                  logger.debug(`Receive time: ${(receiveEnd - receiveStart) / 1000}`);
                   socket.disconnect();
                   if (output[1] || output[2].code !== 0) {
                     throw new Error(`Computation failed with exitcode ${output[2].code}\n Error message:\n${output[1]}}`);
