@@ -15,6 +15,7 @@
     "portscanner": "^2.2.0",
     "request-stream": "^1.2.2",
     "socket.io-client": "^2.1.1",
-    "util": "^0.10.4"
+    "util": "^0.10.4",
+    "winston": "^3.1.0"
   }
 }
