@@ -149,18 +149,6 @@ class ConsortiaList extends Component {
       </div>
     );
 
-    if (owner) {
-      actions.push(
-        <Button
-          bsStyle="success"
-          style={styles.optionalButton}
-          disabled
-        >
-          Owner
-        </Button>
-      );
-    }
-
     if (owner && consortium.activePipelineId && isMapped) {
       actions.push(
         <Button
@@ -226,7 +214,7 @@ class ConsortiaList extends Component {
       );
     }
 
-    return { actions, text };
+    return { actions, text, owner };
   }
 
   getListItem(consortium) {
