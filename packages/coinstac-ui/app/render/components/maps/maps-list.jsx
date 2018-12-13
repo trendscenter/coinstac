@@ -10,6 +10,7 @@ import {
   FETCH_ALL_PIPELINES_QUERY,
 } from '../../state/graphql/functions';
 import MapsItem from './maps-item';
+import MapsEdit from './maps-edit';
 
 const isUserA = (userId, groupArr) => {
   return groupArr.indexOf(userId) !== -1;
@@ -18,9 +19,20 @@ const isUserA = (userId, groupArr) => {
 class MapsList extends Component {
   constructor(props) {
     super(props);
-    this.getMapItem = this.getMapItem.bind(this);
-    this.openModal = this.openModal.bind(this);
-    this.getMapped = this.getMapped.bind(this);
+
+    this.state = {
+      consortium: null
+    }
+
+    this.setConsortium = this.setConsortium.bind(this);
+  }
+
+  componentDidMount = () => {
+    console.log(this.props);
+  }
+
+  setConsortium = (consortium) => {
+    this.setState({ consortium });
   }
 
   getMapped(member, owner, consortium) {
@@ -38,7 +50,7 @@ class MapsList extends Component {
     }
   }
 
-  getMapItem(consortium) {
+  getMapItem = (consortium) => {
     const { user } = this.props.auth;
     if (isUserA(user.id, consortium.owners) || isUserA(user.id, consortium.members)) {
       return (
@@ -47,7 +59,6 @@ class MapsList extends Component {
           deleteItem={this.openModal}
           itemObject={consortium}
           itemOptions
-          itemRoute={'/dashboard/maps'}
           itemMapped={
             this.getMapped(
               isUserA(user.id, consortium.members),
@@ -56,6 +67,7 @@ class MapsList extends Component {
             )
           }
           pipelineId={consortium.activePipelineId}
+          setConsortium={this.setConsortium}
         />
       );
     }
@@ -78,12 +90,21 @@ class MapsList extends Component {
 
     return (
       <div>
-        <div className="page-header clearfix">
-          <h1 className="nav-item-page-title">Maps</h1>
+      {this.state.consortium ?
+        <MapsEdit
+          consortium={this.state.consortium}
+          pipelines={this.props.pipeline}
+          runs={this.props.runs}
+        />:
+        <div>
+          <div className="page-header clearfix">
+            <h1 className="nav-item-page-title">Maps</h1>
+          </div>
+          <div className="row">
+            {consortia && consortia.map(consortium => this.getMapItem(consortium))}
+          </div>
         </div>
-        <div className="row">
-          {consortia && consortia.map(consortium => this.getMapItem(consortium))}
-        </div>
+      }
       </div>
     );
   }

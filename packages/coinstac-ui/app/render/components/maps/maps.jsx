@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { ipcRenderer } from 'electron';
 import PropTypes from 'prop-types';
 import { Tab, Tabs } from 'react-bootstrap';
-import { graphql, compose } from 'react-apollo';
+import { compose, graphql, withApollo } from 'react-apollo';
 import MapsEdit from './maps-edit';
 import MapsList from './maps-list';
 import {
@@ -18,6 +18,7 @@ import {
   ADD_USER_ROLE_MUTATION,
   CONSORTIUM_CHANGED_SUBSCRIPTION,
   FETCH_ALL_USERS_QUERY,
+  FETCH_ALL_CONSORTIA_QUERY,
   FETCH_CONSORTIUM_QUERY,
   JOIN_CONSORTIUM_MUTATION,
   LEAVE_CONSORTIUM_MUTATION,
@@ -32,26 +33,9 @@ const styles = {
   },
 };
 
-class MapsTabs extends Component {
+class Maps extends Component {
   constructor(props) {
     super(props);
-
-    const consortium = {
-      name: '',
-      description: '',
-      members: [],
-      owners: [],
-      activePipelineId: '',
-      activeComputationInputs: [],
-      tags: [],
-    };
-
-    this.state = {
-      consortium,
-      unsubscribeConsortia: null,
-      unsubscribeUsers: null,
-      key: 1
-    };
   }
 
   render() {
@@ -60,55 +44,30 @@ class MapsTabs extends Component {
         <div className="page-header clearfix">
           <h1 className="pull-left">Maps</h1>
         </div>
-        <Tabs defaultActiveKey={1} id="map-tabs">
-            <Tab
-              eventKey={1}
-              title="Consortia"
-              style={styles.tab}
-            >
-              <MapsList />
-            </Tab>
-            {typeof this.state.consortium.id !== 'undefined' ?
-              <Tab
-                eventKey={2}
-                title="Pipelines"
-                style={styles.tab}
-              >
-                <MapEdit
-                  consortium={this.state.consortium}
-                  owner={isOwner}
-                  pipelines={this.props.pipelines}
-                />
-              </Tab>
-            : ''}
-        </Tabs>
+        <MapsList />
       </div>
     );
   }
 }
 
-MapsTabs.defaultProps = {
+Maps.defaultProps = {
   consortia: null,
 };
 
-MapsTabs.propTypes = {
+Maps.propTypes = {
+  associatedConsortia: PropTypes.array.isRequired,
   consortia: PropTypes.array.isRequired,
   notifyInfo: PropTypes.func.isRequired,
   notifySuccess: PropTypes.func.isRequired,
 };
 
-function mapStateToProps({ auth }) {
-  return { auth };
-}
-
-const MapsTabsWithData = compose(
-
-)(MapsTabs);
-
+const mapStateToProps = ({ auth, collections: { associatedConsortia } }) => {
+  return { auth, associatedConsortia };
+};
 
 export default connect(mapStateToProps,
   {
     notifyInfo,
     notifySuccess,
   }
-)(MapsTabsWithData);
+)(MapsList);
