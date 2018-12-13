@@ -8,7 +8,13 @@ function getActiveTime(hoursSinceActive) {
   return Date.now() - (hoursSinceActive * 60 * 60 * 1000);
 }
 
-const RunsList = ({ auth, consortia, limitToComplete, hoursSinceActive, runs }) => {
+const RunsList = ({
+  auth,
+  consortia,
+  limitToComplete,
+  hoursSinceActive,
+  runs,
+}) => {
   let runNoResultsCount = 0;
 
   return (
@@ -18,7 +24,7 @@ const RunsList = ({ auth, consortia, limitToComplete, hoursSinceActive, runs }) 
           ? hoursSinceActive : getActiveTime(hoursSinceActive);
         const consortium = consortia.filter(con => con.id === run.consortiumId)[0];
 
-        if ((!limitToComplete || (limitToComplete && run.status === 'complete'))
+        if ((!limitToComplete || (limitToComplete && (run.status === 'complete' || run.status === 'error')))
           && (run.startDate > activeTime || run.endDate > activeTime)
           && consortium
           && (consortium.owners.indexOf(auth.user.id) > -1
