@@ -116,6 +116,7 @@ export default class ConsortiumAbout extends Component {
                       }
                       onChange={(selected) => this.setState({ newMember: selected })}
                       labelKey="id"
+                      name="members-input"
                       options={users}
                       selected={this.state.newMember}
                       selectHintOnEnter
@@ -156,10 +157,11 @@ export default class ConsortiumAbout extends Component {
                             onChange={this.toggleOwner(consUser)}
                             checked={consUser.owner ? true : false}
                             disabled={!owner || consUser.id === user.id}
+                            name="isOwner"
                           />
                         </td>
                         <td>
-                          <Checkbox disabled checked={consUser.member} />
+                          <Checkbox disabled checked={consUser.member} name="isMember" />
                         </td>
                         {owner &&
                           <td>
