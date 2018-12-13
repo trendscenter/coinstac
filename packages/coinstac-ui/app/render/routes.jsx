@@ -16,7 +16,7 @@ import DashboardHome from './components/dashboard/dashboard-home';
 import RouteContainer from './containers/route-container';
 import Login from './components/user/form-login-controller';
 import Signup from './components/user/form-signup-controller';
-import MapsTabs from './components/maps/maps-tabs';
+import Maps from './components/maps/maps';
 import MapsList from './components/maps/maps-list';
 import MapsEdit from './components/maps/maps-edit';
 import PipelinesList from './components/pipelines/pipelines-list';
@@ -46,9 +46,7 @@ export default (
         <Route path=":collectionId" component={CollectionTabs} />
       </Route>
       <Route path="maps" component={RouteContainer}>
-        <IndexRoute component={MapsList} />
-        <Route path="new" component={MapsTabs} />
-        <Route path=":id" component={MapsEdit} />
+        <IndexRoute component={Maps} />
       </Route>
       <Route path="pipelines" component={RouteContainer}>
         <IndexRoute component={PipelinesList} />
