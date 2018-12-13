@@ -1,11 +1,15 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
+import { Link } from 'react-router';
 import { compose, graphql, withApollo } from 'react-apollo';
 import { Alert } from 'react-bootstrap';
 import Button from '@material-ui/core/Button';
+import Fab from '@material-ui/core/Fab';
+import Typography from '@material-ui/core/Typography';
 import AddIcon from '@material-ui/icons/Add';
 import { withStyles } from '@material-ui/core/styles';
 import { ipcRenderer } from 'electron';
+import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import shortid from 'shortid';
 import MemberAvatar from '../common/member-avatar';
@@ -39,20 +43,30 @@ import { notifyInfo, notifyWarning } from '../../state/ducks/notifyAndLog';
 
 const MAX_LENGTH_CONSORTIA = 5;
 
-const styles = {
-  listItemWarning: {
-    color: 'orange',
-    marginLeft: 10,
-    fontWeight: 'bold',
-  },
-  optionalButton: {
-    marginLeft: 10,
-  },
-};
-
-const materialStyles = theme => ({
+const styles = theme => ({
   button: {
     margin: theme.spacing.unit,
+  },
+  contentContainer: {
+    marginTop: theme.spacing.unit,
+    marginBottom: theme.spacing.unit,
+  },
+  label: {
+    fontWeight: 'bold',
+  },
+  labelInline: {
+    fontWeight: 'bold',
+    marginRight: theme.spacing.unit,
+    display: 'inline-block',
+  },
+  value: {
+    display: 'inline-block',
+  },
+  green: {
+    color: 'green',
+  },
+  red: {
+    color: 'red',
   },
 });
 
@@ -103,10 +117,10 @@ class ConsortiaList extends Component {
     const actions = [];
     const text = [];
     let isMapped = false;
-    const { classes } = this.props;
+    const { classes, pipelines, associatedConsortia } = this.props;
 
-    if (this.props.associatedConsortia.length > 0) {
-      const assocCons = this.props.associatedConsortia.find(c => c.id === consortium.id);
+    if (associatedConsortia.length > 0) {
+      const assocCons = associatedConsortia.find(c => c.id === consortium.id);
       if (assocCons && assocCons.isMapped) {
         isMapped = assocCons.isMapped;
       }
@@ -114,14 +128,16 @@ class ConsortiaList extends Component {
 
     // Add pipeline text
     text.push(
-      <p key={`${consortium.id}-active-pipeline-text`}>
-        <span className="bold">Active Pipeline: </span>
+      <div key={`${consortium.id}-active-pipeline-text`} className={classes.contentContainer}>
+        <Typography className={classes.labelInline}>
+          Active Pipeline:
+        </Typography>
         {
           consortium.activePipelineId
-          ? <span style={{ color: 'green' }}>{this.props.pipelines.find(pipe => pipe.id === consortium.activePipelineId).name}</span>
-          : <span style={{ color: 'red' }}> None</span>
+            ? <Typography className={classNames(classes.value, classes.green)}>{pipelines.find(pipe => pipe.id === consortium.activePipelineId).name}</Typography>
+            : <Typography className={classNames(classes.value, classes.red)}>None</Typography>
         }
-      </p>
+      </div>
     );
 
     // Add owner/member list
@@ -130,8 +146,8 @@ class ConsortiaList extends Component {
       return acc;
     }, {});
 
-    const consortiumUsers =
-      consortium.owners.map(user => ({ id: user, owner: true, member: true }))
+    const consortiumUsers = consortium.owners
+      .map(user => ({ id: user, owner: true, member: true }))
       .concat(
         consortium.members
           .filter(user => !Object.prototype.hasOwnProperty.call(ownersIds, user))
@@ -140,20 +156,21 @@ class ConsortiaList extends Component {
 
     const avatars = consortiumUsers
       .filter((v, i, a) => i === a.indexOf(v))
-      .map((user, index) => (
+      .map(user => (
         <MemberAvatar
-          key={`${user.id}-avatar-${index}`}
+          key={`${user.id}-avatar`}
           consRole={user.owner ? 'Owner' : 'Member'}
           name={user.id}
           showDetails
           width={40}
         />
-      )
-    );
+      ));
 
     text.push(
-      <div key="avatar-container">
-        <span className="bold">Owner(s)/Members: </span><br />
+      <div key="avatar-container" className={classes.contentContainer}>
+        <Typography className={classes.label}>
+          Owner(s)/Members:
+        </Typography>
         {avatars}
       </div>
     );
@@ -402,16 +419,17 @@ class ConsortiaList extends Component {
     return (
       <div>
         <div className="page-header">
-          <h1 className="nav-item-page-title">Consortia</h1>
-          <Button
-            variant="fab"
+          <Typography variant="h4" className={classes.pageTitle}>
+            Consortia
+          </Typography>
+          <Fab
             color="primary"
-            aria-label="Add"
-            href="/dashboard/consortia/new"
+            component={Link}
+            to="/dashboard/consortia/new"
             className={classes.button}
           >
             <AddIcon />
-          </Button>
+          </Fab>
         </div>
 
         {consortia && consortia.length && consortia.length <= MAX_LENGTH_CONSORTIA
@@ -482,7 +500,7 @@ const ConsortiaListWithData = compose(
   withApollo
 )(ConsortiaList);
 
-export default withStyles(materialStyles)(
+export default withStyles(styles)(
   connect(mapStateToProps,
     {
       getCollectionFiles,
