@@ -1,6 +1,6 @@
 {
   "meta": {
-    "name": "Single-shot Regression for MCIC Data",
+    "name": "Single Shot Regression VBM",
     "id": "ssr_vbm",
     "version": "v1.0.0",
     "repository": "https:\/\/github.com\/MRN-Code\/coinstac_ssr_vbm_mcic",
