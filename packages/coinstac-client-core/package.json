@@ -3,7 +3,6 @@
   "version": "4.1.0",
   "description": "COINSTAC business logic for clients.",
   "main": "src/index.js",
-  "bin": "./bin/coinstac-client-core",
   "scripts": {
     "clean": "rm -rf .nyc_output coverage .tmp",
     "docs": "mkdir -p docs && jsdoc -c .jsdoc.json src/",
