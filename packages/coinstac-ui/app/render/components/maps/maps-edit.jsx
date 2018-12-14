@@ -100,7 +100,7 @@ class MapsEdit extends Component {
     let getCon = this.props.getConsortium(this.props.consortium.id);
     getCon.then( result => {
          this.setState({
-           consortium: result,
+           consortium: Object.assign({}, result, this.props.consortium),
          });
          this.setState({
            activeConsortium: {
@@ -116,7 +116,7 @@ class MapsEdit extends Component {
            consortium
          )
          this.setState({isMapped: mapped});
-         this.setPipelineSteps(this.state.consortium.pipelineSteps);
+         this.setPipelineSteps(result.pipelineSteps);
          Object.keys(this.props.collections).map(([key, value]) => {
            if( includes(this.props.collections[key],result.name+': Collection') ){
              this.setState({
