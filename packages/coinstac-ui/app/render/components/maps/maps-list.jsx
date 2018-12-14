@@ -48,7 +48,9 @@ class MapsList extends Component {
 
   getMapItem = (consortium) => {
     const { user } = this.props.auth;
-    if (isUserA(user.id, consortium.owners) || isUserA(user.id, consortium.members)) {
+    const { pipelines } = this.props;
+    let pipeline = pipelines.find( pipeline => pipeline.id === consortium.activePipelineId );
+    if (pipeline && isUserA(user.id, consortium.owners) || pipeline && isUserA(user.id, consortium.members)) {
       return (
         <MapsItem
           key={`${consortium.id}-list-item`}
@@ -62,7 +64,7 @@ class MapsList extends Component {
               consortium
             )
           }
-          pipelineId={consortium.activePipelineId}
+          pipelineId={pipeline.name}
           setConsortium={this.setConsortium}
         />
       );

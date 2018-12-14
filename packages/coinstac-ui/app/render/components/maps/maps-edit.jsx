@@ -60,19 +60,8 @@ class MapsEdit extends Component {
       associatedConsortia: [],
     };
 
-    const consortium = {
-      activePipelineId: '',
-      activeComputationInputs: [],
-      description: '',
-      members: [],
-      name: '',
-      owners: [],
-      tags: [],
-    };
-
     this.state = {
       activeConsortium: { stepIO: [], runs: 0, pipelineSteps: [] },
-      consortium: {},
       containers: [],
       collection,
       exists: false,
@@ -99,44 +88,44 @@ class MapsEdit extends Component {
   componentDidMount = () => {
     let getCon = this.props.getConsortium(this.props.consortium.id);
     getCon.then( result => {
+      this.setState({
+       consortium: Object.assign({}, result, { location: this.props.consortium }),
+      });
+      this.setState({
+       activeConsortium: {
+         ...result,
+         stepIO: [...result.stepIO],
+       },
+      });
+      const { user } = this.props.auth;
+      const { consortium } = this.state;
+      let mapped = this.getMapped(
+       isUserA(user.id, consortium.members),
+       isUserA(user.id, consortium.owners),
+       consortium
+      )
+      this.setState({isMapped: mapped});
+      this.setPipelineSteps(this.state.consortium.pipelineSteps);
+      Object.keys(this.props.collections).map(([key, value]) => {
+       if( includes(this.props.collections[key],result.name+': Collection') ){
          this.setState({
-           consortium: Object.assign({}, result, this.props.consortium),
+           collection: this.props.collections[key],
+           exists: true
          });
-         this.setState({
-           activeConsortium: {
-             ...result,
-             stepIO: [...result.stepIO],
-           },
-         });
-         const { user } = this.props.auth;
-         const { consortium } = this.state;
-         let mapped = this.getMapped(
-           isUserA(user.id, consortium.members),
-           isUserA(user.id, consortium.owners),
-           consortium
-         )
-         this.setState({isMapped: mapped});
-         this.setPipelineSteps(result.pipelineSteps);
-         Object.keys(this.props.collections).map(([key, value]) => {
-           if( includes(this.props.collections[key],result.name+': Collection') ){
-             this.setState({
-               collection: this.props.collections[key],
-               exists: true
-             });
-           }
-         });
-         let collection = {
-           name: this.state.consortium.name+': Collection',
-           associatedConsortia: result,
-           fileGroups: {},
-         }
-         if( this.state.exists === false ){
-            this.setState({collection});
-            this.props.saveCollection(collection);
-         }
-         this.getDropAction();
+       }
+      });
+      let collection = {
+       name: this.state.consortium.name+': Collection',
+       associatedConsortia: result,
+       fileGroups: {},
+      }
+      if( this.state.exists === false ){
+        this.setState({collection});
+        this.props.saveCollection(collection);
+      }
+        this.getDropAction();
       }, function(error) {
-         console.log(error);
+        console.log(error);
     });
   }
 
@@ -264,7 +253,6 @@ class MapsEdit extends Component {
         if (runs && runs.length && !runs[runs.length - 1].endDate) {
           let run = runs[runs.length - 1];
           const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
-
           if ('allFiles' in filesArray) {
             this.props.notifyInfo({
               message: `Pipeline Starting for ${cons.name}.`,
@@ -373,19 +361,28 @@ class MapsEdit extends Component {
   }
 
   render() {
-    const { collections } = this.props;
+    const {
+      activeConsortium,
+      collection,
+      consortium,
+      isMapped,
+      mappedItem,
+      rowArray,
+    } = this.state;
     return (
       <div>
+        {consortium && activeConsortium &&
+        <div>
         <div className="page-header clearfix">
-          <h1 className="pull-left">Map - {this.state.consortium ? this.state.consortium.name : ''}</h1>
+          <h1 className="pull-left">Map - {consortium ? consortium.name : ''}</h1>
         </div>
         <div className="container">
           <div className="row">
             <div className="col-sm-4">
               <Panel header={
                 <h3>
-                { this.state.consortium ?
-                <span>{this.state.consortium.name}: Pipeline</span> : 'Pipeline'}
+                { consortium ?
+                <span>{consortium.name}: Pipeline</span> : 'Pipeline'}
                 </h3>
               }>
                 { this.traversePipelineSteps() }
@@ -394,22 +391,22 @@ class MapsEdit extends Component {
             <div className="col-sm-7">
                 <Panel header={
                   <h3>
-                  { this.state.collection ?
-                    <span>{this.state.collection.name}</span> : 'File Collection'
+                  { collection ?
+                    <span>{collection.name}</span> : 'File Collection'
                   }
                   </h3>
                 }>
                 <div>
-                  {this.state.collection &&
+                  {collection &&
                   <MapsCollection
-                    activeConsortium={this.state.activeConsortium}
-                    collection={this.state.collection}
+                    activeConsortium={activeConsortium}
+                    collection={collection}
                     getContainers={this.getContainers}
-                    isMapped={this.state.isMapped}
+                    isMapped={isMapped}
                     notifySuccess={this.notifySuccess}
-                    mappedItem={this.state.mappedItem}
-                    rowArray={this.state.rowArray}
-                    rowArrayLength={this.state.rowArray.length}
+                    mappedItem={mappedItem}
+                    rowArray={rowArray}
+                    rowArrayLength={rowArray.length}
                     saveAndCheckConsortiaMapping={this.saveAndCheckConsortiaMapping}
                     saveCollection={this.saveCollection}
                     setRowArray={this.setRowArray}
@@ -422,6 +419,8 @@ class MapsEdit extends Component {
             </div>
           </div>
         </div>
+      </div>
+      }
       </div>
   );
 }
