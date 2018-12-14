@@ -89,7 +89,7 @@ class MapsEdit extends Component {
     let getCon = this.props.getConsortium(this.props.consortium.id);
     getCon.then( result => {
       this.setState({
-       consortium: Object.assign({}, result, { location: this.props.consortium }),
+       consortium: Object.assign({}, result, this.props.consortium),
       });
       this.setState({
        activeConsortium: {
