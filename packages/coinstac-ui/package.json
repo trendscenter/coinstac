@@ -1,6 +1,6 @@
 {
   "name": "coinstac-ui",
-  "version": "4.1.0",
+  "version": "4.1.1",
   "description": "COINSTAC desktop application.",
   "main": "app/main/index.js",
   "dependencies": {
@@ -13,7 +13,7 @@
     "bootstrap-sass": "^3.3.7",
     "clarify": "^2.1.0",
     "classnames": "^2.2.5",
-    "coinstac-client-core": "^4.1.0",
+    "coinstac-client-core": "^4.1.1",
     "coinstac-common": "^4.1.0",
     "coinstac-docker-manager": "^4.1.0",
     "coinstac-graphql-schema": "^4.1.0",
