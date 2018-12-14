@@ -12,6 +12,13 @@ const DashboardNav = () => {
           Home
         </NavItem>
       </IndexLinkContainer>
+      <LinkContainer to="/dashboard/maps">
+        <NavItem>
+          <span aria-hidden="true" className="glyphicon glyphicon-hdd" />
+          {' '}
+          Maps
+        </NavItem>
+      </LinkContainer>
       <LinkContainer to="/dashboard/computations">
         <NavItem>
           <span aria-hidden="true" className="glyphicon glyphicon-hdd" />
@@ -24,13 +31,6 @@ const DashboardNav = () => {
           <span aria-hidden="true" className="glyphicon glyphicon-list" />
           {' '}
           Consortia
-        </NavItem>
-      </LinkContainer>
-      <LinkContainer to="/dashboard/collections">
-        <NavItem>
-          <span aria-hidden="true" className="glyphicon glyphicon-list-alt" />
-          {' '}
-          Collections
         </NavItem>
       </LinkContainer>
       <LinkContainer to="/dashboard/pipelines">
@@ -52,4 +52,3 @@ const DashboardNav = () => {
 };
 
 export default DashboardNav;
-
