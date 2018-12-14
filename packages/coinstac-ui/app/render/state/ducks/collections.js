@@ -14,10 +14,86 @@ const GET_COLLECTION_FILES = 'GET_COLLECTION_FILES';
 const INIT_TEST_COLLECTION = 'INIT_TEST_COLLECTION';
 const SAVE_ASSOCIATED_CONSORTIA = 'SAVE_ASSOCIATED_CONSORTIA';
 const SAVE_COLLECTION = 'SAVE_COLLECTION';
+const GET_CONSORTIUM = 'GET_CONSORTIUM';
 const GET_ASSOCIATED_CONSORTIA = 'GET_ASSOCIATED_CONSORTIA';
 const REMOVE_COLLECTIONS_FROM_CONS = 'REMOVE_COLLECTIONS_FROM_CONS';
 const SET_COLLECTIONS = 'GET_ALL_COLLECTIONS';
 const UNMAP_ASSOCIATED_CONSORTIA = 'UNMAP_ASSOCIATED_CONSORTIA';
+
+function parseFilesByGroup(
+  consortium,
+  baseDirectory,
+  filesByGroup,
+  key,
+  keyArray,
+  mappingIndex,
+  sIndex,
+  step
+) {
+  // Cast col types
+  let parsedRows = filesByGroup[consortium.stepIO[sIndex][key][mappingIndex].groupId];
+  // Get typed indices from header (first row)
+  const indices = [];
+  parsedRows[0].forEach((col, colIndex) => { // eslint-disable-line no-loop-func
+    for (
+      let mapIndex = 0;
+      mapIndex < step.inputMap[key].ownerMappings.length;
+      mapIndex += 1
+    ) {
+      // TODO: using use entered names as keys or equality for the raw columns in the
+      // csv is a bad idea, fix this and clean up this whole function
+      if (col.toLowerCase().includes(
+        step.inputMap[key].ownerMappings[mapIndex].name.toLowerCase()
+      )) {
+        indices.push({
+          index: colIndex,
+          type: step.inputMap[key].ownerMappings[mapIndex].type,
+        });
+        break;
+      }
+    }
+  });
+  // Cast types to row col indices
+  parsedRows.map((row, rowIndex) => {
+    if (rowIndex === 0) {
+      return row;
+    }
+
+    indices.forEach((col) => {
+      if (typeof row[col.index] === 'string') {
+        if (col.type === 'boolean' && row[col.index].toLowerCase() === 'true') {
+          row[col.index] = true;
+        } else if (col.type === 'boolean' && row[col.index].toLowerCase() === 'false') {
+          row[col.index] = false;
+        } else if (col.type === 'number') {
+          row[col.index] = parseFloat(row[col.index]);
+        }
+      }
+    });
+
+    return row;
+  });
+
+  const e = new RegExp(/[-\/\\^$*+?.()|[\]{}]/g); // eslint-disable-line no-useless-escape
+  const escape = (string) => {
+    return string.replace(e, '\\$&');
+  };
+  const pathsep = new RegExp(`${escape(sep)}|:`, 'g');
+  parsedRows = parsedRows.map((path) => {
+    if (extname(path[0]) !== '') {
+      path[0] = resolve(baseDirectory, path[0]).replace(pathsep, '-');
+      return path;
+    }
+    return path;
+  });
+
+  keyArray[0].push(parsedRows);
+  keyArray[1] = consortium.stepIO[sIndex][key].map(val => val.column);
+
+  if (step.inputMap[key].ownerMappings.every(val => !(val.type === undefined))) {
+    keyArray[2] = step.inputMap[key].ownerMappings.map(val => val.type);
+  }
+}
 
 function iteratePipelineSteps(consortium, filesByGroup, baseDirectory) {
   let mappingIncomplete = false;
@@ -34,11 +110,6 @@ function iteratePipelineSteps(consortium, filesByGroup, baseDirectory) {
 
     for (let keyIndex = 0; keyIndex < inputKeys.length; keyIndex += 1) {
       const key = inputKeys[keyIndex];
-      const e = new RegExp(/[-\/\\^$*+?.()|[\]{}]/g); // eslint-disable-line no-useless-escape
-      const escape = (string) => {
-        return string.replace(e, '\\$&');
-      };
-      const pathsep = new RegExp(`${escape(sep)}|:`, 'g');
 
       if ('ownerMappings' in step.inputMap[key]) {
         const keyArray = [[], [], []]; // [[values], [labels], [type (if present)]]
@@ -50,67 +121,18 @@ function iteratePipelineSteps(consortium, filesByGroup, baseDirectory) {
         && consortium.stepIO[sIndex][key][mappingIndex].column) {
           const { groupId, collectionId } = consortium.stepIO[sIndex][key][mappingIndex];
           collections.push({ groupId, collectionId });
-
           // This changes by how the parser is reading in files - concat or push
           if (filesByGroup) {
-            // Cast col types
-            let parsedRows = filesByGroup[consortium.stepIO[sIndex][key][mappingIndex].groupId];
-            // Get typed indices from header (first row)
-            const indices = [];
-            parsedRows[0].forEach((col, colIndex) => { // eslint-disable-line no-loop-func
-              for (
-                let mapIndex = 0;
-                mapIndex < step.inputMap[key].ownerMappings.length;
-                mapIndex += 1
-              ) {
-                // TODO: using use entered names as keys or equality for the raw columns in the
-                // csv is a bad idea, fix this and clean up this whole function
-                if (col.toLowerCase().includes(
-                  step.inputMap[key].ownerMappings[mapIndex].name.toLowerCase()
-                )) {
-                  indices.push({
-                    index: colIndex,
-                    type: step.inputMap[key].ownerMappings[mapIndex].type,
-                  });
-                  break;
-                }
-              }
-            });
-            // Cast types to row col indices
-            parsedRows.map((row, rowIndex) => {
-              if (rowIndex === 0) {
-                return row;
-              }
-
-              indices.forEach((col) => {
-                if (typeof row[col.index] === 'string') {
-                  if (col.type === 'boolean' && row[col.index].toLowerCase() === 'true') {
-                    row[col.index] = true;
-                  } else if (col.type === 'boolean' && row[col.index].toLowerCase() === 'false') {
-                    row[col.index] = false;
-                  } else if (col.type === 'number') {
-                    row[col.index] = parseFloat(row[col.index]);
-                  }
-                }
-              });
-
-              return row;
-            });
-
-            parsedRows = parsedRows.map((path) => {
-              if (extname(path[0]) !== '') {
-                path[0] = resolve(baseDirectory, path[0]).replace(pathsep, '-');
-                return path;
-              }
-              return path;
-            });
-
-            keyArray[0].push(parsedRows);
-            keyArray[1] = consortium.stepIO[sIndex][key].map(val => val.column);
-
-            if (step.inputMap[key].ownerMappings.every(val => !(val.type === undefined))) {
-              keyArray[2] = step.inputMap[key].ownerMappings.map(val => val.type);
-            }
+            parseFilesByGroup(
+              consortium,
+              baseDirectory,
+              filesByGroup,
+              key,
+              keyArray,
+              mappingIndex,
+              sIndex,
+              step
+            );
           }
         } else if (mappingObj.source === 'file'
           && (!consortium.stepIO[sIndex] || !consortium.stepIO[sIndex][key][mappingIndex]
@@ -122,7 +144,6 @@ function iteratePipelineSteps(consortium, filesByGroup, baseDirectory) {
         && consortium.stepIO[sIndex][key][mappingIndex].groupId
         && consortium.stepIO[sIndex][key][mappingIndex].column) {
           let filepaths = filesByGroup[consortium.stepIO[sIndex][key][mappingIndex].groupId];
-
           if (filepaths) {
             filepaths = filepaths.map(path => (extname(path[0]) !== '' ? path[0] : undefined))
               .filter(elem => elem !== undefined);
@@ -282,19 +303,47 @@ export const getAssociatedConsortia = applyAsyncLoading(
     })
 );
 
-export const isAssocConsortiumMapped = applyAsyncLoading(
-  consId => () => localDB.associatedConsortia.get(consId)
-    .then(cons => cons.isMapped)
+export const getConsortium = applyAsyncLoading(consortiumId =>
+  dispatch =>
+  localDB.associatedConsortia.get(consortiumId)
+    .then((consortium) => {
+      dispatch(({
+        type: GET_CONSORTIUM,
+        payload: consortium,
+      }));
+
+      return consortium;
+    })
 );
 
-export const unmapAssociatedConsortia = applyAsyncLoading(consortia => (dispatch) => {
-  const updatePromises = [];
-  const consortiaChanged = [];
-  consortia.forEach((consId) => {
-    consortiaChanged.push(consId);
-    updatePromises.push(
-      localDB.associatedConsortia.update(consId, { stepIO: [], isMapped: false })
-    );
+export const isAssocConsortiumMapped = applyAsyncLoading(consId =>
+  () =>
+  localDB.associatedConsortia.get(consId)
+  .then(cons => cons.isMapped)
+);
+
+export const unmapAssociatedConsortia = applyAsyncLoading(consortia =>
+  (dispatch) => {
+    const updatePromises = [];
+    const consortiaChanged = [];
+    // if (consId) {
+    //   consortia.forEach((consId) => {
+    //     consortiaChanged.push(consId);
+    //     updatePromises.push(
+    //       localDB.associatedConsortia.update(consId, { stepIO: [], isMapped: false })
+    //     );
+    //   });
+    // }
+    return Promise.all(updatePromises)
+    .then(() =>
+    localDB.associatedConsortia
+    .toArray()
+  )
+  .then((allConsortia) => {
+    dispatch(({
+      type: UNMAP_ASSOCIATED_CONSORTIA,
+      payload: { allConsortia, consortiaChanged },
+    }));
   });
 
   return Promise.all(updatePromises)
