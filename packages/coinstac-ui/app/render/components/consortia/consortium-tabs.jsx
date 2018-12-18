@@ -67,7 +67,7 @@ class ConsortiumTabs extends Component {
     this.setState({ key });
   }
 
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
 
     let newKey = parseInt(this.props.params.tabId);
     if(this.props.params.tabId && newKey !== this.state.key){
@@ -88,7 +88,7 @@ class ConsortiumTabs extends Component {
     if (nextProps.activeConsortium) {
       const { activeConsortium: { __typename, ...other } } = nextProps;
       const consortiumUsers = [];
-      if (this.props.router.routes[3].path !== 'new') {
+      if (this.props.routes[3].path !== 'new' || (this.props.routes[3].path === 'new' && this.state.consortium.id) ) {
         nextProps.activeConsortium.owners.forEach(user => consortiumUsers
           .push({ id: user, owner: true, member: true }));
         nextProps.activeConsortium.members
@@ -108,7 +108,7 @@ class ConsortiumTabs extends Component {
   }
 
   addMemberToConsortium(userId) {
-    this.props.joinConsortium(this.state.consortium.id, userId);
+    this.props.addUserRole(userId, 'consortia', this.state.consortium.id, 'member');
   }
 
   getConsortiumRuns() {
@@ -119,10 +119,8 @@ class ConsortiumTabs extends Component {
 
   removeMemberFromConsortium(user) {
     return () => {
-      this.props.leaveConsortium(this.state.consortium.id, user.id);
-      //These are not needed since the consortia permissions are handled in the resolver
-      //this.props.removeUserRole(user.id, 'consortia', this.state.consortium.id, 'member');
-      //this.props.removeUserRole(user.id, 'consortia', this.state.consortium.id, 'owner');
+      this.props.removeUserRole(user.id, 'consortia', this.state.consortium.id, 'owner');
+      this.props.removeUserRole(user.id, 'consortia', this.state.consortium.id, 'member');
     };
   }
 
@@ -141,7 +139,6 @@ class ConsortiumTabs extends Component {
 
     this.props.saveConsortium(this.state.consortium)
     .then(({ data: { saveConsortium: { __typename, ...other } } }) => {
-      this.props.addUserRole(this.props.auth.user.id, 'consortia', other.id, 'owner');
       let unsubscribeConsortia = this.state.unsubscribeConsortia;
 
       this.props.saveAssociatedConsortia({ ...other });
@@ -150,9 +147,10 @@ class ConsortiumTabs extends Component {
         unsubscribeConsortia = this.props.subscribeToConsortia(other.id);
       }
 
+
       this.setState({
         consortium: { ...other },
-        unsubscribeConsortia,
+        unsubscribeConsortia
       });
 
       this.props.notifySuccess({
@@ -165,7 +163,6 @@ class ConsortiumTabs extends Component {
           },
         },
       });
-
     })
     .catch(({ graphQLErrors }) => {
       console.log(graphQLErrors);
@@ -185,10 +182,9 @@ class ConsortiumTabs extends Component {
       ? 'Consortium Edit'
       : 'Consortium Creation';
 
-    let isOwner = false;
-    if (this.state.consortium.owners.indexOf(user.id) > -1 || !this.props.params.consortiumId) {
-      isOwner = true;
-    }
+    const isOwner =
+      this.state.consortium.owners.indexOf(user.id) > -1 ||
+      !this.props.params.consortiumId;
 
     return (
       <div>
@@ -259,8 +255,6 @@ ConsortiumTabs.propTypes = {
   addUserRole: PropTypes.func.isRequired,
   auth: PropTypes.object.isRequired,
   consortia: PropTypes.array,
-  joinConsortium: PropTypes.func.isRequired,
-  leaveConsortium: PropTypes.func.isRequired,
   notifySuccess: PropTypes.func.isRequired,
   params: PropTypes.object.isRequired,
   pipelines: PropTypes.array.isRequired,
@@ -292,8 +286,6 @@ const ConsortiumTabsWithData = compose(
     'subscribeToUsers',
     'userChanged'
   )),
-  graphql(JOIN_CONSORTIUM_MUTATION, consortiaMembershipProp('joinConsortium')),
-  graphql(LEAVE_CONSORTIUM_MUTATION, consortiaMembershipProp('leaveConsortium')),
   graphql(ADD_USER_ROLE_MUTATION, userRolesProp('addUserRole')),
   graphql(SAVE_CONSORTIUM_MUTATION, saveDocumentProp('saveConsortium', 'consortium')),
   graphql(REMOVE_USER_ROLE_MUTATION, userRolesProp('removeUserRole'))

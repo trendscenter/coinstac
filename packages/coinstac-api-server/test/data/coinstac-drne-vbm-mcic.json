@@ -1,6 +1,6 @@
 {
   "meta": {
-    "name": "Decentralized Regression with Normal Equation for MCIC Data",
+    "name": "DRNE for VBM",
     "id": "drne_vbm",
     "version": "v1.0.0",
     "repository": "https:\/\/github.com\/mrn-code\/coinstac_drne_vbm",

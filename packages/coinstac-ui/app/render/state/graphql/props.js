@@ -27,8 +27,9 @@ export const consortiaMembershipProp = (name) => {
             const consQuery = store.readQuery({ query: FETCH_ALL_CONSORTIA_QUERY });
             const index = consQuery.fetchAllConsortia.findIndex((cons) => {
               if (cons && data[name]) {
-                cons.id === data[name].id;
+                return cons.id === data[name].id;
               }
+              return false;
             });
             if (index > -1) {
               consQuery.fetchAllConsortia[index].members = data[name].members;
@@ -63,14 +64,13 @@ export const getAllAndSubProp = (document, listProp, query, subProp, subscriptio
         document,
         variables,
         updateQuery: (prevResult, { subscriptionData: { data } }) => {
-          const index =
-            prevResult[query].findIndex(c => c.id === data[subscription].id);
+          const index = prevResult[query].findIndex(c => c.id === data[subscription].id);
 
           if (data[subscription].delete) {
             return {
               [query]: prevResult[query].filter(obj => obj.id !== data[subscription].id),
             };
-          } else if (index !== -1) {
+          } if (index !== -1) {
             return {
               [query]: update(prevResult[query], {
                 $splice: [
@@ -108,18 +108,17 @@ export const getSelectAndSubProp = (activeProp, document, objId, subProp, subscr
   },
   props: props => ({
     [activeProp]: props.data[query],
-    [subProp]: theId =>
-      props.data.subscribeToMore({
-        document,
-        variables: { [objId]: theId },
-        updateQuery: (prevResult, { subscriptionData: { data } }) => {
-          if (data[subscription].delete) {
-            return { [query]: null };
-          }
+    [subProp]: theId => props.data.subscribeToMore({
+      document,
+      variables: { [objId]: theId },
+      updateQuery: (prevResult, { subscriptionData: { data } }) => {
+        if (data[subscription].delete) {
+          return { [query]: null };
+        }
 
-          return { [query]: data[subscription] };
-        },
-      }),
+        return { [query]: data[subscription] };
+      },
+    }),
   }),
 });
 
@@ -167,10 +166,9 @@ export const userRolesProp = (name) => {
   return {
     props: ({ ownProps, mutate }) => ({
       [name]: (userId, table, doc, role) => mutate({
-        variables: { userId, table, doc, role },
-      })
-      .then(({ data: { [name]: { permissions } } }) => {
-        return ownProps.updateUserPerms(permissions);
+        variables: {
+          userId, table, doc, role,
+        },
       }),
     }),
   };

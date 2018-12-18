@@ -1,22 +1,22 @@
 'use strict';
 
-const test = require('ava').test;
+const { test } = require('ava');
 const request = require('request-stream');
-const server = require('../server-http');
 const { createReadStream, readFileSync, unlink } = require('fs');
 const resolvePath = require('path').resolve;
 const unzip = require('unzip');
+const server = require('../server-http');
 
 test.before(() => {
   return server.start({ port: 3224 })
-  .then(() => {
-    return new Promise((resolve, reject) => {
-      createReadStream(resolvePath(__dirname, 'large.json.zip'))
-      .pipe(unzip.Extract({ path: __dirname }))
-      .on('close', () => resolve())
-      .on('error', e => reject(e));
+    .then(() => {
+      return new Promise((resolve, reject) => {
+        createReadStream(resolvePath(__dirname, 'large.json.zip'))
+          .pipe(unzip.Extract({ path: __dirname }))
+          .on('close', () => resolve())
+          .on('error', e => reject(e));
+      });
     });
-  });
 });
 
 test('test run route', (t) => {

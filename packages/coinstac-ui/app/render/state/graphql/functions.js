@@ -98,8 +98,8 @@ export const FETCH_RESULT_QUERY = gql`
 `;
 
 export const JOIN_CONSORTIUM_MUTATION = gql`
-  mutation joinConsortium($consortiumId: ID!, $userId: ID) {
-    joinConsortium(consortiumId: $consortiumId, userId: $userId){
+  mutation joinConsortium($consortiumId: ID!) {
+    joinConsortium(consortiumId: $consortiumId){
       id
       members
     }
@@ -107,8 +107,8 @@ export const JOIN_CONSORTIUM_MUTATION = gql`
 `;
 
 export const LEAVE_CONSORTIUM_MUTATION = gql`
-  mutation leaveConsortium($consortiumId: ID!, $userId: ID) {
-    leaveConsortium(consortiumId: $consortiumId, userId: $userId){
+  mutation leaveConsortium($consortiumId: ID!) {
+    leaveConsortium(consortiumId: $consortiumId){
       id
       members
     }
@@ -136,6 +136,11 @@ export const REMOVE_COMPUTATION_MUTATION = gql`
 export const USER_CHANGED_SUBSCRIPTION = gql`
   subscription userChanged($userId: ID)
     ${queries.userChanged}
+`;
+
+export const USER_METADATA_CHANGED_SUBSCRIPTION = gql`
+  subscription userMetadataChanged($userId: ID)
+    ${queries.userMetadataChanged}
 `;
 
 export const REMOVE_USER_ROLE_MUTATION = gql`

@@ -1,6 +1,6 @@
 'use strict';
 
-const dialog = require('electron').dialog;
+const { dialog } = require('electron');
 
 module.exports = {
   /**
@@ -41,7 +41,7 @@ module.exports = {
         files => resolve(files || [])
       );
     })
-    .then(core.projects.getFileStats)
-    .then(JSON.stringify);
+      .then(core.projects.getFileStats)
+      .then(JSON.stringify);
   },
 };

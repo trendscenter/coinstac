@@ -5,8 +5,8 @@ function cleanRemoteResponse(fn) {
   // a pure representation of the results
   function cstacRenderRemoteCall(...args) {
     const lastNdx = args.length - 1;
-        // detect if callback passed, wrap cb with version that
-        // simplifies and de-refs the result (e.g. no memory leak)
+    // detect if callback passed, wrap cb with version that
+    // simplifies and de-refs the result (e.g. no memory leak)
     if (args.length && isFunction(args[lastNdx])) {
       const cb = args[lastNdx];
       const pojocb = (err, rslt) => {

@@ -9,7 +9,7 @@ module.exports = {
       spec.computation,
       mode === 'remote' ? spec.computation.remote : {}
     );
-    const meta = spec.meta;
+    const { meta } = spec;
 
     return {
       computation,
@@ -33,22 +33,22 @@ module.exports = {
             },
           }
         )
-        .then((service) => {
-          return service(computation.command.concat([`${JSON.stringify(input)}`]))
-          .catch((error) => {
-            // decorate w/ input
-            error.input = input;
-            throw error;
-          })
-          .then((data) => {
-            if (typeof data === 'string') {
-              const err = new Error(`Computation output serialization failed with value: ${data}`);
-              err.input = input;
-              throw err;
-            }
-            return data;
+          .then((service) => {
+            return service(computation.command.concat([`${JSON.stringify(input)}`]))
+              .catch((error) => {
+                // decorate w/ input
+                error.input = input;
+                throw error;
+              })
+              .then((data) => {
+                if (typeof data === 'string') {
+                  const err = new Error(`Computation output serialization failed with value: ${data}`);
+                  err.input = input;
+                  throw err;
+                }
+                return data;
+              });
           });
-        });
       },
       stop() {
         return docker.stopService(this.meta.id, this.runId);

@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import Notifications from 'react-notification-system-redux';
+import ActivityIndicator from './activity-indicator/activity-indicator';
 import { autoLogin } from '../state/ducks/auth';
 import 'react-bootstrap-typeahead/css/Typeahead.css';
 
@@ -26,7 +27,7 @@ class App extends Component { // eslint-disable-line react/prefer-stateless-func
     this.state = { checkJWT: false };
   }
 
-  componentWillMount() {
+  componentDidMount() {
     this.props.autoLogin()
     .then(() => {
       this.setState({ checkJWT: true });
@@ -34,16 +35,11 @@ class App extends Component { // eslint-disable-line react/prefer-stateless-func
   }
 
   render() {
-    const { children, loading: { isLoading, wip }, notifications } = this.props;
+    const { children, loading: { isLoading }, notifications } = this.props;
 
     return (
       <div className="app">
-        <ul id="spinner" className={isLoading ? 'is-loading' : ''}>
-          <li />
-          <li />
-          <li />
-          <li />
-        </ul>
+        <ActivityIndicator visible={isLoading} />
 
         {this.state.checkJWT && children}
 

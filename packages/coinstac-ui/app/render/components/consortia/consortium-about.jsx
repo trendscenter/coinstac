@@ -26,22 +26,13 @@ export default class ConsortiumAbout extends Component {
     this.toggleOwner = this.toggleOwner.bind(this);
   }
 
-  componentWillReceiveProps(nextProps) {
-    if (nextProps.consortiumUsers) {
-      const users = this.state.consortiumUsers.filter((stateUser) => {
-        nextProps.consortiumUsers.findIndex(propsUser => propsUser.id === stateUser.id) > -1
-      });
-      nextProps.consortiumUsers.forEach((propsUser) => {
-        const stateIndex = this.state.consortiumUsers.findIndex(stateUser => stateUser.id === propsUser.id);
-
-        if (stateIndex === -1) {
-          users.push(propsUser);
-        } else {
-          users[stateIndex] = propsUser;
-        }
-      });
-      this.setState({ consortiumUsers: users });
+  static getDerivedStateFromProps(props) {
+    if (props.consortiumUsers) {
+      return {
+        consortiumUsers: props.consortiumUsers.sort((a, b) => a.id.localeCompare(b.id)),
+      };
     }
+    return null;
   }
 
   addMember() {
@@ -55,8 +46,10 @@ export default class ConsortiumAbout extends Component {
       if (owner && consUser.id !== user.id) {
         if (consUser.owner) {
           removeUserRole(consUser.id, 'consortia', consortium.id, 'owner');
+          addUserRole(consUser.id, 'consortia', consortium.id, 'member');
         } else {
           addUserRole(consUser.id, 'consortia', consortium.id, 'owner');
+          removeUserRole(consUser.id, 'consortia', consortium.id, 'member');
         }
       }
     };
@@ -78,8 +71,8 @@ export default class ConsortiumAbout extends Component {
     return (
       <div>
         <Form onSubmit={saveConsortium}>
-
-          {owner &&
+          {
+            owner &&
             <Button
               bsStyle="success"
               type="submit"
@@ -123,6 +116,7 @@ export default class ConsortiumAbout extends Component {
                       }
                       onChange={(selected) => this.setState({ newMember: selected })}
                       labelKey="id"
+                      name="members-input"
                       options={users}
                       selected={this.state.newMember}
                       selectHintOnEnter
@@ -154,7 +148,6 @@ export default class ConsortiumAbout extends Component {
                             isOwner={owner}
                             consRole="Member"
                             name={consUser.id}
-                            removeFunction={removeMemberFromConsortium}
                             width={30}
                           />
                           <span>{consUser.id}</span>
@@ -164,10 +157,11 @@ export default class ConsortiumAbout extends Component {
                             onChange={this.toggleOwner(consUser)}
                             checked={consUser.owner ? true : false}
                             disabled={!owner || consUser.id === user.id}
+                            name="isOwner"
                           />
                         </td>
                         <td>
-                          <Checkbox disabled checked={consUser.member} />
+                          <Checkbox disabled checked={consUser.member} name="isMember" />
                         </td>
                         {owner &&
                           <td>

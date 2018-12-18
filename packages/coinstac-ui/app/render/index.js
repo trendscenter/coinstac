@@ -29,7 +29,7 @@ const store = configureStore(client);
 
 render(
   <ApolloProvider store={store} client={client}>
-    <Root history={hashHistory} store={store} />
+    <Root history={hashHistory} />
   </ApolloProvider>,
   rootEl
 );
