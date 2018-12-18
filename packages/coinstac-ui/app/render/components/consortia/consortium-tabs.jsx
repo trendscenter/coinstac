@@ -1,7 +1,11 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import { Tab, Tabs } from 'react-bootstrap';
+import Tabs from '@material-ui/core/Tabs';
+import Tab from '@material-ui/core/Tab';
+import Button from '@material-ui/core/Button';
+import Typography from '@material-ui/core/Typography';
+import { withStyles } from '@material-ui/core/styles';
 import { graphql, compose } from 'react-apollo';
 import ConsortiumAbout from './consortium-about';
 import ConsortiumPipeline from './consortium-pipeline';
@@ -9,7 +13,6 @@ import ConsortiumRuns from './consortium-runs';
 import { updateUserPerms } from '../../state/ducks/auth';
 import { saveAssociatedConsortia } from '../../state/ducks/collections';
 import {
-  consortiaMembershipProp,
   getAllAndSubProp,
   getSelectAndSubProp,
   saveDocumentProp,
@@ -20,8 +23,6 @@ import {
   CONSORTIUM_CHANGED_SUBSCRIPTION,
   FETCH_ALL_USERS_QUERY,
   FETCH_CONSORTIUM_QUERY,
-  JOIN_CONSORTIUM_MUTATION,
-  LEAVE_CONSORTIUM_MUTATION,
   REMOVE_USER_ROLE_MUTATION,
   SAVE_CONSORTIUM_MUTATION,
   USER_CHANGED_SUBSCRIPTION,
@@ -52,8 +53,8 @@ class ConsortiumTabs extends Component {
       consortium,
       unsubscribeConsortia: null,
       unsubscribeUsers: null,
-      key: 1
-    };;
+      selectedTabIndex: 0,
+    };
 
     this.getConsortiumRuns = this.getConsortiumRuns.bind(this);
     this.addMemberToConsortium = this.addMemberToConsortium.bind(this);
@@ -61,10 +62,6 @@ class ConsortiumTabs extends Component {
     this.saveConsortium = this.saveConsortium.bind(this);
     this.updateConsortium = this.updateConsortium.bind(this);
     this.handleSelect = this.handleSelect.bind(this);
-  }
-
-  handleSelect(key) {
-    this.setState({ key });
   }
 
   UNSAFE_componentWillReceiveProps(nextProps) {
@@ -115,6 +112,10 @@ class ConsortiumTabs extends Component {
     return (
       this.props.runs.filter(run => run.consortiumId === this.state.consortium.id)
     );
+  }
+
+  handleSelect(event, value) {
+    this.setState({ selectedTabIndex: value });
   }
 
   removeMemberFromConsortium(user) {
@@ -176,31 +177,48 @@ class ConsortiumTabs extends Component {
   }
 
   render() {
-    const { users } = this.props;
+    const {
+      users,
+      params,
+      addUserRole,
+      removeUserRole,
+      pipelines,
+      consortia,
+    } = this.props;
     const { user } = this.props.auth;
+    const { selectedTabIndex, consortium, consortiumUsers } = this.state;
+
     const title = this.state.consortium.id
       ? 'Consortium Edit'
       : 'Consortium Creation';
 
-    const isOwner =
-      this.state.consortium.owners.indexOf(user.id) > -1 ||
-      !this.props.params.consortiumId;
+    const isOwner = consortium.owners.indexOf(user.id) > -1
+      || !params.consortiumId;
 
     return (
       <div>
-        <div className="page-header clearfix">
-          <h1 className="pull-left">{title}</h1>
+        <div className="page-header">
+          <Typography variant="h4">
+            {title}
+          </Typography>
         </div>
         <Tabs
-          activeKey={this.state.key}
-          onSelect={this.handleSelect}
-          id="consortium-tabs">
-          <Tab eventKey={1} title="About" style={styles.tab}>
+          value={selectedTabIndex}
+          onChange={this.handleSelect}
+          id="consortium-tabs"
+        >
+          <Tab label="About" />
+          { typeof consortium.id !== 'undefined' && <Tab label="Pipelines" />}
+          { isOwner && typeof consortium.id !== 'undefined' && <Tab label="Runs" /> }
+        </Tabs>
+        {
+          selectedTabIndex === 0
+          && (
             <ConsortiumAbout
-              addUserRole={this.props.addUserRole}
-              removeUserRole={this.props.removeUserRole}
-              consortium={this.state.consortium}
-              consortiumUsers={this.state.consortiumUsers}
+              addUserRole={addUserRole}
+              removeUserRole={removeUserRole}
+              consortium={consortium}
+              consortiumUsers={consortiumUsers}
               addMemberToConsortium={this.addMemberToConsortium}
               removeMemberFromConsortium={this.removeMemberFromConsortium}
               saveConsortium={this.saveConsortium}
@@ -209,34 +227,28 @@ class ConsortiumTabs extends Component {
               user={user}
               users={users}
             />
-          </Tab>
-          {typeof this.state.consortium.id !== 'undefined' ?
-            <Tab
-              eventKey={2}
-              title="Pipelines"
-              style={styles.tab}
-            >
-              <ConsortiumPipeline
-                consortium={this.state.consortium}
-                owner={isOwner}
-                pipelines={this.props.pipelines}
-              />
-            </Tab>
-          : ''}
-          {isOwner && typeof this.state.consortium.id !== 'undefined' ?
-            <Tab
-              eventKey={3}
-              title="Runs"
-              style={styles.tab}
-            >
-              <ConsortiumRuns
-                runs={this.getConsortiumRuns()}
-                consortia={this.props.consortia}
-                owner={isOwner}
-              />
-            </Tab>
-          : ''}
-        </Tabs>
+          )
+        }
+        {
+          false
+          && (
+            <ConsortiumPipeline
+              consortium={consortium}
+              owner={isOwner}
+              pipelines={pipelines}
+            />
+          )
+        }
+        {
+          false
+          && (
+            <ConsortiumRuns
+              runs={this.getConsortiumRuns()}
+              consortia={consortia}
+              owner={isOwner}
+            />
+          )
+        }
       </div>
     );
   }
