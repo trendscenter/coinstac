@@ -10,6 +10,7 @@
     "axios": "^0.16.2",
     "babel-polyfill": "^6.26.0",
     "bootstrap-sass": "^3.3.7",
+    "clarify": "^2.1.0",
     "classnames": "^2.2.5",
     "coinstac-client-core": "^4.0.0",
     "coinstac-common": "^4.0.0",

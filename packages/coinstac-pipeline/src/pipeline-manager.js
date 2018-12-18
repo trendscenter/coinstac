@@ -279,6 +279,7 @@ module.exports = {
             baseDirectory: path.resolve(operatingDirectory, clientId, runId),
             outputDirectory: path.resolve(operatingDirectory, 'output', clientId, runId),
             cacheDirectory: path.resolve(operatingDirectory, 'cache', clientId, runId),
+            transferDirectory: path.resolve(operatingDirectory, 'transfer', clientId, runId),
             stateEmitter: new Emitter(),
             currentState: {},
             clients,
@@ -321,7 +322,7 @@ module.exports = {
               logger.silly('############ END REMOTE OUT');
               io.of('/').in(pipeline.id).clients((error, clients) => {
                 if (error) throw error;
-                readdir(activePipelines[pipeline.id].base)
+                readdir(activePipelines[pipeline.id].transferDirectory)
                 .then((files) => {
                   if (files) {
                     io.of('/').to(pipeline.id).emit('run', { runId: pipeline.id, output: message, files });
@@ -395,6 +396,7 @@ module.exports = {
           mkdirp(this.activePipelines[runId].baseDirectory),
           mkdirp(this.activePipelines[runId].outputDirectory),
           mkdirp(this.activePipelines[runId].cacheDirectory),
+          mkdirp(this.activePipelines[runId].transferDirectory),
         ])
         .catch((err) => {
           throw new Error(`Unable to create pipeline directories: ${err}`);
