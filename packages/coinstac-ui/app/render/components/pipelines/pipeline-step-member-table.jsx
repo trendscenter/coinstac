@@ -35,6 +35,10 @@ export default class PipelineStepMemberTable extends Component {
       updateStep,
     } = this.props;
 
+    const freeSurferOptions = variableOptions.freesurferROIs.map((val) => {
+      return { label: val, value: val };
+    });
+
     return (
       <Table style={{ marginLeft: 10 }}>
         {step.inputMap[objKey] && 'ownerMappings' in step.inputMap[objKey] && step.inputMap[objKey].ownerMappings.length > 0 &&
@@ -91,12 +95,17 @@ export default class PipelineStepMemberTable extends Component {
                     <div id={`data-${index}-area`}>
                       <MultiSelectField
                         value={obj.value}
-                        placeholder={'Select Area(s) of Interest'}
-                        options={variableOptions.freesurferROIs}
-                        change={(value) => updateStep({
+                        placeholder="Select Area(s) of Interest"
+                        options={freeSurferOptions}
+                        closeOnSelect={false}
+                        disabled={false}
+                        multi
+                        onChange={(value) => updateStep({
                           ...step,
                           inputMap: getNewObj('value', value, index, false),
                         })}
+                        removeSelected
+                        simpleValue
                       />
                     </div>
                   }
