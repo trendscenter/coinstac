@@ -29,11 +29,11 @@ import {
 } from '../../state/graphql/functions';
 import { notifySuccess } from '../../state/ducks/notifyAndLog';
 
-const styles = {
-  tab: {
-    marginTop: 10,
+const styles = theme => ({
+  title: {
+    marginBottom: theme.spacing.unit,
   },
-};
+});
 
 class ConsortiumTabs extends Component {
   constructor(props) {
@@ -184,6 +184,7 @@ class ConsortiumTabs extends Component {
       removeUserRole,
       pipelines,
       consortia,
+      classes,
     } = this.props;
     const { user } = this.props.auth;
     const { selectedTabIndex, consortium, consortiumUsers } = this.state;
@@ -198,7 +199,7 @@ class ConsortiumTabs extends Component {
     return (
       <div>
         <div className="page-header">
-          <Typography variant="h4">
+          <Typography variant="h4" className={classes.title}>
             {title}
           </Typography>
         </div>
@@ -303,7 +304,7 @@ const ConsortiumTabsWithData = compose(
   graphql(REMOVE_USER_ROLE_MUTATION, userRolesProp('removeUserRole'))
 )(ConsortiumTabs);
 
-export default connect(
+const connectedComponent = connect(
   mapStateToProps,
   {
     notifySuccess,
@@ -311,3 +312,5 @@ export default connect(
     updateUserPerms,
   }
 )(ConsortiumTabsWithData);
+
+export default withStyles(styles)(connectedComponent);
