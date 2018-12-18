@@ -21,9 +21,9 @@ pify(fs.readdir)(dir)
     const fullPath = path.join(dir, file);
 
     return statAsync(fullPath).then((stats) => {
-      return stats.isDirectory() && file !== 'computations' ?
-        fullPath :
-        undefined;
+      return stats.isDirectory() && file !== 'computations'
+        ? fullPath
+        : undefined;
     });
   })))
   .then(compact)

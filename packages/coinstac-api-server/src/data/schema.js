@@ -122,16 +122,16 @@ const typeDefs = `
   type Mutation {
     # Stringify incoming computation, parse prior to insertion call
     addComputation(computationSchema: ComputationInput): Computation
-    addUserRole(userId: ID, table: String, doc: String, role: String): User
+    addUserRole(userId: ID!, table: String!, doc: String!, role: String!): User
     createRun(consortiumId: ID): Run
     deleteConsortiumById(consortiumId: ID): Consortium
     deletePipeline(pipelineId: ID): Pipeline
-    joinConsortium(consortiumId: ID, userId: ID): Consortium
-    leaveConsortium(consortiumId: ID, userId: ID): Consortium
+    joinConsortium(consortiumId: ID!): Consortium
+    leaveConsortium(consortiumId: ID!): Consortium
     removeComputation(computationId: ID): Computation
-    removeUserRole(userId: ID, table: String, doc: String, role: String): User
+    removeUserRole(userId: ID!, table: String!, doc: String!, role: String!): User
     saveActivePipeline(consortiumId: ID, activePipelineId: ID): String
-    saveConsortium(consortium: ConsortiumInput): Consortium
+    saveConsortium(consortium: ConsortiumInput!): Consortium
     saveError(runId: ID, error: JSON): JSON
     savePipeline(pipeline: PipelineInput): Pipeline
     saveResults(runId: ID, results: JSON): JSON
@@ -164,6 +164,7 @@ const typeDefs = `
     pipelineChanged(pipelineId: ID): Pipeline
     userRunChanged(userId: ID): Run
     userChanged(userId: ID): User
+    userMetadataChanged(userId: ID): User
   }
 `;
 

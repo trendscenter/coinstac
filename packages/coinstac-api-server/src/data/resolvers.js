@@ -3,10 +3,10 @@ const Boom = require('boom');
 const GraphQLJSON = require('graphql-type-json');
 const Promise = require('bluebird');
 const { PubSub, withFilter } = require('graphql-subscriptions');
+const axios = require('axios');
 const helperFunctions = require('../auth-helpers');
 const initSubscriptions = require('./subscriptions');
 const config = require('../../config/default');
-const axios = require('axios');
 
 /**
  * Helper function to retrieve all members of given table
@@ -15,9 +15,7 @@ const axios = require('axios');
  */
 function fetchAll(table) {
   return helperFunctions.getRethinkConnection()
-    .then(connection =>
-      rethink.table(table).orderBy({ index: 'id' }).run(connection)
-    )
+    .then(connection => rethink.table(table).orderBy({ index: 'id' }).run(connection))
     .then(cursor => cursor.toArray());
 }
 
@@ -29,31 +27,118 @@ function fetchAll(table) {
  */
 function fetchOne(table, id) {
   return helperFunctions.getRethinkConnection()
-    .then(connection =>
-      rethink.table(table).get(id).run(connection)
-    );
+    .then(connection => rethink.table(table).get(id).run(connection));
 }
 
 function fetchOnePipeline(table, id) {
   return helperFunctions.getRethinkConnection()
-    .then(connection =>
-      rethink.table('pipelines')
-        .get(id)
-        // Populate computations subfield with computation meta information
-        .merge(pipeline =>
-          ({
-            steps: pipeline('steps').map(step =>
-              step.merge({
-                computations: step('computations').map(compId =>
-                  rethink.table('computations').get(compId)
-                ),
-              })
-            ),
-          })
-        )
-        .run(connection)
-    )
+    .then(connection => rethink.table('pipelines')
+      .get(id)
+    // Populate computations subfield with computation meta information
+      .merge(pipeline => ({
+        steps: pipeline('steps').map(step => step.merge({
+          computations: step('computations').map(compId => rethink.table('computations').get(compId)),
+        })),
+      }))
+      .run(connection))
     .then(result => result);
+}
+
+/**
+ * Helper function for add permissions to an user
+ * @param {object} connection - Existing db connection
+ * @param {object} args - Update object
+ * @param {string} args.userId - Id of the user which will have permissions changed
+ * @param {string} args.role - Role of the user
+ * @param {string} args.doc - Id of the document for which the user will gain access
+ * @param {string} args.table - Table of the document for which the user will gain access
+ */
+async function addUserPermissions(connection, args) {
+  const perms = await rethink.table('users').get(args.userId)('permissions').run(connection);
+
+  const { role, doc, table } = args;
+
+  let newRoles = [role];
+  const promises = [];
+
+  // Grab existing roles if present
+  if (perms[table][doc] && perms[table][doc].indexOf(role) === -1) {
+    newRoles = newRoles.concat(perms[table][doc]);
+  } else if (perms[table][doc]) {
+    newRoles = perms[table][doc];
+  }
+
+  const updateObj = { permissions: { [table]: { [doc]: newRoles } } };
+
+  // Add entry to user statuses object &&
+  if (table === 'consortia') {
+    updateObj.consortiaStatuses = {};
+    updateObj.consortiaStatuses[doc] = 'none';
+
+    promises.push(
+      rethink.table('consortia').get(doc).update(
+        {
+          [`${role}s`]: rethink.row(`${role}s`).append(args.userId),
+        }
+      ).run(connection)
+    );
+  }
+
+  promises.push(
+    rethink.table('users').get(args.userId).update(
+      updateObj, { returnChanges: true }
+    ).run(connection)
+  );
+
+  return Promise.all(promises);
+}
+
+async function removeUserPermissions(connection, args) {
+  const promises = [];
+
+  const nextPermissions = await rethink.table('users')
+    .get(args.userId)('permissions')(args.table)(args.doc)
+    .filter(role => role.ne(args.role))
+    .run(connection);
+
+  if (nextPermissions.length === 0) {
+    const replaceObj = {
+      permissions: { [args.table]: args.doc },
+    };
+
+    if (args.table === 'consortia') {
+      replaceObj.consortiaStatuses = args.doc;
+    }
+
+    promises.push(
+      rethink.table('users').get(args.userId).replace(user => user.without(replaceObj), { nonAtomic: true }).run(connection)
+    );
+  } else {
+    promises.push(
+      rethink.table('users')
+        .get(args.userId)
+        .update({
+          permissions: {
+            [args.table]: {
+              [args.doc]: rethink.row('permissions')(args.table)(args.doc).difference([args.role]),
+            },
+          },
+        }, { nonAtomic: true })
+        .run(connection)
+    );
+  }
+
+  if (args.table === 'consortia') {
+    promises.push(
+      rethink.table('consortia').get(args.doc).update(
+        {
+          [`${args.role}s`]: rethink.row(`${args.role}s`).difference([args.userId]),
+        }
+      ).run(connection)
+    );
+  }
+
+  await Promise.all(promises);
 }
 
 const pubsub = new PubSub();
@@ -231,79 +316,26 @@ const resolvers = {
           return result.changes[0].new_val;
         })
     },
-    // TODO: add table variable to args
     /**
      * Add new user role to user perms, currently consortia perms only
      * @param {object} auth User object from JWT middleware validateFunc
      * @param {object} args
      * @param {string} args.doc Id of the document to add role to
      * @param {string} args.role Role to add to perms
+     * @param {string} args.userId Id of the user to be added
      * @return {object} Updated user object
      */
-    addUserRole: ({ auth: { credentials } }, args) => {
-      // UserID arg could be used by admin to add/remove roles, ignored for now
+    addUserRole: async ({ auth: { credentials } }, args) => {
       const { permissions } = credentials
-      let userId = credentials.id;
 
-      // TODO: perm update
-      // // If adding role for another person from consortium, check perms
-      // if (args.userId &&
-      //     permissions[args.table][args.doc] &&
-      //     permissions[args.table][args.doc].write &&
-      //     (args.role !== 'owner' || args.userId !== credentials.id)
-      // ) {
-      //   userId = args.userId;
-      // } else if (args.userId &&
-      //     (!permissions[args.table][args.doc] ||
-      //     !permissions[args.table][args.doc].write ||
-      //     (args.role === 'owner' && args.userId === credentials.id))
-      // ) {
-      //   return Boom.forbidden('Action not permitted');
-      // }
+      if (!permissions[args.table][args.doc] || !permissions[args.table][args.doc].write) {
+        return Boom.forbidden('Action not permitted');
+      }
 
-      return helperFunctions.getRethinkConnection()
-        .then(connection =>
-          rethink.table('users').get(userId)('permissions').run(connection)
-          .then((perms) => {
-            let newRoles = [args.role];
-            const promises = [];
+      const connection = await helperFunctions.getRethinkConnection();
+      await addUserPermissions(connection, args);
 
-            // Grab existing roles if present
-            if (perms[args.table][args.doc] && perms[args.table][args.doc].indexOf(args.role) === -1) {
-              newRoles = newRoles.concat(perms[args.table][args.doc]);
-            } else if (perms[args.table][args.doc]) {
-              newRoles = perms[args.table][args.doc];
-            }
-
-            const updateObj = { permissions: { [args.table]: { [args.doc]: newRoles } } };
-
-            // Add entry to user statuses object &&
-            if (args.table === 'consortia') {
-              updateObj.consortiaStatuses = {};
-              updateObj.consortiaStatuses[args.doc] = 'none';
-
-              promises.push(
-                rethink.table('consortia').get(args.doc).update(
-                  {
-                    [`${args.role}s`]: rethink.row(`${args.role}s`).append(userId)
-                  }
-                ).run(connection)
-              );
-            }
-
-            promises.push(
-              rethink.table('users').get(userId).update(
-                updateObj, { returnChanges: true }
-              ).run(connection)
-            );
-
-            return Promise.all(promises);
-          })
-        )
-        .then(result =>
-          helperFunctions.getUserDetails({ username: userId })
-        )
-        .then(result => result)
+      return helperFunctions.getUserDetails({ username: args.userId });
     },
     /**
      * Add run to RethinkDB
@@ -357,12 +389,9 @@ const resolvers = {
      * @return {object} Deleted consortium
      */
     deleteConsortiumById: ({ auth: { credentials: { permissions } } }, args) => {
-      // TODO: perm update
-      // if (!permissions.consortia[args.consortiumId]
-      //     || !permissions.consortia[args.consortiumId].write
-      // ) {
-      //   return Boom.forbidden('Action not permitted');
-      // }
+      if (!permissions.consortia[args.consortiumId] || !permissions.consortia[args.consortiumId].write) {
+        return Boom.forbidden('Action not permitted');
+      }
 
       return helperFunctions.getRethinkConnection()
         .then(connection =>
@@ -371,8 +400,14 @@ const resolvers = {
               .delete({ returnChanges: true })
               .run(connection),
             rethink.table('users').replace(user =>
-              user.without({ permissions: { consortia: args.consortiumId } })
-            ).run(connection)
+              user.without({
+                permissions: { consortia: args.consortiumId },
+                consortiaStatuses: args.consortiumId
+              })
+            ).run(connection),
+            rethink.table('pipelines').filter({ owningConsortium: args.consortiumId })
+              .delete()
+              .run(connection)
           ])
         )
         .then(([consortium]) => consortium.changes[0].old_val)
@@ -407,86 +442,30 @@ const resolvers = {
         .then((pipeline) => pipeline.changes[0].old_val)
     },
     /**
-     * Add user id to consortium members list
+     * Add logged user to consortium members list
      * @param {object} auth User object from JWT middleware validateFunc
      * @param {object} args
      * @param {string} args.consortiumId Consortium id to join
-     * @param {string} args.userId Consortium id to join
      * @return {object} Updated consortium
      */
-    joinConsortium: ({ auth: { credentials } }, args) => {
-      const { permissions } = credentials;
-      let userId = args.userId;
-      // TODO: perm update
-      // // If adding another person from consortium, check perms
-      // if (args.userId &&
-      //     permissions.consortia[args.consortiumId] &&
-      //     permissions.consortia[args.consortiumId].write
-      // ) {
-      //   userId = args.userId;
-      // } else if (args.userId &&
-      //     (!permissions.consortia[args.consortiumId] ||
-      //     !permissions.consortia[args.consortiumId].write)
-      // ) {
-      //   return Boom.forbidden('Action not permitted');
-      // }
-      //
-    if(userId){
-      return helperFunctions.getRethinkConnection()
-        .then(connection =>
-          rethink.table('consortia').get(args.consortiumId)('members')
-          .contains(userId).run(connection)
-        ).then((result) => {
-          if(!result){
-            helperFunctions.getRethinkConnection().then((connection) => {
-              rethink.table('consortia').get(args.consortiumId)
-                .update(
-                  { "members": rethink.row("members").append(userId)}, { returnChanges: true }
-                ).run(connection)
-            })
-            .then(result => result)
-          }
-        })
-      }
+    joinConsortium: async ({ auth: { credentials } }, args) => {
+      const connection = await helperFunctions.getRethinkConnection();
+      await addUserPermissions(connection, { userId: credentials.id, role: 'member', doc: args.consortiumId, table: 'consortia' });
+
+      return fetchOne('consortia', args.consortiumId);
     },
     /**
-     * Remove user id to consortium members list
+     * Remove logged user from consortium members list
      * @param {object} auth User object from JWT middleware validateFunc
      * @param {object} args
      * @param {string} args.consortiumId Consortium id to join
-     * @param {string} args.userId Consortium id to join
      * @return {object} Updated consortium
      */
-    leaveConsortium: ({ auth: { credentials } }, args) => {
-      const { permissions } = credentials;
-      userId = args.userId;
-      // TODO: perm update
-      // // If removing another person from consortium, check perms
-      // if (args.userId &&
-      //     permissions.consortia[args.consortiumId] &&
-      //     permissions.consortia[args.consortiumId].write
-      // ) {
-      //   userId = args.userId;
-      // } else if (args.userId &&
-      //     (!permissions.consortia[args.consortiumId] ||
-      //     !permissions.consortia[args.consortiumId].write)
-      // ) {
-      //   return Boom.forbidden('Action not permitted');
-      // }
+    leaveConsortium: async ({ auth: { credentials } }, args) => {
+      const connection = await helperFunctions.getRethinkConnection();
+      await removeUserPermissions(connection, { userId: credentials.id, role: 'member', doc: args.consortiumId, table: 'consortia' });
 
-
-      return helperFunctions.getRethinkConnection()
-        .then((connection) =>
-          rethink.table('consortia').get(args.consortiumId)
-          .update(function(row){
-            return{
-              "members": row("members").setDifference([userId]),
-              "owners": row("owners").setDifference([userId]),
-            }
-          }, {returnChanges: true})
-          .run(connection)
-        )
-        .then(result => result.changes.length ? result.changes[0].new_val : null)
+      return fetchOne('consortia', args.consortiumId);
     },
     /**
      * Deletes computation
@@ -517,66 +496,23 @@ const resolvers = {
      * Add new user role to user perms, currently consortia perms only
      * @param {object} auth User object from JWT middleware validateFunc
      * @param {object} args
+     * @param {string} args.userId Id of the user who will have permissions removed
+     * @param {string} args.table Table of the document to add role to
      * @param {string} args.doc Id of the document to add role to
      * @param {string} args.role Role to add to perms
+     * @param {string} args.userId Id of the user to be removed
      * @return {object} Updated user object
      */
-    removeUserRole: ({ auth: { credentials } }, args) => {
+    removeUserRole: async ({ auth: { credentials } }, args) => {
       const { permissions } = credentials
-      let userId = credentials.id;
 
-      // TODO: perm update
-      // // If adding role for another person from consortium, check perms
-      // if (args.userId &&
-      //     permissions[args.table][args.doc] &&
-      //     permissions[args.table][args.doc].write &&
-      //     (args.role !== 'owner' || args.userId !== credentials.id)
-      // ) {
-      //   userId = args.userId;
-      // } else if (args.userId &&
-      //     (!permissions[args.table][args.doc] ||
-      //     !permissions[args.table][args.doc].write ||
-      //     (args.role === 'owner' && args.userId === credentials.id))
-      // ) {
-      //   return Boom.forbidden('Action not permitted');
-      // }
-
-      let updateObj = {
-        permissions: { [args.table]: {
-          [args.doc]: rethink.table('users')
-            .get(userId)('permissions')(args.table)(args.doc)
-            .filter(role => role.ne(args.role)),
-        } },
-      };
-
-      // Remove entry from user statuses object if updating consortia
-      if (args.table === 'consortia') {
-        const statuses = Object.assign({}, credentials.consortiaStatuses);
-        delete statuses[args.doc];
-        updateObj.consortiaStatuses = statuses;
+      if (!permissions[args.table][args.doc] || !permissions[args.table][args.doc].write) {
+        return Boom.forbidden('Action not permitted');
       }
 
-      return helperFunctions.getRethinkConnection()
-        .then(connection => {
-          const promises = [
-            rethink.table('users')
-              .get(userId).update(updateObj, { nonAtomic: true }).run(connection)
-          ];
-
-          promises.push(
-            rethink.table('consortia').get(args.doc).update(
-              {
-                [`${args.role}s`]: rethink.row(`${args.role}s`).difference([userId])
-              }
-            ).run(connection)
-          );
-
-          return Promise.all(promises);
-        })
-        .then(result =>
-          helperFunctions.getUserDetails({ username: userId })
-        )
-        .then(result => result)
+      const connection = await helperFunctions.getRethinkConnection();
+      await removeUserPermissions(connection, args);
+      return helperFunctions.getUserDetails({ username: args.userId });
     },
     /**
      * Sets active pipeline on consortia object
@@ -606,28 +542,34 @@ const resolvers = {
      * @param {object} args.consortium Consortium object to add/update
      * @return {object} New/updated consortium object
      */
-    saveConsortium: ({ auth: { credentials } }, args) => {
+    saveConsortium: async ({ auth: { credentials } }, args) => {
       const { permissions } = credentials;
 
-      // TODO: perm update
-      // if (!permissions.consortia.write
-      //     && args.consortium.id
-      //     && !permissions.consortia[args.consortium.id].write) {
-      //       return Boom.forbidden('Action not permitted');
-      // }
+      const isUpdate = !!args.consortium.id;
 
-      return helperFunctions.getRethinkConnection()
-        .then(connection =>
-          rethink.table('consortia').insert(
-            args.consortium,
-            {
-              conflict: "update",
-              returnChanges: true,
-            }
-          )
-          .run(connection)
+      if (isUpdate && !permissions.consortia[args.consortium.id].write) {
+        return Boom.forbidden('Action not permitted');
+      }
+
+      const connection = await helperFunctions.getRethinkConnection();
+      const result = await rethink.table('consortia').insert(
+          args.consortium,
+          {
+            conflict: "update",
+            returnChanges: true,
+          }
         )
-        .then(result => result.changes[0].new_val)
+        .run(connection);
+
+      let consortium = result.changes[0].new_val;
+
+      if (!isUpdate) {
+        await addUserPermissions(connection, { userId: credentials.id, role: 'owner', doc: consortium.id, table: 'consortia' });
+        await addUserPermissions(connection, { userId: credentials.id, role: 'member', doc: consortium.id, table: 'consortia' });
+        consortium = await fetchOne('consortia', consortium.id); // fetch again to get the changes on the 'members' and 'owners' properties
+      }
+
+      return consortium;
     },
     /**
      * Saves run error
@@ -799,6 +741,19 @@ const resolvers = {
       subscribe: withFilter(
         () => pubsub.asyncIterator('userChanged'),
         (payload, variables) => (variables.userId || payload.userId === variables.userId)
+      )
+    },
+    /**
+     * User Metadata subscription
+     * @param {object} payload
+     * @param {string} payload.userId The user changed
+     * @param {object} variables
+     * @param {string} variables.userId The user listened for
+     */
+    userMetadataChanged: {
+      subscribe: withFilter(
+        () => pubsub.asyncIterator('userMetadataChanged'),
+        (payload, variables) => (variables.userId && payload.userId === variables.userId)
       )
     },
     /**

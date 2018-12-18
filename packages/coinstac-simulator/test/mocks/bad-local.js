@@ -16,7 +16,6 @@ module.exports = {
   computationPath: './path/to/computation.js',
   local: [{
     x: Promise.resolve('hi'),
-    y: Promise.reject('bye'),
+    y: Promise.reject('bye'), // eslint-disable-line prefer-promise-reject-errors
   }],
 };
-

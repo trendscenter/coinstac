@@ -20,7 +20,6 @@ module.exports = {
   }],
   remote: {
     x: Promise.resolve('charizard'),
-    y: Promise.reject('pikachu'),
+    y: Promise.reject('pikachu'), // eslint-disable-line prefer-promise-reject-errors
   },
 };
-

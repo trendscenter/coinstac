@@ -50,7 +50,7 @@ packages/coinstac-server-core/computations
 jsconfig.json
 
 # Built files
-packages/coinstac-ui/app/render/build
+packages/coinstac-ui/build
 
 # Configuration files
 packages/coinstac-simulator/config/*

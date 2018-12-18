@@ -21,7 +21,7 @@ import {
   pullComputations,
   updateDockerOutput,
 } from '../../state/ducks/docker';
-import { updateUserConsortiaStatuses } from '../../state/ducks/auth';
+import { updateUserConsortiaStatuses, updateUserPerms } from '../../state/ducks/auth';
 import {
   COMPUTATION_CHANGED_SUBSCRIPTION,
   CONSORTIUM_CHANGED_SUBSCRIPTION,
@@ -31,13 +31,51 @@ import {
   FETCH_ALL_USER_RUNS_QUERY,
   PIPELINE_CHANGED_SUBSCRIPTION,
   USER_CHANGED_SUBSCRIPTION,
+  USER_METADATA_CHANGED_SUBSCRIPTION,
   USER_RUN_CHANGED_SUBSCRIPTION,
   UPDATE_USER_CONSORTIUM_STATUS_MUTATION,
+  FETCH_USER_QUERY,
 } from '../../state/graphql/functions';
 import {
   getAllAndSubProp,
   getSelectAndSubProp,
 } from '../../state/graphql/props';
+
+const styles = {
+
+  status: {
+    display: 'inline-block',
+    fontSize: '1.25rem',
+    position: 'relative',
+    width: '100%',
+  },
+
+  statusGood: {
+    marginLeft: '6.5rem',
+  },
+
+  statusUp: {
+    display: 'inline-block',
+    width: '1rem',
+    height: '1rem',
+    background: '#5cb85c',
+    borderRadius: '50%',
+    marginLeft: '0.5rem',
+  },
+
+  statusDown: {
+    display: 'inline-block',
+    width: '100%',
+    background: '#d9534f',
+    borderRadius: '0.5rem',
+    marginLeft: '0.5rem',
+    padding: '1rem',
+    color: 'white',
+    fontSize: '2rem',
+    textAlign: 'center',
+    textShadow: '1px 1px 0px rgba(0, 0, 0, 1)',
+  },
+};
 
 class Dashboard extends Component {
   constructor(props) {
@@ -46,11 +84,13 @@ class Dashboard extends Component {
     this.props.getDBRuns();
 
     this.state = {
+      dockerStatus: true,
       unsubscribeComputations: null,
       unsubscribeConsortia: null,
       unsubscribePipelines: null,
       unsubscribeRuns: null,
       unsubscribeUsers: null,
+      unsubscribeToUserMetadata: null,
     };
   }
 
@@ -58,7 +98,16 @@ class Dashboard extends Component {
     const { auth: { user } } = this.props;
     const { router } = this.context;
 
-    //console.log(this.props.getDockerStatus());
+    setInterval(() => {
+      let status = this.props.getDockerStatus();
+      status.then((result) => {
+        if( result == 'OK' ){
+          this.setState({dockerStatus: true});
+        }
+      }, (err) => {
+        this.setState({dockerStatus: false});
+      });
+    }, 5000);
 
     process.nextTick(() => {
       if (!user.email.length) {
@@ -114,9 +163,18 @@ class Dashboard extends Component {
 
       this.props.updateLocalRun(arg.run.id, { error: arg.run.error, status: 'error' });
     });
+
+    this.unsubscribeToUserMetadata = this.props.subscribeToUserMetaData(user.id);
+    
+    ipcRenderer.on('docker-error', (event, arg) => {
+      this.props.notifyError({
+        message: `Docker Error: ${arg.err.message}`,
+        autoDismiss: 5
+      });
+    });
   }
 
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     const { auth: { user }, client } = this.props;
     const { router } = this.context;
 
@@ -354,17 +412,31 @@ class Dashboard extends Component {
     }
   }
 
+  componentDidUpdate(prevProps) {
+    const { currentUser } = this.props;
+    if (currentUser &&
+      (!prevProps.currentUser || prevProps.currentUser.permissions !== currentUser.permissions)
+    ) {
+      this.props.updateUserPerms(currentUser.permissions);
+    }
+  }
+
   componentWillUnmount() {
     this.state.unsubscribeComputations();
     this.state.unsubscribeConsortia();
     this.state.unsubscribePipelines();
     this.state.unsubscribeRuns();
 
+    if (typeof this.unsubscribeToUserMetadata === 'function') {
+      this.unsubscribeToUserMetadata();
+    }
+
     ipcRenderer.removeAllListeners('docker-out');
     ipcRenderer.removeAllListeners('docker-pull-complete');
     ipcRenderer.removeAllListeners('local-run-complete');
     ipcRenderer.removeAllListeners('local-run-error');
     ipcRenderer.removeAllListeners('local-pipeline-state-update');
+    ipcRenderer.removeAllListeners('docker-error');
   }
 
   render() {
@@ -391,6 +463,12 @@ class Dashboard extends Component {
               <DashboardNav auth={auth} />
               <UserAccountController push={router.push} />
             </nav>
+            <div style={styles.status}>
+              { this.state.dockerStatus
+              ? <span style={styles.statusGood}><strong>Docker Status:</strong><span style={styles.statusUp} /></span>
+              : <span style={styles.statusDown}>Docker Is Not Running!</span>
+              }
+            </div>
           </div>
           <div className="col-xs-12 col-sm-9 content-pane">
             {childrenWithProps}
@@ -410,9 +488,11 @@ Dashboard.contextTypes = {
 Dashboard.defaultProps = {
   computations: [],
   consortia: [],
+  maps: [],
   pipelines: [],
   remoteRuns: [],
   runs: [],
+  currentUser: null,
 };
 
 Dashboard.propTypes = {
@@ -429,6 +509,7 @@ Dashboard.propTypes = {
   notifyInfo: PropTypes.func.isRequired,
   notifySuccess: PropTypes.func.isRequired,
   notifyWarning: PropTypes.func.isRequired,
+  maps: PropTypes.array,
   pipelines: PropTypes.array,
   pullComputations: PropTypes.func.isRequired,
   remoteRuns: PropTypes.array,
@@ -444,6 +525,8 @@ Dashboard.propTypes = {
   updateLocalRun: PropTypes.func.isRequired,
   updateUserConsortiumStatus: PropTypes.func.isRequired,
   writeLog: PropTypes.func.isRequired,
+  updateUserPerms: PropTypes.func.isRequired,
+  currentUser: PropTypes.object,
 };
 
 function mapStateToProps({ auth, runs: { runs } }) {
@@ -483,6 +566,25 @@ const DashboardWithData = compose(
     'subscribeToPipelines',
     'pipelineChanged'
   )),
+  graphql(FETCH_USER_QUERY, {
+    options: props => ({
+      fetchPolicy: 'cache-and-network',
+      variables: { userId: props.auth.user.id },
+    }),
+    props: props => ({
+      currentUser: props.data.fetchUser,
+      subscribeToUserMetaData: userId => props.data.subscribeToMore({
+        document: USER_METADATA_CHANGED_SUBSCRIPTION,
+        variables: { userId },
+        updateQuery: (prevResult, { subscriptionData: { data } }) => {
+          if (data.userMetadataChanged.delete) {
+            return { fetchUser: null };
+          }
+          return { fetchUser: data.userMetadataChanged };
+        },
+      })
+    }),
+  }),
   graphql(UPDATE_USER_CONSORTIUM_STATUS_MUTATION, {
     props: ({ ownProps, mutate }) => ({
       updateUserConsortiumStatus: (consortiumId, status) => mutate({
@@ -515,5 +617,6 @@ export default connect(mapStateToProps,
     updateLocalRun,
     updateUserConsortiaStatuses,
     writeLog,
+    updateUserPerms
   }
 )(DashboardWithData);
