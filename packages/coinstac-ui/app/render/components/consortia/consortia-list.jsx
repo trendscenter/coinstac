@@ -421,7 +421,7 @@ class ConsortiaList extends Component {
     return (
       <div>
         <div className="page-header">
-          <Typography variant="h4" className={classes.pageTitle}>
+          <Typography variant="h4">
             Consortia
           </Typography>
           <Fab
