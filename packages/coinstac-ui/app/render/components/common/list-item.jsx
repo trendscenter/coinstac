@@ -17,6 +17,9 @@ const styles = theme => ({
   title: {
     marginBottom: theme.spacing.unit,
   },
+  description: {
+    marginBottom: theme.spacing.unit * 2,
+  },
 });
 
 const ListItem = ({
@@ -34,7 +37,7 @@ const ListItem = ({
     <Typography variant="headline" className={classes.title}>
       { itemObject.name }
     </Typography>
-    <Typography variant="body1">
+    <Typography variant="body1" className={classes.description}>
       { itemObject.description }
     </Typography>
     { itemOptions.text }
