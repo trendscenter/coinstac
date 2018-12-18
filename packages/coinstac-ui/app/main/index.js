@@ -7,6 +7,8 @@
 
 'use strict';
 
+require('trace');
+require('clarify');
 const { compact } = require('lodash'); // eslint-disable-line no-unused-vars
 const mock = require('../../test/e2e/mocks');
 const electron = require('electron');
