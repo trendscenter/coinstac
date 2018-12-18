@@ -1,6 +1,7 @@
 import React from 'react';
 import Avatar from 'react-avatar';
 import PropTypes from 'prop-types';
+import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
 
 const styles = theme => ({
@@ -11,8 +12,6 @@ const styles = theme => ({
     textAlign: 'center',
   },
   textStyles: {
-    marginBottom: 0,
-    textAlign: 'center',
     fontSize: 12,
   },
 });
@@ -29,9 +28,12 @@ function MemberAvatar({
       <Avatar name={name} size={width} />
       {
         consRole && showDetails
-        && <p className={classes.textStyles}>{consRole}</p>
+        && <Typography variant="subtitle2" className={classes.textStyles}>{consRole}</Typography>
       }
-      {showDetails && <p className={classes.textStyles}><em>{name}</em></p>}
+      {
+        showDetails
+        && <Typography variant="caption" className={classes.textStyles}>{name}</Typography>
+      }
     </div>
   );
 }

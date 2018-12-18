@@ -191,9 +191,10 @@ class ConsortiaList extends Component {
       actions.push(
         <Button
           key={`${consortium.id}-set-active-pipeline-button`}
+          component={Link}
+          to={`dashboard/consortia/${consortium.id}/2`}
           variant="contained"
           color="secondary"
-          href={`dashboard/consortia/${consortium.id}/2`}
           className={classes.button}
         >
           Set Active Pipeline
@@ -202,10 +203,11 @@ class ConsortiaList extends Component {
     } else if ((owner || member) && !isMapped) {
       actions.push(
         <Button
+          component={Link}
+          to="dashboard/collections"
           variant="contained"
           color="secondary"
           className={classes.button}
-          href="dashboard/collections"
           key={`${consortium.id}-set-map-local-button`}
         >
           Map Local Data
