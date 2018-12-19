@@ -1,11 +1,22 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { Table, Button } from 'react-bootstrap';
+import Button from '@material-ui/core/Button';
+import Table from '@material-ui/core/Table';
+import TableBody from '@material-ui/core/TableBody';
+import TableCell from '@material-ui/core/TableCell';
+import TableHead from '@material-ui/core/TableHead';
+import TableRow from '@material-ui/core/TableRow';
+import { withStyles } from '@material-ui/core/styles';
 
-const styles = {
-  csvButton: { position: 'absolute', top: '20rem', right: '2rem' },
-  theading: { color: 'white', fontSize: '0' },
-};
+const styles = theme => ({
+  downloadButtonContainer: {
+    textAlign: 'right',
+  },
+  theading: {
+    color: 'white',
+    fontSize: '0'
+  },
+});
 
 /**
  * downloadCSV
@@ -177,98 +188,102 @@ class TableResult extends Component {
 
       tableContents.push(
         <div>
-        {data.covariate_labels && data.covariate_labels.length > 0 &&
-        <Table
-          responsive
-          bordered
-          key={`${heading}-table-objects`}
-          style={{ marginLeft, width: '60%' }}
-        >
-        <thead>
-            <tr>
-              <th key={`${heading}-table-heading`} style={styles.theading}>{heading}</th>
-              {labels.map((label, index) => {
-                  return <th key={`${index}-table-label`} className={'text-nowrap'}>&beta;{`${index} (${label})`}</th>
-              })}
-            </tr>
-          </thead>
-          <tbody>
-            {Array.isArray(data) &&
-              data.map((d, index) => {
-                return (
-                  <tr key={`${heading}-${index}-${key[0]}-objects-row`}>
-                    {keys.map(key =>
-                    (
-                      <td style={{ fontFamily: 'Courier' }} key={`${heading}-${index}-${key[0]}-column`}>
-                        {parseTableColumnOutput(d[key[0]])}
-                      </td>
-                    ))}
-                  </tr>
-                );
-              })
-            }
-            {!Array.isArray(data) &&
-              keyValPairs.map((pair) => {
-                  if(typeof pair[1] === 'object' && pair[0] !== 'covariate_labels') {
-                    return <tr key={`${heading}-${pair[0]}-objects-row`}>
-                      <td className="bold"  key={`${heading}-${pair[0]}-}-column`}>
-                        {outputProps.items[pair[0]] ? outputProps.items[pair[0]].label : pair[0]}
-                      </td>
-                      {parseTableColumnOutput(pair[1])}
-                    </tr>;
+          {
+            data.covariate_labels && data.covariate_labels.length > 0
+            && (
+              <Table
+                key={`${heading}-table-objects`}
+                style={{ marginLeft, width: '60%' }}
+              >
+                <TableHead>
+                  <TableRow>
+                    <TableCell style={styles.theading}>{heading}</TableCell>
+                    {
+                      labels.map((label, index) => {
+                        return <TableCell key={`${index}-table-label`} className={'text-nowrap'}>&beta;{`${index} (${label})`}</TableCell>
+                      })
+                    }
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {Array.isArray(data) &&
+                    data.map((d, index) => {
+                      return (
+                        <TableRow key={`${heading}-${index}-${key[0]}-objects-row`}>
+                          {keys.map(key =>
+                          (
+                            <TableCell style={{ fontFamily: 'Courier' }} key={`${heading}-${index}-${key[0]}-column`}>
+                              {parseTableColumnOutput(d[key[0]])}
+                            </TableCell>
+                          ))}
+                        </TableRow>
+                      );
+                    })
                   }
-                }
-              )
-            }
-          </tbody>
-        </Table>
-        }
-        <Table
-          responsive
-          bordered
-          condensed
-          key={`${heading}-table-numbers`}
-          style={{ marginLeft, width: '60%' }}
-        >
-          {Array.isArray(data) &&
-            <thead>
-              <tr>
-                {keys.map(key => <th key={`${key[0]}-numbers-heading`}>{key[0]}</th>)}
-              </tr>
-            </thead>
+                  {!Array.isArray(data) &&
+                    keyValPairs.map((pair) => {
+                        if(typeof pair[1] === 'object' && pair[0] !== 'covariate_labels') {
+                          return <TableRow key={`${heading}-${pair[0]}-objects-row`}>
+                            <TableCell className="bold"  key={`${heading}-${pair[0]}-}-column`}>
+                              {outputProps.items[pair[0]] ? outputProps.items[pair[0]].label : pair[0]}
+                            </TableCell>
+                            {parseTableColumnOutput(pair[1])}
+                          </TableRow>;
+                        }
+                      }
+                    )
+                  }
+                </TableBody>
+              </Table>
+            )
           }
-          <tbody>
-            {Array.isArray(data) &&
-              data.map((d, index) => {
-                return (
-                  <tr key={`${index}-objects-row`}>
-                    {keys.map(key =>
-                    (
-                      <td style={{ fontFamily: 'Courier' }} key={`${key[0]}-column`}>
-                        {parseTableColumnOutput(d[key[0]])}
-                      </td>
-                    ))}
-                  </tr>
-                );
-              })
-            }
-            {!Array.isArray(data) &&
-              keyValPairs.map((pair) => {
-                  if(typeof pair[1] === 'number') {
-                    return <tr key={`${pair[0]}-numbers-row`}>
-                      <td className="bold" key={`${pair[0]}-numbers-column`}>
-                      {outputProps.items[pair[0]] ? outputProps.items[pair[0]].label : pair[0]}
-                      </td>
-                      <td style={{ fontFamily: 'Courier' }} key={`${pair[0]}-numbers-column-output`}>
-                        {parseTableColumnOutput(pair[1])}
-                      </td>
-                    </tr>;
-                  }
-                }
+          <Table
+            key={`${heading}-table-numbers`}
+            style={{ marginLeft, width: '60%' }}
+          >
+            {
+              Array.isArray(data)
+              && (
+                <TableHead>
+                  <TableRow>
+                    {keys.map(key => <TableCell key={`${key[0]}-numbers-heading`}>{key[0]}</TableCell>)}
+                  </TableRow>
+                </TableHead>
               )
             }
-          </tbody>
-        </Table>
+            <TableBody>
+              {
+                Array.isArray(data) && data.map((d, index) => {
+                  return (
+                    <TableRow key={`${index}-objects-row`}>
+                      {keys.map(key =>
+                      (
+                        <TableCell style={{ fontFamily: 'Courier' }} key={`${key[0]}-column`}>
+                          {parseTableColumnOutput(d[key[0]])}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  );
+                })
+              }
+              {
+                !Array.isArray(data) && keyValPairs.map((pair) => {
+                  if (typeof pair[1] === 'number') {
+                    return (
+                      <TableRow key={`${pair[0]}-numbers-row`}>
+                        <TableCell className="bold" key={`${pair[0]}-numbers-column`}>
+                        {outputProps.items[pair[0]] ? outputProps.items[pair[0]].label : pair[0]}
+                        </TableCell>
+                        <TableCell style={{ fontFamily: 'Courier' }} key={`${pair[0]}-numbers-column-output`}>
+                          {parseTableColumnOutput(pair[1])}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  }
+                })
+              }
+            </TableBody>
+          </Table>
         </div>
       );
     }
@@ -277,25 +292,28 @@ class TableResult extends Component {
   }
 
   render() {
-    const { computationOutput, plotData, tables } = this.props;
+    const { computationOutput, plotData, tables, classes } = this.props;
 
     return (
       <div>
-        <Button
-          bsStyle="primary"
-          onClick={this.saveFileCSV}
-          style={styles.csvButton}
-        >
-          Download to CSV
-        </Button>
-        {tables && tables.map(t =>
-          this.makeTable(
-            t,
-            plotData[t.source],
-            computationOutput[t.source],
-            computationOutput[t.source].label,
-            0
-          )
+        <div className={classes.downloadButtonContainer}>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={this.saveFileCSV}
+          >
+            Download to CSV
+          </Button>
+        </div>
+        {
+          tables && tables.map(t =>
+            this.makeTable(
+              t,
+              plotData[t.source],
+              computationOutput[t.source],
+              computationOutput[t.source].label,
+              0
+            )
         )}
         {!tables && this.makeTable(null, plotData.testData, null, 'Test Data', 0)}
       </div>
@@ -314,4 +332,4 @@ TableResult.defaultProps = {
   tables: null,
 };
 
-export default TableResult;
+export default withStyles(styles)(TableResult);
