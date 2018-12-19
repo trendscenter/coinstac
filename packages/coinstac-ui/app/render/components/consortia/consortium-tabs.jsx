@@ -240,7 +240,7 @@ class ConsortiumTabs extends Component {
           )
         }
         {
-          false
+          selectedTabIndex === 2
           && (
             <ConsortiumRuns
               runs={this.getConsortiumRuns()}
