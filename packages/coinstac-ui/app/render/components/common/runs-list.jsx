@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import { Alert } from 'react-bootstrap';
+import Typography from '@material-ui/core/Typography';
 import RunItem from './run-item';
 
 function getActiveTime(hoursSinceActive) {
@@ -39,17 +39,17 @@ const RunsList = ({ auth, consortia, limitToComplete, hoursSinceActive, runs }) 
         runNoResultsCount += 1;
         return null;
       })}
-      {(!runs || !runs.length || runNoResultsCount === runs.length) &&
-        <Alert bsStyle="info">
-          {hoursSinceActive === 0 && (<span>No {limitToComplete ? 'results' : 'runs'} found</span>)}
-          {hoursSinceActive > 0 &&
-            (
-              <span>
-                No activity in the last <span className="bold">{hoursSinceActive}</span> hours.
-              </span>
-            )
-          }
-        </Alert>
+      {
+        (!runs || !runs.length || runNoResultsCount === runs.length)
+        && (
+          <Typography variant="body1">
+            {
+              hoursSinceActive === 0
+                ? <span>No {limitToComplete ? 'results' : 'runs'} found</span>
+                : <span>No activity in the last <span className="bold">{hoursSinceActive}</span> hours.</span>
+            }
+          </Typography>
+        )
       }
     </div>
   );

@@ -1,12 +1,22 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import Typography from '@material-ui/core/Typography';
+import { withStyles } from '@material-ui/core/styles';
 import RunsList from '../common/runs-list';
 
-const ResultsList = ({ runs, consortia }) => {
+const styles = theme => ({
+  pageTitle: {
+    marginBottom: theme.spacing.unit * 2,
+  },
+});
+
+const ResultsList = ({ runs, consortia, classes }) => {
   return (
     <div>
-      <div className="page-header clearfix">
-        <h1 className="pull-left">Results</h1>
+      <div className="page-header">
+        <Typography variant="h4" className={classes.pageTitle}>
+          Results
+        </Typography>
       </div>
 
       <RunsList
@@ -22,6 +32,7 @@ const ResultsList = ({ runs, consortia }) => {
 ResultsList.propTypes = {
   runs: PropTypes.array,
   consortia: PropTypes.array,
+  classes: PropTypes.object.isRequired,
 };
 
 ResultsList.defaultProps = {
@@ -29,4 +40,4 @@ ResultsList.defaultProps = {
   consortia: null,
 };
 
-export default ResultsList;
+export default withStyles(styles)(ResultsList);
