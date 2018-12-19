@@ -2,10 +2,9 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { compose, graphql, withApollo } from 'react-apollo';
-import {
-  Alert,
-  Button,
-} from 'react-bootstrap';
+import Button from '@material-ui/core/Button';
+import Typography from '@material-ui/core/Typography';
+import { withStyles } from '@material-ui/core/styles';
 import ipcPromise from 'ipc-promise';
 import { services } from 'coinstac-common';
 import {
@@ -14,9 +13,19 @@ import {
 import { saveDocumentProp } from '../../state/graphql/props';
 import { notifySuccess } from '../../state/ducks/notifyAndLog';
 
-const styles = {
-  topMargin: { marginTop: 10 },
-};
+const styles = theme => ({
+  topMargin: {
+    marginTop: theme.spacing.unit,
+  },
+  description: {
+    marginTop: theme.spacing.unit * 2,
+    marginBottom: theme.spacing.unit * 2,
+  },
+  actionsContainer: {
+    display: 'flex',
+    justifyContent: 'space-between',
+  },
+});
 
 class ComputationSubmission extends Component { // eslint-disable-line
   constructor(props) {
@@ -65,52 +74,77 @@ class ComputationSubmission extends Component { // eslint-disable-line
   }
 
   render() {
+    const { classes } = this.props;
+    const { activeSchema, validationErrors, submissionSuccess } = this.state;
+
     return (
-      <div style={styles.topMargin}>
-        <h1 className="h2">Computation Submission:</h1>
-        <p>
+      <div>
+        <div className="page-header">
+          <Typography variant="h4">
+            Computation Submission:
+          </Typography>
+        </div>
+        <Typography variant="body1" className={classes.description}>
           Use the button below to upload your schema for review. Prior to submission,
           your schema will be validated. Please fix any errors found therein to unlock the
-          <span style={{ fontWeight: 'bold' }}> Submit</span> for review.
-        </p>
-        <Button
-          bsStyle="primary"
-          type="button"
-          onClick={this.getComputationSchema}
-        >
-          Add Computation Schema
-        </Button>
-        <Button
-          bsStyle="success"
-          type="button"
-          className={'pull-right'}
-          disabled={!this.state.activeSchema.meta || this.state.validationErrors !== null}
-          onClick={this.submitSchema}
-        >
-          Submit
-        </Button>
+          <span style={{ fontWeight: 'bold' }}> Submit </span>
+          for review.
+        </Typography>
+        <div className={classes.actionsContainer}>
+          <Button
+            variant="contained"
+            color="secondary"
+            onClick={this.getComputationSchema}
+          >
+            Add Computation Schema
+          </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            disabled={!activeSchema.meta || validationErrors !== null}
+            onClick={this.submitSchema}
+          >
+            Submit
+          </Button>
+        </div>
 
-        {this.state.validationErrors &&
-          (<Alert bsStyle="danger" style={{ ...styles.topMargin, textAlign: 'left' }}>
-            <h4 style={{ fontStyle: 'normal' }}>Validation Error</h4>
-            <ul>
-              {this.state.validationErrors.map(error =>
-                <li key={error.path}>Error at {error.path}: {error.message}</li>
-              )}
-            </ul>
-          </Alert>)
+        {
+          validationErrors
+          && (
+            <div>
+              <Typography variant="h6">
+                Validation Error
+              </Typography>
+              <ul>
+                {
+                  validationErrors.map(error => (
+                    <li key={error.path}>
+                      {`Error at ${error.path}: ${error.message}`}
+                    </li>
+                  ))
+                }
+              </ul>
+            </div>
+          )
         }
 
-        {!this.state.activeSchema.meta && this.state.submissionSuccess === false &&
-          <Alert bsStyle="danger" style={styles.topMargin}>
-            <strong>Error!</strong> Try again?
-          </Alert>
+        {
+          !activeSchema.meta && submissionSuccess === false
+          && (
+            <Typography variant="h6">
+              <strong>Error!</strong>
+              Try again?
+            </Typography>
+          )
         }
 
-        {this.state.activeSchema.meta &&
-          <pre style={styles.topMargin}>
-            {JSON.stringify(this.state.activeSchema, null, 2)}
-          </pre>
+        {
+          activeSchema.meta
+          && (
+            <pre className={classes.topMargin}>
+              {JSON.stringify(activeSchema, null, 2)}
+            </pre>
+          )
         }
       </div>
     );
@@ -127,12 +161,12 @@ const mapStateToProps = ({ notifySuccess, submitSchema }) => {
 };
 
 const ComputationSubmissionWithAlert = compose(
-graphql(ADD_COMPUTATION_MUTATION, saveDocumentProp('submitSchema', 'computationSchema')),
-withApollo
+  graphql(ADD_COMPUTATION_MUTATION, saveDocumentProp('submitSchema', 'computationSchema')),
+  withApollo
 )(ComputationSubmission);
 
-export default connect(mapStateToProps,
-  {
-    notifySuccess
-  }
-)(ComputationSubmissionWithAlert);
+const connectedComponent = connect(mapStateToProps, {
+  notifySuccess,
+})(ComputationSubmissionWithAlert);
+
+export default withStyles(styles)(connectedComponent);
