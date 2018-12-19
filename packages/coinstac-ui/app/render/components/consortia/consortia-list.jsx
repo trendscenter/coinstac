@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { Link } from 'react-router';
 import { compose, graphql, withApollo } from 'react-apollo';
-import { Alert } from 'react-bootstrap';
 import Button from '@material-ui/core/Button';
 import Fab from '@material-ui/core/Fab';
 import Typography from '@material-ui/core/Typography';
@@ -437,19 +436,23 @@ class ConsortiaList extends Component {
         {consortia && consortia.length && consortia.length <= MAX_LENGTH_CONSORTIA
           && consortia.map(consortium => this.getListItem(consortium))
         }
-        {ownedConsortia.length > 0 && <h4>Owned Consortia</h4>}
-        {ownedConsortia.length > 0 &&
-          ownedConsortia.map(consortium => this.getListItem(consortium))
+        {ownedConsortia.length > 0 && <Typography variant="h6">Owned Consortia</Typography>}
+        {
+          ownedConsortia.length > 0
+          && ownedConsortia.map(consortium => this.getListItem(consortium))
         }
-        {otherConsortia.length > 0 && <h4>Other Consortia</h4>}
-        {otherConsortia.length > 0 &&
-          otherConsortia.map(consortium => this.getListItem(consortium))
+        {otherConsortia.length > 0 && <Typography variant="h6">Other Consortia</Typography>}
+        {
+          otherConsortia.length > 0
+          && otherConsortia.map(consortium => this.getListItem(consortium))
         }
-
-        {(!consortia || !consortia.length) &&
-          <Alert bsStyle="info">
-            No consortia found
-          </Alert>
+        {
+          (!consortia || !consortia.length)
+          && (
+            <Typography variant="body1">
+              No consortia found
+            </Typography>
+          )
         }
         <ListDeleteModal
           close={this.closeModal}

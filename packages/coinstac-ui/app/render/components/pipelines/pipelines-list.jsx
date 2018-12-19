@@ -19,7 +19,7 @@ import {
   removeDocFromTableProp,
 } from '../../state/graphql/props';
 
-const MAX_LENGTH_PIPELINES = 2;
+const MAX_LENGTH_PIPELINES = 5;
 
 const styles = theme => ({
   button: {
