@@ -8,7 +8,7 @@ import Tab from '@material-ui/core/Tab';
 import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
 import ArrowBackIcon from '@material-ui/icons/ArrowBack';
-import { Well } from 'react-bootstrap';
+import classNames from 'classnames';
 import TimeStamp from 'react-timestamp';
 import BrowserHistory from 'react-router/lib/browserHistory';
 import Box from './displays/box-plot';
@@ -30,6 +30,9 @@ const styles = theme => ({
   label: {
     fontWeight: 'bold',
     marginRight: theme.spacing.unit,
+  },
+  error: {
+    color: 'red',
   },
 });
 
@@ -233,10 +236,12 @@ class Result extends Component {
         }
 
         {
-          run && run.error &&
-          <Well style={{ color: 'red' }}>
-            {JSON.stringify(run.error.message, null, 2)}
-          </Well>
+          run && run.error
+          && (
+            <Paper className={classNames(classes.paper, classes.error)}>
+              {JSON.stringify(run.error.message, null, 2)}
+            </Paper>
+          )
         }
       </div>
     );
