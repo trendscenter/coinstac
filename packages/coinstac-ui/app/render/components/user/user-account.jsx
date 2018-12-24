@@ -1,5 +1,6 @@
 import { connect } from 'react-redux';
 import React from 'react';
+import { Link } from 'react-router';
 import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
@@ -75,7 +76,7 @@ const UserAccount = (props) => {
               </Typography>
             </ListItemText>
           </ListItem>
-          <ListItem disableGutters button component="a" href="#/dashboard/settings">
+          <ListItem disableGutters button component={Link} to="/dashboard/settings">
             <ListItemIcon><SettingsIcon /></ListItemIcon>
             <ListItemText
               primary="Settings"
@@ -84,7 +85,7 @@ const UserAccount = (props) => {
               }}
             />
           </ListItem>
-          <ListItem disableGutters button component="a" href="#/login" onClick={logoutUser}>
+          <ListItem disableGutters button component={Link} to="/login" onClick={logoutUser}>
             <ListItemIcon><ExitToAppIcon /></ListItemIcon>
             <ListItemText
               primary="Log Out"

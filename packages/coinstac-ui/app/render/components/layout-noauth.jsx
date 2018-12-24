@@ -30,10 +30,22 @@ function LayoutNoAuth({ children, classes }) {
             <div className="screen__content">
               <CoinstacAbbr />
               <div className={classes.navButtonsContainer}>
-                <Button component={Link} variant="contained" color="primary" to="/login" className={classes.navButton}>
+                <Button
+                  component={Link}
+                  variant="contained"
+                  to="/login"
+                  color={window.location.href.includes('/login') ? 'primary' : 'default'}
+                  className={classes.navButton}
+                >
                   Log In
                 </Button>
-                <Button component={Link} to="/signup" className={classNames(classes.navButton, classes.lastNavButton)}>
+                <Button
+                  component={Link}
+                  variant="contained"
+                  to="/signup"
+                  color={window.location.href.includes('/signup') ? 'primary' : 'default'}
+                  className={classNames(classes.navButton, classes.lastNavButton)}
+                >
                   Sign Up
                 </Button>
               </div>
