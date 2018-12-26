@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import { graphql } from 'react-apollo';
-import { Col, Row } from 'react-bootstrap';
 import { Link } from 'react-router';
 import Paper from '@material-ui/core/Paper';
 import Divider from '@material-ui/core/Divider';
