@@ -1,217 +1,74 @@
-import React, { Component } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
-import {
-  Button,
-  DropdownButton,
-  FormGroup,
-  FormControl,
-  MenuItem,
-  Table,
-} from 'react-bootstrap';
-import update from 'immutability-helper';
-import variableOptions from './pipeline-variable-data-options.json';
-import MultiSelectField from '../common/react-select';
+import Table from '@material-ui/core/Table';
+import TableCell from '@material-ui/core/TableCell';
+import TableHead from '@material-ui/core/TableHead';
+import TableRow from '@material-ui/core/TableRow';
+import PipelineOwnerMappings from './pipeline-owner-mappings';
 
-export default class PipelineStepMemberTable extends Component {
-  static getCovarSourceTitle(obj) {
-    if (obj.fromCache) {
-      return `Step: ${obj.fromCache.step + 1}`;
-    } else if (obj.source) {
-      return 'File';
-    }
+function PipelineStepMemberTable(props) {
+  const {
+    getNewObj,
+    objKey,
+    objParams,
+    owner,
+    possibleInputs,
+    step,
+    updateStep,
+  } = props;
 
-    return 'Data Source';
-  }
-
-  render() {
-    const {
-      getNewObj,
-      objKey,
-      objParams,
-      owner,
-      parentKey,
-      possibleInputs,
-      step,
-      updateStep,
-    } = this.props;
-
-    const freeSurferOptions = variableOptions.freesurferROIs.map((val) => {
-      return { label: val, value: val };
-    });
-
-    return (
-      <Table style={{ marginLeft: 10 }}>
-        {step.inputMap[objKey] && 'ownerMappings' in step.inputMap[objKey] && step.inputMap[objKey].ownerMappings.length > 0 &&
-          <thead>
-            {objKey === 'covariates' &&
-              <tr>
-                <th>Data Type</th>
-                <th>Source</th>
-                <th>Name</th>
-                <th />
-              </tr>
+  return (
+    <Table>
+      {
+        step.inputMap[objKey]
+        && 'ownerMappings' in step.inputMap[objKey]
+        && step.inputMap[objKey].ownerMappings.length > 0
+        && (
+          <TableHead>
+            {
+              objKey === 'covariates'
+              && (
+                <TableRow>
+                  <TableCell>Data Type</TableCell>
+                  <TableCell>Source</TableCell>
+                  <TableCell>Name</TableCell>
+                  <TableCell />
+                </TableRow>
+              )
             }
-            {objKey === 'data' &&
-              <tr>
-                <th>Data Type</th>
-                <th>Interest</th>
-                <th />
-              </tr>
+            {
+              objKey === 'data'
+              && (
+                <TableRow>
+                  <TableCell>Data Type</TableCell>
+                  <TableCell>Interest</TableCell>
+                  <TableCell />
+                </TableRow>
+              )
             }
-          </thead>
-        }
-        {step.inputMap[objKey] && 'ownerMappings' in step.inputMap[objKey] && step.inputMap[objKey].ownerMappings.map((obj, index) => (
-          <tbody style={{ border: 'none' }} key={`${objKey}-${index}`}>
-            <tr>
-              <td>
-                <DropdownButton
-                  bsStyle="info"
-                  id={`${objKey}-${index}-data-dropdown`}
-                  title={obj.type ||
-                    (obj.fromCache && possibleInputs.length ?
-                      possibleInputs[obj.fromCache.step].inputs[obj.fromCache.variable].type :
-                      false) ||
-                    'Data Type'
-                  }
-                  disabled={!owner}
-                >
-                  {objParams.items.map(item => (
-                    <MenuItem
-                      eventKey={`${item}-menuitem`}
-                      key={`${item}-menuitem`}
-                      onClick={() => updateStep({
-                        ...step,
-                        inputMap: getNewObj('type', item, index),
-                      })}
-                    >
-                      {item}
-                    </MenuItem>
-                  ))}
-                </DropdownButton>
-              </td>
-              {objKey === 'data' &&
-                <td>
-                  {obj.type === 'FreeSurfer' &&
-                    <div id={`data-${index}-area`}>
-                      <MultiSelectField
-                        value={obj.value}
-                        placeholder="Select Area(s) of Interest"
-                        options={freeSurferOptions}
-                        closeOnSelect={false}
-                        disabled={false}
-                        multi
-                        onChange={(value) => updateStep({
-                          ...step,
-                          inputMap: getNewObj('value', value, index, false),
-                        })}
-                        removeSelected
-                        simpleValue
-                      />
-                    </div>
-                  }
-                  {obj.type !== 'FreeSurfer' && <span>-</span>}
-                </td>
-              }
-              {objKey === 'covariates' &&
-                <td>
-                  <DropdownButton
-                    id={`input-source-${index}-dropdown`}
-                    title={this.constructor.getCovarSourceTitle(obj)}
-                    disabled={!owner}
-                  >
-                    <MenuItem
-                      eventKey={'file-source-menuitem'}
-                      key={'file-source-menuitem'}
-                      onClick={() => this.props.updateStep({
-                        ...step,
-                        inputMap: getNewObj(
-                          'source',
-                          'file',
-                          index
-                        ),
-                      })}
-                    >
-                      File
-                    </MenuItem>
-                    {possibleInputs.map(itemObj => (
-                      Object.entries(itemObj.inputs)
-                        .filter(filterIn =>
-                          (obj.fromCache && possibleInputs.length ?
-                          filterIn[1].type && filterIn[1].type ===
-                            possibleInputs[obj.fromCache.step].inputs[obj.fromCache.variable].type :
-                          filterIn[1].type && filterIn[1].type === obj.type)
-                        )
-                        .map(itemInput => (
-                          <MenuItem
-                            disabled={!owner}
-                            eventKey={`${itemInput[1].label}-Computation-${itemObj.possibleInputIndex + 1}-inputs-menuitem`}
-                            key={`${itemInput[1].label}-Computation-${itemObj.possibleInputIndex + 1}-inputs-menuitem`}
-                            onClick={() => updateStep({
-                              ...step,
-                              inputMap: getNewObj(
-                                'fromCache',
-                                { variable: itemInput[0], step: itemObj.possibleInputIndex },
-                                index
-                              ),
-                            })}
-                          >
-                            {`Step ${itemObj.possibleInputIndex + 1}: ${itemInput[1].label}`}
-                          </MenuItem>
-                        ))
-                    ))}
-                  </DropdownButton>
-                </td>
-              }
-              {objKey === 'covariates' &&
-                <td>
-                  {!obj.fromCache &&
-                    <FormGroup controlId={`covariates-${index}-input-name`}>
-                      <FormControl
-                        disabled={!owner}
-                        placeholder="Variable Name"
-                        type="input"
-                        value={obj.name || ''}
-                        inputRef={(input) => { this[`${index}-name`] = input; }}
-                        onChange={() => updateStep({
-                          ...step,
-                          inputMap: getNewObj('name', this[`${index}-name`].value, index),
-                        })}
-                      />
-                    </FormGroup>
-                  }
-                  {obj.fromCache && possibleInputs.length > 0 &&
-                    <span>
-                      Variable:
-                        {` ${possibleInputs[obj.fromCache.step].inputs[obj.fromCache.variable].label}`}
-                    </span>
-                  }
-                </td>
-              }
-              <td>
-                <Button
-                  disabled={!owner || !obj.type}
-                  bsStyle="danger"
-                  onClick={() => updateStep({
-                    ...step,
-                    inputMap: {
-                      ...step.inputMap,
-                      [objKey]: {
-                        ownerMappings: update(step.inputMap[objKey].ownerMappings, {
-                          $splice: [[index, 1]],
-                        }),
-                      },
-                    },
-                  })}
-                >
-                  Remove
-                </Button>
-              </td>
-            </tr>
-          </tbody>
-        ))}
-      </Table>
-    );
-  }
+          </TableHead>
+        )
+      }
+      {
+        step.inputMap[objKey]
+        && 'ownerMappings' in step.inputMap[objKey]
+        && step.inputMap[objKey].ownerMappings.map((obj, index) => (
+          <PipelineOwnerMappings
+            key={`${objKey}-${index}`}
+            index={index}
+            obj={obj}
+            objKey={objKey}
+            owner={owner}
+            possibleInputs={possibleInputs}
+            objParams={objParams}
+            getNewObj={getNewObj}
+            updateStep={updateStep}
+            step={step}
+          />
+        ))
+      }
+    </Table>
+  );
 }
 
 PipelineStepMemberTable.propTypes = {
@@ -219,8 +76,9 @@ PipelineStepMemberTable.propTypes = {
   objKey: PropTypes.string.isRequired,
   objParams: PropTypes.object.isRequired,
   owner: PropTypes.bool.isRequired,
-  parentKey: PropTypes.string.isRequired,
   possibleInputs: PropTypes.array.isRequired,
   step: PropTypes.object.isRequired,
   updateStep: PropTypes.func.isRequired,
 };
+
+export default PipelineStepMemberTable;

@@ -191,7 +191,7 @@ class ConsortiaList extends Component {
         <Button
           key={`${consortium.id}-set-active-pipeline-button`}
           component={Link}
-          to={`dashboard/consortia/${consortium.id}/2`}
+          to={`dashboard/consortia/${consortium.id}/1`}
           variant="contained"
           color="secondary"
           className={classes.button}

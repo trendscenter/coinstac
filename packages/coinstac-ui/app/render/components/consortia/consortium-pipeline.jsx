@@ -100,7 +100,9 @@ class ConsortiumPipeline extends Component {
   }
 
   selectPipeline = pipelineId => event => {
-    this.removeCollectionsFromAssociatedConsortia(consortium.id, pipe.id);
+    const { consortium } = this.props;
+
+    this.removeCollectionsFromAssociatedConsortia(consortium.id, pipelineId);
     this.closeOwnedPipelinesMenu();
   }
 
