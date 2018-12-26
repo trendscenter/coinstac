@@ -14,7 +14,7 @@ const styles = theme => ({
     paddingBottom: theme.spacing.unit * 2,
     marginTop: theme.spacing.unit * 2,
   },
-  title: {
+  titleContainer: {
     marginBottom: theme.spacing.unit,
   },
   description: {
@@ -34,9 +34,14 @@ const ListItem = ({
     className={classes.rootPaper}
     elevation={1}
   >
-    <Typography variant="headline" className={classes.title}>
-      { itemObject.name }
-    </Typography>
+    <div className={styles.titleContainer}>
+      <Typography variant="headline">
+        { itemObject.name }
+      </Typography>
+      {
+        itemOptions.owner && <Typography>Owner</Typography>
+      }
+    </div>
     <Typography variant="body1" className={classes.description}>
       { itemObject.description }
     </Typography>

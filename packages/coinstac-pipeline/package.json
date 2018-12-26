@@ -12,7 +12,7 @@
     "Sergey Plis <splis@mrn.org>"
   ],
   "dependencies": {
-    "coinstac-docker-manager": "^4.0.2",
+    "coinstac-docker-manager": "^4.1.0",
     "dockerode": "^2.5.5",
     "lodash": "^4.17.10",
     "mkdirp": "^0.5.1",
@@ -21,7 +21,7 @@
     "request-promise": "^4.2.2",
     "socket.io": "^2.1.1",
     "socket.io-client": "^2.1.1",
-    "winston": "^3.0.0"
+    "winston": "^3.1.0"
   },
   "description": "Computation registry service for COINSTAC.",
   "devDependencies": {
@@ -44,5 +44,5 @@
   "scripts": {
     "test": "nyc ava test/**.test.js"
   },
-  "version": "4.0.2"
+  "version": "4.1.0"
 }

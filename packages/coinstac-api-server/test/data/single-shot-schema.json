@@ -1,6 +1,6 @@
 {
   "meta": {
-    "name": "single shot regression demo",
+    "name": "Single Shot Regression",
     "id": "ssr_test",
     "version": "v1.0.0",
     "repository": "https:\/\/github.com\/MRN-Code\/ssr_test",

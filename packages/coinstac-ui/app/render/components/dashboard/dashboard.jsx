@@ -543,6 +543,7 @@ Dashboard.contextTypes = {
 Dashboard.defaultProps = {
   computations: [],
   consortia: [],
+  maps: [],
   pipelines: [],
   remoteRuns: [],
   runs: [],
@@ -563,6 +564,7 @@ Dashboard.propTypes = {
   notifyInfo: PropTypes.func.isRequired,
   notifySuccess: PropTypes.func.isRequired,
   notifyWarning: PropTypes.func.isRequired,
+  maps: PropTypes.array,
   pipelines: PropTypes.array,
   pullComputations: PropTypes.func.isRequired,
   remoteRuns: PropTypes.array,

@@ -17,6 +17,10 @@ const DashboardNav = () => {
         <ListItemIcon><HomeIcon /></ListItemIcon>
         <ListItemText primary="Home" />
       </ListItem>
+      <ListItem button component="a" href="#/dashboard/maps">
+        <ListItemIcon><ListAltIcon /></ListItemIcon>
+        <ListItemText primary="Maps" />
+      </ListItem>
       <ListItem button component="a" href="#/dashboard/computations">
         <ListItemIcon><StorageIcon /></ListItemIcon>
         <ListItemText primary="Computations" />
@@ -24,10 +28,6 @@ const DashboardNav = () => {
       <ListItem button component="a" href="#/dashboard/consortia">
         <ListItemIcon><ViewListIcon /></ListItemIcon>
         <ListItemText primary="Consortia" />
-      </ListItem>
-      <ListItem button component="a" href="#/dashboard/collections">
-        <ListItemIcon><ListAltIcon /></ListItemIcon>
-        <ListItemText primary="Collections" />
       </ListItem>
       <ListItem button component="a" href="#/dashboard/pipelines">
         <ListItemIcon><AssignmentIcon /></ListItemIcon>
