@@ -15,6 +15,8 @@ const styles = theme => ({
     marginTop: theme.spacing.unit * 2,
   },
   titleContainer: {
+    display: 'flex',
+    justifyContent: 'space-between',
     marginBottom: theme.spacing.unit,
   },
   description: {
@@ -34,7 +36,7 @@ const ListItem = ({
     className={classes.rootPaper}
     elevation={1}
   >
-    <div className={styles.titleContainer}>
+    <div className={classes.titleContainer}>
       <Typography variant="headline">
         { itemObject.name }
       </Typography>
