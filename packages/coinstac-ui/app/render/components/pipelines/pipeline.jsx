@@ -158,11 +158,8 @@ class Pipeline extends Component {
     if (this.props.params.runId) {
       owner = false;
     } else {
-      console.log('USER PERMISSIONS', user.permissions.consortia);
-      console.log('CONSORTIUM x', user.permissions.consortia[this.state.pipeline.owningConsortium]);
       owner = user.permissions.consortia[this.state.pipeline.owningConsortium] &&
       user.permissions.consortia[this.state.pipeline.owningConsortium].write;
-      console.log('ASDASDAS 2', owner);
     }
     const consortiumId = this.state.pipeline.owningConsortium;
     const data = client.readQuery({ query: FETCH_ALL_CONSORTIA_QUERY });

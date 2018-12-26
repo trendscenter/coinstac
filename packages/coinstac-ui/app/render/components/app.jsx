@@ -4,7 +4,6 @@ import { connect } from 'react-redux';
 import Notifications from 'react-notification-system-redux';
 import ActivityIndicator from './activity-indicator/activity-indicator';
 import { autoLogin } from '../state/ducks/auth';
-import 'react-bootstrap-typeahead/css/Typeahead.css';
 
 const styles = {
   notifications: {
