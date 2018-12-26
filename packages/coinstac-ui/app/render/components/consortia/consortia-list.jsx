@@ -50,6 +50,9 @@ const styles = theme => ({
     marginTop: theme.spacing.unit,
     marginBottom: theme.spacing.unit,
   },
+  subtitle: {
+    marginTop: theme.spacing.unit * 2,
+  },
   label: {
     fontWeight: 'bold',
   },
@@ -443,7 +446,7 @@ class ConsortiaList extends Component {
           memberConsortia.length > 0
           && memberConsortia.map(consortium => this.getListItem(consortium))
         }
-        {otherConsortia.length > 0 && <Typography variant="h6">Other Consortia</Typography>}
+        {otherConsortia.length > 0 && <Typography variant="h6" className={classes.subtitle}>Other Consortia</Typography>}
         {
           otherConsortia.length > 0
           && otherConsortia.map(consortium => this.getListItem(consortium))

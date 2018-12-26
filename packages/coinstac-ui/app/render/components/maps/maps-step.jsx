@@ -1,28 +1,24 @@
 import React, { Component } from 'react';
-import { connect } from 'react-redux';
-import { compose, graphql, withApollo } from 'react-apollo';
-import { Alert, Button } from 'react-bootstrap';
-import { LinkContainer } from 'react-router-bootstrap';
-import { ipcRenderer } from 'electron';
 import PropTypes from 'prop-types';
 import { capitalize } from 'lodash';
 import bitap from 'bitap';
+import Typography from '@material-ui/core/Typography';
+import { withStyles } from '@material-ui/core/styles';
 import MapsStepData from './maps-step-data';
 import MapsStepCovariate from './maps-step-covariate';
 import MapsStepValue from './maps-step-value';
 
-class MapsStep extends Component {
+const styles = theme => ({
+  section: {
+    marginBottom: theme.spacing.unit * 2,
+  },
+});
 
+class MapsStep extends Component {
   constructor(props) {
     super(props);
-    this.handleStep = this.handleStep.bind(this);
-  }
 
-  componentDidUpdate() {
-    const {
-      name,
-      step
-    } = this.props;
+    this.handleStep = this.handleStep.bind(this);
   }
 
   filterGetObj(arr, search) {
@@ -69,11 +65,14 @@ class MapsStep extends Component {
     const {
       name,
       step,
+      classes,
     } = this.props;
 
     return (
-      <div>
-        <h5>{name === 'covariates' || name == 'data' ? capitalize(name) : 'Value'}</h5>
+      <div className={classes.section}>
+        <Typography variant="h6">
+          {name === 'covariates' || name === 'data' ? capitalize(name) : 'Value'}
+        </Typography>
         <div ref="Steps">
           {this.handleStep(step, name)}
         </div>
@@ -86,6 +85,7 @@ MapsStep.propTypes = {
   consortium: PropTypes.object.isRequired,
   getContainers: PropTypes.func.isRequired,
   step: PropTypes.object.isRequired,
+  classes: PropTypes.object.isRequired,
 };
 
-export default MapsStep;
+export default withStyles(styles)(MapsStep);
