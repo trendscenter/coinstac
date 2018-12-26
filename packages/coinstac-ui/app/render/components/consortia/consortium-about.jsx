@@ -173,6 +173,7 @@ class ConsortiumAbout extends Component {
                   options={userOptions}
                   onChange={this.handleMemberSelect}
                   removeSelected
+                  name="members-input"
                 />
                 <Button
                   variant="contained"
@@ -212,10 +213,11 @@ class ConsortiumAbout extends Component {
                             onChange={this.toggleOwner(consUser)}
                             checked={consUser.owner ? true : false}
                             disabled={!owner || consUser.id === user.id}
+                            name="isOwner"
                           />
                         </TableCell>
                         <TableCell>
-                          <Checkbox disabled checked={consUser.member} />
+                          <Checkbox disabled checked={consUser.member} name="isMember" />
                         </TableCell>
                         {
                           owner

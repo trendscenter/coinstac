@@ -59,15 +59,16 @@ class Result extends Component {
         // Checking display type of computation
         const stepsLength = run.pipelineSnapshot.steps.length;
         let displayTypes = run.pipelineSnapshot.steps[stepsLength - 1]
-            .computations[0].computation.display;
+          .computations[0].computation.display;
+
         this.setState({
           computationOutput: run.pipelineSnapshot.steps[stepsLength - 1]
             .computations[0].computation.output,
           displayTypes,
         });
 
-        if(!displayTypes.length){
-          let array = [];
+        if (displayTypes && !displayTypes.length) {
+          const array = [];
           array[0] = displayTypes;
           displayTypes = array;
         }
@@ -120,8 +121,8 @@ class Result extends Component {
         .inputMap.covariates.ownerMappings.map(m => m.name);
     }
 
-    if(!displayTypes.length){
-      let array = [];
+    if (displayTypes && !displayTypes.length) {
+      const array = [];
       array[0] = displayTypes;
       displayTypes = array;
     }
@@ -178,11 +179,13 @@ class Result extends Component {
               </div>
             )
           }
-          {stepsLength > -1 && covariates.length > 0 &&
-            <div>
-              <span className="bold">Covariates: </span>
-              {covariates.join(', ')}
-            </div>
+          {
+            stepsLength > -1 && covariates.length > 0 && (
+              <div>
+                <span className="bold">Covariates: </span>
+                {covariates.join(', ')}
+              </div>
+            )
           }
         </Paper>
 

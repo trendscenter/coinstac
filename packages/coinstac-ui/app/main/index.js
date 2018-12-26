@@ -27,6 +27,10 @@ process.env.NODE_ENV = process.env.NODE_ENV || 'production';
 // Watch the following issue for progress on dialog support
 // https://github.com/electron/spectron/issues/94
 if (process.env.NODE_ENV === 'test') {
+  if (process.env.TEST_INSTANCE) {
+    electron.app.setPath('userData', `${electron.app.getPath('userData')}-${process.env.TEST_INSTANCE}`);
+  }
+
   mock(electron.dialog);
 }
 
@@ -245,7 +249,7 @@ loadConfig()
         })
         .catch((err) => {
           logger.error(err);
-          mainWindow.webContents.send('Can\'t list current images', {
+          mainWindow.webContents.send('docker-error', {
             err: {
               message: err.message,
               stack: err.stack,
@@ -266,7 +270,7 @@ loadConfig()
         })
         .catch((err) => {
           logger.error(err);
-          mainWindow.webContents.send('Can\'t get current docker status', {
+          mainWindow.webContents.send('docker-error', {
             err: {
               message: err.message,
               stack: err.stack,
