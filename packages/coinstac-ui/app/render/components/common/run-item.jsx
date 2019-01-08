@@ -1,11 +1,12 @@
 import React from 'react';
 import TimeStamp from 'react-timestamp';
-import { Col, ProgressBar, Row, Well } from 'react-bootstrap';
 import { Link } from 'react-router';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
+import LinearProgress from '@material-ui/core/LinearProgress';
 import { withStyles } from '@material-ui/core/styles';
+import classNames from 'classnames';
 import PropTypes from 'prop-types';
 
 const styles = theme => ({
@@ -35,48 +36,83 @@ const styles = theme => ({
     display: 'flex',
     justifyContent: 'space-between',
   },
+  runStateContainer: {
+    display: 'flex',
+    justifyContent: 'space-between',
+  },
+  runStatePaper: {
+    width: `calc(50% - ${theme.spacing.unit}px)`,
+  },
+  runTitle: {
+    textDecoration: 'underline',
+    marginBottom: theme.spacing.unit,
+  },
 });
 
-function getStateWell(runObject, stateName, stateKey) {
+function getStateWell(runObject, stateName, stateKey, classes) {
   return (
-    <Col xs={12} sm={4}>
-      <Well bsSize="small" style={{ overflow: 'hidden', height: '166px' }}>
-        <div style={{ marginBottom: 5 }}>
-          <span className="bold" style={{ textDecoration: 'underline' }}>{stateName} Pipeline State: </span>
-        </div>
-        {runObject[stateKey].mode &&
+    <Paper
+      className={classNames(classes.rootPaper, classes.runStatePaper)}
+    >
+      <Typography variant="headline" className={classes.runTitle}>
+        {`${stateName} Pipeline State:`}
+      </Typography>
+      {
+        runObject[stateKey].mode
+        && (
           <div>
-            <span className="bold">Mode: </span>
-            {runObject[stateKey].mode}
+            <Typography className={classes.label}>Mode:</Typography>
+            <Typography className={classes.value}>
+              {runObject[stateKey].mode}
+            </Typography>
           </div>
-        }
-        {runObject[stateKey].waitingOn &&
+        )
+      }
+      {
+        runObject[stateKey].waitingOn
+        && (
           <div>
-            <span className="bold">Waiting on Users: </span>
-            {runObject[stateKey].controllerState.includes('waiting on') ? runObject[stateKey].waitingOn.join(', ') : ''}
+            <Typography className={classes.label}>Waiting on Users:</Typography>
+            <Typography className={classes.value}>
+              {runObject[stateKey].controllerState.includes('waiting on') ? runObject[stateKey].waitingOn.join(', ') : ''}
+            </Typography>
           </div>
-        }
-        {runObject[stateKey].controllerState &&
+        )
+      }
+      {
+        runObject[stateKey].controllerState
+        && (
           <div>
-            <span className="bold">Controller State: </span>
-            {runObject[stateKey].controllerState}
+            <Typography className={classes.label}>Controller State:</Typography>
+            <Typography className={classes.value}>
+              {runObject[stateKey].controllerState}
+            </Typography>
           </div>
-        }
-        {runObject[stateKey].currentIteration >= 0 &&
+        )
+      }
+      {
+        runObject[stateKey].currentIteration >= 0
+        && (
           <div>
-            <span className="bold">Current Iteration: </span>
-            {runObject[stateKey].currentIteration}
+            <Typography className={classes.label}>Current Iteration:</Typography>
+            <Typography className={classes.value}>
+              {runObject[stateKey].currentIteration}
+            </Typography>
           </div>
-        }
-        {runObject[stateKey].pipelineStep >= 0 &&
+        )
+      }
+      {
+        runObject[stateKey].pipelineStep >= 0
+        && (
           <div>
-            <span className="bold">Step Count: </span>
-            {`${runObject[stateKey].pipelineStep + 1} /
-              ${runObject[stateKey].totalSteps}`}
+            <Typography className={classes.label}>Step Count:</Typography>
+            <Typography className={classes.value}>
+              {`${runObject[stateKey].pipelineStep + 1} / ${runObject[stateKey].totalSteps}`}
+            </Typography>
           </div>
-        }
-      </Well>
-    </Col>
+        )
+      }
+    </Paper>
   );
 }
 
@@ -125,20 +161,16 @@ const RunItem = ({ consortiumName, runObject, classes }) => (
     </div>
     <div className={classes.contentContainer}>
       {
-        runObject.status === 'started' && (runObject.localPipelineState || runObject.remotePipelineState) &&
-        <Row>
-          <Col xs={12}>
-            <ProgressBar
-              active
-              now={runObject.remotePipelineState
-                ? ((runObject.remotePipelineState.pipelineStep + 1) /
-                runObject.remotePipelineState.totalSteps) * 100
-                : ((runObject.localPipelineState.pipelineStep + 1) /
-                runObject.localPipelineState.totalSteps) * 100
-              }
-            />
-          </Col>
-        </Row>
+        runObject.status === 'started' && (runObject.localPipelineState || runObject.remotePipelineState)
+        && (
+          <LinearProgress
+            variant="determinate"
+            value={runObject.remotePipelineState
+              ? ((runObject.remotePipelineState.pipelineStep + 1) / runObject.remotePipelineState.totalSteps) * 100
+              : ((runObject.localPipelineState.pipelineStep + 1) / runObject.localPipelineState.totalSteps) * 100
+            }
+          />
+        )
       }
       <div>
         <Typography className={classes.label}>
@@ -211,12 +243,16 @@ const RunItem = ({ consortiumName, runObject, classes }) => (
           </div>
         )
       }
-      {runObject.localPipelineState && runObject.status === 'started' &&
-        getStateWell(runObject, 'Local', 'localPipelineState')
-      }
-      {runObject.remotePipelineState && runObject.status === 'started' &&
-        getStateWell(runObject, 'Remote', 'remotePipelineState')
-      }
+      <div className={classes.runStateContainer}>
+        {
+          runObject.localPipelineState && runObject.status === 'started'
+          && getStateWell(runObject, 'Local', 'localPipelineState', classes)
+        }
+        {
+          runObject.remotePipelineState && runObject.status === 'started'
+          && getStateWell(runObject, 'Remote', 'remotePipelineState', classes)
+        }
+      </div>
     </div>
     <div className={classes.actionButtons}>
       {
@@ -264,6 +300,7 @@ const RunItem = ({ consortiumName, runObject, classes }) => (
 RunItem.propTypes = {
   consortiumName: PropTypes.string.isRequired,
   runObject: PropTypes.object.isRequired,
+  classes: PropTypes.object.isRequired,
 };
 
 export default withStyles(styles)(RunItem);

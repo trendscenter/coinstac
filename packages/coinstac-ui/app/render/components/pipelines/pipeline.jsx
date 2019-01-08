@@ -453,8 +453,6 @@ class Pipeline extends Component {
 
     const title = pipeline.id ? 'Pipeline Edit' : 'Pipeline Creation';
 
-    console.log('OWNER', owner);
-
     return connectDropTarget(
       <div>
         <div className="page-header">
