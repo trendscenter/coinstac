@@ -62,7 +62,7 @@ class MapsStepData extends Component {
             <ListItem><ListItemText primary="Interest(s):" /></ListItem>
             {
               step.value.map((key, i) => (
-                <ListItem key={key} className={classes.nestedListItem}><ListItemText secondary={step.value[i]} /></ListItem>
+                <ListItem key={key} className={classes.nestedListItem}><ListItemText secondary={step.value[i].label} /></ListItem>
               ))
             }
           </List>
