@@ -123,7 +123,7 @@ class MapsCollection extends Component {
       return Object.keys(obj).some(function(key) {
         let objkey = obj[key];
         if(typeof objkey === 'string'){
-          let fuzzy = bitap(objkey, searchkey, 1);
+          let fuzzy = bitap(objkey.toLowerCase(), searchkey.toLowerCase(), 1);
           if(fuzzy.length){
             return obj[key];
           }
@@ -138,7 +138,7 @@ class MapsCollection extends Component {
        return Object.keys(obj).some(function(key) {
          let objkey = obj[key];
          if(typeof objkey === 'string'){
-           let fuzzy = bitap(objkey, searchkey, 1);
+           let fuzzy = bitap(objkey.toLowerCase(), searchkey.toLowerCase(), 1);
            if(fuzzy.length){
              return obj[key];
            }
@@ -149,8 +149,8 @@ class MapsCollection extends Component {
 
   autoMap(group) {
     this.setState({ autoMap: true });
-    let covariates = this.props.collection.associatedConsortia.pipelineSteps[0].inputMap.covariates.ownerMappings;
-    let data = this.props.collection.associatedConsortia.pipelineSteps[0].inputMap.data.ownerMappings;
+    let covariates = this.props.activeConsortium.pipelineSteps[0].inputMap.covariates.ownerMappings;
+    let data = this.props.activeConsortium.pipelineSteps[0].inputMap.data.ownerMappings;
     this.makePoints(group.firstRow).map((string, index) => {
       if( Object.keys(this.filterGetObj(covariates,string)).length > 0 ){
         this.setStepIO(

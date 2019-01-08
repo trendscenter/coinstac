@@ -7,7 +7,6 @@ import PropTypes from 'prop-types';
 import update from 'immutability-helper';
 import { includes, isEqual, uniqWith } from 'lodash';
 import {
-  getConsortium,
   getAllCollections,
   getCollectionFiles,
   incrementRunCount,
@@ -24,6 +23,7 @@ import {
 } from '../../state/graphql/props';
 import {
   FETCH_ALL_USER_RUNS_QUERY,
+  FETCH_PIPELINE_QUERY,
 } from '../../state/graphql/functions';
 import { notifyInfo } from '../../state/ducks/notifyAndLog';
 import { Alert, Button, Panel } from 'react-bootstrap';
@@ -60,8 +60,19 @@ class MapsEdit extends Component {
       associatedConsortia: [],
     };
 
+    const consortium = {
+      activePipelineId: '',
+      activeComputationInputs: [],
+      description: '',
+      members: [],
+      name: '',
+      owners: [],
+      tags: [],
+    };
+
     this.state = {
       activeConsortium: { stepIO: [], runs: 0, pipelineSteps: [] },
+      consortium: {},
       containers: [],
       collection,
       exists: false,
@@ -86,47 +97,40 @@ class MapsEdit extends Component {
   updateMapsStep = (val) => this.setState({ updateMapsStep: val });
 
   componentDidMount = () => {
-    let getCon = this.props.getConsortium(this.props.consortium.id);
-    getCon.then( result => {
-      this.setState({
-       consortium: Object.assign({}, result, { location: this.props.consortium }),
-      });
-      this.setState({
+    const { user } = this.props.auth;
+    const { consortium, collections, pipelines } = this.props;
+    let pipeline = pipelines.find(p => p.id === consortium.activePipelineId);
+     this.setState({
        activeConsortium: {
-         ...result,
-         stepIO: [...result.stepIO],
+         ...consortium,
+         pipelineSteps: pipeline.steps,
        },
-      });
-      const { user } = this.props.auth;
-      const { consortium } = this.state;
-      let mapped = this.getMapped(
+     });
+     let mapped = this.getMapped(
        isUserA(user.id, consortium.members),
        isUserA(user.id, consortium.owners),
        consortium
-      )
-      this.setState({isMapped: mapped});
-      this.setPipelineSteps(this.state.consortium.pipelineSteps);
-      Object.keys(this.props.collections).map(([key, value]) => {
-       if( includes(this.props.collections[key],result.name+': Collection') ){
+     )
+     this.setState({isMapped: mapped});
+     this.setPipelineSteps(pipeline.steps);
+     Object.keys(collections).map(([key, value]) => {
+       if( includes(collections[key],consortium.name+': Collection') ){
          this.setState({
-           collection: this.props.collections[key],
+           collection: collections[key],
            exists: true
          });
        }
-      });
-      let collection = {
-       name: this.state.consortium.name+': Collection',
-       associatedConsortia: result,
+     });
+     let collection = {
+       name: consortium.name+': Collection',
+       associatedConsortia: consortium,
        fileGroups: {},
-      }
-      if( this.state.exists === false ){
+     }
+     if( this.state.exists === false ){
         this.setState({collection});
         this.props.saveCollection(collection);
-      }
-        this.getDropAction();
-      }, function(error) {
-        console.log(error);
-    });
+     }
+     this.getDropAction();
   }
 
   filterGetObj(arr, searchKey) {
@@ -135,7 +139,7 @@ class MapsEdit extends Component {
      return Object.keys(obj).some(function(key) {
        let objkey = obj[key];
        if(typeof objkey === 'string'){
-         let fuzzy = bitap(objkey, searchkey, 1);
+         let fuzzy = bitap(objkey.toLowerCase(), searchkey.toLowerCase(), 1);
          if(fuzzy.length){
            return obj[key];
          }
@@ -150,7 +154,7 @@ class MapsEdit extends Component {
        return Object.keys(obj).some(function(key) {
          let objkey = obj[key];
          if(typeof objkey === 'string'){
-           let fuzzy = bitap(objkey, searchkey, 1);
+           let fuzzy = bitap(objkey.toLowerCase(), searchkey.toLowerCase(), 1);
            if(fuzzy.length){
              return obj[key];
            }
@@ -179,7 +183,7 @@ class MapsEdit extends Component {
 
   getMapped = (member, owner, consortium) => {
     const { auth: { user } } = this.props;
-    if (this.state.consortium.isMapped) {
+    if (consortium.isMapped) {
       return true;
     }else{
       return false;
@@ -191,17 +195,18 @@ class MapsEdit extends Component {
   });
 
   mapObject = (el, target) => {
-    let fuzzy = bitap(el.dataset.string.toLowerCase(), target.dataset.name.toLowerCase(), 1);
-    if(fuzzy.length){
-      let covariates = this.state.consortium.pipelineSteps[0].inputMap.covariates.ownerMappings;
-      let data = this.state.consortium.pipelineSteps[0].inputMap.data.ownerMappings;
-      let group = this.state.collection.fileGroups[el.dataset.filegroup];
-      let dex = '';
-      let key = '';
+    const { activeConsortium, collection } = this.state;
+    let string = el.dataset.string.replace('file', '');
+    let fuzzy = bitap(string.toLowerCase(), target.dataset.name.toLowerCase(), 1);
+    if(fuzzy.length > 0){
+      let covariates = activeConsortium.pipelineSteps[0].inputMap.covariates.ownerMappings;
+      let data = activeConsortium.pipelineSteps[0].inputMap.data.ownerMappings;
+      let group = collection.fileGroups[el.dataset.filegroup];
+      let dex = null;
+      let key = null;
       let name = target.dataset.name;
-      let string = el.dataset.string;
       let varObject = [{
-        'collectionId': this.state.collection.id,
+        'collectionId': collection.id,
         'groupId': el.dataset.filegroup,
         'column':  target.dataset.name
       }];
@@ -220,19 +225,21 @@ class MapsEdit extends Component {
   }
 
   saveCollection(e) {
+    const { collection } = this.state;
     if (e) {
       e.preventDefault();
     }
-    this.props.saveCollection(this.state.collection);
+    this.props.saveCollection(collection);
   }
 
   updateAssociatedConsortia(cons) {
-    if (this.state.collection.associatedConsortia.id === cons.id) {
+    const { collection } = this.state;
+    if (collection.associatedConsortia.id === cons.id) {
       this.setState(prevState => ({
         collection: {
           ...prevState.collection,
           error: '',
-          associatedConsortia: [...prevState.collection.associatedConsortia, cons.id],
+          associatedConsortia: collection.associatedConsortia,
         },
       }),
       () => {
@@ -242,20 +249,19 @@ class MapsEdit extends Component {
   }
 
   saveAndCheckConsortiaMapping = () => {
-    const cons = this.state.activeConsortium;
-    this.props.saveAssociatedConsortia(cons)
     const runs = this.props.userRuns;
-
-    this.props.getCollectionFiles(cons.id)
+    this.props.saveAssociatedConsortia(this.state.activeConsortium);
+    this.props.getCollectionFiles(this.state.activeConsortium.id)
       .then((filesArray) => {
         this.setState({isMapped: true});
-
         if (runs && runs.length && !runs[runs.length - 1].endDate) {
+
           let run = runs[runs.length - 1];
           const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
+
           if ('allFiles' in filesArray) {
             this.props.notifyInfo({
-              message: `Pipeline Starting for ${cons.name}.`,
+              message: `Pipeline Starting for ${consortium.name}.`,
               action: {
                 label: 'Watch Progress',
                 callback: () => {
@@ -276,7 +282,7 @@ class MapsEdit extends Component {
 
             this.props.incrementRunCount(cons.id);
             ipcRenderer.send('start-pipeline', {
-              consortium, pipeline: run.pipelineSnapshot, filesArray: filesArray.allFiles, run,
+              cons, pipeline: run.pipelineSnapshot, filesArray: filesArray.allFiles, run,
             });
             this.props.saveLocalRun({ ...run, status: 'started' });
           }
@@ -316,9 +322,10 @@ class MapsEdit extends Component {
 
   traversePipelineSteps(){
     let result = [];
-    if (this.state.consortium.pipelineSteps) {
-      let steps = this.state.consortium.pipelineSteps;
-      Object.entries(this.state.consortium.pipelineSteps).forEach(([key, value]) => {
+    const { activeConsortium } = this.state;
+    if (activeConsortium.pipelineSteps) {
+      let steps = activeConsortium.pipelineSteps;
+      Object.entries(activeConsortium.pipelineSteps).forEach(([key, value]) => {
         let inputMap = steps[key].inputMap;
         Object.keys(inputMap).map((k, i) => {
            result.push(
@@ -327,10 +334,7 @@ class MapsEdit extends Component {
                key={i}
                name={Object.keys(inputMap)[i]}
                step={inputMap[k]}
-               consortium={this.state.consortium.stepIO &&
-                 Object.keys(this.state.consortium.stepIO).length > 0 ?
-                this.state.consortium : this.state.activeConsortium
-               }
+               consortium={activeConsortium}
                updateMapsStep={this.state.updateMapsStep}
               />
            );
@@ -361,18 +365,10 @@ class MapsEdit extends Component {
   }
 
   render() {
-    const {
-      activeConsortium,
-      collection,
-      consortium,
-      isMapped,
-      mappedItem,
-      rowArray,
-    } = this.state;
+    const { consortium, collections } = this.props;
+    const { collection } = this.state;
     return (
       <div>
-        {consortium && activeConsortium &&
-        <div>
         <div className="page-header clearfix">
           <h1 className="pull-left">Map - {consortium ? consortium.name : ''}</h1>
         </div>
@@ -399,14 +395,14 @@ class MapsEdit extends Component {
                 <div>
                   {collection &&
                   <MapsCollection
-                    activeConsortium={activeConsortium}
+                    activeConsortium={this.state.activeConsortium}
                     collection={collection}
                     getContainers={this.getContainers}
-                    isMapped={isMapped}
+                    isMapped={this.state.isMapped}
                     notifySuccess={this.notifySuccess}
-                    mappedItem={mappedItem}
-                    rowArray={rowArray}
-                    rowArrayLength={rowArray.length}
+                    mappedItem={this.state.mappedItem}
+                    rowArray={this.state.rowArray}
+                    rowArrayLength={this.state.rowArray.length}
                     saveAndCheckConsortiaMapping={this.saveAndCheckConsortiaMapping}
                     saveCollection={this.saveCollection}
                     setRowArray={this.setRowArray}
@@ -420,8 +416,6 @@ class MapsEdit extends Component {
           </div>
         </div>
       </div>
-      }
-      </div>
   );
 }
 }
@@ -432,7 +426,6 @@ MapsEdit.defaultProps = {
 
 MapsEdit.propTypes = {
   activeAssociatedConsortia: PropTypes.array,
-  getConsortium: PropTypes.func.isRequired,
   getAllCollections: PropTypes.func.isRequired,
   getRunsForConsortium: PropTypes.func.isRequired,
   runs: PropTypes.array.isRequired,
@@ -459,7 +452,6 @@ const ComponentWithData = compose(
 
 export default connect(mapStateToProps,
   {
-    getConsortium,
     getCollectionFiles,
     getAllCollections,
     getRunsForConsortium,

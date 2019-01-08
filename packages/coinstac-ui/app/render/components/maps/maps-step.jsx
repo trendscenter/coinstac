@@ -26,12 +26,11 @@ class MapsStep extends Component {
   }
 
   filterGetObj(arr, search) {
-     let str = search.toLowerCase();
      return arr.findIndex(function(obj) {
        return Object.keys(obj).some(function(key) {
          let objkey = obj[key];
          if(typeof objkey === 'string'){
-           let fuzzy = bitap(objkey, str, 1);
+           let fuzzy = bitap(objkey.toLowerCase(), search.toLowerCase(), 1);
            if(fuzzy.length){
              return true;
            }
@@ -75,7 +74,7 @@ class MapsStep extends Component {
       <div>
         <h5>{name === 'covariates' || name == 'data' ? capitalize(name) : 'Value'}</h5>
         <div ref="Steps">
-          {this.handleStep(step, name)}
+          {this.handleStep(step, name, this.props.updateMapsStep)}
         </div>
       </div>
     );

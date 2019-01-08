@@ -7,7 +7,6 @@ import { ipcRenderer } from 'electron';
 import PropTypes from 'prop-types';
 import {
   FETCH_ALL_CONSORTIA_QUERY,
-  FETCH_ALL_PIPELINES_QUERY,
 } from '../../state/graphql/functions';
 import MapsItem from './maps-item';
 import MapsEdit from './maps-edit';
@@ -92,7 +91,7 @@ class MapsList extends Component {
         <MapsEdit
           consortia={consortia}
           consortium={this.state.consortium}
-          pipelines={this.props.pipeline}
+          pipelines={this.props.pipelines}
           runs={this.props.runs}
         />:
         <div>
