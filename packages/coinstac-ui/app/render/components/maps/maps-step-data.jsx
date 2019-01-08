@@ -27,20 +27,24 @@ class MapsStepData extends Component {
 
     return (
       <Panel className="drop-panel" header={<h3>{step['type']}</h3>}>
-        <ul className="list-inline">
-          <li><strong>Interest(s):</strong></li>
-          {
-            step['value'].map((key, i) => {
-              return (<li key={key}>{step['value'][i]}</li>)
-            })
-          }
-        </ul>
-        <div className="drop-zone">
-          {this.props.isMapped === -1 ?
-            <div ref='Container' className={`acceptor acceptor-${name}`} data-type={this.props.type} data-name={name} />
-            : <div className={"card-draggable"}>
-              <span className="glyphicon glyphicon-file" /> {name}</div>}
+        {step &&
+        <div>
+          <ul className="list-inline">
+            <li><strong>Interest(s):</strong></li>
+            {step['value'] &&
+              step['value'].map((key, i) => {
+                return (<li key={key}>{step['value'][i]}</li>)
+              })
+            }
+          </ul>
+          <div className="drop-zone">
+            {this.props.isMapped === -1 ?
+              <div ref='Container' className={`acceptor acceptor-${name}`} data-type={this.props.type} data-name={name} />
+              : <div className={"card-draggable"}>
+                <span className="glyphicon glyphicon-file" /> {name}</div>}
+          </div>
         </div>
+        }
       </Panel>
     );
   }
