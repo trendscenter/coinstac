@@ -155,13 +155,13 @@ class PipelineOwnerMappings extends React.Component {
                   && (
                     <div id={`data-${index}-area`}>
                       <Select
-                        value={obj.value}
+                        value={obj.value ? obj.value.map(val => ({ label: val, value: val })) : null}
                         placeholder="Select Area(s) of Interest"
                         options={freeSurferOptions}
                         isMulti
                         onChange={value => updateStep({
                           ...step,
-                          inputMap: getNewObj('value', value, index, false),
+                          inputMap: getNewObj('value', value ? value.map(val => val.value) : null, index, false),
                         })}
                       />
                     </div>
