@@ -28,6 +28,7 @@ module.exports = {
       baseDirectory: `/input/${clientId}/${runId}`,
       outputDirectory: `/output/${clientId}/${runId}`,
       cacheDirectory: `/cache/${clientId}/${runId}`,
+      transferDirectory: `/transfer/${clientId}/${runId}`,
       clientId,
       currentBoxCommand: undefined,
       currentComputations,
@@ -96,9 +97,19 @@ module.exports = {
                     cache,
                     // picks only relevant attribs for comp
                     state: (({
-                      baseDirectory, outputDirectory, cacheDirectory, clientId, iteration,
+                      baseDirectory,
+                      outputDirectory,
+                      cacheDirectory,
+                      transferDirectory,
+                      clientId,
+                      iteration,
                     }) => ({
-                      baseDirectory, outputDirectory, cacheDirectory, clientId, iteration,
+                      baseDirectory,
+                      outputDirectory,
+                      cacheDirectory,
+                      transferDirectory,
+                      clientId,
+                      iteration,
                     }))(controllerState),
                   },
                   { baseDirectory: operatingDirectory }

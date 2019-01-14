@@ -19,8 +19,10 @@
     "nyc": "^11.9.0",
     "request": "^2.87.0",
     "request-promise": "^4.2.2",
+    "rimraf": "^2.6.2",
     "socket.io": "^2.1.1",
     "socket.io-client": "^2.1.1",
+    "socket.io-stream": "^0.9.1",
     "winston": "^3.1.0"
   },
   "description": "Computation registry service for COINSTAC.",

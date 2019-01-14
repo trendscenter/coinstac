@@ -570,10 +570,10 @@ const removeImage = (imageId) => {
  * @return {Promise}              A promise that resovles on success
  */
 const stopService = (serviceId, serviceUserId) => {
-  if (services[serviceId].users.indexOf(serviceUserId) > -1) {
+  if (services[serviceId] && services[serviceId].users.indexOf(serviceUserId) > -1) {
     services[serviceId].users.splice(services[serviceId].users.indexOf(serviceUserId), 1);
   }
-  if (services[serviceId].users.length === 0) {
+  if (services[serviceId] && services[serviceId].users.length === 0) {
     services[serviceId].state = 'shutting down';
     return services[serviceId].container.stop()
       .then(() => {

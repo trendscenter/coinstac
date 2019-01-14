@@ -1,11 +1,13 @@
 'use strict';
 
 const http = require('http');
+const fs = require('fs');
 const socketIO = require('socket.io');
 const socketIOClient = require('socket.io-client');
 const _ = require('lodash');
 const { promisify } = require('util');
 const mkdirp = promisify(require('mkdirp'));
+const rimraf = promisify(require('rimraf'));
 const path = require('path');
 const readdir = promisify(require('fs').readdir);
 const Emitter = require('events');
@@ -51,12 +53,21 @@ module.exports = {
     let io;
     let socket;
     const remoteClients = {};
-    const missedCache = {};
+    // TODO: const missedCache = {};
 
     const waitingOnForRun = (runId) => {
       const waiters = [];
       activePipelines[runId].clients.forEach((client) => {
-        if (remoteClients[client][runId] && !remoteClients[client][runId].currentOutput) {
+        if ((remoteClients[client][runId]
+          && !remoteClients[client][runId].currentOutput)
+        // test if we have all files, if there are any
+          || (remoteClients[client][runId]
+            && ((remoteClients[client][runId].files
+              && ((remoteClients[client][runId].files.expected.length === 0
+                || remoteClients[client][runId].files.recieved.length === 0)
+              || !remoteClients[client][runId].files.expected
+                .every(e => remoteClients[client][runId].files.recieved.includes(e))))
+          || (!remoteClients[client][runId].files)))) {
           waiters.push(client);
         }
       });
@@ -69,6 +80,7 @@ module.exports = {
         if (client[runId]) {
           memo[id] = client[runId].currentOutput;
           client[runId].currentOutput = undefined;
+          client[runId].files = undefined;
         }
         return memo;
       }, {});
@@ -133,7 +145,15 @@ module.exports = {
               // has this pipeline error'd out?
               if (!activePipelines[data.runId].error) {
                 remoteClients[data.id][data.runId].currentOutput = data.output.output;
-
+                if (data.files) {
+                  remoteClients[data.id][data.runId].files = remoteClients[data.id][data.runId].files ? // eslint-disable-line max-len, operator-linebreak
+                    Object.assign(
+                      {},
+                      remoteClients[data.id][data.runId].files,
+                      { expected: data.files }
+                    )
+                    : { expected: data.files, recieved: [] };
+                }
                 if (activePipelines[data.runId].state !== 'pre-pipeline') {
                   const waitingOn = waitingOnForRun(data.runId);
                   activePipelines[data.runId].currentState.waitingOn = waitingOn;
@@ -147,9 +167,10 @@ module.exports = {
 
                   if (waitingOn.length === 0) {
                     activePipelines[data.runId].state = 'recieved all clients data';
-                    const agg = aggregateRun(data.runId);
                     logger.silly('Received all client data');
-                    activePipelines[data.runId].remote.resolve({ output: agg });
+                    activePipelines[data.runId].remote.resolve({
+                      output: aggregateRun(data.runId),
+                    });
                   }
                 }
               } else {
@@ -171,7 +192,43 @@ module.exports = {
             }
           }
         });
+        ss(socket).on('file', (stream, data) => {
+          if (activePipelines[data.runId] && !activePipelines[data.runId].error) {
+            mkdirp(path.join(activePipelines[data.runId].baseDirectory, data.id))
+              .then(() => {
+                const wStream = createWriteStream(
+                  path.join(activePipelines[data.runId].baseDirectory, data.id, data.file)
+                );
+                stream.pipe(wStream);
+                wStream.on('close', () => {
+                  // mark off and check to start run
+                  if (remoteClients[data.id][data.runId].files
+                    && remoteClients[data.id][data.runId].files.recieved) {
+                    remoteClients[data.id][data.runId].files.recieved.push(data.file);
+                  } else {
+                    // first entry, set both objects up
+                    remoteClients[data.id][data.runId].files = {
+                      expected: [], recieved: [data.file],
+                    };
+                  }
 
+                  if (waitingOnForRun(data.runId).length === 0) {
+                    activePipelines[data.runId].state = 'recieved all client data';
+                    logger.silly('Received all client data');
+                    activePipelines[data.runId].remote.resolve(
+                      { output: aggregateRun(data.runId) }
+                    );
+                  }
+                  // socket.disconnect();
+                });
+                wStream.on('error', (error) => {
+                  // reject pipe
+                  activePipelines[data.runId].remote.reject(error);
+                  // socket.disconnect();
+                });
+              });
+          }
+        });
         socket.on('disconnect', (reason) => {
           const client = _.find(remoteClients, { socketId: socket.id });
           if (client) {
@@ -199,13 +256,16 @@ module.exports = {
           if (data.files) {
             // we've already recieved the files
             if (activePipelines[data.runId].files
-              && activePipelines[data.runId].files.recieved === data.files) {
+              && activePipelines[data.runId].files.recieved
+              && data.files.every(e => activePipelines[data.runId].files.recieved.includes(e))
+            ) {
               activePipelines[data.runId].remote.resolve(data.output);
               activePipelines[data.runId].currentInput = undefined;
               activePipelines[data.runId].files = undefined;
             } else {
-              activePipelines[data.runId].files =
-                Object.assign({}, { expected: data.files }, activePipelines[data.runId].files);
+              activePipelines[data.runId].files = Object.assign(
+                {}, { expected: data.files }, activePipelines[data.runId].files
+              );
               activePipelines[data.runId].currentInput = data.output;
             }
           } else {
@@ -216,9 +276,11 @@ module.exports = {
           activePipelines[data.runId].remote.reject(Object.assign(new Error(), data.error));
         }
       });
-      ss(socket).on('stderr', (stream, data) => {
+      ss(socket).on('file', (stream, data) => {
         if (activePipelines[data.runId]) {
-          const wStream = createWriteStream(activePipelines[data.runId].baseDirectory);
+          const wStream = createWriteStream(
+            path.join(activePipelines[data.runId].baseDirectory, data.file)
+          );
           stream.pipe(wStream);
           wStream.on('close', () => {
             // mark off and start run?
@@ -230,18 +292,22 @@ module.exports = {
               activePipelines[data.runId].files = { recieved: [data.file] };
             }
 
-            if (activePipelines[data.runId].files.expected
+            if (activePipelines[data.runId].files
+              && activePipelines[data.runId].files.expected
+              && activePipelines[data.runId].files.recieved
               && activePipelines[data.runId].currentInput
               && (activePipelines[data.runId].files.expected
-              === activePipelines[data.runId].files.recieved)) {
+                .every(e => activePipelines[data.runId].files.recieved.includes(e)))) {
               activePipelines[data.runId].remote.resolve(activePipelines[data.runId].currentInput);
               activePipelines[data.runId].currentInput = undefined;
               activePipelines[data.runId].files = undefined;
             }
+            // socket.disconnect();
           });
           wStream.on('error', (error) => {
             // reject pipe
             activePipelines[data.runId].remote.reject(error);
+            // socket.disconnect();
           });
         }
       });
@@ -324,31 +390,64 @@ module.exports = {
               io.of('/').in(pipeline.id).clients((error, clients) => {
                 if (error) throw error;
                 readdir(activePipelines[pipeline.id].transferDirectory)
-                .then((files) => {
-                  if (files) {
-                    io.of('/').to(pipeline.id).emit('run', { runId: pipeline.id, output: message, files });
-                    Object.keys(remoteClients).forEach((key) => {
-                      if (clients.includes(remoteClients[key].socketId)) {
-                        files.forEach((file) => {
-                          const fsStream = createReadStream(file);
+                  .then((files) => {
+                    if (files && files.length !== 0) {
+                      io.of('/').to(pipeline.id).emit('run', { runId: pipeline.id, output: message, files });
+                      Object.keys(remoteClients).forEach((key) => {
+                        if (clients.includes(remoteClients[key].socketId)) {
+                          files.forEach((file) => {
+                            const fsStream = createReadStream(
+                              path.join(activePipelines[pipeline.id].transferDirectory, file)
+                            );
 
-                          const stream = ss.createStream();
-                          ss(remoteClients[key].socket).emit('file', stream, { file, runId: pipeline.id });
-                          fsStream.pipe(stream);
-                        });
-                      }
-                    });
-                  } else {
-                    io.of('/').to(pipeline.id).emit('run', { runId: pipeline.id, output: message });
-                  }
-                });
+                            const stream = ss.createStream();
+                            ss(remoteClients[key].socket).emit('file', stream, {
+                              id: clientId,
+                              file,
+                              runId: pipeline.id,
+                            });
+                            fsStream.pipe(stream);
+                            stream.on('close', () => {
+                              rimraf(
+                                path.join(activePipelines[pipeline.id].transferDirectory, file)
+                              );
+                            });
+                          });
+                        }
+                      });
+                    } else {
+                      io.of('/').to(pipeline.id).emit('run', { runId: pipeline.id, output: message });
+                    }
+                  });
               });
             }
+          // local client
           } else {
             if (message instanceof Error) { // eslint-disable-line no-lonely-if
               socket.emit('run', { id: clientId, runId: pipeline.id, error: message });
             } else {
-              socket.emit('run', { id: clientId, runId: pipeline.id, output: message });
+              readdir(activePipelines[pipeline.id].transferDirectory)
+                .then((files) => {
+                  if (files && files.length !== 0) {
+                    socket.emit('run', {
+                      id: clientId, runId: pipeline.id, output: message, files,
+                    });
+                    files.forEach((file) => {
+                      const fsStream = createReadStream(
+                        path.join(activePipelines[pipeline.id].transferDirectory, file)
+                      );
+
+                      const stream = ss.createStream();
+                      ss(socket).emit('file', stream, { id: clientId, file, runId: pipeline.id });
+                      fsStream.pipe(stream);
+                      stream.on('close', () => {
+                        rimraf(path.join(activePipelines[pipeline.id].transferDirectory, file));
+                      });
+                    });
+                  } else {
+                    socket.emit('run', { id: clientId, runId: pipeline.id, output: message });
+                  }
+                });
             }
           }
         };
@@ -412,6 +511,12 @@ module.exports = {
                 return res;
               });
           }).then((res) => {
+            return Promise.all([
+              rimraf(path.resolve(this.activePipelines[runId].transferDirectory, '*')),
+              rimraf(path.resolve(this.activePipelines[runId].cacheDirectory, '*')),
+            ]).then(() => res);
+          })
+          .then((res) => {
             delete activePipelines[runId];
             Object.keys(remoteClients).forEach((key) => {
               if (remoteClients[key][runId]) {
