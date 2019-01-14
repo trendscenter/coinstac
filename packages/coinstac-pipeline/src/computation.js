@@ -28,6 +28,7 @@ module.exports = {
                   `${baseDirectory}:/input:ro`,
                   `${baseDirectory}/output:/output:rw`,
                   `${baseDirectory}/cache:/cache:rw`,
+                  `${baseDirectory}/transfer:/transfer:rw`,
                 ],
               },
             },
