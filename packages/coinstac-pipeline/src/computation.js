@@ -3,7 +3,7 @@
 const docker = require('coinstac-docker-manager');
 
 module.exports = {
-  create(spec, mode, runId) {
+  create(spec, mode, runId, clientId) {
     const computation = Object.assign(
       {},
       spec.computation,
@@ -16,10 +16,11 @@ module.exports = {
       meta,
       mode,
       runId,
+      clientId,
       start(input, { baseDirectory }) {
         return docker.startService(
           this.meta.id,
-          this.runId,
+          `${this.runId}-${this.clientId}`,
           {
             docker: {
               Image: computation.dockerImage,
@@ -52,7 +53,7 @@ module.exports = {
           });
       },
       stop() {
-        return docker.stopService(this.meta.id, this.runId);
+        return docker.stopService(this.meta.id, `${this.runId}-${this.clientId}`);
       },
     };
   },
