@@ -574,16 +574,20 @@ const stopService = (serviceId, serviceUserId) => {
     services[serviceId].users.splice(services[serviceId].users.indexOf(serviceUserId), 1);
   }
   if (services[serviceId] && services[serviceId].users.length === 0) {
-    services[serviceId].state = 'shutting down';
-    return services[serviceId].container.stop()
-      .then(() => {
-        delete services[serviceId];
-      }).catch((err) => {
-      // TODO: boxes don't always shutdown well, however that shouldn't crash a valid run
-      // figure out a way to cleanup
-        services[serviceId].state = 'zombie';
-        services[serviceId].error = err;
-      });
+    if (services[serviceId].state !== 'starting') {
+      services[serviceId].state = 'shutting down';
+      return services[serviceId].container.stop()
+        .then(() => {
+          delete services[serviceId];
+        }).catch((err) => {
+        // TODO: boxes don't always shutdown well, however that shouldn't crash a valid run
+        // figure out a way to cleanup
+          services[serviceId].state = 'zombie';
+          services[serviceId].error = err;
+        });
+    }
+    delete services[serviceId];
+    return Promise.resolve();
   }
   return Promise.resolve();
 };

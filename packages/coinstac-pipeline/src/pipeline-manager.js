@@ -67,7 +67,9 @@ module.exports = {
                 || remoteClients[client][runId].files.recieved.length === 0)
               || !remoteClients[client][runId].files.expected
                 .every(e => remoteClients[client][runId].files.recieved.includes(e))))
-          || (!remoteClients[client][runId].files)))) {
+            )
+          )
+        ) {
           waiters.push(client);
         }
       });

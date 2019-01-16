@@ -19,7 +19,9 @@ module.exports = {
    */
   create({ controller, computations, inputMap }, runId, { operatingDirectory, mode, clientId }) {
     let cache = {};
-    const currentComputations = computations.map(comp => Computation.create(comp, mode, runId));
+    const currentComputations = computations.map(
+      comp => Computation.create(comp, mode, runId, clientId)
+    );
     const activeControlBox = controllers[controller.type];
     const computationStep = 0;
     const stateEmitter = new Emitter();
@@ -261,13 +263,15 @@ module.exports = {
           const errCb = (err) => {
             setStateProp('state', 'error');
             controllerState.activeComputations[controllerState.computationIndex].stop()
-              .then(() => rej(err));
+              .then(() => rej(err))
+              .catch(err => rej(err));
           };
 
           waterfall(input, (result) => {
             setStateProp('state', 'stopped');
             controllerState.activeComputations[controllerState.computationIndex].stop()
-              .then(() => res(result));
+              .then(() => res(result))
+              .catch(err => rej(err));
           }, errCb);
         });
 
