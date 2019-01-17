@@ -13,17 +13,16 @@ const styles = theme => ({
     paddingBottom: theme.spacing.unit * 2,
     marginTop: theme.spacing.unit * 2,
     height: '100%',
-  },
-  title: {
-    marginBottom: theme.spacing.unit,
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'space-between',
   },
   description: {
-    marginBottom: theme.spacing.unit * 2,
+    marginBottom: theme.spacing.unit,
   },
   activePipelineContainer: {
     display: 'flex',
     alignItems: 'center',
-    marginBottom: theme.spacing.unit,
   },
   activePipelineLabel: {
     marginRight: theme.spacing.unit,
@@ -50,20 +49,27 @@ function MapsItem(props) {
         className={classes.rootPaper}
         elevation={1}
       >
-        <Typography variant="headline" className={classes.title}>
-          { itemObject.name }
-        </Typography>
-        <Typography variant="body1" className={classes.description}>
-          { itemObject.description }
-        </Typography>
-        {itemOptions.text}
-        <div className={classes.activePipelineContainer}>
-          <Typography variant="subtitle1" className={classes.activePipelineLabel}>
-            Active Pipeline:
+        <div>
+          <Typography variant="headline">
+            { itemObject.name }
           </Typography>
-          <Typography variant="body1">
-            {pipelineId}
-          </Typography>
+          {
+            itemObject.description
+            && (
+              <Typography variant="body1" className={classes.description}>
+                { itemObject.description }
+              </Typography>
+            )
+          }
+          {itemOptions.text}
+          <div className={classes.activePipelineContainer}>
+            <Typography variant="subtitle1" className={classes.activePipelineLabel}>
+              Active Pipeline:
+            </Typography>
+            <Typography variant="body1">
+              {pipelineId}
+            </Typography>
+          </div>
         </div>
         <div className={classes.actionsContainer}>
           {
