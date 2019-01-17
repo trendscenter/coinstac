@@ -119,7 +119,7 @@ function getStateWell(runObject, stateName, stateKey, classes) {
 const RunItem = ({ consortiumName, runObject, classes }) => (
   <Paper
     key={runObject.id}
-    elevation={1}
+    elevation={4}
     className={classes.rootPaper}
   >
     <div className={classes.titleContainer}>

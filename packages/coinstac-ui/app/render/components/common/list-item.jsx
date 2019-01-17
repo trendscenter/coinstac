@@ -34,7 +34,7 @@ const ListItem = ({
 }) => (
   <Paper
     className={classes.rootPaper}
-    elevation={1}
+    elevation={4}
   >
     <div className={classes.titleContainer}>
       <Typography variant="headline">
