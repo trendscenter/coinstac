@@ -52,22 +52,28 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 1rem 0;
   flex: 0 0 auto;
-
-  &__image {
-    background: url(../../../img/icons/png/256x256.png) no-repeat;
-    background-size: contain;
-    content: '';
-    height: 4rem;
-    margin: 0 .75rem 0 0;
-    width: 4rem;
-    vertical-align: top;
-  }
+  padding: 1rem 0;
 
   abbr[title] {
     border: none;
     text-decoration: none;
+  }
+
+  abbr {
+    position: relative;
+
+    &::before {
+      background: url(../../../img/icons/png/256x256.png) no-repeat;
+      background-size: contain;
+      content: '';
+      height: 4rem;
+      width: 4rem;
+      vertical-align: top;
+      position: absolute;
+      left: -4.75rem;
+      top: -0.5rem;
+    }
   }
 }
 

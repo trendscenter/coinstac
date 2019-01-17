@@ -7,9 +7,8 @@ const TITLE = `Collaborative Informatics and Neuroimaging Suite Toolkit for
 export default function CoinstacAbbr() {
   return (
     <div className="logo">
-      <div className="logo__image" />
-      <Typography variant="h3">
-        <abbr title={TITLE}>COINSTAC</abbr>
+      <Typography variant="h3" component="abbr" title={TITLE}>
+        COINSTAC
       </Typography>
     </div>
   );
