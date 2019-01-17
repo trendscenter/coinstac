@@ -357,7 +357,7 @@ const resolvers = {
         .then(([consortium, pipelineSnapshot, connection]) =>
           rethink.table('runs').insert(
             {
-              clients: [...new Set([...consortium.members, ...consortium.owners])],
+              clients: [...consortium.members],
               consortiumId,
               pipelineSnapshot,
               startDate: Date.now(),
