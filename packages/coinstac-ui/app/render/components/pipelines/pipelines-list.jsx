@@ -112,6 +112,7 @@ class PipelinesList extends Component {
             component={Link}
             to="/dashboard/pipelines/new"
             className={classes.button}
+            name="create-pipeline-button"
           >
             <AddIcon />
           </Fab>

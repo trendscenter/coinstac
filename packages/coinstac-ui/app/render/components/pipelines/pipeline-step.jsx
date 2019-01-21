@@ -152,7 +152,7 @@ class PipelineStep extends Component {
 
     return connectDragSource(connectDropTarget(
       <div>
-        <ExpansionPanel style={{ ...styles.draggable, opacity: isDragging ? 0 : 1 }}>
+        <ExpansionPanel className="pipeline-step" style={{ ...styles.draggable, opacity: isDragging ? 0 : 1 }}>
           <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
             <Typography variant="headline">{computations[0].meta.name}</Typography>
           </ExpansionPanelSummary>

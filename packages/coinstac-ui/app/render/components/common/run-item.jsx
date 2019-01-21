@@ -120,7 +120,7 @@ const RunItem = ({ consortiumName, runObject, classes }) => (
   <Paper
     key={runObject.id}
     elevation={4}
-    className={classes.rootPaper}
+    className={classNames(classes.rootPaper, 'run-item-paper')}
   >
     <div className={classes.titleContainer}>
       <Typography variant="headline">

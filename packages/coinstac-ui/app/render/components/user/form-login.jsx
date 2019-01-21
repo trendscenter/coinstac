@@ -81,6 +81,7 @@ class FormLogin extends Component {
               )
             }
             <TextField
+              id="login-username"
               label="Username"
               value={username}
               onChange={this.handleChange('username')}
@@ -88,6 +89,7 @@ class FormLogin extends Component {
               className={classes.formControl}
             />
             <TextField
+              id="login-password"
               label="Password"
               value={password}
               onChange={this.handleChange('password')}

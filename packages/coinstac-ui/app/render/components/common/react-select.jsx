@@ -151,7 +151,7 @@ function MultiValue(props) {
 
 function Menu(props) {
   return (
-    <Paper square className={props.selectProps.classes.paper} {...props.innerProps}>
+    <Paper square className={classNames(props.selectProps.classes.paper, 'react-select-dropdown-menu')} {...props.innerProps}>
       {props.children}
     </Paper>
   );

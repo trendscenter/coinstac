@@ -433,6 +433,7 @@ class ConsortiaList extends Component {
             component={Link}
             to="/dashboard/consortia/new"
             className={classes.button}
+            name="create-consortium-button"
           >
             <AddIcon />
           </Fab>
