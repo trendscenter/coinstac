@@ -188,6 +188,7 @@ class Pipeline extends Component {
     this.accordionSelect(id);
 
     this.setState(prevState => ({
+      openAddComputationStepMenu: false,
       pipeline: {
         ...prevState.pipeline,
         steps: [
@@ -376,7 +377,10 @@ class Pipeline extends Component {
 
   updatePipeline(update) {
     if (update.param === 'owningConsortium') {
-      this.setState({ consortium: { id: update.value, name: update.consortiumName } });
+      this.setState({
+        openOwningConsortiumMenu: false,
+        consortium: { id: update.value, name: update.consortiumName },
+      });
     }
 
     this.setState(prevState => ({
@@ -494,6 +498,7 @@ class Pipeline extends Component {
               { consortium ? consortium.name : 'Consortia' }
             </Button>
             <Menu
+              id="consortium-menu"
               anchorEl={this.owningConsortiumButtonElement}
               open={openOwningConsortiumMenu}
               onClose={this.closeOwningConsortiumMenu}
@@ -558,6 +563,7 @@ class Pipeline extends Component {
               Add Computation Step
             </Button>
             <Menu
+              id="computation-menu"
               anchorEl={this.addComputationStepButtonElement}
               open={openAddComputationStepMenu}
               onClose={this.closeAddComputationStepMenu}

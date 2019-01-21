@@ -103,6 +103,7 @@ class ConsortiumPipeline extends Component {
 
     this.removeCollectionsFromAssociatedConsortia(consortium.id, pipelineId);
     this.closeOwnedPipelinesMenu();
+    this.closeSharedPipelinesMenu();
   }
 
   openOwnedPipelinesMenu(event) {
@@ -177,6 +178,7 @@ class ConsortiumPipeline extends Component {
                     Owned Pipelines
                   </Button>
                   <Menu
+                    id="owned-pipelines-dropdown-menu"
                     anchorEl={this.ownedPipelinesButtonElement}
                     open={openOwnedPipelinesMenu}
                     onClose={this.closeOwnedPipelinesMenu}
@@ -203,6 +205,7 @@ class ConsortiumPipeline extends Component {
                     Pipelines Shared With Me
                   </Button>
                   <Menu
+                    id="shared-pipelines-dropdown-menu"
                     anchorEl={this.sharedPipelinesButtonElement}
                     open={openSharedPipelinesMenu}
                     onClose={this.closeSharedPipelinesMenu}

@@ -29,7 +29,7 @@ const ListDeleteModal = ({
   warningMessage,
   classes,
 }) => (
-  <Dialog open={show} onClose={close}>
+  <Dialog id="list-delete-modal" open={show} onClose={close}>
     <DialogTitle>
       Delete
     </DialogTitle>

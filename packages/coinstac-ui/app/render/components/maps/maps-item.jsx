@@ -75,7 +75,7 @@ function MapsItem(props) {
           {
             itemMapped
               ? <Button variant="contained" color="primary" onClick={() => setConsortium(itemObject)}>View Details</Button>
-              : <Button variant="contained" color="secondary" onClick={() => setConsortium(itemObject)}>Map Data to Consortia</Button>
+              : <Button variant="contained" color="secondary" onClick={() => setConsortium(itemObject)} name={`${itemObject.name}-map-data`}>Map Data to Consortia</Button>
           }
           {itemOptions.actions}
           {

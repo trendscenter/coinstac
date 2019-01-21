@@ -133,6 +133,7 @@ class PipelineOwnerMappings extends React.Component {
               anchorEl={this.dataButtonElement}
               open={openDataMenu}
               onClose={this.closeDataMenu}
+              id={`${objKey}-${index}-data-dropdown-menu`}
             >
               {
                 objParams.items.map(item => (
@@ -184,6 +185,7 @@ class PipelineOwnerMappings extends React.Component {
                   { this.constructor.getCovarSourceTitle(obj) }
                 </Button>
                 <Menu
+                  id={`input-source-${index}-dropdown-menu`}
                   anchorEl={this.covariatesSourceButtonElement}
                   open={openCovariatesSourceMenu}
                   onClose={this.closeCovariatesSourceMenu}

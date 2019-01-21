@@ -62,6 +62,7 @@ class MapsCollection extends Component {
       },
       showFiles: {},
       source: {},
+      finishedAutoMapping: false,
     };
 
     this.addFileGroup = this.addFileGroup.bind(this);
@@ -168,13 +169,13 @@ class MapsCollection extends Component {
      });
    }
 
-  autoMap(group) {
+  async autoMap(group) {
     this.setState({ autoMap: true });
     let covariates = this.props.collection.associatedConsortia.pipelineSteps[0].inputMap.covariates.ownerMappings;
     let data = this.props.collection.associatedConsortia.pipelineSteps[0].inputMap.data.ownerMappings;
-    this.makePoints(group.firstRow).map((string, index) => {
+    const resolveAutoMapPromises = this.makePoints(group.firstRow).map((string, index) => {
       if( Object.keys(this.filterGetObj(covariates,string)).length > 0 ){
-        this.setStepIO(
+        return this.setStepIO(
           index,
           group.id,
           0,
@@ -184,7 +185,7 @@ class MapsCollection extends Component {
         );
       }
       if( Object.keys(this.filterGetObj(data,string)).length > 0 ){
-        this.setStepIO(
+        return this.setStepIO(
           index,
           group.id,
           0,
@@ -193,7 +194,12 @@ class MapsCollection extends Component {
           string
         );
       }
+
+      return Promise.resolve();
     });
+
+    await Promise.all(resolveAutoMapPromises);
+    this.setState({ finishedAutoMapping: true });
   }
 
   removeFileGroup(groupId) {
@@ -223,12 +229,15 @@ class MapsCollection extends Component {
       'collectionId': collection.id,
       'groupId': groupId,
       'column':  string
-      }]
+    }];
+    return new Promise((resolve) => {
       setTimeout(() => {
         updateConsortiumClientProps(stepIndex, objKey, index, varObject);
         array.splice( array.indexOf(string), 1 );
         this.props.setRowArray(array);
+        resolve();
       }, timeout);
+    })
   }
 
   updateNewFileOrg(ev) {
@@ -257,7 +266,8 @@ class MapsCollection extends Component {
 
     const {
       contChildren,
-      filesError
+      filesError,
+      finishedAutoMapping,
     } = this.state;
 
     return (
@@ -365,13 +375,14 @@ class MapsCollection extends Component {
                           )
                         }
                         {
-                          !isMapped && contChildren === 0
+                          !isMapped && finishedAutoMapping
                           && (
                             <Button
                               variant="contained"
                               color="primary"
                               onClick={() => this.props.saveAndCheckConsortiaMapping()}
-                            > Save
+                            >
+                              Save
                             </Button>
                           )
                         }
