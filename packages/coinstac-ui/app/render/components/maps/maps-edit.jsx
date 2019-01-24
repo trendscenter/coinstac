@@ -23,7 +23,6 @@ import {
 } from '../../state/graphql/props';
 import {
   FETCH_ALL_USER_RUNS_QUERY,
-  FETCH_PIPELINE_QUERY,
 } from '../../state/graphql/functions';
 import { notifyInfo } from '../../state/ducks/notifyAndLog';
 import { Alert, Button, Panel } from 'react-bootstrap';
