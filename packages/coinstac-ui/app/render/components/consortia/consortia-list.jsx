@@ -35,7 +35,7 @@ import {
 } from '../../state/graphql/props';
 import { notifyInfo, notifyWarning } from '../../state/ducks/notifyAndLog';
 
-const MAX_LENGTH_CONSORTIA = 5;
+const MAX_LENGTH_CONSORTIA = 50;
 
 const styles = {
   listItemWarning: {
@@ -57,7 +57,7 @@ class ConsortiaList extends Component {
     super(props);
 
     this.state = {
-      ownedConsortia: [],
+      memberConsortia: [],
       otherConsortia: [],
       consortiumToDelete: -1,
       showModal: false,
@@ -77,18 +77,18 @@ class ConsortiaList extends Component {
 
   static getDerivedStateFromProps(props) {
     const { auth, consortia } = props;
-    const ownedConsortia = [];
+    const memberConsortia = [];
     const otherConsortia = [];
-    if (consortia && consortia.length > MAX_LENGTH_CONSORTIA) {
+    if (consortia && consortia.length <= MAX_LENGTH_CONSORTIA) {
       consortia.forEach((cons) => {
-        if (cons.owners.indexOf(auth.user.id) > -1) {
-          ownedConsortia.push(cons);
+        if (cons.owners.indexOf(auth.user.id) > -1 || cons.members.indexOf(auth.user.id) > -1) {
+          memberConsortia.push(cons);
         } else {
           otherConsortia.push(cons);
         }
       });
     }
-    return { ownedConsortia, otherConsortia };
+    return { memberConsortia, otherConsortia };
   }
 
   getOptions(member, owner, consortium) {
@@ -194,6 +194,7 @@ class ConsortiaList extends Component {
       actions.push(
         <Button
           key={`${consortium.id}-leave-cons-button`}
+          name={`${consortium.name}-leave-cons-button`}
           bsStyle="warning"
           className="pull-right"
           onClick={() => this.leaveConsortium(consortium.id)}
@@ -205,6 +206,7 @@ class ConsortiaList extends Component {
       actions.push(
         <Button
           key={`${consortium.id}-join-cons-button`}
+          name={`${consortium.name}-join-cons-button`}
           bsStyle="primary"
           className="pull-right"
           onClick={() => this.joinConsortium(consortium.id, consortium.activePipelineId)}
@@ -214,7 +216,7 @@ class ConsortiaList extends Component {
       );
     }
 
-    return { actions, text };
+    return { actions, text, owner };
   }
 
   getListItem(consortium) {
@@ -386,7 +388,7 @@ class ConsortiaList extends Component {
       consortia,
     } = this.props;
     const {
-      ownedConsortia,
+      memberConsortia,
       otherConsortia,
     } = this.state;
 
@@ -403,12 +405,12 @@ class ConsortiaList extends Component {
           </LinkContainer>
         </div>
 
-        {consortia && consortia.length && consortia.length <= MAX_LENGTH_CONSORTIA
+        {consortia && consortia.length && consortia.length > MAX_LENGTH_CONSORTIA
           && consortia.map(consortium => this.getListItem(consortium))
         }
-        {ownedConsortia.length > 0 && <h4>Owned Consortia</h4>}
-        {ownedConsortia.length > 0 &&
-          ownedConsortia.map(consortium => this.getListItem(consortium))
+        {memberConsortia.length > 0 && <h4>Member Consortia</h4>}
+        {memberConsortia.length > 0 &&
+          memberConsortia.map(consortium => this.getListItem(consortium))
         }
         {otherConsortia.length > 0 && <h4>Other Consortia</h4>}
         {otherConsortia.length > 0 &&
