@@ -1,0 +1,40 @@
+{
+  "meta": {
+    "name": "Test Coinstac transfering files",
+    "id": "coinstac-file-transfer-test",
+    "version": "v1.0.0",
+    "repository": "github.com\/user\/computation.git",
+    "description": "sends a large file"
+  },
+  "computation": {
+    "type": "docker",
+    "dockerImage": "coinstac\/coinstac-file-transfer-test",
+    "command": [
+      "python",
+      "\/computation\/local.py"
+    ],
+    "remote": {
+      "type": "docker",
+      "dockerImage": "coinstac\/coinstac-file-transfer-test",
+      "command": [
+        "python",
+        "\/computation\/remote.py"
+      ]
+    },
+    "input": {
+      "testFile": {
+        "type": "string",
+        "label": "input file to test"
+      }
+    },
+    "output": {
+      "outFile": {
+        "type": "string",
+        "label": "Same file as input"
+      }
+    },
+    "display": {
+      "type": "table"
+    }
+  }
+}
