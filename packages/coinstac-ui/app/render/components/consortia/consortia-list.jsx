@@ -323,7 +323,7 @@ class ConsortiaList extends Component {
         const consortium = data.fetchAllConsortia.find(cons => cons.id === consortiumId);
         let run = {
           id: `local-${shortid.generate()}`,
-          clients: [...consortium.members, ...consortium.owners],
+          clients: [...consortium.members],
           consortiumId,
           pipelineSnapshot: pipeline,
           startDate: Date.now(),
