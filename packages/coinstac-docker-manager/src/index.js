@@ -570,20 +570,22 @@ const removeImage = (imageId) => {
  * @return {Promise}              A promise that resovles on success
  */
 const stopService = (serviceId, serviceUserId) => {
-  if (services[serviceId] && services[serviceId].users.indexOf(serviceUserId) > -1) {
-    services[serviceId].users.splice(services[serviceId].users.indexOf(serviceUserId), 1);
+  const service = services[serviceId];
+  if (!service) return Promise.resolve();
+  if (service.users.indexOf(serviceUserId) > -1) {
+    service.users.splice(service.users.indexOf(serviceUserId), 1);
   }
-  if (services[serviceId] && services[serviceId].users.length === 0) {
-    if (services[serviceId].state !== 'starting') {
-      services[serviceId].state = 'shutting down';
-      return services[serviceId].container.stop()
+  if (service.users.length === 0) {
+    if (service.state !== 'starting') {
+      service.state = 'shutting down';
+      return service.container.stop()
         .then(() => {
           delete services[serviceId];
         }).catch((err) => {
         // TODO: boxes don't always shutdown well, however that shouldn't crash a valid run
         // figure out a way to cleanup
-          services[serviceId].state = 'zombie';
-          services[serviceId].error = err;
+          service.state = 'zombie';
+          service.error = err;
         });
     }
     delete services[serviceId];

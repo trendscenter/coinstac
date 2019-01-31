@@ -264,14 +264,14 @@ module.exports = {
             setStateProp('state', 'error');
             controllerState.activeComputations[controllerState.computationIndex].stop()
               .then(() => rej(err))
-              .catch(err => rej(err));
+              .catch(error => rej(error));
           };
 
           waterfall(input, (result) => {
             setStateProp('state', 'stopped');
             controllerState.activeComputations[controllerState.computationIndex].stop()
               .then(() => res(result))
-              .catch(err => rej(err));
+              .catch(error => rej(error));
           }, errCb);
         });
 
