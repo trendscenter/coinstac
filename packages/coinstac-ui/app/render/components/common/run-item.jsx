@@ -164,7 +164,7 @@ const RunItem = ({ consortiumName, runObject, classes }) => (
         runObject.status === 'started' && (runObject.localPipelineState || runObject.remotePipelineState)
         && (
           <LinearProgress
-            variant="determinate"
+            variant="indeterminate"
             value={runObject.remotePipelineState
               ? ((runObject.remotePipelineState.pipelineStep + 1) / runObject.remotePipelineState.totalSteps) * 100
               : ((runObject.localPipelineState.pipelineStep + 1) / runObject.localPipelineState.totalSteps) * 100
