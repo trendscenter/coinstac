@@ -3,18 +3,28 @@ import { DragSource, DropTarget } from 'react-dnd';
 import PropTypes from 'prop-types';
 import { compose } from 'redux';
 import { graphql } from 'react-apollo';
-import { Button, Panel } from 'react-bootstrap';
+import Button from '@material-ui/core/Button';
+import ExpansionPanel from '@material-ui/core/ExpansionPanel';
+import ExpansionPanelSummary from '@material-ui/core/ExpansionPanelSummary';
+import ExpansionPanelDetails from '@material-ui/core/ExpansionPanelDetails';
+import Typography from '@material-ui/core/Typography';
+import { withStyles } from '@material-ui/core/styles';
+import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import ItemTypes from './pipeline-item-types';
 import PipelineStepInput from './pipeline-step-input';
 import { FETCH_COMPUTATION_QUERY } from '../../state/graphql/functions';
 import { compIOProp } from '../../state/graphql/props';
 
-const styles = {
-  container: {
-    margin: '10px 0',
-    cursor: 'move',
+const styles = theme => ({
+  expansionPanelContent: {
+    display: 'block',
   },
-};
+  inputParametersContainer: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+});
 
 const stepSource = {
   beginDrag(props) {
@@ -93,18 +103,25 @@ class PipelineStep extends Component {
   showOutput(paddingLeft, id, output) {
     return (
       <div style={{ paddingLeft }}>
-        {Object.entries(output).map((localOutput) => {
-          if (typeof localOutput[1] === 'object') {
-            const output = [<p key={`${id}-${localOutput[0]}-output`}>{localOutput[1].label} ({localOutput[1].type})</p>];
-            if (localOutput[1].items) {
-              output.push(this.showOutput(paddingLeft + 5, id, localOutput[1].items));
+        {
+          Object.entries(output).map((localOutput) => {
+            if (typeof localOutput[1] === 'object') {
+              const output = [(
+                <Typography key={`${id}-${localOutput[0]}-output`} variant="body1">
+                  {localOutput[1].label} ({localOutput[1].type})
+                </Typography>
+              )];
+
+              if (localOutput[1].items) {
+                output.push(this.showOutput(paddingLeft + 5, id, localOutput[1].items));
+              }
+
+              return output;
             }
 
-            return output;
-          }
-
-          return null;
-        })}
+            return null;
+          })
+        }
       </div>
     );
   }
@@ -125,46 +142,52 @@ class PipelineStep extends Component {
       owner,
       step,
       updateStep,
+      classes,
       ...other
     } = this.props;
+
+    const { orderedInputs } = this.state;
 
     const { id, computations } = step;
 
     return connectDragSource(connectDropTarget(
-      <div style={styles.container}>
-        <Panel
-          expanded={other.isExpanded}
-          defaultExpanded
-          header={computations[0].meta.name}
-          style={{ ...styles.draggable, opacity: isDragging ? 0 : 1 }}
-          {...other}
-        >
-          <Button
-            disabled={!owner}
-            key={`delete-step-button-${step.id}`}
-            bsStyle="danger"
-            className="pull-right"
-            onClick={() => deleteStep(step.id)}
-          >
-            Delete
-          </Button>
-          <h4>Input Parameters:</h4>
-          {compIO !== null && Object.entries(compIO.computation.input).map(localInput => (
-            <PipelineStepInput
-              objKey={localInput[0]}
-              objParams={localInput[1]}
-              pipelineIndex={pipelineIndex}
-              key={`${id}-${localInput[0]}-input`}
-              owner={owner}
-              parentKey={`${id}-${localInput[0]}-input`}
-              possibleInputs={this.state.orderedInputs}
-              step={step}
-              updateStep={updateStep}
-            />
-          ))}
-          <h4>Output:</h4>
-          {compIO !== null && this.showOutput(10, id, compIO.computation.output)}
-        </Panel>
+      <div>
+        <ExpansionPanel className="pipeline-step" style={{ ...styles.draggable, opacity: isDragging ? 0 : 1 }}>
+          <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography variant="headline">{computations[0].meta.name}</Typography>
+          </ExpansionPanelSummary>
+          <ExpansionPanelDetails className={classes.expansionPanelContent}>
+            <div className={classes.inputParametersContainer}>
+              <Typography variant="title">Input Parameters:</Typography>
+              <Button
+                variant="contained"
+                color="secondary"
+                disabled={!owner}
+                onClick={() => deleteStep(step.id)}
+              >
+                Delete
+              </Button>
+            </div>
+            {
+              compIO !== null
+              && Object.entries(compIO.computation.input).map(localInput => (
+                <PipelineStepInput
+                  objKey={localInput[0]}
+                  objParams={localInput[1]}
+                  pipelineIndex={pipelineIndex}
+                  key={`${id}-${localInput[0]}-input`}
+                  owner={owner}
+                  parentKey={`${id}-${localInput[0]}-input`}
+                  possibleInputs={orderedInputs}
+                  step={step}
+                  updateStep={updateStep}
+                />
+              ))
+            }
+            <Typography variant="title">Output:</Typography>
+            {compIO !== null && this.showOutput(10, id, compIO.computation.output)}
+          </ExpansionPanelDetails>
+        </ExpansionPanel>
       </div>
     ));
   }
@@ -190,6 +213,7 @@ PipelineStep.propTypes = {
   previousComputationIds: PropTypes.array.isRequired,
   step: PropTypes.object.isRequired,
   updateStep: PropTypes.func,
+  classes: PropTypes.object.isRequired,
 };
 
 const PipelineStepWithData = compose(
@@ -203,7 +227,9 @@ const PipelineStepWithData = compose(
   })
 )(PipelineStep);
 
+const componentWithStyles = withStyles(styles)(PipelineStepWithData);
+
 export default compose(
   DropTarget(ItemTypes.COMPUTATION, stepTarget, collectDrop),
   DragSource(ItemTypes.COMPUTATION, stepSource, collectDrag)
-)(PipelineStepWithData);
+)(componentWithStyles);

@@ -3,7 +3,13 @@ import { compose, graphql, withApollo } from 'react-apollo';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { ipcRenderer } from 'electron';
-import { isEqual } from 'lodash';
+import { withStyles } from '@material-ui/core/styles';
+import CssBaseline from '@material-ui/core/CssBaseline';
+import Grid from '@material-ui/core/Grid';
+import Drawer from '@material-ui/core/Drawer';
+import List from '@material-ui/core/List';
+import ListItem from '@material-ui/core/ListItem';
+import Typography from '@material-ui/core/Typography';
 import DashboardNav from './dashboard-nav';
 import UserAccountController from '../user/user-account-controller';
 import {
@@ -41,41 +47,57 @@ import {
   getSelectAndSubProp,
 } from '../../state/graphql/props';
 
-const styles = {
-
+const styles = theme => ({
+  root: {
+    display: 'flex',
+  },
+  gridContainer: {
+    position: 'relative',
+    minHeight: '100vh',
+  },
+  drawer: {
+    flexShrink: 0,
+  },
+  drawerPaper: {
+    backgroundColor: '#eee',
+    position: 'absolute',
+    right: 0,
+  },
+  content: {
+    flexGrow: 1,
+    backgroundColor: theme.palette.background.default,
+    padding: theme.spacing.unit * 3,
+  },
   status: {
     display: 'inline-block',
     fontSize: '1.25rem',
     position: 'relative',
     width: '100%',
   },
-
   statusGood: {
-    marginLeft: '6.5rem',
+    display: 'flex',
+    alignItems: 'center',
   },
-
   statusUp: {
-    display: 'inline-block',
     width: '1rem',
     height: '1rem',
     background: '#5cb85c',
     borderRadius: '50%',
     marginLeft: '0.5rem',
   },
-
   statusDown: {
     display: 'inline-block',
     width: '100%',
     background: '#d9534f',
     borderRadius: '0.5rem',
-    marginLeft: '0.5rem',
     padding: '1rem',
-    color: 'white',
-    fontSize: '2rem',
     textAlign: 'center',
     textShadow: '1px 1px 0px rgba(0, 0, 0, 1)',
   },
-};
+  statusDownText: {
+    color: 'white',
+  },
+});
 
 class Dashboard extends Component {
   constructor(props) {
@@ -440,7 +462,8 @@ class Dashboard extends Component {
   }
 
   render() {
-    const { auth, children, computations, consortia, pipelines, runs } = this.props;
+    const { auth, children, computations, consortia, pipelines, runs, classes } = this.props;
+    const { dockerStatus } = this.state;
     const { router } = this.context;
 
     const childrenWithProps = React.cloneElement(children, {
@@ -453,27 +476,59 @@ class Dashboard extends Component {
 
     // @TODO don't render primary content whilst still loading/bg-services
     return (
-      <div className="dashboard container-fluid">
-        <div className="row">
-          <div className="col-xs-12 col-sm-3 navigation-pane">
-            <nav className="navigation">
-              <h1 className="logo text-center">
-                <CoinstacAbbr />
-              </h1>
+      <div>
+        <CssBaseline />
+        <Grid container>
+          <Grid item xs={12} sm={3} className={classes.gridContainer}>
+            <Drawer
+              variant="permanent"
+              anchor="left"
+              className={classes.drawer}
+              classes={{
+                paper: classes.drawerPaper,
+              }}
+            >
+              <CoinstacAbbr />
               <DashboardNav auth={auth} />
-              <UserAccountController push={router.push} />
-            </nav>
-            <div style={styles.status}>
-              { this.state.dockerStatus
-              ? <span style={styles.statusGood}><strong>Docker Status:</strong><span style={styles.statusUp} /></span>
-              : <span style={styles.statusDown}>Docker Is Not Running!</span>
-              }
-            </div>
-          </div>
-          <div className="col-xs-12 col-sm-9 content-pane">
-            {childrenWithProps}
-          </div>
-        </div>
+              <List>
+                <ListItem>
+                  <UserAccountController push={router.push} />
+                </ListItem>
+              </List>
+              <List>
+                <ListItem>
+                  { dockerStatus
+                    ? (
+                      <span className={classes.statusGood}>
+                        <Typography variant="subtitle2">
+                          Docker Status:
+                        </Typography>
+                        <span className={classes.statusUp} />
+                      </span>
+                    )
+                    : (
+                      <span className={classes.statusDown}>
+                        <Typography
+                          variant="body2"
+                          classes={{
+                            root: classes.statusDownText,
+                          }}
+                        >
+                          Docker Is Not Running!
+                        </Typography>
+                      </span>
+                    )
+                  }
+                </ListItem>
+              </List>
+            </Drawer>
+          </Grid>
+          <Grid item xs={12} sm={9}>
+            <main className="content-pane">
+              {childrenWithProps}
+            </main>
+          </Grid>
+        </Grid>
       </div>
     );
   }
@@ -527,6 +582,7 @@ Dashboard.propTypes = {
   writeLog: PropTypes.func.isRequired,
   updateUserPerms: PropTypes.func.isRequired,
   currentUser: PropTypes.object,
+  classes: PropTypes.object.isRequired,
 };
 
 function mapStateToProps({ auth, runs: { runs } }) {
@@ -598,7 +654,7 @@ const DashboardWithData = compose(
   withApollo
 )(Dashboard);
 
-export default connect(mapStateToProps,
+const connectedComponent = connect(mapStateToProps,
   {
     getCollectionFiles,
     getLocalRun,
@@ -617,6 +673,7 @@ export default connect(mapStateToProps,
     updateLocalRun,
     updateUserConsortiaStatuses,
     writeLog,
-    updateUserPerms
-  }
-)(DashboardWithData);
+    updateUserPerms,
+  })(DashboardWithData);
+
+export default withStyles(styles)(connectedComponent);

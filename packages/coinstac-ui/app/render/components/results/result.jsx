@@ -1,7 +1,14 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import { Button, Glyphicon, Tabs, Tab, Well } from 'react-bootstrap';
+import Button from '@material-ui/core/Button';
+import Paper from '@material-ui/core/Paper';
+import Tabs from '@material-ui/core/Tabs';
+import Tab from '@material-ui/core/Tab';
+import Typography from '@material-ui/core/Typography';
+import { withStyles } from '@material-ui/core/styles';
+import ArrowBackIcon from '@material-ui/icons/ArrowBack';
+import classNames from 'classnames';
 import TimeStamp from 'react-timestamp';
 import BrowserHistory from 'react-router/lib/browserHistory';
 import Box from './displays/box-plot';
@@ -9,6 +16,25 @@ import Scatter from './displays/scatter-plot';
 import Table from './displays/result-table';
 import Images from './displays/images';
 import { getLocalRun } from '../../state/ducks/runs';
+
+const styles = theme => ({
+  paper: {
+    ...theme.mixins.gutters(),
+    paddingTop: theme.spacing.unit * 2,
+    paddingBottom: theme.spacing.unit * 2,
+    marginTop: theme.spacing.unit * 2,
+  },
+  timestamp: {
+    display: 'flex',
+  },
+  label: {
+    fontWeight: 'bold',
+    marginRight: theme.spacing.unit,
+  },
+  error: {
+    color: 'red',
+  },
+});
 
 class Result extends Component {
   constructor(props) {
@@ -19,7 +45,10 @@ class Result extends Component {
       computationOutput: {},
       displayTypes: [],
       plotData: [],
+      selectedTabIndex: 0,
     };
+
+    this.handleSelect = this.handleSelect.bind(this);
   }
 
   componentDidMount() {
@@ -67,15 +96,17 @@ class Result extends Component {
         this.setState({
           run,
           plotData,
-          dummyData: [14, 15, 16, 16, 17, 17, 17, 17, 17, 18, 18, 18, 18, 18, 18, 19,
-            19, 19, 20, 20, 20, 20, 20, 20, 21, 21, 22, 23, 24, 24, 29],
         });
       });
   }
 
+  handleSelect(event, value) {
+    this.setState({ selectedTabIndex: value });
+  }
+
   render() {
-    const { run, plotData, computationOutput } = this.state;
-    const { consortia } = this.props;
+    const { run, selectedTabIndex, plotData, computationOutput } = this.state;
+    const { consortia, classes } = this.props;
     const consortium = consortia.find(c => c.id === run.consortiumId);
     let displayTypes = this.state.displayTypes;
     let stepsLength = -1;
@@ -96,41 +127,55 @@ class Result extends Component {
       displayTypes = array;
     }
 
+    const selectedDisplayType = run && run.results && displayTypes && displayTypes[selectedTabIndex];
+
     return (
       <div>
-        <Button className="custom" onClick={BrowserHistory.goBack}>
-          <Glyphicon glyph="glyphicon glyphicon-arrow-left" />
+        <Button
+          variant="contained"
+          onClick={BrowserHistory.goBack}
+        >
+          <ArrowBackIcon />
         </Button>
 
-        <Well bsSize="small" style={{ marginTop: 10 }}>
-          <h2 style={{ marginTop: 0 }}>
-            {consortium && run.pipelineSnapshot && (
-              <span>{`Results: ${consortium.name} || ${run.pipelineSnapshot.name}`}</span>
-            )}
-          </h2>
+        <Paper className={classes.paper}>
           {
-            run.startDate && (
-              <div>
-                <span className="bold">Start date: </span>
-                <TimeStamp
-                  time={run.startDate / 1000}
-                  precision={2}
-                  autoUpdate={10}
-                  format="full"
-                />
+            consortium && run.pipelineSnapshot
+            && (
+              <Typography variant="h6">
+                {`Results: ${consortium.name} || ${run.pipelineSnapshot.name}`}
+              </Typography>
+            )
+          }
+          {
+            run.startDate
+            && (
+              <div className={classes.timestamp}>
+                <Typography className={classes.label}>Start date:</Typography>
+                <Typography>
+                  <TimeStamp
+                    time={run.startDate / 1000}
+                    precision={2}
+                    autoUpdate={10}
+                    format="full"
+                  />
+                </Typography>
               </div>
             )
           }
           {
-            run.endDate && (
-              <div>
-                <span className="bold">End date: </span>
-                <TimeStamp
-                  time={run.endDate / 1000}
-                  precision={2}
-                  autoUpdate={10}
-                  format="full"
-                />
+            run.endDate
+            && (
+              <div className={classes.timestamp}>
+                <Typography className={classes.label}>End date:</Typography>
+                <Typography>
+                  <TimeStamp
+                    time={run.endDate / 1000}
+                    precision={2}
+                    autoUpdate={10}
+                    format="full"
+                  />
+                </Typography>
               </div>
             )
           }
@@ -142,63 +187,63 @@ class Result extends Component {
               </div>
             )
           }
-        </Well>
+        </Paper>
 
-        <Tabs defaultActiveKey={0} id="uncontrolled-tab-example">
+        <Tabs
+          value={selectedTabIndex}
+          onChange={this.handleSelect}
+        >
           {
-            run && run.results && displayTypes
-            && displayTypes.map((disp, index) => {
+            run && run.results && displayTypes.map((disp) => {
               const title = disp.type.replace('_', ' ')
                 .replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
-              return (
-                <Tab
-                  key={disp.type}
-                  eventKey={index}
-                  title={`${title} View`}
-                  style={{ padding: 10 }}
-                >
-                  {
-                    disp.type === 'box_plot' && (
-                      <Box
-                        plotData={plotData.testData}
-                      />
-                    )
-                  }
-                  {
-                    disp.type === 'scatter_plot' && (
-                      <Scatter
-                        plotData={plotData.testData}
-                      />
-                    )
-                  }
-                  {
-                    disp.type === 'table' && (
-                      <Table
-                        computationOutput={computationOutput}
-                        plotData={plotData}
-                        tables={disp.tables ? disp.tables : null}
-                        title={`${consortium.name}_${run.pipelineSnapshot.name}`}
-                      />
-                    )
-                  }
-                  {
-                    disp.type === 'images' && (
-                      <Images
-                        plotData={plotData}
-                        title={`${consortium.name}_${run.pipelineSnapshot.name}`}
-                      />
-                    )
-                  }
-                </Tab>
-              );
+
+              return <Tab key={disp.type} label={`${title} View`} />;
             })
           }
         </Tabs>
         {
-          run && run.error && (
-            <Well style={{ color: 'red' }}>
+          selectedDisplayType
+          && (
+            <div>
+              {
+                selectedDisplayType.type === 'box_plot'
+                && <Box plotData={plotData.testData} />
+              }
+              {
+                selectedDisplayType.type === 'scatter_plot'
+                && <Scatter plotData={plotData.testData} />
+              }
+              {
+                selectedDisplayType.type === 'table'
+                && (
+                  <Table
+                    computationOutput={computationOutput}
+                    plotData={plotData}
+                    tables={selectedDisplayType.tables ? selectedDisplayType.tables : null}
+                    title={`${consortium.name}_${run.pipelineSnapshot.name}`}
+                  />
+                )
+              }
+              {
+                selectedDisplayType.type === 'images'
+                && (
+                  <Images
+                    plotData={plotData}
+                    title={`${consortium.name}_${run.pipelineSnapshot.name}`}
+                  />
+                )
+              }
+            </div>
+          )
+        }
+
+        {
+          run && run.error
+          && (
+            <Paper className={classNames(classes.paper, classes.error)}>
               {JSON.stringify(run.error.message, null, 2)}
-            </Well>
+            </Paper>
           )
         }
       </div>
@@ -210,10 +255,13 @@ Result.propTypes = {
   consortia: PropTypes.array.isRequired,
   getLocalRun: PropTypes.func.isRequired,
   params: PropTypes.object.isRequired,
+  classes: PropTypes.object.isRequired,
 };
 
 const mapStateToProps = ({ auth }) => {
   return { auth };
 };
 
-export default connect(mapStateToProps, { getLocalRun })(Result);
+const connectedComponent = connect(mapStateToProps, { getLocalRun })(Result);
+
+export default withStyles(styles)(connectedComponent);

@@ -1,22 +1,31 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
-import { connect } from 'react-redux';
-import { compose, graphql, withApollo } from 'react-apollo';
-import { Alert, Button, Panel } from 'react-bootstrap';
-import { LinkContainer } from 'react-router-bootstrap';
-import { ipcRenderer } from 'electron';
+import { Panel } from 'react-bootstrap';
 import PropTypes from 'prop-types';
 import { capitalize } from 'lodash';
-import dragula from 'react-dragula';
+import Paper from '@material-ui/core/Paper';
+import Typography from '@material-ui/core/Typography';
+import List from '@material-ui/core/List';
+import ListItem from '@material-ui/core/ListItem';
+import ListItemText from '@material-ui/core/ListItemText';
+import { withStyles } from '@material-ui/core/styles';
 
-class MapsStepData extends Component {
+const styles = theme => ({
+  rootPaper: {
+    ...theme.mixins.gutters(),
+    paddingTop: theme.spacing.unit * 2,
+    paddingBottom: theme.spacing.unit * 2,
+    marginTop: theme.spacing.unit * 2,
+    height: '100%',
+  },
+  nestedListItem: {
+    paddingLeft: theme.spacing.unit * 4,
+  },
+});
 
-  constructor(props) {
-    super(props);
-  }
-
+class MapsStepValue extends Component {
   componentDidUpdate() {
-    if(this.refs.Container){
+    if (this.refs.Container) {
       let Container = ReactDOM.findDOMNode(this.refs.Container);
       this.props.getContainers(Container);
     }
@@ -25,23 +34,31 @@ class MapsStepData extends Component {
   render() {
     const {
       step,
-      type
+      type,
+      classes,
     } = this.props;
 
     return (
-      <Panel>
-        <div>
-          <ul className={"list-inline"}>
-            <li><strong>{capitalize(type)}:</strong> {step['value']}</li>
-          </ul>
-        </div>
-      </Panel>
+      <Paper
+        className={classes.rootPaper}
+        elevation={1}
+      >
+        <List>
+          <ListItem>
+            <ListItemText primary={`${capitalize(type)}:`} />
+          </ListItem>
+          <ListItem className={classes.nestedListItem}>
+            <ListItemText secondary={step.value} />
+          </ListItem>
+        </List>
+      </Paper>
     );
   }
 }
 
-MapsStepData.propTypes = {
+MapsStepValue.propTypes = {
   step: PropTypes.object.isRequired,
+  classes: PropTypes.object.isRequired,
 };
 
-export default MapsStepData;
+export default withStyles(styles)(MapsStepValue);

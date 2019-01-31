@@ -1,8 +1,13 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { graphql } from 'react-apollo';
-import { Alert, Button } from 'react-bootstrap';
-import { LinkContainer } from 'react-router-bootstrap';
+import { Link } from 'react-router';
+import Button from '@material-ui/core/Button';
+import Fab from '@material-ui/core/Fab';
+import Typography from '@material-ui/core/Typography';
+import AddIcon from '@material-ui/icons/Add';
+import { withStyles } from '@material-ui/core/styles';
+import { Alert } from 'react-bootstrap';
 import PropTypes from 'prop-types';
 import ListItem from '../common/list-item';
 import ListDeleteModal from '../common/list-delete-modal';
@@ -15,6 +20,12 @@ import {
 } from '../../state/graphql/props';
 
 const MAX_LENGTH_PIPELINES = 5;
+
+const styles = theme => ({
+  button: {
+    margin: theme.spacing.unit,
+  },
+});
 
 class PipelinesList extends Component {
   constructor(props) {
@@ -59,11 +70,11 @@ class PipelinesList extends Component {
         itemObject={pipeline}
         deleteItem={this.openModal}
         owner={
-          user.permissions.consortia[pipeline.owningConsortium] &&
-          user.permissions.consortia[pipeline.owningConsortium].write
+          user.permissions.consortia[pipeline.owningConsortium]
+          && user.permissions.consortia[pipeline.owningConsortium].write
         }
         itemOptions={{ actions: [], text: [] }}
-        itemRoute={'/dashboard/pipelines'}
+        itemRoute="/dashboard/pipelines"
       />
     );
   }
@@ -87,28 +98,32 @@ class PipelinesList extends Component {
   }
 
   render() {
-    const { pipelines } = this.props;
+    const { pipelines, classes } = this.props;
     const { ownedPipelines, otherPipelines } = this.state;
 
     return (
       <div>
-        <div className="page-header clearfix">
-          <h1 className="nav-item-page-title">Pipelines</h1>
-          <LinkContainer className="pull-right" to="/dashboard/pipelines/new">
-            <Button bsStyle="primary" className="pull-right">
-              <span aria-hidden="true" className="glphicon glyphicon-plus" />
-              {' '}
-              Create Pipeline
-            </Button>
-          </LinkContainer>
+        <div className="page-header">
+          <Typography variant="h4">
+            Pipelines
+          </Typography>
+          <Fab
+            color="primary"
+            component={Link}
+            to="/dashboard/pipelines/new"
+            className={classes.button}
+            name="create-pipeline-button"
+          >
+            <AddIcon />
+          </Fab>
         </div>
-
-        {pipelines && pipelines.length && pipelines.length <= MAX_LENGTH_PIPELINES
+        {
+          pipelines && pipelines.length && pipelines.length <= MAX_LENGTH_PIPELINES
           && pipelines.map(pipeline => this.getListItem(pipeline))
         }
-        {ownedPipelines.length > 0 && <h4>Owned Pipelines</h4>}
+        {ownedPipelines.length > 0 && <Typography variant="h6">Owned Pipelines</Typography>}
         {ownedPipelines.length > 0 && ownedPipelines.map(pipeline => this.getListItem(pipeline))}
-        {otherPipelines.length > 0 && <h4>Other Pipelines</h4>}
+        {otherPipelines.length > 0 && <Typography variant="h6">Other Pipelines</Typography>}
         {otherPipelines.length > 0 && otherPipelines.map(pipeline => this.getListItem(pipeline))}
 
         {(!pipelines || !pipelines.length) &&
@@ -150,4 +165,6 @@ const PipelinesListWithData = graphql(DELETE_PIPELINE_MUTATION,
   )
 )(PipelinesList);
 
-export default connect(mapStateToProps)(PipelinesListWithData);
+const connectedComponent = connect(mapStateToProps)(PipelinesListWithData);
+
+export default withStyles(styles)(connectedComponent);

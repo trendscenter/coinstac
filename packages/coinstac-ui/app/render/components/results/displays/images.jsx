@@ -5,7 +5,9 @@ import PropTypes from 'prop-types';
 import { notifySuccess, notifyError, writeLog } from '../../../state/ducks/notifyAndLog';
 import RasterizeHTML from 'rasterizehtml';
 import jsPDF from 'jspdf';
-import { Button } from 'react-bootstrap';
+import Button from '@material-ui/core/Button';
+import { withStyles } from '@material-ui/core/styles';
+import classNames from 'classnames';
 import _ from 'lodash';
 import kebabcase from 'lodash';
 
@@ -53,6 +55,7 @@ class Images extends Component {
    */
 
   drawImageResults(obj) {
+    const { classes } = this.props;
     const output = [];
     Object.entries(obj).forEach(([key, value]) => {
       const page = [];
@@ -85,7 +88,7 @@ class Images extends Component {
         if (typeof v === 'string') {
           item.push(
             <img key={`${v}-img`} alt={`${v}-img`} src={`data:image/png;base64, ${v}`}
-            style={styles.image} />
+            className={classes.image} />
           );
         } else {
           Object.entries(v).forEach(([l, w], h) => {
@@ -98,17 +101,17 @@ class Images extends Component {
             if (typeof w === 'string') {
               subitem.push(
                 <img alt={`${w}-img`} alt={`${w}-img`} src={`data:image/png;base64, ${w}`}
-                  style={styles.image} />
+                className={classes.image} />
               );
             }
             if (h + 1 <= subItemsLength/2 && subcol1.length < subItemsLength/2) {
               subcol1.push(
-                <div className={'item'} key={`image-sub1-${key}-${k}-${l}`} style={styles.imgItem}>{subitem}</div>
+                <div className={classNames('item', classes.imgItem)} key={`image-sub1-${key}-${k}-${l}`}>{subitem}</div>
               );
             }
             if (h + 1 > subItemsLength/2  && subcol2.length < subItemsLength/2) {
               subcol2.push(
-                <div className={'item'} key={`image-sub2-${key}-${k}-${l}`} style={styles.imgItem}>{subitem}</div>
+                <div className={classNames('item', classes.imgItem)} key={`image-sub2-${key}-${k}-${l}`}>{subitem}</div>
               );
             }
           });
@@ -116,20 +119,20 @@ class Images extends Component {
         if (key.includes('global')) {
           if (i + 1 <= itemsLength/2) {
             col1.push(
-              <div className={'item'} key={`page-${key}-${k}`} style={styles.imgItem}>{item}</div>
+              <div className={classNames('item', classes.imgItem)} key={`page-${key}-${k}`}>{item}</div>
             );
           }
           if (i + 1 > itemsLength/2) {
             col2.push(
-              <div className={'item'} key={`page-${key}-${k}`} style={styles.imgItem}>{item}</div>
+              <div className={classNames('item', classes.imgItem)} key={`page-${key}-${k}`}>{item}</div>
             );
           }
         }else{
           page.push(
-            <div className={`page-${k}`} ref={`page-${k}`} key={`page-${k}`} style={styles.subpage}>
+            <div className={classNames(`page-${k}`, classes.subpage)} ref={`page-${k}`} key={`page-${k}`}>
               {item}
-              <div style={styles.column}>{subcol1}</div>
-              <div style={styles.column}>{subcol2}</div>
+              <div className={classes.column}>{subcol1}</div>
+              <div className={classes.column}>{subcol2}</div>
             </div>
           );
           subcol1 = [];
@@ -137,18 +140,18 @@ class Images extends Component {
         }
       });
       page.push(
-        <div style={styles.column}>{col1}</div>
+        <div className={classes.column}>{col1}</div>
       );
       page.push(
-        <div style={styles.column}>{col2}</div>
+        <div className={classes.column}>{col2}</div>
       );
       if (key.includes('global')) {
         output.push(
-          <div key={`page-${key}`} className={`page-${key}`} ref={'global_page'} style={styles.page}>{page}</div>
+          <div key={`page-${key}`} className={classNames(`page-${key}`, classes.page)} ref={'global_page'}>{page}</div>
         );
       }else{
         output.push(
-          <div key={`page-${key}`} className={'local_stats'} ref={`local_page_${key}`} style={styles.page}>{page}</div>
+          <div key={`page-${key}`} className={classNames('local_stats', classes.page)} ref={`local_page_${key}`}>{page}</div>
         );
       }
     });
@@ -202,7 +205,7 @@ class Images extends Component {
 	}
 
   render() {
-    const { plotData } = this.props;
+    const { plotData, classes } = this.props;
     let global_items = Object.keys(plotData.global_stats).length;
     let local_items = Object.keys(plotData.local_stats).length;
     let height = 0;
@@ -214,15 +217,17 @@ class Images extends Component {
     return (
       <div>
         <Button
-          bsStyle="primary"
+          variant="contained"
+          color="primary"
           onClick={this.savePDF}
-          style={styles.pdfButton}>
+          className={classes.pdfButton}
+        >
           Download as pdf
         </Button>
         <div id="images" ref="results">
           {plotData && this.drawImageResults(plotData)}
         </div>
-        <div style={styles.print}>
+        <div className={classes.print}>
           <canvas ref="global_canvas" width="800" height={height}></canvas>
           {local_canvas}
         </div>
@@ -235,6 +240,7 @@ Images.propTypes = {
   plotData: PropTypes.object,
   notifyError: PropTypes.func.isRequired,
   writeLog: PropTypes.func.isRequired,
+  classes: PropTypes.object.isRequired,
 };
 
 Images.defaultProps = {
@@ -247,7 +253,9 @@ const mapStateToProps = ({ auth: { user } }) => {
   };
 };
 
-export default connect(mapStateToProps, {
+const connectedComponent = connect(mapStateToProps, {
   notifyError,
   writeLog,
 })(Images);
+
+export default withStyles(styles)(connectedComponent);

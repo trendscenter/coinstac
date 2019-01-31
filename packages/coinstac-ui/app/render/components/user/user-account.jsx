@@ -1,74 +1,117 @@
-import { Button } from 'react-bootstrap';
 import { connect } from 'react-redux';
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
+import React from 'react';
 import { Link } from 'react-router';
+import PropTypes from 'prop-types';
+import { withStyles } from '@material-ui/core/styles';
+import Typography from '@material-ui/core/Typography';
+import List from '@material-ui/core/List';
+import ListItem from '@material-ui/core/ListItem';
+import ListItemIcon from '@material-ui/core/ListItemIcon';
+import ListItemText from '@material-ui/core/ListItemText';
+import SettingsIcon from '@material-ui/icons/Settings';
+import ExitToAppIcon from '@material-ui/icons/ExitToApp';
 import MemberAvatar from '../common/member-avatar';
 
-class UserAccount extends Component {
-  render() {
-    const { logoutUser, auth } = this.props;
+const styles = {
+  root: {
+    display: 'flex',
+  },
+  textContainer: {
+    marginLeft: '0.5rem',
+  },
+  listRoot: {
+    padding: 0,
+  },
+  listItemRoot: {
+    padding: '0.2rem 0',
+  },
+  listItemButtonTextRoot: {
+    paddingLeft: 0,
+  },
+};
 
-    if (auth.user) {
-      const { id, label, email } = auth.user;
+const UserAccount = (props) => {
+  const { logoutUser, auth, classes } = props;
 
-      return (
-        <div className="user-account media">
-          <div className="media-left">
-            <MemberAvatar
-              consRole="Member"
-              name={id}
-              width={40}
-            />
-          </div>
-          <div className="media-body">
-            <h4 className="user-account-name media-heading">{label}</h4>
-            <p className="user-account-email">{email}</p>
-            <Link
-              aria-label="settings"
-              className="user-account-settings btn btn-link btn-block"
-              title="Settings"
-              to="dashboard/settings"
-            >
-              <span
-                aria-hidden="true"
-                className="glyphicon glyphicon-cog"
-              />
-              {' '}
-              Settings
-            </Link>
-            <Button
-              block
-              bsStyle="link"
-              className="user-account-logout"
-              onClick={logoutUser}
-              to="/login"
-            >
-              <span
-                aria-hidden="true"
-                className="glyphicon glyphicon-log-out"
-              />
-              {' '}
-              Log Out
-            </Button>
-          </div>
-        </div>
-      );
-    }
-
-    return <div className="user-account media" />;
+  if (!auth || !auth.user) {
+    return <div className={classes.root} />;
   }
-}
+
+  const { id, label, email } = auth.user;
+
+  return (
+    <div className={classes.root}>
+      <MemberAvatar
+        consRole="Member"
+        name={id}
+        width={40}
+      />
+      <div className={classes.textContainer}>
+        <List
+          classes={{
+            root: classes.listRoot,
+          }}
+        >
+          <ListItem
+            disableGutters
+            classes={{
+              root: classes.listItemRoot,
+            }}
+          >
+            <ListItemText disableTypography>
+              <Typography variant="subtitle2" className="user-account-name">
+                { label }
+              </Typography>
+            </ListItemText>
+          </ListItem>
+          <ListItem
+            disableGutters
+            classes={{
+              root: classes.listItemRoot,
+            }}
+          >
+            <ListItemText disableTypography>
+              <Typography variant="caption">
+                { email }
+              </Typography>
+            </ListItemText>
+          </ListItem>
+          <ListItem disableGutters button component={Link} to="/dashboard/settings">
+            <ListItemIcon><SettingsIcon /></ListItemIcon>
+            <ListItemText
+              primary="Settings"
+              classes={{
+                root: classes.listItemButtonTextRoot,
+              }}
+            />
+          </ListItem>
+          <ListItem disableGutters button component={Link} to="/login" onClick={logoutUser}>
+            <ListItemIcon><ExitToAppIcon /></ListItemIcon>
+            <ListItemText
+              primary="Log Out"
+              classes={{
+                root: classes.listItemButtonTextRoot,
+              }}
+            />
+          </ListItem>
+        </List>
+      </div>
+    </div>
+  );
+};
 
 UserAccount.displayName = 'UserAccount';
 
 UserAccount.propTypes = {
   logoutUser: PropTypes.func.isRequired,
   auth: PropTypes.object.isRequired,
+  classes: PropTypes.object.isRequired,
 };
 
 const mapStateToProps = ({ auth }) => {
   return { auth };
 };
 
-export default connect(mapStateToProps)(UserAccount);
+const connectedComponent = connect(mapStateToProps)(UserAccount);
+
+export default withStyles(styles)(connectedComponent);
