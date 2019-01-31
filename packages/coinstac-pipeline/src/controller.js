@@ -19,7 +19,9 @@ module.exports = {
    */
   create({ controller, computations, inputMap }, runId, { operatingDirectory, mode, clientId }) {
     let cache = {};
-    const currentComputations = computations.map(comp => Computation.create(comp, mode, runId));
+    const currentComputations = computations.map(
+      comp => Computation.create(comp, mode, runId, clientId)
+    );
     const activeControlBox = controllers[controller.type];
     const computationStep = 0;
     const stateEmitter = new Emitter();
@@ -28,6 +30,7 @@ module.exports = {
       baseDirectory: `/input/${clientId}/${runId}`,
       outputDirectory: `/output/${clientId}/${runId}`,
       cacheDirectory: `/cache/${clientId}/${runId}`,
+      transferDirectory: `/transfer/${clientId}/${runId}`,
       clientId,
       currentBoxCommand: undefined,
       currentComputations,
@@ -96,9 +99,19 @@ module.exports = {
                     cache,
                     // picks only relevant attribs for comp
                     state: (({
-                      baseDirectory, outputDirectory, cacheDirectory, clientId, iteration,
+                      baseDirectory,
+                      outputDirectory,
+                      cacheDirectory,
+                      transferDirectory,
+                      clientId,
+                      iteration,
                     }) => ({
-                      baseDirectory, outputDirectory, cacheDirectory, clientId, iteration,
+                      baseDirectory,
+                      outputDirectory,
+                      cacheDirectory,
+                      transferDirectory,
+                      clientId,
+                      iteration,
                     }))(controllerState),
                   },
                   { baseDirectory: operatingDirectory }
@@ -250,13 +263,15 @@ module.exports = {
           const errCb = (err) => {
             setStateProp('state', 'error');
             controllerState.activeComputations[controllerState.computationIndex].stop()
-              .then(() => rej(err));
+              .then(() => rej(err))
+              .catch(error => rej(error));
           };
 
           waterfall(input, (result) => {
             setStateProp('state', 'stopped');
             controllerState.activeComputations[controllerState.computationIndex].stop()
-              .then(() => res(result));
+              .then(() => res(result))
+              .catch(error => rej(error));
           }, errCb);
         });
 
