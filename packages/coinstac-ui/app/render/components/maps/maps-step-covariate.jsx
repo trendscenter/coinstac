@@ -1,16 +1,45 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 import PropTypes from 'prop-types';
-import { Panel } from 'react-bootstrap';
+import Paper from '@material-ui/core/Paper';
+import Typography from '@material-ui/core/Typography';
+import List from '@material-ui/core/List';
+import ListItem from '@material-ui/core/ListItem';
+import ListItemText from '@material-ui/core/ListItemText';
+import { withStyles } from '@material-ui/core/styles';
+import FileCopyIcon from '@material-ui/icons/FileCopy';
+import classNames from 'classnames';
+
+const styles = theme => ({
+  rootPaper: {
+    ...theme.mixins.gutters(),
+    paddingTop: theme.spacing.unit * 2,
+    paddingBottom: theme.spacing.unit * 2,
+    marginTop: theme.spacing.unit * 2,
+    height: '100%',
+  },
+  title: {
+    marginBottom: theme.spacing.unit,
+  },
+  nestedListItem: {
+    paddingLeft: theme.spacing.unit * 4,
+  },
+  listDropzoneContainer: {
+    display: 'flex',
+  },
+  interestList: {
+    width: '50%',
+    flex: '0 0 auto',
+    marginRight: theme.spacing.unit,
+  },
+  dropZone: {
+    flex: '1 0 auto',
+  },
+});
 
 class MapsStepCovariate extends Component {
-
-  constructor(props) {
-    super(props);
-  }
-
   componentDidUpdate() {
-    if(this.refs.Container){
+    if (this.refs.Container) {
       let Container = ReactDOM.findDOMNode(this.refs.Container);
       this.props.getContainers(Container);
     }
@@ -20,30 +49,42 @@ class MapsStepCovariate extends Component {
     const {
       step,
       type,
-      update
+      isMapped,
+      classes,
     } = this.props;
 
     let name = step.name;
 
     return (
-      <Panel className="drop-panel" header={<h3>{name}</h3>}>
-        <ul className="list-inline">
-          <li><strong>Source:</strong> {step['source']}</li>
-          <li><strong>Type:</strong> {step['type']}</li>
-        </ul>
-        <div className="drop-zone">
-          {this.props.isMapped === -1 ?
-            <div ref='Container' className={`acceptor acceptor-${name}`} data-type={this.props.type} data-name={name} />
-            : <div className={"card-draggable"}>
-              <span className="glyphicon glyphicon-file" /> {name}</div>}
+      <Paper
+        className={classNames('drop-panel', classes.rootPaper)}
+        elevation={1}
+      >
+        <Typography variant="headline" className={classes.title}>
+          {name}
+        </Typography>
+        <div className={classes.listDropzoneContainer}>
+          <List className={classes.interestList}>
+            <ListItem><ListItemText primary="Source:" /></ListItem>
+            <ListItem className={classes.nestedListItem}><ListItemText secondary={step.source} /></ListItem>
+            <ListItem><ListItemText primary="Type:" /></ListItem>
+            <ListItem className={classes.nestedListItem}><ListItemText secondary={step.type} /></ListItem>
+          </List>
+          <div className={classNames('drop-zone', classes.dropZone)}>
+            {
+              isMapped === -1
+                ? <div ref="Container" className={`acceptor acceptor-${name}`} data-type={type} data-name={name} />
+                : <div className="card-draggable"><FileCopyIcon /> {name}</div>}
+          </div>
         </div>
-      </Panel>
+      </Paper>
     );
   }
 }
 
 MapsStepCovariate.propTypes = {
   step: PropTypes.object.isRequired,
+  classes: PropTypes.object.isRequired,
 };
 
-export default MapsStepCovariate;
+export default withStyles(styles)(MapsStepCovariate);

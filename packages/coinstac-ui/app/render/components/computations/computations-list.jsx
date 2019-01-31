@@ -2,15 +2,14 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { graphql } from 'react-apollo';
-import { LinkContainer } from 'react-router-bootstrap';
-import {
-  Alert,
-  Button,
-  Col,
-  Grid,
-  Panel,
-  Row,
-} from 'react-bootstrap';
+import { Link } from 'react-router';
+import Button from '@material-ui/core/Button';
+import Fab from '@material-ui/core/Fab';
+import Paper from '@material-ui/core/Paper';
+import Typography from '@material-ui/core/Typography';
+import AddIcon from '@material-ui/icons/Add';
+import { withStyles } from '@material-ui/core/styles';
+import classNames from 'classnames';
 import ListDeleteModal from '../common/list-delete-modal';
 import {
   FETCH_ALL_COMPUTATIONS_QUERY,
@@ -26,10 +25,33 @@ import ComputationIO from './computation-io';
 
 const MAX_LENGTH_COMPUTATIONS = 5;
 
-const styles = {
-  outputBox: { marginTop: 10, height: 400, overflowY: 'scroll' },
-  topMargin: { marginTop: 10 },
-};
+const styles = theme => ({
+  titleContainer: {
+    marginBottom: theme.spacing.unit * 2,
+  },
+  downloadAllButton: {
+    marginBottom: theme.spacing.unit * 4,
+  },
+  computationsContainer: {
+    marginBottom: theme.spacing.unit * 4,
+  },
+  rootPaper: {
+    ...theme.mixins.gutters(),
+    paddingTop: theme.spacing.unit * 2,
+    paddingBottom: theme.spacing.unit * 2,
+    marginTop: theme.spacing.unit * 2,
+  },
+  computationName: {
+    marginBottom: theme.spacing.unit,
+  },
+  computationDescription: {
+    marginBottom: theme.spacing.unit * 2,
+  },
+  computationActions: {
+    display: 'flex',
+    justifyContent: 'space-around',
+  },
+});
 
 class ComputationsList extends Component { // eslint-disable-line
   constructor(props) {
@@ -73,35 +95,43 @@ class ComputationsList extends Component { // eslint-disable-line
   }
 
   getTable(computations) {
-    const { auth: { user }, docker } = this.props;
-    return (
-      <div style={styles.topMargin}>
-        {computations.map((comp) => {
-          const title = (<h1>{comp.meta.name}</h1>);
+    const { auth: { user }, docker, classes } = this.props;
+    const { activeComp } = this.state;
 
-          return (
-            <Panel header={title} key={`${comp.id}-panel`}>
-              <p>{comp.meta.description}</p>
-              <Grid>
-                <Row>
-                  <Col xs={4}>
-                    <Button bsStyle="primary" onClick={this.setActiveComp(comp)}>
-                      {this.state.activeComp &&
-                        this.state.activeComp.meta.name === comp.meta.name &&
-                        'Hide IO'
-                      }
-                      {(!this.state.activeComp ||
-                        (this.state.activeComp &&
-                          this.state.activeComp.meta.name !== comp.meta.name)
-                        ) &&
-                        'Get IO'
-                      }
-                    </Button>
-                  </Col>
-                  <Col xs={4}>
-                    {!docker.localImages[comp.computation.dockerImage] &&
+    return (
+      <div className={classes.computationsContainer}>
+        {
+          computations.map((comp) => {
+            const compLocalImage = docker.localImages[comp.computation.dockerImage];
+
+            return (
+              <Paper
+                className={classes.rootPaper}
+                elevation={1}
+                key={comp.id}
+              >
+                <Typography variant="headline" className={classes.computationName}>
+                  { comp.meta.name }
+                </Typography>
+                <Typography variant="body1" className={classes.computationDescription}>
+                  { comp.meta.description }
+                </Typography>
+                <div className={classes.computationActions}>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={this.setActiveComp(comp)}
+                  >
+                    {
+                      activeComp && activeComp.meta.name === comp.meta.name ? 'Hide IO' : 'Get IO'
+                    }
+                  </Button>
+                  {
+                    !compLocalImage
+                    && (
                       <Button
-                        bsStyle="success"
+                        variant="contained"
+                        color="secondary"
                         onClick={
                           this.pullComputations([{
                             img: comp.computation.dockerImage,
@@ -112,57 +142,69 @@ class ComputationsList extends Component { // eslint-disable-line
                       >
                         Download Image
                       </Button>
-                    }
-                    {docker.localImages[comp.computation.dockerImage] &&
+                    )
+                  }
+                  {
+                    compLocalImage
+                    && (
                       <Button
-                        bsStyle="warning"
+                        variant="contained"
+                        color="secondary"
                         onClick={
                           this.removeImage(
                             comp.id,
                             comp.computation.dockerImage,
-                            docker.localImages[comp.computation.dockerImage].id
+                            compLocalImage.id
                           )
                         }
                       >
-                        Remove Image (
-                        <em>{docker.localImages[comp.computation.dockerImage].size.toString().slice(0, -6)} MB</em>)
+                        Remove Image (<em>{ compLocalImage.size.toString().slice(0, -6) } MB</em>)
                       </Button>
-                    }
-                  </Col>
-                  {user.id === comp.submittedBy &&
-                    <Col xs={4}>
-                      <Button bsStyle="danger" onClick={this.openModal(comp.id)}>
+                    )
+                  }
+                  {
+                    user.id === comp.submittedBy
+                    && (
+                      <Button
+                        variant="contained"
+                        onClick={this.openModal(comp.id)}
+                      >
                         Delete
                       </Button>
-                    </Col>
+                    )
                   }
-                </Row>
-              </Grid>
-              {docker.dockerOut[comp.id] &&
-                <pre style={{ marginTop: 15 }}>
-                  {docker.dockerOut[comp.id].map(elem => (
-                    <div
-                      key={elem.id && elem.id !== 'latest' ? elem.id : elem.status}
-                      style={elem.isErr ? { color: 'red' } : {}}
-                    >
-                      {elem.id ? `${elem.id}: ` : ''}{elem.status} {elem.message} {elem.progress}
-                    </div>
-                  ))}
-                </pre>
-              }
-              {this.state.activeComp && this.state.activeComp.meta.name === comp.meta.name &&
-                <ComputationIO computationId={this.state.activeComp.id} />
-              }
-            </Panel>
-          );
-        })}
+                </div>
+                {
+                  docker.dockerOut[comp.id]
+                  && (
+                    <pre style={{ marginTop: 15 }}>
+                      {docker.dockerOut[comp.id].map(elem => (
+                        <div
+                          key={elem.id && elem.id !== 'latest' ? elem.id : elem.status}
+                          style={elem.isErr ? { color: 'red' } : {}}
+                        >
+                          {elem.id ? `${elem.id}: ` : ''}{elem.status} {elem.message} {elem.progress}
+                        </div>
+                      ))}
+                    </pre>
+                  )
+                }
+                {
+                  activeComp && activeComp.meta.name === comp.meta.name
+                  && <ComputationIO computationId={activeComp.id} />
+                }
+              </Paper>
+            );
+          })
+        }
       </div>
     );
   }
 
   setActiveComp(comp) {
+    const { activeComp } = this.state;
     return () => {
-      if (!this.state.activeComp || this.state.activeComp.meta.name !== comp.meta.name) {
+      if (!activeComp || activeComp.meta.name !== comp.meta.name) {
         this.setState({ activeComp: comp });
       } else {
         this.setState({ activeComp: null });
@@ -204,55 +246,66 @@ class ComputationsList extends Component { // eslint-disable-line
   }
 
   render() {
-    const { computations } = this.props;
+    const { computations, classes } = this.props;
     const { ownedComputations, otherComputations } = this.state;
 
     return (
       <div>
-        <div className="page-header clearfix">
-          <h1 className="nav-item-page-title">Computations</h1>
-          <LinkContainer className="pull-right" to="/dashboard/computations/new">
-            <Button bsStyle="primary" className="pull-right">
-              <span aria-hidden="true" className="glphicon glyphicon-plus" />
-              {' '}
-              Create Computation
-            </Button>
-          </LinkContainer>
-        </div>
-
-        {computations && computations.length > 0 &&
-          <Button
-            bsStyle="primary"
-            onClick={this.pullComputations(
-              computations.map(comp => ({
-                img: comp.computation.dockerImage,
-                compId: comp.id,
-                compName: comp.meta.name,
-              }))
-            )}
+        <div className={classNames('page-header', classes.titleContainer)}>
+          <Typography variant="h4">
+            Computations
+          </Typography>
+          <Fab
+            color="primary"
+            component={Link}
+            to="/dashboard/computations/new"
+            className={classes.button}
           >
-            Download All
-          </Button>
+            <AddIcon />
+          </Fab>
+        </div>
+        {
+          computations && computations.length > 0
+          && (
+            <Button
+              variant="contained"
+              color="primary"
+              className={classes.downloadAllButton}
+              onClick={this.pullComputations(
+                computations.map(comp => ({
+                  img: comp.computation.dockerImage,
+                  compId: comp.id,
+                  compName: comp.meta.name,
+                }))
+              )}
+            >
+              Download All
+            </Button>
+          )
         }
 
-        {computations && computations.length > 0 &&
-          computations.length <= MAX_LENGTH_COMPUTATIONS && this.getTable(computations)
+        {
+          computations && computations.length > 0
+          && computations.length <= MAX_LENGTH_COMPUTATIONS && this.getTable(computations)
         }
-        {ownedComputations.length > 0 && <h4>Owned Computations</h4>}
+        {ownedComputations.length > 0 && <Typography variant="h6">Owned Computations</Typography>}
         {ownedComputations.length > 0 && this.getTable(ownedComputations)}
-        {otherComputations.length > 0 && <h4>Other Computations</h4>}
+        {otherComputations.length > 0 && <Typography variant="h6">Other Computations</Typography>}
         {otherComputations.length > 0 && this.getTable(otherComputations)}
 
-        {(!computations || !computations.length) &&
-          <Alert bsStyle="info">
-            No computations found
-          </Alert>
+        {
+          (!computations || !computations.length)
+          && (
+            <Typography variant="body1">
+              No computations found
+            </Typography>
+          )
         }
 
         <ListDeleteModal
           close={this.closeModal}
           deleteItem={this.removeComputation}
-          itemName={'computation'}
+          itemName="computation"
           show={this.state.showModal}
         />
       </div>
@@ -272,6 +325,7 @@ ComputationsList.propTypes = {
   pullComputations: PropTypes.func.isRequired,
   removeComputation: PropTypes.func,
   removeImage: PropTypes.func.isRequired,
+  classes: PropTypes.object.isRequired,
 };
 
 function mapStateToProps({ auth, docker }) {
@@ -287,7 +341,8 @@ const ComputationsListWithData = graphql(REMOVE_COMPUTATION_MUTATION,
   )
 )(ComputationsList);
 
-
-export default connect(mapStateToProps,
+const connectedComponent = connect(mapStateToProps,
   { getDockerImages, pullComputations, removeImage }
 )(ComputationsListWithData);
+
+export default withStyles(styles)(connectedComponent);

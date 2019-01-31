@@ -8,22 +8,16 @@ import { graphql, withApollo } from 'react-apollo';
 import shortid from 'shortid';
 import { isEqual, isEmpty } from 'lodash';
 import update from 'immutability-helper';
-import {
-  Accordion,
-  Alert,
-  Button,
-  Checkbox,
-  Col,
-  ControlLabel,
-  DropdownButton,
-  Form,
-  FormControl,
-  FormGroup,
-  MenuItem,
-  Modal,
-  Row,
-  Well,
-} from 'react-bootstrap';
+import Paper from '@material-ui/core/Paper';
+import Button from '@material-ui/core/Button';
+import Menu from '@material-ui/core/Menu';
+import MenuItem from '@material-ui/core/MenuItem';
+import Checkbox from '@material-ui/core/Checkbox';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
+import TextField from '@material-ui/core/TextField';
+import Typography from '@material-ui/core/Typography';
+import { withStyles } from '@material-ui/core/styles';
+import ListDeleteModal from '../common/list-delete-modal';
 import PipelineStep from './pipeline-step';
 import ItemTypes from './pipeline-item-types';
 import {
@@ -48,6 +42,33 @@ const collect = (connect, monitor) => (
     isOver: monitor.isOver(),
   }
 );
+
+const styles = theme => ({
+  title: {
+    marginBottom: theme.spacing.unit * 2,
+  },
+  formControl: {
+    marginBottom: theme.spacing.unit * 2,
+  },
+  owningConsortiumButtonTitle: {
+    marginBottom: theme.spacing.unit,
+  },
+  savePipelineButtonContainer: {
+    textAlign: 'right',
+    marginBottom: theme.spacing.unit * 2,
+  },
+  tooltipPaper: {
+    ...theme.mixins.gutters(),
+    paddingTop: theme.spacing.unit * 2,
+    paddingBottom: theme.spacing.unit * 2,
+    marginBottom: theme.spacing.unit * 2,
+    backgroundColor: '#fef7e4',
+    textAlign: 'center',
+  },
+  tooltip: {
+    color: '#ab8e6b',
+  },
+});
 
 class Pipeline extends Component {
   constructor(props) {
@@ -82,6 +103,9 @@ class Pipeline extends Component {
       pipeline,
       selectedId: pipeline.steps.length ? pipeline.steps[0].id : null,
       startingPipeline: pipeline,
+      openOwningConsortiumMenu: false,
+      openAddComputationStepMenu: false,
+      showModal: false,
     };
 
     this.accordionSelect = this.accordionSelect.bind(this);
@@ -96,6 +120,10 @@ class Pipeline extends Component {
     this.updatePipeline = this.updatePipeline.bind(this);
     this.updateStep = this.updateStep.bind(this);
     this.updateStorePipeline = this.updateStorePipeline.bind(this);
+    this.openOwningConsortiumMenu = this.openOwningConsortiumMenu.bind(this);
+    this.closeOwningConsortiumMenu = this.closeOwningConsortiumMenu.bind(this);
+    this.openAddComputationStepMenu = this.openAddComputationStepMenu.bind(this);
+    this.closeAddComputationStepMenu = this.closeAddComputationStepMenu.bind(this);
   }
 
   UNSAFE_componentWillReceiveProps(nextProps) {
@@ -160,6 +188,7 @@ class Pipeline extends Component {
     this.accordionSelect(id);
 
     this.setState(prevState => ({
+      openAddComputationStepMenu: false,
       pipeline: {
         ...prevState.pipeline,
         steps: [
@@ -348,7 +377,10 @@ class Pipeline extends Component {
 
   updatePipeline(update) {
     if (update.param === 'owningConsortium') {
-      this.setState({ consortium: { id: update.value, name: update.consortiumName } });
+      this.setState({
+        openOwningConsortiumMenu: false,
+        consortium: { id: update.value, name: update.consortiumName },
+      });
     }
 
     this.setState(prevState => ({
@@ -394,176 +426,200 @@ class Pipeline extends Component {
     .catch(console.log);
   }
 
+  openOwningConsortiumMenu(event) {
+    this.owningConsortiumButtonElement = event.currentTarget;
+    this.setState({ openOwningConsortiumMenu: true });
+  }
+
+  closeOwningConsortiumMenu() {
+    this.setState({ openOwningConsortiumMenu: false });
+  }
+
+  openAddComputationStepMenu(event) {
+    this.addComputationStepButtonElement = event.currentTarget;
+    this.setState({ openAddComputationStepMenu: true });
+  }
+
+  closeAddComputationStepMenu() {
+    this.setState({ openAddComputationStepMenu: false });
+  }
 
   render() {
-    const { computations, connectDropTarget, consortia } = this.props;
-    const { consortium, pipeline } = this.state;
+    const { computations, connectDropTarget, consortia, classes, auth } = this.props;
+    const {
+      consortium,
+      pipeline,
+      owner,
+      openOwningConsortiumMenu,
+      openAddComputationStepMenu,
+      showModal,
+    } = this.state;
+
     const title = pipeline.id ? 'Pipeline Edit' : 'Pipeline Creation';
 
     return connectDropTarget(
       <div>
-        <div className="page-header clearfix">
-          <h1 className="pull-left">{title}</h1>
+        <div className="page-header">
+          <Typography variant="h4" className={classes.title}>
+            {title}
+          </Typography>
         </div>
-        <Form>
-          <FormGroup controlId="name">
-            <ControlLabel>Name</ControlLabel>
-            <FormControl
-              disabled={!this.state.owner}
-              type="input"
-              onChange={evt => this.updatePipeline({ param: 'name', value: evt.target.value })}
-              value={pipeline.name || ''}
-            />
-          </FormGroup>
-
-          <FormGroup controlId="description">
-            <ControlLabel>Description</ControlLabel>
-            <FormControl
-              disabled={!this.state.owner}
-              componentClass="textarea"
-              onChange={evt => this.updatePipeline({ param: 'description', value: evt.target.value })}
-              value={pipeline.description || ''}
-            />
-          </FormGroup>
-
-          <Row>
-            <Col sm={12}>
-              <ControlLabel>Owning Consortium</ControlLabel>
-            </Col>
-          </Row>
-
-          <Row>
-            <Col sm={12}>
-              {consortia &&
-                <DropdownButton
-                  disabled={!this.state.owner}
-                  bsStyle="info"
-                  title={consortium ? consortium.name : 'Consortia'}
-                  id="pipelineconsortia"
-                  onSelect={(value, e) => this.updatePipeline({
-                    param: 'owningConsortium',
-                    value,
-                    consortiumName: e.target.innerHTML,
-                  })}
-                >
-                  {consortia.map((con) => {
-                    return con.owners.includes(this.props.auth.user.id) ?
-                      <MenuItem
-                        eventKey={con.id}
-                        key={con.id}
-                      >
-                        {con.name}
-                      </MenuItem>
-                      : 0;
-                  }).filter(con => con) }
-                </DropdownButton>
-              }
-            </Col>
-          </Row>
-          <Row>
-            <Col sm={12}>
-              <Button
-                key="save-pipeline-button"
-                bsStyle="success"
-                className="pull-right"
-                disabled={!this.state.owner || !this.state.pipeline.name.length ||
-                  !consortium}
-                onClick={this.savePipeline}
-              >
-                Save Pipeline
-              </Button>
-            </Col>
-          </Row>
-
-          <Row>
-            <Col sm={12}>
-              <Checkbox
-                disabled={!this.state.owner}
-                checked={this.state.pipeline.shared}
-                onChange={evt => this.updatePipeline({ param: 'shared', value: evt.target.checked })}
-                inline
-              >
-                Share this pipeline with other consortia
-              </Checkbox>
-            </Col>
-          </Row>
-          <Row style={{ padding: '10px 0px 10px' }}>
-            <Col sm={12}>
-              <Alert bsStyle="warning">
-                Build your pipelines by adding computation steps in the space below.
-                Arrange computations vertically to determine their order from first
-                (highest) to last (lowest)
-              </Alert>
-            </Col>
-          </Row>
-
-          <DropdownButton
-            disabled={!this.state.owner}
-            bsStyle="primary"
-            id="computation-dropdown"
-            title={
-              <span>
-                <span aria-hidden="true" className="glphicon glyphicon-plus" /> Add Computation Step
-              </span>
-            }
-          >
-            {computations.map(comp => (
-              <MenuItem
-                eventKey={comp.id}
-                key={comp.id}
-                onClick={() => this.addStep(comp)}
-              >
-                {comp.meta.name}
-              </MenuItem>
-            ))}
-          </DropdownButton>
-
-          <Modal show={this.state.showModal} onHide={this.closeModal}>
-            <Modal.Header closeButton>
-              <Modal.Title>Delete</Modal.Title>
-            </Modal.Header>
-            <Modal.Body>
-              <h4>Are you sure you want to delete this step?</h4>
-            </Modal.Body>
-            <Modal.Footer>
-              <Button className="pull-left" onClick={this.closeModal}>Cancel</Button>
-              <Button bsStyle="danger" onClick={this.deleteStep}>Delete</Button>
-            </Modal.Footer>
-          </Modal>
-
-          <Row>
-            <Col sm={12}>
-              {this.state.pipeline.steps.length > 0 &&
-                <Accordion onSelect={this.accordionSelect}>
-                  {this.state.pipeline.steps.map((step, index) => (
-                    <PipelineStep
-                      computationId={step.computations[0].id}
-                      deleteStep={this.openModal}
-                      eventKey={step.id}
-                      id={step.id}
-                      key={step.id}
-                      moveStep={this.moveStep}
-                      owner={this.state.owner}
-                      pipelineIndex={index}
-                      previousComputationIds={
-                        this.state.pipeline.steps
-                          .filter((s, i) => i < index)
-                          .map(s => s.computations[0].id)
+        <form>
+          <TextField
+            id="name"
+            label="Name"
+            fullWidth
+            required
+            disabled={!owner}
+            value={pipeline.name || ''}
+            onChange={evt => this.updatePipeline({ param: 'name', value: evt.target.value })}
+            className={classes.formControl}
+          />
+          <TextField
+            id="description"
+            label="Description"
+            multiline
+            fullWidth
+            required
+            disabled={!owner}
+            value={pipeline.description || ''}
+            onChange={evt => this.updatePipeline({ param: 'description', value: evt.target.value })}
+            className={classes.formControl}
+          />
+          <div className={classes.formControl}>
+            <Typography variant="title" className={classes.owningConsortiumButtonTitle}>Owning Consortium</Typography>
+            <Button
+              id="pipelineconsortia"
+              variant="contained"
+              color="primary"
+              disabled={!owner}
+              onClick={this.openOwningConsortiumMenu}
+            >
+              { consortium ? consortium.name : 'Consortia' }
+            </Button>
+            <Menu
+              id="consortium-menu"
+              anchorEl={this.owningConsortiumButtonElement}
+              open={openOwningConsortiumMenu}
+              onClose={this.closeOwningConsortiumMenu}
+            >
+              {
+                consortia
+                && consortia
+                  .filter(cons => cons.owners.includes(auth.user.id))
+                  .map(cons => (
+                    <MenuItem
+                      key={cons.id}
+                      onClick={() => this.updatePipeline({
+                        param: 'owningConsortium',
+                        value: cons.id,
+                        consortiumName: cons.name,
+                      })
                       }
-                      step={step}
-                      updateStep={this.updateStep}
-                    />
-                  ))}
-                </Accordion>
+                    >
+                      {cons.name}
+                    </MenuItem>
+                  ))
               }
-              {!this.state.pipeline.steps.length &&
-                <Well bsSize="small" style={{ margin: '10px 0' }}>
-                  <em>No computations added</em>
-                </Well>
+            </Menu>
+          </div>
+          <div className={classes.savePipelineButtonContainer}>
+            <Button
+              key="save-pipeline-button"
+              variant="contained"
+              color="primary"
+              disabled={!owner || !pipeline.name.length || !consortium}
+              onClick={this.savePipeline}
+            >
+              Save Pipeline
+            </Button>
+          </div>
+          <FormControlLabel
+            control={(
+              <Checkbox
+                checked={pipeline.shared}
+                disabled={!owner}
+                onChange={evt => this.updatePipeline({ param: 'shared', value: evt.target.checked })}
+              />
+            )}
+            label="Share this pipeline with other consortia"
+            className={classes.formControl}
+          />
+          <Paper className={classes.tooltipPaper}>
+            <Typography className={classes.tooltip} variant="body1">
+              Build your pipelines by adding computation steps in the space below.
+              Arrange computations vertically to determine their order from first
+              (highest) to last (lowest)
+            </Typography>
+          </Paper>
+          <div className={classes.formControl}>
+            <Button
+              id="computation-dropdown"
+              variant="contained"
+              color="primary"
+              disabled={!owner}
+              onClick={this.openAddComputationStepMenu}
+            >
+              Add Computation Step
+            </Button>
+            <Menu
+              id="computation-menu"
+              anchorEl={this.addComputationStepButtonElement}
+              open={openAddComputationStepMenu}
+              onClose={this.closeAddComputationStepMenu}
+            >
+              {
+                computations
+                  .map(comp => (
+                    <MenuItem
+                      key={comp.id}
+                      onClick={() => this.addStep(comp)}
+                    >
+                      {comp.meta.name}
+                    </MenuItem>
+                  ))
               }
-            </Col>
-          </Row>
-        </Form>
+            </Menu>
+          </div>
+          <ListDeleteModal
+            close={this.closeModal}
+            deleteItem={this.deleteStep}
+            itemName="step"
+            show={showModal}
+          />
+          <div>
+            {
+              pipeline.steps.length > 0
+              && pipeline.steps.map((step, index) => (
+                <PipelineStep
+                  computationId={step.computations[0].id}
+                  deleteStep={this.openModal}
+                  eventKey={step.id}
+                  id={step.id}
+                  key={step.id}
+                  moveStep={this.moveStep}
+                  owner={owner}
+                  pipelineIndex={index}
+                  previousComputationIds={
+                    pipeline.steps
+                      .filter((s, i) => i < index)
+                      .map(s => s.computations[0].id)
+                  }
+                  step={step}
+                  updateStep={this.updateStep}
+                />
+              ))
+            }
+          </div>
+          {
+            !pipeline.steps.length
+            && (
+              <Typography variant="body1">
+                No computations added
+              </Typography>
+            )
+          }
+        </form>
       </div>
     );
   }
@@ -587,6 +643,7 @@ Pipeline.propTypes = {
   params: PropTypes.object.isRequired,
   runs: PropTypes.array,
   savePipeline: PropTypes.func.isRequired,
+  classes: PropTypes.object.isRequired,
 };
 
 function mapStateToProps({ auth }) {
@@ -609,4 +666,6 @@ const PipelineWithAlert = compose(
   withApollo
 )(PipelineWithData);
 
-export default connect(mapStateToProps,{ notifySuccess })(PipelineWithAlert);
+const connectedComponent = connect(mapStateToProps, { notifySuccess })(PipelineWithAlert);
+
+export default withStyles(styles)(connectedComponent);

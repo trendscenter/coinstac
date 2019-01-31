@@ -15,7 +15,7 @@ const config = {
     port,
   },
   entry: {
-    app: path.join(__dirname, 'app', 'render', 'index.js'),
+    app: ['babel-polyfill', path.join(__dirname, 'app', 'render', 'index.js')],
   },
 
   /**

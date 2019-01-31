@@ -1,6 +1,7 @@
-$icon-font-path: "~bootstrap-sass/assets/fonts/bootstrap/";
+@import "./variables";
+@import "./mixins";
+@import "./classes";
 
-@import "~bootstrap-sass/assets/stylesheets/_bootstrap.scss";
 @import "./alert";
 @import "./computation-field";
 @import "./computation-select";
@@ -10,18 +11,21 @@ $icon-font-path: "~bootstrap-sass/assets/fonts/bootstrap/";
 @import "./consortium-result";
 @import "./consortium-result-list";
 @import "./consortium-result-table";
+@import "./list-item";
 @import "./dragula";
 @import "./maps-collection";
 @import "./maps-list";
-@import "./pipeline-step";
 @import "./page-header";
 @import "./project-card";
 @import "./project-covariates-mapper";
 @import "./project-file";
 @import "./project-form";
 @import "./table.scss";
-@import "./user-account";
 @import "./user-list";
+
+body {
+  margin: 0;
+}
 
 .bold {
   font-weight: bold;
@@ -37,29 +41,40 @@ $icon-font-path: "~bootstrap-sass/assets/fonts/bootstrap/";
   min-height: 100vh;
   flex-direction: column;
   justify-content: center;
+  align-items: center;
 }
 
 /**
  * Logo
  */
 .logo {
-    margin: 0 0 2rem;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex: 0 0 auto;
+  padding: 1rem 0;
 
-    &:before {
-        background: url(../../../img/icons/png/256x256.png) no-repeat;
-        background-size: contain;
-        content: '';
-        display: inline-block;
-        height: 4rem;
-        margin: 0 .75rem 0 0;
-        width: 4rem;
-        vertical-align: top;
-    }
+  abbr[title] {
+    border: none;
+    text-decoration: none;
+  }
 
-    abbr[title] {
-        border: none;
-        text-decoration: none;
+  abbr {
+    position: relative;
+
+    &::before {
+      background: url(../../../img/icons/png/256x256.png) no-repeat;
+      background-size: contain;
+      content: '';
+      height: 4rem;
+      width: 4rem;
+      vertical-align: top;
+      position: absolute;
+      left: -4.75rem;
+      top: -0.5rem;
     }
+  }
 }
 
 /**
