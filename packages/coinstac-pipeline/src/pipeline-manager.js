@@ -58,15 +58,16 @@ module.exports = {
     const waitingOnForRun = (runId) => {
       const waiters = [];
       activePipelines[runId].clients.forEach((client) => {
-        if ((remoteClients[client][runId]
-          && !remoteClients[client][runId].currentOutput)
+        const clientRun = remoteClients[client][runId];
+        if ((clientRun
+          && !clientRun.currentOutput)
         // test if we have all files, if there are any
-          || (remoteClients[client][runId]
-            && ((remoteClients[client][runId].files
-              && ((remoteClients[client][runId].files.expected.length === 0
-                || remoteClients[client][runId].files.recieved.length === 0)
-              || !remoteClients[client][runId].files.expected
-                .every(e => remoteClients[client][runId].files.recieved.includes(e))))
+          || (clientRun
+            && ((clientRun.files
+              && ((clientRun.files.expected.length === 0
+                || clientRun.files.received.length === 0)
+              || !clientRun.files.expected
+                .every(e => clientRun.files.received.includes(e))))
             )
           )
         ) {
@@ -154,7 +155,7 @@ module.exports = {
                       remoteClients[data.id][data.runId].files,
                       { expected: data.files }
                     )
-                    : { expected: data.files, recieved: [] };
+                    : { expected: data.files, received: [] };
                 }
                 if (activePipelines[data.runId].state !== 'pre-pipeline') {
                   const waitingOn = waitingOnForRun(data.runId);
@@ -168,7 +169,7 @@ module.exports = {
                       ));
 
                   if (waitingOn.length === 0) {
-                    activePipelines[data.runId].state = 'recieved all clients data';
+                    activePipelines[data.runId].state = 'received all clients data';
                     logger.silly('Received all client data');
                     activePipelines[data.runId].remote.resolve({
                       output: aggregateRun(data.runId),
@@ -187,7 +188,7 @@ module.exports = {
                   message: `Pipeline error from user: ${data.id}\n Error details: ${data.error.message}`,
                 }
               );
-              activePipelines[data.runId].state = 'recieved client error';
+              activePipelines[data.runId].state = 'received client error';
               activePipelines[data.runId].error = runError;
               io.of('/').to(data.runId).emit('run', { runId: data.runId, error: runError });
               activePipelines[data.runId].remote.reject(runError);
@@ -205,17 +206,17 @@ module.exports = {
                 wStream.on('close', () => {
                   // mark off and check to start run
                   if (remoteClients[data.id][data.runId].files
-                    && remoteClients[data.id][data.runId].files.recieved) {
-                    remoteClients[data.id][data.runId].files.recieved.push(data.file);
+                    && remoteClients[data.id][data.runId].files.received) {
+                    remoteClients[data.id][data.runId].files.received.push(data.file);
                   } else {
                     // first entry, set both objects up
                     remoteClients[data.id][data.runId].files = {
-                      expected: [], recieved: [data.file],
+                      expected: [], received: [data.file],
                     };
                   }
 
                   if (waitingOnForRun(data.runId).length === 0) {
-                    activePipelines[data.runId].state = 'recieved all client data';
+                    activePipelines[data.runId].state = 'received all client data';
                     logger.silly('Received all client data');
                     activePipelines[data.runId].remote.resolve(
                       { output: aggregateRun(data.runId) }
@@ -254,12 +255,11 @@ module.exports = {
       socket.on('run', (data) => {
         // TODO: step check?
         if (!data.error && activePipelines[data.runId]) {
-          activePipelines[data.runId].state = 'recieved central node data';
+          activePipelines[data.runId].state = 'received central node data';
           if (data.files) {
-            // we've already recieved the files
+            // we've already received the files
             if (activePipelines[data.runId].files
-              && activePipelines[data.runId].files.recieved
-              && data.files.every(e => activePipelines[data.runId].files.recieved.includes(e))
+             && data.files.every(e => activePipelines[data.runId].files.received.includes(e))
             ) {
               activePipelines[data.runId].remote.resolve(data.output);
               activePipelines[data.runId].currentInput = undefined;
@@ -274,7 +274,7 @@ module.exports = {
             activePipelines[data.runId].remote.resolve(data.output);
           }
         } else if (data.error && activePipelines[data.runId]) {
-          activePipelines[data.runId].state = 'recieved error';
+          activePipelines[data.runId].state = 'received error';
           activePipelines[data.runId].remote.reject(Object.assign(new Error(), data.error));
         }
       });
@@ -286,20 +286,20 @@ module.exports = {
           stream.pipe(wStream);
           wStream.on('close', () => {
             // mark off and start run?
-            if (activePipelines[data.runId].files && activePipelines[data.runId].files.recieved) {
-              activePipelines[data.runId].files.recieved.push(data.file);
+            if (activePipelines[data.runId].files && activePipelines[data.runId].files.received) {
+              activePipelines[data.runId].files.received.push(data.file);
             } else if (activePipelines[data.runId].files) {
-              activePipelines[data.runId].files.recieved = [data.file];
+              activePipelines[data.runId].files.received = [data.file];
             } else {
-              activePipelines[data.runId].files = { recieved: [data.file] };
+              activePipelines[data.runId].files = { received: [data.file] };
             }
 
             if (activePipelines[data.runId].files
               && activePipelines[data.runId].files.expected
-              && activePipelines[data.runId].files.recieved
+              && activePipelines[data.runId].files.received
               && activePipelines[data.runId].currentInput
               && (activePipelines[data.runId].files.expected
-                .every(e => activePipelines[data.runId].files.recieved.includes(e)))) {
+                .every(e => activePipelines[data.runId].files.received.includes(e)))) {
               activePipelines[data.runId].remote.resolve(activePipelines[data.runId].currentInput);
               activePipelines[data.runId].currentInput = undefined;
               activePipelines[data.runId].files = undefined;
