@@ -102,10 +102,9 @@ class CoinstacClient {
    * @returns {File[]} Collection of files
    */
   static getFilesFromMetadata(metaFilePath, metaFile) {
+
     return tail(metaFile).map(([filename]) => (
-      path.isAbsolute(filename)
-        ? filename
-        : path.resolve(path.join(path.dirname(metaFilePath), filename))
+      path.resolve(path.join(path.dirname(metaFilePath), filename))
     ));
   }
 

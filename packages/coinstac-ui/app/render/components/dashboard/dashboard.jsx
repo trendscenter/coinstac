@@ -187,7 +187,7 @@ class Dashboard extends Component {
     });
 
     this.unsubscribeToUserMetadata = this.props.subscribeToUserMetaData(user.id);
-    
+
     ipcRenderer.on('docker-error', (event, arg) => {
       this.props.notifyError({
         message: `Docker Error: ${arg.err.message}`,
