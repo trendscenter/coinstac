@@ -40,17 +40,33 @@ function parseFilesByGroup(
       mapIndex < step.inputMap[key].ownerMappings.length;
       mapIndex += 1
     ) {
+      let type = step.inputMap[key].ownerMappings[mapIndex].type.toLowerCase();
       // TODO: using use entered names as keys or equality for the raw columns in the
-      // csv is a bad idea, fix this and clean up this whole function
-      if (col.toLowerCase().includes(
-        step.inputMap[key].ownerMappings[mapIndex].name.toLowerCase()
-      )) {
-        indices.push({
-          index: colIndex,
-          type: step.inputMap[key].ownerMappings[mapIndex].type,
-        });
-        break;
+      // csv is a bad idea, fix this and clean up this whole functio
+      if(step.inputMap[key].ownerMappings[mapIndex].name){
+
+        if (col.toLowerCase().includes(
+          step.inputMap[key].ownerMappings[mapIndex].name.toLowerCase()
+        )) {
+          indices.push({
+            index: colIndex,
+            type: step.inputMap[key].ownerMappings[mapIndex].type,
+          });
+          break;
+        }
+
+      }else if(step.inputMap[key].ownerMappings[mapIndex].type){
+        col = col.replace('file','');
+        if (col === type) {
+          indices.push({
+            index: colIndex,
+            type: step.inputMap[key].ownerMappings[mapIndex].type,
+          });
+          break;
+        }
+
       }
+
     }
   });
   // Cast types to row col indices
@@ -80,12 +96,17 @@ function parseFilesByGroup(
   };
   const pathsep = new RegExp(`${escape(sep)}|:`, 'g');
   parsedRows = parsedRows.map((path) => {
-    if (extname(path[0]) !== '') {
-      path[0] = resolve(baseDirectory, path[0]).replace(pathsep, '-');
+    if ( path[0].includes('/') ) {
+      var path = baseDirectory +  path[0];
+      if (extname(path[0]) !== '') {
+        path[0] = resolve(baseDirectory, path[0]).replace(pathsep, '-');
+        return path;
+      }
       return path;
     }
-    return path;
   });
+
+  parsedRows = parsedRows.filter(Boolean);
 
   keyArray[0].push(parsedRows);
   keyArray[1] = consortium.stepIO[sIndex][key].map(val => val.column);
@@ -112,10 +133,34 @@ function iteratePipelineSteps(consortium, filesByGroup, baseDirectory) {
       const key = inputKeys[keyIndex];
 
       if ('ownerMappings' in step.inputMap[key]) {
-        const keyArray = [[], [], []]; // [[values], [labels], [type (if present)]]
+        let keyArray = [[], [], []]; // [[values], [labels], [type (if present)]]
         const mappingIndex = 0;
         const mappingObj = step.inputMap[key].ownerMappings[mappingIndex];
-        if (mappingObj.source === 'file'
+        if (inputKeys.includes("data")
+        && inputKeys.includes("options")
+        && !inputKeys.includes("file")) {
+          const { groupId, collectionId } = consortium.stepIO[sIndex][key][mappingIndex];
+          if (filesByGroup && baseDirectory) {
+            const e = new RegExp(/[-\/\\^$*+?.()|[\]{}]/g); // eslint-disable-line no-useless-escape
+            const escape = (string) => {
+              return string.replace(e, '\\$&');
+            };
+            const pathsep = new RegExp(`${escape(sep)}|:`, 'g');
+            let pathsArray = filesByGroup[groupId];
+            let paths = pathsArray.map((path) => {
+              if (path[0].includes('/')) {
+                var path = baseDirectory +  path[0];
+                path = path.replace(pathsep, '-');
+                return path;
+              }
+            });
+            paths = paths.filter(Boolean);
+            keyArray.push(paths);
+          }else{
+            const pipelineSteps = consortium.pipelineSteps[0];
+            collections.push({ groupId, collectionId });
+          }
+        }else if (mappingObj.source === 'file'
         && consortium.stepIO[sIndex] && consortium.stepIO[sIndex][key][mappingIndex]
         && consortium.stepIO[sIndex][key][mappingIndex].collectionId
         && consortium.stepIO[sIndex][key][mappingIndex].column) {
@@ -163,6 +208,10 @@ function iteratePipelineSteps(consortium, filesByGroup, baseDirectory) {
         } else if (filesByGroup) {
           // TODO: Handle keys fromCache if need be
         }
+
+        keyArray = keyArray.filter((item) => {
+          return item.length !== 0;
+        });// remove empty array items if present
 
         inputMap[key] = { value: keyArray };
       }
