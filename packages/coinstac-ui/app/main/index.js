@@ -130,7 +130,6 @@ loadConfig()
           compStreams.forEach(({ stream }) => {
             let proxRes;
             let proxRej;
-            debugger;
             streamProms.push(new Promise((resolve, reject) => {
               proxRej = reject;
               proxRes = resolve;
@@ -198,6 +197,7 @@ loadConfig()
             run.pipelineSteps
           )
             .then(([{ pipeline, result }]) => {
+              debugger;
               // Listen for local pipeline state updates
               pipeline.stateEmitter.on('update', (data) => {
                 mainWindow.webContents.send('local-pipeline-state-update', { run, data });

@@ -149,7 +149,7 @@ function iteratePipelineSteps(consortium, filesByGroup, baseDirectory) {
             let pathsArray = filesByGroup[groupId];
             let paths = pathsArray.map((path) => {
               if (path[0].includes('/')) {
-                var path = baseDirectory +  path[0];
+                var path = baseDirectory + path[0];
                 path = path.replace(pathsep, '-');
                 return path;
               }
