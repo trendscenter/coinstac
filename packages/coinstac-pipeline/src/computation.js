@@ -18,6 +18,7 @@ module.exports = {
       runId,
       clientId,
       start(input, { baseDirectory }) {
+        //debugger;
         return docker.startService(
           this.meta.id,
           `${this.runId}-${this.clientId}`,
