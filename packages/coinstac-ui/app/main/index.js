@@ -130,7 +130,7 @@ loadConfig()
           compStreams.forEach(({ stream }) => {
             let proxRes;
             let proxRej;
-
+            debugger;
             streamProms.push(new Promise((resolve, reject) => {
               proxRej = reject;
               proxRes = resolve;
@@ -150,6 +150,8 @@ loadConfig()
                 });
               });
 
+              console.log(stream);
+
               stream.on('end', () => {
                 proxRes();
               });
@@ -163,6 +165,7 @@ loadConfig()
           return Promise.all(streamProms);
         })
         .catch((err) => {
+          console.log(err);
           return core.unlinkFiles(run.id)
             .then(() => {
               mainWindow.webContents.send('local-run-error', {
