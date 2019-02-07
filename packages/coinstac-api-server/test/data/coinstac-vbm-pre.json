@@ -1,0 +1,56 @@
+{
+   "meta":{
+      "id":"vbm_pre",
+      "name":"VBM Preprocessor",
+      "version":"v1.0",
+      "repository":"github.com/MRN-Code/Coinstac_VBM_computation.git",
+      "description":"This computation runs Voxel Based Morphometry on structural T1 weighted MRI scans(BIDS format and T1w nifiti) using SPMv12 standalone and MATLAB Runtimev713. Each scan takes approximately 5 mins to run on a system with 2.3 GHz,i5 equivalent processor, 8GB RAM. Each scan output directory takes about 150MB space. Please make sure to have the space and resources.",
+      "tags":[
+         "vbm",
+         "preprocess"
+      ],
+      "preprocess":true
+   },
+   "computation":{
+      "type":"docker",
+      "dockerImage":"spanta28/coinstac_vbm_docker",
+      "command":[
+         "python",
+         "\/computation\/run_vbm.py"
+      ],
+      "input":{
+         "options":{
+            "type":"number",
+            "label":"Smoothing FWHM in mm",
+            "defaultValue":10,
+            "min":0,
+            "max":1,
+            "step":1,
+            "description":"Full width half maximum smoothing kernel value in x,y,z directions"
+         },
+         "data": {
+           "label": "Data",
+           "type": "array",
+           "items": ["NIfTI"],
+           "extensions": [["csv", "txt"]]
+         }
+      },
+      "output":{
+        "display":{
+        "type": "string",
+        "description":"Output wc1 images"
+        },
+        "message":{
+        "type": "string",
+        "description":"Output message from VBM step"
+        },
+  	    "download_outputs":{
+  		    "type":"string",
+  		    "description":"Download vbm outputs here"
+  	    }
+      },
+      "display": {
+        "type": "string"
+      }
+   }
+}

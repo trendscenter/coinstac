@@ -155,6 +155,7 @@ class MapsCollection extends Component {
   }
 
   filterGetIndex(arr, searchKey) {
+     debugger;
      let searchkey = searchKey.replace('file', ''); //other object values contain the string 'file', let's remove.
      return arr.findIndex(function(obj) {
        return Object.keys(obj).some(function(key) {
@@ -169,38 +170,53 @@ class MapsCollection extends Component {
      });
    }
 
-  async autoMap(group) {
-    this.setState({ autoMap: true });
-    let covariates = this.props.collection.associatedConsortia.pipelineSteps[0].inputMap.covariates.ownerMappings;
-    let data = this.props.collection.associatedConsortia.pipelineSteps[0].inputMap.data.ownerMappings;
-    const resolveAutoMapPromises = this.makePoints(group.firstRow).map((string, index) => {
-      if( Object.keys(this.filterGetObj(covariates,string)).length > 0 ){
-        return this.setStepIO(
-          index,
-          group.id,
-          0,
-          'covariates',
-          this.filterGetIndex(covariates,string),
-          string
-        );
-      }
-      if( Object.keys(this.filterGetObj(data,string)).length > 0 ){
-        return this.setStepIO(
-          index,
-          group.id,
-          0,
-          'data',
-          this.filterGetIndex(data,string),
-          string
-        );
-      }
-
-      return Promise.resolve();
-    });
-
-    await Promise.all(resolveAutoMapPromises);
-    this.setState({ finishedAutoMapping: true });
-  }
+   async autoMap(group) {
+     this.setState({ autoMap: true });
+     let obj;
+     let type;
+     if(this.props.activeConsortium.pipelineSteps[0].inputMap.covariates){
+        obj = this.props.activeConsortium.pipelineSteps[0].inputMap.covariates.ownerMappings;
+        type = 'covariates';
+     }
+     if(this.props.activeConsortium.pipelineSteps[0].inputMap.data){
+       obj = this.props.activeConsortium.pipelineSteps[0].inputMap.data.ownerMappings;
+       type = 'data';
+     }
+     if(typeof group.firstRow === 'Array'){
+       let resolveAutoMapPromises = this.makePoints(group.firstRow).map((string, index) => {
+         if( obj && Object.keys(this.filterGetObj(obj,string)).length > 0 ){
+           this.setStepIO(
+             index,
+             group.id,
+             0,
+             type,
+             this.filterGetIndex(obj,string),
+             string
+           );
+         }
+         return Promise.resolve();
+       });
+       await Promise.all(resolveAutoMapPromises);
+       this.setState({ finishedAutoMapping: true });
+     }else{
+       let string = group.firstRow;
+       string = string.replace('file', '');
+       if( obj ){
+         let fuzzy = bitap(string.toLowerCase(), obj[0].type.toLowerCase(), 1);
+         if(fuzzy.length){
+           this.setStepIO(
+             0,
+             group.id,
+             0,
+             type,
+             0,
+             string
+           );
+           this.setState({ finishedAutoMapping: true });
+         }
+       }
+     }
+   }
 
   removeFileGroup(groupId) {
     return () => {

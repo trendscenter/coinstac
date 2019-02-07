@@ -198,27 +198,33 @@ class MapsEdit extends Component {
   });
 
   mapObject = (el, target) => {
-    let fuzzy = bitap(el.dataset.string.toLowerCase(), target.dataset.name.toLowerCase(), 1);
+    let string = el.dataset.string.replace('file', '');
+    let fuzzy = bitap(string.toLowerCase(), target.dataset.name.toLowerCase(), 1);
+    let covariates = false;
+    let data = false;
     if(fuzzy.length){
-      let covariates = this.state.consortium.pipelineSteps[0].inputMap.covariates.ownerMappings;
-      let data = this.state.consortium.pipelineSteps[0].inputMap.data.ownerMappings;
+      if(this.state.consortium.pipelineSteps[0].inputMap.covariates){
+        covariates = this.state.consortium.pipelineSteps[0].inputMap.covariates.ownerMappings;
+      }
+      if(this.state.consortium.pipelineSteps[0].inputMap.data){
+        data = this.state.consortium.pipelineSteps[0].inputMap.data.ownerMappings;
+      }
       let group = this.state.collection.fileGroups[el.dataset.filegroup];
       let dex = '';
       let key = '';
       let name = target.dataset.name;
-      let string = el.dataset.string;
       let varObject = [{
         'collectionId': this.state.collection.id,
         'groupId': el.dataset.filegroup,
         'column':  target.dataset.name
       }];
-      if( Object.keys(this.filterGetObj(covariates,name)).length > 0 ){
-        dex = this.filterGetIndex(covariates,name);
-        key = 'covariates';
+      if( covariates && Object.keys(this.filterGetObj(covariates,name)).length > 0 ){
+         dex = this.filterGetIndex(covariates,name);
+         key = 'covariates';
       }
-      if ( Object.keys(this.filterGetObj(data,name)).length > 0 ){
-        dex = this.filterGetIndex(data,name);
-        key = 'data';
+      if ( data && Object.keys(this.filterGetObj(data,name)).length > 0 ){
+         dex = this.filterGetIndex(data,name);
+         key = 'data';
       }
       this.updateConsortiumClientProps(0, key, dex, varObject);
       this.setState({mappedItem: string});
