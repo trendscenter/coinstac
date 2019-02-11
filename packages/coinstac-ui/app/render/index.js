@@ -3,7 +3,8 @@ import React from 'react';
 import { render } from 'react-dom';
 import { hashHistory } from 'react-router';
 import { ipcRenderer, remote } from 'electron';
-import { ApolloProvider } from 'react-apollo';
+import { ApolloProvider, graphql } from 'react-apollo';
+import { Provider } from 'react-redux';
 import getApolloClient from './state/apollo-client';
 import configureStore from './state/store';
 import { start as startErrorHandling } from './utils/boot/configure-error-handling';
@@ -23,11 +24,13 @@ const rootEl = document.getElementById('app');
 global.config = remote.getGlobal('config');
 
 const client = getApolloClient(global.config);
-const store = configureStore(client);
+const store = configureStore();
 
 render(
-  <ApolloProvider store={store} client={client}>
-    <Root history={hashHistory} />
+  <ApolloProvider client={client}>
+    <Provider store={store}>
+      <Root history={hashHistory} />
+    </Provider>
   </ApolloProvider>,
   rootEl
 );

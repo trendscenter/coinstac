@@ -1,4 +1,4 @@
-import { gql } from 'react-apollo';
+import gql from 'graphql-tag';
 import { mutations, queries } from 'coinstac-graphql-schema';
 
 export const ADD_COMPUTATION_MUTATION = gql`

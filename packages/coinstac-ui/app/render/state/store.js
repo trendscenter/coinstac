@@ -15,11 +15,10 @@ import thunkMiddleware from 'redux-thunk';
 
 import rootReducer from './root-reducer';
 
-export default function (apolloClient) {
+export default function () {
   const store = createStore(
-    rootReducer(apolloClient),
+    rootReducer,
     applyMiddleware(
-      apolloClient.middleware(),
       thunkMiddleware,
       promiseMiddleware,
       createLogger({ collapsed: true })

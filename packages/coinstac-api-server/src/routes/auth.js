@@ -9,8 +9,8 @@ module.exports = [
       pre: [
         { method: helperFunctions.validateUser, assign: 'user' },
       ],
-      handler: (req, res) => {
-        res({
+      handler: (req, h) => {
+        return h.response({
           id_token: helperFunctions.createToken(req.pre.user.id),
           user: req.pre.user,
         }).code(201);
@@ -28,8 +28,8 @@ module.exports = [
             email, id, institution, permissions,
           },
         },
-      }, res) => {
-        res({
+      }, h) => {
+        return h.response({
           id_token: helperFunctions.createToken(id),
           user: {
             email, id, institution, permissions,
@@ -46,19 +46,21 @@ module.exports = [
       pre: [
         { method: helperFunctions.validateUniqueUser },
       ],
-      handler: (req, res) => {
-        helperFunctions.hashPassword(req.payload.password)
-          .then(passwordHash => helperFunctions.createUser(req.payload, passwordHash))
-          .then(({
+      handler: async (req, h) => {
+        const passwordHash = await helperFunctions.hashPassword(req.payload.password);
+        const {
+          id,
+          institution,
+          email,
+          permissions,
+        } = await helperFunctions.createUser(req.payload, passwordHash);
+
+        return h.response({
+          id_token: helperFunctions.createToken(id),
+          user: {
             id, institution, email, permissions,
-          }) => {
-            res({
-              id_token: helperFunctions.createToken(id),
-              user: {
-                id, institution, email, permissions,
-              },
-            }).code(201);
-          });
+          },
+        }).code(201);
       },
     },
   },

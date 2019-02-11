@@ -18,28 +18,29 @@ const tables = [
  * @param {object} pubsub GraphQL publish and subscribe object
  */
 const initSubscriptions = (pubsub) => {
-  tables.forEach((table) => {
-    helperFunctions.getRethinkConnection()
-      .then(connection => rethink.table(table.tableName).changes().run(connection))
-      .then(feed => feed.each((err, change) => {
-        let val = {};
+  tables.forEach(async (table) => {
+    const connection = await helperFunctions.getRethinkConnection();
+    const feed = await rethink.table(table.tableName).changes().run(connection);
 
-        if (!change.new_val) {
-          val = Object.assign({}, change.old_val, { delete: true });
-        } else {
-          val = change.new_val;
-        }
+    feed.each((err, change) => {
+      let val = {};
 
-        const preprocessPromise = table.preprocess ? table.preprocess(val) : Promise.resolve(val);
+      if (!change.new_val) {
+        val = Object.assign({}, change.old_val, { delete: true });
+      } else {
+        val = change.new_val;
+      }
 
-        preprocessPromise
-          .then(result => 
-            pubsub.publish(table.subVar, {
-              [table.subVar]: result,
-              [table.idVar]: result.id,
-            })
-          )
-      }))
+      const preprocessPromise = table.preprocess ? table.preprocess(val) : Promise.resolve(val);
+
+      preprocessPromise
+        .then((result) => {
+          return pubsub.publish(table.subVar, {
+            [table.subVar]: result,
+            [table.idVar]: result.id,
+          });
+        });
+    });
   });
 };
 

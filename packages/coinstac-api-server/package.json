@@ -11,19 +11,18 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "apollo-server-hapi": "1.2.x",
+    "apollo-server-hapi": "^2.3.3",
     "axios": "^0.17.1",
     "bluebird": "^3.5.1",
     "boom": "^5.2.0",
     "coinstac-graphql-schema": "^4.1.0",
-    "graphql": "^0.10.5",
-    "graphql-subscriptions": "^0.5.8",
-    "graphql-tools": "^1.2.3",
+    "graphql": "^14.1.1",
+    "graphql-subscriptions": "^1.0.0",
     "graphql-type-json": "^0.1.4",
-    "hapi": "^16.6.3",
-    "hapi-auth-jwt2": "^7.4.1",
+    "hapi": "^18.1.0",
+    "hapi-auth-jwt2": "^8.3.0",
     "jsonwebtoken": "^7.4.3",
     "rethinkdb": "^2.3.3",
-    "subscriptions-transport-ws": "^0.9.9"
+    "subscriptions-transport-ws": "^0.9.15"
   }
 }

@@ -131,17 +131,14 @@ const helperFunctions = {
    * Validates JWT from authenticated user
    * @param {object} decoded token contents
    * @param {object} request original request from client
-   * @param {function} callback function signature (err, isValid, alternative credentials)
    */
-  validateToken(decoded, request, callback) {
-    helperFunctions.getUserDetails({ username: decoded.username })
-      .then((user) => {
-        if (user.id) {
-          callback(null, true, user);
-        } else {
-          callback(null, false, null);
-        }
-      });
+  async validateToken(decoded, request) {
+    const user = await helperFunctions.getUserDetails({ username: 'test1' });
+
+    return {
+      isValid: user && user.id,
+      credentials: user || null,
+    };
   },
   /**
    * Confirms that submitted email is new
@@ -162,24 +159,21 @@ const helperFunctions = {
    * @param {object} res response
    * @return {object} The submitted user information
    */
-  validateUniqueUser(req, res) {
-    return helperFunctions.getRethinkConnection()
-      .then(connection => helperFunctions.validateUniqueUsername(req, connection)
-        .then((isUniqueUsername) => {
-          if (isUniqueUsername) {
-            return helperFunctions.validateUniqueEmail(req, connection);
-          }
+  async validateUniqueUser(req) {
+    const connection = await helperFunctions.getRethinkConnection();
+    const isUniqueUsername = await helperFunctions.validateUniqueUsername(req, connection);
 
-          res(Boom.badRequest('Username taken'));
-          return null;
-        })
-        .then((isUniqueEmail) => {
-          if (isUniqueEmail) {
-            res(req.payload);
-          } else if (isUniqueEmail === false) {
-            res(Boom.badRequest('Email taken'));
-          }
-        }));
+    if (isUniqueUsername) {
+      const isUniqueEmail = helperFunctions.validateUniqueEmail(req, connection);
+
+      if (isUniqueEmail) {
+        return req.payload;
+      }
+
+      throw Boom.badRequest('Email taken');
+    }
+
+    throw Boom.badRequest('Username taken');
   },
   /**
    * Confirms that submitted username is new
@@ -197,25 +191,22 @@ const helperFunctions = {
   /**
    * Validate that authenticating user is using correct credentials
    * @param {object} req request
-   * @param {object} res response
    * @return {object} The requested user object
    */
-  validateUser(req, res) {
-    return helperFunctions.getUserDetails(req.payload)
-      .then((user) => {
-        if (user) {
-          helperFunctions.verifyPassword(req.payload.password, user.passwordHash)
-            .then((passwordMatch) => {
-              if (user && user.passwordHash && passwordMatch) {
-                res(user);
-              } else {
-                res(Boom.unauthorized('Incorrect username or password.'));
-              }
-            });
-        } else {
-          res(Boom.unauthorized('Incorrect username or password.'));
-        }
-      });
+  async validateUser(req) {
+    const user = await helperFunctions.getUserDetails(req.payload);
+    if (user) {
+      const passwordMatch = await helperFunctions.verifyPassword(
+        req.payload.password,
+        user.passwordHash
+      );
+
+      if (user && user.passwordHash && passwordMatch) {
+        return user;
+      }
+    }
+
+    throw Boom.unauthorized('Incorrect username or password.');
   },
   /**
    * Verify that authenticating user is using correct password

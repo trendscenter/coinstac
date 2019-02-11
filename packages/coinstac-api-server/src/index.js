@@ -1,39 +1,55 @@
+const { ApolloServer } = require('apollo-server-hapi');
 const hapi = require('hapi');
+const jwt2 = require('hapi-auth-jwt2');
 const config = require('../config/default');
 const helperFunctions = require('./auth-helpers');
-const plugins = require('./plugins');
 const routes = require('./routes');
-const wsServer = require('./ws-server');
+const { schema } = require('./data/schema');
 
-const server = new hapi.Server();
-server.connection({
-  host: config.host,
-  port: config.hapiPort,
-});
+async function startServer() {
+  const server = new ApolloServer({
+    schema,
+    context: ({ request, connection }) => {
+      if (connection) {
+        return connection.context;
+      }
 
-server.register(plugins, (err) => {
-  if (err) {
-    console.log(err); // eslint-disable-line no-console
-  }
+      return {
+        credentials: request.auth ? request.auth.credentials : null,
+      };
+    },
+  });
+
+  const app = new hapi.Server({
+    host: config.host,
+    port: config.hapiPort,
+  });
+
+  await app.register(jwt2);
 
   /**
    * JWT middleware validates token on each /graphql request
    * User object with permissions returned from validateToken function
    */
-  server.auth.strategy('jwt', 'jwt',
+  app.auth.strategy('jwt', 'jwt',
     {
       key: helperFunctions.JWTSecret,
-      validateFunc: helperFunctions.validateToken,
+      validate: helperFunctions.validateToken,
       verifyOptions: { algorithms: ['HS256'] },
     });
 
-  server.auth.default('jwt');
-  server.route(routes);
-});
+  app.auth.default('jwt');
+  app.route(routes);
 
-server.start((startErr) => {
-  if (startErr) throw startErr;
-  console.log(`Server running at: ${server.info.uri}`); // eslint-disable-line no-console
+  server.applyMiddleware({
+    app,
+  });
 
-  wsServer.activate(server);
-});
+  await server.installSubscriptionHandlers(app.listener);
+
+  await app.start();
+
+  console.log(`Server running at: ${app.info.uri}`); // eslint-disable-line no-console
+}
+
+startServer();

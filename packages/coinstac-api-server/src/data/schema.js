@@ -1,4 +1,4 @@
-const { makeExecutableSchema } = require('graphql-tools');
+const { makeExecutableSchema } = require('apollo-server-hapi');
 const { pubsub, resolvers } = require('./resolvers');
 const sharedFields = require('./shared-fields');
 
@@ -66,14 +66,12 @@ const typeDefs = `
   }
 
   type PipelineStep {
-    id: ID!
     controller: PipelineController
     computations: [Computation]
     ${sharedFields.pipelineStepFields} 
   }
 
   input PipelineStepInput {
-    id: ID
     controller: PipelineControllerInput
     computations: [ID]
     ${sharedFields.pipelineStepFields} 

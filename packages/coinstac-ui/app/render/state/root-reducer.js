@@ -6,8 +6,7 @@ import docker from './ducks/docker';
 import loading from './ducks/loading';
 import runs from './ducks/runs';
 
-const rootReducer = client => combineReducers({
-  apollo: client.reducer(),
+const rootReducer = combineReducers({
   auth,
   collections,
   docker,

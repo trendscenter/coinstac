@@ -267,11 +267,13 @@ const resolvers = {
     },
     /**
      * Returns single user.
+     * @param {object} parent parent node in GraphQL
      * @param {object} args
      * @param {string} args.userId Requested user ID, restricted to authenticated user for time being
+     * @param {object} context GraphQL context
      * @return {object} Requested user if id present, null otherwise
      */
-    fetchUser: ({ auth: { credentials } }, args) => {
+    fetchUser: (parent, args, { credentials }) => {
       if (args.userId !== credentials.id) {
         return Boom.unauthorized('Unauthorized action');
       }
@@ -279,7 +281,7 @@ const resolvers = {
       return fetchOne('users', credentials.id);
     },
     fetchAllUsers: () => fetchAll('users'),
-    fetchAllUserRuns: ({ auth: { credentials } }, args) => {
+    fetchAllUserRuns: (parent, args, { credentials }) => {
       return helperFunctions.getRethinkConnection()
         .then(connection =>
           rethink.table('runs')
@@ -300,7 +302,7 @@ const resolvers = {
      * @param {object} args.computationSchema Computation object to add/update
      * @return {object} New/updated computation object
      */
-    addComputation: ({ auth: { credentials } }, args) => {
+    addComputation: (parent, args, { credentials }) => {
       return helperFunctions.getRethinkConnection()
         .then((connection) =>
           rethink.table('computations').insert(
@@ -318,14 +320,15 @@ const resolvers = {
     },
     /**
      * Add new user role to user perms, currently consortia perms only
-     * @param {object} auth User object from JWT middleware validateFunc
      * @param {object} args
      * @param {string} args.doc Id of the document to add role to
      * @param {string} args.role Role to add to perms
      * @param {string} args.userId Id of the user to be added
+     * @param {object} context
+     * @param {object} context.credentials User object from JWT middleware validateFunc
      * @return {object} Updated user object
      */
-    addUserRole: async ({ auth: { credentials } }, args) => {
+    addUserRole: async (parent, args, { credentials }) => {
       const { permissions } = credentials
 
       if (!permissions[args.table][args.doc] || !permissions[args.table][args.doc].write) {
@@ -342,8 +345,8 @@ const resolvers = {
      * @param {String} consortiumId Run object to add/update
      * @return {object} New/updated run object
      */
-    createRun: ({ auth }, { consortiumId }) => {
-      if (!auth || !auth.credentials) {
+    createRun: (parent, { consortiumId }, { credentials }) => {
+      if (!credentials) {
         // No authorized user, reject
         return Boom.unauthorized('User not authenticated');
       }
@@ -383,12 +386,13 @@ const resolvers = {
     },
     /**
      * Deletes consortium
-     * @param {object} auth User object from JWT middleware validateFunc
      * @param {object} args
      * @param {string} args.consortiumId Consortium id to delete
+     * @param {object} context
+     * @param {object} context.credentials User object from JWT middleware validateFunc
      * @return {object} Deleted consortium
      */
-    deleteConsortiumById: ({ auth: { credentials: { permissions } } }, args) => {
+    deleteConsortiumById: (parent, args, { credentials }) => {
       if (!permissions.consortia[args.consortiumId] || !permissions.consortia[args.consortiumId].write) {
         return Boom.forbidden('Action not permitted');
       }
@@ -414,12 +418,13 @@ const resolvers = {
     },
     /**
      * Deletes pipeline
-     * @param {object} auth User object from JWT middleware validateFunc
      * @param {object} args
      * @param {string} args.pipelineId Pipeline id to delete
+     * @param {object} context
+     * @param {object} context.credentials User object from JWT middleware validateFunc
      * @return {object} Deleted pipeline
      */
-    deletePipeline: ({ auth: { credentials: { permissions } } }, args) => {
+    deletePipeline: (parent, args, { credentials: { permissions } }) => {
       return helperFunctions.getRethinkConnection()
         .then(connection =>
           new Promise.all([
@@ -443,12 +448,13 @@ const resolvers = {
     },
     /**
      * Add logged user to consortium members list
-     * @param {object} auth User object from JWT middleware validateFunc
      * @param {object} args
      * @param {string} args.consortiumId Consortium id to join
+     * @param {object} context
+     * @param {object} context.credentials User object from JWT middleware validateFunc
      * @return {object} Updated consortium
      */
-    joinConsortium: async ({ auth: { credentials } }, args) => {
+    joinConsortium: async (parent, args, { credentials }) => {
       const connection = await helperFunctions.getRethinkConnection();
       await addUserPermissions(connection, { userId: credentials.id, role: 'member', doc: args.consortiumId, table: 'consortia' });
 
@@ -456,12 +462,13 @@ const resolvers = {
     },
     /**
      * Remove logged user from consortium members list
-     * @param {object} auth User object from JWT middleware validateFunc
      * @param {object} args
      * @param {string} args.consortiumId Consortium id to join
+     * @param {object} context
+     * @param {object} context.credentials User object from JWT middleware validateFunc
      * @return {object} Updated consortium
      */
-    leaveConsortium: async ({ auth: { credentials } }, args) => {
+    leaveConsortium: async (parent, args, { credentials }) => {
       const connection = await helperFunctions.getRethinkConnection();
       await removeUserPermissions(connection, { userId: credentials.id, role: 'member', doc: args.consortiumId, table: 'consortia' });
 
@@ -469,12 +476,13 @@ const resolvers = {
     },
     /**
      * Deletes computation
-     * @param {object} auth User object from JWT middleware validateFunc
      * @param {object} args
      * @param {string} args.computationId Computation id to delete
+     * @param {object} context
+     * @param {object} context.credentials User object from JWT middleware validateFunc
      * @return {object} Deleted computation
      */
-    removeComputation: ({ auth: { credentials } }, args) => {
+    removeComputation: (parent, args, { credentials }) => {
       return helperFunctions.getRethinkConnection()
         .then((connection) =>
           new Promise.all([
@@ -494,16 +502,17 @@ const resolvers = {
     },
     /**
      * Add new user role to user perms, currently consortia perms only
-     * @param {object} auth User object from JWT middleware validateFunc
      * @param {object} args
      * @param {string} args.userId Id of the user who will have permissions removed
      * @param {string} args.table Table of the document to add role to
      * @param {string} args.doc Id of the document to add role to
      * @param {string} args.role Role to add to perms
      * @param {string} args.userId Id of the user to be removed
+     * @param {object} context
+     * @param {object} context.credentials User object from JWT middleware validateFunc
      * @return {object} Updated user object
      */
-    removeUserRole: async ({ auth: { credentials } }, args) => {
+    removeUserRole: async (parent, args, { credentials }) => {
       const { permissions } = credentials
 
       if (!permissions[args.table][args.doc] || !permissions[args.table][args.doc].write) {
@@ -516,12 +525,13 @@ const resolvers = {
     },
     /**
      * Sets active pipeline on consortia object
-     * @param {object} auth User object from JWT middleware validateFunc
      * @param {object} args
      * @param {string} args.consortiumId Consortium to update
      * @param {string} args.activePipelineId Pipeline ID to mark as active
+     * @param {object} context
+     * @param {object} context.credentials User object from JWT middleware validateFunc
      */
-    saveActivePipeline: ({ auth: { credentials } }, args) => {
+    saveActivePipeline: (parent, args, { credentials }) => {
       const { permissions } = credentials;
       /* TODO: Add permissions
       if (!permissions.consortia.write
@@ -537,12 +547,14 @@ const resolvers = {
     },
     /**
      * Saves consortium
-     * @param {object} auth User object from JWT middleware validateFunc
+     * @param {object} parent parent node in GraphQL
      * @param {object} args
      * @param {object} args.consortium Consortium object to add/update
+     * @param {object} context
+     * @param {object} context.credentials User object from JWT middleware validateFunc
      * @return {object} New/updated consortium object
      */
-    saveConsortium: async ({ auth: { credentials } }, args) => {
+    saveConsortium: async (parent, args, { credentials }) => {
       const { permissions } = credentials;
 
       const isUpdate = !!args.consortium.id;
@@ -573,12 +585,13 @@ const resolvers = {
     },
     /**
      * Saves run error
-     * @param {object} auth User object from JWT middleware validateFunc
      * @param {object} args
      * @param {string} args.runId Run id to update
      * @param {string} args.error Error
+     * @param {object} context
+     * @param {object} context.credentials User object from JWT middleware validateFunc
      */
-    saveError: ({ auth: { credentials } }, args) => {
+    saveError: (parent, args, { credentials }) => {
       const { permissions } = credentials;
       return helperFunctions.getRethinkConnection()
         .then((connection) =>
@@ -588,12 +601,13 @@ const resolvers = {
     },
     /**
      * Saves pipeline
-     * @param {object} auth User object from JWT middleware validateFunc
      * @param {object} args
      * @param {object} args.pipeline Pipeline object to add/update
+     * @param {object} context
+     * @param {object} context.credentials User object from JWT middleware validateFunc
      * @return {object} New/updated pipeline object
      */
-    savePipeline: ({ auth: { credentials } }, args) => {
+    savePipeline: (parent, args, { credentials }) => {
       const { permissions } = credentials;
       /* TODO: Add permissions
       if (!permissions.consortia.write
@@ -631,12 +645,13 @@ const resolvers = {
     },
     /**
      * Saves run results
-     * @param {object} auth User object from JWT middleware validateFunc
      * @param {object} args
      * @param {string} args.runId Run id to update
      * @param {string} args.results Results
+     * @param {object} context
+     * @param {object} context.credentials User object from JWT middleware validateFunc
      */
-    saveResults: ({ auth: { credentials } }, args) => {
+    saveResults: (parent, args, { credentials }) => {
       console.log("save results was called");
       const { permissions } = credentials;
       return helperFunctions.getRethinkConnection()
@@ -653,12 +668,13 @@ const resolvers = {
     },
     /**
      * Updates run remote state
-     * @param {object} auth User object from JWT middleware validateFunc
      * @param {object} args
      * @param {string} args.runId Run id to update
      * @param {string} args.data State data
+     * @param {object} context
+     * @param {object} context.credentials User object from JWT middleware validateFunc
      */
-    updateRunState: ({ auth: { credentials } }, args) => {
+    updateRunState: (parent, args, { credentials }) => {
       const { permissions } = credentials;
       return helperFunctions.getRethinkConnection()
         .then((connection) => {
@@ -669,13 +685,14 @@ const resolvers = {
     },
     /**
      * Saves consortium
-     * @param {object} auth User object from JWT middleware validateFunc
      * @param {object} args
      * @param {string} args.consortiumId Consortium id to update
      * @param {string} args.status New status
+     * @param {object} context
+     * @param {object} context.credentials User object from JWT middleware validateFunc
      * @return {object} Updated user object
      */
-    updateUserConsortiumStatus: ({ auth: { credentials } }, { consortiumId, status }) =>
+    updateUserConsortiumStatus: (parent, { consortiumId, status }, { credentials }) =>
       helperFunctions.getRethinkConnection()
         .then(connection =>
           rethink.table('users')
