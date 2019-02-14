@@ -392,7 +392,7 @@ const resolvers = {
      * @param {object} context.credentials User object from JWT middleware validateFunc
      * @return {object} Deleted consortium
      */
-    deleteConsortiumById: (parent, args, { credentials }) => {
+    deleteConsortiumById: (parent, args, { credentials: { permissions } }) => {
       if (!permissions.consortia[args.consortiumId] || !permissions.consortia[args.consortiumId].write) {
         return Boom.forbidden('Action not permitted');
       }
