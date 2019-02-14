@@ -7,7 +7,7 @@ const electronPath = path.join(__dirname, '../..', 'node_modules', '.bin', 'elec
 const appPath = path.join(__dirname, '../..');
 const mocksPath = path.join(__dirname, 'mocks.js');
 
-const EXIST_TIMEOUT = 4000;
+const EXIST_TIMEOUT = 5000;
 const NOTIFICATION_DISMISS_TIMEOUT = 6000;
 const COMPUTATION_TIMEOUT = 120000;
 const COMPUTATION_DOWNLOAD_TIMEOUT = 30000;
