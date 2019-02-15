@@ -1,182 +1,306 @@
 import React from 'react';
 import TimeStamp from 'react-timestamp';
-import { Button, Col, Panel, ProgressBar, Row, Well } from 'react-bootstrap';
-import { LinkContainer } from 'react-router-bootstrap';
+import { Link } from 'react-router';
+import Paper from '@material-ui/core/Paper';
+import Typography from '@material-ui/core/Typography';
+import Button from '@material-ui/core/Button';
+import LinearProgress from '@material-ui/core/LinearProgress';
+import { withStyles } from '@material-ui/core/styles';
+import classNames from 'classnames';
 import PropTypes from 'prop-types';
 
-function getStateWell(runObject, stateName, stateKey) {
+const styles = theme => ({
+  rootPaper: {
+    ...theme.mixins.gutters(),
+    paddingTop: theme.spacing.unit * 2,
+    paddingBottom: theme.spacing.unit * 2,
+    marginTop: theme.spacing.unit * 2,
+  },
+  titleContainer: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    marginBottom: theme.spacing.unit,
+  },
+  label: {
+    display: 'inline-block',
+    fontWeight: 'bold',
+    marginRight: theme.spacing.unit,
+  },
+  value: {
+    display: 'inline-block',
+  },
+  contentContainer: {
+    marginBottom: theme.spacing.unit,
+  },
+  actionButtons: {
+    display: 'flex',
+    justifyContent: 'space-between',
+  },
+  runStateContainer: {
+    display: 'flex',
+    justifyContent: 'space-between',
+  },
+  runStatePaper: {
+    width: `calc(50% - ${theme.spacing.unit}px)`,
+  },
+  runTitle: {
+    textDecoration: 'underline',
+    marginBottom: theme.spacing.unit,
+  },
+});
+
+function getStateWell(runObject, stateName, stateKey, classes) {
   return (
-    <Col xs={12} sm={4}>
-      <Well bsSize="small" style={{ overflow: 'hidden', height: '166px' }}>
-        <div style={{ marginBottom: 5 }}>
-          <span className="bold" style={{ textDecoration: 'underline' }}>{stateName} Pipeline State: </span>
-        </div>
-        {runObject[stateKey].mode &&
+    <Paper
+      className={classNames(classes.rootPaper, classes.runStatePaper)}
+    >
+      <Typography variant="headline" className={classes.runTitle}>
+        {`${stateName} Pipeline State:`}
+      </Typography>
+      {
+        runObject[stateKey].mode
+        && (
           <div>
-            <span className="bold">Mode: </span>
-            {runObject[stateKey].mode}
+            <Typography className={classes.label}>Mode:</Typography>
+            <Typography className={classes.value}>
+              {runObject[stateKey].mode}
+            </Typography>
           </div>
-        }
-        {runObject[stateKey].waitingOn &&
+        )
+      }
+      {
+        runObject[stateKey].waitingOn
+        && (
           <div>
-            <span className="bold">Waiting on Users: </span>
-            {runObject[stateKey].controllerState.includes('waiting on') ? runObject[stateKey].waitingOn.join(', ') : ''}
+            <Typography className={classes.label}>Waiting on Users:</Typography>
+            <Typography className={classes.value}>
+              {runObject[stateKey].controllerState.includes('waiting on') ? runObject[stateKey].waitingOn.join(', ') : ''}
+            </Typography>
           </div>
-        }
-        {runObject[stateKey].controllerState &&
+        )
+      }
+      {
+        runObject[stateKey].controllerState
+        && (
           <div>
-            <span className="bold">Controller State: </span>
-            {runObject[stateKey].controllerState}
+            <Typography className={classes.label}>Controller State:</Typography>
+            <Typography className={classes.value}>
+              {runObject[stateKey].controllerState}
+            </Typography>
           </div>
-        }
-        {runObject[stateKey].currentIteration >= 0 &&
+        )
+      }
+      {
+        runObject[stateKey].currentIteration >= 0
+        && (
           <div>
-            <span className="bold">Current Iteration: </span>
-            {runObject[stateKey].currentIteration}
+            <Typography className={classes.label}>Current Iteration:</Typography>
+            <Typography className={classes.value}>
+              {runObject[stateKey].currentIteration}
+            </Typography>
           </div>
-        }
-        {runObject[stateKey].pipelineStep >= 0 &&
+        )
+      }
+      {
+        runObject[stateKey].pipelineStep >= 0
+        && (
           <div>
-            <span className="bold">Step Count: </span>
-            {`${runObject[stateKey].pipelineStep + 1} /
-              ${runObject[stateKey].totalSteps}`}
+            <Typography className={classes.label}>Step Count:</Typography>
+            <Typography className={classes.value}>
+              {`${runObject[stateKey].pipelineStep + 1} / ${runObject[stateKey].totalSteps}`}
+            </Typography>
           </div>
-        }
-      </Well>
-    </Col>
+        )
+      }
+    </Paper>
   );
 }
 
-const RunItem = ({ consortiumName, runObject }) => (
-  <Panel
+const RunItem = ({ consortiumName, runObject, classes }) => (
+  <Paper
     key={runObject.id}
-    header={
-      <h3>
-        {consortiumName}
-        {runObject.pipelineSnapshot && (<span> || {runObject.pipelineSnapshot.name}</span>)}
-        {!runObject.endDate &&
-          <div className="pull-right">{'Started: '}
+    elevation={4}
+    className={classNames(classes.rootPaper, 'run-item-paper')}
+  >
+    <div className={classes.titleContainer}>
+      <Typography variant="headline">
+        { consortiumName }
+        {
+          runObject.pipelineSnapshot
+          && <span>{ ` || ${runObject.pipelineSnapshot.name}`}</span>
+        }
+      </Typography>
+      {
+        !runObject.endDate
+        && (
+          <Typography variant="headline">
+            {'Started: '}
             <TimeStamp
               time={runObject.startDate / 1000}
               precision={2}
               autoUpdate={60}
               format="ago"
             />
-          </div>
-        }
-        {runObject.endDate &&
-          <div className="pull-right">{'Completed: '}
+          </Typography>
+        )
+      }
+      {
+        runObject.endDate
+        && (
+          <Typography variant="headline">
+            {'Completed: '}
             <TimeStamp
               time={runObject.endDate / 1000}
               precision={2}
               autoUpdate={60}
               format="ago"
             />
-          </div>
-        }
-      </h3>
-    }
-  >
-    {runObject.status === 'started' && (runObject.localPipelineState || runObject.remotePipelineState) &&
-      <Row>
-        <Col xs={12}>
-          <ProgressBar
-            active
-            now={runObject.remotePipelineState
-              ? ((runObject.remotePipelineState.pipelineStep + 1) /
-              runObject.remotePipelineState.totalSteps) * 100
-              : ((runObject.localPipelineState.pipelineStep + 1) /
-              runObject.localPipelineState.totalSteps) * 100
+          </Typography>
+        )
+      }
+    </div>
+    <div className={classes.contentContainer}>
+      {
+        runObject.status === 'started' && (runObject.localPipelineState || runObject.remotePipelineState)
+        && (
+          <LinearProgress
+            variant="indeterminate"
+            value={runObject.remotePipelineState
+              ? ((runObject.remotePipelineState.pipelineStep + 1) / runObject.remotePipelineState.totalSteps) * 100
+              : ((runObject.localPipelineState.pipelineStep + 1) / runObject.localPipelineState.totalSteps) * 100
             }
           />
-        </Col>
-      </Row>
-    }
-    <Row>
-      <Col xs={12} sm={4}>
-        <div>
-          <span className="bold">Status: </span>
+        )
+      }
+      <div>
+        <Typography className={classes.label}>
+          Status:
+        </Typography>
+        <Typography className={classes.value}>
           {runObject.status === 'complete' && <span style={{ color: 'green' }}>Complete</span>}
           {runObject.status === 'started' && <span style={{ color: 'cornflowerblue' }}>In Progress</span>}
           {runObject.status === 'error' && <span style={{ color: 'red' }}>Error</span>}
-          {runObject.status === 'needs-map' &&
-            <div>
-              <LinkContainer
-                to={'dashboard/collections'}
-              >
-                <Button bsStyle="warning">Map Now</Button>
-              </LinkContainer>
-            </div>
-          }
-        </div>
-        {runObject.startDate &&
+        </Typography>
+        {
+          runObject.status === 'needs-map'
+          && (
+            <Button
+              variant="contained"
+              component={Link}
+              href="/dashboard/collections"
+            >
+              Map Now
+            </Button>
+          )
+        }
+      </div>
+      {
+        runObject.startDate
+        && (
           <div>
-            <span className="bold">Start date: </span>
-            <TimeStamp
-              time={runObject.startDate / 1000}
-              precision={2}
-              autoUpdate={10}
-              format="full"
-            />
+            <Typography className={classes.label}>
+              Start date:
+            </Typography>
+            <Typography className={classes.value}>
+              <TimeStamp
+                time={runObject.startDate / 1000}
+                precision={2}
+                autoUpdate={10}
+                format="full"
+              />
+            </Typography>
           </div>
-        }
-        {runObject.endDate &&
+        )
+      }
+      {
+        runObject.endDate
+        && (
           <div>
-            <span className="bold">End date: </span>
-            <TimeStamp
-              time={runObject.endDate / 1000}
-              precision={2}
-              autoUpdate={10}
-              format="full"
-            />
+            <Typography className={classes.label}>
+              End date:
+            </Typography>
+            <Typography className={classes.value}>
+              <TimeStamp
+                time={runObject.endDate / 1000}
+                precision={2}
+                autoUpdate={10}
+                format="full"
+              />
+            </Typography>
           </div>
-        }
-        {runObject.clients &&
-          <p>
-            <span className="bold">Clients: </span>
-            {runObject.clients.join(', ')}
-          </p>
-        }
-      </Col>
-      {runObject.localPipelineState && runObject.status === 'started' &&
-        getStateWell(runObject, 'Local', 'localPipelineState')
+        )
       }
-      {runObject.remotePipelineState && runObject.status === 'started' &&
-        getStateWell(runObject, 'Remote', 'remotePipelineState')
+      {
+        runObject.clients
+        && (
+          <div>
+            <Typography className={classes.label}>
+              Clients:
+            </Typography>
+            <Typography className={classes.value}>
+              { runObject.clients.join(', ') }
+            </Typography>
+          </div>
+        )
       }
-    </Row>
-    <Row>
-      <Col xs={12}>
-        {runObject.results &&
-          <LinkContainer
-            to={`dashboard/results/${runObject.id}`}
-          >
-            <Button bsStyle="success">View Results</Button>
-          </LinkContainer>
+      <div className={classes.runStateContainer}>
+        {
+          runObject.localPipelineState && runObject.status === 'started'
+          && getStateWell(runObject, 'Local', 'localPipelineState', classes)
         }
-        {runObject.error &&
-          <LinkContainer
-            to={`dashboard/results/${runObject.id}`}
-          >
-            <Button bsStyle="danger">View Error</Button>
-          </LinkContainer>
+        {
+          runObject.remotePipelineState && runObject.status === 'started'
+          && getStateWell(runObject, 'Remote', 'remotePipelineState', classes)
         }
-        {runObject.pipelineSnapshot &&
-          <LinkContainer
-            className="pull-right"
-            to={`dashboard/pipelines/snapShot/${runObject.pipelineSnapshot.id}`}
+      </div>
+    </div>
+    <div className={classes.actionButtons}>
+      {
+        runObject.results
+        && (
+          <Button
+            variant="contained"
+            color="primary"
+            component={Link}
+            to={`/dashboard/results/${runObject.id}`}
           >
-            <Button bsStyle="info">View Pipeline</Button>
-          </LinkContainer>
-        }
-      </Col>
-    </Row>
-  </Panel>
+            View Results
+          </Button>
+        )
+      }
+      {
+        runObject.error
+        && (
+          <Button
+            variant="contained"
+            component={Link}
+            to={`/dashboard/results/${runObject.id}`}
+          >
+            View Error
+          </Button>
+        )
+      }
+      {
+        runObject.pipelineSnapshot
+        && (
+          <Button
+            variant="contained"
+            color="secondary"
+            component={Link}
+            to={`/dashboard/pipelines/snapShot/${runObject.pipelineSnapshot.id}`}
+          >
+            View Pipeline
+          </Button>
+        )
+      }
+    </div>
+  </Paper>
 );
 
 RunItem.propTypes = {
   consortiumName: PropTypes.string.isRequired,
   runObject: PropTypes.object.isRequired,
+  classes: PropTypes.object.isRequired,
 };
 
-export default RunItem;
+export default withStyles(styles)(RunItem);

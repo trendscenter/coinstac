@@ -1,11 +1,13 @@
 import React, { Component } from 'react';
-import ReactDOM from 'react-dom';
 import { connect } from 'react-redux';
 import { compose, graphql, withApollo } from 'react-apollo';
 import { ipcRenderer } from 'electron';
 import PropTypes from 'prop-types';
-import update from 'immutability-helper';
 import { includes, isEqual, uniqWith } from 'lodash';
+import Paper from '@material-ui/core/Paper';
+import Typography from '@material-ui/core/Typography';
+import Grid from '@material-ui/core/Grid';
+import { withStyles } from '@material-ui/core/styles';
 import {
   getConsortium,
   getAllCollections,
@@ -13,24 +15,29 @@ import {
   incrementRunCount,
   saveAssociatedConsortia,
   saveCollection,
-  updateCollection
 } from '../../state/ducks/collections';
 import {
   getRunsForConsortium,
   saveLocalRun
 } from '../../state/ducks/runs';
 import {
-  getSelectAndSubProp,
-} from '../../state/graphql/props';
-import {
   FETCH_ALL_USER_RUNS_QUERY,
 } from '../../state/graphql/functions';
 import { notifyInfo } from '../../state/ducks/notifyAndLog';
-import { Alert, Button, Panel } from 'react-bootstrap';
 import MapsStep from './maps-step';
 import MapsCollection from './maps-collection';
 import dragula from 'react-dragula';
 import bitap from 'bitap';
+
+const styles = theme => ({
+  rootPaper: {
+    ...theme.mixins.gutters(),
+    paddingTop: theme.spacing.unit * 2,
+    paddingBottom: theme.spacing.unit * 2,
+    marginTop: theme.spacing.unit * 2,
+    height: '100%',
+  },
+});
 
 const isUserA = (userId, groupArr) => {
   return groupArr.indexOf(userId) !== -1;
@@ -361,6 +368,8 @@ class MapsEdit extends Component {
   }
 
   render() {
+    const { classes } = this.props;
+
     const {
       activeConsortium,
       collection,
@@ -369,59 +378,68 @@ class MapsEdit extends Component {
       mappedItem,
       rowArray,
     } = this.state;
+
     return (
       <div>
-        {consortium && activeConsortium &&
-        <div>
-        <div className="page-header clearfix">
-          <h1 className="pull-left">Map - {consortium ? consortium.name : ''}</h1>
-        </div>
-        <div className="container">
-          <div className="row">
-            <div className="col-sm-4">
-              <Panel header={
-                <h3>
-                { consortium ?
-                <span>{consortium.name}: Pipeline</span> : 'Pipeline'}
-                </h3>
-              }>
-                { this.traversePipelineSteps() }
-              </Panel>
+        {
+          consortium && activeConsortium
+          && (
+            <div>
+              <div className="page-header">
+                <Typography variant="h4">
+                  Map - {consortium ? consortium.name : ''}
+                </Typography>
+              </div>
+              <Grid container spacing={16}>
+                <Grid item sm={4}>
+                  <Paper
+                    className={classes.rootPaper}
+                    elevation={1}
+                  >
+                    <Typography variant="headline" className={classes.title}>
+                      { consortium ? `${consortium.name}: Pipeline` : 'Pipeline' }
+                    </Typography>
+                    { this.traversePipelineSteps() }
+                  </Paper>
+                </Grid>
+                <Grid item sm={8}>
+                  <Paper
+                    className={classes.rootPaper}
+                    elevation={1}
+                  >
+                    <Typography variant="headline" className={classes.title}>
+                      { collection ? collection.name : 'File Collection' }
+                    </Typography>
+                    <div>
+                      {
+                        collection
+                        && (
+                          <MapsCollection
+                            activeConsortium={activeConsortium}
+                            collection={collection}
+                            getContainers={this.getContainers}
+                            isMapped={isMapped}
+                            notifySuccess={this.notifySuccess}
+                            mappedItem={mappedItem}
+                            rowArray={rowArray}
+                            rowArrayLength={rowArray.length}
+                            saveAndCheckConsortiaMapping={this.saveAndCheckConsortiaMapping}
+                            saveCollection={this.saveCollection}
+                            setRowArray={this.setRowArray}
+                            updateCollection={this.updateCollection}
+                            updateConsortiumClientProps={this.updateConsortiumClientProps}
+                            updateMapsStep={this.updateMapsStep}
+                          />
+                        )
+                      }
+                    </div>
+                  </Paper>
+                </Grid>
+              </Grid>
             </div>
-            <div className="col-sm-7">
-                <Panel header={
-                  <h3>
-                  { collection ?
-                    <span>{collection.name}</span> : 'File Collection'
-                  }
-                  </h3>
-                }>
-                <div>
-                  {collection &&
-                  <MapsCollection
-                    activeConsortium={activeConsortium}
-                    collection={collection}
-                    getContainers={this.getContainers}
-                    isMapped={isMapped}
-                    notifySuccess={this.notifySuccess}
-                    mappedItem={mappedItem}
-                    rowArray={rowArray}
-                    rowArrayLength={rowArray.length}
-                    saveAndCheckConsortiaMapping={this.saveAndCheckConsortiaMapping}
-                    saveCollection={this.saveCollection}
-                    setRowArray={this.setRowArray}
-                    updateCollection={this.updateCollection}
-                    updateConsortiumClientProps={this.updateConsortiumClientProps}
-                    updateMapsStep={this.updateMapsStep}
-                  />}
-                </div>
-              </Panel>
-            </div>
-          </div>
-        </div>
-      </div>
-      }
-      </div>
+          )
+        }
+    </div>
   );
 }
 }
@@ -457,7 +475,7 @@ const ComponentWithData = compose(
   withApollo
 )(MapsEdit);
 
-export default connect(mapStateToProps,
+const connectedComponent = connect(mapStateToProps,
   {
     getConsortium,
     getCollectionFiles,
@@ -470,3 +488,5 @@ export default connect(mapStateToProps,
     saveLocalRun,
   }
 )(ComponentWithData);
+
+export default withStyles(styles)(connectedComponent);

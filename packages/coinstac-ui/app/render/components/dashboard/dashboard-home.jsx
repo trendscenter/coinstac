@@ -3,59 +3,61 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
+import { withStyles } from '@material-ui/core';
+import Typography from '@material-ui/core/Typography';
+import Divider from '@material-ui/core/Divider';
 import RunsList from '../common/runs-list';
 
 const HOURS_SINCE_ACTIVE = 72;
 
-class DashboardHome extends Component {
-  constructor(props) {
-    super(props);
+const styles = theme => ({
+  pageTitle: {
+    marginBottom: theme.spacing.unit * 2,
+  },
+  pageSubtitle: {
+    marginBottom: theme.spacing.unit * 2,
+    marginTop: theme.spacing.unit * 2,
+  },
+});
 
-    this.state = {
-      didInitResults: false,
-    };
-  }
+function DashboardHome(props) {
+  const {
+    consortia,
+    runs,
+    userId,
+    classes,
+  } = props;
 
-  componentWillUnmount() {
-    if (this.interval) {
-      clearInterval(this.interval);
-    }
-  }
-
-  render() {
-    const {
-      consortia, runs, userId,
-    } = this.props;
-
-    return (
-      <div>
-        <div className="page-header clearfix">
-          <h1 className="pull-left">{userId}&apos;s Home</h1>
-        </div>
-        <h3>Run Activity in the Last {HOURS_SINCE_ACTIVE} Hours</h3>
-        <RunsList
-          consortia={consortia}
-          hoursSinceActive={HOURS_SINCE_ACTIVE}
-          limitToComplete={false}
-          runs={runs}
-        />
-      </div>
-    );
-  }
+  return (
+    <div>
+      <Typography variant="h4" className={classes.pageTitle}>
+        {`${userId}'s Home`}
+      </Typography>
+      <Divider />
+      <Typography variant="title" className={classes.pageSubtitle}>
+        {`Run Activity in the Last ${HOURS_SINCE_ACTIVE} Hours`}
+      </Typography>
+      <RunsList
+        consortia={consortia}
+        hoursSinceActive={HOURS_SINCE_ACTIVE}
+        limitToComplete={false}
+        runs={runs}
+      />
+    </div>
+  );
 }
 
 DashboardHome.propTypes = {
   consortia: PropTypes.array.isRequired,
   runs: PropTypes.array.isRequired,
   userId: PropTypes.string.isRequired,
-};
-
-DashboardHome.defaultProps = {
-  userId: '',
+  classes: PropTypes.object.isRequired,
 };
 
 function mapStateToProps({ auth: { user: { id } }, runs: { runs } }) {
   return { runs, userId: id };
 }
 
-export default connect(mapStateToProps)(DashboardHome);
+const connectedComponent = connect(mapStateToProps)(DashboardHome);
+
+export default withStyles(styles)(connectedComponent);

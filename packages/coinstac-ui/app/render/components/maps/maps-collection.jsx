@@ -1,30 +1,51 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 import { connect } from 'react-redux';
-import { compose, graphql, withApollo } from 'react-apollo';
-import { LinkContainer } from 'react-router-bootstrap';
-import {
-  Accordion,
-  Alert,
-  Button,
-  Card,
-  Form,
-  FormGroup,
-  Panel,
-  Radio,
-} from 'react-bootstrap';
+import { Link } from 'react-router';
+import Paper from '@material-ui/core/Paper';
+import Button from '@material-ui/core/Button';
+import Divider from '@material-ui/core/Divider';
+import Typography from '@material-ui/core/Typography';
+import { withStyles } from '@material-ui/core/styles';
+import FileCopyIcon from '@material-ui/icons/FileCopy';
+import DeleteIcon from '@material-ui/icons/Delete';
 import ipcPromise from 'ipc-promise';
 import PropTypes from 'prop-types';
 import shortid from 'shortid';
-import dragula from 'react-dragula';
 import { unmapAssociatedConsortia } from '../../state/ducks/collections';
 import bitap from 'bitap';
 
-const styles = {
-  fileLabelRow: {
-    margin: 0
+const styles = theme => ({
+  addFileGroupButton: {
+    marginTop: theme.spacing.unit,
+    marginBottom: theme.spacing.unit,
   },
-};
+  removeFileGroupButton: {
+    marginTop: theme.spacing.unit,
+    marginBottom: theme.spacing.unit,
+  },
+  rootPaper: {
+    ...theme.mixins.gutters(),
+    paddingTop: theme.spacing.unit * 2,
+    paddingBottom: theme.spacing.unit * 2,
+    marginTop: theme.spacing.unit * 2,
+    height: '100%',
+  },
+  fileErrorPaper: {
+    ...theme.mixins.gutters(),
+    paddingTop: theme.spacing.unit * 2,
+    paddingBottom: theme.spacing.unit * 2,
+    marginBottom: theme.spacing.unit * 2,
+    backgroundColor: '#fef7e4',
+    textAlign: 'center',
+  },
+  fileErrorMessage: {
+    color: '#ab8e6b',
+  },
+  actionsContainer: {
+    marginTop: theme.spacing.unit * 2,
+  },
+});
 
 class MapsCollection extends Component {
 
@@ -41,6 +62,7 @@ class MapsCollection extends Component {
       },
       showFiles: {},
       source: {},
+      finishedAutoMapping: false,
     };
 
     this.addFileGroup = this.addFileGroup.bind(this);
@@ -147,13 +169,13 @@ class MapsCollection extends Component {
      });
    }
 
-  autoMap(group) {
+  async autoMap(group) {
     this.setState({ autoMap: true });
     let covariates = this.props.collection.associatedConsortia.pipelineSteps[0].inputMap.covariates.ownerMappings;
     let data = this.props.collection.associatedConsortia.pipelineSteps[0].inputMap.data.ownerMappings;
-    this.makePoints(group.firstRow).map((string, index) => {
+    const resolveAutoMapPromises = this.makePoints(group.firstRow).map((string, index) => {
       if( Object.keys(this.filterGetObj(covariates,string)).length > 0 ){
-        this.setStepIO(
+        return this.setStepIO(
           index,
           group.id,
           0,
@@ -163,7 +185,7 @@ class MapsCollection extends Component {
         );
       }
       if( Object.keys(this.filterGetObj(data,string)).length > 0 ){
-        this.setStepIO(
+        return this.setStepIO(
           index,
           group.id,
           0,
@@ -172,7 +194,12 @@ class MapsCollection extends Component {
           string
         );
       }
+
+      return Promise.resolve();
     });
+
+    await Promise.all(resolveAutoMapPromises);
+    this.setState({ finishedAutoMapping: true });
   }
 
   removeFileGroup(groupId) {
@@ -202,12 +229,15 @@ class MapsCollection extends Component {
       'collectionId': collection.id,
       'groupId': groupId,
       'column':  string
-      }]
+    }];
+    return new Promise((resolve) => {
       setTimeout(() => {
         updateConsortiumClientProps(stepIndex, objKey, index, varObject);
         array.splice( array.indexOf(string), 1 );
         this.props.setRowArray(array);
+        resolve();
       }, timeout);
+    })
   }
 
   updateNewFileOrg(ev) {
@@ -224,126 +254,165 @@ class MapsCollection extends Component {
   });
 
   render() {
-    let {
+    const {
       activeConsortium,
       collection,
       isMapped,
       saveCollection,
       rowArray,
       rowArrayLength,
+      classes,
     } = this.props;
 
-    let {
-      contChildren
+    const {
+      contChildren,
+      filesError,
+      finishedAutoMapping,
     } = this.state;
 
     return (
       <div>
-        <Form onSubmit={saveCollection}>
-          {!isMapped &&
-            <div>
-              <Button
-                block
-                bsStyle="primary"
-                onClick={this.addFileGroup}
-              >
-                Add Files Group
-              </Button>
-              <hr />
-            </div>
+        <form onSubmit={saveCollection}>
+          {
+            !isMapped
+            && (
+              <div>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  className={classes.addFileGroupButton}
+                  onClick={this.addFileGroup}
+                >
+                  Add Files Group
+                </Button>
+                <Divider />
+              </div>
+            )
           }
-          {this.state.filesError &&
-            <Alert bsStyle="danger" style={{ ...styles.topMargin, textAlign: 'left', bottomMargin: 20 }}>
-              <h4 style={{ fontStyle: 'normal' }}>File Error</h4>
-              {this.state.filesError}
-            </Alert>
+          {
+            filesError
+            && (
+              <Paper className={classes.fileErrorPaper}>
+                <Typography variant="h6" className={classes.fileErrorMessage}>File Error</Typography>
+                <Typography className={classes.fileErrorMessage} variant="body1">
+                  {filesError}
+                </Typography>
+              </Paper>
+            )
           }
 
-          {collection.fileGroups &&
-            Object.values(collection.fileGroups).map(group => (
-            <Panel key={`${group.date}-${group.extension}-${group.id}`}>
-              {group.org === 'metafile' &&
-                <div>
-                  {!isMapped &&
-                    <Button
-                      bsStyle="danger"
-                      className="pull-right"
-                      onClick={this.removeFileGroup(group.id)}
-                    >
-                      <span
-                        aria-hidden="true"
-                        className="glyphicon glyphicon-trash"
-                      /> Remove File Group
-                    </Button>
-                  }
-                  <p style={styles.fileLabelRow}>
-                    <span className="bold">Name:</span> {group.name}
-                  </p>
-                  <p style={styles.fileLabelRow}>
-                    <span className="bold">Date:</span> {new Date(group.date).toUTCString()}
-                  </p>
-                  <p style={styles.fileLabelRow}>
-                    <span className="bold">Extension:</span> {group.extension}
-                  </p>
-                  <p style={styles.fileLabelRow}>
-                    <span className="bold">Meta File Path:</span> {group.metaFilePath}
-                  </p>
-                  <p style={styles.fileLabelRow}>
-                    <span className="bold">First Row:</span> {group.firstRow}
-                  </p>
-                  {rowArray.length > 0 &&
-                  <div className="card-deck" ref="Container">
-                    {rowArray && rowArray.map((point, index) => (
-                      <div
-                        className={"card-draggable card-"+point.toLowerCase()}
-                        data-filegroup={group.id}
-                        data-string={point}
-                        key={index}
-                      >
-                        <span className="glyphicon glyphicon-file" /> {point}
-                      </div>
-                    ))}
-                  </div>
-                  }
-                  <hr />
-                  <div>
-                    {!isMapped && contChildren !== 0 &&
-                    <Button
-                      block
-                      bsStyle="primary"
-                      onClick={() => this.autoMap(group)}
-                    > Auto Map
-                    </Button>
-                    }
-                    {!isMapped && contChildren === 0 &&
-                    <Button
-                      block
-                      bsStyle="success"
-                      onClick={() => this.props.saveAndCheckConsortiaMapping()}
-                    > Save
-                    </Button>
-                    }
-                    {isMapped &&
-                      <div>
-                        <div className="alert alert-success" role="alert">
-                          Mapping Complete!
-                        </div>
-                        <br />
-                        <LinkContainer to='/dashboard/consortia'>
+          {
+            collection.fileGroups
+            && Object.values(collection.fileGroups).map(group => (
+              <Paper
+                key={`${group.date}-${group.extension}-${group.id}`}
+                className={classes.rootPaper}
+              >
+                {
+                  group.org === 'metafile'
+                  && (
+                    <div>
+                      {
+                        !isMapped
+                        && (
                           <Button
-                            block
-                            bsStyle="success"
-                          >Back to Consortia
+                            variant="contained"
+                            color="secondary"
+                            className={classes.removeFileGroupButton}
+                            onClick={this.removeFileGroup(group.id)}
+                          >
+                            <DeleteIcon />
+                            Remove File Group
                           </Button>
-                        </LinkContainer>
+                        )
+                      }
+                      <Typography>
+                        <span className="bold">Name:</span> {group.name}
+                      </Typography>
+                      <Typography>
+                        <span className="bold">Date:</span> {new Date(group.date).toUTCString()}
+                      </Typography>
+                      <Typography>
+                        <span className="bold">Extension:</span> {group.extension}
+                      </Typography>
+                      <Typography>
+                        <span className="bold">Meta File Path:</span> {group.metaFilePath}
+                      </Typography>
+                      <Typography>
+                        <span className="bold">First Row:</span> {group.firstRow}
+                      </Typography>
+                      {
+                        rowArray.length > 0
+                        && (
+                          <div className="card-deck" ref="Container">
+                            {
+                              rowArray && rowArray.map((point, index) => (
+                                <div
+                                  className={`card-draggable card-${point.toLowerCase()}`}
+                                  data-filegroup={group.id}
+                                  data-string={point}
+                                  key={index}
+                                >
+                                  <FileCopyIcon /> {point}
+                                </div>
+                              ))
+                            }
+                          </div>
+                        )
+                      }
+                      <Divider />
+                      <div className={classes.actionsContainer}>
+                        {
+                          !isMapped && contChildren !== 0
+                          && (
+                            <Button
+                              variant="contained"
+                              color="primary"
+                              onClick={() => this.autoMap(group)}
+                            >
+                              Auto Map
+                            </Button>
+                          )
+                        }
+                        {
+                          !isMapped && finishedAutoMapping
+                          && (
+                            <Button
+                              variant="contained"
+                              color="primary"
+                              onClick={() => this.props.saveAndCheckConsortiaMapping()}
+                            >
+                              Save
+                            </Button>
+                          )
+                        }
+                        {
+                          isMapped
+                          && (
+                            <div>
+                              <div className="alert alert-success" role="alert">
+                                Mapping Complete!
+                              </div>
+                              <br />
+                              <Button
+                                variant="contained"
+                                color="primary"
+                                to="/dashboard/consortia"
+                                component={Link}
+                              >
+                                Back to Consortia
+                              </Button>
+                            </div>
+                          )
+                        }
                       </div>
-                    }
-                  </div>
-                </div>
-              }
-            </Panel>
-          ))}
-        </Form>
+                    </div>
+                  )
+                }
+              </Paper>
+            ))
+          }
+        </form>
       </div>
     );
   }
@@ -355,10 +424,13 @@ MapsCollection.propTypes = {
   saveAndCheckConsortiaMapping: PropTypes.func.isRequired,
   updateConsortiumClientProps: PropTypes.func.isRequired,
   unmapAssociatedConsortia: PropTypes.func.isRequired,
+  classes: PropTypes.object.isRequired,
 };
 
 MapsCollection.defaultProps = {
   collection: null,
 };
 
-export default connect(null, { unmapAssociatedConsortia })(MapsCollection);
+const connectedComponent = connect(null, { unmapAssociatedConsortia })(MapsCollection);
+
+export default withStyles(styles)(connectedComponent);

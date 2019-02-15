@@ -6,9 +6,11 @@
 
 .page-header {
   margin-top: 1em;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 
   h1 {
-    margin-top: 5px;
-    margin-bottom: 5px;
+    margin: 5px 0;
   }
 }

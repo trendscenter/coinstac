@@ -1,27 +1,82 @@
 import React from 'react';
+import { Link } from 'react-router';
 import PropTypes from 'prop-types';
-import { Button, Panel } from 'react-bootstrap';
-import { LinkContainer } from 'react-router-bootstrap';
+import Paper from '@material-ui/core/Paper';
+import Typography from '@material-ui/core/Typography';
+import Button from '@material-ui/core/Button';
+import DeleteIcon from '@material-ui/icons/Delete';
+import { withStyles } from '@material-ui/core/styles';
 
-const ListItem = ({ owner, itemOptions, itemObject, itemRoute, deleteItem }) => (
-  <Panel header={<h3>{itemObject.name} {itemOptions.owner && <span className="pull-right">Owner</span>}</h3>}>
-    <p>{itemObject.description}</p>
-    {itemOptions.text}
-    <LinkContainer to={`${itemRoute}/${itemObject.id}`} name={itemObject.name}>
-      <Button bsStyle="info">View Details</Button>
-    </LinkContainer>
-    {owner &&
-      <Button
-        bsStyle="danger"
-        onClick={deleteItem(itemObject.id)}
-        className="pull-right"
-        name={`${itemObject.name}-delete`}
-      >
-        Delete
-      </Button>
-    }
-    {itemOptions.actions}
-  </Panel>
+const styles = theme => ({
+  rootPaper: {
+    ...theme.mixins.gutters(),
+    paddingTop: theme.spacing.unit * 2,
+    paddingBottom: theme.spacing.unit * 2,
+    marginTop: theme.spacing.unit * 2,
+  },
+  titleContainer: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    marginBottom: theme.spacing.unit,
+  },
+  description: {
+    marginBottom: theme.spacing.unit * 2,
+  },
+});
+
+const ListItem = ({
+  owner,
+  itemOptions,
+  itemObject,
+  itemRoute,
+  deleteItem,
+  classes,
+}) => (
+  <Paper
+    className={classes.rootPaper}
+    elevation={4}
+  >
+    <div className={classes.titleContainer}>
+      <Typography variant="headline">
+        { itemObject.name }
+      </Typography>
+      {
+        itemOptions.owner && <Typography>Owner</Typography>
+      }
+    </div>
+    <Typography variant="body1" className={classes.description}>
+      { itemObject.description }
+    </Typography>
+    { itemOptions.text }
+    <div className="list-item__actions">
+      <div>
+        <Button
+          variant="contained"
+          color="primary"
+          component={Link}
+          to={`${itemRoute}/${itemObject.id}`}
+          name={itemObject.name}
+        >
+          View Details
+        </Button>
+        { itemOptions.actions }
+      </div>
+      {
+        owner
+        && (
+          <Button
+            variant="contained"
+            color="secondary"
+            onClick={deleteItem(itemObject.id)}
+            name={`${itemObject.name}-delete`}
+          >
+            Delete
+            <DeleteIcon />
+          </Button>
+        )
+      }
+    </div>
+  </Paper>
 );
 
 ListItem.defaultProps = {
@@ -34,6 +89,7 @@ ListItem.propTypes = {
   itemRoute: PropTypes.string.isRequired,
   owner: PropTypes.bool,
   deleteItem: PropTypes.func.isRequired,
+  classes: PropTypes.object.isRequired,
 };
 
-export default ListItem;
+export default withStyles(styles)(ListItem);

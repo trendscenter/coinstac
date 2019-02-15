@@ -1,19 +1,47 @@
 import React, { Component } from 'react';
-import {
-  Checkbox,
-  ControlLabel,
-  Form,
-  FormGroup,
-  FormControl,
-  Button,
-  Table,
-} from 'react-bootstrap';
-import { Typeahead } from 'react-bootstrap-typeahead';
+import Button from '@material-ui/core/Button';
+import TextField from '@material-ui/core/TextField';
+import Typography from '@material-ui/core/Typography';
+import Checkbox from '@material-ui/core/Checkbox';
+import Table from '@material-ui/core/Table';
+import TableBody from '@material-ui/core/TableBody';
+import TableCell from '@material-ui/core/TableCell';
+import TableHead from '@material-ui/core/TableHead';
+import TableRow from '@material-ui/core/TableRow';
+import { withStyles } from '@material-ui/core/styles';
+import DeleteIcon from '@material-ui/icons/Delete';
 import PropTypes from 'prop-types';
 import update from 'immutability-helper';
+import Select from '../common/react-select';
+import memoize from 'memoize-one';
 import MemberAvatar from '../common/member-avatar';
 
-export default class ConsortiumAbout extends Component {
+const styles = theme => ({
+  tabTitleContainer: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: theme.spacing.unit * 2,
+  },
+  textField: {
+    marginTop: theme.spacing.unit * 2,
+  },
+  membersContainer: {
+    marginTop: theme.spacing.unit * 4,
+  },
+  addMemberContainer: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: theme.spacing.unit * 2,
+    marginBottom: theme.spacing.unit * 2,
+  },
+  addMemberButton: {
+    marginLeft: theme.spacing.unit * 2,
+  },
+});
+
+class ConsortiumAbout extends Component {
   constructor(props) {
     super(props);
 
@@ -24,6 +52,7 @@ export default class ConsortiumAbout extends Component {
 
     this.addMember = this.addMember.bind(this);
     this.toggleOwner = this.toggleOwner.bind(this);
+    this.handleMemberSelect = this.handleMemberSelect.bind(this);
   }
 
   static getDerivedStateFromProps(props) {
@@ -37,7 +66,7 @@ export default class ConsortiumAbout extends Component {
 
   addMember() {
     const newMember = this.state.newMember;
-    this.props.addMemberToConsortium(newMember[0].id);
+    this.props.addMemberToConsortium(newMember.value);
   }
 
   toggleOwner(consUser) {
@@ -55,95 +84,122 @@ export default class ConsortiumAbout extends Component {
     };
   }
 
+  handleMemberSelect(value) {
+    this.setState({ newMember: value });
+  }
+
+  handleTextFieldChange = name => event => {
+    const { updateConsortium } = this.props;
+    updateConsortium({ param: name, value: event.target.value });
+  }
+
+  mapUsers = memoize(
+    users => users ? users.map(user => ({ label: user.id, value: user.id })) : null
+  );
+
+  filterSelectedUsers = memoize(
+    (allUsers, selectedUsers) => {
+      if (!allUsers && selectedUsers) {
+        return null;
+      }
+
+      return allUsers.filter(user => selectedUsers.findIndex(selectedUser => selectedUser.id === user.value) === -1);
+    }
+  );
+
   render() {
     const {
       consortium,
       owner,
       removeMemberFromConsortium,
       saveConsortium,
-      updateConsortium,
       user,
       users,
+      classes,
     } = this.props;
 
     const { consortiumUsers } = this.state;
 
+    const allUsers = this.mapUsers(users);
+    const userOptions = this.filterSelectedUsers(allUsers, consortiumUsers);
+
     return (
-      <div>
-        <Form onSubmit={saveConsortium}>
+      <form onSubmit={saveConsortium}>
+        <div className={classes.tabTitleContainer}>
+          <Typography variant="h5">
+            About Consortium
+          </Typography>
           {
-            owner &&
-            <Button
-              bsStyle="success"
-              type="submit"
-              className="pull-right"
-            >
-              Save
-            </Button>
+            owner
+            && (
+              <Button
+                variant="contained"
+                color="primary"
+                type="submit"
+              >
+                Save
+              </Button>
+            )
           }
-          <h3>About Consortium</h3>
-          <FormGroup controlId="name">
-            <ControlLabel>Name</ControlLabel>
-            <FormControl
-              disabled={!owner}
-              type="input"
-              value={consortium.name || ''}
-              inputRef={(input) => { this.name = input; }}
-              onChange={() => updateConsortium({ param: 'name', value: this.name.value })}
-            />
-          </FormGroup>
-
-          <FormGroup controlId="description">
-            <ControlLabel>Description</ControlLabel> (Optional)
-            <FormControl
-              disabled={!owner}
-              componentClass="textarea"
-              value={consortium.description || ''}
-              inputRef={(input) => { this.description = input; }}
-              onChange={() => updateConsortium({ param: 'description', value: this.description.value })}
-            />
-          </FormGroup>
-
-          {consortium.id &&
-            <div key="avatar-container">
-              <div className="bold" style={{ marginBottom: 15 }}>Owner(s)/Members: </div>
-              {owner &&
-                <div>
-                  <div style={{ width: '50%', display: 'inline-block', marginRight: 15 }}>
-                    <Typeahead
-                      filterBy={(option, props) =>
-                        consortiumUsers.findIndex(consUser => consUser.id === option.id) === -1
-                      }
-                      onChange={(selected) => this.setState({ newMember: selected })}
-                      labelKey="id"
-                      name="members-input"
-                      options={users}
-                      selected={this.state.newMember}
-                      selectHintOnEnter
-                    />
-                  </div>
-                  <Button
-                    bsStyle="info"
-                    onClick={this.addMember}
-                  >
-                    Add Member
-                  </Button>
-                </div>
-              }
-              <Table striped condensed>
-                <thead>
-                  <tr>
-                    <th>Username</th>
-                    <th>Owner</th>
-                    <th>Member</th>
-                    {owner && <th />}
-                  </tr>
-                </thead>
-                <tbody>
-                  {consortiumUsers.map(consUser =>
+        </div>
+        <TextField
+          id="name"
+          label="Name"
+          fullWidth
+          required
+          disabled={!owner}
+          value={consortium.name}
+          onChange={this.handleTextFieldChange('name')}
+          className={classes.textField}
+        />
+        <TextField
+          id="description"
+          label="Description"
+          fullWidth
+          disabled={!owner}
+          value={consortium.description}
+          onChange={this.handleTextFieldChange('description')}
+          className={classes.textField}
+        />
+        {
+          consortium.id &&
+          <div key="avatar-container" className={classes.membersContainer}>
+            <Typography variant="subtitle2">Owner(s)/Members:</Typography>
+            {
+              owner &&
+              <div className={classes.addMemberContainer}>
+                <Select
+                  placeholder="Select an user"
+                  options={userOptions}
+                  onChange={this.handleMemberSelect}
+                  removeSelected
+                  name="members-input"
+                />
+                <Button
+                  variant="contained"
+                  color="secondary"
+                  onClick={this.addMember}
+                  className={classes.addMemberButton}
+                >
+                  Add Member
+                </Button>
+              </div>
+            }
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Username</TableCell>
+                  <TableCell>Owner</TableCell>
+                  <TableCell>Member</TableCell>
+                  <TableCell></TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {
+                  consortiumUsers.map(consUser =>
                     (
-                      <tr key={`${consUser.id}-row`}>
-                        <td>
+                      <TableRow key={`${consUser.id}-row`}>
+                        <TableCell>
                           <MemberAvatar
                             isOwner={owner}
                             consRole="Member"
@@ -151,42 +207,46 @@ export default class ConsortiumAbout extends Component {
                             width={30}
                           />
                           <span>{consUser.id}</span>
-                        </td>
-                        <td>
+                        </TableCell>
+                        <TableCell>
                           <Checkbox
                             onChange={this.toggleOwner(consUser)}
                             checked={consUser.owner ? true : false}
                             disabled={!owner || consUser.id === user.id}
                             name="isOwner"
                           />
-                        </td>
-                        <td>
+                        </TableCell>
+                        <TableCell>
                           <Checkbox disabled checked={consUser.member} name="isMember" />
-                        </td>
-                        {owner &&
-                          <td>
-                            { user.id !== consUser.id ?
-                            <Button
-                              bsStyle="danger"
-                              onClick={removeMemberFromConsortium(consUser)}
-                            >
-                              <span
-                                aria-hidden="true"
-                                className="glyphicon glyphicon-remove"
-                              /> Remove
-                            </Button>
-                            : ''}
-                          </td>
+                        </TableCell>
+                        {
+                          owner
+                          && (
+                            <TableCell>
+                              {
+                                user.id !== consUser.id
+                                && (
+                                  <Button
+                                    variant="contained"
+                                    color="default"
+                                    onClick={removeMemberFromConsortium(consUser)}
+                                  >
+                                    Remove
+                                    <DeleteIcon />
+                                  </Button>
+                                )
+                              }
+                            </TableCell>
+                          )
                         }
-                      </tr>
-                    )
-                  )}
-                </tbody>
-              </Table>
-            </div>
-          }
-        </Form>
-      </div>
+                      </TableRow>
+                  ))
+                }
+              </TableBody>
+            </Table>
+          </div>
+        }
+      </form>
     );
   }
 }
@@ -202,3 +262,5 @@ ConsortiumAbout.propTypes = {
 ConsortiumAbout.defaultProps = {
   consortium: null,
 };
+
+export default withStyles(styles)(ConsortiumAbout);

@@ -1,37 +1,49 @@
 import React from 'react';
 import Avatar from 'react-avatar';
 import PropTypes from 'prop-types';
+import Typography from '@material-ui/core/Typography';
+import { withStyles } from '@material-ui/core/styles';
 
-const styles = {
+const styles = theme => ({
   containerStyles: {
     display: 'inline-block',
-    margin: 5,
+    margin: theme.spacing.unit,
     verticalAlign: 'top',
     textAlign: 'center',
   },
   textStyles: {
-    marginBottom: 0,
-    textAlign: 'center',
     fontSize: 12,
   },
-};
+});
 
-const MemberAvatar = ({ name, consRole, showDetails, width }) =>
-  (
-    <div key={`${name}-avatar`} style={{ ...styles.containerStyles, width }}>
+function MemberAvatar({
+  name,
+  consRole,
+  showDetails,
+  width,
+  classes,
+}) {
+  return (
+    <div key={`${name}-avatar`} className={classes.containerStyles}>
       <Avatar name={name} size={width} />
-      {consRole && showDetails &&
-        <p className="bold" style={styles.textStyles}>{consRole}</p>
+      {
+        consRole && showDetails
+        && <Typography variant="subtitle2" className={classes.textStyles}>{consRole}</Typography>
       }
-      {showDetails && <p style={styles.textStyles}><em>{name}</em></p>}
+      {
+        showDetails
+        && <Typography variant="caption" className={classes.textStyles}>{name}</Typography>
+      }
     </div>
   );
+}
 
 MemberAvatar.propTypes = {
   name: PropTypes.string.isRequired,
   consRole: PropTypes.string,
   showDetails: PropTypes.bool,
   width: PropTypes.number.isRequired,
+  classes: PropTypes.object.isRequired,
 };
 
 MemberAvatar.defaultProps = {
@@ -39,4 +51,4 @@ MemberAvatar.defaultProps = {
   showDetails: false,
 };
 
-export default MemberAvatar;
+export default withStyles(styles)(MemberAvatar);
