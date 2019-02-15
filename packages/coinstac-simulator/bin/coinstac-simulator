@@ -243,7 +243,7 @@ fulfilledPipelineSpec
   /* eslint-disable no-console */
     const count = program.clientNumber ? program.clientNumber // eslint-disable-line no-nested-ternary, max-len
       : (Array.isArray(pipelineSpec) ? pipelineSpec.length : 1); // eslint-disable-line no-nested-ternary, max-len
-    logger.debug(`Starting ${mode} simulator run with ${program.clientNumber ? program.clientNumber : 1} client(s)`);
+    logger.debug(`Starting ${mode} simulator run with ${count} client(s)`);
     const simRun = sim.startRun({
       spec: pipelineSpec,
       runMode: mode,
