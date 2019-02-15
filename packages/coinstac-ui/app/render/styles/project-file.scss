@@ -30,12 +30,12 @@ $border-radius: 5px !default;
 }
 .project-file-base {
   display: block;
-  font-size: $font-size-h4;
-  line-height: $headings-line-height;
+  //font-size: $font-size-h4;
+  //line-height: $headings-line-height;
   margin: 0 0 .2em;
 }
 .project-file-btn {
-  color:  $gray-light;
+  // color:  $gray-light;
   font-style: italic;
   height: 100%;
   padding-left: 3rem;

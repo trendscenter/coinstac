@@ -3,6 +3,8 @@
   <head>
     <meta charset="utf-8" name="viewport" content="width=device-width, initial-scale=1">
     <title>COINSTAC</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
   </head>
   <body>
     <div id="app"></div>
@@ -10,7 +12,7 @@
     <script>
       // Add application bundle based on environment
       if (process.env.NODE_ENV === 'development') {
-        document.write('<script src="http://localhost:3000/build/render/bundle.js" async><\/script>');
+        document.write('<script src="http://localhost:3000/bundle.js" async><\/script>');
       } else {
         document.write('<script src="../../build/render/bundle.js" async><\/script>');
       }

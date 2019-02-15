@@ -11,7 +11,7 @@ const unlinkAsync = pify(fs.unlink);
 const linkAsync = pify(fs.link);
 const statAsync = pify(fs.stat);
 
-const osHomedir = require('os-homedir');
+const os = require('os');
 const path = require('path');
 const winston = require('winston');
 // set w/ config etc post release
@@ -91,7 +91,7 @@ class CoinstacClient {
    * @returns {string}
    */
   static getDefaultAppDirectory() {
-    return path.join(osHomedir(), '.coinstac');
+    return path.join(os.homedir(), '.coinstac');
   }
 
   /**

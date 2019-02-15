@@ -1,13 +1,11 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { compose, graphql, withApollo } from 'react-apollo';
-import { Alert, Button } from 'react-bootstrap';
-import { LinkContainer } from 'react-router-bootstrap';
-import { ipcRenderer } from 'electron';
 import PropTypes from 'prop-types';
+import Typography from '@material-ui/core/Typography';
+import Grid from '@material-ui/core/Grid';
 import {
   FETCH_ALL_CONSORTIA_QUERY,
-  FETCH_ALL_PIPELINES_QUERY,
 } from '../../state/graphql/functions';
 import MapsItem from './maps-item';
 import MapsEdit from './maps-edit';
@@ -96,12 +94,19 @@ class MapsList extends Component {
           runs={this.props.runs}
         />:
         <div>
-          <div className="page-header clearfix">
-            <h1 className="nav-item-page-title">Maps</h1>
+          <div className="page-header">
+            <Typography variant="h4">
+              Maps
+            </Typography>
           </div>
-          <div className="row">
+          <Grid
+            container
+            spacing={16}
+            direction="row"
+            alignItems="stretch"
+          >
             {consortia && consortia.map(consortium => this.getMapItem(consortium))}
-          </div>
+          </Grid>
         </div>
       }
       </div>

@@ -24,8 +24,7 @@ const logger = winston.createLogger({
 let DEBUG_MODE = process.execArgv.includes('--inspect-brk=9229');
 
 process.on('unhandledRejection', (error) => {
-  debugger
-  logger.error('unhandledRejection', error); // eslint-disable-line no-console
+  logger.error(`unhandledRejection: ${error.stack}`); // eslint-disable-line no-console
   process.exit(1);
 });
 

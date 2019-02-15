@@ -1,9 +1,14 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
+import { Link } from 'react-router';
 import { compose, graphql, withApollo } from 'react-apollo';
-import { Alert, Button } from 'react-bootstrap';
-import { LinkContainer } from 'react-router-bootstrap';
+import Button from '@material-ui/core/Button';
+import Fab from '@material-ui/core/Fab';
+import Typography from '@material-ui/core/Typography';
+import AddIcon from '@material-ui/icons/Add';
+import { withStyles } from '@material-ui/core/styles';
 import { ipcRenderer } from 'electron';
+import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import shortid from 'shortid';
 import MemberAvatar from '../common/member-avatar';
@@ -37,16 +42,35 @@ import { notifyInfo, notifyWarning } from '../../state/ducks/notifyAndLog';
 
 const MAX_LENGTH_CONSORTIA = 50;
 
-const styles = {
-  listItemWarning: {
-    color: 'orange',
-    marginLeft: 10,
+const styles = theme => ({
+  button: {
+    margin: theme.spacing.unit,
+  },
+  contentContainer: {
+    marginTop: theme.spacing.unit,
+    marginBottom: theme.spacing.unit,
+  },
+  subtitle: {
+    marginTop: theme.spacing.unit * 2,
+  },
+  label: {
     fontWeight: 'bold',
   },
-  optionalButton: {
-    marginLeft: 10,
+  labelInline: {
+    fontWeight: 'bold',
+    marginRight: theme.spacing.unit,
+    display: 'inline-block',
   },
-};
+  value: {
+    display: 'inline-block',
+  },
+  green: {
+    color: 'green',
+  },
+  red: {
+    color: 'red',
+  },
+});
 
 const isUserA = (userId, groupArr) => {
   return groupArr.indexOf(userId) !== -1;
@@ -95,9 +119,10 @@ class ConsortiaList extends Component {
     const actions = [];
     const text = [];
     let isMapped = false;
+    const { classes, pipelines, associatedConsortia } = this.props;
 
-    if (this.props.associatedConsortia.length > 0) {
-      const assocCons = this.props.associatedConsortia.find(c => c.id === consortium.id);
+    if (associatedConsortia.length > 0) {
+      const assocCons = associatedConsortia.find(c => c.id === consortium.id);
       if (assocCons && assocCons.isMapped) {
         isMapped = assocCons.isMapped;
       }
@@ -105,14 +130,16 @@ class ConsortiaList extends Component {
 
     // Add pipeline text
     text.push(
-      <p key={`${consortium.id}-active-pipeline-text`}>
-        <span className="bold">Active Pipeline: </span>
+      <div key={`${consortium.id}-active-pipeline-text`} className={classes.contentContainer}>
+        <Typography className={classes.labelInline}>
+          Active Pipeline:
+        </Typography>
         {
           consortium.activePipelineId
-          ? <span style={{ color: 'green' }}>{this.props.pipelines.find(pipe => pipe.id === consortium.activePipelineId).name}</span>
-          : <span style={{ color: 'red' }}> None</span>
+            ? <Typography className={classNames(classes.value, classes.green)}>{pipelines.find(pipe => pipe.id === consortium.activePipelineId).name}</Typography>
+            : <Typography className={classNames(classes.value, classes.red)}>None</Typography>
         }
-      </p>
+      </div>
     );
 
     // Add owner/member list
@@ -121,8 +148,8 @@ class ConsortiaList extends Component {
       return acc;
     }, {});
 
-    const consortiumUsers =
-      consortium.owners.map(user => ({ id: user, owner: true, member: true }))
+    const consortiumUsers = consortium.owners
+      .map(user => ({ id: user, owner: true, member: true }))
       .concat(
         consortium.members
           .filter(user => !Object.prototype.hasOwnProperty.call(ownersIds, user))
@@ -131,20 +158,21 @@ class ConsortiaList extends Component {
 
     const avatars = consortiumUsers
       .filter((v, i, a) => i === a.indexOf(v))
-      .map((user, index) => (
+      .map(user => (
         <MemberAvatar
-          key={`${user.id}-avatar-${index}`}
+          key={`${user.id}-avatar`}
           consRole={user.owner ? 'Owner' : 'Member'}
           name={user.id}
           showDetails
           width={40}
         />
-      )
-    );
+      ));
 
     text.push(
-      <div key="avatar-container">
-        <span className="bold">Owner(s)/Members: </span><br />
+      <div key="avatar-container" className={classes.contentContainer}>
+        <Typography className={classes.label}>
+          Owner(s)/Members:
+        </Typography>
         {avatars}
       </div>
     );
@@ -153,40 +181,39 @@ class ConsortiaList extends Component {
       actions.push(
         <Button
           key={`${consortium.id}-start-pipeline-button`}
-          bsStyle="success"
+          variant="contained"
+          color="secondary"
+          className={classes.button}
           onClick={this.startPipeline(consortium.id, consortium.activePipelineId)}
-          style={styles.optionalButton}
         >
           Start Pipeline
         </Button>
       );
     } else if (owner && !consortium.activePipelineId) {
       actions.push(
-        <LinkContainer
-          to={`dashboard/consortia/${consortium.id}/2`}
+        <Button
           key={`${consortium.id}-set-active-pipeline-button`}
+          component={Link}
+          to={`dashboard/consortia/${consortium.id}/1`}
+          variant="contained"
+          color="secondary"
+          className={classes.button}
         >
-          <Button
-            bsStyle="warning"
-            style={styles.optionalButton}
-          >
-            Set Active Pipeline
-          </Button>
-        </LinkContainer>
+          Set Active Pipeline
+        </Button>
       );
     } else if ((owner || member) && !isMapped) {
       actions.push(
-        <LinkContainer
-          to={`dashboard/maps/`}
+        <Button
+          component={Link}
+          to="dashboard/maps"
+          variant="contained"
+          color="secondary"
+          className={classes.button}
           key={`${consortium.id}-set-map-local-button`}
         >
-          <Button
-            bsStyle="warning"
-            style={styles.optionalButton}
-          >
-            Map Local Data
-          </Button>
-        </LinkContainer>
+          Map Local Data
+        </Button>
       );
     }
 
@@ -195,8 +222,9 @@ class ConsortiaList extends Component {
         <Button
           key={`${consortium.id}-leave-cons-button`}
           name={`${consortium.name}-leave-cons-button`}
-          bsStyle="warning"
-          className="pull-right"
+          variant="contained"
+          color="secondary"
+          className={classes.button}
           onClick={() => this.leaveConsortium(consortium.id)}
         >
           Leave Consortium
@@ -207,8 +235,9 @@ class ConsortiaList extends Component {
         <Button
           key={`${consortium.id}-join-cons-button`}
           name={`${consortium.name}-join-cons-button`}
-          bsStyle="primary"
-          className="pull-right"
+          variant="contained"
+          color="secondary"
+          className={classes.button}
           onClick={() => this.joinConsortium(consortium.id, consortium.activePipelineId)}
         >
           Join Consortium
@@ -323,7 +352,7 @@ class ConsortiaList extends Component {
         const consortium = data.fetchAllConsortia.find(cons => cons.id === consortiumId);
         let run = {
           id: `local-${shortid.generate()}`,
-          clients: [...consortium.members, ...consortium.owners],
+          clients: [...consortium.members],
           consortiumId,
           pipelineSnapshot: pipeline,
           startDate: Date.now(),
@@ -386,6 +415,7 @@ class ConsortiaList extends Component {
   render() {
     const {
       consortia,
+      classes,
     } = this.props;
     const {
       memberConsortia,
@@ -394,33 +424,41 @@ class ConsortiaList extends Component {
 
     return (
       <div>
-        <div className="page-header clearfix">
-          <h1 className="nav-item-page-title">Consortia</h1>
-          <LinkContainer className="pull-right" to="/dashboard/consortia/new">
-            <Button bsStyle="primary" className="pull-right">
-              <span aria-hidden="true" className="glyphicon glyphicon-plus" />
-              {' '}
-              Create Consortium
-            </Button>
-          </LinkContainer>
+        <div className="page-header">
+          <Typography variant="h4">
+            Consortia
+          </Typography>
+          <Fab
+            color="primary"
+            component={Link}
+            to="/dashboard/consortia/new"
+            className={classes.button}
+            name="create-consortium-button"
+          >
+            <AddIcon />
+          </Fab>
         </div>
 
         {consortia && consortia.length && consortia.length > MAX_LENGTH_CONSORTIA
           && consortia.map(consortium => this.getListItem(consortium))
         }
-        {memberConsortia.length > 0 && <h4>Member Consortia</h4>}
-        {memberConsortia.length > 0 &&
-          memberConsortia.map(consortium => this.getListItem(consortium))
+        {memberConsortia.length > 0 && <Typography variant="h6">Member Consortia</Typography>}
+        {
+          memberConsortia.length > 0
+          && memberConsortia.map(consortium => this.getListItem(consortium))
         }
-        {otherConsortia.length > 0 && <h4>Other Consortia</h4>}
-        {otherConsortia.length > 0 &&
-          otherConsortia.map(consortium => this.getListItem(consortium))
+        {otherConsortia.length > 0 && <Typography variant="h6" className={classes.subtitle}>Other Consortia</Typography>}
+        {
+          otherConsortia.length > 0
+          && otherConsortia.map(consortium => this.getListItem(consortium))
         }
-
-        {(!consortia || !consortia.length) &&
-          <Alert bsStyle="info">
-            No consortia found
-          </Alert>
+        {
+          (!consortia || !consortia.length)
+          && (
+            <Typography variant="body1">
+              No consortia found
+            </Typography>
+          )
         }
         <ListDeleteModal
           close={this.closeModal}
@@ -473,17 +511,18 @@ const ConsortiaListWithData = compose(
   withApollo
 )(ConsortiaList);
 
-export default connect(mapStateToProps,
-  {
-    getCollectionFiles,
-    getAllAssociatedConsortia,
-    incrementRunCount,
-    notifyInfo,
-    notifyWarning,
-    pullComputations,
-    removeCollectionsFromAssociatedConsortia,
-    saveAssociatedConsortia,
-    saveLocalRun,
-    updateUserPerms,
-  }
-)(ConsortiaListWithData);
+export default withStyles(styles)(
+  connect(mapStateToProps,
+    {
+      getCollectionFiles,
+      getAllAssociatedConsortia,
+      incrementRunCount,
+      notifyInfo,
+      notifyWarning,
+      pullComputations,
+      removeCollectionsFromAssociatedConsortia,
+      saveAssociatedConsortia,
+      saveLocalRun,
+      updateUserPerms,
+    })(ConsortiaListWithData)
+);
