@@ -1,4 +1,4 @@
-# Coinstac Development Guide 
+# Coinstac Development Guide
 [![Coinstac](https://github.com/MRN-Code/coinstac/raw/master/packages/coinstac-ui/img/icons/png/64x64.png)](https://github.com/MRN-Code/coinstac)
 
 Coinstac is a Electron based application environment for decentralized algorithms, this guide aims to describe developing an alogrithm in Coinstac.
@@ -17,6 +17,9 @@ To successfully run computation in the simulator we need to
 - [Create a the scripts](#Create-a-the-scripts)
 - [Create an inputspec](#Create-an-inputspec)
 
+## Other topics
+- [Advanced usage](#Advanced-usage)
+
 #### Create a compsec
 Starting a Coinstac computatation begins with making a `compspec.json` a document that allows the Coinstac system to understand how to run and use your computation with others or by itself.
 
@@ -28,7 +31,7 @@ The key sections here are
 - **command** - the command to call when your docker image is started, this should be an array of args
 - **remote** - if your computation has a decentralized component, the remote section is a mirror of the above, but for the remote. The remote can and usually uses the same docker image but calls a different file.
 - **input** - what your computation needs to start running a full overview can be found in the [computation spec api doc](https://github.com/MRN-Code/coinstac/tree/master/algorithm-development/computation-specification-api.md). For now lets take a look at an example:
-- 
+-
 ```json      
 "lambda": // name of your variable as it will be in your script
       {
@@ -123,7 +126,7 @@ Here is a simple example that just sends a number and sums it until it reaches `
 #
 ```python
 #!/usr/bin/python
-  
+
 import sys
 import json
 
@@ -141,7 +144,7 @@ sys.stdout.write(json.dumps(output))
 #
 ```python
 #!/usr/bin/python
-  
+
 import sys
 import json
 
@@ -268,6 +271,104 @@ Adding files to simulator is a bit of a manual process at the moment, they must 
 │   │       ├── subject10_aseg_stats.txt
 ```
 The `simualtorRun` directory is the directory that is shared into docker, put your files in there and they will be accessible by your computation via `["state"]["baseDirectory"] + myfile.txt` for a python example.
+#### Transferring files between clients
+Files can be transferred client to remote and remote to client by writing to a special directory. The _transfer_ directory can be access while in a computation via the `state->transferDiretory` key, looking like `inputJSON['state']['transferDiretory']` in python.
+
+Any file put into the transfer directory is then moved from that directory to the input directory on the corresponding client when that iteration ends.
+From `remote` to `client` would look like this:
+Remote:
+├── ['state']['transferDiretory']
+│   ├── move-this-file.txt
+##### Iteration ends....
+Remote:
+├── ['state']['transferDiretory']
+│   ├──
+All Clients:
+├── ['state']['baseDiretory']
+│   ├── move-this-file.txt
+
+From any `client` to `remote` would look like this:
+A Client:
+├── ['state']['transferDiretory']
+│   ├── move-this-file.txt
+##### Iteration ends....
+A Client:
+├── ['state']['transferDiretory']
+│   ├──
+Remote:
+├── ['state']['baseDiretory']
+│   ├── ['state']['baseDiretory']['clientID'] // files moved into folders based on the sending Client's ID so they cannot conflict
+│   │   └── move-this-file.txt
+*NOTE:* All transferred files are deleted at the end of the pipeline, to persist files write them to the output directory.
+
+#### Running pipelines in sim
+Simulator can run pipelines, which is multiple computations in series with each other. The computations can be different, or the even the same computation, what's required to do this is a `pipelinespec.json` file and the `-p` or `-pipeline` flag in simulator.
+Here's an example:
+```
+["./compspec.json", "/Users/someUser/coinstac/packages/coinstac-images/coinstac-decentralized-test/compspec.json"]
+```
+Running this pipeline:
+```
+coinstac-simulator -p ./pipelinespec.json
+```
+You can see that the pipeline spec file is a list of `compspecs`, this list can be either absolute paths, or a path _relative to_ the `pipelinespec.json`.
+
+If a computation is the first in the list, the normal `inputspec.json` is used for input. However all subsequent computations must have a `inputspec-pipeline.json`, this is used for any computation that isn't the first, such that you can have multiple specs to make running between pipeline and non-pipeline mode less cumbersome.
+
+The `pipelinespec.json` file need not be in any computations directory, but it may be easier to put it in the first computation's directory for source control.
+
+##### Inputspec-pipeline and using previous step output
+Later steps in the pipeline can use variables output from previous steps (note: there is a string size limit of 256mb), using the following paradigm:
+```
+{"inputVariableName":
+  {"fromCache":
+    {"step":0, "variable":"outputVariableName"}
+  }
+}
+```
+Contrasting a normal inputspec that looks like:
+```
+{"inputVariableName":
+  {
+    "value": 0
+  }
+}
+```
+The `fromCache` key tells the pipeline you want to access a previous steps data, the `step` key tells it which step zero indexed you would like, and the `variable` key is the name of the previously outputted variable to access.
+Here's a full example,
+inputspec.json for first step:
+```
+{"firstVariable":{"value":1}}
+```
+it's output compspec:
+```
+"output": {
+  "firstOutput": {
+    "type": "number",
+    "label": "output from first step"
+  }
+},
+```
+inputspec-pipeline.json for the next step:
+```
+{"nextStepInputVar":{"fromCache": {"step":0, "variable":"firstOutput"}}}
+```
+You can see that the first step outputs `firstOutput` which then is plugged into `nextStepInputVar` for the second step, chaining the pipeline I/O together.
+##### Multiple clients in pipeline mode
+Pipeline mode can also do multiple clients, each with their own input. The `inputspec.json` is identical to normal multi client mode, however we also need a multi client `inputspec-pipeline.json` for all the subequent pipeline computations in the pipelinespec.
+A multi client run for the previous example might look like this,
+first step inputspec.json:
+```
+[{"firstVariable":{"value":0.5}},
+{"firstVariable":{"value":23}}]
+```
+second step inputspec-pipeline.json:
+```
+[{"nextStepInputVar":{"fromCache": {"step":0, "variable":"firstOutput"}}},
+{"nextStepInputVar":{"fromCache": {"step":0, "variable":"firstOutput"}}}]
+```
+Some notes on this:
+* The arrays for the multiple clients between the multiple inputspec and inputspec-pipeline files _must_ be the same length, as the client count has to be the same throughout the pipeline
+* The arrays for the multiple clients _must_ also be in the same order, as in array element [5] in the initial input spec should correspond to array element [5] in all other inputspec-pipeline files, otherwise your client input/output chaining will be mismatched.
 ## A full fledged example
 A more real world example can be found [here](https://github.com/MRN-Code/coinstac_ssr_fsl) with our Single Shot Regression Demo that uses freesurfer file test data to run it's simulator example
-
