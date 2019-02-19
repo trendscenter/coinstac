@@ -277,28 +277,40 @@ Files can be transferred client to remote and remote to client by writing to a s
 Any file put into the transfer directory is then moved from that directory to the input directory on the corresponding client when that iteration ends.
 From `remote` to `client` would look like this:
 Remote:
+```
 ├── ['state']['transferDiretory']
 │   ├── move-this-file.txt
+```
 ##### Iteration ends....
 Remote:
+```
 ├── ['state']['transferDiretory']
 │   ├──
+```
 All Clients:
+```
 ├── ['state']['baseDiretory']
 │   ├── move-this-file.txt
+```
 
 From any `client` to `remote` would look like this:
 A Client:
+```
 ├── ['state']['transferDiretory']
 │   ├── move-this-file.txt
+```
 ##### Iteration ends....
 A Client:
+```
 ├── ['state']['transferDiretory']
 │   ├──
+```
 Remote:
+```
 ├── ['state']['baseDiretory']
 │   ├── ['state']['baseDiretory']['clientID'] // files moved into folders based on the sending Client's ID so they cannot conflict
 │   │   └── move-this-file.txt
+```
 *NOTE:* All transferred files are deleted at the end of the pipeline, to persist files write them to the output directory.
 
 #### Running pipelines in sim
