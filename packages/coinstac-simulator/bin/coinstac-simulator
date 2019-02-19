@@ -28,27 +28,15 @@ process.on('unhandledRejection', (error) => {
   process.exit(1);
 });
 
-const pipeSpecFactory = (inputSpec, mode, comp) => {
-  return {
-    steps: [
-      {
-        controller: { type: mode },
-        computations: [comp],
-        inputMap: inputSpec,
-      },
-    ],
-  };
-};
-
-
 program
   .version(pkg.version)
   .option('-i, --inputspec [path]', '/path/to/inputSpec, defaults to ./test/inputspec.json, will interactively create one if none found')
   .option('-s, --compspec [path]', '/path/to/compSpec optional, defaults to cwd')
   .option('-c, --clientNumber [number]', 'number of clients, defaults to 1 not included the remote in decentralized mode. In local mode this creates separate runs')
   .option('-d, --directory [path]', ' path to where input, output, and cache is stored. Defaults to ./test/[input|cache|output]')
-  .option('-p, --showinput', ' on errors show comp input that computation failed with')
+  .option('-t, --showinput', ' on errors show comp input that computation failed with')
   .option('-e, --debug', ' enter debug mode, displays extra info including input')
+  .option('-p, --pipeline [path]', ' give a pipeline file to run a full pipeline from, working dir used is first comp listed')
   .option('-x, --silly', ' enter silly logging, everything in debug mode + even more');
 
 program.on('--help', () => {
@@ -108,78 +96,154 @@ if (!DEBUG_MODE) {
   });
 }
 
+const pipelineSpecFactory = (inputSpec, mode, comp) => {
+  let specMap = Array.isArray(inputSpec) ? inputSpec : [inputSpec];
+  specMap = specMap.map((spec, index) => ({
+    controller: { type: mode },
+    computations: [comp[index]],
+    inputMap: spec,
+  }));
+  return {
+    steps: specMap,
+  };
+};
 
-readFile(program.compspec ? program.compspec : 'compspec.json')
-  .then(compSpec => Promise.all([
-    Promise.resolve(compSpec),
-    readFile(program.inputspec ? program.inputspec : inSpecPath),
-  ].map(p => p.catch(error => error))))
-  .then((specs) => {
-    const comp = JSON.parse(specs[0]);
-    mode = comp.computation.remote ? 'decentralized' : 'local';
-    const createInputSpec = (variable, key) => {
-      return inquirer.prompt({
-        type: 'input',
-        name: `${key}`,
-        message: `Please give a ${variable.type} input for variable: ${key}
-      Files can use glob paterns to resolve to multiple file paths from the input dir
-      ie: **/*.txt`,
-      }).then((value) => {
-        return Promise.all([
-          variable.type === 'files' ? glob(value[key]) : value[key],
-        ]).then((resolvedVal) => {
-          const coerce = variable.type === 'number' ? parseFloat(resolvedVal[0]) : resolvedVal[0];
-          return {
-            [key]: { value: coerce },
-          };
-        });
-      });
-    };
+let fulfilledPipelineSpec;
 
-    let specProm;
-    if (specs[1].code === 'ENOENT') {
-      const memo = {};
-      specProm = Object.keys(comp.computation.input).reduce((prom, variable) => {
-        return prom.then(() => {
-          return createInputSpec(comp.computation.input[variable], variable);
-        }).then(res => Object.assign(memo, res));
-      }, Promise.resolve())
-        .then((res) => {
-          return inquirer.prompt({
-            type: 'confirm',
-            name: 'write',
-            message: `Write out the input spec just entered? This WILL overwrite any spec in
-        ${inSpecPath}`,
-          }).then((response) => {
-            const prom = Promise.resolve(res);
-            if (response.write) {
-              prom.then(res => writeFile(inSpecPath, JSON.stringify(res))
-                .then(res => res));
+if (program.pipeline) {
+  fulfilledPipelineSpec = readFile(program.pipeline)
+    .then((pipeSpec) => {
+      const compSpecs = JSON.parse(pipeSpec);
+      const fileProm = compSpecs.reduce((memo, spec, index) => {
+        const baseDir = path.dirname(path.resolve(path.dirname(program.pipeline), spec));
+        memo.push(Promise.all([
+          readFile(path.resolve(baseDir, spec))
+            .then(file => JSON.parse(file)).catch(() => {
+              throw new Error(`Incorrect json or missing file at ${path.resolve(baseDir, spec)}`);
+            }),
+          readFile(path.join(baseDir, 'test', index === 0 ? 'inputspec.json' : 'inputspec-pipeline.json'))
+            .then(file => JSON.parse(file)).catch(() => {
+              throw new Error(`Incorrect json or missing file at ${path.join(baseDir, 'test', index === 0 ? 'inputspec.json' : 'inputspec-pipeline.json')}`);
+            }),
+        ]));
+        return memo;
+      }, []);
+      return Promise.all(fileProm)
+        .then((fileGroups) => {
+          // group compspecs and inputspecs into an object we can create pipepecs from
+          mode = fileGroups.reduce((memo, fileGroup) => {
+            if (fileGroup[0].computation.remote) {
+              memo = 'decentralized';
             }
-            return prom;
+            return memo;
+          }, 'local');
+
+          let clientCount;
+          const groupedSpecs = fileGroups.reduce((memo, fileGroup, index) => {
+            memo.compSpecs.push(fileGroup[0]);
+            const inputSpec = Array.isArray(fileGroup[1]) ? fileGroup[1] : [fileGroup[1]];
+
+            clientCount = clientCount || inputSpec.length;
+            if (clientCount !== inputSpec.length) throw new Error('Mismached inputspec client count');
+
+            inputSpec.forEach((spec, idx) => {
+              if (memo.inputSpecs[idx]) {
+                memo.inputSpecs[idx][index] = spec;
+              } else {
+                memo.inputSpecs[idx] = [spec];
+              }
+            });
+
+            return memo;
+          }, { compSpecs: [], inputSpecs: [] });
+
+          const pipelineSpecs = groupedSpecs.inputSpecs.map((site) => {
+            return pipelineSpecFactory(site, mode, groupedSpecs.compSpecs);
+          });
+
+          return pipelineSpecs;
+        });
+    });
+} else {
+  fulfilledPipelineSpec = Promise.all([
+    readFile(program.compspec ? program.compspec : 'compspec.json'),
+    readFile(program.inputspec ? program.inputspec : inSpecPath),
+  ].map(p => p.catch(error => error)))
+    .then((specs) => {
+      const comp = JSON.parse(specs[0]);
+      mode = comp.computation.remote ? 'decentralized' : 'local';
+      /**
+       * Create a spec via cmdline if none is given
+       * @param  {Object} variable [description]
+       * @param  {[type]} key      [description]
+       * @return {[type]}          [description]
+       */
+      const createInputSpec = (variable, key) => {
+        return inquirer.prompt({
+          type: 'input',
+          name: `${key}`,
+          message: `Please give a ${variable.type} input for variable: ${key}
+        Files can use glob paterns to resolve to multiple file paths from the input dir
+        ie: **/*.txt`,
+        }).then((value) => {
+          return Promise.all([
+            variable.type === 'files' ? glob(value[key]) : value[key],
+          ]).then((resolvedVal) => {
+            const coerce = variable.type === 'number' ? parseFloat(resolvedVal[0]) : resolvedVal[0];
+            return {
+              [key]: { value: coerce },
+            };
           });
         });
-    } else {
-      specProm = JSON.parse(specs[1]);
-    }
+      };
 
-    return Promise.all([specProm])
-      .then((inputSpec) => {
-        let generatedPipeSpec;
-        if (Array.isArray(inputSpec[0])) {
-          generatedPipeSpec = inputSpec[0].map(spec => pipeSpecFactory(spec, mode, comp));
-        } else {
-          generatedPipeSpec = pipeSpecFactory(inputSpec[0], mode, comp);
-        }
+      let specProm;
+      if (specs[1].code === 'ENOENT') {
+        const memo = {};
+        specProm = Object.keys(comp.computation.input).reduce((prom, variable) => {
+          return prom.then(() => {
+            return createInputSpec(comp.computation.input[variable], variable);
+          }).then(res => Object.assign(memo, res));
+        }, Promise.resolve())
+          .then((res) => {
+            return inquirer.prompt({
+              type: 'confirm',
+              name: 'write',
+              message: `Write out the input spec just entered? This WILL overwrite any spec in
+          ${inSpecPath}`,
+            }).then((response) => {
+              const prom = Promise.resolve(res);
+              if (response.write) {
+                prom.then(res => writeFile(inSpecPath, JSON.stringify(res))
+                  .then(res => res));
+              }
+              return prom;
+            });
+          });
+      } else {
+        specProm = JSON.parse(specs[1]);
+      }
 
-        return generatedPipeSpec;
-      });
-  })
+      return Promise.all([specProm])
+        .then((inputSpec) => {
+          let generatedPipeSpec;
+          if (Array.isArray(inputSpec[0])) {
+            generatedPipeSpec = inputSpec[0].map(spec => pipelineSpecFactory(spec, mode, comp));
+          } else {
+            generatedPipeSpec = pipelineSpecFactory(inputSpec[0], mode, comp);
+          }
+
+          return generatedPipeSpec;
+        });
+    });
+}
+
+fulfilledPipelineSpec
   .then((pipelineSpec) => {
   /* eslint-disable no-console */
     const count = program.clientNumber ? program.clientNumber // eslint-disable-line no-nested-ternary, max-len
       : (Array.isArray(pipelineSpec) ? pipelineSpec.length : 1); // eslint-disable-line no-nested-ternary, max-len
-    logger.debug(`Starting ${mode} simulator run with ${program.clientNumber ? program.clientNumber : 1} client(s)`);
+    logger.debug(`Starting ${mode} simulator run with ${count} client(s)`);
     const simRun = sim.startRun({
       spec: pipelineSpec,
       runMode: mode,
