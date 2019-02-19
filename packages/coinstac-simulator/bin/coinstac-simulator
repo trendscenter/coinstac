@@ -98,9 +98,10 @@ if (!DEBUG_MODE) {
 
 const pipelineSpecFactory = (inputSpec, mode, comp) => {
   let specMap = Array.isArray(inputSpec) ? inputSpec : [inputSpec];
+  const comps = Array.isArray(comp) ? comp : [comp];
   specMap = specMap.map((spec, index) => ({
     controller: { type: mode },
-    computations: [comp[index]],
+    computations: [comps[index]],
     inputMap: spec,
   }));
   return {
