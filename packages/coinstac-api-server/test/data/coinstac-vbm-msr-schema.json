@@ -1,21 +1,21 @@
 {
   "meta": {
-    "name": "Decentralized Regression with Normal Equation for MCIC Data",
-    "id": "drne_vbm",
+    "name": "VBM Regression (Multi shot)",
+    "id": "msr_vbm",
     "version": "v1.0.0",
-    "repository": "https:\/\/github.com\/mrn-code\/coinstac_drne_vbm",
-    "description": "This repository contains code for decentralized regression with normal equation (drne) that was shown to successfully work with the MCIC dataset on coinstac-simulator"
+    "repository": "https:\/\/github.com\/MRN-Code\/coinstac_msr_vbm",
+    "description": "Code for Multi-shot VBM regression"
   },
   "computation": {
     "type": "docker",
-    "dockerImage": "coinstac/drne_vbm",
+    "dockerImage": "coinstac/msr_vbm",
     "command": [
       "python",
       "\/computation\/local.py"
     ],
     "remote": {
       "type": "docker",
-      "dockerImage": "coinstac/drne_vbm",
+      "dockerImage": "coinstac/msr_vbm",
       "command": [
         "python",
         "\/computation\/remote.py"

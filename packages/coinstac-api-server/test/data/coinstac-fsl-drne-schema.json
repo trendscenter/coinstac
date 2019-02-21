@@ -1,20 +1,20 @@
 {
   "meta": {
-    "name": "Test: VBM Regression (Single Shot)",
+    "name": "FreeSurfer Regression (Normal Equation)",
     "version": "v1.0.0",
-    "repository": "https:\/\/github.com\/MRN-Code\/ssr_test",
-    "description": "Single Shot Regression with Data from Multiple Sites"
+    "repository": "https:\/\/github.com\/MRN-Code\/coinstac_drne_fsl",
+    "description": "Decentralized Regression with Normal Equation on FreeSurfer Data"
   },
   "computation": {
     "type": "docker",
-    "dockerImage": "ssr_vbm_mcic",
+    "dockerImage": "coinstac/drne-fsl",
     "command": [
       "python",
       "\/computation\/local.py"
     ],
     "remote": {
       "type": "docker",
-      "dockerImage": "ssr_vbm_mcic",
+      "dockerImage": "coinstac/drne-fsl",
       "command": [
         "python",
         "\/computation\/remote.py"
@@ -35,12 +35,12 @@
       {
         "label": "Covariates",
         "type": "array",
-        "items": ["boolean", "number", "string"]
+        "items": ["boolean", "number"]
       },
       "data": {
         "label": "Data",
         "type": "array",
-        "items": ["NIfTI"],
+        "items": ["FreeSurfer"],
         "extensions": [["csv", "txt"]]
       }
     },
@@ -100,6 +100,10 @@
                 "type": "array"
               }
             }
+          },
+          "ROI": {
+            "label": "Region of Interest",
+            "type": "string"
           }
         }
       }
@@ -112,10 +116,12 @@
             "source": "regressions",
             "subtables": [
               {
-                "source": "global_stats"
+                "source": "global_stats",
+                "subtitle": "ROI"
               },
               {
                 "source": "local_stats",
+                "subtitle": "ROI",
                 "subtables": "by-key"
               }
             ]

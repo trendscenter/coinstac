@@ -1,10 +1,10 @@
 {
   "meta": {
-    "name": "Single-shot Regression for MCIC Data",
+    "name": "VBM Regression (Single shot)",
     "id": "ssr_vbm",
     "version": "v1.0.0",
-    "repository": "https:\/\/github.com\/MRN-Code\/coinstac_ssr_vbm_mcic",
-    "description": "This repository contains code for single-shot regression (ssr) that was shown to successfully work with the MCIC dataset on coinstac-simulator"
+    "repository": "https:\/\/github.com\/MRN-Code\/coinstac_ssr_vbm",
+    "description": "Code for Single-shot VBM regression"
   },
   "computation": {
     "type": "docker",

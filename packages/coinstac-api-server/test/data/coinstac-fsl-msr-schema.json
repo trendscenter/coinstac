@@ -1,6 +1,6 @@
 {
   "meta": {
-    "name": "MSR FreeSurfer",
+    "name": "FreeSurfer Regression (Multi Shot)",
     "version": "v1.0.0",
     "repository": "https:\/\/github.com\/MRN-Code\/coinstac_msr_fsl",
     "description": "Multi-shot Regression on FreeSurfer Data"

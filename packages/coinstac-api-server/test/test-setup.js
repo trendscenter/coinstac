@@ -1,14 +1,22 @@
 const rethink = require('rethinkdb');
+
 const singleShot = require('./data/single-shot-schema');
-const multiShot = require('./data/multi-shot-schema');
-const vbm = require('./data/vbm-schema');
-const drneVbm = require('./data/coinstac-drne-vbm-mcic');
-const ssrVbm = require('./data/coinstac-ssr-vbm-mcic');
+const vbmPreprocess = require('./data/coinstac-vbm-preprocessor-schema');
+
+const drneVbm = require('./data/coinstac-vbm-drne-schema');
+const msrVbm = require('./data/coinstac-vbm-msr-schema');
+const ssrVbm = require('./data/coinstac-vbm-ssr-schema');
+
 const decentralized = require('./data/coinstac-decentralized-test');
 const decentralizedError = require('./data/coinstac-decentralized-error');
+
 const local = require('./data/coinstac-local-test');
 const localError = require('./data/coinstac-local-error');
-const drneFsl = require('./data/drne_fsl_schema');
+
+const drneFsl = require('./data/coinstac-fsl-drne-schema');
+const msrFsl = require('./data/coinstac-fsl-msr-schema');
+const ssrFsl = require('./data/coinstac-fsl-ssr-schema');
+
 const helperFunctions = require('../src/auth-helpers');
 
 helperFunctions.getRethinkConnection()
@@ -28,8 +36,8 @@ helperFunctions.getRethinkConnection()
     Object.assign({}, local, { submittedBy: 'test1' }),
     Object.assign({}, decentralized, { submittedBy: 'test1' }),
     Object.assign({}, singleShot, { submittedBy: 'test1' }),
-    Object.assign({}, multiShot, { submittedBy: 'test1' }),
-    Object.assign({}, vbm, { submittedBy: 'author' }),
+    Object.assign({}, msrFsl, { submittedBy: 'test1' }),
+    Object.assign({}, vbmPreprocess, { submittedBy: 'author' }),
     Object.assign({}, drneVbm, { submittedBy: 'test1' }),
     Object.assign({}, ssrVbm, { submittedBy: 'test1' }),
     Object.assign({}, drneFsl, { submittedBy: 'author' }),

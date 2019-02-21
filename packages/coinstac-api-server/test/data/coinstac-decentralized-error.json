@@ -1,7 +1,7 @@
 {
   "id": "decentralized-error-id",
   "meta": {
-    "name": "Decentralized Error",
+    "name": "Test: Decentralized Error",
     "id": "coinstac-decentralized-error",
     "version": "v1.0.0",
     "repository": "github.com\/user\/computation.git",

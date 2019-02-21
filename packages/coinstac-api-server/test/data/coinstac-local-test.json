@@ -1,7 +1,7 @@
 {
     "id": "local-test-id",
     "meta": {
-        "name": "local test",
+        "name": "Test: Local Test",
         "id": "coinstac-local-test",
         "version": "v1.0.0",
         "repository": "github.com/user/computation.git",

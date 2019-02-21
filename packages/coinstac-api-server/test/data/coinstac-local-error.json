@@ -1,7 +1,7 @@
 {
   "id": "local-error-id",
   "meta": {
-    "name": "Local Error",
+    "name": "Test: Local Error",
     "id": "coinstac-local-error",
     "version": "v1.0.0",
     "repository": "github.com\/user\/computation.git",
