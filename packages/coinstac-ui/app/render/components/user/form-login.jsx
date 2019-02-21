@@ -7,6 +7,7 @@ import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
 import Checkbox from '@material-ui/core/Checkbox';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
+import FormStartupDirectory from './form-startup-directory';
 
 const styles = theme => ({
   loginFormContainer: {
@@ -35,6 +36,7 @@ class FormLogin extends Component {
       username: '',
       password: '',
       saveLogin: false,
+      openSetStartupDirectoryDialog: false,
     };
   }
 
@@ -64,9 +66,22 @@ class FormLogin extends Component {
     });
   };
 
+  openStartupDirectoryDialog = () => {
+    this.setState({ openSetStartupDirectoryDialog: true });
+  }
+
+  closeStartupDirectoryDialog = () => {
+    this.setState({ openSetStartupDirectoryDialog: false });
+  }
+
+  changeAppDirectory = ({ appDirectory }) => {
+    this.props.changeAppDirectory(appDirectory);
+    this.setState({ openSetStartupDirectoryDialog: false });
+  }
+
   render() {
     const { auth, loading, classes } = this.props;
-    const { username, password, saveLogin } = this.state;
+    const { username, password, saveLogin, openSetStartupDirectoryDialog } = this.state;
 
     return (
       <div className={classes.loginFormContainer}>
@@ -119,6 +134,13 @@ class FormLogin extends Component {
           </form>
         </Paper>
         <Button>Forgot Password?</Button>
+        <Button onClick={this.openStartupDirectoryDialog}>Change App Settings</Button>
+        <FormStartupDirectory
+          open={openSetStartupDirectoryDialog}
+          close={this.closeStartupDirectoryDialog}
+          onSubmit={this.changeAppDirectory}
+          appDirectory={auth.appDirectory}
+        />
       </div>
     );
   }
@@ -129,6 +151,7 @@ FormLogin.propTypes = {
   loading: PropTypes.object,
   submit: PropTypes.func.isRequired,
   classes: PropTypes.object.isRequired,
+  changeAppDirectory: PropTypes.func.isRequired,
 };
 
 FormLogin.defaultProps = {
