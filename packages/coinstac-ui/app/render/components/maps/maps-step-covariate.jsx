@@ -13,16 +13,16 @@ import classNames from 'classnames';
 const styles = theme => ({
   rootPaper: {
     ...theme.mixins.gutters(),
-    paddingTop: theme.spacing.unit * 2,
-    paddingBottom: theme.spacing.unit * 2,
-    marginTop: theme.spacing.unit * 2,
+    paddingTop: theme.spacing.unit * 1.5,
+    paddingBottom: theme.spacing.unit * 1.5,
+    marginTop: theme.spacing.unit * 1.5,
     height: '100%',
   },
   title: {
-    marginBottom: theme.spacing.unit,
+    marginBottom: theme.spacing.unit * 1.5,
   },
   nestedListItem: {
-    paddingLeft: theme.spacing.unit * 4,
+    paddingLeft: theme.spacing.unit * 3,
   },
   listDropzoneContainer: {
     display: 'flex',
