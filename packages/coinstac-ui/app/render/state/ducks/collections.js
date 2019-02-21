@@ -136,29 +136,40 @@ function iteratePipelineSteps(consortium, filesByGroup, baseDirectory) {
         let keyArray = [[], [], []]; // [[values], [labels], [type (if present)]]
         const mappingIndex = 0;
         const mappingObj = step.inputMap[key].ownerMappings[mappingIndex];
-        if (inputKeys.includes("data")
-        && inputKeys.includes("options")
-        && !inputKeys.includes("file")) {
-          const { groupId, collectionId } = consortium.stepIO[sIndex][key][mappingIndex];
+        if (inputKeys.includes('data')
+        && inputKeys.includes('options')
+        && !inputKeys.includes('file')) {
+          let groupId = false;
+          let collectionId = false;
+          if(consortium.stepIO[sIndex]) {
+            let conStepIO = consortium.stepIO[sIndex][key][mappingIndex];
+            groupId = conStepIO.groupId;
+            collectionId = conStepIO.collectionId;
+          }
           if (filesByGroup && baseDirectory) {
             const e = new RegExp(/[-\/\\^$*+?.()|[\]{}]/g); // eslint-disable-line no-useless-escape
             const escape = (string) => {
               return string.replace(e, '\\$&');
             };
             const pathsep = new RegExp(`${escape(sep)}|:`, 'g');
-            let pathsArray = filesByGroup[groupId];
+            const pathsArray = filesByGroup[groupId];
             let paths = pathsArray.map((path) => {
               if (path[0].includes('/')) {
-                var path = baseDirectory + path[0];
+                path = baseDirectory + path[0];
                 path = path.replace(pathsep, '-');
                 return path;
               }
             });
             paths = paths.filter(Boolean);
             keyArray.push(paths);
-          }else{
-            const pipelineSteps = consortium.pipelineSteps[0];
-            collections.push({ groupId, collectionId });
+          } else {
+            if (groupId && collectionId && consortium.pipelineSteps) {
+              let pipelineSteps = consortium.pipelineSteps[0];
+              collections.push({ groupId, collectionId });
+            } else {
+              mappingIncomplete = true;
+              break;
+            }
           }
         }else if (mappingObj.source === 'file'
         && consortium.stepIO[sIndex] && consortium.stepIO[sIndex][key][mappingIndex]
@@ -213,7 +224,9 @@ function iteratePipelineSteps(consortium, filesByGroup, baseDirectory) {
           return item.length !== 0;
         });// remove empty array items if present
 
-        inputMap[key] = { value: keyArray };
+        if(keyArray.length === 1){
+          inputMap[key].value = keyArray[0];
+        }
       }
 
       if (mappingIncomplete) {
@@ -268,6 +281,7 @@ export const getAllCollections = applyAsyncLoading(() => dispatch => localDB.col
   }));
 
 export const getCollectionFiles = consortiumId => (dispatch) => {
+  let id = consortiumId;
   return localDB.associatedConsortia.get(consortiumId)
     .then((consortium) => {
       let collections = { collections: [] };
@@ -291,7 +305,7 @@ export const getCollectionFiles = consortiumId => (dispatch) => {
           if (collections.collections.length === 0) {
             return { allFiles: collections.collections };
           }
-
+          let clctns = collections.collections;
           return localDB.collections
             .filter(collection => collections.collections.findIndex(
               c => c.collectionId === collection.id
@@ -315,7 +329,7 @@ export const getCollectionFiles = consortiumId => (dispatch) => {
 
               // TODO: Reconsider how to get updated steps
               const { steps } = iteratePipelineSteps(consortium, filesByGroup, metaDir);
-
+              console.log(allFiles, steps);
               dispatch(({
                 type: GET_COLLECTION_FILES,
                 payload: { allFiles, steps },

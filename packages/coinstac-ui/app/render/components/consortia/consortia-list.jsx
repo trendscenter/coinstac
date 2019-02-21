@@ -333,10 +333,11 @@ class ConsortiaList extends Component {
 
   startPipeline(consortiumId, activePipelineId) {
     return () => {
+      //
       const { client, router } = this.props;
       let isRemotePipeline = false;
       const pipelineData = client.readQuery({ query: FETCH_ALL_PIPELINES_QUERY });
-      const pipeline = pipelineData.fetchAllPipelines
+      let pipeline = pipelineData.fetchAllPipelines
         .find(pipe => pipe.id === activePipelineId);
 
       for (let i = 0; i < pipeline.steps.length; i += 1) {
@@ -370,7 +371,8 @@ class ConsortiaList extends Component {
           run.pipelineSnapshot.steps
         )
         .then((filesArray) => {
-          if ('error' in filesArray) {
+          console.log(filesArray);
+          if (!filesArray || 'error' in filesArray) {
             status = 'needs-map';
             this.props.notifyWarning({
               message: filesArray.error,
@@ -395,11 +397,16 @@ class ConsortiaList extends Component {
                   steps: filesArray.steps,
                 },
               };
+              pipeline = {
+                ...pipeline,
+                steps: filesArray.steps,
+              };
             }
 
             run.status = status;
 
             this.props.incrementRunCount(consortiumId);
+            console.log("filesArray = "+JSON.stringify(filesArray));
             ipcRenderer.send('start-pipeline', { consortium, pipeline, filesArray: filesArray.allFiles, run });
           }
 
