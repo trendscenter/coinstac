@@ -157,7 +157,7 @@ class MapsCollection extends Component {
   }
 
   filterGetIndex(arr, searchKey) {
-     debugger;
+
      let searchkey = searchKey.replace('file', ''); //other object values contain the string 'file', let's remove.
      return arr.findIndex(function(obj) {
        return Object.keys(obj).some(function(key) {
