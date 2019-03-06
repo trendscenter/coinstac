@@ -109,7 +109,7 @@ class FormLogin extends Component {
             />
             <Button
               variant="contained"
-              color="primary"
+              color="secondary"
               type="submit"
               fullWidth
               disabled={loading.isLoading}

@@ -182,7 +182,6 @@ class ConsortiaList extends Component {
         <Button
           key={`${consortium.id}-start-pipeline-button`}
           variant="contained"
-          color="secondary"
           className={classes.button}
           onClick={this.startPipeline(consortium.id, consortium.activePipelineId)}
         >
