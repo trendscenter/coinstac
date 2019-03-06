@@ -3,7 +3,8 @@ import { compose, graphql, withApollo } from 'react-apollo';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { ipcRenderer } from 'electron';
-import { withStyles } from '@material-ui/core/styles';
+import { MuiThemeProvider, withStyles } from '@material-ui/core/styles';
+import theme from '../../styles/material-ui/theme';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import Grid from '@material-ui/core/Grid';
 import Drawer from '@material-ui/core/Drawer';
@@ -187,7 +188,7 @@ class Dashboard extends Component {
     });
 
     this.unsubscribeToUserMetadata = this.props.subscribeToUserMetaData(user.id);
-    
+
     ipcRenderer.on('docker-error', (event, arg) => {
       this.props.notifyError({
         message: `Docker Error: ${arg.err.message}`,
@@ -476,7 +477,7 @@ class Dashboard extends Component {
 
     // @TODO don't render primary content whilst still loading/bg-services
     return (
-      <div>
+      <MuiThemeProvider theme={theme}>
         <CssBaseline />
         <Grid container>
           <Grid item xs={12} sm={3} className={classes.gridContainer}>
@@ -529,7 +530,7 @@ class Dashboard extends Component {
             </main>
           </Grid>
         </Grid>
-      </div>
+      </MuiThemeProvider>
     );
   }
 }

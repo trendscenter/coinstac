@@ -12,7 +12,7 @@ import EqualizerIcon from '@material-ui/icons/Equalizer';
 
 const DashboardNav = () => {
   return (
-    <List>
+    <List className="mainnav">
       <ListItem button component="a" href="#/dashboard">
         <ListItemIcon><HomeIcon /></ListItemIcon>
         <ListItemText primary="Home" />
