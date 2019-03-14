@@ -12,6 +12,7 @@ import ListItem from '@material-ui/core/ListItem';
 import Typography from '@material-ui/core/Typography';
 import DashboardNav from './dashboard-nav';
 import UserAccountController from '../user/user-account-controller';
+import DockerStatusChecker from './docker-status-checker';
 import {
   notifyError,
   notifyInfo,
@@ -23,7 +24,6 @@ import CoinstacAbbr from '../coinstac-abbr';
 import { getCollectionFiles, incrementRunCount, syncRemoteLocalConsortia, syncRemoteLocalPipelines } from '../../state/ducks/collections';
 import { getLocalRun, getDBRuns, saveLocalRun, updateLocalRun } from '../../state/ducks/runs';
 import {
-  getDockerStatus,
   pullComputations,
   updateDockerOutput,
 } from '../../state/ducks/docker';
@@ -36,16 +36,12 @@ import {
   FETCH_ALL_PIPELINES_QUERY,
   FETCH_ALL_USER_RUNS_QUERY,
   PIPELINE_CHANGED_SUBSCRIPTION,
-  USER_CHANGED_SUBSCRIPTION,
   USER_METADATA_CHANGED_SUBSCRIPTION,
   USER_RUN_CHANGED_SUBSCRIPTION,
   UPDATE_USER_CONSORTIUM_STATUS_MUTATION,
   FETCH_USER_QUERY,
 } from '../../state/graphql/functions';
-import {
-  getAllAndSubProp,
-  getSelectAndSubProp,
-} from '../../state/graphql/props';
+import { getAllAndSubProp } from '../../state/graphql/props';
 
 const styles = theme => ({
   root: {
@@ -107,29 +103,14 @@ class Dashboard extends Component {
 
     this.state = {
       dockerStatus: true,
-      unsubscribeComputations: null,
-      unsubscribeConsortia: null,
-      unsubscribePipelines: null,
-      unsubscribeRuns: null,
-      unsubscribeUsers: null,
-      unsubscribeToUserMetadata: null,
     };
+
+    this.setDockerStatus = this.setDockerStatus.bind(this);
   }
 
   componentDidMount() {
     const { auth: { user } } = this.props;
     const { router } = this.context;
-
-    setInterval(() => {
-      let status = this.props.getDockerStatus();
-      status.then((result) => {
-        if( result == 'OK' ){
-          this.setState({dockerStatus: true});
-        }
-      }, (err) => {
-        this.setState({dockerStatus: false});
-      });
-    }, 5000);
 
     process.nextTick(() => {
       if (!user.email.length) {
@@ -186,6 +167,10 @@ class Dashboard extends Component {
       this.props.updateLocalRun(arg.run.id, { error: arg.run.error, status: 'error' });
     });
 
+    this.unsubscribeComputations = this.props.subscribeToComputations(null);
+    this.unsubscribeConsortia = this.props.subscribeToConsortia(null);
+    this.unsubscribePipelines = this.props.subscribeToPipelines(null);
+    this.unsubscribeRuns = this.props.subscribeToUserRuns(null);
     this.unsubscribeToUserMetadata = this.props.subscribeToUserMetaData(user.id);
     
     ipcRenderer.on('docker-error', (event, arg) => {
@@ -199,22 +184,6 @@ class Dashboard extends Component {
   UNSAFE_componentWillReceiveProps(nextProps) {
     const { auth: { user }, client } = this.props;
     const { router } = this.context;
-
-    if (nextProps.computations && !this.state.unsubscribeComputations) {
-      this.setState({ unsubscribeComputations: this.props.subscribeToComputations(null) });
-    }
-
-    if (nextProps.consortia && !this.state.unsubscribeConsortia) {
-      this.setState({ unsubscribeConsortia: this.props.subscribeToConsortia(null) });
-    }
-
-    if (nextProps.pipelines && !this.state.unsubscribePipelines) {
-      this.setState({ unsubscribePipelines: this.props.subscribeToPipelines(null) });
-    }
-
-    if (nextProps.remoteRuns && !this.state.unsubscribeRuns) {
-      this.setState({ unsubscribeRuns: this.props.subscribeToUserRuns(null) });
-    }
 
     if (nextProps.remoteRuns) {
       // TODO: Speed this up by moving to subscription prop (n vs n^2)?
@@ -435,19 +404,30 @@ class Dashboard extends Component {
   }
 
   componentDidUpdate(prevProps) {
-    const { currentUser } = this.props;
-    if (currentUser &&
-      (!prevProps.currentUser || prevProps.currentUser.permissions !== currentUser.permissions)
+    const { currentUser, updateUserPerms } = this.props;
+    if (currentUser
+      && (!prevProps.currentUser || prevProps.currentUser.permissions !== currentUser.permissions)
     ) {
-      this.props.updateUserPerms(currentUser.permissions);
+      updateUserPerms(currentUser.permissions);
     }
   }
 
   componentWillUnmount() {
-    this.state.unsubscribeComputations();
-    this.state.unsubscribeConsortia();
-    this.state.unsubscribePipelines();
-    this.state.unsubscribeRuns();
+    if (typeof this.unsubscribeComputations === 'function') {
+      this.unsubscribeComputations();
+    }
+
+    if (typeof this.unsubscribeConsortia === 'function') {
+      this.unsubscribeConsortia();
+    }
+
+    if (typeof this.unsubscribePipelines === 'function') {
+      this.unsubscribePipelines();
+    }
+
+    if (typeof this.unsubscribeRuns === 'function') {
+      this.unsubscribeRuns();
+    }
 
     if (typeof this.unsubscribeToUserMetadata === 'function') {
       this.unsubscribeToUserMetadata();
@@ -459,6 +439,10 @@ class Dashboard extends Component {
     ipcRenderer.removeAllListeners('local-run-error');
     ipcRenderer.removeAllListeners('local-pipeline-state-update');
     ipcRenderer.removeAllListeners('docker-error');
+  }
+
+  setDockerStatus(status) {
+    this.setState({ dockerStatus: status });
   }
 
   render() {
@@ -478,6 +462,7 @@ class Dashboard extends Component {
     return (
       <div>
         <CssBaseline />
+        <DockerStatusChecker onChangeStatus={this.setDockerStatus} />
         <Grid container>
           <Grid item xs={12} sm={3} className={classes.gridContainer}>
             <Drawer
@@ -558,7 +543,6 @@ Dashboard.propTypes = {
   consortia: PropTypes.array,
   getCollectionFiles: PropTypes.func.isRequired,
   getDBRuns: PropTypes.func.isRequired,
-  getDockerStatus: PropTypes.func.isRequired,
   incrementRunCount: PropTypes.func.isRequired,
   notifyError: PropTypes.func.isRequired,
   notifyInfo: PropTypes.func.isRequired,
@@ -659,7 +643,6 @@ const connectedComponent = connect(mapStateToProps,
     getCollectionFiles,
     getLocalRun,
     getDBRuns,
-    getDockerStatus,
     incrementRunCount,
     notifyError,
     notifyInfo,
