@@ -11,9 +11,8 @@ import TableRow from '@material-ui/core/TableRow';
 import { withStyles } from '@material-ui/core/styles';
 import DeleteIcon from '@material-ui/icons/Delete';
 import PropTypes from 'prop-types';
-import update from 'immutability-helper';
-import Select from '../common/react-select';
 import memoize from 'memoize-one';
+import Select from '../common/react-select';
 import MemberAvatar from '../common/member-avatar';
 
 const styles = theme => ({
