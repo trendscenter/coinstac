@@ -133,7 +133,7 @@ const helperFunctions = {
    * @param {object} request original request from client
    */
   async validateToken(decoded, request) {
-    const user = await helperFunctions.getUserDetails({ username: 'test1' });
+    const user = await helperFunctions.getUserDetails({ username: decoded.username });
 
     return {
       isValid: user && user.id,
