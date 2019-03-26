@@ -241,6 +241,7 @@ loadConfig()
     /**
    * IPC Listener to stop pipeline
    * @param {String} pipelineId The id of the pipeline currently running
+   * @param {String} runId The id of the pipeline run
    * @return {Promise<String>} Status message
    */
 
