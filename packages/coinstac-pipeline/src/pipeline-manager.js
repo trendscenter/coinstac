@@ -541,6 +541,11 @@ module.exports = {
 
         return this.activePipelines[runId].stateEmitter;
       },
+      stopPipeline(pipelineId, runId) {
+        this.activePipelines[runId].pipeline.pipelineSteps.forEach( step => {
+          step.stop();
+        });
+      },
       waitingOnForRun,
     };
   },

@@ -237,6 +237,20 @@ class CoinstacClient {
       });
   }
 
+  /**
+   * Stop pipeline
+   * @param {string} pipelineId The id of the pipeline running
+   * @param {string} runId The id of the pipeline run
+   * @param {string} userId The id of the user requesting pipeline to stop
+   */
+
+  stopPipeline( pipelineId, runId, userId ) {
+    const stopPipeline = this.pipelineManager.stopPipeline(pipelineId, runId);
+    return new Promise((res, rej) => {
+      return stopPipeline;
+    })
+  }
+
   unlinkFiles(runId) {
     const fullPath = path.join(this.appDirectory, this.clientId, runId);
 

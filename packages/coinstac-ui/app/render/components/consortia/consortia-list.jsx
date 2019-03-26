@@ -30,6 +30,7 @@ import {
   FETCH_ALL_COMPUTATIONS_QUERY,
   FETCH_ALL_CONSORTIA_QUERY,
   FETCH_ALL_PIPELINES_QUERY,
+  FETCH_ALL_USER_RUNS_QUERY,
   JOIN_CONSORTIUM_MUTATION,
   LEAVE_CONSORTIUM_MUTATION,
 } from '../../state/graphql/functions';
@@ -97,6 +98,7 @@ class ConsortiaList extends Component {
     this.closeModal = this.closeModal.bind(this);
     this.openModal = this.openModal.bind(this);
     this.startPipeline = this.startPipeline.bind(this);
+    this.stopPipeline = this.stopPipeline.bind(this);
   }
 
   static getDerivedStateFromProps(props) {
@@ -186,6 +188,17 @@ class ConsortiaList extends Component {
           onClick={this.startPipeline(consortium.id, consortium.activePipelineId)}
         >
           Start Pipeline
+        </Button>
+      );
+      actions.push(
+        <Button
+          key={`${consortium.id}-stop-pipeline-button`}
+          variant="contained"
+          color="secondary"
+          className={classes.button}
+          onClick={this.stopPipeline(consortium.activePipelineId)}
+        >
+          Stop Pipeline
         </Button>
       );
     } else if (owner && !consortium.activePipelineId) {
@@ -328,6 +341,19 @@ class ConsortiaList extends Component {
     .then(() => {
       this.props.leaveConsortium(consortiumId);
     });
+  }
+
+  stopPipeline(pipelineId) {
+    return () => {
+      const { client, runs } = this.props;
+      
+      const presentRun = runs.reduce( (prev, curr) => { 
+        return prev.startDate > curr.startDate ? prev : curr ;
+      });
+      const runId = presentRun.id;
+      
+      ipcRenderer.send('stop-pipeline', { pipelineId, runId });
+    }
   }
 
   startPipeline(consortiumId, activePipelineId) {
