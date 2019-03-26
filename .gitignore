@@ -62,3 +62,9 @@ packages/coinstac-ui/coinstac-darwin*
 packages/coinstac-ui/coinstac-linux*
 packages/coinstac-ui/coinstac-win32*
 packages/coinstac-ui/coinstac-mas*
+
+# Package Lock Files
+packages/coinstac-pipeline/package-lock.json
+packages/coinstac-server/package-lock.json
+packages/coinstac-simulator/package-lock.json
+packages/coinstac-ui/package-lock.json
