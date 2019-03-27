@@ -75,8 +75,6 @@ class ConsortiaListContainer extends Component {
       }
     }
 
-    console.log('REOMTE', isRemotePipeline);
-
     // Don't send local pipelines to Rethink
     if (!isRemotePipeline) {
       const data = client.readQuery({ query: FETCH_ALL_CONSORTIA_QUERY });
