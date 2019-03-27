@@ -15,6 +15,7 @@ import Box from './displays/box-plot';
 import Scatter from './displays/scatter-plot';
 import Table from './displays/result-table';
 import Images from './displays/images';
+import String from './displays/string';
 import { getLocalRun } from '../../state/ducks/runs';
 
 const styles = theme => ({
@@ -229,6 +230,15 @@ class Result extends Component {
                 selectedDisplayType.type === 'images'
                 && (
                   <Images
+                    plotData={plotData}
+                    title={`${consortium.name}_${run.pipelineSnapshot.name}`}
+                  />
+                )
+              }
+              {
+                selectedDisplayType.type === 'string'
+                && (
+                  <String
                     plotData={plotData}
                     title={`${consortium.name}_${run.pipelineSnapshot.name}`}
                   />
