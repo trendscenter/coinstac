@@ -118,8 +118,6 @@ loadConfig()
     ipcMain.on('start-pipeline', (event, {
       consortium, pipeline, filesArray, run,
     }) => {
-
-      console.log(filesArray);
       const computationImageList = pipeline.steps
         .map(step => step.computations
           .map(comp => comp.computation.dockerImage))
@@ -151,7 +149,7 @@ loadConfig()
                 });
               });
 
-              console.log(stream);
+              //console.log(stream);
 
               stream.on('end', () => {
                 proxRes();

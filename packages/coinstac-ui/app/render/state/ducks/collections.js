@@ -6,6 +6,10 @@ import { applyAsyncLoading } from './loading';
 import localDB from '../local-db';
 import inputDataTypes from '../input-data-types.json';
 
+//Get Base App Dir
+const CoinstacClient = require('coinstac-client-core');
+const dir = CoinstacClient.getDefaultAppDirectory();
+
 // Actions
 const CLEAR_COLLECTIONS_CONSORTIA = 'CLEAR_COLLECTIONS_CONSORTIA';
 const DELETE_ASSOCIATED_CONSORTIA = 'DELETE_ASSOCIATED_CONSORTIA';
@@ -40,33 +44,17 @@ function parseFilesByGroup(
       mapIndex < step.inputMap[key].ownerMappings.length;
       mapIndex += 1
     ) {
-      let type = step.inputMap[key].ownerMappings[mapIndex].type.toLowerCase();
       // TODO: using use entered names as keys or equality for the raw columns in the
-      // csv is a bad idea, fix this and clean up this whole functio
-      if(step.inputMap[key].ownerMappings[mapIndex].name){
-
-        if (col.toLowerCase().includes(
-          step.inputMap[key].ownerMappings[mapIndex].name.toLowerCase()
-        )) {
-          indices.push({
-            index: colIndex,
-            type: step.inputMap[key].ownerMappings[mapIndex].type,
-          });
-          break;
-        }
-
-      }else if(step.inputMap[key].ownerMappings[mapIndex].type){
-        col = col.replace('file','');
-        if (col === type) {
-          indices.push({
-            index: colIndex,
-            type: step.inputMap[key].ownerMappings[mapIndex].type,
-          });
-          break;
-        }
-
+      // csv is a bad idea, fix this and clean up this whole function
+      if (col.toLowerCase().includes(
+        step.inputMap[key].ownerMappings[mapIndex].name.toLowerCase()
+      )) {
+        indices.push({
+          index: colIndex,
+          type: step.inputMap[key].ownerMappings[mapIndex].type,
+        });
+        break;
       }
-
     }
   });
   // Cast types to row col indices
@@ -96,17 +84,12 @@ function parseFilesByGroup(
   };
   const pathsep = new RegExp(`${escape(sep)}|:`, 'g');
   parsedRows = parsedRows.map((path) => {
-    if ( path[0].includes('/') ) {
-      var path = baseDirectory +  path[0];
-      if (extname(path[0]) !== '') {
-        path[0] = resolve(baseDirectory, path[0]).replace(pathsep, '-');
-        return path;
-      }
+    if (extname(path[0]) !== '') {
+      path[0] = resolve(baseDirectory, path[0]).replace(pathsep, '-');
       return path;
     }
+    return path;
   });
-
-  parsedRows = parsedRows.filter(Boolean);
 
   keyArray[0].push(parsedRows);
   keyArray[1] = consortium.stepIO[sIndex][key].map(val => val.column);
@@ -116,7 +99,7 @@ function parseFilesByGroup(
   }
 }
 
-function iteratePipelineSteps(consortium, filesByGroup, baseDirectory) {
+function iteratePipelineSteps(consortium, filesByGroup, baseDirectory, runId) {
   let mappingIncomplete = false;
   const collections = [];
   const steps = [];
@@ -138,13 +121,16 @@ function iteratePipelineSteps(consortium, filesByGroup, baseDirectory) {
         const mappingObj = step.inputMap[key].ownerMappings[mappingIndex];
         if (inputKeys.includes('data')
         && inputKeys.includes('options')
+        && !inputKeys.includes('covariates')
         && !inputKeys.includes('file')) {
           let groupId = false;
           let collectionId = false;
+          let ownerId = false;
           if(consortium.stepIO[sIndex]) {
             let conStepIO = consortium.stepIO[sIndex][key][mappingIndex];
             groupId = conStepIO.groupId;
             collectionId = conStepIO.collectionId;
+            ownerId = consortium.owners[0];
           }
           if (filesByGroup && baseDirectory) {
             const e = new RegExp(/[-\/\\^$*+?.()|[\]{}]/g); // eslint-disable-line no-useless-escape
@@ -155,9 +141,11 @@ function iteratePipelineSteps(consortium, filesByGroup, baseDirectory) {
             const pathsArray = filesByGroup[groupId];
             let paths = pathsArray.map((path) => {
               if (path[0].includes('/')) {
-                path = baseDirectory + path[0];
-                path = path.replace(pathsep, '-');
-                return path;
+                let filepath = baseDirectory + path[0];
+                filepath = filepath.replace(pathsep, '-');
+                //path = "/input/"+ownerId+"/"+runId+"/"+path;
+                //console.log(filepath);
+                return filepath;
               }
             });
             paths = paths.filter(Boolean);
@@ -226,7 +214,10 @@ function iteratePipelineSteps(consortium, filesByGroup, baseDirectory) {
 
         if(keyArray.length === 1){
           inputMap[key].value = keyArray[0];
+        }else{
+          inputMap[key] = { value: keyArray };
         }
+
       }
 
       if (mappingIncomplete) {
@@ -280,8 +271,7 @@ export const getAllCollections = applyAsyncLoading(() => dispatch => localDB.col
     }));
   }));
 
-export const getCollectionFiles = consortiumId => (dispatch) => {
-  let id = consortiumId;
+export const getCollectionFiles = (consortiumId, runId) => (dispatch) => {
   return localDB.associatedConsortia.get(consortiumId)
     .then((consortium) => {
       let collections = { collections: [] };
@@ -328,8 +318,7 @@ export const getCollectionFiles = consortiumId => (dispatch) => {
               });
 
               // TODO: Reconsider how to get updated steps
-              const { steps } = iteratePipelineSteps(consortium, filesByGroup, metaDir);
-              console.log(allFiles, steps);
+              const { steps } = iteratePipelineSteps(consortium, filesByGroup, metaDir, runId);
               dispatch(({
                 type: GET_COLLECTION_FILES,
                 payload: { allFiles, steps },

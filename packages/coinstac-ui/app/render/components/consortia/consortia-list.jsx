@@ -366,11 +366,9 @@ class ConsortiaList extends Component {
         let status = 'started';
         return this.props.getCollectionFiles(
           consortiumId,
-          consortium.name,
-          run.pipelineSnapshot.steps
+          run.id,
         )
         .then((filesArray) => {
-          console.log(filesArray);
           if (!filesArray || 'error' in filesArray) {
             status = 'needs-map';
             this.props.notifyWarning({
@@ -405,7 +403,6 @@ class ConsortiaList extends Component {
             run.status = status;
 
             this.props.incrementRunCount(consortiumId);
-            console.log("filesArray = "+JSON.stringify(filesArray));
             ipcRenderer.send('start-pipeline', { consortium, pipeline, filesArray: filesArray.allFiles, run });
           }
 
