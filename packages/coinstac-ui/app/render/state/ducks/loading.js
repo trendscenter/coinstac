@@ -27,12 +27,12 @@ export const applyAsyncLoading = function applyAsyncLoading(fn) {
    * @private
    */
   return function wrappedActionCreator(...args) {
-    return (dispatch) => {
+    return (dispatch, getState) => {
       asyncLoadingCallCount += 1;
       const currCount = asyncLoadingCallCount;
       dispatch(start(`${fnName}-${currCount}`));
       const dispatchComplete = () => dispatch(finish(`${fnName}-${currCount}`));
-      return Promise.resolve(fn(...args)(dispatch))
+      return Promise.resolve(fn(...args)(dispatch, getState))
         .then((rslt) => {
           dispatchComplete();
           return rslt;
