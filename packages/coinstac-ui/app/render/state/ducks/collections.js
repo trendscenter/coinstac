@@ -295,7 +295,6 @@ export const getCollectionFiles = (consortiumId, runId) => (dispatch) => {
           if (collections.collections.length === 0) {
             return { allFiles: collections.collections };
           }
-          let clctns = collections.collections;
           return localDB.collections
             .filter(collection => collections.collections.findIndex(
               c => c.collectionId === collection.id
