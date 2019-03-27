@@ -197,7 +197,6 @@ module.exports = {
         });
         ss(socket).on('file', (stream, data) => {
           if (activePipelines[data.runId] && !activePipelines[data.runId].error) {
-            console.log(data);
             mkdirp(path.join(activePipelines[data.runId].baseDirectory, data.id))
               .then(() => {
                 const wStream = createWriteStream(
@@ -345,7 +344,7 @@ module.exports = {
           {
             state: 'created',
             pipeline: Pipeline.create(spec, runId, { mode, operatingDirectory, clientId }),
-            baseDirectory: path.resolve(operatingDirectory, clientId, runId),
+            baseDirectory: path.resolve(operatingDirectory, 'input', clientId, runId),
             outputDirectory: path.resolve(operatingDirectory, 'output', clientId, runId),
             cacheDirectory: path.resolve(operatingDirectory, 'cache', clientId, runId),
             transferDirectory: path.resolve(operatingDirectory, 'transfer', clientId, runId),

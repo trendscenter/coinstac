@@ -93,6 +93,7 @@ class MapsCollection extends Component {
   addFileGroup() {
     ipcPromise.send('open-dialog', 'metafile')
     .then((obj) => {
+
       let newFiles;
 
       const fileGroupId = shortid.generate();
@@ -102,7 +103,7 @@ class MapsCollection extends Component {
       } else {
         const name = `Group ${Object.keys(this.props.collection.fileGroups).length + 1} (${obj.extension.toUpperCase()})`;
         if (this.state.newFile.org === 'metafile') {
-          console.log('metafile');
+          //console.log('metafile');
           this.props.setRowArray(obj.metaFile[0]);
           newFiles = {
             ...obj,
@@ -113,7 +114,7 @@ class MapsCollection extends Component {
             org: this.state.newFile.org,
           };
         } else {
-          console.log('not metafile');
+          //console.log('not metafile');
           newFiles = {
             name,
             id: fileGroupId,
@@ -147,7 +148,7 @@ class MapsCollection extends Component {
       return Object.keys(obj).some(function(key) {
         let objkey = obj[key];
         if(typeof objkey === 'string'){
-          let fuzzy = bitap(objkey, searchkey, 1);
+          let fuzzy = bitap(objkey.toLowerCase(), searchkey.toLowerCase(), 1);
           if(fuzzy.length){
             return obj[key];
           }
@@ -157,13 +158,12 @@ class MapsCollection extends Component {
   }
 
   filterGetIndex(arr, searchKey) {
-
      let searchkey = searchKey.replace('file', ''); //other object values contain the string 'file', let's remove.
      return arr.findIndex(function(obj) {
        return Object.keys(obj).some(function(key) {
          let objkey = obj[key];
          if(typeof objkey === 'string'){
-           let fuzzy = bitap(objkey, searchkey, 1);
+           let fuzzy = bitap(objkey.toLowerCase(), searchkey.toLowerCase(), 1);
            if(fuzzy.length){
              return obj[key];
            }
@@ -173,52 +173,42 @@ class MapsCollection extends Component {
    }
 
    async autoMap(group) {
-     this.setState({ autoMap: true });
-     let obj;
-     let type;
-     if(this.props.activeConsortium.pipelineSteps[0].inputMap.covariates){
-        obj = this.props.activeConsortium.pipelineSteps[0].inputMap.covariates.ownerMappings;
-        type = 'covariates';
-     }
-     if(this.props.activeConsortium.pipelineSteps[0].inputMap.data){
-       obj = this.props.activeConsortium.pipelineSteps[0].inputMap.data.ownerMappings;
-       type = 'data';
-     }
-     if(typeof group.firstRow === 'Array'){
-       let resolveAutoMapPromises = this.makePoints(group.firstRow).map((string, index) => {
-         if( obj && Object.keys(this.filterGetObj(obj,string)).length > 0 ){
-           this.setStepIO(
-             index,
-             group.id,
-             0,
-             type,
-             this.filterGetIndex(obj,string),
-             string
-           );
-         }
-         return Promise.resolve();
+     let inputMap = this.props.activeConsortium.pipelineSteps[0].inputMap;
+     let resolveAutoMapPromises = Object.entries(inputMap).map((item, i) => {
+       let type = item[0];
+       let obj = item[1].ownerMappings;
+       this.makePoints(group.firstRow).map((string, index) => {
+        string = string.replace('file', '');
+        if( obj && Object.keys(this.filterGetObj(obj,string)).length > 0 ){
+         this.setStepIO(
+           index,
+           group.id,
+           0,
+           type,
+           this.filterGetIndex(obj,string),
+           string
+         );
+        }
+        if(obj && obj[0] && obj[0].type){
+          let fuzzy = bitap(string.toLowerCase(), obj[0].type.toLowerCase(), 1);
+          if(fuzzy.length){
+            this.setStepIO(
+              index,
+              group.id,
+              0,
+              type,
+              0,
+              string
+            );
+          }
+        }
        });
-       await Promise.all(resolveAutoMapPromises);
-       this.setState({ finishedAutoMapping: true });
-     }else{
-       let string = group.firstRow;
-       string = string.replace('file', '');
-       if( obj ){
-         let fuzzy = bitap(string.toLowerCase(), obj[0].type.toLowerCase(), 1);
-         if(fuzzy.length){
-           this.setStepIO(
-             0,
-             group.id,
-             0,
-             type,
-             0,
-             string
-           );
-           this.setState({ finishedAutoMapping: true });
-         }
-       }
-     }
+       return Promise.resolve();
+     });
+     await Promise.all(resolveAutoMapPromises);
+     this.setState({ finishedAutoMapping: true });
    }
+
 
   removeFileGroup(groupId) {
     return () => {
@@ -381,7 +371,7 @@ class MapsCollection extends Component {
                       <Divider />
                       <div className={classes.actionsContainer}>
                         {
-                          !isMapped && contChildren !== 0
+                          !isMapped && !finishedAutoMapping && contChildren !== 0
                           && (
                             <Button
                               variant="contained"

@@ -90,7 +90,7 @@ class MapsList extends Component {
         <MapsEdit
           consortia={consortia}
           consortium={this.state.consortium}
-          pipelines={this.props.pipeline}
+          pipelines={this.props.pipelines}
           runs={this.props.runs}
         />:
         <div>
