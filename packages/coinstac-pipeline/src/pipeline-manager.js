@@ -9,7 +9,8 @@ const { promisify } = require('util');
 const mkdirp = promisify(require('mkdirp'));
 const rimraf = promisify(require('rimraf'));
 const path = require('path');
-const readdir = promisify(require('fs').readdir);
+
+const readdir = promisify(fs.readdir);
 const Emitter = require('events');
 const winston = require('winston');
 const ss = require('socket.io-stream');
@@ -340,14 +341,25 @@ module.exports = {
         if (activePipelines[runId] && activePipelines[runId].state !== 'pre-pipeline') {
           throw new Error('Duplicate pipeline started');
         }
+        const userDirectories = {
+          baseDirectory: path.resolve(operatingDirectory, clientId, runId),
+          outputDirectory: path.resolve(operatingDirectory, 'output', clientId, runId),
+          cacheDirectory: path.resolve(operatingDirectory, 'cache', clientId, runId),
+          transferDirectory: path.resolve(operatingDirectory, 'transfer', clientId, runId),
+        };
         activePipelines[runId] = Object.assign(
           {
             state: 'created',
-            pipeline: Pipeline.create(spec, runId, { mode, operatingDirectory, clientId }),
-            baseDirectory: path.resolve(operatingDirectory, clientId, runId),
-            outputDirectory: path.resolve(operatingDirectory, 'output', clientId, runId),
-            cacheDirectory: path.resolve(operatingDirectory, 'cache', clientId, runId),
-            transferDirectory: path.resolve(operatingDirectory, 'transfer', clientId, runId),
+            pipeline: Pipeline.create(spec, runId, {
+              mode,
+              operatingDirectory,
+              clientId,
+              userDirectories,
+            }),
+            baseDirectory: userDirectories.baseDirectory,
+            cacheDirectory: userDirectories.cacheDirectory,
+            outputDirectory: userDirectories.outputDirectory,
+            transferDirectory: userDirectories.transferDirectory,
             stateEmitter: new Emitter(),
             currentState: {},
             clients,
@@ -364,6 +376,11 @@ module.exports = {
           );
         });
 
+        /**
+         * Communicate with the with node(s), clients to remote or remote to clients
+         * @param  {Object} pipeline pipeline to preform the messaging on
+         * @param  {Object} message  data to serialize to recipient
+         */
         const communicate = (pipeline, message) => {
           // TODO: hold the last step for drops, this only works for one step out
           // missedCache[pipeline.id] = {
