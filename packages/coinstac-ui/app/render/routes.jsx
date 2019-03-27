@@ -32,7 +32,7 @@ export default (
     <IndexRedirect to="/login" />
     <Route path="login" component={Login} />
     <Route path="signup" component={Signup} />
-    <Route path="dashboard" component={Dashboard} >
+    <Route path="dashboard" component={Dashboard}>
       <IndexRoute component={DashboardHome} />
       <Route path="consortia" component={RouteContainer}>
         <IndexRoute component={ConsortiaList} />

@@ -1,10 +1,24 @@
 'use strict';
 
+const fs = require('fs');
+const pify = require('util').promisify;
 const Emitter = require('events');
 const Controller = require('./controller');
+const join = require('path').join;
+
+const hardLink = pify(fs.link);
 
 module.exports = {
-  create({ steps }, runId, { mode, operatingDirectory, clientId }) {
+  create(
+    { steps },
+    runId,
+    {
+      mode,
+      operatingDirectory,
+      clientId,
+      userDirectories,
+    }
+  ) {
     const cache = {};
     let currentStep;
     let currentState;
@@ -20,10 +34,17 @@ module.exports = {
       pipelineSpec.forEach((step) => {
         for (let [key, val] of Object.entries(step.inputMap)) { // eslint-disable-line no-restricted-syntax, no-unused-vars, max-len, prefer-const
           if (val.fromCache) {
+            // the currentComputation index may be dynamic if
+            // mult comps per step is added as a feature
+            const compSpec = pipelineSteps[val.fromCache.step]
+              .controllerState.currentComputations[0].computation;
             cache[val.fromCache.step] = Object.assign(
-              {},
+              { preProcess: !!compSpec.meta.preProcess },
               cache[val.fromCache.step],
-              { [val.fromCache.variable]: undefined }
+              {
+                [val.fromCache.variable]:
+                  Object.assign({}, compSpec.output[val.fromCache.variable]),
+              }
             );
           }
         }
@@ -66,19 +87,28 @@ module.exports = {
             step.stateEmitter.on('update', () => stateEmitter.emit('update', packageState()));
           }
         );
-
+        // TODO: simlink here
         const loadCache = (output, step) => {
+          const proms = [];
           if (cache[step]) {
             for (let [key] of Object.entries(cache[step])) { // eslint-disable-line no-restricted-syntax, max-len, prefer-const
-              cache[step][key] = output[key];
+              if (cache[step][key].type === 'covariates' && cache[step][key].preProcess) {
+                output[key].data.forEach((file) => {
+                  proms.push(hardLink(file, join(userDirectories.baseDirectory, file)));
+                });
+              } else {
+                cache[step][key].value = output[key];
+              }
             }
           }
+          return Promise.all(proms);
         };
+        // TODO: FP here
         const loadInput = (step) => {
           const output = {};
           for (let [key, val] of Object.entries(step.inputMap)) { // eslint-disable-line no-restricted-syntax, max-len, prefer-const
             if (val.fromCache) {
-              output[key] = cache[val.fromCache.step][val.fromCache.variable];
+              output[key] = cache[val.fromCache.step][val.fromCache.variable].value;
             } else {
               output[key] = val.value;
             }
