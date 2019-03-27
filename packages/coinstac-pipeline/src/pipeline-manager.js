@@ -344,7 +344,7 @@ module.exports = {
           {
             state: 'created',
             pipeline: Pipeline.create(spec, runId, { mode, operatingDirectory, clientId }),
-            baseDirectory: path.resolve(operatingDirectory, 'input', clientId, runId),
+            baseDirectory: path.resolve(operatingDirectory, clientId, runId),
             outputDirectory: path.resolve(operatingDirectory, 'output', clientId, runId),
             cacheDirectory: path.resolve(operatingDirectory, 'cache', clientId, runId),
             transferDirectory: path.resolve(operatingDirectory, 'transfer', clientId, runId),
