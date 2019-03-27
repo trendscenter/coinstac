@@ -102,7 +102,6 @@ class CoinstacClient {
    * @returns {File[]} Collection of files
    */
   static getFilesFromMetadata(metaFilePath, metaFile) {
-
     return tail(metaFile).map(([filename]) => (
       path.isAbsolute(filename)
         ? filename
@@ -212,7 +211,6 @@ class CoinstacClient {
   ) {
     return mkdirp(path.join(this.appDirectory, this.clientId, runId))
       .then(() => {
-
       // TODO: validate runPipeline against clientPipeline
         const linkPromises = [];
 
