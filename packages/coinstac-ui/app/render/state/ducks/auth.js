@@ -107,7 +107,6 @@ export const login = applyAsyncLoading(({ username, password, saveLogin }) => (d
     return initCoreAndSetToken({ username, password, saveLogin }, data, appDirectory, dispatch);
   })
   .catch((err) => {
-    caches.log('ER', err);
     if (err.response) {
       if (err.response.status === 401) {
         dispatch(setUser({ ...INITIAL_STATE, error: 'Username and/or Password Incorrect' }));
