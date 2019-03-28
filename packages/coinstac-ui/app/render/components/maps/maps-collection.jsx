@@ -103,7 +103,6 @@ class MapsCollection extends Component {
       } else {
         const name = `Group ${Object.keys(this.props.collection.fileGroups).length + 1} (${obj.extension.toUpperCase()})`;
         if (this.state.newFile.org === 'metafile') {
-          //console.log('metafile');
           this.props.setRowArray(obj.metaFile[0]);
           newFiles = {
             ...obj,
@@ -114,7 +113,6 @@ class MapsCollection extends Component {
             org: this.state.newFile.org,
           };
         } else {
-          //console.log('not metafile');
           newFiles = {
             name,
             id: fileGroupId,

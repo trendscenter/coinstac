@@ -332,7 +332,6 @@ class ConsortiaList extends Component {
 
   startPipeline(consortiumId, activePipelineId) {
     return () => {
-      //
       const { client, router } = this.props;
       let isRemotePipeline = false;
       const pipelineData = client.readQuery({ query: FETCH_ALL_PIPELINES_QUERY });
