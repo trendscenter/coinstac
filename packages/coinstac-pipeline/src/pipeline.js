@@ -3,8 +3,15 @@
 const fs = require('fs');
 const pify = require('util').promisify;
 const Emitter = require('events');
+const {
+  join,
+  dirname,
+  relative,
+  sep,
+} = require('path');
+const mkdirp = pify(require('mkdirp'));
+const rimraf = pify(require('rimraf'));
 const Controller = require('./controller');
-const join = require('path').join;
 
 const hardLink = pify(fs.link);
 
@@ -77,7 +84,7 @@ module.exports = {
 
           return this.currentState;
         };
-
+        const fpCleanup = [];
         const setStateProp = (prop, val) => {
           this[prop] = val;
           stateEmitter.emit('update', packageState());
@@ -92,9 +99,26 @@ module.exports = {
           const proms = [];
           if (cache[step]) {
             for (let [key] of Object.entries(cache[step])) { // eslint-disable-line no-restricted-syntax, max-len, prefer-const
-              if (cache[step][key].type === 'covariates' && cache[step][key].preProcess) {
+              if (cache[step][key].type === 'covariates' && cache[step][key].meta.preprocess) {
                 output[key].data.forEach((file) => {
-                  proms.push(hardLink(file, join(userDirectories.baseDirectory, file)));
+                  // move to input dir
+                  const fp = join(userDirectories.baseDirectory, file);
+                  proms.push(
+                    mkdirp(dirname(fp))
+                      .then(() => hardLink(file, fp))
+                      .then(() => fpCleanup.push(fp))
+                  );
+                });
+              } else if (cache[step][key].type === 'files' || cache[step][key].type === 'file') {
+                const fileArray = Array.isArray(output[key]) ? output[key] : [output[key]];
+                fileArray.forEach((file) => {
+                  // move to input dir
+                  const fp = join(userDirectories.baseDirectory, file);
+                  proms.push(
+                    mkdirp(dirname(fp))
+                      .then(() => hardLink(file, fp))
+                      .then(() => fpCleanup.push(fp))
+                  );
                 });
               } else {
                 cache[step][key].value = output[key];
@@ -115,7 +139,7 @@ module.exports = {
           }
           return output;
         };
-        return pipelineSteps.reduce((prom, step, index) => {
+        const pipeineChain = pipelineSteps.reduce((prom, step, index) => {
           setStateProp('currentStep', index);
           // remote doesn't execute local steps but shares the same spec
           if (this.mode === 'remote' && step.controller.type === 'local') {
@@ -127,6 +151,21 @@ module.exports = {
               return output;
             });
         }, Promise.resolve());
+
+        const cleanup = () => {
+          return Promise.all(fpCleanup.map((file) => {
+            // rmraf from the base file/dir
+            return rimraf(relative(userDirectories.baseDirectory, file).split(sep)[0])
+            // unlink errors shouldnt crash the pipe
+              .catch();
+          }));
+        };
+        // cleanup
+        return pipeineChain.then(() => cleanup())
+          .catch((err) => {
+            // cleanup and then rethrow pipeline error
+            return cleanup.then(() => { throw err; });
+          });
       },
     };
   },
