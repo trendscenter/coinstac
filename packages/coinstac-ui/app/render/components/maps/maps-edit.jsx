@@ -70,14 +70,13 @@ class MapsEdit extends Component {
       name: '',
       description: '',
       fileGroups: {},
-      associatedConsortia: [],
+      associatedConsortia: {},
     };
 
     this.state = {
       activeConsortium: { stepIO: [], runs: 0, pipelineSteps: [] },
       containers: [],
       collection,
-      exists: false,
       isMapped: false,
       mappedItem: '',
       rowArray: [],
@@ -98,9 +97,22 @@ class MapsEdit extends Component {
   setRowArray = (val) => this.setState({ rowArray: val });
   updateMapsStep = (val) => this.setState({ updateMapsStep: val });
 
+  componentWillMount = () => {
+    const { consortium, collections } = this.props;
+    Object.keys(collections).map(([key, value]) => {
+      let colname = collections[key].name;
+      let conname = consortium.name+': Collection';
+      if( colname === conname && Object.entries(collections[key].fileGroups).length > 0 ){
+        let collection = collections[key];
+        this.setState(prevState => ({ collection }));
+        return;
+      }
+    });
+  }
+
   componentDidMount = () => {
     const { user } = this.props.auth;
-    const { consortium, collections, pipelines } = this.props;
+    const { consortium, collections, mapped, pipelines } = this.props;
     let pipeline = pipelines.find(p => p.id === consortium.activePipelineId);
      this.setState({
        activeConsortium: {
@@ -108,30 +120,19 @@ class MapsEdit extends Component {
          pipelineSteps: pipeline.steps,
        },
      });
-     let mapped = this.getMapped(
-       isUserA(user.id, consortium.members),
-       isUserA(user.id, consortium.owners),
-       consortium
-     )
      this.setState({isMapped: mapped});
      this.setPipelineSteps(pipeline.steps);
-     Object.keys(collections).map(([key, value]) => {
-       if( includes(collections[key],consortium.name+': Collection') ){
-         this.setState({
-           collection: collections[key],
-           exists: true
-         });
-       }
-     });
-     let collection = {
-       name: consortium.name+': Collection',
-       associatedConsortia: consortium,
-       fileGroups: {},
-     }
-     if( this.state.exists === false ){
+
+     if( Object.entries(this.state.collection.fileGroups).length === 0 ){
+         let collection = {
+           name: consortium.name+': Collection',
+           associatedConsortia: consortium,
+           fileGroups: {},
+         }
         this.setState({collection});
         this.props.saveCollection(collection);
      }
+
      this.getDropAction();
   }
 
@@ -333,7 +334,7 @@ class MapsEdit extends Component {
     const { activeConsortium } = this.state;
     if (activeConsortium.pipelineSteps) {
       let steps = activeConsortium.pipelineSteps;
-      Object.entries(activeConsortium.pipelineSteps).forEach(([key, value]) => {
+      Object.entries(steps).forEach(([key, value]) => {
         let inputMap = steps[key].inputMap;
         Object.keys(inputMap).map((k, i) => {
            result.push(
@@ -344,6 +345,7 @@ class MapsEdit extends Component {
                step={inputMap[k]}
                consortium={activeConsortium}
                updateMapsStep={this.state.updateMapsStep}
+               mapped={this.props.mapped}
               />
            );
         });
