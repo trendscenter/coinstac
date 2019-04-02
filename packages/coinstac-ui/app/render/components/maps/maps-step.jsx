@@ -27,7 +27,7 @@ class MapsStep extends Component {
        return Object.keys(obj).some(function(key) {
          let objkey = obj[key];
          if(typeof objkey === 'string'){
-           let fuzzy = bitap(objkey, str, 1);
+           let fuzzy = bitap(objkey.toLowerCase(), str.toLowerCase(), 1);
            if(fuzzy.length){
              return true;
            }
@@ -46,10 +46,16 @@ class MapsStep extends Component {
               if(this.props.consortium.stepIO[0] && this.props.consortium.stepIO[0].data) {
                 mapped = this.filterGetObj(this.props.consortium.stepIO[0].data, step[key][k].type);
               }
+              if(this.props.mapped){
+                mapped = true;
+              }
               result.push(<MapsStepData isMapped={mapped} getContainers={this.props.getContainers} key={'step-data'+i} step={step[key][k]} type={capitalize(type)} />);
             } else {
               if(this.props.consortium.stepIO[0] && this.props.consortium.stepIO[0].covariates) {
                mapped = this.filterGetObj(this.props.consortium.stepIO[0].covariates, step[key][k].name);
+              }
+              if(this.props.mapped){
+                mapped = true;
               }
               result.push(<MapsStepCovariate isMapped={mapped} getContainers={this.props.getContainers} key={'step-covariate'+i} step={step[key][k]} type={capitalize(type)} />);
             }
