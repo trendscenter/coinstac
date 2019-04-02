@@ -60,7 +60,6 @@ class ConsortiumPipeline extends Component {
       openSharedPipelinesMenu: false,
     };
 
-    //this.modifyCollectionsOnAssociatedConsortia = this.modifyCollectionsOnAssociatedConsortia.bind(this);
     this.openOwnedPipelinesMenu = this.openOwnedPipelinesMenu.bind(this);
     this.closeOwnedPipelinesMenu = this.closeOwnedPipelinesMenu.bind(this);
     this.openSharedPipelinesMenu = this.openSharedPipelinesMenu.bind(this);
