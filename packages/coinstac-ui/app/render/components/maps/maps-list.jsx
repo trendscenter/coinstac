@@ -19,7 +19,7 @@ class MapsList extends Component {
     super(props);
 
     this.state = {
-      consortium: null
+      consortium: this.props.consortium
     }
 
     this.setConsortium = this.setConsortium.bind(this);
@@ -29,12 +29,8 @@ class MapsList extends Component {
     this.setState({ consortium });
   }
 
-  getMapped(member, owner, consortium) {
-    const { auth: { user } } = this.props;
-    const actions = [];
-    const text = [];
+  getMapped(consortium) {
     let isMapped = false;
-
     if (this.props.associatedConsortia.length > 0) {
       const assocCons = this.props.associatedConsortia.find(c => c.id === consortium.id);
       if (assocCons && assocCons.isMapped) {
@@ -56,11 +52,7 @@ class MapsList extends Component {
           itemObject={consortium}
           itemOptions
           itemMapped={
-            this.getMapped(
-              isUserA(user.id, consortium.members),
-              isUserA(user.id, consortium.owners),
-              consortium
-            )
+            this.getMapped(consortium)
           }
           pipelineId={pipeline.name}
           setConsortium={this.setConsortium}
@@ -80,17 +72,26 @@ class MapsList extends Component {
 
   render() {
     const {
+      auth: { user },
       consortia,
       pipelines,
+      mapId,
     } = this.props;
+
+    const {
+      consortium,
+    } = this.state;
 
     return (
       <div>
-      {this.state.consortium ?
+      {consortium && mapId ?
         <MapsEdit
           consortia={consortia}
-          consortium={this.state.consortium}
-          pipelines={this.props.pipeline}
+          consortium={consortium}
+          mapped={
+            this.getMapped(consortium)
+          }
+          pipelines={this.props.pipelines}
           runs={this.props.runs}
         />:
         <div>

@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
 import { graphql } from 'react-apollo';
 import { Link } from 'react-router';
 import Paper from '@material-ui/core/Paper';
@@ -10,6 +11,11 @@ import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
 import AddIcon from '@material-ui/icons/Add';
 import PropTypes from 'prop-types';
+import {
+  getCollectionFiles,
+  getAllCollections,
+  deleteCollection,
+} from '../../state/ducks/collections';
 import {
   FETCH_ALL_CONSORTIA_QUERY,
   SAVE_ACTIVE_PIPELINE_MUTATION,
@@ -52,7 +58,6 @@ class ConsortiumPipeline extends Component {
       openSharedPipelinesMenu: false,
     };
 
-    this.removeCollectionsFromAssociatedConsortia = this.removeCollectionsFromAssociatedConsortia.bind(this);
     this.openOwnedPipelinesMenu = this.openOwnedPipelinesMenu.bind(this);
     this.closeOwnedPipelinesMenu = this.closeOwnedPipelinesMenu.bind(this);
     this.openSharedPipelinesMenu = this.openSharedPipelinesMenu.bind(this);
@@ -73,15 +78,12 @@ class ConsortiumPipeline extends Component {
     return null;
   }
 
-  removeCollectionsFromAssociatedConsortia(consortiumId, value) {
-    const { saveActivePipeline } = this.props;
-    saveActivePipeline(consortiumId, value);
-  }
-
   selectPipeline = pipelineId => event => {
-    const { consortium } = this.props;
-
-    this.removeCollectionsFromAssociatedConsortia(consortium.id, pipelineId);
+    const { collections, consortium, saveActivePipeline } = this.props;
+    collections.map((item) => {
+      this.props.deleteCollection(item.id);
+    });
+    saveActivePipeline(consortium.id, pipelineId);
     this.closeOwnedPipelinesMenu();
     this.closeSharedPipelinesMenu();
   }
@@ -240,7 +242,13 @@ ConsortiumPipeline.propTypes = {
   owner: PropTypes.bool.isRequired,
   classes: PropTypes.object.isRequired,
   saveActivePipeline: PropTypes.func.isRequired,
+  getAllCollections: PropTypes.func.isRequired,
+  deleteCollection: PropTypes.func.isRequired,
 };
+
+function mapStateToProps({ collections: collections }) {
+  return collections;
+}
 
 // TODO: Move this to shared props?
 const ConsortiumPipelineWithData = graphql(SAVE_ACTIVE_PIPELINE_MUTATION, {
@@ -259,4 +267,12 @@ const ConsortiumPipelineWithData = graphql(SAVE_ACTIVE_PIPELINE_MUTATION, {
   }),
 })(ConsortiumPipeline);
 
-export default withStyles(styles)(ConsortiumPipelineWithData);
+const connectedComponent = connect(mapStateToProps,
+  {
+    deleteCollection,
+    getCollectionFiles,
+    getAllCollections,
+  }
+)(ConsortiumPipelineWithData);
+
+export default withStyles(styles)(connectedComponent);
