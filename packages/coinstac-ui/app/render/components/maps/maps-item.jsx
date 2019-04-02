@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router';
 import PropTypes from 'prop-types';
 import Paper from '@material-ui/core/Paper';
 import Button from '@material-ui/core/Button';
@@ -74,8 +75,24 @@ function MapsItem(props) {
         <div className={classes.actionsContainer}>
           {
             itemMapped
-              ? <Button variant="contained" color="primary" onClick={() => setConsortium(itemObject)}>View Details</Button>
-              : <Button variant="contained" color="secondary" onClick={() => setConsortium(itemObject)} name={`${itemObject.name}-map-data`}>Map Data to Consortia</Button>
+              ? <Button
+                 component={Link}
+                 variant="contained"
+                 color="primary"
+                 onClick={() => setConsortium(itemObject)}
+                 to={`map/${itemObject.id}`}>
+                  View Details
+                </Button>
+                :
+                <Button
+                 component={Link}
+                 variant="contained"
+                 color="secondary"
+                 to={`map/${itemObject.id}`}
+                 onClick={() => setConsortium(itemObject)}
+                 name={`${itemObject.name}-map-data`}>
+                  Map Data to Consortia
+                </Button>
           }
           {itemOptions.actions}
           {
