@@ -40,12 +40,13 @@ class Maps extends Component {
 
   render() {
     return (
-      <div>
-        <div className="page-header clearfix">
-          <h1 className="pull-left">Maps</h1>
-        </div>
-        <MapsList />
-      </div>
+      <MapsList
+        auth={this.props.auth}
+        consortia={this.props.associatedConsortia}
+        pipelines={this.props.pipelines}
+        runs={this.props.runs}
+        mapId={this.props.routeParams.mapId}
+      />
     );
   }
 }
@@ -70,4 +71,4 @@ export default connect(mapStateToProps,
     notifyInfo,
     notifySuccess,
   }
-)(MapsList);
+)(Maps);

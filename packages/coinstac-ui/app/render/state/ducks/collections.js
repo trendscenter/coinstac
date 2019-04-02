@@ -418,7 +418,7 @@ export const removeCollectionsFromAssociatedConsortia = applyAsyncLoading(
             .then((collections) => {
               const collectionIds = [];
               collections.forEach((col) => {
-                if (col.associatedConsortia.indexOf(consId) > -1) {
+                if (col.associatedConsortia && col.associatedConsortia.indexOf(consId) > -1) {
                   collectionIds.push(col.id);
                 }
               });

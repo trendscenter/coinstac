@@ -19,7 +19,7 @@ class MapsList extends Component {
     super(props);
 
     this.state = {
-      consortium: null
+      consortium: this.props.consortium
     }
 
     this.setConsortium = this.setConsortium.bind(this);
@@ -75,6 +75,7 @@ class MapsList extends Component {
       auth: { user },
       consortia,
       pipelines,
+      mapId,
     } = this.props;
 
     const {
@@ -83,7 +84,7 @@ class MapsList extends Component {
 
     return (
       <div>
-      {consortium ?
+      {consortium && mapId ?
         <MapsEdit
           consortia={consortia}
           consortium={consortium}
