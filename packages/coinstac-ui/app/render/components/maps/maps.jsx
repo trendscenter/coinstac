@@ -60,7 +60,7 @@ const mapStateToProps = ({ auth, collections: { associatedConsortia } }) => {
 const MapsWithData = compose(
   graphql(FETCH_ALL_CONSORTIA_QUERY,'fetchAllConsortia'),
   withApollo
-)(MapsList);
+)(Maps);
 
 export default connect(mapStateToProps,
   {

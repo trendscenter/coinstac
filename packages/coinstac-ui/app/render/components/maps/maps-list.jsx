@@ -18,7 +18,7 @@ class MapsList extends Component {
     this.setConsortium = this.setConsortium.bind(this);
   }
 
-  setConsortium = (consortium) => {
+  setConsortium(consortium) {
     this.setState({ consortium });
   }
 
@@ -33,7 +33,7 @@ class MapsList extends Component {
     }
   }
 
-  isMember = (userId, groupArr) => {
+  isMember(userId, groupArr) {
     if(userId && groupArr){
       return groupArr.indexOf(userId) !== -1;
     }
@@ -106,7 +106,7 @@ class MapsList extends Component {
             direction="row"
             alignItems="stretch"
           >
-            {consortia && consortia.map(consortium => this.getMapItem(consortium))}
+            {consortia && consortia.map(cons => this.getMapItem(cons))}
           </Grid>
         </div>
       }
@@ -118,8 +118,6 @@ class MapsList extends Component {
 MapsList.propTypes = {
   associatedConsortia: PropTypes.array.isRequired,
   consortia: PropTypes.array.isRequired,
-  notifyInfo: PropTypes.func.isRequired,
-  notifySuccess: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = ({ auth, collections: { associatedConsortia } }) => {

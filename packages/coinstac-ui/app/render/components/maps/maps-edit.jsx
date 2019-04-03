@@ -123,7 +123,13 @@ class MapsEdit extends Component {
      this.setState({isMapped: mapped});
      this.setPipelineSteps(pipeline.steps);
 
-     if( Object.entries(this.state.collection.fileGroups).length === 0 ){
+     let name = consortium.name+': Collection';
+
+     let colExists = collections.map(function(e) { return e.name; }).indexOf(name);
+
+     console.log(colExists);
+
+     if( colExists === -1 && Object.entries(this.state.collection.fileGroups).length === 0 ){
          let collection = {
            name: consortium.name+': Collection',
            associatedConsortia: consortium,
@@ -131,6 +137,8 @@ class MapsEdit extends Component {
          }
         this.setState({collection});
         this.props.saveCollection(collection);
+     }else{
+       this.setState({collection: collections[0]});
      }
 
      this.getDropAction();
