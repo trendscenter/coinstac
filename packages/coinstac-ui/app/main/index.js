@@ -94,8 +94,8 @@ loadConfig()
       logger[type](`process: render - ${message}`);
     });
 
-    ipcPromise.on('login-init', (userId) => {
-      return new Promise(res => res(configureCore(config, logger, userId)))
+    ipcPromise.on('login-init', ({ userId, appDirectory }) => {
+      return new Promise(res => res(configureCore(config, logger, userId, appDirectory)))
         .then((c) => {
           core = c;
           return upsertCoinstacUserDir(core);
@@ -364,6 +364,9 @@ loadConfig()
         }];
         properties = ['openFile'];
         postDialogFunc = ipcFunctions.returnFileAsJSON;
+      } else if (org === 'directory') {
+        properties = ['openDirectory'];
+        postDialogFunc = ipcFunctions.manualDirectorySelection;
       } else {
         filters = [
           {

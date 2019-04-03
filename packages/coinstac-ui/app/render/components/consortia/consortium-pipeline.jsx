@@ -20,7 +20,7 @@ import {
   FETCH_ALL_CONSORTIA_QUERY,
   SAVE_ACTIVE_PIPELINE_MUTATION,
 } from '../../state/graphql/functions';
-import { runInThisContext } from 'vm';
+import memoize from 'memoize-one';
 
 const styles = theme => ({
   tabTitle: {
@@ -54,8 +54,6 @@ class ConsortiumPipeline extends Component {
 
     this.state = {
       activePipeline: {},
-      ownedPipelines: [],
-      sharedPipelines: [],
       openOwnedPipelinesMenu: false,
       openSharedPipelinesMenu: false,
     };
@@ -67,35 +65,17 @@ class ConsortiumPipeline extends Component {
   }
 
   static getDerivedStateFromProps(props, state) {
-    const derivedState = {}
-
     if (props.pipelines.length > 0 &&
       props.consortium.activePipelineId &&
       (!state.activePipeline || state.activePipeline.id !== props.consortium.activePipelineId)
     ) {
       const activePipeline = props.pipelines
         .find(cons => cons.id === props.consortium.activePipelineId);
-      derivedState.activePipeline = activePipeline;
+
+      return { activePipeline };
     }
 
-    if (props.pipelines !== state.prevPipelines) {
-      let ownedPipelines = [];
-      let sharedPipelines = [];
-
-      ownedPipelines = props.pipelines.filter(
-        pipe => pipe.owningConsortium === props.consortium.id
-      );
-
-      sharedPipelines = props.pipelines.filter(
-        pipe => pipe.shared && pipe.owningConsortium !== props.consortium.id
-      );
-
-      derivedState.prevPipelines = props.pipelines;
-      derivedState.ownedPipelines = ownedPipelines;
-      derivedState.sharedPipelines = sharedPipelines;
-    }
-
-    return Object.keys(derivedState).length > 0 ? derivedState : null;
+    return null;
   }
 
   selectPipeline = pipelineId => event => {
@@ -126,15 +106,25 @@ class ConsortiumPipeline extends Component {
     this.setState({ openSharedPipelinesMenu: false });
   }
 
+  filterOwnedPipelines = memoize(
+    (pipelines, consortiumId) => pipelines.filter(pipe => pipe.owningConsortium === consortiumId)
+  );
+
+  filterSharedPipelines = memoize(
+    (pipelines, consortiumId) => pipelines.filter((pipe) => pipe.owningConsortium !== consortiumId)
+  );
+
   render() {
-    const { consortium, owner, classes } = this.props;
+    const { consortium, owner, classes, pipelines } = this.props;
     const {
       activePipeline,
-      ownedPipelines,
-      sharedPipelines,
       openOwnedPipelinesMenu,
       openSharedPipelinesMenu,
     } = this.state;
+
+
+    const ownedPipelines = this.filterOwnedPipelines(pipelines, consortium.id);
+    const sharedPipelines = this.filterSharedPipelines(pipelines, consortium.id);
 
     return (
       <div>
@@ -186,6 +176,7 @@ class ConsortiumPipeline extends Component {
                     onClose={this.closeOwnedPipelinesMenu}
                   >
                     {
+                      ownedPipelines &&
                       ownedPipelines.map(pipe => (
                         <MenuItem
                           key={`owned-${pipe.id}`}
@@ -213,6 +204,7 @@ class ConsortiumPipeline extends Component {
                     onClose={this.closeSharedPipelinesMenu}
                   >
                     {
+                      sharedPipelines &&
                       sharedPipelines.map(pipe => (
                         <MenuItem
                           key={`owned-${pipe.id}`}
