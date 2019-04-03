@@ -127,8 +127,6 @@ class MapsEdit extends Component {
 
      let colExists = collections.map(function(e) { return e.name; }).indexOf(name);
 
-     console.log(colExists);
-
      if( colExists === -1 && Object.entries(this.state.collection.fileGroups).length === 0 ){
          let collection = {
            name: consortium.name+': Collection',
