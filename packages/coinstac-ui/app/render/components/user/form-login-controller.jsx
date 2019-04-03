@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { clearUser, login } from '../../state/ducks/auth';
+import { clearUser, login, setAppDirectory } from '../../state/ducks/auth';
 import FormLogin from './form-login';
 import LayoutNoauth from '../layout-noauth';
 
@@ -11,6 +11,7 @@ class FormLoginController extends Component {
 
     this.submit = this.submit.bind(this);
     this.checkForUser = this.checkForUser.bind(this);
+    this.changeAppDirectory = this.changeAppDirectory.bind(this);
   }
 
   componentDidMount() {
@@ -23,13 +24,19 @@ class FormLoginController extends Component {
 
   checkForUser() {
     const { router } = this.context;
-    if (this.props.auth.user.email.length) {
+    const { auth: { user } } = this.props;
+    if (user && user.email.length) {
       router.push('/dashboard');
     }
   }
 
   submit(data) {
     this.props.login(data);
+  }
+
+  changeAppDirectory(appDirectory) {
+    const { setAppDirectory } = this.props;
+    setAppDirectory(appDirectory);
   }
 
   render() {
@@ -41,6 +48,7 @@ class FormLoginController extends Component {
           auth={auth}
           loading={loading}
           submit={this.submit}
+          changeAppDirectory={this.changeAppDirectory}
         />
       </LayoutNoauth>
     );
@@ -57,6 +65,7 @@ FormLoginController.propTypes = {
   auth: PropTypes.object.isRequired,
   loading: PropTypes.object.isRequired,
   login: PropTypes.func.isRequired,
+  setAppDirectory: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = ({ auth, loading }) => {
@@ -66,4 +75,5 @@ const mapStateToProps = ({ auth, loading }) => {
 export default connect(mapStateToProps, {
   clearUser,
   login,
+  setAppDirectory,
 })(FormLoginController);
