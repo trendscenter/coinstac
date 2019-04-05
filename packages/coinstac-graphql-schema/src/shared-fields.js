@@ -17,6 +17,7 @@ const sharedFields = {
       name
       description
       version
+      id
     }
     delete
     submittedBy

@@ -20,6 +20,7 @@ const schemaFields = {
     repository: String
     description: String
     name: String!
+    id: String!
     tags: [String]
     version: String
     controller: String
@@ -42,7 +43,7 @@ const schemaFields = {
     type: String
   `,
   pipelineStepFields: `
-    inputMap: JSON 
+    inputMap: JSON
     id: ID!
   `,
   resultFields: `
