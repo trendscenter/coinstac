@@ -1,5 +1,5 @@
 const jwt2 = require('hapi-auth-jwt2');
-const { graphiqlHapi, graphqlHapi } = require('apollo-server-hapi');
+const { graphiqlHapi, graphqlHapi } = require('apollo-server-hapi-coinstac');
 const { schema } = require('./data/schema');
 
 module.exports = [
