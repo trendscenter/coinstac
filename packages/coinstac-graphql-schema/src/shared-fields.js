@@ -48,6 +48,7 @@ const sharedFields = {
           name
           description
           version
+          id
         }
         computation {
           type
