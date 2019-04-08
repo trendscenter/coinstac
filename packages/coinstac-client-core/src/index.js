@@ -231,9 +231,8 @@ class CoinstacClient {
           runObj.clients = clients;
         }
 
-        const newPipeline = this.pipelineManager.startPipeline(runObj);
-
-        return Promise.all([newPipeline, ...linkPromises]);
+        return Promise.all(linkPromises)
+          .then(() => this.pipelineManager.startPipeline(runObj));
       });
   }
 
