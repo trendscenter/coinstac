@@ -15,16 +15,7 @@ import {
 } from '../../state/graphql/props';
 import { notifyInfo, notifySuccess } from '../../state/ducks/notifyAndLog';
 import {
-  ADD_USER_ROLE_MUTATION,
-  CONSORTIUM_CHANGED_SUBSCRIPTION,
-  FETCH_ALL_USERS_QUERY,
-  FETCH_ALL_CONSORTIA_QUERY,
-  FETCH_CONSORTIUM_QUERY,
-  JOIN_CONSORTIUM_MUTATION,
-  LEAVE_CONSORTIUM_MUTATION,
-  REMOVE_USER_ROLE_MUTATION,
-  SAVE_CONSORTIUM_MUTATION,
-  USER_CHANGED_SUBSCRIPTION,
+  FETCH_ALL_CONSORTIA_QUERY
 } from '../../state/graphql/functions';
 
 const styles = {
@@ -42,7 +33,7 @@ class Maps extends Component {
     return (
       <MapsList
         auth={this.props.auth}
-        consortia={this.props.associatedConsortia}
+        consortia={this.props.consortia}
         pipelines={this.props.pipelines}
         runs={this.props.runs}
         mapId={this.props.routeParams.mapId}
@@ -66,9 +57,14 @@ const mapStateToProps = ({ auth, collections: { associatedConsortia } }) => {
   return { auth, associatedConsortia };
 };
 
+const MapsWithData = compose(
+  graphql(FETCH_ALL_CONSORTIA_QUERY,'fetchAllConsortia'),
+  withApollo
+)(Maps);
+
 export default connect(mapStateToProps,
   {
     notifyInfo,
     notifySuccess,
   }
-)(Maps);
+)(MapsWithData);

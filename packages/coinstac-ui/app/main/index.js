@@ -194,7 +194,7 @@ loadConfig()
             run.id,
             run.pipelineSteps
           )
-            .then(([{ pipeline, result }]) => {
+            .then(({ pipeline, result }) => {
               // Listen for local pipeline state updates
               pipeline.stateEmitter.on('update', (data) => {
                 mainWindow.webContents.send('local-pipeline-state-update', { run, data });
@@ -234,6 +234,22 @@ loadConfig()
                       });
                     });
                 });
+            })
+            .catch((error) => {
+              mainWindow.webContents.send('local-run-error', {
+                consName: consortium.name,
+                run: Object.assign(
+                  run,
+                  {
+                    error: {
+                      message: error.message,
+                      stack: error.stack,
+                      error: error.error,
+                    },
+                    endDate: Date.now(),
+                  }
+                ),
+              });
             });
         });
     });
