@@ -17,6 +17,7 @@ const sharedFields = {
       name
       description
       version
+      id
     }
     delete
     submittedBy
@@ -47,6 +48,7 @@ const sharedFields = {
           name
           description
           version
+          id
         }
         computation {
           type

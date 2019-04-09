@@ -4,15 +4,8 @@ import { compose, graphql, withApollo } from 'react-apollo';
 import PropTypes from 'prop-types';
 import Typography from '@material-ui/core/Typography';
 import Grid from '@material-ui/core/Grid';
-import {
-  FETCH_ALL_CONSORTIA_QUERY,
-} from '../../state/graphql/functions';
 import MapsItem from './maps-item';
 import MapsEdit from './maps-edit';
-
-const isUserA = (userId, groupArr) => {
-  return groupArr.indexOf(userId) !== -1;
-};
 
 class MapsList extends Component {
   constructor(props) {
@@ -25,7 +18,7 @@ class MapsList extends Component {
     this.setConsortium = this.setConsortium.bind(this);
   }
 
-  setConsortium = (consortium) => {
+  setConsortium(consortium) {
     this.setState({ consortium });
   }
 
@@ -40,11 +33,18 @@ class MapsList extends Component {
     }
   }
 
+  isMember(userId, groupArr) {
+    if(userId && groupArr){
+      return groupArr.indexOf(userId) !== -1;
+    }
+  };
+
   getMapItem = (consortium) => {
     const { user } = this.props.auth;
     const { pipelines } = this.props;
     let pipeline = pipelines.find( pipeline => pipeline.id === consortium.activePipelineId );
-    if (pipeline && isUserA(user.id, consortium.owners) || pipeline && isUserA(user.id, consortium.members)) {
+    if (pipeline && this.isMember(user.id, consortium.owners) ||
+      pipeline && this.isMember(user.id, consortium.members)) {
       return (
         <MapsItem
           key={`${consortium.id}-list-item`}
@@ -106,7 +106,7 @@ class MapsList extends Component {
             direction="row"
             alignItems="stretch"
           >
-            {consortia && consortia.map(consortium => this.getMapItem(consortium))}
+            {consortia && consortia.map(cons => this.getMapItem(cons))}
           </Grid>
         </div>
       }
@@ -116,19 +116,14 @@ class MapsList extends Component {
 }
 
 MapsList.propTypes = {
-  consortia: PropTypes.array.isRequired,
   associatedConsortia: PropTypes.array.isRequired,
+  consortia: PropTypes.array.isRequired,
 };
 
 const mapStateToProps = ({ auth, collections: { associatedConsortia } }) => {
   return { auth, associatedConsortia };
 };
 
-const MapsListWithData = compose(
-  graphql(FETCH_ALL_CONSORTIA_QUERY,'fetchAllConsortia'),
-  withApollo
-)(MapsList);
-
 export default connect(mapStateToProps,
   {}
-)(MapsListWithData);
+)(MapsList);
