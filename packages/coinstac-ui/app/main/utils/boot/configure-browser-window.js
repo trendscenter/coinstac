@@ -37,7 +37,7 @@ function createWindow() {
     width: 810,
     height: 610,
     frame: false,
-    alwaysOnTop: true
+    alwaysOnTop: true,
   });
 
   splashWindow.loadURL(`file://${renderSplashPath}`);
