@@ -175,10 +175,10 @@ class MapsCollection extends Component {
      let resolveAutoMapPromises = Object.entries(inputMap).map((item, i) => {
        let type = item[0];
        let obj = item[1].ownerMappings;
-       this.makePoints(group.firstRow).map((string, index) => {
+       const steps = this.makePoints(group.firstRow).map(async (string, index) => {
         string = string.replace('file', '');
         if( obj && Object.keys(this.filterGetObj(obj,string)).length > 0 ){
-         this.setStepIO(
+         await this.setStepIO(
            index,
            group.id,
            0,
@@ -190,7 +190,7 @@ class MapsCollection extends Component {
         if(obj && obj[0] && obj[0].type){
           let fuzzy = bitap(string.toLowerCase(), obj[0].type.toLowerCase(), 1);
           if(fuzzy.length){
-            this.setStepIO(
+            await this.setStepIO(
               index,
               group.id,
               0,
@@ -201,7 +201,8 @@ class MapsCollection extends Component {
           }
         }
        });
-       return Promise.resolve();
+
+       return Promise.all(steps);
      });
      await Promise.all(resolveAutoMapPromises);
      this.setState({ finishedAutoMapping: true });
