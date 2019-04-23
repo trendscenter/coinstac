@@ -12,11 +12,11 @@ import _ from 'lodash';
 import kebabcase from 'lodash';
 
 const styles = {
-  print: { display: 'none', visibility: 'hidden' },
+  //print: { display: 'none', visibility: 'hidden' },
   column: { position: 'relative', float: 'left', width: '45%', marginRight: '5%' },
   image: { width: '100%', height: 'auto' },
-  pdfButton: { position: 'absolute', top: '20rem', right: '2rem' },
-  page: { position: 'relative', float: 'left', width: '95%', marginRight: '5%' },
+  pdfButton: { position: 'absolute', top: '15.75rem', right: '1rem', zIndex: '9' },
+  page: { position: 'relative', float: 'left', width: '100%' },
   subItem: { position: 'relative', float: 'left', width: '95%', marginRight: '5%' },
   subpage: { position: 'relative', float: 'left', width: '100%', marginBottom: '2rem' },
 };
@@ -185,15 +185,15 @@ class Images extends Component {
       let globalImg = canvas.toDataURL("image/jpg", 1.0);
       let global_items = Object.keys(plotData.global_stats).length;
       let height = 0;
-      height = global_items * 25;
-		  doc.addImage(globalImg, 'jpg', 5, 5, 200, height);
+      height = global_items * 70;
+		  doc.addImage(globalImg, 'jpg', 5, 5, 100, height/2);
       Object.entries(plotData.local_stats).forEach(([key, value]) => {
           let canvas = key + '_canvas';
           let page = 'page-' + key;
           let key_canvas = ReactDOM.findDOMNode(this.refs[canvas]);
           let canvasImg = key_canvas.toDataURL("image/jpg", 1.0);
           doc.addPage();
-    		  doc.addImage(canvasImg, 'jpg', 5, 5, 200, height);
+    		  doc.addImage(canvasImg, 'jpg', 5, 5, 100, height/2);
       });
 		  doc.save(kebabcase(this.props.title) + ".pdf");
     } catch(err) {
@@ -209,7 +209,8 @@ class Images extends Component {
     let global_items = Object.keys(plotData.global_stats).length;
     let local_items = Object.keys(plotData.local_stats).length;
     let height = 0;
-    height = global_items * 105;
+    console.log(global_items, local_items);
+    height = global_items * 350;
     let local_canvas = [];
     Object.entries(plotData.local_stats).forEach(([key, value]) => {
         local_canvas.push(<canvas className={'canvas'} ref={`${key}_canvas`} width="800" height={height}></canvas>);
