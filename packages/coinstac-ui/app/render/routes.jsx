@@ -9,7 +9,7 @@ import React from 'react';
 import App from './components/app';
 import ComputationsList from './components/computations/computations-list';
 import ComputationSubmission from './components/computations/computation-submission';
-import ConsortiaList from './components/consortia/consortia-list';
+import ConsortiaList from './containers/consortia-list-container';
 import ConsortiumTabs from './components/consortia/consortium-tabs';
 import Dashboard from './components/dashboard/dashboard';
 import DashboardHome from './components/dashboard/dashboard-home';
