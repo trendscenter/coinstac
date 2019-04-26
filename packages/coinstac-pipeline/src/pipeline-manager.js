@@ -109,6 +109,7 @@ module.exports = {
         socket.emit('hello', { status: 'connected' });
 
         socket.on('register', (data) => {
+          logger.silly(`############ REGESTERED CLIENT ${data.id}`);
           if (!remoteClients[data.id]) {
             remoteClients[data.id] = {};
           }
@@ -119,9 +120,7 @@ module.exports = {
         });
 
         socket.on('run', (data) => {
-          logger.silly(`############ CLIENT ${data.id}`);
-          logger.silly(JSON.stringify(data, null, 2));
-          logger.silly(`############ END CLIENT ${data.id}`);
+          logger.silly(`############ RECEIVED CLIENT DATA: ${data.id}`);
           // client run started before remote
           if (!activePipelines[data.runId]) {
             activePipelines[data.runId] = {
@@ -387,8 +386,6 @@ module.exports = {
               io.of('/').to(pipeline.id).emit('run', { runId: pipeline.id, error: runError });
             } else {
               logger.silly('############ REMOTE OUT');
-              logger.silly(JSON.stringify(message, null, 2));
-              logger.silly('############ END REMOTE OUT');
               io.of('/').in(pipeline.id).clients((error, clients) => {
                 if (error) throw error;
                 readdir(activePipelines[pipeline.id].transferDirectory)
