@@ -124,11 +124,10 @@ class Dashboard extends Component {
     setInterval(() => {
       let status = this.props.getDockerStatus();
       status.then((result) => {
-        console.log(result);
         if( result == 'OK' ){
           this.setState({dockerStatus: true});
         }else{
-          this.setState({dockerStatus: false});      
+          this.setState({dockerStatus: false});
         }
       }, (err) => {
         this.setState({dockerStatus: false});
