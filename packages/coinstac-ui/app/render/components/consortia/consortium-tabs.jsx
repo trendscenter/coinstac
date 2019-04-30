@@ -207,8 +207,8 @@ class ConsortiumTabs extends Component {
           id="consortium-tabs"
         >
           <Tab label="About" />
-          { typeof consortium.id !== 'undefined' && <Tab label="Pipelines" />}
-          { isOwner && typeof consortium.id !== 'undefined' && <Tab label="Runs" /> }
+          <Tab label="Pipelines" />
+          { isOwner && <Tab label="Runs" /> }
         </Tabs>
         {
           selectedTabIndex === 0

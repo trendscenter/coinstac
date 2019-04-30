@@ -4,37 +4,26 @@ import { compose, graphql, withApollo } from 'react-apollo';
 import PropTypes from 'prop-types';
 import Typography from '@material-ui/core/Typography';
 import Grid from '@material-ui/core/Grid';
-import {
-  FETCH_ALL_CONSORTIA_QUERY,
-} from '../../state/graphql/functions';
 import MapsItem from './maps-item';
 import MapsEdit from './maps-edit';
-
-const isUserA = (userId, groupArr) => {
-  return groupArr.indexOf(userId) !== -1;
-};
 
 class MapsList extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
-      consortium: null
+      consortium: this.props.consortium
     }
 
     this.setConsortium = this.setConsortium.bind(this);
   }
 
-  setConsortium = (consortium) => {
+  setConsortium(consortium) {
     this.setState({ consortium });
   }
 
-  getMapped(member, owner, consortium) {
-    const { auth: { user } } = this.props;
-    const actions = [];
-    const text = [];
+  getMapped(consortium) {
     let isMapped = false;
-
     if (this.props.associatedConsortia.length > 0) {
       const assocCons = this.props.associatedConsortia.find(c => c.id === consortium.id);
       if (assocCons && assocCons.isMapped) {
@@ -44,11 +33,18 @@ class MapsList extends Component {
     }
   }
 
+  isMember(userId, groupArr) {
+    if(userId && groupArr){
+      return groupArr.indexOf(userId) !== -1;
+    }
+  };
+
   getMapItem = (consortium) => {
     const { user } = this.props.auth;
     const { pipelines } = this.props;
     let pipeline = pipelines.find( pipeline => pipeline.id === consortium.activePipelineId );
-    if (pipeline && isUserA(user.id, consortium.owners) || pipeline && isUserA(user.id, consortium.members)) {
+    if (pipeline && this.isMember(user.id, consortium.owners) ||
+      pipeline && this.isMember(user.id, consortium.members)) {
       return (
         <MapsItem
           key={`${consortium.id}-list-item`}
@@ -56,11 +52,7 @@ class MapsList extends Component {
           itemObject={consortium}
           itemOptions
           itemMapped={
-            this.getMapped(
-              isUserA(user.id, consortium.members),
-              isUserA(user.id, consortium.owners),
-              consortium
-            )
+            this.getMapped(consortium)
           }
           pipelineId={pipeline.name}
           setConsortium={this.setConsortium}
@@ -80,17 +72,26 @@ class MapsList extends Component {
 
   render() {
     const {
+      auth: { user },
       consortia,
       pipelines,
+      mapId,
     } = this.props;
+
+    const {
+      consortium,
+    } = this.state;
 
     return (
       <div>
-      {this.state.consortium ?
+      {consortium && mapId ?
         <MapsEdit
           consortia={consortia}
-          consortium={this.state.consortium}
-          pipelines={this.props.pipeline}
+          consortium={consortium}
+          mapped={
+            this.getMapped(consortium)
+          }
+          pipelines={this.props.pipelines}
           runs={this.props.runs}
         />:
         <div>
@@ -105,7 +106,7 @@ class MapsList extends Component {
             direction="row"
             alignItems="stretch"
           >
-            {consortia && consortia.map(consortium => this.getMapItem(consortium))}
+            {consortia && consortia.map(cons => this.getMapItem(cons))}
           </Grid>
         </div>
       }
@@ -115,19 +116,14 @@ class MapsList extends Component {
 }
 
 MapsList.propTypes = {
-  consortia: PropTypes.array.isRequired,
   associatedConsortia: PropTypes.array.isRequired,
+  consortia: PropTypes.array.isRequired,
 };
 
 const mapStateToProps = ({ auth, collections: { associatedConsortia } }) => {
   return { auth, associatedConsortia };
 };
 
-const MapsListWithData = compose(
-  graphql(FETCH_ALL_CONSORTIA_QUERY,'fetchAllConsortia'),
-  withApollo
-)(MapsList);
-
 export default connect(mapStateToProps,
   {}
-)(MapsListWithData);
+)(MapsList);

@@ -60,9 +60,11 @@ class MapsStepData extends Component {
         <div className={classes.listDropzoneContainer}>
           <List className={classes.interestList}>
             <ListItem><ListItemText primary="Interest(s):" /></ListItem>
-            {
+            {step.value &&
               step.value.map((key, i) => (
-                <ListItem key={key} className={classes.nestedListItem}><ListItemText secondary={step.value[i].label} /></ListItem>
+                <ListItem key={key} className={classes.nestedListItem}>
+                  <ListItemText secondary={step.value[i].label} />
+                </ListItem>
               ))
             }
           </List>
