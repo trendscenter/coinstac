@@ -1,4 +1,7 @@
 module.exports = {
+  manualDirectorySelection(path) {
+    return path;
+  },
   manualFileSelection(filePaths, core) {
     return core.constructor.getSubPathsAndGroupExtension({ paths: filePaths, extension: null });
   },

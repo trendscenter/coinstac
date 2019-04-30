@@ -93,6 +93,7 @@ class MapsCollection extends Component {
   addFileGroup() {
     ipcPromise.send('open-dialog', 'metafile')
     .then((obj) => {
+
       let newFiles;
 
       const fileGroupId = shortid.generate();
@@ -145,7 +146,7 @@ class MapsCollection extends Component {
       return Object.keys(obj).some(function(key) {
         let objkey = obj[key];
         if(typeof objkey === 'string'){
-          let fuzzy = bitap(objkey, searchkey, 1);
+          let fuzzy = bitap(objkey.toLowerCase(), searchkey.toLowerCase(), 1);
           if(fuzzy.length){
             return obj[key];
           }
@@ -160,7 +161,7 @@ class MapsCollection extends Component {
        return Object.keys(obj).some(function(key) {
          let objkey = obj[key];
          if(typeof objkey === 'string'){
-           let fuzzy = bitap(objkey, searchkey, 1);
+           let fuzzy = bitap(objkey.toLowerCase(), searchkey.toLowerCase(), 1);
            if(fuzzy.length){
              return obj[key];
            }
@@ -169,38 +170,44 @@ class MapsCollection extends Component {
      });
    }
 
-  async autoMap(group) {
-    this.setState({ autoMap: true });
-    let covariates = this.props.collection.associatedConsortia.pipelineSteps[0].inputMap.covariates.ownerMappings;
-    let data = this.props.collection.associatedConsortia.pipelineSteps[0].inputMap.data.ownerMappings;
-    const resolveAutoMapPromises = this.makePoints(group.firstRow).map((string, index) => {
-      if( Object.keys(this.filterGetObj(covariates,string)).length > 0 ){
-        return this.setStepIO(
-          index,
-          group.id,
-          0,
-          'covariates',
-          this.filterGetIndex(covariates,string),
-          string
-        );
-      }
-      if( Object.keys(this.filterGetObj(data,string)).length > 0 ){
-        return this.setStepIO(
-          index,
-          group.id,
-          0,
-          'data',
-          this.filterGetIndex(data,string),
-          string
-        );
-      }
+   async autoMap(group) {
+     let inputMap = this.props.activeConsortium.pipelineSteps[0].inputMap;
+     let resolveAutoMapPromises = Object.entries(inputMap).map((item, i) => {
+       let type = item[0];
+       let obj = item[1].ownerMappings;
+       const steps = this.makePoints(group.firstRow).map(async (string, index) => {
+        string = string.replace('file', '');
+        if( obj && Object.keys(this.filterGetObj(obj,string)).length > 0 ){
+         await this.setStepIO(
+           index,
+           group.id,
+           0,
+           type,
+           this.filterGetIndex(obj,string),
+           string
+         );
+        }
+        if(obj && obj[0] && obj[0].type){
+          let fuzzy = bitap(string.toLowerCase(), obj[0].type.toLowerCase(), 1);
+          if(fuzzy.length){
+            await this.setStepIO(
+              index,
+              group.id,
+              0,
+              type,
+              0,
+              string
+            );
+          }
+        }
+       });
 
-      return Promise.resolve();
-    });
+       return Promise.all(steps);
+     });
+     await Promise.all(resolveAutoMapPromises);
+     this.setState({ finishedAutoMapping: true });
+   }
 
-    await Promise.all(resolveAutoMapPromises);
-    this.setState({ finishedAutoMapping: true });
-  }
 
   removeFileGroup(groupId) {
     return () => {
@@ -363,7 +370,7 @@ class MapsCollection extends Component {
                       <Divider />
                       <div className={classes.actionsContainer}>
                         {
-                          !isMapped && contChildren !== 0
+                          !isMapped && !finishedAutoMapping && contChildren !== 0
                           && (
                             <Button
                               variant="contained"

@@ -335,7 +335,7 @@ class ConsortiaList extends Component {
       const { client, router } = this.props;
       let isRemotePipeline = false;
       const pipelineData = client.readQuery({ query: FETCH_ALL_PIPELINES_QUERY });
-      const pipeline = pipelineData.fetchAllPipelines
+      let pipeline = pipelineData.fetchAllPipelines
         .find(pipe => pipe.id === activePipelineId);
 
       for (let i = 0; i < pipeline.steps.length; i += 1) {
@@ -365,11 +365,10 @@ class ConsortiaList extends Component {
         let status = 'started';
         return this.props.getCollectionFiles(
           consortiumId,
-          consortium.name,
-          run.pipelineSnapshot.steps
+          run.id,
         )
         .then((filesArray) => {
-          if ('error' in filesArray) {
+          if (!filesArray || 'error' in filesArray) {
             status = 'needs-map';
             this.props.notifyWarning({
               message: filesArray.error,
@@ -393,6 +392,10 @@ class ConsortiaList extends Component {
                   ...run.pipelineSnapshot,
                   steps: filesArray.steps,
                 },
+              };
+              pipeline = {
+                ...pipeline,
+                steps: filesArray.steps,
               };
             }
 

@@ -37,13 +37,8 @@ describe('e2e run computation with 1 member', () => {
     }
   });
 
-  it('opens a single window', () => (
-    app.client.waitUntilWindowLoaded()
-      .getWindowCount().should.eventually.equal(1)
-  ));
-
   it('displays the correct title', () => (
-    app.client.waitUntilWindowLoaded()
+    app.client.waitUntilWindowLoaded(10000)
       .getTitle().should.eventually.equal('COINSTAC')
   ));
 
@@ -184,8 +179,8 @@ describe('e2e run computation with 1 member', () => {
   it('map data to consortium', () => (
     app.client
       .click('a=Maps')
-      .waitForVisible(`button[name="${CONS_NAME}-map-data"]`, EXIST_TIMEOUT)
-      .click(`button[name="${CONS_NAME}-map-data"]`)
+      .waitForVisible(`a[name="${CONS_NAME}-map-data"]`, 20000)
+      .click(`a[name="${CONS_NAME}-map-data"]`)
       .waitForVisible('button=Add Files Group', EXIST_TIMEOUT)
       .click('button=Add Files Group')
       .waitForVisible('button=Auto Map', EXIST_TIMEOUT)

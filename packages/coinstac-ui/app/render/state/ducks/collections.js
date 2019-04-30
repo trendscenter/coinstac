@@ -6,6 +6,10 @@ import { applyAsyncLoading } from './loading';
 import localDB from '../local-db';
 import inputDataTypes from '../input-data-types.json';
 
+//Get Base App Dir
+const CoinstacClient = require('coinstac-client-core');
+const dir = CoinstacClient.getDefaultAppDirectory();
+
 // Actions
 const CLEAR_COLLECTIONS_CONSORTIA = 'CLEAR_COLLECTIONS_CONSORTIA';
 const DELETE_ASSOCIATED_CONSORTIA = 'DELETE_ASSOCIATED_CONSORTIA';
@@ -95,7 +99,7 @@ function parseFilesByGroup(
   }
 }
 
-function iteratePipelineSteps(consortium, filesByGroup, baseDirectory) {
+function iteratePipelineSteps(consortium, filesByGroup, baseDirectory, runId) {
   let mappingIncomplete = false;
   const collections = [];
   const steps = [];
@@ -112,10 +116,50 @@ function iteratePipelineSteps(consortium, filesByGroup, baseDirectory) {
       const key = inputKeys[keyIndex];
 
       if ('ownerMappings' in step.inputMap[key]) {
-        const keyArray = [[], [], []]; // [[values], [labels], [type (if present)]]
+        let keyArray = [[], [], []]; // [[values], [labels], [type (if present)]]
         const mappingIndex = 0;
         const mappingObj = step.inputMap[key].ownerMappings[mappingIndex];
-        if (mappingObj.source === 'file'
+        if (inputKeys.includes('data')
+        && inputKeys.includes('options')
+        && !inputKeys.includes('covariates')
+        && !inputKeys.includes('file')) {
+          let groupId = false;
+          let collectionId = false;
+          let ownerId = false;
+          if(consortium.stepIO[sIndex]) {
+            let conStepIO = consortium.stepIO[sIndex][key][mappingIndex];
+            groupId = conStepIO.groupId;
+            collectionId = conStepIO.collectionId;
+            ownerId = consortium.owners[0];
+          }
+          if (filesByGroup && baseDirectory) {
+            const e = new RegExp(/[-\/\\^$*+?.()|[\]{}]/g); // eslint-disable-line no-useless-escape
+            const escape = (string) => {
+              return string.replace(e, '\\$&');
+            };
+            const pathsep = new RegExp(`${escape(sep)}|:`, 'g');
+            const pathsArray = filesByGroup[groupId];
+            let paths = pathsArray.map((path) => {
+              if (path[0].includes('/')) {
+                let filepath = baseDirectory + path[0];
+                filepath = filepath.replace(pathsep, '-');
+                //path = "/input/"+ownerId+"/"+runId+"/"+path;
+                //console.log(filepath);
+                return filepath;
+              }
+            });
+            paths = paths.filter(Boolean);
+            keyArray.push(paths);
+          } else {
+            if (groupId && collectionId && consortium.pipelineSteps) {
+              let pipelineSteps = consortium.pipelineSteps[0];
+              collections.push({ groupId, collectionId });
+            } else {
+              mappingIncomplete = true;
+              break;
+            }
+          }
+        }else if (mappingObj.source === 'file'
         && consortium.stepIO[sIndex] && consortium.stepIO[sIndex][key][mappingIndex]
         && consortium.stepIO[sIndex][key][mappingIndex].collectionId
         && consortium.stepIO[sIndex][key][mappingIndex].column) {
@@ -164,7 +208,16 @@ function iteratePipelineSteps(consortium, filesByGroup, baseDirectory) {
           // TODO: Handle keys fromCache if need be
         }
 
-        inputMap[key] = { value: keyArray };
+        keyArray = keyArray.filter((item) => {
+          return item.length !== 0;
+        });// remove empty array items if present
+
+        if(keyArray.length === 1){
+          inputMap[key].value = keyArray[0];
+        }else{
+          inputMap[key] = { value: keyArray };
+        }
+
       }
 
       if (mappingIncomplete) {
@@ -218,7 +271,7 @@ export const getAllCollections = applyAsyncLoading(() => dispatch => localDB.col
     }));
   }));
 
-export const getCollectionFiles = consortiumId => (dispatch) => {
+export const getCollectionFiles = (consortiumId, runId) => (dispatch) => {
   return localDB.associatedConsortia.get(consortiumId)
     .then((consortium) => {
       let collections = { collections: [] };
@@ -242,7 +295,6 @@ export const getCollectionFiles = consortiumId => (dispatch) => {
           if (collections.collections.length === 0) {
             return { allFiles: collections.collections };
           }
-
           return localDB.collections
             .filter(collection => collections.collections.findIndex(
               c => c.collectionId === collection.id
@@ -265,8 +317,7 @@ export const getCollectionFiles = consortiumId => (dispatch) => {
               });
 
               // TODO: Reconsider how to get updated steps
-              const { steps } = iteratePipelineSteps(consortium, filesByGroup, metaDir);
-
+              const { steps } = iteratePipelineSteps(consortium, filesByGroup, metaDir, runId);
               dispatch(({
                 type: GET_COLLECTION_FILES,
                 payload: { allFiles, steps },
@@ -367,7 +418,7 @@ export const removeCollectionsFromAssociatedConsortia = applyAsyncLoading(
             .then((collections) => {
               const collectionIds = [];
               collections.forEach((col) => {
-                if (col.associatedConsortia.indexOf(consId) > -1) {
+                if (col.associatedConsortia && col.associatedConsortia.indexOf(consId) > -1) {
                   collectionIds.push(col.id);
                 }
               });
