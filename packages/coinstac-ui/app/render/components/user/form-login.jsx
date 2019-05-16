@@ -1,4 +1,3 @@
-import { Alert } from 'react-bootstrap';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
@@ -7,6 +6,7 @@ import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
 import Checkbox from '@material-ui/core/Checkbox';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
+import classNames from 'classnames';
 import FormStartupDirectory from './form-startup-directory';
 
 const styles = theme => ({
@@ -25,6 +25,10 @@ const styles = theme => ({
   },
   formControl: {
     marginBottom: theme.spacing.unit * 2,
+  },
+  error: {
+    textAlign: 'center',
+    color: 'red',
   },
 });
 
@@ -90,9 +94,17 @@ class FormLogin extends Component {
             {
               auth.error
               && (
-                <Alert bsStyle="danger" className={classes.bottomMargin}>
+                <p className={classNames(classes.bottomMargin, classes.error)}>
                   <strong>Error!</strong> {auth.error}
-                </Alert>
+                </p>
+              )
+            }
+            {
+              !auth.isApiVersionCompatible
+              && (
+                <p className={classNames(classes.bottomMargin, classes.error)}>
+                  <strong>Error!</strong> This Coinstac version is not compatible with the API.
+                </p>
               )
             }
             <TextField
@@ -127,14 +139,14 @@ class FormLogin extends Component {
               color="secondary"
               type="submit"
               fullWidth
-              disabled={loading.isLoading}
+              disabled={loading.isLoading || !auth.isApiVersionCompatible}
             >
               Log In
             </Button>
           </form>
         </Paper>
-        <Button>Forgot Password?</Button>
-        <Button onClick={this.openStartupDirectoryDialog}>Change App Settings</Button>
+        <Button disabled={!auth.isApiVersionCompatible}>Forgot Password?</Button>
+        <Button onClick={this.openStartupDirectoryDialog} disabled={!auth.isApiVersionCompatible}>Change App Settings</Button>
         <FormStartupDirectory
           open={openSetStartupDirectoryDialog}
           close={this.closeStartupDirectoryDialog}
