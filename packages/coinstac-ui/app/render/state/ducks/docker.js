@@ -7,17 +7,14 @@ import { notifyError, notifySuccess } from './notifyAndLog';
 // Actions
 export const CLEAR_DOCKER_OUTPUT = 'CLEAR_DOCKER_OUTPUT';
 export const GET_LOCAL_IMAGES = 'GET_LOCAL_IMAGES';
-export const GET_DOCKER_STATUS = 'GET_DOCKER_STATUS';
 export const PULL_COMPUTATIONS = 'PULL_COMPUTATIONS';
 export const REMOVE_IMAGE = 'REMOVE_IMAGE';
 export const UPDATE_DOCKER_OUTPUT = 'UPDATE_DOCKER_OUTPUT';
 
 // Action Creators
-export const getDockerStatus = applyAsyncLoading(() => dispatch => ipcPromise.send('get-status')
-  .then((res) => {
-    dispatch({ payload: res, type: GET_DOCKER_STATUS });
-    return res;
-  }));
+export const getDockerStatus = async () => {
+  return ipcPromise.send('get-status');
+};
 
 export const getDockerImages = applyAsyncLoading(() => dispatch => ipcPromise.send('get-all-images')
   .then(res => dispatch({ payload: res, type: GET_LOCAL_IMAGES })));

@@ -1,5 +1,4 @@
 import React from 'react';
-import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { getDockerStatus } from '../../state/ducks/docker';
 
@@ -9,7 +8,7 @@ class DockerStatusChecker extends React.PureComponent {
   };
 
   componentWillMount() {
-    const { getDockerStatus, onChangeStatus } = this.props;
+    const { onChangeStatus } = this.props;
     const { dockerStatus } = this.state;
 
     onChangeStatus(dockerStatus);
@@ -43,7 +42,7 @@ class DockerStatusChecker extends React.PureComponent {
 
 DockerStatusChecker.propTypes = {
   onChangeStatus: PropTypes.func.isRequired,
-  getDockerStatus: PropTypes.func.isRequired,
 };
 
-export default connect(null, { getDockerStatus })(DockerStatusChecker);
+export default DockerStatusChecker;
+

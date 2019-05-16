@@ -22,6 +22,9 @@ import {
   FETCH_ALL_PIPELINES_QUERY,
   JOIN_CONSORTIUM_MUTATION,
   LEAVE_CONSORTIUM_MUTATION,
+  GET_ALL_ASSOCIATED_CONSORTIA,
+  SAVE_ASSOCIATED_CONSORTIUM,
+  DELETE_ASSOCIATED_CONSORTIUM,
 } from '../state/graphql/functions';
 import { notifyInfo, notifyWarning } from '../state/ducks/notifyAndLog';
 import ConsortiaList from '../components/consortia/consortia-list';
@@ -34,21 +37,33 @@ class ConsortiaListContainer extends Component {
   }
 
   deleteConsortium = (consortiumId) => {
-    const { removeCollectionsFromAssociatedConsortia, deleteConsortiumById } = this.props;
+    const {
+      removeCollectionsFromAssociatedConsortia,
+      deleteConsortiumById,
+      deleteAssociatedConsortium,
+    } = this.props;
 
     removeCollectionsFromAssociatedConsortia(consortiumId, true)
       .then(() => {
         deleteConsortiumById(consortiumId);
       });
+
+    deleteAssociatedConsortium(consortiumId);
   }
 
   leaveConsortium = (consortiumId) => {
-    const { removeCollectionsFromAssociatedConsortia, leaveConsortium } = this.props;
+    const {
+      removeCollectionsFromAssociatedConsortia,
+      leaveConsortium,
+      deleteAssociatedConsortium,
+    } = this.props;
 
     removeCollectionsFromAssociatedConsortia(consortiumId, true)
       .then(() => {
         leaveConsortium(consortiumId);
       });
+
+    deleteAssociatedConsortium(consortiumId);
   }
 
   startPipeline = (consortiumId, activePipelineId) => {
@@ -150,6 +165,7 @@ class ConsortiaListContainer extends Component {
       pipelines,
       pullComputations,
       saveAssociatedConsortia,
+      saveAssociatedConsortium,
       joinConsortium,
       notifyInfo,
       router,
@@ -184,6 +200,7 @@ class ConsortiaListContainer extends Component {
     }
 
     saveAssociatedConsortia({ id: consortiumId, activePipelineId });
+    saveAssociatedConsortium(consortiumId, activePipelineId);
     joinConsortium(consortiumId);
   }
 
@@ -193,7 +210,11 @@ class ConsortiaListContainer extends Component {
       associatedConsortia,
       consortia,
       pipelines,
+      associatedConsortia2
     } = this.props;
+
+    console.log('ASSOCIATED', associatedConsortia);
+    console.log('ASSOCIATED 2', associatedConsortia2);
 
     return (
       <ConsortiaList
@@ -257,6 +278,28 @@ const ConsortiaListContainerWithData = compose(
   graphql(LEAVE_CONSORTIUM_MUTATION, {
     props: ({ mutate }) => ({
       leaveConsortium: consortiumId => mutate({
+        variables: { consortiumId },
+      }),
+    }),
+  }),
+  graphql(GET_ALL_ASSOCIATED_CONSORTIA, {
+    options: {
+      fetchPolicy: 'cache-and-network',
+    },
+    props: props => ({
+      associatedConsortia2: props.data.associatedConsortia,
+    }),
+  }),
+  graphql(SAVE_ASSOCIATED_CONSORTIUM, {
+    props: ({ mutate }) => ({
+      saveAssociatedConsortium: (consortiumId, activePipelineId) => mutate({
+        variables: { consortiumId, activePipelineId },
+      }),
+    }),
+  }),
+  graphql(DELETE_ASSOCIATED_CONSORTIUM, {
+    props: ({ mutate }) => ({
+      deleteAssociatedConsortium: consortiumId => mutate({
         variables: { consortiumId },
       }),
     }),

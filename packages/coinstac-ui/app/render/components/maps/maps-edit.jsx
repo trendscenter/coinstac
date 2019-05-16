@@ -444,12 +444,7 @@ class MapsEdit extends Component {
 }
 }
 
-MapsEdit.defaultProps = {
-  activeAssociatedConsortia: [],
-};
-
 MapsEdit.propTypes = {
-  activeAssociatedConsortia: PropTypes.array,
   getConsortium: PropTypes.func.isRequired,
   getAllCollections: PropTypes.func.isRequired,
   getRunsForConsortium: PropTypes.func.isRequired,
@@ -458,8 +453,8 @@ MapsEdit.propTypes = {
 };
 
 function mapStateToProps({ auth,
-  collections: { activeAssociatedConsortia, collections } }) {
-  return { auth, activeAssociatedConsortia, collections };
+  collections: { collections } }) {
+  return { auth, collections };
 }
 
 const ComponentWithData = compose(

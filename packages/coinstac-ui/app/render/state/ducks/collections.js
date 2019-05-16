@@ -282,6 +282,7 @@ export const getAllAssociatedConsortia = applyAsyncLoading(
   () => dispatch => localDB.associatedConsortia
     .toArray()
     .then((consortia) => {
+      console.log("CONSORTIAO", consortia);
       dispatch(({
         type: GET_ASSOCIATED_CONSORTIA,
         payload: consortia,

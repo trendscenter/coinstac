@@ -25,6 +25,7 @@ import {
   REMOVE_USER_ROLE_MUTATION,
   SAVE_CONSORTIUM_MUTATION,
   USER_CHANGED_SUBSCRIPTION,
+  SAVE_ASSOCIATED_CONSORTIUM,
 } from '../../state/graphql/functions';
 import { notifySuccess } from '../../state/ducks/notifyAndLog';
 
@@ -139,8 +140,8 @@ class ConsortiumTabs extends Component {
     this.props.saveConsortium(this.state.consortium)
     .then(({ data: { saveConsortium: { __typename, ...other } } }) => {
       let unsubscribeConsortia = this.state.unsubscribeConsortia;
-
       this.props.saveAssociatedConsortia({ ...other });
+      this.props.saveAssociatedConsortium(other.id);
 
       if (!unsubscribeConsortia) {
         unsubscribeConsortia = this.props.subscribeToConsortia(other.id);
@@ -299,7 +300,14 @@ const ConsortiumTabsWithData = compose(
   )),
   graphql(ADD_USER_ROLE_MUTATION, userRolesProp('addUserRole')),
   graphql(SAVE_CONSORTIUM_MUTATION, saveDocumentProp('saveConsortium', 'consortium')),
-  graphql(REMOVE_USER_ROLE_MUTATION, userRolesProp('removeUserRole'))
+  graphql(REMOVE_USER_ROLE_MUTATION, userRolesProp('removeUserRole')),
+  graphql(SAVE_ASSOCIATED_CONSORTIUM, {
+    props: ({ mutate }) => ({
+      saveAssociatedConsortium: consortiumId => mutate({
+        variables: { consortiumId },
+      }),
+    }),
+  })
 )(ConsortiumTabs);
 
 const connectedComponent = connect(

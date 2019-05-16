@@ -173,3 +173,24 @@ export const UPDATE_USER_CONSORTIUM_STATUS_MUTATION = gql`
   mutation updateUserConsortiumStatus($consortiumId: ID, $status: String)
     ${mutations.updateUserConsortiumStatus}
 `;
+
+export const GET_ALL_ASSOCIATED_CONSORTIA = gql`
+  query getAllAssociatedConsortia {
+    associatedConsortia @client {
+      id
+      activePipelineId
+    }
+  }
+`;
+
+export const SAVE_ASSOCIATED_CONSORTIUM = gql`
+  mutation saveAssociatedConsortum($consortiumId: ID!, $activePipelineId: ID!) {
+    saveAssociatedConsortium (consortiumId: $consortiumId, activePipelineId: $activePipelineId) @client
+  }
+`;
+
+export const DELETE_ASSOCIATED_CONSORTIUM = gql`
+  mutation deleteAssociatedConsortium($consortiumId: ID!) {
+    deleteAssociatedConsortium(consortiumId: $consortiumId) @client
+  }
+`;

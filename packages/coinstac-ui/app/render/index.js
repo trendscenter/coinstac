@@ -3,7 +3,7 @@ import React from 'react';
 import { render } from 'react-dom';
 import { hashHistory } from 'react-router';
 import { ipcRenderer, remote } from 'electron';
-import { ApolloProvider, graphql } from 'react-apollo';
+import { ApolloProvider } from 'react-apollo';
 import { Provider } from 'react-redux';
 import getApolloClient from './state/apollo-client';
 import configureStore from './state/store';
@@ -23,30 +23,35 @@ require('./styles/app.scss');
 const rootEl = document.getElementById('app');
 global.config = remote.getGlobal('config');
 
-const client = getApolloClient(global.config);
-const store = configureStore();
+async function init() {
+  const client = await getApolloClient(global.config);
+  const store = configureStore();
 
-render(
-  <ApolloProvider client={client}>
-    <Provider store={store}>
-      <Root history={hashHistory} />
-    </Provider>
-  </ApolloProvider>,
-  rootEl
-);
+  render(
+    <ApolloProvider client={client}>
+      <Provider store={store}>
+        <Root history={hashHistory} />
+      </Provider>
+    </ApolloProvider>,
+    rootEl
+  );
 
-ipcRenderer.send('write-log', { type: 'info', message: 'renderer process up' });
+  ipcRenderer.send('write-log', { type: 'info', message: 'renderer process up' });
 
-if (module.hot) {
-  module.hot.accept('./containers/root', () => {
-    /* eslint-disable global-require */
-    const NextRoot = require('./containers/root').default;
-    /* eslint-enable global-require */
-    render(
-      <ApolloProvider store={store} client={client}>
-        <NextRoot history={hashHistory} store={store} />
-      </ApolloProvider>,
-      rootEl
-    );
-  });
+  if (module.hot) {
+    module.hot.accept('./containers/root', () => {
+      /* eslint-disable global-require */
+      const NextRoot = require('./containers/root').default;
+      /* eslint-enable global-require */
+      render(
+        <ApolloProvider store={store} client={client}>
+          <NextRoot history={hashHistory} store={store} />
+        </ApolloProvider>,
+        rootEl
+      );
+    });
+  }
 }
+
+init();
+
