@@ -17,8 +17,6 @@ const electron = require('electron');
 const ipcPromise = require('ipc-promise');
 const mock = require('../../test/e2e/mocks');
 const ipcFunctions = require('./utils/ipc-functions');
-const util = require('util');
-const fs = require('fs');
 
 const { ipcMain } = electron;
 
