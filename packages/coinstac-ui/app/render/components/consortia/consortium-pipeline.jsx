@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { graphql } from 'react-apollo';
+import { compose, graphql } from 'react-apollo';
 import { Link } from 'react-router';
 import Paper from '@material-ui/core/Paper';
 import Divider from '@material-ui/core/Divider';
@@ -13,6 +13,8 @@ import PropTypes from 'prop-types';
 import {
   FETCH_ALL_CONSORTIA_QUERY,
   SAVE_ACTIVE_PIPELINE_MUTATION,
+  UPDATE_CONSORTIUM_PIPELINE,
+  SAVE_CONSORTIUM_MAPPING,
 } from '../../state/graphql/functions';
 import { runInThisContext } from 'vm';
 
@@ -96,6 +98,13 @@ class ConsortiumPipeline extends Component {
   removeCollectionsFromAssociatedConsortia(consortiumId, value) {
     const { saveActivePipeline } = this.props;
     saveActivePipeline(consortiumId, value);
+    try {
+
+    this.props.saveConsortiumMapping(consortiumId, []);
+    this.props.saveConsortiumPipeline(consortiumId, value);
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   selectPipeline = pipelineId => event => {
@@ -251,20 +260,42 @@ ConsortiumPipeline.propTypes = {
 };
 
 // TODO: Move this to shared props?
-const ConsortiumPipelineWithData = graphql(SAVE_ACTIVE_PIPELINE_MUTATION, {
-  props: ({ mutate }) => ({
-    saveActivePipeline: (consortiumId, activePipelineId) => mutate({
-      variables: { consortiumId, activePipelineId },
-      update: (store) => {
-        const data = store.readQuery({ query: FETCH_ALL_CONSORTIA_QUERY });
-        const index = data.fetchAllConsortia.findIndex(con => con.id === consortiumId);
-        if (index > -1) {
-          data.fetchAllConsortia[index].activePipelineId = activePipelineId;
-        }
-        store.writeQuery({ query: FETCH_ALL_CONSORTIA_QUERY, data });
-      },
+const ConsortiumPipelineWithData = compose(
+  graphql(SAVE_ACTIVE_PIPELINE_MUTATION, {
+    props: ({ mutate }) => ({
+      saveActivePipeline: (consortiumId, activePipelineId) => mutate({
+        variables: { consortiumId, activePipelineId },
+        update: (store) => {
+          const { fetchAllConsortia } = store.readQuery({ query: FETCH_ALL_CONSORTIA_QUERY });
+
+          const index = fetchAllConsortia.findIndex(con => con.id === consortiumId);
+          if (index > -1) {
+            fetchAllConsortia[index].activePipelineId = activePipelineId;
+          }
+          store.writeQuery({
+            query: FETCH_ALL_CONSORTIA_QUERY,
+            data: {
+              fetchAllConsortia
+            }
+          });
+        },
+      }),
     }),
   }),
-})(ConsortiumPipeline);
+  graphql(UPDATE_CONSORTIUM_PIPELINE, {
+    props: ({ mutate }) => ({
+      saveConsortiumPipeline: (consortiumId, pipelineId) => mutate({
+        variables: { consortiumId, pipelineId },
+      }),
+    }),
+  }),
+  graphql(SAVE_CONSORTIUM_MAPPING, {
+    props: ({ mutate }) => ({
+      saveConsortiumMapping: (consortiumId, stepIO) => mutate({
+        variables: { consortiumId, stepIO },
+      }),
+    }),
+  }),
+)(ConsortiumPipeline);
 
 export default withStyles(styles)(ConsortiumPipelineWithData);

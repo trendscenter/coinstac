@@ -29,21 +29,6 @@ class MapsList extends Component {
     this.setState({ consortium });
   }
 
-  getMapped(member, owner, consortium) {
-    const { auth: { user } } = this.props;
-    const actions = [];
-    const text = [];
-    let isMapped = false;
-
-    if (this.props.associatedConsortia.length > 0) {
-      const assocCons = this.props.associatedConsortia.find(c => c.id === consortium.id);
-      if (assocCons && assocCons.isMapped) {
-        isMapped = assocCons.isMapped;
-        return isMapped;
-      }
-    }
-  }
-
   getMapItem = (consortium) => {
     const { user } = this.props.auth;
     const { pipelines } = this.props;
@@ -55,13 +40,7 @@ class MapsList extends Component {
           deleteItem={this.openModal}
           itemObject={consortium}
           itemOptions
-          itemMapped={
-            this.getMapped(
-              isUserA(user.id, consortium.members),
-              isUserA(user.id, consortium.owners),
-              consortium
-            )
-          }
+          itemMapped={consortium.isMapped}
           pipelineId={pipeline.name}
           setConsortium={this.setConsortium}
         />

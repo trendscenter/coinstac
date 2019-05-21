@@ -5,10 +5,7 @@ import { ipcRenderer } from 'electron';
 import PropTypes from 'prop-types';
 import shortid from 'shortid';
 import {
-  getCollectionFiles,
-  getAllAssociatedConsortia,
   incrementRunCount,
-  removeCollectionsFromAssociatedConsortia,
   saveAssociatedConsortia,
 } from '../state/ducks/collections';
 import { saveLocalRun } from '../state/ducks/runs';
@@ -22,55 +19,33 @@ import {
   FETCH_ALL_PIPELINES_QUERY,
   JOIN_CONSORTIUM_MUTATION,
   LEAVE_CONSORTIUM_MUTATION,
-  GET_ALL_ASSOCIATED_CONSORTIA,
-  SAVE_ASSOCIATED_CONSORTIUM,
-  DELETE_ASSOCIATED_CONSORTIUM,
 } from '../state/graphql/functions';
+import { getCollectionFiles2 } from '../state/graphql/utils';
 import { notifyInfo, notifyWarning } from '../state/ducks/notifyAndLog';
 import ConsortiaList from '../components/consortia/consortia-list';
 
 class ConsortiaListContainer extends Component {
-  componentDidMount() {
-    const { getAllAssociatedConsortia } = this.props;
-
-    getAllAssociatedConsortia();
-  }
 
   deleteConsortium = (consortiumId) => {
-    const {
-      removeCollectionsFromAssociatedConsortia,
-      deleteConsortiumById,
-      deleteAssociatedConsortium,
-    } = this.props;
+    const { deleteConsortiumById } = this.props;
 
-    removeCollectionsFromAssociatedConsortia(consortiumId, true)
-      .then(() => {
-        deleteConsortiumById(consortiumId);
-      });
+    deleteConsortiumById(consortiumId);
 
-    deleteAssociatedConsortium(consortiumId);
+    // TODO: Remove consortium from collection 
   }
 
   leaveConsortium = (consortiumId) => {
-    const {
-      removeCollectionsFromAssociatedConsortia,
-      leaveConsortium,
-      deleteAssociatedConsortium,
-    } = this.props;
+    const { leaveConsortium } = this.props;
 
-    removeCollectionsFromAssociatedConsortia(consortiumId, true)
-      .then(() => {
-        leaveConsortium(consortiumId);
-      });
+      leaveConsortium(consortiumId);
 
-    deleteAssociatedConsortium(consortiumId);
+    // TODO: Remove consortium from collection
   }
 
   startPipeline = (consortiumId, activePipelineId) => {
     const {
       client,
       router,
-      getCollectionFiles,
       notifyWarning,
       notifyInfo,
       incrementRunCount,
@@ -108,51 +83,48 @@ class ConsortiaListContainer extends Component {
       };
 
       let status = 'started';
-      return getCollectionFiles(
-        consortiumId,
-        consortium.name,
-        run.pipelineSnapshot.steps
-      ).then((filesArray) => {
-        if ('error' in filesArray) {
-          status = 'needs-map';
-          notifyWarning({
-            message: filesArray.error,
-            autoDismiss: 5,
-          });
-        } else {
-          notifyInfo({
-            message: `Local Pipeline Starting for ${consortium.name}.`,
-            action: {
-              label: 'Watch Progress',
-              callback: () => {
-                router.push('dashboard');
-              },
+
+      const filesArray = getCollectionFiles2(client, consortiumId);
+
+      if ('error' in filesArray) {
+        status = 'needs-map';
+        notifyWarning({
+          message: filesArray.error,
+          autoDismiss: 5,
+        });
+      } else {
+        notifyInfo({
+          message: `Local Pipeline Starting for ${consortium.name}.`,
+          action: {
+            label: 'Watch Progress',
+            callback: () => {
+              router.push('dashboard');
             },
-          });
+          },
+        });
 
-          if ('steps' in filesArray) {
-            run = {
-              ...run,
-              pipelineSnapshot: {
-                ...run.pipelineSnapshot,
-                steps: filesArray.steps,
-              },
-            };
-          }
-
-          run.status = status;
-
-          incrementRunCount(consortiumId);
-          ipcRenderer.send('start-pipeline', {
-            consortium,
-            pipeline,
-            filesArray: filesArray.allFiles,
-            run,
-          });
+        if ('steps' in filesArray) {
+          run = {
+            ...run,
+            pipelineSnapshot: {
+              ...run.pipelineSnapshot,
+              steps: filesArray.steps,
+            },
+          };
         }
 
-        saveLocalRun({ ...run, status });
-      });
+        run.status = status;
+
+        incrementRunCount(consortiumId);
+        ipcRenderer.send('start-pipeline', {
+          consortium,
+          pipeline,
+          filesArray: filesArray.allFiles,
+          run,
+        });
+      }
+
+      saveLocalRun({ ...run, status });
     }
 
     // If remote pipeline, call GraphQL to create new pipeline
@@ -210,16 +182,11 @@ class ConsortiaListContainer extends Component {
       associatedConsortia,
       consortia,
       pipelines,
-      associatedConsortia2
     } = this.props;
-
-    console.log('ASSOCIATED', associatedConsortia);
-    console.log('ASSOCIATED 2', associatedConsortia2);
 
     return (
       <ConsortiaList
         loggedInUser={auth.user}
-        associatedConsortia={associatedConsortia}
         consortia={consortia}
         pipelines={pipelines}
         deleteConsortium={this.deleteConsortium}
@@ -238,8 +205,6 @@ ConsortiaListContainer.propTypes = {
   consortia: PropTypes.array.isRequired,
   createRun: PropTypes.func.isRequired,
   deleteConsortiumById: PropTypes.func.isRequired,
-  getCollectionFiles: PropTypes.func.isRequired,
-  getAllAssociatedConsortia: PropTypes.func.isRequired,
   incrementRunCount: PropTypes.func.isRequired,
   joinConsortium: PropTypes.func.isRequired,
   leaveConsortium: PropTypes.func.isRequired,
@@ -247,7 +212,6 @@ ConsortiaListContainer.propTypes = {
   notifyWarning: PropTypes.func.isRequired,
   pipelines: PropTypes.array.isRequired,
   pullComputations: PropTypes.func.isRequired,
-  removeCollectionsFromAssociatedConsortia: PropTypes.func.isRequired,
   router: PropTypes.object.isRequired,
   saveAssociatedConsortia: PropTypes.func.isRequired,
   saveLocalRun: PropTypes.func.isRequired,
@@ -282,28 +246,6 @@ const ConsortiaListContainerWithData = compose(
       }),
     }),
   }),
-  graphql(GET_ALL_ASSOCIATED_CONSORTIA, {
-    options: {
-      fetchPolicy: 'cache-and-network',
-    },
-    props: props => ({
-      associatedConsortia2: props.data.associatedConsortia,
-    }),
-  }),
-  graphql(SAVE_ASSOCIATED_CONSORTIUM, {
-    props: ({ mutate }) => ({
-      saveAssociatedConsortium: (consortiumId, activePipelineId) => mutate({
-        variables: { consortiumId, activePipelineId },
-      }),
-    }),
-  }),
-  graphql(DELETE_ASSOCIATED_CONSORTIUM, {
-    props: ({ mutate }) => ({
-      deleteAssociatedConsortium: consortiumId => mutate({
-        variables: { consortiumId },
-      }),
-    }),
-  }),
   withApollo
 )(ConsortiaListContainer);
 
@@ -313,13 +255,10 @@ const mapStateToProps = ({ auth, collections: { associatedConsortia } }) => {
 
 export default connect(mapStateToProps,
   {
-    getCollectionFiles,
-    getAllAssociatedConsortia,
     incrementRunCount,
     notifyInfo,
     notifyWarning,
     pullComputations,
-    removeCollectionsFromAssociatedConsortia,
     saveAssociatedConsortia,
     saveLocalRun,
     updateUserPerms,

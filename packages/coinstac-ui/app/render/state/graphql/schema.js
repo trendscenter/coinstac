@@ -1,18 +1,26 @@
 import gql from 'graphql-tag';
 
 const typeDefs = gql`
-  type AssociatedConsortium {
-    id: ID!
-    activePipelineId: ID
+  scalar JSON
+
+  extend type Consortium {
+    isMapped: Boolean!
+    pipelineSteps: [PipelineStep]
+    runs: Int
+    stepIO: JSON
   }
 
-  type Query {
-    getAllAssociatedConsortia: [AssociatedConsortium]!
+  type Collection {
+    name: String!
+    associatedConsortium: ID
+    fileGroups: JSON
   }
 
   extend type Mutation {
-    saveAssociatedConsortium(consortiumId: ID!, activePipelineId: ID): AssociatedConsortium
-    deleteAssociatedConsortium(consortiumId: ID!): AssociatedConsortium
+    syncRemoteLocalConsortium(remoteConsortium: Consortium!, pipelineSteps: [PipelineStep]): Consortium!
+    saveCollection(name: String!, associatedConsortium: ID, fileGroups: JSON): Collection
+    saveConsortiumMapping(consortiumId: ID, stepIO: JSON): Consortium
+    updateConsortiumPipelineSteps(consortiumId: ID, pipelineId: ID): Consortium
   }
 `;
 

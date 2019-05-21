@@ -10,11 +10,8 @@ import Grid from '@material-ui/core/Grid';
 import { withStyles } from '@material-ui/core/styles';
 import {
   getConsortium,
-  getAllCollections,
-  getCollectionFiles,
   incrementRunCount,
   saveAssociatedConsortia,
-  saveCollection,
 } from '../../state/ducks/collections';
 import {
   getRunsForConsortium,
@@ -22,7 +19,11 @@ import {
 } from '../../state/ducks/runs';
 import {
   FETCH_ALL_USER_RUNS_QUERY,
+  SAVE_COLLECTION,
+  SAVE_CONSORTIUM_MAPPING,
+  GET_ALL_COLLECTIONS,
 } from '../../state/graphql/functions';
+import { getCollectionFiles2 } from '../../state/graphql/utils';
 import { notifyInfo } from '../../state/ducks/notifyAndLog';
 import MapsStep from './maps-step';
 import MapsCollection from './maps-collection';
@@ -64,7 +65,7 @@ class MapsEdit extends Component {
       name: '',
       description: '',
       fileGroups: {},
-      associatedConsortia: [],
+      associatedConsortia: null,
     };
 
     this.state = {
@@ -93,47 +94,43 @@ class MapsEdit extends Component {
   updateMapsStep = (val) => this.setState({ updateMapsStep: val });
 
   componentDidMount = () => {
-    let getCon = this.props.getConsortium(this.props.consortium.id);
-    getCon.then( result => {
-      this.setState({
-       consortium: Object.assign({}, result, this.props.consortium),
-      });
-      this.setState({
-       activeConsortium: {
-         ...result,
-         stepIO: [...result.stepIO],
-       },
-      });
-      const { user } = this.props.auth;
-      const { consortium } = this.state;
-      let mapped = this.getMapped(
-       isUserA(user.id, consortium.members),
-       isUserA(user.id, consortium.owners),
-       consortium
-      )
-      this.setState({isMapped: mapped});
-      this.setPipelineSteps(this.state.consortium.pipelineSteps);
-      Object.keys(this.props.collections).map(([key, value]) => {
-       if( includes(this.props.collections[key],result.name+': Collection') ){
-         this.setState({
-           collection: this.props.collections[key],
-           exists: true
-         });
-       }
-      });
-      let collection = {
-       name: this.state.consortium.name+': Collection',
-       associatedConsortia: result,
-       fileGroups: {},
-      }
-      if( this.state.exists === false ){
-        this.setState({collection});
-        this.props.saveCollection(collection);
-      }
-        this.getDropAction();
-      }, function(error) {
-        console.log(error);
+    const consortium = {
+      ...this.props.consortium
+    };
+
+    this.setState({
+      consortium,
+      activeConsortium: {
+        ...this.props.consortium,
+        stepIO: [...this.props.consortium.stepIO],
+      },
     });
+    const { user } = this.props.auth;
+    let mapped = this.getMapped(
+      isUserA(user.id, consortium.members),
+      isUserA(user.id, consortium.owners),
+      consortium
+    )
+    this.setState({isMapped: mapped});
+    this.setPipelineSteps(consortium.pipelineSteps);
+    Object.keys(this.props.collections).map(([key, value]) => {
+      if (includes(this.props.collections[key], consortium.name + ': Collection')) {
+        this.setState({
+          collection: this.props.collections[key],
+          exists: true
+        });
+      }
+    });
+    let collection = {
+      name: consortium.name + ': Collection',
+      associatedConsortia: consortium,
+      fileGroups: {},
+    }
+    if( this.state.exists === false ){
+      this.setState({ collection });
+      this.props.saveCollection(collection.name, consortium.id, {});
+    }
+    this.getDropAction();
   }
 
   filterGetObj(arr, searchKey) {
@@ -164,7 +161,7 @@ class MapsEdit extends Component {
          }
        })
      });
-   }
+  }
 
   getContainers = (container) => {
     let containers = [];
@@ -185,12 +182,7 @@ class MapsEdit extends Component {
   }
 
   getMapped = (member, owner, consortium) => {
-    const { auth: { user } } = this.props;
-    if (this.state.consortium.isMapped) {
-      return true;
-    }else{
-      return false;
-    }
+    return consortium.isMapped;
   }
 
   makePoints = ((str) => {
@@ -208,7 +200,7 @@ class MapsEdit extends Component {
       let name = target.dataset.name;
       let string = el.dataset.string;
       let varObject = [{
-        'collectionId': this.state.collection.id,
+        'consortiumId': this.state.consortium.id,
         'groupId': el.dataset.filegroup,
         'column':  target.dataset.name
       }];
@@ -230,65 +222,67 @@ class MapsEdit extends Component {
     if (e) {
       e.preventDefault();
     }
-    this.props.saveCollection(this.state.collection);
+    const { collection } = this.state;
+    this.props.saveCollection(collection.name, collection.associatedConsortia.id, collection.fileGroups);
   }
 
   updateAssociatedConsortia(cons) {
     if (this.state.collection.associatedConsortia.id === cons.id) {
-      this.setState(prevState => ({
-        collection: {
-          ...prevState.collection,
-          error: '',
-          associatedConsortia: [...prevState.collection.associatedConsortia, cons.id],
-        },
-      }),
-      () => {
-        this.props.saveCollection(this.state.collection);
+      const key = Object.keys(this.state.collection.fileGroups)[0];
+      this.setState(prevState => {
+        return {
+          collection: {
+            ...prevState.collection,
+            error: '',
+            associatedConsortia: cons.id,
+          },
+        };
       });
     }
   }
 
   saveAndCheckConsortiaMapping = () => {
     const cons = this.state.activeConsortium;
+
+    this.props.saveConsortiumMapping(cons.id, cons.stepIO);
     this.props.saveAssociatedConsortia(cons)
     const runs = this.props.userRuns;
 
-    this.props.getCollectionFiles(cons.id)
-      .then((filesArray) => {
-        this.setState({isMapped: true});
+    const filesArray = getCollectionFiles2(this.props.client, cons.id, cons.stepIO);
 
-        if (runs && runs.length && !runs[runs.length - 1].endDate) {
-          let run = runs[runs.length - 1];
-          const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
-          if ('allFiles' in filesArray) {
-            this.props.notifyInfo({
-              message: `Pipeline Starting for ${cons.name}.`,
-              action: {
-                label: 'Watch Progress',
-                callback: () => {
-                  this.props.router.push('dashboard');
-                },
-              },
-            });
+    this.setState({isMapped: true});
 
-            if ('steps' in filesArray) {
-              run = {
-                ...run,
-                pipelineSnapshot: {
-                  ...run.pipelineSnapshot,
-                  steps: filesArray.steps,
-                },
-              };
-            }
+    if (runs && runs.length && !runs[runs.length - 1].endDate) {
+      let run = runs[runs.length - 1];
+      const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
+      if ('allFiles' in filesArray) {
+        this.props.notifyInfo({
+          message: `Pipeline Starting for ${cons.name}.`,
+          action: {
+            label: 'Watch Progress',
+            callback: () => {
+              this.props.router.push('dashboard');
+            },
+          },
+        });
 
-            this.props.incrementRunCount(cons.id);
-            ipcRenderer.send('start-pipeline', {
-              consortium, pipeline: run.pipelineSnapshot, filesArray: filesArray.allFiles, run,
-            });
-            this.props.saveLocalRun({ ...run, status: 'started' });
-          }
+        if ('steps' in filesArray) {
+          run = {
+            ...run,
+            pipelineSnapshot: {
+              ...run.pipelineSnapshot,
+              steps: filesArray.steps,
+            },
+          };
         }
-      });
+
+        this.props.incrementRunCount(cons.id);
+        ipcRenderer.send('start-pipeline', {
+          consortium, pipeline: run.pipelineSnapshot, filesArray: filesArray.allFiles, run,
+        });
+        this.props.saveLocalRun({ ...run, status: 'started' });
+      }
+    }
   }
 
   setPipelineSteps(steps) {
@@ -361,9 +355,14 @@ class MapsEdit extends Component {
 
   updateConsortiumClientProps(pipelineStepIndex, prop, propIndex, propArray) {
     this.setState((prevState) => {
-      prevState.activeConsortium.stepIO[pipelineStepIndex][prop][propIndex] = propArray[0];
-      }, (() => {
-        this.updateAssociatedConsortia(this.state.activeConsortium);
+      const activeConsortium = { ...prevState.activeConsortium };
+      activeConsortium.stepIO[pipelineStepIndex][prop][propIndex] = propArray[0];
+
+      return {
+        activeConsortium,
+      };
+    }, (() => {
+      this.updateAssociatedConsortia(this.state.activeConsortium);
     }));
   }
 
@@ -422,7 +421,6 @@ class MapsEdit extends Component {
                             notifySuccess={this.notifySuccess}
                             mappedItem={mappedItem}
                             rowArray={rowArray}
-                            rowArrayLength={rowArray.length}
                             saveAndCheckConsortiaMapping={this.saveAndCheckConsortiaMapping}
                             saveCollection={this.saveCollection}
                             setRowArray={this.setRowArray}
@@ -446,15 +444,13 @@ class MapsEdit extends Component {
 
 MapsEdit.propTypes = {
   getConsortium: PropTypes.func.isRequired,
-  getAllCollections: PropTypes.func.isRequired,
   getRunsForConsortium: PropTypes.func.isRequired,
   runs: PropTypes.array.isRequired,
   saveLocalRun: PropTypes.func.isRequired,
 };
 
-function mapStateToProps({ auth,
-  collections: { collections } }) {
-  return { auth, collections };
+function mapStateToProps({ auth }) {
+  return { auth };
 }
 
 const ComponentWithData = compose(
@@ -467,19 +463,35 @@ const ComponentWithData = compose(
       variables: { userId: props.auth.user.id },
     }),
   }),
+  graphql(GET_ALL_COLLECTIONS, {
+    props: ({ data }) => ({
+      collections: data.collections,
+    }),
+  }),
+  graphql(SAVE_COLLECTION, {
+    props: ({ mutate }) => ({
+      saveCollection: (name, associatedConsortium, fileGroups) => mutate({
+        variables: { name, associatedConsortium, fileGroups },
+      }),
+    }),
+  }),
+  graphql(SAVE_CONSORTIUM_MAPPING, {
+    props: ({ mutate }) => ({
+      saveConsortiumMapping: (consortiumId, stepIO) => mutate({
+        variables: { consortiumId, stepIO },
+      }),
+    }),
+  }),
   withApollo
 )(MapsEdit);
 
 const connectedComponent = connect(mapStateToProps,
   {
     getConsortium,
-    getCollectionFiles,
-    getAllCollections,
     getRunsForConsortium,
     incrementRunCount,
     notifyInfo,
     saveAssociatedConsortia,
-    saveCollection,
     saveLocalRun,
   }
 )(ComponentWithData);

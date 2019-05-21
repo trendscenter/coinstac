@@ -42,7 +42,7 @@ export const consortiaMembershipProp = (name) => {
   }
 };
 
-export const getAllAndSubProp = (document, listProp, query, subProp, subscription, filter) => ({
+export const getAllAndSubProp = (queryDocument, document, listProp, query, subProp, subscription, filter) => ({
   options: (props) => {
     const opts = { fetchPolicy: 'cache-and-network' };
 
@@ -59,29 +59,51 @@ export const getAllAndSubProp = (document, listProp, query, subProp, subscriptio
       if (filter && filter === 'userId' && props.ownProps.auth.user.id) {
         variables.userId = props.ownProps.auth.user.id;
       }
-
+      
       return props.data.subscribeToMore({
         document,
         variables,
         updateQuery: (prevResult, { subscriptionData: { data } }) => {
-          const index = prevResult[query].findIndex(c => c.id === data[subscription].id);
+          const dataToUpdate = data[subscription];
+          let previousQuery = prevResult;
 
-          if (data[subscription].delete) {
+          if (!previousQuery && props.ownProps.client) {
+            previousQuery = props.ownProps.client.readQuery({ query: queryDocument });
+          }
+
+          const index = previousQuery[query].findIndex(c => c.id === dataToUpdate.id);
+
+          if (query === 'fetchAllConsortia') {
+            if (index !== -1) {
+              const consortium = previousQuery[query][index];
+              dataToUpdate.isMapped = consortium.isMapped;
+              dataToUpdate.runs = consortium.runs;
+              dataToUpdate.stepIO = consortium.stepIO;
+              dataToUpdate.pipelineSteps = consortium.pipelineSteps;
+            }
+
+            if (!dataToUpdate.isMapped) dataToUpdate.isMapped = false;
+            if (!dataToUpdate.runs) dataToUpdate.runs = 0;
+            if (!dataToUpdate.stepIO) dataToUpdate.stepIO = [];
+            if (!dataToUpdate.pipelineSteps) dataToUpdate.pipelineSteps = [];
+          }
+
+          if (dataToUpdate.delete) {
             return {
-              [query]: prevResult[query].filter(obj => obj.id !== data[subscription].id),
+              [query]: previousQuery[query].filter(obj => obj.id !== dataToUpdate.id),
             };
           } if (index !== -1) {
             return {
-              [query]: update(prevResult[query], {
+              [query]: update(previousQuery[query], {
                 $splice: [
-                  [index, 1, data[subscription]],
+                  [index, 1, dataToUpdate],
                 ],
               }),
             };
           }
 
           return {
-            [query]: [...prevResult[query], data[subscription]],
+            [query]: [...previousQuery[query], dataToUpdate],
           };
         },
       });

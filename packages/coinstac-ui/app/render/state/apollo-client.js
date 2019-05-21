@@ -76,5 +76,7 @@ export default async function getApolloClient(config) {
     resolvers: GraphQLLocalResolvers,
   });
 
+  client.resetStore();
+
   return client;
 }

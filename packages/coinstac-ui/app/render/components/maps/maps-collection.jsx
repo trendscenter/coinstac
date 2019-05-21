@@ -73,21 +73,23 @@ class MapsCollection extends Component {
   }
 
   componentDidUpdate(prevProps,prevState) {
-    if(this.refs.Container){
-      let children = 0;
-      let Container = ReactDOM.findDOMNode(this.refs.Container);
-      if(this.state.autoMap){ //this is a hacky hack to get button change to work on drag and drop mapping :(
-        children = Container.children.length - 1;
-      }else{
-        children = Container.children.length;
-      }
-      if(prevState.contChildren !== children){
-        this.setState(prevState => ({
-          contChildren: children
-        }));
-      }
-      this.props.getContainers(Container);
+    if (!this.refs.Container)
+      return;
+
+    let children = 0;
+    let Container = ReactDOM.findDOMNode(this.refs.Container);
+    if (this.state.autoMap) { //this is a hacky hack to get button change to work on drag and drop mapping :(
+      children = Container.children.length - 1;
+    } else {
+      children = Container.children.length;
     }
+
+    if (prevState.contChildren !== children) {
+      this.setState(prevState => ({
+        contChildren: children
+      }));
+    }
+    this.props.getContainers(Container);
   }
 
   addFileGroup() {
@@ -102,7 +104,7 @@ class MapsCollection extends Component {
       } else {
         const name = `Group ${Object.keys(this.props.collection.fileGroups).length + 1} (${obj.extension.toUpperCase()})`;
         if (this.state.newFile.org === 'metafile') {
-          this.props.setRowArray(obj.metaFile[0]);
+          this.props.setRowArray([...obj.metaFile[0]]);
           newFiles = {
             ...obj,
             name,
@@ -174,7 +176,7 @@ class MapsCollection extends Component {
     let covariates = this.props.collection.associatedConsortia.pipelineSteps[0].inputMap.covariates.ownerMappings;
     let data = this.props.collection.associatedConsortia.pipelineSteps[0].inputMap.data.ownerMappings;
     const resolveAutoMapPromises = this.makePoints(group.firstRow).map((string, index) => {
-      if( Object.keys(this.filterGetObj(covariates,string)).length > 0 ){
+      if (Object.keys(this.filterGetObj(covariates,string)).length > 0) {
         return this.setStepIO(
           index,
           group.id,
@@ -184,7 +186,7 @@ class MapsCollection extends Component {
           string
         );
       }
-      if( Object.keys(this.filterGetObj(data,string)).length > 0 ){
+      if (Object.keys(this.filterGetObj(data,string)).length > 0) {
         return this.setStepIO(
           index,
           group.id,
@@ -226,7 +228,7 @@ class MapsCollection extends Component {
     let array = rowArray;
     let timeout = ((i + 1) * 250);
     let varObject = [{
-      'collectionId': collection.id,
+      'associatedConsortia': collection.associatedConsortia.id,
       'groupId': groupId,
       'column':  string
     }];
@@ -260,7 +262,6 @@ class MapsCollection extends Component {
       isMapped,
       saveCollection,
       rowArray,
-      rowArrayLength,
       classes,
     } = this.props;
 

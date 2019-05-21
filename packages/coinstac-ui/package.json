@@ -37,6 +37,7 @@
     "electron-default-menu": "^1.0.1",
     "graphql": "^14.1.1",
     "graphql-tag": "^2.10.1",
+    "graphql-type-json": "^0.3.0",
     "immutability-helper": "^2.7.0",
     "ipc-promise": "^0.1.4",
     "javascript-natural-sort": "^0.7.1",

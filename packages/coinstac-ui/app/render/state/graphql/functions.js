@@ -53,8 +53,23 @@ export const FETCH_ALL_COMPUTATIONS_QUERY = gql`
 `;
 
 export const FETCH_ALL_CONSORTIA_QUERY = gql`
-  query fetchAllConsortia
-    ${queries.fetchAllConsortia}
+  query fetchAllConsortia {
+    fetchAllConsortia {
+      id
+      activePipelineId
+      activeComputationInputs
+      delete
+      description
+      name
+      tags
+      members
+      owners
+      isMapped @client
+      runs @client
+      stepIO @client
+      pipelineSteps @client
+    }
+  }
 `;
 
 export const FETCH_ALL_USER_RUNS_QUERY = gql`
@@ -63,8 +78,23 @@ export const FETCH_ALL_USER_RUNS_QUERY = gql`
 `;
 
 export const FETCH_CONSORTIUM_QUERY = gql`
-  query fetchConsortium ($consortiumId: ID)
-    ${queries.fetchConsortium}
+  query fetchConsortium ($consortiumId: ID) {
+    fetchConsortium(consortiumId: $consortiumId) {
+      id
+      activePipelineId
+      activeComputationInputs
+      delete
+      description
+      name
+      tags
+      members
+      owners
+      isMapped @client
+      runs @client
+      pipelineSteps @client
+      stepIO @client
+    }
+  }
 `;
 
 export const FETCH_COMPUTATION_QUERY = gql`
@@ -174,12 +204,21 @@ export const UPDATE_USER_CONSORTIUM_STATUS_MUTATION = gql`
     ${mutations.updateUserConsortiumStatus}
 `;
 
-export const GET_ALL_ASSOCIATED_CONSORTIA = gql`
-  query getAllAssociatedConsortia {
-    associatedConsortia @client {
-      id
-      activePipelineId
-    }
+export const GET_COLLECTION_FILES = gql`
+  query getCollectionFiles($consortiumId: ID!) {
+    getCollectionFiles(consortiumId: $consortiumId) @client
+  }
+`;
+
+export const GET_ALL_COLLECTIONS = gql`
+  query getAllCollections {
+    collections @client
+  }
+`;
+
+export const SAVE_COLLECTION = gql`
+  mutation saveCollection($name: String!, $associatedConsortium: ID, $fileGroups: JSON) {
+    saveCollection (name: $name, associatedConsortium: $associatedConsortium, fileGroups: $fileGroups) @client
   }
 `;
 
@@ -189,8 +228,14 @@ export const SAVE_ASSOCIATED_CONSORTIUM = gql`
   }
 `;
 
-export const DELETE_ASSOCIATED_CONSORTIUM = gql`
-  mutation deleteAssociatedConsortium($consortiumId: ID!) {
-    deleteAssociatedConsortium(consortiumId: $consortiumId) @client
+export const SAVE_CONSORTIUM_MAPPING = gql`
+  mutation saveConsortiumMapping($consortiumId: ID!, $stepIO: JSON) {
+    saveConsortiumMapping (consortiumId: $consortiumId, stepIO: $stepIO) @client
+  }
+`;
+
+export const UPDATE_CONSORTIUM_PIPELINE = gql`
+  mutation updateConsortiumPipelineSteps($consortiumId: ID!, $pipelineId: ID!) {
+    updateConsortiumPipelineSteps (consortiumId: $consortiumId, pipelineId: $pipelineId) @client
   }
 `;

@@ -83,14 +83,7 @@ class ConsortiaList extends Component {
     const actions = [];
     const text = [];
     let isMapped = false;
-    const { classes, pipelines, associatedConsortia } = this.props;
-
-    if (associatedConsortia.length > 0) {
-      const assocCons = associatedConsortia.find(c => c.id === consortium.id);
-      if (assocCons && assocCons.isMapped) {
-        isMapped = !!assocCons.isMapped;
-      }
-    }
+    const { classes, pipelines } = this.props;
 
     // Add pipeline text
     text.push(
@@ -144,7 +137,7 @@ class ConsortiaList extends Component {
       </div>
     );
 
-    if (owner && consortium.activePipelineId && isMapped) {
+    if (owner && consortium.activePipelineId && consortium.isMapped) {
       actions.push(
         <Button
           key={`${consortium.id}-start-pipeline-button`}
@@ -169,7 +162,7 @@ class ConsortiaList extends Component {
           Set Active Pipeline
         </Button>
       );
-    } else if ((owner || member) && !isMapped) {
+    } else if ((owner || member) && !consortium.isMapped) {
       actions.push(
         <Button
           component={Link}
@@ -331,7 +324,6 @@ class ConsortiaList extends Component {
 
 ConsortiaList.propTypes = {
   loggedInUser: PropTypes.object.isRequired,
-  associatedConsortia: PropTypes.array.isRequired,
   consortia: PropTypes.array.isRequired,
   pipelines: PropTypes.array.isRequired,
   classes: PropTypes.object.isRequired,

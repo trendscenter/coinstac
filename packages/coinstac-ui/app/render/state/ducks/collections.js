@@ -282,7 +282,6 @@ export const getAllAssociatedConsortia = applyAsyncLoading(
   () => dispatch => localDB.associatedConsortia
     .toArray()
     .then((consortia) => {
-      console.log("CONSORTIAO", consortia);
       dispatch(({
         type: GET_ASSOCIATED_CONSORTIA,
         payload: consortia,
@@ -448,8 +447,7 @@ export const saveAssociatedConsortia = applyAsyncLoading(cons => (dispatch) => {
 export const syncRemoteLocalConsortia = (remoteCons, pipelineSteps) => (dispatch) => {
   return localDB.associatedConsortia.get(remoteCons.id)
     .then((localCons) => {
-      if (localCons
-            && (localCons.activePipelineId !== remoteCons.activePipelineId)) {
+      if (localCons && (localCons.activePipelineId !== remoteCons.activePipelineId)) {
         removeCollectionsFromAssociatedConsortia(
           remoteCons.id,
           false,

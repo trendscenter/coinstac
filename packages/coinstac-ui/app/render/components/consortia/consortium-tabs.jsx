@@ -292,6 +292,7 @@ const ConsortiumTabsWithData = compose(
     'fetchConsortium'
   )),
   graphql(FETCH_ALL_USERS_QUERY, getAllAndSubProp(
+    FETCH_ALL_USERS_QUERY,
     USER_CHANGED_SUBSCRIPTION,
     'users',
     'fetchAllUsers',
