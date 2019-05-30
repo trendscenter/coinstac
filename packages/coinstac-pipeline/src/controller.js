@@ -239,10 +239,9 @@ module.exports = {
           trampoline(() => {
             return queue.length
               ? function _cb(...args) {
-                console.log(controllerState);
-                if (controllerState.stopByUser == 'stop'){
-                  err({message: 'Pipeline run is stopped by user'});
-                };
+                if (controllerState.stopByUser === 'stop') {
+                  err(new Error('Pipeline run is stopped by user'));
+                }
                 const argsArray = [].slice.call(args);
                 const fn = queue.shift();
                 controllerState.currentBoxCommand = activeControlBox.preIteration(controllerState);

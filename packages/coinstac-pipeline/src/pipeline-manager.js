@@ -33,7 +33,7 @@ module.exports = {
    * mode that then can run and manipulate pipelines.
    * @param  {String} mode                     either local or remote
    * @param  {String} clientId                 the unique ID that identifies this manager
-   * @param  {String} [operatingDirectory='./' }] the operating directory
+   * @param  {String} [operatingDirectory='./'] the operating directory
    *                                              for results and other file IO
    * @return {Object}                          A pipeline manager
    */
@@ -542,9 +542,18 @@ module.exports = {
         return this.activePipelines[runId].stateEmitter;
       },
       stopPipeline(pipelineId, runId) {
-        this.activePipelines[runId].pipeline.pipelineSteps.forEach( step => {
-          step.stop();
-        });
+        const run = this.activePipelines[runId];
+
+        if (!run) {
+          throw new Error('Invalid pipeline ID');
+        }
+
+        const currentStepNumber = run.pipeline.currentStep;
+        const currentStep = run.pipeline.pipelineSteps[currentStepNumber];
+
+        if (currentStep) {
+          currentStep.stop();
+        }
       },
       waitingOnForRun,
     };

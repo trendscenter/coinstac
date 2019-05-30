@@ -242,12 +242,9 @@ class CoinstacClient {
    * @param {string} pipelineId The id of the pipeline running
    * @param {string} runId The id of the pipeline run
    */
-
-  stopPipeline( pipelineId, runId ) {
-    const stopPipeline = this.pipelineManager.stopPipeline(pipelineId, runId);
-    return new Promise((res, rej) => {
-      return stopPipeline;
-    })
+  stopPipeline(pipelineId, runId) {
+    const result = this.pipelineManager.stopPipeline(pipelineId, runId);
+    return Promise.resolve(result);
   }
 
   unlinkFiles(runId) {
