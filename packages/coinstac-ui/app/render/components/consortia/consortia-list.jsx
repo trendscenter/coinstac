@@ -121,7 +121,7 @@ class ConsortiaList extends Component {
     const actions = [];
     const text = [];
     let isMapped = false;
-    const { classes, pipelines, associatedConsortia } = this.props;
+    const { classes, pipelines, associatedConsortia, runs } = this.props;
 
     if (associatedConsortia.length > 0) {
       const assocCons = associatedConsortia.find(c => c.id === consortium.id);
@@ -180,27 +180,34 @@ class ConsortiaList extends Component {
     );
 
     if (owner && consortium.activePipelineId && isMapped) {
-      actions.push(
-        <Button
-          key={`${consortium.id}-start-pipeline-button`}
-          variant="contained"
-          className={classes.button}
-          onClick={this.startPipeline(consortium.id, consortium.activePipelineId)}
-        >
-          Start Pipeline
-        </Button>
-      );
-      actions.push(
-        <Button
-          key={`${consortium.id}-stop-pipeline-button`}
-          variant="contained"
-          color="secondary"
-          className={classes.button}
-          onClick={this.stopPipeline(consortium.activePipelineId)}
-        >
-          Stop Pipeline
-        </Button>
-      );
+      const isPipelineRunning = runs.filter((run) => {
+        return run.consortiumId === consortium.id && run.status === 'started';
+      }).length > 0;
+
+      if (isPipelineRunning) {
+        actions.push(
+          <Button
+            key={`${consortium.id}-stop-pipeline-button`}
+            variant="contained"
+            color="secondary"
+            className={classes.button}
+            onClick={this.stopPipeline(consortium.activePipelineId)}
+          >
+            Stop Pipeline
+          </Button>
+        );
+      } else {
+        actions.push(
+          <Button
+            key={`${consortium.id}-start-pipeline-button`}
+            variant="contained"
+            className={classes.button}
+            onClick={this.startPipeline(consortium.id, consortium.activePipelineId)}
+          >
+            Start Pipeline
+          </Button>
+        );
+      }
     } else if (owner && !consortium.activePipelineId) {
       actions.push(
         <Button
@@ -517,6 +524,8 @@ ConsortiaList.propTypes = {
   router: PropTypes.object.isRequired,
   saveAssociatedConsortia: PropTypes.func.isRequired,
   saveLocalRun: PropTypes.func.isRequired,
+  classes: PropTypes.object.isRequired,
+  runs: PropTypes.array.isRequired,
 };
 
 const mapStateToProps = ({ auth, collections: { associatedConsortia } }) => {
