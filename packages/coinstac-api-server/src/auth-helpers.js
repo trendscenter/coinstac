@@ -15,6 +15,10 @@ try {
       user: 'admin',
       password: '',
     },
+    rethinkdbServer: {
+      user: 'server',
+      password: 'password',
+    },
     cstacJWTSecret: 'test',
   };
 }
