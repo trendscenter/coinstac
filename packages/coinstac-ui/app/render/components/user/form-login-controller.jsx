@@ -1,7 +1,12 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { clearUser, login, setAppDirectory } from '../../state/ducks/auth';
+import {
+  clearUser,
+  login,
+  setAppDirectory,
+  checkApiVersion,
+} from '../../state/ducks/auth';
 import FormLogin from './form-login';
 import LayoutNoauth from '../layout-noauth';
 
@@ -15,6 +20,9 @@ class FormLoginController extends Component {
   }
 
   componentDidMount() {
+    const { checkApiVersion } = this.props;
+
+    checkApiVersion();
     this.checkForUser();
   }
 
@@ -31,7 +39,8 @@ class FormLoginController extends Component {
   }
 
   submit(data) {
-    this.props.login(data);
+    const { login } = this.props;
+    login(data);
   }
 
   changeAppDirectory(appDirectory) {
@@ -66,6 +75,7 @@ FormLoginController.propTypes = {
   loading: PropTypes.object.isRequired,
   login: PropTypes.func.isRequired,
   setAppDirectory: PropTypes.func.isRequired,
+  checkApiVersion: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = ({ auth, loading }) => {
@@ -76,4 +86,5 @@ export default connect(mapStateToProps, {
   clearUser,
   login,
   setAppDirectory,
+  checkApiVersion,
 })(FormLoginController);

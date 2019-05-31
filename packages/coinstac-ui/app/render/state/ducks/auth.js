@@ -18,6 +18,7 @@ const INITIAL_STATE = {
     consortiaStatuses: {},
   },
   appDirectory: localStorage.getItem('appDirectory') || CoinstacClientCore.getDefaultAppDirectory(),
+  isApiVersionCompatible: true,
 };
 
 // Actions
@@ -27,6 +28,7 @@ const CLEAR_ERROR = 'CLEAR_ERROR';
 const UPDATE_USER_CONSORTIA_STATUSES = 'UPDATE_USER_CONSORTIA_STATUSES';
 const UPDATE_USER_PERMS = 'UPDATE_USER_PERMS';
 const SET_APP_DIRECTORY = 'SET_APP_DIRECTORY';
+const SET_API_VERSION_CHECK = 'SET_API_VERSION_CHECK';
 
 // Action Creators
 export const setUser = user => ({ type: SET_USER, payload: user });
@@ -38,6 +40,10 @@ export const updateUserConsortiaStatuses = statuses => ({
 });
 export const clearUser = () => ({ type: CLEAR_USER, payload: null });
 export const setAppDirectory = appDirectory => ({ type: SET_APP_DIRECTORY, payload: appDirectory });
+export const setApiVersionCheck = isApiVersionCompatible => ({
+  type: SET_API_VERSION_CHECK,
+  payload: isApiVersionCompatible,
+});
 
 // Helpers
 const initCoreAndSetToken = (reqUser, data, appDirectory, dispatch) => {
@@ -101,6 +107,15 @@ export const autoLogin = applyAsyncLoading(() => (dispatch, getState) => {
     });
 });
 
+export const checkApiVersion = applyAsyncLoading(() => dispatch => axios.get(`${API_URL}/version`)
+  .then(({ data }) => {
+    const versionsMatch = process.env.NODE_ENV !== 'production' || data === remote.app.getVersion();
+    dispatch(setApiVersionCheck(versionsMatch));
+  })
+  .catch(() => {
+    dispatch(setUser({ ...INITIAL_STATE, error: 'An unexpected error has occurred' }));
+  }));
+
 export const login = applyAsyncLoading(({ username, password, saveLogin }) => (dispatch, getState) => axios.post(`${API_URL}/authenticate`, { username, password })
   .then(({ data }) => {
     const { auth: { appDirectory } } = getState();
@@ -150,6 +165,8 @@ export default function reducer(state = INITIAL_STATE, action) {
       return { user: { ...state.user, permissions: action.payload } };
     case SET_APP_DIRECTORY:
       return { appDirectory: action.payload };
+    case SET_API_VERSION_CHECK:
+      return { isApiVersionCompatible: action.payload };
     default:
       return state;
   }
