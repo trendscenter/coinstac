@@ -244,9 +244,9 @@ loadConfig()
      * @param {String} runId The id of the pipeline run
      * @return {Promise<String>} Status message
      */
-    ipcMain.on('stop-pipeline', async (event, { pipelineId, runId }) => {
+    ipcMain.on('stop-pipeline', (event, { pipelineId, runId }) => {
       try {
-        return core.stopPipeline(pipelineId, runId);
+        return core.requestPipelineStop(pipelineId, runId);
       } catch (err) {
         logger.error(err);
         mainWindow.webContents.send('docker-error', {
