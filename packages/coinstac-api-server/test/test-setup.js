@@ -632,7 +632,8 @@ helperFunctions.getRethinkConnection()
       'test-cons-2': 'none',
     },
   }, passwordHash))
-  .then(() => helperFunctions.hashPassword(process.argv[3] || helperFunctions.getDBMap().rethinkdbServer.password || 'password'))
+  .then(() => helperFunctions.hashPassword(process.argv[3]
+     || helperFunctions.getDBMap().rethinkdbServer.password))
   .then(passwordHash => helperFunctions.createUser({
     id: 'server',
     username: 'server',

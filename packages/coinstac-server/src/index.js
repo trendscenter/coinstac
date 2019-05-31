@@ -4,11 +4,22 @@ const axios = require('axios');
 process.LOGLEVEL = 'silly';
 const { pullImages } = require('coinstac-docker-manager');
 const graphqlSchema = require('coinstac-graphql-schema');
-const dbmap = require('/etc/coinstac/cstacDBMap'); // eslint-disable-line import/no-absolute-path, import/no-unresolved
 const config = require('../config/default');
 const routes = require('./routes');
 
 let idToken = '';
+let dbmap;
+try {
+  dbmap = require('/etc/coinstac/cstacDBMap'); // eslint-disable-line import/no-absolute-path, import/no-unresolved, global-require
+} catch (e) {
+  console.log('No DBMap found: using defaults'); // eslint-disable-line no-console
+  dbmap = {
+    rethinkdbServer: {
+      user: 'server',
+      password: 'password',
+    },
+  };
+}
 
 
 /**
