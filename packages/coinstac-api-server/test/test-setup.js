@@ -21,6 +21,13 @@ helperFunctions.getRethinkConnection()
           { dbs_dropped: 0 }
         );
       }).run(connection)
+      .then(() => {
+        if (process.argv[2]) {
+          return rethink.db('rethinkdb').table('users')
+            .get('admin').update({ password: process.argv[2] })
+            .run(connection);
+        }
+      })
       .then(() => rethink.dbCreate('coinstac').run(connection))
       .then(() => rethink.tableCreate('pipelines').run(connection))
       .then(() => rethink.tableCreate('computations').run(connection))
@@ -511,7 +518,7 @@ helperFunctions.getRethinkConnection()
   "type": "decentralized",
   "__typename": "Run",
   "status": "complete"
-}
+},
       ]).run(connection))
       .then(() => rethink.tableCreate('consortia').run(connection))
       .then(() => rethink.table('consortia').insert({
@@ -528,8 +535,7 @@ helperFunctions.getRethinkConnection()
         description: 'This consortia is for testing too.',
         owners: ['test1'],
         members: ['author', 'test1'],
-      }).run(connection))
-      .then(() => connection.close());
+      }).run(connection));
   })
   .then(() => helperFunctions.hashPassword('password'))
   .then(passwordHash => helperFunctions.createUser({
@@ -626,7 +632,7 @@ helperFunctions.getRethinkConnection()
       'test-cons-2': 'none',
     },
   }, passwordHash))
-  .then(() => helperFunctions.hashPassword('password'))
+  .then(() => helperFunctions.hashPassword(process.argv[3] || helperFunctions.getDBMap().rethinkdbServer.password || 'password'))
   .then(passwordHash => helperFunctions.createUser({
     id: 'server',
     username: 'server',

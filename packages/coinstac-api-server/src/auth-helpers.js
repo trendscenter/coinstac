@@ -4,7 +4,20 @@ const jwt = require('jsonwebtoken');
 const rethink = require('rethinkdb');
 const Promise = require('bluebird');
 const config = require('../config/default');
-const dbmap = require('/etc/coinstac/cstacDBMap'); // eslint-disable-line import/no-absolute-path, import/no-unresolved
+
+let dbmap;
+try {
+  dbmap = require('/etc/coinstac/cstacDBMap'); // eslint-disable-line import/no-absolute-path, import/no-unresolved, global-require
+} catch (e) {
+  console.log('No DBMap found: using defaults'); // eslint-disable-line no-console
+  dbmap = {
+    rethinkdbAdmin: {
+      user: 'admin',
+      password: '',
+    },
+    cstacJWTSecret: 'test',
+  };
+}
 
 const helperFunctions = {
   /**
@@ -52,6 +65,11 @@ const helperFunctions = {
       .then(result => result.changes[0].new_val);
   },
   /**
+   * dbmap getter
+   * @return {Object} dbmap loaded
+   */
+  getDBMap() { return dbmap; },
+  /**
    * Returns RethinkDB connection
    * @return {object} A connection to RethinkDB
    */
@@ -62,10 +80,8 @@ const helperFunctions = {
       db: config.cstacDB,
     };
 
-    if (process.env.NODE_ENV === 'production') {
-      connectionConfig.user = dbmap.rethinkdbAdmin.user;
-      connectionConfig.password = dbmap.rethinkdbAdmin.password;
-    }
+    connectionConfig.user = dbmap.rethinkdbAdmin.user;
+    connectionConfig.password = dbmap.rethinkdbAdmin.password;
 
     return rethink.connect(connectionConfig);
   },
