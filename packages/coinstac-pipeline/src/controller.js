@@ -240,7 +240,7 @@ module.exports = {
             return queue.length
               ? function _cb(...args) {
                 if (controllerState.stopByUser === 'stop') {
-                  err(new Error('Pipeline run is stopped by user'));
+                  err(new Error('The pipeline run has been stopped by a user'));
                 }
                 const argsArray = [].slice.call(args);
                 const fn = queue.shift();
