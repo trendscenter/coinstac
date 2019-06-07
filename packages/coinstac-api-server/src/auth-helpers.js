@@ -84,8 +84,8 @@ const helperFunctions = {
       db: config.cstacDB,
     };
 
-    connectionConfig.user = dbmap.rethinkdbAdmin.user;
-    connectionConfig.password = dbmap.rethinkdbAdmin.password;
+    defaultConnectionConfig.user = dbmap.rethinkdbAdmin.user;
+    defaultConnectionConfig.password = dbmap.rethinkdbAdmin.password;
 
     return rethink.connect(Object.assign({}, defaultConnectionConfig, connectionConfig));
   },
