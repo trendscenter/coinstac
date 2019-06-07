@@ -64,7 +64,7 @@ const helperFunctions = {
 
         return rethink.table('users')
           .insert(userDetails, { returnChanges: true })
-          .run(connection);
+          .run(connection).then(res => connection.close().then(() => res));
       })
       .then(result => result.changes[0].new_val);
   },
@@ -77,7 +77,7 @@ const helperFunctions = {
    * Returns RethinkDB connection
    * @return {object} A connection to RethinkDB
    */
-  getRethinkConnection(connectionConfig) {
+  getRethinkConnection() {
     const defaultConnectionConfig = {
       host: config.host,
       port: config.rethinkPort,
@@ -87,7 +87,7 @@ const helperFunctions = {
     defaultConnectionConfig.user = dbmap.rethinkdbAdmin.user;
     defaultConnectionConfig.password = dbmap.rethinkdbAdmin.password;
 
-    return rethink.connect(Object.assign({}, defaultConnectionConfig, connectionConfig));
+    return rethink.connect(Object.assign({}, defaultConnectionConfig));
   },
   /**
    * Returns user table object for requested user
@@ -110,7 +110,8 @@ const helperFunctions = {
                 ))).coerceTo('object'),
                 tableArr
               ))).coerceTo('object'),
-          })).run(connection);
+          })).run(connection)
+            .then(res => connection.close().then(() => res));
         }
 
         return null;
@@ -146,6 +147,13 @@ const helperFunctions = {
         }
       );
     });
+  },
+  /**
+   * merges the given map into the current map
+   * @param {Object} map dbmap attrs to set
+   */
+  setDBMap(map) {
+    dbmap = Object.assign({}, dbmap, map);
   },
   /**
    * Validates JWT from authenticated user
@@ -187,11 +195,12 @@ const helperFunctions = {
       .then(connection => helperFunctions.validateUniqueUsername(req, connection)
         .then((isUniqueUsername) => {
           if (isUniqueUsername) {
-            return helperFunctions.validateUniqueEmail(req, connection);
+            return helperFunctions.validateUniqueEmail(req, connection)
+              .then(res => connection.close().then(() => res));
           }
 
           res(Boom.badRequest('Username taken'));
-          return null;
+          return connection.close();
         })
         .then((isUniqueEmail) => {
           if (isUniqueEmail) {
