@@ -11,8 +11,11 @@ const localError = require('./data/coinstac-local-error');
 const drneFsl = require('./data/drne_fsl_schema');
 const helperFunctions = require('../src/auth-helpers');
 
+let connection;
+
 helperFunctions.getRethinkConnection()
-  .then((connection) => {
+  .then((db) => {
+    connection = db;
     return rethink.dbList().contains('coinstac')
       .do((exists) => {
         return rethink.branch(
@@ -25,7 +28,10 @@ helperFunctions.getRethinkConnection()
         if (process.argv[2]) {
           return rethink.db('rethinkdb').table('users')
             .get('admin').update({ password: process.argv[2] })
-            .run(connection);
+            .run(connection)
+            .then(() => connection.close())
+            .then(() => helperFunctions.getRethinkConnection({ password: process.argv[2] }))
+            .then((newDBConn) => { connection = newDBConn; });
         }
       })
       .then(() => rethink.dbCreate('coinstac').run(connection))

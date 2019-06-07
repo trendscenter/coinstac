@@ -77,8 +77,8 @@ const helperFunctions = {
    * Returns RethinkDB connection
    * @return {object} A connection to RethinkDB
    */
-  getRethinkConnection() {
-    const connectionConfig = {
+  getRethinkConnection(connectionConfig) {
+    const defaultConnectionConfig = {
       host: config.host,
       port: config.rethinkPort,
       db: config.cstacDB,
@@ -87,7 +87,7 @@ const helperFunctions = {
     connectionConfig.user = dbmap.rethinkdbAdmin.user;
     connectionConfig.password = dbmap.rethinkdbAdmin.password;
 
-    return rethink.connect(connectionConfig);
+    return rethink.connect(Object.assign({}, defaultConnectionConfig, connectionConfig));
   },
   /**
    * Returns user table object for requested user
