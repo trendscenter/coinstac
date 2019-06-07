@@ -32,7 +32,10 @@ helperFunctions.getRethinkConnection()
             .get('admin').update({ password: process.argv[2] })
             .run(connection)
             .then(() => connection.close())
-            .then(() => helperFunctions.getRethinkConnection({ password: process.argv[2] }))
+            .then(() => {
+              helperFunctions.setDBMap({ rethinkdbAdmin: { user: 'admin', password: process.argv[2] } });
+              return helperFunctions.getRethinkConnection();
+            })
             .then((newDBConn) => { connection = newDBConn; });
         }
       })
