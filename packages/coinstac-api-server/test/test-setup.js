@@ -1,3 +1,5 @@
+require('trace');
+require('clarify');
 const rethink = require('rethinkdb');
 const singleShot = require('./data/single-shot-schema');
 const multiShot = require('./data/multi-shot-schema');
