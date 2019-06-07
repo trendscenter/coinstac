@@ -14,9 +14,14 @@ const config = require('../../config/default');
  * @return {array} The contents of the requested table
  */
 function fetchAll(table) {
+  let connection;
   return helperFunctions.getRethinkConnection()
-    .then(connection => rethink.table(table).orderBy({ index: 'id' }).run(connection))
-    .then(cursor => cursor.toArray());
+    .then((db) => {
+      connection = db;
+      return rethink.table(table).orderBy({ index: 'id' }).run(connection);
+    })
+    .then(cursor => cursor.toArray())
+    .then(res => connection.close().then(() => res));
 }
 
 /**
@@ -281,14 +286,18 @@ const resolvers = {
     },
     fetchAllUsers: () => fetchAll('users'),
     fetchAllUserRuns: ({ auth: { credentials } }, args) => {
+      let connection;
       return helperFunctions.getRethinkConnection()
-        .then(connection =>
-          rethink.table('runs')
+        .then((db) => {
+          connection = db;
+          return rethink.table('runs')
             .orderBy({ index: 'id' })
             .filter(rethink.row('clients').contains(credentials.id))
-            .run(connection).then(res => connection.close().then(() => res))
+            .run(connection);
+          }
         )
-        .then(cursor => cursor.toArray());
+        .then(cursor => cursor.toArray())
+        .then(res => connection.close().then(() => res));
     },
     validateComputation: (_, args) => {
       return new Promise();
@@ -408,8 +417,8 @@ const resolvers = {
             ).run(connection),
             rethink.table('pipelines').filter({ owningConsortium: args.consortiumId })
               .delete()
-              .run(connection).then(res => connection.close().then(() => res))
-          ])
+              .run(connection)
+          ]).then(res => connection.close().then(() => res))
         )
         .then(([consortium]) => consortium.changes[0].old_val)
     },
