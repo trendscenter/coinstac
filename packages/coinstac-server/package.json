@@ -1,6 +1,6 @@
 {
   "name": "coinstac-server",
-  "version": "4.2.1",
+  "version": "4.2.3",
   "description": "COINSTAC core server functionality.",
   "main": "src/index.js",
   "bin": "bin/coinstac-server-core",
@@ -37,7 +37,7 @@
     "axios": "^0.17.1",
     "coinstac-docker-manager": "^4.2.0",
     "coinstac-graphql-schema": "^4.2.1",
-    "coinstac-pipeline": "^4.2.1",
+    "coinstac-pipeline": "^4.2.3",
     "hapi": "^16.6.3"
   }
 }
