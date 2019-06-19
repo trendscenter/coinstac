@@ -4,7 +4,24 @@ const jwt = require('jsonwebtoken');
 const rethink = require('rethinkdb');
 const Promise = require('bluebird');
 const config = require('../config/default');
-const dbmap = require('/etc/coinstac/cstacDBMap'); // eslint-disable-line import/no-absolute-path, import/no-unresolved
+
+let dbmap;
+try {
+  dbmap = require('/etc/coinstac/cstacDBMap'); // eslint-disable-line import/no-absolute-path, import/no-unresolved, global-require
+} catch (e) {
+  console.log('No DBMap found: using defaults'); // eslint-disable-line no-console
+  dbmap = {
+    rethinkdbAdmin: {
+      user: 'admin',
+      password: '',
+    },
+    rethinkdbServer: {
+      user: 'server',
+      password: 'password',
+    },
+    cstacJWTSecret: 'test',
+  };
+}
 
 const helperFunctions = {
   /**
@@ -47,27 +64,30 @@ const helperFunctions = {
 
         return rethink.table('users')
           .insert(userDetails, { returnChanges: true })
-          .run(connection);
+          .run(connection).then(res => connection.close().then(() => res));
       })
       .then(result => result.changes[0].new_val);
   },
+  /**
+   * dbmap getter
+   * @return {Object} dbmap loaded
+   */
+  getDBMap() { return dbmap; },
   /**
    * Returns RethinkDB connection
    * @return {object} A connection to RethinkDB
    */
   getRethinkConnection() {
-    const connectionConfig = {
+    const defaultConnectionConfig = {
       host: config.host,
       port: config.rethinkPort,
       db: config.cstacDB,
     };
 
-    if (process.env.NODE_ENV === 'production') {
-      connectionConfig.user = dbmap.rethinkdbAdmin.user;
-      connectionConfig.password = dbmap.rethinkdbAdmin.password;
-    }
+    defaultConnectionConfig.user = dbmap.rethinkdbAdmin.user;
+    defaultConnectionConfig.password = dbmap.rethinkdbAdmin.password;
 
-    return rethink.connect(connectionConfig);
+    return rethink.connect(Object.assign({}, defaultConnectionConfig));
   },
   /**
    * Returns user table object for requested user
@@ -90,7 +110,8 @@ const helperFunctions = {
                 ))).coerceTo('object'),
                 tableArr
               ))).coerceTo('object'),
-          })).run(connection);
+          })).run(connection)
+            .then(res => connection.close().then(() => res));
         }
 
         return null;
@@ -126,6 +147,13 @@ const helperFunctions = {
         }
       );
     });
+  },
+  /**
+   * merges the given map into the current map
+   * @param {Object} map dbmap attrs to set
+   */
+  setDBMap(map) {
+    dbmap = Object.assign({}, dbmap, map);
   },
   /**
    * Validates JWT from authenticated user
@@ -167,11 +195,12 @@ const helperFunctions = {
       .then(connection => helperFunctions.validateUniqueUsername(req, connection)
         .then((isUniqueUsername) => {
           if (isUniqueUsername) {
-            return helperFunctions.validateUniqueEmail(req, connection);
+            return helperFunctions.validateUniqueEmail(req, connection)
+              .then(res => connection.close().then(() => res));
           }
 
           res(Boom.badRequest('Username taken'));
-          return null;
+          return connection.close();
         })
         .then((isUniqueEmail) => {
           if (isUniqueEmail) {

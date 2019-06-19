@@ -7,9 +7,13 @@ const userMetadataChangedSubsPreprocess = require('./userMetadataChanged');
 const tables = [
   { tableName: 'computations', idVar: 'computationId', subVar: 'computationChanged' },
   { tableName: 'consortia', idVar: 'consortiumId', subVar: 'consortiumChanged' },
-  { tableName: 'pipelines', idVar: 'pipelineId', subVar: 'pipelineChanged', preprocess: pipelineChangedSubsPreprocess },
+  {
+    tableName: 'pipelines', idVar: 'pipelineId', subVar: 'pipelineChanged', preprocess: pipelineChangedSubsPreprocess,
+  },
   { tableName: 'users', idVar: 'userId', subVar: 'userChanged' },
-  { tableName: 'users', idVar: 'userId', subVar: 'userMetadataChanged', preprocess: userMetadataChangedSubsPreprocess },
+  {
+    tableName: 'users', idVar: 'userId', subVar: 'userMetadataChanged', preprocess: userMetadataChangedSubsPreprocess,
+  },
   { tableName: 'runs', idVar: 'runId', subVar: 'userRunChanged' },
 ];
 
@@ -22,6 +26,7 @@ const initSubscriptions = (pubsub) => {
     helperFunctions.getRethinkConnection()
       .then(connection => rethink.table(table.tableName).changes().run(connection))
       .then(feed => feed.each((err, change) => {
+        if (err) console.log(`GraphQL changefeed error: ${err}`);
         let val = {};
 
         if (!change.new_val) {
@@ -33,13 +38,11 @@ const initSubscriptions = (pubsub) => {
         const preprocessPromise = table.preprocess ? table.preprocess(val) : Promise.resolve(val);
 
         preprocessPromise
-          .then(result => 
-            pubsub.publish(table.subVar, {
-              [table.subVar]: result,
-              [table.idVar]: result.id,
-            })
-          )
-      }))
+          .then(result => pubsub.publish(table.subVar, {
+            [table.subVar]: result,
+            [table.idVar]: result.id,
+          }));
+      }));
   });
 };
 

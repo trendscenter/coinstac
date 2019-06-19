@@ -14,9 +14,14 @@ const config = require('../../config/default');
  * @return {array} The contents of the requested table
  */
 function fetchAll(table) {
+  let connection;
   return helperFunctions.getRethinkConnection()
-    .then(connection => rethink.table(table).orderBy({ index: 'id' }).run(connection))
-    .then(cursor => cursor.toArray());
+    .then((db) => {
+      connection = db;
+      return rethink.table(table).orderBy({ index: 'id' }).run(connection);
+    })
+    .then(cursor => cursor.toArray())
+    .then(res => connection.close().then(() => res));
 }
 
 /**
@@ -40,7 +45,8 @@ function fetchOnePipeline(table, id) {
           computations: step('computations').map(compId => rethink.table('computations').get(compId)),
         })),
       }))
-      .run(connection))
+      .run(connection)
+      .then(res => connection.close().then(() => res)))
     .then(result => result);
 }
 
@@ -168,7 +174,7 @@ const resolvers = {
           .then(connection =>
             rethink.table('runs')
               .get(args.resultId)
-              .run(connection)
+              .run(connection).then(res => connection.close().then(() => res))
           )
           .then(result => result);
       }
@@ -200,7 +206,7 @@ const resolvers = {
       return helperFunctions.getRethinkConnection()
         .then((connection) =>
           rethink.table('computations').getAll(...args.computationIds)
-            .run(connection)
+            .run(connection).then(res => connection.close().then(() => res))
         )
         .then((cursor) => cursor.toArray())
         .then((result) => {
@@ -229,7 +235,7 @@ const resolvers = {
                 })
               )
             )
-            .run(connection)
+            .run(connection).then(res => connection.close().then(() => res))
         )
         .then(cursor => cursor.toArray())
         .then(result => result);
@@ -260,7 +266,7 @@ const resolvers = {
                   )
                 })
               )
-              .run(connection)
+              .run(connection).then(res => connection.close().then(() => res))
           )
           .then(result => result);
       }
@@ -280,14 +286,18 @@ const resolvers = {
     },
     fetchAllUsers: () => fetchAll('users'),
     fetchAllUserRuns: ({ auth: { credentials } }, args) => {
+      let connection;
       return helperFunctions.getRethinkConnection()
-        .then(connection =>
-          rethink.table('runs')
+        .then((db) => {
+          connection = db;
+          return rethink.table('runs')
             .orderBy({ index: 'id' })
             .filter(rethink.row('clients').contains(credentials.id))
-            .run(connection)
+            .run(connection);
+          }
         )
-        .then(cursor => cursor.toArray());
+        .then(cursor => cursor.toArray())
+        .then(res => connection.close().then(() => res));
     },
     validateComputation: (_, args) => {
       return new Promise();
@@ -310,7 +320,7 @@ const resolvers = {
               returnChanges: true,
             }
           )
-          .run(connection)
+          .run(connection).then(res => connection.close().then(() => res))
         )
         .then((result) => {
           return result.changes[0].new_val;
@@ -333,7 +343,7 @@ const resolvers = {
       }
 
       const connection = await helperFunctions.getRethinkConnection();
-      await addUserPermissions(connection, args);
+      await addUserPermissions(connection, args).then(res => connection.close().then(() => res));
 
       return helperFunctions.getUserDetails({ username: args.userId });
     },
@@ -368,7 +378,7 @@ const resolvers = {
               returnChanges: true,
             }
           )
-          .run(connection)
+          .run(connection).then(res => connection.close().then(() => res))
         )
         .then((result) => {
           return axios.post(
@@ -408,7 +418,7 @@ const resolvers = {
             rethink.table('pipelines').filter({ owningConsortium: args.consortiumId })
               .delete()
               .run(connection)
-          ])
+          ]).then(res => connection.close().then(() => res))
         )
         .then(([consortium]) => consortium.changes[0].old_val)
     },
@@ -436,7 +446,7 @@ const resolvers = {
           } else {
             return rethink.table('pipelines').get(args.pipelineId)
               .delete({ returnChanges: true })
-              .run(connection)
+              .run(connection).then(res => connection.close().then(() => res))
           }
         })
         .then((pipeline) => pipeline.changes[0].old_val)
@@ -450,7 +460,8 @@ const resolvers = {
      */
     joinConsortium: async ({ auth: { credentials } }, args) => {
       const connection = await helperFunctions.getRethinkConnection();
-      await addUserPermissions(connection, { userId: credentials.id, role: 'member', doc: args.consortiumId, table: 'consortia' });
+      await addUserPermissions(connection, { userId: credentials.id, role: 'member', doc: args.consortiumId, table: 'consortia' })
+        .then(res => connection.close().then(() => res));
 
       return fetchOne('consortia', args.consortiumId);
     },
@@ -463,7 +474,8 @@ const resolvers = {
      */
     leaveConsortium: async ({ auth: { credentials } }, args) => {
       const connection = await helperFunctions.getRethinkConnection();
-      await removeUserPermissions(connection, { userId: credentials.id, role: 'member', doc: args.consortiumId, table: 'consortia' });
+      await removeUserPermissions(connection, { userId: credentials.id, role: 'member', doc: args.consortiumId, table: 'consortia' })
+        .then(res => connection.close().then(() => res));
 
       return fetchOne('consortia', args.consortiumId);
     },
@@ -488,7 +500,7 @@ const resolvers = {
           }
 
           return rethink.table('computations').get(args.computationId)
-            .delete({ returnChanges: true }).run(connection)
+            .delete({ returnChanges: true }).run(connection).then(res => connection.close().then(() => res))
         })
         .then(result => result.changes[0].old_val)
     },
@@ -511,7 +523,8 @@ const resolvers = {
       }
 
       const connection = await helperFunctions.getRethinkConnection();
-      await removeUserPermissions(connection, args);
+      await removeUserPermissions(connection, args)
+        .then(res => connection.close().then(() => res));
       return helperFunctions.getUserDetails({ username: args.userId });
     },
     /**
@@ -532,7 +545,7 @@ const resolvers = {
       return helperFunctions.getRethinkConnection()
         .then((connection) =>
           rethink.table('consortia').get(args.consortiumId).update({activePipelineId: args.activePipelineId})
-          .run(connection)
+          .run(connection).then(res => connection.close().then(() => res))
         )
     },
     /**
@@ -565,8 +578,11 @@ const resolvers = {
 
       if (!isUpdate) {
         await addUserPermissions(connection, { userId: credentials.id, role: 'owner', doc: consortium.id, table: 'consortia' });
-        await addUserPermissions(connection, { userId: credentials.id, role: 'member', doc: consortium.id, table: 'consortia' });
+        await addUserPermissions(connection, { userId: credentials.id, role: 'member', doc: consortium.id, table: 'consortia' })
+        .then(res => connection.close().then(() => res));
         consortium = await fetchOne('consortia', consortium.id); // fetch again to get the changes on the 'members' and 'owners' properties
+      } else {
+        await connection.close();
       }
 
       return consortium;
@@ -583,7 +599,7 @@ const resolvers = {
       return helperFunctions.getRethinkConnection()
         .then((connection) =>
           rethink.table('runs').get(args.runId).update({ error: Object.assign({}, args.error), endDate: Date.now() })
-          .run(connection))
+          .run(connection).then(res => connection.close()));
           // .then(result => result.changes[0].new_val)
     },
     /**
@@ -625,7 +641,7 @@ const resolvers = {
                 )
               })
             )
-            .run(connection)
+            .run(connection).then(res => connection.close().then(() => res))
         ))
         .then(result => result)
     },
@@ -642,7 +658,7 @@ const resolvers = {
       return helperFunctions.getRethinkConnection()
         .then((connection) =>
           rethink.table('runs').get(args.runId).update({ results: Object.assign({}, args.results), endDate: Date.now() })
-          .run(connection))
+          .run(connection).then(res => connection.close()))
           // .then(result => result.changes[0].new_val)
     },
     setActiveComputation: (_, args) => {
@@ -663,7 +679,7 @@ const resolvers = {
       return helperFunctions.getRethinkConnection()
         .then((connection) => {
           return rethink.table('runs').get(args.runId).update({ remotePipelineState: args.data })
-          .run(connection);
+          .run(connection).then(res => connection.close());
         });
           // .then(result => result.changes[0].new_val)
     },
@@ -683,7 +699,7 @@ const resolvers = {
             consortiaStatuses: {
               [consortiumId]: status,
             },
-          }).run(connection)
+          }).run(connection).then(res => connection.close().then(() => res))
         )
         .then(result =>
           helperFunctions.getUserDetails({ username: credentials.id })
