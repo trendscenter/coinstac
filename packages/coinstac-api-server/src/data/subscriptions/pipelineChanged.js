@@ -18,7 +18,7 @@ function preprocessPipelineChangedSubs(pipeline) {
         })),
       }))
       .run(connection)
-    );
+      .then(res => connection.close().then(() => res)));
 }
 
 module.exports = preprocessPipelineChangedSubs;
