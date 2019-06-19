@@ -26,7 +26,7 @@ const initSubscriptions = (pubsub) => {
     helperFunctions.getRethinkConnection()
       .then(connection => rethink.table(table.tableName).changes().run(connection))
       .then(feed => feed.each((err, change) => {
-        console.log(`GraphQL changefeed error: ${err}`);
+        if (err) console.log(`GraphQL changefeed error: ${err}`);
         let val = {};
 
         if (!change.new_val) {
