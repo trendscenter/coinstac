@@ -107,7 +107,7 @@ Follow the general steps above before continuing.
     {
       "rethinkdbAdmin": {
         "user": "coinstac",
-        "password": "test"
+        "password": ""
       },
       "rethinkdbServer": {
         "username": "server",
