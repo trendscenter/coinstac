@@ -223,6 +223,12 @@ class CoinstacClient {
           const pathsep = new RegExp(`${escape(path.sep)}|:`, 'g');
           linkPromises.push(
             linkAsync(filesArray[i], path.resolve(this.appDirectory, this.clientId, runId, filesArray[i].replace(pathsep, '-')))
+            .catch((e) => {
+              // permit dupes
+              if (e.code && e.code !== 'EEXIST') {
+                throw e;
+              }
+            })
           );
         }
 
