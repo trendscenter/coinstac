@@ -19,18 +19,18 @@ const conf = convict({
     env: 'NODE_ENV',
   },
   apiServer: {
-    hostname: 'coinstac.mrn.org',
+    hostname: 'coinstac.services',
     pathname: '/api',
     protocol: 'https:',
   },
   subApiServer: {
-    hostname: 'coinstac.mrn.org',
+    hostname: 'coinstac.services',
     pathname: '/ws',
     port: '443',
     protocol: 'wss:',
   },
   pipelineWSServer: {
-    hostname: 'coinstac.mrn.org',
+    hostname: 'coinstac.services',
     pathname: '',
     port: '443',
     protocol: 'https:',
