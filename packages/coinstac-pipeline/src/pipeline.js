@@ -43,14 +43,19 @@ module.exports = {
           if (val.fromCache) {
             // the currentComputation index may be dynamic if
             // mult comps per step is added as a feature
-            const compSpec = pipelineSteps[val.fromCache.step]
-              .controllerState.currentComputations[0].computation;
+            const { meta, computation } = pipelineSteps[val.fromCache.step]
+              .controllerState.currentComputations[0];
             cache[val.fromCache.step] = Object.assign(
-              { preProcess: !!compSpec.meta.preProcess },
-              cache[val.fromCache.step],
               {
-                [val.fromCache.variable]:
-                  Object.assign({}, compSpec.output[val.fromCache.variable]),
+                preprocess: !!meta.preprocess,
+                variables: Object.assign(
+                  {},
+                  cache[val.fromCache.step] ? cache[val.fromCache.step].variables : {},
+                  {
+                    [val.fromCache.variable]:
+                     Object.assign({}, computation.output[val.fromCache.variable]),
+                  }
+                ),
               }
             );
           }
@@ -98,30 +103,43 @@ module.exports = {
         const loadCache = (output, step) => {
           const proms = [];
           if (cache[step]) {
-            for (let [key] of Object.entries(cache[step])) { // eslint-disable-line no-restricted-syntax, max-len, prefer-const
-              if (cache[step][key].type === 'covariates' && cache[step][key].meta.preprocess) {
-                output[key].data.forEach((file) => {
+            for (let [key] of Object.entries(cache[step].variables)) { // eslint-disable-line no-restricted-syntax, max-len, prefer-const
+              if (cache[step].variables[key].type === 'array' && key === 'covariates' && cache[step].preprocess) {
+                cache[step].variables[key].value = output[key];
+                // pop off the csv column names and get the file data
+                const subjectFiles = output[key][0][0].slice(1);
+                subjectFiles.forEach((subjectFile) => {
                   // move to input dir
-                  const fp = join(userDirectories.baseDirectory, file);
+                  const fpLink = join(userDirectories.baseDirectory, subjectFile[0]);
+                  const fpOut = join(userDirectories.outputDirectory, subjectFile[0]);
                   proms.push(
-                    mkdirp(dirname(fp))
-                      .then(() => hardLink(file, fp))
-                      .then(() => fpCleanup.push(fp))
+                    mkdirp(dirname(fpLink))
+                      .then(() => hardLink(fpOut, fpLink))
+                      .then(() => {
+                        debugger
+                        fpCleanup.push(fpLink);
+                      })
                   );
                 });
-              } else if (cache[step][key].type === 'files' || cache[step][key].type === 'file') {
+              } else if (cache[step].variables[key].type === 'files' || cache[step].variables[key].type === 'file') {
+                cache[step].variables[key].value = output[key];
                 const fileArray = Array.isArray(output[key]) ? output[key] : [output[key]];
                 fileArray.forEach((file) => {
                   // move to input dir
-                  const fp = join(userDirectories.baseDirectory, file);
+                  const fpLink = join(userDirectories.baseDirectory, file);
+                  const fpOut = join(userDirectories.outputDirectory, file);
                   proms.push(
-                    mkdirp(dirname(fp))
-                      .then(() => hardLink(file, fp))
-                      .then(() => fpCleanup.push(fp))
+                    mkdirp(dirname(fpLink))
+                      .then(() => hardLink(fpOut, fpLink))
+                      .then(() => fpCleanup.push(fpLink))
+                      .then(() => {
+                        debugger
+                        fpCleanup.push(fpLink);
+                      })
                   );
                 });
               } else {
-                cache[step][key].value = output[key];
+                cache[step].variables[key].value = output[key];
               }
             }
           }
@@ -132,7 +150,7 @@ module.exports = {
           const output = {};
           for (let [key, val] of Object.entries(step.inputMap)) { // eslint-disable-line no-restricted-syntax, max-len, prefer-const
             if (val.fromCache) {
-              output[key] = cache[val.fromCache.step][val.fromCache.variable].value;
+              output[key] = cache[val.fromCache.step].variables[val.fromCache.variable].value;
             } else {
               output[key] = val.value;
             }
@@ -145,26 +163,33 @@ module.exports = {
           if (this.mode === 'remote' && step.controller.type === 'local') {
             return Promise.resolve();
           }
-          return prom.then(() => step.start(this.mode === 'remote' ? {} : loadInput(step), remoteHandler))
+          return prom.then(() => {
+            return step.start(this.mode === 'remote' ? {} : loadInput(step), remoteHandler);
+          })
             .then((output) => {
-              loadCache(output, index);
-              return output;
+              return loadCache(output, index)
+                .then(() => {
+                  return output;
+                });
             });
         }, Promise.resolve());
 
         const cleanup = () => {
           return Promise.all(fpCleanup.map((file) => {
             // rmraf from the base file/dir
-            return rimraf(relative(userDirectories.baseDirectory, file).split(sep)[0])
+            return rimraf(join(
+              userDirectories.baseDirectory,
+              relative(userDirectories.baseDirectory, file).split(sep)[0]
+            ))
             // unlink errors shouldnt crash the pipe
               .catch();
           }));
         };
         // cleanup
-        return pipeineChain.then(() => cleanup())
+        return pipeineChain.then(finalOutput => cleanup().then(() => finalOutput))
           .catch((err) => {
             // cleanup and then rethrow pipeline error
-            return cleanup.then(() => { throw err; });
+            return cleanup().then(() => { throw err; });
           });
       },
     };
