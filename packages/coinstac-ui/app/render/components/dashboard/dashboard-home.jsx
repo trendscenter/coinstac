@@ -1,6 +1,7 @@
 /* eslint-disable react/no-array-index-key */
 
-import React, { Component } from 'react';
+import React from 'react';
+import { ipcRenderer } from 'electron';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { withStyles } from '@material-ui/core';
@@ -19,6 +20,10 @@ const styles = theme => ({
     marginTop: theme.spacing.unit * 2,
   },
 });
+
+const stopPipeline = (pipelineId, runId) => () => {
+  ipcRenderer.send('stop-pipeline', { pipelineId, runId });
+};
 
 function DashboardHome(props) {
   const {
@@ -42,6 +47,7 @@ function DashboardHome(props) {
         hoursSinceActive={HOURS_SINCE_ACTIVE}
         limitToComplete={false}
         runs={runs}
+        stopPipeline={stopPipeline}
       />
     </div>
   );
