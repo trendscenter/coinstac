@@ -57,7 +57,7 @@ program.on('--help', () => {
 
 program.parse(process.argv);
 
-let mode;
+let globalMode = 'local';
 const inSpecPath = program.directory ? path.join(program.directory, 'inputspec.json') : path.join('.', 'test', 'inputspec.json');
 
 if (program.debug || program.silly) {
@@ -100,7 +100,7 @@ const pipelineSpecFactory = (inputSpec, mode, comp) => {
   let specMap = Array.isArray(inputSpec) ? inputSpec : [inputSpec];
   const comps = Array.isArray(comp) ? comp : [comp];
   specMap = specMap.map((spec, index) => ({
-    controller: { type: mode },
+    controller: { type: mode[index] },
     computations: [comps[index]],
     inputMap: spec,
   }));
@@ -131,13 +131,17 @@ if (program.pipeline) {
       }, []);
       return Promise.all(fileProm)
         .then((fileGroups) => {
+          // each group element is [0] compspec, [1] inputSpec
           // group compspecs and inputspecs into an object we can create pipepecs from
-          mode = fileGroups.reduce((memo, fileGroup) => {
+          const mode = fileGroups.reduce((memo, fileGroup) => {
             if (fileGroup[0].computation.remote) {
-              memo = 'decentralized';
+              memo.push('decentralized');
+              globalMode = 'decentralized';
+            } else {
+              memo.push('local');
             }
             return memo;
-          }, 'local');
+          }, []);
 
           let clientCount;
           const groupedSpecs = fileGroups.reduce((memo, fileGroup, index) => {
@@ -172,7 +176,8 @@ if (program.pipeline) {
   ].map(p => p.catch(error => error)))
     .then((specs) => {
       const comp = JSON.parse(specs[0]);
-      mode = comp.computation.remote ? 'decentralized' : 'local';
+      globalMode = comp.computation.remote ? 'decentralized' : 'local';
+      const mode = new Array(specs.length).fill(globalMode);
       /**
        * Create a spec via cmdline if none is given
        * @param  {Object} variable [description]
@@ -244,10 +249,10 @@ fulfilledPipelineSpec
   /* eslint-disable no-console */
     const count = program.clientNumber ? program.clientNumber // eslint-disable-line no-nested-ternary, max-len
       : (Array.isArray(pipelineSpec) ? pipelineSpec.length : 1); // eslint-disable-line no-nested-ternary, max-len
-    logger.debug(`Starting ${mode} simulator run with ${count} client(s)`);
+    logger.debug(`Starting ${globalMode} simulator run with ${count} client(s)`);
     const simRun = sim.startRun({
       spec: pipelineSpec,
-      runMode: mode,
+      runMode: globalMode,
       clientCount: count,
       operatingDirectory: program.directory,
     });
@@ -315,7 +320,7 @@ fulfilledPipelineSpec
       screen.destroy();
     }
     logger.info('Simulator run finished');
-    if (mode === 'decentralized') {
+    if (globalMode === 'decentralized') {
       logger.info(`Decentralized results:\n ${JSON.stringify(results.remote, null, 2)}`);
     } else {
       logger.info('Local run(s) finished');

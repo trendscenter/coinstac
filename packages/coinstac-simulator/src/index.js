@@ -52,15 +52,26 @@ const startRun = ({
     });
   }
 
+  let throwCount = Object.keys(pipelines).length;
   const allResults = Promise.all(Object.keys(pipelines).map((key) => {
     if (key === 'locals') {
       return Promise.all(pipelines[key].map(
         (localP, index) => localP.pipeline.result
           .then((res) => { pipelines[key][index].pipeline.result = res; })
+          .catch((e) => {
+            // see if you're the last node to err, throw is so
+            throwCount -= 1;
+            if (throwCount === 0) throw e;
+          })
       ));
     }
     return pipelines.remote.pipeline.result
-      .then((res) => { pipelines[key].pipeline.result = res; });
+      .then((res) => { pipelines[key].pipeline.result = res; })
+      .catch((e) => {
+        // see if you're the last node to err, throw is so
+        throwCount -= 1;
+        if (throwCount === 0) throw e;
+      });
   }))
     .then(() => {
       if (runMode === 'decentralized') {
