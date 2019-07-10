@@ -176,9 +176,15 @@ const startService = (serviceId, serviceUserId, opts) => {
         .then((port) => {
           const defaultOpts = {
           // this port is coupled w/ the internal base server image FYI
-            ExposedPorts: { '8881/tcp': {} },
+            ExposedPorts: {
+              '8881/tcp': {},
+              ...(process.LOGLEVEL === 'debug' && { '4444/tcp': {} }),
+            },
             HostConfig: {
-              PortBindings: { '8881/tcp': [{ HostPort: `${port}`, HostIp: '127.0.0.1' }] },
+              PortBindings: {
+                '8881/tcp': [{ HostPort: `${port}`, HostIp: '127.0.0.1' }],
+                ...(process.LOGLEVEL === 'debug' && { '4444/tcp': [{ HostPort: '4444', HostIp: '127.0.0.1' }] }),
+              },
             },
             Tty: true,
           };

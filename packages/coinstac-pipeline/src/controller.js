@@ -27,6 +27,7 @@ module.exports = {
     const stateEmitter = new Emitter();
     const controllerState = {
       activeComputations: [],
+      // docker analogs to the user directories
       baseDirectory: `/input/${clientId}/${runId}`,
       outputDirectory: `/output/${clientId}/${runId}`,
       cacheDirectory: `/cache/${clientId}/${runId}`,
