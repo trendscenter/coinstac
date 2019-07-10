@@ -40,6 +40,7 @@ module.exports = {
       mode,
       runType: 'sequential',
       state: undefined,
+      stopByUser: undefined
     };
     const setStateProp = (prop, val) => {
       controllerState[prop] = val;
@@ -58,6 +59,9 @@ module.exports = {
       inputMap,
       operatingDirectory,
       setStateProp,
+      stop: () => {
+        setStateProp('stopByUser', 'stop');
+      },
       /**
        * Starts a controller, which in turn starts a computation, given the correct
        * conditions.
@@ -235,6 +239,9 @@ module.exports = {
           trampoline(() => {
             return queue.length
               ? function _cb(...args) {
+                if (controllerState.stopByUser === 'stop') {
+                  err(new Error('The pipeline run has been stopped by a user'));
+                }
                 const argsArray = [].slice.call(args);
                 const fn = queue.shift();
                 controllerState.currentBoxCommand = activeControlBox.preIteration(controllerState);

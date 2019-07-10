@@ -116,7 +116,7 @@ function getStateWell(runObject, stateName, stateKey, classes) {
   );
 }
 
-const RunItem = ({ consortiumName, runObject, classes }) => (
+const RunItem = ({ consortiumName, runObject, stopPipeline, classes }) => (
   <Paper
     key={runObject.id}
     elevation={4}
@@ -293,14 +293,31 @@ const RunItem = ({ consortiumName, runObject, classes }) => (
           </Button>
         )
       }
+      {
+        runObject.status === 'started'
+        && (
+          <Button
+            variant="contained"
+            component={Link}
+            onClick={stopPipeline}
+          >
+            Stop Pipeline
+          </Button>
+        )
+      }
     </div>
   </Paper>
 );
+
+RunItem.defaultProps = {
+  stopPipeline: () => {},
+};
 
 RunItem.propTypes = {
   consortiumName: PropTypes.string.isRequired,
   runObject: PropTypes.object.isRequired,
   classes: PropTypes.object.isRequired,
+  stopPipeline: PropTypes.func,
 };
 
 export default withStyles(styles)(RunItem);

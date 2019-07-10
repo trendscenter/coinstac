@@ -255,6 +255,26 @@ loadConfig()
     });
 
     /**
+     * IPC Listener to stop pipeline
+     * @param {String} pipelineId The id of the pipeline currently running
+     * @param {String} runId The id of the pipeline run
+     * @return {Promise<String>} Status message
+     */
+    ipcMain.on('stop-pipeline', (event, { pipelineId, runId }) => {
+      try {
+        return core.requestPipelineStop(pipelineId, runId);
+      } catch (err) {
+        logger.error(err);
+        mainWindow.webContents.send('docker-error', {
+          err: {
+            message: err.message,
+            stack: err.stack,
+          },
+        });
+      }
+    });
+
+    /**
   * IPC listener to return a list of all local Docker images
   * @return {Promise<String[]>} An array of all local Docker image names
   */

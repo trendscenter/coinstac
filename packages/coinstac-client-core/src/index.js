@@ -242,6 +242,17 @@ class CoinstacClient {
       });
   }
 
+  /**
+   * Requests a pipeline stop by notifying the pipeline controller
+   * the pipeline will then stop via an error event and terminate as if an error
+   * were thrown
+   * @param {string} pipelineId The id of the pipeline running
+   * @param {string} runId The id of the pipeline run
+   */
+  requestPipelineStop(pipelineId, runId) {
+    this.pipelineManager.stopPipeline(pipelineId, runId);
+  }
+
   unlinkFiles(runId) {
     const fullPath = path.join(this.appDirectory, this.clientId, runId);
 
