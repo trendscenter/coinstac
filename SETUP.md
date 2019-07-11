@@ -106,7 +106,7 @@ Follow the general steps above before continuing.
    ```json
     {
       "rethinkdbAdmin": {
-        "user": "coinstac",
+        "user": "admin",
         "password": ""
       },
       "rethinkdbServer": {
