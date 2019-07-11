@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 import { Panel } from 'react-bootstrap';
 import PropTypes from 'prop-types';
-import { capitalize } from 'lodash';
+import { startCase, toLower } from 'lodash';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import List from '@material-ui/core/List';
@@ -21,6 +21,9 @@ const styles = theme => ({
   nestedListItem: {
     paddingLeft: theme.spacing.unit * 4,
   },
+  mediumWeight: {
+    fontWeight: 500,
+  }
 });
 
 class MapsStepValue extends Component {
@@ -38,18 +41,34 @@ class MapsStepValue extends Component {
       classes,
     } = this.props;
 
+    let value = '';
+
+    switch(step.value) {
+      case (typeof step.value === 'boolean' && step.value === true):
+        value = 'true';
+        break;
+      case (typeof step.value === 'boolean' && step.value === false):
+        value = 'false';
+        break;
+      case (typeof step.value === 'object'):
+        value = JSON.stringify(step.value);
+        break;
+      default:
+        value = step.value;
+    }
+
+    let label = type.replace(/\_/g, ' ');
+
     return (
       <Paper
         className={classes.rootPaper}
         elevation={1}
       >
         <List>
-          <ListItem>
-            <ListItemText primary={`${capitalize(type)}:`} />
-          </ListItem>
-          <ListItem className={classes.nestedListItem}>
-            <ListItemText secondary={step.value} />
-          </ListItem>
+          <strong className={classes.mediumWeight}>
+            {`${startCase(toLower(label))}: `}
+          </strong>
+          <span>{value}</span>
         </List>
       </Paper>
     );
