@@ -26,6 +26,11 @@ const styles = theme => ({
   },
 });
 
+const capitalize = (s) => {
+  if (typeof s !== 'string') return ''
+  return s.charAt(0).toUpperCase() + s.slice(1)
+}
+
 const stepSource = {
   beginDrag(props) {
     return { id: props.id };
@@ -150,13 +155,52 @@ class PipelineStep extends Component {
 
     const { id, computations } = step;
 
+    let Inputs = [];
+    let defaultInputs = {};
+
+    if (compIO !== null) {
+      let newArray = [];
+      Object.keys(compIO.computation.input).map((key, index) => {
+        let value = Object.create(compIO.computation.input[key]);
+        value['value'] = compIO.computation.input[key];
+        value['key'] = key;
+        newArray.push(value);
+        if(value['value'].default !== null && key !== 'covariates') {
+          let v = value['value'].default;
+          if( v === 0 ){
+            v = '0';
+          }
+          defaultInputs[key] = { value: v };
+        }
+      });
+      Inputs = newArray.sort(function (a, b) {
+        return a.value.order - b.value.order;
+      });
+    }
+
+    if (Object.entries(defaultInputs).length > 0 && Object.entries(step.inputMap).length === 0) {
+      updateStep({
+        ...step,
+        inputMap: defaultInputs,
+      });
+    }
+
+    const Groups = {};
+
+    Inputs.map((localInput) => {
+      if (localInput.group) {
+        Groups[localInput.group] = [];
+      }
+      return null;
+    });
+
     return connectDragSource(connectDropTarget(
-      <div>
+      <div key={'step-'+step.id}>
         <ExpansionPanel className="pipeline-step" style={{ ...styles.draggable, opacity: isDragging ? 0 : 1 }}>
           <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
             <Typography variant="headline">{computations[0].meta.name}</Typography>
           </ExpansionPanelSummary>
-          <ExpansionPanelDetails className={classes.expansionPanelContent}>
+          <ExpansionPanelDetails className={classes.expansionPanelContent} key={'step-exp-'+step.id}>
             <div className={classes.inputParametersContainer}>
               <Typography variant="title">Input Parameters:</Typography>
               <Button
@@ -170,20 +214,51 @@ class PipelineStep extends Component {
             </div>
             {
               compIO !== null
-              && Object.entries(compIO.computation.input).map(localInput => (
-                <PipelineStepInput
-                  objKey={localInput[0]}
-                  objParams={localInput[1]}
-                  pipelineIndex={pipelineIndex}
-                  key={`${id}-${localInput[0]}-input`}
-                  owner={owner}
-                  parentKey={`${id}-${localInput[0]}-input`}
-                  possibleInputs={orderedInputs}
-                  step={step}
-                  updateStep={updateStep}
-                />
-              ))
+              && Inputs !== null
+              && Inputs.map((localInput) => {
+                const piplineStepInputComponent = (
+                  <PipelineStepInput
+                    objKey={localInput.key}
+                    objParams={localInput.value}
+                    pipelineIndex={pipelineIndex}
+                    key={`${id}-${localInput.key}-input`}
+                    owner={owner}
+                    parentKey={`${id}-${localInput.key}-input`}
+                    possibleInputs={orderedInputs}
+                    step={step}
+                    updateStep={updateStep}
+                  />
+                );
+                if (localInput.group) {
+                  console.log('add to group array');
+                  Groups[localInput.group].push(piplineStepInputComponent);
+                }else{
+                  return piplineStepInputComponent;
+                }
+              })
             }
+            <div>
+              {Groups &&
+                Object.entries(Groups).length > 0
+                && Object.entries(Groups).map((group) => {
+                  let name = group[0];
+                  let items = group[1];
+                  return (
+                    <ExpansionPanel className="pipeline-step" style={{ ...styles.draggable, opacity: isDragging ? 0 : 1, margin: '1rem 0' }}>
+                      <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
+                        <span>
+                          {capitalize(name)}
+                          &nbsp; Fields
+                        </span>
+                      </ExpansionPanelSummary>
+                      <ExpansionPanelDetails className={classes.expansionPanelContent}>
+                        {items && items.map((item) => { return item; })}
+                      </ExpansionPanelDetails>
+                    </ExpansionPanel>
+                  )
+                })
+              }
+            </div>
             <Typography variant="title">Output:</Typography>
             {compIO !== null && this.showOutput(10, id, compIO.computation.output)}
           </ExpansionPanelDetails>

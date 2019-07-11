@@ -39,7 +39,7 @@ class MapsStep extends Component {
   handleStep(step, type, updated) {
     let result = [];
     Object.keys(step).map((key, input) => {
-      if (typeof step[key] === 'object') {
+      if (typeof step[key] === 'object' && type.includes('options') === false) {
          let mapped = -1;
          Object.keys(step[key]).map((k, i) => {
             if(type === 'data') {
@@ -76,9 +76,10 @@ class MapsStep extends Component {
 
     return (
       <div className={classes.section}>
-        <Typography variant="h6">
-          {name === 'covariates' || name === 'data' ? capitalize(name) : 'Value'}
-        </Typography>
+        {name === 'covariates' || name === 'data' &&
+          <Typography variant="h6">
+          {capitalize(name)}
+        </Typography>}
         <div ref="Steps">
           {this.handleStep(step, name)}
         </div>
