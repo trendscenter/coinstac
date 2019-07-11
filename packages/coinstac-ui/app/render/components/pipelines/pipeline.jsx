@@ -29,7 +29,7 @@ import {
   getDocumentByParam,
   saveDocumentProp,
 } from '../../state/graphql/props';
-import { notifySuccess } from '../../state/ducks/notifyAndLog';
+import { notifySuccess, notifyError } from '../../state/ducks/notifyAndLog';
 
 const computationTarget = {
   drop() {
@@ -396,22 +396,21 @@ class Pipeline extends Component {
   savePipeline(e) {
     e.preventDefault();
 
-    this.props.savePipeline({
+    const { savePipeline, notifySuccess, notifyError } = this.props;
+
+    savePipeline({
       ...this.state.pipeline,
-      steps: this.state.pipeline.steps.map(step =>
-        ({
-          id: step.id,
-          computations: step.computations.map(comp => comp.id),
-          inputMap: step.inputMap,
-          controller: {
-            id: step.controller.id,
-            type: step.controller.type,
-            options: step.controller.options,
-          },
-        })
-      ),
-    })
-    .then(({ data: { savePipeline: { __typename, ...other } } }) => {
+      steps: this.state.pipeline.steps.map(step => ({
+        id: step.id,
+        computations: step.computations.map(comp => comp.id),
+        inputMap: step.inputMap,
+        controller: {
+          id: step.controller.id,
+          type: step.controller.type,
+          options: step.controller.options,
+        },
+      })),
+    }).then(({ data: { savePipeline: { __typename, ...other } } }) => {
       const pipeline = { ...this.state.pipeline, ...other };
 
       this.setState({
@@ -419,11 +418,12 @@ class Pipeline extends Component {
         startingPipeline: pipeline,
       });
 
-      this.props.notifySuccess({
-        message: `Pipeline Saved.`
-      });
-    })
-    .catch(console.log);
+      notifySuccess({ message: 'Pipeline Saved.' });
+    }).catch((error) => {
+      notifyError({ message: error.message });
+
+      console.error(error);
+    });
   }
 
   openOwningConsortiumMenu(event) {
@@ -640,6 +640,7 @@ Pipeline.propTypes = {
   connectDropTarget: PropTypes.func.isRequired,
   consortia: PropTypes.array.isRequired,
   notifySuccess: PropTypes.func.isRequired,
+  notifyError: PropTypes.func.isRequired,
   params: PropTypes.object.isRequired,
   runs: PropTypes.array,
   savePipeline: PropTypes.func.isRequired,
@@ -666,6 +667,6 @@ const PipelineWithAlert = compose(
   withApollo
 )(PipelineWithData);
 
-const connectedComponent = connect(mapStateToProps, { notifySuccess })(PipelineWithAlert);
+const connectedComponent = connect(mapStateToProps, { notifySuccess, notifyError })(PipelineWithAlert);
 
 export default withStyles(styles)(connectedComponent);
