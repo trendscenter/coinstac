@@ -280,7 +280,7 @@ class PipelineStepInput extends Component {
                       onChange={event => updateStep({
                         ...step,
                         inputMap: this.getNewObj(objKey,
-                          event.target.value ? { value: parseFloat(event.target.value) } : 'DELETE_VAR'
+                          event.target.value ? { value: event.target.value } : 'DELETE_VAR'
                         ),
                       })}
                       value={
