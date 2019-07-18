@@ -184,6 +184,17 @@ class ConsortiaList extends Component {
         return run.consortiumId === consortium.id && run.status === 'started';
       }).length > 0;
 
+      actions.push(
+        <Button
+          key={`${consortium.id}-start-pipeline-button`}
+          variant="contained"
+          className={classes.button}
+          onClick={this.startPipeline(consortium.id, consortium.activePipelineId)}
+        >
+          Start Pipeline
+        </Button>
+      );
+
       if (isPipelineRunning) {
         actions.push(
           <Button
@@ -193,17 +204,6 @@ class ConsortiaList extends Component {
             onClick={this.stopPipeline(consortium.activePipelineId)}
           >
             Stop Pipeline
-          </Button>
-        );
-      } else {
-        actions.push(
-          <Button
-            key={`${consortium.id}-start-pipeline-button`}
-            variant="contained"
-            className={classes.button}
-            onClick={this.startPipeline(consortium.id, consortium.activePipelineId)}
-          >
-            Start Pipeline
           </Button>
         );
       }
