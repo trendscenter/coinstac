@@ -2,8 +2,6 @@
 
 <img src="https://raw.githubusercontent.com/MRN-Code/coinstac/master/img/coinstac.png" height="75px">
 
-[ ![Codeship Status for MRN-Code/coinstac](https://app.codeship.com/projects/9a9dd9b0-8f5a-0134-c5bf-0e20509a962c/status?branch=master)](https://app.codeship.com/projects/185577)
-
 [![DOI](https://zenodo.org/badge/52497909.svg)](https://zenodo.org/badge/latestdoi/52497909)
 
 _Collaborative Informatics and Neuroimaging Suite Toolkit for Anonymous Computation, User Interface._ A research project by your friends [The Mind Research Network](http://www.mrn.org/).
@@ -19,6 +17,7 @@ Let's do research!
 * [The Problem](#the-problem)
 * [The Solution](#the-solution)
 * [Getting Started](#getting-started)
+* [Releases](#releases)
 * [Under The Hood](#under-the-hood)
 * [License](#license)
 
@@ -60,6 +59,10 @@ You may wonder why we haven't been doing this before!  Us too.  Let's get starte
   - [coinstac-simulator](https://github.com/MRN-Code/coinstac/tree/master/packages/coinstac-simulator) for how to test your freshly created `DecentralizedComputation`.
   - "Under the Hood" below, if you want to understand how the system works.
   - **API Documentation** is formally available [here](http://mrn-code.github.io/coinstac/index.html#api-docs).
+
+## Releases
+Binary releases for several platforms can be found here, under each version's assest tab:
+https://github.com/MRN-Code/coinstac/releases
 
 ## Under The Hood
 Developer documentation and system design information may be found over in our [technical docs](./TECHNICAL.md).
