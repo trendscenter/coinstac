@@ -32,6 +32,26 @@
         "type": "number",
         "source": "owner"
       },
+      "voxel_size":
+      {
+        "defaultValue": 0,
+        "label": "Voxel Size",
+        "max": 1,
+        "min": 0,
+        "step": 0.05,
+        "type": "number",
+        "source": "owner"
+      },
+      "threshold":
+      {
+        "defaultValue": 0,
+        "label": "Threshold",
+        "max": 1,
+        "min": 0,
+        "step": 0.05,
+        "type": "number",
+        "source": "owner"
+      },
       "covariates":
       {
         "label": "Covariates",
