@@ -230,7 +230,6 @@ class PipelineStep extends Component {
                   />
                 );
                 if (localInput.group) {
-                  console.log('add to group array');
                   Groups[localInput.group].push(piplineStepInputComponent);
                 }else{
                   return piplineStepInputComponent;
