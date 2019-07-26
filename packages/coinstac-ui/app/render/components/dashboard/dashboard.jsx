@@ -360,11 +360,16 @@ class Dashboard extends Component {
               || nextProps.remoteRuns[i].remotePipelineState.pipelineStep
               !== this.props.remoteRuns[runIndexInPropsRemote].remotePipelineState.pipelineStep
               ||
-              (!nextProps.remoteRuns[i].remotePipelineState.waitingOn && this.props.remoteRuns[runIndexInPropsRemote].remotePipelineState.waitingOn)
+              (!nextProps.remoteRuns[i].remotePipelineState.waitingOn
+               && this.props.remoteRuns[runIndexInPropsRemote].remotePipelineState.waitingOn)
               ||
-              (nextProps.remoteRuns[i].remotePipelineState.waitingOn && !this.props.remoteRuns[runIndexInPropsRemote].remotePipelineState.waitingOn)
+              (nextProps.remoteRuns[i].remotePipelineState.waitingOn
+               && !this.props.remoteRuns[runIndexInPropsRemote].remotePipelineState.waitingOn)
               ||
-              (nextProps.remoteRuns[i].remotePipelineState.waitingOn && this.props.remoteRuns[runIndexInPropsRemote].remotePipelineState.waitingOn && nextProps.remoteRuns[i].remotePipelineState.waitingOn.length !== this.props.remoteRuns[runIndexInPropsRemote].remotePipelineState.waitingOn.length)
+              (nextProps.remoteRuns[i].remotePipelineState.waitingOn
+               && this.props.remoteRuns[runIndexInPropsRemote].remotePipelineState.waitingOn
+               && nextProps.remoteRuns[i].remotePipelineState.waitingOn.length
+               !== this.props.remoteRuns[runIndexInPropsRemote].remotePipelineState.waitingOn.length)
             )
           )
         ) {
