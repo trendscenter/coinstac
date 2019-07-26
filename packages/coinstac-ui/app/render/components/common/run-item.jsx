@@ -69,7 +69,7 @@ function getStateWell(runObject, stateName, stateKey, classes) {
         )
       }
       {
-        runObject[stateKey].waitingOn
+        runObject[stateKey].waitingOn && runObject[stateKey].waitingOn.length > 0
         && (
           <div>
             <Typography className={classes.label}>Waiting on Users:</Typography>

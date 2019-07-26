@@ -120,7 +120,7 @@ function iteratePipelineSteps(consortium, filesByGroup, baseDirectory, runId) {
         const mappingIndex = 0;
         const mappingObj = step.inputMap[key].ownerMappings[mappingIndex];
         if (inputKeys.includes('data')
-        && inputKeys.includes('options')
+        && inputKeys.findIndex(element => element.includes('options'))
         && !inputKeys.includes('covariates')
         && !inputKeys.includes('file')) {
           let groupId = false;
@@ -141,10 +141,9 @@ function iteratePipelineSteps(consortium, filesByGroup, baseDirectory, runId) {
             const pathsArray = filesByGroup[groupId];
             let paths = pathsArray.map((path) => {
               if (path[0].includes('/')) {
-                let filepath = baseDirectory + path[0];
+                let filepath = path[0];
                 filepath = filepath.replace(pathsep, '-');
                 //path = "/input/"+ownerId+"/"+runId+"/"+path;
-                //console.log(filepath);
                 return filepath;
               }
             });
