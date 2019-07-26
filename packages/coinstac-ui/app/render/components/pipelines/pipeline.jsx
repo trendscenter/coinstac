@@ -444,6 +444,13 @@ class Pipeline extends Component {
     this.setState({ openAddComputationStepMenu: false });
   }
 
+  componentDidUpdate() {
+    const pipeline = this.state
+    if(pipeline.steps && pipeline.steps.inputMap){
+      console.log(pipeline.steps.inputMap);
+    }
+  }
+
   render() {
     const { computations, connectDropTarget, consortia, classes, auth } = this.props;
     const {
