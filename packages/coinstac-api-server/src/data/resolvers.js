@@ -617,6 +617,24 @@ const resolvers = {
           && !permissions.consortia[args.consortium.id].write) {
             return Boom.forbidden('Action not permitted');
       }*/
+
+      if (args.pipeline && args.pipeline.steps) {
+
+        const invalidData = args.pipeline.steps.some(step =>
+          step.inputMap &&
+          step.inputMap.covariates &&
+          step.inputMap.covariates.ownerMappings &&
+          step.inputMap.covariates.ownerMappings.some(variable =>
+            !variable.type || !variable.source || !variable.name
+          )
+        );
+
+        if (invalidData) {
+          return Boom.badData('Some of the covariates are incomplete');
+        }
+      }
+
+
       return helperFunctions.getRethinkConnection()
         .then((connection) =>
           rethink.table('pipelines').insert(
@@ -628,20 +646,20 @@ const resolvers = {
           )
           .run(connection)
           .then((result) => rethink.table('pipelines')
-            .get(result.changes[0].new_val.id)
-            // Populate computations subfield with computation meta information
-            .merge(pipeline =>
-              ({
-                steps: pipeline('steps').map(step =>
-                  step.merge({
-                    computations: step('computations').map(compId =>
-                      rethink.table('computations').get(compId)
-                    )
-                  })
-                )
-              })
-            )
-            .run(connection).then(res => connection.close().then(() => res))
+          .get(result.changes[0].new_val.id)
+          // Populate computations subfield with computation meta information
+          .merge(pipeline =>
+            ({
+              steps: pipeline('steps').map(step =>
+                step.merge({
+                  computations: step('computations').map(compId =>
+                    rethink.table('computations').get(compId)
+                  )
+                })
+              )
+            })
+          )
+          .run(connection).then(res => connection.close().then(() => res))
         ))
         .then(result => result)
     },
