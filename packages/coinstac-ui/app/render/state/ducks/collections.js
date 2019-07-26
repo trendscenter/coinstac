@@ -144,7 +144,6 @@ function iteratePipelineSteps(consortium, filesByGroup, baseDirectory, runId) {
                 let filepath = path[0];
                 filepath = filepath.replace(pathsep, '-');
                 //path = "/input/"+ownerId+"/"+runId+"/"+path;
-                console.log(filepath);
                 return filepath;
               }
             });
