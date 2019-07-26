@@ -52,6 +52,10 @@ COINSTAC removes the barriers to collaborative analysis by:
 You may wonder why we haven't been doing this before!  Us too.  Let's get started!
 
 ## Getting Started
+- If you want to run COINSTAC as a user 
+  - Download the latest release for your operating system [here](https://github.com/MRN-Code/coinstac/releases).
+  - You can download sample Freesurfer data [here](https://github.com/MRN-Code/coinstac/releases/download/v3.1.10/20170425-coinstac-test-data.zip), which can be used in a regression.
+  - You can also download sample VBM data [here](https://github.com/MRN-Code/coinstac/files/2134308/coinstac_ssr_vbm_test_data.zip), which can be used in a regression.
 - If you are looking to contribute data, head over to [coinstac-ui](https://github.com/MRN-Code/coinstac/tree/master/packages/coinstac-ui).  There, you will be able to download the application.
 
 - If you are a developer or scientist and want to design a decentralized computation, please see:
