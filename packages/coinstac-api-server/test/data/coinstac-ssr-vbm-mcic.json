@@ -8,14 +8,14 @@
   },
   "computation": {
     "type": "docker",
-    "dockerImage": "coinstac/regression-vbm-resample",
+    "dockerImage": "coinstacteam/regression-vbm-resample",
     "command": [
       "python",
       "\/computation\/local.py"
     ],
     "remote": {
       "type": "docker",
-      "dockerImage": "coinstac/regression-vbm-resample",
+      "dockerImage": "coinstacteam/regression-vbm-resample",
       "command": [
         "python",
         "\/computation\/remote.py"

@@ -8,14 +8,14 @@
   },
   "computation": {
     "type": "docker",
-    "dockerImage": "coinstac/drne_vbm",
+    "dockerImage": "coinstacteam/drne_vbm",
     "command": [
       "python",
       "\/computation\/local.py"
     ],
     "remote": {
       "type": "docker",
-      "dockerImage": "coinstac/drne_vbm",
+      "dockerImage": "coinstacteam/drne_vbm",
       "command": [
         "python",
         "\/computation\/remote.py"

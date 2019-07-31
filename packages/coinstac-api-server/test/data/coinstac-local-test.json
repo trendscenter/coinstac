@@ -8,7 +8,7 @@
     },
     "computation": {
         "type": "docker",
-        "dockerImage": "coinstac/coinstac-local-test",
+        "dockerImage": "coinstacteam/coinstac-local-test",
         "command": ["python", "/computation/local.py"],
         "input": {
             "start": {

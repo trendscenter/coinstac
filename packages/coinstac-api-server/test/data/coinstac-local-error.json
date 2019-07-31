@@ -8,7 +8,7 @@
   },
   "computation": {
     "type": "docker",
-    "dockerImage": "coinstac\/coinstac-local-error",
+    "dockerImage": "coinstacteam/coinstac-local-error",
     "command": [
       "python",
       "\/computation\/local.py"
