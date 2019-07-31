@@ -6,7 +6,7 @@ import { applyAsyncLoading } from './loading';
 import localDB from '../local-db';
 import inputDataTypes from '../input-data-types.json';
 
-//Get Base App Dir
+// Get Base App Dir
 const CoinstacClient = require('coinstac-client-core');
 const dir = CoinstacClient.getDefaultAppDirectory();
 
