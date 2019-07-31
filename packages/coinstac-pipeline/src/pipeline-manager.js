@@ -160,14 +160,14 @@ module.exports = {
                 if (activePipelines[data.runId].state !== 'pre-pipeline') {
                   const waitingOn = waitingOnForRun(data.runId);
                   activePipelines[data.runId].currentState.waitingOn = waitingOn;
+                  const stateUpdate = Object.assign(
+                    {},
+                    activePipelines[data.runId].pipeline.currentState,
+                    activePipelines[data.runId].currentState
+                  );
                   activePipelines[data.runId].stateEmitter
-                    .emit('update',
-                      Object.assign(
-                        {},
-                        activePipelines[data.runId].pipeline.currentState,
-                        activePipelines[data.runId].currentState
-                      ));
-
+                    .emit('update', stateUpdate);
+                  logger.silly(stateUpdate);
                   if (waitingOn.length === 0) {
                     activePipelines[data.runId].state = 'received all clients data';
                     logger.silly('Received all client data');
@@ -248,6 +248,9 @@ module.exports = {
         io.on('connection', socketServer);
       }
     } else {
+      /**
+       * Client side socket code
+       */
       socket = socketIOClient(`${remoteProtocol}//${remoteURL}:${remotePort}${remotePathname}?id=${clientId}`);
       socket.on('hello', () => {
         socket.emit('register', { id: clientId });
@@ -256,6 +259,7 @@ module.exports = {
         // TODO: step check?
         if (!data.error && activePipelines[data.runId]) {
           activePipelines[data.runId].state = 'received central node data';
+          logger.silly('received central node data');
           if (data.files) {
             // we've already received the files
             if (activePipelines[data.runId].files

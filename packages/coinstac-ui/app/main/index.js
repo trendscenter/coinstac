@@ -183,9 +183,7 @@ loadConfig()
         })
         .then(() => core.dockerManager.pruneImages())
         .then(() => {
-          logger.verbose('############ CLIENT INPUT');
-          logger.verbose(pipeline);
-          logger.verbose('############ END CLIENT INPUT');
+          logger.verbose('############ Client starting pipeline');
           return core.startPipeline(
             null,
             consortium.id,
@@ -202,8 +200,7 @@ loadConfig()
 
               // Listen for results
               return result.then((results) => {
-                logger.verbose('Pipeline is done. Result:'); // eslint-disable-line no-console
-                logger.verbose(results); // eslint-disable-line no-console
+                logger.verbose('########### Client pipeline done');
                 return core.unlinkFiles(run.id)
                   .then(() => {
                     if (run.type === 'local') {
@@ -215,6 +212,8 @@ loadConfig()
                   });
               })
                 .catch((error) => {
+                  logger.verbose('########### Client pipeline error');
+                  logger.verbose(error.message);
                   return core.unlinkFiles(run.id)
                     .then(() => {
                       mainWindow.webContents.send('local-run-error', {

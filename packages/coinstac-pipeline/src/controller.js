@@ -41,7 +41,7 @@ module.exports = {
       mode,
       runType: 'sequential',
       state: undefined,
-      stopByUser: undefined
+      stopByUser: undefined,
     };
     const setStateProp = (prop, val) => {
       controllerState[prop] = val;
