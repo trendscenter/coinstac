@@ -8,7 +8,7 @@
     },
     "computation": {
         "type": "docker",
-        "dockerImage": "coinstac/ddfnc",
+        "dockerImage": "coinstacteam/ddfnc",
         "command": [
             "python",
             "\/computation\/local.py"

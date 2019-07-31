@@ -8,14 +8,14 @@
   },
   "computation": {
     "type": "docker",
-    "dockerImage": "coinstac/drne-fsl",
+    "dockerImage": "coinstacteam/drne-fsl",
     "command": [
       "python",
       "\/computation\/local.py"
     ],
     "remote": {
       "type": "docker",
-      "dockerImage": "coinstac/drne-fsl",
+      "dockerImage": "coinstacteam/drne-fsl",
       "command": [
         "python",
         "\/computation\/remote.py"
