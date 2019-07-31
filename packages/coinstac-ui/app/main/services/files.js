@@ -14,13 +14,13 @@ module.exports = {
    * path.
    */
   showDialog: (mainWindow, filters, properties) => {
-    return new Promise((resolve) => {
-      const files = dialog.showOpenDialog(mainWindow, {
+    return dialog.showOpenDialog(
+      mainWindow,
+      {
         filters,
         properties,
-      });
-      resolve(files);
-    });
+      }
+    );
   },
 
   /**
