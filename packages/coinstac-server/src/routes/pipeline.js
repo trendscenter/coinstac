@@ -90,6 +90,7 @@ module.exports = [
                 stateEmitter.on('update', (data) => {
                   // TODO:  console most likely should be removed post proto development
                   // or made less noisy
+                  console.log('Server update:'); // eslint-disable-line no-console
                   console.log(data); // eslint-disable-line no-console
                   updateRunState(run.id, data);
                 });
