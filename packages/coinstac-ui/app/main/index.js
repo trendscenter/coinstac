@@ -423,9 +423,17 @@ loadConfig()
         filters,
         properties
       )
-        .then(filePaths => postDialogFunc(filePaths, core));
+        .then(({ filePaths }) => postDialogFunc(filePaths, core))
+        .catch((err) => {
+          logger.error(err);
+          mainWindow.webContents.send('docker-error', {
+            err: {
+              message: err.message,
+              stack: err.stack,
+            },
+          });
+        });
     });
-
     /**
    * IPC Listener to remove a Docker image
    * @param {String} imgId ID of the image to remove

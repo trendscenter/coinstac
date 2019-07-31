@@ -38,6 +38,9 @@ function createWindow() {
     height: 610,
     frame: false,
     alwaysOnTop: true,
+    webPreferences: {
+      nodeIntegration: true,
+    },
   });
 
   splashWindow.loadURL(`file://${renderSplashPath}`);
@@ -46,6 +49,9 @@ function createWindow() {
     width: size.width,
     height: size.height,
     show: false,
+    webPreferences: {
+      nodeIntegration: true,
+    },
   });
 
   mainWindow.loadURL(`file://${renderIndexPath}`);
@@ -77,6 +83,9 @@ function createWindow() {
         let logWindow = new BrowserWindow({
           height: 600,
           width: 800,
+          webPreferences: {
+            nodeIntegration: true,
+          },
         });
 
         logWindow.loadURL(url.format({
