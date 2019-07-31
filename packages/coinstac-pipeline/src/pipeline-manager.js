@@ -22,8 +22,8 @@ winston.loggers.add('pipeline', {
     new winston.transports.Console({ format: winston.format.cli() }),
   ],
 });
-const logger = winston.loggers.get('pipeline');
-logger.level = process.LOGLEVEL ? process.LOGLEVEL : 'info';
+const defaultLogger = winston.loggers.get('pipeline');
+defaultLogger.level = process.LOGLEVEL ? process.LOGLEVEL : 'info';
 
 const Pipeline = require('./pipeline');
 
@@ -42,6 +42,7 @@ module.exports = {
     authPlugin,
     authOpts,
     clientId,
+    logger,
     operatingDirectory = './',
     mode,
     remotePathname = '',
@@ -54,6 +55,7 @@ module.exports = {
     let io;
     let socket;
     const remoteClients = {};
+    logger = logger || defaultLogger;
     // TODO: const missedCache = {};
 
     const waitingOnForRun = (runId) => {
