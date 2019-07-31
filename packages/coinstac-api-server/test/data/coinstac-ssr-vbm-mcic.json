@@ -18,7 +18,7 @@
       "dockerImage": "coinstac/regression-vbm-resample",
       "command": [
         "python",
-	"\/computation\/scripts\/local.py"
+	"\/computation\/scripts\/remote.py"
       ]
     },
     "input": {
