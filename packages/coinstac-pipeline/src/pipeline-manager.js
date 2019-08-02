@@ -11,6 +11,8 @@ const rimraf = promisify(require('rimraf'));
 const path = require('path');
 
 const readdir = promisify(fs.readdir);
+const writeFile = promisify(fs.writeFile);
+const readFile = promisify(fs.readFile);
 const Emitter = require('events');
 const winston = require('winston');
 const ss = require('socket.io-stream');
@@ -26,6 +28,22 @@ const defaultLogger = winston.loggers.get('pipeline');
 defaultLogger.level = process.LOGLEVEL ? process.LOGLEVEL : 'info';
 
 const Pipeline = require('./pipeline');
+
+// helpers
+
+/**
+ * Send a file via a socket stream
+ * @param  {Object} socket [description]
+ * @param  {string} file   [description]
+ * @param  {Object} data   [description]
+ */
+const sendFile = (socket, filePath, data) => {
+  const fsStream = createReadStream(filePath);
+
+  const stream = ss.createStream();
+  ss(socket).emit('file', stream, data);
+  fsStream.pipe(stream);
+};
 
 module.exports = {
 
@@ -70,7 +88,9 @@ module.exports = {
               && ((clientRun.files.expected.length === 0
                 || clientRun.files.received.length === 0)
               || !clientRun.files.expected
-                .every(e => clientRun.files.received.includes(e))))
+                .every(e => clientRun.files.received.includes(e))
+                // include processing files too
+              ))
             )
           )
         ) {
@@ -112,7 +132,7 @@ module.exports = {
         socket.emit('hello', { status: 'connected' });
 
         socket.on('register', (data) => {
-          logger.silly(`############ REGESTERED CLIENT ${data.id}`);
+          logger.silly(`############ Registered client ${data.id}`);
           if (!remoteClients[data.id]) {
             remoteClients[data.id] = {};
           }
@@ -123,7 +143,7 @@ module.exports = {
         });
 
         socket.on('run', (data) => {
-          logger.silly(`############ RECEIVED CLIENT DATA: ${data.id}`);
+          logger.silly(`############ Received client data: ${data.id}`);
           // client run started before remote
           if (!activePipelines[data.runId]) {
             activePipelines[data.runId] = {
@@ -132,9 +152,10 @@ module.exports = {
             };
           }
           if (activePipelines[data.runId].state === 'pre-pipeline' && remoteClients[data.id][data.runId] === undefined) {
+            socket.join(data.runId);
             remoteClients[data.id] = Object.assign(
               {
-                [data.runId]: {},
+                [data.runId]: { state: {} },
               },
               remoteClients[data.id]
             );
@@ -142,7 +163,6 @@ module.exports = {
 
           // normal pipeline operation
           if (remoteClients[data.id] && remoteClients[data.id][data.runId]) {
-            socket.join(data.runId);
             remoteClients[data.id].lastSeen = Math.floor(Date.now() / 1000);
 
             // is the client giving us an error?
@@ -157,7 +177,7 @@ module.exports = {
                       remoteClients[data.id][data.runId].files,
                       { expected: data.files }
                     )
-                    : { expected: data.files, received: [] };
+                    : { expected: data.files, received: [], processing: [] };
                 }
                 if (activePipelines[data.runId].state !== 'pre-pipeline') {
                   const waitingOn = waitingOnForRun(data.runId);
@@ -173,9 +193,10 @@ module.exports = {
                   if (waitingOn.length === 0) {
                     activePipelines[data.runId].state = 'received all clients data';
                     logger.silly('Received all client data');
-                    activePipelines[data.runId].remote.resolve({
-                      output: aggregateRun(data.runId),
-                    });
+                    // clear transfer and start run
+                    activePipelines[data.runId].remote.resolve(
+                      rimraf(activePipelines[data.runId].transferDirectory, '*').then(() => ({ output: aggregateRun(data.runId) }))
+                    );
                   }
                 }
               } else {
@@ -197,8 +218,21 @@ module.exports = {
             }
           }
         });
+        /**
+         * File transfer socket listener
+         */
         ss(socket).on('file', (stream, data) => {
           if (activePipelines[data.runId] && !activePipelines[data.runId].error) {
+            const currentClient = remoteClients[data.id][data.runId];
+            if (currentClient.files
+              && currentClient.files.processing) {
+              currentClient.files.processing.push(data.file);
+            } else {
+              currentClient.files = Object.assign({
+                processing: [data.file],
+              }, currentClient.files || { expected: [], received: [] });
+            }
+
             mkdirp(path.join(activePipelines[data.runId].baseDirectory, data.id))
               .then(() => {
                 const wStream = createWriteStream(
@@ -207,21 +241,14 @@ module.exports = {
                 stream.pipe(wStream);
                 wStream.on('close', () => {
                   // mark off and check to start run
-                  if (remoteClients[data.id][data.runId].files
-                    && remoteClients[data.id][data.runId].files.received) {
-                    remoteClients[data.id][data.runId].files.received.push(data.file);
-                  } else {
-                    // first entry, set both objects up
-                    remoteClients[data.id][data.runId].files = {
-                      expected: [], received: [data.file],
-                    };
-                  }
+                  currentClient.files.received.push(data.file);
 
                   if (waitingOnForRun(data.runId).length === 0) {
                     activePipelines[data.runId].state = 'received all client data';
-                    logger.silly('Received all client data');
+                    logger.silly('Received all client file data');
+                    // clear transfer and start run
                     activePipelines[data.runId].remote.resolve(
-                      { output: aggregateRun(data.runId) }
+                      rimraf(activePipelines[data.runId].transferDirectory, '*').then(() => ({ output: aggregateRun(data.runId) }))
                     );
                   }
                   // socket.disconnect();
@@ -242,6 +269,51 @@ module.exports = {
           }
         });
       };
+      /**
+       * Long poll backup for run data
+       */
+      setInterval(() => {
+        Object.keys(activePipelines).forEach((runId) => {
+          waitingOnForRun(runId).forEach((clientId) => {
+            const clientRun = remoteClients[clientId][runId];
+            // we have everything some files are just processing
+            if (clientRun.files && clientRun.currentOutput && clientRun.files.expected
+              .every(e => [
+                ...clientRun.files.received,
+                ...clientRun.files.processing,
+              ].includes(e))) {
+              return;
+            }
+            remoteClients[clientId].socket.emit('state', { runId });
+          });
+        });
+      }, 30000);
+      /**
+       * Pipeline state socket listener
+       */
+      ss(socket).on('state', (data) => {
+        const client = remoteClients[data.id][data.runId];
+        if (data.state === 'waiting on remote'
+        && (client.state.retransmitting
+          ? (Date.now() - client.state.retransmitTime > 60000) : false)) {
+          let files = [];
+          if (client.files) {
+            files = client.files.expected.reduce((memo, file) => {
+              if (![...client.files.processing, ...client.files.received].includes(file)) {
+                return memo.push(file);
+              }
+              return memo;
+            }, []);
+          }
+          const output = !client.currentOutput;
+          client.socket.emit('retransmit', { runId: data.runId, files, output });
+          client.state = Object.assign(
+            {},
+            client.state,
+            { retransmitting: true, retransmitTime: Date.now() }
+          );
+        }
+      });
 
       if (authPlugin) {
         io.on('connection', authPlugin.authorize(authOpts))
@@ -250,13 +322,17 @@ module.exports = {
         io.on('connection', socketServer);
       }
     } else {
-      /**
+      /** ***********************
        * Client side socket code
+       ** ***********************
        */
       socket = socketIOClient(`${remoteProtocol}//${remoteURL}:${remotePort}${remotePathname}?id=${clientId}`);
       socket.on('hello', () => {
         socket.emit('register', { id: clientId });
       });
+      /**
+       * Pipeline socket listener
+       */
       socket.on('run', (data) => {
         // TODO: step check?
         if (!data.error && activePipelines[data.runId]) {
@@ -277,13 +353,19 @@ module.exports = {
               activePipelines[data.runId].currentInput = data.output;
             }
           } else {
-            activePipelines[data.runId].remote.resolve(data.output);
+            // clear transfer dir after we know its been transfered
+            activePipelines[data.runId].remote.resolve(
+              rimraf(activePipelines[data.runId].transferDirectory, '*').then(() => data.output)
+            );
           }
         } else if (data.error && activePipelines[data.runId]) {
           activePipelines[data.runId].state = 'received error';
           activePipelines[data.runId].remote.reject(Object.assign(new Error(), data.error));
         }
       });
+      /**
+       * File transfer socket listener
+       */
       ss(socket).on('file', (stream, data) => {
         if (activePipelines[data.runId]) {
           const wStream = createWriteStream(
@@ -319,6 +401,39 @@ module.exports = {
           });
         }
       });
+      /**
+       * Pipeline state socket listener
+       */
+      ss(socket).on('state', (data) => {
+        debugger
+        socket.emit('state', {
+          state: Object.assign(
+            {},
+            activePipelines[data.runId].pipeline.currentState,
+            activePipelines[data.runId].currentState
+          ),
+          id: clientId,
+        });
+      });
+      /**
+       * Retransmit socket listener
+       */
+      ss(socket).on('retransmit', (data) => {
+        debugger
+        data.files.forEach((file) => {
+          sendFile(
+            socket,
+            path.join(activePipelines[data.runId].transferDirectory, file),
+            { rundId: data.runId, file, id: clientId }
+          );
+        });
+        if (data.output) {
+          readFile(path.join(activePipelines[data.runId].transferDirectory, `${data.runId}`, 'utf8'))
+            .then((output) => {
+              socket.emit('run', { id: clientId, runId: data.id, output });
+            });
+        }
+      });
     }
 
 
@@ -351,6 +466,7 @@ module.exports = {
           outputDirectory: path.resolve(operatingDirectory, 'output', clientId, runId),
           cacheDirectory: path.resolve(operatingDirectory, 'cache', clientId, runId),
           transferDirectory: path.resolve(operatingDirectory, 'transfer', clientId, runId),
+          systemDirectory: path.resolve(operatingDirectory, 'system', clientId, runId),
         };
         activePipelines[runId] = Object.assign(
           {
@@ -408,7 +524,7 @@ module.exports = {
               activePipelines[pipeline.id].remote.reject(runError);
               io.of('/').to(pipeline.id).emit('run', { runId: pipeline.id, error: runError });
             } else {
-              logger.silly('############ REMOTE OUT');
+              logger.silly('############ Sending out remote data');
               io.of('/').in(pipeline.id).clients((error, clients) => {
                 if (error) throw error;
                 readdir(activePipelines[pipeline.id].transferDirectory)
@@ -418,22 +534,20 @@ module.exports = {
                       Object.keys(remoteClients).forEach((key) => {
                         if (clients.includes(remoteClients[key].socketId)) {
                           files.forEach((file) => {
-                            const fsStream = createReadStream(
-                              path.join(activePipelines[pipeline.id].transferDirectory, file)
+                            sendFile(
+                              remoteClients[key].socket,
+                              path.join(activePipelines[pipeline.id].transferDirectory, file),
+                              {
+                                id: clientId,
+                                file,
+                                runId: pipeline.id,
+                              }
                             );
-
-                            const stream = ss.createStream();
-                            ss(remoteClients[key].socket).emit('file', stream, {
-                              id: clientId,
-                              file,
-                              runId: pipeline.id,
-                            });
-                            fsStream.pipe(stream);
-                            stream.on('close', () => {
-                              rimraf(
-                                path.join(activePipelines[pipeline.id].transferDirectory, file)
-                              );
-                            });
+                            // stream.on('close', () => {
+                            //   rimraf(
+                            //     path.join(activePipelines[pipeline.id].transferDirectory, file)
+                            //   );
+                            // });
                           });
                         }
                       });
@@ -448,27 +562,37 @@ module.exports = {
             if (message instanceof Error) { // eslint-disable-line no-lonely-if
               socket.emit('run', { id: clientId, runId: pipeline.id, error: message });
             } else {
-              readdir(activePipelines[pipeline.id].transferDirectory)
-                .then((files) => {
-                  if (files && files.length !== 0) {
-                    socket.emit('run', {
-                      id: clientId, runId: pipeline.id, output: message, files,
+              logger.debug('############# Sending out client data');
+              rimraf(path.join(activePipelines[pipeline.id].transferDirectory, `${pipeline.id}`))
+                .then(() => writeFile(
+                  path.join(activePipelines[pipeline.id].transferDirectory, `${pipeline.id}`),
+                  message
+                ))
+                .then(() => {
+                  return readdir(activePipelines[pipeline.id].transferDirectory)
+                    .then((files) => {
+                      if (files && files.length !== 0) {
+                        socket.emit('run', {
+                          id: clientId, runId: pipeline.id, output: message, files,
+                        });
+                        files.forEach((file) => {
+                          sendFile(
+                            socket,
+                            path.join(activePipelines[pipeline.id].transferDirectory, file),
+                            {
+                              id: clientId,
+                              file,
+                              runId: pipeline.id,
+                            }
+                          );
+                          // stream.on('close', () => {
+                          //   rimraf(path.join(activePipelines[pipeline.id].transferDirectory, file));
+                          // });
+                        });
+                      } else {
+                        socket.emit('run', { id: clientId, runId: pipeline.id, output: message });
+                      }
                     });
-                    files.forEach((file) => {
-                      const fsStream = createReadStream(
-                        path.join(activePipelines[pipeline.id].transferDirectory, file)
-                      );
-
-                      const stream = ss.createStream();
-                      ss(socket).emit('file', stream, { id: clientId, file, runId: pipeline.id });
-                      fsStream.pipe(stream);
-                      stream.on('close', () => {
-                        rimraf(path.join(activePipelines[pipeline.id].transferDirectory, file));
-                      });
-                    });
-                  } else {
-                    socket.emit('run', { id: clientId, runId: pipeline.id, output: message });
-                  }
                 });
             }
           }
@@ -518,6 +642,7 @@ module.exports = {
           mkdirp(this.activePipelines[runId].outputDirectory),
           mkdirp(this.activePipelines[runId].cacheDirectory),
           mkdirp(this.activePipelines[runId].transferDirectory),
+          mkdirp(this.activePipelines[runId].systemDirectory),
         ])
           .catch((err) => {
             throw new Error(`Unable to create pipeline directories: ${err}`);
@@ -536,6 +661,7 @@ module.exports = {
             return Promise.all([
               rimraf(path.resolve(this.activePipelines[runId].transferDirectory, '*')),
               rimraf(path.resolve(this.activePipelines[runId].cacheDirectory, '*')),
+              rimraf(path.resolve(this.activePipelines[runId].systemDirectory, '*')),
             ]).then(() => res);
           })
           .then((res) => {
