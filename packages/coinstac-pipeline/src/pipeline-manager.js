@@ -89,7 +89,6 @@ module.exports = {
                 || clientRun.files.received.length === 0)
               || !clientRun.files.expected
                 .every(e => clientRun.files.received.includes(e))
-                // include processing files too
               ))
             )
           )
