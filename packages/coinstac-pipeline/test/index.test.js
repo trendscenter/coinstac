@@ -5,7 +5,8 @@ require('clarify');
 const { test } = require('ava');
 const path = require('path');
 const DockerManager = require('coinstac-docker-manager');
-const rimraf = require('rimraf-promise');
+const pify = require('util').promisify;
+const rimraf = pify(require('rimraf'));
 const PipelineManager = require('../src/pipeline-manager');
 const computationSpecs = require('./computation-specs');
 
