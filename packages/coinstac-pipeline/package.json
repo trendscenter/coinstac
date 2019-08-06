@@ -20,16 +20,15 @@
     "request": "^2.87.0",
     "request-promise": "^4.2.2",
     "rimraf": "^2.6.2",
-    "socket.io": "^2.1.1",
-    "socket.io-client": "^2.1.1",
+    "socket.io": "^2.2.0",
+    "socket.io-client": "^2.2.0",
     "socket.io-stream": "^0.9.1",
     "winston": "^3.2.1"
   },
   "description": "Computation registry service for COINSTAC.",
   "devDependencies": {
-    "ava": "^0.24.0",
+    "ava": "^2.2.0",
     "clarify": "^2.1.0",
-    "rimraf-promise": "^2.0.0",
     "trace": "^3.1.0"
   },
   "homepage": "https://github.com/MRN-Code/coinstac#readme",
