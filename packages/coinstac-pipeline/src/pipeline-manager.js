@@ -115,7 +115,7 @@ module.exports = {
     if (mode === 'remote') {
       const app = http.createServer();
       // these options are passed down to engineIO, both allow larger transport sizes
-      io = socketIO(app, { pingTimeout: 360000, maxHttpBufferSize: 23E7 });
+      io = socketIO(app, { pingTimeout: 360000, maxHttpBufferSize: 1E9 });
 
       app.listen(remotePort);
 
