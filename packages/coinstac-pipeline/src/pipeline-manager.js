@@ -261,8 +261,10 @@ module.exports = {
           }
         });
         socket.on('disconnect', (reason) => {
+          logger.silly(`Client error: ${reason}`);
           const client = _.find(remoteClients, { socketId: socket.id });
           if (client) {
+            logger.silly(`From client: ${client}`);
             client.status = 'disconnected';
             client.error = reason;
           }
@@ -292,6 +294,7 @@ module.exports = {
          * Pipeline state socket listener
          */
         socket.on('state', (data) => {
+          logger.silly(`Returned state: ${JSON.strinify(data)}`);
           const client = remoteClients[data.id][data.runId];
           if (data.state.controllerState === 'waiting on central node'
           && activePipelines[data.runId].pipeline.currentState.controllerState === 'waiting on local users'
@@ -333,6 +336,7 @@ module.exports = {
        */
       socket = socketIOClient(`${remoteProtocol}//${remoteURL}:${remotePort}${remotePathname}?id=${clientId}`);
       socket.on('hello', () => {
+        logger.silly('Client register request');
         socket.emit('register', { id: clientId });
       });
       /**

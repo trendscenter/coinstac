@@ -37,16 +37,12 @@ module.exports = function configureLogger(config) {
         transports: [
           new winston.transports.Console({ format: winston.format.timestamp() }),
           new winston.transports.File({
+            format: winston.format.timestamp(),
             filename: logFilePath,
           }),
         ],
       });
       const logger = winston.loggers.get('coinstac-main');
-
-      if (cliOpts.loglevel) {
-        logger.level = cliOpts.loglevel;
-        logger.verbose(`logLevel set to \`${cliOpts.loglevel}\``);
-      }
 
       return logger;
     })
