@@ -189,6 +189,7 @@ const startService = (serviceId, serviceUserId, opts) => {
     const tryStartService = () => {
       return generateServicePort(serviceId)
         .then((port) => {
+          logger.silly(`Starting service ${serviceId} at port: ${port}`);
           const defaultOpts = {
           // this port is coupled w/ the internal base server image FYI
             ExposedPorts: {
@@ -218,11 +219,13 @@ const startService = (serviceId, serviceUserId, opts) => {
           return docker.createContainer(jobOpts);
         })
         .then((container) => {
+          logger.silly(`Starting cointainer: ${serviceId}`);
           services[serviceId].container = container;
           return container.start();
         })
       // is the container service ready?
         .then(() => {
+          logger.silly(`Cointainer started: ${serviceId}`);
           const checkServicePort = () => {
             if (opts.http) {
               return new Promise((resolve, reject) => {
@@ -252,6 +255,7 @@ const startService = (serviceId, serviceUserId, opts) => {
                       .then(() => checkServicePort());
                   }
                   // met limit, fallback to timeout
+                  logger.silly(`Container timeout for ${serviceId}`);
                   return setTimeoutPromise(5000);
                 }
 
@@ -265,6 +269,7 @@ const startService = (serviceId, serviceUserId, opts) => {
           return checkServicePort();
         })
         .then(() => {
+          logger.silly(`Returning service access func for ${serviceId}`);
           services[serviceId].service = (data) => {
             if (opts.http) {
               return new Promise((resolve, reject) => {

@@ -35,7 +35,7 @@ module.exports = function configureLogger(config) {
       winston.loggers.add('coinstac-main', {
         level: 'silly',
         transports: [
-          new winston.transports.Console({ format: winston.format.cli() }),
+          new winston.transports.Console({ format: winston.format.timestamp() }),
           new winston.transports.File({
             filename: logFilePath,
           }),
