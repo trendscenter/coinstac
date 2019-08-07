@@ -77,8 +77,12 @@ module.exports = {
     // TODO: const missedCache = {};
 
     const waitingOnForRun = (runId) => {
+      logger.silly('Remote client state:');
       const waiters = [];
       activePipelines[runId].clients.forEach((client) => {
+      logger.silly(`${client}`);
+      logger.silly(`Output: ${!!remoteClients[client][runId].currentOutput}`);
+      logger.silly(`Files: ${JSON.stringify(remoteClients[client][runId].files)}`);
         const clientRun = remoteClients[client][runId];
         if ((clientRun
           && !clientRun.currentOutput)
