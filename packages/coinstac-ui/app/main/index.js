@@ -63,7 +63,17 @@ loadConfig()
     configureLogger(config),
   ]))
   .then(([config, logger]) => {
-    process.on('uncaughtException', logUnhandledError(null, logger));
+    const unhandler = logUnhandledError(null, logger);
+    process.on('uncaughtException', (err) => {
+      try {
+        unhandler(err);
+      } catch (e) {
+        console.error('Logging failure:');// eslint-disable-line no-console
+        console.error(e);// eslint-disable-line no-console
+        console.error('Thrown error on failure:');// eslint-disable-line no-console
+        console.error(err);// eslint-disable-line no-console
+      }
+    });
     global.config = config;
 
     const mainWindow = getWindow();
@@ -91,7 +101,7 @@ loadConfig()
    * @param {String} type The type of log to write out
    */
     ipcMain.on('write-log', (event, { type, message }) => {
-      logger[type](`process: render - ${message}`);
+      logger[type](`process: render - ${JSON.stringify(message)}`);
     });
 
     ipcPromise.on('login-init', ({ userId, appDirectory }) => {
