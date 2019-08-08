@@ -268,7 +268,7 @@ module.exports = {
           logger.silly(`Client error: ${reason}`);
           const client = _.find(remoteClients, { socketId: socket.id });
           if (client) {
-            logger.silly(`From client: ${client}`);
+            logger.silly(`From client: ${client.id}`);
             client.status = 'disconnected';
             client.error = reason;
           }
