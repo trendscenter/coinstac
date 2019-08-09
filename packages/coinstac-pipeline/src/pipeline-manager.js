@@ -266,10 +266,10 @@ module.exports = {
           }
         });
         socket.on('disconnect', (reason) => {
-          logger.silly(`Client error: ${reason}`);
+          logger.error(`Client disconnect error: ${reason}`);
           const client = _.find(remoteClients, { socketId: socket.id });
           if (client) {
-            logger.silly(`From client: ${client.id}`);
+            logger.error(`From client: ${client.id}`);
             Object.keys(activePipelines).forEach((pipeline) => {
               if (client[pipeline] && client[pipeline].files) {
                 client[pipeline].files.processing = [];
@@ -326,7 +326,7 @@ module.exports = {
               }, []);
             }
             const output = !client.currentOutput;
-            logger.silly(`Asking client to retransmit: ${JSON.stringify({ runId: data.runId, files, output })}`);
+            logger.error(`Asking client to retransmit: ${JSON.stringify({ runId: data.runId, files, output })}`);
             remoteClients[data.id].socket.emit('retransmit', { runId: data.runId, files, output });
             client.state = Object.assign(
               {},
