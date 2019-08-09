@@ -80,9 +80,9 @@ module.exports = {
       logger.silly('Remote client state:');
       const waiters = [];
       activePipelines[runId].clients.forEach((client) => {
-      logger.silly(`${client}`);
-      logger.silly(`Output: ${!!remoteClients[client][runId].currentOutput}`);
-      logger.silly(`Files: ${JSON.stringify(remoteClients[client][runId].files)}`);
+        logger.silly(`${client}`);
+        logger.silly(`Output: ${!!remoteClients[client][runId].currentOutput}`);
+        logger.silly(`Files: ${JSON.stringify(remoteClients[client][runId].files)}`);
         const clientRun = remoteClients[client][runId];
         if ((clientRun
           && !clientRun.currentOutput)
@@ -119,7 +119,7 @@ module.exports = {
     if (mode === 'remote') {
       const app = http.createServer();
       // these options are passed down to engineIO, both allow larger transport sizes
-      io = socketIO(app, { pingTimeout: 360000, maxHttpBufferSize: 1E9 });
+      io = socketIO(app, { pingTimeout: 360000, maxHttpBufferSize: 3E8 });
 
       app.listen(remotePort);
 
@@ -271,6 +271,9 @@ module.exports = {
             logger.silly(`From client: ${client.id}`);
             client.status = 'disconnected';
             client.error = reason;
+            if (client.files) {
+              client.files.processing = [];
+            }
           }
         });
         /**
@@ -507,9 +510,12 @@ module.exports = {
           },
           activePipelines[runId]
         );
+
+        // remote client object creation
         clients.forEach((client) => {
           remoteClients[client] = Object.assign(
             {
+              id: client,
               status: 'unregistered',
               [runId]: { state: {} },
             },
