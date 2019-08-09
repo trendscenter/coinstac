@@ -307,6 +307,10 @@ module.exports = {
         socket.on('state', (data) => {
           logger.silly(`Returned state: ${JSON.stringify(data)}`);
           const client = remoteClients[data.id][data.runId];
+          logger.silly('Retransmit debug:');
+          logger.silly(`${activePipelines[data.runId].pipeline.currentState.controllerState}`);
+          logger.silly(`${activePipelines[data.runId].pipeline.currentIteration}`);
+          logger.silly(`${client.state.retransmitting}`);
           if (data.state.controllerState === 'waiting on central node'
           && activePipelines[data.runId].pipeline.currentState.controllerState === 'waiting on local users'
           && activePipelines[data.runId].pipeline.currentState.currentIteration
