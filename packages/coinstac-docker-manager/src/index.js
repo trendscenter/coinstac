@@ -166,6 +166,7 @@ const getStatus = () => {
  * @return {Promise}              promise that resolves to the service function
  */
 const startService = (serviceId, serviceUserId, opts) => {
+  logger.silly(`Request to start service ${serviceId}`);
   let recurseLimit = 0;
   let serviceStartedRecurseLimit = 0;
 
@@ -468,6 +469,7 @@ const startService = (serviceId, serviceUserId, opts) => {
     if (services[serviceId].users.indexOf(serviceUserId) === -1) {
       services[serviceId].users.push(serviceUserId);
     }
+    logger.silly('Returning already started service');
     return Promise.resolve(services[serviceId].service);
   }
 
