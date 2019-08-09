@@ -270,11 +270,14 @@ module.exports = {
           const client = _.find(remoteClients, { socketId: socket.id });
           if (client) {
             logger.silly(`From client: ${client.id}`);
+            Object.keys(activePipelines).forEach((pipeline) => {
+              debugger
+              if (client[pipeline] && client[pipeline].files) {
+                client.files.processing = [];
+              }
+            });
             client.status = 'disconnected';
             client.error = reason;
-            if (client.files) {
-              client.files.processing = [];
-            }
           }
         });
         /**
