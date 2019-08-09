@@ -141,6 +141,7 @@ module.exports = {
           }
           remoteClients[data.id].status = 'connected';
           remoteClients[data.id].socketId = socket.id;
+          remoteClients[data.id].id = data.id;
           remoteClients[data.id].socket = socket;
           remoteClients[data.id].lastSeen = Math.floor(Date.now() / 1000);
         });
