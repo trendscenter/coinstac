@@ -28,7 +28,7 @@ const start = (opts) => {
   return new Promise((resolve) => {
     const app = http.createServer();
     // these options are passed down to engineIO, both allow larger transport sizes
-    const io = socketIO(app, { pingTimeout: 360000, maxHttpBufferSize: 23E7 });
+    const io = socketIO(app, { pingTimeout: 360000, maxHttpBufferSize: 1E9 });
 
     const socketServer = (socket) => {
       socket.on('connection', (data) => {
