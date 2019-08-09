@@ -119,7 +119,7 @@ module.exports = {
     if (mode === 'remote') {
       const app = http.createServer();
       // these options are passed down to engineIO, both allow larger transport sizes
-      io = socketIO(app, { pingTimeout: 360000, maxHttpBufferSize: 3E8 });
+      io = socketIO(app, { pingTimeout: 180000, maxHttpBufferSize: 3E8 });
 
       app.listen(remotePort);
 
@@ -271,9 +271,8 @@ module.exports = {
           if (client) {
             logger.silly(`From client: ${client.id}`);
             Object.keys(activePipelines).forEach((pipeline) => {
-              debugger
               if (client[pipeline] && client[pipeline].files) {
-                client.files.processing = [];
+                client[pipeline].files.processing = [];
               }
             });
             client.status = 'disconnected';
@@ -309,7 +308,7 @@ module.exports = {
           const client = remoteClients[data.id][data.runId];
           logger.silly('Retransmit debug:');
           logger.silly(`${activePipelines[data.runId].pipeline.currentState.controllerState}`);
-          logger.silly(`${activePipelines[data.runId].pipeline.currentIteration}`);
+          logger.silly(`${activePipelines[data.runId].pipeline.currentState.currentIteration}`);
           logger.silly(`${client.state.retransmitting}`);
           if (data.state.controllerState === 'waiting on central node'
           && activePipelines[data.runId].pipeline.currentState.controllerState === 'waiting on local users'
