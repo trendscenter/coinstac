@@ -155,7 +155,9 @@ module.exports = {
               currentState: {},
             };
           }
-          if (activePipelines[data.runId].state === 'pre-pipeline' && remoteClients[data.id][data.runId] === undefined) {
+	  if(!remoteClients[data.id]) {
+            return socket.emit('run', { runId: data.runId, error: new Error('Remote has no such pipeline run') });
+          } else if (activePipelines[data.runId].state === 'pre-pipeline' && remoteClients[data.id][data.runId] === undefined) {
             remoteClients[data.id] = Object.assign(
               {
                 [data.runId]: { state: {} },
