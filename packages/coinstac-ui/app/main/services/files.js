@@ -14,13 +14,16 @@ module.exports = {
    * path.
    */
   showDialog: (mainWindow, filters, properties) => {
-    return dialog.showOpenDialog(
-      mainWindow,
-      {
-        filters,
-        properties,
-      }
-    );
+    return new Promise((resolve) => {
+      dialog.showOpenDialog(
+        mainWindow,
+        {
+          filters,
+          properties,
+        },
+        files => resolve({ filePaths: files })
+      );
+    });
   },
 
   /**
