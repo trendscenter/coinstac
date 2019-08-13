@@ -119,7 +119,11 @@ module.exports = {
     if (mode === 'remote') {
       const app = http.createServer();
       // these options are passed down to engineIO, both allow larger transport sizes
-      io = socketIO(app, { pingTimeout: 180000, maxHttpBufferSize: 3E8 });
+      io = socketIO(app, { 
+	transports: ['websocket'],
+	pingTimeout: 180000, 
+	maxHttpBufferSize: 3E8 
+      });
 
       app.listen(remotePort);
 
@@ -131,7 +135,6 @@ module.exports = {
         //   // bye 👋
         //   socket.disconnect();
         // }
-
         socket.emit('hello', { status: 'connected' });
 
         socket.on('register', (data) => {
@@ -288,7 +291,7 @@ module.exports = {
           Object.keys(activePipelines).forEach((runId) => {
             waitingOnForRun(runId).forEach((clientId) => {
               const clientRun = remoteClients[clientId][runId];
-              // we have everything some files are just processing
+             // we have everything some files are just processing
               if (activePipelines[runId].pipeline.currentState.controllerState === 'waiting on local users'
                 && clientRun.files && clientRun.currentOutput && clientRun.files.expected
                 .every(e => [
@@ -299,7 +302,7 @@ module.exports = {
               }
               logger.silly(`Asking client state: ${clientId}`);
               remoteClients[clientId].socket.emit('state', { runId });
-            });
+           });
           });
         }, 30000);
         /**
