@@ -280,27 +280,6 @@ module.exports = {
           }
         });
         /**
-         * Long poll backup for run data
-         */
-        setInterval(() => {
-          Object.keys(activePipelines).forEach((runId) => {
-            waitingOnForRun(runId).forEach((clientId) => {
-              const clientRun = remoteClients[clientId][runId];
-              // we have everything some files are just processing
-              if (activePipelines[runId].pipeline.currentState.controllerState === 'waiting on local users'
-                && clientRun.files && clientRun.currentOutput && clientRun.files.expected
-                .every(e => [
-                  ...clientRun.files.received,
-                  ...clientRun.files.processing,
-                ].includes(e))) {
-                return;
-              }
-              logger.silly(`Asking client state: ${clientId}`);
-              remoteClients[clientId].socket.emit('state', { runId });
-            });
-          });
-        }, 30000);
-        /**
          * Pipeline state socket listener
          */
         socket.on('state', (data) => {
@@ -343,12 +322,38 @@ module.exports = {
       } else {
         io.on('connection', socketServer);
       }
+      /**
+       * Long poll backup for run data
+       */
+      setInterval(() => {
+        Object.keys(activePipelines).forEach((runId) => {
+          waitingOnForRun(runId).forEach((clientId) => {
+            const clientRun = remoteClients[clientId][runId];
+            // we have everything some files are just processing
+            if (activePipelines[runId].pipeline.currentState.controllerState === 'waiting on local users'
+              && clientRun.files && clientRun.currentOutput && clientRun.files.expected
+              .every(e => [
+                ...clientRun.files.received,
+                ...clientRun.files.processing,
+              ].includes(e))) {
+              return;
+            }
+            if (remoteClients[clientId].socket && remoteClients[clientId].status !== 'disconnected') {
+              logger.silly(`Asking client state: ${clientId}`);
+              remoteClients[clientId].socket.emit('state', { runId });
+            }
+          });
+        });
+      }, 30000);
     } else {
       /** ***********************
        * Client side socket code
        ** ***********************
        */
-      socket = socketIOClient(`${remoteProtocol}//${remoteURL}:${remotePort}${remotePathname}?id=${clientId}`);
+      socket = socketIOClient(
+        `${remoteProtocol}//${remoteURL}:${remotePort}${remotePathname}?id=${clientId}`,
+        { transports: ['websocket'] }
+      );
       socket.on('hello', () => {
         logger.silly('Client register request');
         socket.emit('register', { id: clientId });
@@ -583,7 +588,6 @@ module.exports = {
             if (message instanceof Error) { // eslint-disable-line no-lonely-if
               socket.emit('run', { id: clientId, runId: pipeline.id, error: message });
             } else {
-              logger.debug('############# Local client sending out data');
               return readdir(activePipelines[pipeline.id].transferDirectory)
                 .then((files) => {
                   return rimraf(path.join(activePipelines[pipeline.id].systemDirectory, `${pipeline.id}`))
@@ -593,6 +597,7 @@ module.exports = {
                     )).then(() => files);
                 }).then((files) => {
                   if (files && files.length !== 0) {
+                    logger.debug('############# Local client sending out data with files');
                     socket.emit('run', {
                       id: clientId, runId: pipeline.id, output: message, files,
                     });
@@ -608,6 +613,7 @@ module.exports = {
                       );
                     });
                   } else {
+                    logger.debug('############# Local client sending out data');
                     socket.emit('run', { id: clientId, runId: pipeline.id, output: message });
                   }
                 });
