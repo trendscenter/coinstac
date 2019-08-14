@@ -119,7 +119,11 @@ module.exports = {
     if (mode === 'remote') {
       const app = http.createServer();
       // these options are passed down to engineIO, both allow larger transport sizes
-      io = socketIO(app, { pingTimeout: 180000, maxHttpBufferSize: 3E8 });
+      io = socketIO(app, {
+        transports: ['websocket'],
+        pingTimeout: 180000,
+        maxHttpBufferSize: 3E8,
+      });
 
       app.listen(remotePort);
 
@@ -131,7 +135,6 @@ module.exports = {
         //   // bye 👋
         //   socket.disconnect();
         // }
-
         socket.emit('hello', { status: 'connected' });
 
         socket.on('register', (data) => {
@@ -154,6 +157,9 @@ module.exports = {
               state: 'pre-pipeline',
               currentState: {},
             };
+          }
+          if (!remoteClients[data.id]) {
+            return socket.emit('run', { runId: data.runId, error: new Error('Remote has no such pipeline run') });
           }
           if (activePipelines[data.runId].state === 'pre-pipeline' && remoteClients[data.id][data.runId] === undefined) {
             remoteClients[data.id] = Object.assign(
