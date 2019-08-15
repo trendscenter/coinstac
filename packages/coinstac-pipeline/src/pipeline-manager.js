@@ -120,7 +120,6 @@ module.exports = {
       const app = http.createServer();
       // these options are passed down to engineIO, both allow larger transport sizes
       io = socketIO(app, {
-        transports: ['websocket'],
         pingTimeout: 180000,
         maxHttpBufferSize: 3E8,
       });
@@ -357,8 +356,7 @@ module.exports = {
        ** ***********************
        */
       socket = socketIOClient(
-        `${remoteProtocol}//${remoteURL}:${remotePort}${remotePathname}?id=${clientId}`,
-        { transports: ['websocket'] }
+        `${remoteProtocol}//${remoteURL}:${remotePort}${remotePathname}?id=${clientId}`
       );
       socket.on('hello', () => {
         logger.silly('Client register request');
