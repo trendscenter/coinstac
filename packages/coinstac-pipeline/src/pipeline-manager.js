@@ -146,6 +146,14 @@ module.exports = {
           remoteClients[data.id].id = data.id;
           remoteClients[data.id].socket = socket;
           remoteClients[data.id].lastSeen = Math.floor(Date.now() / 1000);
+          if (data.runs) {
+            data.runs.forEach((run) => {
+              if (remoteClients[data.id][run]) {
+                // reset state queries on reconn
+                remoteClients[data.id][run].stateQueried = false;
+              }
+            });
+          }
         });
 
         socket.on('run', (data) => {
@@ -290,6 +298,7 @@ module.exports = {
         socket.on('state', (data) => {
           logger.silly(`Returned state: ${JSON.stringify(data)}`);
           const client = remoteClients[data.id][data.runId];
+          client.stateQueried = false;
           logger.silly('Retransmit debug:');
           logger.silly(`${activePipelines[data.runId].pipeline.currentState.controllerState}`);
           logger.silly(`${activePipelines[data.runId].pipeline.currentState.currentIteration}`);
@@ -343,13 +352,16 @@ module.exports = {
               ].includes(e))) {
               return;
             }
-            if (remoteClients[clientId].socket && remoteClients[clientId].status !== 'disconnected') {
+            if (remoteClients[clientId].socket
+              && remoteClients[clientId].status !== 'disconnected'
+              && clientRun.stateQueried === false
+            ) {
               logger.silly(`Asking client state: ${clientId}`);
               remoteClients[clientId].socket.emit('state', { runId });
             }
           });
         });
-      }, 30000);
+      }, 15000);
     } else {
       /** ***********************
        * Client side socket code
@@ -360,7 +372,7 @@ module.exports = {
       );
       socket.on('hello', () => {
         logger.silly('Client register request');
-        socket.emit('register', { id: clientId });
+        socket.emit('register', { id: clientId, runs: Object.keys(activePipelines) });
       });
       /**
        * Pipeline socket listener
@@ -533,7 +545,7 @@ module.exports = {
             {
               id: client,
               status: 'unregistered',
-              [runId]: { state: {} },
+              [runId]: { state: {}, stateQueried: false },
             },
             remoteClients[client]
           );
