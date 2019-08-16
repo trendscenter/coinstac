@@ -465,12 +465,24 @@ const startService = (serviceId, serviceUserId, opts) => {
     return tryStartService();
   };
 
-  if (services[serviceId] && (services[serviceId] !== 'shutting down')) {
+  if (services[serviceId] && (services[serviceId].state !== 'shutting down' && services[serviceId].state !== 'zombie')) {
     if (services[serviceId].users.indexOf(serviceUserId) === -1) {
       services[serviceId].users.push(serviceUserId);
     }
-    logger.silly('Returning already started service');
-    return Promise.resolve(services[serviceId].service);
+    if (services[serviceId].container) {
+      logger.silly('Returning already started service');
+      return new Promise((resolve, reject) => {
+        services[serviceId].container.inspect((error, data) => {
+          if (error) reject(error);
+          if (data.State.Running === true) {
+            return resolve(services[serviceId].service);
+          }
+          // the service was somehow shutdown or crashed, make a new one
+          logger.silly('Service was down, starting new instance');
+          resolve(createService());
+        });
+      });
+    }
   }
 
   return createService();
