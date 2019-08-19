@@ -35,6 +35,13 @@ const conf = convict({
     port: '443',
     protocol: 'https:',
   },
+  mqttServer: {
+    hostname: 'coinstac.rs.gsu.edu',
+    pathname: '',
+    port: '80',
+    protocol: 'mqtts:',
+  },
+
   logFile: 'coinstac-log.json',
   logFileBoot: 'coinstac-boot-error-log.txt',
   // these are appended to the home dir for you OS
