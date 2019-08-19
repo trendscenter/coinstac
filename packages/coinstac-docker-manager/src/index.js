@@ -12,13 +12,15 @@ const perfTime = () => {
   const t = process.hrtime();
   return t[0] * 1000 + t[1] / 1000000;
 };
+
+let logger;
 winston.loggers.add('docker-manager', {
   level: 'info',
   transports: [
     new winston.transports.Console({ format: winston.format.cli() }),
   ],
 });
-const logger = winston.loggers.get('docker-manager');
+logger = winston.loggers.get('docker-manager');
 logger.level = process.LOGLEVEL ? process.LOGLEVEL : 'info';
 
 const setTimeoutPromise = (delay) => {
@@ -33,6 +35,19 @@ const streamPool = {};
 const jobPool = {};
 let services = {};
 
+/**
+ * Set an external logger instance
+ * @param {Object} loggerInstance Winston logger
+ */
+const setLogger = (loggerInstance) => {
+  logger = loggerInstance;
+};
+
+/**
+ * Assigns a unique unsused port to be used for web traffic
+ * @param  {string} serviceId Id to consume the port
+ * @return {int}              open port assigned
+ */
 const generateServicePort = (serviceId) => {
   return portscanner.findAPortNotInUse(8100, 49151, '127.0.0.1')
     .then((newPort) => {
@@ -370,6 +385,7 @@ const startService = (serviceId, serviceUserId, opts) => {
                 stream.on('end', () => {
                   receiveEnd = perfTime();
                   outRes(stdout);
+                  logger.debug('Docker stream closed');
                   logger.debug(`Output size: ${stdout.length}`);
                 });
                 stream.on('err', err => outRej(err));
@@ -622,6 +638,7 @@ module.exports = {
   pruneImages,
   removeImage,
   queueJob,
+  setLogger,
   startService,
   stopService,
   stopAllServices,

@@ -1,6 +1,7 @@
 'use strict';
 
 const path = require('path');
+const stream = require('stream');
 const winston = require('winston');
 const pify = require('util').promisify;
 const mkdirp = pify(require('mkdirp'));
@@ -15,11 +16,19 @@ module.exports = function configureLogger(config) {
   return mkdirp(logLocation, 0o0775)
     .then(() => {
       const logFilePath = path.join(logLocation, config.get('logFile'));
-      const logger = new winston.Logger({
+      const logger = winston.createLogger({
         transports: [
           new winston.transports.Console(),
           new winston.transports.File({
             filename: logFilePath,
+          }),
+          new winston.transports.Stream({
+            stream: new stream.Writable({
+              write: (chunk, encoding, done) => {
+                logger.emit('log-message', { data: chunk.toString() });
+                done();
+              },
+            }),
           }),
         ],
       });

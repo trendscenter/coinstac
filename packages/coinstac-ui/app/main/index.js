@@ -70,6 +70,10 @@ loadConfig()
     let core = null;
     logger.verbose('main process booted');
 
+    logger.on('log-message', (arg) => {
+      mainWindow.webContents.send('log-message', arg);
+    });
+
     ipcMain.on('clean-remote-pipeline', (event, runId) => {
       if (core) {
         core.unlinkFiles(runId)

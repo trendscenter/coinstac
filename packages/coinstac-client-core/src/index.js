@@ -54,6 +54,7 @@ class CoinstacClient {
       || CoinstacClient.getDefaultAppDirectory();
 
     this.dockerManager = DockerManager;
+    this.dockerManager.setLogger(this.logger);
 
     /* istanbul ignore if */
     if (opts.logLevel) {
@@ -65,6 +66,7 @@ class CoinstacClient {
     this.pipelineManager = PipelineManager.create({
       mode: 'local',
       clientId: opts.userId,
+      logger: this.logger,
       operatingDirectory: path.join(this.appDirectory),
       remotePort: opts.pipelineWSServer.port,
       remoteProtocol: opts.pipelineWSServer.protocol,

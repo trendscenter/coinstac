@@ -17,7 +17,6 @@ import RouteContainer from './containers/route-container';
 import Login from './components/user/form-login-controller';
 import Signup from './components/user/form-signup-controller';
 import Maps from './components/maps/maps';
-import MapsList from './components/maps/maps-list';
 import PipelinesList from './components/pipelines/pipelines-list';
 import Pipeline from './components/pipelines/pipeline';
 import ResultsList from './components/results/results-list';
@@ -25,6 +24,7 @@ import Result from './components/results/result';
 import CollectionsList from './components/collections/collections-list';
 import CollectionTabs from './components/collections/collection-tabs';
 import Settings from './components/user/settings';
+import Logs from './components/logs/logs';
 
 export default (
   <Route path="/" component={App}>
@@ -63,6 +63,7 @@ export default (
         <Route path="new" component={ComputationSubmission} />
       </Route>
       <Route path="settings" component={Settings} />
+      <Route path="logs" component={Logs} />
     </Route>
   </Route>
 );
