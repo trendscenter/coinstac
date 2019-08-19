@@ -7,6 +7,6 @@
     "hostname": "coinstac.rs.gsu.edu",
     "pathname": "",
     "port": 80,
-    "protocol": "mqtts:",
+    "protocol": "mqtts:"
   }
 }
