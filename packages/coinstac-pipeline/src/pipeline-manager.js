@@ -149,6 +149,7 @@ module.exports = {
       serverMqt = mqtt.connect(`${mqttRemoteProtocol}//${mqttRemoteURL}:${mqttRemotePort}`, { clientId });
 
       serverMqt.on('connect', () => {
+        logger.silly('mqtt connection up');
         serverMqt.subscribe('register', { qos: 1 }, (err) => {
           if (err) logger.error(err);
         });
@@ -424,6 +425,7 @@ module.exports = {
       mqtCon = mqtt.connect(`${mqttRemoteProtocol}//${mqttRemoteURL}:${mqttRemotePort}`, { clientId });
 
       mqtCon.on('connect', () => {
+        logger.silly('mqtt connection up');
         mqtCon.subscribe(`${clientId}-register`, { qos: 1 }, (err) => {
           logger.silly('Client register request');
           if (err) logger.error(err);
