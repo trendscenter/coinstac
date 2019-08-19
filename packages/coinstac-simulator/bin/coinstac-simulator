@@ -252,70 +252,72 @@ fulfilledPipelineSpec
     const count = program.clientNumber ? program.clientNumber // eslint-disable-line no-nested-ternary, max-len
       : (Array.isArray(pipelineSpec) ? pipelineSpec.length : 1); // eslint-disable-line no-nested-ternary, max-len
     logger.debug(`Starting ${globalMode} simulator run with ${count} client(s)`);
-    const simRun = sim.startRun({
+    const started = sim.startRun({
       spec: pipelineSpec,
       runMode: globalMode,
       clientCount: count,
       operatingDirectory: program.directory,
     });
 
-    const updateTable = (node, data) => {
-      let foundNode = false;
-      let state = data.controllerState ? data.controllerState : 'initializing';
-      state = state === 'stopped' ? 'shutting down docker...' : state;
+    return started.then((simRun) => {
+      const updateTable = (node, data) => {
+        let foundNode = false;
+        let state = data.controllerState ? data.controllerState : 'initializing';
+        state = state === 'stopped' ? 'shutting down docker...' : state;
 
-      if (!DEBUG_MODE) {
-        tableData.forEach((row, index) => {
-          if (row[0] === node) {
-            tableData[index] = [
+        if (!DEBUG_MODE) {
+          tableData.forEach((row, index) => {
+            if (row[0] === node) {
+              tableData[index] = [
+                node,
+                data.currentIteration ? data.currentIteration : 'initializing',
+                state,
+                data.mode,
+              ];
+              foundNode = true;
+            }
+          });
+          if (!foundNode) {
+            tableData.push([
               node,
               data.currentIteration ? data.currentIteration : 'initializing',
               state,
               data.mode,
-            ];
-            foundNode = true;
+            ]);
           }
-        });
-        if (!foundNode) {
-          tableData.push([
-            node,
-            data.currentIteration ? data.currentIteration : 'initializing',
-            state,
-            data.mode,
-          ]);
+
+          table.setData({
+            headers: ['node', 'iteration', 'state', 'mode'],
+            data: tableData,
+          });
+          screen.render();
+        } else {
+          logger.debug(`${node} ---- ${JSON.stringify(data)}`);
         }
+      };
 
-        table.setData({
-          headers: ['node', 'iteration', 'state', 'mode'],
-          data: tableData,
-        });
-        screen.render();
-      } else {
-        logger.debug(`${node} ---- ${JSON.stringify(data)}`);
+      if (simRun.pipelines.remote) {
+        simRun.pipelines.remote.manager.getPipelineStateListener('simulatorRun')
+          .on('update', (data) => {
+            updateTable('remote', data);
+          });
       }
-    };
-
-    if (simRun.pipelines.remote) {
-      simRun.pipelines.remote.manager.getPipelineStateListener('simulatorRun')
-        .on('update', (data) => {
-          updateTable('remote', data);
+      simRun.pipelines.locals.forEach((local, index) => {
+        local.manager.getPipelineStateListener('simulatorRun').on('update', (data) => {
+          updateTable(`local-${index}`, data);
         });
-    }
-    simRun.pipelines.locals.forEach((local, index) => {
-      local.manager.getPipelineStateListener('simulatorRun').on('update', (data) => {
-        updateTable(`local-${index}`, data);
       });
+
+      if (!DEBUG_MODE) {
+        screen.key(['escape', 'q', 'C-c'], () => process.exit(0));
+        table.focus();
+
+        screen.append(table);
+        screen.render();
+      }
+
+      return simRun.allResults;
     });
-
-    if (!DEBUG_MODE) {
-      screen.key(['escape', 'q', 'C-c'], () => process.exit(0));
-      table.focus();
-
-      screen.append(table);
-      screen.render();
-    }
-
-    return simRun.allResults;
   })
   .then((results) => {
     if (!DEBUG_MODE) {

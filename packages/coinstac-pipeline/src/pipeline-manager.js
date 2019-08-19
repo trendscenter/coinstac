@@ -2,20 +2,21 @@
 
 const http = require('http');
 const fs = require('fs');
+const _ = require('lodash');
 const socketIO = require('socket.io');
 const socketIOClient = require('socket.io-client');
-const _ = require('lodash');
+const mqtt = require('mqtt');
 const { promisify } = require('util');
 const mkdirp = promisify(require('mkdirp'));
 const rimraf = promisify(require('rimraf'));
 const path = require('path');
+const ss = require('socket.io-stream');
 
 const readdir = promisify(fs.readdir);
 const writeFile = promisify(fs.writeFile);
 const readFile = promisify(fs.readFile);
 const Emitter = require('events');
 const winston = require('winston');
-const ss = require('socket.io-stream');
 const { createReadStream, createWriteStream } = require('fs');
 
 winston.loggers.add('pipeline', {
@@ -45,6 +46,21 @@ const sendFile = (socket, filePath, data) => {
   fsStream.pipe(stream);
 };
 
+// const sendFile = (socket, {
+//   channel, clientId, filePath, data, file,
+// }) => {
+//   const fsStream = createReadStream(filePath);
+//   const payload = [channel, clientId, filePath, file].reduce((memo, header) => {
+//     const p = Buffer.from(header)
+//     const h = Buffer.alloc(2).writhUInt16(p.length);
+//     return memo.concat([h, p]);
+//   }, Buffer.alloc(0))
+//
+//   const stream = ss.createStream();
+//   ss(socket).emit('file', stream, data);
+//   fsStream.pipe(stream);
+// };
+
 module.exports = {
 
   /**
@@ -66,23 +82,28 @@ module.exports = {
     remotePathname = '',
     remotePort = 3300,
     remoteProtocol = 'http:',
+    mqttRemotePort = 1883,
+    mqttRemoteProtocol = 'mqtt:',
     remoteURL = 'localhost',
+    mqttRemoteURL = 'localhost',
     unauthHandler, // eslint-disable-line no-unused-vars
   }) {
     const activePipelines = {};
     let io;
     let socket;
+    let mqtCon;
+    let serverMqt;
     const remoteClients = {};
     logger = logger || defaultLogger;
     // TODO: const missedCache = {};
 
     const waitingOnForRun = (runId) => {
-      logger.silly('Remote client state:');
+      // logger.silly('Remote client state:');
       const waiters = [];
       activePipelines[runId].clients.forEach((client) => {
-        logger.silly(`${client}`);
-        logger.silly(`Output: ${!!remoteClients[client][runId].currentOutput}`);
-        logger.silly(`Files: ${JSON.stringify(remoteClients[client][runId].files)}`);
+        // logger.silly(`${client}`);
+        // logger.silly(`Output: ${!!remoteClients[client][runId].currentOutput}`);
+        // logger.silly(`Files: ${JSON.stringify(remoteClients[client][runId].files)}`);
         const clientRun = remoteClients[client][runId];
         if ((clientRun
           && !clientRun.currentOutput)
@@ -125,6 +146,109 @@ module.exports = {
       });
 
       app.listen(remotePort);
+      serverMqt = mqtt.connect(`${mqttRemoteProtocol}//${mqttRemoteURL}:${mqttRemotePort}`, { clientId });
+
+      serverMqt.on('connect', () => {
+        serverMqt.subscribe('register', { qos: 1 }, (err) => {
+          if (err) logger.error(err);
+        });
+        serverMqt.subscribe('run', { qos: 1 }, (err) => {
+          if (err) logger.error(err);
+        });
+      });
+
+      serverMqt.on('message', (topic, dataBuffer) => {
+        const data = JSON.parse(dataBuffer);
+        switch (topic) {
+          case 'run':
+            logger.silly(`############ Received client data: ${data.id}`);
+            // client run started before remote
+            if (!activePipelines[data.runId]) {
+              activePipelines[data.runId] = {
+                state: 'pre-pipeline',
+                currentState: {},
+              };
+            }
+            if (!remoteClients[data.id]) {
+              // return socket.emit('run', { runId: data.runId, error: new Error('Remote has no such pipeline run') });
+            }
+            if (activePipelines[data.runId].state === 'pre-pipeline' && remoteClients[data.id][data.runId] === undefined) {
+              remoteClients[data.id] = Object.assign(
+                {
+                  [data.runId]: { state: {} },
+                },
+                remoteClients[data.id]
+              );
+            }
+
+            // normal pipeline operation
+            if (remoteClients[data.id] && remoteClients[data.id][data.runId]) {
+              remoteClients[data.id].lastSeen = Math.floor(Date.now() / 1000);
+
+              // is the client giving us an error?
+              if (!data.error) {
+                // has this pipeline error'd out?
+                if (!activePipelines[data.runId].error) {
+                  // check if the msg is a dup, either for a current or past iteration
+                  if (remoteClients[data.id][data.runId].currentOutput
+                    || activePipelines[data.runId].pipeline.currentState.currentIteration + 1
+                    !== data.iteration
+                  ) {
+                    logger.silly(`Duplicate message client ${data.id}`);
+                    return;
+                  }
+                  remoteClients[data.id][data.runId].currentOutput = data.output.output;
+                  if (data.files) {
+                    remoteClients[data.id][data.runId].files = remoteClients[data.id][data.runId].files ? // eslint-disable-line max-len, operator-linebreak
+                      Object.assign(
+                        {},
+                        remoteClients[data.id][data.runId].files,
+                        { expected: data.files }
+                      )
+                      : { expected: data.files, received: [], processing: [] };
+                  }
+                  if (activePipelines[data.runId].state !== 'pre-pipeline') {
+                    const waitingOn = waitingOnForRun(data.runId);
+                    activePipelines[data.runId].currentState.waitingOn = waitingOn;
+                    const stateUpdate = Object.assign(
+                      {},
+                      activePipelines[data.runId].pipeline.currentState,
+                      activePipelines[data.runId].currentState
+                    );
+                    activePipelines[data.runId].stateEmitter
+                      .emit('update', stateUpdate);
+                    logger.silly(JSON.stringify(stateUpdate));
+                    if (waitingOn.length === 0) {
+                      activePipelines[data.runId].state = 'received all clients data';
+                      logger.silly('Received all client data');
+                      // clear transfer and start run
+                      activePipelines[data.runId].remote.resolve(
+                        rimraf(path.join(activePipelines[data.runId].transferDirectory, '*')).then(() => ({ output: aggregateRun(data.runId) }))
+                      );
+                    }
+                  }
+                } else {
+                  io.of('/').to(data.runId).emit('run', { runId: data.runId, error: activePipelines[data.runId].error });
+                }
+              } else {
+                const runError = Object.assign(
+                  new Error(),
+                  data.error,
+                  {
+                    error: `Pipeline error from user: ${data.id}\n Error details: ${data.error.error}`,
+                    message: `Pipeline error from user: ${data.id}\n Error details: ${data.error.message}`,
+                  }
+                );
+                activePipelines[data.runId].state = 'received client error';
+                activePipelines[data.runId].error = runError;
+                io.of('/').to(data.runId).emit('run', { runId: data.runId, error: runError });
+                activePipelines[data.runId].remote.reject(runError);
+              }
+            }
+            break;
+          default:
+        }
+      });
 
       const socketServer = (socket) => {
         // TODO: not the way to do this, as runs would have to
@@ -156,85 +280,6 @@ module.exports = {
           }
         });
 
-        socket.on('run', (data) => {
-          logger.silly(`############ Received client data: ${data.id}`);
-          // client run started before remote
-          if (!activePipelines[data.runId]) {
-            activePipelines[data.runId] = {
-              state: 'pre-pipeline',
-              currentState: {},
-            };
-          }
-          if (!remoteClients[data.id]) {
-            return socket.emit('run', { runId: data.runId, error: new Error('Remote has no such pipeline run') });
-          }
-          if (activePipelines[data.runId].state === 'pre-pipeline' && remoteClients[data.id][data.runId] === undefined) {
-            remoteClients[data.id] = Object.assign(
-              {
-                [data.runId]: { state: {} },
-              },
-              remoteClients[data.id]
-            );
-          }
-
-          // normal pipeline operation
-          if (remoteClients[data.id] && remoteClients[data.id][data.runId]) {
-            socket.join(data.runId);
-            remoteClients[data.id].lastSeen = Math.floor(Date.now() / 1000);
-
-            // is the client giving us an error?
-            if (!data.error) {
-              // has this pipeline error'd out?
-              if (!activePipelines[data.runId].error) {
-                remoteClients[data.id][data.runId].currentOutput = data.output.output;
-                if (data.files) {
-                  remoteClients[data.id][data.runId].files = remoteClients[data.id][data.runId].files ? // eslint-disable-line max-len, operator-linebreak
-                    Object.assign(
-                      {},
-                      remoteClients[data.id][data.runId].files,
-                      { expected: data.files }
-                    )
-                    : { expected: data.files, received: [], processing: [] };
-                }
-                if (activePipelines[data.runId].state !== 'pre-pipeline') {
-                  const waitingOn = waitingOnForRun(data.runId);
-                  activePipelines[data.runId].currentState.waitingOn = waitingOn;
-                  const stateUpdate = Object.assign(
-                    {},
-                    activePipelines[data.runId].pipeline.currentState,
-                    activePipelines[data.runId].currentState
-                  );
-                  activePipelines[data.runId].stateEmitter
-                    .emit('update', stateUpdate);
-                  logger.silly(JSON.stringify(stateUpdate));
-                  if (waitingOn.length === 0) {
-                    activePipelines[data.runId].state = 'received all clients data';
-                    logger.silly('Received all client data');
-                    // clear transfer and start run
-                    activePipelines[data.runId].remote.resolve(
-                      rimraf(path.join(activePipelines[data.runId].transferDirectory, '*')).then(() => ({ output: aggregateRun(data.runId) }))
-                    );
-                  }
-                }
-              } else {
-                io.of('/').to(data.runId).emit('run', { runId: data.runId, error: activePipelines[data.runId].error });
-              }
-            } else {
-              const runError = Object.assign(
-                new Error(),
-                data.error,
-                {
-                  error: `Pipeline error from user: ${data.id}\n Error details: ${data.error.error}`,
-                  message: `Pipeline error from user: ${data.id}\n Error details: ${data.error.message}`,
-                }
-              );
-              activePipelines[data.runId].state = 'received client error';
-              activePipelines[data.runId].error = runError;
-              io.of('/').to(data.runId).emit('run', { runId: data.runId, error: runError });
-              activePipelines[data.runId].remote.reject(runError);
-            }
-          }
-        });
         /**
          * File transfer socket listener
          */
@@ -278,6 +323,7 @@ module.exports = {
               });
           }
         });
+
         socket.on('disconnect', (reason) => {
           logger.error(`Client disconnect error: ${reason}`);
           const client = _.find(remoteClients, { socketId: socket.id });
@@ -292,42 +338,42 @@ module.exports = {
             client.error = reason;
           }
         });
-        /**
-         * Pipeline state socket listener
-         */
-        socket.on('state', (data) => {
-          logger.silly(`Returned state: ${JSON.stringify(data)}`);
-          const client = remoteClients[data.id][data.runId];
-          client.stateQueried = false;
-          logger.silly('Retransmit debug:');
-          logger.silly(`${activePipelines[data.runId].pipeline.currentState.controllerState}`);
-          logger.silly(`${activePipelines[data.runId].pipeline.currentState.currentIteration}`);
-          logger.silly(`${client.state.retransmitting}`);
-          if (data.state.controllerState === 'waiting on central node'
-          && activePipelines[data.runId].pipeline.currentState.controllerState === 'waiting on local users'
-          && activePipelines[data.runId].pipeline.currentState.currentIteration
-          === data.state.currentIteration - 1
-          && (client && client.state.retransmitting
-            ? (Date.now() - client.state.retransmitTime > 60000) : true)) {
-            let files = [];
-            if (client.files) {
-              files = client.files.expected.reduce((memo, file) => {
-                if (![...client.files.processing, ...client.files.received].includes(file)) {
-                  memo.push(file);
-                }
-                return memo;
-              }, []);
-            }
-            const output = !client.currentOutput;
-            logger.error(`Asking client to retransmit: ${JSON.stringify({ runId: data.runId, files, output })}`);
-            remoteClients[data.id].socket.emit('retransmit', { runId: data.runId, files, output });
-            client.state = Object.assign(
-              {},
-              client.state,
-              { retransmitting: true, retransmitTime: Date.now() }
-            );
-          }
-        });
+        // /**
+        //  * Pipeline state socket listener
+        //  */
+        // socket.on('state', (data) => {
+        //   logger.silly(`Returned state: ${JSON.stringify(data)}`);
+        //   const client = remoteClients[data.id][data.runId];
+        //   client.stateQueried = false;
+        //   logger.silly('Retransmit debug:');
+        //   logger.silly(`${activePipelines[data.runId].pipeline.currentState.controllerState}`);
+        //   logger.silly(`${activePipelines[data.runId].pipeline.currentState.currentIteration}`);
+        //   logger.silly(`${client.state.retransmitting}`);
+        //   if (data.state.controllerState === 'waiting on central node'
+        //   && activePipelines[data.runId].pipeline.currentState.controllerState === 'waiting on local users'
+        //   && activePipelines[data.runId].pipeline.currentState.currentIteration
+        //   === data.state.currentIteration - 1
+        //   && (client && client.state.retransmitting
+        //     ? (Date.now() - client.state.retransmitTime > 60000) : true)) {
+        //     let files = [];
+        //     if (client.files) {
+        //       files = client.files.expected.reduce((memo, file) => {
+        //         if (![...client.files.processing, ...client.files.received].includes(file)) {
+        //           memo.push(file);
+        //         }
+        //         return memo;
+        //       }, []);
+        //     }
+        //     const output = !client.currentOutput;
+        //     logger.error(`Asking client to retransmit: ${JSON.stringify({ runId: data.runId, files, output })}`);
+        //     remoteClients[data.id].socket.emit('retransmit', { runId: data.runId, files, output });
+        //     client.state = Object.assign(
+        //       {},
+        //       client.state,
+        //       { retransmitting: true, retransmitTime: Date.now() }
+        //     );
+        //   }
+        // });
       };
 
       if (authPlugin) {
@@ -336,32 +382,32 @@ module.exports = {
       } else {
         io.on('connection', socketServer);
       }
-      /**
-       * Long poll backup for run data
-       */
-      setInterval(() => {
-        Object.keys(activePipelines).forEach((runId) => {
-          waitingOnForRun(runId).forEach((clientId) => {
-            const clientRun = remoteClients[clientId][runId];
-            // we have everything some files are just processing
-            if (activePipelines[runId].pipeline.currentState.controllerState === 'waiting on local users'
-              && clientRun.files && clientRun.currentOutput && clientRun.files.expected
-              .every(e => [
-                ...clientRun.files.received,
-                ...clientRun.files.processing,
-              ].includes(e))) {
-              return;
-            }
-            if (remoteClients[clientId].socket
-              && remoteClients[clientId].status !== 'disconnected'
-              && clientRun.stateQueried === false
-            ) {
-              logger.silly(`Asking client state: ${clientId}`);
-              remoteClients[clientId].socket.emit('state', { runId });
-            }
-          });
-        });
-      }, 15000);
+      // /**
+      //  * Long poll backup for run data
+      //  */
+      // setInterval(() => {
+      //   Object.keys(activePipelines).forEach((runId) => {
+      //     waitingOnForRun(runId).forEach((clientId) => {
+      //       const clientRun = remoteClients[clientId][runId];
+      //       // we have everything some files are just processing
+      //       if (activePipelines[runId].pipeline.currentState.controllerState === 'waiting on local users'
+      //         && clientRun.files && clientRun.currentOutput && clientRun.files.expected
+      //         .every(e => [
+      //           ...clientRun.files.received,
+      //           ...clientRun.files.processing,
+      //         ].includes(e))) {
+      //         return;
+      //       }
+      //       if (remoteClients[clientId].socket
+      //         && remoteClients[clientId].status !== 'disconnected'
+      //         && clientRun.stateQueried === false
+      //       ) {
+      //         logger.silly(`Asking client state: ${clientId}`);
+      //         remoteClients[clientId].socket.emit('state', { runId });
+      //       }
+      //     });
+      //   });
+      // }, 15000);
     } else {
       /** ***********************
        * Client side socket code
@@ -374,37 +420,64 @@ module.exports = {
         logger.silly('Client register request');
         socket.emit('register', { id: clientId, runs: Object.keys(activePipelines) });
       });
-      /**
-       * Pipeline socket listener
-       */
-      socket.on('run', (data) => {
+
+      mqtCon = mqtt.connect(`${mqttRemoteProtocol}//${mqttRemoteURL}:${mqttRemotePort}`, { clientId });
+
+      mqtCon.on('connect', () => {
+        mqtCon.subscribe(`${clientId}-register`, { qos: 1 }, (err) => {
+          logger.silly('Client register request');
+          if (err) logger.error(err);
+          mqtCon.publish(
+            'register',
+            JSON.stringify({ id: clientId, runs: Object.keys(activePipelines) }),
+            { qos: 1 }
+          );
+        });
+        mqtCon.subscribe(`${clientId}-run`, { qos: 1 }, (err) => {
+          if (err) logger.error(err);
+        });
+      });
+
+      mqtCon.on('message', (topic, dataBuffer) => {
+        const data = JSON.parse(dataBuffer);
         // TODO: step check?
-        if (!data.error && activePipelines[data.runId]) {
-          activePipelines[data.runId].state = 'received central node data';
-          logger.silly('received central node data');
-          if (data.files) {
-            // we've already received the files
-            if (activePipelines[data.runId].files
-             && data.files.every(e => activePipelines[data.runId].files.received.includes(e))
-            ) {
-              activePipelines[data.runId].remote.resolve(data.output);
-              activePipelines[data.runId].currentInput = undefined;
-              activePipelines[data.runId].files = undefined;
-            } else {
-              activePipelines[data.runId].files = Object.assign(
-                {}, { expected: data.files }, activePipelines[data.runId].files
-              );
-              activePipelines[data.runId].currentInput = data.output;
+        switch (topic) {
+          case `${clientId}-run`:
+            if (!data.error && activePipelines[data.runId]) {
+              if (activePipelines[data.runId].pipeline.currentState.currentIteration
+                !== data.iteration
+              ) {
+                logger.silly(`Duplicate message client ${data.id}`);
+                return;
+              }
+              activePipelines[data.runId].state = 'received central node data';
+              logger.silly('received central node data');
+              if (data.files) {
+                // we've already received the files
+                if (activePipelines[data.runId].files
+                 && data.files.every(e => activePipelines[data.runId].files.received.includes(e))
+                ) {
+                  activePipelines[data.runId].remote.resolve(data.output);
+                  activePipelines[data.runId].currentInput = undefined;
+                  activePipelines[data.runId].files = undefined;
+                } else {
+                  activePipelines[data.runId].files = Object.assign(
+                    {}, { expected: data.files }, activePipelines[data.runId].files
+                  );
+                  activePipelines[data.runId].currentInput = data.output;
+                }
+              } else {
+                // clear transfer dir after we know its been transfered
+                activePipelines[data.runId].remote.resolve(
+                  rimraf(path.join(activePipelines[data.runId].transferDirectory, '*')).then(() => data.output)
+                );
+              }
+            } else if (data.error && activePipelines[data.runId]) {
+              activePipelines[data.runId].state = 'received error';
+              activePipelines[data.runId].remote.reject(Object.assign(new Error(), data.error));
             }
-          } else {
-            // clear transfer dir after we know its been transfered
-            activePipelines[data.runId].remote.resolve(
-              rimraf(path.join(activePipelines[data.runId].transferDirectory, '*')).then(() => data.output)
-            );
-          }
-        } else if (data.error && activePipelines[data.runId]) {
-          activePipelines[data.runId].state = 'received error';
-          activePipelines[data.runId].remote.reject(Object.assign(new Error(), data.error));
+            break;
+          default:
         }
       });
       /**
@@ -445,46 +518,46 @@ module.exports = {
           });
         }
       });
-      /**
-       * Pipeline state socket listener
-       */
-      socket.on('state', (data) => {
-        socket.emit('state', {
-          state: Object.assign(
-            {},
-            activePipelines[data.runId].pipeline.currentState,
-            activePipelines[data.runId].currentState
-          ),
-          id: clientId,
-          runId: data.runId,
-        });
-      });
-      /**
-       * Retransmit socket listener
-       */
-      socket.on('retransmit', (data) => {
-        data.files.forEach((file) => {
-          sendFile(
-            socket,
-            path.join(activePipelines[data.runId].transferDirectory, file),
-            { runId: data.runId, file, id: clientId }
-          );
-        });
-        if (data.output) {
-          readFile(path.join(activePipelines[data.runId].systemDirectory, `${data.runId}`), 'utf8')
-            .then((output) => {
-              output = JSON.parse(output);
-              socket.emit('run', {
-                id: clientId,
-                runId: data.runId,
-                output: output.savedOutput,
-                files: output.savedFileList && output.savedFileList.length > 0
-                  ? output.savedFileList : undefined,
-                boop: undefined,
-              });
-            });
-        }
-      });
+      // /**
+      //  * Pipeline state socket listener
+      //  */
+      // socket.on('state', (data) => {
+      //   socket.emit('state', {
+      //     state: Object.assign(
+      //       {},
+      //       activePipelines[data.runId].pipeline.currentState,
+      //       activePipelines[data.runId].currentState
+      //     ),
+      //     id: clientId,
+      //     runId: data.runId,
+      //   });
+      // });
+      // /**
+      //  * Retransmit socket listener
+      //  */
+      // socket.on('retransmit', (data) => {
+      //   data.files.forEach((file) => {
+      //     sendFile(
+      //       socket,
+      //       path.join(activePipelines[data.runId].transferDirectory, file),
+      //       { runId: data.runId, file, id: clientId }
+      //     );
+      //   });
+      //   if (data.output) {
+      //     readFile(path.join(activePipelines[data.runId].systemDirectory, `${data.runId}`), 'utf8')
+      //       .then((output) => {
+      //         output = JSON.parse(output);
+      //         socket.emit('run', {
+      //           id: clientId,
+      //           runId: data.runId,
+      //           output: output.savedOutput,
+      //           files: output.savedFileList && output.savedFileList.length > 0
+      //             ? output.savedFileList : undefined,
+      //           boop: undefined,
+      //         });
+      //       });
+      //   }
+      // });
     }
 
 
@@ -496,6 +569,7 @@ module.exports = {
       operatingDirectory,
       remoteClients,
       socket,
+      mqtCon,
 
       /**
        * Starts a pipeline given a pipeline spec, client list and unique ID
@@ -550,13 +624,17 @@ module.exports = {
             remoteClients[client]
           );
         });
-
+        const clientPublish = (clientList, data) => {
+          clientList.forEach((client) => {
+            serverMqt.publish(`${client}-run`, JSON.stringify(data), { qos: 1 }, err => logger.error(err));
+          });
+        };
         /**
          * Communicate with the with node(s), clients to remote or remote to clients
          * @param  {Object} pipeline pipeline to preform the messaging on
          * @param  {Object} message  data to serialize to recipient
          */
-        const communicate = (pipeline, message) => {
+        const communicate = (pipeline, message, messageIteration) => {
           if (mode === 'remote') {
             if (message instanceof Error) {
               const runError = Object.assign(
@@ -569,40 +647,53 @@ module.exports = {
               activePipelines[pipeline.id].state = 'central node error';
               activePipelines[pipeline.id].error = runError;
               activePipelines[pipeline.id].remote.reject(runError);
-              io.of('/').to(pipeline.id).emit('run', { runId: pipeline.id, error: runError });
+              clientPublish(
+                activePipelines[pipeline.id].clients,
+                { runId: pipeline.id, error: runError }
+              );
             } else {
               logger.silly('############ Sending out remote data');
-              io.of('/').in(pipeline.id).clients((error, clients) => {
-                if (error) throw error;
-                readdir(activePipelines[pipeline.id].transferDirectory)
-                  .then((files) => {
-                    if (files && files.length !== 0) {
-                      io.of('/').to(pipeline.id).emit('run', { runId: pipeline.id, output: message, files });
-                      Object.keys(remoteClients).forEach((key) => {
-                        if (clients.includes(remoteClients[key].socketId)) {
-                          files.forEach((file) => {
-                            sendFile(
-                              remoteClients[key].socket,
-                              path.join(activePipelines[pipeline.id].transferDirectory, file),
-                              {
-                                id: clientId,
-                                file,
-                                runId: pipeline.id,
-                              }
-                            );
-                          });
-                        }
-                      });
-                    } else {
-                      io.of('/').to(pipeline.id).emit('run', { runId: pipeline.id, output: message });
-                    }
-                  });
-              });
+              readdir(activePipelines[pipeline.id].transferDirectory)
+                .then((files) => {
+                  if (files && files.length !== 0) {
+                    clientPublish(
+                      activePipelines[pipeline.id].clients,
+                      {
+                        runId: pipeline.id, output: message, files, iteration: messageIteration,
+                      }
+                    );
+                    activePipelines[pipeline.id].clients.forEach((key) => {
+                      if (remoteClients[key]) {
+                        files.forEach((file) => {
+                          sendFile(
+                            remoteClients[key].socket,
+                            path.join(activePipelines[pipeline.id].transferDirectory, file),
+                            {
+                              id: clientId,
+                              file,
+                              runId: pipeline.id,
+                            }
+                          );
+                        });
+                      }
+                    });
+                  } else {
+                    clientPublish(
+                      activePipelines[pipeline.id].clients,
+                      { runId: pipeline.id, output: message, iteration: messageIteration }
+                    );
+                  }
+                });
             }
           // local client
           } else {
             if (message instanceof Error) { // eslint-disable-line no-lonely-if
-              socket.emit('run', { id: clientId, runId: pipeline.id, error: message });
+              mqtCon.publish(
+                'run',
+                JSON.stringify({ id: clientId, runId: pipeline.id, error: message }),
+                { qos: 1 },
+                err => logger.error(err)
+              );
             } else {
               return readdir(activePipelines[pipeline.id].transferDirectory)
                 .then((files) => {
@@ -614,9 +705,18 @@ module.exports = {
                 }).then((files) => {
                   if (files && files.length !== 0) {
                     logger.debug('############# Local client sending out data with files');
-                    socket.emit('run', {
-                      id: clientId, runId: pipeline.id, output: message, files,
-                    });
+                    mqtCon.publish(
+                      'run',
+                      JSON.stringify({
+                        id: clientId,
+                        runId: pipeline.id,
+                        output: message,
+                        files,
+                        iteration: messageIteration,
+                      }),
+                      { qos: 1 },
+                      err => logger.error(err)
+                    );
                     files.forEach((file) => {
                       sendFile(
                         socket,
@@ -630,14 +730,26 @@ module.exports = {
                     });
                   } else {
                     logger.debug('############# Local client sending out data');
-                    socket.emit('run', { id: clientId, runId: pipeline.id, output: message });
+                    mqtCon.publish(
+                      'run',
+                      JSON.stringify({
+                        id: clientId,
+                        runId: pipeline.id,
+                        output: message,
+                        iteration: messageIteration,
+                      }),
+                      { qos: 1 },
+                      err => logger.error(err)
+                    );
                   }
                 });
             }
           }
         };
 
-        const remoteHandler = ({ input, noop, transmitOnly }) => {
+        const remoteHandler = ({
+          input, noop, transmitOnly, iteration,
+        }) => {
           let proxRes;
           let proxRej;
 
@@ -655,7 +767,7 @@ module.exports = {
             if (transmitOnly) {
               proxRes();
             }
-            communicate(activePipelines[runId].pipeline, input);
+            communicate(activePipelines[runId].pipeline, input, iteration);
             activePipelines[runId].state = 'running';
           } else if (activePipelines[runId].state === 'pre-pipeline') {
             const waitingOn = waitingOnForRun(runId);
