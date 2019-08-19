@@ -163,7 +163,10 @@ module.exports = {
               break;
             case 'remote':
               setStateProp('state', controllerState.mode === 'remote' ? 'waiting on local users' : 'waiting on central node');
-              return remoteHandler({ input: controllerState.currentOutput })
+              return remoteHandler({
+                input: controllerState.currentOutput,
+                iteration: controllerState.iteration,
+              })
                 .then((output) => {
                   setStateProp('state', 'finished remote iteration');
                   controllerState.currentOutput = {
@@ -191,7 +194,11 @@ module.exports = {
               setStateProp('state', 'waiting on local users');
               // we want the success output, grabbing the last currentOutput is fine
               // Note that input arg === controllerState.currentOutput.output at this point
-              return remoteHandler({ input: controllerState.currentOutput, transmitOnly: true })
+              return remoteHandler({
+                input: controllerState.currentOutput,
+                transmitOnly: true,
+                iteration: controllerState.iteration,
+              })
                 .then(() => {
                   setStateProp('state', 'finished final remote iteration');
                   cb(input);
