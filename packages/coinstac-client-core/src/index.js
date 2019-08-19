@@ -72,6 +72,9 @@ class CoinstacClient {
       remoteProtocol: opts.pipelineWSServer.protocol,
       remotePathname: opts.pipelineWSServer.pathname,
       remoteURL: opts.pipelineWSServer.hostname,
+      mqttRemotePort: opts.mqttServer.port,
+      mqttRemoteProtocol: opts.mqttServer.protocol,
+      mqttRemoteURL: opts.mqttServer.hostname,
     });
   }
 
