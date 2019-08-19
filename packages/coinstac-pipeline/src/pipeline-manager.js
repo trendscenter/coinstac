@@ -22,8 +22,8 @@ winston.loggers.add('pipeline', {
     new winston.transports.Console({ format: winston.format.cli() }),
   ],
 });
-const logger = winston.loggers.get('pipeline');
-logger.level = process.LOGLEVEL ? process.LOGLEVEL : 'info';
+const defaultLogger = winston.loggers.get('pipeline');
+defaultLogger.level = process.LOGLEVEL ? process.LOGLEVEL : 'info';
 
 const Pipeline = require('./pipeline');
 
@@ -42,6 +42,7 @@ module.exports = {
     authPlugin,
     authOpts,
     clientId,
+    logger,
     operatingDirectory = './',
     mode,
     remotePathname = '',
@@ -54,6 +55,7 @@ module.exports = {
     let io;
     let socket;
     const remoteClients = {};
+    logger = logger || defaultLogger;
     // TODO: const missedCache = {};
 
     const waitingOnForRun = (runId) => {
@@ -110,7 +112,7 @@ module.exports = {
         socket.emit('hello', { status: 'connected' });
 
         socket.on('register', (data) => {
-          logger.silly(`############ REGESTERED CLIENT ${data.id}`);
+          defaultLogger.silly(`############ REGESTERED CLIENT ${data.id}`);
           if (!remoteClients[data.id]) {
             remoteClients[data.id] = {};
           }
@@ -121,7 +123,7 @@ module.exports = {
         });
 
         socket.on('run', (data) => {
-          logger.silly(`############ RECEIVED CLIENT DATA: ${data.id}`);
+          defaultLogger.silly(`############ RECEIVED CLIENT DATA: ${data.id}`);
           // client run started before remote
           if (!activePipelines[data.runId]) {
             activePipelines[data.runId] = {
@@ -170,7 +172,7 @@ module.exports = {
 
                   if (waitingOn.length === 0) {
                     activePipelines[data.runId].state = 'received all clients data';
-                    logger.silly('Received all client data');
+                    defaultLogger.silly('Received all client data');
                     activePipelines[data.runId].remote.resolve({
                       output: aggregateRun(data.runId),
                     });
@@ -217,7 +219,7 @@ module.exports = {
 
                   if (waitingOnForRun(data.runId).length === 0) {
                     activePipelines[data.runId].state = 'received all client data';
-                    logger.silly('Received all client data');
+                    defaultLogger.silly('Received all client data');
                     activePipelines[data.runId].remote.resolve(
                       { output: aggregateRun(data.runId) }
                     );
@@ -402,7 +404,7 @@ module.exports = {
               activePipelines[pipeline.id].remote.reject(runError);
               io.of('/').to(pipeline.id).emit('run', { runId: pipeline.id, error: runError });
             } else {
-              logger.silly('############ REMOTE OUT');
+              defaultLogger.silly('############ REMOTE OUT');
               io.of('/').in(pipeline.id).clients((error, clients) => {
                 if (error) throw error;
                 readdir(activePipelines[pipeline.id].transferDirectory)
