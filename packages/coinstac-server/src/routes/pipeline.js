@@ -11,6 +11,9 @@ this.remotePipelineManager = PipelineManager.create({
   mode: 'remote',
   clientId: 'remote',
   operatingDirectory: path.resolve(config.operatingDirectory, 'coinstac'),
+  mqttRemotePort: config.mqttServer.port,
+  mqttRemoteProtocol: config.mqttServer.protocol,
+  mqttRemoteURL: config.mqttServer.hostname,
 });
 
 const authenticateServer = () => {
