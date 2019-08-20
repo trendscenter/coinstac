@@ -2,7 +2,7 @@
 const PipelineManager = require('coinstac-pipeline');
 const path = require('path');
 const axios = require('axios');
-const config = require('../../config/default');
+const config = require('../config');
 const graphqlSchema = require('coinstac-graphql-schema');
 const { pullImagesFromList, pruneImages } = require('coinstac-docker-manager');
 const dbmap = require('/etc/coinstac/cstacDBMap'); // eslint-disable-line import/no-absolute-path, import/no-unresolved
