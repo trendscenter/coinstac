@@ -16,5 +16,11 @@
     "pathname": "",
     "port": "3300",
     "protocol": "http:"
+  },
+  "mqttServer": {
+    "hostname": "localhost",
+    "pathname": "",
+    "port": "1883",
+    "protocol": "mqtt:"
   }
 }
