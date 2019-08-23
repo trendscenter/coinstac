@@ -14,7 +14,6 @@ const ss = require('socket.io-stream');
 
 const readdir = promisify(fs.readdir);
 const writeFile = promisify(fs.writeFile);
-const readFile = promisify(fs.readFile);
 const Emitter = require('events');
 const winston = require('winston');
 const { createReadStream, createWriteStream } = require('fs');
@@ -45,21 +44,6 @@ const sendFile = (socket, filePath, data) => {
   ss(socket).emit('file', stream, data);
   fsStream.pipe(stream);
 };
-
-// const sendFile = (socket, {
-//   channel, clientId, filePath, data, file,
-// }) => {
-//   const fsStream = createReadStream(filePath);
-//   const payload = [channel, clientId, filePath, file].reduce((memo, header) => {
-//     const p = Buffer.from(header)
-//     const h = Buffer.alloc(2).writhUInt16(p.length);
-//     return memo.concat([h, p]);
-//   }, Buffer.alloc(0))
-//
-//   const stream = ss.createStream();
-//   ss(socket).emit('file', stream, data);
-//   fsStream.pipe(stream);
-// };
 
 module.exports = {
 
@@ -95,7 +79,12 @@ module.exports = {
     let serverMqt;
     const remoteClients = {};
     logger = logger || defaultLogger;
-    // TODO: const missedCache = {};
+
+    const clientPublish = (clientList, data) => {
+      clientList.forEach((client) => {
+        serverMqt.publish(`${client}-run`, JSON.stringify(data), { qos: 1 }, err => logger.error(err));
+      });
+    };
 
     const waitingOnForRun = (runId) => {
       // logger.silly('Remote client state:');
@@ -171,7 +160,7 @@ module.exports = {
               };
             }
             if (!remoteClients[data.id]) {
-              // return socket.emit('run', { runId: data.runId, error: new Error('Remote has no such pipeline run') });
+              return serverMqt.publish(`${data.id}-run`, { runId: data.runId, error: new Error('Remote has no such pipeline run') });
             }
             if (activePipelines[data.runId].state === 'pre-pipeline' && remoteClients[data.id][data.runId] === undefined) {
               remoteClients[data.id] = Object.assign(
@@ -339,42 +328,6 @@ module.exports = {
             client.error = reason;
           }
         });
-        // /**
-        //  * Pipeline state socket listener
-        //  */
-        // socket.on('state', (data) => {
-        //   logger.silly(`Returned state: ${JSON.stringify(data)}`);
-        //   const client = remoteClients[data.id][data.runId];
-        //   client.stateQueried = false;
-        //   logger.silly('Retransmit debug:');
-        //   logger.silly(`${activePipelines[data.runId].pipeline.currentState.controllerState}`);
-        //   logger.silly(`${activePipelines[data.runId].pipeline.currentState.currentIteration}`);
-        //   logger.silly(`${client.state.retransmitting}`);
-        //   if (data.state.controllerState === 'waiting on central node'
-        //   && activePipelines[data.runId].pipeline.currentState.controllerState === 'waiting on local users'
-        //   && activePipelines[data.runId].pipeline.currentState.currentIteration
-        //   === data.state.currentIteration - 1
-        //   && (client && client.state.retransmitting
-        //     ? (Date.now() - client.state.retransmitTime > 60000) : true)) {
-        //     let files = [];
-        //     if (client.files) {
-        //       files = client.files.expected.reduce((memo, file) => {
-        //         if (![...client.files.processing, ...client.files.received].includes(file)) {
-        //           memo.push(file);
-        //         }
-        //         return memo;
-        //       }, []);
-        //     }
-        //     const output = !client.currentOutput;
-        //     logger.error(`Asking client to retransmit: ${JSON.stringify({ runId: data.runId, files, output })}`);
-        //     remoteClients[data.id].socket.emit('retransmit', { runId: data.runId, files, output });
-        //     client.state = Object.assign(
-        //       {},
-        //       client.state,
-        //       { retransmitting: true, retransmitTime: Date.now() }
-        //     );
-        //   }
-        // });
       };
 
       if (authPlugin) {
@@ -383,32 +336,6 @@ module.exports = {
       } else {
         io.on('connection', socketServer);
       }
-      // /**
-      //  * Long poll backup for run data
-      //  */
-      // setInterval(() => {
-      //   Object.keys(activePipelines).forEach((runId) => {
-      //     waitingOnForRun(runId).forEach((clientId) => {
-      //       const clientRun = remoteClients[clientId][runId];
-      //       // we have everything some files are just processing
-      //       if (activePipelines[runId].pipeline.currentState.controllerState === 'waiting on local users'
-      //         && clientRun.files && clientRun.currentOutput && clientRun.files.expected
-      //         .every(e => [
-      //           ...clientRun.files.received,
-      //           ...clientRun.files.processing,
-      //         ].includes(e))) {
-      //         return;
-      //       }
-      //       if (remoteClients[clientId].socket
-      //         && remoteClients[clientId].status !== 'disconnected'
-      //         && clientRun.stateQueried === false
-      //       ) {
-      //         logger.silly(`Asking client state: ${clientId}`);
-      //         remoteClients[clientId].socket.emit('state', { runId });
-      //       }
-      //     });
-      //   });
-      // }, 15000);
     } else {
       /** ***********************
        * Client side socket code
@@ -520,46 +447,6 @@ module.exports = {
           });
         }
       });
-      // /**
-      //  * Pipeline state socket listener
-      //  */
-      // socket.on('state', (data) => {
-      //   socket.emit('state', {
-      //     state: Object.assign(
-      //       {},
-      //       activePipelines[data.runId].pipeline.currentState,
-      //       activePipelines[data.runId].currentState
-      //     ),
-      //     id: clientId,
-      //     runId: data.runId,
-      //   });
-      // });
-      // /**
-      //  * Retransmit socket listener
-      //  */
-      // socket.on('retransmit', (data) => {
-      //   data.files.forEach((file) => {
-      //     sendFile(
-      //       socket,
-      //       path.join(activePipelines[data.runId].transferDirectory, file),
-      //       { runId: data.runId, file, id: clientId }
-      //     );
-      //   });
-      //   if (data.output) {
-      //     readFile(path.join(activePipelines[data.runId].systemDirectory, `${data.runId}`), 'utf8')
-      //       .then((output) => {
-      //         output = JSON.parse(output);
-      //         socket.emit('run', {
-      //           id: clientId,
-      //           runId: data.runId,
-      //           output: output.savedOutput,
-      //           files: output.savedFileList && output.savedFileList.length > 0
-      //             ? output.savedFileList : undefined,
-      //           boop: undefined,
-      //         });
-      //       });
-      //   }
-      // });
     }
 
 
@@ -626,11 +513,7 @@ module.exports = {
             remoteClients[client]
           );
         });
-        const clientPublish = (clientList, data) => {
-          clientList.forEach((client) => {
-            serverMqt.publish(`${client}-run`, JSON.stringify(data), { qos: 1 }, err => logger.error(err));
-          });
-        };
+
         /**
          * Communicate with the with node(s), clients to remote or remote to clients
          * @param  {Object} pipeline pipeline to preform the messaging on
