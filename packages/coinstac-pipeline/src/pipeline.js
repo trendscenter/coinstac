@@ -78,10 +78,10 @@ module.exports = {
       pipelineSteps,
       run(remoteHandler) {
         const packageState = () => {
-          const ctrs = this.pipelineSteps[this.currentStep].controllerState;
+          const troller = this.pipelineSteps[this.currentStep].controllerState;
           this.currentState = {
-            currentIteration: ctrs.iteration,
-            controllerState: ctrs.state,
+            currentIteration: troller.iteration,
+            controllerState: troller.state,
             pipelineStep: this.currentStep,
             mode: this.mode,
             totalSteps: this.pipelineSteps.length,
@@ -116,7 +116,6 @@ module.exports = {
                     mkdirp(dirname(fpLink))
                       .then(() => hardLink(fpOut, fpLink))
                       .then(() => {
-                        debugger
                         fpCleanup.push(fpLink);
                       })
                   );
@@ -133,7 +132,6 @@ module.exports = {
                       .then(() => hardLink(fpOut, fpLink))
                       .then(() => fpCleanup.push(fpLink))
                       .then(() => {
-                        debugger
                         fpCleanup.push(fpLink);
                       })
                   );

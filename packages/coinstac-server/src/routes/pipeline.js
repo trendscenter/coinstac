@@ -2,7 +2,7 @@
 const PipelineManager = require('coinstac-pipeline');
 const path = require('path');
 const axios = require('axios');
-const config = require('../../config/default');
+const config = require('../config');
 const graphqlSchema = require('coinstac-graphql-schema');
 const { pullImagesFromList, pruneImages } = require('coinstac-docker-manager');
 const dbmap = require('/etc/coinstac/cstacDBMap'); // eslint-disable-line import/no-absolute-path, import/no-unresolved
@@ -11,6 +11,9 @@ this.remotePipelineManager = PipelineManager.create({
   mode: 'remote',
   clientId: 'remote',
   operatingDirectory: path.resolve(config.operatingDirectory, 'coinstac'),
+  mqttRemotePort: config.mqttServer.port,
+  mqttRemoteProtocol: config.mqttServer.protocol,
+  mqttRemoteURL: config.mqttServer.hostname,
 });
 
 const authenticateServer = () => {
@@ -90,6 +93,7 @@ module.exports = [
                 stateEmitter.on('update', (data) => {
                   // TODO:  console most likely should be removed post proto development
                   // or made less noisy
+                  console.log('Server update:'); // eslint-disable-line no-console
                   console.log(data); // eslint-disable-line no-console
                   updateRunState(run.id, data);
                 });

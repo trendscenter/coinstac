@@ -1,10 +1,10 @@
 'use strict';
 
-const { test } = require('ava');
+import test from 'ava';
 const request = require('request-stream');
 const { createReadStream, readFileSync, unlink } = require('fs');
 const resolvePath = require('path').resolve;
-const unzip = require('unzip');
+const unzip = require('unzipper');
 const server = require('../server-http');
 
 test.before(() => {
@@ -34,7 +34,7 @@ test('test run route', (t) => {
       res.on('error', e => reject(e));
     });
 
-    const fsStream = createReadStream(resolvePath(__dirname, 'large.json'));
+    const fsStream = createReadStream(resolvePath(__dirname, 'large2.json'));
     const control = {
       command: 'node',
       args: [resolvePath(__dirname, 'check.js')],
@@ -55,7 +55,7 @@ test('test run route', (t) => {
     let outData = Buffer.alloc(0);
     let code = Buffer.alloc(0);
 
-    const orig = readFileSync(resolvePath(__dirname, './large.json'));
+    const orig = readFileSync(resolvePath(__dirname, './large2.json'));
     let data = Buffer.from(inData);
     while (outMatch !== -1 || errMatch !== -1 || codeMatch !== -1) {
       outMatch = data.indexOf('stdoutSTART\n');
@@ -83,7 +83,7 @@ test('test run route', (t) => {
 
 test.after.always('cleanup', () => {
   return new Promise((resolve, reject) => {
-    unlink(resolvePath(__dirname, './large.json'), (err) => {
+    unlink(resolvePath(__dirname, './large2.json'), (err) => {
       if (err) return reject(err);
       resolve();
     });

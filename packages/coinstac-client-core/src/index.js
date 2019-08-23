@@ -54,6 +54,7 @@ class CoinstacClient {
       || CoinstacClient.getDefaultAppDirectory();
 
     this.dockerManager = DockerManager;
+    this.dockerManager.setLogger(this.logger);
 
     /* istanbul ignore if */
     if (opts.logLevel) {
@@ -65,11 +66,15 @@ class CoinstacClient {
     this.pipelineManager = PipelineManager.create({
       mode: 'local',
       clientId: opts.userId,
+      logger: this.logger,
       operatingDirectory: path.join(this.appDirectory),
       remotePort: opts.pipelineWSServer.port,
       remoteProtocol: opts.pipelineWSServer.protocol,
       remotePathname: opts.pipelineWSServer.pathname,
       remoteURL: opts.pipelineWSServer.hostname,
+      mqttRemotePort: opts.mqttServer.port,
+      mqttRemoteProtocol: opts.mqttServer.protocol,
+      mqttRemoteURL: opts.mqttServer.hostname,
     });
   }
 
@@ -223,12 +228,12 @@ class CoinstacClient {
           const pathsep = new RegExp(`${escape(path.sep)}|:`, 'g');
           linkPromises.push(
             linkAsync(filesArray[i], path.resolve(this.appDirectory, this.clientId, runId, filesArray[i].replace(pathsep, '-')))
-            .catch((e) => {
+              .catch((e) => {
               // permit dupes
-              if (e.code && e.code !== 'EEXIST') {
-                throw e;
-              }
-            })
+                if (e.code && e.code !== 'EEXIST') {
+                  throw e;
+                }
+              })
           );
         }
 

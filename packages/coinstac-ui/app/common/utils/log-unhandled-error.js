@@ -72,19 +72,16 @@ const unhandledBootLogger = () => {
 module.exports = function logUnhandledError(opts, logr) {
   opts = opts || {};
   const errorLogger = unhandledBootLogger();
+  const logger = logr || errorLogger || unfinishedBootLog;
   return (err) => {
-    const logger = logr || unfinishedBootLog;
     if (logger === unfinishedBootLog) {
-      errorLogger('error occurred before application had finished booting');
-      errorLogger(err);
-      errorLogger(err.stack);
+      logger('error occurred before application had finished booting');
+      logger(err);
+      logger(err.stack);
       process.exit(1);
-    } else if (opts.processType === 'render') {
-      errorLogger(err);
-      errorLogger(err.stack);
     } else {
-      errorLogger(err);
-      errorLogger(err.stack);
+      logger(err);
+      logger(err.stack);
     }
 
     throw err;
