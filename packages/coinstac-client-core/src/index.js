@@ -25,11 +25,6 @@ const PipelineManager = require('coinstac-pipeline');
 /**
  * Create a user client for COINSTAC
  * @example <caption>construction and initialization</caption>
- * const client = new CoinstacClient();
- * client.initialize((err) => {
- *   if (err) { throw err; }
- *   client.logger.info('Success! I’ve initialized!');
- * });
  *
  * @class
  * @constructor
@@ -49,6 +44,7 @@ class CoinstacClient {
     if (!opts || !(opts instanceof Object)) {
       throw new TypeError('coinstac-client requires configuration opts');
     }
+    this.options = opts;
     this.logger = opts.logger || new Logger({ transports: [new Console()] });
     this.appDirectory = opts.appDirectory
       || CoinstacClient.getDefaultAppDirectory();
@@ -62,20 +58,25 @@ class CoinstacClient {
     }
 
     this.clientId = opts.userId;
+  }
 
-    this.pipelineManager = PipelineManager.create({
+  initialize() {
+    return PipelineManager.create({
       mode: 'local',
-      clientId: opts.userId,
+      clientId: this.options.userId,
       logger: this.logger,
       operatingDirectory: path.join(this.appDirectory),
-      remotePort: opts.pipelineWSServer.port,
-      remoteProtocol: opts.pipelineWSServer.protocol,
-      remotePathname: opts.pipelineWSServer.pathname,
-      remoteURL: opts.pipelineWSServer.hostname,
-      mqttRemotePort: opts.mqttServer.port,
-      mqttRemoteProtocol: opts.mqttServer.protocol,
-      mqttRemoteURL: opts.mqttServer.hostname,
-    });
+      remotePort: this.options.pipelineWSServer.port,
+      remoteProtocol: this.options.pipelineWSServer.protocol,
+      remotePathname: this.options.pipelineWSServer.pathname,
+      remoteURL: this.options.pipelineWSServer.hostname,
+      mqttRemotePort: this.options.mqttServer.port,
+      mqttRemoteProtocol: this.options.mqttServer.protocol,
+      mqttRemoteURL: this.options.mqttServer.hostname,
+    })
+      .then((manager) => {
+        this.pipelineManager = manager;
+      });
   }
 
   /**
