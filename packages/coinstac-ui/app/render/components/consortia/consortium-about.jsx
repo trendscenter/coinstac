@@ -11,7 +11,7 @@ import TableRow from '@material-ui/core/TableRow';
 import { withStyles } from '@material-ui/core/styles';
 import DeleteIcon from '@material-ui/icons/Delete';
 import PropTypes from 'prop-types';
-import update from 'immutability-helper';
+import { ValidatorForm, TextValidator } from 'react-material-ui-form-validator';
 import Select from '../common/react-select';
 import memoize from 'memoize-one';
 import MemberAvatar from '../common/member-avatar';
@@ -124,7 +124,7 @@ class ConsortiumAbout extends Component {
     const userOptions = this.filterSelectedUsers(allUsers, consortiumUsers);
 
     return (
-      <form onSubmit={saveConsortium}>
+      <ValidatorForm ref="form" onSubmit={saveConsortium} instantValidate noValidate>
         <div className={classes.tabTitleContainer}>
           <Typography variant="h5">
             About Consortium
@@ -142,15 +142,19 @@ class ConsortiumAbout extends Component {
             )
           }
         </div>
-        <TextField
+        <TextValidator
           id="name"
           label="Name"
           fullWidth
-          required
           disabled={!owner}
           value={consortium.name}
-          onChange={this.handleTextFieldChange('name')}
+          name="name"
+          required
+          validators={['required']}
+          errorMessages={['Consortium name is required']}
           className={classes.textField}
+          withRequiredValidator
+          onChange={this.handleTextFieldChange('name')}
         />
         <TextField
           id="description"
@@ -158,8 +162,8 @@ class ConsortiumAbout extends Component {
           fullWidth
           disabled={!owner}
           value={consortium.description}
-          onChange={this.handleTextFieldChange('description')}
           className={classes.textField}
+          onChange={this.handleTextFieldChange('description')}
         />
         {
           consortium.id &&
@@ -246,7 +250,7 @@ class ConsortiumAbout extends Component {
             </Table>
           </div>
         }
-      </form>
+      </ValidatorForm>
     );
   }
 }
