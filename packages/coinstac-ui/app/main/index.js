@@ -105,7 +105,7 @@ loadConfig()
     });
 
     ipcPromise.on('login-init', ({ userId, appDirectory }) => {
-      return new Promise(res => res(configureCore(config, logger, userId, appDirectory)))
+      return configureCore(config, logger, userId, appDirectory)
         .then((c) => {
           core = c;
           return upsertCoinstacUserDir(core);
