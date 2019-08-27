@@ -124,7 +124,7 @@ class ConsortiumAbout extends Component {
     const userOptions = this.filterSelectedUsers(allUsers, consortiumUsers);
 
     return (
-      <ValidatorForm ref="form" onSubmit={saveConsortium} instantValidate noValidate>
+      <ValidatorForm onSubmit={saveConsortium} instantValidate noValidate>
         <div className={classes.tabTitleContainer}>
           <Typography variant="h5">
             About Consortium
