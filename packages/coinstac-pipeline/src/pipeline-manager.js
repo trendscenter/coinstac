@@ -39,7 +39,7 @@ module.exports = {
    *                                              for results and other file IO
    * @return {Object}                          A pipeline manager
    */
-  create({
+  async create({
     clientId,
     logger,
     operatingDirectory = './',
@@ -254,7 +254,15 @@ module.exports = {
           }
         });
       });
-      app.listen(remotePort);
+      await new Promise((resolve) => {
+        const server = app.listen(remotePort, () => {
+          logger.silly(`File server up on port ${remotePort}`);
+          resolve();
+        });
+        server.on('error', (e) => {
+          logger.error(`File server error: ${e}`);
+        });
+      });
 
       /**
        * mqtt server-side setup
