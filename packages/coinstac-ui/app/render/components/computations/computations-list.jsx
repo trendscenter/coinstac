@@ -98,8 +98,6 @@ class ComputationsList extends Component { // eslint-disable-line
     const { auth: { user }, docker, classes } = this.props;
     const { activeComp } = this.state;
 
-    console.log(computations)
-
     return (
       <div className={classes.computationsContainer}>
         {
