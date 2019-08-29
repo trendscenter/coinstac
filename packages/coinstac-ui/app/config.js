@@ -29,9 +29,9 @@ const conf = convict({
     port: '443',
     protocol: 'wss:',
   },
-  pipelineWSServer: {
+  fileServer: {
     hostname: 'coinstac.rs.gsu.edu',
-    pathname: '',
+    pathname: '/transfer',
     port: '443',
     protocol: 'https:',
   },

@@ -8,6 +8,7 @@ const mkdirp = promisify(require('mkdirp'));
 const rimraf = promisify(require('rimraf'));
 const path = require('path');
 const http = require('http');
+const https = require('https');
 const FormData = require('form-data');
 
 const readdir = promisify(fs.readdir);
@@ -44,7 +45,7 @@ module.exports = {
     logger,
     operatingDirectory = './',
     mode,
-    remotePathname = 'transfer',
+    remotePathname = '/transfer',
     remotePort = 3300,
     remoteProtocol = 'http:',
     mqttRemotePort = 1883,
@@ -59,6 +60,7 @@ module.exports = {
     let mqtCon;
     let serverMqt;
     const remoteClients = {};
+    const request = remoteProtocol.trim() === 'https:' ? https : http;
     logger = logger || defaultLogger;
 
     /**
@@ -69,8 +71,8 @@ module.exports = {
       return new Promise((resolve, reject) => {
         setTimeout(() => {
           if (method === 'get') {
-            http.get(
-              `${remoteProtocol}//${remoteURL}:${remotePort}/${remotePathname}?id=${encodeURIComponent(clientId)}&runId=${encodeURIComponent(runId)}&file=${encodeURIComponent(file)}`,
+            request.get(
+              `${remoteProtocol}//${remoteURL}:${remotePort}${remotePathname}?id=${encodeURIComponent(clientId)}&runId=${encodeURIComponent(runId)}&file=${encodeURIComponent(file)}`,
               (res) => {
                 res.pipe(fs.createWriteStream(
                   path.join(activePipelines[runId].baseDirectory, file)
@@ -92,7 +94,7 @@ module.exports = {
             form.append('file', fs.createReadStream(
               path.join(activePipelines[runId].transferDirectory, file)
             ));
-            form.submit(`${remoteProtocol}//${remoteURL}:${remotePort}/${remotePathname}`,
+            form.submit(`${remoteProtocol}//${remoteURL}:${remotePort}${remotePathname}`,
               (err, res) => {
                 if (err) return reject(err);
                 res.resume();
@@ -101,7 +103,7 @@ module.exports = {
                     return reject(new Error('File post connection broken'));
                   }
                   if (res.statusCode !== 200) {
-                    return reject(new Error(`File get error: ${res.statusCode} ${res.statusMessage}`));
+                    return reject(new Error(`File post error: ${res.statusCode} ${res.statusMessage}`));
                   }
                   resolve();
                 });
