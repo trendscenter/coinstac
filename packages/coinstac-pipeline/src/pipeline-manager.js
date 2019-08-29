@@ -7,6 +7,8 @@ const { promisify } = require('util');
 const mkdirp = promisify(require('mkdirp'));
 const rimraf = promisify(require('rimraf'));
 const path = require('path');
+const http = require('http');
+const FormData = require('form-data');
 
 const readdir = promisify(fs.readdir);
 const writeFile = promisify(fs.writeFile);
@@ -14,7 +16,6 @@ const Emitter = require('events');
 const winston = require('winston');
 const express = require('express');
 const multer = require('multer');
-const request = require('request');
 
 winston.loggers.add('pipeline', {
   level: 'info',
@@ -26,9 +27,6 @@ const defaultLogger = winston.loggers.get('pipeline');
 defaultLogger.level = process.LOGLEVEL ? process.LOGLEVEL : 'info';
 
 const Pipeline = require('./pipeline');
-
-// helpers
-
 
 module.exports = {
 
@@ -46,7 +44,7 @@ module.exports = {
     logger,
     operatingDirectory = './',
     mode,
-    remotePathname = '',
+    remotePathname = 'transfer',
     remotePort = 3300,
     remoteProtocol = 'http:',
     mqttRemotePort = 1883,
@@ -67,65 +65,89 @@ module.exports = {
      * exponential backout for GET
      * consider file batching here if server load is too high
      */
-    const exponentialRequest = (method, factor, clientId, runId, file) => {
+    const exponentialRequest = (method, factor, file, clientId, runId) => {
       return new Promise((resolve, reject) => {
         setTimeout(() => {
           if (method === 'get') {
-            request
-              .get(`${remoteProtocol}//${remoteURL}:${remotePort}${remotePathname}?id=${clientId}?runId=${runId}&file=${file}`)
-              .on('error', (err) => {
-                reject(err);
-              })
-              .pipe(fs.createWriteStream(
-                path.join(activePipelines[runId].transferDirectory, file)
-              ))
-              .on('finished', () => resolve());
+            http.get(
+              `${remoteProtocol}//${remoteURL}:${remotePort}/${remotePathname}?id=${encodeURIComponent(clientId)}&runId=${encodeURIComponent(runId)}&file=${encodeURIComponent(file)}`,
+              (res) => {
+                res.pipe(fs.createWriteStream(
+                  path.join(activePipelines[runId].baseDirectory, file)
+                ));
+
+                res.on('end', () => {
+                  resolve();
+                });
+                res.on('error', (e) => {
+                  reject(e);
+                });
+              }
+            );
           } else if (method === 'post') {
-            request
-              .post({
-                url: `${remoteProtocol}//${remoteURL}:${remotePort}${remotePathname}?id=${clientId}?runId=${runId}&file=${file}`,
-                formData: {
-                  fileName: file,
-                  clientId,
-                  runId,
-                  file: fs.readWriteStream(
-                    path.join(activePipelines[runId].transferDirectory, file)
-                  ),
-                },
-              }, (err, res) => {
+            const form = new FormData();
+            form.append('fileName', file);
+            form.append('clientId', clientId);
+            form.append('runId', runId);
+            form.append('file', fs.createReadStream(
+              path.join(activePipelines[runId].transferDirectory, file)
+            ));
+            form.submit(`${remoteProtocol}//${remoteURL}:${remotePort}/${remotePathname}`,
+              (err, res) => {
                 if (err) return reject(err);
-                resolve(res);
+                res.resume();
+                res.on('end', () => {
+                  if (!res.complete) {
+                    return reject(new Error('File post connection broken'));
+                  }
+                  if (res.statusCode !== 200) {
+                    return reject(new Error(`File get error: ${res.statusCode} ${res.statusMessage}`));
+                  }
+                  resolve();
+                });
+                res.on('error', (e) => {
+                  reject(e);
+                });
               });
           }
-        }, 100 * factor);
+        }, 500 * factor);
       });
     };
 
     /**
-     * [serverFile description]
-     * @param  {[type]} method   [description]
-     * @param  {[type]} limit    [description]
-     * @param  {[type]} files    [description]
-     * @param  {[type]} clientId [description]
-     * @param  {[type]} runId    [description]
-     * @return {[type]}          [description]
+     * POST or GET a file relating to a run from the server
+     * @param  {string} method   POST or GET
+     * @param  {integer} limit   retry limit for an unreachable host
+     * @param  {Array} files     files to send or recieve
+     * @param  {string} clientId this clients id
+     * @param  {string} runId    the run context for the files
+     * @return {Promise}         Promise when the files are received,
+     *                           the action fails besides ECONNREFUSED,
+     *                           or the limit is reached
      */
     const serverFile = (method, limit, files, clientId, runId) => {
       return Promise.all(files.reduce((memo, file) => {
-        memo.push(async () => {
-          let retryLimit = limit;
+        memo.push((async () => {
+          let retryLimit = 0;
+          let success = false;
           // retry 1000 times w/ backout
-          while (retryLimit < 1000) {
+          while (retryLimit < limit) {
             try {
-              await exponentialRequest(method, retryLimit, clientId, runId, file); // eslint-disable-line no-await-in-loop, max-len
+              await exponentialRequest(method, retryLimit, file, clientId, runId); // eslint-disable-line no-await-in-loop, max-len
+
+              success = true;
               break;
             } catch (e) {
-              retryLimit += 1;
-              logger.silly(`Retrying file request: ${file}`);
-              logger.silly(`File request failed with: ${e.name}`);
+              if (e.code && e.code === 'ECONNREFUSED') {
+                retryLimit += 1;
+                logger.silly(`Retrying file request: ${file}`);
+                logger.silly(`File request failed with: ${e.name}`);
+              }
+              throw e;
             }
           }
-        });
+          if (!success) throw new Error('Service down, file retry limit reached');
+        })());
         return memo;
       }, []));
     };
@@ -133,7 +155,7 @@ module.exports = {
 
     const clientPublish = (clientList, data) => {
       clientList.forEach((client) => {
-        serverMqt.publish(`${client}-run`, JSON.stringify(data), { qos: 1 }, err => logger.error(`Mqtt error: ${err.name}`));
+        serverMqt.publish(`${client}-run`, JSON.stringify(data), { qos: 1 }, (err) => { if (err) logger.error(`Mqtt error: ${err}`); });
       });
     };
 
@@ -166,7 +188,7 @@ module.exports = {
         if (client[runId]) {
           memo[id] = client[runId].currentOutput;
           client[runId].currentOutput = undefined;
-          client[runId].files = undefined;
+          client[runId].files = { received: [], expected: [] };
         }
         return memo;
       }, {});
@@ -179,14 +201,17 @@ module.exports = {
        */
       const storage = multer.diskStorage({
         destination: (req, file, cb) => {
-          debugger
-          mkdirp(path.join(activePipelines[req.runId].baseDirectory, req.id))
+          const fp = path.join(activePipelines[req.body.runId].baseDirectory, req.body.clientId);
+          mkdirp(fp)
             .then(() => {
-              cb(null, path.join(activePipelines[req.runId].baseDirectory, req.id, file));
+              cb(
+                null,
+                fp
+              );
             });
         },
         filename: (req, file, cb) => {
-          cb(null, req.file);
+          cb(null, req.body.fileName);
         },
       });
 
@@ -194,11 +219,40 @@ module.exports = {
       const app = express();
 
       app.post('/transfer', upload.single('file'), (req, res) => {
-        debugger
+        res.end();
+
+        // check to see if we can run
+        remoteClients[req.body.clientId][req.body.runId].files.received.push(req.body.fileName);
+        const waitingOn = waitingOnForRun(req.body.runId);
+        activePipelines[req.body.runId].currentState.waitingOn = waitingOn;
+        const stateUpdate = Object.assign(
+          {},
+          activePipelines[req.body.runId].pipeline.currentState,
+          activePipelines[req.body.runId].currentState
+        );
+        activePipelines[req.body.runId].stateEmitter
+          .emit('update', stateUpdate);
+        logger.silly(JSON.stringify(stateUpdate));
+        if (waitingOn.length === 0) {
+          activePipelines[req.body.runId].state = 'received all clients data';
+          logger.silly('Received all client data');
+          // clear transfer and start run
+          activePipelines[req.body.runId].remote.resolve(
+            rimraf(path.join(activePipelines[req.body.runId].transferDirectory, '*'))
+              .then(() => ({ output: aggregateRun(req.body.runId) }))
+          );
+        }
       });
       app.get('/transfer', (req, res) => {
-        debugger
-        res.sendFile(path.join(`${activePipelines[req.rundId]}`, `${req.file}`));
+        const fn = path.join(`${activePipelines[req.query.runId].transferDirectory}`, `${req.query.file}`);
+
+        fs.exists(fn, (exists) => {
+          if (exists) {
+            res.download(fn);
+          } else {
+            res.sendStatus(404);
+          }
+        });
       });
       app.listen(remotePort);
 
@@ -210,10 +264,10 @@ module.exports = {
       serverMqt.on('connect', () => {
         logger.silly('mqtt connection up');
         serverMqt.subscribe('register', { qos: 1 }, (err) => {
-          if (err) logger.error(`Mqtt error: ${err.name}`);
+          if (err) logger.error(`Mqtt error: ${err}`);
         });
         serverMqt.subscribe('run', { qos: 1 }, (err) => {
-          if (err) logger.error(`Mqtt error: ${err.name}`);
+          if (err) logger.error(`Mqtt error: ${err}`);
         });
       });
 
@@ -235,7 +289,7 @@ module.exports = {
             if (activePipelines[data.runId].state === 'pre-pipeline' && remoteClients[data.id][data.runId] === undefined) {
               remoteClients[data.id] = Object.assign(
                 {
-                  [data.runId]: { state: {} },
+                  [data.runId]: { state: {}, files: { expected: [], received: [] } },
                 },
                 remoteClients[data.id]
               );
@@ -259,13 +313,7 @@ module.exports = {
                   }
                   remoteClients[data.id][data.runId].currentOutput = data.output.output;
                   if (data.files) {
-                    remoteClients[data.id][data.runId].files = remoteClients[data.id][data.runId].files ? // eslint-disable-line max-len, operator-linebreak
-                      Object.assign(
-                        {},
-                        remoteClients[data.id][data.runId].files,
-                        { expected: data.files }
-                      )
-                      : { expected: data.files, received: [], processing: [] };
+                    remoteClients[data.id][data.runId].files.expected.push(...data.files);
                   }
                   if (activePipelines[data.runId].state !== 'pre-pipeline') {
                     const waitingOn = waitingOnForRun(data.runId);
@@ -288,7 +336,10 @@ module.exports = {
                     }
                   }
                 } else {
-                  io.of('/').to(data.runId).emit('run', { runId: data.runId, error: activePipelines[data.runId].error });
+                  clientPublish(
+                    activePipelines[data.runId].clients,
+                    { runId: data.runId, error: activePipelines[data.runId].error }
+                  );
                 }
               } else {
                 const runError = Object.assign(
@@ -301,7 +352,10 @@ module.exports = {
                 );
                 activePipelines[data.runId].state = 'received client error';
                 activePipelines[data.runId].error = runError;
-                io.of('/').to(data.runId).emit('run', { runId: data.runId, error: runError });
+                clientPublish(
+                  activePipelines[data.runId].clients,
+                  { runId: data.runId, error: runError }
+                );
                 activePipelines[data.runId].remote.reject(runError);
               }
             }
@@ -316,7 +370,7 @@ module.exports = {
         logger.silly('mqtt connection up');
         mqtCon.subscribe(`${clientId}-register`, { qos: 1 }, (err) => {
           logger.silly('Client register request');
-          if (err) logger.error(`Mqtt error: ${err.name}`);
+          if (err) logger.error(`Mqtt error: ${err}`);
           mqtCon.publish(
             'register',
             JSON.stringify({ id: clientId, runs: Object.keys(activePipelines) }),
@@ -324,7 +378,7 @@ module.exports = {
           );
         });
         mqtCon.subscribe(`${clientId}-run`, { qos: 1 }, (err) => {
-          if (err) logger.error(`Mqtt error: ${err.name}`);
+          if (err) logger.error(`Mqtt error: ${err}`);
         });
       });
 
@@ -343,15 +397,33 @@ module.exports = {
               activePipelines[data.runId].state = 'received central node data';
               logger.silly('received central node data');
 
-              let preWork = Promise.resolve();
+              let preWork;
               if (data.files) {
-                preWork = serverFile('get', 1000, data.files, data.id, data.runId);
+                preWork = serverFile('get', 1000, data.files, clientId, data.runId);
               } else {
-                // clear transfer dir after we know its been transfered
-                activePipelines[data.runId].remote.resolve(
-                  rimraf(preWork.then(() => path.join(activePipelines[data.runId].transferDirectory, '*'))).then(() => data.output)
-                );
+                preWork = Promise.resolve();
               }
+              // clear transfer dir after we know its been transfered
+              preWork
+                .catch((e) => {
+                  mqtCon.publish(
+                    'run',
+                    JSON.stringify(
+                      {
+                        id: clientId,
+                        runId: data.runId,
+                        error: { stack: e.stack, message: e.message },
+                      }
+                    ),
+                    { qos: 1 },
+                    (err) => { if (err) logger.error(`Mqtt error: ${err}`); }
+                  );
+                  activePipelines[data.runId].remote.reject(e);
+                })
+                .then(() => {
+                  rimraf(path.join(activePipelines[data.runId].transferDirectory, '*'));
+                })
+                .then(() => activePipelines[data.runId].remote.resolve(data.output));
             } else if (data.error && activePipelines[data.runId]) {
               activePipelines[data.runId].state = 'received error';
               activePipelines[data.runId].remote.reject(Object.assign(new Error(), data.error));
@@ -421,7 +493,7 @@ module.exports = {
             {
               id: client,
               status: 'unregistered',
-              [runId]: { state: {}, stateQueried: false },
+              [runId]: { state: {}, files: { expected: [], received: [] } },
             },
             remoteClients[client]
           );
@@ -475,7 +547,7 @@ module.exports = {
                 'run',
                 JSON.stringify({ id: clientId, runId: pipeline.id, error: message }),
                 { qos: 1 },
-                err => logger.error(`Mqtt error: ${err.name}`)
+                (err) => { if (err) logger.error(`Mqtt error: ${err}`); }
               );
             } else {
               return readdir(activePipelines[pipeline.id].transferDirectory)
@@ -498,14 +570,30 @@ module.exports = {
                         iteration: messageIteration,
                       }),
                       { qos: 1 },
-                      err => logger.error(`Mqtt error: ${err.name}`)
+                      (err) => { if (err) logger.error(`Mqtt error: ${err}`); }
                     );
                     serverFile(
                       'post',
+                      100,
                       files,
                       clientId,
                       pipeline.id
-                    );
+                    ).catch((e) => {
+                      // files failed to send, bail
+                      logger.error(`Client file send error: ${e}`);
+                      mqtCon.publish(
+                        'run',
+                        JSON.stringify(
+                          {
+                            id: clientId,
+                            runId: pipeline.id,
+                            error: { stack: e.stack, message: e.message },
+                          }
+                        ),
+                        { qos: 1 },
+                        (err) => { if (err) logger.error(`Mqtt error: ${err}`); }
+                      );
+                    });
                   } else {
                     logger.debug('############# Local client sending out data');
                     mqtCon.publish(
@@ -517,7 +605,7 @@ module.exports = {
                         iteration: messageIteration,
                       }),
                       { qos: 1 },
-                      err => logger.error(`Mqtt error: ${err.name}`)
+                      (err) => { if (err) logger.error(`Mqtt error: ${err}`); }
                     );
                   }
                 });
