@@ -83,6 +83,26 @@ class FormLogin extends Component {
     this.setState({ openSetStartupDirectoryDialog: false });
   }
 
+  renderError = () => {
+    const { auth, classes } = this.props;
+
+    if (!auth.error) {
+      return null;
+    }
+
+    const errorMessage =
+      auth.error === 'Expired token'
+        ? 'Your login session has expired,<br/>please re-login'
+        : auth.error;
+
+    return (
+      <p
+        className={classNames(classes.bottomMargin, classes.error)}
+        dangerouslySetInnerHTML={{__html: errorMessage}}
+      />
+    );
+  }
+
   render() {
     const { auth, loading, classes } = this.props;
     const { username, password, saveLogin, openSetStartupDirectoryDialog } = this.state;
@@ -91,19 +111,12 @@ class FormLogin extends Component {
       <div className={classes.loginFormContainer}>
         <Paper className={classes.paper}>
           <form onSubmit={this.onSubmit}>
-            {
-              auth.error
-              && (
-                <p className={classNames(classes.bottomMargin, classes.error)}>
-                  <strong>Error!</strong> {auth.error}
-                </p>
-              )
-            }
+            {this.renderError()}
             {
               !auth.isApiVersionCompatible
               && (
                 <p className={classNames(classes.bottomMargin, classes.error)}>
-                  <strong>Error!</strong> This Coinstac version is not compatible with the API.
+                  This Coinstac version is not compatible with the API.
                 </p>
               )
             }
