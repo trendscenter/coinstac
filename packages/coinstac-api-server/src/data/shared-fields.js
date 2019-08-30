@@ -10,6 +10,7 @@ const schemaFields = {
     members: [ID]
     pipelines: [ID]
     results: [ID]
+    isPrivate: Boolean
   `,
   computationFields: `
     display: JSON
