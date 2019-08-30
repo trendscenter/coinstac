@@ -540,6 +540,7 @@ helperFunctions.getRethinkConnection()
         description: 'This consortia is for testing.',
         owners: ['author'],
         members: ['author'],
+        isPrivate: false,
       }).run(connection))
       .then(() => rethink.table('consortia').insert({
         id: 'test-cons-2',
@@ -548,6 +549,7 @@ helperFunctions.getRethinkConnection()
         description: 'This consortia is for testing too.',
         owners: ['test1'],
         members: ['author', 'test1'],
+        isPrivate: false,
       }).run(connection));
   })
   .then(() => helperFunctions.hashPassword('password'))

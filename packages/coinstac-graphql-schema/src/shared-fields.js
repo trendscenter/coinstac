@@ -32,6 +32,7 @@ const sharedFields = {
     tags
     members
     owners
+    isPrivate
   `,
   pipelineFields: `
     id

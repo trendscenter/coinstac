@@ -46,6 +46,7 @@ class ConsortiumTabs extends Component {
       activePipelineId: '',
       activeComputationInputs: [],
       tags: [],
+      isPrivate: false,
     };
 
     this.state = {
@@ -83,7 +84,7 @@ class ConsortiumTabs extends Component {
     if (nextProps.activeConsortium) {
       const { activeConsortium: { __typename, ...other } } = nextProps;
       const consortiumUsers = [];
-      if (this.props.routes[3].path !== 'new' || (this.props.routes[3].path === 'new' && this.state.consortium.id) ) {
+      if (this.props.routes[3].path !== 'new' || (this.props.routes[3].path === 'new' && this.state.consortium.id)) {
         nextProps.activeConsortium.owners.forEach(user => consortiumUsers
           .push({ id: user, owner: true, member: true }));
         nextProps.activeConsortium.members
@@ -176,6 +177,7 @@ class ConsortiumTabs extends Component {
 
   render() {
     const {
+      auth,
       users,
       params,
       addUserRole,
@@ -184,10 +186,10 @@ class ConsortiumTabs extends Component {
       consortia,
       classes,
     } = this.props;
-    const { user } = this.props.auth;
+    const { user } = auth;
     const { selectedTabIndex, consortium, consortiumUsers } = this.state;
 
-    const isEditingConsortium = !!this.state.consortium.id;
+    const isEditingConsortium = !!consortium.id;
 
     const title = isEditingConsortium
       ? 'Consortium Edit'
@@ -277,6 +279,8 @@ ConsortiumTabs.propTypes = {
   saveConsortium: PropTypes.func.isRequired,
   subscribeToConsortia: PropTypes.func,
   subscribeToUsers: PropTypes.func,
+  classes: PropTypes.object.isRequired,
+  users: PropTypes.array.isRequired,
 };
 
 function mapStateToProps({ auth }) {
