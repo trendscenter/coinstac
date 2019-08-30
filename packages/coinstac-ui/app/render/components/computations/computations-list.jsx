@@ -307,6 +307,7 @@ class ComputationsList extends Component { // eslint-disable-line
           deleteItem={this.removeComputation}
           itemName="computation"
           show={this.state.showModal}
+          warningMessage="This action will delete the computation, invalidating all pipelines that are currently using it."
         />
       </div>
     );
