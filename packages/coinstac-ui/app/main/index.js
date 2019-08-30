@@ -104,6 +104,14 @@ loadConfig()
       logger[type](`process: render - ${JSON.stringify(message)}`);
     });
 
+    /**
+     * IPC Listener to notify token expire
+     * @param {String} message The message about expire
+     */
+    ipcMain.on('token-expired', (event, data) => {
+      mainWindow.webContents.send('token-expired', data);
+    });
+
     ipcPromise.on('login-init', ({ userId, appDirectory }) => {
       return new Promise(res => res(configureCore(config, logger, userId, appDirectory)))
         .then((c) => {
