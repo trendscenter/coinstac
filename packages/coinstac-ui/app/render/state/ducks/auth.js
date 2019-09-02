@@ -157,8 +157,8 @@ export const signUp = applyAsyncLoading(user => (dispatch, getState) => axios.po
     return initCoreAndSetToken(user, data, appDirectory, dispatch);
   })
   .catch((err) => {
-    const { message } = getErrorDetail(err);
-    if (message === 'Username taken' || message === 'Email taken') {
+    const { statusCode, message } = getErrorDetail(err);
+    if (statusCode === 409) {
       dispatch(setError(message));
     }
   }));

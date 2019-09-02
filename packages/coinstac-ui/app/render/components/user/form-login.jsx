@@ -8,6 +8,7 @@ import Checkbox from '@material-ui/core/Checkbox';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import classNames from 'classnames';
 import FormStartupDirectory from './form-startup-directory';
+import { EXPIRED_TOKEN } from '../../utils/error-codes';
 
 const styles = theme => ({
   loginFormContainer: {
@@ -86,12 +87,8 @@ class FormLogin extends Component {
   renderError = () => {
     const { auth, classes } = this.props;
 
-    if (!auth.error) {
-      return null;
-    }
-
     const errorMessage =
-      auth.error === 'Expired token'
+      auth.error === EXPIRED_TOKEN
         ? 'Your login session has expired,<br/>please re-login'
         : auth.error;
 
@@ -111,7 +108,7 @@ class FormLogin extends Component {
       <div className={classes.loginFormContainer}>
         <Paper className={classes.paper}>
           <form onSubmit={this.onSubmit}>
-            {this.renderError()}
+            { auth.error && this.renderError() }
             {
               !auth.isApiVersionCompatible
               && (
