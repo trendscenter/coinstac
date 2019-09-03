@@ -1,9 +1,11 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
+import { ipcRenderer } from 'electron';
 import Notifications from 'react-notification-system-redux';
 import ActivityIndicator from './activity-indicator/activity-indicator';
-import { autoLogin } from '../state/ducks/auth';
+import { autoLogin, logout, setError } from '../state/ducks/auth';
+import { EXPIRED_TOKEN } from '../utils/error-codes';
 
 const styles = {
   notifications: {
@@ -31,6 +33,16 @@ class App extends Component { // eslint-disable-line react/prefer-stateless-func
     .then(() => {
       this.setState({ checkJWT: true });
     });
+
+    ipcRenderer.on(EXPIRED_TOKEN, () => {
+      this.props.setError(EXPIRED_TOKEN);
+      this.props.logout();
+      this.props.router.push('/login');
+    });
+  }
+
+  componentWillUnmount() {
+    ipcRenderer.removeAllListeners(EXPIRED_TOKEN);
   }
 
   render() {
@@ -71,4 +83,8 @@ function mapStateToProps({ loading, notifications }) {
   };
 }
 
-export default connect(mapStateToProps, { autoLogin })(App);
+export default connect(mapStateToProps, {
+  autoLogin,
+  logout,
+  setError,
+})(App);

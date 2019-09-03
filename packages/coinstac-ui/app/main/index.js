@@ -20,6 +20,8 @@ const ipcFunctions = require('./utils/ipc-functions');
 
 const { ipcMain } = electron;
 
+const { EXPIRED_TOKEN } = require('../render/utils/error-codes');
+
 // if no env set prd
 process.env.NODE_ENV = process.env.NODE_ENV || 'production';
 
@@ -102,6 +104,13 @@ loadConfig()
    */
     ipcMain.on('write-log', (event, { type, message }) => {
       logger[type](`process: render - ${JSON.stringify(message)}`);
+    });
+
+    /**
+     * IPC Listener to notify token expire
+     */
+    ipcMain.on(EXPIRED_TOKEN, () => {
+      mainWindow.webContents.send(EXPIRED_TOKEN);
     });
 
     ipcPromise.on('login-init', ({ userId, appDirectory }) => {
