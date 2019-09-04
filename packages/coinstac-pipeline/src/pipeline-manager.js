@@ -169,12 +169,9 @@ module.exports = {
           && !clientRun.currentOutput)
         // test if we have all files, if there are any
           || (clientRun
-            && ((clientRun.files
-              && ((clientRun.files.expected.length === 0
-                || clientRun.files.received.length === 0)
-              || !clientRun.files.expected
+            && (clientRun.files.expected.length !== 0
+              && !clientRun.files.expected
                 .every(e => clientRun.files.received.includes(e))
-              ))
             )
           )
         ) {
