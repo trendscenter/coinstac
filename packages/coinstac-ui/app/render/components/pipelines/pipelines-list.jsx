@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { graphql } from 'react-apollo';
 import { Link } from 'react-router';
-import Button from '@material-ui/core/Button';
 import Fab from '@material-ui/core/Fab';
 import Typography from '@material-ui/core/Typography';
 import AddIcon from '@material-ui/icons/Add';
@@ -18,6 +17,7 @@ import {
 import {
   removeDocFromTableProp,
 } from '../../state/graphql/props';
+import { isPipelineOwner } from '../../utils/helpers';
 
 const MAX_LENGTH_PIPELINES = 5;
 
@@ -51,8 +51,7 @@ class PipelinesList extends Component {
     if (pipelines && pipelines.length > MAX_LENGTH_PIPELINES) {
       const { user } = auth;
       pipelines.forEach((pipeline) => {
-        if (user.permissions.consortia[pipeline.owningConsortium] &&
-          user.permissions.consortia[pipeline.owningConsortium].write) {
+        if (isPipelineOwner(user.permissions, pipeline.owningConsortium)) {
           ownedPipelines.push(pipeline);
         } else {
           otherPipelines.push(pipeline);
@@ -70,8 +69,7 @@ class PipelinesList extends Component {
         itemObject={pipeline}
         deleteItem={this.openModal}
         owner={
-          user.permissions.consortia[pipeline.owningConsortium]
-          && user.permissions.consortia[pipeline.owningConsortium].write
+          isPipelineOwner(user.permissions, pipeline.owningConsortium)
         }
         itemOptions={{ actions: [], text: [] }}
         itemRoute="/dashboard/pipelines"
