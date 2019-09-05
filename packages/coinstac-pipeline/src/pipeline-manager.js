@@ -291,7 +291,12 @@ module.exports = {
               };
             }
             if (!remoteClients[data.id]) {
-              return serverMqt.publish(`${data.id}-run`, { runId: data.runId, error: new Error('Remote has no such pipeline run') });
+              remoteClients[data.id] = {
+                id: data.id,
+                status: 'pre-pipeline',
+                [data.runId]: { state: {}, files: { expected: [], received: [] } },
+              };
+              // return serverMqt.publish(`${data.id}-run`, JSON.stringify({ runId: data.runId, error: new Error('Remote has no such pipeline run') }));
             }
             if (activePipelines[data.runId].state === 'pre-pipeline' && remoteClients[data.id][data.runId] === undefined) {
               remoteClients[data.id] = Object.assign(
