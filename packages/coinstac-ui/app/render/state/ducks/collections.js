@@ -270,8 +270,12 @@ export const getCollectionFiles = (consortiumId, runId) => (dispatch) => {
   return localDB.associatedConsortia.get(consortiumId)
     .then((consortium) => {
       let collections = { collections: [] };
-      if (consortium.pipelineSteps) {
+      if (consortium && consortium.pipelineSteps) {
         collections = iteratePipelineSteps(consortium);
+      } else {
+        // no local collection assocaiated with the input consortia
+        console.log('Missing consortia in local collection');
+        return;
       }
 
       if ('error' in collections) {
