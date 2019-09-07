@@ -6,10 +6,6 @@ import { applyAsyncLoading } from './loading';
 import localDB from '../local-db';
 import inputDataTypes from '../input-data-types.json';
 
-// Get Base App Dir
-const CoinstacClient = require('coinstac-client-core');
-const dir = CoinstacClient.getDefaultAppDirectory();
-
 // Actions
 const CLEAR_COLLECTIONS_CONSORTIA = 'CLEAR_COLLECTIONS_CONSORTIA';
 const DELETE_ASSOCIATED_CONSORTIA = 'DELETE_ASSOCIATED_CONSORTIA';

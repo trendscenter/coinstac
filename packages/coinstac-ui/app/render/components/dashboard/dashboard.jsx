@@ -100,6 +100,8 @@ const styles = theme => ({
   },
 });
 
+let dockerInterval;
+
 class Dashboard extends Component {
   constructor(props) {
     super(props);
@@ -121,7 +123,7 @@ class Dashboard extends Component {
     const { auth: { user } } = this.props;
     const { router } = this.context;
 
-    setInterval(() => {
+    dockerInterval = setInterval(() => {
       let status = this.props.getDockerStatus();
       status.then((result) => {
         if( result == 'OK' ){
@@ -458,6 +460,7 @@ class Dashboard extends Component {
   }
 
   componentWillUnmount() {
+    clearInterval(dockerInterval);
     this.state.unsubscribeComputations();
     this.state.unsubscribeConsortia();
     this.state.unsubscribePipelines();

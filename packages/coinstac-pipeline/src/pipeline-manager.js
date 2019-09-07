@@ -195,6 +195,7 @@ module.exports = {
 
     // TODO: secure socket layer
     if (mode === 'remote') {
+      logger.silly('Starting remote pipeline manager');
       /**
        * express file server setup
        */
@@ -371,6 +372,7 @@ module.exports = {
         }
       });
     } else {
+      logger.silly('Starting local pipeline manager');
       mqtCon = mqtt.connect(`${mqttRemoteProtocol}//${mqttRemoteURL}:${mqttRemotePort}`, { clientId });
 
       mqtCon.on('connect', () => {
