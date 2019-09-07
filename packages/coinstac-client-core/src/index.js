@@ -11,7 +11,6 @@ const unlinkAsync = pify(fs.unlink);
 const linkAsync = pify(fs.link);
 const statAsync = pify(fs.stat);
 
-const os = require('os');
 const path = require('path');
 const winston = require('winston');
 // set w/ config etc post release
@@ -46,8 +45,7 @@ class CoinstacClient {
     }
     this.options = opts;
     this.logger = opts.logger || new Logger({ transports: [new Console()] });
-    this.appDirectory = opts.appDirectory
-      || CoinstacClient.getDefaultAppDirectory();
+    this.appDirectory = opts.appDirectory;
 
     this.dockerManager = DockerManager;
     this.dockerManager.setLogger(this.logger);
@@ -89,15 +87,6 @@ class CoinstacClient {
     return pify(fs.readFile)(filename)
       .then(data => pify(csvParse)(data.toString()))
       .then(JSON.stringify);
-  }
-
-  /**
-   * Get the default application storage directory.
-   *
-   * @returns {string}
-   */
-  static getDefaultAppDirectory() {
-    return path.join(os.homedir(), '.coinstac');
   }
 
   /**

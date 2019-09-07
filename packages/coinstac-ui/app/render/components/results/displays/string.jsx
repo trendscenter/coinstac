@@ -8,10 +8,10 @@ import { withStyles } from '@material-ui/core/styles';
 import classNames from 'classnames';
 import _ from 'lodash';
 import kebabcase from 'lodash';
+import { remote } from 'electron';
 
 //Get Base App Dir
-const CoinstacClient = require('coinstac-client-core');
-const dir = CoinstacClient.getDefaultAppDirectory();
+const dir = remote.getGlobal('config').get('coinstacHome');
 
 class String extends Component {
   constructor(props) {
