@@ -12,7 +12,6 @@ const https = require('https');
 const FormData = require('form-data');
 
 const readdir = promisify(fs.readdir);
-const writeFile = promisify(fs.writeFile);
 const Emitter = require('events');
 const winston = require('winston');
 const express = require('express');
@@ -268,14 +267,16 @@ module.exports = {
        * mqtt server-side setup
        */
       serverMqt = mqtt.connect(`${mqttRemoteProtocol}//${mqttRemoteURL}:${mqttRemotePort}`, { clientId });
-
-      serverMqt.on('connect', () => {
-        logger.silly('mqtt connection up');
-        serverMqt.subscribe('register', { qos: 1 }, (err) => {
-          if (err) logger.error(`Mqtt error: ${err}`);
-        });
-        serverMqt.subscribe('run', { qos: 1 }, (err) => {
-          if (err) logger.error(`Mqtt error: ${err}`);
+      await new Promise((resolve) => {
+        serverMqt.on('connect', () => {
+          logger.silly(`mqtt connection up ${clientId}`);
+          serverMqt.subscribe('register', { qos: 1 }, (err) => {
+            resolve();
+            if (err) logger.error(`Mqtt error: ${err}`);
+          });
+          serverMqt.subscribe('run', { qos: 1 }, (err) => {
+            if (err) logger.error(`Mqtt error: ${err}`);
+          });
         });
       });
 
@@ -285,23 +286,23 @@ module.exports = {
           case 'run':
             logger.silly(`############ Received client data: ${data.id}`);
             // client run started before remote
-            if (!activePipelines[data.runId]) {
-              activePipelines[data.runId] = {
-                state: 'pre-pipeline',
-                currentState: {},
-              };
-            }
-            if (!remoteClients[data.id]) {
+            // if (!activePipelines[data.runId]) {
+            //   activePipelines[data.runId] = {
+            //     state: 'pre-pipeline',
+            //     currentState: {},
+            //   };
+            // }
+            if (!activePipelines[data.runId] || !remoteClients[data.id]) {
               return serverMqt.publish(`${data.id}-run`, JSON.stringify({ runId: data.runId, error: new Error('Remote has no such pipeline run') }));
             }
-            if (activePipelines[data.runId].state === 'pre-pipeline' && remoteClients[data.id][data.runId] === undefined) {
-              remoteClients[data.id] = Object.assign(
-                {
-                  [data.runId]: { state: {}, files: { expected: [], received: [] } },
-                },
-                remoteClients[data.id]
-              );
-            }
+            // if (activePipelines[data.runId].state === 'pre-pipeline' && remoteClients[data.id][data.runId] === undefined) {
+            //   remoteClients[data.id] = Object.assign(
+            //     {
+            //       [data.runId]: { state: {}, files: { expected: [], received: [] } },
+            //     },
+            //     remoteClients[data.id]
+            //   );
+            // }
 
             // normal pipeline operation
             if (remoteClients[data.id] && remoteClients[data.id][data.runId]) {
@@ -368,6 +369,20 @@ module.exports = {
               }
             }
             break;
+          case 'register':
+            if (!activePipelines[data.runId] || activePipelines[data.runId].state === 'created') {
+              remoteClients[data.id] = Object.assign(
+                {
+                  [data.runId]: { state: {}, files: { expected: [], received: [] } },
+                  state: 'pre-registered',
+                },
+                remoteClients[data.id]
+              );
+            } else {
+              serverMqt.publish(`${data.id}-register`, JSON.stringify({ runId: data.runId }));
+              remoteClients[data.id].state = 'registered';
+            }
+            break;
           default:
         }
       });
@@ -375,19 +390,16 @@ module.exports = {
       logger.silly('Starting local pipeline manager');
       mqtCon = mqtt.connect(`${mqttRemoteProtocol}//${mqttRemoteURL}:${mqttRemotePort}`, { clientId });
 
-      mqtCon.on('connect', () => {
-        logger.silly('mqtt connection up');
-        mqtCon.subscribe(`${clientId}-register`, { qos: 1 }, (err) => {
-          logger.silly('Client register request');
-          if (err) logger.error(`Mqtt error: ${err}`);
-          mqtCon.publish(
-            'register',
-            JSON.stringify({ id: clientId, runs: Object.keys(activePipelines) }),
-            { qos: 1 }
-          );
-        });
-        mqtCon.subscribe(`${clientId}-run`, { qos: 1 }, (err) => {
-          if (err) logger.error(`Mqtt error: ${err}`);
+      await new Promise((resolve) => {
+        mqtCon.on('connect', () => {
+          logger.silly(`mqtt connection up ${clientId}`);
+          mqtCon.subscribe(`${clientId}-register`, { qos: 1 }, (err) => {
+            resolve();
+            if (err) logger.error(`Mqtt error: ${err}`);
+          });
+          mqtCon.subscribe(`${clientId}-run`, { qos: 1 }, (err) => {
+            if (err) logger.error(`Mqtt error: ${err}`);
+          });
         });
       });
 
@@ -438,6 +450,18 @@ module.exports = {
               activePipelines[data.runId].remote.reject(Object.assign(new Error(), data.error));
             }
             break;
+          case `${clientId}-register`:
+            if (activePipelines[data.runId].registered) break;
+            activePipelines[data.runId].registered = true;
+            if (activePipelines[data.runId].stashedOutput) {
+              activePipelines[data.runId]
+                .communicate(
+                  activePipelines[data.runId].pipeline,
+                  activePipelines[data.runId].stashedOutput,
+                  activePipelines[data.runId].pipeline.currentState.currentIteration
+                );
+            }
+            break;
           default:
         }
       });
@@ -469,6 +493,7 @@ module.exports = {
         if (activePipelines[runId] && activePipelines[runId].state !== 'pre-pipeline') {
           throw new Error('Duplicate pipeline started');
         }
+
         const userDirectories = {
           baseDirectory: path.resolve(operatingDirectory, clientId, runId),
           outputDirectory: path.resolve(operatingDirectory, 'output', clientId, runId),
@@ -491,6 +516,8 @@ module.exports = {
             systemDirectory: path.resolve(operatingDirectory, 'system', clientId, runId),
             stateEmitter: new Emitter(),
             currentState: {},
+            stashedOuput: undefined,
+            communicate: undefined,
             clients,
           },
           activePipelines[runId]
@@ -501,19 +528,27 @@ module.exports = {
           remoteClients[client] = Object.assign(
             {
               id: client,
-              status: 'unregistered',
+              state: 'unregistered',
               [runId]: { state: {}, files: { expected: [], received: [] } },
             },
             remoteClients[client]
           );
         });
 
+        if (mode === 'local') {
+          activePipelines[runId].registered = false;
+          mqtCon.publish(
+            'register',
+            JSON.stringify({ id: clientId, runId }),
+            { qos: 1 }
+          );
+        }
         /**
          * Communicate with the with node(s), clients to remote or remote to clients
          * @param  {Object} pipeline pipeline to preform the messaging on
          * @param  {Object} message  data to serialize to recipient
          */
-        const communicate = (pipeline, message, messageIteration) => {
+        activePipelines[runId].communicate = (pipeline, message, messageIteration) => {
           if (mode === 'remote') {
             if (message instanceof Error) {
               const runError = Object.assign(
@@ -552,76 +587,93 @@ module.exports = {
           // local client
           } else {
             if (message instanceof Error) { // eslint-disable-line no-lonely-if
-              mqtCon.publish(
-                'run',
-                JSON.stringify({ id: clientId, runId: pipeline.id, error: message }),
-                { qos: 1 },
-                (err) => { if (err) logger.error(`Mqtt error: ${err}`); }
-              );
+              if (!activePipelines[pipeline.id].registered) {
+                activePipelines[pipeline.id].stashedOutput = message;
+              } else {
+                mqtCon.publish(
+                  'run',
+                  JSON.stringify({ id: clientId, runId: pipeline.id, error: message }),
+                  { qos: 1 },
+                  (err) => { if (err) logger.error(`Mqtt error: ${err}`); }
+                );
+                activePipelines[pipeline.id].stashedOutput = undefined;
+              }
             } else {
               return readdir(activePipelines[pipeline.id].transferDirectory)
                 .then((files) => {
-                  return rimraf(path.join(activePipelines[pipeline.id].systemDirectory, `${pipeline.id}`))
-                    .then(() => writeFile(
-                      path.join(activePipelines[pipeline.id].systemDirectory, `${pipeline.id}`),
-                      JSON.stringify({ savedOutput: message, savedFileList: files })
-                    )).then(() => files);
-                }).then((files) => {
                   if (files && files.length !== 0) {
-                    logger.debug('############# Local client sending out data with files');
-                    mqtCon.publish(
-                      'run',
-                      JSON.stringify({
-                        id: clientId,
-                        runId: pipeline.id,
-                        output: message,
-                        files,
-                        iteration: messageIteration,
-                      }),
-                      { qos: 1 },
-                      (err) => { if (err) logger.error(`Mqtt error: ${err}`); }
-                    );
-                    serverFile(
-                      'post',
-                      100,
-                      files,
-                      clientId,
-                      pipeline.id
-                    ).catch((e) => {
-                      // files failed to send, bail
-                      logger.error(`Client file send error: ${e}`);
+                    if (!activePipelines[pipeline.id].registered) {
+                      activePipelines[pipeline.id].stashedOutput = message;
+                    } else {
+                      logger.debug('############# Local client sending out data with files');
                       mqtCon.publish(
                         'run',
-                        JSON.stringify(
-                          {
-                            id: clientId,
-                            runId: pipeline.id,
-                            error: { stack: e.stack, message: e.message },
-                          }
-                        ),
+                        JSON.stringify({
+                          id: clientId,
+                          runId: pipeline.id,
+                          output: message,
+                          files,
+                          iteration: messageIteration,
+                        }),
                         { qos: 1 },
                         (err) => { if (err) logger.error(`Mqtt error: ${err}`); }
                       );
-                    });
+                      activePipelines[pipeline.id].stashedOutput = undefined;
+                      serverFile(
+                        'post',
+                        100,
+                        files,
+                        clientId,
+                        pipeline.id
+                      ).catch((e) => {
+                        // files failed to send, bail
+                        logger.error(`Client file send error: ${e}`);
+                        mqtCon.publish(
+                          'run',
+                          JSON.stringify(
+                            {
+                              id: clientId,
+                              runId: pipeline.id,
+                              error: { stack: e.stack, message: e.message },
+                            }
+                          ),
+                          { qos: 1 },
+                          (err) => { if (err) logger.error(`Mqtt error: ${err}`); }
+                        );
+                      });
+                    }
                   } else {
-                    logger.debug('############# Local client sending out data');
-                    mqtCon.publish(
-                      'run',
-                      JSON.stringify({
-                        id: clientId,
-                        runId: pipeline.id,
-                        output: message,
-                        iteration: messageIteration,
-                      }),
-                      { qos: 1 },
-                      (err) => { if (err) logger.error(`Mqtt error: ${err}`); }
-                    );
+                    if (!activePipelines[pipeline.id].registered) { // eslint-disable-line no-lonely-if, max-len
+                      activePipelines[pipeline.id].stashedOutput = message;
+                    } else {
+                      logger.debug('############# Local client sending out data');
+                      mqtCon.publish(
+                        'run',
+                        JSON.stringify({
+                          id: clientId,
+                          runId: pipeline.id,
+                          output: message,
+                          iteration: messageIteration,
+                        }),
+                        { qos: 1 },
+                        (err) => { if (err) logger.error(`Mqtt error: ${err}`); }
+                      );
+                      activePipelines[pipeline.id].stashedOutput = undefined;
+                    }
                   }
                 });
             }
           }
         };
 
+        /**
+         * callback fn passed down to facilitate external communication
+         * @param  {[type]} input        data to send
+         * @param  {[type]} noop         do nothing but resolve
+         * @param  {[type]} transmitOnly send without input
+         * @param  {[type]} iteration    the iteration for the input
+         * @return {[type]}              Promise when we get a response
+         */
         const remoteHandler = ({
           input, noop, transmitOnly, iteration,
         }) => {
@@ -642,23 +694,13 @@ module.exports = {
             if (transmitOnly) {
               proxRes();
             }
-            communicate(activePipelines[runId].pipeline, input, iteration);
+            activePipelines[runId].communicate(activePipelines[runId].pipeline, input, iteration);
+            if (mode === 'remote') activePipelines[runId].state = 'running';
+          } else if (activePipelines[runId].state === 'created') {
             activePipelines[runId].state = 'running';
-          } else if (activePipelines[runId].state === 'pre-pipeline') {
-            const waitingOn = waitingOnForRun(runId);
-            activePipelines[runId].currentState.waitingOn = waitingOn;
-            activePipelines[runId].stateEmitter
-              .emit('update',
-                Object.assign(
-                  {},
-                  activePipelines[runId].pipeline.currentState,
-                  activePipelines[runId].currentState
-                ));
-
-            if (waitingOn.length === 0) {
-              proxRes({ output: aggregateRun(runId) });
-            }
-            activePipelines[runId].state = 'running';
+            activePipelines[runId].clients.forEach((client) => {
+              serverMqt.publish(`${client}-register`, JSON.stringify({ runId }));
+            });
           }
           return prom;
         };
