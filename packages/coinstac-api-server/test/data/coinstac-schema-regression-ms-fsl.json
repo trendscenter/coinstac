@@ -1,21 +1,21 @@
 {
   "meta": {
-    "name": "DRNE FreeSurfer",
-    "id": "drne-fsl",
+    "name": "Regression (Multishot) - FreeSurfer Volumes",
+    "id": "msr-fsl",
     "version": "v1.0.0",
-    "repository": "https:\/\/github.com\/MRN-Code\/coinstac_drne_fsl",
-    "description": "Decentralized Regression with Normal Equation on FreeSurfer Data"
+    "repository": "https:\/\/github.com\/trendscenter\/coinstac-msr-fsl",
+    "description": "Decentralized Regression (Multishot) for Brain Volumetric Data"
   },
   "computation": {
     "type": "docker",
-    "dockerImage": "coinstacteam/drne-fsl",
+    "dockerImage": "coinstacteam/msr-fsl",
     "command": [
       "python",
       "\/computation\/local.py"
     ],
     "remote": {
       "type": "docker",
-      "dockerImage": "coinstacteam/drne-fsl",
+      "dockerImage": "coinstacteam/msr-fsl",
       "command": [
         "python",
         "\/computation\/remote.py"

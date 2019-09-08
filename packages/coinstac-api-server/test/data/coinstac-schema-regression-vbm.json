@@ -1,24 +1,24 @@
 {
   "meta": {
-    "name": "Single Shot Regression VBM",
-    "id": "ssr_vbm",
+    "name": "Regression (Normal Equation) - VBM",
+    "id": "regression-vbm",
     "version": "v1.0.0",
-    "repository": "https:\/\/github.com\/MRN-Code\/coinstac_ssr_vbm_mcic",
-    "description": "This repository contains code for single-shot regression (ssr) that was shown to successfully work with the MCIC dataset on coinstac-simulator"
+    "repository": "https:\/\/github.com\/trendscenter\/coinstac-regression-vbm",
+    "description": "Decentralized Regression for Voxel-based Morphometry"
   },
   "computation": {
     "type": "docker",
-    "dockerImage": "coinstacteam/regression-vbm-resample",
+    "dockerImage": "coinstacteam/regression-vbm",
     "command": [
       "python",
-      "\/computation\/scripts\/local.py"
+      "\/computation\/local.py"
     ],
     "remote": {
       "type": "docker",
-      "dockerImage": "coinstacteam/regression-vbm-resample",
+      "dockerImage": "coinstacteam/regression-vbm",
       "command": [
         "python",
-	"\/computation\/scripts\/remote.py"
+        "\/computation\/remote.py"
       ]
     },
     "input": {
@@ -29,25 +29,6 @@
         "max": 1,
         "min": 0,
         "step": 0.05,
-        "type": "number",
-        "source": "owner"
-      },
-      "threshold":
-      {
-        "defaultValue": 0.2,
-        "label": "Masking threshold",
-        "max": 1,
-        "min": 0,
-        "type": "number",
-        "source": "owner"
-      },
-      "voxel_size":
-      {
-        "defaultValue": 4,
-        "label": "Voxel Size",
-        "max": 6,
-        "min": 0,
-        "step": 0.5,
         "type": "number",
         "source": "owner"
       },

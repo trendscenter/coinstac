@@ -1,21 +1,21 @@
 {
   "meta": {
-    "name": "Single Shot Regression",
-    "id": "ssr_test",
+    "name": "Regression (Normal Equation) - FreeSurfer Volumes",
+    "id": "regression-fsl",
     "version": "v1.0.0",
-    "repository": "https:\/\/github.com\/MRN-Code\/ssr_test",
-    "description": "a test from single shot regresssion"
+    "repository": "https:\/\/github.com\/trendscenter\/coinstac-regression-fsl",
+    "description": "Decentralized Regression for Brain Volumetric Data"
   },
   "computation": {
     "type": "docker",
-    "dockerImage": "coinstacteam/ssr",
+    "dockerImage": "coinstacteam/regression-fsl",
     "command": [
       "python",
       "\/computation\/local.py"
     ],
     "remote": {
       "type": "docker",
-      "dockerImage": "coinstacteam/ssr",
+      "dockerImage": "coinstacteam/regression-fsl",
       "command": [
         "python",
         "\/computation\/remote.py"
