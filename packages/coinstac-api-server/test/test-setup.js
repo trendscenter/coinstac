@@ -1,17 +1,23 @@
 require('trace');
 require('clarify');
 const rethink = require('rethinkdb');
-const singleShot = require('./data/single-shot-schema');
-const multiShot = require('./data/multi-shot-schema');
-const vbm = require('./data/coinstac-vbm-pre');
+
+const drneVbm = require('./data/coinstac-schema-regression-vbm');
+const ssrVbm = require('./data/coinstac-schema-regression-ss-vbm');
+const msrVbm = require('./data/coinstac-schema-regression-ms-vbm');
+
+const drneFsl = require('./data/coinstac-schema-regression-fsl');
+const ssrFsl = require('./data/coinstac-schema-regression-ss-fsl');
+const msrFsl = require('./data/coinstac-schema-regression-ms-fsl');
+
 const ddfnc = require('./data/coinstac-ddfnc-pipeline');
-const drneVbm = require('./data/coinstac-drne-vbm-mcic');
-const ssrVbm = require('./data/coinstac-ssr-vbm-mcic');
+const vbm = require('./data/coinstac-vbm-pre');
+
 const decentralized = require('./data/coinstac-decentralized-test');
 const decentralizedError = require('./data/coinstac-decentralized-error');
 const local = require('./data/coinstac-local-test');
 const localError = require('./data/coinstac-local-error');
-const drneFsl = require('./data/drne_fsl_schema');
+
 const helperFunctions = require('../src/auth-helpers');
 
 let connection;
@@ -46,8 +52,8 @@ helperFunctions.getRethinkConnection()
       .then(() => rethink.table('computations').insert([
         Object.assign({}, local, { submittedBy: 'test1' }),
         Object.assign({}, decentralized, { submittedBy: 'test1' }),
-        Object.assign({}, singleShot, { submittedBy: 'test1' }),
-        Object.assign({}, multiShot, { submittedBy: 'test1' }),
+        Object.assign({}, ssrFsl, { submittedBy: 'test1' }),
+        Object.assign({}, msrFsl, { submittedBy: 'test1' }),
         Object.assign({}, vbm, { submittedBy: 'author' }),
         Object.assign({}, ddfnc, { submittedBy: 'test1' }),
         Object.assign({}, drneVbm, { submittedBy: 'test1' }),
