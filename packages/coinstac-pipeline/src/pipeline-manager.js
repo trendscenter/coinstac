@@ -266,7 +266,13 @@ module.exports = {
       /**
        * mqtt server-side setup
        */
-      serverMqt = mqtt.connect(`${mqttRemoteProtocol}//${mqttRemoteURL}:${mqttRemotePort}`, { clientId });
+      serverMqt = mqtt.connect(
+        `${mqttRemoteProtocol}//${mqttRemoteURL}:${mqttRemotePort}`,
+        {
+          clientId: `${clientId}_${Math.random().toString(16).substr(2, 8)}`,
+          reconnectPeriod: 5000,
+        }
+      );
       await new Promise((resolve) => {
         serverMqt.on('connect', () => {
           logger.silly(`mqtt connection up ${clientId}`);
@@ -285,24 +291,9 @@ module.exports = {
         switch (topic) {
           case 'run':
             logger.silly(`############ Received client data: ${data.id}`);
-            // client run started before remote
-            // if (!activePipelines[data.runId]) {
-            //   activePipelines[data.runId] = {
-            //     state: 'pre-pipeline',
-            //     currentState: {},
-            //   };
-            // }
             if (!activePipelines[data.runId] || !remoteClients[data.id]) {
               return serverMqt.publish(`${data.id}-run`, JSON.stringify({ runId: data.runId, error: new Error('Remote has no such pipeline run') }));
             }
-            // if (activePipelines[data.runId].state === 'pre-pipeline' && remoteClients[data.id][data.runId] === undefined) {
-            //   remoteClients[data.id] = Object.assign(
-            //     {
-            //       [data.runId]: { state: {}, files: { expected: [], received: [] } },
-            //     },
-            //     remoteClients[data.id]
-            //   );
-            // }
 
             // normal pipeline operation
             if (remoteClients[data.id] && remoteClients[data.id][data.runId]) {
@@ -388,7 +379,13 @@ module.exports = {
       });
     } else {
       logger.silly('Starting local pipeline manager');
-      mqtCon = mqtt.connect(`${mqttRemoteProtocol}//${mqttRemoteURL}:${mqttRemotePort}`, { clientId });
+      mqtCon = mqtt.connect(
+        `${mqttRemoteProtocol}//${mqttRemoteURL}:${mqttRemotePort}`,
+        {
+          clientId: `${clientId}_${Math.random().toString(16).substr(2, 8)}`,
+          reconnectPeriod: 5000,
+        }
+      );
 
       await new Promise((resolve) => {
         mqtCon.on('connect', () => {
@@ -451,15 +448,17 @@ module.exports = {
             }
             break;
           case `${clientId}-register`:
-            if (activePipelines[data.runId].registered) break;
-            activePipelines[data.runId].registered = true;
-            if (activePipelines[data.runId].stashedOutput) {
-              activePipelines[data.runId]
-                .communicate(
-                  activePipelines[data.runId].pipeline,
-                  activePipelines[data.runId].stashedOutput,
-                  activePipelines[data.runId].pipeline.currentState.currentIteration
-                );
+            if (activePipelines[data.runId]) {
+              if (activePipelines[data.runId].registered) break;
+              activePipelines[data.runId].registered = true;
+              if (activePipelines[data.runId].stashedOutput) {
+                activePipelines[data.runId]
+                  .communicate(
+                    activePipelines[data.runId].pipeline,
+                    activePipelines[data.runId].stashedOutput,
+                    activePipelines[data.runId].pipeline.currentState.currentIteration
+                  );
+              }
             }
             break;
           default:
@@ -602,6 +601,7 @@ module.exports = {
               return readdir(activePipelines[pipeline.id].transferDirectory)
                 .then((files) => {
                   if (files && files.length !== 0) {
+                    debugger
                     if (!activePipelines[pipeline.id].registered) {
                       activePipelines[pipeline.id].stashedOutput = message;
                     } else {
@@ -643,6 +643,7 @@ module.exports = {
                       });
                     }
                   } else {
+                    debugger
                     if (!activePipelines[pipeline.id].registered) { // eslint-disable-line no-lonely-if, max-len
                       activePipelines[pipeline.id].stashedOutput = message;
                     } else {
