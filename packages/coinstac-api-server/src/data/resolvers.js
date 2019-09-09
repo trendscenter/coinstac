@@ -449,8 +449,8 @@ const resolvers = {
               rethink.table('pipelines').get(args.pipelineId)
               .delete({ returnChanges: true })
               .run(connection),
-              rethink.table('consortia').filter({ pipelineId: args.pipelineId })
-              .update({ pipelineId: '' })
+              rethink.table('consortia').filter({ activePipelineId: args.pipelineId })
+              .update({ activePipelineId: '' })
               .run(connection)
             ])
           }
