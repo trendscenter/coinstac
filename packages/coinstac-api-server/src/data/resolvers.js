@@ -450,7 +450,7 @@ const resolvers = {
               .delete({ returnChanges: true })
               .run(connection),
               rethink.table('consortia').filter({ activePipelineId: args.pipelineId })
-              .update({ activePipelineId: '' })
+              .replace(rethink.row.without('activePipelineId'))
               .run(connection)
             ])
           }
