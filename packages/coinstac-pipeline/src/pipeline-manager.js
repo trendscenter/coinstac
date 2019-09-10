@@ -601,7 +601,6 @@ module.exports = {
               return readdir(activePipelines[pipeline.id].transferDirectory)
                 .then((files) => {
                   if (files && files.length !== 0) {
-                    debugger
                     if (!activePipelines[pipeline.id].registered) {
                       activePipelines[pipeline.id].stashedOutput = message;
                     } else {
@@ -643,7 +642,6 @@ module.exports = {
                       });
                     }
                   } else {
-                    debugger
                     if (!activePipelines[pipeline.id].registered) { // eslint-disable-line no-lonely-if, max-len
                       activePipelines[pipeline.id].stashedOutput = message;
                     } else {
