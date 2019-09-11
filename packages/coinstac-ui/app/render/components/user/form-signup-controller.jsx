@@ -4,29 +4,20 @@ import PropTypes from 'prop-types';
 import FormSignup from './form-signup';
 import LayoutNoauth from '../layout-noauth';
 import { clearError, clearUser, signUp } from '../../state/ducks/auth';
-import { notifyError, notifySuccess } from '../../state/ducks/notifyAndLog';
+import { notifySuccess } from '../../state/ducks/notifyAndLog';
 
 class FormSignupController extends Component {
-  constructor(props) {
-    super(props);
-    this.onSubmit = this.onSubmit.bind(this);
-    this.checkForUser = this.checkForUser.bind(this);
-    this.handleSignupError = this.handleSignupError.bind(this);
+  state = {
+    error: null,
   }
 
-  componentDidMount() {
+  componentWillMount() {
     this.props.clearUser();
+    this.props.clearError();
   }
 
   componentDidUpdate() {
     this.checkForUser();
-  }
-
-  componentWillUnmount() {
-    const { auth, clearError } = this.props;
-    if (auth.error) {
-      clearError();
-    }
   }
 
   /**
@@ -42,7 +33,7 @@ class FormSignupController extends Component {
    * @param  {string}    formData.username
    * @return {undefined}
    */
-  onSubmit(formData) {
+  onSubmit = formData => {
     let error;
 
     if (!formData.name) {
@@ -60,32 +51,35 @@ class FormSignupController extends Component {
     }
 
     if (error) {
-      return FormSignupController.handleSignupError(error);
+      return this.handleSignupError(error);
     }
+
+    this.setState({ error: null })
 
     return this.props.signUp(formData)
       .then(() => {
-        if (!this.props.auth.error) {
+        const { auth } = this.props;
+        if (!auth.error) {
           this.props.notifySuccess({
             message: 'Account created',
           });
+        } else {
+          this.handleSignupError(auth.error);
         }
       })
       .catch((error) => {
-        this.props.notifyError({
-          message: error.message,
-        });
+        this.handleSignupError(error)
       });
   }
 
-  checkForUser() {
+  checkForUser = () => {
     const { router } = this.context;
     if (this.props.auth.user.email.length) {
       router.push('/dashboard');
     }
   }
 
-  handleSignupError(error) {
+  handleSignupError = error => {
     let message;
 
     if (error.message) {
@@ -96,15 +90,15 @@ class FormSignupController extends Component {
       message = 'Signup error occurred. Please try again.';
     }
 
-    this.props.notifyError({
-      message,
-    });
+    this.setState({ error: message });
   }
 
   render() {
+    const { error } = this.state;
+
     return (
       <LayoutNoauth>
-        <FormSignup onSubmit={this.onSubmit} />
+        <FormSignup error={error} onSubmit={this.onSubmit} />
       </LayoutNoauth>
     );
   }
@@ -120,7 +114,6 @@ FormSignupController.propTypes = {
   auth: PropTypes.object.isRequired,
   clearError: PropTypes.func.isRequired,
   clearUser: PropTypes.func.isRequired,
-  notifyError: PropTypes.func.isRequired,
   notifySuccess: PropTypes.func.isRequired,
   signUp: PropTypes.func.isRequired,
 };
@@ -130,5 +123,5 @@ const mapStateToProps = ({ auth }) => {
 };
 
 export default connect(mapStateToProps,
-  { clearError, clearUser, notifyError, notifySuccess, signUp }
+  { clearError, clearUser, notifySuccess, signUp }
 )(FormSignupController);
