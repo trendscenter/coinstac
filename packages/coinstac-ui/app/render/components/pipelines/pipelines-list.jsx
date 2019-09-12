@@ -52,7 +52,7 @@ class PipelinesList extends Component {
       const { user } = auth;
       pipelines.forEach((pipeline) => {
         if (user.permissions.consortia[pipeline.owningConsortium] &&
-          user.permissions.consortia[pipeline.owningConsortium].write) {
+          user.permissions.consortia[pipeline.owningConsortium].includes('owner')) {
           ownedPipelines.push(pipeline);
         } else {
           otherPipelines.push(pipeline);
@@ -71,7 +71,7 @@ class PipelinesList extends Component {
         deleteItem={this.openModal}
         owner={
           user.permissions.consortia[pipeline.owningConsortium]
-          && user.permissions.consortia[pipeline.owningConsortium].write
+          && user.permissions.consortia[pipeline.owningConsortium].includes('owner')
         }
         itemOptions={{ actions: [], text: [] }}
         itemRoute="/dashboard/pipelines"

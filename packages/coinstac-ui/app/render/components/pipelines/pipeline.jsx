@@ -159,7 +159,7 @@ class Pipeline extends Component {
       owner = false;
     } else {
       owner = user.permissions.consortia[this.state.pipeline.owningConsortium] &&
-      user.permissions.consortia[this.state.pipeline.owningConsortium].write;
+      user.permissions.consortia[this.state.pipeline.owningConsortium].includes('owner');
     }
     const consortiumId = this.state.pipeline.owningConsortium;
     const data = client.readQuery({ query: FETCH_ALL_CONSORTIA_QUERY });
