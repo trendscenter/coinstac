@@ -94,28 +94,14 @@ const helperFunctions = {
    * @param {object} credentials credentials of requested user
    * @return {object} The requested user object
    */
-  getUserDetails(credentials) {
-    return helperFunctions.getRethinkConnection()
-      .then(connection => Promise.all([connection, rethink.table('users').get(credentials.username).run(connection)]))
-      .then(([connection, user]) => {
-        if (user) {
-          return rethink.table('users').get(credentials.username).merge(user => ({
-            permissions: user('permissions').coerceTo('array')
-              .map(table => table.map(tableArr => rethink.branch(
-                tableArr.typeOf().eq('OBJECT'),
-                tableArr.coerceTo('array').map(doc => doc.map(docArr => rethink.branch(
-                  docArr.typeOf().eq('ARRAY'),
-                  docArr.fold({}, (acc, row) => acc.merge(rethink.table('roles').get(row)('verbs'))),
-                  docArr
-                ))).coerceTo('object'),
-                tableArr
-              ))).coerceTo('object'),
-          })).run(connection)
-            .then(res => connection.close().then(() => res));
-        }
+  async getUserDetails(credentials) {
+    const connection = await helperFunctions.getRethinkConnection();
 
-        return null;
-      });
+    const user = await rethink.table('users').get(credentials.username).run(connection);
+
+    await connection.close();
+
+    return user;
   },
   /**
    * Hashes password for storage in database
