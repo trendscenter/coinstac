@@ -99,7 +99,9 @@ class ConsortiumTabs extends Component {
       this.state.unsubscribeConsortia();
     }
 
-    this.state.unsubscribeUsers();
+    if (this.state.unsubscribeUsers) {
+      this.state.unsubscribeUsers();
+    }
   }
 
   addMemberToConsortium(userId) {
