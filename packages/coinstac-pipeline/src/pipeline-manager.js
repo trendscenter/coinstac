@@ -112,7 +112,7 @@ module.exports = {
         socket.emit('hello', { status: 'connected' });
 
         socket.on('register', (data) => {
-          defaultLogger.silly(`############ REGESTERED CLIENT ${data.id}`);
+          logger.silly(`############ REGESTERED CLIENT ${data.id}`);
           if (!remoteClients[data.id]) {
             remoteClients[data.id] = {};
           }
@@ -123,7 +123,7 @@ module.exports = {
         });
 
         socket.on('run', (data) => {
-          defaultLogger.silly(`############ RECEIVED CLIENT DATA: ${data.id}`);
+          logger.silly(`############ RECEIVED CLIENT DATA: ${data.id}`);
           // client run started before remote
           if (!activePipelines[data.runId]) {
             activePipelines[data.runId] = {
@@ -172,7 +172,7 @@ module.exports = {
 
                   if (waitingOn.length === 0) {
                     activePipelines[data.runId].state = 'received all clients data';
-                    defaultLogger.silly('Received all client data');
+                    logger.silly('Received all client data');
                     activePipelines[data.runId].remote.resolve({
                       output: aggregateRun(data.runId),
                     });
@@ -219,7 +219,7 @@ module.exports = {
 
                   if (waitingOnForRun(data.runId).length === 0) {
                     activePipelines[data.runId].state = 'received all client data';
-                    defaultLogger.silly('Received all client data');
+                    logger.silly('Received all client data');
                     activePipelines[data.runId].remote.resolve(
                       { output: aggregateRun(data.runId) }
                     );
@@ -404,7 +404,7 @@ module.exports = {
               activePipelines[pipeline.id].remote.reject(runError);
               io.of('/').to(pipeline.id).emit('run', { runId: pipeline.id, error: runError });
             } else {
-              defaultLogger.silly('############ REMOTE OUT');
+              logger.silly('############ REMOTE OUT');
               io.of('/').in(pipeline.id).clients((error, clients) => {
                 if (error) throw error;
                 readdir(activePipelines[pipeline.id].transferDirectory)
