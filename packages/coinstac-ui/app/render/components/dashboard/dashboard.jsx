@@ -100,6 +100,8 @@ const styles = theme => ({
   },
 });
 
+let dockerInterval;
+
 class Dashboard extends Component {
   constructor(props) {
     super(props);
@@ -121,7 +123,7 @@ class Dashboard extends Component {
     const { auth: { user } } = this.props;
     const { router } = this.context;
 
-    setInterval(() => {
+    dockerInterval = setInterval(() => {
       let status = this.props.getDockerStatus();
       status.then((result) => {
         if( result == 'OK' ){
@@ -244,11 +246,11 @@ class Dashboard extends Component {
           && this.props.consortia.length && runIndexInPropsRemote === -1
           && !nextProps.remoteRuns[i].error
         ) {
+          // TODO: Runs on startup disable, put this back in when we're not clearing dexie on startup
           let run = nextProps.remoteRuns[i];
           const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
-
           this.props.getCollectionFiles(
-            run.consortiumId, consortium.name, run.pipelineSnapshot.steps
+            run.consortiumId, run.id
           )
           .then((filesArray) => {
             let status = 'started';
@@ -458,6 +460,7 @@ class Dashboard extends Component {
   }
 
   componentWillUnmount() {
+    clearInterval(dockerInterval);
     this.state.unsubscribeComputations();
     this.state.unsubscribeConsortia();
     this.state.unsubscribePipelines();
