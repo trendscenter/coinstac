@@ -7,7 +7,7 @@ const graphqlSchema = require('coinstac-graphql-schema');
 const { pullImagesFromList, pruneImages } = require('coinstac-docker-manager');
 const dbmap = require('/etc/coinstac/cstacDBMap'); // eslint-disable-line import/no-absolute-path, import/no-unresolved
 
-this.remotePipelineManager = PipelineManager.create({
+const manager = PipelineManager.create({
   mode: 'remote',
   clientId: 'remote',
   operatingDirectory: path.resolve(config.operatingDirectory, 'coinstac'),
@@ -64,51 +64,53 @@ const saveResults = (runId, results) => axios({
   },
 });
 
-module.exports = [
-  {
-    method: 'POST',
-    path: '/startPipeline',
-    config: {
-      // auth: 'jwt',
-      handler: (req, res) => {
-        authenticateServer()
-          .then(() => {
-            const { payload: { run } } = req;
+module.exports = manager.then((remotePipelineManager) => {
+  return [
+    {
+      method: 'POST',
+      path: '/startPipeline',
+      config: {
+        // auth: 'jwt',
+        handler: (req, res) => {
+          authenticateServer()
+            .then(() => {
+              const { payload: { run } } = req;
 
-            const computationImageList = run.pipelineSnapshot.steps
-              .map(step => step.computations
-                .map(comp => comp.computation.dockerImage))
-              .reduce((acc, val) => acc.concat(val), []);
+              const computationImageList = run.pipelineSnapshot.steps
+                .map(step => step.computations
+                  .map(comp => comp.computation.dockerImage))
+                .reduce((acc, val) => acc.concat(val), []);
 
-            pullImagesFromList(computationImageList)
-              .then(() => pruneImages())
-              .then(() => {
-                const { result, stateEmitter } = this.remotePipelineManager.startPipeline({
-                  clients: run.clients,
-                  spec: run.pipelineSnapshot,
-                  runId: run.id,
-                });
-                res({}).code(201);
-
-                stateEmitter.on('update', (data) => {
-                  // TODO:  console most likely should be removed post proto development
-                  // or made less noisy
-                  console.log('Server update:'); // eslint-disable-line no-console
-                  console.log(data); // eslint-disable-line no-console
-                  updateRunState(run.id, data);
-                });
-
-                return result
-                  .then((result) => {
-                    saveResults(run.id, result);
-                  })
-                  .catch((error) => {
-                    console.log(error); // eslint-disable-line no-console
-                    saveError(run.id, error);
+              pullImagesFromList(computationImageList)
+                .then(() => pruneImages())
+                .then(() => {
+                  const { result, stateEmitter } = remotePipelineManager.startPipeline({
+                    clients: run.clients,
+                    spec: run.pipelineSnapshot,
+                    runId: run.id,
                   });
-              });
-          });
+                  res({}).code(201);
+
+                  stateEmitter.on('update', (data) => {
+                    // TODO:  console most likely should be removed post proto development
+                    // or made less noisy
+                    console.log('Server update:'); // eslint-disable-line no-console
+                    console.log(data); // eslint-disable-line no-console
+                    updateRunState(run.id, data);
+                  });
+
+                  return result
+                    .then((result) => {
+                      saveResults(run.id, result);
+                    })
+                    .catch((error) => {
+                      console.log(error); // eslint-disable-line no-console
+                      saveError(run.id, error);
+                    });
+                });
+            });
+        },
       },
     },
-  },
-];
+  ];
+});

@@ -4,8 +4,6 @@ import { remote } from 'electron';
 import { applyAsyncLoading } from './loading';
 import { get } from 'lodash';
 
-const CoinstacClientCore = require('coinstac-client-core');
-
 const apiServer = remote.getGlobal('config').get('apiServer');
 const API_URL = `${apiServer.protocol}//${apiServer.hostname}${apiServer.port ? `:${apiServer.port}` : ''}${apiServer.pathname}`;
 
@@ -23,7 +21,7 @@ const INITIAL_STATE = {
     institution: '',
     consortiaStatuses: {},
   },
-  appDirectory: localStorage.getItem('appDirectory') || CoinstacClientCore.getDefaultAppDirectory(),
+  appDirectory: localStorage.getItem('appDirectory') || remote.getGlobal('config').get('coinstacHome'),
   isApiVersionCompatible: true,
   error: null,
 };
@@ -146,9 +144,12 @@ export const login = applyAsyncLoading(({ username, password, saveLogin }) => (d
   }));
 
 export const logout = applyAsyncLoading(() => (dispatch) => {
-  localStorage.removeItem('id_token');
-  sessionStorage.removeItem('id_token');
-  dispatch(clearUser());
+  localStorage.setItem('id_token');
+  sessionStorage.setItem('id_token');
+  return ipcPromise.send('logout')
+    .then(() => {
+      dispatch(clearUser());
+    });
 });
 
 export const signUp = applyAsyncLoading(user => (dispatch, getState) => axios.post(`${API_URL}/createAccount`, user)

@@ -21,7 +21,11 @@ try {
   };
 }
 
-
+const server = new hapi.Server();
+server.connection({
+  host: config.host,
+  port: config.hapiPort,
+});
 /**
  * On server start, pull in comps from DB whitelist and download via docker
  * @return {Promise<string>} Success flag
@@ -44,24 +48,21 @@ axios.post(
     return pullImages(comps);
   })
   .then((pullStreams) => {
+    console.log('Updating docker images'); // eslint-disable-line no-console
     pullStreams.forEach((obj) => {
       if (typeof obj.stream.pipe === 'function') {
         obj.stream.pipe(process.stdout);
       } else {
-        console.log(obj); // eslint-disable-line no-console
+        process.stdout.write('.');
       }
     });
   })
-  .catch(console.log); // eslint-disable-line no-console
-
-const server = new hapi.Server();
-server.connection({
-  host: config.host,
-  port: config.hapiPort,
-});
-server.route(routes);
-
-server.start((startErr) => {
-  if (startErr) throw startErr;
-  console.log(`Server running at: ${server.info.uri}`); // eslint-disable-line no-console
-});
+  .catch(console.log) // eslint-disable-line no-console
+  .then(() => routes)
+  .then((routes) => {
+    server.route(routes);
+    server.start((startErr) => {
+      if (startErr) throw startErr;
+      console.log(`Server running at: ${server.info.uri}`); // eslint-disable-line no-console
+    });
+  });
