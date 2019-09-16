@@ -4,6 +4,9 @@ import {
   createBatchingNetworkInterface,
 } from 'react-apollo';
 import { SubscriptionClient, addGraphQLSubscriptions } from 'subscriptions-transport-ws';
+import { ipcRenderer } from 'electron';
+import { get } from 'lodash';
+import { EXPIRED_TOKEN } from '../utils/error-codes';
 
 export default function getApolloClient(config) {
   const { apiServer, subApiServer } = config.getProperties();
@@ -41,6 +44,17 @@ export default function getApolloClient(config) {
 
       req.options.headers.authorization = token ? `Bearer ${token}` : null;
       next();
+    },
+  }]);
+
+  client.networkInterface.useAfter([{
+    applyBatchAfterware(res, next) {
+      const status = get(res, 'responses.0.status');
+      if (status === 401) {
+        ipcRenderer.send(EXPIRED_TOKEN);
+      } else {
+        next();
+      }
     },
   }]);
 

@@ -2,5 +2,11 @@
   "hapiPort": 3200,
   "host": "localhost",
   "apiServer": "http://localhost:3100",
-  "operatingDirectory": "/tmp/"
+  "operatingDirectory": "/tmp/",
+  "mqttServer": {
+    "hostname": "coinstac.rs.gsu.edu",
+    "pathname": "",
+    "port": 80,
+    "protocol": "mqtts:"
+  }
 }

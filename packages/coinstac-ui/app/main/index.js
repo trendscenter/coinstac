@@ -20,6 +20,8 @@ const ipcFunctions = require('./utils/ipc-functions');
 
 const { ipcMain } = electron;
 
+const { EXPIRED_TOKEN } = require('../render/utils/error-codes');
+
 // if no env set prd
 process.env.NODE_ENV = process.env.NODE_ENV || 'production';
 
@@ -63,7 +65,17 @@ loadConfig()
     configureLogger(config),
   ]))
   .then(([config, logger]) => {
-    process.on('uncaughtException', logUnhandledError(null, logger));
+    const unhandler = logUnhandledError(null, logger);
+    process.on('uncaughtException', (err) => {
+      try {
+        unhandler(err);
+      } catch (e) {
+        console.error('Logging failure:');// eslint-disable-line no-console
+        console.error(e);// eslint-disable-line no-console
+        console.error('Thrown error on failure:');// eslint-disable-line no-console
+        console.error(err);// eslint-disable-line no-console
+      }
+    });
     global.config = config;
 
     const mainWindow = getWindow();
@@ -95,7 +107,14 @@ loadConfig()
    * @param {String} type The type of log to write out
    */
     ipcMain.on('write-log', (event, { type, message }) => {
-      logger[type](`process: render - ${message}`);
+      logger[type](`process: render - ${JSON.stringify(message)}`);
+    });
+
+    /**
+     * IPC Listener to notify token expire
+     */
+    ipcMain.on(EXPIRED_TOKEN, () => {
+      mainWindow.webContents.send(EXPIRED_TOKEN);
     });
 
     ipcPromise.on('login-init', ({ userId, appDirectory }) => {
@@ -187,9 +206,7 @@ loadConfig()
         })
         .then(() => core.dockerManager.pruneImages())
         .then(() => {
-          logger.verbose('############ CLIENT INPUT');
-          logger.verbose(pipeline);
-          logger.verbose('############ END CLIENT INPUT');
+          logger.verbose('############ Client starting pipeline');
           return core.startPipeline(
             null,
             consortium.id,
@@ -206,8 +223,7 @@ loadConfig()
 
               // Listen for results
               return result.then((results) => {
-                logger.verbose('Pipeline is done. Result:'); // eslint-disable-line no-console
-                logger.verbose(results); // eslint-disable-line no-console
+                logger.verbose('########### Client pipeline done');
                 return core.unlinkFiles(run.id)
                   .then(() => {
                     if (run.type === 'local') {
@@ -219,6 +235,8 @@ loadConfig()
                   });
               })
                 .catch((error) => {
+                  logger.verbose('########### Client pipeline error');
+                  logger.verbose(error.message);
                   return core.unlinkFiles(run.id)
                     .then(() => {
                       mainWindow.webContents.send('local-run-error', {
