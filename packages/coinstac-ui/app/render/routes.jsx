@@ -24,7 +24,7 @@ import Result from './components/results/result';
 import CollectionsList from './components/collections/collections-list';
 import CollectionTabs from './components/collections/collection-tabs';
 import Settings from './components/user/settings';
-import Logs from './components/logs/logs';
+import Logs from './components/logs-display/logs';
 
 export default (
   <Route path="/" component={App}>
