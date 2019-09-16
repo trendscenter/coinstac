@@ -444,12 +444,18 @@ const resolvers = {
           ) {
             return Boom.forbidden('Action not permitted');
           } else {
-            return rethink.table('pipelines').get(args.pipelineId)
+            return new Promise.all([
+              connection,
+              rethink.table('pipelines').get(args.pipelineId)
               .delete({ returnChanges: true })
-              .run(connection).then(res => connection.close().then(() => res))
+              .run(connection),
+              rethink.table('consortia').filter({ activePipelineId: args.pipelineId })
+              .replace(rethink.row.without('activePipelineId'))
+              .run(connection)
+            ])
           }
         })
-        .then((pipeline) => pipeline.changes[0].old_val)
+        .then(([connection, pipeline]) => connection.close().then(() => pipeline.changes[0].old_val))
     },
     /**
      * Add logged user to consortium members list

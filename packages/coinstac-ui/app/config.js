@@ -19,22 +19,29 @@ const conf = convict({
     env: 'NODE_ENV',
   },
   apiServer: {
-    hostname: 'coinstac.services',
+    hostname: 'coinstac.rs.gsu.edu',
     pathname: '/api',
     protocol: 'https:',
   },
   subApiServer: {
-    hostname: 'coinstac.services',
+    hostname: 'coinstac.rs.gsu.edu',
     pathname: '/ws',
     port: '443',
     protocol: 'wss:',
   },
   pipelineWSServer: {
-    hostname: 'coinstac.services',
+    hostname: 'coinstac.rs.gsu.edu',
     pathname: '',
     port: '443',
     protocol: 'https:',
   },
+  mqttServer: {
+    hostname: 'coinstac.rs.gsu.edu',
+    pathname: '',
+    port: '80',
+    protocol: 'mqtts:',
+  },
+
   logFile: 'coinstac-log.json',
   logFileBoot: 'coinstac-boot-error-log.txt',
   // these are appended to the home dir for you OS

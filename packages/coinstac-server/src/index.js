@@ -4,7 +4,7 @@ const axios = require('axios');
 process.LOGLEVEL = 'silly';
 const { pullImages } = require('coinstac-docker-manager');
 const graphqlSchema = require('coinstac-graphql-schema');
-const config = require('../config/default');
+const config = require('./config');
 const routes = require('./routes');
 
 let idToken = '';

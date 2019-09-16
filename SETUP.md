@@ -98,6 +98,7 @@ Follow the general steps above before continuing.
    }
    ```
 3. **Docker** Download [here](https://www.docker.com/get-docker)
+4. **mosquitto** `brew install mosquitto`
 
 ## Additional Source Code
 
@@ -119,7 +120,7 @@ Follow the general steps above before continuing.
 
 ## Configuration
 
-Create a new file at `coinstac/packages/coinstac-ui/config/local.json` and copy into it the following, conversely there is a `local-example.json` that cointains the local defualts that work for local development work. Just copy that file to `local.json` in the `config` directory. 
+Create a new file at `coinstac/packages/coinstac-ui/config/local.json` and copy into it the following, conversely there is a `local-example.json` that cointains the local defualts that work for local development work. Just copy that file to `local.json` in the `config` directory.
 
    ```json
    {
@@ -140,6 +141,25 @@ Create a new file at `coinstac/packages/coinstac-ui/config/local.json` and copy 
        "pathname": "",
        "port": "3300",
        "protocol": "http:"
+     },
+     "mqttServer": {
+       "hostname": "localhost",
+       "pathname": "",
+       "port": "1883",
+       "protocol": "mqtt:"
+     }
+   }
+   ```
+
+As well as the above config, the `coinstac-server` needs to be pointed to your local mosquitto instance.
+Place the following in `/coinstac-server/config/local.json`
+   ```json
+   {
+     "mqttServer": {
+       "hostname": "localhost",
+       "pathname": "",
+       "port": "1883",
+       "protocol": "mqtt:"
      }
    }
    ```
@@ -172,6 +192,10 @@ Five services need to be run in the following order to start COINSTAC in develop
   ```shell
   NODE_ENV=development && cd ~/coinstac/packages/coinstac-ui && npm run watch
   ```
+2. **mosquitto**:
+  ```shell
+  mosquitto -c /path/to/your/config
+  ```
 Next, you'll need to start the application. You can do this from the command line or via VSCode.
 
 * **Command Line**:
@@ -183,8 +207,8 @@ Open the COINSTAC repo in VSCode and click on the debugging icon, which is the f
 
 **Test data for collections mapping can be found in `coinstac/algorithm-development/test-data/`**
 
-## Steps to Setup Pipeline 
+## Steps to Setup Pipeline
 
-A YouTube video showing the basic steps for creating a Consortia, adding Collection files, and running a Pipeline. 
+A YouTube video showing the basic steps for creating a Consortia, adding Collection files, and running a Pipeline.
 
 [![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/QL95M74usAA/0.jpg)](https://www.youtube.com/watch?v=QL95M74usAA)

@@ -1,9 +1,9 @@
 'use strict';
 
-const { test } = require('ava');
+import test from 'ava';
 const { createReadStream, readFileSync, unlink } = require('fs');
 const resolvePath = require('path').resolve;
-const unzip = require('unzip');
+const unzip = require('unzipper');
 const ss = require('socket.io-stream');
 const socketIOClient = require('socket.io-client');
 const server = require('../server-ws');

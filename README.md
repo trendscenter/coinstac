@@ -36,7 +36,7 @@ You want to do research, and you want to include data from around the world.  Un
 
 Bottom line--collaborative group research requires a great deal of coordination.  Human and business factors can hamper research from happening at a pace that we are able to handle!  Constraints may even forbid group research to occur at all.
 
-# The Solution
+## The Solution
 Let's remove these barriers.  The best usage of research data is to apply it _everywhere it can be useful_.  Our strategy enables otherwise "locked-down data" to become useful again.
 
 COINSTAC removes the barriers to collaborative analysis by:
@@ -70,6 +70,11 @@ https://github.com/MRN-Code/coinstac/releases
 
 ## Under The Hood
 Developer documentation and system design information may be found over in our [technical docs](./TECHNICAL.md).
+
+## Grants
+COINSTAC is supported by the following grants:
+- NSF 1631838/1631819, 1453432, 1539067
+- NIH 1R01DA040487
 
 ## License
 MIT. See [LICENSE](./LICENSE) for details.
