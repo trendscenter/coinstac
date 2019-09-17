@@ -11,7 +11,7 @@ class FormSignupController extends Component {
     error: null,
   }
 
-  componentWillMount() {
+  componentDidMount() {
     this.props.clearUser();
     this.props.clearError();
   }
