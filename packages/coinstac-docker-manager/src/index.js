@@ -610,7 +610,7 @@ const removeImage = (imageId) => {
  * @param  {String} serviceUserId the user asking
  * @return {Promise}              A promise that resovles on success
  */
-const stopService = (serviceId, serviceUserId) => {
+const stopService = (serviceId, serviceUserId, waitForBox) => {
   const service = services[serviceId];
   if (!service) return Promise.resolve();
   if (service.users.indexOf(serviceUserId) > -1) {
@@ -619,7 +619,7 @@ const stopService = (serviceId, serviceUserId) => {
   if (service.users.length === 0) {
     if (service.state !== 'starting') {
       service.state = 'shutting down';
-      return service.container.stop()
+      const boxPromise = service.container.stop()
         .then(() => {
           delete services[serviceId];
         }).catch((err) => {
@@ -628,6 +628,7 @@ const stopService = (serviceId, serviceUserId) => {
           service.state = 'zombie';
           service.error = err;
         });
+      return waitForBox ? boxPromise : Promise.resolve();
     }
     delete services[serviceId];
     return Promise.resolve();
