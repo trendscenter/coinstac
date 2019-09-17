@@ -19,13 +19,13 @@ const startRun = ({
   const server = new mosca.Server({ port: 1883 });
 
   server.on('clientConnected', (client) => {
-    console.log('Mosca client connected', client.id);
+    console.log('Mosca client connected', client.id); // eslint-disable-line no-console
   });
 
   return new Promise((resolve) => {
     server.on('ready', resolve);
   })
-    .then(() => {
+    .then(async () => {
       const pipelines = {
         locals: [],
       };
@@ -33,7 +33,7 @@ const startRun = ({
 
       if (runMode === 'decentralized') {
         const remoteSpec = Array.isArray(spec) ? spec[0] : spec;
-        const remoteManager = Pipeline.create({
+        const remoteManager = await Pipeline.create({
           clientId: 'remote',
           mode: 'remote',
           operatingDirectory: path.resolve(operatingDirectory),
@@ -49,7 +49,7 @@ const startRun = ({
       }
       for (let i = 0; i < clientCount; i += 1) {
         const localSpec = Array.isArray(spec) ? spec[i] : spec;
-        const localPipelineManager = Pipeline.create({
+        const localPipelineManager = await Pipeline.create({ // eslint-disable-line no-await-in-loop, max-len
           clientId: `local${i}`,
           mode: 'local',
           operatingDirectory: path.resolve(operatingDirectory),
