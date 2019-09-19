@@ -41,8 +41,12 @@ function Logs(props) {
 }
 
 Logs.propTypes = {
-  logs: PropTypes.string.isRequired,
+  logs: PropTypes.string,
   classes: PropTypes.object.isRequired,
+};
+
+Logs.defaultProps = {
+  logs: null,
 };
 
 function mapStateToProps({ app }) {

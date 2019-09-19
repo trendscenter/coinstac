@@ -29,7 +29,7 @@ import {
   updateDockerOutput,
 } from '../../state/ducks/docker';
 import { updateUserConsortiaStatuses, updateUserPerms } from '../../state/ducks/auth';
-import { appendLogMessage } from '../../state/ducks/app';
+import { appendLogMessage, clearLogs } from '../../state/ducks/app';
 import {
   COMPUTATION_CHANGED_SUBSCRIPTION,
   CONSORTIUM_CHANGED_SUBSCRIPTION,
@@ -192,10 +192,15 @@ class Dashboard extends Component {
       this.props.updateLocalRun(arg.run.id, { error: arg.run.error, status: 'error' });
     });
 
+    const { clearLogs } = this.props;
+    clearLogs();
+
     ipcRenderer.on('log-message', (event, arg) => {
       const { appendLogMessage } = this.props;
       appendLogMessage(arg.data);
     });
+
+    ipcRenderer.send('load-initial-log');
 
     this.unsubscribeToUserMetadata = this.props.subscribeToUserMetaData(user.id);
 
@@ -602,6 +607,7 @@ Dashboard.propTypes = {
   updateDockerOutput: PropTypes.func.isRequired,
   updateLocalRun: PropTypes.func.isRequired,
   updateUserConsortiumStatus: PropTypes.func.isRequired,
+  clearLogs: PropTypes.func.isRequired,
   appendLogMessage: PropTypes.func.isRequired,
   writeLog: PropTypes.func.isRequired,
   updateUserPerms: PropTypes.func.isRequired,
@@ -698,6 +704,7 @@ const connectedComponent = connect(mapStateToProps,
     updateUserConsortiaStatuses,
     writeLog,
     updateUserPerms,
+    clearLogs,
     appendLogMessage,
   })(DashboardWithData);
 
