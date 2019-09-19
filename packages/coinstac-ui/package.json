@@ -48,6 +48,7 @@
     "react-dom": "^16.5.2",
     "react-dragula": "^1.1.17",
     "react-faux-dom": "^4.1.0",
+    "react-material-ui-form-validator": "^2.0.9",
     "react-notification-system": "^0.2.17",
     "react-notification-system-redux": "^1.2.0",
     "react-redux": "^5.0.7",

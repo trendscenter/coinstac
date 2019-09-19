@@ -14,9 +14,9 @@ import Menu from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
 import Checkbox from '@material-ui/core/Checkbox';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
-import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
+import { ValidatorForm, TextValidator } from 'react-material-ui-form-validator';
 import ListDeleteModal from '../common/list-delete-modal';
 import PipelineStep from './pipeline-step';
 import ItemTypes from './pipeline-item-types';
@@ -394,9 +394,7 @@ class Pipeline extends Component {
     return isEqual(this.state.startingPipeline, this.state.pipeline);
   }
 
-  savePipeline(e) {
-    e.preventDefault();
-
+  savePipeline() {
     const { savePipeline, notifySuccess, notifyError } = this.props;
 
     savePipeline({
@@ -472,18 +470,22 @@ class Pipeline extends Component {
             {title}
           </Typography>
         </div>
-        <form>
-          <TextField
+        <ValidatorForm instantValidate noValidate onSubmit={this.savePipeline}>
+          <TextValidator
             id="name"
             label="Name"
             fullWidth
             required
             disabled={!owner}
             value={pipeline.name || ''}
+            name="name"
+            validators={['required']}
+            errorMessages={['Name is required']}
+            withRequiredValidator
             onChange={evt => this.updatePipeline({ param: 'name', value: evt.target.value })}
             className={classes.formControl}
           />
-          <TextField
+          <TextValidator
             id="description"
             label="Description"
             multiline
@@ -491,6 +493,10 @@ class Pipeline extends Component {
             required
             disabled={!owner}
             value={pipeline.description || ''}
+            name="description"
+            validators={['required']}
+            errorMessages={['Description is required']}
+            withRequiredValidator
             onChange={evt => this.updatePipeline({ param: 'description', value: evt.target.value })}
             className={classes.formControl}
           />
@@ -536,8 +542,8 @@ class Pipeline extends Component {
               key="save-pipeline-button"
               variant="contained"
               color="primary"
-              disabled={!owner || !pipeline.name.length || !consortium}
-              onClick={this.savePipeline}
+              disabled={!owner || !consortium}
+              type="submit"
             >
               Save Pipeline
             </Button>
@@ -627,7 +633,7 @@ class Pipeline extends Component {
               </Typography>
             )
           }
-        </form>
+        </ValidatorForm>
       </div>
     );
   }
