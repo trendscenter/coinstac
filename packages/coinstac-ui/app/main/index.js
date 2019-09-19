@@ -217,7 +217,16 @@ loadConfig()
         .then(() => initializedCore.dockerManager.pruneImages())
         .then(() => {
           logger.verbose('############ Client starting pipeline');
-          return initializedCore.startPipeline(
+
+          const pipelineName = pipeline.name
+          const consortiumName = consortium.name
+
+          ipcFunctions.sendNotification(
+            'Pipeline started',
+            `Pipeline ${pipelineName} started on consortia ${consortiumName}`
+          )
+
+          return core.startPipeline(
             null,
             consortium.id,
             pipeline,
@@ -234,7 +243,13 @@ loadConfig()
               // Listen for results
               return result.then((results) => {
                 logger.verbose('########### Client pipeline done');
-                return initializedCore.unlinkFiles(run.id)
+
+                ipcFunctions.sendNotification(
+                  'Pipeline finished',
+                  `Pipeline ${pipelineName} finished on consortia ${consortiumName}`
+                )
+
+                return core.unlinkFiles(run.id)
                   .then(() => {
                     if (run.type === 'local') {
                       mainWindow.webContents.send('local-run-complete', {
