@@ -159,7 +159,7 @@ export const signUp = applyAsyncLoading(user => (dispatch, getState) => axios.po
   })
   .catch((err) => {
     const { statusCode, message } = getErrorDetail(err);
-    if (statusCode === 401) {
+    if (statusCode === 400) {
       dispatch(setError(message));
     }
   }));
