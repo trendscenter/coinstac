@@ -15,5 +15,6 @@ module.exports = function configureCore(config, logger, userId, appDirectory) {
     }
   );
 
-  return new CoinstacClientCore(coreConfiguration);
+  const core = new CoinstacClientCore(coreConfiguration);
+  return core.initialize().then(() => core);
 };

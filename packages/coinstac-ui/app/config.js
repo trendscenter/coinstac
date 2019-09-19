@@ -4,6 +4,7 @@ const convict = require('convict');
 const pify = require('util').promisify;
 const access = pify(require('fs').access);
 const path = require('path');
+const home = require('os').homedir;
 
 const localConfig = path.resolve(__dirname, '..', 'config', 'local.json');
 
@@ -29,9 +30,9 @@ const conf = convict({
     port: '443',
     protocol: 'wss:',
   },
-  pipelineWSServer: {
+  fileServer: {
     hostname: 'coinstac.rs.gsu.edu',
-    pathname: '',
+    pathname: '/transfer',
     port: '443',
     protocol: 'https:',
   },
@@ -54,6 +55,7 @@ const conf = convict({
     sunos: '.config/coinstac/',
     win32: 'coinstac/',
   },
+  coinstacHome: path.join(home(), '.coinstac'),
 });
 
 module.exports = function loadConfig() {

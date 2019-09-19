@@ -11,7 +11,6 @@ const unlinkAsync = pify(fs.unlink);
 const linkAsync = pify(fs.link);
 const statAsync = pify(fs.stat);
 
-const os = require('os');
 const path = require('path');
 const winston = require('winston');
 // set w/ config etc post release
@@ -25,11 +24,6 @@ const PipelineManager = require('coinstac-pipeline');
 /**
  * Create a user client for COINSTAC
  * @example <caption>construction and initialization</caption>
- * const client = new CoinstacClient();
- * client.initialize((err) => {
- *   if (err) { throw err; }
- *   client.logger.info('Success! I’ve initialized!');
- * });
  *
  * @class
  * @constructor
@@ -49,9 +43,9 @@ class CoinstacClient {
     if (!opts || !(opts instanceof Object)) {
       throw new TypeError('coinstac-client requires configuration opts');
     }
+    this.options = opts;
     this.logger = opts.logger || new Logger({ transports: [new Console()] });
-    this.appDirectory = opts.appDirectory
-      || CoinstacClient.getDefaultAppDirectory();
+    this.appDirectory = opts.appDirectory;
 
     this.dockerManager = DockerManager;
     this.dockerManager.setLogger(this.logger);
@@ -62,20 +56,25 @@ class CoinstacClient {
     }
 
     this.clientId = opts.userId;
+  }
 
-    this.pipelineManager = PipelineManager.create({
+  initialize() {
+    return PipelineManager.create({
       mode: 'local',
-      clientId: opts.userId,
+      clientId: this.options.userId,
       logger: this.logger,
       operatingDirectory: path.join(this.appDirectory),
-      remotePort: opts.pipelineWSServer.port,
-      remoteProtocol: opts.pipelineWSServer.protocol,
-      remotePathname: opts.pipelineWSServer.pathname,
-      remoteURL: opts.pipelineWSServer.hostname,
-      mqttRemotePort: opts.mqttServer.port,
-      mqttRemoteProtocol: opts.mqttServer.protocol,
-      mqttRemoteURL: opts.mqttServer.hostname,
-    });
+      remotePort: this.options.fileServer.port,
+      remoteProtocol: this.options.fileServer.protocol,
+      remotePathname: this.options.fileServer.pathname,
+      remoteURL: this.options.fileServer.hostname,
+      mqttRemotePort: this.options.mqttServer.port,
+      mqttRemoteProtocol: this.options.mqttServer.protocol,
+      mqttRemoteURL: this.options.mqttServer.hostname,
+    })
+      .then((manager) => {
+        this.pipelineManager = manager;
+      });
   }
 
   /**
@@ -88,15 +87,6 @@ class CoinstacClient {
     return pify(fs.readFile)(filename)
       .then(data => pify(csvParse)(data.toString()))
       .then(JSON.stringify);
-  }
-
-  /**
-   * Get the default application storage directory.
-   *
-   * @returns {string}
-   */
-  static getDefaultAppDirectory() {
-    return path.join(os.homedir(), '.coinstac');
   }
 
   /**

@@ -68,9 +68,7 @@ class PipelinesList extends Component {
         key={`${pipeline.name}-list-item`}
         itemObject={pipeline}
         deleteItem={this.openModal}
-        owner={
-          isPipelineOwner(user.permissions, pipeline.owningConsortium)
-        }
+        owner={isPipelineOwner(user.permissions, pipeline.owningConsortium)}
         itemOptions={{ actions: [], text: [] }}
         itemRoute="/dashboard/pipelines"
       />

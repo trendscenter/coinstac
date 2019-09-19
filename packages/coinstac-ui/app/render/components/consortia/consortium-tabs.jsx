@@ -189,7 +189,9 @@ class ConsortiumTabs extends Component {
     const { user } = this.props.auth;
     const { selectedTabIndex, consortium, consortiumUsers } = this.state;
 
-    const title = this.state.consortium.id
+    const isEditingConsortium = !!this.state.consortium.id;
+
+    const title = isEditingConsortium
       ? 'Consortium Edit'
       : 'Consortium Creation';
 
@@ -209,8 +211,8 @@ class ConsortiumTabs extends Component {
           id="consortium-tabs"
         >
           <Tab label="About" />
-          <Tab label="Pipelines" />
-          { isOwner && <Tab label="Runs" /> }
+          { isEditingConsortium && <Tab label="Pipelines" /> }
+          { isEditingConsortium && isOwner && <Tab label="Runs" /> }
         </Tabs>
         {
           selectedTabIndex === 0
