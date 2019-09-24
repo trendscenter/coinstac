@@ -110,7 +110,7 @@ export const autoLogin = applyAsyncLoading(() => (dispatch, getState) => {
           dispatch(setError('An unexpected error has occurred'));
         }
       } else {
-        dispatch(setError('Server not responding'));
+        dispatch(setError('Coinstac services not available'));
       }
     });
 });
@@ -139,13 +139,13 @@ export const login = applyAsyncLoading(({ username, password, saveLogin }) => (d
         dispatch(setError('An unexpected error has occurred'));
       }
     } else {
-      dispatch(setError('Server not responding'));
+      dispatch(setError('Coinstac services not available'));
     }
   }));
 
 export const logout = applyAsyncLoading(() => (dispatch) => {
-  localStorage.setItem('id_token');
-  sessionStorage.setItem('id_token');
+  localStorage.removeItem('id_token');
+  sessionStorage.removeItem('id_token');
   return ipcPromise.send('logout')
     .then(() => {
       dispatch(clearUser());

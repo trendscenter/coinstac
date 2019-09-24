@@ -62,6 +62,35 @@ module.exports = {
     const request = remoteProtocol.trim() === 'https:' ? https : http;
     logger = logger || defaultLogger;
 
+
+    /**
+     * Check mqtt server status
+     */
+    mqtCon = mqtt.connect(
+      `${mqttRemoteProtocol}//${mqttRemoteURL}:${mqttRemotePort}`,
+      {
+        clientId: `${clientId}_${Math.random().toString(16).substr(2, 8)}`,
+        reconnectPeriod: 5000,
+      }
+    );
+
+    const mqttServerStatus = await Promise.race([
+      new Promise(resolve => {
+        mqtCon.on('connect', () => {
+          resolve('mqttOnline')
+        });
+      }),
+      new Promise(resolve => {
+        mqtCon.on('offline', () => {
+          resolve('mqttOffline')
+        });
+      }),
+    ])
+
+    if (mqttServerStatus === 'mqttOffline') {
+      return { mqttServerStatus }
+    }
+
     /**
      * exponential backout for GET
      * consider file batching here if server load is too high
