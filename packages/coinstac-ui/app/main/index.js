@@ -53,7 +53,7 @@ const getWindow = require('./utils/boot/configure-browser-window.js');
 // Set up error handling
 const logUnhandledError = require('../common/utils/log-unhandled-error.js');
 const configureCore = require('./utils/boot/configure-core.js');
-const configureLogger = require('./utils/boot/configure-logger.js');
+const { configureLogger, readInitialLogContents } = require('./utils/boot/configure-logger.js');
 const upsertCoinstacUserDir = require('./utils/boot/upsert-coinstac-user-dir.js');
 const loadConfig = require('../config.js');
 const fileFunctions = require('./services/files.js');
@@ -81,6 +81,15 @@ loadConfig()
 
     const mainWindow = getWindow();
     logger.verbose('main process booted');
+
+    logger.on('log-message', (arg) => {
+      mainWindow.webContents.send('log-message', arg);
+    });
+
+    ipcMain.on('load-initial-log', async () => {
+      const fileContents = await readInitialLogContents(config);
+      mainWindow.webContents.send('log-message', { data: fileContents });
+    });
 
     ipcMain.on('clean-remote-pipeline', (event, runId) => {
       if (initializedCore) {
