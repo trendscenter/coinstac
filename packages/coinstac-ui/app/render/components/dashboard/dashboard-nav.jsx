@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
@@ -9,6 +10,7 @@ import ViewListIcon from '@material-ui/icons/ViewList';
 import ListAltIcon from '@material-ui/icons/ListAlt';
 import AssignmentIcon from '@material-ui/icons/Assignment';
 import EqualizerIcon from '@material-ui/icons/Equalizer';
+import DescriptionIcon from '@material-ui/icons/Description';
 
 const DashboardNav = () => {
   return (
@@ -36,6 +38,10 @@ const DashboardNav = () => {
       <ListItem button component="a" href="#/dashboard/results">
         <ListItemIcon><EqualizerIcon /></ListItemIcon>
         <ListItemText primary="Results" />
+      </ListItem>
+      <ListItem button component={Link} to="/dashboard/logs">
+        <ListItemIcon><DescriptionIcon /></ListItemIcon>
+        <ListItemText primary="Logs" />
       </ListItem>
     </List>
   );
