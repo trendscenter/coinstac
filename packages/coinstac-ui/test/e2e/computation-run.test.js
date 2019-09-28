@@ -38,7 +38,7 @@ describe('e2e run computation with 1 member', () => {
   });
 
   it('displays the correct title', () => (
-    app.client.waitUntilWindowLoaded(10000)
+    app.client.waitUntilWindowLoaded(10000).windowByIndex(1)
       .getTitle().should.eventually.equal('COINSTAC')
   ));
 

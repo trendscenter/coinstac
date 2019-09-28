@@ -57,10 +57,10 @@ function createWindow() {
   mainWindow.loadURL(`file://${renderIndexPath}`);
 
   mainWindow.once('ready-to-show', () => {
-    mainWindow.show();
     setTimeout(() => {
-      splashWindow.hide();
+      splashWindow.destroy();
       splashWindow = null;
+      mainWindow.show();
     }, 4000);
   });
 
