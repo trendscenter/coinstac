@@ -338,7 +338,8 @@ const resolvers = {
     addUserRole: async ({ auth: { credentials } }, args) => {
       const { permissions } = credentials
 
-      if (!permissions[args.table][args.doc] || !permissions[args.table][args.doc].write) {
+      const documentPermissions = permissions[args.table][args.doc];
+      if (!documentPermissions || !documentPermissions.includes('owner')) {
         return Boom.forbidden('Action not permitted');
       }
 
@@ -399,7 +400,7 @@ const resolvers = {
      * @return {object} Deleted consortium
      */
     deleteConsortiumById: ({ auth: { credentials: { permissions } } }, args) => {
-      if (!permissions.consortia[args.consortiumId] || !permissions.consortia[args.consortiumId].write) {
+      if (!permissions.consortia[args.consortiumId] || !permissions.consortia[args.consortiumId].includes('owner')) {
         return Boom.forbidden('Action not permitted');
       }
 
@@ -440,7 +441,7 @@ const resolvers = {
         )
         .then(([connection, pipeline]) => {
           if (!permissions.consortia[pipeline.owningConsortium] ||
-              !permissions.consortia[pipeline.owningConsortium].write
+              !permissions.consortia[pipeline.owningConsortium].includes('owner')
           ) {
             return Boom.forbidden('Action not permitted');
           } else {
@@ -524,7 +525,7 @@ const resolvers = {
     removeUserRole: async ({ auth: { credentials } }, args) => {
       const { permissions } = credentials
 
-      if (!permissions[args.table][args.doc] || !permissions[args.table][args.doc].write) {
+      if (!permissions[args.table][args.doc] || !permissions[args.table][args.doc].includes('owner')) {
         return Boom.forbidden('Action not permitted');
       }
 
@@ -566,7 +567,7 @@ const resolvers = {
 
       const isUpdate = !!args.consortium.id;
 
-      if (isUpdate && !permissions.consortia[args.consortium.id].write) {
+      if (isUpdate && !permissions.consortia[args.consortium.id].includes('owner')) {
         return Boom.forbidden('Action not permitted');
       }
 
