@@ -12,6 +12,8 @@ const fileExists = (fPath) => {
   return access(fPath).then(() => true, () => false);
 };
 
+const apiEndPoint = process.env.NODE_ENV === 'development'
+  ? 'coinstacdev01.rs.gsu.edu' : 'coinstac.rs.gsu.edu';
 const conf = convict({
   env: {
     doc: 'The applicaton environment.',
@@ -20,24 +22,24 @@ const conf = convict({
     env: 'NODE_ENV',
   },
   apiServer: {
-    hostname: 'coinstac.rs.gsu.edu',
+    hostname: apiEndPoint,
     pathname: '/api',
     protocol: 'https:',
   },
   subApiServer: {
-    hostname: 'coinstac.rs.gsu.edu',
+    hostname: apiEndPoint,
     pathname: '/ws',
     port: '443',
     protocol: 'wss:',
   },
   fileServer: {
-    hostname: 'coinstac.rs.gsu.edu',
+    hostname: apiEndPoint,
     pathname: '/transfer',
     port: '443',
     protocol: 'https:',
   },
   mqttServer: {
-    hostname: 'coinstac.rs.gsu.edu',
+    hostname: apiEndPoint,
     pathname: '',
     port: '80',
     protocol: 'mqtts:',
