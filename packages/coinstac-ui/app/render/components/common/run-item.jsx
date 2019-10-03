@@ -69,6 +69,17 @@ function getStateWell(runObject, stateName, stateKey, classes) {
         )
       }
       {
+        runObject[stateKey].owner
+        && (
+          <div>
+            <Typography className={classes.label}>Owner:</Typography>
+            <Typography className={classes.value}>
+              {runObject[stateKey].owner}
+            </Typography>
+          </div>
+        )
+      }
+      {
         runObject[stateKey].waitingOn && runObject[stateKey].waitingOn.length > 0
         && (
           <div>
