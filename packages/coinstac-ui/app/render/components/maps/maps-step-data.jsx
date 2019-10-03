@@ -18,6 +18,7 @@ const styles = theme => ({
     paddingBottom: theme.spacing.unit * 2,
     marginTop: theme.spacing.unit * 2,
     height: '100%',
+    overflow: 'scroll',
   },
   title: {
     marginBottom: theme.spacing.unit,
@@ -75,6 +76,16 @@ class MapsStepData extends Component {
           {step.type}
         </Typography>
         <div className={classes.listDropzoneContainer}>
+          {step.value && <List className={classes.interestList}>
+            <ListItem><ListItemText primary="Interest(s):" /></ListItem>
+            {step.value &&
+              step.value.map((key, i) => (
+                <ListItem key={key} className={classes.nestedListItem}>
+                  <ListItemText secondary={step.value[i].label} />
+                </ListItem>
+              ))
+            }
+          </List>}
           <div className={classNames('drop-zone', classes.dropZone)}>
             {
               !column

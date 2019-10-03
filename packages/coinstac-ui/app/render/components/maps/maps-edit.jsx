@@ -71,6 +71,7 @@ class MapsEdit extends Component {
       activeConsortium: { stepIO: [], runs: 0, pipelineSteps: [] },
       containers: [],
       collection,
+      dataType: '',
       isMapped: false,
       mappedItem: '',
       rowArray: [],
@@ -333,6 +334,7 @@ class MapsEdit extends Component {
       }
 
       if ('data' in step.inputMap) {
+        this.setState({ dataType: step.inputMap.data.ownerMappings[0]['type'] });
         stepIO[index] = {
           ...stepIO[index],
           data: Array(step.inputMap.data.ownerMappings.length).fill([]),
@@ -407,6 +409,7 @@ class MapsEdit extends Component {
     const {
       activeConsortium,
       collection,
+      dataType,
       isMapped,
       mappedItem,
       metaRow,
@@ -452,6 +455,7 @@ class MapsEdit extends Component {
                           <MapsCollection
                             activeConsortium={activeConsortium}
                             collection={collection}
+                            dataType={dataType}
                             getContainers={this.getContainers}
                             isMapped={isMapped}
                             notifySuccess={this.notifySuccess}
