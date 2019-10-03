@@ -1,5 +1,8 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
+import ipcPromise from 'ipc-promise';
+import fs from 'fs';
+//import ReGrid from 'rethinkdb-regrid';
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
 import Checkbox from '@material-ui/core/Checkbox';
@@ -20,6 +23,8 @@ import CloseIcon from '@material-ui/icons/CloseRounded';
 import InfoIcon from '@material-ui/icons/Info';
 import update from 'immutability-helper';
 import PipelineStepMemberTable from './pipeline-step-member-table';
+
+//var bucket = ReGrid({db: 'coinstac'});
 
 const styles = theme => ({
   addObjButton: {
@@ -42,10 +47,21 @@ class PipelineStepInput extends Component {
     this.state = {
       isClientProp: props.objKey === 'covariates' || props.objKey === 'data',
       openInputSourceMenu: false,
+      filePath: '',
     };
 
     this.addClientProp = this.addClientProp.bind(this);
     this.getNewObj = this.getNewObj.bind(this);
+  }
+
+  componentDidUpdate = () => {
+    const { objKey, objParams, updateStep, step } = this.props;
+    if (step && objKey === 'data' && !step.dataMeta) {
+      updateStep({
+        ...step,
+        dataMeta: objParams
+      });
+    }
   }
 
   getNewObj(
@@ -117,6 +133,29 @@ class PipelineStepInput extends Component {
     return [value];
   }
 
+  // addFile = () => {
+  //   const { objKey, step } = this.props;
+  //   ipcPromise.send('open-dialog')
+  //     .then((obj) => {
+  //       const filePath = obj.paths[0];
+  //       if (filePath && filePath !== '') {
+  //         this.setState({ filePath });
+  //       }
+  //       fs.readFile(filePath, (err, data) => {
+  //         if (err) {
+  //          alert("An error ocurred reading the file :" + err.message);
+  //         } else {
+  //          console.log(btoa(this.utf8ArrayToStr(data)));
+  //          this.props.updateStep({
+  //            ...step,
+  //            inputMap: this.getNewObj(objKey, btoa(this.utf8ArrayToStr(data))),
+  //          });
+  //         }
+  //      });
+  //   })
+  //   .catch(console.log);
+  // }
+
   // Covars or data items
   addClientProp() {
     const {
@@ -165,6 +204,39 @@ class PipelineStepInput extends Component {
     return range;
   }
 
+  // deleteFile(id) {
+  //   bucket.initBucket().then(async () => {
+  //     bucket.deleteId(id, {hard: true});
+  //     this.setState({filePath: ''});
+  //   });
+  // }
+  //
+  // saveFile(id, field) {
+  //   ipcPromise.send('open-dialog')
+  //     .then((obj) => {
+  //       const filePath = obj.paths[0];
+  //       if (filePath && filePath !== '') {
+  //         this.setState({ filePath });
+  //       }
+  //       fs.readFile(filePath, (err, data) => {
+  //         if (err) {
+  //           alert("An error ocurred reading the file :" + err.message);
+  //         } else {
+  //           let fileArr = filePath.split('/');
+  //           let fileName = fileArr.pop();
+  //           bucket.initBucket().then(async () => {
+  //             let upFile = await bucket.writeFile({filename: fileName, buffer: data});
+  //             this.setState({
+  //               filePath,
+  //               fileId: upFile.id
+  //             });
+  //           });
+  //         }
+  //      });
+  //   })
+  //   .catch(console.log);
+  // }
+
   render() {
     const {
       objKey,
@@ -177,7 +249,7 @@ class PipelineStepInput extends Component {
       classes,
     } = this.props;
 
-    const { openInputSourceMenu } = this.state;
+    const { openInputSourceMenu, filePath } = this.state;
 
     let sourceDropDownLabel = null;
     let isValue = false;
@@ -212,7 +284,7 @@ class PipelineStepInput extends Component {
     return (
       <div style={{position: 'relative', display: visibility}} key={'pipestep-'+objKey}>
         {
-          (objKey === 'covariates' || objKey === 'data' || objParams.type === 'file')
+          (objKey === 'covariates' || objKey === 'data')
           && (
             <div style={{ paddingLeft: 10 }}>
               <Typography variant="subtitle2">
@@ -253,7 +325,7 @@ class PipelineStepInput extends Component {
         }
 
         {
-          objKey !== 'covariates' && objKey !== 'data'
+          objKey !== 'covariates' && objKey !== 'data' && objKey !== 'file'
           && (
             <div className={classes.lambdaContainer}>
               <div>
@@ -271,6 +343,37 @@ class PipelineStepInput extends Component {
                   objParams.description
                   && <Typography variant="body1">{ objParams.description }</Typography>
                 }
+                {/*
+                  objParams.type === 'file'
+                  && (
+                    <div>
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={() => {
+                          this.saveFile(
+                            this.props.pipelineId,
+                            this.props.objKey
+                          )
+                        }}
+                        style={{marginRight: '1rem'}}
+                      >
+                        Add File
+                      </Button>
+                      {
+                        filePath && filePath !== ''
+                        && (
+                          <span>
+                            <span>{filePath}</span>
+                            <CloseIcon onClick={() => {
+                                this.deleteFile(this.state.fileId);
+                              }} />
+                          </span>
+                        )
+                      }
+                    </div>
+                  )
+                */}
                 {
                   objParams.type === 'string'
                   && (
