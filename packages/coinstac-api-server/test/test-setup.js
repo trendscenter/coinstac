@@ -281,6 +281,217 @@ helperFunctions.getRethinkConnection()
   }
 },
 {
+  "id": "b23af8ff-18fa-479d-adc7-19408abb3741",
+  "clients": [
+    "test1"
+  ],
+  "consortiumId": "test-cons-2",
+  "startDate": "1568405561851",
+  "endDate": "1568408608526",
+  "pipelineSnapshot": {
+    "delete": false,
+    "description": "ddFNC",
+    "id": "b908c384-aa47-42cf-af56-9fc473b4ceff",
+    "name": "ddFNC",
+    "owningConsortium": "test-cons-2",
+    "shared": false,
+    "steps": [
+      {
+        "computations": [
+          {
+            "computation": {
+              "command": [
+                "python",
+                "/computation/local.py"
+              ],
+              "display": {
+                "type": "iframe"
+              },
+              "dockerImage": "pixelsaurus/ddfnc:latest",
+              "input": {
+                "data": {
+                  "extensions": [
+                    [
+                      "csv",
+                      "txt"
+                    ]
+                  ],
+                  "items": [
+                    "NIfTI"
+                  ],
+                  "label": "Data",
+                  "order": 0,
+                  "type": "directory"
+                },
+                "dfnc_k": {
+                  "conditional": {
+                    "value": "Dynamic FNC",
+                    "variable": "fnc"
+                  },
+                  "default": 5,
+                  "group": "fnc_method",
+                  "label": "Number of Clusters",
+                  "order": 7,
+                  "showValue": "Dynamic FNC",
+                  "source": "owner",
+                  "type": "number"
+                },
+                "fnc": {
+                  "default": "None",
+                  "group": "fnc_method",
+                  "label": "Kind of FNC to perform",
+                  "order": 5,
+                  "type": "select",
+                  "values": [
+                    "None",
+                    "Static FNC",
+                    "Dynamic FNC"
+                  ]
+                },
+                "fnc_window_size": {
+                  "conditional": {
+                    "value": "Dynamic FNC",
+                    "variable": "fnc"
+                  },
+                  "default": 22,
+                  "group": "fnc_method",
+                  "label": "Sliding Window Size",
+                  "order": 6,
+                  "showValue": "Dynamic FNC",
+                  "source": "owner",
+                  "type": "number"
+                },
+                "ica": {
+                  "default": "Infomax ICA",
+                  "group": "ica",
+                  "label": "ICA Method",
+                  "order": 2,
+                  "type": "select",
+                  "values": [
+                    "Infomax ICA",
+                    "Spatially Constrained"
+                  ]
+                },
+                "mask": {
+                  "default": "/computation/local_data/mask.nii",
+                  "label": "Mask",
+                  "order": 1,
+                  "source": "owner",
+                  "type": "string"
+                },
+                "num_ics": {
+                  "conditional": {
+                    "value": "Infomax ICA",
+                    "variable": "ica"
+                  },
+                  "default": 20,
+                  "group": "ica",
+                  "label": "Global Number of Independent Components",
+                  "order": 3,
+                  "showValue": "Infomax ICA",
+                  "source": "owner",
+                  "type": "number"
+                },
+                "results_html_path": {
+                  "default": "gica_cmd_gica_results/icatb_gica_html_report.html",
+                  "label": "Generated Results HTML File Path",
+                  "order": 8,
+                  "source": "owner",
+                  "type": "string"
+                },
+                "scica_template": {
+                  "conditional": {
+                    "value": "Infomax ICA",
+                    "variable": "ica"
+                  },
+                  "default": "/computation/local_data/NeuroMark.nii",
+                  "group": "ica",
+                  "label": "Spatially Constrained ICA Template",
+                  "order": 4,
+                  "showValue": "Spatially Constrained",
+                  "type": "string"
+                }
+              },
+              "output": {},
+              "remote": {
+                "command": [
+                  "python",
+                  "/computation/remote.py"
+                ],
+                "dockerImage": "pixelsaurus/ddfnc:latest",
+                "type": "docker"
+              },
+              "type": "docker"
+            },
+            "id": "0ebb54bb-09fe-452b-a2e7-44f4b20fcb0b",
+            "meta": {
+              "description": "a demo for decentralized dfnc",
+              "id": "ddfnc",
+              "name": "Decentralized DFNC",
+              "repository": "https://github.com/MRN-Code/coinstac_ddfnc_pipeline",
+              "version": "v1.0.0"
+            },
+            "submittedBy": "test1"
+          }
+        ],
+        "controller": {
+          "options": {},
+          "type": "decentralized"
+        },
+        "id": "w4TJR47n9",
+        "inputMap": {
+          "data": {
+            "ownerMappings": [
+              {
+                "type": "NIfTI"
+              }
+            ]
+          },
+          "dfnc_k": {
+            "value": 5
+          },
+          "fnc": {
+            "value": "None"
+          },
+          "fnc_window_size": {
+            "value": 22
+          },
+          "ica": {
+            "value": "Infomax ICA"
+          },
+          "mask": {
+            "value": "/computation/local_data/mask.nii"
+          },
+          "num_ics": {
+            "value": 20
+          },
+          "results_folder": {
+            "value": "gica_cmd_gica_results"
+          },
+          "scica_template": {
+            "value": "/computation/local_data/NeuroMark.nii"
+          }
+        }
+      }
+    ]
+  },
+  "remotePipelineState": {
+    "controllerState": "waiting on local users",
+    "currentIteration": 30,
+    "mode": "remote",
+    "pipelineStep": 0,
+    "totalSteps": 1,
+    "waitingOn": []
+  },
+  "error": null,
+  "results": {
+    "computation_phase": "dkmnx_remote_final"
+  },
+  "type": "decentralized",
+  "__typename": "Run",
+  "status": "complete"
+},
+{
   "id": "results-2",
   "clients": [
     "test1"

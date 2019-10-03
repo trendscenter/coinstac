@@ -128,7 +128,7 @@ function iteratePipelineSteps(consortium, filesByGroup, baseDirectory, runId) {
             collectionId = conStepIO.collectionId;
             ownerId = consortium.owners[0];
           }
-          if (filesByGroup && baseDirectory) {
+          if (filesByGroup) {
             const e = new RegExp(/[-\/\\^$*+?.()|[\]{}]/g); // eslint-disable-line no-useless-escape
             const escape = (string) => {
               return string.replace(e, '\\$&');
@@ -136,8 +136,8 @@ function iteratePipelineSteps(consortium, filesByGroup, baseDirectory, runId) {
             const pathsep = new RegExp(`${escape(sep)}|:`, 'g');
             const pathsArray = filesByGroup[groupId];
             let paths = pathsArray.map((path) => {
-              if (path[0].includes('/')) {
-                let filepath = path[0];
+              if (path.includes('/')) {
+                let filepath = path;
                 filepath = filepath.replace(pathsep, '-');
                 //path = "/input/"+ownerId+"/"+runId+"/"+path;
                 return filepath;
