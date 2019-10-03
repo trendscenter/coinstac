@@ -16,6 +16,7 @@ import Scatter from './displays/scatter-plot';
 import Table from './displays/result-table';
 import Images from './displays/images';
 import String from './displays/string';
+import Iframe from './displays/iframe';
 import { getLocalRun } from '../../state/ducks/runs';
 
 const styles = theme => ({
@@ -107,7 +108,7 @@ class Result extends Component {
 
   render() {
     const { run, selectedTabIndex, plotData, computationOutput } = this.state;
-    const { consortia, classes } = this.props;
+    const { consortia, classes, auth: { appDirectory, user } } = this.props;
     const consortium = consortia.find(c => c.id === run.consortiumId);
     let displayTypes = this.state.displayTypes;
     let stepsLength = -1;
@@ -223,6 +224,16 @@ class Result extends Component {
                     plotData={plotData}
                     tables={selectedDisplayType.tables ? selectedDisplayType.tables : null}
                     title={`${consortium.name}_${run.pipelineSnapshot.name}`}
+                  />
+                )
+              }
+              {
+                selectedDisplayType.type === 'iframe'
+                && (
+                  <Iframe
+                    plotData={plotData}
+                    title={`${consortium.name}_${run.pipelineSnapshot.name}`}
+                    path={`${appDirectory}/output/${user.id}/${run.id}/${run.pipelineSnapshot.steps[0].inputMap.results_html_path.value}`}
                   />
                 )
               }
