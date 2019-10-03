@@ -79,12 +79,18 @@ module.exports = {
       run(remoteHandler) {
         const packageState = () => {
           const troller = this.pipelineSteps[this.currentStep].controllerState;
+          let owner = '';
+          if (this.pipelineSteps[this.currentStep].inputMap.meta &&
+            this.pipelineSteps[this.currentStep].inputMap.meta.owner) {
+              owner = this.pipelineSteps[this.currentStep].inputMap.meta.owner;
+          }
           this.currentState = {
             currentIteration: troller.iteration,
             controllerState: troller.state,
             pipelineStep: this.currentStep,
             mode: this.mode,
             totalSteps: this.pipelineSteps.length,
+            owner: owner,
           };
 
           return this.currentState;
