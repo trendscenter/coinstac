@@ -523,7 +523,7 @@ module.exports = {
         }
 
         const userDirectories = {
-          baseDirectory: path.resolve(operatingDirectory, clientId, runId),
+          baseDirectory: path.resolve(operatingDirectory, 'input', clientId, runId),
           outputDirectory: path.resolve(operatingDirectory, 'output', clientId, runId),
           cacheDirectory: path.resolve(operatingDirectory, 'cache', clientId, runId),
           transferDirectory: path.resolve(operatingDirectory, 'transfer', clientId, runId),
@@ -537,7 +537,7 @@ module.exports = {
               clientId,
               userDirectories,
             }),
-            baseDirectory: userDirectories.baseDirectory,
+            baseDirectory: path.resolve(operatingDirectory, 'input', clientId, runId),
             cacheDirectory: userDirectories.cacheDirectory,
             outputDirectory: userDirectories.outputDirectory,
             transferDirectory: userDirectories.transferDirectory,
