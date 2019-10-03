@@ -8,14 +8,14 @@
     },
     "computation": {
         "type": "docker",
-        "dockerImage": "coinstacteam/ddfnc",
+        "dockerImage": "pixelsaurus/ddfnc:latest",
         "command": [
             "python",
             "\/computation\/local.py"
         ],
         "remote": {
             "type": "docker",
-            "dockerImage": "ddfnc",
+            "dockerImage": "pixelsaurus/ddfnc:latest",
             "command": [
                 "python",
                 "\/computation\/remote.py"
@@ -24,15 +24,16 @@
         "input": {
             "data": {
               "label": "Data",
-              "type": "array",
+              "type": "directory",
               "items": ["NIfTI"],
-              "extensions": [["csv"]],
+              "extensions": [["csv","txt"]],
               "order": 0
             },
             "mask": {
                 "label": "Mask",
-                "type": "file",
+                "type": "string",
                 "source": "owner",
+                "default": "\/computation\/local_data\/mask.nii",
                 "order": 1
             },
             "ica": {
@@ -49,7 +50,6 @@
             "num_ics": {
                 "default": 20,
                 "label": "Global Number of Independent Components",
-                "": 1,
                 "type": "number",
                 "source": "owner",
                 "order": 3,
@@ -62,9 +62,10 @@
             },
             "scica_template": {
                 "label": "Spatially Constrained ICA Template",
-                "type": "file",
+                "type": "string",
                 "order": 4,
                 "group": "ica",
+                "default": "\/computation\/local_data\/NeuroMark.nii",
                 "showValue": "Spatially Constrained",
                 "conditional": {
                   "variable": "ica",
@@ -108,8 +109,18 @@
                   "variable": "fnc",
                   "value": "Dynamic FNC"
                 }
+            },
+            "results_html_path": {
+              "order": 8,
+              "label": "Results HTML Path",
+              "default": "gica_cmd_gica_results/icatb_gica_html_report.html",
+              "type": "string",
+              "source": "owner"
             }
         },
-        "output": {}
+        "output": {},
+        "display": {
+          "type": "iframe"
+        }
     }
 }
