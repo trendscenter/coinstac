@@ -210,7 +210,7 @@ class CoinstacClient {
     runId,
     runPipeline // eslint-disable-line no-unused-vars
   ) {
-    return mkdirp(path.join(this.appDirectory, this.clientId, runId))
+    return mkdirp(path.join(this.appDirectory, 'input', this.clientId, runId))
       .then(() => {
       // TODO: validate runPipeline against clientPipeline
         const linkPromises = [];
@@ -223,8 +223,8 @@ class CoinstacClient {
         for (let i = 0; i < filesArray.length; i += 1) {
           const pathsep = new RegExp(`${escape(path.sep)}|:`, 'g');
           linkPromises.push(
-            linkAsync(filesArray[i], path.resolve(this.appDirectory, this.clientId, runId, filesArray[i].replace(pathsep, '-')))
-              .catch((e) => {
+            linkAsync(filesArray[i], path.resolve(this.appDirectory, 'input', this.clientId, runId, filesArray[i].replace(pathsep, '-')))
+            .catch((e) => {
               // permit dupes
                 if (e.code && e.code !== 'EEXIST') {
                   throw e;
@@ -255,7 +255,7 @@ class CoinstacClient {
   }
 
   unlinkFiles(runId) {
-    const fullPath = path.join(this.appDirectory, this.clientId, runId);
+    const fullPath = path.join(this.appDirectory, 'input', this.clientId, runId);
 
     return statAsync(fullPath).then((stats) => {
       return stats.isDirectory();

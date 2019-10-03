@@ -18,7 +18,7 @@ module.exports = {
       runId,
       clientId,
       start(input, { baseDirectory }) {
-        //console.log(input); Keeping this for future ref. 
+        //console.log(input); Keeping this for future ref.
         return docker.startService(
           this.meta.id,
           `${this.runId}-${this.clientId}`,
@@ -27,7 +27,7 @@ module.exports = {
               Image: computation.dockerImage,
               HostConfig: {
                 Binds: [
-                  `${baseDirectory}:/input:ro`,
+                  `${baseDirectory}/input:/input:ro`,
                   `${baseDirectory}/output:/output:rw`,
                   `${baseDirectory}/cache:/cache:rw`,
                   `${baseDirectory}/transfer:/transfer:rw`,
