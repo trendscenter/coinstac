@@ -16,7 +16,7 @@ module.exports = {
         const metaFile = JSON.parse(rawMetaFile);
         return Promise.all([
           metaFilePath,
-          metaFile,
+          core.constructor.parseMetaFile(metaFile),
           core.constructor.getFilesFromMetadata(
             metaFilePath,
             metaFile
