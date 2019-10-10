@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 import { connect } from 'react-redux';
 import { Link } from 'react-router';
+import Icon from '@material-ui/core/Icon';
 import Paper from '@material-ui/core/Paper';
 import Button from '@material-ui/core/Button';
 import Divider from '@material-ui/core/Divider';
@@ -14,6 +15,7 @@ import PropTypes from 'prop-types';
 import shortid from 'shortid';
 import { unmapAssociatedConsortia } from '../../state/ducks/collections';
 import bitap from 'bitap';
+import classNames from 'classnames';
 
 const styles = theme => ({
   addFileGroupButton: {
@@ -45,6 +47,18 @@ const styles = theme => ({
   actionsContainer: {
     marginTop: theme.spacing.unit * 2,
   },
+  timesIcon: {
+    color: '#f05a29 !important',
+    fontSize: '1.25rem',
+    position: 'absolute',
+    top: '-0.75rem',
+    right: '-0.75rem',
+    background: 'white',
+    borderRadius: '50%',
+    border: '2px solid white',
+    width: '1.5rem',
+    height: '1.5rem',
+  },
 });
 
 class MapsCollection extends Component {
@@ -54,7 +68,7 @@ class MapsCollection extends Component {
 
     this.state = {
       autoMap: false,
-      contChildren: -1,
+      contChildren: 0,
       filesError: null,
       newFile: {
         open: false,
@@ -76,11 +90,7 @@ class MapsCollection extends Component {
     if(this.refs.Container){
       let children = 0;
       let Container = ReactDOM.findDOMNode(this.refs.Container);
-      if(this.state.autoMap){ //this is a hacky hack to get button change to work on drag and drop mapping :(
-        children = Container.children.length - 1;
-      }else{
-        children = Container.children.length;
-      }
+      children = Container.children.length;
       if(prevState.contChildren !== children){
         this.setState(prevState => ({
           contChildren: children
@@ -103,7 +113,9 @@ class MapsCollection extends Component {
       } else {
         const name = `Group ${Object.keys(this.props.collection.fileGroups).length + 1} (${obj.extension.toUpperCase()})`;
         if (this.state.newFile.org === 'metafile') {
-          this.props.setRowArray(obj.metaFile[0]);
+          let headerArray = obj.metaFile[0];
+          let rowArray = [...headerArray];
+          this.props.setRowArray(rowArray);
           newFiles = {
             ...obj,
             name,
@@ -140,14 +152,18 @@ class MapsCollection extends Component {
     .catch(console.log);
   }
 
- filterGetObj(arr, searchKey) {
-    let searchkey = searchKey.replace('file', ''); //other object values contain the string 'file', let's remove.
+ filterGetObj(arr, string) {
     return arr.filter(function(obj) {
       return Object.keys(obj).some(function(key) {
         let objkey = obj[key];
         if(typeof objkey === 'string'){
-          let fuzzy = bitap(objkey.toLowerCase(), searchkey.toLowerCase(), 1);
-          if(fuzzy.length){
+          let fuzzy = [];
+          if(string.length > objkey.length){
+            fuzzy = bitap(string.toLowerCase(), objkey.toLowerCase(), 1);
+          }else{
+            fuzzy = bitap(objkey.toLowerCase(), string.toLowerCase(), 1);
+          }
+          if(fuzzy[0] > 1){
             return obj[key];
           }
         }
@@ -155,14 +171,18 @@ class MapsCollection extends Component {
     });
   }
 
-  filterGetIndex(arr, searchKey) {
-     let searchkey = searchKey.replace('file', ''); //other object values contain the string 'file', let's remove.
+  filterGetIndex(arr, string) {
      return arr.findIndex(function(obj) {
        return Object.keys(obj).some(function(key) {
          let objkey = obj[key];
          if(typeof objkey === 'string'){
-           let fuzzy = bitap(objkey.toLowerCase(), searchkey.toLowerCase(), 1);
-           if(fuzzy.length){
+           let fuzzy = [];
+           if(string.length > objkey.length){
+             fuzzy = bitap(string.toLowerCase(), objkey.toLowerCase(), 1);
+           }else{
+             fuzzy = bitap(objkey.toLowerCase(), string.toLowerCase(), 1);
+           }
+           if(fuzzy[0] > 1){
              return obj[key];
            }
          }
@@ -176,7 +196,6 @@ class MapsCollection extends Component {
        let type = item[0];
        let obj = item[1].ownerMappings;
        const steps = this.makePoints(group.firstRow).map(async (string, index) => {
-        string = string.replace('file', '');
         if( obj && Object.keys(this.filterGetObj(obj,string)).length > 0 ){
          await this.setStepIO(
            index,
@@ -186,19 +205,6 @@ class MapsCollection extends Component {
            this.filterGetIndex(obj,string),
            string
          );
-        }
-        if(obj && obj[0] && obj[0].type){
-          let fuzzy = bitap(string.toLowerCase(), obj[0].type.toLowerCase(), 1);
-          if(fuzzy.length){
-            await this.setStepIO(
-              index,
-              group.id,
-              0,
-              type,
-              0,
-              string
-            );
-          }
         }
        });
 
@@ -230,7 +236,6 @@ class MapsCollection extends Component {
 
   setStepIO(i, groupId, stepIndex, objKey, index, string) {
     const { collection, rowArray, updateConsortiumClientProps } = this.props;
-    let array = rowArray;
     let timeout = ((i + 1) * 250);
     let varObject = [{
       'collectionId': collection.id,
@@ -240,8 +245,8 @@ class MapsCollection extends Component {
     return new Promise((resolve) => {
       setTimeout(() => {
         updateConsortiumClientProps(stepIndex, objKey, index, varObject);
-        array.splice( array.indexOf(string), 1 );
-        this.props.setRowArray(array);
+        rowArray.splice( rowArray.indexOf(string), 1 );
+        this.props.setRowArray(rowArray);
         resolve();
       }, timeout);
     })
@@ -272,6 +277,7 @@ class MapsCollection extends Component {
     } = this.props;
 
     const {
+      autoMap,
       contChildren,
       filesError,
       finishedAutoMapping,
@@ -361,6 +367,10 @@ class MapsCollection extends Component {
                                   key={index}
                                 >
                                   <FileCopyIcon /> {point}
+                                  <span onClick={()=>{this.props.removeRowArrItem(point)}}>
+                                    <Icon
+                                      className={classNames('fa fa-times-circle', classes.timesIcon)} />
+                                  </span>
                                 </div>
                               ))
                             }
@@ -370,7 +380,8 @@ class MapsCollection extends Component {
                       <Divider />
                       <div className={classes.actionsContainer}>
                         {
-                          !isMapped && !finishedAutoMapping && contChildren !== 0
+                          !isMapped
+                          && rowArray.length * contChildren > 0
                           && (
                             <Button
                               variant="contained"
@@ -382,15 +393,26 @@ class MapsCollection extends Component {
                           )
                         }
                         {
-                          !isMapped && finishedAutoMapping
+                          !isMapped
+                          && rowArrayLength * contChildren === 0
                           && (
-                            <Button
-                              variant="contained"
-                              color="primary"
-                              onClick={() => this.props.saveAndCheckConsortiaMapping()}
-                            >
-                              Save
-                            </Button>
+                            <div>
+                              <Button
+                                variant="contained"
+                                color="primary"
+                                onClick={() => this.props.saveAndCheckConsortiaMapping()}
+                              >
+                                Save
+                              </Button>
+                              &nbsp;
+                              <Button
+                                variant="contained"
+                                color="secondary"
+                                onClick={() => this.props.resetPipelineSteps(this.makePoints(group.firstRow))}
+                              >
+                                Clear Mapping
+                              </Button>
+                            </div>
                           )
                         }
                         {
