@@ -410,6 +410,20 @@ class MapsEdit extends Component {
      this.setPipelineSteps(pipeline.steps);
   }
 
+  resetPipelineSteps = (array) => {
+    const { consortium, collections, mapped, pipelines } = this.props;
+    let pipeline = pipelines.find(p => p.id === consortium.activePipelineId);
+     this.setState({
+       activeConsortium: {
+         ...consortium,
+         pipelineSteps: pipeline.steps,
+       },
+     });
+     this.setRowArray(array);
+     this.setState({isMapped: false});
+     this.setPipelineSteps(pipeline.steps);
+  }
+
   setPipelineSteps(steps) {
     // Prepopulate stepIO with same number of steps as pipeline to ensure indices match
     // TODO: Add section specifically for covars and prepopulate empty values for all params?
