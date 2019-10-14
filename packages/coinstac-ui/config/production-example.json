@@ -1,0 +1,23 @@
+{
+  "apiServer": {
+    "hostname": "coinstac.rs.gsu.edu",
+    "pathname": "/api",
+    "protocol": "https:"
+  },
+  "subApiServer": {
+    "hostname": "coinstac.rs.gsu.edu",
+    "pathname": "/ws",
+    "port": "443",
+    "protocol": "wss:"
+  },
+  "fileServer": {
+    "hostname": "coinstac.rs.gsu.edu",
+    "pathname": "/transfer",
+    "protocol": "https:"
+  },
+  "mqttServer": {
+    "hostname": "coinstac.rs.gsu.edu",
+    "port": "80",
+    "protocol": "mqtts:"
+  }
+}

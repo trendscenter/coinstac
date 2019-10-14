@@ -12,8 +12,6 @@ const fileExists = (fPath) => {
   return access(fPath).then(() => true, () => false);
 };
 
-const apiEndPoint = process.env.NODE_ENV === 'development'
-  ? 'coinstacdev01.rs.gsu.edu' : 'coinstac.rs.gsu.edu';
 const conf = convict({
   env: {
     doc: 'The applicaton environment.',
@@ -22,29 +20,29 @@ const conf = convict({
     env: 'NODE_ENV',
   },
   apiServer: {
-    hostname: apiEndPoint,
-    pathname: '/api',
-    protocol: 'https:',
+    hostname: 'localhost',
+    pathname: '',
+    port: '3100',
+    protocol: 'http:',
   },
   subApiServer: {
-    hostname: apiEndPoint,
-    pathname: '/ws',
-    port: '443',
-    protocol: 'wss:',
+    hostname: 'localhost',
+    pathname: '',
+    port: '3100',
+    protocol: 'ws:',
   },
   fileServer: {
-    hostname: apiEndPoint,
+    hostname: 'localhost',
     pathname: '/transfer',
-    port: '443',
-    protocol: 'https:',
+    port: '3300',
+    protocol: 'http:',
   },
   mqttServer: {
-    hostname: apiEndPoint,
+    hostname: 'localhost',
     pathname: '',
-    port: '80',
-    protocol: 'mqtts:',
+    port: '1883',
+    protocol: 'mqtt:',
   },
-
   logFile: 'coinstac-log.json',
   logFileBoot: 'coinstac-boot-error-log.txt',
   // these are appended to the home dir for you OS
