@@ -51,17 +51,10 @@ const isUserA = (userId, groupArr) => {
 };
 
 let drake = dragula({
-    copy: false,
-    revertOnSpill: true,
-    // accepts: function (el, target) {
-    //   if(el.dataset.string && target.dataset.name){
-    //     let fuzzy = bitap(el.dataset.string.toLowerCase(), target.dataset.name.toLowerCase(), 1);
-    //     if(fuzzy.length){
-    //       return true;
-    //     }
-    //   }
-    // },
-  });
+  copy: true,
+  copySortSource: true,
+  revertOnSpill: true,
+});
 
 class MapsEdit extends Component {
   constructor(props) {
@@ -143,38 +136,6 @@ class MapsEdit extends Component {
      this.getDropAction();
   }
 
-  filterGetObj(arr, searchKey) {
-    //let searchkey = searchKey.replace('file', ''); //other object values contain the string 'file', let's remove.
-    let result = arr.filter(function(obj) {
-     return Object.keys(obj).some(function(key) {
-       let objkey = obj[key];
-       if(typeof objkey === 'string'){
-         let fuzzy = bitap(objkey.toLowerCase(), searchKey.toLowerCase(), 1);
-         if(fuzzy.length){
-           return obj[key];
-         }
-       }
-     })
-    });
-    return result;
-  }
-
-  filterGetIndex(arr, searchKey) {
-     //let searchkey = searchKey.replace('file', ''); //other object values contain the string 'file', let's remove.
-     let result = arr.findIndex(function(obj) {
-       return Object.keys(obj).some(function(key) {
-         let objkey = obj[key];
-         if(typeof objkey === 'string'){
-           let fuzzy = bitap(objkey.toLowerCase(), searchKey.toLowerCase(), 1);
-           if(fuzzy.length){
-             return obj[key];
-           }
-         }
-       })
-     });
-     return result;
-   }
-
   getContainers = (container) => {
     let containers = [];
     if(container){
@@ -208,34 +169,20 @@ class MapsEdit extends Component {
 
   mapObject = (el, target) => {
     const { activeConsortium, collection } = this.state;
-    let covariates = false;
-    let data = false;
-
-    if(activeConsortium.pipelineSteps[0].inputMap.covariates){
-      covariates = activeConsortium.pipelineSteps[0].inputMap.covariates.ownerMappings;
-    }
-    if(activeConsortium.pipelineSteps[0].inputMap.data){
-      data = activeConsortium.pipelineSteps[0].inputMap.data.ownerMappings;
-    }
     let group = collection.fileGroups[el.dataset.filegroup];
-    let dex = null;
-    let key = null;
+    let dex = target.dataset.index;
+    let key = target.dataset.type;
     let name = target.dataset.name;
     let varObject = [{
       'collectionId': collection.id,
       'groupId': el.dataset.filegroup,
       'column':  el.dataset.string
     }];
-    if( covariates && Object.keys(this.filterGetObj(covariates,name)).length > 0 ){
-      dex = this.filterGetIndex(covariates,name);
-      key = 'covariates';
+    if(key && dex && varObject){
+      this.updateConsortiumClientProps(0, key, dex, varObject);
+      this.setState({mappedItem: el.dataset.string});
+      this.removeRowArrItem(el.dataset.string);
     }
-    if ( data && Object.keys(this.filterGetObj(data,name)).length > 0 ){
-      dex = this.filterGetIndex(data,name);
-      key = 'data';
-    }
-    this.updateConsortiumClientProps(0, key, dex, varObject);
-    this.setState({mappedItem: el.dataset.string});
     el.remove();
   }
 
@@ -334,6 +281,7 @@ class MapsEdit extends Component {
          pipelineSteps: pipeline.steps,
        },
      });
+     this.setRowArray([]);
      this.setRowArray(array);
      this.setState({isMapped: false});
      this.setPipelineSteps(pipeline.steps);
