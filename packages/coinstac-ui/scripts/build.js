@@ -18,18 +18,23 @@ const options = {
   overwrite: true,
   prune: true,
 };
-
-rm('../build/apps/coinstac-*')
-  .then(() => rename('../config/local.json', '../config/local-build-copy.json'))
+rm('./build/apps/coinstac-*')
+  .then(() => rename('./config/local.json', './config/local-build-copy.json'))
+  .catch((e) => {
+    if (e.code !== 'ENOENT') {
+      throw e;
+    }
+  })
   .then(() => {
     if (process.argv[2] && process.argv[2] === 'development') {
-      return copy(process.argv[2] && process.argv[2] === 'development');
+      return copy('./config/local-development.json', './config/local.json');
     } else if (process.argv[2] && process.argv[2] === 'production') { // eslint-disable-line no-else-return
-      return copy(process.argv[2] && process.argv[2] === 'production');
+      return copy('./config/local-production.json', './config/local.json');
     }
   })
   .then(() => packager(options))
   .then((appPaths) => {
+    debugger
     appPaths.forEach((appPath) => {
       const zip = archiver.create('zip');
       console.log(`Finished building at: ${appPath}`); // eslint-disable-line no-console
@@ -49,7 +54,8 @@ rm('../build/apps/coinstac-*')
       });
     });
   })
-  .then(() => rename('../config/local-build-copy.json', '../config/local.json'))
+  .then(() => rename('./config/local-build-copy.json', './config/local.json'))
   .catch((err) => {
-    console.error('Build failed with:', err); // eslint-disable-line no-console
+    debugger
+    if (err.code !== 'ENOENT') console.error('Build failed with:', err); // eslint-disable-line no-console
   });
