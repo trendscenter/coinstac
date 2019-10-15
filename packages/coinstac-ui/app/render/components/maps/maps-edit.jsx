@@ -200,7 +200,11 @@ class MapsEdit extends Component {
   });
 
   mapObject = (el, target) => {
+<<<<<<< HEAD
     const { activeConsortium, collection, metaRow, rowArray } = this.state;
+=======
+    const { activeConsortium, collection } = this.state;
+>>>>>>> Cleaning up some mapping issues and removing comments
     let group = collection.fileGroups[el.dataset.filegroup];
     let dex = target.dataset.index;
     let key = target.dataset.type;
@@ -214,6 +218,7 @@ class MapsEdit extends Component {
       this.updateConsortiumClientProps(0, key, dex, varObject);
       this.setState({mappedItem: el.dataset.string});
       this.removeRowArrItem(el.dataset.string);
+<<<<<<< HEAD
       let marray = [...metaRow];
       let index = marray.indexOf(el.dataset.string);
       if(index === 0){
@@ -222,6 +227,8 @@ class MapsEdit extends Component {
         marray[index] = name;
       }
       this.setMetaRow(marray);
+=======
+>>>>>>> Cleaning up some mapping issues and removing comments
     }
     el.remove();
   }
@@ -419,6 +426,7 @@ class MapsEdit extends Component {
          pipelineSteps: pipeline.steps,
        },
      });
+     this.setRowArray([]);
      this.setRowArray(array);
      this.setState({isMapped: false});
      this.setPipelineSteps(pipeline.steps);
