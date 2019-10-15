@@ -152,18 +152,19 @@ class MapsCollection extends Component {
     .catch(console.log);
   }
 
-  findInObject(obj, string){
+  findInObject(obj, string, type){
      return Object.entries(obj).find(function([key, value]) {
        let search = null;
        let name = obj['name'];
-       let type = obj['type'];
-       if(!name && type){
-         search = type;
-       }else if(name && type){
+       let itemtype = obj['type'];
+       if(!name && itemtype){
+         search = itemtype;
+       }else if(name && itemtype){
          search = name;
        }
        if(search !== null && search !== 'undefined'){
          let fuzzy = [];
+         console.log(obj,name,type, string.toLowerCase());
          if(string.length > search.length){
            fuzzy = bitap(string.toLowerCase(), search.toLowerCase(), 1);
          }else{
@@ -172,19 +173,23 @@ class MapsCollection extends Component {
          if(fuzzy[0] > 1){
            return obj[key];
          }
+         if(type === 'data'
+         && string.toLowerCase() === 'id'){
+           return obj[key];
+         }
        }
      });
   }
 
-  filterGetObj(arr, string) {
+  filterGetObj(arr, string, type) {
     return arr.filter((obj) => {
-       return this.findInObject(obj, string);
+       return this.findInObject(obj, string, type);
     });
   }
 
-  filterGetIndex(arr, string) {
+  filterGetIndex(arr, string, type) {
      return arr.findIndex((obj) => {
-       return this.findInObject(obj, string);
+       return this.findInObject(obj, string, type);
      });
    }
 
@@ -195,14 +200,14 @@ class MapsCollection extends Component {
        let obj = item[1].ownerMappings;
        let firstRow = this.makePoints(group.firstRow);
        const steps = firstRow.map(async (string, index) => {
-        if( obj && Object.keys(this.filterGetObj(obj,string)).length > 0 ){
+        if( obj && Object.keys(this.filterGetObj(obj,string,type)).length > 0 ){
          firstRow.filter(e => e !== string);
          await this.setStepIO(
            index,
            group.id,
            0,
            type,
-           this.filterGetIndex(obj,string),
+           this.filterGetIndex(obj,string,type),
            string
          );
         }
