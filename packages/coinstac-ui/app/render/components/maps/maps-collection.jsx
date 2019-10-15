@@ -237,6 +237,10 @@ class MapsCollection extends Component {
            this.changeMetaRow(search, string);
            return obj[key];
          }
+         if(type === 'data'
+         && string.toLowerCase() === 'id'){
+           return obj[key];
+         }
        }
      });
   }
