@@ -164,7 +164,6 @@ class MapsCollection extends Component {
        }
        if(search !== null && search !== 'undefined'){
          let fuzzy = [];
-         console.log(obj,name,type, string.toLowerCase());
          if(string.length > search.length){
            fuzzy = bitap(string.toLowerCase(), search.toLowerCase(), 1);
          }else{
