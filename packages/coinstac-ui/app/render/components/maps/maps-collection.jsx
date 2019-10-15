@@ -234,7 +234,10 @@ class MapsCollection extends Component {
          }
          if(type === 'data'
          && string.toLowerCase() === 'id'){
+<<<<<<< HEAD
            this.changeMetaRow(search, string);
+=======
+>>>>>>> automapping header string id to data
            return obj[key];
          }
        }
