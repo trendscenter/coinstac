@@ -232,6 +232,10 @@ class MapsCollection extends Component {
              }
            });
          }
+         if(type === 'data'
+         && string.toLowerCase() === 'id'){
+           return obj[key];
+         }
        }
      });
   }
