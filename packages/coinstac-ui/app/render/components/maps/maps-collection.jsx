@@ -405,7 +405,8 @@ class MapsCollection extends Component {
                               </Button>
                         }
                         {
-                          this.makePoints(group.firstRow).length !== rowArrayLength
+                          !isMapped
+                          && this.makePoints(group.firstRow).length !== rowArrayLength
                           && <Button
                             style={{marginLeft: '1rem'}}
                             variant="contained"
