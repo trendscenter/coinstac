@@ -232,6 +232,10 @@ class MapsCollection extends Component {
          if(fuzzy.length > 1 && fuzzy[0] > 3){
            return this.changeMetaGetObj(search, string, obj, key);
          }
+         if(type === 'data'
+         && string.toLowerCase() === 'id'){
+           return obj[key];
+         }
        }
      });
   }
