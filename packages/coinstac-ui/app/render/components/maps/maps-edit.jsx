@@ -399,6 +399,7 @@ class MapsEdit extends Component {
          pipelineSteps: pipeline.steps,
        },
      });
+     this.setRowArray([]);
      this.setRowArray(array);
      this.setState({isMapped: false});
      this.setPipelineSteps(pipeline.steps);
