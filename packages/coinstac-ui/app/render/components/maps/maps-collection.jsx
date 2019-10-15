@@ -152,51 +152,51 @@ class MapsCollection extends Component {
     .catch(console.log);
   }
 
- filterGetObj(arr, string) {
-    return arr.filter(function(obj) {
-      return Object.keys(obj).some(function(key) {
-        let objkey = obj[key];
-        if(typeof objkey === 'string'){
-          let fuzzy = [];
-          if(string.length > objkey.length){
-            fuzzy = bitap(string.toLowerCase(), objkey.toLowerCase(), 1);
-          }else{
-            fuzzy = bitap(objkey.toLowerCase(), string.toLowerCase(), 1);
-          }
-          if(fuzzy[0] > 1){
-            return obj[key];
-          }
-        }
-      })
+  findInObject(obj, string){
+     return Object.entries(obj).find(function([key, value]) {
+       let search = null;
+       let name = obj['name'];
+       let type = obj['type'];
+       if(!name && type){
+         search = type;
+       }else if(name && type){
+         search = name;
+       }
+       if(search !== null && search !== 'undefined'){
+         let fuzzy = [];
+         if(string.length > search.length){
+           fuzzy = bitap(string.toLowerCase(), search.toLowerCase(), 1);
+         }else{
+           fuzzy = bitap(search.toLowerCase(), string.toLowerCase(), 1);
+         }
+         if(fuzzy[0] > 1){
+           return obj[key];
+         }
+       }
+     });
+  }
+
+  filterGetObj(arr, string) {
+    return arr.filter((obj) => {
+       return this.findInObject(obj, string);
     });
   }
 
   filterGetIndex(arr, string) {
-     return arr.findIndex(function(obj) {
-       return Object.keys(obj).some(function(key) {
-         let objkey = obj[key];
-         if(typeof objkey === 'string'){
-           let fuzzy = [];
-           if(string.length > objkey.length){
-             fuzzy = bitap(string.toLowerCase(), objkey.toLowerCase(), 1);
-           }else{
-             fuzzy = bitap(objkey.toLowerCase(), string.toLowerCase(), 1);
-           }
-           if(fuzzy[0] > 1){
-             return obj[key];
-           }
-         }
-       })
+     return arr.findIndex((obj) => {
+       return this.findInObject(obj, string);
      });
    }
 
-   async autoMap(group) {
+  async autoMap(group) {
      let inputMap = this.props.activeConsortium.pipelineSteps[0].inputMap;
      let resolveAutoMapPromises = Object.entries(inputMap).map((item, i) => {
        let type = item[0];
        let obj = item[1].ownerMappings;
-       const steps = this.makePoints(group.firstRow).map(async (string, index) => {
+       let firstRow = this.makePoints(group.firstRow);
+       const steps = firstRow.map(async (string, index) => {
         if( obj && Object.keys(this.filterGetObj(obj,string)).length > 0 ){
+         firstRow.filter(e => e !== string);
          await this.setStepIO(
            index,
            group.id,
@@ -207,7 +207,6 @@ class MapsCollection extends Component {
          );
         }
        });
-
        return Promise.all(steps);
      });
      await Promise.all(resolveAutoMapPromises);
@@ -234,21 +233,18 @@ class MapsCollection extends Component {
     };
   }
 
-  setStepIO(i, groupId, stepIndex, objKey, index, string) {
+  setStepIO(i, groupId, stepIndex, search, index, string) {
     const { collection, rowArray, updateConsortiumClientProps } = this.props;
-    let timeout = ((i + 1) * 250);
     let varObject = [{
       'collectionId': collection.id,
       'groupId': groupId,
       'column':  string
     }];
     return new Promise((resolve) => {
-      setTimeout(() => {
-        updateConsortiumClientProps(stepIndex, objKey, index, varObject);
-        rowArray.splice( rowArray.indexOf(string), 1 );
-        this.props.setRowArray(rowArray);
-        resolve();
-      }, timeout);
+      updateConsortiumClientProps(stepIndex, search, index, varObject);
+      rowArray.splice( rowArray.indexOf(string), 1 );
+      this.props.setRowArray(rowArray);
+      resolve();
     })
   }
 
@@ -395,25 +391,24 @@ class MapsCollection extends Component {
                         {
                           !isMapped
                           && rowArrayLength * contChildren === 0
-                          && (
-                            <div>
-                              <Button
+                          &&  <Button
                                 variant="contained"
                                 color="primary"
                                 onClick={() => this.props.saveAndCheckConsortiaMapping()}
                               >
                                 Save
                               </Button>
-                              &nbsp;
-                              <Button
-                                variant="contained"
-                                color="secondary"
-                                onClick={() => this.props.resetPipelineSteps(this.makePoints(group.firstRow))}
-                              >
-                                Clear Mapping
-                              </Button>
-                            </div>
-                          )
+                        }
+                        {
+                          this.makePoints(group.firstRow).length !== rowArrayLength
+                          && <Button
+                            style={{marginLeft: '1rem'}}
+                            variant="contained"
+                            color="secondary"
+                            onClick={() => this.props.resetPipelineSteps(this.makePoints(group.firstRow))}
+                          >
+                            Reset
+                          </Button>
                         }
                         {
                           isMapped
