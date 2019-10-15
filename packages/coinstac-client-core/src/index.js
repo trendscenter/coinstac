@@ -1,7 +1,6 @@
 'use strict';
 
 // app package deps
-//const tail = require('lodash/tail');
 const pify = require('util').promisify;
 const csvParse = require('csv-parse');
 const mkdirp = pify(require('mkdirp'));
