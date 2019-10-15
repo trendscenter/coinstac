@@ -78,7 +78,13 @@ class MapsStepData extends Component {
           <div className={classNames('drop-zone', classes.dropZone)}>
             {
               !column
-                ? <div ref="Container" className={`acceptor acceptor-${name}`} data-type={type} data-name={name} />
+                ? <div
+                    ref="Container"
+                    className={`acceptor acceptor-${name}`}
+                    data-type={type} 
+                    data-name={name}
+                    data-index={index}
+                  />
               : <div className="card-draggable">
                 <FileCopyIcon /> {column}
                 <span onClick={()=>{this.props.removeMapStep(type, index, column)}}>
