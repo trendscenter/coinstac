@@ -81,7 +81,7 @@ class MapsStepData extends Component {
                 ? <div
                     ref="Container"
                     className={`acceptor acceptor-${name}`}
-                    data-type={type} 
+                    data-type={type}
                     data-name={name}
                     data-index={index}
                   />
