@@ -1,5 +1,5 @@
 const pify = require('util').promisify;
-const packager = pify(require('electron-packager'));
+const packager = require('electron-packager');
 const archiver = require('archiver');
 const fs = require('fs');
 const rm = pify(require('rimraf'));
@@ -34,7 +34,6 @@ rm('./build/apps/coinstac-*')
   })
   .then(() => packager(options))
   .then((appPaths) => {
-    debugger
     appPaths.forEach((appPath) => {
       const zip = archiver.create('zip');
       console.log(`Finished building at: ${appPath}`); // eslint-disable-line no-console
@@ -56,6 +55,5 @@ rm('./build/apps/coinstac-*')
   })
   .then(() => rename('./config/local-build-copy.json', './config/local.json'))
   .catch((err) => {
-    debugger
     if (err.code !== 'ENOENT') console.error('Build failed with:', err); // eslint-disable-line no-console
   });
