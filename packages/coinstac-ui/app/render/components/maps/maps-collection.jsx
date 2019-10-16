@@ -234,6 +234,7 @@ class MapsCollection extends Component {
          }
          if(type === 'data'
          && string.toLowerCase() === 'id'){
+           this.changeMetaRow(search, string);
            return obj[key];
          }
        }
@@ -436,6 +437,9 @@ class MapsCollection extends Component {
                       </Typography>
                       <Typography>
                         <span className="bold">Mapped MetaFile Header:</span> {metaRow.toString()}
+                      </Typography>
+                      <Typography>
+                        <span className="bold">Meta Row:</span> {metaRow.toString()}
                       </Typography>
                       {
                         rowArray.length > 0
