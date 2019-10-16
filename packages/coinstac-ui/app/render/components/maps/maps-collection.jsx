@@ -234,11 +234,7 @@ class MapsCollection extends Component {
          }
          if(type === 'data'
          && string.toLowerCase() === 'id'){
-<<<<<<< HEAD
-           this.changeMetaRow(search, string);
-=======
->>>>>>> automapping header string id to data
-           return obj[key];
+           return this.changeMetaGetObj(search, string, obj, key);
          }
        }
      });
@@ -444,6 +440,9 @@ class MapsCollection extends Component {
                       </Typography>
                       <Typography>
                         <span className="bold">Items Mapped:</span> {stepsMapped} of {stepsTotal}
+                      </Typography>
+                      <Typography>
+                        <span className="bold">Meta Row:</span> {metaRow.toString()}
                       </Typography>
                       {
                         rowArray.length > 0
