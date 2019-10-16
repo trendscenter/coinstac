@@ -114,8 +114,8 @@ class MapsCollection extends Component {
         const name = `Group ${Object.keys(this.props.collection.fileGroups).length + 1} (${obj.extension.toUpperCase()})`;
         if (this.state.newFile.org === 'metafile') {
           let headerArray = obj.metaFile[0];
-          let rowArray = [...headerArray];
-          this.props.setRowArray(rowArray);
+          this.props.setRowArray([...headerArray]);
+          this.props.setMetaRow([...headerArray]);
           newFiles = {
             ...obj,
             name,
@@ -152,8 +152,23 @@ class MapsCollection extends Component {
     .catch(console.log);
   }
 
-  findInObject(obj, string, type){
-     return Object.entries(obj).find(function([key, value]) {
+  changeMetaRow(search, string){
+    const {
+      metaRow,
+      setMetaRow,
+    } = this.props;
+    let marray = metaRow;
+    let index = marray.indexOf(string);
+    if(index === 0){
+      marray[index] = 'id';
+    }else{
+      marray[index] = search;
+    }
+    setMetaRow(marray);
+  }
+
+  findInObject = (obj, string, type) => {
+     return Object.entries(obj).find(([key, value]) => {
        let search = null;
        let name = obj['name'];
        let itemtype = obj['type'];
@@ -170,10 +185,12 @@ class MapsCollection extends Component {
            fuzzy = bitap(search.toLowerCase(), string.toLowerCase(), 1);
          }
          if(fuzzy[0] > 1){
+           this.changeMetaRow(search, string);
            return obj[key];
          }
          if(type === 'data'
          && string.toLowerCase() === 'id'){
+           this.changeMetaRow(search, string);
            return obj[key];
          }
        }
@@ -238,7 +255,12 @@ class MapsCollection extends Component {
   }
 
   setStepIO(i, groupId, stepIndex, search, index, string) {
-    const { collection, rowArray, updateConsortiumClientProps } = this.props;
+    const {
+      collection,
+      rowArray,
+      setRowArray,
+      updateConsortiumClientProps
+    } = this.props;
     let varObject = [{
       'collectionId': collection.id,
       'groupId': groupId,
@@ -247,7 +269,7 @@ class MapsCollection extends Component {
     return new Promise((resolve) => {
       updateConsortiumClientProps(stepIndex, search, index, varObject);
       rowArray.splice( rowArray.indexOf(string), 1 );
-      this.props.setRowArray(rowArray);
+      setRowArray(rowArray);
       resolve();
     })
   }
@@ -271,6 +293,7 @@ class MapsCollection extends Component {
       collection,
       isMapped,
       saveCollection,
+      metaRow,
       rowArray,
       rowArrayLength,
       classes,
@@ -353,6 +376,9 @@ class MapsCollection extends Component {
                       </Typography>
                       <Typography>
                         <span className="bold">First Row:</span> {group.firstRow}
+                      </Typography>
+                      <Typography>
+                        <span className="bold">Meta Row:</span> {metaRow.toString()}
                       </Typography>
                       {
                         rowArray.length > 0
