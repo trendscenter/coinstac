@@ -178,18 +178,24 @@ class MapsCollection extends Component {
          search = name;
        }
        if(search !== null && search !== 'undefined'){
-         let fuzzy = [];
-         if(string.length > search.length){
-           fuzzy = bitap(string.toLowerCase(), search.toLowerCase(), 1);
-         }else{
-           fuzzy = bitap(search.toLowerCase(), string.toLowerCase(), 1);
-         }
-         if(fuzzy[0] > 1){
+         if( string.toLowerCase() === search.toLowerCase() ){
            this.changeMetaRow(search, string);
            return obj[key];
          }
          if(type === 'data'
          && string.toLowerCase() === 'id'){
+           this.changeMetaRow(search, string);
+           return obj[key];
+         }
+         let fuzzy = [];
+         string = string.replace(/[^\w\s]/gi, '');
+         search = search.replace(/[^\w\s]/gi, '');
+         if(string.length > search.length){
+           fuzzy = bitap(string.toLowerCase(), search.toLowerCase(), 1);
+         }else{
+           fuzzy = bitap(search.toLowerCase(), string.toLowerCase(), 1);
+         }
+         if(fuzzy.length > 1 && fuzzy[0] > 3){
            this.changeMetaRow(search, string);
            return obj[key];
          }
@@ -262,8 +268,9 @@ class MapsCollection extends Component {
       setRowArray,
       updateConsortiumClientProps
     } = this.props;
-    let dex = rowArray.indexOf(string);
-    let name = metaRow[dex];
+    let firstRow = this.makePoints(collection.fileGroups[groupId].firstRow);
+    let dex = firstRow.indexOf(string);
+    let name = firstRow[dex];
     let varObject = [{
       'collectionId': collection.id,
       'groupId': groupId,
