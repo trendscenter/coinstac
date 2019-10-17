@@ -74,6 +74,7 @@ class MapsEdit extends Component {
       isMapped: false,
       mappedItem: '',
       rowArray: [],
+      metaRow: [],
       sources: [],
       updateMapsStep: false,
     };
@@ -88,6 +89,7 @@ class MapsEdit extends Component {
     this.updateConsortiumClientProps = this.updateConsortiumClientProps.bind(this);
   }
 
+  setMetaRow = (val) => this.setState({ metaRow: val });
   setRowArray = (val) => this.setState({ rowArray: val });
   updateMapsStep = (val) => this.setState({ updateMapsStep: val });
 
@@ -168,7 +170,7 @@ class MapsEdit extends Component {
   });
 
   mapObject = (el, target) => {
-    const { activeConsortium, collection } = this.state;
+    const { activeConsortium, collection, metaRow, rowArray } = this.state;
     let group = collection.fileGroups[el.dataset.filegroup];
     let dex = target.dataset.index;
     let key = target.dataset.type;
@@ -176,12 +178,20 @@ class MapsEdit extends Component {
     let varObject = [{
       'collectionId': collection.id,
       'groupId': el.dataset.filegroup,
-      'column':  el.dataset.string
+      'column':  name
     }];
     if(key && dex && varObject){
       this.updateConsortiumClientProps(0, key, dex, varObject);
       this.setState({mappedItem: el.dataset.string});
       this.removeRowArrItem(el.dataset.string);
+      let marray = [...metaRow];
+      let index = marray.indexOf(el.dataset.string);
+      if(index === 0){
+        marray[index] = 'id';
+      }else{
+        marray[index] = name;
+      }
+      this.setMetaRow(marray);
     }
     el.remove();
   }
@@ -214,6 +224,26 @@ class MapsEdit extends Component {
     this.props.saveCollection(collection);
   }
 
+  updateMetaRow() {
+    let groupKey = Object.keys(this.state.collection.fileGroups);
+    groupKey = groupKey[0];
+    let newMeta = this.state.collection.fileGroups[groupKey].metaFile;
+    newMeta[0] = [...this.state.metaRow];
+    this.setState(prevState => ({
+      collection: {
+        ...prevState.collection,
+          fileGroups: {
+            [groupKey]: update(prevState.collection.fileGroups[groupKey], {
+            metaFile: {$set: newMeta}
+          }),
+        },
+      },
+    }),
+    () => {
+      this.props.saveCollection(this.state.collection);
+    });
+  }
+
   updateAssociatedConsortia(cons) {
     if (this.state.collection.associatedConsortia.id === cons.id) {
       this.setState(prevState => ({
@@ -230,6 +260,8 @@ class MapsEdit extends Component {
   }
 
   saveAndCheckConsortiaMapping = () => {
+    this.updateMetaRow();
+
     const cons = this.state.activeConsortium;
     this.props.saveAssociatedConsortia(cons);
     const runs = this.props.userRuns;
@@ -319,7 +351,7 @@ class MapsEdit extends Component {
 
   traversePipelineSteps(){
     let result = [];
-    const { activeConsortium, rowArray } = this.state;
+    const { activeConsortium, metaRow, rowArray } = this.state;
     if (activeConsortium.pipelineSteps) {
       let steps = activeConsortium.pipelineSteps;
       Object.entries(steps).forEach(([key, value]) => {
@@ -332,6 +364,8 @@ class MapsEdit extends Component {
                name={Object.keys(inputMap)[i]}
                step={inputMap[k]}
                consortium={activeConsortium}
+               metaRow={metaRow}
+               setMetaRow={this.setMetaRow}
                rowArray={rowArray}
                removeMapStep={this.removeMapStep}
                setRowArray={this.setRowArray}
@@ -375,6 +409,7 @@ class MapsEdit extends Component {
       collection,
       isMapped,
       mappedItem,
+      metaRow,
       rowArray,
     } = this.state;
 
@@ -421,6 +456,8 @@ class MapsEdit extends Component {
                             isMapped={isMapped}
                             notifySuccess={this.notifySuccess}
                             mappedItem={mappedItem}
+                            metaRow={metaRow}
+                            setMetaRow={this.setMetaRow}
                             removeRowArrItem={this.removeRowArrItem}
                             resetPipelineSteps={this.resetPipelineSteps}
                             rowArray={rowArray}

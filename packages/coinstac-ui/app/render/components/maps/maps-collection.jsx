@@ -114,8 +114,8 @@ class MapsCollection extends Component {
         const name = `Group ${Object.keys(this.props.collection.fileGroups).length + 1} (${obj.extension.toUpperCase()})`;
         if (this.state.newFile.org === 'metafile') {
           let headerArray = obj.metaFile[0];
-          let rowArray = [...headerArray];
-          this.props.setRowArray(rowArray);
+          this.props.setRowArray([...headerArray]);
+          this.props.setMetaRow([...headerArray]);
           newFiles = {
             ...obj,
             name,
@@ -152,8 +152,27 @@ class MapsCollection extends Component {
     .catch(console.log);
   }
 
-  findInObject(obj, string, type){
-     return Object.entries(obj).find(function([key, value]) {
+  changeMetaRow(search, string){
+    return new Promise((resolve, reject) => {
+      const {
+        metaRow,
+        setMetaRow,
+      } = this.props;
+      let marray = metaRow;
+      let index = marray.indexOf(string);
+      if(index === 0){
+        marray[index] = 'id';
+      }
+      if(index !== 0 && index !== -1){
+        marray[index] = search;
+      }
+      setMetaRow(marray);
+      resolve(true);
+    });
+  }
+
+  findInObject = (obj, string, type) => {
+     return Object.entries(obj).find(([key, value]) => {
        let search = null;
        let name = obj['name'];
        let itemtype = obj['type'];
@@ -163,18 +182,38 @@ class MapsCollection extends Component {
          search = name;
        }
        if(search !== null && search !== 'undefined'){
+         if( string.toLowerCase() === search.toLowerCase() ){
+           let changeMeta = this.changeMetaRow(search, string);
+           return changeMeta.then((r) => {
+             if(r){
+               return obj[key];
+             }
+           });
+         }
+         if(type === 'data'
+         && string.toLowerCase() === 'id'){
+           let changeMeta = this.changeMetaRow(search, string);
+           return changeMeta.then((r) => {
+             if(r){
+               return obj[key];
+             }
+           });
+         }
          let fuzzy = [];
+         string = string.replace(/[^\w\s]/gi, '');
+         search = search.replace(/[^\w\s]/gi, '');
          if(string.length > search.length){
            fuzzy = bitap(string.toLowerCase(), search.toLowerCase(), 1);
          }else{
            fuzzy = bitap(search.toLowerCase(), string.toLowerCase(), 1);
          }
-         if(fuzzy[0] > 1){
-           return obj[key];
-         }
-         if(type === 'data'
-         && string.toLowerCase() === 'id'){
-           return obj[key];
+         if(fuzzy.length > 1 && fuzzy[0] > 3){
+           let changeMeta = this.changeMetaRow(search, string);
+           return changeMeta.then((r) => {
+             if(r){
+               return obj[key];
+             }
+           });
          }
        }
      });
@@ -187,10 +226,13 @@ class MapsCollection extends Component {
   }
 
   filterGetIndex(arr, string, type) {
-     return arr.findIndex((obj) => {
-       return this.findInObject(obj, string, type);
-     });
-   }
+    return new Promise((resolve, reject) => {
+       let result = arr.findIndex((obj) => {
+         return this.findInObject(obj, string, type);
+       });
+       resolve(result);
+    });
+  }
 
   async autoMap(group) {
      let inputMap = this.props.activeConsortium.pipelineSteps[0].inputMap;
@@ -201,14 +243,17 @@ class MapsCollection extends Component {
        const steps = firstRow.map(async (string, index) => {
         if( obj && Object.keys(this.filterGetObj(obj,string,type)).length > 0 ){
          firstRow.filter(e => e !== string);
-         await this.setStepIO(
-           index,
-           group.id,
-           0,
-           type,
-           this.filterGetIndex(obj,string,type),
-           string
-         );
+         let setObj = this.filterGetIndex(obj,string,type);
+         await setObj.then((result) => {
+           this.setStepIO(
+             index,
+             group.id,
+             0,
+             type,
+             result,
+             string
+           );
+         });
         }
        });
        return Promise.all(steps);
@@ -238,16 +283,26 @@ class MapsCollection extends Component {
   }
 
   setStepIO(i, groupId, stepIndex, search, index, string) {
-    const { collection, rowArray, updateConsortiumClientProps } = this.props;
-    let varObject = [{
-      'collectionId': collection.id,
-      'groupId': groupId,
-      'column':  string
-    }];
+    const {
+      collection,
+      metaRow,
+      rowArray,
+      setRowArray,
+      updateConsortiumClientProps
+    } = this.props;
     return new Promise((resolve) => {
+      let firstRow = collection.fileGroups[groupId].firstRow;
+      let newFirstRow = firstRow.split(', ');
+      let dex = newFirstRow.indexOf(string);
+      let name = metaRow[dex];
+      let varObject = [{
+        'collectionId': collection.id,
+        'groupId': groupId,
+        'column':  name
+      }];
       updateConsortiumClientProps(stepIndex, search, index, varObject);
       rowArray.splice( rowArray.indexOf(string), 1 );
-      this.props.setRowArray(rowArray);
+      setRowArray(rowArray);
       resolve();
     })
   }
@@ -271,6 +326,7 @@ class MapsCollection extends Component {
       collection,
       isMapped,
       saveCollection,
+      metaRow,
       rowArray,
       rowArrayLength,
       classes,
@@ -353,6 +409,9 @@ class MapsCollection extends Component {
                       </Typography>
                       <Typography>
                         <span className="bold">First Row:</span> {group.firstRow}
+                      </Typography>
+                      <Typography>
+                        <span className="bold">Meta Row:</span> {metaRow.toString()}
                       </Typography>
                       {
                         rowArray.length > 0
