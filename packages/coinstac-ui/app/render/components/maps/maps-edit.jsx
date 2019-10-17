@@ -178,7 +178,7 @@ class MapsEdit extends Component {
     let varObject = [{
       'collectionId': collection.id,
       'groupId': el.dataset.filegroup,
-      'column':  el.dataset.string
+      'column':  name
     }];
     if(key && dex && varObject){
       this.updateConsortiumClientProps(0, key, dex, varObject);
@@ -224,27 +224,24 @@ class MapsEdit extends Component {
     this.props.saveCollection(collection);
   }
 
-  updateMetaRow(cons) {
+  updateMetaRow() {
     let groupKey = Object.keys(this.state.collection.fileGroups);
     groupKey = groupKey[0];
     let newMeta = this.state.collection.fileGroups[groupKey].metaFile;
-    newMeta[0] = this.state.metaRow;
-    if (this.state.collection.associatedConsortia.id === cons.id) {
-      this.setState(prevState => ({
-        collection: {
-          ...prevState.collection,
+    newMeta[0] = [...this.state.metaRow];
+    this.setState(prevState => ({
+      collection: {
+        ...prevState.collection,
           fileGroups: {
-            ...prevState.collection.fileGroups,
-            [groupKey]: {
-              metaFile: newMeta,
-            }
-          }
+            [groupKey]: update(prevState.collection.fileGroups[groupKey], {
+            metaFile: {$set: newMeta}
+          }),
         },
-      }),
-      () => {
-        this.props.saveCollection(this.state.collection);
-      });
-    }
+      },
+    }),
+    () => {
+      this.props.saveCollection(this.state.collection);
+    });
   }
 
   updateAssociatedConsortia(cons) {
@@ -263,11 +260,11 @@ class MapsEdit extends Component {
   }
 
   saveAndCheckConsortiaMapping = () => {
+    this.updateMetaRow();
+
     const cons = this.state.activeConsortium;
     this.props.saveAssociatedConsortia(cons);
     const runs = this.props.userRuns;
-
-    this.updateMetaRow(cons);
 
     this.props.getCollectionFiles(cons.id)
       .then((filesArray) => {
