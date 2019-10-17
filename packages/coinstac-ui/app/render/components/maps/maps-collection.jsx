@@ -153,18 +153,22 @@ class MapsCollection extends Component {
   }
 
   changeMetaRow(search, string){
-    const {
-      metaRow,
-      setMetaRow,
-    } = this.props;
-    let marray = metaRow;
-    let index = marray.indexOf(string);
-    if(index === 0){
-      marray[index] = 'id';
-    }else{
-      marray[index] = search;
-    }
-    setMetaRow(marray);
+    return new Promise((resolve, reject) => {
+      const {
+        metaRow,
+        setMetaRow,
+      } = this.props;
+      let marray = metaRow;
+      let index = marray.indexOf(string);
+      if(index === 0){
+        marray[index] = 'id';
+      }
+      if(index !== 0 && index !== -1){
+        marray[index] = search;
+      }
+      setMetaRow(marray);
+      resolve(true);
+    });
   }
 
   findInObject = (obj, string, type) => {
@@ -179,13 +183,21 @@ class MapsCollection extends Component {
        }
        if(search !== null && search !== 'undefined'){
          if( string.toLowerCase() === search.toLowerCase() ){
-           this.changeMetaRow(search, string);
-           return obj[key];
+           let changeMeta = this.changeMetaRow(search, string);
+           return changeMeta.then((r) => {
+             if(r){
+               return obj[key];
+             }
+           });
          }
          if(type === 'data'
          && string.toLowerCase() === 'id'){
-           this.changeMetaRow(search, string);
-           return obj[key];
+           let changeMeta = this.changeMetaRow(search, string);
+           return changeMeta.then((r) => {
+             if(r){
+               return obj[key];
+             }
+           });
          }
          let fuzzy = [];
          string = string.replace(/[^\w\s]/gi, '');
@@ -196,8 +208,12 @@ class MapsCollection extends Component {
            fuzzy = bitap(search.toLowerCase(), string.toLowerCase(), 1);
          }
          if(fuzzy.length > 1 && fuzzy[0] > 3){
-           this.changeMetaRow(search, string);
-           return obj[key];
+           let changeMeta = this.changeMetaRow(search, string);
+           return changeMeta.then((r) => {
+             if(r){
+               return obj[key];
+             }
+           });
          }
        }
      });
@@ -210,10 +226,13 @@ class MapsCollection extends Component {
   }
 
   filterGetIndex(arr, string, type) {
-     return arr.findIndex((obj) => {
-       return this.findInObject(obj, string, type);
-     });
-   }
+    return new Promise((resolve, reject) => {
+       let result = arr.findIndex((obj) => {
+         return this.findInObject(obj, string, type);
+       });
+       resolve(result);
+    });
+  }
 
   async autoMap(group) {
      let inputMap = this.props.activeConsortium.pipelineSteps[0].inputMap;
@@ -224,14 +243,17 @@ class MapsCollection extends Component {
        const steps = firstRow.map(async (string, index) => {
         if( obj && Object.keys(this.filterGetObj(obj,string,type)).length > 0 ){
          firstRow.filter(e => e !== string);
-         await this.setStepIO(
-           index,
-           group.id,
-           0,
-           type,
-           this.filterGetIndex(obj,string,type),
-           string
-         );
+         let setObj = this.filterGetIndex(obj,string,type);
+         await setObj.then((result) => {
+           this.setStepIO(
+             index,
+             group.id,
+             0,
+             type,
+             result,
+             string
+           );
+         });
         }
        });
        return Promise.all(steps);
@@ -268,15 +290,16 @@ class MapsCollection extends Component {
       setRowArray,
       updateConsortiumClientProps
     } = this.props;
-    let firstRow = this.makePoints(collection.fileGroups[groupId].firstRow);
-    let dex = firstRow.indexOf(string);
-    let name = firstRow[dex];
-    let varObject = [{
-      'collectionId': collection.id,
-      'groupId': groupId,
-      'column':  name
-    }];
     return new Promise((resolve) => {
+      let firstRow = collection.fileGroups[groupId].firstRow;
+      let newFirstRow = firstRow.split(', ');
+      let dex = newFirstRow.indexOf(string);
+      let name = metaRow[dex];
+      let varObject = [{
+        'collectionId': collection.id,
+        'groupId': groupId,
+        'column':  name
+      }];
       updateConsortiumClientProps(stepIndex, search, index, varObject);
       rowArray.splice( rowArray.indexOf(string), 1 );
       setRowArray(rowArray);
