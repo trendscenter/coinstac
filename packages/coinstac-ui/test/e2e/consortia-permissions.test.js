@@ -7,13 +7,13 @@ const electronPath = path.join(__dirname, '../..', 'node_modules', '.bin', 'elec
 const appPath = path.join(__dirname, '../..');
 const mocksPath = path.join(__dirname, 'mocks.js');
 
-const EXIST_TIMEOUT = 4000;
-const NOTIFICATION_DISMISS_TIMEOUT = 6000;
+const EXIST_TIMEOUT = 6000;
+const NOTIFICATION_DISMISS_TIMEOUT = 8000;
 const USER_ID_1 = 'test1';
 const USER_ID_2 = 'test2';
 const PASS = 'password';
-const CONS_NAME = 'e2e-consortium';
-const CONS_DESC = 'e2e-description';
+const CONS_NAME = 'e2e-consortium-permission';
+const CONS_DESC = 'e2e-description-permission';
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -22,38 +22,40 @@ const app1 = new Application({
   path: electronPath,
   env: { NODE_ENV: 'test', TEST_INSTANCE: 'test-1' },
   args: [appPath, '-r', mocksPath],
+  port: 9515,
 });
 
-// const app2 = new Application({
-//   path: electronPath,
-//   env: { NODE_ENV: 'test', TEST_INSTANCE: 'test-2' },
-//   args: [appPath, '-r', mocksPath],
-// });
+const app2 = new Application({
+  path: electronPath,
+  env: { NODE_ENV: 'test', TEST_INSTANCE: 'test-2' },
+  args: [appPath, '-r', mocksPath],
+  port: 9516,
+});
 
 describe('e2e consortia permissions', () => {
   before(() => (
     Promise.all([
       app1.start(),
-      // app2.start(),
+      app2.start(),
     ])
   ));
 
   after(() => (
     Promise.all([
       app1.stop(),
-      // app2.browserWindow.close(),
+      app2.stop(),
     ])
   ));
 
   it('opens a single window on first instance', () => (
     app1.client.waitUntilWindowLoaded()
-      .getWindowCount().should.eventually.equal(2)
+      .getWindowCount().should.eventually.equal(1)
   ));
 
-  // it('opens a single window on second instance', () => (
-  //   app2.client.waitUntilWindowLoaded()
-  //     .getWindowCount().should.eventually.equal(2)
-  // ));
+  it('opens a single window on second instance', () => (
+    app2.client.waitUntilWindowLoaded()
+      .getWindowCount().should.eventually.equal(1)
+  ));
 
   it('displays the correct title', () => (
     app1.client.waitUntilWindowLoaded()
@@ -62,7 +64,6 @@ describe('e2e consortia permissions', () => {
 
   it('authenticates demo user on first instance', () => (
     app1.client
-      .windowByIndex(1)
       .waitForVisible('#login-username', EXIST_TIMEOUT)
       .setValue('#login-username', USER_ID_1)
       .setValue('#login-password', PASS)
@@ -71,16 +72,15 @@ describe('e2e consortia permissions', () => {
       .getText('.user-account-name').should.eventually.equal(USER_ID_1)
   ));
 
-  // it('authenticates demo user on second instance', () => (
-  //   app2.client
-  //     .windowByIndex(1)
-  //     .waitForVisible('#login-username', EXIST_TIMEOUT)
-  //     .setValue('#login-username', USER_ID_2)
-  //     .setValue('#login-password', PASS)
-  //     .click('button=Log In')
-  //     .waitForExist('.user-account-name', EXIST_TIMEOUT)
-  //     .getText('.user-account-name').should.eventually.equal(USER_ID_2)
-  // ));
+  it('authenticates demo user on second instance', () => (
+    app2.client
+      .waitForVisible('#login-username', EXIST_TIMEOUT)
+      .setValue('#login-username', USER_ID_2)
+      .setValue('#login-password', PASS)
+      .click('button=Log In')
+      .waitForExist('.user-account-name', EXIST_TIMEOUT)
+      .getText('.user-account-name').should.eventually.equal(USER_ID_2)
+  ));
 
   it('accesses the Add Consortium page', () => (
     app1.client
@@ -118,16 +118,16 @@ describe('e2e consortia permissions', () => {
       .waitForVisible(`div=${USER_ID_2}`, EXIST_TIMEOUT)
   ));
 
-  // it('access consortium as member', () => (
-  //   app2.client
-  //     .click('a=Consortia')
-  //     .waitForVisible(`a[name="${CONS_NAME}"]`, EXIST_TIMEOUT)
-  //     .click(`a[name="${CONS_NAME}"]`)
-  //     .waitForVisible('h4=Consortium Edit', EXIST_TIMEOUT)
-  //     .waitForVisible(`div=${USER_ID_2}`, EXIST_TIMEOUT)
-  //     .element('#consortium-tabs-pane-1 tbody tr:last-child')
-  //     .isSelected('input[name="isOwner"]').should.eventually.equal(false)
-  // ));
+  it('access consortium as member', () => (
+    app2.client
+      .click('a=Consortia')
+      .waitForVisible(`a[name="${CONS_NAME}"]`, EXIST_TIMEOUT)
+      .click(`a[name="${CONS_NAME}"]`)
+      .waitForVisible('h4=Consortium Edit', EXIST_TIMEOUT)
+      .waitForVisible(`div=${USER_ID_2}`, EXIST_TIMEOUT)
+      .element('#consortium-member-table tbody tr:last-child')
+      .isSelected('input[name="isOwner"]').should.eventually.equal(false)
+  ));
 
   it('grant ownership to a member', () => (
     app1.client
@@ -140,16 +140,16 @@ describe('e2e consortia permissions', () => {
       .click('input[name="isOwner"]')
   ));
 
-  // it('access consortium as owner', () => (
-  //   app2.client
-  //     .click('a=Consortia')
-  //     .waitForVisible(`a[name="${CONS_NAME}"]`, EXIST_TIMEOUT)
-  //     .click(`a[name="${CONS_NAME}"]`)
-  //     .waitForVisible('h1=Consortium Edit', EXIST_TIMEOUT)
-  //     .waitForVisible(`span=${USER_ID_2}`, EXIST_TIMEOUT)
-  //     .element('#consortium-tabs-pane-1 tbody tr:last-child')
-  //     .isSelected('input[name="isOwner"]').should.eventually.equal(true)
-  // ));
+  it('access consortium as owner', () => (
+    app2.client
+      .click('a=Consortia')
+      .waitForVisible(`a[name="${CONS_NAME}"]`, EXIST_TIMEOUT)
+      .click(`a[name="${CONS_NAME}"]`)
+      .waitForVisible('h4=Consortium Edit', EXIST_TIMEOUT)
+      .waitForVisible(`span=${USER_ID_2}`, EXIST_TIMEOUT)
+      .element('#consortium-member-table tbody tr:last-child')
+      .isSelected('input[name="isOwner"]').should.eventually.equal(true)
+  ));
 
   it('deletes consortium', () => (
     app1.client
@@ -168,10 +168,10 @@ describe('e2e consortia permissions', () => {
         .waitForVisible('a=Log Out', EXIST_TIMEOUT)
         .click('a=Log Out')
         .waitForVisible('button=Log In', EXIST_TIMEOUT),
-      // app2.client
-      //   .waitForVisible('a=Log Out', EXIST_TIMEOUT)
-      //   .click('a=Log Out')
-      //   .waitForVisible('button=Log In', EXIST_TIMEOUT),
+      app2.client
+        .waitForVisible('a=Log Out', EXIST_TIMEOUT)
+        .click('a=Log Out')
+        .waitForVisible('button=Log In', EXIST_TIMEOUT),
     ])
   ));
 });
