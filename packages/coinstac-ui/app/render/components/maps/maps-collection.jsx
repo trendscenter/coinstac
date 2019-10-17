@@ -257,14 +257,17 @@ class MapsCollection extends Component {
   setStepIO(i, groupId, stepIndex, search, index, string) {
     const {
       collection,
+      metaRow,
       rowArray,
       setRowArray,
       updateConsortiumClientProps
     } = this.props;
+    let dex = rowArray.indexOf(string);
+    let name = metaRow[dex];
     let varObject = [{
       'collectionId': collection.id,
       'groupId': groupId,
-      'column':  string
+      'column':  name
     }];
     return new Promise((resolve) => {
       updateConsortiumClientProps(stepIndex, search, index, varObject);
