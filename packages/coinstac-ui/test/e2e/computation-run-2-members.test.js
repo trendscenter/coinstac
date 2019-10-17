@@ -7,17 +7,17 @@ const electronPath = path.join(__dirname, '../..', 'node_modules', '.bin', 'elec
 const appPath = path.join(__dirname, '../..');
 const mocksPath = path.join(__dirname, 'mocks.js');
 
-const EXIST_TIMEOUT = 4000;
-const NOTIFICATION_DISMISS_TIMEOUT = 6000;
-const COMPUTATION_TIMEOUT = 120000;
-const COMPUTATION_DOWNLOAD_TIMEOUT = 30000;
+const EXIST_TIMEOUT = 6000;
+const NOTIFICATION_DISMISS_TIMEOUT = 8000;
+const COMPUTATION_TIMEOUT = 150000;
+const COMPUTATION_DOWNLOAD_TIMEOUT = 40000;
 const USER_ID_1 = 'test1';
 const USER_ID_2 = 'test2';
 const PASS = 'password';
-const CONS_NAME = 'e2e-consortium';
-const CONS_DESC = 'e2e-description';
-const PIPE_NAME = 'e2e-pipeline';
-const PIPE_DESC = 'e2e-pipeline-description';
+const CONS_NAME = 'e2e-consortium-2-member';
+const CONS_DESC = 'e2e-description-2-member';
+const PIPE_NAME = 'e2e-pipeline-2-member';
+const PIPE_DESC = 'e2e-pipeline-description-2-member';
 const COMPUTATION_NAME = 'Single Shot Regression';
 
 chai.should();
@@ -27,12 +27,14 @@ const app1 = new Application({
   path: electronPath,
   env: { NODE_ENV: 'test', TEST_INSTANCE: 'test-1' },
   args: [appPath, '-r', mocksPath],
+  port: 9515,
 });
 
 const app2 = new Application({
   path: electronPath,
   env: { NODE_ENV: 'test', TEST_INSTANCE: 'test-2' },
   args: [appPath, '-r', mocksPath],
+  port: 9516,
 });
 
 describe('e2e run computation with 2 members', () => {
@@ -46,28 +48,27 @@ describe('e2e run computation with 2 members', () => {
   after(() => (
     Promise.all([
       app1.stop(),
-      app2.browserWindow.close(),
+      app2.stop(),
     ])
   ));
 
   it('opens a single window on first instance', () => (
     app1.client.waitUntilWindowLoaded()
-      .getWindowCount().should.eventually.equal(2)
+      .getWindowCount().should.eventually.equal(1)
   ));
 
   it('opens a single window on second instance', () => (
     app2.client.waitUntilWindowLoaded()
-      .getWindowCount().should.eventually.equal(2)
+      .getWindowCount().should.eventually.equal(1)
   ));
 
   it('displays the correct title', () => (
-    app1.client.waitUntilWindowLoaded().windowByIndex(1)
+    app1.client.waitUntilWindowLoaded()
       .getTitle().should.eventually.equal('COINSTAC')
   ));
 
   it('authenticates demo user on first instance', () => (
     app1.client
-      .windowByIndex(1)
       .waitForVisible('#login-username', EXIST_TIMEOUT)
       .setValue('#login-username', USER_ID_1)
       .setValue('#login-password', PASS)
@@ -230,114 +231,34 @@ describe('e2e run computation with 2 members', () => {
       .waitForVisible('.notification-message*=Pipeline Computations Downloaded', EXIST_TIMEOUT, true)
   ));
 
-  it('creates a file collection for instance 1', () => (
+  it('map data to consortium', () => (
     app1.client
-      .click('a=Collections')
-      .waitForVisible('a=Create File Collection', EXIST_TIMEOUT)
-      .click('a=Create File Collection')
-      .waitForVisible('h1=New Collection', EXIST_TIMEOUT)
-      .setValue('#name', CONS_NAME)
-      .setValue('#description', CONS_DESC)
-      .click('button=Save')
-      .waitForText('.notification-message', EXIST_TIMEOUT)
-      .getText('.notification-message')
-      .then(notificationMessage => notificationMessage.should.equal('Collection Saved.'))
-      .then(() => app1.client.waitForVisible('.notification-message', NOTIFICATION_DISMISS_TIMEOUT, true))
-  ));
-
-  it('sets the data set into the file collection for instance 1', () => (
-    app1.client
-      .element('#collection-tabs')
-      .click('a=Files')
-      .waitForVisible('h3=Collection Files', EXIST_TIMEOUT)
-      .click('button=Add Group')
+      .click('a=Maps')
+      .waitForVisible(`a[name="${CONS_NAME}-map-data"]`, 20000)
+      .click(`a[name="${CONS_NAME}-map-data"]`)
       .waitForVisible('button=Add Files Group', EXIST_TIMEOUT)
-      .click('label=A metadata file containing file paths and covariates.')
       .click('button=Add Files Group')
-      .waitForVisible('button=Remove File Group', EXIST_TIMEOUT)
-      .waitForVisible('.notification-message', EXIST_TIMEOUT)
-      .waitForVisible('.notification-message', NOTIFICATION_DISMISS_TIMEOUT, true)
-      .element('#collection-tabs')
-      .click('a=Consortia')
-      .waitForVisible('h3=Add to Consortia', EXIST_TIMEOUT)
-      .click('#member-consortia-dropdown')
-      .waitForVisible('.dropdown-menu[aria-labelledby="member-consortia-dropdown"]', EXIST_TIMEOUT)
-      .element('.dropdown-menu[aria-labelledby="member-consortia-dropdown"]')
-      .click(`a=${CONS_NAME}`)
-      .waitForVisible('div.panel', EXIST_TIMEOUT)
-      .element('.tab-pane.active .panel-body li')
-      .click('select')
-      .element('.tab-pane.active .panel-body li')
-      .click('option=Group 1 (.CSV)')
-      .element('.tab-pane.active .panel-body li:nth-child(2)')
-      .click('select')
-      .element('.tab-pane.active .panel-body li:nth-child(2)')
-      .click('option=Group 1 (.CSV)')
-      .element('.tab-pane.active .panel-body > div:nth-child(2)')
-      .click('select')
-      .element('.tab-pane.active .panel-body > div:nth-child(2)')
-      .click('option=Group 1 (.CSV)')
-      .element('.tab-pane.active')
+      .waitForVisible('button=Auto Map', EXIST_TIMEOUT)
+      .click('button=Auto Map')
+      .waitForVisible('button=Save', EXIST_TIMEOUT)
       .click('button=Save')
-      .waitForText('.notification-message', EXIST_TIMEOUT)
-      .getText('.notification-message')
-      .then(notificationMessage => notificationMessage.should.equal('Collection Saved.'))
-      .then(() => app1.client.waitForVisible('.notification-message', NOTIFICATION_DISMISS_TIMEOUT, true))
+      .waitForVisible('a=Back to Consortia', EXIST_TIMEOUT)
+      .click('a=Back to Consortia')
   ));
 
-  it('creates a file collection for instance 2', () => (
+  it('map data to consortium', () => (
     app2.client
-      .click('a=Collections')
-      .waitForVisible('a=Create File Collection', EXIST_TIMEOUT)
-      .click('a=Create File Collection')
-      .waitForVisible('h1=New Collection', EXIST_TIMEOUT)
-      .setValue('#name', CONS_NAME)
-      .setValue('#description', CONS_DESC)
-      .click('button=Save')
-      .waitForText('.notification-message', EXIST_TIMEOUT)
-      .getText('.notification-message')
-      .then(notificationMessage => notificationMessage.should.equal('Collection Saved.'))
-      .then(() => app2.client.waitForVisible('.notification-message', NOTIFICATION_DISMISS_TIMEOUT, true))
-  ));
-
-  it('sets the data set into the file collection for instance 2', () => (
-    app2.client
-      .element('#collection-tabs')
-      .click('a=Files')
-      .waitForVisible('h3=Collection Files', EXIST_TIMEOUT)
-      .click('button=Add Group')
+      .click('a=Maps')
+      .waitForVisible(`a[name="${CONS_NAME}-map-data"]`, 20000)
+      .click(`a[name="${CONS_NAME}-map-data"]`)
       .waitForVisible('button=Add Files Group', EXIST_TIMEOUT)
-      .click('label=A metadata file containing file paths and covariates.')
       .click('button=Add Files Group')
-      .waitForVisible('button=Remove File Group', EXIST_TIMEOUT)
-      .waitForVisible('.notification-message', EXIST_TIMEOUT)
-      .waitForVisible('.notification-message', NOTIFICATION_DISMISS_TIMEOUT, true)
-      .element('#collection-tabs')
-      .click('a=Consortia')
-      .waitForVisible('h3=Add to Consortia', EXIST_TIMEOUT)
-      .click('#member-consortia-dropdown')
-      .waitForVisible('.dropdown-menu[aria-labelledby="member-consortia-dropdown"]', EXIST_TIMEOUT)
-      .element('.dropdown-menu[aria-labelledby="member-consortia-dropdown"]')
-      .click(`a=${CONS_NAME}`)
-      .waitForVisible('div.panel', EXIST_TIMEOUT)
-      .element('.tab-pane.active .panel-body li')
-      .click('select')
-      .element('.tab-pane.active .panel-body li')
-      .click('option=Group 1 (.CSV)')
-      .element('.tab-pane.active .panel-body li:nth-child(2)')
-      .click('select')
-      .element('.tab-pane.active .panel-body li:nth-child(2)')
-      .click('option=Group 1 (.CSV)')
-      .element('.tab-pane.active .panel-body > div:nth-child(2)')
-      .click('select')
-      .element('.tab-pane.active .panel-body > div:nth-child(2)')
-      .click('option=Group 1 (.CSV)')
-      .element('.tab-pane.active')
+      .waitForVisible('button=Auto Map', EXIST_TIMEOUT)
+      .click('button=Auto Map')
+      .waitForVisible('button=Save', EXIST_TIMEOUT)
       .click('button=Save')
-      .waitForText('.notification-message', EXIST_TIMEOUT)
-      .getText('.notification-message')
-      .then(notificationMessage => notificationMessage.should.equal('Collection Saved.'))
-      .then(() => app2.client.waitForVisible('.notification-message', NOTIFICATION_DISMISS_TIMEOUT, true))
+      .waitForVisible('a=Back to Consortia', EXIST_TIMEOUT)
+      .click('a=Back to Consortia')
   ));
 
   it('runs a computation', () => (
@@ -375,6 +296,7 @@ describe('e2e run computation with 2 members', () => {
       .click('a=Consortia')
       .waitForVisible(`button[name="${CONS_NAME}-delete"]`, EXIST_TIMEOUT)
       .click(`button[name="${CONS_NAME}-delete"]`)
+      .waitForVisible('#list-delete-modal')
       .element('#list-delete-modal')
       .click('button=Delete')
       .waitForVisible(`h1=${CONS_NAME}`, EXIST_TIMEOUT, true)
