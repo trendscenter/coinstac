@@ -65,11 +65,10 @@ function createWindow() {
       setTimeout(() => {
         splashWindow.destroy();
         splashWindow = null;
-        mainWindow.show();
       }, 4000);
-    } else {
-      mainWindow.show();
     }
+
+    mainWindow.show();
   });
 
   // Emitted when the window is closed.
