@@ -82,13 +82,8 @@ class ConsortiumTabs extends Component {
 
     if (nextProps.activeConsortium) {
       const { activeConsortium: { __typename, ...other } } = nextProps;
-      const consortiumUsers = [];
       if (this.props.routes[3].path !== 'new' || (this.props.routes[3].path === 'new' && this.state.consortium.id) ) {
-        nextProps.activeConsortium.owners.forEach(user => consortiumUsers
-          .push({ id: user, owner: true, member: true }));
-        nextProps.activeConsortium.members
-          .filter(user => consortiumUsers.findIndex(consUser => consUser.id === user) === -1)
-          .forEach(user => consortiumUsers.push({ id: user, member: true }));
+        const consortiumUsers = this.getConsortiumUsers(other);
         this.setState({ consortium: { ...other }, consortiumUsers });
       }
     }
@@ -102,6 +97,17 @@ class ConsortiumTabs extends Component {
     if (this.state.unsubscribeUsers) {
       this.state.unsubscribeUsers();
     }
+  }
+
+  getConsortiumUsers = consortium => {
+    let consortiumUsers = [];
+
+    consortium.owners.forEach(user => consortiumUsers.push({ id: user, owner: true, member: true }));
+    consortium.members
+      .filter(user => consortiumUsers.findIndex(consUser => consUser.id === user) === -1)
+      .forEach(user => consortiumUsers.push({ id: user, member: true }));
+
+    return consortiumUsers;
   }
 
   addMemberToConsortium(userId) {
@@ -148,9 +154,11 @@ class ConsortiumTabs extends Component {
         unsubscribeConsortia = this.props.subscribeToConsortia(other.id);
       }
 
+      const consortiumUsers = this.getConsortiumUsers(other);
 
       this.setState({
         consortium: { ...other },
+        consortiumUsers,
         unsubscribeConsortia
       });
 

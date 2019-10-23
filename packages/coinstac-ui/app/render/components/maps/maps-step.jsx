@@ -21,43 +21,50 @@ class MapsStep extends Component {
     this.handleStep = this.handleStep.bind(this);
   }
 
-  filterGetObj(arr, search) {
-     let str = search.toLowerCase();
-     return arr.findIndex(function(obj) {
-       return Object.keys(obj).some(function(key) {
-         let objkey = obj[key];
-         if(typeof objkey === 'string'){
-           let fuzzy = bitap(objkey.toLowerCase(), str.toLowerCase(), 1);
-           if(fuzzy.length){
-             return true;
-           }
-         }
-       })
-     });
-   }
-
-  handleStep(step, type, updated) {
+  handleStep(step, type) {
     let result = [];
     Object.keys(step).map((key, input) => {
       if (typeof step[key] === 'object' && type.includes('options') === false) {
-         let mapped = -1;
+         let column = null;
          Object.keys(step[key]).map((k, i) => {
             if(type === 'data') {
-              if(this.props.consortium.stepIO[0] && this.props.consortium.stepIO[0].data) {
-                mapped = this.filterGetObj(this.props.consortium.stepIO[0].data, step[key][k].type);
+              if(this.props.consortium.stepIO[0]['data'][k] &&
+                this.props.consortium.stepIO[0]['data'][k]['column']){
+                column = this.props.consortium.stepIO[0]['data'][k]['column'];
               }
-              if(this.props.mapped){
-                mapped = true;
-              }
-              result.push(<MapsStepData isMapped={mapped} getContainers={this.props.getContainers} key={'step-data'+i} step={step[key][k]} type={capitalize(type)} />);
+              result.push(
+                <MapsStepData
+                  getContainers={this.props.getContainers}
+                  key={'step-data-'+i+'-'+type}
+                  step={step[key][k]}
+                  type={type}
+                  index={k}
+                  column={column}
+                  removeMapStep={this.props.removeMapStep}
+                  rowArray={this.props.rowArray}
+                  setRowArray={this.props.setRowArray}
+                />
+              );
+              column = null;
             } else {
-              if(this.props.consortium.stepIO[0] && this.props.consortium.stepIO[0].covariates) {
-               mapped = this.filterGetObj(this.props.consortium.stepIO[0].covariates, step[key][k].name);
+              if(this.props.consortium.stepIO[0]['covariates'][k] &&
+                this.props.consortium.stepIO[0]['covariates'][k]['column']){
+                column = this.props.consortium.stepIO[0]['covariates'][k]['column'];
               }
-              if(this.props.mapped){
-                mapped = true;
-              }
-              result.push(<MapsStepCovariate isMapped={mapped} getContainers={this.props.getContainers} key={'step-covariate'+i} step={step[key][k]} type={capitalize(type)} />);
+              result.push(
+                <MapsStepCovariate
+                  getContainers={this.props.getContainers}
+                  key={'step-cov-'+i+'-'+type}
+                  step={step[key][k]}
+                  type={type}
+                  index={k}
+                  column={column}
+                  removeMapStep={this.props.removeMapStep}
+                  rowArray={this.props.rowArray}
+                  setRowArray={this.props.setRowArray}
+                />
+              );
+              column = null;
             }
          });
       } else {
@@ -74,12 +81,18 @@ class MapsStep extends Component {
       classes,
     } = this.props;
 
+    let showName = false;
+
+    if(name === 'covariates' || name === 'data'){
+      showName = true;
+    }
+
     return (
       <div className={classes.section}>
-        {name === 'covariates' || name === 'data' &&
-          <Typography variant="h6">
-          {capitalize(name)}
-        </Typography>}
+        {!showName ?
+          <Typography variant="h6">Options</Typography> :
+          <Typography variant="h6">{capitalize(name)}</Typography>
+        }
         <div ref="Steps">
           {this.handleStep(step, name)}
         </div>
@@ -93,6 +106,7 @@ MapsStep.propTypes = {
   getContainers: PropTypes.func.isRequired,
   step: PropTypes.object.isRequired,
   classes: PropTypes.object.isRequired,
+  updateConsortiumClientProps: PropTypes.func.isRequired,
 };
 
 export default withStyles(styles)(MapsStep);

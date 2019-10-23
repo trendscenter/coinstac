@@ -1,3 +1,5 @@
+const electron = require('electron');
+
 module.exports = {
   manualDirectorySelection(path) {
     return path;
@@ -14,7 +16,7 @@ module.exports = {
         const metaFile = JSON.parse(rawMetaFile);
         return Promise.all([
           metaFilePath,
-          metaFile,
+          core.constructor.parseMetaFile(metaFile),
           core.constructor.getFilesFromMetadata(
             metaFilePath,
             metaFile
@@ -28,4 +30,8 @@ module.exports = {
   returnFileAsJSON(filePath, core) {
     return core.constructor.getJSONSchema(filePath[0]);
   },
+  sendNotification(title, body) {
+    const notification = new electron.Notification({ title, body })
+    notification.show()
+  }
 };

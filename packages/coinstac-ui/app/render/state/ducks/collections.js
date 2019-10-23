@@ -6,10 +6,6 @@ import { applyAsyncLoading } from './loading';
 import localDB from '../local-db';
 import inputDataTypes from '../input-data-types.json';
 
-// Get Base App Dir
-const CoinstacClient = require('coinstac-client-core');
-const dir = CoinstacClient.getDefaultAppDirectory();
-
 // Actions
 const CLEAR_COLLECTIONS_CONSORTIA = 'CLEAR_COLLECTIONS_CONSORTIA';
 const DELETE_ASSOCIATED_CONSORTIA = 'DELETE_ASSOCIATED_CONSORTIA';
@@ -274,8 +270,12 @@ export const getCollectionFiles = (consortiumId, runId) => (dispatch) => {
   return localDB.associatedConsortia.get(consortiumId)
     .then((consortium) => {
       let collections = { collections: [] };
-      if (consortium.pipelineSteps) {
+      if (consortium && consortium.pipelineSteps) {
         collections = iteratePipelineSteps(consortium);
+      } else {
+        // no local collection assocaiated with the input consortia
+        console.log('Missing consortia in local collection');
+        return;
       }
 
       if ('error' in collections) {

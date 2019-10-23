@@ -29,6 +29,7 @@ import {
   updateDockerOutput,
 } from '../../state/ducks/docker';
 import { updateUserConsortiaStatuses, updateUserPerms } from '../../state/ducks/auth';
+import { appendLogMessage, clearLogs } from '../../state/ducks/app';
 import {
   COMPUTATION_CHANGED_SUBSCRIPTION,
   CONSORTIUM_CHANGED_SUBSCRIPTION,
@@ -100,6 +101,8 @@ const styles = theme => ({
   },
 });
 
+let dockerInterval;
+
 class Dashboard extends Component {
   constructor(props) {
     super(props);
@@ -121,7 +124,7 @@ class Dashboard extends Component {
     const { auth: { user } } = this.props;
     const { router } = this.context;
 
-    setInterval(() => {
+    dockerInterval = setInterval(() => {
       let status = this.props.getDockerStatus();
       status.then((result) => {
         if( result == 'OK' ){
@@ -189,6 +192,16 @@ class Dashboard extends Component {
       this.props.updateLocalRun(arg.run.id, { error: arg.run.error, status: 'error' });
     });
 
+    const { clearLogs } = this.props;
+    clearLogs();
+
+    ipcRenderer.on('log-message', (event, arg) => {
+      const { appendLogMessage } = this.props;
+      appendLogMessage(arg.data);
+    });
+
+    ipcRenderer.send('load-initial-log');
+
     this.unsubscribeToUserMetadata = this.props.subscribeToUserMetaData(user.id);
 
     ipcRenderer.on('docker-error', (event, arg) => {
@@ -244,11 +257,11 @@ class Dashboard extends Component {
           && this.props.consortia.length && runIndexInPropsRemote === -1
           && !nextProps.remoteRuns[i].error
         ) {
+          // TODO: Runs on startup disable, put this back in when we're not clearing dexie on startup
           let run = nextProps.remoteRuns[i];
           const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
-
           this.props.getCollectionFiles(
-            run.consortiumId, consortium.name, run.pipelineSnapshot.steps
+            run.consortiumId, run.id
           )
           .then((filesArray) => {
             let status = 'started';
@@ -458,6 +471,7 @@ class Dashboard extends Component {
   }
 
   componentWillUnmount() {
+    clearInterval(dockerInterval);
     this.state.unsubscribeComputations();
     this.state.unsubscribeConsortia();
     this.state.unsubscribePipelines();
@@ -593,6 +607,8 @@ Dashboard.propTypes = {
   updateDockerOutput: PropTypes.func.isRequired,
   updateLocalRun: PropTypes.func.isRequired,
   updateUserConsortiumStatus: PropTypes.func.isRequired,
+  clearLogs: PropTypes.func.isRequired,
+  appendLogMessage: PropTypes.func.isRequired,
   writeLog: PropTypes.func.isRequired,
   updateUserPerms: PropTypes.func.isRequired,
   currentUser: PropTypes.object,
@@ -688,6 +704,8 @@ const connectedComponent = connect(mapStateToProps,
     updateUserConsortiaStatuses,
     writeLog,
     updateUserPerms,
+    clearLogs,
+    appendLogMessage,
   })(DashboardWithData);
 
 export default withStyles(styles)(connectedComponent);
