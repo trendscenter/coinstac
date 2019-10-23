@@ -13,10 +13,11 @@ import kebabcase from 'lodash';
 
 const styles = {
   print: { display: 'none', visibility: 'hidden' },
-  column: { position: 'relative', float: 'left', width: '45%', marginRight: '5%' },
+  container: { width: '100%' },
+  column: { padding: '1rem' },
+  spacer: { width: '1rem', color: '#fff !important' },
   image: { width: '100%', height: 'auto' },
   pdfButton: { position: 'absolute', top: '15.75rem', right: '1rem', zIndex: '9' },
-  page: { position: 'relative', float: 'left', width: '100%' },
   subItem: { position: 'relative', float: 'left', width: '95%', marginRight: '5%' },
   subpage: { position: 'relative', float: 'left', width: '100%', marginBottom: '2rem' },
 };
@@ -131,19 +132,28 @@ class Images extends Component {
           page.push(
             <div className={classNames(`page-${k}`, classes.subpage)} ref={`page-${k}`} key={`page-${k}`}>
               {item}
-              <div className={classes.column}>{subcol1}</div>
-              <div className={classes.column}>{subcol2}</div>
+              <table className={classes.container}>
+                <tr className={classes.container}>
+                  <td className={classes.column}>{subcol1}</td>
+                  <td className={classes.spacer}>&nbsp; &nbsp; &nbsp;</td>
+                  <td className={classes.column}>{subcol2}</td>
+                </tr>
+              </table>
             </div>
           );
           subcol1 = [];
           subcol2 = [];
         }
       });
+
       page.push(
-        <div className={classes.column}>{col1}</div>
-      );
-      page.push(
-        <div className={classes.column}>{col2}</div>
+        <table className={classes.container}>
+          <tr className={classes.container}>
+            <td className={classes.column}>{col1}</td>
+            <td className={classes.spacer}>&nbsp; &nbsp; &nbsp;</td>
+            <td className={classes.column}>{col2}</td>
+          </tr>
+        </table>
       );
       if (key.includes('global')) {
         output.push(
@@ -181,19 +191,19 @@ class Images extends Component {
      let canvas = ReactDOM.findDOMNode(this.refs.global_canvas);
 		 try {
 			canvas.getContext('2d');
-		  let doc = new jsPDF();
+		  let doc = new jsPDF({compress: true});
       let globalImg = canvas.toDataURL("image/jpg", 1.0);
       let global_items = Object.keys(plotData.global_stats).length;
       let height = 0;
-      height = global_items * 70;
-		  doc.addImage(globalImg, 'jpg', 5, 5, 100, height/2);
+      height = global_items * 20;
+		  doc.addImage(globalImg, 'jpg', 5, 5, 200, height);
       Object.entries(plotData.local_stats).forEach(([key, value]) => {
           let canvas = key + '_canvas';
           let page = 'page-' + key;
           let key_canvas = ReactDOM.findDOMNode(this.refs[canvas]);
           let canvasImg = key_canvas.toDataURL("image/jpg", 1.0);
           doc.addPage();
-    		  doc.addImage(canvasImg, 'jpg', 5, 5, 100, height/2);
+    		  doc.addImage(canvasImg, 'jpg', 5, 5, 200, height);
       });
 		  doc.save(kebabcase(this.props.title) + ".pdf");
     } catch(err) {
@@ -209,10 +219,10 @@ class Images extends Component {
     let global_items = Object.keys(plotData.global_stats).length;
     let local_items = Object.keys(plotData.local_stats).length;
     let height = 0;
-    height = global_items * 350;
+    height = global_items * 180;
     let local_canvas = [];
     Object.entries(plotData.local_stats).forEach(([key, value]) => {
-        local_canvas.push(<canvas className={'canvas'} ref={`${key}_canvas`} width="800" height={height}></canvas>);
+        local_canvas.push(<canvas className={'canvas'} ref={`${key}_canvas`} width="1600" height={height}></canvas>);
     });
     return (
       <div>
@@ -228,7 +238,7 @@ class Images extends Component {
           {plotData && this.drawImageResults(plotData)}
         </div>
         <div className={classes.print}>
-          <canvas ref="global_canvas" width="800" height={height}></canvas>
+          <canvas ref="global_canvas" width="1600" height={height}></canvas>
           {local_canvas}
         </div>
       </div>
