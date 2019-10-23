@@ -53,11 +53,12 @@ const getWindow = require('./utils/boot/configure-browser-window.js');
 // Set up error handling
 const logUnhandledError = require('../common/utils/log-unhandled-error.js');
 const configureCore = require('./utils/boot/configure-core.js');
-const configureLogger = require('./utils/boot/configure-logger.js');
+const { configureLogger, readInitialLogContents } = require('./utils/boot/configure-logger.js');
 const upsertCoinstacUserDir = require('./utils/boot/upsert-coinstac-user-dir.js');
 const loadConfig = require('../config.js');
 const fileFunctions = require('./services/files.js');
 
+let initializedCore;
 // Boot up the main process
 loadConfig()
   .then(config => Promise.all([
@@ -79,12 +80,20 @@ loadConfig()
     global.config = config;
 
     const mainWindow = getWindow();
-    let core = null;
     logger.verbose('main process booted');
 
+    logger.on('log-message', (arg) => {
+      mainWindow.webContents.send('log-message', arg);
+    });
+
+    ipcMain.on('load-initial-log', async () => {
+      const fileContents = await readInitialLogContents(config);
+      mainWindow.webContents.send('log-message', { data: fileContents });
+    });
+
     ipcMain.on('clean-remote-pipeline', (event, runId) => {
-      if (core) {
-        core.unlinkFiles(runId)
+      if (initializedCore) {
+        initializedCore.unlinkFiles(runId)
           .catch((err) => {
             logger.error(err);
             mainWindow.webContents.send('docker-error', {
@@ -114,13 +123,27 @@ loadConfig()
     });
 
     ipcPromise.on('login-init', ({ userId, appDirectory }) => {
-      return new Promise(res => res(configureCore(config, logger, userId, appDirectory)))
-        .then((c) => {
-          core = c;
-          return upsertCoinstacUserDir(core);
-        });
+      return initializedCore
+        ? Promise.resolve() : configureCore(config, logger, userId, appDirectory || config.get('coinstacHome'))
+          .then((c) => {
+            initializedCore = c;
+            return upsertCoinstacUserDir(c);
+          });
     });
-
+    /**
+     * [initializedCore description]
+     * @type {[type]}
+     */
+    ipcPromise.on('logout', () => {
+      // TODO: hacky way to not get a mqtt reconnn loop
+      // a better way would be to make an actual shutdown fn for pipeline
+      return new Promise((resolve) => {
+        initializedCore.pipelineManager.mqtCon.end(true, () => {
+          initializedCore = undefined;
+          resolve();
+        });
+      });
+    });
     /**
    * IPC Listener to start pipeline
    * @param {Object} consortium
@@ -142,7 +165,7 @@ loadConfig()
           .map(comp => comp.computation.dockerImage))
         .reduce((acc, val) => acc.concat(val), []);
 
-      return core.dockerManager.pullImagesFromList(computationImageList)
+      return initializedCore.dockerManager.pullImagesFromList(computationImageList)
         .then((compStreams) => {
           const streamProms = [];
 
@@ -182,7 +205,7 @@ loadConfig()
           return Promise.all(streamProms);
         })
         .catch((err) => {
-          return core.unlinkFiles(run.id)
+          return initializedCore.unlinkFiles(run.id)
             .then(() => {
               mainWindow.webContents.send('local-run-error', {
                 consName: consortium.name,
@@ -200,10 +223,19 @@ loadConfig()
               });
             });
         })
-        .then(() => core.dockerManager.pruneImages())
+        .then(() => initializedCore.dockerManager.pruneImages())
         .then(() => {
           logger.verbose('############ Client starting pipeline');
-          return core.startPipeline(
+
+          const pipelineName = pipeline.name
+          const consortiumName = consortium.name
+
+          ipcFunctions.sendNotification(
+            'Pipeline started',
+            `Pipeline ${pipelineName} started on consortia ${consortiumName}`
+          )
+
+          return initializedCore.startPipeline(
             null,
             consortium.id,
             pipeline,
@@ -220,7 +252,13 @@ loadConfig()
               // Listen for results
               return result.then((results) => {
                 logger.verbose('########### Client pipeline done');
-                return core.unlinkFiles(run.id)
+
+                ipcFunctions.sendNotification(
+                  'Pipeline finished',
+                  `Pipeline ${pipelineName} finished on consortia ${consortiumName}`
+                )
+
+                return initializedCore.unlinkFiles(run.id)
                   .then(() => {
                     if (run.type === 'local') {
                       mainWindow.webContents.send('local-run-complete', {
@@ -233,7 +271,7 @@ loadConfig()
                 .catch((error) => {
                   logger.verbose('########### Client pipeline error');
                   logger.verbose(error.message);
-                  return core.unlinkFiles(run.id)
+                  return initializedCore.unlinkFiles(run.id)
                     .then(() => {
                       mainWindow.webContents.send('local-run-error', {
                         consName: consortium.name,
@@ -280,7 +318,7 @@ loadConfig()
      */
     ipcMain.on('stop-pipeline', (event, { pipelineId, runId }) => {
       try {
-        return core.requestPipelineStop(pipelineId, runId);
+        return initializedCore.requestPipelineStop(pipelineId, runId);
       } catch (err) {
         logger.error(err);
         mainWindow.webContents.send('docker-error', {
@@ -297,7 +335,7 @@ loadConfig()
   * @return {Promise<String[]>} An array of all local Docker image names
   */
     ipcPromise.on('get-all-images', () => {
-      return core.dockerManager.getImages()
+      return initializedCore.dockerManager.getImages()
         .then((data) => {
           return data;
         })
@@ -318,7 +356,7 @@ loadConfig()
   * @return {Promise<boolean[]>} Docker running?
   */
     ipcPromise.on('get-status', () => {
-      return core.dockerManager.getStatus()
+      return initializedCore.dockerManager.getStatus()
         .then((result) => {
           return result;
         })
@@ -342,7 +380,7 @@ loadConfig()
   * @return {Promise}
   */
     ipcPromise.on('download-comps', (params) => { // eslint-disable-line no-unused-vars
-      return core.dockerManager
+      return initializedCore.dockerManager
         .pullImages(params.computations)
         .then((compStreams) => {
           let streamsComplete = 0;
@@ -441,7 +479,7 @@ loadConfig()
         filters,
         properties
       )
-        .then(({ filePaths }) => postDialogFunc(filePaths, core))
+        .then(({ filePaths }) => postDialogFunc(filePaths, initializedCore))
         .catch((err) => {
           logger.error(err);
           mainWindow.webContents.send('docker-error', {
@@ -457,7 +495,7 @@ loadConfig()
    * @param {String} imgId ID of the image to remove
    */
     ipcPromise.on('remove-image', ({ compId, imgId, imgName }) => {
-      return core.dockerManager.removeImage(imgId)
+      return initializedCore.dockerManager.removeImage(imgId)
         .catch((err) => {
           const output = [{
             message: err.message, status: 'error', statusCode: err.statusCode, isErr: true,

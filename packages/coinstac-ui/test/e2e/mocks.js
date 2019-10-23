@@ -13,8 +13,8 @@ module.exports = (dialog) => {
       count = 1;
   }
 
-  dialog.showOpenDialog = () => {
+  dialog.showOpenDialog = (window, opts, cb) => {
     const testFile = path.join(__dirname, `../../../../algorithm-development/test-data/freesurfer-test-data/site${count}/site${count}_Covariate.csv`);
-    return [testFile];
+    cb([testFile]);
   };
 };

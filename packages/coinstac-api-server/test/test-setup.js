@@ -158,11 +158,6 @@ helperFunctions.getRethinkConnection()
           ],
         },
       ]).run(connection))
-      .then(() => rethink.tableCreate('roles', { primaryKey: 'role' }).run(connection))
-      .then(() => rethink.table('roles').insert([
-        { role: 'owner', verbs: { write: true, read: true } },
-        { role: 'member', verbs: { subscribe: true } },
-      ]).run(connection))
       .then(() => rethink.tableCreate('users').run(connection))
       .then(() => rethink.tableCreate('runs').run(connection))
       .then(() => rethink.table('runs').insert([

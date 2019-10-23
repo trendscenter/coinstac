@@ -6,7 +6,7 @@ import HTML5Backend from 'react-dnd-html5-backend';
 import PropTypes from 'prop-types';
 import { graphql, withApollo } from 'react-apollo';
 import shortid from 'shortid';
-import { isEqual, isEmpty } from 'lodash';
+import { isEqual, isEmpty, get } from 'lodash';
 import update from 'immutability-helper';
 import Paper from '@material-ui/core/Paper';
 import Button from '@material-ui/core/Button';
@@ -30,6 +30,7 @@ import {
   saveDocumentProp,
 } from '../../state/graphql/props';
 import { notifySuccess, notifyError } from '../../state/ducks/notifyAndLog';
+import { isPipelineOwner } from '../../utils/helpers';
 
 const computationTarget = {
   drop() {
@@ -94,7 +95,7 @@ class Pipeline extends Component {
     if (props.params.runId) {
       const runs = props.runs;
       runs.filter(run => run.id === props.params.runId);
-      pipeline = runs[0].pipelineSnapshot;
+      pipeline = get(runs, '0.pipelineSnapshot');
     }
 
     this.state = {
@@ -154,12 +155,12 @@ class Pipeline extends Component {
 
   setConsortium() {
     const { auth: { user }, client } = this.props;
+
     let owner;
     if (this.props.params.runId) {
       owner = false;
     } else {
-      owner = user.permissions.consortia[this.state.pipeline.owningConsortium] &&
-      user.permissions.consortia[this.state.pipeline.owningConsortium].write;
+      owner = isPipelineOwner(user.permissions, this.state.pipeline.owningConsortium);
     }
     const consortiumId = this.state.pipeline.owningConsortium;
     const data = client.readQuery({ query: FETCH_ALL_CONSORTIA_QUERY });
