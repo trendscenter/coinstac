@@ -120,6 +120,9 @@ class MapsEdit extends Component {
        },
      });
      this.setState({isMapped: mapped});
+     let ctotal = pipeline.steps[0].inputMap.covariates.ownerMappings.length;
+     let dtotal = pipeline.steps[0].inputMap.data.ownerMappings.length;
+     this.setState({stepsTotal: ctotal + dtotal });
      this.setPipelineSteps(pipeline.steps);
 
      let name = consortium.name+': Collection';
@@ -137,7 +140,6 @@ class MapsEdit extends Component {
      }else{
        this.setState({collection: collections[0]});
      }
-
      this.getDropAction();
   }
 
@@ -155,12 +157,30 @@ class MapsEdit extends Component {
       newContainers.push(container);
     }
     containers = uniqWith(this.state.containers, isEqual);
+    let filter = [
+      'card-deck',
+      'card-draggable',
+    ];
+    let filtered = containers.map((item, key) => {
+      if( !item.getAttribute('class').includes(filter[0]) &&
+          !item.getAttribute('class').includes(filter[1]) ){
+        return item;
+      }else{
+        return false;
+      }
+    });
+    filtered = filtered.filter(Boolean);
+    let length = filtered.length;
+    if(this.state.stepsFilled !== length){
+      this.setState({ stepsFilled: length });
+    }
     containers.map((container) => {
       drake.containers.push(container);
     });
   }
 
   getDropAction = () => {
+    let newArray = new Set(drake.containers);
     drake.on('drop', (el, target, source, sibling) => {
       this.mapObject(el, target);
     });
