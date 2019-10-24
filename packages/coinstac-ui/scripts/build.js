@@ -27,8 +27,10 @@ rm('./build/apps/coinstac-*')
   })
   .then(() => {
     if (process.argv[2] && process.argv[2] === 'development') {
+      console.log('Creating development build'); // eslint-disable-line no-console
       return copy('./config/local-development.json', './config/local.json');
     } else if (process.argv[2] && process.argv[2] === 'production') { // eslint-disable-line no-else-return
+      console.log('Creating production build'); // eslint-disable-line no-console
       return copy('./config/local-production.json', './config/local.json');
     }
   })
