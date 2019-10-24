@@ -77,6 +77,7 @@ class MapsCollection extends Component {
       showFiles: {},
       source: {},
       finishedAutoMapping: false,
+      stepsMapped: 0,
     };
 
     this.addFileGroup = this.addFileGroup.bind(this);
@@ -87,6 +88,14 @@ class MapsCollection extends Component {
   }
 
   componentDidUpdate(prevProps,prevState) {
+    const {
+      stepsTotal,
+      stepsFilled,
+    } = this.props;
+    const {
+      autoMap,
+      stepsMapped,
+    } = this.state;
     if(this.refs.Container){
       let children = 0;
       let Container = ReactDOM.findDOMNode(this.refs.Container);
@@ -98,6 +107,15 @@ class MapsCollection extends Component {
       }
       this.props.getContainers(Container);
     }
+    if(!autoMap && stepsTotal - stepsFilled !== stepsMapped){
+      this.setState({ stepsMapped: stepsTotal - stepsFilled });
+    }
+    if(autoMap &&
+       stepsMapped !== stepsTotal &&
+       stepsTotal - stepsFilled !== stepsMapped &&
+       stepsTotal - (stepsTotal - stepsFilled) === 1){
+      this.setState({ stepsMapped: stepsTotal });
+     }
   }
 
   addFileGroup() {
@@ -171,7 +189,16 @@ class MapsCollection extends Component {
     });
   }
 
-  findInObject = (obj, string, type) => {
+  changeMetaGetObj(search, string, obj, key){
+    let changeMeta = this.changeMetaRow(search, string);
+    return changeMeta.then((r) => {
+      if(r){
+        return obj[key];
+      }
+    });
+  }
+
+  findInObject = (obj, string, type, method) => {
      return Object.entries(obj).find(([key, value]) => {
        let search = null;
        let name = obj['name'];
@@ -182,38 +209,41 @@ class MapsCollection extends Component {
          search = name;
        }
        if(search !== null && search !== 'undefined'){
-         if( string.toLowerCase() === search.toLowerCase() ){
-           let changeMeta = this.changeMetaRow(search, string);
-           return changeMeta.then((r) => {
-             if(r){
-               return obj[key];
-             }
-           });
-         }
+         //Match data column and map to ID
          if(type === 'data'
          && string.toLowerCase() === 'id'){
-           let changeMeta = this.changeMetaRow(search, string);
-           return changeMeta.then((r) => {
-             if(r){
-               return obj[key];
-             }
-           });
+           return this.changeMetaGetObj(search, string, obj, key);
          }
-         let fuzzy = [];
-         string = string.replace(/[^\w\s]/gi, '');
-         search = search.replace(/[^\w\s]/gi, '');
-         if(string.length > search.length){
-           fuzzy = bitap(string.toLowerCase(), search.toLowerCase(), 1);
+
+         //Match if string and search are equal
+         if( string.toLowerCase() === search.toLowerCase() ){
+           return this.changeMetaGetObj(search, string, obj, key);
+         }
+
+         //Match is string contains search and vice versa
+         if(string.length < search.length){
+           let sch = search.replace(/[_-\s]/g, ' ');
+           if(sch.includes(string)){
+             return this.changeMetaGetObj(search, string, obj, key);
+           }
          }else{
-           fuzzy = bitap(search.toLowerCase(), string.toLowerCase(), 1);
+           let str = string.replace(/[_-\s]/gi, ' ');
+           if(str.includes(search)){
+             return this.changeMetaGetObj(search, string, obj, key);
+           }
+         }
+
+         //Finally Fuzzy match string to search based on which is larger
+         let fuzzy = [];
+         let str = string.replace(/[_-\s]/gi, '');
+         let sch = search.replace(/[_-\s]/gi, '');
+         if(str.length > sch.length){
+           fuzzy = bitap(str.toLowerCase(), sch.toLowerCase(), 1);
+         }else{
+           fuzzy = bitap(sch.toLowerCase(), str.toLowerCase(), 1);
          }
          if(fuzzy.length > 1 && fuzzy[0] > 3){
-           let changeMeta = this.changeMetaRow(search, string);
-           return changeMeta.then((r) => {
-             if(r){
-               return obj[key];
-             }
-           });
+           return this.changeMetaGetObj(search, string, obj, key);
          }
        }
      });
@@ -221,20 +251,21 @@ class MapsCollection extends Component {
 
   filterGetObj(arr, string, type) {
     return arr.filter((obj) => {
-       return this.findInObject(obj, string, type);
+       return this.findInObject(obj, string, type, 'getObj');
     });
   }
 
   filterGetIndex(arr, string, type) {
     return new Promise((resolve, reject) => {
        let result = arr.findIndex((obj) => {
-         return this.findInObject(obj, string, type);
+         return this.findInObject(obj, string, type, 'getIndex');
        });
        resolve(result);
     });
   }
 
   async autoMap(group) {
+     this.setState({ autoMap: true });
      let inputMap = this.props.activeConsortium.pipelineSteps[0].inputMap;
      let resolveAutoMapPromises = Object.entries(inputMap).map((item, i) => {
        let type = item[0];
@@ -324,12 +355,13 @@ class MapsCollection extends Component {
     const {
       activeConsortium,
       collection,
+      classes,
       isMapped,
-      saveCollection,
       metaRow,
       rowArray,
       rowArrayLength,
-      classes,
+      saveCollection,
+      stepsTotal,
     } = this.props;
 
     const {
@@ -337,6 +369,7 @@ class MapsCollection extends Component {
       contChildren,
       filesError,
       finishedAutoMapping,
+      stepsMapped
     } = this.state;
 
     return (
@@ -413,6 +446,9 @@ class MapsCollection extends Component {
                       <Typography>
                         <span className="bold">Meta Row:</span> {metaRow.toString()}
                       </Typography>
+                      <Typography>
+                        <span className="bold">Items Mapped:</span> {stepsMapped} of {stepsTotal}
+                      </Typography>
                       {
                         rowArray.length > 0
                         && (
@@ -440,7 +476,7 @@ class MapsCollection extends Component {
                       <div className={classes.actionsContainer}>
                         {
                           !isMapped
-                          && rowArray.length * contChildren > 0
+                          && stepsTotal !== stepsMapped
                           && (
                             <Button
                               variant="contained"
@@ -453,10 +489,13 @@ class MapsCollection extends Component {
                         }
                         {
                           !isMapped
-                          && rowArrayLength * contChildren === 0
+                          && stepsTotal === stepsMapped
                           &&  <Button
                                 variant="contained"
-                                color="primary"
+                                style={{
+                                  backgroundColor: '#5cb85c',
+                                  color: '#fff',
+                                }}
                                 onClick={() => this.props.saveAndCheckConsortiaMapping()}
                               >
                                 Save
@@ -469,7 +508,10 @@ class MapsCollection extends Component {
                             style={{marginLeft: '1rem'}}
                             variant="contained"
                             color="secondary"
-                            onClick={() => this.props.resetPipelineSteps(this.makePoints(group.firstRow))}
+                            onClick={() => {
+                              this.props.resetPipelineSteps(this.makePoints(group.firstRow));
+                              this.setState({autoMap: false, stepsMapped: 0});
+                            }}
                           >
                             Reset
                           </Button>
