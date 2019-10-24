@@ -114,7 +114,7 @@ class PipelinesList extends Component {
           </Fab>
         </div>
         {
-          pipelines && pipelines.length && pipelines.length <= MAX_LENGTH_PIPELINES
+          pipelines && pipelines.length > 0 && pipelines.length <= MAX_LENGTH_PIPELINES
           && pipelines.map(pipeline => this.getListItem(pipeline))
         }
         {ownedPipelines.length > 0 && <Typography variant="h6">Owned Pipelines</Typography>}

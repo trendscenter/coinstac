@@ -177,6 +177,7 @@ class ConsortiumAbout extends Component {
                   options={userOptions}
                   onChange={this.handleMemberSelect}
                   removeSelected
+                  className="consortium-add-user"
                   name="members-input"
                 />
                 <Button
@@ -189,7 +190,7 @@ class ConsortiumAbout extends Component {
                 </Button>
               </div>
             }
-            <Table>
+            <Table id="consortium-member-table">
               <TableHead>
                 <TableRow>
                   <TableCell>Username</TableCell>
