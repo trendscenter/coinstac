@@ -11,14 +11,14 @@
     "dockerImage": "coinstacteam/regression-vbm",
     "command": [
       "python",
-      "\/computation\/local.py"
+      "\/computation\/scripts\/local.py"
     ],
     "remote": {
       "type": "docker",
       "dockerImage": "coinstacteam/regression-vbm",
       "command": [
         "python",
-        "\/computation\/remote.py"
+        "\/computation\/scripts\/remote.py"
       ]
     },
     "input": {
@@ -29,6 +29,25 @@
         "max": 1,
         "min": 0,
         "step": 0.05,
+        "type": "number",
+        "source": "owner"
+      },
+      "threshold":
+      {
+        "defaultValue": 0.2,
+        "label": "Masking threshold",
+        "max": 1,
+        "min": 0,
+        "type": "number",
+        "source": "owner"
+      },
+      "voxel_size":
+      {
+        "defaultValue": 4,
+        "label": "Voxel Size",
+        "max": 6,
+        "min": 0,
+        "step": 0.5,
         "type": "number",
         "source": "owner"
       },
