@@ -13,7 +13,7 @@
   },
   "fileServer": {
     "hostname": "localhost",
-    "pathname": "transfer",
+    "pathname": "/transfer",
     "port": "3300",
     "protocol": "http:"
   },

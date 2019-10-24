@@ -63,33 +63,6 @@ module.exports = {
     logger = logger || defaultLogger;
 
 
-    /**
-     * Check mqtt server status
-     */
-    mqtCon = mqtt.connect(
-      `${mqttRemoteProtocol}//${mqttRemoteURL}:${mqttRemotePort}`,
-      {
-        clientId: `${clientId}_${Math.random().toString(16).substr(2, 8)}`,
-        reconnectPeriod: 5000,
-      }
-    );
-
-    const mqttServerStatus = await Promise.race([
-      new Promise(resolve => {
-        mqtCon.on('connect', () => {
-          resolve('mqttOnline')
-        });
-      }),
-      new Promise(resolve => {
-        mqtCon.on('offline', () => {
-          resolve('mqttOffline')
-        });
-      }),
-    ])
-
-    if (mqttServerStatus === 'mqttOffline') {
-      return { mqttServerStatus }
-    }
 
     /**
      * exponential backout for GET
@@ -407,6 +380,7 @@ module.exports = {
         }
       });
     } else {
+      let clientInit = false;
       logger.silly('Starting local pipeline manager');
       mqtCon = mqtt.connect(
         `${mqttRemoteProtocol}//${mqttRemoteURL}:${mqttRemotePort}`,
@@ -416,8 +390,9 @@ module.exports = {
         }
       );
 
-      await new Promise((resolve) => {
+      await new Promise((resolve, reject) => {
         mqtCon.on('connect', () => {
+          clientInit = true;
           logger.silly(`mqtt connection up ${clientId}`);
           mqtCon.subscribe(`${clientId}-register`, { qos: 1 }, (err) => {
             resolve();
@@ -426,6 +401,9 @@ module.exports = {
           mqtCon.subscribe(`${clientId}-run`, { qos: 1 }, (err) => {
             if (err) logger.error(`Mqtt error: ${err}`);
           });
+        });
+        mqtCon.on('offline', () => {
+          if (!clientInit) reject(new Error('MQTT connection down'));
         });
       });
 
