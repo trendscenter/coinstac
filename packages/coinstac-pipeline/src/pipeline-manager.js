@@ -62,8 +62,6 @@ module.exports = {
     const request = remoteProtocol.trim() === 'https:' ? https : http;
     logger = logger || defaultLogger;
 
-
-
     /**
      * exponential backout for GET
      * consider file batching here if server load is too high
@@ -382,6 +380,7 @@ module.exports = {
     } else {
       let clientInit = false;
       logger.silly('Starting local pipeline manager');
+      debugger
       mqtCon = mqtt.connect(
         `${mqttRemoteProtocol}//${mqttRemoteURL}:${mqttRemotePort}`,
         {
@@ -392,6 +391,7 @@ module.exports = {
 
       await new Promise((resolve, reject) => {
         mqtCon.on('connect', () => {
+          debugger
           clientInit = true;
           logger.silly(`mqtt connection up ${clientId}`);
           mqtCon.subscribe(`${clientId}-register`, { qos: 1 }, (err) => {
@@ -403,6 +403,7 @@ module.exports = {
           });
         });
         mqtCon.on('offline', () => {
+          debugger
           if (!clientInit) reject(new Error('MQTT connection down'));
         });
       });
