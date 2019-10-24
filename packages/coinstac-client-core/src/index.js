@@ -1,7 +1,6 @@
 'use strict';
 
 // app package deps
-const tail = require('lodash/tail');
 const pify = require('util').promisify;
 const csvParse = require('csv-parse');
 const mkdirp = pify(require('mkdirp'));
@@ -90,6 +89,47 @@ class CoinstacClient {
   }
 
   /**
+   * Get array index of metadata file column
+   *
+   * @param {array} arr metadata array set
+   * @returns {index}
+   */
+  static getFileIndex(arr) {
+    let key = '';
+    arr.shift();
+    arr[0].forEach((str, i) => {
+      if (str && typeof str === 'string') {
+        let match = str.match(/(?:\.([a-zA-Z]+))?$/);
+        if (match[0] !== '' && match[1] !== 'undefined') {
+          key = i;
+        }
+      }
+    });
+    return key;
+  }
+
+  /**
+   * Parse metadata and shift data column if need be.
+   *
+   * @param {Array[]} metaFile Metadata CSV's contents
+   * @returns {Array[]} metaFile Metadata CSV's contents
+   */
+  static parseMetaFile(metaFile) {
+    const filesKey = this.getFileIndex([...metaFile]);
+    if (filesKey !== 0) {
+      metaFile = metaFile.map((row, i) => {
+        let r = [...row];
+        let data = r[filesKey];
+        r.splice(filesKey, 1);
+        r.unshift(data);
+        return r;
+      });
+    }
+    return metaFile;
+  }
+
+
+  /**
    * Load a metadata CSV file.
    *
    * @param {string} metaFilePath Path to metadata CSV
@@ -97,12 +137,16 @@ class CoinstacClient {
    * @returns {File[]} Collection of files
    */
   static getFilesFromMetadata(metaFilePath, metaFile) {
-    return tail(metaFile).map(([filename]) => (
-      path.isAbsolute(filename)
-        ? filename
-        : path.resolve(path.join(path.dirname(metaFilePath), filename))
-    ));
+    const files = this.parseMetaFile(metaFile).map((filecol, i) => {
+      const file = filecol[0];
+      return path.isAbsolute(file)
+        ? file
+        : path.resolve(path.join(path.dirname(metaFilePath), file))
+    });
+    files.shift();
+    return files;
   }
+
 
   /**
    * Get JSON schema contents.

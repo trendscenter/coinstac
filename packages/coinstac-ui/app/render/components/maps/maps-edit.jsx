@@ -6,6 +6,7 @@ import { ipcRenderer } from 'electron';
 import PropTypes from 'prop-types';
 import update from 'immutability-helper';
 import { includes, isEqual, uniqWith } from 'lodash';
+import Divider from '@material-ui/core/Divider';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import Grid from '@material-ui/core/Grid';
@@ -50,17 +51,10 @@ const isUserA = (userId, groupArr) => {
 };
 
 let drake = dragula({
-    copy: false,
-    revertOnSpill: true,
-    accepts: function (el, target) {
-      if(el.dataset.string && target.dataset.name){
-        let fuzzy = bitap(el.dataset.string.toLowerCase(), target.dataset.name.toLowerCase(), 1);
-        if(fuzzy.length){
-          return true;
-        }
-      }
-    },
-  });
+  copy: true,
+  copySortSource: true,
+  revertOnSpill: true,
+});
 
 class MapsEdit extends Component {
   constructor(props) {
@@ -80,6 +74,7 @@ class MapsEdit extends Component {
       isMapped: false,
       mappedItem: '',
       rowArray: [],
+      metaRow: [],
       sources: [],
       updateMapsStep: false,
     };
@@ -94,6 +89,7 @@ class MapsEdit extends Component {
     this.updateConsortiumClientProps = this.updateConsortiumClientProps.bind(this);
   }
 
+  setMetaRow = (val) => this.setState({ metaRow: val });
   setRowArray = (val) => this.setState({ rowArray: val });
   updateMapsStep = (val) => this.setState({ updateMapsStep: val });
 
@@ -142,36 +138,6 @@ class MapsEdit extends Component {
      this.getDropAction();
   }
 
-  filterGetObj(arr, searchKey) {
-    let searchkey = searchKey.replace('file', ''); //other object values contain the string 'file', let's remove.
-    return arr.filter(function(obj) {
-     return Object.keys(obj).some(function(key) {
-       let objkey = obj[key];
-       if(typeof objkey === 'string'){
-         let fuzzy = bitap(objkey.toLowerCase(), searchkey.toLowerCase(), 1);
-         if(fuzzy.length){
-           return obj[key];
-         }
-       }
-     })
-    });
-  }
-
-  filterGetIndex(arr, searchKey) {
-     let searchkey = searchKey.replace('file', ''); //other object values contain the string 'file', let's remove.
-     return arr.findIndex(function(obj) {
-       return Object.keys(obj).some(function(key) {
-         let objkey = obj[key];
-         if(typeof objkey === 'string'){
-           let fuzzy = bitap(objkey.toLowerCase(), searchkey.toLowerCase(), 1);
-           if(fuzzy.length){
-             return obj[key];
-           }
-         }
-       })
-     });
-   }
-
   getContainers = (container) => {
     let containers = [];
     if(container){
@@ -204,39 +170,50 @@ class MapsEdit extends Component {
   });
 
   mapObject = (el, target) => {
-    const { activeConsortium, collection } = this.state;
-    let string = el.dataset.string.replace('file', '');
-    let fuzzy = bitap(string.toLowerCase(), target.dataset.name.toLowerCase(), 1);
-    let covariates = false;
-    let data = false;
-    if(fuzzy.length > 0){
-      if(activeConsortium.pipelineSteps[0].inputMap.covariates){
-        covariates = activeConsortium.pipelineSteps[0].inputMap.covariates.ownerMappings;
-      }
-      if(activeConsortium.pipelineSteps[0].inputMap.data){
-        data = activeConsortium.pipelineSteps[0].inputMap.data.ownerMappings;
-      }
-      let group = collection.fileGroups[el.dataset.filegroup];
-      let dex = null;
-      let key = null;
-      let name = target.dataset.name;
-      let varObject = [{
-        'collectionId': collection.id,
-        'groupId': el.dataset.filegroup,
-        'column':  target.dataset.name
-      }];
-      if( covariates && Object.keys(this.filterGetObj(covariates,name)).length > 0 ){
-        dex = this.filterGetIndex(covariates,name);
-        key = 'covariates';
-      }
-      if ( data && Object.keys(this.filterGetObj(data,name)).length > 0 ){
-        dex = this.filterGetIndex(data,name);
-        key = 'data';
-      }
+    const { activeConsortium, collection, metaRow, rowArray } = this.state;
+    let group = collection.fileGroups[el.dataset.filegroup];
+    let dex = target.dataset.index;
+    let key = target.dataset.type;
+    let name = target.dataset.name;
+    let varObject = [{
+      'collectionId': collection.id,
+      'groupId': el.dataset.filegroup,
+      'column':  name
+    }];
+    if(key && dex && varObject){
       this.updateConsortiumClientProps(0, key, dex, varObject);
-      this.setState({mappedItem: string});
-      el.remove();
+      this.setState({mappedItem: el.dataset.string});
+      this.removeRowArrItem(el.dataset.string);
+      let marray = [...metaRow];
+      let index = marray.indexOf(el.dataset.string);
+      if(index === 0){
+        marray[index] = 'id';
+      }else{
+        marray[index] = name;
+      }
+      this.setMetaRow(marray);
     }
+    el.remove();
+  }
+
+  removeMapStep = (type, index, string) => {
+    const {
+      rowArray,
+    } = this.state;
+    this.updateConsortiumClientProps(0, type, index, []);
+    let array = rowArray;
+    array.push(string);
+    this.setRowArray(array);
+  }
+
+  removeRowArrItem = (item) => {
+    const {
+      rowArray,
+    } = this.state;
+    let array = rowArray;
+    var index = array.indexOf(item);
+    if (index !== -1) array.splice(index, 1);
+    this.setRowArray(array);
   }
 
   saveCollection(e) {
@@ -245,6 +222,26 @@ class MapsEdit extends Component {
       e.preventDefault();
     }
     this.props.saveCollection(collection);
+  }
+
+  updateMetaRow() {
+    let groupKey = Object.keys(this.state.collection.fileGroups);
+    groupKey = groupKey[0];
+    let newMeta = this.state.collection.fileGroups[groupKey].metaFile;
+    newMeta[0] = [...this.state.metaRow];
+    this.setState(prevState => ({
+      collection: {
+        ...prevState.collection,
+          fileGroups: {
+            [groupKey]: update(prevState.collection.fileGroups[groupKey], {
+            metaFile: {$set: newMeta}
+          }),
+        },
+      },
+    }),
+    () => {
+      this.props.saveCollection(this.state.collection);
+    });
   }
 
   updateAssociatedConsortia(cons) {
@@ -263,6 +260,8 @@ class MapsEdit extends Component {
   }
 
   saveAndCheckConsortiaMapping = () => {
+    this.updateMetaRow();
+
     const cons = this.state.activeConsortium;
     this.props.saveAssociatedConsortia(cons);
     const runs = this.props.userRuns;
@@ -305,6 +304,21 @@ class MapsEdit extends Component {
       });
   }
 
+  resetPipelineSteps = (array) => {
+    const { consortium, collections, mapped, pipelines } = this.props;
+    let pipeline = pipelines.find(p => p.id === consortium.activePipelineId);
+     this.setState({
+       activeConsortium: {
+         ...consortium,
+         pipelineSteps: pipeline.steps,
+       },
+     });
+     this.setRowArray([]);
+     this.setRowArray(array);
+     this.setState({isMapped: false});
+     this.setPipelineSteps(pipeline.steps);
+  }
+
   setPipelineSteps(steps) {
     // Prepopulate stepIO with same number of steps as pipeline to ensure indices match
     // TODO: Add section specifically for covars and prepopulate empty values for all params?
@@ -337,7 +351,7 @@ class MapsEdit extends Component {
 
   traversePipelineSteps(){
     let result = [];
-    const { activeConsortium } = this.state;
+    const { activeConsortium, metaRow, rowArray } = this.state;
     if (activeConsortium.pipelineSteps) {
       let steps = activeConsortium.pipelineSteps;
       Object.entries(steps).forEach(([key, value]) => {
@@ -346,11 +360,17 @@ class MapsEdit extends Component {
            result.push(
              <MapsStep
                getContainers={this.getContainers}
-               key={i}
+               key={'step'+k+'-'+i}
                name={Object.keys(inputMap)[i]}
                step={inputMap[k]}
                consortium={activeConsortium}
+               metaRow={metaRow}
+               setMetaRow={this.setMetaRow}
+               rowArray={rowArray}
+               removeMapStep={this.removeMapStep}
+               setRowArray={this.setRowArray}
                updateMapsStep={this.state.updateMapsStep}
+               updateConsortiumClientProps={this.updateConsortiumClientProps}
                mapped={this.props.mapped}
               />
            );
@@ -378,6 +398,7 @@ class MapsEdit extends Component {
       }, (() => {
         this.updateAssociatedConsortia(this.state.activeConsortium);
     }));
+    this.setState({updateMapsStep: true});
   }
 
   render() {
@@ -388,6 +409,7 @@ class MapsEdit extends Component {
       collection,
       isMapped,
       mappedItem,
+      metaRow,
       rowArray,
     } = this.state;
 
@@ -411,6 +433,7 @@ class MapsEdit extends Component {
                     <Typography variant="headline" className={classes.title}>
                       { consortium ? `${consortium.name}: Pipeline` : 'Pipeline' }
                     </Typography>
+                    <Divider />
                     { this.traversePipelineSteps() }
                   </Paper>
                 </Grid>
@@ -433,6 +456,10 @@ class MapsEdit extends Component {
                             isMapped={isMapped}
                             notifySuccess={this.notifySuccess}
                             mappedItem={mappedItem}
+                            metaRow={metaRow}
+                            setMetaRow={this.setMetaRow}
+                            removeRowArrItem={this.removeRowArrItem}
+                            resetPipelineSteps={this.resetPipelineSteps}
                             rowArray={rowArray}
                             rowArrayLength={rowArray.length}
                             saveAndCheckConsortiaMapping={this.saveAndCheckConsortiaMapping}
