@@ -1,15 +1,15 @@
 import axios from 'axios';
 import ipcPromise from 'ipc-promise';
 import { remote } from 'electron';
-import { applyAsyncLoading } from './loading';
 import { get } from 'lodash';
+import { applyAsyncLoading } from './loading';
 
 const apiServer = remote.getGlobal('config').get('apiServer');
 const API_URL = `${apiServer.protocol}//${apiServer.hostname}${apiServer.port ? `:${apiServer.port}` : ''}${apiServer.pathname}`;
 
 const getErrorDetail = error => ({
   message: get(error, 'response.data.message'),
-  statusCode: get(error, 'response.status')
+  statusCode: get(error, 'response.status'),
 });
 
 const INITIAL_STATE = {
@@ -72,6 +72,15 @@ const initCoreAndSetToken = (reqUser, data, appDirectory, dispatch) => {
     });
 };
 
+export const logout = applyAsyncLoading(() => (dispatch) => {
+  localStorage.removeItem('id_token');
+  sessionStorage.removeItem('id_token');
+  return ipcPromise.send('logout')
+    .then(() => {
+      dispatch(clearUser());
+    });
+});
+
 export const autoLogin = applyAsyncLoading(() => (dispatch, getState) => {
   let token = localStorage.getItem('id_token');
   let saveLogin = true;
@@ -101,6 +110,7 @@ export const autoLogin = applyAsyncLoading(() => (dispatch, getState) => {
       );
     })
     .catch((err) => {
+      console.error(err); // eslint-disable-line no-console
       if (err.response) {
         dispatch(logout());
         const { statusCode, message } = getErrorDetail(err);
@@ -130,6 +140,7 @@ export const login = applyAsyncLoading(({ username, password, saveLogin }) => (d
     return initCoreAndSetToken({ username, password, saveLogin }, data, appDirectory, dispatch);
   })
   .catch((err) => {
+    console.error(err); // eslint-disable-line no-console
     if (err.response) {
       const { statusCode } = getErrorDetail(err);
 
@@ -142,15 +153,6 @@ export const login = applyAsyncLoading(({ username, password, saveLogin }) => (d
       dispatch(setError('Coinstac services not available'));
     }
   }));
-
-export const logout = applyAsyncLoading(() => (dispatch) => {
-  localStorage.removeItem('id_token');
-  sessionStorage.removeItem('id_token');
-  return ipcPromise.send('logout')
-    .then(() => {
-      dispatch(clearUser());
-    });
-});
 
 export const signUp = applyAsyncLoading(user => (dispatch, getState) => axios.post(`${API_URL}/createAccount`, user)
   .then(({ data }) => {
