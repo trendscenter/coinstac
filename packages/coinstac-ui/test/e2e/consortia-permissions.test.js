@@ -7,18 +7,13 @@ const electronPath = path.join(__dirname, '../..', 'node_modules', '.bin', 'elec
 const appPath = path.join(__dirname, '../..');
 const mocksPath = path.join(__dirname, 'mocks.js');
 
-const EXIST_TIMEOUT = 4000;
-const NOTIFICATION_DISMISS_TIMEOUT = 6000;
-const COMPUTATION_TIMEOUT = 120000;
-const COMPUTATION_DOWNLOAD_TIMEOUT = 30000;
+const EXIST_TIMEOUT = 6000;
+const NOTIFICATION_DISMISS_TIMEOUT = 8000;
 const USER_ID_1 = 'test1';
 const USER_ID_2 = 'test2';
 const PASS = 'password';
-const CONS_NAME = 'e2e-consortium';
-const CONS_DESC = 'e2e-description';
-const PIPE_NAME = 'e2e-pipeline';
-const PIPE_DESC = 'e2e-pipeline-description';
-const COMPUTATION_NAME = 'single shot regression demo';
+const CONS_NAME = 'e2e-consortium-permission';
+const CONS_DESC = 'e2e-description-permission';
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -27,12 +22,14 @@ const app1 = new Application({
   path: electronPath,
   env: { NODE_ENV: 'test', TEST_INSTANCE: 'test-1' },
   args: [appPath, '-r', mocksPath],
+  port: 9515,
 });
 
 const app2 = new Application({
   path: electronPath,
   env: { NODE_ENV: 'test', TEST_INSTANCE: 'test-2' },
   args: [appPath, '-r', mocksPath],
+  port: 9516,
 });
 
 describe('e2e consortia permissions', () => {
@@ -46,7 +43,7 @@ describe('e2e consortia permissions', () => {
   after(() => (
     Promise.all([
       app1.stop(),
-      app2.browserWindow.close(),
+      app2.stop(),
     ])
   ));
 
@@ -88,9 +85,9 @@ describe('e2e consortia permissions', () => {
   it('accesses the Add Consortium page', () => (
     app1.client
       .click('a=Consortia')
-      .waitForVisible('a=Create Consortium', EXIST_TIMEOUT)
-      .click('a=Create Consortium')
-      .isVisible('h1=Consortium Creation').should.eventually.equal(true)
+      .waitForVisible('a[name="create-consortium-button"]', EXIST_TIMEOUT)
+      .click('a[name="create-consortium-button"]')
+      .isVisible('h4=Consortium Creation').should.eventually.equal(true)
   ));
 
   it('creates a consortium', () => (
@@ -104,7 +101,7 @@ describe('e2e consortia permissions', () => {
       .then(() => app1.client
         .waitForVisible('.notification-message', NOTIFICATION_DISMISS_TIMEOUT, true)
         .click('a=Consortia')
-        .waitForVisible(`h3=${CONS_NAME}`))
+        .waitForVisible(`h1=${CONS_NAME}`))
   ));
 
   it('add another user as member', () => (
@@ -112,13 +109,13 @@ describe('e2e consortia permissions', () => {
       .click('a=Consortia')
       .waitForVisible(`a[name="${CONS_NAME}"]`, EXIST_TIMEOUT)
       .click(`a[name="${CONS_NAME}"]`)
-      .waitForVisible('h1=Consortium Edit', EXIST_TIMEOUT)
-      .click('.rbt-input-main')
-      .waitForVisible('.rbt-menu', EXIST_TIMEOUT)
-      .element('.rbt-menu', EXIST_TIMEOUT)
-      .click(`span=${USER_ID_2}`)
+      .waitForVisible('h4=Consortium Edit', EXIST_TIMEOUT)
+      .click('.consortium-add-user')
+      .waitForVisible('.react-select-dropdown-menu', EXIST_TIMEOUT)
+      .element('.react-select-dropdown-menu', EXIST_TIMEOUT)
+      .click(`div=${USER_ID_2}`)
       .click('button=Add Member')
-      .waitForVisible(`span=${USER_ID_2}`, EXIST_TIMEOUT)
+      .waitForVisible(`div=${USER_ID_2}`, EXIST_TIMEOUT)
   ));
 
   it('access consortium as member', () => (
@@ -126,9 +123,9 @@ describe('e2e consortia permissions', () => {
       .click('a=Consortia')
       .waitForVisible(`a[name="${CONS_NAME}"]`, EXIST_TIMEOUT)
       .click(`a[name="${CONS_NAME}"]`)
-      .waitForVisible('h1=Consortium Edit', EXIST_TIMEOUT)
-      .waitForVisible(`span=${USER_ID_2}`, EXIST_TIMEOUT)
-      .element('#consortium-tabs-pane-1 tbody tr:last-child')
+      .waitForVisible('h4=Consortium Edit', EXIST_TIMEOUT)
+      .waitForVisible(`div=${USER_ID_2}`, EXIST_TIMEOUT)
+      .element('#consortium-member-table tbody tr:last-child')
       .isSelected('input[name="isOwner"]').should.eventually.equal(false)
   ));
 
@@ -137,9 +134,9 @@ describe('e2e consortia permissions', () => {
       .click('a=Consortia')
       .waitForVisible(`a[name="${CONS_NAME}"]`, EXIST_TIMEOUT)
       .click(`a[name="${CONS_NAME}"]`)
-      .waitForVisible('h1=Consortium Edit', EXIST_TIMEOUT)
+      .waitForVisible('h4=Consortium Edit', EXIST_TIMEOUT)
       .waitForVisible(`span=${USER_ID_2}`, EXIST_TIMEOUT)
-      .element('#consortium-tabs-pane-1 tbody tr:last-child')
+      .element('#consortium-member-table tbody tr:last-child')
       .click('input[name="isOwner"]')
   ));
 
@@ -148,9 +145,9 @@ describe('e2e consortia permissions', () => {
       .click('a=Consortia')
       .waitForVisible(`a[name="${CONS_NAME}"]`, EXIST_TIMEOUT)
       .click(`a[name="${CONS_NAME}"]`)
-      .waitForVisible('h1=Consortium Edit', EXIST_TIMEOUT)
+      .waitForVisible('h4=Consortium Edit', EXIST_TIMEOUT)
       .waitForVisible(`span=${USER_ID_2}`, EXIST_TIMEOUT)
-      .element('#consortium-tabs-pane-1 tbody tr:last-child')
+      .element('#consortium-member-table tbody tr:last-child')
       .isSelected('input[name="isOwner"]').should.eventually.equal(true)
   ));
 
@@ -159,20 +156,21 @@ describe('e2e consortia permissions', () => {
       .click('a=Consortia')
       .waitForVisible(`button[name="${CONS_NAME}-delete"]`, EXIST_TIMEOUT)
       .click(`button[name="${CONS_NAME}-delete"]`)
-      .element('.modal-dialog')
+      .waitForVisible('#list-delete-modal')
+      .element('#list-delete-modal')
       .click('button=Delete')
-      .waitForVisible(`h3=${CONS_NAME}`, EXIST_TIMEOUT, true)
+      .waitForVisible(`h1=${CONS_NAME}`, EXIST_TIMEOUT, true)
   ));
 
   it('logs out', () => (
     Promise.all([
       app1.client
-        .waitForVisible('button=Log Out', EXIST_TIMEOUT)
-        .click('button=Log Out')
+        .waitForVisible('a=Log Out', EXIST_TIMEOUT)
+        .click('a=Log Out')
         .waitForVisible('button=Log In', EXIST_TIMEOUT),
       app2.client
-        .waitForVisible('button=Log Out', EXIST_TIMEOUT)
-        .click('button=Log Out')
+        .waitForVisible('a=Log Out', EXIST_TIMEOUT)
+        .click('a=Log Out')
         .waitForVisible('button=Log In', EXIST_TIMEOUT),
     ])
   ));

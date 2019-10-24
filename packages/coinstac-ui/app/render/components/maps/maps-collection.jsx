@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 import { connect } from 'react-redux';
 import { Link } from 'react-router';
+import Icon from '@material-ui/core/Icon';
 import Paper from '@material-ui/core/Paper';
 import Button from '@material-ui/core/Button';
 import Divider from '@material-ui/core/Divider';
@@ -14,6 +15,7 @@ import PropTypes from 'prop-types';
 import shortid from 'shortid';
 import { unmapAssociatedConsortia } from '../../state/ducks/collections';
 import bitap from 'bitap';
+import classNames from 'classnames';
 
 const styles = theme => ({
   addFileGroupButton: {
@@ -45,6 +47,18 @@ const styles = theme => ({
   actionsContainer: {
     marginTop: theme.spacing.unit * 2,
   },
+  timesIcon: {
+    color: '#f05a29 !important',
+    fontSize: '1.25rem',
+    position: 'absolute',
+    top: '-0.75rem',
+    right: '-0.75rem',
+    background: 'white',
+    borderRadius: '50%',
+    border: '2px solid white',
+    width: '1.5rem',
+    height: '1.5rem',
+  },
 });
 
 class MapsCollection extends Component {
@@ -54,7 +68,7 @@ class MapsCollection extends Component {
 
     this.state = {
       autoMap: false,
-      contChildren: -1,
+      contChildren: 0,
       filesError: null,
       newFile: {
         open: false,
@@ -76,11 +90,7 @@ class MapsCollection extends Component {
     if(this.refs.Container){
       let children = 0;
       let Container = ReactDOM.findDOMNode(this.refs.Container);
-      if(this.state.autoMap){ //this is a hacky hack to get button change to work on drag and drop mapping :(
-        children = Container.children.length - 1;
-      }else{
-        children = Container.children.length;
-      }
+      children = Container.children.length;
       if(prevState.contChildren !== children){
         this.setState(prevState => ({
           contChildren: children
@@ -103,7 +113,9 @@ class MapsCollection extends Component {
       } else {
         const name = `Group ${Object.keys(this.props.collection.fileGroups).length + 1} (${obj.extension.toUpperCase()})`;
         if (this.state.newFile.org === 'metafile') {
-          this.props.setRowArray(obj.metaFile[0]);
+          let headerArray = obj.metaFile[0];
+          this.props.setRowArray([...headerArray]);
+          this.props.setMetaRow([...headerArray]);
           newFiles = {
             ...obj,
             name,
@@ -140,68 +152,110 @@ class MapsCollection extends Component {
     .catch(console.log);
   }
 
- filterGetObj(arr, searchKey) {
-    let searchkey = searchKey.replace('file', ''); //other object values contain the string 'file', let's remove.
-    return arr.filter(function(obj) {
-      return Object.keys(obj).some(function(key) {
-        let objkey = obj[key];
-        if(typeof objkey === 'string'){
-          let fuzzy = bitap(objkey.toLowerCase(), searchkey.toLowerCase(), 1);
-          if(fuzzy.length){
-            return obj[key];
-          }
-        }
-      })
+  changeMetaRow(search, string){
+    return new Promise((resolve, reject) => {
+      const {
+        metaRow,
+        setMetaRow,
+      } = this.props;
+      let marray = metaRow;
+      let index = marray.indexOf(string);
+      if(index === 0){
+        marray[index] = 'id';
+      }
+      if(index !== 0 && index !== -1){
+        marray[index] = search;
+      }
+      setMetaRow(marray);
+      resolve(true);
     });
   }
 
-  filterGetIndex(arr, searchKey) {
-     let searchkey = searchKey.replace('file', ''); //other object values contain the string 'file', let's remove.
-     return arr.findIndex(function(obj) {
-       return Object.keys(obj).some(function(key) {
-         let objkey = obj[key];
-         if(typeof objkey === 'string'){
-           let fuzzy = bitap(objkey.toLowerCase(), searchkey.toLowerCase(), 1);
-           if(fuzzy.length){
-             return obj[key];
-           }
+  findInObject = (obj, string, type) => {
+     return Object.entries(obj).find(([key, value]) => {
+       let search = null;
+       let name = obj['name'];
+       let itemtype = obj['type'];
+       if(!name && itemtype){
+         search = itemtype;
+       }else if(name && itemtype){
+         search = name;
+       }
+       if(search !== null && search !== 'undefined'){
+         if( string.toLowerCase() === search.toLowerCase() ){
+           let changeMeta = this.changeMetaRow(search, string);
+           return changeMeta.then((r) => {
+             if(r){
+               return obj[key];
+             }
+           });
          }
-       })
+         if(type === 'data'
+         && string.toLowerCase() === 'id'){
+           let changeMeta = this.changeMetaRow(search, string);
+           return changeMeta.then((r) => {
+             if(r){
+               return obj[key];
+             }
+           });
+         }
+         let fuzzy = [];
+         string = string.replace(/[^\w\s]/gi, '');
+         search = search.replace(/[^\w\s]/gi, '');
+         if(string.length > search.length){
+           fuzzy = bitap(string.toLowerCase(), search.toLowerCase(), 1);
+         }else{
+           fuzzy = bitap(search.toLowerCase(), string.toLowerCase(), 1);
+         }
+         if(fuzzy.length > 1 && fuzzy[0] > 3){
+           let changeMeta = this.changeMetaRow(search, string);
+           return changeMeta.then((r) => {
+             if(r){
+               return obj[key];
+             }
+           });
+         }
+       }
      });
-   }
+  }
 
-   async autoMap(group) {
+  filterGetObj(arr, string, type) {
+    return arr.filter((obj) => {
+       return this.findInObject(obj, string, type);
+    });
+  }
+
+  filterGetIndex(arr, string, type) {
+    return new Promise((resolve, reject) => {
+       let result = arr.findIndex((obj) => {
+         return this.findInObject(obj, string, type);
+       });
+       resolve(result);
+    });
+  }
+
+  async autoMap(group) {
      let inputMap = this.props.activeConsortium.pipelineSteps[0].inputMap;
      let resolveAutoMapPromises = Object.entries(inputMap).map((item, i) => {
        let type = item[0];
        let obj = item[1].ownerMappings;
-       const steps = this.makePoints(group.firstRow).map(async (string, index) => {
-        string = string.replace('file', '');
-        if( obj && Object.keys(this.filterGetObj(obj,string)).length > 0 ){
-         await this.setStepIO(
-           index,
-           group.id,
-           0,
-           type,
-           this.filterGetIndex(obj,string),
-           string
-         );
-        }
-        if(obj && obj[0] && obj[0].type){
-          let fuzzy = bitap(string.toLowerCase(), obj[0].type.toLowerCase(), 1);
-          if(fuzzy.length){
-            await this.setStepIO(
-              index,
-              group.id,
-              0,
-              type,
-              0,
-              string
-            );
-          }
+       let firstRow = this.makePoints(group.firstRow);
+       const steps = firstRow.map(async (string, index) => {
+        if( obj && Object.keys(this.filterGetObj(obj,string,type)).length > 0 ){
+         firstRow.filter(e => e !== string);
+         let setObj = this.filterGetIndex(obj,string,type);
+         await setObj.then((result) => {
+           this.setStepIO(
+             index,
+             group.id,
+             0,
+             type,
+             result,
+             string
+           );
+         });
         }
        });
-
        return Promise.all(steps);
      });
      await Promise.all(resolveAutoMapPromises);
@@ -228,22 +282,28 @@ class MapsCollection extends Component {
     };
   }
 
-  setStepIO(i, groupId, stepIndex, objKey, index, string) {
-    const { collection, rowArray, updateConsortiumClientProps } = this.props;
-    let array = rowArray;
-    let timeout = ((i + 1) * 250);
-    let varObject = [{
-      'collectionId': collection.id,
-      'groupId': groupId,
-      'column':  string
-    }];
+  setStepIO(i, groupId, stepIndex, search, index, string) {
+    const {
+      collection,
+      metaRow,
+      rowArray,
+      setRowArray,
+      updateConsortiumClientProps
+    } = this.props;
     return new Promise((resolve) => {
-      setTimeout(() => {
-        updateConsortiumClientProps(stepIndex, objKey, index, varObject);
-        array.splice( array.indexOf(string), 1 );
-        this.props.setRowArray(array);
-        resolve();
-      }, timeout);
+      let firstRow = collection.fileGroups[groupId].firstRow;
+      let newFirstRow = firstRow.split(', ');
+      let dex = newFirstRow.indexOf(string);
+      let name = metaRow[dex];
+      let varObject = [{
+        'collectionId': collection.id,
+        'groupId': groupId,
+        'column':  name
+      }];
+      updateConsortiumClientProps(stepIndex, search, index, varObject);
+      rowArray.splice( rowArray.indexOf(string), 1 );
+      setRowArray(rowArray);
+      resolve();
     })
   }
 
@@ -266,12 +326,14 @@ class MapsCollection extends Component {
       collection,
       isMapped,
       saveCollection,
+      metaRow,
       rowArray,
       rowArrayLength,
       classes,
     } = this.props;
 
     const {
+      autoMap,
       contChildren,
       filesError,
       finishedAutoMapping,
@@ -348,6 +410,9 @@ class MapsCollection extends Component {
                       <Typography>
                         <span className="bold">First Row:</span> {group.firstRow}
                       </Typography>
+                      <Typography>
+                        <span className="bold">Meta Row:</span> {metaRow.toString()}
+                      </Typography>
                       {
                         rowArray.length > 0
                         && (
@@ -361,6 +426,10 @@ class MapsCollection extends Component {
                                   key={index}
                                 >
                                   <FileCopyIcon /> {point}
+                                  <span onClick={()=>{this.props.removeRowArrItem(point)}}>
+                                    <Icon
+                                      className={classNames('fa fa-times-circle', classes.timesIcon)} />
+                                  </span>
                                 </div>
                               ))
                             }
@@ -370,7 +439,8 @@ class MapsCollection extends Component {
                       <Divider />
                       <div className={classes.actionsContainer}>
                         {
-                          !isMapped && !finishedAutoMapping && contChildren !== 0
+                          !isMapped
+                          && rowArray.length * contChildren > 0
                           && (
                             <Button
                               variant="contained"
@@ -382,16 +452,27 @@ class MapsCollection extends Component {
                           )
                         }
                         {
-                          !isMapped && finishedAutoMapping
-                          && (
-                            <Button
-                              variant="contained"
-                              color="primary"
-                              onClick={() => this.props.saveAndCheckConsortiaMapping()}
-                            >
-                              Save
-                            </Button>
-                          )
+                          !isMapped
+                          && rowArrayLength * contChildren === 0
+                          &&  <Button
+                                variant="contained"
+                                color="primary"
+                                onClick={() => this.props.saveAndCheckConsortiaMapping()}
+                              >
+                                Save
+                              </Button>
+                        }
+                        {
+                          !isMapped
+                          && this.makePoints(group.firstRow).length !== rowArrayLength
+                          && <Button
+                            style={{marginLeft: '1rem'}}
+                            variant="contained"
+                            color="secondary"
+                            onClick={() => this.props.resetPipelineSteps(this.makePoints(group.firstRow))}
+                          >
+                            Reset
+                          </Button>
                         }
                         {
                           isMapped

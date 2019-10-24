@@ -235,7 +235,7 @@ loadConfig()
             `Pipeline ${pipelineName} started on consortia ${consortiumName}`
           )
 
-          return core.startPipeline(
+          return initializedCore.startPipeline(
             null,
             consortium.id,
             pipeline,
@@ -258,7 +258,7 @@ loadConfig()
                   `Pipeline ${pipelineName} finished on consortia ${consortiumName}`
                 )
 
-                return core.unlinkFiles(run.id)
+                return initializedCore.unlinkFiles(run.id)
                   .then(() => {
                     if (run.type === 'local') {
                       mainWindow.webContents.send('local-run-complete', {
