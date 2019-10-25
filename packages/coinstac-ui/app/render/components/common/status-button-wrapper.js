@@ -7,7 +7,7 @@ const commonStyle = {
 }
 
 export default class StatusButtonWrapper extends Component {
-  get pendignIcon() {
+  get pendingIcon() {
     const style = {
       ...commonStyle,
       fontSize: 20,
@@ -40,7 +40,7 @@ export default class StatusButtonWrapper extends Component {
 
     switch(status) {
       case 'pending':
-        return this.pendignIcon
+        return this.pendingIcon
       case 'success':
         return this.successIcon
       case 'fail':
@@ -56,6 +56,7 @@ export default class StatusButtonWrapper extends Component {
     const wrapperStyle = {
       display: 'flex',
       alignItems: 'center',
+      justifyContent: 'flex-end',
     }
 
     return (
