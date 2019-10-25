@@ -18,25 +18,7 @@ class MapsStep extends Component {
   constructor(props) {
     super(props);
 
-    this.state = {
-      contChildren: 0,
-    };
-
     this.handleStep = this.handleStep.bind(this);
-  }
-
-  componentDidUpdate(prevProps,prevState) {
-    if(this.refs.Container){
-      let children = 0;
-      let Container = ReactDOM.findDOMNode(this.refs.Container);
-      children = Container.children.length;
-      if(prevState.contChildren !== children){
-        this.setState(prevState => ({
-          contChildren: children
-        }));
-      }
-      this.props.getContainers(Container);
-    }
   }
 
   handleStep(step, type) {

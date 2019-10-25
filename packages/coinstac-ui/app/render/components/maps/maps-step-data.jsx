@@ -80,7 +80,7 @@ class MapsStepData extends Component {
               !column
                 ? <div
                     ref="Container"
-                    className={`acceptor acceptor-data`}
+                    className={`acceptor acceptor-${name}`}
                     data-type={type}
                     data-name={name}
                     data-index={index}
