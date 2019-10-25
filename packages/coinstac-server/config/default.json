@@ -4,9 +4,9 @@
   "apiServer": "http://localhost:3100",
   "operatingDirectory": "/tmp/",
   "mqttServer": {
-    "hostname": "localhost",
+    "hostname": "coinstac.rs.gsu.edu",
     "pathname": "",
     "port": 80,
-    "protocol": "mqtt:"
+    "protocol": "mqtts:"
   }
 }
