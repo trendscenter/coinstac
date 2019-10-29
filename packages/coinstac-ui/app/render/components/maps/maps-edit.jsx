@@ -14,6 +14,7 @@ import { withStyles } from '@material-ui/core/styles';
 import {
   getAllCollections,
   getCollectionFiles,
+  mapConsortiumData,
   incrementRunCount,
   saveAssociatedConsortia,
   saveCollection,
@@ -266,42 +267,81 @@ class MapsEdit extends Component {
     this.props.saveAssociatedConsortia(cons);
     const runs = this.props.userRuns;
 
-    this.props.getCollectionFiles(cons.id)
-      .then((filesArray) => {
-        this.setState({isMapped: true});
+    mapConsortiumData(cons.id)
+      .then(filesArray => {
+        this.setState({ isMapped: true });
 
-        if (runs && runs.length && !runs[runs.length - 1].endDate) {
-          let run = runs[runs.length - 1];
-          const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
-          if ('allFiles' in filesArray) {
-            this.props.notifyInfo({
-              message: `Pipeline Starting for ${cons.name}.`,
-              action: {
-                label: 'Watch Progress',
-                callback: () => {
-                  this.props.router.push('dashboard');
-                },
+        if (!runs || !runs.length && runs[runs.length - 1].endDate) {
+          return;
+        }
+
+        let run = runs[runs.length - 1];
+        const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
+        if ('allFiles' in filesArray) {
+          this.props.notifyInfo({
+            message: `Pipeline Starting for ${cons.name}.`,
+            action: {
+              label: 'Watch Progress',
+              callback: () => {
+                this.props.router.push('dashboard');
               },
-            });
+            },
+          });
 
-            if ('steps' in filesArray) {
-              run = {
-                ...run,
-                pipelineSnapshot: {
-                  ...run.pipelineSnapshot,
-                  steps: filesArray.steps,
-                },
-              };
-            }
-
-            this.props.incrementRunCount(cons.id);
-            ipcRenderer.send('start-pipeline', {
-              consortium, pipeline: run.pipelineSnapshot, filesArray: filesArray.allFiles, run,
-            });
-            this.props.saveLocalRun({ ...run, status: 'started' });
+          if ('steps' in filesArray) {
+            run = {
+              ...run,
+              pipelineSnapshot: {
+                ...run.pipelineSnapshot,
+                steps: filesArray.steps,
+              },
+            };
           }
+
+          this.props.incrementRunCount(cons.id);
+          ipcRenderer.send('start-pipeline', {
+            consortium, pipeline: run.pipelineSnapshot, filesArray: filesArray.allFiles, run,
+          });
+          this.props.saveLocalRun({ ...run, status: 'started' });
         }
       });
+
+    // this.props.getCollectionFiles(cons.id)
+    //   .then((filesArray) => {
+    //     this.setState({isMapped: true});
+
+    //     if (runs && runs.length && !runs[runs.length - 1].endDate) {
+    //       let run = runs[runs.length - 1];
+    //       const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
+    //       if ('allFiles' in filesArray) {
+    //         this.props.notifyInfo({
+    //           message: `Pipeline Starting for ${cons.name}.`,
+    //           action: {
+    //             label: 'Watch Progress',
+    //             callback: () => {
+    //               this.props.router.push('dashboard');
+    //             },
+    //           },
+    //         });
+
+    //         if ('steps' in filesArray) {
+    //           run = {
+    //             ...run,
+    //             pipelineSnapshot: {
+    //               ...run.pipelineSnapshot,
+    //               steps: filesArray.steps,
+    //             },
+    //           };
+    //         }
+
+    //         this.props.incrementRunCount(cons.id);
+    //         ipcRenderer.send('start-pipeline', {
+    //           consortium, pipeline: run.pipelineSnapshot, filesArray: filesArray.allFiles, run,
+    //         });
+    //         this.props.saveLocalRun({ ...run, status: 'started' });
+    //       }
+    //     }
+    //   });
   }
 
   resetPipelineSteps = (array) => {

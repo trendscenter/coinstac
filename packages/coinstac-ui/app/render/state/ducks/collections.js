@@ -74,9 +74,8 @@ function parseFilesByGroup(
     return row;
   });
 
-  const e = new RegExp(/[-\/\\^$*+?.()|[\]{}]/g); // eslint-disable-line no-useless-escape
   const escape = (string) => {
-    return string.replace(e, '\\$&');
+    return string.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'); // eslint-disable-line no-useless-escape
   };
   const pathsep = new RegExp(`${escape(sep)}|:`, 'g');
   parsedRows = parsedRows.map((path) => {
@@ -95,7 +94,216 @@ function parseFilesByGroup(
   }
 }
 
-function iteratePipelineSteps(consortium, filesByGroup, baseDirectory, runId) {
+function parseFileData(dataRows, inputSchema, mappedStepData, baseDirectory, keyArray) {
+  // Get typed indices from header (first row)
+  const indices = [];
+  dataRows[0].forEach((col, colIndex) => {
+    for (let i = 0; i < inputSchema.ownerMappings.length; i += 1) {
+      // TODO: using use entered names as keys or equality for the raw columns in the
+      // csv is a bad idea, fix this and clean up this whole function
+      const ownerMapping = inputSchema.ownerMappings[i];
+      if (col.toLowerCase().includes(
+        ownerMapping.name.toLowerCase()
+      )) {
+        indices.push({
+          index: colIndex,
+          type: ownerMapping.type,
+        });
+        break;
+      }
+    }
+  });
+
+  // Cast types to row col indices
+  dataRows.forEach((row, rowIndex) => {
+    if (rowIndex === 0) {
+      return;
+    }
+
+    indices.forEach((col) => {
+      if (typeof row[col.index] === 'string') {
+        if (col.type === 'boolean' && row[col.index].toLowerCase() === 'true') {
+          row[col.index] = true;
+        } else if (col.type === 'boolean' && row[col.index].toLowerCase() === 'false') {
+          row[col.index] = false;
+        } else if (col.type === 'number') {
+          row[col.index] = parseFloat(row[col.index]);
+        }
+      }
+    });
+  });
+
+  const escape = (string) => {
+    return string.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'); // eslint-disable-line no-useless-escape
+  };
+  const pathsep = new RegExp(`${escape(sep)}|:`, 'g');
+  dataRows = dataRows.map((path) => {
+    if (extname(path[0]) !== '') {
+      path[0] = resolve(baseDirectory, path[0]).replace(pathsep, '-');
+      return path;
+    }
+    return path;
+  });
+
+  keyArray[0].push(dataRows);
+  keyArray[1] = mappedStepData.map(val => val.column);
+
+  if (inputSchema.ownerMappings.every(val => !(val.type === undefined))) {
+    keyArray[2] = inputSchema.ownerMappings.map(val => val.type);
+  }
+}
+
+function stepInputNeedsDataMapping(inputSchema) {
+  return 'ownerMappings' in inputSchema;
+}
+
+function stepInputMapSchemaHasOptions(inputMapSchemaKeys) {
+  return inputMapSchemaKeys.includes('data') && inputMapSchemaKeys.findIndex(element => element.includes('options'))
+    && !inputMapSchemaKeys.includes('covariates') && !inputMapSchemaKeys.includes('file');
+}
+
+function inputSchemaHasFileSource(inputSchemaObj) {
+  return inputSchemaObj.source === 'file';
+}
+
+function getMappedDataCollectionIds(consortium) {
+  const collectionIds = new Set();
+
+  consortium.pipelineSteps.forEach((step, stepIndex) => {
+    const consortiumMappedStepData = consortium.stepIO[stepIndex];
+
+    if (!consortiumMappedStepData) {
+      throw new Error('Data was not mapped for at least one of the computation steps');
+    }
+
+    const inputMapSchema = { ...step.inputMap };
+    const inputMapSchemaKeys = Object.keys(inputMapSchema);
+
+    inputMapSchemaKeys.forEach((inputSchemaKey) => {
+      const inputSchema = step.inputMap[inputSchemaKey];
+
+      if (!stepInputNeedsDataMapping(inputSchema)) {
+        return;
+      }
+
+      const firstInputSchemaObj = inputSchema.ownerMappings[0];
+      const inputKeyData = consortiumMappedStepData[inputSchemaKey][0];
+
+      if (stepInputMapSchemaHasOptions(inputMapSchemaKeys)) {
+        if (!inputKeyData || !inputKeyData.groupId || !inputKeyData.collectionId) {
+          throw new Error('Data mapping is incomplete');
+        }
+
+        collectionIds.add(inputKeyData.collectionId);
+      } else if (inputSchemaHasFileSource(firstInputSchemaObj)) {
+        if (!inputKeyData || !inputKeyData.column || !inputKeyData.collectionId) {
+          throw new Error('Data mapping is incomplete');
+        }
+
+        collectionIds.add(inputKeyData.collectionId);
+      }
+    });
+  });
+
+  return [...collectionIds];
+}
+
+function buildConsortiumStepsData(consortium, filesByGroup, baseDirectory) {
+  const steps = [];
+
+  consortium.pipelineSteps.forEach((step, stepIndex) => {
+    const consortiumMappedStepData = consortium.stepIO[stepIndex];
+
+    if (!consortiumMappedStepData) {
+      throw new Error('Data was not mapped for at least one of the computation steps');
+    }
+
+    const inputMapSchema = { ...step.inputMap };
+    const inputMapSchemaKeys = Object.keys(inputMapSchema);
+
+    inputMapSchemaKeys.forEach((inputSchemaKey) => {
+      const inputSchema = step.inputMap[inputSchemaKey];
+
+      if (!stepInputNeedsDataMapping(inputSchema)) {
+        return;
+      }
+
+      let keyArray = [[], [], []]; // [[values], [labels], [type (if present)]]
+      const firstInputSchemaObj = inputSchema.ownerMappings[0];
+      const inputKeyData = consortiumMappedStepData[inputSchemaKey][0];
+
+      if (stepInputMapSchemaHasOptions(inputMapSchemaKeys)) {
+        if (!inputKeyData || !inputKeyData.groupId || !inputKeyData.collectionId) {
+          throw new Error('Data mapping is incomplete');
+        }
+
+        if (filesByGroup && baseDirectory) {
+          const escape = (string) => {
+            return string.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'); // eslint-disable-line no-useless-escape
+          };
+          const pathsep = new RegExp(`${escape(sep)}|:`, 'g');
+          const pathsArray = filesByGroup[inputKeyData.groupId];
+          let paths = pathsArray.map((path) => {
+            if (path[0].includes('/')) {
+              return path[0].replace(pathsep, '-');
+            }
+            return null;
+          });
+          paths = paths.filter(Boolean);
+          keyArray.push(paths);
+        }
+      } else if (inputSchemaHasFileSource(firstInputSchemaObj)) {
+        if (!inputKeyData || !inputKeyData.column || !inputKeyData.collectionId) {
+          throw new Error('Data mapping is incomplete');
+        }
+
+        if (filesByGroup) {
+          parseFileData(
+            filesByGroup[inputKeyData.groupId],
+            inputSchema,
+            consortiumMappedStepData[inputSchemaKey],
+            baseDirectory,
+            keyArray
+          );
+        }
+      } else if (filesByGroup) {
+        if (!inputDataTypes.includes(firstInputSchemaObj.type) || !inputKeyData
+          || !inputKeyData.column || !inputKeyData.groupId) {
+          throw new Error('Data mapping is incomplete');
+        }
+
+        let filepaths = filesByGroup[inputKeyData.groupId];
+        if (filepaths) {
+          filepaths = filepaths.map(path => (extname(path[0]) !== '' ? path[0] : undefined))
+            .filter(Boolean);
+        }
+
+        // There will only ever be one single data object. Don't nest arrays, use concat.
+        keyArray[0] = keyArray[0].concat(filepaths);
+        keyArray[1].push(firstInputSchemaObj.type);
+        if ('value' in firstInputSchemaObj) {
+          keyArray[2] = keyArray[2].concat(firstInputSchemaObj.value);
+        }
+      }
+
+      // remove empty array items if present
+      keyArray = keyArray.filter((item) => {
+        return item.length !== 0;
+      });
+
+      if (keyArray.length === 1) {
+        // eslint-disable-next-line prefer-destructuring
+        inputMapSchema[inputSchemaKey].value = keyArray[0];
+      } else {
+        inputMapSchema[inputSchemaKey] = { value: keyArray };
+      }
+    });
+
+    steps.push({ ...step, inputMapSchema });
+  });
+}
+
+function iteratePipelineSteps(consortium, filesByGroup, baseDirectory) {
   let mappingIncomplete = false;
   const collections = [];
   const steps = [];
@@ -107,6 +315,39 @@ function iteratePipelineSteps(consortium, filesByGroup, baseDirectory, runId) {
     const inputMap = { ...step.inputMap };
 
     const inputKeys = Object.keys(inputMap);
+
+    /*
+      inputMap
+      {
+        covariates: {
+          ownerMappings: [
+            { name: "isControl", source: "file", type: "boolean" },
+            { name: "age", source: "file", type: "number" }
+          ]
+        },
+        data: {
+          ownerMappings: [
+            { type: "FreeSurfer", value: [ "3rd-Ventricle" ] }
+          ]
+        },
+        lambda: {
+          value: 0
+        }
+      }
+
+      stepIO
+      [
+        {
+          covariates: [
+            { collectionId: 1, groupId: "kgEZ9q3s", column: "isControl" },
+            { collectionId: 1, groupId: "kgEZ9q3s", column: "age" }
+          ],
+          data: [
+            { collectionId: 1, groupId: "kgEZ9q3s", column: "FreeSurfer" }
+          ]
+        }
+      ]
+    */
 
     for (let keyIndex = 0; keyIndex < inputKeys.length; keyIndex += 1) {
       const key = inputKeys[keyIndex];
@@ -129,9 +370,9 @@ function iteratePipelineSteps(consortium, filesByGroup, baseDirectory, runId) {
             ownerId = consortium.owners[0];
           }
           if (filesByGroup && baseDirectory) {
-            const e = new RegExp(/[-\/\\^$*+?.()|[\]{}]/g); // eslint-disable-line no-useless-escape
+            const e = new RegExp(); // eslint-disable-line no-useless-escape
             const escape = (string) => {
-              return string.replace(e, '\\$&');
+              return string.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'); // eslint-disable-line no-useless-escape
             };
             const pathsep = new RegExp(`${escape(sep)}|:`, 'g');
             const pathsArray = filesByGroup[groupId];
@@ -266,6 +507,41 @@ export const getAllCollections = applyAsyncLoading(() => dispatch => localDB.col
     }));
   }));
 
+export const mapConsortiumData = async (consortiumId) => {
+  const consortium = await localDB.associatedConsortia.get(consortiumId);
+
+  if (!consortium) {
+    return;
+  }
+
+  const collectionIds = getMappedDataCollectionIds(consortium);
+
+  await localDB.associatedConsortia.update(consortium.id, { isMapped: true });
+
+  const collections = await localDB.collections
+    .filter(collection => collectionIds.includes(collection.id))
+    .toArray();
+
+  let allFiles = [];
+  const filesByGroup = {};
+  let metaDir;
+  collections.forEach((coll) => {
+    Object.values(coll.fileGroups).forEach((group) => {
+      allFiles = allFiles.concat(coll.fileGroups[group.id].files);
+      if ('metaFile' in group) {
+        metaDir = dirname(group.metaFilePath);
+        filesByGroup[group.id] = coll.fileGroups[group.id].metaFile;
+      } else {
+        filesByGroup[group.id] = coll.fileGroups[group.id].files;
+      }
+    });
+  });
+
+  const steps = buildConsortiumStepsData(consortium, filesByGroup, metaDir);
+
+  return { allFiles, steps };
+};
+
 export const getCollectionFiles = (consortiumId, runId) => (dispatch) => {
   return localDB.associatedConsortia.get(consortiumId)
     .then((consortium) => {
@@ -277,6 +553,18 @@ export const getCollectionFiles = (consortiumId, runId) => (dispatch) => {
         console.log('Missing consortia in local collection');
         return;
       }
+
+      /*
+        collections
+        {
+          collections: [
+            { groupId: "J7JZwAZB", collectionId: 1 }
+          ],
+          steps: [
+            { id: "GEQm9xZK", computations: Array(1), controller: {…}, inputMap: {…}, __typename: "PipelineStep" }
+          ]
+        }
+      */
 
       if ('error' in collections) {
         return localDB.associatedConsortia.update(consortium.id, { isMapped: false })
@@ -314,6 +602,17 @@ export const getCollectionFiles = (consortiumId, runId) => (dispatch) => {
                   }
                 });
               });
+
+              /*
+                filesByGroup
+                {
+                  aaaaa: [
+                    ["id", "isControl", "age"],
+                    ["-home-rochaeb-Documents-Projects-coinstac-algorith…reesurfer-test-data-site1-subject0_aseg_stats.txt", false, 22],
+                    ...
+                  ]
+                }
+              */
 
               // TODO: Reconsider how to get updated steps
               const { steps } = iteratePipelineSteps(consortium, filesByGroup, metaDir, runId);
