@@ -394,36 +394,6 @@ class MapsEdit extends Component {
       }
     });
   }
-  
-  resetPipelineSteps = (array) => {
-    const { consortium, collections, mapped, pipelines } = this.props;
-    let pipeline = pipelines.find(p => p.id === consortium.activePipelineId);
-     this.setState({
-       activeConsortium: {
-         ...consortium,
-         pipelineSteps: pipeline.steps,
-       },
-     });
-     this.setRowArray([]);
-     this.setRowArray(array);
-     this.setState({isMapped: false});
-     this.setPipelineSteps(pipeline.steps);
-  }
-
-  resetPipelineSteps = (array) => {
-    const { consortium, collections, mapped, pipelines } = this.props;
-    let pipeline = pipelines.find(p => p.id === consortium.activePipelineId);
-     this.setState({
-       activeConsortium: {
-         ...consortium,
-         pipelineSteps: pipeline.steps,
-       },
-     });
-     this.setRowArray([]);
-     this.setRowArray(array);
-     this.setState({isMapped: false});
-     this.setPipelineSteps(pipeline.steps);
-  }
 
   resetPipelineSteps = (array) => {
     const { consortium, collections, mapped, pipelines } = this.props;
