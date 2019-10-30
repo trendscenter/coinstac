@@ -299,8 +299,13 @@ function buildConsortiumStepsData(consortium, filesByGroup, baseDirectory) {
       }
     });
 
-    steps.push({ ...step, inputMapSchema });
+    steps.push({
+      ...step,
+      inputMap: inputMapSchema,
+    });
   });
+
+  return steps;
 }
 
 function iteratePipelineSteps(consortium, filesByGroup, baseDirectory) {
