@@ -258,62 +258,6 @@ class Dashboard extends Component {
             .findIndex(run => run.id === nextProps.remoteRuns[i].id);
         }
 
-        // Run not in local props, start a pipeline (runs already filtered by member)
-        // if (runIndexInLocalRuns === -1 && !nextProps.remoteRuns[i].results
-        //   && this.props.consortia.length && runIndexInPropsRemote === -1
-        //   && !nextProps.remoteRuns[i].error
-        // ) {
-        //   // TODO: Runs on startup disable, put this back in when we're not clearing dexie on startup
-        //   let run = nextProps.remoteRuns[i];
-        //   const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
-        //   this.props.getCollectionFiles(
-        //     run.consortiumId, run.id
-        //   )
-        //   .then((filesArray) => {
-        //     let status = 'started';
-
-        //     if ('error' in filesArray) {
-        //       status = 'needs-map';
-        //       this.props.notifyWarning({
-        //         message: filesArray.error,
-        //         autoDismiss: 5,
-        //       });
-        //     } else {
-        //       // Save run status to localDB
-        //       this.props.saveLocalRun({ ...run, status });
-
-        //       if ('steps' in filesArray) {
-        //         run = {
-        //           ...run,
-        //           pipelineSnapshot: {
-        //             ...run.pipelineSnapshot,
-        //             steps: filesArray.steps,
-        //           },
-        //         };
-        //       }
-
-        //       this.props.incrementRunCount(consortium.id);
-        //       this.props.notifyInfo({
-        //         message: `Decentralized Pipeline Starting for ${consortium.name}.`,
-        //         action: {
-        //           label: 'Watch Progress',
-        //           callback: () => {
-        //             router.push('dashboard');
-        //           },
-        //         },
-        //       });
-
-        //       this.props.incrementRunCount(consortium.id);
-        //       ipcRenderer.send('start-pipeline', {
-        //         consortium,
-        //         pipeline: run.pipelineSnapshot,
-        //         filesArray: filesArray.allFiles,
-        //         run: { ...run, status },
-        //       });
-        //     }
-        //   });
-        //   // Not saved locally, but results signify complete
-        // } else if (runIndexInLocalRuns === -1 && nextProps.remoteRuns[i].results) {
         if (runIndexInLocalRuns === -1 && nextProps.remoteRuns[i].results) {
           ipcRenderer.send('clean-remote-pipeline', nextProps.remoteRuns[i].id);
           this.props.saveLocalRun({ ...nextProps.remoteRuns[i], status: 'complete' });
@@ -488,8 +432,8 @@ class Dashboard extends Component {
       updateUserPerms(currentUser.permissions);
     }
 
-    if (remoteRuns) {
-      // TODO: Speed this up by moving to subscription prop (n vs n^2)?
+    // Start pipeline for new runs that are still not running local
+    if (remoteRuns && remoteRuns.length > prevProps.remoteRuns.length) {
       remoteRuns.forEach((remoteRun) => {
         let runIndexInLocalRuns = -1;
 
