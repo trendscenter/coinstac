@@ -131,7 +131,7 @@ const RunItem = ({ consortiumName, runObject, stopPipeline, classes }) => (
         }
       </Typography>
       {
-        !runObject.endDate
+        !runObject.endDate && runObject.status === 'started'
         && (
           <Typography variant="headline">
             {'Started: '}
