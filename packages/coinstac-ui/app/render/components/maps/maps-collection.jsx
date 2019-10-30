@@ -351,7 +351,6 @@ class MapsCollection extends Component {
       metaRow,
       rowArray,
       rowArrayLength,
-      classes,
       saveCollection,
       stepsTotal,
       stepsMapped,
@@ -434,12 +433,6 @@ class MapsCollection extends Component {
                       </Typography>
                       <Typography>
                         <span className="bold">Original MetaFile Header:</span> {group.firstRow}
-                      </Typography>
-                      <Typography>
-                        <span className="bold">Mapped MetaFile Header:</span> {metaRow.toString()}
-                      </Typography>
-                      <Typography>
-                        <span className="bold">Items Mapped:</span> {stepsMapped} of {stepsTotal}
                       </Typography>
                       <Typography>
                         <span className="bold">Mapped MetaFile Header:</span> {metaRow.toString()}
