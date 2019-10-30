@@ -54,7 +54,7 @@ const styles = theme => ({
 });
 
 class MapsStepData extends Component {
-  componentDidUpdate() {
+  componentWillUpdate() {
     if (this.refs.Container) {
       let Container = ReactDOM.findDOMNode(this.refs.Container);
       this.props.getContainers(Container);
@@ -85,7 +85,7 @@ class MapsStepData extends Component {
                     data-name={name}
                     data-index={index}
                   />
-              : <div className="card-draggable">
+              : <div ref="Container" className="card-draggable">
                 <FileCopyIcon /> {column}
                 <span onClick={()=>{this.props.removeMapStep(type, index, column)}}>
                   <Icon
