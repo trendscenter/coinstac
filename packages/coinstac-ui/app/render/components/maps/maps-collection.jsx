@@ -77,7 +77,7 @@ class MapsCollection extends Component {
       showFiles: {},
       source: {},
       finishedAutoMapping: false,
-      stepsMapped: 0,
+      stepsMapped: -1,
     };
 
     this.addFileGroup = this.addFileGroup.bind(this);
@@ -88,14 +88,6 @@ class MapsCollection extends Component {
   }
 
   componentDidUpdate(prevProps,prevState) {
-    const {
-      stepsTotal,
-      stepsFilled,
-    } = this.props;
-    const {
-      autoMap,
-      stepsMapped,
-    } = this.state;
     if(this.refs.Container){
       let children = 0;
       let Container = ReactDOM.findDOMNode(this.refs.Container);
@@ -107,15 +99,6 @@ class MapsCollection extends Component {
       }
       this.props.getContainers(Container);
     }
-    if(!autoMap && stepsTotal - stepsFilled !== stepsMapped){
-      this.setState({ stepsMapped: stepsTotal - stepsFilled });
-    }
-    if(autoMap &&
-       stepsMapped !== stepsTotal &&
-       stepsTotal - stepsFilled !== stepsMapped &&
-       stepsTotal - (stepsTotal - stepsFilled) === 1){
-      this.setState({ stepsMapped: stepsTotal });
-     }
   }
 
   addFileGroup() {
@@ -220,14 +203,18 @@ class MapsCollection extends Component {
            return this.changeMetaGetObj(search, string, obj, key);
          }
 
-         //Match is string contains search and vice versa
+         //Match if string contains search and vice versa
          if(string.length < search.length){
            let sch = search.replace(/[_-\s]/g, ' ');
+           sch = sch.toLowerCase();
+           string = string.toLowerCase();
            if(sch.includes(string)){
              return this.changeMetaGetObj(search, string, obj, key);
            }
          }else{
            let str = string.replace(/[_-\s]/gi, ' ');
+           search = search.toLowerCase();
+           str = str.toLowerCase();
            if(str.includes(search)){
              return this.changeMetaGetObj(search, string, obj, key);
            }
@@ -272,7 +259,7 @@ class MapsCollection extends Component {
        let obj = item[1].ownerMappings;
        let firstRow = this.makePoints(group.firstRow);
        const steps = firstRow.map(async (string, index) => {
-        if( obj && Object.keys(this.filterGetObj(obj,string,type)).length > 0 ){
+       if( obj && Object.keys(this.filterGetObj(obj,string,type)).length > 0 ){
          firstRow.filter(e => e !== string);
          let setObj = this.filterGetIndex(obj,string,type);
          await setObj.then((result) => {
@@ -362,6 +349,7 @@ class MapsCollection extends Component {
       rowArrayLength,
       saveCollection,
       stepsTotal,
+      stepsMapped,
     } = this.props;
 
     const {
@@ -369,7 +357,6 @@ class MapsCollection extends Component {
       contChildren,
       filesError,
       finishedAutoMapping,
-      stepsMapped
     } = this.state;
 
     return (
@@ -441,10 +428,10 @@ class MapsCollection extends Component {
                         <span className="bold">Meta File Path:</span> {group.metaFilePath}
                       </Typography>
                       <Typography>
-                        <span className="bold">First Row:</span> {group.firstRow}
+                        <span className="bold">Original MetaFile Header:</span> {group.firstRow}
                       </Typography>
                       <Typography>
-                        <span className="bold">Meta Row:</span> {metaRow.toString()}
+                        <span className="bold">Mapped MetaFile Header:</span> {metaRow.toString()}
                       </Typography>
                       <Typography>
                         <span className="bold">Items Mapped:</span> {stepsMapped} of {stepsTotal}
@@ -462,7 +449,7 @@ class MapsCollection extends Component {
                                   key={index}
                                 >
                                   <FileCopyIcon /> {point}
-                                  <span onClick={()=>{this.props.removeRowArrItem(point)}}>
+                                  <span onClick={()=>{this.props.removeRowArrItem(point, 'delete')}}>
                                     <Icon
                                       className={classNames('fa fa-times-circle', classes.timesIcon)} />
                                   </span>
@@ -489,6 +476,22 @@ class MapsCollection extends Component {
                         }
                         {
                           !isMapped
+                          && rowArray.length > 0
+                          && stepsTotal === stepsMapped
+                          &&  <Button
+                                variant="contained"
+                                style={{
+                                  backgroundColor: '#5cb85c',
+                                  color: '#fff',
+                                }}
+                                onClick={() => this.props.saveAndCheckConsortiaMapping()}
+                              >
+                                Remove Extra Items
+                              </Button>
+                        }
+                        {
+                          !isMapped
+                          && rowArray.length === 0
                           && stepsTotal === stepsMapped
                           &&  <Button
                                 variant="contained"
