@@ -88,14 +88,6 @@ class MapsCollection extends Component {
   }
 
   componentDidUpdate(prevProps,prevState) {
-    const {
-      stepsTotal,
-      stepsFilled,
-    } = this.props;
-    const {
-      autoMap,
-      stepsMapped,
-    } = this.state;
     if(this.refs.Container){
       let children = 0;
       let Container = ReactDOM.findDOMNode(this.refs.Container);
@@ -107,15 +99,6 @@ class MapsCollection extends Component {
       }
       this.props.getContainers(Container);
     }
-    if(!autoMap && stepsTotal - stepsFilled !== stepsMapped){
-      this.setState({ stepsMapped: stepsTotal - stepsFilled });
-    }
-    if(autoMap &&
-       stepsMapped !== stepsTotal &&
-       stepsTotal - stepsFilled !== stepsMapped &&
-       stepsTotal - (stepsTotal - stepsFilled) === 1){
-      this.setState({ stepsMapped: stepsTotal });
-     }
   }
 
   addFileGroup() {
@@ -212,12 +195,13 @@ class MapsCollection extends Component {
          //Match data column and map to ID
          if(type === 'data'
          && string.toLowerCase() === 'id'){
-           let changeMeta = this.changeMetaRow(search, string);
-           return changeMeta.then((r) => {
-             if(r){
-               return obj[key];
-             }
-           });
+           return this.changeMetaGetObj(search, string, obj, key);
+         }
+
+         //Match if string and search are equal
+         if( string.toLowerCase() === search.toLowerCase() ){
+           return this.changeMetaGetObj(search, string, obj, key);
+         }
 
          //Match if string contains search and vice versa
          if(string.length < search.length){
@@ -456,9 +440,6 @@ class MapsCollection extends Component {
                         <span className="bold">Mapped MetaFile Header:</span> {metaRow.toString()}
                       </Typography>
                       <Typography>
-                        <span className="bold">Meta Row:</span> {metaRow.toString()}
-                      </Typography>
-                      <Typography>
                         <span className="bold">Items Mapped:</span> {stepsMapped} of {stepsTotal}
                       </Typography>
                       {
@@ -501,7 +482,6 @@ class MapsCollection extends Component {
                         }
                         {
                           !isMapped
-                          && rowArrayLength * contChildren === 0
                           && rowArray.length > 0
                           && stepsTotal === stepsMapped
                           &&  <Button
