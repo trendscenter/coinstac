@@ -218,6 +218,26 @@ class MapsCollection extends Component {
            if(str.includes(search)){
              return this.changeMetaGetObj(search, string, obj, key);
            }
+         }else{
+           let str = string.replace(/[_-\s]/gi, ' ');
+           search = search.toLowerCase();
+           str = str.toLowerCase();
+           if(str.includes(search)){
+             return this.changeMetaGetObj(search, string, obj, key);
+           }
+         }
+
+         //Finally Fuzzy match string to search based on which is larger
+         let fuzzy = [];
+         let str = string.replace(/[_-\s]/gi, '');
+         let sch = search.replace(/[_-\s]/gi, '');
+         if(str.length > sch.length){
+           fuzzy = bitap(str.toLowerCase(), sch.toLowerCase(), 1);
+         }else{
+           fuzzy = bitap(sch.toLowerCase(), str.toLowerCase(), 1);
+         }
+         if(fuzzy.length > 1 && fuzzy[0] > 3){
+           return this.changeMetaGetObj(search, string, obj, key);
          }
 
          //Finally Fuzzy match string to search based on which is larger
