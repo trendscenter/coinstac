@@ -271,7 +271,7 @@ class MapsEdit extends Component {
       .then(filesArray => {
         this.setState({ isMapped: true });
 
-        if (!runs || !runs.length && runs[runs.length - 1].endDate) {
+        if (!runs || !runs.length || runs[runs.length - 1].endDate) {
           return;
         }
 
