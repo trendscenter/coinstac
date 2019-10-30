@@ -88,14 +88,6 @@ class MapsCollection extends Component {
   }
 
   componentDidUpdate(prevProps,prevState) {
-    const {
-      stepsTotal,
-      stepsFilled,
-    } = this.props;
-    const {
-      autoMap,
-      stepsMapped,
-    } = this.state;
     if(this.refs.Container){
       let children = 0;
       let Container = ReactDOM.findDOMNode(this.refs.Container);
@@ -107,15 +99,6 @@ class MapsCollection extends Component {
       }
       this.props.getContainers(Container);
     }
-    if(!autoMap && stepsTotal - stepsFilled !== stepsMapped){
-      this.setState({ stepsMapped: stepsTotal - stepsFilled });
-    }
-    if(autoMap &&
-       stepsMapped !== stepsTotal &&
-       stepsTotal - stepsFilled !== stepsMapped &&
-       stepsTotal - (stepsTotal - stepsFilled) === 1){
-      this.setState({ stepsMapped: stepsTotal });
-     }
   }
 
   addFileGroup() {
@@ -380,7 +363,6 @@ class MapsCollection extends Component {
       contChildren,
       filesError,
       finishedAutoMapping,
-      stepsMapped
     } = this.state;
 
     return (
@@ -456,12 +438,6 @@ class MapsCollection extends Component {
                       </Typography>
                       <Typography>
                         <span className="bold">Mapped MetaFile Header:</span> {metaRow.toString()}
-                      </Typography>
-                      <Typography>
-                        <span className="bold">Items Mapped:</span> {stepsMapped} of {stepsTotal}
-                      </Typography>
-                      <Typography>
-                        <span className="bold">Meta Row:</span> {metaRow.toString()}
                       </Typography>
                       <Typography>
                         <span className="bold">Items Mapped:</span> {stepsMapped} of {stepsTotal}
