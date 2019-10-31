@@ -22,7 +22,6 @@ import {
 } from '../../state/ducks/notifyAndLog';
 import CoinstacAbbr from '../coinstac-abbr';
 import {
-  getCollectionFiles,
   incrementRunCount,
   syncRemoteLocalConsortia,
   syncRemoteLocalPipelines,
@@ -604,7 +603,6 @@ Dashboard.propTypes = {
   client: PropTypes.object.isRequired,
   computations: PropTypes.array,
   consortia: PropTypes.array,
-  getCollectionFiles: PropTypes.func.isRequired,
   getDBRuns: PropTypes.func.isRequired,
   getDockerStatus: PropTypes.func.isRequired,
   incrementRunCount: PropTypes.func.isRequired,
@@ -706,7 +704,6 @@ const DashboardWithData = compose(
 
 const connectedComponent = connect(mapStateToProps,
   {
-    getCollectionFiles,
     getLocalRun,
     getDBRuns,
     getDockerStatus,
