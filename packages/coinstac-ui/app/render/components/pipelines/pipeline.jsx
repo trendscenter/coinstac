@@ -18,6 +18,7 @@ import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
 import { ValidatorForm, TextValidator } from 'react-material-ui-form-validator';
 import ListDeleteModal from '../common/list-delete-modal';
+import StatusButtonWrapper from '../common/status-button-wrapper';
 import PipelineStep from './pipeline-step';
 import ItemTypes from './pipeline-item-types';
 import {
@@ -107,6 +108,7 @@ class Pipeline extends Component {
       openOwningConsortiumMenu: false,
       openAddComputationStepMenu: false,
       showModal: false,
+      savingStatus: 'init',
     };
 
     this.accordionSelect = this.accordionSelect.bind(this);
@@ -397,6 +399,8 @@ class Pipeline extends Component {
   savePipeline() {
     const { savePipeline, notifySuccess, notifyError } = this.props;
 
+    this.setState({ savingStatus: 'pending' });
+
     savePipeline({
       ...this.state.pipeline,
       steps: this.state.pipeline.steps.map(step => ({
@@ -415,11 +419,14 @@ class Pipeline extends Component {
       this.setState({
         pipeline,
         startingPipeline: pipeline,
+        savingStatus: 'success',
       });
 
       notifySuccess({ message: 'Pipeline Saved.' });
     }).catch((error) => {
       notifyError({ message: error.message });
+
+      this.setState({ savingStatus: 'fail' });
 
       console.error(error);
     });
@@ -459,6 +466,7 @@ class Pipeline extends Component {
       openOwningConsortiumMenu,
       openAddComputationStepMenu,
       showModal,
+      savingStatus,
     } = this.state;
 
     const title = pipeline.id ? 'Pipeline Edit' : 'Pipeline Creation';
@@ -538,15 +546,17 @@ class Pipeline extends Component {
             </Menu>
           </div>
           <div className={classes.savePipelineButtonContainer}>
-            <Button
-              key="save-pipeline-button"
-              variant="contained"
-              color="primary"
-              disabled={!owner || !consortium}
-              type="submit"
-            >
-              Save Pipeline
-            </Button>
+            <StatusButtonWrapper status={savingStatus}>
+              <Button
+                key="save-pipeline-button"
+                variant="contained"
+                color="primary"
+                disabled={!owner || !consortium}
+                type="submit"
+              >
+                Save Pipeline
+              </Button>
+            </StatusButtonWrapper>
           </div>
           <FormControlLabel
             control={(
