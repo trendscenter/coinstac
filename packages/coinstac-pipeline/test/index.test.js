@@ -2,7 +2,7 @@
 
 require('trace');
 require('clarify');
-const { test } = require('ava');
+const test = require('ava');
 const path = require('path');
 const DockerManager = require('coinstac-docker-manager');
 const pify = require('util').promisify;
