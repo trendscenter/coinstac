@@ -18,7 +18,6 @@ const styles = theme => ({
     paddingBottom: theme.spacing.unit * 2,
     marginTop: theme.spacing.unit * 2,
     height: '100%',
-    overflow: 'scroll',
   },
   title: {
     marginBottom: theme.spacing.unit,
@@ -55,7 +54,7 @@ const styles = theme => ({
 });
 
 class MapsStepData extends Component {
-  componentDidUpdate() {
+  componentWillUpdate() {
     if (this.refs.Container) {
       let Container = ReactDOM.findDOMNode(this.refs.Container);
       this.props.getContainers(Container);
@@ -76,27 +75,17 @@ class MapsStepData extends Component {
           {step.type}
         </Typography>
         <div className={classes.listDropzoneContainer}>
-          {step.value && <List className={classes.interestList}>
-            <ListItem><ListItemText primary="Interest(s):" /></ListItem>
-            {step.value &&
-              step.value.map((key, i) => (
-                <ListItem key={key} className={classes.nestedListItem}>
-                  <ListItemText secondary={step.value[i].label} />
-                </ListItem>
-              ))
-            }
-          </List>}
           <div className={classNames('drop-zone', classes.dropZone)}>
             {
               !column
                 ? <div
                     ref="Container"
-                    className={`acceptor acceptor-${name}`}
+                    className={`acceptor acceptor-data`}
                     data-type={type}
                     data-name={name}
                     data-index={index}
                   />
-              : <div className="card-draggable">
+              : <div ref="Container" className="card-draggable">
                 <FileCopyIcon /> {column}
                 <span onClick={()=>{this.props.removeMapStep(type, index, column)}}>
                   <Icon
