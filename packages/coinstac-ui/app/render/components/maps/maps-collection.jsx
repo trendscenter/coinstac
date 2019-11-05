@@ -44,6 +44,16 @@ const styles = theme => ({
   fileErrorMessage: {
     color: '#ab8e6b',
   },
+  fileList: {
+    backgroundColor: '#efefef',
+    padding: '1rem',
+    borderRadius: '0.25rem'
+  },
+  fileListItem: {
+    whiteSpace: 'nowrap',
+    fontSize: '0.75rem',
+    margin: '0.25rem'
+  },
   actionsContainer: {
     marginTop: theme.spacing.unit * 2,
   },
@@ -81,6 +91,7 @@ class MapsCollection extends Component {
     };
 
     this.addFileGroup = this.addFileGroup.bind(this);
+    this.addFolderGroup = this.addFolderGroup.bind(this);
     this.removeFileGroup = this.removeFileGroup.bind(this);
     this.updateNewFileOrg = this.updateNewFileOrg.bind(this);
     this.updateMapsStep = this.updateMapsStep.bind(this);
@@ -113,6 +124,7 @@ class MapsCollection extends Component {
         this.setState({ filesError: obj.error });
       } else {
         const name = `Group ${Object.keys(this.props.collection.fileGroups).length + 1} (${obj.extension.toUpperCase()})`;
+<<<<<<< HEAD
         if (this.state.newFile.org === 'metafile') {
           let headerArray = obj.metaFile[0];
           this.props.setRowArray([...headerArray]);
@@ -137,8 +149,63 @@ class MapsCollection extends Component {
 
           this.setState({ showFiles: { [newFiles.date]: false } });
         }
+=======
+
+        this.props.setRowArray(obj.metaFile[0]);
+
+        newFiles = {
+          ...obj,
+          name,
+          id: fileGroupId,
+          date: new Date().getTime(),
+          firstRow: obj.metaFile[0].join(', '),
+          org: this.state.newFile.org,
+        };
 
         this.setState({ filesError: null });
+        this.props.updateCollection(
+          {
+            fileGroups: {
+              ...this.props.collection.fileGroups,
+              [fileGroupId]: newFiles,
+            },
+          },
+          this.props.saveCollection
+        );
+      }
+    })
+    .catch(console.log);
+  }
+
+  addFolderGroup() {
+    ipcPromise.send('open-dialog')
+    .then((obj) => {
+
+      let newFiles;
+
+      const fileGroupId = shortid.generate();
+
+      if (obj.error) {
+        this.setState({ filesError: obj.error });
+      } else {
+        const name = `Group ${Object.keys(this.props.collection.fileGroups).length + 1} (${obj.extension.toUpperCase()})`;
+
+        this.props.setRowArray([this.props.dataType]);
+
+        newFiles = {
+          name,
+          id: fileGroupId,
+          extension: obj.extension,
+          files: [...obj.paths],
+          date: new Date().getTime(),
+          firstRow: this.props.dataType
+        };
+
+        this.setState({ showFiles: { [newFiles.date]: false } });
+>>>>>>> 243be6d04bd575b1e9a53c1fe03e3b4117159657
+
+        this.setState({ filesError: null });
+
         this.props.updateCollection(
           {
             fileGroups: {
@@ -300,23 +367,32 @@ class MapsCollection extends Component {
      this.setState({ autoMap: true });
      let inputMap = this.props.activeConsortium.pipelineSteps[0].inputMap;
      let resolveAutoMapPromises = Object.entries(inputMap).map((item, i) => {
-       let type = item[0];
-       let obj = item[1].ownerMappings;
-       let firstRow = this.makePoints(group.firstRow);
-       const steps = firstRow.map(async (string, index) => {
-       if( obj && Object.keys(this.filterGetObj(obj,string,type)).length > 0 ){
-         firstRow.filter(e => e !== string);
-         let setObj = this.filterGetIndex(obj,string,type);
-         await setObj.then((result) => {
-           this.setStepIO(
-             index,
-             group.id,
-             0,
-             type,
-             result,
-             string
-           );
-         });
+     let type = item[0];
+     let obj = item[1].ownerMappings;
+     const steps = this.makePoints(group.firstRow).map(async (string, index) => {
+     string = string.replace('file', '');
+        if( obj && Object.keys(this.filterGetObj(obj,string)).length > 0 ){
+         await this.setStepIO(
+           index,
+           group.id,
+           0,
+           type,
+           this.filterGetIndex(obj,string),
+           string
+         );
+        }
+        if(obj && obj[0] && obj[0].type){
+          let fuzzy = bitap(string.toLowerCase(), obj[0].type.toLowerCase(), 1);
+          if(fuzzy.length){
+            await this.setStepIO(
+              index,
+              group.id,
+              0,
+              type,
+              0,
+              string
+            );
+          }
         }
        });
        return Promise.all(steps);
@@ -405,13 +481,19 @@ class MapsCollection extends Component {
       finishedAutoMapping,
     } = this.state;
 
+    let dataType = 'meta';
+    if(this.props.activeConsortium.pipelineSteps[0]
+      && this.props.activeConsortium.pipelineSteps[0].dataMeta){
+      dataType = this.props.activeConsortium.pipelineSteps[0].dataMeta.type;
+    }
+
     return (
       <div>
         <form onSubmit={saveCollection}>
           {
             !isMapped
             && dataType === 'meta'
-	          && (
+            && (
               <div>
                 <Button
                   variant="contained"
@@ -442,8 +524,8 @@ class MapsCollection extends Component {
               </div>
             )
           }
-	  {
-	    filesError
+          {
+            filesError
             && (
               <Paper className={classes.fileErrorPaper}>
                 <Typography variant="h6" className={classes.fileErrorMessage}>File Error</Typography>
@@ -485,18 +567,18 @@ class MapsCollection extends Component {
                   <Typography>
                     <span className="bold">Extension:</span> {group.extension}
                   </Typography>
-                  <Typography>
-                    <span className="bold">Meta File Path:</span> {group.metaFilePath}
-                  </Typography>
-                  <Typography>
-                    <span className="bold">Original MetaFile Header:</span> {group.firstRow}
-                  </Typography>
-                  <Typography>
-                    <span className="bold">Mapped MetaFile Header:</span> {metaRow.toString()}
-                  </Typography>
-                  <Typography>
-                    <span className="bold">Items Mapped:</span> {stepsMapped} of {stepsTotal}
-                  </Typography>
+                  {group.org === 'metafile'
+                    && rowArray.length > 0
+                    && (
+                      <div>
+                        <Typography>
+                          <span className="bold">Meta File Path:</span> {group.metaFilePath}
+                        </Typography>
+                        <Typography>
+                          <span className="bold">First Row:</span> {group.firstRow}
+                        </Typography>
+                      </div>
+                    )}
                     {group.org !== 'metafile'
                       && (
                         <div>
@@ -514,29 +596,18 @@ class MapsCollection extends Component {
                         </div>
                       )
                     }
-                    <div>
-                      {group
-                        && rowArray.length > 0
-                        && (
-                          <div className="card-deck" ref="Container">
-                            {
-                              rowArray && rowArray.map((point, index) => (
-                                <div
-                                  className={`card-draggable card-${point.toLowerCase()}`}
-                                  data-filegroup={group.id}
-                                  data-string={point}
-                                  key={index}
-                                >
-                                  <FileCopyIcon /> {point}
-                                  <span onClick={()=>{this.props.removeRowArrItem(point, 'delete')}}>
-                                    <Icon
-                                      className={classNames('fa fa-times-circle', classes.timesIcon)} />
-                                  </span>
-                                </div>
-                              ))
-                            }
+                    <div className="card-deck" ref="Container">
+                      {group &&
+                        rowArray && rowArray.map((point, index) => (
+                          <div
+                            className={`card-draggable card-${point.toLowerCase()}`}
+                            data-filegroup={group.id}
+                            data-string={point}
+                            key={index}
+                          >
+                            <FileCopyIcon /> {point}
                           </div>
-                        )
+                        ))
                       }
                       </div>
                       <Divider />

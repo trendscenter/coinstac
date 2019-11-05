@@ -434,6 +434,7 @@ class MapsEdit extends Component {
       }
 
       if ('data' in step.inputMap) {
+        this.setState({ dataType: step.inputMap.data.ownerMappings[0]['type'] });
         stepIO[index] = {
           ...stepIO[index],
           data: Array(step.inputMap.data.ownerMappings.length).fill([]),
