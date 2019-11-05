@@ -19,7 +19,6 @@ const styles = theme => ({
     paddingBottom: theme.spacing.unit * 1.5,
     marginTop: theme.spacing.unit * 1.5,
     height: '100%',
-    overflow: 'scroll',
   },
   title: {
     marginBottom: theme.spacing.unit * 1.5,
@@ -53,7 +52,7 @@ const styles = theme => ({
 });
 
 class MapsStepCovariate extends Component {
-  componentDidUpdate() {
+  componentWillUpdate() {
     if (this.refs.Container) {
       let Container = ReactDOM.findDOMNode(this.refs.Container);
       this.props.getContainers(Container);
@@ -90,7 +89,7 @@ class MapsStepCovariate extends Component {
                     data-name={name}
                     data-index={index}
                   />
-              : <div className="card-draggable">
+              : <div ref="Container" className="card-draggable">
                 <FileCopyIcon /> {column}
                 <span onClick={()=>{this.props.removeMapStep(type, index, column)}}>
                   <Icon

@@ -77,6 +77,9 @@ class MapsEdit extends Component {
       rowArray: [],
       metaRow: [],
       sources: [],
+      stepsLength: 0,
+      stepsFilled: 0,
+      stepsMapped: 0,
       updateMapsStep: false,
     };
 
@@ -111,13 +114,25 @@ class MapsEdit extends Component {
     const { user } = this.props.auth;
     const { consortium, collections, mapped, pipelines } = this.props;
     let pipeline = pipelines.find(p => p.id === consortium.activePipelineId);
-     this.setState({
+
+    console.log(pipeline.steps[0].dataMeta.type);
+
+    this.setState({ dataType: pipeline.steps[0].dataMeta.type });
+
+    this.setState({
        activeConsortium: {
          ...consortium,
          pipelineSteps: pipeline.steps,
        },
      });
      this.setState({isMapped: mapped});
+
+     if(pipeline.steps[0].inputMap.covariates && pipeline.steps[0].inputMap.data){
+       let ctotal = pipeline.steps[0].inputMap.covariates.ownerMappings.length;
+       let dtotal = pipeline.steps[0].inputMap.data.ownerMappings.length;
+       this.setState({stepsTotal: ctotal + dtotal });
+     }
+
      this.setPipelineSteps(pipeline.steps);
 
      let name = consortium.name+': Collection';
@@ -135,8 +150,14 @@ class MapsEdit extends Component {
      }else{
        this.setState({collection: collections[0]});
      }
-
      this.getDropAction();
+  }
+
+  componentDidUpdate(prevProps, prevState){
+    const { stepsTotal, stepsFilled, stepsMapped } = this.state;
+    if(prevState.stepsFilled && prevState.stepsFilled !== this.state.stepsFilled){
+      this.setState({ stepsMapped: stepsTotal - stepsFilled });
+    }
   }
 
   getContainers = (container) => {
@@ -146,12 +167,30 @@ class MapsEdit extends Component {
       newContainers.push(container);
     }
     containers = uniqWith(this.state.containers, isEqual);
+    let filter = [
+      'card-deck',
+      'card-draggable',
+    ];
+    let filtered = containers.map((item, key) => {
+      if( !item.getAttribute('class').includes(filter[0]) &&
+          !item.getAttribute('class').includes(filter[1]) ){
+        return item;
+      }else{
+        return false;
+      }
+    });
+    filtered = filtered.filter(Boolean);
+    let length = filtered.length;
+    if(this.state.stepsFilled !== length){
+      this.setState({ stepsFilled: length });
+    }
     containers.map((container) => {
       drake.containers.push(container);
     });
   }
 
   getDropAction = () => {
+    let newArray = new Set(drake.containers);
     drake.on('drop', (el, target, source, sibling) => {
       this.mapObject(el, target);
     });
@@ -207,7 +246,35 @@ class MapsEdit extends Component {
     this.setRowArray(array);
   }
 
-  removeRowArrItem = (item) => {
+  removeMetaFileColumn(string) {
+    let newMetaRow = [...this.state.metaRow];
+    let index = newMetaRow.indexOf(string);
+    if (index !== -1) newMetaRow.splice(index, 1);
+    this.setState({metaRow: newMetaRow});
+    let groupKey = Object.keys(this.state.collection.fileGroups);
+    groupKey = groupKey[0];
+    let newMeta = [...this.state.collection.fileGroups[groupKey].metaFile];
+    newMeta = newMeta.map((row) => {
+      row.splice(index, 1);
+      return row;
+    });
+    //console.log(newMeta);
+    this.setState(prevState => ({
+      collection: {
+        ...prevState.collection,
+          fileGroups: {
+            [groupKey]: update(prevState.collection.fileGroups[groupKey], {
+            metaFile: {$set: newMeta}
+          }),
+        },
+      },
+    }),
+    () => {
+      this.props.saveCollection(this.state.collection);
+    });
+  }
+
+  removeRowArrItem = (item, method) => {
     const {
       rowArray,
     } = this.state;
@@ -215,6 +282,30 @@ class MapsEdit extends Component {
     var index = array.indexOf(item);
     if (index !== -1) array.splice(index, 1);
     this.setRowArray(array);
+    if(method && method === 'delete'){
+      this.removeMetaFileColumn(item);
+    }
+  }
+
+  removeExtraRowArrItems(){
+    return new Promise((resolve, reject) => {
+      const {
+        rowArray,
+      } = this.state;
+      if(rowArray.length > 0){
+        setTimeout(() => {
+          while(rowArray.length > 0){
+            console.log(rowArray.length);
+            rowArray.map((item) => {
+                this.removeRowArrItem(item, 'delete');
+            });
+          }
+        }, 250);
+      }
+      if(rowArray.length === 0){
+        resolve(true);
+      }
+    });
   }
 
   saveCollection(e) {
@@ -225,7 +316,7 @@ class MapsEdit extends Component {
     this.props.saveCollection(collection);
   }
 
-  updateMetaRow() {
+  updateMetaFileHeader() {
     let groupKey = Object.keys(this.state.collection.fileGroups);
     groupKey = groupKey[0];
     let newMeta = this.state.collection.fileGroups[groupKey].metaFile;
@@ -261,48 +352,57 @@ class MapsEdit extends Component {
   }
 
   saveAndCheckConsortiaMapping = () => {
-    this.updateMetaRow();
+    let removeExtraRowArrItems = this.removeExtraRowArrItems();
+    removeExtraRowArrItems.then((r) => {
+      if(r){
+        const {
+          rowArray,
+        } = this.state;
 
-    const cons = this.state.activeConsortium;
-    this.props.saveAssociatedConsortia(cons);
-    const runs = this.props.userRuns;
+        this.updateMetaFileHeader();
 
-    this.props.getCollectionFiles(cons.id)
-      .then((filesArray) => {
-        this.setState({isMapped: true});
+        const cons = this.state.activeConsortium;
+        this.props.saveAssociatedConsortia(cons);
+        const runs = this.props.userRuns;
 
-        if (runs && runs.length && !runs[runs.length - 1].endDate) {
-          let run = runs[runs.length - 1];
-          const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
-          if ('allFiles' in filesArray) {
-            this.props.notifyInfo({
-              message: `Pipeline Starting for ${cons.name}.`,
-              action: {
-                label: 'Watch Progress',
-                callback: () => {
-                  this.props.router.push('dashboard');
-                },
-              },
-            });
+        this.props.getCollectionFiles(cons.id)
+          .then((filesArray) => {
+            this.setState({isMapped: true});
 
-            if ('steps' in filesArray) {
-              run = {
-                ...run,
-                pipelineSnapshot: {
-                  ...run.pipelineSnapshot,
-                  steps: filesArray.steps,
-                },
-              };
+            if (runs && runs.length && !runs[runs.length - 1].endDate) {
+              let run = runs[runs.length - 1];
+              const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
+              if ('allFiles' in filesArray) {
+                this.props.notifyInfo({
+                  message: `Pipeline Starting for ${cons.name}.`,
+                  action: {
+                    label: 'Watch Progress',
+                    callback: () => {
+                      this.props.router.push('dashboard');
+                    },
+                  },
+                });
+
+                if ('steps' in filesArray) {
+                  run = {
+                    ...run,
+                    pipelineSnapshot: {
+                      ...run.pipelineSnapshot,
+                      steps: filesArray.steps,
+                    },
+                  };
+                }
+
+                this.props.incrementRunCount(cons.id);
+                ipcRenderer.send('start-pipeline', {
+                  consortium, pipeline: run.pipelineSnapshot, filesArray: filesArray.allFiles, run,
+                });
+                this.props.saveLocalRun({ ...run, status: 'started' });
+              }
             }
-
-            this.props.incrementRunCount(cons.id);
-            ipcRenderer.send('start-pipeline', {
-              consortium, pipeline: run.pipelineSnapshot, filesArray: filesArray.allFiles, run,
-            });
-            this.props.saveLocalRun({ ...run, status: 'started' });
-          }
-        }
-      });
+          });
+      }
+    });
   }
 
   resetPipelineSteps = (array) => {
@@ -334,7 +434,6 @@ class MapsEdit extends Component {
       }
 
       if ('data' in step.inputMap) {
-        this.setState({ dataType: step.inputMap.data.ownerMappings[0]['type'] });
         stepIO[index] = {
           ...stepIO[index],
           data: Array(step.inputMap.data.ownerMappings.length).fill([]),
@@ -414,6 +513,9 @@ class MapsEdit extends Component {
       mappedItem,
       metaRow,
       rowArray,
+      stepsFilled,
+      stepsMapped,
+      stepsTotal,
     } = this.state;
 
     return (
@@ -469,6 +571,9 @@ class MapsEdit extends Component {
                             saveAndCheckConsortiaMapping={this.saveAndCheckConsortiaMapping}
                             saveCollection={this.saveCollection}
                             setRowArray={this.setRowArray}
+                            stepsFilled={stepsFilled}
+                            stepsMapped={stepsMapped}
+                            stepsTotal={stepsTotal}
                             updateCollection={this.updateCollection}
                             updateConsortiumClientProps={this.updateConsortiumClientProps}
                             updateMapsStep={this.updateMapsStep}

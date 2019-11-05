@@ -82,7 +82,7 @@ module.exports = {
           let owner = '';
           if (this.pipelineSteps[this.currentStep].inputMap.meta &&
             this.pipelineSteps[this.currentStep].inputMap.meta.owner) {
-              owner = this.pipelineSteps[this.currentStep].inputMap.meta.owner;
+            owner = this.pipelineSteps[this.currentStep].inputMap.meta.owner;
           }
           this.currentState = {
             currentIteration: troller.iteration,
@@ -90,7 +90,7 @@ module.exports = {
             pipelineStep: this.currentStep,
             mode: this.mode,
             totalSteps: this.pipelineSteps.length,
-            owner: owner,
+            owner,
           };
 
           return this.currentState;
