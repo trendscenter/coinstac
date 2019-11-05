@@ -48,6 +48,7 @@ module.exports = {
       controllerState[prop] = val;
       stateEmitter.emit('update', controllerState);
     };
+    const stopByUserErrorMessage = 'The pipeline run has been stopped by a user';
 
     return {
       activeControlBox,
@@ -63,8 +64,8 @@ module.exports = {
       setStateProp,
       pipelineErrorCallback,
       stop: () => {
-        // setStateProp('stopByUser', 'stop');
-        this.pipelineErrorCallback(new Error('The pipeline run has been stopped by a user'));
+        setStateProp('stopByUser', 'stop');
+        pipelineErrorCallback(new Error(stopByUserErrorMessage));
       },
       /**
        * Starts a controller, which in turn starts a computation, given the correct
@@ -250,6 +251,9 @@ module.exports = {
           trampoline(() => {
             return queue.length
               ? function _cb(...args) {
+                if (controllerState.stopByUser === 'stop') {
+                  err(new Error(stopByUserErrorMessage));
+                }
                 const argsArray = [].slice.call(args);
                 const fn = queue.shift();
                 controllerState.currentBoxCommand = activeControlBox.preIteration(controllerState);

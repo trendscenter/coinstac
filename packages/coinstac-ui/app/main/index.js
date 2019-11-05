@@ -271,6 +271,12 @@ loadConfig()
                 .catch((error) => {
                   logger.verbose('########### Client pipeline error');
                   logger.verbose(error.message);
+
+                  ipcFunctions.sendNotification(
+                    'Pipeline stopped',
+                    `Pipeline ${pipelineName} stopped on consortia ${consortiumName}`
+                  )
+
                   return initializedCore.unlinkFiles(run.id)
                     .then(() => {
                       mainWindow.webContents.send('local-run-error', {
