@@ -80,8 +80,8 @@ module.exports = function logUnhandledError(opts, logr) {
       logger(err.stack);
       process.exit(1);
     } else {
-      logger(err);
-      logger(err.stack);
+      logger.error(err);
+      logger.error(err.stack);
     }
 
     throw err;

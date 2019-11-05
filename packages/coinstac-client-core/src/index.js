@@ -58,28 +58,22 @@ class CoinstacClient {
   }
 
   initialize() {
-    return new Promise((resolve, reject) => {
-      PipelineManager.create({
-        mode: 'local',
-        clientId: this.options.userId,
-        logger: this.logger,
-        operatingDirectory: path.join(this.appDirectory),
-        remotePort: this.options.fileServer.port,
-        remoteProtocol: this.options.fileServer.protocol,
-        remotePathname: this.options.fileServer.pathname,
-        remoteURL: this.options.fileServer.hostname,
-        mqttRemotePort: this.options.mqttServer.port,
-        mqttRemoteProtocol: this.options.mqttServer.protocol,
-        mqttRemoteURL: this.options.mqttServer.hostname,
-      }).then(manager => {
-        if (manager.mqttServerStatus && manager.mqttServerStatus === 'mqttOffline') {
-          reject(manager.mqttServerStatus)
-        } else {
-          this.pipelineManager = manager;
-          resolve(manager);
-        }
-      })
-    })
+    return PipelineManager.create({
+      mode: 'local',
+      clientId: this.options.userId,
+      logger: this.logger,
+      operatingDirectory: path.join(this.appDirectory),
+      remotePort: this.options.fileServer.port,
+      remoteProtocol: this.options.fileServer.protocol,
+      remotePathname: this.options.fileServer.pathname,
+      remoteURL: this.options.fileServer.hostname,
+      mqttRemotePort: this.options.mqttServer.port,
+      mqttRemoteProtocol: this.options.mqttServer.protocol,
+      mqttRemoteURL: this.options.mqttServer.hostname,
+    }).then((manager) => {
+      this.pipelineManager = manager;
+      return manager;
+    });
   }
 
   /**
