@@ -39,7 +39,6 @@ module.exports = {
       initialized: false,
       iteration: undefined,
       mode,
-      owner: undefined,
       runType: 'sequential',
       state: undefined,
       stopByUser: undefined,
@@ -97,7 +96,6 @@ module.exports = {
             case 'nextIteration':
               setStateProp('iteration', controllerState.iteration + 1);
               setStateProp('state', 'waiting on computation');
-              setStateProp('owner', input.meta.owner);
 
               return controllerState.activeComputations[controllerState.computationIndex]
                 .start(

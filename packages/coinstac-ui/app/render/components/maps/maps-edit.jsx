@@ -115,8 +115,6 @@ class MapsEdit extends Component {
     const { consortium, collections, mapped, pipelines } = this.props;
     let pipeline = pipelines.find(p => p.id === consortium.activePipelineId);
 
-    console.log(pipeline.steps[0].dataMeta.type);
-
     this.setState({ dataType: pipeline.steps[0].dataMeta.type });
 
     this.setState({
@@ -131,6 +129,11 @@ class MapsEdit extends Component {
        let ctotal = pipeline.steps[0].inputMap.covariates.ownerMappings.length;
        let dtotal = pipeline.steps[0].inputMap.data.ownerMappings.length;
        this.setState({stepsTotal: ctotal + dtotal });
+     }
+
+     if(!pipeline.steps[0].inputMap.covariates && pipeline.steps[0].inputMap.data){
+       let dtotal = pipeline.steps[0].inputMap.data.ownerMappings.length;
+       this.setState({stepsTotal: dtotal });
      }
 
      this.setPipelineSteps(pipeline.steps);
@@ -359,7 +362,9 @@ class MapsEdit extends Component {
           rowArray,
         } = this.state;
 
-        this.updateMetaFileHeader();
+        if(this.state.dataType === 'meta'){
+          this.updateMetaFileHeader();
+        }
 
         const cons = this.state.activeConsortium;
         this.props.saveAssociatedConsortia(cons);
@@ -434,7 +439,6 @@ class MapsEdit extends Component {
       }
 
       if ('data' in step.inputMap) {
-        this.setState({ dataType: step.inputMap.data.ownerMappings[0]['type'] });
         stepIO[index] = {
           ...stepIO[index],
           data: Array(step.inputMap.data.ownerMappings.length).fill([]),
