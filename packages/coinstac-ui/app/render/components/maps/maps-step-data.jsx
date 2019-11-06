@@ -18,7 +18,6 @@ const styles = theme => ({
     paddingBottom: theme.spacing.unit * 2,
     marginTop: theme.spacing.unit * 2,
     height: '100%',
-    overflow: 'scroll',
   },
   title: {
     marginBottom: theme.spacing.unit,
