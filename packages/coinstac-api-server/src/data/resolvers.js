@@ -35,7 +35,7 @@ function fetchOne(table, id) {
     .then(connection => rethink.table(table).get(id).run(connection));
 }
 
-function fetchOnePipeline(table, id) {
+function fetchOnePipeline(id) {
   return helperFunctions.getRethinkConnection()
     .then(connection => rethink.table('pipelines')
       .get(id)
@@ -362,7 +362,7 @@ const resolvers = {
       return fetchOne('consortia', consortiumId)
         .then(consortium => Promise.all([
           consortium,
-          fetchOnePipeline('pipelines', consortium.activePipelineId),
+          fetchOnePipeline(consortium.activePipelineId),
           helperFunctions.getRethinkConnection()
         ]))
         .then(([consortium, pipelineSnapshot, connection]) =>
@@ -572,25 +572,23 @@ const resolvers = {
       }
 
       const connection = await helperFunctions.getRethinkConnection();
-      const result = await rethink.table('consortia').insert(
-          args.consortium,
-          {
-            conflict: "update",
-            returnChanges: true,
-          }
-        )
+      const result = await rethink.table('consortia')
+        .insert(args.consortium, {
+          conflict: 'update',
+          returnChanges: true,
+        })
         .run(connection);
 
-      let consortium = result.changes[0].new_val;
+      const consortiumId = args.consortium.id || result.changes[0].new_val.id;
 
       if (!isUpdate) {
-        await addUserPermissions(connection, { userId: credentials.id, role: 'owner', doc: consortium.id, table: 'consortia' });
-        await addUserPermissions(connection, { userId: credentials.id, role: 'member', doc: consortium.id, table: 'consortia' })
-        .then(res => connection.close().then(() => res));
-        consortium = await fetchOne('consortia', consortium.id); // fetch again to get the changes on the 'members' and 'owners' properties
-      } else {
-        await connection.close();
+        await addUserPermissions(connection, { userId: credentials.id, role: 'owner', doc: consortiumId, table: 'consortia' });
+        await addUserPermissions(connection, { userId: credentials.id, role: 'member', doc: consortiumId, table: 'consortia' });
       }
+
+      const consortium = await fetchOne('consortia', consortiumId);
+
+      await connection.close();
 
       return consortium;
     },
@@ -616,8 +614,8 @@ const resolvers = {
      * @param {object} args.pipeline Pipeline object to add/update
      * @return {object} New/updated pipeline object
      */
-    savePipeline: ({ auth: { credentials } }, args) => {
-      const { permissions } = credentials;
+    savePipeline: async ({ auth: { credentials } }, args) => {
+      // const { permissions } = credentials;
       /* TODO: Add permissions
       if (!permissions.consortia.write
           && args.consortium.id
@@ -626,7 +624,6 @@ const resolvers = {
       }*/
 
       if (args.pipeline && args.pipeline.steps) {
-
         const invalidData = args.pipeline.steps.some(step =>
           step.inputMap &&
           step.inputMap.covariates &&
@@ -641,34 +638,20 @@ const resolvers = {
         }
       }
 
+      const connection = await helperFunctions.getRethinkConnection();
+      const result = await rethink.table('pipelines')
+        .insert(args.pipeline, {
+          conflict: 'update',
+          returnChanges: true,
+        })
+        .run(connection);
 
-      return helperFunctions.getRethinkConnection()
-        .then((connection) =>
-          rethink.table('pipelines').insert(
-            args.pipeline,
-            {
-              conflict: "update",
-              returnChanges: true,
-            }
-          )
-          .run(connection)
-          .then((result) => rethink.table('pipelines')
-          .get(result.changes[0].new_val.id)
-          // Populate computations subfield with computation meta information
-          .merge(pipeline =>
-            ({
-              steps: pipeline('steps').map(step =>
-                step.merge({
-                  computations: step('computations').map(compId =>
-                    rethink.table('computations').get(compId)
-                  )
-                })
-              )
-            })
-          )
-          .run(connection).then(res => connection.close().then(() => res))
-        ))
-        .then(result => result)
+      const pipelineId = args.pipeline.id || result.changes[0].new_val.id;
+      const pipeline = await fetchOnePipeline(pipelineId);
+
+      await connection.close();
+
+      return pipeline;
     },
     /**
      * Saves run results
