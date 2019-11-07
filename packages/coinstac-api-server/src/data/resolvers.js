@@ -114,6 +114,11 @@ async function removeUserPermissions(connection, args) {
 
     if (args.table === 'consortia') {
       replaceObj.consortiaStatuses = args.doc;
+
+      await rethink.table('consortia')
+        .get(args.doc)
+        .update({ mappedForRun: rethink.row('mappedForRun').difference([args.userId]) })
+        .run(connection);
     }
 
     promises.push(
@@ -541,19 +546,23 @@ const resolvers = {
      * @param {string} args.consortiumId Consortium to update
      * @param {string} args.activePipelineId Pipeline ID to mark as active
      */
-    saveActivePipeline: ({ auth: { credentials } }, args) => {
-      const { permissions } = credentials;
+    saveActivePipeline: async ({ auth: { credentials } }, args) => {
+      // const { permissions } = credentials;
       /* TODO: Add permissions
       if (!permissions.consortia.write
           && args.consortium.id
           && !permissions.consortia[args.consortium.id].write) {
             return Boom.forbidden('Action not permitted');
       }*/
-      return helperFunctions.getRethinkConnection()
-        .then((connection) =>
-          rethink.table('consortia').get(args.consortiumId).update({activePipelineId: args.activePipelineId})
-          .run(connection).then(res => connection.close().then(() => res))
-        )
+
+      const connection = await helperFunctions.getRethinkConnection()
+      const result = await rethink.table('consortia')
+        .get(args.consortiumId)
+        .update({ activePipelineId: args.activePipelineId, mappedForRun: [] })
+        .run(connection)
+      await connection.close()
+
+      return result
     },
     /**
      * Saves consortium
@@ -730,6 +739,24 @@ const resolvers = {
           helperFunctions.getUserDetails({ username: credentials.id })
         )
         .then(result => result)
+    ,
+    /**
+     * Updated consortium mapped users
+     * @param {object} auth User object from JWT middleware validateFunc
+     * @param {object} args
+     * @param {string} args.consortiumId Consortium id to update
+     * @param {string} args.mappedForRun New mappedUsers
+     * @return {object} Updated user object
+     */
+    updateConsortiumMappedUsers: async ({ auth: { credentials } }, args) => {
+      const connection = await helperFunctions.getRethinkConnection()
+      const result = await rethink.table('consortia')
+        .get(args.consortiumId)
+        .update({ mappedForRun: args.mappedForRun })
+        .run(connection)
+      await connection.close()
+      return result
+    }
   },
   Subscription: {
     /**

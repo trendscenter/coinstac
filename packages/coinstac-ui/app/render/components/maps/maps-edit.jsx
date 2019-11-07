@@ -25,9 +25,13 @@ import {
 } from '../../state/ducks/runs';
 import {
   getSelectAndSubProp,
+  saveDocumentProp,
+  updateConsortiumMappedUsersProp,
 } from '../../state/graphql/props';
 import {
   FETCH_ALL_USER_RUNS_QUERY,
+  SAVE_CONSORTIUM_MUTATION,
+  UPDATE_CONSORTIUM_MAPPED_USERS_MUTATION,
 } from '../../state/graphql/functions';
 import { notifyInfo } from '../../state/ducks/notifyAndLog';
 import { Alert, Button, Panel } from 'react-bootstrap';
@@ -265,10 +269,19 @@ class MapsEdit extends Component {
     const cons = this.state.activeConsortium;
     this.props.saveAssociatedConsortia(cons);
     const runs = this.props.userRuns;
+    const currentUserId = this.props.auth.user.id;
+
+    let mappedForRun = cons.mappedForRun || [];
+
+    if (mappedForRun.indexOf(currentUserId) === -1) {
+      mappedForRun = [...mappedForRun, currentUserId]
+    }
 
     mapConsortiumData(cons.id)
       .then(filesArray => {
         this.setState({ isMapped: true });
+
+        this.props.updateConsortiumMappedUsers({ consortiumId: cons.id, mappedForRun });
 
         if (!runs || !runs.length || runs[runs.length - 1].endDate) {
           return;
@@ -512,6 +525,11 @@ const ComponentWithData = compose(
       variables: { userId: props.auth.user.id },
     }),
   }),
+  graphql(SAVE_CONSORTIUM_MUTATION, saveDocumentProp('saveConsortium', 'consortium')),
+  graphql(
+    UPDATE_CONSORTIUM_MAPPED_USERS_MUTATION,
+    updateConsortiumMappedUsersProp('updateConsortiumMappedUsers'),
+  ),
   withApollo
 )(MapsEdit);
 
