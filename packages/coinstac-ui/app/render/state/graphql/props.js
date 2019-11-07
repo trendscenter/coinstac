@@ -173,3 +173,13 @@ export const userRolesProp = (name) => {
     }),
   };
 };
+
+export const updateConsortiumMappedUsersProp = (name) => {
+  return {
+    props: ({ ownProps, mutate }) => ({
+      [name]: ({ consortiumId, mappedForRun }) => mutate({
+        variables: { consortiumId, mappedForRun },
+      })
+    }),
+  };
+};

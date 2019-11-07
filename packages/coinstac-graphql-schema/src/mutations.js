@@ -72,6 +72,11 @@ const mutations = {
       }
     }
   `,
+  updateConsortiumMappedUsers: `
+    {
+      updateConsortiumMappedUsers(consortiumId: $consortiumId, mappedForRun: $mappedForRun)
+    }
+  `,
 };
 
 module.exports = mutations;
