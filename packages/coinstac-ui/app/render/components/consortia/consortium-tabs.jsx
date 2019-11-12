@@ -53,6 +53,7 @@ class ConsortiumTabs extends Component {
       unsubscribeConsortia: null,
       unsubscribeUsers: null,
       selectedTabIndex: 0,
+      savingStatus: 'init',
     };
 
     this.getConsortiumRuns = this.getConsortiumRuns.bind(this);
@@ -144,6 +145,8 @@ class ConsortiumTabs extends Component {
     //
     */
 
+    this.setState({ savingStatus: 'pending' });
+
     this.props.saveConsortium(this.state.consortium)
     .then(({ data: { saveConsortium: { __typename, ...other } } }) => {
       let unsubscribeConsortia = this.state.unsubscribeConsortia;
@@ -159,7 +162,8 @@ class ConsortiumTabs extends Component {
       this.setState({
         consortium: { ...other },
         consortiumUsers,
-        unsubscribeConsortia
+        unsubscribeConsortia,
+        savingStatus: 'success',
       });
 
       this.props.notifySuccess({
@@ -175,6 +179,9 @@ class ConsortiumTabs extends Component {
     })
     .catch(({ graphQLErrors }) => {
       console.log(graphQLErrors);
+      this.setState({
+        savingStatus: 'fail',
+      })
     });
   }
 
@@ -195,7 +202,7 @@ class ConsortiumTabs extends Component {
       classes,
     } = this.props;
     const { user } = this.props.auth;
-    const { selectedTabIndex, consortium, consortiumUsers } = this.state;
+    const { selectedTabIndex, consortium, consortiumUsers, savingStatus } = this.state;
 
     const isEditingConsortium = !!this.state.consortium.id;
 
@@ -237,6 +244,7 @@ class ConsortiumTabs extends Component {
               owner={isOwner}
               user={user}
               users={users}
+              savingStatus={savingStatus}
             />
           )
         }
