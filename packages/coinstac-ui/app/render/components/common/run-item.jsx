@@ -1,6 +1,9 @@
 import React, { Component } from 'react';
 import TimeStamp from 'react-timestamp';
 import { Link } from 'react-router';
+import { compose } from 'redux';
+import { connect } from 'react-redux';
+import { shell } from 'electron';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
@@ -9,6 +12,7 @@ import { withStyles } from '@material-ui/core/styles';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import StatusButtonWrapper from '../common/status-button-wrapper';
+import path from 'path';
 
 const styles = theme => ({
   rootPaper: {
@@ -36,6 +40,9 @@ const styles = theme => ({
   actionButtons: {
     display: 'flex',
     justifyContent: 'space-between',
+  },
+  resultButtons: {
+    display: 'flex',
   },
   runStateContainer: {
     display: 'flex',
@@ -119,24 +126,30 @@ function getStateWell(runObject, stateName, stateKey, classes) {
 
 class RunItem extends Component {
   constructor(props) {
-    super(props)
+    super(props);
 
     this.state = {
       stoppingPipeline: 'init',
-    }
+    };
   }
 
   handleStopPipeline = () => {
     this.setState({
       stoppingPipeline: 'pending',
-    })
+    });
 
-    this.props.stopPipeline()
+    this.props.stopPipeline();
+  }
+
+  handleOpenResult = () => {
+    const { runObject, appDirectory, user } = this.props;
+    const resultDir = path.join(appDirectory, 'output', user.id, runObject.id);
+
+    shell.openItem(resultDir);
   }
 
   render() {
-    const { consortiumName, runObject, classes } = this.props
-    const { stoppingStatus } = this.state
+    const { consortiumName, runObject, classes } = this.props;
 
     return (
       <Paper
@@ -280,14 +293,24 @@ class RunItem extends Component {
           {
             runObject.results
             && (
-              <Button
-                variant="contained"
-                color="primary"
-                component={Link}
-                to={`/dashboard/results/${runObject.id}`}
-              >
-                View Results
-              </Button>
+              <div className={classes.resultButtons}>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  component={Link}
+                  to={`/dashboard/results/${runObject.id}`}
+                >
+                  View Results
+                </Button>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  style={{ marginLeft: 10 }}
+                  onClick={this.handleOpenResult}
+                >
+                  Open Results
+                </Button>
+              </div>
             )
           }
           {
@@ -344,7 +367,20 @@ RunItem.propTypes = {
   consortiumName: PropTypes.string.isRequired,
   runObject: PropTypes.object.isRequired,
   classes: PropTypes.object.isRequired,
+  appDirectory: PropTypes.string.isRequired,
+  user: PropTypes.object.isRequired,
   stopPipeline: PropTypes.func,
 };
 
-export default withStyles(styles)(RunItem);
+function mapStateToProps({ auth }) {
+  return {
+    appDirectory: auth.appDirectory,
+    user: auth.user,
+  };
+}
+
+
+export default compose(
+  withStyles(styles),
+  connect(mapStateToProps)
+)(RunItem);
