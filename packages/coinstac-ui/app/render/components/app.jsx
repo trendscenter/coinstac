@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { findDOMNode } from 'react-dom';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { ipcRenderer } from 'electron';
@@ -27,6 +28,8 @@ class App extends Component { // eslint-disable-line react/prefer-stateless-func
     super(props);
 
     this.state = { checkJWT: false };
+
+    this.transitionSplashScreenIntoApp = this.transitionSplashScreenIntoApp.bind(this);
   }
 
   componentDidMount() {
@@ -37,6 +40,9 @@ class App extends Component { // eslint-disable-line react/prefer-stateless-func
       router,
       notifyWarning,
     } = this.props;
+
+    // Remove splash screen
+    setTimeout(this.transitionSplashScreenIntoApp, 1000);
 
     autoLogin()
       .then(() => {
@@ -58,14 +64,27 @@ class App extends Component { // eslint-disable-line react/prefer-stateless-func
     ipcRenderer.removeAllListeners(EXPIRED_TOKEN);
   }
 
+  transitionSplashScreenIntoApp() {
+    const splashComponent = document.getElementById('splash-component');
+    splashComponent.className = 'fade-out';
+
+    // eslint-disable-next-line react/no-find-dom-node
+    const appComponent = findDOMNode(this);
+    appComponent.className = 'app fade-in';
+
+    setTimeout(() => splashComponent.parentNode.removeChild(splashComponent), 500);
+  }
+
   render() {
     const { children, loading: { isLoading }, notifications } = this.props;
+
+    const { checkJWT } = this.state;
 
     return (
       <div className="app">
         <ActivityIndicator visible={isLoading} />
 
-        {this.state.checkJWT && children}
+        { checkJWT && children }
 
         <Notifications
           notifications={notifications}
@@ -83,6 +102,7 @@ App.defaultProps = {
 };
 
 App.propTypes = {
+  router: PropTypes.object.isRequired,
   autoLogin: PropTypes.func.isRequired,
   logout: PropTypes.func.isRequired,
   setError: PropTypes.func.isRequired,
@@ -90,7 +110,6 @@ App.propTypes = {
   children: PropTypes.node.isRequired,
   loading: PropTypes.object.isRequired,
   notifications: PropTypes.array,
-  router: PropTypes.object.isRequired,
 };
 
 function mapStateToProps({ loading, notifications }) {

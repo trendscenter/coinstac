@@ -462,11 +462,11 @@ class Dashboard extends Component {
   }
 
   componentDidUpdate(prevProps) {
-    const { currentUser } = this.props;
-    if (currentUser &&
-      (!prevProps.currentUser || prevProps.currentUser.permissions !== currentUser.permissions)
+    const { currentUser, updateUserPerms } = this.props;
+    if (currentUser
+      && (!prevProps.currentUser || prevProps.currentUser.permissions !== currentUser.permissions)
     ) {
-      this.props.updateUserPerms(currentUser.permissions);
+      updateUserPerms(currentUser.permissions);
     }
   }
 
@@ -653,6 +653,7 @@ const DashboardWithData = compose(
     'pipelineChanged'
   )),
   graphql(FETCH_USER_QUERY, {
+    skip: props => !props.auth || !props.auth.user || !props.auth.user.id,
     options: props => ({
       fetchPolicy: 'cache-and-network',
       variables: { userId: props.auth.user.id },
@@ -668,7 +669,7 @@ const DashboardWithData = compose(
           }
           return { fetchUser: data.userMetadataChanged };
         },
-      })
+      }),
     }),
   }),
   graphql(UPDATE_USER_CONSORTIUM_STATUS_MUTATION, {

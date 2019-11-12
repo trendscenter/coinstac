@@ -487,13 +487,18 @@ loadConfig()
       )
         .then(({ filePaths }) => postDialogFunc(filePaths, initializedCore))
         .catch((err) => {
-          logger.error(err);
-          mainWindow.webContents.send('docker-error', {
-            err: {
-              message: err.message,
-              stack: err.stack,
-            },
-          });
+          //  Below error happens when File Dialog is cancelled.
+          //  Not really an error.
+          //  Let's not freak people out. 
+          if (!err.message.contains("Cannot read property '0' of undefined")) {
+            logger.error(err);
+            mainWindow.webContents.send('docker-error', {
+              err: {
+                message: err.message,
+                stack: err.stack,
+              },
+            });
+          }
         });
     });
     /**
