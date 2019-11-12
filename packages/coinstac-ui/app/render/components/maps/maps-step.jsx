@@ -18,6 +18,10 @@ class MapsStep extends Component {
   constructor(props) {
     super(props);
 
+    this.state = {
+      contChildren: 0,
+    };
+
     this.handleStep = this.handleStep.bind(this);
   }
 
