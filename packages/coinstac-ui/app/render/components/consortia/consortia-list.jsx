@@ -167,6 +167,10 @@ class ConsortiaList extends Component {
           name={user.id}
           showDetails
           width={40}
+          mapped={
+            consortium.mappedForRun &&
+              consortium.mappedForRun.indexOf(user.id) !== -1
+          }
         />
       ));
 
