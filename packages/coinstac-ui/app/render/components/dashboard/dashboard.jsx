@@ -671,6 +671,7 @@ const DashboardWithData = compose(
     'pipelineChanged'
   )),
   graphql(FETCH_USER_QUERY, {
+    skip: props => !props.auth || !props.auth.user || !props.auth.user.id,
     options: props => ({
       fetchPolicy: 'cache-and-network',
       variables: { userId: props.auth.user.id },
@@ -686,7 +687,7 @@ const DashboardWithData = compose(
           }
           return { fetchUser: data.userMetadataChanged };
         },
-      })
+      }),
     }),
   }),
   graphql(UPDATE_USER_CONSORTIUM_STATUS_MUTATION, {
