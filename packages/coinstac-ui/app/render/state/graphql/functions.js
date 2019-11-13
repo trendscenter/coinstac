@@ -173,3 +173,8 @@ export const UPDATE_USER_CONSORTIUM_STATUS_MUTATION = gql`
   mutation updateUserConsortiumStatus($consortiumId: ID, $status: String)
     ${mutations.updateUserConsortiumStatus}
 `;
+
+export const UPDATE_CONSORTIUM_MAPPED_USERS_MUTATION = gql`
+  mutation updateConsortiumMappedUsers($consortiumId: ID, $mappedForRun: [ID])
+    ${mutations.updateConsortiumMappedUsers}
+`;

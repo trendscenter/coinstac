@@ -25,9 +25,13 @@ import {
 } from '../../state/ducks/runs';
 import {
   getSelectAndSubProp,
+  saveDocumentProp,
+  updateConsortiumMappedUsersProp,
 } from '../../state/graphql/props';
 import {
   FETCH_ALL_USER_RUNS_QUERY,
+  SAVE_CONSORTIUM_MUTATION,
+  UPDATE_CONSORTIUM_MAPPED_USERS_MUTATION,
 } from '../../state/graphql/functions';
 import { notifyInfo } from '../../state/ducks/notifyAndLog';
 import { Alert, Button, Panel } from 'react-bootstrap';
@@ -353,53 +357,62 @@ class MapsEdit extends Component {
       const cons = this.state.activeConsortium;
       this.props.saveAssociatedConsortia(cons);
       const runs = this.props.userRuns;
+      const currentUserId = this.props.auth.user.id;
+
+      let mappedForRun = cons.mappedForRun || [];
+
+      if (mappedForRun.indexOf(currentUserId) === -1) {
+        mappedForRun = [...mappedForRun, currentUserId]
+      }
 
       mapConsortiumData(cons.id)
-        .then(filesArray => {
-          this.setState({ isMapped: true });
+      .then(filesArray => {
+        this.setState({ isMapped: true });
 
-          if (!runs || !runs.length || runs[runs.length - 1].endDate) {
-            return;
-          }
+        this.props.updateConsortiumMappedUsers({ consortiumId: cons.id, mappedForRun });
 
-          let run = runs[runs.length - 1];
-          const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
-          if ('allFiles' in filesArray) {
-            this.props.notifyInfo({
-              message: `Pipeline Starting for ${cons.name}.`,
-              action: {
-                label: 'Watch Progress',
-                callback: () => {
-                  this.props.router.push('dashboard');
-                },
+        if (!runs || !runs.length || runs[runs.length - 1].endDate) {
+          return;
+        }
+
+        let run = runs[runs.length - 1];
+        const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
+        if ('allFiles' in filesArray) {
+          this.props.notifyInfo({
+            message: `Pipeline Starting for ${cons.name}.`,
+            action: {
+              label: 'Watch Progress',
+              callback: () => {
+                this.props.router.push('dashboard');
               },
-            });
+            },
+          });
 
-            if ('steps' in filesArray) {
-              run = {
-                ...run,
-                pipelineSnapshot: {
-                  ...run.pipelineSnapshot,
-                  steps: filesArray.steps,
-                },
-              };
-            }
-
-            this.props.incrementRunCount(cons.id);
-            ipcRenderer.send('start-pipeline', {
-              consortium, pipeline: run.pipelineSnapshot, filesArray: filesArray.allFiles, run,
-            });
-            this.props.saveLocalRun({ ...run, status: 'started' });
+          if ('steps' in filesArray) {
+            run = {
+              ...run,
+              pipelineSnapshot: {
+                ...run.pipelineSnapshot,
+                steps: filesArray.steps,
+              },
+            };
           }
-        });
+
+          this.props.incrementRunCount(cons.id);
+          ipcRenderer.send('start-pipeline', {
+            consortium, pipeline: run.pipelineSnapshot, filesArray: filesArray.allFiles, run,
+          });
+          this.props.saveLocalRun({ ...run, status: 'started' });
+        }
+      });
     });
   }
 
   resetPipelineSteps = (array) => {
     const { consortium, collections, mapped, pipelines } = this.props;
     let pipeline = pipelines.find(p => p.id === consortium.activePipelineId);
-     this.setState({
-       activeConsortium: {
+    this.setState({
+      activeConsortium: {
          ...consortium,
          pipelineSteps: pipeline.steps,
        },
@@ -607,6 +620,11 @@ const ComponentWithData = compose(
       variables: { userId: props.auth.user.id },
     }),
   }),
+  graphql(SAVE_CONSORTIUM_MUTATION, saveDocumentProp('saveConsortium', 'consortium')),
+  graphql(
+    UPDATE_CONSORTIUM_MAPPED_USERS_MUTATION,
+    updateConsortiumMappedUsersProp('updateConsortiumMappedUsers'),
+  ),
   withApollo
 )(MapsEdit);
 
