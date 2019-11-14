@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Component } from 'react';
 import TimeStamp from 'react-timestamp';
 import { Link } from 'react-router';
 import Paper from '@material-ui/core/Paper';
@@ -8,6 +8,7 @@ import LinearProgress from '@material-ui/core/LinearProgress';
 import { withStyles } from '@material-ui/core/styles';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
+import StatusButtonWrapper from '../common/status-button-wrapper';
 
 const styles = theme => ({
   rootPaper: {
@@ -116,198 +117,224 @@ function getStateWell(runObject, stateName, stateKey, classes) {
   );
 }
 
-const RunItem = ({ consortiumName, runObject, stopPipeline, classes }) => (
-  <Paper
-    key={runObject.id}
-    elevation={4}
-    className={classNames(classes.rootPaper, 'run-item-paper')}
-  >
-    <div className={classes.titleContainer}>
-      <Typography variant="headline">
-        { consortiumName }
-        {
-          runObject.pipelineSnapshot
-          && <span>{ ` || ${runObject.pipelineSnapshot.name}`}</span>
-        }
-      </Typography>
-      {
-        !runObject.endDate
-        && (
+class RunItem extends Component {
+  constructor(props) {
+    super(props)
+
+    this.state = {
+      stoppingPipeline: 'init',
+    }
+  }
+
+  handleStopPipeline = () => {
+    this.setState({
+      stoppingPipeline: 'pending',
+    })
+
+    this.props.stopPipeline()
+  }
+
+  render() {
+    const { consortiumName, runObject, classes } = this.props
+    const { stoppingStatus } = this.state
+
+    return (
+      <Paper
+        key={runObject.id}
+        elevation={4}
+        className={classNames(classes.rootPaper, 'run-item-paper')}
+      >
+        <div className={classes.titleContainer}>
           <Typography variant="headline">
-            {'Started: '}
-            <TimeStamp
-              time={runObject.startDate / 1000}
-              precision={2}
-              autoUpdate={60}
-              format="ago"
-            />
-          </Typography>
-        )
-      }
-      {
-        runObject.endDate
-        && (
-          <Typography variant="headline">
-            {'Completed: '}
-            <TimeStamp
-              time={runObject.endDate / 1000}
-              precision={2}
-              autoUpdate={60}
-              format="ago"
-            />
-          </Typography>
-        )
-      }
-    </div>
-    <div className={classes.contentContainer}>
-      {
-        runObject.status === 'started' && (runObject.localPipelineState || runObject.remotePipelineState)
-        && (
-          <LinearProgress
-            variant="indeterminate"
-            value={runObject.remotePipelineState
-              ? ((runObject.remotePipelineState.pipelineStep + 1) / runObject.remotePipelineState.totalSteps) * 100
-              : ((runObject.localPipelineState.pipelineStep + 1) / runObject.localPipelineState.totalSteps) * 100
+            { consortiumName }
+            {
+              runObject.pipelineSnapshot
+              && <span>{ ` || ${runObject.pipelineSnapshot.name}`}</span>
             }
-          />
-        )
-      }
-      <div>
-        <Typography className={classes.label}>
-          Status:
-        </Typography>
-        <Typography className={classes.value}>
-          {runObject.status === 'complete' && <span style={{ color: 'green' }}>Complete</span>}
-          {runObject.status === 'started' && <span style={{ color: 'cornflowerblue' }}>In Progress</span>}
-          {runObject.status === 'error' && <span style={{ color: 'red' }}>Error</span>}
-        </Typography>
-        {
-          runObject.status === 'needs-map'
-          && (
-            <Button
-              variant="contained"
-              component={Link}
-              href="/dashboard/collections"
-            >
-              Map Now
-            </Button>
-          )
-        }
-      </div>
-      {
-        runObject.startDate
-        && (
-          <div>
-            <Typography className={classes.label}>
-              Start date:
-            </Typography>
-            <Typography className={classes.value}>
-              <TimeStamp
-                time={runObject.startDate / 1000}
-                precision={2}
-                autoUpdate={10}
-                format="full"
+          </Typography>
+          {
+            !runObject.endDate && runObject.status === 'started'
+            && (
+              <Typography variant="headline">
+                {'Started: '}
+                <TimeStamp
+                  time={runObject.startDate / 1000}
+                  precision={2}
+                  autoUpdate={60}
+                  format="ago"
+                />
+              </Typography>
+            )
+          }
+          {
+            runObject.endDate
+            && (
+              <Typography variant="headline">
+                {'Completed: '}
+                <TimeStamp
+                  time={runObject.endDate / 1000}
+                  precision={2}
+                  autoUpdate={60}
+                  format="ago"
+                />
+              </Typography>
+            )
+          }
+        </div>
+        <div className={classes.contentContainer}>
+          {
+            runObject.status === 'started' && (runObject.localPipelineState || runObject.remotePipelineState)
+            && (
+              <LinearProgress
+                variant="indeterminate"
+                value={runObject.remotePipelineState
+                  ? ((runObject.remotePipelineState.pipelineStep + 1) / runObject.remotePipelineState.totalSteps) * 100
+                  : ((runObject.localPipelineState.pipelineStep + 1) / runObject.localPipelineState.totalSteps) * 100
+                }
               />
-            </Typography>
-          </div>
-        )
-      }
-      {
-        runObject.endDate
-        && (
+            )
+          }
           <div>
             <Typography className={classes.label}>
-              End date:
+              Status:
             </Typography>
             <Typography className={classes.value}>
-              <TimeStamp
-                time={runObject.endDate / 1000}
-                precision={2}
-                autoUpdate={10}
-                format="full"
-              />
+              {runObject.status === 'complete' && <span style={{ color: 'green' }}>Complete</span>}
+              {runObject.status === 'started' && <span style={{ color: 'cornflowerblue' }}>In Progress</span>}
+              {runObject.status === 'error' && <span style={{ color: 'red' }}>Error</span>}
             </Typography>
+            {
+              runObject.status === 'needs-map'
+              && (
+                <Button
+                  variant="contained"
+                  component={Link}
+                  href="/dashboard/collections"
+                >
+                  Map Now
+                </Button>
+              )
+            }
           </div>
-        )
-      }
-      {
-        runObject.clients
-        && (
-          <div>
-            <Typography className={classes.label}>
-              Clients:
-            </Typography>
-            <Typography className={classes.value}>
-              { runObject.clients.join(', ') }
-            </Typography>
+          {
+            runObject.startDate
+            && (
+              <div>
+                <Typography className={classes.label}>
+                  Start date:
+                </Typography>
+                <Typography className={classes.value}>
+                  <TimeStamp
+                    time={runObject.startDate / 1000}
+                    precision={2}
+                    autoUpdate={10}
+                    format="full"
+                  />
+                </Typography>
+              </div>
+            )
+          }
+          {
+            runObject.endDate
+            && (
+              <div>
+                <Typography className={classes.label}>
+                  End date:
+                </Typography>
+                <Typography className={classes.value}>
+                  <TimeStamp
+                    time={runObject.endDate / 1000}
+                    precision={2}
+                    autoUpdate={10}
+                    format="full"
+                  />
+                </Typography>
+              </div>
+            )
+          }
+          {
+            runObject.clients
+            && (
+              <div>
+                <Typography className={classes.label}>
+                  Clients:
+                </Typography>
+                <Typography className={classes.value}>
+                  { runObject.clients.join(', ') }
+                </Typography>
+              </div>
+            )
+          }
+          <div className={classes.runStateContainer}>
+            {
+              runObject.localPipelineState && runObject.status === 'started'
+              && getStateWell(runObject, 'Local', 'localPipelineState', classes)
+            }
+            {
+              runObject.remotePipelineState && runObject.status === 'started'
+              && getStateWell(runObject, 'Remote', 'remotePipelineState', classes)
+            }
           </div>
-        )
-      }
-      <div className={classes.runStateContainer}>
-        {
-          runObject.localPipelineState && runObject.status === 'started'
-          && getStateWell(runObject, 'Local', 'localPipelineState', classes)
-        }
-        {
-          runObject.remotePipelineState && runObject.status === 'started'
-          && getStateWell(runObject, 'Remote', 'remotePipelineState', classes)
-        }
-      </div>
-    </div>
-    <div className={classes.actionButtons}>
-      {
-        runObject.results
-        && (
-          <Button
-            variant="contained"
-            color="primary"
-            component={Link}
-            to={`/dashboard/results/${runObject.id}`}
-          >
-            View Results
-          </Button>
-        )
-      }
-      {
-        runObject.error
-        && (
-          <Button
-            variant="contained"
-            component={Link}
-            to={`/dashboard/results/${runObject.id}`}
-          >
-            View Error
-          </Button>
-        )
-      }
-      {
-        runObject.pipelineSnapshot
-        && (
-          <Button
-            variant="contained"
-            color="secondary"
-            component={Link}
-            to={`/dashboard/pipelines/snapShot/${runObject.pipelineSnapshot.id}`}
-          >
-            View Pipeline
-          </Button>
-        )
-      }
-      {
-        runObject.status === 'started'
-        && (
-          <Button
-            variant="contained"
-            component={Link}
-            onClick={stopPipeline}
-          >
-            Stop Pipeline
-          </Button>
-        )
-      }
-    </div>
-  </Paper>
-);
+        </div>
+        <div className={classes.actionButtons}>
+          {
+            runObject.results
+            && (
+              <Button
+                variant="contained"
+                color="primary"
+                component={Link}
+                to={`/dashboard/results/${runObject.id}`}
+              >
+                View Results
+              </Button>
+            )
+          }
+          {
+            runObject.error
+            && (
+              <Button
+                variant="contained"
+                component={Link}
+                to={`/dashboard/results/${runObject.id}`}
+              >
+                View Error
+              </Button>
+            )
+          }
+          {
+            runObject.pipelineSnapshot
+            && (
+              <Button
+                variant="contained"
+                color="secondary"
+                component={Link}
+                to={`/dashboard/pipelines/snapShot/${runObject.pipelineSnapshot.id}`}
+              >
+                View Pipeline
+              </Button>
+            )
+          }
+          {
+            runObject.status === 'started' && (runObject.localPipelineState || runObject.remotePipelineState)
+            && (
+              <StatusButtonWrapper status={stoppingStatus}>
+                <Button
+                  variant="contained"
+                  component={Link}
+                  disabled={stoppingStatus === 'pending'}
+                  onClick={this.handleStopPipeline}
+                >
+                  Stop Pipeline
+                </Button>
+              </StatusButtonWrapper>
+            )
+          }
+        </div>
+      </Paper>
+    );
+  }
+};
 
 RunItem.defaultProps = {
   stopPipeline: () => {},
