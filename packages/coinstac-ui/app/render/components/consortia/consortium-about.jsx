@@ -139,6 +139,7 @@ class ConsortiumAbout extends Component {
                   variant="contained"
                   color="primary"
                   type="submit"
+                  disabled={savingStatus === 'pending'}
                 >
                   Save
                 </Button>
