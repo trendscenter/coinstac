@@ -551,7 +551,7 @@ class Pipeline extends Component {
                 key="save-pipeline-button"
                 variant="contained"
                 color="primary"
-                disabled={!owner || !consortium}
+                disabled={!owner || !consortium || savingStatus === 'pending'}
                 type="submit"
               >
                 Save Pipeline
