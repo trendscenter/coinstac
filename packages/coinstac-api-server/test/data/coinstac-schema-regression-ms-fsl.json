@@ -1,21 +1,21 @@
 {
   "meta": {
-    "name": "Single Shot Regression",
-    "id": "ssr_test",
+    "name": "Regression (Multishot) - FreeSurfer Volumes",
+    "id": "msr-fsl",
     "version": "v1.0.0",
-    "repository": "https:\/\/github.com\/MRN-Code\/ssr_test",
-    "description": "a test from single shot regresssion"
+    "repository": "https:\/\/github.com\/trendscenter\/coinstac-msr-fsl",
+    "description": "Decentralized Regression (Multishot) for Brain Volumetric Data"
   },
   "computation": {
     "type": "docker",
-    "dockerImage": "coinstacteam/ssr",
+    "dockerImage": "coinstacteam/msr-fsl",
     "command": [
       "python",
       "\/computation\/local.py"
     ],
     "remote": {
       "type": "docker",
-      "dockerImage": "coinstacteam/ssr",
+      "dockerImage": "coinstacteam/msr-fsl",
       "command": [
         "python",
         "\/computation\/remote.py"
@@ -40,7 +40,7 @@
       },
       "data": {
         "label": "Data",
-        "type": "meta",
+        "type": "array",
         "items": ["FreeSurfer"],
         "extensions": [["csv", "txt"]]
       }

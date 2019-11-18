@@ -1,24 +1,24 @@
 {
   "meta": {
-    "name": "Single Shot Regression VBM",
-    "id": "ssr_vbm",
+    "name": "Regression (Normal Equation) - VBM",
+    "id": "regression-vbm",
     "version": "v1.0.0",
-    "repository": "https:\/\/github.com\/MRN-Code\/coinstac_ssr_vbm_mcic",
-    "description": "This repository contains code for single-shot regression (ssr) that was shown to successfully work with the MCIC dataset on coinstac-simulator"
+    "repository": "https:\/\/github.com\/trendscenter\/coinstac-regression-vbm",
+    "description": "Decentralized Regression for Voxel-based Morphometry"
   },
   "computation": {
     "type": "docker",
-    "dockerImage": "coinstacteam/regression-vbm-resample",
+    "dockerImage": "coinstacteam/regression-vbm",
     "command": [
       "python",
       "\/computation\/scripts\/local.py"
     ],
     "remote": {
       "type": "docker",
-      "dockerImage": "coinstacteam/regression-vbm-resample",
+      "dockerImage": "coinstacteam/regression-vbm",
       "command": [
         "python",
-	"\/computation\/scripts\/remote.py"
+        "\/computation\/scripts\/remote.py"
       ]
     },
     "input": {

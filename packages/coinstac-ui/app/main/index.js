@@ -20,7 +20,7 @@ const ipcFunctions = require('./utils/ipc-functions');
 
 const { ipcMain } = electron;
 
-const { EXPIRED_TOKEN } = require('../render/utils/error-codes');
+const { EXPIRED_TOKEN, BAD_TOKEN } = require('../render/utils/error-codes');
 
 // if no env set prd
 process.env.NODE_ENV = process.env.NODE_ENV || 'production';
@@ -120,6 +120,12 @@ loadConfig()
      */
     ipcMain.on(EXPIRED_TOKEN, () => {
       mainWindow.webContents.send(EXPIRED_TOKEN);
+    });
+
+    ipcMain.on(BAD_TOKEN, () => {
+      logger.error('A bad token was used on a request to the api');
+
+      mainWindow.webContents.send(BAD_TOKEN);
     });
 
     ipcPromise.on('login-init', ({ userId, appDirectory }) => {
@@ -271,6 +277,12 @@ loadConfig()
                 .catch((error) => {
                   logger.verbose('########### Client pipeline error');
                   logger.verbose(error.message);
+
+                  ipcFunctions.sendNotification(
+                    'Pipeline stopped',
+                    `Pipeline ${pipelineName} stopped on consortia ${consortiumName}`
+                  )
+
                   return initializedCore.unlinkFiles(run.id)
                     .then(() => {
                       mainWindow.webContents.send('local-run-error', {
@@ -477,13 +489,18 @@ loadConfig()
       )
         .then(({ filePaths }) => postDialogFunc(filePaths, initializedCore))
         .catch((err) => {
-          logger.error(err);
-          mainWindow.webContents.send('docker-error', {
-            err: {
-              message: err.message,
-              stack: err.stack,
-            },
-          });
+          //  Below error happens when File Dialog is cancelled.
+          //  Not really an error.
+          //  Let's not freak people out. 
+          if (!err.message.contains("Cannot read property '0' of undefined")) {
+            logger.error(err);
+            mainWindow.webContents.send('docker-error', {
+              err: {
+                message: err.message,
+                stack: err.stack,
+              },
+            });
+          }
         });
     });
     /**

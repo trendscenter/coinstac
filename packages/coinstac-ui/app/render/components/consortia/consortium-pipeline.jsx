@@ -12,7 +12,6 @@ import { withStyles } from '@material-ui/core/styles';
 import AddIcon from '@material-ui/icons/Add';
 import PropTypes from 'prop-types';
 import {
-  getCollectionFiles,
   getAllCollections,
   deleteCollection,
 } from '../../state/ducks/collections';
@@ -270,7 +269,6 @@ const ConsortiumPipelineWithData = graphql(SAVE_ACTIVE_PIPELINE_MUTATION, {
 const connectedComponent = connect(mapStateToProps,
   {
     deleteCollection,
-    getCollectionFiles,
     getAllCollections,
   }
 )(ConsortiumPipelineWithData);

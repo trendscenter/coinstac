@@ -21,7 +21,12 @@ import {
   writeLog,
 } from '../../state/ducks/notifyAndLog';
 import CoinstacAbbr from '../coinstac-abbr';
-import { getCollectionFiles, incrementRunCount, syncRemoteLocalConsortia, syncRemoteLocalPipelines } from '../../state/ducks/collections';
+import {
+  incrementRunCount,
+  syncRemoteLocalConsortia,
+  syncRemoteLocalPipelines,
+  mapConsortiumData,
+} from '../../state/ducks/collections';
 import { getLocalRun, getDBRuns, saveLocalRun, updateLocalRun } from '../../state/ducks/runs';
 import {
   getDockerStatus,
@@ -252,62 +257,7 @@ class Dashboard extends Component {
             .findIndex(run => run.id === nextProps.remoteRuns[i].id);
         }
 
-        // Run not in local props, start a pipeline (runs already filtered by member)
-        if (runIndexInLocalRuns === -1 && !nextProps.remoteRuns[i].results
-          && this.props.consortia.length && runIndexInPropsRemote === -1
-          && !nextProps.remoteRuns[i].error
-        ) {
-          // TODO: Runs on startup disable, put this back in when we're not clearing dexie on startup
-          let run = nextProps.remoteRuns[i];
-          const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
-          this.props.getCollectionFiles(
-            run.consortiumId, run.id
-          )
-          .then((filesArray) => {
-            let status = 'started';
-
-            if ('error' in filesArray) {
-              status = 'needs-map';
-              this.props.notifyWarning({
-                message: filesArray.error,
-                autoDismiss: 5,
-              });
-            } else {
-              // Save run status to localDB
-              this.props.saveLocalRun({ ...run, status });
-
-              if ('steps' in filesArray) {
-                run = {
-                  ...run,
-                  pipelineSnapshot: {
-                    ...run.pipelineSnapshot,
-                    steps: filesArray.steps,
-                  },
-                };
-              }
-
-              this.props.incrementRunCount(consortium.id);
-              this.props.notifyInfo({
-                message: `Decentralized Pipeline Starting for ${consortium.name}.`,
-                action: {
-                  label: 'Watch Progress',
-                  callback: () => {
-                    router.push('dashboard');
-                  },
-                },
-              });
-
-              this.props.incrementRunCount(consortium.id);
-              ipcRenderer.send('start-pipeline', {
-                consortium,
-                pipeline: run.pipelineSnapshot,
-                filesArray: filesArray.allFiles,
-                run: { ...run, status },
-              });
-            }
-          });
-          // Not saved locally, but results signify complete
-        } else if (runIndexInLocalRuns === -1 && nextProps.remoteRuns[i].results) {
+        if (runIndexInLocalRuns === -1 && nextProps.remoteRuns[i].results) {
           ipcRenderer.send('clean-remote-pipeline', nextProps.remoteRuns[i].id);
           this.props.saveLocalRun({ ...nextProps.remoteRuns[i], status: 'complete' });
           // Not saved locally, but error signify complete
@@ -462,11 +412,80 @@ class Dashboard extends Component {
   }
 
   componentDidUpdate(prevProps) {
-    const { currentUser } = this.props;
-    if (currentUser &&
-      (!prevProps.currentUser || prevProps.currentUser.permissions !== currentUser.permissions)
+    const {
+      currentUser,
+      updateUserPerms,
+      remoteRuns,
+      consortia,
+      saveLocalRun,
+      incrementRunCount,
+      notifyInfo,
+      notifyWarning,
+    } = this.props;
+
+    const { router } = this.context;
+
+    if (currentUser
+      && (!prevProps.currentUser || prevProps.currentUser.permissions !== currentUser.permissions)
     ) {
-      this.props.updateUserPerms(currentUser.permissions);
+      updateUserPerms(currentUser.permissions);
+    }
+
+    // Start pipeline for new runs that are still not running local
+    if (remoteRuns && remoteRuns.length > prevProps.remoteRuns.length) {
+      remoteRuns.forEach((remoteRun) => {
+        let runIndexInLocalRuns = -1;
+
+        // Find run in redux runs if it's there
+        if (prevProps.runs.length > 0) {
+          runIndexInLocalRuns = prevProps.runs.findIndex(run => run.id === remoteRun.id);
+        }
+
+        if (runIndexInLocalRuns === -1 && !remoteRun.results && !remoteRun.error) {
+          const consortium = consortia.find(obj => obj.id === remoteRun.consortiumId);
+
+          mapConsortiumData(consortium.id)
+            .then((filesArray) => {
+              const status = 'started';
+
+              const run = {
+                ...remoteRun,
+                pipelineSnapshot: {
+                  ...remoteRun.pipelineSnapshot,
+                  steps: filesArray.steps,
+                },
+              };
+
+              // Save run status to localDB
+              saveLocalRun({ ...run, status });
+
+              incrementRunCount(consortium.id);
+
+              notifyInfo({
+                message: `Decentralized Pipeline Starting for ${consortium.name}.`,
+                action: {
+                  label: 'Watch Progress',
+                  callback: () => {
+                    router.push('dashboard');
+                  },
+                },
+              });
+
+              ipcRenderer.send('start-pipeline', {
+                consortium,
+                pipeline: run.pipelineSnapshot,
+                filesArray: filesArray.allFiles,
+                run: { ...run, status },
+              });
+            })
+            .catch((err) => {
+              notifyWarning({
+                message: err,
+                autoDismiss: 5,
+              });
+            });
+        }
+      });
     }
   }
 
@@ -584,7 +603,6 @@ Dashboard.propTypes = {
   client: PropTypes.object.isRequired,
   computations: PropTypes.array,
   consortia: PropTypes.array,
-  getCollectionFiles: PropTypes.func.isRequired,
   getDBRuns: PropTypes.func.isRequired,
   getDockerStatus: PropTypes.func.isRequired,
   incrementRunCount: PropTypes.func.isRequired,
@@ -653,6 +671,7 @@ const DashboardWithData = compose(
     'pipelineChanged'
   )),
   graphql(FETCH_USER_QUERY, {
+    skip: props => !props.auth || !props.auth.user || !props.auth.user.id,
     options: props => ({
       fetchPolicy: 'cache-and-network',
       variables: { userId: props.auth.user.id },
@@ -668,7 +687,7 @@ const DashboardWithData = compose(
           }
           return { fetchUser: data.userMetadataChanged };
         },
-      })
+      }),
     }),
   }),
   graphql(UPDATE_USER_CONSORTIUM_STATUS_MUTATION, {
@@ -686,7 +705,6 @@ const DashboardWithData = compose(
 
 const connectedComponent = connect(mapStateToProps,
   {
-    getCollectionFiles,
     getLocalRun,
     getDBRuns,
     getDockerStatus,

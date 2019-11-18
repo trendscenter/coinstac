@@ -32,6 +32,7 @@ const sharedFields = {
     tags
     members
     owners
+    mappedForRun
   `,
   pipelineFields: `
     id

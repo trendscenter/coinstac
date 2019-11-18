@@ -1,21 +1,21 @@
 {
   "meta": {
-    "name": "MSR FreeSurfer",
-    "id": "msr-fsl",
+    "name": "Regression (Normal Equation) - FreeSurfer Volumes",
+    "id": "regression-fsl",
     "version": "v1.0.0",
-    "repository": "https:\/\/github.com\/MRN-Code\/coinstac_msr_fsl",
-    "description": "Multi-shot Regression on FreeSurfer Data"
+    "repository": "https:\/\/github.com\/trendscenter\/coinstac-regression-fsl",
+    "description": "Decentralized Regression for Brain Volumetric Data"
   },
   "computation": {
     "type": "docker",
-    "dockerImage": "msr_fsl",
+    "dockerImage": "coinstacteam/regression-fsl",
     "command": [
       "python",
       "\/computation\/local.py"
     ],
     "remote": {
       "type": "docker",
-      "dockerImage": "msr_fsl",
+      "dockerImage": "coinstacteam/regression-fsl",
       "command": [
         "python",
         "\/computation\/remote.py"
