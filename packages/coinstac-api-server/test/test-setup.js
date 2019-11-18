@@ -9,6 +9,7 @@ const drneVbm = require('./data/coinstac-drne-vbm-mcic');
 const ssrVbm = require('./data/coinstac-ssr-vbm-mcic');
 const decentralized = require('./data/coinstac-decentralized-test');
 const decentralizedError = require('./data/coinstac-decentralized-error');
+const enigmaSans = require('./data/coinstac-enigma-sans');
 const local = require('./data/coinstac-local-test');
 const localError = require('./data/coinstac-local-error');
 const drneFsl = require('./data/drne_fsl_schema');
@@ -54,6 +55,7 @@ helperFunctions.getRethinkConnection()
         Object.assign({}, ssrVbm, { submittedBy: 'test1' }),
         Object.assign({}, drneFsl, { submittedBy: 'author' }),
         Object.assign({}, decentralizedError, { submittedBy: 'test1' }),
+        Object.assign({}, enigmaSans, { submittedBy: 'test1' }),
         Object.assign({}, localError, { submittedBy: 'test1' }),
       ], { returnChanges: true }).run(connection))
       .then(compInsertResult => rethink.table('pipelines').insert([

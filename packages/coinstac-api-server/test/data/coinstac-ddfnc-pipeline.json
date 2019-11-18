@@ -8,14 +8,14 @@
     },
     "computation": {
         "type": "docker",
-        "dockerImage": "pixelsaurus/ddfnc:latest",
+        "dockerImage": "coinstacteam/ddfnc",
         "command": [
             "python",
             "\/computation\/local.py"
         ],
         "remote": {
             "type": "docker",
-            "dockerImage": "pixelsaurus/ddfnc:latest",
+            "dockerImage": "coinstacteam/ddfnc",
             "command": [
                 "python",
                 "\/computation\/remote.py"
