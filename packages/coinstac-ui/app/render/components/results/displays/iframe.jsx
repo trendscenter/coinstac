@@ -25,18 +25,12 @@ class Iframe extends Component {
        <div>
            <div>
                <iframe
-                 style={{width:'100%', height:this.state.iFrameHeight}}
+                 style={{width:'100%', height: this.state.iFrameHeight}}
                  src={path}
-                 onLoad={() => {
-                      const obj = ReactDOM.findDOMNode(this);
-                      this.setState({
-                          "iFrameHeight":  obj.contentWindow.document.body.scrollHeight + 'px'
-                      });
-                  }}
-                  ref="iframe"
-                  width="100%"
-                  height={this.state.iFrameHeight}
-                  frameBorder="0"
+                 ref="iframe"
+                 width="100%"
+                 height={this.state.iFrameHeight}
+                 frameBorder="0"
                  >
                </iframe>
            </div>
@@ -49,7 +43,6 @@ Iframe.propTypes = {
   plotData: PropTypes.object,
   notifyError: PropTypes.func.isRequired,
   writeLog: PropTypes.func.isRequired,
-  classes: PropTypes.object.isRequired,
 };
 
 Iframe.defaultProps = {
