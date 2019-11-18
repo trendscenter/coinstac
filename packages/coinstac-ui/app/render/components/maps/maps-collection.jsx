@@ -176,8 +176,6 @@ class MapsCollection extends Component {
   }
 
   addFolderGroup() {
-    console.log(this.props.collection);
-    console.log(this.props.activeConsortium);
     ipcPromise.send('open-dialog')
     .then((obj) => {
 
@@ -432,11 +430,12 @@ class MapsCollection extends Component {
       finishedAutoMapping,
     } = this.state;
 
-    // let dataType = 'meta';
-    // if(this.props.activeConsortium.pipelineSteps[0]
-    //   && this.props.activeConsortium.pipelineSteps[0].dataMeta){
-    //   dataType = this.props.activeConsortium.pipelineSteps[0].dataMeta.type;
-    // }
+    let dataType = 'meta';
+    if(this.props.activeConsortium.pipelineSteps[0]
+      && this.props.activeConsortium.pipelineSteps[0].dataMeta){
+      dataType = this.props.activeConsortium.pipelineSteps[0].dataMeta.type;
+    }
+    
     return (
       <div>
         <form onSubmit={saveCollection}>
