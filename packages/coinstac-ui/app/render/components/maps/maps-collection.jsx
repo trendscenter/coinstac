@@ -435,7 +435,7 @@ class MapsCollection extends Component {
       && this.props.activeConsortium.pipelineSteps[0].dataMeta){
       dataType = this.props.activeConsortium.pipelineSteps[0].dataMeta.type;
     }
-    
+
     return (
       <div>
         <form onSubmit={saveCollection}>

@@ -2,6 +2,7 @@ import React from 'react';
 import Avatar from 'react-avatar';
 import PropTypes from 'prop-types';
 import Typography from '@material-ui/core/Typography';
+import DoneIcon from '@material-ui/icons/Done';
 import { withStyles } from '@material-ui/core/styles';
 
 const styles = theme => ({
@@ -10,9 +11,19 @@ const styles = theme => ({
     margin: theme.spacing.unit,
     verticalAlign: 'top',
     textAlign: 'center',
+    position: 'relative',
   },
   textStyles: {
     fontSize: 12,
+  },
+  markStyles: {
+    fontSize: 14,
+    color: 'white',
+    backgroundColor: '#5cb85c',
+    borderRadius: 14,
+    position: 'absolute',
+    right: -5,
+    top: -5,
   },
 });
 
@@ -22,6 +33,7 @@ function MemberAvatar({
   showDetails,
   width,
   classes,
+  mapped,
 }) {
   return (
     <div key={`${name}-avatar`} className={classes.containerStyles}>
@@ -34,6 +46,10 @@ function MemberAvatar({
         showDetails
         && <Typography variant="caption" className={classes.textStyles}>{name}</Typography>
       }
+      {
+        mapped
+        && <DoneIcon className={classes.markStyles} />
+      }
     </div>
   );
 }
@@ -44,11 +60,13 @@ MemberAvatar.propTypes = {
   showDetails: PropTypes.bool,
   width: PropTypes.number.isRequired,
   classes: PropTypes.object.isRequired,
+  mapped: PropTypes.bool,
 };
 
 MemberAvatar.defaultProps = {
   consRole: null,
   showDetails: false,
+  mapped: false,
 };
 
 export default withStyles(styles)(MemberAvatar);

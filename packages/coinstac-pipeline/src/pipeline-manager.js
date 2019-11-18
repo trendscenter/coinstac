@@ -62,8 +62,6 @@ module.exports = {
     const request = remoteProtocol.trim() === 'https:' ? https : http;
     logger = logger || defaultLogger;
 
-
-
     /**
      * exponential backout for GET
      * consider file batching here if server load is too high

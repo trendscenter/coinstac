@@ -13,7 +13,7 @@ import Grid from '@material-ui/core/Grid';
 import { withStyles } from '@material-ui/core/styles';
 import {
   getAllCollections,
-  getCollectionFiles,
+  mapConsortiumData,
   incrementRunCount,
   saveAssociatedConsortia,
   saveCollection,
@@ -25,9 +25,13 @@ import {
 } from '../../state/ducks/runs';
 import {
   getSelectAndSubProp,
+  saveDocumentProp,
+  updateConsortiumMappedUsersProp,
 } from '../../state/graphql/props';
 import {
   FETCH_ALL_USER_RUNS_QUERY,
+  SAVE_CONSORTIUM_MUTATION,
+  UPDATE_CONSORTIUM_MAPPED_USERS_MUTATION,
 } from '../../state/graphql/functions';
 import { notifyInfo } from '../../state/ducks/notifyAndLog';
 import { Alert, Button, Panel } from 'react-bootstrap';
@@ -413,8 +417,8 @@ class MapsEdit extends Component {
   resetPipelineSteps = (array) => {
     const { consortium, collections, mapped, pipelines } = this.props;
     let pipeline = pipelines.find(p => p.id === consortium.activePipelineId);
-     this.setState({
-       activeConsortium: {
+    this.setState({
+      activeConsortium: {
          ...consortium,
          pipelineSteps: pipeline.steps,
        },
@@ -624,12 +628,16 @@ const ComponentWithData = compose(
       variables: { userId: props.auth.user.id },
     }),
   }),
+  graphql(SAVE_CONSORTIUM_MUTATION, saveDocumentProp('saveConsortium', 'consortium')),
+  graphql(
+    UPDATE_CONSORTIUM_MAPPED_USERS_MUTATION,
+    updateConsortiumMappedUsersProp('updateConsortiumMappedUsers'),
+  ),
   withApollo
 )(MapsEdit);
 
 const connectedComponent = connect(mapStateToProps,
   {
-    getCollectionFiles,
     getAllCollections,
     getRunsForConsortium,
     incrementRunCount,

@@ -6,7 +6,7 @@ import { Tab, Tabs } from 'react-bootstrap';
 import CollectionAbout from './collection-about';
 import CollectionFiles from './collection-files';
 import CollectionConsortia from './collection-consortia';
-import { getAssociatedConsortia, getCollectionFiles, incrementRunCount, saveAssociatedConsortia, saveCollection } from '../../state/ducks/collections';
+import { getAssociatedConsortia, incrementRunCount, saveAssociatedConsortia, saveCollection } from '../../state/ducks/collections';
 import { getRunsForConsortium, saveLocalRun } from '../../state/ducks/runs';
 import { notifyInfo, notifySuccess } from '../../state/ducks/notifyAndLog';
 
@@ -68,47 +68,6 @@ class CollectionTabs extends Component {
         this.props.saveCollection(this.state.collection);
       });
     }
-
-    // Grab runs for consortium, check if most recent is waiting for mapping,
-    //   start pipeline if mapping complete
-    this.props.saveAssociatedConsortia(cons)
-      .then(() => this.props.getRunsForConsortium(cons.id))
-      .then((runs) => {
-        return this.props.getCollectionFiles(cons.id)
-        .then((filesArray) => {
-          if (runs && runs.length && runs[runs.length - 1].status === 'needs-map') {
-            let run = runs[runs.length - 1];
-            const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
-            if ('allFiles' in filesArray) {
-              this.props.notifyInfo({
-                message: `Pipeline Starting for ${consortium.name}.`,
-                action: {
-                  label: 'Watch Progress',
-                  callback: () => {
-                    this.props.router.push('dashboard');
-                  },
-                },
-              });
-
-              if ('steps' in filesArray) {
-                run = {
-                  ...run,
-                  pipelineSnapshot: {
-                    ...run.pipelineSnapshot,
-                    steps: filesArray.steps,
-                  },
-                };
-              }
-
-              this.props.incrementRunCount(consortium.id);
-              ipcRenderer.send('start-pipeline', {
-                consortium, pipeline: run.pipelineSnapshot, filesArray: filesArray.allFiles, run,
-              });
-              this.props.saveLocalRun({ ...run, status: 'started' });
-            }
-          }
-        });
-      });
   }
 
   updateCollection(updateObj, callback) {
@@ -179,7 +138,6 @@ CollectionTabs.propTypes = {
   collections: PropTypes.array.isRequired,
   consortia: PropTypes.array.isRequired,
   getAssociatedConsortia: PropTypes.func.isRequired,
-  getCollectionFiles: PropTypes.func.isRequired,
   getRunsForConsortium: PropTypes.func.isRequired,
   incrementRunCount: PropTypes.func.isRequired,
   notifyInfo: PropTypes.func.isRequired,
@@ -198,7 +156,6 @@ function mapStateToProps({ collections: { activeAssociatedConsortia, collections
 export default connect(mapStateToProps,
   {
     getAssociatedConsortia,
-    getCollectionFiles,
     getRunsForConsortium,
     incrementRunCount,
     notifyInfo,
