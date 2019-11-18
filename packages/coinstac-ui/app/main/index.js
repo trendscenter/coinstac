@@ -462,12 +462,8 @@ loadConfig()
       } else {
         filters = [
           {
-            name: 'Images',
-            extensions: ['jpeg', 'jpg', 'png', 'nii'],
-          },
-          {
-            name: 'Files',
-            extensions: ['csv', 'txt', 'rtf'],
+            name: 'File Types',
+            extensions: ['jpeg', 'jpg', 'png', 'nii', 'csv', 'txt', 'rtf'],
           },
         ];
         properties = ['openDirectory', 'openFile', 'multiSelections'];
