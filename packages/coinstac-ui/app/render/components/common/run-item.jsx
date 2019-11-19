@@ -150,6 +150,7 @@ class RunItem extends Component {
 
   render() {
     const { consortiumName, runObject, classes } = this.props;
+    const { stoppingStatus } = this.state;
 
     return (
       <Paper
