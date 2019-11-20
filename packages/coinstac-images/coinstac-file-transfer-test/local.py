@@ -15,8 +15,8 @@ def md5sum(filename, blocksize=65536):
 
 doc = json.loads(sys.stdin.read())
 if doc["state"]["iteration"] == 1:
-    a = "a" * 100000000
-    b = "b" * 100000000
+    a = "a" * int(doc["input"]["size"])
+    b = "b" * int(doc["input"]["size"])
     text_filea = open(os.path.join(doc["state"]["transferDirectory"], "a.txt"), "w")
     text_filea.write(a)
     text_filea.close()
