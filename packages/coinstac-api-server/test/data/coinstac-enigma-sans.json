@@ -24,7 +24,7 @@
     "input": {
       "data": {
         "label": "Data",
-        "type": "directory",
+        "type": "bundle",
         "items": ["ENIGMA"],
         "extensions": [["csv","txt"]],
         "order": 0

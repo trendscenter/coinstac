@@ -13,7 +13,7 @@
    },
    "computation":{
       "type":"docker",
-      "dockerImage":"pixelsaurus/vbm_pre",
+      "dockerImage":"coinstacteam/vbm_pre",
       "command":[
          "python",
          "\/computation\/run_vbm.py"

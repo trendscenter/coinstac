@@ -24,9 +24,9 @@
         "input": {
             "data": {
               "label": "Data",
-              "type": "directory",
+              "type": "bundle",
               "items": ["NIfTI"],
-              "extensions": [["csv","txt"]],
+              "extensions": [["nii"]],
               "order": 0
             },
             "mask": {
