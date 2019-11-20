@@ -435,7 +435,7 @@ class MapsCollection extends Component {
         <form onSubmit={saveCollection}>
           {
             !isMapped
-            && dataType === 'meta'
+            && dataType === 'array'
 	          && (
               <div>
                 <Button
@@ -452,7 +452,7 @@ class MapsCollection extends Component {
           }
           {
             !isMapped
-            && dataType === 'directory'
+            && dataType === 'bundle'
             && (
               <div>
                 <Button
@@ -560,7 +560,7 @@ class MapsCollection extends Component {
                                 >
                                   <FileCopyIcon />
                                   {point}
-                                  {dataType !== 'meta' ? ' Bundle ('+group.files.length+' files)' : ''}
+                                  {dataType !== 'array' ? ' Bundle ('+group.files.length+' files)' : ''}
                                   <span onClick={()=>{this.props.removeRowArrItem(point)}}>
                                     <Icon
                                       className={classNames('fa fa-times-circle', classes.timesIcon)} />
