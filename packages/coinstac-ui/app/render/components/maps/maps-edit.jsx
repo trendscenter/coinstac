@@ -75,7 +75,7 @@ class MapsEdit extends Component {
       activeConsortium: { stepIO: [], runs: 0, pipelineSteps: [] },
       containers: [],
       collection,
-      dataType: '',
+      dataType: 'array',
       isMapped: false,
       mappedItem: '',
       rowArray: [],
@@ -119,7 +119,9 @@ class MapsEdit extends Component {
     const { consortium, collections, mapped, pipelines } = this.props;
     let pipeline = pipelines.find(p => p.id === consortium.activePipelineId);
 
+    if( pipeline.steps[0].dataMeta && pipeline.steps[0].dataMeta.type ){
     this.setState({ dataType: pipeline.steps[0].dataMeta.type });
+    }
 
     this.setState({
        activeConsortium: {
@@ -361,56 +363,65 @@ class MapsEdit extends Component {
   saveAndCheckConsortiaMapping = () => {
     let removeExtraRowArrItems = this.removeExtraRowArrItems();
     removeExtraRowArrItems.then((r) => {
-      if(r){
-        const {
-          rowArray,
-        } = this.state;
+      if (!r) {
+        return;
+      }
 
-        if(this.state.dataType === 'meta'){
-          this.updateMetaFileHeader();
+      if(this.state.dataType === 'array'){
+        this.updateMetaFileHeader();
+      }
+
+      const cons = this.state.activeConsortium;
+      this.props.saveAssociatedConsortia(cons);
+      const runs = this.props.userRuns;
+      const currentUserId = this.props.auth.user.id;
+
+      let mappedForRun = cons.mappedForRun || [];
+
+      if (mappedForRun.indexOf(currentUserId) === -1) {
+        mappedForRun = [...mappedForRun, currentUserId]
+      }
+
+      mapConsortiumData(cons.id)
+      .then(filesArray => {
+        this.setState({ isMapped: true });
+
+        this.props.updateConsortiumMappedUsers({ consortiumId: cons.id, mappedForRun });
+
+        if (!runs || !runs.length || runs[runs.length - 1].endDate) {
+          return;
         }
 
-        const cons = this.state.activeConsortium;
-        this.props.saveAssociatedConsortia(cons);
-        const runs = this.props.userRuns;
-
-        this.props.getCollectionFiles(cons.id)
-          .then((filesArray) => {
-            this.setState({isMapped: true});
-
-            if (runs && runs.length && !runs[runs.length - 1].endDate) {
-              let run = runs[runs.length - 1];
-              const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
-              if ('allFiles' in filesArray) {
-                this.props.notifyInfo({
-                  message: `Pipeline Starting for ${cons.name}.`,
-                  action: {
-                    label: 'Watch Progress',
-                    callback: () => {
-                      this.props.router.push('dashboard');
-                    },
-                  },
-                });
-
-                if ('steps' in filesArray) {
-                  run = {
-                    ...run,
-                    pipelineSnapshot: {
-                      ...run.pipelineSnapshot,
-                      steps: filesArray.steps,
-                    },
-                  };
-                }
-
-                this.props.incrementRunCount(cons.id);
-                ipcRenderer.send('start-pipeline', {
-                  consortium, pipeline: run.pipelineSnapshot, filesArray: filesArray.allFiles, run,
-                });
-                this.props.saveLocalRun({ ...run, status: 'started' });
-              }
-            }
+        let run = runs[runs.length - 1];
+        const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
+        if ('allFiles' in filesArray) {
+          this.props.notifyInfo({
+            message: `Pipeline Starting for ${cons.name}.`,
+            action: {
+              label: 'Watch Progress',
+              callback: () => {
+                this.props.router.push('dashboard');
+              },
+            },
           });
-      }
+
+          if ('steps' in filesArray) {
+            run = {
+              ...run,
+              pipelineSnapshot: {
+                ...run.pipelineSnapshot,
+                steps: filesArray.steps,
+              },
+            };
+          }
+
+          this.props.incrementRunCount(cons.id);
+          ipcRenderer.send('start-pipeline', {
+            consortium, pipeline: run.pipelineSnapshot, filesArray: filesArray.allFiles, run,
+          });
+          this.props.saveLocalRun({ ...run, status: 'started' });
+        }
+      });
     });
   }
 
