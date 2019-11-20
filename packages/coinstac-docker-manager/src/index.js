@@ -480,7 +480,6 @@ const startService = (serviceId, serviceUserId, opts) => {
         services[serviceId].container.inspect((error, data) => {
           if (error) reject(error);
           if (data.State.Running === true) {
-            // debugger
             return resolve(services[serviceId].service);
           }
           // the service was somehow shutdown or crashed, make a new one
