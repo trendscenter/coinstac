@@ -197,7 +197,7 @@ helperFunctions.getRethinkConnection()
               ],
               "remote": null,
               "input": {
-                "data": {
+                "dataMeta": {
                   "extensions": [
                     [
                       "txt"
@@ -315,9 +315,9 @@ helperFunctions.getRethinkConnection()
               "display": {
                 "type": "iframe"
               },
-              "dockerImage": "pixelsaurus/ddfnc:latest",
+              "dockerImage": "coinstacteam/ddfnc:latest",
               "input": {
-                "data": {
+                "dataMeta": {
                   "extensions": [
                     [
                       "csv",
@@ -329,7 +329,7 @@ helperFunctions.getRethinkConnection()
                   ],
                   "label": "Data",
                   "order": 0,
-                  "type": "directory"
+                  "type": "bundle"
                 },
                 "dfnc_k": {
                   "conditional": {
@@ -426,7 +426,7 @@ helperFunctions.getRethinkConnection()
                   "python",
                   "/computation/remote.py"
                 ],
-                "dockerImage": "pixelsaurus/ddfnc:latest",
+                "dockerImage": "coinstacteam/ddfnc:latest",
                 "type": "docker"
               },
               "type": "docker"
