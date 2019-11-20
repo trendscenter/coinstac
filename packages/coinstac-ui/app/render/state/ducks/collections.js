@@ -162,15 +162,15 @@ function buildConsortiumStepsData(consortium, filesByGroup, baseDirectory) {
           throw new Error('Data mapping is incomplete');
         }
 
-        if (filesByGroup && baseDirectory) {
+        if (filesByGroup) {
           const escape = (string) => {
             return string.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'); // eslint-disable-line no-useless-escape
           };
           const pathsep = new RegExp(`${escape(sep)}|:`, 'g');
           const pathsArray = filesByGroup[inputKeyData.groupId];
           let paths = pathsArray.map((path) => {
-            if (path[0].includes('/')) {
-              return path[0].replace(pathsep, '-');
+            if (path.includes('/')) {
+              return path.replace(pathsep, '-');
             }
             return null;
           });
