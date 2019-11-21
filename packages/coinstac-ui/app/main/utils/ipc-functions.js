@@ -5,7 +5,10 @@ module.exports = {
     return path;
   },
   manualFileSelection(filePaths, core) {
-    return core.constructor.getSubPathsAndGroupExtension({ paths: filePaths, extension: null });
+    return core.constructor.getSubPathsAndGroupExtension({ paths: filePaths, extension: null }, false);
+  },
+  manualFileSelectionMultExt(filePaths, core) {
+    return core.constructor.getSubPathsAndGroupExtension({ paths: filePaths, extension: null }, true);
   },
   parseCSVMetafile(metaFilePath, core) {
     return Promise.all([

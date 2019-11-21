@@ -471,11 +471,20 @@ loadConfig()
       } else if (org === 'directory') {
         properties = ['openDirectory'];
         postDialogFunc = ipcFunctions.manualDirectorySelection;
+      } else if (org === 'bundle') {
+        filters = [
+          {
+            name: 'File Types',
+            extensions: ['jpeg', 'jpg', 'png', 'nii', 'csv', 'txt', 'rtf', 'gz'],
+          },
+        ];
+        properties = ['openDirectory', 'openFile', 'multiSelections'];
+        postDialogFunc = ipcFunctions.manualFileSelectionMultExt;       
       } else {
         filters = [
           {
             name: 'File Types',
-            extensions: ['jpeg', 'jpg', 'png', 'nii', 'csv', 'txt', 'rtf'],
+            extensions: ['jpeg', 'jpg', 'png', 'nii', 'csv', 'txt', 'rtf', 'gz'],
           },
         ];
         properties = ['openDirectory', 'openFile', 'multiSelections'];
@@ -491,7 +500,7 @@ loadConfig()
         .catch((err) => {
           //  Below error happens when File Dialog is cancelled.
           //  Not really an error.
-          //  Let's not freak people out. 
+          //  Let's not freak people out.
           if (!err.message.contains("Cannot read property '0' of undefined")) {
             logger.error(err);
             mainWindow.webContents.send('docker-error', {
