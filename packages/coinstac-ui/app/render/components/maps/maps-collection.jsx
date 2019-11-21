@@ -47,7 +47,8 @@ const styles = theme => ({
   fileList: {
     backgroundColor: '#efefef',
     padding: '1rem',
-    borderRadius: '0.25rem'
+    borderRadius: '0.25rem',
+    overflowY: 'hidden'
   },
   fileListItem: {
     whiteSpace: 'nowrap',
@@ -429,6 +430,8 @@ class MapsCollection extends Component {
       filesError,
       finishedAutoMapping,
     } = this.state;
+
+    console.log(dataType);
 
     return (
       <div>
