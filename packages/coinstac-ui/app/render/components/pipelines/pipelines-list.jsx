@@ -10,6 +10,7 @@ import { Alert } from 'react-bootstrap';
 import PropTypes from 'prop-types';
 import ListItem from '../common/list-item';
 import ListDeleteModal from '../common/list-delete-modal';
+import { notifyError } from '../../state/ducks/notifyAndLog';
 import {
   DELETE_PIPELINE_MUTATION,
   FETCH_ALL_PIPELINES_QUERY,
@@ -89,7 +90,13 @@ class PipelinesList extends Component {
   }
 
   deletePipeline() {
-    this.props.deletePipeline(this.state.pipelineToDelete);
+    const { notifyError } = this.props;
+
+    this.props.deletePipeline(this.state.pipelineToDelete)
+      .catch(error => {
+        notifyError({ message: error.message });
+      });
+
     this.closeModal();
   }
 
@@ -161,6 +168,6 @@ const PipelinesListWithData = graphql(DELETE_PIPELINE_MUTATION,
   )
 )(PipelinesList);
 
-const connectedComponent = connect(mapStateToProps)(PipelinesListWithData);
+const connectedComponent = connect(mapStateToProps, { notifyError })(PipelinesListWithData);
 
 export default withStyles(styles)(connectedComponent);
