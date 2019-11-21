@@ -177,7 +177,7 @@ class MapsCollection extends Component {
   }
 
   addFolderGroup() {
-    ipcPromise.send('open-dialog')
+    ipcPromise.send('open-dialog','bundle')
     .then((obj) => {
 
       let newFiles;

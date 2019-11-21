@@ -167,7 +167,7 @@ class CoinstacClient {
    * @param {string} group.parentDir parent directory if diving into subdir
    * @param {string} group.error present if error found
    */
-  static getSubPathsAndGroupExtension(group) {
+  static getSubPathsAndGroupExtension(group, multext) {
     let pathsArray = [];
     let extension = null;
 
@@ -205,7 +205,7 @@ class CoinstacClient {
             return subGroup;
           }
 
-          if (extension && subGroup.extension && extension !== subGroup.extension) {
+          if (!multext && extension && subGroup.extension && extension !== subGroup.extension) {
             return { error: `Group contains multiple extensions - ${extension} & ${subGroup.extension}.` };
           }
 
@@ -215,8 +215,8 @@ class CoinstacClient {
       } else {
         const thisExtension = path.extname(p);
 
-        if ((group.extension && thisExtension !== group.extension)
-            || (extension && extension !== thisExtension)) {
+        if ((!multext && group.extension && thisExtension !== group.extension)
+            || (!multext && extension && extension !== thisExtension)) {
           return { error: `Group contains multiple extensions - ${thisExtension} & ${group.extension ? group.extension : extension}.` };
         }
 
