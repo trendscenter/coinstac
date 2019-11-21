@@ -478,6 +478,7 @@ class MapsEdit extends Component {
       Object.entries(steps).forEach(([key, value]) => {
         let inputMap = steps[key].inputMap;
         Object.keys(inputMap).map((k, i) => {
+           Object.keys(inputMap)[i] !== 'meta' ?
            result.push(
              <MapsStep
                getContainers={this.getContainers}
@@ -494,7 +495,8 @@ class MapsEdit extends Component {
                updateConsortiumClientProps={this.updateConsortiumClientProps}
                mapped={this.props.mapped}
               />
-           );
+           )
+           : null
         });
       });
     }
