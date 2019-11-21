@@ -66,7 +66,7 @@ module.exports = {
      * exponential backout for GET
      * consider file batching here if server load is too high
      */
-    const exponentialRequest = (method, factor, file, clientId, runId) => {
+    const exponentialRequest = (method, factor, file, clientId, runId, directory) => {
       return new Promise((resolve, reject) => {
         setTimeout(() => {
           if (method === 'get') {
@@ -74,7 +74,7 @@ module.exports = {
               `${remoteProtocol}//${remoteURL}:${remotePort}${remotePathname}?id=${encodeURIComponent(clientId)}&runId=${encodeURIComponent(runId)}&file=${encodeURIComponent(file)}`,
               (res) => {
                 res.pipe(fs.createWriteStream(
-                  path.join(activePipelines[runId].baseDirectory, file)
+                  path.join(directory, file)
                 ));
 
                 res.on('end', () => {
@@ -91,7 +91,7 @@ module.exports = {
             form.append('clientId', clientId);
             form.append('runId', runId);
             form.append('file', fs.createReadStream(
-              path.join(activePipelines[runId].transferDirectory, file)
+              path.join(directory, file)
             ));
             form.submit(`${remoteProtocol}//${remoteURL}:${remotePort}${remotePathname}`,
               (err, res) => {
@@ -126,7 +126,7 @@ module.exports = {
      *                           the action fails besides ECONNREFUSED,
      *                           or the limit is reached
      */
-    const serverFile = (method, limit, files, clientId, runId) => {
+    const serverFile = (method, limit, files, clientId, runId, directory) => {
       return Promise.all(files.reduce((memo, file) => {
         memo.push((async () => {
           let retryLimit = 0;
@@ -134,7 +134,7 @@ module.exports = {
           // retry 1000 times w/ backout
           while (retryLimit < limit) {
             try {
-              await exponentialRequest(method, retryLimit, file, clientId, runId); // eslint-disable-line no-await-in-loop, max-len
+              await exponentialRequest(method, retryLimit, file, clientId, runId, directory); // eslint-disable-line no-await-in-loop, max-len
 
               success = true;
               break;
@@ -346,8 +346,8 @@ module.exports = {
                   new Error(),
                   data.error,
                   {
-                    error: `Pipeline error from user: ${data.id}\n Error details: ${data.error.error}`,
-                    message: `Pipeline error from user: ${data.id}\n Error details: ${data.error.message}`,
+                    error: `Pipeline error from pipeline ${data.runId} user: ${data.id}\n Error details: ${data.error.error}`,
+                    message: `Pipeline error from pipeline ${data.runId} user: ${data.id}\n Error details: ${data.error.message}`,
                   }
                 );
                 activePipelines[data.runId].state = 'received client error';
@@ -422,7 +422,10 @@ module.exports = {
 
               let preWork;
               if (data.files) {
-                preWork = serverFile('get', 1000, data.files, clientId, data.runId);
+                const workDir = data.output.success
+                  ? activePipelines[data.runId].outputDirectory
+                  : activePipelines[data.runId].baseDirectory;
+                preWork = serverFile('get', 1000, data.files, clientId, data.runId, workDir);
               } else {
                 preWork = Promise.resolve();
               }
@@ -523,6 +526,7 @@ module.exports = {
             stashedOuput: undefined,
             communicate: undefined,
             clients,
+            remote: { reject: () => {} }, // noop for pre pipe errors
           },
           activePipelines[runId]
         );
@@ -628,7 +632,8 @@ module.exports = {
                         100,
                         files,
                         clientId,
-                        pipeline.id
+                        pipeline.id,
+                        activePipelines[pipeline.id].transferDirectory
                       ).catch((e) => {
                         // files failed to send, bail
                         logger.error(`Client file send error: ${e}`);

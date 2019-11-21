@@ -22,15 +22,19 @@
       ]
     },
     "input": {
-      "testFile": {
-        "type": "string",
-        "label": "input file to test"
+      "size": {
+        "type": "number",
+        "label": "file size to test"
       }
     },
     "output": {
-      "outFile": {
+      "message": {
         "type": "string",
-        "label": "Same file as input"
+        "label": "has match message"
+      },
+      "files" : {
+        "type": "array",
+        "label": "output files"
       }
     },
     "display": {
