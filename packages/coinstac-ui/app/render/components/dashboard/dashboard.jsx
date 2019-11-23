@@ -8,6 +8,7 @@ import theme from '../../styles/material-ui/theme';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import Grid from '@material-ui/core/Grid';
 import Drawer from '@material-ui/core/Drawer';
+import Icon from '@material-ui/core/Icon';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import Typography from '@material-ui/core/Typography';
@@ -508,6 +509,24 @@ class Dashboard extends Component {
     ipcRenderer.removeAllListeners('docker-error');
   }
 
+  goBack = () => {
+    if (!this.canShowBackButton) {
+      return;
+    }
+
+    const { auth } = this.props;
+    const { locationStacks } = auth;
+
+    this.props.router.push(locationStacks[locationStacks.length - 2]);
+  }
+
+  get canShowBackButton() {
+    const { auth } = this.props;
+    const { locationStacks } = auth;
+
+    return locationStacks.length > 1;
+  }
+
   render() {
     const { auth, children, computations, consortia, pipelines, runs, classes } = this.props;
     const { dockerStatus } = this.state;
@@ -572,6 +591,14 @@ class Dashboard extends Component {
           </Grid>
           <Grid item xs={12} sm={9}>
             <main className="content-pane">
+              {this.canShowBackButton && (
+                <button
+                  className="back-button"
+                  onClick={this.goBack}
+                >
+                  <Icon className="fa fa-arrow-up arrow-icon"/>
+                </button>
+              )}
               {childrenWithProps}
             </main>
           </Grid>

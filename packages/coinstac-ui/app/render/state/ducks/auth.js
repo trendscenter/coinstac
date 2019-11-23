@@ -2,6 +2,7 @@ import axios from 'axios';
 import ipcPromise from 'ipc-promise';
 import { remote } from 'electron';
 import { get } from 'lodash';
+import { LOCATION_CHANGE } from 'react-router-redux';
 import { applyAsyncLoading } from './loading';
 
 const apiServer = remote.getGlobal('config').get('apiServer');
@@ -23,8 +24,11 @@ const INITIAL_STATE = {
   },
   appDirectory: localStorage.getItem('appDirectory') || remote.getGlobal('config').get('coinstacHome'),
   isApiVersionCompatible: true,
+  locationStacks: [],
   error: null,
 };
+
+const EXCLUDE_PATHS = ['login', 'signup'];
 
 // Actions
 const SET_USER = 'SET_USER';
@@ -184,6 +188,32 @@ export default function reducer(state = INITIAL_STATE, { type, payload }) {
       return { ...state, appDirectory: payload };
     case SET_API_VERSION_CHECK:
       return { ...state, isApiVersionCompatible: payload };
+    case LOCATION_CHANGE:
+      const { locationStacks } = state;
+      const { pathname } = payload;
+
+      if (EXCLUDE_PATHS.indexOf(pathname) !== -1) {
+        return state;
+      }
+
+      if (pathname === locationStacks[locationStacks.length - 1]) {
+        return state;
+      }
+
+      if (locationStacks.length > 1 &&
+        locationStacks[locationStacks.length - 2] === pathname) {
+        locationStacks.pop();
+
+        return {
+          ...state,
+          locationStacks,
+        }
+      }
+  
+      return {
+        ...state,
+        locationStacks: [...locationStacks, pathname],
+      };
     default:
       return state;
   }
