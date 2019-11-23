@@ -1,5 +1,6 @@
 import { combineReducers } from 'redux';
 import { reducer as notifications } from 'react-notification-system-redux';
+import { routerReducer } from 'react-router-redux';
 import app from './ducks/app';
 import auth from './ducks/auth';
 import collections from './ducks/collections';
@@ -16,6 +17,7 @@ const rootReducer = client => combineReducers({
   loading,
   notifications,
   runs,
+  routing: routerReducer,
 });
 
 export default rootReducer;
