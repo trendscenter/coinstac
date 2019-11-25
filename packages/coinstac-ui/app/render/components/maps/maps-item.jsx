@@ -91,7 +91,7 @@ function MapsItem(props) {
                  to={`map/${itemObject.id}`}
                  onClick={() => setConsortium(itemObject)}
                  name={`${itemObject.name}-map-data`}>
-                  Map Data to Consortia
+                  Map Data to Consortium
                 </Button>
           }
           {itemOptions.actions}
