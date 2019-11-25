@@ -46,6 +46,7 @@ class Result extends Component {
       run: {},
       computationOutput: {},
       displayTypes: [],
+      type: 'object',
       plotData: [],
       selectedTabIndex: 0,
     };
@@ -196,7 +197,7 @@ class Result extends Component {
           onChange={this.handleSelect}
         >
           {
-            run && run.results && displayTypes.map((disp) => {
+            run && run.results && displayTypes && displayTypes.map((disp) => {
               const title = disp.type.replace('_', ' ')
                 .replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
 
@@ -256,6 +257,21 @@ class Result extends Component {
                 )
               }
             </div>
+          )
+        }
+
+        {
+          !selectedDisplayType
+          && run.results
+          && (
+            <Paper className={classNames(classes.paper)}>
+              <span className={classNames(classes.error)}>
+                Output Type not defined in Compspec.
+              </span>
+              <br /><br />
+              <strong>Results Object:</strong><br />
+              {JSON.stringify(run.results)}
+            </Paper>
           )
         }
 
