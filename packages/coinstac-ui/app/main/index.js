@@ -478,7 +478,7 @@ loadConfig()
             extensions: ['jpeg', 'jpg', 'png', 'nii', 'csv', 'txt', 'rtf', 'gz'],
           },
         ];
-        properties = ['openDirectory', 'openFile', 'multiSelections'];
+        properties = ['openFile', 'multiSelections'];
         postDialogFunc = ipcFunctions.manualFileSelectionMultExt;       
       } else {
         filters = [
