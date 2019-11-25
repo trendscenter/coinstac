@@ -374,6 +374,23 @@ module.exports = {
               remoteClients[data.id].state = 'registered';
             }
             break;
+          case 'finished':
+            if (activePipelines[data.runId] && activePipelines[data.runId].clients[data.id]) {
+              if (activePipelines[data.runId].finished) {
+                activePipelines[data.runId].finished.add(data.id);
+                if (activePipelines[data.runId].clients
+                  .every(value => activePipelines[data.runId].finished.has(value))
+                ) {
+                  delete activePipelines[data.runId];
+                  Object.keys(remoteClients).forEach((key) => {
+                    if (remoteClients[key][data.runId]) {
+                      delete remoteClients[key][data.runId];
+                    }
+                  });
+                }
+              }
+            }
+            break;
           default:
         }
       });
@@ -449,7 +466,23 @@ module.exports = {
                 .then(() => {
                   rimraf(path.join(activePipelines[data.runId].transferDirectory, '*'));
                 })
-                .then(() => activePipelines[data.runId].remote.resolve(data.output));
+                .then(() => {
+                  if (data.output.success && data.output.files) {
+                    // let the remote know we have the files
+                    mqtCon.publish(
+                      'finished',
+                      JSON.stringify(
+                        {
+                          id: clientId,
+                          runId: data.runId,
+                        }
+                      ),
+                      { qos: 1 },
+                      (err) => { if (err) logger.error(`Mqtt error: ${err}`); }
+                    );
+                  }
+                  activePipelines[data.runId].remote.resolve(data.output);
+                });
             } else if (data.error && activePipelines[data.runId]) {
               activePipelines[data.runId].state = 'received error';
               activePipelines[data.runId].remote.reject(Object.assign(new Error(), data.error));
@@ -578,6 +611,9 @@ module.exports = {
               readdir(activePipelines[pipeline.id].transferDirectory)
                 .then((files) => {
                   if (files && files.length !== 0) {
+                    if (message.success) {
+                      activePipelines[pipeline.id].finished = new Set();
+                    }
                     clientPublish(
                       activePipelines[pipeline.id].clients,
                       {
@@ -742,12 +778,17 @@ module.exports = {
             ]).then(() => res);
           })
           .then((res) => {
-            delete activePipelines[runId];
-            Object.keys(remoteClients).forEach((key) => {
-              if (remoteClients[key][runId]) {
-                delete remoteClients[key][runId];
-              }
-            });
+            if (!activePipelines[runId].finished
+                || activePipelines[runId].clients
+                  .every(value => activePipelines[runId].finished.has(value))
+            ) {
+              delete activePipelines[runId];
+              Object.keys(remoteClients).forEach((key) => {
+                if (remoteClients[key][runId]) {
+                  delete remoteClients[key][runId];
+                }
+              });
+            }
             return res;
           });
 
