@@ -66,7 +66,7 @@ module.exports = {
      * exponential backout for GET
      * consider file batching here if server load is too high
      */
-    const exponentialRequest = (method, factor, file, clientId, runId) => {
+    const exponentialRequest = (method, factor, file, clientId, runId, directory) => {
       return new Promise((resolve, reject) => {
         setTimeout(() => {
           if (method === 'get') {
@@ -74,7 +74,7 @@ module.exports = {
               `${remoteProtocol}//${remoteURL}:${remotePort}${remotePathname}?id=${encodeURIComponent(clientId)}&runId=${encodeURIComponent(runId)}&file=${encodeURIComponent(file)}`,
               (res) => {
                 res.pipe(fs.createWriteStream(
-                  path.join(activePipelines[runId].baseDirectory, file)
+                  path.join(directory, file)
                 ));
 
                 res.on('end', () => {
@@ -91,7 +91,7 @@ module.exports = {
             form.append('clientId', clientId);
             form.append('runId', runId);
             form.append('file', fs.createReadStream(
-              path.join(activePipelines[runId].transferDirectory, file)
+              path.join(directory, file)
             ));
             form.submit(`${remoteProtocol}//${remoteURL}:${remotePort}${remotePathname}`,
               (err, res) => {
@@ -126,7 +126,7 @@ module.exports = {
      *                           the action fails besides ECONNREFUSED,
      *                           or the limit is reached
      */
-    const serverFile = (method, limit, files, clientId, runId) => {
+    const serverFile = (method, limit, files, clientId, runId, directory) => {
       return Promise.all(files.reduce((memo, file) => {
         memo.push((async () => {
           let retryLimit = 0;
@@ -134,7 +134,7 @@ module.exports = {
           // retry 1000 times w/ backout
           while (retryLimit < limit) {
             try {
-              await exponentialRequest(method, retryLimit, file, clientId, runId); // eslint-disable-line no-await-in-loop, max-len
+              await exponentialRequest(method, retryLimit, file, clientId, runId, directory); // eslint-disable-line no-await-in-loop, max-len
 
               success = true;
               break;
@@ -346,8 +346,8 @@ module.exports = {
                   new Error(),
                   data.error,
                   {
-                    error: `Pipeline error from user: ${data.id}\n Error details: ${data.error.error}`,
-                    message: `Pipeline error from user: ${data.id}\n Error details: ${data.error.message}`,
+                    error: `Pipeline error from pipeline ${data.runId} user: ${data.id}\n Error details: ${data.error.error}`,
+                    message: `Pipeline error from pipeline ${data.runId} user: ${data.id}\n Error details: ${data.error.message}`,
                   }
                 );
                 activePipelines[data.runId].state = 'received client error';
@@ -372,6 +372,23 @@ module.exports = {
             } else {
               serverMqt.publish(`${data.id}-register`, JSON.stringify({ runId: data.runId }));
               remoteClients[data.id].state = 'registered';
+            }
+            break;
+          case 'finished':
+            if (activePipelines[data.runId] && activePipelines[data.runId].clients[data.id]) {
+              if (activePipelines[data.runId].finished) {
+                activePipelines[data.runId].finished.add(data.id);
+                if (activePipelines[data.runId].clients
+                  .every(value => activePipelines[data.runId].finished.has(value))
+                ) {
+                  delete activePipelines[data.runId];
+                  Object.keys(remoteClients).forEach((key) => {
+                    if (remoteClients[key][data.runId]) {
+                      delete remoteClients[key][data.runId];
+                    }
+                  });
+                }
+              }
             }
             break;
           default:
@@ -422,7 +439,10 @@ module.exports = {
 
               let preWork;
               if (data.files) {
-                preWork = serverFile('get', 1000, data.files, clientId, data.runId);
+                const workDir = data.output.success
+                  ? activePipelines[data.runId].outputDirectory
+                  : activePipelines[data.runId].baseDirectory;
+                preWork = serverFile('get', 1000, data.files, clientId, data.runId, workDir);
               } else {
                 preWork = Promise.resolve();
               }
@@ -446,7 +466,23 @@ module.exports = {
                 .then(() => {
                   rimraf(path.join(activePipelines[data.runId].transferDirectory, '*'));
                 })
-                .then(() => activePipelines[data.runId].remote.resolve(data.output));
+                .then(() => {
+                  if (data.output.success && data.output.files) {
+                    // let the remote know we have the files
+                    mqtCon.publish(
+                      'finished',
+                      JSON.stringify(
+                        {
+                          id: clientId,
+                          runId: data.runId,
+                        }
+                      ),
+                      { qos: 1 },
+                      (err) => { if (err) logger.error(`Mqtt error: ${err}`); }
+                    );
+                  }
+                  activePipelines[data.runId].remote.resolve(data.output);
+                });
             } else if (data.error && activePipelines[data.runId]) {
               activePipelines[data.runId].state = 'received error';
               activePipelines[data.runId].remote.reject(Object.assign(new Error(), data.error));
@@ -523,6 +559,7 @@ module.exports = {
             stashedOuput: undefined,
             communicate: undefined,
             clients,
+            remote: { reject: () => {} }, // noop for pre pipe errors
           },
           activePipelines[runId]
         );
@@ -574,6 +611,9 @@ module.exports = {
               readdir(activePipelines[pipeline.id].transferDirectory)
                 .then((files) => {
                   if (files && files.length !== 0) {
+                    if (message.success) {
+                      activePipelines[pipeline.id].finished = new Set();
+                    }
                     clientPublish(
                       activePipelines[pipeline.id].clients,
                       {
@@ -628,7 +668,8 @@ module.exports = {
                         100,
                         files,
                         clientId,
-                        pipeline.id
+                        pipeline.id,
+                        activePipelines[pipeline.id].transferDirectory
                       ).catch((e) => {
                         // files failed to send, bail
                         logger.error(`Client file send error: ${e}`);
@@ -737,12 +778,17 @@ module.exports = {
             ]).then(() => res);
           })
           .then((res) => {
-            delete activePipelines[runId];
-            Object.keys(remoteClients).forEach((key) => {
-              if (remoteClients[key][runId]) {
-                delete remoteClients[key][runId];
-              }
-            });
+            if (!activePipelines[runId].finished
+                || activePipelines[runId].clients
+                  .every(value => activePipelines[runId].finished.has(value))
+            ) {
+              delete activePipelines[runId];
+              Object.keys(remoteClients).forEach((key) => {
+                if (remoteClients[key][runId]) {
+                  delete remoteClients[key][runId];
+                }
+              });
+            }
             return res;
           });
 
