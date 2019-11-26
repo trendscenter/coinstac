@@ -32,10 +32,10 @@ for site, output in doc["input"].items():
         raise Exception("Hash mismatch site: " + "hasha: " + hasha["hash"] + " hashb: " + hashb["hash"])
     shutil.copy(os.path.join(doc["state"]["baseDirectory"], site, "a.txt"), os.path.join(doc["state"]["transferDirectory"], "a.txt"))
     shutil.copy(os.path.join(doc["state"]["baseDirectory"], site, "b.txt"), os.path.join(doc["state"]["transferDirectory"], "b.txt"))
-    break
+    break 
 
 if success == True:
-    output = { "output": { "message": "hashes match" }, "success": success }
+    output = { "output": { "message": "hashes match", "files": ["a.txt", "b.txt"] }, "success": success }
 else:
     output = { "output": { "hasha": hasha["hash"], "hashb": hashb["hash"], "counta": hasha["count"], "countb": hashb["count"]  }, "success": success }
 

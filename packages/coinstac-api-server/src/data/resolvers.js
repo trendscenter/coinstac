@@ -435,33 +435,40 @@ const resolvers = {
      * @param {string} args.pipelineId Pipeline id to delete
      * @return {object} Deleted pipeline
      */
-    deletePipeline: ({ auth: { credentials: { permissions } } }, args) => {
-      return helperFunctions.getRethinkConnection()
-        .then(connection =>
-          new Promise.all([
-            connection,
-            rethink.table('pipelines').get(args.pipelineId)
-              .run(connection)
-          ])
-        )
-        .then(([connection, pipeline]) => {
-          if (!permissions.consortia[pipeline.owningConsortium] ||
-              !permissions.consortia[pipeline.owningConsortium].includes('owner')
-          ) {
-            return Boom.forbidden('Action not permitted');
-          } else {
-            return new Promise.all([
-              connection,
-              rethink.table('pipelines').get(args.pipelineId)
-              .delete({ returnChanges: true })
-              .run(connection),
-              rethink.table('consortia').filter({ activePipelineId: args.pipelineId })
-              .replace(rethink.row.without('activePipelineId'))
-              .run(connection)
-            ])
-          }
-        })
-        .then(([connection, pipeline]) => connection.close().then(() => pipeline.changes[0].old_val))
+    deletePipeline: async ({ auth: { credentials: { permissions } } }, args) => {
+      const connection = await helperFunctions.getRethinkConnection()
+      const pipeline = await rethink.table('pipelines')
+        .get(args.pipelineId)
+        .run(connection)
+
+      if (!permissions.consortia[pipeline.owningConsortium] ||
+          !permissions.consortia[pipeline.owningConsortium].includes('owner')
+      ) {
+        return Boom.forbidden('Action not permitted')
+      }
+
+      const runsCount = await rethink.table('runs')('pipelineSnapshot')
+        .filter({ id: args.pipelineId })
+        .count()
+        .run(connection)
+
+      if (runsCount > 0) {
+        return Boom.badData('Runs on this pipeline exist')
+      }
+
+      await rethink.table('pipelines')
+        .get(args.pipelineId)
+        .delete({ returnChanges: true })
+        .run(connection)
+
+      await rethink.table('consortia')
+        .filter({ activePipelineId: args.pipelineId })
+        .replace(rethink.row.without('activePipelineId'))
+        .run(connection)
+
+      await connection.close()
+
+      return pipeline
     },
     /**
      * Add logged user to consortium members list
