@@ -12,7 +12,10 @@
     "Sergey Plis <splis@mrn.org>"
   ],
   "dependencies": {
-    "coinstac-docker-manager": "^4.4.1",
+    "archiver": "^3.1.1",
+    "coinstac-docker-manager": "^4.5.0",
+    "content-disposition": "^0.5.3",
+    "decompress": "^4.2.0",
     "dockerode": "^2.5.5",
     "express": "^4.17.1",
     "form-data": "^2.5.0",
@@ -44,5 +47,5 @@
   "scripts": {
     "test": "nyc ava test/**.test.js"
   },
-  "version": "4.4.1"
+  "version": "4.5.0"
 }

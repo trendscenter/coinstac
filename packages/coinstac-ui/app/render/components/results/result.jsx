@@ -1,10 +1,14 @@
 import React, { Component } from 'react';
-import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
+import { compose } from 'redux';
+import { DragDropContext } from 'react-dnd';
+import HTML5Backend from 'react-dnd-html5-backend';
 import Button from '@material-ui/core/Button';
 import Paper from '@material-ui/core/Paper';
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
+import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
 import ArrowBackIcon from '@material-ui/icons/ArrowBack';
@@ -16,6 +20,7 @@ import Scatter from './displays/scatter-plot';
 import Table from './displays/result-table';
 import Images from './displays/images';
 import String from './displays/string';
+import PipelineStep from '../pipelines/pipeline-step';
 import Iframe from './displays/iframe';
 import { getLocalRun } from '../../state/ducks/runs';
 
@@ -32,6 +37,9 @@ const styles = theme => ({
   label: {
     fontWeight: 'bold',
     marginRight: theme.spacing.unit,
+  },
+  formControl: {
+    marginBottom: theme.spacing.unit * 2,
   },
   error: {
     color: 'red',
@@ -61,8 +69,13 @@ class Result extends Component {
 
         // Checking display type of computation
         const stepsLength = run.pipelineSnapshot.steps.length;
+
         let displayTypes = run.pipelineSnapshot.steps[stepsLength - 1]
           .computations[0].computation.display;
+
+        if(!displayTypes.type){
+          displayTypes.push({ type: 'pipeline' });
+        }
 
         this.setState({
           computationOutput: run.pipelineSnapshot.steps[stepsLength - 1]
@@ -256,6 +269,49 @@ class Result extends Component {
                   />
                 )
               }
+              {
+                selectedDisplayType.type === 'pipeline' && run.pipelineSnapshot
+                && (
+                  <div>
+                    <TextField
+                      fullWidth
+                      disabled
+                      value={run.pipelineSnapshot.name || ''}
+                      className={classes.formControl}
+                      label="Name"
+                    />
+                    <TextField
+                      fullWidth
+                      disabled
+                      value={run.pipelineSnapshot.description || ''}
+                      className={classes.formControl}
+                      label="Description"
+                    />
+                    {
+                      run.pipelineSnapshot.steps.length > 0
+                      && run.pipelineSnapshot.steps.map((step, index) => (
+                        <PipelineStep
+                          computationId={step.computations[0].id}
+                          deleteStep={() => {}}
+                          eventKey={step.id}
+                          id={step.id}
+                          key={step.id}
+                          moveStep={() => {}}
+                          owner={false}
+                          pipelineIndex={index}
+                          previousComputationIds={
+                            run.pipelineSnapshot.steps
+                              .filter((s, i) => i < index)
+                              .map(s => s.computations[0].id)
+                          }
+                          step={step}
+                          updateStep={() => {}}
+                        />
+                      ))
+                    }
+                  </div>
+                )
+              }
             </div>
           )
         }
@@ -299,6 +355,9 @@ const mapStateToProps = ({ auth }) => {
   return { auth };
 };
 
-const connectedComponent = connect(mapStateToProps, { getLocalRun })(Result);
+const connectedComponent = compose(
+  connect(mapStateToProps, { getLocalRun }),
+  DragDropContext(HTML5Backend),
+)(Result);
 
 export default withStyles(styles)(connectedComponent);
