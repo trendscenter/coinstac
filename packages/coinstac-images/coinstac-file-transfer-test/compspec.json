@@ -8,14 +8,14 @@
   },
   "computation": {
     "type": "docker",
-    "dockerImage": "coinstac\/coinstac-file-transfer-test",
+    "dockerImage": "coinstacteam\/coinstac-file-transfer-test",
     "command": [
       "python",
       "\/computation\/local.py"
     ],
     "remote": {
       "type": "docker",
-      "dockerImage": "coinstac\/coinstac-file-transfer-test",
+      "dockerImage": "coinstacteam\/coinstac-file-transfer-test",
       "command": [
         "python",
         "\/computation\/remote.py"
