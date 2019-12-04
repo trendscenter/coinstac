@@ -12,7 +12,10 @@
     "Sergey Plis <splis@mrn.org>"
   ],
   "dependencies": {
+    "archiver": "^3.1.1",
     "coinstac-docker-manager": "^4.4.1",
+    "content-disposition": "^0.5.3",
+    "decompress": "^4.2.0",
     "dockerode": "^2.5.5",
     "express": "^4.17.1",
     "form-data": "^2.5.0",
