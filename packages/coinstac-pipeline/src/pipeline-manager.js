@@ -10,12 +10,15 @@ const path = require('path');
 const http = require('http');
 const https = require('https');
 const FormData = require('form-data');
-
-const readdir = promisify(fs.readdir);
+const archiver = require('archiver');
 const Emitter = require('events');
 const winston = require('winston');
 const express = require('express');
 const multer = require('multer');
+const decompress = require('decompress');
+const cd = require('content-disposition');
+
+const readdir = promisify(fs.readdir);
 
 winston.loggers.add('pipeline', {
   level: 'info',
@@ -66,19 +69,29 @@ module.exports = {
      * exponential backout for GET
      * consider file batching here if server load is too high
      */
-    const exponentialRequest = (method, factor, file, clientId, runId, directory) => {
+    const exponentialRequest = (
+      method,
+      factor,
+      file,
+      clientId,
+      runId,
+      directory,
+      compressed = false,
+      files = []
+    ) => {
       return new Promise((resolve, reject) => {
         setTimeout(() => {
           if (method === 'get') {
             request.get(
-              `${remoteProtocol}//${remoteURL}:${remotePort}${remotePathname}?id=${encodeURIComponent(clientId)}&runId=${encodeURIComponent(runId)}&file=${encodeURIComponent(file)}`,
+              `${remoteProtocol}//${remoteURL}:${remotePort}${remotePathname}?id=${encodeURIComponent(clientId)}&runId=${encodeURIComponent(runId)}&file=${encodeURIComponent(file)}&files=${encodeURIComponent(JSON.stringify(files))}`,
               (res) => {
+                const resFile = cd.parse(res.headers['content-disposition']).parameters.filename;
                 res.pipe(fs.createWriteStream(
-                  path.join(directory, file)
+                  path.join(directory, resFile)
                 ));
 
                 res.on('end', () => {
-                  resolve();
+                  resolve(resFile);
                 });
                 res.on('error', (e) => {
                   reject(e);
@@ -88,6 +101,8 @@ module.exports = {
           } else if (method === 'post') {
             const form = new FormData();
             form.append('fileName', file);
+            form.append('compressed', compressed.toString());
+            form.append('files', JSON.stringify(files));
             form.append('clientId', clientId);
             form.append('runId', runId);
             form.append('file', fs.createReadStream(
@@ -116,7 +131,7 @@ module.exports = {
     };
 
     /**
-     * POST or GET a file relating to a run from the server
+     *  GET a file relating to a run from the server
      * @param  {string} method   POST or GET
      * @param  {integer} limit   retry limit for an unreachable host
      * @param  {Array} files     files to send or recieve
@@ -126,31 +141,116 @@ module.exports = {
      *                           the action fails besides ECONNREFUSED,
      *                           or the limit is reached
      */
-    const serverFile = (method, limit, files, clientId, runId, directory) => {
-      return Promise.all(files.reduce((memo, file) => {
-        memo.push((async () => {
-          let retryLimit = 0;
-          let success = false;
-          // retry 1000 times w/ backout
-          while (retryLimit < limit) {
-            try {
-              await exponentialRequest(method, retryLimit, file, clientId, runId, directory); // eslint-disable-line no-await-in-loop, max-len
-
-              success = true;
-              break;
-            } catch (e) {
-              if (e.code && e.code === 'ECONNREFUSED') {
-                retryLimit += 1;
-                logger.silly(`Retrying file request: ${file}`);
-                logger.silly(`File request failed with: ${e.name}`);
-              }
-              throw e;
-            }
+    const getFiles = async (limit, files, clientId, runId, directory) => {
+      let retryLimit = 0;
+      let success = false;
+      // retry 1000 times w/ backout
+      while (retryLimit < limit) {
+        try {
+          const packedFile = await exponentialRequest('get', retryLimit, '', clientId, runId, directory, true, files); // eslint-disable-line no-await-in-loop, max-len
+          await decompress(path.join(directory, packedFile), directory); // eslint-disable-line no-await-in-loop, max-len
+          await rimraf(path.join(directory, packedFile)); // eslint-disable-line no-await-in-loop
+          success = true;
+          break;
+        } catch (e) {
+          if (e.code && e.code === 'ECONNREFUSED') {
+            retryLimit += 1;
+            logger.silly(`Retrying file request: ${files}`);
+            logger.silly(`File request failed with: ${e.name}`);
           }
-          if (!success) throw new Error('Service down, file retry limit reached');
-        })());
-        return memo;
-      }, []));
+          throw e;
+        }
+      }
+      if (!success) throw new Error('Service down, file retry limit reached');
+    };
+
+    /**
+     * POST a file relating to a run from the server
+     * @param  {integer} limit   retry limit for an unreachable host
+     * @param  {Array} files     files to send or recieve
+     * @param  {string} clientId this clients id
+     * @param  {string} runId    the run context for the files
+     * @return {Promise}         Promise when the files are received,
+     *                           the action fails besides ECONNREFUSED,
+     *                           or the limit is reached
+     */
+    const sendFiles = (limit, files, clientId, runId, directory) => {
+      const archiveFilename = `/${runId}-${clientId}-tempOutput.tar.gz`;
+      const output = fs.createWriteStream(
+        path.join(directory, archiveFilename)
+      );
+      const archive = archiver('tar', {
+        gzip: true,
+        gzipOptions: {
+          level: 2,
+        },
+      });
+
+      const archProm = new Promise((resolve, reject) => {
+        output.on('close', () => {
+          resolve();
+        });
+
+        archive.on('error', (err) => {
+          reject(err);
+        });
+      });
+
+      archive.pipe(output);
+      files.forEach((file) => {
+        archive.append(fs.createReadStream(path.join(directory, file)), { name: file });
+      });
+      archive.finalize();
+
+      return archProm.then(async () => {
+        let retryLimit = 0;
+        let success = false;
+        // retry 1000 times w/ backout
+        while (retryLimit < limit) {
+          try {
+            await exponentialRequest( // eslint-disable-line no-await-in-loop, max-len
+              'post',
+              retryLimit,
+              archiveFilename,
+              clientId,
+              runId,
+              directory,
+              true,
+              files
+            );
+            success = true;
+            break;
+          } catch (e) {
+            if (e.code && (e.code === 'ECONNREFUSED' || e.code === 'ECONNRESET')) {
+              retryLimit += 1;
+              logger.silly(`Retrying file request: ${archiveFilename}`);
+              logger.silly(`File request failed with: ${e.name}`);
+            }
+            throw e;
+          }
+        }
+        if (!success) throw new Error('Service down, file retry limit reached');
+      });
+    };
+
+    /**
+     * Perform final cleanup on a specified pipeline
+     * @param  {string} runId  id of the pipeline to clean
+     * @return {Promise}       Promise on completion
+     */
+    const cleanupPipeline = (runId) => {
+      return Promise.all([
+        rimraf(path.resolve(activePipelines[runId].transferDirectory)),
+        rimraf(path.resolve(activePipelines[runId].cacheDirectory)),
+        rimraf(path.resolve(activePipelines[runId].systemDirectory)),
+      ]).then(() => {
+        delete activePipelines[runId];
+        Object.keys(remoteClients).forEach((key) => {
+          if (remoteClients[key][runId]) {
+            delete remoteClients[key][runId];
+          }
+        });
+      });
     };
 
 
@@ -221,36 +321,85 @@ module.exports = {
         res.end();
 
         // check to see if we can run
-        remoteClients[req.body.clientId][req.body.runId].files.received.push(req.body.fileName);
-        const waitingOn = waitingOnForRun(req.body.runId);
-        activePipelines[req.body.runId].currentState.waitingOn = waitingOn;
-        const stateUpdate = Object.assign(
-          {},
-          activePipelines[req.body.runId].pipeline.currentState,
-          activePipelines[req.body.runId].currentState
-        );
-        activePipelines[req.body.runId].stateEmitter
-          .emit('update', stateUpdate);
-        logger.silly(JSON.stringify(stateUpdate));
-        if (waitingOn.length === 0) {
-          activePipelines[req.body.runId].state = 'received all clients data';
-          logger.silly('Received all client data');
-          // clear transfer and start run
-          activePipelines[req.body.runId].remote.resolve(
-            rimraf(path.join(activePipelines[req.body.runId].transferDirectory, '*'))
-              .then(() => ({ output: aggregateRun(req.body.runId) }))
+        let prom = Promise.resolve();
+        if (req.body.compressed === 'true') {
+          prom = decompress(
+            path.join(
+              activePipelines[req.body.runId].baseDirectory,
+              req.body.clientId,
+              req.body.fileName
+            ),
+            path.join(activePipelines[req.body.runId].baseDirectory, req.body.clientId)
           );
         }
+        prom.then(() => rimraf(
+          path.join(
+            activePipelines[req.body.runId].baseDirectory,
+            req.body.clientId,
+            req.body.fileName
+          )
+        )).then(() => {
+          const compressedFiles = JSON.parse(req.body.files);
+          remoteClients[req.body.clientId][req.body.runId].files.received
+            .push(...(compressedFiles.length && compressedFiles.length > 0
+              ? compressedFiles : [req.body.filename]));
+          const waitingOn = waitingOnForRun(req.body.runId);
+          activePipelines[req.body.runId].currentState.waitingOn = waitingOn;
+          const stateUpdate = Object.assign(
+            {},
+            activePipelines[req.body.runId].pipeline.currentState,
+            activePipelines[req.body.runId].currentState
+          );
+          activePipelines[req.body.runId].stateEmitter
+            .emit('update', stateUpdate);
+          logger.silly(JSON.stringify(stateUpdate));
+          if (waitingOn.length === 0) {
+            activePipelines[req.body.runId].state = 'received all clients data';
+            logger.silly('Received all client data');
+            // clear transfer and start run
+            activePipelines[req.body.runId].remote.resolve(
+              rimraf(path.join(activePipelines[req.body.runId].transferDirectory, '*'))
+                .then(() => ({ output: aggregateRun(req.body.runId) }))
+            );
+          }
+        });
       });
       app.get('/transfer', (req, res) => {
-        const fn = path.join(`${activePipelines[req.query.runId].transferDirectory}`, `${req.query.file}`);
+        const archiveFp = path.join(activePipelines[req.query.runId].transferDirectory, `/${req.query.runId}-${req.query.id}-tempOutput.tar.gz`);
+        const reqFiles = req.query.files ? JSON.parse(req.query.files) : req.query.file;
+        const output = fs.createWriteStream(
+          archiveFp
+        );
+        const archive = archiver('tar', {
+          gzip: true,
+          gzipOptions: {
+            level: 2,
+          },
+        });
 
-        fs.exists(fn, (exists) => {
-          if (exists) {
-            res.download(fn);
-          } else {
-            res.sendStatus(404);
-          }
+        const archProm = new Promise((resolve, reject) => {
+          output.on('close', () => {
+            resolve();
+          });
+
+          archive.on('error', (err) => {
+            reject(err);
+          });
+        });
+
+        archive.pipe(output);
+        reqFiles.forEach((file) => {
+          archive.append(fs.createReadStream(path.join(`${activePipelines[req.query.runId].transferDirectory}`, `${file}`)), { name: file });
+        });
+        archive.finalize();
+        archProm.then(() => {
+          fs.exists(archiveFp, (exists) => {
+            if (exists) {
+              res.download(archiveFp);
+            } else {
+              res.sendStatus(404);
+            }
+          });
         });
       });
       await new Promise((resolve) => {
@@ -376,17 +525,13 @@ module.exports = {
             break;
           case 'finished':
             if (activePipelines[data.runId] && activePipelines[data.runId].clients[data.id]) {
-              if (activePipelines[data.runId].finished) {
-                activePipelines[data.runId].finished.add(data.id);
+              if (activePipelines[data.runId].finalTransferList) {
+                activePipelines[data.runId].finalTransferList.add(data.id);
                 if (activePipelines[data.runId].clients
-                  .every(value => activePipelines[data.runId].finished.has(value))
+                  .every(value => activePipelines[data.runId].finalTransferList.has(value))
                 ) {
-                  delete activePipelines[data.runId];
-                  Object.keys(remoteClients).forEach((key) => {
-                    if (remoteClients[key][data.runId]) {
-                      delete remoteClients[key][data.runId];
-                    }
-                  });
+                  cleanupPipeline(data.runId)
+                    .catch(e => logger.error(`Pipeline cleanup failure: ${e}`));
                 }
               }
             }
@@ -442,7 +587,7 @@ module.exports = {
                 const workDir = data.output.success
                   ? activePipelines[data.runId].outputDirectory
                   : activePipelines[data.runId].baseDirectory;
-                preWork = serverFile('get', 1000, data.files, clientId, data.runId, workDir);
+                preWork = getFiles(1000, data.files, clientId, data.runId, workDir);
               } else {
                 preWork = Promise.resolve();
               }
@@ -467,7 +612,7 @@ module.exports = {
                   rimraf(path.join(activePipelines[data.runId].transferDirectory, '*'));
                 })
                 .then(() => {
-                  if (data.output.success && data.output.files) {
+                  if (data.output.success && data.files) {
                     // let the remote know we have the files
                     mqtCon.publish(
                       'finished',
@@ -612,7 +757,7 @@ module.exports = {
                 .then((files) => {
                   if (files && files.length !== 0) {
                     if (message.success) {
-                      activePipelines[pipeline.id].finished = new Set();
+                      activePipelines[pipeline.id].finalTransferList = new Set();
                     }
                     clientPublish(
                       activePipelines[pipeline.id].clients,
@@ -663,8 +808,7 @@ module.exports = {
                         (err) => { if (err) logger.error(`Mqtt error: ${err}`); }
                       );
                       activePipelines[pipeline.id].stashedOutput = undefined;
-                      serverFile(
-                        'post',
+                      sendFiles(
                         100,
                         files,
                         clientId,
@@ -771,24 +915,16 @@ module.exports = {
                 return res;
               });
           }).then((res) => {
-            return Promise.all([
-              rimraf(path.resolve(this.activePipelines[runId].transferDirectory, '*')),
-              rimraf(path.resolve(this.activePipelines[runId].cacheDirectory, '*')),
-              rimraf(path.resolve(this.activePipelines[runId].systemDirectory, '*')),
-            ]).then(() => res);
-          })
-          .then((res) => {
-            if (!activePipelines[runId].finished
+            if (!activePipelines[runId].finalTransferList
                 || activePipelines[runId].clients
-                  .every(value => activePipelines[runId].finished.has(value))
+                  .every(value => activePipelines[runId].finalTransferList.has(value))
+                // allow locals to cleanup in sim
+                || mode === 'local'
             ) {
-              delete activePipelines[runId];
-              Object.keys(remoteClients).forEach((key) => {
-                if (remoteClients[key][runId]) {
-                  delete remoteClients[key][runId];
-                }
-              });
+              return cleanupPipeline(runId)
+                .then(() => { return res; });
             }
+            // we have clients waiting on final transfer output, just give results
             return res;
           });
 
