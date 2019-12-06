@@ -4,6 +4,7 @@ import { render } from 'react-dom';
 import { hashHistory } from 'react-router';
 import { ipcRenderer, remote } from 'electron';
 import { ApolloProvider } from 'react-apollo';
+import { syncHistoryWithStore } from 'react-router-redux';
 import getApolloClient from './state/apollo-client';
 import configureStore from './state/store';
 import { start as startErrorHandling } from './utils/boot/configure-error-handling';
@@ -25,9 +26,11 @@ global.config = remote.getGlobal('config');
 const client = getApolloClient(global.config);
 const store = configureStore(client);
 
+const history = syncHistoryWithStore(hashHistory, store)
+
 render(
   <ApolloProvider store={store} client={client}>
-    <Root history={hashHistory} />
+    <Root history={history} />
   </ApolloProvider>,
   rootEl
 );
@@ -41,7 +44,7 @@ if (module.hot) {
     /* eslint-enable global-require */
     render(
       <ApolloProvider store={store} client={client}>
-        <NextRoot history={hashHistory} store={store} />
+        <NextRoot history={history} store={store} />
       </ApolloProvider>,
       rootEl
     );
