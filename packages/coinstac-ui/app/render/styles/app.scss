@@ -137,8 +137,35 @@ body {
 .content-pane {
   background: white;
   min-height: 100vh;
+  position: relative;
+
   @media (min-width: $screen-sm) {
     padding: $grid-gutter-width / 2;
+  }
+
+  .back-button {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    margin: 0 auto;
+    width: 80px;
+    height: 40px;
+    background-color: #eee;
+    border-bottom-left-radius: 110px;
+    border-bottom-right-radius: 110px;
+    border: 0;
+    cursor: pointer;
+
+    &:hover {
+      .arrow-icon {
+        color: #999;
+      }
+    }
+  }
+
+  .arrow-icon {
+    font-size: 19px;
+    color: #ccc;
   }
 }
 
