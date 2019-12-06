@@ -13,6 +13,8 @@ const msrFsl = require('./data/coinstac-schema-regression-ms-fsl');
 const ddfnc = require('./data/coinstac-ddfnc-pipeline');
 const vbm = require('./data/coinstac-vbm-pre');
 
+const fmri = require('./data/coinstac-fmri');
+
 const decentralized = require('./data/coinstac-decentralized-test');
 const decentralizedError = require('./data/coinstac-decentralized-error');
 const enigmaSans = require('./data/coinstac-enigma-sans');
@@ -63,6 +65,7 @@ helperFunctions.getRethinkConnection()
         Object.assign({}, decentralizedError, { submittedBy: 'test1' }),
         Object.assign({}, enigmaSans, { submittedBy: 'test1' }),
         Object.assign({}, localError, { submittedBy: 'test1' }),
+        Object.assign({}, fmri, { submittedBy: 'test1' }),
       ], { returnChanges: true }).run(connection))
       .then(compInsertResult => rethink.table('pipelines').insert([
         {

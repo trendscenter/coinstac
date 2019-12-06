@@ -498,6 +498,38 @@ class PipelineStepInput extends Component {
                   )
                 }
                 {
+                  objParams.type === 'matrix'
+                  && (
+                    <div>
+                      {
+                        step.inputMap[objKey] && step.inputMap[objKey].value.map((line, i) => (
+                          <div>
+                            {
+                              line.map((cell, j) => (
+                                <TextField
+                                  key={`${objKey}-${i}-${j}`}
+                                  disabled={!owner || isFromCache}
+                                  name={`step-${objKey}-${i}-${j}`}
+                                  value={cell}
+                                  onChange={event => updateStep({
+                                    ...step,
+                                    inputMap: this.getNewObj(objKey, {
+                                      value: update(step.inputMap[objKey].value, {
+                                        [i]: { $splice: [[j, 1, event.target.value]] },
+                                      }),
+                                    }),
+                                  })}
+                                  style={{ marginRight: '10px', maxWidth: '50px' }}
+                                />
+                              ))
+                            }
+                          </div>
+                        ))
+                      }
+                    </div>
+                  )
+                }
+                {
                   objParams.type === 'range' && objParams.min && objParams.max
                   && (
                     <Select
