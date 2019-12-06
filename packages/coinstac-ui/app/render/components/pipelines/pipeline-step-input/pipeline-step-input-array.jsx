@@ -1,9 +1,11 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
 
-function PipelineStepInputArray(objKey, objParams, owner, updateStep, getNewObj, getSelectList,
-  step) {
+function PipelineStepInputArray({
+  objKey, objParams, owner, updateStep, getNewObj, getSelectList, step,
+}) {
   return (
     <Select
       disabled={!owner}
@@ -31,5 +33,15 @@ function PipelineStepInputArray(objKey, objParams, owner, updateStep, getNewObj,
     </Select>
   );
 }
+
+PipelineStepInputArray.propTypes = {
+  objKey: PropTypes.string.isRequired,
+  objParams: PropTypes.object.isRequired,
+  owner: PropTypes.bool.isRequired,
+  step: PropTypes.object.isRequired,
+  updateStep: PropTypes.func.isRequired,
+  getNewObj: PropTypes.func.isRequired,
+  getSelectList: PropTypes.func.isRequired,
+};
 
 export default PipelineStepInputArray;

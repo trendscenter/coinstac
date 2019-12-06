@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
 import Tooltip from '@material-ui/core/Tooltip';
@@ -21,8 +22,10 @@ const styles = theme => ({
   },
 });
 
-function PipelineStepInputWithMappings(objKey, objParams, owner, addClientProp, getNewObj,
-  parentKey, possibleInputs, step, updateStep, classes) {
+function PipelineStepInputWithMappings({
+  objKey, objParams, owner, addClientProp, getNewObj, parentKey, possibleInputs, step,
+  updateStep, classes,
+}) {
   return (
     <div style={{ paddingLeft: 10 }}>
       <Typography variant="subtitle2">
@@ -58,5 +61,24 @@ function PipelineStepInputWithMappings(objKey, objParams, owner, addClientProp, 
     </div>
   );
 }
+
+PipelineStepInputWithMappings.defaultProps = {
+  parentKey: '',
+  owner: false,
+  possibleInputs: [],
+};
+
+PipelineStepInputWithMappings.propTypes = {
+  classes: PropTypes.object.isRequired,
+  parentKey: PropTypes.string,
+  possibleInputs: PropTypes.array,
+  objKey: PropTypes.string.isRequired,
+  objParams: PropTypes.object.isRequired,
+  owner: PropTypes.bool,
+  step: PropTypes.object.isRequired,
+  updateStep: PropTypes.func.isRequired,
+  getNewObj: PropTypes.func.isRequired,
+  addClientProp: PropTypes.func.isRequired,
+};
 
 export default withStyles(styles)(PipelineStepInputWithMappings);
