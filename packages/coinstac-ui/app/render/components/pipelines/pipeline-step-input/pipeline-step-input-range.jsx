@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
 
@@ -13,8 +14,10 @@ function makeNumberRange(min, max, step) {
   return range;
 }
 
-function PipelineStepInputRange(objKey, objParams, owner, updateStep, getNewObj, step) {
-  if (!objParams.min || !objParams.max || !objParams.step) {
+function PipelineStepInputRange({
+  objKey, objParams, owner, updateStep, getNewObj, step,
+}) {
+  if (!step || !objParams.min || !objParams.max || !objParams.step) {
     return null;
   }
 
@@ -49,5 +52,14 @@ function PipelineStepInputRange(objKey, objParams, owner, updateStep, getNewObj,
     </Select>
   );
 }
+
+PipelineStepInputRange.propTypes = {
+  objKey: PropTypes.string.isRequired,
+  objParams: PropTypes.object.isRequired,
+  owner: PropTypes.bool.isRequired,
+  step: PropTypes.object.isRequired,
+  updateStep: PropTypes.func.isRequired,
+  getNewObj: PropTypes.func.isRequired,
+};
 
 export default PipelineStepInputRange;

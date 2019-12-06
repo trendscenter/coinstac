@@ -1,8 +1,15 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import TextField from '@material-ui/core/TextField';
 import update from 'immutability-helper';
 
-function PipelineStepInputSet(objKey, owner, isFromCache, updateStep, getNewObj, step) {
+function PipelineStepInputSet({
+  objKey, owner, isFromCache, updateStep, getNewObj, step,
+}) {
+  if (!step) {
+    return null;
+  }
+
   return (
     <div>
       {
@@ -28,5 +35,14 @@ function PipelineStepInputSet(objKey, owner, isFromCache, updateStep, getNewObj,
     </div>
   );
 }
+
+PipelineStepInputSet.propTypes = {
+  objKey: PropTypes.string.isRequired,
+  owner: PropTypes.bool.isRequired,
+  isFromCache: PropTypes.bool.isRequired,
+  step: PropTypes.object.isRequired,
+  updateStep: PropTypes.func.isRequired,
+  getNewObj: PropTypes.func.isRequired,
+};
 
 export default PipelineStepInputSet;

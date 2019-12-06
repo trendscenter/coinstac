@@ -385,7 +385,6 @@ class PipelineStepInput extends Component {
 }
 
 PipelineStepInput.defaultProps = {
-  classes: '',
   parentKey: '',
   owner: false,
   possibleInputs: [],
@@ -393,9 +392,8 @@ PipelineStepInput.defaultProps = {
 };
 
 PipelineStepInput.propTypes = {
-  classes: PropTypes.string,
+  classes: PropTypes.object.isRequired,
   parentKey: PropTypes.string,
-  pipelineIndex: PropTypes.number.isRequired,
   possibleInputs: PropTypes.array,
   objKey: PropTypes.string.isRequired,
   objParams: PropTypes.object.isRequired,
