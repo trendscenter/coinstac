@@ -17,42 +17,40 @@ function PipelineStepMemberTable(props) {
     updateStep,
   } = props;
 
+  const objInputMap = step.inputMap[objKey];
+
+  if (!objInputMap || !('ownerMappings' in objInputMap) || objInputMap.ownerMappings.length === 0) {
+    return null;
+  }
+
+
   return (
     <Table>
+      <TableHead>
+        {
+          objKey === 'covariates'
+          && (
+            <TableRow>
+              <TableCell>Data Type</TableCell>
+              <TableCell>Source</TableCell>
+              <TableCell>Name</TableCell>
+              <TableCell />
+            </TableRow>
+          )
+        }
+        {
+          objKey === 'data'
+          && (
+            <TableRow>
+              <TableCell>Data Type</TableCell>
+              <TableCell>Interest</TableCell>
+              <TableCell />
+            </TableRow>
+          )
+        }
+      </TableHead>
       {
-        step.inputMap[objKey]
-        && 'ownerMappings' in step.inputMap[objKey]
-        && step.inputMap[objKey].ownerMappings.length > 0
-        && (
-          <TableHead>
-            {
-              objKey === 'covariates'
-              && (
-                <TableRow>
-                  <TableCell>Data Type</TableCell>
-                  <TableCell>Source</TableCell>
-                  <TableCell>Name</TableCell>
-                  <TableCell />
-                </TableRow>
-              )
-            }
-            {
-              objKey === 'data'
-              && (
-                <TableRow>
-                  <TableCell>Data Type</TableCell>
-                  <TableCell>Interest</TableCell>
-                  <TableCell />
-                </TableRow>
-              )
-            }
-          </TableHead>
-        )
-      }
-      {
-        step.inputMap[objKey]
-        && 'ownerMappings' in step.inputMap[objKey]
-        && step.inputMap[objKey].ownerMappings.map((obj, index) => (
+        objInputMap.ownerMappings.map((obj, index) => (
           <PipelineOwnerMappings
             key={`${objKey}-${index}`}
             index={index}

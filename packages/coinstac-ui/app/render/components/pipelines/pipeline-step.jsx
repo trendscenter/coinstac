@@ -194,6 +194,8 @@ class PipelineStep extends Component {
       return null;
     });
 
+    console.log("INPUTS", Inputs);
+
     return connectDragSource(connectDropTarget(
       <div key={'step-'+step.id}>
         <ExpansionPanel className="pipeline-step" style={{ ...styles.draggable, opacity: isDragging ? 0 : 1 }}>
