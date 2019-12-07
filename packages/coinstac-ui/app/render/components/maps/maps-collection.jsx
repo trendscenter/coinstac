@@ -431,8 +431,6 @@ class MapsCollection extends Component {
       finishedAutoMapping,
     } = this.state;
 
-    console.log(dataType);
-
     return (
       <div>
         <form onSubmit={saveCollection}>
