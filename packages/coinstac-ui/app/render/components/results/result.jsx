@@ -15,6 +15,8 @@ import ArrowBackIcon from '@material-ui/icons/ArrowBack';
 import classNames from 'classnames';
 import TimeStamp from 'react-timestamp';
 import BrowserHistory from 'react-router/lib/browserHistory';
+import { shell } from 'electron';
+import path from 'path';
 import Box from './displays/box-plot';
 import Scatter from './displays/scatter-plot';
 import Table from './displays/result-table';
@@ -24,12 +26,22 @@ import PipelineStep from '../pipelines/pipeline-step';
 import Iframe from './displays/iframe';
 import { getLocalRun } from '../../state/ducks/runs';
 
+
 const styles = theme => ({
   paper: {
     ...theme.mixins.gutters(),
     paddingTop: theme.spacing.unit * 2,
     paddingBottom: theme.spacing.unit * 2,
     marginTop: theme.spacing.unit * 2,
+    display: 'flex',
+  },
+  resultsInfo: {
+    display: 'flex',
+    'flex-direction': 'column',
+  },
+  resultButton: {
+    display: 'flex',
+    'flex-direction': 'column-reverse',
   },
   timestamp: {
     display: 'flex',
@@ -62,6 +74,7 @@ class Result extends Component {
     this.handleSelect = this.handleSelect.bind(this);
   }
 
+
   componentDidMount() {
     this.props.getLocalRun(this.props.params.resultId)
       .then((run) => {
@@ -71,11 +84,7 @@ class Result extends Component {
         const stepsLength = run.pipelineSnapshot.steps.length;
 
         let displayTypes = run.pipelineSnapshot.steps[stepsLength - 1]
-          .computations[0].computation.display;
-
-        if(!displayTypes.type){
-          displayTypes.push({ type: 'pipeline' });
-        }
+          .computations[0].computation.display || { type: 'pipeline' };
 
         this.setState({
           computationOutput: run.pipelineSnapshot.steps[stepsLength - 1]
@@ -98,8 +107,8 @@ class Result extends Component {
                 x: val.x,
                 y: val.y,
               })
-            )
-          )));
+            ))
+          ));
         } else if (displayTypes && displayTypes.findIndex(disp => disp.type === 'box_plot') > -1) {
           plotData.testData = [];
           run.results.x.map(val => (
@@ -116,15 +125,25 @@ class Result extends Component {
       });
   }
 
+  handleOpenResult = () => {
+    const { run: { id } } = this.state;
+    const { auth: { user, appDirectory } } = this.props;
+    const resultDir = path.join(appDirectory, 'output', user.id, id);
+
+    shell.openItem(resultDir);
+  }
+
   handleSelect(event, value) {
     this.setState({ selectedTabIndex: value });
   }
 
   render() {
-    const { run, selectedTabIndex, plotData, computationOutput } = this.state;
+    const {
+      run, selectedTabIndex, plotData, computationOutput,
+    } = this.state;
     const { consortia, classes, auth: { appDirectory, user } } = this.props;
     const consortium = consortia.find(c => c.id === run.consortiumId);
-    let displayTypes = this.state.displayTypes;
+    let { displayTypes } = this.state;
     let stepsLength = -1;
     let covariates = [];
     if (run && run.pipelineSnapshot) {
@@ -143,7 +162,8 @@ class Result extends Component {
       displayTypes = array;
     }
 
-    const selectedDisplayType = run && run.results && displayTypes && displayTypes[selectedTabIndex];
+    const selectedDisplayType = run && run.results
+      && displayTypes && displayTypes[selectedTabIndex];
 
     return (
       <div>
@@ -155,54 +175,67 @@ class Result extends Component {
         </Button>
 
         <Paper className={classes.paper}>
-          {
-            consortium && run.pipelineSnapshot
-            && (
-              <Typography variant="h6">
-                {`Results: ${consortium.name} || ${run.pipelineSnapshot.name}`}
-              </Typography>
-            )
-          }
-          {
-            run.startDate
-            && (
-              <div className={classes.timestamp}>
-                <Typography className={classes.label}>Start date:</Typography>
-                <Typography>
-                  <TimeStamp
-                    time={run.startDate / 1000}
-                    precision={2}
-                    autoUpdate={10}
-                    format="full"
-                  />
+          <div className={classes.resultsInfo}>
+            {
+              consortium && run.pipelineSnapshot
+              && (
+                <Typography variant="h6">
+                  {`Results: ${consortium.name} || ${run.pipelineSnapshot.name}`}
                 </Typography>
-              </div>
-            )
-          }
-          {
-            run.endDate
-            && (
-              <div className={classes.timestamp}>
-                <Typography className={classes.label}>End date:</Typography>
-                <Typography>
-                  <TimeStamp
-                    time={run.endDate / 1000}
-                    precision={2}
-                    autoUpdate={10}
-                    format="full"
-                  />
-                </Typography>
-              </div>
-            )
-          }
-          {
-            stepsLength > -1 && covariates.length > 0 && (
-              <div>
-                <span className="bold">Covariates: </span>
-                {covariates.join(', ')}
-              </div>
-            )
-          }
+              )
+            }
+            {
+              run.startDate
+              && (
+                <div className={classes.timestamp}>
+                  <Typography className={classes.label}>Start date:</Typography>
+                  <Typography>
+                    <TimeStamp
+                      time={run.startDate / 1000}
+                      precision={2}
+                      autoUpdate={10}
+                      format="full"
+                    />
+                  </Typography>
+                </div>
+              )
+            }
+            {
+              run.endDate
+              && (
+                <div className={classes.timestamp}>
+                  <Typography className={classes.label}>End date:</Typography>
+                  <Typography>
+                    <TimeStamp
+                      time={run.endDate / 1000}
+                      precision={2}
+                      autoUpdate={10}
+                      format="full"
+                    />
+                  </Typography>
+                </div>
+              )
+            }
+            {
+              stepsLength > -1 && covariates.length > 0 && (
+                <div>
+                  <span className="bold">Covariates: </span>
+                  {covariates.join(', ')}
+                </div>
+              )
+            }
+          </div>
+          <div className={classes.resultButton}>
+            <Button
+              variant="contained"
+              color="primary"
+              style={{ marginLeft: 10 }}
+              onClick={this.handleOpenResult}
+            >
+              Open Local Results
+            </Button>
+          </div>
+
         </Paper>
 
         <Tabs
@@ -324,8 +357,10 @@ class Result extends Component {
               <span className={classNames(classes.error)}>
                 Output Type not defined in Compspec.
               </span>
-              <br /><br />
-              <strong>Results Object:</strong><br />
+              <br />
+              <br />
+              <strong>Results Object:</strong>
+              <br />
               {JSON.stringify(run.results)}
             </Paper>
           )
@@ -348,6 +383,7 @@ Result.propTypes = {
   consortia: PropTypes.array.isRequired,
   getLocalRun: PropTypes.func.isRequired,
   params: PropTypes.object.isRequired,
+  auth: PropTypes.object.isRequired,
   classes: PropTypes.object.isRequired,
 };
 
@@ -357,7 +393,7 @@ const mapStateToProps = ({ auth }) => {
 
 const connectedComponent = compose(
   connect(mapStateToProps, { getLocalRun }),
-  DragDropContext(HTML5Backend),
+  DragDropContext(HTML5Backend)
 )(Result);
 
 export default withStyles(styles)(connectedComponent);
