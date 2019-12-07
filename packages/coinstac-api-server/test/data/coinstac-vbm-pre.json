@@ -13,7 +13,7 @@
    },
    "computation":{
       "type":"docker",
-      "dockerImage":"pixelsaurus/vbm_pre",
+      "dockerImage":"coinstacteam/vbm_pre",
       "command":[
          "python",
          "\/computation\/run_vbm.py"
@@ -27,7 +27,7 @@
       },
       "data": {
         "label": "Data",
-        "type": "array",
+        "type": "bundle",
         "items": ["NIfTI"],
         "extensions": [["csv", "txt"]],
         "order": 1

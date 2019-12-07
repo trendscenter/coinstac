@@ -71,6 +71,7 @@ const sharedFields = {
         type
       }
       inputMap
+      dataMeta
     }
   `,
   runFields: `
