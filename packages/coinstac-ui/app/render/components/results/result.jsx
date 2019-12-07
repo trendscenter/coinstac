@@ -21,6 +21,7 @@ import Table from './displays/result-table';
 import Images from './displays/images';
 import String from './displays/string';
 import PipelineStep from '../pipelines/pipeline-step';
+import Iframe from './displays/iframe';
 import { getLocalRun } from '../../state/ducks/runs';
 
 const styles = theme => ({
@@ -53,6 +54,7 @@ class Result extends Component {
       run: {},
       computationOutput: {},
       displayTypes: [],
+      type: 'object',
       plotData: [],
       selectedTabIndex: 0,
     };
@@ -67,10 +69,13 @@ class Result extends Component {
 
         // Checking display type of computation
         const stepsLength = run.pipelineSnapshot.steps.length;
+
         let displayTypes = run.pipelineSnapshot.steps[stepsLength - 1]
           .computations[0].computation.display;
 
-        displayTypes.push({ type: 'pipeline' });
+        if(!displayTypes.type){
+          displayTypes.push({ type: 'pipeline' });
+        }
 
         this.setState({
           computationOutput: run.pipelineSnapshot.steps[stepsLength - 1]
@@ -117,7 +122,7 @@ class Result extends Component {
 
   render() {
     const { run, selectedTabIndex, plotData, computationOutput } = this.state;
-    const { consortia, classes } = this.props;
+    const { consortia, classes, auth: { appDirectory, user } } = this.props;
     const consortium = consortia.find(c => c.id === run.consortiumId);
     let displayTypes = this.state.displayTypes;
     let stepsLength = -1;
@@ -205,7 +210,7 @@ class Result extends Component {
           onChange={this.handleSelect}
         >
           {
-            run && run.results && displayTypes.map((disp) => {
+            run && run.results && displayTypes && displayTypes.map((disp) => {
               const title = disp.type.replace('_', ' ')
                 .replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
 
@@ -233,6 +238,16 @@ class Result extends Component {
                     plotData={plotData}
                     tables={selectedDisplayType.tables ? selectedDisplayType.tables : null}
                     title={`${consortium.name}_${run.pipelineSnapshot.name}`}
+                  />
+                )
+              }
+              {
+                selectedDisplayType.type === 'iframe'
+                && (
+                  <Iframe
+                    plotData={plotData}
+                    title={`${consortium.name}_${run.pipelineSnapshot.name}`}
+                    path={`${appDirectory}/output/${user.id}/${run.id}/${run.pipelineSnapshot.steps[0].inputMap.results_html_path.value}`}
                   />
                 )
               }
@@ -298,6 +313,21 @@ class Result extends Component {
                 )
               }
             </div>
+          )
+        }
+
+        {
+          !selectedDisplayType
+          && run.results
+          && (
+            <Paper className={classNames(classes.paper)}>
+              <span className={classNames(classes.error)}>
+                Output Type not defined in Compspec.
+              </span>
+              <br /><br />
+              <strong>Results Object:</strong><br />
+              {JSON.stringify(run.results)}
+            </Paper>
           )
         }
 

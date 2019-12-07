@@ -114,6 +114,7 @@ module.exports = {
                       transferDirectory,
                       clientId,
                       iteration,
+                      owner,
                     }) => ({
                       baseDirectory,
                       outputDirectory,
@@ -121,6 +122,7 @@ module.exports = {
                       transferDirectory,
                       clientId,
                       iteration,
+                      owner,
                     }))(controllerState),
                   },
                   { baseDirectory: operatingDirectory }

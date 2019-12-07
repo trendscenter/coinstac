@@ -342,11 +342,10 @@ class RunItem extends Component {
           {
             runObject.status === 'started' && (runObject.localPipelineState || runObject.remotePipelineState)
             && (
-              <StatusButtonWrapper status={stoppingStatus}>
+              <StatusButtonWrapper>
                 <Button
                   variant="contained"
                   component={Link}
-                  disabled={stoppingStatus === 'pending'}
                   onClick={this.handleStopPipeline}
                 >
                   Stop Pipeline

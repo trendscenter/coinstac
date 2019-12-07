@@ -75,6 +75,7 @@ class MapsEdit extends Component {
       activeConsortium: { stepIO: [], runs: 0, pipelineSteps: [] },
       containers: [],
       collection,
+      dataType: 'array',
       isMapped: false,
       mappedItem: '',
       rowArray: [],
@@ -117,16 +118,30 @@ class MapsEdit extends Component {
     const { user } = this.props.auth;
     const { consortium, collections, mapped, pipelines } = this.props;
     let pipeline = pipelines.find(p => p.id === consortium.activePipelineId);
-     this.setState({
+
+    if( pipeline.steps[0].dataMeta && pipeline.steps[0].dataMeta.type ){
+    this.setState({ dataType: pipeline.steps[0].dataMeta.type });
+    }
+
+    this.setState({
        activeConsortium: {
          ...consortium,
          pipelineSteps: pipeline.steps,
        },
      });
      this.setState({isMapped: mapped});
-     let ctotal = pipeline.steps[0].inputMap.covariates.ownerMappings.length;
-     let dtotal = pipeline.steps[0].inputMap.data.ownerMappings.length;
-     this.setState({stepsTotal: ctotal + dtotal });
+
+     if(pipeline.steps[0].inputMap.covariates && pipeline.steps[0].inputMap.data){
+       let ctotal = pipeline.steps[0].inputMap.covariates.ownerMappings.length;
+       let dtotal = pipeline.steps[0].inputMap.data.ownerMappings.length;
+       this.setState({stepsTotal: ctotal + dtotal });
+     }
+
+     if(!pipeline.steps[0].inputMap.covariates && pipeline.steps[0].inputMap.data){
+       let dtotal = pipeline.steps[0].inputMap.data.ownerMappings.length;
+       this.setState({stepsTotal: dtotal });
+     }
+
      this.setPipelineSteps(pipeline.steps);
 
      let name = consortium.name+': Collection';
@@ -352,7 +367,9 @@ class MapsEdit extends Component {
         return;
       }
 
-      this.updateMetaFileHeader();
+      if(this.state.dataType === 'array'){
+        this.updateMetaFileHeader();
+      }
 
       const cons = this.state.activeConsortium;
       this.props.saveAssociatedConsortia(cons);
@@ -461,6 +478,7 @@ class MapsEdit extends Component {
       Object.entries(steps).forEach(([key, value]) => {
         let inputMap = steps[key].inputMap;
         Object.keys(inputMap).map((k, i) => {
+           Object.keys(inputMap)[i] !== 'meta' ?
            result.push(
              <MapsStep
                getContainers={this.getContainers}
@@ -477,7 +495,8 @@ class MapsEdit extends Component {
                updateConsortiumClientProps={this.updateConsortiumClientProps}
                mapped={this.props.mapped}
               />
-           );
+           )
+           : null
         });
       });
     }
@@ -511,6 +530,7 @@ class MapsEdit extends Component {
     const {
       activeConsortium,
       collection,
+      dataType,
       isMapped,
       mappedItem,
       metaRow,
@@ -559,6 +579,7 @@ class MapsEdit extends Component {
                           <MapsCollection
                             activeConsortium={activeConsortium}
                             collection={collection}
+                            dataType={dataType}
                             getContainers={this.getContainers}
                             isMapped={isMapped}
                             notifySuccess={this.notifySuccess}
