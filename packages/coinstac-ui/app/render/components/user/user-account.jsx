@@ -3,6 +3,7 @@ import React from 'react';
 import { Link } from 'react-router';
 import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
+import Badge from '@material-ui/core/Badge';
 import Typography from '@material-ui/core/Typography';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
@@ -10,6 +11,7 @@ import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import SettingsIcon from '@material-ui/icons/Settings';
 import ExitToAppIcon from '@material-ui/icons/ExitToApp';
+import MessageIcon from '@material-ui/icons/Message';
 import MemberAvatar from '../common/member-avatar';
 
 const styles = {
@@ -75,6 +77,19 @@ const UserAccount = (props) => {
                 { email }
               </Typography>
             </ListItemText>
+          </ListItem>
+          <ListItem disableGutters button component={Link} to="/dashboard/threads">
+            <ListItemIcon>
+            <Badge className={classes.margin} badgeContent={0} color="secondary">
+              <MessageIcon />
+            </Badge>
+            </ListItemIcon>
+            <ListItemText
+              primary="Messages"
+              classes={{
+                root: classes.listItemButtonTextRoot,
+              }}
+            />
           </ListItem>
           <ListItem disableGutters button component={Link} to="/dashboard/settings">
             <ListItemIcon><SettingsIcon /></ListItemIcon>
