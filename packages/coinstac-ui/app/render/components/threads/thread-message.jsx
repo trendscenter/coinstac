@@ -1,7 +1,7 @@
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
-import { withStyles } from '@material-ui/core/styles';
-import ThreadAvatar from './thread-avatar';
+import React, { Component } from 'react'
+import PropTypes from 'prop-types'
+import { withStyles } from '@material-ui/core/styles'
+import ThreadAvatar from './thread-avatar'
 
 const styles = theme => ({
   wrapper: {
@@ -24,11 +24,11 @@ const styles = theme => ({
     paddingLeft: theme.spacing.unit * 1.5,
     paddingRight: theme.spacing.unit,
   },
-});
+})
 
 class ThreadMessage extends Component {
   render() {
-    const { classes, message } = this.props;
+    const { classes, message } = this.props
 
     return (
       <div className={classes.wrapper}>
@@ -58,7 +58,7 @@ class ThreadMessage extends Component {
           {message.content}
         </p>
       </div>
-    );
+    )
   }
 }
 
@@ -66,4 +66,4 @@ ThreadMessage.propTypes = {
   classes: PropTypes.object,
 }
 
-export default withStyles(styles)(ThreadMessage);
+export default withStyles(styles)(ThreadMessage)

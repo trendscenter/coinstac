@@ -1,8 +1,8 @@
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
-import { TextField } from '@material-ui/core';
-import { withStyles } from '@material-ui/core/styles';
-import ThreadReply from './thread-reply';
+import React, { Component } from 'react'
+import PropTypes from 'prop-types'
+import { TextField } from '@material-ui/core'
+import { withStyles } from '@material-ui/core/styles'
+import ThreadReply from './thread-reply'
 
 const styles = theme => ({
   wrapper: {
@@ -18,38 +18,36 @@ const styles = theme => ({
   input: {
     width: '100%',
   },
-});
+})
 
 class ThreadNew extends Component {
   constructor(props) {
-    super(props);
+    super(props)
 
     this.state = {
       title: '',
-    };
+    }
   }
 
   handleTitleChange = evt => {
-    this.setState({ title: evt.target.value });
+    this.setState({ title: evt.target.value })
   }
 
   validateTitle = () => {
-    const { title } = this.state;
+    const { title } = this.state
 
     if (!title) {
-      return 'Please input title';
+      return 'Please input title'
     }
 
-    return null;
+    return
   }
 
   render() {
-    const { classes } = this.props;
-    const { title } = this.state;
+    const { classes } = this.props
+    const { title } = this.state
 
-    const allUsers = ['Ross', 'Eduardo', 'Eric', 'Javier'];
-
-    const error = this.validateTitle();
+    const error = this.validateTitle()
 
     return (
       <div className={classes.wrapper}>
@@ -63,9 +61,9 @@ class ThreadNew extends Component {
           />
         </div>
         <div style={{ flex: 1 }}></div>
-        <ThreadReply users={allUsers} parentError={error} />
+        <ThreadReply parentError={error} />
       </div>
-    );
+    )
   }
 }
 
@@ -73,4 +71,4 @@ ThreadNew.propTypes = {
   classes: PropTypes.object,
 }
 
-export default withStyles(styles)(ThreadNew);
+export default withStyles(styles)(ThreadNew)
