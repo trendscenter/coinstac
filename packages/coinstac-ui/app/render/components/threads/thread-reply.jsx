@@ -1,6 +1,7 @@
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
-import classNames from 'classnames';
+import React, { Component } from 'react'
+import PropTypes from 'prop-types'
+import classNames from 'classnames'
+import { graphql, compose } from 'react-apollo'
 import {
   FormControl,
   InputBase,
@@ -8,10 +9,20 @@ import {
   MenuItem,
   Select,
   Tooltip,
-} from '@material-ui/core';
-import { withStyles } from '@material-ui/core/styles';
-import ThreadAvatar from './thread-avatar';
-import CustomSelect from '../common/react-select';
+} from '@material-ui/core'
+import { withStyles } from '@material-ui/core/styles'
+import ThreadAvatar from './thread-avatar'
+import CustomSelect from '../common/react-select'
+import {
+  getAllAndSubProp,
+} from '../../state/graphql/props'
+import {
+  FETCH_ALL_USERS_QUERY,
+  FETCH_ALL_CONSORTIA_QUERY,
+  USER_CHANGED_SUBSCRIPTION,
+  CONSORTIUM_CHANGED_SUBSCRIPTION,
+} from '../../state/graphql/functions'
+
 
 const BootstrapInput = withStyles(theme => ({
   root: {
@@ -46,7 +57,7 @@ const BootstrapInput = withStyles(theme => ({
       boxShadow: '0 0 0 0.2rem rgba(0,123,255,.25)',
     },
   },
-}))(InputBase);
+}))(InputBase)
 
 const styles = theme => ({
   wrapper: {
@@ -101,54 +112,54 @@ const styles = theme => ({
       cursor: 'not-allowed',
     },
   }
-});
+})
 
 class ThreadReply extends Component {
   constructor(props) {
-    super(props);
+    super(props)
 
     this.state = {
       selectedRecipients: [],
       message: '',
       action: 'none',
       selectedConsortium: 'none',
-    };
+    }
   }
 
   handleRecipientsChange = selectedRecipients => {
-    this.setState({ selectedRecipients });
+    this.setState({ selectedRecipients })
   }
 
   handleMessageChange = evt => {
-    this.setState({ message: evt.target.value });
+    this.setState({ message: evt.target.value })
   }
 
   handleActionChange = evt => {
-    const { value } = evt.target;
+    const { value } = evt.target
     this.setState(Object.assign(
       { action: value },
       value === 'none' && { selectedConsortium: 'none' },
-    ));
+    ))
   }
 
   handleConsortiumChange = evt => {
-    this.setState({ selectedConsortium: evt.target.value });
+    this.setState({ selectedConsortium: evt.target.value })
   }
 
   handleSend = () => {
-    const error = this.validateForm();
+    const error = this.validateForm()
 
     if (error) {
-      return;
+      return
     }
   }
 
   validateForm = () => {
-    const { parentError } = this.props;
-    const { selectedRecipients, message, action, selectedConsortium } = this.state;
+    const { parentError } = this.props
+    const { selectedRecipients, message, action, selectedConsortium } = this.state
 
     if (parentError) {
-      return parentError;
+      return parentError
     }
 
     if (selectedRecipients.length === 0) {
@@ -167,8 +178,8 @@ class ThreadReply extends Component {
   }
 
   renderReplyButton = () => {
-    const { classes } = this.props;
-    const error = this.validateForm();
+    const { classes } = this.props
+    const error = this.validateForm()
 
     const button = (
       <button
@@ -179,7 +190,7 @@ class ThreadReply extends Component {
       >
         Send
       </button>
-    );
+    )
 
     if (error) {
       return (
@@ -190,44 +201,61 @@ class ThreadReply extends Component {
           {button}    
         </Tooltip>
       )
-    };
+    }
 
-    return button;
+    return button
   }
 
-  render() {
-    const { classes, users } = this.props;
-    const { selectedRecipients, message, action, selectedConsortium } = this.state;
+  getAllRecipients = () => {
+    const { users } = this.props
 
-    const sender = 'Xiao';
-    const allRecipients = users
-      .filter(user => user !== sender)
-      .map(user => ({ value: user, label: user }));
 
+    const currentUser = 'Xiao'
+    const allRecipients = (users || [])
+      .filter(user => user.id !== currentUser)
+      .map(user => ({ value: user.id, label: user.id }))
+
+    return allRecipients
+  }
+
+  getAllConsortia = () => {
+    const { consortia } = this.props
+
+    let allConsortia = [
+      { value: 'none', label: 'None' },
+    ]
+
+    consortia.forEach(consortium =>
+      allConsortia.push({ value: consortium.id, label: consortium.name })
+    )
+
+    return allConsortia
+  }
+
+  getAllActions = () => {
     const allActions = [
       { value: 'none', label: 'None' },
       { value: 'join-consortium', label: 'Join Consortium' },
     ]
 
-    let allConsortia = [
-      { value: 'none', label: 'None' },
-    ];
+    return allActions
+  }
 
-    for (let i = 0; i < 10; i++) {
-      allConsortia.push({ value: `consortia-${i}`, label: `Consortia ${i}`});
-    }
+  render() {
+    const { classes } = this.props
+    const { selectedRecipients, message, action, selectedConsortium } = this.state
 
     return (
       <div className={classes.wrapper}>
         <div style={{ display: 'flex' }}>
-          <ThreadAvatar username={sender} showUsername/>
+          <ThreadAvatar username={currentUser} showUsername/>
 
           <div className={classes.recipients}>
             <span>To:</span>
             <CustomSelect
               value={selectedRecipients}
               placeholder="Select Recipients"
-              options={allRecipients}
+              options={this.getAllRecipients()}
               isMulti
               className={classes.select}
               onChange={this.handleRecipientsChange}
@@ -254,7 +282,7 @@ class ThreadReply extends Component {
                 input={<BootstrapInput />}
                 onChange={this.handleActionChange}
               >
-                {allActions.map(action =>
+                {this.getAllActions.map(action =>
                   <MenuItem
                     key={action.value}
                     value={action.value}
@@ -273,7 +301,7 @@ class ThreadReply extends Component {
                   input={<BootstrapInput />}
                   onChange={this.handleConsortiumChange}
                 >
-                  {allConsortia.map(consortium =>
+                  {this.getAllConsortia.map(consortium =>
                     <MenuItem
                       key={consortium.value}
                       value={consortium.value}
@@ -290,7 +318,7 @@ class ThreadReply extends Component {
         </div>
       </div>
     )
-  };
+  }
 }
 
 ThreadReply.propTypes = {
@@ -299,4 +327,22 @@ ThreadReply.propTypes = {
   parentError: PropTypes.any,
 }
 
-export default withStyles(styles)(ThreadReply);
+
+const ThreadReplyWithData = compose(
+  graphql(FETCH_ALL_USERS_QUERY, getAllAndSubProp(
+    USER_CHANGED_SUBSCRIPTION,
+    'users',
+    'fetchAllUsers',
+    'subscribeToUsers',
+    'userChanged'
+  )),
+  graphql(FETCH_ALL_CONSORTIA_QUERY, getAllAndSubProp(
+    CONSORTIUM_CHANGED_SUBSCRIPTION,
+    'consortia',
+    'fetchAllConsortia',
+    'subscribeToConsortia',
+    'consortiumChanged'
+  )),
+)(ThreadReply)
+
+export default withStyles(styles)(ThreadReplyWithData)

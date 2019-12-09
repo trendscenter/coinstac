@@ -1,10 +1,10 @@
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
-import classNames from 'classnames';
-import { get, head, orderBy, toUpper } from 'lodash';
-import { Avatar } from '@material-ui/core';
-import { withStyles } from '@material-ui/core/styles';
-import ThreadAvatar from './thread-avatar';
+import React, { Component } from 'react'
+import PropTypes from 'prop-types'
+import classNames from 'classnames'
+import { get, head, orderBy, toUpper } from 'lodash'
+import { Avatar } from '@material-ui/core'
+import { withStyles } from '@material-ui/core/styles'
+import ThreadAvatar from './thread-avatar'
 
 const styles = () => ({
   wrapper: {
@@ -41,20 +41,20 @@ const styles = () => ({
       fontWeight: 600,
     }
   }
-});
+})
 
 class ThreadCard extends Component {
   getContent = () => {
-    const { thread } = this.props;
+    const { thread } = this.props
 
-    const messages = orderBy(thread.messages, 'date', 'desc');
-    const firstMessage = head(messages);
+    const messages = orderBy(thread.messages, 'date', 'desc')
+    const firstMessage = head(messages)
 
-    return get(firstMessage, 'content', '');
+    return get(firstMessage, 'content', '')
   }
 
   render() {
-    const { classes, thread, isSelected } = this.props;
+    const { classes, thread, isSelected } = this.props
 
     return (
       <div
@@ -73,7 +73,7 @@ class ThreadCard extends Component {
           <div>{this.getContent()}</div>
         </div>
       </div>
-    );
+    )
   }
 }
 
@@ -87,4 +87,4 @@ ThreadCard.propTypes = {
   onClick: PropTypes.func,
 }
 
-export default withStyles(styles)(ThreadCard);
+export default withStyles(styles)(ThreadCard)

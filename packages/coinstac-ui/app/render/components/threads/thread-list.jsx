@@ -1,8 +1,8 @@
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
-import { orderBy } from 'lodash';
-import { withStyles } from '@material-ui/core/styles';
-import ThreadCard from './thread-card';
+import React, { Component } from 'react'
+import PropTypes from 'prop-types'
+import { orderBy } from 'lodash'
+import { withStyles } from '@material-ui/core/styles'
+import ThreadCard from './thread-card'
 
 const styles = theme => ({
   wrapper: {
@@ -29,11 +29,11 @@ const styles = theme => ({
       backgroundColor: '#005a9e',
     },
   }
-});
+})
 
 class ThreadList extends Component {
   render() {
-    const { classes, threads, selectedThread } = this.props;
+    const { classes, threads, selectedThread } = this.props
 
     return (
       <div className={classes.wrapper}>
@@ -54,7 +54,7 @@ class ThreadList extends Component {
           New Message
         </button>
       </div>
-    );
+    )
   }
 }
 
@@ -66,4 +66,4 @@ ThreadList.propTypes = {
   onThreadNewClick: PropTypes.func,
 }
 
-export default withStyles(styles)(ThreadList);
+export default withStyles(styles)(ThreadList)

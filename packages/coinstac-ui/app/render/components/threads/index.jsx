@@ -1,20 +1,19 @@
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
-import { find } from 'lodash';
-import moment from 'moment';
-import { withStyles } from '@material-ui/core/styles';
+import React, { Component } from 'react'
+import PropTypes from 'prop-types'
+import { find } from 'lodash'
+import moment from 'moment'
+import { withStyles } from '@material-ui/core/styles'
 import {
   Button,
   Dialog,
-  DialogTitle,
   DialogContent,
   DialogContentText,
   DialogActions,
   Typography,
-} from '@material-ui/core';
-import ThreadList from './thread-list';
-import ThreadContent from './thread-content';
-import ThreadNew from './thread-new';
+} from '@material-ui/core'
+import ThreadList from './thread-list'
+import ThreadContent from './thread-content'
+import ThreadNew from './thread-new'
 
 const styles = theme => ({
   wrapper: {
@@ -33,53 +32,53 @@ const styles = theme => ({
     display: 'flex',
     border: `1px solid ${theme.palette.grey[300]}`,
   },
-});
+})
 
 class Threads extends Component {
   constructor(props) {
-    super(props);
+    super(props)
 
     this.state = {
       selectedThread: null,
       creatingNewThread: false,
       openDialog: false,
-    };
+    }
   }
 
   handleThreadClick = (threadId) => {
-    const { creatingNewThread } = this.state;
+    const { creatingNewThread } = this.state
 
     if (creatingNewThread) {
-      this.toggleDialog(threadId);
+      this.toggleDialog(threadId)
     } else {
-      this.setState({ selectedThread: threadId });
+      this.setState({ selectedThread: threadId })
     }
   }
 
   handleThreadNewClick = () => {
-    this.setState({ creatingNewThread: true });
+    this.setState({ creatingNewThread: true })
   }
 
   handleConfirm = () => {
     this.setState({
       openDialog: false,
       creatingNewThread: false,
-    });
+    })
   }
 
   toggleDialog = threadId => {
-    const { openDialog } = this.state;
+    const { openDialog } = this.state
 
     this.setState(
       Object.assign(
         { openDialog: !openDialog },
         threadId && { selectedThread: threadId },
       )
-    );
+    )
   }
 
   getThreads = () => {
-    let threads = [];
+    let threads = []
 
     const thread = {
       owner: 'Ross',
@@ -105,7 +104,7 @@ class Threads extends Component {
         },
       ],
       users: ['Ross', 'Xiao', 'Eduardo'],
-    };
+    }
 
     for (let id = 0; id < 20; id++) {
       threads.push({
@@ -113,24 +112,24 @@ class Threads extends Component {
         isRead: !(id === 19),
         createdAt: moment.now() + id,
         updatedAt: moment.now() + id,
-      });
+      })
     }
 
-    return threads;
+    return threads
   }
 
   getSelectedThread = () => {
-    const { selectedThread } = this.state;
-    const threads = this.getThreads();
+    const { selectedThread } = this.state
+    const threads = this.getThreads()
 
-    return find(threads, { id: selectedThread });
+    return find(threads, { id: selectedThread })
   }
 
   render() {
-    const { classes } = this.props;
-    const { selectedThread, creatingNewThread, openDialog } = this.state;
+    const { classes } = this.props
+    const { selectedThread, creatingNewThread, openDialog } = this.state
 
-    const threads = this.getThreads();
+    const threads = this.getThreads()
 
     return (
       <div className={classes.wrapper}>
@@ -170,12 +169,12 @@ class Threads extends Component {
           </Dialog>
         </div>
       </div>
-    );
+    )
   }
 }
 
 Threads.propTypes = {
   classes: PropTypes.object.isRequired,
-};
+}
 
-export default withStyles(styles, { withTheme: true })(Threads);
+export default withStyles(styles, { withTheme: true })(Threads)
