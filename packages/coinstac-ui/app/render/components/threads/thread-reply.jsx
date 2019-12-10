@@ -1,7 +1,8 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
-import classNames from 'classnames'
+import { connect } from 'react-redux'
 import { graphql, compose } from 'react-apollo'
+import classNames from 'classnames'
 import {
   FormControl,
   InputBase,
@@ -22,7 +23,6 @@ import {
   USER_CHANGED_SUBSCRIPTION,
   CONSORTIUM_CHANGED_SUBSCRIPTION,
 } from '../../state/graphql/functions'
-
 
 const BootstrapInput = withStyles(theme => ({
   root: {
@@ -207,12 +207,10 @@ class ThreadReply extends Component {
   }
 
   getAllRecipients = () => {
-    const { users } = this.props
+    const { users, currentUser } = this.props
 
-
-    const currentUser = 'Xiao'
     const allRecipients = (users || [])
-      .filter(user => user.id !== currentUser)
+      .filter(user => user.id !== currentUser.id)
       .map(user => ({ value: user.id, label: user.id }))
 
     return allRecipients
@@ -242,13 +240,13 @@ class ThreadReply extends Component {
   }
 
   render() {
-    const { classes } = this.props
+    const { classes, currentUser } = this.props
     const { selectedRecipients, message, action, selectedConsortium } = this.state
 
     return (
       <div className={classes.wrapper}>
         <div style={{ display: 'flex' }}>
-          <ThreadAvatar username={currentUser} showUsername/>
+          <ThreadAvatar username={currentUser.id} showUsername/>
 
           <div className={classes.recipients}>
             <span>To:</span>
@@ -282,7 +280,7 @@ class ThreadReply extends Component {
                 input={<BootstrapInput />}
                 onChange={this.handleActionChange}
               >
-                {this.getAllActions.map(action =>
+                {this.getAllActions().map(action =>
                   <MenuItem
                     key={action.value}
                     value={action.value}
@@ -301,7 +299,7 @@ class ThreadReply extends Component {
                   input={<BootstrapInput />}
                   onChange={this.handleConsortiumChange}
                 >
-                  {this.getAllConsortia.map(consortium =>
+                  {this.getAllConsortia().map(consortium =>
                     <MenuItem
                       key={consortium.value}
                       value={consortium.value}
@@ -327,6 +325,9 @@ ThreadReply.propTypes = {
   parentError: PropTypes.any,
 }
 
+const selectors = ({ auth }) => ({
+  currentUser: auth.user,
+})
 
 const ThreadReplyWithData = compose(
   graphql(FETCH_ALL_USERS_QUERY, getAllAndSubProp(
@@ -345,4 +346,6 @@ const ThreadReplyWithData = compose(
   )),
 )(ThreadReply)
 
-export default withStyles(styles)(ThreadReplyWithData)
+const connectedComponent = connect(selectors)(ThreadReplyWithData)
+
+export default withStyles(styles)(connectedComponent)
