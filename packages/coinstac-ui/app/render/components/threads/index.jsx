@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 import { find } from 'lodash'
-import moment from 'moment'
+import { graphql, compose, withApollo } from 'react-apollo'
 import { withStyles } from '@material-ui/core/styles'
 import {
   Button,
@@ -14,6 +14,12 @@ import {
 import ThreadList from './thread-list'
 import ThreadContent from './thread-content'
 import ThreadNew from './thread-new'
+import {
+  saveMessageProp,
+} from '../../state/graphql/props'
+import {
+  SAVE_MESSAGE_MUTATION,
+} from '../../state/graphql/functions'
 
 const styles = theme => ({
   wrapper: {
@@ -42,6 +48,7 @@ class Threads extends Component {
       selectedThread: null,
       creatingNewThread: false,
       openDialog: false,
+      savingStatus: 'init',
     }
   }
 
@@ -77,59 +84,40 @@ class Threads extends Component {
     )
   }
 
-  getThreads = () => {
-    let threads = []
+  handleSend = data => {
+    const { creatingNewThread } = this.state
 
-    const thread = {
-      owner: 'Ross',
-      title: 'Join consortia',
-      messages: [
-        {
-          id: '1',
-          sender: 'Ross',
-          receivers: ['Xiao', 'Eduardo'],
-          action: {
-            type: 'join-consortia',
-            id: '1234',
-          },
-          content: 'hi, please accept my invitation',
-          date: '2019-12-05',
-        },
-        {
-          id: '2',
-          sender: 'Xiao',
-          receivers: ['Ross'],
-          content: 'Ok, thank you',
-          date: '2019-12-06',
-        },
-      ],
-      users: ['Ross', 'Xiao', 'Eduardo'],
-    }
+    this.setState({ savingStatus: 'pending' })
 
-    for (let id = 0; id < 20; id++) {
-      threads.push({
-        ...thread, id,
-        isRead: !(id === 19),
-        createdAt: moment.now() + id,
-        updatedAt: moment.now() + id,
+    this.props.saveMessage(data).then(res => {
+      const { id } = res.data.saveMessage
+
+      this.setState(Object.assign(
+        { savingStatus: 'success' },
+        creatingNewThread && {
+          creatingNewThread: false,
+          selectedThread: id,
+        },
+      ))
+    }).catch(() => {
+      this.setState({
+        savingStatus: 'fail',
       })
-    }
-
-    return threads
+    })
   }
 
   getSelectedThread = () => {
+    const { threads } = this.props
     const { selectedThread } = this.state
-    const threads = this.getThreads()
 
     return find(threads, { id: selectedThread })
   }
 
   render() {
-    const { classes } = this.props
-    const { selectedThread, creatingNewThread, openDialog } = this.state
+    const { threads, classes } = this.props
+    const { selectedThread, creatingNewThread, openDialog, savingStatus } = this.state
 
-    const threads = this.getThreads()
+    const thread = this.getSelectedThread()
 
     return (
       <div className={classes.wrapper}>
@@ -144,9 +132,16 @@ class Threads extends Component {
             onThreadNewClick={this.handleThreadNewClick}
           />
           {creatingNewThread ? (
-            <ThreadNew />
+            <ThreadNew
+              savingStatus={savingStatus}
+              onSend={this.handleSend}
+            />
           ) : (
-            <ThreadContent thread={this.getSelectedThread()} />
+            <ThreadContent
+              savingStatus={savingStatus}
+              thread={thread}
+              onSend={this.handleSend}
+            />
           )}
 
           <Dialog
@@ -175,6 +170,16 @@ class Threads extends Component {
 
 Threads.propTypes = {
   classes: PropTypes.object.isRequired,
+  threads: PropTypes.array,
+  saveMessage: PropTypes.func.isRequired,
 }
 
-export default withStyles(styles, { withTheme: true })(Threads)
+const ThreadsWithData = compose(
+  graphql(
+    SAVE_MESSAGE_MUTATION,
+    saveMessageProp('saveMessage'),
+  ),
+  withApollo,
+)(Threads)
+
+export default withStyles(styles, { withTheme: true })(ThreadsWithData)

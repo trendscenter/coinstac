@@ -4,6 +4,7 @@ const GraphQLJSON = require('graphql-type-json');
 const Promise = require('bluebird');
 const { PubSub, withFilter } = require('graphql-subscriptions');
 const axios = require('axios');
+const { uniq } = require('lodash');
 const helperFunctions = require('../auth-helpers');
 const initSubscriptions = require('./subscriptions');
 const config = require('../../config/default');
@@ -317,6 +318,17 @@ const resolvers = {
         )
         .then(cursor => cursor.toArray())
         .then(res => connection.close().then(() => res));
+    },
+    fetchAllThreads: async ({ auth: { credentials } }) => {
+      const connection = await helperFunctions.getRethinkConnection();
+      const cursor = await rethink.table('threads')
+        .filter(rethink.row('users').contains(credentials.id))
+        .run(connection)
+      const threads = cursor.toArray()
+
+      await connection.close()
+
+      return threads
     },
     validateComputation: (_, args) => {
       return new Promise();
@@ -777,6 +789,71 @@ const resolvers = {
         .run(connection)
 
       return result
+    },
+    /**
+     * Save message
+     * @param {object} auth User object from JWT middleware validateFunc
+     * @param {object} args
+     * @param {string} args.threadId Thread Id
+     * @param {string} args.title Thread title
+     * @param {array} args.recipients Message recipients
+     * @param {array} args.content Message content
+     * @param {object} args.action Message action
+     * @return {object} Updated message
+     */
+    saveMessage: async ({ auth: { credentials } }, args) => {
+      const { threadId, title, recipients, content, action } = args
+
+      const connection = await helperFunctions.getRethinkConnection()
+
+      const messageToSave = Object.assign(
+        {
+          id: rethink.uuid(),
+          sender: credentials.id,
+          recipients,
+          content,
+          date: Date.now(),
+        },
+        action && { action },
+      )
+
+      let result
+
+      if (threadId) {
+        const thread = await fetchOne('threads', threadId)
+        const { messages, users } = thread
+        const threadToSave = {
+          messages: [...messages, messageToSave],
+          users: uniq([...users, ...recipients]),
+          date: Date.now(),
+        }
+
+        await rethink.table('threads')
+          .get(threadId)
+          .update(threadToSave, { nonAtomic: true })
+          .run(connection)
+
+        result = await fetchOne('threads', threadId)
+      } else {
+        const thread = {
+          id: rethink.uuid(),
+          owner: credentials.id,
+          title: title,
+          messages: [messageToSave],
+          users: [credentials.id, ...recipients],
+          date: Date.now(),
+        }
+
+        const res = await rethink.table('threads')
+          .insert(thread, { returnChanges: true })
+          .run(connection)
+
+        result = res.changes[0].new_val
+      }
+
+      await connection.close()
+
+      return result
     }
   },
   Subscription: {
@@ -817,6 +894,19 @@ const resolvers = {
       subscribe: withFilter(
         () => pubsub.asyncIterator('pipelineChanged'),
         (payload, variables) => (!variables.pipelineId || payload.pipelineId === variables.pipelineId)
+      )
+    },
+    /**
+     * Thread subscription
+     * @param {object} payload
+     * @param {string} payload.threadId The thread changed
+     * @param {object} variables
+     * @param {string} variables.threadId The thread listened for
+     */
+    threadChanged: {
+      subscribe: withFilter(
+        () => pubsub.asyncIterator('threadChanged'),
+        (payload, variables) => (!variables.threadId || payload.threadId === variables.threadId)
       )
     },
     /**

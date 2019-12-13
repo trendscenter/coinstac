@@ -21,6 +21,11 @@ export const CONSORTIUM_CHANGED_SUBSCRIPTION = gql`
     ${queries.consortiumChanged}
 `;
 
+export const THREAD_CHANGED_SUBSCRIPTION = gql`
+  subscription threadChanged($threadId: ID)
+    ${queries.threadChanged}
+`;
+
 export const CREATE_RUN_MUTATION = gql`
   mutation createRun($consortiumId: ID!)
     ${mutations.createRun}
@@ -95,6 +100,11 @@ export const FETCH_ALL_USERS_QUERY = gql`
 export const FETCH_RESULT_QUERY = gql`
   query fetchResult ($resultId: ID)
     ${queries.fetchResult}
+`;
+
+export const FETCH_ALL_THREADS_QUERY = gql`
+  query fetchAllThreads
+    ${queries.fetchAllThreads}
 `;
 
 export const JOIN_CONSORTIUM_MUTATION = gql`
@@ -182,4 +192,9 @@ export const UPDATE_CONSORTIUM_MAPPED_USERS_MUTATION = gql`
 export const UPDATE_CONSORTIA_MAPPED_USERS_MUTATION = gql`
   mutation updateConsortiaMappedUsers($consortia: [ID])
     ${mutations.updateConsortiaMappedUsers}
+`;
+
+export const SAVE_MESSAGE_MUTATION = gql`
+  mutation saveMessage($threadId: ID, $title: String!, $recipients: [String!], $content: String!, $action: ActionInput)
+    ${mutations.saveMessage}
 `;

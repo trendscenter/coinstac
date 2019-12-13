@@ -51,10 +51,10 @@ const ThreadAvatar = ({
 )
 
 ThreadAvatar.propTypes = {
-  classes: PropTypes.object,
+  classes: PropTypes.object.isRequired,
   className: PropTypes.any,
   isSender: PropTypes.bool,
-  username: PropTypes.string,
+  username: PropTypes.string.isRequired,
   showUsername: PropTypes.bool,
 }
 

@@ -1,9 +1,11 @@
-import React, { Component } from 'react'
+import React, { Component, Fragment } from 'react'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 import { graphql, compose } from 'react-apollo'
 import classNames from 'classnames'
+import { omit } from 'lodash'
 import {
+  CircularProgress,
   FormControl,
   InputBase,
   InputLabel,
@@ -111,19 +113,51 @@ const styles = theme => ({
       backgroundColor: `${theme.palette.grey[300]} !important`,
       cursor: 'not-allowed',
     },
+  },
+  loader: {
+    width: `20px !important`,
+    height: `20px !important`,
+    marginRight: 10,
   }
 })
+
+const INITIAL_STATE = {
+  threadId: '',
+  title: '',
+  selectedRecipients: [],
+  message: '',
+  action: 'none',
+  selectedConsortium: 'none',
+}
 
 class ThreadReply extends Component {
   constructor(props) {
     super(props)
 
-    this.state = {
-      selectedRecipients: [],
-      message: '',
-      action: 'none',
-      selectedConsortium: 'none',
+    this.state = INITIAL_STATE
+  }
+
+  UNSAFE_componentWillMount() {
+    this.initializeState(this.props);
+  }
+
+  UNSAFE_componentWillReceiveProps(nextProps) {
+    const { title, savingStatus } = this.props
+
+    if (savingStatus !== nextProps.savingStatus) {
+      this.setState(omit(INITIAL_STATE, ['threadId', 'title']))
+    } else if (title !== nextProps.title) {
+      this.initializeState(nextProps)
     }
+  }
+
+  initializeState = props => {
+    const { threadId, title } = props
+
+    this.setState({
+      threadId: threadId || '',
+      title: title || '',
+    })
   }
 
   handleRecipientsChange = selectedRecipients => {
@@ -147,19 +181,45 @@ class ThreadReply extends Component {
   }
 
   handleSend = () => {
+    const { savingStatus } = this.props
     const error = this.validateForm()
 
-    if (error) {
+    if (savingStatus === 'pending' || error) {
       return
     }
+
+    const {
+      threadId,
+      title,
+      selectedRecipients,
+      message,
+      action,
+      selectedConsortium,
+    } = this.state
+
+    const data = Object.assign(
+      {
+        threadId,
+        title,
+        recipients: selectedRecipients.map(recipient => recipient.value),
+        content: message,
+      },
+      (action !== 'none' && selectedConsortium !== 'none') && ({
+        action: {
+          id: selectedConsortium,
+          type: action,
+        }
+      }),
+    )
+
+    this.props.onSend(data)
   }
 
   validateForm = () => {
-    const { parentError } = this.props
-    const { selectedRecipients, message, action, selectedConsortium } = this.state
+    const { title, selectedRecipients, message, action, selectedConsortium } = this.state
 
-    if (parentError) {
-      return parentError
+    if (!title) {
+      return 'Please input title'
     }
 
     if (selectedRecipients.length === 0) {
@@ -178,26 +238,27 @@ class ThreadReply extends Component {
   }
 
   renderReplyButton = () => {
-    const { classes } = this.props
+    const { classes, savingStatus } = this.props
     const error = this.validateForm()
 
     const button = (
-      <button
-        className={
-          classNames(classes.replyButton, { disabled: !!error })
-        }
-        onClick={this.handleSend}
-      >
-        Send
-      </button>
+      <div className={classes.actionWrapper}>
+        {savingStatus === 'pending' &&
+          <CircularProgress color="secondary" className={classes.loader} />}
+        <button
+          className={
+            classNames(classes.replyButton, { disabled: !!error || savingStatus === 'pending' })
+          }
+          onClick={this.handleSend}
+        >
+          Send
+        </button>
+      </div>
     )
 
     if (error) {
       return (
-        <Tooltip
-          title={error || ''}
-          placement="top"
-        >
+        <Tooltip title={error || ''} placement="top">
           {button}    
         </Tooltip>
       )
@@ -256,6 +317,7 @@ class ThreadReply extends Component {
               options={this.getAllRecipients()}
               isMulti
               className={classes.select}
+              style={{ height: 50 }}
               onChange={this.handleRecipientsChange}
             />
           </div>
@@ -320,9 +382,14 @@ class ThreadReply extends Component {
 }
 
 ThreadReply.propTypes = {
-  classes: PropTypes.object,
+  classes: PropTypes.object.isRequired,
+  currentUser: PropTypes.object.isRequired,
   users: PropTypes.array,
-  parentError: PropTypes.any,
+  threadId: PropTypes.any,
+  title: PropTypes.any,
+  savingStatus: PropTypes.string.isRequired,
+  consortia: PropTypes.array,
+  onSend: PropTypes.func.isRequired,
 }
 
 const selectors = ({ auth }) => ({

@@ -193,3 +193,13 @@ export const updateConsortiaMappedUsersProp = (name) => {
     }),
   };
 };
+
+export const saveMessageProp = (name) => {
+  return {
+    props: ({ ownProps, mutate }) => ({
+      [name]: ({ threadId, title, content, recipients, action }) => mutate({
+        variables: { threadId, title, content, recipients, action },
+      })
+    }),
+  };
+};

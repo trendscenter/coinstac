@@ -177,6 +177,10 @@ function IntegrationReactSelect({ classes, theme, ...otherProps }) {
         font: 'inherit',
       },
     }),
+    menuList: provided => ({
+      ...provided,
+      maxHeight: 200,
+    }),
   };
 
   return (

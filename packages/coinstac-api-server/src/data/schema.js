@@ -118,6 +118,34 @@ const typeDefs = `
     ${sharedFields.userFields}
   }
 
+  input ActionInput {
+    id: String
+    type: String
+  }
+
+  type ActionOutput {
+    id: String
+    type: String
+  }
+
+  type MessageOutput {
+    id: ID
+    sender: ID
+    recipients: [ID]
+    content: String
+    date: String
+    action: ActionOutput
+  }
+
+  type Thread {
+    id: ID
+    messages: [MessageOutput]
+    owner: ID
+    title: String
+    users: [ID]
+    date: String
+  }
+
   # This is the general mutation description
   type Mutation {
     # Stringify incoming computation, parse prior to insertion call
@@ -141,6 +169,7 @@ const typeDefs = `
     updateUserConsortiumStatus(consortiumId: ID, status: String): User
     updateConsortiumMappedUsers(consortiumId: ID, mappedForRun: [ID]): JSON
     updateConsortiaMappedUsers(consortia: [ID]): JSON
+    saveMessage(threadId: ID, title: String!, recipients: [String!], content: String!, action: ActionInput): Thread
   }
 
   # This is a description of the queries
@@ -157,6 +186,7 @@ const typeDefs = `
     fetchPipeline(pipelineId: ID): Pipeline
     fetchResult(resultId: ID): Result
     fetchUser(userId: ID): User
+    fetchAllThreads: [Thread]
     validateComputation(compId: ID): Boolean
   }
 
@@ -164,6 +194,7 @@ const typeDefs = `
     computationChanged(computationId: ID): Computation
     consortiumChanged(consortiumId: ID): Consortium
     pipelineChanged(pipelineId: ID): Pipeline
+    threadChanged(threadId: ID): Thread
     userRunChanged(userId: ID): Run
     userChanged(userId: ID): User
     userMetadataChanged(userId: ID): User

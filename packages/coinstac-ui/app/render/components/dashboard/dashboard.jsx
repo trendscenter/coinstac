@@ -46,10 +46,12 @@ import {
   FETCH_ALL_CONSORTIA_QUERY,
   FETCH_ALL_PIPELINES_QUERY,
   FETCH_ALL_USER_RUNS_QUERY,
+  FETCH_ALL_THREADS_QUERY,
   PIPELINE_CHANGED_SUBSCRIPTION,
   USER_CHANGED_SUBSCRIPTION,
   USER_METADATA_CHANGED_SUBSCRIPTION,
   USER_RUN_CHANGED_SUBSCRIPTION,
+  THREAD_CHANGED_SUBSCRIPTION,
   UPDATE_USER_CONSORTIUM_STATUS_MUTATION,
   UPDATE_CONSORTIA_MAPPED_USERS_MUTATION,
   FETCH_USER_QUERY,
@@ -127,6 +129,7 @@ class Dashboard extends Component {
       unsubscribePipelines: null,
       unsubscribeRuns: null,
       unsubscribeUsers: null,
+      unsubscribeThreads: null,
       unsubscribeToUserMetadata: null,
     };
   }
@@ -247,6 +250,10 @@ class Dashboard extends Component {
 
     if (nextProps.remoteRuns && !this.state.unsubscribeRuns) {
       this.setState({ unsubscribeRuns: this.props.subscribeToUserRuns(null) });
+    }
+
+    if (nextProps.threads && !this.state.unsubscribeThreads) {
+      this.setState({ unsubscribeThreads: this.props.subscribeToThreads(null) });
     }
 
     if (nextProps.remoteRuns) {
@@ -507,6 +514,7 @@ class Dashboard extends Component {
     this.state.unsubscribeConsortia();
     this.state.unsubscribePipelines();
     this.state.unsubscribeRuns();
+    this.state.unsubscribeThreads();
 
     if (typeof this.unsubscribeToUserMetadata === 'function') {
       this.unsubscribeToUserMetadata();
@@ -549,17 +557,19 @@ class Dashboard extends Component {
   }
 
   render() {
-    const { auth, children, computations, consortia, pipelines, runs, classes } = this.props;
+    const { auth, children, computations, consortia, pipelines, runs, threads, classes } = this.props;
     const { dockerStatus } = this.state;
     const { router } = this.context;
 
     const childrenWithProps = React.cloneElement(children, {
-      computations, consortia, pipelines, runs,
+      computations, consortia, pipelines, runs, threads,
     });
 
     if (!auth || !auth.user.email.length) {
       return (<p>Redirecting to login...</p>);
     }
+
+    const threadCount = threads ? threads.length : 0;
 
     // @TODO don't render primary content whilst still loading/bg-services
     return (
@@ -579,7 +589,7 @@ class Dashboard extends Component {
               <DashboardNav auth={auth} />
               <List>
                 <ListItem>
-                  <UserAccountController push={router.push} />
+                  <UserAccountController push={router.push} threadCount={threadCount} />
                 </ListItem>
               </List>
               <List>
@@ -718,6 +728,13 @@ const DashboardWithData = compose(
     'fetchAllPipelines',
     'subscribeToPipelines',
     'pipelineChanged'
+  )),
+  graphql(FETCH_ALL_THREADS_QUERY, getAllAndSubProp(
+    THREAD_CHANGED_SUBSCRIPTION,
+    'threads',
+    'fetchAllThreads',
+    'subscribeToThreads',
+    'threadChanged',
   )),
   graphql(FETCH_USER_QUERY, {
     skip: props => !props.auth || !props.auth.user || !props.auth.user.id,
