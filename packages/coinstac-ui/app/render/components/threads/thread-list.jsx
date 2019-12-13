@@ -1,4 +1,4 @@
-import React, { Component } from 'react'
+import React from 'react'
 import PropTypes from 'prop-types'
 import { orderBy } from 'lodash'
 import { withStyles } from '@material-ui/core/styles'
@@ -31,39 +31,35 @@ const styles = theme => ({
   }
 })
 
-class ThreadList extends Component {
-  render() {
-    const { classes, threads, selectedThread } = this.props
-
-    return (
-      <div className={classes.wrapper}>
-        <div className={classes.threads}>
-          {orderBy(threads, 'updatedAt', 'desc').map(thread => (
-            <ThreadCard
-              key={thread.id}
-              thread={thread}
-              isSelected={thread.id === selectedThread}
-              onClick={() => this.props.onThreadClick(thread.id)}
-            />)
-          )}
-        </div>
-        <button
-          className={classes.button}
-          onClick={this.props.onThreadNewClick}
-        >
-          New Message
-        </button>
+const ThreadList = ({ classes, threads, selectedThread, onThreadClick, onThreadNewClick }) => {
+  return (
+    <div className={classes.wrapper}>
+      <div className={classes.threads}>
+        {orderBy(threads, 'date', 'desc').map(thread => (
+          <ThreadCard
+            key={thread.id}
+            thread={thread}
+            isSelected={thread.id === selectedThread}
+            onClick={() => onThreadClick(thread.id)}
+          />)
+        )}
       </div>
-    )
-  }
+      <button
+        className={classes.button}
+        onClick={onThreadNewClick}
+      >
+        New Message
+      </button>
+    </div>
+  )
 }
 
 ThreadList.propTypes = {
-  classes: PropTypes.object,
+  classes: PropTypes.object.isRequired,
   threads: PropTypes.array,
   selectedThread: PropTypes.any,
-  onThreadClick: PropTypes.func,
-  onThreadNewClick: PropTypes.func,
+  onThreadClick: PropTypes.func.isRequired,
+  onThreadNewClick: PropTypes.func.isRequired,
 }
 
 export default withStyles(styles)(ThreadList)

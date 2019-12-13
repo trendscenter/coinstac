@@ -82,6 +82,13 @@ const mutations = {
       updateConsortiaMappedUsers(consortia: $consortia)
     }
   `,
+  saveMessage: `
+    {
+      saveMessage(threadId: $threadId, title: $title, recipients: $recipients, content: $content, action: $action) {
+        ${sharedFields.threadFields}
+      }
+    }
+  `,
 };
 
 module.exports = mutations;

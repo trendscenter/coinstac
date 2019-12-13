@@ -1,4 +1,4 @@
-import React, { Component, Fragment } from 'react'
+import React, { Fragment } from 'react'
 import PropTypes from 'prop-types'
 import { withStyles } from '@material-ui/core/styles'
 import { Typography } from '@material-ui/core'
@@ -19,10 +19,8 @@ const styles = theme => ({
   },
 })
 
-class ThreadContent extends Component {
-  renderContent = () => {
-    const { classes, thread } = this.props
-
+const ThreadContent = ({ classes, thread, savingStatus, onSend }) => {
+  function renderContent() {
     if (!thread) {
       return null
     }
@@ -30,28 +28,31 @@ class ThreadContent extends Component {
     return (
       <Fragment>
         <Typography variant="h5" className={classes.title}>
-          {thread.title} - {thread.id}
+          {thread.title}
         </Typography>
         <ThreadMessages messages={thread.messages} />
-        <ThreadReply />
+        <ThreadReply
+          threadId={thread.id}
+          title={thread.title}
+          savingStatus={savingStatus}
+          onSend={onSend}
+        />
       </Fragment>
     )
   }
 
-  render() {
-    const { classes } = this.props
-
-    return (
-      <div className={classes.wrapper}>
-        {this.renderContent()}
-      </div>
-    )
-  }
+  return (
+    <div className={classes.wrapper}>
+      {renderContent()}
+    </div>
+  )
 }
 
 ThreadContent.propTypes = {
-  classes: PropTypes.object,
+  classes: PropTypes.object.isRequired,
   thread: PropTypes.object,
+  savingStatus: PropTypes.string.isRequired,
+  onSend: PropTypes.func.isRequired,
 }
 
 export default withStyles(styles)(ThreadContent)

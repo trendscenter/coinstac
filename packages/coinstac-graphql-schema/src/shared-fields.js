@@ -110,6 +110,24 @@ const sharedFields = {
     runId
     results
   `,
+  threadFields: `
+    id
+    owner
+    title
+    users
+    date
+    messages {
+      id
+      content
+      sender
+      recipients
+      date
+      action {
+        id
+        type
+      }
+    }
+  `
 };
 
 module.exports = sharedFields;

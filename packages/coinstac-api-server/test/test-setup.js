@@ -168,6 +168,7 @@ helperFunctions.getRethinkConnection()
         },
       ]).run(connection))
       .then(() => rethink.tableCreate('users').run(connection))
+      .then(() => rethink.tableCreate('threads').run(connection))
       .then(() => rethink.tableCreate('runs').run(connection))
       .then(() => rethink.table('runs').insert([
         {

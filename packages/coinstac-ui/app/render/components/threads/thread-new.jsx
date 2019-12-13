@@ -33,21 +33,9 @@ class ThreadNew extends Component {
     this.setState({ title: evt.target.value })
   }
 
-  validateTitle = () => {
-    const { title } = this.state
-
-    if (!title) {
-      return 'Please input title'
-    }
-
-    return
-  }
-
   render() {
-    const { classes } = this.props
+    const { classes, savingStatus } = this.props
     const { title } = this.state
-
-    const error = this.validateTitle()
 
     return (
       <div className={classes.wrapper}>
@@ -61,7 +49,11 @@ class ThreadNew extends Component {
           />
         </div>
         <div style={{ flex: 1 }}></div>
-        <ThreadReply parentError={error} />
+        <ThreadReply
+          title={title}
+          savingStatus={savingStatus}
+          onSend={this.props.onSend}
+        />
       </div>
     )
   }
@@ -69,6 +61,8 @@ class ThreadNew extends Component {
 
 ThreadNew.propTypes = {
   classes: PropTypes.object,
+  savingStatus: PropTypes.string,
+  onSend: PropTypes.func,
 }
 
 export default withStyles(styles)(ThreadNew)
