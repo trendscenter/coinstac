@@ -6,6 +6,11 @@ import Typography from '@material-ui/core/Typography';
 import Grid from '@material-ui/core/Grid';
 import MapsItem from './maps-item';
 import MapsEdit from './maps-edit';
+import {
+  getAllCollections,
+  deleteCollection,
+  unmapAssociatedConsortia
+} from '../../state/ducks/collections';
 
 class MapsList extends Component {
   constructor(props) {
@@ -16,10 +21,19 @@ class MapsList extends Component {
     }
 
     this.setConsortium = this.setConsortium.bind(this);
+    this.saveCollection = this.saveCollection.bind(this);
   }
 
   setConsortium(consortium) {
     this.setState({ consortium });
+  }
+
+  saveCollection(e) {
+    const { collection } = this.state;
+    if (e) {
+      e.preventDefault();
+    }
+    this.props.saveCollection(collection);
   }
 
   getMapped(consortium) {
@@ -39,6 +53,21 @@ class MapsList extends Component {
     }
   };
 
+  unsetMap = (consortium) => {
+    const { collections, pipelines, unmapAssociatedConsortia, deleteCollection } = this.props;
+    const assocCons = this.props.associatedConsortia.find(c => c.id === consortium.id);
+    const pipeline = pipelines.find(p => p.id === consortium.activePipelineId );
+    const collection = this.props.collections.find(c => c.associatedConsortia[0] === consortium.id);
+    const groups = collection.fileGroups;
+    let groupId = Object.keys(groups);
+    groupId = groupId[0];
+    delete groups[groupId];
+    unmapAssociatedConsortia(collection.associatedConsortia, consortium.id)
+    .then(() => {
+      deleteCollection(collection.id);
+    });
+  }
+
   getMapItem = (consortium) => {
     const { user } = this.props.auth;
     const { pipelines } = this.props;
@@ -56,6 +85,7 @@ class MapsList extends Component {
           }
           pipelineId={pipeline.name}
           setConsortium={this.setConsortium}
+          resetMapping={this.unsetMap}
         />
       );
     }
@@ -118,12 +148,18 @@ class MapsList extends Component {
 MapsList.propTypes = {
   associatedConsortia: PropTypes.array.isRequired,
   consortia: PropTypes.array.isRequired,
+  collections: PropTypes.array.isRequired,
+  deleteCollection: PropTypes.func.isRequired,
+  unmapAssociatedConsortia: PropTypes.func.isRequired,
 };
 
-const mapStateToProps = ({ auth, collections: { associatedConsortia } }) => {
-  return { auth, associatedConsortia };
-};
+function mapStateToProps({ auth,
+  collections: { associatedConsortia, collections } }) {
+  return { auth, associatedConsortia, collections };
+}
 
-export default connect(mapStateToProps,
-  {}
-)(MapsList);
+export default connect(mapStateToProps, {
+    getAllCollections,
+    deleteCollection,
+    unmapAssociatedConsortia,
+})(MapsList);

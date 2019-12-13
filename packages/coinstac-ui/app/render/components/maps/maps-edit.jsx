@@ -117,6 +117,7 @@ class MapsEdit extends Component {
   componentDidMount = () => {
     const { user } = this.props.auth;
     const { consortium, collections, mapped, pipelines } = this.props;
+    console.log(collections);
     let pipeline = pipelines.find(p => p.id === consortium.activePipelineId);
 
     if( pipeline.steps[0].dataMeta && pipeline.steps[0].dataMeta.type ){
