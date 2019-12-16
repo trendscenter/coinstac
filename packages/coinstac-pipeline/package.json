@@ -47,5 +47,5 @@
   "scripts": {
     "test": "nyc ava test/**.test.js"
   },
-  "version": "4.6.1"
+  "version": "4.6.2"
 }
