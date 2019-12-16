@@ -16,7 +16,7 @@ const winston = require('winston');
 const express = require('express');
 const multer = require('multer');
 const decompress = require('decompress');
-const cd = require('content-disposition');
+const uuid = require('uuid/v4');
 
 const readdir = promisify(fs.readdir);
 
@@ -30,6 +30,24 @@ const defaultLogger = winston.loggers.get('pipeline');
 defaultLogger.level = process.LOGLEVEL ? process.LOGLEVEL : 'info';
 
 const Pipeline = require('./pipeline');
+
+/**
+ * get files in a dir recursively
+ * https://stackoverflow.com/questions/5827612/node-js-fs-readdir-recursive-directory-search
+ * @param  {string}  dir dir path
+ * @return {Promise}     files
+ */
+const getFilesAndDirs = async (dir) => {
+  const dirents = await readdir(dir, { withFileTypes: true });
+  return dirents.reduce((memo, dirent) => {
+    if (dirent.isDirectory()) {
+      memo.directories.push(dirent.name);
+    } else {
+      memo.files.push(dirent.name);
+    }
+    return memo;
+  }, { files: [], directories: [] });
+};
 
 module.exports = {
 
@@ -85,13 +103,15 @@ module.exports = {
             request.get(
               `${remoteProtocol}//${remoteURL}:${remotePort}${remotePathname}?id=${encodeURIComponent(clientId)}&runId=${encodeURIComponent(runId)}&file=${encodeURIComponent(file)}&files=${encodeURIComponent(JSON.stringify(files))}`,
               (res) => {
-                const resFile = cd.parse(res.headers['content-disposition']).parameters.filename;
+                if (res.statusCode !== 200) {
+                  return reject(new Error(`File post error: ${res.statusCode} ${res.statusMessage}`));
+                }
                 res.pipe(fs.createWriteStream(
-                  path.join(directory, resFile)
+                  path.join(directory, file)
                 ));
 
                 res.on('end', () => {
-                  resolve(resFile);
+                  resolve(file);
                 });
                 res.on('error', (e) => {
                   reject(e);
@@ -100,7 +120,7 @@ module.exports = {
             );
           } else if (method === 'post') {
             const form = new FormData();
-            form.append('fileName', file);
+            form.append('filename', file);
             form.append('compressed', compressed.toString());
             form.append('files', JSON.stringify(files));
             form.append('clientId', clientId);
@@ -131,7 +151,7 @@ module.exports = {
     };
 
     /**
-     *  GET a file relating to a run from the server
+     *  transfer a file to or from the remote
      * @param  {string} method   POST or GET
      * @param  {integer} limit   retry limit for an unreachable host
      * @param  {Array} files     files to send or recieve
@@ -141,96 +161,42 @@ module.exports = {
      *                           the action fails besides ECONNREFUSED,
      *                           or the limit is reached
      */
-    const getFiles = async (limit, files, clientId, runId, directory) => {
-      let retryLimit = 0;
-      let success = false;
-      // retry 1000 times w/ backout
-      while (retryLimit < limit) {
-        try {
-          const packedFile = await exponentialRequest('get', retryLimit, '', clientId, runId, directory, true, files); // eslint-disable-line no-await-in-loop, max-len
-          await decompress(path.join(directory, packedFile), directory); // eslint-disable-line no-await-in-loop, max-len
-          await rimraf(path.join(directory, packedFile)); // eslint-disable-line no-await-in-loop
-          success = true;
-          break;
-        } catch (e) {
-          if (e.code && e.code === 'ECONNREFUSED') {
-            retryLimit += 1;
-            logger.silly(`Retrying file request: ${files}`);
-            logger.silly(`File request failed with: ${e.name}`);
-          }
-          throw e;
-        }
-      }
-      if (!success) throw new Error('Service down, file retry limit reached');
-    };
-
-    /**
-     * POST a file relating to a run from the server
-     * @param  {integer} limit   retry limit for an unreachable host
-     * @param  {Array} files     files to send or recieve
-     * @param  {string} clientId this clients id
-     * @param  {string} runId    the run context for the files
-     * @return {Promise}         Promise when the files are received,
-     *                           the action fails besides ECONNREFUSED,
-     *                           or the limit is reached
-     */
-    const sendFiles = (limit, files, clientId, runId, directory) => {
-      const archiveFilename = `/${runId}-${clientId}-tempOutput.tar.gz`;
-      const output = fs.createWriteStream(
-        path.join(directory, archiveFilename)
-      );
-      const archive = archiver('tar', {
-        gzip: true,
-        gzipOptions: {
-          level: 2,
-        },
-      });
-
-      const archProm = new Promise((resolve, reject) => {
-        output.on('close', () => {
-          resolve();
-        });
-
-        archive.on('error', (err) => {
-          reject(err);
-        });
-      });
-
-      archive.pipe(output);
-      files.forEach((file) => {
-        archive.append(fs.createReadStream(path.join(directory, file)), { name: file });
-      });
-      archive.finalize();
-
-      return archProm.then(async () => {
-        let retryLimit = 0;
-        let success = false;
-        // retry 1000 times w/ backout
-        while (retryLimit < limit) {
-          try {
-            await exponentialRequest( // eslint-disable-line no-await-in-loop, max-len
-              'post',
-              retryLimit,
-              archiveFilename,
-              clientId,
-              runId,
-              directory,
-              true,
-              files
-            );
-            success = true;
-            break;
-          } catch (e) {
-            if (e.code && (e.code === 'ECONNREFUSED' || e.code === 'ECONNRESET')) {
-              retryLimit += 1;
-              logger.silly(`Retrying file request: ${archiveFilename}`);
-              logger.silly(`File request failed with: ${e.name}`);
+    const transferFiles = async (method, limit, files, clientId, runId, directory) => {
+      return Promise.all(files.reduce((memo, file) => {
+        memo.push((async () => {
+          let retryLimit = 0;
+          let success = false;
+          // retry 1000 times w/ backout
+          while (retryLimit < limit) {
+            try {
+              const packedFile = await exponentialRequest( // eslint-disable-line no-await-in-loop, max-len
+                method,
+                retryLimit,
+                file,
+                clientId,
+                runId,
+                directory,
+                true
+              );
+              if (method === 'get' && packedFile) {
+                await decompress(path.join(directory, packedFile), directory); // eslint-disable-line no-await-in-loop, max-len
+                await rimraf(path.join(directory, packedFile)); // eslint-disable-line no-await-in-loop, max-len
+              }
+              success = true;
+              break;
+            } catch (e) {
+              if (e.code && e.code === 'ECONNREFUSED') {
+                retryLimit += 1;
+                logger.silly(`Retrying file request: ${files}`);
+                logger.silly(`File request failed with: ${e.name}`);
+              }
+              throw e;
             }
-            throw e;
           }
-        }
-        if (!success) throw new Error('Service down, file retry limit reached');
-      });
+          if (!success) throw new Error('Service down, file retry limit reached');
+        })());
+        return memo;
+      }, []));
     };
 
     /**
@@ -310,7 +276,7 @@ module.exports = {
             });
         },
         filename: (req, file, cb) => {
-          cb(null, req.body.fileName);
+          cb(null, req.body.filename);
         },
       });
 
@@ -327,7 +293,7 @@ module.exports = {
             path.join(
               activePipelines[req.body.runId].baseDirectory,
               req.body.clientId,
-              req.body.fileName
+              req.body.filename
             ),
             path.join(activePipelines[req.body.runId].baseDirectory, req.body.clientId)
           );
@@ -336,13 +302,11 @@ module.exports = {
           path.join(
             activePipelines[req.body.runId].baseDirectory,
             req.body.clientId,
-            req.body.fileName
+            req.body.filename
           )
         )).then(() => {
-          const compressedFiles = JSON.parse(req.body.files);
           remoteClients[req.body.clientId][req.body.runId].files.received
-            .push(...(compressedFiles.length && compressedFiles.length > 0
-              ? compressedFiles : [req.body.filename]));
+            .push(req.body.filename);
           const waitingOn = waitingOnForRun(req.body.runId);
           activePipelines[req.body.runId].currentState.waitingOn = waitingOn;
           const stateUpdate = Object.assign(
@@ -365,41 +329,16 @@ module.exports = {
         });
       });
       app.get('/transfer', (req, res) => {
-        const archiveFp = path.join(activePipelines[req.query.runId].transferDirectory, `/${req.query.runId}-${req.query.id}-tempOutput.tar.gz`);
-        const reqFiles = req.query.files ? JSON.parse(req.query.files) : req.query.file;
-        const output = fs.createWriteStream(
-          archiveFp
+        const file = path.join(
+          activePipelines[req.query.runId].transferDirectory,
+          req.query.file
         );
-        const archive = archiver('tar', {
-          gzip: true,
-          gzipOptions: {
-            level: 2,
-          },
-        });
-
-        const archProm = new Promise((resolve, reject) => {
-          output.on('close', () => {
-            resolve();
-          });
-
-          archive.on('error', (err) => {
-            reject(err);
-          });
-        });
-
-        archive.pipe(output);
-        reqFiles.forEach((file) => {
-          archive.append(fs.createReadStream(path.join(`${activePipelines[req.query.runId].transferDirectory}`, `${file}`)), { name: file });
-        });
-        archive.finalize();
-        archProm.then(() => {
-          fs.exists(archiveFp, (exists) => {
-            if (exists) {
-              res.download(archiveFp);
-            } else {
-              res.sendStatus(404);
-            }
-          });
+        fs.exists(file, (exists) => {
+          if (exists) {
+            res.download(file);
+          } else {
+            res.sendStatus(404);
+          }
         });
       });
       await new Promise((resolve) => {
@@ -587,27 +526,12 @@ module.exports = {
                 const workDir = data.output.success
                   ? activePipelines[data.runId].outputDirectory
                   : activePipelines[data.runId].baseDirectory;
-                preWork = getFiles(1000, data.files, clientId, data.runId, workDir);
+                preWork = transferFiles('get', 1000, data.files, clientId, data.runId, workDir);
               } else {
                 preWork = Promise.resolve();
               }
               // clear transfer dir after we know its been transfered
               preWork
-                .catch((e) => {
-                  mqtCon.publish(
-                    'run',
-                    JSON.stringify(
-                      {
-                        id: clientId,
-                        runId: data.runId,
-                        error: { stack: e.stack, message: e.message },
-                      }
-                    ),
-                    { qos: 1 },
-                    (err) => { if (err) logger.error(`Mqtt error: ${err}`); }
-                  );
-                  activePipelines[data.runId].remote.reject(e);
-                })
                 .then(() => {
                   rimraf(path.join(activePipelines[data.runId].transferDirectory, '*'));
                 })
@@ -627,6 +551,22 @@ module.exports = {
                     );
                   }
                   activePipelines[data.runId].remote.resolve(data.output);
+                })
+                .catch((e) => {
+                  if (data.output.success) throw e;
+                  mqtCon.publish(
+                    'run',
+                    JSON.stringify(
+                      {
+                        id: clientId,
+                        runId: data.runId,
+                        error: { stack: e.stack, message: e.message },
+                      }
+                    ),
+                    { qos: 1 },
+                    (err) => { if (err) logger.error(`Mqtt error: ${err}`); }
+                  );
+                  activePipelines[data.runId].remote.reject(e);
                 });
             } else if (data.error && activePipelines[data.runId]) {
               activePipelines[data.runId].state = 'received error';
@@ -734,7 +674,7 @@ module.exports = {
          * @param  {Object} pipeline pipeline to preform the messaging on
          * @param  {Object} message  data to serialize to recipient
          */
-        activePipelines[runId].communicate = (pipeline, message, messageIteration) => {
+        activePipelines[runId].communicate = async (pipeline, message, messageIteration) => {
           if (mode === 'remote') {
             if (message instanceof Error) {
               const runError = Object.assign(
@@ -753,24 +693,68 @@ module.exports = {
               );
             } else {
               logger.silly('############ Sending out remote data');
-              readdir(activePipelines[pipeline.id].transferDirectory)
-                .then((files) => {
-                  if (files && files.length !== 0) {
-                    if (message.success) {
-                      activePipelines[pipeline.id].finalTransferList = new Set();
-                    }
-                    clientPublish(
-                      activePipelines[pipeline.id].clients,
-                      {
-                        runId: pipeline.id, output: message, files, iteration: messageIteration,
+              await getFilesAndDirs(activePipelines[pipeline.id].transferDirectory)
+                .then((data) => {
+                  if (data && (data.files.length !== 0 || data.directories.length !== 0)) {
+                    const archive = archiver('tar', {
+                      gzip: true,
+                      gzipOptions: {
+                        level: 2,
+                      },
+                    });
+                    const archiveName = `${pipeline.id}-${uuid()}-tempOutput.tar.gz`;
+                    const archiveFp = path.join(
+                      activePipelines[pipeline.id].transferDirectory, archiveName
+                    );
+                    const output = fs.createWriteStream(
+                      archiveFp
+                    );
+
+                    const archProm = new Promise((resolve, reject) => {
+                      output.on('close', () => {
+                        resolve();
+                      });
+
+                      archive.on('error', (err) => {
+                        reject(err);
+                      });
+                    });
+
+                    archive.pipe(output);
+                    data.files.forEach((file) => {
+                      archive.append(
+                        fs.createReadStream(
+                          path.join(activePipelines[pipeline.id].transferDirectory, file)
+                        ),
+                        { name: file }
+                      );
+                    });
+                    data.directories.forEach((dir) => {
+                      archive.directory(
+                        path.join(activePipelines[pipeline.id].transferDirectory, dir),
+                        dir
+                      );
+                    });
+                    archive.finalize();
+                    return archProm.then(() => {
+                      if (message.success) {
+                        activePipelines[pipeline.id].finalTransferList = new Set();
                       }
-                    );
-                  } else {
-                    clientPublish(
-                      activePipelines[pipeline.id].clients,
-                      { runId: pipeline.id, output: message, iteration: messageIteration }
-                    );
+                      clientPublish(
+                        activePipelines[pipeline.id].clients,
+                        {
+                          runId: pipeline.id,
+                          output: message,
+                          files: [archiveName],
+                          iteration: messageIteration,
+                        }
+                      );
+                    });
                   }
+                  clientPublish(
+                    activePipelines[pipeline.id].clients,
+                    { runId: pipeline.id, output: message, iteration: messageIteration }
+                  );
                 });
             }
           // local client
@@ -788,47 +772,87 @@ module.exports = {
                 activePipelines[pipeline.id].stashedOutput = undefined;
               }
             } else {
-              return readdir(activePipelines[pipeline.id].transferDirectory)
-                .then((files) => {
-                  if (files && files.length !== 0) {
+              await getFilesAndDirs(activePipelines[pipeline.id].transferDirectory)
+                .then((data) => {
+                  if (data && (data.files.length !== 0 || data.directories.length !== 0)) {
                     if (!activePipelines[pipeline.id].registered) {
                       activePipelines[pipeline.id].stashedOutput = message;
                     } else {
-                      logger.debug('############# Local client sending out data with files');
-                      mqtCon.publish(
-                        'run',
-                        JSON.stringify({
-                          id: clientId,
-                          runId: pipeline.id,
-                          output: message,
-                          files,
-                          iteration: messageIteration,
-                        }),
-                        { qos: 1 },
-                        (err) => { if (err) logger.error(`Mqtt error: ${err}`); }
+                      const archiveFilename = `${pipeline.id}-${clientId}-tempOutput.tar.gz`;
+                      const output = fs.createWriteStream(
+                        path.join(activePipelines[pipeline.id].transferDirectory, archiveFilename)
                       );
-                      activePipelines[pipeline.id].stashedOutput = undefined;
-                      sendFiles(
-                        100,
-                        files,
-                        clientId,
-                        pipeline.id,
-                        activePipelines[pipeline.id].transferDirectory
-                      ).catch((e) => {
-                        // files failed to send, bail
-                        logger.error(`Client file send error: ${e}`);
+                      const archive = archiver('tar', {
+                        gzip: true,
+                        gzipOptions: {
+                          level: 2,
+                        },
+                      });
+
+                      const archProm = new Promise((resolve, reject) => {
+                        output.on('close', () => {
+                          resolve();
+                        });
+
+                        archive.on('error', (err) => {
+                          reject(err);
+                        });
+                      });
+
+                      archive.pipe(output);
+                      data.files.forEach((file) => {
+                        archive.append(
+                          fs.createReadStream(
+                            path.join(activePipelines[pipeline.id].transferDirectory, file)
+                          ),
+                          { name: file }
+                        );
+                      });
+                      data.directories.forEach((dir) => {
+                        archive.directory(
+                          path.join(activePipelines[pipeline.id].transferDirectory, dir),
+                          dir
+                        );
+                      });
+                      archive.finalize();
+                      return archProm.then(() => {
+                        logger.debug('############# Local client sending out data with files');
                         mqtCon.publish(
                           'run',
-                          JSON.stringify(
-                            {
-                              id: clientId,
-                              runId: pipeline.id,
-                              error: { stack: e.stack, message: e.message },
-                            }
-                          ),
+                          JSON.stringify({
+                            id: clientId,
+                            runId: pipeline.id,
+                            output: message,
+                            files: [archiveFilename],
+                            iteration: messageIteration,
+                          }),
                           { qos: 1 },
                           (err) => { if (err) logger.error(`Mqtt error: ${err}`); }
                         );
+                        activePipelines[pipeline.id].stashedOutput = undefined;
+                        transferFiles(
+                          'post',
+                          100,
+                          [archiveFilename],
+                          clientId,
+                          pipeline.id,
+                          activePipelines[pipeline.id].transferDirectory
+                        ).catch((e) => {
+                          // files failed to send, bail
+                          logger.error(`Client file send error: ${e}`);
+                          mqtCon.publish(
+                            'run',
+                            JSON.stringify(
+                              {
+                                id: clientId,
+                                runId: pipeline.id,
+                                error: { stack: e.stack, message: e.message },
+                              }
+                            ),
+                            { qos: 1 },
+                            (err) => { if (err) logger.error(`Mqtt error: ${err}`); }
+                          );
+                        });
                       });
                     }
                   } else {
@@ -863,7 +887,7 @@ module.exports = {
          * @param  {[type]} iteration    the iteration for the input
          * @return {[type]}              Promise when we get a response
          */
-        const remoteHandler = ({
+        const remoteHandler = async ({
           input, noop, transmitOnly, iteration,
         }) => {
           let proxRes;
@@ -878,12 +902,17 @@ module.exports = {
             reject: proxRej,
           };
           if (!noop) {
+            await activePipelines[runId].communicate(
+              activePipelines[runId].pipeline,
+              input,
+              iteration
+            );
             // only send out results, don't wait
             // this allows the last remote iteration to just finish
             if (transmitOnly) {
               proxRes();
             }
-            activePipelines[runId].communicate(activePipelines[runId].pipeline, input, iteration);
+
             if (mode === 'remote') activePipelines[runId].state = 'running';
           } else if (activePipelines[runId].state === 'created') {
             activePipelines[runId].state = 'running';

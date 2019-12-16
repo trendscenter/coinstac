@@ -366,7 +366,7 @@ test('file transfer and output test', (t) => {
     remotePipeline.result.then((result) => {
       t.is(result.message, 'hashes match');
       result.files.forEach((file) => {
-        t.is(existsSync(path.join('test', 'tempCompDir', 'one', 'fileTest', file)), true);
+        t.is(existsSync(path.join('test', 'tempCompDir', 'input', 'one', 'fileTest', file)), true);
       });
     }),
   ]);
