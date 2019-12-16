@@ -11,10 +11,8 @@ import Tab from '@material-ui/core/Tab';
 import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
-import ArrowBackIcon from '@material-ui/icons/ArrowBack';
 import classNames from 'classnames';
 import TimeStamp from 'react-timestamp';
-import BrowserHistory from 'react-router/lib/browserHistory';
 import { shell } from 'electron';
 import path from 'path';
 import Box from './displays/box-plot';
@@ -167,13 +165,6 @@ class Result extends Component {
 
     return (
       <div>
-        <Button
-          variant="contained"
-          onClick={BrowserHistory.goBack}
-        >
-          <ArrowBackIcon />
-        </Button>
-
         <Paper className={classes.paper}>
           <div className={classes.resultsInfo}>
             {
