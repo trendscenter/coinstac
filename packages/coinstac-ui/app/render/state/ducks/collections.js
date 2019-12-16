@@ -169,7 +169,7 @@ function buildConsortiumStepsData(consortium, filesByGroup, baseDirectory) {
           const pathsep = new RegExp(`${escape(sep)}|:`, 'g');
           const pathsArray = filesByGroup[inputKeyData.groupId];
           let paths = pathsArray.map((path) => {
-            if (path.includes('/')) {
+            if (path.includes(sep)) {
               return path.replace(pathsep, '-');
             }
             return null;
