@@ -4,7 +4,6 @@ import PropTypes from 'prop-types';
 import Typography from '@material-ui/core/Typography';
 import Grid from '@material-ui/core/Grid';
 import { withStyles } from '@material-ui/core';
-import MapsEdit from './maps-edit';
 import ListItem from '../common/list-item';
 
 const styles = theme => ({
@@ -22,13 +21,19 @@ const styles = theme => ({
   },
 });
 
+function isMember(userId, groupArr) {
+  if (userId && groupArr) {
+    return groupArr.indexOf(userId) !== -1;
+  }
+}
+
 class MapsList extends Component {
   getMapItem = (consortium) => {
     const { auth, pipelines, classes } = this.props;
 
     const pipeline = pipelines.find(pipeline => pipeline.id === consortium.activePipelineId);
 
-    if (!pipeline || !this.isMember(auth.user.id, consortium.members)) {
+    if (!pipeline || !isMember(auth.user.id, consortium.members)) {
       return null;
     }
 
@@ -79,12 +84,6 @@ class MapsList extends Component {
     return assocCons && assocCons.isMapped;
   }
 
-  isMember(userId, groupArr) {
-    if (userId && groupArr) {
-      return groupArr.indexOf(userId) !== -1;
-    }
-  };
-
   render() {
     const { consortia } = this.props;
 
@@ -112,6 +111,8 @@ MapsList.propTypes = {
   associatedConsortia: PropTypes.array.isRequired,
   auth: PropTypes.object.isRequired,
   consortia: PropTypes.array.isRequired,
+  pipelines: PropTypes.array.isRequired,
+  classes: PropTypes.object.isRequired,
 };
 
 const mapStateToProps = ({ auth, collections: { associatedConsortia } }) => {
