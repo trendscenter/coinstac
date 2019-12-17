@@ -101,29 +101,28 @@ class MapsEdit extends Component {
   setRowArray = (val) => this.setState({ rowArray: val });
   updateMapsStep = (val) => this.setState({ updateMapsStep: val });
 
-  componentWillMount = () => {
-    const { consortium, collections } = this.props;
-    Object.keys(collections).map(([key, value]) => {
-      let colname = collections[key].name;
-      let conname = consortium.name+': Collection';
-      if( colname === conname && Object.entries(collections[key].fileGroups).length > 0 ){
-        let collection = collections[key];
-        this.setState(prevState => ({ collection }));
-        return;
+  componentDidMount = () => {
+    const { params, consortia, collections, mapped, pipelines } = this.props;
+
+    const consortium = consortia.find(c => c.id === params.consortiumId);
+
+    const pipeline = pipelines.find(p => p.id === consortium.activePipelineId);
+
+    Object.keys(collections).forEach(([key]) => {
+      const colname = collections[key].name;
+      const conname = `${consortium.name}: Collection`;
+      if (colname === conname && Object.entries(collections[key].fileGroups).length > 0) {
+        const collection = collections[key];
+        this.setState(() => ({ collection }));
       }
     });
-  }
 
-  componentDidMount = () => {
-    const { user } = this.props.auth;
-    const { consortium, collections, mapped, pipelines } = this.props;
-    let pipeline = pipelines.find(p => p.id === consortium.activePipelineId);
-
-    if( pipeline.steps[0].dataMeta && pipeline.steps[0].dataMeta.type ){
-    this.setState({ dataType: pipeline.steps[0].dataMeta.type });
+    if (pipeline.steps[0].dataMeta && pipeline.steps[0].dataMeta.type) {
+      this.setState({ dataType: pipeline.steps[0].dataMeta.type });
     }
 
     this.setState({
+      consortium,
        activeConsortium: {
          ...consortium,
          pipelineSteps: pipeline.steps,
@@ -209,7 +208,7 @@ class MapsEdit extends Component {
     const { auth: { user } } = this.props;
     if (consortium.isMapped) {
       return true;
-    }else{
+    } else {
       return false;
     }
   }
@@ -426,7 +425,8 @@ class MapsEdit extends Component {
   }
 
   resetPipelineSteps = (array) => {
-    const { consortium, collections, mapped, pipelines } = this.props;
+    const { collections, mapped, pipelines } = this.props;
+    const { consortium } = this.state;
     let pipeline = pipelines.find(p => p.id === consortium.activePipelineId);
     this.setState({
       activeConsortium: {
@@ -525,9 +525,10 @@ class MapsEdit extends Component {
   }
 
   render() {
-    const { classes, consortium } = this.props;
+    const { classes } = this.props;
 
     const {
+      consortium,
       activeConsortium,
       collection,
       dataType,

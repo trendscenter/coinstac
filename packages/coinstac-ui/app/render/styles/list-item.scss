@@ -1,5 +1,12 @@
-.list-item__actions {
+.list-item {
+  &__actions {
     display: flex;
     justify-content: space-between;
     align-items: center;
+  }
+
+  &__actions-primary {
+      display: flex;
+      align-items: center;
+  }
 }

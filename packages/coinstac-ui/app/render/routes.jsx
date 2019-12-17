@@ -17,6 +17,7 @@ import RouteContainer from './containers/route-container';
 import Login from './components/user/form-login-controller';
 import Signup from './components/user/form-signup-controller';
 import Maps from './components/maps/maps';
+import MapsEdit from './components/maps/maps-edit';
 import PipelinesList from './components/pipelines/pipelines-list';
 import Pipeline from './components/pipelines/pipeline';
 import ResultsList from './components/results/results-list';
@@ -46,7 +47,7 @@ export default (
       </Route>
       <Route path="maps" component={RouteContainer}>
         <IndexRoute component={Maps} />
-        <Route path="/map/:mapId" component={Maps} />
+        <Route path=":consortiumId" component={MapsEdit} />
       </Route>
       <Route path="pipelines" component={RouteContainer}>
         <IndexRoute component={PipelinesList} />
