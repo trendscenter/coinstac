@@ -1,115 +1,108 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { compose, graphql, withApollo } from 'react-apollo';
 import PropTypes from 'prop-types';
 import Typography from '@material-ui/core/Typography';
 import Grid from '@material-ui/core/Grid';
-import MapsItem from './maps-item';
+import { withStyles } from '@material-ui/core';
 import MapsEdit from './maps-edit';
+import ListItem from '../common/list-item';
+
+const styles = theme => ({
+  contentContainer: {
+    marginTop: theme.spacing.unit,
+    marginBottom: theme.spacing.unit,
+  },
+  labelInline: {
+    fontWeight: 'bold',
+    marginRight: theme.spacing.unit,
+    display: 'inline-block',
+  },
+  value: {
+    display: 'inline-block',
+  },
+});
 
 class MapsList extends Component {
-  constructor(props) {
-    super(props);
+  getMapItem = (consortium) => {
+    const { auth, pipelines, classes } = this.props;
 
-    this.state = {
-      consortium: this.props.consortium
+    const pipeline = pipelines.find(pipeline => pipeline.id === consortium.activePipelineId);
+
+    if (!pipeline || !this.isMember(auth.user.id, consortium.members)) {
+      return null;
     }
 
-    this.setConsortium = this.setConsortium.bind(this);
+    const isDataMapped = this.isDataMappedToConsortium(consortium);
+
+    const itemOptions = {
+      text: [],
+      actions: [],
+    };
+
+    itemOptions.text.push((
+      <div key={`${consortium.id}-active-pipeline-text`} className={classes.contentContainer}>
+        <Typography className={classes.labelInline}>
+          Active Pipeline:
+        </Typography>
+        <Typography className={classes.value}>{ pipeline.name }</Typography>
+      </div>
+    ));
+
+    itemOptions.actions.push((
+      <span
+        key={`${consortium.id}-map-status`}
+        className={isDataMapped ? 'mapped true' : 'mapped false'}
+      />
+    ));
+
+    return (
+      <Grid item sm={4} lg={3} key={`${consortium.id}-list-item`}>
+        <ListItem
+          itemObject={consortium}
+          itemOptions={itemOptions}
+          itemRoute="/dashboard/maps"
+          linkButtonText={isDataMapped ? 'View Details' : 'Map Data to Consortium'}
+          linkButtonColor={isDataMapped ? 'primary' : 'secondary'}
+        />
+      </Grid>
+    );
   }
 
-  setConsortium(consortium) {
-    this.setState({ consortium });
-  }
+  isDataMappedToConsortium(consortium) {
+    const { associatedConsortia } = this.props;
 
-  getMapped(consortium) {
-    let isMapped = false;
-    if (this.props.associatedConsortia.length > 0) {
-      const assocCons = this.props.associatedConsortia.find(c => c.id === consortium.id);
-      if (assocCons && assocCons.isMapped) {
-        isMapped = assocCons.isMapped;
-        return isMapped;
-      }
+    if (!associatedConsortia) {
+      return false;
     }
+
+    const assocCons = associatedConsortia.find(c => c.id === consortium.id);
+    return assocCons && assocCons.isMapped;
   }
 
   isMember(userId, groupArr) {
-    if(userId && groupArr){
+    if (userId && groupArr) {
       return groupArr.indexOf(userId) !== -1;
     }
   };
 
-  getMapItem = (consortium) => {
-    const { user } = this.props.auth;
-    const { pipelines } = this.props;
-    let pipeline = pipelines.find( pipeline => pipeline.id === consortium.activePipelineId );
-    if (pipeline && this.isMember(user.id, consortium.owners) ||
-      pipeline && this.isMember(user.id, consortium.members)) {
-      return (
-        <MapsItem
-          key={`${consortium.id}-list-item`}
-          deleteItem={this.openModal}
-          itemObject={consortium}
-          itemOptions
-          itemMapped={
-            this.getMapped(consortium)
-          }
-          pipelineId={pipeline.name}
-          setConsortium={this.setConsortium}
-        />
-      );
-    }
-  }
-
-  openModal(consortiumId) {
-    return () => {
-      this.setState({
-        showModal: true,
-        consortiumToDelete: consortiumId,
-      });
-    };
-  }
-
   render() {
-    const {
-      auth: { user },
-      consortia,
-      pipelines,
-      mapId,
-    } = this.props;
-
-    const {
-      consortium,
-    } = this.state;
+    const { consortia } = this.props;
 
     return (
       <div>
-      {consortium && mapId ?
-        <MapsEdit
-          consortia={consortia}
-          consortium={consortium}
-          mapped={
-            this.getMapped(consortium)
-          }
-          pipelines={this.props.pipelines}
-          runs={this.props.runs}
-        />:
-        <div>
-          <div className="page-header">
-            <Typography variant="h4">
-              Maps
-            </Typography>
-          </div>
-          <Grid
-            container
-            spacing={16}
-            direction="row"
-            alignItems="stretch"
-          >
-            {consortia && consortia.map(cons => this.getMapItem(cons))}
-          </Grid>
+        <div className="page-header">
+          <Typography variant="h4">
+            Maps
+          </Typography>
         </div>
-      }
+        <Grid
+          container
+          spacing={16}
+          direction="row"
+          alignItems="stretch"
+        >
+          {consortia && consortia.map(cons => this.getMapItem(cons))}
+        </Grid>
       </div>
     );
   }
@@ -117,6 +110,7 @@ class MapsList extends Component {
 
 MapsList.propTypes = {
   associatedConsortia: PropTypes.array.isRequired,
+  auth: PropTypes.object.isRequired,
   consortia: PropTypes.array.isRequired,
 };
 
@@ -124,6 +118,6 @@ const mapStateToProps = ({ auth, collections: { associatedConsortia } }) => {
   return { auth, associatedConsortia };
 };
 
-export default connect(mapStateToProps,
-  {}
-)(MapsList);
+export default withStyles(styles)(
+  connect(mapStateToProps)(MapsList)
+);

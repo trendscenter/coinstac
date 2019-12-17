@@ -13,6 +13,10 @@ const styles = theme => ({
     paddingTop: theme.spacing.unit * 2,
     paddingBottom: theme.spacing.unit * 2,
     marginTop: theme.spacing.unit * 2,
+    height: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'space-between',
   },
   titleContainer: {
     display: 'flex',
@@ -30,6 +34,8 @@ const ListItem = ({
   itemObject,
   itemRoute,
   deleteItem,
+  linkButtonText,
+  linkButtonColor,
   classes,
 }) => (
   <Paper
@@ -49,21 +55,20 @@ const ListItem = ({
     </Typography>
     { itemOptions.text }
     <div className="list-item__actions">
-      <div>
+      <div className="list-item__actions-primary">
         <Button
           variant="contained"
-          color="primary"
+          color={linkButtonColor || 'primary'}
           component={Link}
           to={`${itemRoute}/${itemObject.id}`}
           name={itemObject.name}
         >
-          View Details
+          { linkButtonText || 'View Details' }
         </Button>
         { itemOptions.actions }
       </div>
       {
-        owner
-        && (
+        deleteItem && owner && (
           <Button
             variant="contained"
             color="secondary"
@@ -81,6 +86,9 @@ const ListItem = ({
 
 ListItem.defaultProps = {
   owner: false,
+  linkButtonText: null,
+  linkButtonColor: null,
+  deleteItem: null,
 };
 
 ListItem.propTypes = {
@@ -88,7 +96,9 @@ ListItem.propTypes = {
   itemOptions: PropTypes.object.isRequired,
   itemRoute: PropTypes.string.isRequired,
   owner: PropTypes.bool,
-  deleteItem: PropTypes.func.isRequired,
+  deleteItem: PropTypes.func,
+  linkButtonText: PropTypes.string,
+  linkButtonColor: PropTypes.string,
   classes: PropTypes.object.isRequired,
 };
 
