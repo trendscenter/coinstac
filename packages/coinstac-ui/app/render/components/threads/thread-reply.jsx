@@ -128,6 +128,7 @@ const INITIAL_STATE = {
   message: '',
   action: 'none',
   selectedConsortium: 'none',
+  selectedResult: 'none',
 }
 
 class ThreadReply extends Component {
@@ -180,6 +181,10 @@ class ThreadReply extends Component {
     this.setState({ selectedConsortium: evt.target.value })
   }
 
+  handleResultChange = evt => {
+    this.setState({ selectedResult: evt.target.value })
+  }
+
   handleSend = () => {
     const { savingStatus } = this.props
     const error = this.validateForm()
@@ -191,10 +196,11 @@ class ThreadReply extends Component {
     const {
       threadId,
       title,
-      selectedRecipients,
-      message,
       action,
+      message,
+      selectedRecipients,
       selectedConsortium,
+      selectedResult,
     } = this.state
 
     const data = Object.assign(
@@ -204,10 +210,16 @@ class ThreadReply extends Component {
         recipients: selectedRecipients.map(recipient => recipient.value),
         content: message,
       },
-      (action !== 'none' && selectedConsortium !== 'none') && ({
+      (action === 'join-consortium' && selectedConsortium !== 'none') && ({
         action: {
           id: selectedConsortium,
-          type: action,
+          name: action,
+        }
+      }),
+      (action === 'share-result' && selectedResult !== 'none') && ({
+        action: {
+          id: selectedResult,
+          name: action,
         }
       }),
     )
@@ -216,7 +228,14 @@ class ThreadReply extends Component {
   }
 
   validateForm = () => {
-    const { title, selectedRecipients, message, action, selectedConsortium } = this.state
+    const {
+      action,
+      title,
+      message,
+      selectedRecipients,
+      selectedConsortium,
+      selectedResult,
+    } = this.state
 
     if (!title) {
       return 'Please input title'
@@ -230,8 +249,12 @@ class ThreadReply extends Component {
       return 'Please input your message'
     }
 
-    if (action !== 'none' && selectedConsortium === 'none') {
+    if (action === 'join-consortium' && selectedConsortium === 'none') {
       return 'Please select consortium to join'
+    }
+
+    if (action === 'share-result' && selectedResult === 'none') {
+      return 'Please select result to share'
     }
 
     return
@@ -247,7 +270,10 @@ class ThreadReply extends Component {
           <CircularProgress color="secondary" className={classes.loader} />}
         <button
           className={
-            classNames(classes.replyButton, { disabled: !!error || savingStatus === 'pending' })
+            classNames(
+              classes.replyButton,
+              { disabled: !!error || savingStatus === 'pending' },
+            )
           }
           onClick={this.handleSend}
         >
@@ -295,14 +321,35 @@ class ThreadReply extends Component {
     const allActions = [
       { value: 'none', label: 'None' },
       { value: 'join-consortium', label: 'Join Consortium' },
+      { value: 'share-result', label: 'Share Result' },
     ]
 
     return allActions
   }
 
+  getAllResults = () => {
+    const { runs } = this.props
+
+    let allRuns = [
+      { value: 'none', label: 'None' },
+    ]
+
+    runs.forEach(run => {
+      allRuns.push({ value: run.id, label: run.id })
+    })
+
+    return allRuns
+  }
+
   render() {
     const { classes, currentUser } = this.props
-    const { selectedRecipients, message, action, selectedConsortium } = this.state
+    const {
+      action,
+      message,
+      selectedRecipients,
+      selectedConsortium,
+      selectedResult,
+    } = this.state
 
     return (
       <div className={classes.wrapper}>
@@ -330,7 +377,6 @@ class ThreadReply extends Component {
             placeholder='Your message here...'
             onChange={this.handleMessageChange}
           />
-
         </div>
 
         <div className={classes.actionWrapper}>
@@ -353,7 +399,7 @@ class ThreadReply extends Component {
               </Select>
             </FormControl>
 
-            {action !== 'none' && (
+            {action === 'join-consortium' && (
               <FormControl className={classes.formControl}>
                 <InputLabel>Consortium</InputLabel>
                 <Select
@@ -367,6 +413,26 @@ class ThreadReply extends Component {
                       value={consortium.value}
                     >
                       {consortium.label}
+                    </MenuItem>
+                  )}
+                </Select>
+              </FormControl>
+            )}
+
+            {action === 'share-result' && (
+              <FormControl className={classes.formControl}>
+                <InputLabel>Result</InputLabel>
+                <Select
+                  value={selectedResult}
+                  input={<BootstrapInput />}
+                  onChange={this.handleResultChange}
+                >
+                  {this.getAllResults().map(result =>
+                    <MenuItem
+                      key={result.value}
+                      value={result.value}
+                    >
+                      {result.label}
                     </MenuItem>
                   )}
                 </Select>

@@ -34,7 +34,7 @@ class ThreadNew extends Component {
   }
 
   render() {
-    const { classes, savingStatus } = this.props
+    const { classes, runs, savingStatus } = this.props
     const { title } = this.state
 
     return (
@@ -51,6 +51,7 @@ class ThreadNew extends Component {
         <div style={{ flex: 1 }}></div>
         <ThreadReply
           title={title}
+          runs={runs}
           savingStatus={savingStatus}
           onSend={this.props.onSend}
         />
@@ -61,6 +62,7 @@ class ThreadNew extends Component {
 
 ThreadNew.propTypes = {
   classes: PropTypes.object,
+  runs: PropTypes.array,
   savingStatus: PropTypes.string,
   onSend: PropTypes.func,
 }

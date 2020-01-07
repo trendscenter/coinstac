@@ -114,7 +114,7 @@ class Threads extends Component {
   }
 
   render() {
-    const { threads, classes } = this.props
+    const { threads, runs, classes } = this.props
     const { selectedThread, creatingNewThread, openDialog, savingStatus } = this.state
 
     const thread = this.getSelectedThread()
@@ -133,13 +133,15 @@ class Threads extends Component {
           />
           {creatingNewThread ? (
             <ThreadNew
+              runs={runs}
               savingStatus={savingStatus}
               onSend={this.handleSend}
             />
           ) : (
             <ThreadContent
-              savingStatus={savingStatus}
               thread={thread}
+              runs={runs}
+              savingStatus={savingStatus}
               onSend={this.handleSend}
             />
           )}
@@ -171,6 +173,7 @@ class Threads extends Component {
 Threads.propTypes = {
   classes: PropTypes.object.isRequired,
   threads: PropTypes.array,
+  runs: PropTypes.array,
   saveMessage: PropTypes.func.isRequired,
 }
 

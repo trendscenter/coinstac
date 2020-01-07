@@ -106,6 +106,7 @@ const typeDefs = `
     results: JSON
     remotePipelineState: JSON
     type: String
+    sharedUsers: [ID]
   }
 
   type User {
@@ -120,12 +121,12 @@ const typeDefs = `
 
   input ActionInput {
     id: String
-    type: String
+    name: String
   }
 
   type ActionOutput {
     id: String
-    type: String
+    name: String
   }
 
   type MessageOutput {

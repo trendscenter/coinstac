@@ -86,6 +86,7 @@ const sharedFields = {
     error
     results
     type
+    sharedUsers
   `,
   userMetadata: `
     id
@@ -124,7 +125,7 @@ const sharedFields = {
       date
       action {
         id
-        type
+        name
       }
     }
   `
