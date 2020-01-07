@@ -1,5 +1,6 @@
 import React from 'react'
 import PropTypes from 'prop-types'
+import { Link } from 'react-router'
 import { withStyles } from '@material-ui/core/styles'
 import ThreadAvatar from './thread-avatar'
 
@@ -42,6 +43,8 @@ const styles = theme => ({
 const ThreadMessage = ({ classes, message }) => {
   const { sender, recipients, content, action } = message
 
+  console.log(action)
+
   return (
     <div className={classes.wrapper}>
       <div className={classes.users}>
@@ -69,8 +72,16 @@ const ThreadMessage = ({ classes, message }) => {
       <p>
         {content}
       </p>
-      {action && action.type === 'join-consortium' && (
-        <button className={classes.button}>Join consortia</button>
+      {action && action.name === 'join-consortium' && (
+        <Link to="/dashboard/consortia">
+          <button className={classes.button}>Join consortia</button>
+        </Link>
+      )}
+
+      {action && action.name === 'share-result' && (
+        <Link to="/dashboard/results">
+          <button className={classes.button}>See Result</button>
+        </Link>
       )}
     </div>
   )

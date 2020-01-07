@@ -312,7 +312,10 @@ const resolvers = {
           connection = db;
           return rethink.table('runs')
             .orderBy({ index: 'id' })
-            .filter(rethink.row('clients').contains(credentials.id))
+            .filter(
+              rethink.row('clients').contains(credentials.id).
+              or(rethink.row('sharedUsers').contains(credentials.id))
+            )
             .run(connection);
           }
         )
@@ -849,6 +852,18 @@ const resolvers = {
           .run(connection)
 
         result = res.changes[0].new_val
+      }
+
+      if (action && action.type === 'share-result') {
+        const run = await fetchOne('runs', action.id)
+        const runToSave = {
+          sharedUsers: uniq([...run.sharedUsers || [], ...recipients]),
+        }
+
+        await rethink.table('runs')
+          .get(action.id)
+          .update(runToSave, { nonAtomic: true })
+          .run(connection)
       }
 
       await connection.close()

@@ -19,7 +19,7 @@ const styles = theme => ({
   },
 })
 
-const ThreadContent = ({ classes, thread, savingStatus, onSend }) => {
+const ThreadContent = ({ classes, thread, runs, savingStatus, onSend }) => {
   function renderContent() {
     if (!thread) {
       return null
@@ -34,6 +34,7 @@ const ThreadContent = ({ classes, thread, savingStatus, onSend }) => {
         <ThreadReply
           threadId={thread.id}
           title={thread.title}
+          runs={runs}
           savingStatus={savingStatus}
           onSend={onSend}
         />
@@ -51,6 +52,7 @@ const ThreadContent = ({ classes, thread, savingStatus, onSend }) => {
 ThreadContent.propTypes = {
   classes: PropTypes.object.isRequired,
   thread: PropTypes.object,
+  runs: PropTypes.array,
   savingStatus: PropTypes.string.isRequired,
   onSend: PropTypes.func.isRequired,
 }
