@@ -5,16 +5,20 @@ import { DragDropContext, DropTarget } from 'react-dnd';
 import HTML5Backend from 'react-dnd-html5-backend';
 import PropTypes from 'prop-types';
 import { graphql, withApollo } from 'react-apollo';
+import NumberFormat from 'react-number-format';
 import shortid from 'shortid';
 import { isEqual, isEmpty, get } from 'lodash';
 import update from 'immutability-helper';
-import Paper from '@material-ui/core/Paper';
-import Button from '@material-ui/core/Button';
-import Menu from '@material-ui/core/Menu';
-import MenuItem from '@material-ui/core/MenuItem';
-import Checkbox from '@material-ui/core/Checkbox';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
-import Typography from '@material-ui/core/Typography';
+import {
+  Button,
+  Checkbox,
+  FormControlLabel,
+  Menu,
+  MenuItem,
+  Paper,
+  TextField,
+  Typography,
+} from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
 import { ValidatorForm, TextValidator } from 'react-material-ui-form-validator';
 import ListDeleteModal from '../common/list-delete-modal';
@@ -72,6 +76,26 @@ const styles = theme => ({
   },
 });
 
+function NumberFormatCustom(props) {
+  const { inputRef, onChange, ...other } = props;
+
+  return (
+    <NumberFormat
+      {...other}
+      getInputRef={inputRef}
+      onValueChange={values => {
+        onChange({
+          target: {
+            value: values.value,
+          },
+        });
+      }}
+      isNumericString
+      suffix=" m"
+    />
+  );
+}
+
 class Pipeline extends Component {
   constructor(props) {
     super(props);
@@ -80,6 +104,7 @@ class Pipeline extends Component {
     let pipeline = {
       name: '',
       description: '',
+      timeout: null,
       owningConsortium: '',
       shared: false,
       steps: [],
@@ -514,6 +539,21 @@ class Pipeline extends Component {
             withRequiredValidator
             onChange={evt => this.updatePipeline({ param: 'description', value: evt.target.value })}
             className={classes.formControl}
+          />
+          <TextValidator
+            id="timeout"
+            label="Timeout"
+            fullWidth
+            disabled={!owner}
+            value={pipeline.timeout}
+            name="timeout"
+            validators={['minNumber: 0', 'matchRegexp:^[0-9]$']}
+            errorMessages={['Timeout must be positive']}
+            onChange={evt => this.updatePipeline({ param: 'timeout', value: evt.target.value })}
+            className={classes.formControl}
+            InputProps={{
+              inputComponent: NumberFormatCustom,
+            }}
           />
           <div className={classes.formControl}>
             <Typography variant="title" className={classes.owningConsortiumButtonTitle}>Owning Consortium</Typography>
