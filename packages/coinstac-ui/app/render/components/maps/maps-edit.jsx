@@ -1,30 +1,28 @@
 import React, { Component } from 'react';
-import ReactDOM from 'react-dom';
 import { connect } from 'react-redux';
 import { compose, graphql, withApollo } from 'react-apollo';
 import { ipcRenderer } from 'electron';
 import PropTypes from 'prop-types';
 import update from 'immutability-helper';
-import { includes, isEqual, uniqWith } from 'lodash';
+import { isEqual, uniqWith } from 'lodash';
 import Divider from '@material-ui/core/Divider';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import Grid from '@material-ui/core/Grid';
 import { withStyles } from '@material-ui/core/styles';
+import dragula from 'react-dragula';
 import {
   getAllCollections,
   mapConsortiumData,
   incrementRunCount,
   saveAssociatedConsortia,
   saveCollection,
-  updateCollection
 } from '../../state/ducks/collections';
 import {
   getRunsForConsortium,
-  saveLocalRun
+  saveLocalRun,
 } from '../../state/ducks/runs';
 import {
-  getSelectAndSubProp,
   saveDocumentProp,
   updateConsortiumMappedUsersProp,
 } from '../../state/graphql/props';
@@ -34,11 +32,8 @@ import {
   UPDATE_CONSORTIUM_MAPPED_USERS_MUTATION,
 } from '../../state/graphql/functions';
 import { notifyInfo } from '../../state/ducks/notifyAndLog';
-import { Alert, Button, Panel } from 'react-bootstrap';
-import MapsStep from './maps-step';
+import MapsStepFieldset from './maps-step-fieldset';
 import MapsCollection from './maps-collection';
-import dragula from 'react-dragula';
-import bitap from 'bitap';
 
 const styles = theme => ({
   rootPaper: {
@@ -50,11 +45,7 @@ const styles = theme => ({
   },
 });
 
-const isUserA = (userId, groupArr) => {
-  return groupArr.indexOf(userId) !== -1;
-};
-
-let drake = dragula({
+const drake = dragula({
   copy: true,
   copySortSource: true,
   revertOnSpill: true,
@@ -64,7 +55,7 @@ class MapsEdit extends Component {
   constructor(props) {
     super(props);
 
-    let collection = {
+    const collection = {
       name: '',
       description: '',
       fileGroups: {},
@@ -80,11 +71,7 @@ class MapsEdit extends Component {
       mappedItem: '',
       rowArray: [],
       metaRow: [],
-      sources: [],
-      stepsLength: 0,
-      stepsFilled: 0,
       stepsMapped: 0,
-      updateMapsStep: false,
     };
 
     this.saveCollection = this.saveCollection.bind(this);
@@ -99,123 +86,119 @@ class MapsEdit extends Component {
 
   setMetaRow = (val) => this.setState({ metaRow: val });
   setRowArray = (val) => this.setState({ rowArray: val });
-  updateMapsStep = (val) => this.setState({ updateMapsStep: val });
 
   componentDidMount = () => {
-    const { params, consortia, collections, mapped, pipelines } = this.props;
+    const {
+      params,
+      consortia,
+      collections,
+      mapped,
+      pipelines,
+      saveCollection,
+    } = this.props;
 
     const consortium = consortia.find(c => c.id === params.consortiumId);
-
     const pipeline = pipelines.find(p => p.id === consortium.activePipelineId);
-
-    Object.keys(collections).forEach(([key]) => {
-      const colname = collections[key].name;
-      const conname = `${consortium.name}: Collection`;
-      if (colname === conname && Object.entries(collections[key].fileGroups).length > 0) {
-        const collection = collections[key];
-        this.setState(() => ({ collection }));
-      }
-    });
 
     if (pipeline.steps[0].dataMeta && pipeline.steps[0].dataMeta.type) {
       this.setState({ dataType: pipeline.steps[0].dataMeta.type });
     }
 
-    this.setState({
-      consortium,
-       activeConsortium: {
-         ...consortium,
-         pipelineSteps: pipeline.steps,
-       },
-     });
-     this.setState({isMapped: mapped});
+    let collection = collections.find(c => c.associatedConsortia.includes(consortium.id));
+    if (!collection || Object.entries(collection.fileGroups).length === 0) {
+      collection = {
+        name: `${consortium.name}: Collection`,
+        associatedConsortia: [consortium.id],
+        fileGroups: {},
+      };
 
-     if(pipeline.steps[0].inputMap.covariates && pipeline.steps[0].inputMap.data){
-       let ctotal = pipeline.steps[0].inputMap.covariates.ownerMappings.length;
-       let dtotal = pipeline.steps[0].inputMap.data.ownerMappings.length;
-       this.setState({stepsTotal: ctotal + dtotal });
-     }
-
-     if(!pipeline.steps[0].inputMap.covariates && pipeline.steps[0].inputMap.data){
-       let dtotal = pipeline.steps[0].inputMap.data.ownerMappings.length;
-       this.setState({stepsTotal: dtotal });
-     }
-
-     this.setPipelineSteps(pipeline.steps);
-
-     let name = consortium.name+': Collection';
-
-     let colExists = collections.map(function(e) { return e.name; }).indexOf(name);
-
-     if( colExists === -1 && Object.entries(this.state.collection.fileGroups).length === 0 ){
-         let collection = {
-           name: consortium.name+': Collection',
-           associatedConsortia: consortium,
-           fileGroups: {},
-         }
-        this.setState({collection});
-        this.props.saveCollection(collection);
-     }else{
-       this.setState({collection: collections[0]});
-     }
-     this.getDropAction();
-  }
-
-  componentDidUpdate(prevProps, prevState){
-    const { stepsTotal, stepsFilled, stepsMapped } = this.state;
-    if(prevState.stepsFilled && prevState.stepsFilled !== this.state.stepsFilled){
-      this.setState({ stepsMapped: stepsTotal - stepsFilled });
+      saveCollection(collection);
     }
+
+    this.setState({ collection });
+
+    this.setState({
+      activeConsortium: {
+        ...consortium,
+        pipelineSteps: pipeline.steps,
+      },
+    });
+
+    this.setState({ isMapped: mapped });
+
+    let totalInputFields = 0;
+
+    if (pipeline.steps[0].inputMap.covariates) {
+      const ctotal = pipeline.steps[0].inputMap.covariates.ownerMappings.length;
+      totalInputFields += ctotal;
+    }
+
+    if (pipeline.steps[0].inputMap.data) {
+      const dtotal = pipeline.steps[0].inputMap.data.ownerMappings.length;
+      totalInputFields += dtotal;
+    }
+
+    this.setState({ stepsTotal: totalInputFields });
+
+    this.setPipelineSteps(pipeline.steps);
+
+    this.getDropAction();
   }
 
   getContainers = (container) => {
-    let containers = [];
-    if(container){
-      let newContainers = this.state.containers;
-      newContainers.push(container);
+    if (!container) {
+      return;
     }
-    containers = uniqWith(this.state.containers, isEqual);
-    let filter = [
+
+    const { containers, stepsTotal, stepsMapped } = this.state;
+
+    const newContainers = containers;
+    newContainers.push(container);
+
+    const uniqueContainers = uniqWith(newContainers, isEqual);
+
+    const filter = [
       'card-deck',
       'card-draggable',
     ];
-    let filtered = containers.map((item, key) => {
-      if( !item.getAttribute('class').includes(filter[0]) &&
-          !item.getAttribute('class').includes(filter[1]) ){
-        return item;
-      }else{
-        return false;
+
+    let unmappedContainersCount = 0;
+    console.log('unique', uniqueContainers);
+    uniqueContainers.forEach((item) => {
+      const itemClass = item.getAttribute('class');
+      console.log('classao', itemClass);
+
+      if (!itemClass.includes(filter[0]) && !itemClass.includes(filter[1])) {
+        unmappedContainersCount += 1;
       }
     });
-    filtered = filtered.filter(Boolean);
-    let length = filtered.length;
-    if(this.state.stepsFilled !== length){
-      this.setState({ stepsFilled: length });
+
+    const stepsMappedCount = stepsTotal - unmappedContainersCount;
+
+    console.log('MAPPED', stepsMappedCount);
+
+    if (stepsMappedCount !== stepsMapped) {
+      this.setState({ stepsMapped: stepsMappedCount });
     }
-    containers.map((container) => {
+
+    uniqueContainers.forEach((container) => {
       drake.containers.push(container);
     });
   }
 
   getDropAction = () => {
-    let newArray = new Set(drake.containers);
-    drake.on('drop', (el, target, source, sibling) => {
+    drake.on('drop', (el, target) => {
       this.mapObject(el, target);
     });
   }
 
-  getMapped = (member, owner, consortium) => {
-    const { auth: { user } } = this.props;
+  getMapped = (consortium) => {
     if (consortium.isMapped) {
       return true;
-    } else {
-      return false;
     }
-  }
 
-  makePoints = ((str) => {
-    return str.split(", ");
-  });
+    return false;
+  }
 
   mapObject = (el, target) => {
     const { activeConsortium, collection, metaRow, rowArray } = this.state;
@@ -266,7 +249,6 @@ class MapsEdit extends Component {
       row.splice(index, 1);
       return row;
     });
-    //console.log(newMeta);
     this.setState(prevState => ({
       collection: {
         ...prevState.collection,
@@ -303,7 +285,6 @@ class MapsEdit extends Component {
       if(rowArray.length > 0){
         setTimeout(() => {
           while(rowArray.length > 0){
-            console.log(rowArray.length);
             rowArray.map((item) => {
                 this.removeRowArrItem(item, 'delete');
             });
@@ -425,19 +406,22 @@ class MapsEdit extends Component {
   }
 
   resetPipelineSteps = (array) => {
-    const { collections, mapped, pipelines } = this.props;
-    const { consortium } = this.state;
-    let pipeline = pipelines.find(p => p.id === consortium.activePipelineId);
+    const { pipelines } = this.props;
+    const { activeConsortium } = this.state;
+
+    const pipeline = pipelines.find(p => p.id === activeConsortium.activePipelineId);
+
     this.setState({
       activeConsortium: {
-         ...consortium,
-         pipelineSteps: pipeline.steps,
-       },
-     });
-     this.setRowArray([]);
-     this.setRowArray(array);
-     this.setState({isMapped: false});
-     this.setPipelineSteps(pipeline.steps);
+        ...activeConsortium,
+        pipelineSteps: pipeline.steps,
+      },
+    });
+
+    this.setRowArray([]);
+    this.setRowArray(array);
+    this.setState({ isMapped: false });
+    this.setPipelineSteps(pipeline.steps);
   }
 
   setPipelineSteps(steps) {
@@ -470,37 +454,38 @@ class MapsEdit extends Component {
     }));
   }
 
-  traversePipelineSteps(){
-    let result = [];
-    const { activeConsortium, metaRow, rowArray } = this.state;
-    if (activeConsortium.pipelineSteps) {
-      let steps = activeConsortium.pipelineSteps;
-      Object.entries(steps).forEach(([key, value]) => {
-        let inputMap = steps[key].inputMap;
-        Object.keys(inputMap).map((k, i) => {
-           Object.keys(inputMap)[i] !== 'meta' ?
-           result.push(
-             <MapsStep
-               getContainers={this.getContainers}
-               key={'step'+k+'-'+i}
-               name={Object.keys(inputMap)[i]}
-               step={inputMap[k]}
-               consortium={activeConsortium}
-               metaRow={metaRow}
-               setMetaRow={this.setMetaRow}
-               rowArray={rowArray}
-               removeMapStep={this.removeMapStep}
-               setRowArray={this.setRowArray}
-               updateMapsStep={this.state.updateMapsStep}
-               updateConsortiumClientProps={this.updateConsortiumClientProps}
-               mapped={this.props.mapped}
-              />
-           )
-           : null
-        });
-      });
+  traversePipelineSteps() {
+    const stepsInputs = [];
+    const { activeConsortium } = this.state;
+
+    if (!activeConsortium.pipelineSteps) {
+      return;
     }
-    return result;
+
+    activeConsortium.pipelineSteps.forEach((step) => {
+      const { inputMap } = step;
+
+      Object.keys(inputMap).forEach((inputMapKey) => {
+        if (inputMapKey === 'meta') {
+          return;
+        }
+
+        stepsInputs.push(
+          <MapsStepFieldset
+            getContainers={this.getContainers}
+            key={`step-${inputMapKey}`}
+            name={inputMapKey}
+            stepFieldset={inputMap[inputMapKey]}
+            consortium={activeConsortium}
+            removeMapStep={this.removeMapStep}
+            updateConsortiumClientProps={this.updateConsortiumClientProps}
+            mapped={this.props.mapped}
+          />
+        );
+      });
+    });
+
+    return stepsInputs;
   }
 
   uniqueArray(array) {
@@ -521,14 +506,12 @@ class MapsEdit extends Component {
       }, (() => {
         this.updateAssociatedConsortia(this.state.activeConsortium);
     }));
-    this.setState({updateMapsStep: true});
   }
 
   render() {
     const { classes } = this.props;
 
     const {
-      consortium,
       activeConsortium,
       collection,
       dataType,
@@ -536,7 +519,6 @@ class MapsEdit extends Component {
       mappedItem,
       metaRow,
       rowArray,
-      stepsFilled,
       stepsMapped,
       stepsTotal,
     } = this.state;
@@ -544,12 +526,12 @@ class MapsEdit extends Component {
     return (
       <div>
         {
-          consortium && activeConsortium
+          activeConsortium
           && (
             <div>
               <div className="page-header">
                 <Typography variant="h4">
-                  Map - {consortium ? consortium.name : ''}
+                  { `Map - ${activeConsortium.name}` }
                 </Typography>
               </div>
               <Grid container spacing={16}>
@@ -559,7 +541,7 @@ class MapsEdit extends Component {
                     elevation={1}
                   >
                     <Typography variant="headline" className={classes.title}>
-                      { consortium ? `${consortium.name}: Pipeline` : 'Pipeline' }
+                      { `${activeConsortium.name}: Pipeline` }
                     </Typography>
                     <Divider />
                     { this.traversePipelineSteps() }
@@ -594,12 +576,10 @@ class MapsEdit extends Component {
                             saveAndCheckConsortiaMapping={this.saveAndCheckConsortiaMapping}
                             saveCollection={this.saveCollection}
                             setRowArray={this.setRowArray}
-                            stepsFilled={stepsFilled}
                             stepsMapped={stepsMapped}
                             stepsTotal={stepsTotal}
                             updateCollection={this.updateCollection}
                             updateConsortiumClientProps={this.updateConsortiumClientProps}
-                            updateMapsStep={this.updateMapsStep}
                           />
                         )
                       }
@@ -610,17 +590,13 @@ class MapsEdit extends Component {
             </div>
           )
         }
-    </div>
-  );
+      </div>
+    );
+  }
 }
-}
-
-MapsEdit.defaultProps = {
-  activeAssociatedConsortia: [],
-};
 
 MapsEdit.propTypes = {
-  activeAssociatedConsortia: PropTypes.array,
+  associatedConsortia: PropTypes.array.isRequired,
   getAllCollections: PropTypes.func.isRequired,
   getRunsForConsortium: PropTypes.func.isRequired,
   runs: PropTypes.array.isRequired,
@@ -628,8 +604,8 @@ MapsEdit.propTypes = {
 };
 
 function mapStateToProps({ auth,
-  collections: { activeAssociatedConsortia, collections } }) {
-  return { auth, activeAssociatedConsortia, collections };
+  collections: { associatedConsortia, collections } }) {
+  return { auth, associatedConsortia, collections };
 }
 
 const ComponentWithData = compose(

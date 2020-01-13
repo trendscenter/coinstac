@@ -437,7 +437,7 @@ class MapsCollection extends Component {
           {
             !isMapped
             && dataType === 'array'
-	          && (
+            && (
               <div>
                 <Button
                   variant="contained"
@@ -468,9 +468,8 @@ class MapsCollection extends Component {
               </div>
             )
           }
-	  {
-	    filesError
-            && (
+          {
+            filesError && (
               <Paper className={classes.fileErrorPaper}>
                 <Typography variant="h6" className={classes.fileErrorMessage}>File Error</Typography>
                 <Typography className={classes.fileErrorMessage} variant="body1">
@@ -479,7 +478,6 @@ class MapsCollection extends Component {
               </Paper>
             )
           }
-
           {
             collection.fileGroups
             && Object.values(collection.fileGroups).map(group => (
