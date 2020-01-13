@@ -52,10 +52,21 @@ const styles = theme => ({
 });
 
 class MapsStepCovariate extends Component {
-  componentWillUpdate() {
+  componentDidMount() {
+    const { getContainers } = this.props;
+
     if (this.refs.Container) {
-      let Container = ReactDOM.findDOMNode(this.refs.Container);
-      this.props.getContainers(Container);
+      const Container = ReactDOM.findDOMNode(this.refs.Container);
+      getContainers(Container);
+    }
+  }
+
+  componentDidUpdate(prevProps) {
+    const { getContainers, column } = this.props;
+
+    if (prevProps.column !== column && this.refs.Container) {
+      const Container = ReactDOM.findDOMNode(this.refs.Container);
+      getContainers(Container);
     }
   }
 
@@ -82,20 +93,24 @@ class MapsStepCovariate extends Component {
           <div className={classNames('drop-zone', classes.dropZone)}>
             {
               !column
-                ? <div
+                ? (
+                  <div
                     ref="Container"
                     className={`acceptor acceptor-${name}`}
                     data-type={type}
                     data-name={name}
                     data-index={index}
                   />
-              : <div ref="Container" className="card-draggable">
-                <FileCopyIcon /> {column}
-                <span onClick={()=>{this.props.removeMapStep(type, index, column)}}>
-                  <Icon
-                    className={classNames('fa fa-times-circle', classes.timesIcon)} />
-                </span>
-                </div>}
+                ) : (
+                  <div ref="Container" className="card-draggable">
+                    <FileCopyIcon /> {column}
+                    <span onClick={()=>{this.props.removeMapStep(type, index, column)}}>
+                      <Icon
+                        className={classNames('fa fa-times-circle', classes.timesIcon)} />
+                    </span>
+                  </div>
+                )
+            }
           </div>
         </div>
       </Paper>
@@ -103,8 +118,13 @@ class MapsStepCovariate extends Component {
   }
 }
 
+MapsStepCovariate.defaultProps = {
+  column: null,
+};
+
 MapsStepCovariate.propTypes = {
   step: PropTypes.object.isRequired,
+  column: PropTypes.string,
   classes: PropTypes.object.isRequired,
   type: PropTypes.string.isRequired,
   index: PropTypes.number.isRequired,
