@@ -193,3 +193,13 @@ export const updateConsortiaMappedUsersProp = (name) => {
     }),
   };
 };
+
+export const updatePasswordProps = (name) => {
+  return {
+    props: ({ mutate }) => ({
+      [name]: ({ currentPassword, newPassword }) => mutate({
+        variables: { currentPassword, newPassword },
+      })
+    }),
+  };
+};

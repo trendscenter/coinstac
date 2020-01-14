@@ -1,10 +1,13 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
+import { compose, graphql, withApollo } from 'react-apollo';
 import PropTypes from 'prop-types';
-import Button from '@material-ui/core/Button';
-import Typography from '@material-ui/core/Typography';
+import { Button, CircularProgress, Typography } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
-import { notifyError, notifyInfo } from '../../state/ducks/notifyAndLog';
+import { ValidatorForm, TextValidator } from 'react-material-ui-form-validator';
+import { updatePasswordProps } from '../../state/graphql/props';
+import { UPDATE_PASSWORD_MUTATION } from '../../state/graphql/functions';
+import { notifySuccess, notifyInfo, notifyError } from '../../state/ducks/notifyAndLog';
 import { clearCollectionsAndConsortia } from '../../state/ducks/collections';
 import { clearRuns } from '../../state/ducks/runs';
 
@@ -12,7 +15,11 @@ const styles = theme => ({
   pageTitle: {
     marginBottom: theme.spacing.unit * 2,
   },
-  pageSubtitle: {
+  removeDataTitle: {
+    marginBottom: theme.spacing.unit,
+  },
+  updatePasswordTitle: {
+    marginTop: theme.spacing.unit * 5,
     marginBottom: theme.spacing.unit,
   },
   sectionTitle: {
@@ -21,24 +28,84 @@ const styles = theme => ({
   button: {
     marginTop: theme.spacing.unit,
   },
+  formControl: {
+    marginBottom: theme.spacing.unit,
+    display: 'block',
+  },
+  spinner: {
+    color: theme.palette.grey[500],
+    marginLeft: theme.spacing.unit * 2,
+  },
+  buttonWrapper: {
+    display: 'flex',
+    alignItems: 'center',
+    marginTop: theme.spacing.unit * 2,
+  },
 });
+
+const INITIAL_STATE = {
+  currentPassword: '',
+  newPassword: '',
+  confirmPassword: '',
+  isUpdating: false,
+};
 
 class Settings extends Component {
   constructor(props) {
     super(props);
 
-    this.clearData = this.clearData.bind(this);
+    this.state = INITIAL_STATE;
   }
 
-  clearData(e) {
+  componentDidMount() {
+    ValidatorForm.addValidationRule(
+      'isPasswordMatch',
+      value => value === this.state.newPassword,
+    );
+  }
+
+  componentWillUnmount() {
+    ValidatorForm.removeValidationRule('isPasswordMatch');
+  }
+
+  clearData = e => {
     e.preventDefault();
     this.props.clearRuns();
     this.props.clearCollectionsAndConsortia();
     this.props.notifyInfo({ message: 'Local data cleared' });
   }
 
+  updatePassword = () => {
+    const { currentPassword, newPassword, isUpdating } = this.state;
+
+    if (isUpdating) {
+      return;
+    }
+
+    this.setState({ isUpdating: true })
+
+    this.props
+      .updatePassword({ currentPassword, newPassword })
+      .then(() => {
+        this.props.notifySuccess({ message: 'Password updated successfully' });
+        this.setState(INITIAL_STATE);
+        this.passwordResetForm.resetValidations();
+      })
+      .catch(error => {
+        this.props.notifyError({ message: error.message });
+      })
+      .finally(() => {
+        this.setState({ isUpdating: false })
+      });
+  }
+
+  updatePasswordParam = ({ param, value }) => {
+    this.setState({ [param]: value });
+  }
+
   render() {
     const { classes } = this.props;
+    const { currentPassword, newPassword, confirmPassword, isUpdating } = this.state;
 
     return (
       <div className="settings">
@@ -47,7 +114,7 @@ class Settings extends Component {
             Settings
           </Typography>
         </div>
-        <Typography variant="h5" className={classes.pageSubtitle}>
+        <Typography variant="h5" className={classes.removeDataTitle}>
           Remove Data
         </Typography>
         <form method="post" onSubmit={this.clearData}>
@@ -60,6 +127,68 @@ class Settings extends Component {
             Delete Local Data
           </Button>
         </form>
+
+        <Typography variant="h5" className={classes.updatePasswordTitle}>
+          Update Password
+        </Typography>
+
+        <ValidatorForm
+          instantValidate
+          noValidate
+          ref={ref => this.passwordResetForm = ref}
+          onSubmit={this.updatePassword}
+        >
+          <TextValidator
+            className={classes.formControl}
+            type="password"
+            label="Current Password"
+            value={currentPassword}
+            validators={['required']}
+            errorMessages={['Current password is required']}
+            withRequiredValidator
+            required
+            onChange={evt =>
+              this.updatePasswordParam({ param: 'currentPassword', value: evt.target.value })
+            }
+          />
+          <TextValidator
+            className={classes.formControl}
+            type="password"
+            label="New Password"
+            value={newPassword}
+            validators={['required']}
+            errorMessages={['New password is required']}
+            withRequiredValidator
+            required
+            onChange={evt =>
+              this.updatePasswordParam({ param: 'newPassword', value: evt.target.value })
+            }
+          />
+          <TextValidator
+            className={classes.formControl}
+            type="password"
+            label="Confirm Password"
+            value={confirmPassword}
+            validators={['isPasswordMatch', 'required']}
+            errorMessages={['Password mismatch', 'Confirm password is required']}
+            withRequiredValidator
+            required
+            onChange={evt =>
+              this.updatePasswordParam({ param: 'confirmPassword', value: evt.target.value })
+            }
+          />
+          <div className={classes.buttonWrapper}>
+            <Button
+              variant="contained"
+              color="primary"
+              type="submit"
+              disabled={isUpdating}
+            >
+              Update
+            </Button>
+            {isUpdating && <CircularProgress size={30} className={classes.spinner} />}
+          </div>
+        </ValidatorForm>
       </div>
     );
   }
@@ -76,11 +205,20 @@ Settings.contextTypes = {
   router: PropTypes.object.isRequired,
 };
 
+const ComponentWithDatta = compose(
+  graphql(
+    UPDATE_PASSWORD_MUTATION,
+    updatePasswordProps('updatePassword'),
+  ),
+  withApollo,
+)(Settings);
+
 const connectedComponent = connect(null, {
   clearCollectionsAndConsortia,
   clearRuns,
-  notifyError,
+  notifySuccess,
   notifyInfo,
-})(Settings);
+  notifyError,
+})(ComponentWithDatta);
 
 export default withStyles(styles)(connectedComponent);
