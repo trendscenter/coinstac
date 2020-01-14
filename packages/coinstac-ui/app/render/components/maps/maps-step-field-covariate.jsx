@@ -49,20 +49,20 @@ const styles = theme => ({
 
 class MapsStepFieldCovariate extends Component {
   componentDidMount() {
-    const { getContainers } = this.props;
+    const { registerDraggableContainer } = this.props;
 
     if (this.refs.Container) {
       const Container = ReactDOM.findDOMNode(this.refs.Container);
-      getContainers(Container);
+      registerDraggableContainer(Container);
     }
   }
 
   componentDidUpdate(prevProps) {
-    const { getContainers, column } = this.props;
+    const { registerDraggableContainer, column } = this.props;
 
     if (prevProps.column !== column && this.refs.Container) {
       const Container = ReactDOM.findDOMNode(this.refs.Container);
-      getContainers(Container);
+      registerDraggableContainer(Container);
     }
   }
 
@@ -124,6 +124,7 @@ MapsStepFieldCovariate.propTypes = {
   classes: PropTypes.object.isRequired,
   type: PropTypes.string.isRequired,
   index: PropTypes.number.isRequired,
+  registerDraggableContainer: PropTypes.func.isRequired,
   updateConsortiumClientProps: PropTypes.func.isRequired,
 };
 

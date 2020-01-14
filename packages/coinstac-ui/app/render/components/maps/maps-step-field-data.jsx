@@ -57,20 +57,20 @@ const styles = theme => ({
 
 class MapsStepFieldData extends Component {
   componentDidMount() {
-    const { getContainers } = this.props;
+    const { registerDraggableContainer } = this.props;
 
     if (this.refs.Container) {
       const Container = ReactDOM.findDOMNode(this.refs.Container);
-      getContainers(Container);
+      registerDraggableContainer(Container);
     }
   }
 
   componentDidUpdate(prevProps) {
-    const { getContainers, column } = this.props;
+    const { registerDraggableContainer, column } = this.props;
 
     if (prevProps.column !== column && this.refs.Container) {
       const Container = ReactDOM.findDOMNode(this.refs.Container);
-      getContainers(Container);
+      registerDraggableContainer(Container);
     }
   }
 
@@ -152,7 +152,7 @@ MapsStepFieldData.propTypes = {
   type: PropTypes.string.isRequired,
   column: PropTypes.string,
   index: PropTypes.number.isRequired,
-  getContainers: PropTypes.func.isRequired,
+  registerDraggableContainer: PropTypes.func.isRequired,
   classes: PropTypes.object.isRequired,
 };
 

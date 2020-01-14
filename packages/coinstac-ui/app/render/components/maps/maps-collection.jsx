@@ -97,6 +97,8 @@ class MapsCollection extends Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
+    const { registerDraggableContainer } = this.props;
+
     if (this.refs.Container) {
       let children = 0;
       let Container = ReactDOM.findDOMNode(this.refs.Container);
@@ -108,7 +110,7 @@ class MapsCollection extends Component {
         }));
       }
 
-      this.props.getContainers(Container);
+      registerDraggableContainer(Container);
     }
   }
 
@@ -660,6 +662,7 @@ MapsCollection.propTypes = {
   saveAndCheckConsortiaMapping: PropTypes.func.isRequired,
   updateConsortiumClientProps: PropTypes.func.isRequired,
   unmapAssociatedConsortia: PropTypes.func.isRequired,
+  registerDraggableContainer: PropTypes.func.isRequired,
   classes: PropTypes.object.isRequired,
 };
 

@@ -77,7 +77,6 @@ class MapsEdit extends Component {
     this.saveCollection = this.saveCollection.bind(this);
     this.traversePipelineSteps = this.traversePipelineSteps.bind(this);
     this.updateCollection = this.updateCollection.bind(this);
-    this.getContainers = this.getContainers.bind(this);
     this.getDropAction = this.getDropAction.bind(this);
     this.saveAndCheckConsortiaMapping = this.saveAndCheckConsortiaMapping.bind(this);
     this.updateAssociatedConsortia = this.updateAssociatedConsortia.bind(this);
@@ -144,72 +143,10 @@ class MapsEdit extends Component {
     this.getDropAction();
   }
 
-  getContainers = (container) => {
-    if (!container) {
-      return;
-    }
-
-    const { containers, stepsTotal } = this.state;
-
-    const newContainers = containers;
-    newContainers.push(container);
-
-    const uniqueContainers = uniqWith(newContainers, isEqual);
-
-    const filter = [
-      'card-deck',
-      'card-draggable',
-    ];
-
-    let unmappedContainersCount = 0;
-    uniqueContainers.forEach((item) => {
-      const itemClass = item.getAttribute('class');
-
-      if (!itemClass.includes(filter[0]) && !itemClass.includes(filter[1])) {
-        unmappedContainersCount += 1;
-      }
-    });
-
-    const stepsMappedCount = stepsTotal - unmappedContainersCount;
-
-    this.setState({ stepsMapped: stepsMappedCount });
-
-    uniqueContainers.forEach((container) => {
-      drake.containers.push(container);
-    });
-  }
-
   getDropAction = () => {
     drake.on('drop', (el, target) => {
       this.mapObject(el, target);
     });
-  }
-
-  mapObject = (el, target) => {
-    const { activeConsortium, collection, metaRow, rowArray } = this.state;
-    let group = collection.fileGroups[el.dataset.filegroup];
-    let dex = target.dataset.index;
-    let key = target.dataset.type;
-    let name = target.dataset.name;
-    let varObject = [{
-      'collectionId': collection.id,
-      'groupId': el.dataset.filegroup,
-      'column':  name
-    }];
-    if(key && dex && varObject){
-      this.updateConsortiumClientProps(0, key, dex, varObject);
-      this.setState({mappedItem: el.dataset.string});
-      this.removeRowArrItem(el.dataset.string);
-      let marray = [...metaRow];
-      let index = marray.indexOf(el.dataset.string);
-      if(index === 0){
-        marray[index] = 'id';
-      }else{
-        marray[index] = name;
-      }
-      this.setMetaRow(marray);
-    }
-    el.remove();
   }
 
   removeMapStep = (type, index, string) => {
@@ -220,33 +157,6 @@ class MapsEdit extends Component {
     let array = rowArray;
     array.push(string);
     this.setRowArray(array);
-  }
-
-  removeMetaFileColumn(string) {
-    let newMetaRow = [...this.state.metaRow];
-    let index = newMetaRow.indexOf(string);
-    if (index !== -1) newMetaRow.splice(index, 1);
-    this.setState({metaRow: newMetaRow});
-    let groupKey = Object.keys(this.state.collection.fileGroups);
-    groupKey = groupKey[0];
-    let newMeta = [...this.state.collection.fileGroups[groupKey].metaFile];
-    newMeta = newMeta.map((row) => {
-      row.splice(index, 1);
-      return row;
-    });
-    this.setState(prevState => ({
-      collection: {
-        ...prevState.collection,
-          fileGroups: {
-            [groupKey]: update(prevState.collection.fileGroups[groupKey], {
-            metaFile: {$set: newMeta}
-          }),
-        },
-      },
-    }),
-    () => {
-      this.props.saveCollection(this.state.collection);
-    });
   }
 
   removeRowArrItem = (item, method) => {
@@ -439,6 +349,95 @@ class MapsEdit extends Component {
     }));
   }
 
+  registerDraggableContainer = (container) => {
+    if (!container) {
+      return;
+    }
+
+    const { containers, stepsTotal } = this.state;
+
+    const newContainers = containers;
+    newContainers.push(container);
+
+    const uniqueContainers = uniqWith(newContainers, isEqual);
+
+    const filter = [
+      'card-deck',
+      'card-draggable',
+    ];
+
+    let unmappedContainersCount = 0;
+    uniqueContainers.forEach((item) => {
+      const itemClass = item.getAttribute('class');
+
+      if (!itemClass.includes(filter[0]) && !itemClass.includes(filter[1])) {
+        unmappedContainersCount += 1;
+      }
+    });
+
+    const stepsMappedCount = stepsTotal - unmappedContainersCount;
+
+    this.setState({ stepsMapped: stepsMappedCount });
+
+    uniqueContainers.forEach((container) => {
+      drake.containers.push(container);
+    });
+  }
+
+  mapObject = (el, target) => {
+    const { collection, metaRow } = this.state;
+    const dex = target.dataset.index;
+    const key = target.dataset.type;
+    const name = target.dataset.name;
+    const varObject = [{
+      'collectionId': collection.id,
+      'groupId': el.dataset.filegroup,
+      'column':  name
+    }];
+
+    if (key && dex && varObject) {
+      this.updateConsortiumClientProps(0, key, dex, varObject);
+      this.setState({ mappedItem: el.dataset.string });
+      this.removeRowArrItem(el.dataset.string);
+      const marray = [...metaRow];
+      const index = marray.indexOf(el.dataset.string);
+      if (index === 0) {
+        marray[index] = 'id';
+      } else {
+        marray[index] = name;
+      }
+      this.setMetaRow(marray);
+    }
+    el.remove();
+  }
+
+  removeMetaFileColumn(string) {
+    let newMetaRow = [...this.state.metaRow];
+    let index = newMetaRow.indexOf(string);
+    if (index !== -1) newMetaRow.splice(index, 1);
+    this.setState({metaRow: newMetaRow});
+    let groupKey = Object.keys(this.state.collection.fileGroups);
+    groupKey = groupKey[0];
+    let newMeta = [...this.state.collection.fileGroups[groupKey].metaFile];
+    newMeta = newMeta.map((row) => {
+      row.splice(index, 1);
+      return row;
+    });
+    this.setState(prevState => ({
+      collection: {
+        ...prevState.collection,
+          fileGroups: {
+            [groupKey]: update(prevState.collection.fileGroups[groupKey], {
+            metaFile: {$set: newMeta}
+          }),
+        },
+      },
+    }),
+    () => {
+      this.props.saveCollection(this.state.collection);
+    });
+  }
+
   traversePipelineSteps() {
     const stepsInputs = [];
     const { activeConsortium } = this.state;
@@ -457,7 +456,7 @@ class MapsEdit extends Component {
 
         stepsInputs.push(
           <MapsStepFieldset
-            getContainers={this.getContainers}
+            registerDraggableContainer={this.registerDraggableContainer}
             key={`step-${inputMapKey}`}
             fieldsetName={inputMapKey}
             stepFieldset={inputMap[inputMapKey]}
@@ -542,7 +541,7 @@ class MapsEdit extends Component {
                             activeConsortium={activeConsortium}
                             collection={collection}
                             dataType={dataType}
-                            getContainers={this.getContainers}
+                            registerDraggableContainer={this.registerDraggableContainer}
                             isMapped={isMapped}
                             notifySuccess={this.notifySuccess}
                             mappedItem={mappedItem}

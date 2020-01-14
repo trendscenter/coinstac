@@ -23,7 +23,13 @@ class MapsStepFieldset extends Component {
   };
 
   renderCovariatesField = (fieldKey) => {
-    const { consortium, stepFieldset, fieldsetName } = this.props;
+    const {
+      consortium,
+      stepFieldset,
+      fieldsetName,
+      registerDraggableContainer,
+      removeMapStep,
+    } = this.props;
 
     const stepIO = consortium.stepIO[0];
 
@@ -35,20 +41,26 @@ class MapsStepFieldset extends Component {
 
       return (
         <MapsStepFieldCovariate
-          getContainers={this.props.getContainers}
+          registerDraggableContainer={registerDraggableContainer}
           key={`step-cov-${k}-${fieldsetName}`}
           step={field}
           type={fieldsetName}
           index={k}
           column={column}
-          removeMapStep={this.props.removeMapStep}
+          removeMapStep={removeMapStep}
         />
       );
     });
   };
 
   renderDataField = (fieldKey) => {
-    const { consortium, stepFieldset, fieldsetName } = this.props;
+    const {
+      consortium,
+      stepFieldset,
+      fieldsetName,
+      registerDraggableContainer,
+      removeMapStep,
+    } = this.props;
 
     const stepIO = consortium.stepIO[0];
 
@@ -60,13 +72,13 @@ class MapsStepFieldset extends Component {
 
       return (
         <MapsStepFieldData
-          getContainers={this.props.getContainers}
+          registerDraggableContainer={registerDraggableContainer}
           key={`step-data-${k}-${fieldsetName}`}
           step={field}
           type={fieldsetName}
           index={k}
           column={column}
-          removeMapStep={this.props.removeMapStep}
+          removeMapStep={removeMapStep}
         />
       );
     });
@@ -110,7 +122,8 @@ class MapsStepFieldset extends Component {
 MapsStepFieldset.propTypes = {
   fieldsetName: PropTypes.string.isRequired,
   consortium: PropTypes.object.isRequired,
-  getContainers: PropTypes.func.isRequired,
+  registerDraggableContainer: PropTypes.func.isRequired,
+  removeMapStep: PropTypes.func.isRequired,
   stepFieldset: PropTypes.object.isRequired,
   classes: PropTypes.object.isRequired,
 };
