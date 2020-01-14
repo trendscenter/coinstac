@@ -3,8 +3,8 @@ import PropTypes from 'prop-types';
 import { capitalize } from 'lodash';
 import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
-import MapsStepData from './maps-step-data';
-import MapsStepCovariate from './maps-step-covariate';
+import MapsStepFieldData from './maps-step-field-data';
+import MapsStepFieldCovariate from './maps-step-field-covariate';
 import MapsStepFieldFixedValue from './maps-step-field-fixed-value';
 
 const styles = theme => ({
@@ -14,16 +14,16 @@ const styles = theme => ({
 });
 
 class MapsStepFieldset extends Component {
-  renderFixedValueInputFieldset = (fieldKey) => {
-    const { stepFieldset, name } = this.props;
+  renderFixedValueInputField = (fieldKey) => {
+    const { stepFieldset, fieldsetName } = this.props;
 
     return (
-      <MapsStepFieldFixedValue step={stepFieldset} key={fieldKey} fieldName={name} />
+      <MapsStepFieldFixedValue step={stepFieldset} key={fieldKey} fieldName={fieldsetName} />
     );
   };
 
-  renderCovariatesFieldset = (fieldKey) => {
-    const { consortium, stepFieldset, name } = this.props;
+  renderCovariatesField = (fieldKey) => {
+    const { consortium, stepFieldset, fieldsetName } = this.props;
 
     const stepIO = consortium.stepIO[0];
 
@@ -34,11 +34,11 @@ class MapsStepFieldset extends Component {
       }
 
       return (
-        <MapsStepCovariate
+        <MapsStepFieldCovariate
           getContainers={this.props.getContainers}
-          key={`step-cov-${k}-${name}`}
+          key={`step-cov-${k}-${fieldsetName}`}
           step={field}
-          type={name}
+          type={fieldsetName}
           index={k}
           column={column}
           removeMapStep={this.props.removeMapStep}
@@ -47,8 +47,8 @@ class MapsStepFieldset extends Component {
     });
   };
 
-  renderDataFieldset = (fieldKey) => {
-    const { consortium, stepFieldset, name } = this.props;
+  renderDataField = (fieldKey) => {
+    const { consortium, stepFieldset, fieldsetName } = this.props;
 
     const stepIO = consortium.stepIO[0];
 
@@ -59,11 +59,11 @@ class MapsStepFieldset extends Component {
       }
 
       return (
-        <MapsStepData
+        <MapsStepFieldData
           getContainers={this.props.getContainers}
-          key={`step-data-${k}-${name}`}
+          key={`step-data-${k}-${fieldsetName}`}
           step={field}
-          type={name}
+          type={fieldsetName}
           index={k}
           column={column}
           removeMapStep={this.props.removeMapStep}
@@ -74,14 +74,14 @@ class MapsStepFieldset extends Component {
 
   render() {
     const {
-      name,
       stepFieldset,
+      fieldsetName,
       classes,
     } = this.props;
 
-    let inputCategoryName = capitalize(name);
+    let inputCategoryName = capitalize(fieldsetName);
 
-    if (name !== 'covariates' && name !== 'data') {
+    if (fieldsetName !== 'covariates' && fieldsetName !== 'data') {
       inputCategoryName = 'Options';
     }
 
@@ -91,13 +91,13 @@ class MapsStepFieldset extends Component {
         <div>
           {
             Object.keys(stepFieldset).map((fieldKey) => {
-              switch (name) {
+              switch (fieldsetName) {
                 case 'data':
-                  return this.renderDataFieldset(fieldKey);
+                  return this.renderDataField(fieldKey);
                 case 'covariates':
-                  return this.renderCovariatesFieldset(fieldKey);
+                  return this.renderCovariatesField(fieldKey);
                 default:
-                  return this.renderFixedValueInputFieldset(fieldKey);
+                  return this.renderFixedValueInputField(fieldKey);
               }
             })
           }
@@ -108,7 +108,7 @@ class MapsStepFieldset extends Component {
 }
 
 MapsStepFieldset.propTypes = {
-  name: PropTypes.string.isRequired,
+  fieldsetName: PropTypes.string.isRequired,
   consortium: PropTypes.object.isRequired,
   getContainers: PropTypes.func.isRequired,
   stepFieldset: PropTypes.object.isRequired,

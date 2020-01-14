@@ -4,12 +4,8 @@ import PropTypes from 'prop-types';
 import Icon from '@material-ui/core/Icon';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
-import List from '@material-ui/core/List';
-import ListItem from '@material-ui/core/ListItem';
-import ListItemText from '@material-ui/core/ListItemText';
 import { withStyles } from '@material-ui/core/styles';
 import FileCopyIcon from '@material-ui/icons/FileCopy';
-import DeleteRoundedIcon from '@material-ui/icons/DeleteRounded';
 import classNames from 'classnames';
 
 const styles = theme => ({
@@ -51,7 +47,7 @@ const styles = theme => ({
   },
 });
 
-class MapsStepCovariate extends Component {
+class MapsStepFieldCovariate extends Component {
   componentDidMount() {
     const { getContainers } = this.props;
 
@@ -118,11 +114,11 @@ class MapsStepCovariate extends Component {
   }
 }
 
-MapsStepCovariate.defaultProps = {
+MapsStepFieldCovariate.defaultProps = {
   column: null,
 };
 
-MapsStepCovariate.propTypes = {
+MapsStepFieldCovariate.propTypes = {
   step: PropTypes.object.isRequired,
   column: PropTypes.string,
   classes: PropTypes.object.isRequired,
@@ -131,4 +127,4 @@ MapsStepCovariate.propTypes = {
   updateConsortiumClientProps: PropTypes.func.isRequired,
 };
 
-export default withStyles(styles)(MapsStepCovariate);
+export default withStyles(styles)(MapsStepFieldCovariate);

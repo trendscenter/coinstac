@@ -55,7 +55,7 @@ const styles = theme => ({
   },
 });
 
-class MapsStepData extends Component {
+class MapsStepFieldData extends Component {
   componentDidMount() {
     const { getContainers } = this.props;
 
@@ -143,11 +143,11 @@ class MapsStepData extends Component {
   }
 }
 
-MapsStepData.defaultProps = {
+MapsStepFieldData.defaultProps = {
   column: null,
 };
 
-MapsStepData.propTypes = {
+MapsStepFieldData.propTypes = {
   step: PropTypes.object.isRequired,
   type: PropTypes.string.isRequired,
   column: PropTypes.string,
@@ -156,4 +156,4 @@ MapsStepData.propTypes = {
   classes: PropTypes.object.isRequired,
 };
 
-export default withStyles(styles)(MapsStepData);
+export default withStyles(styles)(MapsStepFieldData);
