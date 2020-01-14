@@ -13,9 +13,9 @@ import DeleteIcon from '@material-ui/icons/Delete';
 import ipcPromise from 'ipc-promise';
 import PropTypes from 'prop-types';
 import shortid from 'shortid';
-import { unmapAssociatedConsortia } from '../../state/ducks/collections';
 import bitap from 'bitap';
 import classNames from 'classnames';
+import { unmapAssociatedConsortia } from '../../state/ducks/collections';
 
 const styles = theme => ({
   addFileGroupButton: {
@@ -73,7 +73,6 @@ const styles = theme => ({
 });
 
 class MapsCollection extends Component {
-
   constructor(props) {
     super(props);
 
@@ -94,28 +93,92 @@ class MapsCollection extends Component {
     this.addFileGroup = this.addFileGroup.bind(this);
     this.addFolderGroup = this.addFolderGroup.bind(this);
     this.removeFileGroup = this.removeFileGroup.bind(this);
-    this.updateNewFileOrg = this.updateNewFileOrg.bind(this);
-    this.updateMapsStep = this.updateMapsStep.bind(this);
     this.setStepIO = this.setStepIO.bind(this);
   }
 
-  componentDidUpdate(prevProps,prevState) {
-    if(this.refs.Container){
+  componentDidUpdate(prevProps, prevState) {
+    if (this.refs.Container) {
       let children = 0;
       let Container = ReactDOM.findDOMNode(this.refs.Container);
       children = Container.children.length;
-      if(prevState.contChildren !== children){
+
+      if (prevState.contChildren !== children) {
         this.setState(prevState => ({
           contChildren: children
         }));
       }
+
       this.props.getContainers(Container);
     }
   }
 
-  addFileGroup() {
-    ipcPromise.send('open-dialog', 'metafile')
-    .then((obj) => {
+  makePoints = ((str) => {
+    str = str.split(', ');
+    return str.sort();
+  });
+
+  findInObject = (obj, string, type) => {
+    return Object.entries(obj).find(([key, value]) => {
+      let search = null;
+      let name = obj['name'];
+      let itemtype = obj['type'];
+      if(!name && itemtype){
+        search = itemtype;
+      }else if(name && itemtype){
+        search = name;
+      }
+      if(search !== null && search !== 'undefined'){
+        //Match data column and map to ID
+        if(type === 'data'
+        && string.toLowerCase() === 'id'){
+          return this.changeMetaGetObj(search, string, obj, key);
+        }
+
+        //Match if string and search are equal
+        if( string.toLowerCase() === search.toLowerCase() ){
+          return this.changeMetaGetObj(search, string, obj, key);
+        }
+
+        //Match if string contains search and vice versa
+        if(string.length < search.length){
+          let sch = search.replace(/[_-\s]/g, ' ');
+          sch = sch.toLowerCase();
+          string = string.toLowerCase();
+          if(sch.includes(string)){
+            return this.changeMetaGetObj(search, string, obj, key);
+          }
+        }else{
+          let str = string.replace(/[_-\s]/gi, ' ');
+          search = search.toLowerCase();
+          str = str.toLowerCase();
+          if(str.includes(search)){
+            return this.changeMetaGetObj(search, string, obj, key);
+          }
+        }
+
+        //Finally Fuzzy match string to search based on which is larger
+        let fuzzy = [];
+        let str = string.replace(/[_-\s]/gi, '');
+        let sch = search.replace(/[_-\s]/gi, '');
+        if(str.length > sch.length){
+          fuzzy = bitap(str.toLowerCase(), sch.toLowerCase(), 1);
+        }else{
+          fuzzy = bitap(sch.toLowerCase(), str.toLowerCase(), 1);
+        }
+        if(fuzzy.length > 1 && fuzzy[0] > 3){
+          return this.changeMetaGetObj(search, string, obj, key);
+        }
+        if(type === 'data'
+        && string.toLowerCase() === 'id'){
+          return this.changeMetaGetObj(search, string, obj, key);
+        }
+      }
+    });
+ }
+
+  async addFileGroup() {
+    try {
+      const obj = await ipcPromise.send('open-dialog', 'metafile');
 
       let newFiles;
 
@@ -172,8 +235,9 @@ class MapsCollection extends Component {
           this.props.saveCollection
         );
       }
-    })
-    .catch(console.log);
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   addFolderGroup() {
@@ -248,75 +312,16 @@ class MapsCollection extends Component {
     });
   }
 
-  findInObject = (obj, string, type, method) => {
-     return Object.entries(obj).find(([key, value]) => {
-       let search = null;
-       let name = obj['name'];
-       let itemtype = obj['type'];
-       if(!name && itemtype){
-         search = itemtype;
-       }else if(name && itemtype){
-         search = name;
-       }
-       if(search !== null && search !== 'undefined'){
-         //Match data column and map to ID
-         if(type === 'data'
-         && string.toLowerCase() === 'id'){
-           return this.changeMetaGetObj(search, string, obj, key);
-         }
-
-         //Match if string and search are equal
-         if( string.toLowerCase() === search.toLowerCase() ){
-           return this.changeMetaGetObj(search, string, obj, key);
-         }
-
-         //Match if string contains search and vice versa
-         if(string.length < search.length){
-           let sch = search.replace(/[_-\s]/g, ' ');
-           sch = sch.toLowerCase();
-           string = string.toLowerCase();
-           if(sch.includes(string)){
-             return this.changeMetaGetObj(search, string, obj, key);
-           }
-         }else{
-           let str = string.replace(/[_-\s]/gi, ' ');
-           search = search.toLowerCase();
-           str = str.toLowerCase();
-           if(str.includes(search)){
-             return this.changeMetaGetObj(search, string, obj, key);
-           }
-         }
-
-         //Finally Fuzzy match string to search based on which is larger
-         let fuzzy = [];
-         let str = string.replace(/[_-\s]/gi, '');
-         let sch = search.replace(/[_-\s]/gi, '');
-         if(str.length > sch.length){
-           fuzzy = bitap(str.toLowerCase(), sch.toLowerCase(), 1);
-         }else{
-           fuzzy = bitap(sch.toLowerCase(), str.toLowerCase(), 1);
-         }
-         if(fuzzy.length > 1 && fuzzy[0] > 3){
-           return this.changeMetaGetObj(search, string, obj, key);
-         }
-         if(type === 'data'
-         && string.toLowerCase() === 'id'){
-           return this.changeMetaGetObj(search, string, obj, key);
-         }
-       }
-     });
-  }
-
   filterGetObj(arr, string, type) {
     return arr.filter((obj) => {
-       return this.findInObject(obj, string, type, 'getObj');
+       return this.findInObject(obj, string, type);
     });
   }
 
   filterGetIndex(arr, string, type) {
     return new Promise((resolve, reject) => {
        let result = arr.findIndex((obj) => {
-         return this.findInObject(obj, string, type, 'getIndex');
+         return this.findInObject(obj, string, type);
        });
        resolve(result);
     });
@@ -395,19 +400,6 @@ class MapsCollection extends Component {
       resolve();
     })
   }
-
-  updateNewFileOrg(ev) {
-    this.setState({ newFile: { ...this.state.newFile, org: ev.target.value } });
-  }
-
-  updateMapsStep(){
-    this.props.updateMapsStep(true);
-  }
-
-  makePoints = ((str) => {
-    str = str.split(", ");
-    return str.sort();
-  });
 
   render() {
     const {

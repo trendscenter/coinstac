@@ -90,14 +90,13 @@ class MapsEdit extends Component {
   componentDidMount = () => {
     const {
       params,
-      consortia,
       collections,
-      mapped,
       pipelines,
       saveCollection,
+      associatedConsortia,
     } = this.props;
 
-    const consortium = consortia.find(c => c.id === params.consortiumId);
+    const consortium = associatedConsortia.find(c => c.id === params.consortiumId);
     const pipeline = pipelines.find(p => p.id === consortium.activePipelineId);
 
     if (pipeline.steps[0].dataMeta && pipeline.steps[0].dataMeta.type) {
@@ -124,7 +123,7 @@ class MapsEdit extends Component {
       },
     });
 
-    this.setState({ isMapped: mapped });
+    this.setState({ isMapped: consortium.isMapped });
 
     let totalInputFields = 0;
 
@@ -150,7 +149,7 @@ class MapsEdit extends Component {
       return;
     }
 
-    const { containers, stepsTotal, stepsMapped } = this.state;
+    const { containers, stepsTotal } = this.state;
 
     const newContainers = containers;
     newContainers.push(container);
@@ -163,10 +162,8 @@ class MapsEdit extends Component {
     ];
 
     let unmappedContainersCount = 0;
-    console.log('unique', uniqueContainers);
     uniqueContainers.forEach((item) => {
       const itemClass = item.getAttribute('class');
-      console.log('classao', itemClass);
 
       if (!itemClass.includes(filter[0]) && !itemClass.includes(filter[1])) {
         unmappedContainersCount += 1;
@@ -175,11 +172,7 @@ class MapsEdit extends Component {
 
     const stepsMappedCount = stepsTotal - unmappedContainersCount;
 
-    console.log('MAPPED', stepsMappedCount);
-
-    if (stepsMappedCount !== stepsMapped) {
-      this.setState({ stepsMapped: stepsMappedCount });
-    }
+    this.setState({ stepsMapped: stepsMappedCount });
 
     uniqueContainers.forEach((container) => {
       drake.containers.push(container);
@@ -190,14 +183,6 @@ class MapsEdit extends Component {
     drake.on('drop', (el, target) => {
       this.mapObject(el, target);
     });
-  }
-
-  getMapped = (consortium) => {
-    if (consortium.isMapped) {
-      return true;
-    }
-
-    return false;
   }
 
   mapObject = (el, target) => {
@@ -474,7 +459,7 @@ class MapsEdit extends Component {
           <MapsStepFieldset
             getContainers={this.getContainers}
             key={`step-${inputMapKey}`}
-            name={inputMapKey}
+            fieldsetName={inputMapKey}
             stepFieldset={inputMap[inputMapKey]}
             consortium={activeConsortium}
             removeMapStep={this.removeMapStep}
@@ -487,12 +472,6 @@ class MapsEdit extends Component {
 
     return stepsInputs;
   }
-
-  uniqueArray(array) {
-    return array.filter(function(elem, pos,arr) {
-      return arr.indexOf(elem) == pos;
-    });
-  };
 
   updateCollection(updateObj, callback) {
     this.setState(prevState => ({
