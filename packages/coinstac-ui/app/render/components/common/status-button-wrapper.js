@@ -51,7 +51,7 @@ export default class StatusButtonWrapper extends Component {
   }
 
   render() {
-    const { children, status, ...otherProps } = this.props
+    const { children } = this.props
 
     const wrapperStyle = {
       display: 'flex',

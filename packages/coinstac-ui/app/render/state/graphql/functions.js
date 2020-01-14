@@ -183,3 +183,8 @@ export const UPDATE_CONSORTIA_MAPPED_USERS_MUTATION = gql`
   mutation updateConsortiaMappedUsers($consortia: [ID])
     ${mutations.updateConsortiaMappedUsers}
 `;
+
+export const UPDATE_PASSWORD_MUTATION = gql`
+  mutation updatePassword($currentPassword: String!, $newPassword: String!)
+    ${mutations.updatePassword}
+`;
