@@ -777,7 +777,36 @@ const resolvers = {
         .run(connection)
 
       return result
-    }
+    },
+    /**
+     * Updated password
+     * @param {object} auth User object from JWT middleware validateFunc
+     * @param {object} args
+     * @param {string} args.currentPassword Current password
+     * @param {string} args.newPassword New password
+     * @return {boolean} Success status
+     */
+    updatePassword: async ({ auth: { credentials } }, args) => {
+      const { currentPassword, newPassword } = args
+      const currentUser = await fetchOne('users', credentials.id)
+
+      const isPasswordCorrect =
+        await helperFunctions.verifyPassword(currentPassword, currentUser.passwordHash)
+
+      if (!isPasswordCorrect) {
+        return Boom.badData('Current password is not correct')
+      }
+
+      const newPasswordHash = await helperFunctions.hashPassword(newPassword)
+
+      const connection = await helperFunctions.getRethinkConnection()
+      await rethink.table('users')
+        .get(credentials.id)
+        .update({ passwordHash: newPasswordHash })
+        .run(connection)
+
+      return true
+    },
   },
   Subscription: {
     /**
