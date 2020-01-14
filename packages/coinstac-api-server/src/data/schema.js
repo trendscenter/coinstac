@@ -141,6 +141,7 @@ const typeDefs = `
     updateUserConsortiumStatus(consortiumId: ID, status: String): User
     updateConsortiumMappedUsers(consortiumId: ID, mappedForRun: [ID]): JSON
     updateConsortiaMappedUsers(consortia: [ID]): JSON
+    updatePassword(currentPassword: String!, newPassword: String!): Boolean
   }
 
   # This is a description of the queries

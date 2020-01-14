@@ -82,6 +82,11 @@ const mutations = {
       updateConsortiaMappedUsers(consortia: $consortia)
     }
   `,
+  updatePassword: `
+    {
+      updatePassword(currentPassword: $currentPassword, newPassword: $newPassword)
+    }
+  `,
 };
 
 module.exports = mutations;
