@@ -62,4 +62,40 @@ module.exports = [
       },
     },
   },
+  {
+    method: 'POST',
+    path: '/sendPasswordResetEmail',
+    config: {
+      auth: false,
+      pre: [
+        { method: helperFunctions.validateEmail },
+      ],
+      handler: (req, res) => {
+        const resetToken = helperFunctions.createPasswordResetToken(req.payload.email)
+          
+        helperFunctions
+          .savePasswordResetToken(req.payload.email, resetToken)
+          .then(() => {
+            res().code(204);
+          })
+      },
+    },
+  },
+  {
+    method: 'POST',
+    path: '/resetPassword',
+    config: {
+      auth: false,
+      pre: [
+        { method: helperFunctions.validateResetToken },
+      ],
+      handler: (req, res) => {
+        helperFunctions
+          .resetPassword(req, res)
+          .then(() => {
+            res().code(204);
+          })
+      },
+    },
+  },
 ];
