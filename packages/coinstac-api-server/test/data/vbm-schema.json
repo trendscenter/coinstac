@@ -17,7 +17,7 @@
         "max": 3,
         "type": "array",
         "items": "number",
-        "defaultValue": [6, 6, 6],
+        "default": [6, 6, 6],
         "description": "Enter the full-width at half maximum (FWHM) of the Gaussian smoothing kernel in mm, Three values should be entered, denoting the FWHM in the x,y and z directions."
       },
       "input_bids_dir": {
