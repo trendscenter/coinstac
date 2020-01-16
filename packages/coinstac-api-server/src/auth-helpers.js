@@ -33,6 +33,14 @@ const helperFunctions = {
     return jwt.sign({ username: user }, dbmap.cstacJWTSecret, { algorithm: 'HS256', expiresIn: '12h' });
   },
   /**
+   * Create JWT for password reset
+   * @param {string} email email
+   * @return {string} A JWT for the requested email
+   */
+  createPasswordResetToken(email) {
+    return jwt.sign({ email }, dbmap.cstacJWTSecret, { algorithm: 'HS256', expiresIn: '24h' });
+  },
+  /**
    * Create new user account
    * @param {string} user authenticating user's username
    * @param {string} passwordHash string of hashed password
@@ -67,6 +75,22 @@ const helperFunctions = {
           .run(connection).then(res => connection.close().then(() => res));
       })
       .then(result => result.changes[0].new_val);
+  },
+  /**
+   * Save password reset token
+   * @param {string} email user's email
+   * @param {string} resetToken reset password token
+   * @return {object} nothing
+   */
+  savePasswordResetToken(email, resetToken) {
+    return helperFunctions.getRethinkConnection()
+      .then(connection => {
+        return rethink.table('users')
+          .filter({ email })
+          .update({ passwordResetToken: resetToken })
+          .run(connection)
+          .then(() => connection.close())
+      })
   },
   /**
    * dbmap getter
@@ -231,6 +255,68 @@ const helperFunctions = {
           res(Boom.unauthorized('Incorrect username or password.'));
         }
       });
+  },
+  /**
+   * Confirms that submitted email is valid
+   * @param {object} req request
+   * @param {object} res response
+   * @return {object} The requested object
+   */
+  validateEmail(req, res) {
+    return helperFunctions.getRethinkConnection()
+      .then(connection =>
+        rethink.table('users')
+          .filter({ email: req.payload.email })
+          .count()
+          .eq(1)
+          .run(connection)
+          .then(emailExists => connection.close().then(() => ({ connection, emailExists })))
+      )
+      .then(({ connection, emailExists }) => {
+        if (emailExists) {
+          res(req.payload);
+        } else {
+          res(Boom.badRequest('Invalid email'));
+        }
+
+        return connection.close();
+      })
+  },
+  /**
+   * Confirms that submitted token is valid
+   * @param {object} req request
+   * @param {object} res response
+   * @return {object} The requested object
+   */
+  validateResetToken(req, res) {
+    try {
+      const { email } = jwt.verify(req.payload.token, dbmap.cstacJWTSecret)
+      return helperFunctions.validateEmail({ payload: { email } }, res)
+    } catch(err) {
+      res(Boom.badRequest(err))
+    }
+  },
+  /**
+   * Reset password
+   * @param {object} req request
+   * @param {object} res response
+   * @return {object} The requested object
+   */
+  resetPassword(req, res) {
+    return helperFunctions.getRethinkConnection()
+      .then(connection =>
+        helperFunctions.hashPassword(req.payload.password)
+          .then(newPassword =>
+            rethink.table('users')
+            .filter({ passwordResetToken: req.payload.token })
+            .update({
+              passwordHash: newPassword,
+              passwordResetToken: '',
+            })
+            .run(connection)
+            .then(() => connection.close())
+          ) 
+      )
   },
   /**
    * Verify that authenticating user is using correct password
