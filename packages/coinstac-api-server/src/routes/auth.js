@@ -71,13 +71,10 @@ module.exports = [
         { method: helperFunctions.validateEmail },
       ],
       handler: (req, res) => {
-        const resetToken = helperFunctions.createPasswordResetToken(req.payload.email)
-          
         helperFunctions
-          .savePasswordResetToken(req.payload.email, resetToken)
-          .then(() => {
-            res().code(204);
-          })
+          .savePasswordResetToken(req.payload.email)
+          .then(() => res().code(204))
+          .catch(() => res().code(400))
       },
     },
   },
@@ -91,10 +88,8 @@ module.exports = [
       ],
       handler: (req, res) => {
         helperFunctions
-          .resetPassword(req, res)
-          .then(() => {
-            res().code(204);
-          })
+          .resetPassword(req.payload.token, req.payload.password)
+          .then(() => res().code(204))
       },
     },
   },

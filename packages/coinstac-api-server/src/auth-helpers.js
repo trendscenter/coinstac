@@ -1,9 +1,11 @@
+const sgMail = require('@sendgrid/mail');
 const crypto = require('crypto');
 const Boom = require('boom');
 const jwt = require('jsonwebtoken');
 const rethink = require('rethinkdb');
 const Promise = require('bluebird');
 const config = require('../config/default');
+const dotenv = require('dotenv')
 
 let dbmap;
 try {
@@ -22,6 +24,10 @@ try {
     cstacJWTSecret: 'test',
   };
 }
+
+dotenv.config()
+
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 const helperFunctions = {
   /**
@@ -78,19 +84,32 @@ const helperFunctions = {
   },
   /**
    * Save password reset token
-   * @param {string} email user's email
-   * @param {string} resetToken reset password token
-   * @return {object} nothing
+   * @param {string} email email to send password reset token
+   * @return {object}
    */
-  savePasswordResetToken(email, resetToken) {
-    return helperFunctions.getRethinkConnection()
-      .then(connection => {
-        return rethink.table('users')
-          .filter({ email })
-          .update({ passwordResetToken: resetToken })
-          .run(connection)
-          .then(() => connection.close())
-      })
+  savePasswordResetToken(email) {
+    const resetToken = helperFunctions.createPasswordResetToken(email)
+  
+    const msg = {
+      to: email,
+      from: 'no-reply@mrn.org',
+      subject: 'Password Reset Request',
+      html: `We received your password reset request. <br/>
+        Please use this token for password reset. <br/>
+        Token: <strong>${resetToken}</strong>`,
+    };
+
+    return sgMail.send(msg)
+      .then(() =>
+        helperFunctions.getRethinkConnection()
+          .then(connection =>
+            rethink.table('users')
+              .filter({ email })
+              .update({ passwordResetToken: resetToken })
+              .run(connection)
+              .then(() => connection.close())
+          )
+      )
   },
   /**
    * dbmap getter
@@ -289,26 +308,40 @@ const helperFunctions = {
    * @return {object} The requested object
    */
   validateResetToken(req, res) {
-    try {
-      const { email } = jwt.verify(req.payload.token, dbmap.cstacJWTSecret)
-      return helperFunctions.validateEmail({ payload: { email } }, res)
-    } catch(err) {
-      res(Boom.badRequest(err))
-    }
+    return helperFunctions.getRethinkConnection()
+      .then(connection =>
+        rethink.table('users')
+          .filter({ passwordResetToken: req.payload.token })
+          .count()
+          .eq(1)
+          .run(connection)
+          .then(resetTokenExists => {
+            if (!resetTokenExists) {
+              res(Boom.badRequest('Invalid token'))
+            } else {
+              try {
+                const { email } = jwt.verify(req.payload.token, dbmap.cstacJWTSecret) 
+                return helperFunctions.validateEmail({ payload: { email } }, res)
+              } catch(err) {
+                res(Boom.badRequest(err))
+              }
+            }
+          })
+      )
   },
   /**
    * Reset password
-   * @param {object} req request
-   * @param {object} res response
-   * @return {object} The requested object
+   * @param {object} password token for resetting password
+   * @param {object} password new password
+   * @return {object}
    */
-  resetPassword(req, res) {
+  resetPassword(token, password) {
     return helperFunctions.getRethinkConnection()
       .then(connection =>
-        helperFunctions.hashPassword(req.payload.password)
+        helperFunctions.hashPassword(password)
           .then(newPassword =>
             rethink.table('users')
-            .filter({ passwordResetToken: req.payload.token })
+            .filter({ passwordResetToken: token })
             .update({
               passwordHash: newPassword,
               passwordResetToken: '',
