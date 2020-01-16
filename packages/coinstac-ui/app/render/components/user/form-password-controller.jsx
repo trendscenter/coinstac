@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
 import {
   ValidatorForm,
   TextValidator,
@@ -10,10 +11,13 @@ import {
   Paper,
   Tab,
   Tabs,
-  TextField,
 } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
 import LayoutNoauth from '../layout-noauth';
+import {
+  sendPasswordResetEmail,
+  resetPassword,
+} from '../../state/ducks/auth';
 
 const styles = theme => ({
   formControl: {
@@ -92,11 +96,22 @@ class FormPasswordController extends Component {
   }
 
   handleSendEmail = () => {
-    this.handleSendingEmailStateChange('loading', true);
+    const { sendingEmail } = this.state;
+    
+    // this.handleSendingEmailStateChange('loading', true);
+    this.props.sendPasswordResetEmail({
+      email: sendingEmail.email
+    });
   }
 
   handleResetPassword = () => {
-    this.handleResettingPasswordStateChange('loading', true);
+    const { resettingPassword } = this.state;
+
+    // this.handleResettingPasswordStateChange('loading', true);
+    this.props.resetPassword({
+      token: resettingPassword.token,
+      password: resettingPassword.newPassword,
+    });
   }
 
   render() {
@@ -181,6 +196,7 @@ class FormPasswordController extends Component {
                   {...commonProps}
                 />
                 <TextValidator
+                  type="password"
                   label="New Password"
                   value={resettingPassword.newPassword}
                   disabled={resettingPassword.loading}
@@ -192,6 +208,7 @@ class FormPasswordController extends Component {
                   {...commonProps}
                 />
                 <TextValidator
+                  type="password"
                   label="Confirm Password"
                   value={resettingPassword.confirmPassword}
                   validators={['isPasswordMatch', 'required']}
@@ -226,4 +243,13 @@ FormPasswordController.contextTypes = {
 
 FormPasswordController.displayName = 'FormPasswordController';
 
-export default withStyles(styles)(FormPasswordController);
+const mapStateToProps = ({ auth, loading }) => {
+  return { auth, loading };
+}
+
+const connectedComponent = connect(mapStateToProps, {
+  sendPasswordResetEmail,
+  resetPassword,
+})(FormPasswordController);
+
+export default withStyles(styles)(connectedComponent);
