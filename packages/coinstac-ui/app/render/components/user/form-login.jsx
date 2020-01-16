@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
+import { Link } from 'react-router';
 import { withStyles } from '@material-ui/core/styles';
 import Paper from '@material-ui/core/Paper';
 import Button from '@material-ui/core/Button';
@@ -41,7 +42,8 @@ class FormLogin extends Component {
       username: '',
       password: '',
       saveLogin: false,
-      openSetStartupDirectoryDialog: false,
+      isForgotPasswordDialogOpen: false,
+      isStartupDirectoryDialogOpen: false,
     };
   }
 
@@ -71,17 +73,23 @@ class FormLogin extends Component {
     });
   };
 
-  openStartupDirectoryDialog = () => {
-    this.setState({ openSetStartupDirectoryDialog: true });
+  toggleForgotPasswordDialog = () => {
+    const { isForgotPasswordDialogOpen } = this.state;
+    this.setState({
+      isForgotPasswordDialogOpen: !isForgotPasswordDialogOpen,
+    });
   }
 
-  closeStartupDirectoryDialog = () => {
-    this.setState({ openSetStartupDirectoryDialog: false });
+  toggleStartupDirectoryDialog = () => {
+    const { isStartupDirectoryDialogOpen } = this.state;
+    this.setState({
+      isStartupDirectoryDialogOpen: !isStartupDirectoryDialogOpen,
+    });
   }
 
   changeAppDirectory = ({ appDirectory }) => {
     this.props.changeAppDirectory(appDirectory);
-    this.setState({ openSetStartupDirectoryDialog: false });
+    this.setState({ isStartupDirectoryDialogOpen: false });
   }
 
   renderError = () => {
@@ -102,7 +110,13 @@ class FormLogin extends Component {
 
   render() {
     const { auth, loading, classes } = this.props;
-    const { username, password, saveLogin, openSetStartupDirectoryDialog } = this.state;
+    const {
+      username,
+      password,
+      saveLogin,
+      isForgotPasswordDialogOpen,
+      isStartupDirectoryDialogOpen,
+    } = this.state;
 
     return (
       <div className={classes.loginFormContainer}>
@@ -155,13 +169,26 @@ class FormLogin extends Component {
             </Button>
           </form>
         </Paper>
-        <Button disabled={!auth.isApiVersionCompatible}>Forgot Password?</Button>
-        <Button onClick={this.openStartupDirectoryDialog} disabled={!auth.isApiVersionCompatible}>Change App Settings</Button>
+
+        <Button
+          component={Link}
+          to="/forgot-password"
+          color={window.location.href.includes('/forgot-password') ? 'primary' : 'default'}
+        >
+          Forgot Password?
+        </Button>
+
+        <Button
+          onClick={this.toggleStartupDirectoryDialog}
+          disabled={!auth.isApiVersionCompatible}
+        >
+          Change App Settings
+        </Button>
         <FormStartupDirectory
-          open={openSetStartupDirectoryDialog}
-          close={this.closeStartupDirectoryDialog}
-          onSubmit={this.changeAppDirectory}
+          open={isStartupDirectoryDialogOpen}
+          close={this.toggleStartupDirectoryDialog}
           appDirectory={auth.appDirectory}
+          onSubmit={this.changeAppDirectory}
         />
       </div>
     );
