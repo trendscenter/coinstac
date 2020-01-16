@@ -32,72 +32,59 @@ source for the easiest usage of coinstac simulator, and be called
 An example specification may look like:
 ```json
 {
-"id": "example-computation-unique-name",
-"meta": {
-"name": "example computation",]
-"version": "v1.0.0",
-"repository": "github.com\/user\/computation.git",
-"description": "a computation example",
-"controller": "decentralized" // required for decentralized
-computations
-"tags": ["vbm", "preprocess"]
+  "meta": {
+    "id": "preprocess-vbm",
+    "name": "VBM (Voxel Based Morphometry) on T1W scans",
+    "version":  "v1.0",
+    "repository": "github.com/MRN-Code/Coinstac_VBM_computation.git",
+    "description": "This computation runs Voxel Based Morphometry on structural T1 weighted MRI scans(BIDS format and T1w nifiti) using SPMv12 standalone and MATLAB Runtimev713. Each scan takes approximately 5 mins to run on a system with 2.3 GHz,i5 equivalent processor, 8GB RAM. Each scan output directory takes about 150MB space. Please make sure to have the space and resources.",
+    "tags": ["vbm", "preprocess"], 
+    "preprocess": true
+  },
+  "computation": {
+    "type": "docker",
+   "dockerImage": "coinstacteam/fmri_coinstac",
+    "command": [
+      "python",
+      "\/computation\/run_fmri.py"
+    ],
+
+
+"input":{
+
+"options":{
+"type":"number",
+"label": "Smoothing FWHM in mm",
+"defaultValue": 10,
+"min": 0,
+"max": 10,
+"step": 1,
+"description":"Full width half maximum smoothing kernel value in x,y,z directions"
 },
 
-"computation": {
-"type": "docker",
-"dockerImage": "spanta28\/coinstac:vbm_nipype",
-"command": ["python", "\/computation\/comp1.py"],
-"remote": {
-"type": "docker",
-"dockerImage": "spanta28/vbm_nipype",
-"command:" ["python", "\/computation\/comp2.py"],
-},
-"input": {
-"x": {
-"label": "x-value"
-"type": "number",
-"description": "This field is optional",
-},
-"y": {
-"type": "string",
-"default": "left-ventricle",
-"label": "y-value"
+"data":{
+"type":"array",
+"label": "Dataset_description.json of Bids Directory"
 }
+
 },
-"output": {
-"z": {
-"label": "z-value",
-"type": "array",
-"contains": ["number"]
-},
-"wc1files": {},
-"y": {}
-}
-},
-display: [
-{
-source: "output.wc1files",
-type: "nifti_viewer"
-},
-{
-source: "z"
-type: "box_plot",
-label: "",
-x_labels: ["fwhm_x", "fwhm_y", "fwhm_z"],
-x: ["fwhm_x", "fwhm_y", "fwhm_z"],
-y_labels: ["FWHM(mm)"],
-y: []
-},
-{
-source: "y"
-type: "box_plot",
-label: "",
-x_labels: ["efc"],
-x: ["efc"],
-y_labels: ["EFC"],
-y: []
-}
-]
+  
+    "output": {
+      "display":{
+      "type": "string",
+      "description":"Output wc1 images"
+      },
+      "message":{
+      "type": "string",
+      "description":"Output message from VBM step"
+      },
+	    "download_outputs":{
+		    "type":"string",
+		    "description":"Download vbm outputs here"
+	    }
+	}
+
+  }
 }
 ```
 Meta
