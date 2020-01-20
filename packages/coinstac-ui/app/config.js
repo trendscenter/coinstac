@@ -4,6 +4,7 @@ const convict = require('convict');
 const pify = require('util').promisify;
 const access = pify(require('fs').access);
 const path = require('path');
+const home = require('os').homedir;
 
 const localConfig = path.resolve(__dirname, '..', 'config', 'local.json');
 
@@ -19,29 +20,29 @@ const conf = convict({
     env: 'NODE_ENV',
   },
   apiServer: {
-    hostname: 'coinstac.rs.gsu.edu',
-    pathname: '/api',
-    protocol: 'https:',
+    hostname: 'localhost',
+    pathname: '',
+    port: '3100',
+    protocol: 'http:',
   },
   subApiServer: {
-    hostname: 'coinstac.rs.gsu.edu',
-    pathname: '/ws',
-    port: '443',
-    protocol: 'wss:',
-  },
-  pipelineWSServer: {
-    hostname: 'coinstac.rs.gsu.edu',
+    hostname: 'localhost',
     pathname: '',
-    port: '443',
-    protocol: 'https:',
+    port: '3100',
+    protocol: 'ws:',
+  },
+  fileServer: {
+    hostname: 'localhost',
+    pathname: '/transfer',
+    port: '3300',
+    protocol: 'http:',
   },
   mqttServer: {
-    hostname: 'coinstac.rs.gsu.edu',
+    hostname: 'localhost',
     pathname: '',
-    port: '80',
-    protocol: 'mqtts:',
+    port: '1883',
+    protocol: 'mqtt:',
   },
-
   logFile: 'coinstac-log.json',
   logFileBoot: 'coinstac-boot-error-log.txt',
   // these are appended to the home dir for you OS
@@ -54,13 +55,10 @@ const conf = convict({
     sunos: '.config/coinstac/',
     win32: 'coinstac/',
   },
+  coinstacHome: path.join(home(), '.coinstac'),
 });
 
 module.exports = function loadConfig() {
-  if (conf.get('env') === 'production') {
-    return Promise.resolve(conf);
-  }
-
   return fileExists(localConfig)
     .then((exists) => {
       if (exists) {

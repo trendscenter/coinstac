@@ -54,6 +54,7 @@ class ConsortiumTabs extends Component {
       unsubscribeConsortia: null,
       unsubscribeUsers: null,
       selectedTabIndex: 0,
+      savingStatus: 'init',
     };
 
     this.getConsortiumRuns = this.getConsortiumRuns.bind(this);
@@ -83,13 +84,8 @@ class ConsortiumTabs extends Component {
 
     if (nextProps.activeConsortium) {
       const { activeConsortium: { __typename, ...other } } = nextProps;
-      const consortiumUsers = [];
-      if (this.props.routes[3].path !== 'new' || (this.props.routes[3].path === 'new' && this.state.consortium.id)) {
-        nextProps.activeConsortium.owners.forEach(user => consortiumUsers
-          .push({ id: user, owner: true, member: true }));
-        nextProps.activeConsortium.members
-          .filter(user => consortiumUsers.findIndex(consUser => consUser.id === user) === -1)
-          .forEach(user => consortiumUsers.push({ id: user, member: true }));
+      if (this.props.routes[3].path !== 'new' || (this.props.routes[3].path === 'new' && this.state.consortium.id) ) {
+        const consortiumUsers = this.getConsortiumUsers(other);
         this.setState({ consortium: { ...other }, consortiumUsers });
       }
     }
@@ -100,7 +96,20 @@ class ConsortiumTabs extends Component {
       this.state.unsubscribeConsortia();
     }
 
-    this.state.unsubscribeUsers();
+    if (this.state.unsubscribeUsers) {
+      this.state.unsubscribeUsers();
+    }
+  }
+
+  getConsortiumUsers = consortium => {
+    let consortiumUsers = [];
+
+    consortium.owners.forEach(user => consortiumUsers.push({ id: user, owner: true, member: true }));
+    consortium.members
+      .filter(user => consortiumUsers.findIndex(consUser => consUser.id === user) === -1)
+      .forEach(user => consortiumUsers.push({ id: user, member: true }));
+
+    return consortiumUsers;
   }
 
   addMemberToConsortium(userId) {
@@ -137,6 +146,8 @@ class ConsortiumTabs extends Component {
     //
     */
 
+    this.setState({ savingStatus: 'pending' });
+
     this.props.saveConsortium(this.state.consortium)
     .then(({ data: { saveConsortium: { __typename, ...other } } }) => {
       let unsubscribeConsortia = this.state.unsubscribeConsortia;
@@ -147,10 +158,13 @@ class ConsortiumTabs extends Component {
         unsubscribeConsortia = this.props.subscribeToConsortia(other.id);
       }
 
+      const consortiumUsers = this.getConsortiumUsers(other);
 
       this.setState({
         consortium: { ...other },
-        unsubscribeConsortia
+        consortiumUsers,
+        unsubscribeConsortia,
+        savingStatus: 'success',
       });
 
       this.props.notifySuccess({
@@ -166,6 +180,9 @@ class ConsortiumTabs extends Component {
     })
     .catch(({ graphQLErrors }) => {
       console.log(graphQLErrors);
+      this.setState({
+        savingStatus: 'fail',
+      })
     });
   }
 
@@ -186,8 +203,14 @@ class ConsortiumTabs extends Component {
       consortia,
       classes,
     } = this.props;
+
     const { user } = auth;
-    const { selectedTabIndex, consortium, consortiumUsers } = this.state;
+    const {
+      selectedTabIndex,
+      consortium,
+      consortiumUsers,
+      savingStatus,
+    } = this.state;
 
     const isEditingConsortium = !!consortium.id;
 
@@ -229,6 +252,7 @@ class ConsortiumTabs extends Component {
               owner={isOwner}
               user={user}
               users={users}
+              savingStatus={savingStatus}
             />
           )
         }

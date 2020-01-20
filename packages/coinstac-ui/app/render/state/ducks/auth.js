@@ -1,12 +1,17 @@
 import axios from 'axios';
 import ipcPromise from 'ipc-promise';
 import { remote } from 'electron';
+import { get } from 'lodash';
+import { LOCATION_CHANGE } from 'react-router-redux';
 import { applyAsyncLoading } from './loading';
-
-const CoinstacClientCore = require('coinstac-client-core');
 
 const apiServer = remote.getGlobal('config').get('apiServer');
 const API_URL = `${apiServer.protocol}//${apiServer.hostname}${apiServer.port ? `:${apiServer.port}` : ''}${apiServer.pathname}`;
+
+const getErrorDetail = error => ({
+  message: get(error, 'response.data.message'),
+  statusCode: get(error, 'response.status'),
+});
 
 const INITIAL_STATE = {
   user: {
@@ -17,13 +22,18 @@ const INITIAL_STATE = {
     institution: '',
     consortiaStatuses: {},
   },
-  appDirectory: localStorage.getItem('appDirectory') || CoinstacClientCore.getDefaultAppDirectory(),
+  appDirectory: localStorage.getItem('appDirectory') || remote.getGlobal('config').get('coinstacHome'),
   isApiVersionCompatible: true,
+  locationStacks: [],
+  error: null,
 };
+
+const EXCLUDE_PATHS = ['login', 'signup'];
 
 // Actions
 const SET_USER = 'SET_USER';
 const CLEAR_USER = 'CLEAR_USER';
+const SET_ERROR = 'SET_ERROR';
 const CLEAR_ERROR = 'CLEAR_ERROR';
 const UPDATE_USER_CONSORTIA_STATUSES = 'UPDATE_USER_CONSORTIA_STATUSES';
 const UPDATE_USER_PERMS = 'UPDATE_USER_PERMS';
@@ -32,13 +42,14 @@ const SET_API_VERSION_CHECK = 'SET_API_VERSION_CHECK';
 
 // Action Creators
 export const setUser = user => ({ type: SET_USER, payload: user });
-export const clearError = () => ({ type: CLEAR_ERROR, payload: null });
-export const updateUserPerms = perms => ({ type: UPDATE_USER_PERMS, payload: perms });
+export const clearUser = () => ({ type: CLEAR_USER });
+export const setError = error => ({ type: SET_ERROR, payload: error });
+export const clearError = () => ({ type: CLEAR_ERROR });
 export const updateUserConsortiaStatuses = statuses => ({
   type: UPDATE_USER_CONSORTIA_STATUSES,
   payload: statuses,
 });
-export const clearUser = () => ({ type: CLEAR_USER, payload: null });
+export const updateUserPerms = perms => ({ type: UPDATE_USER_PERMS, payload: perms });
 export const setAppDirectory = appDirectory => ({ type: SET_APP_DIRECTORY, payload: appDirectory });
 export const setApiVersionCheck = isApiVersionCompatible => ({
   type: SET_API_VERSION_CHECK,
@@ -61,9 +72,18 @@ const initCoreAndSetToken = (reqUser, data, appDirectory, dispatch) => {
         sessionStorage.setItem('id_token', data.id_token);
       }
 
-      dispatch(setUser({ user }));
+      dispatch(setUser(user));
     });
 };
+
+export const logout = applyAsyncLoading(() => (dispatch) => {
+  localStorage.removeItem('id_token');
+  sessionStorage.removeItem('id_token');
+  return ipcPromise.send('logout')
+    .then(() => {
+      dispatch(clearUser());
+    });
+});
 
 export const autoLogin = applyAsyncLoading(() => (dispatch, getState) => {
   let token = localStorage.getItem('id_token');
@@ -94,15 +114,17 @@ export const autoLogin = applyAsyncLoading(() => (dispatch, getState) => {
       );
     })
     .catch((err) => {
+      console.error(err); // eslint-disable-line no-console
       if (err.response) {
-        localStorage.setItem('id_token', null);
-        if (err.response.status === 401) {
-          dispatch(setUser({ ...INITIAL_STATE, error: 'Please Login Again' }));
+        dispatch(logout());
+        const { statusCode, message } = getErrorDetail(err);
+        if (statusCode === 401) {
+          dispatch(setError(message || 'Please Login Again'));
         } else {
-          dispatch(setUser({ ...INITIAL_STATE, error: 'An unexpected error has occurred' }));
+          dispatch(setError('An unexpected error has occurred'));
         }
       } else {
-        dispatch(setUser({ ...INITIAL_STATE, error: 'Server not responding' }));
+        dispatch(setError('Coinstac services not available'));
       }
     });
 });
@@ -113,7 +135,7 @@ export const checkApiVersion = applyAsyncLoading(() => dispatch => axios.get(`${
     dispatch(setApiVersionCheck(versionsMatch));
   })
   .catch(() => {
-    dispatch(setUser({ ...INITIAL_STATE, error: 'An unexpected error has occurred' }));
+    dispatch(setError('An unexpected error has occurred'));
   }));
 
 export const login = applyAsyncLoading(({ username, password, saveLogin }) => (dispatch, getState) => axios.post(`${API_URL}/authenticate`, { username, password })
@@ -122,22 +144,19 @@ export const login = applyAsyncLoading(({ username, password, saveLogin }) => (d
     return initCoreAndSetToken({ username, password, saveLogin }, data, appDirectory, dispatch);
   })
   .catch((err) => {
+    console.error(err); // eslint-disable-line no-console
     if (err.response) {
-      if (err.response.status === 401) {
-        dispatch(setUser({ ...INITIAL_STATE, error: 'Username and/or Password Incorrect' }));
+      const { statusCode } = getErrorDetail(err);
+
+      if (statusCode === 401) {
+        dispatch(setError('Username and/or Password Incorrect'));
       } else {
-        dispatch(setUser({ ...INITIAL_STATE, error: 'An unexpected error has occurred' }));
+        dispatch(setError('An unexpected error has occurred'));
       }
     } else {
-      dispatch(setUser({ ...INITIAL_STATE, error: 'Server not responding' }));
+      dispatch(setError('Coinstac services not available'));
     }
   }));
-
-export const logout = applyAsyncLoading(() => (dispatch) => {
-  localStorage.setItem('id_token', null);
-  sessionStorage.setItem('id_token', null);
-  dispatch(clearUser());
-});
 
 export const signUp = applyAsyncLoading(user => (dispatch, getState) => axios.post(`${API_URL}/createAccount`, user)
   .then(({ data }) => {
@@ -145,28 +164,56 @@ export const signUp = applyAsyncLoading(user => (dispatch, getState) => axios.po
     return initCoreAndSetToken(user, data, appDirectory, dispatch);
   })
   .catch((err) => {
-    if (err.response && err.response.data && (err.response.data.message === 'Username taken'
-          || err.response.data.message === 'Email taken')) {
-      dispatch(setUser({ ...INITIAL_STATE, error: err.response.data.message }));
+    const { statusCode, message } = getErrorDetail(err);
+    if (statusCode === 400) {
+      dispatch(setError(message));
     }
   }));
 
-export default function reducer(state = INITIAL_STATE, action) {
-  switch (action.type) {
-    case CLEAR_USER:
-      return { ...INITIAL_STATE };
-    case CLEAR_ERROR:
-      return { user: state.user };
+export default function reducer(state = INITIAL_STATE, { type, payload }) {
+  switch (type) {
     case SET_USER:
-      return { ...action.payload };
+      return { ...state, user: payload };
+    case CLEAR_USER:
+      return { ...state, user: { ...INITIAL_STATE.user } };
+    case SET_ERROR:
+      return { ...state, error: payload };
+    case CLEAR_ERROR:
+      return { ...state, error: null };
     case UPDATE_USER_CONSORTIA_STATUSES:
-      return { user: { ...state.user, consortiaStatuses: action.payload } };
+      return { ...state, user: { ...state.user, consortiaStatuses: payload } };
     case UPDATE_USER_PERMS:
-      return { user: { ...state.user, permissions: action.payload } };
+      return { ...state, user: { ...state.user, permissions: payload } };
     case SET_APP_DIRECTORY:
-      return { appDirectory: action.payload };
+      return { ...state, appDirectory: payload };
     case SET_API_VERSION_CHECK:
-      return { isApiVersionCompatible: action.payload };
+      return { ...state, isApiVersionCompatible: payload };
+    case LOCATION_CHANGE:
+      const { locationStacks } = state;
+      const { pathname } = payload;
+
+      if (EXCLUDE_PATHS.indexOf(pathname) !== -1) {
+        return state;
+      }
+
+      if (pathname === locationStacks[locationStacks.length - 1]) {
+        return state;
+      }
+
+      if (locationStacks.length > 1 &&
+        locationStacks[locationStacks.length - 2] === pathname) {
+        locationStacks.pop();
+
+        return {
+          ...state,
+          locationStacks,
+        }
+      }
+  
+      return {
+        ...state,
+        locationStacks: [...locationStacks, pathname],
+      };
     default:
       return state;
   }

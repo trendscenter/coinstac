@@ -9,7 +9,7 @@ module.exports = {
     },
     computation: {
       type: 'docker',
-      dockerImage: 'coinstac/coinstac-local-test',
+      dockerImage: 'coinstacteam/coinstac-local-test',
       command: ['python', '/computation/local.py'],
       input: {
         start: {
@@ -36,7 +36,7 @@ module.exports = {
     },
     computation: {
       type: 'docker',
-      dockerImage: 'coinstac/coinstac-local-error',
+      dockerImage: 'coinstacteam/coinstac-local-error',
       command: ['python', '/computation/local.py'],
       input: {
       },
@@ -57,11 +57,11 @@ module.exports = {
     },
     computation: {
       type: 'docker',
-      dockerImage: 'coinstac/coinstac-decentralized-test',
+      dockerImage: 'coinstacteam/coinstac-decentralized-test',
       command: ['python', '/computation/local.py'],
       remote: {
         type: 'docker',
-        dockerImage: 'coinstac/coinstac-decentralized-test',
+        dockerImage: 'coinstacteam/coinstac-decentralized-test',
         command: ['python', '/computation/remote.py'],
       },
       input: {
@@ -89,11 +89,11 @@ module.exports = {
     },
     computation: {
       type: 'docker',
-      dockerImage: 'coinstac/coinstac-decentralized-error',
+      dockerImage: 'coinstacteam/coinstac-decentralized-error',
       command: ['python', '/computation/local.py'],
       remote: {
         type: 'docker',
-        dockerImage: 'coinstac/coinstac-decentralized-error',
+        dockerImage: 'coinstacteam/coinstac-decentralized-error',
         command: ['python', '/computation/remote.py'],
       },
       input: {
@@ -105,6 +105,50 @@ module.exports = {
         },
       },
       output: {
+      },
+      display: {
+        type: 'table',
+      },
+    },
+  },
+  fileTest: {
+    meta: {
+      name: 'Large input test',
+      id: 'coinstac-large-input',
+      version: 'v1.0.0',
+      repository: 'github.com/user/computation.git',
+      description: 'sends a large file',
+    },
+    computation: {
+      type: 'docker',
+      dockerImage: 'coinstacteam/coinstac-file-transfer-test',
+      command: [
+        'python',
+        '/computation/local.py',
+      ],
+      remote: {
+        type: 'docker',
+        dockerImage: 'coinstacteam/coinstac-file-transfer-test',
+        command: [
+          'python',
+          '/computation/remote.py',
+        ],
+      },
+      input: {
+        size: {
+          type: 'number',
+          label: 'file size to test',
+        },
+      },
+      output: {
+        message: {
+          type: 'string',
+          label: 'has match message',
+        },
+        files: {
+          type: 'array',
+          label: 'output files',
+        },
       },
       display: {
         type: 'table',

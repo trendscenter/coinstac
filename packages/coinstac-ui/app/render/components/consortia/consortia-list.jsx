@@ -15,11 +15,11 @@ import MemberAvatar from '../common/member-avatar';
 import ListItem from '../common/list-item';
 import ListDeleteModal from '../common/list-delete-modal';
 import {
-  getCollectionFiles,
   getAllAssociatedConsortia,
   incrementRunCount,
   removeCollectionsFromAssociatedConsortia,
   saveAssociatedConsortia,
+  mapConsortiumData,
 } from '../../state/ducks/collections';
 import { saveLocalRun } from '../../state/ducks/runs';
 import { updateUserPerms } from '../../state/ducks/auth';
@@ -167,6 +167,10 @@ class ConsortiaList extends Component {
           name={user.id}
           showDetails
           width={40}
+          mapped={
+            consortium.mappedForRun &&
+              consortium.mappedForRun.indexOf(user.id) !== -1
+          }
         />
       ));
 
@@ -364,7 +368,16 @@ class ConsortiaList extends Component {
 
   startPipeline(consortiumId, activePipelineId) {
     return () => {
-      const { client, router } = this.props;
+      const {
+        client,
+        router,
+        incrementRunCount,
+        saveLocalRun,
+        createRun,
+        notifyInfo,
+        notifyWarning,
+      } = this.props;
+
       let isRemotePipeline = false;
       const pipelineData = client.readQuery({ query: FETCH_ALL_PIPELINES_QUERY });
       let pipeline = pipelineData.fetchAllPipelines
@@ -394,20 +407,9 @@ class ConsortiaList extends Component {
           __typename: 'Run',
         };
 
-        let status = 'started';
-        return this.props.getCollectionFiles(
-          consortiumId,
-          run.id,
-        )
-        .then((filesArray) => {
-          if (!filesArray || 'error' in filesArray) {
-            status = 'needs-map';
-            this.props.notifyWarning({
-              message: filesArray.error,
-              autoDismiss: 5,
-            });
-          } else {
-            this.props.notifyInfo({
+        return mapConsortiumData(consortiumId)
+          .then((filesArray) => {
+            notifyInfo({
               message: `Local Pipeline Starting for ${consortium.name}.`,
               action: {
                 label: 'Watch Progress',
@@ -431,18 +433,30 @@ class ConsortiaList extends Component {
               };
             }
 
+            const status = 'started';
+
             run.status = status;
 
-            this.props.incrementRunCount(consortiumId);
-            ipcRenderer.send('start-pipeline', { consortium, pipeline, filesArray: filesArray.allFiles, run });
-          }
+            incrementRunCount(consortiumId);
+            ipcRenderer.send('start-pipeline', {
+              consortium,
+              pipeline,
+              filesArray: filesArray.allFiles,
+              run,
+            });
 
-          this.props.saveLocalRun({ ...run, status });
-        });
+            saveLocalRun({ ...run, status });
+          })
+          .catch((error) => {
+            notifyWarning({
+              message: error.message,
+              autoDismiss: 5,
+            });
+          });
       }
 
       // If remote pipeline, call GraphQL to create new pipeline
-      this.props.createRun(consortiumId);
+      createRun(consortiumId);
     };
   }
 
@@ -513,7 +527,6 @@ ConsortiaList.propTypes = {
   consortia: PropTypes.array.isRequired,
   createRun: PropTypes.func.isRequired,
   deleteConsortiumById: PropTypes.func.isRequired,
-  getCollectionFiles: PropTypes.func.isRequired,
   getAllAssociatedConsortia: PropTypes.func.isRequired,
   incrementRunCount: PropTypes.func.isRequired,
   joinConsortium: PropTypes.func.isRequired,
@@ -550,7 +563,6 @@ const ConsortiaListWithData = compose(
 export default withStyles(styles)(
   connect(mapStateToProps,
     {
-      getCollectionFiles,
       getAllAssociatedConsortia,
       incrementRunCount,
       notifyInfo,

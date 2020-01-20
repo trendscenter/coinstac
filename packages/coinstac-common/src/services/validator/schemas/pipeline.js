@@ -20,6 +20,7 @@ module.exports = {
           options: Joi.object().keys({}),
           type: Joi.string(),
         }).required(),
+        dataMeta: Joi.any().required(),
         inputMap: Joi.any().required(),
       })
     ).min(1).required(),

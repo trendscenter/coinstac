@@ -11,6 +11,7 @@ const schemaFields = {
     pipelines: [ID]
     results: [ID]
     isPrivate: Boolean
+    mappedForRun: [ID]
   `,
   computationFields: `
     display: JSON
@@ -44,8 +45,9 @@ const schemaFields = {
     type: String
   `,
   pipelineStepFields: `
-    inputMap: JSON
     id: ID!
+    inputMap: JSON
+    dataMeta: JSON
   `,
   resultFields: `
     id: ID!

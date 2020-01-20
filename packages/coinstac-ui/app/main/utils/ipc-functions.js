@@ -1,9 +1,14 @@
+const electron = require('electron');
+
 module.exports = {
   manualDirectorySelection(path) {
     return path;
   },
   manualFileSelection(filePaths, core) {
-    return core.constructor.getSubPathsAndGroupExtension({ paths: filePaths, extension: null });
+    return core.constructor.getSubPathsAndGroupExtension({ paths: filePaths, extension: null }, false);
+  },
+  manualFileSelectionMultExt(filePaths, core) {
+    return core.constructor.getSubPathsAndGroupExtension({ paths: filePaths, extension: null }, true);
   },
   parseCSVMetafile(metaFilePath, core) {
     return Promise.all([
@@ -14,7 +19,7 @@ module.exports = {
         const metaFile = JSON.parse(rawMetaFile);
         return Promise.all([
           metaFilePath,
-          metaFile,
+          core.constructor.parseMetaFile(metaFile),
           core.constructor.getFilesFromMetadata(
             metaFilePath,
             metaFile
@@ -28,4 +33,8 @@ module.exports = {
   returnFileAsJSON(filePath, core) {
     return core.constructor.getJSONSchema(filePath[0]);
   },
+  sendNotification(title, body) {
+    const notification = new electron.Notification({ title, body })
+    notification.show()
+  }
 };
