@@ -1,12 +1,14 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 import PropTypes from 'prop-types';
+import Icon from '@material-ui/core/Icon';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
 import { withStyles } from '@material-ui/core/styles';
+import FileCopyIcon from '@material-ui/icons/FileCopy';
 import classNames from 'classnames';
 
 const styles = theme => ({
@@ -21,7 +23,9 @@ const styles = theme => ({
     marginBottom: theme.spacing.unit,
   },
   nestedListItem: {
-    paddingLeft: theme.spacing.unit * 4,
+    paddingLeft: theme.spacing.unit * 2,
+    paddingTop: 0,
+    paddingBottom: 0,
   },
   listDropzoneContainer: {
     display: 'flex',
@@ -30,14 +34,27 @@ const styles = theme => ({
     width: '50%',
     flex: '0 0 auto',
     marginRight: theme.spacing.unit,
+    paddingLeft: 0,
   },
   dropZone: {
     flex: '1 0 auto',
   },
+  timesIcon: {
+    color: '#f05a29 !important',
+    fontSize: '1.25rem',
+    position: 'absolute',
+    top: '-0.75rem',
+    right: '-0.75rem',
+    background: 'white',
+    borderRadius: '50%',
+    border: '2px solid white',
+    width: '1.5rem',
+    height: '1.5rem',
+  },
 });
 
 class MapsStepData extends Component {
-  componentDidUpdate() {
+  componentWillUpdate() {
     if (this.refs.Container) {
       let Container = ReactDOM.findDOMNode(this.refs.Container);
       this.props.getContainers(Container);
@@ -45,7 +62,7 @@ class MapsStepData extends Component {
   }
 
   render() {
-    const { step, isMapped, type, classes } = this.props;
+    const { step, type, classes, column, index } = this.props;
 
     const name = step.type;
 
@@ -54,28 +71,43 @@ class MapsStepData extends Component {
         className={classNames('drop-panel', classes.rootPaper)}
         elevation={1}
       >
-        <Typography variant="headline" className={classes.title}>
+        <Typography style={{fontWeight: '500', fontSize: '1rem'}} className={classes.title}>
           {step.type}
         </Typography>
         <div className={classes.listDropzoneContainer}>
-          <List className={classes.interestList}>
-            <ListItem><ListItemText primary="Interest(s):" /></ListItem>
-            {step.value &&
-              step.value.map((key, i) => (
-                <ListItem key={key} className={classes.nestedListItem}>
-                  <ListItemText secondary={step.value[i].label} />
-                </ListItem>
-              ))
-            }
-          </List>
           <div className={classNames('drop-zone', classes.dropZone)}>
             {
-              isMapped === -1
-                ? <div ref="Container" className={`acceptor acceptor-${name}`} data-type={type} data-name={name} />
-                : <div className="card-draggable"><span className="glyphicon glyphicon-file" /> {name}</div>
-            }
+              !column
+                ? <div
+                    ref="Container"
+                    className={`acceptor acceptor-data`}
+                    data-type={type}
+                    data-name={name}
+                    data-index={index}
+                  />
+              : <div ref="Container" className="card-draggable">
+                <FileCopyIcon /> {column}
+                <span onClick={()=>{this.props.removeMapStep(type, index, column)}}>
+                  <Icon
+                    className={classNames('fa fa-times-circle', classes.timesIcon)} />
+                </span>
+                </div>}
           </div>
         </div>
+        {step.value && <div className={classes.listDropzoneContainer}>
+            <List className={classes.interestList}>
+              <ListItem style={{paddingLeft: 0}}><ListItemText primary="Interest(s):" /></ListItem>
+              {step.value &&
+                step.value.map((key, i) => (
+                  <ListItem key={key} className={classes.nestedListItem}>
+                    <ListItemText
+                      style={{whiteSpace: 'nowrap'}}
+                      secondary={step.value[i]} />
+                  </ListItem>
+                ))
+              }
+            </List>
+        </div>}
       </Paper>
     );
   }

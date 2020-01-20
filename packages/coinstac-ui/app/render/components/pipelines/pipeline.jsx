@@ -6,7 +6,7 @@ import HTML5Backend from 'react-dnd-html5-backend';
 import PropTypes from 'prop-types';
 import { graphql, withApollo } from 'react-apollo';
 import shortid from 'shortid';
-import { isEqual, isEmpty } from 'lodash';
+import { isEqual, isEmpty, get } from 'lodash';
 import update from 'immutability-helper';
 import Paper from '@material-ui/core/Paper';
 import Button from '@material-ui/core/Button';
@@ -18,6 +18,7 @@ import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
 import { ValidatorForm, TextValidator } from 'react-material-ui-form-validator';
 import ListDeleteModal from '../common/list-delete-modal';
+import StatusButtonWrapper from '../common/status-button-wrapper';
 import PipelineStep from './pipeline-step';
 import ItemTypes from './pipeline-item-types';
 import {
@@ -30,6 +31,7 @@ import {
   saveDocumentProp,
 } from '../../state/graphql/props';
 import { notifySuccess, notifyError } from '../../state/ducks/notifyAndLog';
+import { isPipelineOwner } from '../../utils/helpers';
 
 const computationTarget = {
   drop() {
@@ -94,7 +96,7 @@ class Pipeline extends Component {
     if (props.params.runId) {
       const runs = props.runs;
       runs.filter(run => run.id === props.params.runId);
-      pipeline = runs[0].pipelineSnapshot;
+      pipeline = get(runs, '0.pipelineSnapshot');
     }
 
     this.state = {
@@ -106,6 +108,7 @@ class Pipeline extends Component {
       openOwningConsortiumMenu: false,
       openAddComputationStepMenu: false,
       showModal: false,
+      savingStatus: 'init',
     };
 
     this.accordionSelect = this.accordionSelect.bind(this);
@@ -152,14 +155,21 @@ class Pipeline extends Component {
     }
   }
 
+  componentDidUpdate() {
+    const pipeline = this.state
+    if (pipeline.steps && pipeline.steps.inputMap) {
+      console.log(pipeline.steps.inputMap);
+    }
+  }
+
   setConsortium() {
     const { auth: { user }, client } = this.props;
+
     let owner;
     if (this.props.params.runId) {
       owner = false;
     } else {
-      owner = user.permissions.consortia[this.state.pipeline.owningConsortium] &&
-      user.permissions.consortia[this.state.pipeline.owningConsortium].write;
+      owner = isPipelineOwner(user.permissions, this.state.pipeline.owningConsortium);
     }
     const consortiumId = this.state.pipeline.owningConsortium;
     const data = client.readQuery({ query: FETCH_ALL_CONSORTIA_QUERY });
@@ -394,14 +404,23 @@ class Pipeline extends Component {
   }
 
   savePipeline() {
-    const { savePipeline, notifySuccess, notifyError } = this.props;
+    const { auth: { user }, savePipeline, notifySuccess, notifyError } = this.props;
+
+    this.setState({ savingStatus: 'pending' });
 
     savePipeline({
       ...this.state.pipeline,
       steps: this.state.pipeline.steps.map(step => ({
         id: step.id,
         computations: step.computations.map(comp => comp.id),
-        inputMap: step.inputMap,
+        inputMap: {
+          ...step.inputMap,
+          meta: {
+            ...step.inputMap.meta,
+            owner: user.id,
+          },
+        },
+        dataMeta: step.dataMeta,
         controller: {
           id: step.controller.id,
           type: step.controller.type,
@@ -414,11 +433,14 @@ class Pipeline extends Component {
       this.setState({
         pipeline,
         startingPipeline: pipeline,
+        savingStatus: 'success',
       });
 
       notifySuccess({ message: 'Pipeline Saved.' });
     }).catch((error) => {
       notifyError({ message: error.message });
+
+      this.setState({ savingStatus: 'fail' });
 
       console.error(error);
     });
@@ -442,13 +464,6 @@ class Pipeline extends Component {
     this.setState({ openAddComputationStepMenu: false });
   }
 
-  componentDidUpdate() {
-    const pipeline = this.state
-    if(pipeline.steps && pipeline.steps.inputMap){
-      console.log(pipeline.steps.inputMap);
-    }
-  }
-
   render() {
     const { computations, connectDropTarget, consortia, classes, auth } = this.props;
     const {
@@ -458,6 +473,7 @@ class Pipeline extends Component {
       openOwningConsortiumMenu,
       openAddComputationStepMenu,
       showModal,
+      savingStatus,
     } = this.state;
 
     const title = pipeline.id ? 'Pipeline Edit' : 'Pipeline Creation';
@@ -537,15 +553,17 @@ class Pipeline extends Component {
             </Menu>
           </div>
           <div className={classes.savePipelineButtonContainer}>
-            <Button
-              key="save-pipeline-button"
-              variant="contained"
-              color="primary"
-              disabled={!owner || !consortium}
-              type="submit"
-            >
-              Save Pipeline
-            </Button>
+            <StatusButtonWrapper status={savingStatus}>
+              <Button
+                key="save-pipeline-button"
+                variant="contained"
+                color="primary"
+                disabled={!owner || !consortium || savingStatus === 'pending'}
+                type="submit"
+              >
+                Save Pipeline
+              </Button>
+            </StatusButtonWrapper>
           </div>
           <FormControlLabel
             control={(

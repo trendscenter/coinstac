@@ -11,7 +11,7 @@ function onError(error) {
 function onUnhandledRejection(event) {
   ipcRenderer.send('write-log', {
     type: 'error',
-    message: `Unhandled rejection: ${event.promise} ${event.reason}`,
+    message: `Unhandled rejection - Message: ${event.reason.message} - Stack: ${event.reason.stack}`,
   });
 }
 

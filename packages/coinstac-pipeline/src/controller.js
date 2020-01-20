@@ -19,6 +19,7 @@ module.exports = {
    */
   create({ controller, computations, inputMap }, runId, { operatingDirectory, mode, clientId }) {
     let cache = {};
+    let pipelineErrorCallback;
     const currentComputations = computations.map(
       comp => Computation.create(comp, mode, runId, clientId)
     );
@@ -47,6 +48,7 @@ module.exports = {
       controllerState[prop] = val;
       stateEmitter.emit('update', controllerState);
     };
+    const stopByUserErrorMessage = 'The pipeline run has been stopped by a user';
 
     return {
       activeControlBox,
@@ -60,8 +62,10 @@ module.exports = {
       inputMap,
       operatingDirectory,
       setStateProp,
+      pipelineErrorCallback,
       stop: () => {
         setStateProp('stopByUser', 'stop');
+        pipelineErrorCallback(new Error(stopByUserErrorMessage));
       },
       /**
        * Starts a controller, which in turn starts a computation, given the correct
@@ -110,6 +114,7 @@ module.exports = {
                       transferDirectory,
                       clientId,
                       iteration,
+                      owner,
                     }) => ({
                       baseDirectory,
                       outputDirectory,
@@ -117,6 +122,7 @@ module.exports = {
                       transferDirectory,
                       clientId,
                       iteration,
+                      owner,
                     }))(controllerState),
                   },
                   { baseDirectory: operatingDirectory }
@@ -248,7 +254,7 @@ module.exports = {
             return queue.length
               ? function _cb(...args) {
                 if (controllerState.stopByUser === 'stop') {
-                  err(new Error('The pipeline run has been stopped by a user'));
+                  err(new Error(stopByUserErrorMessage));
                 }
                 const argsArray = [].slice.call(args);
                 const fn = queue.shift();
@@ -275,7 +281,7 @@ module.exports = {
         };
 
         const p = new Promise((res, rej) => {
-          const errCb = (err) => {
+          pipelineErrorCallback = (err) => {
             setStateProp('state', 'error');
             controllerState.activeComputations[controllerState.computationIndex].stop()
               .then(() => rej(err))
@@ -287,7 +293,7 @@ module.exports = {
             controllerState.activeComputations[controllerState.computationIndex].stop()
               .then(() => res(result))
               .catch(error => rej(error));
-          }, errCb);
+          }, pipelineErrorCallback);
         });
 
         return p;

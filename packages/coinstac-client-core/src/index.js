@@ -1,7 +1,6 @@
 'use strict';
 
 // app package deps
-const tail = require('lodash/tail');
 const pify = require('util').promisify;
 const csvParse = require('csv-parse');
 const mkdirp = pify(require('mkdirp'));
@@ -11,7 +10,6 @@ const unlinkAsync = pify(fs.unlink);
 const linkAsync = pify(fs.link);
 const statAsync = pify(fs.stat);
 
-const os = require('os');
 const path = require('path');
 const winston = require('winston');
 // set w/ config etc post release
@@ -25,11 +23,6 @@ const PipelineManager = require('coinstac-pipeline');
 /**
  * Create a user client for COINSTAC
  * @example <caption>construction and initialization</caption>
- * const client = new CoinstacClient();
- * client.initialize((err) => {
- *   if (err) { throw err; }
- *   client.logger.info('Success! I’ve initialized!');
- * });
  *
  * @class
  * @constructor
@@ -49,9 +42,9 @@ class CoinstacClient {
     if (!opts || !(opts instanceof Object)) {
       throw new TypeError('coinstac-client requires configuration opts');
     }
+    this.options = opts;
     this.logger = opts.logger || new Logger({ transports: [new Console()] });
-    this.appDirectory = opts.appDirectory
-      || CoinstacClient.getDefaultAppDirectory();
+    this.appDirectory = opts.appDirectory;
 
     this.dockerManager = DockerManager;
     this.dockerManager.setLogger(this.logger);
@@ -62,19 +55,24 @@ class CoinstacClient {
     }
 
     this.clientId = opts.userId;
+  }
 
-    this.pipelineManager = PipelineManager.create({
+  initialize() {
+    return PipelineManager.create({
       mode: 'local',
-      clientId: opts.userId,
+      clientId: this.options.userId,
       logger: this.logger,
       operatingDirectory: path.join(this.appDirectory),
-      remotePort: opts.pipelineWSServer.port,
-      remoteProtocol: opts.pipelineWSServer.protocol,
-      remotePathname: opts.pipelineWSServer.pathname,
-      remoteURL: opts.pipelineWSServer.hostname,
-      mqttRemotePort: opts.mqttServer.port,
-      mqttRemoteProtocol: opts.mqttServer.protocol,
-      mqttRemoteURL: opts.mqttServer.hostname,
+      remotePort: this.options.fileServer.port,
+      remoteProtocol: this.options.fileServer.protocol,
+      remotePathname: this.options.fileServer.pathname,
+      remoteURL: this.options.fileServer.hostname,
+      mqttRemotePort: this.options.mqttServer.port,
+      mqttRemoteProtocol: this.options.mqttServer.protocol,
+      mqttRemoteURL: this.options.mqttServer.hostname,
+    }).then((manager) => {
+      this.pipelineManager = manager;
+      return manager;
     });
   }
 
@@ -91,13 +89,45 @@ class CoinstacClient {
   }
 
   /**
-   * Get the default application storage directory.
+   * Get array index of metadata file column
    *
-   * @returns {string}
+   * @param {array} arr metadata array set
+   * @returns {index}
    */
-  static getDefaultAppDirectory() {
-    return path.join(os.homedir(), '.coinstac');
+  static getFileIndex(arr) {
+    let key = '';
+    arr.shift();
+    arr[0].forEach((str, i) => {
+      if (str && typeof str === 'string') {
+        let match = str.match(/(?:\.([a-zA-Z]+))?$/);
+        if (match[0] !== '' && match[1] !== 'undefined') {
+          key = i;
+        }
+      }
+    });
+    return key;
   }
+
+  /**
+   * Parse metadata and shift data column if need be.
+   *
+   * @param {Array[]} metaFile Metadata CSV's contents
+   * @returns {Array[]} metaFile Metadata CSV's contents
+   */
+  static parseMetaFile(metaFile) {
+    const filesKey = this.getFileIndex([...metaFile]);
+    if (filesKey !== 0) {
+      metaFile = metaFile.map((row, i) => {
+        let r = [...row];
+        let data = r[filesKey];
+        r.splice(filesKey, 1);
+        r.unshift(data);
+        return r;
+      });
+    }
+    return metaFile;
+  }
+
 
   /**
    * Load a metadata CSV file.
@@ -107,12 +137,16 @@ class CoinstacClient {
    * @returns {File[]} Collection of files
    */
   static getFilesFromMetadata(metaFilePath, metaFile) {
-    return tail(metaFile).map(([filename]) => (
-      path.isAbsolute(filename)
-        ? filename
-        : path.resolve(path.join(path.dirname(metaFilePath), filename))
-    ));
+    const files = this.parseMetaFile(metaFile).map((filecol, i) => {
+      const file = filecol[0];
+      return path.isAbsolute(file)
+        ? file
+        : path.resolve(path.join(path.dirname(metaFilePath), file))
+    });
+    files.shift();
+    return files;
   }
+
 
   /**
    * Get JSON schema contents.
@@ -133,7 +167,7 @@ class CoinstacClient {
    * @param {string} group.parentDir parent directory if diving into subdir
    * @param {string} group.error present if error found
    */
-  static getSubPathsAndGroupExtension(group) {
+  static getSubPathsAndGroupExtension(group, multext) {
     let pathsArray = [];
     let extension = null;
 
@@ -171,7 +205,7 @@ class CoinstacClient {
             return subGroup;
           }
 
-          if (extension && subGroup.extension && extension !== subGroup.extension) {
+          if (!multext && extension && subGroup.extension && extension !== subGroup.extension) {
             return { error: `Group contains multiple extensions - ${extension} & ${subGroup.extension}.` };
           }
 
@@ -181,8 +215,8 @@ class CoinstacClient {
       } else {
         const thisExtension = path.extname(p);
 
-        if ((group.extension && thisExtension !== group.extension)
-            || (extension && extension !== thisExtension)) {
+        if ((!multext && group.extension && thisExtension !== group.extension)
+            || (!multext && extension && extension !== thisExtension)) {
           return { error: `Group contains multiple extensions - ${thisExtension} & ${group.extension ? group.extension : extension}.` };
         }
 
@@ -214,7 +248,7 @@ class CoinstacClient {
     runId,
     runPipeline // eslint-disable-line no-unused-vars
   ) {
-    return mkdirp(path.join(this.appDirectory, this.clientId, runId))
+    return mkdirp(path.join(this.appDirectory, 'input', this.clientId, runId))
       .then(() => {
       // TODO: validate runPipeline against clientPipeline
         const linkPromises = [];
@@ -227,8 +261,8 @@ class CoinstacClient {
         for (let i = 0; i < filesArray.length; i += 1) {
           const pathsep = new RegExp(`${escape(path.sep)}|:`, 'g');
           linkPromises.push(
-            linkAsync(filesArray[i], path.resolve(this.appDirectory, this.clientId, runId, filesArray[i].replace(pathsep, '-')))
-              .catch((e) => {
+            linkAsync(filesArray[i], path.resolve(this.appDirectory, 'input', this.clientId, runId, filesArray[i].replace(pathsep, '-')))
+            .catch((e) => {
               // permit dupes
                 if (e.code && e.code !== 'EEXIST') {
                   throw e;
@@ -259,7 +293,7 @@ class CoinstacClient {
   }
 
   unlinkFiles(runId) {
-    const fullPath = path.join(this.appDirectory, this.clientId, runId);
+    const fullPath = path.join(this.appDirectory, 'input', this.clientId, runId);
 
     return statAsync(fullPath).then((stats) => {
       return stats.isDirectory();

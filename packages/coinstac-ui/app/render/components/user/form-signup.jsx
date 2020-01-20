@@ -1,11 +1,10 @@
 import React, { Component } from 'react';
-import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import Paper from '@material-ui/core/Paper';
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
 import { withStyles } from '@material-ui/core/styles';
-import { Alert } from 'react-bootstrap';
+import classNames from 'classnames';
 import memoize from 'memoize-one';
 
 const styles = theme => ({
@@ -20,10 +19,13 @@ const styles = theme => ({
   formControl: {
     marginBottom: theme.spacing.unit * 2,
   },
+  error: {
+    textAlign: 'center',
+    color: 'red',
+  },
 });
 
 class FormSignup extends Component {
-
   constructor(props) {
     super(props);
 
@@ -34,8 +36,6 @@ class FormSignup extends Component {
       password: '',
       confirmPassword: '',
     };
-
-    this.handleSubmit = this.handleSubmit.bind(this);
   }
 
   handleChange = name => event => {
@@ -44,7 +44,7 @@ class FormSignup extends Component {
     });
   };
 
-  handleSubmit(evt) {
+  handleSubmit = evt => {
     evt.preventDefault();
 
     const { onSubmit } = this.props;
@@ -70,7 +70,7 @@ class FormSignup extends Component {
   );
 
   render() {
-    const { auth, classes } = this.props;
+    const { error, classes } = this.props;
     const {
       name,
       username,
@@ -85,10 +85,11 @@ class FormSignup extends Component {
       <Paper className={classes.paper}>
         <form onSubmit={this.handleSubmit}>
           {
-            auth.error &&
-            <Alert bsStyle="danger" className={classes.bottomMargin}>
-              <strong>Error!</strong> {auth.error}
-            </Alert>
+            error &&
+            <p
+              className={classNames(classes.bottomMargin, classes.error)}
+              dangerouslySetInnerHTML={{ __html: error }}
+            />
           }
           <TextField
             label="Name"
@@ -147,15 +148,8 @@ class FormSignup extends Component {
 FormSignup.displayName = 'FormSignup';
 
 FormSignup.propTypes = {
-  auth: PropTypes.object.isRequired,
   onSubmit: PropTypes.func.isRequired,
   classes: PropTypes.object.isRequired,
 };
 
-const mapStateToProps = ({ auth }) => {
-  return { auth };
-};
-
-const connectedComponent = connect(mapStateToProps)(FormSignup);
-
-export default withStyles(styles)(connectedComponent);
+export default withStyles(styles)(FormSignup);

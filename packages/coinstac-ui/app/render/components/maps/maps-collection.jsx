@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 import { connect } from 'react-redux';
 import { Link } from 'react-router';
+import Icon from '@material-ui/core/Icon';
 import Paper from '@material-ui/core/Paper';
 import Button from '@material-ui/core/Button';
 import Divider from '@material-ui/core/Divider';
@@ -14,6 +15,7 @@ import PropTypes from 'prop-types';
 import shortid from 'shortid';
 import { unmapAssociatedConsortia } from '../../state/ducks/collections';
 import bitap from 'bitap';
+import classNames from 'classnames';
 
 const styles = theme => ({
   addFileGroupButton: {
@@ -42,8 +44,31 @@ const styles = theme => ({
   fileErrorMessage: {
     color: '#ab8e6b',
   },
+  fileList: {
+    backgroundColor: '#efefef',
+    padding: '1rem',
+    borderRadius: '0.25rem',
+    overflowY: 'hidden'
+  },
+  fileListItem: {
+    whiteSpace: 'nowrap',
+    fontSize: '0.75rem',
+    margin: '0.25rem'
+  },
   actionsContainer: {
     marginTop: theme.spacing.unit * 2,
+  },
+  timesIcon: {
+    color: '#f05a29 !important',
+    fontSize: '1.25rem',
+    position: 'absolute',
+    top: '-0.75rem',
+    right: '-0.75rem',
+    background: 'white',
+    borderRadius: '50%',
+    border: '2px solid white',
+    width: '1.5rem',
+    height: '1.5rem',
   },
 });
 
@@ -54,7 +79,7 @@ class MapsCollection extends Component {
 
     this.state = {
       autoMap: false,
-      contChildren: -1,
+      contChildren: 0,
       filesError: null,
       newFile: {
         open: false,
@@ -63,9 +88,11 @@ class MapsCollection extends Component {
       showFiles: {},
       source: {},
       finishedAutoMapping: false,
+      stepsMapped: -1,
     };
 
     this.addFileGroup = this.addFileGroup.bind(this);
+    this.addFolderGroup = this.addFolderGroup.bind(this);
     this.removeFileGroup = this.removeFileGroup.bind(this);
     this.updateNewFileOrg = this.updateNewFileOrg.bind(this);
     this.updateMapsStep = this.updateMapsStep.bind(this);
@@ -76,11 +103,7 @@ class MapsCollection extends Component {
     if(this.refs.Container){
       let children = 0;
       let Container = ReactDOM.findDOMNode(this.refs.Container);
-      if(this.state.autoMap){ //this is a hacky hack to get button change to work on drag and drop mapping :(
-        children = Container.children.length - 1;
-      }else{
-        children = Container.children.length;
-      }
+      children = Container.children.length;
       if(prevState.contChildren !== children){
         this.setState(prevState => ({
           contChildren: children
@@ -103,7 +126,9 @@ class MapsCollection extends Component {
       } else {
         const name = `Group ${Object.keys(this.props.collection.fileGroups).length + 1} (${obj.extension.toUpperCase()})`;
         if (this.state.newFile.org === 'metafile') {
-          this.props.setRowArray(obj.metaFile[0]);
+          let headerArray = obj.metaFile[0];
+          this.props.setRowArray([...headerArray]);
+          this.props.setMetaRow([...headerArray]);
           newFiles = {
             ...obj,
             name,
@@ -125,6 +150,17 @@ class MapsCollection extends Component {
           this.setState({ showFiles: { [newFiles.date]: false } });
         }
 
+        this.props.setRowArray(obj.metaFile[0]);
+
+        newFiles = {
+          ...obj,
+          name,
+          id: fileGroupId,
+          date: new Date().getTime(),
+          firstRow: obj.metaFile[0].join(', '),
+          org: this.state.newFile.org,
+        };
+
         this.setState({ filesError: null });
         this.props.updateCollection(
           {
@@ -140,68 +176,175 @@ class MapsCollection extends Component {
     .catch(console.log);
   }
 
- filterGetObj(arr, searchKey) {
-    let searchkey = searchKey.replace('file', ''); //other object values contain the string 'file', let's remove.
-    return arr.filter(function(obj) {
-      return Object.keys(obj).some(function(key) {
-        let objkey = obj[key];
-        if(typeof objkey === 'string'){
-          let fuzzy = bitap(objkey.toLowerCase(), searchkey.toLowerCase(), 1);
-          if(fuzzy.length){
-            return obj[key];
-          }
-        }
-      })
+  addFolderGroup() {
+    ipcPromise.send('open-dialog','bundle')
+    .then((obj) => {
+
+      let newFiles;
+
+      const fileGroupId = shortid.generate();
+
+      if (obj.error) {
+        this.setState({ filesError: obj.error });
+      } else {
+        const name = `Group ${Object.keys(this.props.collection.fileGroups).length + 1} (${obj.extension.toUpperCase()})`;
+
+        let type = this.props.activeConsortium.pipelineSteps[0].dataMeta.items[0];
+
+        this.props.setRowArray([type]);
+        this.props.setMetaRow([type]);
+
+        newFiles = {
+          name,
+          id: fileGroupId,
+          extension: obj.extension,
+          files: [...obj.paths],
+          date: new Date().getTime(),
+          firstRow: type
+        };
+
+        this.setState({ showFiles: { [newFiles.date]: false } });
+        this.setState({ filesError: null });
+
+        this.props.updateCollection(
+          {
+            fileGroups: {
+              ...this.props.collection.fileGroups,
+              [fileGroupId]: newFiles,
+            },
+          },
+          this.props.saveCollection
+        );
+      }
+    })
+    .catch(console.log);
+  }
+
+  changeMetaRow(search, string){
+    return new Promise((resolve, reject) => {
+      const {
+        metaRow,
+        setMetaRow,
+      } = this.props;
+      let marray = metaRow;
+      let index = marray.indexOf(string);
+      if(index === 0){
+        marray[index] = 'id';
+      }
+      if(index !== 0 && index !== -1){
+        marray[index] = search;
+      }
+      setMetaRow(marray);
+      resolve(true);
     });
   }
 
-  filterGetIndex(arr, searchKey) {
-     let searchkey = searchKey.replace('file', ''); //other object values contain the string 'file', let's remove.
-     return arr.findIndex(function(obj) {
-       return Object.keys(obj).some(function(key) {
-         let objkey = obj[key];
-         if(typeof objkey === 'string'){
-           let fuzzy = bitap(objkey.toLowerCase(), searchkey.toLowerCase(), 1);
-           if(fuzzy.length){
-             return obj[key];
+  changeMetaGetObj(search, string, obj, key){
+    let changeMeta = this.changeMetaRow(search, string);
+    return changeMeta.then((r) => {
+      if(r){
+        return obj[key];
+      }
+    });
+  }
+
+  findInObject = (obj, string, type, method) => {
+     return Object.entries(obj).find(([key, value]) => {
+       let search = null;
+       let name = obj['name'];
+       let itemtype = obj['type'];
+       if(!name && itemtype){
+         search = itemtype;
+       }else if(name && itemtype){
+         search = name;
+       }
+       if(search !== null && search !== 'undefined'){
+         //Match data column and map to ID
+         if(type === 'data'
+         && string.toLowerCase() === 'id'){
+           return this.changeMetaGetObj(search, string, obj, key);
+         }
+
+         //Match if string and search are equal
+         if( string.toLowerCase() === search.toLowerCase() ){
+           return this.changeMetaGetObj(search, string, obj, key);
+         }
+
+         //Match if string contains search and vice versa
+         if(string.length < search.length){
+           let sch = search.replace(/[_-\s]/g, ' ');
+           sch = sch.toLowerCase();
+           string = string.toLowerCase();
+           if(sch.includes(string)){
+             return this.changeMetaGetObj(search, string, obj, key);
+           }
+         }else{
+           let str = string.replace(/[_-\s]/gi, ' ');
+           search = search.toLowerCase();
+           str = str.toLowerCase();
+           if(str.includes(search)){
+             return this.changeMetaGetObj(search, string, obj, key);
            }
          }
-       })
-     });
-   }
 
-   async autoMap(group) {
+         //Finally Fuzzy match string to search based on which is larger
+         let fuzzy = [];
+         let str = string.replace(/[_-\s]/gi, '');
+         let sch = search.replace(/[_-\s]/gi, '');
+         if(str.length > sch.length){
+           fuzzy = bitap(str.toLowerCase(), sch.toLowerCase(), 1);
+         }else{
+           fuzzy = bitap(sch.toLowerCase(), str.toLowerCase(), 1);
+         }
+         if(fuzzy.length > 1 && fuzzy[0] > 3){
+           return this.changeMetaGetObj(search, string, obj, key);
+         }
+         if(type === 'data'
+         && string.toLowerCase() === 'id'){
+           return this.changeMetaGetObj(search, string, obj, key);
+         }
+       }
+     });
+  }
+
+  filterGetObj(arr, string, type) {
+    return arr.filter((obj) => {
+       return this.findInObject(obj, string, type, 'getObj');
+    });
+  }
+
+  filterGetIndex(arr, string, type) {
+    return new Promise((resolve, reject) => {
+       let result = arr.findIndex((obj) => {
+         return this.findInObject(obj, string, type, 'getIndex');
+       });
+       resolve(result);
+    });
+  }
+
+  async autoMap(group) {
+     this.setState({ autoMap: true });
      let inputMap = this.props.activeConsortium.pipelineSteps[0].inputMap;
      let resolveAutoMapPromises = Object.entries(inputMap).map((item, i) => {
        let type = item[0];
        let obj = item[1].ownerMappings;
-       const steps = this.makePoints(group.firstRow).map(async (string, index) => {
-        string = string.replace('file', '');
-        if( obj && Object.keys(this.filterGetObj(obj,string)).length > 0 ){
-         await this.setStepIO(
-           index,
-           group.id,
-           0,
-           type,
-           this.filterGetIndex(obj,string),
-           string
-         );
-        }
-        if(obj && obj[0] && obj[0].type){
-          let fuzzy = bitap(string.toLowerCase(), obj[0].type.toLowerCase(), 1);
-          if(fuzzy.length){
-            await this.setStepIO(
-              index,
-              group.id,
-              0,
-              type,
-              0,
-              string
-            );
-          }
+       let firstRow = this.makePoints(group.firstRow);
+       const steps = firstRow.map(async (string, index) => {
+       if( obj && Object.keys(this.filterGetObj(obj,string,type)).length > 0 ){
+         firstRow.filter(e => e !== string);
+         let setObj = this.filterGetIndex(obj,string,type);
+         await setObj.then((result) => {
+           this.setStepIO(
+             index,
+             group.id,
+             0,
+             type,
+             result,
+             string
+           );
+         });
         }
        });
-
        return Promise.all(steps);
      });
      await Promise.all(resolveAutoMapPromises);
@@ -228,22 +371,28 @@ class MapsCollection extends Component {
     };
   }
 
-  setStepIO(i, groupId, stepIndex, objKey, index, string) {
-    const { collection, rowArray, updateConsortiumClientProps } = this.props;
-    let array = rowArray;
-    let timeout = ((i + 1) * 250);
-    let varObject = [{
-      'collectionId': collection.id,
-      'groupId': groupId,
-      'column':  string
-    }];
+  setStepIO(i, groupId, stepIndex, search, index, string) {
+    const {
+      collection,
+      metaRow,
+      rowArray,
+      setRowArray,
+      updateConsortiumClientProps
+    } = this.props;
     return new Promise((resolve) => {
-      setTimeout(() => {
-        updateConsortiumClientProps(stepIndex, objKey, index, varObject);
-        array.splice( array.indexOf(string), 1 );
-        this.props.setRowArray(array);
-        resolve();
-      }, timeout);
+      let firstRow = collection.fileGroups[groupId].firstRow;
+      let newFirstRow = firstRow.split(', ');
+      let dex = newFirstRow.indexOf(string);
+      let name = metaRow[dex];
+      let varObject = [{
+        'collectionId': collection.id,
+        'groupId': groupId,
+        'column':  name
+      }];
+      updateConsortiumClientProps(stepIndex, search, index, varObject);
+      rowArray.splice( rowArray.indexOf(string), 1 );
+      setRowArray(rowArray);
+      resolve();
     })
   }
 
@@ -264,14 +413,19 @@ class MapsCollection extends Component {
     const {
       activeConsortium,
       collection,
+      classes,
+      dataType,
       isMapped,
-      saveCollection,
+      metaRow,
       rowArray,
       rowArrayLength,
-      classes,
+      saveCollection,
+      stepsTotal,
+      stepsMapped,
     } = this.props;
 
     const {
+      autoMap,
       contChildren,
       filesError,
       finishedAutoMapping,
@@ -282,7 +436,8 @@ class MapsCollection extends Component {
         <form onSubmit={saveCollection}>
           {
             !isMapped
-            && (
+            && dataType === 'array'
+	          && (
               <div>
                 <Button
                   variant="contained"
@@ -297,7 +452,24 @@ class MapsCollection extends Component {
             )
           }
           {
-            filesError
+            !isMapped
+            && dataType === 'bundle'
+            && (
+              <div>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  className={classes.addFileGroupButton}
+                  onClick={this.addFolderGroup}
+                >
+                  Add Files from Folder
+                </Button>
+                <Divider />
+              </div>
+            )
+          }
+	  {
+	    filesError
             && (
               <Paper className={classes.fileErrorPaper}>
                 <Typography variant="h6" className={classes.fileErrorMessage}>File Error</Typography>
@@ -315,41 +487,68 @@ class MapsCollection extends Component {
                 key={`${group.date}-${group.extension}-${group.id}`}
                 className={classes.rootPaper}
               >
-                {
-                  group.org === 'metafile'
-                  && (
+                <div>
+                  {
+                    !isMapped
+                    && (
+                      <Button
+                        variant="contained"
+                        color="secondary"
+                        className={classes.removeFileGroupButton}
+                        onClick={this.removeFileGroup(group.id)}
+                      >
+                        <DeleteIcon />
+                        Remove File Group
+                      </Button>
+                    )
+                  }
+                  <Typography>
+                    <span className="bold">Name:</span> {group.name}
+                  </Typography>
+                  <Typography>
+                    <span className="bold">Date:</span> {new Date(group.date).toUTCString()}
+                  </Typography>
+                  <Typography>
+                    <span className="bold">Extension:</span> {group.extension}
+                  </Typography>
+                   {group.org === 'metafile'
+                    && (
+                      <div>
+                        <Typography>
+                          <span className="bold">Meta File Path:</span> {group.metaFilePath}
+                        </Typography>
+                        <Typography>
+                          <span className="bold">Original MetaFile Header:</span> {group.firstRow}
+                        </Typography>
+                        <Typography>
+                          <span className="bold">Mapped MetaFile Header:</span> {metaRow.toString()}
+                        </Typography>
+                        <Typography>
+                          <span className="bold">Items Mapped:</span> {stepsMapped} of {stepsTotal}
+                        </Typography>
+                      </div>
+                      )
+                    }
+                    {group.org !== 'metafile'
+                      && (
+                        <div>
+                          <Typography>
+                            <span className="bold">File(s):</span>
+                          </Typography>
+                          <div className={classes.fileList}>
+                            {group.files.map((file, i) => {
+                              return(
+                                <div className={classes.fileListItem}>
+                                  ({i+1}){file}
+                                </div>)
+                            })}
+                          </div>
+                        </div>
+                      )
+                    }
                     <div>
-                      {
-                        !isMapped
-                        && (
-                          <Button
-                            variant="contained"
-                            color="secondary"
-                            className={classes.removeFileGroupButton}
-                            onClick={this.removeFileGroup(group.id)}
-                          >
-                            <DeleteIcon />
-                            Remove File Group
-                          </Button>
-                        )
-                      }
-                      <Typography>
-                        <span className="bold">Name:</span> {group.name}
-                      </Typography>
-                      <Typography>
-                        <span className="bold">Date:</span> {new Date(group.date).toUTCString()}
-                      </Typography>
-                      <Typography>
-                        <span className="bold">Extension:</span> {group.extension}
-                      </Typography>
-                      <Typography>
-                        <span className="bold">Meta File Path:</span> {group.metaFilePath}
-                      </Typography>
-                      <Typography>
-                        <span className="bold">First Row:</span> {group.firstRow}
-                      </Typography>
-                      {
-                        rowArray.length > 0
+                      {group
+                        && rowArray.length > 0
                         && (
                           <div className="card-deck" ref="Container">
                             {
@@ -360,17 +559,26 @@ class MapsCollection extends Component {
                                   data-string={point}
                                   key={index}
                                 >
-                                  <FileCopyIcon /> {point}
+                                  <FileCopyIcon />
+                                  {point}
+                                  {dataType !== 'array' ? ' Bundle ('+group.files.length+' files)' : ''}
+                                  <span onClick={()=>{this.props.removeRowArrItem(point)}}>
+                                    <Icon
+                                      className={classNames('fa fa-times-circle', classes.timesIcon)} />
+                                  </span>
                                 </div>
                               ))
                             }
                           </div>
                         )
                       }
+                      </div>
                       <Divider />
                       <div className={classes.actionsContainer}>
                         {
-                          !isMapped && !finishedAutoMapping && contChildren !== 0
+                          !isMapped
+                          && rowArray.length > 1
+                          && rowArray.length * contChildren > 0
                           && (
                             <Button
                               variant="contained"
@@ -382,16 +590,49 @@ class MapsCollection extends Component {
                           )
                         }
                         {
-                          !isMapped && finishedAutoMapping
-                          && (
-                            <Button
-                              variant="contained"
-                              color="primary"
-                              onClick={() => this.props.saveAndCheckConsortiaMapping()}
-                            >
-                              Save
-                            </Button>
-                          )
+                          !isMapped
+                          && rowArray.length > 0
+                          && stepsTotal === stepsMapped
+                          &&  <Button
+                                variant="contained"
+                                style={{
+                                  backgroundColor: '#5cb85c',
+                                  color: '#fff',
+                                }}
+                                onClick={() => this.props.saveAndCheckConsortiaMapping()}
+                              >
+                                Remove Extra Items
+                              </Button>
+                        }
+                        {
+                          !isMapped
+                          && rowArray.length === 0
+                          && stepsTotal === stepsMapped
+                          &&  <Button
+                                variant="contained"
+                                style={{
+                                  backgroundColor: '#5cb85c',
+                                  color: '#fff',
+                                }}
+                                onClick={() => this.props.saveAndCheckConsortiaMapping()}
+                              >
+                                Save
+                              </Button>
+                        }
+                        {
+                          !isMapped
+                          && this.makePoints(group.firstRow).length !== rowArrayLength
+                          && <Button
+                            style={{marginLeft: '1rem'}}
+                            variant="contained"
+                            color="secondary"
+                            onClick={() => {
+                              this.props.resetPipelineSteps(this.makePoints(group.firstRow));
+                              this.setState({autoMap: false, stepsMapped: 0});
+                            }}
+                          >
+                            Reset
+                          </Button>
                         }
                         {
                           isMapped
@@ -412,10 +653,8 @@ class MapsCollection extends Component {
                             </div>
                           )
                         }
-                      </div>
-                    </div>
-                  )
-                }
+                     </div>
+                </div>
               </Paper>
             ))
           }

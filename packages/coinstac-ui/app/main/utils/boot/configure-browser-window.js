@@ -16,14 +16,12 @@ const {
   BrowserWindow,
 } = electron;
 let mainWindow = null;
-let splashWindow = null;
 
 /**
  * Create a `BrowserWindow`
  */
 function createWindow() {
   const renderIndexPath = require.resolve('app/render/index.html');
-  const renderSplashPath = require.resolve('app/render/splash.html');
   const menu = electronDefaultMenu(electron.app, electron.shell);
   const size = electron.screen.getPrimaryDisplay().workAreaSize;
 
@@ -32,19 +30,6 @@ function createWindow() {
    * reference of the window object, if you don't, the window will be closed
    * automatically when the javascript object is GCed.
    */
-
-  splashWindow = new BrowserWindow({
-    width: 810,
-    height: 610,
-    frame: false,
-    alwaysOnTop: true,
-    webPreferences: {
-      nodeIntegration: true,
-    },
-  });
-
-  splashWindow.loadURL(`file://${renderSplashPath}`);
-
   mainWindow = new BrowserWindow({
     width: size.width,
     height: size.height,
@@ -58,10 +43,6 @@ function createWindow() {
 
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
-    setTimeout(() => {
-      splashWindow.hide();
-      splashWindow = null;
-    }, 4000);
   });
 
   // Emitted when the window is closed.

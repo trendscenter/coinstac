@@ -1,9 +1,12 @@
 const pify = require('util').promisify;
-const packager = pify(require('electron-packager'));
+const packager = require('electron-packager');
 const archiver = require('archiver');
 const fs = require('fs');
 const rm = pify(require('rimraf'));
 const path = require('path');
+
+const rename = pify(fs.rename);
+const copy = pify(fs.copyFile);
 
 const options = {
   all: true,
@@ -15,8 +18,22 @@ const options = {
   overwrite: true,
   prune: true,
 };
-
-rm('coinstac-*')
+rm('./build/apps/coinstac-*')
+  .then(() => rename('./config/local.json', './config/local-build-copy.json'))
+  .catch((e) => {
+    if (e.code !== 'ENOENT') {
+      throw e;
+    }
+  })
+  .then(() => {
+    if (process.argv[2] && process.argv[2] === 'development') {
+      console.log('Creating development build'); // eslint-disable-line no-console
+      return copy('./config/local-development.json', './config/local.json');
+    } else if (process.argv[2] && process.argv[2] === 'production') { // eslint-disable-line no-else-return
+      console.log('Creating production build'); // eslint-disable-line no-console
+      return copy('./config/local-production.json', './config/local.json');
+    }
+  })
   .then(() => packager(options))
   .then((appPaths) => {
     appPaths.forEach((appPath) => {
@@ -38,6 +55,7 @@ rm('coinstac-*')
       });
     });
   })
+  .then(() => rename('./config/local-build-copy.json', './config/local.json'))
   .catch((err) => {
-    console.error('Build failed with:', err); // eslint-disable-line no-console
+    if (err.code !== 'ENOENT') console.error('Build failed with:', err); // eslint-disable-line no-console
   });

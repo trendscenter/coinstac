@@ -2,8 +2,9 @@
 
 require('trace');
 require('clarify');
-const { test } = require('ava');
+const test = require('ava');
 const path = require('path');
+const { existsSync } = require('fs');
 const DockerManager = require('coinstac-docker-manager');
 const pify = require('util').promisify;
 const rimraf = pify(require('rimraf'));
@@ -14,6 +15,7 @@ const localCompSpec = computationSpecs.local;
 const localErrorCompSpec = computationSpecs.localError;
 const decentralizedCompSpec = computationSpecs.decentralized;
 const decentralizedErrorCompSpec = computationSpecs.decentralizedError;
+const { fileTest } = computationSpecs;
 Error.stackTraceLimit = Infinity;
 
 
@@ -105,13 +107,26 @@ const decentralizedErrorLocalPipelineSpec = {
   ],
 };
 
+// errors on the local node
+const fileTestSpec = {
+  steps: [
+    {
+      controller: { type: 'decentralized' },
+      computations: [fileTest],
+      inputMap: {
+        size: { value: 100 },
+      },
+    },
+  ],
+};
+
 let remote;
 let local;
 let local2;
 let local3;
 let local4;
 
-test.before(() => {
+test.before(async () => {
   const proms = [];
   const docker = new DockerManager.Docker();
   const pullImage = (image) => {
@@ -140,31 +155,30 @@ test.before(() => {
     }
   });
 
-  remote = PipelineManager.create({
+  remote = await PipelineManager.create({
     mode: 'remote',
     clientId: 'remote',
-    operatingDirectory: path.resolve(__dirname, 'remote'),
+    operatingDirectory: path.resolve(__dirname, 'tempCompDir'),
   });
-
-  local = PipelineManager.create({
+  local = await PipelineManager.create({
     mode: 'local',
     clientId: 'one',
-    operatingDirectory: path.resolve(__dirname, 'local'),
+    operatingDirectory: path.resolve(__dirname, 'tempCompDir'),
   });
-  local2 = PipelineManager.create({
+  local2 = await PipelineManager.create({
     mode: 'local',
     clientId: 'two',
-    operatingDirectory: path.resolve(__dirname, 'local2'),
+    operatingDirectory: path.resolve(__dirname, 'tempCompDir'),
   });
-  local3 = PipelineManager.create({
+  local3 = await PipelineManager.create({
     mode: 'local',
     clientId: 'three',
-    operatingDirectory: path.resolve(__dirname, 'local3'),
+    operatingDirectory: path.resolve(__dirname, 'tempCompDir'),
   });
-  local4 = PipelineManager.create({
+  local4 = await PipelineManager.create({
     mode: 'local',
     clientId: 'four',
-    operatingDirectory: path.resolve(__dirname, 'local4'),
+    operatingDirectory: path.resolve(__dirname, 'tempCompDir'),
   });
 
   return Promise.all(proms);
@@ -216,7 +230,6 @@ test('test decentralized error from remote and local node', (t) => {
     spec: decentralizedErrorLocalPipelineSpec,
     runId: 'remoteErrorLocal',
   });
-
   return Promise.all([
     localPipeline.result.catch((error) => {
       t.true(error.message.includes('remote throws error'));
@@ -244,7 +257,6 @@ test('test decentralized error from remote and local node', (t) => {
     }),
   ]);
 });
-
 
 test('test local pipeline + cache', (t) => {
   const pipeline = local2.startPipeline({
@@ -336,9 +348,32 @@ test('test pre remote start data preservation', (t) => {
   return Promise.all([prom, prom2]);
 });
 
+test('file transfer and output test', (t) => {
+  const remotePipeline = remote.startPipeline({
+    clients: ['one'],
+    spec: fileTestSpec,
+    runId: 'fileTest',
+  });
+  const localPipeline = local.startPipeline({
+    spec: fileTestSpec,
+    runId: 'fileTest',
+  });
+
+  return Promise.all([
+    localPipeline.result.then((result) => {
+      t.is(result.message, 'hashes match');
+    }),
+    remotePipeline.result.then((result) => {
+      t.is(result.message, 'hashes match');
+      result.files.forEach((file) => {
+        t.is(existsSync(path.join('test', 'tempCompDir', 'input', 'one', 'fileTest', file)), true);
+      });
+    }),
+  ]);
+});
+
 test.after.always('cleanup', () => {
   return Promise.all([
-    rimraf('./local*'),
-    rimraf('./remote'),
+    rimraf('test/tempCompDir'),
   ]);
 });

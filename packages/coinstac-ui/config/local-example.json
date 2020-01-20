@@ -11,9 +11,9 @@
     "port": "3100",
     "protocol": "ws:"
   },
-  "pipelineWSServer": {
+  "fileServer": {
     "hostname": "localhost",
-    "pathname": "",
+    "pathname": "/transfer",
     "port": "3300",
     "protocol": "http:"
   },

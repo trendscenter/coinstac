@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { graphql } from 'react-apollo';
 import { Link } from 'react-router';
-import Button from '@material-ui/core/Button';
 import Fab from '@material-ui/core/Fab';
 import Typography from '@material-ui/core/Typography';
 import AddIcon from '@material-ui/icons/Add';
@@ -11,6 +10,7 @@ import { Alert } from 'react-bootstrap';
 import PropTypes from 'prop-types';
 import ListItem from '../common/list-item';
 import ListDeleteModal from '../common/list-delete-modal';
+import { notifyError } from '../../state/ducks/notifyAndLog';
 import {
   DELETE_PIPELINE_MUTATION,
   FETCH_ALL_PIPELINES_QUERY,
@@ -18,6 +18,7 @@ import {
 import {
   removeDocFromTableProp,
 } from '../../state/graphql/props';
+import { isPipelineOwner } from '../../utils/helpers';
 
 const MAX_LENGTH_PIPELINES = 5;
 
@@ -51,8 +52,7 @@ class PipelinesList extends Component {
     if (pipelines && pipelines.length > MAX_LENGTH_PIPELINES) {
       const { user } = auth;
       pipelines.forEach((pipeline) => {
-        if (user.permissions.consortia[pipeline.owningConsortium] &&
-          user.permissions.consortia[pipeline.owningConsortium].write) {
+        if (isPipelineOwner(user.permissions, pipeline.owningConsortium)) {
           ownedPipelines.push(pipeline);
         } else {
           otherPipelines.push(pipeline);
@@ -69,10 +69,7 @@ class PipelinesList extends Component {
         key={`${pipeline.name}-list-item`}
         itemObject={pipeline}
         deleteItem={this.openModal}
-        owner={
-          user.permissions.consortia[pipeline.owningConsortium]
-          && user.permissions.consortia[pipeline.owningConsortium].write
-        }
+        owner={isPipelineOwner(user.permissions, pipeline.owningConsortium)}
         itemOptions={{ actions: [], text: [] }}
         itemRoute="/dashboard/pipelines"
       />
@@ -93,7 +90,13 @@ class PipelinesList extends Component {
   }
 
   deletePipeline() {
-    this.props.deletePipeline(this.state.pipelineToDelete);
+    const { notifyError } = this.props;
+
+    this.props.deletePipeline(this.state.pipelineToDelete)
+      .catch(error => {
+        notifyError({ message: error.message });
+      });
+
     this.closeModal();
   }
 
@@ -118,7 +121,7 @@ class PipelinesList extends Component {
           </Fab>
         </div>
         {
-          pipelines && pipelines.length && pipelines.length <= MAX_LENGTH_PIPELINES
+          pipelines && pipelines.length > 0 && pipelines.length <= MAX_LENGTH_PIPELINES
           && pipelines.map(pipeline => this.getListItem(pipeline))
         }
         {ownedPipelines.length > 0 && <Typography variant="h6">Owned Pipelines</Typography>}
@@ -165,6 +168,6 @@ const PipelinesListWithData = graphql(DELETE_PIPELINE_MUTATION,
   )
 )(PipelinesList);
 
-const connectedComponent = connect(mapStateToProps)(PipelinesListWithData);
+const connectedComponent = connect(mapStateToProps, { notifyError })(PipelinesListWithData);
 
 export default withStyles(styles)(connectedComponent);

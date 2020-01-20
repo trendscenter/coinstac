@@ -17,6 +17,7 @@ import { ValidatorForm, TextValidator } from 'react-material-ui-form-validator';
 import memoize from 'memoize-one';
 import Select from '../common/react-select';
 import MemberAvatar from '../common/member-avatar';
+import StatusButtonWrapper from '../common/status-button-wrapper';
 
 const styles = theme => ({
   tabTitleContainer: {
@@ -124,6 +125,7 @@ class ConsortiumAbout extends Component {
       user,
       users,
       classes,
+      savingStatus,
     } = this.props;
 
     const { consortiumUsers } = this.state;
@@ -140,13 +142,16 @@ class ConsortiumAbout extends Component {
           {
             owner
             && (
-              <Button
-                variant="contained"
-                color="primary"
-                type="submit"
-              >
-                Save
-              </Button>
+              <StatusButtonWrapper status={savingStatus}>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  type="submit"
+                  disabled={savingStatus === 'pending'}
+                >
+                  Save
+                </Button>
+              </StatusButtonWrapper>
             )
           }
         </div>
@@ -191,6 +196,7 @@ class ConsortiumAbout extends Component {
                   options={userOptions}
                   onChange={this.handleMemberSelect}
                   removeSelected
+                  className="consortium-add-user"
                   name="members-input"
                 />
                 <Button
@@ -203,7 +209,7 @@ class ConsortiumAbout extends Component {
                 </Button>
               </div>
             }
-            <Table>
+            <Table id="consortium-member-table">
               <TableHead>
                 <TableRow>
                   <TableCell>Username</TableCell>

@@ -34,6 +34,7 @@ const docker = new Docker();
 const streamPool = {};
 const jobPool = {};
 let services = {};
+const portBlackList = new Set();
 
 /**
  * Set an external logger instance
@@ -48,12 +49,16 @@ const setLogger = (loggerInstance) => {
  * @param  {string} serviceId Id to consume the port
  * @return {int}              open port assigned
  */
-const generateServicePort = (serviceId) => {
-  return portscanner.findAPortNotInUse(8100, 49151, '127.0.0.1')
-    .then((newPort) => {
-      services[serviceId].port = newPort;
-      return newPort;
-    });
+const generateServicePort = async (serviceId, start = 8100) => {
+  let newPort = await portscanner.findAPortNotInUse(start, 49151, '127.0.0.1');
+  if (portBlackList.has(newPort)) {
+    newPort = await generateServicePort(serviceId, newPort + 5);
+    return newPort;
+  }
+  // base case
+  portBlackList.add(newPort);
+  services[serviceId].port = newPort;
+  return newPort;
 };
 
 const manageStream = (stream, jobId) => {
@@ -484,7 +489,6 @@ const startService = (serviceId, serviceUserId, opts) => {
       });
     }
   }
-
   return createService();
 };
 
@@ -610,7 +614,7 @@ const removeImage = (imageId) => {
  * @param  {String} serviceUserId the user asking
  * @return {Promise}              A promise that resovles on success
  */
-const stopService = (serviceId, serviceUserId) => {
+const stopService = (serviceId, serviceUserId, waitForBox) => {
   const service = services[serviceId];
   if (!service) return Promise.resolve();
   if (service.users.indexOf(serviceUserId) > -1) {
@@ -619,8 +623,9 @@ const stopService = (serviceId, serviceUserId) => {
   if (service.users.length === 0) {
     if (service.state !== 'starting') {
       service.state = 'shutting down';
-      return service.container.stop()
+      const boxPromise = service.container.stop()
         .then(() => {
+          portBlackList.delete(service[serviceId].port);
           delete services[serviceId];
         }).catch((err) => {
         // TODO: boxes don't always shutdown well, however that shouldn't crash a valid run
@@ -628,6 +633,7 @@ const stopService = (serviceId, serviceUserId) => {
           service.state = 'zombie';
           service.error = err;
         });
+      return waitForBox ? boxPromise : Promise.resolve();
     }
     delete services[serviceId];
     return Promise.resolve();

@@ -8,29 +8,33 @@
   },
   "computation": {
     "type": "docker",
-    "dockerImage": "coinstac\/coinstac-file-transfer-test",
+    "dockerImage": "coinstacteam\/coinstac-file-transfer-test",
     "command": [
       "python",
       "\/computation\/local.py"
     ],
     "remote": {
       "type": "docker",
-      "dockerImage": "coinstac\/coinstac-file-transfer-test",
+      "dockerImage": "coinstacteam\/coinstac-file-transfer-test",
       "command": [
         "python",
         "\/computation\/remote.py"
       ]
     },
     "input": {
-      "testFile": {
-        "type": "string",
-        "label": "input file to test"
+      "size": {
+        "type": "number",
+        "label": "file size to test"
       }
     },
     "output": {
-      "outFile": {
+      "message": {
         "type": "string",
-        "label": "Same file as input"
+        "label": "has match message"
+      },
+      "files" : {
+        "type": "array",
+        "label": "output files"
       }
     },
     "display": {

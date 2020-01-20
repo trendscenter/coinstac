@@ -139,6 +139,7 @@ const typeDefs = `
     setComputationInputs(consortiumId: ID, fieldIndex: Int, values: String ): String
     updateRunState(runId: ID, data: JSON): JSON
     updateUserConsortiumStatus(consortiumId: ID, status: String): User
+    updateConsortiumMappedUsers(consortiumId: ID, mappedForRun: [ID]): JSON
   }
 
   # This is a description of the queries
