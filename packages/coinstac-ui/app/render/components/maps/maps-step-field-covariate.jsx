@@ -125,7 +125,6 @@ MapsStepFieldCovariate.propTypes = {
   type: PropTypes.string.isRequired,
   index: PropTypes.number.isRequired,
   registerDraggableContainer: PropTypes.func.isRequired,
-  updateConsortiumClientProps: PropTypes.func.isRequired,
 };
 
 export default withStyles(styles)(MapsStepFieldCovariate);
