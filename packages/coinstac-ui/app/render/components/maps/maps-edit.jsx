@@ -193,11 +193,14 @@ class MapsEdit extends Component {
   }
 
   saveCollection(e) {
-    const { collection } = this.state;
     if (e) {
       e.preventDefault();
     }
-    this.props.saveCollection(collection);
+
+    const { collection } = this.state;
+    const { saveCollection } = this.props;
+
+    saveCollection(collection);
   }
 
   updateMetaFileHeader() {
@@ -481,8 +484,8 @@ class MapsEdit extends Component {
   updateConsortiumClientProps(pipelineStepIndex, prop, propIndex, propArray) {
     this.setState((prevState) => {
       prevState.activeConsortium.stepIO[pipelineStepIndex][prop][propIndex] = propArray[0];
-      }, (() => {
-        this.updateAssociatedConsortia(this.state.activeConsortium);
+    }, (() => {
+      this.updateAssociatedConsortia(this.state.activeConsortium);
     }));
   }
 

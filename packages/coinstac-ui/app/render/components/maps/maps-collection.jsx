@@ -77,13 +77,8 @@ class MapsCollection extends Component {
     super(props);
 
     this.state = {
-      autoMap: false,
       contChildren: 0,
       filesError: null,
-      newFile: {
-        open: false,
-        org: 'metafile',
-      },
       showFiles: {},
       source: {},
       finishedAutoMapping: false,
@@ -114,75 +109,108 @@ class MapsCollection extends Component {
     }
   }
 
+  setStepIO(i, groupId, stepIndex, search, index, string) {
+    const {
+      collection,
+      metaRow,
+      rowArray,
+      setRowArray,
+      updateConsortiumClientProps
+    } = this.props;
+
+    const firstRow = collection.fileGroups[groupId].firstRow;
+    const newFirstRow = firstRow.split(', ');
+    const dex = newFirstRow.indexOf(string);
+    const name = metaRow[dex];
+    const varObject = [{
+      collectionId: collection.id,
+      groupId,
+      column: name,
+    }];
+
+    updateConsortiumClientProps(stepIndex, search, index, varObject);
+    rowArray.splice(rowArray.indexOf(string), 1);
+    setRowArray(rowArray);
+  }
+
   makePoints = ((str) => {
     str = str.split(', ');
     return str.sort();
   });
 
   findInObject = (obj, string, type) => {
-    return Object.entries(obj).find(([key, value]) => {
+    const x = Object.entries(obj).find(([key]) => {
       let search = null;
-      let name = obj['name'];
-      let itemtype = obj['type'];
-      if(!name && itemtype){
-        search = itemtype;
-      }else if(name && itemtype){
-        search = name;
+
+      if (!obj.name && obj.type) {
+        search = obj.type;
+      } else if (obj.name && obj.type) {
+        search = obj.name;
       }
-      if(search !== null && search !== 'undefined'){
-        //Match data column and map to ID
-        if(type === 'data'
-        && string.toLowerCase() === 'id'){
-          return this.changeMetaGetObj(search, string, obj, key);
-        }
 
-        //Match if string and search are equal
-        if( string.toLowerCase() === search.toLowerCase() ){
-          return this.changeMetaGetObj(search, string, obj, key);
-        }
+      if (!search) {
+        return false;
+      }
 
-        //Match if string contains search and vice versa
-        if(string.length < search.length){
+      let match = false;
+
+      // Match data column and map to ID
+      if (type === 'data' && string.toLowerCase() === 'id') {
+        match = true;
+      }
+
+      // Match if string and search are equal
+      if (!match && string.toLowerCase() === search.toLowerCase()) {
+        match = true;
+      }
+
+      // Match if string contains search and vice versa
+      if (!match) {
+        if (string.length < search.length) {
           let sch = search.replace(/[_-\s]/g, ' ');
           sch = sch.toLowerCase();
           string = string.toLowerCase();
-          if(sch.includes(string)){
-            return this.changeMetaGetObj(search, string, obj, key);
+          if (sch.includes(string)) {
+            match = true;
           }
-        }else{
+        } else {
           let str = string.replace(/[_-\s]/gi, ' ');
           search = search.toLowerCase();
           str = str.toLowerCase();
-          if(str.includes(search)){
-            return this.changeMetaGetObj(search, string, obj, key);
+          if (str.includes(search)) {
+            match = true;
           }
         }
+      }
 
-        //Finally Fuzzy match string to search based on which is larger
+      // Finally Fuzzy match string to search based on which is larger
+      if (!match) {
         let fuzzy = [];
-        let str = string.replace(/[_-\s]/gi, '');
-        let sch = search.replace(/[_-\s]/gi, '');
-        if(str.length > sch.length){
+        const str = string.replace(/[_-\s]/gi, '');
+        const sch = search.replace(/[_-\s]/gi, '');
+        if (str.length > sch.length) {
           fuzzy = bitap(str.toLowerCase(), sch.toLowerCase(), 1);
-        }else{
+        } else {
           fuzzy = bitap(sch.toLowerCase(), str.toLowerCase(), 1);
         }
-        if(fuzzy.length > 1 && fuzzy[0] > 3){
-          return this.changeMetaGetObj(search, string, obj, key);
-        }
-        if(type === 'data'
-        && string.toLowerCase() === 'id'){
-          return this.changeMetaGetObj(search, string, obj, key);
+
+        if (fuzzy.length > 1 && fuzzy[0] > 3) {
+          match = true;
         }
       }
+
+      if (match) {
+        this.changeMetaRow(search, string);
+        return obj[key];
+      }
     });
- }
+
+    return x;
+  }
 
   async addFileGroup() {
     try {
       const obj = await ipcPromise.send('open-dialog', 'metafile');
-
-      let newFiles;
 
       const fileGroupId = shortid.generate();
 
@@ -190,40 +218,18 @@ class MapsCollection extends Component {
         this.setState({ filesError: obj.error });
       } else {
         const name = `Group ${Object.keys(this.props.collection.fileGroups).length + 1} (${obj.extension.toUpperCase()})`;
-        if (this.state.newFile.org === 'metafile') {
-          let headerArray = obj.metaFile[0];
-          this.props.setRowArray([...headerArray]);
-          this.props.setMetaRow([...headerArray]);
-          newFiles = {
-            ...obj,
-            name,
-            id: fileGroupId,
-            date: new Date().getTime(),
-            firstRow: obj.metaFile[0].join(', '),
-            org: this.state.newFile.org,
-          };
-        } else {
-          newFiles = {
-            name,
-            id: fileGroupId,
-            extension: obj.extension,
-            files: [...obj.paths.sort(naturalSort)],
-            date: new Date().getTime(),
-            org: this.state.newFile.org,
-          };
 
-          this.setState({ showFiles: { [newFiles.date]: false } });
-        }
+        let headerArray = obj.metaFile[0];
+        this.props.setRowArray([...headerArray]);
+        this.props.setMetaRow([...headerArray]);
 
-        this.props.setRowArray(obj.metaFile[0]);
-
-        newFiles = {
+        const newFiles = {
           ...obj,
           name,
           id: fileGroupId,
           date: new Date().getTime(),
           firstRow: obj.metaFile[0].join(', '),
-          org: this.state.newFile.org,
+          org: 'metafile',
         };
 
         this.setState({ filesError: null });
@@ -286,77 +292,73 @@ class MapsCollection extends Component {
     .catch(console.log);
   }
 
-  changeMetaRow(search, string){
-    return new Promise((resolve, reject) => {
-      const {
-        metaRow,
-        setMetaRow,
-      } = this.props;
-      let marray = metaRow;
-      let index = marray.indexOf(string);
-      if(index === 0){
-        marray[index] = 'id';
-      }
-      if(index !== 0 && index !== -1){
-        marray[index] = search;
-      }
-      setMetaRow(marray);
-      resolve(true);
-    });
-  }
+  changeMetaRow(search, string) {
+    const { metaRow, setMetaRow } = this.props;
 
-  changeMetaGetObj(search, string, obj, key){
-    let changeMeta = this.changeMetaRow(search, string);
-    return changeMeta.then((r) => {
-      if(r){
-        return obj[key];
-      }
-    });
+    const index = metaRow.indexOf(string);
+
+    if (index === -1) {
+      return;
+    }
+
+    const marray = [...metaRow];
+
+    if (index === 0) {
+      marray[index] = 'id';
+    } else {
+      marray[index] = search;
+    }
+
+    setMetaRow(marray);
   }
 
   filterGetObj(arr, string, type) {
     return arr.filter((obj) => {
-       return this.findInObject(obj, string, type);
+      return this.findInObject(obj, string, type);
     });
   }
 
   filterGetIndex(arr, string, type) {
-    return new Promise((resolve, reject) => {
-       let result = arr.findIndex((obj) => {
-         return this.findInObject(obj, string, type);
-       });
-       resolve(result);
+    return arr.findIndex((obj) => {
+      return this.findInObject(obj, string, type);
     });
   }
 
-  async autoMap(group) {
-     this.setState({ autoMap: true });
-     let inputMap = this.props.activeConsortium.pipelineSteps[0].inputMap;
-     let resolveAutoMapPromises = Object.entries(inputMap).map((item, i) => {
-       let type = item[0];
-       let obj = item[1].ownerMappings;
-       let firstRow = this.makePoints(group.firstRow);
-       const steps = firstRow.map(async (string, index) => {
-       if( obj && Object.keys(this.filterGetObj(obj,string,type)).length > 0 ){
-         firstRow.filter(e => e !== string);
-         let setObj = this.filterGetIndex(obj,string,type);
-         await setObj.then((result) => {
-           this.setStepIO(
-             index,
-             group.id,
-             0,
-             type,
-             result,
-             string
-           );
-         });
+  autoMap(group) {
+    this.setState({ autoMap: true });
+
+    const { activeConsortium } = this.props;
+
+    const inputMap = activeConsortium.pipelineSteps[0].inputMap;
+
+    Object.entries(inputMap).forEach((item) => {
+      const type = item[0];
+      const obj = item[1].ownerMappings;
+      const firstRow = this.makePoints(group.firstRow);
+
+      firstRow.forEach((string, index) => {
+        if (!obj) {
+          return;
         }
-       });
-       return Promise.all(steps);
-     });
-     await Promise.all(resolveAutoMapPromises);
-     this.setState({ finishedAutoMapping: true });
-   }
+
+        const x = this.filterGetObj(obj, string, type);
+
+        if (Object.keys(x).length > 0) {
+          const result = this.filterGetIndex(obj, string, type);
+          this.setStepIO(
+            index,
+            group.id,
+            0,
+            type,
+            result,
+            string
+          );
+        }
+      });
+    });
+
+    this.setState({ finishedAutoMapping: true });
+  }
 
 
   removeFileGroup(groupId) {
@@ -376,31 +378,6 @@ class MapsCollection extends Component {
         );
       });
     };
-  }
-
-  setStepIO(i, groupId, stepIndex, search, index, string) {
-    const {
-      collection,
-      metaRow,
-      rowArray,
-      setRowArray,
-      updateConsortiumClientProps
-    } = this.props;
-    return new Promise((resolve) => {
-      let firstRow = collection.fileGroups[groupId].firstRow;
-      let newFirstRow = firstRow.split(', ');
-      let dex = newFirstRow.indexOf(string);
-      let name = metaRow[dex];
-      let varObject = [{
-        'collectionId': collection.id,
-        'groupId': groupId,
-        'column':  name
-      }];
-      updateConsortiumClientProps(stepIndex, search, index, varObject);
-      rowArray.splice( rowArray.indexOf(string), 1 );
-      setRowArray(rowArray);
-      resolve();
-    })
   }
 
   render() {
