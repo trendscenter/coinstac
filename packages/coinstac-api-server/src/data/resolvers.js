@@ -736,7 +736,7 @@ const resolvers = {
      * @param {object} args
      * @param {string} args.consortiumId Consortium id to update
      * @param {string} args.mappedForRun New mappedUsers
-     * @return {object} Updated user object
+     * @return {object} Updated consortia
      */
     updateConsortiumMappedUsers: async ({ auth: { credentials } }, args) => {
       const connection = await helperFunctions.getRethinkConnection()
@@ -745,6 +745,30 @@ const resolvers = {
         .update({ mappedForRun: args.mappedForRun })
         .run(connection)
       await connection.close()
+      return result
+    },
+    /**
+     * Updated consortia mapped users
+     * @param {object} auth User object from JWT middleware validateFunc
+     * @param {object} args
+     * @param {string} args.consortia Mapped consortiums
+     * @return {object} Updated consortia
+     */
+    updateConsortiaMappedUsers: async ({ auth: { credentials } }, args) => {
+      console.log('User id: ', credentials.id)
+      console.log('unmapped consortias: ', args.consortia)
+      // const result = await rethink.table('consortia')
+      //   .get(args.consortiumId)
+      //   .update({ mappedForRun: args.mappedForRun })
+      //   .run(connection)
+      // await connection.close()
+      const connection = await helperFunctions.getRethinkConnection()
+      const result = await rethink.table('consortia')
+        .getAll(...args.consortia)
+        .filter(rethink.row('mappedForRun').contains(credentials.id))
+        .update({ mappedForRun: rethink.row('mappedForRun').difference([credentials.id]) })
+        .run(connection)
+
       return result
     }
   },
