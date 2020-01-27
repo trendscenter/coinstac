@@ -98,10 +98,16 @@ class ComputationsList extends Component { // eslint-disable-line
     const { auth: { user }, docker, classes } = this.props;
     const { activeComp } = this.state;
 
+    let sortedComputations = computations.sort(function(a, b) {
+        var nameA = a.meta.name.toLowerCase();
+        var nameB = b.meta.name.toLowerCase();
+        return (nameA < nameB) ? -1 : (nameA > nameB) ? 1 : 0;
+    });
+
     return (
       <div className={classes.computationsContainer}>
         {
-          computations.map((comp) => {
+          sortedComputations.map((comp) => {
             const compLocalImage = docker.localImages[comp.computation.dockerImage];
 
             return (
