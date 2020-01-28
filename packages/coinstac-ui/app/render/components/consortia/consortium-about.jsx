@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
+import Switch from '@material-ui/core/Switch';
 import Typography from '@material-ui/core/Typography';
 import Checkbox from '@material-ui/core/Checkbox';
 import Table from '@material-ui/core/Table';
@@ -12,8 +14,8 @@ import { withStyles } from '@material-ui/core/styles';
 import DeleteIcon from '@material-ui/icons/Delete';
 import PropTypes from 'prop-types';
 import { ValidatorForm, TextValidator } from 'react-material-ui-form-validator';
-import Select from '../common/react-select';
 import memoize from 'memoize-one';
+import Select from '../common/react-select';
 import MemberAvatar from '../common/member-avatar';
 import StatusButtonWrapper from '../common/status-button-wrapper';
 
@@ -43,6 +45,10 @@ const styles = theme => ({
 });
 
 class ConsortiumAbout extends Component {
+  mapUsers = memoize(
+    users => users ? users.map(user => ({ label: user.id, value: user.id })) : null
+  );
+
   constructor(props) {
     super(props);
 
@@ -65,9 +71,20 @@ class ConsortiumAbout extends Component {
     return null;
   }
 
+  handleTextFieldChange = name => (event) => {
+    const { updateConsortium } = this.props;
+    updateConsortium({ param: name, value: event.target.value });
+  }
+
+  handleSwitchChange = name => (event) => {
+    const { updateConsortium } = this.props;
+    updateConsortium({ param: name, value: event.target.checked });
+  }
+
   addMember() {
-    const newMember = this.state.newMember;
-    this.props.addMemberToConsortium(newMember.value);
+    const { newMember } = this.state;
+    const { addMemberToConsortium } = this.props;
+    addMemberToConsortium(newMember.value);
   }
 
   toggleOwner(consUser) {
@@ -88,15 +105,6 @@ class ConsortiumAbout extends Component {
   handleMemberSelect(value) {
     this.setState({ newMember: value });
   }
-
-  handleTextFieldChange = name => event => {
-    const { updateConsortium } = this.props;
-    updateConsortium({ param: name, value: event.target.value });
-  }
-
-  mapUsers = memoize(
-    users => users ? users.map(user => ({ label: user.id, value: user.id })) : null
-  );
 
   filterSelectedUsers = memoize(
     (allUsers, selectedUsers) => {
@@ -169,6 +177,12 @@ class ConsortiumAbout extends Component {
           value={consortium.description}
           className={classes.textField}
           onChange={this.handleTextFieldChange('description')}
+        />
+        <FormControlLabel
+          control={
+            <Switch checked={consortium.isPrivate} value={consortium.isPrivate} onChange={this.handleSwitchChange('isPrivate')} />
+          }
+          label="Turn consortia private?"
         />
         {
           consortium.id &&

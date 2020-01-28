@@ -27,7 +27,7 @@ module.exports = {
               Image: computation.dockerImage,
               HostConfig: {
                 Binds: [
-                  `${baseDirectory}:/input:ro`,
+                  `${baseDirectory}/input:/input:ro`,
                   `${baseDirectory}/output:/output:rw`,
                   `${baseDirectory}/cache:/cache:rw`,
                   `${baseDirectory}/transfer:/transfer:rw`,

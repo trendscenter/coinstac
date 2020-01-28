@@ -11,8 +11,8 @@ import LinearProgress from '@material-ui/core/LinearProgress';
 import { withStyles } from '@material-ui/core/styles';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
-import StatusButtonWrapper from '../common/status-button-wrapper';
 import path from 'path';
+import StatusButtonWrapper from './status-button-wrapper';
 
 const styles = theme => ({
   rootPaper: {
@@ -342,11 +342,10 @@ class RunItem extends Component {
           {
             runObject.status === 'started' && (runObject.localPipelineState || runObject.remotePipelineState)
             && (
-              <StatusButtonWrapper status={stoppingStatus}>
+              <StatusButtonWrapper>
                 <Button
                   variant="contained"
                   component={Link}
-                  disabled={stoppingStatus === 'pending'}
                   onClick={this.handleStopPipeline}
                 >
                   Stop Pipeline

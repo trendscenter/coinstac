@@ -12,6 +12,7 @@ import PipelineStepInputTextField from './pipeline-step-input/pipeline-step-inpu
 import PipelineStepInputNumberTextField from './pipeline-step-input/pipeline-step-input-number-textfield';
 import PipelineStepInputArray from './pipeline-step-input/pipeline-step-input-array';
 import PipelineStepInputSet from './pipeline-step-input/pipeline-step-input-set';
+import PipelineStepInputMatrix from './pipeline-step-input/pipeline-step-input-matrix';
 import PipelineStepInputRange from './pipeline-step-input/pipeline-step-input-range';
 import PipelineStepInputSelect from './pipeline-step-input/pipeline-step-input-select';
 import PipelineStepInputRadio from './pipeline-step-input/pipeline-step-input-radio';
@@ -38,13 +39,26 @@ class PipelineStepInput extends Component {
     this.state = {
       isClientProp: props.objKey === 'covariates' || props.objKey === 'data',
       openInputSourceMenu: false,
+      filePath: '',
     };
 
     this.addClientProp = this.addClientProp.bind(this);
     this.getNewObj = this.getNewObj.bind(this);
   }
 
-  getNewObj(prop, value, clientPropIndex, isValueArray) {
+  componentDidUpdate = () => {
+    const { objKey, objParams, updateStep, step } = this.props;
+    if (step && objKey === 'data' && !step.dataMeta) {
+      updateStep({
+        ...step,
+        dataMeta: objParams
+      });
+    }
+  }
+
+  getNewObj(
+    prop, value, clientPropIndex, isValueArray
+  ) { // eslint-disable-line class-methods-use-this
     const { objKey, possibleInputs, step: { inputMap } } = this.props;
     const inputCopy = { ...inputMap };
 
@@ -111,6 +125,29 @@ class PipelineStepInput extends Component {
     return [value];
   }
 
+  // addFile = () => {
+  //   const { objKey, step } = this.props;
+  //   ipcPromise.send('open-dialog')
+  //     .then((obj) => {
+  //       const filePath = obj.paths[0];
+  //       if (filePath && filePath !== '') {
+  //         this.setState({ filePath });
+  //       }
+  //       fs.readFile(filePath, (err, data) => {
+  //         if (err) {
+  //          alert("An error ocurred reading the file :" + err.message);
+  //         } else {
+  //          console.log(btoa(this.utf8ArrayToStr(data)));
+  //          this.props.updateStep({
+  //            ...step,
+  //            inputMap: this.getNewObj(objKey, btoa(this.utf8ArrayToStr(data))),
+  //          });
+  //         }
+  //      });
+  //   })
+  //   .catch(console.log);
+  // }
+
   // Covars or data items
   addClientProp() {
     const {
@@ -159,7 +196,7 @@ class PipelineStepInput extends Component {
       classes,
     } = this.props;
 
-    const { openInputSourceMenu } = this.state;
+    const { openInputSourceMenu, filePath } = this.state;
 
     let sourceDropDownLabel = null;
     let isValue = false;
@@ -227,6 +264,37 @@ class PipelineStepInput extends Component {
                   objParams.description
                   && <Typography variant="body1">{ objParams.description }</Typography>
                 }
+                {/*
+                  objParams.type === 'file'
+                  && (
+                    <div>
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={() => {
+                          this.saveFile(
+                            this.props.pipelineId,
+                            this.props.objKey
+                          )
+                        }}
+                        style={{marginRight: '1rem'}}
+                      >
+                        Add File
+                      </Button>
+                      {
+                        filePath && filePath !== ''
+                        && (
+                          <span>
+                            <span>{filePath}</span>
+                            <CloseIcon onClick={() => {
+                                this.deleteFile(this.state.fileId);
+                              }} />
+                          </span>
+                        )
+                      }
+                    </div>
+                  )
+                */}
                 {
                   objParams.type === 'string' && (
                     <PipelineStepInputTextField
@@ -285,6 +353,19 @@ class PipelineStepInput extends Component {
                       objKey={objKey}
                       objParams={objParams}
                       owner={owner}
+                      updateStep={updateStep}
+                      getNewObj={this.getNewObj}
+                      step={step}
+                    />
+                  )
+                }
+                {
+                  objParams.type === 'matrix'
+                  && (
+                    <PipelineStepInputMatrix
+                      objKey={objKey}
+                      owner={owner}
+                      isFromCache={isFromCache}
                       updateStep={updateStep}
                       getNewObj={this.getNewObj}
                       step={step}
