@@ -185,10 +185,24 @@ const resolvers = {
       }
     },
     /**
-     * Returns all consortia.
-     * @return {array} All consortia
+     * Fetches all public consortia and private consortia for which the current user has access
+     * @return {array} All consortia to which the current user access
      */
-    fetchAllConsortia: () => fetchAll('consortia'),
+    fetchAllConsortia: async ({ auth: { credentials } }) => {
+      const connection = await helperFunctions.getRethinkConnection();
+
+      const cursor = await rethink
+        .table('consortia')
+        .orderBy({ index: 'id' })
+        .filter(rethink.row('isPrivate').eq(false).or(rethink.row('members').contains(credentials.id)))
+        .run(connection);
+
+      const results = await cursor.toArray();
+
+      await connection.close();
+
+      return results;
+    },
     /**
      * Returns single consortium.
      * @param {object} args
