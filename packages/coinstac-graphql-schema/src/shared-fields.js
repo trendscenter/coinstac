@@ -32,6 +32,7 @@ const sharedFields = {
     tags
     members
     owners
+    isPrivate
     mappedForRun
   `,
   pipelineFields: `
@@ -71,6 +72,7 @@ const sharedFields = {
         type
       }
       inputMap
+      dataMeta
     }
   `,
   runFields: `

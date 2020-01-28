@@ -14,9 +14,8 @@ function PipelineStepInputSet({
     <div>
       {
         step.inputMap[objKey] && step.inputMap[objKey].value.map((item, i) => (
-          <div>
+          <div key={`${objKey}-${i}`}>
             <TextField
-              key={`${objKey}-${i}`}
               disabled={!owner || isFromCache}
               name={`step-${objKey}-${i}`}
               value={item}
@@ -36,10 +35,14 @@ function PipelineStepInputSet({
   );
 }
 
+PipelineStepInputSet.defaultProps = {
+  isFromCache: false,
+};
+
 PipelineStepInputSet.propTypes = {
   objKey: PropTypes.string.isRequired,
   owner: PropTypes.bool.isRequired,
-  isFromCache: PropTypes.bool.isRequired,
+  isFromCache: PropTypes.bool,
   step: PropTypes.object.isRequired,
   updateStep: PropTypes.func.isRequired,
   getNewObj: PropTypes.func.isRequired,

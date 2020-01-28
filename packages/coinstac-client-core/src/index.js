@@ -167,7 +167,7 @@ class CoinstacClient {
    * @param {string} group.parentDir parent directory if diving into subdir
    * @param {string} group.error present if error found
    */
-  static getSubPathsAndGroupExtension(group) {
+  static getSubPathsAndGroupExtension(group, multext) {
     let pathsArray = [];
     let extension = null;
 
@@ -205,7 +205,7 @@ class CoinstacClient {
             return subGroup;
           }
 
-          if (extension && subGroup.extension && extension !== subGroup.extension) {
+          if (!multext && extension && subGroup.extension && extension !== subGroup.extension) {
             return { error: `Group contains multiple extensions - ${extension} & ${subGroup.extension}.` };
           }
 
@@ -215,8 +215,8 @@ class CoinstacClient {
       } else {
         const thisExtension = path.extname(p);
 
-        if ((group.extension && thisExtension !== group.extension)
-            || (extension && extension !== thisExtension)) {
+        if ((!multext && group.extension && thisExtension !== group.extension)
+            || (!multext && extension && extension !== thisExtension)) {
           return { error: `Group contains multiple extensions - ${thisExtension} & ${group.extension ? group.extension : extension}.` };
         }
 
@@ -248,7 +248,7 @@ class CoinstacClient {
     runId,
     runPipeline // eslint-disable-line no-unused-vars
   ) {
-    return mkdirp(path.join(this.appDirectory, this.clientId, runId))
+    return mkdirp(path.join(this.appDirectory, 'input', this.clientId, runId))
       .then(() => {
       // TODO: validate runPipeline against clientPipeline
         const linkPromises = [];
@@ -261,8 +261,8 @@ class CoinstacClient {
         for (let i = 0; i < filesArray.length; i += 1) {
           const pathsep = new RegExp(`${escape(path.sep)}|:`, 'g');
           linkPromises.push(
-            linkAsync(filesArray[i], path.resolve(this.appDirectory, this.clientId, runId, filesArray[i].replace(pathsep, '-')))
-              .catch((e) => {
+            linkAsync(filesArray[i], path.resolve(this.appDirectory, 'input', this.clientId, runId, filesArray[i].replace(pathsep, '-')))
+            .catch((e) => {
               // permit dupes
                 if (e.code && e.code !== 'EEXIST') {
                   throw e;
@@ -293,7 +293,7 @@ class CoinstacClient {
   }
 
   unlinkFiles(runId) {
-    const fullPath = path.join(this.appDirectory, this.clientId, runId);
+    const fullPath = path.join(this.appDirectory, 'input', this.clientId, runId);
 
     return statAsync(fullPath).then((stats) => {
       return stats.isDirectory();

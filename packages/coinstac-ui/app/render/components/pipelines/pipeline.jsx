@@ -155,6 +155,13 @@ class Pipeline extends Component {
     }
   }
 
+  componentDidUpdate() {
+    const pipeline = this.state
+    if (pipeline.steps && pipeline.steps.inputMap) {
+      console.log(pipeline.steps.inputMap);
+    }
+  }
+
   setConsortium() {
     const { auth: { user }, client } = this.props;
 
@@ -397,7 +404,7 @@ class Pipeline extends Component {
   }
 
   savePipeline() {
-    const { savePipeline, notifySuccess, notifyError } = this.props;
+    const { auth: { user }, savePipeline, notifySuccess, notifyError } = this.props;
 
     this.setState({ savingStatus: 'pending' });
 
@@ -406,7 +413,14 @@ class Pipeline extends Component {
       steps: this.state.pipeline.steps.map(step => ({
         id: step.id,
         computations: step.computations.map(comp => comp.id),
-        inputMap: step.inputMap,
+        inputMap: {
+          ...step.inputMap,
+          meta: {
+            ...step.inputMap.meta,
+            owner: user.id,
+          },
+        },
+        dataMeta: step.dataMeta,
         controller: {
           id: step.controller.id,
           type: step.controller.type,
@@ -448,13 +462,6 @@ class Pipeline extends Component {
 
   closeAddComputationStepMenu() {
     this.setState({ openAddComputationStepMenu: false });
-  }
-
-  componentDidUpdate() {
-    const pipeline = this.state
-    if(pipeline.steps && pipeline.steps.inputMap){
-      console.log(pipeline.steps.inputMap);
-    }
   }
 
   render() {

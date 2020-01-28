@@ -13,8 +13,11 @@ const msrFsl = require('./data/coinstac-schema-regression-ms-fsl');
 const ddfnc = require('./data/coinstac-ddfnc-pipeline');
 const vbm = require('./data/coinstac-vbm-pre');
 
+const fmri = require('./data/coinstac-fmri');
+
 const decentralized = require('./data/coinstac-decentralized-test');
 const decentralizedError = require('./data/coinstac-decentralized-error');
+const enigmaSans = require('./data/coinstac-enigma-sans');
 const local = require('./data/coinstac-local-test');
 const localError = require('./data/coinstac-local-error');
 
@@ -60,7 +63,9 @@ helperFunctions.getRethinkConnection()
         Object.assign({}, ssrVbm, { submittedBy: 'test1' }),
         Object.assign({}, drneFsl, { submittedBy: 'author' }),
         Object.assign({}, decentralizedError, { submittedBy: 'test1' }),
+        Object.assign({}, enigmaSans, { submittedBy: 'test1' }),
         Object.assign({}, localError, { submittedBy: 'test1' }),
+        Object.assign({}, fmri, { submittedBy: 'test1' }),
       ], { returnChanges: true }).run(connection))
       .then(compInsertResult => rethink.table('pipelines').insert([
         {
@@ -195,7 +200,7 @@ helperFunctions.getRethinkConnection()
               ],
               "remote": null,
               "input": {
-                "data": {
+                "dataMeta": {
                   "extensions": [
                     [
                       "txt"
@@ -285,6 +290,217 @@ helperFunctions.getRethinkConnection()
     "pipelineStep": 0,
     "totalSteps": 1
   }
+},
+{
+  "id": "b23af8ff-18fa-479d-adc7-19408abb3741",
+  "clients": [
+    "test1"
+  ],
+  "consortiumId": "test-cons-2",
+  "startDate": "1568405561851",
+  "endDate": "1568408608526",
+  "pipelineSnapshot": {
+    "delete": false,
+    "description": "ddFNC",
+    "id": "b908c384-aa47-42cf-af56-9fc473b4ceff",
+    "name": "ddFNC",
+    "owningConsortium": "test-cons-2",
+    "shared": false,
+    "steps": [
+      {
+        "computations": [
+          {
+            "computation": {
+              "command": [
+                "python",
+                "/computation/local.py"
+              ],
+              "display": {
+                "type": "iframe"
+              },
+              "dockerImage": "coinstacteam/ddfnc:latest",
+              "input": {
+                "dataMeta": {
+                  "extensions": [
+                    [
+                      "csv",
+                      "txt"
+                    ]
+                  ],
+                  "items": [
+                    "NIfTI"
+                  ],
+                  "label": "Data",
+                  "order": 0,
+                  "type": "bundle"
+                },
+                "dfnc_k": {
+                  "conditional": {
+                    "value": "Dynamic FNC",
+                    "variable": "fnc"
+                  },
+                  "default": 5,
+                  "group": "fnc_method",
+                  "label": "Number of Clusters",
+                  "order": 7,
+                  "showValue": "Dynamic FNC",
+                  "source": "owner",
+                  "type": "number"
+                },
+                "fnc": {
+                  "default": "None",
+                  "group": "fnc_method",
+                  "label": "Kind of FNC to perform",
+                  "order": 5,
+                  "type": "select",
+                  "values": [
+                    "None",
+                    "Static FNC",
+                    "Dynamic FNC"
+                  ]
+                },
+                "fnc_window_size": {
+                  "conditional": {
+                    "value": "Dynamic FNC",
+                    "variable": "fnc"
+                  },
+                  "default": 22,
+                  "group": "fnc_method",
+                  "label": "Sliding Window Size",
+                  "order": 6,
+                  "showValue": "Dynamic FNC",
+                  "source": "owner",
+                  "type": "number"
+                },
+                "ica": {
+                  "default": "Infomax ICA",
+                  "group": "ica",
+                  "label": "ICA Method",
+                  "order": 2,
+                  "type": "select",
+                  "values": [
+                    "Infomax ICA",
+                    "Spatially Constrained"
+                  ]
+                },
+                "mask": {
+                  "default": "/computation/local_data/mask.nii",
+                  "label": "Mask",
+                  "order": 1,
+                  "source": "owner",
+                  "type": "string"
+                },
+                "num_ics": {
+                  "conditional": {
+                    "value": "Infomax ICA",
+                    "variable": "ica"
+                  },
+                  "default": 20,
+                  "group": "ica",
+                  "label": "Global Number of Independent Components",
+                  "order": 3,
+                  "showValue": "Infomax ICA",
+                  "source": "owner",
+                  "type": "number"
+                },
+                "results_html_path": {
+                  "default": "gica_cmd_gica_results/icatb_gica_html_report.html",
+                  "label": "Generated Results HTML File Path",
+                  "order": 8,
+                  "source": "owner",
+                  "type": "string"
+                },
+                "scica_template": {
+                  "conditional": {
+                    "value": "Infomax ICA",
+                    "variable": "ica"
+                  },
+                  "default": "/computation/local_data/NeuroMark.nii",
+                  "group": "ica",
+                  "label": "Spatially Constrained ICA Template",
+                  "order": 4,
+                  "showValue": "Spatially Constrained",
+                  "type": "string"
+                }
+              },
+              "output": {},
+              "remote": {
+                "command": [
+                  "python",
+                  "/computation/remote.py"
+                ],
+                "dockerImage": "coinstacteam/ddfnc:latest",
+                "type": "docker"
+              },
+              "type": "docker"
+            },
+            "id": "0ebb54bb-09fe-452b-a2e7-44f4b20fcb0b",
+            "meta": {
+              "description": "a demo for decentralized dfnc",
+              "id": "ddfnc",
+              "name": "Decentralized DFNC",
+              "repository": "https://github.com/MRN-Code/coinstac_ddfnc_pipeline",
+              "version": "v1.0.0"
+            },
+            "submittedBy": "test1"
+          }
+        ],
+        "controller": {
+          "options": {},
+          "type": "decentralized"
+        },
+        "id": "w4TJR47n9",
+        "inputMap": {
+          "data": {
+            "ownerMappings": [
+              {
+                "type": "NIfTI"
+              }
+            ]
+          },
+          "dfnc_k": {
+            "value": 5
+          },
+          "fnc": {
+            "value": "None"
+          },
+          "fnc_window_size": {
+            "value": 22
+          },
+          "ica": {
+            "value": "Infomax ICA"
+          },
+          "mask": {
+            "value": "/computation/local_data/mask.nii"
+          },
+          "num_ics": {
+            "value": 20
+          },
+          "results_folder": {
+            "value": "gica_cmd_gica_results"
+          },
+          "scica_template": {
+            "value": "/computation/local_data/NeuroMark.nii"
+          }
+        }
+      }
+    ]
+  },
+  "remotePipelineState": {
+    "controllerState": "waiting on local users",
+    "currentIteration": 30,
+    "mode": "remote",
+    "pipelineStep": 0,
+    "totalSteps": 1,
+    "waitingOn": []
+  },
+  "error": null,
+  "results": {
+    "computation_phase": "dkmnx_remote_final"
+  },
+  "type": "decentralized",
+  "__typename": "Run",
+  "status": "complete"
 },
 {
   "id": "results-2",
@@ -541,6 +757,7 @@ helperFunctions.getRethinkConnection()
         description: 'This consortia is for testing.',
         owners: ['author'],
         members: ['author'],
+        isPrivate: false,
       }).run(connection))
       .then(() => rethink.table('consortia').insert({
         id: 'test-cons-2',
@@ -549,6 +766,7 @@ helperFunctions.getRethinkConnection()
         description: 'This consortia is for testing too.',
         owners: ['test1'],
         members: ['author', 'test1'],
+        isPrivate: false,
       }).run(connection));
   })
   .then(() => helperFunctions.hashPassword('password'))
