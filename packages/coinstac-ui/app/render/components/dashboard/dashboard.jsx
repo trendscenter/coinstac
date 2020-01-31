@@ -606,7 +606,7 @@ class Dashboard extends Component {
             </main>
           </Grid>
         </Grid>
-        <DashboardMappedDataListener />
+        <DashboardMappedDataListener consortia={consortia} />
       </MuiThemeProvider>
     );
   }

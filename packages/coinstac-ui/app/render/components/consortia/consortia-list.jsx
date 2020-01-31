@@ -14,13 +14,7 @@ import shortid from 'shortid';
 import MemberAvatar from '../common/member-avatar';
 import ListItem from '../common/list-item';
 import ListDeleteModal from '../common/list-delete-modal';
-import {
-  getAllAssociatedConsortia,
-  incrementRunCount,
-  removeCollectionsFromAssociatedConsortia,
-  saveAssociatedConsortia,
-  mapConsortiumData,
-} from '../../state/ducks/collections';
+import { deleteDataMapping } from '../../state/ducks/maps';
 import { saveLocalRun } from '../../state/ducks/runs';
 import { updateUserPerms } from '../../state/ducks/auth';
 import { pullComputations } from '../../state/ducks/docker';
@@ -88,8 +82,6 @@ class ConsortiaList extends Component {
       showModal: false,
     };
 
-    this.props.getAllAssociatedConsortia();
-
     this.getOptions = this.getOptions.bind(this);
     this.getListItem = this.getListItem.bind(this);
     this.deleteConsortium = this.deleteConsortium.bind(this);
@@ -120,15 +112,15 @@ class ConsortiaList extends Component {
   getOptions(member, owner, consortium) {
     const actions = [];
     const text = [];
-    let isMapped = false;
-    const { classes, pipelines, associatedConsortia, runs } = this.props;
+    const {
+      classes,
+      pipelines,
+      maps,
+      runs,
+    } = this.props;
 
-    if (associatedConsortia.length > 0) {
-      const assocCons = associatedConsortia.find(c => c.id === consortium.id);
-      if (assocCons && assocCons.isMapped) {
-        isMapped = assocCons.isMapped;
-      }
-    }
+    const isMapped = maps.findIndex(m => m.consortiumId === consortium.id
+      && m.pipelineId === consortium.activePipelineId) > -1;
 
     // Add pipeline text
     text.push(
@@ -304,11 +296,13 @@ class ConsortiaList extends Component {
   }
 
   deleteConsortium() {
-    this.props.removeCollectionsFromAssociatedConsortia(this.state.consortiumToDelete, true)
-    .then(() => {
-      this.props.deleteConsortiumById(this.state.consortiumToDelete);
-      this.closeModal();
-    });
+    const { deleteDataMapping, deleteConsortiumById } = this.props;
+    const { consortiumToDelete } = this.state;
+
+    deleteDataMapping(consortiumToDelete);
+    deleteConsortiumById(consortiumToDelete);
+
+    this.closeModal();
   }
 
   joinConsortium(consortiumId, activePipelineId) {
@@ -342,15 +336,14 @@ class ConsortiaList extends Component {
       });
     }
 
-    this.props.saveAssociatedConsortia({ id: consortiumId, activePipelineId });
     this.props.joinConsortium(consortiumId);
   }
 
   leaveConsortium(consortiumId) {
-    this.props.removeCollectionsFromAssociatedConsortia(consortiumId, true)
-    .then(() => {
-      this.props.leaveConsortium(consortiumId);
-    });
+    const { deleteDataMapping, leaveConsortium } = this.props;
+
+    deleteDataMapping(consortiumId);
+    leaveConsortium(consortiumId);
   }
 
   stopPipeline(pipelineId) {
@@ -521,13 +514,12 @@ class ConsortiaList extends Component {
 }
 
 ConsortiaList.propTypes = {
-  associatedConsortia: PropTypes.array.isRequired,
+  maps: PropTypes.array.isRequired,
   auth: PropTypes.object.isRequired,
   client: PropTypes.object.isRequired,
   consortia: PropTypes.array.isRequired,
   createRun: PropTypes.func.isRequired,
   deleteConsortiumById: PropTypes.func.isRequired,
-  getAllAssociatedConsortia: PropTypes.func.isRequired,
   incrementRunCount: PropTypes.func.isRequired,
   joinConsortium: PropTypes.func.isRequired,
   leaveConsortium: PropTypes.func.isRequired,
@@ -535,16 +527,15 @@ ConsortiaList.propTypes = {
   notifyWarning: PropTypes.func.isRequired,
   pipelines: PropTypes.array.isRequired,
   pullComputations: PropTypes.func.isRequired,
-  removeCollectionsFromAssociatedConsortia: PropTypes.func.isRequired,
+  deleteDataMapping: PropTypes.func.isRequired,
   router: PropTypes.object.isRequired,
-  saveAssociatedConsortia: PropTypes.func.isRequired,
   saveLocalRun: PropTypes.func.isRequired,
   classes: PropTypes.object.isRequired,
   runs: PropTypes.array.isRequired,
 };
 
-const mapStateToProps = ({ auth, collections: { associatedConsortia } }) => {
-  return { auth, associatedConsortia };
+const mapStateToProps = ({ auth, maps }) => {
+  return { auth, maps: maps.consortiumDataMappings };
 };
 
 const ConsortiaListWithData = compose(
@@ -563,13 +554,10 @@ const ConsortiaListWithData = compose(
 export default withStyles(styles)(
   connect(mapStateToProps,
     {
-      getAllAssociatedConsortia,
-      incrementRunCount,
       notifyInfo,
       notifyWarning,
       pullComputations,
-      removeCollectionsFromAssociatedConsortia,
-      saveAssociatedConsortia,
+      deleteDataMapping,
       saveLocalRun,
       updateUserPerms,
     })(ConsortiaListWithData)
