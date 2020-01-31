@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
-import { connect } from 'react-redux';
 import { Link } from 'react-router';
 import Icon from '@material-ui/core/Icon';
 import Paper from '@material-ui/core/Paper';
@@ -15,7 +14,7 @@ import PropTypes from 'prop-types';
 import shortid from 'shortid';
 import bitap from 'bitap';
 import classNames from 'classnames';
-import { unmapAssociatedConsortia } from '../../state/ducks/collections';
+import memoize from 'memoize-one';
 
 const styles = theme => ({
   addFileGroupButton: {
@@ -77,106 +76,86 @@ class MapsCollection extends Component {
     super(props);
 
     this.state = {
-      contChildren: 0,
       filesError: null,
-      showFiles: {},
-      source: {},
-      finishedAutoMapping: false,
-      stepsMapped: -1,
     };
 
-    this.addFileGroup = this.addFileGroup.bind(this);
     this.addFolderGroup = this.addFolderGroup.bind(this);
-    this.removeFileGroup = this.removeFileGroup.bind(this);
-    this.setStepIO = this.setStepIO.bind(this);
   }
 
-  componentDidUpdate(prevProps, prevState) {
-    const { registerDraggableContainer } = this.props;
+  componentDidUpdate(prevProps) {
+    const { registerDraggableContainer, dataFileHeader } = this.props;
 
-    if (this.refs.Container) {
-      let children = 0;
-      let Container = ReactDOM.findDOMNode(this.refs.Container);
-      children = Container.children.length;
-
-      if (prevState.contChildren !== children) {
-        this.setState(prevState => ({
-          contChildren: children
-        }));
-      }
+    if (this.refs.Container && !prevProps.dataFileHeader && dataFileHeader) {
+      const Container = ReactDOM.findDOMNode(this.refs.Container);
 
       registerDraggableContainer(Container);
     }
   }
 
-  setStepIO(i, groupId, stepIndex, search, index, string) {
-    const {
-      collection,
-      metaRow,
-      rowArray,
-      setRowArray,
-      updateConsortiumClientProps
-    } = this.props;
-
-    const firstRow = collection.fileGroups[groupId].firstRow;
-    const newFirstRow = firstRow.split(', ');
-    const dex = newFirstRow.indexOf(string);
-    const name = metaRow[dex];
-    const varObject = [{
-      collectionId: collection.id,
-      groupId,
-      column: name,
-    }];
-
-    updateConsortiumClientProps(stepIndex, search, index, varObject);
-    rowArray.splice(rowArray.indexOf(string), 1);
-    setRowArray(rowArray);
-  }
-
-  makePoints = ((str) => {
-    str = str.split(', ');
-    return str.sort();
-  });
-
-  findInObject = (obj, string, type) => {
-    const x = Object.entries(obj).find(([key]) => {
-      let search = null;
-
-      if (!obj.name && obj.type) {
-        search = obj.type;
-      } else if (obj.name && obj.type) {
-        search = obj.name;
+  getRemainingDataVariables = memoize(
+    (dataFileHeader, stepsDataMappings) => {
+      if (!dataFileHeader) {
+        return null;
       }
+
+      const firstStepDataMappings = stepsDataMappings[0];
+
+      const remainingVariables = [
+        ...dataFileHeader,
+      ];
+
+      if (!firstStepDataMappings) {
+        return remainingVariables;
+      }
+
+      Object.keys(firstStepDataMappings).forEach((key) => {
+        firstStepDataMappings[key].forEach((mapping) => {
+          const variableName = mapping.dataFileFieldName;
+
+          const index = remainingVariables.findIndex(v => v === variableName);
+
+          if (index > -1) {
+            remainingVariables.splice(index, 1);
+          }
+        });
+      });
+
+      return remainingVariables;
+    }
+  );
+
+  findMatchInPipelineVariables = (pipelineVariables, columnToMatch, pipelineFieldsetName) => {
+    const matches = pipelineVariables.filter((variable) => {
+      let search = variable.name ? variable.name : variable.type;
 
       if (!search) {
         return false;
       }
 
+      search = search.toLowerCase();
+      columnToMatch = columnToMatch.toLowerCase();
+
       let match = false;
 
       // Match data column and map to ID
-      if (type === 'data' && string.toLowerCase() === 'id') {
+      if (pipelineFieldsetName === 'data' && columnToMatch === 'id') {
         match = true;
       }
 
       // Match if string and search are equal
-      if (!match && string.toLowerCase() === search.toLowerCase()) {
+      if (!match && columnToMatch === search) {
         match = true;
       }
 
       // Match if string contains search and vice versa
       if (!match) {
-        if (string.length < search.length) {
-          let sch = search.replace(/[_-\s]/g, ' ');
-          sch = sch.toLowerCase();
-          string = string.toLowerCase();
-          if (sch.includes(string)) {
+        if (columnToMatch.length < search.length) {
+          const sch = search.replace(/[_-\s]/g, ' ');
+          if (sch.includes(columnToMatch)) {
             match = true;
           }
         } else {
-          let str = string.replace(/[_-\s]/gi, ' ');
-          search = search.toLowerCase();
-          str = str.toLowerCase();
+          const str = columnToMatch.replace(/[_-\s]/gi, ' ');
           if (str.includes(search)) {
             match = true;
           }
@@ -186,12 +165,12 @@ class MapsCollection extends Component {
       // Finally Fuzzy match string to search based on which is larger
       if (!match) {
         let fuzzy = [];
-        const str = string.replace(/[_-\s]/gi, '');
+        const str = columnToMatch.replace(/[_-\s]/gi, '');
         const sch = search.replace(/[_-\s]/gi, '');
         if (str.length > sch.length) {
-          fuzzy = bitap(str.toLowerCase(), sch.toLowerCase(), 1);
+          fuzzy = bitap(str, sch, 1);
         } else {
-          fuzzy = bitap(sch.toLowerCase(), str.toLowerCase(), 1);
+          fuzzy = bitap(sch, str, 1);
         }
 
         if (fuzzy.length > 1 && fuzzy[0] > 3) {
@@ -199,53 +178,55 @@ class MapsCollection extends Component {
         }
       }
 
-      if (match) {
-        this.changeMetaRow(search, string);
-        return obj[key];
-      }
+      return match;
     });
 
-    return x;
+    return matches.length > 0 ? matches[0] : null;
   }
 
-  async addFileGroup() {
-    try {
-      const obj = await ipcPromise.send('open-dialog', 'metafile');
+  autoMap = () => {
+    const { activeConsortium, addToDataMapping, dataFileHeader } = this.props;
 
-      const fileGroupId = shortid.generate();
+    const inputMap = activeConsortium.pipelineSteps[0].inputMap;
 
-      if (obj.error) {
-        this.setState({ filesError: obj.error });
-      } else {
-        const name = `Group ${Object.keys(this.props.collection.fileGroups).length + 1} (${obj.extension.toUpperCase()})`;
+    Object.entries(inputMap).forEach((item) => {
+      const pipelineFieldsetName = item[0];
+      const pipelineVariables = item[1].ownerMappings;
 
-        let headerArray = obj.metaFile[0];
-        this.props.setRowArray([...headerArray]);
-        this.props.setMetaRow([...headerArray]);
+      if (!pipelineVariables) {
+        return;
+      }
 
-        const newFiles = {
-          ...obj,
-          name,
-          id: fileGroupId,
-          date: new Date().getTime(),
-          firstRow: obj.metaFile[0].join(', '),
-          org: 'metafile',
-        };
+      dataFileHeader.forEach((headerColumn) => {
+        const match = this.findMatchInPipelineVariables(
+          pipelineVariables,
+          headerColumn,
+          pipelineFieldsetName
+        );
+
+        if (match) {
+          addToDataMapping(pipelineFieldsetName, match.name || match.type, headerColumn);
+        }
+      });
+    });
+  }
+
+  addFileGroup = () => {
+    ipcPromise.send('open-dialog', 'metafile')
+      .then((obj) => {
+        if (obj.error) {
+          this.setState({ filesError: obj.error });
+          return;
+        }
+
+        const { setSelectedDataFile } = this.props;
+
+        setSelectedDataFile(obj);
 
         this.setState({ filesError: null });
-        this.props.updateCollection(
-          {
-            fileGroups: {
-              ...this.props.collection.fileGroups,
-              [fileGroupId]: newFiles,
-            },
-          },
-          this.props.saveCollection
-        );
-      }
-    } catch (error) {
-      console.log(error);
-    }
+      }).catch((error) => {
+        this.setState({ filesError: error.message });
+      });
   }
 
   addFolderGroup() {
@@ -292,342 +273,223 @@ class MapsCollection extends Component {
     .catch(console.log);
   }
 
-  changeMetaRow(search, string) {
-    const { metaRow, setMetaRow } = this.props;
-
-    const index = metaRow.indexOf(string);
-
-    if (index === -1) {
-      return;
-    }
-
-    const marray = [...metaRow];
-
-    if (index === 0) {
-      marray[index] = 'id';
-    } else {
-      marray[index] = search;
-    }
-
-    setMetaRow(marray);
-  }
-
-  filterGetObj(arr, string, type) {
-    return arr.filter((obj) => {
-      return this.findInObject(obj, string, type);
-    });
-  }
-
-  filterGetIndex(arr, string, type) {
-    return arr.findIndex((obj) => {
-      return this.findInObject(obj, string, type);
-    });
-  }
-
-  autoMap(group) {
-    this.setState({ autoMap: true });
-
-    const { activeConsortium } = this.props;
-
-    const inputMap = activeConsortium.pipelineSteps[0].inputMap;
-
-    Object.entries(inputMap).forEach((item) => {
-      const type = item[0];
-      const obj = item[1].ownerMappings;
-      const firstRow = this.makePoints(group.firstRow);
-
-      firstRow.forEach((string, index) => {
-        if (!obj) {
-          return;
-        }
-
-        const x = this.filterGetObj(obj, string, type);
-
-        if (Object.keys(x).length > 0) {
-          const result = this.filterGetIndex(obj, string, type);
-          this.setStepIO(
-            index,
-            group.id,
-            0,
-            type,
-            result,
-            string
-          );
-        }
-      });
-    });
-
-    this.setState({ finishedAutoMapping: true });
-  }
-
-
-  removeFileGroup(groupId) {
-    return () => {
-      const groups = { ...this.props.collection.fileGroups };
-      delete groups[groupId];
-
-      // Props delete assocCons featuring groupId
-      this.props.unmapAssociatedConsortia(this.props.collection.associatedConsortia)
-      .then(() => {
-        this.props.updateCollection(
-          {
-            fileGroups: { ...groups },
-            associatedConsortia: [],
-          },
-          this.props.saveCollection
-        );
-      });
-    };
-  }
-
   render() {
     const {
-      activeConsortium,
-      collection,
       classes,
       dataType,
       isMapped,
-      metaRow,
-      rowArray,
-      rowArrayLength,
       saveCollection,
       stepsTotal,
       stepsMapped,
+      resetDataMapping,
+      stepsDataMappings,
+      removeColumnFromDataFileHeader,
+      removeExtraColumnsFromDataFileHeader,
+      dataFile,
+      dataFileHeader,
+      saveDataMapping,
     } = this.props;
 
-    const {
-      autoMap,
-      contChildren,
-      filesError,
-      finishedAutoMapping,
-    } = this.state;
+    const { filesError } = this.state;
+
+    const remainingDataVariables = this.getRemainingDataVariables(
+      dataFileHeader, stepsDataMappings
+    );
+
+    const hasAnyDataMapped = remainingDataVariables
+      && remainingDataVariables.length < dataFileHeader.length;
 
     return (
       <div>
-        <form onSubmit={saveCollection}>
-          {
-            !isMapped
-            && dataType === 'array'
-            && (
-              <div>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  className={classes.addFileGroupButton}
-                  onClick={this.addFileGroup}
-                >
-                  Add Files Group
-                </Button>
-                <Divider />
-              </div>
-            )
-          }
-          {
-            !isMapped
-            && dataType === 'bundle'
-            && (
-              <div>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  className={classes.addFileGroupButton}
-                  onClick={this.addFolderGroup}
-                >
-                  Add Files from Folder
-                </Button>
-                <Divider />
-              </div>
-            )
-          }
-          {
-            filesError && (
-              <Paper className={classes.fileErrorPaper}>
-                <Typography variant="h6" className={classes.fileErrorMessage}>File Error</Typography>
-                <Typography className={classes.fileErrorMessage} variant="body1">
-                  {filesError}
-                </Typography>
-              </Paper>
-            )
-          }
-          {
-            collection.fileGroups
-            && Object.values(collection.fileGroups).map(group => (
-              <Paper
-                key={`${group.date}-${group.extension}-${group.id}`}
-                className={classes.rootPaper}
+        {
+          !isMapped
+          && dataType === 'array'
+          && (
+            <div>
+              <Button
+                variant="contained"
+                color="primary"
+                className={classes.addFileGroupButton}
+                onClick={this.addFileGroup}
               >
+                Add Files Group
+              </Button>
+              <Divider />
+            </div>
+          )
+        }
+        {
+          !isMapped
+          && dataType === 'bundle'
+          && (
+            <div>
+              <Button
+                variant="contained"
+                color="primary"
+                className={classes.addFileGroupButton}
+                onClick={this.addFolderGroup}
+              >
+                Add Files from Folder
+              </Button>
+              <Divider />
+            </div>
+          )
+        }
+        {
+          filesError && (
+            <Paper className={classes.fileErrorPaper}>
+              <Typography variant="h6" className={classes.fileErrorMessage}>File Error</Typography>
+              <Typography className={classes.fileErrorMessage} variant="body1">
+                {filesError}
+              </Typography>
+            </Paper>
+          )
+        }
+        {
+          dataFile && (
+            <Paper className={classes.rootPaper}>
+              <div>
+                {
+                  !isMapped
+                  && (
+                    <Button
+                      variant="contained"
+                      color="secondary"
+                      className={classes.removeFileGroupButton}
+                      onClick={this.removeSelectedFile}
+                    >
+                      <DeleteIcon />
+                      Remove selected file
+                    </Button>
+                  )
+                }
+                <Typography>
+                  <span className="bold">Extension:</span> {dataFile.extension}
+                </Typography>
+                <Typography>
+                  <span className="bold">Items Mapped:</span> {stepsMapped} of {stepsTotal}
+                </Typography>
+                <Typography>
+                  <span className="bold">Original MetaFile Header:</span> {dataFile.metaFile[0].join(', ')}
+                </Typography>
+                <Typography>
+                  <span className="bold">Mapped MetaFile Header:</span> {dataFileHeader.join(', ')}
+                </Typography>
+                {
+                  /*group.org === 'metafile'
+                  && (
+                    <div>
+                      <Typography>
+                        <span className="bold">Meta File Path:</span> {group.metaFilePath}
+                      </Typography>
+                    </div>
+                    )*/
+                }
                 <div>
                   {
-                    !isMapped
+                    remainingDataVariables && (
+                      <div className="card-deck" ref="Container">
+                        {
+                          remainingDataVariables.map(columnName => (
+                            <div
+                              className={`card-draggable card-${columnName.toLowerCase()}`}
+                              data-string={columnName}
+                              key={columnName}
+                            >
+                              <FileCopyIcon />
+                              { columnName }
+                              { dataType !== 'array' ? `Bundle (${dataFile.files.length} files)` : '' }
+                              <span onClick={() => removeColumnFromDataFileHeader(columnName)}>
+                                <Icon className={classNames('fa fa-times-circle', classes.timesIcon)} />
+                              </span>
+                            </div>
+                          ))
+                        }
+                      </div>
+                    )
+                  }
+                </div>
+                <Divider />
+                <div className={classes.actionsContainer}>
+                  {
+                    !isMapped && stepsTotal !== stepsMapped
                     && (
                       <Button
                         variant="contained"
-                        color="secondary"
-                        className={classes.removeFileGroupButton}
-                        onClick={this.removeFileGroup(group.id)}
+                        color="primary"
+                        onClick={this.autoMap}
                       >
-                        <DeleteIcon />
-                        Remove File Group
+                        Auto Map
                       </Button>
                     )
                   }
-                  <Typography>
-                    <span className="bold">Name:</span> {group.name}
-                  </Typography>
-                  <Typography>
-                    <span className="bold">Date:</span> {new Date(group.date).toUTCString()}
-                  </Typography>
-                  <Typography>
-                    <span className="bold">Extension:</span> {group.extension}
-                  </Typography>
-                   {group.org === 'metafile'
+                  {
+                    !isMapped && stepsTotal === stepsMapped
+                    && remainingDataVariables && remainingDataVariables.length > 0
+                    && (
+                      <Button
+                        variant="contained"
+                        style={{
+                          backgroundColor: '#5cb85c',
+                          color: '#fff',
+                        }}
+                        onClick={removeExtraColumnsFromDataFileHeader}
+                      >
+                        Remove Extra Items
+                      </Button>
+                    )
+                  }
+                  {
+                    !isMapped && stepsTotal === stepsMapped
+                    && (
+                      <Button
+                        variant="contained"
+                        style={{
+                          backgroundColor: '#5cb85c',
+                          color: '#fff',
+                        }}
+                        onClick={saveDataMapping}
+                      >
+                        Save
+                      </Button>
+                    )
+                  }
+                  {
+                    !isMapped && hasAnyDataMapped && (
+                      <Button
+                        style={{ marginLeft: '1rem' }}
+                        variant="contained"
+                        color="secondary"
+                        onClick={resetDataMapping}
+                      >
+                        Reset
+                      </Button>
+                    )
+                  }
+                  {
+                    isMapped
                     && (
                       <div>
-                        <Typography>
-                          <span className="bold">Meta File Path:</span> {group.metaFilePath}
-                        </Typography>
-                        <Typography>
-                          <span className="bold">Original MetaFile Header:</span> {group.firstRow}
-                        </Typography>
-                        <Typography>
-                          <span className="bold">Mapped MetaFile Header:</span> {metaRow.toString()}
-                        </Typography>
-                        <Typography>
-                          <span className="bold">Items Mapped:</span> {stepsMapped} of {stepsTotal}
-                        </Typography>
-                      </div>
-                      )
-                    }
-                    {group.org !== 'metafile'
-                      && (
-                        <div>
-                          <Typography>
-                            <span className="bold">File(s):</span>
-                          </Typography>
-                          <div className={classes.fileList}>
-                            {group.files.map((file, i) => {
-                              return(
-                                <div className={classes.fileListItem}>
-                                  ({i+1}){file}
-                                </div>)
-                            })}
-                          </div>
+                        <div className="alert alert-success" role="alert">
+                          Mapping Complete!
                         </div>
-                      )
-                    }
-                    <div>
-                      {group
-                        && rowArray.length > 0
-                        && (
-                          <div className="card-deck" ref="Container">
-                            {
-                              rowArray && rowArray.map((point, index) => (
-                                <div
-                                  className={`card-draggable card-${point.toLowerCase()}`}
-                                  data-filegroup={group.id}
-                                  data-string={point}
-                                  key={index}
-                                >
-                                  <FileCopyIcon />
-                                  {point}
-                                  {dataType !== 'array' ? ' Bundle ('+group.files.length+' files)' : ''}
-                                  <span onClick={()=>{this.props.removeRowArrItem(point)}}>
-                                    <Icon
-                                      className={classNames('fa fa-times-circle', classes.timesIcon)} />
-                                  </span>
-                                </div>
-                              ))
-                            }
-                          </div>
-                        )
-                      }
+                        <br />
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          to="/dashboard/consortia"
+                          component={Link}
+                        >
+                          Back to Consortia
+                        </Button>
                       </div>
-                      <Divider />
-                      <div className={classes.actionsContainer}>
-                        {
-                          !isMapped
-                          && rowArray.length > 1
-                          && rowArray.length * contChildren > 0
-                          && (
-                            <Button
-                              variant="contained"
-                              color="primary"
-                              onClick={() => this.autoMap(group)}
-                            >
-                              Auto Map
-                            </Button>
-                          )
-                        }
-                        {
-                          !isMapped
-                          && rowArray.length > 0
-                          && stepsTotal === stepsMapped
-                          &&  <Button
-                                variant="contained"
-                                style={{
-                                  backgroundColor: '#5cb85c',
-                                  color: '#fff',
-                                }}
-                                onClick={() => this.props.saveAndCheckConsortiaMapping()}
-                              >
-                                Remove Extra Items
-                              </Button>
-                        }
-                        {
-                          !isMapped
-                          && rowArray.length === 0
-                          && stepsTotal === stepsMapped
-                          &&  <Button
-                                variant="contained"
-                                style={{
-                                  backgroundColor: '#5cb85c',
-                                  color: '#fff',
-                                }}
-                                onClick={() => this.props.saveAndCheckConsortiaMapping()}
-                              >
-                                Save
-                              </Button>
-                        }
-                        {
-                          !isMapped
-                          && this.makePoints(group.firstRow).length !== rowArrayLength
-                          && <Button
-                            style={{marginLeft: '1rem'}}
-                            variant="contained"
-                            color="secondary"
-                            onClick={() => {
-                              this.props.resetPipelineSteps(this.makePoints(group.firstRow));
-                              this.setState({autoMap: false, stepsMapped: 0});
-                            }}
-                          >
-                            Reset
-                          </Button>
-                        }
-                        {
-                          isMapped
-                          && (
-                            <div>
-                              <div className="alert alert-success" role="alert">
-                                Mapping Complete!
-                              </div>
-                              <br />
-                              <Button
-                                variant="contained"
-                                color="primary"
-                                to="/dashboard/consortia"
-                                component={Link}
-                              >
-                                Back to Consortia
-                              </Button>
-                            </div>
-                          )
-                        }
-                     </div>
+                    )
+                  }
                 </div>
-              </Paper>
-            ))
-          }
-        </form>
+              </div>
+            </Paper>
+          )
+        }
       </div>
     );
   }
@@ -635,10 +497,8 @@ class MapsCollection extends Component {
 
 MapsCollection.propTypes = {
   collection: PropTypes.object,
-  saveCollection: PropTypes.func.isRequired,
-  saveAndCheckConsortiaMapping: PropTypes.func.isRequired,
-  updateConsortiumClientProps: PropTypes.func.isRequired,
-  unmapAssociatedConsortia: PropTypes.func.isRequired,
+  saveDataMapping: PropTypes.func.isRequired,
+  resetDataMapping: PropTypes.func.isRequired,
   registerDraggableContainer: PropTypes.func.isRequired,
   classes: PropTypes.object.isRequired,
 };
@@ -647,6 +507,4 @@ MapsCollection.defaultProps = {
   collection: null,
 };
 
-const connectedComponent = connect(null, { unmapAssociatedConsortia })(MapsCollection);
-
-export default withStyles(styles)(connectedComponent);
+export default withStyles(styles)(MapsCollection);

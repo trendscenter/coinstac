@@ -12,8 +12,8 @@ import { withStyles } from '@material-ui/core/styles';
 import DeleteIcon from '@material-ui/icons/Delete';
 import PropTypes from 'prop-types';
 import { ValidatorForm, TextValidator } from 'react-material-ui-form-validator';
-import Select from '../common/react-select';
 import memoize from 'memoize-one';
+import Select from '../common/react-select';
 import MemberAvatar from '../common/member-avatar';
 import StatusButtonWrapper from '../common/status-button-wrapper';
 

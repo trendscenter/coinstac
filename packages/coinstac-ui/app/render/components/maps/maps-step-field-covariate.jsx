@@ -72,39 +72,40 @@ class MapsStepFieldCovariate extends Component {
       type,
       classes,
       column,
-      index,
+      unmapField,
     } = this.props;
 
-    let name = step.name;
+    const { name } = step;
+
+    const isMapped = !!column;
 
     return (
       <Paper
         className={classNames('drop-panel', classes.rootPaper)}
         elevation={1}
       >
-        <Typography style={{fontWeight: '500', fontSize: '1rem'}} className={classes.title}>
-          {name}
+        <Typography style={{ fontWeight: '500', fontSize: '1rem' }} className={classes.title}>
+          { name }
         </Typography>
         <div className={classes.listDropzoneContainer}>
           <div className={classNames('drop-zone', classes.dropZone)}>
             {
-              !column
+              isMapped
                 ? (
+                  <div ref="Container" className="card-draggable">
+                    <FileCopyIcon />
+                    { column }
+                    <span onClick={() => unmapField(type, column)}>
+                      <Icon className={classNames('fa fa-times-circle', classes.timesIcon)} />
+                    </span>
+                  </div>
+                ) : (
                   <div
                     ref="Container"
                     className={`acceptor acceptor-${name}`}
                     data-type={type}
                     data-name={name}
-                    data-index={index}
                   />
-                ) : (
-                  <div ref="Container" className="card-draggable">
-                    <FileCopyIcon /> {column}
-                    <span onClick={()=>{this.props.removeMapStep(type, index, column)}}>
-                      <Icon
-                        className={classNames('fa fa-times-circle', classes.timesIcon)} />
-                    </span>
-                  </div>
                 )
             }
           </div>
@@ -123,8 +124,8 @@ MapsStepFieldCovariate.propTypes = {
   column: PropTypes.string,
   classes: PropTypes.object.isRequired,
   type: PropTypes.string.isRequired,
-  index: PropTypes.number.isRequired,
   registerDraggableContainer: PropTypes.func.isRequired,
+  unmapField: PropTypes.func.isRequired,
 };
 
 export default withStyles(styles)(MapsStepFieldCovariate);
