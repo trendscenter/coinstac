@@ -74,14 +74,9 @@ class MapsList extends Component {
   }
 
   isDataMappedToConsortium(consortium) {
-    const { associatedConsortia } = this.props;
+    const { maps } = this.props;
 
-    if (!associatedConsortia) {
-      return false;
-    }
-
-    const assocCons = associatedConsortia.find(c => c.id === consortium.id);
-    return assocCons && assocCons.isMapped;
+    return maps.findIndex(m => m.consortiumId === consortium.id) > -1;
   }
 
   render() {
@@ -108,15 +103,15 @@ class MapsList extends Component {
 }
 
 MapsList.propTypes = {
-  associatedConsortia: PropTypes.array.isRequired,
+  maps: PropTypes.array.isRequired,
   auth: PropTypes.object.isRequired,
   consortia: PropTypes.array.isRequired,
   pipelines: PropTypes.array.isRequired,
   classes: PropTypes.object.isRequired,
 };
 
-const mapStateToProps = ({ auth, collections: { associatedConsortia } }) => {
-  return { auth, associatedConsortia };
+const mapStateToProps = ({ auth, maps }) => {
+  return { auth, maps: maps.consortiumDataMappings };
 };
 
 export default withStyles(styles)(

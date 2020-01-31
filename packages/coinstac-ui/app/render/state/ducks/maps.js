@@ -3,6 +3,7 @@ import { applyAsyncLoading } from './loading';
 import localDB from '../local-db';
 
 const SAVE_DATA_MAPPING = 'SAVE_DATA_MAPPING';
+const DELETE_DATA_MAPPING = 'DELETE_DATA_MAPPING';
 
 const INITIAL_STATE = {
   consortiumDataMappings: [],
@@ -57,22 +58,43 @@ export const saveDataMapping = applyAsyncLoading(
   }
 );
 
+export const deleteDataMapping = applyAsyncLoading(
+  (consortiumId) => async (dispatch) => {
+    dispatch(({
+      type: DELETE_DATA_MAPPING,
+      payload: consortiumId,
+    }));
+  }
+);
+
 export default function reducer(state = INITIAL_STATE, action) {
   switch (action.type) {
     case SAVE_DATA_MAPPING:
-      const mapsCopy = [...state.consortiumDataMappings];
-      const index = state.consortiumDataMappings.findIndex(map => map.consortiumId === action.payload.consortiumId);
+      const saveMapsCopy = [...state.consortiumDataMappings];
+      const saveMapIndex = state.consortiumDataMappings.findIndex(map => map.consortiumId === action.payload.consortiumId);
 
-      if (index === -1) {
-        mapsCopy.push(action.payload);
+      if (saveMapIndex === -1) {
+        saveMapsCopy.push(action.payload);
       } else {
-        mapsCopy.splice(index, 1, action.payload);
+        saveMapsCopy.splice(saveMapIndex, 1, action.payload);
       }
 
       return {
         ...state,
-        consortiumDataMappings: mapsCopy,
+        consortiumDataMappings: saveMapsCopy,
       };
+    case DELETE_DATA_MAPPING:
+      const deleteMapsCopy = [...state.consortiumDataMappings];
+      const deleteIndex = state.consortiumDataMappings.findIndex(map => map.consortiumId === action.payload);
+
+      if (deleteIndex > -1) {
+        deleteMapsCopy.splice(deleteIndex, 1);
+      }
+
+      return {
+        ...state,
+        consortiumDataMappings: deleteMapsCopy,
+      }
     default:
       return state;
   }

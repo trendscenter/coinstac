@@ -8,11 +8,6 @@ import Typography from '@material-ui/core/Typography';
 import Grid from '@material-ui/core/Grid';
 import { withStyles } from '@material-ui/core/styles';
 import dragula from 'react-dragula';
-import {
-  mapConsortiumData,
-  incrementRunCount,
-  saveAssociatedConsortia,
-} from '../../state/ducks/collections';
 import { saveDataMapping } from '../../state/ducks/maps';
 import {
   saveLocalRun,
@@ -60,8 +55,6 @@ class MapsEdit extends Component {
       dataFile: null,
       dataFileHeader: null,
     };
-
-    this.saveAndCheckConsortiaMapping = this.saveAndCheckConsortiaMapping.bind(this);
   }
 
   componentDidMount = () => {
@@ -430,9 +423,7 @@ const ComponentWithData = compose(
 
 const connectedComponent = connect(mapStateToProps,
   {
-    incrementRunCount,
     notifyInfo,
-    saveAssociatedConsortia,
     saveLocalRun,
     saveDataMapping,
   })(ComponentWithData);

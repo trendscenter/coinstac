@@ -26,8 +26,8 @@ Maps.propTypes = {
   routeParams: PropTypes.object.isRequired,
 };
 
-const mapStateToProps = ({ auth, collections: { associatedConsortia } }) => {
-  return { auth, associatedConsortia };
+const mapStateToProps = ({ auth }) => {
+  return { auth };
 };
 
 export default connect(mapStateToProps, {
