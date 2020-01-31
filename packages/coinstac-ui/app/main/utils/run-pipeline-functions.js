@@ -26,6 +26,19 @@ function inputSchemaHasFileSource(inputSchemaObj) {
   return inputSchemaObj.source === 'file';
 }
 
+function encodeFilePath(filePath) {
+  const escape = (string) => {
+    return string.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'); // eslint-disable-line no-useless-escape
+  };
+  const pathsep = new RegExp(`${escape(sep)}|:`, 'g');
+
+  if (filePath.includes(sep)) {
+    return filePath.replace(pathsep, '-');
+  }
+
+  return null;
+}
+
 function mapVariablesIntoArray(inputSchema, dataMappings, data, baseDirectory) {
   const dataArray = [];
   const variablesArray = [];
@@ -85,7 +98,7 @@ function mapVariablesIntoArray(inputSchema, dataMappings, data, baseDirectory) {
   });
 
   return [
-    dataArray,
+    [dataArray],
     variablesArray,
     variablesTypesArray,
   ];
@@ -117,25 +130,17 @@ function parsePipelineInput(pipeline, dataMappings) {
       const firstInputSchemaObj = inputSchema.ownerMappings[0];
 
       if (stepInputMapSchemaHasOptions(inputMapSchemaKeys)) {
-        const escape = (string) => {
-          return string.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'); // eslint-disable-line no-useless-escape
-        };
-        const pathsep = new RegExp(`${escape(sep)}|:`, 'g');
-        const pathsArray = firstStepData.allFiles;
-        let paths = pathsArray.map((path) => {
-          if (path.includes(sep)) {
-            return path.replace(pathsep, '-');
-          }
-          return null;
-        });
-        paths = paths.filter(Boolean);
+        const pathsArray = dataMappings.data[stepIndex].allFiles;
+        const paths = pathsArray
+          .map(path => encodeFilePath(path))
+          .filter(Boolean);
         keyArray.push(paths);
       } else if (inputSchemaHasFileSource(firstInputSchemaObj)) {
         keyArray = mapVariablesIntoArray(inputSchema, consortiumMappedStepData[inputSchemaKey],
           dataMappings.data[stepIndex].filesData, dataMappings.data[stepIndex].baseDirectory);
       } else {
         const filePaths = dataMappings.data[stepIndex].allFiles
-          .map(path => (extname(path) !== '' ? path : undefined))
+          .map(path => encodeFilePath(path))
           .filter(Boolean);
 
         keyArray[0] = keyArray[0].concat(filePaths);
