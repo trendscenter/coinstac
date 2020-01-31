@@ -430,6 +430,8 @@ class ConsortiaList extends Component {
 
             run.status = status;
 
+            console.log('aaaaaaaaaaaaa');
+
             incrementRunCount(consortiumId);
             ipcRenderer.send('start-pipeline', {
               consortium,

@@ -169,6 +169,13 @@ class Dashboard extends Component {
       );
     });
 
+    ipcRenderer.on('save-local-run', (event, arg) => {
+      this.props.saveLocalRun({
+        ...arg.run,
+        status: 'started',
+      });
+    });
+
     ipcRenderer.on('local-run-complete', (event, arg) => {
       this.props.notifySuccess({
         message: `${arg.consName} Pipeline Complete.`,
@@ -423,6 +430,7 @@ class Dashboard extends Component {
       incrementRunCount,
       notifyInfo,
       notifyWarning,
+      maps,
     } = this.props;
 
     const { router } = this.context;
@@ -445,49 +453,22 @@ class Dashboard extends Component {
 
         if (runIndexInLocalRuns === -1 && !remoteRun.results && !remoteRun.error) {
           const consortium = consortia.find(obj => obj.id === remoteRun.consortiumId);
+          const dataMapping = maps.find(m => m.consortiumId === remoteRun.consortiumId);
 
-          mapConsortiumData(consortium.id)
-            .then((filesArray) => {
-              const status = 'started';
 
-              const run = {
-                ...remoteRun,
-                pipelineSnapshot: {
-                  ...remoteRun.pipelineSnapshot,
-                  steps: filesArray.steps,
-                },
-              };
+          notifyInfo({
+            message: `Pipeline Starting for ${consortium.name}.`,
+            action: {
+              label: 'Watch Progress',
+              callback: () => {
+                router.push('dashboard');
+              },
+            },
+          });
 
-              console.log('filesarray', filesArray);
-
-              // Save run status to localDB
-              saveLocalRun({ ...run, status });
-
-              incrementRunCount(consortium.id);
-
-              notifyInfo({
-                message: `Decentralized Pipeline Starting for ${consortium.name}.`,
-                action: {
-                  label: 'Watch Progress',
-                  callback: () => {
-                    router.push('dashboard');
-                  },
-                },
-              });
-
-              ipcRenderer.send('start-pipeline', {
-                consortium,
-                pipeline: run.pipelineSnapshot,
-                filesArray: filesArray.allFiles,
-                run: { ...run, status },
-              });
-            })
-            .catch((err) => {
-              notifyWarning({
-                message: err,
-                autoDismiss: 5,
-              });
-            });
+          ipcRenderer.send('start-pipeline', {
+            consortium, dataMappings: dataMapping, pipelineRun: remoteRun,
+          });
         }
       });
     }
@@ -641,7 +622,7 @@ Dashboard.propTypes = {
   notifyInfo: PropTypes.func.isRequired,
   notifySuccess: PropTypes.func.isRequired,
   notifyWarning: PropTypes.func.isRequired,
-  maps: PropTypes.array,
+  maps: PropTypes.array.isRequired,
   pipelines: PropTypes.array,
   pullComputations: PropTypes.func.isRequired,
   remoteRuns: PropTypes.array,
@@ -664,10 +645,11 @@ Dashboard.propTypes = {
   classes: PropTypes.object.isRequired,
 };
 
-function mapStateToProps({ auth, runs: { runs } }) {
+function mapStateToProps({ auth, runs: { runs }, maps }) {
   return {
     auth,
     runs,
+    maps: maps.consortiumDataMappings,
   };
 }
 
