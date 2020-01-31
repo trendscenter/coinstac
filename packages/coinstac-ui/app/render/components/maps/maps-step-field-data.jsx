@@ -80,10 +80,12 @@ class MapsStepFieldData extends Component {
       type,
       classes,
       column,
-      index,
+      unmapField,
     } = this.props;
 
     const name = step.type;
+
+    const isMapped = !!column;
 
     return (
       <Paper
@@ -96,22 +98,22 @@ class MapsStepFieldData extends Component {
         <div className={classes.listDropzoneContainer}>
           <div className={classNames('drop-zone', classes.dropZone)}>
             {
-              !column
+              isMapped
                 ? (
+                  <div ref="Container" className="card-draggable">
+                    <FileCopyIcon />
+                    { column }
+                    <span onClick={() => unmapField(type, column)}>
+                      <Icon className={classNames('fa fa-times-circle', classes.timesIcon)} />
+                    </span>
+                  </div>
+                ) : (
                   <div
                     ref="Container"
                     className="acceptor acceptor-data"
                     data-type={type}
                     data-name={name}
-                    data-index={index}
                   />
-                ) : (
-                  <div ref="Container" className="card-draggable">
-                    <FileCopyIcon /> {column}
-                    <span onClick={()=>{this.props.removeMapStep(type, index, column)}}>
-                      <Icon className={classNames('fa fa-times-circle', classes.timesIcon)} />
-                    </span>
-                  </div>
                 )
             }
           </div>
@@ -151,8 +153,8 @@ MapsStepFieldData.propTypes = {
   step: PropTypes.object.isRequired,
   type: PropTypes.string.isRequired,
   column: PropTypes.string,
-  index: PropTypes.number.isRequired,
   registerDraggableContainer: PropTypes.func.isRequired,
+  unmapField: PropTypes.func.isRequired,
   classes: PropTypes.object.isRequired,
 };
 

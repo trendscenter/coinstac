@@ -24,30 +24,33 @@ class MapsStepFieldset extends Component {
 
   renderCovariatesField = (fieldKey) => {
     const {
-      consortium,
+      stepsDataMappings,
       stepFieldset,
       fieldsetName,
       registerDraggableContainer,
-      removeMapStep,
+      unmapField,
     } = this.props;
 
-    const stepIO = consortium.stepIO[0];
+    const firstStepDataMappings = stepsDataMappings[0];
 
-    return stepFieldset[fieldKey].map((field, k) => {
+    return stepFieldset[fieldKey].map((field) => {
       let column = null;
-      if (stepIO.covariates[k] && stepIO.covariates[k].column) {
-        column = stepIO.covariates[k].column;
+      if (firstStepDataMappings && 'covariates' in firstStepDataMappings) {
+        const mappedField = firstStepDataMappings.covariates.find(
+          c => c.pipelineVariableName === field.name
+        );
+
+        column = mappedField ? mappedField.dataFileFieldName : null;
       }
 
       return (
         <MapsStepFieldCovariate
           registerDraggableContainer={registerDraggableContainer}
-          key={`step-cov-${k}-${fieldsetName}`}
+          key={`step-cov-${field.name}-${fieldsetName}`}
           step={field}
           type={fieldsetName}
-          index={k}
           column={column}
-          removeMapStep={removeMapStep}
+          unmapField={unmapField}
         />
       );
     });
@@ -55,30 +58,33 @@ class MapsStepFieldset extends Component {
 
   renderDataField = (fieldKey) => {
     const {
-      consortium,
+      stepsDataMappings,
       stepFieldset,
       fieldsetName,
       registerDraggableContainer,
-      removeMapStep,
+      unmapField,
     } = this.props;
 
-    const stepIO = consortium.stepIO[0];
+    const firstStepDataMappings = stepsDataMappings[0];
 
-    return stepFieldset[fieldKey].map((field, k) => {
+    return stepFieldset[fieldKey].map((field) => {
       let column = null;
-      if (stepIO.data[k] && stepIO.data[k].column) {
-        column = stepIO.data[k].column;
+      if (firstStepDataMappings && 'data' in firstStepDataMappings) {
+        const mappedField = firstStepDataMappings.data.find(
+          c => c.pipelineVariableName === field.type
+        );
+
+        column = mappedField ? mappedField.dataFileFieldName : null;
       }
 
       return (
         <MapsStepFieldData
           registerDraggableContainer={registerDraggableContainer}
-          key={`step-data-${k}-${fieldsetName}`}
+          key={`step-data-${field.name}-${fieldsetName}`}
           step={field}
           type={fieldsetName}
-          index={k}
           column={column}
-          removeMapStep={removeMapStep}
+          unmapField={unmapField}
         />
       );
     });
@@ -123,8 +129,9 @@ MapsStepFieldset.propTypes = {
   fieldsetName: PropTypes.string.isRequired,
   consortium: PropTypes.object.isRequired,
   registerDraggableContainer: PropTypes.func.isRequired,
-  removeMapStep: PropTypes.func.isRequired,
+  unmapField: PropTypes.func.isRequired,
   stepFieldset: PropTypes.object.isRequired,
+  stepsDataMappings: PropTypes.array.isRequired,
   classes: PropTypes.object.isRequired,
 };
 

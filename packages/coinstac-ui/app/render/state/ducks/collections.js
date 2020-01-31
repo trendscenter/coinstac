@@ -510,8 +510,6 @@ const INITIAL_STATE = {
   associatedConsortia: [],
   collections: [],
   error: '',
-  runFiles: [],
-  runSteps: [],
 };
 
 export default function reducer(state = INITIAL_STATE, action) {

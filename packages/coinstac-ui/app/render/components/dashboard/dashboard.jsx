@@ -4,7 +4,6 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { ipcRenderer } from 'electron';
 import { MuiThemeProvider, withStyles } from '@material-ui/core/styles';
-import theme from '../../styles/material-ui/theme';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import Grid from '@material-ui/core/Grid';
 import Drawer from '@material-ui/core/Drawer';
@@ -12,6 +11,7 @@ import Icon from '@material-ui/core/Icon';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import Typography from '@material-ui/core/Typography';
+import theme from '../../styles/material-ui/theme';
 import DashboardNav from './dashboard-nav';
 import UserAccountController from '../user/user-account-controller';
 import {
@@ -54,6 +54,7 @@ import {
   getAllAndSubProp,
   getSelectAndSubProp,
 } from '../../state/graphql/props';
+import DashboardMappedDataListener from './listeners/dashboard-mapped-data-listener';
 
 const styles = theme => ({
   root: {
@@ -457,6 +458,8 @@ class Dashboard extends Component {
                 },
               };
 
+              console.log('filesarray', filesArray);
+
               // Save run status to localDB
               saveLocalRun({ ...run, status });
 
@@ -603,6 +606,7 @@ class Dashboard extends Component {
             </main>
           </Grid>
         </Grid>
+        <DashboardMappedDataListener />
       </MuiThemeProvider>
     );
   }

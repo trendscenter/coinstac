@@ -6,6 +6,7 @@ import auth from './ducks/auth';
 import collections from './ducks/collections';
 import docker from './ducks/docker';
 import loading from './ducks/loading';
+import maps from './ducks/maps';
 import runs from './ducks/runs';
 
 const rootReducer = client => combineReducers({
@@ -17,6 +18,7 @@ const rootReducer = client => combineReducers({
   loading,
   notifications,
   runs,
+  maps,
   routing: routerReducer,
 });
 
