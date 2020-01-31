@@ -4,7 +4,6 @@ import { ipcRenderer } from 'electron';
 import { connect } from 'react-redux';
 import { compose, graphql, withApollo } from 'react-apollo';
 import { FETCH_ALL_USER_RUNS_QUERY } from '../../../state/graphql/functions';
-import { saveLocalRun } from '../../../state/ducks/runs';
 import { notifyInfo } from '../../../state/ducks/notifyAndLog';
 
 class DashboardMappedDataListener extends React.Component {
@@ -14,7 +13,6 @@ class DashboardMappedDataListener extends React.Component {
       consortia,
       userRuns,
       notifyInfo,
-      saveLocalRun,
       router,
     } = this.props;
 
@@ -23,8 +21,6 @@ class DashboardMappedDataListener extends React.Component {
       const consortium = consortia.find(c => lastDataMapping.consortiumId === c.id);
 
       if (this.checkIfConsortiumHasActiveRun(consortium)) {
-        const lastRun = userRuns[userRuns.length - 1];
-
         notifyInfo({
           message: `Pipeline Starting for ${consortium.name}.`,
           action: {
@@ -35,21 +31,11 @@ class DashboardMappedDataListener extends React.Component {
           },
         });
 
-        let run;
-        if ('steps' in filesArray) {
-          run = {
-            ...lastRun,
-            pipelineSnapshot: {
-              ...lastRun.pipelineSnapshot,
-              steps: filesArray.steps,
-            },
-          };
-        }
+        const run = userRuns[userRuns.length - 1]
 
         ipcRenderer.send('start-pipeline', {
-          consortium, pipeline: run.pipelineSnapshot, filesArray: filesArray.allFiles, run,
+          consortium, lastDataMapping, run,
         });
-        saveLocalRun({ ...run, status: 'started' });
       }
     }
   }
@@ -98,7 +84,6 @@ function mapStateToProps({ auth, maps }) {
 
 const connectedComponent = connect(mapStateToProps,
   {
-    saveLocalRun,
     notifyInfo,
   })(ComponentWithData);
 

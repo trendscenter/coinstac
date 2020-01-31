@@ -69,6 +69,8 @@ class MapsEdit extends Component {
     const consortium = consortia.find(c => c.id === params.consortiumId);
     const pipeline = pipelines.find(p => p.id === consortium.activePipelineId);
 
+    console.log('pipao', pipeline.steps);
+
     if (pipeline.steps[0].dataMeta && pipeline.steps[0].dataMeta.type) {
       this.setState({ dataType: pipeline.steps[0].dataMeta.type });
     }

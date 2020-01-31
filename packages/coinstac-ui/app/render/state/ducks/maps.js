@@ -18,6 +18,7 @@ export const saveDataMapping = applyAsyncLoading(
       data: [{
         baseDirectory: dirname(dataFile.metaFilePath),
         metaFilePath: dataFile.metaFilePath,
+        allFiles: dataFile.files,
         filesData: [],
       }],
     };
