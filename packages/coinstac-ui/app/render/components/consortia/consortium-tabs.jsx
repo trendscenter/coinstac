@@ -46,6 +46,7 @@ class ConsortiumTabs extends Component {
       activePipelineId: '',
       activeComputationInputs: [],
       tags: [],
+      isPrivate: false,
     };
 
     this.state = {
@@ -193,6 +194,7 @@ class ConsortiumTabs extends Component {
 
   render() {
     const {
+      auth,
       users,
       params,
       addUserRole,
@@ -201,10 +203,16 @@ class ConsortiumTabs extends Component {
       consortia,
       classes,
     } = this.props;
-    const { user } = this.props.auth;
-    const { selectedTabIndex, consortium, consortiumUsers, savingStatus } = this.state;
 
-    const isEditingConsortium = !!this.state.consortium.id;
+    const { user } = auth;
+    const {
+      selectedTabIndex,
+      consortium,
+      consortiumUsers,
+      savingStatus,
+    } = this.state;
+
+    const isEditingConsortium = !!consortium.id;
 
     const title = isEditingConsortium
       ? 'Consortium Edit'
@@ -295,6 +303,8 @@ ConsortiumTabs.propTypes = {
   saveConsortium: PropTypes.func.isRequired,
   subscribeToConsortia: PropTypes.func,
   subscribeToUsers: PropTypes.func,
+  classes: PropTypes.object.isRequired,
+  users: PropTypes.array.isRequired,
 };
 
 function mapStateToProps({ auth }) {
