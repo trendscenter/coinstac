@@ -602,6 +602,18 @@ const resolvers = {
       }
 
       const connection = await helperFunctions.getRethinkConnection();
+
+      if (!isUpdate) {
+        const count = await rethink.table('consortia')
+          .filter({ name: args.consortium.name })
+          .count()
+          .run(connection)
+
+        if (count > 0) {
+          return Boom.forbidden('Consortium with same name already exists');
+        }
+      }
+
       const result = await rethink.table('consortia')
         .insert(args.consortium, {
           conflict: 'update',
@@ -652,6 +664,18 @@ const resolvers = {
           && !permissions.consortia[args.consortium.id].write) {
             return Boom.forbidden('Action not permitted');
       }*/
+      const connection = await helperFunctions.getRethinkConnection();
+
+      if (!args.pipeline.id) {
+        const count = await rethink.table('pipelines')
+          .filter({ name: args.pipeline.name })
+          .count()
+          .run(connection)
+
+        if (count > 0) {
+          return Boom.forbidden('Pipeline with same name already exists');
+        }
+      }
 
       if (args.pipeline && args.pipeline.steps) {
         const invalidData = args.pipeline.steps.some(step =>
@@ -668,7 +692,6 @@ const resolvers = {
         }
       }
 
-      const connection = await helperFunctions.getRethinkConnection();
       const result = await rethink.table('pipelines')
         .insert(args.pipeline, {
           conflict: 'update',
