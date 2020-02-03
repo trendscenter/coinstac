@@ -14,10 +14,9 @@ export const saveDataMapping = applyAsyncLoading(
     const map = {
       consortiumId,
       pipelineId,
+      dataType: dataFile.dataType,
       dataMappings: mappings,
       data: [{
-        baseDirectory: dirname(dataFile.metaFilePath),
-        metaFilePath: dataFile.metaFilePath,
         allFiles: dataFile.files,
         filesData: [],
       }],
@@ -25,31 +24,37 @@ export const saveDataMapping = applyAsyncLoading(
 
     const mappedColumns = [];
 
-    Object.keys(mappings[0]).forEach((fieldsetName) => {
-      mappings[0][fieldsetName].forEach((field) => {
-        const mappedColumn = {
-          name: field.dataFileFieldName,
-          index: dataFile.metaFile[0].findIndex(c => c === field.dataFileFieldName),
-        };
+    if (dataFile.dataType === 'array') {
+      map.data[0].baseDirectory = dirname(dataFile.metaFilePath);
+      map.data[0].metaFilePath = dataFile.metaFilePath;
 
-        mappedColumns.push(mappedColumn);
-      });
-    });
+      Object.keys(mappings[0]).forEach((fieldsetName) => {
+        mappings[0][fieldsetName].forEach((field) => {
+          const mappedColumn = {
+            name: field.dataFileFieldName,
+            index: dataFile.metaFile[0].findIndex(c => c === field.dataFileFieldName),
+          };
 
-    dataFile.metaFile.forEach((dataRow, index) => {
-      // first row is the header
-      if (index === 0) {
-        return;
-      }
-
-      const parsedRow = {};
-
-      mappedColumns.forEach((mappedColumn) => {
-        parsedRow[mappedColumn.name] = dataRow[mappedColumn.index];
+          mappedColumns.push(mappedColumn);
+        });
       });
 
-      map.data[0].filesData.push(parsedRow);
-    });
+      dataFile.metaFile.forEach((dataRow, index) => {
+        // first row is the header
+        if (index === 0) {
+          return;
+        }
+
+        const parsedRow = {};
+
+        mappedColumns.forEach((mappedColumn) => {
+          parsedRow[mappedColumn.name] = dataRow[mappedColumn.index];
+        });
+
+        map.data[0].filesData.push(parsedRow);
+      });
+    }
+
 
     await localDB.maps.put(map);
     dispatch(({

@@ -364,7 +364,7 @@ class ConsortiaList extends Component {
       const {
         client,
         router,
-        incrementRunCount,
+        maps,
         saveLocalRun,
         createRun,
         notifyInfo,
@@ -400,54 +400,21 @@ class ConsortiaList extends Component {
           __typename: 'Run',
         };
 
-        return mapConsortiumData(consortiumId)
-          .then((filesArray) => {
-            notifyInfo({
-              message: `Local Pipeline Starting for ${consortium.name}.`,
-              action: {
-                label: 'Watch Progress',
-                callback: () => {
-                  router.push('dashboard');
-                },
-              },
-            });
+        const dataMapping = maps.find(m => m.consortiumId === run.consortiumId);
 
-            if ('steps' in filesArray) {
-              run = {
-                ...run,
-                pipelineSnapshot: {
-                  ...run.pipelineSnapshot,
-                  steps: filesArray.steps,
-                },
-              };
-              pipeline = {
-                ...pipeline,
-                steps: filesArray.steps,
-              };
-            }
+        notifyInfo({
+          message: `Local Pipeline Starting for ${consortium.name}.`,
+          action: {
+            label: 'Watch Progress',
+            callback: () => {
+              router.push('dashboard');
+            },
+          },
+        });
 
-            const status = 'started';
-
-            run.status = status;
-
-            console.log('aaaaaaaaaaaaa');
-
-            incrementRunCount(consortiumId);
-            ipcRenderer.send('start-pipeline', {
-              consortium,
-              pipeline,
-              filesArray: filesArray.allFiles,
-              run,
-            });
-
-            saveLocalRun({ ...run, status });
-          })
-          .catch((error) => {
-            notifyWarning({
-              message: error.message,
-              autoDismiss: 5,
-            });
-          });
+        ipcRenderer.send('start-pipeline', {
+          consortium, dataMappings: dataMapping, run,
+        });
       }
 
       // If remote pipeline, call GraphQL to create new pipeline
@@ -522,7 +489,6 @@ ConsortiaList.propTypes = {
   consortia: PropTypes.array.isRequired,
   createRun: PropTypes.func.isRequired,
   deleteConsortiumById: PropTypes.func.isRequired,
-  incrementRunCount: PropTypes.func.isRequired,
   joinConsortium: PropTypes.func.isRequired,
   leaveConsortium: PropTypes.func.isRequired,
   notifyInfo: PropTypes.func.isRequired,

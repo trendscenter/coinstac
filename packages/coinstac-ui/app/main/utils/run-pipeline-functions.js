@@ -105,8 +105,6 @@ function mapVariablesIntoArray(inputSchema, dataMappings, data, baseDirectory) {
 }
 
 function parsePipelineInput(pipeline, dataMappings) {
-  const firstStepData = dataMappings.data[0];
-
   const steps = [];
 
   pipeline.steps.forEach((step, stepIndex) => {
@@ -168,6 +166,8 @@ function parsePipelineInput(pipeline, dataMappings) {
       inputMap: inputMapSchema,
     });
   });
+
+  const firstStepData = dataMappings.data[0];
 
   return {
     filesArray: firstStepData.allFiles,

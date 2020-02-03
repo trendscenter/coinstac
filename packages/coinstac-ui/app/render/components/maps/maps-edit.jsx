@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
+import { Link } from 'react-router';
 import { compose, graphql, withApollo } from 'react-apollo';
 import PropTypes from 'prop-types';
 import { isEqual, uniqWith } from 'lodash';
@@ -8,17 +9,12 @@ import Typography from '@material-ui/core/Typography';
 import Grid from '@material-ui/core/Grid';
 import { withStyles } from '@material-ui/core/styles';
 import dragula from 'react-dragula';
+import Button from '@material-ui/core/Button';
 import { saveDataMapping } from '../../state/ducks/maps';
 import {
-  saveLocalRun,
-} from '../../state/ducks/runs';
-import {
-  saveDocumentProp,
   updateConsortiumMappedUsersProp,
 } from '../../state/graphql/props';
 import {
-  FETCH_ALL_USER_RUNS_QUERY,
-  SAVE_CONSORTIUM_MUTATION,
   UPDATE_CONSORTIUM_MAPPED_USERS_MUTATION,
 } from '../../state/graphql/functions';
 import { notifyInfo } from '../../state/ducks/notifyAndLog';
@@ -63,7 +59,6 @@ class MapsEdit extends Component {
       maps,
       pipelines,
       consortia,
-      saveDataMapping,
     } = this.props;
 
     const consortium = consortia.find(c => c.id === params.consortiumId);
@@ -73,15 +68,16 @@ class MapsEdit extends Component {
       this.setState({ dataType: pipeline.steps[0].dataMeta.type });
     }
 
-    // const consortiumDataMap = maps.find(
-    //   m => m.consortiumId === consortium.id && m.pipelineId === consortium.activePipelineId
-    // );
+    const consortiumDataMap = maps.find(
+      m => m.consortiumId === consortium.id && m.pipelineId === consortium.activePipelineId
+    );
 
     this.setState({
       activeConsortium: {
         ...consortium,
         pipelineSteps: pipeline.steps,
       },
+      isMapped: !!consortiumDataMap,
     });
 
     let totalInputFields = 0;
@@ -304,9 +300,16 @@ class MapsEdit extends Component {
   }
 
   setSelectedDataFile = (dataFile) => {
-    this.setState({
-      dataFileHeader: dataFile.metaFile[0],
-      dataFile,
+    this.setState((prevState) => {
+      const { dataType } = prevState;
+
+      return {
+        dataFileHeader: dataType === 'array' ? dataFile.metaFile[0] : [dataType],
+        dataFile: {
+          ...dataFile,
+          dataType,
+        },
+      };
     });
   }
 
@@ -360,24 +363,43 @@ class MapsEdit extends Component {
                       File Collection
                     </Typography>
                     <div>
-                      <MapsCollection
-                        activeConsortium={activeConsortium}
-                        dataType={dataType}
-                        registerDraggableContainer={this.registerDraggableContainer}
-                        isMapped={isMapped}
-                        removeSelectedFile={this.removeSelectedFile}
-                        stepsMapped={stepsMapped}
-                        stepsTotal={stepsTotal}
-                        addToDataMapping={this.addToDataMapping}
-                        stepsDataMappings={stepsDataMappings}
-                        removeColumnFromDataFileHeader={this.removeColumnFromDataFileHeader}
-                        removeExtraColumnsFromDataFileHeader={this.removeExtraColumnsFromDataFileHeader}
-                        dataFile={dataFile}
-                        dataFileHeader={dataFileHeader}
-                        saveDataMapping={this.saveDataMapping}
-                        setSelectedDataFile={this.setSelectedDataFile}
-                        resetDataMapping={this.resetDataMapping}
-                      />
+                      {
+                        isMapped ? (
+                          <div>
+                            <div className="alert alert-success" role="alert">
+                              Mapping Complete!
+                            </div>
+                            <br />
+                            <Button
+                              variant="contained"
+                              color="primary"
+                              to="/dashboard/consortia"
+                              component={Link}
+                            >
+                              Back to Consortia
+                            </Button>
+                          </div>
+                        ) : (
+                          <MapsCollection
+                            activeConsortium={activeConsortium}
+                            dataType={dataType}
+                            registerDraggableContainer={this.registerDraggableContainer}
+                            isMapped={isMapped}
+                            removeSelectedFile={this.removeSelectedFile}
+                            stepsMapped={stepsMapped}
+                            stepsTotal={stepsTotal}
+                            addToDataMapping={this.addToDataMapping}
+                            stepsDataMappings={stepsDataMappings}
+                            removeColumnFromDataFileHeader={this.removeColumnFromDataFileHeader}
+                            removeExtraColumnsFromDataFileHeader={this.removeExtraColumnsFromDataFileHeader}
+                            dataFile={dataFile}
+                            dataFileHeader={dataFileHeader}
+                            saveDataMapping={this.saveDataMapping}
+                            setSelectedDataFile={this.setSelectedDataFile}
+                            resetDataMapping={this.resetDataMapping}
+                          />
+                        )
+                      }
                     </div>
                   </Paper>
                 </Grid>
@@ -391,8 +413,13 @@ class MapsEdit extends Component {
 }
 
 MapsEdit.propTypes = {
+  params: PropTypes.object.isRequired,
   consortia: PropTypes.array.isRequired,
-  saveLocalRun: PropTypes.func.isRequired,
+  maps: PropTypes.array.isRequired,
+  pipelines: PropTypes.array.isRequired,
+  saveDataMapping: PropTypes.func.isRequired,
+  updateConsortiumMappedUsers: PropTypes.func.isRequired,
+  auth: PropTypes.object.isRequired,
   classes: PropTypes.object.isRequired,
 };
 
@@ -404,19 +431,9 @@ function mapStateToProps({ auth, maps }) {
 }
 
 const ComponentWithData = compose(
-  graphql(FETCH_ALL_USER_RUNS_QUERY, {
-    props: ({ data }) => ({
-      userRuns: data.fetchAllUserRuns,
-      refetchUserRuns: data.refetch,
-    }),
-    options: props => ({
-      variables: { userId: props.auth.user.id },
-    }),
-  }),
-  graphql(SAVE_CONSORTIUM_MUTATION, saveDocumentProp('saveConsortium', 'consortium')),
   graphql(
     UPDATE_CONSORTIUM_MAPPED_USERS_MUTATION,
-    updateConsortiumMappedUsersProp('updateConsortiumMappedUsers'),
+    updateConsortiumMappedUsersProp('updateConsortiumMappedUsers')
   ),
   withApollo
 )(MapsEdit);
@@ -424,7 +441,6 @@ const ComponentWithData = compose(
 const connectedComponent = connect(mapStateToProps,
   {
     notifyInfo,
-    saveLocalRun,
     saveDataMapping,
   })(ComponentWithData);
 
