@@ -8,6 +8,10 @@ import Divider from '@material-ui/core/Divider';
 import Typography from '@material-ui/core/Typography';
 
 const styles = theme => ({
+  addFileGroupButton: {
+    marginTop: theme.spacing.unit,
+    marginBottom: theme.spacing.unit,
+  },
   fileErrorPaper: {
     ...theme.mixins.gutters(),
     paddingTop: theme.spacing.unit * 2,

@@ -128,10 +128,10 @@ class MapsEdit extends Component {
         stepsDataMappings: [],
       };
 
-      const { dataFile } = prevState;
+      const { dataFile, dataType } = prevState;
 
       if (dataFile) {
-        stateChanges.dataFileHeader = dataFile.metaFile[0];
+        stateChanges.dataFileHeader = dataType === 'array' ? dataFile.metaFile[0] : [dataType];
       }
 
       return stateChanges;
