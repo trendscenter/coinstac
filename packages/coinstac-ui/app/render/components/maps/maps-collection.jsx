@@ -8,12 +8,11 @@ import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
 import FileCopyIcon from '@material-ui/icons/FileCopy';
 import DeleteIcon from '@material-ui/icons/Delete';
-import ipcPromise from 'ipc-promise';
 import PropTypes from 'prop-types';
-import shortid from 'shortid';
 import bitap from 'bitap';
 import classNames from 'classnames';
 import memoize from 'memoize-one';
+import MapsFilePicker from './maps-file-picker';
 
 const styles = theme => ({
   addFileGroupButton: {
@@ -30,17 +29,6 @@ const styles = theme => ({
     paddingBottom: theme.spacing.unit * 2,
     marginTop: theme.spacing.unit * 2,
     height: '100%',
-  },
-  fileErrorPaper: {
-    ...theme.mixins.gutters(),
-    paddingTop: theme.spacing.unit * 2,
-    paddingBottom: theme.spacing.unit * 2,
-    marginBottom: theme.spacing.unit * 2,
-    backgroundColor: '#fef7e4',
-    textAlign: 'center',
-  },
-  fileErrorMessage: {
-    color: '#ab8e6b',
   },
   fileList: {
     backgroundColor: '#efefef',
@@ -71,14 +59,6 @@ const styles = theme => ({
 });
 
 class MapsCollection extends Component {
-  constructor(props) {
-    super(props);
-
-    this.state = {
-      filesError: null,
-    };
-  }
-
   componentDidUpdate(prevProps) {
     const { registerDraggableContainer, dataFileHeader } = this.props;
 
@@ -184,7 +164,7 @@ class MapsCollection extends Component {
   autoMap = () => {
     const { activeConsortium, addToDataMapping, dataFileHeader } = this.props;
 
-    const inputMap = activeConsortium.pipelineSteps[0].inputMap;
+    const { inputMap } = activeConsortium.pipelineSteps[0];
 
     Object.entries(inputMap).forEach((item) => {
       const pipelineFieldsetName = item[0];
@@ -208,48 +188,6 @@ class MapsCollection extends Component {
     });
   }
 
-  addFileGroup = () => {
-    ipcPromise.send('open-dialog', 'metafile')
-      .then((obj) => {
-        if (obj.error) {
-          this.setState({ filesError: obj.error });
-          return;
-        }
-
-        const { setSelectedDataFile } = this.props;
-
-        setSelectedDataFile(obj);
-
-        this.setState({ filesError: null });
-      }).catch((error) => {
-        this.setState({ filesError: error.message });
-      });
-  }
-
-  addFolderGroup = () => {
-    ipcPromise.send('open-dialog', 'bundle')
-      .then((obj) => {
-        if (obj.error) {
-          this.setState({ filesError: obj.error });
-          return;
-        }
-
-        const { setSelectedDataFile } = this.props;
-
-        const dataFile = {
-          extension: obj.extension,
-          files: obj.paths,
-        };
-
-        setSelectedDataFile(dataFile);
-
-        this.setState({ filesError: null });
-      })
-      .catch((error) => {
-        this.setState({ filesError: error.message });
-      });
-  }
-
   render() {
     const {
       classes,
@@ -263,9 +201,8 @@ class MapsCollection extends Component {
       dataFile,
       dataFileHeader,
       saveDataMapping,
+      setSelectedDataFile,
     } = this.props;
-
-    const { filesError } = this.state;
 
     const remainingDataVariables = this.getRemainingDataVariables(
       dataFileHeader, stepsDataMappings
@@ -277,46 +214,8 @@ class MapsCollection extends Component {
     return (
       <div>
         {
-          dataType === 'array'
-          && (
-            <div>
-              <Button
-                variant="contained"
-                color="primary"
-                className={classes.addFileGroupButton}
-                onClick={this.addFileGroup}
-              >
-                Add Files Group
-              </Button>
-              <Divider />
-            </div>
-          )
-        }
-        {
-          dataType === 'bundle'
-          && (
-            <div>
-              <Button
-                variant="contained"
-                color="primary"
-                className={classes.addFileGroupButton}
-                onClick={this.addFolderGroup}
-              >
-                Add Files from Folder
-              </Button>
-              <Divider />
-            </div>
-          )
-        }
-        {
-          filesError && (
-            <Paper className={classes.fileErrorPaper}>
-              <Typography variant="h6" className={classes.fileErrorMessage}>File Error</Typography>
-              <Typography className={classes.fileErrorMessage} variant="body1">
-                {filesError}
-              </Typography>
-            </Paper>
-          )
+          !dataFile
+          && <MapsFilePicker dataType={dataType} setSelectedDataFile={setSelectedDataFile} />
         }
         {
           dataFile && (
@@ -465,15 +364,19 @@ MapsCollection.defaultProps = {
 MapsCollection.propTypes = {
   activeConsortium: PropTypes.object.isRequired,
   addToDataMapping: PropTypes.func.isRequired,
+  setSelectedDataFile: PropTypes.func.isRequired,
   dataFileHeader: PropTypes.array,
   saveDataMapping: PropTypes.func.isRequired,
   resetDataMapping: PropTypes.func.isRequired,
   registerDraggableContainer: PropTypes.func.isRequired,
+  dataType: PropTypes.string.isRequired,
+  stepsTotal: PropTypes.number.isRequired,
+  stepsMapped: PropTypes.number.isRequired,
+  stepsDataMappings: PropTypes.array.isRequired,
+  removeColumnFromDataFileHeader: PropTypes.func.isRequired,
+  removeExtraColumnsFromDataFileHeader: PropTypes.func.isRequired,
+  dataFile: PropTypes.object.isRequired,
   classes: PropTypes.object.isRequired,
-};
-
-MapsCollection.defaultProps = {
-  collection: null,
 };
 
 export default withStyles(styles)(MapsCollection);
