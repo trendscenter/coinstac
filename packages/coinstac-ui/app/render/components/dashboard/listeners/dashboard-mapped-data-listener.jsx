@@ -31,7 +31,7 @@ class DashboardMappedDataListener extends React.Component {
           },
         });
 
-        const run = userRuns[userRuns.length - 1]
+        const run = userRuns[userRuns.length - 1];
 
         ipcRenderer.send('start-pipeline', {
           consortium, lastDataMapping, run,
@@ -39,7 +39,7 @@ class DashboardMappedDataListener extends React.Component {
       }
     }
   }
-  
+
   checkIfConsortiumHasActiveRun = (consortium) => {
     // TODO: filter by consortium
     const { userRuns } = this.props;

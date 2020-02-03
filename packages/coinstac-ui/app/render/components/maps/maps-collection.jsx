@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
-import { Link } from 'react-router';
 import Icon from '@material-ui/core/Icon';
 import Paper from '@material-ui/core/Paper';
 import Button from '@material-ui/core/Button';
@@ -78,8 +77,6 @@ class MapsCollection extends Component {
     this.state = {
       filesError: null,
     };
-
-    this.addFolderGroup = this.addFolderGroup.bind(this);
   }
 
   componentDidUpdate(prevProps) {
@@ -229,56 +226,34 @@ class MapsCollection extends Component {
       });
   }
 
-  addFolderGroup() {
-    ipcPromise.send('open-dialog','bundle')
-    .then((obj) => {
+  addFolderGroup = () => {
+    ipcPromise.send('open-dialog', 'bundle')
+      .then((obj) => {
+        if (obj.error) {
+          this.setState({ filesError: obj.error });
+          return;
+        }
 
-      let newFiles;
+        const { setSelectedDataFile } = this.props;
 
-      const fileGroupId = shortid.generate();
-
-      if (obj.error) {
-        this.setState({ filesError: obj.error });
-      } else {
-        const name = `Group ${Object.keys(this.props.collection.fileGroups).length + 1} (${obj.extension.toUpperCase()})`;
-
-        let type = this.props.activeConsortium.pipelineSteps[0].dataMeta.items[0];
-
-        this.props.setRowArray([type]);
-        this.props.setMetaRow([type]);
-
-        newFiles = {
-          name,
-          id: fileGroupId,
+        const dataFile = {
           extension: obj.extension,
-          files: [...obj.paths],
-          date: new Date().getTime(),
-          firstRow: type
+          files: obj.paths,
         };
 
-        this.setState({ showFiles: { [newFiles.date]: false } });
-        this.setState({ filesError: null });
+        setSelectedDataFile(dataFile);
 
-        this.props.updateCollection(
-          {
-            fileGroups: {
-              ...this.props.collection.fileGroups,
-              [fileGroupId]: newFiles,
-            },
-          },
-          this.props.saveCollection
-        );
-      }
-    })
-    .catch(console.log);
+        this.setState({ filesError: null });
+      })
+      .catch((error) => {
+        this.setState({ filesError: error.message });
+      });
   }
 
   render() {
     const {
       classes,
       dataType,
-      isMapped,
-      saveCollection,
       stepsTotal,
       stepsMapped,
       resetDataMapping,
@@ -302,8 +277,7 @@ class MapsCollection extends Component {
     return (
       <div>
         {
-          !isMapped
-          && dataType === 'array'
+          dataType === 'array'
           && (
             <div>
               <Button
@@ -319,8 +293,7 @@ class MapsCollection extends Component {
           )
         }
         {
-          !isMapped
-          && dataType === 'bundle'
+          dataType === 'bundle'
           && (
             <div>
               <Button
@@ -349,41 +322,50 @@ class MapsCollection extends Component {
           dataFile && (
             <Paper className={classes.rootPaper}>
               <div>
+                <Button
+                  variant="contained"
+                  color="secondary"
+                  className={classes.removeFileGroupButton}
+                  onClick={this.removeSelectedFile}
+                >
+                  <DeleteIcon />
+                  Remove selected file
+                </Button>
                 {
-                  !isMapped
-                  && (
-                    <Button
-                      variant="contained"
-                      color="secondary"
-                      className={classes.removeFileGroupButton}
-                      onClick={this.removeSelectedFile}
-                    >
-                      <DeleteIcon />
-                      Remove selected file
-                    </Button>
-                  )
-                }
-                <Typography>
-                  <span className="bold">Extension:</span> {dataFile.extension}
-                </Typography>
-                <Typography>
-                  <span className="bold">Items Mapped:</span> {stepsMapped} of {stepsTotal}
-                </Typography>
-                <Typography>
-                  <span className="bold">Original MetaFile Header:</span> {dataFile.metaFile[0].join(', ')}
-                </Typography>
-                <Typography>
-                  <span className="bold">Mapped MetaFile Header:</span> {dataFileHeader.join(', ')}
-                </Typography>
-                {
-                  /*group.org === 'metafile'
-                  && (
+                  dataType === 'array' && (
                     <div>
                       <Typography>
-                        <span className="bold">Meta File Path:</span> {group.metaFilePath}
+                        <span className="bold">Items Mapped:</span> {stepsMapped} of {stepsTotal}
+                      </Typography>
+                      <Typography>
+                        <span className="bold">Extension:</span> {dataFile.extension}
+                      </Typography>
+                      <Typography>
+                        <span className="bold">Original MetaFile Header:</span> {dataFile.metaFile[0].join(', ')}
+                      </Typography>
+                      <Typography>
+                        <span className="bold">Mapped MetaFile Header:</span> {dataFileHeader.join(', ')}
                       </Typography>
                     </div>
-                    )*/
+                  )
+                }
+                {
+                  dataType === 'bundle' && (
+                    <div>
+                      <Typography>
+                        <span className="bold">File(s):</span>
+                      </Typography>
+                      <div className={classes.fileList}>
+                        {
+                          dataFile.files.map((file, i) => (
+                            <div key={file} className={classes.fileListItem}>
+                              { `(${i+1}) ${file}` }
+                            </div>
+                          ))
+                        }
+                      </div>
+                    </div>
+                  )
                 }
                 <div>
                   {
@@ -412,7 +394,7 @@ class MapsCollection extends Component {
                 <Divider />
                 <div className={classes.actionsContainer}>
                   {
-                    !isMapped && stepsTotal !== stepsMapped
+                    stepsTotal !== stepsMapped
                     && (
                       <Button
                         variant="contained"
@@ -424,7 +406,7 @@ class MapsCollection extends Component {
                     )
                   }
                   {
-                    !isMapped && stepsTotal === stepsMapped
+                    stepsTotal === stepsMapped
                     && remainingDataVariables && remainingDataVariables.length > 0
                     && (
                       <Button
@@ -440,7 +422,7 @@ class MapsCollection extends Component {
                     )
                   }
                   {
-                    !isMapped && stepsTotal === stepsMapped
+                    stepsTotal === stepsMapped
                     && (
                       <Button
                         variant="contained"
@@ -455,7 +437,7 @@ class MapsCollection extends Component {
                     )
                   }
                   {
-                    !isMapped && hasAnyDataMapped && (
+                    hasAnyDataMapped && (
                       <Button
                         style={{ marginLeft: '1rem' }}
                         variant="contained"
@@ -464,25 +446,6 @@ class MapsCollection extends Component {
                       >
                         Reset
                       </Button>
-                    )
-                  }
-                  {
-                    isMapped
-                    && (
-                      <div>
-                        <div className="alert alert-success" role="alert">
-                          Mapping Complete!
-                        </div>
-                        <br />
-                        <Button
-                          variant="contained"
-                          color="primary"
-                          to="/dashboard/consortia"
-                          component={Link}
-                        >
-                          Back to Consortia
-                        </Button>
-                      </div>
                     )
                   }
                 </div>
@@ -495,8 +458,14 @@ class MapsCollection extends Component {
   }
 }
 
+MapsCollection.defaultProps = {
+  dataFileHeader: null,
+};
+
 MapsCollection.propTypes = {
-  collection: PropTypes.object,
+  activeConsortium: PropTypes.object.isRequired,
+  addToDataMapping: PropTypes.func.isRequired,
+  dataFileHeader: PropTypes.array,
   saveDataMapping: PropTypes.func.isRequired,
   resetDataMapping: PropTypes.func.isRequired,
   registerDraggableContainer: PropTypes.func.isRequired,
