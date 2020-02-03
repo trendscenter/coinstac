@@ -15,10 +15,6 @@ import memoize from 'memoize-one';
 import MapsFilePicker from './maps-file-picker';
 
 const styles = theme => ({
-  addFileGroupButton: {
-    marginTop: theme.spacing.unit,
-    marginBottom: theme.spacing.unit,
-  },
   removeFileGroupButton: {
     marginTop: theme.spacing.unit,
     marginBottom: theme.spacing.unit,
@@ -202,6 +198,7 @@ class MapsCollection extends Component {
       dataFileHeader,
       saveDataMapping,
       setSelectedDataFile,
+      removeSelectedFile,
     } = this.props;
 
     const remainingDataVariables = this.getRemainingDataVariables(
@@ -213,10 +210,7 @@ class MapsCollection extends Component {
 
     return (
       <div>
-        {
-          !dataFile
-          && <MapsFilePicker dataType={dataType} setSelectedDataFile={setSelectedDataFile} />
-        }
+        <MapsFilePicker dataType={dataType} setSelectedDataFile={setSelectedDataFile} />
         {
           dataFile && (
             <Paper className={classes.rootPaper}>
@@ -225,7 +219,7 @@ class MapsCollection extends Component {
                   variant="contained"
                   color="secondary"
                   className={classes.removeFileGroupButton}
-                  onClick={this.removeSelectedFile}
+                  onClick={removeSelectedFile}
                 >
                   <DeleteIcon />
                   Remove selected file
@@ -359,6 +353,7 @@ class MapsCollection extends Component {
 
 MapsCollection.defaultProps = {
   dataFileHeader: null,
+  dataFile: null,
 };
 
 MapsCollection.propTypes = {
@@ -375,7 +370,8 @@ MapsCollection.propTypes = {
   stepsDataMappings: PropTypes.array.isRequired,
   removeColumnFromDataFileHeader: PropTypes.func.isRequired,
   removeExtraColumnsFromDataFileHeader: PropTypes.func.isRequired,
-  dataFile: PropTypes.object.isRequired,
+  removeSelectedFile: PropTypes.func.isRequired,
+  dataFile: PropTypes.object,
   classes: PropTypes.object.isRequired,
 };
 
