@@ -129,6 +129,7 @@ const sharedFields = {
       action {
         id
         name
+        consortiumName
       }
     }
   `

@@ -122,11 +122,13 @@ const typeDefs = `
   input ActionInput {
     id: String
     name: String
+    consortiumName: String
   }
 
   type ActionOutput {
     id: String
     name: String
+    consortiumName: String
   }
 
   type MessageOutput {
