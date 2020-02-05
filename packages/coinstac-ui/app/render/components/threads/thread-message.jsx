@@ -72,7 +72,7 @@ const ThreadMessage = ({ classes, message }) => {
       </p>
       {action && action.name === 'join-consortium' && (
         <Link to="/dashboard/consortia">
-          <button className={classes.button}>Join consortia</button>
+          <button className={classes.button}>Join consortium - {action.consortiumName}</button>
         </Link>
       )}
 

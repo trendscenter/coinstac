@@ -186,7 +186,7 @@ class ThreadReply extends Component {
   }
 
   handleSend = () => {
-    const { savingStatus } = this.props
+    const { consortia, savingStatus } = this.props
     const error = this.validateForm()
 
     if (savingStatus === 'pending' || error) {
@@ -213,6 +213,7 @@ class ThreadReply extends Component {
       (action === 'join-consortium' && selectedConsortium !== 'none') && ({
         action: {
           id: selectedConsortium,
+          consortiumName: consortia.find(({ id }) => id === selectedConsortium).name,
           name: action,
         }
       }),
