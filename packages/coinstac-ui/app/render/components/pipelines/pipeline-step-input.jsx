@@ -1,36 +1,24 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import ipcPromise from 'ipc-promise';
-import fs from 'fs';
-//import ReGrid from 'rethinkdb-regrid';
 import Button from '@material-ui/core/Button';
-import TextField from '@material-ui/core/TextField';
-import Checkbox from '@material-ui/core/Checkbox';
-import Select from '@material-ui/core/Select';
 import Menu from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
 import Typography from '@material-ui/core/Typography';
-import Radio from '@material-ui/core/Radio';
-import RadioGroup from '@material-ui/core/RadioGroup';
-import FormHelperText from '@material-ui/core/FormHelperText';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
-import FormControl from '@material-ui/core/FormControl';
-import FormLabel from '@material-ui/core/FormLabel';
 import Tooltip from '@material-ui/core/Tooltip';
 import { withStyles } from '@material-ui/core/styles';
-import AddIcon from '@material-ui/icons/Add';
-import CloseIcon from '@material-ui/icons/CloseRounded';
 import InfoIcon from '@material-ui/icons/Info';
-import update from 'immutability-helper';
-import PipelineStepMemberTable from './pipeline-step-member-table';
-
-//var bucket = ReGrid({db: 'coinstac'});
+import PipelineStepInputWithMappings from './pipeline-step-input-with-mappings';
+import PipelineStepInputTextField from './pipeline-step-input/pipeline-step-input-textfield';
+import PipelineStepInputNumberTextField from './pipeline-step-input/pipeline-step-input-number-textfield';
+import PipelineStepInputArray from './pipeline-step-input/pipeline-step-input-array';
+import PipelineStepInputSet from './pipeline-step-input/pipeline-step-input-set';
+import PipelineStepInputMatrix from './pipeline-step-input/pipeline-step-input-matrix';
+import PipelineStepInputRange from './pipeline-step-input/pipeline-step-input-range';
+import PipelineStepInputSelect from './pipeline-step-input/pipeline-step-input-select';
+import PipelineStepInputRadio from './pipeline-step-input/pipeline-step-input-radio';
+import PipelineStepInputBoolean from './pipeline-step-input/pipeline-step-input-boolean';
 
 const styles = theme => ({
-  addObjButton: {
-    marginBottom: theme.spacing.unit,
-    marginLeft: theme.spacing.unit,
-  },
   lambdaContainer: {
     display: 'flex',
     alignItems: 'center',
@@ -39,6 +27,10 @@ const styles = theme => ({
     marginLeft: theme.spacing.unit,
   },
 });
+
+function objectNeedsDataMapping(objKey, objParams) {
+  return objKey === 'covariates' || objKey === 'data' || objParams.type === 'file';
+}
 
 class PipelineStepInput extends Component {
   constructor(props) {
@@ -192,51 +184,6 @@ class PipelineStepInput extends Component {
     this.setState({ openInputSourceMenu: false });
   }
 
-  makeNumberRange(min, max, step) {
-    let range = [];
-    if(!step){
-      step = 1;
-    }
-    while (parseFloat(min) <= parseFloat(max)) {
-       range.push(min);
-       min = min + step;
-    }
-    return range;
-  }
-
-  // deleteFile(id) {
-  //   bucket.initBucket().then(async () => {
-  //     bucket.deleteId(id, {hard: true});
-  //     this.setState({filePath: ''});
-  //   });
-  // }
-  //
-  // saveFile(id, field) {
-  //   ipcPromise.send('open-dialog')
-  //     .then((obj) => {
-  //       const filePath = obj.paths[0];
-  //       if (filePath && filePath !== '') {
-  //         this.setState({ filePath });
-  //       }
-  //       fs.readFile(filePath, (err, data) => {
-  //         if (err) {
-  //           alert("An error ocurred reading the file :" + err.message);
-  //         } else {
-  //           let fileArr = filePath.split('/');
-  //           let fileName = fileArr.pop();
-  //           bucket.initBucket().then(async () => {
-  //             let upFile = await bucket.writeFile({filename: fileName, buffer: data});
-  //             this.setState({
-  //               filePath,
-  //               fileId: upFile.id
-  //             });
-  //           });
-  //         }
-  //      });
-  //   })
-  //   .catch(console.log);
-  // }
-
   render() {
     const {
       objKey,
@@ -282,62 +229,36 @@ class PipelineStepInput extends Component {
     }
 
     return (
-      <div style={{position: 'relative', display: visibility}} key={'pipestep-'+objKey}>
+      <div style={{ position: 'relative', display: visibility }} key={`pipestep-${objKey}`}>
         {
-          (objKey === 'covariates' || objKey === 'data')
-          && (
-            <div style={{ paddingLeft: 10 }}>
-              <Typography variant="subtitle2">
-                <span>{ objParams.label }</span>
-                { objParams.tooltip &&
-                  <Tooltip title={ objParams.tooltip } placement="right-start">
-                    <InfoIcon />
-                  </Tooltip> }
-              </Typography>
-              {
-                objParams.tooltip &&
-                <Tooltip title={ objParams.tooltip } placement="right-start">
-                  <InfoIcon />
-                </Tooltip>
-              }
-              <Button
-                variant="contained"
-                color="primary"
-                disabled={!owner}
-                onClick={this.addClientProp}
-                className={classes.addObjButton}
-              >
-                <AddIcon />
-                {`Add ${objParams.label}`}
-              </Button>
-              <PipelineStepMemberTable
-                getNewObj={this.getNewObj}
-                objKey={objKey}
-                objParams={objParams}
-                owner={owner}
-                parentKey={parentKey}
-                possibleInputs={possibleInputs}
-                step={step}
-                updateStep={updateStep}
-              />
-            </div>
-          )
-        }
-
-        {
-          objKey !== 'covariates' && objKey !== 'data' && objKey !== 'file'
-          && (
+          objectNeedsDataMapping(objKey, objParams) ? (
+            <PipelineStepInputWithMappings
+              objKey={objKey}
+              objParams={objParams}
+              owner={owner}
+              addClientProp={this.addClientProp}
+              getNewObj={this.getNewObj}
+              parentKey={parentKey}
+              possibleInputs={possibleInputs}
+              step={step}
+              updateStep={updateStep}
+            />
+          ) : (
             <div className={classes.lambdaContainer}>
               <div>
                 {
-                  objParams.label
-                  && <Typography variant="subtitle2">
-                    <span>{ objParams.label }</span>
-                    { objParams.tooltip &&
-                      <Tooltip title={ objParams.tooltip } placement="right-start">
-                        <InfoIcon />
-                      </Tooltip> }
-                  </Typography>
+                  objParams.label && (
+                    <Typography variant="subtitle2">
+                      <span>{ objParams.label }</span>
+                      {
+                        objParams.tooltip && (
+                          <Tooltip title={objParams.tooltip} placement="right-start">
+                            <InfoIcon />
+                          </Tooltip>
+                        )
+                      }
+                    </Typography>
+                  )
                 }
                 {
                   objParams.description
@@ -375,271 +296,116 @@ class PipelineStepInput extends Component {
                   )
                 */}
                 {
-                  objParams.type === 'string'
-                  && (
-                    <TextField
-                      disabled={!owner || isFromCache}
-                      name={`step-${objKey}`}
-                      onChange={event => updateStep({
-                        ...step,
-                        inputMap: this.getNewObj(objKey,
-                          event.target.value ? { value: event.target.value } : 'DELETE_VAR'
-                        ),
-                      })}
-                      value={
-                        step.inputMap[objKey] && 'value' in step.inputMap[objKey]
-                          ? step.inputMap[objKey].value
-                          : objParams.default
-                      }
+                  objParams.type === 'string' && (
+                    <PipelineStepInputTextField
+                      objKey={objKey}
+                      objParams={objParams}
+                      owner={owner}
+                      isFromCache={isFromCache}
+                      updateStep={updateStep}
+                      getNewObj={this.getNewObj}
+                      step={step}
                     />
                   )
                 }
                 {
                   objParams.type === 'number'
                   && (
-                    <TextField
-                      disabled={!owner || isFromCache}
-                      name={`step-${objKey}`}
-                      onChange={event => updateStep({
-                        ...step,
-                        inputMap: this.getNewObj(objKey,
-                          event.target.value ? { value: parseFloat(event.target.value) } : 'DELETE_VAR'
-                        ),
-                      })}
-                      type="number"
-                      value={
-                        step.inputMap[objKey] && 'value' in step.inputMap[objKey]
-                          ? step.inputMap[objKey].value
-                          : objParams.default
-                      }
+                    <PipelineStepInputNumberTextField
+                      objKey={objKey}
+                      objParams={objParams}
+                      owner={owner}
+                      isFromCache={isFromCache}
+                      updateStep={updateStep}
+                      getNewObj={this.getNewObj}
+                      step={step}
                     />
                   )
                 }
                 {
-                  objParams.type === 'array' && objParams.values
-                  && (
-                    <Select
-                      disabled={!owner}
-                      multiple
-                      onChange={event => updateStep({
-                        ...step,
-                        inputMap: this.getNewObj(
-                          objKey,
-                          event.target.value
-                            ? { value: this.getSelectList(step.inputMap[objKey].value, event.target.value) }
-                            : 'DELETE_VAR'
-                        ),
-                      })}
-                      value={
-                        step.inputMap[objKey] && 'value' in step.inputMap[objKey]
-                          ? step.inputMap[objKey].value
-                          : [objParams.default]
-                      }
-                    >
-                      {
-                        objParams.values.map(val => (
-                          <MenuItem key={`${val}-select-option`} value={val}>{val}</MenuItem>
-                        ))
-                      }
-                    </Select>
+                  objParams.type === 'array' && objParams.values && (
+                    <PipelineStepInputArray
+                      objKey={objKey}
+                      objParams={objParams}
+                      owner={owner}
+                      updateStep={updateStep}
+                      getNewObj={this.getNewObj}
+                      getSelectList={this.getSelectList}
+                      step={step}
+                    />
                   )
                 }
                 {
-                  objParams.type === 'array' && !objParams.values && objParams.items === 'number'
-                  && step.inputMap[objKey] && step.inputMap[objKey].value.map((val, i) => (
-                    <TextField
-                      key={`${objKey}-${i}`}
-                      disabled={!owner}
-                      onChange={event => updateStep({
-                        ...step,
-                        inputMap: {
-                          [objKey]: {
-                            value: update(step.inputMap[objKey].value, {
-                              $splice: [[i, 1, parseFloat(event.target.value)]],
-                            }),
-                          },
-                        },
-                      })}
-                      type="number"
-                      value={
-                        step.inputMap[objKey] && step.inputMap[objKey][i] && 'value' in step.inputMap[objKey][i]
-                          ? step.inputMap[objKey][i].value
-                          : ''
-                      }
+                  objParams.type === 'set' && (
+                    <PipelineStepInputSet
+                      objKey={objKey}
+                      owner={owner}
+                      isFromCache={isFromCache}
+                      updateStep={updateStep}
+                      getNewObj={this.getNewObj}
+                      step={step}
                     />
-                  ))
+                  )
                 }
                 {
-                  objParams.type === 'set'
-                  && (
-                    <div>
-                      <div>
-                        {step.inputMap[objKey] && step.inputMap[objKey].value.map((item, i) => (
-                          <div>
-                            <TextField
-                              key={`${objKey}-${i}`}
-                              disabled={!owner || isFromCache}
-                              name={`step-${objKey}-${i}`}
-                              value={item}
-                              onChange={event => updateStep({
-                                ...step,
-                                inputMap: this.getNewObj(objKey, {
-                                  value: update(step.inputMap[objKey].value, {
-                                    $splice: [[i, 1, event.target.value]],
-                                  }),
-                                }),
-                              })}
-                            />
-                          {/*<CloseIcon style={{color: 'red'}} />*/}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
+                  objParams.type === 'range' && (
+                    <PipelineStepInputRange
+                      objKey={objKey}
+                      objParams={objParams}
+                      owner={owner}
+                      updateStep={updateStep}
+                      getNewObj={this.getNewObj}
+                      step={step}
+                    />
                   )
                 }
                 {
                   objParams.type === 'matrix'
                   && (
-                    <div>
-                      {
-                        step.inputMap[objKey] && step.inputMap[objKey].value.map((line, i) => (
-                          <div>
-                            {
-                              line.map((cell, j) => (
-                                <TextField
-                                  key={`${objKey}-${i}-${j}`}
-                                  disabled={!owner || isFromCache}
-                                  name={`step-${objKey}-${i}-${j}`}
-                                  value={cell}
-                                  onChange={event => updateStep({
-                                    ...step,
-                                    inputMap: this.getNewObj(objKey, {
-                                      value: update(step.inputMap[objKey].value, {
-                                        [i]: { $splice: [[j, 1, event.target.value]] },
-                                      }),
-                                    }),
-                                  })}
-                                  style={{ marginRight: '10px', maxWidth: '50px' }}
-                                />
-                              ))
-                            }
-                          </div>
-                        ))
-                      }
-                    </div>
+                    <PipelineStepInputMatrix
+                      objKey={objKey}
+                      owner={owner}
+                      isFromCache={isFromCache}
+                      updateStep={updateStep}
+                      getNewObj={this.getNewObj}
+                      step={step}
+                    />
                   )
                 }
                 {
-                  objParams.type === 'range' && objParams.min && objParams.max
-                  && (
-                    <Select
-                      disabled={!owner}
-                      onChange={event => updateStep({
-                        ...step,
-                        inputMap: this.getNewObj(
-                          objKey,
-                          event.target.value
-                            ? { value: event.target.value }
-                            : 'DELETE_VAR'
-                        ),
-                      })}
-                      value={step.inputMap[objKey] && 'value' in step.inputMap[objKey]
-                          ? step.inputMap[objKey].value
-                          : parseFloat(objParams.default)
-                      }
-                    >
-                      {
-                        this.makeNumberRange(objParams.min, objParams.max, objParams.step).map(val => (
-                          <MenuItem
-                            key={`${val}-select-option`}
-                            value={parseFloat(val)}
-                            selected={val === objParams.default ? true : false}
-                          >
-                            {val.toString()}
-                          </MenuItem>
-                        ))
-                      }
-                    </Select>
+                  objParams.type === 'select' && (
+                    <PipelineStepInputSelect
+                      objKey={objKey}
+                      objParams={objParams}
+                      owner={owner}
+                      updateStep={updateStep}
+                      getNewObj={this.getNewObj}
+                      step={step}
+                    />
                   )
                 }
                 {
-                  objParams.type === 'select' && objParams.values
-                  && (
-                    <Select
-                      disabled={!owner}
-                      onChange={event => updateStep({
-                        ...step,
-                        inputMap: this.getNewObj(
-                          objKey,
-                          event.target.value
-                            ? { value: event.target.value }
-                            : 'DELETE_VAR'
-                        ),
-                      })}
-                      value={
-                        step.inputMap[objKey] && 'value' in step.inputMap[objKey]
-                          ? step.inputMap[objKey].value
-                          : objParams.default
-                      }
-                    >
-                      {
-                        objParams.values.map(val => (
-                          <MenuItem key={`${val}-select-option`} value={val}>{val.toString()}</MenuItem>
-                        ))
-                      }
-                    </Select>
+                  objParams.type === 'radio' && (
+                    <PipelineStepInputRadio
+                      objKey={objKey}
+                      objParams={objParams}
+                      owner={owner}
+                      updateStep={updateStep}
+                      getNewObj={this.getNewObj}
+                      step={step}
+                    />
                   )
                 }
                 {
-                  objParams.type === 'radio' && objParams.values
-                  && (
-                    <RadioGroup
-                      disabled={!owner}
-                      onChange={event => updateStep({
-                        ...step,
-                        inputMap: this.getNewObj(objKey,
-                          event.target.checked ? { value: event.target.checked } : 'DELETE_VAR'
-                        ),
-                      })}
-                      value={
-                        step.inputMap[objKey] && 'value' in step.inputMap[objKey]
-                          ? step.inputMap[objKey].value
-                          : objParams.default
-                      }
-                    >
-                      {
-                        objParams.values.map(val => (
-                          <FormControlLabel
-                            value={val}
-                            control={<Radio />}
-                            label={val}
-                            labelPlacement="start"
-                          />))
-                      }
-                    </RadioGroup>
-                  )
-                }
-                {
-                  objParams.type === 'boolean'
-                  && (
-                    <Checkbox
-                      disabled={!owner}
-                      onChange={event => updateStep({
-                        ...step,
-                        inputMap: this.getNewObj(objKey,
-                          event.target.checked ?
-                          { value: true } :
-                          { value: false }
-                        ),
-                      })}
-                      checked={
-                        step.inputMap[objKey]
-                        && 'value' in step.inputMap[objKey]
-                        && step.inputMap[objKey].value || false
-                      }
-                    >
-                      True?
-                    </Checkbox>
+                  objParams.type === 'boolean' && (
+                    <PipelineStepInputBoolean
+                      objKey={objKey}
+                      objParams={objParams}
+                      owner={owner}
+                      updateStep={updateStep}
+                      getNewObj={this.getNewObj}
+                      step={step}
+                    />
                   )
                 }
               </div>
@@ -692,7 +458,7 @@ class PipelineStepInput extends Component {
                 </Menu>
               </div>
             </div>
-          )
+            )
         }
       </div>
     );
@@ -700,7 +466,6 @@ class PipelineStepInput extends Component {
 }
 
 PipelineStepInput.defaultProps = {
-  classes: '',
   parentKey: '',
   owner: false,
   possibleInputs: [],
@@ -708,9 +473,8 @@ PipelineStepInput.defaultProps = {
 };
 
 PipelineStepInput.propTypes = {
-  classes: PropTypes.string,
+  classes: PropTypes.object.isRequired,
   parentKey: PropTypes.string,
-  pipelineIndex: PropTypes.number.isRequired,
   possibleInputs: PropTypes.array,
   objKey: PropTypes.string.isRequired,
   objParams: PropTypes.object.isRequired,
