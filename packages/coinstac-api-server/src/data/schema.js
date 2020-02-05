@@ -138,12 +138,17 @@ const typeDefs = `
     action: ActionOutput
   }
 
+  type ThreadUserOutput {
+    username: String
+    isRead: Boolean
+  }
+
   type Thread {
     id: ID
     messages: [MessageOutput]
     owner: ID
     title: String
-    users: [ID]
+    users: [ThreadUserOutput]
     date: String
   }
 
@@ -171,6 +176,7 @@ const typeDefs = `
     updateConsortiumMappedUsers(consortiumId: ID, mappedForRun: [ID]): JSON
     updateConsortiaMappedUsers(consortia: [ID]): JSON
     saveMessage(threadId: ID, title: String!, recipients: [String!], content: String!, action: ActionInput): Thread
+    setReadMessage(threadId: ID, userId: ID): JSON
   }
 
   # This is a description of the queries

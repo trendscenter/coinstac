@@ -198,3 +198,8 @@ export const SAVE_MESSAGE_MUTATION = gql`
   mutation saveMessage($threadId: ID, $title: String!, $recipients: [String!], $content: String!, $action: ActionInput)
     ${mutations.saveMessage}
 `;
+
+export const SET_READ_MESSAGE_MUTATION = gql`
+  mutation setReadMessage($threadId: ID!, $userId: ID!)
+    ${mutations.setReadMessage}
+`;

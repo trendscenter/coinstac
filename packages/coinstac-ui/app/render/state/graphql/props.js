@@ -203,3 +203,14 @@ export const saveMessageProp = (name) => {
     }),
   };
 };
+
+
+export const setReadMessageProp = (name) => {
+  return {
+    props: ({ mutate }) => ({
+      [name]: ({ threadId, userId }) => mutate({
+        variables: { threadId, userId },
+      })
+    }),
+  };
+};

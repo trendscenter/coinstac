@@ -43,8 +43,6 @@ const styles = theme => ({
 const ThreadMessage = ({ classes, message }) => {
   const { sender, recipients, content, action } = message
 
-  console.log(action)
-
   return (
     <div className={classes.wrapper}>
       <div className={classes.users}>

@@ -325,7 +325,11 @@ const resolvers = {
     fetchAllThreads: async ({ auth: { credentials } }) => {
       const connection = await helperFunctions.getRethinkConnection();
       const cursor = await rethink.table('threads')
-        .filter(rethink.row('users').contains(credentials.id))
+        .filter(doc => {
+          return doc('users').contains(user => {
+            return user('username').eq(credentials.id)
+          })
+        })
         .run(connection)
       const threads = cursor.toArray()
 
@@ -827,7 +831,8 @@ const resolvers = {
         const { messages, users } = thread
         const threadToSave = {
           messages: [...messages, messageToSave],
-          users: uniq([...users, ...recipients]),
+          users: uniq([...users, ...recipients])
+            .map(user => ({ username: user, isRead: user === credentials.id })),
           date: Date.now(),
         }
 
@@ -843,7 +848,8 @@ const resolvers = {
           owner: credentials.id,
           title: title,
           messages: [messageToSave],
-          users: [credentials.id, ...recipients],
+          users: [credentials.id, ...recipients]
+            .map(user => ({ username: user, isRead: user === credentials.id })),
           date: Date.now(),
         }
 
@@ -869,6 +875,34 @@ const resolvers = {
       await connection.close()
 
       return result
+    },
+    /**
+     * Set read mesasge
+     * @param {object} auth User object from JWT middleware validateFunc
+     * @param {object} args
+     * @param {string} args.threadId Thread Id
+     * @param {string} args.userId User Id
+     * @return {object} None
+     */
+    setReadMessage: async ({ auth: { credentials } }, args) => {
+      const { threadId, userId } = args
+
+      const connection = await helperFunctions.getRethinkConnection()
+      const thread = await fetchOne('threads', threadId)
+
+      const threadToSave = {
+        ...thread,
+        users: thread.users.map(user => user.username === userId ? { ...user, isRead: true } : user)
+      }
+
+      await rethink.table('threads')
+        .get(threadId)
+        .update(threadToSave, { nonAtomic: true })
+        .run(connection)
+
+      await connection.close()
+
+      return
     }
   },
   Subscription: {
