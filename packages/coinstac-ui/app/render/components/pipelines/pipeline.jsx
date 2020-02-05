@@ -83,7 +83,7 @@ function NumberFormatCustom(props) {
     <NumberFormat
       {...other}
       getInputRef={inputRef}
-      onValueChange={values => {
+      onValueChange={(values) => {
         onChange({
           target: {
             value: values.value,
@@ -91,7 +91,7 @@ function NumberFormatCustom(props) {
         });
       }}
       isNumericString
-      suffix=" m"
+      suffix=" minutes"
     />
   );
 }
@@ -119,7 +119,7 @@ class Pipeline extends Component {
     }
 
     if (props.params.runId) {
-      const runs = props.runs;
+      const { runs } = props;
       runs.filter(run => run.id === props.params.runId);
       pipeline = get(runs, '0.pipelineSnapshot');
     }
@@ -547,7 +547,7 @@ class Pipeline extends Component {
             disabled={!owner}
             value={pipeline.timeout}
             name="timeout"
-            validators={['minNumber: 0', 'matchRegexp:^[0-9]$']}
+            validators={['minNumber: 0', 'matchRegexp:[0-9]*']}
             errorMessages={['Timeout must be positive']}
             onChange={evt => this.updatePipeline({ param: 'timeout', value: evt.target.value })}
             className={classes.formControl}
