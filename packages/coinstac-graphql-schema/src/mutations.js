@@ -89,6 +89,11 @@ const mutations = {
       }
     }
   `,
+  setReadMessage: `
+    {
+      setReadMessage(threadId: $threadId, userId: $userId)
+    }
+  `,
 };
 
 module.exports = mutations;

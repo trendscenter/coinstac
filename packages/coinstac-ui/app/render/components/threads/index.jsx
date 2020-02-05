@@ -1,7 +1,8 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
-import { find } from 'lodash'
+import { connect } from 'react-redux'
 import { graphql, compose, withApollo } from 'react-apollo'
+import { find } from 'lodash'
 import { withStyles } from '@material-ui/core/styles'
 import {
   Button,
@@ -16,9 +17,11 @@ import ThreadContent from './thread-content'
 import ThreadNew from './thread-new'
 import {
   saveMessageProp,
+  setReadMessageProp,
 } from '../../state/graphql/props'
 import {
   SAVE_MESSAGE_MUTATION,
+  SET_READ_MESSAGE_MUTATION,
 } from '../../state/graphql/functions'
 
 const styles = theme => ({
@@ -53,12 +56,14 @@ class Threads extends Component {
   }
 
   handleThreadClick = (threadId) => {
+    const { user } = this.props
     const { creatingNewThread } = this.state
 
     if (creatingNewThread) {
       this.toggleDialog(threadId)
     } else {
       this.setState({ selectedThread: threadId })
+      this.props.setReadMessage({ threadId, userId: user.id })
     }
   }
 
@@ -114,7 +119,7 @@ class Threads extends Component {
   }
 
   render() {
-    const { threads, runs, classes } = this.props
+    const { user, threads, runs, classes } = this.props
     const { selectedThread, creatingNewThread, openDialog, savingStatus } = this.state
 
     const thread = this.getSelectedThread()
@@ -126,6 +131,7 @@ class Threads extends Component {
         </Typography>
         <div className={classes.container}>
           <ThreadList
+            userId={user.id}
             threads={threads}
             selectedThread={selectedThread}
             onThreadClick={this.handleThreadClick}
@@ -182,7 +188,17 @@ const ThreadsWithData = compose(
     SAVE_MESSAGE_MUTATION,
     saveMessageProp('saveMessage'),
   ),
+  graphql(
+    SET_READ_MESSAGE_MUTATION,
+    setReadMessageProp('setReadMessage'),
+  ),
   withApollo,
 )(Threads)
 
-export default withStyles(styles, { withTheme: true })(ThreadsWithData)
+const mapStateToProps = ({ auth: { user } }) => {
+  return { user };
+};
+
+const connectedComponent = connect(mapStateToProps)(ThreadsWithData);
+
+export default withStyles(styles, { withTheme: true })(connectedComponent)

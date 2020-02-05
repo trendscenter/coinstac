@@ -16,7 +16,7 @@ const styles = () => ({
     backgroundColor: 'white',
     cursor: 'pointer',
     lineHeight: '19px',
-    '&.unRead': {
+    '&.unread': {
       borderLeft: '4px solid #0078d4'
     },
     '&.selected': {
@@ -29,9 +29,9 @@ const styles = () => ({
   avatarWrapper: {
     padding: '6px 12px 0 8px',
   },
-  username: {
+  owner: {
     color: '#201f1e',
-    '&.unRead': {
+    '&.unread': {
       fontWeight: 600,
     }
   },
@@ -46,14 +46,14 @@ const styles = () => ({
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     maxWidth: 130,
-    '&.unRead': {
+    '&.unread': {
       color: '#0078d4',
       fontWeight: 600,
     }
   }
 })
 
-const ThreadCard = ({ classes, thread, isSelected, onClick }) =>  {
+const ThreadCard = ({ classes, thread, isSelected, isUnread, onClick }) =>  {
   function getContent() {
     const messages = orderBy(thread.messages, 'date', 'desc')
     const firstMessage = head(messages)
@@ -83,6 +83,7 @@ const ThreadCard = ({ classes, thread, isSelected, onClick }) =>  {
     <div
       className={classNames(classes.wrapper, {
         selected: isSelected,
+        unread: isUnread,
       })}
       onClick={onClick}
     >
@@ -90,11 +91,11 @@ const ThreadCard = ({ classes, thread, isSelected, onClick }) =>  {
         <ThreadAvatar username={thread.owner} />
       </div>
       <div style={{ flex: 1 }}>
-        <div className={classes.owner}>
+        <div className={classNames(classes.owner, { unread: isUnread })}>
           {thread.owner}
         </div>
         <div className={classes.titleWrapper}>
-          <span className={classes.title}>
+          <span className={classNames(classes.title, { unread: isUnread })}>
             {thread.title}
           </span>
           <span>{getDate()}</span>
@@ -108,6 +109,7 @@ const ThreadCard = ({ classes, thread, isSelected, onClick }) =>  {
 ThreadCard.propTypes = {
   classes: PropTypes.object.isRequired,
   isSelected: PropTypes.bool,
+  isUnread: PropTypes.bool,
   thread: PropTypes.object.isRequired,
   onClick: PropTypes.func.isRequired,
 }

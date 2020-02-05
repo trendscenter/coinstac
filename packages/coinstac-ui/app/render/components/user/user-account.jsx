@@ -33,7 +33,7 @@ const styles = {
 };
 
 const UserAccount = (props) => {
-  const { logoutUser, auth, threadCount, classes } = props;
+  const { logoutUser, auth, unreadThreadCount, classes } = props;
 
   if (!auth || !auth.user) {
     return <div className={classes.root} />;
@@ -80,7 +80,7 @@ const UserAccount = (props) => {
           </ListItem>
           <ListItem disableGutters button component={Link} to="/dashboard/threads">
             <ListItemIcon>
-            <Badge className={classes.margin} badgeContent={threadCount} color="secondary">
+            <Badge className={classes.margin} badgeContent={unreadThreadCount} color="secondary">
               <MessageIcon />
             </Badge>
             </ListItemIcon>
@@ -118,9 +118,10 @@ const UserAccount = (props) => {
 UserAccount.displayName = 'UserAccount';
 
 UserAccount.propTypes = {
-  logoutUser: PropTypes.func.isRequired,
   auth: PropTypes.object.isRequired,
   classes: PropTypes.object.isRequired,
+  unreadThreadCount: PropTypes.number.isRequired,
+  logoutUser: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = ({ auth }) => {

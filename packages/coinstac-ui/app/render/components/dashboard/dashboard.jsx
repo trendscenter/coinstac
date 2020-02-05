@@ -556,6 +556,25 @@ class Dashboard extends Component {
     return locationStacks.length > 1;
   }
 
+  get unreadThreadCount() {
+    const { auth, threads } = this.props;
+
+    if (!auth || !threads || threads.length === 0) {
+      return 0;
+    }
+
+    const { id: userId } = auth.user;
+
+    const unreadThreads = threads.filter(thread => {
+      return thread.users
+        .filter(({ username, isRead }) =>
+          username === userId && !isRead
+        ).length > 0;
+    });
+
+    return unreadThreads.length;
+  }
+
   render() {
     const { auth, children, computations, consortia, pipelines, runs, threads, classes } = this.props;
     const { dockerStatus } = this.state;
@@ -568,8 +587,6 @@ class Dashboard extends Component {
     if (!auth || !auth.user.email.length) {
       return (<p>Redirecting to login...</p>);
     }
-
-    const threadCount = threads ? threads.length : 0;
 
     // @TODO don't render primary content whilst still loading/bg-services
     return (
@@ -589,7 +606,7 @@ class Dashboard extends Component {
               <DashboardNav auth={auth} />
               <List>
                 <ListItem>
-                  <UserAccountController push={router.push} threadCount={threadCount} />
+                  <UserAccountController push={router.push} unreadThreadCount={this.unreadThreadCount} />
                 </ListItem>
               </List>
               <List>

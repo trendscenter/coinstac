@@ -1,6 +1,6 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { orderBy } from 'lodash'
+import { get, orderBy } from 'lodash'
 import { withStyles } from '@material-ui/core/styles'
 import ThreadCard from './thread-card'
 
@@ -31,7 +31,13 @@ const styles = theme => ({
   }
 })
 
-const ThreadList = ({ classes, threads, selectedThread, onThreadClick, onThreadNewClick }) => {
+const ThreadList = ({ userId, classes, threads, selectedThread, onThreadClick, onThreadNewClick }) => {
+  function isThreadUnread(thread) {
+    const user = thread.users.find(({ username }) => username === userId)
+
+    return !get(user, 'isRead', true);
+  }
+
   return (
     <div className={classes.wrapper}>
       <div className={classes.threads}>
@@ -40,6 +46,7 @@ const ThreadList = ({ classes, threads, selectedThread, onThreadClick, onThreadN
             key={thread.id}
             thread={thread}
             isSelected={thread.id === selectedThread}
+            isUnread ={isThreadUnread(thread)}
             onClick={() => onThreadClick(thread.id)}
           />)
         )}
@@ -55,6 +62,7 @@ const ThreadList = ({ classes, threads, selectedThread, onThreadClick, onThreadN
 }
 
 ThreadList.propTypes = {
+  userId: PropTypes.string.isRequired,
   classes: PropTypes.object.isRequired,
   threads: PropTypes.array,
   selectedThread: PropTypes.any,
