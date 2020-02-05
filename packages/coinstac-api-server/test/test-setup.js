@@ -10,6 +10,7 @@ const drneFsl = require('./data/coinstac-schema-regression-fsl');
 const ssrFsl = require('./data/coinstac-schema-regression-ss-fsl');
 const msrFsl = require('./data/coinstac-schema-regression-ms-fsl');
 
+const gica = require('./data/coinstac-gica-pipeline');
 const ddfnc = require('./data/coinstac-ddfnc-pipeline');
 const vbm = require('./data/coinstac-vbm-pre');
 
@@ -58,6 +59,7 @@ helperFunctions.getRethinkConnection()
         Object.assign({}, ssrFsl, { submittedBy: 'test1' }),
         Object.assign({}, msrFsl, { submittedBy: 'test1' }),
         Object.assign({}, vbm, { submittedBy: 'author' }),
+        Object.assign({}, gica, { submittedBy: 'test1' }),
         Object.assign({}, ddfnc, { submittedBy: 'test1' }),
         Object.assign({}, drneVbm, { submittedBy: 'test1' }),
         Object.assign({}, ssrVbm, { submittedBy: 'test1' }),
@@ -757,6 +759,7 @@ helperFunctions.getRethinkConnection()
         description: 'This consortia is for testing.',
         owners: ['author'],
         members: ['author'],
+        isPrivate: false,
       }).run(connection))
       .then(() => rethink.table('consortia').insert({
         id: 'test-cons-2',
@@ -765,6 +768,7 @@ helperFunctions.getRethinkConnection()
         description: 'This consortia is for testing too.',
         owners: ['test1'],
         members: ['author', 'test1'],
+        isPrivate: false,
       }).run(connection));
   })
   .then(() => helperFunctions.hashPassword('password'))

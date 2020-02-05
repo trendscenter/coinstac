@@ -34,6 +34,7 @@ class Maps extends Component {
       <MapsList
         auth={this.props.auth}
         consortia={this.props.consortia}
+        collections={this.props.collections}
         pipelines={this.props.pipelines}
         runs={this.props.runs}
         mapId={this.props.routeParams.mapId}
