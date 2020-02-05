@@ -1,23 +1,26 @@
 {
   "apiServer": {
-    "hostname": "coinstacdev01.rs.gsu.edu'",
-    "pathname": "/api",
-    "protocol": "https:"
+    "hostname": "localhost",
+    "pathname": "",
+    "port": "3100",
+    "protocol": "http:"
   },
   "subApiServer": {
-    "hostname": "coinstacdev01.rs.gsu.edu'",
-    "pathname": "/ws",
-    "port": "443",
-    "protocol": "wss:"
+    "hostname": "localhost",
+    "pathname": "",
+    "port": "3100",
+    "protocol": "ws:"
   },
   "fileServer": {
-    "hostname": "coinstacdev01.rs.gsu.edu'",
+    "hostname": "localhost",
     "pathname": "/transfer",
-    "protocol": "https:"
+    "port": "3300",
+    "protocol": "http:"
   },
   "mqttServer": {
-    "hostname": "coinstacdev01.rs.gsu.edu'",
-    "port": "80",
-    "protocol": "mqtts:"
+    "hostname": "localhost",
+    "pathname": "",
+    "port": "1883",
+    "protocol": "mqtt:"
   }
 }
