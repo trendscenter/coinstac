@@ -33,6 +33,7 @@ const ThreadContent = ({ classes, thread, runs, savingStatus, onSend }) => {
         <ThreadMessages messages={thread.messages} />
         <ThreadReply
           threadId={thread.id}
+          threadUsers={thread.users}
           title={thread.title}
           runs={runs}
           savingStatus={savingStatus}

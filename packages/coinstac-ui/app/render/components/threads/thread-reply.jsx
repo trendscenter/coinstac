@@ -3,7 +3,7 @@ import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 import { graphql, compose } from 'react-apollo'
 import classNames from 'classnames'
-import { omit } from 'lodash'
+import { isEqual, omit } from 'lodash'
 import {
   CircularProgress,
   FormControl,
@@ -118,6 +118,10 @@ const styles = theme => ({
     width: `20px !important`,
     height: `20px !important`,
     marginRight: 10,
+  },
+  note: {
+    marginLeft: 20,
+    color: 'red',
   }
 })
 
@@ -139,16 +143,21 @@ class ThreadReply extends Component {
   }
 
   UNSAFE_componentWillMount() {
-    this.initializeState(this.props);
+    this.initializeState(this.props)
+    this.initializeDefaultRecipients(this.props)
   }
 
   UNSAFE_componentWillReceiveProps(nextProps) {
-    const { title, savingStatus } = this.props
+    const { title, threadUsers, savingStatus } = this.props
 
-    if (savingStatus !== nextProps.savingStatus) {
-      this.setState(omit(INITIAL_STATE, ['threadId', 'title']))
+    if (savingStatus !== nextProps.savingStatus && nextProps.savingStatus === 'success') {
+      this.setState(omit(INITIAL_STATE, ['threadId', 'title', 'selectedRecipients']))
     } else if (title !== nextProps.title) {
       this.initializeState(nextProps)
+    }
+
+    if (!isEqual(threadUsers, nextProps.threadUsers)) {
+      this.initializeDefaultRecipients(nextProps)
     }
   }
 
@@ -161,8 +170,33 @@ class ThreadReply extends Component {
     })
   }
 
-  handleRecipientsChange = selectedRecipients => {
-    this.setState({ selectedRecipients })
+  initializeDefaultRecipients = props => {
+    const { threadUsers, currentUser } = props
+
+    const defaultSelectedRecipients = (threadUsers || [])
+      .filter(({ username }) => username !== currentUser.id)
+      .map(({ username }) => ({ value: username, label: username, isFixed: true }))
+
+    this.setState({
+      selectedRecipients: defaultSelectedRecipients,
+    })
+  }
+
+  handleRecipientsChange = (recipients, { action, removedValue }) => {
+    const { selectedRecipients } = this.state
+
+    switch (action) {
+      case 'remove-value':
+      case 'pop-value':
+        if (removedValue.isFixed) {
+          return
+        }
+      case 'clear':
+        this.setState({ selectedRecipients: selectedRecipients.filter(user => user.isFixed) })
+        return
+      default:
+        this.setState({ selectedRecipients: recipients })
+    }
   }
 
   handleMessageChange = evt => {
@@ -285,7 +319,7 @@ class ThreadReply extends Component {
 
     if (error) {
       return (
-        <Tooltip title={error || ''} placement="top">
+        <Tooltip title={error} placement="top">
           {button}    
         </Tooltip>
       )
@@ -354,7 +388,7 @@ class ThreadReply extends Component {
 
     return (
       <div className={classes.wrapper}>
-        <div style={{ display: 'flex' }}>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
           <ThreadAvatar username={currentUser.id} showUsername/>
 
           <div className={classes.recipients}>
@@ -366,8 +400,13 @@ class ThreadReply extends Component {
               isMulti
               className={classes.select}
               style={{ height: 50 }}
+              isClearable={selectedRecipients.some(user => !user.isFixed)}
               onChange={this.handleRecipientsChange}
             />
+          </div>
+
+          <div className={classes.note}>
+            Note: Adding users to threads shares the thread history
           </div>
         </div>
 
@@ -453,6 +492,7 @@ ThreadReply.propTypes = {
   currentUser: PropTypes.object.isRequired,
   users: PropTypes.array,
   threadId: PropTypes.any,
+  threadUsers: PropTypes.array,
   title: PropTypes.any,
   savingStatus: PropTypes.string.isRequired,
   consortia: PropTypes.array,
