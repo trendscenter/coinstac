@@ -12,6 +12,7 @@ const msrFsl = require('./data/coinstac-schema-regression-ms-fsl');
 
 const gica = require('./data/coinstac-gica-pipeline');
 const ddfnc = require('./data/coinstac-ddfnc-pipeline');
+const dpsvm = require('./data/coinstac-dpsvm');
 const vbm = require('./data/coinstac-vbm-pre');
 
 const fmri = require('./data/coinstac-fmri');
@@ -61,6 +62,7 @@ helperFunctions.getRethinkConnection()
         Object.assign({}, vbm, { submittedBy: 'author' }),
         Object.assign({}, gica, { submittedBy: 'test1' }),
         Object.assign({}, ddfnc, { submittedBy: 'test1' }),
+        Object.assign({}, dpsvm, { submittedBy: 'test1' }),
         Object.assign({}, drneVbm, { submittedBy: 'test1' }),
         Object.assign({}, ssrVbm, { submittedBy: 'test1' }),
         Object.assign({}, drneFsl, { submittedBy: 'author' }),
