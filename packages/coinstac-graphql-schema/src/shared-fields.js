@@ -127,9 +127,8 @@ const sharedFields = {
       recipients
       date
       action {
-        id
-        name
-        consortiumName
+        type
+        detail
       }
     }
   `

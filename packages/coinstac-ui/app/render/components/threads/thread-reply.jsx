@@ -246,15 +246,19 @@ class ThreadReply extends Component {
       },
       (action === 'join-consortium' && selectedConsortium !== 'none') && ({
         action: {
-          id: selectedConsortium,
-          consortiumName: consortia.find(({ id }) => id === selectedConsortium).name,
-          name: action,
+          type: action,
+          detail: {
+            id: selectedConsortium,
+            name: consortia.find(({ id }) => id === selectedConsortium).name,
+          },
         }
       }),
       (action === 'share-result' && selectedResult !== 'none') && ({
         action: {
-          id: selectedResult,
-          name: action,
+          type: action,
+          detail: {
+            id: selectedResult,
+          }
         }
       }),
     )
@@ -406,7 +410,7 @@ class ThreadReply extends Component {
           </div>
 
           <div className={classes.note}>
-            Note: Adding users to threads shares the thread history
+            Adding users to threads shares the thread history
           </div>
         </div>
 
