@@ -475,16 +475,16 @@ loadConfig()
         filters = [
           {
             name: 'File Types',
-            extensions: ['jpeg', 'jpg', 'png', 'nii', 'csv', 'txt', 'rtf', 'gz'],
+            extensions: ['jpeg', 'jpg', 'png', 'nii', 'csv', 'txt', 'rtf', 'gz',  'pickle'],
           },
         ];
         properties = ['openFile', 'multiSelections'];
-        postDialogFunc = ipcFunctions.manualFileSelectionMultExt;       
+        postDialogFunc = ipcFunctions.manualFileSelectionMultExt;
       } else {
         filters = [
           {
             name: 'File Types',
-            extensions: ['jpeg', 'jpg', 'png', 'nii', 'csv', 'txt', 'rtf', 'gz'],
+            extensions: ['jpeg', 'jpg', 'png', 'nii', 'csv', 'txt', 'rtf', 'gz', 'pickle'],
           },
         ];
         properties = ['openDirectory', 'openFile', 'multiSelections'];
