@@ -831,7 +831,7 @@ const resolvers = {
         const { messages, users } = thread
         const threadToSave = {
           messages: [...messages, messageToSave],
-          users: uniq([...users, ...recipients])
+          users: uniq([...users.map(user => user.username), ...recipients])
             .map(user => ({ username: user, isRead: user === credentials.id })),
           date: Date.now(),
         }
@@ -848,7 +848,7 @@ const resolvers = {
           owner: credentials.id,
           title: title,
           messages: [messageToSave],
-          users: [credentials.id, ...recipients]
+          users: uniq([credentials.id, ...recipients])
             .map(user => ({ username: user, isRead: user === credentials.id })),
           date: Date.now(),
         }
