@@ -70,13 +70,13 @@ const ThreadMessage = ({ classes, message }) => {
       <p>
         {content}
       </p>
-      {action && action.name === 'join-consortium' && (
+      {action && action.type === 'join-consortium' && (
         <Link to="/dashboard/consortia">
-          <button className={classes.button}>Join consortium - {action.consortiumName}</button>
+          <button className={classes.button}>Join consortium - {action.detail.name}</button>
         </Link>
       )}
 
-      {action && action.name === 'share-result' && (
+      {action && action.type === 'share-result' && (
         <Link to="/dashboard/results">
           <button className={classes.button}>See Result</button>
         </Link>

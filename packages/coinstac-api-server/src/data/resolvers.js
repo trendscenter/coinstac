@@ -861,13 +861,13 @@ const resolvers = {
       }
 
       if (action && action.type === 'share-result') {
-        const run = await fetchOne('runs', action.id)
+        const run = await fetchOne('runs', action.detail.id)
         const runToSave = {
           sharedUsers: uniq([...run.sharedUsers || [], ...recipients]),
         }
 
         await rethink.table('runs')
-          .get(action.id)
+          .get(action.detail.id)
           .update(runToSave, { nonAtomic: true })
           .run(connection)
       }

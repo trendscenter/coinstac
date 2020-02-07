@@ -120,15 +120,13 @@ const typeDefs = `
   }
 
   input ActionInput {
-    id: String
-    name: String
-    consortiumName: String
+    type: String
+    detail: JSON
   }
 
   type ActionOutput {
-    id: String
-    name: String
-    consortiumName: String
+    type: String
+    detail: JSON
   }
 
   type MessageOutput {
