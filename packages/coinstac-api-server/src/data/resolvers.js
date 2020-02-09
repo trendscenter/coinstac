@@ -755,13 +755,6 @@ const resolvers = {
      * @return {object} Updated consortia
      */
     updateConsortiaMappedUsers: async ({ auth: { credentials } }, args) => {
-      console.log('User id: ', credentials.id)
-      console.log('unmapped consortias: ', args.consortia)
-      // const result = await rethink.table('consortia')
-      //   .get(args.consortiumId)
-      //   .update({ mappedForRun: args.mappedForRun })
-      //   .run(connection)
-      // await connection.close()
       const connection = await helperFunctions.getRethinkConnection()
       const result = await rethink.table('consortia')
         .getAll(...args.consortia)
