@@ -19,7 +19,9 @@ const styles = theme => ({
   },
 })
 
-const ThreadContent = ({ classes, thread, runs, savingStatus, onSend }) => {
+const ThreadContent = ({
+  classes, savingStatus, thread, onSend, onJoinConsortium,
+}) => {
   function renderContent() {
     if (!thread) {
       return null
@@ -30,12 +32,14 @@ const ThreadContent = ({ classes, thread, runs, savingStatus, onSend }) => {
         <Typography variant="h5" className={classes.title}>
           {thread.title}
         </Typography>
-        <ThreadMessages messages={thread.messages} />
+        <ThreadMessages
+          messages={thread.messages}
+          joinConsortium={onJoinConsortium}
+        />
         <ThreadReply
           threadId={thread.id}
           threadUsers={thread.users}
           title={thread.title}
-          runs={runs}
           savingStatus={savingStatus}
           onSend={onSend}
         />
@@ -52,9 +56,9 @@ const ThreadContent = ({ classes, thread, runs, savingStatus, onSend }) => {
 
 ThreadContent.propTypes = {
   classes: PropTypes.object.isRequired,
-  thread: PropTypes.object,
-  runs: PropTypes.array,
   savingStatus: PropTypes.string.isRequired,
+  thread: PropTypes.object,
+  onJoinConsortium: PropTypes.func.isRequired,
   onSend: PropTypes.func.isRequired,
 }
 

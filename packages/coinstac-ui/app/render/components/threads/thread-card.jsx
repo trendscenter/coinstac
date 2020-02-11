@@ -53,7 +53,7 @@ const styles = () => ({
   }
 })
 
-const ThreadCard = ({ classes, thread, isSelected, isUnread, onClick }) =>  {
+const ThreadCard = ({ classes, isSelected, isUnread, thread, onClick }) =>  {
   function getContent() {
     const messages = orderBy(thread.messages, 'date', 'desc')
     const firstMessage = head(messages)

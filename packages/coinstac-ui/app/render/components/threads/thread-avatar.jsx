@@ -29,9 +29,9 @@ const styles = theme => ({
 const ThreadAvatar = ({
   classes,
   className,
-  username,
-  showUsername,
   isSender,
+  showUsername,
+  username,
   ...otherProps,
 }) => (
   <div className={classes.wrapper}>
@@ -54,8 +54,8 @@ ThreadAvatar.propTypes = {
   classes: PropTypes.object.isRequired,
   className: PropTypes.any,
   isSender: PropTypes.bool,
-  username: PropTypes.string.isRequired,
   showUsername: PropTypes.bool,
+  username: PropTypes.string.isRequired,
 }
 
 ThreadAvatar.defaultProps = {
