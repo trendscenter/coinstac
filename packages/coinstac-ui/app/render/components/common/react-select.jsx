@@ -38,6 +38,11 @@ const styles = theme => ({
       0.08,
     ),
   },
+  chipDisabled: {
+    backgroundColor: 'gray',
+    fontWeight: 'bold',
+    color: 'white',
+  },
   noOptionsMessage: {
     padding: `${theme.spacing.unit}px ${theme.spacing.unit * 2}px`,
   },
@@ -142,9 +147,10 @@ function MultiValue(props) {
       label={props.children}
       className={classNames(props.selectProps.classes.chip, {
         [props.selectProps.classes.chipFocused]: props.isFocused,
+        [props.selectProps.classes.chipDisabled]: props.data.isFixed,
       })}
-      onDelete={props.removeProps.onClick}
-      deleteIcon={<CancelIcon {...props.removeProps} />}
+      onDelete={!props.data.isFixed ? props.removeProps.onClick : null }
+      deleteIcon={!props.data.isFixed ? <CancelIcon {...props.removeProps} /> : null}
     />
   );
 }

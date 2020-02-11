@@ -1,7 +1,5 @@
-import React, { Component, Fragment } from 'react'
+import React, { Component } from 'react'
 import PropTypes from 'prop-types'
-import { connect } from 'react-redux'
-import { graphql, compose } from 'react-apollo'
 import classNames from 'classnames'
 import { isEqual, omit } from 'lodash'
 import {
@@ -15,16 +13,8 @@ import {
 } from '@material-ui/core'
 import { withStyles } from '@material-ui/core/styles'
 import ThreadAvatar from './thread-avatar'
+import { ThreadContext } from './context'
 import CustomSelect from '../common/react-select'
-import {
-  getAllAndSubProp,
-} from '../../state/graphql/props'
-import {
-  FETCH_ALL_USERS_QUERY,
-  FETCH_ALL_CONSORTIA_QUERY,
-  USER_CHANGED_SUBSCRIPTION,
-  CONSORTIUM_CHANGED_SUBSCRIPTION,
-} from '../../state/graphql/functions'
 
 const BootstrapInput = withStyles(theme => ({
   root: {
@@ -136,19 +126,15 @@ const INITIAL_STATE = {
 }
 
 class ThreadReply extends Component {
-  constructor(props) {
-    super(props)
-
-    this.state = INITIAL_STATE
-  }
+  state = INITIAL_STATE
 
   UNSAFE_componentWillMount() {
     this.initializeState(this.props)
-    this.initializeDefaultRecipients(this.props)
+    this.initializeDefaultRecipients(this.props, this.context)
   }
 
   UNSAFE_componentWillReceiveProps(nextProps) {
-    const { title, threadUsers, savingStatus } = this.props
+    const { savingStatus, title, threadUsers } = this.props
 
     if (savingStatus !== nextProps.savingStatus && nextProps.savingStatus === 'success') {
       this.setState(omit(INITIAL_STATE, ['threadId', 'title', 'selectedRecipients']))
@@ -157,7 +143,7 @@ class ThreadReply extends Component {
     }
 
     if (!isEqual(threadUsers, nextProps.threadUsers)) {
-      this.initializeDefaultRecipients(nextProps)
+      this.initializeDefaultRecipients(nextProps, this.context)
     }
   }
 
@@ -170,11 +156,12 @@ class ThreadReply extends Component {
     })
   }
 
-  initializeDefaultRecipients = props => {
-    const { threadUsers, currentUser } = props
+  initializeDefaultRecipients = (props, context) => {
+    const { threadUsers } = props
+    const { auth } = context
 
     const defaultSelectedRecipients = (threadUsers || [])
-      .filter(({ username }) => username !== currentUser.id)
+      .filter(({ username }) => username !== auth.user.id)
       .map(({ username }) => ({ value: username, label: username, isFixed: true }))
 
     this.setState({
@@ -220,7 +207,8 @@ class ThreadReply extends Component {
   }
 
   handleSend = () => {
-    const { consortia, savingStatus } = this.props
+    const { savingStatus } = this.props
+    const { consortia } = this.context
     const error = this.validateForm()
 
     if (savingStatus === 'pending' || error) {
@@ -333,25 +321,27 @@ class ThreadReply extends Component {
   }
 
   getAllRecipients = () => {
-    const { users, currentUser } = this.props
+    const { users, auth } = this.context
 
     const allRecipients = (users || [])
-      .filter(user => user.id !== currentUser.id)
+      .filter(user => user.id !== auth.user.id)
       .map(user => ({ value: user.id, label: user.id }))
 
     return allRecipients
   }
 
   getAllConsortia = () => {
-    const { consortia } = this.props
+    const { auth, consortia } = this.context
 
     let allConsortia = [
       { value: 'none', label: 'None' },
     ]
 
-    consortia.forEach(consortium =>
-      allConsortia.push({ value: consortium.id, label: consortium.name })
-    )
+    consortia.forEach(consortium => {
+      if (consortium.owners.indexOf(auth.user.id) !== -1) {
+        allConsortia.push({ value: consortium.id, label: consortium.name })
+      }
+    })
 
     return allConsortia
   }
@@ -367,7 +357,7 @@ class ThreadReply extends Component {
   }
 
   getAllResults = () => {
-    const { runs } = this.props
+    const { runs } = this.context
 
     let allRuns = [
       { value: 'none', label: 'None' },
@@ -381,7 +371,7 @@ class ThreadReply extends Component {
   }
 
   render() {
-    const { classes, currentUser } = this.props
+    const { classes } = this.props
     const {
       action,
       message,
@@ -389,11 +379,12 @@ class ThreadReply extends Component {
       selectedConsortium,
       selectedResult,
     } = this.state
+    const { auth } = this.context
 
     return (
       <div className={classes.wrapper}>
         <div style={{ display: 'flex', alignItems: 'center' }}>
-          <ThreadAvatar username={currentUser.id} showUsername/>
+          <ThreadAvatar username={auth.user.id} showUsername/>
 
           <div className={classes.recipients}>
             <span>To:</span>
@@ -493,37 +484,13 @@ class ThreadReply extends Component {
 
 ThreadReply.propTypes = {
   classes: PropTypes.object.isRequired,
-  currentUser: PropTypes.object.isRequired,
-  users: PropTypes.array,
+  savingStatus: PropTypes.string.isRequired,
   threadId: PropTypes.any,
   threadUsers: PropTypes.array,
   title: PropTypes.any,
-  savingStatus: PropTypes.string.isRequired,
-  consortia: PropTypes.array,
   onSend: PropTypes.func.isRequired,
 }
 
-const selectors = ({ auth }) => ({
-  currentUser: auth.user,
-})
+ThreadReply.contextType = ThreadContext
 
-const ThreadReplyWithData = compose(
-  graphql(FETCH_ALL_USERS_QUERY, getAllAndSubProp(
-    USER_CHANGED_SUBSCRIPTION,
-    'users',
-    'fetchAllUsers',
-    'subscribeToUsers',
-    'userChanged'
-  )),
-  graphql(FETCH_ALL_CONSORTIA_QUERY, getAllAndSubProp(
-    CONSORTIUM_CHANGED_SUBSCRIPTION,
-    'consortia',
-    'fetchAllConsortia',
-    'subscribeToConsortia',
-    'consortiumChanged'
-  )),
-)(ThreadReply)
-
-const connectedComponent = connect(selectors)(ThreadReplyWithData)
-
-export default withStyles(styles)(connectedComponent)
+export default withStyles(styles)(ThreadReply)

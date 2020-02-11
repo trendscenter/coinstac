@@ -31,7 +31,11 @@ class ThreadMessages extends Component {
     return (
       <div className={classes.wrapper}>
         {messages.map(message => (
-          <ThreadMessage key={message.id} message={message} />
+          <ThreadMessage
+            key={message.id}
+            message={message}
+            joinConsortium={this.props.joinConsortium}
+          />
         ))}
         <div ref={ref => this.lastRef = ref} />
       </div>
@@ -42,6 +46,7 @@ class ThreadMessages extends Component {
 ThreadMessages.propTypes = {
   classes: PropTypes.object.isRequired,
   messages: PropTypes.array,
+  joinConsortium: PropTypes.func.isRequired,
 }
 
 export default withStyles(styles)(ThreadMessages)

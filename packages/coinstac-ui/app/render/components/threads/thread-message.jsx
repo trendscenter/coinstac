@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 import { Link } from 'react-router'
 import { withStyles } from '@material-ui/core/styles'
@@ -40,7 +40,7 @@ const styles = theme => ({
   }
 })
 
-const ThreadMessage = ({ classes, message }) => {
+const ThreadMessage = ({ classes, message, joinConsortium }) => {
   const { sender, recipients, content, action } = message
 
   return (
@@ -71,9 +71,12 @@ const ThreadMessage = ({ classes, message }) => {
         {content}
       </p>
       {action && action.type === 'join-consortium' && (
-        <Link to="/dashboard/consortia">
-          <button className={classes.button}>Join consortium - {action.detail.name}</button>
-        </Link>
+        <button
+          className={classes.button}
+          onClick={() => joinConsortium(action.detail.id)}
+        >
+          Join consortium - {action.detail.name}
+        </button>
       )}
 
       {action && action.type === 'share-result' && (
@@ -88,6 +91,7 @@ const ThreadMessage = ({ classes, message }) => {
 ThreadMessage.propTypes = {
   classes: PropTypes.object.isRequired,
   message: PropTypes.object.isRequired,
+  joinConsortium: PropTypes.func.isRequired,
 }
 
 export default withStyles(styles)(ThreadMessage)
