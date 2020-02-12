@@ -3,11 +3,11 @@ require('clarify');
 const rethink = require('rethinkdb');
 
 const drneVbm = require('./data/coinstac-schema-regression-vbm');
-const ssrVbm = require('./data/coinstac-schema-regression-ss-vbm');
+//const ssrVbm = require('./data/coinstac-schema-regression-ss-vbm');
 const msrVbm = require('./data/coinstac-schema-regression-ms-vbm');
 
 const drneFsl = require('./data/coinstac-schema-regression-fsl');
-const ssrFsl = require('./data/coinstac-schema-regression-ss-fsl');
+//const ssrFsl = require('./data/coinstac-schema-regression-ss-fsl');
 const msrFsl = require('./data/coinstac-schema-regression-ms-fsl');
 
 const gica = require('./data/coinstac-gica-pipeline');
@@ -55,21 +55,21 @@ helperFunctions.getRethinkConnection()
       .then(() => rethink.tableCreate('pipelines').run(connection))
       .then(() => rethink.tableCreate('computations').run(connection))
       .then(() => rethink.table('computations').insert([
-        Object.assign({}, local, { submittedBy: 'test1' }),
-        Object.assign({}, decentralized, { submittedBy: 'test1' }),
-        Object.assign({}, ssrFsl, { submittedBy: 'test1' }),
-        Object.assign({}, msrFsl, { submittedBy: 'test1' }),
+        Object.assign({}, local, { submittedBy: 'author' }),
+        Object.assign({}, decentralized, { submittedBy: 'author' }),
+        //Object.assign({}, ssrFsl, { submittedBy: 'author' }),
+        Object.assign({}, msrFsl, { submittedBy: 'author' }),
         Object.assign({}, vbm, { submittedBy: 'author' }),
         Object.assign({}, gica, { submittedBy: 'test1' }),
         Object.assign({}, ddfnc, { submittedBy: 'test1' }),
         Object.assign({}, dpsvm, { submittedBy: 'test1' }),
         Object.assign({}, drneVbm, { submittedBy: 'test1' }),
-        Object.assign({}, ssrVbm, { submittedBy: 'test1' }),
+        // Object.assign({}, ssrVbm, { submittedBy: 'test1' }),
         Object.assign({}, drneFsl, { submittedBy: 'author' }),
-        Object.assign({}, decentralizedError, { submittedBy: 'test1' }),
-        Object.assign({}, enigmaSans, { submittedBy: 'test1' }),
-        Object.assign({}, localError, { submittedBy: 'test1' }),
-        Object.assign({}, fmri, { submittedBy: 'test1' }),
+        Object.assign({}, decentralizedError, { submittedBy: 'author' }),
+        Object.assign({}, enigmaSans, { submittedBy: 'author' }),
+        Object.assign({}, localError, { submittedBy: 'author' }),
+        Object.assign({}, fmri, { submittedBy: 'author' }),
       ], { returnChanges: true }).run(connection))
       .then(compInsertResult => rethink.table('pipelines').insert([
         {
