@@ -3,16 +3,19 @@ import { compose, graphql, withApollo } from 'react-apollo';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { ipcRenderer } from 'electron';
+import { isEqual } from 'lodash';
 import { MuiThemeProvider, withStyles } from '@material-ui/core/styles';
-import theme from '../../styles/material-ui/theme';
-import CssBaseline from '@material-ui/core/CssBaseline';
-import Grid from '@material-ui/core/Grid';
-import Drawer from '@material-ui/core/Drawer';
-import Icon from '@material-ui/core/Icon';
-import List from '@material-ui/core/List';
-import ListItem from '@material-ui/core/ListItem';
-import Typography from '@material-ui/core/Typography';
+import {
+  CssBaseline,
+  Drawer,
+  Grid,
+  Icon,
+  List,
+  ListItem,
+  Typography,
+} from '@material-ui/core';
 import DashboardNav from './dashboard-nav';
+import theme from '../../styles/material-ui/theme';
 import UserAccountController from '../user/user-account-controller';
 import {
   notifyError,
@@ -48,11 +51,13 @@ import {
   USER_METADATA_CHANGED_SUBSCRIPTION,
   USER_RUN_CHANGED_SUBSCRIPTION,
   UPDATE_USER_CONSORTIUM_STATUS_MUTATION,
+  UPDATE_CONSORTIA_MAPPED_USERS_MUTATION,
   FETCH_USER_QUERY,
 } from '../../state/graphql/functions';
 import {
   getAllAndSubProp,
   getSelectAndSubProp,
+  updateConsortiaMappedUsersProp
 } from '../../state/graphql/props';
 
 const styles = theme => ({
@@ -216,11 +221,17 @@ class Dashboard extends Component {
         autoDismiss: 5
       });
     });
+
+    this.checkLocalMappedStatus(this.props.associatedConsortia);
   }
 
   UNSAFE_componentWillReceiveProps(nextProps) {
     const { auth: { user }, client } = this.props;
     const { router } = this.context;
+
+    if (!isEqual(this.props.associatedConsortia, nextProps.associatedConsortia)) {
+      this.checkLocalMappedStatus(nextProps.associatedConsortia);
+    }
 
     if (nextProps.computations && !this.state.unsubscribeComputations) {
       this.setState({ unsubscribeComputations: this.props.subscribeToComputations(null) });
@@ -509,6 +520,16 @@ class Dashboard extends Component {
     ipcRenderer.removeAllListeners('docker-error');
   }
 
+  checkLocalMappedStatus = associatedConsortia => {
+    if (associatedConsortia.length === 0) {
+      return
+    }
+
+    const unmappedConsortia = associatedConsortia.filter(consortia => consortia.isMapped === false).map(consortia => consortia.id)
+
+    this.props.updateConsortiaMappedUsers({ consortia: unmappedConsortia })
+  }
+
   goBack = () => {
     if (!this.canShowBackButton) {
       return;
@@ -660,10 +681,11 @@ Dashboard.propTypes = {
   classes: PropTypes.object.isRequired,
 };
 
-function mapStateToProps({ auth, runs: { runs } }) {
+function mapStateToProps({ auth, runs: { runs }, collections: { associatedConsortia } }) {
   return {
     auth,
     runs,
+    associatedConsortia,
   };
 }
 
@@ -727,6 +749,10 @@ const DashboardWithData = compose(
       }),
     }),
   }),
+  graphql(
+    UPDATE_CONSORTIA_MAPPED_USERS_MUTATION,
+    updateConsortiaMappedUsersProp('updateConsortiaMappedUsers'),
+  ),
   withApollo
 )(Dashboard);
 

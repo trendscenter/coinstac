@@ -24,7 +24,7 @@
     "input": {
       "lambda":
       {
-        "defaultValue": 0,
+        "default": 0,
         "label": "Lambda",
         "max": 1,
         "min": 0,

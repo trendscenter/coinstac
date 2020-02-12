@@ -10,7 +10,9 @@ const drneFsl = require('./data/coinstac-schema-regression-fsl');
 //const ssrFsl = require('./data/coinstac-schema-regression-ss-fsl');
 const msrFsl = require('./data/coinstac-schema-regression-ms-fsl');
 
+const gica = require('./data/coinstac-gica-pipeline');
 const ddfnc = require('./data/coinstac-ddfnc-pipeline');
+const dpsvm = require('./data/coinstac-dpsvm');
 const vbm = require('./data/coinstac-vbm-pre');
 
 const fmri = require('./data/coinstac-fmri');
@@ -58,9 +60,11 @@ helperFunctions.getRethinkConnection()
         //Object.assign({}, ssrFsl, { submittedBy: 'author' }),
         Object.assign({}, msrFsl, { submittedBy: 'author' }),
         Object.assign({}, vbm, { submittedBy: 'author' }),
-        Object.assign({}, ddfnc, { submittedBy: 'author' }),
-        Object.assign({}, drneVbm, { submittedBy: 'author' }),
-        //Object.assign({}, ssrVbm, { submittedBy: 'author' }),
+        Object.assign({}, gica, { submittedBy: 'test1' }),
+        Object.assign({}, ddfnc, { submittedBy: 'test1' }),
+        Object.assign({}, dpsvm, { submittedBy: 'test1' }),
+        Object.assign({}, drneVbm, { submittedBy: 'test1' }),
+        // Object.assign({}, ssrVbm, { submittedBy: 'test1' }),
         Object.assign({}, drneFsl, { submittedBy: 'author' }),
         Object.assign({}, decentralizedError, { submittedBy: 'author' }),
         Object.assign({}, enigmaSans, { submittedBy: 'author' }),
@@ -757,6 +761,7 @@ helperFunctions.getRethinkConnection()
         description: 'This consortia is for testing.',
         owners: ['author'],
         members: ['author'],
+        isPrivate: false,
       }).run(connection))
       .then(() => rethink.table('consortia').insert({
         id: 'test-cons-2',
@@ -765,6 +770,7 @@ helperFunctions.getRethinkConnection()
         description: 'This consortia is for testing too.',
         owners: ['test1'],
         members: ['author', 'test1'],
+        isPrivate: false,
       }).run(connection));
   })
   .then(() => helperFunctions.hashPassword('password'))

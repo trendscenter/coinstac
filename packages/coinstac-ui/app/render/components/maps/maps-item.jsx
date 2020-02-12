@@ -17,6 +17,7 @@ const styles = theme => ({
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'space-between',
+    position: 'relative',
   },
   description: {
     marginBottom: theme.spacing.unit,
@@ -36,10 +37,12 @@ const styles = theme => ({
 
 function MapsItem(props) {
   const {
+    activePipelineId,
     itemOptions,
     itemObject,
     itemMapped,
     pipelineId,
+    resetMapping,
     setConsortium,
     classes,
   } = props;
@@ -75,7 +78,8 @@ function MapsItem(props) {
         <div className={classes.actionsContainer}>
           {
             itemMapped
-              ? <Button
+              ? <div>
+                <Button
                  component={Link}
                  variant="contained"
                  color="primary"
@@ -83,8 +87,19 @@ function MapsItem(props) {
                  to={`map/${itemObject.id}`}>
                   View Details
                 </Button>
+                <Button
+                   style={{marginTop: '0.5rem'}}
+                   component={Link}
+                   variant="contained"
+                   color="secondary"
+                   onClick={() => resetMapping(itemObject)}
+                   to={`map/${itemObject.id}`}>
+                    Clear Mapping
+                  </Button>
+                </div>
                 :
                 <Button
+                 style={{fontSize: '0.8rem'}}
                  component={Link}
                  variant="contained"
                  color="secondary"

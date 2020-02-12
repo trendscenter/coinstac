@@ -183,3 +183,13 @@ export const updateConsortiumMappedUsersProp = (name) => {
     }),
   };
 };
+
+export const updateConsortiaMappedUsersProp = (name) => {
+  return {
+    props: ({ mutate }) => ({
+      [name]: ({ consortia }) => mutate({
+        variables: { consortia },
+      })
+    }),
+  };
+};
