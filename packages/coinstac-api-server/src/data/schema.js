@@ -140,6 +140,7 @@ const typeDefs = `
     updateRunState(runId: ID, data: JSON): JSON
     updateUserConsortiumStatus(consortiumId: ID, status: String): User
     updateConsortiumMappedUsers(consortiumId: ID, mappedForRun: [ID]): JSON
+    updateConsortiaMappedUsers(consortia: [ID]): JSON
   }
 
   # This is a description of the queries

@@ -77,6 +77,11 @@ const mutations = {
       updateConsortiumMappedUsers(consortiumId: $consortiumId, mappedForRun: $mappedForRun)
     }
   `,
+  updateConsortiaMappedUsers: `
+    {
+      updateConsortiaMappedUsers(consortia: $consortia)
+    }
+  `,
 };
 
 module.exports = mutations;
