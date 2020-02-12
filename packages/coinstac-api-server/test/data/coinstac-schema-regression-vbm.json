@@ -1,6 +1,6 @@
 {
   "meta": {
-    "name": "Regression (Normal Equation) - VBM",
+    "name": "Regression - VBM",
     "id": "regression-vbm",
     "version": "v1.0.0",
     "repository": "https:\/\/github.com\/trendscenter\/coinstac-regression-vbm",

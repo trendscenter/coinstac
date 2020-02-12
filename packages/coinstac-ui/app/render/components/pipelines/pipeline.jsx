@@ -464,6 +464,16 @@ class Pipeline extends Component {
     this.setState({ openAddComputationStepMenu: false });
   }
 
+  sortComputations(computations){
+    if(computations && computations.length > 0){
+      return computations.slice().sort(function(a, b) {
+          var nameA = a.meta.name.toLowerCase();
+          var nameB = b.meta.name.toLowerCase();
+          return (nameA < nameB) ? -1 : (nameA > nameB) ? 1 : 0;
+      });
+    }
+  }
+
   render() {
     const { computations, connectDropTarget, consortia, classes, auth } = this.props;
     const {
@@ -477,6 +487,8 @@ class Pipeline extends Component {
     } = this.state;
 
     const title = pipeline.id ? 'Pipeline Edit' : 'Pipeline Creation';
+
+    let sortedComputations = this.sortComputations(computations);
 
     return connectDropTarget(
       <div>
@@ -599,8 +611,8 @@ class Pipeline extends Component {
               open={openAddComputationStepMenu}
               onClose={this.closeAddComputationStepMenu}
             >
-              {
-                computations
+              {sortedComputations &&
+                sortedComputations
                   .map(comp => (
                     <MenuItem
                       key={comp.id}

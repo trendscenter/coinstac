@@ -1,6 +1,6 @@
 {
   "meta": {
-    "name": "Regression (Normal Equation) - FreeSurfer Volumes",
+    "name": "Regression - FreeSurfer Volumes",
     "id": "regression-fsl",
     "version": "v1.0.0",
     "repository": "https:\/\/github.com\/trendscenter\/coinstac-regression-fsl",
