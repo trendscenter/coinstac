@@ -17,7 +17,7 @@ import {
   incrementRunCount,
   saveAssociatedConsortia,
   saveCollection,
-  updateCollection
+  updateCollection,
 } from '../../state/ducks/collections';
 import {
   getRunsForConsortium,

@@ -1,21 +1,21 @@
 {
   "meta": {
-    "name": "Regression (Singleshot) - Test",
-    "id": "ssr-test",
+    "name": "Differentially Private Support Vector Machines demo",
+    "id": "dpsvm",
     "version": "v1.0.0",
-    "repository": "https:\/\/github.com\/trendsenter\/ssr-test",
-    "description": "Regression (Singleshot) on test data"
+    "repository": "https:\/\/github.com\/MRN-Code\/coinstac_dpSVM",
+    "description": "a test from single shot regresssion"
   },
   "computation": {
     "type": "docker",
-    "dockerImage": "coinstacteam/ssr-test",
+    "dockerImage": "coinstacteam/dpsvm",
     "command": [
       "python",
       "\/computation\/local.py"
     ],
     "remote": {
       "type": "docker",
-      "dockerImage": "coinstacteam/ssr-test",
+      "dockerImage": "coinstacteam/dpsvm",
       "command": [
         "python",
         "\/computation\/remote.py"
@@ -32,17 +32,11 @@
         "type": "number",
         "source": "owner"
       },
-      "covariates":
-      {
-        "label": "Covariates",
-        "type": "array",
-        "items": ["boolean", "number"]
-      },
       "data": {
         "label": "Data",
-        "type": "meta",
-        "items": ["FreeSurfer"],
-        "extensions": [["csv", "txt"]]
+        "type": "bundle",
+        "items": ["Pickle"],
+        "extensions": [["Pickle"]]
       }
     },
     "output": {
@@ -111,23 +105,7 @@
     },
     "display": [
       {
-        "type": "table",
-        "tables": [
-          {
-            "source": "regressions",
-            "subtables": [
-              {
-                "source": "global_stats",
-                "subtitle": "ROI"
-              },
-              {
-                "source": "local_stats",
-                "subtitle": "ROI",
-                "subtables": "by-key"
-              }
-            ]
-          }
-        ]
+        "type": ""
       }
     ]
   }

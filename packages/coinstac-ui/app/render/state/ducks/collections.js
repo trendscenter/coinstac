@@ -342,18 +342,18 @@ export const isAssocConsortiumMapped = applyAsyncLoading(consId =>
   .then(cons => cons.isMapped)
 );
 
-export const unmapAssociatedConsortia = applyAsyncLoading(consortia =>
+export const unmapAssociatedConsortia = applyAsyncLoading((consortia, consId) =>
   (dispatch) => {
     const updatePromises = [];
     const consortiaChanged = [];
-    // if (consId) {
-    //   consortia.forEach((consId) => {
-    //     consortiaChanged.push(consId);
-    //     updatePromises.push(
-    //       localDB.associatedConsortia.update(consId, { stepIO: [], isMapped: false })
-    //     );
-    //   });
-    // }
+    if (consId) {
+      consortia.forEach((consId) => {
+        consortiaChanged.push(consId);
+        updatePromises.push(
+          localDB.associatedConsortia.update(consId, { stepIO: [], isMapped: false })
+        );
+      });
+    }
     return Promise.all(updatePromises)
     .then(() =>
     localDB.associatedConsortia
