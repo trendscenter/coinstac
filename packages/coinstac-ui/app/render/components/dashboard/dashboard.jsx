@@ -464,7 +464,8 @@ class Dashboard extends Component {
 
         if (runIndexInLocalRuns === -1 && !remoteRun.results && !remoteRun.error) {
           const consortium = consortia.find(obj => obj.id === remoteRun.consortiumId);
-          const dataMapping = maps.find(m => m.consortiumId === remoteRun.consortiumId);
+          const dataMapping = maps.find(m => m.consortiumId === consortium.id
+            && m.pipelineId === consortium.activePipelineId);
 
 
           notifyInfo({
@@ -655,7 +656,7 @@ Dashboard.propTypes = {
   notifyInfo: PropTypes.func.isRequired,
   notifySuccess: PropTypes.func.isRequired,
   notifyWarning: PropTypes.func.isRequired,
-  maps: PropTypes.array.isRequired,
+  maps: PropTypes.array,
   pipelines: PropTypes.array,
   pullComputations: PropTypes.func.isRequired,
   remoteRuns: PropTypes.array,

@@ -30,8 +30,11 @@ function isMember(userId, groupArr) {
 
 class MapsList extends Component {
   deleteDataMapping = consortiumId => () => {
-    const { deleteDataMapping } = this.props;
-    deleteDataMapping(consortiumId);
+    const { deleteDataMapping, consortia } = this.props;
+
+    const consortium = consortia.find(c => c.id === consortiumId);
+
+    deleteDataMapping(consortium.id, consortium.activePipelineId);
   }
 
   getMapItem = (consortium) => {
