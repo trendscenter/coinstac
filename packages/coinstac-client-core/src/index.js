@@ -193,7 +193,8 @@ class CoinstacClient {
       const stats = await fs.statAsync(p);
 
       if (stats.isDirectory()) {
-        const paths = [...fs.readdirSync(p).filter(item => !(/(^|\/)\.[^\/\.]/g).test(item))] // eslint-disable-line no-useless-escape
+        const dirs = await fs.readdir(p)
+        const paths = [...dirs.filter(item => !(/(^|\/)\.[^\/\.]/g).test(item))]
         // Recursively retrieve path contents of directory
         const subGroup = await this.getSubPathsAndGroupExtension({
           paths,
