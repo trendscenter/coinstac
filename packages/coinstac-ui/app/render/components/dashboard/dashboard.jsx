@@ -480,8 +480,6 @@ class Dashboard extends Component {
       .filter(cons => cons.mappedForRun && cons.mappedForRun.indexOf(user.id) !== -1)
       .map(cons => cons.id);
 
-    console.log('consortia', consortia);
-
     maps.forEach((map) => {
       const index = consortiaCurrentlyUserIsMappedFor.indexOf(map.consortiumId);
 
