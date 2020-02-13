@@ -5,6 +5,7 @@ import Typography from '@material-ui/core/Typography';
 import Grid from '@material-ui/core/Grid';
 import { withStyles } from '@material-ui/core';
 import ListItem from '../common/list-item';
+import { deleteDataMapping } from '../../state/ducks/maps';
 
 const styles = theme => ({
   contentContainer: {
@@ -28,6 +29,11 @@ function isMember(userId, groupArr) {
 }
 
 class MapsList extends Component {
+  deleteDataMapping = consortiumId => () => {
+    const { deleteDataMapping } = this.props;
+    deleteDataMapping(consortiumId);
+  }
+
   getMapItem = (consortium) => {
     const { auth, pipelines, classes } = this.props;
 
@@ -41,7 +47,7 @@ class MapsList extends Component {
 
     const itemOptions = {
       text: [],
-      actions: [],
+      status: [],
     };
 
     itemOptions.text.push((
@@ -53,7 +59,7 @@ class MapsList extends Component {
       </div>
     ));
 
-    itemOptions.actions.push((
+    itemOptions.status.push((
       <span
         key={`${consortium.id}-map-status`}
         className={isDataMapped ? 'mapped true' : 'mapped false'}
@@ -61,13 +67,16 @@ class MapsList extends Component {
     ));
 
     return (
-      <Grid item sm={4} lg={3} key={`${consortium.id}-list-item`}>
+      <Grid item sm={6} lg={4} key={`${consortium.id}-list-item`}>
         <ListItem
           itemObject={consortium}
           itemOptions={itemOptions}
           itemRoute="/dashboard/maps"
           linkButtonText={isDataMapped ? 'View Details' : 'Map Data to Consortium'}
           linkButtonColor={isDataMapped ? 'primary' : 'secondary'}
+          canDelete={isDataMapped}
+          deleteItem={this.deleteDataMapping}
+          deleteButtonText="Clear Mapping"
         />
       </Grid>
     );
@@ -106,6 +115,7 @@ MapsList.propTypes = {
   maps: PropTypes.array.isRequired,
   auth: PropTypes.object.isRequired,
   consortia: PropTypes.array.isRequired,
+  deleteDataMapping: PropTypes.func.isRequired,
   pipelines: PropTypes.array.isRequired,
   classes: PropTypes.object.isRequired,
 };
@@ -115,5 +125,7 @@ const mapStateToProps = ({ auth, maps }) => {
 };
 
 export default withStyles(styles)(
-  connect(mapStateToProps)(MapsList)
+  connect(mapStateToProps, {
+    deleteDataMapping,
+  })(MapsList)
 );

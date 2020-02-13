@@ -1,21 +1,21 @@
 {
     "meta": {
-        "name": "Decentralized Dynamic Functional Connectivity (DDFNC) Pipeline",
-        "id": "ddfnc",
+        "name": "Decentralized GICA",
+        "id": "gica",
         "version": "v1.0.0",
-        "repository": "https:\/\/github.com\/MRN-Code\/coinstac_ddfnc_pipeline",
-        "description": "a demo for decentralized dfnc"
+        "repository": "https:\/\/github.com\/MRN-Code\/coinstac_gica_pipeline",
+        "description": "a demo for decentralized gica"
     },
     "computation": {
         "type": "docker",
-        "dockerImage": "coinstacteam/ddfnc",
+        "dockerImage": "coinstacteam/gica",
         "command": [
             "python",
             "\/computation\/local.py"
         ],
         "remote": {
             "type": "docker",
-            "dockerImage": "coinstacteam/ddfnc",
+            "dockerImage": "coinstacteam/gica",
             "command": [
                 "python",
                 "\/computation\/remote.py"
@@ -36,24 +36,12 @@
                 "default": "\/computation\/local_data\/mask.nii",
                 "order": 1
             },
-            "ica": {
-              "label": "ICA Method",
-              "default": "Infomax ICA",
-              "type": "select",
-              "values": [
-                  "Infomax ICA",
-                  "Spatially Constrained"
-              ],
-              "group": "ica",
-              "order": 2
-            },
             "num_ics": {
                 "default": 20,
                 "label": "Global Number of Independent Components",
                 "type": "number",
                 "source": "owner",
                 "order": 3,
-                "group": "ica",
                 "showValue": "Infomax ICA",
                 "conditional": {
                   "variable": "ica",
@@ -64,7 +52,6 @@
                 "label": "Spatially Constrained ICA Template",
                 "type": "string",
                 "order": 4,
-                "group": "ica",
                 "default": "\/computation\/local_data\/NeuroMark.nii",
                 "showValue": "Spatially Constrained",
                 "conditional": {
@@ -72,30 +59,13 @@
                   "value": "Infomax ICA"
                 }
             },
-            "fnc": {
-                "label": "Kind of FNC to perform",
-                "type": "select",
-                "default": "None",
-                "values": [
-                    "None",
-                    "Static FNC",
-                    "Dynamic FNC"
-                ],
-                "group": "fnc_method",
-                "order": 5
-            },
             "fnc_window_size": {
                 "default": 22,
                 "label": "Sliding Window Size",
                 "type": "number",
                 "source": "owner",
                 "order": 6,
-                "group": "fnc_method",
-                "showValue": "Dynamic FNC",
-                "conditional": {
-                  "variable": "fnc",
-                  "value": "Dynamic FNC"
-                }
+                "showValue": "Dynamic FNC"
             },
             "dfnc_k": {
                 "default": 5,
@@ -103,12 +73,7 @@
                 "type": "number",
                 "source": "owner",
                 "order": 7,
-                "group": "fnc_method",
-                "showValue": "Dynamic FNC",
-                "conditional": {
-                  "variable": "fnc",
-                  "value": "Dynamic FNC"
-                }
+                "showValue": "Dynamic FNC"
             },
             "results_html_path": {
               "order": 8,
