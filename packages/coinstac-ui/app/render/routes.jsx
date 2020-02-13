@@ -22,8 +22,6 @@ import PipelinesList from './components/pipelines/pipelines-list';
 import Pipeline from './components/pipelines/pipeline';
 import ResultsList from './components/results/results-list';
 import Result from './components/results/result';
-import CollectionsList from './components/collections/collections-list';
-import CollectionTabs from './components/collections/collection-tabs';
 import Settings from './components/user/settings';
 import Logs from './components/logs-display/logs';
 
@@ -39,11 +37,6 @@ export default (
         <Route path="new" component={ConsortiumTabs} />
         <Route path=":consortiumId" component={ConsortiumTabs} />
         <Route path=":consortiumId/:tabId" component={ConsortiumTabs} />
-      </Route>
-      <Route path="collections" component={RouteContainer}>
-        <IndexRoute component={CollectionsList} />
-        <Route path="new" component={CollectionTabs} />
-        <Route path=":collectionId" component={CollectionTabs} />
       </Route>
       <Route path="maps" component={RouteContainer}>
         <IndexRoute component={Maps} />
