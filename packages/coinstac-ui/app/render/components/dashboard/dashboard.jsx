@@ -25,12 +25,6 @@ import {
   writeLog,
 } from '../../state/ducks/notifyAndLog';
 import CoinstacAbbr from '../coinstac-abbr';
-import {
-  incrementRunCount,
-  syncRemoteLocalConsortia,
-  syncRemoteLocalPipelines,
-  mapConsortiumData,
-} from '../../state/ducks/collections';
 import { getLocalRun, getDBRuns, saveLocalRun, updateLocalRun } from '../../state/ducks/runs';
 import {
   getDockerStatus,
@@ -367,31 +361,6 @@ class Dashboard extends Component {
       }
     }
 
-    if (nextProps.pipelines) {
-      // Check associated consortia to see if activepipelineid matches.
-      //  If so check if pipeline steps match. If they don't, clear.
-      for (let i = 0; i < nextProps.pipelines.length; i += 1) {
-        this.props.syncRemoteLocalPipelines(nextProps.pipelines[i]);
-      }
-    }
-
-    if (nextProps.consortia) {
-      // If member or owner, check consortia activePipeline against
-      //  localDB assocCons activePipelineId. If different, clear steps
-      //  & activePipelineId, delete stepIO, remove assocCons in collections
-      for (let i = 0; i < nextProps.consortia.length; i += 1) {
-        if (nextProps.consortia[i].members.indexOf(user.id) > -1
-            || nextProps.consortia[i].owners.indexOf(user.id) > -1) {
-          let steps = [];
-          if (nextProps.consortia[i].activePipelineId && this.props.pipelines.length) {
-            steps = this.props.pipelines
-              .find(p => p.id === nextProps.consortia[i].activePipelineId).steps;
-          }
-          this.props.syncRemoteLocalConsortia(nextProps.consortia[i], steps);
-        }
-      }
-    }
-
     if (nextProps.consortia && this.props.consortia.length > 0) {
       for (let i = 0; i < nextProps.consortia.length; i += 1) {
         // Download Docker images for consortia activePipeline if user is a member
@@ -438,7 +407,6 @@ class Dashboard extends Component {
       remoteRuns,
       consortia,
       saveLocalRun,
-      incrementRunCount,
       notifyInfo,
       notifyWarning,
       maps,
@@ -651,7 +619,6 @@ Dashboard.propTypes = {
   consortia: PropTypes.array,
   getDBRuns: PropTypes.func.isRequired,
   getDockerStatus: PropTypes.func.isRequired,
-  incrementRunCount: PropTypes.func.isRequired,
   notifyError: PropTypes.func.isRequired,
   notifyInfo: PropTypes.func.isRequired,
   notifySuccess: PropTypes.func.isRequired,
@@ -666,8 +633,6 @@ Dashboard.propTypes = {
   subscribeToConsortia: PropTypes.func.isRequired,
   subscribeToPipelines: PropTypes.func.isRequired,
   subscribeToUserRuns: PropTypes.func.isRequired,
-  syncRemoteLocalConsortia: PropTypes.func.isRequired,
-  syncRemoteLocalPipelines: PropTypes.func.isRequired,
   updateDockerOutput: PropTypes.func.isRequired,
   updateLocalRun: PropTypes.func.isRequired,
   updateUserConsortiumStatus: PropTypes.func.isRequired,
@@ -759,15 +724,12 @@ const connectedComponent = connect(mapStateToProps,
     getLocalRun,
     getDBRuns,
     getDockerStatus,
-    incrementRunCount,
     notifyError,
     notifyInfo,
     notifySuccess,
     notifyWarning,
     pullComputations,
     saveLocalRun,
-    syncRemoteLocalConsortia,
-    syncRemoteLocalPipelines,
     updateDockerOutput,
     updateLocalRun,
     updateUserConsortiaStatuses,
