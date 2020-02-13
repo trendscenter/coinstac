@@ -490,7 +490,7 @@ loadConfig()
         filters = [
           {
             name: 'File Types',
-            extensions: ['jpeg', 'jpg', 'png', 'nii', 'csv', 'txt', 'rtf', 'gz'],
+            extensions: ['jpeg', 'jpg', 'png', 'nii', 'csv', 'txt', 'rtf', 'gz',  'pickle'],
           },
         ];
         properties = ['openFile', 'multiSelections'];
@@ -499,7 +499,7 @@ loadConfig()
         filters = [
           {
             name: 'File Types',
-            extensions: ['jpeg', 'jpg', 'png', 'nii', 'csv', 'txt', 'rtf', 'gz'],
+            extensions: ['jpeg', 'jpg', 'png', 'nii', 'csv', 'txt', 'rtf', 'gz', 'pickle'],
           },
         ];
         properties = ['openDirectory', 'openFile', 'multiSelections'];

@@ -33,9 +33,11 @@ const ListItem = ({
   itemOptions,
   itemObject,
   itemRoute,
+  canDelete,
   deleteItem,
   linkButtonText,
   linkButtonColor,
+  deleteButtonText,
   classes,
 }) => (
   <Paper
@@ -68,18 +70,19 @@ const ListItem = ({
         { itemOptions.actions }
       </div>
       {
-        deleteItem && owner && (
+        deleteItem && (owner || canDelete) && (
           <Button
             variant="contained"
             color="secondary"
             onClick={deleteItem(itemObject.id)}
             name={`${itemObject.name}-delete`}
           >
-            Delete
+            { deleteButtonText || 'Delete' }
             <DeleteIcon />
           </Button>
         )
       }
+      { itemOptions.status }
     </div>
   </Paper>
 );
@@ -88,17 +91,21 @@ ListItem.defaultProps = {
   owner: false,
   linkButtonText: null,
   linkButtonColor: null,
+  deleteButtonText: null,
   deleteItem: null,
+  canDelete: false,
 };
 
 ListItem.propTypes = {
   itemObject: PropTypes.object.isRequired,
   itemOptions: PropTypes.object.isRequired,
   itemRoute: PropTypes.string.isRequired,
+  canDelete: PropTypes.bool,
   owner: PropTypes.bool,
   deleteItem: PropTypes.func,
   linkButtonText: PropTypes.string,
   linkButtonColor: PropTypes.string,
+  deleteButtonText: PropTypes.string,
   classes: PropTypes.object.isRequired,
 };
 
