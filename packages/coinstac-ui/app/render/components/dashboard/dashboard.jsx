@@ -231,7 +231,7 @@ class Dashboard extends Component {
     const { auth: { user }, client } = this.props;
     const { router } = this.context;
 
-    if (!isEqual(this.props.maps, nextProps.maps)) {
+    if (!isEqual(this.props.consortia, nextProps.consortia)) {
       this.checkLocalMappedStatus(nextProps.maps, nextProps.consortia);
     }
 
@@ -474,15 +474,13 @@ class Dashboard extends Component {
   }
 
   checkLocalMappedStatus = (maps, consortia) => {
-    if (maps.length === 0) {
-      return;
-    }
-
     const { updateConsortiaMappedUsers, auth: { user } } = this.props;
 
     const consortiaCurrentlyUserIsMappedFor = consortia
       .filter(cons => cons.mappedForRun && cons.mappedForRun.indexOf(user.id) !== -1)
       .map(cons => cons.id);
+
+    console.log('consortia', consortia);
 
     maps.forEach((map) => {
       const index = consortiaCurrentlyUserIsMappedFor.indexOf(map.consortiumId);
