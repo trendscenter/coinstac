@@ -180,7 +180,6 @@ class ConsortiumTabs extends Component {
       });
     })
     .catch(({ graphQLErrors }) => {
-      console.log(graphQLErrors);
       this.setState({
         savingStatus: 'fail',
       })
