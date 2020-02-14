@@ -271,7 +271,7 @@ class CoinstacClient {
           );
         }
 
-        const runObj = { spec: clientPipeline, runId };
+        const runObj = { spec: clientPipeline, runId, timeout: clientPipeline.timeout };
         if (clients) {
           runObj.clients = clients;
         }
