@@ -132,6 +132,7 @@ class Threads extends Component {
 
     if (members.indexOf(auth.user.id) !== -1 || !activePipelineId) {
       this.props.router.push('/dashboard/consortia')
+      return
     }
 
     const computationData = client.readQuery({ query: FETCH_ALL_COMPUTATIONS_QUERY })

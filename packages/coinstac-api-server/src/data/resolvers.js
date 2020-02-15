@@ -511,11 +511,17 @@ const resolvers = {
      * @return {object} Updated consortium
      */
     joinConsortium: async ({ auth: { credentials } }, args) => {
-      const connection = await helperFunctions.getRethinkConnection();
-      await addUserPermissions(connection, { userId: credentials.id, role: 'member', doc: args.consortiumId, table: 'consortia' })
-        .then(res => connection.close().then(() => res));
+      const connection = await helperFunctions.getRethinkConnection()
+      const consortium = await fetchOne('consortia', args.consortiumId)
 
-      return fetchOne('consortia', args.consortiumId);
+      if (consortium.members.indexOf(credentials.id) !== -1) {
+        return consortium
+      }
+
+      await addUserPermissions(connection, { userId: credentials.id, role: 'member', doc: args.consortiumId, table: 'consortia' })
+      await connection.close()
+
+      return fetchOne('consortia', args.consortiumId)
     },
     /**
      * Remove logged user from consortium members list
