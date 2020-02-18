@@ -19,6 +19,9 @@ import {
   FETCH_ALL_CONSORTIA_QUERY,
   SAVE_ACTIVE_PIPELINE_MUTATION,
 } from '../../state/graphql/functions';
+import {
+  consortiumSaveActivePipelineProp,
+} from '../../state/graphql/props';
 import memoize from 'memoize-one';
 
 const styles = theme => ({
@@ -250,21 +253,7 @@ function mapStateToProps({ collections: collections }) {
 }
 
 // TODO: Move this to shared props?
-const ConsortiumPipelineWithData = graphql(SAVE_ACTIVE_PIPELINE_MUTATION, {
-  props: ({ mutate }) => ({
-    saveActivePipeline: (consortiumId, activePipelineId) => mutate({
-      variables: { consortiumId, activePipelineId },
-      update: (store) => {
-        const data = store.readQuery({ query: FETCH_ALL_CONSORTIA_QUERY });
-        const index = data.fetchAllConsortia.findIndex(con => con.id === consortiumId);
-        if (index > -1) {
-          data.fetchAllConsortia[index].activePipelineId = activePipelineId;
-        }
-        store.writeQuery({ query: FETCH_ALL_CONSORTIA_QUERY, data });
-      },
-    }),
-  }),
-})(ConsortiumPipeline);
+const ConsortiumPipelineWithData = graphql(SAVE_ACTIVE_PIPELINE_MUTATION, consortiumSaveActivePipelineProp('saveActivePipeline'))(ConsortiumPipeline);
 
 const connectedComponent = connect(mapStateToProps,
   {
