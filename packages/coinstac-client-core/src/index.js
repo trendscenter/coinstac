@@ -167,7 +167,7 @@ class CoinstacClient {
    * @param {string} group.parentDir parent directory if diving into subdir
    * @param {string} group.error present if error found
    */
-  static getSubPathsAndGroupExtension(group, multext) {
+  static async getSubPathsAndGroupExtension(group, multext) {
     let pathsArray = [];
     let extension = null;
 
@@ -190,12 +190,14 @@ class CoinstacClient {
         p = group.parentDir.concat(`/${p}`);
       }
 
-      const stats = fs.statSync(p);
+      const stats = await fs.statAsync(p);
 
       if (stats.isDirectory()) {
+        const dirs = await fs.readdir(p)
+        const paths = [...dirs.filter(item => !(/(^|\/)\.[^\/\.]/g).test(item))]
         // Recursively retrieve path contents of directory
-        const subGroup = this.getSubPathsAndGroupExtension({
-          paths: [...fs.readdirSync(p).filter(item => !(/(^|\/)\.[^\/\.]/g).test(item))], // eslint-disable-line no-useless-escape
+        const subGroup = await this.getSubPathsAndGroupExtension({
+          paths,
           extension: group.extension,
           parentDir: p,
         });
