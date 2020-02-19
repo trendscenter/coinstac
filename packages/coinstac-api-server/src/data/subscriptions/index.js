@@ -15,6 +15,7 @@ const tables = [
     tableName: 'users', idVar: 'userId', subVar: 'userMetadataChanged', preprocess: userMetadataChangedSubsPreprocess,
   },
   { tableName: 'runs', idVar: 'runId', subVar: 'userRunChanged' },
+  { tableName: 'threads', idVar: 'threadId', subVar: 'threadChanged' },
 ];
 
 /**

@@ -38,6 +38,7 @@ const schemaFields = {
     owningConsortium: ID
     delete: Boolean
     shared: Boolean
+    timeout: Int
   `,
   pipelineControllerFields: `
     id: ID

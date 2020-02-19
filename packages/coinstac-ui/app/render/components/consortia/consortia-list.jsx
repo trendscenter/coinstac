@@ -79,7 +79,11 @@ class ConsortiaList extends Component {
       otherConsortia: [],
       consortiumToDelete: -1,
       showModal: false,
+      consortiumJoinedByThread:
+        localStorage.getItem('CONSORTIUM_JOINED_BY_THREAD'),
     };
+
+    localStorage.removeItem('CONSORTIUM_JOINED_BY_THREAD');
 
     this.getOptions = this.getOptions.bind(this);
     this.getListItem = this.getListItem.bind(this);
@@ -90,6 +94,16 @@ class ConsortiaList extends Component {
     this.openModal = this.openModal.bind(this);
     this.startPipeline = this.startPipeline.bind(this);
     this.stopPipeline = this.stopPipeline.bind(this);
+  }
+
+  componentDidMount() {
+    const { consortiumJoinedByThread } = this.state
+
+    if (consortiumJoinedByThread) {
+      setTimeout(() => {
+        this.setState({ consortiumJoinedByThread: null })
+      }, 5000)  
+    }
   }
 
   static getDerivedStateFromProps(props) {
@@ -263,12 +277,15 @@ class ConsortiaList extends Component {
 
   getListItem(consortium) {
     const { user } = this.props.auth;
+    const { consortiumJoinedByThread } = this.state;
+
     return (
       <ListItem
         key={`${consortium.id}-list-item`}
         itemObject={consortium}
         deleteItem={this.openModal}
         owner={isUserA(user.id, consortium.owners)}
+        highlight={consortiumJoinedByThread === consortium.id}
         itemOptions={
           this.getOptions(
             isUserA(user.id, consortium.members),

@@ -26,10 +26,15 @@ const styles = theme => ({
   description: {
     marginBottom: theme.spacing.unit * 2,
   },
+  highlight: {
+    backgroundColor: 'yellow',
+    color: 'red',
+  },
 });
 
 const ListItem = ({
   owner,
+  highlight,
   itemOptions,
   itemObject,
   itemRoute,
@@ -45,7 +50,7 @@ const ListItem = ({
     elevation={4}
   >
     <div className={classes.titleContainer}>
-      <Typography variant="headline">
+      <Typography variant="headline" className={highlight && classes.highlight}>
         { itemObject.name }
       </Typography>
       {
@@ -102,10 +107,11 @@ ListItem.propTypes = {
   itemRoute: PropTypes.string.isRequired,
   canDelete: PropTypes.bool,
   owner: PropTypes.bool,
-  deleteItem: PropTypes.func,
   linkButtonText: PropTypes.string,
   linkButtonColor: PropTypes.string,
   deleteButtonText: PropTypes.string,
+  highlight: PropTypes.bool,
+  deleteItem: PropTypes.func.isRequired,
   classes: PropTypes.object.isRequired,
 };
 

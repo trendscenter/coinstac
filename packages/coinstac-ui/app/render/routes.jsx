@@ -23,6 +23,7 @@ import Pipeline from './components/pipelines/pipeline';
 import ResultsList from './components/results/results-list';
 import Result from './components/results/result';
 import Settings from './components/user/settings';
+import Threads from './components/threads';
 import Logs from './components/logs-display/logs';
 
 export default (
@@ -57,6 +58,7 @@ export default (
         <Route path="new" component={ComputationSubmission} />
       </Route>
       <Route path="settings" component={Settings} />
+      <Route path="threads" component={Threads} />
       <Route path="logs" component={Logs} />
     </Route>
   </Route>
