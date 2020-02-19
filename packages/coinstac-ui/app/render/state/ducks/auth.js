@@ -207,9 +207,9 @@ export default function reducer(state = INITIAL_STATE, { type, payload }) {
         return {
           ...state,
           locationStacks,
-        }
+        };
       }
-  
+
       return {
         ...state,
         locationStacks: [...locationStacks, pathname],

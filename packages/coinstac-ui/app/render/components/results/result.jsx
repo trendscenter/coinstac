@@ -54,6 +54,10 @@ const styles = theme => ({
   error: {
     color: 'red',
   },
+  errorSmall: {
+    color: 'red',
+    fontSize: '0.8rem',
+  },
 });
 
 class Result extends Component {
@@ -247,6 +251,15 @@ class Result extends Component {
           && (
             <div>
               {
+                selectedDisplayType.type === 'string'
+                && (
+                  <String
+                    plotData={plotData}
+                    title={`${consortium.name}_${run.pipelineSnapshot.name}`}
+                  />
+                )
+              }
+              {
                 selectedDisplayType.type === 'box_plot'
                 && <Box plotData={plotData.testData} />
               }
@@ -279,15 +292,6 @@ class Result extends Component {
                 selectedDisplayType.type === 'images'
                 && (
                   <Images
-                    plotData={plotData}
-                    title={`${consortium.name}_${run.pipelineSnapshot.name}`}
-                  />
-                )
-              }
-              {
-                selectedDisplayType.type === 'string'
-                && (
-                  <String
                     plotData={plotData}
                     title={`${consortium.name}_${run.pipelineSnapshot.name}`}
                   />
@@ -342,17 +346,30 @@ class Result extends Component {
 
         {
           !selectedDisplayType
-          && run.results
+          || selectedDisplayType.type === ''
           && (
             <Paper className={classNames(classes.paper)}>
-              <span className={classNames(classes.error)}>
-                Output Type not defined in Compspec.
-              </span>
-              <br />
-              <br />
-              <strong>Results Object:</strong>
-              <br />
-              {JSON.stringify(run.results)}
+              <table>
+                <tbody>
+                  <tr>
+                    <td>
+                      <strong>Results Object:</strong>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      {JSON.stringify(run.results)}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <span className={classNames(classes.errorSmall)}>
+                        *Output Type not defined in Compspec.
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </Paper>
           )
         }

@@ -6,6 +6,7 @@
   "dependencies": {},
   "devDependencies": {
     "babel-eslint": "^10.0.3",
+    "concurrently": "^5.1.0",
     "cross-spawn": "^4.0.2",
     "eslint": "^5.7.0",
     "eslint-config-airbnb": "^17.1.0",
@@ -15,14 +16,18 @@
     "fs-extra": "^0.30.0",
     "gh-pages": "^0.11.0",
     "github-markdown-css": "^2.10.0",
-    "jsdoc": "^3.5.5",
+    "jsdoc": "^3.6.3",
     "lerna": "^2.8.0",
-    "marked": "^0.3.12",
+    "marked": "^0.8.0",
     "minami": "^1.2.3",
     "pre-commit": "^1.2.2",
     "swig-templates": "^2.0.2"
   },
   "scripts": {
+    "api-server": "cd packages/coinstac-api-server/ && npm start",
+    "server": "cd packages/coinstac-server/ && npm start",
+    "watch": "cd packages/coinstac-ui/ && npm run watch",
+    "start": "concurrently \"npm run api-server\" \"npm run server\" \"npm run watch\" ",
     "bootstrap": "echo 'Deprecated! Please use \"npm run build\"'; exit 1;",
     "build": "lerna bootstrap",
     "build:server": "lerna bootstrap --ignore 'coinstac-{client-core,decentralized-algorithm-integration,simulator,storage-proxy,ui}'",

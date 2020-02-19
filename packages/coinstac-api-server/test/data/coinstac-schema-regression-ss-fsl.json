@@ -1,6 +1,6 @@
 {
   "meta": {
-    "name": "Regression (Singleshot) - FreeSurfer Volumes",
+    "name": "Ridge Regression (Singleshot) - FreeSurfer Volumes",
     "id": "ssr-fsl",
     "version": "v1.0.0",
     "repository": "https:\/\/github.com\/trendscenter\/coinstac-ssr-fsl",
@@ -24,7 +24,7 @@
     "input": {
       "lambda":
       {
-        "defaultValue": 0,
+        "default": 0,
         "label": "Lambda",
         "max": 1,
         "min": 0,

@@ -106,6 +106,7 @@ const typeDefs = `
     results: JSON
     remotePipelineState: JSON
     type: String
+    sharedUsers: [ID]
   }
 
   type User {
@@ -116,6 +117,39 @@ const typeDefs = `
   type UserInput {
     id: ID
     ${sharedFields.userFields}
+  }
+
+  input ActionInput {
+    type: String
+    detail: JSON
+  }
+
+  type ActionOutput {
+    type: String
+    detail: JSON
+  }
+
+  type MessageOutput {
+    id: ID
+    sender: ID
+    recipients: [ID]
+    content: String
+    date: String
+    action: ActionOutput
+  }
+
+  type ThreadUserOutput {
+    username: String
+    isRead: Boolean
+  }
+
+  type Thread {
+    id: ID
+    messages: [MessageOutput]
+    owner: ID
+    title: String
+    users: [ThreadUserOutput]
+    date: String
   }
 
   # This is the general mutation description
@@ -140,6 +174,9 @@ const typeDefs = `
     updateRunState(runId: ID, data: JSON): JSON
     updateUserConsortiumStatus(consortiumId: ID, status: String): User
     updateConsortiumMappedUsers(consortiumId: ID, mappedForRun: [ID]): JSON
+    updateConsortiaMappedUsers(consortia: [ID]): JSON
+    saveMessage(threadId: ID, title: String!, recipients: [String!], content: String!, action: ActionInput): Thread
+    setReadMessage(threadId: ID, userId: ID): JSON
   }
 
   # This is a description of the queries
@@ -156,6 +193,7 @@ const typeDefs = `
     fetchPipeline(pipelineId: ID): Pipeline
     fetchResult(resultId: ID): Result
     fetchUser(userId: ID): User
+    fetchAllThreads: [Thread]
     validateComputation(compId: ID): Boolean
   }
 
@@ -163,6 +201,7 @@ const typeDefs = `
     computationChanged(computationId: ID): Computation
     consortiumChanged(consortiumId: ID): Consortium
     pipelineChanged(pipelineId: ID): Pipeline
+    threadChanged(threadId: ID): Thread
     userRunChanged(userId: ID): Run
     userChanged(userId: ID): User
     userMetadataChanged(userId: ID): User

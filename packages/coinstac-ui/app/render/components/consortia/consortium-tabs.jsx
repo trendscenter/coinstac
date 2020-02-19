@@ -11,7 +11,6 @@ import ConsortiumAbout from './consortium-about';
 import ConsortiumPipeline from './consortium-pipeline';
 import ConsortiumRuns from './consortium-runs';
 import { updateUserPerms } from '../../state/ducks/auth';
-import { saveAssociatedConsortia } from '../../state/ducks/collections';
 import {
   getAllAndSubProp,
   getSelectAndSubProp,
@@ -153,8 +152,6 @@ class ConsortiumTabs extends Component {
     .then(({ data: { saveConsortium: { __typename, ...other } } }) => {
       let unsubscribeConsortia = this.state.unsubscribeConsortia;
 
-      this.props.saveAssociatedConsortia({ ...other });
-
       if (!unsubscribeConsortia) {
         unsubscribeConsortia = this.props.subscribeToConsortia(other.id);
       }
@@ -294,7 +291,6 @@ ConsortiumTabs.defaultProps = {
 };
 
 ConsortiumTabs.propTypes = {
-  activeConsortium: PropTypes.object,
   addUserRole: PropTypes.func.isRequired,
   auth: PropTypes.object.isRequired,
   consortia: PropTypes.array,
@@ -303,7 +299,6 @@ ConsortiumTabs.propTypes = {
   pipelines: PropTypes.array.isRequired,
   removeUserRole: PropTypes.func.isRequired,
   runs: PropTypes.array,
-  saveAssociatedConsortia: PropTypes.func.isRequired,
   saveConsortium: PropTypes.func.isRequired,
   subscribeToConsortia: PropTypes.func,
   subscribeToUsers: PropTypes.func,
@@ -341,7 +336,6 @@ const connectedComponent = connect(
   {
     notifySuccess,
     notifyError,
-    saveAssociatedConsortia,
     updateUserPerms,
   }
 )(ConsortiumTabsWithData);
