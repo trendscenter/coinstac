@@ -42,6 +42,7 @@ const sharedFields = {
     name
     owningConsortium
     shared
+    timeout
     steps {
       id
       computations {
