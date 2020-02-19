@@ -3,6 +3,7 @@ import React from 'react';
 import { Link } from 'react-router';
 import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
+import Badge from '@material-ui/core/Badge';
 import Typography from '@material-ui/core/Typography';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
@@ -10,6 +11,7 @@ import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import SettingsIcon from '@material-ui/icons/Settings';
 import ExitToAppIcon from '@material-ui/icons/ExitToApp';
+import MessageIcon from '@material-ui/icons/Message';
 import MemberAvatar from '../common/member-avatar';
 
 const styles = {
@@ -31,7 +33,7 @@ const styles = {
 };
 
 const UserAccount = (props) => {
-  const { logoutUser, auth, classes } = props;
+  const { logoutUser, auth, unreadThreadCount, classes } = props;
 
   if (!auth || !auth.user) {
     return <div className={classes.root} />;
@@ -76,6 +78,19 @@ const UserAccount = (props) => {
               </Typography>
             </ListItemText>
           </ListItem>
+          <ListItem disableGutters button component={Link} to="/dashboard/threads">
+            <ListItemIcon>
+            <Badge className={classes.margin} badgeContent={unreadThreadCount} color="secondary">
+              <MessageIcon />
+            </Badge>
+            </ListItemIcon>
+            <ListItemText
+              primary="Messages"
+              classes={{
+                root: classes.listItemButtonTextRoot,
+              }}
+            />
+          </ListItem>
           <ListItem disableGutters button component={Link} to="/dashboard/settings">
             <ListItemIcon><SettingsIcon /></ListItemIcon>
             <ListItemText
@@ -103,9 +118,10 @@ const UserAccount = (props) => {
 UserAccount.displayName = 'UserAccount';
 
 UserAccount.propTypes = {
-  logoutUser: PropTypes.func.isRequired,
   auth: PropTypes.object.isRequired,
   classes: PropTypes.object.isRequired,
+  unreadThreadCount: PropTypes.number.isRequired,
+  logoutUser: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = ({ auth }) => {

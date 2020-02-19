@@ -87,6 +87,7 @@ const sharedFields = {
     error
     results
     type
+    sharedUsers
   `,
   userMetadata: `
     id
@@ -111,6 +112,27 @@ const sharedFields = {
     runId
     results
   `,
+  threadFields: `
+    id
+    owner
+    title
+    users {
+      username
+      isRead
+    }
+    date
+    messages {
+      id
+      content
+      sender
+      recipients
+      date
+      action {
+        type
+        detail
+      }
+    }
+  `
 };
 
 module.exports = sharedFields;
