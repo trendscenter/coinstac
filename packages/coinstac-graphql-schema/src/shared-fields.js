@@ -34,6 +34,7 @@ const sharedFields = {
     owners
     isPrivate
     mappedForRun
+    createDate
   `,
   pipelineFields: `
     id
