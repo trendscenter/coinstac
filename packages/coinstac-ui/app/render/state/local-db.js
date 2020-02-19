@@ -1,38 +1,29 @@
 import Dexie from 'dexie';
 
-Dexie.delete('coinstac');
-const db = new Dexie('coinstac');
+let db = null;
 
-db.version(1).stores({
-  collections: '++id',
-});
+/**
+ * Return the singleton instance of the local db.
+ */
+function getDatabaseInstance() {
+  return db;
+}
 
-db.version(2).stores({
-  collections: '++id',
-  associatedConsortia: 'id',
-});
+/**
+ * Get a local database by name. Creates a new database in case one with the given name
+ * does not exist.
+ * @param {string} dbName - Database name (must be unique)
+ */
+function getOrCreateLocalDatabase(dbName) {
+  db = new Dexie(dbName);
 
-db.version(3).stores({
-  collections: '++id',
-  associatedConsortia: 'id',
-  runs: 'id',
-});
+  db.version(1).stores({
+    runs: 'id, type',
+    maps: '[consortiumId+pipelineId], consortiumId',
+  });
+}
 
-db.version(4).stores({
-  collections: '++id',
-  associatedConsortia: 'id',
-  runs: 'id,type',
-});
-
-db.version(5).stores({
-  collections: '++id',
-  associatedConsortia: 'id,activePipelineId',
-  runs: 'id,type',
-});
-
-db.version(6).stores({
-  runs: 'id, type',
-  maps: '[consortiumId+pipelineId], consortiumId',
-});
-
-export default db;
+export {
+  getOrCreateLocalDatabase,
+  getDatabaseInstance,
+};
