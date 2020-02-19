@@ -17,12 +17,11 @@ import RouteContainer from './containers/route-container';
 import Login from './components/user/form-login-controller';
 import Signup from './components/user/form-signup-controller';
 import Maps from './components/maps/maps';
+import MapsEdit from './components/maps/maps-edit';
 import PipelinesList from './components/pipelines/pipelines-list';
 import Pipeline from './components/pipelines/pipeline';
 import ResultsList from './components/results/results-list';
 import Result from './components/results/result';
-import CollectionsList from './components/collections/collections-list';
-import CollectionTabs from './components/collections/collection-tabs';
 import Settings from './components/user/settings';
 import Threads from './components/threads';
 import Logs from './components/logs-display/logs';
@@ -40,14 +39,9 @@ export default (
         <Route path=":consortiumId" component={ConsortiumTabs} />
         <Route path=":consortiumId/:tabId" component={ConsortiumTabs} />
       </Route>
-      <Route path="collections" component={RouteContainer}>
-        <IndexRoute component={CollectionsList} />
-        <Route path="new" component={CollectionTabs} />
-        <Route path=":collectionId" component={CollectionTabs} />
-      </Route>
       <Route path="maps" component={RouteContainer}>
         <IndexRoute component={Maps} />
-        <Route path="/map/:mapId" component={Maps} />
+        <Route path=":consortiumId" component={MapsEdit} />
       </Route>
       <Route path="pipelines" component={RouteContainer}>
         <IndexRoute component={PipelinesList} />
