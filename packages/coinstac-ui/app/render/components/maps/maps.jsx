@@ -1,71 +1,36 @@
-import React, { Component } from 'react';
+import React from 'react';
 import { connect } from 'react-redux';
-import { ipcRenderer } from 'electron';
 import PropTypes from 'prop-types';
-import { Tab, Tabs } from 'react-bootstrap';
-import { compose, graphql, withApollo } from 'react-apollo';
-import MapsEdit from './maps-edit';
 import MapsList from './maps-list';
-import {
-  consortiaMembershipProp,
-  getAllAndSubProp,
-  getSelectAndSubProp,
-  saveDocumentProp,
-  userRolesProp,
-} from '../../state/graphql/props';
 import { notifyInfo, notifySuccess } from '../../state/ducks/notifyAndLog';
-import {
-  FETCH_ALL_CONSORTIA_QUERY
-} from '../../state/graphql/functions';
 
-const styles = {
-  tab: {
-    marginTop: 10,
-  },
-};
-
-class Maps extends Component {
-  constructor(props) {
-    super(props);
-  }
-
-  render() {
-    return (
-      <MapsList
-        auth={this.props.auth}
-        consortia={this.props.consortia}
-        collections={this.props.collections}
-        pipelines={this.props.pipelines}
-        runs={this.props.runs}
-        mapId={this.props.routeParams.mapId}
-      />
-    );
-  }
+function Maps({
+  auth, consortia, pipelines, runs, routeParams,
+}) {
+  return (
+    <MapsList
+      auth={auth}
+      consortia={consortia}
+      pipelines={pipelines}
+      runs={runs}
+      mapId={routeParams.mapId}
+    />
+  );
 }
 
-Maps.defaultProps = {
-  consortia: null,
-};
-
 Maps.propTypes = {
-  associatedConsortia: PropTypes.array.isRequired,
+  auth: PropTypes.object.isRequired,
   consortia: PropTypes.array.isRequired,
-  notifyInfo: PropTypes.func.isRequired,
-  notifySuccess: PropTypes.func.isRequired,
+  pipelines: PropTypes.array.isRequired,
+  runs: PropTypes.array.isRequired,
+  routeParams: PropTypes.object.isRequired,
 };
 
-const mapStateToProps = ({ auth, collections: { associatedConsortia } }) => {
-  return { auth, associatedConsortia };
+const mapStateToProps = ({ auth }) => {
+  return { auth };
 };
 
-const MapsWithData = compose(
-  graphql(FETCH_ALL_CONSORTIA_QUERY,'fetchAllConsortia'),
-  withApollo
-)(Maps);
-
-export default connect(mapStateToProps,
-  {
-    notifyInfo,
-    notifySuccess,
-  }
-)(MapsWithData);
+export default connect(mapStateToProps, {
+  notifyInfo,
+  notifySuccess,
+})(Maps);

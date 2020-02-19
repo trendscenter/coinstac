@@ -4,12 +4,8 @@ import PropTypes from 'prop-types';
 import Icon from '@material-ui/core/Icon';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
-import List from '@material-ui/core/List';
-import ListItem from '@material-ui/core/ListItem';
-import ListItemText from '@material-ui/core/ListItemText';
 import { withStyles } from '@material-ui/core/styles';
 import FileCopyIcon from '@material-ui/icons/FileCopy';
-import DeleteRoundedIcon from '@material-ui/icons/DeleteRounded';
 import classNames from 'classnames';
 
 const styles = theme => ({
@@ -51,11 +47,22 @@ const styles = theme => ({
   },
 });
 
-class MapsStepCovariate extends Component {
-  componentWillUpdate() {
+class MapsStepFieldCovariate extends Component {
+  componentDidMount() {
+    const { registerDraggableContainer } = this.props;
+
     if (this.refs.Container) {
-      let Container = ReactDOM.findDOMNode(this.refs.Container);
-      this.props.getContainers(Container);
+      const Container = ReactDOM.findDOMNode(this.refs.Container);
+      registerDraggableContainer(Container);
+    }
+  }
+
+  componentDidUpdate(prevProps) {
+    const { registerDraggableContainer, column } = this.props;
+
+    if (prevProps.column !== column && this.refs.Container) {
+      const Container = ReactDOM.findDOMNode(this.refs.Container);
+      registerDraggableContainer(Container);
     }
   }
 
@@ -65,37 +72,42 @@ class MapsStepCovariate extends Component {
       type,
       classes,
       column,
-      index,
+      unmapField,
     } = this.props;
 
-    let name = step.name;
+    const { name } = step;
+
+    const isMapped = !!column;
 
     return (
       <Paper
         className={classNames('drop-panel', classes.rootPaper)}
         elevation={1}
       >
-        <Typography style={{fontWeight: '500', fontSize: '1rem'}} className={classes.title}>
-          {name}
+        <Typography style={{ fontWeight: '500', fontSize: '1rem' }} className={classes.title}>
+          { name }
         </Typography>
         <div className={classes.listDropzoneContainer}>
           <div className={classNames('drop-zone', classes.dropZone)}>
             {
-              !column
-                ? <div
+              isMapped
+                ? (
+                  <div ref="Container" className="card-draggable">
+                    <FileCopyIcon />
+                    { column }
+                    <span onClick={() => unmapField(type, column)}>
+                      <Icon className={classNames('fa fa-times-circle', classes.timesIcon)} />
+                    </span>
+                  </div>
+                ) : (
+                  <div
                     ref="Container"
                     className={`acceptor acceptor-${name}`}
                     data-type={type}
                     data-name={name}
-                    data-index={index}
                   />
-              : <div ref="Container" className="card-draggable">
-                <FileCopyIcon /> {column}
-                <span onClick={()=>{this.props.removeMapStep(type, index, column)}}>
-                  <Icon
-                    className={classNames('fa fa-times-circle', classes.timesIcon)} />
-                </span>
-                </div>}
+                )
+            }
           </div>
         </div>
       </Paper>
@@ -103,12 +115,17 @@ class MapsStepCovariate extends Component {
   }
 }
 
-MapsStepCovariate.propTypes = {
-  step: PropTypes.object.isRequired,
-  classes: PropTypes.object.isRequired,
-  type: PropTypes.string.isRequired,
-  index: PropTypes.number.isRequired,
-  updateConsortiumClientProps: PropTypes.func.isRequired,
+MapsStepFieldCovariate.defaultProps = {
+  column: null,
 };
 
-export default withStyles(styles)(MapsStepCovariate);
+MapsStepFieldCovariate.propTypes = {
+  step: PropTypes.object.isRequired,
+  column: PropTypes.string,
+  classes: PropTypes.object.isRequired,
+  type: PropTypes.string.isRequired,
+  registerDraggableContainer: PropTypes.func.isRequired,
+  unmapField: PropTypes.func.isRequired,
+};
+
+export default withStyles(styles)(MapsStepFieldCovariate);

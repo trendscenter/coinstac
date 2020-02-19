@@ -25,12 +25,6 @@ import {
   writeLog,
 } from '../../state/ducks/notifyAndLog';
 import CoinstacAbbr from '../coinstac-abbr';
-import {
-  incrementRunCount,
-  syncRemoteLocalConsortia,
-  syncRemoteLocalPipelines,
-  mapConsortiumData,
-} from '../../state/ducks/collections';
 import { getLocalRun, getDBRuns, saveLocalRun, updateLocalRun } from '../../state/ducks/runs';
 import {
   getDockerStatus,
@@ -61,6 +55,7 @@ import {
   getSelectAndSubProp,
   updateConsortiaMappedUsersProp
 } from '../../state/graphql/props';
+import DashboardMappedDataListener from './listeners/dashboard-mapped-data-listener';
 
 const styles = theme => ({
   root: {
@@ -176,6 +171,13 @@ class Dashboard extends Component {
       );
     });
 
+    ipcRenderer.on('save-local-run', (event, arg) => {
+      this.props.saveLocalRun({
+        ...arg.run,
+        status: 'started',
+      });
+    });
+
     ipcRenderer.on('local-run-complete', (event, arg) => {
       this.props.notifySuccess({
         message: `${arg.consName} Pipeline Complete.`,
@@ -225,15 +227,15 @@ class Dashboard extends Component {
       });
     });
 
-    this.checkLocalMappedStatus(this.props.associatedConsortia);
+    this.checkLocalMappedStatus(this.props.maps, this.props.consortia);
   }
 
   UNSAFE_componentWillReceiveProps(nextProps) {
     const { auth: { user }, client } = this.props;
     const { router } = this.context;
 
-    if (!isEqual(this.props.associatedConsortia, nextProps.associatedConsortia)) {
-      this.checkLocalMappedStatus(nextProps.associatedConsortia);
+    if (!isEqual(this.props.consortia, nextProps.consortia)) {
+      this.checkLocalMappedStatus(nextProps.maps, nextProps.consortia);
     }
 
     if (nextProps.computations && !this.state.unsubscribeComputations) {
@@ -366,31 +368,6 @@ class Dashboard extends Component {
       }
     }
 
-    if (nextProps.pipelines) {
-      // Check associated consortia to see if activepipelineid matches.
-      //  If so check if pipeline steps match. If they don't, clear.
-      for (let i = 0; i < nextProps.pipelines.length; i += 1) {
-        this.props.syncRemoteLocalPipelines(nextProps.pipelines[i]);
-      }
-    }
-
-    if (nextProps.consortia) {
-      // If member or owner, check consortia activePipeline against
-      //  localDB assocCons activePipelineId. If different, clear steps
-      //  & activePipelineId, delete stepIO, remove assocCons in collections
-      for (let i = 0; i < nextProps.consortia.length; i += 1) {
-        if (nextProps.consortia[i].members.indexOf(user.id) > -1
-            || nextProps.consortia[i].owners.indexOf(user.id) > -1) {
-          let steps = [];
-          if (nextProps.consortia[i].activePipelineId && this.props.pipelines.length) {
-            steps = this.props.pipelines
-              .find(p => p.id === nextProps.consortia[i].activePipelineId).steps;
-          }
-          this.props.syncRemoteLocalConsortia(nextProps.consortia[i], steps);
-        }
-      }
-    }
-
     if (nextProps.consortia && this.props.consortia.length > 0) {
       for (let i = 0; i < nextProps.consortia.length; i += 1) {
         // Download Docker images for consortia activePipeline if user is a member
@@ -437,9 +414,9 @@ class Dashboard extends Component {
       remoteRuns,
       consortia,
       saveLocalRun,
-      incrementRunCount,
       notifyInfo,
       notifyWarning,
+      maps,
     } = this.props;
 
     const { router } = this.context;
@@ -462,47 +439,23 @@ class Dashboard extends Component {
 
         if (runIndexInLocalRuns === -1 && !remoteRun.results && !remoteRun.error) {
           const consortium = consortia.find(obj => obj.id === remoteRun.consortiumId);
+          const dataMapping = maps.find(m => m.consortiumId === consortium.id
+            && m.pipelineId === consortium.activePipelineId);
 
-          mapConsortiumData(consortium.id)
-            .then((filesArray) => {
-              const status = 'started';
 
-              const run = {
-                ...remoteRun,
-                pipelineSnapshot: {
-                  ...remoteRun.pipelineSnapshot,
-                  steps: filesArray.steps,
-                },
-              };
+          notifyInfo({
+            message: `Pipeline Starting for ${consortium.name}.`,
+            action: {
+              label: 'Watch Progress',
+              callback: () => {
+                router.push('dashboard');
+              },
+            },
+          });
 
-              // Save run status to localDB
-              saveLocalRun({ ...run, status });
-
-              incrementRunCount(consortium.id);
-
-              notifyInfo({
-                message: `Decentralized Pipeline Starting for ${consortium.name}.`,
-                action: {
-                  label: 'Watch Progress',
-                  callback: () => {
-                    router.push('dashboard');
-                  },
-                },
-              });
-
-              ipcRenderer.send('start-pipeline', {
-                consortium,
-                pipeline: run.pipelineSnapshot,
-                filesArray: filesArray.allFiles,
-                run: { ...run, status },
-              });
-            })
-            .catch((err) => {
-              notifyWarning({
-                message: err,
-                autoDismiss: 5,
-              });
-            });
+          ipcRenderer.send('start-pipeline', {
+            consortium, dataMappings: dataMapping, pipelineRun: remoteRun,
+          });
         }
       });
     }
@@ -528,14 +481,22 @@ class Dashboard extends Component {
     ipcRenderer.removeAllListeners('docker-error');
   }
 
-  checkLocalMappedStatus = associatedConsortia => {
-    if (associatedConsortia.length === 0) {
-      return
-    }
+  checkLocalMappedStatus = (maps, consortia) => {
+    const { updateConsortiaMappedUsers, auth: { user } } = this.props;
 
-    const unmappedConsortia = associatedConsortia.filter(consortia => consortia.isMapped === false).map(consortia => consortia.id)
+    const consortiaCurrentlyUserIsMappedFor = consortia
+      .filter(cons => cons.mappedForRun && cons.mappedForRun.indexOf(user.id) !== -1)
+      .map(cons => cons.id);
 
-    this.props.updateConsortiaMappedUsers({ consortia: unmappedConsortia })
+    maps.forEach((map) => {
+      const index = consortiaCurrentlyUserIsMappedFor.indexOf(map.consortiumId);
+
+      if (index > -1) {
+        consortiaCurrentlyUserIsMappedFor.splice(index, 1);
+      }
+    });
+
+    updateConsortiaMappedUsers({ consortia: consortiaCurrentlyUserIsMappedFor });
   }
 
   goBack = () => {
@@ -651,6 +612,7 @@ class Dashboard extends Component {
             </main>
           </Grid>
         </Grid>
+        <DashboardMappedDataListener consortia={consortia} />
       </MuiThemeProvider>
     );
   }
@@ -680,7 +642,6 @@ Dashboard.propTypes = {
   consortia: PropTypes.array,
   getDBRuns: PropTypes.func.isRequired,
   getDockerStatus: PropTypes.func.isRequired,
-  incrementRunCount: PropTypes.func.isRequired,
   notifyError: PropTypes.func.isRequired,
   notifyInfo: PropTypes.func.isRequired,
   notifySuccess: PropTypes.func.isRequired,
@@ -695,8 +656,6 @@ Dashboard.propTypes = {
   subscribeToConsortia: PropTypes.func.isRequired,
   subscribeToPipelines: PropTypes.func.isRequired,
   subscribeToUserRuns: PropTypes.func.isRequired,
-  syncRemoteLocalConsortia: PropTypes.func.isRequired,
-  syncRemoteLocalPipelines: PropTypes.func.isRequired,
   updateDockerOutput: PropTypes.func.isRequired,
   updateLocalRun: PropTypes.func.isRequired,
   updateUserConsortiumStatus: PropTypes.func.isRequired,
@@ -708,11 +667,11 @@ Dashboard.propTypes = {
   classes: PropTypes.object.isRequired,
 };
 
-function mapStateToProps({ auth, runs: { runs }, collections: { associatedConsortia } }) {
+function mapStateToProps({ auth, runs: { runs }, maps }) {
   return {
     auth,
     runs,
-    associatedConsortia,
+    maps: maps.consortiumDataMappings,
   };
 }
 
@@ -795,15 +754,12 @@ const connectedComponent = connect(mapStateToProps,
     getLocalRun,
     getDBRuns,
     getDockerStatus,
-    incrementRunCount,
     notifyError,
     notifyInfo,
     notifySuccess,
     notifyWarning,
     pullComputations,
     saveLocalRun,
-    syncRemoteLocalConsortia,
-    syncRemoteLocalPipelines,
     updateDockerOutput,
     updateLocalRun,
     updateUserConsortiaStatuses,
