@@ -36,7 +36,7 @@ class String extends Component {
       const { plotData } = this.props;
       return (
         <div>
-          <div>
+          {plotData.message && plotData.display ? <div>
             <p>{plotData.message}</p>
             <p><img src={`data:image/png;base64, ${plotData.display}`} /></p>
             <Button
@@ -46,7 +46,7 @@ class String extends Component {
             >
               Download
             </Button>
-          </div>
+          </div> : <p>{JSON.stringify(plotData)}</p>}
         </div>
       );
     }

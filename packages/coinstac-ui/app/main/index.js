@@ -17,6 +17,7 @@ const electron = require('electron');
 const ipcPromise = require('ipc-promise');
 const mock = require('../../test/e2e/mocks');
 const ipcFunctions = require('./utils/ipc-functions');
+const runPipelineFunctions = require('./utils/run-pipeline-functions');
 
 const { ipcMain } = electron;
 
@@ -156,7 +157,7 @@ loadConfig()
    * @param {String} consortium.id The id of the consortium starting the pipeline
    * @param {Object[]} consortium.pipelineSteps An array of the steps involved in
    *  this pipeline run according to the consortium
-   * @param {String[]} filesArray An array of all the file locations used by this run
+   * @param {String[]} dataMappings Mapping of pipeline variables into data file columns
    * @param {Object} run
    * @param {String} run.id The id of the current run
    * @param {Object[]} run.pipelineSteps An array of the steps involved in this pipeline run
@@ -164,8 +165,22 @@ loadConfig()
    * @return {Promise<String>} Status message
    */
     ipcMain.on('start-pipeline', (event, {
-      consortium, pipeline, filesArray, run,
+      consortium, dataMappings, pipelineRun,
     }) => {
+      const { filesArray, steps } = runPipelineFunctions.parsePipelineInput(pipelineRun.pipelineSnapshot, dataMappings);
+
+      const run = {
+        ...pipelineRun,
+        pipelineSnapshot: {
+          ...pipelineRun.pipelineSnapshot,
+          steps,
+        },
+      };
+
+      const pipeline = run.pipelineSnapshot;
+
+      mainWindow.webContents.send('save-local-run', { run });
+
       const computationImageList = pipeline.steps
         .map(step => step.computations
           .map(comp => comp.computation.dockerImage))
@@ -475,16 +490,16 @@ loadConfig()
         filters = [
           {
             name: 'File Types',
-            extensions: ['jpeg', 'jpg', 'png', 'nii', 'csv', 'txt', 'rtf', 'gz'],
+            extensions: ['jpeg', 'jpg', 'png', 'nii', 'csv', 'txt', 'rtf', 'gz',  'pickle'],
           },
         ];
         properties = ['openFile', 'multiSelections'];
-        postDialogFunc = ipcFunctions.manualFileSelectionMultExt;       
+        postDialogFunc = ipcFunctions.manualFileSelectionMultExt;
       } else {
         filters = [
           {
             name: 'File Types',
-            extensions: ['jpeg', 'jpg', 'png', 'nii', 'csv', 'txt', 'rtf', 'gz'],
+            extensions: ['jpeg', 'jpg', 'png', 'nii', 'csv', 'txt', 'rtf', 'gz', 'pickle'],
           },
         ];
         properties = ['openDirectory', 'openFile', 'multiSelections'];

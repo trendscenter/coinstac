@@ -1,6 +1,6 @@
 {
   "meta": {
-    "name": "Regression (Singleshot) - VBM",
+    "name": "Ridge Regression (Singleshot) - VBM",
     "id": "ssr-vbm",
     "version": "v1.0.0",
     "repository": "https:\/\/github.com\/trendscenter\/coinstac-ssr-vbm",
@@ -24,7 +24,7 @@
     "input": {
       "lambda":
       {
-        "defaultValue": 0,
+        "default": 0,
         "label": "Lambda",
         "max": 1,
         "min": 0,
@@ -34,7 +34,7 @@
       },
       "threshold":
       {
-        "defaultValue": 0.2,
+        "default": 0.2,
         "label": "Masking threshold",
         "max": 1,
         "min": 0,
@@ -43,7 +43,7 @@
       },
       "voxel_size":
       {
-        "defaultValue": 4,
+        "default": 4,
         "label": "Voxel Size",
         "max": 6,
         "min": 0,

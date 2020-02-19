@@ -1,6 +1,6 @@
 {
     "meta": {
-        "name": "Decentralized DFNC",
+        "name": "Decentralized Dynamic Functional Connectivity (DDFNC) Pipeline",
         "id": "ddfnc",
         "version": "v1.0.0",
         "repository": "https:\/\/github.com\/MRN-Code\/coinstac_ddfnc_pipeline",
