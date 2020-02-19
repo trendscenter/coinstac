@@ -12,11 +12,6 @@ import shortid from 'shortid';
 import MemberAvatar from '../common/member-avatar';
 import ListItem from '../common/list-item';
 import ListDeleteModal from '../common/list-delete-modal';
-import {
-  getAllAssociatedConsortia,
-  incrementRunCount,
-  deleteCollection,
-} from '../../state/ducks/collections';
 import { deleteAllDataMappingsFromConsortium } from '../../state/ducks/maps';
 import { saveLocalRun } from '../../state/ducks/runs';
 import { updateUserPerms } from '../../state/ducks/auth';
@@ -602,9 +597,6 @@ const ConsortiaListWithData = compose(
 export default withStyles(styles)(
   connect(mapStateToProps,
     {
-      getAllAssociatedConsortia,
-      deleteCollection,
-      incrementRunCount,
       notifyInfo,
       notifyWarning,
       pullComputations,
