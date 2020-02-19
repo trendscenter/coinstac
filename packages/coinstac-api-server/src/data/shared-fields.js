@@ -12,6 +12,7 @@ const schemaFields = {
     results: [ID]
     isPrivate: Boolean
     mappedForRun: [ID]
+    createDate: String
   `,
   computationFields: `
     display: JSON
