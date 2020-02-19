@@ -70,7 +70,7 @@ class FormSignup extends Component {
   );
 
   render() {
-    const { error, classes } = this.props;
+    const { auth, classes, error } = this.props;
     const {
       name,
       username,
@@ -84,13 +84,17 @@ class FormSignup extends Component {
     return (
       <Paper className={classes.paper}>
         <form onSubmit={this.handleSubmit}>
-          {
-            error &&
+          {error && (
             <p
               className={classNames(classes.bottomMargin, classes.error)}
               dangerouslySetInnerHTML={{ __html: error }}
             />
-          }
+          )}
+          {!auth.isApiVersionCompatible && (
+            <p className={classNames(classes.bottomMargin, classes.error)}>
+              This Coinstac version is not compatible with the API.
+            </p>
+          )}
           <TextField
             label="Name"
             value={name}
@@ -135,7 +139,9 @@ class FormSignup extends Component {
             color="primary"
             type="submit"
             fullWidth
-            disabled={!name || !username || !email || !password || !passwordsMatch}
+            disabled={
+              !name || !username || !email || !password || !passwordsMatch || !auth.isApiVersionCompatible
+            }
           >
             Sign Up
           </Button>
@@ -148,6 +154,7 @@ class FormSignup extends Component {
 FormSignup.displayName = 'FormSignup';
 
 FormSignup.propTypes = {
+  auth: PropTypes.object.isRequired,
   onSubmit: PropTypes.func.isRequired,
   classes: PropTypes.object.isRequired,
 };
