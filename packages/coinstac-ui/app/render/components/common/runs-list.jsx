@@ -30,6 +30,7 @@ const RunsList = ({
           && consortium
           && (consortium.owners.indexOf(auth.user.id) > -1
             || consortium.members.indexOf(auth.user.id) > -1
+            || run.sharedUsers.indexOf(auth.user.id) > -1
           )
         ) {
           return (

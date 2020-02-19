@@ -193,3 +193,24 @@ export const updateConsortiaMappedUsersProp = (name) => {
     }),
   };
 };
+
+export const saveMessageProp = (name) => {
+  return {
+    props: ({ ownProps, mutate }) => ({
+      [name]: ({ threadId, title, content, recipients, action }) => mutate({
+        variables: { threadId, title, content, recipients, action },
+      })
+    }),
+  };
+};
+
+
+export const setReadMessageProp = (name) => {
+  return {
+    props: ({ mutate }) => ({
+      [name]: ({ threadId, userId }) => mutate({
+        variables: { threadId, userId },
+      })
+    }),
+  };
+};
