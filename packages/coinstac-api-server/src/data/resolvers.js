@@ -4,6 +4,7 @@ const GraphQLJSON = require('graphql-type-json');
 const Promise = require('bluebird');
 const { PubSub, withFilter } = require('graphql-subscriptions');
 const axios = require('axios');
+const { uniq } = require('lodash');
 const helperFunctions = require('../auth-helpers');
 const initSubscriptions = require('./subscriptions');
 const config = require('../../config/default');
@@ -311,12 +312,30 @@ const resolvers = {
           connection = db;
           return rethink.table('runs')
             .orderBy({ index: 'id' })
-            .filter(rethink.row('clients').contains(credentials.id))
+            .filter(
+              rethink.row('clients').contains(credentials.id).
+              or(rethink.row('sharedUsers').contains(credentials.id))
+            )
             .run(connection);
           }
         )
         .then(cursor => cursor.toArray())
         .then(res => connection.close().then(() => res));
+    },
+    fetchAllThreads: async ({ auth: { credentials } }) => {
+      const connection = await helperFunctions.getRethinkConnection();
+      const cursor = await rethink.table('threads')
+        .filter(doc => {
+          return doc('users').contains(user => {
+            return user('username').eq(credentials.id)
+          })
+        })
+        .run(connection)
+      const threads = cursor.toArray()
+
+      await connection.close()
+
+      return threads
     },
     validateComputation: (_, args) => {
       return new Promise();
@@ -492,11 +511,17 @@ const resolvers = {
      * @return {object} Updated consortium
      */
     joinConsortium: async ({ auth: { credentials } }, args) => {
-      const connection = await helperFunctions.getRethinkConnection();
-      await addUserPermissions(connection, { userId: credentials.id, role: 'member', doc: args.consortiumId, table: 'consortia' })
-        .then(res => connection.close().then(() => res));
+      const connection = await helperFunctions.getRethinkConnection()
+      const consortium = await fetchOne('consortia', args.consortiumId)
 
-      return fetchOne('consortia', args.consortiumId);
+      if (consortium.members.indexOf(credentials.id) !== -1) {
+        return consortium
+      }
+
+      await addUserPermissions(connection, { userId: credentials.id, role: 'member', doc: args.consortiumId, table: 'consortia' })
+      await connection.close()
+
+      return fetchOne('consortia', args.consortiumId)
     },
     /**
      * Remove logged user from consortium members list
@@ -602,6 +627,18 @@ const resolvers = {
       }
 
       const connection = await helperFunctions.getRethinkConnection();
+
+      if (!isUpdate) {
+        const count = await rethink.table('consortia')
+          .filter({ name: args.consortium.name })
+          .count()
+          .run(connection)
+
+        if (count > 0) {
+          return Boom.forbidden('Consortium with same name already exists');
+        }
+      }
+
       const result = await rethink.table('consortia')
         .insert(args.consortium, {
           conflict: 'update',
@@ -652,6 +689,18 @@ const resolvers = {
           && !permissions.consortia[args.consortium.id].write) {
             return Boom.forbidden('Action not permitted');
       }*/
+      const connection = await helperFunctions.getRethinkConnection();
+
+      if (!args.pipeline.id) {
+        const count = await rethink.table('pipelines')
+          .filter({ name: args.pipeline.name })
+          .count()
+          .run(connection)
+
+        if (count > 0) {
+          return Boom.forbidden('Pipeline with same name already exists');
+        }
+      }
 
       if (args.pipeline && args.pipeline.steps) {
         const invalidData = args.pipeline.steps.some(step =>
@@ -668,7 +717,6 @@ const resolvers = {
         }
       }
 
-      const connection = await helperFunctions.getRethinkConnection();
       const result = await rethink.table('pipelines')
         .insert(args.pipeline, {
           conflict: 'update',
@@ -777,6 +825,113 @@ const resolvers = {
         .run(connection)
 
       return result
+    },
+    /**
+     * Save message
+     * @param {object} auth User object from JWT middleware validateFunc
+     * @param {object} args
+     * @param {string} args.threadId Thread Id
+     * @param {string} args.title Thread title
+     * @param {array} args.recipients Message recipients
+     * @param {array} args.content Message content
+     * @param {object} args.action Message action
+     * @return {object} Updated message
+     */
+    saveMessage: async ({ auth: { credentials } }, args) => {
+      const { threadId, title, recipients, content, action } = args
+
+      const connection = await helperFunctions.getRethinkConnection()
+
+      const messageToSave = Object.assign(
+        {
+          id: rethink.uuid(),
+          sender: credentials.id,
+          recipients,
+          content,
+          date: Date.now(),
+        },
+        action && { action },
+      )
+
+      let result
+
+      if (threadId) {
+        const thread = await fetchOne('threads', threadId)
+        const { messages, users } = thread
+        const threadToSave = {
+          messages: [...messages, messageToSave],
+          users: uniq([...users.map(user => user.username), ...recipients])
+            .map(user => ({ username: user, isRead: user === credentials.id })),
+          date: Date.now(),
+        }
+
+        await rethink.table('threads')
+          .get(threadId)
+          .update(threadToSave, { nonAtomic: true })
+          .run(connection)
+
+        result = await fetchOne('threads', threadId)
+      } else {
+        const thread = {
+          id: rethink.uuid(),
+          owner: credentials.id,
+          title: title,
+          messages: [messageToSave],
+          users: uniq([credentials.id, ...recipients])
+            .map(user => ({ username: user, isRead: user === credentials.id })),
+          date: Date.now(),
+        }
+
+        const res = await rethink.table('threads')
+          .insert(thread, { returnChanges: true })
+          .run(connection)
+
+        result = res.changes[0].new_val
+      }
+
+      if (action && action.type === 'share-result') {
+        const run = await fetchOne('runs', action.detail.id)
+        const runToSave = {
+          sharedUsers: uniq([...run.sharedUsers || [], ...recipients]),
+        }
+
+        await rethink.table('runs')
+          .get(action.detail.id)
+          .update(runToSave, { nonAtomic: true })
+          .run(connection)
+      }
+
+      await connection.close()
+
+      return result
+    },
+    /**
+     * Set read mesasge
+     * @param {object} auth User object from JWT middleware validateFunc
+     * @param {object} args
+     * @param {string} args.threadId Thread Id
+     * @param {string} args.userId User Id
+     * @return {object} None
+     */
+    setReadMessage: async ({ auth: { credentials } }, args) => {
+      const { threadId, userId } = args
+
+      const connection = await helperFunctions.getRethinkConnection()
+      const thread = await fetchOne('threads', threadId)
+
+      const threadToSave = {
+        ...thread,
+        users: thread.users.map(user => user.username === userId ? { ...user, isRead: true } : user)
+      }
+
+      await rethink.table('threads')
+        .get(threadId)
+        .update(threadToSave, { nonAtomic: true })
+        .run(connection)
+
+      await connection.close()
+
+      return
     }
   },
   Subscription: {
@@ -817,6 +972,19 @@ const resolvers = {
       subscribe: withFilter(
         () => pubsub.asyncIterator('pipelineChanged'),
         (payload, variables) => (!variables.pipelineId || payload.pipelineId === variables.pipelineId)
+      )
+    },
+    /**
+     * Thread subscription
+     * @param {object} payload
+     * @param {string} payload.threadId The thread changed
+     * @param {object} variables
+     * @param {string} variables.threadId The thread listened for
+     */
+    threadChanged: {
+      subscribe: withFilter(
+        () => pubsub.asyncIterator('threadChanged'),
+        (payload, variables) => (!variables.threadId || payload.threadId === variables.threadId)
       )
     },
     /**

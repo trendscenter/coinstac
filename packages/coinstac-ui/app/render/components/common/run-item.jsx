@@ -223,7 +223,7 @@ class RunItem extends Component {
                 <Button
                   variant="contained"
                   component={Link}
-                  href="/dashboard/collections"
+                  href="/dashboard/maps"
                 >
                   Map Now
                 </Button>

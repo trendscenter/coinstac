@@ -67,8 +67,7 @@ class ComputationSubmission extends Component { // eslint-disable-line
         this.setState({ submissionSuccess: false });
       }
     })
-    .catch(({ graphQLErrors }) => {
-      console.log(graphQLErrors);
+    .catch(() => {
       this.setState({ submissionSuccess: false });
     });
   }

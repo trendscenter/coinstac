@@ -1,165 +1,134 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { compose, graphql, withApollo } from 'react-apollo';
 import PropTypes from 'prop-types';
 import Typography from '@material-ui/core/Typography';
 import Grid from '@material-ui/core/Grid';
-import MapsItem from './maps-item';
-import MapsEdit from './maps-edit';
-import {
-  getAllCollections,
-  deleteCollection,
-  unmapAssociatedConsortia
-} from '../../state/ducks/collections';
+import { withStyles } from '@material-ui/core';
+import ListItem from '../common/list-item';
+import { deleteDataMapping } from '../../state/ducks/maps';
+
+const styles = theme => ({
+  contentContainer: {
+    marginTop: theme.spacing.unit,
+    marginBottom: theme.spacing.unit,
+  },
+  labelInline: {
+    fontWeight: 'bold',
+    marginRight: theme.spacing.unit,
+    display: 'inline-block',
+  },
+  value: {
+    display: 'inline-block',
+  },
+});
+
+function isMember(userId, groupArr) {
+  if (userId && groupArr) {
+    return groupArr.indexOf(userId) !== -1;
+  }
+}
 
 class MapsList extends Component {
-  constructor(props) {
-    super(props);
+  deleteDataMapping = consortiumId => () => {
+    const { deleteDataMapping, consortia } = this.props;
 
-    this.state = {
-      consortium: this.props.consortium
-    }
+    const consortium = consortia.find(c => c.id === consortiumId);
 
-    this.setConsortium = this.setConsortium.bind(this);
-    this.saveCollection = this.saveCollection.bind(this);
-  }
-
-  setConsortium(consortium) {
-    this.setState({ consortium });
-  }
-
-  saveCollection(e) {
-    const { collection } = this.state;
-    if (e) {
-      e.preventDefault();
-    }
-    this.props.saveCollection(collection);
-  }
-
-  getMapped(consortium) {
-    let isMapped = false;
-    if (this.props.associatedConsortia.length > 0) {
-      const assocCons = this.props.associatedConsortia.find(c => c.id === consortium.id);
-      if (assocCons && assocCons.isMapped) {
-        isMapped = assocCons.isMapped;
-        return isMapped;
-      }
-    }
-  }
-
-  isMember(userId, groupArr) {
-    if(userId && groupArr){
-      return groupArr.indexOf(userId) !== -1;
-    }
-  };
-
-  unsetMap = (consortium) => {
-    const { collections, pipelines, unmapAssociatedConsortia, deleteCollection } = this.props;
-    const assocCons = this.props.associatedConsortia.find(c => c.id === consortium.id);
-    const pipeline = pipelines.find(p => p.id === consortium.activePipelineId );
-    const collection = this.props.collections.find(c => c.associatedConsortia[0] === consortium.id);
-    const groups = collection.fileGroups;
-    let groupId = Object.keys(groups);
-    groupId = groupId[0];
-    delete groups[groupId];
-    unmapAssociatedConsortia(collection.associatedConsortia, consortium.id)
-    .then(() => {
-      deleteCollection(collection.id);
-    });
+    deleteDataMapping(consortium.id, consortium.activePipelineId);
   }
 
   getMapItem = (consortium) => {
-    const { user } = this.props.auth;
-    const { pipelines } = this.props;
-    let pipeline = pipelines.find( pipeline => pipeline.id === consortium.activePipelineId );
-    if (pipeline && this.isMember(user.id, consortium.owners) ||
-      pipeline && this.isMember(user.id, consortium.members)) {
-      return (
-        <MapsItem
-          key={`${consortium.id}-list-item`}
-          deleteItem={this.openModal}
-          itemObject={consortium}
-          itemOptions
-          itemMapped={
-            this.getMapped(consortium)
-          }
-          pipelineId={pipeline.name}
-          setConsortium={this.setConsortium}
-          resetMapping={this.unsetMap}
-        />
-      );
+    const { auth, pipelines, classes } = this.props;
+
+    const pipeline = pipelines.find(pipeline => pipeline.id === consortium.activePipelineId);
+
+    if (!pipeline || !isMember(auth.user.id, consortium.members)) {
+      return null;
     }
+
+    const isDataMapped = this.isDataMappedToConsortium(consortium);
+
+    const itemOptions = {
+      text: [],
+      status: [],
+    };
+
+    itemOptions.text.push((
+      <div key={`${consortium.id}-active-pipeline-text`} className={classes.contentContainer}>
+        <Typography className={classes.labelInline}>
+          Active Pipeline:
+        </Typography>
+        <Typography className={classes.value}>{ pipeline.name }</Typography>
+      </div>
+    ));
+
+    itemOptions.status.push((
+      <span
+        key={`${consortium.id}-map-status`}
+        className={isDataMapped ? 'mapped true' : 'mapped false'}
+      />
+    ));
+
+    return (
+      <Grid item sm={6} lg={4} key={`${consortium.id}-list-item`}>
+        <ListItem
+          itemObject={consortium}
+          itemOptions={itemOptions}
+          itemRoute="/dashboard/maps"
+          linkButtonText={isDataMapped ? 'View Details' : 'Map Data to Consortium'}
+          linkButtonColor={isDataMapped ? 'primary' : 'secondary'}
+          canDelete={isDataMapped}
+          deleteItem={this.deleteDataMapping}
+          deleteButtonText="Clear Mapping"
+        />
+      </Grid>
+    );
   }
 
-  openModal(consortiumId) {
-    return () => {
-      this.setState({
-        showModal: true,
-        consortiumToDelete: consortiumId,
-      });
-    };
+  isDataMappedToConsortium(consortium) {
+    const { maps } = this.props;
+
+    return maps.findIndex(m => m.consortiumId === consortium.id) > -1;
   }
 
   render() {
-    const {
-      auth: { user },
-      consortia,
-      pipelines,
-      mapId,
-    } = this.props;
-
-    const {
-      consortium,
-    } = this.state;
+    const { consortia } = this.props;
 
     return (
       <div>
-      {consortium && mapId ?
-        <MapsEdit
-          consortia={consortia}
-          consortium={consortium}
-          mapped={
-            this.getMapped(consortium)
-          }
-          pipelines={this.props.pipelines}
-          runs={this.props.runs}
-        />:
-        <div>
-          <div className="page-header">
-            <Typography variant="h4">
-              Maps
-            </Typography>
-          </div>
-          <Grid
-            container
-            spacing={16}
-            direction="row"
-            alignItems="stretch"
-          >
-            {consortia && consortia.map(cons => this.getMapItem(cons))}
-          </Grid>
+        <div className="page-header">
+          <Typography variant="h4">
+            Maps
+          </Typography>
         </div>
-      }
+        <Grid
+          container
+          spacing={16}
+          direction="row"
+          alignItems="stretch"
+        >
+          {consortia && consortia.map(cons => this.getMapItem(cons))}
+        </Grid>
       </div>
     );
   }
 }
 
 MapsList.propTypes = {
-  associatedConsortia: PropTypes.array.isRequired,
+  maps: PropTypes.array.isRequired,
+  auth: PropTypes.object.isRequired,
   consortia: PropTypes.array.isRequired,
-  collections: PropTypes.array.isRequired,
-  deleteCollection: PropTypes.func.isRequired,
-  unmapAssociatedConsortia: PropTypes.func.isRequired,
+  deleteDataMapping: PropTypes.func.isRequired,
+  pipelines: PropTypes.array.isRequired,
+  classes: PropTypes.object.isRequired,
 };
 
-function mapStateToProps({ auth,
-  collections: { associatedConsortia, collections } }) {
-  return { auth, associatedConsortia, collections };
-}
+const mapStateToProps = ({ auth, maps }) => {
+  return { auth, maps: maps.consortiumDataMappings };
+};
 
-export default connect(mapStateToProps, {
-    getAllCollections,
-    deleteCollection,
-    unmapAssociatedConsortia,
-})(MapsList);
+export default withStyles(styles)(
+  connect(mapStateToProps, {
+    deleteDataMapping,
+  })(MapsList)
+);
