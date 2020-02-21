@@ -1,22 +1,19 @@
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { Link } from 'react-router';
-import { compose, graphql, withApollo } from 'react-apollo';
-import Button from '@material-ui/core/Button';
-import Fab from '@material-ui/core/Fab';
-import Typography from '@material-ui/core/Typography';
-import AddIcon from '@material-ui/icons/Add';
-import { withStyles } from '@material-ui/core/styles';
 import { ipcRenderer } from 'electron';
 import classNames from 'classnames';
-import PropTypes from 'prop-types';
+import { orderBy } from 'lodash';
 import shortid from 'shortid';
+import { compose, graphql, withApollo } from 'react-apollo';
+import { Button, Fab, TextField, Typography } from '@material-ui/core';
+import AddIcon from '@material-ui/icons/Add';
+import { withStyles } from '@material-ui/core/styles';
 import MemberAvatar from '../common/member-avatar';
 import ListItem from '../common/list-item';
 import ListDeleteModal from '../common/list-delete-modal';
 import { deleteAllDataMappingsFromConsortium } from '../../state/ducks/maps';
-import { saveLocalRun } from '../../state/ducks/runs';
-import { updateUserPerms } from '../../state/ducks/auth';
 import { pullComputations } from '../../state/ducks/docker';
 import {
   CREATE_RUN_MUTATION,
@@ -32,7 +29,7 @@ import {
   removeDocFromTableProp,
   saveDocumentProp,
 } from '../../state/graphql/props';
-import { notifyInfo, notifyWarning } from '../../state/ducks/notifyAndLog';
+import { notifyInfo } from '../../state/ducks/notifyAndLog';
 
 const MAX_LENGTH_CONSORTIA = 50;
 
@@ -64,6 +61,9 @@ const styles = theme => ({
   red: {
     color: 'red',
   },
+  searchInput: {
+    marginBottom: theme.spacing.unit * 4,
+  },
 });
 
 const isUserA = (userId, groupArr) => {
@@ -75,10 +75,9 @@ class ConsortiaList extends Component {
     super(props);
 
     this.state = {
-      memberConsortia: [],
-      otherConsortia: [],
       consortiumToDelete: -1,
       showModal: false,
+      search: '',
       consortiumJoinedByThread:
         localStorage.getItem('CONSORTIUM_JOINED_BY_THREAD'),
     };
@@ -102,24 +101,8 @@ class ConsortiaList extends Component {
     if (consortiumJoinedByThread) {
       setTimeout(() => {
         this.setState({ consortiumJoinedByThread: null })
-      }, 5000)  
+      }, 5000)
     }
-  }
-
-  static getDerivedStateFromProps(props) {
-    const { auth, consortia } = props;
-    const memberConsortia = [];
-    const otherConsortia = [];
-    if (consortia && consortia.length <= MAX_LENGTH_CONSORTIA) {
-      consortia.forEach((cons) => {
-        if (cons.owners.indexOf(auth.user.id) > -1 || cons.members.indexOf(auth.user.id) > -1) {
-          memberConsortia.push(cons);
-        } else {
-          otherConsortia.push(cons);
-        }
-      });
-    }
-    return { memberConsortia, otherConsortia };
   }
 
   getOptions(member, owner, consortium) {
@@ -384,10 +367,8 @@ class ConsortiaList extends Component {
         client,
         router,
         maps,
-        saveLocalRun,
         createRun,
         notifyInfo,
-        notifyWarning,
         consortia,
       } = this.props;
 
@@ -442,15 +423,50 @@ class ConsortiaList extends Component {
     };
   }
 
+  getFilteredConsortia = () => {
+    const { consortia } = this.props;
+    const { search } = this.state;
+
+    if (!search) {
+      return consortia;
+    }
+
+    return consortia.filter(consortium => consortium.name.indexOf(search) !== -1);
+  }
+
+  getConsortiaByOwner = () => {
+    const { auth } = this.props;
+
+    const consortia = this.getFilteredConsortia();
+
+    let memberConsortia = [];
+    let otherConsortia = [];
+
+    if (consortia && consortia.length <= MAX_LENGTH_CONSORTIA) {
+      consortia.forEach(consortium => {
+        const { owners, members } = consortium;
+        if ([...owners, ...members].indexOf(auth.user.id) !== -1) {
+          memberConsortia.push(consortium);
+        } else {
+          otherConsortia.push(consortium);
+        }
+      })
+    }
+
+    return {
+      memberConsortia: orderBy(memberConsortia, ['createDate'], ['desc']),
+      otherConsortia: orderBy(otherConsortia, ['createDate'], ['desc']),
+    };
+  }
+
+  handleSearchChange = evt => {
+    this.setState({ search: evt.target.value });
+  }
+
   render() {
-    const {
-      consortia,
-      classes,
-    } = this.props;
-    const {
-      memberConsortia,
-      otherConsortia,
-    } = this.state;
+    const { consortia, classes } = this.props;
+    const { search } = this.state;
+    const { memberConsortia, otherConsortia } = this.getConsortiaByOwner();
 
     return (
       <div>
@@ -468,6 +484,15 @@ class ConsortiaList extends Component {
             <AddIcon />
           </Fab>
         </div>
+
+        <TextField
+          id="search"
+          label="Search"
+          fullWidth
+          value={search}
+          className={classes.searchInput}
+          onChange={this.handleSearchChange}
+        />
 
         {consortia && consortia.length && consortia.length > MAX_LENGTH_CONSORTIA
           && consortia.map(consortium => this.getListItem(consortium))
@@ -512,12 +537,10 @@ ConsortiaList.propTypes = {
   joinConsortium: PropTypes.func.isRequired,
   leaveConsortium: PropTypes.func.isRequired,
   notifyInfo: PropTypes.func.isRequired,
-  notifyWarning: PropTypes.func.isRequired,
   pipelines: PropTypes.array.isRequired,
   pullComputations: PropTypes.func.isRequired,
   deleteAllDataMappingsFromConsortium: PropTypes.func.isRequired,
   router: PropTypes.object.isRequired,
-  saveLocalRun: PropTypes.func.isRequired,
   classes: PropTypes.object.isRequired,
   runs: PropTypes.array.isRequired,
 };
@@ -543,10 +566,7 @@ export default withStyles(styles)(
   connect(mapStateToProps,
     {
       notifyInfo,
-      notifyWarning,
       pullComputations,
       deleteAllDataMappingsFromConsortium,
-      saveLocalRun,
-      updateUserPerms,
     })(ConsortiaListWithData)
 );
