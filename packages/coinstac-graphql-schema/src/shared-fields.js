@@ -91,13 +91,18 @@ const sharedFields = {
     id
     email
     institution
+    username
     passwordHash
     permissions
+    photo
+    photoID
+    name
     consortiaStatuses
   `,
   userEmailIds: `
     id
     email
+    username
   `,
   resultFields: `
     id

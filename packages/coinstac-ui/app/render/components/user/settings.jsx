@@ -7,6 +7,7 @@ import { withStyles } from '@material-ui/core/styles';
 import { notifyError, notifyInfo } from '../../state/ducks/notifyAndLog';
 import { clearCollectionsAndConsortia } from '../../state/ducks/collections';
 import { clearRuns } from '../../state/ducks/runs';
+import UserEditController from './user-edit-controller';
 
 const styles = theme => ({
   pageTitle: {
@@ -47,6 +48,8 @@ class Settings extends Component {
             Settings
           </Typography>
         </div>
+        <UserEditController />
+        <hr />
         <Typography variant="h5" className={classes.pageSubtitle}>
           Remove Data
         </Typography>

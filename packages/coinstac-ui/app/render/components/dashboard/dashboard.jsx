@@ -107,6 +107,17 @@ const styles = theme => ({
   },
 });
 
+const isUserA = (userId, groupArr) => {
+  let res = false;
+  Object.values(groupArr).map((item) => {
+    if(Object.keys(item).indexOf(userId) !== -1){
+      res = true;
+      return;
+    }
+  });
+  return res;
+};
+
 let dockerInterval;
 
 class Dashboard extends Component {
@@ -361,8 +372,8 @@ class Dashboard extends Component {
       //  localDB assocCons activePipelineId. If different, clear steps
       //  & activePipelineId, delete stepIO, remove assocCons in collections
       for (let i = 0; i < nextProps.consortia.length; i += 1) {
-        if (nextProps.consortia[i].members.indexOf(user.id) > -1
-            || nextProps.consortia[i].owners.indexOf(user.id) > -1) {
+        if (isUserA(user.id, nextProps.consortia[i].members)
+            || isUserA(user.id, nextProps.consortia[i].owners)) {
           let steps = [];
           if (nextProps.consortia[i].activePipelineId && this.props.pipelines.length) {
             steps = this.props.pipelines
@@ -379,7 +390,7 @@ class Dashboard extends Component {
         if (this.props.consortia[i] && nextProps.consortia[i].id === this.props.consortia[i].id
             && nextProps.consortia[i].activePipelineId
             && !this.props.consortia[i].activePipelineId
-            && nextProps.consortia[i].members.indexOf(user.id) > -1) {
+            && isUserA(user.id, nextProps.consortia[i].members)) {
           const computationData = client.readQuery({ query: FETCH_ALL_COMPUTATIONS_QUERY });
           const pipelineData = client.readQuery({ query: FETCH_ALL_PIPELINES_QUERY });
           const pipeline = pipelineData.fetchAllPipelines
