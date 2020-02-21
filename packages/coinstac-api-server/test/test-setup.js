@@ -755,8 +755,8 @@ helperFunctions.getRethinkConnection()
         id: 'test-cons-1',
         name: 'Test Consortia 1',
         description: 'This consortia is for testing.',
-        owners: ['author'],
-        members: ['author'],
+        owners: [{'_9dmskxj3':'author'}],
+        members: [{'_9dmskxj3':'author'}],
         isPrivate: false,
       }).run(connection))
       .then(() => rethink.table('consortia').insert({
@@ -764,15 +764,16 @@ helperFunctions.getRethinkConnection()
         activePipelineId: 'test-pipeline-ssr',
         name: 'Test Consortia 2',
         description: 'This consortia is for testing too.',
-        owners: ['test1'],
-        members: ['author', 'test1'],
+        owners: [{'_rm48dmwlr':'test1'}],
+        members: [{'_9dmskxj3':'author'}, {'_rm48dmwlr':'test1'}],
         isPrivate: false,
       }).run(connection));
   })
   .then(() => helperFunctions.hashPassword('password'))
   .then(passwordHash => helperFunctions.createUser({
-    id: 'test1',
+    id: '_rm48dmwlr',
     username: 'test1',
+    name: 'Testy Testerson',
     institution: 'mrn',
     email: 'test@mrn.org',
     permissions: {
@@ -790,8 +791,9 @@ helperFunctions.getRethinkConnection()
   }, passwordHash))
   .then(() => helperFunctions.hashPassword('password'))
   .then(passwordHash => helperFunctions.createUser({
-    id: 'test2',
+    id: '_5mfos03dk',
     username: 'test2',
+    name: 'Deuce McTestington',
     institution: 'mrn',
     email: 'test2@mrn.org',
     permissions: {
@@ -809,8 +811,9 @@ helperFunctions.getRethinkConnection()
   }, passwordHash))
   .then(() => helperFunctions.hashPassword('password'))
   .then(passwordHash => helperFunctions.createUser({
-    id: 'test3',
+    id: '_9ckdme39s',
     username: 'test3',
+    name: 'Tre Testerino',
     institution: 'mrn',
     email: 'test3@mrn.org',
     permissions: {
@@ -828,8 +831,9 @@ helperFunctions.getRethinkConnection()
   }, passwordHash))
   .then(() => helperFunctions.hashPassword('password'))
   .then(passwordHash => helperFunctions.createUser({
-    id: 'test4',
+    id: '_dnxke43is',
     username: 'test4',
+    name: 'Quattro Testevez',
     institution: 'mrn',
     email: 'test4@mrn.org',
     permissions: {
@@ -847,8 +851,9 @@ helperFunctions.getRethinkConnection()
   }, passwordHash))
   .then(() => helperFunctions.hashPassword('password'))
   .then(passwordHash => helperFunctions.createUser({
-    id: 'test5',
+    id: '_tidm3skxi',
     username: 'test5',
+    name: 'Cinco De Testino',
     institution: 'mrn',
     email: 'test5@mrn.org',
     permissions: {
@@ -867,8 +872,9 @@ helperFunctions.getRethinkConnection()
   .then(() => helperFunctions.hashPassword(process.argv[3]
      || helperFunctions.getDBMap().rethinkdbServer.password))
   .then(passwordHash => helperFunctions.createUser({
-    id: 'server',
+    id: '_4neid0cmd',
     username: 'server',
+    name: 'Severus Serverson',
     institution: 'mrn',
     email: 'server@mrn.org',
     permissions: {
@@ -883,10 +889,11 @@ helperFunctions.getRethinkConnection()
   }, passwordHash))
   .then(() => helperFunctions.hashPassword('password'))
   .then(passwordHash => helperFunctions.createUser({
-    id: 'author',
+    id: '_9dmskxj3',
     username: 'author',
+    name: 'Arthur McAuthor',
     institution: 'mrn',
-    email: 'server@mrn.org',
+    email: 'author@mrn.org',
     permissions: {
       computations: {},
       consortia: {
