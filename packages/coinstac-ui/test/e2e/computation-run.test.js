@@ -17,7 +17,7 @@ const CONS_NAME = 'e2e-consortium-single';
 const CONS_DESC = 'e2e-description-single';
 const PIPE_NAME = 'e2e-pipeline-single';
 const PIPE_DESC = 'e2e-pipeline-description-single';
-const COMPUTATION_NAME = 'Regression (Singleshot) - FreeSurfer Volumes';
+const COMPUTATION_NAME = 'Regression - FreeSurfer Volumes';
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -179,8 +179,8 @@ describe('e2e run computation with 1 member', () => {
   it('map data to consortium', () => (
     app.client
       .click('a=Maps')
-      .waitForVisible(`a[name="${CONS_NAME}-map-data"]`, 20000)
-      .click(`a[name="${CONS_NAME}-map-data"]`)
+      .waitForVisible(`a[name="${CONS_NAME}"]`, 20000)
+      .click(`a[name="${CONS_NAME}"]`)
       .waitForVisible('button=Add Files Group', EXIST_TIMEOUT)
       .click('button=Add Files Group')
       .waitForVisible('button=Auto Map', EXIST_TIMEOUT)
@@ -197,7 +197,7 @@ describe('e2e run computation with 1 member', () => {
       .click('button=Start Pipeline')
       .waitForText('.notification-message', EXIST_TIMEOUT)
       .getText('.notification-message')
-      .then(notificationMessage => notificationMessage.should.equal(`Decentralized Pipeline Starting for ${CONS_NAME}.`))
+      .then(notificationMessage => notificationMessage.should.equal(`Pipeline Starting for ${CONS_NAME}.`))
       .then(() => app.client.waitForVisible('.notification-message', NOTIFICATION_DISMISS_TIMEOUT, true))
   ));
 
