@@ -28,6 +28,11 @@
 
     <script>
       // Add application bundle based on environment
+      Error.stackTraceLimit = 1000;
+      window.addEventListener('unhandledrejection', (event) => {
+        debugger
+        console.warn(`UNHANDLED PROMISE REJECTION: ${event.reason}`);
+      })
       if (process.env.NODE_ENV === 'development') {
         document.write('<script src="http://localhost:3000/bundle.js" async><\/script>');
       } else {
