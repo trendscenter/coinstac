@@ -188,7 +188,6 @@ module.exports = {
               success = true;
               break;
             } catch (e) {
-              debugger
               if (e.code && e.code === 'ECONNREFUSED') {
                 retryLimit += 1;
                 logger.silly(`Retrying file request: ${files}`);
