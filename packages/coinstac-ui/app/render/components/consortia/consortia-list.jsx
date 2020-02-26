@@ -431,7 +431,9 @@ class ConsortiaList extends Component {
       return consortia;
     }
 
-    return consortia.filter(consortium => consortium.name.indexOf(search) !== -1);
+    return consortia.filter(
+      consortium => consortium.name.toLowerCase().indexOf(search.toLowerCase()) !== -1
+    );
   }
 
   getConsortiaByOwner = () => {
