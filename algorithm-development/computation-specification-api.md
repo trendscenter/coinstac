@@ -184,13 +184,17 @@ The I/O sections use the following format:
 
 }
 ```
-### I/O Variable Attributes
+### I/O Variable Generic Attributes
+These attributes can be set on any field type
 
 `label: "UI Label" // Required, the label for this field on the UI`
 
 `description: "what this variable is" //Optional. A one-to-two sentence description`
 
 `type: "variableType" // The type of variable` 
+
+`source: "user" or "owner" // The source of the input data whether from pipeline creator or each individual user/site`
+
 ###### there are several different variable types with sub options for each type.
 
 -   `number` - the basic numeric type
@@ -222,6 +226,11 @@ The I/O sections use the following format:
     -   `min`- the minimum number of files
 
     -   `extensions` - a list of allowable extensions: `["nii","dcm","txt"]`
+
+-   `users` - allows UI creation of a list of users/sites current in the computation for various purposes.
+Output is an array of user/site names.
+
+    -   `source` - a required field set to `"owner"` as the pipeline creator fills in this field
 
 Running in a Pipeline
 ---------------------
