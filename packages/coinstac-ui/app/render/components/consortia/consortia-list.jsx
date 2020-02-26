@@ -499,7 +499,7 @@ class ConsortiaList extends Component {
         {consortia && consortia.length && consortia.length > MAX_LENGTH_CONSORTIA
           && consortia.map(consortium => this.getListItem(consortium))
         }
-        {memberConsortia.length > 0 && <Typography variant="h6">Member Consortia</Typography>}
+        {memberConsortia.length > 0 && <Typography variant="h6">Your Consortia</Typography>}
         {
           memberConsortia.length > 0
           && memberConsortia.map(consortium => this.getListItem(consortium))
