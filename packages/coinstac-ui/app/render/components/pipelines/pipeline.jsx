@@ -29,10 +29,13 @@ import {
   FETCH_ALL_CONSORTIA_QUERY,
   FETCH_PIPELINE_QUERY,
   SAVE_PIPELINE_MUTATION,
+  FETCH_ALL_USERS_QUERY,
+  USER_CHANGED_SUBSCRIPTION,
 } from '../../state/graphql/functions';
 import {
   getDocumentByParam,
   saveDocumentProp,
+  getAllAndSubProp,
 } from '../../state/graphql/props';
 import { notifySuccess, notifyError } from '../../state/ducks/notifyAndLog';
 import { isPipelineOwner } from '../../utils/helpers';
@@ -498,7 +501,7 @@ class Pipeline extends Component {
   }
 
   render() {
-    const { computations, connectDropTarget, consortia, classes, auth } = this.props;
+    const { computations, connectDropTarget, consortia, users, classes, auth } = this.props;
     const {
       consortium,
       pipeline,
@@ -688,6 +691,7 @@ class Pipeline extends Component {
                   }
                   step={step}
                   updateStep={this.updateStep}
+                  users={users}
                 />
               ))
             }
@@ -738,7 +742,14 @@ const PipelineWithData = compose(
     'activePipeline',
     'fetchPipeline'
   )),
-  graphql(SAVE_PIPELINE_MUTATION, saveDocumentProp('savePipeline', 'pipeline'))
+  graphql(SAVE_PIPELINE_MUTATION, saveDocumentProp('savePipeline', 'pipeline')),
+  graphql(FETCH_ALL_USERS_QUERY, getAllAndSubProp(
+    USER_CHANGED_SUBSCRIPTION,
+    'users',
+    'fetchAllUsers',
+    'subscribeToUsers',
+    'userChanged'
+  ))
 )(Pipeline);
 
 const PipelineWithAlert = compose(

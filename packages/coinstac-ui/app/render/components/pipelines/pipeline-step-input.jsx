@@ -17,6 +17,7 @@ import PipelineStepInputRange from './pipeline-step-input/pipeline-step-input-ra
 import PipelineStepInputSelect from './pipeline-step-input/pipeline-step-input-select';
 import PipelineStepInputRadio from './pipeline-step-input/pipeline-step-input-radio';
 import PipelineStepInputBoolean from './pipeline-step-input/pipeline-step-input-boolean';
+import PipelineStepInputUsers from './pipeline-step-input/pipeline-step-input-users';
 
 const styles = theme => ({
   lambdaContainer: {
@@ -193,6 +194,7 @@ class PipelineStepInput extends Component {
       owner,
       step,
       updateStep,
+      users,
       classes,
     } = this.props;
 
@@ -408,8 +410,21 @@ class PipelineStepInput extends Component {
                     />
                   )
                 }
+                {
+                  objParams.type === 'users' && (
+                    <PipelineStepInputUsers
+                      objKey={objKey}
+                      objParams={objParams}
+                      owner={owner}
+                      updateStep={updateStep}
+                      getNewObj={this.getNewObj}
+                      step={step}
+                      users={users}
+                    />
+                  )
+                }
               </div>
-              <div style={{position: 'absolute', right: '0'}}>
+              <div style={{ position: 'absolute', right: '0' }}>
                 <Button
                   id={`input-source-${objKey}-dropdown`}
                   disabled={!owner || !objParams.type || isValue}
@@ -458,7 +473,7 @@ class PipelineStepInput extends Component {
                 </Menu>
               </div>
             </div>
-            )
+          )
         }
       </div>
     );
