@@ -36,7 +36,10 @@
     "lint": "eslint '**/*.js' '**/bin/*'",
     "lintfix": "eslint --fix **/*.js",
     "publish": "lerna publish",
-    "test": "lerna run test --concurrency=1"
+    "test": "lerna run test --concurrency=1",
+    "switch:prod": "cp packages/coinstac-ui/config/local-production.json packages/coinstac-ui/config/local.json",
+    "switch:dev": "cp packages/coinstac-ui/config/local-development.json packages/coinstac-ui/config/local.json",
+    "switch:local": "cp packages/coinstac-ui/config/local-example.json packages/coinstac-ui/config/local.json"
   },
   "repository": {
     "type": "git",
