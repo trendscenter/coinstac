@@ -106,12 +106,15 @@ module.exports = {
                 if (res.statusCode !== 200) {
                   return reject(new Error(`File post error: ${res.statusCode} ${res.statusMessage}`));
                 }
-                res.pipe(fs.createWriteStream(
+                const wstream = fs.createWriteStream(
                   path.join(directory, file)
-                ));
-
-                res.on('end', () => {
+                );
+                res.pipe(wstream);
+                wstream.on('close', () => {
                   resolve(file);
+                });
+                wstream.on('error', (e) => {
+                  reject(e);
                 });
                 res.on('error', (e) => {
                   reject(e);
