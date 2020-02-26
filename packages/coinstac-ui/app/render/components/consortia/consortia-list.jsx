@@ -120,7 +120,7 @@ class ConsortiaList extends Component {
 
   selectPipeline = (consortiumId, pipelineId) => {
     const { collections } = this.props;
-    collections.collections.forEach((item) => {
+    collections.forEach((item) => {
       this.props.deleteCollection(item.id);
     });
 
@@ -155,10 +155,8 @@ class ConsortiaList extends Component {
   }
 
   getOptions = (member, owner, consortium) => {
-    
     const { classes, pipelines, collections, maps, runs } = this.props;
     const { isConsortiumPipelinesMenuOpen } = this.state;
-    const { associatedConsortia } = collections;
     const actions = [];
     const text = [];
 
@@ -576,8 +574,8 @@ ConsortiaList.propTypes = {
   deleteCollection: PropTypes.func.isRequired,
 };
 
-const mapStateToProps = ({ auth, maps }) => {
-  return { auth, collections, maps: maps.consortiumDataMappings };
+const mapStateToProps = ({ auth, collections, maps }) => {
+  return { auth, collections: collections.collections, maps: maps.consortiumDataMappings };
 };
 
 const ConsortiaListWithData = compose(
