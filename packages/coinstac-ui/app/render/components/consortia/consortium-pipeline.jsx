@@ -17,7 +17,6 @@ import {
 import {
   consortiumSaveActivePipelineProp,
 } from '../../state/graphql/props';
-import memoize from 'memoize-one';
 
 const styles = theme => ({
   tabTitle: {
