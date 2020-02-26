@@ -8,7 +8,6 @@ import { ValidatorForm, TextValidator } from 'react-material-ui-form-validator';
 import { updatePasswordProps } from '../../state/graphql/props';
 import { UPDATE_PASSWORD_MUTATION } from '../../state/graphql/functions';
 import { notifySuccess, notifyInfo, notifyError } from '../../state/ducks/notifyAndLog';
-import { clearCollectionsAndConsortia } from '../../state/ducks/collections';
 import { clearRuns } from '../../state/ducks/runs';
 
 const styles = theme => ({
@@ -71,7 +70,6 @@ class Settings extends Component {
   clearData = e => {
     e.preventDefault();
     this.props.clearRuns();
-    this.props.clearCollectionsAndConsortia();
     this.props.notifyInfo({ message: 'Local data cleared' });
   }
 
@@ -195,7 +193,6 @@ class Settings extends Component {
 }
 
 Settings.propTypes = {
-  clearCollectionsAndConsortia: PropTypes.func.isRequired,
   clearRuns: PropTypes.func.isRequired,
   notifyInfo: PropTypes.func.isRequired,
   classes: PropTypes.object.isRequired,
@@ -214,7 +211,6 @@ const ComponentWithDatta = compose(
 )(Settings);
 
 const connectedComponent = connect(null, {
-  clearCollectionsAndConsortia,
   clearRuns,
   notifySuccess,
   notifyInfo,

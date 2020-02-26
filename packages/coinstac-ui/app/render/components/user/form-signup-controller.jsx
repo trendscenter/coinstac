@@ -3,7 +3,12 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import FormSignup from './form-signup';
 import LayoutNoauth from '../layout-noauth';
-import { clearError, clearUser, signUp } from '../../state/ducks/auth';
+import {
+  clearError,
+  clearUser,
+  signUp,
+  checkApiVersion,
+} from '../../state/ducks/auth';
 import { notifySuccess } from '../../state/ducks/notifyAndLog';
 
 class FormSignupController extends Component {
@@ -12,6 +17,10 @@ class FormSignupController extends Component {
   }
 
   componentDidMount() {
+    const { checkApiVersion } = this.props;
+
+    checkApiVersion();
+
     this.props.clearUser();
     this.props.clearError();
   }
@@ -94,11 +103,16 @@ class FormSignupController extends Component {
   }
 
   render() {
+    const { auth } = this.props;
     const { error } = this.state;
 
     return (
       <LayoutNoauth>
-        <FormSignup error={error} onSubmit={this.onSubmit} />
+        <FormSignup
+          auth={auth}
+          error={error}
+          onSubmit={this.onSubmit}
+        />
       </LayoutNoauth>
     );
   }
@@ -116,12 +130,17 @@ FormSignupController.propTypes = {
   clearUser: PropTypes.func.isRequired,
   notifySuccess: PropTypes.func.isRequired,
   signUp: PropTypes.func.isRequired,
+  checkApiVersion: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = ({ auth }) => {
   return { auth };
 };
 
-export default connect(mapStateToProps,
-  { clearError, clearUser, notifySuccess, signUp }
-)(FormSignupController);
+export default connect(mapStateToProps, {
+  clearError,
+  clearUser,
+  notifySuccess,
+  signUp,
+  checkApiVersion,
+})(FormSignupController);

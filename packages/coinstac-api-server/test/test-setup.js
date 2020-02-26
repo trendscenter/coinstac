@@ -168,6 +168,7 @@ helperFunctions.getRethinkConnection()
         },
       ]).run(connection))
       .then(() => rethink.tableCreate('users').run(connection))
+      .then(() => rethink.tableCreate('threads').run(connection))
       .then(() => rethink.tableCreate('runs').run(connection))
       .then(() => rethink.table('runs').insert([
         {
@@ -762,6 +763,7 @@ helperFunctions.getRethinkConnection()
         owners: ['author'],
         members: ['author'],
         isPrivate: false,
+        createDate: 1551333489519,
       }).run(connection))
       .then(() => rethink.table('consortia').insert({
         id: 'test-cons-2',
@@ -771,6 +773,7 @@ helperFunctions.getRethinkConnection()
         owners: ['test1'],
         members: ['author', 'test1'],
         isPrivate: false,
+        createDate: 1551666489519,
       }).run(connection));
   })
   .then(() => helperFunctions.hashPassword('password'))

@@ -54,9 +54,7 @@ UserAccountController.propTypes = {
 };
 
 const mapStateToProps = ({ auth: { user } }) => {
-  return {
-    user,
-  };
+  return { user };
 };
 
 export default connect(mapStateToProps, {

@@ -87,6 +87,18 @@ const mutations = {
       updatePassword(currentPassword: $currentPassword, newPassword: $newPassword)
     }
   `,
+  saveMessage: `
+    {
+      saveMessage(threadId: $threadId, title: $title, recipients: $recipients, content: $content, action: $action) {
+        ${sharedFields.threadFields}
+      }
+    }
+  `,
+  setReadMessage: `
+    {
+      setReadMessage(threadId: $threadId, userId: $userId)
+    }
+  `,
 };
 
 module.exports = mutations;
