@@ -78,6 +78,16 @@ loadConfig()
         console.error(err);// eslint-disable-line no-console
       }
     });
+    process.on('unhandledRejection', (err) => {
+      try {
+        unhandler(err);
+      } catch (e) {
+        console.error('Logging failure:');// eslint-disable-line no-console
+        console.error(e);// eslint-disable-line no-console
+        console.error('Thrown error on failure:');// eslint-disable-line no-console
+        console.error(err);// eslint-disable-line no-console
+      }
+    });
     global.config = config;
 
     const mainWindow = getWindow();
