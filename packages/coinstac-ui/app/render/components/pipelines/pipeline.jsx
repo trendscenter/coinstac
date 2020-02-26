@@ -29,11 +29,14 @@ import {
   FETCH_PIPELINE_QUERY,
   SAVE_PIPELINE_MUTATION,
   SAVE_ACTIVE_PIPELINE_MUTATION,
+  FETCH_ALL_USERS_QUERY,
+  USER_CHANGED_SUBSCRIPTION,
 } from '../../state/graphql/functions';
 import {
   getDocumentByParam,
   saveDocumentProp,
   consortiumSaveActivePipelineProp,
+  getAllAndSubProp,
 } from '../../state/graphql/props';
 import { notifySuccess, notifyError } from '../../state/ducks/notifyAndLog';
 import { isPipelineOwner } from '../../utils/helpers';
@@ -473,7 +476,7 @@ class Pipeline extends Component {
   }
 
   render() {
-    const { computations, connectDropTarget, consortia, classes, auth } = this.props;
+    const { computations, connectDropTarget, consortia, users, classes, auth } = this.props;
     const {
       consortium,
       pipeline,
@@ -654,25 +657,25 @@ class Pipeline extends Component {
           />
           <div>
             {pipeline.steps.length > 0 && pipeline.steps.map((step, index) => (
-                <PipelineStep
-                  computationId={step.computations[0].id}
-                  deleteStep={this.openModal}
-                  eventKey={step.id}
-                  id={step.id}
-                  key={step.id}
-                  moveStep={this.moveStep}
-                  owner={owner}
-                  pipelineIndex={index}
-                  previousComputationIds={
-                    pipeline.steps
-                      .filter((_s, i) => i < index)
-                      .map(s => s.computations[0].id)
-                  }
-                  step={step}
-                  updateStep={this.updateStep}
-                />
-              ))
-            }
+              <PipelineStep
+                computationId={step.computations[0].id}
+                deleteStep={this.openModal}
+                eventKey={step.id}
+                id={step.id}
+                key={step.id}
+                moveStep={this.moveStep}
+                owner={owner}
+                pipelineIndex={index}
+                previousComputationIds={
+                  pipeline.steps
+                    .filter((_s, i) => i < index)
+                    .map(s => s.computations[0].id)
+                }
+                step={step}
+                updateStep={this.updateStep}
+                users={users}
+              />
+            ))}
           </div>
           {!pipeline.steps.length && (
             <Typography variant="body1">
@@ -719,6 +722,13 @@ const PipelineWithData = compose(
   )),
   graphql(SAVE_PIPELINE_MUTATION, saveDocumentProp('savePipeline', 'pipeline')),
   graphql(SAVE_ACTIVE_PIPELINE_MUTATION, consortiumSaveActivePipelineProp('saveActivePipeline')),
+  graphql(FETCH_ALL_USERS_QUERY, getAllAndSubProp(
+    USER_CHANGED_SUBSCRIPTION,
+    'users',
+    'fetchAllUsers',
+    'subscribeToUsers',
+    'userChanged'
+  ))
 )(Pipeline);
 
 const PipelineWithAlert = compose(
