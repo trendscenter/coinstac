@@ -32,7 +32,6 @@ import {
   CONSORTIUM_CHANGED_SUBSCRIPTION,
   USER_CHANGED_SUBSCRIPTION,
 } from '../../state/graphql/functions'
-import { saveAssociatedConsortia } from '../../state/ducks/collections'
 import { pullComputations } from '../../state/ducks/docker'
 import { notifyInfo } from '../../state/ducks/notifyAndLog'
 
@@ -161,7 +160,6 @@ class Threads extends Component {
       },
     })
 
-    this.props.saveAssociatedConsortia({ id: consortiumId, activePipelineId })
     this.props.joinConsortium(consortiumId).then(() => {
       localStorage.setItem('CONSORTIUM_JOINED_BY_THREAD', consortiumId)
       this.props.router.push('/dashboard/consortia')
@@ -247,7 +245,6 @@ Threads.propTypes = {
   joinConsortium: PropTypes.func.isRequired,
   notifyInfo: PropTypes.func.isRequired,
   pullComputations: PropTypes.func.isRequired,
-  saveAssociatedConsortia: PropTypes.func.isRequired,
   saveMessage: PropTypes.func.isRequired,
   setReadMessage: PropTypes.func.isRequired,
 }
@@ -286,7 +283,6 @@ const mapStateToProps = ({ auth }) => {
 const connectedComponent = connect(mapStateToProps, {
   pullComputations,
   notifyInfo,
-  saveAssociatedConsortia,
 })(ThreadsWithData)
 
 export default withStyles(styles, { withTheme: true })(connectedComponent)
