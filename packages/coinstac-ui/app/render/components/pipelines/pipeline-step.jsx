@@ -148,6 +148,7 @@ class PipelineStep extends Component {
       step,
       updateStep,
       classes,
+      users,
       ...other
     } = this.props;
 
@@ -227,6 +228,7 @@ class PipelineStep extends Component {
                     possibleInputs={orderedInputs}
                     step={step}
                     updateStep={updateStep}
+                    users={users}
                   />
                 );
                 if (localInput.group) {
