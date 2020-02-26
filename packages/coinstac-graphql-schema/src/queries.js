@@ -28,6 +28,13 @@ const queries = {
     }
   }
   `,
+  threadChanged: `
+  {
+    threadChanged(threadId: $threadId) {
+      ${sharedFields.threadFields}
+    }
+  }
+  `,
   resultChanged: `
   {
     resultChanged(resultId: $resultId) {
@@ -114,6 +121,13 @@ const queries = {
           input
           output
         }
+      }
+    }
+  `,
+  fetchAllThreads: `
+    {
+      fetchAllThreads {
+        ${sharedFields.threadFields}
       }
     }
   `,

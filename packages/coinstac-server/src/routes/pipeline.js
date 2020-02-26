@@ -88,6 +88,7 @@ module.exports = manager.then((remotePipelineManager) => {
                     clients: run.clients,
                     spec: run.pipelineSnapshot,
                     runId: run.id,
+                    timeout: run.pipelineSnapshot.timeout,
                   });
                   res({}).code(201);
 

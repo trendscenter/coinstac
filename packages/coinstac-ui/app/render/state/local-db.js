@@ -30,4 +30,9 @@ db.version(5).stores({
   runs: 'id,type',
 });
 
+db.version(6).stores({
+  runs: 'id, type',
+  maps: '[consortiumId+pipelineId], consortiumId',
+});
+
 export default db;

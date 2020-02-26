@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
+import { get } from 'lodash';
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
 import Typography from '@material-ui/core/Typography';
@@ -10,7 +11,6 @@ import ConsortiumAbout from './consortium-about';
 import ConsortiumPipeline from './consortium-pipeline';
 import ConsortiumRuns from './consortium-runs';
 import { updateUserPerms } from '../../state/ducks/auth';
-import { saveAssociatedConsortia } from '../../state/ducks/collections';
 import {
   getAllAndSubProp,
   getSelectAndSubProp,
@@ -26,7 +26,7 @@ import {
   SAVE_CONSORTIUM_MUTATION,
   USER_CHANGED_SUBSCRIPTION,
 } from '../../state/graphql/functions';
-import { notifySuccess } from '../../state/ducks/notifyAndLog';
+import { notifySuccess, notifyError } from '../../state/ducks/notifyAndLog';
 
 const styles = theme => ({
   title: {
@@ -152,8 +152,6 @@ class ConsortiumTabs extends Component {
     .then(({ data: { saveConsortium: { __typename, ...other } } }) => {
       let unsubscribeConsortia = this.state.unsubscribeConsortia;
 
-      this.props.saveAssociatedConsortia({ ...other });
-
       if (!unsubscribeConsortia) {
         unsubscribeConsortia = this.props.subscribeToConsortia(other.id);
       }
@@ -179,9 +177,12 @@ class ConsortiumTabs extends Component {
       });
     })
     .catch(({ graphQLErrors }) => {
-      console.log(graphQLErrors);
       this.setState({
         savingStatus: 'fail',
+      })
+
+      this.props.notifyError({
+        message: get(graphQLErrors, '0.message', 'Failed to save consortium')
       })
     });
   }
@@ -290,7 +291,6 @@ ConsortiumTabs.defaultProps = {
 };
 
 ConsortiumTabs.propTypes = {
-  activeConsortium: PropTypes.object,
   addUserRole: PropTypes.func.isRequired,
   auth: PropTypes.object.isRequired,
   consortia: PropTypes.array,
@@ -299,7 +299,6 @@ ConsortiumTabs.propTypes = {
   pipelines: PropTypes.array.isRequired,
   removeUserRole: PropTypes.func.isRequired,
   runs: PropTypes.array,
-  saveAssociatedConsortia: PropTypes.func.isRequired,
   saveConsortium: PropTypes.func.isRequired,
   subscribeToConsortia: PropTypes.func,
   subscribeToUsers: PropTypes.func,
@@ -336,7 +335,7 @@ const connectedComponent = connect(
   mapStateToProps,
   {
     notifySuccess,
-    saveAssociatedConsortia,
+    notifyError,
     updateUserPerms,
   }
 )(ConsortiumTabsWithData);
