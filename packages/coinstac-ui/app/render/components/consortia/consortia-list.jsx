@@ -97,6 +97,16 @@ class ConsortiaList extends Component {
     this.stopPipeline = this.stopPipeline.bind(this);
   }
 
+  componentDidMount() {
+    const { consortiumJoinedByThread } = this.state
+
+    if (consortiumJoinedByThread) {
+      setTimeout(() => {
+        this.setState({ consortiumJoinedByThread: null })
+      }, 5000)
+    }
+  }
+
   openConsortiumPipelinesMenu = (event, consortiumId) => {
     this.pipelinesButtonElement = event.target;
     this.setState({ isConsortiumPipelinesMenuOpen: consortiumId });
@@ -119,24 +129,11 @@ class ConsortiaList extends Component {
     return pipelines.filter(pipe => pipe.owningConsortium === consortium.id);
   }
 
-  selectPipeline = (consortiumId, pipelineId) => {
-    const { collections } = this.props;
-    collections.forEach((item) => {
-      this.props.deleteCollection(item.id);
-    });
+  selectPipeline = async (consortiumId, pipelineId) => {
+    await this.props.deleteAllDataMappingsFromConsortium(consortiumId)
 
     this.props.saveActivePipeline(consortiumId, pipelineId);
     this.closeConsortiumPipelinesMenu();
-  }
-
-  componentDidMount() {
-    const { consortiumJoinedByThread } = this.state
-
-    if (consortiumJoinedByThread) {
-      setTimeout(() => {
-        this.setState({ consortiumJoinedByThread: null })
-      }, 5000)
-    }
   }
 
   getOptions(member, owner, consortium) {
@@ -581,7 +578,6 @@ class ConsortiaList extends Component {
 }
 
 ConsortiaList.propTypes = {
-  collections: PropTypes.array.isRequired,
   maps: PropTypes.array.isRequired,
   auth: PropTypes.object.isRequired,
   client: PropTypes.object.isRequired,
@@ -597,13 +593,11 @@ ConsortiaList.propTypes = {
   router: PropTypes.object.isRequired,
   classes: PropTypes.object.isRequired,
   runs: PropTypes.array.isRequired,
-  deleteCollection: PropTypes.func.isRequired,
 };
 
-const mapStateToProps = ({ auth, collections, maps }) => {
+const mapStateToProps = ({ auth, maps }) => {
   return {
     auth,
-    collections: collections.collections,
     maps: maps.consortiumDataMappings,
   };
 };
