@@ -30,6 +30,7 @@ import {
   saveDocumentProp,
 } from '../../state/graphql/props';
 import { notifyInfo } from '../../state/ducks/notifyAndLog';
+import { pipelineNeedsDataMapping } from '../../../main/utils/run-pipeline-functions';
 
 const MAX_LENGTH_CONSORTIA = 50;
 
@@ -115,8 +116,12 @@ class ConsortiaList extends Component {
       runs,
     } = this.props;
 
-    const isMapped = maps.findIndex(m => m.consortiumId === consortium.id
+    const pipeline = pipelines.find(pipe => pipe.id === consortium.activePipelineId);
+
+    const consortiumHasDataMap = maps.findIndex(m => m.consortiumId === consortium.id
       && m.pipelineId === consortium.activePipelineId) > -1;
+
+    const needsDataMapping = !consortiumHasDataMap && pipelineNeedsDataMapping(pipeline);
 
     // Add pipeline text
     text.push(
@@ -126,7 +131,7 @@ class ConsortiaList extends Component {
         </Typography>
         {
           consortium.activePipelineId
-            ? <Typography className={classNames(classes.value, classes.green)}>{pipelines.find(pipe => pipe.id === consortium.activePipelineId).name}</Typography>
+            ? <Typography className={classNames(classes.value, classes.green)}>{pipeline.name}</Typography>
             : <Typography className={classNames(classes.value, classes.red)}>None</Typography>
         }
       </div>
@@ -171,7 +176,7 @@ class ConsortiaList extends Component {
       </div>
     );
 
-    if (owner && consortium.activePipelineId && isMapped) {
+    if (owner && consortium.activePipelineId && !needsDataMapping) {
       const isPipelineRunning = runs.filter((run) => {
         return run.consortiumId === consortium.id && run.status === 'started';
       }).length > 0;
@@ -212,7 +217,7 @@ class ConsortiaList extends Component {
           Set Active Pipeline
         </Button>
       );
-    } else if ((owner || member) && !isMapped) {
+    } else if ((owner || member) && needsDataMapping) {
       actions.push(
         <Button
           key={`${consortium.id}-set-map-local-button`}
