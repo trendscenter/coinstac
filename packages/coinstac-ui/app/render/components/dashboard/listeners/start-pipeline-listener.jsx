@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { ipcRenderer, remote } from 'electron';
+import { ipcRenderer } from 'electron';
 import { connect } from 'react-redux';
 import { notifyInfo } from '../../../state/ducks/notifyAndLog';
 
@@ -29,12 +29,15 @@ class StartPipelineListener extends React.Component {
     const {
       maps,
       consortia,
+      remoteRuns,
     } = this.props;
 
     const lastDataMapping = maps[maps.length - 1];
     const consortium = consortia.find(c => lastDataMapping.consortiumId === c.id);
 
-    const run = this.getConsortiumActiveRun(consortium);
+    const run = remoteRuns.find(run => run.consortiumId === consortium.id
+      && !run.results && !run.error);
+
     if (run) {
       this.startPipeline(consortium, lastDataMapping, run);
     }
@@ -66,17 +69,6 @@ class StartPipelineListener extends React.Component {
     });
   }
 
-  getConsortiumActiveRun = (consortium) => {
-    const { remoteRuns, auth: { user } } = this.props;
-
-    if (!remoteRuns || !remoteRuns.length) {
-      return false;
-    }
-
-    return remoteRuns.find(run => run.consortiumId === consortium.id
-      && run.clients.includes(user.id) && !run.results && !run.error);
-  }
-
   startPipeline = (consortium, dataMapping, run) => {
     const { notifyInfo, router } = this.props;
 
@@ -88,10 +80,6 @@ class StartPipelineListener extends React.Component {
           router.push('dashboard');
         },
       },
-    });
-
-    console.log('testao', {
-      consortium, dataMappings: dataMapping, pipelineRun: run,
     });
 
     ipcRenderer.send('start-pipeline', {
@@ -109,14 +97,12 @@ StartPipelineListener.propTypes = {
   consortia: PropTypes.array.isRequired,
   remoteRuns: PropTypes.array.isRequired,
   localRuns: PropTypes.array.isRequired,
-  auth: PropTypes.object.isRequired,
   notifyInfo: PropTypes.func.isRequired,
   router: PropTypes.object.isRequired,
 };
 
-function mapStateToProps({ auth, runs: { runs }, maps }) {
+function mapStateToProps({ runs: { runs }, maps }) {
   return {
-    auth,
     localRuns: runs,
     maps: maps.consortiumDataMappings,
   };
