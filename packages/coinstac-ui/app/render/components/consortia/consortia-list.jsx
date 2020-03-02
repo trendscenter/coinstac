@@ -93,6 +93,7 @@ class ConsortiaList extends Component {
     this.leaveConsortium = this.leaveConsortium.bind(this);
     this.closeModal = this.closeModal.bind(this);
     this.openModal = this.openModal.bind(this);
+    this.selectPipeline = this.selectPipeline.bind(this);
     this.startPipeline = this.startPipeline.bind(this);
     this.stopPipeline = this.stopPipeline.bind(this);
   }
@@ -129,14 +130,17 @@ class ConsortiaList extends Component {
     return pipelines.filter(pipe => pipe.owningConsortium === consortium.id);
   }
 
-  selectPipeline = async (consortiumId, pipelineId) => {
-    await this.props.deleteAllDataMappingsFromConsortium(consortiumId)
+  async selectPipeline(consortiumId, pipelineId) {
+    await this.props.deleteAllDataMappingsFromConsortium(consortiumId);
 
     this.props.saveActivePipeline(consortiumId, pipelineId);
     this.closeConsortiumPipelinesMenu();
   }
 
   getOptions(member, owner, consortium) {
+    const { maps, classes, pipelines } = this.props;
+    const { isConsortiumPipelinesMenuOpen } = this.state;
+
     const actions = [];
     const text = [];
 
