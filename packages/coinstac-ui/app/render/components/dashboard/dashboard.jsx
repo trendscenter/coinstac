@@ -53,6 +53,7 @@ import {
   updateConsortiaMappedUsersProp
 } from '../../state/graphql/props';
 import StartPipelineListener from './listeners/start-pipeline-listener';
+import NotificationsListener from './listeners/notifications-listener';
 
 const styles = theme => ({
   root: {
@@ -572,6 +573,7 @@ class Dashboard extends Component {
           consortia={consortia}
           remoteRuns={remoteRuns}
         />
+        <NotificationsListener />
       </MuiThemeProvider>
     );
   }
