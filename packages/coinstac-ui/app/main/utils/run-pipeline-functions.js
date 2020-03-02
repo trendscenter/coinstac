@@ -105,6 +105,10 @@ function mapVariablesIntoArray(inputSchema, dataMappings, data, baseDirectory) {
 }
 
 function parsePipelineInput(pipeline, dataMappings) {
+  if (!dataMappings) {
+    throw new Error('This user did not map any data for this pipeline');
+  }
+
   const steps = [];
 
   pipeline.steps.forEach((step, stepIndex) => {
