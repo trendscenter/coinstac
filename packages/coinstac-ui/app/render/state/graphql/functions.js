@@ -203,3 +203,8 @@ export const SET_READ_MESSAGE_MUTATION = gql`
   mutation setReadMessage($threadId: ID!, $userId: ID!)
     ${mutations.setReadMessage}
 `;
+
+export const CREATE_ISSUE_MUTATION = gql`
+  mutation createIssue($issue: IssueInput!)
+    ${mutations.createIssue}
+`;

@@ -3,11 +3,15 @@ const Boom = require('boom');
 const GraphQLJSON = require('graphql-type-json');
 const Promise = require('bluebird');
 const { PubSub, withFilter } = require('graphql-subscriptions');
+const Issue = require('github-api/dist/components/Issue');
 const axios = require('axios');
 const { uniq } = require('lodash');
 const helperFunctions = require('../auth-helpers');
 const initSubscriptions = require('./subscriptions');
 const config = require('../../config/default');
+const dotenv = require('dotenv');
+
+dotenv.config()
 
 /**
  * Helper function to retrieve all members of given table
@@ -937,7 +941,32 @@ const resolvers = {
       await connection.close()
 
       return
-    }
+    },
+    /**
+     * Create github issue
+     * @param {object} auth User object from JWT middleware validateFunc
+     * @param {object} args
+     * @param {object} args.issue Issue
+     * @return {object} Created issue
+     */
+    createIssue: async ({ auth: { credentials } }, args) => {
+      const { title, body } = args.issue
+
+      const repository = process.env.GIT_REPO
+      const auth = {
+        username: process.env.GIT_USER_NAME,
+        password: process.env.GET_USER_PASSWORD,
+      }
+
+      try {
+        const issue = new Issue(repository, auth)
+
+        await issue.createIssue({ title, body })
+        return
+      } catch (error) {
+        return Boom.notAcceptable('Failed to create issue on GitHub')
+      }
+    },
   },
   Subscription: {
     /**
