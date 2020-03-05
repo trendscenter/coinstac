@@ -330,7 +330,7 @@ loadConfig()
    * @param {Object} pipelineRun Current run details
    * @return {Promise<String>} Status message
    */
-    ipcMain.on('start-pipeline', (event, {
+    ipcMain.on('start-pipeline', async (event, {
       consortium, dataMappings, pipelineRun,
     }) => {
       try {
@@ -346,7 +346,7 @@ loadConfig()
           },
         };
 
-        startPipelineRun(run, filesArray, consortium);
+        await startPipelineRun(run, filesArray, consortium);
       } catch (error) {
         mainWindow.webContents.send('notify-warning', {
           message: error.message,
