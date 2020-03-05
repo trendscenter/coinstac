@@ -189,7 +189,7 @@ loadConfig()
 
       const pipeline = run.pipelineSnapshot;
 
-      mainWindow.webContents.send('save-local-run', { run });
+      mainWindow.webContents.send('save-local-run', { run: pipelineRun });
 
       const computationImageList = pipeline.steps
         .map(step => step.computations
