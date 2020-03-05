@@ -20,14 +20,10 @@ module.exports = {
         return Promise.all([
           metaFilePath,
           core.constructor.parseMetaFile(metaFile),
-          core.constructor.getFilesFromMetadata(
-            metaFilePath,
-            metaFile
-          ),
         ]);
       })
-      .then(([metaFilePath, metaFile, files]) => ({
-        metaFilePath, metaFile, files, extension: '.csv',
+      .then(([metaFilePath, metaFile]) => ({
+        metaFilePath, metaFile, extension: '.csv',
       }));
   },
   returnFileAsJSON(filePath, core) {
