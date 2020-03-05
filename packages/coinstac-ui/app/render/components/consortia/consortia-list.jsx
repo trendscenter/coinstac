@@ -138,7 +138,12 @@ class ConsortiaList extends Component {
   }
 
   getOptions(member, owner, consortium) {
-    const { maps, classes, pipelines } = this.props;
+    const {
+      maps,
+      classes,
+      pipelines,
+      runs,
+    } = this.props;
     const { isConsortiumPipelinesMenuOpen } = this.state;
 
     const actions = [];
@@ -402,12 +407,12 @@ class ConsortiaList extends Component {
   stopPipeline(pipelineId) {
     return () => {
       const { runs } = this.props;
-      
-      const presentRun = runs.reduce( (prev, curr) => { 
+
+      const presentRun = runs.reduce( (prev, curr) => {
         return prev.startDate > curr.startDate ? prev : curr ;
       });
       const runId = presentRun.id;
-      
+
       ipcRenderer.send('stop-pipeline', { pipelineId, runId });
     }
   }
