@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { Component, Fragment } from 'react';
 import { DragSource, DropTarget } from 'react-dnd';
 import PropTypes from 'prop-types';
 import { compose } from 'redux';
@@ -15,7 +15,7 @@ import PipelineStepInput from './pipeline-step-input';
 import { FETCH_COMPUTATION_QUERY } from '../../state/graphql/functions';
 import { compIOProp } from '../../state/graphql/props';
 
-const styles = theme => ({
+const styles = () => ({
   expansionPanelContent: {
     display: 'block',
   },
@@ -77,15 +77,9 @@ const collectDrop = connect =>
   ({ connectDropTarget: connect.dropTarget() });
 
 class PipelineStep extends Component {
-  constructor(props) {
-    super(props);
-
-    this.state = {
-      orderedInputs: [],
-    };
-
-    this.showOutput = this.showOutput.bind(this);
-  }
+  state = {
+    orderedInputs: [],
+  };
 
   UNSAFE_componentWillReceiveProps(nextProps) {
     let orderedInputs = [];
@@ -105,68 +99,74 @@ class PipelineStep extends Component {
     }
   }
 
-  showOutput(paddingLeft, id, output) {
+  showOutput = (paddingLeft, id, output) => {
+    const localOutputs = Object.entries(output).filter(elem => typeof elem[1] === 'object');
+
     return (
-      <div style={{ paddingLeft }}>
+      <div key={`${id}-output`} style={{ paddingLeft }}>
         {
-          Object.entries(output).map((localOutput) => {
-            if (typeof localOutput[1] === 'object') {
-              const output = [(
-                <Typography key={`${id}-${localOutput[0]}-output`} variant="body1">
-                  {localOutput[1].label} ({localOutput[1].type})
-                </Typography>
-              )];
+          localOutputs.map((localOutput) => {
+            const output = [(
+              <Typography key={`${id}-${localOutput[0]}-output`} variant="body1">
+                {localOutput[1].label} ({localOutput[1].type})
+              </Typography>
+            )];
 
-              if (localOutput[1].items) {
-                output.push(this.showOutput(paddingLeft + 5, id, localOutput[1].items));
-              }
-
-              return output;
+            if (localOutput[1].items) {
+              output.push(this.showOutput(paddingLeft + 5, id, localOutput[1].items));
             }
 
-            return null;
+            return output;
           })
         }
       </div>
     );
   }
 
+  renderPipelineStepInput = localInput => {
+    const { pipelineIndex, step, users, owner, updateStep } = this.props;
+    const { orderedInputs } = this.state;
+
+    return (
+      <PipelineStepInput
+        objKey={localInput.key}
+        objParams={localInput.value}
+        pipelineIndex={pipelineIndex}
+        key={`${step.id}-${localInput.key}-input`}
+        owner={owner}
+        parentKey={`${step.id}-${localInput.key}-input`}
+        possibleInputs={orderedInputs}
+        step={step}
+        updateStep={updateStep}
+        users={users}
+      />
+    )
+  }
+
   render() {
     const {
+      classes,
       compIO,
-      computationId,
       connectDragSource,
       connectDropTarget,
       deleteStep,
-      expanded,
-      pipelineIndex,
-      possibleInputs,
-      previousComputationIds,
       isDragging,
-      moveStep,
       owner,
       step,
       updateStep,
-      classes,
-      users,
-      ...other
     } = this.props;
-
-    const { orderedInputs } = this.state;
-
-    const { id, computations } = step;
 
     let Inputs = [];
     let defaultInputs = {};
 
-    if (compIO !== null) {
+    if (compIO) {
       let newArray = [];
       Object.keys(compIO.computation.input).map((key, index) => {
         let value = Object.create(compIO.computation.input[key]);
         value['value'] = compIO.computation.input[key];
         value['key'] = key;
         newArray.push(value);
-        if(value['value'].default !== null && key !== 'covariates') {
+        if(value['value'].default && key !== 'covariates') {
           let v = value['value'].default;
           if( v === 0 ){
             v = '0';
@@ -186,20 +186,21 @@ class PipelineStep extends Component {
       });
     }
 
-    const Groups = {};
-
-    Inputs.map((localInput) => {
+    const Groups = Inputs.reduce((acc, localInput) => {
       if (localInput.group) {
-        Groups[localInput.group] = [];
+        if (!acc[localInput.group]) {
+          acc[localInput.group] = [];
+        }
+        acc[localInput.group].push(localInput);
       }
-      return null;
-    });
+      return acc;
+    }, {});
 
     return connectDragSource(connectDropTarget(
       <div key={'step-'+step.id}>
         <ExpansionPanel className="pipeline-step" style={{ ...styles.draggable, opacity: isDragging ? 0 : 1 }}>
           <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography variant="headline">{computations[0].meta.name}</Typography>
+            <Typography variant="headline">{step.computations[0].meta.name}</Typography>
           </ExpansionPanelSummary>
           <ExpansionPanelDetails className={classes.expansionPanelContent} key={'step-exp-'+step.id}>
             <div className={classes.inputParametersContainer}>
@@ -213,47 +214,25 @@ class PipelineStep extends Component {
                 Delete
               </Button>
             </div>
-            {
-              compIO !== null
-              && Inputs !== null
-              && Inputs.map((localInput) => {
-                const piplineStepInputComponent = (
-                  <PipelineStepInput
-                    objKey={localInput.key}
-                    objParams={localInput.value}
-                    pipelineIndex={pipelineIndex}
-                    key={`${id}-${localInput.key}-input`}
-                    owner={owner}
-                    parentKey={`${id}-${localInput.key}-input`}
-                    possibleInputs={orderedInputs}
-                    step={step}
-                    updateStep={updateStep}
-                    users={users}
-                  />
-                );
-                if (localInput.group) {
-                  Groups[localInput.group].push(piplineStepInputComponent);
-                }else{
-                  return piplineStepInputComponent;
-                }
-              })
-            }
+            {compIO && Inputs && Inputs
+                .filter(localInput => !localInput.group)
+                .map(this.renderPipelineStepInput)}
             <div>
               {Groups &&
                 Object.entries(Groups).length > 0
-                && Object.entries(Groups).map((group) => {
-                  let name = group[0];
-                  let items = group[1];
+                && Object.entries(Groups).map(group => {
+                  const name = group[0];
+                  const items = group[1];
+
                   return (
-                    <ExpansionPanel className="pipeline-step" style={{ ...styles.draggable, opacity: isDragging ? 0 : 1, margin: '1rem 0' }}>
+                    <ExpansionPanel key={name} className="pipeline-step" style={{ ...styles.draggable, opacity: isDragging ? 0 : 1, margin: '1rem 0' }}>
                       <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
                         <span>
-                          {capitalize(name)}
-                          &nbsp; Fields
+                          {`${capitalize(name)} Fields`}
                         </span>
                       </ExpansionPanelSummary>
                       <ExpansionPanelDetails className={classes.expansionPanelContent}>
-                        {items && items.map((item) => { return item; })}
+                        {items && items.map(this.renderPipelineStepInput)}
                       </ExpansionPanelDetails>
                     </ExpansionPanel>
                   )
@@ -261,7 +240,7 @@ class PipelineStep extends Component {
               }
             </div>
             <Typography variant="title">Output:</Typography>
-            {compIO !== null && this.showOutput(10, id, compIO.computation.output)}
+            {compIO && this.showOutput(10, step.id, compIO.computation.output)}
           </ExpansionPanelDetails>
         </ExpansionPanel>
       </div>
