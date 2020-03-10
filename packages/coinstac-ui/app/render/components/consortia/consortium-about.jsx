@@ -228,6 +228,7 @@ class ConsortiumAbout extends Component {
                             isOwner={owner}
                             consRole="Member"
                             name={consUser.name}
+                            id={consUser.id}
                             width={30}
                           />
                           <span>{consUser.name}</span>

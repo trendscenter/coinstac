@@ -57,6 +57,18 @@ const styles = theme => ({
   },
 });
 
+function parseWaiting(runObject, stateKey) {
+  let users = [];
+  runObject[stateKey].waitingOn.map((client) => {
+    runObject.members.map((member) => {
+      if (member[client]) {
+        users.push(member[client]);
+      }
+    });
+  });
+  return users;
+}
+
 function getStateWell(runObject, stateName, stateKey, classes) {
   return (
     <Paper
@@ -82,7 +94,7 @@ function getStateWell(runObject, stateName, stateKey, classes) {
           <div>
             <Typography className={classes.label}>Waiting on Users:</Typography>
             <Typography className={classes.value}>
-              {runObject[stateKey].controllerState.includes('waiting on') ? runObject[stateKey].waitingOn.join(', ') : ''}
+              {runObject[stateKey].controllerState.includes('waiting on') ? parseWaiting(runObject, stateKey) : ''}
             </Typography>
           </div>
         )
@@ -267,14 +279,16 @@ class RunItem extends Component {
             )
           }
           {
-            runObject.clients
+            runObject.members
             && (
               <div>
                 <Typography className={classes.label}>
                   Clients:
                 </Typography>
                 <Typography className={classes.value}>
-                  { runObject.clients.join(', ') }
+                  { runObject.members.map((member)=>{
+                    return <span>{Object.values(member)[0]},</span>
+                  }) }
                 </Typography>
               </div>
             )

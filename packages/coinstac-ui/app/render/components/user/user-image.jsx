@@ -68,6 +68,7 @@ class UserImage extends Component {
       classes,
       user,
       handleImageDestroy,
+      unSetPhoto,
       uploadedFileCloudinaryUrl,
       uploadedFileCloudinaryID,
       uploadProgress,
@@ -110,7 +111,10 @@ class UserImage extends Component {
             <img className={classes.filePreviewImg} src={uploadedFileCloudinaryUrl} />
             <div
               className={classes.filePreviewDeleteButton}
-              onClick={() => {handleImageDestroy(uploadedFileCloudinaryID)}}
+              onClick={() => {
+                handleImageDestroy(uploadedFileCloudinaryID);
+                unSetPhoto();
+              }}
             >
             <Icon
               className={classNames('fa fa-times-circle', classes.timesIcon)} />
