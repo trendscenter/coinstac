@@ -2,9 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { get } from 'lodash';
-import Tabs from '@material-ui/core/Tabs';
-import Tab from '@material-ui/core/Tab';
-import Typography from '@material-ui/core/Typography';
+import { Tab, Tabs, Typography } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
 import { graphql, compose } from 'react-apollo';
 import ConsortiumAbout from './consortium-about';
@@ -58,8 +56,6 @@ class ConsortiumTabs extends Component {
     };
 
     this.getConsortiumRuns = this.getConsortiumRuns.bind(this);
-    this.addMemberToConsortium = this.addMemberToConsortium.bind(this);
-    this.removeMemberFromConsortium = this.removeMemberFromConsortium.bind(this);
     this.saveConsortium = this.saveConsortium.bind(this);
     this.updateConsortium = this.updateConsortium.bind(this);
     this.handleSelect = this.handleSelect.bind(this);
@@ -112,10 +108,6 @@ class ConsortiumTabs extends Component {
     return consortiumUsers;
   }
 
-  addMemberToConsortium(userId) {
-    this.props.addUserRole(userId, 'consortia', this.state.consortium.id, 'member');
-  }
-
   getConsortiumRuns() {
     return (
       this.props.runs.filter(run => run.consortiumId === this.state.consortium.id)
@@ -124,13 +116,6 @@ class ConsortiumTabs extends Component {
 
   handleSelect(event, value) {
     this.setState({ selectedTabIndex: value });
-  }
-
-  removeMemberFromConsortium(user) {
-    return () => {
-      this.props.removeUserRole(user.id, 'consortia', this.state.consortium.id, 'owner');
-      this.props.removeUserRole(user.id, 'consortia', this.state.consortium.id, 'member');
-    };
   }
 
   saveConsortium(e) {
@@ -246,8 +231,6 @@ class ConsortiumTabs extends Component {
               removeUserRole={removeUserRole}
               consortium={consortium}
               consortiumUsers={consortiumUsers}
-              addMemberToConsortium={this.addMemberToConsortium}
-              removeMemberFromConsortium={this.removeMemberFromConsortium}
               saveConsortium={this.saveConsortium}
               updateConsortium={this.updateConsortium}
               owner={isOwner}
