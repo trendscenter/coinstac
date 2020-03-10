@@ -196,6 +196,7 @@ class ConsortiaList extends Component {
       .filter((v, i, a) => i === a.indexOf(v))
       .map(user => (
         <MemberAvatar
+          id={user.id}
           key={`${user.id}-avatar`}
           consRole={user.owner ? 'Owner' : 'Member'}
           name={user.name}
