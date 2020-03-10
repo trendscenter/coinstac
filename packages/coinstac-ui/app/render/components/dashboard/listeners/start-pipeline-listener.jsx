@@ -71,15 +71,7 @@ class StartPipelineListener extends React.Component {
   startPipeline = (consortium, dataMapping, run) => {
     const { notifyInfo, router } = this.props;
 
-    notifyInfo({
-      message: `Pipeline Starting for ${consortium.name}.`,
-      action: {
-        label: 'Watch Progress',
-        callback: () => {
-          router.push('dashboard');
-        },
-      },
-    });
+    notifyInfo(`Pipeline Starting for ${consortium.name}.`);
 
     ipcRenderer.send('start-pipeline', {
       consortium, dataMappings: dataMapping, pipelineRun: run,

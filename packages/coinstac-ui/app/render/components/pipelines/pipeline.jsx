@@ -464,9 +464,9 @@ class Pipeline extends Component {
         savingStatus: 'success',
       });
 
-      notifySuccess({ message: 'Pipeline Saved.' });
+      notifySuccess('Pipeline Saved.');
     }).catch(({ graphQLErrors }) => {
-      notifyError({ message: get(graphQLErrors, '0.message', 'Failed to save pipeline') });
+      notifyError(get(graphQLErrors, '0.message', 'Failed to save pipeline'));
 
       this.setState({ savingStatus: 'fail' });
     });

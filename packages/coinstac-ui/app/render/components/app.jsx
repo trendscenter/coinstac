@@ -3,25 +3,14 @@ import { findDOMNode } from 'react-dom';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { ipcRenderer } from 'electron';
-import Notifications from 'react-notification-system-redux';
+import { SnackbarProvider } from 'notistack';
+import { CssBaseline } from '@material-ui/core';
+import { MuiThemeProvider } from '@material-ui/core/styles';
 import ActivityIndicator from './activity-indicator/activity-indicator';
 import { autoLogin, logout, setError } from '../state/ducks/auth';
 import { notifyWarning } from '../state/ducks/notifyAndLog';
 import { EXPIRED_TOKEN, BAD_TOKEN } from '../utils/error-codes';
-
-const styles = {
-  notifications: {
-    NotificationItem: {
-      DefaultStyle: {
-        borderRadius: 0,
-        border: 'none',
-        opacity: 0.75,
-        boxShadow: 'none',
-        fontWeight: 'bold', // This might not be necessary. Use your judgement.
-      },
-    }
-  }
-};
+import theme from '../styles/material-ui/theme';
 
 class App extends Component { // eslint-disable-line react/prefer-stateless-function
   constructor(props) {
@@ -56,7 +45,7 @@ class App extends Component { // eslint-disable-line react/prefer-stateless-func
     });
 
     ipcRenderer.on(BAD_TOKEN, () => {
-      notifyWarning({ message: 'Bad token used on a request' });
+      notifyWarning('Bad token used on a request');
     });
   }
 
@@ -76,30 +65,26 @@ class App extends Component { // eslint-disable-line react/prefer-stateless-func
   }
 
   render() {
-    const { children, loading: { isLoading }, notifications } = this.props;
+    const { children, loading: { isLoading } } = this.props;
 
     const { checkJWT } = this.state;
 
     return (
       <div className="app">
-        <ActivityIndicator visible={isLoading} />
+        <MuiThemeProvider theme={theme}>
+          <CssBaseline />
+          <ActivityIndicator visible={isLoading} />
 
-        { checkJWT && children }
-
-        <Notifications
-          notifications={notifications}
-          style={styles.notifications}
-        />
+          <SnackbarProvider maxSnack={3}>
+            { checkJWT && children }
+          </SnackbarProvider>
+        </MuiThemeProvider>
       </div>
     );
   }
 }
 
 App.displayName = 'App';
-
-App.defaultProps = {
-  notifications: null,
-};
 
 App.propTypes = {
   router: PropTypes.object.isRequired,
@@ -109,13 +94,11 @@ App.propTypes = {
   notifyWarning: PropTypes.func.isRequired,
   children: PropTypes.node.isRequired,
   loading: PropTypes.object.isRequired,
-  notifications: PropTypes.array,
 };
 
-function mapStateToProps({ loading, notifications }) {
+function mapStateToProps({ loading }) {
   return {
     loading,
-    notifications,
   };
 }
 

@@ -348,9 +348,7 @@ loadConfig()
 
         await startPipelineRun(run, filesArray, consortium);
       } catch (error) {
-        mainWindow.webContents.send('notify-warning', {
-          message: error.message,
-        });
+        mainWindow.webContents.send('notify-warning', error.message);
       }
     });
 
