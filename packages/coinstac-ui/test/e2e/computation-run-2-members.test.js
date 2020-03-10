@@ -198,17 +198,8 @@ describe('e2e run computation with 2 members', () => {
       .click(`li=${PIPE_NAME}`)
       .waitForVisible(`a=${PIPE_NAME}`, EXIST_TIMEOUT)
       .waitForVisible('.notification-message=Pipeline computations downloading via Docker.', EXIST_TIMEOUT)
-      .element('.notification:last-child')
-      .click('.notification-dismiss')
-      .waitForVisible('.notification-message=Pipeline computations downloading via Docker.', EXIST_TIMEOUT, true)
       .waitForVisible(`.notification-message=${COMPUTATION_NAME} Download Complete`, COMPUTATION_DOWNLOAD_TIMEOUT)
-      .element('.notification:last-child')
-      .click('.notification-dismiss')
-      .waitForVisible(`.notification-message=${COMPUTATION_NAME} Download Complete`, EXIST_TIMEOUT, true)
       .waitForVisible('.notification-message*=Pipeline Computations Downloaded', COMPUTATION_DOWNLOAD_TIMEOUT)
-      .element('.notification:last-child')
-      .click('.notification-dismiss')
-      .waitForVisible('.notification-message*=Pipeline Computations Downloaded', EXIST_TIMEOUT, true)
   ));
 
   it('joins a consortium', () => (
@@ -218,17 +209,8 @@ describe('e2e run computation with 2 members', () => {
       .click(`button[name="${CONS_NAME}-join-cons-button"]`)
       .waitForVisible(`button[name="${CONS_NAME}-leave-cons-button"]`, EXIST_TIMEOUT)
       .waitForVisible('.notification-message=Pipeline computations downloading via Docker.', EXIST_TIMEOUT)
-      .element('.notification:last-child')
-      .click('.notification .notification-dismiss')
-      .waitForVisible('.notification-message=Pipeline computations downloading via Docker.', EXIST_TIMEOUT, true)
-      .waitForVisible(`.notification-message=${COMPUTATION_NAME} Download Complete`, COMPUTATION_DOWNLOAD_TIMEOUT) // Dismiss computation download notification
-      .element('.notification:last-child')
-      .click('.notification .notification-dismiss')
-      .waitForVisible(`.notification-message=${COMPUTATION_NAME} Download Complete`, NOTIFICATION_DISMISS_TIMEOUT, true)
+      .waitForVisible(`.notification-message=${COMPUTATION_NAME} Download Complete`, COMPUTATION_DOWNLOAD_TIMEOUT)
       .waitForVisible('.notification-message*=Pipeline Computations Downloaded', COMPUTATION_DOWNLOAD_TIMEOUT)
-      .element('.notification:last-child')
-      .click('.notification .notification-dismiss')
-      .waitForVisible('.notification-message*=Pipeline Computations Downloaded', EXIST_TIMEOUT, true)
   ));
 
   it('map data to consortium', () => (
@@ -265,10 +247,7 @@ describe('e2e run computation with 2 members', () => {
     app1.client
       .waitForVisible('button=Start Pipeline', EXIST_TIMEOUT)
       .click('button=Start Pipeline')
-      .waitForText('.notification-message', EXIST_TIMEOUT)
-      .getText('.notification-message')
-      .then(notificationMessage => notificationMessage.should.equal(`Pipeline Starting for ${CONS_NAME}.`))
-      .then(() => app1.client.waitForVisible('.notification-message', NOTIFICATION_DISMISS_TIMEOUT, true))
+      .waitForVisible(`.notification-message=Pipeline Starting for ${CONS_NAME}.`, EXIST_TIMEOUT)
   ));
 
   it('displays computation progress', () => (
