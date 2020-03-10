@@ -69,14 +69,14 @@ const typeDefs = `
     id: ID!
     controller: PipelineController
     computations: [Computation]
-    ${sharedFields.pipelineStepFields} 
+    ${sharedFields.pipelineStepFields}
   }
 
   input PipelineStepInput {
     id: ID
     controller: PipelineControllerInput
     computations: [ID]
-    ${sharedFields.pipelineStepFields} 
+    ${sharedFields.pipelineStepFields}
   }
 
   type Pipeline {
@@ -156,14 +156,14 @@ const typeDefs = `
   type Mutation {
     # Stringify incoming computation, parse prior to insertion call
     addComputation(computationSchema: ComputationInput): Computation
-    addUserRole(userId: ID!, table: String!, doc: String!, role: String!): User
+    addUserRole(userId: ID!, table: String!, doc: String!, role: String!, userName: String): User
     createRun(consortiumId: ID): Run
     deleteConsortiumById(consortiumId: ID): Consortium
     deletePipeline(pipelineId: ID): Pipeline
     joinConsortium(consortiumId: ID!): Consortium
     leaveConsortium(consortiumId: ID!): Consortium
     removeComputation(computationId: ID): Computation
-    removeUserRole(userId: ID!, table: String!, doc: String!, role: String!): User
+    removeUserRole(userId: ID!, table: String!, doc: String!, role: String!, userName: String): User
     saveActivePipeline(consortiumId: ID, activePipelineId: ID): String
     saveConsortium(consortium: ConsortiumInput!): Consortium
     saveError(runId: ID, error: JSON): JSON

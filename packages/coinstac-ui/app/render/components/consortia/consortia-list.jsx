@@ -67,7 +67,17 @@ const styles = theme => ({
 });
 
 const isUserA = (userId, groupArr) => {
-  return groupArr.indexOf(userId) !== -1;
+  let res = false;
+  if(typeof groupArr === 'object'){
+    groupArr = Object.values(groupArr);
+  }
+  groupArr.map((item) => {
+    if(Object.keys(item).indexOf(userId) !== -1){
+      res = true;
+      return;
+    }
+  });
+  return res;
 };
 
 class ConsortiaList extends Component {
@@ -112,7 +122,8 @@ class ConsortiaList extends Component {
     const otherConsortia = [];
     if (consortia && consortia.length <= MAX_LENGTH_CONSORTIA) {
       consortia.forEach((cons) => {
-        if (cons.owners.indexOf(auth.user.id) > -1 || cons.members.indexOf(auth.user.id) > -1) {
+        if (isUserA(auth.user.id, cons.members)
+            || isUserA(auth.user.id, cons.owners)) {
           memberConsortia.push(cons);
         } else {
           otherConsortia.push(cons);
@@ -151,16 +162,34 @@ class ConsortiaList extends Component {
 
     // Add owner/member list
     const ownersIds = consortium.owners.reduce((acc, user) => {
-      acc[user] = true;
+      let userID = Object.keys(user)[0];
+      acc[userID] = true;
       return acc;
     }, {});
 
     const consortiumUsers = consortium.owners
-      .map(user => ({ id: user, owner: true, member: true }))
+      .map((user) => {
+          let userID = Object.keys(user)[0];
+          let userName = user[userID];
+          return ({ id: userID, name: userName, owner: true, member: true });
+        }
+      )
       .concat(
         consortium.members
-          .filter(user => !Object.prototype.hasOwnProperty.call(ownersIds, user))
-          .map(user => ({ id: user, member: true }))
+          .filter((user) => {
+            let userID = Object.keys(user)[0];
+            if(Object.prototype.hasOwnProperty.call(ownersIds, userID) === false){
+              return true;
+            }else{
+              return false;
+            }
+          })
+          .map((user) => {
+              let userID = Object.keys(user)[0];
+              let userName = user[userID];
+              return ({ id: userID, name: userName, owner: false, member: true });
+            }
+          )
       );
 
     const avatars = consortiumUsers
@@ -169,7 +198,7 @@ class ConsortiaList extends Component {
         <MemberAvatar
           key={`${user.id}-avatar`}
           consRole={user.owner ? 'Owner' : 'Member'}
-          name={user.id}
+          name={user.name}
           showDetails
           width={40}
           mapped={
@@ -368,12 +397,12 @@ class ConsortiaList extends Component {
   stopPipeline(pipelineId) {
     return () => {
       const { client, runs } = this.props;
-      
-      const presentRun = runs.reduce( (prev, curr) => { 
+
+      const presentRun = runs.reduce( (prev, curr) => {
         return prev.startDate > curr.startDate ? prev : curr ;
       });
       const runId = presentRun.id;
-      
+
       ipcRenderer.send('stop-pipeline', { pipelineId, runId });
     }
   }

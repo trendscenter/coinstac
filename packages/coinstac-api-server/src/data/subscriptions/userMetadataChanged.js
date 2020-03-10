@@ -5,7 +5,7 @@ function preprocessUserMetadataChangedSubs(user) {
     return Promise.resolve(user);
   }
 
-  return helperFunctions.getUserDetails({ username: user.id });
+  return helperFunctions.getUserDetailsByID({ id: user.id });
 }
 
 module.exports = preprocessUserMetadataChangedSubs;

@@ -42,9 +42,25 @@ class MapsList extends Component {
 
     const pipeline = pipelines.find(pipeline => pipeline.id === consortium.activePipelineId);
 
+<<<<<<< HEAD
     if (!pipeline || !isMember(auth.user.id, consortium.members)) {
       return null;
     }
+=======
+  isMember = (userId, groupArr) => {
+    let res = false;
+    if(typeof groupArr === 'object'){
+      groupArr = Object.values(groupArr);
+    }
+    groupArr.map((item) => {
+      if(Object.keys(item).indexOf(userId) !== -1){
+        res = true;
+        return;
+      }
+    });
+    return res;
+  };
+>>>>>>> Embellished user settings and added photo upload. Changed schema to correct user.id
 
     const isDataMapped = this.isDataMappedToConsortium(consortium);
 

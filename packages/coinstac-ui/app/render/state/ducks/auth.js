@@ -20,6 +20,7 @@ const INITIAL_STATE = {
     permissions: {},
     email: '',
     institution: '',
+    photo: '',
     consortiaStatuses: {},
   },
   appDirectory: localStorage.getItem('appDirectory') || remote.getGlobal('config').get('coinstacHome'),
@@ -64,15 +65,13 @@ const initCoreAndSetToken = (reqUser, data, appDirectory, dispatch) => {
 
   return ipcPromise.send('login-init', { userId: reqUser.username, appDirectory })
     .then(() => {
-      const user = { ...data.user, label: reqUser.username };
-
       if (reqUser.saveLogin) {
         localStorage.setItem('id_token', data.id_token);
       } else {
         sessionStorage.setItem('id_token', data.id_token);
       }
 
-      dispatch(setUser(user));
+      dispatch(setUser(data.user));
     });
 };
 
@@ -107,7 +106,7 @@ export const autoLogin = applyAsyncLoading(() => (dispatch, getState) => {
     .then(({ data }) => {
       const { auth: { appDirectory } } = getState();
       return initCoreAndSetToken(
-        { username: data.user.id, saveLogin, password: 'password' },
+        { id: data.user.id, saveLogin, password: 'password' },
         data,
         appDirectory,
         dispatch
@@ -162,6 +161,18 @@ export const signUp = applyAsyncLoading(user => (dispatch, getState) => axios.po
   .then(({ data }) => {
     const { auth: { appDirectory } } = getState();
     return initCoreAndSetToken(user, data, appDirectory, dispatch);
+  })
+  .catch((err) => {
+    const { statusCode, message } = getErrorDetail(err);
+    if (statusCode === 400) {
+      dispatch(setError(message));
+    }
+  }));
+
+export const update = applyAsyncLoading(user => (dispatch, getState) => axios.post(`${API_URL}/updateAccount`, user)
+  .then(({ data }) => {
+    const userNew = { ...data.user, username: user.username, photo: user.photo, photoID: user.photoID, name: user.name };
+    dispatch(setUser(userNew));
   })
   .catch((err) => {
     const { statusCode, message } = getErrorDetail(err);

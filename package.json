@@ -3,7 +3,10 @@
   "version": "2.0.0",
   "description": "Decentralized Analyses Made Easy",
   "main": "index.js",
-  "dependencies": {},
+  "dependencies": {
+    "cloudinary": "^1.19.0",
+    "js-sha1": "^0.6.0"
+  },
   "devDependencies": {
     "babel-eslint": "^10.0.3",
     "concurrently": "^5.1.0",

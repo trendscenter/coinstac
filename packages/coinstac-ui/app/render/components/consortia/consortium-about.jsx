@@ -46,7 +46,7 @@ const styles = theme => ({
 
 class ConsortiumAbout extends Component {
   mapUsers = memoize(
-    users => users ? users.map(user => ({ label: user.id, value: user.id })) : null
+    users => users ? users.map(user => ({ label: user.username, value: user.id })) : null
   );
 
   constructor(props) {
@@ -92,11 +92,11 @@ class ConsortiumAbout extends Component {
     return () => {
       if (owner && consUser.id !== user.id) {
         if (consUser.owner) {
-          removeUserRole(consUser.id, 'consortia', consortium.id, 'owner');
-          addUserRole(consUser.id, 'consortia', consortium.id, 'member');
+          removeUserRole(consUser.id, 'consortia', consortium.id, 'owner', consUser.username);
+          addUserRole(consUser.id, 'consortia', consortium.id, 'member', consUser.username);
         } else {
-          addUserRole(consUser.id, 'consortia', consortium.id, 'owner');
-          removeUserRole(consUser.id, 'consortia', consortium.id, 'member');
+          addUserRole(consUser.id, 'consortia', consortium.id, 'owner', consUser.username);
+          removeUserRole(consUser.id, 'consortia', consortium.id, 'member', consUser.username);
         }
       }
     };
@@ -227,10 +227,10 @@ class ConsortiumAbout extends Component {
                           <MemberAvatar
                             isOwner={owner}
                             consRole="Member"
-                            name={consUser.id}
+                            name={consUser.name}
                             width={30}
                           />
-                          <span>{consUser.id}</span>
+                          <span>{consUser.name}</span>
                         </TableCell>
                         <TableCell>
                           <Checkbox

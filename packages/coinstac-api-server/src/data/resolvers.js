@@ -81,11 +81,23 @@ async function addUserPermissions(connection, args) {
   if (table === 'consortia') {
     updateObj.consortiaStatuses = {};
     updateObj.consortiaStatuses[doc] = 'none';
+  }
 
+  if (!args.userName) {
+    const userDetails = helperFunctions.getUserDetailsByID({ id: args.userId }).then((res) => {
+        promises.push(
+          rethink.table('consortia').get(doc).update(
+            {
+              [`${role}s`]: rethink.row(`${role}s`).append({ [args.userId]: res.username }),
+            }
+          ).run(connection)
+        );
+    });
+  }else{
     promises.push(
       rethink.table('consortia').get(doc).update(
         {
-          [`${role}s`]: rethink.row(`${role}s`).append(args.userId),
+          [`${role}s`]: rethink.row(`${role}s`).append({ [args.userId]: args.userName }),
         }
       ).run(connection)
     );
@@ -141,12 +153,26 @@ async function removeUserPermissions(connection, args) {
   }
 
   if (args.table === 'consortia') {
+
+    let newMembers = null;
+
     promises.push(
-      rethink.table('consortia').get(args.doc).update(
-        {
-          [`${args.role}s`]: rethink.row(`${args.role}s`).difference([args.userId]),
-        }
-      ).run(connection)
+
+      rethink.table('consortia')
+        .get(args.doc)
+        .getField(`${args.role}s`)
+        .without(args.userId)
+        .run(connection, (err, result) => {
+          if (err) throw err;
+          membersPost = result.filter(value => JSON.stringify(value) !== '{}');
+          if (membersPost && membersPost !== null) {
+            rethink.table('consortia')
+              .get(args.doc)
+              .update({
+                [`${args.role}s`]: membersPost })
+              .run(connection)
+          }
+      }),
     );
   }
 
@@ -384,7 +410,7 @@ const resolvers = {
       const connection = await helperFunctions.getRethinkConnection();
       await addUserPermissions(connection, args).then(res => connection.close().then(() => res));
 
-      return helperFunctions.getUserDetails({ username: args.userId });
+      return helperFunctions.getUserDetailsByID({ id: args.userId });
     },
     /**
      * Add run to RethinkDB
@@ -403,10 +429,15 @@ const resolvers = {
           fetchOnePipeline(consortium.activePipelineId),
           helperFunctions.getRethinkConnection()
         ]))
-        .then(([consortium, pipelineSnapshot, connection]) =>
+        .then(([consortium, pipelineSnapshot, connection]) => {
+          let clients = [];
+          consortium.members.map((member) => {
+            let id = Object.keys(member)[0];
+            clients.push(id);
+          });
           rethink.table('runs').insert(
             {
-              clients: [...consortium.members],
+              clients,
               consortiumId,
               pipelineSnapshot,
               startDate: Date.now(),
@@ -418,7 +449,7 @@ const resolvers = {
             }
           )
           .run(connection).then(res => connection.close().then(() => res))
-        )
+        })
         .then((result) => {
           return axios.post(
             `http://${config.host}:${config.pipelineServer}/startPipeline`, { run: result.changes[0].new_val }
@@ -518,8 +549,8 @@ const resolvers = {
         return consortium
       }
 
-      await addUserPermissions(connection, { userId: credentials.id, role: 'member', doc: args.consortiumId, table: 'consortia' })
-      await connection.close()
+      await addUserPermissions(connection, { userId: credentials.id, userName: credentials.username, role: 'member', doc: args.consortiumId, table: 'consortia' })
+        .then(res => connection.close().then(() => res));
 
       return fetchOne('consortia', args.consortiumId)
     },
@@ -583,7 +614,7 @@ const resolvers = {
       const connection = await helperFunctions.getRethinkConnection();
       await removeUserPermissions(connection, args)
         .then(res => connection.close().then(() => res));
-      return helperFunctions.getUserDetails({ username: args.userId });
+      return helperFunctions.getUserDetailsByID({ id: args.userId });
     },
     /**
      * Sets active pipeline on consortia object
@@ -649,8 +680,8 @@ const resolvers = {
       const consortiumId = args.consortium.id || result.changes[0].new_val.id;
 
       if (!isUpdate) {
-        await addUserPermissions(connection, { userId: credentials.id, role: 'owner', doc: consortiumId, table: 'consortia' });
-        await addUserPermissions(connection, { userId: credentials.id, role: 'member', doc: consortiumId, table: 'consortia' });
+        await addUserPermissions(connection, { userId: credentials.id, userName: credentials.username, role: 'owner', doc: consortiumId, table: 'consortia' });
+        await addUserPermissions(connection, { userId: credentials.id, userName: credentials.username, role: 'member', doc: consortiumId, table: 'consortia' });
       }
 
       const consortium = await fetchOne('consortia', consortiumId);
@@ -788,7 +819,7 @@ const resolvers = {
           }).run(connection).then(res => connection.close().then(() => res))
         )
         .then(result =>
-          helperFunctions.getUserDetails({ username: credentials.id })
+          helperFunctions.getUserDetailsByID({ id: credentials.id })
         )
         .then(result => result)
     ,
