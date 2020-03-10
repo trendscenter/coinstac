@@ -64,7 +64,6 @@ class StartPipelineListener extends React.Component {
       const dataMapping = maps.find(m => m.consortiumId === consortium.id
         && m.pipelineId === consortium.activePipelineId);
 
-
       this.startPipeline(consortium, dataMapping, remoteRun);
     });
   }

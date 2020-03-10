@@ -165,8 +165,6 @@ loadConfig()
     function startPipelineRun(run, filesArray, consortium) {
       const pipeline = run.pipelineSnapshot;
 
-      mainWindow.webContents.send('save-local-run', { run: pipelineRun });
-
       const computationImageList = pipeline.steps
         .map(step => step.computations
           .map(comp => comp.computation.dockerImage))
@@ -345,6 +343,8 @@ loadConfig()
             steps,
           },
         };
+
+        mainWindow.webContents.send('save-local-run', { run: pipelineRun });
 
         await startPipelineRun(run, filesArray, consortium);
       } catch (error) {
