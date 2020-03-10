@@ -479,7 +479,7 @@ loadConfig()
           },
         ];
         properties = ['openFile', 'multiSelections'];
-        postDialogFunc = ipcFunctions.manualFileSelectionMultExt;       
+        postDialogFunc = ipcFunctions.manualFileSelectionMultExt;
       } else {
         filters = [
           {

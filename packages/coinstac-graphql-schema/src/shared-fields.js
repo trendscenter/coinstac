@@ -78,6 +78,7 @@ const sharedFields = {
   runFields: `
     id
     clients
+    members
     consortiumId
     startDate
     endDate

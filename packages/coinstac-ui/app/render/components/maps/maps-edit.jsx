@@ -304,7 +304,6 @@ class MapsEdit extends Component {
       if(rowArray.length > 0){
         setTimeout(() => {
           while(rowArray.length > 0){
-            console.log(rowArray.length);
             rowArray.map((item) => {
                 this.removeRowArrItem(item, 'delete');
             });

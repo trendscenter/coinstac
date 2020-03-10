@@ -63,7 +63,9 @@ const initCoreAndSetToken = (reqUser, data, appDirectory, dispatch) => {
     localStorage.setItem('appDirectory', appDirectory);
   }
 
-  return ipcPromise.send('login-init', { userId: reqUser.username, appDirectory })
+  console.log(reqUser);
+
+  return ipcPromise.send('login-init', { userId: reqUser.userid, appDirectory })
     .then(() => {
       if (reqUser.saveLogin) {
         localStorage.setItem('id_token', data.id_token);
@@ -140,7 +142,8 @@ export const checkApiVersion = applyAsyncLoading(() => dispatch => axios.get(`${
 export const login = applyAsyncLoading(({ username, password, saveLogin }) => (dispatch, getState) => axios.post(`${API_URL}/authenticate`, { username, password })
   .then(({ data }) => {
     const { auth: { appDirectory } } = getState();
-    return initCoreAndSetToken({ username, password, saveLogin }, data, appDirectory, dispatch);
+    let userid = data.user.id;
+    return initCoreAndSetToken({ userid, password, saveLogin }, data, appDirectory, dispatch);
   })
   .catch((err) => {
     console.error(err); // eslint-disable-line no-console

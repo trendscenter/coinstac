@@ -36,6 +36,8 @@ class UserEdit extends Component {
       name: this.props.user.name,
       userName: this.props.user.username,
       email: this.props.user.email,
+      photo: this.props.user.photo,
+      photoID: this.props.user.photoID,
     };
   }
 
@@ -77,6 +79,13 @@ class UserEdit extends Component {
   checkPasswordsMatch = memoize(
     (password, confirmPassword) => password === confirmPassword
   );
+
+  unSetPhoto = event => {
+    this.setState({
+      photo: null,
+      photoID: null,
+    });
+  }
 
   render() {
     const {
@@ -144,7 +153,7 @@ class UserEdit extends Component {
           />
           <UserImage
             {...this.props}
-            setPhoto={this.setPhoto}
+            unSetPhoto={this.unSetPhoto}
             handleImageUpload={handleImageUpload}
             handleImageDestroy={handleImageDestroy}
             uploadedFileCloudinaryUrl={uploadedFileCloudinaryUrl}

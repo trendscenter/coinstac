@@ -323,11 +323,7 @@ const resolvers = {
      * @return {object} Requested user if id present, null otherwise
      */
     fetchUser: ({ auth: { credentials } }, args) => {
-      if (args.userId !== credentials.id) {
-        return Boom.unauthorized('Unauthorized action');
-      }
-
-      return fetchOne('users', credentials.id);
+      return fetchOne('users', args.userId);
     },
     fetchAllUsers: () => fetchAll('users'),
     fetchAllUserRuns: ({ auth: { credentials } }, args) => {
@@ -411,14 +407,15 @@ const resolvers = {
           helperFunctions.getRethinkConnection()
         ]))
         .then(([consortium, pipelineSnapshot, connection]) => {
-          let clients = [];
-          consortium.members.map((member) => {
-            let id = Object.keys(member)[0];
-            clients.push(id);
+          let clientArray = [];
+          consortium.members.map((client) => {
+            client = Object.keys(client)[0];
+            clientArray.push(client);
           });
           rethink.table('runs').insert(
             {
-              clients,
+              clients: clientArray,
+              members: consortium.members,
               consortiumId,
               pipelineSnapshot,
               startDate: Date.now(),
@@ -429,17 +426,16 @@ const resolvers = {
               returnChanges: true,
             }
           )
-          .run(connection).then(res => connection.close().then(() => res))
-        })
-        .then((result) => {
-          return axios.post(
-            `http://${config.host}:${config.pipelineServer}/startPipeline`, { run: result.changes[0].new_val }
-          ).then(() => {
-              return result.changes[0].new_val;
+          .run(connection).then((result) => {
+            connection.close();
+            return axios.post(
+              `http://${config.host}:${config.pipelineServer}/startPipeline`, { run: result.changes[0].new_val }
+            ).then((res) => {
+                return result.changes[0].new_val;
+            }).catch(error => {
+                console.log(error)
+            });
           })
-        })
-        .catch(error => {
-              console.log(error)
         });
     },
     /**
