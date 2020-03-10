@@ -387,16 +387,7 @@ class ConsortiaList extends Component {
       });
 
       this.props.pullComputations({ consortiumId, computations });
-      this.props.notifyInfo({
-        message: 'Pipeline computations downloading via Docker.',
-        autoDismiss: 5,
-        action: {
-          label: 'View Docker Download Progress',
-          callback: () => {
-            this.props.router.push('/dashboard/computations');
-          },
-        },
-      });
+      this.props.notifyInfo('Pipeline computations downloading via Docker.');
     }
 
     this.props.joinConsortium(consortiumId);
@@ -464,15 +455,7 @@ class ConsortiaList extends Component {
         const dataMapping = maps.find(m => m.consortiumId === consortium.id
           && m.pipelineId === consortium.activePipelineId);
 
-        notifyInfo({
-          message: `Local Pipeline Starting for ${consortium.name}.`,
-          action: {
-            label: 'Watch Progress',
-            callback: () => {
-              router.push('dashboard');
-            },
-          },
-        });
+        notifyInfo(`Local Pipeline Starting for ${consortium.name}.`);
 
         ipcRenderer.send('start-pipeline', {
           consortium, dataMappings: dataMapping, run,
