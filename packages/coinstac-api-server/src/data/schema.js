@@ -164,7 +164,7 @@ const typeDefs = `
     leaveConsortium(consortiumId: ID!): Consortium
     removeComputation(computationId: ID): Computation
     removeUserRole(userId: ID!, table: String!, doc: String!, role: String!): User
-    saveActivePipeline(consortiumId: ID, activePipelineId: ID): String
+    saveActivePipeline(consortiumId: ID, activePipelineId: ID): JSON
     saveConsortium(consortium: ConsortiumInput!): Consortium
     saveError(runId: ID, error: JSON): JSON
     savePipeline(pipeline: PipelineInput): Pipeline

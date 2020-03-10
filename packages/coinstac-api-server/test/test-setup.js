@@ -408,13 +408,6 @@ helperFunctions.getRethinkConnection()
                   "source": "owner",
                   "type": "number"
                 },
-                "results_html_path": {
-                  "default": "gica_cmd_gica_results/icatb_gica_html_report.html",
-                  "label": "Generated Results HTML File Path",
-                  "order": 8,
-                  "source": "owner",
-                  "type": "string"
-                },
                 "scica_template": {
                   "conditional": {
                     "value": "Infomax ICA",
@@ -486,7 +479,14 @@ helperFunctions.getRethinkConnection()
           },
           "scica_template": {
             "value": "/computation/local_data/NeuroMark.nii"
-          }
+          },
+          "results_html_path": {
+            "default": "gica_cmd_gica_results/icatb_gica_html_report.html",
+            "label": "Generated Results HTML File Path",
+            "order": 8,
+            "source": "owner",
+            "type": "string"
+          },
         }
       }
     ]
