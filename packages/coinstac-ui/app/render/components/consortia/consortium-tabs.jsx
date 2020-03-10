@@ -101,13 +101,37 @@ class ConsortiumTabs extends Component {
     }
   }
 
-  getConsortiumUsers = consortium => {
-    let consortiumUsers = [];
+  getConsortiumUsers = (consortium) => {
+    const ownersIds = consortium.owners.reduce((acc, user) => {
+      let userID = Object.keys(user)[0];
+      acc[userID] = true;
+      return acc;
+    }, {});
 
-    consortium.owners.forEach(user => consortiumUsers.push({ id: user, owner: true, member: true }));
-    consortium.members
-      .filter(user => consortiumUsers.findIndex(consUser => consUser.id === user) === -1)
-      .forEach(user => consortiumUsers.push({ id: user, member: true }));
+    let consortiumUsers = consortium.owners
+      .map((user) => {
+          let userID = Object.keys(user)[0];
+          let userName = user[userID];
+          return ({ id: userID, name: userName, owner: true, member: true });
+        }
+      )
+      .concat(
+        consortium.members
+          .filter((user) => {
+            let userID = Object.keys(user)[0];
+            if(Object.prototype.hasOwnProperty.call(ownersIds, userID) === false){
+              return true;
+            }else{
+              return false;
+            }
+          })
+          .map((user) => {
+              let userID = Object.keys(user)[0];
+              let userName = user[userID];
+              return ({ id: userID, name: userName, owner: false, member: true });
+            }
+          )
+      );
 
     return consortiumUsers;
   }
@@ -219,8 +243,16 @@ class ConsortiumTabs extends Component {
       ? 'Consortium Edit'
       : 'Consortium Creation';
 
-    const isOwner = consortium.owners.indexOf(user.id) > -1
-      || !params.consortiumId;
+    const isOwner = (user, consortium) => {
+      let res = false;
+      Object.values(consortium.owners).map((item) => {
+        if(Object.keys(item).indexOf(userId) !== -1){
+          res = true;
+          return;
+        }
+      });
+      return res;
+    };
 
     return (
       <div>
@@ -278,7 +310,7 @@ class ConsortiumTabs extends Component {
           )
         }
       </div>
-    );
+    )
   }
 }
 

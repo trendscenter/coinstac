@@ -26,11 +26,11 @@ try {
 const helperFunctions = {
   /**
    * Create JWT for user signing in to application
-   * @param {string} user username of authenticating user passed in from route handler
+   * @param {string} user id of authenticating user passed in from route handler
    * @return {string} A JWT for the requested user
    */
-  createToken(user) {
-    return jwt.sign({ username: user }, dbmap.cstacJWTSecret, { algorithm: 'HS256', expiresIn: '12h' });
+  createToken(id) {
+    return jwt.sign({ id: id }, dbmap.cstacJWTSecret, { algorithm: 'HS256', expiresIn: '12h' });
   },
   /**
    * Create new user account
@@ -39,11 +39,14 @@ const helperFunctions = {
    * @return {object} The updated user object
    */
   createUser(user, passwordHash) {
+    let hash = `_${Math.random().toString(36).substr(2, 9)}`;
     return helperFunctions.getRethinkConnection()
       .then((connection) => {
         const userDetails = {
-          id: user.username,
+          id: user.id || hash,
+          username: user.username,
           email: user.email,
+          name: user.name,
           institution: user.institution,
           passwordHash,
           permissions: {
@@ -64,6 +67,22 @@ const helperFunctions = {
 
         return rethink.table('users')
           .insert(userDetails, { returnChanges: true })
+          .run(connection).then(res => connection.close().then(() => res));
+      })
+      .then(result => result.changes[0].new_val);
+  },
+  updateUser(user) {
+    return helperFunctions.getRethinkConnection()
+      .then((connection) => {
+        return rethink.table('users')
+          .get(user.id)
+          .update({
+            username: user.username,
+            email: user.email,
+            photo: user.photo,
+            photoID: user.photoID,
+            institution: user.institution,
+          }, { returnChanges: true })
           .run(connection).then(res => connection.close().then(() => res));
       })
       .then(result => result.changes[0].new_val);
@@ -90,18 +109,30 @@ const helperFunctions = {
     return rethink.connect(Object.assign({}, defaultConnectionConfig));
   },
   /**
+ * Returns user table object for requested user
+ * @param {object} credentials credentials of requested user
+ * @return {object} The requested user object
+ */
+  async getUserDetailsByID(credentials) {
+    const connection = await helperFunctions.getRethinkConnection();
+    const user = await rethink.table('users').get(credentials.id).run(connection);
+    await connection.close();
+    return user;
+  },
+  /**
    * Returns user table object for requested user
    * @param {object} credentials credentials of requested user
    * @return {object} The requested user object
    */
-  async getUserDetails(credentials) {
-    const connection = await helperFunctions.getRethinkConnection();
-
-    const user = await rethink.table('users').get(credentials.username).run(connection);
-
-    await connection.close();
-
-    return user;
+  getUserDetails(credentials) {
+    return helperFunctions.getRethinkConnection()
+      .then(connection => rethink.table('users')
+        .filter({'username':credentials.username})
+        .run(connection).then(res => connection.close().then(() => res))
+      ).then((cursor) => cursor.toArray())
+      .then((result) => {
+        return result;
+      });
   },
   /**
    * Hashes password for storage in database
@@ -148,7 +179,7 @@ const helperFunctions = {
    * @param {function} callback function signature (err, isValid, alternative credentials)
    */
   validateToken(decoded, request, callback) {
-    helperFunctions.getUserDetails({ username: decoded.username })
+    helperFunctions.getUserDetailsByID({ id: decoded.id })
       .then((user) => {
         if (user.id) {
           callback(null, true, user);
@@ -219,6 +250,7 @@ const helperFunctions = {
     return helperFunctions.getUserDetails(req.payload)
       .then((user) => {
         if (user) {
+          user = user[0];
           helperFunctions.verifyPassword(req.payload.password, user.passwordHash)
             .then((passwordMatch) => {
               if (user && user.passwordHash && passwordMatch) {
