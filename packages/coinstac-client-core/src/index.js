@@ -39,6 +39,7 @@ const PipelineManager = require('coinstac-pipeline');
  */
 class CoinstacClient {
   constructor(opts) {
+
     if (!opts || !(opts instanceof Object)) {
       throw new TypeError('coinstac-client requires configuration opts');
     }

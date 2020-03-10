@@ -8,6 +8,17 @@ function getActiveTime(hoursSinceActive) {
   return Date.now() - (hoursSinceActive * 60 * 60 * 1000);
 }
 
+const isUserA = (userId, groupArr) => {
+  let res = false;
+  Object.values(groupArr).map((item) => {
+    if(Object.keys(item).indexOf(userId) !== -1){
+      res = true;
+      return;
+    }
+  });
+  return res;
+};
+
 const RunsList = ({
   auth,
   consortia,
@@ -28,10 +39,9 @@ const RunsList = ({
         if ((!limitToComplete || (limitToComplete && (run.status === 'complete' || run.status === 'error')))
           && (run.startDate > activeTime || run.endDate > activeTime)
           && consortium
-          && (consortium.owners.indexOf(auth.user.id) > -1
-            || consortium.members.indexOf(auth.user.id) > -1
-            || run.sharedUsers.indexOf(auth.user.id) > -1
-          )
+          && (isUserA(auth.user.id, consortium.members)
+              || isUserA(auth.user.id, consortium.owners))
+              || isUserA(auth.user.id, run.sharedUsers))
         ) {
           return (
             <RunItem

@@ -48,12 +48,12 @@ const UserAccount = (props) => {
 
   return (
     <div className={classes.root}>
-      {photo ? <img src={photo} className={classes.userPhoto} />
-      : <MemberAvatar
+      <MemberAvatar
         consRole="Member"
+        id={id}
         name={username}
         width={40}
-      />}
+      />
       <div className={classes.textContainer}>
         <List
           classes={{

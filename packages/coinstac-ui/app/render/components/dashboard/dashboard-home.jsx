@@ -56,7 +56,7 @@ function DashboardHome(props) {
 DashboardHome.propTypes = {
   consortia: PropTypes.array.isRequired,
   runs: PropTypes.array.isRequired,
-  user: PropTypes.array.isRequired,
+  user: PropTypes.object.isRequired,
   classes: PropTypes.object.isRequired,
 };
 

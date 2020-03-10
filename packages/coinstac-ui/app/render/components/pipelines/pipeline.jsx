@@ -442,7 +442,7 @@ class Pipeline extends Component {
           ...step.inputMap,
           meta: {
             ...step.inputMap.meta,
-            owner: user.id,
+            owner: user.username,
           },
         },
         dataMeta: step.dataMeta,

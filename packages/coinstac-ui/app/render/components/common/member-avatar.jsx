@@ -1,9 +1,13 @@
 import React from 'react';
+import { compose, graphql, withApollo } from 'react-apollo';
 import Avatar from 'react-avatar';
 import PropTypes from 'prop-types';
 import Typography from '@material-ui/core/Typography';
 import DoneIcon from '@material-ui/icons/Done';
 import { withStyles } from '@material-ui/core/styles';
+import {
+  FETCH_USER_QUERY,
+} from '../../state/graphql/functions';
 
 const styles = theme => ({
   containerStyles: {
@@ -28,16 +32,20 @@ const styles = theme => ({
 });
 
 function MemberAvatar({
+  id,
   name,
   consRole,
   showDetails,
   width,
   classes,
   mapped,
+  user,
 }) {
   return (
     <div key={`${name}-avatar`} className={classes.containerStyles}>
-      <Avatar name={name} size={width} />
+      {user && user.photo
+        ? <Avatar name={name} size={width} src={user.photo} />
+        : <Avatar name={name} size={width} />}
       {
         consRole && showDetails
         && <Typography variant="subtitle2" className={classes.textStyles}>{consRole}</Typography>
@@ -55,6 +63,7 @@ function MemberAvatar({
 }
 
 MemberAvatar.propTypes = {
+  id: PropTypes.string.isRequired,
   name: PropTypes.string.isRequired,
   consRole: PropTypes.string,
   showDetails: PropTypes.bool,
@@ -67,6 +76,24 @@ MemberAvatar.defaultProps = {
   consRole: null,
   showDetails: false,
   mapped: false,
+  user: null,
 };
 
-export default withStyles(styles)(MemberAvatar);
+MemberAvatar.propTypes = {
+  user: PropTypes.object,
+};
+
+const MemberAvatarWithData = compose(
+  graphql(FETCH_USER_QUERY, {
+    skip: props => !props.id,
+    options: props => ({
+      variables: { userId: props.id },
+    }),
+    props: props => ({
+      user: props.data.fetchUser,
+    }),
+  }),
+  withApollo
+)(MemberAvatar);
+
+export default withStyles(styles)(MemberAvatarWithData);

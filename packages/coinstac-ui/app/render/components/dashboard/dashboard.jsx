@@ -397,11 +397,17 @@ class Dashboard extends Component {
         if (isUserA(user.id, nextProps.consortia[i].members)
             || isUserA(user.id, nextProps.consortia[i].owners)) {
           let steps = [];
-          if (nextProps.consortia[i].activePipelineId && this.props.pipelines.length) {
-            steps = this.props.pipelines
-              .find(p => p.id === nextProps.consortia[i].activePipelineId).steps;
+          if (nextProps.consortia[i].activePipelineId
+            && this.props.pipelines.length > 0) {
+            let pipeline = this.props.pipelines
+              .find(p => p.id === nextProps.consortia[i].activePipelineId);
+            if(pipeline && pipeline.steps){
+              steps = pipeline.steps;
+            }
           }
-          this.props.syncRemoteLocalConsortia(nextProps.consortia[i], steps);
+          if(steps.length > 0){
+            this.props.syncRemoteLocalConsortia(nextProps.consortia[i], steps);
+          }
         }
       }
     }
