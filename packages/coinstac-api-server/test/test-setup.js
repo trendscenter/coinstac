@@ -174,7 +174,7 @@ helperFunctions.getRethinkConnection()
         {
   "id": "local-S1zjvgj8E",
   "clients": [
-    "test1"
+    {'xrp2xmg2':'test1'}
   ],
   "consortiumId": "test-cons-2",
   "pipelineSnapshot": {
@@ -299,7 +299,7 @@ helperFunctions.getRethinkConnection()
 {
   "id": "b23af8ff-18fa-479d-adc7-19408abb3741",
   "clients": [
-    "test1"
+    {'xrp2xmg2':'test1'}
   ],
   "consortiumId": "test-cons-2",
   "startDate": "1568405561851",
@@ -510,7 +510,7 @@ helperFunctions.getRethinkConnection()
 {
   "id": "results-2",
   "clients": [
-    "test1"
+    {'xrp2xmg2':'test1'}
   ],
   "consortiumId": "test-cons-2",
   "startDate": "1518559440672",
@@ -593,7 +593,7 @@ helperFunctions.getRethinkConnection()
 {
   "id": "results-1",
   "clients": [
-    "test1"
+    {'xrp2xmg2':'test1'}
   ],
   "consortiumId": "test-cons-2",
   "startDate": "1518559440668",
@@ -760,8 +760,8 @@ helperFunctions.getRethinkConnection()
         id: 'test-cons-1',
         name: 'Test Consortia 1',
         description: 'This consortia is for testing.',
-        owners: ['author'],
-        members: ['author'],
+        owners: [{'gnqyomm0':'author'}],
+        members: [{'gnqyomm0':'author'}],
         isPrivate: false,
         createDate: 1551333489519,
       }).run(connection))
@@ -770,16 +770,17 @@ helperFunctions.getRethinkConnection()
         activePipelineId: 'test-pipeline-ssr',
         name: 'Test Consortia 2',
         description: 'This consortia is for testing too.',
-        owners: ['test1'],
-        members: ['author', 'test1'],
+        owners: [{"xrp2xmg2": "test1"}],
+        members: [{'gnqyomm0':'author'}, {"xrp2xmg2": "test1"}],
         isPrivate: false,
         createDate: 1551666489519,
       }).run(connection));
   })
   .then(() => helperFunctions.hashPassword('password'))
   .then(passwordHash => helperFunctions.createUser({
-    id: 'test1',
+    id: 'xrp2xmg2',
     username: 'test1',
+    name: 'Testy Testerson',
     institution: 'mrn',
     email: 'test@mrn.org',
     permissions: {
@@ -797,8 +798,9 @@ helperFunctions.getRethinkConnection()
   }, passwordHash))
   .then(() => helperFunctions.hashPassword('password'))
   .then(passwordHash => helperFunctions.createUser({
-    id: 'test2',
+    id: 'oc4ey3vg',
     username: 'test2',
+    name: 'Deuce Masterson',
     institution: 'mrn',
     email: 'test2@mrn.org',
     permissions: {
@@ -816,8 +818,9 @@ helperFunctions.getRethinkConnection()
   }, passwordHash))
   .then(() => helperFunctions.hashPassword('password'))
   .then(passwordHash => helperFunctions.createUser({
-    id: 'test3',
+    id: 'y7bqf28p',
     username: 'test3',
+    name: 'Tre Testington III',
     institution: 'mrn',
     email: 'test3@mrn.org',
     permissions: {
@@ -835,8 +838,9 @@ helperFunctions.getRethinkConnection()
   }, passwordHash))
   .then(() => helperFunctions.hashPassword('password'))
   .then(passwordHash => helperFunctions.createUser({
-    id: 'test4',
+    id: 'vagfpnjw',
     username: 'test4',
+    name: 'Quattro Quintana',
     institution: 'mrn',
     email: 'test4@mrn.org',
     permissions: {
@@ -854,8 +858,9 @@ helperFunctions.getRethinkConnection()
   }, passwordHash))
   .then(() => helperFunctions.hashPassword('password'))
   .then(passwordHash => helperFunctions.createUser({
-    id: 'test5',
+    id: 'mhcetjmo',
     username: 'test5',
+    name: 'Cinco Chavez',
     institution: 'mrn',
     email: 'test5@mrn.org',
     permissions: {
@@ -874,8 +879,9 @@ helperFunctions.getRethinkConnection()
   .then(() => helperFunctions.hashPassword(process.argv[3]
      || helperFunctions.getDBMap().rethinkdbServer.password))
   .then(passwordHash => helperFunctions.createUser({
-    id: 'server',
+    id: 'fuic3e3b',
     username: 'server',
+    name: 'Sally Serverson',
     institution: 'mrn',
     email: 'server@mrn.org',
     permissions: {
@@ -890,8 +896,9 @@ helperFunctions.getRethinkConnection()
   }, passwordHash))
   .then(() => helperFunctions.hashPassword('password'))
   .then(passwordHash => helperFunctions.createUser({
-    id: 'author',
+    id: 'gnqyomm0',
     username: 'author',
+    name: 'Arturo Andersson',
     institution: 'mrn',
     email: 'server@mrn.org',
     permissions: {
