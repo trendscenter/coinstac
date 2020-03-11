@@ -17,7 +17,7 @@ const CONS_NAME = 'e2e-consortium-single';
 const CONS_DESC = 'e2e-description-single';
 const PIPE_NAME = 'e2e-pipeline-single';
 const PIPE_DESC = 'e2e-pipeline-description-single';
-const COMPUTATION_NAME = 'Regression (Singleshot) - FreeSurfer Volumes';
+const COMPUTATION_NAME = 'Regression - FreeSurfer Volumes';
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -69,7 +69,6 @@ describe('e2e run computation with 1 member', () => {
       .getText('.notification-message')
       .then(notificationMessage => notificationMessage.should.equal('Consortium Saved'))
       .then(() => app.client
-        .waitForVisible('.notification-message', NOTIFICATION_DISMISS_TIMEOUT, true)
         .click('a=Consortia')
         .waitForVisible(`h1=${CONS_NAME}`))
   ));
@@ -144,8 +143,6 @@ describe('e2e run computation with 1 member', () => {
       .waitForVisible('.notification-message', EXIST_TIMEOUT)
       .getText('.notification-message')
       .then(notificationMessage => notificationMessage.should.equal('Pipeline Saved.'))
-      .then(() => app.client
-        .waitForVisible('.notification-message', NOTIFICATION_DISMISS_TIMEOUT, true))
   ));
 
   it('sets the created pipeline to the consortium', () => (
@@ -163,24 +160,15 @@ describe('e2e run computation with 1 member', () => {
       .click(`li=${PIPE_NAME}`)
       .waitForVisible(`a=${PIPE_NAME}`, EXIST_TIMEOUT)
       .waitForVisible('.notification-message=Pipeline computations downloading via Docker.', EXIST_TIMEOUT)
-      .element('.notification:last-child')
-      .click('.notification-dismiss')
-      .waitForVisible('.notification-message=Pipeline computations downloading via Docker.', EXIST_TIMEOUT, true)
       .waitForVisible(`.notification-message=${COMPUTATION_NAME} Download Complete`, COMPUTATION_DOWNLOAD_TIMEOUT)
-      .element('.notification:last-child')
-      .click('.notification-dismiss')
-      .waitForVisible(`.notification-message=${COMPUTATION_NAME} Download Complete`, EXIST_TIMEOUT, true)
       .waitForVisible('.notification-message*=Pipeline Computations Downloaded', COMPUTATION_DOWNLOAD_TIMEOUT)
-      .element('.notification:last-child')
-      .click('.notification-dismiss')
-      .waitForVisible('.notification-message*=Pipeline Computations Downloaded', EXIST_TIMEOUT, true)
   ));
 
   it('map data to consortium', () => (
     app.client
       .click('a=Maps')
-      .waitForVisible(`a[name="${CONS_NAME}-map-data"]`, 20000)
-      .click(`a[name="${CONS_NAME}-map-data"]`)
+      .waitForVisible(`a[name="${CONS_NAME}"]`, 20000)
+      .click(`a[name="${CONS_NAME}"]`)
       .waitForVisible('button=Add Files Group', EXIST_TIMEOUT)
       .click('button=Add Files Group')
       .waitForVisible('button=Auto Map', EXIST_TIMEOUT)
@@ -195,10 +183,7 @@ describe('e2e run computation with 1 member', () => {
     app.client
       .waitForVisible('button=Start Pipeline', EXIST_TIMEOUT)
       .click('button=Start Pipeline')
-      .waitForText('.notification-message', EXIST_TIMEOUT)
-      .getText('.notification-message')
-      .then(notificationMessage => notificationMessage.should.equal(`Decentralized Pipeline Starting for ${CONS_NAME}.`))
-      .then(() => app.client.waitForVisible('.notification-message', NOTIFICATION_DISMISS_TIMEOUT, true))
+      .waitForVisible(`.notification-message=Pipeline Starting for ${CONS_NAME}.`, EXIST_TIMEOUT)
   ));
 
   it('displays computation progress', () => (
