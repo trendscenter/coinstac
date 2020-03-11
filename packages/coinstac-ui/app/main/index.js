@@ -78,6 +78,16 @@ loadConfig()
         console.error(err);// eslint-disable-line no-console
       }
     });
+    process.on('unhandledRejection', (err) => {
+      try {
+        unhandler(err);
+      } catch (e) {
+        console.error('Logging failure:');// eslint-disable-line no-console
+        console.error(e);// eslint-disable-line no-console
+        console.error('Thrown error on failure:');// eslint-disable-line no-console
+        console.error(err);// eslint-disable-line no-console
+      }
+    });
     global.config = config;
 
     const mainWindow = getWindow();
@@ -151,35 +161,9 @@ loadConfig()
         });
       });
     });
-    /**
-   * IPC Listener to start pipeline
-   * @param {Object} consortium
-   * @param {String} consortium.id The id of the consortium starting the pipeline
-   * @param {Object[]} consortium.pipelineSteps An array of the steps involved in
-   *  this pipeline run according to the consortium
-   * @param {String[]} dataMappings Mapping of pipeline variables into data file columns
-   * @param {Object} run
-   * @param {String} run.id The id of the current run
-   * @param {Object[]} run.pipelineSteps An array of the steps involved in this pipeline run
-   *  according to the run
-   * @return {Promise<String>} Status message
-   */
-    ipcMain.on('start-pipeline', (event, {
-      consortium, dataMappings, pipelineRun,
-    }) => {
-      const { filesArray, steps } = runPipelineFunctions.parsePipelineInput(pipelineRun.pipelineSnapshot, dataMappings);
 
-      const run = {
-        ...pipelineRun,
-        pipelineSnapshot: {
-          ...pipelineRun.pipelineSnapshot,
-          steps,
-        },
-      };
-
+    function startPipelineRun(run, filesArray, consortium) {
       const pipeline = run.pipelineSnapshot;
-
-      mainWindow.webContents.send('save-local-run', { run });
 
       const computationImageList = pipeline.steps
         .map(step => step.computations
@@ -248,13 +232,13 @@ loadConfig()
         .then(() => {
           logger.verbose('############ Client starting pipeline');
 
-          const pipelineName = pipeline.name
-          const consortiumName = consortium.name
+          const pipelineName = pipeline.name;
+          const consortiumName = consortium.name;
 
           ipcFunctions.sendNotification(
             'Pipeline started',
             `Pipeline ${pipelineName} started on consortia ${consortiumName}`
-          )
+          );
 
           return initializedCore.startPipeline(
             null,
@@ -277,7 +261,7 @@ loadConfig()
                 ipcFunctions.sendNotification(
                   'Pipeline finished',
                   `Pipeline ${pipelineName} finished on consortia ${consortiumName}`
-                )
+                );
 
                 return initializedCore.unlinkFiles(run.id)
                   .then(() => {
@@ -335,6 +319,37 @@ loadConfig()
               });
             });
         });
+    }
+
+    /**
+   * IPC Listener to start pipeline
+   * @param {Object} consortium Consortium starting the pipeline
+   * @param {Object} dataMappings Mapping of pipeline variables into data file columns
+   * @param {Object} pipelineRun Current run details
+   * @return {Promise<String>} Status message
+   */
+    ipcMain.on('start-pipeline', async (event, {
+      consortium, dataMappings, pipelineRun,
+    }) => {
+      try {
+        const { filesArray, steps } = runPipelineFunctions.parsePipelineInput(
+          pipelineRun.pipelineSnapshot, dataMappings
+        );
+
+        const run = {
+          ...pipelineRun,
+          pipelineSnapshot: {
+            ...pipelineRun.pipelineSnapshot,
+            steps,
+          },
+        };
+
+        mainWindow.webContents.send('save-local-run', { run: pipelineRun });
+
+        await startPipelineRun(run, filesArray, consortium);
+      } catch (error) {
+        mainWindow.webContents.send('notify-warning', error.message);
+      }
     });
 
     /**

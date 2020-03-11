@@ -33,12 +33,12 @@ export default function reducer(state = INITIAL_STATE, action) {
   switch (action.type) {
     case CLEAR_LOGS:
       return {
-        ...INITIAL_STATE,
+        ...state,
         logs: null,
       };
     case APPEND_LOG_MESSAGE:
       return {
-        ...INITIAL_STATE,
+        ...state,
         logs: state.logs ? state.logs.concat(action.payload) : action.payload,
       };
     default:

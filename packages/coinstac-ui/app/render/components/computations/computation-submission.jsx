@@ -59,10 +59,7 @@ class ComputationSubmission extends Component { // eslint-disable-line
       if (res.data.addComputation) {
         this.setState({ submissionSuccess: true });
         this.props.router.push('/dashboard/computations');
-        this.props.notifySuccess({
-          message: 'Computation Submission Successful',
-          autoDismiss: 5,
-        });
+        this.props.notifySuccess('Computation Submission Successful');
       } else {
         this.setState({ submissionSuccess: false });
       }
