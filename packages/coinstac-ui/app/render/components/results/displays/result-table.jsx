@@ -174,7 +174,11 @@ class TableResult extends Component {
 
       let labels = [];
 
-      if (heading.includes('Global') && Array.isArray(data.covariate_labels[0])) {
+      if (heading.includes('Global')
+        && data.covariate_labels
+        && data.covariate_labels[0]
+        && Array.isArray(data.covariate_labels[0])
+      ) {
         labels = data.covariate_labels[0];
       } else {
         labels = data.covariate_labels;
