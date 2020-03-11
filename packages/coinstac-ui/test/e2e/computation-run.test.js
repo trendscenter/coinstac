@@ -137,7 +137,7 @@ describe('e2e run computation with 1 member', () => {
       .waitForVisible('#data-0-area .react-select-dropdown-menu', EXIST_TIMEOUT, true)
       .setValue('[name="step-lambda"]', '0')
       .click('button=Save Pipeline')
-      .waitForVisible('span=Pipeline Saved.', EXIST_TIMEOUT)
+      .waitForVisible('span=Pipeline Saved', EXIST_TIMEOUT)
   ));
 
   it('sets the created pipeline to the consortium', () => (
