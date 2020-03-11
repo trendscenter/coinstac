@@ -441,11 +441,7 @@ class ConsortiaList extends Component {
 
   stopPipeline(pipelineId) {
     return () => {
-<<<<<<< HEAD
       const { client, runs } = this.props;
-=======
-      const { runs } = this.props;
->>>>>>> master
 
       const presentRun = runs.reduce( (prev, curr) => {
         return prev.startDate > curr.startDate ? prev : curr ;
