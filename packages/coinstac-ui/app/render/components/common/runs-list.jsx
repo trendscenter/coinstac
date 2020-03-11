@@ -40,7 +40,7 @@ const RunsList = ({
           && (run.startDate > activeTime || run.endDate > activeTime)
           && consortium
           && (isUserA(auth.user.id, consortium.members)
-              || isUserA(auth.user.id, consortium.owners))
+              || isUserA(auth.user.id, consortium.owners)
               || isUserA(auth.user.id, run.sharedUsers))
         ) {
           return (
