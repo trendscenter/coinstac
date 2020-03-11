@@ -109,17 +109,6 @@ const styles = theme => ({
   },
 });
 
-const isUserA = (userId, groupArr) => {
-  let res = false;
-  Object.values(groupArr).map((item) => {
-    if(Object.keys(item).indexOf(userId) !== -1){
-      res = true;
-      return;
-    }
-  });
-  return res;
-};
-
 let dockerInterval;
 
 class Dashboard extends Component {
@@ -379,47 +368,13 @@ class Dashboard extends Component {
       }
     }
 
-<<<<<<< HEAD
-=======
-    if (nextProps.pipelines) {
-      // Check associated consortia to see if activepipelineid matches.
-      //  If so check if pipeline steps match. If they don't, clear.
-      for (let i = 0; i < nextProps.pipelines.length; i += 1) {
-        this.props.syncRemoteLocalPipelines(nextProps.pipelines[i]);
-      }
-    }
-
-    if (nextProps.consortia) {
-      // If member or owner, check consortia activePipeline against
-      //  localDB assocCons activePipelineId. If different, clear steps
-      //  & activePipelineId, delete stepIO, remove assocCons in collections
-      for (let i = 0; i < nextProps.consortia.length; i += 1) {
-        if (isUserA(user.id, nextProps.consortia[i].members)
-            || isUserA(user.id, nextProps.consortia[i].owners)) {
-          let steps = [];
-          if (nextProps.consortia[i].activePipelineId
-            && this.props.pipelines.length > 0) {
-            let pipeline = this.props.pipelines
-              .find(p => p.id === nextProps.consortia[i].activePipelineId);
-            if(pipeline && pipeline.steps){
-              steps = pipeline.steps;
-            }
-          }
-          if(steps.length > 0){
-            this.props.syncRemoteLocalConsortia(nextProps.consortia[i], steps);
-          }
-        }
-      }
-    }
-
->>>>>>> Embellished user settings and added photo upload. Changed schema to correct user.id
     if (nextProps.consortia && this.props.consortia.length > 0) {
       for (let i = 0; i < nextProps.consortia.length; i += 1) {
         // Download Docker images for consortia activePipeline if user is a member
         if (this.props.consortia[i] && nextProps.consortia[i].id === this.props.consortia[i].id
             && nextProps.consortia[i].activePipelineId
             && !this.props.consortia[i].activePipelineId
-            && isUserA(user.id, nextProps.consortia[i].members)) {
+            && nextProps.consortia[i].members.indexOf(user.id) > -1) {
           const computationData = client.readQuery({ query: FETCH_ALL_COMPUTATIONS_QUERY });
           const pipelineData = client.readQuery({ query: FETCH_ALL_PIPELINES_QUERY });
           const pipeline = pipelineData.fetchAllPipelines

@@ -10,12 +10,15 @@ function getActiveTime(hoursSinceActive) {
 
 const isUserA = (userId, groupArr) => {
   let res = false;
-  Object.values(groupArr).map((item) => {
-    if(Object.keys(item).indexOf(userId) !== -1){
-      res = true;
-      return;
-    }
-  });
+  if (groupArr.indexOf(userId) !== -1) {
+    res = true;
+  }else{
+    Object.values(groupArr).map((item) => {
+      if (Object.keys(item).indexOf(userId) !== -1) {
+        res = true;
+      }
+    });
+  }
   return res;
 };
 
@@ -39,9 +42,11 @@ const RunsList = ({
         if ((!limitToComplete || (limitToComplete && (run.status === 'complete' || run.status === 'error')))
           && (run.startDate > activeTime || run.endDate > activeTime)
           && consortium
-          && (isUserA(auth.user.id, consortium.members)
-              || isUserA(auth.user.id, consortium.owners)
-              || isUserA(auth.user.id, run.sharedUsers))
+          && (
+            isUserA(auth.user.id, consortium.members)
+            || isUserA(auth.user.id, consortium.owners)
+            || isUserA(auth.user.id, run.sharedUsers)
+          )
         ) {
           return (
             <RunItem
