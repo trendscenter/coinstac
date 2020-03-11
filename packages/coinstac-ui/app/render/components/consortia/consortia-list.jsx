@@ -32,6 +32,7 @@ import {
   consortiumSaveActivePipelineProp,
 } from '../../state/graphql/props';
 import { notifyInfo } from '../../state/ducks/notifyAndLog';
+import { pipelineNeedsDataMapping } from '../../../main/utils/run-pipeline-functions';
 
 const MAX_LENGTH_CONSORTIA = 50;
 
@@ -87,7 +88,6 @@ class ConsortiaList extends Component {
 
     localStorage.removeItem('CONSORTIUM_JOINED_BY_THREAD');
 
-    this.getListItem = this.getListItem.bind(this);
     this.deleteConsortium = this.deleteConsortium.bind(this);
     this.joinConsortium = this.joinConsortium.bind(this);
     this.leaveConsortium = this.leaveConsortium.bind(this);
@@ -149,8 +149,12 @@ class ConsortiaList extends Component {
     const actions = [];
     const text = [];
 
-    const isMapped = maps.findIndex(m => m.consortiumId === consortium.id
+    const pipeline = pipelines.find(pipe => pipe.id === consortium.activePipelineId);
+
+    const consortiumHasDataMap = maps.findIndex(m => m.consortiumId === consortium.id
       && m.pipelineId === consortium.activePipelineId) > -1;
+
+    const needsDataMapping = !consortiumHasDataMap && pipelineNeedsDataMapping(pipeline);
 
     // Add pipeline text
     text.push(
@@ -158,11 +162,14 @@ class ConsortiaList extends Component {
         <Typography className={classes.labelInline}>
           Active Pipeline:
         </Typography>
-        {
-          consortium.activePipelineId
-            ? <Typography className={classNames(classes.value, classes.green)}>{pipelines.find(pipe => pipe.id === consortium.activePipelineId).name}</Typography>
-            : <Typography className={classNames(classes.value, classes.red)}>None</Typography>
-        }
+        <Typography className={
+          classNames(classes.value, consortium.activePipelineId ? classes.green : classes.red)
+        }>
+          {consortium.activePipelineId
+            ? pipelines.find(pipe => pipe.id === consortium.activePipelineId).name
+            : 'None'
+          }
+        </Typography>
       </div>
     );
 
@@ -205,7 +212,7 @@ class ConsortiaList extends Component {
       </div>
     );
 
-    if (owner && consortium.activePipelineId && isMapped) {
+    if (owner && consortium.activePipelineId && !needsDataMapping) {
       const isPipelineRunning = runs.filter((run) => {
         return run.consortiumId === consortium.id && run.status === 'started';
       }).length > 0;
@@ -237,9 +244,8 @@ class ConsortiaList extends Component {
       const consortiumPipelines = this.getConsortiumPipelines(consortium);
 
       actions.push(
-        <Fragment>
+        <Fragment key={`${consortium.id}-set-active-pipeline-button`}>
           <Button
-            key={`${consortium.id}-set-active-pipeline-button`}
             component={Link}
             variant="contained"
             color="secondary"
@@ -268,7 +274,7 @@ class ConsortiaList extends Component {
           </Menu>
         </Fragment>
       );
-    } else if ((owner || member) && !isMapped) {
+    } else if ((owner || member) && needsDataMapping) {
       actions.push(
         <Button
           key={`${consortium.id}-set-map-local-button`}
@@ -314,7 +320,7 @@ class ConsortiaList extends Component {
     return { actions, text, owner };
   }
 
-  getListItem(consortium) {
+  renderListItem = consortium => {
     const { user } = this.props.auth;
     const { consortiumJoinedByThread } = this.state;
 
@@ -382,16 +388,7 @@ class ConsortiaList extends Component {
       });
 
       this.props.pullComputations({ consortiumId, computations });
-      this.props.notifyInfo({
-        message: 'Pipeline computations downloading via Docker.',
-        autoDismiss: 5,
-        action: {
-          label: 'View Docker Download Progress',
-          callback: () => {
-            this.props.router.push('/dashboard/computations');
-          },
-        },
-      });
+      this.props.notifyInfo('Pipeline computations downloading via Docker.');
     }
 
     this.props.joinConsortium(consortiumId);
@@ -459,15 +456,7 @@ class ConsortiaList extends Component {
         const dataMapping = maps.find(m => m.consortiumId === consortium.id
           && m.pipelineId === consortium.activePipelineId);
 
-        notifyInfo({
-          message: `Local Pipeline Starting for ${consortium.name}.`,
-          action: {
-            label: 'Watch Progress',
-            callback: () => {
-              router.push('dashboard');
-            },
-          },
-        });
+        notifyInfo(`Local Pipeline Starting for ${consortium.name}.`);
 
         ipcRenderer.send('start-pipeline', {
           consortium, dataMappings: dataMapping, run,
@@ -553,14 +542,14 @@ class ConsortiaList extends Component {
         />
 
         {consortia && consortia.length && consortia.length > MAX_LENGTH_CONSORTIA &&
-          consortia.map(consortium => this.getListItem(consortium))}
+          consortia.map(this.renderListItem)}
 
-        {memberConsortia.length > 0 &&(
+        {memberConsortia.length > 0 && (
           <Typography variant="h6">Your Consortia</Typography>
         )}
 
         {memberConsortia.length > 0 &&
-          memberConsortia.map(consortium => this.getListItem(consortium))
+          memberConsortia.map(this.renderListItem)
         }
 
         {otherConsortia.length > 0 && (
@@ -568,7 +557,8 @@ class ConsortiaList extends Component {
         )}
 
         {otherConsortia.length > 0 &&
-          otherConsortia.map(consortium => this.getListItem(consortium))}
+          otherConsortia.map(this.renderListItem)}
+
         {(!consortia || !consortia.length) && (
           <Typography variant="body1">
             No consortia found

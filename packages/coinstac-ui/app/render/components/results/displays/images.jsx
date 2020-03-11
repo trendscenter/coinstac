@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import { notifySuccess, notifyError, writeLog } from '../../../state/ducks/notifyAndLog';
+import { notifyError, writeLog } from '../../../state/ducks/notifyAndLog';
 import RasterizeHTML from 'rasterizehtml';
 import jsPDF from 'jspdf';
 import Button from '@material-ui/core/Button';
@@ -208,9 +208,7 @@ class Images extends Component {
 		  doc.save(kebabcase(this.props.title) + ".pdf");
     } catch(err) {
      this.props.writeLog({ type: 'error', message: err });
-     this.props.notifyError({
-       message: err
-     });
+     this.props.notifyError(err.message);
 	 }
 	}
 
