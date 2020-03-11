@@ -88,7 +88,6 @@ class ConsortiaList extends Component {
 
     localStorage.removeItem('CONSORTIUM_JOINED_BY_THREAD');
 
-    this.getListItem = this.getListItem.bind(this);
     this.deleteConsortium = this.deleteConsortium.bind(this);
     this.joinConsortium = this.joinConsortium.bind(this);
     this.leaveConsortium = this.leaveConsortium.bind(this);
@@ -163,11 +162,14 @@ class ConsortiaList extends Component {
         <Typography className={classes.labelInline}>
           Active Pipeline:
         </Typography>
-        {
-          consortium.activePipelineId
-            ? <Typography className={classNames(classes.value, classes.green)}>{pipeline.name}</Typography>
-            : <Typography className={classNames(classes.value, classes.red)}>None</Typography>
-        }
+        <Typography className={
+          classNames(classes.value, consortium.activePipelineId ? classes.green : classes.red)
+        }>
+          {consortium.activePipelineId
+            ? pipelines.find(pipe => pipe.id === consortium.activePipelineId).name
+            : 'None'
+          }
+        </Typography>
       </div>
     );
 
@@ -242,9 +244,8 @@ class ConsortiaList extends Component {
       const consortiumPipelines = this.getConsortiumPipelines(consortium);
 
       actions.push(
-        <Fragment>
+        <Fragment key={`${consortium.id}-set-active-pipeline-button`}>
           <Button
-            key={`${consortium.id}-set-active-pipeline-button`}
             component={Link}
             variant="contained"
             color="secondary"
@@ -319,7 +320,7 @@ class ConsortiaList extends Component {
     return { actions, text, owner };
   }
 
-  getListItem(consortium) {
+  renderListItem = consortium => {
     const { user } = this.props.auth;
     const { consortiumJoinedByThread } = this.state;
 
@@ -558,14 +559,14 @@ class ConsortiaList extends Component {
         />
 
         {consortia && consortia.length && consortia.length > MAX_LENGTH_CONSORTIA &&
-          consortia.map(consortium => this.getListItem(consortium))}
+          consortia.map(this.renderListItem)}
 
-        {memberConsortia.length > 0 &&(
+        {memberConsortia.length > 0 && (
           <Typography variant="h6">Your Consortia</Typography>
         )}
 
         {memberConsortia.length > 0 &&
-          memberConsortia.map(consortium => this.getListItem(consortium))
+          memberConsortia.map(this.renderListItem)
         }
 
         {otherConsortia.length > 0 && (
@@ -573,7 +574,8 @@ class ConsortiaList extends Component {
         )}
 
         {otherConsortia.length > 0 &&
-          otherConsortia.map(consortium => this.getListItem(consortium))}
+          otherConsortia.map(this.renderListItem)}
+
         {(!consortia || !consortia.length) && (
           <Typography variant="body1">
             No consortia found
