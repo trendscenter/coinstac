@@ -22,14 +22,14 @@ import {
   writeLog,
 } from '../../state/ducks/notifyAndLog';
 import CoinstacAbbr from '../coinstac-abbr';
-import { getLocalRun, getDBRuns, saveLocalRun, updateLocalRun } from '../../state/ducks/runs';
+import { getLocalRun, saveLocalRun, updateLocalRun } from '../../state/ducks/runs';
 import {
   getDockerStatus,
   pullComputations,
   updateDockerOutput,
 } from '../../state/ducks/docker';
 import { updateUserConsortiaStatuses, updateUserPerms } from '../../state/ducks/auth';
-import { appendLogMessage, clearLogs } from '../../state/ducks/app';
+import { appendLogMessage, clearLogs, loadLocalData } from '../../state/ducks/app';
 import {
   COMPUTATION_CHANGED_SUBSCRIPTION,
   CONSORTIUM_CHANGED_SUBSCRIPTION,
@@ -112,8 +112,6 @@ class Dashboard extends Component {
   constructor(props) {
     super(props);
 
-    this.props.getDBRuns();
-
     this.state = {
       dockerStatus: true,
       unsubscribeComputations: null,
@@ -124,8 +122,10 @@ class Dashboard extends Component {
   }
 
   componentDidMount() {
-    const { auth: { user } } = this.props;
+    const { auth: { user }, loadLocalData } = this.props;
     const { router } = this.context;
+
+    loadLocalData();
 
     dockerInterval = setInterval(() => {
       let status = this.props.getDockerStatus();
@@ -550,7 +550,6 @@ Dashboard.propTypes = {
   client: PropTypes.object.isRequired,
   computations: PropTypes.array,
   consortia: PropTypes.array,
-  getDBRuns: PropTypes.func.isRequired,
   getDockerStatus: PropTypes.func.isRequired,
   notifyError: PropTypes.func.isRequired,
   notifyInfo: PropTypes.func.isRequired,
@@ -573,6 +572,7 @@ Dashboard.propTypes = {
   writeLog: PropTypes.func.isRequired,
   updateUserPerms: PropTypes.func.isRequired,
   currentUser: PropTypes.object,
+  loadLocalData: PropTypes.func.isRequired,
   classes: PropTypes.object.isRequired,
 };
 
@@ -661,7 +661,6 @@ const DashboardWithData = compose(
 const connectedComponent = connect(mapStateToProps,
   {
     getLocalRun,
-    getDBRuns,
     getDockerStatus,
     notifyError,
     notifyInfo,
@@ -675,6 +674,7 @@ const connectedComponent = connect(mapStateToProps,
     updateUserPerms,
     clearLogs,
     appendLogMessage,
+    loadLocalData,
   })(DashboardWithData);
 
 export default withStyles(styles)(connectedComponent);

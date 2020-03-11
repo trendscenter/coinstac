@@ -1,3 +1,8 @@
+import { applyAsyncLoading } from './loading';
+import { loadLocalDataMappings } from './maps';
+import { getDBRuns } from './runs';
+import { getOrCreateLocalDatabase } from '../local-db';
+
 const INITIAL_STATE = {
   logs: null,
 };
@@ -8,8 +13,22 @@ const APPEND_LOG_MESSAGE = 'APPEND_LOG_MESSAGE';
 
 // Action Creators
 export const clearLogs = () => ({ type: CLEAR_LOGS });
+
 export const appendLogMessage = message => ({ type: APPEND_LOG_MESSAGE, payload: message });
 
+export const loadLocalData = applyAsyncLoading(() => (dispatch, getState) => {
+  const { auth: { user } } = getState();
+
+  // local databases are uniquely identified by user id
+  const localDBName = `coinstac-${user.id}`;
+
+  getOrCreateLocalDatabase(localDBName);
+
+  dispatch(loadLocalDataMappings());
+  dispatch(getDBRuns());
+});
+
+// Reducer
 export default function reducer(state = INITIAL_STATE, action) {
   switch (action.type) {
     case CLEAR_LOGS:

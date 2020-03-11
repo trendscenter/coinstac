@@ -1,6 +1,6 @@
 import { uniqBy } from 'lodash';
 import { applyAsyncLoading } from './loading';
-import localDB from '../local-db';
+import { getDatabaseInstance } from '../local-db';
 
 // Actions
 const CLEAR_RUNS = 'CLEAR_RUNS';
@@ -11,7 +11,7 @@ const UPDATE_LOCAL_RUN = 'UPDATE_LOCAL_RUN';
 
 // Action Creators
 export const saveRemoteRunsLocally = applyAsyncLoading(
-  runs => dispatch => localDB.runs.bulkPut(runs)
+  runs => dispatch => getDatabaseInstance().runs.bulkPut(runs)
     .then(() => {
       dispatch(({
         type: SAVE_REMOTE_RUNS_LOCALLY,
@@ -20,7 +20,7 @@ export const saveRemoteRunsLocally = applyAsyncLoading(
     })
 );
 
-export const clearRuns = applyAsyncLoading(() => dispatch => localDB.runs.clear()
+export const clearRuns = applyAsyncLoading(() => dispatch => getDatabaseInstance().runs.clear()
   .then(() => {
     dispatch(({
       type: CLEAR_RUNS,
@@ -28,19 +28,19 @@ export const clearRuns = applyAsyncLoading(() => dispatch => localDB.runs.clear(
     }));
   }));
 
-export const getRunsForConsortium = applyAsyncLoading(consId => () => localDB.runs
+export const getRunsForConsortium = applyAsyncLoading(consId => () => getDatabaseInstance().runs
   .filter(run => run.consortiumId === consId)
   .sortBy('startDate')
   .then((runs) => {
     return runs;
   }));
 
-export const getLocalRun = applyAsyncLoading(runId => () => localDB.runs.get(runId)
+export const getLocalRun = applyAsyncLoading(runId => () => getDatabaseInstance().runs.get(runId)
   .then((run) => {
     return run;
   }));
 
-export const getDBRuns = applyAsyncLoading(() => dispatch => localDB.runs
+export const getDBRuns = applyAsyncLoading(() => dispatch => getDatabaseInstance().runs
   // .where('id').startsWith('local')
   .toArray()
   .then((runs) => {
@@ -51,7 +51,7 @@ export const getDBRuns = applyAsyncLoading(() => dispatch => localDB.runs
     return runs;
   }));
 
-export const saveLocalRun = applyAsyncLoading(run => dispatch => localDB.runs.put(run)
+export const saveLocalRun = applyAsyncLoading(run => dispatch => getDatabaseInstance().runs.put(run)
   .then((key) => {
     dispatch(({
       type: SAVE_LOCAL_RUN,
@@ -61,7 +61,7 @@ export const saveLocalRun = applyAsyncLoading(run => dispatch => localDB.runs.pu
   }));
 
 export const updateLocalRun = applyAsyncLoading(
-  (runId, object) => dispatch => localDB.runs.update(runId, { ...object })
+  (runId, object) => dispatch => getDatabaseInstance().runs.update(runId, { ...object })
     .then((key) => {
       dispatch(({
         type: UPDATE_LOCAL_RUN,
