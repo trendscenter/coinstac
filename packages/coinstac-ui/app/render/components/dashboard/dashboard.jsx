@@ -4,9 +4,8 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { ipcRenderer } from 'electron';
 import { isEqual } from 'lodash';
-import { MuiThemeProvider, withStyles } from '@material-ui/core/styles';
+import { withStyles } from '@material-ui/core/styles';
 import {
-  CssBaseline,
   Drawer,
   Grid,
   Icon,
@@ -15,7 +14,6 @@ import {
   Typography,
 } from '@material-ui/core';
 import DashboardNav from './dashboard-nav';
-import theme from '../../styles/material-ui/theme';
 import UserAccountController from '../user/user-account-controller';
 import {
   notifyError,
@@ -50,10 +48,11 @@ import {
 } from '../../state/graphql/functions';
 import {
   getAllAndSubProp,
-  updateConsortiaMappedUsersProp
+  updateConsortiaMappedUsersProp,
 } from '../../state/graphql/props';
 import StartPipelineListener from './listeners/start-pipeline-listener';
 import NotificationsListener from './listeners/notifications-listener';
+import DisplayNotificationsListener from './listeners/display-notifications-listener';
 
 const styles = theme => ({
   root: {
@@ -154,9 +153,7 @@ class Dashboard extends Component {
 
     ipcRenderer.on('docker-pull-complete', (event, arg) => {
       this.props.updateUserConsortiumStatus(arg, 'pipeline-computations-downloaded');
-      this.props.notifySuccess({
-        message: `${arg} Pipeline Computations Downloaded`,
-      });
+      this.props.notifySuccess(`${arg} Pipeline Computations Downloaded`);
     });
 
     ipcRenderer.on('local-pipeline-state-update', (event, arg) => {
@@ -174,31 +171,13 @@ class Dashboard extends Component {
     });
 
     ipcRenderer.on('local-run-complete', (event, arg) => {
-      this.props.notifySuccess({
-        message: `${arg.consName} Pipeline Complete.`,
-        autoDismiss: 5,
-        action: {
-          label: 'View Results',
-          callback: () => {
-            router.push(`dashboard/results/${arg.run.id}`);
-          },
-        },
-      });
+      this.props.notifySuccess(`${arg.consName} Pipeline Complete.`);
 
       this.props.updateLocalRun(arg.run.id, { results: arg.run.results, status: 'complete' });
     });
 
     ipcRenderer.on('local-run-error', (event, arg) => {
-      this.props.notifyError({
-        message: `${arg.consName} Pipeline Error.`,
-        autoDismiss: 5,
-        action: {
-          label: 'View Error',
-          callback: () => {
-            router.push(`dashboard/results/${arg.run.id}`);
-          },
-        },
-      });
+      this.props.notifyError(`${arg.consName} Pipeline Error.`);
 
       this.props.updateLocalRun(arg.run.id, { error: arg.run.error, status: 'error' });
     });
@@ -217,10 +196,7 @@ class Dashboard extends Component {
     this.unsubscribeToUserRuns = this.props.subscribeToUserRuns(user.id);
 
     ipcRenderer.on('docker-error', (event, arg) => {
-      this.props.notifyError({
-        message: `Docker Error: ${arg.err.message}`,
-        autoDismiss: 5
-      });
+      this.props.notifyError(`Docker Error: ${arg.err.message}`);
     });
 
     this.checkLocalMappedStatus(this.props.maps, this.props.consortia);
@@ -290,16 +266,7 @@ class Dashboard extends Component {
           // Update status of run in localDB
           ipcRenderer.send('clean-remote-pipeline', nextProps.remoteRuns[i].id);
           this.props.updateLocalRun(run.id, { error: run.error, status: 'error' });
-          this.props.notifyError({
-            message: `${consortium.name} Pipeline Error.`,
-            autoDismiss: 5,
-            action: {
-              label: 'View Error',
-              callback: () => {
-                router.push(`dashboard/results/${run.id}`);
-              },
-            },
-          });
+          this.props.notifyError(`${consortium.name} Pipeline Error.`);
 
           // Run already in props but results are incoming
         } else if (runIndexInLocalRuns > -1 && nextProps.remoteRuns[i].results
@@ -315,16 +282,7 @@ class Dashboard extends Component {
           // Update status of run in localDB
           ipcRenderer.send('clean-remote-pipeline', nextProps.remoteRuns[i].id);
           this.props.saveLocalRun({ ...run, status: 'complete' });
-          this.props.notifySuccess({
-            message: `${consortium.name} Pipeline Complete.`,
-            autoDismiss: 5,
-            action: {
-              label: 'View Results',
-              callback: () => {
-                router.push(`dashboard/results/${run.id}`);
-              },
-            },
-          });
+          this.props.notifySuccess(`${consortium.name} Pipeline Complete.`);
           // Looking for remote run state changes
         } else if (runIndexInPropsRemote > -1 && nextProps.remoteRuns[i].remotePipelineState
           && (!this.props.remoteRuns[runIndexInPropsRemote].remotePipelineState ||
@@ -384,16 +342,7 @@ class Dashboard extends Component {
           });
 
           this.props.pullComputations({ consortiumId: nextProps.consortia[i].id, computations });
-          this.props.notifyInfo({
-            message: 'Pipeline computations downloading via Docker.',
-            autoDismiss: 5,
-            action: {
-              label: 'View Docker Download Progress',
-              callback: () => {
-                router.push('/dashboard/computations');
-              },
-            },
-          });
+          this.props.notifyInfo('Pipeline computations downloading via Docker.');
         }
       }
     }
@@ -507,8 +456,7 @@ class Dashboard extends Component {
 
     // @TODO don't render primary content whilst still loading/bg-services
     return (
-      <MuiThemeProvider theme={theme}>
-        <CssBaseline />
+      <React.Fragment>
         <Grid container>
           <Grid item xs={12} sm={3} className={classes.gridContainer}>
             <Drawer
@@ -574,7 +522,8 @@ class Dashboard extends Component {
           remoteRuns={remoteRuns}
         />
         <NotificationsListener />
-      </MuiThemeProvider>
+        <DisplayNotificationsListener />
+      </React.Fragment>
     );
   }
 }

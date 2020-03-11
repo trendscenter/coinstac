@@ -163,25 +163,14 @@ class ConsortiumTabs extends Component {
         savingStatus: 'success',
       });
 
-      this.props.notifySuccess({
-        message: 'Consortium Saved',
-        autoDismiss: 5,
-        action: {
-          label: 'View Consortia List',
-          callback: () => {
-            this.props.router.push('/dashboard/consortia/');
-          },
-        },
-      });
+      this.props.notifySuccess('Consortium Saved');
     })
     .catch(({ graphQLErrors }) => {
       this.setState({
         savingStatus: 'fail',
       })
 
-      this.props.notifyError({
-        message: get(graphQLErrors, '0.message', 'Failed to save consortium')
-      })
+      this.props.notifyError(get(graphQLErrors, '0.message', 'Failed to save consortium'));
     });
   }
 

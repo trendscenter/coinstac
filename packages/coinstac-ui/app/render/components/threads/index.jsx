@@ -149,16 +149,7 @@ class Threads extends Component {
     })
 
     this.props.pullComputations({ consortiumId, computations })
-    this.props.notifyInfo({
-      message: 'Pipeline computations downloading via Docker.',
-      autoDismiss: 5,
-      action: {
-        label: 'View Docker Download Progress',
-        callback: () => {
-          this.props.router.push('/dashboard/computations')
-        },
-      },
-    })
+    this.props.notifyInfo('Pipeline computations downloading via Docker.');
 
     this.props.joinConsortium(consortiumId).then(() => {
       localStorage.setItem('CONSORTIUM_JOINED_BY_THREAD', consortiumId)
