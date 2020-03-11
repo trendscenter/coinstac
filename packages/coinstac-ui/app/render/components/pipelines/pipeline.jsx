@@ -395,7 +395,7 @@ class Pipeline extends Component {
   }
 
   savePipeline = async () => {
-    const { auth: { user } } = this.props;
+    const { auth: { user }, notifySuccess, notifyError } = this.props;
 
     const isActive = get(this.state.pipeline, 'isActive', false);
 
@@ -434,7 +434,7 @@ class Pipeline extends Component {
         savingStatus: 'success',
       });
 
-      notifySuccess('Pipeline Saved.');
+      notifySuccess('Pipeline Saved');
 
       if (isActive) {
         const { savePipeline } = data;
