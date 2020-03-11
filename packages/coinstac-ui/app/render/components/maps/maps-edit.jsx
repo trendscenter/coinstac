@@ -17,7 +17,6 @@ import {
 import {
   UPDATE_CONSORTIUM_MAPPED_USERS_MUTATION,
 } from '../../state/graphql/functions';
-import { notifyInfo } from '../../state/ducks/notifyAndLog';
 import MapsPipelineVariables from './maps-pipeline-variables';
 import MapsCollection from './maps-collection';
 
@@ -440,7 +439,6 @@ const ComponentWithData = compose(
 
 const connectedComponent = connect(mapStateToProps,
   {
-    notifyInfo,
     saveDataMapping,
   })(ComponentWithData);
 

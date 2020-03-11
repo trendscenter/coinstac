@@ -94,7 +94,7 @@ class PipelinesList extends Component {
 
     this.props.deletePipeline(this.state.pipelineToDelete)
       .catch(error => {
-        notifyError({ message: error.message });
+        notifyError(error.message);
       });
 
     this.closeModal();

@@ -58,13 +58,12 @@ class ConsortiumTabs extends Component {
     this.getConsortiumRuns = this.getConsortiumRuns.bind(this);
     this.saveConsortium = this.saveConsortium.bind(this);
     this.updateConsortium = this.updateConsortium.bind(this);
-    this.handleSelect = this.handleSelect.bind(this);
   }
 
   UNSAFE_componentWillReceiveProps(nextProps) {
-
     const tabId = parseInt(this.props.params.tabId);
-    if (this.props.params.tabId && tabId !== this.state.selectedTabIndex) {
+
+    if (tabId && tabId !== this.state.selectedTabIndex) {
       this.handleSelect(null, tabId);
     }
 
@@ -114,7 +113,7 @@ class ConsortiumTabs extends Component {
     );
   }
 
-  handleSelect(event, value) {
+  handleSelect= (_event, value) => {
     this.setState({ selectedTabIndex: value });
   }
 
@@ -150,25 +149,14 @@ class ConsortiumTabs extends Component {
         savingStatus: 'success',
       });
 
-      this.props.notifySuccess({
-        message: 'Consortium Saved',
-        autoDismiss: 5,
-        action: {
-          label: 'View Consortia List',
-          callback: () => {
-            this.props.router.push('/dashboard/consortia/');
-          },
-        },
-      });
+      this.props.notifySuccess('Consortium Saved');
     })
     .catch(({ graphQLErrors }) => {
       this.setState({
         savingStatus: 'fail',
       })
 
-      this.props.notifyError({
-        message: get(graphQLErrors, '0.message', 'Failed to save consortium')
-      })
+      this.props.notifyError(get(graphQLErrors, '0.message', 'Failed to save consortium'));
     });
   }
 
@@ -176,6 +164,28 @@ class ConsortiumTabs extends Component {
     this.setState(prevState => ({
       consortium: { ...prevState.consortium, [update.param]: update.value },
     }));
+  }
+
+  getTabIndex = () => {
+    const { auth, params } = this.props;
+    const { selectedTabIndex, consortium } = this.state;
+    const isEditingConsortium = !!consortium.id;
+
+    const isOwner = consortium.owners.indexOf(auth.user.id) > -1
+      || !params.consortiumId;
+
+    
+    if (selectedTabIndex == 1) {
+      if (!isEditingConsortium) {
+        return 0;
+      }
+    } else if (selectedTabIndex == 2) {
+      if (!isEditingConsortium || !isOwner) {
+        return 0;
+      }
+    }
+
+    return selectedTabIndex;
   }
 
   render() {
@@ -215,7 +225,7 @@ class ConsortiumTabs extends Component {
           </Typography>
         </div>
         <Tabs
-          value={selectedTabIndex}
+          value={this.getTabIndex()}
           onChange={this.handleSelect}
           id="consortium-tabs"
         >
@@ -267,10 +277,11 @@ class ConsortiumTabs extends Component {
 
 ConsortiumTabs.defaultProps = {
   activeConsortium: null,
-  consortia: null,
-  runs: null,
+  consortia: [],
+  runs: [],
   subscribeToConsortia: null,
   subscribeToUsers: null,
+  users: [],
 };
 
 ConsortiumTabs.propTypes = {

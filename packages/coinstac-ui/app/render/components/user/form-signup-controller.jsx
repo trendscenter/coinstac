@@ -69,9 +69,7 @@ class FormSignupController extends Component {
       .then(() => {
         const { auth } = this.props;
         if (!auth.error) {
-          this.props.notifySuccess({
-            message: 'Account created',
-          });
+          this.props.notifySuccess('Account created');
         } else {
           this.handleSignupError(auth.error);
         }
