@@ -639,14 +639,19 @@ const resolvers = {
         }
       }
 
+      const consortiumData = Object.assign(
+        { ...args.consortium },
+        !isUpdate && { createDate: Date.now() },
+      )
+
       const result = await rethink.table('consortia')
-        .insert(args.consortium, {
+        .insert(consortiumData, {
           conflict: 'update',
           returnChanges: true,
         })
         .run(connection);
 
-      const consortiumId = args.consortium.id || result.changes[0].new_val.id;
+      const consortiumId = consortiumData.id || result.changes[0].new_val.id;
 
       if (!isUpdate) {
         await addUserPermissions(connection, { userId: credentials.id, role: 'owner', doc: consortiumId, table: 'consortia' });

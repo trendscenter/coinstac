@@ -1,4 +1,4 @@
-import { dirname } from 'path';
+import { dirname, join, isAbsolute, resolve } from 'path';
 import { applyAsyncLoading } from './loading';
 import { getDatabaseInstance } from '../local-db';
 
@@ -24,6 +24,18 @@ export const loadLocalDataMappings = applyAsyncLoading(
 
 export const saveDataMapping = applyAsyncLoading(
   (consortiumId, pipelineId, mappings, dataFile) => async (dispatch) => {
+    if (dataFile.extension === '.csv') {
+      const csvLines = [...dataFile.metaFile];
+      csvLines.shift();
+
+      const files = csvLines.map((csvLine) => {
+        const file = csvLine[0];
+        return isAbsolute(file) ? file : resolve(join(dirname(dataFile.metaFilePath), file));
+      });
+
+      dataFile.files = files;
+    }
+
     const map = {
       consortiumId,
       pipelineId,

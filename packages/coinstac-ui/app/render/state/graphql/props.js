@@ -194,6 +194,24 @@ export const updateConsortiaMappedUsersProp = (name) => {
   };
 };
 
+export const consortiumSaveActivePipelineProp = (name) => {
+  return {
+    props: ({ mutate }) => ({
+      [name]: (consortiumId, activePipelineId) => mutate({
+        variables: { consortiumId, activePipelineId },
+        update: (store) => {
+          const data = store.readQuery({ query: FETCH_ALL_CONSORTIA_QUERY });
+          const index = data.fetchAllConsortia.findIndex(con => con.id === consortiumId);
+          if (index > -1) {
+            data.fetchAllConsortia[index].activePipelineId = activePipelineId;
+          }
+          store.writeQuery({ query: FETCH_ALL_CONSORTIA_QUERY, data });
+        },
+      }),
+    })
+  }
+};
+
 export const saveMessageProp = (name) => {
   return {
     props: ({ ownProps, mutate }) => ({

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Fragment } from 'react';
 import { Link } from 'react-router';
 import PropTypes from 'prop-types';
 import Paper from '@material-ui/core/Paper';
@@ -46,11 +46,12 @@ const ListItem = ({
   classes,
 }) => (
   <Paper
+    key={`${itemObject.id}-list-item`}
     className={classes.rootPaper}
     elevation={4}
   >
     <div className={classes.titleContainer}>
-      <Typography variant="headline" className={highlight && classes.highlight}>
+      <Typography variant="headline" className={highlight ? classes.highlight : ''}>
         { itemObject.name }
       </Typography>
       {
