@@ -651,7 +651,6 @@ module.exports = {
 
         // remote client object creation
         clients.forEach((client) => {
-          console.log(client);
           remoteClients[client] = Object.assign(
             {
               id: client,
@@ -661,8 +660,6 @@ module.exports = {
             remoteClients[client]
           );
         });
-
-        console.log(remoteClients);
 
         if (mode === 'local') {
           activePipelines[runId].registered = false;
