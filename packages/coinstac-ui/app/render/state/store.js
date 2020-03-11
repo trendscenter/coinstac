@@ -22,7 +22,7 @@ export default function (apolloClient) {
       apolloClient.middleware(),
       thunkMiddleware,
       promiseMiddleware,
-      createLogger({ collapsed: true })
+      // createLogger({ collapsed: true })
     )
   );
 

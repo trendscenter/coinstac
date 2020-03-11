@@ -11,14 +11,14 @@
     "dockerImage": "coinstacteam/regression-fsl",
     "command": [
       "python",
-      "\/computation\/local.py"
+      "\/computation\/scripts\/local.py"
     ],
     "remote": {
       "type": "docker",
       "dockerImage": "coinstacteam/regression-fsl",
       "command": [
         "python",
-        "\/computation\/remote.py"
+        "\/computation\/scripts\/remote.py"
       ]
     },
     "input": {

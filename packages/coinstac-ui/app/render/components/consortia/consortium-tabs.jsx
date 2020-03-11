@@ -57,18 +57,16 @@ class ConsortiumTabs extends Component {
       savingStatus: 'init',
     };
 
-    this.getConsortiumRuns = this.getConsortiumRuns.bind(this);
     this.addMemberToConsortium = this.addMemberToConsortium.bind(this);
     this.removeMemberFromConsortium = this.removeMemberFromConsortium.bind(this);
     this.saveConsortium = this.saveConsortium.bind(this);
     this.updateConsortium = this.updateConsortium.bind(this);
-    this.handleSelect = this.handleSelect.bind(this);
   }
 
   UNSAFE_componentWillReceiveProps(nextProps) {
-
     const tabId = parseInt(this.props.params.tabId);
-    if (this.props.params.tabId && tabId !== this.state.selectedTabIndex) {
+
+    if (tabId && tabId !== this.state.selectedTabIndex) {
       this.handleSelect(null, tabId);
     }
 
@@ -140,13 +138,13 @@ class ConsortiumTabs extends Component {
     this.props.addUserRole(userId, 'consortia', this.state.consortium.id, 'member');
   }
 
-  getConsortiumRuns() {
+  getConsortiumRuns = () => {
     return (
       this.props.runs.filter(run => run.consortiumId === this.state.consortium.id)
     );
   }
 
-  handleSelect(event, value) {
+  handleSelect= (_event, value) => {
     this.setState({ selectedTabIndex: value });
   }
 
@@ -217,6 +215,28 @@ class ConsortiumTabs extends Component {
     }));
   }
 
+  getTabIndex = () => {
+    const { auth, params } = this.props;
+    const { selectedTabIndex, consortium } = this.state;
+    const isEditingConsortium = !!consortium.id;
+
+    const isOwner = consortium.owners.indexOf(auth.user.id) > -1
+      || !params.consortiumId;
+
+    
+    if (selectedTabIndex == 1) {
+      if (!isEditingConsortium) {
+        return 0;
+      }
+    } else if (selectedTabIndex == 2) {
+      if (!isEditingConsortium || !isOwner) {
+        return 0;
+      }
+    }
+
+    return selectedTabIndex;
+  }
+
   render() {
     const {
       auth,
@@ -262,7 +282,7 @@ class ConsortiumTabs extends Component {
           </Typography>
         </div>
         <Tabs
-          value={selectedTabIndex}
+          value={this.getTabIndex()}
           onChange={this.handleSelect}
           id="consortium-tabs"
         >
@@ -316,10 +336,11 @@ class ConsortiumTabs extends Component {
 
 ConsortiumTabs.defaultProps = {
   activeConsortium: null,
-  consortia: null,
-  runs: null,
+  consortia: [],
+  runs: [],
   subscribeToConsortia: null,
   subscribeToUsers: null,
+  users: [],
 };
 
 ConsortiumTabs.propTypes = {

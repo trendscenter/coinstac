@@ -108,11 +108,7 @@ function parsePipelineInput(pipeline, dataMappings) {
   const steps = [];
 
   pipeline.steps.forEach((step, stepIndex) => {
-    const consortiumMappedStepData = dataMappings.dataMappings[stepIndex];
-
-    if (!consortiumMappedStepData) {
-      throw new Error('Data was not mapped for at least one of the computation steps');
-    }
+    const consortiumMappedStepData = dataMappings ? dataMappings.dataMappings[stepIndex] : null;
 
     const inputMapSchema = { ...step.inputMap };
     const inputMapSchemaKeys = Object.keys(inputMapSchema);
@@ -122,6 +118,10 @@ function parsePipelineInput(pipeline, dataMappings) {
 
       if (!stepInputNeedsDataMapping(inputSchema)) {
         return;
+      }
+
+      if (!consortiumMappedStepData) {
+        throw new Error('Data was not mapped for at least one of the computation steps');
       }
 
       let keyArray = [[], [], []]; // [[values], [labels], [type (if present)]]
@@ -167,14 +167,35 @@ function parsePipelineInput(pipeline, dataMappings) {
     });
   });
 
-  const firstStepData = dataMappings.data[0];
-
   return {
-    filesArray: firstStepData.allFiles,
+    filesArray: dataMappings ? dataMappings.data[0].allFiles : [],
     steps,
   };
 }
 
+function pipelineNeedsDataMapping(pipeline) {
+  if (!pipeline || !pipeline.steps) {
+    return false;
+  }
+
+  let needsDataMapping = false;
+
+  pipeline.steps.forEach((step) => {
+    const inputMapSchemaKeys = Object.keys(step.inputMap);
+
+    inputMapSchemaKeys.forEach((inputSchemaKey) => {
+      const inputSchema = step.inputMap[inputSchemaKey];
+
+      if (stepInputNeedsDataMapping(inputSchema)) {
+        needsDataMapping = true;
+      }
+    });
+  });
+
+  return needsDataMapping;
+}
+
 module.exports = {
   parsePipelineInput,
+  pipelineNeedsDataMapping,
 };
