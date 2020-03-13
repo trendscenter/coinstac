@@ -164,7 +164,7 @@ export const saveDocumentProp = (funcName, objVar) => {
 
 export const userRolesProp = (name) => {
   return {
-    props: ({ ownProps, mutate }) => ({
+    props: ({ mutate }) => ({
       [name]: (userId, table, doc, role) => mutate({
         variables: {
           userId, table, doc, role,
@@ -176,10 +176,10 @@ export const userRolesProp = (name) => {
 
 export const updateConsortiumMappedUsersProp = (name) => {
   return {
-    props: ({ ownProps, mutate }) => ({
+    props: ({ mutate }) => ({
       [name]: ({ consortiumId, mappedForRun }) => mutate({
         variables: { consortiumId, mappedForRun },
-      })
+      }),
     }),
   };
 };
@@ -189,7 +189,7 @@ export const updateConsortiaMappedUsersProp = (name) => {
     props: ({ mutate }) => ({
       [name]: ({ consortia }) => mutate({
         variables: { consortia },
-      })
+      }),
     }),
   };
 };
@@ -208,16 +208,20 @@ export const consortiumSaveActivePipelineProp = (name) => {
           store.writeQuery({ query: FETCH_ALL_CONSORTIA_QUERY, data });
         },
       }),
-    })
+    }),
   }
 };
 
 export const saveMessageProp = (name) => {
   return {
-    props: ({ ownProps, mutate }) => ({
-      [name]: ({ threadId, title, content, recipients, action }) => mutate({
-        variables: { threadId, title, content, recipients, action },
-      })
+    props: ({ mutate }) => ({
+      [name]: ({
+        threadId, title, content, recipients, action,
+      }) => mutate({
+        variables: {
+          threadId, title, content, recipients, action,
+        },
+      }),
     }),
   };
 };
@@ -228,7 +232,7 @@ export const setReadMessageProp = (name) => {
     props: ({ mutate }) => ({
       [name]: ({ threadId, userId }) => mutate({
         variables: { threadId, userId },
-      })
+      }),
     }),
   };
 };
