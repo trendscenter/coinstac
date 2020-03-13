@@ -99,7 +99,7 @@ class CoinstacClient {
     arr.shift();
     arr[0].forEach((str, i) => {
       if (str && typeof str === 'string') {
-        let match = str.match(/(?:\.([a-zA-Z]+))?$/);
+        const match = str.match(/(?:\.([a-zA-Z]+))?$/);
         if (match[0] !== '' && match[1] !== 'undefined') {
           key = i;
         }
@@ -117,9 +117,9 @@ class CoinstacClient {
   static parseMetaFile(metaFile) {
     const filesKey = this.getFileIndex([...metaFile]);
     if (filesKey !== 0) {
-      metaFile = metaFile.map((row, i) => {
-        let r = [...row];
-        let data = r[filesKey];
+      metaFile = metaFile.map(row => {
+        const r = [...row];
+        const data = r[filesKey];
         r.splice(filesKey, 1);
         r.unshift(data);
         return r;
@@ -137,7 +137,7 @@ class CoinstacClient {
    * @returns {File[]} Collection of files
    */
   static getFilesFromMetadata(metaFilePath, metaFile) {
-    const files = this.parseMetaFile(metaFile).map((filecol, i) => {
+    const files = this.parseMetaFile(metaFile).map(filecol => {
       const file = filecol[0];
       return path.isAbsolute(file)
         ? file
@@ -190,12 +190,16 @@ class CoinstacClient {
         p = group.parentDir.concat(`/${p}`);
       }
 
+      // eslint-disable-next-line
       const stats = await fs.statAsync(p);
 
       if (stats.isDirectory()) {
+        // eslint-disable-next-line
         const dirs = await fs.readdir(p)
+        // eslint-disable-next-line
         const paths = [...dirs.filter(item => !(/(^|\/)\.[^\/\.]/g).test(item))]
         // Recursively retrieve path contents of directory
+        // eslint-disable-next-line
         const subGroup = await this.getSubPathsAndGroupExtension({
           paths,
           extension: group.extension,

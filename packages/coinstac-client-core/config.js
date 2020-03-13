@@ -1,5 +1,6 @@
 'use strict';
 
+// eslint-disable-next-line
 const convict = require('convict');
 
 const conf = convict({
