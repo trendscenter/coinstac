@@ -117,7 +117,7 @@ class CoinstacClient {
   static parseMetaFile(metaFile) {
     const filesKey = this.getFileIndex([...metaFile]);
     if (filesKey !== 0) {
-      metaFile = metaFile.map(row => {
+      metaFile = metaFile.map((row) => {
         const r = [...row];
         const data = r[filesKey];
         r.splice(filesKey, 1);
@@ -137,11 +137,11 @@ class CoinstacClient {
    * @returns {File[]} Collection of files
    */
   static getFilesFromMetadata(metaFilePath, metaFile) {
-    const files = this.parseMetaFile(metaFile).map(filecol => {
+    const files = this.parseMetaFile(metaFile).map((filecol) => {
       const file = filecol[0];
       return path.isAbsolute(file)
         ? file
-        : path.resolve(path.join(path.dirname(metaFilePath), file))
+        : path.resolve(path.join(path.dirname(metaFilePath), file));
     });
     files.shift();
     return files;
@@ -182,24 +182,19 @@ class CoinstacClient {
     }
 
     // Iterate through all paths
-    for (let i = 0; i < group.paths.length; i += 1) {
-      let p = group.paths[i];
-
+    group.paths.forEach(async (path) => {
+      let p = path;
       // Combine path with parent dir to get absolute path
       if (group.parentDir) {
         p = group.parentDir.concat(`/${p}`);
       }
 
-      // eslint-disable-next-line
       const stats = await fs.statAsync(p);
 
       if (stats.isDirectory()) {
-        // eslint-disable-next-line
-        const dirs = await fs.readdir(p)
-        // eslint-disable-next-line
-        const paths = [...dirs.filter(item => !(/(^|\/)\.[^\/\.]/g).test(item))]
+        const dirs = await fs.readdir(p);
+        const paths = [...dirs.filter(item => !(/(^|\/)\.[^/.]/g).test(item))];
         // Recursively retrieve path contents of directory
-        // eslint-disable-next-line
         const subGroup = await this.getSubPathsAndGroupExtension({
           paths,
           extension: group.extension,
@@ -223,13 +218,13 @@ class CoinstacClient {
 
         if ((!multext && group.extension && thisExtension !== group.extension)
             || (!multext && extension && extension !== thisExtension)) {
-          return { error: `Group contains multiple extensions - ${thisExtension} & ${group.extension ? group.extension : extension}.` };
+          return { error: `Group contains multiple extensions - ${thisExtension} & ${group.extension || extension}.` };
         }
 
         extension = thisExtension;
         pathsArray.push(p);
       }
-    }
+    });
 
     return { paths: pathsArray, extension };
   }

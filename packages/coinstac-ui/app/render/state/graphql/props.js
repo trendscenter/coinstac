@@ -209,7 +209,7 @@ export const consortiumSaveActivePipelineProp = (name) => {
         },
       }),
     }),
-  }
+  };
 };
 
 export const saveMessageProp = (name) => {

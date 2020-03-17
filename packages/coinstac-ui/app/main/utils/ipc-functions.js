@@ -36,7 +36,7 @@ module.exports = {
     return core.constructor.getJSONSchema(filePath[0]);
   },
   sendNotification(title, body) {
-    const notification = new electron.Notification({ title, body })
-    notification.show()
+    const notification = new electron.Notification({ title, body });
+    notification.show();
   },
 };
