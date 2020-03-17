@@ -280,7 +280,7 @@ loadConfig()
                   ipcFunctions.sendNotification(
                     'Pipeline stopped',
                     `Pipeline ${pipelineName} stopped on consortia ${consortiumName}`
-                  )
+                  );
 
                   return initializedCore.unlinkFiles(run.id)
                     .then(() => {

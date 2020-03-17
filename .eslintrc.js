@@ -26,14 +26,12 @@ module.exports = {
   rules: {
     strict: [0, 'global'], // required for node, configurable for browser, https://github.com/eslint/eslint/issues/2785#issuecomment-113254153
     'arrow-body-style': 0,
-    'arrow-parens': 0,
     'consistent-return': 0,
     'no-param-reassign': 0,
     'no-shadow': 0,
     'no-underscore-dangle': 0,
     'react/forbid-prop-types': 0,
     'import/no-extraneous-dependencies': ['error', { devDependencies: true }],
-    'semi': 0,
     'comma-dangle': ['error', {
       arrays: 'always-multiline',
       objects: 'always-multiline',
