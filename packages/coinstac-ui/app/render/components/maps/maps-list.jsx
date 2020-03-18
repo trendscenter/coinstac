@@ -13,11 +13,6 @@ const styles = theme => ({
     marginTop: theme.spacing.unit,
     marginBottom: theme.spacing.unit,
   },
-  labelInline: {
-    fontWeight: 'bold',
-    marginRight: theme.spacing.unit,
-    display: 'inline-block',
-  },
   value: {
     display: 'inline-block',
   },
@@ -79,7 +74,7 @@ class MapsList extends Component {
     ));
 
     return (
-      <Grid item sm={6} lg={4} key={`${consortium.id}-list-item`}>
+      <Grid item sm={5} key={`${consortium.id}-list-item`}>
         <ListItem
           itemObject={consortium}
           itemOptions={itemOptions}
