@@ -99,7 +99,7 @@ class CoinstacClient {
     arr.shift();
     arr[0].forEach((str, i) => {
       if (str && typeof str === 'string') {
-        let match = str.match(/(?:\.([a-zA-Z]+))?$/);
+        const match = str.match(/(?:\.([a-zA-Z]+))?$/);
         if (match[0] !== '' && match[1] !== 'undefined') {
           key = i;
         }
@@ -117,9 +117,9 @@ class CoinstacClient {
   static parseMetaFile(metaFile) {
     const filesKey = this.getFileIndex([...metaFile]);
     if (filesKey !== 0) {
-      metaFile = metaFile.map((row, i) => {
-        let r = [...row];
-        let data = r[filesKey];
+      metaFile = metaFile.map((row) => {
+        const r = [...row];
+        const data = r[filesKey];
         r.splice(filesKey, 1);
         r.unshift(data);
         return r;
@@ -137,11 +137,11 @@ class CoinstacClient {
    * @returns {File[]} Collection of files
    */
   static getFilesFromMetadata(metaFilePath, metaFile) {
-    const files = this.parseMetaFile(metaFile).map((filecol, i) => {
+    const files = this.parseMetaFile(metaFile).map((filecol) => {
       const file = filecol[0];
       return path.isAbsolute(file)
         ? file
-        : path.resolve(path.join(path.dirname(metaFilePath), file))
+        : path.resolve(path.join(path.dirname(metaFilePath), file));
     });
     files.shift();
     return files;
@@ -182,9 +182,8 @@ class CoinstacClient {
     }
 
     // Iterate through all paths
-    for (let i = 0; i < group.paths.length; i += 1) {
-      let p = group.paths[i];
-
+    group.paths.forEach(async (path) => {
+      let p = path;
       // Combine path with parent dir to get absolute path
       if (group.parentDir) {
         p = group.parentDir.concat(`/${p}`);
@@ -193,8 +192,8 @@ class CoinstacClient {
       const stats = await fs.statAsync(p);
 
       if (stats.isDirectory()) {
-        const dirs = await fs.readdir(p)
-        const paths = [...dirs.filter(item => !(/(^|\/)\.[^\/\.]/g).test(item))]
+        const dirs = await fs.readdir(p);
+        const paths = [...dirs.filter(item => !(/(^|\/)\.[^/.]/g).test(item))];
         // Recursively retrieve path contents of directory
         const subGroup = await this.getSubPathsAndGroupExtension({
           paths,
@@ -219,13 +218,13 @@ class CoinstacClient {
 
         if ((!multext && group.extension && thisExtension !== group.extension)
             || (!multext && extension && extension !== thisExtension)) {
-          return { error: `Group contains multiple extensions - ${thisExtension} & ${group.extension ? group.extension : extension}.` };
+          return { error: `Group contains multiple extensions - ${thisExtension} & ${group.extension || extension}.` };
         }
 
         extension = thisExtension;
         pathsArray.push(p);
       }
-    }
+    });
 
     return { paths: pathsArray, extension };
   }

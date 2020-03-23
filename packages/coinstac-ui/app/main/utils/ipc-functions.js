@@ -5,10 +5,16 @@ module.exports = {
     return path;
   },
   manualFileSelection(filePaths, core) {
-    return core.constructor.getSubPathsAndGroupExtension({ paths: filePaths, extension: null }, false);
+    return core.constructor.getSubPathsAndGroupExtension(
+      { paths: filePaths, extension: null },
+      false
+    );
   },
   manualFileSelectionMultExt(filePaths, core) {
-    return core.constructor.getSubPathsAndGroupExtension({ paths: filePaths, extension: null }, true);
+    return core.constructor.getSubPathsAndGroupExtension(
+      { paths: filePaths, extension: null },
+      true
+    );
   },
   parseCSVMetafile(metaFilePath, core) {
     return Promise.all([
@@ -30,7 +36,7 @@ module.exports = {
     return core.constructor.getJSONSchema(filePath[0]);
   },
   sendNotification(title, body) {
-    const notification = new electron.Notification({ title, body })
-    notification.show()
-  }
+    const notification = new electron.Notification({ title, body });
+    notification.show();
+  },
 };

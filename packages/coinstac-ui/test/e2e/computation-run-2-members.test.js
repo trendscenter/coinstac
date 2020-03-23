@@ -182,6 +182,8 @@ describe('e2e run computation with 2 members', () => {
       .click(`a[name="${CONS_NAME}"]`)
       .waitForVisible('#consortium-tabs', EXIST_TIMEOUT)
       .element('#consortium-tabs')
+      .waitForVisible('span=Pipelines', EXIST_TIMEOUT)
+      .element('#consortium-tabs')
       .click('span=Pipelines')
       .waitForVisible('#owned-pipelines-dropdown', EXIST_TIMEOUT)
       .click('#owned-pipelines-dropdown')
