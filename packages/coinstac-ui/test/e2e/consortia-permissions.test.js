@@ -8,7 +8,6 @@ const appPath = path.join(__dirname, '../..');
 const mocksPath = path.join(__dirname, 'mocks.js');
 
 const EXIST_TIMEOUT = 6000;
-const NOTIFICATION_DISMISS_TIMEOUT = 8000;
 const USER_ID_1 = 'test1';
 const USER_ID_2 = 'test2';
 const PASS = 'password';

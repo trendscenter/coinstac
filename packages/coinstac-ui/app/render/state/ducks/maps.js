@@ -1,4 +1,9 @@
-import { dirname, join, isAbsolute, resolve } from 'path';
+import {
+  dirname,
+  join,
+  isAbsolute,
+  resolve,
+} from 'path';
 import { applyAsyncLoading } from './loading';
 import { getDatabaseInstance } from '../local-db';
 
@@ -120,7 +125,7 @@ export default function reducer(state = INITIAL_STATE, action) {
     case LOAD_LOCAL_DATA_MAPPINGS:
       return {
         ...state,
-        consortiumDataMappings: [...action.payload]
+        consortiumDataMappings: [...action.payload],
       };
     case SAVE_DATA_MAPPING:
       return {

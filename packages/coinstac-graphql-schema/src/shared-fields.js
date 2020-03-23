@@ -133,7 +133,7 @@ const sharedFields = {
         detail
       }
     }
-  `
+  `,
 };
 
 module.exports = sharedFields;
