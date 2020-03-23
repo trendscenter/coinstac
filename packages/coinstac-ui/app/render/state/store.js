@@ -9,15 +9,29 @@
  * Uses ApolloClient as outlined: https://medium.com/react-weekly/implementing-graphql-in-your-redux-app-dad7acf39e1b
  */
 import { applyMiddleware, createStore } from 'redux';
-import { createLogger } from 'redux-logger';
 import promiseMiddleware from 'redux-promise';
 import thunkMiddleware from 'redux-thunk';
-
+import { persistStore, persistReducer } from 'redux-persist';
+import createElectronStorage from 'redux-persist-electron-storage';
+import { dirname, join } from 'path';
+import { ipcRenderer } from 'electron';
 import rootReducer from './root-reducer';
 
+const ElectronStore = require('electron-store');
+
+const electronStore = new ElectronStore();
+
+const persistConfig = {
+  key: 'root',
+  storage: createElectronStorage({ electronStore }),
+  whitelist: ['maps'],
+};
+
 export default function (apolloClient) {
+  const persistedReducer = persistReducer(persistConfig, rootReducer(apolloClient));
+
   const store = createStore(
-    rootReducer(apolloClient),
+    persistedReducer,
     applyMiddleware(
       apolloClient.middleware(),
       thunkMiddleware,
@@ -25,6 +39,15 @@ export default function (apolloClient) {
       // createLogger({ collapsed: true })
     )
   );
+
+  const persistor = persistStore(store);
+
+  ipcRenderer.on('login-success', (event, userId) => {
+    const electronStoreFolder = dirname(electronStore.path);
+    electronStore.path = join(electronStoreFolder, `local-db-${userId}.json`);
+
+    persistor.persist();
+  });
 
   if (module.hot) {
     // Enable Webpack hot module replacement for reducers
@@ -36,5 +59,5 @@ export default function (apolloClient) {
     });
   }
 
-  return store;
+  return { store, persistor };
 }

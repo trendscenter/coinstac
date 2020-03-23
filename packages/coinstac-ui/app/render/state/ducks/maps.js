@@ -1,8 +1,6 @@
 import { dirname, join, isAbsolute, resolve } from 'path';
 import { applyAsyncLoading } from './loading';
-import { getDatabaseInstance } from '../local-db';
 
-const LOAD_LOCAL_DATA_MAPPINGS = 'LOAD_LOCAL_DATA_MAPPINGS';
 const SAVE_DATA_MAPPING = 'SAVE_DATA_MAPPING';
 const DELETE_DATA_MAPPING = 'DELETE_DATA_MAPPING';
 const DELETE_ALL_DATA_MAPPINGS_FROM_CONSORTIUM = 'DELETE_ALL_DATA_MAPPINGS_FROM_CONSORTIUM';
@@ -10,17 +8,6 @@ const DELETE_ALL_DATA_MAPPINGS_FROM_CONSORTIUM = 'DELETE_ALL_DATA_MAPPINGS_FROM_
 const INITIAL_STATE = {
   consortiumDataMappings: [],
 };
-
-export const loadLocalDataMappings = applyAsyncLoading(
-  () => async (dispatch) => {
-    const maps = await getDatabaseInstance().maps.toArray();
-
-    dispatch({
-      type: LOAD_LOCAL_DATA_MAPPINGS,
-      payload: maps || [],
-    });
-  }
-);
 
 export const saveDataMapping = applyAsyncLoading(
   (consortiumId, pipelineId, mappings, dataFile) => async (dispatch) => {
@@ -80,7 +67,6 @@ export const saveDataMapping = applyAsyncLoading(
       });
     }
 
-    await getDatabaseInstance().maps.put(map);
     dispatch(({
       type: SAVE_DATA_MAPPING,
       payload: map,
@@ -90,8 +76,6 @@ export const saveDataMapping = applyAsyncLoading(
 
 export const deleteDataMapping = applyAsyncLoading(
   (consortiumId, pipelineId) => async (dispatch) => {
-    await getDatabaseInstance().maps.delete([consortiumId, pipelineId]);
-
     dispatch(({
       type: DELETE_DATA_MAPPING,
       payload: {
@@ -104,10 +88,6 @@ export const deleteDataMapping = applyAsyncLoading(
 
 export const deleteAllDataMappingsFromConsortium = applyAsyncLoading(
   consortiumId => async (dispatch) => {
-    const keys = await getDatabaseInstance().maps.where({ consortiumId }).primaryKeys();
-
-    await getDatabaseInstance().maps.bulkDelete(keys);
-
     dispatch(({
       type: DELETE_ALL_DATA_MAPPINGS_FROM_CONSORTIUM,
       payload: consortiumId,
@@ -117,11 +97,6 @@ export const deleteAllDataMappingsFromConsortium = applyAsyncLoading(
 
 export default function reducer(state = INITIAL_STATE, action) {
   switch (action.type) {
-    case LOAD_LOCAL_DATA_MAPPINGS:
-      return {
-        ...state,
-        consortiumDataMappings: [...action.payload]
-      };
     case SAVE_DATA_MAPPING:
       return {
         ...state,

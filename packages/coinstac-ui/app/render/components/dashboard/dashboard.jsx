@@ -22,14 +22,14 @@ import {
   writeLog,
 } from '../../state/ducks/notifyAndLog';
 import CoinstacAbbr from '../coinstac-abbr';
-import { getLocalRun, saveLocalRun, updateLocalRun } from '../../state/ducks/runs';
+import { saveLocalRun, updateLocalRun } from '../../state/ducks/runs';
 import {
   getDockerStatus,
   pullComputations,
   updateDockerOutput,
 } from '../../state/ducks/docker';
 import { updateUserConsortiaStatuses, updateUserPerms } from '../../state/ducks/auth';
-import { appendLogMessage, clearLogs, loadLocalData } from '../../state/ducks/app';
+import { appendLogMessage, clearLogs } from '../../state/ducks/app';
 import {
   COMPUTATION_CHANGED_SUBSCRIPTION,
   CONSORTIUM_CHANGED_SUBSCRIPTION,
@@ -122,10 +122,8 @@ class Dashboard extends Component {
   }
 
   componentDidMount() {
-    const { auth: { user }, loadLocalData } = this.props;
+    const { auth: { user } } = this.props;
     const { router } = this.context;
-
-    loadLocalData();
 
     dockerInterval = setInterval(() => {
       let status = this.props.getDockerStatus();
@@ -572,7 +570,6 @@ Dashboard.propTypes = {
   writeLog: PropTypes.func.isRequired,
   updateUserPerms: PropTypes.func.isRequired,
   currentUser: PropTypes.object,
-  loadLocalData: PropTypes.func.isRequired,
   classes: PropTypes.object.isRequired,
 };
 
@@ -660,7 +657,6 @@ const DashboardWithData = compose(
 
 const connectedComponent = connect(mapStateToProps,
   {
-    getLocalRun,
     getDockerStatus,
     notifyError,
     notifyInfo,
@@ -674,7 +670,6 @@ const connectedComponent = connect(mapStateToProps,
     updateUserPerms,
     clearLogs,
     appendLogMessage,
-    loadLocalData,
   })(DashboardWithData);
 
 export default withStyles(styles)(connectedComponent);

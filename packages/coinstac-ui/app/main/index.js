@@ -147,6 +147,11 @@ loadConfig()
             return upsertCoinstacUserDir(c);
           });
     });
+
+    ipcPromise.on('login-success', (userId) => {
+      mainWindow.webContents.send('login-success', userId);
+    });
+
     /**
      * [initializedCore description]
      * @type {[type]}
