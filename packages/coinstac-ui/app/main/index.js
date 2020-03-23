@@ -280,7 +280,7 @@ loadConfig()
                   ipcFunctions.sendNotification(
                     'Pipeline stopped',
                     `Pipeline ${pipelineName} stopped on consortia ${consortiumName}`
-                  )
+                  );
 
                   return initializedCore.unlinkFiles(run.id)
                     .then(() => {
@@ -505,7 +505,7 @@ loadConfig()
         filters = [
           {
             name: 'File Types',
-            extensions: ['jpeg', 'jpg', 'png', 'nii', 'csv', 'txt', 'rtf', 'gz',  'pickle'],
+            extensions: ['jpeg', 'jpg', 'png', 'nii', 'csv', 'txt', 'rtf', 'gz', 'pickle'],
           },
         ];
         properties = ['openFile', 'multiSelections'];
