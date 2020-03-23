@@ -172,7 +172,7 @@ export const signUp = applyAsyncLoading(user => (dispatch, getState) => axios.po
 
 export default function reducer(state = INITIAL_STATE, { type, payload }) {
   const { locationStacks } = state;
-  const { pathname } = payload;
+  const { pathname } = payload || {};
 
   switch (type) {
     case SET_USER:
