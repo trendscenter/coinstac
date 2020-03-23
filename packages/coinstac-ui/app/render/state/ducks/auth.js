@@ -173,6 +173,9 @@ export const signUp = applyAsyncLoading(user => (dispatch, getState) => axios.po
   }));
 
 export default function reducer(state = INITIAL_STATE, { type, payload }) {
+  const { locationStacks } = state;
+  const { pathname } = payload || {};
+
   switch (type) {
     case SET_USER:
       return { ...state, user: payload };
@@ -191,9 +194,6 @@ export default function reducer(state = INITIAL_STATE, { type, payload }) {
     case SET_API_VERSION_CHECK:
       return { ...state, isApiVersionCompatible: payload };
     case LOCATION_CHANGE:
-      const { locationStacks } = state;
-      const { pathname } = payload;
-
       if (EXCLUDE_PATHS.indexOf(pathname) !== -1) {
         return state;
       }
@@ -202,8 +202,8 @@ export default function reducer(state = INITIAL_STATE, { type, payload }) {
         return state;
       }
 
-      if (locationStacks.length > 1 &&
-        locationStacks[locationStacks.length - 2] === pathname) {
+      if (locationStacks.length > 1
+        && locationStacks[locationStacks.length - 2] === pathname) {
         locationStacks.pop();
 
         return {

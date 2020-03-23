@@ -1,4 +1,9 @@
-import { dirname, join, isAbsolute, resolve } from 'path';
+import {
+  dirname,
+  join,
+  isAbsolute,
+  resolve,
+} from 'path';
 import { applyAsyncLoading } from './loading';
 
 const SAVE_DATA_MAPPING = 'SAVE_DATA_MAPPING';
