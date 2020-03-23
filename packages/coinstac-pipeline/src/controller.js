@@ -18,6 +18,7 @@ module.exports = {
    * @return {Object}        a controller instance
    */
   create({ controller, computations, inputMap }, runId, { operatingDirectory, mode, clientId }) {
+    console.log(inputMap);
     let cache = {};
     let pipelineErrorCallback;
     const currentComputations = computations.map(
@@ -26,6 +27,7 @@ module.exports = {
     const activeControlBox = controllers[controller.type];
     const computationStep = 0;
     const stateEmitter = new Emitter();
+    const owner = inputMap.meta.owner;
     const controllerState = {
       activeComputations: [],
       // docker analogs to the user directories
@@ -43,6 +45,7 @@ module.exports = {
       runType: 'sequential',
       state: undefined,
       stopByUser: undefined,
+      owner,
     };
     const setStateProp = (prop, val) => {
       controllerState[prop] = val;

@@ -111,7 +111,7 @@
     },
     "display": [
       {
-        "type": "table",
+        "type": "string",
         "tables": [
           {
             "source": "regressions",

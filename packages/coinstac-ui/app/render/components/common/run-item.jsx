@@ -58,6 +58,7 @@ const styles = theme => ({
 });
 
 function getStateWell(runObject, stateName, stateKey, classes) {
+  console.log(runObject);
   return (
     <Paper
       className={classNames(classes.rootPaper, classes.runStatePaper)}
@@ -116,6 +117,17 @@ function getStateWell(runObject, stateName, stateKey, classes) {
             <Typography className={classes.label}>Step Count:</Typography>
             <Typography className={classes.value}>
               {`${runObject[stateKey].pipelineStep + 1} / ${runObject[stateKey].totalSteps}`}
+            </Typography>
+          </div>
+        )
+      }
+      {
+        runObject[stateKey].owner
+        && (
+          <div>
+            <Typography className={classes.label}>Owner:</Typography>
+            <Typography className={classes.value}>
+              {runObject[stateKey].owner}
             </Typography>
           </div>
         )
