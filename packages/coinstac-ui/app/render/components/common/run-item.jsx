@@ -287,7 +287,7 @@ class RunItem extends Component {
                 </Typography>
                 <Typography className={classes.value}>
                   { runObject.members.map((member)=>{
-                    return <span>{Object.values(member)[0]},</span>
+                    return <span>{Object.values(member)[0]}, </span>
                   }) }
                 </Typography>
               </div>
