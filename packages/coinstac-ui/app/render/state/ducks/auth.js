@@ -66,6 +66,8 @@ const initCoreAndSetToken = (reqUser, data, appDirectory, dispatch) => {
     .then(() => {
       const user = { ...data.user, label: reqUser.username };
 
+      ipcPromise.send('login-success', data.user.id);
+
       if (reqUser.saveLogin) {
         localStorage.setItem('id_token', data.id_token);
       } else {
