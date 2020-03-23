@@ -60,9 +60,7 @@ class UserAccountController extends Component {
 
     return this.props.update(formData)
       .then((res) => {
-        this.props.notifySuccess({
-          message: 'User account changed',
-        });
+        this.props.notifySuccess('User account changed');
       });
   }
 
