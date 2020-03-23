@@ -78,15 +78,17 @@ module.exports = {
       pipelineSteps,
       run(remoteHandler) {
         const packageState = () => {
-          const troller = this.pipelineSteps[this.currentStep].controllerState;
+          const { controllerState, inputMap } = this.pipelineSteps[this.currentStep];
           let owner = '';
-          if (this.pipelineSteps[this.currentStep].inputMap.meta &&
-            this.pipelineSteps[this.currentStep].inputMap.meta.owner) {
+
+          if (inputMap.meta && inputMap.meta.owner) {
+            // eslint-disable-next-line
             owner = this.pipelineSteps[this.currentStep].inputMap.meta.owner;
           }
+
           this.currentState = {
-            currentIteration: troller.iteration,
-            controllerState: troller.state,
+            currentIteration: controllerState.iteration,
+            controllerState: controllerState.state,
             pipelineStep: this.currentStep,
             mode: this.mode,
             totalSteps: this.pipelineSteps.length,

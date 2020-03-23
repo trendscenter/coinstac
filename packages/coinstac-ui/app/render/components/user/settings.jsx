@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
-import { notifyError, notifyInfo } from '../../state/ducks/notifyAndLog';
+import { notifyInfo } from '../../state/ducks/notifyAndLog';
 import { clearRuns } from '../../state/ducks/runs';
 import UserEditController from './user-edit-controller';
 
@@ -33,7 +33,7 @@ class Settings extends Component {
   clearData(e) {
     e.preventDefault();
     this.props.clearRuns();
-    this.props.notifyInfo({ message: 'Local data cleared' });
+    this.props.notifyInfo('Local data cleared');
   }
 
   render() {
@@ -78,7 +78,6 @@ Settings.contextTypes = {
 
 const connectedComponent = connect(null, {
   clearRuns,
-  notifyError,
   notifyInfo,
 })(Settings);
 

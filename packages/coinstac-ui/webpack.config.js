@@ -8,7 +8,6 @@ const port = 3000;
 
 const config = {
   bail: true,
-  devtool: 'eval',
   devServer: {
     historyApiFallback: true,
     hot: true,
@@ -116,6 +115,7 @@ const config = {
 
 if (process.env.NODE_ENV === 'development') {
   config.bail = false;
+  config.devtool = 'eval-source-map';
   // config.plugins.push(new webpack.NoErrorsPlugin());
 
   // Massage configuration for hot module replacement:

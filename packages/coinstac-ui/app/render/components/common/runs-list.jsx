@@ -45,7 +45,7 @@ const RunsList = ({
           && (
             isUserA(auth.user.id, consortium.members)
             || isUserA(auth.user.id, consortium.owners)
-            || isUserA(auth.user.id, run.sharedUsers)
+            || (run.sharedUsers && isUserA(auth.user.id, run.sharedUsers))
           )
         ) {
           return (

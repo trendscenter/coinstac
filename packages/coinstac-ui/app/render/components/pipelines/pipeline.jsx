@@ -395,7 +395,7 @@ class Pipeline extends Component {
   }
 
   savePipeline = async () => {
-    const { auth: { user } } = this.props;
+    const { auth: { user }, notifySuccess, notifyError } = this.props;
 
     const isActive = get(this.state.pipeline, 'isActive', false);
 
@@ -434,14 +434,14 @@ class Pipeline extends Component {
         savingStatus: 'success',
       });
 
-      this.props.notifySuccess({ message: 'Pipeline Saved.' });
+      notifySuccess('Pipeline Saved');
 
       if (isActive) {
         const { savePipeline } = data;
         await this.props.saveActivePipeline(savePipeline.owningConsortium, savePipeline.id);
       }
     } catch ({ graphQLErrors }) {
-      this.props.notifyError({ message: get(graphQLErrors, '0.message', 'Failed to save pipeline') });
+      notifyError(get(graphQLErrors, '0.message', 'Failed to save pipeline'));
 
       this.setState({ savingStatus: 'fail' });
     }
