@@ -562,7 +562,7 @@ class Pipeline extends Component {
                 onChange={evt => this.updatePipeline({ param: 'limitOutputToOwner', value: evt.target.checked })}
               />
             )}
-            label="Limit output to owner"
+            label="Only send results to consortia owner"
             className={classes.formControl}
           />
           <div className={classes.formControl}>
