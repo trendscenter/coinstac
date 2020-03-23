@@ -7,7 +7,7 @@ const drneVbm = require('./data/coinstac-schema-regression-vbm');
 const msrVbm = require('./data/coinstac-schema-regression-ms-vbm');
 
 const drneFsl = require('./data/coinstac-schema-regression-fsl');
-//const ssrFsl = require('./data/coinstac-schema-regression-ss-fsl');
+// const ssrFsl = require('./data/coinstac-schema-regression-ss-fsl');
 const msrFsl = require('./data/coinstac-schema-regression-ms-fsl');
 
 const gica = require('./data/coinstac-gica-pipeline');
@@ -57,7 +57,7 @@ helperFunctions.getRethinkConnection()
       .then(() => rethink.table('computations').insert([
         Object.assign({}, local, { submittedBy: 'author' }),
         Object.assign({}, decentralized, { submittedBy: 'author' }),
-        //Object.assign({}, ssrFsl, { submittedBy: 'author' }),
+        // Object.assign({}, ssrFsl, { submittedBy: 'author' }),
         Object.assign({}, msrFsl, { submittedBy: 'author' }),
         Object.assign({}, vbm, { submittedBy: 'author' }),
         Object.assign({}, gica, { submittedBy: 'test1' }),

@@ -1,13 +1,7 @@
 import React, { Component } from 'react';
-import ReactDOM from 'react-dom';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import { notifySuccess, notifyError, writeLog } from '../../../state/ducks/notifyAndLog';
 import Button from '@material-ui/core/Button';
-import { withStyles } from '@material-ui/core/styles';
-import classNames from 'classnames';
-import _ from 'lodash';
-import kebabcase from 'lodash';
 import { remote } from 'electron';
 
 //Get Base App Dir
@@ -53,12 +47,7 @@ class String extends Component {
 }
 
 String.propTypes = {
-  notifyError: PropTypes.func.isRequired,
-  writeLog: PropTypes.func.isRequired,
-};
-
-String.defaultProps = {
-  plotData: null,
+  plotData: PropTypes.object.isRequired,
 };
 
 const mapStateToProps = ({ auth: { user } }) => {
@@ -67,9 +56,4 @@ const mapStateToProps = ({ auth: { user } }) => {
   };
 };
 
-const connectedComponent = connect(mapStateToProps, {
-  notifyError,
-  writeLog,
-})(String);
-
-export default connectedComponent;
+export default connect(mapStateToProps)(String);

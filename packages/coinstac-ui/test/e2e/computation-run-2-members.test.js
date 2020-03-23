@@ -8,7 +8,6 @@ const appPath = path.join(__dirname, '../..');
 const mocksPath = path.join(__dirname, 'mocks.js');
 
 const EXIST_TIMEOUT = 6000;
-const NOTIFICATION_DISMISS_TIMEOUT = 8000;
 const COMPUTATION_TIMEOUT = 150000;
 const COMPUTATION_DOWNLOAD_TIMEOUT = 40000;
 const USER_ID_1 = 'test1';
@@ -100,13 +99,9 @@ describe('e2e run computation with 2 members', () => {
       .setValue('#name', CONS_NAME)
       .setValue('#description', CONS_DESC)
       .click('button=Save')
-      .waitForText('.notification-message', EXIST_TIMEOUT)
-      .getText('.notification-message')
-      .then(notificationMessage => notificationMessage.should.equal('Consortium Saved'))
-      .then(() => app1.client
-        .waitForVisible('.notification-message', NOTIFICATION_DISMISS_TIMEOUT, true)
-        .click('a=Consortia')
-        .waitForVisible(`h1=${CONS_NAME}`))
+      .waitForVisible('span=Consortium Saved', EXIST_TIMEOUT)
+      .click('a=Consortia')
+      .waitForVisible(`h1=${CONS_NAME}`)
   ));
 
   it('accesses the Add Pipeline page', () => (
@@ -124,10 +119,14 @@ describe('e2e run computation with 2 members', () => {
       .click('#pipelineconsortia')
       .waitForVisible('#consortium-menu', EXIST_TIMEOUT)
       .element('#consortium-menu')
+      .waitForVisible(`li=${CONS_NAME}`, EXIST_TIMEOUT)
+      .element('#consortium-menu')
       .click(`li=${CONS_NAME}`)
       .waitForVisible('#consortium-menu', EXIST_TIMEOUT, true)
       .click('#computation-dropdown')
       .waitForVisible('#computation-menu', EXIST_TIMEOUT)
+      .element('#computation-menu')
+      .waitForVisible(`li=${COMPUTATION_NAME}`, EXIST_TIMEOUT)
       .element('#computation-menu')
       .click(`li=${COMPUTATION_NAME}`)
       .waitForVisible('#computation-menu', EXIST_TIMEOUT, true)
@@ -167,20 +166,13 @@ describe('e2e run computation with 2 members', () => {
       .click('#data-0-area')
       .waitForVisible('#data-0-area .react-select-dropdown-menu', EXIST_TIMEOUT)
       .element('#data-0-area .react-select-dropdown-menu')
-      .click('div=5th-Ventricle', EXIST_TIMEOUT)
-      .waitForVisible('#data-0-area .react-select-dropdown-menu', EXIST_TIMEOUT, true)
-      .click('#data-0-area')
-      .waitForVisible('#data-0-area .react-select-dropdown-menu', EXIST_TIMEOUT)
+      .waitForVisible('div=5th-Ventricle', EXIST_TIMEOUT)
       .element('#data-0-area .react-select-dropdown-menu')
-      .click('div=BrainSegVol', EXIST_TIMEOUT)
+      .click('div=5th-Ventricle')
       .waitForVisible('#data-0-area .react-select-dropdown-menu', EXIST_TIMEOUT, true)
       .setValue('[name="step-lambda"]', '0')
       .click('button=Save Pipeline')
-      .waitForVisible('.notification-message', EXIST_TIMEOUT)
-      .getText('.notification-message')
-      .then(notificationMessage => notificationMessage.should.equal('Pipeline Saved.'))
-      .then(() => app1.client
-        .waitForVisible('.notification-message', NOTIFICATION_DISMISS_TIMEOUT, true))
+      .waitForVisible('span=Pipeline Saved', EXIST_TIMEOUT)
   ));
 
   it('sets the created pipeline to the consortium', () => (
@@ -190,6 +182,8 @@ describe('e2e run computation with 2 members', () => {
       .click(`a[name="${CONS_NAME}"]`)
       .waitForVisible('#consortium-tabs', EXIST_TIMEOUT)
       .element('#consortium-tabs')
+      .waitForVisible('span=Pipelines', EXIST_TIMEOUT)
+      .element('#consortium-tabs')
       .click('span=Pipelines')
       .waitForVisible('#owned-pipelines-dropdown', EXIST_TIMEOUT)
       .click('#owned-pipelines-dropdown')
@@ -197,9 +191,9 @@ describe('e2e run computation with 2 members', () => {
       .element('#owned-pipelines-dropdown-menu')
       .click(`li=${PIPE_NAME}`)
       .waitForVisible(`a=${PIPE_NAME}`, EXIST_TIMEOUT)
-      .waitForVisible('.notification-message=Pipeline computations downloading via Docker.', EXIST_TIMEOUT)
-      .waitForVisible(`.notification-message=${COMPUTATION_NAME} Download Complete`, COMPUTATION_DOWNLOAD_TIMEOUT)
-      .waitForVisible('.notification-message*=Pipeline Computations Downloaded', COMPUTATION_DOWNLOAD_TIMEOUT)
+      .waitForVisible('span=Pipeline computations downloading via Docker.', EXIST_TIMEOUT)
+      .waitForVisible(`span=${COMPUTATION_NAME} Download Complete`, COMPUTATION_DOWNLOAD_TIMEOUT)
+      .waitForVisible('span*=Pipeline Computations Downloaded', COMPUTATION_DOWNLOAD_TIMEOUT)
   ));
 
   it('joins a consortium', () => (
@@ -208,9 +202,9 @@ describe('e2e run computation with 2 members', () => {
       .waitForVisible(`button[name="${CONS_NAME}-join-cons-button"]`, EXIST_TIMEOUT)
       .click(`button[name="${CONS_NAME}-join-cons-button"]`)
       .waitForVisible(`button[name="${CONS_NAME}-leave-cons-button"]`, EXIST_TIMEOUT)
-      .waitForVisible('.notification-message=Pipeline computations downloading via Docker.', EXIST_TIMEOUT)
-      .waitForVisible(`.notification-message=${COMPUTATION_NAME} Download Complete`, COMPUTATION_DOWNLOAD_TIMEOUT)
-      .waitForVisible('.notification-message*=Pipeline Computations Downloaded', COMPUTATION_DOWNLOAD_TIMEOUT)
+      .waitForVisible('span=Pipeline computations downloading via Docker.', EXIST_TIMEOUT)
+      .waitForVisible(`span=${COMPUTATION_NAME} Download Complete`, COMPUTATION_DOWNLOAD_TIMEOUT)
+      .waitForVisible('span*=Pipeline Computations Downloaded', COMPUTATION_DOWNLOAD_TIMEOUT)
   ));
 
   it('map data to consortium', () => (
@@ -247,7 +241,7 @@ describe('e2e run computation with 2 members', () => {
     app1.client
       .waitForVisible('button=Start Pipeline', EXIST_TIMEOUT)
       .click('button=Start Pipeline')
-      .waitForVisible(`.notification-message=Pipeline Starting for ${CONS_NAME}.`, EXIST_TIMEOUT)
+      .waitForVisible(`span=Pipeline Starting for ${CONS_NAME}.`, EXIST_TIMEOUT)
   ));
 
   it('displays computation progress', () => (
