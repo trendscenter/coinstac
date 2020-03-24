@@ -24,7 +24,7 @@ const rootEl = document.getElementById('app');
 global.config = remote.getGlobal('config');
 
 const client = getApolloClient(global.config);
-const { store } = configureStore(client);
+const store = configureStore(client);
 
 const history = syncHistoryWithStore(hashHistory, store);
 
