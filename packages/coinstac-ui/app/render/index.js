@@ -5,7 +5,6 @@ import { hashHistory } from 'react-router';
 import { ipcRenderer, remote } from 'electron';
 import { ApolloProvider } from 'react-apollo';
 import { syncHistoryWithStore } from 'react-router-redux';
-import { PersistGate } from 'redux-persist/integration/react'
 import getApolloClient from './state/apollo-client';
 import configureStore from './state/store';
 import { start as startErrorHandling } from './utils/boot/configure-error-handling';
@@ -25,15 +24,13 @@ const rootEl = document.getElementById('app');
 global.config = remote.getGlobal('config');
 
 const client = getApolloClient(global.config);
-const { store, persistor } = configureStore(client);
+const { store } = configureStore(client);
 
 const history = syncHistoryWithStore(hashHistory, store);
 
 render(
   <ApolloProvider store={store} client={client}>
-    <PersistGate loading={null} persistor={persistor}>
-      <Root history={history} />
-    </PersistGate>
+    <Root history={history} />
   </ApolloProvider>,
   rootEl
 );
@@ -47,9 +44,7 @@ if (module.hot) {
     /* eslint-enable global-require */
     render(
       <ApolloProvider store={store} client={client}>
-        <PersistGate loading={null} persistor={persistor}>
-          <NextRoot history={history} store={store} />
-        </PersistGate>
+        <NextRoot history={history} store={store} />
       </ApolloProvider>,
       rootEl
     );

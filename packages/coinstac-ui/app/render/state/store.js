@@ -9,6 +9,7 @@
  * Uses ApolloClient as outlined: https://medium.com/react-weekly/implementing-graphql-in-your-redux-app-dad7acf39e1b
  */
 import { applyMiddleware, createStore } from 'redux';
+import { createLogger } from 'redux-logger';
 import promiseMiddleware from 'redux-promise';
 import thunkMiddleware from 'redux-thunk';
 import { persistStore, persistReducer } from 'redux-persist';
@@ -40,7 +41,7 @@ export default function (apolloClient) {
     )
   );
 
-  const persistor = persistStore(store);
+  const persistor = persistStore(store, { manualPersist: true });
 
   ipcRenderer.on('login-success', (event, userId) => {
     const electronStoreFolder = dirname(electronStore.path);
@@ -59,5 +60,5 @@ export default function (apolloClient) {
     });
   }
 
-  return { store, persistor };
+  return store;
 }
