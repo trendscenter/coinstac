@@ -148,7 +148,7 @@ loadConfig()
           });
     });
 
-    ipcPromise.on('login-success', (userId) => {
+    ipcMain.on('login-success', (userId) => {
       mainWindow.webContents.send('login-success', userId);
     });
 
