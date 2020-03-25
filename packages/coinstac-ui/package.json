@@ -25,6 +25,7 @@
     "create-react-class": "^15.6.3",
     "d3": "^4.13.0",
     "deep-equal": "^1.0.1",
+    "deep-parse-json": "^1.0.1",
     "dexie": "^2.0.4",
     "electron-default-menu": "^1.0.1",
     "electron-store": "^5.1.1",

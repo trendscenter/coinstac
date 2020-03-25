@@ -16,9 +16,10 @@ import { persistStore, persistReducer } from 'redux-persist';
 import createElectronStorage from 'redux-persist-electron-storage';
 import { dirname, join } from 'path';
 import { ipcRenderer } from 'electron';
-import rootReducer from './root-reducer';
+import rootReducer, { clearState, rehydrate } from './root-reducer';
 
 const ElectronStore = require('electron-store');
+const { deepParseJson } = require('deep-parse-json');
 
 const electronStore = new ElectronStore();
 
@@ -47,7 +48,26 @@ export default function (apolloClient) {
     const electronStoreFolder = dirname(electronStore.path);
     electronStore.path = join(electronStoreFolder, `local-db-${userId}.json`);
 
-    persistor.persist();
+    persistConfig.storage.getItem('persist:root')
+      .then((data) => {
+        persistor.persist();
+
+        // Rehydrate is done only once by redux-persist, so we do it manually
+        // for hydrating state on consecutive logins
+        if (data) {
+          const parsedState = deepParseJson(data);
+
+          delete parsedState._persist;
+
+          store.dispatch(rehydrate(parsedState));
+        }
+      });
+  });
+
+  ipcRenderer.on('logout', () => {
+    persistor.pause();
+
+    store.dispatch(clearState());
   });
 
   if (module.hot) {
