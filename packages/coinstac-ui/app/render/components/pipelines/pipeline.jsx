@@ -583,7 +583,7 @@ class Pipeline extends Component {
               onClose={this.closeOwningConsortiumMenu}
             >
               {consortia && consortia
-                .filter(cons => cons.owners.includes(auth.user.id))
+                .filter(cons => Object.keys(cons.owners[0]).includes(auth.user.id))
                 .map(cons => (
                   <MenuItem
                     key={cons.id}
