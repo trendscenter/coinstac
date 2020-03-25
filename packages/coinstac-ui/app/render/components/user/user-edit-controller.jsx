@@ -1,16 +1,16 @@
 import { connect } from 'react-redux';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
+import crypto from 'crypto';
 import { notifySuccess, notifyError, writeLog } from '../../state/ducks/notifyAndLog';
 import { update } from '../../state/ducks/auth';
 import UserEdit from './user-edit';
-import sha1 from 'js-sha1';
 
 const CLOUDINARY_UPLOAD_PRESET = 'rxdgvbk9';
 const CLOUDINARY_API_KEY = '457127984681938';
 const CLOUDINARY_API_SECRET = 'mmx87Xdnl4FsSsRcU1Pi5hTEXy8';
 const CLOUDINARY_UPLOAD_URL = 'https://api.cloudinary.com/v1_1/cstacimg/upload';
-const CLOUDINARY_DELETE_URL = 'https://api.cloudinary.com/v1_1/cstacimg/image/destroy'
+const CLOUDINARY_DELETE_URL = 'https://api.cloudinary.com/v1_1/cstacimg/image/destroy';
 
 
 class UserAccountController extends Component {
@@ -22,7 +22,7 @@ class UserAccountController extends Component {
       uploadedFileCloudinaryID: this.props.user.photoID,
       uploadProgress: 0,
       uploadProgressShow: false,
-    }
+    };
   }
 
   /**
@@ -41,7 +41,7 @@ class UserAccountController extends Component {
    * @param  {string}    formData.username
    * @return {undefined}
    */
-  onSubmit = formData => {
+  onSubmit = (formData) => {
     let error;
 
     if (!formData.id) {
@@ -114,7 +114,7 @@ class UserAccountController extends Component {
       if (xhr.readyState == 4 && xhr.status == 200) {
         // File uploaded successfully
         let response = JSON.parse(xhr.responseText);
-        if(response.result === 'ok'){
+        if (response.result === 'ok') {
           this.setState({
             uploadedFileCloudinaryID: null,
             uploadedFileCloudinaryUrl: null,
@@ -125,9 +125,10 @@ class UserAccountController extends Component {
       }
     };
 
-    let date = new Date();
-    let timestamp = date.getTime();
-    let sign = sha1('public_id='+file+'&timestamp='+timestamp+CLOUDINARY_API_SECRET);
+    const date = new Date();
+    const timestamp = date.getTime();
+    const hash = crypto.createHash('sha1');
+    const sign = hash.update(`public_id=${file}&timestamp=${timestamp}${CLOUDINARY_API_SECRET}`).digest('hex');
 
     fd.append('public_id', file);
     fd.append('api_key', CLOUDINARY_API_KEY);
@@ -172,7 +173,6 @@ class UserAccountController extends Component {
       />
     );
   }
-
 }
 
 UserAccountController.contextTypes = {
