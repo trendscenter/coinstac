@@ -8,7 +8,7 @@ _Collaborative Informatics and Neuroimaging Suite Toolkit for Anonymous Computat
 
 📖 Read the project’s paper, [_COINSTAC: A Privacy Enabled Model and Prototype for Leveraging and Processing Decentralized Brain Imaging Data_ on Frontiers in Neuroscience](http://journal.frontiersin.org/article/10.3389/fnins.2016.00365/full)
 
-Find a full list of papers [here](https://www.github.com/trendscenter.org/coinstac/algorithm-development/papers.md).
+Find a full list of papers [here](https://github.com/trendscenter/coinstac/blob/master/algorithm-development/papers.md).
 
 For instructions on how to install and run COINSTAC as an end user, see the documents [here](https://github.com/trendscenter/coinstac-instructions).
 
