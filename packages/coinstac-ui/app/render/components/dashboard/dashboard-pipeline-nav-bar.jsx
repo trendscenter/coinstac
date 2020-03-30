@@ -57,9 +57,9 @@ class DashboardPipelineNavBar extends React.Component {
     const prevRuns = prevProps.localRuns || [];
 
     if (prevRuns.length < runs.length) {
-      const lastRun = runs[runs.length - 1];
+      const lastRun = runs.find(run => !runIsComplete(run));
 
-      if (!runIsComplete(lastRun)) {
+      if (lastRun) {
         const consortium = consortia.find(c => c.id === lastRun.consortiumId);
 
         this.setState({
