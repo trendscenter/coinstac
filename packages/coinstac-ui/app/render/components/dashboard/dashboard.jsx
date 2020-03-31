@@ -504,7 +504,7 @@ class Dashboard extends Component {
             </Drawer>
           </Grid>
           <Grid item xs={12} sm={9}>
-            <DashboardPipelineNavBar consortia={consortia} localRuns={runs} />
+            <DashboardPipelineNavBar router={router} consortia={consortia} localRuns={runs} />
             <main className="content-pane">
               {this.canShowBackButton && (
                 <button
