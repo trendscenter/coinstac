@@ -638,7 +638,7 @@ const resolvers = {
         const isAdmin = get(permissions, 'roles.admin', false);
         const isAuthor = get(permissions, 'roles.author', false);
 
-        if ((!isAdmin || !isAuthor) || (AVAILABLE_USER_APP_ROLES.indexOf(args.role) === -1)) {
+        if ((!isAdmin && !isAuthor) || (AVAILABLE_USER_APP_ROLES.indexOf(args.role) === -1)) {
           return Boom.forbidden('Action not permitted');
         }
 

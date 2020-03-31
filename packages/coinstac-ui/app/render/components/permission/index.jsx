@@ -15,6 +15,7 @@ import {
 } from '@material-ui/core'
 import { withStyles } from '@material-ui/core/styles'
 import MemberAvatar from '../common/member-avatar'
+import { logout } from '../../state/ducks/auth'
 import {
   getAllAndSubProp,
   userRolesProp,
@@ -41,13 +42,28 @@ class Permission extends Component {
     isUpdating: null,
   }
 
-  toggleUserAppRole = (user, checked, role) => {
-    const { addUserRole, removeUserRole } = this.props
+  logoutUser = () => {
+    const { router } = this.context
+
+    this.props.logout()
+      .then(() => {
+        router.push('/login')
+        this.props.notifySuccess('Successfully logged out')
+      })
+  }
+
+  toggleUserAppRole = (userId, checked, role) => {
+    const { currentUser, addUserRole, removeUserRole } = this.props
     const mutation = checked ? addUserRole : removeUserRole
 
-    this.setState({ isUpdating: { userId: user.id, role }})
+    this.setState({ isUpdating: { userId, role }})
 
-    mutation(user.id, 'app', role, role, 'app')
+    mutation(userId, 'app', role, role, 'app')
+      .then(() => {
+        if (currentUser.id === userId && role === 'admin') {
+          this.logoutUser()
+        }
+      })
       .finally(() => {
         this.setState({ isUpdating: null })
       })
@@ -104,7 +120,7 @@ class Permission extends Component {
                           className={classes.checkbox}
                           checked={isAdmin}
                           name="Admin"
-                          onChange={() => this.toggleUserAppRole(user, !isAdmin, 'admin')}
+                          onChange={() => this.toggleUserAppRole(user.id, !isAdmin, 'admin')}
                         />
                       )}
                     </TableCell>
@@ -116,7 +132,7 @@ class Permission extends Component {
                           className={classes.checkbox}
                           checked={isAuthor}
                           name="Author"
-                          onChange={() => this.toggleUserAppRole(user, !isAuthor, 'author')}
+                          onChange={() => this.toggleUserAppRole(user.id, !isAuthor, 'author')}
                         />
                       )}
                     </TableCell>
@@ -131,10 +147,15 @@ class Permission extends Component {
   }
 }
 
+Permission.contextTypes = {
+  router: PropTypes.object.isRequired,
+}
+
 Permission.propTypes = {
   users: PropTypes.array,
   addUserRole: PropTypes.func.isRequired,
   removeUserRole: PropTypes.func.isRequired,
+  logout: PropTypes.func.isRequired,
 }
 
 const PermissionWithData = compose(
@@ -151,9 +172,11 @@ const PermissionWithData = compose(
 )(Permission)
 
 const mapStateToProps = ({ auth }) => ({
-  user: auth.user,
+  currentUser: auth.user,
 })
 
-const connectedComponent = connect(mapStateToProps)(PermissionWithData)
+const connectedComponent = connect(mapStateToProps, {
+  logout,
+})(PermissionWithData)
 
 export default withStyles(styles, { withTheme: true })(connectedComponent)
