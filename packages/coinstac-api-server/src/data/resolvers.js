@@ -4,10 +4,13 @@ const GraphQLJSON = require('graphql-type-json');
 const Promise = require('bluebird');
 const { PubSub, withFilter } = require('graphql-subscriptions');
 const axios = require('axios');
-const { uniq } = require('lodash');
+const { get, uniq } = require('lodash');
 const helperFunctions = require('../auth-helpers');
 const initSubscriptions = require('./subscriptions');
 const config = require('../../config/default');
+
+const AVAILABLE_ROLE_TYPES = ['data', 'app'];
+const AVAILABLE_USER_APP_ROLES = ['admin', 'author'];
 
 /**
  * Helper function to retrieve all members of given table
@@ -151,6 +154,21 @@ async function removeUserPermissions(connection, args) {
   }
 
   await Promise.all(promises);
+}
+
+async function changeUserAppRole(connection, args, addOrRemove) {
+  const { userId, role } = args;
+
+  await rethink.table('users')
+    .get(userId)
+    .update({
+      permissions: {
+        roles: {
+          [role]: addOrRemove === 'add',
+        },
+      },
+    })
+    .run(connection);
 }
 
 const pubsub = new PubSub();
@@ -371,20 +389,43 @@ const resolvers = {
      * @param {string} args.doc Id of the document to add role to
      * @param {string} args.role Role to add to perms
      * @param {string} args.userId Id of the user to be added
+     * @param {string} args.roleType Type of role to add
      * @return {object} Updated user object
      */
     addUserRole: async ({ auth: { credentials } }, args) => {
       const { permissions } = credentials
 
-      const documentPermissions = permissions[args.table][args.doc];
-      if (!documentPermissions || !documentPermissions.includes('owner')) {
-        return Boom.forbidden('Action not permitted');
+      if (AVAILABLE_ROLE_TYPES.indexOf(args.roleType) === -1) {
+        return Boom.forbidden('Invalid role type');
       }
 
-      const connection = await helperFunctions.getRethinkConnection();
-      await addUserPermissions(connection, args).then(res => connection.close().then(() => res));
+      if (args.roleType === 'data') {
+        const documentPermissions = permissions[args.table][args.doc];
+        if (!documentPermissions || !documentPermissions.includes('owner')) {
+          return Boom.forbidden('Action not permitted');
+        }
 
-      return helperFunctions.getUserDetails({ username: args.userId });
+        const connection = await helperFunctions.getRethinkConnection();
+        await addUserPermissions(connection, args);
+        await connection.close();
+
+        return helperFunctions.getUserDetails({ username: args.userId });
+      }
+      
+      if (args.roleType === 'app') {
+        const isAdmin = get(permissions, 'roles.admin', false);
+        const isAuthor = get(permissions, 'roles.author', false);
+
+        if ((!isAdmin && !isAuthor) || (AVAILABLE_USER_APP_ROLES.indexOf(args.role) === -1)) {
+          return Boom.forbidden('Action not permitted');
+        }
+
+        const connection = await helperFunctions.getRethinkConnection();
+        await changeUserAppRole(connection, args, 'add');
+        await connection.close();
+
+        return helperFunctions.getUserDetails({ username: args.userId });
+      }
     },
     /**
      * Add run to RethinkDB
@@ -423,11 +464,11 @@ const resolvers = {
           return axios.post(
             `http://${config.host}:${config.pipelineServer}/startPipeline`, { run: result.changes[0].new_val }
           ).then(() => {
-              return result.changes[0].new_val;
+            return result.changes[0].new_val;
           })
         })
         .catch(error => {
-              console.log(error)
+          console.log(error)
         });
     },
     /**
@@ -571,19 +612,42 @@ const resolvers = {
      * @param {string} args.doc Id of the document to add role to
      * @param {string} args.role Role to add to perms
      * @param {string} args.userId Id of the user to be removed
+     * @param {string} args.roleType Type of role to add
      * @return {object} Updated user object
      */
     removeUserRole: async ({ auth: { credentials } }, args) => {
       const { permissions } = credentials
 
-      if (!permissions[args.table][args.doc] || !permissions[args.table][args.doc].includes('owner')) {
-        return Boom.forbidden('Action not permitted');
+      if (AVAILABLE_ROLE_TYPES.indexOf(args.roleType) === -1) {
+        return Boom.forbidden('Invalid role type');
       }
 
-      const connection = await helperFunctions.getRethinkConnection();
-      await removeUserPermissions(connection, args)
-        .then(res => connection.close().then(() => res));
-      return helperFunctions.getUserDetails({ username: args.userId });
+      if (args.roleType === 'data') {
+        if (!permissions[args.table][args.doc] || !permissions[args.table][args.doc].includes('owner')) {
+          return Boom.forbidden('Action not permitted');
+        }
+  
+        const connection = await helperFunctions.getRethinkConnection();
+        await removeUserPermissions(connection, args);
+        await connection.close();
+
+        return helperFunctions.getUserDetails({ username: args.userId });
+      }
+
+      if (args.roleType === 'app') {
+        const isAdmin = get(permissions, 'roles.admin', false);
+        const isAuthor = get(permissions, 'roles.author', false);
+
+        if ((!isAdmin || !isAuthor) || (AVAILABLE_USER_APP_ROLES.indexOf(args.role) === -1)) {
+          return Boom.forbidden('Action not permitted');
+        }
+
+        const connection = await helperFunctions.getRethinkConnection();
+        await changeUserAppRole(connection, args, 'remove');
+        await connection.close();
+
+        return helperFunctions.getUserDetails({ username: args.userId });
+      }
     },
     /**
      * Sets active pipeline on consortia object

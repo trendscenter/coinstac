@@ -94,7 +94,7 @@ const queries = {
   fetchAllUsers: `
     {
       fetchAllUsers {
-        ${sharedFields.userEmailIds}
+        ${sharedFields.userData}
       }
     }
   `,
@@ -141,7 +141,7 @@ const queries = {
   userChanged: `
     {
       userChanged(userId: $userId) {
-        ${sharedFields.userEmailIds}
+        ${sharedFields.userData}
       }
     }
   `,
