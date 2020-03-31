@@ -50,6 +50,10 @@ const helperFunctions = {
             computations: {},
             consortia: {},
             pipelines: {},
+            roles: {
+              admin: false,
+              author: false,
+            },
           },
           consortiaStatuses: {},
         };

@@ -787,6 +787,10 @@ helperFunctions.getRethinkConnection()
         'test-cons-2': ['owner', 'member'],
       },
       pipelines: {},
+      roles: {
+        admin: true,
+        author: true,
+      },
     },
     consortiaStatuses: {
       'test-cons-1': 'none',
@@ -806,6 +810,10 @@ helperFunctions.getRethinkConnection()
         'test-cons-2': ['member'],
       },
       pipelines: {},
+      roles: {
+        admin: false,
+        author: true,
+      },
     },
     consortiaStatuses: {
       'test-cons-1': 'none',
@@ -825,6 +833,10 @@ helperFunctions.getRethinkConnection()
         'test-cons-2': ['member'],
       },
       pipelines: {},
+      roles: {
+        admin: false,
+        author: false,
+      },
     },
     consortiaStatuses: {
       'test-cons-1': 'none',
@@ -844,6 +856,10 @@ helperFunctions.getRethinkConnection()
         'test-cons-2': ['member'],
       },
       pipelines: {},
+      roles: {
+        admin: true,
+        author: true,
+      },
     },
     consortiaStatuses: {
       'test-cons-1': 'none',
@@ -863,6 +879,10 @@ helperFunctions.getRethinkConnection()
         'test-cons-2': ['member'],
       },
       pipelines: {},
+      roles: {
+        admin: false,
+        author: true,
+      },
     },
     consortiaStatuses: {
       'test-cons-1': 'none',
@@ -880,6 +900,10 @@ helperFunctions.getRethinkConnection()
       computations: {},
       consortia: {},
       pipelines: {},
+      roles: {
+        admin: false,
+        author: false,
+      },
     },
     consortiaStatuses: {
       'test-cons-1': 'none',
@@ -899,6 +923,10 @@ helperFunctions.getRethinkConnection()
         'test-cons-2': ['member'],
       },
       pipelines: {},
+      roles: {
+        admin: true,
+        author: false,
+      },
     },
   }, passwordHash))
   .then(() => {
