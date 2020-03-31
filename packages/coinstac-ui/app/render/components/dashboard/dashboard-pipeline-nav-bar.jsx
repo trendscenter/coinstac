@@ -12,8 +12,7 @@ import classnames from 'classnames';
 const styles = theme => ({
   root: {
     padding: theme.spacing.unit * 2,
-    backgroundColor: '#616161',
-    borderBottom: '1px solid #424242',
+    backgroundColor: '#F05A28',
     transition: 'all 0.5s ease-out',
   },
   titleBox: {
@@ -84,20 +83,20 @@ class DashboardPipelineNavBar extends React.Component {
   }
 
   render() {
-    const { classes } = this.props;
+    const { classes, router } = this.props;
 
     const { runId, consortiumName, pipelineName } = this.state;
 
     return (
       <div
-        className={runId
+        className={runId && router.location.pathname !== '/dashboard'
           ? classnames(classes.root, classes.show)
           : classnames(classes.root, classes.hide)
         }
       >
         <div className={classes.titleBox}>
           <Typography variant="h6" className={classes.title}>
-            {`${consortiumName} || ${pipelineName}`}
+            {`${consortiumName} | ${pipelineName}`}
           </Typography>
           <Button
             variant="contained"
@@ -106,7 +105,7 @@ class DashboardPipelineNavBar extends React.Component {
             to="/dashboard"
           >
             <KeyboardArrowUpIcon />
-            DASHBOARD
+            View Detailed Progress
           </Button>
         </div>
         <LinearProgress variant="indeterminate" />
