@@ -4,8 +4,8 @@
  * @{@link  http://rackt.github.io/react-router/}
  * @{@link  https://github.com/rackt/react-router}
  */
-import { Route, IndexRoute, IndexRedirect } from 'react-router';
 import React from 'react';
+import { Route, IndexRoute, IndexRedirect } from 'react-router';
 import App from './components/app';
 import ComputationsList from './components/computations/computations-list';
 import ComputationSubmission from './components/computations/computation-submission';
@@ -25,6 +25,8 @@ import Result from './components/results/result';
 import Settings from './components/user/settings';
 import Threads from './components/threads';
 import Logs from './components/logs-display/logs';
+import Permission from './components/permission';
+import AdminRoute from './components/admin-route';
 
 export default (
   <Route path="/" component={App}>
@@ -60,6 +62,7 @@ export default (
       <Route path="settings" component={Settings} />
       <Route path="threads" component={Threads} />
       <Route path="logs" component={Logs} />
+      <AdminRoute path="permission" component={Permission} />
     </Route>
   </Route>
 );
