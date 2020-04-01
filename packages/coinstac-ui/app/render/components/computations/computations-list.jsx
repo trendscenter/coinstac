@@ -1,29 +1,31 @@
-import React, { Component } from 'react';
-import { connect } from 'react-redux';
-import PropTypes from 'prop-types';
-import { graphql } from 'react-apollo';
-import { Link } from 'react-router';
-import Button from '@material-ui/core/Button';
-import Fab from '@material-ui/core/Fab';
-import Paper from '@material-ui/core/Paper';
-import Typography from '@material-ui/core/Typography';
-import AddIcon from '@material-ui/icons/Add';
-import { withStyles } from '@material-ui/core/styles';
-import classNames from 'classnames';
-import ListDeleteModal from '../common/list-delete-modal';
+import React, { Component } from 'react'
+import { connect } from 'react-redux'
+import PropTypes from 'prop-types'
+import { graphql } from 'react-apollo'
+import { Link } from 'react-router'
+import { get } from 'lodash'
+import { Button, CircularProgress, Fab, Paper, Typography } from '@material-ui/core'
+import AddIcon from '@material-ui/icons/Add'
+import { withStyles } from '@material-ui/core/styles'
+import classNames from 'classnames'
+import ListDeleteModal from '../common/list-delete-modal'
 import {
   FETCH_ALL_COMPUTATIONS_QUERY,
   REMOVE_COMPUTATION_MUTATION,
-} from '../../state/graphql/functions';
+} from '../../state/graphql/functions'
 import {
   getDockerImages,
   pullComputations,
   removeImage,
-} from '../../state/ducks/docker';
-import { removeDocFromTableProp } from '../../state/graphql/props';
-import ComputationIO from './computation-io';
+} from '../../state/ducks/docker'
+import {
+  notifySuccess,
+  notifyError,
+} from '../../state/ducks/notifyAndLog'
+import { removeDocFromTableProp } from '../../state/graphql/props'
+import ComputationIO from './computation-io'
 
-const MAX_LENGTH_COMPUTATIONS = 5;
+const MAX_LENGTH_COMPUTATIONS = 5
 
 const styles = theme => ({
   titleContainer: {
@@ -51,209 +53,202 @@ const styles = theme => ({
     display: 'flex',
     justifyContent: 'space-around',
   },
-});
+})
 
-class ComputationsList extends Component { // eslint-disable-line
+class ComputationsList extends Component {
   constructor(props) {
-    super(props);
+    super(props)
 
     this.state = {
       activeComp: null,
-      computationToDelete: -1,
+      computationToDelete: null,
       ownedComputations: [],
       otherComputations: [],
       showModal: false,
-    };
+      isDeleting: false,
+    }
 
-    this.getTable = this.getTable.bind(this);
-    this.pullComputations = this.pullComputations.bind(this);
-    this.removeComputation = this.removeComputation.bind(this);
-    this.removeImage = this.removeImage.bind(this);
-    this.setActiveComp = this.setActiveComp.bind(this);
-    this.closeModal = this.closeModal.bind(this);
-    this.openModal = this.openModal.bind(this);
+    this.pullComputations = this.pullComputations.bind(this)
   }
 
   componentDidMount() {
-    this.props.getDockerImages();
+    this.props.getDockerImages()
   }
 
   static getDerivedStateFromProps(props) {
-    const { computations, auth } = props;
-    const ownedComputations = [];
-    const otherComputations = [];
+    const { computations, auth } = props
+    const ownedComputations = []
+    const otherComputations = []
+
     if (computations && computations.length > MAX_LENGTH_COMPUTATIONS) {
       computations.forEach((comp) => {
         if (auth.user.id === comp.submittedBy) {
-          ownedComputations.push(comp);
+          ownedComputations.push(comp)
         } else {
-          otherComputations.push(comp);
+          otherComputations.push(comp)
         }
-      });
+      })
     }
-    return { ownedComputations, otherComputations };
+
+    return { ownedComputations, otherComputations }
   }
 
-  getTable(computations) {
-    const { auth: { user }, docker, classes } = this.props;
-    const { activeComp } = this.state;
+  getTable = computations => {
+    const { auth: { user }, docker, classes } = this.props
+    const { activeComp, isDeleting, computationToDelete } = this.state
 
-    let sortedComputations = computations.sort(function(a, b) {
-        var nameA = a.meta.name.toLowerCase();
-        var nameB = b.meta.name.toLowerCase();
-        return (nameA < nameB) ? -1 : (nameA > nameB) ? 1 : 0;
-    });
+    const sortedComputations = computations.sort((a, b) => {
+        const nameA = a.meta.name.toLowerCase()
+        const nameB = b.meta.name.toLowerCase()
+
+        return (nameA < nameB) ? -1 : (nameA > nameB) ? 1 : 0
+    })
 
     return (
       <div className={classes.computationsContainer}>
-        {
-          sortedComputations.map((comp) => {
-            const compLocalImage = docker.localImages[comp.computation.dockerImage];
+        {sortedComputations.map((comp) => {
+          const compLocalImage = docker.localImages[comp.computation.dockerImage]
+          const isDeletingComputation = isDeleting && computationToDelete === comp.id
 
-            return (
-              <Paper
-                className={classes.rootPaper}
-                elevation={1}
-                key={comp.id}
-              >
-                <Typography variant="headline" className={classes.computationName}>
-                  { comp.meta.name }
-                </Typography>
-                <Typography variant="body1" className={classes.computationDescription}>
-                  { comp.meta.description }
-                </Typography>
-                <div className={classes.computationActions}>
+          return (
+            <Paper
+              className={classes.rootPaper}
+              elevation={1}
+              key={comp.id}
+            >
+              <Typography variant="headline" className={classes.computationName}>
+                {comp.meta.name}
+              </Typography>
+              <Typography variant="body1" className={classes.computationDescription}>
+                {comp.meta.description}
+              </Typography>
+              <div className={classes.computationActions}>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={() => this.setActiveComp(comp)}
+                >
+                  {activeComp && activeComp.meta.name === comp.meta.name ? 'Hide IO' : 'Get IO'}
+                </Button>
+                {!compLocalImage && (
                   <Button
                     variant="contained"
-                    color="primary"
-                    onClick={this.setActiveComp(comp)}
-                  >
-                    {
-                      activeComp && activeComp.meta.name === comp.meta.name ? 'Hide IO' : 'Get IO'
+                    color="secondary"
+                    onClick={
+                      this.pullComputations([{
+                        img: comp.computation.dockerImage,
+                        compId: comp.id,
+                        compName: comp.meta.name,
+                      }])
                     }
+                  >
+                    Download Image
                   </Button>
-                  {
-                    !compLocalImage
-                    && (
-                      <Button
-                        variant="contained"
-                        color="secondary"
-                        onClick={
-                          this.pullComputations([{
-                            img: comp.computation.dockerImage,
-                            compId: comp.id,
-                            compName: comp.meta.name,
-                          }])
-                        }
-                      >
-                        Download Image
-                      </Button>
-                    )
-                  }
-                  {
-                    compLocalImage
-                    && (
-                      <Button
-                        variant="contained"
-                        color="secondary"
-                        onClick={
-                          this.removeImage(
-                            comp.id,
-                            comp.computation.dockerImage,
-                            compLocalImage.id
-                          )
-                        }
-                      >
-                        Remove Image (<em>{ compLocalImage.size.toString().slice(0, -6) } MB</em>)
-                      </Button>
-                    )
-                  }
-                  {
-                    user.id === comp.submittedBy
-                    && (
-                      <Button
-                        variant="contained"
-                        onClick={this.openModal(comp.id)}
-                      >
-                        Delete
-                      </Button>
-                    )
-                  }
-                </div>
-                {
-                  docker.dockerOut[comp.id]
-                  && (
-                    <pre style={{ marginTop: 15 }}>
-                      {docker.dockerOut[comp.id].map(elem => (
-                        <div
-                          key={elem.id && elem.id !== 'latest' ? elem.id : elem.status}
-                          style={elem.isErr ? { color: 'red' } : {}}
-                        >
-                          {elem.id ? `${elem.id}: ` : ''}{elem.status} {elem.message} {elem.progress}
-                        </div>
-                      ))}
-                    </pre>
-                  )
-                }
-                {
-                  activeComp && activeComp.meta.name === comp.meta.name
-                  && <ComputationIO computationId={activeComp.id} />
-                }
-              </Paper>
-            );
-          })
-        }
+                )}
+                {compLocalImage && (
+                  <Button
+                    variant="contained"
+                    color="secondary"
+                    onClick={() => this.removeImage(
+                      comp.id,
+                      comp.computation.dockerImage,
+                      compLocalImage.id
+                    )}
+                  >
+                    Remove Image (<em>{compLocalImage.size.toString().slice(0, -6)} MB</em>)
+                  </Button>
+                )}
+                {user.id === comp.submittedBy && (
+                  <Button
+                    variant="contained"
+                    disabled={isDeletingComputation}
+                    onClick={() => this.openModal(comp.id)}
+                  >
+                    {isDeletingComputation ? <CircularProgress size={15} /> : 'Delete'}
+                  </Button>
+                )}
+              </div>
+              {docker.dockerOut[comp.id] && (
+                <pre style={{ marginTop: 15 }}>
+                  {docker.dockerOut[comp.id].map(elem => (
+                    <div
+                      key={elem.id && elem.id !== 'latest' ? elem.id : elem.status}
+                      style={elem.isErr ? { color: 'red' } : {}}
+                    >
+                      {elem.id ? `${elem.id}: ` : ''}{elem.status} {elem.message} {elem.progress}
+                    </div>
+                  ))}
+                </pre>
+              )}
+              {activeComp && activeComp.meta.name === comp.meta.name && (
+                <ComputationIO computationId={activeComp.id} />
+              )}
+            </Paper>
+          )
+        })}
       </div>
-    );
+    )
   }
 
-  setActiveComp(comp) {
-    const { activeComp } = this.state;
-    return () => {
-      if (!activeComp || activeComp.meta.name !== comp.meta.name) {
-        this.setState({ activeComp: comp });
-      } else {
-        this.setState({ activeComp: null });
-      }
-    };
+  setActiveComp = comp => {
+    const { activeComp } = this.state
+
+    if (!activeComp || activeComp.meta.name !== comp.meta.name) {
+      this.setState({ activeComp: comp })
+    } else {
+      this.setState({ activeComp: null })
+    }
   }
 
-  closeModal() {
-    this.setState({ showModal: false });
+  closeModal = () => {
+    this.setState({ showModal: false })
   }
 
-  openModal(computationId) {
-    return () => {
-      this.setState({
-        showModal: true,
-        computationToDelete: computationId,
-      });
-    };
+  openModal = computationId => {
+    this.setState({
+      showModal: true,
+      computationToDelete: computationId,
+    })
   }
 
   pullComputations(comps) {
     return () => {
-      this.props.pullComputations({ computations: comps });
-    };
+      this.props.pullComputations({ computations: comps })
+    }
   }
 
-  removeComputation() {
-    this.props.removeComputation(this.state.computationToDelete);
-    this.closeModal();
-  }
+  removeComputation = () => {
+    const { computationToDelete } = this.state
 
-  removeImage(compId, imgId, imgName) {
-    return () => {
-      this.props.removeImage(compId, imgId, imgName)
-        .then(() => {
-          this.props.getDockerImages();
+    this.closeModal()
+    this.setState({ isDeleting: true })
+
+    this.props
+      .removeComputation(computationToDelete)
+      .then(() => {
+        this.props.notifySuccess('Successfully deleted computation');
+      })
+      .catch(({ graphQLErrors }) => {
+        this.props.notifyError(get(graphQLErrors, '0.message', 'Failed to save consortium'));
+      })
+      .finally(() => {
+        this.setState({
+          isDeleting: false,
+          computationToDelete: null,
         });
-    };
+      })
+  }
+
+  removeImage = (compId, imgId, imgName) => {
+    this.props.removeImage(compId, imgId, imgName)
+      .then(() => {
+        this.props.getDockerImages()
+      })
   }
 
   render() {
-    const { computations, classes } = this.props;
-    const { ownedComputations, otherComputations } = this.state;
+    const { computations, classes } = this.props
+    const { ownedComputations, otherComputations, showModal } = this.state
 
     return (
       <div>
@@ -270,59 +265,51 @@ class ComputationsList extends Component { // eslint-disable-line
             <AddIcon />
           </Fab>
         </div>
-        {
-          computations && computations.length > 0
-          && (
-            <Button
-              variant="contained"
-              color="primary"
-              className={classes.downloadAllButton}
-              onClick={this.pullComputations(
-                computations.map(comp => ({
-                  img: comp.computation.dockerImage,
-                  compId: comp.id,
-                  compName: comp.meta.name,
-                }))
-              )}
-            >
-              Download All
-            </Button>
-          )
-        }
+        {computations && computations.length > 0 && (
+          <Button
+            variant="contained"
+            color="primary"
+            className={classes.downloadAllButton}
+            onClick={this.pullComputations(
+              computations.map(comp => ({
+                img: comp.computation.dockerImage,
+                compId: comp.id,
+                compName: comp.meta.name,
+              }))
+            )}
+          >
+            Download All
+          </Button>
+        )}
 
-        {
-          computations && computations.length > 0
-          && computations.length <= MAX_LENGTH_COMPUTATIONS && this.getTable(computations)
-        }
+        {computations && computations.length > 0 &&
+          computations.length <= MAX_LENGTH_COMPUTATIONS && this.getTable(computations)}
         {ownedComputations.length > 0 && <Typography variant="h6">Owned Computations</Typography>}
         {ownedComputations.length > 0 && this.getTable(ownedComputations)}
         {otherComputations.length > 0 && <Typography variant="h6">Other Computations</Typography>}
         {otherComputations.length > 0 && this.getTable(otherComputations)}
 
-        {
-          (!computations || !computations.length)
-          && (
-            <Typography variant="body1">
-              No computations found
-            </Typography>
-          )
-        }
+        {(!computations || !computations.length) && (
+          <Typography variant="body1">
+            No computations found
+          </Typography>
+        )}
 
         <ListDeleteModal
           close={this.closeModal}
           deleteItem={this.removeComputation}
           itemName="computation"
-          show={this.state.showModal}
+          show={showModal}
           warningMessage="This action will delete the computation, invalidating all pipelines that are currently using it."
         />
       </div>
-    );
+    )
   }
 }
 
 ComputationsList.defaultProps = {
   removeComputation: null,
-};
+}
 
 ComputationsList.propTypes = {
   auth: PropTypes.object.isRequired,
@@ -333,11 +320,11 @@ ComputationsList.propTypes = {
   removeComputation: PropTypes.func,
   removeImage: PropTypes.func.isRequired,
   classes: PropTypes.object.isRequired,
-};
-
-function mapStateToProps({ auth, docker }) {
-  return { auth, docker };
 }
+
+const mapStateToProps = ({ auth, docker }) => ({
+  auth, docker
+})
 
 const ComputationsListWithData = graphql(REMOVE_COMPUTATION_MUTATION,
   removeDocFromTableProp(
@@ -346,10 +333,14 @@ const ComputationsListWithData = graphql(REMOVE_COMPUTATION_MUTATION,
     FETCH_ALL_COMPUTATIONS_QUERY,
     'fetchAllComputations'
   )
-)(ComputationsList);
+)(ComputationsList)
 
-const connectedComponent = connect(mapStateToProps,
-  { getDockerImages, pullComputations, removeImage }
-)(ComputationsListWithData);
+const connectedComponent = connect(mapStateToProps, {
+  getDockerImages,
+  pullComputations,
+  removeImage,
+  notifySuccess,
+  notifyError,
+})(ComputationsListWithData)
 
-export default withStyles(styles)(connectedComponent);
+export default withStyles(styles)(connectedComponent)

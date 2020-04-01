@@ -585,23 +585,18 @@ const resolvers = {
      * @param {string} args.computationId Computation id to delete
      * @return {object} Deleted computation
      */
-    removeComputation: ({ auth: { credentials } }, args) => {
-      return helperFunctions.getRethinkConnection()
-        .then((connection) =>
-          new Promise.all([
-            connection,
-            rethink.table('computations').get(args.computationId).run(connection)
-          ])
-        )
-        .then(([connection, comp]) => {
-          if (comp.submittedBy !== credentials.id) {
-            return Boom.forbidden('Action not permitted');
-          }
+    removeComputation: async ({ auth: { credentials } }, args) => {
+      const connection = await helperFunctions.getRethinkConnection()
+      const computation = await fetchOne('computations', args.computationId)
 
-          return rethink.table('computations').get(args.computationId)
-            .delete({ returnChanges: true }).run(connection).then(res => connection.close().then(() => res))
-        })
-        .then(result => result.changes[0].old_val)
+      if (computation.submittedBy !== credentials.id) {
+        return Boom.forbidden('Only admin or computation owner can delete computations.')
+      }
+
+      await rethink.table('computations').get(args.computationId).delete()
+      await connection.close()
+
+      return computation
     },
     /**
      * Add new user role to user perms, currently consortia perms only
