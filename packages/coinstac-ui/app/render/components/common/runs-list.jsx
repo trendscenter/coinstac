@@ -3,24 +3,11 @@ import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import Typography from '@material-ui/core/Typography';
 import RunItem from './run-item';
+import { isUserInGroup } from '../../utils/helpers';
 
 function getActiveTime(hoursSinceActive) {
   return Date.now() - (hoursSinceActive * 60 * 60 * 1000);
 }
-
-const isUserA = (userId, groupArr) => {
-  let res = false;
-  if (groupArr.indexOf(userId) !== -1) {
-    res = true;
-  }else{
-    Object.values(groupArr).map((item) => {
-      if (Object.keys(item).indexOf(userId) !== -1) {
-        res = true;
-      }
-    });
-  }
-  return res;
-};
 
 const RunsList = ({
   auth,
@@ -43,9 +30,9 @@ const RunsList = ({
           && (run.startDate > activeTime || run.endDate > activeTime)
           && consortium
           && (
-            isUserA(auth.user.id, consortium.members)
-            || isUserA(auth.user.id, consortium.owners)
-            || (run.sharedUsers && isUserA(auth.user.id, run.sharedUsers))
+            isUserInGroup(auth.user.id, consortium.members)
+            || isUserInGroup(auth.user.id, consortium.owners)
+            || (run.sharedUsers && isUserInGroup(auth.user.id, run.sharedUsers))
           )
         ) {
           return (

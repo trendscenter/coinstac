@@ -174,7 +174,7 @@ helperFunctions.getRethinkConnection()
         {
   "id": "local-S1zjvgj8E",
   "clients": [
-    {'xrp2xmg2':'test1'}
+    {'f647cc72-cab5-4366-aa27-71815d2084f0':'test1'}
   ],
   "consortiumId": "test-cons-2",
   "pipelineSnapshot": {
@@ -299,7 +299,7 @@ helperFunctions.getRethinkConnection()
 {
   "id": "b23af8ff-18fa-479d-adc7-19408abb3741",
   "clients": [
-    {'xrp2xmg2':'test1'}
+    {'f647cc72-cab5-4366-aa27-71815d2084f0':'test1'}
   ],
   "consortiumId": "test-cons-2",
   "startDate": "1568405561851",
@@ -510,7 +510,7 @@ helperFunctions.getRethinkConnection()
 {
   "id": "results-2",
   "clients": [
-    {'xrp2xmg2':'test1'}
+    {'f647cc72-cab5-4366-aa27-71815d2084f0':'test1'}
   ],
   "consortiumId": "test-cons-2",
   "startDate": "1518559440672",
@@ -593,7 +593,7 @@ helperFunctions.getRethinkConnection()
 {
   "id": "results-1",
   "clients": [
-    {'xrp2xmg2':'test1'}
+    {'f647cc72-cab5-4366-aa27-71815d2084f0':'test1'}
   ],
   "consortiumId": "test-cons-2",
   "startDate": "1518559440668",
@@ -760,8 +760,8 @@ helperFunctions.getRethinkConnection()
         id: 'test-cons-1',
         name: 'Test Consortia 1',
         description: 'This consortia is for testing.',
-        owners: [{'gnqyomm0':'author'}],
-        members: [{'gnqyomm0':'author'}],
+        owners: [{'da0c1de3-0c95-4657-93d0-26136ccfaaa2':'author'}],
+        members: [{'da0c1de3-0c95-4657-93d0-26136ccfaaa2':'author'}],
         isPrivate: false,
         createDate: 1551333489519,
       }).run(connection))
@@ -770,15 +770,15 @@ helperFunctions.getRethinkConnection()
         activePipelineId: 'test-pipeline-ssr',
         name: 'Test Consortia 2',
         description: 'This consortia is for testing too.',
-        owners: [{"xrp2xmg2": "test1"}],
-        members: [{'gnqyomm0':'author'}, {"xrp2xmg2": "test1"}],
+        owners: [{"f647cc72-cab5-4366-aa27-71815d2084f0": "test1"}],
+        members: [{'da0c1de3-0c95-4657-93d0-26136ccfaaa2':'author'}, {"f647cc72-cab5-4366-aa27-71815d2084f0": "test1"}],
         isPrivate: false,
         createDate: 1551666489519,
       }).run(connection));
   })
   .then(() => helperFunctions.hashPassword('password'))
   .then(passwordHash => helperFunctions.createUser({
-    id: 'xrp2xmg2',
+    id: 'f647cc72-cab5-4366-aa27-71815d2084f0',
     username: 'test1',
     name: 'Testy Testerson',
     institution: 'mrn',
@@ -798,7 +798,7 @@ helperFunctions.getRethinkConnection()
   }, passwordHash))
   .then(() => helperFunctions.hashPassword('password'))
   .then(passwordHash => helperFunctions.createUser({
-    id: 'oc4ey3vg',
+    id: 'd604b8f6-ebfe-4e60-a61b-35e4a85132ed',
     username: 'test2',
     name: 'Deuce Masterson',
     institution: 'mrn',
@@ -818,7 +818,7 @@ helperFunctions.getRethinkConnection()
   }, passwordHash))
   .then(() => helperFunctions.hashPassword('password'))
   .then(passwordHash => helperFunctions.createUser({
-    id: 'y7bqf28p',
+    id: '4895b73a-88de-4e3b-a048-c3f161628ef2',
     username: 'test3',
     name: 'Tre Testington III',
     institution: 'mrn',
@@ -838,7 +838,7 @@ helperFunctions.getRethinkConnection()
   }, passwordHash))
   .then(() => helperFunctions.hashPassword('password'))
   .then(passwordHash => helperFunctions.createUser({
-    id: 'vagfpnjw',
+    id: '9143d340-4907-46c4-9d53-c8f292e0400a',
     username: 'test4',
     name: 'Quattro Quintana',
     institution: 'mrn',
@@ -858,7 +858,7 @@ helperFunctions.getRethinkConnection()
   }, passwordHash))
   .then(() => helperFunctions.hashPassword('password'))
   .then(passwordHash => helperFunctions.createUser({
-    id: 'mhcetjmo',
+    id: '8d00ee70-a2dd-4120-853b-d4772cc7e57c',
     username: 'test5',
     name: 'Cinco Chavez',
     institution: 'mrn',
@@ -879,7 +879,7 @@ helperFunctions.getRethinkConnection()
   .then(() => helperFunctions.hashPassword(process.argv[3]
      || helperFunctions.getDBMap().rethinkdbServer.password))
   .then(passwordHash => helperFunctions.createUser({
-    id: 'fuic3e3b',
+    id: '6d1a9409-3a21-4d88-b2e6-c68cdffaad3e',
     username: 'server',
     name: 'Sally Serverson',
     institution: 'mrn',
@@ -896,7 +896,7 @@ helperFunctions.getRethinkConnection()
   }, passwordHash))
   .then(() => helperFunctions.hashPassword('password'))
   .then(passwordHash => helperFunctions.createUser({
-    id: 'gnqyomm0',
+    id: 'da0c1de3-0c95-4657-93d0-26136ccfaaa2',
     username: 'author',
     name: 'Arturo Andersson',
     institution: 'mrn',

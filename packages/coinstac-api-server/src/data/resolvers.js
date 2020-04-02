@@ -545,8 +545,8 @@ const resolvers = {
         return consortium
       }
 
-      await addUserPermissions(connection, { userId: credentials.id, userName: credentials.username, role: 'member', doc: args.consortiumId, table: 'consortia' })
-        .then(res => connection.close().then(() => res));
+      await addUserPermissions(connection, { userId: credentials.id, userName: credentials.username, role: 'member', doc: args.consortiumId, table: 'consortia' });
+      await connection.close();
 
       return fetchOne('consortia', args.consortiumId)
     },

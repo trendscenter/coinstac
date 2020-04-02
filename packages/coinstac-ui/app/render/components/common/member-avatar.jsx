@@ -41,11 +41,12 @@ function MemberAvatar({
   mapped,
   user,
 }) {
+  console.log(user);
   return (
     <div key={`${name}-avatar`} className={classes.containerStyles}>
       {user && user.photo
-        ? <Avatar name={name} size={width} src={user.photo} />
-        : <Avatar name={name} size={width} />}
+        ? <Avatar name={name} size={width} src={user.photo} round={true} />
+        : <Avatar name={name} size={width} round={true} />}
       {
         consRole && showDetails
         && <Typography variant="subtitle2" className={classes.textStyles}>{consRole}</Typography>

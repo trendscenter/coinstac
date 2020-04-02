@@ -33,6 +33,7 @@ import {
 } from '../../state/graphql/props';
 import { notifyInfo } from '../../state/ducks/notifyAndLog';
 import { pipelineNeedsDataMapping } from '../../../main/utils/run-pipeline-functions';
+import { isUserInGroup } from '../../utils/helpers';
 
 const MAX_LENGTH_CONSORTIA = 50;
 
@@ -68,20 +69,6 @@ const styles = theme => ({
     marginBottom: theme.spacing.unit * 4,
   },
 });
-
-const isUserA = (userId, groupArr) => {
-  let res = false;
-  if(typeof groupArr === 'object'){
-    groupArr = Object.values(groupArr);
-  }
-  groupArr.map((item) => {
-    if(Object.keys(item).indexOf(userId) !== -1){
-      res = true;
-      return;
-    }
-  });
-  return res;
-};
 
 class ConsortiaList extends Component {
   constructor(props) {
@@ -358,12 +345,12 @@ class ConsortiaList extends Component {
         key={`${consortium.id}-list-item`}
         itemObject={consortium}
         deleteItem={this.openModal}
-        owner={isUserA(user.id, consortium.owners)}
+        owner={isUserInGroup(user.id, consortium.owners)}
         highlight={consortiumJoinedByThread === consortium.id}
         itemOptions={
           this.getOptions(
-            isUserA(user.id, consortium.members),
-            isUserA(user.id, consortium.owners),
+            isUserInGroup(user.id, consortium.members),
+            isUserInGroup(user.id, consortium.owners),
             consortium
           )
         }

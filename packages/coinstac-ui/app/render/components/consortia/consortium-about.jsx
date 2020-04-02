@@ -227,6 +227,7 @@ class ConsortiumAbout extends Component {
                   <TableRow key={`${consUser.id}-row`}>
                     <TableCell>
                       <MemberAvatar
+                        id={user.id}
                         isOwner={owner}
                         consRole="Member"
                         name={consUser.name}
