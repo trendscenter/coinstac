@@ -2,9 +2,12 @@
 
 const path = require('path');
 const webpack = require('webpack');
+const dotenv = require('dotenv');
 const pkg = require('./package.json');
 
 const port = 3000;
+
+const env = dotenv.config({ path: '../../.env', safe: true }).parsed;
 
 const config = {
   bail: true,
@@ -107,7 +110,11 @@ const config = {
     // relative to entry path
     publicPath: '../../build/render/',
   },
-  plugins: [new webpack.optimize.OccurrenceOrderPlugin(), new webpack.HotModuleReplacementPlugin()],
+  plugins: [
+    new webpack.EnvironmentPlugin(env),
+    new webpack.optimize.OccurrenceOrderPlugin(),
+    new webpack.HotModuleReplacementPlugin()
+  ],
   resolve: {
     extensions: ['.json', '.js', '.jsx'],
   },
@@ -121,6 +128,7 @@ if (process.env.NODE_ENV === 'development') {
   // Massage configuration for hot module replacement:
   config.output.publicPath = `http://localhost:${port}/`;
   config.plugins.push(
+    new webpack.EnvironmentPlugin(env),
     new webpack.HotModuleReplacementPlugin(),
     new webpack.NamedModulesPlugin()
   );

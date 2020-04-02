@@ -2,16 +2,16 @@ import { connect } from 'react-redux';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import crypto from 'crypto';
+import axios from 'axios';
 import { notifySuccess, notifyError, writeLog } from '../../state/ducks/notifyAndLog';
 import { update } from '../../state/ducks/auth';
 import UserEdit from './user-edit';
 
-const CLOUDINARY_UPLOAD_PRESET = 'rxdgvbk9';
-const CLOUDINARY_API_KEY = '457127984681938';
-const CLOUDINARY_API_SECRET = 'mmx87Xdnl4FsSsRcU1Pi5hTEXy8';
-const CLOUDINARY_UPLOAD_URL = 'https://api.cloudinary.com/v1_1/cstacimg/upload';
-const CLOUDINARY_DELETE_URL = 'https://api.cloudinary.com/v1_1/cstacimg/image/destroy';
-
+const CLOUDINARY_UPLOAD_PRESET = process.env.CLOUDINARY_UPLOAD_PRESET;
+const CLOUDINARY_API_KEY = process.env.CLOUDINARY_API_KEY;
+const CLOUDINARY_API_SECRET = process.env.CLOUDINARY_API_SECRET;
+const CLOUDINARY_UPLOAD_URL = process.env.CLOUDINARY_UPLOAD_URL;
+const CLOUDINARY_DELETE_URL = process.env.CLOUDINARY_DELETE_URL;
 
 class UserAccountController extends Component {
   constructor(props) {

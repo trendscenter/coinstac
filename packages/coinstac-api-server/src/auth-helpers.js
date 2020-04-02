@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const rethink = require('rethinkdb');
 const Promise = require('bluebird');
 const config = require('../config/default');
+const { v4: uuidv4 } = require('uuid');
 
 let dbmap;
 try {
@@ -39,7 +40,7 @@ const helperFunctions = {
    * @return {object} The updated user object
    */
   createUser(user, passwordHash) {
-    let hash = `_${Math.random().toString(36).substr(2, 9)}`;
+    let hash = uuidv4();
     return helperFunctions.getRethinkConnection()
       .then((connection) => {
         const userDetails = {
@@ -129,7 +130,7 @@ const helperFunctions = {
       .then(connection => rethink.table('users')
         .filter({'username':credentials.username})
         .run(connection).then(res => connection.close().then(() => res))
-      ).then((cursor) => cursor.toArray())
+      ).then((cursor) => cursor.next())
       .then((result) => {
         return result;
       });
@@ -250,7 +251,6 @@ const helperFunctions = {
     return helperFunctions.getUserDetails(req.payload)
       .then((user) => {
         if (user) {
-          user = user[0];
           helperFunctions.verifyPassword(req.payload.password, user.passwordHash)
             .then((passwordMatch) => {
               if (user && user.passwordHash && passwordMatch) {
