@@ -49,6 +49,7 @@
     "react-dom": "^16.5.2",
     "react-dragula": "^1.1.17",
     "react-faux-dom": "^4.1.0",
+    "react-json-view": "^1.19.1",
     "react-material-ui-form-validator": "^2.0.9",
     "react-number-format": "^4.3.1",
     "react-redux": "^5.0.7",
