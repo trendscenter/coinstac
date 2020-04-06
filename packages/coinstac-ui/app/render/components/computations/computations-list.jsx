@@ -251,7 +251,7 @@ class ComputationsList extends Component {
   }
 
   render() {
-    const { computations, classes, user } = this.props
+    const { computations, classes, auth } = this.props
     const { ownedComputations, otherComputations, showModal } = this.state
 
     return (
@@ -260,7 +260,7 @@ class ComputationsList extends Component {
           <Typography variant="h4">
             Computations
           </Typography>
-          {isAllowedForComputationChange(user) && (
+          {isAllowedForComputationChange(auth.user) && (
             <Fab
               color="primary"
               component={Link}
