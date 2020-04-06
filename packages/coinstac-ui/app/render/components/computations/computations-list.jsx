@@ -1,10 +1,12 @@
-import React, { Component } from 'react'
+import React, { Component, Fragment } from 'react'
 import { connect } from 'react-redux'
 import PropTypes from 'prop-types'
 import { graphql } from 'react-apollo'
 import { Link } from 'react-router'
 import { Button, CircularProgress, Fab, Paper, Typography } from '@material-ui/core'
 import AddIcon from '@material-ui/icons/Add'
+import DeleteIcon from '@material-ui/icons/Delete'
+import EditIcon from '@material-ui/icons/Edit'
 import { withStyles } from '@material-ui/core/styles'
 import classNames from 'classnames'
 import ListDeleteModal from '../common/list-delete-modal'
@@ -55,8 +57,14 @@ const styles = theme => ({
   },
   computationActions: {
     display: 'flex',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
   },
+  computationButtons: {
+    display: 'flex',
+    '& > button': {
+      marginLeft: theme.spacing.unit,
+    },
+  }
 })
 
 class ComputationsList extends Component {
@@ -127,14 +135,19 @@ class ComputationsList extends Component {
                 {comp.meta.description}
               </Typography>
               <div className={classes.computationActions}>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={() => this.setActiveComp(comp)}
-                >
-                  {activeComp && activeComp.meta.name === comp.meta.name ? 'Hide IO' : 'Get IO'}
-                </Button>
-                {!compLocalImage && (
+                {compLocalImage ? (
+                  <Button
+                    variant="contained"
+                    color="secondary"
+                    onClick={() => this.removeImage(
+                      comp.id,
+                      comp.computation.dockerImage,
+                      compLocalImage.id
+                    )}
+                  >
+                    Remove Image (<em>{compLocalImage.size.toString().slice(0, -6)} MB</em>)
+                  </Button>
+                ) : (
                   <Button
                     variant="contained"
                     color="secondary"
@@ -147,30 +160,40 @@ class ComputationsList extends Component {
                     }
                   >
                     Download Image
-                  </Button>
+                  </Button>  
                 )}
-                {compLocalImage && (
+
+                <div className={classes.computationButtons}>
                   <Button
                     variant="contained"
-                    color="secondary"
-                    onClick={() => this.removeImage(
-                      comp.id,
-                      comp.computation.dockerImage,
-                      compLocalImage.id
-                    )}
+                    color="primary"
+                    onClick={() => this.setActiveComp(comp)}
                   >
-                    Remove Image (<em>{compLocalImage.size.toString().slice(0, -6)} MB</em>)
+                    {activeComp && activeComp.meta.name === comp.meta.name ? 'Hide IO' : 'Get IO'}
                   </Button>
-                )}
-                {(user.id === comp.submittedBy || isAdmin(user)) && (
                   <Button
                     variant="contained"
-                    disabled={isDeletingComputation}
-                    onClick={() => this.openModal(comp.id)}
+                    onClick={() => this.props.router.push(`/dashboard/computations/${comp.id}`)}
                   >
-                    {isDeletingComputation ? <CircularProgress size={15} /> : 'Delete'}
+                    Edit <EditIcon />
                   </Button>
-                )}
+                  {(user.id === comp.submittedBy || isAdmin(user)) && (
+                    <Button
+                      variant="contained"
+                      color="secondary"
+                      disabled={isDeletingComputation}
+                      onClick={() => this.openModal(comp.id)}
+                    >
+                      {isDeletingComputation ? (
+                        <CircularProgress size={15} />
+                      ) : (
+                        <Fragment>
+                          Delete{' '}<DeleteIcon />
+                        </Fragment>
+                      )}
+                    </Button>
+                  )}
+                </div>
               </div>
               {docker.dockerOut[comp.id] && (
                 <pre style={{ marginTop: 15 }}>

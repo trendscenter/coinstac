@@ -4,13 +4,14 @@ import { connect } from 'react-redux'
 import { compose, graphql, withApollo } from 'react-apollo'
 import ReactJson from 'react-json-view'
 import ipcPromise from 'ipc-promise'
-import { Button, Typography } from '@material-ui/core'
+import { Button, CircularProgress, Typography } from '@material-ui/core'
 import { withStyles } from '@material-ui/core/styles'
 import { services } from 'coinstac-common'
 import {
   CREATE_COMPUTATION_MUTATION,
+  UPDATE_COMPUTATION_MUTATION,
 } from '../../state/graphql/functions'
-import { saveDocumentProp } from '../../state/graphql/props'
+import { genericProp } from '../../state/graphql/props'
 import { notifySuccess, notifyError } from '../../state/ducks/notifyAndLog'
 import { getGraphQLErrorMessage } from '../../utils/helpers'
 
@@ -50,16 +51,20 @@ class ComputationSubmission extends Component {
       .catch(console.log)
   }
 
-  submitSchema = () => {
-    const { activeSchema } = this.state
+  handleComputation = () => {
+    const { router } = this.props
+
+    const { computationId } = router.params
 
     this.setState({ isSubmitting: true })
 
-    this.props.submitSchema(activeSchema)
-      .then((res) => {
+    const mutation = computationId ? this.updateComputation : this.createComputation
+
+    mutation()
+      .then(() => {
         this.setState({ activeSchema: {} })
         this.props.router.push('/dashboard/computations')
-        this.props.notifySuccess('Computation Submission Successful')
+        this.props.notifySuccess('Created Computation Successfully')
       })
       .catch((error) => {
         this.props.notifyError(getGraphQLErrorMessage(error))
@@ -69,15 +74,37 @@ class ComputationSubmission extends Component {
       })
   }
 
+  createComputation = () => {
+    const { activeSchema } = this.state
+
+    return this.props.createComputation({
+      computationSchema: activeSchema,
+    })
+  }
+
+  updateComputation = () => {
+    const { router } = this.props
+    const { activeSchema } = this.state
+
+    this.setState({ isSubmitting: true })
+
+    return this.props.updateComputation({
+      computationId: router.params.computationId,
+      computationSchema: activeSchema,
+    })
+  }
+
   render() {
-    const { classes } = this.props
-    const { activeSchema, validationErrors, submissionSuccess } = this.state
+    const { classes, router } = this.props
+    const { activeSchema, validationErrors, isSubmitting } = this.state
+
+    const { computationId } = router.params
 
     return (
       <div>
         <div className="page-header">
           <Typography variant="h4">
-            Computation Submission:
+            {computationId ? 'Edit Computation' : 'Create Computation'}
           </Typography>
         </div>
         <Typography variant="body1" className={classes.description}>
@@ -97,10 +124,10 @@ class ComputationSubmission extends Component {
           <Button
             variant="contained"
             color="primary"
-            disabled={!activeSchema.meta || validationErrors !== null}
-            onClick={this.submitSchema}
+            disabled={!activeSchema.meta || validationErrors !== null || isSubmitting}
+            onClick={this.handleComputation}
           >
-            Submit
+            {isSubmitting ? <CircularProgress size={15} /> : 'Submit'}
           </Button>
         </div>
 
@@ -140,11 +167,18 @@ class ComputationSubmission extends Component {
 ComputationSubmission.propTypes = {
   notifySuccess: PropTypes.func.isRequired,
   notifyError: PropTypes.func.isRequired,
-  submitSchema: PropTypes.func.isRequired,
+  createComputation: PropTypes.func.isRequired,
 }
 
 const ComputationSubmissionWithAlert = compose(
-  graphql(CREATE_COMPUTATION_MUTATION, saveDocumentProp('submitSchema', 'computationSchema')),
+  graphql(
+    CREATE_COMPUTATION_MUTATION,
+    genericProp('createComputation')
+  ),
+  graphql(
+    UPDATE_COMPUTATION_MUTATION,
+    genericProp('updateComputation'),
+  ),
   withApollo
 )(ComputationSubmission)
 

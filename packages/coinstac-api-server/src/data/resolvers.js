@@ -171,22 +171,27 @@ async function changeUserAppRole(connection, args, addOrRemove) {
     .run(connection);
 }
 
-async function validateComputationSchema(connection, validationSchema) {
-  const compCount = await rethink.table('computations')
-    .filter({ meta: { id: validationSchema.meta.id } })
-    .count()
+async function filterComputationsByMetaId(connection, metaId) {
+  const cursor = await rethink.table('computations')
+    .filter({ meta: { id: metaId } })
     .run(connection);
 
-  return compCount === 0;
+  const computations = await cursor.toArray();
+
+  return computations;
+}
+
+function isAdmin(permissions) {
+  return get(permissions, 'roles.admin', false);
+}
+
+function isAuthor(permissions) {
+  return get(permissions, 'roles.author', false);
 }
 
 function isAllowedForComputationChange(credentials) {
   const { permissions } = credentials;
-
-  const isAdmin = get(permissions, 'roles.admin', false);
-  const isAuthor = get(permissions, 'roles.author', false);
-
-  return isAdmin || isAuthor;
+  return isAdmin(permissions) || isAuthor(permissions);
 }
 
 const pubsub = new PubSub();
@@ -367,7 +372,7 @@ const resolvers = {
           })
         })
         .run(connection)
-      const threads = cursor.toArray()
+      const threads = await cursor.toArray()
 
       await connection.close()
 
@@ -387,14 +392,15 @@ const resolvers = {
     createComputation: async ({ auth: { credentials } }, args) => {
       const connection = await helperFunctions.getRethinkConnection();
 
-      const isSchemaValid = await validateComputationSchema(connection, args.computationSchema);
-
       if (!isAllowedForComputationChange(credentials)) {
         return Boom.forbidden('Only admin or author can create computation');
       }
 
-      if (!isSchemaValid) {
-        return Boom.forbidden('Computation with same id already exists');
+      const filteredComputations =
+        await filterComputationsByMetaId(connection, args.computationSchema.meta.id);
+
+      if (filteredComputations.length !== 0) {
+        return Boom.forbidden('Computation with same meta id already exists');
       }
 
       const result = await rethink.table('computations')
@@ -418,20 +424,39 @@ const resolvers = {
      * @return {object} Updated computation object
      */
     updateComputation: async ({ auth: { credentials } }, args) => {
-      const connection = await helperFunctions.getRethinkConnection()
+      const connection = await helperFunctions.getRethinkConnection();
 
-      const isSchemaValid = await validateComputationSchema(connection, args.computationSchema)
+      const computation = await fetchOne('computations', args.computationId);
 
-      if (!isSchemaValid) {
-        return Boom.forbidden('Computation with same id already exists')
+      if (!computation) {
+        return Boom.forbidden('Cannot find computation');
       }
 
-      const result = await rethink.table('computations')
-        .insert({ ...args.computationSchema, submittedBy: credentials.id })
-        .run(connection)
-      await connection.close()
+      const filteredComputations =
+        await filterComputationsByMetaId(connection, args.computationSchema.meta.id);
 
-      return result.changes[0].new_val
+      if (filteredComputations.length > 1) {
+        return Boom.forbidden('Multiple computations found with same meta id');
+      }
+
+      if (filteredComputations.length === 1) {
+        if (filteredComputations[0].id !== args.computationId) {
+          return Boom.forbidden('Computation with same meta id already exists');
+        } else if (computation.submittedBy !== credentials.id && !isAdmin(credentials.permissions)) {
+          return Boom.forbidden('Only admin or computation owner can delete computations.');
+        }
+      }
+
+      await rethink.table('computations')
+        .get(args.computationId)
+        .update(args.computationSchema)
+        .run(connection);
+        
+      await connection.close();
+
+      const updatedComputation = await fetchOne('computations', args.computationId);
+
+      return updatedComputation;
     },
     /**
      * Add new user role to user perms, currently consortia perms only
@@ -464,10 +489,7 @@ const resolvers = {
       }
       
       if (args.roleType === 'app') {
-        const isAdmin = get(permissions, 'roles.admin', false);
-        const isAuthor = get(permissions, 'roles.author', false);
-
-        if ((!isAdmin && !isAuthor) || (AVAILABLE_USER_APP_ROLES.indexOf(args.role) === -1)) {
+        if ((!isAdmin(permissions) && !isAuthor(permissions)) || (AVAILABLE_USER_APP_ROLES.indexOf(args.role) === -1)) {
           return Boom.forbidden('Action not permitted');
         }
 
@@ -640,13 +662,19 @@ const resolvers = {
       const connection = await helperFunctions.getRethinkConnection()
       const computation = await fetchOne('computations', args.computationId)
 
-      const isAdmin = get(permissions, 'roles.admin', false);
+      if (!computation) {
+        return Boom.forbidden('Cannot find computation');
+      }
 
-      if (computation.submittedBy !== credentials.id && !isAdmin) {
+      if (computation.submittedBy !== credentials.id && !isAdmin(permissions)) {
         return Boom.forbidden('Only admin or computation owner can delete computations.');
       }
 
-      await rethink.table('computations').get(args.computationId).delete();
+      await rethink.table('computations')
+        .get(args.computationId)
+        .delete()
+        .run(connection);
+
       await connection.close();
 
       return computation;
@@ -683,10 +711,7 @@ const resolvers = {
       }
 
       if (args.roleType === 'app') {
-        const isAdmin = get(permissions, 'roles.admin', false);
-        const isAuthor = get(permissions, 'roles.author', false);
-
-        if ((!isAdmin && !isAuthor) || (AVAILABLE_USER_APP_ROLES.indexOf(args.role) === -1)) {
+        if ((!isAdmin(permissions) && !isAuthor(permissions)) || (AVAILABLE_USER_APP_ROLES.indexOf(args.role) === -1)) {
           return Boom.forbidden('Action not permitted');
         }
 
@@ -856,8 +881,6 @@ const resolvers = {
      * @param {string} args.results Results
      */
     saveResults: ({ auth: { credentials } }, args) => {
-      console.log("save results was called");
-      const { permissions } = credentials;
       return helperFunctions.getRethinkConnection()
         .then((connection) =>
           rethink.table('runs').get(args.runId).update({ results: Object.assign({}, args.results), endDate: Date.now() })

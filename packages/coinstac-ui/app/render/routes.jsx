@@ -57,6 +57,7 @@ export default (
       <Route path="computations" component={RouteContainer}>
         <IndexRoute component={ComputationsList} />
         <Route path="new" component={ComputationSubmission} />
+        <Route path=":computationId" component={ComputationSubmission} />
       </Route>
       <Route path="settings" component={Settings} />
       <Route path="threads" component={Threads} />
