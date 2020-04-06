@@ -1,9 +1,16 @@
 const sharedFields = require('./shared-fields');
 
 const mutations = {
-  addComputation: `
+  createComputation: `
     {
-      addComputation(computationSchema: $computationSchema) {
+      createComputation(computationSchema: $computationSchema) {
+        ${sharedFields.computationMetadata}
+      }
+    }
+  `,
+  updateComputation: `
+    {
+      updateComputation(computationId: $computationId, computationSchema: $computationSchema) {
         ${sharedFields.computationMetadata}
       }
     }

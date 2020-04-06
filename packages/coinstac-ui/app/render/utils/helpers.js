@@ -7,3 +7,15 @@ export const isPipelineOwner = (permissions, owningConsortium) => {
 export const isAdmin = (user) => {
   return get(user, 'permissions.roles.admin', false);
 };
+
+export const isAuthor = (user) => {
+  return get(user, 'permissions.roles.author', false);
+};
+
+export const isAllowedForComputationChange = (user) => {
+  return isAdmin(user) || isAuthor(user);
+};
+
+export const getGraphQLErrorMessage = (error, defaultMessag) => {
+  return get(error, 'graphQLErrors.0.message', defaultMessag);
+};

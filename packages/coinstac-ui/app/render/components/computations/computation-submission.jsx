@@ -1,20 +1,22 @@
 import React, { Component } from 'react'
-import { connect } from 'react-redux'
 import PropTypes from 'prop-types'
+import { connect } from 'react-redux'
 import { compose, graphql, withApollo } from 'react-apollo'
+import ReactJson from 'react-json-view'
 import ipcPromise from 'ipc-promise'
 import { Button, Typography } from '@material-ui/core'
 import { withStyles } from '@material-ui/core/styles'
 import { services } from 'coinstac-common'
 import {
-  ADD_COMPUTATION_MUTATION,
+  CREATE_COMPUTATION_MUTATION,
 } from '../../state/graphql/functions'
 import { saveDocumentProp } from '../../state/graphql/props'
-import { notifySuccess } from '../../state/ducks/notifyAndLog'
+import { notifySuccess, notifyError } from '../../state/ducks/notifyAndLog'
+import { getGraphQLErrorMessage } from '../../utils/helpers'
 
 const styles = theme => ({
   topMargin: {
-    marginTop: theme.spacing.unit,
+    marginTop: theme.spacing.unit * 2,
   },
   description: {
     marginTop: theme.spacing.unit * 2,
@@ -29,8 +31,8 @@ const styles = theme => ({
 class ComputationSubmission extends Component {
   state = {
     activeSchema: {},
-    submissionSuccess: null,
     validationErrors: null,
+    isSubmitting: false,
   }
 
   getComputationSchema = () => {
@@ -49,19 +51,21 @@ class ComputationSubmission extends Component {
   }
 
   submitSchema = () => {
-    this.props.submitSchema(this.state.activeSchema)
+    const { activeSchema } = this.state
+
+    this.setState({ isSubmitting: true })
+
+    this.props.submitSchema(activeSchema)
       .then((res) => {
         this.setState({ activeSchema: {} })
-        if (res.data.addComputation) {
-          this.setState({ submissionSuccess: true })
-          this.props.router.push('/dashboard/computations')
-          this.props.notifySuccess('Computation Submission Successful')
-        } else {
-          this.setState({ submissionSuccess: false })
-        }
+        this.props.router.push('/dashboard/computations')
+        this.props.notifySuccess('Computation Submission Successful')
       })
-      .catch(() => {
-        this.setState({ submissionSuccess: false })
+      .catch((error) => {
+        this.props.notifyError(getGraphQLErrorMessage(error))
+      })
+      .finally(() => {
+        this.setState({ isSubmitting: false })
       })
   }
 
@@ -117,17 +121,16 @@ class ComputationSubmission extends Component {
           </div>
         )}
 
-        {!activeSchema.meta && submissionSuccess === false && (
-          <Typography variant="h6">
-            <strong>Error!</strong>
-            Try again?
-          </Typography>
-        )}
-
         {activeSchema.meta && (
-          <pre className={classes.topMargin}>
-            {JSON.stringify(activeSchema, null, 2)}
-          </pre>
+          <div className={classes.topMargin}>
+            <ReactJson
+              src={activeSchema}
+              theme="monokai"
+              displayDataTypes={false}
+              displayObjectSize={false}
+              enableClipboard={false}
+            />
+          </div>
         )}
       </div>
     )
@@ -136,20 +139,18 @@ class ComputationSubmission extends Component {
 
 ComputationSubmission.propTypes = {
   notifySuccess: PropTypes.func.isRequired,
+  notifyError: PropTypes.func.isRequired,
   submitSchema: PropTypes.func.isRequired,
 }
 
-const mapStateToProps = ({ notifySuccess, submitSchema }) => ({
-  notifySuccess, submitSchema,
-})
-
 const ComputationSubmissionWithAlert = compose(
-  graphql(ADD_COMPUTATION_MUTATION, saveDocumentProp('submitSchema', 'computationSchema')),
+  graphql(CREATE_COMPUTATION_MUTATION, saveDocumentProp('submitSchema', 'computationSchema')),
   withApollo
 )(ComputationSubmission)
 
-const connectedComponent = connect(mapStateToProps, {
+const connectedComponent = connect(null, {
   notifySuccess,
+  notifyError,
 })(ComputationSubmissionWithAlert)
 
 export default withStyles(styles)(connectedComponent)

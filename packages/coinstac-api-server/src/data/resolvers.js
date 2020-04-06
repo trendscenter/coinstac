@@ -171,6 +171,24 @@ async function changeUserAppRole(connection, args, addOrRemove) {
     .run(connection);
 }
 
+async function validateComputationSchema(connection, validationSchema) {
+  const compCount = await rethink.table('computations')
+    .filter({ meta: { id: validationSchema.meta.id } })
+    .count()
+    .run(connection);
+
+  return compCount === 0;
+}
+
+function isAllowedForComputationChange(credentials) {
+  const { permissions } = credentials;
+
+  const isAdmin = get(permissions, 'roles.admin', false);
+  const isAuthor = get(permissions, 'roles.author', false);
+
+  return isAdmin || isAuthor;
+}
+
 const pubsub = new PubSub();
 
 initSubscriptions(pubsub);
@@ -361,26 +379,59 @@ const resolvers = {
   },
   Mutation: {
     /**
-     * Add computation to RethinkDB
+     * Create computation to RethinkDB
      * @param {object} args
      * @param {object} args.computationSchema Computation object to add/update
-     * @return {object} New/updated computation object
+     * @return {object} New computation object
      */
-    addComputation: ({ auth: { credentials } }, args) => {
-      return helperFunctions.getRethinkConnection()
-        .then((connection) =>
-          rethink.table('computations').insert(
-            Object.assign({}, args.computationSchema, { submittedBy: credentials.id }),
-            {
-              conflict: "replace",
-              returnChanges: true,
-            }
-          )
-          .run(connection).then(res => connection.close().then(() => res))
+    createComputation: async ({ auth: { credentials } }, args) => {
+      const connection = await helperFunctions.getRethinkConnection();
+
+      const isSchemaValid = await validateComputationSchema(connection, args.computationSchema);
+
+      if (!isAllowedForComputationChange(credentials)) {
+        return Boom.forbidden('Only admin or author can create computation');
+      }
+
+      if (!isSchemaValid) {
+        return Boom.forbidden('Computation with same id already exists');
+      }
+
+      const result = await rethink.table('computations')
+        .insert(
+          {
+            ...args.computationSchema,
+            submittedBy: credentials.id
+          },
+          { returnChanges: true }
         )
-        .then((result) => {
-          return result.changes[0].new_val;
-        })
+        .run(connection);
+      await connection.close();
+
+      return result.changes[0].new_val;
+    },
+    /**
+     * Update computation
+     * @param {object} args
+     * @param {object} args.computationId
+     * @param {object} args.computationSchema Computation object to add/update
+     * @return {object} Updated computation object
+     */
+    updateComputation: async ({ auth: { credentials } }, args) => {
+      const connection = await helperFunctions.getRethinkConnection()
+
+      const isSchemaValid = await validateComputationSchema(connection, args.computationSchema)
+
+      if (!isSchemaValid) {
+        return Boom.forbidden('Computation with same id already exists')
+      }
+
+      const result = await rethink.table('computations')
+        .insert({ ...args.computationSchema, submittedBy: credentials.id })
+        .run(connection)
+      await connection.close()
+
+      return result.changes[0].new_val
     },
     /**
      * Add new user role to user perms, currently consortia perms only
@@ -589,14 +640,16 @@ const resolvers = {
       const connection = await helperFunctions.getRethinkConnection()
       const computation = await fetchOne('computations', args.computationId)
 
-      if (computation.submittedBy !== credentials.id) {
-        return Boom.forbidden('Only admin or computation owner can delete computations.')
+      const isAdmin = get(permissions, 'roles.admin', false);
+
+      if (computation.submittedBy !== credentials.id && !isAdmin) {
+        return Boom.forbidden('Only admin or computation owner can delete computations.');
       }
 
-      await rethink.table('computations').get(args.computationId).delete()
-      await connection.close()
+      await rethink.table('computations').get(args.computationId).delete();
+      await connection.close();
 
-      return computation
+      return computation;
     },
     /**
      * Add new user role to user perms, currently consortia perms only

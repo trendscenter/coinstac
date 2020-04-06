@@ -3,7 +3,6 @@ import { connect } from 'react-redux'
 import PropTypes from 'prop-types'
 import { graphql } from 'react-apollo'
 import { Link } from 'react-router'
-import { get } from 'lodash'
 import { Button, CircularProgress, Fab, Paper, Typography } from '@material-ui/core'
 import AddIcon from '@material-ui/icons/Add'
 import { withStyles } from '@material-ui/core/styles'
@@ -23,6 +22,11 @@ import {
   notifyError,
 } from '../../state/ducks/notifyAndLog'
 import { removeDocFromTableProp } from '../../state/graphql/props'
+import {
+  getGraphQLErrorMessage,
+  isAdmin,
+  isAllowedForComputationChange,
+} from '../../utils/helpers'
 import ComputationIO from './computation-io'
 
 const MAX_LENGTH_COMPUTATIONS = 5
@@ -158,7 +162,7 @@ class ComputationsList extends Component {
                     Remove Image (<em>{compLocalImage.size.toString().slice(0, -6)} MB</em>)
                   </Button>
                 )}
-                {user.id === comp.submittedBy && (
+                {(user.id === comp.submittedBy || isAdmin(user)) && (
                   <Button
                     variant="contained"
                     disabled={isDeletingComputation}
@@ -226,10 +230,10 @@ class ComputationsList extends Component {
     this.props
       .removeComputation(computationToDelete)
       .then(() => {
-        this.props.notifySuccess('Successfully deleted computation');
+        this.props.notifySuccess('Successfully deleted computation')
       })
-      .catch(({ graphQLErrors }) => {
-        this.props.notifyError(get(graphQLErrors, '0.message', 'Failed to save consortium'));
+      .catch((error) => {
+        this.props.notifyError(getGraphQLErrorMessage(error))
       })
       .finally(() => {
         this.setState({
@@ -247,7 +251,7 @@ class ComputationsList extends Component {
   }
 
   render() {
-    const { computations, classes } = this.props
+    const { computations, classes, user } = this.props
     const { ownedComputations, otherComputations, showModal } = this.state
 
     return (
@@ -256,14 +260,16 @@ class ComputationsList extends Component {
           <Typography variant="h4">
             Computations
           </Typography>
-          <Fab
-            color="primary"
-            component={Link}
-            to="/dashboard/computations/new"
-            className={classes.button}
-          >
-            <AddIcon />
-          </Fab>
+          {isAllowedForComputationChange(user) && (
+            <Fab
+              color="primary"
+              component={Link}
+              to="/dashboard/computations/new"
+              className={classes.button}
+            >
+              <AddIcon />
+            </Fab>
+          )}
         </div>
         {computations && computations.length > 0 && (
           <Button

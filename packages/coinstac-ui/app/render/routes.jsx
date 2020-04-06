@@ -26,7 +26,6 @@ import Settings from './components/user/settings';
 import Threads from './components/threads';
 import Logs from './components/logs-display/logs';
 import Permission from './components/permission';
-import AdminRoute from './components/admin-route';
 
 export default (
   <Route path="/" component={App}>
@@ -62,7 +61,7 @@ export default (
       <Route path="settings" component={Settings} />
       <Route path="threads" component={Threads} />
       <Route path="logs" component={Logs} />
-      <AdminRoute path="permission" component={Permission} />
+      <Route path="permission" component={Permission} />
     </Route>
   </Route>
 );
