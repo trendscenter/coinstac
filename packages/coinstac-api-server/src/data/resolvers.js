@@ -389,74 +389,54 @@ const resolvers = {
      * @param {object} args.computationSchema Computation object to add/update
      * @return {object} New computation object
      */
-    createComputation: async ({ auth: { credentials } }, args) => {
-      const connection = await helperFunctions.getRethinkConnection();
+    addComputation: async ({ auth: { credentials } }, args) => {
+      const { computationSchema } = args;
 
       if (!isAllowedForComputationChange(credentials)) {
-        return Boom.forbidden('Only admin or author can create computation');
+        return Boom.forbidden('Only admin or author can add computation.');
       }
 
-      const filteredComputations =
-        await filterComputationsByMetaId(connection, args.computationSchema.meta.id);
-
-      if (filteredComputations.length !== 0) {
-        return Boom.forbidden('Computation with same meta id already exists');
-      }
-
-      const result = await rethink.table('computations')
-        .insert(
-          {
-            ...args.computationSchema,
-            submittedBy: credentials.id
-          },
-          { returnChanges: true }
-        )
-        .run(connection);
-      await connection.close();
-
-      return result.changes[0].new_val;
-    },
-    /**
-     * Update computation
-     * @param {object} args
-     * @param {object} args.computationId
-     * @param {object} args.computationSchema Computation object to add/update
-     * @return {object} Updated computation object
-     */
-    updateComputation: async ({ auth: { credentials } }, args) => {
       const connection = await helperFunctions.getRethinkConnection();
 
-      const computation = await fetchOne('computations', args.computationId);
+      const filteredComputations = await filterComputationsByMetaId(connection, computationSchema.meta.id);
 
-      if (!computation) {
-        return Boom.forbidden('Cannot find computation');
-      }
+      if (filteredComputations.length === 0) {
+        const result = await rethink.table('computations')
+          .insert(
+            {
+              ...computationSchema,
+              submittedBy: credentials.id,
+            },
+            { returnChanges: true }
+          )
+          .run(connection);
+        await connection.close();
 
-      const filteredComputations =
-        await filterComputationsByMetaId(connection, args.computationSchema.meta.id);
-
-      if (filteredComputations.length > 1) {
-        return Boom.forbidden('Multiple computations found with same meta id');
+        return result.changes[0].new_val;
       }
 
       if (filteredComputations.length === 1) {
-        if (filteredComputations[0].id !== args.computationId) {
-          return Boom.forbidden('Computation with same meta id already exists');
-        } else if (computation.submittedBy !== credentials.id && !isAdmin(credentials.permissions)) {
-          return Boom.forbidden('Only admin or computation owner can delete computations.');
+        const computation = filteredComputations[0];
+
+        if (computation.submittedBy !== credentials.id && !isAdmin(credentials.permissions)) {
+          return Boom.forbidden('Only admin or computation owner can update computations.');
         }
+
+        await rethink.table('computations')
+          .get(computation.id)
+          .update(computationSchema)
+          .run(connection);
+        
+        await connection.close();
+
+        const updatedComputation = await fetchOne('computations', computation.id);
+
+        return updatedComputation;
       }
 
-      await rethink.table('computations')
-        .get(args.computationId)
-        .update(args.computationSchema)
-        .run(connection);
-        
-      await connection.close();
-
-      const updatedComputation = await fetchOne('computations', args.computationId);
-
-      return updatedComputation;
+      if (filteredComputations.length > 1) {
+        return Boom.forbidden('Computation with same meta id already exists.');
+      }
     },
     /**
      * Add new user role to user perms, currently consortia perms only

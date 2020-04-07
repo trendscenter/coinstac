@@ -162,16 +162,6 @@ export const saveDocumentProp = (funcName, objVar) => {
   };
 };
 
-export const genericProp = (funcName) => {
-  return {
-    props: ({ mutate }) => ({
-      [funcName]: obj => mutate({
-        variables: obj,
-      }),
-    }),
-  };
-};
-
 export const userRolesProp = (name) => {
   return {
     props: ({ mutate }) => ({

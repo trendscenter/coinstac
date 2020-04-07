@@ -155,8 +155,7 @@ const typeDefs = `
   # This is the general mutation description
   type Mutation {
     # Stringify incoming computation, parse prior to insertion call
-    createComputation(computationSchema: ComputationInput): Computation
-    updateComputation(computationId: ID!, computationSchema: ComputationInput): Computation
+    addComputation(computationSchema: ComputationInput): Computation
     addUserRole(userId: ID!, table: String!, doc: String!, role: String!, roleType: String!): User
     createRun(consortiumId: ID): Run
     deleteConsortiumById(consortiumId: ID): Consortium

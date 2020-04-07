@@ -6,7 +6,6 @@ import { Link } from 'react-router'
 import { Button, CircularProgress, Fab, Paper, Typography } from '@material-ui/core'
 import AddIcon from '@material-ui/icons/Add'
 import DeleteIcon from '@material-ui/icons/Delete'
-import EditIcon from '@material-ui/icons/Edit'
 import { withStyles } from '@material-ui/core/styles'
 import classNames from 'classnames'
 import ListDeleteModal from '../common/list-delete-modal'
@@ -27,6 +26,7 @@ import { removeDocFromTableProp } from '../../state/graphql/props'
 import {
   getGraphQLErrorMessage,
   isAdmin,
+  isAuthor,
   isAllowedForComputationChange,
 } from '../../utils/helpers'
 import ComputationIO from './computation-io'
@@ -171,13 +171,7 @@ class ComputationsList extends Component {
                   >
                     {activeComp && activeComp.meta.name === comp.meta.name ? 'Hide IO' : 'Get IO'}
                   </Button>
-                  <Button
-                    variant="contained"
-                    onClick={() => this.props.router.push(`/dashboard/computations/${comp.id}`)}
-                  >
-                    Edit <EditIcon />
-                  </Button>
-                  {(user.id === comp.submittedBy || isAdmin(user)) && (
+                  {((user.id === comp.submittedBy && isAuthor(user)) || isAdmin(user)) && (
                     <Button
                       variant="contained"
                       color="secondary"

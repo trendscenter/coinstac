@@ -1,14 +1,9 @@
 import { gql } from 'react-apollo';
 import { mutations, queries } from 'coinstac-graphql-schema';
 
-export const CREATE_COMPUTATION_MUTATION = gql`
-  mutation createComputation($computationSchema: ComputationInput!) 
-    ${mutations.createComputation}
-`;
-
-export const UPDATE_COMPUTATION_MUTATION = gql`
-  mutation updateComputation($computationId: ID!, $computationSchema: ComputationInput!) 
-    ${mutations.updateComputation}
+export const ADD_COMPUTATION_MUTATION = gql`
+  mutation addComputation($computationSchema: ComputationInput!) 
+    ${mutations.addComputation}
 `;
 
 export const ADD_USER_ROLE_MUTATION = gql`

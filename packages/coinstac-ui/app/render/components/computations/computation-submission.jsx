@@ -8,10 +8,9 @@ import { Button, CircularProgress, Typography } from '@material-ui/core'
 import { withStyles } from '@material-ui/core/styles'
 import { services } from 'coinstac-common'
 import {
-  CREATE_COMPUTATION_MUTATION,
-  UPDATE_COMPUTATION_MUTATION,
+  ADD_COMPUTATION_MUTATION,
 } from '../../state/graphql/functions'
-import { genericProp } from '../../state/graphql/props'
+import { saveDocumentProp } from '../../state/graphql/props'
 import { notifySuccess, notifyError } from '../../state/ducks/notifyAndLog'
 import { getGraphQLErrorMessage } from '../../utils/helpers'
 
@@ -51,16 +50,12 @@ class ComputationSubmission extends Component {
       .catch(console.log)
   }
 
-  handleComputation = () => {
-    const { router } = this.props
-
-    const { computationId } = router.params
+  addComputation = () => {
+    const { activeSchema } = this.state
 
     this.setState({ isSubmitting: true })
 
-    const mutation = computationId ? this.updateComputation : this.createComputation
-
-    mutation()
+    this.props.addComputation(activeSchema)
       .then(() => {
         this.setState({ activeSchema: {} })
         this.props.router.push('/dashboard/computations')
@@ -74,37 +69,15 @@ class ComputationSubmission extends Component {
       })
   }
 
-  createComputation = () => {
-    const { activeSchema } = this.state
-
-    return this.props.createComputation({
-      computationSchema: activeSchema,
-    })
-  }
-
-  updateComputation = () => {
-    const { router } = this.props
-    const { activeSchema } = this.state
-
-    this.setState({ isSubmitting: true })
-
-    return this.props.updateComputation({
-      computationId: router.params.computationId,
-      computationSchema: activeSchema,
-    })
-  }
-
   render() {
-    const { classes, router } = this.props
+    const { classes } = this.props
     const { activeSchema, validationErrors, isSubmitting } = this.state
-
-    const { computationId } = router.params
 
     return (
       <div>
         <div className="page-header">
           <Typography variant="h4">
-            {computationId ? 'Edit Computation' : 'Create Computation'}
+            Add Computation
           </Typography>
         </div>
         <Typography variant="body1" className={classes.description}>
@@ -125,7 +98,7 @@ class ComputationSubmission extends Component {
             variant="contained"
             color="primary"
             disabled={!activeSchema.meta || validationErrors !== null || isSubmitting}
-            onClick={this.handleComputation}
+            onClick={this.addComputation}
           >
             {isSubmitting ? <CircularProgress size={15} /> : 'Submit'}
           </Button>
@@ -167,17 +140,13 @@ class ComputationSubmission extends Component {
 ComputationSubmission.propTypes = {
   notifySuccess: PropTypes.func.isRequired,
   notifyError: PropTypes.func.isRequired,
-  createComputation: PropTypes.func.isRequired,
+  addComputation: PropTypes.func.isRequired,
 }
 
 const ComputationSubmissionWithAlert = compose(
   graphql(
-    CREATE_COMPUTATION_MUTATION,
-    genericProp('createComputation')
-  ),
-  graphql(
-    UPDATE_COMPUTATION_MUTATION,
-    genericProp('updateComputation'),
+    ADD_COMPUTATION_MUTATION,
+    saveDocumentProp('addComputation', 'computationSchema')
   ),
   withApollo
 )(ComputationSubmission)
