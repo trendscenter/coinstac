@@ -40,7 +40,9 @@ program
   .option('-e, --debug', ' enter debug mode, displays extra info including input')
   .option('-p, --pipeline [path]', ' give a pipeline file to run a full pipeline from, working dir used is first comp listed')
   .option('-x, --silly', ' enter silly logging, everything in debug mode + even more')
-  .option('-u, --upload <username> <password>', ' upload computation spec');
+  .option('-u, --upload', ' upload computation spec')
+  .option('-user, --username [username]', ' username')
+  .option('-pass, --password [password]', ' password');
 
 program.on('--help', () => {
   logger.info([ // eslint-disable-line
@@ -75,11 +77,10 @@ if (program.debug || program.silly) {
 const sim = require('../src/');
 const compSim = require('../src/comspec-upload');
 
-if (program.upload) {
+if (program.upload && program.username && program.password) {
   logger.info('Uploading computation schema.');
-  const username = 'test1';
-  const password = 'password';
-  compSim.compspecUpload(username, password, logger)
+
+  compSim.compspecUpload(program.username, program.password, logger)
     .then(() => {
       process.exit();
     })

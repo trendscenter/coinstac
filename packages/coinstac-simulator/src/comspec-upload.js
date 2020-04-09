@@ -52,17 +52,17 @@ const compspecUpload = (username, password, logger) => {
       logger.info('Successfully uploaded computation schema');
       resolve();
     } catch (error) {
-      let { message } = error;
+      let message = get(error, 'response.data.message');
 
       if (!message) {
         const { response, data } = error;
 
         if (!response) {
           message = 'Failed to parse computation schema.';
-        } else if (data.statusCode === 404) {
+        } else if (get(data, 'statusCode') === 404) {
           message = 'Network failed.';
         } else {
-          message = get(data, 'message', 'Failed to upload computation schema.');
+          message = 'Failed to upload computation schema.';
         }
       }
 
