@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const rethink = require('rethinkdb');
 const Promise = require('bluebird');
 const config = require('../config/default');
+const database = require('./database');
 
 let dbmap;
 try {
@@ -38,35 +39,37 @@ const helperFunctions = {
    * @param {string} passwordHash string of hashed password
    * @return {object} The updated user object
    */
-  createUser(user, passwordHash) {
-    return helperFunctions.getRethinkConnection()
-      .then((connection) => {
-        const userDetails = {
-          id: user.username,
-          email: user.email,
-          institution: user.institution,
-          passwordHash,
-          permissions: {
-            computations: {},
-            consortia: {},
-            pipelines: {},
-          },
-          consortiaStatuses: {},
-        };
+  async createUser(user, passwordHash) {
+    const userDetails = {
+      username: user.username,
+      email: user.email,
+      institution: user.institution,
+      passwordHash,
+      permissions: {
+        computations: {},
+        consortia: {},
+        pipelines: {},
+      },
+      consortiaStatuses: {},
+    };
 
-        if (user.permissions) {
-          userDetails.permissions = user.permissions;
-        }
+    if (user._id) {
+      userDetails._id = user._id;
+    }
 
-        if (user.consortiaStatuses) {
-          userDetails.consortiaStatuses = user.consortiaStatuses;
-        }
+    if (user.permissions) {
+      userDetails.permissions = user.permissions;
+    }
 
-        return rethink.table('users')
-          .insert(userDetails, { returnChanges: true })
-          .run(connection).then(res => connection.close().then(() => res));
-      })
-      .then(result => result.changes[0].new_val);
+    if (user.consortiaStatuses) {
+      userDetails.consortiaStatuses = user.consortiaStatuses;
+    }
+
+    const db = database.getDbInstance();
+
+    const result = await db.collection('users').insertOne(userDetails);
+
+    return result.ops[0];
   },
   /**
    * dbmap getter
@@ -91,17 +94,13 @@ const helperFunctions = {
   },
   /**
    * Returns user table object for requested user
-   * @param {object} credentials credentials of requested user
+   * @param {string} username username of requested user
    * @return {object} The requested user object
    */
-  async getUserDetails(credentials) {
-    const connection = await helperFunctions.getRethinkConnection();
+  async getUserDetails(username) {
+    const db = database.getDbInstance();
 
-    const user = await rethink.table('users').get(credentials.username).run(connection);
-
-    await connection.close();
-
-    return user;
+    return db.collection('users').findOne({ username });
   },
   /**
    * Hashes password for storage in database
@@ -148,9 +147,9 @@ const helperFunctions = {
    * @param {function} callback function signature (err, isValid, alternative credentials)
    */
   validateToken(decoded, request, callback) {
-    helperFunctions.getUserDetails({ username: decoded.username })
+    helperFunctions.getUserDetails(decoded.username)
       .then((user) => {
-        if (user.id) {
+        if (user) {
           callback(null, true, user);
         } else {
           callback(null, false, null);
@@ -160,15 +159,16 @@ const helperFunctions = {
   /**
    * Confirms that submitted email is new
    * @param {object} req request
-   * @param {object} connection GraphQL connection
    * @return {boolean} Is the email unique?
    */
-  validateUniqueEmail(req, connection) {
-    return rethink.table('users')
-      .filter({ email: req.payload.email })
-      .count()
-      .eq(0)
-      .run(connection);
+  async validateUniqueEmail(req) {
+    const db = database.getDbInstance();
+
+    const count = await db.collection('users')
+      .find({ email: req.payload.email })
+      .count();
+
+    return count === 0;
   },
   /**
    * Confirms that submitted username & email are new
@@ -177,37 +177,33 @@ const helperFunctions = {
    * @return {object} The submitted user information
    */
   validateUniqueUser(req, res) {
-    return helperFunctions.getRethinkConnection()
-      .then(connection => helperFunctions.validateUniqueUsername(req, connection)
-        .then((isUniqueUsername) => {
-          if (isUniqueUsername) {
-            return helperFunctions.validateUniqueEmail(req, connection)
-              .then(res => connection.close().then(() => res));
-          }
+    const isUsernameUnique = this.validateUniqueUsername(req);
 
-          res(Boom.badRequest('Username taken'));
-          return connection.close();
-        })
-        .then((isUniqueEmail) => {
-          if (isUniqueEmail) {
-            res(req.payload);
-          } else if (isUniqueEmail === false) {
-            res(Boom.badRequest('Email taken'));
-          }
-        }));
+    if (!isUsernameUnique) {
+      return res(Boom.badRequest('Username taken'));
+    }
+
+    const isEmailUnique = this.validateUniqueEmail(req);
+
+    if (!isEmailUnique) {
+      return res(Boom.badRequest('Email taken'));
+    }
+
+    return res(req.payload);
   },
   /**
    * Confirms that submitted username is new
    * @param {object} req request
-   * @param {object} connection GraphQL connection
    * @return {boolean} Is the username unique?
    */
-  validateUniqueUsername(req, connection) {
-    return rethink.table('users')
-      .getAll(req.payload.username)
-      .count()
-      .eq(0)
-      .run(connection);
+  async validateUniqueUsername(req) {
+    const db = database.getDbInstance();
+
+    const count = await db.collection('users')
+      .find({ username: req.payload.username })
+      .count();
+
+    return count === 0;
   },
   /**
    * Validate that authenticating user is using correct credentials
@@ -216,7 +212,7 @@ const helperFunctions = {
    * @return {object} The requested user object
    */
   validateUser(req, res) {
-    return helperFunctions.getUserDetails(req.payload)
+    return helperFunctions.getUserDetails(req.payload.username)
       .then((user) => {
         if (user) {
           helperFunctions.verifyPassword(req.payload.password, user.passwordHash)
