@@ -132,7 +132,7 @@ const typeDefs = `
   type MessageOutput {
     id: ID
     sender: ID
-    recipients: [ID]
+    recipients: [String]
     content: String
     date: String
     action: ActionOutput

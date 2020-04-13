@@ -1,3 +1,4 @@
+/* eslint-disable no-await-in-loop */
 const rethink = require('rethinkdb');
 const Boom = require('boom');
 const GraphQLJSON = require('graphql-type-json');
@@ -8,149 +9,138 @@ const { uniq } = require('lodash');
 const helperFunctions = require('../auth-helpers');
 const initSubscriptions = require('./subscriptions');
 const config = require('../../config/default');
+const database = require('../database');
 
-/**
- * Helper function to retrieve all members of given table
- * @param {string} table - The table name
- * @return {array} The contents of the requested table
- */
-function fetchAll(table) {
-  let connection;
-  return helperFunctions.getRethinkConnection()
-    .then((db) => {
-      connection = db;
-      return rethink.table(table).orderBy({ index: 'id' }).run(connection);
-    })
-    .then(cursor => cursor.toArray())
-    .then(res => connection.close().then(() => res));
-}
+async function fetchOnePipeline(id) {
+  const db = database.getDbInstance();
 
-/**
- * Helper function to retrieve a single entry in a table
- * @param {string} table - The table name
- * @param {string} id - The entry id
- * @return {object} The requested table entry
- */
-function fetchOne(table, id) {
-  return helperFunctions.getRethinkConnection()
-    .then(connection => rethink.table(table).get(id).run(connection));
-}
+  const pipelineSteps = await db.collection('pipelines').aggregate([
+    { $match: { _id: id } },
+    { $unwind: '$steps' },
+    {
+      $lookup: {
+        from: 'computations',
+        localField: 'steps.computations',
+        foreignField: '_id',
+        as: 'steps.computations',
+      },
+    },
+  ]);
 
-function fetchOnePipeline(id) {
-  return helperFunctions.getRethinkConnection()
-    .then(connection => rethink.table('pipelines')
-      .get(id)
-    // Populate computations subfield with computation meta information
-      .merge(pipeline => ({
-        steps: pipeline('steps').map(step => step.merge({
-          computations: step('computations').map(compId => rethink.table('computations').get(compId)),
-        })),
-      }))
-      .run(connection)
-      .then(res => connection.close().then(() => res)))
-    .then(result => result);
+  if (!pipelineSteps || pipelineSteps.length === 0) {
+    return null;
+  }
+
+  let pipe = null;
+  while (await pipelineSteps.hasNext()) {
+    const currentStep = await pipelineSteps.next();
+
+    if (!pipe) {
+      pipe = {
+        ...currentStep,
+        steps: [],
+      };
+    }
+
+    pipe.steps.push(currentStep.steps);
+  }
+
+  return pipe;
 }
 
 /**
  * Helper function for add permissions to an user
- * @param {object} connection - Existing db connection
  * @param {object} args - Update object
  * @param {string} args.userId - Id of the user which will have permissions changed
  * @param {string} args.role - Role of the user
  * @param {string} args.doc - Id of the document for which the user will gain access
  * @param {string} args.table - Table of the document for which the user will gain access
  */
-async function addUserPermissions(connection, args) {
-  const perms = await rethink.table('users').get(args.userId)('permissions').run(connection);
+async function addUserPermissions(args) {
+  const db = database.getDbInstance();
 
   const { role, doc, table } = args;
 
-  let newRoles = [role];
   const promises = [];
 
-  // Grab existing roles if present
-  if (perms[table][doc] && perms[table][doc].indexOf(role) === -1) {
-    newRoles = newRoles.concat(perms[table][doc]);
-  } else if (perms[table][doc]) {
-    newRoles = perms[table][doc];
-  }
+  const updateObj = {
+    $addToSet: {
+      [`permissions.${table}.${doc}`]: role,
+    },
+  };
 
-  const updateObj = { permissions: { [table]: { [doc]: newRoles } } };
-
-  // Add entry to user statuses object &&
   if (table === 'consortia') {
-    updateObj.consortiaStatuses = {};
-    updateObj.consortiaStatuses[doc] = 'none';
+    updateObj.$set = {
+      [`consortiaStatuses.${doc}`]: 'none',
+    };
 
     promises.push(
-      rethink.table('consortia').get(doc).update(
-        {
-          [`${role}s`]: rethink.row(`${role}s`).append(args.userId),
-        }
-      ).run(connection)
+      db.collection('consortia').updateOne({ _id: doc }, {
+        $addToSet: { [`${role}s`]: args.userId },
+      })
     );
   }
 
   promises.push(
-    rethink.table('users').get(args.userId).update(
-      updateObj, { returnChanges: true }
-    ).run(connection)
+    db.collection('users').updateOne({ _id: args.userId }, updateObj)
   );
 
   return Promise.all(promises);
 }
 
-async function removeUserPermissions(connection, args) {
+async function removeUserPermissions(args) {
+  const db = database.getDbInstance();
+
   const promises = [];
 
-  const nextPermissions = await rethink.table('users')
-    .get(args.userId)('permissions')(args.table)(args.doc)
-    .filter(role => role.ne(args.role))
-    .run(connection);
+  const user = await db.collection('users').findOne({ _id: args.userId }, {
+    projection: { permissions: 1 },
+  });
 
-  if (nextPermissions.length === 0) {
-    const replaceObj = {
-      permissions: { [args.table]: args.doc },
+  const { permissions } = user;
+
+  const index = permissions[args.table][args.doc].findIndex(p => p === args.role);
+  permissions[args.table][args.doc].splice(index, 1);
+
+  if (permissions[args.table][args.doc].length === 0) {
+    const updateObj = {
+      $unset: {
+        [`permissions.${args.table}.${args.doc}`]: '',
+      },
     };
 
     if (args.table === 'consortia') {
-      replaceObj.consortiaStatuses = args.doc;
-
-      await rethink.table('consortia')
-        .get(args.doc)
-        .update({ mappedForRun: rethink.row('mappedForRun').difference([args.userId]) })
-        .run(connection);
+      updateObj.$unset[`consortiaStatuses.${args.doc}`] = '';
     }
 
     promises.push(
-      rethink.table('users').get(args.userId).replace(user => user.without(replaceObj), { nonAtomic: true }).run(connection)
+      db.collection('users').updateOne({ _id: args.userId }, updateObj)
     );
   } else {
     promises.push(
-      rethink.table('users')
-        .get(args.userId)
-        .update({
-          permissions: {
-            [args.table]: {
-              [args.doc]: rethink.row('permissions')(args.table)(args.doc).difference([args.role]),
-            },
-          },
-        }, { nonAtomic: true })
-        .run(connection)
+      db.collection('users').updateOne({ _id: args.userId }, {
+        $pull: { [`permissions.${args.table}.${args.doc}`]: args.role },
+      })
     );
   }
 
   if (args.table === 'consortia') {
+    const updateObj = {
+      $pull: {
+        [`${args.role}s`]: args.userId,
+      },
+    };
+
+    if (permissions[args.table][args.doc].length === 0) {
+      updateObj.$pull.mappedForRun = args.userId;
+    }
+
     promises.push(
-      rethink.table('consortia').get(args.doc).update(
-        {
-          [`${args.role}s`]: rethink.row(`${args.role}s`).difference([args.userId]),
-        }
-      ).run(connection)
+      db.collection('consortia').updateOne({ _id: args.doc }, updateObj)
     );
   }
 
-  await Promise.all(promises);
+  return Promise.all(promises);
 }
 
 const pubsub = new PubSub();
@@ -165,7 +155,11 @@ const resolvers = {
      * Returns all results.
      * @return {array} All results
      */
-    fetchAllResults: () => fetchAll('runs'),
+    fetchAllResults: () => {
+      const db = database.getDbInstance();
+
+      return db.collection('runs').find().toArray();
+    },
     /**
      * Returns single pipeline
      * @param {object} args
@@ -175,34 +169,25 @@ const resolvers = {
     fetchResult: (_, args) => {
       if (!args.resultId) {
         return null;
-      } else {
-        return helperFunctions.getRethinkConnection()
-          .then(connection =>
-            rethink.table('runs')
-              .get(args.resultId)
-              .run(connection).then(res => connection.close().then(() => res))
-          )
-          .then(result => result);
       }
+
+      const db = database.getDbInstance();
+
+      return db.collection('runs').findOne({ _id: args.resultId });
     },
     /**
      * Fetches all public consortia and private consortia for which the current user has access
      * @return {array} All consortia to which the current user access
      */
     fetchAllConsortia: async ({ auth: { credentials } }) => {
-      const connection = await helperFunctions.getRethinkConnection();
+      const db = database.getDbInstance();
 
-      const cursor = await rethink
-        .table('consortia')
-        .orderBy({ index: 'id' })
-        .filter(rethink.row('isPrivate').eq(false).or(rethink.row('members').contains(credentials.id)))
-        .run(connection);
-
-      const results = await cursor.toArray();
-
-      await connection.close();
-
-      return results;
+      return db.collection('consortia').find({
+        $or: [
+          { isPrivate: false },
+          { members: { $elemMatch: { $eq: credentials.username } } }
+        ]
+      });
     },
     /**
      * Returns single consortium.
@@ -210,12 +195,24 @@ const resolvers = {
      * @param {string} args.consortiumId Requested consortium ID
      * @return {object} Requested consortium if id present, null otherwise
      */
-    fetchConsortium: (_, args) => args.consortiumId ? fetchOne('consortia', args.consortiumId) : null,
+    fetchConsortium: (_, args) => {
+      if (!args.consortiumId) {
+        return null;
+      }
+
+      const db = database.getDbInstance();
+
+      return db.collection('consortia').findOne({ _id: args.consortiumId });
+    },
     /**
      * Returns all computations.
      * @return {array} All computations
      */
-    fetchAllComputations: () => fetchAll('computations'),
+    fetchAllComputations: () => {
+      const db = database.getDbInstance();
+
+      return db.collection('computations').find().toArray();
+    },
     /**
      * Returns metadata for specific computation name
      * @param {object} args
@@ -297,14 +294,24 @@ const resolvers = {
      * @param {string} args.userId Requested user ID, restricted to authenticated user for time being
      * @return {object} Requested user if id present, null otherwise
      */
-    fetchUser: ({ auth: { credentials } }, args) => {
-      if (args.userId !== credentials.id) {
+    fetchUser: async ({ auth: { credentials } }, args) => {
+      if (args.userId !== credentials.username) {
         return Boom.unauthorized('Unauthorized action');
       }
 
-      return fetchOne('users', credentials.id);
+      const db = database.getDbInstance();
+
+      const user = await db.collection('users').findOne({ _id: credentials._id });
+
+      delete user.passwordHash;
+
+      return user;
     },
-    fetchAllUsers: () => fetchAll('users'),
+    fetchAllUsers: () => {
+      const db = database.getDbInstance();
+
+      return db.collection('users').find().toArray();
+    },
     fetchAllUserRuns: ({ auth: { credentials } }, args) => {
       let connection;
       return helperFunctions.getRethinkConnection()
@@ -323,19 +330,13 @@ const resolvers = {
         .then(res => connection.close().then(() => res));
     },
     fetchAllThreads: async ({ auth: { credentials } }) => {
-      const connection = await helperFunctions.getRethinkConnection();
-      const cursor = await rethink.table('threads')
-        .filter(doc => {
-          return doc('users').contains(user => {
-            return user('username').eq(credentials.id)
-          })
-        })
-        .run(connection)
-      const threads = cursor.toArray()
+      const db = database.getDbInstance();
 
-      await connection.close()
-
-      return threads
+      return db.collection('threads').find({
+        users: {
+          $elemMatch: { username: credentials.username }
+        }
+      });
     },
     validateComputation: (_, args) => {
       return new Promise();
@@ -381,54 +382,45 @@ const resolvers = {
         return Boom.forbidden('Action not permitted');
       }
 
-      const connection = await helperFunctions.getRethinkConnection();
-      await addUserPermissions(connection, args).then(res => connection.close().then(() => res));
+      await addUserPermissions(args);
 
-      return helperFunctions.getUserDetails({ username: args.userId });
+      return helperFunctions.getUserDetails(args.userId);
     },
     /**
      * Add run to RethinkDB
      * @param {String} consortiumId Run object to add/update
      * @return {object} New/updated run object
      */
-    createRun: ({ auth }, { consortiumId }) => {
+    createRun: async ({ auth }, { consortiumId }) => {
       if (!auth || !auth.credentials) {
         // No authorized user, reject
         return Boom.unauthorized('User not authenticated');
       }
 
-      return fetchOne('consortia', consortiumId)
-        .then(consortium => Promise.all([
-          consortium,
-          fetchOnePipeline(consortium.activePipelineId),
-          helperFunctions.getRethinkConnection()
-        ]))
-        .then(([consortium, pipelineSnapshot, connection]) =>
-          rethink.table('runs').insert(
-            {
-              clients: [...consortium.members],
-              consortiumId,
-              pipelineSnapshot,
-              startDate: Date.now(),
-              type: 'decentralized',
-            },
-            {
-              conflict: "replace",
-              returnChanges: true,
-            }
-          )
-          .run(connection).then(res => connection.close().then(() => res))
-        )
-        .then((result) => {
-          return axios.post(
-            `http://${config.host}:${config.pipelineServer}/startPipeline`, { run: result.changes[0].new_val }
-          ).then(() => {
-              return result.changes[0].new_val;
-          })
-        })
-        .catch(error => {
-              console.log(error)
+      try {
+        const db = database.getDbInstance();
+
+        const consortium = await db.collection('consortia').findOne({ _id: consortiumId });
+        const pipeline = await fetchOnePipeline(consortium.activePipelineId);
+
+        const result = await db.collection('runs').insertOne({
+            clients: [...consortium.members],
+            consortiumId,
+            pipelineSnapshot: pipeline,
+            startDate: Date.now(),
+            type: 'decentralized',
         });
+
+        const run = result.ops[0];
+
+        await axios.post(
+          `http://${config.host}:${config.pipelineServer}/startPipeline`, { run }
+        );
+
+        return result.ops[0]
+      } catch (error) {
+        console.log(error)
+      }
     },
     /**
      * Deletes consortium
@@ -511,17 +503,16 @@ const resolvers = {
      * @return {object} Updated consortium
      */
     joinConsortium: async ({ auth: { credentials } }, args) => {
-      const connection = await helperFunctions.getRethinkConnection()
-      const consortium = await fetchOne('consortia', args.consortiumId)
+      const db = database.getDbInstance();
+      const consortium = await db.collection('consortia').findOne({ _id: args.consortiumId });
 
       if (consortium.members.indexOf(credentials.id) !== -1) {
-        return consortium
+        return consortium;
       }
 
-      await addUserPermissions(connection, { userId: credentials.id, role: 'member', doc: args.consortiumId, table: 'consortia' })
-      await connection.close()
+      await addUserPermissions({ userId: credentials.id, role: 'member', doc: args.consortiumId, table: 'consortia' });
 
-      return fetchOne('consortia', args.consortiumId)
+      return db.collection('consortia').findOne({ _id: args.consortiumId });
     },
     /**
      * Remove logged user from consortium members list
@@ -531,11 +522,9 @@ const resolvers = {
      * @return {object} Updated consortium
      */
     leaveConsortium: async ({ auth: { credentials } }, args) => {
-      const connection = await helperFunctions.getRethinkConnection();
-      await removeUserPermissions(connection, { userId: credentials.id, role: 'member', doc: args.consortiumId, table: 'consortia' })
-        .then(res => connection.close().then(() => res));
+      await removeUserPermissions({ userId: credentials.id, role: 'member', doc: args.consortiumId, table: 'consortia' });
 
-      return fetchOne('consortia', args.consortiumId);
+      return db.collection('consortia').findOne({ _id: args.consortiumId });
     },
     /**
      * Deletes computation
@@ -580,10 +569,9 @@ const resolvers = {
         return Boom.forbidden('Action not permitted');
       }
 
-      const connection = await helperFunctions.getRethinkConnection();
-      await removeUserPermissions(connection, args)
-        .then(res => connection.close().then(() => res));
-      return helperFunctions.getUserDetails({ username: args.userId });
+      await removeUserPermissions(args)
+
+      return helperFunctions.getUserDetails(args.userId);
     },
     /**
      * Sets active pipeline on consortia object
@@ -654,11 +642,11 @@ const resolvers = {
       const consortiumId = consortiumData.id || result.changes[0].new_val.id;
 
       if (!isUpdate) {
-        await addUserPermissions(connection, { userId: credentials.id, role: 'owner', doc: consortiumId, table: 'consortia' });
-        await addUserPermissions(connection, { userId: credentials.id, role: 'member', doc: consortiumId, table: 'consortia' });
+        await addUserPermissions({ userId: credentials.id, role: 'owner', doc: consortiumId, table: 'consortia' });
+        await addUserPermissions({ userId: credentials.id, role: 'member', doc: consortiumId, table: 'consortia' });
       }
 
-      const consortium = await fetchOne('consortia', consortiumId);
+      const consortium = await db.collection('consortia').findOne({ _id: args.consortiumId });
 
       await connection.close();
 
@@ -694,18 +682,7 @@ const resolvers = {
           && !permissions.consortia[args.consortium.id].write) {
             return Boom.forbidden('Action not permitted');
       }*/
-      const connection = await helperFunctions.getRethinkConnection();
-
-      if (!args.pipeline.id) {
-        const count = await rethink.table('pipelines')
-          .filter({ name: args.pipeline.name })
-          .count()
-          .run(connection)
-
-        if (count > 0) {
-          return Boom.forbidden('Pipeline with same name already exists');
-        }
-      }
+      const db = database.getDbInstance();
 
       if (args.pipeline && args.pipeline.steps) {
         const invalidData = args.pipeline.steps.some(step =>
@@ -722,19 +699,17 @@ const resolvers = {
         }
       }
 
-      const result = await rethink.table('pipelines')
-        .insert(args.pipeline, {
-          conflict: 'update',
-          returnChanges: true,
-        })
-        .run(connection);
+      let pipelineId;
 
-      const pipelineId = args.pipeline.id || result.changes[0].new_val.id;
-      const pipeline = await fetchOnePipeline(pipelineId);
+      if (!args.pipeline.id) {
+        const result = await db.collection('pipelines').insertOne(args.pipeline);
+        pipelineId = result.ops[0]._id;
+      } else {
+        await db.collection('pipelines').updateOne({ _id: args.pipeline.id }, args.pipeline);
+        pipelineId = args.pipeline.id;
+      }
 
-      await connection.close();
-
-      return pipeline;
+      return fetchOnePipeline(pipelineId);
     },
     /**
      * Saves run results
@@ -793,7 +768,7 @@ const resolvers = {
           }).run(connection).then(res => connection.close().then(() => res))
         )
         .then(result =>
-          helperFunctions.getUserDetails({ username: credentials.id })
+          helperFunctions.getUserDetails(credentials.username)
         )
         .then(result => result)
     ,
@@ -843,72 +818,68 @@ const resolvers = {
      * @return {object} Updated message
      */
     saveMessage: async ({ auth: { credentials } }, args) => {
-      const { threadId, title, recipients, content, action } = args
+      const { threadId, title, recipients, content, action } = args;
 
       const connection = await helperFunctions.getRethinkConnection()
 
+      const db = database.getDbInstance();
+
       const messageToSave = Object.assign(
         {
-          id: rethink.uuid(),
+          _id: database.createUniqueId(),
           sender: credentials.id,
           recipients,
           content,
           date: Date.now(),
         },
         action && { action },
-      )
+      );
 
-      let result
+      let result;
 
       if (threadId) {
-        const thread = await fetchOne('threads', threadId)
-        const { messages, users } = thread
-        const threadToSave = {
-          messages: [...messages, messageToSave],
-          users: uniq([...users.map(user => user.username), ...recipients])
-            .map(user => ({ username: user, isRead: user === credentials.id })),
-          date: Date.now(),
-        }
+        const thread = await db.collection('threads').findOne({ _id: threadId });
 
-        await rethink.table('threads')
-          .get(threadId)
-          .update(threadToSave, { nonAtomic: true })
-          .run(connection)
+        const { users } = thread;
 
-        result = await fetchOne('threads', threadId)
+        const updateObj = {
+          $push: {
+            messages: messageToSave
+          },
+          $set: {
+            date: Date.now(),
+            users: uniq([...users.map(user => user.username), ...recipients])
+              .map(user => ({ username: user, isRead: user === credentials.id }))
+          }
+        };
+
+        const updateResult = await db.collection('threads').updateOne({ _id: threadId }, updateObj);
+
+        result = updateResult.ops[0];
       } else {
         const thread = {
-          id: rethink.uuid(),
           owner: credentials.id,
           title: title,
           messages: [messageToSave],
-          users: uniq([credentials.id, ...recipients])
-            .map(user => ({ username: user, isRead: user === credentials.id })),
+          users: uniq([credentials.username, ...recipients])
+            .map(user => ({ username: user, isRead: user === credentials.username })),
           date: Date.now(),
-        }
+        };
 
-        const res = await rethink.table('threads')
-          .insert(thread, { returnChanges: true })
-          .run(connection)
+        const insertResult = await db.collection('threads').insertOne(thread);
 
-        result = res.changes[0].new_val
+        result = insertResult.ops[0];
       }
 
       if (action && action.type === 'share-result') {
-        const run = await fetchOne('runs', action.detail.id)
-        const runToSave = {
-          sharedUsers: uniq([...run.sharedUsers || [], ...recipients]),
-        }
-
-        await rethink.table('runs')
-          .get(action.detail.id)
-          .update(runToSave, { nonAtomic: true })
-          .run(connection)
+        await db.collection('runs').updateOne({ _id: action.detail.id }, {
+          $addToSet: {
+            sharedUsers: { $each: recipients }
+          }
+        });
       }
 
-      await connection.close()
-
-      return result
+      return result;
     },
     /**
      * Set read mesasge
@@ -918,25 +889,19 @@ const resolvers = {
      * @param {string} args.userId User Id
      * @return {object} None
      */
-    setReadMessage: async ({ auth: { credentials } }, args) => {
-      const { threadId, userId } = args
+    setReadMessage: async (_, args) => {
+      const { threadId, userId } = args;
 
-      const connection = await helperFunctions.getRethinkConnection()
-      const thread = await fetchOne('threads', threadId)
+      const db = database.getDbInstance();
 
-      const threadToSave = {
-        ...thread,
-        users: thread.users.map(user => user.username === userId ? { ...user, isRead: true } : user)
-      }
-
-      await rethink.table('threads')
-        .get(threadId)
-        .update(threadToSave, { nonAtomic: true })
-        .run(connection)
-
-      await connection.close()
-
-      return
+      await db.collection('threads').updateOne({
+        _id: threadId,
+        'users.username': userId,
+      }, {
+        $set: {
+          'users.$.isRead': true,
+        }
+      });
     }
   },
   Subscription: {
