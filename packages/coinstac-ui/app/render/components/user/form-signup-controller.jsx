@@ -17,12 +17,11 @@ class FormSignupController extends Component {
   }
 
   componentDidMount() {
-    const { checkApiVersion } = this.props;
+    const { checkApiVersion, clearUser, clearError } = this.props;
 
     checkApiVersion();
-
-    this.props.clearUser();
-    this.props.clearError();
+    clearUser();
+    clearError();
   }
 
   componentDidUpdate() {
@@ -42,7 +41,9 @@ class FormSignupController extends Component {
    * @param  {string}    formData.username
    * @return {undefined}
    */
-  onSubmit = formData => {
+  onSubmit = (formData) => {
+    const { signUp, notifySuccess } = this.props;
+
     let error;
 
     if (!formData.name) {
@@ -63,38 +64,40 @@ class FormSignupController extends Component {
       return this.handleSignupError(error);
     }
 
-    this.setState({ error: null })
+    this.setState({ error: null });
 
-    return this.props.signUp(formData)
+    return signUp(formData)
       .then(() => {
         const { auth } = this.props;
         if (!auth.error) {
-          this.props.notifySuccess('Account created');
+          notifySuccess('Account created');
         } else {
           this.handleSignupError(auth.error);
         }
       })
       .catch((error) => {
-        this.handleSignupError(error)
+        this.handleSignupError(error);
       });
   }
 
   checkForUser = () => {
     const { router } = this.context;
-    if (this.props.auth.user.email.length) {
+    const { auth } = this.props;
+
+    if (auth.user.email.length) {
       router.push('/dashboard');
     }
   }
 
-  handleSignupError = error => {
-    let message;
+  handleSignupError = (error) => {
+    let { message } = error;
 
-    if (error.message) {
-      message = error.message;
-    } else if (typeof error === 'string') {
-      message = error;
-    } else {
-      message = 'Signup error occurred. Please try again.';
+    if (!message) {
+      if (typeof error === 'string') {
+        message = error;
+      } else {
+        message = 'Signup error occurred. Please try again.';
+      }
     }
 
     this.setState({ error: message });
@@ -124,16 +127,16 @@ FormSignupController.displayName = 'FormSignupController';
 
 FormSignupController.propTypes = {
   auth: PropTypes.object.isRequired,
+  checkApiVersion: PropTypes.func.isRequired,
   clearError: PropTypes.func.isRequired,
   clearUser: PropTypes.func.isRequired,
   notifySuccess: PropTypes.func.isRequired,
   signUp: PropTypes.func.isRequired,
-  checkApiVersion: PropTypes.func.isRequired,
 };
 
-const mapStateToProps = ({ auth }) => {
-  return { auth };
-};
+const mapStateToProps = ({ auth }) => ({
+  auth,
+});
 
 export default connect(mapStateToProps, {
   clearError,

@@ -118,17 +118,18 @@ class MapsList extends Component {
 }
 
 MapsList.propTypes = {
-  maps: PropTypes.array.isRequired,
   auth: PropTypes.object.isRequired,
-  consortia: PropTypes.array.isRequired,
-  deleteDataMapping: PropTypes.func.isRequired,
-  pipelines: PropTypes.array.isRequired,
   classes: PropTypes.object.isRequired,
+  consortia: PropTypes.array.isRequired,
+  maps: PropTypes.array.isRequired,
+  pipelines: PropTypes.array.isRequired,
+  deleteDataMapping: PropTypes.func.isRequired,
 };
 
-const mapStateToProps = ({ auth, maps }) => {
-  return { auth, maps: maps.consortiumDataMappings };
-};
+const mapStateToProps = ({ auth, maps }) => ({
+  auth,
+  maps: maps.consortiumDataMappings,
+});
 
 export default withStyles(styles)(
   connect(mapStateToProps, {
