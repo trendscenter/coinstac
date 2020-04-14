@@ -17,7 +17,18 @@ module.exports = {
    *                            operatingDirectory - base directory for file operations
    * @return {Object}        a controller instance
    */
-  create({ controller, computations, inputMap }, runId, { operatingDirectory, mode, clientId }) {
+  create({
+    controller,
+    computations,
+    inputMap,
+  },
+  runId,
+  {
+    operatingDirectory,
+    mode,
+    clientId,
+    owner,
+  }) {
     let cache = {};
     let pipelineErrorCallback;
     const currentComputations = computations.map(
@@ -40,6 +51,7 @@ module.exports = {
       initialized: false,
       iteration: undefined,
       mode,
+      owner,
       runType: 'sequential',
       state: undefined,
       stopByUser: undefined,
@@ -100,7 +112,6 @@ module.exports = {
             case 'nextIteration':
               setStateProp('iteration', controllerState.iteration + 1);
               setStateProp('state', 'waiting on computation');
-
               return controllerState.activeComputations[controllerState.computationIndex]
                 .start(
                   {
