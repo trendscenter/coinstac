@@ -475,7 +475,6 @@ module.exports = {
             }
             break;
           case 'finished':
-          debugger
             if (activePipelines[data.runId] && activePipelines[data.runId].clients[data.id]) {
               if (activePipelines[data.runId].finalTransferList) {
                 activePipelines[data.runId].finalTransferList.add(data.id);
@@ -982,7 +981,6 @@ module.exports = {
                 return res;
               });
           }).then((res) => {
-            debugger
             if (!activePipelines[runId].finalTransferList
                 || activePipelines[runId].clients
                   .every(value => activePipelines[runId].finalTransferList.has(value))
