@@ -649,8 +649,7 @@ module.exports = {
               operatingDirectory,
               clientId,
               userDirectories,
-              // owner: spec.owner,
-              owner: 'local0',
+              owner: spec.owner,
             }),
             baseDirectory: path.resolve(operatingDirectory, 'input', clientId, runId),
             cacheDirectory: userDirectories.cacheDirectory,
@@ -663,10 +662,8 @@ module.exports = {
             communicate: undefined,
             clients,
             remote: { reject: () => {} }, // noop for pre pipe errors
-            // owner: spec.owner,
-            // limitOutputToOwner: spec.limitOutputToOwner,
-            owner: 'local0',
-            limitOutputToOwner: true,
+            owner: spec.owner,
+            limitOutputToOwner: spec.limitOutputToOwner,
           },
           activePipelines[runId]
         );
