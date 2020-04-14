@@ -61,24 +61,18 @@ const styles = theme => ({
 });
 
 class Result extends Component {
-  constructor(props) {
-    super(props);
-
-    this.state = {
-      run: {},
-      computationOutput: {},
-      displayTypes: [],
-      type: 'object',
-      plotData: [],
-      selectedTabIndex: 0,
-    };
-
-    this.handleSelect = this.handleSelect.bind(this);
-  }
-
+  state = {
+    run: {},
+    computationOutput: {},
+    displayTypes: [],
+    plotData: [],
+    selectedTabIndex: 0,
+  };
 
   componentDidMount() {
-    this.props.getLocalRun(this.props.params.resultId)
+    const { params, getLocalRun } = this.props;
+
+    getLocalRun(params.resultId)
       .then((run) => {
         let plotData = {};
 
@@ -135,7 +129,7 @@ class Result extends Component {
     shell.openItem(resultDir);
   }
 
-  handleSelect(event, value) {
+  handleSelect = (_event, value) => {
     this.setState({ selectedTabIndex: value });
   }
 
@@ -345,8 +339,7 @@ class Result extends Component {
         }
 
         {
-          !selectedDisplayType
-          || selectedDisplayType.type === ''
+          (!selectedDisplayType || selectedDisplayType.type === '')
           && (
             <Paper className={classNames(classes.paper)}>
               <table>
@@ -388,16 +381,16 @@ class Result extends Component {
 }
 
 Result.propTypes = {
-  consortia: PropTypes.array.isRequired,
-  getLocalRun: PropTypes.func.isRequired,
-  params: PropTypes.object.isRequired,
   auth: PropTypes.object.isRequired,
   classes: PropTypes.object.isRequired,
+  consortia: PropTypes.array.isRequired,
+  params: PropTypes.object.isRequired,
+  getLocalRun: PropTypes.func.isRequired,
 };
 
-const mapStateToProps = ({ auth }) => {
-  return { auth };
-};
+const mapStateToProps = ({ auth }) => ({
+  auth,
+});
 
 const connectedComponent = compose(
   connect(mapStateToProps, { getLocalRun }),

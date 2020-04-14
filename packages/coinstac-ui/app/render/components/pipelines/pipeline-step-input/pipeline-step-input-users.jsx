@@ -55,10 +55,10 @@ PipelineStepInputUsers.defaultProps = {
 PipelineStepInputUsers.propTypes = {
   objKey: PropTypes.string.isRequired,
   objParams: PropTypes.object.isRequired,
-  users: PropTypes.array,
   step: PropTypes.object.isRequired,
-  updateStep: PropTypes.func.isRequired,
+  users: PropTypes.array,
   getNewObj: PropTypes.func.isRequired,
+  updateStep: PropTypes.func.isRequired,
 };
 
 export default PipelineStepInputUsers;

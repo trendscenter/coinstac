@@ -8,9 +8,12 @@ class Scatter extends Component {
     super(props);
     this.drawScatter = this.drawScatter.bind(this);
   }
+
   drawScatter() {
     const { plotData } = this.props;
-    const margin = { top: 20, right: 20, bottom: 30, left: 40 };
+    const margin = {
+      top: 20, right: 20, bottom: 30, left: 40,
+    };
     const width = 960 - margin.left - margin.right;
     const height = 500 - margin.top - margin.bottom;
 
@@ -33,17 +36,17 @@ class Scatter extends Component {
     const svg = d3.select(el).append('svg')
       .attr('width', width + margin.left + margin.right)
       .attr('height', height + margin.top + margin.bottom)
-    .append('g')
-      .attr('transform', `translate(${  margin.left  },${  margin.top  })`);
+      .append('g')
+      .attr('transform', `translate(${margin.left},${margin.top})`);
 
     x.domain(d3.extent(plotData, (p) => { return p.x; })).nice();
     y.domain(d3.extent(plotData, (p) => { return p.y; })).nice();
 
     svg.append('g')
       .attr('class', 'x axis')
-      .attr('transform', 'translate(0,' + height + ')')
+      .attr('transform', `translate(0,${height})`)
       .call(xAxis)
-    .append('text')
+      .append('text')
       .attr('class', 'label')
       .attr('fill', 'black')
       .style('font-size', '8pt')
@@ -55,7 +58,7 @@ class Scatter extends Component {
     svg.append('g')
       .attr('class', 'y axis')
       .call(yAxis)
-    .append('text')
+      .append('text')
       .attr('class', 'label')
       .attr('fill', 'black')
       .style('font-size', '8pt')
@@ -66,19 +69,19 @@ class Scatter extends Component {
       .text('Y-Axis Label');
 
     svg.selectAll('.dot')
-    .data(plotData)
-    .enter().append('circle')
-    .attr('class', 'dot')
-    .attr('r', 4.5)
-    .attr('cx', (p) => { return x(p.x); })
-    .attr('cy', (p) => { return y(p.y); })
-    .style('fill', (p) => { return color(p.name); });
+      .data(plotData)
+      .enter().append('circle')
+      .attr('class', 'dot')
+      .attr('r', 4.5)
+      .attr('cx', (p) => { return x(p.x); })
+      .attr('cy', (p) => { return y(p.y); })
+      .style('fill', (p) => { return color(p.name); });
 
     const legend = svg.selectAll('.legend')
       .data(color.domain())
-    .enter().append('g')
+      .enter().append('g')
       .attr('class', 'legend')
-      .attr('transform', (d, i) => { return 'translate(0,' + i * 20 + ')'; });
+      .attr('transform', (d, i) => { return `translate(0,${i * 20})`; });
 
     legend.append('rect')
       .attr('x', width - 18)
@@ -113,4 +116,3 @@ Scatter.defaultProps = {
 };
 
 export default Scatter;
-
