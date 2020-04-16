@@ -391,24 +391,33 @@ const resolvers = {
      * @param {String} consortiumId Run object to add/update
      * @return {object} New/updated run object
      */
-    createRun: ({ auth }, { consortiumId }) => {
+    createRun: async ({ auth }, { consortiumId }) => {
       if (!auth || !auth.credentials) {
         // No authorized user, reject
         return Boom.unauthorized('User not authenticated');
       }
 
-      return fetchOne('consortia', consortiumId)
-        .then(consortium => Promise.all([
-          consortium,
-          fetchOnePipeline(consortium.activePipelineId),
-          helperFunctions.getRethinkConnection()
-        ]))
-        .then(([consortium, pipelineSnapshot, connection]) =>
-          rethink.table('runs').insert(
+      const consortium = await fetchOne('consortia', consortiumId)
+
+      if (!consortium) {
+        return Boom.notFound('Consortium with provided id not found')
+      }
+
+      const activePipeline = await fetchOnePipeline(consortium.activePipelineId)
+
+      if (!activePipeline) {
+        return Boom.notFound('Active pipeline not found on this consortium')
+      }
+
+      const connection = await helperFunctions.getRethinkConnection()
+
+      const result =
+        await rethink.table('runs')
+          .insert(
             {
               clients: [...consortium.members],
               consortiumId,
-              pipelineSnapshot,
+              pipelineSnapshot: activePipeline,
               startDate: Date.now(),
               type: 'decentralized',
             },
@@ -416,19 +425,23 @@ const resolvers = {
               conflict: "replace",
               returnChanges: true,
             }
-          )
-          .run(connection).then(res => connection.close().then(() => res))
+          ).run(connection)
+
+      const run = result.changes[0].new_val
+
+      try {
+        await axios.post(
+          `http://${config.host}:${config.pipelineServer}/startPipeline`,
+          { run },
         )
-        .then((result) => {
-          return axios.post(
-            `http://${config.host}:${config.pipelineServer}/startPipeline`, { run: result.changes[0].new_val }
-          ).then(() => {
-              return result.changes[0].new_val;
-          })
-        })
-        .catch(error => {
-              console.log(error)
-        });
+        return run
+      } catch (error) {
+        if (error.code === 'ECONNREFUSED') {
+          return Boom.serverUnavailable('Pipeline server does not work.')
+        }
+
+        return Boom.notAcceptable(error)
+      }
     },
     /**
      * Deletes consortium
