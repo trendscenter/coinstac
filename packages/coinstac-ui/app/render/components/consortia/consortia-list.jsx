@@ -5,9 +5,11 @@ import { Link } from 'react-router';
 import { compose, graphql, withApollo } from 'react-apollo';
 import { ipcRenderer } from 'electron';
 import classNames from 'classnames';
-import { orderBy } from 'lodash';
+import { get, orderBy } from 'lodash';
 import shortid from 'shortid';
-import { Button, Fab, Menu, MenuItem, TextField, Typography } from '@material-ui/core';
+import {
+  Button, Fab, Menu, MenuItem, TextField, Typography,
+} from '@material-ui/core';
 import AddIcon from '@material-ui/icons/Add';
 import { withStyles } from '@material-ui/core/styles';
 import MemberAvatar from '../common/member-avatar';
@@ -31,7 +33,7 @@ import {
   saveDocumentProp,
   consortiumSaveActivePipelineProp,
 } from '../../state/graphql/props';
-import { notifyInfo } from '../../state/ducks/notifyAndLog';
+import { notifyInfo, notifyError } from '../../state/ducks/notifyAndLog';
 import { pipelineNeedsDataMapping } from '../../../main/utils/run-pipeline-functions';
 
 const MAX_LENGTH_CONSORTIA = 50;
@@ -99,12 +101,12 @@ class ConsortiaList extends Component {
   }
 
   componentDidMount() {
-    const { consortiumJoinedByThread } = this.state
+    const { consortiumJoinedByThread } = this.state;
 
     if (consortiumJoinedByThread) {
       setTimeout(() => {
-        this.setState({ consortiumJoinedByThread: null })
-      }, 5000)
+        this.setState({ consortiumJoinedByThread: null });
+      }, 5000);
     }
   }
 
@@ -119,13 +121,13 @@ class ConsortiaList extends Component {
 
   handleSetActivePipelineOnConsortium = (event, consortium, redirect) => {
     if (redirect) {
-      this.props.router.push(`dashboard/consortia/${consortium.id}/1`)
+      this.props.router.push(`dashboard/consortia/${consortium.id}/1`);
     } else {
       this.openConsortiumPipelinesMenu(event, consortium.id);
     }
   }
 
-  getConsortiumPipelines = consortium => {
+  getConsortiumPipelines = (consortium) => {
     const { pipelines } = this.props;
     return pipelines.filter(pipe => pipe.owningConsortium === consortium.id);
   }
@@ -164,7 +166,8 @@ class ConsortiaList extends Component {
         </Typography>
         <Typography className={
           classNames(classes.value, consortium.activePipelineId ? classes.green : classes.red)
-        }>
+        }
+        >
           {consortium.activePipelineId
             ? pipelines.find(pipe => pipe.id === consortium.activePipelineId).name
             : 'None'
@@ -197,8 +200,8 @@ class ConsortiaList extends Component {
           showDetails
           width={40}
           mapped={
-            consortium.mappedForRun &&
-              consortium.mappedForRun.indexOf(user.id) !== -1
+            consortium.mappedForRun
+              && consortium.mappedForRun.indexOf(user.id) !== -1
           }
         />
       ));
@@ -261,8 +264,8 @@ class ConsortiaList extends Component {
             onClose={() => this.closeConsortiumPipelinesMenu()}
           >
             {
-              consortiumPipelines &&
-              consortiumPipelines.map(pipe => (
+              consortiumPipelines
+              && consortiumPipelines.map(pipe => (
                 <MenuItem
                   key={`owned-${pipe.id}`}
                   onClick={() => this.selectPipeline(consortium.id, pipe.id)}
@@ -320,7 +323,7 @@ class ConsortiaList extends Component {
     return { actions, text, owner };
   }
 
-  renderListItem = consortium => {
+  renderListItem = (consortium) => {
     const { user } = this.props.auth;
     const { consortiumJoinedByThread } = this.state;
 
@@ -405,13 +408,13 @@ class ConsortiaList extends Component {
     return () => {
       const { runs } = this.props;
 
-      const presentRun = runs.reduce( (prev, curr) => {
-        return prev.startDate > curr.startDate ? prev : curr ;
+      const presentRun = runs.reduce((prev, curr) => {
+        return prev.startDate > curr.startDate ? prev : curr;
       });
       const runId = presentRun.id;
 
       ipcRenderer.send('stop-pipeline', { pipelineId, runId });
-    }
+    };
   }
 
   startPipeline(consortiumId, activePipelineId) {
@@ -422,12 +425,13 @@ class ConsortiaList extends Component {
         maps,
         createRun,
         notifyInfo,
+        notifyError,
         consortia,
       } = this.props;
 
       let isRemotePipeline = false;
       const pipelineData = client.readQuery({ query: FETCH_ALL_PIPELINES_QUERY });
-      let pipeline = pipelineData.fetchAllPipelines
+      const pipeline = pipelineData.fetchAllPipelines
         .find(pipe => pipe.id === activePipelineId);
 
       for (let i = 0; i < pipeline.steps.length; i += 1) {
@@ -437,34 +441,37 @@ class ConsortiaList extends Component {
         }
       }
 
-      // Don't send local pipelines to Rethink
-      if (!isRemotePipeline) {
-        const consortium = consortia.find(cons => cons.id === consortiumId);
-        const run = {
-          id: `local-${shortid.generate()}`,
-          clients: [...consortium.members],
-          consortiumId,
-          pipelineSnapshot: pipeline,
-          startDate: Date.now(),
-          type: 'local',
-          results: null,
-          endDate: null,
-          userErrors: null,
-          __typename: 'Run',
-        };
+      createRun(consortiumId)
+        .then(() => {
+          const consortium = consortia.find(cons => cons.id === consortiumId);
 
-        const dataMapping = maps.find(m => m.consortiumId === consortium.id
-          && m.pipelineId === consortium.activePipelineId);
+          if (!isRemotePipeline) {
+            const run = {
+              id: `local-${shortid.generate()}`,
+              clients: [...consortium.members],
+              consortiumId,
+              pipelineSnapshot: pipeline,
+              startDate: Date.now(),
+              type: 'local',
+              results: null,
+              endDate: null,
+              userErrors: null,
+              __typename: 'Run',
+            };
 
-        notifyInfo(`Local Pipeline Starting for ${consortium.name}.`);
+            const dataMapping = maps.find(m => m.consortiumId === consortium.id
+              && m.pipelineId === consortium.activePipelineId);
 
-        ipcRenderer.send('start-pipeline', {
-          consortium, dataMappings: dataMapping, run,
+            notifyInfo(`Local Pipeline Starting for ${consortium.name}.`);
+
+            ipcRenderer.send('start-pipeline', {
+              consortium, dataMappings: dataMapping, run,
+            });
+          }
+        })
+        .catch(({ graphQLErrors }) => {
+          notifyError(get(graphQLErrors, '0.message', 'Failed to start pipeline'));
         });
-      }
-
-      // If remote pipeline, call GraphQL to create new pipeline
-      createRun(consortiumId);
     };
   }
 
@@ -486,18 +493,18 @@ class ConsortiaList extends Component {
 
     const consortia = this.getFilteredConsortia();
 
-    let memberConsortia = [];
-    let otherConsortia = [];
+    const memberConsortia = [];
+    const otherConsortia = [];
 
     if (consortia && consortia.length <= MAX_LENGTH_CONSORTIA) {
-      consortia.forEach(consortium => {
+      consortia.forEach((consortium) => {
         const { owners, members } = consortium;
         if ([...owners, ...members].indexOf(auth.user.id) !== -1) {
           memberConsortia.push(consortium);
         } else {
           otherConsortia.push(consortium);
         }
-      })
+      });
     }
 
     return {
@@ -506,7 +513,7 @@ class ConsortiaList extends Component {
     };
   }
 
-  handleSearchChange = evt => {
+  handleSearchChange = (evt) => {
     this.setState({ search: evt.target.value });
   }
 
@@ -541,23 +548,23 @@ class ConsortiaList extends Component {
           onChange={this.handleSearchChange}
         />
 
-        {consortia && consortia.length && consortia.length > MAX_LENGTH_CONSORTIA &&
-          consortia.map(this.renderListItem)}
+        {consortia && consortia.length && consortia.length > MAX_LENGTH_CONSORTIA
+          && consortia.map(this.renderListItem)}
 
         {memberConsortia.length > 0 && (
           <Typography variant="h6">Your Consortia</Typography>
         )}
 
-        {memberConsortia.length > 0 &&
-          memberConsortia.map(this.renderListItem)
+        {memberConsortia.length > 0
+          && memberConsortia.map(this.renderListItem)
         }
 
         {otherConsortia.length > 0 && (
           <Typography variant="h6" className={classes.subtitle}>Other Consortia</Typography>
         )}
 
-        {otherConsortia.length > 0 &&
-          otherConsortia.map(this.renderListItem)}
+        {otherConsortia.length > 0
+          && otherConsortia.map(this.renderListItem)}
 
         {(!consortia || !consortia.length) && (
           <Typography variant="body1">
@@ -586,6 +593,7 @@ ConsortiaList.propTypes = {
   joinConsortium: PropTypes.func.isRequired,
   leaveConsortium: PropTypes.func.isRequired,
   notifyInfo: PropTypes.func.isRequired,
+  notifyError: PropTypes.func.isRequired,
   pipelines: PropTypes.array.isRequired,
   pullComputations: PropTypes.func.isRequired,
   deleteAllDataMappingsFromConsortium: PropTypes.func.isRequired,
@@ -619,6 +627,7 @@ export default withStyles(styles)(
   connect(mapStateToProps,
     {
       notifyInfo,
+      notifyError,
       pullComputations,
       deleteAllDataMappingsFromConsortium,
     })(ConsortiaListWithData)
