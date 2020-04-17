@@ -24,23 +24,51 @@ const enigmaSans = require('./data/coinstac-enigma-sans');
 const local = require('./data/coinstac-local-test');
 const localError = require('./data/coinstac-local-error');
 
+const CONSORTIA_IDS = [
+  database.createUniqueId(),
+  database.createUniqueId(),
+];
+
+const PIPELINE_IDS = [
+  database.createUniqueId(),
+  database.createUniqueId(),
+  database.createUniqueId(),
+  database.createUniqueId(),
+];
+
+const COMPUTATION_IDS = [
+  database.createUniqueId(),
+  database.createUniqueId(),
+  database.createUniqueId(),
+  database.createUniqueId(),
+  database.createUniqueId(),
+  database.createUniqueId(),
+  database.createUniqueId(),
+  database.createUniqueId(),
+  database.createUniqueId(),
+  database.createUniqueId(),
+  database.createUniqueId(),
+  database.createUniqueId(),
+  database.createUniqueId(),
+];
+
 async function populateComputations() {
   const db = database.getDbInstance();
 
   return db.collection('computations').insertMany([
-    { ...local, submittedBy: 'author' },
-    { ...decentralized, submittedBy: 'author' },
-    { ...msrFsl, submittedBy: 'author' },
-    { ...vbm, submittedBy: 'author' },
-    { ...gica, submittedBy: 'author' },
-    { ...ddfnc, submittedBy: 'author' },
-    { ...dpsvm, submittedBy: 'author' },
-    { ...drneVbm, submittedBy: 'author' },
-    { ...drneFsl, submittedBy: 'author' },
-    { ...decentralizedError, submittedBy: 'author' },
-    { ...enigmaSans, submittedBy: 'author' },
-    { ...localError, submittedBy: 'author' },
-    { ...fmri, submittedBy: 'author' },
+    { ...local, submittedBy: 'author', _id: COMPUTATION_IDS[0] },
+    { ...decentralized, submittedBy: 'author', _id: COMPUTATION_IDS[1] },
+    { ...msrFsl, submittedBy: 'author', _id: COMPUTATION_IDS[2] },
+    { ...vbm, submittedBy: 'author', _id: COMPUTATION_IDS[3] },
+    { ...gica, submittedBy: 'author', _id: COMPUTATION_IDS[4] },
+    { ...ddfnc, submittedBy: 'author', _id: COMPUTATION_IDS[5] },
+    { ...dpsvm, submittedBy: 'author', _id: COMPUTATION_IDS[6] },
+    { ...drneVbm, submittedBy: 'author', _id: COMPUTATION_IDS[7] },
+    { ...drneFsl, submittedBy: 'author', _id: COMPUTATION_IDS[8] },
+    { ...decentralizedError, submittedBy: 'author', _id: COMPUTATION_IDS[9] },
+    { ...enigmaSans, submittedBy: 'author', _id: COMPUTATION_IDS[10] },
+    { ...localError, submittedBy: 'author', _id: COMPUTATION_IDS[11] },
+    { ...fmri, submittedBy: 'author', _id: COMPUTATION_IDS[12] },
   ]);
 }
 
@@ -49,6 +77,7 @@ async function populateConsortia() {
 
   return db.collection('consortia').insertMany([
     {
+      _id: CONSORTIA_IDS[0],
       name: 'Test Consortia 1',
       description: 'This consortia is for testing.',
       owners: ['author'],
@@ -57,7 +86,8 @@ async function populateConsortia() {
       createDate: 1551333489519,
     },
     {
-      activePipelineId: 'test-pipeline-ssr',
+      _id: CONSORTIA_IDS[1],
+      activePipelineId: PIPELINE_IDS[0],
       name: 'Test Consortia 2',
       description: 'This consortia is for testing too.',
       owners: ['test1'],
@@ -68,20 +98,21 @@ async function populateConsortia() {
   ]);
 }
 
-async function populatePipelines(compResults, consortiaResults) {
+async function populatePipelines() {
   const db = database.getDbInstance();
 
   return db.collection('pipelines').insertMany([
     {
+      _id: PIPELINE_IDS[0],
       delete: false,
       description: 'ssr',
       name: 'ssr test',
-      owningConsortium: consortiaResults.ops[1]._id,
+      owningConsortium: CONSORTIA_IDS[1],
       shared: false,
       steps: [
         {
           computations: [
-            compResults.ops[2]._id,
+            COMPUTATION_IDS[2],
           ],
           controller: {
             id: null,
@@ -118,16 +149,17 @@ async function populatePipelines(compResults, consortiaResults) {
       ],
     },
     {
+      _id: PIPELINE_IDS[1],
       name: 'Decentralized Pipeline',
       description: 'Test description',
-      owningConsortium: consortiaResults.ops[1]._id,
+      owningConsortium: CONSORTIA_IDS[1],
       shared: true,
       steps: [
         {
           id: 'UIKDl-',
           controller: { type: 'decentralized' },
           computations: [
-            compResults.ops[1]._id,
+            COMPUTATION_IDS[1],
           ],
           inputMap: {
             start: { value: 1 },
@@ -136,16 +168,17 @@ async function populatePipelines(compResults, consortiaResults) {
       ],
     },
     {
+      _id: PIPELINE_IDS[2],
       name: 'Local Pipeline',
       description: 'Local Test description',
-      owningConsortium: consortiaResults.ops[1]._id,
+      owningConsortium: CONSORTIA_IDS[1],
       shared: true,
       steps: [
         {
           id: 'UIKDl-local1',
           controller: { type: 'local' },
           computations: [
-            compResults.ops[0]._id,
+            COMPUTATION_IDS[0],
           ],
           inputMap: {
             start: { value: 1 },
@@ -155,7 +188,7 @@ async function populatePipelines(compResults, consortiaResults) {
           id: 'UIKDl-local2',
           controller: { type: 'local' },
           computations: [
-            compResults.ops[0]._id,
+            COMPUTATION_IDS[0],
           ],
           inputMap: {
             start: { fromCache: { step: 0, variable: 'sum' } },
@@ -166,19 +199,19 @@ async function populatePipelines(compResults, consortiaResults) {
   ]);
 }
 
-async function populateRuns(consortiaResults) {
+async function populateRuns() {
   const db = database.getDbInstance();
 
   db.collection('runs').insertMany([
     {
       clients: ['test1'],
-      consortiumId: consortiaResults.ops[1]._id,
+      consortiumId: CONSORTIA_IDS[1],
       pipelineSnapshot: {
         id: '52d44390-07a5-4b8c-85c9-e22821ce7183',
         delete: false,
         description: '',
         name: 'VBM Pre',
-        owningConsortium: consortiaResults.ops[1]._id,
+        owningConsortium: CONSORTIA_IDS[1],
         shared: false,
         steps: [
           {
@@ -297,7 +330,7 @@ async function populateRuns(consortiaResults) {
       clients: [
         'test1',
       ],
-      consortiumId: consortiaResults.ops[1]._id,
+      consortiumId: CONSORTIA_IDS[1],
       startDate: '1568405561851',
       endDate: '1568408608526',
       pipelineSnapshot: {
@@ -305,7 +338,7 @@ async function populateRuns(consortiaResults) {
         description: 'ddFNC',
         id: 'b908c384-aa47-42cf-af56-9fc473b4ceff',
         name: 'ddFNC',
-        owningConsortium: consortiaResults.ops[1]._id,
+        owningConsortium: CONSORTIA_IDS[1],
         shared: false,
         steps: [
           {
@@ -508,7 +541,7 @@ async function populateRuns(consortiaResults) {
       clients: [
         'test1',
       ],
-      consortiumId: consortiaResults.ops[1]._id,
+      consortiumId: CONSORTIA_IDS[1],
       startDate: '1518559440672',
       endDate: '1518559440685',
       pipelineSnapshot: {
@@ -591,7 +624,7 @@ async function populateRuns(consortiaResults) {
       clients: [
         'test1',
       ],
-      consortiumId: consortiaResults.ops[1]._id,
+      consortiumId: CONSORTIA_IDS[1],
       startDate: '1518559440668',
       endDate: '1551465751260',
       pipelineSnapshot: {
@@ -753,7 +786,7 @@ async function populateRuns(consortiaResults) {
   ]);
 }
 
-async function populateUsers(consortiaResults) {
+async function populateUsers() {
   const password = await helperFunctions.hashPassword('password');
 
   await helperFunctions.createUser({
@@ -764,14 +797,14 @@ async function populateUsers(consortiaResults) {
     permissions: {
       computations: {},
       consortia: {
-        [consortiaResults.ops[0]._id]: ['member'],
-        [consortiaResults.ops[1]._id]: ['owner', 'member'],
+        [CONSORTIA_IDS[0]]: ['member'],
+        [CONSORTIA_IDS[1]]: ['owner', 'member'],
       },
       pipelines: {},
     },
     consortiaStatuses: {
-      [consortiaResults.ops[0]._id]: 'none',
-      [consortiaResults.ops[1]._id]: 'none',
+      [CONSORTIA_IDS[0]]: 'none',
+      [CONSORTIA_IDS[1]]: 'none',
     },
   }, password);
 
@@ -783,14 +816,14 @@ async function populateUsers(consortiaResults) {
     permissions: {
       computations: {},
       consortia: {
-        [consortiaResults.ops[0]._id]: ['member'],
-        // [consortiaResults.ops[1]._id]: ['member'],
+        [CONSORTIA_IDS[0]]: ['member'],
+        [CONSORTIA_IDS[1]]: ['member'],
       },
       pipelines: {},
     },
     consortiaStatuses: {
-      [consortiaResults.ops[0]._id]: 'none',
-      // [consortiaResults.ops[1]._id]: 'none',
+      [CONSORTIA_IDS[0]]: 'none',
+      [CONSORTIA_IDS[1]]: 'none',
     },
   }, password);
 
@@ -802,14 +835,14 @@ async function populateUsers(consortiaResults) {
     permissions: {
       computations: {},
       consortia: {
-        [consortiaResults.ops[0]._id]: ['member'],
-        [consortiaResults.ops[1]._id]: ['member'],
+        [CONSORTIA_IDS[0]]: ['member'],
+        [CONSORTIA_IDS[1]]: ['member'],
       },
       pipelines: {},
     },
     consortiaStatuses: {
-      [consortiaResults.ops[0]._id]: 'none',
-      [consortiaResults.ops[1]._id]: 'none',
+      [CONSORTIA_IDS[0]]: 'none',
+      [CONSORTIA_IDS[1]]: 'none',
     },
   }, password);
 
@@ -821,14 +854,14 @@ async function populateUsers(consortiaResults) {
     permissions: {
       computations: {},
       consortia: {
-        [consortiaResults.ops[0]._id]: ['member'],
-        [consortiaResults.ops[1]._id]: ['member'],
+        [CONSORTIA_IDS[0]]: ['member'],
+        [CONSORTIA_IDS[1]]: ['member'],
       },
       pipelines: {},
     },
     consortiaStatuses: {
-      [consortiaResults.ops[0]._id]: 'none',
-      [consortiaResults.ops[1]._id]: 'none',
+      [CONSORTIA_IDS[0]]: 'none',
+      [CONSORTIA_IDS[1]]: 'none',
     },
   }, password);
 
@@ -840,14 +873,14 @@ async function populateUsers(consortiaResults) {
     permissions: {
       computations: {},
       consortia: {
-        [consortiaResults.ops[0]._id]: ['member'],
-        [consortiaResults.ops[1]._id]: ['member'],
+        [CONSORTIA_IDS[0]]: ['member'],
+        [CONSORTIA_IDS[1]]: ['member'],
       },
       pipelines: {},
     },
     consortiaStatuses: {
-      [consortiaResults.ops[0]._id]: 'none',
-      [consortiaResults.ops[1]._id]: 'none',
+      [CONSORTIA_IDS[0]]: 'none',
+      [CONSORTIA_IDS[1]]: 'none',
     },
   }, password);
 
@@ -859,15 +892,15 @@ async function populateUsers(consortiaResults) {
     permissions: {
       computations: {},
       consortia: {
-        [consortiaResults.ops[0]._id]: ['owner', 'member'],
-        [consortiaResults.ops[1]._id]: ['member'],
+        [CONSORTIA_IDS[0]]: ['owner', 'member'],
+        [CONSORTIA_IDS[1]]: ['member'],
       },
       pipelines: {},
     },
   }, password);
 
   const adminPassword = await helperFunctions.hashPassword(process.argv[3]
-    || helperFunctions.getDBMap().rethinkdbServer.password);
+    || helperFunctions.getDBMap().apiCredentials.password);
 
   await helperFunctions.createUser({
     _id: 'server',
@@ -880,43 +913,10 @@ async function populateUsers(consortiaResults) {
       pipelines: {},
     },
     consortiaStatuses: {
-      [consortiaResults.ops[0]._id]: 'none',
-      [consortiaResults.ops[1]._id]: 'none',
+      [CONSORTIA_IDS[0]]: 'none',
+      [CONSORTIA_IDS[1]]: 'none',
     },
   }, adminPassword);
-}
-
-async function addUserPermissions(args) {
-  const db = database.getDbInstance();
-
-  const { role, doc, table } = args;
-
-  const promises = [];
-
-  const updateObj = {
-    $addToSet: {
-      [`permissions.${table}.${doc}`]: role,
-    },
-  };
-
-  // Add entry to user statuses object &&
-  if (table === 'consortia') {
-    updateObj.$set = {
-      [`consortiaStatuses.${doc}`]: 'none',
-    };
-
-    promises.push(
-      db.collection('consortia').updateOne({ _id: doc }, {
-        $addToSet: { [`${role}s`]: args.userId },
-      })
-    );
-  }
-
-  promises.push(
-    db.collection('users').updateOne({ _id: args.userId }, updateObj)
-  );
-
-  return Promise.all(promises);
 }
 
 async function populate() {
@@ -924,26 +924,11 @@ async function populate() {
 
   database.dropDbInstance();
 
-  const compResults = await populateComputations();
-  const consortiaResults = await populateConsortia();
-
-  await populatePipelines(compResults, consortiaResults);
-  await populateRuns(consortiaResults);
-  await populateUsers(consortiaResults);
-
-  const db = database.getDbInstance();
-  const user = await db.collection('users').findOne({ username: 'test2' });
-  console.log(user);
-  console.log('----------------------');
-
-  await addUserPermissions({ userId: user._id, role: 'member', doc: consortiaResults.ops[1]._id, table: 'consortia' });
-
-  const user2 = await db.collection('users').findOne({ username: 'test2' });
-  console.log(user2);
-  console.log('----------------------');
-
-  const con = await db.collection('consortia').findOne({ _id: consortiaResults.ops[1]._id });
-  console.log(con);
+  await populateComputations();
+  await populateConsortia();
+  await populatePipelines();
+  await populateRuns();
+  await populateUsers();
 
   database.close();
 }

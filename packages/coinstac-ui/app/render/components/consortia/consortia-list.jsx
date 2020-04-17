@@ -164,9 +164,10 @@ class ConsortiaList extends Component {
         </Typography>
         <Typography className={
           classNames(classes.value, consortium.activePipelineId ? classes.green : classes.red)
-        }>
+        }
+      >
           {consortium.activePipelineId
-            ? pipelines.find(pipe => pipe.id === consortium.activePipelineId).name
+            ? pipeline.name
             : 'None'
           }
         </Typography>
@@ -437,7 +438,7 @@ class ConsortiaList extends Component {
         }
       }
 
-      // Don't send local pipelines to Rethink
+      // Don't send local pipelines to api
       if (!isRemotePipeline) {
         const consortium = consortia.find(cons => cons.id === consortiumId);
         const run = {

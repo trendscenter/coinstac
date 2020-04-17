@@ -1,10 +1,9 @@
 const crypto = require('crypto');
 const Boom = require('boom');
 const jwt = require('jsonwebtoken');
-const rethink = require('rethinkdb');
 const Promise = require('bluebird');
-const config = require('../config/default');
 const database = require('./database');
+const { transformToClient } = require('./utils');
 
 let dbmap;
 try {
@@ -12,12 +11,8 @@ try {
 } catch (e) {
   console.log('No DBMap found: using defaults'); // eslint-disable-line no-console
   dbmap = {
-    rethinkdbAdmin: {
-      user: 'admin',
-      password: '',
-    },
-    rethinkdbServer: {
-      user: 'server',
+    apiCredentials: {
+      username: 'server',
       password: 'password',
     },
     cstacJWTSecret: 'test',
@@ -77,22 +72,6 @@ const helperFunctions = {
    */
   getDBMap() { return dbmap; },
   /**
-   * Returns RethinkDB connection
-   * @return {object} A connection to RethinkDB
-   */
-  getRethinkConnection() {
-    const defaultConnectionConfig = {
-      host: config.host,
-      port: config.rethinkPort,
-      db: config.cstacDB,
-    };
-
-    defaultConnectionConfig.user = dbmap.rethinkdbAdmin.user;
-    defaultConnectionConfig.password = dbmap.rethinkdbAdmin.password;
-
-    return rethink.connect(Object.assign({}, defaultConnectionConfig));
-  },
-  /**
    * Returns user table object for requested user
    * @param {string} username username of requested user
    * @return {object} The requested user object
@@ -100,7 +79,8 @@ const helperFunctions = {
   async getUserDetails(username) {
     const db = database.getDbInstance();
 
-    return db.collection('users').findOne({ username });
+    const user = await db.collection('users').findOne({ username });
+    return transformToClient(user);
   },
   /**
    * Hashes password for storage in database
@@ -165,8 +145,7 @@ const helperFunctions = {
     const db = database.getDbInstance();
 
     const count = await db.collection('users')
-      .find({ email: req.payload.email })
-      .count();
+      .countDocuments({ email: req.payload.email });
 
     return count === 0;
   },
@@ -200,8 +179,7 @@ const helperFunctions = {
     const db = database.getDbInstance();
 
     const count = await db.collection('users')
-      .find({ username: req.payload.username })
-      .count();
+      .countDocuments({ username: req.payload.username });
 
     return count === 0;
   },
@@ -211,22 +189,24 @@ const helperFunctions = {
    * @param {object} res response
    * @return {object} The requested user object
    */
-  validateUser(req, res) {
-    return helperFunctions.getUserDetails(req.payload.username)
-      .then((user) => {
-        if (user) {
-          helperFunctions.verifyPassword(req.payload.password, user.passwordHash)
-            .then((passwordMatch) => {
-              if (user && user.passwordHash && passwordMatch) {
-                res(user);
-              } else {
-                res(Boom.unauthorized('Incorrect username or password.'));
-              }
-            });
-        } else {
-          res(Boom.unauthorized('Incorrect username or password.'));
-        }
-      });
+  async validateUser(req, res) {
+    const db = database.getDbInstance();
+
+    const user = await db.collection('users').findOne({ username: req.payload.username });
+
+    if (!user) {
+      return res(Boom.unauthorized('Incorrect username or password.'));
+    }
+
+    const passwordMatch = await helperFunctions.verifyPassword(
+      req.payload.password, user.passwordHash
+    );
+
+    if (passwordMatch) {
+      res(transformToClient(user));
+    } else {
+      res(Boom.unauthorized('Incorrect username or password.'));
+    }
   },
   /**
    * Verify that authenticating user is using correct password

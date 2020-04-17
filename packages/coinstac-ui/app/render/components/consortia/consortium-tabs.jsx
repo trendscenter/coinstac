@@ -11,15 +11,12 @@ import ConsortiumRuns from './consortium-runs';
 import { updateUserPerms } from '../../state/ducks/auth';
 import {
   getAllAndSubProp,
-  getSelectAndSubProp,
   saveDocumentProp,
   userRolesProp,
 } from '../../state/graphql/props';
 import {
   ADD_USER_ROLE_MUTATION,
-  CONSORTIUM_CHANGED_SUBSCRIPTION,
   FETCH_ALL_USERS_QUERY,
-  FETCH_CONSORTIUM_QUERY,
   REMOVE_USER_ROLE_MUTATION,
   SAVE_CONSORTIUM_MUTATION,
   USER_CHANGED_SUBSCRIPTION,
@@ -49,7 +46,6 @@ class ConsortiumTabs extends Component {
 
     this.state = {
       consortium,
-      unsubscribeConsortia: null,
       unsubscribeUsers: null,
       selectedTabIndex: 0,
       savingStatus: 'init',
@@ -60,6 +56,20 @@ class ConsortiumTabs extends Component {
     this.updateConsortium = this.updateConsortium.bind(this);
   }
 
+  componentDidMount() {
+    const { consortia, params } = this.props;
+
+    if (params.consortiumId) {
+      const consortium = consortia.find(c => c.id === params.consortiumId);
+      const consortiumUsers = this.getConsortiumUsers(consortium);
+
+      this.setState({
+        consortium: { ...consortium },
+        consortiumUsers,
+      });
+    }
+  }
+
   UNSAFE_componentWillReceiveProps(nextProps) {
     const tabId = parseInt(this.props.params.tabId);
 
@@ -67,30 +77,12 @@ class ConsortiumTabs extends Component {
       this.handleSelect(null, tabId);
     }
 
-    if (this.state.consortium.id && !this.state.unsubscribeConsortia) {
-      this.setState({
-        unsubscribeConsortia: this.props.subscribeToConsortia(this.state.consortium.id),
-      });
-    }
-
     if (nextProps.users && !this.state.unsubscribeUsers) {
       this.setState({ unsubscribeUsers: this.props.subscribeToUsers(null) });
-    }
-
-    if (nextProps.activeConsortium) {
-      const { activeConsortium: { __typename, ...other } } = nextProps;
-      if (this.props.routes[3].path !== 'new' || (this.props.routes[3].path === 'new' && this.state.consortium.id) ) {
-        const consortiumUsers = this.getConsortiumUsers(other);
-        this.setState({ consortium: { ...other }, consortiumUsers });
-      }
     }
   }
 
   componentWillUnmount() {
-    if (this.state.unsubscribeConsortia) {
-      this.state.unsubscribeConsortia();
-    }
-
     if (this.state.unsubscribeUsers) {
       this.state.unsubscribeUsers();
     }
@@ -134,18 +126,11 @@ class ConsortiumTabs extends Component {
 
     this.props.saveConsortium(this.state.consortium)
     .then(({ data: { saveConsortium: { __typename, ...other } } }) => {
-      let unsubscribeConsortia = this.state.unsubscribeConsortia;
-
-      if (!unsubscribeConsortia) {
-        unsubscribeConsortia = this.props.subscribeToConsortia(other.id);
-      }
-
       const consortiumUsers = this.getConsortiumUsers(other);
 
       this.setState({
         consortium: { ...other },
         consortiumUsers,
-        unsubscribeConsortia,
         savingStatus: 'success',
       });
 
@@ -276,10 +261,8 @@ class ConsortiumTabs extends Component {
 }
 
 ConsortiumTabs.defaultProps = {
-  activeConsortium: null,
   consortia: [],
   runs: [],
-  subscribeToConsortia: null,
   subscribeToUsers: null,
   users: [],
 };
@@ -294,10 +277,9 @@ ConsortiumTabs.propTypes = {
   removeUserRole: PropTypes.func.isRequired,
   runs: PropTypes.array,
   saveConsortium: PropTypes.func.isRequired,
-  subscribeToConsortia: PropTypes.func,
   subscribeToUsers: PropTypes.func,
   classes: PropTypes.object.isRequired,
-  users: PropTypes.array.isRequired,
+  users: PropTypes.array,
 };
 
 function mapStateToProps({ auth }) {
@@ -305,14 +287,6 @@ function mapStateToProps({ auth }) {
 }
 
 const ConsortiumTabsWithData = compose(
-  graphql(FETCH_CONSORTIUM_QUERY, getSelectAndSubProp(
-    'activeConsortium',
-    CONSORTIUM_CHANGED_SUBSCRIPTION,
-    'consortiumId',
-    'subscribeToConsortia',
-    'consortiumChanged',
-    'fetchConsortium'
-  )),
   graphql(FETCH_ALL_USERS_QUERY, getAllAndSubProp(
     USER_CHANGED_SUBSCRIPTION,
     'users',
