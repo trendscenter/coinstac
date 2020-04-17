@@ -43,10 +43,6 @@ const DashboardNav = () => {
         <ListItemIcon><DescriptionIcon /></ListItemIcon>
         <ListItemText primary="Logs" />
       </ListItem>
-      <ListItem button component={Link} to="/dashboard/papaya">
-        <ListItemIcon><DescriptionIcon /></ListItemIcon>
-        <ListItemText primary="Papaya"/>
-      </ListItem>
     </List>
   );
 };
