@@ -26,7 +26,6 @@
     "jsonwebtoken": "^7.4.3",
     "lodash": "^4.17.15",
     "mongodb": "^3.5.5",
-    "rethinkdb": "^2.3.3",
     "subscriptions-transport-ws": "^0.9.9",
     "trace": "^3.1.1"
   }

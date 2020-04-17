@@ -10,15 +10,9 @@ module.exports = [
         { method: helperFunctions.validateUser, assign: 'user' },
       ],
       handler: (req, res) => {
-        const user = {
-          ...req.pre.user,
-        };
-
-        delete user.passwordHash;
-
         res({
-          id_token: helperFunctions.createToken(user.username),
-          user,
+          id_token: helperFunctions.createToken(req.pre.user.username),
+          user: req.pre.user,
         }).code(201);
       },
     },
