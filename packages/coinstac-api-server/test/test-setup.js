@@ -790,7 +790,6 @@ async function populateUsers() {
   const password = await helperFunctions.hashPassword('password');
 
   await helperFunctions.createUser({
-    _id: 'test1',
     username: 'test1',
     institution: 'mrn',
     email: 'test@mrn.org',
@@ -809,7 +808,6 @@ async function populateUsers() {
   }, password);
 
   await helperFunctions.createUser({
-    _id: 'test2',
     username: 'test2',
     institution: 'mrn',
     email: 'test2@mrn.org',
@@ -828,7 +826,6 @@ async function populateUsers() {
   }, password);
 
   await helperFunctions.createUser({
-    _id: 'test3',
     username: 'test3',
     institution: 'mrn',
     email: 'test3@mrn.org',
@@ -847,7 +844,6 @@ async function populateUsers() {
   }, password);
 
   await helperFunctions.createUser({
-    _id: 'test4',
     username: 'test4',
     institution: 'mrn',
     email: 'test4@mrn.org',
@@ -866,7 +862,6 @@ async function populateUsers() {
   }, password);
 
   await helperFunctions.createUser({
-    _id: 'test5',
     username: 'test5',
     institution: 'mrn',
     email: 'test5@mrn.org',
@@ -885,7 +880,6 @@ async function populateUsers() {
   }, password);
 
   await helperFunctions.createUser({
-    _id: 'author',
     username: 'author',
     institution: 'mrn',
     email: 'author@mrn.org',
@@ -903,7 +897,6 @@ async function populateUsers() {
     || helperFunctions.getDBMap().apiCredentials.password);
 
   await helperFunctions.createUser({
-    _id: 'server',
     username: 'server',
     institution: 'mrn',
     email: 'server@mrn.org',

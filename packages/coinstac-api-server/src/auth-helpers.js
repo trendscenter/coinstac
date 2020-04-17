@@ -36,6 +36,7 @@ const helperFunctions = {
    */
   async createUser(user, passwordHash) {
     const userDetails = {
+      _id: user.username,
       username: user.username,
       email: user.email,
       institution: user.institution,
@@ -47,10 +48,6 @@ const helperFunctions = {
       },
       consortiaStatuses: {},
     };
-
-    if (user._id) {
-      userDetails._id = user._id;
-    }
 
     if (user.permissions) {
       userDetails.permissions = user.permissions;

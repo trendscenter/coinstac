@@ -394,7 +394,7 @@ const resolvers = {
         return Boom.forbidden('Action not permitted');
       }
 
-      await addUserPermissions({ doc: ObjectID(args.doc), role: args.role, userId: ObjectID(args.userId), table: args.table });
+      await addUserPermissions({ doc: ObjectID(args.doc), role: args.role, userId: args.userId, table: args.table });
     },
     /**
      * Add run to database
@@ -533,7 +533,7 @@ const resolvers = {
       const db = database.getDbInstance();
       let consortium = await db.collection('consortia').findOne({ _id: ObjectID(args.consortiumId) });
 
-      if (consortium.members.indexOf(credentials.id) !== -1) {
+      if (consortium.members.indexOf(credentials.username) !== -1) {
         return consortium;
       }
 
@@ -586,7 +586,7 @@ const resolvers = {
         return Boom.forbidden('Action not permitted');
       }
 
-      await removeUserPermissions({ doc: ObjectID(args.doc), role: args.role, userId: ObjectID(args.userId), table: args.table });
+      await removeUserPermissions({ doc: ObjectID(args.doc), role: args.role, userId: args.userId, table: args.table });
     },
     /**
      * Sets active pipeline on consortia object
