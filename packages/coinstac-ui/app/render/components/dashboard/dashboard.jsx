@@ -22,7 +22,7 @@ import {
   writeLog,
 } from '../../state/ducks/notifyAndLog';
 import CoinstacAbbr from '../coinstac-abbr';
-import { getLocalRun, saveLocalRun, updateLocalRun } from '../../state/ducks/runs';
+import { saveLocalRun, updateLocalRun } from '../../state/ducks/runs';
 import {
   getDockerStatus,
   pullComputations,
@@ -662,7 +662,6 @@ const DashboardWithData = compose(
 
 const connectedComponent = connect(mapStateToProps,
   {
-    getLocalRun,
     getDockerStatus,
     notifyError,
     notifyInfo,
