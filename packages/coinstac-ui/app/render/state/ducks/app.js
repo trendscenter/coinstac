@@ -1,6 +1,5 @@
 import { applyAsyncLoading } from './loading';
 import { loadLocalDataMappings } from './maps';
-import { getDBRuns } from './runs';
 import { getOrCreateLocalDatabase } from '../local-db';
 
 const INITIAL_STATE = {
@@ -25,7 +24,6 @@ export const loadLocalData = applyAsyncLoading(() => (dispatch, getState) => {
   getOrCreateLocalDatabase(localDBName);
 
   dispatch(loadLocalDataMappings());
-  dispatch(getDBRuns());
 });
 
 // Reducer

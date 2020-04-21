@@ -18,7 +18,6 @@ function getOrCreateLocalDatabase(dbName) {
   db = new Dexie(dbName);
 
   db.version(1).stores({
-    runs: 'id, type',
     maps: '[consortiumId+pipelineId], consortiumId',
   });
 }
