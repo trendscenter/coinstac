@@ -15,7 +15,7 @@ try {
   console.log('No DBMap found: using defaults'); // eslint-disable-line no-console
   dbmap = {
     rethinkdbServer: {
-      user: 'server',
+      username: 'server',
       password: 'password',
     },
   };
