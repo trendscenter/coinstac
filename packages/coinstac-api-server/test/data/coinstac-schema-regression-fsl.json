@@ -35,12 +35,12 @@
       "covariates":
       {
         "label": "Covariates",
-        "type": "array",
+        "type": "covariate",
         "items": ["boolean", "number"]
       },
       "data": {
         "label": "Data",
-        "type": "array",
+        "type": "freeSurferRegions",
         "items": ["FreeSurfer"],
         "extensions": [["csv", "txt"]]
       }
