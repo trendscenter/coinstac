@@ -25,6 +25,7 @@ import Result from './components/results/result';
 import Settings from './components/user/settings';
 import Threads from './components/threads';
 import Logs from './components/logs-display/logs';
+import Papaya from './components/papaya';
 import Permission from './components/permission';
 
 export default (
@@ -61,6 +62,7 @@ export default (
       <Route path="settings" component={Settings} />
       <Route path="threads" component={Threads} />
       <Route path="logs" component={Logs} />
+      <Route path="papaya" component={Papaya} />
       <Route path="permission" component={Permission} />
     </Route>
   </Route>

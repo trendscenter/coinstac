@@ -187,9 +187,6 @@ body {
 .dashboard-consortia > .row > .col-sm-6:nth-child(odd) {
     clear: both;
 }
-.consortium {
-
-}
 .consortium .btn-toolbar {
     .glyphicon {
         margin-right: .5rem;
@@ -224,6 +221,15 @@ ul#loading_list {
 
 #add_project {
     margin-top: -5em;
+}
+
+#papaya-viewer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: scroll;
 }
 
 .react-json-view {
