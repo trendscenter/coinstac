@@ -225,7 +225,7 @@ module.exports = {
 
     const clientPublish = (clientList, data, opts) => {
       clientList.forEach((client) => {
-        if (opts.success && opts.limitOutputToOwner) {
+        if (opts && opts.success && opts.limitOutputToOwner) {
           if (client === opts.owner) {
             serverMqt.publish(`${client}-run`, JSON.stringify(data), { qos: 1 }, (err) => { if (err) logger.error(`Mqtt error: ${err}`); });
           } else {
