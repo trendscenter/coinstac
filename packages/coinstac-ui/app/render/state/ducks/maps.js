@@ -3,6 +3,7 @@ import {
   join,
   isAbsolute,
   resolve,
+  sep,
 } from 'path';
 import { applyAsyncLoading } from './loading';
 import { getDatabaseInstance } from '../local-db';
@@ -29,32 +30,30 @@ export const loadLocalDataMappings = applyAsyncLoading(
 
 export const saveDataMapping = applyAsyncLoading(
   (consortiumId, pipelineId, mappings, dataFile) => async (dispatch) => {
-    if (dataFile.extension === '.csv') {
-      const csvLines = [...dataFile.metaFile];
-      csvLines.shift();
-
-      const files = csvLines.map((csvLine) => {
-        const file = csvLine[0];
-        return isAbsolute(file) ? file : resolve(join(dirname(dataFile.metaFilePath), file));
-      });
-
-      dataFile.files = files;
-    }
-
     const map = {
       consortiumId,
       pipelineId,
       dataType: dataFile.dataType,
       dataMappings: mappings,
-      data: [{
-        allFiles: dataFile.files,
-        filesData: [],
-      }],
     };
 
     const mappedColumns = [];
 
     if (dataFile.dataType === 'array') {
+      if (dataFile.extension === '.csv') {
+        const csvLines = [...dataFile.metaFile];
+        csvLines.shift();
+
+        const files = csvLines.map((csvLine) => {
+          const file = csvLine[0];
+          return isAbsolute(file) ? file : resolve(join(dirname(dataFile.metaFilePath), file));
+        });
+
+        map.data = [{
+          allFiles: files,
+          filesData: [],
+        }];
+      }
       map.data[0].baseDirectory = dirname(dataFile.metaFilePath);
       map.data[0].metaFilePath = dataFile.metaFilePath;
 
@@ -83,6 +82,21 @@ export const saveDataMapping = applyAsyncLoading(
 
         map.data[0].filesData.push(parsedRow);
       });
+    } else if (dataFile.dataType === 'bundle') {
+      const e = new RegExp(/[-\/\\^$*+?.()|[\]{}]/g); // eslint-disable-line no-useless-escape
+      const escape = (string) => {
+        return string.replace(e, '\\$&');
+      };
+      const pathsep = new RegExp(`${escape(sep)}|:`, 'g');
+
+      map.dataMappings.forEach((step, i) => {
+        Object.keys(step).forEach((variable) => {
+          if (map.dataMappings[i][variable][0] && map.dataMappings[i][variable][0].dataFileFieldName === 'bundle') {
+            map.dataMappings[i][variable] = dataFile.files.map((f => f.replace(pathsep, '-')));
+          }
+        });
+      });
+      map.files = dataFile.files;
     }
 
     await getDatabaseInstance().maps.put(map);
