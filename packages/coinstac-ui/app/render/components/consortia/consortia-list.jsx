@@ -321,7 +321,7 @@ class ConsortiaList extends Component {
   }
 
   renderListItem = (consortium) => {
-    const { auth } = this.porps;
+    const { auth } = this.props;
     const { consortiumJoinedByThread } = this.state;
 
     const { user } = auth;
