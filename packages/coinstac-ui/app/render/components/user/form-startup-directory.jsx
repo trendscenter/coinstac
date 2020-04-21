@@ -84,14 +84,15 @@ class FormStartupDirectory extends React.Component {
 
 FormStartupDirectory.defaultProps = {
   appDirectory: '',
+  open: false,
 };
 
 FormStartupDirectory.propTypes = {
   appDirectory: PropTypes.string,
+  open: PropTypes.bool,
   classes: PropTypes.object.isRequired,
   close: PropTypes.func.isRequired,
   onSubmit: PropTypes.func.isRequired,
-  open: PropTypes.func.isRequired,
 };
 
 export default withStyles(styles)(FormStartupDirectory);
