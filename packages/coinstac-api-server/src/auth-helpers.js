@@ -16,7 +16,7 @@ try {
       password: '',
     },
     rethinkdbServer: {
-      user: 'server',
+      username: 'server',
       password: 'password',
     },
     cstacJWTSecret: 'test',
