@@ -11,7 +11,6 @@ const linkAsync = pify(fs.link);
 const statAsync = pify(fs.stat);
 const readdirAsync = pify(fs.readdir);
 
-
 const path = require('path');
 const winston = require('winston');
 // set w/ config etc post release
