@@ -53,6 +53,7 @@ import {
 import StartPipelineListener from './listeners/start-pipeline-listener';
 import NotificationsListener from './listeners/notifications-listener';
 import DisplayNotificationsListener from './listeners/display-notifications-listener';
+import DashboardPipelineNavBar from './dashboard-pipeline-nav-bar';
 
 const styles = theme => ({
   root: {
@@ -498,6 +499,7 @@ class Dashboard extends Component {
             </Drawer>
           </Grid>
           <Grid item xs={12} sm={9}>
+            <DashboardPipelineNavBar router={router} consortia={consortia} localRuns={runs} />
             <main className="content-pane">
               {this.canShowBackButton && (
                 <button

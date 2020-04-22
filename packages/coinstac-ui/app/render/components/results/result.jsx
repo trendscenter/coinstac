@@ -74,7 +74,6 @@ class Result extends Component {
     this.handleSelect = this.handleSelect.bind(this);
   }
 
-
   componentDidMount() {
     const { params: { resultId }, runs } = this.props;
 
@@ -388,6 +387,7 @@ class Result extends Component {
 
 Result.propTypes = {
   consortia: PropTypes.array.isRequired,
+  runs: PropTypes.object.isRequired,
   params: PropTypes.object.isRequired,
   auth: PropTypes.object.isRequired,
   classes: PropTypes.object.isRequired,
