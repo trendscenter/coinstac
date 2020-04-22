@@ -1,5 +1,4 @@
 import { uniqBy } from 'lodash';
-import { applyAsyncLoading } from './loading';
 
 // Actions
 const CLEAR_RUNS = 'CLEAR_RUNS';
@@ -7,27 +6,20 @@ const SAVE_LOCAL_RUN = 'SAVE_LOCAL_RUN';
 const UPDATE_LOCAL_RUN = 'UPDATE_LOCAL_RUN';
 
 // Action Creators
-export const clearRuns = applyAsyncLoading(() => (dispatch) => {
-  dispatch(({
-    type: CLEAR_RUNS,
-    payload: null,
-  }));
+export const clearRuns = () => ({
+  type: CLEAR_RUNS,
+  payload: null,
 });
 
-export const saveLocalRun = applyAsyncLoading(run => (dispatch) => {
-  dispatch(({
-    type: SAVE_LOCAL_RUN,
-    payload: run,
-  }));
+export const saveLocalRun = run => ({
+  type: SAVE_LOCAL_RUN,
+  payload: run,
 });
 
-export const updateLocalRun = applyAsyncLoading(
-  (runId, object) => (dispatch) => {
-    dispatch(({
-      type: UPDATE_LOCAL_RUN,
-      payload: { runId, object },
-    }));
-  });
+export const updateLocalRun = (runId, object) => ({
+  type: UPDATE_LOCAL_RUN,
+  payload: { runId, object },
+});
 
 const INITIAL_STATE = {
   localRuns: [],
