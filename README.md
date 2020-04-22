@@ -4,11 +4,13 @@
 
 [![DOI](https://zenodo.org/badge/52497909.svg)](https://zenodo.org/badge/latestdoi/52497909)
 
-_Collaborative Informatics and Neuroimaging Suite Toolkit for Anonymous Computation, User Interface._ A research project by your friends at the [Center for Translational Research in Neuroimaging and Data Science (TReNDS)](https://www.trendscenter.org).
+_Collaborative Informatics and Neuroimaging Suite Toolkit for Anonymous Computation._ A research project by your friends at the [Center for Translational Research in Neuroimaging and Data Science (TReNDS)](https://www.trendscenter.org).
 
 📖 Read the project’s paper, [_COINSTAC: A Privacy Enabled Model and Prototype for Leveraging and Processing Decentralized Brain Imaging Data_ on Frontiers in Neuroscience](http://journal.frontiersin.org/article/10.3389/fnins.2016.00365/full)
 
-Find a full list of papers [here](https://www.github.com/trendscenter.org/coinstac/algorithm-development/papers.md).
+Find a full list of papers [here](https://github.com/trendscenter/coinstac/blob/master/algorithm-development/papers.md).
+
+For instructions on how to install and run COINSTAC as an end user, see the documents [here](https://github.com/trendscenter/coinstac-instructions).
 
 COINSTAC is software to foster collaborative research, removing large barriers to traditional data-centric collaboration approaches.  It enables groups of users to run common analyses _on their own machines_ over _their own datasets_ with ease.  The results of these analyses are synchronized to the cloud, and undergo aggregate analyses processes using all contributor data.  Decentralized pipelines allow for distributed, iterative, and feature rich analyses to be run, opening new and exciting capabilities for collaborative computation.  If also offers data anonymity through differential privacy algorithms, so members do not need to fear PHI traceback.
 

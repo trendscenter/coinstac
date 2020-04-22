@@ -36,10 +36,12 @@ const schemaFields = {
   pipelineFields: `
     name: String
     description: String
+    owner: ID
     owningConsortium: ID
     delete: Boolean
     shared: Boolean
     timeout: Int
+    limitOutputToOwner: Boolean
   `,
   pipelineControllerFields: `
     id: ID

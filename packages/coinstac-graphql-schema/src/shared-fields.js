@@ -41,9 +41,11 @@ const sharedFields = {
     delete
     description
     name
+    owner
     owningConsortium
     shared
     timeout
+    limitOutputToOwner
     steps {
       id
       computations {

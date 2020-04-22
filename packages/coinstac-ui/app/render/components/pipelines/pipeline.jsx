@@ -109,6 +109,7 @@ class Pipeline extends Component {
       shared: false,
       steps: [],
       delete: false,
+      limitOutputToOwner: false,
     };
 
     // if routed from New Pipeline button on consortium page
@@ -406,16 +407,11 @@ class Pipeline extends Component {
     try {
       const { data } = await this.props.savePipeline({
         ...pipeline,
+        owner: user.id,
         steps: pipeline.steps.map(step => ({
           id: step.id,
           computations: step.computations.map(comp => comp.id),
-          inputMap: {
-            ...step.inputMap,
-            meta: {
-              ...step.inputMap.meta,
-              owner: user.id,
-            },
-          },
+          inputMap: step.inputMap,
           dataMeta: step.dataMeta,
           controller: {
             id: step.controller.id,
@@ -465,7 +461,8 @@ class Pipeline extends Component {
     this.setState({ openAddComputationStepMenu: false });
   }
 
-  sortComputations = computations => {
+  sortComputations = () => {
+    const { computations } = this.props;
     if(computations && computations.length > 0){
       return computations.slice().sort(function(a, b) {
         const nameA = a.meta.name.toLowerCase();
@@ -476,7 +473,7 @@ class Pipeline extends Component {
   }
 
   render() {
-    const { computations, connectDropTarget, consortia, users, classes, auth } = this.props;
+    const { connectDropTarget, consortia, users, classes, auth } = this.props;
     const {
       consortium,
       pipeline,
@@ -490,7 +487,7 @@ class Pipeline extends Component {
     const isEditing = !!pipeline.id;
     const title = isEditing ? 'Pipeline Edit' : 'Pipeline Creation';
 
-    const sortedComputations = this.sortComputations(computations);
+    const sortedComputations = this.sortComputations();
 
     return connectDropTarget(
       <div>
@@ -548,7 +545,7 @@ class Pipeline extends Component {
             <FormControlLabel
               control={(
                 <Checkbox
-                  checked={pipeline.setActive}
+                  checked={pipeline.isActive}
                   disabled={!owner}
                   onChange={evt => this.updatePipeline({ param: 'isActive', value: evt.target.checked })}
                 />
@@ -557,6 +554,17 @@ class Pipeline extends Component {
               className={classes.formControl}
             />
           )}
+          <FormControlLabel
+            control={(
+              <Checkbox
+                checked={pipeline.limitOutputToOwner || false}
+                disabled={!owner}
+                onChange={evt => this.updatePipeline({ param: 'limitOutputToOwner', value: evt.target.checked })}
+              />
+            )}
+            label="Only send results to consortia owner"
+            className={classes.formControl}
+          />
           <div className={classes.formControl}>
             <Typography variant="title" className={classes.owningConsortiumButtonTitle}>Owning Consortium</Typography>
             <Button
