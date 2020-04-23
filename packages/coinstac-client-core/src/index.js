@@ -9,6 +9,7 @@ const fs = require('fs');
 const unlinkAsync = pify(fs.unlink);
 const linkAsync = pify(fs.link);
 const statAsync = pify(fs.stat);
+const readdirAsync = pify(fs.readdir);
 
 const path = require('path');
 const winston = require('winston');
@@ -182,24 +183,24 @@ class CoinstacClient {
     }
 
     // Iterate through all paths
-    for (let i = 0; i < group.paths.length; i += 1) {
-      let p = group.paths[i];
-
+    await Promise.all(group.paths.map(async (filePath) => {
+      let p = filePath;
       // Combine path with parent dir to get absolute path
       if (group.parentDir) {
-        p = group.parentDir.concat(`/${p}`);
+        p = path.join(group.parentDir, p);
       }
 
-      const stats = fs.statSync(p);
+      const stats = await statAsync(p);
 
       if (stats.isDirectory()) {
+        const dirs = await readdirAsync(p);
+        const paths = [...dirs.filter(item => !(/(^|\/)\.[^/.]/g).test(item))];
         // Recursively retrieve path contents of directory
         const subGroup = this.getSubPathsAndGroupExtension({
           paths: [...fs.readdirSync(p).filter(item => !(/(^|\/)\.[^\/\.]/g).test(item))], // eslint-disable-line no-useless-escape
           extension: group.extension,
           parentDir: p,
         });
-
         if (subGroup) {
           if (subGroup.error) {
             return subGroup;
@@ -223,8 +224,7 @@ class CoinstacClient {
         extension = thisExtension;
         pathsArray.push(p);
       }
-    }
-
+    }));
     return { paths: pathsArray, extension };
   }
 
