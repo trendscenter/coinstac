@@ -39,6 +39,16 @@ function encodeFilePath(filePath) {
   return null;
 }
 
+function makeDataObjFromDataMappings(dataMappings, stepIndex) {
+  const dataObj = {};
+  const dataMaps = dataMappings.dataMappings[stepIndex].data;
+  dataMaps.map((map) => {
+    const key = map.pipelineVariableName;
+    dataObj[key] = encodeFilePath(map.dataFileFieldName);
+  });
+  return dataObj;
+}
+
 function mapVariablesIntoArray(inputSchema, dataMappings, data, baseDirectory) {
   const dataArray = [];
   const variablesArray = [];
@@ -153,9 +163,12 @@ function parsePipelineInput(pipeline, dataMappings) {
         return item.length !== 0;
       });
 
-      if (keyArray.length === 1) {
+      if (keyArray[0].length === 1) {
         // eslint-disable-next-line prefer-destructuring
         inputMapSchema[inputSchemaKey].value = keyArray[0];
+      } else if (dataMappings.dataType === 'singles' && inputSchemaKey === 'data') {
+        const dataObj = makeDataObjFromDataMappings(dataMappings, stepIndex);
+        inputMapSchema[inputSchemaKey] = { value: dataObj };
       } else {
         inputMapSchema[inputSchemaKey] = { value: keyArray };
       }

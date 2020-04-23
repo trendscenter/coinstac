@@ -199,6 +199,7 @@ class MapsCollection extends Component {
       saveDataMapping,
       setSelectedDataFile,
       removeSelectedFile,
+      getFileName,
     } = this.props;
 
     const remainingDataVariables = this.getRemainingDataVariables(
@@ -243,7 +244,8 @@ class MapsCollection extends Component {
                   )
                 }
                 {
-                  dataType === 'bundle' && (
+                  dataType === 'bundle' ||
+                  dataType === 'singles' && (
                     <div>
                       <Typography>
                         <span className="bold">File(s):</span>
@@ -264,7 +266,7 @@ class MapsCollection extends Component {
                   {
                     remainingDataVariables && (
                       <div className="card-deck" ref="Container">
-                        {
+                        { dataType !== 'singles' &&
                           remainingDataVariables.map(columnName => (
                             <div
                               className={`card-draggable card-${columnName.toLowerCase()}`}
@@ -275,6 +277,21 @@ class MapsCollection extends Component {
                               { columnName }
                               { dataType !== 'array' ? `Bundle (${dataFile.files.length} files)` : '' }
                               <span onClick={() => removeColumnFromDataFileHeader(columnName)}>
+                                <Icon className={classNames('fa fa-times-circle', classes.timesIcon)} />
+                              </span>
+                            </div>
+                          ))
+                        }
+                        { dataType == 'singles' &&
+                          remainingDataVariables.map(filePath => (
+                            <div
+                              className={`card-draggable card-${getFileName(filePath).toLowerCase()}`}
+                              data-string={filePath}
+                              key={getFileName(filePath)}
+                            >
+                              <FileCopyIcon />
+                              { getFileName(filePath) }
+                              <span onClick={() => removeColumnFromDataFileHeader(filePath)}>
                                 <Icon className={classNames('fa fa-times-circle', classes.timesIcon)} />
                               </span>
                             </div>

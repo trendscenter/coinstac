@@ -74,6 +74,14 @@ class MapsStepFieldData extends Component {
     }
   }
 
+  strMasseuse = (path) => {
+    let str = path.split("/").pop().split(".")[0];
+    if (str.length > 12) {
+      str = '...'+str.slice(str.length - 12);
+    }
+    return str;
+  }
+
   render() {
     const {
       step,
@@ -102,7 +110,7 @@ class MapsStepFieldData extends Component {
                 ? (
                   <div ref="Container" className="card-draggable">
                     <FileCopyIcon />
-                    { column }
+                    { this.strMasseuse(column) }
                     <span onClick={() => unmapField(type, column)}>
                       <Icon className={classNames('fa fa-times-circle', classes.timesIcon)} />
                     </span>

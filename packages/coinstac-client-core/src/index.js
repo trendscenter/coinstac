@@ -160,14 +160,14 @@ class CoinstacClient {
   }
 
   /**
-   * Get array of file paths recursively
-   *
-   * @param {object} group
-   * @param {array} group.paths the paths to traverse
-   * @param {string} group.parentDir parent directory if diving into subdir
-   * @param {string} group.error present if error found
-   */
-  static async getSubPathsAndGroupExtension(group, multext) {
+    * Get array of file paths recursively
+    *
+    * @param {object} group
+    * @param {array} group.paths the paths to traverse
+    * @param {string} group.parentDir parent directory if diving into subdir
+    * @param {string} group.error present if error found
+    */
+  static getSubPathsAndGroupExtension(group, multext) {
     let pathsArray = [];
     let extension = null;
 
@@ -182,21 +182,20 @@ class CoinstacClient {
     }
 
     // Iterate through all paths
-    group.paths.forEach(async (path) => {
-      let p = path;
+    for (let i = 0; i < group.paths.length; i += 1) {
+      let p = group.paths[i];
+
       // Combine path with parent dir to get absolute path
       if (group.parentDir) {
         p = group.parentDir.concat(`/${p}`);
       }
 
-      const stats = await fs.statAsync(p);
+      const stats = fs.statSync(p);
 
       if (stats.isDirectory()) {
-        const dirs = await fs.readdir(p);
-        const paths = [...dirs.filter(item => !(/(^|\/)\.[^/.]/g).test(item))];
         // Recursively retrieve path contents of directory
-        const subGroup = await this.getSubPathsAndGroupExtension({
-          paths,
+        const subGroup = this.getSubPathsAndGroupExtension({
+          paths: [...fs.readdirSync(p).filter(item => !(/(^|\/)\.[^\/\.]/g).test(item))], // eslint-disable-line no-useless-escape
           extension: group.extension,
           parentDir: p,
         });
@@ -217,14 +216,14 @@ class CoinstacClient {
         const thisExtension = path.extname(p);
 
         if ((!multext && group.extension && thisExtension !== group.extension)
-            || (!multext && extension && extension !== thisExtension)) {
-          return { error: `Group contains multiple extensions - ${thisExtension} & ${group.extension || extension}.` };
+             || (!multext && extension && extension !== thisExtension)) {
+          return { error: `Group contains multiple extensions - ${thisExtension} & ${group.extension ? group.extension : extension}.` };
         }
 
         extension = thisExtension;
         pathsArray.push(p);
       }
-    });
+    }
 
     return { paths: pathsArray, extension };
   }
