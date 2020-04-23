@@ -12,7 +12,7 @@ import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
 import classNames from 'classnames';
-import TimeStamp from 'react-timestamp';
+import moment from 'moment';
 import { shell } from 'electron';
 import path from 'path';
 import Box from './displays/box-plot';
@@ -183,12 +183,7 @@ class Result extends Component {
                 <div className={classes.timestamp}>
                   <Typography className={classes.label}>Start date:</Typography>
                   <Typography>
-                    <TimeStamp
-                      time={run.startDate / 1000}
-                      precision={2}
-                      autoUpdate={10}
-                      format="full"
-                    />
+                    {moment.unix(runObject.startDate / 1000).format('MMMM Do YYYY, h:mm:ss a')}
                   </Typography>
                 </div>
               )
@@ -199,12 +194,7 @@ class Result extends Component {
                 <div className={classes.timestamp}>
                   <Typography className={classes.label}>End date:</Typography>
                   <Typography>
-                    <TimeStamp
-                      time={run.endDate / 1000}
-                      precision={2}
-                      autoUpdate={10}
-                      format="full"
-                    />
+                    {moment.unix(runObject.endDate / 1000).format('MMMM Do YYYY, h:mm:ss a')}
                   </Typography>
                 </div>
               )
@@ -290,6 +280,7 @@ class Result extends Component {
                 selectedDisplayType.type === 'images'
                 && (
                   <Images
+                    imagePath={`${appDirectory}/output/${user.id}/${run.id}/${plotData.file_name}`}
                     plotData={plotData}
                     title={`${consortium.name}_${run.pipelineSnapshot.name}`}
                   />
