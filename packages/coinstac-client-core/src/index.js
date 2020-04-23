@@ -168,7 +168,7 @@ class CoinstacClient {
     * @param {string} group.parentDir parent directory if diving into subdir
     * @param {string} group.error present if error found
     */
-  static getSubPathsAndGroupExtension(group, multext) {
+  static async getSubPathsAndGroupExtension(group, multext) {
     let pathsArray = [];
     let extension = null;
 
