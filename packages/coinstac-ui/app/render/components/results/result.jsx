@@ -183,7 +183,7 @@ class Result extends Component {
                 <div className={classes.timestamp}>
                   <Typography className={classes.label}>Start date:</Typography>
                   <Typography>
-                    {moment.unix(runObject.startDate / 1000).format('MMMM Do YYYY, h:mm:ss a')}
+                    {moment.unix(run.startDate / 1000).format('MMMM Do YYYY, h:mm:ss a')}
                   </Typography>
                 </div>
               )
@@ -194,7 +194,7 @@ class Result extends Component {
                 <div className={classes.timestamp}>
                   <Typography className={classes.label}>End date:</Typography>
                   <Typography>
-                    {moment.unix(runObject.endDate / 1000).format('MMMM Do YYYY, h:mm:ss a')}
+                    {moment.unix(run.endDate / 1000).format('MMMM Do YYYY, h:mm:ss a')}
                   </Typography>
                 </div>
               )

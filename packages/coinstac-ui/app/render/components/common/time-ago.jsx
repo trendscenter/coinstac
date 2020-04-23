@@ -28,7 +28,6 @@ const TimeAgo = (props) => {
   const [time, setTime] = useState(moment.unix(timestamp, "YYYYMMDD").fromNow());
 
   useInterval(() => {
-  console.log('!');
    setTime(moment.unix(timestamp).fromNow());
  }, 10000);
 

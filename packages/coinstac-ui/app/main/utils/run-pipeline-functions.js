@@ -121,6 +121,8 @@ function parsePipelineInput(pipeline, dataMappings) {
     filesArray = dataMappings ? dataMappings.data[0].allFiles : [];
   } else if (dataMappings.dataType === 'bundle') {
     filesArray = dataMappings.files;
+  } else if (dataMappings.dataType === 'singles') {
+    filesArray = dataMappings.files;
   }
 
   pipeline.steps.forEach((step, stepIndex) => {
@@ -188,6 +190,8 @@ function parsePipelineInput(pipeline, dataMappings) {
       inputMap: inputMapSchema,
     });
   });
+
+  debugger;
 
   return {
     filesArray, // files for core to simlink
