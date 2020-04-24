@@ -1,4 +1,4 @@
-import React, { Fragment } from 'react';
+import React from 'react';
 import { Link } from 'react-router';
 import PropTypes from 'prop-types';
 import Paper from '@material-ui/core/Paper';
@@ -95,6 +95,7 @@ const ListItem = ({
 
 ListItem.defaultProps = {
   owner: false,
+  highlight: false,
   linkButtonText: null,
   linkButtonColor: null,
   deleteButtonText: null,
@@ -103,17 +104,17 @@ ListItem.defaultProps = {
 };
 
 ListItem.propTypes = {
+  canDelete: PropTypes.bool,
+  classes: PropTypes.object.isRequired,
+  deleteButtonText: PropTypes.string,
+  highlight: PropTypes.bool,
   itemObject: PropTypes.object.isRequired,
   itemOptions: PropTypes.object.isRequired,
   itemRoute: PropTypes.string.isRequired,
-  canDelete: PropTypes.bool,
-  owner: PropTypes.bool,
-  linkButtonText: PropTypes.string,
   linkButtonColor: PropTypes.string,
-  deleteButtonText: PropTypes.string,
-  highlight: PropTypes.bool,
-  deleteItem: PropTypes.func.isRequired,
-  classes: PropTypes.object.isRequired,
+  linkButtonText: PropTypes.string,
+  owner: PropTypes.bool,
+  deleteItem: PropTypes.func,
 };
 
 export default withStyles(styles)(ListItem);

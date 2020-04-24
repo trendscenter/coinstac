@@ -1,10 +1,12 @@
-import React from 'react'
-import PropTypes from 'prop-types'
-import classNames from 'classnames'
-import { get, head, orderBy } from 'lodash'
-import moment from 'moment'
-import { withStyles } from '@material-ui/core/styles'
-import ThreadAvatar from './thread-avatar'
+/* eslint-disable jsx-a11y/click-events-have-key-events,
+  jsx-a11y/no-static-element-interactions */
+import React from 'react';
+import PropTypes from 'prop-types';
+import classNames from 'classnames';
+import { get, head, orderBy } from 'lodash';
+import moment from 'moment';
+import { withStyles } from '@material-ui/core/styles';
+import ThreadAvatar from './thread-avatar';
 
 const styles = () => ({
   wrapper: {
@@ -17,14 +19,14 @@ const styles = () => ({
     cursor: 'pointer',
     lineHeight: '19px',
     '&.unread': {
-      borderLeft: '4px solid #0078d4'
+      borderLeft: '4px solid #0078d4',
     },
     '&.selected': {
       backgroundColor: '#cfe0f4',
     },
     '&:hover': {
       backgroundColor: '#edebe9',
-    }
+    },
   },
   avatarWrapper: {
     padding: '6px 12px 0 8px',
@@ -33,7 +35,7 @@ const styles = () => ({
     color: '#201f1e',
     '&.unread': {
       fontWeight: 600,
-    }
+    },
   },
   titleWrapper: {
     width: '100%',
@@ -49,34 +51,36 @@ const styles = () => ({
     '&.unread': {
       color: '#0078d4',
       fontWeight: 600,
-    }
-  }
-})
+    },
+  },
+});
 
-const ThreadCard = ({ classes, isSelected, isUnread, thread, onClick }) =>  {
+const ThreadCard = ({
+  classes, isSelected, isUnread, thread, onClick,
+}) => {
   function getContent() {
-    const messages = orderBy(thread.messages, 'date', 'desc')
-    const firstMessage = head(messages)
+    const messages = orderBy(thread.messages, 'date', 'desc');
+    const firstMessage = head(messages);
 
-    return get(firstMessage, 'content', '')
+    return get(firstMessage, 'content', '');
   }
 
   function getDate() {
-    const { date } = thread
-    const momentDate = moment(parseInt(date, 10))
-    let format
+    const { date } = thread;
+    const momentDate = moment(parseInt(date, 10));
+    let format;
 
     if (momentDate.isSame(moment(), 'day')) {
-      format = 'h:mm A'
+      format = 'h:mm A';
     } else if (momentDate.isSame(moment(), 'week')) {
-      format = 'ddd h:mm A'
+      format = 'ddd h:mm A';
     } else if (momentDate.isSame(moment(), 'month')) {
-      format = 'ddd MM/DD'
+      format = 'ddd MM/DD';
     } else {
-      format = 'YYYY/MM/DD'
+      format = 'YYYY/MM/DD';
     }
 
-    return momentDate.format(format)
+    return momentDate.format(format);
   }
 
   return (
@@ -103,8 +107,13 @@ const ThreadCard = ({ classes, isSelected, isUnread, thread, onClick }) =>  {
         <div>{getContent()}</div>
       </div>
     </div>
-  )
-}
+  );
+};
+
+ThreadCard.defaultProps = {
+  isSelected: false,
+  isUnread: false,
+};
 
 ThreadCard.propTypes = {
   classes: PropTypes.object.isRequired,
@@ -112,6 +121,6 @@ ThreadCard.propTypes = {
   isUnread: PropTypes.bool,
   thread: PropTypes.object.isRequired,
   onClick: PropTypes.func.isRequired,
-}
+};
 
-export default withStyles(styles)(ThreadCard)
+export default withStyles(styles)(ThreadCard);

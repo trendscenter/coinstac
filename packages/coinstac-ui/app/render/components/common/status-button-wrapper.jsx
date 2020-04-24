@@ -1,78 +1,67 @@
-import React, { Component } from 'react'
-import PropTypes from 'prop-types'
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 
 const commonStyle = {
   marginRight: 15,
   fontSize: 25,
-}
+};
 
 export default class StatusButtonWrapper extends Component {
-  get pendingIcon() {
-    const style = {
+  renderStatus = () => {
+    const { status } = this.props;
+
+    const pendingStyle = {
       ...commonStyle,
       fontSize: 20,
       color: '#3F6D87',
-    }
+    };
 
-    return <i className="fa fa-circle-notch fa-spin" style={style} />
-  }
-
-  get successIcon() {
-    const style = {
+    const successStyle = {
       ...commonStyle,
       color: '#2EB150',
-    }
+    };
 
-    return <i className="animated bounceIn fa fa-check-circle" style={style} />
-  }
-
-  get failIcon() {
-    const style = {
+    const failStyle = {
       ...commonStyle,
       color: '#FFCC00',
-    }
+    };
 
-    return <i className="animated bounceIn fa fa-exclamation-circle" style={style} />
-  }
-
-  renderStatus = () => {
-    const { status } = this.props
-
-    switch(status) {
+    switch (status) {
       case 'pending':
-        return this.pendingIcon
+        return <i className="fa fa-circle-notch fa-spin" style={pendingStyle} />;
       case 'success':
-        return this.successIcon
+        return <i className="animated bounceIn fa fa-check-circle" style={successStyle} />;
       case 'fail':
-        return this.failIcon
+        return <i className="animated bounceIn fa fa-exclamation-circle" style={failStyle} />;
       default:
-        return null
+        return null;
     }
   }
 
   render() {
-    const { children, status, ...otherProps } = this.props
+    const { children } = this.props;
 
     const wrapperStyle = {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'flex-end',
-    }
+    };
 
     return (
       <div style={wrapperStyle}>
         {this.renderStatus()}
         {children}
       </div>
-    )
+    );
   }
 }
 
 StatusButtonWrapper.propTypes = {
   children: PropTypes.node,
   status: PropTypes.oneOf(['init', 'pending', 'success', 'fail']),
-}
+};
 
 StatusButtonWrapper.defaultProps = {
+  children: null,
   status: 'init',
-}
+};
