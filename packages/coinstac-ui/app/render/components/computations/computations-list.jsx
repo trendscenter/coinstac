@@ -75,7 +75,8 @@ class ComputationsList extends Component { // eslint-disable-line
   }
 
   componentDidMount() {
-    this.props.getDockerImages();
+    const { getDockerImages } = this.props;
+    getDockerImages();
   }
 
   static getDerivedStateFromProps(props) {
@@ -98,10 +99,15 @@ class ComputationsList extends Component { // eslint-disable-line
     const { auth: { user }, docker, classes } = this.props;
     const { activeComp } = this.state;
 
-    let sortedComputations = computations.sort(function(a, b) {
-        var nameA = a.meta.name.toLowerCase();
-        var nameB = b.meta.name.toLowerCase();
-        return (nameA < nameB) ? -1 : (nameA > nameB) ? 1 : 0;
+    const sortedComputations = computations.sort((a, b) => {
+      const nameA = a.meta.name.toLowerCase();
+      const nameB = b.meta.name.toLowerCase();
+
+      if (nameA < nameB) {
+        return -1;
+      }
+
+      return (nameA > nameB) ? 1 : 0;
     });
 
     return (
@@ -164,7 +170,13 @@ class ComputationsList extends Component { // eslint-disable-line
                           )
                         }
                       >
-                        Remove Image (<em>{ compLocalImage.size.toString().slice(0, -6) } MB</em>)
+                        Remove Image (
+                        <em>
+                          { compLocalImage.size.toString().slice(0, -6) }
+                          {' '}
+MB
+                        </em>
+)
                       </Button>
                     )
                   }
@@ -189,7 +201,12 @@ class ComputationsList extends Component { // eslint-disable-line
                           key={elem.id && elem.id !== 'latest' ? elem.id : elem.status}
                           style={elem.isErr ? { color: 'red' } : {}}
                         >
-                          {elem.id ? `${elem.id}: ` : ''}{elem.status} {elem.message} {elem.progress}
+                          {elem.id ? `${elem.id}: ` : ''}
+                          {elem.status}
+                          {' '}
+                          {elem.message}
+                          {' '}
+                          {elem.progress}
                         </div>
                       ))}
                     </pre>
@@ -232,28 +249,33 @@ class ComputationsList extends Component { // eslint-disable-line
   }
 
   pullComputations(comps) {
+    const { pullComputations } = this.props;
     return () => {
-      this.props.pullComputations({ computations: comps });
+      pullComputations({ computations: comps });
     };
   }
 
   removeComputation() {
-    this.props.removeComputation(this.state.computationToDelete);
+    const { removeComputation } = this.props;
+    const { computationToDelete } = this.state;
+    removeComputation(computationToDelete);
     this.closeModal();
   }
 
   removeImage(compId, imgId, imgName) {
+    const { getDockerImages, removeImage } = this.props;
+
     return () => {
-      this.props.removeImage(compId, imgId, imgName)
+      removeImage(compId, imgId, imgName)
         .then(() => {
-          this.props.getDockerImages();
+          getDockerImages();
         });
     };
   }
 
   render() {
     const { computations, classes } = this.props;
-    const { ownedComputations, otherComputations } = this.state;
+    const { ownedComputations, otherComputations, showModal } = this.state;
 
     return (
       <div>
@@ -312,7 +334,7 @@ class ComputationsList extends Component { // eslint-disable-line
           close={this.closeModal}
           deleteItem={this.removeComputation}
           itemName="computation"
-          show={this.state.showModal}
+          show={showModal}
           warningMessage="This action will delete the computation, invalidating all pipelines that are currently using it."
         />
       </div>
@@ -326,18 +348,18 @@ ComputationsList.defaultProps = {
 
 ComputationsList.propTypes = {
   auth: PropTypes.object.isRequired,
+  classes: PropTypes.object.isRequired,
   computations: PropTypes.array.isRequired,
   docker: PropTypes.object.isRequired,
   getDockerImages: PropTypes.func.isRequired,
   pullComputations: PropTypes.func.isRequired,
   removeComputation: PropTypes.func,
   removeImage: PropTypes.func.isRequired,
-  classes: PropTypes.object.isRequired,
 };
 
-function mapStateToProps({ auth, docker }) {
-  return { auth, docker };
-}
+const mapStateToProps = ({ auth, docker }) => ({
+  auth, docker,
+});
 
 const ComputationsListWithData = graphql(REMOVE_COMPUTATION_MUTATION,
   removeDocFromTableProp(
@@ -345,11 +367,9 @@ const ComputationsListWithData = graphql(REMOVE_COMPUTATION_MUTATION,
     'removeComputation',
     FETCH_ALL_COMPUTATIONS_QUERY,
     'fetchAllComputations'
-  )
-)(ComputationsList);
+  ))(ComputationsList);
 
 const connectedComponent = connect(mapStateToProps,
-  { getDockerImages, pullComputations, removeImage }
-)(ComputationsListWithData);
+  { getDockerImages, pullComputations, removeImage })(ComputationsListWithData);
 
 export default withStyles(styles)(connectedComponent);
