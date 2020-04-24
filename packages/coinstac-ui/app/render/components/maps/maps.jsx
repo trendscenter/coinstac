@@ -21,12 +21,12 @@ Maps.propTypes = {
   auth: PropTypes.object.isRequired,
   consortia: PropTypes.array.isRequired,
   pipelines: PropTypes.array.isRequired,
-  runs: PropTypes.array.isRequired,
   routeParams: PropTypes.object.isRequired,
+  runs: PropTypes.array.isRequired,
 };
 
-const mapStateToProps = ({ auth }) => {
-  return { auth };
-};
+const mapStateToProps = ({ auth }) => ({
+  auth,
+});
 
 export default connect(mapStateToProps)(Maps);

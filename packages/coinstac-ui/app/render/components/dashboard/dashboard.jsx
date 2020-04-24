@@ -123,67 +123,82 @@ class Dashboard extends Component {
   }
 
   componentDidMount() {
-    const { auth: { user }, loadLocalData } = this.props;
+    const {
+      auth: { user },
+      maps,
+      consortia,
+      loadLocalData,
+      getDockerStatus,
+      writeLog,
+      updateDockerOutput,
+      updateUserConsortiumStatus,
+      notifySuccess,
+      notifyError,
+      updateLocalRun,
+      saveLocalRun,
+      clearLogs,
+      subscribeToUserMetaData,
+      subscribeToUserRuns,
+    } = this.props;
     const { router } = this.context;
 
     loadLocalData();
 
     dockerInterval = setInterval(() => {
-      let status = this.props.getDockerStatus();
+      const status = getDockerStatus();
       status.then((result) => {
-        if( result == 'OK' ){
-          this.setState({dockerStatus: true});
-        }else{
-          this.setState({dockerStatus: false});
+        if (result === 'OK') {
+          this.setState({ dockerStatus: true });
+        } else {
+          this.setState({ dockerStatus: false });
         }
-      }, (err) => {
-        this.setState({dockerStatus: false});
+      }, () => {
+        this.setState({ dockerStatus: false });
       });
     }, 5000);
 
     process.nextTick(() => {
       if (!user.email.length) {
-        this.props.writeLog({ type: 'verbose', message: 'Redirecting login (no authorized user)' });
+        writeLog({ type: 'verbose', message: 'Redirecting login (no authorized user)' });
         router.push('/login');
       }
     });
 
-    ipcRenderer.on('docker-out', (event, arg) => {
-      this.props.updateDockerOutput(arg);
+    ipcRenderer.on('docker-out', (_event, arg) => {
+      updateDockerOutput(arg);
     });
 
     ipcRenderer.on('docker-pull-complete', (event, arg) => {
-      this.props.updateUserConsortiumStatus(arg, 'pipeline-computations-downloaded');
-      this.props.notifySuccess(`${arg} Pipeline Computations Downloaded`);
+      updateUserConsortiumStatus(arg, 'pipeline-computations-downloaded');
+      notifySuccess(`${arg} Pipeline Computations Downloaded`);
     });
 
     ipcRenderer.on('local-pipeline-state-update', (event, arg) => {
-      this.props.updateLocalRun(
+      updateLocalRun(
         arg.run.id,
         { localPipelineState: arg.data }
       );
     });
 
     ipcRenderer.on('save-local-run', (event, arg) => {
-      this.props.saveLocalRun({
+      saveLocalRun({
         ...arg.run,
         status: 'started',
       });
     });
 
     ipcRenderer.on('local-run-complete', (event, arg) => {
-      this.props.notifySuccess(`${arg.consName} Pipeline Complete.`);
+      notifySuccess(`${arg.consName} Pipeline Complete.`);
 
-      this.props.updateLocalRun(arg.run.id, { results: arg.run.results, status: 'complete' });
+      updateLocalRun(arg.run.id, { results: arg.run.results, status: 'complete' });
     });
 
     ipcRenderer.on('local-run-error', (event, arg) => {
-      this.props.notifyError(`${arg.consName} Pipeline Error.`);
+      notifyError(`${arg.consName} Pipeline Error.`);
 
-      this.props.updateLocalRun(arg.run.id, { error: arg.run.error, status: 'error' });
+      updateLocalRun(arg.run.id, { error: arg.run.error, status: 'error' });
     });
 
-    const { clearLogs } = this.props;
     clearLogs();
 
     ipcRenderer.on('log-message', (event, arg) => {
@@ -193,38 +208,57 @@ class Dashboard extends Component {
 
     ipcRenderer.send('load-initial-log');
 
-    this.unsubscribeToUserMetadata = this.props.subscribeToUserMetaData(user.id);
-    this.unsubscribeToUserRuns = this.props.subscribeToUserRuns(user.id);
+    this.unsubscribeToUserMetadata = subscribeToUserMetaData(user.id);
+    this.unsubscribeToUserRuns = subscribeToUserRuns(user.id);
 
     ipcRenderer.on('docker-error', (event, arg) => {
-      this.props.notifyError(`Docker Error: ${arg.err.message}`);
+      notifyError(`Docker Error: ${arg.err.message}`);
     });
 
-    this.checkLocalMappedStatus(this.props.maps, this.props.consortia);
+    this.checkLocalMappedStatus(maps, consortia);
   }
 
+  // eslint-disable-next-line
   UNSAFE_componentWillReceiveProps(nextProps) {
-    const { auth: { user }, client } = this.props;
-    const { router } = this.context;
+    const {
+      auth: { user },
+      client,
+      consortia,
+      runs,
+      remoteRuns,
+      subscribeToComputations,
+      subscribeToConsortia,
+      subscribeToPipelines,
+      subscribeToThreads,
+      saveLocalRun,
+      updateLocalRun,
+      pullComputations,
+      notifyInfo,
+      notifySuccess,
+      notifyError,
+    } = this.props;
+    const {
+      unsubscribeComputations, unsubscribeConsortia, unsubscribePipelines, unsubscribeThreads,
+    } = this.state;
 
-    if (!isEqual(this.props.consortia, nextProps.consortia)) {
+    if (!isEqual(consortia, nextProps.consortia)) {
       this.checkLocalMappedStatus(nextProps.maps, nextProps.consortia);
     }
 
-    if (nextProps.computations && !this.state.unsubscribeComputations) {
-      this.setState({ unsubscribeComputations: this.props.subscribeToComputations(null) });
+    if (nextProps.computations && !unsubscribeComputations) {
+      this.setState({ unsubscribeComputations: subscribeToComputations(null) });
     }
 
-    if (nextProps.consortia && !this.state.unsubscribeConsortia) {
-      this.setState({ unsubscribeConsortia: this.props.subscribeToConsortia(null) });
+    if (nextProps.consortia && !unsubscribeConsortia) {
+      this.setState({ unsubscribeConsortia: subscribeToConsortia(null) });
     }
 
-    if (nextProps.pipelines && !this.state.unsubscribePipelines) {
-      this.setState({ unsubscribePipelines: this.props.subscribeToPipelines(null) });
+    if (nextProps.pipelines && !unsubscribePipelines) {
+      this.setState({ unsubscribePipelines: subscribeToPipelines(null) });
     }
 
-    if (nextProps.threads && !this.state.unsubscribeThreads) {
-      this.setState({ unsubscribeThreads: this.props.subscribeToThreads(null) });
+    if (nextProps.threads && !unsubscribeThreads) {
+      this.setState({ unsubscribeThreads: subscribeToThreads(null) });
     }
 
     if (nextProps.remoteRuns) {
@@ -234,84 +268,81 @@ class Dashboard extends Component {
         let runIndexInPropsRemote = -1;
 
         // Find run in redux runs if it's there
-        if (this.props.runs.length > 0) {
-          runIndexInLocalRuns = this.props.runs
+        if (runs.length > 0) {
+          runIndexInLocalRuns = runs
             .findIndex(run => run.id === nextProps.remoteRuns[i].id);
         }
 
         // Redux state seems to be behind a cycle, so also check component props
         if (runIndexInLocalRuns > -1
           || (runIndexInLocalRuns === -1 && !nextProps.remoteRuns[i].results
-          && this.props.consortia.length)) {
-          runIndexInPropsRemote = this.props.remoteRuns
+          && consortia.length)) {
+          runIndexInPropsRemote = remoteRuns
             .findIndex(run => run.id === nextProps.remoteRuns[i].id);
         }
 
         if (runIndexInLocalRuns === -1 && nextProps.remoteRuns[i].results) {
           ipcRenderer.send('clean-remote-pipeline', nextProps.remoteRuns[i].id);
-          this.props.saveLocalRun({ ...nextProps.remoteRuns[i], status: 'complete' });
+          saveLocalRun({ ...nextProps.remoteRuns[i], status: 'complete' });
           // Not saved locally, but error signify complete
         } else if (runIndexInLocalRuns === -1 && nextProps.remoteRuns[i].error) {
           ipcRenderer.send('clean-remote-pipeline', nextProps.remoteRuns[i].id);
-          this.props.saveLocalRun({ ...nextProps.remoteRuns[i], status: 'error' });
+          saveLocalRun({ ...nextProps.remoteRuns[i], status: 'error' });
           // Run already in props but error is incoming
         } else if (runIndexInLocalRuns > -1 && nextProps.remoteRuns[i].error
-          && !this.props.runs[runIndexInLocalRuns].error && this.props.consortia.length
-          && (!this.props.remoteRuns.length ||
-            (runIndexInPropsRemote > -1 && !this.props.remoteRuns[runIndexInPropsRemote].error)
+          && !runs[runIndexInLocalRuns].error && consortia.length
+          && (!remoteRuns.length
+            || (runIndexInPropsRemote > -1 && !remoteRuns[runIndexInPropsRemote].error)
           )
         ) {
           const run = nextProps.remoteRuns[i];
-          const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
+          const consortium = consortia.find(obj => obj.id === run.consortiumId);
 
           // Update status of run in localDB
           ipcRenderer.send('clean-remote-pipeline', nextProps.remoteRuns[i].id);
-          this.props.updateLocalRun(run.id, { error: run.error, status: 'error' });
-          this.props.notifyError(`${consortium.name} Pipeline Error.`);
+          updateLocalRun(run.id, { error: run.error, status: 'error' });
+          notifyError(`${consortium.name} Pipeline Error.`);
 
           // Run already in props but results are incoming
         } else if (runIndexInLocalRuns > -1 && nextProps.remoteRuns[i].results
           && runIndexInPropsRemote > -1
-          && !this.props.runs[runIndexInLocalRuns].results && this.props.consortia.length
-          && (!this.props.remoteRuns.length ||
-            (runIndexInPropsRemote > -1 && !this.props.remoteRuns[runIndexInPropsRemote].results)
+          && !runs[runIndexInLocalRuns].results && consortia.length
+          && (!remoteRuns.length
+            || (runIndexInPropsRemote > -1 && !remoteRuns[runIndexInPropsRemote].results)
           )
         ) {
           const run = nextProps.remoteRuns[i];
-          const consortium = this.props.consortia.find(obj => obj.id === run.consortiumId);
+          const consortium = consortia.find(obj => obj.id === run.consortiumId);
 
           // Update status of run in localDB
           ipcRenderer.send('clean-remote-pipeline', nextProps.remoteRuns[i].id);
-          this.props.saveLocalRun({ ...run, status: 'complete' });
-          this.props.notifySuccess(`${consortium.name} Pipeline Complete.`);
+          saveLocalRun({ ...run, status: 'complete' });
+          notifySuccess(`${consortium.name} Pipeline Complete.`);
           // Looking for remote run state changes
         } else if (runIndexInPropsRemote > -1 && nextProps.remoteRuns[i].remotePipelineState
-          && (!this.props.remoteRuns[runIndexInPropsRemote].remotePipelineState ||
-            (
+          && (!remoteRuns[runIndexInPropsRemote].remotePipelineState
+            || (
               nextProps.remoteRuns[i].remotePipelineState.currentIteration
-              !== this.props.remoteRuns[runIndexInPropsRemote].remotePipelineState.currentIteration
+              !== remoteRuns[runIndexInPropsRemote].remotePipelineState.currentIteration
               || nextProps.remoteRuns[i].remotePipelineState.controllerState
-              !== this.props.remoteRuns[runIndexInPropsRemote].remotePipelineState.controllerState
+              !== remoteRuns[runIndexInPropsRemote].remotePipelineState.controllerState
               || nextProps.remoteRuns[i].remotePipelineState.pipelineStep
-              !== this.props.remoteRuns[runIndexInPropsRemote].remotePipelineState.pipelineStep
-              ||
-              (!nextProps.remoteRuns[i].remotePipelineState.waitingOn
-               && this.props.remoteRuns[runIndexInPropsRemote].remotePipelineState.waitingOn)
-              ||
-              (nextProps.remoteRuns[i].remotePipelineState.waitingOn
-               && !this.props.remoteRuns[runIndexInPropsRemote].remotePipelineState.waitingOn)
-              ||
-              (nextProps.remoteRuns[i].remotePipelineState.waitingOn
-               && this.props.remoteRuns[runIndexInPropsRemote].remotePipelineState.waitingOn
+              !== remoteRuns[runIndexInPropsRemote].remotePipelineState.pipelineStep
+              || (!nextProps.remoteRuns[i].remotePipelineState.waitingOn
+               && remoteRuns[runIndexInPropsRemote].remotePipelineState.waitingOn)
+              || (nextProps.remoteRuns[i].remotePipelineState.waitingOn
+               && !remoteRuns[runIndexInPropsRemote].remotePipelineState.waitingOn)
+              || (nextProps.remoteRuns[i].remotePipelineState.waitingOn
+               && remoteRuns[runIndexInPropsRemote].remotePipelineState.waitingOn
                && nextProps.remoteRuns[i].remotePipelineState.waitingOn.length
-               !== this.props.remoteRuns[runIndexInPropsRemote].remotePipelineState.waitingOn.length)
+               !== remoteRuns[runIndexInPropsRemote].remotePipelineState.waitingOn.length)
             )
           )
         ) {
           const run = nextProps.remoteRuns[i];
 
           // Update status of run in localDB
-          this.props.updateLocalRun(
+          updateLocalRun(
             run.id,
             { remotePipelineState: run.remotePipelineState }
           );
@@ -319,12 +350,12 @@ class Dashboard extends Component {
       }
     }
 
-    if (nextProps.consortia && this.props.consortia.length > 0) {
+    if (nextProps.consortia && consortia.length > 0) {
       for (let i = 0; i < nextProps.consortia.length; i += 1) {
         // Download Docker images for consortia activePipeline if user is a member
-        if (this.props.consortia[i] && nextProps.consortia[i].id === this.props.consortia[i].id
+        if (consortia[i] && nextProps.consortia[i].id === consortia[i].id
             && nextProps.consortia[i].activePipelineId
-            && !this.props.consortia[i].activePipelineId
+            && !consortia[i].activePipelineId
             && nextProps.consortia[i].members.indexOf(user.id) > -1) {
           const computationData = client.readQuery({ query: FETCH_ALL_COMPUTATIONS_QUERY });
           const pipelineData = client.readQuery({ query: FETCH_ALL_PIPELINES_QUERY });
@@ -342,8 +373,8 @@ class Dashboard extends Component {
             });
           });
 
-          this.props.pullComputations({ consortiumId: nextProps.consortia[i].id, computations });
-          this.props.notifyInfo('Pipeline computations downloading via Docker.');
+          pullComputations({ consortiumId: nextProps.consortia[i].id, computations });
+          notifyInfo('Pipeline computations downloading via Docker.');
         }
       }
     }
@@ -360,11 +391,15 @@ class Dashboard extends Component {
   }
 
   componentWillUnmount() {
+    const {
+      unsubscribeComputations, unsubscribeConsortia, unsubscribePipelines, unsubscribeThreads,
+    } = this.state;
+
     clearInterval(dockerInterval);
-    this.state.unsubscribeComputations();
-    this.state.unsubscribeConsortia();
-    this.state.unsubscribePipelines();
-    this.state.unsubscribeThreads();
+    unsubscribeComputations();
+    unsubscribeConsortia();
+    unsubscribePipelines();
+    unsubscribeThreads();
 
     this.unsubscribeToUserMetadata();
     this.unsubscribeToUserRuns();
@@ -377,33 +412,16 @@ class Dashboard extends Component {
     ipcRenderer.removeAllListeners('docker-error');
   }
 
-  checkLocalMappedStatus = (maps, consortia) => {
-    const { updateConsortiaMappedUsers, auth: { user } } = this.props;
-
-    const consortiaCurrentlyUserIsMappedFor = consortia
-      .filter(cons => cons.mappedForRun && cons.mappedForRun.indexOf(user.id) !== -1)
-      .map(cons => cons.id);
-
-    maps.forEach((map) => {
-      const index = consortiaCurrentlyUserIsMappedFor.indexOf(map.consortiumId);
-
-      if (index > -1) {
-        consortiaCurrentlyUserIsMappedFor.splice(index, 1);
-      }
-    });
-
-    updateConsortiaMappedUsers({ consortia: consortiaCurrentlyUserIsMappedFor });
-  }
-
   goBack = () => {
     if (!this.canShowBackButton) {
       return;
     }
 
+    const { router } = this.context;
     const { auth } = this.props;
     const { locationStacks } = auth;
 
-    this.props.router.push(locationStacks[locationStacks.length - 2]);
+    router.push(locationStacks[locationStacks.length - 2]);
   }
 
   get canShowBackButton() {
@@ -422,14 +440,30 @@ class Dashboard extends Component {
 
     const { id: userId } = auth.user;
 
-    const unreadThreads = threads.filter(thread => {
+    const unreadThreads = threads.filter((thread) => {
       return thread.users
-        .filter(({ username, isRead }) =>
-          username === userId && !isRead
-        ).length > 0;
+        .filter(({ username, isRead }) => username === userId && !isRead).length > 0;
     });
 
     return unreadThreads.length;
+  }
+
+  checkLocalMappedStatus = (maps, consortia) => {
+    const { updateConsortiaMappedUsers, auth: { user } } = this.props;
+
+    const consortiaCurrentlyUserIsMappedFor = consortia
+      .filter(cons => cons.mappedForRun && cons.mappedForRun.indexOf(user.id) !== -1)
+      .map(cons => cons.id);
+
+    maps.forEach((map) => {
+      const index = consortiaCurrentlyUserIsMappedFor.indexOf(map.consortiumId);
+
+      if (index > -1) {
+        consortiaCurrentlyUserIsMappedFor.splice(index, 1);
+      }
+    });
+
+    updateConsortiaMappedUsers({ consortia: consortiaCurrentlyUserIsMappedFor });
   }
 
   render() {
@@ -472,7 +506,10 @@ class Dashboard extends Component {
               <DashboardNav auth={auth} />
               <List>
                 <ListItem>
-                  <UserAccountController push={router.push} unreadThreadCount={this.unreadThreadCount} />
+                  <UserAccountController
+                    push={router.push}
+                    unreadThreadCount={this.unreadThreadCount}
+                  />
                 </ListItem>
               </List>
               <List>
@@ -508,10 +545,11 @@ class Dashboard extends Component {
             <main className="content-pane">
               {this.canShowBackButton && (
                 <button
+                  type="button"
                   className="back-button"
                   onClick={this.goBack}
                 >
-                  <Icon className="fa fa-arrow-up arrow-icon"/>
+                  <Icon className="fa fa-arrow-up arrow-icon" />
                 </button>
               )}
               {childrenWithProps}
@@ -533,7 +571,7 @@ class Dashboard extends Component {
 Dashboard.displayName = 'Dashboard';
 
 Dashboard.contextTypes = {
-  router: PropTypes.object,
+  router: PropTypes.object.isRequired,
 };
 
 Dashboard.defaultProps = {
@@ -543,48 +581,51 @@ Dashboard.defaultProps = {
   pipelines: [],
   remoteRuns: [],
   runs: [],
+  threads: [],
   currentUser: null,
 };
 
 Dashboard.propTypes = {
   auth: PropTypes.object.isRequired,
   children: PropTypes.node.isRequired,
+  classes: PropTypes.object.isRequired,
   client: PropTypes.object.isRequired,
   computations: PropTypes.array,
   consortia: PropTypes.array,
+  currentUser: PropTypes.object,
+  maps: PropTypes.array,
+  pipelines: PropTypes.array,
+  remoteRuns: PropTypes.array,
+  runs: PropTypes.array,
+  threads: PropTypes.array,
+  appendLogMessage: PropTypes.func.isRequired,
+  clearLogs: PropTypes.func.isRequired,
   getDockerStatus: PropTypes.func.isRequired,
+  loadLocalData: PropTypes.func.isRequired,
   notifyError: PropTypes.func.isRequired,
   notifyInfo: PropTypes.func.isRequired,
   notifySuccess: PropTypes.func.isRequired,
-  maps: PropTypes.array,
-  pipelines: PropTypes.array,
   pullComputations: PropTypes.func.isRequired,
-  remoteRuns: PropTypes.array,
-  runs: PropTypes.array,
   saveLocalRun: PropTypes.func.isRequired,
   subscribeToComputations: PropTypes.func.isRequired,
   subscribeToConsortia: PropTypes.func.isRequired,
   subscribeToPipelines: PropTypes.func.isRequired,
+  subscribeToThreads: PropTypes.func.isRequired,
+  subscribeToUserMetaData: PropTypes.func.isRequired,
   subscribeToUserRuns: PropTypes.func.isRequired,
+  updateConsortiaMappedUsers: PropTypes.func.isRequired,
   updateDockerOutput: PropTypes.func.isRequired,
   updateLocalRun: PropTypes.func.isRequired,
   updateUserConsortiumStatus: PropTypes.func.isRequired,
-  clearLogs: PropTypes.func.isRequired,
-  appendLogMessage: PropTypes.func.isRequired,
-  writeLog: PropTypes.func.isRequired,
   updateUserPerms: PropTypes.func.isRequired,
-  currentUser: PropTypes.object,
-  loadLocalData: PropTypes.func.isRequired,
-  classes: PropTypes.object.isRequired,
+  writeLog: PropTypes.func.isRequired,
 };
 
-function mapStateToProps({ auth, runs: { runs }, maps }) {
-  return {
-    auth,
-    runs,
-    maps: maps.consortiumDataMappings,
-  };
-}
+const mapStateToProps = ({ auth, runs, maps }) => ({
+  auth,
+  runs: runs.runs,
+  maps: maps.consortiumDataMappings,
+});
 
 const DashboardWithData = compose(
   graphql(FETCH_ALL_COMPUTATIONS_QUERY, getAllAndSubProp(
@@ -648,14 +689,14 @@ const DashboardWithData = compose(
       updateUserConsortiumStatus: (consortiumId, status) => mutate({
         variables: { consortiumId, status },
       })
-      .then(({ data: { updateUserConsortiumStatus: { consortiaStatuses } } }) => {
-        return ownProps.updateUserConsortiaStatuses(consortiaStatuses);
-      }),
+        .then(({ data: { updateUserConsortiumStatus: { consortiaStatuses } } }) => {
+          return ownProps.updateUserConsortiaStatuses(consortiaStatuses);
+        }),
     }),
   }),
   graphql(
     UPDATE_CONSORTIA_MAPPED_USERS_MUTATION,
-    updateConsortiaMappedUsersProp('updateConsortiaMappedUsers'),
+    updateConsortiaMappedUsersProp('updateConsortiaMappedUsers')
   ),
   withApollo
 )(Dashboard);
