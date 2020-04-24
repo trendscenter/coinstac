@@ -72,53 +72,52 @@ class Result extends Component {
   componentDidMount() {
     const { params, getLocalRun } = this.props;
 
-    getLocalRun(params.resultId)
-      .then((run) => {
-        let plotData = {};
+    const run = getLocalRun(params.resultId);
 
-        // Checking display type of computation
-        const stepsLength = run.pipelineSnapshot.steps.length;
+    let plotData = {};
 
-        let displayTypes = run.pipelineSnapshot.steps[stepsLength - 1]
-          .computations[0].computation.display || { type: 'pipeline' };
+    // Checking display type of computation
+    const stepsLength = run.pipelineSnapshot.steps.length;
 
-        this.setState({
-          computationOutput: run.pipelineSnapshot.steps[stepsLength - 1]
-            .computations[0].computation.output,
-          displayTypes,
-        });
+    let displayTypes = run.pipelineSnapshot.steps[stepsLength - 1]
+      .computations[0].computation.display || { type: 'pipeline' };
 
-        if (displayTypes && !displayTypes.length) {
-          const array = [];
-          array[0] = displayTypes;
-          displayTypes = array;
-        }
+    this.setState({
+      computationOutput: run.pipelineSnapshot.steps[stepsLength - 1]
+        .computations[0].computation.output,
+      displayTypes,
+    });
 
-        if (displayTypes && displayTypes.findIndex(disp => disp.type === 'scatter_plot') > -1) {
-          plotData.testData = [];
-          run.results.plots.map(result => (
-            result.coordinates.map(val => (
-              plotData.testData.push({
-                name: result.title,
-                x: val.x,
-                y: val.y,
-              })
-            ))
-          ));
-        } else if (displayTypes && displayTypes.findIndex(disp => disp.type === 'box_plot') > -1) {
-          plotData.testData = [];
-          run.results.x.map(val => (
-            plotData.testData.push(val)
-          ));
-        } else {
-          plotData = run.results;
-        }
+    if (displayTypes && !displayTypes.length) {
+      const array = [];
+      array[0] = displayTypes;
+      displayTypes = array;
+    }
 
-        this.setState({
-          run,
-          plotData,
-        });
-      });
+    if (displayTypes && displayTypes.findIndex(disp => disp.type === 'scatter_plot') > -1) {
+      plotData.testData = [];
+      run.results.plots.map(result => (
+        result.coordinates.map(val => (
+          plotData.testData.push({
+            name: result.title,
+            x: val.x,
+            y: val.y,
+          })
+        ))
+      ));
+    } else if (displayTypes && displayTypes.findIndex(disp => disp.type === 'box_plot') > -1) {
+      plotData.testData = [];
+      run.results.x.map(val => (
+        plotData.testData.push(val)
+      ));
+    } else {
+      plotData = run.results;
+    }
+
+    this.setState({
+      run,
+      plotData,
+    });
   }
 
   handleOpenResult = () => {
