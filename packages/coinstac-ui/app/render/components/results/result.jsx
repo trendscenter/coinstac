@@ -61,70 +61,63 @@ const styles = theme => ({
 });
 
 class Result extends Component {
-  constructor(props) {
-    super(props);
-
-    this.state = {
-      run: {},
-      computationOutput: {},
-      displayTypes: [],
-      type: 'object',
-      plotData: [],
-      selectedTabIndex: 0,
-    };
-
-    this.handleSelect = this.handleSelect.bind(this);
-  }
-
+  state = {
+    run: {},
+    computationOutput: {},
+    displayTypes: [],
+    plotData: [],
+    selectedTabIndex: 0,
+  };
 
   componentDidMount() {
-    this.props.getLocalRun(this.props.params.resultId)
-      .then((run) => {
-        let plotData = {};
+    const { params, getLocalRun } = this.props;
 
-        // Checking display type of computation
-        const stepsLength = run.pipelineSnapshot.steps.length;
+    const run = getLocalRun(params.resultId);
 
-        let displayTypes = run.pipelineSnapshot.steps[stepsLength - 1]
-          .computations[0].computation.display || { type: 'pipeline' };
+    let plotData = {};
 
-        this.setState({
-          computationOutput: run.pipelineSnapshot.steps[stepsLength - 1]
-            .computations[0].computation.output,
-          displayTypes,
-        });
+    // Checking display type of computation
+    const stepsLength = run.pipelineSnapshot.steps.length;
 
-        if (displayTypes && !displayTypes.length) {
-          const array = [];
-          array[0] = displayTypes;
-          displayTypes = array;
-        }
+    let displayTypes = run.pipelineSnapshot.steps[stepsLength - 1]
+      .computations[0].computation.display || { type: 'pipeline' };
 
-        if (displayTypes && displayTypes.findIndex(disp => disp.type === 'scatter_plot') > -1) {
-          plotData.testData = [];
-          run.results.plots.map(result => (
-            result.coordinates.map(val => (
-              plotData.testData.push({
-                name: result.title,
-                x: val.x,
-                y: val.y,
-              })
-            ))
-          ));
-        } else if (displayTypes && displayTypes.findIndex(disp => disp.type === 'box_plot') > -1) {
-          plotData.testData = [];
-          run.results.x.map(val => (
-            plotData.testData.push(val)
-          ));
-        } else {
-          plotData = run.results;
-        }
+    this.setState({
+      computationOutput: run.pipelineSnapshot.steps[stepsLength - 1]
+        .computations[0].computation.output,
+      displayTypes,
+    });
 
-        this.setState({
-          run,
-          plotData,
-        });
-      });
+    if (displayTypes && !displayTypes.length) {
+      const array = [];
+      array[0] = displayTypes;
+      displayTypes = array;
+    }
+
+    if (displayTypes && displayTypes.findIndex(disp => disp.type === 'scatter_plot') > -1) {
+      plotData.testData = [];
+      run.results.plots.map(result => (
+        result.coordinates.map(val => (
+          plotData.testData.push({
+            name: result.title,
+            x: val.x,
+            y: val.y,
+          })
+        ))
+      ));
+    } else if (displayTypes && displayTypes.findIndex(disp => disp.type === 'box_plot') > -1) {
+      plotData.testData = [];
+      run.results.x.map(val => (
+        plotData.testData.push(val)
+      ));
+    } else {
+      plotData = run.results;
+    }
+
+    this.setState({
+      run,
+      plotData,
+    });
   }
 
   handleOpenResult = () => {
@@ -135,7 +128,7 @@ class Result extends Component {
     shell.openItem(resultDir);
   }
 
-  handleSelect(event, value) {
+  handleSelect = (_event, value) => {
     this.setState({ selectedTabIndex: value });
   }
 
@@ -345,8 +338,7 @@ class Result extends Component {
         }
 
         {
-          !selectedDisplayType
-          || selectedDisplayType.type === ''
+          (!selectedDisplayType || selectedDisplayType.type === '')
           && (
             <Paper className={classNames(classes.paper)}>
               <table>
@@ -388,16 +380,16 @@ class Result extends Component {
 }
 
 Result.propTypes = {
-  consortia: PropTypes.array.isRequired,
-  getLocalRun: PropTypes.func.isRequired,
-  params: PropTypes.object.isRequired,
   auth: PropTypes.object.isRequired,
   classes: PropTypes.object.isRequired,
+  consortia: PropTypes.array.isRequired,
+  params: PropTypes.object.isRequired,
+  getLocalRun: PropTypes.func.isRequired,
 };
 
-const mapStateToProps = ({ auth }) => {
-  return { auth };
-};
+const mapStateToProps = ({ auth }) => ({
+  auth,
+});
 
 const connectedComponent = compose(
   connect(mapStateToProps, { getLocalRun }),

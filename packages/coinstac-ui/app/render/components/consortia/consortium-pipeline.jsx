@@ -237,10 +237,10 @@ class ConsortiumPipeline extends Component {
 }
 
 ConsortiumPipeline.propTypes = {
-  consortium: PropTypes.object.isRequired,
-  pipelines: PropTypes.array.isRequired,
-  owner: PropTypes.bool.isRequired,
   classes: PropTypes.object.isRequired,
+  consortium: PropTypes.object.isRequired,
+  owner: PropTypes.bool.isRequired,
+  pipelines: PropTypes.array.isRequired,
   saveActivePipeline: PropTypes.func.isRequired,
 };
 
