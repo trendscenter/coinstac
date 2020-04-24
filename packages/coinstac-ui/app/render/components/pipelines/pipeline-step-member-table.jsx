@@ -52,7 +52,7 @@ function PipelineStepMemberTable(props) {
       {
         objInputMap.ownerMappings.map((obj, index) => (
           <PipelineOwnerMappings
-            key={`${objKey}-${index}`}
+            key={`${objKey}-${index}`} // eslint-disable-line react/no-array-index-key
             index={index}
             obj={obj}
             objKey={objKey}
@@ -70,12 +70,12 @@ function PipelineStepMemberTable(props) {
 }
 
 PipelineStepMemberTable.propTypes = {
-  getNewObj: PropTypes.func.isRequired,
   objKey: PropTypes.string.isRequired,
   objParams: PropTypes.object.isRequired,
   owner: PropTypes.bool.isRequired,
   possibleInputs: PropTypes.array.isRequired,
   step: PropTypes.object.isRequired,
+  getNewObj: PropTypes.func.isRequired,
   updateStep: PropTypes.func.isRequired,
 };
 
