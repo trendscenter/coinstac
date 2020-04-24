@@ -54,8 +54,22 @@ const RunsList = ({
           <Typography variant="body1">
             {
               hoursSinceActive === 0
-                ? <span>No {limitToComplete ? 'results' : 'runs'} found</span>
-                : <span>No activity in the last <span className="bold">{hoursSinceActive}</span> hours.</span>
+                ? (
+                  <span>
+No
+                    {limitToComplete ? 'results' : 'runs'}
+                    {' '}
+found
+                  </span>
+                )
+                : (
+                  <span>
+No activity in the last
+                    <span className="bold">{hoursSinceActive}</span>
+                    {' '}
+hours.
+                  </span>
+                )
             }
           </Typography>
         )
@@ -70,15 +84,15 @@ RunsList.defaultProps = {
 
 RunsList.propTypes = {
   auth: PropTypes.object.isRequired,
+  consortia: PropTypes.array.isRequired,
   hoursSinceActive: PropTypes.number.isRequired,
   limitToComplete: PropTypes.bool.isRequired,
   runs: PropTypes.array.isRequired,
-  consortia: PropTypes.array.isRequired,
   stopPipeline: PropTypes.func,
 };
 
-const mapStateToProps = ({ auth }) => {
-  return { auth };
-};
+const mapStateToProps = ({ auth }) => ({
+  auth,
+});
 
 export default connect(mapStateToProps)(RunsList);

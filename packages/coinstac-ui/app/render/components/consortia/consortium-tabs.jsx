@@ -60,26 +60,34 @@ class ConsortiumTabs extends Component {
     this.updateConsortium = this.updateConsortium.bind(this);
   }
 
+  // eslint-disable-next-line
   UNSAFE_componentWillReceiveProps(nextProps) {
-    const tabId = parseInt(this.props.params.tabId);
+    const {
+      params, subscribeToConsortia, subscribeToUsers, routes,
+    } = this.props;
+    const {
+      consortium, selectedTabIndex, unsubscribeConsortia, unsubscribeUsers,
+    } = this.state;
 
-    if (tabId && tabId !== this.state.selectedTabIndex) {
+    const tabId = parseInt(params.tabId, 10);
+
+    if (tabId && tabId !== selectedTabIndex) {
       this.handleSelect(null, tabId);
     }
 
-    if (this.state.consortium.id && !this.state.unsubscribeConsortia) {
+    if (consortium.id && !unsubscribeConsortia) {
       this.setState({
-        unsubscribeConsortia: this.props.subscribeToConsortia(this.state.consortium.id),
+        unsubscribeConsortia: subscribeToConsortia(consortium.id),
       });
     }
 
-    if (nextProps.users && !this.state.unsubscribeUsers) {
-      this.setState({ unsubscribeUsers: this.props.subscribeToUsers(null) });
+    if (nextProps.users && !unsubscribeUsers) {
+      this.setState({ unsubscribeUsers: subscribeToUsers(null) });
     }
 
     if (nextProps.activeConsortium) {
       const { activeConsortium: { __typename, ...other } } = nextProps;
-      if (this.props.routes[3].path !== 'new' || (this.props.routes[3].path === 'new' && this.state.consortium.id) ) {
+      if (routes[3].path !== 'new' || (routes[3].path === 'new' && consortium.id)) {
         const consortiumUsers = this.getConsortiumUsers(other);
         this.setState({ consortium: { ...other }, consortiumUsers });
       }
@@ -87,19 +95,22 @@ class ConsortiumTabs extends Component {
   }
 
   componentWillUnmount() {
-    if (this.state.unsubscribeConsortia) {
-      this.state.unsubscribeConsortia();
+    const { unsubscribeConsortia, unsubscribeUsers } = this.state;
+    if (unsubscribeConsortia) {
+      unsubscribeConsortia();
     }
 
-    if (this.state.unsubscribeUsers) {
-      this.state.unsubscribeUsers();
+    if (unsubscribeUsers) {
+      unsubscribeUsers();
     }
   }
 
-  getConsortiumUsers = consortium => {
-    let consortiumUsers = [];
+  getConsortiumUsers = (consortium) => {
+    const consortiumUsers = [];
 
-    consortium.owners.forEach(user => consortiumUsers.push({ id: user, owner: true, member: true }));
+    consortium.owners.forEach(user => consortiumUsers.push({
+      id: user, owner: true, member: true,
+    }));
     consortium.members
       .filter(user => consortiumUsers.findIndex(consUser => consUser.id === user) === -1)
       .forEach(user => consortiumUsers.push({ id: user, member: true }));
@@ -108,8 +119,11 @@ class ConsortiumTabs extends Component {
   }
 
   getConsortiumRuns() {
+    const { runs } = this.props;
+    const { consortium } = this.state;
+
     return (
-      this.props.runs.filter(run => run.consortiumId === this.state.consortium.id)
+      runs.filter(run => run.consortiumId === consortium.id)
     );
   }
 
@@ -118,6 +132,11 @@ class ConsortiumTabs extends Component {
   }
 
   saveConsortium(e) {
+    const {
+      saveConsortium, subscribeToConsortia, notifySuccess, notifyError,
+    } = this.props;
+    const { consortium, unsubscribeConsortia } = this.state;
+
     e.preventDefault();
 
     /* This is creating a duplicate consortia owner. Why is this here?
@@ -132,32 +151,26 @@ class ConsortiumTabs extends Component {
 
     this.setState({ savingStatus: 'pending' });
 
-    this.props.saveConsortium(this.state.consortium)
-    .then(({ data: { saveConsortium: { __typename, ...other } } }) => {
-      let unsubscribeConsortia = this.state.unsubscribeConsortia;
+    saveConsortium(consortium)
+      .then(({ data: { saveConsortium: { __typename, ...other } } }) => {
+        const consortiumUsers = this.getConsortiumUsers(other);
 
-      if (!unsubscribeConsortia) {
-        unsubscribeConsortia = this.props.subscribeToConsortia(other.id);
-      }
+        this.setState({
+          consortium: { ...other },
+          consortiumUsers,
+          unsubscribeConsortia: unsubscribeConsortia || subscribeToConsortia(other.id),
+          savingStatus: 'success',
+        });
 
-      const consortiumUsers = this.getConsortiumUsers(other);
-
-      this.setState({
-        consortium: { ...other },
-        consortiumUsers,
-        unsubscribeConsortia,
-        savingStatus: 'success',
-      });
-
-      this.props.notifySuccess('Consortium Saved');
-    })
-    .catch(({ graphQLErrors }) => {
-      this.setState({
-        savingStatus: 'fail',
+        notifySuccess('Consortium Saved');
       })
+      .catch(({ graphQLErrors }) => {
+        this.setState({
+          savingStatus: 'fail',
+        });
 
-      this.props.notifyError(get(graphQLErrors, '0.message', 'Failed to save consortium'));
-    });
+        notifyError(get(graphQLErrors, '0.message', 'Failed to save consortium'));
+      });
   }
 
   updateConsortium(update) {
@@ -174,12 +187,12 @@ class ConsortiumTabs extends Component {
     const isOwner = consortium.owners.indexOf(auth.user.id) > -1
       || !params.consortiumId;
 
-    
-    if (selectedTabIndex == 1) {
+
+    if (selectedTabIndex === 1) {
       if (!isEditingConsortium) {
         return 0;
       }
-    } else if (selectedTabIndex == 2) {
+    } else if (selectedTabIndex === 2) {
       if (!isEditingConsortium || !isOwner) {
         return 0;
       }
@@ -276,7 +289,7 @@ class ConsortiumTabs extends Component {
 }
 
 ConsortiumTabs.defaultProps = {
-  activeConsortium: null,
+  activeConsortium: null, // eslint-disable-line react/default-props-match-prop-types
   consortia: [],
   runs: [],
   subscribeToConsortia: null,
@@ -285,24 +298,26 @@ ConsortiumTabs.defaultProps = {
 };
 
 ConsortiumTabs.propTypes = {
-  addUserRole: PropTypes.func.isRequired,
   auth: PropTypes.object.isRequired,
+  classes: PropTypes.object.isRequired,
   consortia: PropTypes.array,
-  notifySuccess: PropTypes.func.isRequired,
   params: PropTypes.object.isRequired,
   pipelines: PropTypes.array.isRequired,
-  removeUserRole: PropTypes.func.isRequired,
+  routes: PropTypes.array.isRequired,
   runs: PropTypes.array,
+  users: PropTypes.array,
+  addUserRole: PropTypes.func.isRequired,
+  notifyError: PropTypes.func.isRequired,
+  notifySuccess: PropTypes.func.isRequired,
+  removeUserRole: PropTypes.func.isRequired,
   saveConsortium: PropTypes.func.isRequired,
   subscribeToConsortia: PropTypes.func,
   subscribeToUsers: PropTypes.func,
-  classes: PropTypes.object.isRequired,
-  users: PropTypes.array.isRequired,
 };
 
-function mapStateToProps({ auth }) {
-  return { auth };
-}
+const mapStateToProps = ({ auth }) => ({
+  auth,
+});
 
 const ConsortiumTabsWithData = compose(
   graphql(FETCH_CONSORTIUM_QUERY, getSelectAndSubProp(

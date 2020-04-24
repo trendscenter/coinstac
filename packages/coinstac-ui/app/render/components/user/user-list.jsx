@@ -2,8 +2,6 @@ import classNames from 'classnames';
 import React from 'react';
 import PropTypes from 'prop-types';
 import { OverlayTrigger, Tooltip } from 'react-bootstrap';
-import { remote } from 'electron';
-import path from 'path';
 
 export default function UserList(props) {
   const { size, users } = props;

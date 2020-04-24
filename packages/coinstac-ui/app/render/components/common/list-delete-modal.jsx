@@ -61,12 +61,12 @@ ListDeleteModal.defaultProps = {
 };
 
 ListDeleteModal.propTypes = {
-  close: PropTypes.func.isRequired,
-  deleteItem: PropTypes.func.isRequired,
+  classes: PropTypes.object.isRequired,
   itemName: PropTypes.string.isRequired,
   show: PropTypes.bool.isRequired,
   warningMessage: PropTypes.string,
-  classes: PropTypes.object.isRequired,
+  close: PropTypes.func.isRequired,
+  deleteItem: PropTypes.func.isRequired,
 };
 
 export default withStyles(styles)(ListDeleteModal);

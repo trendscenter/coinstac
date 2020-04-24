@@ -23,16 +23,12 @@ const styles = theme => ({
 });
 
 class Settings extends Component {
-  constructor(props) {
-    super(props);
-
-    this.clearData = this.clearData.bind(this);
-  }
-
-  clearData(e) {
+  clearData = (e) => {
+    const { clearRuns, notifyInfo } = this.props;
     e.preventDefault();
-    this.props.clearRuns();
-    this.props.notifyInfo('Local data cleared');
+
+    clearRuns();
+    notifyInfo('Local data cleared');
   }
 
   render() {
@@ -64,9 +60,9 @@ class Settings extends Component {
 }
 
 Settings.propTypes = {
+  classes: PropTypes.object.isRequired,
   clearRuns: PropTypes.func.isRequired,
   notifyInfo: PropTypes.func.isRequired,
-  classes: PropTypes.object.isRequired,
 };
 
 Settings.contextTypes = {

@@ -1,7 +1,7 @@
-import React, { Component } from 'react'
-import PropTypes from 'prop-types'
-import classNames from 'classnames'
-import { isEqual, omit } from 'lodash'
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
+import classNames from 'classnames';
+import { isEqual, omit } from 'lodash';
 import {
   CircularProgress,
   FormControl,
@@ -10,11 +10,11 @@ import {
   MenuItem,
   Select,
   Tooltip,
-} from '@material-ui/core'
-import { withStyles } from '@material-ui/core/styles'
-import ThreadAvatar from './thread-avatar'
-import { ThreadContext } from './context'
-import CustomSelect from '../common/react-select'
+} from '@material-ui/core';
+import { withStyles } from '@material-ui/core/styles';
+import ThreadAvatar from './thread-avatar';
+import { ThreadContext } from './context';
+import CustomSelect from '../common/react-select';
 
 const BootstrapInput = withStyles(theme => ({
   root: {
@@ -49,7 +49,7 @@ const BootstrapInput = withStyles(theme => ({
       boxShadow: '0 0 0 0.2rem rgba(0,123,255,.25)',
     },
   },
-}))(InputBase)
+}))(InputBase);
 
 const styles = theme => ({
   wrapper: {
@@ -77,7 +77,7 @@ const styles = theme => ({
     resize: 'none',
     '&:active, &:focus': {
       outline: 'none',
-    }
+    },
   },
   actionWrapper: {
     display: 'flex',
@@ -105,15 +105,15 @@ const styles = theme => ({
     },
   },
   loader: {
-    width: `20px !important`,
-    height: `20px !important`,
+    width: '20px !important',
+    height: '20px !important',
     marginRight: 10,
   },
   note: {
     marginLeft: 20,
     color: 'red',
-  }
-})
+  },
+});
 
 const INITIAL_STATE = {
   threadId: '',
@@ -123,96 +123,98 @@ const INITIAL_STATE = {
   action: 'none',
   selectedConsortium: 'none',
   selectedResult: 'none',
-}
+};
 
 class ThreadReply extends Component {
   state = INITIAL_STATE
 
-  UNSAFE_componentWillMount() {
-    this.initializeState(this.props)
-    this.initializeDefaultRecipients(this.props, this.context)
+  UNSAFE_componentWillMount() { // eslint-disable-line
+    this.initializeState(this.props);
+    this.initializeDefaultRecipients(this.props, this.context);
   }
 
-  UNSAFE_componentWillReceiveProps(nextProps) {
-    const { savingStatus, title, threadUsers } = this.props
+  UNSAFE_componentWillReceiveProps(nextProps) { // eslint-disable-line
+    const { savingStatus, title, threadUsers } = this.props;
 
     if (savingStatus !== nextProps.savingStatus && nextProps.savingStatus === 'success') {
-      this.setState(omit(INITIAL_STATE, ['threadId', 'title', 'selectedRecipients']))
+      this.setState(omit(INITIAL_STATE, ['threadId', 'title', 'selectedRecipients']));
     } else if (title !== nextProps.title) {
-      this.initializeState(nextProps)
+      this.initializeState(nextProps);
     }
 
     if (!isEqual(threadUsers, nextProps.threadUsers)) {
-      this.initializeDefaultRecipients(nextProps, this.context)
+      this.initializeDefaultRecipients(nextProps, this.context);
     }
   }
 
-  initializeState = props => {
-    const { threadId, title } = props
+  initializeState = (props) => {
+    const { threadId, title } = props;
 
     this.setState({
-      threadId: threadId || '',
-      title: title || '',
-    })
+      threadId,
+      title,
+    });
   }
 
   initializeDefaultRecipients = (props, context) => {
-    const { threadUsers } = props
-    const { auth } = context
+    const { threadUsers } = props;
+    const { auth } = context;
 
     const defaultSelectedRecipients = (threadUsers || [])
       .filter(({ username }) => username !== auth.user.id)
-      .map(({ username }) => ({ value: username, label: username, isFixed: true }))
+      .map(({ username }) => ({ value: username, label: username, isFixed: true }));
 
     this.setState({
       selectedRecipients: defaultSelectedRecipients,
-    })
+    });
   }
 
   handleRecipientsChange = (recipients, { action, removedValue }) => {
-    const { selectedRecipients } = this.state
+    const { selectedRecipients } = this.state;
 
     switch (action) {
       case 'remove-value':
       case 'pop-value':
         if (removedValue.isFixed) {
-          return
+          return;
         }
+      // eslint-disable-next-line no-fallthrough
       case 'clear':
-        this.setState({ selectedRecipients: selectedRecipients.filter(user => user.isFixed) })
-        return
+        this.setState({ selectedRecipients: selectedRecipients.filter(user => user.isFixed) });
+        return;
       default:
-        this.setState({ selectedRecipients: recipients })
+        this.setState({ selectedRecipients: recipients });
     }
   }
 
-  handleMessageChange = evt => {
-    this.setState({ message: evt.target.value })
+  handleMessageChange = (evt) => {
+    this.setState({ message: evt.target.value });
   }
 
-  handleActionChange = evt => {
-    const { value } = evt.target
+  handleActionChange = (evt) => {
+    const { value } = evt.target;
     this.setState(Object.assign(
       { action: value },
-      value === 'none' && { selectedConsortium: 'none' },
-    ))
+      value === 'none' && { selectedConsortium: 'none' }
+    ));
   }
 
-  handleConsortiumChange = evt => {
-    this.setState({ selectedConsortium: evt.target.value })
+  handleConsortiumChange = (evt) => {
+    this.setState({ selectedConsortium: evt.target.value });
   }
 
-  handleResultChange = evt => {
-    this.setState({ selectedResult: evt.target.value })
+  handleResultChange = (evt) => {
+    this.setState({ selectedResult: evt.target.value });
   }
 
   handleSend = () => {
-    const { savingStatus } = this.props
-    const { consortia } = this.context
-    const error = this.validateForm()
+    const { savingStatus, onSend } = this.props;
+    const { consortia } = this.context;
+
+    const error = this.validateForm();
 
     if (savingStatus === 'pending' || error) {
-      return
+      return;
     }
 
     const {
@@ -223,7 +225,7 @@ class ThreadReply extends Component {
       selectedRecipients,
       selectedConsortium,
       selectedResult,
-    } = this.state
+    } = this.state;
 
     const data = Object.assign(
       {
@@ -239,19 +241,19 @@ class ThreadReply extends Component {
             id: selectedConsortium,
             name: consortia.find(({ id }) => id === selectedConsortium).name,
           },
-        }
+        },
       }),
       (action === 'share-result' && selectedResult !== 'none') && ({
         action: {
           type: action,
           detail: {
             id: selectedResult,
-          }
-        }
-      }),
-    )
+          },
+        },
+      })
+    );
 
-    this.props.onSend(data)
+    onSend(data);
   }
 
   validateForm = () => {
@@ -262,44 +264,43 @@ class ThreadReply extends Component {
       selectedRecipients,
       selectedConsortium,
       selectedResult,
-    } = this.state
+    } = this.state;
 
     if (!title) {
-      return 'Please input title'
+      return 'Please input title';
     }
 
     if (selectedRecipients.length === 0) {
-      return 'Please select at least one recipient'
+      return 'Please select at least one recipient';
     }
 
     if (!message) {
-      return 'Please input your message'
+      return 'Please input your message';
     }
 
     if (action === 'join-consortium' && selectedConsortium === 'none') {
-      return 'Please select consortium to join'
+      return 'Please select consortium to join';
     }
 
     if (action === 'share-result' && selectedResult === 'none') {
-      return 'Please select result to share'
+      return 'Please select result to share';
     }
-
-    return
   }
 
   renderReplyButton = () => {
-    const { classes, savingStatus } = this.props
-    const error = this.validateForm()
+    const { classes, savingStatus } = this.props;
+    const error = this.validateForm();
 
     const button = (
       <div className={classes.actionWrapper}>
-        {savingStatus === 'pending' &&
-          <CircularProgress color="secondary" className={classes.loader} />}
+        {savingStatus === 'pending'
+          && <CircularProgress color="secondary" className={classes.loader} />}
         <button
+          type="button"
           className={
             classNames(
               classes.replyButton,
-              { disabled: !!error || savingStatus === 'pending' },
+              { disabled: !!error || savingStatus === 'pending' }
             )
           }
           onClick={this.handleSend}
@@ -307,43 +308,43 @@ class ThreadReply extends Component {
           Send
         </button>
       </div>
-    )
+    );
 
     if (error) {
       return (
         <Tooltip title={error} placement="top">
-          {button}    
+          {button}
         </Tooltip>
-      )
+      );
     }
 
-    return button
+    return button;
   }
 
   getAllRecipients = () => {
-    const { users, auth } = this.context
+    const { users, auth } = this.context;
 
     const allRecipients = (users || [])
       .filter(user => user.id !== auth.user.id)
-      .map(user => ({ value: user.id, label: user.id }))
+      .map(user => ({ value: user.id, label: user.id }));
 
-    return allRecipients
+    return allRecipients;
   }
 
   getAllConsortia = () => {
-    const { auth, consortia } = this.context
+    const { auth, consortia } = this.context;
 
-    let allConsortia = [
+    const allConsortia = [
       { value: 'none', label: 'None' },
-    ]
+    ];
 
-    consortia.forEach(consortium => {
+    consortia.forEach((consortium) => {
       if (consortium.owners.indexOf(auth.user.id) !== -1) {
-        allConsortia.push({ value: consortium.id, label: consortium.name })
+        allConsortia.push({ value: consortium.id, label: consortium.name });
       }
-    })
+    });
 
-    return allConsortia
+    return allConsortia;
   }
 
   getAllActions = () => {
@@ -351,40 +352,40 @@ class ThreadReply extends Component {
       { value: 'none', label: 'None' },
       { value: 'join-consortium', label: 'Join Consortium' },
       { value: 'share-result', label: 'Share Result' },
-    ]
+    ];
 
-    return allActions
+    return allActions;
   }
 
   getAllResults = () => {
-    const { runs } = this.context
+    const { runs } = this.context;
 
-    let allRuns = [
+    const allRuns = [
       { value: 'none', label: 'None' },
-    ]
+    ];
 
-    runs.forEach(run => {
-      allRuns.push({ value: run.id, label: run.id })
-    })
+    runs.forEach((run) => {
+      allRuns.push({ value: run.id, label: run.id });
+    });
 
-    return allRuns
+    return allRuns;
   }
 
   render() {
-    const { classes } = this.props
+    const { classes } = this.props;
     const {
       action,
       message,
       selectedRecipients,
       selectedConsortium,
       selectedResult,
-    } = this.state
-    const { auth } = this.context
+    } = this.state;
+    const { auth } = this.context;
 
     return (
       <div className={classes.wrapper}>
         <div style={{ display: 'flex', alignItems: 'center' }}>
-          <ThreadAvatar username={auth.user.id} showUsername/>
+          <ThreadAvatar username={auth.user.id} showUsername />
 
           <div className={classes.recipients}>
             <span>To:</span>
@@ -409,7 +410,7 @@ class ThreadReply extends Component {
           <textarea
             className={classes.textarea}
             value={message}
-            placeholder='Your message here...'
+            placeholder="Your message here..."
             onChange={this.handleMessageChange}
           />
         </div>
@@ -423,14 +424,14 @@ class ThreadReply extends Component {
                 input={<BootstrapInput />}
                 onChange={this.handleActionChange}
               >
-                {this.getAllActions().map(action =>
+                {this.getAllActions().map(action => (
                   <MenuItem
                     key={action.value}
                     value={action.value}
                   >
                     {action.label}
                   </MenuItem>
-                )}
+                ))}
               </Select>
             </FormControl>
 
@@ -442,14 +443,14 @@ class ThreadReply extends Component {
                   input={<BootstrapInput />}
                   onChange={this.handleConsortiumChange}
                 >
-                  {this.getAllConsortia().map(consortium =>
+                  {this.getAllConsortia().map(consortium => (
                     <MenuItem
                       key={consortium.value}
                       value={consortium.value}
                     >
                       {consortium.label}
                     </MenuItem>
-                  )}
+                  ))}
                 </Select>
               </FormControl>
             )}
@@ -462,14 +463,14 @@ class ThreadReply extends Component {
                   input={<BootstrapInput />}
                   onChange={this.handleResultChange}
                 >
-                  {this.getAllResults().map(result =>
+                  {this.getAllResults().map(result => (
                     <MenuItem
                       key={result.value}
                       value={result.value}
                     >
                       {result.label}
                     </MenuItem>
-                  )}
+                  ))}
                 </Select>
               </FormControl>
             )}
@@ -478,19 +479,25 @@ class ThreadReply extends Component {
           {this.renderReplyButton()}
         </div>
       </div>
-    )
+    );
   }
 }
+
+ThreadReply.defaultProps = {
+  threadId: '',
+  threadUsers: [],
+  title: '',
+};
 
 ThreadReply.propTypes = {
   classes: PropTypes.object.isRequired,
   savingStatus: PropTypes.string.isRequired,
-  threadId: PropTypes.any,
+  threadId: PropTypes.any, // eslint-disable-line react/no-unused-prop-types
   threadUsers: PropTypes.array,
   title: PropTypes.any,
   onSend: PropTypes.func.isRequired,
-}
+};
 
-ThreadReply.contextType = ThreadContext
+ThreadReply.contextType = ThreadContext;
 
-export default withStyles(styles)(ThreadReply)
+export default withStyles(styles)(ThreadReply);
