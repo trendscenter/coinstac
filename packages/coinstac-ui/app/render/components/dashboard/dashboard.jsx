@@ -594,7 +594,6 @@ Dashboard.propTypes = {
   threads: PropTypes.array,
   appendLogMessage: PropTypes.func.isRequired,
   getDockerStatus: PropTypes.func.isRequired,
-  loadLocalData: PropTypes.func.isRequired,
   notifyError: PropTypes.func.isRequired,
   notifyInfo: PropTypes.func.isRequired,
   notifySuccess: PropTypes.func.isRequired,
@@ -610,11 +609,8 @@ Dashboard.propTypes = {
   updateDockerOutput: PropTypes.func.isRequired,
   updateLocalRun: PropTypes.func.isRequired,
   updateUserConsortiumStatus: PropTypes.func.isRequired,
-  appendLogMessage: PropTypes.func.isRequired,
   writeLog: PropTypes.func.isRequired,
   updateUserPerms: PropTypes.func.isRequired,
-  currentUser: PropTypes.object,
-  classes: PropTypes.object.isRequired,
 };
 
 const mapStateToProps = ({ auth, runs, maps }) => ({

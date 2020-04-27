@@ -1,6 +1,6 @@
 import axios from 'axios';
 import ipcPromise from 'ipc-promise';
-import { remote } from 'electron';
+import { remote, ipcRenderer } from 'electron';
 import { get } from 'lodash';
 import { LOCATION_CHANGE } from 'react-router-redux';
 import { applyAsyncLoading } from './loading';
@@ -73,7 +73,7 @@ const initCoreAndSetToken = (reqUser, data, appDirectory, dispatch) => {
     .then(() => {
       const user = { ...data.user, label: reqUser.username };
 
-      ipcPromise.send('login-success', data.user.id);
+      ipcRenderer.send('login-success', data.user.id);
 
       currentApiTokenKey = `${API_TOKEN_KEY}_${data.user.id}`;
 
