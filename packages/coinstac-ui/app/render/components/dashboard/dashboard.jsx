@@ -29,7 +29,7 @@ import {
   updateDockerOutput,
 } from '../../state/ducks/docker';
 import { updateUserConsortiaStatuses, updateUserPerms } from '../../state/ducks/auth';
-import { appendLogMessage, clearLogs, loadLocalData } from '../../state/ducks/app';
+import { appendLogMessage } from '../../state/ducks/app';
 import {
   COMPUTATION_CHANGED_SUBSCRIPTION,
   CONSORTIUM_CHANGED_SUBSCRIPTION,
@@ -127,7 +127,6 @@ class Dashboard extends Component {
       auth: { user },
       maps,
       consortia,
-      loadLocalData,
       getDockerStatus,
       writeLog,
       updateDockerOutput,
@@ -136,13 +135,10 @@ class Dashboard extends Component {
       notifyError,
       updateLocalRun,
       saveLocalRun,
-      clearLogs,
       subscribeToUserMetaData,
       subscribeToUserRuns,
     } = this.props;
     const { router } = this.context;
-
-    loadLocalData();
 
     dockerInterval = setInterval(() => {
       const status = getDockerStatus();
@@ -198,8 +194,6 @@ class Dashboard extends Component {
 
       updateLocalRun(arg.run.id, { error: arg.run.error, status: 'error' });
     });
-
-    clearLogs();
 
     ipcRenderer.on('log-message', (event, arg) => {
       const { appendLogMessage } = this.props;
@@ -599,9 +593,7 @@ Dashboard.propTypes = {
   runs: PropTypes.array,
   threads: PropTypes.array,
   appendLogMessage: PropTypes.func.isRequired,
-  clearLogs: PropTypes.func.isRequired,
   getDockerStatus: PropTypes.func.isRequired,
-  loadLocalData: PropTypes.func.isRequired,
   notifyError: PropTypes.func.isRequired,
   notifyInfo: PropTypes.func.isRequired,
   notifySuccess: PropTypes.func.isRequired,
@@ -617,8 +609,8 @@ Dashboard.propTypes = {
   updateDockerOutput: PropTypes.func.isRequired,
   updateLocalRun: PropTypes.func.isRequired,
   updateUserConsortiumStatus: PropTypes.func.isRequired,
-  updateUserPerms: PropTypes.func.isRequired,
   writeLog: PropTypes.func.isRequired,
+  updateUserPerms: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = ({ auth, runs, maps }) => ({
@@ -714,9 +706,7 @@ const connectedComponent = connect(mapStateToProps,
     updateUserConsortiaStatuses,
     writeLog,
     updateUserPerms,
-    clearLogs,
     appendLogMessage,
-    loadLocalData,
   })(DashboardWithData);
 
 export default withStyles(styles)(connectedComponent);

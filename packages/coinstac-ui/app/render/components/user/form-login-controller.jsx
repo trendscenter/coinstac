@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import {
-  clearUser,
   login,
   setAppDirectory,
   checkApiVersion,
@@ -83,7 +82,6 @@ const mapStateToProps = ({ auth, loading }) => ({
 });
 
 export default connect(mapStateToProps, {
-  clearUser,
   login,
   setAppDirectory,
   checkApiVersion,
