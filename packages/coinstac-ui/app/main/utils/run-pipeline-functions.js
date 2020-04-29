@@ -107,11 +107,15 @@ function mapVariablesIntoArray(inputSchema, dataMappings, data, baseDirectory) {
 function parsePipelineInput(pipeline, dataMappings) {
   const steps = [];
   let filesArray;
-  if (dataMappings.dataType === 'array') {
-    filesArray = dataMappings ? dataMappings.data[0].allFiles : [];
-  } else if (dataMappings.dataType === 'bundle') {
-    filesArray = dataMappings.files;
+
+  if (dataMappings) {
+    if (dataMappings.dataType === 'array') {
+      filesArray = dataMappings ? dataMappings.data[0].allFiles : [];
+    } else if (dataMappings.dataType === 'bundle') {
+      filesArray = dataMappings.files;
+    }
   }
+
 
   pipeline.steps.forEach((step, stepIndex) => {
     const consortiumMappedStepData = dataMappings ? dataMappings.dataMappings[stepIndex] : null;
@@ -120,12 +124,13 @@ function parsePipelineInput(pipeline, dataMappings) {
     const inputMapSchemaKeys = Object.keys(inputMapSchema);
     // terrible hack for convar type processing, fixxxxx
     inputMapSchemaKeys.forEach((inputSchemaKey) => {
-      if (dataMappings.dataType === 'array') {
-        const inputSchema = step.inputMap[inputSchemaKey];
+      const inputSchema = step.inputMap[inputSchemaKey];
 
-        if (!stepInputNeedsDataMapping(inputSchema)) {
-          return;
-        }
+      if (!stepInputNeedsDataMapping(inputSchema)) {
+        return;
+      }
+
+      if (dataMappings.dataType === 'array') {
 
         if (!consortiumMappedStepData) {
           throw new Error('Data was not mapped for at least one of the computation steps');
@@ -170,6 +175,7 @@ function parsePipelineInput(pipeline, dataMappings) {
         inputMapSchema[inputSchemaKey].value = dataMappings.dataMappings[stepIndex][inputSchemaKey];
       }
     });
+
     steps.push({
       ...step,
       inputMap: inputMapSchema,

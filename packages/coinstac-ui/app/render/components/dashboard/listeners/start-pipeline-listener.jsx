@@ -22,7 +22,7 @@ class StartPipelineListener extends React.Component {
   hasNewRemoteRun = (prevProps) => {
     const { remoteRuns } = this.props;
 
-    return prevProps.remoteRuns.length < remoteRuns.length;
+    return prevProps.remoteRuns.length > 0 && prevProps.remoteRuns.length < remoteRuns.length;
   }
 
   startPipelineIfHasActiveRun = () => {
