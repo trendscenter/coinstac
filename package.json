@@ -24,7 +24,7 @@
     "swig-templates": "^2.0.2"
   },
   "scripts": {
-    "api-server": "cd packages/coinstac-api-server/ && npm start",
+    "api-server": "cd packages/coinstac-api-server/ && docker-compose up -d && npm start",
     "devdata": "cd packages/coinstac-api-server/ && npm run test-setup",
     "server": "cd packages/coinstac-server/ && npm start",
     "watch": "cd packages/coinstac-ui/ && npm run watch",
