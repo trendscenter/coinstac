@@ -186,13 +186,13 @@ class Dashboard extends Component {
     ipcRenderer.on('local-run-complete', (event, arg) => {
       notifySuccess(`${arg.consName} Pipeline Complete.`);
 
-      updateLocalRun(arg.run.id, { results: arg.run.results, status: 'complete' });
+      updateLocalRun(arg.run.id, { results: arg.run.results, status: 'complete', type: arg.run.type });
     });
 
     ipcRenderer.on('local-run-error', (event, arg) => {
       notifyError(`${arg.consName} Pipeline Error.`);
 
-      updateLocalRun(arg.run.id, { error: arg.run.error, status: 'error' });
+      updateLocalRun(arg.run.id, { error: arg.run.error, status: 'error', type: arg.run.type });
     });
 
     ipcRenderer.on('log-message', (event, arg) => {
@@ -294,7 +294,7 @@ class Dashboard extends Component {
 
           // Update status of run in localDB
           ipcRenderer.send('clean-remote-pipeline', nextProps.remoteRuns[i].id);
-          updateLocalRun(run.id, { error: run.error, status: 'error' });
+          updateLocalRun(run.id, { error: run.error, status: 'error', type: run.type });
           notifyError(`${consortium.name} Pipeline Error.`);
 
           // Run already in props but results are incoming
@@ -375,12 +375,20 @@ class Dashboard extends Component {
   }
 
   componentDidUpdate(prevProps) {
-    const { currentUser, updateUserPerms } = this.props;
+    const {
+      currentUser, updateUserPerms, remoteRuns, saveLocalRun
+    } = this.props;
 
     if (currentUser
       && (!prevProps.currentUser || prevProps.currentUser.permissions !== currentUser.permissions)
     ) {
       updateUserPerms(currentUser.permissions);
+    }
+
+    if (prevProps.remoteRuns.length === 0 && remoteRuns.length > prevProps.remoteRuns.length) {
+      remoteRuns
+        .filter(run => run.type === 'local')
+        .forEach(run => saveLocalRun(run));
     }
   }
 

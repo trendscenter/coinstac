@@ -403,21 +403,24 @@ const resolvers = {
           fetchOnePipeline(consortium.activePipelineId),
           helperFunctions.getRethinkConnection()
         ]))
-        .then(([consortium, pipelineSnapshot, connection]) =>
-          rethink.table('runs').insert(
+        .then(([consortium, pipelineSnapshot, connection]) => {
+          const isPipelineDecentralized = pipelineSnapshot.steps.findIndex(step => step.controller.type === 'decentralized') > -1;
+
+          return rethink.table('runs').insert(
             {
               clients: [...consortium.members],
               consortiumId,
               pipelineSnapshot,
               startDate: Date.now(),
-              type: 'decentralized',
+              type: isPipelineDecentralized ? 'decentralized' : 'local',
             },
             {
               conflict: "replace",
               returnChanges: true,
             }
           )
-          .run(connection).then(res => connection.close().then(() => res))
+          .run(connection).then(res => connection.close().then(() => res));
+        }
         )
         .then((result) => {
           return axios.post(
@@ -671,13 +674,26 @@ const resolvers = {
      * @param {string} args.runId Run id to update
      * @param {string} args.error Error
      */
-    saveError: ({ auth: { credentials } }, args) => {
-      const { permissions } = credentials;
-      return helperFunctions.getRethinkConnection()
-        .then((connection) =>
-          rethink.table('runs').get(args.runId).update({ error: Object.assign({}, args.error), endDate: Date.now() })
-          .run(connection).then(res => connection.close()));
-          // .then(result => result.changes[0].new_val)
+    saveError: async ({ auth: { credentials } }, args) => {
+      const connection = await helperFunctions.getRethinkConnection();
+
+      const run = await rethink.table('runs').get(args.runId).run(connection);
+
+      if (!run) {
+        return;
+      }
+
+      const updateObj = {
+        endDate: Date.now()
+      };
+
+      if (run.type !== 'local') {
+        updateObj.error = Object.assign({}, args.error);
+      }
+
+      await rethink.table('runs').get(args.runId).update(updateObj);
+
+      return connection.close();
     },
     /**
      * Saves pipeline
@@ -743,14 +759,26 @@ const resolvers = {
      * @param {string} args.runId Run id to update
      * @param {string} args.results Results
      */
-    saveResults: ({ auth: { credentials } }, args) => {
-      console.log("save results was called");
-      const { permissions } = credentials;
-      return helperFunctions.getRethinkConnection()
-        .then((connection) =>
-          rethink.table('runs').get(args.runId).update({ results: Object.assign({}, args.results), endDate: Date.now() })
-          .run(connection).then(res => connection.close()))
-          // .then(result => result.changes[0].new_val)
+    saveResults: async ({ auth: { credentials } }, args) => {
+      const connection = await helperFunctions.getRethinkConnection();
+
+      const run = await rethink.table('runs').get(args.runId).run(connection);
+
+      if (!run) {
+        return;
+      }
+
+      const updateObj = {
+        endDate: Date.now()
+      };
+
+      if (run.type !== 'local') {
+        updateObj.results = Object.assign({}, args.results);
+      }
+
+      await rethink.table('runs').get(args.runId).update(updateObj);
+
+      return connection.close();
     },
     setActiveComputation: (_, args) => {
       return new Promise();
