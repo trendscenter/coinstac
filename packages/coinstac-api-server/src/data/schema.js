@@ -204,7 +204,6 @@ const typeDefs = `
     threadChanged(threadId: ID): Thread
     userRunChanged(userId: ID): Run
     userChanged(userId: ID): User
-    userMetadataChanged(userId: ID): User
   }
 `;
 

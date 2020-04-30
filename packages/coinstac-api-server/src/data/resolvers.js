@@ -1061,19 +1061,6 @@ const resolvers = {
       )
     },
     /**
-     * User Metadata subscription
-     * @param {object} payload
-     * @param {string} payload.userId The user changed
-     * @param {object} variables
-     * @param {string} variables.userId The user listened for
-     */
-    userMetadataChanged: {
-      subscribe: withFilter(
-        () => pubsub.asyncIterator('userMetadataChanged'),
-        (payload, variables) => (variables.userId && payload.userId === variables.userId)
-      )
-    },
-    /**
      * Run subscription
      * @param {object} payload
      * @param {string} payload.runId The run changed
