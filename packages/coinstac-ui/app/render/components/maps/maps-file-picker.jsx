@@ -78,7 +78,6 @@ class MapsFilePicker extends React.Component {
   addSingleGroup = () => {
     ipcPromise.send('open-dialog', 'singles')
       .then((obj) => {
-        console.log(obj);
         if (obj.error) {
           this.setState({ filesError: obj.error });
           return;

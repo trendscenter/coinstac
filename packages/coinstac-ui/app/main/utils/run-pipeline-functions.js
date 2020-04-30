@@ -191,8 +191,6 @@ function parsePipelineInput(pipeline, dataMappings) {
     });
   });
 
-  debugger;
-
   return {
     filesArray, // files for core to simlink
     steps,
