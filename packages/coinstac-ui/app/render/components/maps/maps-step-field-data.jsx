@@ -77,6 +77,7 @@ class MapsStepFieldData extends Component {
   render() {
     const {
       step,
+      label,
       type,
       classes,
       column,
