@@ -22,8 +22,6 @@ import Images from './displays/images';
 import String from './displays/string';
 import PipelineStep from '../pipelines/pipeline-step';
 import Iframe from './displays/iframe';
-import { getLocalRun } from '../../state/ducks/runs';
-
 
 const styles = theme => ({
   paper: {
@@ -70,9 +68,9 @@ class Result extends Component {
   };
 
   componentDidMount() {
-    const { params, getLocalRun } = this.props;
+    const { params: { resultId }, runs } = this.props;
 
-    const run = getLocalRun(params.resultId);
+    const run = runs.find(run => run.id === resultId);
 
     let plotData = {};
 
@@ -383,16 +381,16 @@ Result.propTypes = {
   auth: PropTypes.object.isRequired,
   classes: PropTypes.object.isRequired,
   consortia: PropTypes.array.isRequired,
+  runs: PropTypes.object.isRequired,
   params: PropTypes.object.isRequired,
-  getLocalRun: PropTypes.func.isRequired,
 };
 
-const mapStateToProps = ({ auth }) => ({
-  auth,
-});
+const mapStateToProps = ({ auth, runs: { runs } }) => {
+  return { auth, runs };
+};
 
 const connectedComponent = compose(
-  connect(mapStateToProps, { getLocalRun }),
+  connect(mapStateToProps),
   DragDropContext(HTML5Backend)
 )(Result);
 
