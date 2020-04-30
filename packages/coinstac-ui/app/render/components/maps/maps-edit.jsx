@@ -258,7 +258,6 @@ class MapsEdit extends Component {
   }
 
   removeColumnFromDataFileHeader = (column) => {
-    console.log(column);
     this.setState((prevState) => {
       const updatedDataFileHeader = [
         ...prevState.dataFileHeader,
