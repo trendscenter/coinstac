@@ -4,18 +4,35 @@
   "description": "",
   "main": "src/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\""
+    "test": "nyc ava"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "ava": "^3.8.1",
     "coinstac-socket.io-stream": "^0.9.1",
+    "clarify": "^2.1.0",
     "dockerode": "^2.5.5",
+    "get-stdin": "^6.0.0",
     "lodash": "^4.17.10",
     "portscanner": "^2.2.0",
     "request-stream": "^1.2.2",
+    "socket.io": "^2.1.1",
     "socket.io-client": "^2.1.1",
+    "socket.io-stream": "^0.9.1",
+    "trace": "^3.1.0",
+    "unzipper": "^0.10.3",
     "util": "^0.10.4",
     "winston": "^3.2.1"
+  },
+  "devDependencies": {
+    "nyc": "^15.0.1",
+    "sinon": "^9.0.2"
+  },
+  "ava": {
+    "files": [
+      "test/**.test.js"
+    ],
+    "timeout": "20s"
   }
 }

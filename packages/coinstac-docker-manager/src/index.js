@@ -31,8 +31,8 @@ const setTimeoutPromise = (delay) => {
 
 // TODO: ENV specific socket
 const docker = new Docker();
-const streamPool = {};
-const jobPool = {};
+// const streamPool = {};
+// const jobPool = {};
 let services = {};
 const portBlackList = new Set();
 
@@ -61,90 +61,90 @@ const generateServicePort = async (serviceId, start = 8100) => {
   return newPort;
 };
 
-const manageStream = (stream, jobId) => {
-  streamPool[jobId] = { stream, data: '', error: '' };
+// const manageStream = (stream, jobId) => {
+//   streamPool[jobId] = { stream, data: '', error: '' };
 
-  let header = null;
-  stream.on('readable', () => {
-    // Demux streams, docker puts stdout/err together
-    header = header || stream.read(8);
-    while (header !== null) {
-      const type = header.readUInt8(0);
-      const payload = stream.read(header.readUInt32BE(4));
-      if (payload === null) break;
-      if (type === 2) {
-        streamPool[jobId].error += payload;
-      } else {
-        streamPool[jobId].data += payload;
-      }
-      header = stream.read(8);
-    }
-  });
+//   let header = null;
+//   stream.on('readable', () => {
+//     // Demux streams, docker puts stdout/err together
+//     header = header || stream.read(8);
+//     while (header !== null) {
+//       const type = header.readUInt8(0);
+//       const payload = stream.read(header.readUInt32BE(4));
+//       if (payload === null) break;
+//       if (type === 2) {
+//         streamPool[jobId].error += payload;
+//       } else {
+//         streamPool[jobId].data += payload;
+//       }
+//       header = stream.read(8);
+//     }
+//   });
 
-  return new Promise((resolve, reject) => {
-    stream.on('end', () => {
-      const container = jobPool[jobId];
-      if (streamPool[jobId].error) {
-        container.remove()
-          .then(() => {
-            jobPool[jobId] = undefined;
-          });
-        reject(streamPool[jobId].error);
-        streamPool[jobId] = undefined;
-      } else {
-        resolve(streamPool[jobId].data);
-        streamPool[jobId] = undefined;
+//   return new Promise((resolve, reject) => {
+//     stream.on('end', () => {
+//       const container = jobPool[jobId];
+//       if (streamPool[jobId].error) {
+//         container.remove()
+//           .then(() => {
+//             jobPool[jobId] = undefined;
+//           });
+//         reject(streamPool[jobId].error);
+//         streamPool[jobId] = undefined;
+//       } else {
+//         resolve(streamPool[jobId].data);
+//         streamPool[jobId] = undefined;
 
-        container.remove()
-          .then(() => {
-            jobPool[jobId] = undefined;
-          });
-      }
-    });
-    stream.on('error', (err) => {
-      const container = jobPool[jobId];
+//         container.remove()
+//           .then(() => {
+//             jobPool[jobId] = undefined;
+//           });
+//       }
+//     });
+//     stream.on('error', (err) => {
+//       const container = jobPool[jobId];
 
-      streamPool[jobId] = undefined;
+//       streamPool[jobId] = undefined;
 
-      container.stop()
-        .then(() => container.remove())
-        .then(() => {
-          jobPool[jobId] = undefined;
-        });
-      reject(err);
-    });
-  });
-};
+//       container.stop()
+//         .then(() => container.remove())
+//         .then(() => {
+//           jobPool[jobId] = undefined;
+//         });
+//       reject(err);
+//     });
+//   });
+// };
 
-const queueJob = (jobId, input, opts) => {
-  const jobOpts = Object.assign(
-    {
-      AttachStdin: true,
-      AttachStdout: true,
-      AttachStderr: true,
-      Cmd: input,
-    },
-    Object.assign({}, opts, opts.Image.includes(':') ? {} : { Image: `${opts.Image}:latest` })
-  );
-  return docker.createContainer(jobOpts).then((container) => {
-    jobPool[jobId] = container;
+// const queueJob = (jobId, input, opts) => {
+//   const jobOpts = Object.assign(
+//     {
+//       AttachStdin: true,
+//       AttachStdout: true,
+//       AttachStderr: true,
+//       Cmd: input,
+//     },
+//     Object.assign({}, opts, opts.Image.includes(':') ? {} : { Image: `${opts.Image}:latest` })
+//   );
+//   return docker.createContainer(jobOpts).then((container) => {
+//     jobPool[jobId] = container;
 
-    // Return a Promise that resolves when the container's data stream 2closes,
-    // which should happen when the comp is done.
-    const dataFinished = new Promise((resolve, reject) => {
-      container.attach({ stream: true, stdout: true, stderr: true }, (err, stream) => {
-        if (!err) {
-          resolve(manageStream(stream, jobId));
-        }
+//     // Return a Promise that resolves when the container's data stream 2closes,
+//     // which should happen when the comp is done.
+//     const dataFinished = new Promise((resolve, reject) => {
+//       container.attach({ stream: true, stdout: true, stderr: true }, (err, stream) => {
+//         if (!err) {
+//           resolve(manageStream(stream, jobId));
+//         }
 
-        reject(err);
-      });
-    });
+//         reject(err);
+//       });
+//     });
 
-    return container.start()
-      .then(() => dataFinished);
-  });
-};
+//     return container.start()
+//       .then(() => dataFinished);
+//   });
+// };
 
 /**
  * Retrieve list of all local Docker images
@@ -214,7 +214,10 @@ const startService = (serviceId, serviceUserId, opts) => {
           // merge opts one level deep
           const memo = {};
           for (let [key] of Object.entries(defaultOpts)) { // eslint-disable-line no-restricted-syntax, max-len, prefer-const
-            memo[key] = Object.assign(defaultOpts[key], opts.docker[key] ? opts.docker[key] : {});
+            memo[key] = Object.assign(
+              defaultOpts[key],
+              opts.docker && opts.docker[key] ? opts.docker[key] : {}
+            );
           }
 
           const jobOpts = Object.assign(
@@ -340,7 +343,6 @@ const startService = (serviceId, serviceUserId, opts) => {
                 return parsed;
               });
             }
-
             // no http opt use WS
             let proxR;
             let proxRj;
@@ -524,7 +526,7 @@ const pruneImages = () => {
         });
       });
     }));
-  });
+  }).catch(() => {});
 };
 
 /**
@@ -648,7 +650,7 @@ const stopService = (serviceId, serviceUserId, waitForBox) => {
 const stopAllServices = () => {
   return Promise.all(
     Object.keys(services)
-      .map(service => services[service].container.stop())
+      .map(serviceId => services[serviceId].container.stop())
   )
     .then(() => {
       services = {};
@@ -662,10 +664,11 @@ module.exports = {
   pullImagesFromList,
   pruneImages,
   removeImage,
-  queueJob,
+  // queueJob,
   setLogger,
   startService,
   stopService,
   stopAllServices,
+  docker,
   Docker,
 };
