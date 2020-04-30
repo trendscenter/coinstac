@@ -1,3 +1,4 @@
+/* eslint-disable react/no-find-dom-node */
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 import Icon from '@material-ui/core/Icon';
@@ -30,12 +31,12 @@ const styles = theme => ({
     backgroundColor: '#efefef',
     padding: '1rem',
     borderRadius: '0.25rem',
-    overflowY: 'hidden'
+    overflowY: 'hidden',
   },
   fileListItem: {
     whiteSpace: 'nowrap',
     fontSize: '0.75rem',
-    margin: '0.25rem'
+    margin: '0.25rem',
   },
   actionsContainer: {
     marginTop: theme.spacing.unit * 2,
@@ -58,8 +59,8 @@ class MapsCollection extends Component {
   componentDidUpdate(prevProps) {
     const { registerDraggableContainer, dataFileHeader } = this.props;
 
-    if (this.refs.Container && !prevProps.dataFileHeader && dataFileHeader) {
-      const Container = ReactDOM.findDOMNode(this.refs.Container);
+    if (this.container && !prevProps.dataFileHeader && dataFileHeader) {
+      const Container = ReactDOM.findDOMNode(this.container);
 
       registerDraggableContainer(Container);
     }
@@ -229,16 +230,28 @@ class MapsCollection extends Component {
                   dataType === 'array' && (
                     <div>
                       <Typography>
-                        <span className="bold">Items Mapped:</span> {stepsMapped} of {stepsTotal}
+                        <span className="bold">Items Mapped:</span>
+                        {' '}
+                        {stepsMapped}
+                        {' '}
+                        of
+                        {' '}
+                        {stepsTotal}
                       </Typography>
                       <Typography>
-                        <span className="bold">Extension:</span> {dataFile.extension}
+                        <span className="bold">Extension:</span>
+                        {' '}
+                        {dataFile.extension}
                       </Typography>
                       <Typography>
-                        <span className="bold">Original MetaFile Header:</span> {dataFile.metaFile[0].join(', ')}
+                        <span className="bold">Original MetaFile Header:</span>
+                        {' '}
+                        {dataFile.metaFile[0].join(', ')}
                       </Typography>
                       <Typography>
-                        <span className="bold">Mapped MetaFile Header:</span> {dataFileHeader.join(', ')}
+                        <span className="bold">Mapped MetaFile Header:</span>
+                        {' '}
+                        {dataFileHeader.join(', ')}
                       </Typography>
                     </div>
                   )
@@ -254,7 +267,7 @@ class MapsCollection extends Component {
                         {
                           dataFile.files.map((file, i) => (
                             <div key={file} className={classes.fileListItem}>
-                              { `(${i+1}) ${file}` }
+                              { `(${i + 1}) ${file}` }
                             </div>
                           ))
                         }
@@ -265,7 +278,7 @@ class MapsCollection extends Component {
                 <div>
                   {
                     remainingDataVariables && (
-                      <div className="card-deck" ref="Container">
+                      <div className="card-deck" ref={(ref) => { this.container = ref; }}>
                         { dataType !== 'singles' &&
                           remainingDataVariables.map(columnName => (
                             <div
@@ -276,9 +289,10 @@ class MapsCollection extends Component {
                               <FileCopyIcon />
                               { columnName }
                               { dataType !== 'array' ? `Bundle (${dataFile.files.length} files)` : '' }
-                              <span onClick={() => removeColumnFromDataFileHeader(columnName)}>
-                                <Icon className={classNames('fa fa-times-circle', classes.timesIcon)} />
-                              </span>
+                              <Icon
+                                className={classNames('fa fa-times-circle', classes.timesIcon)}
+                                onClick={() => removeColumnFromDataFileHeader(columnName)}
+                              />
                             </div>
                           ))
                         }
@@ -375,21 +389,21 @@ MapsCollection.defaultProps = {
 
 MapsCollection.propTypes = {
   activeConsortium: PropTypes.object.isRequired,
-  addToDataMapping: PropTypes.func.isRequired,
-  setSelectedDataFile: PropTypes.func.isRequired,
+  classes: PropTypes.object.isRequired,
+  dataFile: PropTypes.object,
   dataFileHeader: PropTypes.array,
-  saveDataMapping: PropTypes.func.isRequired,
-  resetDataMapping: PropTypes.func.isRequired,
-  registerDraggableContainer: PropTypes.func.isRequired,
   dataType: PropTypes.string.isRequired,
-  stepsTotal: PropTypes.number.isRequired,
-  stepsMapped: PropTypes.number.isRequired,
   stepsDataMappings: PropTypes.array.isRequired,
+  stepsMapped: PropTypes.number.isRequired,
+  stepsTotal: PropTypes.number.isRequired,
+  addToDataMapping: PropTypes.func.isRequired,
+  registerDraggableContainer: PropTypes.func.isRequired,
   removeColumnFromDataFileHeader: PropTypes.func.isRequired,
   removeExtraColumnsFromDataFileHeader: PropTypes.func.isRequired,
   removeSelectedFile: PropTypes.func.isRequired,
-  dataFile: PropTypes.object,
-  classes: PropTypes.object.isRequired,
+  resetDataMapping: PropTypes.func.isRequired,
+  saveDataMapping: PropTypes.func.isRequired,
+  setSelectedDataFile: PropTypes.func.isRequired,
 };
 
 export default withStyles(styles)(MapsCollection);

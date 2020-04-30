@@ -7,24 +7,22 @@ import UserAccount from './user-account';
 
 
 class UserAccountController extends Component {
-  constructor(props) {
-    super(props);
-    this.logoutUser = this.logoutUser.bind(this);
-  }
-
-  logoutUser(evt) {
+  logoutUser = (evt) => {
     const { router } = this.context;
+    const {
+      logout, notifySuccess, notifyError, writeLog,
+    } = this.props;
 
     evt.preventDefault();
 
-    this.props.logout()
+    logout()
       .then(() => {
         router.push('/login');
-        this.props.notifySuccess('Successfully logged out');
+        notifySuccess('Successfully logged out');
       })
       .catch((err) => {
-        this.props.writeLog({ type: 'error', message: err });
-        this.props.notifyError('Error logging out');
+        writeLog({ type: 'error', message: err });
+        notifyError('Error logging out');
       });
   }
 
@@ -33,7 +31,6 @@ class UserAccountController extends Component {
       <UserAccount logoutUser={this.logoutUser} {...this.props} />
     );
   }
-
 }
 
 UserAccountController.contextTypes = {
@@ -49,11 +46,7 @@ UserAccountController.propTypes = {
   writeLog: PropTypes.func.isRequired,
 };
 
-const mapStateToProps = ({ auth: { user } }) => {
-  return { user };
-};
-
-export default connect(mapStateToProps, {
+export default connect(null, {
   logout,
   notifyError,
   notifySuccess,

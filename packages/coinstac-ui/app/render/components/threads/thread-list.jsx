@@ -1,9 +1,9 @@
-import React, { Component } from 'react'
-import PropTypes from 'prop-types'
-import { get, orderBy } from 'lodash'
-import { withStyles } from '@material-ui/core/styles'
-import ThreadCard from './thread-card'
-import { ThreadContext } from './context'
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
+import { get, orderBy } from 'lodash';
+import { withStyles } from '@material-ui/core/styles';
+import ThreadCard from './thread-card';
+import { ThreadContext } from './context';
 
 const styles = theme => ({
   wrapper: {
@@ -11,7 +11,7 @@ const styles = theme => ({
     flexDirection: 'column',
     width: 250,
     borderRight: `1px solid ${theme.palette.grey[300]}`,
-  }, 
+  },
   threads: {
     flex: 1,
     overflow: 'auto',
@@ -29,20 +29,22 @@ const styles = theme => ({
     '&:hover': {
       backgroundColor: '#005a9e',
     },
-  }
-})
+  },
+});
 
 class ThreadList extends Component {
   isThreadUnread = (thread) => {
-    const { auth } = this.context
-    const user = thread.users.find(({ username }) => username === auth.user.id)
+    const { auth } = this.context;
+    const user = thread.users.find(({ username }) => username === auth.user.id);
 
-    return !get(user, 'isRead', true)
+    return !get(user, 'isRead', true);
   }
 
   render() {
-    const { classes, selectedThread, onThreadClick, onThreadNewClick } = this.props
-    const { threads } = this.context
+    const {
+      classes, selectedThread, onThreadClick, onThreadNewClick,
+    } = this.props;
+    const { threads } = this.context;
 
     return (
       <div className={classes.wrapper}>
@@ -52,29 +54,33 @@ class ThreadList extends Component {
               key={thread.id}
               thread={thread}
               isSelected={thread.id === selectedThread}
-              isUnread ={this.isThreadUnread(thread)}
+              isUnread={this.isThreadUnread(thread)}
               onClick={() => onThreadClick(thread.id)}
-            />)
-          )}
+            />))}
         </div>
         <button
+          type="button"
           className={classes.button}
           onClick={onThreadNewClick}
         >
           New Message
         </button>
       </div>
-    )
+    );
   }
 }
+
+ThreadList.defaultProps = {
+  selectedThread: null,
+};
 
 ThreadList.propTypes = {
   classes: PropTypes.object.isRequired,
   selectedThread: PropTypes.any,
   onThreadClick: PropTypes.func.isRequired,
   onThreadNewClick: PropTypes.func.isRequired,
-}
+};
 
-ThreadList.contextType = ThreadContext
+ThreadList.contextType = ThreadContext;
 
-export default withStyles(styles)(ThreadList)
+export default withStyles(styles)(ThreadList);

@@ -8,16 +8,39 @@ import maps from './ducks/maps';
 import runs from './ducks/runs';
 import notifications from './ducks/notifyAndLog';
 
-const rootReducer = client => combineReducers({
-  apollo: client.reducer(),
-  app,
-  auth,
-  docker,
-  loading,
-  notifications,
-  runs,
-  maps,
-  routing: routerReducer,
-});
+const CLEAR_STATE = 'CLEAR_STATE';
+const REHYDRATE = 'REHYDRATE';
+
+export const clearState = () => ({ type: CLEAR_STATE });
+export const rehydrate = state => ({ type: REHYDRATE, payload: state });
+
+function rootReducer(client) {
+  const appReducer = combineReducers({
+    apollo: client.reducer(),
+    app,
+    auth,
+    docker,
+    loading,
+    notifications,
+    runs,
+    maps,
+    routing: routerReducer,
+  });
+
+  return (state, action) => {
+    if (action.type === CLEAR_STATE) {
+      state = undefined;
+    }
+
+    if (action.type === REHYDRATE) {
+      state = {
+        ...state,
+        ...action.payload,
+      };
+    }
+
+    return appReducer(state, action);
+  };
+}
 
 export default rootReducer;

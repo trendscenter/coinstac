@@ -19,7 +19,7 @@ function getWaitingOnUsers({
 
   if (allUsernames.length !== Object.keys(groupStep.userStep).length) {
     return difference(allUsernames, currentUsernames);
-  } else if (values(groupStep.userStep).some(step => step !== currentStep)) {
+  } if (values(groupStep.userStep).some(step => step !== currentStep)) {
     return reduce(groupStep.userStep, (memo, step, username) => (
       step !== currentStep ? memo.concat(username) : memo
     ), []);

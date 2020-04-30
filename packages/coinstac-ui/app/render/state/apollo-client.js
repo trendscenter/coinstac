@@ -6,6 +6,7 @@ import {
 import { SubscriptionClient, addGraphQLSubscriptions } from 'subscriptions-transport-ws';
 import { ipcRenderer } from 'electron';
 import { get } from 'lodash';
+import { getCurrentApiTokenKey } from './ducks/auth';
 import { EXPIRED_TOKEN, BAD_TOKEN } from '../utils/error-codes';
 
 const utf8Decoder = new TextDecoder('utf-8');
@@ -59,10 +60,10 @@ function getApolloClient(config) {
       }
 
       // get the authentication token from local storage if it exists
-      let token = localStorage.getItem('id_token');
+      let token = localStorage.getItem(getCurrentApiTokenKey());
 
       if (!token || token === 'null' || token === 'undefined') {
-        token = sessionStorage.getItem('id_token');
+        token = sessionStorage.getItem(getCurrentApiTokenKey());
       }
 
       req.options.headers.authorization = token ? `Bearer ${token}` : null;

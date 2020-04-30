@@ -54,15 +54,16 @@ function DashboardHome(props) {
 }
 
 DashboardHome.propTypes = {
+  classes: PropTypes.object.isRequired,
   consortia: PropTypes.array.isRequired,
   runs: PropTypes.array.isRequired,
   userId: PropTypes.string.isRequired,
-  classes: PropTypes.object.isRequired,
 };
 
-function mapStateToProps({ auth: { user: { id } }, runs: { runs } }) {
-  return { runs, userId: id };
-}
+const mapStateToProps = ({ auth, runs }) => ({
+  runs: runs.runs,
+  userId: auth.user.id,
+});
 
 const connectedComponent = connect(mapStateToProps)(DashboardHome);
 

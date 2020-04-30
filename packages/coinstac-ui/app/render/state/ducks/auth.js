@@ -1,12 +1,19 @@
 import axios from 'axios';
 import ipcPromise from 'ipc-promise';
-import { remote } from 'electron';
+import { remote, ipcRenderer } from 'electron';
 import { get } from 'lodash';
 import { LOCATION_CHANGE } from 'react-router-redux';
 import { applyAsyncLoading } from './loading';
 
 const apiServer = remote.getGlobal('config').get('apiServer');
 const API_URL = `${apiServer.protocol}//${apiServer.hostname}${apiServer.port ? `:${apiServer.port}` : ''}${apiServer.pathname}`;
+
+const API_TOKEN_KEY = 'id_token';
+let currentApiTokenKey = null;
+
+export function getCurrentApiTokenKey() {
+  return currentApiTokenKey;
+}
 
 const getErrorDetail = error => ({
   message: get(error, 'response.data.message'),
@@ -66,10 +73,14 @@ const initCoreAndSetToken = (reqUser, data, appDirectory, dispatch) => {
     .then(() => {
       const user = { ...data.user, label: reqUser.username };
 
+      ipcRenderer.send('login-success', data.user.id);
+
+      currentApiTokenKey = `${API_TOKEN_KEY}_${data.user.id}`;
+
       if (reqUser.saveLogin) {
-        localStorage.setItem('id_token', data.id_token);
+        localStorage.setItem(getCurrentApiTokenKey(), data.id_token);
       } else {
-        sessionStorage.setItem('id_token', data.id_token);
+        sessionStorage.setItem(getCurrentApiTokenKey(), data.id_token);
       }
 
       dispatch(setUser(user));
@@ -77,20 +88,21 @@ const initCoreAndSetToken = (reqUser, data, appDirectory, dispatch) => {
 };
 
 export const logout = applyAsyncLoading(() => (dispatch) => {
-  localStorage.removeItem('id_token');
-  sessionStorage.removeItem('id_token');
+  localStorage.removeItem(getCurrentApiTokenKey());
+  sessionStorage.removeItem(getCurrentApiTokenKey());
   return ipcPromise.send('logout')
     .then(() => {
       dispatch(clearUser());
+      currentApiTokenKey = null;
     });
 });
 
 export const autoLogin = applyAsyncLoading(() => (dispatch, getState) => {
-  let token = localStorage.getItem('id_token');
+  let token = localStorage.getItem(getCurrentApiTokenKey());
   let saveLogin = true;
 
   if (!token || token === 'null' || token === 'undefined') {
-    token = sessionStorage.getItem('id_token');
+    token = sessionStorage.getItem(getCurrentApiTokenKey());
     saveLogin = false;
   }
 

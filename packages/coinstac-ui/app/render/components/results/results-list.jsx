@@ -30,9 +30,9 @@ const ResultsList = ({ runs, consortia, classes }) => {
 };
 
 ResultsList.propTypes = {
-  runs: PropTypes.array,
-  consortia: PropTypes.array,
   classes: PropTypes.object.isRequired,
+  consortia: PropTypes.array,
+  runs: PropTypes.array,
 };
 
 ResultsList.defaultProps = {
