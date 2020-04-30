@@ -40,7 +40,6 @@ class PipelineStepInput extends Component {
     this.state = {
       isClientProp: props.objKey === 'covariates' || props.objKey === 'data',
       openInputSourceMenu: false,
-      filePath: '',
     };
 
     this.addClientProp = this.addClientProp.bind(this);
@@ -48,11 +47,13 @@ class PipelineStepInput extends Component {
   }
 
   componentDidUpdate = () => {
-    const { objKey, objParams, updateStep, step } = this.props;
+    const {
+      objKey, objParams, updateStep, step,
+    } = this.props;
     if (step && objKey === 'data' && !step.dataMeta) {
       updateStep({
         ...step,
-        dataMeta: objParams
+        dataMeta: objParams,
       });
     }
   }
@@ -61,6 +62,7 @@ class PipelineStepInput extends Component {
     prop, value, clientPropIndex, isValueArray
   ) { // eslint-disable-line class-methods-use-this
     const { objKey, possibleInputs, step: { inputMap } } = this.props;
+    const { isClientProp } = this.state;
     const inputCopy = { ...inputMap };
 
     // Close alternate source prop
@@ -70,10 +72,12 @@ class PipelineStepInput extends Component {
       delete inputCopy.fromCache;
     }
 
-    if (!this.state.isClientProp && value === 'DELETE_VAR') {
-      delete inputCopy[prop];
-      return { ...inputCopy };
-    } else if (!this.state.isClientProp) {
+    if (!isClientProp) {
+      if (value === 'DELETE_VAR') {
+        delete inputCopy[prop];
+        return { ...inputCopy };
+      }
+
       return { ...inputCopy, [prop]: value };
     }
 
@@ -198,20 +202,20 @@ class PipelineStepInput extends Component {
       classes,
     } = this.props;
 
-    const { openInputSourceMenu, filePath } = this.state;
+    const { openInputSourceMenu } = this.state;
 
     let sourceDropDownLabel = null;
     let isValue = false;
     let isFromCache;
     let visibility = 'block';
 
-    if (objParams.conditional &&
-      objParams.conditional.variable &&
-      step.inputMap) {
+    if (objParams.conditional
+      && objParams.conditional.variable
+      && step.inputMap) {
       visibility = 'none';
-      if (step.inputMap[objParams.conditional.variable] &&
-          step.inputMap[objParams.conditional.variable].value ===
-          objParams.conditional.value) {
+      if (step.inputMap[objParams.conditional.variable]
+          && step.inputMap[objParams.conditional.variable].value
+          === objParams.conditional.value) {
         visibility = 'block';
       }
     }
@@ -461,8 +465,7 @@ class PipelineStepInput extends Component {
                                     step: itemObj.possibleInputIndex,
                                     variable: itemInput[0],
                                   },
-                                }
-                              ),
+                                }),
                             })}
                           >
                             {`Computation ${itemObj.possibleInputIndex + 1}: ${itemInput[1].label}`}
@@ -484,17 +487,19 @@ PipelineStepInput.defaultProps = {
   parentKey: '',
   owner: false,
   possibleInputs: [],
+  users: [],
   updateStep: null,
 };
 
 PipelineStepInput.propTypes = {
   classes: PropTypes.object.isRequired,
-  parentKey: PropTypes.string,
-  possibleInputs: PropTypes.array,
   objKey: PropTypes.string.isRequired,
   objParams: PropTypes.object.isRequired,
   owner: PropTypes.bool,
+  parentKey: PropTypes.string,
+  possibleInputs: PropTypes.array,
   step: PropTypes.object.isRequired,
+  users: PropTypes.array,
   updateStep: PropTypes.func,
 };
 

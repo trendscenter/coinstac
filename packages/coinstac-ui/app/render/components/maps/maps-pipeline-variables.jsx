@@ -65,11 +65,11 @@ function MapsPipelineVariables(props) {
 }
 
 MapsPipelineVariables.propTypes = {
+  classes: PropTypes.object.isRequired,
   consortium: PropTypes.object.isRequired,
   stepsDataMappings: PropTypes.array.isRequired,
   registerDraggableContainer: PropTypes.func.isRequired,
   unmapField: PropTypes.func.isRequired,
-  classes: PropTypes.object.isRequired,
 };
 
 export default withStyles(styles)(MapsPipelineVariables);

@@ -156,7 +156,10 @@ class PipelineOwnerMappings extends React.Component {
                   && (
                     <div id={`data-${index}-area`}>
                       <Select
-                        value={obj.value ? obj.value.map(val => ({ label: val, value: val })) : null}
+                        value={obj.value
+                          ? obj.value.map(val => ({ label: val, value: val }))
+                          : null
+                        }
                         placeholder="Select Area(s) of Interest"
                         options={freeSurferOptions}
                         isMulti
@@ -200,7 +203,7 @@ class PipelineOwnerMappings extends React.Component {
                       Object.entries(itemObj.inputs)
                         .filter(filterIn => (
                           obj.fromCache && possibleInputs.length
-                            ? filterIn[1].type && filterIn[1].type === possibleInputs[obj.fromCache.step].inputs[obj.fromCache.variable].type
+                            ? filterIn[1].type && filterIn[1].type === possibleInputs[obj.fromCache.step].inputs[obj.fromCache.variable].type // eslint-disable-line
                             : filterIn[1].type && filterIn[1].type === obj.type
                         ))
                         .map(itemInput => (
@@ -276,14 +279,14 @@ class PipelineOwnerMappings extends React.Component {
 }
 
 PipelineOwnerMappings.propTypes = {
-  getNewObj: PropTypes.func.isRequired,
+  index: PropTypes.number.isRequired,
   obj: PropTypes.object.isRequired,
   objKey: PropTypes.string.isRequired,
   objParams: PropTypes.object.isRequired,
-  index: PropTypes.number.isRequired,
   owner: PropTypes.bool.isRequired,
   possibleInputs: PropTypes.array.isRequired,
   step: PropTypes.object.isRequired,
+  getNewObj: PropTypes.func.isRequired,
   updateStep: PropTypes.func.isRequired,
 };
 

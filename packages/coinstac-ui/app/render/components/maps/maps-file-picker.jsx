@@ -169,8 +169,8 @@ class MapsFilePicker extends React.Component {
 }
 
 MapsFilePicker.propTypes = {
-  dataType: PropTypes.string.isRequired,
   classes: PropTypes.object.isRequired,
+  dataType: PropTypes.string.isRequired,
   setSelectedDataFile: PropTypes.func.isRequired,
 };
 

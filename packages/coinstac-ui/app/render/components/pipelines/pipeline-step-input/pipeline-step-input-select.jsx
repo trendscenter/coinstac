@@ -62,8 +62,8 @@ PipelineStepInputSelect.propTypes = {
   objParams: PropTypes.object.isRequired,
   owner: PropTypes.bool.isRequired,
   step: PropTypes.object.isRequired,
-  updateStep: PropTypes.func.isRequired,
   getNewObj: PropTypes.func.isRequired,
+  updateStep: PropTypes.func.isRequired,
 };
 
 export default PipelineStepInputSelect;
