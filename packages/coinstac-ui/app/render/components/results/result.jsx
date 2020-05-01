@@ -265,7 +265,7 @@ class Result extends Component {
                   <Iframe
                     plotData={plotData}
                     title={`${consortium.name}_${run.pipelineSnapshot.name}`}
-                    path={`${appDirectory}/output/${user.id}/${run.id}/${run.pipelineSnapshot.steps[0].inputMap.results_html_path.value}`}
+                    path={path.join(appDirectory, 'output', user.id, run.id, run.pipelineSnapshot.steps[0].inputMap.results_html_path.value)}
                   />
                 )
               }
