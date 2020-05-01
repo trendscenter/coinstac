@@ -349,7 +349,7 @@ class MapsEdit extends Component {
   }
 
   getFileName = (filepath) => {
-    return path.basename(filepath, path.extname(filepath);
+    return path.basename(filepath, path.extname(filepath));
   }
 
   render() {
