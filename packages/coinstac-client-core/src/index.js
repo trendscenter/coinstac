@@ -196,8 +196,8 @@ class CoinstacClient {
         const dirs = await readdirAsync(p);
         const paths = [...dirs.filter(item => !(/(^|\/)\.[^/.]/g).test(item))];
         // Recursively retrieve path contents of directory
-        const subGroup = this.getSubPathsAndGroupExtension({
-          paths: [...fs.readdirSync(p).filter(item => !(/(^|\/)\.[^\/\.]/g).test(item))], // eslint-disable-line no-useless-escape
+        const subGroup = await this.getSubPathsAndGroupExtension({
+          path,
           extension: group.extension,
           parentDir: p,
         });
@@ -218,7 +218,7 @@ class CoinstacClient {
 
         if ((!multext && group.extension && thisExtension !== group.extension)
              || (!multext && extension && extension !== thisExtension)) {
-          return { error: `Group contains multiple extensions - ${thisExtension} & ${group.extension ? group.extension : extension}.` };
+          return { error: `Group contains multiple extensions - ${thisExtension} & ${group.extension || extension}.` };
         }
 
         extension = thisExtension;
