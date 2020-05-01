@@ -19,6 +19,7 @@ import {
 } from '../../state/graphql/functions';
 import MapsPipelineVariables from './maps-pipeline-variables';
 import MapsCollection from './maps-collection';
+import path from 'path';
 
 const styles = theme => ({
   rootPaper: {
@@ -347,8 +348,8 @@ class MapsEdit extends Component {
     });
   }
 
-  getFileName = (path) => {
-    return path.split("/").pop().split(".")[0];
+  getFileName = (filepath) => {
+    return path.basename(filepath, path.extname(filepath);
   }
 
   render() {
