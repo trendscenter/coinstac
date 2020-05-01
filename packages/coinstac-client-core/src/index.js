@@ -197,7 +197,7 @@ class CoinstacClient {
         const paths = [...dirs.filter(item => !(/(^|\/)\.[^/.]/g).test(item))];
         // Recursively retrieve path contents of directory
         const subGroup = await this.getSubPathsAndGroupExtension({
-          path,
+          paths,
           extension: group.extension,
           parentDir: p,
         });
