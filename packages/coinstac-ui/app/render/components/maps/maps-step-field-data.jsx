@@ -11,6 +11,7 @@ import ListItemText from '@material-ui/core/ListItemText';
 import { withStyles } from '@material-ui/core/styles';
 import FileCopyIcon from '@material-ui/icons/FileCopy';
 import classNames from 'classnames';
+import path from 'path';
 
 const styles = theme => ({
   rootPaper: {
@@ -75,12 +76,12 @@ class MapsStepFieldData extends Component {
     }
   }
 
-  strMasseuse = (path) => {
-    let str = path.split("/").pop().split(".")[0];
-    if (str.length > 12) {
-      str = '...'+str.slice(str.length - 12);
+  strMasseuse = (filepath) => {
+    let filename = path.basename(filepath, path.extname(filepath));
+    if (filename.length > 12) {
+      filename = `...${filename.slice(filename.length - 12)}`;
     }
-    return str;
+    return filename;
   }
 
   render() {
