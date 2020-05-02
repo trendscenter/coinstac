@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import {
-  clearUser,
   login,
   setAppDirectory,
   checkApiVersion,
@@ -73,17 +72,16 @@ FormLoginController.displayName = 'FormLoginController';
 FormLoginController.propTypes = {
   auth: PropTypes.object.isRequired,
   loading: PropTypes.object.isRequired,
+  checkApiVersion: PropTypes.func.isRequired,
   login: PropTypes.func.isRequired,
   setAppDirectory: PropTypes.func.isRequired,
-  checkApiVersion: PropTypes.func.isRequired,
 };
 
-const mapStateToProps = ({ auth, loading }) => {
-  return { auth, loading };
-};
+const mapStateToProps = ({ auth, loading }) => ({
+  auth, loading,
+});
 
 export default connect(mapStateToProps, {
-  clearUser,
   login,
   setAppDirectory,
   checkApiVersion,

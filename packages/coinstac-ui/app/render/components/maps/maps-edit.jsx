@@ -390,7 +390,9 @@ class MapsEdit extends Component {
                             addToDataMapping={this.addToDataMapping}
                             stepsDataMappings={stepsDataMappings}
                             removeColumnFromDataFileHeader={this.removeColumnFromDataFileHeader}
-                            removeExtraColumnsFromDataFileHeader={this.removeExtraColumnsFromDataFileHeader}
+                            removeExtraColumnsFromDataFileHeader={
+                              this.removeExtraColumnsFromDataFileHeader
+                            }
                             dataFile={dataFile}
                             dataFileHeader={dataFileHeader}
                             saveDataMapping={this.saveDataMapping}
@@ -412,22 +414,20 @@ class MapsEdit extends Component {
 }
 
 MapsEdit.propTypes = {
-  params: PropTypes.object.isRequired,
+  auth: PropTypes.object.isRequired,
+  classes: PropTypes.object.isRequired,
   consortia: PropTypes.array.isRequired,
   maps: PropTypes.array.isRequired,
+  params: PropTypes.object.isRequired,
   pipelines: PropTypes.array.isRequired,
   saveDataMapping: PropTypes.func.isRequired,
   updateConsortiumMappedUsers: PropTypes.func.isRequired,
-  auth: PropTypes.object.isRequired,
-  classes: PropTypes.object.isRequired,
 };
 
-function mapStateToProps({ auth, maps }) {
-  return {
-    auth,
-    maps: maps.consortiumDataMappings,
-  };
-}
+const mapStateToProps = ({ auth, maps }) => ({
+  auth,
+  maps: maps.consortiumDataMappings,
+});
 
 const ComponentWithData = compose(
   graphql(

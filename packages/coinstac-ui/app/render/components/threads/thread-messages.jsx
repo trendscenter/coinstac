@@ -1,7 +1,7 @@
-import React, { Component } from 'react'
-import PropTypes from 'prop-types'
-import { withStyles } from '@material-ui/core/styles'
-import ThreadMessage from './thread-message'
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
+import { withStyles } from '@material-ui/core/styles';
+import ThreadMessage from './thread-message';
 
 const styles = () => ({
   wrapper: {
@@ -10,23 +10,23 @@ const styles = () => ({
     display: 'flex',
     flexDirection: 'column',
   },
-})
+});
 
 class ThreadMessages extends Component {
   componentDidMount() {
-    this.scrollToBottom('auto')
+    this.scrollToBottom('auto');
   }
 
   componentDidUpdate() {
-    this.scrollToBottom('smooth')
+    this.scrollToBottom('smooth');
   }
 
-  scrollToBottom = behavior => {
-    this.lastRef.scrollIntoView({ behavior })
+  scrollToBottom = (behavior) => {
+    this.lastRef.scrollIntoView({ behavior });
   }
 
   render() {
-    const { classes, messages } = this.props
+    const { classes, messages, joinConsortium } = this.props;
 
     return (
       <div className={classes.wrapper}>
@@ -34,19 +34,23 @@ class ThreadMessages extends Component {
           <ThreadMessage
             key={message.id}
             message={message}
-            joinConsortium={this.props.joinConsortium}
+            joinConsortium={joinConsortium}
           />
         ))}
-        <div ref={ref => this.lastRef = ref} />
+        <div ref={(ref) => { this.lastRef = ref; }} />
       </div>
-    )
+    );
   }
 }
+
+ThreadMessages.defaultProps = {
+  messages: [],
+};
 
 ThreadMessages.propTypes = {
   classes: PropTypes.object.isRequired,
   messages: PropTypes.array,
   joinConsortium: PropTypes.func.isRequired,
-}
+};
 
-export default withStyles(styles)(ThreadMessages)
+export default withStyles(styles)(ThreadMessages);

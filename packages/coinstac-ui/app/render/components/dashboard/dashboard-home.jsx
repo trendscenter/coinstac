@@ -54,10 +54,10 @@ function DashboardHome(props) {
 }
 
 DashboardHome.propTypes = {
+  classes: PropTypes.object.isRequired,
   consortia: PropTypes.array.isRequired,
   runs: PropTypes.array.isRequired,
   user: PropTypes.object.isRequired,
-  classes: PropTypes.object.isRequired,
 };
 
 function mapStateToProps({ auth: { user }, runs: { runs } }) {

@@ -1,4 +1,5 @@
-import React, { Component, Fragment } from 'react';
+/* eslint-disable react/no-unused-prop-types */
+import React, { Component } from 'react';
 import { DragSource, DropTarget } from 'react-dnd';
 import PropTypes from 'prop-types';
 import { compose } from 'redux';
@@ -27,9 +28,9 @@ const styles = () => ({
 });
 
 const capitalize = (s) => {
-  if (typeof s !== 'string') return ''
-  return s.charAt(0).toUpperCase() + s.slice(1)
-}
+  if (typeof s !== 'string') return '';
+  return s.charAt(0).toUpperCase() + s.slice(1);
+};
 
 const stepSource = {
   beginDrag(props) {
@@ -73,21 +74,23 @@ const collectDrag = (connect, monitor) => {
   };
 };
 
-const collectDrop = connect =>
-  ({ connectDropTarget: connect.dropTarget() });
+const collectDrop = connect => ({ connectDropTarget: connect.dropTarget() });
 
 class PipelineStep extends Component {
   state = {
     orderedInputs: [],
   };
 
+  // eslint-disable-next-line
   UNSAFE_componentWillReceiveProps(nextProps) {
+    const { previousComputationIds } = this.props;
+
     let orderedInputs = [];
 
     // TODO: Find another way to force possibleInputs array to
     //   always match order of previousComputationId
     if (nextProps.possibleInputs) {
-      orderedInputs = this.props.previousComputationIds.map((prevComp, possibleInputIndex) => {
+      orderedInputs = previousComputationIds.map((prevComp, possibleInputIndex) => {
         const comp = nextProps.possibleInputs.find(pI => pI.id === prevComp);
         return {
           inputs: comp ? comp.computation.output : [],
@@ -108,7 +111,11 @@ class PipelineStep extends Component {
           localOutputs.map((localOutput) => {
             const output = [(
               <Typography key={`${id}-${localOutput[0]}-output`} variant="body1">
-                {localOutput[1].label} ({localOutput[1].type})
+                {localOutput[1].label}
+                {' '}
+(
+                {localOutput[1].type}
+)
               </Typography>
             )];
 
@@ -123,8 +130,10 @@ class PipelineStep extends Component {
     );
   }
 
-  renderPipelineStepInput = localInput => {
-    const { pipelineIndex, step, users, owner, updateStep } = this.props;
+  renderPipelineStepInput = (localInput) => {
+    const {
+      pipelineIndex, step, users, owner, updateStep,
+    } = this.props;
     const { orderedInputs } = this.state;
 
     return (
@@ -140,7 +149,7 @@ class PipelineStep extends Component {
         updateStep={updateStep}
         users={users}
       />
-    )
+    );
   }
 
   render() {
@@ -157,24 +166,24 @@ class PipelineStep extends Component {
     } = this.props;
 
     let Inputs = [];
-    let defaultInputs = {};
+    const defaultInputs = {};
 
     if (compIO) {
-      let newArray = [];
-      Object.keys(compIO.computation.input).map((key, index) => {
-        let value = Object.create(compIO.computation.input[key]);
-        value['value'] = compIO.computation.input[key];
-        value['key'] = key;
+      const newArray = [];
+      Object.keys(compIO.computation.input).forEach((key) => {
+        const value = Object.create(compIO.computation.input[key]);
+        value.value = compIO.computation.input[key];
+        value.key = key;
         newArray.push(value);
-        if(value['value'].default && key !== 'covariates') {
-          let v = value['value'].default;
-          if( v === 0 ){
+        if (value.value.default && key !== 'covariates') {
+          let v = value.value.default;
+          if (v === 0) {
             v = '0';
           }
           defaultInputs[key] = { value: v };
         }
       });
-      Inputs = newArray.sort(function (a, b) {
+      Inputs = newArray.sort((a, b) => {
         return a.value.order - b.value.order;
       });
     }
@@ -197,12 +206,12 @@ class PipelineStep extends Component {
     }, {});
 
     return connectDragSource(connectDropTarget(
-      <div key={'step-'+step.id}>
+      <div key={`step-${step.id}`}>
         <ExpansionPanel className="pipeline-step" style={{ ...styles.draggable, opacity: isDragging ? 0 : 1 }}>
           <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
             <Typography variant="headline">{step.computations[0].meta.name}</Typography>
           </ExpansionPanelSummary>
-          <ExpansionPanelDetails className={classes.expansionPanelContent} key={'step-exp-'+step.id}>
+          <ExpansionPanelDetails className={classes.expansionPanelContent} key={`step-exp-${step.id}`}>
             <div className={classes.inputParametersContainer}>
               <Typography variant="title">Input Parameters:</Typography>
               <Button
@@ -215,17 +224,25 @@ class PipelineStep extends Component {
               </Button>
             </div>
             {compIO && Inputs && Inputs
-                .filter(localInput => !localInput.group)
-                .map(this.renderPipelineStepInput)}
+              .filter(localInput => !localInput.group)
+              .map(this.renderPipelineStepInput)}
             <div>
-              {Groups &&
-                Object.entries(Groups).length > 0
-                && Object.entries(Groups).map(group => {
+              {Groups
+                && Object.entries(Groups).length > 0
+                && Object.entries(Groups).map((group) => {
                   const name = group[0];
                   const items = group[1];
 
                   return (
-                    <ExpansionPanel key={name} className="pipeline-step" style={{ ...styles.draggable, opacity: isDragging ? 0 : 1, margin: '1rem 0' }}>
+                    <ExpansionPanel
+                      key={name}
+                      className="pipeline-step"
+                      style={{
+                        ...styles.draggable,
+                        opacity: isDragging ? 0 : 1,
+                        margin: '1rem 0',
+                      }}
+                    >
                       <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
                         <span>
                           {`${capitalize(name)} Fields`}
@@ -235,7 +252,7 @@ class PipelineStep extends Component {
                         {items && items.map(this.renderPipelineStepInput)}
                       </ExpansionPanelDetails>
                     </ExpansionPanel>
-                  )
+                  );
                 })
               }
             </div>
@@ -253,22 +270,25 @@ PipelineStep.defaultProps = {
   owner: false,
   possibleInputs: [],
   updateStep: null,
+  users: [],
 };
 
 PipelineStep.propTypes = {
+  classes: PropTypes.object.isRequired,
   compIO: PropTypes.object,
-  connectDragSource: PropTypes.func.isRequired,
-  connectDropTarget: PropTypes.func.isRequired,
-  deleteStep: PropTypes.func.isRequired,
   id: PropTypes.string.isRequired,
   isDragging: PropTypes.bool.isRequired,
-  moveStep: PropTypes.func.isRequired,
   owner: PropTypes.bool,
+  pipelineIndex: PropTypes.number.isRequired,
   possibleInputs: PropTypes.array,
   previousComputationIds: PropTypes.array.isRequired,
   step: PropTypes.object.isRequired,
+  users: PropTypes.array,
+  connectDragSource: PropTypes.func.isRequired,
+  connectDropTarget: PropTypes.func.isRequired,
+  deleteStep: PropTypes.func.isRequired,
+  moveStep: PropTypes.func.isRequired,
   updateStep: PropTypes.func,
-  classes: PropTypes.object.isRequired,
 };
 
 const PipelineStepWithData = compose(
@@ -277,8 +297,9 @@ const PipelineStepWithData = compose(
     props: ({ data: { fetchComputation } }) => ({
       possibleInputs: fetchComputation,
     }),
-    options: ({ previousComputationIds }) =>
-      ({ variables: { computationIds: previousComputationIds } }),
+    options: ({ previousComputationIds }) => ({
+      variables: { computationIds: previousComputationIds },
+    }),
   })
 )(PipelineStep);
 

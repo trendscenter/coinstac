@@ -32,7 +32,6 @@ const styles = theme => ({
 });
 
 function MemberAvatar({
-  id,
   name,
   consRole,
   showDetails,
@@ -41,12 +40,11 @@ function MemberAvatar({
   mapped,
   user,
 }) {
-  console.log(user);
   return (
     <div key={`${name}-avatar`} className={classes.containerStyles}>
       {user && user.photo
-        ? <Avatar name={name} size={width} src={user.photo} round={true} />
-        : <Avatar name={name} size={width} round={true} />}
+        ? <Avatar name={name} size={width} src={user.photo} round />
+        : <Avatar name={name} size={width} round />}
       {
         consRole && showDetails
         && <Typography variant="subtitle2" className={classes.textStyles}>{consRole}</Typography>
@@ -64,13 +62,12 @@ function MemberAvatar({
 }
 
 MemberAvatar.propTypes = {
-  id: PropTypes.string.isRequired,
   name: PropTypes.string.isRequired,
+  classes: PropTypes.object.isRequired,
   consRole: PropTypes.string,
+  mapped: PropTypes.bool,
   showDetails: PropTypes.bool,
   width: PropTypes.number.isRequired,
-  classes: PropTypes.object.isRequired,
-  mapped: PropTypes.bool,
 };
 
 MemberAvatar.defaultProps = {
