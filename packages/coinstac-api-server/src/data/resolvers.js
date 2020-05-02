@@ -691,7 +691,7 @@ const resolvers = {
         updateObj.error = Object.assign({}, args.error);
       }
 
-      await rethink.table('runs').get(args.runId).update(updateObj);
+      await rethink.table('runs').get(args.runId).update(updateObj).run(connection);
 
       return connection.close();
     },
@@ -776,7 +776,7 @@ const resolvers = {
         updateObj.results = Object.assign({}, args.results);
       }
 
-      await rethink.table('runs').get(args.runId).update(updateObj);
+      await rethink.table('runs').get(args.runId).update(updateObj).run(connection);
 
       return connection.close();
     },
