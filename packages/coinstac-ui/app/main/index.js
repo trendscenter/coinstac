@@ -147,11 +147,18 @@ loadConfig()
             return upsertCoinstacUserDir(c);
           });
     });
+
+    ipcMain.on('login-success', (userId) => {
+      mainWindow.webContents.send('login-success', userId);
+    });
+
     /**
      * [initializedCore description]
      * @type {[type]}
      */
     ipcPromise.on('logout', () => {
+      mainWindow.webContents.send('logout');
+
       // TODO: hacky way to not get a mqtt reconnn loop
       // a better way would be to make an actual shutdown fn for pipeline
       return new Promise((resolve) => {

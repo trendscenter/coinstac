@@ -14,6 +14,7 @@ function PipelineStepInputSet({
     <div>
       {
         step.inputMap[objKey] && step.inputMap[objKey].value.map((item, i) => (
+          // eslint-disable-next-line react/no-array-index-key
           <div key={`${objKey}-${i}`}>
             <TextField
               disabled={!owner || isFromCache}
@@ -40,12 +41,12 @@ PipelineStepInputSet.defaultProps = {
 };
 
 PipelineStepInputSet.propTypes = {
+  isFromCache: PropTypes.bool,
   objKey: PropTypes.string.isRequired,
   owner: PropTypes.bool.isRequired,
-  isFromCache: PropTypes.bool,
   step: PropTypes.object.isRequired,
-  updateStep: PropTypes.func.isRequired,
   getNewObj: PropTypes.func.isRequired,
+  updateStep: PropTypes.func.isRequired,
 };
 
 export default PipelineStepInputSet;
