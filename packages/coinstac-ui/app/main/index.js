@@ -358,8 +358,8 @@ loadConfig()
     }) => {
       // This is a way to avoid multiple instances of COINSTAC running on the same machine to start
       // the pipeline runs at the same time. We start the pipeline runs with random delays
-      // between 0 and 500ms.
-      const delayAmount = Math.floor(Math.random() * 500);
+      // between 0 and 3000ms.
+      const delayAmount = Math.floor(Math.random() * 3000);
 
       setTimeout(() => {
         startPipeline(consortium, dataMappings, pipelineRun);
