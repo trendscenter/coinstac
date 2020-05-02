@@ -324,16 +324,7 @@ loadConfig()
         });
     }
 
-    /**
-   * IPC Listener to start pipeline
-   * @param {Object} consortium Consortium starting the pipeline
-   * @param {Object} dataMappings Mapping of pipeline variables into data file columns
-   * @param {Object} pipelineRun Current run details
-   * @return {Promise<String>} Status message
-   */
-    ipcMain.on('start-pipeline', async (event, {
-      consortium, dataMappings, pipelineRun,
-    }) => {
+    async function startPipeline(consortium, dataMappings, pipelineRun) {
       try {
         const { filesArray, steps } = runPipelineFunctions.parsePipelineInput(
           pipelineRun.pipelineSnapshot, dataMappings
@@ -353,6 +344,26 @@ loadConfig()
       } catch (error) {
         mainWindow.webContents.send('notify-warning', error.message);
       }
+    }
+
+    /**
+   * IPC Listener to start pipeline
+   * @param {Object} consortium Consortium starting the pipeline
+   * @param {Object} dataMappings Mapping of pipeline variables into data file columns
+   * @param {Object} pipelineRun Current run details
+   * @return {Promise<String>} Status message
+   */
+    ipcMain.on('start-pipeline', (event, {
+      consortium, dataMappings, pipelineRun,
+    }) => {
+      // This is a way to avoid multiple instances of COINSTAC running on the same machine to start
+      // the pipeline runs at the same time. We start the pipeline runs with random delays
+      // between 0 and 500ms.
+      const delayAmount = Math.floor(Math.random() * 500);
+
+      setTimeout(() => {
+        startPipeline(consortium, dataMappings, pipelineRun);
+      }, delayAmount);
     });
 
     /**
