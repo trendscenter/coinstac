@@ -87,7 +87,7 @@ const initCoreAndSetToken = async (reqUser, data, appDirectory, dispatch) => {
 
       dispatch(setUser(user));
 
-      resolve('aaa');
+      resolve();
     });
   });
 };
@@ -159,7 +159,7 @@ export const login = applyAsyncLoading(({ username, password, saveLogin }) => (d
   .then(({ data }) => {
     const { auth: { appDirectory } } = getState();
     return initCoreAndSetToken({ username, password, saveLogin }, data, appDirectory, dispatch);
-  }).then(x => console.log('aisndosindaiodnaoi', x))
+  })
   .catch((err) => {
     console.error(err); // eslint-disable-line no-console
     if (err.response) {
