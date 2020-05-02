@@ -75,16 +75,20 @@ const initCoreAndSetToken = async (reqUser, data, appDirectory, dispatch) => {
 
   remote.getCurrentWindow().webContents.send('login-success', data.user.id);
 
-  ipcRenderer.on('app-init-finished', () => {
-    currentApiTokenKey = `${API_TOKEN_KEY}_${data.user.id}`;
+  return new Promise((resolve) => {
+    ipcRenderer.on('app-init-finished', () => {
+      currentApiTokenKey = `${API_TOKEN_KEY}_${data.user.id}`;
 
-    if (reqUser.saveLogin) {
-      localStorage.setItem(getCurrentApiTokenKey(), data.id_token);
-    } else {
-      sessionStorage.setItem(getCurrentApiTokenKey(), data.id_token);
-    }
+      if (reqUser.saveLogin) {
+        localStorage.setItem(getCurrentApiTokenKey(), data.id_token);
+      } else {
+        sessionStorage.setItem(getCurrentApiTokenKey(), data.id_token);
+      }
 
-    dispatch(setUser(user));
+      dispatch(setUser(user));
+
+      resolve('aaa');
+    });
   });
 };
 
@@ -155,7 +159,7 @@ export const login = applyAsyncLoading(({ username, password, saveLogin }) => (d
   .then(({ data }) => {
     const { auth: { appDirectory } } = getState();
     return initCoreAndSetToken({ username, password, saveLogin }, data, appDirectory, dispatch);
-  })
+  }).then(x => console.log('aisndosindaiodnaoi', x))
   .catch((err) => {
     console.error(err); // eslint-disable-line no-console
     if (err.response) {
