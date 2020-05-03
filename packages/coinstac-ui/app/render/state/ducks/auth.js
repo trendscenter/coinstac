@@ -64,17 +64,19 @@ export const setApiVersionCheck = isApiVersionCompatible => ({
 });
 
 // Helpers
-const initCoreAndSetToken = (reqUser, data, appDirectory, dispatch) => {
+const initCoreAndSetToken = async (reqUser, data, appDirectory, dispatch) => {
   if (appDirectory) {
     localStorage.setItem('appDirectory', appDirectory);
   }
 
-  return ipcPromise.send('login-init', { userId: reqUser.username, appDirectory })
-    .then(() => {
-      const user = { ...data.user, label: reqUser.username };
+  await ipcPromise.send('login-init', { userId: reqUser.username, appDirectory });
 
-      ipcRenderer.send('login-success', data.user.id);
+  const user = { ...data.user, label: reqUser.username };
 
+  remote.getCurrentWindow().webContents.send('login-success', data.user.id);
+
+  return new Promise((resolve) => {
+    ipcRenderer.on('app-init-finished', () => {
       currentApiTokenKey = `${API_TOKEN_KEY}_${data.user.id}`;
 
       if (reqUser.saveLogin) {
@@ -84,7 +86,10 @@ const initCoreAndSetToken = (reqUser, data, appDirectory, dispatch) => {
       }
 
       dispatch(setUser(user));
+
+      resolve();
     });
+  });
 };
 
 export const logout = applyAsyncLoading(() => (dispatch) => {
