@@ -4,6 +4,7 @@ import app from './ducks/app';
 import auth from './ducks/auth';
 import docker from './ducks/docker';
 import loading from './ducks/loading';
+import localRunResults from './ducks/localRunResults';
 import maps from './ducks/maps';
 import runs from './ducks/runs';
 import notifications from './ducks/notifyAndLog';
@@ -24,6 +25,7 @@ function rootReducer(client) {
     notifications,
     runs,
     maps,
+    localRunResults,
     routing: routerReducer,
   });
 
