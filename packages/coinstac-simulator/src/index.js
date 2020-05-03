@@ -44,6 +44,7 @@ const startRun = ({
             spec: remoteSpec,
             runId: 'simulatorRun',
             clients: Array.from(Array(clientCount)).map((val, idx) => `local${idx}`),
+            owner: 'local0',
           }),
         };
       }
@@ -59,36 +60,33 @@ const startRun = ({
           pipeline: localPipelineManager.startPipeline({
             spec: localSpec,
             runId: 'simulatorRun',
+            owner: 'local0',
           }),
         });
       }
 
-      let throwCount = Object.keys(pipelines).length;
       const allResults = Promise.all(Object.keys(pipelines).map((key) => {
         if (key === 'locals') {
           return Promise.all(pipelines[key].map(
             (localP, index) => localP.pipeline.result
               .then((res) => { pipelines[key][index].pipeline.result = res; })
               .catch((e) => {
-                // see if you're the last node to err, throw is so
-                throwCount -= 1;
-                if (throwCount === 0) throw e;
+                return e;
               })
           ));
         }
         return pipelines.remote.pipeline.result
           .then((res) => { pipelines[key].pipeline.result = res; })
           .catch((e) => {
-            // see if you're the last node to err, throw is so
-            throwCount -= 1;
-            if (throwCount === 0) throw e;
+            return e;
           });
       }))
-        .then(() => {
-          if (runMode === 'decentralized') {
-            return { remote: pipelines.remote.pipeline.result };
-          }
-          return { locals: pipelines.locals.map(local => local.pipeline.result) };
+        .then((errors) => {
+          if (errors.length > 0) throw errors[1];
+          return {
+            remote: pipelines.remote.pipeline.result,
+            locals: pipelines.locals.map(local => local.pipeline.result),
+          };
         });
 
       return { pipelines, allResults };
