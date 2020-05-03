@@ -39,6 +39,16 @@ function encodeFilePath(filePath) {
   return null;
 }
 
+function makeDataObjFromDataMappings(dataMappings, stepIndex) {
+  const dataObj = {};
+  const dataMaps = dataMappings.dataMappings[stepIndex].data;
+  dataMaps.map((map) => {
+    const key = map.pipelineVariableName;
+    dataObj[key] = encodeFilePath(map.dataFileFieldName);
+  });
+  return dataObj;
+}
+
 function mapVariablesIntoArray(inputSchema, dataMappings, data, baseDirectory) {
   const dataArray = [];
   const variablesArray = [];
@@ -107,11 +117,12 @@ function mapVariablesIntoArray(inputSchema, dataMappings, data, baseDirectory) {
 function parsePipelineInput(pipeline, dataMappings) {
   const steps = [];
   let filesArray;
-
   if (dataMappings) {
     if (dataMappings.dataType === 'array') {
       filesArray = dataMappings ? dataMappings.data[0].allFiles : [];
     } else if (dataMappings.dataType === 'bundle') {
+      filesArray = dataMappings.files;
+    } else if (dataMappings.dataType === 'singles') {
       filesArray = dataMappings.files;
     }
   }
@@ -171,6 +182,9 @@ function parsePipelineInput(pipeline, dataMappings) {
         } else {
           inputMapSchema[inputSchemaKey] = { value: keyArray };
         }
+      } else if (dataMappings.dataType === 'singles' && inputSchemaKey === 'data') {
+        const dataObj = makeDataObjFromDataMappings(dataMappings, stepIndex);
+        inputMapSchema[inputSchemaKey] = { value: dataObj };
       } else if (dataMappings.dataType === 'bundle') {
         inputMapSchema[inputSchemaKey].value = dataMappings.dataMappings[stepIndex][inputSchemaKey];
       }

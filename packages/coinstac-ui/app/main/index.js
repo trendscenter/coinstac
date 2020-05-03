@@ -329,7 +329,6 @@ loadConfig()
         const { filesArray, steps } = runPipelineFunctions.parsePipelineInput(
           pipelineRun.pipelineSnapshot, dataMappings
         );
-
         const run = {
           ...pipelineRun,
           pipelineSnapshot: {
@@ -515,7 +514,7 @@ loadConfig()
       } else if (org === 'directory') {
         properties = ['openDirectory'];
         postDialogFunc = ipcFunctions.manualDirectorySelection;
-      } else if (org === 'bundle') {
+      } else if (org === 'bundle' || org === 'singles') {
         filters = [
           {
             name: 'File Types',

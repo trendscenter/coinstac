@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import TimeStamp from 'react-timestamp';
 import { Link } from 'react-router';
 import { compose } from 'redux';
 import { connect } from 'react-redux';
@@ -12,7 +11,9 @@ import { withStyles } from '@material-ui/core/styles';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import path from 'path';
+import moment from 'moment';
 import StatusButtonWrapper from './status-button-wrapper';
+import TimeAgo from './time-ago';
 
 const styles = theme => ({
   rootPaper: {
@@ -167,12 +168,7 @@ class RunItem extends Component {
             && (
               <Typography variant="headline">
                 {'Started: '}
-                <TimeStamp
-                  time={startDate / 1000}
-                  precision={2}
-                  autoUpdate={60}
-                  format="ago"
-                />
+                <TimeAgo timestamp={runObject.startDate / 1000} />
               </Typography>
             )
           }
@@ -181,12 +177,7 @@ class RunItem extends Component {
             && (
               <Typography variant="headline">
                 {'Completed: '}
-                <TimeStamp
-                  time={endDate / 1000}
-                  precision={2}
-                  autoUpdate={60}
-                  format="ago"
-                />
+                <TimeAgo timestamp={runObject.endDate / 1000} />
               </Typography>
             )
           }
@@ -234,12 +225,7 @@ class RunItem extends Component {
                   Start date:
                 </Typography>
                 <Typography className={classes.value}>
-                  <TimeStamp
-                    time={startDate / 1000}
-                    precision={2}
-                    autoUpdate={10}
-                    format="full"
-                  />
+                  {moment.unix(runObject.startDate / 1000).format('MMMM Do YYYY, h:mm:ss a')}
                 </Typography>
               </div>
             )
@@ -252,12 +238,7 @@ class RunItem extends Component {
                   End date:
                 </Typography>
                 <Typography className={classes.value}>
-                  <TimeStamp
-                    time={endDate / 1000}
-                    precision={2}
-                    autoUpdate={10}
-                    format="full"
-                  />
+                  {moment.unix(runObject.endDate / 1000).format('MMMM Do YYYY, h:mm:ss a')}
                 </Typography>
               </div>
             )

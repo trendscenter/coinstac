@@ -2,9 +2,10 @@ require('trace');
 require('clarify');
 const rethink = require('rethinkdb');
 
+const dsneMS = require('./data/coinstac-dsne-ms');
 const drneVbm = require('./data/coinstac-schema-regression-vbm');
 // const ssrVbm = require('./data/coinstac-schema-regression-ss-vbm');
-// const msrVbm = require('./data/coinstac-schema-regression-ms-vbm');
+const msrVbm = require('./data/coinstac-schema-regression-ms-vbm');
 
 const drneFsl = require('./data/coinstac-schema-regression-fsl');
 // const ssrFsl = require('./data/coinstac-schema-regression-ss-fsl');
@@ -59,11 +60,13 @@ helperFunctions.getRethinkConnection()
         Object.assign({}, decentralized, { submittedBy: 'author' }),
         // Object.assign({}, ssrFsl, { submittedBy: 'author' }),
         Object.assign({}, msrFsl, { submittedBy: 'author' }),
+        Object.assign({}, msrVbm, { submittedBy: 'author' }),
         Object.assign({}, vbm, { submittedBy: 'author' }),
         Object.assign({}, gica, { submittedBy: 'test1' }),
         Object.assign({}, ddfnc, { submittedBy: 'test1' }),
         Object.assign({}, dpsvm, { submittedBy: 'test1' }),
         Object.assign({}, drneVbm, { submittedBy: 'test1' }),
+        Object.assign({}, dsneMS, { submittedBy: 'author' }),
         // Object.assign({}, ssrVbm, { submittedBy: 'test1' }),
         Object.assign({}, drneFsl, { submittedBy: 'author' }),
         Object.assign({}, decentralizedError, { submittedBy: 'author' }),
@@ -82,7 +85,7 @@ helperFunctions.getRethinkConnection()
           steps: [
             {
               computations: [
-                compInsertResult.changes[2].new_val.id,
+                compInsertResult.changes[0].new_val.id,
               ],
               controller: {
                 id: null,
@@ -129,7 +132,7 @@ helperFunctions.getRethinkConnection()
               id: 'UIKDl-',
               controller: { type: 'decentralized' },
               computations: [
-                compInsertResult.changes[1].new_val.id,
+                compInsertResult.changes[0].new_val.id,
               ],
               inputMap: {
                 start: { value: 1 },
