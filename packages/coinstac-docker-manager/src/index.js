@@ -495,7 +495,6 @@ const startService = (serviceId, serviceUserId, opts) => {
             return resolve(services[serviceId].service);
           }
           // the service was somehow shutdown or crashed, make a new one
-          console.log(services);
           logger.silly('Service was down, starting new instance');
           resolve(createService());
         });
