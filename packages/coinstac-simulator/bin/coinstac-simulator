@@ -340,5 +340,6 @@ fulfilledPipelineSpec
     logger.error('Simulator run failed!');
     logger.error('Fun error details:\n');
     logger.error(err.message);
+    logger.error(err.stack || '');
     process.exit(0);
   });
