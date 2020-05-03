@@ -163,7 +163,6 @@ module.exports = {
                     }
                   );
                   logger.silly(`Pipeline Error: ${iterationError}`);
-                  logger.silly(`Input on Error: ${input}`);
                   if (controller.type === 'local') {
                     err(iterationError);
                   } else {
