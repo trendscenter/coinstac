@@ -1,27 +1,41 @@
 {
   "meta": {
-    "name": "Differentially Private Support Vector Machines demo",
+    "name": "Differentially Private Support Vector Machines Demo",
     "id": "dpsvm",
     "version": "v1.0.0",
     "repository": "https:\/\/github.com\/MRN-Code\/coinstac_dpSVM",
-    "description": "a test from single shot regresssion"
+    "description": "A test from single shot regresssion"
   },
   "computation": {
     "type": "docker",
     "dockerImage": "coinstacteam/dpsvm",
     "command": [
       "python",
-      "\/computation\/local.py"
+      "\/computation\/scripts\/local.py"
     ],
     "remote": {
       "type": "docker",
       "dockerImage": "coinstacteam/dpsvm",
       "command": [
         "python",
-        "\/computation\/remote.py"
+        "\/computation\/scripts\/remote.py"
       ]
     },
     "input": {
+      "data": {
+        "label": "Features",
+        "type": "array",
+        "items": ["FreeSurfer"],
+        "extensions": [["csv", "txt"]],
+        "order": 0
+      },
+      "covariates":
+      {
+        "label": "Labels",
+        "type": "array",
+        "items": ["boolean", "number"],
+        "order": 1
+      },
       "lambda":
       {
         "default": 0,
@@ -30,13 +44,19 @@
         "min": 0,
         "step": 0.05,
         "type": "number",
-        "source": "owner"
+        "source": "owner",
+        "order": 2
       },
-      "data": {
-        "label": "Data",
-        "type": "bundle",
-        "items": ["Pickle"],
-        "extensions": [["Pickle"]]
+      "train_split":
+      {
+        "default": 0.8,
+        "label": "Train Split",
+        "max": 1,
+        "min": 0,
+        "step": 0.1,
+        "type": "number",
+        "source": "owner",
+        "order": 3
       }
     },
     "output": {
@@ -105,7 +125,23 @@
     },
     "display": [
       {
-        "type": ""
+        "type": "string",
+        "tables": [
+          {
+            "source": "regressions",
+            "subtables": [
+              {
+                "source": "global_stats",
+                "subtitle": "ROI"
+              },
+              {
+                "source": "local_stats",
+                "subtitle": "ROI",
+                "subtables": "by-key"
+              }
+            ]
+          }
+        ]
       }
     ]
   }
