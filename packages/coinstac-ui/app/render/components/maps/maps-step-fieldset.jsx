@@ -102,7 +102,7 @@ class MapsStepFieldset extends Component {
 
     if(fieldsetLabel){
       inputCategoryName = fieldsetLabel;
-    }else if (fieldsetName !== 'covariates' && fieldsetName !== 'data') {
+    } else if (fieldsetName !== 'covariates' && fieldsetName !== 'data') {
       inputCategoryName = 'Options';
     }
 
