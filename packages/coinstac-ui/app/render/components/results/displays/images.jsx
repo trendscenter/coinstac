@@ -239,32 +239,47 @@ class Images extends Component {
   }
 
   render() {
-    const { plotData, classes } = this.props;
-    const globalItems = Object.keys(plotData.global_stats).length;
-    const height = globalItems * 180;
-    const localCanvas = [];
-
-    Object.entries(plotData.local_stats).forEach(([key]) => {
-      localCanvas.push(<canvas className="canvas" ref={`${key}_canvas`} width="1600" height={height} />);
-    });
-
+    const { appDirectory, imagePath, plotData, classes } = this.props;
+    let global_items;
+    let local_items;
+    let height = 0;
+    if (plotData.image_path) {
+      image_path = plotData.image_path;
+    }
+    if (plotData.global_stats && plotData.local_stats) {
+      global_items = Object.keys(plotData.global_stats).length;
+      local_items = Object.keys(plotData.local_stats).length;
+      height = global_items * 180;
+      let local_canvas = [];
+      Object.entries(plotData.local_stats).forEach(([key, value]) => {
+          local_canvas.push(<canvas className={'canvas'} ref={`${key}_canvas`} width="1600" height={height}></canvas>);
+      });
+    }
     return (
       <div>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={this.savePDF}
-          className={classes.pdfButton}
-        >
-          Download as pdf
-        </Button>
-        <div id="images" ref={(ref) => { this.results = ref; }}>
-          {plotData && this.drawImageResults(plotData)}
-        </div>
-        <div className={classes.print}>
-          <canvas ref={(ref) => { this.global_canvas = ref; }} width="1600" height={height} />
-          {localCanvas}
-        </div>
+        {global_items &&
+         local_items &&
+        <div>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={this.savePDF}
+            className={classes.pdfButton}
+          >
+            Download as pdf
+          </Button>
+          <div id="images" ref="results">
+            {plotData && this.drawImageResults(plotData)}
+          </div>
+          <div className={classes.print}>
+            <canvas ref="global_canvas" width="1600" height={height}></canvas>
+            {local_canvas}
+          </div>
+        </div>}
+        {imagePath &&
+          <div>
+            <img src={imagePath} className={classes.image} />
+         </div>}
       </div>
     );
   }

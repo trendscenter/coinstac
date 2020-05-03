@@ -542,7 +542,7 @@ class Pipeline extends Component {
           />
           <TextValidator
             id="timeout"
-            label="Timeout"
+            label="Timeout for clients (default: infinite)"
             fullWidth
             disabled={!owner}
             value={pipeline.timeout}
