@@ -3,9 +3,10 @@ require('clarify');
 const database = require('../src/database');
 const helperFunctions = require('../src/auth-helpers');
 
+const dsneMS = require('./data/coinstac-dsne-ms');
 const drneVbm = require('./data/coinstac-schema-regression-vbm');
 // const ssrVbm = require('./data/coinstac-schema-regression-ss-vbm');
-// const msrVbm = require('./data/coinstac-schema-regression-ms-vbm');
+const msrVbm = require('./data/coinstac-schema-regression-ms-vbm');
 
 const drneFsl = require('./data/coinstac-schema-regression-fsl');
 // const ssrFsl = require('./data/coinstac-schema-regression-ss-fsl');
@@ -50,6 +51,8 @@ const COMPUTATION_IDS = [
   database.createUniqueId(),
   database.createUniqueId(),
   database.createUniqueId(),
+  database.createUniqueId(),
+  database.createUniqueId(),
 ];
 
 async function populateComputations() {
@@ -59,16 +62,18 @@ async function populateComputations() {
     { ...local, submittedBy: 'author', _id: COMPUTATION_IDS[0] },
     { ...decentralized, submittedBy: 'author', _id: COMPUTATION_IDS[1] },
     { ...msrFsl, submittedBy: 'author', _id: COMPUTATION_IDS[2] },
-    { ...vbm, submittedBy: 'author', _id: COMPUTATION_IDS[3] },
-    { ...gica, submittedBy: 'author', _id: COMPUTATION_IDS[4] },
-    { ...ddfnc, submittedBy: 'author', _id: COMPUTATION_IDS[5] },
-    { ...dpsvm, submittedBy: 'author', _id: COMPUTATION_IDS[6] },
-    { ...drneVbm, submittedBy: 'author', _id: COMPUTATION_IDS[7] },
-    { ...drneFsl, submittedBy: 'author', _id: COMPUTATION_IDS[8] },
-    { ...decentralizedError, submittedBy: 'author', _id: COMPUTATION_IDS[9] },
-    { ...enigmaSans, submittedBy: 'author', _id: COMPUTATION_IDS[10] },
-    { ...localError, submittedBy: 'author', _id: COMPUTATION_IDS[11] },
-    { ...fmri, submittedBy: 'author', _id: COMPUTATION_IDS[12] },
+    { ...msrVbm, submittedBy: 'author', _id: COMPUTATION_IDS[3] },
+    { ...vbm, submittedBy: 'author', _id: COMPUTATION_IDS[4] },
+    { ...gica, submittedBy: 'author', _id: COMPUTATION_IDS[5] },
+    { ...ddfnc, submittedBy: 'author', _id: COMPUTATION_IDS[6] },
+    { ...dpsvm, submittedBy: 'author', _id: COMPUTATION_IDS[7] },
+    { ...drneVbm, submittedBy: 'author', _id: COMPUTATION_IDS[8] },
+    { ...dsneMS, submittedBy: 'author', _id: COMPUTATION_IDS[9] },
+    { ...drneFsl, submittedBy: 'author', _id: COMPUTATION_IDS[10] },
+    { ...decentralizedError, submittedBy: 'author', _id: COMPUTATION_IDS[11] },
+    { ...enigmaSans, submittedBy: 'author', _id: COMPUTATION_IDS[12] },
+    { ...localError, submittedBy: 'author', _id: COMPUTATION_IDS[13] },
+    { ...fmri, submittedBy: 'author', _id: COMPUTATION_IDS[14] },
   ]);
 }
 
@@ -112,7 +117,7 @@ async function populatePipelines() {
       steps: [
         {
           computations: [
-            COMPUTATION_IDS[2],
+            COMPUTATION_IDS[0],
           ],
           controller: {
             id: null,
@@ -159,7 +164,7 @@ async function populatePipelines() {
           id: 'UIKDl-',
           controller: { type: 'decentralized' },
           computations: [
-            COMPUTATION_IDS[1],
+            COMPUTATION_IDS[0],
           ],
           inputMap: {
             start: { value: 1 },

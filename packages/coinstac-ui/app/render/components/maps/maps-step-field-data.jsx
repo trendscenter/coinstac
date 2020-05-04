@@ -11,6 +11,7 @@ import ListItemText from '@material-ui/core/ListItemText';
 import { withStyles } from '@material-ui/core/styles';
 import FileCopyIcon from '@material-ui/icons/FileCopy';
 import classNames from 'classnames';
+import path from 'path';
 
 const styles = theme => ({
   rootPaper: {
@@ -75,9 +76,18 @@ class MapsStepFieldData extends Component {
     }
   }
 
+  strMasseuse = (filepath) => {
+    let filename = path.basename(filepath, path.extname(filepath));
+    if (filename.length > 12) {
+      filename = `...${filename.slice(filename.length - 12)}`;
+    }
+    return filename;
+  }
+
   render() {
     const {
       step,
+      label,
       type,
       classes,
       column,
@@ -106,7 +116,7 @@ class MapsStepFieldData extends Component {
                     ref={(ref) => { this.container = ref; }}
                   >
                     <FileCopyIcon />
-                    { column }
+                    { this.strMasseuse(column) }
                     <Icon
                       className={classNames('fa fa-times-circle', classes.timesIcon)}
                       onClick={() => unmapField(type, column)}

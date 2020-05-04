@@ -17,6 +17,7 @@ const express = require('express');
 const multer = require('multer');
 const decompress = require('decompress');
 const uuid = require('uuid/v4');
+const dockerManager = require('coinstac-docker-manager');
 
 const readdir = promisify(fs.readdir);
 
@@ -443,7 +444,6 @@ module.exports = {
                 }
               } else {
                 const runError = Object.assign(
-                  new Error(),
                   data.error,
                   {
                     error: `Pipeline error from pipeline ${data.runId} user: ${data.id}\n Error details: ${data.error.error}`,
@@ -650,6 +650,8 @@ module.exports = {
               clientId,
               userDirectories,
               owner: spec.owner,
+              logger,
+              dockerManager,
             }),
             baseDirectory: path.resolve(operatingDirectory, 'input', clientId, runId),
             cacheDirectory: userDirectories.cacheDirectory,
@@ -701,6 +703,7 @@ module.exports = {
                 {
                   error: `Pipeline error from central node\n Error details: ${message.error}`,
                   message: `Pipeline error from central node\n Error details: ${message.message}`,
+                  stack: message.stack,
                 }
               );
               activePipelines[pipeline.id].state = 'central node error';
@@ -1023,6 +1026,7 @@ module.exports = {
         }
       },
       waitingOnForRun,
+      dockerManager,
     };
   },
 };

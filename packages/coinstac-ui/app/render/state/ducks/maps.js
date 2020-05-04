@@ -69,7 +69,7 @@ export const saveDataMapping = applyAsyncLoading(
 
         map.data[0].filesData.push(parsedRow);
       });
-    } else if (dataFile.dataType === 'bundle') {
+    } else if (dataFile.dataType === 'bundle' || dataFile.dataType === 'singles') {
       const e = new RegExp(/[-\/\\^$*+?.()|[\]{}]/g); // eslint-disable-line no-useless-escape
       const escape = (string) => {
         return string.replace(e, '\\$&');
