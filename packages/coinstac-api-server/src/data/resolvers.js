@@ -413,12 +413,14 @@ const resolvers = {
         const consortium = await db.collection('consortia').findOne({ _id: ObjectID(consortiumId) });
         const pipeline = await fetchOnePipeline(consortium.activePipelineId);
 
+        const isPipelineDecentralized = pipeline.steps.findIndex(step => step.controller.type === 'decentralized') > -1;
+
         const result = await db.collection('runs').insertOne({
             clients: [...consortium.members],
             consortiumId,
             pipelineSnapshot: pipeline,
             startDate: Date.now(),
-            type: 'decentralized',
+            type: isPipelineDecentralized ? 'decentralized' : 'local',
         });
 
         const run = transformToClient(result.ops[0]);
@@ -682,13 +684,28 @@ const resolvers = {
     saveError: async (_, args) => {
       const db = database.getDbInstance();
 
+      const run = await db.collection('runs').findOne({
+        _id: ObjectID(args.runId)
+      }, {
+        projection: { _id: 1, type: 1 }
+      });
+
+      if (!run) {
+        return;
+      }
+
+      const updateObj = {
+        endDate: Date.now()
+      };
+
+      if (run.type !== 'local') {
+        updateObj.error = Object.assign({}, args.error);
+      }
+
       const result = await db.collection('runs').findOneAndUpdate({
         _id: ObjectID(args.runId)
       }, {
-        $set: {
-          error: { ...args.error },
-          endDate: Date.now()
-        }
+        $set: updateObj
       }, {
         returnOriginal: false
       });
@@ -762,13 +779,28 @@ const resolvers = {
     saveResults: async (_, args) => {
       const db = database.getDbInstance();
 
+      const run = await db.collection('runs').findOne({
+        _id: ObjectID(args.runId)
+      }, {
+        projection: { _id: 1, type: 1 }
+      });
+
+      if (!run) {
+        return;
+      }
+
+      const updateObj = {
+        endDate: Date.now()
+      };
+
+      if (run.type !== 'local') {
+        updateObj.results = Object.assign({}, args.results);
+      }
+
       const result = await db.collection('runs').findOneAndUpdate({
         _id: ObjectID(args.runId)
       }, {
-        $set: {
-          results: { ...args.results },
-          endDate: Date.now()
-        }
+        $set: updateObj
       }, {
         returnOriginal: false
       });

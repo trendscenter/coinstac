@@ -543,7 +543,7 @@ class Pipeline extends Component {
           />
           <TextValidator
             id="timeout"
-            label="Timeout"
+            label="Timeout for clients (default: infinite)"
             fullWidth
             disabled={!owner}
             value={pipeline.timeout}
@@ -733,6 +733,7 @@ Pipeline.propTypes = {
   notifyError: PropTypes.func.isRequired,
   notifySuccess: PropTypes.func.isRequired,
   savePipeline: PropTypes.func.isRequired,
+  saveActivePipeline: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = ({ auth }) => ({
