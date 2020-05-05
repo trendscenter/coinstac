@@ -928,8 +928,10 @@ const resolvers = {
      * @return {boolean} Success status
      */
     updatePassword: async ({ auth: { credentials } }, args) => {
-      const { currentPassword, newPassword } = args
-      const currentUser = await fetchOne('users', credentials.id)
+      const { currentPassword, newPassword } = args;
+      const db = database.getDbInstance();
+
+      const currentUser = await db.collection('users').findOne({ _id: credentials.id });
 
       const isPasswordCorrect =
         await helperFunctions.verifyPassword(currentPassword, currentUser.passwordHash)
@@ -940,13 +942,15 @@ const resolvers = {
 
       const newPasswordHash = await helperFunctions.hashPassword(newPassword)
 
-      const connection = await helperFunctions.getRethinkConnection()
-      await rethink.table('users')
-        .get(credentials.id)
-        .update({ passwordHash: newPasswordHash })
-        .run(connection)
-
-      return true
+      await db.collection('users').findOneAndUpdate({
+        _id: credentials.id
+      }, {
+        $set: {
+          passwordHash: newPasswordHash,
+        },
+      }, {
+        returnOriginal: false,
+      });
     },
     /**
      * Save message

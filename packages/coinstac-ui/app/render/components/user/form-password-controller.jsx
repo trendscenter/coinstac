@@ -57,7 +57,8 @@ class FormPasswordController extends Component {
   componentDidMount() {
     ValidatorForm.addValidationRule(
       'isPasswordMatch',
-      value => value === this.state.resettingPassword.newPassword,
+      // eslint-disable-next-line react/destructuring-assignment
+      value => value === this.state.resettingPassword.newPassword
     );
   }
 
@@ -87,7 +88,7 @@ class FormPasswordController extends Component {
     });
   }
 
-  handleTabChange = selectedTab => {
+  handleTabChange = (selectedTab) => {
     const { sendingEmail, resettingPassword } = this.state;
 
     if (!sendingEmail.loading && !resettingPassword.loading) {
@@ -96,22 +97,30 @@ class FormPasswordController extends Component {
   }
 
   handleSendEmail = () => {
+    const { sendPasswordResetEmail } = this.props;
     const { sendingEmail } = this.state;
-    
-    // this.handleSendingEmailStateChange('loading', true);
-    this.props.sendPasswordResetEmail({
-      email: sendingEmail.email
-    });
+
+    this.handleSendingEmailStateChange('loading', true);
+
+    sendPasswordResetEmail({ email: sendingEmail.email })
+      .finally(() => {
+        this.handleSendingEmailStateChange('loading', false);
+      });
   }
 
   handleResetPassword = () => {
+    const { resetPassword } = this.props;
     const { resettingPassword } = this.state;
 
-    // this.handleResettingPasswordStateChange('loading', true);
-    this.props.resetPassword({
+    this.handleResettingPasswordStateChange('loading', true);
+
+    resetPassword({
       token: resettingPassword.token,
       password: resettingPassword.newPassword,
-    });
+    })
+      .finally(() => {
+        this.handleResettingPasswordStateChange('loading', false);
+      });
   }
 
   render() {
@@ -123,7 +132,7 @@ class FormPasswordController extends Component {
       fullWidth: true,
       withRequiredValidator: true,
       required: true,
-    }
+    };
 
     return (
       <LayoutNoauth>
@@ -140,7 +149,7 @@ class FormPasswordController extends Component {
             </Tabs>
           </AppBar>
 
-          {selectedTab === "sendEmail" && (
+          {selectedTab === 'sendEmail' && (
             <Paper
               className={classes.tabPanel}
               square
@@ -174,7 +183,7 @@ class FormPasswordController extends Component {
             </Paper>
           )}
 
-          {selectedTab === "passwordReset" && (
+          {selectedTab === 'passwordReset' && (
             <Paper
               className={classes.tabPanel}
               square
@@ -243,9 +252,10 @@ FormPasswordController.contextTypes = {
 
 FormPasswordController.displayName = 'FormPasswordController';
 
-const mapStateToProps = ({ auth, loading }) => {
-  return { auth, loading };
-}
+const mapStateToProps = ({ auth, loading }) => ({
+  auth,
+  loading,
+});
 
 const connectedComponent = connect(mapStateToProps, {
   sendPasswordResetEmail,

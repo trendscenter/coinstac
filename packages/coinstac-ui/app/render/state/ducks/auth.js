@@ -188,26 +188,22 @@ export const signUp = applyAsyncLoading(user => (dispatch, getState) => axios.po
     }
   }));
 
-export const sendPasswordResetEmail = applyAsyncLoading(payload => (dispatch, getState) => axios.post(`${API_URL}/sendPasswordResetEmail`, payload)
+export const sendPasswordResetEmail = applyAsyncLoading(payload => dispatch => axios.post(`${API_URL}/sendPasswordResetEmail`, payload)
   .then(() => {
-    dispatch(notifySuccess({ message: 'Sent password reset email successfully' }));
+    dispatch(notifySuccess('Sent password reset email successfully'));
   })
   .catch((err) => {
     const { statusCode, message } = getErrorDetail(err);
-    if (statusCode === 400) {
-      dispatch(notifyError({ message: 'Failed to send password reset email' }));
-    }
+    dispatch(notifyError(statusCode === 400 ? message : 'Failed to send password reset email'));
   }));
 
-export const resetPassword = applyAsyncLoading(payload => (dispatch, getState) => axios.post(`${API_URL}/resetPassword`, payload)
+export const resetPassword = applyAsyncLoading(payload => dispatch => axios.post(`${API_URL}/resetPassword`, payload)
   .then(() => {
     dispatch(notifySuccess({ message: 'Reset password successfully' }));
   })
   .catch((err) => {
     const { statusCode, message } = getErrorDetail(err);
-    if (statusCode === 400) {
-      dispatch(notifyError({ message: 'Provided password reset token is not valid. It could be expired' }));
-    }
+    dispatch(notifyError(statusCode === 400 ? message : 'Provided password reset token is not valid. It could be expired'));
   }));
 
 export default function reducer(state = INITIAL_STATE, { type, payload }) {
