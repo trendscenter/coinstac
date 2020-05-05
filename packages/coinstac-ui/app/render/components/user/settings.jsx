@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { compose, graphql, withApollo } from 'react-apollo';
-import PropTypes from 'prop-types';
+import { get } from 'lodash';
 import { Button, CircularProgress, Typography } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
 import { ValidatorForm, TextValidator } from 'react-material-ui-form-validator';
@@ -57,10 +58,10 @@ class Settings extends Component {
   }
 
   componentDidMount() {
-    const { newPassword } = this.state;
     ValidatorForm.addValidationRule(
       'isPasswordMatch',
-      value => value === newPassword
+      // eslint-disable-next-line react/destructuring-assignment
+      value => value === this.state.newPassword
     );
   }
 
@@ -88,12 +89,12 @@ class Settings extends Component {
 
     updatePassword({ currentPassword, newPassword })
       .then(() => {
-        notifySuccess({ message: 'Password updated successfully' });
+        notifySuccess('Password updated successfully');
         this.setState(INITIAL_STATE);
         this.passwordResetForm.resetValidations();
       })
-      .catch((error) => {
-        notifyError({ message: error.message });
+      .catch(({ graphQLErrors }) => {
+        notifyError(get(graphQLErrors, '0.message', 'Failed to update password'));
       })
       .finally(() => {
         this.setState({ isUpdating: false });
