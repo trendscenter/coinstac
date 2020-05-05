@@ -1,8 +1,8 @@
 {
-  "cstacDB": "coinstac",
   "hapiPort": 3100,
   "pipelineServer": 3200,
   "hashBytes": 64,
   "host": "localhost",
-  "rethinkPort": 28015
+  "mongoConnString": "mongodb://root:test@localhost:27017",
+  "databaseName": "coinstac"
 }

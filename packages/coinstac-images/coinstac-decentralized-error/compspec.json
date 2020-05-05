@@ -8,14 +8,14 @@
   },
   "computation": {
     "type": "docker",
-    "dockerImage": "coinstac\/coinstac-decentralized-error",
+    "dockerImage": "coinstacteam/coinstac-decentralized-error",
     "command": [
       "python",
       "\/computation\/local.py"
     ],
     "remote": {
       "type": "docker",
-      "dockerImage": "coinstac\/coinstac-decentralized-error",
+      "dockerImage": "coinstacteam/coinstac-decentralized-error",
       "command": [
         "python",
         "\/computation\/remote.py"

@@ -1,6 +1,6 @@
 import axios from 'axios';
 import ipcPromise from 'ipc-promise';
-import { remote } from 'electron';
+import { remote, ipcRenderer } from 'electron';
 import { get } from 'lodash';
 import { LOCATION_CHANGE } from 'react-router-redux';
 import { applyAsyncLoading } from './loading';
@@ -8,6 +8,13 @@ import { notifySuccess, notifyError } from './notifyAndLog';
 
 const apiServer = remote.getGlobal('config').get('apiServer');
 const API_URL = `${apiServer.protocol}//${apiServer.hostname}${apiServer.port ? `:${apiServer.port}` : ''}${apiServer.pathname}`;
+
+const API_TOKEN_KEY = 'id_token';
+let currentApiTokenKey = null;
+
+export function getCurrentApiTokenKey() {
+  return currentApiTokenKey;
+}
 
 const getErrorDetail = error => ({
   message: get(error, 'response.data.message'),
@@ -58,40 +65,50 @@ export const setApiVersionCheck = isApiVersionCompatible => ({
 });
 
 // Helpers
-const initCoreAndSetToken = (reqUser, data, appDirectory, dispatch) => {
+const initCoreAndSetToken = async (reqUser, data, appDirectory, dispatch) => {
   if (appDirectory) {
     localStorage.setItem('appDirectory', appDirectory);
   }
 
-  return ipcPromise.send('login-init', { userId: reqUser.username, appDirectory })
-    .then(() => {
-      const user = { ...data.user, label: reqUser.username };
+  await ipcPromise.send('login-init', { userId: reqUser.username, appDirectory });
+
+  const user = { ...data.user, label: reqUser.username };
+
+  remote.getCurrentWindow().webContents.send('login-success', data.user.id);
+
+  return new Promise((resolve) => {
+    ipcRenderer.on('app-init-finished', () => {
+      currentApiTokenKey = `${API_TOKEN_KEY}_${data.user.id}`;
 
       if (reqUser.saveLogin) {
-        localStorage.setItem('id_token', data.id_token);
+        localStorage.setItem(getCurrentApiTokenKey(), data.id_token);
       } else {
-        sessionStorage.setItem('id_token', data.id_token);
+        sessionStorage.setItem(getCurrentApiTokenKey(), data.id_token);
       }
 
       dispatch(setUser(user));
+
+      resolve();
     });
+  });
 };
 
 export const logout = applyAsyncLoading(() => (dispatch) => {
-  localStorage.removeItem('id_token');
-  sessionStorage.removeItem('id_token');
+  localStorage.removeItem(getCurrentApiTokenKey());
+  sessionStorage.removeItem(getCurrentApiTokenKey());
   return ipcPromise.send('logout')
     .then(() => {
       dispatch(clearUser());
+      currentApiTokenKey = null;
     });
 });
 
 export const autoLogin = applyAsyncLoading(() => (dispatch, getState) => {
-  let token = localStorage.getItem('id_token');
+  let token = localStorage.getItem(getCurrentApiTokenKey());
   let saveLogin = true;
 
   if (!token || token === 'null' || token === 'undefined') {
-    token = sessionStorage.getItem('id_token');
+    token = sessionStorage.getItem(getCurrentApiTokenKey());
     saveLogin = false;
   }
 
@@ -194,6 +211,9 @@ export const resetPassword = applyAsyncLoading(payload => (dispatch, getState) =
   }));
 
 export default function reducer(state = INITIAL_STATE, { type, payload }) {
+  const { locationStacks } = state;
+  const { pathname } = payload || {};
+
   switch (type) {
     case SET_USER:
       return { ...state, user: payload };
@@ -212,9 +232,6 @@ export default function reducer(state = INITIAL_STATE, { type, payload }) {
     case SET_API_VERSION_CHECK:
       return { ...state, isApiVersionCompatible: payload };
     case LOCATION_CHANGE:
-      const { locationStacks } = state;
-      const { pathname } = payload;
-
       if (EXCLUDE_PATHS.indexOf(pathname) !== -1) {
         return state;
       }
@@ -223,8 +240,8 @@ export default function reducer(state = INITIAL_STATE, { type, payload }) {
         return state;
       }
 
-      if (locationStacks.length > 1 &&
-        locationStacks[locationStacks.length - 2] === pathname) {
+      if (locationStacks.length > 1
+        && locationStacks[locationStacks.length - 2] === pathname) {
         locationStacks.pop();
 
         return {
