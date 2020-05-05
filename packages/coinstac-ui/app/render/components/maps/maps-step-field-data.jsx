@@ -1,3 +1,4 @@
+/* eslint-disable react/no-find-dom-node */
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 import PropTypes from 'prop-types';
@@ -10,6 +11,7 @@ import ListItemText from '@material-ui/core/ListItemText';
 import { withStyles } from '@material-ui/core/styles';
 import FileCopyIcon from '@material-ui/icons/FileCopy';
 import classNames from 'classnames';
+import path from 'path';
 
 const styles = theme => ({
   rootPaper: {
@@ -59,8 +61,8 @@ class MapsStepFieldData extends Component {
   componentDidMount() {
     const { registerDraggableContainer } = this.props;
 
-    if (this.refs.Container) {
-      const Container = ReactDOM.findDOMNode(this.refs.Container);
+    if (this.container) {
+      const Container = ReactDOM.findDOMNode(this.container);
       registerDraggableContainer(Container);
     }
   }
@@ -68,15 +70,24 @@ class MapsStepFieldData extends Component {
   componentDidUpdate(prevProps) {
     const { registerDraggableContainer, column } = this.props;
 
-    if (prevProps.column !== column && this.refs.Container) {
-      const Container = ReactDOM.findDOMNode(this.refs.Container);
+    if (prevProps.column !== column && this.container) {
+      const Container = ReactDOM.findDOMNode(this.container);
       registerDraggableContainer(Container);
     }
+  }
+
+  strMasseuse = (filepath) => {
+    let filename = path.basename(filepath, path.extname(filepath));
+    if (filename.length > 12) {
+      filename = `...${filename.slice(filename.length - 12)}`;
+    }
+    return filename;
   }
 
   render() {
     const {
       step,
+      label,
       type,
       classes,
       column,
@@ -100,19 +111,23 @@ class MapsStepFieldData extends Component {
             {
               isMapped
                 ? (
-                  <div ref="Container" className="card-draggable">
+                  <div
+                    className="card-draggable"
+                    ref={(ref) => { this.container = ref; }}
+                  >
                     <FileCopyIcon />
-                    { column }
-                    <span onClick={() => unmapField(type, column)}>
-                      <Icon className={classNames('fa fa-times-circle', classes.timesIcon)} />
-                    </span>
+                    { this.strMasseuse(column) }
+                    <Icon
+                      className={classNames('fa fa-times-circle', classes.timesIcon)}
+                      onClick={() => unmapField(type, column)}
+                    />
                   </div>
                 ) : (
                   <div
-                    ref="Container"
                     className="acceptor acceptor-data"
                     data-type={type}
                     data-name={name}
+                    ref={(ref) => { this.container = ref; }}
                   />
                 )
             }
@@ -150,12 +165,12 @@ MapsStepFieldData.defaultProps = {
 };
 
 MapsStepFieldData.propTypes = {
+  classes: PropTypes.object.isRequired,
+  column: PropTypes.string,
   step: PropTypes.object.isRequired,
   type: PropTypes.string.isRequired,
-  column: PropTypes.string,
   registerDraggableContainer: PropTypes.func.isRequired,
   unmapField: PropTypes.func.isRequired,
-  classes: PropTypes.object.isRequired,
 };
 
 export default withStyles(styles)(MapsStepFieldData);

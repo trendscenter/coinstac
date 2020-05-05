@@ -17,6 +17,7 @@ const express = require('express');
 const multer = require('multer');
 const decompress = require('decompress');
 const uuid = require('uuid/v4');
+const dockerManager = require('coinstac-docker-manager');
 
 const readdir = promisify(fs.readdir);
 
@@ -106,12 +107,15 @@ module.exports = {
                 if (res.statusCode !== 200) {
                   return reject(new Error(`File post error: ${res.statusCode} ${res.statusMessage}`));
                 }
-                res.pipe(fs.createWriteStream(
+                const wstream = fs.createWriteStream(
                   path.join(directory, file)
-                ));
-
-                res.on('end', () => {
+                );
+                res.pipe(wstream);
+                wstream.on('close', () => {
                   resolve(file);
+                });
+                wstream.on('error', (e) => {
+                  reject(e);
                 });
                 res.on('error', (e) => {
                   reject(e);
@@ -220,9 +224,18 @@ module.exports = {
     };
 
 
-    const clientPublish = (clientList, data) => {
+    const clientPublish = (clientList, data, opts) => {
       clientList.forEach((client) => {
-        serverMqt.publish(`${client}-run`, JSON.stringify(data), { qos: 1 }, (err) => { if (err) logger.error(`Mqtt error: ${err}`); });
+        if (opts && opts.success && opts.limitOutputToOwner) {
+          if (client === opts.owner) {
+            serverMqt.publish(`${client}-run`, JSON.stringify(data), { qos: 1 }, (err) => { if (err) logger.error(`Mqtt error: ${err}`); });
+          } else {
+            const limitedData = Object.assign({}, data, { files: undefined, output: { success: true, output: { message: 'output sent to consortium owner' } } });
+            serverMqt.publish(`${client}-run`, JSON.stringify(limitedData), { qos: 1 }, (err) => { if (err) logger.error(`Mqtt error: ${err}`); });
+          }
+        } else {
+          serverMqt.publish(`${client}-run`, JSON.stringify(data), { qos: 1 }, (err) => { if (err) logger.error(`Mqtt error: ${err}`); });
+        }
       });
     };
 
@@ -431,7 +444,6 @@ module.exports = {
                 }
               } else {
                 const runError = Object.assign(
-                  new Error(),
                   data.error,
                   {
                     error: `Pipeline error from pipeline ${data.runId} user: ${data.id}\n Error details: ${data.error.error}`,
@@ -468,6 +480,10 @@ module.exports = {
                 activePipelines[data.runId].finalTransferList.add(data.id);
                 if (activePipelines[data.runId].clients
                   .every(value => activePipelines[data.runId].finalTransferList.has(value))
+                  || (
+                    activePipelines[data.runId].limitOutputToOwner
+                    && data.id === activePipelines[data.runId].owner
+                  )
                 ) {
                   cleanupPipeline(data.runId)
                     .catch(e => logger.error(`Pipeline cleanup failure: ${e}`));
@@ -633,6 +649,9 @@ module.exports = {
               operatingDirectory,
               clientId,
               userDirectories,
+              owner: spec.owner,
+              logger,
+              dockerManager,
             }),
             baseDirectory: path.resolve(operatingDirectory, 'input', clientId, runId),
             cacheDirectory: userDirectories.cacheDirectory,
@@ -645,6 +664,8 @@ module.exports = {
             communicate: undefined,
             clients,
             remote: { reject: () => {} }, // noop for pre pipe errors
+            owner: spec.owner,
+            limitOutputToOwner: spec.limitOutputToOwner,
           },
           activePipelines[runId]
         );
@@ -682,6 +703,7 @@ module.exports = {
                 {
                   error: `Pipeline error from central node\n Error details: ${message.error}`,
                   message: `Pipeline error from central node\n Error details: ${message.message}`,
+                  stack: message.stack,
                 }
               );
               activePipelines[pipeline.id].state = 'central node error';
@@ -747,13 +769,28 @@ module.exports = {
                           output: message,
                           files: [archiveName],
                           iteration: messageIteration,
+                        },
+                        {
+                          success: message.success,
+                          limitOutputToOwner: activePipelines[pipeline.id].limitOutputToOwner,
+                          owner: activePipelines[pipeline.id].owner,
                         }
                       );
                     });
                   }
                   clientPublish(
                     activePipelines[pipeline.id].clients,
-                    { runId: pipeline.id, output: message, iteration: messageIteration }
+                    {
+                      runId: pipeline.id,
+                      output: message,
+                      iteration: messageIteration,
+                    },
+                    {
+                      success: message.success,
+                      limitOutputToOwner: activePipelines[pipeline.id].limitOutputToOwner,
+                      owner: activePipelines[pipeline.id].owner,
+                    }
+
                   );
                 });
             }
@@ -947,6 +984,10 @@ module.exports = {
             if (!activePipelines[runId].finalTransferList
                 || activePipelines[runId].clients
                   .every(value => activePipelines[runId].finalTransferList.has(value))
+                || (
+                  activePipelines[runId].limitOutputToOwner
+                  && activePipelines[runId].finalTransferList.has(activePipelines[runId].owner)
+                )
                 // allow locals to cleanup in sim
                 || mode === 'local'
             ) {
@@ -985,6 +1026,7 @@ module.exports = {
         }
       },
       waitingOnForRun,
+      dockerManager,
     };
   },
 };

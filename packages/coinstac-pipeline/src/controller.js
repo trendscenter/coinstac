@@ -17,11 +17,24 @@ module.exports = {
    *                            operatingDirectory - base directory for file operations
    * @return {Object}        a controller instance
    */
-  create({ controller, computations, inputMap }, runId, { operatingDirectory, mode, clientId }) {
+  create({
+    controller,
+    computations,
+    inputMap,
+  },
+  runId,
+  {
+    operatingDirectory,
+    mode,
+    clientId,
+    owner,
+    logger,
+    dockerManager,
+  }) {
     let cache = {};
     let pipelineErrorCallback;
     const currentComputations = computations.map(
-      comp => Computation.create(comp, mode, runId, clientId)
+      comp => Computation.create(comp, mode, runId, clientId, dockerManager)
     );
     const activeControlBox = controllers[controller.type];
     const computationStep = 0;
@@ -40,6 +53,7 @@ module.exports = {
       initialized: false,
       iteration: undefined,
       mode,
+      owner,
       runType: 'sequential',
       state: undefined,
       stopByUser: undefined,
@@ -100,7 +114,6 @@ module.exports = {
             case 'nextIteration':
               setStateProp('iteration', controllerState.iteration + 1);
               setStateProp('state', 'waiting on computation');
-
               return controllerState.activeComputations[controllerState.computationIndex]
                 .start(
                   {
@@ -147,9 +160,9 @@ module.exports = {
                       error: message,
                       name,
                       stack,
-                      input: input ? input.input : input,
                     }
                   );
+                  logger.silly(`Pipeline Error: ${iterationError}`);
                   if (controller.type === 'local') {
                     err(iterationError);
                   } else {

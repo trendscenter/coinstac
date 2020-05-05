@@ -11,7 +11,7 @@ module.exports = [
       ],
       handler: (req, res) => {
         res({
-          id_token: helperFunctions.createToken(req.pre.user.id),
+          id_token: helperFunctions.createToken(req.pre.user.username),
           user: req.pre.user,
         }).code(201);
       },
@@ -25,14 +25,14 @@ module.exports = [
       handler: ({
         auth: {
           credentials: {
-            email, id, institution, permissions,
+            email, username, institution, permissions,
           },
         },
       }, res) => {
         res({
-          id_token: helperFunctions.createToken(id),
+          id_token: helperFunctions.createToken(username),
           user: {
-            email, id, institution, permissions,
+            email, username, institution, permissions,
           },
         }).code(201);
       },
@@ -50,12 +50,12 @@ module.exports = [
         helperFunctions.hashPassword(req.payload.password)
           .then(passwordHash => helperFunctions.createUser(req.payload, passwordHash))
           .then(({
-            id, institution, email, permissions,
+            _id, username, institution, email, permissions,
           }) => {
             res({
-              id_token: helperFunctions.createToken(id),
+              id_token: helperFunctions.createToken(username),
               user: {
-                id, institution, email, permissions,
+                id: _id, username, institution, email, permissions,
               },
             }).code(201);
           });
@@ -74,7 +74,7 @@ module.exports = [
         helperFunctions
           .savePasswordResetToken(req.payload.email)
           .then(() => res().code(204))
-          .catch(() => res().code(400))
+          .catch(() => res().code(400));
       },
     },
   },
@@ -89,7 +89,7 @@ module.exports = [
       handler: (req, res) => {
         helperFunctions
           .resetPassword(req.payload.token, req.payload.password)
-          .then(() => res().code(204))
+          .then(() => res().code(204));
       },
     },
   },

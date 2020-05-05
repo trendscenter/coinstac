@@ -57,9 +57,10 @@ class Settings extends Component {
   }
 
   componentDidMount() {
+    const { newPassword } = this.state;
     ValidatorForm.addValidationRule(
       'isPasswordMatch',
-      value => value === this.state.newPassword,
+      value => value === newPassword
     );
   }
 
@@ -67,33 +68,35 @@ class Settings extends Component {
     ValidatorForm.removeValidationRule('isPasswordMatch');
   }
 
-  clearData = e => {
+  clearData = (e) => {
+    const { clearRuns, notifyInfo } = this.props;
     e.preventDefault();
-    this.props.clearRuns();
-    this.props.notifyInfo({ message: 'Local data cleared' });
+
+    clearRuns();
+    notifyInfo('Local data cleared');
   }
 
   updatePassword = () => {
     const { currentPassword, newPassword, isUpdating } = this.state;
+    const { updatePassword, notifySuccess, notifyError } = this.props;
 
     if (isUpdating) {
       return;
     }
 
-    this.setState({ isUpdating: true })
+    this.setState({ isUpdating: true });
 
-    this.props
-      .updatePassword({ currentPassword, newPassword })
+    updatePassword({ currentPassword, newPassword })
       .then(() => {
-        this.props.notifySuccess({ message: 'Password updated successfully' });
+        notifySuccess({ message: 'Password updated successfully' });
         this.setState(INITIAL_STATE);
         this.passwordResetForm.resetValidations();
       })
-      .catch(error => {
-        this.props.notifyError({ message: error.message });
+      .catch((error) => {
+        notifyError({ message: error.message });
       })
       .finally(() => {
-        this.setState({ isUpdating: false })
+        this.setState({ isUpdating: false });
       });
   }
 
@@ -103,7 +106,9 @@ class Settings extends Component {
 
   render() {
     const { classes } = this.props;
-    const { currentPassword, newPassword, confirmPassword, isUpdating } = this.state;
+    const {
+      currentPassword, newPassword, confirmPassword, isUpdating,
+    } = this.state;
 
     return (
       <div className="settings">
@@ -133,7 +138,7 @@ class Settings extends Component {
         <ValidatorForm
           instantValidate
           noValidate
-          ref={ref => this.passwordResetForm = ref}
+          ref={(ref) => { this.passwordResetForm = ref; }}
           onSubmit={this.updatePassword}
         >
           <TextValidator
@@ -145,9 +150,9 @@ class Settings extends Component {
             errorMessages={['Current password is required']}
             withRequiredValidator
             required
-            onChange={evt =>
-              this.updatePasswordParam({ param: 'currentPassword', value: evt.target.value })
-            }
+            onChange={evt => this.updatePasswordParam({
+              param: 'currentPassword', value: evt.target.value,
+            })}
           />
           <TextValidator
             className={classes.formControl}
@@ -158,9 +163,9 @@ class Settings extends Component {
             errorMessages={['New password is required']}
             withRequiredValidator
             required
-            onChange={evt =>
-              this.updatePasswordParam({ param: 'newPassword', value: evt.target.value })
-            }
+            onChange={evt => this.updatePasswordParam({
+              param: 'newPassword', value: evt.target.value,
+            })}
           />
           <TextValidator
             className={classes.formControl}
@@ -171,9 +176,9 @@ class Settings extends Component {
             errorMessages={['Password mismatch', 'Confirm password is required']}
             withRequiredValidator
             required
-            onChange={evt =>
-              this.updatePasswordParam({ param: 'confirmPassword', value: evt.target.value })
-            }
+            onChange={evt => this.updatePasswordParam({
+              param: 'confirmPassword', value: evt.target.value,
+            })}
           />
           <div className={classes.buttonWrapper}>
             <Button
@@ -193,9 +198,12 @@ class Settings extends Component {
 }
 
 Settings.propTypes = {
-  clearRuns: PropTypes.func.isRequired,
-  notifyInfo: PropTypes.func.isRequired,
   classes: PropTypes.object.isRequired,
+  clearRuns: PropTypes.func.isRequired,
+  notifyError: PropTypes.func.isRequired,
+  notifyInfo: PropTypes.func.isRequired,
+  notifySuccess: PropTypes.func.isRequired,
+  updatePassword: PropTypes.func.isRequired,
 };
 
 Settings.contextTypes = {
@@ -205,9 +213,9 @@ Settings.contextTypes = {
 const ComponentWithDatta = compose(
   graphql(
     UPDATE_PASSWORD_MUTATION,
-    updatePasswordProps('updatePassword'),
+    updatePasswordProps('updatePassword')
   ),
-  withApollo,
+  withApollo
 )(Settings);
 
 const connectedComponent = connect(null, {
