@@ -199,7 +199,7 @@ export const sendPasswordResetEmail = applyAsyncLoading(payload => dispatch => a
 
 export const resetPassword = applyAsyncLoading(payload => dispatch => axios.post(`${API_URL}/resetPassword`, payload)
   .then(() => {
-    dispatch(notifySuccess({ message: 'Reset password successfully' }));
+    dispatch(notifySuccess('Reset password successfully'));
   })
   .catch((err) => {
     const { statusCode, message } = getErrorDetail(err);
