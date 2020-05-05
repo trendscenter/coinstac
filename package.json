@@ -28,7 +28,7 @@
     "devdata": "cd packages/coinstac-api-server/ && npm run test-setup",
     "server": "cd packages/coinstac-server/ && npm start",
     "watch": "cd packages/coinstac-ui/ && npm run watch",
-    "start": "concurrently \"npm run api-server\" \"npm run server\" \"npm run watch\" ",
+    "start": "concurrently \"npm run api-server\" \"sleep 6 && npm run server\" \"npm run watch\" ",
     "build": "lerna bootstrap",
     "build:server": "lerna bootstrap --ignore 'coinstac-{client-core,decentralized-algorithm-integration,simulator,storage-proxy,ui}'",
     "clean": "lerna clean",
