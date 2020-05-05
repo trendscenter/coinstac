@@ -14,8 +14,8 @@ try {
 } catch (e) {
   console.log('No DBMap found: using defaults'); // eslint-disable-line no-console
   dbmap = {
-    rethinkdbServer: {
-      user: 'server',
+    apiCredentials: {
+      username: 'server',
       password: 'password',
     },
   };
@@ -32,7 +32,7 @@ server.connection({
  */
 axios.post(
   `${config.apiServer}/authenticate`,
-  dbmap.rethinkdbServer
+  dbmap.apiCredentials
 )
   .then((token) => {
     idToken = token.data.id_token;

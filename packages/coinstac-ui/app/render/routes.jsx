@@ -26,6 +26,7 @@ import Settings from './components/user/settings';
 import Issues from './components/issues';
 import Threads from './components/threads';
 import Logs from './components/logs-display/logs';
+import Papaya from './components/papaya';
 
 export default (
   <Route path="/" component={App}>
@@ -62,6 +63,7 @@ export default (
       <Route path="issues" component={Issues} />
       <Route path="threads" component={Threads} />
       <Route path="logs" component={Logs} />
+      <Route path="papaya" component={Papaya} />
     </Route>
   </Route>
 );
