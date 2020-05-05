@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
-import { notifyError, notifyInfo } from '../../state/ducks/notifyAndLog';
+import { notifyInfo } from '../../state/ducks/notifyAndLog';
 import { clearRuns } from '../../state/ducks/runs';
 
 const styles = theme => ({
@@ -23,16 +23,12 @@ const styles = theme => ({
 });
 
 class Settings extends Component {
-  constructor(props) {
-    super(props);
-
-    this.clearData = this.clearData.bind(this);
-  }
-
-  clearData(e) {
+  clearData = (e) => {
+    const { clearRuns, notifyInfo } = this.props;
     e.preventDefault();
-    this.props.clearRuns();
-    this.props.notifyInfo({ message: 'Local data cleared' });
+
+    clearRuns();
+    notifyInfo('Local data cleared');
   }
 
   render() {
@@ -64,9 +60,9 @@ class Settings extends Component {
 }
 
 Settings.propTypes = {
+  classes: PropTypes.object.isRequired,
   clearRuns: PropTypes.func.isRequired,
   notifyInfo: PropTypes.func.isRequired,
-  classes: PropTypes.object.isRequired,
 };
 
 Settings.contextTypes = {
@@ -75,7 +71,6 @@ Settings.contextTypes = {
 
 const connectedComponent = connect(null, {
   clearRuns,
-  notifyError,
   notifyInfo,
 })(Settings);
 

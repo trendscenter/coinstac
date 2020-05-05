@@ -4,27 +4,25 @@ import classNames from 'classnames';
 
 import './activity-indicator.css';
 
-export default class ActivityIndicator extends React.Component {
-  static defaultProps = {
-    visible: false
-  };
+const ActivityIndicator = ({ visible }) => (
+  <ul
+    className={classNames('activity-indicator', {
+      'is-loading': visible,
+    })}
+  >
+    <li />
+    <li />
+    <li />
+    <li />
+  </ul>
+);
 
-  static propTypes = {
-    visible: PropTypes.bool
-  };
+ActivityIndicator.defaultProps = {
+  visible: false,
+};
 
-  render() {
-    return (
-      <ul
-        className={classNames('activity-indicator', {
-          'is-loading': this.props.visible
-        })}
-      >
-        <li />
-        <li />
-        <li />
-        <li />
-      </ul>
-    )
-  }
-}
+ActivityIndicator.propTypes = {
+  visible: PropTypes.bool,
+};
+
+export default ActivityIndicator;

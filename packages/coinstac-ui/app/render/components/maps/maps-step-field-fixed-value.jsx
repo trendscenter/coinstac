@@ -42,9 +42,12 @@ function MapsStepFieldFixedValue(props) {
       value = JSON.stringify(step.value);
       break;
     default:
+      // eslint-disable-next-line prefer-destructuring
       value = step.value;
+      break;
   }
 
+  // eslint-disable-next-line no-useless-escape
   const label = fieldName.replace(/\_/g, ' ');
 
   return (
@@ -63,9 +66,9 @@ function MapsStepFieldFixedValue(props) {
 }
 
 MapsStepFieldFixedValue.propTypes = {
-  step: PropTypes.object.isRequired,
-  fieldName: PropTypes.string.isRequired,
   classes: PropTypes.object.isRequired,
+  fieldName: PropTypes.string.isRequired,
+  step: PropTypes.object.isRequired,
 };
 
 export default withStyles(styles)(MapsStepFieldFixedValue);
