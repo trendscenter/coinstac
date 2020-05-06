@@ -49,13 +49,13 @@ PipelineStepInputTextField.defaultProps = {
 };
 
 PipelineStepInputTextField.propTypes = {
+  isFromCache: PropTypes.bool,
   objKey: PropTypes.string.isRequired,
   objParams: PropTypes.object.isRequired,
   owner: PropTypes.bool.isRequired,
-  isFromCache: PropTypes.bool,
   step: PropTypes.object.isRequired,
-  updateStep: PropTypes.func.isRequired,
   getNewObj: PropTypes.func.isRequired,
+  updateStep: PropTypes.func.isRequired,
 };
 
 export default PipelineStepInputTextField;

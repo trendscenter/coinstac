@@ -19,6 +19,7 @@ import {
 } from '../../state/graphql/functions';
 import MapsPipelineVariables from './maps-pipeline-variables';
 import MapsCollection from './maps-collection';
+import path from 'path';
 
 const styles = theme => ({
   rootPaper: {
@@ -130,7 +131,20 @@ class MapsEdit extends Component {
       const { dataFile, dataType } = prevState;
 
       if (dataFile) {
-        stateChanges.dataFileHeader = dataType === 'array' ? dataFile.metaFile[0] : [dataType];
+        switch (dataType) {
+          case 'array':
+            stateChanges.dataFileHeader = dataFile.metaFile[0]
+            break;
+          case 'bundle':
+            stateChanges.dataFileHeader = [dataType]
+            break;
+          case 'singles':
+            stateChanges.dataFileHeader = dataFile.files
+            break;
+          default:
+            stateChanges.dataFileHeader = [dataType]
+            break;
+        }
       }
 
       return stateChanges;
@@ -200,7 +214,6 @@ class MapsEdit extends Component {
   mapObject = (fileDataMappingElement, targetPipelineElement) => {
     const fieldsetName = targetPipelineElement.dataset.type;
     const fieldName = targetPipelineElement.dataset.name;
-
     const dataMappingFieldName = fileDataMappingElement.dataset.string;
 
     this.addToDataMapping(fieldsetName, fieldName, dataMappingFieldName);
@@ -301,9 +314,23 @@ class MapsEdit extends Component {
   setSelectedDataFile = (dataFile) => {
     this.setState((prevState) => {
       const { dataType } = prevState;
-
+      let fileHeader;
+      switch (dataType) {
+        case 'array':
+          fileHeader = dataFile.metaFile[0]
+          break;
+        case 'bundle':
+          fileHeader = [dataType]
+          break;
+        case 'singles':
+          fileHeader = dataFile.files
+          break;
+        default:
+          fileHeader = [dataType]
+          break;
+      }
       return {
-        dataFileHeader: dataType === 'array' ? dataFile.metaFile[0] : [dataType],
+        dataFileHeader: fileHeader,
         dataFile: {
           ...dataFile,
           dataType,
@@ -319,6 +346,10 @@ class MapsEdit extends Component {
       dataFile: null,
       dataFileHeader: null,
     });
+  }
+
+  getFileName = (filepath) => {
+    return path.basename(filepath, path.extname(filepath));
   }
 
   render() {
@@ -390,12 +421,15 @@ class MapsEdit extends Component {
                             addToDataMapping={this.addToDataMapping}
                             stepsDataMappings={stepsDataMappings}
                             removeColumnFromDataFileHeader={this.removeColumnFromDataFileHeader}
-                            removeExtraColumnsFromDataFileHeader={this.removeExtraColumnsFromDataFileHeader}
+                            removeExtraColumnsFromDataFileHeader={
+                              this.removeExtraColumnsFromDataFileHeader
+                            }
                             dataFile={dataFile}
                             dataFileHeader={dataFileHeader}
                             saveDataMapping={this.saveDataMapping}
                             setSelectedDataFile={this.setSelectedDataFile}
                             resetDataMapping={this.resetDataMapping}
+                            getFileName={this.getFileName}
                           />
                         )
                       }
@@ -412,22 +446,20 @@ class MapsEdit extends Component {
 }
 
 MapsEdit.propTypes = {
-  params: PropTypes.object.isRequired,
+  auth: PropTypes.object.isRequired,
+  classes: PropTypes.object.isRequired,
   consortia: PropTypes.array.isRequired,
   maps: PropTypes.array.isRequired,
+  params: PropTypes.object.isRequired,
   pipelines: PropTypes.array.isRequired,
   saveDataMapping: PropTypes.func.isRequired,
   updateConsortiumMappedUsers: PropTypes.func.isRequired,
-  auth: PropTypes.object.isRequired,
-  classes: PropTypes.object.isRequired,
 };
 
-function mapStateToProps({ auth, maps }) {
-  return {
-    auth,
-    maps: maps.consortiumDataMappings,
-  };
-}
+const mapStateToProps = ({ auth, maps }) => ({
+  auth,
+  maps: maps.consortiumDataMappings,
+});
 
 const ComponentWithData = compose(
   graphql(

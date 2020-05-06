@@ -1,3 +1,4 @@
-import React from 'react'
+import React from 'react';
 
-export const ThreadContext = React.createContext(null)
+// eslint-disable-next-line import/prefer-default-export
+export const ThreadContext = React.createContext(null);

@@ -1,18 +1,18 @@
-import React, { Component } from 'react'
-import PropTypes from 'prop-types'
-import { connect } from 'react-redux'
-import { compose, graphql, withApollo } from 'react-apollo'
-import ReactJson from 'react-json-view'
-import ipcPromise from 'ipc-promise'
-import { Button, CircularProgress, Typography } from '@material-ui/core'
-import { withStyles } from '@material-ui/core/styles'
-import { services } from 'coinstac-common'
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
+import { compose, graphql, withApollo } from 'react-apollo';
+import ReactJson from 'react-json-view';
+import ipcPromise from 'ipc-promise';
+import { Button, CircularProgress, Typography } from '@material-ui/core';
+import { withStyles } from '@material-ui/core/styles';
+import { services } from 'coinstac-common';
 import {
   ADD_COMPUTATION_MUTATION,
-} from '../../state/graphql/functions'
-import { saveDocumentProp } from '../../state/graphql/props'
-import { notifySuccess, notifyError } from '../../state/ducks/notifyAndLog'
-import { getGraphQLErrorMessage } from '../../utils/helpers'
+} from '../../state/graphql/functions';
+import { saveDocumentProp } from '../../state/graphql/props';
+import { notifySuccess, notifyError } from '../../state/ducks/notifyAndLog';
+import { getGraphQLErrorMessage } from '../../utils/helpers';
 
 const styles = theme => ({
   topMargin: {
@@ -26,7 +26,7 @@ const styles = theme => ({
     display: 'flex',
     justifyContent: 'space-between',
   },
-})
+});
 
 class ComputationSubmission extends Component {
   state = {
@@ -38,40 +38,43 @@ class ComputationSubmission extends Component {
   getComputationSchema = () => {
     ipcPromise.send('open-dialog', 'jsonschema')
       .then((res) => {
-        let error = null
+        let error = null;
         const validationReults = services.validator.validate(res, 'computation')
 
         if (validationReults.error) {
-          error = validationReults.error.details
+          error = validationReults.error.details;
         }
 
-        this.setState({ activeSchema: res, validationErrors: error })
+        this.setState({ activeSchema: res, validationErrors: error });
       })
-      .catch(console.log)
+      .catch(() => {});
   }
 
   addComputation = () => {
-    const { activeSchema } = this.state
+    const {
+      router, addComputation, notifySuccess, notifyError,
+    } = this.props;
+    const { activeSchema } = this.state;
 
-    this.setState({ isSubmitting: true })
+    this.setState({ isSubmitting: true });
 
-    this.props.addComputation(activeSchema)
+    addComputation(activeSchema)
       .then(() => {
-        this.setState({ activeSchema: {} })
-        this.props.router.push('/dashboard/computations')
-        this.props.notifySuccess('Created Computation Successfully')
+        this.setState({ activeSchema: {} });
+        router.push('/dashboard/computations');
+        notifySuccess('Created Computation Successfully');
       })
       .catch((error) => {
-        this.props.notifyError(getGraphQLErrorMessage(error))
+        notifyError(getGraphQLErrorMessage(error));
       })
       .finally(() => {
-        this.setState({ isSubmitting: false })
-      })
+        this.setState({ isSubmitting: false });
+      });
   }
 
   render() {
-    const { classes } = this.props
-    const { activeSchema, validationErrors, isSubmitting } = this.state
+    const { classes } = this.props;
+    const { activeSchema, validationErrors, isSubmitting } = this.state;
 
     return (
       <div>
@@ -133,15 +136,17 @@ class ComputationSubmission extends Component {
           </div>
         )}
       </div>
-    )
+    );
   }
 }
 
 ComputationSubmission.propTypes = {
+  classes: PropTypes.object.isRequired,
+  router: PropTypes.object.isRequired,
   notifySuccess: PropTypes.func.isRequired,
   notifyError: PropTypes.func.isRequired,
   addComputation: PropTypes.func.isRequired,
-}
+};
 
 const ComputationSubmissionWithAlert = compose(
   graphql(
@@ -149,11 +154,11 @@ const ComputationSubmissionWithAlert = compose(
     saveDocumentProp('addComputation', 'computationSchema')
   ),
   withApollo
-)(ComputationSubmission)
+)(ComputationSubmission);
 
 const connectedComponent = connect(null, {
   notifySuccess,
   notifyError,
-})(ComputationSubmissionWithAlert)
+})(ComputationSubmissionWithAlert);
 
-export default withStyles(styles)(connectedComponent)
+export default withStyles(styles)(connectedComponent);

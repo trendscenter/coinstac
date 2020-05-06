@@ -1,35 +1,41 @@
-import React, { Component, Fragment } from 'react'
-import { connect } from 'react-redux'
-import PropTypes from 'prop-types'
-import { graphql } from 'react-apollo'
-import { Link } from 'react-router'
-import { Button, CircularProgress, Fab, Paper, Typography } from '@material-ui/core'
-import AddIcon from '@material-ui/icons/Add'
-import DeleteIcon from '@material-ui/icons/Delete'
-import { withStyles } from '@material-ui/core/styles'
-import classNames from 'classnames'
-import ListDeleteModal from '../common/list-delete-modal'
+import React, { Component, Fragment } from 'react';
+import { connect } from 'react-redux';
+import PropTypes from 'prop-types';
+import { graphql } from 'react-apollo';
+import { Link } from 'react-router';
+import {
+  Button,
+  CircularProgress,
+  Fab,
+  Paper,
+  Typography,
+} from '@material-ui/core';
+import AddIcon from '@material-ui/icons/Add';
+import DeleteIcon from '@material-ui/icons/Delete';
+import { withStyles } from '@material-ui/core/styles';
+import classNames from 'classnames';
+import ListDeleteModal from '../common/list-delete-modal';
 import {
   FETCH_ALL_COMPUTATIONS_QUERY,
   REMOVE_COMPUTATION_MUTATION,
-} from '../../state/graphql/functions'
+} from '../../state/graphql/functions';
 import {
   getDockerImages,
   pullComputations,
   removeImage,
-} from '../../state/ducks/docker'
+} from '../../state/ducks/docker';
 import {
   notifySuccess,
   notifyError,
-} from '../../state/ducks/notifyAndLog'
-import { removeDocFromTableProp } from '../../state/graphql/props'
+} from '../../state/ducks/notifyAndLog';
+import { removeDocFromTableProp } from '../../state/graphql/props';
 import {
   getGraphQLErrorMessage,
   isAdmin,
   isAuthor,
   isAllowedForComputationChange,
-} from '../../utils/helpers'
-import ComputationIO from './computation-io'
+} from '../../utils/helpers';
+import ComputationIO from './computation-io';
 
 const MAX_LENGTH_COMPUTATIONS = 5
 
@@ -64,8 +70,8 @@ const styles = theme => ({
     '& > button': {
       marginLeft: theme.spacing.unit,
     },
-  }
-})
+  },
+});
 
 class ComputationsList extends Component {
   constructor(props) {
@@ -78,43 +84,48 @@ class ComputationsList extends Component {
       otherComputations: [],
       showModal: false,
       isDeleting: false,
-    }
+    };
 
-    this.pullComputations = this.pullComputations.bind(this)
+    this.pullComputations = this.pullComputations.bind(this);
   }
 
   componentDidMount() {
-    this.props.getDockerImages()
+    const { getDockerImages } = this.props;
+    getDockerImages();
   }
 
   static getDerivedStateFromProps(props) {
-    const { computations, auth } = props
-    const ownedComputations = []
-    const otherComputations = []
+    const { computations, auth } = props;
+    const ownedComputations = [];
+    const otherComputations = [];
 
     if (computations && computations.length > MAX_LENGTH_COMPUTATIONS) {
       computations.forEach((comp) => {
         if (auth.user.id === comp.submittedBy) {
-          ownedComputations.push(comp)
+          ownedComputations.push(comp);
         } else {
-          otherComputations.push(comp)
+          otherComputations.push(comp);
         }
-      })
+      });
     }
 
-    return { ownedComputations, otherComputations }
+    return { ownedComputations, otherComputations };
   }
 
-  getTable = computations => {
-    const { auth: { user }, docker, classes } = this.props
-    const { activeComp, isDeleting, computationToDelete } = this.state
+  getTable = (computations) => {
+    const { auth: { user }, docker, classes } = this.props;
+    const { activeComp, isDeleting, computationToDelete } = this.state;
 
     const sortedComputations = computations.sort((a, b) => {
-        const nameA = a.meta.name.toLowerCase()
-        const nameB = b.meta.name.toLowerCase()
+      const nameA = a.meta.name.toLowerCase();
+      const nameB = b.meta.name.toLowerCase();
 
-        return (nameA < nameB) ? -1 : (nameA > nameB) ? 1 : 0
-    })
+      if (nameA < nameB) {
+        return -1;
+      }
+
+      return (nameA > nameB) ? 1 : 0;
+    });
 
     return (
       <div className={classes.computationsContainer}>
@@ -208,68 +219,72 @@ class ComputationsList extends Component {
           )
         })}
       </div>
-    )
+    );
   }
 
-  setActiveComp = comp => {
-    const { activeComp } = this.state
+  setActiveComp = (comp) => {
+    const { activeComp } = this.state;
 
     if (!activeComp || activeComp.meta.name !== comp.meta.name) {
-      this.setState({ activeComp: comp })
+      this.setState({ activeComp: comp });
     } else {
-      this.setState({ activeComp: null })
+      this.setState({ activeComp: null });
     }
   }
 
   closeModal = () => {
-    this.setState({ showModal: false })
+    this.setState({ showModal: false });
   }
 
-  openModal = computationId => {
+  openModal = (computationId) => {
     this.setState({
       showModal: true,
       computationToDelete: computationId,
-    })
+    });
   }
 
-  pullComputations(comps) {
-    return () => {
-      this.props.pullComputations({ computations: comps })
-    }
-  }
 
   removeComputation = () => {
-    const { computationToDelete } = this.state
+    const { removeComputation, notifySuccess, notifyError } = this.props;
+    const { computationToDelete } = this.state;
 
-    this.closeModal()
-    this.setState({ isDeleting: true })
+    this.closeModal();
+    this.setState({ isDeleting: true });
 
-    this.props
-      .removeComputation(computationToDelete)
+    removeComputation(computationToDelete)
       .then(() => {
-        this.props.notifySuccess('Successfully deleted computation')
+        notifySuccess('Successfully deleted computation');
       })
       .catch((error) => {
-        this.props.notifyError(getGraphQLErrorMessage(error))
+        notifyError(getGraphQLErrorMessage(error));
       })
       .finally(() => {
         this.setState({
           isDeleting: false,
           computationToDelete: null,
         });
-      })
+      });
   }
 
   removeImage = (compId, imgId, imgName) => {
-    this.props.removeImage(compId, imgId, imgName)
+    const { removeImage, getDockerImages } = this.props;
+
+    removeImage(compId, imgId, imgName)
       .then(() => {
-        this.props.getDockerImages()
-      })
+        getDockerImages();
+      });
+  }
+
+  pullComputations(comps) {
+    const { pullComputations } = this.props;
+    return () => {
+      pullComputations({ computations: comps });
+    };
   }
 
   render() {
-    const { computations, classes, auth } = this.props
-    const { ownedComputations, otherComputations, showModal } = this.state
+    const { computations, classes, auth } = this.props;
+    const { ownedComputations, otherComputations, showModal } = this.state;
 
     return (
       <div>
@@ -328,35 +343,36 @@ class ComputationsList extends Component {
       </div>
     )
   }
-}
+};
 
 ComputationsList.defaultProps = {
   removeComputation: null,
-}
+};
 
 ComputationsList.propTypes = {
   auth: PropTypes.object.isRequired,
+  classes: PropTypes.object.isRequired,
   computations: PropTypes.array.isRequired,
   docker: PropTypes.object.isRequired,
   getDockerImages: PropTypes.func.isRequired,
   pullComputations: PropTypes.func.isRequired,
   removeComputation: PropTypes.func,
   removeImage: PropTypes.func.isRequired,
-  classes: PropTypes.object.isRequired,
-}
+};
 
 const mapStateToProps = ({ auth, docker }) => ({
-  auth, docker
-})
+  auth, docker,
+});
 
-const ComputationsListWithData = graphql(REMOVE_COMPUTATION_MUTATION,
+const ComputationsListWithData = graphql(
+  REMOVE_COMPUTATION_MUTATION,
   removeDocFromTableProp(
     'computationId',
     'removeComputation',
     FETCH_ALL_COMPUTATIONS_QUERY,
     'fetchAllComputations'
   )
-)(ComputationsList)
+)(ComputationsList);
 
 const connectedComponent = connect(mapStateToProps, {
   getDockerImages,
@@ -364,6 +380,6 @@ const connectedComponent = connect(mapStateToProps, {
   removeImage,
   notifySuccess,
   notifyError,
-})(ComputationsListWithData)
+})(ComputationsListWithData);
 
-export default withStyles(styles)(connectedComponent)
+export default withStyles(styles)(connectedComponent);

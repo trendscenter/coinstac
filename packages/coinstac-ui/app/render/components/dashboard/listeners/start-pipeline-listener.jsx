@@ -47,6 +47,7 @@ class StartPipelineListener extends React.Component {
     const {
       remoteRuns,
       localRuns,
+      localRunResults,
       consortia,
       maps,
     } = this.props;
@@ -56,7 +57,7 @@ class StartPipelineListener extends React.Component {
         return;
       }
 
-      if (remoteRun.results || remoteRun.error) {
+      if (remoteRun.results || remoteRun.error || (remoteRun.id in localRunResults)) {
         return;
       }
 
@@ -69,7 +70,7 @@ class StartPipelineListener extends React.Component {
   }
 
   startPipeline = (consortium, dataMapping, run) => {
-    const { notifyInfo, router } = this.props;
+    const { notifyInfo } = this.props;
 
     notifyInfo(`Pipeline Starting for ${consortium.name}.`);
 
@@ -84,20 +85,19 @@ class StartPipelineListener extends React.Component {
 }
 
 StartPipelineListener.propTypes = {
-  maps: PropTypes.array.isRequired,
   consortia: PropTypes.array.isRequired,
-  remoteRuns: PropTypes.array.isRequired,
   localRuns: PropTypes.array.isRequired,
+  localRunResults: PropTypes.object.isRequired,
+  maps: PropTypes.array.isRequired,
+  remoteRuns: PropTypes.array.isRequired,
   notifyInfo: PropTypes.func.isRequired,
-  router: PropTypes.object.isRequired,
 };
 
-function mapStateToProps({ runs: { runs }, maps }) {
-  return {
-    localRuns: runs,
-    maps: maps.consortiumDataMappings,
-  };
-}
+const mapStateToProps = ({ runs, maps, localRunResults }) => ({
+  localRuns: runs.runs,
+  localRunResults,
+  maps: maps.consortiumDataMappings,
+});
 
 export default connect(mapStateToProps,
   {

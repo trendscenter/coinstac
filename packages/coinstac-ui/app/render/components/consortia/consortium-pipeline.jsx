@@ -68,24 +68,27 @@ class ConsortiumPipeline extends Component {
     this.closeSharedPipelinesMenu = this.closeSharedPipelinesMenu.bind(this);
   }
 
-  static getDerivedStateFromProps(props, state) {
-    if (props.pipelines.length > 0 && props.consortium.activePipelineId
-      && (!state.activePipeline || state.activePipeline.id !== props.consortium.activePipelineId)
-    ) {
-      const activePipeline = props.pipelines
-        .find(cons => cons.id === props.consortium.activePipelineId);
+  componentDidMount() {
+    const { consortium, pipelines } = this.props;
 
-      return { activePipeline };
+    if (consortium && consortium.activePipelineId) {
+      const activePipeline = pipelines.find(p => p.id === consortium.activePipelineId);
+
+      this.setState({ activePipeline });
     }
-
-    return null;
   }
 
-  selectPipeline = pipelineId => () => {
-    const { consortium, saveActivePipeline } = this.props;
-    saveActivePipeline(consortium.id, pipelineId);
+  selectPipeline = pipelineId => async () => {
+    const { consortium, saveActivePipeline, pipelines } = this.props;
+
     this.closeOwnedPipelinesMenu();
     this.closeSharedPipelinesMenu();
+
+    await saveActivePipeline(consortium.id, pipelineId);
+
+    const activePipeline = pipelines.find(p => p.id === pipelineId);
+
+    this.setState({ activePipeline });
   }
 
   openOwnedPipelinesMenu(event) {
@@ -234,10 +237,10 @@ class ConsortiumPipeline extends Component {
 }
 
 ConsortiumPipeline.propTypes = {
-  consortium: PropTypes.object.isRequired,
-  pipelines: PropTypes.array.isRequired,
-  owner: PropTypes.bool.isRequired,
   classes: PropTypes.object.isRequired,
+  consortium: PropTypes.object.isRequired,
+  owner: PropTypes.bool.isRequired,
+  pipelines: PropTypes.array.isRequired,
   saveActivePipeline: PropTypes.func.isRequired,
 };
 

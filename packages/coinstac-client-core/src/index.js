@@ -9,6 +9,7 @@ const fs = require('fs');
 const unlinkAsync = pify(fs.unlink);
 const linkAsync = pify(fs.link);
 const statAsync = pify(fs.stat);
+const readdirAsync = pify(fs.readdir);
 
 const path = require('path');
 const winston = require('winston');
@@ -160,13 +161,13 @@ class CoinstacClient {
   }
 
   /**
-   * Get array of file paths recursively
-   *
-   * @param {object} group
-   * @param {array} group.paths the paths to traverse
-   * @param {string} group.parentDir parent directory if diving into subdir
-   * @param {string} group.error present if error found
-   */
+    * Get array of file paths recursively
+    *
+    * @param {object} group
+    * @param {array} group.paths the paths to traverse
+    * @param {string} group.parentDir parent directory if diving into subdir
+    * @param {string} group.error present if error found
+    */
   static async getSubPathsAndGroupExtension(group, multext) {
     let pathsArray = [];
     let extension = null;
@@ -182,17 +183,17 @@ class CoinstacClient {
     }
 
     // Iterate through all paths
-    group.paths.forEach(async (path) => {
-      let p = path;
+    await Promise.all(group.paths.map(async (filePath) => {
+      let p = filePath;
       // Combine path with parent dir to get absolute path
       if (group.parentDir) {
-        p = group.parentDir.concat(`/${p}`);
+        p = path.join(group.parentDir, p);
       }
 
-      const stats = await fs.statAsync(p);
+      const stats = await statAsync(p);
 
       if (stats.isDirectory()) {
-        const dirs = await fs.readdir(p);
+        const dirs = await readdirAsync(p);
         const paths = [...dirs.filter(item => !(/(^|\/)\.[^/.]/g).test(item))];
         // Recursively retrieve path contents of directory
         const subGroup = await this.getSubPathsAndGroupExtension({
@@ -200,7 +201,6 @@ class CoinstacClient {
           extension: group.extension,
           parentDir: p,
         });
-
         if (subGroup) {
           if (subGroup.error) {
             return subGroup;
@@ -217,15 +217,14 @@ class CoinstacClient {
         const thisExtension = path.extname(p);
 
         if ((!multext && group.extension && thisExtension !== group.extension)
-            || (!multext && extension && extension !== thisExtension)) {
+             || (!multext && extension && extension !== thisExtension)) {
           return { error: `Group contains multiple extensions - ${thisExtension} & ${group.extension || extension}.` };
         }
 
         extension = thisExtension;
         pathsArray.push(p);
       }
-    });
-
+    }));
     return { paths: pathsArray, extension };
   }
 
