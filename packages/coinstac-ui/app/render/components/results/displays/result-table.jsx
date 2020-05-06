@@ -178,7 +178,7 @@ class TableResult extends Component {
 
       let labels = [];
 
-      if (heading.includes('Global') && Array.isArray(data.covariate_labels[0])) {
+      if (heading.includes('Global') && data.covariate_labels && Array.isArray(data.covariate_labels[0])) {
         labels = data.covariate_labels[0]; // eslint-disable-line prefer-destructuring
       } else {
         labels = data.covariate_labels;
