@@ -46,8 +46,8 @@ class ConsortiumTabs extends Component {
 
     this.state = {
       consortium,
-      unsubscribeUsers: null,
       selectedTabIndex: 0,
+      selectedInitialTab: false,
       savingStatus: 'init',
     };
 
@@ -57,7 +57,7 @@ class ConsortiumTabs extends Component {
   }
 
   componentDidMount() {
-    const { consortia, params } = this.props;
+    const { consortia, params, subscribeToUsers } = this.props;
 
     if (params.consortiumId) {
       const consortium = consortia.find(c => c.id === params.consortiumId);
@@ -68,29 +68,40 @@ class ConsortiumTabs extends Component {
         consortiumUsers,
       });
     }
+
+    this.unsubscribeUsers = subscribeToUsers(null);
   }
 
-  // eslint-disable-next-line
-  UNSAFE_componentWillReceiveProps(nextProps) {
-    const { params, subscribeToUsers } = this.props;
-    const { selectedTabIndex, unsubscribeUsers } = this.state;
+  componentDidUpdate(prevProps) {
+    const { params, consortia } = this.props;
+    const { selectedTabIndex, selectedInitialTab, consortium } = this.state;
 
-    const tabId = parseInt(params.tabId, 10);
+    if (!selectedInitialTab) {
+      const tabId = parseInt(params.tabId, 10);
 
-    if (tabId && tabId !== selectedTabIndex) {
-      this.handleSelect(null, tabId);
+      if (tabId && tabId !== selectedTabIndex) {
+        this.handleSelect(null, tabId);
+      }
     }
 
-    if (nextProps.users && !unsubscribeUsers) {
-      this.setState({ unsubscribeUsers: subscribeToUsers(null) });
+    if (consortium.id) {
+      const prevRemoteConsortium = prevProps.consortia.find(c => c.id === consortium.id);
+      const remoteConsortium = consortia.find(c => c.id === consortium.id);
+
+      if (prevRemoteConsortium.members.length !== remoteConsortium.members.length
+        || prevRemoteConsortium.owners.length !== remoteConsortium.owners.length) {
+        const consortiumUsers = this.getConsortiumUsers(remoteConsortium);
+
+        // eslint-disable-next-line react/no-did-update-set-state
+        this.setState({
+          consortiumUsers,
+        });
+      }
     }
   }
 
   componentWillUnmount() {
-    const { unsubscribeUsers } = this.state;
-    if (unsubscribeUsers) {
-      unsubscribeUsers();
-    }
+    this.unsubscribeUsers();
   }
 
   getConsortiumUsers = (consortium) => {
@@ -99,11 +110,12 @@ class ConsortiumTabs extends Component {
     consortium.owners.forEach(user => consortiumUsers.push({
       id: user, owner: true, member: true,
     }));
+
     consortium.members
       .filter(user => consortiumUsers.findIndex(consUser => consUser.id === user) === -1)
       .forEach(user => consortiumUsers.push({ id: user, member: true }));
 
-    return consortiumUsers;
+    return consortiumUsers.sort((a, b) => a.id.localeCompare(b.id));
   }
 
   getConsortiumRuns() {
@@ -115,8 +127,30 @@ class ConsortiumTabs extends Component {
     );
   }
 
-  handleSelect= (_event, value) => {
-    this.setState({ selectedTabIndex: value });
+  handleSelect = (_, value) => {
+    this.setState({ selectedTabIndex: value, selectedInitialTab: true });
+  }
+
+  getTabIndex = () => {
+    const { auth, params } = this.props;
+    const { selectedTabIndex, consortium } = this.state;
+    const isEditingConsortium = !!consortium.id;
+
+    const isOwner = consortium.owners.indexOf(auth.user.id) > -1
+      || !params.consortiumId;
+
+
+    if (selectedTabIndex === 1) {
+      if (!isEditingConsortium) {
+        return 0;
+      }
+    } else if (selectedTabIndex === 2) {
+      if (!isEditingConsortium || !isOwner) {
+        return 0;
+      }
+    }
+
+    return selectedTabIndex;
   }
 
   saveConsortium(e) {
@@ -164,28 +198,6 @@ class ConsortiumTabs extends Component {
     this.setState(prevState => ({
       consortium: { ...prevState.consortium, [update.param]: update.value },
     }));
-  }
-
-  getTabIndex = () => {
-    const { auth, params } = this.props;
-    const { selectedTabIndex, consortium } = this.state;
-    const isEditingConsortium = !!consortium.id;
-
-    const isOwner = consortium.owners.indexOf(auth.user.id) > -1
-      || !params.consortiumId;
-
-
-    if (selectedTabIndex === 1) {
-      if (!isEditingConsortium) {
-        return 0;
-      }
-    } else if (selectedTabIndex === 2) {
-      if (!isEditingConsortium || !isOwner) {
-        return 0;
-      }
-    }
-
-    return selectedTabIndex;
   }
 
   render() {
