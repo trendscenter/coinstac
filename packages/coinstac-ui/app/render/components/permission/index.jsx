@@ -42,6 +42,16 @@ class Permission extends Component {
     isUpdating: null,
   }
 
+  componentDidMount() {
+    const { subscribeToUsers } = this.props;
+
+    this.unsubscribeUsers = subscribeToUsers(null);
+  }
+
+  componentWillUnmount() {
+    this.unsubscribeUsers();
+  }
+
   logoutUser = () => {
     const { logout } = this.props;
     const { router } = this.context;
@@ -157,6 +167,7 @@ Permission.propTypes = {
   addUserRole: PropTypes.func.isRequired,
   removeUserRole: PropTypes.func.isRequired,
   logout: PropTypes.func.isRequired,
+  subscribeToUsers: PropTypes.func.isRequired,
 };
 
 Permission.defaultProps = {
