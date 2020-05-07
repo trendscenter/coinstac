@@ -16,6 +16,6 @@ export default function reducer(state = INITIAL_STATE, action) {
         [action.runId]: action.result,
       };
     default:
-      return state;
+      return state || INITIAL_STATE;
   }
 }
