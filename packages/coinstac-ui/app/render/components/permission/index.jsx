@@ -1,8 +1,8 @@
-import React, { Component } from 'react'
-import PropTypes from 'prop-types'
-import { connect } from 'react-redux'
-import { graphql, compose, withApollo } from 'react-apollo'
-import { get } from 'lodash'
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
+import { graphql, compose, withApollo } from 'react-apollo';
+import { get } from 'lodash';
 import {
   Checkbox,
   CircularProgress,
@@ -12,20 +12,20 @@ import {
   TableHead,
   TableRow,
   Typography,
-} from '@material-ui/core'
-import { withStyles } from '@material-ui/core/styles'
-import MemberAvatar from '../common/member-avatar'
-import { logout } from '../../state/ducks/auth'
+} from '@material-ui/core';
+import { withStyles } from '@material-ui/core/styles';
+import MemberAvatar from '../common/member-avatar';
+import { logout } from '../../state/ducks/auth';
 import {
   getAllAndSubProp,
   userRolesProp,
-} from '../../state/graphql/props'
+} from '../../state/graphql/props';
 import {
   FETCH_ALL_USERS_QUERY,
   USER_CHANGED_SUBSCRIPTION,
   ADD_USER_ROLE_MUTATION,
   REMOVE_USER_ROLE_MUTATION,
-} from '../../state/graphql/functions'
+} from '../../state/graphql/functions';
 
 const styles = () => ({
   avatarWrapper: {
@@ -34,8 +34,8 @@ const styles = () => ({
   },
   checkbox: {
     padding: 0,
-  }
-})
+  },
+});
 
 class Permission extends Component {
   state = {
@@ -43,38 +43,38 @@ class Permission extends Component {
   }
 
   logoutUser = () => {
-    const { router } = this.context
+    const { logout } = this.props;
+    const { router } = this.context;
 
-    this.props.logout()
+    logout()
       .then(() => {
-        router.push('/login')
-        this.props.notifySuccess('Successfully logged out')
-      })
+        router.push('/login');
+      });
   }
 
   toggleUserAppRole = (userId, checked, role) => {
-    const { currentUser, addUserRole, removeUserRole } = this.props
-    const mutation = checked ? addUserRole : removeUserRole
+    const { currentUser, addUserRole, removeUserRole } = this.props;
+    const mutation = checked ? addUserRole : removeUserRole;
 
-    this.setState({ isUpdating: { userId, role }})
+    this.setState({ isUpdating: { userId, role } });
 
     mutation(userId, 'app', role, role, 'app')
       .then(() => {
         if (currentUser.id === userId && role === 'admin') {
-          this.logoutUser()
+          this.logoutUser();
         }
       })
       .finally(() => {
-        this.setState({ isUpdating: null })
-      })
+        this.setState({ isUpdating: null });
+      });
   }
 
   render() {
-    const { users, classes } = this.props
-    const { isUpdating } = this.state
+    const { users, classes } = this.props;
+    const { isUpdating } = this.state;
 
-    const updatingUserId = get(isUpdating, 'userId')
-    const updatingRole = get(isUpdating, 'role')
+    const updatingUserId = get(isUpdating, 'userId');
+    const updatingRole = get(isUpdating, 'role');
 
     return (
       <div>
@@ -90,16 +90,15 @@ class Permission extends Component {
                 <TableCell>Username</TableCell>
                 <TableCell>Admin</TableCell>
                 <TableCell>Author</TableCell>
-                <TableCell></TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {users && users.map(user => {
-                const isAdmin = get(user, 'permissions.roles.admin', false)
-                const isAuthor = get(user, 'permissions.roles.author', false)
+              {users && users.map((user) => {
+                const isAdmin = get(user, 'permissions.roles.admin', false);
+                const isAuthor = get(user, 'permissions.roles.author', false);
 
-                const isUpdatingAdmin = updatingUserId === user.id && updatingRole === 'admin'
-                const isUpdatingAuthor = updatingUserId === user.id && updatingRole === 'author'
+                const isUpdatingAdmin = updatingUserId === user.id && updatingRole === 'admin';
+                const isUpdatingAuthor = updatingUserId === user.id && updatingRole === 'author';
 
                 return (
                   <TableRow key={`${user.id}-row`}>
@@ -137,26 +136,32 @@ class Permission extends Component {
                       )}
                     </TableCell>
                   </TableRow>
-                )
+                );
               })}
             </TableBody>
           </Table>
         </div>
       </div>
-    )
+    );
   }
 }
 
 Permission.contextTypes = {
   router: PropTypes.object.isRequired,
-}
+};
 
 Permission.propTypes = {
+  currentUser: PropTypes.object.isRequired,
+  classes: PropTypes.object.isRequired,
   users: PropTypes.array,
   addUserRole: PropTypes.func.isRequired,
   removeUserRole: PropTypes.func.isRequired,
   logout: PropTypes.func.isRequired,
-}
+};
+
+Permission.defaultProps = {
+  users: [],
+};
 
 const PermissionWithData = compose(
   graphql(FETCH_ALL_USERS_QUERY, getAllAndSubProp(
@@ -168,15 +173,15 @@ const PermissionWithData = compose(
   )),
   graphql(ADD_USER_ROLE_MUTATION, userRolesProp('addUserRole')),
   graphql(REMOVE_USER_ROLE_MUTATION, userRolesProp('removeUserRole')),
-  withApollo,
-)(Permission)
+  withApollo
+)(Permission);
 
 const mapStateToProps = ({ auth }) => ({
   currentUser: auth.user,
-})
+});
 
 const connectedComponent = connect(mapStateToProps, {
   logout,
-})(PermissionWithData)
+})(PermissionWithData);
 
-export default withStyles(styles, { withTheme: true })(connectedComponent)
+export default withStyles(styles, { withTheme: true })(connectedComponent);

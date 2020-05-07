@@ -376,7 +376,7 @@ class Dashboard extends Component {
 
   componentDidUpdate(prevProps) {
     const {
-      currentUser, updateUserPerms, remoteRuns, saveLocalRun
+      currentUser, updateUserPerms, remoteRuns, saveLocalRun,
     } = this.props;
 
     if (currentUser

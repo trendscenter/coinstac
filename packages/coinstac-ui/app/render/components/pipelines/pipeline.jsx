@@ -446,7 +446,7 @@ class Pipeline extends Component {
     } catch (error) {
       this.setState({ savingStatus: 'fail' });
 
-      notifyError(getGraphQLErrorMessage(error, 'Failed to save pipeline'))
+      notifyError(getGraphQLErrorMessage(error, 'Failed to save pipeline'));
     }
   }
 

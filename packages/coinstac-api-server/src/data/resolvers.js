@@ -13,7 +13,7 @@ const database = require('../database');
 const { transformToClient } = require('../utils');
 const {
   eventEmitter,
-  COMPUTATION_CHANGED,
+  // COMPUTATION_CHANGED,
   COMPUTATION_DELETED,
   CONSORTIUM_CHANGED,
   CONSORTIUM_DELETED,
@@ -155,24 +155,23 @@ async function removeUserPermissions(args) {
   }
 }
 
-async function changeUserAppRole(db, args, addOrRemove) {
+async function changeUserAppRole(args, addOrRemove) {
+  const db = database.getDbInstance();
   const { userId, role } = args;
 
-  await db.collections('users').findOneAndUpdate({ _id: ObjectID(userId) }, {
+  const userUpdateResult = await db.collection('users').findOneAndUpdate({ _id: userId }, {
     $set: {
-      permission: {
-        roles: {
-          [role]: addOrRemove === 'add',
-        },
-      },
+      [`permissions.roles.${role}`]: addOrRemove === 'add',
     },
   }, {
     returnOriginal: false,
   });
+
+  eventEmitter.emit(USER_CHANGED, userUpdateResult.value);
 }
 
 async function filterComputationsByMetaId(db, metaId) {
-  const results = await db.collections('computations').find({ meta: { id: metaId }}).toArray();
+  const results = await db.collection('computations').find({ meta: { id: metaId } }).toArray();
 
   return transformToClient(results);
 }
@@ -473,7 +472,9 @@ const resolvers = {
      * @return {object} Updated user object
      */
     addUserRole: async ({ auth: { credentials } }, args) => {
-      const { permissions } = credentials
+      const { permissions } = credentials;
+
+      console.log(args);
 
       if (AVAILABLE_ROLE_TYPES.indexOf(args.roleType) === -1) {
         return Boom.forbidden('Invalid role type');
@@ -485,11 +486,7 @@ const resolvers = {
           return Boom.forbidden('Action not permitted');
         }
 
-        const connection = await helperFunctions.getRethinkConnection();
-        await addUserPermissions(connection, args);
-        await connection.close();
-
-        return helperFunctions.getUserDetails({ username: args.userId });
+        await addUserPermissions({ doc: ObjectID(args.doc), role: args.role, userId: args.userId, table: args.table });
       }
       
       if (args.roleType === 'app') {
@@ -497,13 +494,8 @@ const resolvers = {
           return Boom.forbidden('Action not permitted');
         }
 
-        const connection = await helperFunctions.getRethinkConnection();
-        await changeUserAppRole(connection, args, 'add');
-        await connection.close();
-
-        return helperFunctions.getUserDetails({ username: args.userId });
+        await changeUserAppRole(args, 'add');
       }
-      // await addUserPermissions({ doc: ObjectID(args.doc), role: args.role, userId: args.userId, table: args.table });
     },
     /**
      * Add run to database
@@ -713,11 +705,7 @@ const resolvers = {
           return Boom.forbidden('Action not permitted');
         }
   
-        const connection = await helperFunctions.getRethinkConnection();
-        await removeUserPermissions(connection, args);
-        await connection.close();
-
-        return helperFunctions.getUserDetails({ username: args.userId });
+        await removeUserPermissions({ doc: ObjectID(args.doc), role: args.role, userId: args.userId, table: args.table });
       }
 
       if (args.roleType === 'app') {
@@ -725,11 +713,7 @@ const resolvers = {
           return Boom.forbidden('Action not permitted');
         }
 
-        const connection = await helperFunctions.getRethinkConnection();
-        await changeUserAppRole(connection, args, 'remove');
-        await connection.close();
-
-        return helperFunctions.getUserDetails({ username: args.userId });
+        await changeUserAppRole(args, 'remove');
       }
       // await removeUserPermissions({ doc: ObjectID(args.doc), role: args.role, userId: args.userId, table: args.table });
     },
