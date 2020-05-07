@@ -88,8 +88,10 @@ class ConsortiumTabs extends Component {
       const prevRemoteConsortium = prevProps.consortia.find(c => c.id === consortium.id);
       const remoteConsortium = consortia.find(c => c.id === consortium.id);
 
-      if (prevRemoteConsortium.members.length !== remoteConsortium.members.length
-        || prevRemoteConsortium.owners.length !== remoteConsortium.owners.length) {
+      if (remoteConsortium && prevRemoteConsortium && (
+        prevRemoteConsortium.members.length !== remoteConsortium.members.length
+        || prevRemoteConsortium.owners.length !== remoteConsortium.owners.length
+      )) {
         const consortiumUsers = this.getConsortiumUsers(remoteConsortium);
 
         // eslint-disable-next-line react/no-did-update-set-state

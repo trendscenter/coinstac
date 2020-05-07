@@ -1236,7 +1236,7 @@ const resolvers = {
     userChanged: {
       subscribe: withFilter(
         () => pubsub.asyncIterator('userChanged'),
-        (payload, variables) => (variables.userId || payload.userId === variables.userId)
+        (payload, variables) => (!variables.userId || payload.userId === variables.userId)
       )
     },
     /**
