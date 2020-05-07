@@ -135,6 +135,6 @@ export default function reducer(state = INITIAL_STATE, action) {
           .filter(map => map.consortiumId !== action.payload),
       };
     default:
-      return state;
+      return state || INITIAL_STATE;
   }
 }

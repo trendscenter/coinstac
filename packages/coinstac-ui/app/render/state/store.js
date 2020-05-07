@@ -29,6 +29,24 @@ const persistConfig = {
   whitelist: ['maps', 'localRunResults'],
 };
 
+async function loadPersistedState(userId, persistor, store) {
+  const electronStoreFolder = dirname(electronStore.path);
+  electronStore.path = join(electronStoreFolder, `local-db-${userId}.json`);
+
+  const data = await persistConfig.storage.getItem('persist:root');
+  persistor.persist();
+
+  // Rehydrate is done only once by redux-persist, so we do it manually
+  // for hydrating state on consecutive logins
+  if (data) {
+    const parsedState = deepParseJson(data);
+
+    delete parsedState._persist;
+
+    store.dispatch(rehydrate(parsedState));
+  }
+}
+
 export default function (apolloClient) {
   const persistedReducer = persistReducer(persistConfig, rootReducer(apolloClient));
 
@@ -44,30 +62,20 @@ export default function (apolloClient) {
 
   const persistor = persistStore(store, { manualPersist: true });
 
-  ipcRenderer.on('login-success', async (event, userId) => {
-    const electronStoreFolder = dirname(electronStore.path);
-    electronStore.path = join(electronStoreFolder, `local-db-${userId}.json`);
+  ipcRenderer.on('login-success', async (_, userId) => {
+    await loadPersistedState(userId, persistor, store);
 
-    const data = await persistConfig.storage.getItem('persist:root');
-    persistor.persist();
-
-    // Rehydrate is done only once by redux-persist, so we do it manually
-    // for hydrating state on consecutive logins
-    if (data) {
-      const parsedState = deepParseJson(data);
-
-      delete parsedState._persist;
-
-      store.dispatch(rehydrate(parsedState));
-
-      remote.getCurrentWindow().webContents.send('app-init-finished');
-    }
+    remote.getCurrentWindow().webContents.send('app-init-finished');
   });
 
   ipcRenderer.on('logout', () => {
     persistor.pause();
 
-    store.dispatch(clearState());
+    // clear persisted state
+    store.dispatch(clearState({
+      maps: null,
+      localRunResults: null,
+    }));
   });
 
   if (module.hot) {
