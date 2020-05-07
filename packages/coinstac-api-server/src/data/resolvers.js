@@ -395,6 +395,8 @@ const resolvers = {
       }
 
       await addUserPermissions({ doc: ObjectID(args.doc), role: args.role, userId: args.userId, table: args.table });
+
+      return helperFunctions.getUserDetails(args.userId);
     },
     /**
      * Add run to database
@@ -544,6 +546,8 @@ const resolvers = {
       }
 
       await addUserPermissions({ userId: credentials.id, role: 'member', doc: ObjectID(args.consortiumId), table: 'consortia' });
+
+      return helperFunctions.getUserDetails(credentials.username);
     },
     /**
      * Remove logged user from consortium members list
@@ -554,6 +558,8 @@ const resolvers = {
      */
     leaveConsortium: async ({ auth: { credentials } }, args) => {
       await removeUserPermissions({ userId: credentials.id, role: 'member', doc: ObjectID(args.consortiumId), table: 'consortia' });
+
+      return helperFunctions.getUserDetails(credentials.username);
     },
     /**
      * Deletes computation
@@ -595,6 +601,8 @@ const resolvers = {
       }
 
       await removeUserPermissions({ doc: ObjectID(args.doc), role: args.role, userId: args.userId, table: args.table });
+
+      return helperFunctions.getUserDetails(args.userId);
     },
     /**
      * Sets active pipeline on consortia object
@@ -626,6 +634,8 @@ const resolvers = {
       });
 
       eventEmitter.emit(CONSORTIUM_CHANGED, result.value);
+
+      return transformToClient(result.value);
     },
     /**
      * Saves consortium
@@ -717,6 +727,8 @@ const resolvers = {
       });
 
       eventEmitter.emit(RUN_CHANGED, result.value);
+
+      return transformToClient(result.value);
     },
     /**
      * Saves pipeline
@@ -812,6 +824,8 @@ const resolvers = {
       });
 
       eventEmitter.emit(RUN_CHANGED, result.value);
+
+      return transformToClient(result.value);
     },
     setActiveComputation: (_, args) => {
       return new Promise();
@@ -840,6 +854,8 @@ const resolvers = {
       });
 
       eventEmitter.emit(RUN_CHANGED, result.value);
+
+      return transformToClient(result.value);
     },
     /**
      * Saves consortium
@@ -1034,6 +1050,8 @@ const resolvers = {
       });
 
       eventEmitter.emit(THREAD_CHANGED, result.value);
+
+      return transformToClient(result.value);
     }
   },
   Subscription: {
