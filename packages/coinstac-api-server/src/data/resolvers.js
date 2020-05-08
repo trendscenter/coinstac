@@ -13,7 +13,7 @@ const database = require('../database');
 const { transformToClient } = require('../utils');
 const {
   eventEmitter,
-  // COMPUTATION_CHANGED,
+  COMPUTATION_CHANGED,
   COMPUTATION_DELETED,
   CONSORTIUM_CHANGED,
   CONSORTIUM_DELETED,
@@ -171,7 +171,7 @@ async function changeUserAppRole(args, addOrRemove) {
 }
 
 async function filterComputationsByMetaId(db, metaId) {
-  const results = await db.collection('computations').find({ meta: { id: metaId } }).toArray();
+  const results = await db.collection('computations').find({ 'meta.id': metaId }).toArray();
 
   return transformToClient(results);
 }
@@ -184,8 +184,7 @@ function isAuthor(permissions) {
   return get(permissions, 'roles.author', false);
 }
 
-function isAllowedForComputationChange(credentials) {
-  const { permissions } = credentials;
+function isAllowedForComputationChange(permissions) {
   return isAdmin(permissions) || isAuthor(permissions);
 }
 
@@ -396,29 +395,28 @@ const resolvers = {
      * @return {object} New computation object
      */
     addComputation: async ({ auth: { credentials } }, args) => {
+      const { permissions } = credentials;
       const { computationSchema } = args;
 
-      if (!isAllowedForComputationChange(credentials)) {
+      if (!isAllowedForComputationChange(permissions)) {
         return Boom.forbidden('Only admin or author can add computation.');
       }
 
-      const connection = await helperFunctions.getRethinkConnection();
+      const db = database.getDbInstance();
 
-      const filteredComputations = await filterComputationsByMetaId(connection, computationSchema.meta.id);
+      const filteredComputations = await filterComputationsByMetaId(db, computationSchema.meta.id);
 
       if (filteredComputations.length === 0) {
-        const result = await rethink.table('computations')
-          .insert(
-            {
-              ...computationSchema,
-              submittedBy: credentials.id,
-            },
-            { returnChanges: true }
-          )
-          .run(connection);
-        await connection.close();
+        const result = await db.collection('computations').insertOne({
+          ...computationSchema,
+          submittedBy: credentials.id,
+        });
 
-        return result.changes[0].new_val;
+        const computation = result.ops[0];
+
+        eventEmitter.emit(COMPUTATION_CHANGED, computation);
+
+        return transformToClient(computation);
       }
 
       if (filteredComputations.length === 1) {
@@ -428,38 +426,22 @@ const resolvers = {
           return Boom.forbidden('Only admin or computation owner can update computations.');
         }
 
-        await rethink.table('computations')
-          .get(computation.id)
-          .update(computationSchema)
-          .run(connection);
-        
-        await connection.close();
-
-        const updatedComputation = await fetchOne('computations', computation.id);
-
-        return updatedComputation;
+        const updatedComputationResult = await db.collection('computations').findOneAndUpdate({
+          _id: ObjectID(computation.id)
+        }, {
+          $set: computationSchema,
+        }, {
+          returnOriginal: false,
+        });
+  
+        eventEmitter.emit(COMPUTATION_CHANGED, updatedComputationResult.value);
+  
+        return transformToClient(updatedComputationResult.value);
       }
 
       if (filteredComputations.length > 1) {
         return Boom.forbidden('Computation with same meta id already exists.');
       }
-      // const db = database.getDbInstance();
-
-      // args.computationSchema.id = args.computationSchema.id ? ObjectID(args.computationSchema.id) : new ObjectID();
-
-      // await db.collection('computations').replaceOne({
-      //   _id: args.computationSchema.id,
-      // }, {
-      //   ...args.computationSchema, submittedBy: credentials.id
-      // }, {
-      //   upsert: true
-      // });
-
-      // const computation = transformToClient(args.computationSchema);
-
-      // eventEmitter.emit(COMPUTATION_CHANGED, computation);
-
-      // return computation;
     },
     /**
      * Add new user role to user perms, currently consortia perms only
@@ -473,8 +455,6 @@ const resolvers = {
      */
     addUserRole: async ({ auth: { credentials } }, args) => {
       const { permissions } = credentials;
-
-      console.log(args);
 
       if (AVAILABLE_ROLE_TYPES.indexOf(args.roleType) === -1) {
         return Boom.forbidden('Invalid role type');
@@ -671,7 +651,7 @@ const resolvers = {
         return Boom.forbidden('Cannot find computation');
       }
 
-      if (computation.submittedBy !== credentials.username && isAdmin(credentials.permissions)) {
+      if (computation.submittedBy !== credentials.username && !isAdmin(credentials.permissions)) {
         return Boom.forbidden('Only admin or computation owner can delete computations.');
       }
 
