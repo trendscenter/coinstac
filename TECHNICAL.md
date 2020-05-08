@@ -79,7 +79,7 @@ Here’s how a basic decentralized computation works:
     +----------+   +----------+   +----------+
     ```
 
-6. The local and remote computers iterate between steps 3 through 5 until the remote machine deems the computation is done. Data flows in one direction, in a circular manner:
+6. The local and remote computers iterate between steps 3 through 5 until the remote machine deems the computation is done. Data flows between client and remote databases:
 
     ```
         +---------+                        +----------------+
@@ -167,7 +167,7 @@ Authentication plugin for [hapi](http://hapijs.com/) server. This ensures COINST
 * **Uses:** [coinstac-client-core](#coinstac-client-core)
 * **Used by:**
 
-This is the Electron-based application that runs on OS X, Windows and Linux. It consumes coinstac-client-core and coinstac-common.
+This is the Electron-based application that runs on OS X, Windows and Linux. It uses coinstac-client-core and coinstac-common.
 
 ### [nodeapi](https://github.com/MRN-Code/nodeapi)
 
@@ -180,45 +180,51 @@ Consortia are COINSTAC’s high-level groups composed of researchers, scientists
 
 ## Computations
 
-Computations are instructions for client-server interaction. Clients are referred to as “local” and the the server is referred to as “remote” in a computation. Researchers author computations in a specified format, and they are hosted as repositories on GitHub. Here’s an example:
+Computations are instructions for client-server interaction. Clients are referred to as “local” and the the server is referred to as “remote” in a computation. Researchers author computations in a specified format, and they are hosted as repositories on GitHub. A computation consists of a computation
+specification that details how Coinstac should interact both in communication between the "local" and "remote" as well as the UI needed to fulfill a computations requirements, and the scripts that contain the actual computation to be done such as a Docker container to be launched.
 
-```js
+Here is a simple example:
+
+```json
 {
-    name: 'barebones-multishot',
-    version: '1.0.0',
-    repository: {
-        url: 'https://github.com/MRN-Code/barebones-multishot',
+  "meta": {
+    "name": "Average Test",
+    "id": "avg_test",
+    "version": "v1.0.0",
+    "repository": "https:\/\/github.com\/trendscenter\/coinstac-first-example",
+    "description": "A simple averaging example"
+  },
+  "computation": {
+    "type": "docker",
+    "dockerImage": "avg_test",
+    "command": [
+      "python",
+      "\/computation\/local.py"
+    ],
+    "remote": {
+      "type": "docker",
+      "dockerImage": "avg_test",
+      "command": [
+        "python",
+        "\/computation\/remote.py"
+      ]
     },
-    label: 'Barebones Multi-shot',
-    description: 'This is a simple, iterative computation.',
-    local: {
-        type: 'function',
-        fn: function(previousLocalResult, remoteResult, next) {
-            if (typeof previousLocalResult === 'undefined') {
-                previousLocalResult = Math.round(Math.random() * 10);
-            }
-            // Average previous and remote results
-            return (previousLocalResult + remoteResult) / 2;
-        },
+    "input": {
+      "covariates": {
+        "type": "array"
+      }
     },
-    remote: {
-        type: 'function',
-        fn: function(previousRemoteResult, localResults, next) {
-            if (typeof previousRemoteResult === 'undefined') {
-                previousRemoteResult = 0;
-            }
-
-            // Move on to next task if the remote value exceeds 30
-            if (previousRemoteResult >= 30) {
-                return next();
-            }
-
-            // Add all the local results
-            return localResults.reduce((sum, n) => sum + n);
-        },
-    },
-};
+    "output": {
+      "Beta": {
+        "type": "array"
+      }
+    }
+  }
+}
 ```
+The full code for this example can be found [here](https://github.com/trendscenter/coinstac-first-example)
+
+An in depth guide on how to create computations for Coinstac can be found [here](https://github.com/trendscenter/coinstac/blob/master/algorithm-development/coinstac-development-guide.md#Create-a-compsec) as well
 
 ## Database Structure
 
@@ -258,7 +264,7 @@ Contains local computation results. Database name follows `local-consortium-${co
 Saved local computation result documents have a few important items:
 
 * **_id:** an identifier of the form `${runId}-${username}`. `runId` is a unique number that signifies a decentralized computation “run.” The `runId` is used as a key to match several local documents and a single remote document.
-* **data:** an object/primitive that is the result of the computation.
+* **data:** an object/primitive that is the result of the computation
 * **timestamp** entry of when the data was saved
 * **name:** name of the computation. UsedRequired for finding a particular computation’s local results when filtering
 * **username:** The local computation’s client’s username. (This is also maintained in RemoteComputation’s `usernames` array.)
@@ -331,7 +337,7 @@ Saved `RemoteComputation`s have a few important values:
 
 * **_id:** This _is_ a computation instance’s `runId`. This links a remote document to clients’ local documents.
 * **data:** result of running a remote computation
-* **name:** name of the computation.
+* **name:** name of the computation
 * **usernames:** Collection of all user names involved in computation instance.
 * **version:** semver version number of computation.
 
