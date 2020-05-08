@@ -7,7 +7,7 @@ Coinstac is a Electron based application environment for decentralized algorithm
 ### Requirements
 
   - lastest version of [coinstac-simulator](https://npm.org/packages/coinstac-simulator)
-    ```sudo npm i -g coisntac-simulator```
+    ```sudo npm i -g coinstac-simulator```
   - latest version of [docker](https://docs.docker.com/install/)
 
 ## Getting Started
