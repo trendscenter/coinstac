@@ -8,7 +8,7 @@ const path = require('path');
 
 
 const options = {
-  // all: true,
+  all: true,
   asar: true,
   dir: `${__dirname}/../`,
   icon: path.resolve(__dirname, '../img/icons/coinstac'),
