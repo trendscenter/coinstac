@@ -402,5 +402,3 @@ Computations are pipelines. The basic example above has one pipeline element for
 ## Coding Standards
 
 Each COINSTAC project uses [coins-validate](https://github.com/MRN-Code/coins-validate) to ensure consistent code style
-
-https://www.lucidchart.com/documents/edit/1d7f8f06-d29c-4896-a282-845fbd61f4d5
