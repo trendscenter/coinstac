@@ -1,12 +1,12 @@
 {
   "algo": "sha512",
-  "cstacDB": "coinstac",
   "encoding": "base64",
   "hapiPort": 3100,
   "hashBytes": 64,
   "host": "localhost",
   "iterations": 500000,
   "jwtSecret": "friends",
-  "rethinkPort": 28015,
-  "saltBytes": 16
+  "saltBytes": 16,
+  "mongoConnString": "mongodb://root:test@localhost:27017",
+  "databaseName": "coinstac"
 }

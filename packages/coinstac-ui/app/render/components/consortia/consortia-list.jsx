@@ -143,7 +143,7 @@ class ConsortiaList extends Component {
         }
         >
           {consortium.activePipelineId
-            ? pipelines.find(pipe => pipe.id === consortium.activePipelineId).name
+            ? pipeline.name
             : 'None'
           }
         </Typography>

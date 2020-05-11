@@ -443,8 +443,8 @@ class Pipeline extends Component {
         const { savePipeline } = data;
         await saveActivePipeline(savePipeline.owningConsortium, savePipeline.id);
       }
-    } catch ({ graphQLErrors }) {
-      notifyError(get(graphQLErrors, '0.message', 'Failed to save pipeline'));
+    } catch (error) {
+      notifyError(get(error.graphQLErrors, '0.message', 'Failed to save pipeline'));
 
       this.setState({ savingStatus: 'fail' });
     }
@@ -732,6 +732,7 @@ Pipeline.propTypes = {
   notifyError: PropTypes.func.isRequired,
   notifySuccess: PropTypes.func.isRequired,
   savePipeline: PropTypes.func.isRequired,
+  saveActivePipeline: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = ({ auth }) => ({
