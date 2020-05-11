@@ -6,6 +6,7 @@ const helperFunctions = require('./auth-helpers');
 const plugins = require('./plugins');
 const routes = require('./routes');
 const wsServer = require('./ws-server');
+const database = require('./database');
 
 const server = new hapi.Server();
 server.connection({
@@ -33,9 +34,14 @@ server.register(plugins, (err) => {
   server.route(routes);
 });
 
-server.start((startErr) => {
-  if (startErr) throw startErr;
-  console.log(`Server running at: ${server.info.uri}`); // eslint-disable-line no-console
-
-  wsServer.activate(server);
-});
+database.connect()
+  .then(() => {
+    server.start((startErr) => {
+      if (startErr) throw startErr;
+      console.log(`Server running at: ${server.info.uri}`); // eslint-disable-line no-console
+      wsServer.activate(server);
+    });
+  })
+  .catch((err) => {
+    console.error(err); // eslint-disable-line no-console
+  });

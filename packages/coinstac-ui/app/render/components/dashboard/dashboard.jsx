@@ -39,7 +39,7 @@ import {
   FETCH_ALL_USER_RUNS_QUERY,
   FETCH_ALL_THREADS_QUERY,
   PIPELINE_CHANGED_SUBSCRIPTION,
-  USER_METADATA_CHANGED_SUBSCRIPTION,
+  USER_CHANGED_SUBSCRIPTION,
   USER_RUN_CHANGED_SUBSCRIPTION,
   THREAD_CHANGED_SUBSCRIPTION,
   UPDATE_USER_CONSORTIUM_STATUS_MUTATION,
@@ -135,7 +135,7 @@ class Dashboard extends Component {
       notifyError,
       updateLocalRun,
       saveLocalRun,
-      subscribeToUserMetaData,
+      subscribeToUser,
       subscribeToUserRuns,
     } = this.props;
     const { router } = this.context;
@@ -202,7 +202,7 @@ class Dashboard extends Component {
 
     ipcRenderer.send('load-initial-log');
 
-    this.unsubscribeToUserMetadata = subscribeToUserMetaData(user.id);
+    this.unsubscribeToUser = subscribeToUser(user.id);
     this.unsubscribeToUserRuns = subscribeToUserRuns(user.id);
 
     ipcRenderer.on('docker-error', (event, arg) => {
@@ -403,7 +403,7 @@ class Dashboard extends Component {
     unsubscribePipelines();
     unsubscribeThreads();
 
-    this.unsubscribeToUserMetadata();
+    this.unsubscribeToUser();
     this.unsubscribeToUserRuns();
 
     ipcRenderer.removeAllListeners('docker-out');
@@ -611,7 +611,7 @@ Dashboard.propTypes = {
   subscribeToConsortia: PropTypes.func.isRequired,
   subscribeToPipelines: PropTypes.func.isRequired,
   subscribeToThreads: PropTypes.func.isRequired,
-  subscribeToUserMetaData: PropTypes.func.isRequired,
+  subscribeToUser: PropTypes.func.isRequired,
   subscribeToUserRuns: PropTypes.func.isRequired,
   updateConsortiaMappedUsers: PropTypes.func.isRequired,
   updateDockerOutput: PropTypes.func.isRequired,
@@ -672,14 +672,14 @@ const DashboardWithData = compose(
     }),
     props: props => ({
       currentUser: props.data.fetchUser,
-      subscribeToUserMetaData: userId => props.data.subscribeToMore({
-        document: USER_METADATA_CHANGED_SUBSCRIPTION,
+      subscribeToUser: userId => props.data.subscribeToMore({
+        document: USER_CHANGED_SUBSCRIPTION,
         variables: { userId },
         updateQuery: (prevResult, { subscriptionData: { data } }) => {
-          if (data.userMetadataChanged.delete) {
+          if (data.userChanged.delete) {
             return { fetchUser: null };
           }
-          return { fetchUser: data.userMetadataChanged };
+          return { fetchUser: data.userChanged };
         },
       }),
     }),

@@ -132,7 +132,7 @@ const typeDefs = `
   type MessageOutput {
     id: ID
     sender: ID
-    recipients: [ID]
+    recipients: [String]
     content: String
     date: String
     action: ActionOutput
@@ -204,7 +204,6 @@ const typeDefs = `
     threadChanged(threadId: ID): Thread
     userRunChanged(userId: ID): Run
     userChanged(userId: ID): User
-    userMetadataChanged(userId: ID): User
   }
 `;
 
