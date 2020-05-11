@@ -1,3 +1,4 @@
+/* eslint-disable react/no-array-index-key, no-useless-escape */
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import Button from '@material-ui/core/Button';
@@ -8,13 +9,13 @@ import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import { withStyles } from '@material-ui/core/styles';
 
-const styles = theme => ({
+const styles = () => ({
   downloadButtonContainer: {
     textAlign: 'right',
   },
   theading: {
     color: 'white',
-    fontSize: '0'
+    fontSize: '0',
   },
 });
 
@@ -72,10 +73,14 @@ function parseTableColumnOutput(output) {
       } else if (Math.abs(o) > 999 || Math.abs(o) < 0.001) {
         o = parseFloat(o).toExponential(4);
       }
-      cols.push(<td key={`value-${o}`}>{o}&nbsp;</td>);
+      cols.push(
+        <td key={`value-${o}`}>
+          {`${o} `}
+        </td>
+      );
     });
     return cols;
-  } else if (!isNaN(output) && typeof output !== 'boolean') {
+  } if (!isNaN(output) && typeof output !== 'boolean') { // eslint-disable-line no-restricted-globals
     if (output === 0) {
       output = 0;
     } else if (Math.abs(output) > 999 || Math.abs(output) < 0.001) {
@@ -88,7 +93,6 @@ function parseTableColumnOutput(output) {
 }
 
 class TableResult extends Component {
-
   /**
    * slugify
    * Converts human readable string to a slug
@@ -96,15 +100,15 @@ class TableResult extends Component {
    * @return {string}     Converted String to Slug
    */
 
-   // ignore weird class-methods-use-this lint error
-   // eslint-disable-next-line
+  // ignore weird class-methods-use-this lint error
+  // eslint-disable-next-line
   slugify(text) {
     return text.toString().toLowerCase()
-      .replace(/\s+/g, '-')           // Replace spaces with -
-      .replace(/[^\w\-]+/g, '')       // Remove all non-word chars
-      .replace(/\-\-+/g, '-')         // Replace multiple - with single -
-      .replace(/^-+/, '')             // Trim - from start of text
-      .replace(/-+$/, '');            // Trim - from end of text
+      .replace(/\s+/g, '-') // Replace spaces with -
+      .replace(/[^\w\-]+/g, '') // Remove all non-word chars
+      .replace(/\-\-+/g, '-') // Replace multiple - with single -
+      .replace(/^-+/, '') // Trim - from start of text
+      .replace(/-+$/, ''); // Trim - from end of text
   }
 
   /**
@@ -175,7 +179,7 @@ class TableResult extends Component {
       let labels = [];
 
       if (heading.includes('Global') && Array.isArray(data.covariate_labels[0])) {
-        labels = data.covariate_labels[0];
+        labels = data.covariate_labels[0]; // eslint-disable-line prefer-destructuring
       } else {
         labels = data.covariate_labels;
       }
@@ -200,18 +204,22 @@ class TableResult extends Component {
                     <TableCell style={styles.theading}>{heading}</TableCell>
                     {
                       labels.map((label, index) => {
-                        return <TableCell key={`${index}-table-label`} className={'text-nowrap'}>&beta;{`${index} (${label})`}</TableCell>
+                        return (
+                          <TableCell key={`${index}-table-label`} className="text-nowrap">
+                            &beta;
+                            {`${index} (${label})`}
+                          </TableCell>
+                        );
                       })
                     }
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {Array.isArray(data) &&
-                    data.map((d, index) => {
+                  {Array.isArray(data)
+                    && data.map((d, index) => {
                       return (
-                        <TableRow key={`${heading}-${index}-${key[0]}-objects-row`}>
-                          {keys.map(key =>
-                          (
+                        <TableRow key={`${heading}-${index}-objects-row`}>
+                          {keys.map(key => (
                             <TableCell style={{ fontFamily: 'Courier' }} key={`${heading}-${index}-${key[0]}-column`}>
                               {parseTableColumnOutput(d[key[0]])}
                             </TableCell>
@@ -220,18 +228,23 @@ class TableResult extends Component {
                       );
                     })
                   }
-                  {!Array.isArray(data) &&
-                    keyValPairs.map((pair) => {
-                        if(typeof pair[1] === 'object' && pair[0] !== 'covariate_labels') {
-                          return <TableRow key={`${heading}-${pair[0]}-objects-row`}>
-                            <TableCell className="bold"  key={`${heading}-${pair[0]}-}-column`}>
-                              {outputProps.items[pair[0]] ? outputProps.items[pair[0]].label : pair[0]}
+                  {!Array.isArray(data)
+                    && keyValPairs.map((pair) => {
+                      if (typeof pair[1] === 'object' && pair[0] !== 'covariate_labels') {
+                        return (
+                          <TableRow key={`${heading}-${pair[0]}-objects-row`}>
+                            <TableCell className="bold" key={`${heading}-${pair[0]}-}-column`}>
+                              {outputProps.items[pair[0]]
+                                ? outputProps.items[pair[0]].label
+                                : pair[0]
+                              }
                             </TableCell>
                             {parseTableColumnOutput(pair[1])}
-                          </TableRow>;
-                        }
+                          </TableRow>
+                        );
                       }
-                    )
+                      return null;
+                    })
                   }
                 </TableBody>
               </Table>
@@ -256,8 +269,7 @@ class TableResult extends Component {
                 Array.isArray(data) && data.map((d, index) => {
                   return (
                     <TableRow key={`${index}-objects-row`}>
-                      {keys.map(key =>
-                      (
+                      {keys.map(key => (
                         <TableCell style={{ fontFamily: 'Courier' }} key={`${key[0]}-column`}>
                           {parseTableColumnOutput(d[key[0]])}
                         </TableCell>
@@ -272,7 +284,7 @@ class TableResult extends Component {
                     return (
                       <TableRow key={`${pair[0]}-numbers-row`}>
                         <TableCell className="bold" key={`${pair[0]}-numbers-column`}>
-                        {outputProps.items[pair[0]] ? outputProps.items[pair[0]].label : pair[0]}
+                          {outputProps.items[pair[0]] ? outputProps.items[pair[0]].label : pair[0]}
                         </TableCell>
                         <TableCell style={{ fontFamily: 'Courier' }} key={`${pair[0]}-numbers-column-output`}>
                           {parseTableColumnOutput(pair[1])}
@@ -280,6 +292,7 @@ class TableResult extends Component {
                       </TableRow>
                     );
                   }
+                  return null;
                 })
               }
             </TableBody>
@@ -292,7 +305,9 @@ class TableResult extends Component {
   }
 
   render() {
-    const { computationOutput, plotData, tables, classes } = this.props;
+    const {
+      computationOutput, plotData, tables, classes,
+    } = this.props;
 
     return (
       <div>
@@ -306,15 +321,13 @@ class TableResult extends Component {
           </Button>
         </div>
         {
-          tables && tables.map(t =>
-            this.makeTable(
-              t,
-              plotData[t.source],
-              computationOutput[t.source],
-              computationOutput[t.source].label,
-              0
-            )
-        )}
+          tables && tables.map(t => this.makeTable(
+            t,
+            plotData[t.source],
+            computationOutput[t.source],
+            computationOutput[t.source].label,
+            0
+          ))}
         {!tables && this.makeTable(null, plotData.testData, null, 'Test Data', 0)}
       </div>
     );
@@ -322,14 +335,17 @@ class TableResult extends Component {
 }
 
 TableResult.propTypes = {
+  classes: PropTypes.object.isRequired,
   computationOutput: PropTypes.object,
   plotData: PropTypes.object.isRequired,
   tables: PropTypes.array,
+  title: PropTypes.string,
 };
 
 TableResult.defaultProps = {
   computationOutput: null,
   tables: null,
+  title: '',
 };
 
 export default withStyles(styles)(TableResult);

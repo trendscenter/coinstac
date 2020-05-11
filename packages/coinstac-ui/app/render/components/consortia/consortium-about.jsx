@@ -46,23 +46,25 @@ const styles = theme => ({
 
 class ConsortiumAbout extends Component {
   state = {
-    consortiumUsers: [],
     newMember: null,
     isAddingMember: false,
   };
 
   mapUsers = memoize(
-    users => users ? users.map(user => ({ label: user.id, value: user.id })) : null
+    users => (users ? users.map(user => ({ label: user.id, value: user.id })) : null)
   );
 
-  static getDerivedStateFromProps(props) {
-    if (props.consortiumUsers) {
-      return {
-        consortiumUsers: props.consortiumUsers.sort((a, b) => a.id.localeCompare(b.id)),
-      };
+  filterSelectedUsers = memoize(
+    (allUsers, selectedUsers) => {
+      if (!allUsers && selectedUsers) {
+        return null;
+      }
+
+      return allUsers.filter(user => selectedUsers.findIndex(
+        selectedUser => selectedUser.id === user.value
+      ) === -1);
     }
-    return null;
-  }
+  );
 
   handleTextFieldChange = name => (event) => {
     const { updateConsortium } = this.props;
@@ -74,56 +76,45 @@ class ConsortiumAbout extends Component {
     updateConsortium({ param: name, value: event.target.checked });
   }
 
-
   toggleOwner = (consUser) => {
-    const { consortium, owner, user, addUserRole, removeUserRole } = this.props;
+    const {
+      consortium, owner, user, addUserRole, removeUserRole,
+    } = this.props;
 
     if (owner && consUser.id !== user.id) {
       if (consUser.owner) {
         removeUserRole(consUser.id, 'consortia', consortium.id, 'owner');
-        addUserRole(consUser.id, 'consortia', consortium.id, 'member');
       } else {
         addUserRole(consUser.id, 'consortia', consortium.id, 'owner');
-        removeUserRole(consUser.id, 'consortia', consortium.id, 'member');
       }
     }
   }
 
-  handleMemberSelect = value => {
+  handleMemberSelect = (value) => {
     this.setState({ newMember: value });
   }
 
   addMember = () => {
-    const { consortium } = this.props;
+    const { consortium, addUserRole } = this.props;
     const { newMember } = this.state;
 
     this.setState({ isAddingMember: true });
 
-    this.props.addUserRole(newMember.value, 'consortia', consortium.id, 'member')
+    addUserRole(newMember.value, 'consortia', consortium.id, 'member')
       .then(() => {
         this.setState({ newMember: null });
       })
       .finally(() => {
         this.setState({ isAddingMember: false });
-      })
+      });
   }
 
-  removeMember = user => {
-    const { consortium } = this.props;
+  removeMember = (user) => {
+    const { consortium, removeUserRole } = this.props;
 
-    this.props.removeUserRole(user.id, 'consortia', consortium.id, 'owner');
-    this.props.removeUserRole(user.id, 'consortia', consortium.id, 'member');
+    removeUserRole(user.id, 'consortia', consortium.id, 'owner');
+    removeUserRole(user.id, 'consortia', consortium.id, 'member');
   }
-
-  filterSelectedUsers = memoize(
-    (allUsers, selectedUsers) => {
-      if (!allUsers && selectedUsers) {
-        return null;
-      }
-
-      return allUsers.filter(user => selectedUsers.findIndex(selectedUser => selectedUser.id === user.value) === -1);
-    }
-  );
 
   render() {
     const {
@@ -134,9 +125,10 @@ class ConsortiumAbout extends Component {
       classes,
       savingStatus,
       saveConsortium,
+      consortiumUsers,
     } = this.props;
 
-    const { consortiumUsers, newMember, isAddingMember } = this.state;
+    const { newMember, isAddingMember } = this.state;
 
     const allUsers = this.mapUsers(users);
     const userOptions = this.filterSelectedUsers(allUsers, consortiumUsers);
@@ -188,37 +180,41 @@ class ConsortiumAbout extends Component {
           }
           label="Turn consortia private?"
         />
-        {consortium.id &&
+        {consortium.id
+          && (
           <div key="avatar-container" className={classes.membersContainer}>
             <Typography variant="subtitle2">Owner(s)/Members:</Typography>
-            {owner && (
-              <div className={classes.addMemberContainer}>
-                <Select
-                  value={newMember}
-                  placeholder="Select an user"
-                  options={userOptions}
-                  onChange={this.handleMemberSelect}
-                  removeSelected
-                  className="consortium-add-user"
-                  name="members-input"
-                />
-                <Button
-                  className={classes.addMemberButton}
-                  variant="contained"
-                  color="secondary"
-                  disabled={!newMember || isAddingMember}
-                  onClick={this.addMember}
-                >
-                  Add Member
-                </Button>
-              </div>)}
+            {
+              owner && (
+                <div className={classes.addMemberContainer}>
+                  <Select
+                    value={newMember}
+                    placeholder="Select an user"
+                    options={userOptions}
+                    onChange={this.handleMemberSelect}
+                    removeSelected
+                    className="consortium-add-user"
+                    name="members-input"
+                  />
+                  <Button
+                    className={classes.addMemberButton}
+                    variant="contained"
+                    color="secondary"
+                    disabled={!newMember || isAddingMember}
+                    onClick={this.addMember}
+                  >
+                      Add Member
+                  </Button>
+                </div>
+              )
+            }
             <Table id="consortium-member-table">
               <TableHead>
                 <TableRow>
                   <TableCell>Username</TableCell>
                   <TableCell>Owner</TableCell>
                   <TableCell>Member</TableCell>
-                  <TableCell></TableCell>
+                  <TableCell />
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -244,24 +240,28 @@ class ConsortiumAbout extends Component {
                     <TableCell>
                       <Checkbox disabled checked={consUser.member} name="isMember" />
                     </TableCell>
-                    {owner && (
-                      <TableCell>
-                        {user.id !== consUser.id && (
+                    {
+                      owner && (
+                        <TableCell>
+                          {user.id !== consUser.id && (
                           <Button
                             variant="contained"
                             color="default"
                             onClick={() => this.removeMember(consUser)}
                           >
-                            Remove
+                                Remove
                             <DeleteIcon />
                           </Button>
-                        )}
-                      </TableCell>)}
+                          )}
+                        </TableCell>
+                      )
+                    }
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
           </div>
+          )
         }
       </ValidatorForm>
     );
@@ -269,16 +269,24 @@ class ConsortiumAbout extends Component {
 }
 
 ConsortiumAbout.propTypes = {
+  classes: PropTypes.object.isRequired,
   consortium: PropTypes.object,
   owner: PropTypes.bool.isRequired,
-  saveConsortium: PropTypes.func.isRequired,
-  updateConsortium: PropTypes.func.isRequired,
+  savingStatus: PropTypes.string,
+  user: PropTypes.object.isRequired,
+  users: PropTypes.array,
   addUserRole: PropTypes.func.isRequired,
   removeUserRole: PropTypes.func.isRequired,
+  saveConsortium: PropTypes.func.isRequired,
+  updateConsortium: PropTypes.func.isRequired,
+  consortiumUsers: PropTypes.array,
 };
 
 ConsortiumAbout.defaultProps = {
   consortium: null,
+  users: [],
+  savingStatus: 'init',
+  consortiumUsers: [],
 };
 
 export default withStyles(styles)(ConsortiumAbout);

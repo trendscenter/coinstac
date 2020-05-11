@@ -87,20 +87,18 @@ class App extends Component { // eslint-disable-line react/prefer-stateless-func
 App.displayName = 'App';
 
 App.propTypes = {
+  children: PropTypes.node.isRequired,
+  loading: PropTypes.object.isRequired,
   router: PropTypes.object.isRequired,
   autoLogin: PropTypes.func.isRequired,
   logout: PropTypes.func.isRequired,
-  setError: PropTypes.func.isRequired,
   notifyWarning: PropTypes.func.isRequired,
-  children: PropTypes.node.isRequired,
-  loading: PropTypes.object.isRequired,
+  setError: PropTypes.func.isRequired,
 };
 
-function mapStateToProps({ loading }) {
-  return {
-    loading,
-  };
-}
+const mapStateToProps = ({ loading }) => ({
+  loading,
+});
 
 export default connect(mapStateToProps, {
   autoLogin,

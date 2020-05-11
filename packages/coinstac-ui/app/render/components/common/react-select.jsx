@@ -35,7 +35,7 @@ const styles = theme => ({
   chipFocused: {
     backgroundColor: emphasize(
       theme.palette.type === 'light' ? theme.palette.grey[300] : theme.palette.grey[700],
-      0.08,
+      0.08
     ),
   },
   chipDisabled: {
@@ -67,13 +67,14 @@ const styles = theme => ({
 });
 
 function NoOptionsMessage(props) {
+  const { selectProps, innerProps, children } = props;
   return (
     <Typography
       color="textSecondary"
-      className={props.selectProps.classes.noOptionsMessage}
-      {...props.innerProps}
+      className={selectProps.classes.noOptionsMessage}
+      {...innerProps}
     >
-      {props.children}
+      {children}
     </Typography>
   );
 }
@@ -83,82 +84,100 @@ function inputComponent({ inputRef, ...props }) {
 }
 
 function Control(props) {
+  const {
+    selectProps, innerProps, innerRef, children,
+  } = props;
+
   return (
     <TextField
       fullWidth
       InputProps={{
         inputComponent,
         inputProps: {
-          className: props.selectProps.classes.input,
-          inputRef: props.innerRef,
-          children: props.children,
-          ...props.innerProps,
+          className: selectProps.classes.input,
+          inputRef: innerRef,
+          children,
+          ...innerProps,
         },
       }}
-      {...props.selectProps.textFieldProps}
+      {...selectProps.textFieldProps}
     />
   );
 }
 
 function Option(props) {
+  const {
+    innerRef, isFocused, isSelected, innerProps, children,
+  } = props;
+
   return (
     <MenuItem
-      buttonRef={props.innerRef}
-      selected={props.isFocused}
+      buttonRef={innerRef}
+      selected={isFocused}
       component="div"
       style={{
-        fontWeight: props.isSelected ? 500 : 400,
+        fontWeight: isSelected ? 500 : 400,
       }}
-      {...props.innerProps}
+      {...innerProps}
     >
-      {props.children}
+      {children}
     </MenuItem>
   );
 }
 
 function Placeholder(props) {
+  const { selectProps, innerProps, children } = props;
+
   return (
     <Typography
       color="textSecondary"
-      className={props.selectProps.classes.placeholder}
-      {...props.innerProps}
+      className={selectProps.classes.placeholder}
+      {...innerProps}
     >
-      {props.children}
+      {children}
     </Typography>
   );
 }
 
 function SingleValue(props) {
+  const { selectProps, innerProps, children } = props;
+
   return (
-    <Typography className={props.selectProps.classes.singleValue} {...props.innerProps}>
-      {props.children}
+    <Typography className={selectProps.classes.singleValue} {...innerProps}>
+      {children}
     </Typography>
   );
 }
 
 function ValueContainer(props) {
-  return <div className={props.selectProps.classes.valueContainer}>{props.children}</div>;
+  const { selectProps, children } = props;
+  return <div className={selectProps.classes.valueContainer}>{children}</div>;
 }
 
 function MultiValue(props) {
+  const {
+    selectProps, data, removeProps, isFocused, children,
+  } = props;
+
   return (
     <Chip
       tabIndex={-1}
-      label={props.children}
-      className={classNames(props.selectProps.classes.chip, {
-        [props.selectProps.classes.chipFocused]: props.isFocused,
-        [props.selectProps.classes.chipDisabled]: props.data.isFixed,
+      label={children}
+      className={classNames(selectProps.classes.chip, {
+        [selectProps.classes.chipFocused]: isFocused,
+        [selectProps.classes.chipDisabled]: data.isFixed,
       })}
-      onDelete={!props.data.isFixed ? props.removeProps.onClick : null }
-      deleteIcon={!props.data.isFixed ? <CancelIcon {...props.removeProps} /> : null}
+      onDelete={!data.isFixed ? removeProps.onClick : null}
+      deleteIcon={!data.isFixed ? <CancelIcon {...removeProps} /> : null}
     />
   );
 }
 
 function Menu(props) {
+  const { selectProps, innerProps, children } = props;
   return (
-    <Paper square className={classNames(props.selectProps.classes.paper, 'react-select-dropdown-menu')} {...props.innerProps}>
-      {props.children}
+    <Paper square className={classNames(selectProps.classes.paper, 'react-select-dropdown-menu')} {...innerProps}>
+      {children}
     </Paper>
   );
 }

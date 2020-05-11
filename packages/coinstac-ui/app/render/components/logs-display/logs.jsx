@@ -41,19 +41,17 @@ function Logs(props) {
 }
 
 Logs.propTypes = {
-  logs: PropTypes.string,
   classes: PropTypes.object.isRequired,
+  logs: PropTypes.string,
 };
 
 Logs.defaultProps = {
   logs: null,
 };
 
-function mapStateToProps({ app }) {
-  return {
-    logs: app.logs,
-  };
-}
+const mapStateToProps = ({ app }) => ({
+  logs: app.logs,
+});
 
 const connectedComponent = connect(mapStateToProps)(Logs);
 

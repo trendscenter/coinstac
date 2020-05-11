@@ -48,25 +48,27 @@ class ComputationSubmission extends Component { // eslint-disable-line
         }
 
         this.setState({ activeSchema: res, validationErrors: error });
-      })
-      .catch(console.log);
+      });
   }
 
   submitSchema() {
-    this.props.submitSchema(this.state.activeSchema)
-    .then((res) => {
-      this.setState({ activeSchema: {} });
-      if (res.data.addComputation) {
-        this.setState({ submissionSuccess: true });
-        this.props.router.push('/dashboard/computations');
-        this.props.notifySuccess('Computation Submission Successful');
-      } else {
+    const { router, submitSchema, notifySuccess } = this.props;
+    const { activeSchema } = this.state;
+
+    submitSchema(activeSchema)
+      .then((res) => {
+        this.setState({ activeSchema: {} });
+        if (res.data.addComputation) {
+          this.setState({ submissionSuccess: true });
+          router.push('/dashboard/computations');
+          notifySuccess('Computation Submission Successful');
+        } else {
+          this.setState({ submissionSuccess: false });
+        }
+      })
+      .catch(() => {
         this.setState({ submissionSuccess: false });
-      }
-    })
-    .catch(() => {
-      this.setState({ submissionSuccess: false });
-    });
+      });
   }
 
   render() {
@@ -148,12 +150,10 @@ class ComputationSubmission extends Component { // eslint-disable-line
 }
 
 ComputationSubmission.propTypes = {
+  classes: PropTypes.object.isRequired,
+  router: PropTypes.object.isRequired,
   notifySuccess: PropTypes.func.isRequired,
   submitSchema: PropTypes.func.isRequired,
-};
-
-const mapStateToProps = ({ notifySuccess, submitSchema }) => {
-  return { notifySuccess, submitSchema };
 };
 
 const ComputationSubmissionWithAlert = compose(
@@ -161,7 +161,7 @@ const ComputationSubmissionWithAlert = compose(
   withApollo
 )(ComputationSubmission);
 
-const connectedComponent = connect(mapStateToProps, {
+const connectedComponent = connect(null, {
   notifySuccess,
 })(ComputationSubmissionWithAlert);
 

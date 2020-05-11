@@ -59,7 +59,29 @@ class MapsFilePicker extends React.Component {
           this.setState({ filesError: obj.error });
           return;
         }
+        const { setSelectedDataFile } = this.props;
 
+        const dataFile = {
+          extension: obj.extension,
+          files: obj.paths,
+        };
+
+        setSelectedDataFile(dataFile);
+
+        this.setState({ filesError: null });
+      })
+      .catch((error) => {
+        this.setState({ filesError: error.message });
+      });
+  }
+
+  addSingleGroup = () => {
+    ipcPromise.send('open-dialog', 'singles')
+      .then((obj) => {
+        if (obj.error) {
+          this.setState({ filesError: obj.error });
+          return;
+        }
         const { setSelectedDataFile } = this.props;
 
         const dataFile = {
@@ -116,6 +138,22 @@ class MapsFilePicker extends React.Component {
           )
         }
         {
+          dataType === 'singles'
+          && (
+            <div>
+              <Button
+                variant="contained"
+                color="primary"
+                className={classes.addFileGroupButton}
+                onClick={this.addSingleGroup}
+              >
+                Add Single File(s)
+              </Button>
+              <Divider />
+            </div>
+          )
+        }
+        {
           filesError && (
             <Paper className={classes.fileErrorPaper}>
               <Typography variant="h6" className={classes.fileErrorMessage}>File Error</Typography>
@@ -131,8 +169,8 @@ class MapsFilePicker extends React.Component {
 }
 
 MapsFilePicker.propTypes = {
-  dataType: PropTypes.string.isRequired,
   classes: PropTypes.object.isRequired,
+  dataType: PropTypes.string.isRequired,
   setSelectedDataFile: PropTypes.func.isRequired,
 };
 

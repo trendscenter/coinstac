@@ -33,16 +33,14 @@ DisplayNotificationsListener.defaultProps = {
 };
 
 DisplayNotificationsListener.propTypes = {
+  notifications: PropTypes.array,
   dequeueNotification: PropTypes.func.isRequired,
   enqueueSnackbar: PropTypes.func.isRequired,
-  notifications: PropTypes.array,
 };
 
-function mapStateToProps({ notifications }) {
-  return {
-    notifications: notifications.notifications,
-  };
-}
+const mapStateToProps = ({ notifications }) => ({
+  notifications: notifications.notifications,
+});
 
 const connectedComponent = connect(mapStateToProps,
   {

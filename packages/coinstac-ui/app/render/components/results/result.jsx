@@ -12,7 +12,7 @@ import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
 import classNames from 'classnames';
-import TimeStamp from 'react-timestamp';
+import moment from 'moment';
 import { shell } from 'electron';
 import path from 'path';
 import Box from './displays/box-plot';
@@ -22,8 +22,6 @@ import Images from './displays/images';
 import String from './displays/string';
 import PipelineStep from '../pipelines/pipeline-step';
 import Iframe from './displays/iframe';
-import { getLocalRun } from '../../state/ducks/runs';
-
 
 const styles = theme => ({
   paper: {
@@ -61,70 +59,63 @@ const styles = theme => ({
 });
 
 class Result extends Component {
-  constructor(props) {
-    super(props);
-
-    this.state = {
-      run: {},
-      computationOutput: {},
-      displayTypes: [],
-      type: 'object',
-      plotData: [],
-      selectedTabIndex: 0,
-    };
-
-    this.handleSelect = this.handleSelect.bind(this);
-  }
-
+  state = {
+    run: {},
+    computationOutput: {},
+    displayTypes: [],
+    plotData: [],
+    selectedTabIndex: 0,
+  };
 
   componentDidMount() {
-    this.props.getLocalRun(this.props.params.resultId)
-      .then((run) => {
-        let plotData = {};
+    const { params: { resultId }, runs } = this.props;
 
-        // Checking display type of computation
-        const stepsLength = run.pipelineSnapshot.steps.length;
+    const run = runs.find(run => run.id === resultId);
 
-        let displayTypes = run.pipelineSnapshot.steps[stepsLength - 1]
-          .computations[0].computation.display || { type: 'pipeline' };
+    let plotData = {};
 
-        this.setState({
-          computationOutput: run.pipelineSnapshot.steps[stepsLength - 1]
-            .computations[0].computation.output,
-          displayTypes,
-        });
+    // Checking display type of computation
+    const stepsLength = run.pipelineSnapshot.steps.length;
 
-        if (displayTypes && !displayTypes.length) {
-          const array = [];
-          array[0] = displayTypes;
-          displayTypes = array;
-        }
+    let displayTypes = run.pipelineSnapshot.steps[stepsLength - 1]
+      .computations[0].computation.display || { type: 'pipeline' };
 
-        if (displayTypes && displayTypes.findIndex(disp => disp.type === 'scatter_plot') > -1) {
-          plotData.testData = [];
-          run.results.plots.map(result => (
-            result.coordinates.map(val => (
-              plotData.testData.push({
-                name: result.title,
-                x: val.x,
-                y: val.y,
-              })
-            ))
-          ));
-        } else if (displayTypes && displayTypes.findIndex(disp => disp.type === 'box_plot') > -1) {
-          plotData.testData = [];
-          run.results.x.map(val => (
-            plotData.testData.push(val)
-          ));
-        } else {
-          plotData = run.results;
-        }
+    this.setState({
+      computationOutput: run.pipelineSnapshot.steps[stepsLength - 1]
+        .computations[0].computation.output,
+      displayTypes,
+    });
 
-        this.setState({
-          run,
-          plotData,
-        });
-      });
+    if (displayTypes && !displayTypes.length) {
+      const array = [];
+      array[0] = displayTypes;
+      displayTypes = array;
+    }
+
+    if (displayTypes && displayTypes.findIndex(disp => disp.type === 'scatter_plot') > -1) {
+      plotData.testData = [];
+      run.results.plots.map(result => (
+        result.coordinates.map(val => (
+          plotData.testData.push({
+            name: result.title,
+            x: val.x,
+            y: val.y,
+          })
+        ))
+      ));
+    } else if (displayTypes && displayTypes.findIndex(disp => disp.type === 'box_plot') > -1) {
+      plotData.testData = [];
+      run.results.x.map(val => (
+        plotData.testData.push(val)
+      ));
+    } else {
+      plotData = run.results;
+    }
+
+    this.setState({
+      run,
+      plotData,
+    });
   }
 
   handleOpenResult = () => {
@@ -135,7 +126,7 @@ class Result extends Component {
     shell.openItem(resultDir);
   }
 
-  handleSelect(event, value) {
+  handleSelect = (_event, value) => {
     this.setState({ selectedTabIndex: value });
   }
 
@@ -185,12 +176,7 @@ class Result extends Component {
                 <div className={classes.timestamp}>
                   <Typography className={classes.label}>Start date:</Typography>
                   <Typography>
-                    <TimeStamp
-                      time={run.startDate / 1000}
-                      precision={2}
-                      autoUpdate={10}
-                      format="full"
-                    />
+                    {moment.unix(run.startDate / 1000).format('MMMM Do YYYY, h:mm:ss a')}
                   </Typography>
                 </div>
               )
@@ -201,12 +187,7 @@ class Result extends Component {
                 <div className={classes.timestamp}>
                   <Typography className={classes.label}>End date:</Typography>
                   <Typography>
-                    <TimeStamp
-                      time={run.endDate / 1000}
-                      precision={2}
-                      autoUpdate={10}
-                      format="full"
-                    />
+                    {moment.unix(run.endDate / 1000).format('MMMM Do YYYY, h:mm:ss a')}
                   </Typography>
                 </div>
               )
@@ -284,7 +265,7 @@ class Result extends Component {
                   <Iframe
                     plotData={plotData}
                     title={`${consortium.name}_${run.pipelineSnapshot.name}`}
-                    path={`${appDirectory}/output/${user.id}/${run.id}/${run.pipelineSnapshot.steps[0].inputMap.results_html_path.value}`}
+                    path={path.join(appDirectory, 'output', user.id, run.id, run.pipelineSnapshot.steps[0].inputMap.results_html_path.value)}
                   />
                 )
               }
@@ -292,6 +273,7 @@ class Result extends Component {
                 selectedDisplayType.type === 'images'
                 && (
                   <Images
+                    imagePath={path.join(appDirectory, 'output', user.id, run.id, plotData.file_name)}
                     plotData={plotData}
                     title={`${consortium.name}_${run.pipelineSnapshot.name}`}
                   />
@@ -345,8 +327,7 @@ class Result extends Component {
         }
 
         {
-          !selectedDisplayType
-          || selectedDisplayType.type === ''
+          (!selectedDisplayType || selectedDisplayType.type === '')
           && (
             <Paper className={classNames(classes.paper)}>
               <table>
@@ -388,19 +369,19 @@ class Result extends Component {
 }
 
 Result.propTypes = {
-  consortia: PropTypes.array.isRequired,
-  getLocalRun: PropTypes.func.isRequired,
-  params: PropTypes.object.isRequired,
   auth: PropTypes.object.isRequired,
   classes: PropTypes.object.isRequired,
+  consortia: PropTypes.array.isRequired,
+  runs: PropTypes.object.isRequired,
+  params: PropTypes.object.isRequired,
 };
 
-const mapStateToProps = ({ auth }) => {
-  return { auth };
+const mapStateToProps = ({ auth, runs: { runs } }) => {
+  return { auth, runs };
 };
 
 const connectedComponent = compose(
-  connect(mapStateToProps, { getLocalRun }),
+  connect(mapStateToProps),
   DragDropContext(HTML5Backend)
 )(Result);
 

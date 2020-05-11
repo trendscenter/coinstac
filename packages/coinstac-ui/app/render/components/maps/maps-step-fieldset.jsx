@@ -93,13 +93,16 @@ class MapsStepFieldset extends Component {
   render() {
     const {
       stepFieldset,
+      fieldsetLabel,
       fieldsetName,
       classes,
     } = this.props;
 
     let inputCategoryName = capitalize(fieldsetName);
 
-    if (fieldsetName !== 'covariates' && fieldsetName !== 'data') {
+    if(fieldsetLabel){
+      inputCategoryName = fieldsetLabel;
+    } else if (fieldsetName !== 'covariates' && fieldsetName !== 'data') {
       inputCategoryName = 'Options';
     }
 
@@ -126,13 +129,12 @@ class MapsStepFieldset extends Component {
 }
 
 MapsStepFieldset.propTypes = {
+  classes: PropTypes.object.isRequired,
   fieldsetName: PropTypes.string.isRequired,
-  consortium: PropTypes.object.isRequired,
-  registerDraggableContainer: PropTypes.func.isRequired,
-  unmapField: PropTypes.func.isRequired,
   stepFieldset: PropTypes.object.isRequired,
   stepsDataMappings: PropTypes.array.isRequired,
-  classes: PropTypes.object.isRequired,
+  registerDraggableContainer: PropTypes.func.isRequired,
+  unmapField: PropTypes.func.isRequired,
 };
 
 export default withStyles(styles)(MapsStepFieldset);
