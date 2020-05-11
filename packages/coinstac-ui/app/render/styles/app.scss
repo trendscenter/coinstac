@@ -146,7 +146,7 @@ body {
   .back-button {
     position: absolute;
     top: 0;
-    left: 50%;
+    left: calc(50% - 40px);
     margin: 0 auto;
     width: 80px;
     height: 40px;
@@ -155,6 +155,7 @@ body {
     border-bottom-right-radius: 110px;
     border: 0;
     outline: none;
+    z-index: 5;
     cursor: pointer;
 
     &:hover {
@@ -224,4 +225,13 @@ ul#loading_list {
 
 #add_project {
     margin-top: -5em;
+}
+
+#papaya-viewer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: scroll;
 }

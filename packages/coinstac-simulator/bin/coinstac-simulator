@@ -339,10 +339,7 @@ fulfilledPipelineSpec
     }
     logger.error('Simulator run failed!');
     logger.error('Fun error details:\n');
-    logger.error(err.stack);
-    if (program.showinput || DEBUG_MODE) {
-      logger.error('Input given to the comp on failure:\n');
-      logger.error(JSON.stringify(err.input));
-    }
+    logger.error(err.message);
+    logger.error(err.stack || '');
     process.exit(0);
   });

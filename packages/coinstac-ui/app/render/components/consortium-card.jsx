@@ -3,8 +3,7 @@ import PropTypes from 'prop-types';
 import { Link } from 'react-router';
 import { Button, ButtonToolbar } from 'react-bootstrap';
 import { LinkContainer } from 'react-router-bootstrap';
-
-import UserList from './user-list';
+import UserList from './user/user-list';
 
 export default function ConsortiumCard(props) {
   const {
@@ -42,27 +41,27 @@ export default function ConsortiumCard(props) {
     );
     editOrViewText = 'Edit/View';
   } else {
-    membershipButton = isMember ?
-    (
-      <Button bsSize="small" bsStyle="warning" onClick={leaveConsortium}>
-        <span
-          aria-hidden="true"
-          className="glyphicon glyphicon glyphicon-minus"
-        />
-        {' '}
+    membershipButton = isMember
+      ? (
+        <Button bsSize="small" bsStyle="warning" onClick={leaveConsortium}>
+          <span
+            aria-hidden="true"
+            className="glyphicon glyphicon glyphicon-minus"
+          />
+          {' '}
         Leave
-      </Button>
-    ) :
-    (
-      <Button bsSize="small" bsStyle="success" onClick={joinConsortium}>
-        <span
-          aria-hidden="true"
-          className="glyphicon glyphicon glyphicon-plus"
-        />
-        {' '}
+        </Button>
+      )
+      : (
+        <Button bsSize="small" bsStyle="success" onClick={joinConsortium}>
+          <span
+            aria-hidden="true"
+            className="glyphicon glyphicon glyphicon-plus"
+          />
+          {' '}
         Join
-      </Button>
-    );
+        </Button>
+      );
     editOrViewText = 'View';
   }
 
@@ -108,12 +107,12 @@ export default function ConsortiumCard(props) {
 
 ConsortiumCard.propTypes = {
   _id: PropTypes.string.isRequired,
-  deleteConsortium: PropTypes.func.isRequired,
   description: PropTypes.string.isRequired,
   isMember: PropTypes.bool.isRequired,
   isOwner: PropTypes.bool.isRequired,
-  joinConsortium: PropTypes.func.isRequired,
   label: PropTypes.string.isRequired,
-  leaveConsortium: PropTypes.func.isRequired,
   users: PropTypes.arrayOf(PropTypes.string).isRequired,
+  deleteConsortium: PropTypes.func.isRequired,
+  joinConsortium: PropTypes.func.isRequired,
+  leaveConsortium: PropTypes.func.isRequired,
 };

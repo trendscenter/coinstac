@@ -1,3 +1,4 @@
+/* eslint-disable react/no-array-index-key */
 import React from 'react';
 import PropTypes from 'prop-types';
 import TextField from '@material-ui/core/TextField';
@@ -42,12 +43,12 @@ PipelineStepInputMatrix.defaultProps = {
 };
 
 PipelineStepInputMatrix.propTypes = {
+  isFromCache: PropTypes.bool,
   objKey: PropTypes.string.isRequired,
   owner: PropTypes.bool.isRequired,
-  isFromCache: PropTypes.bool,
   step: PropTypes.object.isRequired,
-  updateStep: PropTypes.func.isRequired,
   getNewObj: PropTypes.func.isRequired,
+  updateStep: PropTypes.func.isRequired,
 };
 
 export default PipelineStepInputMatrix;

@@ -3,8 +3,8 @@ import PropTypes from 'prop-types';
 import { Link } from 'react-router';
 import classNames from 'classnames';
 import { MuiThemeProvider, withStyles } from '@material-ui/core/styles';
-import theme from '../styles/material-ui/theme';
 import Button from '@material-ui/core/Button';
+import theme from '../styles/material-ui/theme';
 import CoinstacAbbr from './coinstac-abbr';
 
 const styles = theme => ({

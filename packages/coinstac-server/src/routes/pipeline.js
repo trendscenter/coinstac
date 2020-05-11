@@ -19,7 +19,7 @@ const manager = PipelineManager.create({
 const authenticateServer = () => {
   return axios.post(
     `${config.apiServer}/authenticate`,
-    dbmap.rethinkdbServer
+    dbmap.apiCredentials
   )
     .then((token) => {
       this.id_token = token.data.id_token;

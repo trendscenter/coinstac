@@ -1,8 +1,8 @@
-import React, { Component } from 'react'
-import PropTypes from 'prop-types'
-import { TextField } from '@material-ui/core'
-import { withStyles } from '@material-ui/core/styles'
-import ThreadReply from './thread-reply'
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
+import { TextField } from '@material-ui/core';
+import { withStyles } from '@material-ui/core/styles';
+import ThreadReply from './thread-reply';
 
 const styles = theme => ({
   wrapper: {
@@ -18,20 +18,20 @@ const styles = theme => ({
   input: {
     width: '100%',
   },
-})
+});
 
 class ThreadNew extends Component {
   state = {
     title: '',
   }
 
-  handleTitleChange = evt => {
-    this.setState({ title: evt.target.value })
+  handleTitleChange = (evt) => {
+    this.setState({ title: evt.target.value });
   }
 
   render() {
-    const { classes, savingStatus } = this.props
-    const { title } = this.state
+    const { classes, savingStatus, onSend } = this.props;
+    const { title } = this.state;
 
     return (
       <div className={classes.wrapper}>
@@ -39,26 +39,30 @@ class ThreadNew extends Component {
           <TextField
             className={classes.input}
             value={title}
-            label='Title'
-            variant='outlined'
+            label="Title"
+            variant="outlined"
             onChange={this.handleTitleChange}
           />
         </div>
-        <div style={{ flex: 1 }}></div>
+        <div style={{ flex: 1 }} />
         <ThreadReply
           title={title}
           savingStatus={savingStatus}
-          onSend={this.props.onSend}
+          onSend={onSend}
         />
       </div>
-    )
+    );
   }
 }
 
-ThreadNew.propTypes = {
-  classes: PropTypes.object,
-  savingStatus: PropTypes.string,
-  onSend: PropTypes.func,
-}
+ThreadNew.defaultProps = {
+  savingStatus: 'init',
+};
 
-export default withStyles(styles)(ThreadNew)
+ThreadNew.propTypes = {
+  classes: PropTypes.object.isRequired,
+  savingStatus: PropTypes.string,
+  onSend: PropTypes.func.isRequired,
+};
+
+export default withStyles(styles)(ThreadNew);

@@ -48,6 +48,7 @@ class FormLogin extends Component {
   onSubmit = (e) => {
     e.preventDefault();
 
+    const { submit } = this.props;
     const { username, password, saveLogin } = this.state;
 
     const data = {
@@ -56,16 +57,16 @@ class FormLogin extends Component {
       saveLogin,
     };
 
-    this.props.submit(data);
+    submit(data);
   }
 
-  handleChange = name => event => {
+  handleChange = name => (event) => {
     this.setState({
       [name]: event.target.value,
     });
   };
 
-  handleChangeCheckbox = name => event => {
+  handleChangeCheckbox = name => (event) => {
     this.setState({
       [name]: event.target.checked,
     });
@@ -80,29 +81,30 @@ class FormLogin extends Component {
   }
 
   changeAppDirectory = ({ appDirectory }) => {
-    this.props.changeAppDirectory(appDirectory);
+    const { changeAppDirectory } = this.props;
+    changeAppDirectory(appDirectory);
     this.setState({ openSetStartupDirectoryDialog: false });
   }
 
   renderError = () => {
     const { auth, classes } = this.props;
 
-    const errorMessage =
-      auth.error === EXPIRED_TOKEN
-        ? 'Your login session has expired,<br/>please re-login'
-        : auth.error;
+    const errorMessage = auth.error === EXPIRED_TOKEN
+      ? 'Your login session has expired,<br/>please re-login'
+      : auth.error;
 
     return (
-      <p
-        className={classNames(classes.bottomMargin, classes.error)}
-        dangerouslySetInnerHTML={{__html: errorMessage}}
-      />
+      <p className={classNames(classes.bottomMargin, classes.error)}>
+        {errorMessage}
+      </p>
     );
   }
 
   render() {
     const { auth, loading, classes } = this.props;
-    const { username, password, saveLogin, openSetStartupDirectoryDialog } = this.state;
+    const {
+      username, password, saveLogin, openSetStartupDirectoryDialog,
+    } = this.state;
 
     return (
       <div className={classes.loginFormContainer}>
@@ -135,12 +137,12 @@ class FormLogin extends Component {
               className={classes.formControl}
             />
             <FormControlLabel
-              control={
+              control={(
                 <Checkbox
                   checked={saveLogin}
                   onChange={this.handleChangeCheckbox('saveLogin')}
                 />
-              }
+)}
               label="Keep me logged in"
               className={classes.formControl}
             />
@@ -156,7 +158,12 @@ class FormLogin extends Component {
           </form>
         </Paper>
         <Button disabled={!auth.isApiVersionCompatible}>Forgot Password?</Button>
-        <Button onClick={this.openStartupDirectoryDialog} disabled={!auth.isApiVersionCompatible}>Change App Settings</Button>
+        <Button
+          disabled={!auth.isApiVersionCompatible}
+          onClick={this.openStartupDirectoryDialog}
+        >
+          Change App Settings
+        </Button>
         <FormStartupDirectory
           open={openSetStartupDirectoryDialog}
           close={this.closeStartupDirectoryDialog}
@@ -170,10 +177,10 @@ class FormLogin extends Component {
 
 FormLogin.propTypes = {
   auth: PropTypes.object.isRequired,
-  loading: PropTypes.object,
-  submit: PropTypes.func.isRequired,
   classes: PropTypes.object.isRequired,
+  loading: PropTypes.object,
   changeAppDirectory: PropTypes.func.isRequired,
+  submit: PropTypes.func.isRequired,
 };
 
 FormLogin.defaultProps = {

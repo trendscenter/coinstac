@@ -7,7 +7,9 @@ import { DragDropContext, DropTarget } from 'react-dnd';
 import HTML5Backend from 'react-dnd-html5-backend';
 import NumberFormat from 'react-number-format';
 import shortid from 'shortid';
-import { isEqual, isEmpty, get, omit } from 'lodash';
+import {
+  isEqual, isEmpty, get, omit,
+} from 'lodash';
 import update from 'immutability-helper';
 import {
   Button,
@@ -83,12 +85,11 @@ const styles = theme => ({
 const NumberFormatCustom = ({ inputRef, onChange, ...other }) => (
   <NumberFormat
     getInputRef={inputRef}
-    onValueChange={(values) =>
-      onChange({
-        target: {
-          value: values.value,
-        },
-      })
+    onValueChange={values => onChange({
+      target: {
+        value: values.value,
+      },
+    })
     }
     isNumericString
     suffix=" minutes"
@@ -141,25 +142,28 @@ class Pipeline extends Component {
     };
   }
 
+  // eslint-disable-next-line
   UNSAFE_componentWillReceiveProps(nextProps) {
-    if (isEmpty(this.state.consortium) && nextProps.consortia.length
-      && this.state.pipeline.id && this.state.pipeline.owningConsortium) {
+    const { consortium, pipeline, selectedId } = this.state;
+
+    if (isEmpty(consortium) && nextProps.consortia.length
+      && pipeline.id && pipeline.owningConsortium) {
       this.setConsortium();
     }
 
-    let selectedId = null;
-    if (this.state.selectedId) {
-      selectedId = this.state.selectedId;
+    let newSelectedId = null;
+    if (selectedId) {
+      newSelectedId = selectedId;
     } else if (nextProps.activePipeline && nextProps.activePipeline.steps.length) {
-      selectedId = nextProps.activePipeline.steps[0].id;
+      newSelectedId = nextProps.activePipeline.steps[0].id;
     }
 
-    if (nextProps.activePipeline && !this.state.pipeline.id) {
+    if (nextProps.activePipeline && !pipeline.id) {
       const { activePipeline: { __typename, ...other } } = nextProps;
       this.setState(
-        { pipeline: { ...other }, selectedId, startingPipeline: { ...other } },
+        { pipeline: { ...other }, selectedId: newSelectedId, startingPipeline: { ...other } },
         () => {
-          if (nextProps.consortia.length && this.state.pipeline.owningConsortium) {
+          if (nextProps.consortia.length && pipeline.owningConsortium) {
             this.setConsortium();
           }
         }
@@ -189,7 +193,7 @@ class Pipeline extends Component {
     }));
   }
 
-  addStep = computation => {
+  addStep = (computation) => {
     const controllerType = computation.computation.remote ? 'decentralized' : 'local';
 
     const id = shortid.generate();
@@ -216,12 +220,13 @@ class Pipeline extends Component {
     // () => this.updateStorePipeline());
   }
 
-  accordionSelect = selectedId => {
+  accordionSelect = (selectedId) => {
     this.setState({ selectedId });
   }
 
   moveStep = (id, swapId) => {
-    const { steps } = this.state.pipeline;
+    const { pipeline } = this.state;
+    const { steps } = pipeline;
 
     const movedStepIndex = steps.findIndex(step => step.id === id);
     const movedStep = steps[movedStepIndex];
@@ -237,18 +242,17 @@ class Pipeline extends Component {
           ...Object.keys(inputMap).map((key) => {
             if (key !== 'covariates' && 'fromCache' in inputMap[key]) {
               const cacheStep = inputMap[key].fromCache.step;
-              const variable = inputMap[key].fromCache.variable;
-              const label = inputMap[key].fromCache.label;
+              const { variable, label } = inputMap[key].fromCache;
 
               if (index >= stepIndex && movedStepIndex < stepIndex) {
                 return { [key]: {} };
-              } else if (movedStepIndex === cacheStep) {
+              } if (movedStepIndex === cacheStep) {
                 return { [key]: { fromCache: { step: index, variable, label } } };
-              } else if (index <= cacheStep && movedStepIndex > cacheStep) {
+              } if (index <= cacheStep && movedStepIndex > cacheStep) {
                 return {
                   [key]: { fromCache: { step: cacheStep + 1, variable, label } },
                 };
-              } else if (movedStepIndex < cacheStep && index >= cacheStep && index < stepIndex) {
+              } if (movedStepIndex < cacheStep && index >= cacheStep && index < stepIndex) {
                 return {
                   [key]: { fromCache: { step: cacheStep - 1, variable, label } },
                 };
@@ -256,8 +260,7 @@ class Pipeline extends Component {
             }
 
             return { [key]: inputMap[key] };
-          })
-        );
+          }));
 
         if ('covariates' in inputMap && 'ownerMappings' in inputMap.covariates && inputMap.covariates.ownerMappings.length) {
           let covariateMappings = [...inputMap.covariates.ownerMappings];
@@ -267,11 +270,12 @@ class Pipeline extends Component {
             .map((cov) => {
               if (index >= stepIndex && movedStepIndex < stepIndex) {
                 return {};
-              } else if (movedStepIndex === cov.fromCache.step) {
+              } if (movedStepIndex === cov.fromCache.step) {
                 return { fromCache: { ...cov.fromCache, step: index } };
-              } else if (index <= cov.fromCache.step && movedStepIndex > cov.fromCache.step) {
+              } if (index <= cov.fromCache.step && movedStepIndex > cov.fromCache.step) {
                 return { fromCache: { ...cov.fromCache, step: cov.fromCache.step + 1 } };
-              } else if (movedStepIndex < cov.fromCache.step && index >= cov.fromCache.step && index < stepIndex) {
+              } if (movedStepIndex < cov.fromCache.step
+                && index >= cov.fromCache.step && index < stepIndex) {
                 return { fromCache: { ...cov.fromCache, step: cov.fromCache.step - 1 } };
               }
 
@@ -298,10 +302,10 @@ class Pipeline extends Component {
       inputMap: Object.assign(
         {},
         ...Object.keys(movedStep.inputMap).map((key) => {
-          if (key !== 'covariates' && 'fromCache' in movedStep.inputMap[key] &&
-            movedStep.inputMap[key].step >= index) {
+          if (key !== 'covariates' && 'fromCache' in movedStep.inputMap[key]
+            && movedStep.inputMap[key].step >= index) {
             return { [key]: {} };
-          } else if (key === 'covariates' && 'ownerMappings' in movedStep.inputMap.covariates && movedStep.inputMap.covariates.ownerMappings.length) {
+          } if (key === 'covariates' && 'ownerMappings' in movedStep.inputMap.covariates && movedStep.inputMap.covariates.ownerMappings.length) {
             return {
               [key]: movedStep.inputMap[key].ownerMappings
                 .filter(cov => cov.fromCache)
@@ -367,14 +371,14 @@ class Pipeline extends Component {
     this.setState({ showModal: false });
   }
 
-  openModal = stepId => {
+  openModal = (stepId) => {
     this.setState({
       showModal: true,
       stepToDelete: stepId,
     });
   }
 
-  updatePipeline = payload => {
+  updatePipeline = (payload) => {
     const { param, value, consortiumName } = payload;
 
     if (param === 'owningConsortium') {
@@ -396,19 +400,22 @@ class Pipeline extends Component {
   }
 
   savePipeline = async () => {
-    const { auth: { user }, notifySuccess, notifyError } = this.props;
+    const {
+      auth: { user }, notifySuccess, notifyError, saveActivePipeline, savePipeline,
+    } = this.props;
+    const { pipeline } = this.state;
 
-    const isActive = get(this.state.pipeline, 'isActive', false);
+    const isActive = get(pipeline, 'isActive', false);
 
-    const pipeline = omit(this.state.pipeline, ['isActive']);
+    const omittedPipeline = omit(pipeline, ['isActive']);
 
     this.setState({ savingStatus: 'pending' });
 
     try {
-      const { data } = await this.props.savePipeline({
-        ...pipeline,
+      const { data } = await savePipeline({
+        ...omittedPipeline,
         owner: user.id,
-        steps: pipeline.steps.map(step => ({
+        steps: omittedPipeline.steps.map(step => ({
           id: step.id,
           computations: step.computations.map(comp => comp.id),
           inputMap: step.inputMap,
@@ -421,8 +428,8 @@ class Pipeline extends Component {
         })),
       });
 
-      const { savePipeline: { __typename, ...other } } = data
-      const newPipeline = { ...this.state.pipeline, ...other };
+      const { savePipeline: { __typename, ...other } } = data;
+      const newPipeline = { ...pipeline, ...other };
 
       this.setState({
         pipeline: newPipeline,
@@ -434,10 +441,10 @@ class Pipeline extends Component {
 
       if (isActive) {
         const { savePipeline } = data;
-        await this.props.saveActivePipeline(savePipeline.owningConsortium, savePipeline.id);
+        await saveActivePipeline(savePipeline.owningConsortium, savePipeline.id);
       }
-    } catch ({ graphQLErrors }) {
-      notifyError(get(graphQLErrors, '0.message', 'Failed to save pipeline'));
+    } catch (error) {
+      notifyError(get(error.graphQLErrors, '0.message', 'Failed to save pipeline'));
 
       this.setState({ savingStatus: 'fail' });
     }
@@ -452,7 +459,7 @@ class Pipeline extends Component {
     this.setState({ openOwningConsortiumMenu: false });
   }
 
-  openAddComputationStepMenu = event => {
+  openAddComputationStepMenu = (event) => {
     this.addComputationStepButtonElement = event.currentTarget;
     this.setState({ openAddComputationStepMenu: true });
   }
@@ -463,17 +470,24 @@ class Pipeline extends Component {
 
   sortComputations = () => {
     const { computations } = this.props;
-    if(computations && computations.length > 0){
-      return computations.slice().sort(function(a, b) {
+    if (computations && computations.length > 0) {
+      return computations.slice().sort((a, b) => {
         const nameA = a.meta.name.toLowerCase();
         const nameB = b.meta.name.toLowerCase();
-        return (nameA < nameB) ? -1 : (nameA > nameB) ? 1 : 0;
+
+        if (nameA < nameB) {
+          return -1;
+        }
+
+        return (nameA > nameB) ? 1 : 0;
       });
     }
   }
 
   render() {
-    const { connectDropTarget, consortia, users, classes, auth } = this.props;
+    const {
+      connectDropTarget, consortia, users, classes, auth,
+    } = this.props;
     const {
       consortium,
       pipeline,
@@ -528,7 +542,7 @@ class Pipeline extends Component {
           />
           <TextValidator
             id="timeout"
-            label="Timeout"
+            label="Timeout for clients (default: infinite)"
             fullWidth
             disabled={!owner}
             value={pipeline.timeout}
@@ -699,28 +713,31 @@ class Pipeline extends Component {
 Pipeline.defaultProps = {
   activePipeline: null,
   runs: null,
+  users: [],
   subscribeToComputations: null,
   subscribeToPipelines: null,
 };
 
 Pipeline.propTypes = {
-  activePipeline: PropTypes.object,
+  activePipeline: PropTypes.object, // eslint-disable-line react/no-unused-prop-types
   auth: PropTypes.object.isRequired,
+  classes: PropTypes.object.isRequired,
   client: PropTypes.object.isRequired,
   computations: PropTypes.array.isRequired,
-  connectDropTarget: PropTypes.func.isRequired,
   consortia: PropTypes.array.isRequired,
-  notifySuccess: PropTypes.func.isRequired,
-  notifyError: PropTypes.func.isRequired,
   params: PropTypes.object.isRequired,
   runs: PropTypes.array,
+  users: PropTypes.array,
+  connectDropTarget: PropTypes.func.isRequired,
+  notifyError: PropTypes.func.isRequired,
+  notifySuccess: PropTypes.func.isRequired,
   savePipeline: PropTypes.func.isRequired,
-  classes: PropTypes.object.isRequired,
+  saveActivePipeline: PropTypes.func.isRequired,
 };
 
-function mapStateToProps({ auth }) {
-  return { auth };
-}
+const mapStateToProps = ({ auth }) => ({
+  auth,
+});
 
 const PipelineWithData = compose(
   graphql(FETCH_PIPELINE_QUERY, getDocumentByParam(
