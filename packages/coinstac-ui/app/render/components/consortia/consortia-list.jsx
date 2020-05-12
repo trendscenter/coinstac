@@ -5,7 +5,7 @@ import { Link } from 'react-router';
 import { compose, graphql, withApollo } from 'react-apollo';
 import { ipcRenderer } from 'electron';
 import classNames from 'classnames';
-import { orderBy } from 'lodash';
+import { get, orderBy } from 'lodash';
 import {
   Button, Fab, Menu, MenuItem, TextField, Typography,
 } from '@material-ui/core';
@@ -387,11 +387,12 @@ class ConsortiaList extends Component {
 
   startPipeline(consortiumId) {
     return () => {
-      const {
-        createRun,
-      } = this.props;
+      const { createRun, notifyError } = this.props;
 
-      createRun(consortiumId);
+      createRun(consortiumId)
+        .catch(({ graphQLErrors }) => {
+          notifyError(get(graphQLErrors, '0.message', 'Failed to start pipeline'));
+        });
     };
   }
 
@@ -558,6 +559,7 @@ ConsortiaList.propTypes = {
   joinConsortium: PropTypes.func.isRequired,
   leaveConsortium: PropTypes.func.isRequired,
   notifyInfo: PropTypes.func.isRequired,
+  notifyError: PropTypes.func.isRequired,
   pullComputations: PropTypes.func.isRequired,
 };
 
