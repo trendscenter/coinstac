@@ -935,6 +935,7 @@ async function populate() {
   await database.connect();
 
   database.dropDbInstance();
+  database.deployDb();
 
   await populateComputations();
   await populateConsortia();
