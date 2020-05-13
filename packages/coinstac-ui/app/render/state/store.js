@@ -15,7 +15,7 @@ import thunkMiddleware from 'redux-thunk';
 import { persistStore, persistReducer } from 'redux-persist';
 import createElectronStorage from 'redux-persist-electron-storage';
 import { dirname, join } from 'path';
-import { ipcRenderer } from 'electron';
+import { ipcRenderer, remote } from 'electron';
 import rootReducer, { clearState, rehydrate } from './root-reducer';
 
 const ElectronStore = require('electron-store');
@@ -26,8 +26,26 @@ const electronStore = new ElectronStore();
 const persistConfig = {
   key: 'root',
   storage: createElectronStorage({ electronStore }),
-  whitelist: ['maps'],
+  whitelist: ['maps', 'localRunResults'],
 };
+
+async function loadPersistedState(userId, persistor, store) {
+  const electronStoreFolder = dirname(electronStore.path);
+  electronStore.path = join(electronStoreFolder, `local-db-${userId}.json`);
+
+  const data = await persistConfig.storage.getItem('persist:root');
+  persistor.persist();
+
+  // Rehydrate is done only once by redux-persist, so we do it manually
+  // for hydrating state on consecutive logins
+  if (data) {
+    const parsedState = deepParseJson(data);
+
+    delete parsedState._persist;
+
+    store.dispatch(rehydrate(parsedState));
+  }
+}
 
 export default function (apolloClient) {
   const persistedReducer = persistReducer(persistConfig, rootReducer(apolloClient));
@@ -44,30 +62,20 @@ export default function (apolloClient) {
 
   const persistor = persistStore(store, { manualPersist: true });
 
-  ipcRenderer.on('login-success', (event, userId) => {
-    const electronStoreFolder = dirname(electronStore.path);
-    electronStore.path = join(electronStoreFolder, `local-db-${userId}.json`);
+  ipcRenderer.on('login-success', async (_, userId) => {
+    await loadPersistedState(userId, persistor, store);
 
-    persistConfig.storage.getItem('persist:root')
-      .then((data) => {
-        persistor.persist();
-
-        // Rehydrate is done only once by redux-persist, so we do it manually
-        // for hydrating state on consecutive logins
-        if (data) {
-          const parsedState = deepParseJson(data);
-
-          delete parsedState._persist;
-
-          store.dispatch(rehydrate(parsedState));
-        }
-      });
+    remote.getCurrentWindow().webContents.send('app-init-finished');
   });
 
   ipcRenderer.on('logout', () => {
     persistor.pause();
 
-    store.dispatch(clearState());
+    // clear persisted state
+    store.dispatch(clearState({
+      maps: null,
+      localRunResults: null,
+    }));
   });
 
   if (module.hot) {

@@ -98,7 +98,6 @@ const sharedFields = {
     email
     institution
     username
-    passwordHash
     permissions
     photo
     photoID

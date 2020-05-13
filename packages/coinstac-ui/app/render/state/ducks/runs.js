@@ -1,4 +1,5 @@
 import { uniqBy } from 'lodash';
+import { saveLocalRunResult } from './localRunResults';
 
 // Actions
 const CLEAR_RUNS = 'CLEAR_RUNS';
@@ -11,15 +12,34 @@ export const clearRuns = () => ({
   payload: null,
 });
 
-export const saveLocalRun = run => ({
-  type: SAVE_LOCAL_RUN,
-  payload: run,
-});
+export const saveLocalRun = run => (dispatch, getState) => {
+  if (run.type === 'local') {
+    const { localRunResults } = getState();
 
-export const updateLocalRun = (runId, object) => ({
-  type: UPDATE_LOCAL_RUN,
-  payload: { runId, object },
-});
+    if (run.id in localRunResults) {
+      run = {
+        ...run,
+        ...localRunResults[run.id],
+      };
+    }
+  }
+
+  dispatch({
+    type: SAVE_LOCAL_RUN,
+    payload: run,
+  });
+};
+
+export const updateLocalRun = (runId, object) => (dispatch) => {
+  dispatch({
+    type: UPDATE_LOCAL_RUN,
+    payload: { runId, object },
+  });
+
+  if (object.type === 'local' && (object.status === 'error' || object.status === 'complete')) {
+    dispatch(saveLocalRunResult(runId, object));
+  }
+};
 
 const INITIAL_STATE = {
   localRuns: [],

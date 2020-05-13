@@ -28,11 +28,13 @@ module.exports = {
     mode,
     clientId,
     owner,
+    logger,
+    dockerManager,
   }) {
     let cache = {};
     let pipelineErrorCallback;
     const currentComputations = computations.map(
-      comp => Computation.create(comp, mode, runId, clientId)
+      comp => Computation.create(comp, mode, runId, clientId, dockerManager)
     );
     const activeControlBox = controllers[controller.type];
     const computationStep = 0;
@@ -158,9 +160,9 @@ module.exports = {
                       error: message,
                       name,
                       stack,
-                      input: input ? input.input : input,
                     }
                   );
+                  logger.silly(`Pipeline Error: ${iterationError}`);
                   if (controller.type === 'local') {
                     err(iterationError);
                   } else {

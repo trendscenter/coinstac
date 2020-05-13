@@ -46,7 +46,6 @@ const styles = theme => ({
 
 class ConsortiumAbout extends Component {
   state = {
-    consortiumUsers: [],
     newMember: null,
     isAddingMember: false,
   };
@@ -54,15 +53,6 @@ class ConsortiumAbout extends Component {
   mapUsers = memoize(
     users => (users ? users.map(user => ({ label: user.username, value: user.id })) : null)
   );
-
-  static getDerivedStateFromProps(props) {
-    if (props.consortiumUsers) {
-      return {
-        consortiumUsers: props.consortiumUsers.sort((a, b) => a.id.localeCompare(b.id)),
-      };
-    }
-    return null;
-  }
 
   filterSelectedUsers = memoize(
     (allUsers, selectedUsers) => {
@@ -84,6 +74,20 @@ class ConsortiumAbout extends Component {
   handleSwitchChange = name => (event) => {
     const { updateConsortium } = this.props;
     updateConsortium({ param: name, value: event.target.checked });
+  }
+
+  toggleOwner = (consUser) => {
+    const {
+      consortium, owner, user, addUserRole, removeUserRole,
+    } = this.props;
+
+    if (owner && consUser.id !== user.id) {
+      if (consUser.owner) {
+        removeUserRole(consUser.id, 'consortia', consortium.id, 'owner');
+      } else {
+        addUserRole(consUser.id, 'consortia', consortium.id, 'owner');
+      }
+    }
   }
 
   handleMemberSelect = (value) => {
@@ -112,21 +116,6 @@ class ConsortiumAbout extends Component {
     removeUserRole(user.id, 'consortia', consortium.id, 'member');
   }
 
-  toggleOwner(consUser) {
-    const {
-      addUserRole, consortium, owner, removeUserRole, user,
-    } = this.props;
-    return () => {
-      if (owner && consUser.id !== user.id) {
-        if (consUser.owner) {
-          removeUserRole(consUser.id, 'consortia', consortium.id, 'owner', consUser.username);
-        } else {
-          addUserRole(consUser.id, 'consortia', consortium.id, 'owner', consUser.username);
-        }
-      }
-    };
-  }
-
   render() {
     const {
       consortium,
@@ -136,9 +125,10 @@ class ConsortiumAbout extends Component {
       classes,
       savingStatus,
       saveConsortium,
+      consortiumUsers,
     } = this.props;
 
-    const { consortiumUsers, newMember, isAddingMember } = this.state;
+    const { newMember, isAddingMember } = this.state;
 
     const allUsers = this.mapUsers(users);
     const userOptions = this.filterSelectedUsers(allUsers, consortiumUsers);
@@ -293,12 +283,14 @@ ConsortiumAbout.propTypes = {
   removeUserRole: PropTypes.func.isRequired,
   saveConsortium: PropTypes.func.isRequired,
   updateConsortium: PropTypes.func.isRequired,
+  consortiumUsers: PropTypes.array,
 };
 
 ConsortiumAbout.defaultProps = {
   consortium: null,
   users: [],
   savingStatus: 'init',
+  consortiumUsers: [],
 };
 
 export default withStyles(styles)(ConsortiumAbout);

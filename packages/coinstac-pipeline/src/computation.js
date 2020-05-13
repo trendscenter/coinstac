@@ -1,9 +1,7 @@
 'use strict';
 
-const docker = require('coinstac-docker-manager');
-
 module.exports = {
-  create(spec, mode, runId, clientId) {
+  create(spec, mode, runId, clientId, docker) {
     const computation = Object.assign(
       {},
       spec.computation,
@@ -54,7 +52,7 @@ module.exports = {
           });
       },
       stop() {
-        return docker.stopService(this.meta.id, `${this.runId}-${this.clientId}`);
+        return docker.stopService(this.meta.id, `${this.runId}-${this.clientId}`, true);
       },
     };
   },

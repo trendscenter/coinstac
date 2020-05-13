@@ -39,7 +39,7 @@ import {
   FETCH_ALL_USER_RUNS_QUERY,
   FETCH_ALL_THREADS_QUERY,
   PIPELINE_CHANGED_SUBSCRIPTION,
-  USER_METADATA_CHANGED_SUBSCRIPTION,
+  USER_CHANGED_SUBSCRIPTION,
   USER_RUN_CHANGED_SUBSCRIPTION,
   THREAD_CHANGED_SUBSCRIPTION,
   UPDATE_USER_CONSORTIUM_STATUS_MUTATION,
@@ -135,7 +135,7 @@ class Dashboard extends Component {
       notifyError,
       updateLocalRun,
       saveLocalRun,
-      subscribeToUserMetaData,
+      subscribeToUser,
       subscribeToUserRuns,
     } = this.props;
     const { router } = this.context;
@@ -186,13 +186,13 @@ class Dashboard extends Component {
     ipcRenderer.on('local-run-complete', (event, arg) => {
       notifySuccess(`${arg.consName} Pipeline Complete.`);
 
-      updateLocalRun(arg.run.id, { results: arg.run.results, status: 'complete' });
+      updateLocalRun(arg.run.id, { results: arg.run.results, status: 'complete', type: arg.run.type });
     });
 
     ipcRenderer.on('local-run-error', (event, arg) => {
       notifyError(`${arg.consName} Pipeline Error.`);
 
-      updateLocalRun(arg.run.id, { error: arg.run.error, status: 'error' });
+      updateLocalRun(arg.run.id, { error: arg.run.error, status: 'error', type: arg.run.type });
     });
 
     ipcRenderer.on('log-message', (event, arg) => {
@@ -202,7 +202,7 @@ class Dashboard extends Component {
 
     ipcRenderer.send('load-initial-log');
 
-    this.unsubscribeToUserMetadata = subscribeToUserMetaData(user.id);
+    this.unsubscribeToUser = subscribeToUser(user.id);
     this.unsubscribeToUserRuns = subscribeToUserRuns(user.id);
 
     ipcRenderer.on('docker-error', (event, arg) => {
@@ -294,7 +294,7 @@ class Dashboard extends Component {
 
           // Update status of run in localDB
           ipcRenderer.send('clean-remote-pipeline', nextProps.remoteRuns[i].id);
-          updateLocalRun(run.id, { error: run.error, status: 'error' });
+          updateLocalRun(run.id, { error: run.error, status: 'error', type: run.type });
           notifyError(`${consortium.name} Pipeline Error.`);
 
           // Run already in props but results are incoming
@@ -350,7 +350,8 @@ class Dashboard extends Component {
         if (consortia[i] && nextProps.consortia[i].id === consortia[i].id
             && nextProps.consortia[i].activePipelineId
             && !consortia[i].activePipelineId
-            && nextProps.consortia[i].members.indexOf(user.id) > -1) {
+            && nextProps.consortia[i].members.findIndex(usr => Object.keys(usr)[0] === user.id) > -1
+        ) {
           const computationData = client.readQuery({ query: FETCH_ALL_COMPUTATIONS_QUERY });
           const pipelineData = client.readQuery({ query: FETCH_ALL_PIPELINES_QUERY });
           const pipeline = pipelineData.fetchAllPipelines
@@ -375,12 +376,20 @@ class Dashboard extends Component {
   }
 
   componentDidUpdate(prevProps) {
-    const { currentUser, updateUserPerms } = this.props;
+    const {
+      currentUser, updateUserPerms, remoteRuns, saveLocalRun
+    } = this.props;
 
     if (currentUser
       && (!prevProps.currentUser || prevProps.currentUser.permissions !== currentUser.permissions)
     ) {
       updateUserPerms(currentUser.permissions);
+    }
+
+    if (prevProps.remoteRuns.length === 0 && remoteRuns.length > prevProps.remoteRuns.length) {
+      remoteRuns
+        .filter(run => run.type === 'local')
+        .forEach(run => saveLocalRun(run));
     }
   }
 
@@ -395,7 +404,7 @@ class Dashboard extends Component {
     unsubscribePipelines();
     unsubscribeThreads();
 
-    this.unsubscribeToUserMetadata();
+    this.unsubscribeToUser();
     this.unsubscribeToUserRuns();
 
     ipcRenderer.removeAllListeners('docker-out');
@@ -603,7 +612,7 @@ Dashboard.propTypes = {
   subscribeToConsortia: PropTypes.func.isRequired,
   subscribeToPipelines: PropTypes.func.isRequired,
   subscribeToThreads: PropTypes.func.isRequired,
-  subscribeToUserMetaData: PropTypes.func.isRequired,
+  subscribeToUser: PropTypes.func.isRequired,
   subscribeToUserRuns: PropTypes.func.isRequired,
   updateConsortiaMappedUsers: PropTypes.func.isRequired,
   updateDockerOutput: PropTypes.func.isRequired,
@@ -664,14 +673,14 @@ const DashboardWithData = compose(
     }),
     props: props => ({
       currentUser: props.data.fetchUser,
-      subscribeToUserMetaData: userId => props.data.subscribeToMore({
-        document: USER_METADATA_CHANGED_SUBSCRIPTION,
+      subscribeToUser: userId => props.data.subscribeToMore({
+        document: USER_CHANGED_SUBSCRIPTION,
         variables: { userId },
         updateQuery: (prevResult, { subscriptionData: { data } }) => {
-          if (data.userMetadataChanged.delete) {
+          if (data.userChanged.delete) {
             return { fetchUser: null };
           }
-          return { fetchUser: data.userMetadataChanged };
+          return { fetchUser: data.userChanged };
         },
       }),
     }),

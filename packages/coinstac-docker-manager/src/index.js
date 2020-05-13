@@ -35,6 +35,7 @@ const streamPool = {};
 const jobPool = {};
 let services = {};
 const portBlackList = new Set();
+let portLock = false;
 
 /**
  * Set an external logger instance
@@ -49,14 +50,24 @@ const setLogger = (loggerInstance) => {
  * @param  {string} serviceId Id to consume the port
  * @return {int}              open port assigned
  */
-const generateServicePort = async (serviceId, start = 8100) => {
-  let newPort = await portscanner.findAPortNotInUse(start, 49151, '127.0.0.1');
-  if (portBlackList.has(newPort)) {
-    newPort = await generateServicePort(serviceId, newPort + 5);
+const generateServicePort = async (serviceId, start = 8101, thisLock = false) => {
+  let newPort;
+  if (portLock && !thisLock) {
+    await setTimeoutPromise(Math.floor(Math.random() * 300));
+    newPort = await generateServicePort(serviceId, newPort);
     return newPort;
   }
-  // base case
+  portLock = true;
+  newPort = await portscanner.findAPortNotInUse(start, 49151, '127.0.0.1');
+  if (portBlackList.has(newPort)) {
+    newPort = await generateServicePort(serviceId, newPort + 1, true);
+    portBlackList.add(newPort);
+    portLock = false;
+    services[serviceId].port = newPort;
+    return newPort;
+  }
   portBlackList.add(newPort);
+  portLock = false;
   services[serviceId].port = newPort;
   return newPort;
 };
@@ -229,7 +240,7 @@ const startService = (serviceId, serviceUserId, opts) => {
           services[serviceId].container = container;
           return container.start();
         })
-      // is the container service ready?
+        // is the container service ready?
         .then(() => {
           logger.silly(`Cointainer started: ${serviceId}`);
           const checkServicePort = () => {
@@ -264,7 +275,6 @@ const startService = (serviceId, serviceUserId, opts) => {
                   logger.silly(`Container timeout for ${serviceId}`);
                   return setTimeoutPromise(5000);
                 }
-
                 // not a socket error, throw
                 throw status;
               });
@@ -474,11 +484,13 @@ const startService = (serviceId, serviceUserId, opts) => {
     if (services[serviceId].users.indexOf(serviceUserId) === -1) {
       services[serviceId].users.push(serviceUserId);
     }
-    if (services[serviceId].container) {
+    if (services[serviceId].container && services[serviceId].state !== 'starting') {
       logger.silly('Returning already started service');
       return new Promise((resolve, reject) => {
         services[serviceId].container.inspect((error, data) => {
-          if (error) reject(error);
+          if (error) {
+            reject(error);
+          }
           if (data.State.Running === true) {
             return resolve(services[serviceId].service);
           }
@@ -488,6 +500,7 @@ const startService = (serviceId, serviceUserId, opts) => {
         });
       });
     }
+    return Promise.resolve(services[serviceId].service);
   }
   return createService();
 };
