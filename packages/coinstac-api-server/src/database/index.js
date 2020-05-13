@@ -1,53 +1,27 @@
-const { MongoClient, ObjectID } = require('mongodb');
+const { MongoClient } = require('mongodb');
+const { mongoUser } = require('/etc/coinstac/cstacDBMap'); // eslint-disable-line import/no-absolute-path
 const config = require('../../config/default');
 
 let client = null;
 let db = null;
 
-async function connect() {
-  client = new MongoClient(config.mongoConnString, {
+function connect() {
+  client = new MongoClient(`mongodb://${mongoUser.user}:${mongoUser.password}@${config.mongoHost}:${config.mongoPort}`, {
     useUnifiedTopology: true,
   });
 
-  await client.connect();
-}
-
-function createDbInstance() {
-  db = client.db(config.databaseName);
-
-  db.collection('users').createIndex({ username: 1 }, { unique: true });
-  db.collection('users').createIndex({ email: 1 }, { unique: true });
-}
-
-function dropDbInstance() {
-  if (!db) {
-    createDbInstance();
-  }
-
-  db.dropDatabase();
-  db = null;
+  return client.connect();
 }
 
 function getDbInstance() {
   if (!db) {
-    createDbInstance();
+    db = client.db(config.databaseName);
   }
 
   return db;
 }
 
-function createUniqueId() {
-  return new ObjectID();
-}
-
-function close() {
-  client.close();
-}
-
 module.exports = {
   connect,
-  close,
-  dropDbInstance,
   getDbInstance,
-  createUniqueId,
 };

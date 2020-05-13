@@ -4,20 +4,7 @@ const jwt = require('jsonwebtoken');
 const Promise = require('bluebird');
 const database = require('./database');
 const { transformToClient } = require('./utils');
-
-let dbmap;
-try {
-  dbmap = require('/etc/coinstac/cstacDBMap'); // eslint-disable-line import/no-absolute-path, import/no-unresolved, global-require
-} catch (e) {
-  console.log('No DBMap found: using defaults'); // eslint-disable-line no-console
-  dbmap = {
-    apiCredentials: {
-      username: 'server',
-      password: 'password',
-    },
-    cstacJWTSecret: 'test',
-  };
-}
+const dbmap = require('/etc/coinstac/cstacDBMap'); // eslint-disable-line import/no-absolute-path
 
 const helperFunctions = {
   /**
@@ -109,13 +96,6 @@ const helperFunctions = {
         }
       );
     });
-  },
-  /**
-   * merges the given map into the current map
-   * @param {Object} map dbmap attrs to set
-   */
-  setDBMap(map) {
-    dbmap = Object.assign({}, dbmap, map);
   },
   /**
    * Validates JWT from authenticated user

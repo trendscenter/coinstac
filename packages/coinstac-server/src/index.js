@@ -6,20 +6,9 @@ const { pullImages } = require('coinstac-docker-manager');
 const graphqlSchema = require('coinstac-graphql-schema');
 const config = require('./config');
 const routes = require('./routes');
+const dbmap = require('/etc/coinstac/cstacDBMap'); // eslint-disable-line import/no-absolute-path
 
 let idToken = '';
-let dbmap;
-try {
-  dbmap = require('/etc/coinstac/cstacDBMap'); // eslint-disable-line import/no-absolute-path, import/no-unresolved, global-require
-} catch (e) {
-  console.log('No DBMap found: using defaults'); // eslint-disable-line no-console
-  dbmap = {
-    apiCredentials: {
-      username: 'server',
-      password: 'password',
-    },
-  };
-}
 
 const server = new hapi.Server();
 server.connection({

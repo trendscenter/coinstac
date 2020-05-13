@@ -1,6 +1,7 @@
 require('trace');
 require('clarify');
-const database = require('../src/database');
+const { ObjectID } = require('mongodb');
+const database = require('../db-deploy');
 const helperFunctions = require('../src/auth-helpers');
 
 const dsneMS = require('./data/coinstac-dsne-ms');
@@ -26,33 +27,33 @@ const local = require('./data/coinstac-local-test');
 const localError = require('./data/coinstac-local-error');
 
 const CONSORTIA_IDS = [
-  database.createUniqueId(),
-  database.createUniqueId(),
+  new ObjectID(),
+  new ObjectID(),
 ];
 
 const PIPELINE_IDS = [
-  database.createUniqueId(),
-  database.createUniqueId(),
-  database.createUniqueId(),
-  database.createUniqueId(),
+  new ObjectID(),
+  new ObjectID(),
+  new ObjectID(),
+  new ObjectID(),
 ];
 
 const COMPUTATION_IDS = [
-  database.createUniqueId(),
-  database.createUniqueId(),
-  database.createUniqueId(),
-  database.createUniqueId(),
-  database.createUniqueId(),
-  database.createUniqueId(),
-  database.createUniqueId(),
-  database.createUniqueId(),
-  database.createUniqueId(),
-  database.createUniqueId(),
-  database.createUniqueId(),
-  database.createUniqueId(),
-  database.createUniqueId(),
-  database.createUniqueId(),
-  database.createUniqueId(),
+  new ObjectID(),
+  new ObjectID(),
+  new ObjectID(),
+  new ObjectID(),
+  new ObjectID(),
+  new ObjectID(),
+  new ObjectID(),
+  new ObjectID(),
+  new ObjectID(),
+  new ObjectID(),
+  new ObjectID(),
+  new ObjectID(),
+  new ObjectID(),
+  new ObjectID(),
+  new ObjectID(),
 ];
 
 async function populateComputations() {
@@ -792,129 +793,142 @@ async function populateRuns() {
 }
 
 async function populateUsers() {
+  const db = database.getDbInstance();
+
   const password = await helperFunctions.hashPassword('password');
-
-  await helperFunctions.createUser({
-    username: 'test1',
-    institution: 'mrn',
-    email: 'test@mrn.org',
-    permissions: {
-      computations: {},
-      consortia: {
-        [CONSORTIA_IDS[0]]: ['member'],
-        [CONSORTIA_IDS[1]]: ['owner', 'member'],
-      },
-      pipelines: {},
-    },
-    consortiaStatuses: {
-      [CONSORTIA_IDS[0]]: 'none',
-      [CONSORTIA_IDS[1]]: 'none',
-    },
-  }, password);
-
-  await helperFunctions.createUser({
-    username: 'test2',
-    institution: 'mrn',
-    email: 'test2@mrn.org',
-    permissions: {
-      computations: {},
-      consortia: {
-        [CONSORTIA_IDS[0]]: ['member'],
-        [CONSORTIA_IDS[1]]: ['member'],
-      },
-      pipelines: {},
-    },
-    consortiaStatuses: {
-      [CONSORTIA_IDS[0]]: 'none',
-      [CONSORTIA_IDS[1]]: 'none',
-    },
-  }, password);
-
-  await helperFunctions.createUser({
-    username: 'test3',
-    institution: 'mrn',
-    email: 'test3@mrn.org',
-    permissions: {
-      computations: {},
-      consortia: {
-        [CONSORTIA_IDS[0]]: ['member'],
-        [CONSORTIA_IDS[1]]: ['member'],
-      },
-      pipelines: {},
-    },
-    consortiaStatuses: {
-      [CONSORTIA_IDS[0]]: 'none',
-      [CONSORTIA_IDS[1]]: 'none',
-    },
-  }, password);
-
-  await helperFunctions.createUser({
-    username: 'test4',
-    institution: 'mrn',
-    email: 'test4@mrn.org',
-    permissions: {
-      computations: {},
-      consortia: {
-        [CONSORTIA_IDS[0]]: ['member'],
-        [CONSORTIA_IDS[1]]: ['member'],
-      },
-      pipelines: {},
-    },
-    consortiaStatuses: {
-      [CONSORTIA_IDS[0]]: 'none',
-      [CONSORTIA_IDS[1]]: 'none',
-    },
-  }, password);
-
-  await helperFunctions.createUser({
-    username: 'test5',
-    institution: 'mrn',
-    email: 'test5@mrn.org',
-    permissions: {
-      computations: {},
-      consortia: {
-        [CONSORTIA_IDS[0]]: ['member'],
-        [CONSORTIA_IDS[1]]: ['member'],
-      },
-      pipelines: {},
-    },
-    consortiaStatuses: {
-      [CONSORTIA_IDS[0]]: 'none',
-      [CONSORTIA_IDS[1]]: 'none',
-    },
-  }, password);
-
-  await helperFunctions.createUser({
-    username: 'author',
-    institution: 'mrn',
-    email: 'author@mrn.org',
-    permissions: {
-      computations: {},
-      consortia: {
-        [CONSORTIA_IDS[0]]: ['owner', 'member'],
-        [CONSORTIA_IDS[1]]: ['member'],
-      },
-      pipelines: {},
-    },
-  }, password);
 
   const adminPassword = await helperFunctions.hashPassword(process.argv[3]
     || helperFunctions.getDBMap().apiCredentials.password);
 
-  await helperFunctions.createUser({
-    username: 'server',
-    institution: 'mrn',
-    email: 'server@mrn.org',
-    permissions: {
-      computations: {},
-      consortia: {},
-      pipelines: {},
+  await db.collection('users').insertMany([
+    {
+      _id: 'test1',
+      username: 'test1',
+      institution: 'mrn',
+      email: 'test@mrn.org',
+      passwordHash: password,
+      permissions: {
+        computations: {},
+        consortia: {
+          [CONSORTIA_IDS[0]]: ['member'],
+          [CONSORTIA_IDS[1]]: ['owner', 'member'],
+        },
+        pipelines: {},
+      },
+      consortiaStatuses: {
+        [CONSORTIA_IDS[0]]: 'none',
+        [CONSORTIA_IDS[1]]: 'none',
+      },
     },
-    consortiaStatuses: {
-      [CONSORTIA_IDS[0]]: 'none',
-      [CONSORTIA_IDS[1]]: 'none',
+    {
+      _id: 'test2',
+      username: 'test2',
+      institution: 'mrn',
+      email: 'test2@mrn.org',
+      passwordHash: password,
+      permissions: {
+        computations: {},
+        consortia: {
+          [CONSORTIA_IDS[0]]: ['member'],
+          [CONSORTIA_IDS[1]]: ['member'],
+        },
+        pipelines: {},
+      },
+      consortiaStatuses: {
+        [CONSORTIA_IDS[0]]: 'none',
+        [CONSORTIA_IDS[1]]: 'none',
+      },
     },
-  }, adminPassword);
+    {
+      _id: 'test3',
+      username: 'test3',
+      institution: 'mrn',
+      email: 'test3@mrn.org',
+      passwordHash: password,
+      permissions: {
+        computations: {},
+        consortia: {
+          [CONSORTIA_IDS[0]]: ['member'],
+          [CONSORTIA_IDS[1]]: ['member'],
+        },
+        pipelines: {},
+      },
+      consortiaStatuses: {
+        [CONSORTIA_IDS[0]]: 'none',
+        [CONSORTIA_IDS[1]]: 'none',
+      },
+    },
+    {
+      _id: 'test4',
+      username: 'test4',
+      institution: 'mrn',
+      email: 'test4@mrn.org',
+      passwordHash: password,
+      permissions: {
+        computations: {},
+        consortia: {
+          [CONSORTIA_IDS[0]]: ['member'],
+          [CONSORTIA_IDS[1]]: ['member'],
+        },
+        pipelines: {},
+      },
+      consortiaStatuses: {
+        [CONSORTIA_IDS[0]]: 'none',
+        [CONSORTIA_IDS[1]]: 'none',
+      },
+    },
+    {
+      _id: 'test5',
+      username: 'test5',
+      institution: 'mrn',
+      email: 'test5@mrn.org',
+      passwordHash: password,
+      permissions: {
+        computations: {},
+        consortia: {
+          [CONSORTIA_IDS[0]]: ['member'],
+          [CONSORTIA_IDS[1]]: ['member'],
+        },
+        pipelines: {},
+      },
+      consortiaStatuses: {
+        [CONSORTIA_IDS[0]]: 'none',
+        [CONSORTIA_IDS[1]]: 'none',
+      },
+    },
+    {
+      _id: 'author',
+      username: 'author',
+      institution: 'mrn',
+      email: 'author@mrn.org',
+      passwordHash: password,
+      permissions: {
+        computations: {},
+        consortia: {
+          [CONSORTIA_IDS[0]]: ['owner', 'member'],
+          [CONSORTIA_IDS[1]]: ['member'],
+        },
+        pipelines: {},
+      },
+      consortiaStatuses: {},
+    },
+    {
+      _id: 'server',
+      username: 'server',
+      institution: 'mrn',
+      email: 'server@mrn.org',
+      passwordHash: adminPassword,
+      permissions: {
+        computations: {},
+        consortia: {},
+        pipelines: {},
+      },
+      consortiaStatuses: {
+        [CONSORTIA_IDS[0]]: 'none',
+        [CONSORTIA_IDS[1]]: 'none',
+      },
+    },
+  ]);
 }
 
 async function populate() {

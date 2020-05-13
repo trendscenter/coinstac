@@ -7,6 +7,7 @@
   "iterations": 500000,
   "jwtSecret": "friends",
   "saltBytes": 16,
-  "mongoConnString": "mongodb://root:test@localhost:27017",
+  "mongoHost": "localhost",
+  "mongoPort": "27017",
   "databaseName": "coinstac"
 }

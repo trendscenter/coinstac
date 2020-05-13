@@ -3,6 +3,7 @@
   "pipelineServer": 3200,
   "hashBytes": 64,
   "host": "localhost",
-  "mongoConnString": "mongodb://root:test@localhost:27017",
+  "mongoHost": "localhost",
+  "mongoPort": "27017",
   "databaseName": "coinstac"
 }
