@@ -10,6 +10,8 @@ module.exports = [
         { method: helperFunctions.validateUser, assign: 'user' },
       ],
       handler: (req, res) => {
+        req.pre.user.passwordHash = undefined;
+
         res({
           id_token: helperFunctions.createToken(req.pre.user.id),
           user: req.pre.user,
@@ -25,14 +27,14 @@ module.exports = [
       handler: ({
         auth: {
           credentials: {
-            email, id, institution, permissions, username, photo, photoID, name
+            email, id, institution, permissions, username, photo, photoID, name,
           },
         },
       }, res) => {
         res({
           id_token: helperFunctions.createToken(id),
           user: {
-            email, id, institution, permissions, username, photo, photoID, name
+            email, id, institution, permissions, username, photo, photoID, name,
           },
         }).code(201);
       },
@@ -50,12 +52,12 @@ module.exports = [
         helperFunctions.hashPassword(req.payload.password)
           .then(passwordHash => helperFunctions.createUser(req.payload, passwordHash))
           .then(({
-            email, id, institution, permissions, username, photo, photoID, name
+            email, _id, institution, permissions, username, photo, photoID, name,
           }) => {
             res({
-              id_token: helperFunctions.createToken(id),
+              id_token: helperFunctions.createToken(username),
               user: {
-                email, id, institution, permissions, username, photo, photoID, name
+                email, _id, institution, permissions, username, photo, photoID, name,
               },
             }).code(201);
           });

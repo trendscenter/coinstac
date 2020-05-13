@@ -6,7 +6,6 @@ import { compose, graphql, withApollo } from 'react-apollo';
 import { ipcRenderer } from 'electron';
 import classNames from 'classnames';
 import { orderBy } from 'lodash';
-import shortid from 'shortid';
 import {
   Button, Fab, Menu, MenuItem, TextField, Typography,
 } from '@material-ui/core';
@@ -22,7 +21,6 @@ import {
   DELETE_CONSORTIUM_MUTATION,
   FETCH_ALL_COMPUTATIONS_QUERY,
   FETCH_ALL_CONSORTIA_QUERY,
-  FETCH_ALL_PIPELINES_QUERY,
   JOIN_CONSORTIUM_MUTATION,
   LEAVE_CONSORTIUM_MUTATION,
   SAVE_ACTIVE_PIPELINE_MUTATION,
@@ -142,7 +140,7 @@ class ConsortiaList extends Component {
         }
         >
           {consortium.activePipelineId
-            ? pipelines.find(pipe => pipe.id === consortium.activePipelineId).name
+            ? pipeline.name
             : 'None'
           }
         </Typography>
@@ -215,7 +213,7 @@ class ConsortiaList extends Component {
           key={`${consortium.id}-start-pipeline-button`}
           variant="contained"
           className={classes.button}
-          onClick={this.startPipeline(consortium.id, consortium.activePipelineId)}
+          onClick={this.startPipeline(consortium.id)}
         >
           Start Pipeline
         </Button>
@@ -401,55 +399,12 @@ class ConsortiaList extends Component {
     };
   }
 
-  startPipeline(consortiumId, activePipelineId) {
+  startPipeline(consortiumId) {
     return () => {
       const {
-        client,
-        maps,
         createRun,
-        notifyInfo,
-        consortia,
       } = this.props;
 
-      let isRemotePipeline = false;
-      const pipelineData = client.readQuery({ query: FETCH_ALL_PIPELINES_QUERY });
-      const pipeline = pipelineData.fetchAllPipelines
-        .find(pipe => pipe.id === activePipelineId);
-
-      for (let i = 0; i < pipeline.steps.length; i += 1) {
-        if (pipeline.steps[i].controller.type === 'decentralized') {
-          isRemotePipeline = true;
-          break;
-        }
-      }
-
-      // Don't send local pipelines to Rethink
-      if (!isRemotePipeline) {
-        const consortium = consortia.find(cons => cons.id === consortiumId);
-        const run = {
-          id: `local-${shortid.generate()}`,
-          clients: [...consortium.members],
-          consortiumId,
-          pipelineSnapshot: pipeline,
-          startDate: Date.now(),
-          type: 'local',
-          results: null,
-          endDate: null,
-          userErrors: null,
-          __typename: 'Run',
-        };
-
-        const dataMapping = maps.find(m => m.consortiumId === consortium.id
-          && m.pipelineId === consortium.activePipelineId);
-
-        notifyInfo(`Local Pipeline Starting for ${consortium.name}.`);
-
-        ipcRenderer.send('start-pipeline', {
-          consortium, dataMappings: dataMapping, run,
-        });
-      }
-
-      // If remote pipeline, call GraphQL to create new pipeline
       createRun(consortiumId);
     };
   }
@@ -612,6 +567,7 @@ ConsortiaList.propTypes = {
   runs: PropTypes.array.isRequired,
   createRun: PropTypes.func.isRequired,
   deleteAllDataMappingsFromConsortium: PropTypes.func.isRequired,
+  saveActivePipeline: PropTypes.func.isRequired,
   deleteConsortiumById: PropTypes.func.isRequired,
   saveActivePipeline: PropTypes.func.isRequired,
   joinConsortium: PropTypes.func.isRequired,

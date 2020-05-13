@@ -64,8 +64,7 @@ const schemaFields = {
     consortiaStatuses: JSON
     email: String!
     institution: String
-    username: String
-    passwordHash: String!
+    username: String!
     permissions: JSON
     photo: String
     photoID: String

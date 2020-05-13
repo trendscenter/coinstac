@@ -47,6 +47,7 @@ class StartPipelineListener extends React.Component {
     const {
       remoteRuns,
       localRuns,
+      localRunResults,
       consortia,
       maps,
     } = this.props;
@@ -56,7 +57,7 @@ class StartPipelineListener extends React.Component {
         return;
       }
 
-      if (remoteRun.results || remoteRun.error) {
+      if (remoteRun.results || remoteRun.error || (remoteRun.id in localRunResults)) {
         return;
       }
 
@@ -86,13 +87,15 @@ class StartPipelineListener extends React.Component {
 StartPipelineListener.propTypes = {
   consortia: PropTypes.array.isRequired,
   localRuns: PropTypes.array.isRequired,
+  localRunResults: PropTypes.object.isRequired,
   maps: PropTypes.array.isRequired,
   remoteRuns: PropTypes.array.isRequired,
   notifyInfo: PropTypes.func.isRequired,
 };
 
-const mapStateToProps = ({ runs, maps }) => ({
+const mapStateToProps = ({ runs, maps, localRunResults }) => ({
   localRuns: runs.runs,
+  localRunResults,
   maps: maps.consortiumDataMappings,
 });
 

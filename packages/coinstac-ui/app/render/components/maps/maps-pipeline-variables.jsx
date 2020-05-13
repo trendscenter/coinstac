@@ -38,9 +38,15 @@ function MapsPipelineVariables(props) {
         <Divider />
         {
           consortium.pipelineSteps && consortium.pipelineSteps.map((step) => {
-            const { inputMap } = step;
+            const { computations, inputMap } = step;
 
-            return Object.keys(inputMap).map((inputMapKey) => {
+            const inputs = {...inputMap, ...computations[0].computation.input};
+
+            return Object.entries(inputs).map((input) => {
+
+              const inputMapKey = input[0];
+              const inputMapValue = input[1];
+
               if (inputMapKey === 'meta') {
                 return;
               }
@@ -49,6 +55,7 @@ function MapsPipelineVariables(props) {
                 <MapsStepFieldset
                   registerDraggableContainer={registerDraggableContainer}
                   key={`step-${inputMapKey}`}
+                  fieldsetLabel={inputMapValue.label}
                   fieldsetName={inputMapKey}
                   stepFieldset={inputMap[inputMapKey]}
                   stepsDataMappings={stepsDataMappings}

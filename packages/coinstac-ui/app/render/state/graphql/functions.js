@@ -148,11 +148,6 @@ export const USER_CHANGED_SUBSCRIPTION = gql`
     ${queries.userChanged}
 `;
 
-export const USER_METADATA_CHANGED_SUBSCRIPTION = gql`
-  subscription userMetadataChanged($userId: ID)
-    ${queries.userMetadataChanged}
-`;
-
 export const REMOVE_USER_ROLE_MUTATION = gql`
   mutation removeUserRole($userId: ID!, $table: String!, $doc: String!, $role: String!)
     ${mutations.removeUserRole}
