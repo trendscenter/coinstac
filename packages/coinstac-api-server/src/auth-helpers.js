@@ -5,6 +5,7 @@ const Promise = require('bluebird');
 const { ObjectID } = require('mongodb');
 const database = require('./database');
 const { transformToClient } = require('./utils');
+const { eventEmitter, USER_CHANGED } = require('./data/events');
 
 let dbmap;
 try {
@@ -71,6 +72,7 @@ const helperFunctions = {
       _id: ObjectID(user.id),
     }, {
       $set: {
+        name: user.name,
         username: user.username,
         email: user.email,
         photo: user.photo,
@@ -81,7 +83,11 @@ const helperFunctions = {
       returnOriginal: false,
     });
 
-    return transformToClient(result.value);
+    const updatedUser = transformToClient(result.value);
+
+    eventEmitter.emit(USER_CHANGED, updatedUser);
+
+    return updatedUser;
   },
   /**
    * dbmap getter

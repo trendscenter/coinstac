@@ -680,7 +680,12 @@ const DashboardWithData = compose(
           if (data.userChanged.delete) {
             return { fetchUser: null };
           }
-          return { fetchUser: data.userChanged };
+          return {
+            fetchUser: {
+              ...prevResult.fetchUser,
+              ...data.userChanged,
+            },
+          };
         },
       }),
     }),

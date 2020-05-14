@@ -7,22 +7,31 @@ import { notifySuccess, notifyError, writeLog } from '../../state/ducks/notifyAn
 import { update } from '../../state/ducks/auth';
 import UserEdit from './user-edit';
 
-const CLOUDINARY_UPLOAD_PRESET = process.env.CLOUDINARY_UPLOAD_PRESET;
-const CLOUDINARY_API_KEY = process.env.CLOUDINARY_API_KEY;
-const CLOUDINARY_API_SECRET = process.env.CLOUDINARY_API_SECRET;
-const CLOUDINARY_UPLOAD_URL = process.env.CLOUDINARY_UPLOAD_URL;
-const CLOUDINARY_DELETE_URL = process.env.CLOUDINARY_DELETE_URL;
+const {
+  CLOUDINARY_UPLOAD_PRESET,
+  CLOUDINARY_API_KEY,
+  CLOUDINARY_API_SECRET,
+  CLOUDINARY_UPLOAD_URL,
+  CLOUDINARY_DELETE_URL,
+} = process.env;
 
 class UserAccountController extends Component {
   constructor(props) {
     super(props);
+
+    const { user } = props;
+
     this.state = {
       error: null,
-      uploadedFileCloudinaryUrl: this.props.user.photo,
-      uploadedFileCloudinaryID: this.props.user.photoID,
+      uploadedFileCloudinaryUrl: user.photo,
+      uploadedFileCloudinaryID: user.photoID,
       uploadProgress: 0,
       uploadProgressShow: false,
     };
+
+    this.onSubmit = this.onSubmit.bind(this);
+    this.handleImageUpload = this.handleImageUpload.bind(this);
+    this.handleImageDestroy = this.handleImageDestroy.bind(this);
   }
 
   /**
@@ -41,7 +50,7 @@ class UserAccountController extends Component {
    * @param  {string}    formData.username
    * @return {undefined}
    */
-  onSubmit = (formData) => {
+  async onSubmit(formData) {
     let error;
 
     if (!formData.id) {
@@ -56,99 +65,91 @@ class UserAccountController extends Component {
       return this.handleUpdateError(error);
     }
 
-    this.setState({ error: null })
+    this.setState({ error: null });
 
-    return this.props.update(formData)
-      .then((res) => {
-        this.props.notifySuccess('User account changed');
-      });
+    const { update, notifySuccess } = this.props;
+
+    await update(formData);
+
+    notifySuccess('User account changed');
   }
 
-  // *********** Upload file to Cloudinary ******************** //
-  handleImageUpload = (file) => {
-    let url = CLOUDINARY_UPLOAD_URL;
-    let xhr = new XMLHttpRequest();
-    let fd = new FormData();
-    xhr.open('POST', url, true);
-    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+  handleUpdateError = (error) => {
+    let { message } = error;
 
-    // Update progress (can be used to show progress indicator)
-    xhr.upload.addEventListener("progress", (e) => {
-      let progress = Math.round((e.loaded * 100.0) / e.total);
-      this.setState({
-        uploadProgressShow: true,
-        uploadProgress: progress
-      });
-    });
-
-    xhr.onreadystatechange = (e) => {
-      if (xhr.readyState == 4 && xhr.status == 200) {
-        // File uploaded successfully
-        let response = JSON.parse(xhr.response);
-        if (url !== '') {
-          this.setState({
-            uploadedFileCloudinaryID: response.public_id,
-            uploadedFileCloudinaryUrl: response.secure_url,
-            uploadProgress: 0,
-            uploadProgressShow: false,
-          });
-        }
+    if (!message) {
+      if (typeof error === 'string') {
+        message = error;
+      } else {
+        message = 'User update error occurred. Please try again.';
       }
-    };
+    }
 
-    fd.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-    fd.append('tags', 'browser_upload'); // Optional - add tag for image admin in Cloudinary
-    fd.append('file', file);
-    xhr.send(fd);
+    this.setState({ error: message });
   }
 
   // *********** Delete Cloudinary Image File ******************** //
-  handleImageDestroy = (file) => {
-    let url = CLOUDINARY_DELETE_URL;
-    let xhr = new XMLHttpRequest();
-    let fd = new FormData();
-    xhr.open("POST", url, true);
-    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-
-    xhr.onreadystatechange = (e) => {
-      if (xhr.readyState == 4 && xhr.status == 200) {
-        // File uploaded successfully
-        let response = JSON.parse(xhr.responseText);
-        if (response.result === 'ok') {
-          this.setState({
-            uploadedFileCloudinaryID: null,
-            uploadedFileCloudinaryUrl: null,
-            uploadProgress: 0,
-            uploadProgressShow: false,
-          });
-        }
-      }
-    };
-
+  async handleImageDestroy(file) {
     const date = new Date();
     const timestamp = date.getTime();
     const hash = crypto.createHash('sha1');
     const sign = hash.update(`public_id=${file}&timestamp=${timestamp}${CLOUDINARY_API_SECRET}`).digest('hex');
 
+    const fd = new FormData();
     fd.append('public_id', file);
     fd.append('api_key', CLOUDINARY_API_KEY);
     fd.append('timestamp', timestamp);
     fd.append('signature', sign);
-    xhr.send(fd);
+
+    try {
+      await axios.post(
+        CLOUDINARY_DELETE_URL,
+        fd
+      );
+
+      this.setState({
+        uploadedFileCloudinaryID: null,
+        uploadedFileCloudinaryUrl: null,
+        uploadProgress: 0,
+        uploadProgressShow: false,
+      });
+    } catch (error) {
+      this.handleUpdateError(error);
+    }
   }
 
-  handleUpdateError = error => {
-    let message;
+  // *********** Upload file to Cloudinary ******************** //
+  async handleImageUpload(file) {
+    const fd = new FormData();
+    fd.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+    fd.append('tags', 'browser_upload'); // Optional - add tag for image admin in Cloudinary
+    fd.append('file', file);
 
-    if (error.message) {
-      message = error.message;
-    } else if (typeof error === 'string') {
-      message = error;
-    } else {
-      message = 'User update error occurred. Please try again.';
+    try {
+      const response = await axios.post(
+        CLOUDINARY_UPLOAD_URL,
+        fd,
+        {
+          onUploadProgress: (progressEvent) => {
+            const progress = Math.round((progressEvent.loaded * 100.0) / progressEvent.total);
+
+            this.setState({
+              uploadProgressShow: true,
+              uploadProgress: progress,
+            });
+          },
+        }
+      );
+
+      this.setState({
+        uploadedFileCloudinaryID: response.data.public_id,
+        uploadedFileCloudinaryUrl: response.data.secure_url,
+        uploadProgress: 0,
+        uploadProgressShow: false,
+      });
+    } catch (error) {
+      this.handleUpdateError(error);
     }
-
-    this.setState({ error: message });
   }
 
   render() {
@@ -159,6 +160,7 @@ class UserAccountController extends Component {
       uploadProgress,
       uploadProgressShow,
     } = this.state;
+
     return (
       <UserEdit
         {...this.props}
@@ -179,9 +181,8 @@ UserAccountController.contextTypes = {
   router: PropTypes.object.isRequired,
 };
 
-UserAccountController.displayName = 'UserAccountController';
-
 UserAccountController.propTypes = {
+  user: PropTypes.object.isRequired,
   notifySuccess: PropTypes.func.isRequired,
   update: PropTypes.func.isRequired,
 };

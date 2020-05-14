@@ -5,7 +5,6 @@ import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
 import { withStyles } from '@material-ui/core/styles';
 import classNames from 'classnames';
-import memoize from 'memoize-one';
 import UserImage from './user-image';
 
 const styles = theme => ({
@@ -30,18 +29,18 @@ class UserEdit extends Component {
   constructor(props) {
     super(props);
 
+    const { user } = props;
+
     this.state = {
-      id: this.props.user.id,
-      institution: this.props.user.institution,
-      name: this.props.user.name,
-      userName: this.props.user.username,
-      email: this.props.user.email,
-      photo: this.props.user.photo,
-      photoID: this.props.user.photoID,
+      id: user.id,
+      institution: user.institution,
+      name: user.name,
+      userName: user.username,
+      email: user.email,
     };
   }
 
-  handleChange = name => event => {
+  handleChange = name => (event) => {
     this.setState({
       [name]: event.target.value,
     });
@@ -53,7 +52,7 @@ class UserEdit extends Component {
     const {
       onSubmit,
       uploadedFileCloudinaryUrl,
-      uploadedFileCloudinaryID
+      uploadedFileCloudinaryID,
     } = this.props;
 
     const {
@@ -62,13 +61,12 @@ class UserEdit extends Component {
       email,
       name,
       userName,
-      userPhoto,
     } = this.state;
 
     onSubmit({
-      id: id,
-      institution: institution,
-      name: name,
+      id,
+      institution,
+      name,
       username: userName.trim(),
       photo: uploadedFileCloudinaryUrl,
       photoID: uploadedFileCloudinaryID,
@@ -76,36 +74,16 @@ class UserEdit extends Component {
     });
   }
 
-  checkPasswordsMatch = memoize(
-    (password, confirmPassword) => password === confirmPassword
-  );
-
-  unSetPhoto = event => {
-    this.setState({
-      photo: null,
-      photoID: null,
-    });
-  }
-
   render() {
     const {
       error,
       classes,
-      user,
-      handleImageUpload,
-      handleImageDestroy,
-      uploadedFileCloudinaryUrl,
-      uploadedFileCloudinaryID,
-      uploadProgress,
-      uploadProgressShow
     } = this.props;
 
     const {
-      id,
       institution,
       name,
       userName,
-      userPhoto,
       email,
     } = this.state;
 
@@ -113,16 +91,13 @@ class UserEdit extends Component {
       <Paper className={classes.paper}>
         <form onSubmit={this.handleSubmit}>
           {
-            error &&
-            <p
-              className={classNames(classes.bottomMargin, classes.error)}
-              dangerouslySetInnerHTML={{ __html: error }}
-            />
+            error && (
+              <p
+                className={classNames(classes.bottomMargin, classes.error)}
+                dangerouslySetInnerHTML={{ __html: error }}
+              />
+            )
           }
-          <TextField
-            type='hidden'
-            value={id}
-          />
           <TextField
             label="Name"
             value={name}
@@ -153,13 +128,6 @@ class UserEdit extends Component {
           />
           <UserImage
             {...this.props}
-            unSetPhoto={this.unSetPhoto}
-            handleImageUpload={handleImageUpload}
-            handleImageDestroy={handleImageDestroy}
-            uploadedFileCloudinaryUrl={uploadedFileCloudinaryUrl}
-            uploadedFileCloudinaryID={uploadedFileCloudinaryID}
-            uploadProgress={uploadProgress}
-            uploadProgressShow={uploadProgressShow}
           />
           <Button
             variant="contained"
@@ -176,10 +144,18 @@ class UserEdit extends Component {
   }
 }
 
-UserEdit.displayName = 'UserEdit';
+UserEdit.defaultProps = {
+  error: null,
+  uploadedFileCloudinaryID: null,
+  uploadedFileCloudinaryUrl: null,
+};
 
 UserEdit.propTypes = {
+  user: PropTypes.object.isRequired,
   onSubmit: PropTypes.func.isRequired,
+  error: PropTypes.string,
+  uploadedFileCloudinaryID: PropTypes.string,
+  uploadedFileCloudinaryUrl: PropTypes.string,
   classes: PropTypes.object.isRequired,
 };
 
