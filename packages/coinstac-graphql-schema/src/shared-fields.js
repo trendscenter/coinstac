@@ -108,6 +108,8 @@ const sharedFields = {
     id
     email
     username
+    photo
+    photoID
   `,
   resultFields: `
     id

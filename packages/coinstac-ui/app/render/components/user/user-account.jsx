@@ -34,7 +34,7 @@ const styles = {
     width: '40px',
     height: '40px',
     marginTop: '5px',
-  }
+  },
 };
 
 const UserAccount = (props) => {
@@ -46,7 +46,7 @@ const UserAccount = (props) => {
     return <div className={classes.root} />;
   }
 
-  const { id, username, email, photo, photoID, name } = auth.user;
+  const { id, username, email } = auth.user;
 
   return (
     <div className={classes.root}>
