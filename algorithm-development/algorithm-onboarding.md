@@ -289,12 +289,12 @@ if "siteAverage" in input["input"]:
 # checking the state dict for the iteration count
 # state data is provided by coinstac on every iteration
 # and includes useful information such as directories and site names
-if input["state"]["iteration"] == 2:
+if input["state"]["iteration"] == 3:
 ```
 ```python
 # setting a specific step variable from the remote
 # allows a switch structure vs option 1
-if input["input"]["step"] === "two":
+if input["input"]["step"] == "two":
 ```
 
 Different options work better for different computational structures, let's use the 3rd option for now and set a "step" variable on the remote. From here on the local we'll have to check if this variable exists, and if it does what step we've set it to, though there is only one step for now
