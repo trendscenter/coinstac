@@ -55,7 +55,7 @@ The important sections here are
     "name": "Onboarding example", // this name is displayed in the UI
     "id": "ssr_fsl", // needs to be unique for any Coinstac computation
     "version": "v1.0.0", // semver version
-    "repository": "https:\/\/github.com\/trendscenter\/coinstac/coinstac-devcomp\/",
+    "repository": "https:\/\/github.com\/trendscenter\/coinstac/coinstac-onboarding\/",
     "description": "A simple example" // a short description for the UI
   },
   "computation": {
