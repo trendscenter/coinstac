@@ -435,7 +435,7 @@ Remote:
 │   │   │            // files moved into folders based on the sending Client's ID so they cannot conflict
 │   │   └── move-this-file.txt
 ```
-*NOTE:* All transferred files are deleted at the end of the pipeline, to persist files write them to the output directory.t
+*NOTE:* All transferred files are deleted at the end of the pipeline, to persist files write them to the output directory
 
 Once you've calculated your `withEffect`, you'll want to save it out to the transfer directory
 ```python
