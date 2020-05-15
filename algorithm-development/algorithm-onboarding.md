@@ -76,7 +76,7 @@ The important sections here are
     "input": {
       "startingValue":
       {
-        "defaultValue": 0,
+        "default": 0,
         "label": "Starting input",
         "min": 0,
         "step": 1,
