@@ -87,7 +87,7 @@ The important sections here are
     },
     "output": {
       "outputNumber" : {
-        "type": number
+        "type": "number"
       }
     },
     "display": [ // blank for now
