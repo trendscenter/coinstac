@@ -395,43 +395,43 @@ effect = effectFile.read()
 For this exercise read both the effect and startingValue file in, replicating the multiplication operation from exercise three. Instead of sending the `withEffect` result out to the remote directly, we'll transfer it via file
 
 ###### Transferring files between clients
-Files can be transferred client to remote and remote to client by writing to a special directory. The _transfer_ directory can be accessed while in a computation via the `state->transferDiretory` key, looking like `inputJSON['state']['transferDirectory']` in python.
+Files can be transferred client to remote and remote to client by writing to a special directory. The _transfer_ directory can be accessed while in a computation via the `state->transferDirectory` key, looking like `inputJSON['state']['transferDirectory']` in python.
 
 Any file put into the transfer directory is then moved from that directory to the input directory on the corresponding client when that iteration ends.
 From `remote` to `client` would look like this:
 Remote:
 ```
-├── ['state']['transferDiretory']
+├── ['state']['transferDirectory']
 │   ├── move-this-file.txt
 ```
 ##### Iteration ends....
 Remote:
 ```
-├── ['state']['transferDiretory']
+├── ['state']['transferDirectory']
 │   ├──
 ```
 All Clients:
 ```
-├── ['state']['baseDiretory']
+├── ['state']['baseDirectory']
 │   ├── move-this-file.txt
 ```
 
 From any `client` to `remote` would look like this:
 A Client:
 ```
-├── ['state']['transferDiretory']
+├── ['state']['transferDirectory']
 │   ├── move-this-file.txt
 ```
 ##### Iteration ends....
 A Client:
 ```
-├── ['state']['transferDiretory']
+├── ['state']['transferDirectory']
 │   ├──
 ```
 Remote:
 ```
-├── ['state']['baseDiretory']
-│   ├── ['state']['baseDiretory']['clientID'] 
+├── ['state']['baseDirectory']
+│   ├── ['state']['baseDirectory']['clientID'] 
 │   │   │            // files moved into folders based on the sending Client's ID so they cannot conflict
 │   │   └── move-this-file.txt
 ```
