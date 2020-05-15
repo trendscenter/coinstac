@@ -344,11 +344,11 @@ effect.txt
 ```sh
 ├── test
 │   ├── inputspec.json
-│   ├── input
-│   │   ├── local0 # local site name
-│   │   └── simulatorRun # the run name in all simulator pipelines, in the UI this would be a database ID
-│   │       ├── startingValue.txt
-            ├── effect.txt
+│   ├── input
+│   │   ├── local0
+│   │   │   └── simulatorRun # the run name in all simulator pipelines, in the UI this would be a database ID
+│   │   │       ├── startingValue.txt
+│   │   │       ├── effect.txt
 ```
 
 
