@@ -82,8 +82,7 @@ The important sections here are
         "step": 1,
         "type": "number",
         "source": "owner"
-      },
-
+      }
     },
     "output": {
       "outputNumber" : {
