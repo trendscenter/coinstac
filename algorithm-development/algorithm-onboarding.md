@@ -195,7 +195,7 @@ Since all we're doing in this example is just echoing the starting value out, we
 ```python
 inputFromLocal0 = input["input"]["local0"]["startingValue"];
 
-output = { "output": { outputNumber: inputFromLocal0 }, "success": true }
+output = { "output": { outputNumber: inputFromLocal0 }, "success": True }
 sys.stdout.write(json.dumps(output))
 ```
 Note the `success: true`, this tells Coinstac that the computation has finished and the results are ready. The last output from the remote is the final output for the computation
@@ -315,7 +315,7 @@ input["cache"]["startingValue"]
 After doing this and calculating the percentage difference, send this value back to the remote. We'll need a step variable for the remote as well since we're iterating more than once. At the remote aggregate the site percentages in one object and set the computation to finish with the `success` flag set to true. Your output should look something like this
 
 ```python
-output = { "output": { "local0": ....site data, "local1": ...site data }, "success": true }
+output = { "output": { "local0": ....site data, "local1": ...site data }, "success": True }
 sys.stdout.write(json.dumps(output))
 ```
 
