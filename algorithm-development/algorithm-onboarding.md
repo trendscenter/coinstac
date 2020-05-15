@@ -134,7 +134,7 @@ input = json.loads(sys.stdin.read()) # input data is read in from stdin and pars
 output = { "output": {} }
 sys.stdout.write(json.dumps(output)) # output data is serialized into JSON then put onto stdout
 ```
-####### Quick note on local vs decentralized
+###### Quick note on local vs decentralized
 local and decentralized computations are made nearly the same, except for two key differences: Decentralized computations **_always_** are ended by the remote, and decentralized computations have a `"remote"` section in their compspec.
 
 ##### Creating an inputspec
@@ -200,7 +200,7 @@ sys.stdout.write(json.dumps(output))
 ```
 Note the `success: true`, this tells Coinstac that the computation has finished and the results are ready. The last output from the remote is the final output for the computation
 
-####### Running the computation
+###### Running the computation
 Now that we have our compspec, local, and remote scripts, now let's try to run it
 First we'll want to build our docker box, on some machines (typically windows) you may have to run these commands as an **administrator**. On linux you can get around this by adding your user to the `docker` group
 
@@ -326,7 +326,7 @@ Coinstac makes a trade off between messaging reliability and data transfer by us
 
 First lets put some files in the simulator test directories
 
-####### Adding test files in simulator
+###### Adding test files in simulator
 Adding files to simulator is a bit of a manual process at the moment, they must be put into the `test` folder under the automatic site name and run name the simulator generates. Sim names each site `local#` where # is 0 to the number of clients the run has. Here's what the directory structure looks like for `local0`, or the first client
 
 Let's create a file called `startingValue.txt` and `effect.txt` and place it in this directory the contents of the files will just be the variables from the `inputspec` respectively for each site, for local0 for example:
@@ -344,7 +344,8 @@ effect.txt
 ```sh
 ├── test
 │   ├── inputspec.json
-│   ├── local0 # local site name
+│   ├── input
+│   │   ├── local0 # local site name
 │   │   └── simulatorRun # the run name in all simulator pipelines, in the UI this would be a database ID
 │   │       ├── startingValue.txt
             ├── effect.txt
@@ -391,8 +392,10 @@ effectFile = open(os.path.join(input["state"]["baseDirectory"], input["input"]["
 effect = effectFile.read()
 ```
 
-##### Transferring files between clients
-Files can be transferred client to remote and remote to client by writing to a special directory. The _transfer_ directory can be access while in a computation via the `state->transferDiretory` key, looking like `inputJSON['state']['transferDiretory']` in python.
+For this exercise read both the effect and startingValue file in, replicating the multiplication operation from exercise three. Instead of sending the `withEffect` result out to the remote directly, we'll transfer it via file
+
+###### Transferring files between clients
+Files can be transferred client to remote and remote to client by writing to a special directory. The _transfer_ directory can be accessed while in a computation via the `state->transferDiretory` key, looking like `inputJSON['state']['transferDirectory']` in python.
 
 Any file put into the transfer directory is then moved from that directory to the input directory on the corresponding client when that iteration ends.
 From `remote` to `client` would look like this:
@@ -428,79 +431,40 @@ A Client:
 Remote:
 ```
 ├── ['state']['baseDiretory']
-│   ├── ['state']['baseDiretory']['clientID'] // files moved into folders based on the sending Client's ID so they cannot conflict
+│   ├── ['state']['baseDiretory']['clientID'] 
+│   │   │            // files moved into folders based on the sending Client's ID so they cannot conflict
 │   │   └── move-this-file.txt
 ```
-*NOTE:* All transferred files are deleted at the end of the pipeline, to persist files write them to the output directory.
+*NOTE:* All transferred files are deleted at the end of the pipeline, to persist files write them to the output directory.t
 
-#### Running pipelines in sim
-Simulator can run pipelines, which is multiple computations in series with each other. The computations can be different, or the even the same computation, what's required to do this is a `pipelinespec.json` file and the `-p` or `-pipeline` flag in simulator.
-Here's an example:
+Once you've calculated your `withEffect`, you'll want to save it out to the transfer directory
+```python
+file = open(os.path.join(input["state"]["transferDirectory], "effectFile.txt"),”w”)
+file.write(withEffect) 
 ```
-["./compspec.json", "/Users/someUser/coinstac/packages/coinstac-images/coinstac-decentralized-test/compspec.json"]
-```
-Running this pipeline:
-```
-coinstac-simulator -p ./pipelinespec.json
-```
-You can see that the pipeline spec file is a list of `compspecs`, this list can be either absolute paths, or a path _relative to_ the `pipelinespec.json`.
 
-If a computation is the first in the list, the normal `inputspec.json` is used for input. However all subsequent computations must have a `inputspec-pipeline.json`, this is used for any computation that isn't the first, such that you can have multiple specs to make running between pipeline and non-pipeline mode less cumbersome.
+We'll also be saving the `startingValue` to the file cache instead as well
+```python
+file = open(os.path.join(input["state"]["cacheDirectory], "startingValue.txt"),”w”)
+file.write(startingValue) 
+```
 
-The `pipelinespec.json` file need not be in any computations directory, but it may be easier to put it in the first computation's directory for source control.
+For the remote to know what our file names are (though they are static within the script, but may not be in a real computation) we will send them with the output
+```python
+output = { "output": { "withEffectFile": "withEffect.txt" } }
+```
 
-##### Inputspec-pipeline and using previous step output
-Later steps in the pipeline can use variables output from previous steps (note: there is a string size limit of 256mb), using the following paradigm:
+On the remote side the input files will be in their respective site directories in the `baseDirectory`
+```python
+for site, siteVariables in input["input"].items():
+    file = open(os.path.join(input["state"]["baseDirectory], siteVariables["withEffectFile"),”r”)
+    siteEffect = file.read() 
 ```
-{"inputVariableName":
-  {"fromCache":
-    {"step":0, "variable":"outputVariableName"}
-  }
-}
+
+Sending only files back and forth replicate exercise three, for the final output write out a file containing all the site percentages to the `transferDirectory` and send out an empty `output` object but set success to `True`. Files put into the `transferDirectory` on the final remote iteration get sent to all the sites `output` directories
+```python
+output = { "output": {}, "success": True}
 ```
-Contrasting a normal inputspec that looks like:
-```
-{"inputVariableName":
-  {
-    "value": 0
-  }
-}
-```
-The `fromCache` key tells the pipeline you want to access a previous steps data, the `step` key tells it which step zero indexed you would like, and the `variable` key is the name of the previously outputted variable to access.
-Here's a full example,
-inputspec.json for first step:
-```
-{"firstVariable":{"value":1}}
-```
-it's output compspec:
-```
-"output": {
-  "firstOutput": {
-    "type": "number",
-    "label": "output from first step"
-  }
-},
-```
-inputspec-pipeline.json for the next step:
-```
-{"nextStepInputVar":{"fromCache": {"step":0, "variable":"firstOutput"}}}
-```
-You can see that the first step outputs `firstOutput` which then is plugged into `nextStepInputVar` for the second step, chaining the pipeline I/O together.
-##### Multiple clients in pipeline mode
-Pipeline mode can also do multiple clients, each with their own input. The `inputspec.json` is identical to normal multi client mode, however we also need a multi client `inputspec-pipeline.json` for all the subequent pipeline computations in the pipelinespec.
-A multi client run for the previous example might look like this,
-first step inputspec.json:
-```
-[{"firstVariable":{"value":0.5}},
-{"firstVariable":{"value":23}}]
-```
-second step inputspec-pipeline.json:
-```
-[{"nextStepInputVar":{"fromCache": {"step":0, "variable":"firstOutput"}}},
-{"nextStepInputVar":{"fromCache": {"step":0, "variable":"firstOutput"}}}]
-```
-Some notes on this:
-* The arrays for the multiple clients between the multiple inputspec and inputspec-pipeline files _must_ be the same length, as the client count has to be the same throughout the pipeline
-* The arrays for the multiple clients _must_ also be in the same order, as in array element [5] in the initial input spec should correspond to array element [5] in all other inputspec-pipeline files, otherwise your client input/output chaining will be mismatched.
+
 ## A full fledged example
 A more real world example can be found [here](https://github.com/MRN-Code/coinstac_ssr_fsl) with our Single Shot Regression Demo that uses freesurfer file test data to run it's simulator example
