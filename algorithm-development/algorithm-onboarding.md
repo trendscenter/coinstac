@@ -14,14 +14,14 @@ In this guide we'll go through several examples that aim to teach the basics of 
 
 ## Getting Started
 To successfully run computation in the simulator we need to
-- [Create a compsec](#Create-a-compsec)
+- [Create a compspec](#Create-a-compsec)
 - [Create a dockerfile](#Create-a-dockerfile)
 - [Create a the scripts](#Create-a-the-scripts)
 - [Create an inputspec](#Create-an-inputspec)
 
 Many of these topics are also covered in greater detail in the [computation development guide](https://github.com/trendscenter/coinstac/blob/master/algorithm-development/coinstac-development-guide.md)
 
-#### Create a `compsec.json`
+#### Create a `compspec.json`
 Starting a Coinstac computatation begins with making a `compspec.json` a document that allows the Coinstac system to understand how to interact with your computation. This includes how the UI is generated, how computations can chain together, and input and output handling. A more in depth overview can be found [here](https://github.com/trendscenter/coinstac/blob/master/algorithm-development/computation-specification-api.md)
 
 We're going to create a simple compspec, with two key sections: `meta` for computation metadata and `computation` for the computation details
