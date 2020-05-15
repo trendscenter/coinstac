@@ -457,7 +457,7 @@ output = { "output": { "withEffectFile": "withEffect.txt" } }
 On the remote side the input files will be in their respective site directories in the `baseDirectory`
 ```python
 for site, siteVariables in input["input"].items():
-    file = open(os.path.join(input["state"]["baseDirectory], siteVariables["withEffectFile"),”r”)
+    file = open(os.path.join(input["state"]["baseDirectory], site, siteVariables["withEffectFile"),”r”)
     siteEffect = file.read() 
 ```
 
