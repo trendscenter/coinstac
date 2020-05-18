@@ -27,11 +27,13 @@ class UserAccountController extends Component {
       uploadedFileCloudinaryID: user.photoID,
       uploadProgress: 0,
       uploadProgressShow: false,
+      deletedCurrentImage: false,
+      deleteImageQueue: [],
     };
 
     this.onSubmit = this.onSubmit.bind(this);
     this.handleImageUpload = this.handleImageUpload.bind(this);
-    this.handleImageDestroy = this.handleImageDestroy.bind(this);
+    this.destroyImage = this.destroyImage.bind(this);
   }
 
   /**
@@ -65,11 +67,18 @@ class UserAccountController extends Component {
       return this.handleUpdateError(error);
     }
 
-    this.setState({ error: null });
-
     const { update, notifySuccess } = this.props;
+    const { deleteImageQueue } = this.state;
 
     await update(formData);
+
+    if (deleteImageQueue.length > 0) {
+      const deletePromises = deleteImageQueue.map(file => this.destroyImage(file));
+
+      await Promise.all(deletePromises);
+    }
+
+    this.setState({ error: null, deleteImageQueue: [] });
 
     notifySuccess('User account changed');
   }
@@ -88,8 +97,18 @@ class UserAccountController extends Component {
     this.setState({ error: message });
   }
 
+  handleImageDestroy = (file) => {
+    this.setState(prevState => ({
+      deleteImageQueue: [
+        ...prevState.deleteImageQueue,
+        file,
+      ],
+      deletedCurrentImage: true,
+    }));
+  }
+
   // *********** Delete Cloudinary Image File ******************** //
-  async handleImageDestroy(file) {
+  async destroyImage(file) {
     const date = new Date();
     const timestamp = date.getTime();
     const hash = crypto.createHash('sha1');
@@ -106,13 +125,6 @@ class UserAccountController extends Component {
         CLOUDINARY_DELETE_URL,
         fd
       );
-
-      this.setState({
-        uploadedFileCloudinaryID: null,
-        uploadedFileCloudinaryUrl: null,
-        uploadProgress: 0,
-        uploadProgressShow: false,
-      });
     } catch (error) {
       this.handleUpdateError(error);
     }
@@ -146,6 +158,7 @@ class UserAccountController extends Component {
         uploadedFileCloudinaryUrl: response.data.secure_url,
         uploadProgress: 0,
         uploadProgressShow: false,
+        deletedCurrentImage: false,
       });
     } catch (error) {
       this.handleUpdateError(error);
@@ -159,6 +172,7 @@ class UserAccountController extends Component {
       uploadedFileCloudinaryID,
       uploadProgress,
       uploadProgressShow,
+      deletedCurrentImage,
     } = this.state;
 
     return (
@@ -172,6 +186,7 @@ class UserAccountController extends Component {
         uploadedFileCloudinaryID={uploadedFileCloudinaryID}
         uploadProgress={uploadProgress}
         uploadProgressShow={uploadProgressShow}
+        deletedCurrentImage={deletedCurrentImage}
       />
     );
   }
