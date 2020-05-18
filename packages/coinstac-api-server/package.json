@@ -1,6 +1,6 @@
 {
   "name": "coinstac-api-server",
-  "version": "4.7.4",
+  "version": "5.0.0",
   "description": "",
   "main": "src/index.js",
   "scripts": {
@@ -16,7 +16,7 @@
     "bluebird": "^3.5.1",
     "boom": "^5.2.0",
     "clarify": "^2.1.0",
-    "coinstac-graphql-schema": "^4.7.1",
+    "coinstac-graphql-schema": "^5.0.0",
     "graphql": "^0.10.5",
     "graphql-subscriptions": "^0.5.8",
     "graphql-tools": "^1.2.3",
