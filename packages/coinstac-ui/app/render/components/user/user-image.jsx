@@ -67,6 +67,7 @@ class UserImage extends Component {
       uploadedFileCloudinaryUrl,
       uploadProgress,
       uploadProgressShow,
+      deletedCurrentImage,
     } = this.props;
 
     return (
@@ -82,7 +83,7 @@ class UserImage extends Component {
           )
         }
         {
-          !uploadedFileCloudinaryUrl ? (
+          (!uploadedFileCloudinaryUrl || deletedCurrentImage) ? (
             <div className={classes.fileUploadContainer}>
               <InputLabel>Profile Image</InputLabel>
               <div className={classes.fileUpload}>
@@ -137,6 +138,7 @@ UserImage.propTypes = {
   handleImageDestroy: PropTypes.func.isRequired,
   uploadedFileCloudinaryID: PropTypes.string,
   uploadedFileCloudinaryUrl: PropTypes.string,
+  deletedCurrentImage: PropTypes.bool.isRequired,
   uploadProgress: PropTypes.number,
   uploadProgressShow: PropTypes.bool,
   classes: PropTypes.object.isRequired,
