@@ -126,10 +126,7 @@ const sharedFields = {
     id
     owner
     title
-    users {
-      username
-      isRead
-    }
+    users
     date
     messages {
       id

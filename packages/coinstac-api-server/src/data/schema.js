@@ -97,7 +97,7 @@ const typeDefs = `
 
   type Run {
     id: ID!,
-    clients: JSON
+    clients: [ID]
     members: JSON
     consortiumId: ID!
     startDate: String
@@ -132,24 +132,19 @@ const typeDefs = `
 
   type MessageOutput {
     id: ID
-    sender: ID
-    recipients: [String]
+    sender: JSON
+    recipients: JSON
     content: String
     date: String
     action: ActionOutput
   }
 
-  type ThreadUserOutput {
-    username: String
-    isRead: Boolean
-  }
-
   type Thread {
     id: ID
     messages: [MessageOutput]
-    owner: ID
+    owner: JSON
     title: String
-    users: [ThreadUserOutput]
+    users: JSON
     date: String
   }
 
@@ -176,7 +171,7 @@ const typeDefs = `
     updateUserConsortiumStatus(consortiumId: ID, status: String): User
     updateConsortiumMappedUsers(consortiumId: ID, mappedForRun: [ID]): JSON
     updateConsortiaMappedUsers(consortia: [ID]): JSON
-    saveMessage(threadId: ID, title: String!, recipients: [String!], content: String!, action: ActionInput): Thread
+    saveMessage(threadId: ID, title: String!, recipients: JSON, content: String!, action: ActionInput): Thread
     setReadMessage(threadId: ID, userId: ID): JSON
   }
 

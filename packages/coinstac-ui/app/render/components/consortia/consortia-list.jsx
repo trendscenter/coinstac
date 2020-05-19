@@ -147,34 +147,16 @@ class ConsortiaList extends Component {
       </div>
     );
 
-    // Add owner/member list
-    const ownersIds = consortium.owners.reduce((acc, user) => {
-      const userID = Object.keys(user)[0];
-      acc[userID] = true;
-      return acc;
-    }, {});
-
-    const consortiumUsers = consortium.owners
-      .map((user) => {
-        const userID = Object.keys(user)[0];
-        const userName = user[userID];
-        return ({
-          id: userID, name: userName, owner: true, member: true,
-        });
-      })
+    const consortiumUsers = Object.keys(consortium.owners)
+      .map(userId => ({
+        id: userId, name: consortium.owners[userId], owner: true, member: true,
+      }))
       .concat(
-        consortium.members
-          .filter((user) => {
-            const userID = Object.keys(user)[0];
-            return Object.prototype.hasOwnProperty.call(ownersIds, userID) === false;
-          })
-          .map((user) => {
-            const userID = Object.keys(user)[0];
-            const userName = user[userID];
-            return ({
-              id: userID, name: userName, owner: false, member: true,
-            });
-          })
+        Object.keys(consortium.members)
+          .filter(userId => !(userId in consortium.owners))
+          .map(userId => ({
+            id: userId, name: consortium.owners[userId], owner: false, member: true,
+          }))
       );
 
     const avatars = consortiumUsers
@@ -375,7 +357,7 @@ class ConsortiaList extends Component {
   }
 
   getConsortiaByOwner = () => {
-    const { auth } = this.props;
+    const { auth: { user } } = this.props;
 
     const consortia = this.getFilteredConsortia();
 
@@ -385,7 +367,7 @@ class ConsortiaList extends Component {
     if (consortia && consortia.length <= MAX_LENGTH_CONSORTIA) {
       consortia.forEach((consortium) => {
         const { owners, members } = consortium;
-        if ([...owners, ...members].indexOf(auth.user.id) !== -1) {
+        if (user.id in owners || user.id in members) {
           memberConsortia.push(consortium);
         } else {
           otherConsortia.push(consortium);

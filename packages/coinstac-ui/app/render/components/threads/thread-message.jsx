@@ -51,23 +51,25 @@ const ThreadMessage = ({ classes, message, joinConsortium }) => {
         <span>From:</span>
         <div className={classes.avatarWrapper}>
           <ThreadAvatar
-            username={sender}
+            username={sender.username}
             showUsername
           />
         </div>
         <span className={classes.to}>To:</span>
-        {recipients.map(recipient => (
-          <div
-            className={classes.avatarWrapper}
-            key={recipient}
-          >
-            <ThreadAvatar
-              username={recipient}
-              showUsername
-              isSender={false}
-            />
-          </div>
-        ))}
+        {
+          Object.keys(recipients).map(userId => (
+            <div
+              className={classes.avatarWrapper}
+              key={userId}
+            >
+              <ThreadAvatar
+                username={recipients[userId]}
+                showUsername
+                isSender={false}
+              />
+            </div>
+          ))
+        }
       </div>
       <p>
         {content}

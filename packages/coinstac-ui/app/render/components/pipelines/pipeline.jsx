@@ -41,7 +41,7 @@ import {
   getAllAndSubProp,
 } from '../../state/graphql/props';
 import { notifySuccess, notifyError } from '../../state/ducks/notifyAndLog';
-import { isPipelineOwner,isUserInGroup } from '../../utils/helpers';
+import { isPipelineOwner, isUserInGroup } from '../../utils/helpers';
 
 const computationTarget = {
   drop() {
