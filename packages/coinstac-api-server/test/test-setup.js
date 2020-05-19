@@ -94,12 +94,12 @@ async function populateConsortia() {
       _id: CONSORTIA_IDS[0],
       name: 'Test Consortia 1',
       description: 'This consortia is for testing.',
-      owners: [
-        { [USER_IDS[5]]: 'author' },
-      ],
-      members: [
-        { [USER_IDS[5]]: 'author' },
-      ],
+      owners: {
+        [USER_IDS[5]]: 'author',
+      },
+      members: {
+        [USER_IDS[5]]: 'author',
+      },
       isPrivate: false,
       createDate: 1551333489519,
     },
@@ -108,13 +108,13 @@ async function populateConsortia() {
       activePipelineId: PIPELINE_IDS[0],
       name: 'Test Consortia 2',
       description: 'This consortia is for testing too.',
-      owners: [
-        { [USER_IDS[0]]: 'test1' },
-      ],
-      members: [
-        { [USER_IDS[0]]: 'test1' },
-        { [USER_IDS[5]]: 'author' },
-      ],
+      owners: {
+        [USER_IDS[0]]: 'test1',
+      },
+      members: {
+        [USER_IDS[0]]: 'test1',
+        [USER_IDS[5]]: 'author',
+      },
       isPrivate: false,
       createDate: 1551666489519,
     },
@@ -227,9 +227,9 @@ async function populateRuns() {
 
   db.collection('runs').insertMany([
     {
-      clients: [
-        { [USER_IDS[0]]: 'test1' },
-      ],
+      clients: {
+        [USER_IDS[0]]: 'test1',
+      },
       consortiumId: CONSORTIA_IDS[1],
       pipelineSnapshot: {
         id: '52d44390-07a5-4b8c-85c9-e22821ce7183',
@@ -345,9 +345,9 @@ async function populateRuns() {
     },
     {
       id: 'b23af8ff-18fa-479d-adc7-19408abb3741',
-      clients: [
-        { [USER_IDS[0]]: 'test1' },
-      ],
+      clients: {
+        [USER_IDS[0]]: 'test1',
+      },
       consortiumId: CONSORTIA_IDS[1],
       startDate: '1568405561851',
       endDate: '1568408608526',
@@ -555,9 +555,9 @@ async function populateRuns() {
     },
     {
       id: 'results-2',
-      clients: [
-        { [USER_IDS[0]]: 'test1' },
-      ],
+      clients: {
+        [USER_IDS[0]]: 'test1',
+      },
       consortiumId: CONSORTIA_IDS[1],
       startDate: '1518559440672',
       endDate: '1518559440685',
@@ -641,9 +641,9 @@ async function populateRuns() {
     },
     {
       id: 'results-1',
-      clients: [
-        'test1',
-      ],
+      clients: {
+        [USER_IDS[0]]: 'test1',
+      },
       consortiumId: CONSORTIA_IDS[1],
       startDate: '1518559440668',
       endDate: '1551465751260',

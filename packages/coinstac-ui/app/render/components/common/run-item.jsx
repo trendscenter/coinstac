@@ -62,11 +62,9 @@ function parseWaiting(runObject, stateKey) {
   const users = [];
 
   runObject[stateKey].waitingOn.forEach((client) => {
-    runObject.members.forEach((member) => {
-      if (member[client]) {
-        users.push(member[client]);
-      }
-    });
+    if (client in runObject.members) {
+      users.push(runObject.members[client]);
+    }
   });
 
   return users;
@@ -266,9 +264,9 @@ class RunItem extends Component {
                 </Typography>
                 <Typography className={classes.value}>
                   {
-                    members.map(member => (
+                    Object.values(members).map(member => (
                       <span>
-                        { `${Object.values(member)[0]},` }
+                        { `${member},` }
                       </span>
                     ))
                   }

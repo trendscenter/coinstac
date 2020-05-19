@@ -40,6 +40,7 @@ const helperFunctions = {
     const userDetails = {
       _id: user._id || new ObjectID(),
       username: user.username,
+      name: user.name,
       email: user.email,
       institution: user.institution,
       passwordHash,
