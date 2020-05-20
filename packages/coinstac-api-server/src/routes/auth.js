@@ -10,6 +10,8 @@ module.exports = [
         { method: helperFunctions.validateUser, assign: 'user' },
       ],
       handler: (req, res) => {
+        delete req.pre.user.passwordHash;
+
         res({
           id_token: helperFunctions.createToken(req.pre.user.username),
           user: req.pre.user,
@@ -23,17 +25,13 @@ module.exports = [
     config: {
       auth: 'jwt',
       handler: ({
-        auth: {
-          credentials: {
-            email, username, institution, permissions,
-          },
-        },
+        auth: { credentials },
       }, res) => {
+        delete credentials.passwordHash;
+
         res({
-          id_token: helperFunctions.createToken(username),
-          user: {
-            email, username, institution, permissions,
-          },
+          id_token: helperFunctions.createToken(credentials.username),
+          user: credentials,
         }).code(201);
       },
     },
