@@ -1,13 +1,13 @@
 # Coinstac Development Guide
 [![Coinstac](https://github.com/MRN-Code/coinstac/raw/master/packages/coinstac-ui/img/icons/png/64x64.png)](https://github.com/MRN-Code/coinstac)
 
-Coinstac is a Electron based application environment for decentralized algorithms, this guide aims to describe developing an alogrithm in Coinstac.
+Coinstac is a Electron based application environment for decentralized algorithms, this guide aims to describe developing an alogrithm for Coinstac.
 
 
 ### Requirements
-
+  - An LTS release of [Node and NPM](https://nodejs.org/en/)
   - lastest version of [coinstac-simulator](https://npm.org/packages/coinstac-simulator)
-    ```sudo npm i -g coisntac-simulator```
+    ```sudo npm i -g coinstac-simulator```
   - latest version of [docker](https://docs.docker.com/install/)
 
 ## Getting Started
