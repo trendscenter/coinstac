@@ -112,7 +112,7 @@ async function removeUserPermissions(args) {
   const index = permissions[args.table][args.doc].findIndex(p => p === args.role);
   permissions[args.table][args.doc].splice(index, 1);
 
-  let consortiaUpdateResult;
+  let userUpdateResult;
 
   if (permissions[args.table][args.doc].length === 0) {
     const updateObj = {
@@ -125,16 +125,16 @@ async function removeUserPermissions(args) {
       updateObj.$unset[`consortiaStatuses.${args.doc}`] = '';
     }
 
-    consortiaUpdateResult = await db.collection('users').findOneAndUpdate({ _id: args.userId }, updateObj, { returnOriginal: false });
+    userUpdateResult = await db.collection('users').findOneAndUpdate({ _id: args.userId }, updateObj, { returnOriginal: false });
   } else {
-    consortiaUpdateResult = await db.collection('users').findOneAndUpdate({ _id: args.userId }, {
+    userUpdateResult = await db.collection('users').findOneAndUpdate({ _id: args.userId }, {
       $pull: { [`permissions.${args.table}.${args.doc}`]: args.role },
     }, {
       returnOriginal: false,
     });
   }
 
-  eventEmitter.emit(CONSORTIUM_CHANGED, consortiaUpdateResult.value);
+  eventEmitter.emit(USER_CHANGED, userUpdateResult.value);
 
   if (args.table === 'consortia') {
     const updateObj = {
@@ -395,6 +395,8 @@ const resolvers = {
       }
 
       await addUserPermissions({ doc: ObjectID(args.doc), role: args.role, userId: args.userId, table: args.table });
+
+      return helperFunctions.getUserDetails(args.userId);
     },
     /**
      * Add run to database
@@ -482,6 +484,8 @@ const resolvers = {
       });
 
       eventEmitter.emit(PIPELINE_DELETED, pipelines);
+
+      return transformToClient(deleteConsortiumResult.value);
     },
     /**
      * Deletes pipeline
@@ -523,6 +527,8 @@ const resolvers = {
       });
 
       eventEmitter.emit(CONSORTIUM_CHANGED, updateConsortiumResult.value);
+
+      return transformToClient(deletePipelineResult.value);
     },
     /**
      * Add logged user to consortium members list
@@ -540,6 +546,8 @@ const resolvers = {
       }
 
       await addUserPermissions({ userId: credentials.id, role: 'member', doc: ObjectID(args.consortiumId), table: 'consortia' });
+
+      return helperFunctions.getUserDetails(credentials.username);
     },
     /**
      * Remove logged user from consortium members list
@@ -550,6 +558,8 @@ const resolvers = {
      */
     leaveConsortium: async ({ auth: { credentials } }, args) => {
       await removeUserPermissions({ userId: credentials.id, role: 'member', doc: ObjectID(args.consortiumId), table: 'consortia' });
+
+      return helperFunctions.getUserDetails(credentials.username);
     },
     /**
      * Deletes computation
@@ -570,6 +580,8 @@ const resolvers = {
       const deleteComputationResult = await db.collection('computations').findOneAndDelete({ _id: ObjectID(args.computationId) });
 
       eventEmitter.emit(COMPUTATION_DELETED, deleteComputationResult.value);
+
+      return transformToClient(deleteComputationResult.value);
     },
     /**
      * Add new user role to user perms, currently consortia perms only
@@ -589,6 +601,8 @@ const resolvers = {
       }
 
       await removeUserPermissions({ doc: ObjectID(args.doc), role: args.role, userId: args.userId, table: args.table });
+
+      return helperFunctions.getUserDetails(args.userId);
     },
     /**
      * Sets active pipeline on consortia object
@@ -620,6 +634,8 @@ const resolvers = {
       });
 
       eventEmitter.emit(CONSORTIUM_CHANGED, result.value);
+
+      return transformToClient(result.value);
     },
     /**
      * Saves consortium
@@ -711,6 +727,8 @@ const resolvers = {
       });
 
       eventEmitter.emit(RUN_CHANGED, result.value);
+
+      return transformToClient(result.value);
     },
     /**
      * Saves pipeline
@@ -806,6 +824,8 @@ const resolvers = {
       });
 
       eventEmitter.emit(RUN_CHANGED, result.value);
+
+      return transformToClient(result.value);
     },
     setActiveComputation: (_, args) => {
       return new Promise();
@@ -834,6 +854,8 @@ const resolvers = {
       });
 
       eventEmitter.emit(RUN_CHANGED, result.value);
+
+      return transformToClient(result.value);
     },
     /**
      * Saves consortium
@@ -857,6 +879,8 @@ const resolvers = {
       });
 
       eventEmitter.emit(USER_CHANGED, result.value);
+
+      return transformToClient(result.value);
     },
     /**
      * Updated consortium mapped users
@@ -880,6 +904,8 @@ const resolvers = {
       });
 
       eventEmitter.emit(CONSORTIUM_CHANGED, result.value);
+
+      return transformToClient(result.value);
     },
     /**
      * Updated consortia mapped users
@@ -1057,6 +1083,8 @@ const resolvers = {
       });
 
       eventEmitter.emit(THREAD_CHANGED, result.value);
+
+      return transformToClient(result.value);
     }
   },
   Subscription: {
@@ -1122,7 +1150,7 @@ const resolvers = {
     userChanged: {
       subscribe: withFilter(
         () => pubsub.asyncIterator('userChanged'),
-        (payload, variables) => (variables.userId || payload.userId === variables.userId)
+        (payload, variables) => (!variables.userId || payload.userId === variables.userId)
       )
     },
     /**
