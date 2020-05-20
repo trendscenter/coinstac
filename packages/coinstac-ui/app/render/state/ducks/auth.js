@@ -8,12 +8,7 @@ import { applyAsyncLoading } from './loading';
 const apiServer = remote.getGlobal('config').get('apiServer');
 const API_URL = `${apiServer.protocol}//${apiServer.hostname}${apiServer.port ? `:${apiServer.port}` : ''}${apiServer.pathname}`;
 
-const API_TOKEN_KEY = 'id_token';
-let currentApiTokenKey = null;
-
-export function getCurrentApiTokenKey() {
-  return currentApiTokenKey;
-}
+export const API_TOKEN_KEY = `id_token_${remote.getCurrentWindow().id}`;
 
 const getErrorDetail = error => ({
   message: get(error, 'response.data.message'),
@@ -77,12 +72,15 @@ const initCoreAndSetToken = async (reqUser, data, appDirectory, dispatch) => {
 
   return new Promise((resolve) => {
     ipcRenderer.on('app-init-finished', () => {
-      currentApiTokenKey = `${API_TOKEN_KEY}_${data.user.id}`;
+      const tokenData = {
+        token: data.id_token,
+        userId: user.id,
+      };
 
       if (reqUser.saveLogin) {
-        localStorage.setItem(getCurrentApiTokenKey(), data.id_token);
+        localStorage.setItem(API_TOKEN_KEY, JSON.stringify(tokenData));
       } else {
-        sessionStorage.setItem(getCurrentApiTokenKey(), data.id_token);
+        sessionStorage.setItem(API_TOKEN_KEY, JSON.stringify(tokenData));
       }
 
       dispatch(setUser(user));
@@ -93,21 +91,20 @@ const initCoreAndSetToken = async (reqUser, data, appDirectory, dispatch) => {
 };
 
 export const logout = applyAsyncLoading(() => (dispatch) => {
-  localStorage.removeItem(getCurrentApiTokenKey());
-  sessionStorage.removeItem(getCurrentApiTokenKey());
+  localStorage.removeItem(API_TOKEN_KEY);
+  sessionStorage.removeItem(API_TOKEN_KEY);
   return ipcPromise.send('logout')
     .then(() => {
       dispatch(clearUser());
-      currentApiTokenKey = null;
     });
 });
 
 export const autoLogin = applyAsyncLoading(() => (dispatch, getState) => {
-  let token = localStorage.getItem(getCurrentApiTokenKey());
+  let token = localStorage.getItem(API_TOKEN_KEY);
   let saveLogin = true;
 
   if (!token || token === 'null' || token === 'undefined') {
-    token = sessionStorage.getItem(getCurrentApiTokenKey());
+    token = sessionStorage.getItem(API_TOKEN_KEY);
     saveLogin = false;
   }
 
@@ -115,10 +112,12 @@ export const autoLogin = applyAsyncLoading(() => (dispatch, getState) => {
     return;
   }
 
+  token = JSON.parse(token);
+
   return axios.post(
     `${API_URL}/authenticateByToken`,
     null,
-    { headers: { Authorization: `Bearer ${token}` } }
+    { headers: { Authorization: `Bearer ${token.token}` } }
   )
     // TODO: GET RID OF CORE INIT
     .then(({ data }) => {
