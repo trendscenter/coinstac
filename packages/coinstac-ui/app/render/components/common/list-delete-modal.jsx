@@ -13,11 +13,11 @@ const styles = theme => ({
   warningMessageContainer: {
     display: 'flex',
     alignItems: 'center',
-    marginTop: theme.spacing.unit * 2,
+    marginTop: theme.spacing(2),
   },
   warningMessage: {
-    marginTop: theme.spacing.unit * 0.5,
-    marginLeft: theme.spacing.unit * 0.5,
+    marginTop: theme.spacing(0.5),
+    marginLeft: theme.spacing(0.5),
   },
 });
 

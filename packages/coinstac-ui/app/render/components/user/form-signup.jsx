@@ -12,12 +12,12 @@ const styles = theme => ({
     marginBottom: 10,
   },
   paper: {
-    padding: theme.spacing.unit * 2,
+    padding: theme.spacing(2),
     maxWidth: 300,
-    marginBottom: theme.spacing.unit * 2,
+    marginBottom: theme.spacing(2),
   },
   formControl: {
-    marginBottom: theme.spacing.unit * 2,
+    marginBottom: theme.spacing(2),
   },
   error: {
     textAlign: 'center',

@@ -9,16 +9,16 @@ import { clearRuns } from '../../state/ducks/runs';
 
 const styles = theme => ({
   pageTitle: {
-    marginBottom: theme.spacing.unit * 2,
+    marginBottom: theme.spacing(2),
   },
   pageSubtitle: {
-    marginBottom: theme.spacing.unit,
+    marginBottom: theme.spacing(1),
   },
   sectionTitle: {
-    marginBottom: theme.spacing.unit,
+    marginBottom: theme.spacing(1),
   },
   button: {
-    marginTop: theme.spacing.unit,
+    marginTop: theme.spacing(1),
   },
 });
 
@@ -46,7 +46,7 @@ class Settings extends Component {
         </Typography>
         <form method="post" onSubmit={this.clearData}>
           <Typography variant="h6" className={classes.sectionTitle}>Clear local data</Typography>
-          <Typography variant="body1">
+          <Typography variant="body2">
             Remove stored data on your machine, including your collections.
             <strong> This action is permanent.</strong>
           </Typography>
