@@ -14,7 +14,7 @@ const styles = theme => ({
   title: {
     textAlign: 'center',
     fontWeight: 600,
-    padding: `${theme.spacing.unit * 2}px 0`,
+    padding: `${theme.spacing(2)}px 0`,
     borderBottom: `1px solid ${theme.palette.grey[300]}`,
   },
 });

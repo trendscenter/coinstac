@@ -6,7 +6,7 @@ import RunsList from '../common/runs-list';
 
 const styles = theme => ({
   pageTitle: {
-    marginBottom: theme.spacing.unit * 2,
+    marginBottom: theme.spacing(2),
   },
 });
 

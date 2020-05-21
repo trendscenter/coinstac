@@ -9,14 +9,14 @@ import Typography from '@material-ui/core/Typography';
 
 const styles = theme => ({
   addFileGroupButton: {
-    marginTop: theme.spacing.unit,
-    marginBottom: theme.spacing.unit,
+    marginTop: theme.spacing(1),
+    marginBottom: theme.spacing(1),
   },
   fileErrorPaper: {
     ...theme.mixins.gutters(),
-    paddingTop: theme.spacing.unit * 2,
-    paddingBottom: theme.spacing.unit * 2,
-    marginBottom: theme.spacing.unit * 2,
+    paddingTop: theme.spacing(2),
+    paddingBottom: theme.spacing(2),
+    marginBottom: theme.spacing(2),
     backgroundColor: '#fef7e4',
     textAlign: 'center',
   },
@@ -157,7 +157,7 @@ class MapsFilePicker extends React.Component {
           filesError && (
             <Paper className={classes.fileErrorPaper}>
               <Typography variant="h6" className={classes.fileErrorMessage}>File Error</Typography>
-              <Typography className={classes.fileErrorMessage} variant="body1">
+              <Typography className={classes.fileErrorMessage} variant="body2">
                 {filesError}
               </Typography>
             </Paper>

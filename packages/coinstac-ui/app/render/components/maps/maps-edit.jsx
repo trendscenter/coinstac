@@ -24,9 +24,9 @@ import path from 'path';
 const styles = theme => ({
   rootPaper: {
     ...theme.mixins.gutters(),
-    paddingTop: theme.spacing.unit * 2,
-    paddingBottom: theme.spacing.unit * 2,
-    marginTop: theme.spacing.unit * 2,
+    paddingTop: theme.spacing(2),
+    paddingBottom: theme.spacing(2),
+    marginTop: theme.spacing(2),
     height: '100%',
   },
 });
@@ -389,7 +389,7 @@ class MapsEdit extends Component {
                     className={classes.rootPaper}
                     elevation={1}
                   >
-                    <Typography variant="headline" className={classes.title}>
+                    <Typography variant="h5" className={classes.title}>
                       File Collection
                     </Typography>
                     <div>
