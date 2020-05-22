@@ -377,7 +377,7 @@ class MapsEdit extends Component {
                   { `Map - ${activeConsortium.name}` }
                 </Typography>
               </div>
-              <Grid container spacing={16}>
+              <Grid container spacing={2}>
                 <MapsPipelineVariables
                   consortium={activeConsortium}
                   registerDraggableContainer={this.registerDraggableContainer}
