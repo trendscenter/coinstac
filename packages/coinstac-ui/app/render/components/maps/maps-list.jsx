@@ -106,7 +106,7 @@ class MapsList extends Component {
         </div>
         <Grid
           container
-          spacing={16}
+          spacing={2}
           direction="row"
           alignItems="stretch"
         >
