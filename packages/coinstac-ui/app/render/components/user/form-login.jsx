@@ -17,15 +17,15 @@ const styles = theme => ({
     alignItems: 'center',
   },
   paper: {
-    padding: theme.spacing.unit * 2,
+    padding: theme.spacing(2),
     maxWidth: 300,
-    marginBottom: theme.spacing.unit * 2,
+    marginBottom: theme.spacing(2),
   },
   bottomMargin: {
     marginBottom: 10,
   },
   formControl: {
-    marginBottom: theme.spacing.unit * 2,
+    marginBottom: theme.spacing(2),
   },
   error: {
     textAlign: 'center',

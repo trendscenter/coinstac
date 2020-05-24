@@ -12,7 +12,7 @@ import ipcPromise from 'ipc-promise';
 
 const styles = theme => ({
   description: {
-    marginBottom: theme.spacing.unit * 3,
+    marginBottom: theme.spacing(3),
   },
   directoryField: {
     display: 'flex',
@@ -20,7 +20,7 @@ const styles = theme => ({
   },
   textField: {
     flex: '1 0 auto',
-    marginRight: theme.spacing.unit,
+    marginRight: theme.spacing(1),
   },
 });
 
