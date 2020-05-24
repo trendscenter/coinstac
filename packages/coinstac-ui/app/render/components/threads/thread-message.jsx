@@ -7,26 +7,26 @@ import ThreadAvatar from './thread-avatar';
 const styles = theme => ({
   wrapper: {
     borderTop: `1px solid ${theme.palette.grey[300]}`,
-    padding: theme.spacing.unit * 2,
+    padding: theme.spacing(2),
   },
   users: {
     display: 'flex',
     alignItems: 'center',
-    paddingBottom: theme.spacing.unit * 2,
+    paddingBottom: theme.spacing(2),
     borderBottom: '1px solid #f3f2f1',
     '&>span': {
       fontWeight: 600,
     },
   },
   to: {
-    paddingLeft: theme.spacing.unit,
+    paddingLeft: theme.spacing(1),
   },
   avatarWrapper: {
-    paddingLeft: theme.spacing.unit * 1.5,
-    paddingRight: theme.spacing.unit,
+    paddingLeft: theme.spacing(1.5),
+    paddingRight: theme.spacing(1),
   },
   button: {
-    padding: theme.spacing.unit,
+    padding: theme.spacing(1),
     backgroundColor: '#0078d4',
     fontSize: 12,
     color: 'white',
