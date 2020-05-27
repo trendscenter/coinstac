@@ -24,7 +24,7 @@ const MAX_LENGTH_PIPELINES = 5;
 
 const styles = theme => ({
   button: {
-    margin: theme.spacing.unit,
+    margin: theme.spacing(1),
   },
 });
 
@@ -63,13 +63,14 @@ class PipelinesList extends Component {
   }
 
   getListItem(pipeline) {
-    const { user } = this.props.auth;
+    const { auth } = this.props;
+
     return (
       <ListItem
         key={`${pipeline.name}-list-item`}
         itemObject={pipeline}
         deleteItem={this.openModal}
-        owner={isPipelineOwner(user.permissions, pipeline.owningConsortium)}
+        owner={isPipelineOwner(auth.user.permissions, pipeline.owningConsortium)}
         itemOptions={{ actions: [], text: [] }}
         itemRoute="/dashboard/pipelines"
       />
@@ -90,11 +91,12 @@ class PipelinesList extends Component {
   }
 
   deletePipeline() {
-    const { notifyError } = this.props;
+    const { notifyError, deletePipeline } = this.props;
+    const { pipelineToDelete } = this.state;
 
-    this.props.deletePipeline(this.state.pipelineToDelete)
-      .catch(error => {
-        notifyError({ message: error.message });
+    deletePipeline(pipelineToDelete)
+      .catch((error) => {
+        notifyError(error.message);
       });
 
     this.closeModal();
@@ -102,7 +104,7 @@ class PipelinesList extends Component {
 
   render() {
     const { pipelines, classes } = this.props;
-    const { ownedPipelines, otherPipelines } = this.state;
+    const { ownedPipelines, otherPipelines, showModal } = this.state;
 
     return (
       <div>
@@ -129,16 +131,18 @@ class PipelinesList extends Component {
         {otherPipelines.length > 0 && <Typography variant="h6">Other Pipelines</Typography>}
         {otherPipelines.length > 0 && otherPipelines.map(pipeline => this.getListItem(pipeline))}
 
-        {(!pipelines || !pipelines.length) &&
+        {(!pipelines || !pipelines.length)
+          && (
           <Alert bsStyle="info">
             No pipelines found
           </Alert>
+          )
         }
         <ListDeleteModal
           close={this.closeModal}
           deleteItem={this.deletePipeline}
-          itemName={'pipeline'}
-          show={this.state.showModal}
+          itemName="pipeline"
+          show={showModal}
         />
       </div>
     );
@@ -147,17 +151,19 @@ class PipelinesList extends Component {
 
 PipelinesList.propTypes = {
   auth: PropTypes.object.isRequired,
-  deletePipeline: PropTypes.func.isRequired,
+  classes: PropTypes.object.isRequired,
   pipelines: PropTypes.array,
+  deletePipeline: PropTypes.func.isRequired,
+  notifyError: PropTypes.func.isRequired,
 };
 
 PipelinesList.defaultProps = {
   pipelines: null,
 };
 
-const mapStateToProps = ({ auth }) => {
-  return { auth };
-};
+const mapStateToProps = ({ auth }) => ({
+  auth,
+});
 
 const PipelinesListWithData = graphql(DELETE_PIPELINE_MUTATION,
   removeDocFromTableProp(
@@ -165,8 +171,7 @@ const PipelinesListWithData = graphql(DELETE_PIPELINE_MUTATION,
     'deletePipeline',
     FETCH_ALL_PIPELINES_QUERY,
     'fetchAllPipelines'
-  )
-)(PipelinesList);
+  ))(PipelinesList);
 
 const connectedComponent = connect(mapStateToProps, { notifyError })(PipelinesListWithData);
 

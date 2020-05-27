@@ -8,7 +8,7 @@ import { withStyles } from '@material-ui/core/styles';
 const styles = theme => ({
   containerStyles: {
     display: 'inline-block',
-    margin: theme.spacing.unit,
+    margin: theme.spacing(1),
     verticalAlign: 'top',
     textAlign: 'center',
     position: 'relative',
@@ -55,12 +55,12 @@ function MemberAvatar({
 }
 
 MemberAvatar.propTypes = {
-  name: PropTypes.string.isRequired,
+  classes: PropTypes.object.isRequired,
   consRole: PropTypes.string,
+  mapped: PropTypes.bool,
+  name: PropTypes.string.isRequired,
   showDetails: PropTypes.bool,
   width: PropTypes.number.isRequired,
-  classes: PropTypes.object.isRequired,
-  mapped: PropTypes.bool,
 };
 
 MemberAvatar.defaultProps = {

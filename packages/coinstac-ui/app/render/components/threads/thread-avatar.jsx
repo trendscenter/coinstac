@@ -1,9 +1,9 @@
-import React from 'react'
-import PropTypes from 'prop-types'
-import classNames from 'classnames'
-import { get, toUpper } from 'lodash'
-import { Avatar } from '@material-ui/core'
-import { withStyles } from '@material-ui/core/styles'
+import React from 'react';
+import PropTypes from 'prop-types';
+import classNames from 'classnames';
+import { get, toUpper } from 'lodash';
+import { Avatar } from '@material-ui/core';
+import { withStyles } from '@material-ui/core/styles';
 
 const styles = theme => ({
   wrapper: {
@@ -22,9 +22,9 @@ const styles = theme => ({
     },
   },
   username: {
-    paddingLeft: theme.spacing.unit,
-  }
-})
+    paddingLeft: theme.spacing(1),
+  },
+});
 
 const ThreadAvatar = ({
   classes,
@@ -32,23 +32,21 @@ const ThreadAvatar = ({
   isSender,
   showUsername,
   username,
-  ...otherProps,
 }) => (
   <div className={classes.wrapper}>
     <Avatar
       className={
         classNames(
           className || classes.avatar,
-          { sender: isSender, receiver: !isSender },
+          { sender: isSender, receiver: !isSender }
         )
       }
-      {...otherProps}
     >
       {toUpper(get(username, '0'))}
     </Avatar>
     <span className={classes.username}>{showUsername && username}</span>
   </div>
-)
+);
 
 ThreadAvatar.propTypes = {
   classes: PropTypes.object.isRequired,
@@ -56,11 +54,12 @@ ThreadAvatar.propTypes = {
   isSender: PropTypes.bool,
   showUsername: PropTypes.bool,
   username: PropTypes.string.isRequired,
-}
+};
 
 ThreadAvatar.defaultProps = {
+  className: '',
   isSender: true,
   showUsername: false,
-}
+};
 
-export default withStyles(styles)(ThreadAvatar)
+export default withStyles(styles)(ThreadAvatar);

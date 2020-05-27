@@ -8,7 +8,6 @@ const appPath = path.join(__dirname, '../..');
 const mocksPath = path.join(__dirname, 'mocks.js');
 
 const EXIST_TIMEOUT = 6000;
-const NOTIFICATION_DISMISS_TIMEOUT = 8000;
 const USER_ID_1 = 'test1';
 const USER_ID_2 = 'test2';
 const PASS = 'password';
@@ -95,13 +94,9 @@ describe('e2e consortia permissions', () => {
       .setValue('#name', CONS_NAME)
       .setValue('#description', CONS_DESC)
       .click('button=Save')
-      .waitForText('.notification-message', EXIST_TIMEOUT)
-      .getText('.notification-message')
-      .then(notificationMessage => notificationMessage.should.equal('Consortium Saved'))
-      .then(() => app1.client
-        .waitForVisible('.notification-message', NOTIFICATION_DISMISS_TIMEOUT, true)
-        .click('a=Consortia')
-        .waitForVisible(`h1=${CONS_NAME}`))
+      .waitForVisible('span=Consortium Saved', EXIST_TIMEOUT)
+      .click('a=Consortia')
+      .waitForVisible(`h1=${CONS_NAME}`)
   ));
 
   it('add another user as member', () => (

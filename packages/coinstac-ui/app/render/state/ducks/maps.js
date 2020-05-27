@@ -1,6 +1,11 @@
-import { dirname } from 'path';
+import {
+  dirname,
+  join,
+  isAbsolute,
+  resolve,
+  sep,
+} from 'path';
 import { applyAsyncLoading } from './loading';
-import localDB from '../local-db';
 
 const SAVE_DATA_MAPPING = 'SAVE_DATA_MAPPING';
 const DELETE_DATA_MAPPING = 'DELETE_DATA_MAPPING';
@@ -17,15 +22,25 @@ export const saveDataMapping = applyAsyncLoading(
       pipelineId,
       dataType: dataFile.dataType,
       dataMappings: mappings,
-      data: [{
-        allFiles: dataFile.files,
-        filesData: [],
-      }],
     };
 
     const mappedColumns = [];
 
     if (dataFile.dataType === 'array') {
+      if (dataFile.extension === '.csv') {
+        const csvLines = [...dataFile.metaFile];
+        csvLines.shift();
+
+        const files = csvLines.map((csvLine) => {
+          const file = csvLine[0];
+          return isAbsolute(file) ? file : resolve(join(dirname(dataFile.metaFilePath), file));
+        });
+
+        map.data = [{
+          allFiles: files,
+          filesData: [],
+        }];
+      }
       map.data[0].baseDirectory = dirname(dataFile.metaFilePath);
       map.data[0].metaFilePath = dataFile.metaFilePath;
 
@@ -54,9 +69,23 @@ export const saveDataMapping = applyAsyncLoading(
 
         map.data[0].filesData.push(parsedRow);
       });
+    } else if (dataFile.dataType === 'bundle' || dataFile.dataType === 'singles') {
+      const e = new RegExp(/[-\/\\^$*+?.()|[\]{}]/g); // eslint-disable-line no-useless-escape
+      const escape = (string) => {
+        return string.replace(e, '\\$&');
+      };
+      const pathsep = new RegExp(`${escape(sep)}|:`, 'g');
+
+      map.dataMappings.forEach((step, i) => {
+        Object.keys(step).forEach((variable) => {
+          if (map.dataMappings[i][variable][0] && map.dataMappings[i][variable][0].dataFileFieldName === 'bundle') {
+            map.dataMappings[i][variable] = dataFile.files.map((f => f.replace(pathsep, '-')));
+          }
+        });
+      });
+      map.files = dataFile.files;
     }
 
-    await localDB.maps.put(map);
     dispatch(({
       type: SAVE_DATA_MAPPING,
       payload: map,
@@ -66,8 +95,6 @@ export const saveDataMapping = applyAsyncLoading(
 
 export const deleteDataMapping = applyAsyncLoading(
   (consortiumId, pipelineId) => async (dispatch) => {
-    await localDB.maps.delete([consortiumId, pipelineId]);
-
     dispatch(({
       type: DELETE_DATA_MAPPING,
       payload: {
@@ -80,10 +107,6 @@ export const deleteDataMapping = applyAsyncLoading(
 
 export const deleteAllDataMappingsFromConsortium = applyAsyncLoading(
   consortiumId => async (dispatch) => {
-    const keys = await localDB.maps.where({ consortiumId }).primaryKeys();
-
-    await localDB.maps.bulkDelete(keys);
-
     dispatch(({
       type: DELETE_ALL_DATA_MAPPINGS_FROM_CONSORTIUM,
       payload: consortiumId,
@@ -112,6 +135,6 @@ export default function reducer(state = INITIAL_STATE, action) {
           .filter(map => map.consortiumId !== action.payload),
       };
     default:
-      return state;
+      return state || INITIAL_STATE;
   }
 }

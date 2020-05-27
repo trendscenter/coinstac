@@ -1,13 +1,15 @@
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
+import { graphql, withApollo } from 'react-apollo';
 import { DragDropContext, DropTarget } from 'react-dnd';
 import HTML5Backend from 'react-dnd-html5-backend';
-import PropTypes from 'prop-types';
-import { graphql, withApollo } from 'react-apollo';
 import NumberFormat from 'react-number-format';
 import shortid from 'shortid';
-import { isEqual, isEmpty, get } from 'lodash';
+import {
+  isEqual, isEmpty, get, omit,
+} from 'lodash';
 import update from 'immutability-helper';
 import {
   Button,
@@ -16,7 +18,6 @@ import {
   Menu,
   MenuItem,
   Paper,
-  TextField,
   Typography,
 } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
@@ -29,10 +30,15 @@ import {
   FETCH_ALL_CONSORTIA_QUERY,
   FETCH_PIPELINE_QUERY,
   SAVE_PIPELINE_MUTATION,
+  SAVE_ACTIVE_PIPELINE_MUTATION,
+  FETCH_ALL_USERS_QUERY,
+  USER_CHANGED_SUBSCRIPTION,
 } from '../../state/graphql/functions';
 import {
   getDocumentByParam,
   saveDocumentProp,
+  consortiumSaveActivePipelineProp,
+  getAllAndSubProp,
 } from '../../state/graphql/props';
 import { notifySuccess, notifyError } from '../../state/ducks/notifyAndLog';
 import { isPipelineOwner } from '../../utils/helpers';
@@ -51,23 +57,23 @@ const collect = (connect, monitor) => (
 
 const styles = theme => ({
   title: {
-    marginBottom: theme.spacing.unit * 2,
+    marginBottom: theme.spacing(2),
   },
   formControl: {
-    marginBottom: theme.spacing.unit * 2,
+    marginBottom: theme.spacing(2),
   },
   owningConsortiumButtonTitle: {
-    marginBottom: theme.spacing.unit,
+    marginBottom: theme.spacing(1),
   },
   savePipelineButtonContainer: {
     textAlign: 'right',
-    marginBottom: theme.spacing.unit * 2,
+    marginBottom: theme.spacing(2),
   },
   tooltipPaper: {
     ...theme.mixins.gutters(),
-    paddingTop: theme.spacing.unit * 2,
-    paddingBottom: theme.spacing.unit * 2,
-    marginBottom: theme.spacing.unit * 2,
+    paddingTop: theme.spacing(2),
+    paddingBottom: theme.spacing(2),
+    marginBottom: theme.spacing(2),
     backgroundColor: '#fef7e4',
     textAlign: 'center',
   },
@@ -76,25 +82,20 @@ const styles = theme => ({
   },
 });
 
-function NumberFormatCustom(props) {
-  const { inputRef, onChange, ...other } = props;
-
-  return (
-    <NumberFormat
-      {...other}
-      getInputRef={inputRef}
-      onValueChange={(values) => {
-        onChange({
-          target: {
-            value: values.value,
-          },
-        });
-      }}
-      isNumericString
-      suffix=" minutes"
-    />
-  );
-}
+const NumberFormatCustom = ({ inputRef, onChange, ...other }) => (
+  <NumberFormat
+    getInputRef={inputRef}
+    onValueChange={values => onChange({
+      target: {
+        value: values.value,
+      },
+    })
+    }
+    isNumericString
+    suffix=" minutes"
+    {...other}
+  />
+);
 
 class Pipeline extends Component {
   constructor(props) {
@@ -109,18 +110,22 @@ class Pipeline extends Component {
       shared: false,
       steps: [],
       delete: false,
+      limitOutputToOwner: false,
     };
 
     // if routed from New Pipeline button on consortium page
-    if (props.params.consortiumId) {
+
+    const { consortiumId, runId } = props.params;
+
+    if (consortiumId) {
       const data = props.client.readQuery({ query: FETCH_ALL_CONSORTIA_QUERY });
-      consortium = data.fetchAllConsortia.find(cons => cons.id === props.params.consortiumId);
+      consortium = data.fetchAllConsortia.find(cons => cons.id === consortiumId);
       pipeline.owningConsortium = consortium.id;
     }
 
-    if (props.params.runId) {
+    if (runId) {
       const { runs } = props;
-      runs.filter(run => run.id === props.params.runId);
+      runs.filter(run => run.id === runId);
       pipeline = get(runs, '0.pipelineSnapshot');
     }
 
@@ -135,44 +140,30 @@ class Pipeline extends Component {
       showModal: false,
       savingStatus: 'init',
     };
-
-    this.accordionSelect = this.accordionSelect.bind(this);
-    this.addStep = this.addStep.bind(this);
-    this.checkPipeline = this.checkPipeline.bind(this);
-    this.closeModal = this.closeModal.bind(this);
-    this.deleteStep = this.deleteStep.bind(this);
-    this.moveStep = this.moveStep.bind(this);
-    this.openModal = this.openModal.bind(this);
-    this.savePipeline = this.savePipeline.bind(this);
-    this.setConsortium = this.setConsortium.bind(this);
-    this.updatePipeline = this.updatePipeline.bind(this);
-    this.updateStep = this.updateStep.bind(this);
-    this.updateStorePipeline = this.updateStorePipeline.bind(this);
-    this.openOwningConsortiumMenu = this.openOwningConsortiumMenu.bind(this);
-    this.closeOwningConsortiumMenu = this.closeOwningConsortiumMenu.bind(this);
-    this.openAddComputationStepMenu = this.openAddComputationStepMenu.bind(this);
-    this.closeAddComputationStepMenu = this.closeAddComputationStepMenu.bind(this);
   }
 
+  // eslint-disable-next-line
   UNSAFE_componentWillReceiveProps(nextProps) {
-    if (isEmpty(this.state.consortium) && nextProps.consortia.length
-      && this.state.pipeline.id && this.state.pipeline.owningConsortium) {
+    const { consortium, pipeline, selectedId } = this.state;
+
+    if (isEmpty(consortium) && nextProps.consortia.length
+      && pipeline.id && pipeline.owningConsortium) {
       this.setConsortium();
     }
 
-    let selectedId = null;
-    if (this.state.selectedId) {
-      selectedId = this.state.selectedId;
+    let newSelectedId = null;
+    if (selectedId) {
+      newSelectedId = selectedId;
     } else if (nextProps.activePipeline && nextProps.activePipeline.steps.length) {
-      selectedId = nextProps.activePipeline.steps[0].id;
+      newSelectedId = nextProps.activePipeline.steps[0].id;
     }
 
-    if (nextProps.activePipeline && !this.state.pipeline.id) {
+    if (nextProps.activePipeline && !pipeline.id) {
       const { activePipeline: { __typename, ...other } } = nextProps;
       this.setState(
-        { pipeline: { ...other }, selectedId, startingPipeline: { ...other } },
+        { pipeline: { ...other }, selectedId: newSelectedId, startingPipeline: { ...other } },
         () => {
-          if (nextProps.consortia.length && this.state.pipeline.owningConsortium) {
+          if (nextProps.consortia.length && pipeline.owningConsortium) {
             this.setConsortium();
           }
         }
@@ -180,25 +171,15 @@ class Pipeline extends Component {
     }
   }
 
-  componentDidUpdate() {
-    const pipeline = this.state
-    if (pipeline.steps && pipeline.steps.inputMap) {
-      console.log(pipeline.steps.inputMap);
-    }
-  }
+  setConsortium = () => {
+    const { auth: { user }, client, params } = this.props;
+    const { pipeline } = this.state;
+    const { owningConsortium } = pipeline;
 
-  setConsortium() {
-    const { auth: { user }, client } = this.props;
+    const owner = params.runId ? false : isPipelineOwner(user.permissions, owningConsortium);
 
-    let owner;
-    if (this.props.params.runId) {
-      owner = false;
-    } else {
-      owner = isPipelineOwner(user.permissions, this.state.pipeline.owningConsortium);
-    }
-    const consortiumId = this.state.pipeline.owningConsortium;
     const data = client.readQuery({ query: FETCH_ALL_CONSORTIA_QUERY });
-    const consortium = data.fetchAllConsortia.find(cons => cons.id === consortiumId);
+    const consortium = data.fetchAllConsortia.find(cons => cons.id === owningConsortium);
 
     if (consortium) {
       delete consortium.__typename;
@@ -207,16 +188,13 @@ class Pipeline extends Component {
     this.setState(prevState => ({
       owner,
       consortium,
-      pipeline: { ...prevState.pipeline, owningConsortium: consortiumId },
-      startingPipeline: { ...prevState.pipeline, owningConsortium: consortiumId },
+      pipeline: { ...prevState.pipeline, owningConsortium },
+      startingPipeline: { ...prevState.pipeline, owningConsortium },
     }));
   }
 
-  addStep(computation) {
-    let controllerType = 'local';
-    if (computation.computation.remote) {
-      controllerType = 'decentralized';
-    }
+  addStep = (computation) => {
+    const controllerType = computation.computation.remote ? 'decentralized' : 'local';
 
     const id = shortid.generate();
 
@@ -234,7 +212,7 @@ class Pipeline extends Component {
             computations: [
               { ...computation },
             ],
-            inputMap: { },
+            inputMap: {},
           },
         ],
       },
@@ -242,24 +220,21 @@ class Pipeline extends Component {
     // () => this.updateStorePipeline());
   }
 
-  accordionSelect(selectedId) {
+  accordionSelect = (selectedId) => {
     this.setState({ selectedId });
   }
 
-  moveStep(id, swapId) {
-    let index;
+  moveStep = (id, swapId) => {
+    const { pipeline } = this.state;
+    const { steps } = pipeline;
 
-    const movedStepIndex = this.state.pipeline.steps.findIndex(step => step.id === id);
-    const movedStep = this.state.pipeline.steps[movedStepIndex];
+    const movedStepIndex = steps.findIndex(step => step.id === id);
+    const movedStep = steps[movedStepIndex];
 
-    if (swapId !== null) {
-      index = this.state.pipeline.steps.findIndex(step => step.id === swapId);
-    } else {
-      index = this.state.pipeline.steps.findIndex(step => step.id === id);
-    }
+    const index = steps.findIndex(step => step.id === (swapId || id));
 
     // Remap inputMap props to new indices if required
-    const newArr = this.state.pipeline.steps
+    const newArr = steps
       .map((step, stepIndex) => {
         let inputMap = { ...step.inputMap };
 
@@ -267,20 +242,17 @@ class Pipeline extends Component {
           ...Object.keys(inputMap).map((key) => {
             if (key !== 'covariates' && 'fromCache' in inputMap[key]) {
               const cacheStep = inputMap[key].fromCache.step;
-              const variable = inputMap[key].fromCache.variable;
-              const label = inputMap[key].fromCache.label;
+              const { variable, label } = inputMap[key].fromCache;
 
               if (index >= stepIndex && movedStepIndex < stepIndex) {
                 return { [key]: {} };
-              } else if (movedStepIndex === cacheStep) {
+              } if (movedStepIndex === cacheStep) {
                 return { [key]: { fromCache: { step: index, variable, label } } };
-              } else if (index <= cacheStep && movedStepIndex > cacheStep) {
+              } if (index <= cacheStep && movedStepIndex > cacheStep) {
                 return {
                   [key]: { fromCache: { step: cacheStep + 1, variable, label } },
                 };
-              } else if (movedStepIndex < cacheStep
-                          && index >= cacheStep
-                          && index < stepIndex) {
+              } if (movedStepIndex < cacheStep && index >= cacheStep && index < stepIndex) {
                 return {
                   [key]: { fromCache: { step: cacheStep - 1, variable, label } },
                 };
@@ -288,8 +260,7 @@ class Pipeline extends Component {
             }
 
             return { [key]: inputMap[key] };
-          })
-        );
+          }));
 
         if ('covariates' in inputMap && 'ownerMappings' in inputMap.covariates && inputMap.covariates.ownerMappings.length) {
           let covariateMappings = [...inputMap.covariates.ownerMappings];
@@ -299,14 +270,12 @@ class Pipeline extends Component {
             .map((cov) => {
               if (index >= stepIndex && movedStepIndex < stepIndex) {
                 return {};
-              } else if (movedStepIndex === cov.fromCache.step) {
+              } if (movedStepIndex === cov.fromCache.step) {
                 return { fromCache: { ...cov.fromCache, step: index } };
-              } else if (index <= cov.fromCache.step
-                          && movedStepIndex > cov.fromCache.step) {
+              } if (index <= cov.fromCache.step && movedStepIndex > cov.fromCache.step) {
                 return { fromCache: { ...cov.fromCache, step: cov.fromCache.step + 1 } };
-              } else if (movedStepIndex < cov.fromCache.step
-                          && index >= cov.fromCache.step
-                          && index < stepIndex) {
+              } if (movedStepIndex < cov.fromCache.step
+                && index >= cov.fromCache.step && index < stepIndex) {
                 return { fromCache: { ...cov.fromCache, step: cov.fromCache.step - 1 } };
               }
 
@@ -328,36 +297,32 @@ class Pipeline extends Component {
       })
       .filter(step => step.id !== id);
 
-    newArr.splice(
-      index,
-      0,
-      {
-        ...movedStep,
-        inputMap: Object.assign(
-          {},
-          ...Object.keys(movedStep.inputMap).map((key) => {
-            if (key !== 'covariates' && 'fromCache' in movedStep.inputMap[key] &&
-              movedStep.inputMap[key].step >= index) {
-              return { [key]: {} };
-            } else if (key === 'covariates' && 'ownerMappings' in movedStep.inputMap.covariates && movedStep.inputMap.covariates.ownerMappings.length) {
-              return {
-                [key]: movedStep.inputMap[key].ownerMappings
-                  .filter(cov => cov.fromCache)
-                  .map((cov) => {
-                    if (cov.fromCache.step >= index) {
-                      return {};
-                    }
+    newArr.splice(index, 0, {
+      ...movedStep,
+      inputMap: Object.assign(
+        {},
+        ...Object.keys(movedStep.inputMap).map((key) => {
+          if (key !== 'covariates' && 'fromCache' in movedStep.inputMap[key]
+            && movedStep.inputMap[key].step >= index) {
+            return { [key]: {} };
+          } if (key === 'covariates' && 'ownerMappings' in movedStep.inputMap.covariates && movedStep.inputMap.covariates.ownerMappings.length) {
+            return {
+              [key]: movedStep.inputMap[key].ownerMappings
+                .filter(cov => cov.fromCache)
+                .map((cov) => {
+                  if (cov.fromCache.step >= index) {
+                    return {};
+                  }
 
-                    return cov;
-                  }),
-              };
-            }
+                  return cov;
+                }),
+            };
+          }
 
-            return { [key]: { ...movedStep.inputMap[key] } };
-          })
-        ),
-      }
-    );
+          return { [key]: { ...movedStep.inputMap[key] } };
+        })
+      ),
+    });
 
     this.setState(prevState => ({
       pipeline: {
@@ -368,14 +333,17 @@ class Pipeline extends Component {
     // () => this.updateStorePipeline());
   }
 
-  updateStorePipeline() {
+  updateStorePipeline = () => {
     const { client } = this.props;
+    const { pipeline } = this.state;
+
     const data = client.readQuery({ query: FETCH_ALL_CONSORTIA_QUERY });
-    data.fetchPipeline = { ...this.state.pipeline, __typename: 'Pipeline' };
+    data.fetchPipeline = { ...pipeline, __typename: 'Pipeline' };
+
     client.writeQuery({ query: FETCH_PIPELINE_QUERY, data });
   }
 
-  updateStep(step) {
+  updateStep = (step) => {
     this.setState(prevState => ({
       pipeline: {
         ...prevState.pipeline,
@@ -386,7 +354,7 @@ class Pipeline extends Component {
     }));
   }
 
-  deleteStep() {
+  deleteStep = () => {
     this.setState(prevState => ({
       pipeline: {
         ...prevState.pipeline,
@@ -399,106 +367,127 @@ class Pipeline extends Component {
     this.closeModal();
   }
 
-  closeModal() {
+  closeModal = () => {
     this.setState({ showModal: false });
   }
 
-  openModal(stepId) {
+  openModal = (stepId) => {
     this.setState({
       showModal: true,
       stepToDelete: stepId,
     });
   }
 
-  updatePipeline(update) {
-    if (update.param === 'owningConsortium') {
+  updatePipeline = (payload) => {
+    const { param, value, consortiumName } = payload;
+
+    if (param === 'owningConsortium') {
       this.setState({
         openOwningConsortiumMenu: false,
-        consortium: { id: update.value, name: update.consortiumName },
+        consortium: { id: value, name: consortiumName },
       });
     }
 
     this.setState(prevState => ({
-      pipeline: { ...prevState.pipeline, [update.param]: update.value },
+      pipeline: { ...prevState.pipeline, [param]: value },
     }));
     // this.updateStorePipeline());
   }
 
-  checkPipeline() {
-    return isEqual(this.state.startingPipeline, this.state.pipeline);
+  checkPipeline = () => {
+    const { startingPipeline, pipeline } = this.state;
+    return isEqual(startingPipeline, pipeline);
   }
 
-  savePipeline() {
-    const { auth: { user }, savePipeline, notifySuccess, notifyError } = this.props;
+  savePipeline = async () => {
+    const {
+      auth: { user }, notifySuccess, notifyError, saveActivePipeline, savePipeline,
+    } = this.props;
+    const { pipeline } = this.state;
+
+    const isActive = get(pipeline, 'isActive', false);
+
+    const omittedPipeline = omit(pipeline, ['isActive']);
 
     this.setState({ savingStatus: 'pending' });
 
-    savePipeline({
-      ...this.state.pipeline,
-      steps: this.state.pipeline.steps.map(step => ({
-        id: step.id,
-        computations: step.computations.map(comp => comp.id),
-        inputMap: {
-          ...step.inputMap,
-          meta: {
-            ...step.inputMap.meta,
-            owner: user.id,
+    try {
+      const { data } = await savePipeline({
+        ...omittedPipeline,
+        owner: user.id,
+        steps: omittedPipeline.steps.map(step => ({
+          id: step.id,
+          computations: step.computations.map(comp => comp.id),
+          inputMap: step.inputMap,
+          dataMeta: step.dataMeta,
+          controller: {
+            id: step.controller.id,
+            type: step.controller.type,
+            options: step.controller.options,
           },
-        },
-        dataMeta: step.dataMeta,
-        controller: {
-          id: step.controller.id,
-          type: step.controller.type,
-          options: step.controller.options,
-        },
-      })),
-    }).then(({ data: { savePipeline: { __typename, ...other } } }) => {
-      const pipeline = { ...this.state.pipeline, ...other };
+        })),
+      });
+
+      const { savePipeline: { __typename, ...other } } = data;
+      const newPipeline = { ...pipeline, ...other };
 
       this.setState({
-        pipeline,
-        startingPipeline: pipeline,
+        pipeline: newPipeline,
+        startingPipeline: newPipeline,
         savingStatus: 'success',
       });
 
-      notifySuccess({ message: 'Pipeline Saved.' });
-    }).catch(({ graphQLErrors }) => {
-      notifyError({ message: get(graphQLErrors, '0.message', 'Failed to save pipeline') });
+      notifySuccess('Pipeline Saved');
+
+      if (isActive) {
+        const { savePipeline } = data;
+        await saveActivePipeline(savePipeline.owningConsortium, savePipeline.id);
+      }
+    } catch (error) {
+      notifyError(get(error.graphQLErrors, '0.message', 'Failed to save pipeline'));
 
       this.setState({ savingStatus: 'fail' });
-    });
+    }
   }
 
-  openOwningConsortiumMenu(event) {
+  openOwningConsortiumMenu = (event) => {
     this.owningConsortiumButtonElement = event.currentTarget;
     this.setState({ openOwningConsortiumMenu: true });
   }
 
-  closeOwningConsortiumMenu() {
+  closeOwningConsortiumMenu = () => {
     this.setState({ openOwningConsortiumMenu: false });
   }
 
-  openAddComputationStepMenu(event) {
+  openAddComputationStepMenu = (event) => {
     this.addComputationStepButtonElement = event.currentTarget;
     this.setState({ openAddComputationStepMenu: true });
   }
 
-  closeAddComputationStepMenu() {
+  closeAddComputationStepMenu = () => {
     this.setState({ openAddComputationStepMenu: false });
   }
 
-  sortComputations(computations){
-    if(computations && computations.length > 0){
-      return computations.slice().sort(function(a, b) {
-          var nameA = a.meta.name.toLowerCase();
-          var nameB = b.meta.name.toLowerCase();
-          return (nameA < nameB) ? -1 : (nameA > nameB) ? 1 : 0;
+  sortComputations = () => {
+    const { computations } = this.props;
+    if (computations && computations.length > 0) {
+      return computations.slice().sort((a, b) => {
+        const nameA = a.meta.name.toLowerCase();
+        const nameB = b.meta.name.toLowerCase();
+
+        if (nameA < nameB) {
+          return -1;
+        }
+
+        return (nameA > nameB) ? 1 : 0;
       });
     }
   }
 
   render() {
-    const { computations, connectDropTarget, consortia, classes, auth } = this.props;
+    const {
+      connectDropTarget, consortia, users, classes, auth,
+    } = this.props;
     const {
       consortium,
       pipeline,
@@ -509,9 +498,10 @@ class Pipeline extends Component {
       savingStatus,
     } = this.state;
 
-    const title = pipeline.id ? 'Pipeline Edit' : 'Pipeline Creation';
+    const isEditing = !!pipeline.id;
+    const title = isEditing ? 'Pipeline Edit' : 'Pipeline Creation';
 
-    let sortedComputations = this.sortComputations(computations);
+    const sortedComputations = this.sortComputations();
 
     return connectDropTarget(
       <div>
@@ -552,7 +542,7 @@ class Pipeline extends Component {
           />
           <TextValidator
             id="timeout"
-            label="Timeout"
+            label="Timeout for clients (default: infinite)"
             fullWidth
             disabled={!owner}
             value={pipeline.timeout}
@@ -565,8 +555,32 @@ class Pipeline extends Component {
               inputComponent: NumberFormatCustom,
             }}
           />
+          {!isEditing && (
+            <FormControlLabel
+              control={(
+                <Checkbox
+                  checked={pipeline.isActive}
+                  disabled={!owner}
+                  onChange={evt => this.updatePipeline({ param: 'isActive', value: evt.target.checked })}
+                />
+              )}
+              label="Set active on this consortium"
+              className={classes.formControl}
+            />
+          )}
+          <FormControlLabel
+            control={(
+              <Checkbox
+                checked={pipeline.limitOutputToOwner || false}
+                disabled={!owner}
+                onChange={evt => this.updatePipeline({ param: 'limitOutputToOwner', value: evt.target.checked })}
+              />
+            )}
+            label="Only send results to consortia owner"
+            className={classes.formControl}
+          />
           <div className={classes.formControl}>
-            <Typography variant="title" className={classes.owningConsortiumButtonTitle}>Owning Consortium</Typography>
+            <Typography variant="h6" className={classes.owningConsortiumButtonTitle}>Owning Consortium</Typography>
             <Button
               id="pipelineconsortia"
               variant="contained"
@@ -574,7 +588,7 @@ class Pipeline extends Component {
               disabled={!owner}
               onClick={this.openOwningConsortiumMenu}
             >
-              { consortium ? consortium.name : 'Consortia' }
+              {get(consortium, 'name', 'Consortia')}
             </Button>
             <Menu
               id="consortium-menu"
@@ -582,23 +596,21 @@ class Pipeline extends Component {
               open={openOwningConsortiumMenu}
               onClose={this.closeOwningConsortiumMenu}
             >
-              {
-                consortia
-                && consortia
-                  .filter(cons => cons.owners.includes(auth.user.id))
-                  .map(cons => (
-                    <MenuItem
-                      key={cons.id}
-                      onClick={() => this.updatePipeline({
-                        param: 'owningConsortium',
-                        value: cons.id,
-                        consortiumName: cons.name,
-                      })
-                      }
-                    >
-                      {cons.name}
-                    </MenuItem>
-                  ))
+              {consortia && consortia
+                .filter(cons => cons.owners.includes(auth.user.id))
+                .map(cons => (
+                  <MenuItem
+                    key={cons.id}
+                    onClick={() => this.updatePipeline({
+                      param: 'owningConsortium',
+                      value: cons.id,
+                      consortiumName: cons.name,
+                    })
+                    }
+                  >
+                    {cons.name}
+                  </MenuItem>
+                ))
               }
             </Menu>
           </div>
@@ -627,7 +639,7 @@ class Pipeline extends Component {
             className={classes.formControl}
           />
           <Paper className={classes.tooltipPaper}>
-            <Typography className={classes.tooltip} variant="body1">
+            <Typography className={classes.tooltip} variant="body2">
               Build your pipelines by adding computation steps in the space below.
               Arrange computations vertically to determine their order from first
               (highest) to last (lowest)
@@ -649,17 +661,14 @@ class Pipeline extends Component {
               open={openAddComputationStepMenu}
               onClose={this.closeAddComputationStepMenu}
             >
-              {sortedComputations &&
-                sortedComputations
-                  .map(comp => (
-                    <MenuItem
-                      key={comp.id}
-                      onClick={() => this.addStep(comp)}
-                    >
-                      {comp.meta.name}
-                    </MenuItem>
-                  ))
-              }
+              {sortedComputations && sortedComputations.map(comp => (
+                <MenuItem
+                  key={comp.id}
+                  onClick={() => this.addStep(comp)}
+                >
+                  {comp.meta.name}
+                </MenuItem>
+              ))}
             </Menu>
           </div>
           <ListDeleteModal
@@ -669,37 +678,32 @@ class Pipeline extends Component {
             show={showModal}
           />
           <div>
-            {
-              pipeline.steps.length > 0
-              && pipeline.steps.map((step, index) => (
-                <PipelineStep
-                  computationId={step.computations[0].id}
-                  deleteStep={this.openModal}
-                  eventKey={step.id}
-                  id={step.id}
-                  key={step.id}
-                  moveStep={this.moveStep}
-                  owner={owner}
-                  pipelineIndex={index}
-                  previousComputationIds={
-                    pipeline.steps
-                      .filter((s, i) => i < index)
-                      .map(s => s.computations[0].id)
-                  }
-                  step={step}
-                  updateStep={this.updateStep}
-                />
-              ))
-            }
+            {pipeline.steps.length > 0 && pipeline.steps.map((step, index) => (
+              <PipelineStep
+                computationId={step.computations[0].id}
+                deleteStep={this.openModal}
+                eventKey={step.id}
+                id={step.id}
+                key={step.id}
+                moveStep={this.moveStep}
+                owner={owner}
+                pipelineIndex={index}
+                previousComputationIds={
+                  pipeline.steps
+                    .filter((_s, i) => i < index)
+                    .map(s => s.computations[0].id)
+                }
+                step={step}
+                updateStep={this.updateStep}
+                users={users}
+              />
+            ))}
           </div>
-          {
-            !pipeline.steps.length
-            && (
-              <Typography variant="body1">
-                No computations added
-              </Typography>
-            )
-          }
+          {!pipeline.steps.length && (
+            <Typography variant="body2">
+              No computations added
+            </Typography>
+          )}
         </ValidatorForm>
       </div>
     );
@@ -709,28 +713,31 @@ class Pipeline extends Component {
 Pipeline.defaultProps = {
   activePipeline: null,
   runs: null,
+  users: [],
   subscribeToComputations: null,
   subscribeToPipelines: null,
 };
 
 Pipeline.propTypes = {
-  activePipeline: PropTypes.object,
+  activePipeline: PropTypes.object, // eslint-disable-line react/no-unused-prop-types
   auth: PropTypes.object.isRequired,
+  classes: PropTypes.object.isRequired,
   client: PropTypes.object.isRequired,
   computations: PropTypes.array.isRequired,
-  connectDropTarget: PropTypes.func.isRequired,
   consortia: PropTypes.array.isRequired,
-  notifySuccess: PropTypes.func.isRequired,
-  notifyError: PropTypes.func.isRequired,
   params: PropTypes.object.isRequired,
   runs: PropTypes.array,
+  users: PropTypes.array,
+  connectDropTarget: PropTypes.func.isRequired,
+  notifyError: PropTypes.func.isRequired,
+  notifySuccess: PropTypes.func.isRequired,
   savePipeline: PropTypes.func.isRequired,
-  classes: PropTypes.object.isRequired,
+  saveActivePipeline: PropTypes.func.isRequired,
 };
 
-function mapStateToProps({ auth }) {
-  return { auth };
-}
+const mapStateToProps = ({ auth }) => ({
+  auth,
+});
 
 const PipelineWithData = compose(
   graphql(FETCH_PIPELINE_QUERY, getDocumentByParam(
@@ -738,7 +745,15 @@ const PipelineWithData = compose(
     'activePipeline',
     'fetchPipeline'
   )),
-  graphql(SAVE_PIPELINE_MUTATION, saveDocumentProp('savePipeline', 'pipeline'))
+  graphql(SAVE_PIPELINE_MUTATION, saveDocumentProp('savePipeline', 'pipeline')),
+  graphql(SAVE_ACTIVE_PIPELINE_MUTATION, consortiumSaveActivePipelineProp('saveActivePipeline')),
+  graphql(FETCH_ALL_USERS_QUERY, getAllAndSubProp(
+    USER_CHANGED_SUBSCRIPTION,
+    'users',
+    'fetchAllUsers',
+    'subscribeToUsers',
+    'userChanged'
+  ))
 )(Pipeline);
 
 const PipelineWithAlert = compose(
@@ -748,6 +763,9 @@ const PipelineWithAlert = compose(
   withApollo
 )(PipelineWithData);
 
-const connectedComponent = connect(mapStateToProps, { notifySuccess, notifyError })(PipelineWithAlert);
+const connectedComponent = connect(mapStateToProps, {
+  notifySuccess,
+  notifyError,
+})(PipelineWithAlert);
 
 export default withStyles(styles)(connectedComponent);

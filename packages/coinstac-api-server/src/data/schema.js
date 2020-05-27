@@ -132,7 +132,7 @@ const typeDefs = `
   type MessageOutput {
     id: ID
     sender: ID
-    recipients: [ID]
+    recipients: [String]
     content: String
     date: String
     action: ActionOutput
@@ -164,7 +164,7 @@ const typeDefs = `
     leaveConsortium(consortiumId: ID!): Consortium
     removeComputation(computationId: ID): Computation
     removeUserRole(userId: ID!, table: String!, doc: String!, role: String!): User
-    saveActivePipeline(consortiumId: ID, activePipelineId: ID): String
+    saveActivePipeline(consortiumId: ID, activePipelineId: ID): JSON
     saveConsortium(consortium: ConsortiumInput!): Consortium
     saveError(runId: ID, error: JSON): JSON
     savePipeline(pipeline: PipelineInput): Pipeline
@@ -204,7 +204,6 @@ const typeDefs = `
     threadChanged(threadId: ID): Thread
     userRunChanged(userId: ID): Run
     userChanged(userId: ID): User
-    userMetadataChanged(userId: ID): User
   }
 `;
 

@@ -12,6 +12,7 @@ const schemaFields = {
     results: [ID]
     isPrivate: Boolean
     mappedForRun: [ID]
+    createDate: String
   `,
   computationFields: `
     display: JSON
@@ -35,10 +36,12 @@ const schemaFields = {
   pipelineFields: `
     name: String
     description: String
+    owner: ID
     owningConsortium: ID
     delete: Boolean
     shared: Boolean
     timeout: Int
+    limitOutputToOwner: Boolean
   `,
   pipelineControllerFields: `
     id: ID
@@ -61,7 +64,6 @@ const schemaFields = {
     consortiaStatuses: JSON
     email: String!
     institution: String
-    passwordHash: String!
     permissions: JSON
   `,
 };

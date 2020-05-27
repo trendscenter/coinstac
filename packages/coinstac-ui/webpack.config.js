@@ -8,7 +8,6 @@ const port = 3000;
 
 const config = {
   bail: true,
-  devtool: 'eval',
   devServer: {
     historyApiFallback: true,
     hot: true,
@@ -116,6 +115,7 @@ const config = {
 
 if (process.env.NODE_ENV === 'development') {
   config.bail = false;
+  config.devtool = 'eval-source-map';
   // config.plugins.push(new webpack.NoErrorsPlugin());
 
   // Massage configuration for hot module replacement:
@@ -129,7 +129,7 @@ if (process.env.NODE_ENV === 'development') {
    * Remove react and redux from externals to make HMR easier.
    * {@link https://github.com/gaearon/react-hot-loader/tree/master/docs#usage-with-external-react}
    */
-  const pattern = /react|redux/;
+  const pattern = /redux/;
   config.externals = config.externals.filter(name => !pattern.test(name));
 }
 

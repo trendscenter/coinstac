@@ -4,9 +4,13 @@
 
 [![DOI](https://zenodo.org/badge/52497909.svg)](https://zenodo.org/badge/latestdoi/52497909)
 
-_Collaborative Informatics and Neuroimaging Suite Toolkit for Anonymous Computation, User Interface._ A research project by your friends [The Mind Research Network](http://www.mrn.org/).
+_Collaborative Informatics and Neuroimaging Suite Toolkit for Anonymous Computation._ A research project by your friends at the [Center for Translational Research in Neuroimaging and Data Science (TReNDS)](https://www.trendscenter.org).
 
 📖 Read the project’s paper, [_COINSTAC: A Privacy Enabled Model and Prototype for Leveraging and Processing Decentralized Brain Imaging Data_ on Frontiers in Neuroscience](http://journal.frontiersin.org/article/10.3389/fnins.2016.00365/full)
+
+Find a full list of papers [here](https://github.com/trendscenter/coinstac/blob/master/algorithm-development/papers.md).
+
+For instructions on how to install and run COINSTAC as an end user, see the documents [here](https://github.com/trendscenter/coinstac-instructions).
 
 COINSTAC is software to foster collaborative research, removing large barriers to traditional data-centric collaboration approaches.  It enables groups of users to run common analyses _on their own machines_ over _their own datasets_ with ease.  The results of these analyses are synchronized to the cloud, and undergo aggregate analyses processes using all contributor data.  Decentralized pipelines allow for distributed, iterative, and feature rich analyses to be run, opening new and exciting capabilities for collaborative computation.  If also offers data anonymity through differential privacy algorithms, so members do not need to fear PHI traceback.
 
@@ -42,7 +46,7 @@ Let's remove these barriers.  The best usage of research data is to apply it _ev
 COINSTAC removes the barriers to collaborative analysis by:
 
 - **decentralizing analyses and computation**
-  - each user performs analyses/pipelines/etc all on their own computers. bits and pieces of each users' output _may_ be sent to a central compute node
+  - each user performs analyses/pipelines/etc all on their own computers. Bits and pieces of each users' output _may_ be sent to a central compute node
   - a central compute node performs a complimentary component of the group analysis, generally a Machine Learning algorithm.  this node may trigger adjusted computations on users' machines, generally in effort to improve a model, which the research is trying to predict!
 - _not_ synchronizing full datasets. instead, **synchronizing only resultant analysis metrics**
   - as previously discussed, central compute nodes aggregate these metrics, and attempt to draw conclusions from the contributor swarm
@@ -52,21 +56,19 @@ COINSTAC removes the barriers to collaborative analysis by:
 You may wonder why we haven't been doing this before!  Us too.  Let's get started!
 
 ## Getting Started
-- If you want to run COINSTAC as a user 
-  - Download the latest release for your operating system [here](https://github.com/MRN-Code/coinstac/releases).
-  - You can download sample Freesurfer data [here](https://github.com/MRN-Code/coinstac/releases/download/v3.1.10/20170425-coinstac-test-data.zip), which can be used in a regression.
-  - You can also download sample VBM data [here](https://github.com/MRN-Code/coinstac/files/2134308/coinstac_ssr_vbm_test_data.zip), which can be used in a regression.
-- If you are looking to contribute data, head over to [coinstac-ui](https://github.com/MRN-Code/coinstac/tree/master/packages/coinstac-ui).  There, you will be able to download the application.
+- If you want to run COINSTAC as a user
+  - Download the latest release for your operating system [here](https://github.com/trendscenter/coinstac/releases).
+  - You can download sample Freesurfer data [here](https://github.com/trendscenter/coinstac/releases/download/v3.1.10/20170425-coinstac-test-data.zip), which can be used in a regression.
+  - You can also download sample VBM data [here](https://github.com/trendscenter/coinstac/files/2134308/coinstac_ssr_vbm_test_data.zip), which can be used in a regression.
+- If you are looking to join a consortium and contribute data to a decentralized pipeline, head over to [releases](https://github.com/trendscenter/coinstac/releases) to download the latest release.
 
 - If you are a developer or scientist and want to design a decentralized computation, please see:
   - [DecentralizedComputation.md](DecentralizedComputation.md) for how to build your own `DecentralizedComputation`.
-  - [coinstac-simulator](https://github.com/MRN-Code/coinstac/tree/master/packages/coinstac-simulator) for how to test your freshly created `DecentralizedComputation`.
-  - "Under the Hood" below, if you want to understand how the system works.
-  - **API Documentation** is formally available [here](http://mrn-code.github.io/coinstac/index.html#api-docs).
+  - The [development guide](https://github.com/trendscenter/coinstac/blob/master/algorithm-development/coinstac-development-guide.md) for how to test your freshly created `DecentralizedComputation`.
 
 ## Releases
-Binary releases for several platforms can be found here, under each version's assest tab:
-https://github.com/MRN-Code/coinstac/releases
+Binary releases for several platforms can be found here, under each version's assets tab:
+https://github.com/trendscenter/coinstac/releases
 
 ## Under The Hood
 Developer documentation and system design information may be found over in our [technical docs](./TECHNICAL.md).

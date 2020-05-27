@@ -9,6 +9,7 @@ const fs = require('fs');
 const unlinkAsync = pify(fs.unlink);
 const linkAsync = pify(fs.link);
 const statAsync = pify(fs.stat);
+const readdirAsync = pify(fs.readdir);
 
 const path = require('path');
 const winston = require('winston');
@@ -99,7 +100,7 @@ class CoinstacClient {
     arr.shift();
     arr[0].forEach((str, i) => {
       if (str && typeof str === 'string') {
-        let match = str.match(/(?:\.([a-zA-Z]+))?$/);
+        const match = str.match(/(?:\.([a-zA-Z]+))?$/);
         if (match[0] !== '' && match[1] !== 'undefined') {
           key = i;
         }
@@ -117,9 +118,9 @@ class CoinstacClient {
   static parseMetaFile(metaFile) {
     const filesKey = this.getFileIndex([...metaFile]);
     if (filesKey !== 0) {
-      metaFile = metaFile.map((row, i) => {
-        let r = [...row];
-        let data = r[filesKey];
+      metaFile = metaFile.map((row) => {
+        const r = [...row];
+        const data = r[filesKey];
         r.splice(filesKey, 1);
         r.unshift(data);
         return r;
@@ -137,11 +138,11 @@ class CoinstacClient {
    * @returns {File[]} Collection of files
    */
   static getFilesFromMetadata(metaFilePath, metaFile) {
-    const files = this.parseMetaFile(metaFile).map((filecol, i) => {
+    const files = this.parseMetaFile(metaFile).map((filecol) => {
       const file = filecol[0];
       return path.isAbsolute(file)
         ? file
-        : path.resolve(path.join(path.dirname(metaFilePath), file))
+        : path.resolve(path.join(path.dirname(metaFilePath), file));
     });
     files.shift();
     return files;
@@ -160,13 +161,13 @@ class CoinstacClient {
   }
 
   /**
-   * Get array of file paths recursively
-   *
-   * @param {object} group
-   * @param {array} group.paths the paths to traverse
-   * @param {string} group.parentDir parent directory if diving into subdir
-   * @param {string} group.error present if error found
-   */
+    * Get array of file paths recursively
+    *
+    * @param {object} group
+    * @param {array} group.paths the paths to traverse
+    * @param {string} group.parentDir parent directory if diving into subdir
+    * @param {string} group.error present if error found
+    */
   static async getSubPathsAndGroupExtension(group, multext) {
     let pathsArray = [];
     let extension = null;
@@ -182,26 +183,24 @@ class CoinstacClient {
     }
 
     // Iterate through all paths
-    for (let i = 0; i < group.paths.length; i += 1) {
-      let p = group.paths[i];
-
+    await Promise.all(group.paths.map(async (filePath) => {
+      let p = filePath;
       // Combine path with parent dir to get absolute path
       if (group.parentDir) {
-        p = group.parentDir.concat(`/${p}`);
+        p = path.join(group.parentDir, p);
       }
 
-      const stats = await fs.statAsync(p);
+      const stats = await statAsync(p);
 
       if (stats.isDirectory()) {
-        const dirs = await fs.readdir(p)
-        const paths = [...dirs.filter(item => !(/(^|\/)\.[^\/\.]/g).test(item))]
+        const dirs = await readdirAsync(p);
+        const paths = [...dirs.filter(item => !(/(^|\/)\.[^/.]/g).test(item))];
         // Recursively retrieve path contents of directory
         const subGroup = await this.getSubPathsAndGroupExtension({
           paths,
           extension: group.extension,
           parentDir: p,
         });
-
         if (subGroup) {
           if (subGroup.error) {
             return subGroup;
@@ -218,15 +217,14 @@ class CoinstacClient {
         const thisExtension = path.extname(p);
 
         if ((!multext && group.extension && thisExtension !== group.extension)
-            || (!multext && extension && extension !== thisExtension)) {
-          return { error: `Group contains multiple extensions - ${thisExtension} & ${group.extension ? group.extension : extension}.` };
+             || (!multext && extension && extension !== thisExtension)) {
+          return { error: `Group contains multiple extensions - ${thisExtension} & ${group.extension || extension}.` };
         }
 
         extension = thisExtension;
         pathsArray.push(p);
       }
-    }
-
+    }));
     return { paths: pathsArray, extension };
   }
 

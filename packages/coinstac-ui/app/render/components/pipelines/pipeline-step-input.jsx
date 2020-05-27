@@ -17,14 +17,15 @@ import PipelineStepInputRange from './pipeline-step-input/pipeline-step-input-ra
 import PipelineStepInputSelect from './pipeline-step-input/pipeline-step-input-select';
 import PipelineStepInputRadio from './pipeline-step-input/pipeline-step-input-radio';
 import PipelineStepInputBoolean from './pipeline-step-input/pipeline-step-input-boolean';
+import PipelineStepInputUsers from './pipeline-step-input/pipeline-step-input-users';
 
 const styles = theme => ({
   lambdaContainer: {
     display: 'flex',
     alignItems: 'center',
-    marginTop: theme.spacing.unit * 2,
-    marginBottom: theme.spacing.unit * 2,
-    marginLeft: theme.spacing.unit,
+    marginTop: theme.spacing(2),
+    marginBottom: theme.spacing(2),
+    marginLeft: theme.spacing(1),
   },
 });
 
@@ -39,7 +40,6 @@ class PipelineStepInput extends Component {
     this.state = {
       isClientProp: props.objKey === 'covariates' || props.objKey === 'data',
       openInputSourceMenu: false,
-      filePath: '',
     };
 
     this.addClientProp = this.addClientProp.bind(this);
@@ -47,11 +47,13 @@ class PipelineStepInput extends Component {
   }
 
   componentDidUpdate = () => {
-    const { objKey, objParams, updateStep, step } = this.props;
+    const {
+      objKey, objParams, updateStep, step,
+    } = this.props;
     if (step && objKey === 'data' && !step.dataMeta) {
       updateStep({
         ...step,
-        dataMeta: objParams
+        dataMeta: objParams,
       });
     }
   }
@@ -60,6 +62,7 @@ class PipelineStepInput extends Component {
     prop, value, clientPropIndex, isValueArray
   ) { // eslint-disable-line class-methods-use-this
     const { objKey, possibleInputs, step: { inputMap } } = this.props;
+    const { isClientProp } = this.state;
     const inputCopy = { ...inputMap };
 
     // Close alternate source prop
@@ -69,10 +72,12 @@ class PipelineStepInput extends Component {
       delete inputCopy.fromCache;
     }
 
-    if (!this.state.isClientProp && value === 'DELETE_VAR') {
-      delete inputCopy[prop];
-      return { ...inputCopy };
-    } else if (!this.state.isClientProp) {
+    if (!isClientProp) {
+      if (value === 'DELETE_VAR') {
+        delete inputCopy[prop];
+        return { ...inputCopy };
+      }
+
       return { ...inputCopy, [prop]: value };
     }
 
@@ -193,23 +198,24 @@ class PipelineStepInput extends Component {
       owner,
       step,
       updateStep,
+      users,
       classes,
     } = this.props;
 
-    const { openInputSourceMenu, filePath } = this.state;
+    const { openInputSourceMenu } = this.state;
 
     let sourceDropDownLabel = null;
     let isValue = false;
     let isFromCache;
     let visibility = 'block';
 
-    if (objParams.conditional &&
-      objParams.conditional.variable &&
-      step.inputMap) {
+    if (objParams.conditional
+      && objParams.conditional.variable
+      && step.inputMap) {
       visibility = 'none';
-      if (step.inputMap[objParams.conditional.variable] &&
-          step.inputMap[objParams.conditional.variable].value ===
-          objParams.conditional.value) {
+      if (step.inputMap[objParams.conditional.variable]
+          && step.inputMap[objParams.conditional.variable].value
+          === objParams.conditional.value) {
         visibility = 'block';
       }
     }
@@ -262,7 +268,7 @@ class PipelineStepInput extends Component {
                 }
                 {
                   objParams.description
-                  && <Typography variant="body1">{ objParams.description }</Typography>
+                  && <Typography variant="body2">{ objParams.description }</Typography>
                 }
                 {/*
                   objParams.type === 'file'
@@ -408,8 +414,21 @@ class PipelineStepInput extends Component {
                     />
                   )
                 }
+                {
+                  objParams.type === 'users' && (
+                    <PipelineStepInputUsers
+                      objKey={objKey}
+                      objParams={objParams}
+                      owner={owner}
+                      updateStep={updateStep}
+                      getNewObj={this.getNewObj}
+                      step={step}
+                      users={users}
+                    />
+                  )
+                }
               </div>
-              <div style={{position: 'absolute', right: '0'}}>
+              <div style={{ position: 'absolute', right: '0' }}>
                 <Button
                   id={`input-source-${objKey}-dropdown`}
                   disabled={!owner || !objParams.type || isValue}
@@ -446,8 +465,7 @@ class PipelineStepInput extends Component {
                                     step: itemObj.possibleInputIndex,
                                     variable: itemInput[0],
                                   },
-                                }
-                              ),
+                                }),
                             })}
                           >
                             {`Computation ${itemObj.possibleInputIndex + 1}: ${itemInput[1].label}`}
@@ -458,7 +476,7 @@ class PipelineStepInput extends Component {
                 </Menu>
               </div>
             </div>
-            )
+          )
         }
       </div>
     );
@@ -469,17 +487,19 @@ PipelineStepInput.defaultProps = {
   parentKey: '',
   owner: false,
   possibleInputs: [],
+  users: [],
   updateStep: null,
 };
 
 PipelineStepInput.propTypes = {
   classes: PropTypes.object.isRequired,
-  parentKey: PropTypes.string,
-  possibleInputs: PropTypes.array,
   objKey: PropTypes.string.isRequired,
   objParams: PropTypes.object.isRequired,
   owner: PropTypes.bool,
+  parentKey: PropTypes.string,
+  possibleInputs: PropTypes.array,
   step: PropTypes.object.isRequired,
+  users: PropTypes.array,
   updateStep: PropTypes.func,
 };
 

@@ -26,7 +26,7 @@ global.config = remote.getGlobal('config');
 const client = getApolloClient(global.config);
 const store = configureStore(client);
 
-const history = syncHistoryWithStore(hashHistory, store)
+const history = syncHistoryWithStore(hashHistory, store);
 
 render(
   <ApolloProvider store={store} client={client}>

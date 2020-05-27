@@ -10,15 +10,15 @@ import PipelineStepMemberTable from './pipeline-step-member-table';
 
 const styles = theme => ({
   addObjButton: {
-    marginBottom: theme.spacing.unit,
-    marginLeft: theme.spacing.unit,
+    marginBottom: theme.spacing(1),
+    marginLeft: theme.spacing(1),
   },
   lambdaContainer: {
     display: 'flex',
     alignItems: 'center',
-    marginTop: theme.spacing.unit * 2,
-    marginBottom: theme.spacing.unit * 2,
-    marginLeft: theme.spacing.unit,
+    marginTop: theme.spacing(2),
+    marginBottom: theme.spacing(2),
+    marginLeft: theme.spacing(1),
   },
 });
 
@@ -70,15 +70,15 @@ PipelineStepInputWithMappings.defaultProps = {
 
 PipelineStepInputWithMappings.propTypes = {
   classes: PropTypes.object.isRequired,
-  parentKey: PropTypes.string,
-  possibleInputs: PropTypes.array,
   objKey: PropTypes.string.isRequired,
   objParams: PropTypes.object.isRequired,
   owner: PropTypes.bool,
+  parentKey: PropTypes.string,
+  possibleInputs: PropTypes.array,
   step: PropTypes.object.isRequired,
-  updateStep: PropTypes.func.isRequired,
-  getNewObj: PropTypes.func.isRequired,
   addClientProp: PropTypes.func.isRequired,
+  getNewObj: PropTypes.func.isRequired,
+  updateStep: PropTypes.func.isRequired,
 };
 
 export default withStyles(styles)(PipelineStepInputWithMappings);

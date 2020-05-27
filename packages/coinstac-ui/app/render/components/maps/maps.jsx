@@ -2,7 +2,6 @@ import React from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import MapsList from './maps-list';
-import { notifyInfo, notifySuccess } from '../../state/ducks/notifyAndLog';
 
 function Maps({
   auth, consortia, pipelines, runs, routeParams,
@@ -22,15 +21,12 @@ Maps.propTypes = {
   auth: PropTypes.object.isRequired,
   consortia: PropTypes.array.isRequired,
   pipelines: PropTypes.array.isRequired,
-  runs: PropTypes.array.isRequired,
   routeParams: PropTypes.object.isRequired,
+  runs: PropTypes.array.isRequired,
 };
 
-const mapStateToProps = ({ auth }) => {
-  return { auth };
-};
+const mapStateToProps = ({ auth }) => ({
+  auth,
+});
 
-export default connect(mapStateToProps, {
-  notifyInfo,
-  notifySuccess,
-})(Maps);
+export default connect(mapStateToProps)(Maps);

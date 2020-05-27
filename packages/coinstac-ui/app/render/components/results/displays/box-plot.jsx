@@ -8,12 +8,15 @@ class Box extends Component {
     super(props);
     this.drawBox = this.drawBox.bind(this);
   }
+
   drawBox() {
     const { plotData } = this.props;
     const widthBox = 960;
     const heightBox = 500;
     const barWidth = 30;
-    const margin = { top: 20, right: 20, bottom: 30, left: 40 };
+    const margin = {
+      top: 20, right: 20, bottom: 30, left: 40,
+    };
     const width = widthBox - margin.left - margin.right;
     const height = heightBox - margin.top - margin.bottom;
     const totalWidth = width + margin.left + margin.right;
@@ -74,7 +77,7 @@ class Box extends Component {
       .attr('width', totalWidth)
       .attr('height', totalheight)
       .append('g')
-      .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+      .attr('transform', `translate(${margin.left},${margin.top})`);
     // Move the left axis over 25 pixels, and the top axis over 35 pixels
     const axisG = svg.append('g').attr('transform', 'translate(25,0)');
     const axisTopG = svg.append('g').attr('transform', 'translate(35,0)');
@@ -84,9 +87,9 @@ class Box extends Component {
     // Draw legend
     const legend = svg.selectAll('.legend')
       .data(color.domain())
-    .enter().append('g')
+      .enter().append('g')
       .attr('class', 'legend')
-      .attr('transform', (d, i) => { return 'translate(20,' + i * 25 + ')'; });
+      .attr('transform', (d, i) => { return `translate(20,${i * 25})`; });
 
     legend.append('rect')
       .attr('x', width - 18)
@@ -107,22 +110,18 @@ class Box extends Component {
       .append('line')
       .attr('x1', (datum) => {
         return xScale(datum.key) + (barWidth / 2);
-      }
-      )
+      })
       .attr('y1', (datum) => {
         const whisker = datum.whiskers[0];
         return yScale(whisker);
-      }
-      )
+      })
       .attr('x2', (datum) => {
         return xScale(datum.key) + (barWidth / 2);
-      }
-      )
+      })
       .attr('y2', (datum) => {
         const whisker = datum.whiskers[1];
         return yScale(whisker);
-      }
-      )
+      })
       .attr('stroke', '#000')
       .attr('stroke-width', 1)
       .attr('fill', 'none');
@@ -136,20 +135,16 @@ class Box extends Component {
         const quartiles = datum.quartile;
         const height = yScale(quartiles[2]) - yScale(quartiles[0]);
         return height;
-      }
-      )
+      })
       .attr('x', (datum) => {
         return xScale(datum.key);
-      }
-      )
+      })
       .attr('y', (datum) => {
         return yScale(datum.quartile[0]);
-      }
-      )
+      })
       .attr('fill', (datum) => {
         return datum.color;
-      }
-      )
+      })
       .attr('stroke', '#000')
       .attr('stroke-width', 1);
     // Now render all the horizontal lines at once - the whiskers and the median
@@ -221,4 +216,3 @@ Box.defaultProps = {
 };
 
 export default Box;
-

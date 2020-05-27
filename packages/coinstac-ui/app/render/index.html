@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.2/animate.min.css">
     <link rel="stylesheet" herf="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="styles/splash-screen.css">
+    <link rel="stylesheet" href="./papaya/papaya.css?build=1449" />
   </head>
   <body>
     <div id="splash-component">
@@ -26,8 +27,14 @@
 
     <div id="app"></div>
 
+    <script type="text/javascript" src="./papaya/papaya.js?build=1449"></script>
+
     <script>
       // Add application bundle based on environment
+      Error.stackTraceLimit = 1000;
+      window.addEventListener('unhandledrejection', (event) => {
+        console.error(`UNHANDLED PROMISE REJECTION: ${event.reason}`);
+      })
       if (process.env.NODE_ENV === 'development') {
         document.write('<script src="http://localhost:3000/bundle.js" async><\/script>');
       } else {

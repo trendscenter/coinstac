@@ -1,6 +1,7 @@
 'use strict';
 
 import test from 'ava';
+
 const request = require('request-stream');
 const { createReadStream, readFileSync, unlink } = require('fs');
 const resolvePath = require('path').resolve;

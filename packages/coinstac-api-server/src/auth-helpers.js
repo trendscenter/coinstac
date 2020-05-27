@@ -1,9 +1,9 @@
 const crypto = require('crypto');
 const Boom = require('boom');
 const jwt = require('jsonwebtoken');
-const rethink = require('rethinkdb');
 const Promise = require('bluebird');
-const config = require('../config/default');
+const database = require('./database');
+const { transformToClient } = require('./utils');
 
 let dbmap;
 try {
@@ -11,12 +11,8 @@ try {
 } catch (e) {
   console.log('No DBMap found: using defaults'); // eslint-disable-line no-console
   dbmap = {
-    rethinkdbAdmin: {
-      user: 'admin',
-      password: '',
-    },
-    rethinkdbServer: {
-      user: 'server',
+    apiCredentials: {
+      username: 'server',
       password: 'password',
     },
     cstacJWTSecret: 'test',
@@ -38,35 +34,34 @@ const helperFunctions = {
    * @param {string} passwordHash string of hashed password
    * @return {object} The updated user object
    */
-  createUser(user, passwordHash) {
-    return helperFunctions.getRethinkConnection()
-      .then((connection) => {
-        const userDetails = {
-          id: user.username,
-          email: user.email,
-          institution: user.institution,
-          passwordHash,
-          permissions: {
-            computations: {},
-            consortia: {},
-            pipelines: {},
-          },
-          consortiaStatuses: {},
-        };
+  async createUser(user, passwordHash) {
+    const userDetails = {
+      _id: user.username,
+      username: user.username,
+      email: user.email,
+      institution: user.institution,
+      passwordHash,
+      permissions: {
+        computations: {},
+        consortia: {},
+        pipelines: {},
+      },
+      consortiaStatuses: {},
+    };
 
-        if (user.permissions) {
-          userDetails.permissions = user.permissions;
-        }
+    if (user.permissions) {
+      userDetails.permissions = user.permissions;
+    }
 
-        if (user.consortiaStatuses) {
-          userDetails.consortiaStatuses = user.consortiaStatuses;
-        }
+    if (user.consortiaStatuses) {
+      userDetails.consortiaStatuses = user.consortiaStatuses;
+    }
 
-        return rethink.table('users')
-          .insert(userDetails, { returnChanges: true })
-          .run(connection).then(res => connection.close().then(() => res));
-      })
-      .then(result => result.changes[0].new_val);
+    const db = database.getDbInstance();
+
+    const result = await db.collection('users').insertOne(userDetails);
+
+    return result.ops[0];
   },
   /**
    * dbmap getter
@@ -74,34 +69,15 @@ const helperFunctions = {
    */
   getDBMap() { return dbmap; },
   /**
-   * Returns RethinkDB connection
-   * @return {object} A connection to RethinkDB
-   */
-  getRethinkConnection() {
-    const defaultConnectionConfig = {
-      host: config.host,
-      port: config.rethinkPort,
-      db: config.cstacDB,
-    };
-
-    defaultConnectionConfig.user = dbmap.rethinkdbAdmin.user;
-    defaultConnectionConfig.password = dbmap.rethinkdbAdmin.password;
-
-    return rethink.connect(Object.assign({}, defaultConnectionConfig));
-  },
-  /**
    * Returns user table object for requested user
-   * @param {object} credentials credentials of requested user
+   * @param {string} username username of requested user
    * @return {object} The requested user object
    */
-  async getUserDetails(credentials) {
-    const connection = await helperFunctions.getRethinkConnection();
+  async getUserDetails(username) {
+    const db = database.getDbInstance();
 
-    const user = await rethink.table('users').get(credentials.username).run(connection);
-
-    await connection.close();
-
-    return user;
+    const user = await db.collection('users').findOne({ username });
+    return transformToClient(user);
   },
   /**
    * Hashes password for storage in database
@@ -148,9 +124,9 @@ const helperFunctions = {
    * @param {function} callback function signature (err, isValid, alternative credentials)
    */
   validateToken(decoded, request, callback) {
-    helperFunctions.getUserDetails({ username: decoded.username })
+    helperFunctions.getUserDetails(decoded.username)
       .then((user) => {
-        if (user.id) {
+        if (user) {
           callback(null, true, user);
         } else {
           callback(null, false, null);
@@ -160,15 +136,15 @@ const helperFunctions = {
   /**
    * Confirms that submitted email is new
    * @param {object} req request
-   * @param {object} connection GraphQL connection
    * @return {boolean} Is the email unique?
    */
-  validateUniqueEmail(req, connection) {
-    return rethink.table('users')
-      .filter({ email: req.payload.email })
-      .count()
-      .eq(0)
-      .run(connection);
+  async validateUniqueEmail(req) {
+    const db = database.getDbInstance();
+
+    const count = await db.collection('users')
+      .countDocuments({ email: req.payload.email });
+
+    return count === 0;
   },
   /**
    * Confirms that submitted username & email are new
@@ -177,37 +153,32 @@ const helperFunctions = {
    * @return {object} The submitted user information
    */
   validateUniqueUser(req, res) {
-    return helperFunctions.getRethinkConnection()
-      .then(connection => helperFunctions.validateUniqueUsername(req, connection)
-        .then((isUniqueUsername) => {
-          if (isUniqueUsername) {
-            return helperFunctions.validateUniqueEmail(req, connection)
-              .then(res => connection.close().then(() => res));
-          }
+    const isUsernameUnique = this.validateUniqueUsername(req);
 
-          res(Boom.badRequest('Username taken'));
-          return connection.close();
-        })
-        .then((isUniqueEmail) => {
-          if (isUniqueEmail) {
-            res(req.payload);
-          } else if (isUniqueEmail === false) {
-            res(Boom.badRequest('Email taken'));
-          }
-        }));
+    if (!isUsernameUnique) {
+      return res(Boom.badRequest('Username taken'));
+    }
+
+    const isEmailUnique = this.validateUniqueEmail(req);
+
+    if (!isEmailUnique) {
+      return res(Boom.badRequest('Email taken'));
+    }
+
+    return res(req.payload);
   },
   /**
    * Confirms that submitted username is new
    * @param {object} req request
-   * @param {object} connection GraphQL connection
    * @return {boolean} Is the username unique?
    */
-  validateUniqueUsername(req, connection) {
-    return rethink.table('users')
-      .getAll(req.payload.username)
-      .count()
-      .eq(0)
-      .run(connection);
+  async validateUniqueUsername(req) {
+    const db = database.getDbInstance();
+
+    const count = await db.collection('users')
+      .countDocuments({ username: req.payload.username });
+
+    return count === 0;
   },
   /**
    * Validate that authenticating user is using correct credentials
@@ -215,22 +186,24 @@ const helperFunctions = {
    * @param {object} res response
    * @return {object} The requested user object
    */
-  validateUser(req, res) {
-    return helperFunctions.getUserDetails(req.payload)
-      .then((user) => {
-        if (user) {
-          helperFunctions.verifyPassword(req.payload.password, user.passwordHash)
-            .then((passwordMatch) => {
-              if (user && user.passwordHash && passwordMatch) {
-                res(user);
-              } else {
-                res(Boom.unauthorized('Incorrect username or password.'));
-              }
-            });
-        } else {
-          res(Boom.unauthorized('Incorrect username or password.'));
-        }
-      });
+  async validateUser(req, res) {
+    const db = database.getDbInstance();
+
+    const user = await db.collection('users').findOne({ username: req.payload.username });
+
+    if (!user) {
+      return res(Boom.unauthorized('Incorrect username or password.'));
+    }
+
+    const passwordMatch = await helperFunctions.verifyPassword(
+      req.payload.password, user.passwordHash
+    );
+
+    if (passwordMatch) {
+      res(transformToClient(user));
+    } else {
+      res(Boom.unauthorized('Incorrect username or password.'));
+    }
   },
   /**
    * Verify that authenticating user is using correct password

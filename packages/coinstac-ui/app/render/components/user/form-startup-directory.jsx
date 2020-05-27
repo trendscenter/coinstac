@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
@@ -11,7 +12,7 @@ import ipcPromise from 'ipc-promise';
 
 const styles = theme => ({
   description: {
-    marginBottom: theme.spacing.unit * 3,
+    marginBottom: theme.spacing(3),
   },
   directoryField: {
     display: 'flex',
@@ -19,7 +20,7 @@ const styles = theme => ({
   },
   textField: {
     flex: '1 0 auto',
-    marginRight: theme.spacing.unit,
+    marginRight: theme.spacing(1),
   },
 });
 
@@ -27,24 +28,26 @@ class FormStartupDirectory extends React.Component {
   constructor(props) {
     super(props);
 
+    const { appDirectory } = props;
+
     this.state = {
-      currentDirectory: props.appDirectory,
+      currentDirectory: appDirectory,
     };
   }
 
   handleSelectDirectoryClick = () => {
     ipcPromise.send('open-dialog', 'directory')
       .then((selectedDirectory) => {
-        if (!selectedDirectory)
-          return;
+        if (!selectedDirectory) return;
 
-          this.setState({ currentDirectory: selectedDirectory[0] });
+        this.setState({ currentDirectory: selectedDirectory[0] });
       });
   }
 
   submit = () => {
+    const { onSubmit } = this.props;
     const { currentDirectory } = this.state;
-    this.props.onSubmit({ appDirectory: currentDirectory });
+    onSubmit({ appDirectory: currentDirectory });
   }
 
   render() {
@@ -78,5 +81,18 @@ class FormStartupDirectory extends React.Component {
     );
   }
 }
+
+FormStartupDirectory.defaultProps = {
+  appDirectory: '',
+  open: false,
+};
+
+FormStartupDirectory.propTypes = {
+  appDirectory: PropTypes.string,
+  open: PropTypes.bool,
+  classes: PropTypes.object.isRequired,
+  close: PropTypes.func.isRequired,
+  onSubmit: PropTypes.func.isRequired,
+};
 
 export default withStyles(styles)(FormStartupDirectory);

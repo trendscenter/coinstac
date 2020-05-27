@@ -1,3 +1,4 @@
+/* eslint-disable react/no-find-dom-node */
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 import PropTypes from 'prop-types';
@@ -11,16 +12,16 @@ import classNames from 'classnames';
 const styles = theme => ({
   rootPaper: {
     ...theme.mixins.gutters(),
-    paddingTop: theme.spacing.unit * 1.5,
-    paddingBottom: theme.spacing.unit * 1.5,
-    marginTop: theme.spacing.unit * 1.5,
+    paddingTop: theme.spacing(1.5),
+    paddingBottom: theme.spacing(1.5),
+    marginTop: theme.spacing(1.5),
     height: '100%',
   },
   title: {
-    marginBottom: theme.spacing.unit * 1.5,
+    marginBottom: theme.spacing(1.5),
   },
   nestedListItem: {
-    paddingLeft: theme.spacing.unit * 3,
+    paddingLeft: theme.spacing(3),
   },
   listDropzoneContainer: {
     display: 'flex',
@@ -28,7 +29,7 @@ const styles = theme => ({
   interestList: {
     width: '50%',
     flex: '0 0 auto',
-    marginRight: theme.spacing.unit,
+    marginRight: theme.spacing(1),
   },
   dropZone: {
     flex: '1 0 auto',
@@ -51,8 +52,8 @@ class MapsStepFieldCovariate extends Component {
   componentDidMount() {
     const { registerDraggableContainer } = this.props;
 
-    if (this.refs.Container) {
-      const Container = ReactDOM.findDOMNode(this.refs.Container);
+    if (this.container) {
+      const Container = ReactDOM.findDOMNode(this.container);
       registerDraggableContainer(Container);
     }
   }
@@ -60,8 +61,8 @@ class MapsStepFieldCovariate extends Component {
   componentDidUpdate(prevProps) {
     const { registerDraggableContainer, column } = this.props;
 
-    if (prevProps.column !== column && this.refs.Container) {
-      const Container = ReactDOM.findDOMNode(this.refs.Container);
+    if (prevProps.column !== column && this.container) {
+      const Container = ReactDOM.findDOMNode(this.container);
       registerDraggableContainer(Container);
     }
   }
@@ -69,6 +70,7 @@ class MapsStepFieldCovariate extends Component {
   render() {
     const {
       step,
+      label,
       type,
       classes,
       column,
@@ -92,19 +94,23 @@ class MapsStepFieldCovariate extends Component {
             {
               isMapped
                 ? (
-                  <div ref="Container" className="card-draggable">
+                  <div
+                    className="card-draggable"
+                    ref={(ref) => { this.container = ref; }}
+                  >
                     <FileCopyIcon />
                     { column }
-                    <span onClick={() => unmapField(type, column)}>
-                      <Icon className={classNames('fa fa-times-circle', classes.timesIcon)} />
-                    </span>
+                    <Icon
+                      className={classNames('fa fa-times-circle', classes.timesIcon)}
+                      onClick={() => unmapField(type, column)}
+                    />
                   </div>
                 ) : (
                   <div
-                    ref="Container"
                     className={`acceptor acceptor-${name}`}
                     data-type={type}
                     data-name={name}
+                    ref={(ref) => { this.container = ref; }}
                   />
                 )
             }
@@ -120,9 +126,9 @@ MapsStepFieldCovariate.defaultProps = {
 };
 
 MapsStepFieldCovariate.propTypes = {
-  step: PropTypes.object.isRequired,
-  column: PropTypes.string,
   classes: PropTypes.object.isRequired,
+  column: PropTypes.string,
+  step: PropTypes.object.isRequired,
   type: PropTypes.string.isRequired,
   registerDraggableContainer: PropTypes.func.isRequired,
   unmapField: PropTypes.func.isRequired,

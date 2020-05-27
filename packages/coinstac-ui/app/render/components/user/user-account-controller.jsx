@@ -7,29 +7,23 @@ import UserAccount from './user-account';
 
 
 class UserAccountController extends Component {
-  constructor(props) {
-    super(props);
-    this.logoutUser = this.logoutUser.bind(this);
-  }
-
-  logoutUser(evt) {
+  logoutUser = (evt) => {
     const { router } = this.context;
+    const {
+      logout, notifySuccess, notifyError, writeLog,
+    } = this.props;
 
     evt.preventDefault();
 
-    this.props.logout()
-    .then(() => {
-      router.push('/login');
-      this.props.notifySuccess({
-        message: 'Successfully logged out',
+    logout()
+      .then(() => {
+        router.push('/login');
+        notifySuccess('Successfully logged out');
+      })
+      .catch((err) => {
+        writeLog({ type: 'error', message: err });
+        notifyError('Error logging out');
       });
-    })
-    .catch((err) => {
-      this.props.writeLog({ type: 'error', message: err });
-      this.props.notifyError({
-        message: 'Error logging out',
-      });
-    });
   }
 
   render() {
@@ -37,7 +31,6 @@ class UserAccountController extends Component {
       <UserAccount logoutUser={this.logoutUser} {...this.props} />
     );
   }
-
 }
 
 UserAccountController.contextTypes = {
@@ -53,11 +46,7 @@ UserAccountController.propTypes = {
   writeLog: PropTypes.func.isRequired,
 };
 
-const mapStateToProps = ({ auth: { user } }) => {
-  return { user };
-};
-
-export default connect(mapStateToProps, {
+export default connect(null, {
   logout,
   notifyError,
   notifySuccess,

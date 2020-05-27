@@ -15,11 +15,11 @@ import { notifySuccess } from '../../state/ducks/notifyAndLog';
 
 const styles = theme => ({
   topMargin: {
-    marginTop: theme.spacing.unit,
+    marginTop: theme.spacing(1),
   },
   description: {
-    marginTop: theme.spacing.unit * 2,
-    marginBottom: theme.spacing.unit * 2,
+    marginTop: theme.spacing(2),
+    marginBottom: theme.spacing(2),
   },
   actionsContainer: {
     display: 'flex',
@@ -48,28 +48,27 @@ class ComputationSubmission extends Component { // eslint-disable-line
         }
 
         this.setState({ activeSchema: res, validationErrors: error });
-      })
-      .catch(console.log);
+      });
   }
 
   submitSchema() {
-    this.props.submitSchema(this.state.activeSchema)
-    .then((res) => {
-      this.setState({ activeSchema: {} });
-      if (res.data.addComputation) {
-        this.setState({ submissionSuccess: true });
-        this.props.router.push('/dashboard/computations');
-        this.props.notifySuccess({
-          message: 'Computation Submission Successful',
-          autoDismiss: 5,
-        });
-      } else {
+    const { router, submitSchema, notifySuccess } = this.props;
+    const { activeSchema } = this.state;
+
+    submitSchema(activeSchema)
+      .then((res) => {
+        this.setState({ activeSchema: {} });
+        if (res.data.addComputation) {
+          this.setState({ submissionSuccess: true });
+          router.push('/dashboard/computations');
+          notifySuccess('Computation Submission Successful');
+        } else {
+          this.setState({ submissionSuccess: false });
+        }
+      })
+      .catch(() => {
         this.setState({ submissionSuccess: false });
-      }
-    })
-    .catch(() => {
-      this.setState({ submissionSuccess: false });
-    });
+      });
   }
 
   render() {
@@ -83,7 +82,7 @@ class ComputationSubmission extends Component { // eslint-disable-line
             Computation Submission:
           </Typography>
         </div>
-        <Typography variant="body1" className={classes.description}>
+        <Typography variant="body2" className={classes.description}>
           Use the button below to upload your schema for review. Prior to submission,
           your schema will be validated. Please fix any errors found therein to unlock the
           <span style={{ fontWeight: 'bold' }}> Submit </span>
@@ -151,12 +150,10 @@ class ComputationSubmission extends Component { // eslint-disable-line
 }
 
 ComputationSubmission.propTypes = {
+  classes: PropTypes.object.isRequired,
+  router: PropTypes.object.isRequired,
   notifySuccess: PropTypes.func.isRequired,
   submitSchema: PropTypes.func.isRequired,
-};
-
-const mapStateToProps = ({ notifySuccess, submitSchema }) => {
-  return { notifySuccess, submitSchema };
 };
 
 const ComputationSubmissionWithAlert = compose(
@@ -164,7 +161,7 @@ const ComputationSubmissionWithAlert = compose(
   withApollo
 )(ComputationSubmission);
 
-const connectedComponent = connect(mapStateToProps, {
+const connectedComponent = connect(null, {
   notifySuccess,
 })(ComputationSubmissionWithAlert);
 

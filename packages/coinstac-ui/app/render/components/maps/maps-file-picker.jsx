@@ -9,14 +9,14 @@ import Typography from '@material-ui/core/Typography';
 
 const styles = theme => ({
   addFileGroupButton: {
-    marginTop: theme.spacing.unit,
-    marginBottom: theme.spacing.unit,
+    marginTop: theme.spacing(1),
+    marginBottom: theme.spacing(1),
   },
   fileErrorPaper: {
     ...theme.mixins.gutters(),
-    paddingTop: theme.spacing.unit * 2,
-    paddingBottom: theme.spacing.unit * 2,
-    marginBottom: theme.spacing.unit * 2,
+    paddingTop: theme.spacing(2),
+    paddingBottom: theme.spacing(2),
+    marginBottom: theme.spacing(2),
     backgroundColor: '#fef7e4',
     textAlign: 'center',
   },
@@ -59,7 +59,29 @@ class MapsFilePicker extends React.Component {
           this.setState({ filesError: obj.error });
           return;
         }
+        const { setSelectedDataFile } = this.props;
 
+        const dataFile = {
+          extension: obj.extension,
+          files: obj.paths,
+        };
+
+        setSelectedDataFile(dataFile);
+
+        this.setState({ filesError: null });
+      })
+      .catch((error) => {
+        this.setState({ filesError: error.message });
+      });
+  }
+
+  addSingleGroup = () => {
+    ipcPromise.send('open-dialog', 'singles')
+      .then((obj) => {
+        if (obj.error) {
+          this.setState({ filesError: obj.error });
+          return;
+        }
         const { setSelectedDataFile } = this.props;
 
         const dataFile = {
@@ -116,10 +138,26 @@ class MapsFilePicker extends React.Component {
           )
         }
         {
+          dataType === 'singles'
+          && (
+            <div>
+              <Button
+                variant="contained"
+                color="primary"
+                className={classes.addFileGroupButton}
+                onClick={this.addSingleGroup}
+              >
+                Add Single File(s)
+              </Button>
+              <Divider />
+            </div>
+          )
+        }
+        {
           filesError && (
             <Paper className={classes.fileErrorPaper}>
               <Typography variant="h6" className={classes.fileErrorMessage}>File Error</Typography>
-              <Typography className={classes.fileErrorMessage} variant="body1">
+              <Typography className={classes.fileErrorMessage} variant="body2">
                 {filesError}
               </Typography>
             </Paper>
@@ -131,8 +169,8 @@ class MapsFilePicker extends React.Component {
 }
 
 MapsFilePicker.propTypes = {
-  dataType: PropTypes.string.isRequired,
   classes: PropTypes.object.isRequired,
+  dataType: PropTypes.string.isRequired,
   setSelectedDataFile: PropTypes.func.isRequired,
 };
 

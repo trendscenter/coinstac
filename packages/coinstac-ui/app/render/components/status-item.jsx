@@ -19,7 +19,7 @@ function getWaitingOnUsers({
 
   if (allUsernames.length !== Object.keys(groupStep.userStep).length) {
     return difference(allUsernames, currentUsernames);
-  } else if (values(groupStep.userStep).some(step => step !== currentStep)) {
+  } if (values(groupStep.userStep).some(step => step !== currentStep)) {
     return reduce(groupStep.userStep, (memo, step, username) => (
       step !== currentStep ? memo.concat(username) : memo
     ), []);
@@ -43,7 +43,7 @@ export default function StatusItem({
   } else if (remoteResult.complete) {
     indicator = <Label bsStyle="success">Complete</Label>;
     resultButton = (
-      <LinkContainer to={`/dashboard/consortia/${consortium._id}/${remoteResult._id}`}>
+      <LinkContainer to={`/dashboard/consortia/${consortium._id}/2`}>
         <Button
           bsStyle="default"
           className="pull-right"

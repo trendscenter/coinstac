@@ -10,9 +10,9 @@ import { withStyles } from '@material-ui/core/styles';
 const styles = theme => ({
   rootPaper: {
     ...theme.mixins.gutters(),
-    paddingTop: theme.spacing.unit * 2,
-    paddingBottom: theme.spacing.unit * 2,
-    marginTop: theme.spacing.unit * 2,
+    paddingTop: theme.spacing(2),
+    paddingBottom: theme.spacing(2),
+    marginTop: theme.spacing(2),
     height: '100%',
     display: 'flex',
     flexDirection: 'column',
@@ -21,10 +21,10 @@ const styles = theme => ({
   titleContainer: {
     display: 'flex',
     justifyContent: 'space-between',
-    marginBottom: theme.spacing.unit,
+    marginBottom: theme.spacing(1),
   },
   description: {
-    marginBottom: theme.spacing.unit * 2,
+    marginBottom: theme.spacing(2),
   },
   highlight: {
     backgroundColor: 'yellow',
@@ -46,18 +46,19 @@ const ListItem = ({
   classes,
 }) => (
   <Paper
+    key={`${itemObject.id}-list-item`}
     className={classes.rootPaper}
     elevation={4}
   >
     <div className={classes.titleContainer}>
-      <Typography variant="headline" className={highlight && classes.highlight}>
+      <Typography variant="h5" className={highlight ? classes.highlight : ''}>
         { itemObject.name }
       </Typography>
       {
         itemOptions.owner && <Typography>Owner</Typography>
       }
     </div>
-    <Typography variant="body1" className={classes.description}>
+    <Typography variant="body2" className={classes.description}>
       { itemObject.description }
     </Typography>
     { itemOptions.text }
@@ -94,6 +95,7 @@ const ListItem = ({
 
 ListItem.defaultProps = {
   owner: false,
+  highlight: false,
   linkButtonText: null,
   linkButtonColor: null,
   deleteButtonText: null,
@@ -102,17 +104,17 @@ ListItem.defaultProps = {
 };
 
 ListItem.propTypes = {
+  canDelete: PropTypes.bool,
+  classes: PropTypes.object.isRequired,
+  deleteButtonText: PropTypes.string,
+  highlight: PropTypes.bool,
   itemObject: PropTypes.object.isRequired,
   itemOptions: PropTypes.object.isRequired,
   itemRoute: PropTypes.string.isRequired,
-  canDelete: PropTypes.bool,
-  owner: PropTypes.bool,
-  linkButtonText: PropTypes.string,
   linkButtonColor: PropTypes.string,
-  deleteButtonText: PropTypes.string,
-  highlight: PropTypes.bool,
-  deleteItem: PropTypes.func.isRequired,
-  classes: PropTypes.object.isRequired,
+  linkButtonText: PropTypes.string,
+  owner: PropTypes.bool,
+  deleteItem: PropTypes.func,
 };
 
 export default withStyles(styles)(ListItem);

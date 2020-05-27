@@ -34,6 +34,8 @@ npm install // needed only for initial top level setup
 npm run build
 ```
 
+These [dependencies](https://github.com/trendscenter/coinstac/blob/master/package-lock.json) will be installed.
+
 ## Updating Source Code
 Any time you pull in new code, you'll need to rebuild the application.
 1. `git pull` to get the latest source code

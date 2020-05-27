@@ -1,58 +1,59 @@
-import React, { Component } from 'react';
+import React, { Component, Fragment } from 'react';
+import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { Link } from 'react-router';
 import { compose, graphql, withApollo } from 'react-apollo';
-import Button from '@material-ui/core/Button';
-import Fab from '@material-ui/core/Fab';
-import Typography from '@material-ui/core/Typography';
-import AddIcon from '@material-ui/icons/Add';
-import { withStyles } from '@material-ui/core/styles';
 import { ipcRenderer } from 'electron';
 import classNames from 'classnames';
-import PropTypes from 'prop-types';
-import shortid from 'shortid';
+import { orderBy } from 'lodash';
+import {
+  Button, Menu, MenuItem, TextField, Typography,
+} from '@material-ui/core';
+import Fab from '@material-ui/core/Fab';
+import AddIcon from '@material-ui/icons/Add';
+import { withStyles } from '@material-ui/core/styles';
 import MemberAvatar from '../common/member-avatar';
 import ListItem from '../common/list-item';
 import ListDeleteModal from '../common/list-delete-modal';
 import { deleteAllDataMappingsFromConsortium } from '../../state/ducks/maps';
-import { saveLocalRun } from '../../state/ducks/runs';
-import { updateUserPerms } from '../../state/ducks/auth';
 import { pullComputations } from '../../state/ducks/docker';
 import {
   CREATE_RUN_MUTATION,
   DELETE_CONSORTIUM_MUTATION,
   FETCH_ALL_COMPUTATIONS_QUERY,
   FETCH_ALL_CONSORTIA_QUERY,
-  FETCH_ALL_PIPELINES_QUERY,
   JOIN_CONSORTIUM_MUTATION,
   LEAVE_CONSORTIUM_MUTATION,
+  SAVE_ACTIVE_PIPELINE_MUTATION,
 } from '../../state/graphql/functions';
 import {
   consortiaMembershipProp,
   removeDocFromTableProp,
   saveDocumentProp,
+  consortiumSaveActivePipelineProp,
 } from '../../state/graphql/props';
-import { notifyInfo, notifyWarning } from '../../state/ducks/notifyAndLog';
+import { notifyInfo } from '../../state/ducks/notifyAndLog';
+import { pipelineNeedsDataMapping } from '../../../main/utils/run-pipeline-functions';
 
 const MAX_LENGTH_CONSORTIA = 50;
 
 const styles = theme => ({
   button: {
-    margin: theme.spacing.unit,
+    margin: theme.spacing(1),
   },
   contentContainer: {
-    marginTop: theme.spacing.unit,
-    marginBottom: theme.spacing.unit,
+    marginTop: theme.spacing(1),
+    marginBottom: theme.spacing(1),
   },
   subtitle: {
-    marginTop: theme.spacing.unit * 2,
+    marginTop: theme.spacing(2),
   },
   label: {
     fontWeight: 'bold',
   },
   labelInline: {
     fontWeight: 'bold',
-    marginRight: theme.spacing.unit,
+    marginRight: theme.spacing(1),
     display: 'inline-block',
   },
   value: {
@@ -63,6 +64,9 @@ const styles = theme => ({
   },
   red: {
     color: 'red',
+  },
+  searchInput: {
+    marginBottom: theme.spacing(4),
   },
 });
 
@@ -75,65 +79,59 @@ class ConsortiaList extends Component {
     super(props);
 
     this.state = {
-      memberConsortia: [],
-      otherConsortia: [],
       consortiumToDelete: -1,
       showModal: false,
+      isConsortiumPipelinesMenuOpen: false,
+      search: '',
       consortiumJoinedByThread:
         localStorage.getItem('CONSORTIUM_JOINED_BY_THREAD'),
     };
 
     localStorage.removeItem('CONSORTIUM_JOINED_BY_THREAD');
 
-    this.getOptions = this.getOptions.bind(this);
-    this.getListItem = this.getListItem.bind(this);
     this.deleteConsortium = this.deleteConsortium.bind(this);
     this.joinConsortium = this.joinConsortium.bind(this);
     this.leaveConsortium = this.leaveConsortium.bind(this);
     this.closeModal = this.closeModal.bind(this);
     this.openModal = this.openModal.bind(this);
+    this.selectPipeline = this.selectPipeline.bind(this);
     this.startPipeline = this.startPipeline.bind(this);
     this.stopPipeline = this.stopPipeline.bind(this);
   }
 
   componentDidMount() {
-    const { consortiumJoinedByThread } = this.state
+    const { consortiumJoinedByThread } = this.state;
 
     if (consortiumJoinedByThread) {
       setTimeout(() => {
-        this.setState({ consortiumJoinedByThread: null })
-      }, 5000)  
+        this.setState({ consortiumJoinedByThread: null });
+      }, 5000);
     }
   }
 
-  static getDerivedStateFromProps(props) {
-    const { auth, consortia } = props;
-    const memberConsortia = [];
-    const otherConsortia = [];
-    if (consortia && consortia.length <= MAX_LENGTH_CONSORTIA) {
-      consortia.forEach((cons) => {
-        if (cons.owners.indexOf(auth.user.id) > -1 || cons.members.indexOf(auth.user.id) > -1) {
-          memberConsortia.push(cons);
-        } else {
-          otherConsortia.push(cons);
-        }
-      });
-    }
-    return { memberConsortia, otherConsortia };
+  getConsortiumPipelines = (consortium) => {
+    const { pipelines } = this.props;
+    return pipelines.filter(pipe => pipe.owningConsortium === consortium.id);
   }
 
   getOptions(member, owner, consortium) {
-    const actions = [];
-    const text = [];
     const {
+      maps,
       classes,
       pipelines,
-      maps,
       runs,
     } = this.props;
+    const { isConsortiumPipelinesMenuOpen } = this.state;
 
-    const isMapped = maps.findIndex(m => m.consortiumId === consortium.id
+    const actions = [];
+    const text = [];
+
+    const pipeline = pipelines.find(pipe => pipe.id === consortium.activePipelineId);
+
+    const consortiumHasDataMap = maps.findIndex(m => m.consortiumId === consortium.id
       && m.pipelineId === consortium.activePipelineId) > -1;
+
+    const needsDataMapping = !consortiumHasDataMap && pipelineNeedsDataMapping(pipeline);
 
     // Add pipeline text
     text.push(
@@ -141,11 +139,15 @@ class ConsortiaList extends Component {
         <Typography className={classes.labelInline}>
           Active Pipeline:
         </Typography>
-        {
-          consortium.activePipelineId
-            ? <Typography className={classNames(classes.value, classes.green)}>{pipelines.find(pipe => pipe.id === consortium.activePipelineId).name}</Typography>
-            : <Typography className={classNames(classes.value, classes.red)}>None</Typography>
+        <Typography className={
+          classNames(classes.value, consortium.activePipelineId ? classes.green : classes.red)
         }
+        >
+          {consortium.activePipelineId
+            ? pipeline.name
+            : 'None'
+          }
+        </Typography>
       </div>
     );
 
@@ -173,8 +175,8 @@ class ConsortiaList extends Component {
           showDetails
           width={40}
           mapped={
-            consortium.mappedForRun &&
-              consortium.mappedForRun.indexOf(user.id) !== -1
+            consortium.mappedForRun
+              && consortium.mappedForRun.indexOf(user.id) !== -1
           }
         />
       ));
@@ -188,7 +190,7 @@ class ConsortiaList extends Component {
       </div>
     );
 
-    if (owner && consortium.activePipelineId && isMapped) {
+    if (owner && consortium.activePipelineId && !needsDataMapping) {
       const isPipelineRunning = runs.filter((run) => {
         return run.consortiumId === consortium.id && run.status === 'started';
       }).length > 0;
@@ -198,7 +200,7 @@ class ConsortiaList extends Component {
           key={`${consortium.id}-start-pipeline-button`}
           variant="contained"
           className={classes.button}
-          onClick={this.startPipeline(consortium.id, consortium.activePipelineId)}
+          onClick={this.startPipeline(consortium.id)}
         >
           Start Pipeline
         </Button>
@@ -217,19 +219,42 @@ class ConsortiaList extends Component {
         );
       }
     } else if (owner && !consortium.activePipelineId) {
+      const consortiumPipelines = this.getConsortiumPipelines(consortium);
+
       actions.push(
-        <Button
-          key={`${consortium.id}-set-active-pipeline-button`}
-          component={Link}
-          to={`/dashboard/consortia/${consortium.id}/1`}
-          variant="contained"
-          color="secondary"
-          className={classes.button}
-        >
-          Set Active Pipeline
-        </Button>
+        <Fragment key={`${consortium.id}-set-active-pipeline-button`}>
+          <Button
+            component={Link}
+            variant="contained"
+            color="secondary"
+            className={classes.button}
+            onClick={event => this.handleSetActivePipelineOnConsortium(
+              event, consortium, consortiumPipelines.length === 0
+            )}
+          >
+            Set Active Pipeline
+          </Button>
+          <Menu
+            id="consortium-pipelines-dropdown-menu"
+            anchorEl={this.pipelinesButtonElement}
+            open={isConsortiumPipelinesMenuOpen === consortium.id}
+            onClose={() => this.closeConsortiumPipelinesMenu()}
+          >
+            {
+              consortiumPipelines
+              && consortiumPipelines.map(pipe => (
+                <MenuItem
+                  key={`owned-${pipe.id}`}
+                  onClick={() => this.selectPipeline(consortium.id, pipe.id)}
+                >
+                  {pipe.name}
+                </MenuItem>
+              ))
+            }
+          </Menu>
+        </Fragment>
       );
-    } else if ((owner || member) && !isMapped) {
+    } else if ((owner || member) && needsDataMapping) {
       actions.push(
         <Button
           key={`${consortium.id}-set-map-local-button`}
@@ -275,9 +300,30 @@ class ConsortiaList extends Component {
     return { actions, text, owner };
   }
 
-  getListItem(consortium) {
-    const { user } = this.props.auth;
+  handleSetActivePipelineOnConsortium = (event, consortium, redirect) => {
+    const { router } = this.props;
+
+    if (redirect) {
+      router.push(`dashboard/consortia/${consortium.id}/1`);
+    } else {
+      this.openConsortiumPipelinesMenu(event, consortium.id);
+    }
+  }
+
+  closeConsortiumPipelinesMenu = () => {
+    this.setState({ isConsortiumPipelinesMenuOpen: false });
+  }
+
+  openConsortiumPipelinesMenu = (event, consortiumId) => {
+    this.pipelinesButtonElement = event.target;
+    this.setState({ isConsortiumPipelinesMenuOpen: consortiumId });
+  }
+
+  renderListItem = (consortium) => {
+    const { auth } = this.props;
     const { consortiumJoinedByThread } = this.state;
+
+    const { user } = auth;
 
     return (
       <ListItem
@@ -298,34 +344,82 @@ class ConsortiaList extends Component {
     );
   }
 
-  closeModal() {
-    this.setState({ showModal: false });
+  handleSearchChange = (evt) => {
+    this.setState({ search: evt.target.value });
   }
 
-  openModal(consortiumId) {
-    return () => {
-      this.setState({
-        showModal: true,
-        consortiumToDelete: consortiumId,
+  getFilteredConsortia = () => {
+    const { consortia } = this.props;
+    const { search } = this.state;
+
+    if (!search) {
+      return consortia;
+    }
+
+    return consortia.filter(
+      consortium => consortium.name.toLowerCase().indexOf(search.toLowerCase()) !== -1
+    );
+  }
+
+  getConsortiaByOwner = () => {
+    const { auth } = this.props;
+
+    const consortia = this.getFilteredConsortia();
+
+    const memberConsortia = [];
+    const otherConsortia = [];
+
+    if (consortia && consortia.length <= MAX_LENGTH_CONSORTIA) {
+      consortia.forEach((consortium) => {
+        const { owners, members } = consortium;
+        if ([...owners, ...members].indexOf(auth.user.id) !== -1) {
+          memberConsortia.push(consortium);
+        } else {
+          otherConsortia.push(consortium);
+        }
       });
+    }
+
+    return {
+      memberConsortia: orderBy(memberConsortia, ['createDate'], ['desc']),
+      otherConsortia: orderBy(otherConsortia, ['createDate'], ['desc']),
     };
   }
 
-  async deleteConsortium() {
-    const { deleteAllDataMappingsFromConsortium, deleteConsortiumById, consortia } = this.props;
-    const { consortiumToDelete } = this.state;
+  startPipeline(consortiumId) {
+    return () => {
+      const {
+        createRun,
+      } = this.props;
 
-    const consortium = consortia.find(c => c.id === consortiumToDelete);
+      createRun(consortiumId);
+    };
+  }
 
-    await deleteAllDataMappingsFromConsortium(consortium.id);
+  stopPipeline(pipelineId) {
+    return () => {
+      const { runs } = this.props;
 
-    deleteConsortiumById(consortium.id);
+      const presentRun = runs.reduce((prev, curr) => {
+        return prev.startDate > curr.startDate ? prev : curr;
+      });
+      const runId = presentRun.id;
 
-    this.closeModal();
+      ipcRenderer.send('stop-pipeline', { pipelineId, runId });
+    };
+  }
+
+  async leaveConsortium(consortiumId) {
+    const { deleteAllDataMappingsFromConsortium, leaveConsortium } = this.props;
+
+    await deleteAllDataMappingsFromConsortium(consortiumId);
+    leaveConsortium(consortiumId);
   }
 
   joinConsortium(consortiumId, activePipelineId) {
-    const { client, pipelines } = this.props;
+    const {
+      client, pipelines, pullComputations, notifyInfo, joinConsortium,
+    } = this.props;
 
     if (activePipelineId) {
       const computationData = client.readQuery({ query: FETCH_ALL_COMPUTATIONS_QUERY });
@@ -342,115 +436,51 @@ class ConsortiaList extends Component {
         });
       });
 
-      this.props.pullComputations({ consortiumId, computations });
-      this.props.notifyInfo({
-        message: 'Pipeline computations downloading via Docker.',
-        autoDismiss: 5,
-        action: {
-          label: 'View Docker Download Progress',
-          callback: () => {
-            this.props.router.push('/dashboard/computations');
-          },
-        },
-      });
+      pullComputations({ consortiumId, computations });
+      notifyInfo('Pipeline computations downloading via Docker.');
     }
 
-    this.props.joinConsortium(consortiumId);
+    joinConsortium(consortiumId);
   }
 
-  async leaveConsortium(consortiumId) {
-    const { deleteAllDataMappingsFromConsortium, leaveConsortium } = this.props;
+  async deleteConsortium() {
+    const { deleteAllDataMappingsFromConsortium, deleteConsortiumById, consortia } = this.props;
+    const { consortiumToDelete } = this.state;
 
-    await deleteAllDataMappingsFromConsortium(consortiumId);
-    leaveConsortium(consortiumId);
+    const consortium = consortia.find(c => c.id === consortiumToDelete);
+
+    await deleteAllDataMappingsFromConsortium(consortium.id);
+
+    deleteConsortiumById(consortium.id);
+
+    this.closeModal();
   }
 
-  stopPipeline(pipelineId) {
+  openModal(consortiumId) {
     return () => {
-      const { client, runs } = this.props;
-      
-      const presentRun = runs.reduce( (prev, curr) => { 
-        return prev.startDate > curr.startDate ? prev : curr ;
+      this.setState({
+        showModal: true,
+        consortiumToDelete: consortiumId,
       });
-      const runId = presentRun.id;
-      
-      ipcRenderer.send('stop-pipeline', { pipelineId, runId });
-    }
-  }
-
-  startPipeline(consortiumId, activePipelineId) {
-    return () => {
-      const {
-        client,
-        router,
-        maps,
-        saveLocalRun,
-        createRun,
-        notifyInfo,
-        notifyWarning,
-        consortia,
-      } = this.props;
-
-      let isRemotePipeline = false;
-      const pipelineData = client.readQuery({ query: FETCH_ALL_PIPELINES_QUERY });
-      let pipeline = pipelineData.fetchAllPipelines
-        .find(pipe => pipe.id === activePipelineId);
-
-      for (let i = 0; i < pipeline.steps.length; i += 1) {
-        if (pipeline.steps[i].controller.type === 'decentralized') {
-          isRemotePipeline = true;
-          break;
-        }
-      }
-
-      // Don't send local pipelines to Rethink
-      if (!isRemotePipeline) {
-        const consortium = consortia.find(cons => cons.id === consortiumId);
-        const run = {
-          id: `local-${shortid.generate()}`,
-          clients: [...consortium.members],
-          consortiumId,
-          pipelineSnapshot: pipeline,
-          startDate: Date.now(),
-          type: 'local',
-          results: null,
-          endDate: null,
-          userErrors: null,
-          __typename: 'Run',
-        };
-
-        const dataMapping = maps.find(m => m.consortiumId === consortium.id
-          && m.pipelineId === consortium.activePipelineId);
-
-        notifyInfo({
-          message: `Local Pipeline Starting for ${consortium.name}.`,
-          action: {
-            label: 'Watch Progress',
-            callback: () => {
-              router.push('dashboard');
-            },
-          },
-        });
-
-        ipcRenderer.send('start-pipeline', {
-          consortium, dataMappings: dataMapping, run,
-        });
-      }
-
-      // If remote pipeline, call GraphQL to create new pipeline
-      createRun(consortiumId);
     };
   }
 
+  closeModal() {
+    this.setState({ showModal: false });
+  }
+
+  async selectPipeline(consortiumId, pipelineId) {
+    const { deleteAllDataMappingsFromConsortium, saveActivePipeline } = this.props;
+    await deleteAllDataMappingsFromConsortium(consortiumId);
+
+    saveActivePipeline(consortiumId, pipelineId);
+    this.closeConsortiumPipelinesMenu();
+  }
+
   render() {
-    const {
-      consortia,
-      classes,
-    } = this.props;
-    const {
-      memberConsortia,
-      otherConsortia,
-    } = this.state;
+    const { consortia, classes } = this.props;
+    const { search, showModal } = this.state;
+    const { memberConsortia, otherConsortia } = this.getConsortiaByOwner();
 
     return (
       <div>
@@ -464,37 +494,49 @@ class ConsortiaList extends Component {
             to="/dashboard/consortia/new"
             className={classes.button}
             name="create-consortium-button"
+            aria-label="add"
           >
             <AddIcon />
           </Fab>
         </div>
 
+        <TextField
+          id="search"
+          label="Search"
+          fullWidth
+          value={search}
+          className={classes.searchInput}
+          onChange={this.handleSearchChange}
+        />
+
         {consortia && consortia.length && consortia.length > MAX_LENGTH_CONSORTIA
-          && consortia.map(consortium => this.getListItem(consortium))
+          && consortia.map(this.renderListItem)}
+
+        {memberConsortia.length > 0 && (
+          <Typography variant="h6">Your Consortia</Typography>
+        )}
+
+        {memberConsortia.length > 0
+          && memberConsortia.map(this.renderListItem)
         }
-        {memberConsortia.length > 0 && <Typography variant="h6">Member Consortia</Typography>}
-        {
-          memberConsortia.length > 0
-          && memberConsortia.map(consortium => this.getListItem(consortium))
-        }
-        {otherConsortia.length > 0 && <Typography variant="h6" className={classes.subtitle}>Other Consortia</Typography>}
-        {
-          otherConsortia.length > 0
-          && otherConsortia.map(consortium => this.getListItem(consortium))
-        }
-        {
-          (!consortia || !consortia.length)
-          && (
-            <Typography variant="body1">
-              No consortia found
-            </Typography>
-          )
-        }
+
+        {otherConsortia.length > 0 && (
+          <Typography variant="h6" className={classes.subtitle}>Other Consortia</Typography>
+        )}
+
+        {otherConsortia.length > 0
+          && otherConsortia.map(this.renderListItem)}
+
+        {(!consortia || !consortia.length) && (
+          <Typography variant="body2">
+            No consortia found
+          </Typography>
+        )}
         <ListDeleteModal
           close={this.closeModal}
           deleteItem={this.deleteConsortium}
           itemName="consortium"
-          show={this.state.showModal}
+          show={showModal}
           warningMessage="All pipelines associated with this consortium will also be deleted"
         />
       </div>
@@ -503,28 +545,28 @@ class ConsortiaList extends Component {
 }
 
 ConsortiaList.propTypes = {
-  maps: PropTypes.array.isRequired,
   auth: PropTypes.object.isRequired,
+  classes: PropTypes.object.isRequired,
   client: PropTypes.object.isRequired,
   consortia: PropTypes.array.isRequired,
+  maps: PropTypes.array.isRequired,
+  pipelines: PropTypes.array.isRequired,
+  router: PropTypes.object.isRequired,
+  runs: PropTypes.array.isRequired,
   createRun: PropTypes.func.isRequired,
+  deleteAllDataMappingsFromConsortium: PropTypes.func.isRequired,
+  saveActivePipeline: PropTypes.func.isRequired,
   deleteConsortiumById: PropTypes.func.isRequired,
   joinConsortium: PropTypes.func.isRequired,
   leaveConsortium: PropTypes.func.isRequired,
   notifyInfo: PropTypes.func.isRequired,
-  notifyWarning: PropTypes.func.isRequired,
-  pipelines: PropTypes.array.isRequired,
   pullComputations: PropTypes.func.isRequired,
-  deleteAllDataMappingsFromConsortium: PropTypes.func.isRequired,
-  router: PropTypes.object.isRequired,
-  saveLocalRun: PropTypes.func.isRequired,
-  classes: PropTypes.object.isRequired,
-  runs: PropTypes.array.isRequired,
 };
 
-const mapStateToProps = ({ auth, maps }) => {
-  return { auth, maps: maps.consortiumDataMappings };
-};
+const mapStateToProps = ({ auth, maps }) => ({
+  auth,
+  maps: maps.consortiumDataMappings,
+});
 
 const ConsortiaListWithData = compose(
   graphql(CREATE_RUN_MUTATION, saveDocumentProp('createRun', 'consortiumId')),
@@ -536,6 +578,7 @@ const ConsortiaListWithData = compose(
   )),
   graphql(JOIN_CONSORTIUM_MUTATION, consortiaMembershipProp('joinConsortium')),
   graphql(LEAVE_CONSORTIUM_MUTATION, consortiaMembershipProp('leaveConsortium')),
+  graphql(SAVE_ACTIVE_PIPELINE_MUTATION, consortiumSaveActivePipelineProp('saveActivePipeline')),
   withApollo
 )(ConsortiaList);
 
@@ -543,10 +586,7 @@ export default withStyles(styles)(
   connect(mapStateToProps,
     {
       notifyInfo,
-      notifyWarning,
       pullComputations,
       deleteAllDataMappingsFromConsortium,
-      saveLocalRun,
-      updateUserPerms,
     })(ConsortiaListWithData)
 );

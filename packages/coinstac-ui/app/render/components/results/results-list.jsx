@@ -6,7 +6,7 @@ import RunsList from '../common/runs-list';
 
 const styles = theme => ({
   pageTitle: {
-    marginBottom: theme.spacing.unit * 2,
+    marginBottom: theme.spacing(2),
   },
 });
 
@@ -30,9 +30,9 @@ const ResultsList = ({ runs, consortia, classes }) => {
 };
 
 ResultsList.propTypes = {
-  runs: PropTypes.array,
-  consortia: PropTypes.array,
   classes: PropTypes.object.isRequired,
+  consortia: PropTypes.array,
+  runs: PropTypes.array,
 };
 
 ResultsList.defaultProps = {

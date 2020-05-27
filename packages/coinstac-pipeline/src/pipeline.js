@@ -24,6 +24,9 @@ module.exports = {
       operatingDirectory,
       clientId,
       userDirectories,
+      owner,
+      logger,
+      dockerManager,
     }
   ) {
     const cache = {};
@@ -34,7 +37,14 @@ module.exports = {
 
 
     const pipelineSteps = steps.map(
-      step => Controller.create(step, runId, { mode, operatingDirectory, clientId })
+      step => Controller.create(step, runId, {
+        mode,
+        operatingDirectory,
+        clientId,
+        owner,
+        logger,
+        dockerManager,
+      })
     );
 
     const prepCache = (pipelineSpec) => {
@@ -78,15 +88,11 @@ module.exports = {
       pipelineSteps,
       run(remoteHandler) {
         const packageState = () => {
-          const troller = this.pipelineSteps[this.currentStep].controllerState;
-          let owner = '';
-          if (this.pipelineSteps[this.currentStep].inputMap.meta &&
-            this.pipelineSteps[this.currentStep].inputMap.meta.owner) {
-            owner = this.pipelineSteps[this.currentStep].inputMap.meta.owner;
-          }
+          const { controllerState } = this.pipelineSteps[this.currentStep];
+
           this.currentState = {
-            currentIteration: troller.iteration,
-            controllerState: troller.state,
+            currentIteration: controllerState.iteration,
+            controllerState: controllerState.state,
             pipelineStep: this.currentStep,
             mode: this.mode,
             totalSteps: this.pipelineSteps.length,

@@ -8,14 +8,14 @@ import { withStyles } from '@material-ui/core/styles';
 const styles = theme => ({
   rootPaper: {
     ...theme.mixins.gutters(),
-    paddingTop: theme.spacing.unit * 2,
-    paddingBottom: theme.spacing.unit * 2,
-    marginTop: theme.spacing.unit * 2,
+    paddingTop: theme.spacing(2),
+    paddingBottom: theme.spacing(2),
+    marginTop: theme.spacing(2),
     height: '100%',
     overflow: 'scroll',
   },
   nestedListItem: {
-    paddingLeft: theme.spacing.unit * 4,
+    paddingLeft: theme.spacing(4),
   },
   mediumWeight: {
     fontWeight: 500,
@@ -42,9 +42,12 @@ function MapsStepFieldFixedValue(props) {
       value = JSON.stringify(step.value);
       break;
     default:
+      // eslint-disable-next-line prefer-destructuring
       value = step.value;
+      break;
   }
 
+  // eslint-disable-next-line no-useless-escape
   const label = fieldName.replace(/\_/g, ' ');
 
   return (
@@ -63,9 +66,9 @@ function MapsStepFieldFixedValue(props) {
 }
 
 MapsStepFieldFixedValue.propTypes = {
-  step: PropTypes.object.isRequired,
-  fieldName: PropTypes.string.isRequired,
   classes: PropTypes.object.isRequired,
+  fieldName: PropTypes.string.isRequired,
+  step: PropTypes.object.isRequired,
 };
 
 export default withStyles(styles)(MapsStepFieldFixedValue);

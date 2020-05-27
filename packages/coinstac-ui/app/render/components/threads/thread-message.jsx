@@ -1,32 +1,32 @@
-import React, { Component } from 'react'
-import PropTypes from 'prop-types'
-import { Link } from 'react-router'
-import { withStyles } from '@material-ui/core/styles'
-import ThreadAvatar from './thread-avatar'
+import React from 'react';
+import PropTypes from 'prop-types';
+import { Link } from 'react-router';
+import { withStyles } from '@material-ui/core/styles';
+import ThreadAvatar from './thread-avatar';
 
 const styles = theme => ({
   wrapper: {
     borderTop: `1px solid ${theme.palette.grey[300]}`,
-    padding: theme.spacing.unit * 2,
+    padding: theme.spacing(2),
   },
   users: {
     display: 'flex',
     alignItems: 'center',
-    paddingBottom: theme.spacing.unit * 2,
+    paddingBottom: theme.spacing(2),
     borderBottom: '1px solid #f3f2f1',
     '&>span': {
       fontWeight: 600,
     },
   },
   to: {
-    paddingLeft: theme.spacing.unit,
+    paddingLeft: theme.spacing(1),
   },
   avatarWrapper: {
-    paddingLeft: theme.spacing.unit * 1.5,
-    paddingRight: theme.spacing.unit,
+    paddingLeft: theme.spacing(1.5),
+    paddingRight: theme.spacing(1),
   },
   button: {
-    padding: theme.spacing.unit,
+    padding: theme.spacing(1),
     backgroundColor: '#0078d4',
     fontSize: 12,
     color: 'white',
@@ -37,11 +37,13 @@ const styles = theme => ({
     '&:hover': {
       backgroundColor: '#005a9e',
     },
-  }
-})
+  },
+});
 
 const ThreadMessage = ({ classes, message, joinConsortium }) => {
-  const { sender, recipients, content, action } = message
+  const {
+    sender, recipients, content, action,
+  } = message;
 
   return (
     <div className={classes.wrapper}>
@@ -54,7 +56,7 @@ const ThreadMessage = ({ classes, message, joinConsortium }) => {
           />
         </div>
         <span className={classes.to}>To:</span>
-        {recipients.map(recipient =>
+        {recipients.map(recipient => (
           <div
             className={classes.avatarWrapper}
             key={recipient}
@@ -65,33 +67,34 @@ const ThreadMessage = ({ classes, message, joinConsortium }) => {
               isSender={false}
             />
           </div>
-        )}
+        ))}
       </div>
       <p>
         {content}
       </p>
       {action && action.type === 'join-consortium' && (
         <button
+          type="button"
           className={classes.button}
           onClick={() => joinConsortium(action.detail.id)}
         >
-          Join consortium - {action.detail.name}
+          {`Join consortium - ${action.detail.name}`}
         </button>
       )}
 
       {action && action.type === 'share-result' && (
         <Link to="/dashboard/results">
-          <button className={classes.button}>See Result</button>
+          <button type="button" className={classes.button}>See Result</button>
         </Link>
       )}
     </div>
-  )
-}
+  );
+};
 
 ThreadMessage.propTypes = {
   classes: PropTypes.object.isRequired,
   message: PropTypes.object.isRequired,
   joinConsortium: PropTypes.func.isRequired,
-}
+};
 
-export default withStyles(styles)(ThreadMessage)
+export default withStyles(styles)(ThreadMessage);

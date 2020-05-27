@@ -34,15 +34,18 @@ const sharedFields = {
     owners
     isPrivate
     mappedForRun
+    createDate
   `,
   pipelineFields: `
     id
     delete
     description
     name
+    owner
     owningConsortium
     shared
     timeout
+    limitOutputToOwner
     steps {
       id
       computations {
@@ -93,7 +96,6 @@ const sharedFields = {
     id
     email
     institution
-    passwordHash
     permissions
     consortiaStatuses
   `,
@@ -132,7 +134,7 @@ const sharedFields = {
         detail
       }
     }
-  `
+  `,
 };
 
 module.exports = sharedFields;

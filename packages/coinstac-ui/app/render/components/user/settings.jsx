@@ -4,35 +4,31 @@ import PropTypes from 'prop-types';
 import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
-import { notifyError, notifyInfo } from '../../state/ducks/notifyAndLog';
+import { notifyInfo } from '../../state/ducks/notifyAndLog';
 import { clearRuns } from '../../state/ducks/runs';
 
 const styles = theme => ({
   pageTitle: {
-    marginBottom: theme.spacing.unit * 2,
+    marginBottom: theme.spacing(2),
   },
   pageSubtitle: {
-    marginBottom: theme.spacing.unit,
+    marginBottom: theme.spacing(1),
   },
   sectionTitle: {
-    marginBottom: theme.spacing.unit,
+    marginBottom: theme.spacing(1),
   },
   button: {
-    marginTop: theme.spacing.unit,
+    marginTop: theme.spacing(1),
   },
 });
 
 class Settings extends Component {
-  constructor(props) {
-    super(props);
-
-    this.clearData = this.clearData.bind(this);
-  }
-
-  clearData(e) {
+  clearData = (e) => {
+    const { clearRuns, notifyInfo } = this.props;
     e.preventDefault();
-    this.props.clearRuns();
-    this.props.notifyInfo({ message: 'Local data cleared' });
+
+    clearRuns();
+    notifyInfo('Local data cleared');
   }
 
   render() {
@@ -50,7 +46,7 @@ class Settings extends Component {
         </Typography>
         <form method="post" onSubmit={this.clearData}>
           <Typography variant="h6" className={classes.sectionTitle}>Clear local data</Typography>
-          <Typography variant="body1">
+          <Typography variant="body2">
             Remove stored data on your machine, including your collections.
             <strong> This action is permanent.</strong>
           </Typography>
@@ -64,9 +60,9 @@ class Settings extends Component {
 }
 
 Settings.propTypes = {
+  classes: PropTypes.object.isRequired,
   clearRuns: PropTypes.func.isRequired,
   notifyInfo: PropTypes.func.isRequired,
-  classes: PropTypes.object.isRequired,
 };
 
 Settings.contextTypes = {
@@ -75,7 +71,6 @@ Settings.contextTypes = {
 
 const connectedComponent = connect(null, {
   clearRuns,
-  notifyError,
   notifyInfo,
 })(Settings);
 

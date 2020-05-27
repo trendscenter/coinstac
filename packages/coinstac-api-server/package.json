@@ -1,12 +1,12 @@
 {
   "name": "coinstac-api-server",
-  "version": "4.6.2",
+  "version": "5.0.0",
   "description": "",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
     "test": "echo \"Error: no test specified\"",
-    "test-setup": "node test/test-setup.js"
+    "test-setup": "docker-compose up -d && node test/test-setup.js"
   },
   "author": "",
   "license": "ISC",
@@ -16,7 +16,7 @@
     "bluebird": "^3.5.1",
     "boom": "^5.2.0",
     "clarify": "^2.1.0",
-    "coinstac-graphql-schema": "^4.6.0",
+    "coinstac-graphql-schema": "^5.0.0",
     "graphql": "^0.10.5",
     "graphql-subscriptions": "^0.5.8",
     "graphql-tools": "^1.2.3",
@@ -24,7 +24,8 @@
     "hapi": "^16.6.3",
     "hapi-auth-jwt2": "^7.4.1",
     "jsonwebtoken": "^7.4.3",
-    "rethinkdb": "^2.3.3",
+    "lodash": "^4.17.15",
+    "mongodb": "^3.5.5",
     "subscriptions-transport-ws": "^0.9.9",
     "trace": "^3.1.1"
   }

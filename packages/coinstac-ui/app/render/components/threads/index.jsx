@@ -1,8 +1,8 @@
-import React, { Component } from 'react'
-import PropTypes from 'prop-types'
-import { connect } from 'react-redux'
-import { graphql, compose, withApollo } from 'react-apollo'
-import { find } from 'lodash'
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
+import { graphql, compose, withApollo } from 'react-apollo';
+import { find } from 'lodash';
 import {
   Button,
   Dialog,
@@ -10,18 +10,18 @@ import {
   DialogContentText,
   DialogActions,
   Typography,
-} from '@material-ui/core'
-import { withStyles } from '@material-ui/core/styles'
-import ThreadList from './thread-list'
-import ThreadContent from './thread-content'
-import ThreadNew from './thread-new'
-import { ThreadContext } from './context'
+} from '@material-ui/core';
+import { withStyles } from '@material-ui/core/styles';
+import ThreadList from './thread-list';
+import ThreadContent from './thread-content';
+import ThreadNew from './thread-new';
+import { ThreadContext } from './context';
 import {
   getAllAndSubProp,
   saveMessageProp,
   setReadMessageProp,
   consortiaMembershipProp,
-} from '../../state/graphql/props'
+} from '../../state/graphql/props';
 import {
   FETCH_ALL_COMPUTATIONS_QUERY,
   FETCH_ALL_CONSORTIA_QUERY,
@@ -31,10 +31,9 @@ import {
   SET_READ_MESSAGE_MUTATION,
   CONSORTIUM_CHANGED_SUBSCRIPTION,
   USER_CHANGED_SUBSCRIPTION,
-} from '../../state/graphql/functions'
-import { saveAssociatedConsortia } from '../../state/ducks/collections'
-import { pullComputations } from '../../state/ducks/docker'
-import { notifyInfo } from '../../state/ducks/notifyAndLog'
+} from '../../state/graphql/functions';
+import { pullComputations } from '../../state/ducks/docker';
+import { notifyInfo } from '../../state/ducks/notifyAndLog';
 
 const styles = theme => ({
   wrapper: {
@@ -46,14 +45,14 @@ const styles = theme => ({
     padding: 15,
   },
   title: {
-    marginBottom: theme.spacing.unit * 2,
+    marginBottom: theme.spacing(2),
   },
   container: {
     flex: 1,
     display: 'flex',
     border: `1px solid ${theme.palette.grey[300]}`,
   },
-})
+});
 
 class Threads extends Component {
   state = {
@@ -64,126 +63,126 @@ class Threads extends Component {
   }
 
   handleThreadClick = (threadId) => {
-    const { auth } = this.props
-    const { creatingNewThread } = this.state
+    const { auth, setReadMessage } = this.props;
+    const { creatingNewThread } = this.state;
 
     if (creatingNewThread) {
-      this.toggleDialog(threadId)
+      this.toggleDialog(threadId);
     } else {
-      this.setState({ selectedThread: threadId })
-      this.props.setReadMessage({ threadId, userId: auth.user.id })
+      this.setState({ selectedThread: threadId });
+      setReadMessage({ threadId, userId: auth.user.id });
     }
   }
 
   handleThreadNewClick = () => {
-    this.setState({ creatingNewThread: true })
+    this.setState({ creatingNewThread: true });
   }
 
   handleConfirm = () => {
     this.setState({
       creatingNewThread: false,
       openDialog: false,
-    })
+    });
   }
 
-  toggleDialog = threadId => {
-    const { openDialog } = this.state
+  toggleDialog = (threadId) => {
+    const { openDialog } = this.state;
 
     this.setState(
       Object.assign(
         { openDialog: !openDialog },
-        threadId && { selectedThread: threadId },
+        threadId && { selectedThread: threadId }
       )
-    )
+    );
   }
 
-  handleSend = data => {
-    const { creatingNewThread } = this.state
+  handleSend = (data) => {
+    const { saveMessage } = this.props;
+    const { creatingNewThread } = this.state;
 
-    this.setState({ savingStatus: 'pending' })
+    this.setState({ savingStatus: 'pending' });
 
-    this.props.saveMessage(data).then(res => {
-      const { id } = res.data.saveMessage
+    saveMessage(data).then((res) => {
+      const { id } = res.data.saveMessage;
 
       this.setState(Object.assign(
         { savingStatus: 'success' },
         creatingNewThread && {
           creatingNewThread: false,
           selectedThread: id,
-        },
-      ))
+        }
+      ));
     }).catch(() => {
       this.setState({
         savingStatus: 'fail',
-      })
-    })
+      });
+    });
   }
 
-  handleJoinConsortium = consortiumId => {
-    const { auth, consortia, client, pipelines } = this.props
+  handleJoinConsortium = (consortiumId) => {
+    const {
+      auth, consortia, client, pipelines, router,
+      pullComputations, notifyInfo, joinConsortium,
+    } = this.props;
 
-    const consortium = find(consortia, { id: consortiumId })
+    const consortium = find(consortia, { id: consortiumId });
 
     if (!consortium) {
-      return
+      return;
     }
 
-    const { members, activePipelineId } = consortium
+    const { members, activePipelineId } = consortium;
 
     if (members.indexOf(auth.user.id) !== -1 || !activePipelineId) {
-      this.props.router.push('/dashboard/consortia')
-      return
+      router.push('/dashboard/consortia');
+      return;
     }
 
-    const computationData = client.readQuery({ query: FETCH_ALL_COMPUTATIONS_QUERY })
-    const pipeline = pipelines.find(cons => cons.id === activePipelineId)
+    const computationData = client.readQuery({ query: FETCH_ALL_COMPUTATIONS_QUERY });
+    const pipeline = pipelines.find(cons => cons.id === activePipelineId);
 
-    const computations = []
+    const computations = [];
     pipeline.steps.forEach((step) => {
       const compObject = computationData.fetchAllComputations
-        .find(comp => comp.id === step.computations[0].id)
+        .find(comp => comp.id === step.computations[0].id);
       computations.push({
         img: compObject.computation.dockerImage,
         compId: compObject.id,
         compName: compObject.meta.name,
-      })
-    })
+      });
+    });
 
-    this.props.pullComputations({ consortiumId, computations })
-    this.props.notifyInfo({
-      message: 'Pipeline computations downloading via Docker.',
-      autoDismiss: 5,
-      action: {
-        label: 'View Docker Download Progress',
-        callback: () => {
-          this.props.router.push('/dashboard/computations')
-        },
-      },
-    })
+    pullComputations({ consortiumId, computations });
+    notifyInfo('Pipeline computations downloading via Docker.');
 
-    this.props.saveAssociatedConsortia({ id: consortiumId, activePipelineId })
-    this.props.joinConsortium(consortiumId).then(() => {
-      localStorage.setItem('CONSORTIUM_JOINED_BY_THREAD', consortiumId)
-      this.props.router.push('/dashboard/consortia')
-    })
+    joinConsortium(consortiumId).then(() => {
+      localStorage.setItem('CONSORTIUM_JOINED_BY_THREAD', consortiumId);
+      router.push('/dashboard/consortia');
+    });
   }
 
   getSelectedThread = () => {
-    const { threads } = this.props
-    const { selectedThread } = this.state
+    const { threads } = this.props;
+    const { selectedThread } = this.state;
 
-    return find(threads, { id: selectedThread })
+    return find(threads, { id: selectedThread });
   }
 
   render() {
-    const { auth, consortia, runs, threads, users, classes } = this.props
-    const { selectedThread, creatingNewThread, openDialog, savingStatus } = this.state
+    const {
+      auth, consortia, runs, threads, users, classes,
+    } = this.props;
+    const {
+      selectedThread, creatingNewThread, openDialog, savingStatus,
+    } = this.state;
 
-    const thread = this.getSelectedThread()
+    const thread = this.getSelectedThread();
 
     return (
       <ThreadContext.Provider
-        value={{ auth, consortia, runs, threads, users }}
+        value={{
+          auth, consortia, runs, threads, users,
+        }}
       >
         <div className={classes.wrapper}>
           <Typography variant="h4" className={classes.title}>
@@ -230,36 +229,43 @@ class Threads extends Component {
           </div>
         </div>
       </ThreadContext.Provider>
-    )
+    );
   }
 }
 
+Threads.defaultProps = {
+  consortia: [],
+  pipelines: [],
+  runs: [],
+  threads: [],
+  users: [],
+};
+
 Threads.propTypes = {
-  auth: PropTypes.object,
+  auth: PropTypes.object.isRequired,
   classes: PropTypes.object.isRequired,
-  client: PropTypes.object,
+  client: PropTypes.object.isRequired,
   consortia: PropTypes.array,
   pipelines: PropTypes.array,
-  router: PropTypes.object,
+  router: PropTypes.object.isRequired,
   runs: PropTypes.array,
   threads: PropTypes.array,
   users: PropTypes.array,
   joinConsortium: PropTypes.func.isRequired,
   notifyInfo: PropTypes.func.isRequired,
   pullComputations: PropTypes.func.isRequired,
-  saveAssociatedConsortia: PropTypes.func.isRequired,
   saveMessage: PropTypes.func.isRequired,
   setReadMessage: PropTypes.func.isRequired,
-}
+};
 
 const ThreadsWithData = compose(
   graphql(
     SAVE_MESSAGE_MUTATION,
-    saveMessageProp('saveMessage'),
+    saveMessageProp('saveMessage')
   ),
   graphql(
     SET_READ_MESSAGE_MUTATION,
-    setReadMessageProp('setReadMessage'),
+    setReadMessageProp('setReadMessage')
   ),
   graphql(FETCH_ALL_USERS_QUERY, getAllAndSubProp(
     USER_CHANGED_SUBSCRIPTION,
@@ -276,17 +282,16 @@ const ThreadsWithData = compose(
     'consortiumChanged'
   )),
   graphql(JOIN_CONSORTIUM_MUTATION, consortiaMembershipProp('joinConsortium')),
-  withApollo,
-)(Threads)
+  withApollo
+)(Threads);
 
-const mapStateToProps = ({ auth }) => {
-  return { auth }
-}
+const mapStateToProps = ({ auth }) => ({
+  auth,
+});
 
 const connectedComponent = connect(mapStateToProps, {
   pullComputations,
   notifyInfo,
-  saveAssociatedConsortia,
-})(ThreadsWithData)
+})(ThreadsWithData);
 
-export default withStyles(styles, { withTheme: true })(connectedComponent)
+export default withStyles(styles, { withTheme: true })(connectedComponent);

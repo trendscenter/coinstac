@@ -12,12 +12,12 @@ const styles = theme => ({
     marginBottom: 10,
   },
   paper: {
-    padding: theme.spacing.unit * 2,
+    padding: theme.spacing(2),
     maxWidth: 300,
-    marginBottom: theme.spacing.unit * 2,
+    marginBottom: theme.spacing(2),
   },
   formControl: {
-    marginBottom: theme.spacing.unit * 2,
+    marginBottom: theme.spacing(2),
   },
   error: {
     textAlign: 'center',
@@ -26,25 +26,25 @@ const styles = theme => ({
 });
 
 class FormSignup extends Component {
-  constructor(props) {
-    super(props);
+  state = {
+    name: '',
+    username: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+  };
 
-    this.state = {
-      name: '',
-      username: '',
-      email: '',
-      password: '',
-      confirmPassword: '',
-    };
-  }
+  checkPasswordsMatch = memoize(
+    (password, confirmPassword) => password === confirmPassword
+  );
 
-  handleChange = name => event => {
+  handleChange = name => (event) => {
     this.setState({
       [name]: event.target.value,
     });
   };
 
-  handleSubmit = evt => {
+  handleSubmit = (evt) => {
     evt.preventDefault();
 
     const { onSubmit } = this.props;
@@ -65,9 +65,6 @@ class FormSignup extends Component {
     });
   }
 
-  checkPasswordsMatch = memoize(
-    (password, confirmPassword) => password === confirmPassword
-  );
 
   render() {
     const { auth, classes, error } = this.props;
@@ -85,10 +82,9 @@ class FormSignup extends Component {
       <Paper className={classes.paper}>
         <form onSubmit={this.handleSubmit}>
           {error && (
-            <p
-              className={classNames(classes.bottomMargin, classes.error)}
-              dangerouslySetInnerHTML={{ __html: error }}
-            />
+            <p className={classNames(classes.bottomMargin, classes.error)}>
+              {error}
+            </p>
           )}
           {!auth.isApiVersionCompatible && (
             <p className={classNames(classes.bottomMargin, classes.error)}>
@@ -140,7 +136,12 @@ class FormSignup extends Component {
             type="submit"
             fullWidth
             disabled={
-              !name || !username || !email || !password || !passwordsMatch || !auth.isApiVersionCompatible
+              !name
+              || !username
+              || !email
+              || !password
+              || !passwordsMatch
+              || !auth.isApiVersionCompatible
             }
           >
             Sign Up
@@ -153,10 +154,15 @@ class FormSignup extends Component {
 
 FormSignup.displayName = 'FormSignup';
 
+FormSignup.defaultProps = {
+  error: null,
+};
+
 FormSignup.propTypes = {
   auth: PropTypes.object.isRequired,
-  onSubmit: PropTypes.func.isRequired,
   classes: PropTypes.object.isRequired,
+  error: PropTypes.object,
+  onSubmit: PropTypes.func.isRequired,
 };
 
 export default withStyles(styles)(FormSignup);

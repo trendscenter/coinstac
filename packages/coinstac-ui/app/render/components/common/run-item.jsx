@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import TimeStamp from 'react-timestamp';
 import { Link } from 'react-router';
 import { compose } from 'redux';
 import { connect } from 'react-redux';
@@ -12,30 +11,32 @@ import { withStyles } from '@material-ui/core/styles';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import path from 'path';
+import moment from 'moment';
 import StatusButtonWrapper from './status-button-wrapper';
+import TimeAgo from './time-ago';
 
 const styles = theme => ({
   rootPaper: {
     ...theme.mixins.gutters(),
-    paddingTop: theme.spacing.unit * 2,
-    paddingBottom: theme.spacing.unit * 2,
-    marginTop: theme.spacing.unit * 2,
+    paddingTop: theme.spacing(2),
+    paddingBottom: theme.spacing(2),
+    marginTop: theme.spacing(2),
   },
   titleContainer: {
     display: 'flex',
     justifyContent: 'space-between',
-    marginBottom: theme.spacing.unit,
+    marginBottom: theme.spacing(1),
   },
   label: {
     display: 'inline-block',
     fontWeight: 'bold',
-    marginRight: theme.spacing.unit,
+    marginRight: theme.spacing(1),
   },
   value: {
     display: 'inline-block',
   },
   contentContainer: {
-    marginBottom: theme.spacing.unit,
+    marginBottom: theme.spacing(1),
   },
   actionButtons: {
     display: 'flex',
@@ -49,73 +50,77 @@ const styles = theme => ({
     justifyContent: 'space-between',
   },
   runStatePaper: {
-    width: `calc(50% - ${theme.spacing.unit}px)`,
+    width: `calc(50% - ${theme.spacing(1)}px)`,
   },
   runTitle: {
     textDecoration: 'underline',
-    marginBottom: theme.spacing.unit,
+    marginBottom: theme.spacing(1),
   },
 });
 
 function getStateWell(runObject, stateName, stateKey, classes) {
+  const {
+    mode, waitingOn, controllerState, currentIteration, pipelineStep, totalSteps,
+  } = runObject[stateKey];
+
   return (
     <Paper
       className={classNames(classes.rootPaper, classes.runStatePaper)}
     >
-      <Typography variant="headline" className={classes.runTitle}>
+      <Typography variant="h5" className={classes.runTitle}>
         {`${stateName} Pipeline State:`}
       </Typography>
       {
-        runObject[stateKey].mode
+        mode
         && (
           <div>
             <Typography className={classes.label}>Mode:</Typography>
             <Typography className={classes.value}>
-              {runObject[stateKey].mode}
+              {mode}
             </Typography>
           </div>
         )
       }
       {
-        runObject[stateKey].waitingOn && runObject[stateKey].waitingOn.length > 0
+        waitingOn && waitingOn.length > 0
         && (
           <div>
             <Typography className={classes.label}>Waiting on Users:</Typography>
             <Typography className={classes.value}>
-              {runObject[stateKey].controllerState.includes('waiting on') ? runObject[stateKey].waitingOn.join(', ') : ''}
+              {controllerState.includes('waiting on') ? waitingOn.join(', ') : ''}
             </Typography>
           </div>
         )
       }
       {
-        runObject[stateKey].controllerState
+        controllerState
         && (
           <div>
             <Typography className={classes.label}>Controller State:</Typography>
             <Typography className={classes.value}>
-              {runObject[stateKey].controllerState}
+              {controllerState}
             </Typography>
           </div>
         )
       }
       {
-        runObject[stateKey].currentIteration >= 0
+        currentIteration >= 0
         && (
           <div>
             <Typography className={classes.label}>Current Iteration:</Typography>
             <Typography className={classes.value}>
-              {runObject[stateKey].currentIteration}
+              {currentIteration}
             </Typography>
           </div>
         )
       }
       {
-        runObject[stateKey].pipelineStep >= 0
+        pipelineStep >= 0
         && (
           <div>
             <Typography className={classes.label}>Step Count:</Typography>
             <Typography className={classes.value}>
-              {`${runObject[stateKey].pipelineStep + 1} / ${runObject[stateKey].totalSteps}`}
+              {`${pipelineStep + 1} / ${totalSteps}`}
             </Typography>
           </div>
         )
@@ -125,20 +130,9 @@ function getStateWell(runObject, stateName, stateKey, classes) {
 }
 
 class RunItem extends Component {
-  constructor(props) {
-    super(props);
-
-    this.state = {
-      stoppingPipeline: 'init',
-    };
-  }
-
   handleStopPipeline = () => {
-    this.setState({
-      stoppingPipeline: 'pending',
-    });
-
-    this.props.stopPipeline();
+    const { stopPipeline } = this.props;
+    stopPipeline();
   }
 
   handleOpenResult = () => {
@@ -150,60 +144,53 @@ class RunItem extends Component {
 
   render() {
     const { consortiumName, runObject, classes } = this.props;
-    const { stoppingStatus } = this.state;
+    const {
+      id, startDate, endDate, status, localPipelineState, remotePipelineState,
+      clients, pipelineSnapshot, results, error,
+    } = runObject;
 
     return (
       <Paper
-        key={runObject.id}
+        key={id}
         elevation={4}
         className={classNames(classes.rootPaper, 'run-item-paper')}
       >
         <div className={classes.titleContainer}>
-          <Typography variant="headline">
+          <Typography variant="h5">
             { consortiumName }
             {
-              runObject.pipelineSnapshot
-              && <span>{ ` || ${runObject.pipelineSnapshot.name}`}</span>
+              pipelineSnapshot
+              && <span>{ ` || ${pipelineSnapshot.name}`}</span>
             }
           </Typography>
           {
-            !runObject.endDate && runObject.status === 'started'
+            !endDate && status === 'started'
             && (
-              <Typography variant="headline">
+              <Typography variant="h5">
                 {'Started: '}
-                <TimeStamp
-                  time={runObject.startDate / 1000}
-                  precision={2}
-                  autoUpdate={60}
-                  format="ago"
-                />
+                <TimeAgo timestamp={runObject.startDate / 1000} />
               </Typography>
             )
           }
           {
-            runObject.endDate
+            endDate
             && (
-              <Typography variant="headline">
+              <Typography variant="h5">
                 {'Completed: '}
-                <TimeStamp
-                  time={runObject.endDate / 1000}
-                  precision={2}
-                  autoUpdate={60}
-                  format="ago"
-                />
+                <TimeAgo timestamp={runObject.endDate / 1000} />
               </Typography>
             )
           }
         </div>
         <div className={classes.contentContainer}>
           {
-            runObject.status === 'started' && (runObject.localPipelineState || runObject.remotePipelineState)
+            status === 'started' && (localPipelineState || remotePipelineState)
             && (
               <LinearProgress
                 variant="indeterminate"
-                value={runObject.remotePipelineState
-                  ? ((runObject.remotePipelineState.pipelineStep + 1) / runObject.remotePipelineState.totalSteps) * 100
-                  : ((runObject.localPipelineState.pipelineStep + 1) / runObject.localPipelineState.totalSteps) * 100
+                value={remotePipelineState
+                  ? ((remotePipelineState.pipelineStep + 1) / remotePipelineState.totalSteps) * 100
+                  : ((localPipelineState.pipelineStep + 1) / localPipelineState.totalSteps) * 100
                 }
               />
             )
@@ -213,12 +200,12 @@ class RunItem extends Component {
               Status:
             </Typography>
             <Typography className={classes.value}>
-              {runObject.status === 'complete' && <span style={{ color: 'green' }}>Complete</span>}
-              {runObject.status === 'started' && <span style={{ color: 'cornflowerblue' }}>In Progress</span>}
-              {runObject.status === 'error' && <span style={{ color: 'red' }}>Error</span>}
+              {status === 'complete' && <span style={{ color: 'green' }}>Complete</span>}
+              {status === 'started' && <span style={{ color: 'cornflowerblue' }}>In Progress</span>}
+              {status === 'error' && <span style={{ color: 'red' }}>Error</span>}
             </Typography>
             {
-              runObject.status === 'needs-map'
+              status === 'needs-map'
               && (
                 <Button
                   variant="contained"
@@ -231,75 +218,65 @@ class RunItem extends Component {
             }
           </div>
           {
-            runObject.startDate
+            startDate
             && (
               <div>
                 <Typography className={classes.label}>
                   Start date:
                 </Typography>
                 <Typography className={classes.value}>
-                  <TimeStamp
-                    time={runObject.startDate / 1000}
-                    precision={2}
-                    autoUpdate={10}
-                    format="full"
-                  />
+                  {moment.unix(runObject.startDate / 1000).format('MMMM Do YYYY, h:mm:ss a')}
                 </Typography>
               </div>
             )
           }
           {
-            runObject.endDate
+            endDate
             && (
               <div>
                 <Typography className={classes.label}>
                   End date:
                 </Typography>
                 <Typography className={classes.value}>
-                  <TimeStamp
-                    time={runObject.endDate / 1000}
-                    precision={2}
-                    autoUpdate={10}
-                    format="full"
-                  />
+                  {moment.unix(runObject.endDate / 1000).format('MMMM Do YYYY, h:mm:ss a')}
                 </Typography>
               </div>
             )
           }
           {
-            runObject.clients
+            clients
             && (
               <div>
                 <Typography className={classes.label}>
                   Clients:
                 </Typography>
                 <Typography className={classes.value}>
-                  { runObject.clients.join(', ') }
+                  { clients.join(', ') }
                 </Typography>
               </div>
             )
           }
           <div className={classes.runStateContainer}>
             {
-              runObject.localPipelineState && runObject.status === 'started'
+              localPipelineState && status === 'started'
               && getStateWell(runObject, 'Local', 'localPipelineState', classes)
             }
             {
-              runObject.remotePipelineState && runObject.status === 'started'
+              remotePipelineState && status === 'started'
               && getStateWell(runObject, 'Remote', 'remotePipelineState', classes)
             }
           </div>
         </div>
         <div className={classes.actionButtons}>
           {
-            runObject.results
+            results
             && (
               <div className={classes.resultButtons}>
                 <Button
                   variant="contained"
                   color="primary"
                   component={Link}
-                  to={`/dashboard/results/${runObject.id}`}
+                  to={`/dashboard/results/${id}`}
                 >
                   View Results
                 </Button>
@@ -315,32 +292,32 @@ class RunItem extends Component {
             )
           }
           {
-            runObject.error
+            error
             && (
               <Button
                 variant="contained"
                 component={Link}
-                to={`/dashboard/results/${runObject.id}`}
+                to={`/dashboard/results/${id}`}
               >
                 View Error
               </Button>
             )
           }
           {
-            runObject.pipelineSnapshot
+            pipelineSnapshot
             && (
               <Button
                 variant="contained"
                 color="secondary"
                 component={Link}
-                to={`/dashboard/pipelines/snapShot/${runObject.pipelineSnapshot.id}`}
+                to={`/dashboard/pipelines/snapShot/${pipelineSnapshot.id}`}
               >
                 View Pipeline
               </Button>
             )
           }
           {
-            runObject.status === 'started' && (runObject.localPipelineState || runObject.remotePipelineState)
+            status === 'started' && (localPipelineState || remotePipelineState)
             && (
               <StatusButtonWrapper>
                 <Button
@@ -357,28 +334,25 @@ class RunItem extends Component {
       </Paper>
     );
   }
-};
+}
 
 RunItem.defaultProps = {
   stopPipeline: () => {},
 };
 
 RunItem.propTypes = {
+  appDirectory: PropTypes.string.isRequired,
+  classes: PropTypes.object.isRequired,
   consortiumName: PropTypes.string.isRequired,
   runObject: PropTypes.object.isRequired,
-  classes: PropTypes.object.isRequired,
-  appDirectory: PropTypes.string.isRequired,
   user: PropTypes.object.isRequired,
   stopPipeline: PropTypes.func,
 };
 
-function mapStateToProps({ auth }) {
-  return {
-    appDirectory: auth.appDirectory,
-    user: auth.user,
-  };
-}
-
+const mapStateToProps = ({ auth }) => ({
+  appDirectory: auth.appDirectory,
+  user: auth.user,
+});
 
 export default compose(
   withStyles(styles),
