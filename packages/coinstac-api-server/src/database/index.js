@@ -1,8 +1,11 @@
 const { MongoClient, ObjectID } = require('mongodb');
-const config = require('../../config/default');
+const defaultConfig = require('../../config/default');
+const testConfig = require('../../config/test');
 
 let client = null;
 let db = null;
+
+const config = process.env.NODE_ENV === 'test' ? testConfig : defaultConfig;
 
 async function connect() {
   client = new MongoClient(config.mongoConnString, {
@@ -40,8 +43,8 @@ function createUniqueId() {
   return new ObjectID();
 }
 
-function close() {
-  client.close();
+async function close() {
+  await client.close();
 }
 
 module.exports = {

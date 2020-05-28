@@ -212,7 +212,7 @@ async function populateRuns() {
       clients: ['test1'],
       consortiumId: CONSORTIA_IDS[1],
       pipelineSnapshot: {
-        id: '52d44390-07a5-4b8c-85c9-e22821ce7183',
+        id: PIPELINE_IDS[0].toHexString(),
         delete: false,
         description: '',
         name: 'VBM Pre',
@@ -917,7 +917,7 @@ async function populateUsers() {
   }, adminPassword);
 }
 
-async function populate() {
+async function populate(closeConnection = true) {
   await database.connect();
 
   database.dropDbInstance();
@@ -928,7 +928,9 @@ async function populate() {
   await populateRuns();
   await populateUsers();
 
-  database.close();
+  if (closeConnection) {
+    await database.close();
+  }
 }
 
-populate();
+module.exports = populate;

@@ -1,7 +1,6 @@
 /* eslint-disable no-await-in-loop */
 const Boom = require('boom');
 const GraphQLJSON = require('graphql-type-json');
-const Promise = require('bluebird');
 const { PubSub, withFilter } = require('graphql-subscriptions');
 const axios = require('axios');
 const { uniq } = require('lodash');
@@ -42,6 +41,7 @@ async function fetchOnePipeline(id) {
 
   const hasSteps = await pipelineSteps.hasNext();
   if (!hasSteps) {
+    /* istanbul ignore next */
     return db.collection('pipelines').findOne({ _id: id });
   }
 
@@ -269,7 +269,6 @@ const resolvers = {
       const pipelines = {};
       while (await pipelineSteps.hasNext()) {
         const currentStep = await pipelineSteps.next();
-        
 
         if (!(currentStep._id in pipelines)) {
           pipelines[currentStep._id] = {
@@ -324,7 +323,7 @@ const resolvers = {
       const users = await db.collection('users').find().toArray();
       return transformToClient(users);
     },
-    fetchAllUserRuns: async ({ auth: { credentials } }, args) => {
+    fetchAllUserRuns: async ({ auth: { credentials } }) => {
       const db = database.getDbInstance();
 
       const runs = await db.collection('runs').find({
@@ -346,9 +345,6 @@ const resolvers = {
       }).toArray();
 
       return transformToClient(threads);
-    },
-    validateComputation: (_, args) => {
-      return new Promise();
     },
   },
   Mutation: {
@@ -418,11 +414,11 @@ const resolvers = {
         const isPipelineDecentralized = pipeline.steps.findIndex(step => step.controller.type === 'decentralized') > -1;
 
         const result = await db.collection('runs').insertOne({
-            clients: [...consortium.members],
-            consortiumId,
-            pipelineSnapshot: pipeline,
-            startDate: Date.now(),
-            type: isPipelineDecentralized ? 'decentralized' : 'local',
+          clients: [...consortium.members],
+          consortiumId,
+          pipelineSnapshot: pipeline,
+          startDate: Date.now(),
+          type: isPipelineDecentralized ? 'decentralized' : 'local',
         });
 
         const run = transformToClient(result.ops[0]);
@@ -435,6 +431,7 @@ const resolvers = {
 
         return run;
       } catch (error) {
+        /* istanbul ignore next */
         console.log(error)
       }
     },
@@ -539,7 +536,7 @@ const resolvers = {
      */
     joinConsortium: async ({ auth: { credentials } }, args) => {
       const db = database.getDbInstance();
-      let consortium = await db.collection('consortia').findOne({ _id: ObjectID(args.consortiumId) });
+      const consortium = await db.collection('consortia').findOne({ _id: ObjectID(args.consortiumId) });
 
       if (consortium.members.indexOf(credentials.username) !== -1) {
         return consortium;
@@ -611,7 +608,7 @@ const resolvers = {
      * @param {string} args.consortiumId Consortium to update
      * @param {string} args.activePipelineId Pipeline ID to mark as active
      */
-    saveActivePipeline: async ({ auth: { credentials } }, args) => {
+    saveActivePipeline: async (_, args) => {
       // const { permissions } = credentials;
       /* TODO: Add permissions
       if (!permissions.consortia.write
@@ -737,7 +734,7 @@ const resolvers = {
      * @param {object} args.pipeline Pipeline object to add/update
      * @return {object} New/updated pipeline object
      */
-    savePipeline: async ({ auth: { credentials } }, args) => {
+    savePipeline: async (_, args) => {
       // const { permissions } = credentials;
       /* TODO: Add permissions
       if (!permissions.consortia.write
@@ -827,12 +824,6 @@ const resolvers = {
 
       return transformToClient(result.value);
     },
-    setActiveComputation: (_, args) => {
-      return new Promise();
-    },
-    setComputationInputs: (_, args) => {
-      return new Promise();
-    },
     /**
      * Updates run remote state
      * @param {object} auth User object from JWT middleware validateFunc
@@ -890,7 +881,7 @@ const resolvers = {
      * @param {string} args.mappedForRun New mappedUsers
      * @return {object} Updated consortia
      */
-    updateConsortiumMappedUsers: async ({ auth: { credentials } }, args) => {
+    updateConsortiumMappedUsers: async (_, args) => {
       const db = database.getDbInstance();
 
       const result = await db.collection('consortia').findOneAndUpdate({
@@ -957,8 +948,7 @@ const resolvers = {
      * @return {object} Updated message
      */
     saveMessage: async ({ auth: { credentials } }, args) => {
-      const { title, recipients, content, action } = args;
-      const threadId = ObjectID(args.threadId);
+      const { threadId, title, recipients, content, action } = args;
 
       const db = database.getDbInstance();
 
@@ -976,7 +966,8 @@ const resolvers = {
       let result;
 
       if (threadId) {
-        const thread = await db.collection('threads').findOne({ _id: threadId });
+        const threadObjectId = ObjectID(args.threadId);
+        const thread = await db.collection('threads').findOne({ _id: threadObjectId });
 
         const { users } = thread;
 
@@ -991,7 +982,7 @@ const resolvers = {
           }
         };
 
-        const updateResult = await db.collection('threads').findOneAndUpdate({ _id: threadId }, updateObj, { returnOriginal: false });
+        const updateResult = await db.collection('threads').findOneAndUpdate({ _id: threadObjectId }, updateObj, { returnOriginal: false });
 
         result = updateResult.value;
       } else {

@@ -7,9 +7,11 @@ const { transformToClient } = require('./utils');
 
 let dbmap;
 try {
-  dbmap = require('/etc/coinstac/cstacDBMap'); // eslint-disable-line import/no-absolute-path, import/no-unresolved, global-require
+  dbmap = require('/etc/coinstac/cstacDBMap'); // eslint-disable-line import/no-absolute-path, global-require
 } catch (e) {
+  /* istanbul ignore next */
   console.log('No DBMap found: using defaults'); // eslint-disable-line no-console
+  /* istanbul ignore next */
   dbmap = {
     apiCredentials: {
       username: 'server',
@@ -41,24 +43,15 @@ const helperFunctions = {
       email: user.email,
       institution: user.institution,
       passwordHash,
-      permissions: {
+      permissions: user.permissions || {
         computations: {},
         consortia: {},
         pipelines: {},
       },
-      consortiaStatuses: {},
+      consortiaStatuses: user.consortiaStatuses || {},
     };
 
-    if (user.permissions) {
-      userDetails.permissions = user.permissions;
-    }
-
-    if (user.consortiaStatuses) {
-      userDetails.consortiaStatuses = user.consortiaStatuses;
-    }
-
     const db = database.getDbInstance();
-
     const result = await db.collection('users').insertOne(userDetails);
 
     return result.ops[0];
@@ -123,15 +116,13 @@ const helperFunctions = {
    * @param {object} request original request from client
    * @param {function} callback function signature (err, isValid, alternative credentials)
    */
-  validateToken(decoded, request, callback) {
-    helperFunctions.getUserDetails(decoded.username)
-      .then((user) => {
-        if (user) {
-          callback(null, true, user);
-        } else {
-          callback(null, false, null);
-        }
-      });
+  async validateToken(decoded, request, callback) {
+    try {
+      const user = await helperFunctions.getUserDetails(decoded.username);
+      callback(null, true, user);
+    } catch {
+      callback(null, false, null);
+    }
   },
   /**
    * Confirms that submitted email is new
@@ -152,14 +143,14 @@ const helperFunctions = {
    * @param {object} res response
    * @return {object} The submitted user information
    */
-  validateUniqueUser(req, res) {
-    const isUsernameUnique = this.validateUniqueUsername(req);
+  async validateUniqueUser(req, res) {
+    const isUsernameUnique = await this.validateUniqueUsername(req);
 
     if (!isUsernameUnique) {
       return res(Boom.badRequest('Username taken'));
     }
 
-    const isEmailUnique = this.validateUniqueEmail(req);
+    const isEmailUnique = await this.validateUniqueEmail(req);
 
     if (!isEmailUnique) {
       return res(Boom.badRequest('Email taken'));
@@ -200,10 +191,10 @@ const helperFunctions = {
     );
 
     if (passwordMatch) {
-      res(transformToClient(user));
-    } else {
-      res(Boom.unauthorized('Incorrect username or password.'));
+      return res(transformToClient(user));
     }
+
+    return res(Boom.unauthorized('Incorrect username or password.'));
   },
   /**
    * Verify that authenticating user is using correct password
