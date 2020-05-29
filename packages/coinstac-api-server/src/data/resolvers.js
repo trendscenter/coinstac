@@ -685,6 +685,11 @@ const resolvers = {
       }
 
       const consortium = await db.collection('consortia').findOne({ _id: consortiumData.id });
+
+      if (isUpdate) {
+        eventEmitter.emit(CONSORTIUM_CHANGED, consortium);
+      }
+
       return transformToClient(consortium);
     },
     /**

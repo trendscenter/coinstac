@@ -3,9 +3,18 @@ const test = require('ava');
 const sinon = require('sinon');
 const axios = require('axios');
 const crypto = require('crypto');
+const { graphql } = require('graphql');
+const { SubscriptionClient } = require('subscriptions-transport-ws');
+const { ApolloClient } = require('apollo-client');
+const gql = require('graphql-tag');
+const WebSocket = require('ws');
+const { EventEmitter } = require('events');
 const database = require('../src/database');
 const populate = require('../seed/populate');
 const helperFunctions = require('../src/auth-helpers');
+const { schema } = require('../src/data/schema');
+
+const SUB_URL = 'ws://localhost:3100/subscriptions';
 
 const { resolvers } = require('../src/data/resolvers');
 
@@ -19,6 +28,44 @@ function getMessageFromError(error) {
   return error.output.payload.mesage;
 }
 
+/*
+  This function creates an object to manage the subscription. Before calling a mutation,
+  you should call the waitForNext function, which will return a promise that will resolve
+  once the subscription receives data. After calling the mutation you should wait for the
+  waitForNext function to resolve. In the end of the test, you should call the unsubscribe
+  function to release resources.
+*/
+function subscribe(query, variables) {
+  const subDataEventEmitter = new EventEmitter();
+
+  let currentWaitIndex = 0;
+  let currentDataIndex = 0;
+
+  const subscription = apolloClient
+    .subscribe({
+      query,
+      variables,
+    })
+    .subscribe({
+      next: (data) => {
+        subDataEventEmitter.emit(`sub-data-${currentDataIndex}`, data);
+        currentDataIndex += 1;
+      },
+    });
+
+  return {
+    waitForNext() {
+      return new Promise((resolve) => {
+        subDataEventEmitter.on(`sub-data-${currentWaitIndex}`, data => resolve(data));
+        currentWaitIndex += 1;
+      });
+    },
+    unsubscribe() {
+      subscription.unsubscribe();
+    },
+  };
+}
+
 /**
  * Error messages
  */
@@ -28,10 +75,28 @@ const UNIQUE_USERNAME_ERROR = 'Username taken';
 const DUPLICATE_CONSORTIUM_ERROR = 'Consortium with same name already exists';
 const INVALID_PIPELINE_STEP = 'Some of the covariates are incomplete';
 
+/**
+ * Variables
+ */
+let networkInterface;
+let apolloClient;
+
 test.before(async () => {
   await populate(false);
 
   require('../src');
+
+  networkInterface = new SubscriptionClient(SUB_URL, {
+    reconnect: false,
+  }, WebSocket);
+
+  apolloClient = new ApolloClient({
+    networkInterface,
+  });
+});
+
+test.beforeEach(() => {
+  networkInterface.unsubscribeAll();
 });
 
 /**
@@ -769,6 +834,85 @@ test.serial('removeComputation', async (t) => {
   t.deepEqual(res.id, computationId);
 });
 
+// Subscription
+test.serial('consortium subscription', async (t) => {
+  const auth = getAuthByUsername('test1');
+
+  const consortium = {
+    name: 'Consortium Test Sub 1',
+    description: 'Consortium Test Sub Desc 1',
+    isPrivate: false,
+    owners: [],
+    members: [],
+  };
+
+  const NEW_NAME = 'Consortium Test Sub 1 Updated';
+
+  const subDataControl = subscribe(gql`
+    subscription consortiumChanged($consortiumId: ID) {
+      consortiumChanged(consortiumId: $consortiumId) {
+        id
+        name
+      }
+    }
+  `, {
+    consortiumId: null,
+  });
+
+  const insertConsortiumSubDataPromise = subDataControl.waitForNext();
+
+  const { data: { saveConsortium: createdConsortium } } = await graphql(schema, `
+    mutation saveConsortium($consortium: ConsortiumInput!) {
+      saveConsortium(consortium: $consortium) {
+        id
+        name
+      }
+    }
+  `, auth, null, { consortium });
+
+  const insertConsortiumSubData = await insertConsortiumSubDataPromise;
+
+  t.is(insertConsortiumSubData.consortiumChanged.name, consortium.name);
+
+  consortium.id = createdConsortium.id;
+  consortium.name = NEW_NAME;
+
+  auth.auth.credentials.permissions = {
+    consortia: {
+      [consortium.id]: ['owner'],
+    },
+  };
+
+  const updateConsortiumSubDataPromise = subDataControl.waitForNext();
+
+  await graphql(schema, `
+    mutation saveConsortium($consortium: ConsortiumInput!) {
+      saveConsortium(consortium: $consortium) {
+        id
+        name
+      }
+    }
+  `, auth, null, { consortium });
+
+  const updateConsortiumSubData = await updateConsortiumSubDataPromise;
+
+  t.is(updateConsortiumSubData.consortiumChanged.name, NEW_NAME);
+
+  // Cleanup
+  await graphql(schema, `
+    mutation deleteConsortiumById($consortiumId: ID) {
+      deleteConsortiumById(consortiumId: $consortiumId) {
+        id
+        name
+      }
+    }
+  `, auth, null, { consortiumId: consortium.id.toString() });
+
+  subDataControl.unsubscribe();
+});
+
+
 test.after.always('cleanup', async () => {
   await database.close();
+  networkInterface.close();
 });
