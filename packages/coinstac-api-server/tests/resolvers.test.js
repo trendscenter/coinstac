@@ -13,12 +13,26 @@ const database = require('../src/database');
 const populate = require('../seed/populate');
 const helperFunctions = require('../src/auth-helpers');
 const { schema } = require('../src/data/schema');
-
-const SUB_URL = 'ws://localhost:3100/subscriptions';
-
 const { resolvers } = require('../src/data/resolvers');
 
 const { Query, Mutation } = resolvers;
+
+const SUB_URL = 'ws://localhost:3100/subscriptions';
+
+/**
+ * Error messages
+ */
+const UNAUTHENTICATED_ERROR = 'User not authenticated';
+const ACTION_PERMIT_ERROR = 'Action not permitted';
+const UNIQUE_USERNAME_ERROR = 'Username taken';
+const DUPLICATE_CONSORTIUM_ERROR = 'Consortium with same name already exists';
+const INVALID_PIPELINE_STEP = 'Some of the covariates are incomplete';
+
+/**
+ * Variables
+ */
+let networkInterface;
+let apolloClient;
 
 function getAuthByUsername(username) {
   return { auth: { credentials: { id: username, username } } };
@@ -65,21 +79,6 @@ function subscribe(query, variables) {
     },
   };
 }
-
-/**
- * Error messages
- */
-const UNAUTHENTICATED_ERROR = 'User not authenticated';
-const ACTION_PERMIT_ERROR = 'Action not permitted';
-const UNIQUE_USERNAME_ERROR = 'Username taken';
-const DUPLICATE_CONSORTIUM_ERROR = 'Consortium with same name already exists';
-const INVALID_PIPELINE_STEP = 'Some of the covariates are incomplete';
-
-/**
- * Variables
- */
-let networkInterface;
-let apolloClient;
 
 test.before(async () => {
   await populate(false);
@@ -834,7 +833,9 @@ test.serial('removeComputation', async (t) => {
   t.deepEqual(res.id, computationId);
 });
 
-// Subscription
+/**
+ * Subscription tests
+ */
 test.serial('consortium subscription', async (t) => {
   const auth = getAuthByUsername('test1');
 
