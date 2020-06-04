@@ -17,12 +17,16 @@ class MapsStepFieldset extends Component {
   renderFixedValueInputField = (fieldKey) => {
     const { stepFieldset, fieldsetName } = this.props;
 
+    if (fieldKey === 'fulfilled') {
+      return null;
+    }
+
     return (
       <MapsStepFieldFixedValue step={stepFieldset} key={fieldKey} fieldName={fieldsetName} />
     );
   };
 
-  renderCovariatesField = (fieldKey) => {
+  renderCovariatesField = () => {
     const {
       stepsDataMappings,
       stepFieldset,
@@ -33,7 +37,7 @@ class MapsStepFieldset extends Component {
 
     const firstStepDataMappings = stepsDataMappings[0];
 
-    return stepFieldset[fieldKey].map((field) => {
+    return stepFieldset.value.map((field) => {
       let column = null;
       if (firstStepDataMappings && 'covariates' in firstStepDataMappings) {
         const mappedField = firstStepDataMappings.covariates.find(
@@ -56,35 +60,18 @@ class MapsStepFieldset extends Component {
     });
   };
 
-  renderDataField = (fieldKey) => {
+  renderDataField = () => {
     const {
-      stepsDataMappings,
       stepFieldset,
       fieldsetName,
-      registerDraggableContainer,
-      unmapField,
     } = this.props;
 
-    const firstStepDataMappings = stepsDataMappings[0];
-
-    return stepFieldset[fieldKey].map((field) => {
-      let column = null;
-      if (firstStepDataMappings && 'data' in firstStepDataMappings) {
-        const mappedField = firstStepDataMappings.data.find(
-          c => c.pipelineVariableName === field.type
-        );
-
-        column = mappedField ? mappedField.dataFileFieldName : null;
-      }
-
+    return stepFieldset.value.map((field) => {
       return (
         <MapsStepFieldData
-          registerDraggableContainer={registerDraggableContainer}
           key={`step-data-${field.name}-${fieldsetName}`}
           step={field}
           type={fieldsetName}
-          column={column}
-          unmapField={unmapField}
         />
       );
     });
@@ -100,7 +87,7 @@ class MapsStepFieldset extends Component {
 
     let inputCategoryName = capitalize(fieldsetName);
 
-    if(fieldsetLabel){
+    if (fieldsetLabel) {
       inputCategoryName = fieldsetLabel;
     } else if (fieldsetName !== 'covariates' && fieldsetName !== 'data') {
       inputCategoryName = 'Options';
@@ -111,16 +98,14 @@ class MapsStepFieldset extends Component {
         <Typography variant="h6">{ inputCategoryName }</Typography>
         <div>
           {
-            Object.keys(stepFieldset).map((fieldKey) => {
-              switch (fieldsetName) {
-                case 'data':
-                  return this.renderDataField(fieldKey);
-                case 'covariates':
-                  return this.renderCovariatesField(fieldKey);
-                default:
-                  return this.renderFixedValueInputField(fieldKey);
-              }
-            })
+            fieldsetName === 'covariates' && this.renderCovariatesField()
+          }
+          {
+            fieldsetName === 'data' && this.renderDataField()
+          }
+          {
+            fieldsetName !== 'covariates' && fieldsetName !== 'data'
+            && Object.keys(stepFieldset).map(fieldKey => this.renderFixedValueInputField(fieldKey))
           }
         </div>
       </div>
@@ -131,6 +116,7 @@ class MapsStepFieldset extends Component {
 MapsStepFieldset.propTypes = {
   classes: PropTypes.object.isRequired,
   fieldsetName: PropTypes.string.isRequired,
+  fieldsetLabel: PropTypes.string.isRequired,
   stepFieldset: PropTypes.object.isRequired,
   stepsDataMappings: PropTypes.array.isRequired,
   registerDraggableContainer: PropTypes.func.isRequired,

@@ -29,10 +29,6 @@ const styles = theme => ({
   },
 });
 
-function objectNeedsDataMapping(objKey, objParams) {
-  return objKey === 'covariates' || objKey === 'data' || objParams.type === 'file';
-}
-
 class PipelineStepInput extends Component {
   constructor(props) {
     super(props);
@@ -78,7 +74,13 @@ class PipelineStepInput extends Component {
         return { ...inputCopy };
       }
 
-      return { ...inputCopy, [prop]: value };
+      return {
+        ...inputCopy,
+        [prop]: {
+          fulfilled: true,
+          ...value,
+        },
+      };
     }
 
     let newArr = [];
@@ -87,8 +89,8 @@ class PipelineStepInput extends Component {
     if (isValueArray) {
       const newValue = value;
 
-      if (inputCopy[objKey].ownerMappings[clientPropIndex][prop]) {
-        value = [...inputCopy[objKey].ownerMappings[clientPropIndex][prop]];
+      if (inputCopy[objKey].value[clientPropIndex][prop]) {
+        value = [...inputCopy[objKey].value[clientPropIndex][prop]];
       } else {
         value = [];
       }
@@ -102,7 +104,7 @@ class PipelineStepInput extends Component {
     }
 
     if (inputCopy[objKey]) {
-      newArr = [...inputCopy[objKey].ownerMappings];
+      newArr = [...inputCopy[objKey].value];
 
       let newObj = { ...newArr[clientPropIndex], [prop]: value };
       if (prop === 'fromCache') {
@@ -115,7 +117,13 @@ class PipelineStepInput extends Component {
       newArr.splice(clientPropIndex, 1, newObj);
     }
 
-    return { ...inputCopy, [objKey]: { ownerMappings: [...newArr] } };
+    return {
+      ...inputCopy,
+      [objKey]: {
+        fulfilled: objKey !== 'covariates',
+        value: [...newArr],
+      },
+    };
   }
 
   getSelectList(array, value) { // eslint-disable-line class-methods-use-this
@@ -161,10 +169,10 @@ class PipelineStepInput extends Component {
       updateStep,
     } = this.props;
 
-    let ownerMappings = [{}];
-    if (step.inputMap[objKey] && 'ownerMappings' in step.inputMap[objKey]) {
-      ownerMappings = [
-        ...step.inputMap[objKey].ownerMappings,
+    let value = [{}];
+    if (step.inputMap[objKey] && 'value' in step.inputMap[objKey]) {
+      value = [
+        ...step.inputMap[objKey].value,
         {},
       ];
     }
@@ -174,7 +182,8 @@ class PipelineStepInput extends Component {
       inputMap: {
         ...step.inputMap,
         [objKey]: {
-          ownerMappings,
+          fulfilled: objKey !== 'covariates',
+          value,
         },
       },
     });
@@ -202,7 +211,7 @@ class PipelineStepInput extends Component {
       classes,
     } = this.props;
 
-    const { openInputSourceMenu } = this.state;
+    const { openInputSourceMenu, isClientProp } = this.state;
 
     let sourceDropDownLabel = null;
     let isValue = false;
@@ -237,7 +246,7 @@ class PipelineStepInput extends Component {
     return (
       <div style={{ position: 'relative', display: visibility }} key={`pipestep-${objKey}`}>
         {
-          objectNeedsDataMapping(objKey, objParams) ? (
+          isClientProp ? (
             <PipelineStepInputWithMappings
               objKey={objKey}
               objParams={objParams}

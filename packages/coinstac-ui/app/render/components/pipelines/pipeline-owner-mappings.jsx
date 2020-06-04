@@ -18,15 +18,12 @@ class PipelineOwnerMappings extends React.Component {
 
     this.state = {
       openDataMenu: false,
-      openCovariatesSourceMenu: false,
     };
 
     this.selectData = this.selectData.bind(this);
     this.selectCovariateSource = this.selectCovariateSource.bind(this);
     this.openDataMenu = this.openDataMenu.bind(this);
     this.closeDataMenu = this.closeDataMenu.bind(this);
-    this.openCovariatesSourceMenu = this.openCovariatesSourceMenu.bind(this);
-    this.closeCovariatesSourceMenu = this.closeCovariatesSourceMenu.bind(this);
   }
 
   static getCovarSourceTitle(obj) {
@@ -80,15 +77,6 @@ class PipelineOwnerMappings extends React.Component {
     this.setState({ openDataMenu: false });
   }
 
-  openCovariatesSourceMenu(event) {
-    this.covariatesSourceButtonElement = event.currentTarget;
-    this.setState({ openCovariatesSourceMenu: true });
-  }
-
-  closeCovariatesSourceMenu() {
-    this.setState({ openCovariatesSourceMenu: false });
-  }
-
   render() {
     const {
       obj,
@@ -102,7 +90,7 @@ class PipelineOwnerMappings extends React.Component {
       step,
     } = this.props;
 
-    const { openDataMenu, openCovariatesSourceMenu } = this.state;
+    const { openDataMenu } = this.state;
 
     const freeSurferOptions = variableOptions.freesurferROIs.map((val) => {
       return { label: val, value: val };
@@ -179,52 +167,6 @@ class PipelineOwnerMappings extends React.Component {
             objKey === 'covariates'
             && (
               <TableCell>
-                <Button
-                  id={`input-source-${index}-dropdown`}
-                  variant="contained"
-                  disabled={!owner}
-                  onClick={this.openCovariatesSourceMenu}
-                >
-                  { this.constructor.getCovarSourceTitle(obj) }
-                </Button>
-                <Menu
-                  id={`input-source-${index}-dropdown-menu`}
-                  anchorEl={this.covariatesSourceButtonElement}
-                  open={openCovariatesSourceMenu}
-                  onClose={this.closeCovariatesSourceMenu}
-                >
-                  <MenuItem
-                    onClick={() => this.selectCovariateSource('source', 'file', index)}
-                  >
-                    File
-                  </MenuItem>
-                  {
-                    possibleInputs.map(itemObj => (
-                      Object.entries(itemObj.inputs)
-                        .filter(filterIn => (
-                          obj.fromCache && possibleInputs.length
-                            ? filterIn[1].type && filterIn[1].type === possibleInputs[obj.fromCache.step].inputs[obj.fromCache.variable].type // eslint-disable-line
-                            : filterIn[1].type && filterIn[1].type === obj.type
-                        ))
-                        .map(itemInput => (
-                          <MenuItem
-                            disabled={!owner}
-                            key={`${itemInput[1].label}-Computation-${itemObj.possibleInputIndex + 1}-inputs-menuitem`}
-                            onClick={() => this.selectCovariateSource('fromCache', { variable: itemInput[0], step: itemObj.possibleInputIndex }, index)}
-                          >
-                            {`Step ${itemObj.possibleInputIndex + 1}: ${itemInput[1].label}`}
-                          </MenuItem>
-                        ))
-                    ))
-                  }
-                </Menu>
-              </TableCell>
-            )
-          }
-          {
-            objKey === 'covariates'
-            && (
-              <TableCell>
                 {
                   !obj.fromCache
                   && (
@@ -262,7 +204,7 @@ class PipelineOwnerMappings extends React.Component {
                 inputMap: {
                   ...step.inputMap,
                   [objKey]: {
-                    ownerMappings: update(step.inputMap[objKey].ownerMappings, {
+                    value: update(step.inputMap[objKey].value, {
                       $splice: [[index, 1]],
                     }),
                   },

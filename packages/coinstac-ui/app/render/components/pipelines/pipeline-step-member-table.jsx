@@ -19,10 +19,9 @@ function PipelineStepMemberTable(props) {
 
   const objInputMap = step.inputMap[objKey];
 
-  if (!objInputMap || !('ownerMappings' in objInputMap) || objInputMap.ownerMappings.length === 0) {
+  if (!objInputMap || !('value' in objInputMap) || objInputMap.value.length === 0) {
     return null;
   }
-
 
   return (
     <Table>
@@ -32,7 +31,6 @@ function PipelineStepMemberTable(props) {
           && (
             <TableRow>
               <TableCell>Data Type</TableCell>
-              <TableCell>Source</TableCell>
               <TableCell>Name</TableCell>
               <TableCell />
             </TableRow>
@@ -50,7 +48,7 @@ function PipelineStepMemberTable(props) {
         }
       </TableHead>
       {
-        objInputMap.ownerMappings.map((obj, index) => (
+        objInputMap.value.map((obj, index) => (
           <PipelineOwnerMappings
             key={`${objKey}-${index}`} // eslint-disable-line react/no-array-index-key
             index={index}

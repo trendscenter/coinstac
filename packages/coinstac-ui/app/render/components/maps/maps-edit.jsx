@@ -82,15 +82,12 @@ class MapsEdit extends Component {
 
     let totalInputFields = 0;
 
-    if (pipeline.steps[0].inputMap.covariates) {
-      const ctotal = pipeline.steps[0].inputMap.covariates.ownerMappings.length;
-      totalInputFields += ctotal;
-    }
-
-    if (pipeline.steps[0].inputMap.data) {
-      const dtotal = pipeline.steps[0].inputMap.data.ownerMappings.length;
-      totalInputFields += dtotal;
-    }
+    Object.keys(pipeline.steps[0].inputMap).forEach((inputMapKey) => {
+      const inputMapItem = pipeline.steps[0].inputMap[inputMapKey];
+      if (!inputMapItem.fulfilled) {
+        totalInputFields += inputMapItem.value.length;
+      }
+    });
 
     this.setState({ stepsTotal: totalInputFields });
 
@@ -107,19 +104,18 @@ class MapsEdit extends Component {
     const { dataFile, stepsDataMappings, activeConsortium } = this.state;
     const { saveDataMapping, updateConsortiumMappedUsers, auth } = this.props;
 
-    saveDataMapping(activeConsortium.id, activeConsortium.activePipelineId,
-      stepsDataMappings, dataFile);
+    saveDataMapping(activeConsortium, stepsDataMappings, dataFile);
 
-    const currentUserId = auth.user.id;
-    let mappedForRun = activeConsortium.mappedForRun || [];
+    // const currentUserId = auth.user.id;
+    // let mappedForRun = activeConsortium.mappedForRun || [];
 
-    if (mappedForRun.indexOf(currentUserId) === -1) {
-      mappedForRun = [...mappedForRun, currentUserId];
-    }
+    // if (mappedForRun.indexOf(currentUserId) === -1) {
+    //   mappedForRun = [...mappedForRun, currentUserId];
+    // }
 
-    updateConsortiumMappedUsers({ consortiumId: activeConsortium.id, mappedForRun });
+    // updateConsortiumMappedUsers({ consortiumId: activeConsortium.id, mappedForRun });
 
-    this.setState({ isMapped: true });
+    // this.setState({ isMapped: true });
   }
 
   resetDataMapping = () => {
@@ -133,7 +129,8 @@ class MapsEdit extends Component {
       if (dataFile) {
         switch (dataType) {
           case 'array':
-            stateChanges.dataFileHeader = dataFile.metaFile[0]
+            const [, ...header] = dataFile.metaFile[0]; // eslint-disable-line no-case-declarations
+            stateChanges.dataFileHeader = header;
             break;
           case 'bundle':
             stateChanges.dataFileHeader = [dataType]
@@ -317,7 +314,8 @@ class MapsEdit extends Component {
       let fileHeader;
       switch (dataType) {
         case 'array':
-          fileHeader = dataFile.metaFile[0]
+          const [, ...header] = dataFile.metaFile[0]; // eslint-disable-line no-case-declarations
+          fileHeader = header;
           break;
         case 'bundle':
           fileHeader = [dataType]
