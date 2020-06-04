@@ -1,15 +1,12 @@
 /* eslint-disable react/no-find-dom-node */
 import React, { Component } from 'react';
-import ReactDOM from 'react-dom';
 import PropTypes from 'prop-types';
-import Icon from '@material-ui/core/Icon';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
 import { withStyles } from '@material-ui/core/styles';
-import FileCopyIcon from '@material-ui/icons/FileCopy';
 import classNames from 'classnames';
 import path from 'path';
 
@@ -58,24 +55,6 @@ const styles = theme => ({
 });
 
 class MapsStepFieldData extends Component {
-  componentDidMount() {
-    const { registerDraggableContainer } = this.props;
-
-    if (this.container) {
-      const Container = ReactDOM.findDOMNode(this.container);
-      registerDraggableContainer(Container);
-    }
-  }
-
-  componentDidUpdate(prevProps) {
-    const { registerDraggableContainer, column } = this.props;
-
-    if (prevProps.column !== column && this.container) {
-      const Container = ReactDOM.findDOMNode(this.container);
-      registerDraggableContainer(Container);
-    }
-  }
-
   strMasseuse = (filepath) => {
     let filename = path.basename(filepath, path.extname(filepath));
     if (filename.length > 12) {
@@ -85,18 +64,7 @@ class MapsStepFieldData extends Component {
   }
 
   render() {
-    const {
-      step,
-      label,
-      type,
-      classes,
-      column,
-      unmapField,
-    } = this.props;
-
-    const name = step.type;
-
-    const isMapped = !!column;
+    const { step, classes } = this.props;
 
     return (
       <Paper
@@ -106,33 +74,6 @@ class MapsStepFieldData extends Component {
         <Typography className={classes.title}>
           {step.type}
         </Typography>
-        <div className={classes.listDropzoneContainer}>
-          <div className={classNames('drop-zone', classes.dropZone)}>
-            {
-              isMapped
-                ? (
-                  <div
-                    className="card-draggable"
-                    ref={(ref) => { this.container = ref; }}
-                  >
-                    <FileCopyIcon />
-                    { this.strMasseuse(column) }
-                    <Icon
-                      className={classNames('fa fa-times-circle', classes.timesIcon)}
-                      onClick={() => unmapField(type, column)}
-                    />
-                  </div>
-                ) : (
-                  <div
-                    className="acceptor acceptor-data"
-                    data-type={type}
-                    data-name={name}
-                    ref={(ref) => { this.container = ref; }}
-                  />
-                )
-            }
-          </div>
-        </div>
         {
           step.value && (
             <div className={classes.listDropzoneContainer}>
@@ -160,17 +101,9 @@ class MapsStepFieldData extends Component {
   }
 }
 
-MapsStepFieldData.defaultProps = {
-  column: null,
-};
-
 MapsStepFieldData.propTypes = {
   classes: PropTypes.object.isRequired,
-  column: PropTypes.string,
   step: PropTypes.object.isRequired,
-  type: PropTypes.string.isRequired,
-  registerDraggableContainer: PropTypes.func.isRequired,
-  unmapField: PropTypes.func.isRequired,
 };
 
 export default withStyles(styles)(MapsStepFieldData);

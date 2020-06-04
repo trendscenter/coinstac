@@ -180,7 +180,10 @@ class PipelineStep extends Component {
           if (v === 0) {
             v = '0';
           }
-          defaultInputs[key] = { value: v };
+          defaultInputs[key] = {
+            fulfilled: true,
+            value: v,
+          };
         }
       });
       Inputs = newArray.sort((a, b) => {

@@ -164,12 +164,12 @@ class MapsCollection extends Component {
     const { inputMap } = activeConsortium.pipelineSteps[0];
 
     Object.entries(inputMap).forEach((item) => {
-      const pipelineFieldsetName = item[0];
-      const pipelineVariables = item[1].ownerMappings;
-
-      if (!pipelineVariables) {
+      if (item[1].fulfilled) {
         return;
       }
+
+      const pipelineFieldsetName = item[0];
+      const pipelineVariables = item[1].value;
 
       dataFileHeader.forEach((headerColumn) => {
         const match = this.findMatchInPipelineVariables(
