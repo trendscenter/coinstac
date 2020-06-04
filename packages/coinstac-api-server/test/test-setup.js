@@ -19,6 +19,7 @@ const vbm = require('./data/coinstac-vbm-pre');
 const fmri = require('./data/coinstac-fmri');
 
 const decentralized = require('./data/coinstac-decentralized-test');
+const transfer = require('./data/coinstac-file-transfer-test');
 const decentralizedError = require('./data/coinstac-decentralized-error');
 const enigmaSans = require('./data/coinstac-enigma-sans');
 const local = require('./data/coinstac-local-test');
@@ -58,6 +59,7 @@ helperFunctions.getRethinkConnection()
       .then(() => rethink.table('computations').insert([
         Object.assign({}, local, { submittedBy: 'author' }),
         Object.assign({}, decentralized, { submittedBy: 'author' }),
+        Object.assign({}, transfer, { submittedBy: 'author' }),
         // Object.assign({}, ssrFsl, { submittedBy: 'author' }),
         Object.assign({}, msrFsl, { submittedBy: 'author' }),
         Object.assign({}, msrVbm, { submittedBy: 'author' }),

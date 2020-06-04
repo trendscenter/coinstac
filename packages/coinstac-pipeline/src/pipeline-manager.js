@@ -295,6 +295,8 @@ module.exports = {
 
       const upload = multer({ storage });
       const app = express();
+      app.use(express.json({ limit: '100mb' }));
+      app.use(express.urlencoded({ limit: '100mb' }));
 
       app.post('/transfer', upload.single('file'), (req, res) => {
         res.end();
