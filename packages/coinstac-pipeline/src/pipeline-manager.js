@@ -123,6 +123,7 @@ module.exports = {
               }
             );
           } else if (method === 'post') {
+            logger.silly(`############# ZIPPED FILE SIZE: ${fs.statSync(path.join(directory, file)).size / 1048576}`);
             const form = new FormData();
             form.append('filename', file);
             form.append('compressed', compressed.toString());
@@ -130,7 +131,11 @@ module.exports = {
             form.append('clientId', clientId);
             form.append('runId', runId);
             form.append('file', fs.createReadStream(
-              path.join(directory, file)
+              path.join(directory, file),
+              {
+                headers: { 'transfer-encoding': 'chunked' },
+                knownSize: NaN,
+              }
             ));
             form.submit(`${remoteProtocol}//${remoteURL}:${remotePort}${remotePathname}`,
               (err, res) => {
