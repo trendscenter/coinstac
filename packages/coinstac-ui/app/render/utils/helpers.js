@@ -18,7 +18,7 @@ export function pipelineNeedsDataMapping(pipeline) {
     inputMapSchemaKeys.forEach((inputSchemaKey) => {
       const inputSchema = step.inputMap[inputSchemaKey];
 
-      if (!inputSchema.fulfilled) {
+      if (!inputSchema.fulfilled || inputSchemaKey === 'data') {
         needsDataMapping = true;
       }
     });

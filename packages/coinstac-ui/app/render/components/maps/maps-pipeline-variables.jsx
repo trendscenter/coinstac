@@ -5,7 +5,7 @@ import Grid from '@material-ui/core/Grid';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
-import MapsStepFieldset from './maps-step-fieldset';
+import MapsStepField from './maps-step-field';
 
 const styles = theme => ({
   rootPaper: {
@@ -51,12 +51,12 @@ function MapsPipelineVariables(props) {
               }
 
               return (
-                <MapsStepFieldset
+                <MapsStepField
                   registerDraggableContainer={registerDraggableContainer}
                   key={`step-${inputMapKey}`}
-                  fieldsetLabel={inputMapValue.label}
-                  fieldsetName={inputMapKey}
-                  stepFieldset={inputMap[inputMapKey]}
+                  fieldName={inputMapKey}
+                  fieldCompSpec={inputMapValue}
+                  fieldPipeline={inputMap[inputMapKey]}
                   stepsDataMappings={stepsDataMappings}
                   consortium={consortium}
                   unmapField={unmapField}

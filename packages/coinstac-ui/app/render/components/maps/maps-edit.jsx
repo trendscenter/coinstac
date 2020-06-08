@@ -45,7 +45,7 @@ class MapsEdit extends Component {
       activeConsortium: null,
       containers: [],
       stepsDataMappings: [],
-      dataType: 'array',
+      dataType: 'freesurfer',
       isMapped: false,
       stepsMapped: 0,
       dataFile: null,
@@ -106,16 +106,16 @@ class MapsEdit extends Component {
 
     saveDataMapping(activeConsortium, stepsDataMappings, dataFile);
 
-    // const currentUserId = auth.user.id;
-    // let mappedForRun = activeConsortium.mappedForRun || [];
+    const currentUserId = auth.user.id;
+    let mappedForRun = activeConsortium.mappedForRun || [];
 
-    // if (mappedForRun.indexOf(currentUserId) === -1) {
-    //   mappedForRun = [...mappedForRun, currentUserId];
-    // }
+    if (mappedForRun.indexOf(currentUserId) === -1) {
+      mappedForRun = [...mappedForRun, currentUserId];
+    }
 
-    // updateConsortiumMappedUsers({ consortiumId: activeConsortium.id, mappedForRun });
+    updateConsortiumMappedUsers({ consortiumId: activeConsortium.id, mappedForRun });
 
-    // this.setState({ isMapped: true });
+    this.setState({ isMapped: true });
   }
 
   resetDataMapping = () => {
@@ -128,18 +128,12 @@ class MapsEdit extends Component {
 
       if (dataFile) {
         switch (dataType) {
-          case 'array':
+          case 'freesurfer':
             const [, ...header] = dataFile.metaFile[0]; // eslint-disable-line no-case-declarations
             stateChanges.dataFileHeader = header;
             break;
-          case 'bundle':
-            stateChanges.dataFileHeader = [dataType]
-            break;
-          case 'singles':
-            stateChanges.dataFileHeader = dataFile.files
-            break;
           default:
-            stateChanges.dataFileHeader = [dataType]
+            stateChanges.dataFileHeader = [];
             break;
         }
       }
@@ -313,20 +307,15 @@ class MapsEdit extends Component {
       const { dataType } = prevState;
       let fileHeader;
       switch (dataType) {
-        case 'array':
+        case 'freesurfer':
           const [, ...header] = dataFile.metaFile[0]; // eslint-disable-line no-case-declarations
           fileHeader = header;
           break;
-        case 'bundle':
-          fileHeader = [dataType]
-          break;
-        case 'singles':
-          fileHeader = dataFile.files
-          break;
         default:
-          fileHeader = [dataType]
+          fileHeader = [];
           break;
       }
+
       return {
         dataFileHeader: fileHeader,
         dataFile: {

@@ -106,7 +106,7 @@ class MapsFilePicker extends React.Component {
     return (
       <div>
         {
-          dataType === 'array'
+          dataType === 'freesurfer'
           && (
             <div>
               <Button
