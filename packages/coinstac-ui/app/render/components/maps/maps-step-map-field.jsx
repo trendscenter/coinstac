@@ -48,7 +48,7 @@ const styles = theme => ({
   },
 });
 
-class MapsStepFieldCovariate extends Component {
+class MapsStepMapField extends Component {
   componentDidMount() {
     const { registerDraggableContainer } = this.props;
 
@@ -70,7 +70,6 @@ class MapsStepFieldCovariate extends Component {
   render() {
     const {
       step,
-      label,
       type,
       classes,
       column,
@@ -121,11 +120,11 @@ class MapsStepFieldCovariate extends Component {
   }
 }
 
-MapsStepFieldCovariate.defaultProps = {
+MapsStepMapField.defaultProps = {
   column: null,
 };
 
-MapsStepFieldCovariate.propTypes = {
+MapsStepMapField.propTypes = {
   classes: PropTypes.object.isRequired,
   column: PropTypes.string,
   step: PropTypes.object.isRequired,
@@ -134,4 +133,4 @@ MapsStepFieldCovariate.propTypes = {
   unmapField: PropTypes.func.isRequired,
 };
 
-export default withStyles(styles)(MapsStepFieldCovariate);
+export default withStyles(styles)(MapsStepMapField);

@@ -6,4 +6,14 @@ const palette = {
 };
 const themeName = 'Coinstac';
 
-export default createMuiTheme({ palette, themeName });
+export default createMuiTheme({
+  themeName,
+  palette,
+  overrides: {
+    MuiTableCell: {
+      root: {
+        padding: '8px',
+      },
+    },
+  },
+});

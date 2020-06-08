@@ -3,7 +3,6 @@ import {
   join,
   isAbsolute,
   resolve,
-  sep,
 } from 'path';
 import { applyAsyncLoading } from './loading';
 
@@ -22,17 +21,27 @@ export const saveDataMapping = applyAsyncLoading(
       pipelineId: consortium.activePipelineId,
       metaFilePath: dataFile.metaFilePath,
       dataMappings: [],
+      dataFiles: dataFile.files,
     };
 
     const mappedColumns = [];
     const stepIndex = 0; // only one step is supported right now on maps
 
-    if (dataFile.dataType === 'array') {
+    if (dataFile.dataType === 'freesurfer') {
+      const files = dataFile.metaFile.map((csvLine) => {
+        const file = csvLine[0];
+        return isAbsolute(file) ? file : resolve(join(dirname(dataFile.metaFilePath), file));
+      });
+
+      files.shift();
+
+      map.dataFiles = files;
+
       const stepDataMap = {};
 
       Object.keys(mappings[stepIndex]).forEach((fieldsetName) => {
         stepDataMap[fieldsetName] = {
-          data: {},
+          value: {},
         };
 
         mappings[stepIndex][fieldsetName].forEach((field) => {
@@ -58,31 +67,16 @@ export const saveDataMapping = applyAsyncLoading(
         });
 
         const rowId = dataRow[0];
-        stepDataMap.covariates.data[rowId] = parsedRow;
+        stepDataMap.covariates.value[rowId] = parsedRow;
       });
 
       map.dataMappings.push(stepDataMap);
-    } else if (dataFile.dataType === 'bundle' || dataFile.dataType === 'singles') {
-      const e = new RegExp(/[-\/\\^$*+?.()|[\]{}]/g); // eslint-disable-line no-useless-escape
-      const escape = (string) => {
-        return string.replace(e, '\\$&');
-      };
-      const pathsep = new RegExp(`${escape(sep)}|:`, 'g');
-
-      mappings.forEach((step, i) => {
-        Object.keys(step).forEach((variable) => {
-          if (mappings[i][variable][0] && mappings[i][variable][0].dataFileFieldName === 'bundle') {
-            map.dataMappings[i][variable] = dataFile.files.map((f => f.replace(pathsep, '-')));
-          }
-        });
-      });
-      map.files = dataFile.files;
     }
 
-    // dispatch(({
-    //   type: SAVE_DATA_MAPPING,
-    //   payload: map,
-    // }));
+    dispatch(({
+      type: SAVE_DATA_MAPPING,
+      payload: map,
+    }));
   }
 );
 
