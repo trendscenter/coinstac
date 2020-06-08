@@ -33,7 +33,7 @@ import {
   consortiumSaveActivePipelineProp,
 } from '../../state/graphql/props';
 import { notifyInfo } from '../../state/ducks/notifyAndLog';
-import { pipelineNeedsDataMapping } from '../../../main/utils/run-pipeline-functions';
+import { pipelineNeedsDataMapping } from '../../utils/helpers';
 
 const MAX_LENGTH_CONSORTIA = 50;
 
