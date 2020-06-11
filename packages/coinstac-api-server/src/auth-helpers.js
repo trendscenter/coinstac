@@ -97,7 +97,8 @@ const helperFunctions = {
     const db = database.getDbInstance();
 
     await sgMail.send(msg);
-    await db.collection('users').findOneAndUpdate({ email }, {
+
+    return db.collection('users').updateOne({ email }, {
       $set: {
         passwordResetToken: resetToken,
       },
@@ -246,22 +247,6 @@ const helperFunctions = {
     }
   },
   /**
-   * Confirms that submitted email is valid
-   * @param {object} req request
-   * @param {object} res response
-   * @return {object} The requested object
-   */
-  async validateEmail(req, res) {
-    const db = database.getDbInstance();
-    const user = await db.collection('users').findOne({ email: req.payload.email });
-
-    if (!user) {
-      return res(Boom.badRequest('Invalid email'));
-    }
-
-    res(req.payload);
-  },
-  /**
    * Confirms that submitted token is valid
    * @param {object} req request
    * @param {object} res response
@@ -277,7 +262,13 @@ const helperFunctions = {
 
     try {
       const { email } = jwt.verify(req.payload.token, dbmap.cstacJWTSecret);
-      return helperFunctions.validateEmail({ payload: { email } }, res);
+      const noEmail = await helperFunctions.validateUniqueEmail({ payload: { email } });
+
+      if (noEmail) {
+        return res(Boom.badRequest('Invalid email'));
+      }
+
+      return res({ email });
     } catch (err) {
       res(Boom.badRequest(err));
     }
@@ -292,7 +283,8 @@ const helperFunctions = {
     const db = database.getDbInstance();
 
     const newPassword = await helperFunctions.hashPassword(password);
-    await db.collection('users').findOneAndUpdate({
+
+    return db.collection('users').updateOne({
       passwordResetToken: token,
     }, {
       $set: {
