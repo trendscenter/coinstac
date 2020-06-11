@@ -73,7 +73,7 @@ const styles = theme => ({
   content: {
     flexGrow: 1,
     backgroundColor: theme.palette.background.default,
-    padding: theme.spacing.unit * 3,
+    padding: theme.spacing(3),
   },
   status: {
     display: 'inline-block',
@@ -527,7 +527,7 @@ class Dashboard extends Component {
                     : (
                       <span className={classes.statusDown}>
                         <Typography
-                          variant="body2"
+                          variant="body1"
                           classes={{
                             root: classes.statusDownText,
                           }}
