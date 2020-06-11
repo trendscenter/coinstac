@@ -10,9 +10,9 @@ import { withStyles } from '@material-ui/core/styles';
 const styles = theme => ({
   rootPaper: {
     ...theme.mixins.gutters(),
-    paddingTop: theme.spacing.unit * 2,
-    paddingBottom: theme.spacing.unit * 2,
-    marginTop: theme.spacing.unit * 2,
+    paddingTop: theme.spacing(2),
+    paddingBottom: theme.spacing(2),
+    marginTop: theme.spacing(2),
     height: '100%',
     display: 'flex',
     flexDirection: 'column',
@@ -21,10 +21,10 @@ const styles = theme => ({
   titleContainer: {
     display: 'flex',
     justifyContent: 'space-between',
-    marginBottom: theme.spacing.unit,
+    marginBottom: theme.spacing(1),
   },
   description: {
-    marginBottom: theme.spacing.unit * 2,
+    marginBottom: theme.spacing(2),
   },
   highlight: {
     backgroundColor: 'yellow',
@@ -51,14 +51,14 @@ const ListItem = ({
     elevation={4}
   >
     <div className={classes.titleContainer}>
-      <Typography variant="headline" className={highlight ? classes.highlight : ''}>
+      <Typography variant="h5" className={highlight ? classes.highlight : ''}>
         { itemObject.name }
       </Typography>
       {
         itemOptions.owner && <Typography>Owner</Typography>
       }
     </div>
-    <Typography variant="body1" className={classes.description}>
+    <Typography variant="body2" className={classes.description}>
       { itemObject.description }
     </Typography>
     { itemOptions.text }

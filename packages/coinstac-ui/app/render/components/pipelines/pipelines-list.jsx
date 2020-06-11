@@ -24,7 +24,7 @@ const MAX_LENGTH_PIPELINES = 5;
 
 const styles = theme => ({
   button: {
-    margin: theme.spacing.unit,
+    margin: theme.spacing(1),
   },
 });
 

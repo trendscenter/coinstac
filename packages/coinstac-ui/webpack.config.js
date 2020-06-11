@@ -129,7 +129,7 @@ if (process.env.NODE_ENV === 'development') {
    * Remove react and redux from externals to make HMR easier.
    * {@link https://github.com/gaearon/react-hot-loader/tree/master/docs#usage-with-external-react}
    */
-  const pattern = /react|redux/;
+  const pattern = /redux/;
   config.externals = config.externals.filter(name => !pattern.test(name));
 }
 

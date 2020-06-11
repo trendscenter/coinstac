@@ -51,7 +51,7 @@ const RunsList = ({
       {
         (!runs || !runs.length || runNoResultsCount === runs.length)
         && (
-          <Typography variant="body1">
+          <Typography variant="body2">
             {
               hoursSinceActive === 0
                 ? (
