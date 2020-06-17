@@ -1,11 +1,16 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
+import classNames from 'classnames';
 import Button from '@material-ui/core/Button';
+import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
+import CheckIcon from '@material-ui/icons/Check';
 import { withStyles } from '@material-ui/core/styles';
 import { notifyInfo } from '../../state/ducks/notifyAndLog';
 import { clearRuns } from '../../state/ducks/runs';
+
+const REMOTE_URL = 'remoteUrl';
 
 const styles = theme => ({
   pageTitle: {
@@ -13,16 +18,46 @@ const styles = theme => ({
   },
   pageSubtitle: {
     marginBottom: theme.spacing(1),
+    borderBottom: `1px solid ${theme.palette.grey[300]}`,
   },
   sectionTitle: {
     marginBottom: theme.spacing(1),
   },
+  topMargin: {
+    marginTop: theme.spacing(4),
+  },
+  rightMargin: {
+    marginRight: theme.spacing(2),
+  },
+  textField: {
+    marginTop: theme.spacing(2),
+  },
   button: {
     marginTop: theme.spacing(1),
+  },
+  buttons: {
+    display: 'flex',
+    alignItems: 'center',
+  },
+  checkIcon: {
+    marginTop: theme.spacing(1),
+    marginLeft: theme.spacing(1),
   },
 });
 
 class Settings extends Component {
+  constructor(props) {
+    super(props);
+
+    const savedRemoteUrl = localStorage.getItem(REMOTE_URL) || '';
+
+    this.state = {
+      remoteUrl: savedRemoteUrl,
+      editingUrl: savedRemoteUrl,
+      saved: false,
+    };
+  }
+
   clearData = (e) => {
     const { clearRuns, notifyInfo } = this.props;
     e.preventDefault();
@@ -31,8 +66,26 @@ class Settings extends Component {
     notifyInfo('Local data cleared');
   }
 
+  handleUrlChange = (e) => {
+    this.setState({ editingUrl: e.target.value, saved: false });
+  }
+
+  handleSave = () => {
+    const { editingUrl } = this.state;
+
+    localStorage.setItem(REMOTE_URL, editingUrl);
+    this.setState({ remoteUrl: editingUrl, saved: true });
+  }
+
+  handleReset = () => {
+    const { remoteUrl } = this.state;
+
+    this.setState({ editingUrl: remoteUrl, saved: false });
+  }
+
   render() {
     const { classes } = this.props;
+    const { remoteUrl, editingUrl, saved } = this.state;
 
     return (
       <div className="settings">
@@ -41,6 +94,7 @@ class Settings extends Component {
             Settings
           </Typography>
         </div>
+
         <Typography variant="h5" className={classes.pageSubtitle}>
           Remove Data
         </Typography>
@@ -54,6 +108,40 @@ class Settings extends Component {
             Delete Local Data
           </Button>
         </form>
+
+        <Typography variant="h5" className={classNames(classes.pageSubtitle, classes.topMargin)}>
+          Save remote url for local pipeline
+        </Typography>
+        <div>
+          <TextField
+            id="remoteUrl"
+            label="Remote Url"
+            value={editingUrl}
+            className={classes.textField}
+            fullWidth
+            onChange={this.handleUrlChange}
+          />
+          <div className={classes.buttons}>
+            <Button
+              variant="contained"
+              color="secondary"
+              disabled={remoteUrl === editingUrl}
+              className={classNames(classes.button, classes.rightMargin)}
+              onClick={this.handleReset}
+            >
+              Restore
+            </Button>
+            <Button
+              variant="contained"
+              disabled={remoteUrl === editingUrl || !editingUrl}
+              className={classes.button}
+              onClick={this.handleSave}
+            >
+              Save
+            </Button>
+            {saved && <CheckIcon className={classes.checkIcon} color="primary" />}
+          </div>
+        </div>
       </div>
     );
   }
