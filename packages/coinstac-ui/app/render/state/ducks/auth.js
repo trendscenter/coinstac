@@ -25,7 +25,7 @@ const INITIAL_STATE = {
     consortiaStatuses: {},
   },
   appDirectory: localStorage.getItem('appDirectory') || remote.getGlobal('config').get('coinstacHome'),
-  remoteUrl: localStorage.getItem('remoteUrl') || remote.getGlobal('config').get('remoteUrl'),
+  remoteURL: localStorage.getItem('remoteURL') || remote.getGlobal('config').get('remoteURL'),
   isApiVersionCompatible: true,
   locationStacks: [],
   error: null,
@@ -55,19 +55,23 @@ export const updateUserConsortiaStatuses = statuses => ({
 });
 export const updateUserPerms = perms => ({ type: UPDATE_USER_PERMS, payload: perms });
 export const setAppDirectory = appDirectory => ({ type: SET_APP_DIRECTORY, payload: appDirectory });
-export const setRemoteUrl = remoteUrl => ({ type: SET_REMOTE_URL, payload: remoteUrl });
+export const setRemoteURL = remoteURL => ({ type: SET_REMOTE_URL, payload: remoteURL });
 export const setApiVersionCheck = isApiVersionCompatible => ({
   type: SET_API_VERSION_CHECK,
   payload: isApiVersionCompatible,
 });
 
 // Helpers
-const initCoreAndSetToken = async (reqUser, data, appDirectory, dispatch) => {
+const initCoreAndSetToken = async (reqUser, data, appDirectory, remoteURL, dispatch) => {
   if (appDirectory) {
     localStorage.setItem('appDirectory', appDirectory);
   }
 
-  await ipcPromise.send('login-init', { userId: reqUser.username, appDirectory });
+  if (remoteURL) {
+    localStorage.setItem('remoteURL', remoteURL);
+  }
+
+  await ipcPromise.send('login-init', { userId: reqUser.username, appDirectory, remoteURL });
 
   const user = { ...data.user, label: reqUser.username };
 
@@ -124,11 +128,12 @@ export const autoLogin = applyAsyncLoading(() => (dispatch, getState) => {
   )
     // TODO: GET RID OF CORE INIT
     .then(({ data }) => {
-      const { auth: { appDirectory } } = getState();
+      const { auth: { appDirectory, remoteURL } } = getState();
       return initCoreAndSetToken(
         { username: data.user.id, saveLogin, password: 'password' },
         data,
         appDirectory,
+        remoteURL,
         dispatch
       );
     })
@@ -159,8 +164,10 @@ export const checkApiVersion = applyAsyncLoading(() => dispatch => axios.get(`${
 
 export const login = applyAsyncLoading(({ username, password, saveLogin }) => (dispatch, getState) => axios.post(`${API_URL}/authenticate`, { username, password })
   .then(({ data }) => {
-    const { auth: { appDirectory } } = getState();
-    return initCoreAndSetToken({ username, password, saveLogin }, data, appDirectory, dispatch);
+    const { auth: { appDirectory, remoteURL } } = getState();
+    return initCoreAndSetToken(
+      { username, password, saveLogin }, data, appDirectory, remoteURL, dispatch
+    );
   })
   .catch((err) => {
     console.error(err); // eslint-disable-line no-console
@@ -179,8 +186,8 @@ export const login = applyAsyncLoading(({ username, password, saveLogin }) => (d
 
 export const signUp = applyAsyncLoading(user => (dispatch, getState) => axios.post(`${API_URL}/createAccount`, user)
   .then(({ data }) => {
-    const { auth: { appDirectory } } = getState();
-    return initCoreAndSetToken(user, data, appDirectory, dispatch);
+    const { auth: { appDirectory, remoteURL } } = getState();
+    return initCoreAndSetToken(user, data, appDirectory, remoteURL, dispatch);
   })
   .catch((err) => {
     const { statusCode, message } = getErrorDetail(err);
@@ -207,9 +214,11 @@ export default function reducer(state = INITIAL_STATE, { type, payload }) {
     case UPDATE_USER_PERMS:
       return { ...state, user: { ...state.user, permissions: payload } };
     case SET_APP_DIRECTORY:
+      localStorage.setItem('appDirectory', payload);
       return { ...state, appDirectory: payload };
     case SET_REMOTE_URL:
-      return { ...state, remoteUrl: payload };
+      localStorage.setItem('remoteURL', payload);
+      return { ...state, remoteURL: payload };
     case SET_API_VERSION_CHECK:
       return { ...state, isApiVersionCompatible: payload };
     case LOCATION_CHANGE:
