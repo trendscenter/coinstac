@@ -1,9 +1,14 @@
 import { indexOf } from 'lodash';
 
-// eslint-disable-next-line import/prefer-default-export
-export const isPipelineOwner = (permissions, owningConsortium) => {
+const COMP_INPUT_NEED_USER_DATA = [
+  'csv',
+  'freesurfer',
+  'files',
+];
+
+export function isPipelineOwner(permissions, owningConsortium) {
   return indexOf(permissions.consortia[owningConsortium], 'owner') !== -1;
-};
+}
 
 export function pipelineNeedsDataMapping(pipeline) {
   if (!pipeline || !pipeline.steps) {
@@ -16,9 +21,10 @@ export function pipelineNeedsDataMapping(pipeline) {
     const inputMapSchemaKeys = Object.keys(step.inputMap);
 
     inputMapSchemaKeys.forEach((inputSchemaKey) => {
-      const inputSchema = step.inputMap[inputSchemaKey];
+      const compInputField = step.computations[0].computation.input[inputSchemaKey];
+      const compInputFieldType = compInputField.type.toLowerCase();
 
-      if (!inputSchema.fulfilled || inputSchemaKey === 'data') {
+      if (COMP_INPUT_NEED_USER_DATA.includes(compInputFieldType)) {
         needsDataMapping = true;
       }
     });

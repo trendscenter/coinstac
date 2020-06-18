@@ -19,6 +19,7 @@ import PipelineStepInputBoolean from './pipeline-step-input/pipeline-step-input-
 import PipelineStepInputUsers from './pipeline-step-input/pipeline-step-input-users';
 import PipelineStepInputCsv from './pipeline-step-input/pipeline-step-input-csv';
 import PipelineStepInputFreesurfer from './pipeline-step-input/pipeline-step-input-freesurfer';
+import PipelineStepInputFiles from './pipeline-step-input/pipeline-step-input-files';
 
 const styles = theme => ({
   lambdaContainer: {
@@ -44,9 +45,9 @@ class PipelineStepInput extends Component {
 
   componentDidUpdate = () => {
     const {
-      objKey, objParams, updateStep, step,
+      objParams, updateStep, step,
     } = this.props;
-    if (step && objKey === 'data' && !step.dataMeta) {
+    if (step && (objParams.type === 'freesurfer' || objParams.type === 'files') && !step.dataMeta) {
       updateStep({
         ...step,
         dataMeta: objParams,
@@ -69,7 +70,7 @@ class PipelineStepInput extends Component {
       delete inputCopy.fromCache;
     }
 
-    if (objParams.source === 'owner' && objParams.type !== 'freesurfer') {
+    if (objParams.source === 'owner' && objParams.type !== 'freesurfer' && objParams.type !== 'files') {
       if (value === 'DELETE_VAR') {
         delete inputCopy[prop];
         return { ...inputCopy };
@@ -255,6 +256,19 @@ class PipelineStepInput extends Component {
             {
               objParams.type === 'freesurfer' && (
                 <PipelineStepInputFreesurfer
+                  objKey={objKey}
+                  objParams={objParams}
+                  owner={owner}
+                  addClientProp={this.addClientProp}
+                  updateStep={updateStep}
+                  getNewObj={this.getNewObj}
+                  step={step}
+                />
+              )
+            }
+            {
+              objParams.type === 'files' && (
+                <PipelineStepInputFiles
                   objKey={objKey}
                   objParams={objParams}
                   owner={owner}

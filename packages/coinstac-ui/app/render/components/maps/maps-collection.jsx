@@ -257,7 +257,7 @@ class MapsCollection extends Component {
                   )
                 }
                 {
-                  (dataType === 'bundle' || dataType === 'singles') && (
+                  dataType === 'files' && (
                     <div>
                       <Typography>
                         <span className="bold">File(s):</span>
@@ -276,7 +276,7 @@ class MapsCollection extends Component {
                 }
                 <div>
                   {
-                    dataType === 'freesurfer' && remainingDataVariables && (
+                    remainingDataVariables && remainingDataVariables.length > 0 && (
                       <div className="card-deck" ref={(ref) => { this.container = ref; }}>
                         {
                           remainingDataVariables.map(columnName => (
