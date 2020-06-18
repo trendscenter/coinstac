@@ -42,27 +42,30 @@ function MapsPipelineVariables(props) {
 
             const inputs = { ...inputMap, ...computations[0].computation.input };
 
-            return Object.entries(inputs).map((input) => {
-              const inputMapKey = input[0];
-              const inputMapValue = input[1];
+            return Object.keys(inputs)
+              .sort((inputKeyA, inputKeyB) => {
+                if (inputMap[inputKeyA].fulfilled) return 1;
+                if (inputMap[inputKeyB].fulfilled) return -1;
+                return 0;
+              })
+              .map((inputKey) => {
+                if (inputKey === 'meta') {
+                  return;
+                }
 
-              if (inputMapKey === 'meta') {
-                return;
-              }
-
-              return (
-                <MapsStepField
-                  registerDraggableContainer={registerDraggableContainer}
-                  key={`step-${inputMapKey}`}
-                  fieldName={inputMapKey}
-                  fieldCompSpec={inputMapValue}
-                  fieldPipeline={inputMap[inputMapKey]}
-                  stepsDataMappings={stepsDataMappings}
-                  consortium={consortium}
-                  unmapField={unmapField}
-                />
-              );
-            });
+                return (
+                  <MapsStepField
+                    registerDraggableContainer={registerDraggableContainer}
+                    key={`step-${inputKey}`}
+                    fieldName={inputKey}
+                    fieldCompSpec={inputs[inputKey]}
+                    fieldPipeline={inputMap[inputKey]}
+                    stepsDataMappings={stepsDataMappings}
+                    consortium={consortium}
+                    unmapField={unmapField}
+                  />
+                );
+              });
           })
         }
       </Paper>

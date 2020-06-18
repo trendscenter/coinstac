@@ -514,7 +514,7 @@ loadConfig()
       } else if (org === 'directory') {
         properties = ['openDirectory'];
         postDialogFunc = ipcFunctions.manualDirectorySelection;
-      } else if (org === 'bundle' || org === 'singles') {
+      } else if (org === 'files') {
         filters = [
           {
             name: 'File Types',

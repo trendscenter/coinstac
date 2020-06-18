@@ -117,7 +117,7 @@ async function populatePipelines() {
       steps: [
         {
           computations: [
-            COMPUTATION_IDS[0],
+            COMPUTATION_IDS[10],
           ],
           controller: {
             id: null,
@@ -127,21 +127,21 @@ async function populatePipelines() {
           id: 'HJKRyjTuM',
           inputMap: {
             covariates: {
-              ownerMappings: [
+              fulfilled: false,
+              value: [
                 {
                   name: 'isControl',
-                  source: 'file',
                   type: 'boolean',
                 },
                 {
                   name: 'age',
-                  source: 'file',
                   type: 'number',
                 },
               ],
             },
             data: {
-              ownerMappings: [
+              fulfilled: true,
+              value: [
                 {
                   type: 'FreeSurfer',
                   value: ['3rd-Ventricle', '4th-Ventricle', '5th-Ventricle'],

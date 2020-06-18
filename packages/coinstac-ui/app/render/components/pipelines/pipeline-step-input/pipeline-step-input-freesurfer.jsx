@@ -2,7 +2,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import AddIcon from '@material-ui/icons/Add';
-import InfoIcon from '@material-ui/icons/Info';
 import {
   Table,
   TableHead,
@@ -10,8 +9,6 @@ import {
   TableRow,
   TableCell,
   Button,
-  Typography,
-  Tooltip,
 } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
 import PipelineStepInputFreesurferTableRow from './pipeline-step-input-freesurfer-table-row';
@@ -78,6 +75,10 @@ function PipelineStepInputFreesurfer(props) {
   );
 }
 
+PipelineStepInputFreesurfer.defaultProps = {
+  possibleInputs: null,
+};
+
 PipelineStepInputFreesurfer.propTypes = {
   objKey: PropTypes.string.isRequired,
   objParams: PropTypes.object.isRequired,
@@ -86,7 +87,7 @@ PipelineStepInputFreesurfer.propTypes = {
   getNewObj: PropTypes.func.isRequired,
   updateStep: PropTypes.func.isRequired,
   addClientProp: PropTypes.func.isRequired,
-  possibleInputs: PropTypes.array.isRequired,
+  possibleInputs: PropTypes.array,
   classes: PropTypes.object.isRequired,
 };
 

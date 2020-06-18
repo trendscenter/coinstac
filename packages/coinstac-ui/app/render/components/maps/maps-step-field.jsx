@@ -36,11 +36,13 @@ class MapsStepField extends Component {
 
     const firstStepDataMappings = stepsDataMappings[0];
 
-    return fieldPipeline.value.map((field) => {
+    return fieldPipeline.value.map((innerField) => {
       let column = null;
+      const innerFieldName = innerField.name || innerField.type;
+
       if (firstStepDataMappings && fieldName in firstStepDataMappings) {
         const mappedField = firstStepDataMappings[fieldName].find(
-          c => c.pipelineVariableName === field.name
+          c => c.pipelineVariableName === innerFieldName
         );
 
         column = mappedField ? mappedField.dataFileFieldName : null;
@@ -49,8 +51,8 @@ class MapsStepField extends Component {
       return (
         <MapsStepMapField
           registerDraggableContainer={registerDraggableContainer}
-          key={`step-cov-${field.name}-${fieldName}`}
-          step={field}
+          key={`step-cov-${innerFieldName}-${fieldName}`}
+          step={innerField}
           type={fieldName}
           column={column}
           unmapField={unmapField}
