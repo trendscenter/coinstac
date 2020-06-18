@@ -3,7 +3,7 @@ const rmrf = pify(require('rimraf'));
 const mkdirp = pify(require('mkdirp'));
 const ncp = pify(require('ncp'));
 const path = require('path');
-const npmi = require('./utils/npmi');
+const { npmi } = require('./utils/npmi');
 
 const paths = [
   path.join('node_modules', 'coinstac-common'),
