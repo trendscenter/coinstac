@@ -46,6 +46,7 @@ class CoinstacClient {
     this.options = opts;
     this.logger = opts.logger || new Logger({ transports: [new Console()] });
     this.appDirectory = opts.appDirectory;
+    this.remoteURL = opts.remoteURL;
 
     this.dockerManager = DockerManager;
     this.dockerManager.setLogger(this.logger);
@@ -75,6 +76,10 @@ class CoinstacClient {
       this.pipelineManager = manager;
       return manager;
     });
+  }
+
+  updateRemoteURL(remoteURL) {
+    this.remoteURL = remoteURL;
   }
 
   /**

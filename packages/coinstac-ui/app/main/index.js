@@ -139,9 +139,16 @@ loadConfig()
       mainWindow.webContents.send(BAD_TOKEN);
     });
 
-    ipcPromise.on('login-init', ({ userId, appDirectory }) => {
+    ipcPromise.on('login-init', ({ userId, appDirectory, remoteURL }) => {
       return initializedCore
-        ? Promise.resolve() : configureCore(config, logger, userId, appDirectory || config.get('coinstacHome'))
+        ? Promise.resolve()
+        : configureCore(
+          config,
+          logger,
+          userId,
+          appDirectory || config.get('coinstacHome'),
+          remoteURL || config.get('remoteURL')
+        )
           .then((c) => {
             initializedCore = c;
             return upsertCoinstacUserDir(c);
