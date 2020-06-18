@@ -80,9 +80,10 @@ class FormLogin extends Component {
     this.setState({ openSetStartupDirectoryDialog: false });
   }
 
-  changeAppDirectory = ({ appDirectory }) => {
-    const { changeAppDirectory } = this.props;
+  changeAppData = ({ appDirectory, remoteURL }) => {
+    const { changeAppDirectory, changeRemoteURL } = this.props;
     changeAppDirectory(appDirectory);
+    changeRemoteURL(remoteURL);
     this.setState({ openSetStartupDirectoryDialog: false });
   }
 
@@ -142,7 +143,7 @@ class FormLogin extends Component {
                   checked={saveLogin}
                   onChange={this.handleChangeCheckbox('saveLogin')}
                 />
-)}
+              )}
               label="Keep me logged in"
               className={classes.formControl}
             />
@@ -165,10 +166,11 @@ class FormLogin extends Component {
           Change App Settings
         </Button>
         <FormStartupDirectory
+          appDirectory={auth.appDirectory}
+          remoteURL={auth.remoteURL}
           open={openSetStartupDirectoryDialog}
           close={this.closeStartupDirectoryDialog}
-          onSubmit={this.changeAppDirectory}
-          appDirectory={auth.appDirectory}
+          onSubmit={this.changeAppData}
         />
       </div>
     );
@@ -180,6 +182,7 @@ FormLogin.propTypes = {
   classes: PropTypes.object.isRequired,
   loading: PropTypes.object,
   changeAppDirectory: PropTypes.func.isRequired,
+  changeRemoteURL: PropTypes.func.isRequired,
   submit: PropTypes.func.isRequired,
 };
 

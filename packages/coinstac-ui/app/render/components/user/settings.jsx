@@ -7,10 +7,9 @@ import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
 import CheckIcon from '@material-ui/icons/Check';
 import { withStyles } from '@material-ui/core/styles';
+import { setRemoteURL } from '../../state/ducks/auth';
 import { notifyInfo } from '../../state/ducks/notifyAndLog';
 import { clearRuns } from '../../state/ducks/runs';
-
-const REMOTE_URL = 'remoteUrl';
 
 const styles = theme => ({
   pageTitle: {
@@ -49,13 +48,19 @@ class Settings extends Component {
   constructor(props) {
     super(props);
 
-    const savedRemoteUrl = localStorage.getItem(REMOTE_URL) || '';
-
     this.state = {
-      remoteUrl: savedRemoteUrl,
-      editingUrl: savedRemoteUrl,
-      saved: false,
+      editingURL: props.remoteURL,
+      savingURLStatus: 'init',
     };
+  }
+
+  // eslint-disable-next-line
+  UNSAFE_componentWillReceiveProps(nextProps) {
+    const { remoteURL } = this.props;
+
+    if (remoteURL !== nextProps.remoteURL) {
+      this.setState({ editingURL: nextProps.remoteURL });
+    }
   }
 
   clearData = (e) => {
@@ -66,26 +71,28 @@ class Settings extends Component {
     notifyInfo('Local data cleared');
   }
 
-  handleUrlChange = (e) => {
-    this.setState({ editingUrl: e.target.value, saved: false });
+  handleURLChange = (e) => {
+    this.setState({ editingURL: e.target.value, savingURLStatus: 'init' });
   }
 
   handleSave = () => {
-    const { editingUrl } = this.state;
+    const { setRemoteURL } = this.props;
+    const { editingURL } = this.state;
 
-    localStorage.setItem(REMOTE_URL, editingUrl);
-    this.setState({ remoteUrl: editingUrl, saved: true });
+    setRemoteURL(editingURL);
+
+    this.setState({ savingURLStatus: 'success' });
   }
 
   handleReset = () => {
-    const { remoteUrl } = this.state;
+    const { remoteURL } = this.props;
 
-    this.setState({ editingUrl: remoteUrl, saved: false });
+    this.setState({ editingURL: remoteURL, savingURLStatus: 'init' });
   }
 
   render() {
-    const { classes } = this.props;
-    const { remoteUrl, editingUrl, saved } = this.state;
+    const { classes, remoteURL } = this.props;
+    const { editingURL, savingURLStatus } = this.state;
 
     return (
       <div className="settings">
@@ -114,18 +121,18 @@ class Settings extends Component {
         </Typography>
         <div>
           <TextField
-            id="remoteUrl"
-            label="Remote Url"
-            value={editingUrl}
+            id="remoteURL"
+            label="Remote URL"
+            value={editingURL}
             className={classes.textField}
             fullWidth
-            onChange={this.handleUrlChange}
+            onChange={this.handleURLChange}
           />
           <div className={classes.buttons}>
             <Button
               variant="contained"
               color="secondary"
-              disabled={remoteUrl === editingUrl}
+              disabled={remoteURL === editingURL}
               className={classNames(classes.button, classes.rightMargin)}
               onClick={this.handleReset}
             >
@@ -133,13 +140,13 @@ class Settings extends Component {
             </Button>
             <Button
               variant="contained"
-              disabled={remoteUrl === editingUrl || !editingUrl}
+              disabled={remoteURL === editingURL || !editingURL}
               className={classes.button}
               onClick={this.handleSave}
             >
               Save
             </Button>
-            {saved && <CheckIcon className={classes.checkIcon} color="primary" />}
+            {savingURLStatus === 'success' && <CheckIcon className={classes.checkIcon} color="primary" />}
           </div>
         </div>
       </div>
@@ -148,7 +155,9 @@ class Settings extends Component {
 }
 
 Settings.propTypes = {
+  remoteURL: PropTypes.string.isRequired,
   classes: PropTypes.object.isRequired,
+  setRemoteURL: PropTypes.func.isRequired,
   clearRuns: PropTypes.func.isRequired,
   notifyInfo: PropTypes.func.isRequired,
 };
@@ -157,7 +166,12 @@ Settings.contextTypes = {
   router: PropTypes.object.isRequired,
 };
 
-const connectedComponent = connect(null, {
+const mapStateToProps = ({ auth }) => ({
+  remoteURL: auth.remoteURL,
+});
+
+const connectedComponent = connect(mapStateToProps, {
+  setRemoteURL,
   clearRuns,
   notifyInfo,
 })(Settings);
