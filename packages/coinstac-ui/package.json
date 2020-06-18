@@ -119,8 +119,8 @@
   "scripts": {
     "build:webpack": "cross-env NODE_ENV=production webpack --mode=production",
     "build": "npm i && npm run build:webpack && node ./scripts/build.js production",
-    "build-dev": "node ./scripts/build-setup.js && npm i && node ./scripts/post-install.js && npm run build:webpack && node ./scripts/build.js development",
-    "build-local": "node ./scripts/build-setup.js && npm i && node ./scripts/post-install.js && npm run build:webpack && node ./scripts/build.js",
+    "build-dev": "npm i && node ./scripts/build-setup.js  && node ./scripts/post-install.js && npm run build:webpack && node ./scripts/build.js development",
+    "build-local": "npm i && node ./scripts/build-setup.js && node ./scripts/post-install.js && npm run build:webpack && node ./scripts/build.js",
     "start": "electron . --log-level=debug",
     "build-native": "node ./scripts/build-native.js",
     "clean": "node scripts/clean.js",
