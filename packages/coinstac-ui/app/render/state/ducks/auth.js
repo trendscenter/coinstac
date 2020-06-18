@@ -25,6 +25,7 @@ const INITIAL_STATE = {
     consortiaStatuses: {},
   },
   appDirectory: localStorage.getItem('appDirectory') || remote.getGlobal('config').get('coinstacHome'),
+  remoteUrl: localStorage.getItem('remoteUrl') || remote.getGlobal('config').get('remoteUrl'),
   isApiVersionCompatible: true,
   locationStacks: [],
   error: null,
@@ -40,6 +41,7 @@ const CLEAR_ERROR = 'CLEAR_ERROR';
 const UPDATE_USER_CONSORTIA_STATUSES = 'UPDATE_USER_CONSORTIA_STATUSES';
 const UPDATE_USER_PERMS = 'UPDATE_USER_PERMS';
 const SET_APP_DIRECTORY = 'SET_APP_DIRECTORY';
+const SET_REMOTE_URL = 'SET_REMOTE_URL';
 const SET_API_VERSION_CHECK = 'SET_API_VERSION_CHECK';
 
 // Action Creators
@@ -53,6 +55,7 @@ export const updateUserConsortiaStatuses = statuses => ({
 });
 export const updateUserPerms = perms => ({ type: UPDATE_USER_PERMS, payload: perms });
 export const setAppDirectory = appDirectory => ({ type: SET_APP_DIRECTORY, payload: appDirectory });
+export const setRemoteUrl = remoteUrl => ({ type: SET_REMOTE_URL, payload: remoteUrl });
 export const setApiVersionCheck = isApiVersionCompatible => ({
   type: SET_API_VERSION_CHECK,
   payload: isApiVersionCompatible,
@@ -205,6 +208,8 @@ export default function reducer(state = INITIAL_STATE, { type, payload }) {
       return { ...state, user: { ...state.user, permissions: payload } };
     case SET_APP_DIRECTORY:
       return { ...state, appDirectory: payload };
+    case SET_REMOTE_URL:
+      return { ...state, remoteUrl: payload };
     case SET_API_VERSION_CHECK:
       return { ...state, isApiVersionCompatible: payload };
     case LOCATION_CHANGE:
