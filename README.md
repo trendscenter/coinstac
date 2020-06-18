@@ -65,6 +65,8 @@ You may wonder why we haven't been doing this before!  Us too.  Let's get starte
 - If you are a developer or scientist and want to design a decentralized computation, please see:
   - [DecentralizedComputation.md](DecentralizedComputation.md) for how to build your own `DecentralizedComputation`.
   - The [development guide](https://github.com/trendscenter/coinstac/blob/master/algorithm-development/coinstac-development-guide.md) for how to test your freshly created `DecentralizedComputation`.
+  
+- If you would like to run your own COINSTAC remote server, please see the [setup instructions](https://github.com/trendscenter/coinstac/blob/master/SETUP.md).
 
 ## Releases
 Binary releases for several platforms can be found here, under each version's assets tab:
