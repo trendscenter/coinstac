@@ -6,12 +6,10 @@ import {
   Button,
   Menu,
   MenuItem,
-  Typography,
-  TextField,
 } from '@material-ui/core';
 import update from 'immutability-helper';
 
-class PipelineStepInputCsvTableRow extends React.Component {
+class PipelineStepInputFilesTableRow extends React.Component {
   constructor(props) {
     super(props);
 
@@ -49,7 +47,7 @@ class PipelineStepInputCsvTableRow extends React.Component {
 
   render() {
     const {
-      obj, index, objKey, objParams, owner, getNewObj, possibleInputs, step, updateStep,
+      obj, index, objKey, objParams, owner, possibleInputs, step, updateStep,
     } = this.props;
 
     const { openDataMenu } = this.state;
@@ -93,31 +91,6 @@ class PipelineStepInputCsvTableRow extends React.Component {
           </Menu>
         </TableCell>
         <TableCell>
-          {
-            !obj.fromCache && (
-              <TextField
-                id={`${objKey}-${index}-input-name`}
-                disabled={!owner}
-                placeholder="Variable Name"
-                value={obj.name || ''}
-                onChange={event => updateStep({
-                  ...step,
-                  inputMap: getNewObj('name', event.target.value, index),
-                })}
-              />
-            )
-          }
-          {
-            obj.fromCache && possibleInputs.length > 0
-            && (
-              <Typography variant="subtitle1">
-                Variable:
-                  {` ${possibleInputs[obj.fromCache.step].inputs[obj.fromCache.variable].label}`}
-              </Typography>
-            )
-          }
-        </TableCell>
-        <TableCell>
           <Button
             variant="contained"
             color="secondary"
@@ -142,11 +115,11 @@ class PipelineStepInputCsvTableRow extends React.Component {
   }
 }
 
-PipelineStepInputCsvTableRow.defaultProps = {
+PipelineStepInputFilesTableRow.defaultProps = {
   possibleInputs: null,
 };
 
-PipelineStepInputCsvTableRow.propTypes = {
+PipelineStepInputFilesTableRow.propTypes = {
   obj: PropTypes.object.isRequired,
   index: PropTypes.number.isRequired,
   objKey: PropTypes.string.isRequired,
@@ -158,4 +131,4 @@ PipelineStepInputCsvTableRow.propTypes = {
   possibleInputs: PropTypes.array,
 };
 
-export default PipelineStepInputCsvTableRow;
+export default PipelineStepInputFilesTableRow;

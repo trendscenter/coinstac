@@ -76,7 +76,7 @@ class MapsStepMapField extends Component {
       unmapField,
     } = this.props;
 
-    const { name } = step;
+    const name = step.name || step.type;
 
     const isMapped = !!column;
 

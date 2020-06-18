@@ -32,10 +32,14 @@ function MapsStepFixedValueField(props) {
 
   if (typeof fieldPipeline.value === 'boolean') {
     value = fieldPipeline.value.toString();
-  } else if (Array.isArray(fieldPipeline.value) && fieldCompSpec.type === 'freesurfer') {
-    value = fieldPipeline.value.map(v => v.value).join(',');
   } else if (Array.isArray(fieldPipeline.value)) {
-    value = fieldPipeline.value.join(', ');
+    if (fieldCompSpec.type === 'freesurfer') {
+      value = fieldPipeline.value.map(v => v.value).join(',');
+    } else if (fieldCompSpec.type === 'files') {
+      value = fieldPipeline.value.map(v => v.type).join(',');
+    } else {
+      value = fieldPipeline.value.join(', ');
+    }
   } else if (typeof fieldPipeline.value === 'object') {
     value = JSON.stringify(fieldPipeline.value);
   } else {

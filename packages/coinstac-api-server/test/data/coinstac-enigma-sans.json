@@ -24,10 +24,11 @@
     "input": {
       "data": {
         "label": "Data",
-        "type": "bundle",
+        "type": "files",
         "items": ["ENIGMA"],
         "extensions": [["csv","txt"]],
-        "order": 0
+        "order": 0,
+        "source": "owner"
       }
     },
     "output": {

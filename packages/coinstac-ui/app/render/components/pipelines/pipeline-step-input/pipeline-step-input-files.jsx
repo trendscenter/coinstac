@@ -1,3 +1,4 @@
+/* eslint-disable react/no-array-index-key */
 import React from 'react';
 import PropTypes from 'prop-types';
 import AddIcon from '@material-ui/icons/Add';
@@ -10,7 +11,7 @@ import {
   Button,
 } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
-import PipelineStepInputCsvTableRow from './pipeline-step-input-csv-table-row';
+import PipelineStepInputFilesTableRow from './pipeline-step-input-files-table-row';
 
 const styles = theme => ({
   addObjButton: {
@@ -19,7 +20,7 @@ const styles = theme => ({
   },
 });
 
-function PipelineStepInputCsv(props) {
+function PipelineStepInputFiles(props) {
   const {
     objKey, objParams, owner, addClientProp, getNewObj, possibleInputs, step,
     updateStep, classes,
@@ -45,14 +46,13 @@ function PipelineStepInputCsv(props) {
             <TableHead>
               <TableRow>
                 <TableCell>Data Type</TableCell>
-                <TableCell>Name</TableCell>
                 <TableCell />
               </TableRow>
             </TableHead>
             <TableBody>
               {
                 objInputMap.value.map((obj, index) => (
-                  <PipelineStepInputCsvTableRow
+                  <PipelineStepInputFilesTableRow
                     key={`${objKey}-${index}`} // eslint-disable-line react/no-array-index-key
                     index={index}
                     obj={obj}
@@ -74,11 +74,11 @@ function PipelineStepInputCsv(props) {
   );
 }
 
-PipelineStepInputCsv.defaultProps = {
+PipelineStepInputFiles.defaultProps = {
   possibleInputs: null,
 };
 
-PipelineStepInputCsv.propTypes = {
+PipelineStepInputFiles.propTypes = {
   objKey: PropTypes.string.isRequired,
   objParams: PropTypes.object.isRequired,
   owner: PropTypes.bool.isRequired,
@@ -90,4 +90,4 @@ PipelineStepInputCsv.propTypes = {
   classes: PropTypes.object.isRequired,
 };
 
-export default withStyles(styles)(PipelineStepInputCsv);
+export default withStyles(styles)(PipelineStepInputFiles);
