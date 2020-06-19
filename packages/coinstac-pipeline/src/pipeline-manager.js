@@ -261,6 +261,7 @@ module.exports = {
               success = true;
               break;
             } catch (e) {
+              logger.silly(JSON.stringify(e));
               if ((e.code
                 && (
                   e.code === 'ECONNREFUSED'
