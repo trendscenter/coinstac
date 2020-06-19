@@ -225,7 +225,7 @@ module.exports = {
                 });
               });
           }
-        }, 500 * factor);
+        }, 50 * factor);
       });
     };
 
@@ -261,13 +261,15 @@ module.exports = {
               success = true;
               break;
             } catch (e) {
-              if (e.code
+              if ((e.code
                 && (
                   e.code === 'ECONNREFUSED'
                   || e.code === 'EPIPE'
                   || e.code === 'ECONNRESET'
                   || e.code === 'EAGAIN'
-                )) {
+                ))
+                || (e.message && e.message.includes('EPIPE'))
+              ) {
                 retryLimit += 1;
                 logger.silly(`Retrying file request: ${files}`);
                 logger.silly(`File request failed with: ${e.message}`);
@@ -824,7 +826,7 @@ module.exports = {
                     const archive = archiver('tar', {
                       gzip: true,
                       gzipOptions: {
-                        level: 0,
+                        level: 9,
                       },
                     });
                     const archiveFilename = `${pipeline.id}-${uuid()}-tempOutput.tar.gz`;
@@ -908,7 +910,7 @@ module.exports = {
                       const archive = archiver('tar', {
                         gzip: true,
                         gzipOptions: {
-                          level: 0,
+                          level: 9,
                         },
                       });
 
