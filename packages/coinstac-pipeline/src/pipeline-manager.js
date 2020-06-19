@@ -241,7 +241,8 @@ module.exports = {
      *                           or the limit is reached
      */
     const transferFiles = async (method, limit, files, clientId, runId, directory) => {
-      return Promise.all(files.reduce((memo, file) => {
+      logger.silly(`Sending ${files.length} files`)
+      return Promise.all(files.reduce((memo, file, index) => {
         memo.push((async () => {
           let retryLimit = 0;
           let success = false;
@@ -279,6 +280,7 @@ module.exports = {
             }
           }
           if (!success) throw new Error('Service down, file retry limit reached');
+          logger.silly(`Successfully sent file ${index}`);
           return partFile;
         })());
         return memo;
@@ -382,27 +384,6 @@ module.exports = {
 
       app.post('/transfer', upload.single('file'), (req, res) => {
         res.end();
-
-        // check to see if we can run
-        // let prom = Promise.resolve();
-        // if (req.body.compressed === 'true') {
-        //   prom = decompress(
-        //     path.join(
-        //       activePipelines[req.body.runId].baseDirectory,
-        //       req.body.clientId,
-        //       req.body.filename
-        //     ),
-        //     path.join(activePipelines[req.body.runId].baseDirectory, req.body.clientId)
-        //   );
-        // }
-        // prom.then(() => rimraf(
-        //   path.join(
-        //     activePipelines[req.body.runId].baseDirectory,
-        //     req.body.clientId,
-        //     req.body.filename
-        //   )
-        // )).then(() => {
-
 
         const client = remoteClients[req.body.clientId][req.body.runId];
         client.files.received
