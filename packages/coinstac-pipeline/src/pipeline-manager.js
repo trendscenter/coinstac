@@ -273,7 +273,7 @@ module.exports = {
                 || (e.message && e.message.includes('EPIPE'))
               ) {
                 retryLimit += 1;
-                logger.silly(`Retrying file request: ${files}`);
+                logger.silly(`Retrying file request: ${file}`);
                 logger.silly(`File request failed with: ${e.message}`);
               }
               throw e;
