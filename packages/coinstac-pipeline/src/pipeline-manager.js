@@ -21,7 +21,7 @@ const tar = require('tar-fs');
 const zlib = require('zlib');
 const merge2 = require('merge2');
 
-const readdir = promisify(fs.readdir);
+const { readdir } = fs.promises;
 
 winston.loggers.add('pipeline', {
   level: 'info',
