@@ -275,8 +275,9 @@ module.exports = {
                 retryLimit += 1;
                 logger.silly(`Retrying file request: ${file}`);
                 logger.silly(`File request failed with: ${e.message}`);
+              } else {
+                throw e;
               }
-              throw e;
             }
           }
           if (!success) throw new Error('Service down, file retry limit reached');
