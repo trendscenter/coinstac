@@ -1,7 +1,6 @@
 'use strict';
 
-import test from 'ava';
-
+const test = require('ava');
 const { createReadStream, readFileSync, unlink } = require('fs');
 const resolvePath = require('path').resolve;
 const unzip = require('unzipper');
@@ -22,6 +21,7 @@ test.before(() => {
 });
 
 test('test run route', (t) => {
+  console.time('Execute Time'); // eslint-disable-line no-console
   const fsStream = createReadStream(resolvePath(__dirname, 'large.json'));
   const control = {
     command: 'node',
@@ -62,6 +62,7 @@ test('test run route', (t) => {
   });
   return Promise.all([stdoutProm, stderrProm, endProm])
     .then((inData) => {
+      console.timeEnd('Execute Time'); // eslint-disable-line no-console
       if (inData[2].error) throw new Error(inData[2].error);
       const orig = readFileSync(resolvePath(__dirname, './large.json')).toString();
       t.true(orig === inData[0] && orig === inData[1] && inData[2].code === 0);

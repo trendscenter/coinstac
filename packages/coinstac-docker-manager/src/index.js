@@ -1,12 +1,12 @@
+require('trace');
+require('clarify');
 const Docker = require('dockerode');
 const { reduce } = require('lodash');
 const request = require('request-stream');
 const portscanner = require('portscanner');
 const http = require('http');
-const { Readable } = require('stream');
-const ss = require('coinstac-socket.io-stream');
-const socketIOClient = require('socket.io-client');
 const winston = require('winston');
+const WS = require('ws');
 
 const perfTime = () => {
   const t = process.hrtime();
@@ -174,7 +174,7 @@ const getStatus = () => {
 };
 
 /**
- * start or use an already started docker service based on serviceID
+ * start or use an already started docker service based on serviceId
  * @param  {string} serviceId     unique ID to describe the service
  * @param  {string} serviceUserId unique user ID for use of this service
  * @param  {Object} opts          options for the service, { docker: {...} } opts are
@@ -358,106 +358,133 @@ const startService = (serviceId, serviceUserId, opts) => {
               proxR = resolve;
               proxRj = reject;
             });
-            const socket = socketIOClient(`http://127.0.0.1:${services[serviceId].port}`);
-            socket.on('connect', () => {
-              const stream = ss.createStream();
-              ss(socket).emit('run', stream, {
-                control: {
-                  command: data[0],
-                  args: data.slice(1, 2),
-                },
-              });
-              let start = 0;
-              const dBuff = Buffer.from(data[2]);
-              logger.debug(`Input data size: ${dBuff.length}`);
-              const dataStream = new Readable();
-              dataStream._read = () => {
-                setImmediate(() => {
-                  if (start !== dBuff.length) {
-                    dataStream.push(dBuff.slice(start, start + 10000000));
-                    if (start + 10000000 > dBuff.length) {
-                      start += dBuff.length - start;
+            new Promise((resolve) => {
+              let count = 0;
+              const testConnection = () => {
+                const ws = new WS(`ws://127.0.0.1:${services[serviceId].port}`);
+                ws.on('open', () => {
+                  ws.close();
+                  resolve();
+                });
+                ws.on('error', (e) => {
+                  if (e.code && (e.code === 'ECONNRESET' || e.code === 'ECONNREFUSED')) {
+                    ws.terminate();
+                    if (count > 500) {
+                      proxRj(new Error('Docker ws server timeout exceeded'));
                     } else {
-                      start += 10000000;
+                      count += 1;
+                      setTimeout(testConnection, 10 * count);
                     }
                   } else {
-                    dataStream.push(null);
+                    proxRj(e);
                   }
                 });
               };
-              let transmitEnd;
-              stream.on('end', () => { transmitEnd = perfTime(); });
-              const transmitStart = perfTime();
-              dataStream.pipe(stream);
-              let outRes;
-              let outRej;
-              let stdout = '';
-              const stdoutProm = new Promise((resolve, reject) => {
-                outRes = resolve;
-                outRej = reject;
+              testConnection();
+            }).then(() => {
+              const ws = new WS(`ws://127.0.0.1:${services[serviceId].port}`);
+              ws.on('open', () => {
+                ws.send(JSON.stringify({
+                  command: data[0],
+                  args: data.slice(1, 2),
+                }));
+                logger.debug(`Input data size: ${data[2].length}`);
+                ws.send(data[2]);
+                ws.send(null);
               });
-              let receiveStart;
-              let receiveEnd;
-              ss(socket).on('stdout', (stream) => {
-                stream.on('data', (chunk) => {
-                  receiveStart = perfTime();
-                  stdout += chunk;
-                });
-                stream.on('end', () => {
-                  receiveEnd = perfTime();
-                  outRes(stdout);
-                  logger.debug('Docker stream closed');
-                  logger.debug(`Output size: ${stdout.length}`);
-                });
-                stream.on('err', err => outRej(err));
+              ws.on('error', (e) => {
+                proxRj(e);
               });
-
-              let errRes;
-              let errRej;
-              let stderr = '';
-              const stderrProm = new Promise((resolve, reject) => {
-                errRes = resolve;
-                errRej = reject;
-              });
-              ss(socket).on('stderr', (stream) => {
-                stream.on('data', (chunk) => {
-                  receiveStart = perfTime();
-                  stderr += chunk;
-                });
-                stream.on('end', () => {
-                  receiveEnd = perfTime();
-                  errRes(stderr);
-                });
-                stream.on('err', err => errRej(err));
-              });
-
-              const endProm = new Promise((resolve) => {
-                socket.on('exit', (compOutput) => {
-                  resolve(compOutput);
-                });
-              });
-              Promise.all([stdoutProm, stderrProm, endProm])
-                .then((output) => {
-                  logger.debug(`Transmit time: ${(transmitEnd - transmitStart) / 1000}`);
-                  logger.debug(`Approx comp time: ${(receiveStart - transmitEnd) / 1000}`);
-                  logger.debug(`Receive time: ${(receiveEnd - receiveStart) / 1000}`);
-                  socket.disconnect();
-                  if (output[1] || output[2].code !== 0) {
-                    throw new Error(`Computation failed with exitcode ${output[2].code}\n Error message:\n${output[1]}}`);
-                  } else if (output[2].error) {
-                    throw new Error(`Computation failed to start\n Error message:\n${output[2].error}}`);
-                  }
-                  // NOTE: limited to sub 256mb
-                  let parsed;
+              new Promise((resolve, reject) => {
+                let stdout = '';
+                let stderr = '';
+                let outfin = false;
+                let errfin = false;
+                let code;
+                ws.on('message', (data) => {
+                  let res;
                   try {
-                    parsed = JSON.parse(output[0]);
+                    res = JSON.parse(data);
                   } catch (e) {
-                    parsed = output[0]; // eslint-disable-line prefer-destructuring
+                    ws.close(1011, 'Data parse error');
+                    return reject(e);
                   }
-                  proxR(parsed);
-                }).catch(error => proxRj(error));
+                  switch (res.type) {
+                    case 'error':
+                      ws.close(1011, 'Computation start error');
+                      return reject(res.error);
+                    case 'stderr':
+                      errfin = res.end;
+                      stderr += res.data || '';
+                      if (code !== undefined && outfin && errfin) {
+                        ws.close(1000, 'Client disconnect');
+                        resolve({
+                          code,
+                          stdout,
+                          stderr,
+                        });
+                      }
+                      break;
+                    case 'stdout':
+                      outfin = res.end;
+                      stdout += res.data || '';
+                      if (code !== undefined && outfin && errfin) {
+                        try {
+                          stdout = JSON.parse(stdout);
+                        } catch (e) {
+                          let a = res;
+                          let b = stdout;
+                          let c = stderr;
+                          debugger
+                          ws.close(1011, 'Output parse error');
+                          return reject(e);
+                        }
+                        ws.close(1000, 'Client disconnect');
+                        resolve({
+                          code,
+                          stdout,
+                          stderr,
+                        });
+                      } else if (outfin) {
+                        try {
+                          stdout = JSON.parse(stdout);
+                        } catch (e) {
+                          let a = res;
+                          let b = stdout;
+                          let c = stderr;
+                          debugger
+                          ws.close(1011, 'Output parse error');
+                          return reject(e);
+                        }
+                      }
+                      break;
+                    case 'close':
+                      ({ code } = res);
+                      if (code !== 0) {
+                        ws.close(1011, 'Computation error');
+                        return reject(new Error(`Computation failed with exitcode ${code} stderr ${stderr}`));
+                      }
+                      if (outfin && errfin) {
+                        resolve({
+                          code,
+                          stdout,
+                          stderr,
+                        });
+                      }
+                      break;
+                    default:
+                  }
+                });
+              }).then((output) => {
+                logger.debug('Docker container closed');
+                logger.silly(`Docker stderr: ${output.stderr}`);
+                logger.debug(`Output size: ${output.stdout.length}`);
+                proxR(output.stdout);
+              }).catch((e) => {
+                debugger
+                proxRj(e);
+              });
             });
-
             return prox;
           };
           services[serviceId].state = 'running';

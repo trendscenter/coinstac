@@ -1,7 +1,6 @@
 'use strict';
 
-import test from 'ava';
-
+const test = require('ava');
 const request = require('request-stream');
 const { createReadStream, readFileSync, unlink } = require('fs');
 const resolvePath = require('path').resolve;
@@ -21,6 +20,7 @@ test.before(() => {
 });
 
 test('test run route', (t) => {
+  console.time('Execute Time'); // eslint-disable-line no-console
   return new Promise((resolve, reject) => {
     const req = request('localhost:3224/run', { method: 'POST' }, (err, res) => {
       let buf = '';
@@ -78,6 +78,7 @@ test('test run route', (t) => {
         data = Buffer.concat([data.slice(0, codeMatch), data.slice(endMatch + 'exitcodeEND\n'.length)]);
       }
     }
+    console.timeEnd('Execute Time'); // eslint-disable-line no-console
     t.true(orig.compare(outData) && orig.compare(errData) && code.toString() === '0');
   });
 });
