@@ -797,6 +797,7 @@ module.exports = {
           // local client
           } else {
             if (message instanceof Error) { // eslint-disable-line no-lonely-if
+              debugger
               if (!activePipelines[pipeline.id].registered) {
                 activePipelines[pipeline.id].stashedOutput = message;
               } else {

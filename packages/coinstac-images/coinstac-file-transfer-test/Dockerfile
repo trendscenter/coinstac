@@ -1,4 +1,4 @@
-FROM coinstac/coinstac-python-base-stream
+FROM cb
 
 # Set the working directory to /app
 WORKDIR /computation

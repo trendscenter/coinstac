@@ -111,11 +111,9 @@ const createWebServer = (requestHandler) => {
                 const size = chunk.length.toString(16);
                 socket.write(`${size}\r\n`);
                 socket.write(chunk);
-                logger.silly(`Socket data: ${chunk}`);
                 socket.write('\r\n');
               } else {
                 socket.write(chunk);
-                logger.silly(`Socket data: ${chunk}`);
               }
             },
             end(chunk) {
@@ -132,13 +130,11 @@ const createWebServer = (requestHandler) => {
                   const size = (chunk.length).toString(16);
                   socket.write(`${size}\r\n`);
                   socket.write(chunk);
-                  logger.silly(`Socket data: ${chunk}`);
                   socket.write('\r\n');
                 }
                 socket.end('0\r\n\r\n');
               } else {
                 socket.end(chunk);
-                logger.silly(`Socket end: ${chunk}`);
               }
             },
             setHeader,
@@ -175,7 +171,6 @@ const callCommand = (control, inputStream, res) => {
 
   cmd.stderr.on('data', (data) => {
     res.write(`stderrSTART\n${data}stderrEND\n`);
-    logger.error(`stderr:\n${data}`); // eslint-disable-line no-console
   });
 
   cmd.on('close', (code) => {
