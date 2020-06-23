@@ -225,7 +225,7 @@ module.exports = {
                 });
               });
           }
-        }, 50 * factor);
+        }, 5000 * factor);
       });
     };
 
@@ -241,7 +241,7 @@ module.exports = {
      *                           or the limit is reached
      */
     const transferFiles = async (method, limit, files, clientId, runId, directory) => {
-      logger.silly(`Sending ${files.length} files`)
+      logger.silly(`Sending ${files.length} files`);
       return Promise.all(files.reduce((memo, file, index) => {
         memo.push((async () => {
           let retryLimit = 0;
@@ -815,7 +815,7 @@ module.exports = {
                     const splitProm = splitFilesFromStream(
                       archive,
                       path.join(activePipelines[pipeline.id].transferDirectory, archiveFilename),
-                      52428800 // 50MB chunk size
+                      22428800 // 20MB chunk size
                     );
                     data.files.forEach((file) => {
                       archive.append(
@@ -900,7 +900,7 @@ module.exports = {
                       const splitProm = splitFilesFromStream(
                         archive,
                         path.join(activePipelines[pipeline.id].transferDirectory, archiveFilename),
-                        52428800 // 50MB chunk size
+                        22428800 // 20MB chunk size
                       );
                       data.files.forEach((file) => {
                         archive.append(
