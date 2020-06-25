@@ -56,7 +56,6 @@ const conf = convict({
     win32: 'coinstac/',
   },
   coinstacHome: path.join(home(), '.coinstac'),
-  clientServerURL: path.join(home(), '.coinstac'),
 });
 
 module.exports = function loadConfig() {
