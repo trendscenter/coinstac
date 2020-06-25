@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import {
   login,
   setAppDirectory,
-  setRemoteURL,
+  setClientServerURL,
   checkApiVersion,
 } from '../../state/ducks/auth';
 import FormLogin from './form-login';
@@ -40,9 +40,9 @@ class FormLoginController extends Component {
     setAppDirectory(appDirectory);
   }
 
-  changeRemoteURL = (remoteURL) => {
-    const { setRemoteURL } = this.props;
-    setRemoteURL(remoteURL);
+  changeClientServerURL = (clientServerURL) => {
+    const { setClientServerURL } = this.props;
+    setClientServerURL(clientServerURL);
   }
 
   render() {
@@ -55,7 +55,7 @@ class FormLoginController extends Component {
           loading={loading}
           submit={this.submit}
           changeAppDirectory={this.changeAppDirectory}
-          changeRemoteURL={this.changeRemoteURL}
+          changeClientServerURL={this.changeClientServerURL}
         />
       </LayoutNoauth>
     );
@@ -74,7 +74,7 @@ FormLoginController.propTypes = {
   checkApiVersion: PropTypes.func.isRequired,
   login: PropTypes.func.isRequired,
   setAppDirectory: PropTypes.func.isRequired,
-  setRemoteURL: PropTypes.func.isRequired,
+  setClientServerURL: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = ({ auth, loading }) => ({
@@ -84,6 +84,6 @@ const mapStateToProps = ({ auth, loading }) => ({
 export default connect(mapStateToProps, {
   login,
   setAppDirectory,
-  setRemoteURL,
+  setClientServerURL,
   checkApiVersion,
 })(FormLoginController);

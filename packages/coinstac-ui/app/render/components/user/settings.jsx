@@ -7,7 +7,7 @@ import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
 import CheckIcon from '@material-ui/icons/Check';
 import { withStyles } from '@material-ui/core/styles';
-import { setRemoteURL } from '../../state/ducks/auth';
+import { setClientCoreUrlAsync } from '../../state/ducks/auth';
 import { notifyInfo } from '../../state/ducks/notifyAndLog';
 import { clearRuns } from '../../state/ducks/runs';
 
@@ -31,6 +31,10 @@ const styles = theme => ({
   textField: {
     marginTop: theme.spacing(2),
   },
+  directory: {
+    display: 'flex',
+    alignItems: 'flex-end',
+  },
   button: {
     marginTop: theme.spacing(1),
   },
@@ -49,17 +53,17 @@ class Settings extends Component {
     super(props);
 
     this.state = {
-      editingURL: props.remoteURL,
+      editingURL: props.clientServerURL,
       savingURLStatus: 'init',
     };
   }
 
   // eslint-disable-next-line
   UNSAFE_componentWillReceiveProps(nextProps) {
-    const { remoteURL } = this.props;
+    const { clientServerURL } = this.props;
 
-    if (remoteURL !== nextProps.remoteURL) {
-      this.setState({ editingURL: nextProps.remoteURL });
+    if (clientServerURL !== nextProps.clientServerURL) {
+      this.setState({ editingURL: nextProps.clientServerURL });
     }
   }
 
@@ -76,22 +80,28 @@ class Settings extends Component {
   }
 
   handleSave = () => {
-    const { setRemoteURL } = this.props;
+    const { setClientCoreUrlAsync } = this.props;
     const { editingURL } = this.state;
 
-    setRemoteURL(editingURL);
+    this.setState({ savingURLStatus: 'pending' });
 
-    this.setState({ savingURLStatus: 'success' });
+    setClientCoreUrlAsync(editingURL)
+      .then(() => {
+        this.setState({ savingURLStatus: 'success' });
+      })
+      .catch(() => {
+        this.setState({ savingURLStatus: 'fail' });
+      });
   }
 
   handleReset = () => {
-    const { remoteURL } = this.props;
+    const { clientServerURL } = this.props;
 
-    this.setState({ editingURL: remoteURL, savingURLStatus: 'init' });
+    this.setState({ editingURL: clientServerURL, savingURLStatus: 'init' });
   }
 
   render() {
-    const { classes, remoteURL } = this.props;
+    const { classes, clientServerURL } = this.props;
     const { editingURL, savingURLStatus } = this.state;
 
     return (
@@ -117,37 +127,36 @@ class Settings extends Component {
         </form>
 
         <Typography variant="h5" className={classNames(classes.pageSubtitle, classes.topMargin)}>
-          Save remote url for local pipeline
+          Save client server URL for local pipeline
         </Typography>
-        <div>
+        <div className={classes.directory}>
           <TextField
-            id="remoteURL"
-            label="Remote URL"
+            id="clientServerURL"
+            label="Client Server URL"
             value={editingURL}
             className={classes.textField}
-            fullWidth
             onChange={this.handleURLChange}
           />
-          <div className={classes.buttons}>
-            <Button
-              variant="contained"
-              color="secondary"
-              disabled={remoteURL === editingURL}
-              className={classNames(classes.button, classes.rightMargin)}
-              onClick={this.handleReset}
-            >
-              Restore
-            </Button>
-            <Button
-              variant="contained"
-              disabled={remoteURL === editingURL || !editingURL}
-              className={classes.button}
-              onClick={this.handleSave}
-            >
-              Save
-            </Button>
-            {savingURLStatus === 'success' && <CheckIcon className={classes.checkIcon} color="primary" />}
-          </div>
+        </div>
+        <div className={classes.buttons}>
+          <Button
+            variant="contained"
+            color="secondary"
+            disabled={clientServerURL === editingURL}
+            className={classNames(classes.button, classes.rightMargin)}
+            onClick={this.handleReset}
+          >
+            Restore
+          </Button>
+          <Button
+            variant="contained"
+            disabled={clientServerURL === editingURL || !editingURL}
+            className={classes.button}
+            onClick={this.handleSave}
+          >
+            Save
+          </Button>
+          {savingURLStatus === 'success' && <CheckIcon className={classes.checkIcon} color="primary" />}
         </div>
       </div>
     );
@@ -155,9 +164,9 @@ class Settings extends Component {
 }
 
 Settings.propTypes = {
-  remoteURL: PropTypes.string.isRequired,
+  clientServerURL: PropTypes.string.isRequired,
   classes: PropTypes.object.isRequired,
-  setRemoteURL: PropTypes.func.isRequired,
+  setClientCoreUrlAsync: PropTypes.func.isRequired,
   clearRuns: PropTypes.func.isRequired,
   notifyInfo: PropTypes.func.isRequired,
 };
@@ -167,11 +176,11 @@ Settings.contextTypes = {
 };
 
 const mapStateToProps = ({ auth }) => ({
-  remoteURL: auth.remoteURL,
+  clientServerURL: auth.clientServerURL,
 });
 
 const connectedComponent = connect(mapStateToProps, {
-  setRemoteURL,
+  setClientCoreUrlAsync,
   clearRuns,
   notifyInfo,
 })(Settings);

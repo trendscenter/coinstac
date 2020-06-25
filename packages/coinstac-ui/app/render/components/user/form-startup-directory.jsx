@@ -29,32 +29,36 @@ class FormStartupDirectory extends React.Component {
   constructor(props) {
     super(props);
 
-    const { appDirectory, remoteURL } = props;
+    const { appDirectory, clientServerURL } = props;
 
     this.state = {
       currentDirectory: appDirectory,
-      currentRemoteURL: remoteURL,
+      currentClientServerURL: clientServerURL,
     };
   }
 
-  handleSelectDirectoryClick = (key) => {
+  handleSelectDirectoryClick = () => {
     ipcPromise.send('open-dialog', 'directory')
       .then((selectedDirectory) => {
         if (!selectedDirectory) return;
 
-        this.setState({ [key]: selectedDirectory[0] });
+        this.setState({ currentDirectory: selectedDirectory[0] });
       });
+  }
+
+  handleChangeURL = (evt) => {
+    this.setState({ currentClientServerURL: evt.target.value });
   }
 
   submit = () => {
     const { onSubmit } = this.props;
-    const { currentDirectory, currentRemoteURL } = this.state;
-    onSubmit({ appDirectory: currentDirectory, remoteURL: currentRemoteURL });
+    const { currentDirectory, currentClientServerURL } = this.state;
+    onSubmit({ appDirectory: currentDirectory, clientServerURL: currentClientServerURL });
   }
 
   render() {
     const { open, close, classes } = this.props;
-    const { currentDirectory, currentRemoteURL } = this.state;
+    const { currentDirectory, currentClientServerURL } = this.state;
 
     return (
       <Dialog open={open} onClose={close}>
@@ -72,16 +76,15 @@ class FormStartupDirectory extends React.Component {
               value={currentDirectory}
               className={classes.textField}
             />
-            <Button onClick={() => this.handleSelectDirectoryClick('currentDirectory')}>Select Directory</Button>
+            <Button onClick={this.handleSelectDirectoryClick}>Select Directory</Button>
           </div>
           <div className={classes.directoryField}>
             <TextField
-              label="Remote URL"
-              disabled
-              value={currentRemoteURL}
+              label="Client Server URL"
+              value={currentClientServerURL}
               className={classes.textField}
+              onChange={this.handleChangeURL}
             />
-            <Button onClick={() => this.handleSelectDirectoryClick('currentRemoteURL')}>Select Directory</Button>
           </div>
         </DialogContent>
         <DialogActions>
@@ -95,13 +98,13 @@ class FormStartupDirectory extends React.Component {
 
 FormStartupDirectory.defaultProps = {
   appDirectory: '',
-  remoteURL: '',
+  clientServerURL: '',
   open: false,
 };
 
 FormStartupDirectory.propTypes = {
   appDirectory: PropTypes.string,
-  remoteURL: PropTypes.string,
+  clientServerURL: PropTypes.string,
   open: PropTypes.bool,
   classes: PropTypes.object.isRequired,
   close: PropTypes.func.isRequired,

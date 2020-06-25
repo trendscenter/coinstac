@@ -139,7 +139,7 @@ loadConfig()
       mainWindow.webContents.send(BAD_TOKEN);
     });
 
-    ipcPromise.on('login-init', ({ userId, appDirectory, remoteURL }) => {
+    ipcPromise.on('login-init', ({ userId, appDirectory, clientServerURL }) => {
       return initializedCore
         ? Promise.resolve()
         : configureCore(
@@ -147,7 +147,7 @@ loadConfig()
           logger,
           userId,
           appDirectory || config.get('coinstacHome'),
-          remoteURL || config.get('remoteURL')
+          clientServerURL || config.get('clientServerURL')
         )
           .then((c) => {
             initializedCore = c;
@@ -171,6 +171,11 @@ loadConfig()
         });
       });
     });
+
+    ipcPromise.on('set-client-server-url', url => new Promise((resolve) => {
+      initializedCore.setClientServerURL(url);
+      resolve();
+    }));
 
     function startPipelineRun(run, filesArray, consortium) {
       const pipeline = run.pipelineSnapshot;

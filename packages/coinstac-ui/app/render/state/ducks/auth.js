@@ -25,7 +25,7 @@ const INITIAL_STATE = {
     consortiaStatuses: {},
   },
   appDirectory: localStorage.getItem('appDirectory') || remote.getGlobal('config').get('coinstacHome'),
-  remoteURL: localStorage.getItem('remoteURL') || remote.getGlobal('config').get('remoteURL'),
+  clientServerURL: localStorage.getItem('clientServerURL') || '',
   isApiVersionCompatible: true,
   locationStacks: [],
   error: null,
@@ -41,7 +41,7 @@ const CLEAR_ERROR = 'CLEAR_ERROR';
 const UPDATE_USER_CONSORTIA_STATUSES = 'UPDATE_USER_CONSORTIA_STATUSES';
 const UPDATE_USER_PERMS = 'UPDATE_USER_PERMS';
 const SET_APP_DIRECTORY = 'SET_APP_DIRECTORY';
-const SET_REMOTE_URL = 'SET_REMOTE_URL';
+const SET_CLIENT_SERVER_URL = 'SET_CLIENT_SERVER_URL';
 const SET_API_VERSION_CHECK = 'SET_API_VERSION_CHECK';
 
 // Action Creators
@@ -55,23 +55,26 @@ export const updateUserConsortiaStatuses = statuses => ({
 });
 export const updateUserPerms = perms => ({ type: UPDATE_USER_PERMS, payload: perms });
 export const setAppDirectory = appDirectory => ({ type: SET_APP_DIRECTORY, payload: appDirectory });
-export const setRemoteURL = remoteURL => ({ type: SET_REMOTE_URL, payload: remoteURL });
+export const setClientServerURL = clientServerURL => ({
+  type: SET_CLIENT_SERVER_URL,
+  payload: clientServerURL,
+});
 export const setApiVersionCheck = isApiVersionCompatible => ({
   type: SET_API_VERSION_CHECK,
   payload: isApiVersionCompatible,
 });
 
 // Helpers
-const initCoreAndSetToken = async (reqUser, data, appDirectory, remoteURL, dispatch) => {
+const initCoreAndSetToken = async (reqUser, data, appDirectory, clientServerURL, dispatch) => {
   if (appDirectory) {
     localStorage.setItem('appDirectory', appDirectory);
   }
 
-  if (remoteURL) {
-    localStorage.setItem('remoteURL', remoteURL);
+  if (clientServerURL) {
+    localStorage.setItem('clientServerURL', clientServerURL);
   }
 
-  await ipcPromise.send('login-init', { userId: reqUser.username, appDirectory, remoteURL });
+  await ipcPromise.send('login-init', { userId: reqUser.username, appDirectory, clientServerURL });
 
   const user = { ...data.user, label: reqUser.username };
 
@@ -106,6 +109,14 @@ export const logout = applyAsyncLoading(() => (dispatch) => {
     });
 });
 
+export const setClientCoreUrlAsync = applyAsyncLoading(url => (dispatch) => {
+  localStorage.setItem('clientServerURL', url);
+  return ipcPromise.send('set-client-server-url', url)
+    .then(() => {
+      dispatch(setClientServerURL(url));
+    });
+});
+
 export const autoLogin = applyAsyncLoading(() => (dispatch, getState) => {
   let token = localStorage.getItem(API_TOKEN_KEY);
   let saveLogin = true;
@@ -128,12 +139,12 @@ export const autoLogin = applyAsyncLoading(() => (dispatch, getState) => {
   )
     // TODO: GET RID OF CORE INIT
     .then(({ data }) => {
-      const { auth: { appDirectory, remoteURL } } = getState();
+      const { auth: { appDirectory, clientServerURL } } = getState();
       return initCoreAndSetToken(
         { username: data.user.id, saveLogin, password: 'password' },
         data,
         appDirectory,
-        remoteURL,
+        clientServerURL,
         dispatch
       );
     })
@@ -164,9 +175,9 @@ export const checkApiVersion = applyAsyncLoading(() => dispatch => axios.get(`${
 
 export const login = applyAsyncLoading(({ username, password, saveLogin }) => (dispatch, getState) => axios.post(`${API_URL}/authenticate`, { username, password })
   .then(({ data }) => {
-    const { auth: { appDirectory, remoteURL } } = getState();
+    const { auth: { appDirectory, clientServerURL } } = getState();
     return initCoreAndSetToken(
-      { username, password, saveLogin }, data, appDirectory, remoteURL, dispatch
+      { username, password, saveLogin }, data, appDirectory, clientServerURL, dispatch
     );
   })
   .catch((err) => {
@@ -186,8 +197,8 @@ export const login = applyAsyncLoading(({ username, password, saveLogin }) => (d
 
 export const signUp = applyAsyncLoading(user => (dispatch, getState) => axios.post(`${API_URL}/createAccount`, user)
   .then(({ data }) => {
-    const { auth: { appDirectory, remoteURL } } = getState();
-    return initCoreAndSetToken(user, data, appDirectory, remoteURL, dispatch);
+    const { auth: { appDirectory, clientServerURL } } = getState();
+    return initCoreAndSetToken(user, data, appDirectory, clientServerURL, dispatch);
   })
   .catch((err) => {
     const { statusCode, message } = getErrorDetail(err);
@@ -216,9 +227,9 @@ export default function reducer(state = INITIAL_STATE, { type, payload }) {
     case SET_APP_DIRECTORY:
       localStorage.setItem('appDirectory', payload);
       return { ...state, appDirectory: payload };
-    case SET_REMOTE_URL:
-      localStorage.setItem('remoteURL', payload);
-      return { ...state, remoteURL: payload };
+    case SET_CLIENT_SERVER_URL:
+      localStorage.setItem('clientServerURL', payload);
+      return { ...state, clientServerURL: payload };
     case SET_API_VERSION_CHECK:
       return { ...state, isApiVersionCompatible: payload };
     case LOCATION_CHANGE:
