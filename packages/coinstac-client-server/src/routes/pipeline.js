@@ -15,18 +15,18 @@ const manager = PipelineManager.create({
   mqttRemoteURL: config.mqttServer.hostname,
 });
 
-module.exports = manager.then(() => {
+module.exports = manager.then((remotePipelineManager) => {
   return [
     {
       method: 'POST',
       path: '/pullImages',
       config: {
-        handler: async (req, res) => {
+        handler: (req, res) => {
           const { payload: { images } } = req;
 
           pullImagesFromList(images)
             .then(() => {
-              res('Pulled images successfully').code(200);
+              res('Pulled images.').code(200);
             });
         },
       },
@@ -35,13 +35,25 @@ module.exports = manager.then(() => {
       method: 'POST',
       path: '/removeImages',
       config: {
-        handler: async (req, res) => {
+        handler: (req, res) => {
           const { payload: { images } } = req;
 
           removeImagesFromList(images)
             .then(() => {
-              res('Removed images successfully').code(200);
+              res('Removed images.').code(200);
             });
+        },
+      },
+    },
+    {
+      method: 'GET',
+      path: '/stopPipeline/{runId}',
+      config: {
+        handler: (req, res) => {
+          const { runId } = req.params;
+
+          remotePipelineManager.stopPipeline('', runId);
+          res('Stopped pipeline.').code(200);
         },
       },
     },
