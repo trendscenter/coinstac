@@ -1,6 +1,6 @@
 {
   "name": "coinstac-simulator",
-  "version": "5.0.0",
+  "version": "5.0.1",
   "description": "COINSTAC simulator for computation runs.",
   "main": "src/index.js",
   "bin": "bin/coinstac-simulator",
