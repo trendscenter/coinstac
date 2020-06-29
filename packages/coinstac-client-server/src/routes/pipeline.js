@@ -15,46 +15,90 @@ const manager = PipelineManager.create({
   mqttRemoteURL: config.mqttServer.hostname,
 });
 
+const updateRunState = () => {};
+
+const saveError = () => {};
+
+const saveResults = () => {};
+
 module.exports = manager.then((remotePipelineManager) => {
   return [
     {
       method: 'POST',
       path: '/pullImages',
-      config: {
-        handler: (req, res) => {
-          const { payload: { images } } = req;
+      handler: async (req, res) => {
+        const { payload: { images } } = req;
 
-          pullImagesFromList(images)
-            .then(() => {
-              res('Pulled images.').code(200);
-            });
-        },
+        try {
+          await pullImagesFromList(images);
+          return res.response('Pulled images.').code(200);
+        } catch (error) {
+          return res.response(error.message).code(400);
+        }
       },
     },
     {
       method: 'POST',
       path: '/removeImages',
-      config: {
-        handler: (req, res) => {
-          const { payload: { images } } = req;
+      handler: async (req, res) => {
+        const { payload: { images } } = req;
 
-          removeImagesFromList(images)
-            .then(() => {
-              res('Removed images.').code(200);
+        try {
+          await removeImagesFromList(images);
+          return res.response('Pulled images.').code(200);
+        } catch (error) {
+          return res.response(error.message).code(400);
+        }
+      },
+    },
+    {
+      method: 'POST',
+      path: '/startPipeline',
+      handler: (req, res) => {
+        const { payload: { run } } = req;
+
+        const computationImageList = run.pipelineSnapshot.steps
+          .map(step => step.computations
+            .map(comp => comp.computation.dockerImage))
+          .reduce((acc, val) => acc.concat(val), []);
+
+        pullImagesFromList(computationImageList)
+          .then(() => {
+            const { result, stateEmitter } = remotePipelineManager.startPipeline({
+              clients: run.clients,
+              spec: run.pipelineSnapshot,
+              runId: run.id,
+              timeout: run.pipelineSnapshot.timeout,
             });
-        },
+
+            stateEmitter.on('update', (data) => {
+              updateRunState(run.id, data);
+            });
+
+            result
+              .then((result) => {
+                saveResults(run.id, result);
+              })
+              .catch((error) => {
+                saveError(run.id, error);
+              });
+
+            return res.response('Started pipeline successfully').code(201);
+          });
       },
     },
     {
       method: 'GET',
       path: '/stopPipeline/{runId}',
-      config: {
-        handler: (req, res) => {
-          const { runId } = req.params;
+      handler: async (req, res) => {
+        const { runId } = req.params;
 
-          remotePipelineManager.stopPipeline('', runId);
-          res('Stopped pipeline.').code(200);
-        },
+        try {
+          await remotePipelineManager.stopPipeline('', runId);
+          return res.response('Stopped pipeline.').code(200);
+        } catch (error) {
+          return res.response(error.message).code(400);
+        }
       },
     },
   ];

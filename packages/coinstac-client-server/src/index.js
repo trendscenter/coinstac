@@ -1,19 +1,23 @@
-const hapi = require('hapi');
+const hapi = require('@hapi/hapi');
+const http2 = require('http2');
+const config = require('./config');
 
 process.LOGLEVEL = 'silly';
 
-const config = require('./config');
-
-const server = new hapi.Server();
-server.connection({
-  host: config.host,
-  port: config.hapiPort,
-});
-
-require('./routes').then((routes) => {
-  server.route(routes);
-  server.start((startErr) => {
-    if (startErr) throw startErr;
-    console.log(`Server running at: ${server.info.uri}`); // eslint-disable-line no-console
+const init = async () => {
+  const server = hapi.Server({
+    listener: http2.createServer(),
+    host: config.host,
+    port: config.hapiPort,
   });
-});
+
+  const routes = await require('./routes'); // eslint-disable-line global-require
+
+  server.route(routes);
+
+  await server.start();
+
+  console.log(`Server running at: ${server.info.uri}`); // eslint-disable-line no-console
+};
+
+init();
