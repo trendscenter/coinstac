@@ -1,25 +1,26 @@
 'use strict';
 
 // app package deps
+const http2 = require('http2');
 const pify = require('util').promisify;
 const csvParse = require('csv-parse');
 const mkdirp = pify(require('mkdirp'));
 const fs = require('fs');
+const path = require('path');
+const winston = require('winston');
+const DockerManager = require('coinstac-docker-manager');
+const PipelineManager = require('coinstac-pipeline');
+const { request } = require('./utils');
+
+// set w/ config etc post release
+process.LOGLEVEL = 'silly';
+
+const { Logger, transports: { Console } } = winston;
 
 const unlinkAsync = pify(fs.unlink);
 const linkAsync = pify(fs.link);
 const statAsync = pify(fs.stat);
 const readdirAsync = pify(fs.readdir);
-
-const path = require('path');
-const winston = require('winston');
-// set w/ config etc post release
-process.LOGLEVEL = 'silly';
-
-const { Logger, transports: { Console } } = winston;
-const DockerManager = require('coinstac-docker-manager');
-const PipelineManager = require('coinstac-pipeline');
-
 
 /**
  * Create a user client for COINSTAC
@@ -253,37 +254,42 @@ class CoinstacClient {
     runId,
     runPipeline // eslint-disable-line no-unused-vars
   ) {
-    return mkdirp(path.join(this.appDirectory, 'input', this.clientId, runId))
-      .then(() => {
-      // TODO: validate runPipeline against clientPipeline
-        const linkPromises = [];
+    const runObj = { spec: clientPipeline, runId, timeout: clientPipeline.timeout };
 
-        const e = new RegExp(/[-\/\\^$*+?.()|[\]{}]/g); // eslint-disable-line no-useless-escape
-        const escape = (string) => {
-          return string.replace(e, '\\$&');
-        };
+    if (clients) {
+      runObj.clients = clients;
+    }
 
-        for (let i = 0; i < filesArray.length; i += 1) {
-          const pathsep = new RegExp(`${escape(path.sep)}|:`, 'g');
-          linkPromises.push(
-            linkAsync(filesArray[i], path.resolve(this.appDirectory, 'input', this.clientId, runId, filesArray[i].replace(pathsep, '-')))
-              .catch((e) => {
-              // permit dupes
-                if (e.code && e.code !== 'EEXIST') {
-                  throw e;
-                }
-              })
-          );
-        }
+    if (!this.clientServerURL) {
+      return mkdirp(path.join(this.appDirectory, 'input', this.clientId, runId))
+        .then(() => {
+        // TODO: validate runPipeline against clientPipeline
+          const linkPromises = [];
 
-        const runObj = { spec: clientPipeline, runId, timeout: clientPipeline.timeout };
-        if (clients) {
-          runObj.clients = clients;
-        }
+          const e = new RegExp(/[-\/\\^$*+?.()|[\]{}]/g); // eslint-disable-line no-useless-escape
+          const escape = (string) => {
+            return string.replace(e, '\\$&');
+          };
 
-        return Promise.all(linkPromises)
-          .then(() => this.pipelineManager.startPipeline(runObj));
-      });
+          for (let i = 0; i < filesArray.length; i += 1) {
+            const pathsep = new RegExp(`${escape(path.sep)}|:`, 'g');
+            linkPromises.push(
+              linkAsync(filesArray[i], path.resolve(this.appDirectory, 'input', this.clientId, runId, filesArray[i].replace(pathsep, '-')))
+                .catch((e) => {
+                // permit dupes
+                  if (e.code && e.code !== 'EEXIST') {
+                    throw e;
+                  }
+                })
+            );
+          }
+
+          return Promise.all(linkPromises)
+            .then(() => this.pipelineManager.startPipeline(runObj));
+        });
+    }
+
+    return request(http2.constants.HTTP2_METHOD_POST, this.clientServerURL, '/startPipeline', runObj);
   }
 
   /**
