@@ -59,9 +59,9 @@ export default function (apolloClient) {
       delete parsedState._persist;
 
       store.dispatch(rehydrate(parsedState));
-
-      remote.getCurrentWindow().webContents.send('app-init-finished');
     }
+
+    remote.getCurrentWindow().webContents.send('app-init-finished');
   });
 
   ipcRenderer.on('logout', () => {
