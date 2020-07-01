@@ -243,6 +243,7 @@ module.exports = {
             let res = fn.apply(this, args);
             while (res && res instanceof Function) {
               res = res();
+              logger.silly(`TRAMPOLINE RES: ${res}`);
             }
             return res;
           };
