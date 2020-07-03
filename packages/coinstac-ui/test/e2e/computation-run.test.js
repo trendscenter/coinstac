@@ -2,8 +2,8 @@ const { Application } = require('spectron');
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 const path = require('path');
+const electronPath = require('electron');
 
-const electronPath = path.join(__dirname, '../..', 'node_modules', '.bin', 'electron');
 const appPath = path.join(__dirname, '../..');
 const mocksPath = path.join(__dirname, 'mocks.js');
 
@@ -23,7 +23,6 @@ chai.use(chaiAsPromised);
 
 const app = new Application({
   path: electronPath,
-  env: { NODE_ENV: 'test', TEST_INSTANCE: 'test-1' },
   args: [appPath, '-r', mocksPath],
 });
 
@@ -66,7 +65,7 @@ describe('e2e run computation with 1 member', () => {
       .click('button=Save')
       .waitForVisible('span=Consortium Saved', EXIST_TIMEOUT)
       .click('a=Consortia')
-      .waitForVisible(`h1=${CONS_NAME}`)
+      .waitForVisible(`h5=${CONS_NAME}`)
   ));
 
   it('accesses the Add Pipeline page', () => (

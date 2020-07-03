@@ -19,14 +19,12 @@ chai.use(chaiAsPromised);
 
 const app1 = new Application({
   path: electronPath,
-  env: { NODE_ENV: 'test', TEST_INSTANCE: 'test-1' },
   args: [appPath, '-r', mocksPath],
   port: 9515,
 });
 
 const app2 = new Application({
   path: electronPath,
-  env: { NODE_ENV: 'test', TEST_INSTANCE: 'test-2' },
   args: [appPath, '-r', mocksPath],
   port: 9516,
 });
@@ -96,7 +94,7 @@ describe('e2e consortia permissions', () => {
       .click('button=Save')
       .waitForVisible('span=Consortium Saved', EXIST_TIMEOUT)
       .click('a=Consortia')
-      .waitForVisible(`h1=${CONS_NAME}`)
+      .waitForVisible(`h5=${CONS_NAME}`)
   ));
 
   it('add another user as member', () => (

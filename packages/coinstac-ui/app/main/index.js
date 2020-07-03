@@ -30,10 +30,6 @@ process.env.NODE_ENV = process.env.NODE_ENV || 'production';
 // Watch the following issue for progress on dialog support
 // https://github.com/electron/spectron/issues/94
 if (process.env.NODE_ENV === 'test') {
-  if (process.env.TEST_INSTANCE) {
-    electron.app.setPath('userData', `${electron.app.getPath('userData')}-${process.env.TEST_INSTANCE}`);
-  }
-
   mock(electron.dialog);
 }
 
