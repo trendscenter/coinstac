@@ -2,8 +2,8 @@ const { Application } = require('spectron');
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 const path = require('path');
+const electron = require('electron');
 
-const electronPath = path.join(__dirname, '../..', 'node_modules', '.bin', 'electron');
 const appPath = path.join(__dirname, '../..');
 const mocksPath = path.join(__dirname, 'mocks.js');
 
@@ -18,13 +18,13 @@ chai.should();
 chai.use(chaiAsPromised);
 
 const app1 = new Application({
-  path: electronPath,
+  path: electron,
   args: [appPath, '-r', mocksPath],
   port: 9515,
 });
 
 const app2 = new Application({
-  path: electronPath,
+  path: electron,
   args: [appPath, '-r', mocksPath],
   port: 9516,
 });
