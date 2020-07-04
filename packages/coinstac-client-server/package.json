@@ -37,6 +37,7 @@
     "@hapi/hapi": "^19.1.1",
     "coinstac-docker-manager": "^5.0.0",
     "coinstac-graphql-schema": "^5.0.0",
-    "coinstac-pipeline": "^5.0.0"
+    "coinstac-pipeline": "^5.0.0",
+    "nes": "^10.0.2"
   }
 }

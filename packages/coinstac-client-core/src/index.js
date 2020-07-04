@@ -1,16 +1,18 @@
 'use strict';
 
 // app package deps
-const http2 = require('http2');
 const pify = require('util').promisify;
 const csvParse = require('csv-parse');
 const mkdirp = pify(require('mkdirp'));
+const Emitter = require('events');
+const axios = require('axios');
+const nes = require('nes');
 const fs = require('fs');
 const path = require('path');
 const winston = require('winston');
+// const nes = require('@hapi/nes');
 const DockerManager = require('coinstac-docker-manager');
 const PipelineManager = require('coinstac-pipeline');
-const { request } = require('./utils');
 
 // set w/ config etc post release
 process.LOGLEVEL = 'silly';
@@ -58,6 +60,8 @@ class CoinstacClient {
     }
 
     this.clientId = opts.userId;
+
+    this.initializeSocket();
   }
 
   initialize() {
@@ -77,6 +81,17 @@ class CoinstacClient {
       this.pipelineManager = manager;
       return manager;
     });
+  }
+
+  async initializeSocket() {
+    if (!this.clientServerURL) {
+      return;
+    }
+
+    const url = this.clientServerURL.replace('https', 'ws').replace('http', 'ws');
+
+    this.socketClient = new nes.Client(url);
+    await this.socketClient.connect();
   }
 
   setClientServerURL(clientServerURL) {
@@ -289,7 +304,49 @@ class CoinstacClient {
         });
     }
 
-    return request(http2.constants.HTTP2_METHOD_POST, this.clientServerURL, '/startPipeline', runObj);
+    const run = {
+      ...runObj,
+      consortiumId,
+      pipelineSnapshot: clientPipeline,
+    };
+
+    return axios.post(`${this.clientServerURL}/startPipeline`, { run }).then(({ data }) => {
+      return new Promise((resolve) => {
+        const stateEmitter = new Emitter();
+
+        function getResult(socketClient) {
+          return new Promise((resResolve, resReject) => {
+            socketClient.subscribe('/pipelineResult', (res) => {
+              if (res.runId !== runId) {
+                return;
+              }
+
+              if (res.event === 'update') {
+                stateEmitter.emit('update', res.data);
+              }
+
+              if (res.event === 'result') {
+                socketClient.unsubscribe('/pipelineResult');
+                resResolve(res.data);
+              }
+
+              if (res.event === 'error') {
+                socketClient.unsubscribe('/pipelineResult');
+                resReject(res.data);
+              }
+            });
+          });
+        }
+
+        resolve({
+          pipeline: {
+            ...data.pipeline,
+            stateEmitter,
+          },
+          result: getResult(this.socketClient),
+        });
+      });
+    });
   }
 
   /**
