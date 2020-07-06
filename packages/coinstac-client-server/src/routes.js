@@ -1,8 +1,32 @@
+const path = require('path');
+const PipelineManager = require('coinstac-pipeline');
 const { pullImagesFromList, removeImagesFromList } = require('coinstac-docker-manager');
+
+const config = require('./config');
 
 const DELAY = 5000;
 
-module.exports = (remotePipelineManager, server) => {
+const dockerManagers = {};
+
+async function getDockerManager(clientId) {
+  if (dockerManagers[clientId]) {
+    return dockerManagers[clientId];
+  }
+
+  const manager = await PipelineManager.create({
+    mode: 'local',
+    clientId,
+    operatingDirectory: path.resolve(config.operatingDirectory, 'coinstac'),
+    remotePort: 3400,
+    mqttRemotePort: config.mqttServer.port,
+    mqttRemoteProtocol: config.mqttServer.protocol,
+    mqttRemoteURL: config.mqttServer.hostname,
+  });
+
+  return manager;
+}
+
+module.exports = (server) => {
   return [
     {
       method: 'POST',
@@ -34,8 +58,12 @@ module.exports = (remotePipelineManager, server) => {
     },
     {
       method: 'POST',
-      path: '/startPipeline',
+      path: '/startPipeline/{clientId}',
       handler: async (req, h) => {
+        const { clientId } = req.params;
+
+        const remotePipelineManager = await getDockerManager(clientId);
+
         const { payload: { run } } = req;
         const computationImageList = run.pipelineSnapshot.steps
           .map(step => step.computations
@@ -78,11 +106,13 @@ module.exports = (remotePipelineManager, server) => {
     },
     {
       method: 'GET',
-      path: '/stopPipeline/{runId}',
+      path: '/stopPipeline/{clientId}/{runId}',
       handler: async (req, h) => {
-        const { runId } = req.params;
+        const { clientId, runId } = req.params;
 
         try {
+          const remotePipelineManager = await getDockerManager(clientId, runId);
+
           await remotePipelineManager.stopPipeline('', runId);
           return h.response('Stopped pipeline.').code(200);
         } catch (error) {

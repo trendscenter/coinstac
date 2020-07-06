@@ -310,7 +310,7 @@ class CoinstacClient {
       pipelineSnapshot: clientPipeline,
     };
 
-    return axios.post(`${this.clientServerURL}/startPipeline`, { run }).then(({ data }) => {
+    return axios.post(`${this.clientServerURL}/startPipeline/${this.clientId}`, { run }).then(({ data }) => {
       return new Promise((resolve) => {
         const stateEmitter = new Emitter();
 
