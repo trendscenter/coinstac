@@ -1,4 +1,5 @@
 const path = require('path');
+const axios = require('axios');
 const PipelineManager = require('coinstac-pipeline');
 const { pullImagesFromList, removeImagesFromList } = require('coinstac-docker-manager');
 
@@ -26,12 +27,31 @@ async function getDockerManager(clientId) {
   return manager;
 }
 
+async function validateToken(authorization) {
+  if (!authorization) {
+    return false;
+  }
+
+  try {
+    await axios.post(`${config.apiServer}/authenticateByToken`, null, { headers: { Authorization: authorization } });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 module.exports = (server) => {
   return [
     {
       method: 'POST',
       path: '/pullImages',
       handler: async (req, h) => {
+        const tokenIsValid = await validateToken(req.headers.authorization);
+
+        if (!tokenIsValid) {
+          return h.response('Invalid token.').code(400);
+        }
+
         const { payload: { images } } = req;
 
         try {
@@ -46,6 +66,12 @@ module.exports = (server) => {
       method: 'POST',
       path: '/removeImages',
       handler: async (req, h) => {
+        const tokenIsValid = await validateToken(req.headers.authorization);
+
+        if (!tokenIsValid) {
+          return h.response('Invalid token.').code(400);
+        }
+
         const { payload: { images } } = req;
 
         try {
@@ -60,6 +86,12 @@ module.exports = (server) => {
       method: 'POST',
       path: '/startPipeline/{clientId}',
       handler: async (req, h) => {
+        const tokenIsValid = await validateToken(req.headers.authorization);
+
+        if (!tokenIsValid) {
+          return h.response('Invalid token.').code(400);
+        }
+
         const { clientId } = req.params;
 
         const remotePipelineManager = await getDockerManager(clientId);
@@ -105,9 +137,15 @@ module.exports = (server) => {
       },
     },
     {
-      method: 'GET',
+      method: 'PATCH',
       path: '/stopPipeline/{clientId}/{runId}',
       handler: async (req, h) => {
+        const tokenIsValid = await validateToken(req.headers.authorization);
+
+        if (!tokenIsValid) {
+          return h.response('Invalid token.').code(400);
+        }
+
         const { clientId, runId } = req.params;
 
         try {
