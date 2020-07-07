@@ -10,7 +10,6 @@ const nes = require('nes');
 const fs = require('fs');
 const path = require('path');
 const winston = require('winston');
-// const nes = require('@hapi/nes');
 const DockerManager = require('coinstac-docker-manager');
 const PipelineManager = require('coinstac-pipeline');
 
@@ -60,6 +59,7 @@ class CoinstacClient {
     }
 
     this.clientId = opts.userId;
+    this.token = opts.token;
 
     this.initializeSocket();
   }
@@ -310,43 +310,48 @@ class CoinstacClient {
       pipelineSnapshot: clientPipeline,
     };
 
-    return axios.post(`${this.clientServerURL}/startPipeline/${this.clientId}`, { run }).then(({ data }) => {
-      return new Promise((resolve) => {
-        const stateEmitter = new Emitter();
+    return axios.post(
+      `${this.clientServerURL}/startPipeline/${this.clientId}`,
+      { run },
+      { headers: { Authorization: `Bearer ${this.token}` } }
+    )
+      .then(({ data }) => {
+        return new Promise((resolve) => {
+          const stateEmitter = new Emitter();
 
-        function getResult(socketClient) {
-          return new Promise((resResolve, resReject) => {
-            socketClient.subscribe('/pipelineResult', (res) => {
-              if (res.runId !== runId) {
-                return;
-              }
+          function getResult(socketClient) {
+            return new Promise((resResolve, resReject) => {
+              socketClient.subscribe('/pipelineResult', (res) => {
+                if (res.runId !== runId) {
+                  return;
+                }
 
-              if (res.event === 'update') {
-                stateEmitter.emit('update', res.data);
-              }
+                if (res.event === 'update') {
+                  stateEmitter.emit('update', res.data);
+                }
 
-              if (res.event === 'result') {
-                socketClient.unsubscribe('/pipelineResult');
-                resResolve(res.data);
-              }
+                if (res.event === 'result') {
+                  socketClient.unsubscribe('/pipelineResult');
+                  resResolve(res.data);
+                }
 
-              if (res.event === 'error') {
-                socketClient.unsubscribe('/pipelineResult');
-                resReject(res.data);
-              }
+                if (res.event === 'error') {
+                  socketClient.unsubscribe('/pipelineResult');
+                  resReject(res.data);
+                }
+              });
             });
-          });
-        }
+          }
 
-        resolve({
-          pipeline: {
-            ...data.pipeline,
-            stateEmitter,
-          },
-          result: getResult(this.socketClient),
+          resolve({
+            pipeline: {
+              ...data.pipeline,
+              stateEmitter,
+            },
+            result: getResult(this.socketClient),
+          });
         });
       });
-    });
   }
 
   /**

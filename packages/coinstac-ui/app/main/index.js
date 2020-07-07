@@ -139,7 +139,9 @@ loadConfig()
       mainWindow.webContents.send(BAD_TOKEN);
     });
 
-    ipcPromise.on('login-init', ({ userId, appDirectory, clientServerURL }) => {
+    ipcPromise.on('login-init', ({
+      userId, appDirectory, clientServerURL, token,
+    }) => {
       return initializedCore
         ? Promise.resolve()
         : configureCore(
@@ -147,7 +149,8 @@ loadConfig()
           logger,
           userId,
           appDirectory || config.get('coinstacHome'),
-          clientServerURL || config.get('clientServerURL')
+          clientServerURL || config.get('clientServerURL'),
+          token
         )
           .then((c) => {
             initializedCore = c;

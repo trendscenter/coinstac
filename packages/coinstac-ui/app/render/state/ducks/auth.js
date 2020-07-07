@@ -74,7 +74,9 @@ const initCoreAndSetToken = async (reqUser, data, appDirectory, clientServerURL,
     localStorage.setItem('clientServerURL', clientServerURL);
   }
 
-  await ipcPromise.send('login-init', { userId: reqUser.username, appDirectory, clientServerURL });
+  await ipcPromise.send('login-init', {
+    userId: reqUser.username, appDirectory, clientServerURL, token: data.id_token,
+  });
 
   const user = { ...data.user, label: reqUser.username };
 
