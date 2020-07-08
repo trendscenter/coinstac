@@ -442,7 +442,7 @@ const startService = (serviceId, serviceUserId, opts) => {
                   logger.debug(`Approx comp time: ${(receiveStart - transmitEnd) / 1000}`);
                   logger.debug(`Receive time: ${(receiveEnd - receiveStart) / 1000}`);
                   socket.disconnect();
-                  if (output[1] || output[2].code !== 0) {
+                  if (output[2].code !== 0) {
                     throw new Error(`Computation failed with exitcode ${output[2].code}\n Error message:\n${output[1]}}`);
                   } else if (output[2].error) {
                     throw new Error(`Computation failed to start\n Error message:\n${output[2].error}}`);
