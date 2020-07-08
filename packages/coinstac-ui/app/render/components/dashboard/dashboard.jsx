@@ -48,7 +48,6 @@ import {
 } from '../../state/graphql/functions';
 import {
   getAllAndSubProp,
-  updateConsortiaMappedUsersProp,
 } from '../../state/graphql/props';
 import StartPipelineListener from './listeners/start-pipeline-listener';
 import NotificationsListener from './listeners/notifications-listener';
@@ -208,8 +207,6 @@ class Dashboard extends Component {
     ipcRenderer.on('docker-error', (event, arg) => {
       notifyError(`Docker Error: ${arg.err.message}`);
     });
-
-    this.checkLocalMappedStatus(maps, consortia);
   }
 
   // eslint-disable-next-line
@@ -235,7 +232,7 @@ class Dashboard extends Component {
       unsubscribeComputations, unsubscribeConsortia, unsubscribePipelines, unsubscribeThreads,
     } = this.state;
 
-    if (!isEqual(consortia, nextProps.consortia)) {
+    if (consortia.length === 0 && nextProps.consortia.length > 0) {
       this.checkLocalMappedStatus(nextProps.maps, nextProps.consortia);
     }
 
@@ -376,7 +373,7 @@ class Dashboard extends Component {
 
   componentDidUpdate(prevProps) {
     const {
-      currentUser, updateUserPerms, remoteRuns, saveLocalRun
+      currentUser, updateUserPerms, remoteRuns, saveLocalRun,
     } = this.props;
 
     if (currentUser
@@ -453,19 +450,33 @@ class Dashboard extends Component {
   checkLocalMappedStatus = (maps, consortia) => {
     const { updateConsortiaMappedUsers, auth: { user } } = this.props;
 
-    const consortiaCurrentlyUserIsMappedFor = consortia
-      .filter(cons => cons.mappedForRun && cons.mappedForRun.indexOf(user.id) !== -1)
-      .map(cons => cons.id);
+    const consortiaUserIsMappedFor = [];
+    const consortiaUserIsNotMappedFor = [];
 
-    maps.forEach((map) => {
-      const index = consortiaCurrentlyUserIsMappedFor.indexOf(map.consortiumId);
+    consortia.forEach((consortium) => {
+      if (consortium.members.indexOf(user.id) === -1) {
+        return;
+      }
 
-      if (index > -1) {
-        consortiaCurrentlyUserIsMappedFor.splice(index, 1);
+      const consortiumDataMapping = maps.find(m => m.consortiumId === consortium.id
+        && m.pipelineId === consortium.activePipelineId);
+
+      if (consortium.mappedForRun && consortium.mappedForRun.indexOf(user.id) > -1) {
+        if (!consortiumDataMapping) {
+          consortiaUserIsNotMappedFor.push(consortium.id);
+        }
+      } else if (consortiumDataMapping) {
+        consortiaUserIsMappedFor.push(consortium.id);
       }
     });
 
-    updateConsortiaMappedUsers({ consortia: consortiaCurrentlyUserIsMappedFor });
+    if (consortiaUserIsMappedFor.length > 0) {
+      updateConsortiaMappedUsers(consortiaUserIsMappedFor, true);
+    }
+
+    if (consortiaUserIsNotMappedFor.length > 0) {
+      updateConsortiaMappedUsers(consortiaUserIsNotMappedFor, false);
+    }
   }
 
   render() {
@@ -585,6 +596,7 @@ Dashboard.defaultProps = {
   runs: [],
   threads: [],
   currentUser: null,
+  subscribeToUser: null,
 };
 
 Dashboard.propTypes = {
@@ -611,7 +623,7 @@ Dashboard.propTypes = {
   subscribeToConsortia: PropTypes.func.isRequired,
   subscribeToPipelines: PropTypes.func.isRequired,
   subscribeToThreads: PropTypes.func.isRequired,
-  subscribeToUser: PropTypes.func.isRequired,
+  subscribeToUser: PropTypes.func,
   subscribeToUserRuns: PropTypes.func.isRequired,
   updateConsortiaMappedUsers: PropTypes.func.isRequired,
   updateDockerOutput: PropTypes.func.isRequired,
@@ -695,8 +707,13 @@ const DashboardWithData = compose(
     }),
   }),
   graphql(
-    UPDATE_CONSORTIA_MAPPED_USERS_MUTATION,
-    updateConsortiaMappedUsersProp('updateConsortiaMappedUsers')
+    UPDATE_CONSORTIA_MAPPED_USERS_MUTATION, {
+      props: ({ mutate }) => ({
+        updateConsortiaMappedUsers: (consortia, isMapped) => mutate({
+          variables: { consortia, isMapped },
+        }),
+      }),
+    }
   ),
   withApollo
 )(Dashboard);

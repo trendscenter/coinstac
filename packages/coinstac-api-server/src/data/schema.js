@@ -173,8 +173,8 @@ const typeDefs = `
     setComputationInputs(consortiumId: ID, fieldIndex: Int, values: String ): String
     updateRunState(runId: ID, data: JSON): JSON
     updateUserConsortiumStatus(consortiumId: ID, status: String): User
-    updateConsortiumMappedUsers(consortiumId: ID, mappedForRun: [ID]): JSON
-    updateConsortiaMappedUsers(consortia: [ID]): JSON
+    updateConsortiumMappedUsers(consortiumId: ID, isMapped: Boolean): JSON
+    updateConsortiaMappedUsers(consortia: [ID], isMapped: Boolean): JSON
     saveMessage(threadId: ID, title: String!, recipients: [String!], content: String!, action: ActionInput): Thread
     setReadMessage(threadId: ID, userId: ID): JSON
   }
@@ -195,6 +195,7 @@ const typeDefs = `
     fetchUser(userId: ID): User
     fetchAllThreads: [Thread]
     validateComputation(compId: ID): Boolean
+    fetchUsersOnlineStatus: JSON
   }
 
   type Subscription {
@@ -204,6 +205,7 @@ const typeDefs = `
     threadChanged(threadId: ID): Thread
     userRunChanged(userId: ID): Run
     userChanged(userId: ID): User
+    usersOnlineStatusChanged: JSON
   }
 `;
 

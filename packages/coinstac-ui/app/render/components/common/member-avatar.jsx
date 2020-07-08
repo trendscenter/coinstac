@@ -33,7 +33,7 @@ function MemberAvatar({
   showDetails,
   width,
   classes,
-  mapped,
+  ready,
 }) {
   return (
     <div key={`${name}-avatar`} className={classes.containerStyles}>
@@ -47,7 +47,7 @@ function MemberAvatar({
         && <Typography variant="caption" className={classes.textStyles}>{name}</Typography>
       }
       {
-        mapped
+        ready
         && <DoneIcon className={classes.markStyles} />
       }
     </div>
@@ -57,7 +57,7 @@ function MemberAvatar({
 MemberAvatar.propTypes = {
   classes: PropTypes.object.isRequired,
   consRole: PropTypes.string,
-  mapped: PropTypes.bool,
+  ready: PropTypes.bool,
   name: PropTypes.string.isRequired,
   showDetails: PropTypes.bool,
   width: PropTypes.number.isRequired,
@@ -66,7 +66,7 @@ MemberAvatar.propTypes = {
 MemberAvatar.defaultProps = {
   consRole: null,
   showDetails: false,
-  mapped: false,
+  ready: false,
 };
 
 export default withStyles(styles)(MemberAvatar);

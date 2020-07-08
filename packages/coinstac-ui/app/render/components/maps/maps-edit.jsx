@@ -10,16 +10,13 @@ import Grid from '@material-ui/core/Grid';
 import { withStyles } from '@material-ui/core/styles';
 import dragula from 'react-dragula';
 import Button from '@material-ui/core/Button';
+import path from 'path';
 import { saveDataMapping } from '../../state/ducks/maps';
-import {
-  updateConsortiumMappedUsersProp,
-} from '../../state/graphql/props';
 import {
   UPDATE_CONSORTIUM_MAPPED_USERS_MUTATION,
 } from '../../state/graphql/functions';
 import MapsPipelineVariables from './maps-pipeline-variables';
 import MapsCollection from './maps-collection';
-import path from 'path';
 
 const styles = theme => ({
   rootPaper: {
@@ -105,19 +102,12 @@ class MapsEdit extends Component {
 
   saveDataMapping = () => {
     const { dataFile, stepsDataMappings, activeConsortium } = this.state;
-    const { saveDataMapping, updateConsortiumMappedUsers, auth } = this.props;
+    const { saveDataMapping, updateConsortiumMappedUsers } = this.props;
 
     saveDataMapping(activeConsortium.id, activeConsortium.activePipelineId,
       stepsDataMappings, dataFile);
 
-    const currentUserId = auth.user.id;
-    let mappedForRun = activeConsortium.mappedForRun || [];
-
-    if (mappedForRun.indexOf(currentUserId) === -1) {
-      mappedForRun = [...mappedForRun, currentUserId];
-    }
-
-    updateConsortiumMappedUsers({ consortiumId: activeConsortium.id, mappedForRun });
+    updateConsortiumMappedUsers(activeConsortium.id, true);
 
     this.setState({ isMapped: true });
   }
@@ -463,8 +453,13 @@ const mapStateToProps = ({ auth, maps }) => ({
 
 const ComponentWithData = compose(
   graphql(
-    UPDATE_CONSORTIUM_MAPPED_USERS_MUTATION,
-    updateConsortiumMappedUsersProp('updateConsortiumMappedUsers')
+    UPDATE_CONSORTIUM_MAPPED_USERS_MUTATION, {
+      props: ({ mutate }) => ({
+        updateConsortiumMappedUsers: (consortiumId, isMapped) => mutate({
+          variables: { consortiumId, isMapped },
+        }),
+      }),
+    }
   ),
   withApollo
 )(MapsEdit);

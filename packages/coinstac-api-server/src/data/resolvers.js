@@ -23,6 +23,7 @@ const {
   THREAD_CHANGED,
   USER_CHANGED,
 } = require('./events');
+const { getOnlineUsers } = require('./user-online-status-tracker');
 
 async function fetchOnePipeline(id) {
   const db = database.getDbInstance();
@@ -350,6 +351,9 @@ const resolvers = {
     validateComputation: (_, args) => {
       return new Promise();
     },
+    fetchUsersOnlineStatus: () => {
+      return getOnlineUsers();
+    }
   },
   Mutation: {
     /**
@@ -893,13 +897,21 @@ const resolvers = {
     updateConsortiumMappedUsers: async ({ auth: { credentials } }, args) => {
       const db = database.getDbInstance();
 
+      const updateObj =  {};
+
+      if (args.isMapped) {
+        updateObj.$addToSet = {
+          mappedForRun: credentials.username
+        };
+      } else {
+        updateObj.$pull = {
+          mappedForRun: credentials.username
+        };
+      }
+
       const result = await db.collection('consortia').findOneAndUpdate({
         _id: ObjectID(args.consortiumId)
-      }, {
-        $set: {
-          mappedForRun: args.mappedForRun
-        }
-      }, {
+      }, updateObj, {
         returnOriginal: false
       });
 
@@ -923,24 +935,24 @@ const resolvers = {
 
       const consortiaIds = args.consortia.map(id => ObjectID(id));
 
-      const updatedConsortiaIds = await db.collection('consortia').find({
-        _id: { $in: consortiaIds },
-        mappedForRun: credentials.username
-      }, {
-        projection: { _id: 1 }
-      }).toArray();
+      const updateObj = {};
+
+      if (args.isMapped) {
+        updateObj.$addToSet = {
+          mappedForRun: credentials.username
+        };
+      } else {
+        updateObj.$pull = {
+          mappedForRun: credentials.username
+        };
+      }
 
       await db.collection('consortia').updateMany({
         _id: { $in: consortiaIds },
-        mappedForRun: credentials.username
-      }, {
-        $pull: {
-          mappedForRun: credentials.username
-        }
-      });
+      }, updateObj);
 
       const consortia = await db.collection('consortia').find({
-        _id: { $in: updatedConsortiaIds.map(c => c._id) }
+        _id: { $in: consortiaIds }
       });
 
       eventEmitter.emit(CONSORTIUM_CHANGED, consortia);
@@ -1133,6 +1145,12 @@ const resolvers = {
         (payload, variables) => (variables.userId && payload.userRunChanged.clients.indexOf(variables.userId) > -1)
       )
     },
+    /**
+     * Users online status subscription
+     */
+    usersOnlineStatusChanged: {
+      subscribe: () => pubsub.asyncIterator('usersOnlineStatusChanged')
+    }
   },
 };
 

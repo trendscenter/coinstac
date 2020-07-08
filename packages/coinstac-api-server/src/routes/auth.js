@@ -1,4 +1,5 @@
 const helperFunctions = require('../auth-helpers');
+const { eventEmitter, USER_LOGOUT } = require('../data/events');
 
 module.exports = [
   {
@@ -57,6 +58,18 @@ module.exports = [
               },
             }).code(201);
           });
+      },
+    },
+  },
+  {
+    method: 'POST',
+    path: '/logout',
+    config: {
+      auth: false,
+      handler: (req, res) => {
+        eventEmitter.emit(USER_LOGOUT, req.payload.username);
+
+        res().code(200);
       },
     },
   },
