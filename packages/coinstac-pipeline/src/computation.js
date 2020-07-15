@@ -52,8 +52,7 @@ module.exports = {
           });
       },
       stop() {
-        // return docker.stopService(this.meta.id, `${this.runId}-${this.clientId}`, true);
-        return Promise.resolve();
+        return docker.stopService(this.meta.id, `${this.runId}-${this.clientId}`, true);
       },
     };
   },
