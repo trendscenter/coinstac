@@ -2,8 +2,6 @@
 
 'use strict';
 
-//require('trace');
-//require('clarify');
 const util = require('util');
 const readFile = util.promisify(require('fs').readFile);
 const writeFile = util.promisify(require('fs').writeFile);
