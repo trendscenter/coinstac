@@ -17,18 +17,18 @@ const exitHook = require('exit-hook');
 const startRun = ({
   spec, runMode = 'local', clientCount = 1, operatingDirectory = 'test',
 }) => {
-  return new Promise((resolve, reject) => {
-    // the execArgv opt are a work around for https://github.com/nodejs/node/issues/9435
-    const mqtt = fork(path.resolve(__dirname, 'mqtt-server.js'), { execArgv: [], stdio: ['inherit', 'inherit', 'inherit', 'ipc'] });
-    mqtt.on('message', (m) => {
-      if (m.e) return reject(m.e);
-      if (m.started) resolve();
-    });
-    exitHook(() => {
-      mqtt.kill();
-    });
-  })
-    .then(async () => {
+  // return new Promise((resolve, reject) => {
+  //   // the execArgv opt are a work around for https://github.com/nodejs/node/issues/9435
+  //   const mqtt = fork(path.resolve(__dirname, 'mqtt-server.js'), { execArgv: [], stdio: ['inherit', 'inherit', 'inherit', 'ipc'] });
+  //   mqtt.on('message', (m) => {
+  //     if (m.e) return reject(m.e);
+  //     if (m.started) resolve();
+  //   });
+  //   exitHook(() => {
+  //     mqtt.kill();
+  //   });
+  // })
+    return Promise.resolve().then(async () => {
       const pipelines = {
         locals: [],
       };
@@ -40,9 +40,9 @@ const startRun = ({
           clientId: 'remote',
           mode: 'remote',
           operatingDirectory: path.resolve(operatingDirectory),
-          // mqttRemoteURL: 'coinstac.rs.gsu.edu',
-          // mqttRemotePort: '80',
-          // mqttRemoteProtocol: 'mqtts:',
+          mqttRemoteURL: 'localhost',
+          mqttRemotePort: '1883',
+          mqttRemoteProtocol: 'mqtt:',
         });
         pipelines.remote = {
           manager: remoteManager,
