@@ -364,7 +364,7 @@ const startService = (serviceId, serviceUserId, opts) => {
                 ws.on('error', (e) => {
                   if (e.code && (e.code === 'ECONNRESET' || e.code === 'ECONNREFUSED')) {
                     ws.terminate();
-                    if (count > 500) {
+                    if (count > 10) {
                       proxRj(new Error('Docker ws server timeout exceeded'));
                     } else {
                       count += 1;
