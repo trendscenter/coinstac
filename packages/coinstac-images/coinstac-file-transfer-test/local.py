@@ -35,9 +35,13 @@ else:
     # hashb = md5sum(os.path.join(doc["state"]["baseDirectory"], "b.txt"))
     # if hasha != doc["input"]["hasha"] or hashb != doc["input"]["hashb"]:
     #     raise Exception("Hash mismatch at local")
-    shutil.copy(os.path.join(doc["state"]["baseDirectory"], "a.txt"), os.path.join(doc["state"]["transferDirectory"], "a.txt"))
+    a = os.stat(os.path.join(doc["state"]["transferDirectory"]))
+    try:
+      shutil.copy(os.path.join(doc["state"]["baseDirectory"], "a.txt"), os.path.join(doc["state"]["transferDirectory"], "a.txt"))
+    except Exception as e:
+        raise Exception(json.dumps(a))
     # shutil.copy(os.path.join(doc["state"]["baseDirectory"], "b.txt"), os.path.join(doc["state"]["transferDirectory"], "b.txt"))
-
+    #
 # output = { "output": { "hasha": hasha, "hashb": hashb } }
 output = { "output": { "hasha": b } }
 sys.stdout.write(json.dumps(output))

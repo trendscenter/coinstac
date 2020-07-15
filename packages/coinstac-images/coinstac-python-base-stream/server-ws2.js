@@ -77,6 +77,12 @@ const start = (opts) => {
       ws.on('close', (message) => {
         logger.info(`Client socket close: ${JSON.stringify(message)}`);
       });
+      ws.on('error', (message) => {
+        logger.error(`Client socket error: ${JSON.stringify(message)}`);
+      });
+    });
+    wss.on('error', (message) => {
+      logger.error(`Socker server error: ${JSON.stringify(message)}`);
     });
   });
 };

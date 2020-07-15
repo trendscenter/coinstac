@@ -39,10 +39,14 @@ if doc["state"]["iteration"] > 2000:
     # shutil.copy(os.path.join(doc["state"]["baseDirectory"], site, "a.txt"), os.path.join(doc["state"]["transferDirectory"], "a.txt"))
     # shutil.copy(os.path.join(doc["state"]["baseDirectory"], site, "b.txt"), os.path.join(doc["state"]["transferDirectory"], "b.txt"))
     # break
-a = "a" * 90000
-text_filea = open(os.path.join(doc["state"]["transferDirectory"], "a.txt"), "w")
-text_filea.write(a)
-text_filea.close()
+a = "a" * 9
+
+try:
+    text_filea = open(os.path.join(doc["state"]["transferDirectory"], "a.txt"), "w")
+    text_filea.write(a)
+    text_filea.close()
+except:
+    raise Exception(os.listdir(os.path.join(doc["state"]["transferDirectory"], '.')))
 
 
 # if success == True:

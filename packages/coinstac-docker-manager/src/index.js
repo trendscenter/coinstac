@@ -1,5 +1,5 @@
-require('trace');
-require('clarify');
+'use strict';
+
 const Docker = require('dockerode');
 const { reduce } = require('lodash');
 const request = require('request-stream');
@@ -7,11 +7,6 @@ const portscanner = require('portscanner');
 const http = require('http');
 const winston = require('winston');
 const WS = require('ws');
-
-const perfTime = () => {
-  const t = process.hrtime();
-  return t[0] * 1000 + t[1] / 1000000;
-};
 
 let logger;
 winston.loggers.add('docker-manager', {
@@ -363,7 +358,7 @@ const startService = (serviceId, serviceUserId, opts) => {
               const testConnection = () => {
                 const ws = new WS(`ws://127.0.0.1:${services[serviceId].port}`);
                 ws.on('open', () => {
-                  ws.close();
+                  ws.close(1000, 'Test Connection');
                   resolve();
                 });
                 ws.on('error', (e) => {
@@ -373,7 +368,7 @@ const startService = (serviceId, serviceUserId, opts) => {
                       proxRj(new Error('Docker ws server timeout exceeded'));
                     } else {
                       count += 1;
-                      setTimeout(testConnection, 10 * count);
+                      setTimeout(testConnection, 200 * count);
                     }
                   } else {
                     proxRj(e);
@@ -417,7 +412,7 @@ const startService = (serviceId, serviceUserId, opts) => {
                       errfin = res.end;
                       stderr += res.data || '';
                       if (code !== undefined && outfin && errfin) {
-                        ws.close(1000, 'Client disconnect');
+                        ws.close(1000, 'Normal Client disconnect');
                         resolve({
                           code,
                           stdout,
@@ -429,42 +424,18 @@ const startService = (serviceId, serviceUserId, opts) => {
                       outfin = res.end;
                       stdout += res.data || '';
                       if (code !== undefined && outfin && errfin) {
-                        try {
-                          stdout = JSON.parse(stdout);
-                        } catch (e) {
-                          let a = res;
-                          let b = stdout;
-                          let c = stderr;
-                          debugger
-                          ws.close(1011, 'Output parse error');
-                          return reject(e);
-                        }
-                        ws.close(1000, 'Client disconnect');
+                        ws.close(1000, 'Normal Client disconnect');
                         resolve({
                           code,
                           stdout,
                           stderr,
                         });
-                      } else if (outfin) {
-                        try {
-                          stdout = JSON.parse(stdout);
-                        } catch (e) {
-                          let a = res;
-                          let b = stdout;
-                          let c = stderr;
-                          debugger
-                          ws.close(1011, 'Output parse error');
-                          return reject(e);
-                        }
                       }
                       break;
                     case 'close':
                       ({ code } = res);
-                      if (code !== 0) {
-                        ws.close(1011, 'Computation error');
-                        return reject(new Error(`Computation failed with exitcode ${code} stderr ${stderr}`));
-                      }
                       if (outfin && errfin) {
+                        ws.close(1000, 'Normal Client disconnect');
                         resolve({
                           code,
                           stdout,
@@ -477,11 +448,21 @@ const startService = (serviceId, serviceUserId, opts) => {
                 });
               }).then((output) => {
                 logger.debug('Docker container closed');
+                if (output.code !== 0) {
+                  throw new Error(`Computation failed with exitcode ${output.code} and stderr ${output.stderr}`);
+                }
                 logger.silly(`Docker stderr: ${output.stderr}`);
                 logger.debug(`Output size: ${output.stdout.length}`);
-                proxR(output.stdout);
+
+                let parsedStdout;
+                try {
+                  parsedStdout = JSON.parse(output.stdout);
+                } catch (e) {
+                  throw new Error(`Computation output parsing failed: ${e.message}`);
+                }
+
+                proxR(parsedStdout);
               }).catch((e) => {
-                debugger
                 proxRj(e);
               });
             });

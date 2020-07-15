@@ -2,6 +2,7 @@
 
 const Emitter = require('events');
 const Computation = require('./computation');
+const Store = require('./io-store');
 
 const controllers = {};
 controllers.local = require('./control-boxes/local');
@@ -31,7 +32,8 @@ module.exports = {
     logger,
     dockerManager,
   }) {
-    let cache = {};
+    const store = Store.init(clientId);
+    let computationCache = {};
     let pipelineErrorCallback;
     const currentComputations = computations.map(
       comp => Computation.create(comp, mode, runId, clientId, dockerManager)
@@ -49,7 +51,6 @@ module.exports = {
       clientId,
       currentBoxCommand: undefined,
       currentComputations,
-      currentOutput: undefined,
       initialized: false,
       iteration: undefined,
       mode,
@@ -57,6 +58,7 @@ module.exports = {
       runType: 'sequential',
       state: undefined,
       stopByUser: undefined,
+      success: false,
     };
     const setStateProp = (prop, val) => {
       controllerState[prop] = val;
@@ -66,7 +68,7 @@ module.exports = {
 
     return {
       activeControlBox,
-      cache,
+      computationCache,
       computationStep,
       controller,
       controllerState,
@@ -108,17 +110,25 @@ module.exports = {
          * @param  {Function} cb        callback called with results
          * @param  {Function} err       error callback for async operations
          */
-        const iterateComp = (input, cb, err) => {
+        const iterateComp = (overideInput, cb, err) => {
           // TODO: logic for different runTypes (single, parallel, etc)
+          let compInput;
           switch (controllerState.currentBoxCommand) {
             case 'nextIteration':
+              if (mode === 'remote' && !compInput) {
+                compInput = store.getAndRemoveGroup(runId);
+              } else {
+                compInput = store.getAndRemove(runId, clientId);
+              }
+              // if there is no store input use the arg input (first iteration)
+              compInput = compInput || overideInput;
               setStateProp('iteration', controllerState.iteration + 1);
               setStateProp('state', 'waiting on computation');
               return controllerState.activeComputations[controllerState.computationIndex]
                 .start(
                   {
-                    input,
-                    cache,
+                    input: compInput,
+                    cache: computationCache,
                     // picks only relevant attribs for comp
                     state: (({
                       baseDirectory,
@@ -140,17 +150,14 @@ module.exports = {
                   },
                   { baseDirectory: operatingDirectory }
                 )
-                .then((output) => {
-                  cache = Object.assign(cache, output.cache);
-                  controllerState.currentOutput = {
-                    output: output.output,
-                    success: output.success,
-                  };
+                .then(({ cache, success, output }) => {
+                  computationCache = Object.assign(computationCache, cache);
+                  controllerState.success = !!success;
                   setStateProp('state', 'finished iteration');
-                  output = undefined;
-                  cb(controllerState.currentOutput.output);
+                  store.put(runId, clientId, output);
+                  cb();
                 }).catch(({
-                  statusCode, message, name, stack, input,
+                  statusCode, message, name, stack,
                 }) => {
                   const iterationError = Object.assign(
                     new Error(),
@@ -166,9 +173,9 @@ module.exports = {
                   if (controller.type === 'local') {
                     err(iterationError);
                   } else {
-                    controllerState.currentOutput = iterationError;
                     setStateProp('state', 'finished iteration with error');
-                    cb(iterationError);
+                    store.put(runId, clientId, iterationError);
+                    cb();
                   }
                 });
             case 'nextComputation':
@@ -183,47 +190,47 @@ module.exports = {
             case 'remote':
               setStateProp('state', controllerState.mode === 'remote' ? 'waiting on local users' : 'waiting on central node');
               return remoteHandler({
-                input: controllerState.currentOutput,
+                success: controllerState.success,
                 iteration: controllerState.iteration,
-              })
-                .then((output) => {
+                callback: (error, output) => {
+                  if (error) return err(error);
                   setStateProp('state', 'finished remote iteration');
-                  controllerState.currentOutput = {
-                    output: output.output,
-                    success: output.success,
-                  };
-                  output = undefined;
-                  cb(controllerState.currentOutput.output);
-                }).catch(error => err(error));
+                  controllerState.success = !!output.success;
+                  cb();
+                },
+              });
             case 'firstServerRemote':
               // TODO: not ideal, figure out better remote start
               // remove noop need
               setStateProp('state', 'waiting on local users');
-              return remoteHandler({ input: controllerState.currentOutput, noop: true })
-                .then((output) => {
+              return remoteHandler({
+                success: controllerState.success,
+                noop: true,
+                callback: (error, output) => {
+                  if (error) return err(error);
                   setStateProp('state', 'finished remote iteration');
-                  controllerState.currentOutput = {
-                    output: output.output,
-                    success: output.success,
-                  };
-                  output = undefined;
-                  cb(controllerState.currentOutput.output);
-                }).catch(error => err(error));
+                  controllerState.success = !!output.success;
+                  cb();
+                },
+              });
             case 'doneRemote':
               setStateProp('state', 'waiting on local users');
               // we want the success output, grabbing the last currentOutput is fine
               // Note that input arg === controllerState.currentOutput.output at this point
               return remoteHandler({
-                input: controllerState.currentOutput,
+                success: controllerState.success,
                 transmitOnly: true,
                 iteration: controllerState.iteration,
-              })
-                .then(() => {
+                callback: (error) => {
+                  if (error) return err(error);
                   setStateProp('state', 'finished final remote iteration');
-                  cb(input);
-                }).catch(error => err(error));
+                  cb();
+                },
+              });
             case 'done':
-              cb(input);
+              // grab final output from store
+              compInput = store.getAndRemove(runId, clientId);
+              cb(compInput);
               break;
             default:
               throw new Error('unknown controller runType');
@@ -243,7 +250,6 @@ module.exports = {
             let res = fn.apply(this, args);
             while (res && res instanceof Function) {
               res = res();
-              logger.silly(`TRAMPOLINE RES: ${res}`);
             }
             return res;
           };
@@ -270,28 +276,33 @@ module.exports = {
                 if (controllerState.stopByUser === 'stop') {
                   err(new Error(stopByUserErrorMessage));
                 }
-                const argsArray = [].slice.call(args);
                 const fn = queue.shift();
                 controllerState.currentBoxCommand = activeControlBox.preIteration(controllerState);
 
                 if ((controllerState.mode === 'local' && controllerState.iteration === 0)
                 || (controllerState.mode === 'remote' && controllerState.remoteInitial)) {
                 // add initial input to first iteration
-                  argsArray.unshift(input);
+                  args.unshift(initialInput);
+                } else if (args.length === 0) {
+                  // no passed back input
+                  // this happens on the last iteration
+                  args.push(undefined);
                 }
+
                 if (controllerState.currentBoxCommand !== 'done' && controllerState.currentBoxCommand !== 'doneRemote') {
                   const lastCallback = queue.pop();
                   queue.push(iterateComp);
+                  // done cb
                   queue.push(lastCallback);
                 }
 
                 // necessary if this function call turns out synchronous
                 // the stack won't clear and overflow, has limited perf impact
-                setImmediate(() => fn.apply(this, argsArray.concat([_cb, err])));
+                setImmediate(() => fn.apply(this, args.concat([_cb, err])));
                 controllerState.remoteInitial = controllerState.mode === 'remote' ? false : undefined;
               }
               : undefined; // steps complete
-          })(input);
+          })();
         };
 
         const p = new Promise((res, rej) => {
@@ -301,7 +312,6 @@ module.exports = {
               .then(() => rej(err))
               .catch(error => rej(error));
           };
-
           waterfall(input, (result) => {
             setStateProp('state', 'stopped');
             controllerState.activeComputations[controllerState.computationIndex].stop()
