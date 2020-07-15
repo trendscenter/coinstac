@@ -3,7 +3,6 @@
 const fs = require('fs');
 const pify = require('util').promisify;
 const Emitter = require('events');
-const rmrf = require('rimraf');
 const {
   join,
   dirname,
@@ -11,6 +10,7 @@ const {
   sep,
 } = require('path');
 const mkdirp = pify(require('mkdirp'));
+const rmrf = pify(require('rimraf'));
 const Controller = require('./controller');
 
 

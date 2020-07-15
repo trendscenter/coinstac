@@ -302,9 +302,9 @@ module.exports = {
      */
     const cleanupPipeline = (runId) => {
       return Promise.all([
-        rmdir(path.resolve(activePipelines[runId].transferDirectory), { recursive: true }),
-        rmdir(path.resolve(activePipelines[runId].cacheDirectory), { recursive: true }),
-        rmdir(path.resolve(activePipelines[runId].systemDirectory), { recursive: true }),
+        rmrf(path.resolve(activePipelines[runId].transferDirectory)),
+        rmrf(path.resolve(activePipelines[runId].cacheDirectory)),
+        rmrf(path.resolve(activePipelines[runId].systemDirectory)),
       ]).then(() => {
         delete activePipelines[runId];
         Object.keys(remoteClients).forEach((key) => {
@@ -451,7 +451,7 @@ module.exports = {
           activePipelines[runId].remote.reject(runError);
         });
       });
-      // });
+
       app.get('/transfer', (req, res) => {
         const file = path.join(
           activePipelines[req.query.runId].transferDirectory,
@@ -966,7 +966,6 @@ module.exports = {
                       });
                       archive.finalize();
                       return splitProm.then((files) => {
-                        // files = ['one.bin', 'two.bin', 'three.bin', 'four.bin'];
                         logger.debug('############# Local client sending out data with files');
                         mqttClient.publish(
                           'run',
