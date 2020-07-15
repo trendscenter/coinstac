@@ -126,13 +126,6 @@ const getFilesAndDirs = async (dir) => {
   }, { files: [], directories: [] });
 };
 
-// const rmrf = async (workdir) => {
-//   const dnf = await getFilesAndDirs(workdir);
-//   await Promise.all(dnf.files.map(file => unlink(path.join(workdir, file))));
-//   await Promise.all(dnf.directories
-//     .map(dir => rmdir(path.join(workdir, dir), { recursive: true })));
-// };
-
 module.exports = {
 
   /**
