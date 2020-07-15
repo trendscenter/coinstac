@@ -40,11 +40,12 @@ defaultLogger.level = process.LOGLEVEL ? process.LOGLEVEL : 'info';
 const Pipeline = require('./pipeline');
 
 /**
- * [splitFilesFromStream description]
- * @param  {[type]} stream    [description]
- * @param  {[type]} filePath  [description]
- * @param  {[type]} chunkSize [description]
- * @return {[type]}           [description]
+ * Takes an input stream and writes it to disk in
+ * chunks specified by the chunk size
+ * @param  {Object} stream      stream to split
+ * @param  {string} filePath    destination
+ * @param  {integer} chunkSize  split size
+ * @return {Object}             Promise on output close
  */
 const splitFilesFromStream = (stream, filePath, chunkSize) => {
   let currentChunk = 0;
