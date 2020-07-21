@@ -1,0 +1,28 @@
+appId: com.github.trendscenter.coinstac
+productName: coinstac
+files:
+  - "**/*"
+  - "build/render"
+  - "!config/local-development.json"
+  - "!config/local-example.json"
+  - "!config/local-production.json"
+  - "!CONTRIBUTING.md"
+  - "!coverage"
+  - "!img"
+  - "!README.md"
+  - "!scripts"
+  - "!test"
+  - "!webpack.config.js"
+win:
+  icon: img/icons/coinstac.ico
+nsis:
+  oneClick: true
+  runAfterFinish: true
+  installerIcon: img/icons/coinstac.ico
+  uninstallerIcon: img/icons/coinstac.ico
+  deleteAppDataOnUninstall: true
+  license: LICENSE
+linux:
+  target: AppImage
+  icon: img/icons/coinstac.icns
+  category: Science

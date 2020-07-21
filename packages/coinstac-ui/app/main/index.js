@@ -15,7 +15,6 @@ Error.stackTraceLimit = 100;
 const { compact } = require('lodash'); // eslint-disable-line no-unused-vars
 const electron = require('electron');
 const ipcPromise = require('ipc-promise');
-const mock = require('../../test/e2e/mocks');
 const ipcFunctions = require('./utils/ipc-functions');
 const runPipelineFunctions = require('./utils/run-pipeline-functions');
 
@@ -29,7 +28,9 @@ process.env.NODE_ENV = process.env.NODE_ENV || 'production';
 // Mock file dialogue in testing environment
 // Watch the following issue for progress on dialog support
 // https://github.com/electron/spectron/issues/94
-if (process.env.NODE_ENV === 'test') {
+if (process.env.NODE_ENV !== 'production') {
+  const mock = require('../../test/e2e/mocks'); // eslint-disable-line global-require
+
   if (process.env.TEST_INSTANCE) {
     electron.app.setPath('userData', `${electron.app.getPath('userData')}-${process.env.TEST_INSTANCE}`);
   }
