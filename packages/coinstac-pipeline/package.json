@@ -13,8 +13,7 @@
   ],
   "dependencies": {
     "archiver": "^3.1.1",
-    "coinstac-docker-manager": "^5.0.0",
-    "custom-event": "^1.0.1",
+    "coinstac-docker-manager": "^5.0.2",
     "decompress": "^4.2.0",
     "dockerode": "^2.5.5",
     "express": "^4.17.1",
@@ -52,5 +51,5 @@
   "scripts": {
     "test": "nyc ava test/**.test.js"
   },
-  "version": "5.0.0"
+  "version": "5.0.2"
 }
