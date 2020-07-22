@@ -2,15 +2,13 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { isEqual, omit } from 'lodash';
-import {
-  CircularProgress,
-  FormControl,
-  InputBase,
-  InputLabel,
-  MenuItem,
-  Select,
-  Tooltip,
-} from '@material-ui/core';
+import CircularProgress from '@material-ui/core/CircularProgress';
+import FormControl from '@material-ui/core/FormControl';
+import InputBase from '@material-ui/core/InputBase';
+import InputLabel from '@material-ui/core/InputLabel';
+import MenuItem from '@material-ui/core/MenuItem';
+import Select from '@material-ui/core/Select';
+import Tooltip from '@material-ui/core/Tooltip';
 import { withStyles } from '@material-ui/core/styles';
 import ThreadAvatar from './thread-avatar';
 import { ThreadContext } from './context';
