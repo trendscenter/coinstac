@@ -1,5 +1,5 @@
 appId: com.github.trendscenter.coinstac
-productName: coinstac
+productName: COINSTAC
 files:
   - "**/*"
   - "build/render"
@@ -13,7 +13,12 @@ files:
   - "!scripts"
   - "!test"
   - "!webpack.config.js"
+mac:
+  icon: img/icons/coinstac.icns
+  target: dmg
+  category: public.app-category.education
 win:
+  target: nsis
   icon: img/icons/coinstac.ico
 nsis:
   oneClick: true

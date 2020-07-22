@@ -128,7 +128,7 @@
     "build-dev": "node ./scripts/build-setup.js && npm i && node ./scripts/post-install.js && npm run build:webpack && node ./scripts/build.js development",
     "build-local": "node ./scripts/build-setup.js && npm i && node ./scripts/post-install.js && npm run build:webpack && node ./scripts/build.js",
     "pack": "electron-builder --dir",
-    "dist": "npm i && npm run build:webpack && NODE_ENV=production node ./scripts/pre-build.js && electron-builder -wl",
+    "dist": "npm i && npm run build:webpack && NODE_ENV=production node ./scripts/pre-build.js && electron-builder -mwl",
     "start": "electron . --log-level=debug",
     "build-native": "node ./scripts/build-native.js",
     "clean": "node scripts/clean.js",

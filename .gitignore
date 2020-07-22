@@ -51,6 +51,7 @@ jsconfig.json
 
 # Built files
 packages/coinstac-ui/build
+packages/coinstac-ui/dist
 
 # Configuration files
 packages/coinstac-simulator/config/*
