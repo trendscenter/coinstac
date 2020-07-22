@@ -24,7 +24,7 @@ unset AWS_SECRET_ACCESS_KEY
 unset AWS_SESSION_TOKEN
 
 if [ $2 = export ]; then
-	echo "export CLOUDINARY_UPLOAD_PRESET=$(echo $CONFIG | jq -r .CLOUDINARY_UPLOAD_PRESET)"
+  echo "export CLOUDINARY_UPLOAD_PRESET=$(echo $CONFIG | jq -r .CLOUDINARY_UPLOAD_PRESET)"
   echo "export CLOUDINARY_API_KEY=$(echo $CONFIG | jq -r .CLOUDINARY_API_KEY)"
   echo "export CLOUDINARY_API_SECRET=$(echo $CONFIG | jq -r .CLOUDINARY_API_SECRET)"
   echo "export CLOUDINARY_UPLOAD_URL=$(echo $CONFIG | jq -r .CLOUDINARY_UPLOAD_URL)"
