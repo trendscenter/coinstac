@@ -5,9 +5,9 @@ import PropTypes from 'prop-types';
 import { compose } from 'redux';
 import { graphql } from 'react-apollo';
 import Button from '@material-ui/core/Button';
-import ExpansionPanel from '@material-ui/core/ExpansionPanel';
-import ExpansionPanelSummary from '@material-ui/core/ExpansionPanelSummary';
-import ExpansionPanelDetails from '@material-ui/core/ExpansionPanelDetails';
+import Accordion from '@material-ui/core/Accordion';
+import AccordionSummary from '@material-ui/core/AccordionSummary';
+import AccordionDetails from '@material-ui/core/AccordionActions';
 import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
@@ -16,7 +16,10 @@ import PipelineStepInput from './pipeline-step-input';
 import { FETCH_COMPUTATION_QUERY } from '../../state/graphql/functions';
 import { compIOProp } from '../../state/graphql/props';
 
-const styles = () => ({
+const styles = theme => ({
+  pipelineStep: {
+    marginBottom: theme.spacing(2),
+  },
   expansionPanelContent: {
     display: 'block',
   },
@@ -113,9 +116,9 @@ class PipelineStep extends Component {
               <Typography key={`${id}-${localOutput[0]}-output`} variant="body2">
                 {localOutput[1].label}
                 {' '}
-(
+                (
                 {localOutput[1].type}
-)
+                )
               </Typography>
             )];
 
@@ -206,12 +209,12 @@ class PipelineStep extends Component {
     }, {});
 
     return connectDragSource(connectDropTarget(
-      <div key={`step-${step.id}`}>
-        <ExpansionPanel className="pipeline-step" style={{ ...styles.draggable, opacity: isDragging ? 0 : 1 }}>
-          <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
+      <div className={classes.pipelineStep} key={`step-${step.id}`}>
+        <Accordion className="pipeline-step" style={{ ...styles.draggable, opacity: isDragging ? 0 : 1 }}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography variant="h5">{step.computations[0].meta.name}</Typography>
-          </ExpansionPanelSummary>
-          <ExpansionPanelDetails className={classes.expansionPanelContent} key={`step-exp-${step.id}`}>
+          </AccordionSummary>
+          <AccordionDetails className={classes.expansionPanelContent} key={`step-exp-${step.id}`}>
             <div className={classes.inputParametersContainer}>
               <Typography variant="h6">Input Parameters:</Typography>
               <Button
@@ -258,8 +261,8 @@ class PipelineStep extends Component {
             </div>
             <Typography variant="h6">Output:</Typography>
             {compIO && this.showOutput(10, step.id, compIO.computation.output)}
-          </ExpansionPanelDetails>
-        </ExpansionPanel>
+          </AccordionDetails>
+        </Accordion>
       </div>
     ));
   }
