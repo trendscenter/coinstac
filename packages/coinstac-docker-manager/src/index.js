@@ -7,6 +7,7 @@ const { Readable } = require('stream');
 const ss = require('coinstac-socket.io-stream');
 const socketIOClient = require('socket.io-client');
 const winston = require('winston');
+const _ = require('lodash');
 
 const perfTime = () => {
   const t = process.hrtime();
@@ -222,17 +223,12 @@ const startService = (serviceId, serviceUserId, opts) => {
             Tty: true,
           };
 
-          // merge opts one level deep
-          const memo = {};
-          for (let [key] of Object.entries(defaultOpts)) { // eslint-disable-line no-restricted-syntax, max-len, prefer-const
-            memo[key] = Object.assign(defaultOpts[key], opts.docker[key] ? opts.docker[key] : {});
-          }
-
-          const jobOpts = Object.assign(
-            {},
+          const jobOpts = _.merge(
             opts.docker,
-            memo
+            defaultOpts,
+            {}
           );
+
           return docker.createContainer(jobOpts);
         })
         .then((container) => {
@@ -449,12 +445,23 @@ const startService = (serviceId, serviceUserId, opts) => {
                   }
                   // NOTE: limited to sub 256mb
                   let parsed;
+                  let error;
                   try {
                     parsed = JSON.parse(output[0]);
+                    proxR(parsed);
                   } catch (e) {
-                    parsed = output[0]; // eslint-disable-line prefer-destructuring
+                    error = e;
+                    logger.error(`Computation output serialization failed with value: ${output[0]}`);
+                    error.message = `${error.message}\n Additional computation failure information:\n
+                    Error code: ${output[2].code}\n
+                    Stderr: ${output[1]}
+                    `;
+                    error.error = `${error.error}\n Additional computation failure information:\n
+                    Error code: ${output[2].code}\n
+                    Stderr: ${output[1]}
+                    `;
+                    throw error;
                   }
-                  proxR(parsed);
                 }).catch(error => proxRj(error));
             });
 
