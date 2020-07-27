@@ -9,7 +9,6 @@ files:
   - "!CONTRIBUTING.md"
   - "!coverage"
   - "!img"
-  - "!README.md"
   - "!scripts"
   - "!test"
   - "!webpack.config.js"
