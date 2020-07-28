@@ -130,7 +130,7 @@ class PipelineStep extends Component {
         acc[inputField.value.group] = [];
       }
 
-      acc[inputField.group].push(inputField);
+      acc[inputField.value.group].push(inputField);
 
       return acc;
     }, {});

@@ -3,9 +3,9 @@ import PropTypes from 'prop-types';
 import Checkbox from '@material-ui/core/Checkbox';
 
 function PipelineStepInputBoolean({
-  objKey, objParams, owner, updateStep, getNewObj, step,
+  objKey, owner, updateStep, getNewObj, step,
 }) {
-  if (!step || !objParams.values) {
+  if (!step) {
     return null;
   }
 
@@ -29,7 +29,6 @@ function PipelineStepInputBoolean({
 
 PipelineStepInputBoolean.propTypes = {
   objKey: PropTypes.string.isRequired,
-  objParams: PropTypes.object.isRequired,
   owner: PropTypes.bool.isRequired,
   step: PropTypes.object.isRequired,
   getNewObj: PropTypes.func.isRequired,

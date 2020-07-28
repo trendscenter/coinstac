@@ -40,30 +40,44 @@ function MapsPipelineVariables(props) {
           consortium.pipelineSteps && consortium.pipelineSteps.map((step) => {
             const { computations, inputMap } = step;
 
-            const inputs = {...inputMap, ...computations[0].computation.input};
+            const inputs = { ...inputMap, ...computations[0].computation.input };
 
-            return Object.entries(inputs).map((input) => {
+            return Object.entries(inputs)
+              .sort((a, b) => {
+                const keyA = a[0];
+                const keyB = b[0];
 
-              const inputMapKey = input[0];
-              const inputMapValue = input[1];
+                if (keyA === 'data' || keyA === 'covariates') {
+                  return -1;
+                }
 
-              if (inputMapKey === 'meta') {
-                return;
-              }
+                if (keyB === 'data' || keyB === 'covariates') {
+                  return 1;
+                }
 
-              return (
-                <MapsStepFieldset
-                  registerDraggableContainer={registerDraggableContainer}
-                  key={`step-${inputMapKey}`}
-                  fieldsetLabel={inputMapValue.label}
-                  fieldsetName={inputMapKey}
-                  stepFieldset={inputMap[inputMapKey]}
-                  stepsDataMappings={stepsDataMappings}
-                  consortium={consortium}
-                  unmapField={unmapField}
-                />
-              );
-            });
+                return 0;
+              })
+              .map((input) => {
+                const inputMapKey = input[0];
+                const inputMapValue = input[1];
+
+                if (inputMapKey === 'meta' || !inputMap[inputMapKey]) {
+                  return;
+                }
+
+                return (
+                  <MapsStepFieldset
+                    registerDraggableContainer={registerDraggableContainer}
+                    key={`step-${inputMapKey}`}
+                    fieldsetLabel={inputMapValue.label}
+                    fieldsetName={inputMapKey}
+                    stepFieldset={inputMap[inputMapKey]}
+                    stepsDataMappings={stepsDataMappings}
+                    consortium={consortium}
+                    unmapField={unmapField}
+                  />
+                );
+              });
           })
         }
       </Paper>
