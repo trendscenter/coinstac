@@ -4,7 +4,6 @@ const path = require('path');
 const axios = require('axios');
 const graphqlSchema = require('coinstac-graphql-schema');
 const { pullImagesFromList, pruneImages } = require('coinstac-docker-manager');
-const dbmap = require('/etc/coinstac/cstacDBMap'); // eslint-disable-line import/no-absolute-path, import/no-unresolved
 
 const manager = PipelineManager.create({
   mode: 'remote',
@@ -19,7 +18,10 @@ const apiServer = `http://${process.env.API_SERVER_HOSTNAME}:${process.env.API_S
 const authenticateServer = () => {
   return axios.post(
     `${apiServer}/authenticate`,
-    dbmap.apiCredentials
+	  {
+		  username: process.env.SERVER_API_USERNAME,
+		  password: process.env.SERVER_API_PASSWORD,
+	  }
   )
     .then((token) => {
       this.id_token = token.data.id_token;
