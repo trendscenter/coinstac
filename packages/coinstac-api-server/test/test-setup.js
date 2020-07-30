@@ -899,10 +899,10 @@ async function populateUsers() {
   }, password);
 
   const adminPassword = await helperFunctions.hashPassword(process.argv[3]
-    || helperFunctions.getDBMap().apiCredentials.password);
+    || process.env.SERVER_API_PASSWORD);
 
   await helperFunctions.createUser({
-    username: 'server',
+    username: process.env.SERVER_API_USERNAME,
     institution: 'mrn',
     email: 'server@mrn.org',
     permissions: {
