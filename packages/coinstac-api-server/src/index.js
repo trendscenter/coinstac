@@ -24,7 +24,7 @@ server.register(plugins, (err) => {
    */
   server.auth.strategy('jwt', 'jwt',
     {
-      key: helperFunctions.JWTSecret,
+      key: process.env.API_JWT_SECRET,
       validateFunc: helperFunctions.validateToken,
       verifyOptions: { algorithms: ['HS256'] },
     });

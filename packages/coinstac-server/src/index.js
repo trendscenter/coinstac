@@ -7,18 +7,6 @@ const graphqlSchema = require('coinstac-graphql-schema');
 const routes = require('./routes');
 
 let idToken = '';
-let dbmap;
-try {
-  dbmap = require('/etc/coinstac/cstacDBMap'); // eslint-disable-line import/no-absolute-path, import/no-unresolved, global-require
-} catch (e) {
-  console.log('No DBMap found: using defaults'); // eslint-disable-line no-console
-  dbmap = {
-    apiCredentials: {
-      username: 'server',
-      password: 'password',
-    },
-  };
-}
 
 const server = new hapi.Server();
 server.connection({
@@ -32,7 +20,10 @@ const apiServer = `http://${process.env.API_SERVER_HOSTNAME}:${process.env.API_S
  */
 axios.post(
   `${apiServer}/authenticate`,
-  dbmap.apiCredentials
+	{
+		username: process.env.SERVER_API_USERNAME,
+		password: process.env.SERVER_API_PASSWORD,
+	}
 )
   .then((token) => {
     idToken = token.data.id_token;

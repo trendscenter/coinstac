@@ -52,6 +52,10 @@ if [ $3 = export ]; then
   echo "export MQTT_SERVER_PATHNAME=$(echo $CONFIG | jq -r .MQTT_SERVER_PATHNAME)"
   echo "export MQTT_SERVER_PORT=$(echo $CONFIG | jq -r .MQTT_SERVER_PORT)"
   echo "export MQTT_SERVER_PROTOCOL=$(echo $CONFIG | jq -r .MQTT_SERVER_PROTOCOL)"
+  echo "export API_JWT_SECRET=$(echo $CONFIG | jq -r .API_JWT_SECRET)"
+  echo "export SERVER_API_USERNAME=$(echo $CONFIG | jq -r .SERVER_API_USERNAME)"
+  echo "export SERVER_API_PASSWORD=$(echo $CONFIG | jq -r .SERVER_API_PASSWORD)"
+
 elif [ $3 = systemd ]; then
   echo "CLOUDINARY_UPLOAD_PRESET=$(echo $CONFIG | jq -r .CLOUDINARY_UPLOAD_PRESET)"
   echo "CLOUDINARY_API_KEY=$(echo $CONFIG | jq -r .CLOUDINARY_API_KEY)"
@@ -71,6 +75,9 @@ elif [ $3 = systemd ]; then
   echo "MQTT_SERVER_PATHNAME=$(echo $CONFIG | jq -r .MQTT_SERVER_PATHNAME)"
   echo "MQTT_SERVER_PORT=$(echo $CONFIG | jq -r .MQTT_SERVER_PORT)"
   echo "MQTT_SERVER_PROTOCOL=$(echo $CONFIG | jq -r .MQTT_SERVER_PROTOCOL)"
+  echo "API_JWT_SECRET=$(echo $CONFIG | jq -r .API_JWT_SECRET)"
+  echo "SERVER_API_USERNAME=$(echo $CONFIG | jq -r .SERVER_API_USERNAME)"
+  echo "SERVER_API_PASSWORD=$(echo $CONFIG | jq -r .SERVER_API_PASSWORD)"
 else
   echo $CONFIG
 fi
