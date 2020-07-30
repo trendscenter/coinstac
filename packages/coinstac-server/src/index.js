@@ -4,7 +4,6 @@ const axios = require('axios');
 process.LOGLEVEL = 'silly';
 const { pullImages } = require('coinstac-docker-manager');
 const graphqlSchema = require('coinstac-graphql-schema');
-const config = require('./config');
 const routes = require('./routes');
 
 let idToken = '';
@@ -23,22 +22,23 @@ try {
 
 const server = new hapi.Server();
 server.connection({
-  host: config.host,
-  port: config.hapiPort,
+  host: process.env.PIPELINE_SERVER_HOSTNAME,
+  port: process.env.PIPELINE_SERVER_PORT,
 });
+const apiServer = `http://${process.env.API_SERVER_HOSTNAME}:${process.env.API_SERVER_PORT}`;
 /**
  * On server start, pull in comps from DB whitelist and download via docker
  * @return {Promise<string>} Success flag
  */
 axios.post(
-  `${config.apiServer}/authenticate`,
+  `${apiServer}/authenticate`,
   dbmap.apiCredentials
 )
   .then((token) => {
     idToken = token.data.id_token;
     axios.defaults.headers.common.Authorization = `Bearer ${idToken}`;
   })
-  .then(() => axios.get(`${config.apiServer}/graphql?query=${graphqlSchema.queries.allDockerImages}`))
+  .then(() => axios.get(`${apiServer}/graphql?query=${graphqlSchema.queries.allDockerImages}`))
   .then(({ data: { data: { fetchAllComputations } } }) => {
     const comps = fetchAllComputations.map(comp => ({
       img: comp.computation.dockerImage,
