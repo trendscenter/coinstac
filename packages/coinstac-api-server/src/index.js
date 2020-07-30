@@ -1,7 +1,6 @@
 require('trace');
 require('clarify');
 const hapi = require('hapi');
-const config = require('../config/default');
 const helperFunctions = require('./auth-helpers');
 const plugins = require('./plugins');
 const routes = require('./routes');
@@ -10,8 +9,8 @@ const database = require('./database');
 
 const server = new hapi.Server();
 server.connection({
-  host: config.host,
-  port: config.hapiPort,
+  host: process.env.API_SERVER_HOSTNAME,
+  port: process.env.API_SERVER_PORT,
 });
 
 server.register(plugins, (err) => {
