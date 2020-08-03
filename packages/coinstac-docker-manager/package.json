@@ -9,12 +9,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "clarify": "^2.1.0",
     "dockerode": "^2.5.5",
     "lodash": "^4.17.10",
     "portscanner": "^2.2.0",
     "request-stream": "^1.2.2",
-    "trace": "^3.1.1",
     "util": "^0.10.4",
     "winston": "^3.2.1",
     "ws": "^7.2.3"
