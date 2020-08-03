@@ -386,7 +386,6 @@ const startService = (serviceId, serviceUserId, opts) => {
               ws.on('error', (e) => {
                 proxRj(e);
               });
-<<<<<<< HEAD
               new Promise((resolve, reject) => {
                 let stdout = '';
                 let stderr = '';
@@ -450,40 +449,6 @@ const startService = (serviceId, serviceUserId, opts) => {
                 }
                 logger.silly(`Docker stderr: ${output.stderr}`);
                 logger.debug(`Output size: ${output.stdout.length}`);
-=======
-              Promise.all([stdoutProm, stderrProm, endProm])
-                .then((output) => {
-                  logger.debug(`Transmit time: ${(transmitEnd - transmitStart) / 1000}`);
-                  logger.debug(`Approx comp time: ${(receiveStart - transmitEnd) / 1000}`);
-                  logger.debug(`Receive time: ${(receiveEnd - receiveStart) / 1000}`);
-                  socket.disconnect();
-                  if (output[2].code !== 0) {
-                    throw new Error(`Computation failed with exitcode ${output[2].code}\n Error message:\n${output[1]}}`);
-                  } else if (output[2].error) {
-                    throw new Error(`Computation failed to start\n Error message:\n${output[2].error}}`);
-                  }
-                  // NOTE: limited to sub 256mb
-                  let parsed;
-                  let error;
-                  try {
-                    parsed = JSON.parse(output[0]);
-                    proxR(parsed);
-                  } catch (e) {
-                    error = e;
-                    logger.error(`Computation output serialization failed with value: ${output[0]}`);
-                    error.message = `${error.message}\n Additional computation failure information:\n
-                    Error code: ${output[2].code}\n
-                    Stderr: ${output[1]}
-                    `;
-                    error.error = `${error.error}\n Additional computation failure information:\n
-                    Error code: ${output[2].code}\n
-                    Stderr: ${output[1]}
-                    `;
-                    throw error;
-                  }
-                }).catch(error => proxRj(error));
-            });
->>>>>>> master
 
                 let parsedStdout;
                 try {
