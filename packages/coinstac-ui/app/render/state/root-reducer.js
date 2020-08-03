@@ -12,7 +12,7 @@ import notifications from './ducks/notifyAndLog';
 const CLEAR_STATE = 'CLEAR_STATE';
 const REHYDRATE = 'REHYDRATE';
 
-export const clearState = () => ({ type: CLEAR_STATE });
+export const clearState = state => ({ type: CLEAR_STATE, payload: state });
 export const rehydrate = state => ({ type: REHYDRATE, payload: state });
 
 function rootReducer(client) {
@@ -31,7 +31,10 @@ function rootReducer(client) {
 
   return (state, action) => {
     if (action.type === CLEAR_STATE) {
-      state = undefined;
+      state = {
+        ...state,
+        ...action.payload,
+      };
     }
 
     if (action.type === REHYDRATE) {

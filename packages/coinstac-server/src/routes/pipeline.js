@@ -2,24 +2,26 @@
 const PipelineManager = require('coinstac-pipeline');
 const path = require('path');
 const axios = require('axios');
-const config = require('../config');
 const graphqlSchema = require('coinstac-graphql-schema');
 const { pullImagesFromList, pruneImages } = require('coinstac-docker-manager');
-const dbmap = require('/etc/coinstac/cstacDBMap'); // eslint-disable-line import/no-absolute-path, import/no-unresolved
 
 const manager = PipelineManager.create({
   mode: 'remote',
   clientId: 'remote',
-  operatingDirectory: path.resolve(config.operatingDirectory, 'coinstac'),
-  mqttRemotePort: config.mqttServer.port,
-  mqttRemoteProtocol: config.mqttServer.protocol,
-  mqttRemoteURL: config.mqttServer.hostname,
+  operatingDirectory: path.resolve(process.env.PIPELINE_SERVER_OPERARTING_DIR, 'coinstac'),
+  mqttRemotePort: process.env.MQTT_SERVER_PORT,
+  mqttRemoteProtocol: process.env.MQTT_SERVER_PROTOCOL,
+  mqttRemoteURL: process.env.MQTT_SERVER_HOSTNAME,
 });
+const apiServer = `http://${process.env.API_SERVER_HOSTNAME}:${process.env.API_SERVER_PORT}`;
 
 const authenticateServer = () => {
   return axios.post(
-    `${config.apiServer}/authenticate`,
-    dbmap.rethinkdbServer
+    `${apiServer}/authenticate`,
+	  {
+		  username: process.env.SERVER_API_USERNAME,
+		  password: process.env.SERVER_API_PASSWORD,
+	  }
   )
     .then((token) => {
       this.id_token = token.data.id_token;
@@ -30,7 +32,7 @@ const authenticateServer = () => {
 
 const updateRunState = (runId, data) => axios({
   method: 'post',
-  url: `${config.apiServer}/graphql`,
+  url: `${apiServer}/graphql`,
   data: {
     query: `mutation($runId: ID!, $data: JSON) ${graphqlSchema.mutations.updateRunState.replace(/\s{2,10}/g, ' ')}`,
     variables: {
@@ -42,7 +44,7 @@ const updateRunState = (runId, data) => axios({
 
 const saveError = (runId, error) => axios({
   method: 'post',
-  url: `${config.apiServer}/graphql`,
+  url: `${apiServer}/graphql`,
   data: {
     query: `mutation($runId: ID!, $error: JSON) ${graphqlSchema.mutations.saveError.replace(/\s{2,10}/g, ' ')}`,
     variables: {
@@ -54,7 +56,7 @@ const saveError = (runId, error) => axios({
 
 const saveResults = (runId, results) => axios({
   method: 'post',
-  url: `${config.apiServer}/graphql`,
+  url: `${apiServer}/graphql`,
   data: {
     query: `mutation($runId: ID!, $results: JSON) ${graphqlSchema.mutations.saveResults.replace(/\s{2,10}/g, ' ')}`,
     variables: {

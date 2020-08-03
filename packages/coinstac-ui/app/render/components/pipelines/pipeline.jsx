@@ -57,23 +57,23 @@ const collect = (connect, monitor) => (
 
 const styles = theme => ({
   title: {
-    marginBottom: theme.spacing.unit * 2,
+    marginBottom: theme.spacing(2),
   },
   formControl: {
-    marginBottom: theme.spacing.unit * 2,
+    marginBottom: theme.spacing(2),
   },
   owningConsortiumButtonTitle: {
-    marginBottom: theme.spacing.unit,
+    marginBottom: theme.spacing(1),
   },
   savePipelineButtonContainer: {
     textAlign: 'right',
-    marginBottom: theme.spacing.unit * 2,
+    marginBottom: theme.spacing(2),
   },
   tooltipPaper: {
     ...theme.mixins.gutters(),
-    paddingTop: theme.spacing.unit * 2,
-    paddingBottom: theme.spacing.unit * 2,
-    marginBottom: theme.spacing.unit * 2,
+    paddingTop: theme.spacing(2),
+    paddingBottom: theme.spacing(2),
+    marginBottom: theme.spacing(2),
     backgroundColor: '#fef7e4',
     textAlign: 'center',
   },
@@ -443,8 +443,8 @@ class Pipeline extends Component {
         const { savePipeline } = data;
         await saveActivePipeline(savePipeline.owningConsortium, savePipeline.id);
       }
-    } catch ({ graphQLErrors }) {
-      notifyError(get(graphQLErrors, '0.message', 'Failed to save pipeline'));
+    } catch (error) {
+      notifyError(get(error.graphQLErrors, '0.message', 'Failed to save pipeline'));
 
       this.setState({ savingStatus: 'fail' });
     }
@@ -580,7 +580,7 @@ class Pipeline extends Component {
             className={classes.formControl}
           />
           <div className={classes.formControl}>
-            <Typography variant="title" className={classes.owningConsortiumButtonTitle}>Owning Consortium</Typography>
+            <Typography variant="h6" className={classes.owningConsortiumButtonTitle}>Owning Consortium</Typography>
             <Button
               id="pipelineconsortia"
               variant="contained"
@@ -639,7 +639,7 @@ class Pipeline extends Component {
             className={classes.formControl}
           />
           <Paper className={classes.tooltipPaper}>
-            <Typography className={classes.tooltip} variant="body1">
+            <Typography className={classes.tooltip} variant="body2">
               Build your pipelines by adding computation steps in the space below.
               Arrange computations vertically to determine their order from first
               (highest) to last (lowest)
@@ -700,7 +700,7 @@ class Pipeline extends Component {
             ))}
           </div>
           {!pipeline.steps.length && (
-            <Typography variant="body1">
+            <Typography variant="body2">
               No computations added
             </Typography>
           )}
@@ -732,6 +732,7 @@ Pipeline.propTypes = {
   notifyError: PropTypes.func.isRequired,
   notifySuccess: PropTypes.func.isRequired,
   savePipeline: PropTypes.func.isRequired,
+  saveActivePipeline: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = ({ auth }) => ({
