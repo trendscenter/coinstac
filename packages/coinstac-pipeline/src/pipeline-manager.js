@@ -425,7 +425,7 @@ module.exports = {
           }
         });
       });
-      // });
+      
       app.get('/transfer', (req, res) => {
         const file = path.join(
           activePipelines[req.query.runId].transferDirectory,
@@ -919,7 +919,6 @@ module.exports = {
                       });
                       archive.finalize();
                       return splitProm.then((files) => {
-                        // files = ['one.bin', 'two.bin', 'three.bin', 'four.bin'];
                         logger.debug('############# Local client sending out data with files');
                         mqtCon.publish(
                           'run',
