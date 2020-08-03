@@ -10,12 +10,10 @@
   "license": "ISC",
   "dependencies": {
     "clarify": "^2.1.0",
-    "coinstac-socket.io-stream": "^0.9.1",
     "dockerode": "^2.5.5",
     "lodash": "^4.17.10",
     "portscanner": "^2.2.0",
     "request-stream": "^1.2.2",
-    "socket.io-client": "^2.3.0",
     "trace": "^3.1.1",
     "util": "^0.10.4",
     "winston": "^3.2.1",
