@@ -3,25 +3,9 @@ import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import Typography from '@material-ui/core/Typography';
 import Grid from '@material-ui/core/Grid';
-import { withStyles } from '@material-ui/core';
-import ListItem from '../common/list-item';
+import MapsListItem from './maps-list-item';
 import { deleteDataMapping } from '../../state/ducks/maps';
 import { pipelineNeedsDataMapping } from '../../../main/utils/run-pipeline-functions';
-
-const styles = theme => ({
-  contentContainer: {
-    marginTop: theme.spacing(1),
-    marginBottom: theme.spacing(1),
-  },
-  labelInline: {
-    fontWeight: 'bold',
-    marginRight: theme.spacing(1),
-    display: 'inline-block',
-  },
-  value: {
-    display: 'inline-block',
-  },
-});
 
 function isMember(userId, groupArr) {
   if (userId && groupArr) {
@@ -43,7 +27,6 @@ class MapsList extends Component {
       auth,
       pipelines,
       maps,
-      classes,
     } = this.props;
 
     const pipeline = pipelines.find(pipeline => pipeline.id === consortium.activePipelineId);
@@ -57,38 +40,14 @@ class MapsList extends Component {
 
     const needsDataMapping = !hasDataMap && pipelineNeedsDataMapping(pipeline);
 
-    const itemOptions = {
-      text: [],
-      status: [],
-    };
-
-    itemOptions.text.push((
-      <div key={`${consortium.id}-active-pipeline-text`} className={classes.contentContainer}>
-        <Typography className={classes.labelInline}>
-          Active Pipeline:
-        </Typography>
-        <Typography className={classes.value}>{ pipeline.name }</Typography>
-      </div>
-    ));
-
-    itemOptions.status.push((
-      <span
-        key={`${consortium.id}-map-status`}
-        className={needsDataMapping ? 'mapped false' : 'mapped true'}
-      />
-    ));
-
     return (
       <Grid item sm={6} lg={4} key={`${consortium.id}-list-item`}>
-        <ListItem
-          itemObject={consortium}
-          itemOptions={itemOptions}
-          itemRoute="/dashboard/maps"
-          linkButtonText={needsDataMapping ? 'Map Data to Consortium' : 'View Details'}
-          linkButtonColor={needsDataMapping ? 'secondary' : 'primary'}
+        <MapsListItem
+          consortium={consortium}
+          pipeline={pipeline}
           canDelete={hasDataMap}
-          deleteItem={this.deleteDataMapping}
-          deleteButtonText="Clear Mapping"
+          onDelete={this.deleteDataMapping}
+          needsDataMapping={needsDataMapping}
         />
       </Grid>
     );
@@ -106,7 +65,7 @@ class MapsList extends Component {
         </div>
         <Grid
           container
-          spacing={2}
+          spacing={3}
           direction="row"
           alignItems="stretch"
         >
@@ -119,7 +78,6 @@ class MapsList extends Component {
 
 MapsList.propTypes = {
   auth: PropTypes.object.isRequired,
-  classes: PropTypes.object.isRequired,
   consortia: PropTypes.array.isRequired,
   maps: PropTypes.array.isRequired,
   pipelines: PropTypes.array.isRequired,
@@ -131,8 +89,6 @@ const mapStateToProps = ({ auth, maps }) => ({
   maps: maps.consortiumDataMappings,
 });
 
-export default withStyles(styles)(
-  connect(mapStateToProps, {
-    deleteDataMapping,
-  })(MapsList)
-);
+export default connect(mapStateToProps, {
+  deleteDataMapping,
+})(MapsList);
