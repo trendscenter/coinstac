@@ -9,13 +9,12 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "coinstac-socket.io-stream": "^0.9.1",
     "dockerode": "^2.5.5",
     "lodash": "^4.17.10",
     "portscanner": "^2.2.0",
     "request-stream": "^1.2.2",
-    "socket.io-client": "^2.1.1",
     "util": "^0.10.4",
-    "winston": "^3.2.1"
+    "winston": "^3.2.1",
+    "ws": "^7.2.3"
   }
 }
