@@ -20,6 +20,8 @@ const vbm = require('./data/coinstac-vbm-pre');
 const fmri = require('./data/coinstac-fmri');
 
 const decentralized = require('./data/coinstac-decentralized-test');
+const transfer = require('./data/coinstac-file-transfer-test');
+const stress = require('./data/coinstac-file-stress-test');
 const decentralizedError = require('./data/coinstac-decentralized-error');
 const enigmaSans = require('./data/coinstac-enigma-sans');
 const local = require('./data/coinstac-local-test');
