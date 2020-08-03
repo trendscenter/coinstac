@@ -7,7 +7,7 @@ const portscanner = require('portscanner');
 const http = require('http');
 const winston = require('winston');
 const WS = require('ws');
-const _ = require('lodash')
+const _ = require('lodash');
 
 let logger;
 winston.loggers.add('docker-manager', {
@@ -450,14 +450,23 @@ const startService = (serviceId, serviceUserId, opts) => {
                 logger.silly(`Docker stderr: ${output.stderr}`);
                 logger.debug(`Output size: ${output.stdout.length}`);
 
-                let parsedStdout;
+                let error;
                 try {
-                  parsedStdout = JSON.parse(output.stdout);
+                  const parsed = JSON.parse(output.stdout);
+                  proxR(parsed);
                 } catch (e) {
-                  throw new Error(`Computation output parsing failed: ${e.message}`);
+                  error = e;
+                  logger.error(`Computation output serialization failed with value: ${output.stdout}`);
+                  error.message = `${error.message}\n Additional computation failure information:\n
+                  Error code: ${output.code}\n
+                  Stderr: ${output.stderr}
+                  `;
+                  error.error = `${error.error}\n Additional computation failure information:\n
+                  Error code: ${output.code}\n
+                  Stderr: ${output.stderr}
+                  `;
+                  throw error;
                 }
-
-                proxR(parsedStdout);
               }).catch((e) => {
                 proxRj(e);
               });
