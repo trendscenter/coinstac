@@ -5,7 +5,7 @@ const _ = require('lodash');
 const mqtt = require('mqtt');
 const { promisify } = require('util');
 const mkdirp = promisify(require('mkdirp'));
-const rimraf = promisify(require('rimraf'));
+const rimraf = require('rmfr');
 const path = require('path');
 const http = require('http');
 const https = require('https');
@@ -15,11 +15,13 @@ const Emitter = require('events');
 const winston = require('winston');
 const express = require('express');
 const multer = require('multer');
-const decompress = require('decompress');
 const uuid = require('uuid/v4');
 const dockerManager = require('coinstac-docker-manager');
+const tar = require('tar-fs');
+const zlib = require('zlib');
+const merge2 = require('merge2');
 
-const readdir = promisify(fs.readdir);
+const { readdir } = fs.promises;
 
 winston.loggers.add('pipeline', {
   level: 'info',
@@ -31,6 +33,74 @@ const defaultLogger = winston.loggers.get('pipeline');
 defaultLogger.level = process.LOGLEVEL ? process.LOGLEVEL : 'info';
 
 const Pipeline = require('./pipeline');
+
+/**
+ * [splitFilesFromStream description]
+ * @param  {[type]} stream    [description]
+ * @param  {[type]} filePath  [description]
+ * @param  {[type]} chunkSize [description]
+ * @return {[type]}           [description]
+ */
+const splitFilesFromStream = (stream, filePath, chunkSize) => {
+  let currentChunk = 0;
+  let currentChunkLen = 0;
+  const asyncStreams = [];
+  const splits = [];
+  const newFileStream = fs.createWriteStream(
+    `${filePath}.${currentChunk}`
+  );
+  splits[currentChunk] = {
+    filePath: `${filePath}.${currentChunk}`,
+    stream: newFileStream,
+  };
+  asyncStreams.push(new Promise((resolve, reject) => {
+    splits[currentChunk].stream.on('close', () => resolve());
+    splits[currentChunk].stream.on('error', e => reject(e));
+  }));
+  stream.on('data', (data) => {
+    if (currentChunkLen >= chunkSize) {
+      splits[currentChunk].stream.end();
+      currentChunk += 1;
+      const newFileStream = fs.createWriteStream(
+        `${filePath}.${currentChunk}`
+      );
+      splits[currentChunk] = {
+        filePath: `${filePath}.${currentChunk}`,
+        stream: newFileStream,
+      };
+      asyncStreams.push(new Promise((resolve, reject) => {
+        splits[currentChunk].stream.on('close', () => resolve());
+        splits[currentChunk].stream.on('error', () => reject());
+      }));
+      splits[currentChunk].stream.write(data);
+      currentChunkLen = data.length;
+    } else {
+      splits[currentChunk].stream.write(data);
+      currentChunkLen += data.length;
+    }
+  });
+  asyncStreams.push(new Promise((resolve, reject) => {
+    stream.on('end', () => {
+      splits[currentChunk].stream.end();
+      resolve();
+    });
+    stream.on('error', (e) => {
+      reject(e);
+    });
+  }));
+  return Promise.all(asyncStreams)
+    .then(() => splits.map(split => path.basename(split.filePath)));
+};
+
+const extractTar = (parts, outdir) => {
+  return new Promise((resolve, reject) => {
+    const unpack = merge2(...parts.map(part => fs.createReadStream(part)))
+      .pipe(zlib.createGunzip())
+      .pipe(tar.extract(outdir));
+    unpack.on('finish', () => resolve());
+    unpack.on('error', e => reject(e));
+  });
+};
 
 /**
  * get files in a dir recursively
@@ -123,6 +193,7 @@ module.exports = {
               }
             );
           } else if (method === 'post') {
+            logger.silly(`############# ZIPPED FILE SIZE: ${fs.statSync(path.join(directory, file)).size / 1048576}`);
             const form = new FormData();
             form.append('filename', file);
             form.append('compressed', compressed.toString());
@@ -130,7 +201,11 @@ module.exports = {
             form.append('clientId', clientId);
             form.append('runId', runId);
             form.append('file', fs.createReadStream(
-              path.join(directory, file)
+              path.join(directory, file),
+              {
+                headers: { 'transfer-encoding': 'chunked' },
+                knownSize: NaN,
+              }
             ));
             form.submit(`${remoteProtocol}//${remoteURL}:${remotePort}${remotePathname}`,
               (err, res) => {
@@ -150,7 +225,7 @@ module.exports = {
                 });
               });
           }
-        }, 500 * factor);
+        }, 5000 * factor);
       });
     };
 
@@ -166,14 +241,16 @@ module.exports = {
      *                           or the limit is reached
      */
     const transferFiles = async (method, limit, files, clientId, runId, directory) => {
-      return Promise.all(files.reduce((memo, file) => {
+      logger.silly(`Sending ${files.length} files`);
+      return Promise.all(files.reduce((memo, file, index) => {
         memo.push((async () => {
           let retryLimit = 0;
           let success = false;
+          let partFile;
           // retry 1000 times w/ backout
           while (retryLimit < limit) {
             try {
-              const packedFile = await exponentialRequest( // eslint-disable-line no-await-in-loop, max-len
+              partFile = await exponentialRequest( // eslint-disable-line no-await-in-loop, max-len
                 method,
                 retryLimit,
                 file,
@@ -182,22 +259,30 @@ module.exports = {
                 directory,
                 true
               );
-              if (method === 'get' && packedFile) {
-                await decompress(path.join(directory, packedFile), directory); // eslint-disable-line no-await-in-loop, max-len
-                await rimraf(path.join(directory, packedFile)); // eslint-disable-line no-await-in-loop, max-len
-              }
               success = true;
               break;
             } catch (e) {
-              if (e.code && e.code === 'ECONNREFUSED') {
+              logger.silly(JSON.stringify(e));
+              if ((e.code
+                && (
+                  e.code === 'ECONNREFUSED'
+                  || e.code === 'EPIPE'
+                  || e.code === 'ECONNRESET'
+                  || e.code === 'EAGAIN'
+                ))
+                || (e.message && e.message.includes('EPIPE'))
+              ) {
                 retryLimit += 1;
-                logger.silly(`Retrying file request: ${files}`);
-                logger.silly(`File request failed with: ${e.name}`);
+                logger.silly(`Retrying file request: ${file}`);
+                logger.silly(`File request failed with: ${e.message}`);
+              } else {
+                throw e;
               }
-              throw e;
             }
           }
           if (!success) throw new Error('Service down, file retry limit reached');
+          logger.silly(`Successfully sent file ${index}`);
+          return partFile;
         })());
         return memo;
       }, []));
@@ -295,31 +380,30 @@ module.exports = {
 
       const upload = multer({ storage });
       const app = express();
+      app.use(express.json({ limit: '100mb' }));
+      app.use(express.urlencoded({ limit: '100mb' }));
 
       app.post('/transfer', upload.single('file'), (req, res) => {
         res.end();
 
-        // check to see if we can run
-        let prom = Promise.resolve();
-        if (req.body.compressed === 'true') {
-          prom = decompress(
-            path.join(
+        const client = remoteClients[req.body.clientId][req.body.runId];
+        client.files.received
+          .push(req.body.filename);
+
+        Promise.resolve().then(() => {
+          if (client.files.expected
+            .every(e => client.files.received.includes(e))) {
+            const workDir = path.join(
               activePipelines[req.body.runId].baseDirectory,
-              req.body.clientId,
-              req.body.filename
-            ),
-            path.join(activePipelines[req.body.runId].baseDirectory, req.body.clientId)
-          );
-        }
-        prom.then(() => rimraf(
-          path.join(
-            activePipelines[req.body.runId].baseDirectory,
-            req.body.clientId,
-            req.body.filename
-          )
-        )).then(() => {
-          remoteClients[req.body.clientId][req.body.runId].files.received
-            .push(req.body.filename);
+              req.body.clientId
+            );
+            const tars = client.files.expected
+              .map(file => path.join(workDir, file))
+              .sort((a, b) => parseInt(path.extname(a), 10) > parseInt(path.extname(b), 10));
+            return extractTar(tars, workDir)
+              .then(() => Promise.all(tars.map(tar => rimraf(tar))));
+          }
+        }).then(() => {
           const waitingOn = waitingOnForRun(req.body.runId);
           activePipelines[req.body.runId].currentState.waitingOn = waitingOn;
           const stateUpdate = Object.assign(
@@ -341,6 +425,7 @@ module.exports = {
           }
         });
       });
+      
       app.get('/transfer', (req, res) => {
         const file = path.join(
           activePipelines[req.query.runId].transferDirectory,
@@ -542,15 +627,18 @@ module.exports = {
                 const workDir = data.output.success
                   ? activePipelines[data.runId].outputDirectory
                   : activePipelines[data.runId].baseDirectory;
-                preWork = transferFiles('get', 1000, data.files, clientId, data.runId, workDir);
+                preWork = transferFiles('get', 300, data.files, clientId, data.runId, workDir)
+                  .then((paths) => {
+                    const fullPathFiles = paths
+                      .map(p => path.join(workDir, p));
+                    return extractTar(fullPathFiles, workDir)
+                      .then(() => Promise.all(fullPathFiles.map(f => rimraf(f))));
+                  });
               } else {
                 preWork = Promise.resolve();
               }
-              // clear transfer dir after we know its been transfered
               preWork
-                .then(() => {
-                  rimraf(path.join(activePipelines[data.runId].transferDirectory, '*'));
-                })
+                .then(() => rimraf(path.join(activePipelines[data.runId].transferDirectory, '*')))
                 .then(() => {
                   if (data.output.success && data.files) {
                     // let the remote know we have the files
@@ -721,28 +809,15 @@ module.exports = {
                     const archive = archiver('tar', {
                       gzip: true,
                       gzipOptions: {
-                        level: 2,
+                        level: 9,
                       },
                     });
-                    const archiveName = `${pipeline.id}-${uuid()}-tempOutput.tar.gz`;
-                    const archiveFp = path.join(
-                      activePipelines[pipeline.id].transferDirectory, archiveName
+                    const archiveFilename = `${pipeline.id}-${uuid()}-tempOutput.tar.gz`;
+                    const splitProm = splitFilesFromStream(
+                      archive,
+                      path.join(activePipelines[pipeline.id].transferDirectory, archiveFilename),
+                      22428800 // 20MB chunk size
                     );
-                    const output = fs.createWriteStream(
-                      archiveFp
-                    );
-
-                    const archProm = new Promise((resolve, reject) => {
-                      output.on('close', () => {
-                        resolve();
-                      });
-
-                      archive.on('error', (err) => {
-                        reject(err);
-                      });
-                    });
-
-                    archive.pipe(output);
                     data.files.forEach((file) => {
                       archive.append(
                         fs.createReadStream(
@@ -758,7 +833,7 @@ module.exports = {
                       );
                     });
                     archive.finalize();
-                    return archProm.then(() => {
+                    return splitProm.then((files) => {
                       if (message.success) {
                         activePipelines[pipeline.id].finalTransferList = new Set();
                       }
@@ -767,7 +842,7 @@ module.exports = {
                         {
                           runId: pipeline.id,
                           output: message,
-                          files: [archiveName],
+                          files: [...files],
                           iteration: messageIteration,
                         },
                         {
@@ -815,28 +890,19 @@ module.exports = {
                     if (!activePipelines[pipeline.id].registered) {
                       activePipelines[pipeline.id].stashedOutput = message;
                     } else {
-                      const archiveFilename = `${pipeline.id}-${clientId}-tempOutput.tar.gz`;
-                      const output = fs.createWriteStream(
-                        path.join(activePipelines[pipeline.id].transferDirectory, archiveFilename)
-                      );
                       const archive = archiver('tar', {
                         gzip: true,
                         gzipOptions: {
-                          level: 2,
+                          level: 9,
                         },
                       });
 
-                      const archProm = new Promise((resolve, reject) => {
-                        output.on('close', () => {
-                          resolve();
-                        });
-
-                        archive.on('error', (err) => {
-                          reject(err);
-                        });
-                      });
-
-                      archive.pipe(output);
+                      const archiveFilename = `${pipeline.id}-${clientId}-tempOutput.tar.gz`;
+                      const splitProm = splitFilesFromStream(
+                        archive,
+                        path.join(activePipelines[pipeline.id].transferDirectory, archiveFilename),
+                        22428800 // 20MB chunk size
+                      );
                       data.files.forEach((file) => {
                         archive.append(
                           fs.createReadStream(
@@ -852,7 +918,7 @@ module.exports = {
                         );
                       });
                       archive.finalize();
-                      return archProm.then(() => {
+                      return splitProm.then((files) => {
                         logger.debug('############# Local client sending out data with files');
                         mqtCon.publish(
                           'run',
@@ -860,7 +926,7 @@ module.exports = {
                             id: clientId,
                             runId: pipeline.id,
                             output: message,
-                            files: [archiveFilename],
+                            files: [...files],
                             iteration: messageIteration,
                           }),
                           { qos: 1 },
@@ -870,7 +936,7 @@ module.exports = {
                         transferFiles(
                           'post',
                           100,
-                          [archiveFilename],
+                          [...files],
                           clientId,
                           pipeline.id,
                           activePipelines[pipeline.id].transferDirectory
