@@ -1,16 +1,16 @@
 require('trace');
 require('clarify');
 const hapi = require('hapi');
-const config = require('../config/default');
 const helperFunctions = require('./auth-helpers');
 const plugins = require('./plugins');
 const routes = require('./routes');
 const wsServer = require('./ws-server');
+const database = require('./database');
 
 const server = new hapi.Server();
 server.connection({
-  host: config.host,
-  port: config.hapiPort,
+  host: process.env.API_SERVER_HOSTNAME,
+  port: process.env.API_SERVER_PORT,
 });
 
 server.register(plugins, (err) => {
@@ -24,7 +24,7 @@ server.register(plugins, (err) => {
    */
   server.auth.strategy('jwt', 'jwt',
     {
-      key: helperFunctions.JWTSecret,
+      key: process.env.API_JWT_SECRET,
       validateFunc: helperFunctions.validateToken,
       verifyOptions: { algorithms: ['HS256'] },
     });
@@ -33,9 +33,14 @@ server.register(plugins, (err) => {
   server.route(routes);
 });
 
-server.start((startErr) => {
-  if (startErr) throw startErr;
-  console.log(`Server running at: ${server.info.uri}`); // eslint-disable-line no-console
-
-  wsServer.activate(server);
-});
+database.connect()
+  .then(() => {
+    server.start((startErr) => {
+      if (startErr) throw startErr;
+      console.log(`Server running at: ${server.info.uri}`); // eslint-disable-line no-console
+      wsServer.activate(server);
+    });
+  })
+  .catch((err) => {
+    console.error(err); // eslint-disable-line no-console
+  });

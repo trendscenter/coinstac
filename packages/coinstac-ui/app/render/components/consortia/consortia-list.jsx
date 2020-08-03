@@ -7,8 +7,9 @@ import { ipcRenderer } from 'electron';
 import classNames from 'classnames';
 import { orderBy } from 'lodash';
 import {
-  Button, Fab, Menu, MenuItem, TextField, Typography,
+  Button, Menu, MenuItem, TextField, Typography,
 } from '@material-ui/core';
+import Fab from '@material-ui/core/Fab';
 import AddIcon from '@material-ui/icons/Add';
 import { withStyles } from '@material-ui/core/styles';
 import MemberAvatar from '../common/member-avatar';
@@ -38,21 +39,21 @@ const MAX_LENGTH_CONSORTIA = 50;
 
 const styles = theme => ({
   button: {
-    margin: theme.spacing.unit,
+    margin: theme.spacing(1),
   },
   contentContainer: {
-    marginTop: theme.spacing.unit,
-    marginBottom: theme.spacing.unit,
+    marginTop: theme.spacing(1),
+    marginBottom: theme.spacing(1),
   },
   subtitle: {
-    marginTop: theme.spacing.unit * 2,
+    marginTop: theme.spacing(2),
   },
   label: {
     fontWeight: 'bold',
   },
   labelInline: {
     fontWeight: 'bold',
-    marginRight: theme.spacing.unit,
+    marginRight: theme.spacing(1),
     display: 'inline-block',
   },
   value: {
@@ -65,7 +66,7 @@ const styles = theme => ({
     color: 'red',
   },
   searchInput: {
-    marginBottom: theme.spacing.unit * 4,
+    marginBottom: theme.spacing(4),
   },
 });
 
@@ -143,7 +144,7 @@ class ConsortiaList extends Component {
         }
         >
           {consortium.activePipelineId
-            ? pipelines.find(pipe => pipe.id === consortium.activePipelineId).name
+            ? pipeline.name
             : 'None'
           }
         </Typography>
@@ -493,6 +494,7 @@ class ConsortiaList extends Component {
             to="/dashboard/consortia/new"
             className={classes.button}
             name="create-consortium-button"
+            aria-label="add"
           >
             <AddIcon />
           </Fab>
@@ -526,7 +528,7 @@ class ConsortiaList extends Component {
           && otherConsortia.map(this.renderListItem)}
 
         {(!consortia || !consortia.length) && (
-          <Typography variant="body1">
+          <Typography variant="body2">
             No consortia found
           </Typography>
         )}

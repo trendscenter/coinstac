@@ -96,7 +96,6 @@ const sharedFields = {
     id
     email
     institution
-    passwordHash
     permissions
     consortiaStatuses
   `,
