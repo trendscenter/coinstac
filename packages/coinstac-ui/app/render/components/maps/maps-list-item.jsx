@@ -49,7 +49,7 @@ const MapsListItem = ({
   <Paper
     key={`${consortium.id}-list-item`}
     className={classes.rootPaper}
-    elevation={12}
+    elevation={10}
   >
     <Typography variant="h4" className={classes.title}>
       { consortium.name }
