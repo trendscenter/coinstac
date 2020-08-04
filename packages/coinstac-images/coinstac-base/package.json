@@ -10,18 +10,19 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "ava": "^2.2.0",
+    "ava": "^3.6.0",
     "get-stdin": "^6.0.0",
     "nyc": "^14.1.1",
     "request-stream": "^1.2.2",
     "socket.io-client": "^2.2.0",
+    "socket.io": "^2.1.1",
+    "socket.io-stream": "^0.9.1",
     "unzipper": "^0.10.3"
   },
   "dependencies": {
     "clarify": "^2.1.0",
-    "socket.io": "^2.1.1",
-    "socket.io-stream": "^0.9.1",
     "trace": "^3.1.0",
-    "winston": "^3.0.0"
+    "winston": "^3.0.0",
+    "ws": "^7.2.3"
   }
 }
