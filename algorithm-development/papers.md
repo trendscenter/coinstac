@@ -1,4 +1,4 @@
-# Papers
+# Papers and Presentations
 [![Coinstac](https://github.com/MRN-Code/coinstac/raw/master/packages/coinstac-ui/img/icons/png/64x64.png)](https://github.com/MRN-Code/coinstac)
 
 Below is a list of papers related to COINSTAC.
@@ -59,5 +59,8 @@ http://dx.doi.org/10.1109/ICASSP.2016.7472089
 B. Baker, R. Silva, V.D. Calhoun, A.D. Sarwate, S. Plis, Large scale collaboration with autonomy: decentralized data ICA, Proceedings of the IEEE International Workshop on Machine Learning For Signal Processing (MLSP), Boston, MA, USA, pp. 1–6, 17–20 September 2015.  
 http://dx.doi.org/10.1109/MLSP.2015.7324344
 
+## Presentations
 
+E. Verner, H. Gazula, R. Kelly, J. Romero, B.T. Baker, R.F. Silva, H. Imtiaz, D.K. Saha, R. Raja, J.A.Turner, S.M. Plis, V.D. Calhoun, “Open, Reproducible, and Decentralized Workflows with COINSTAC,” Annual Meeting of the Organization for Human Brain Mapping. Montreal, CA. June 2020.
+https://doi.org/10.5281/zenodo.3906184
 
