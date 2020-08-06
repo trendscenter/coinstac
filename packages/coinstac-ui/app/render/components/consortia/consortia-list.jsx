@@ -32,7 +32,8 @@ import {
   saveDocumentProp,
   consortiumSaveActivePipelineProp,
 } from '../../state/graphql/props';
-import { notifyInfo } from '../../state/ducks/notifyAndLog';
+import { notifyInfo, notifyError } from '../../state/ducks/notifyAndLog';
+import { start, finish } from '../../state/ducks/loading';
 import { pipelineNeedsDataMapping } from '../../../main/utils/run-pipeline-functions';
 
 const MAX_LENGTH_CONSORTIA = 50;
@@ -387,12 +388,19 @@ class ConsortiaList extends Component {
   }
 
   startPipeline(consortiumId) {
-    return () => {
+    return async () => {
       const {
-        createRun,
+        createRun, startLoading, finishLoading, notifyError,
       } = this.props;
 
-      createRun(consortiumId);
+      startLoading('start-pipeline');
+      try {
+        await createRun(consortiumId);
+      } catch (_) {
+        notifyError('An error has occurred on the pipeline initialization. Please try again later.');
+      } finally {
+        finishLoading('start-pipeline');
+      }
     };
   }
 
@@ -560,7 +568,10 @@ ConsortiaList.propTypes = {
   joinConsortium: PropTypes.func.isRequired,
   leaveConsortium: PropTypes.func.isRequired,
   notifyInfo: PropTypes.func.isRequired,
+  notifyError: PropTypes.func.isRequired,
   pullComputations: PropTypes.func.isRequired,
+  startLoading: PropTypes.func.isRequired,
+  finishLoading: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = ({ auth, maps }) => ({
@@ -586,7 +597,10 @@ export default withStyles(styles)(
   connect(mapStateToProps,
     {
       notifyInfo,
+      notifyError,
       pullComputations,
       deleteAllDataMappingsFromConsortium,
+      startLoading: start,
+      finishLoading: finish,
     })(ConsortiaListWithData)
 );

@@ -13,6 +13,7 @@ import {
   ListItem,
   Typography,
 } from '@material-ui/core';
+import update from 'immutability-helper';
 import DashboardNav from './dashboard-nav';
 import UserAccountController from '../user/user-account-controller';
 import {
@@ -376,7 +377,7 @@ class Dashboard extends Component {
 
   componentDidUpdate(prevProps) {
     const {
-      currentUser, updateUserPerms, remoteRuns, saveLocalRun
+      currentUser, updateUserPerms, remoteRuns, saveLocalRun,
     } = this.props;
 
     if (currentUser
@@ -635,14 +636,41 @@ const DashboardWithData = compose(
     'subscribeToComputations',
     'computationChanged'
   )),
-  graphql(FETCH_ALL_USER_RUNS_QUERY, getAllAndSubProp(
-    USER_RUN_CHANGED_SUBSCRIPTION,
-    'remoteRuns',
-    'fetchAllUserRuns',
-    'subscribeToUserRuns',
-    'userRunChanged',
-    'userId'
-  )),
+  graphql(FETCH_ALL_USER_RUNS_QUERY, {
+    options: {
+      fetchPolicy: 'cache-and-network',
+      pollInterval: 5000,
+    },
+    props: props => ({
+      remoteRuns: props.data.fetchAllUserRuns,
+      subscribeToUserRuns: userId => props.data.subscribeToMore({
+        document: USER_RUN_CHANGED_SUBSCRIPTION,
+        variables: { userId },
+        updateQuery: (prevResult, { subscriptionData: { data } }) => {
+          const index = prevResult.fetchAllUserRuns.findIndex(c => c.id === data.userRunChanged.id);
+
+          if (data.userRunChanged.delete) {
+            return {
+              fetchAllUserRuns: prevResult.fetchAllUserRuns
+                .filter(obj => obj.id !== data.userRunChanged.id),
+            };
+          } if (index !== -1) {
+            return {
+              fetchAllUserRuns: update(prevResult.fetchAllUserRuns, {
+                $splice: [
+                  [index, 1, data.userRunChanged],
+                ],
+              }),
+            };
+          }
+
+          return {
+            fetchAllUserRuns: [...prevResult.fetchAllUserRuns, data.userRunChanged],
+          };
+        },
+      }),
+    }),
+  }),
   graphql(FETCH_ALL_CONSORTIA_QUERY, getAllAndSubProp(
     CONSORTIUM_CHANGED_SUBSCRIPTION,
     'consortia',

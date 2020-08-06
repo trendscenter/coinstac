@@ -408,34 +408,33 @@ const resolvers = {
         return Boom.unauthorized('User not authenticated');
       }
 
-      try {
-        const db = database.getDbInstance();
+      const db = database.getDbInstance();
 
-        const consortium = await db.collection('consortia').findOne({ _id: ObjectID(consortiumId) });
-        const pipeline = await fetchOnePipeline(consortium.activePipelineId);
+      const consortium = await db.collection('consortia').findOne({ _id: ObjectID(consortiumId) });
+      const pipeline = await fetchOnePipeline(consortium.activePipelineId);
 
-        const isPipelineDecentralized = pipeline.steps.findIndex(step => step.controller.type === 'decentralized') > -1;
+      const isPipelineDecentralized = pipeline.steps.findIndex(step => step.controller.type === 'decentralized') > -1;
 
-        const result = await db.collection('runs').insertOne({
-            clients: [...consortium.members],
-            consortiumId,
-            pipelineSnapshot: pipeline,
-            startDate: Date.now(),
-            type: isPipelineDecentralized ? 'decentralized' : 'local',
-        });
+      const run = {
+        _id: ObjectID(),
+        clients: [...consortium.members],
+        consortiumId,
+        pipelineSnapshot: pipeline,
+        startDate: Date.now(),
+        type: isPipelineDecentralized ? 'decentralized' : 'local',
+      };
 
-        const run = transformToClient(result.ops[0]);
+      const transformedRun = transformToClient(run);
 
-        await axios.post(
-          `http://${process.env.PIPELINE_SERVER_HOSTNAME}:${process.env.PIPELINE_SERVER_PORT}/startPipeline`, { run }
-        );
+      await axios.post(
+        `http://${process.env.PIPELINE_SERVER_HOSTNAME}:${process.env.PIPELINE_SERVER_PORT}/startPipeline`, { run: transformedRun }
+      );
 
-        eventEmitter.emit(RUN_CHANGED, run);
+      await db.collection('runs').insertOne(run);
 
-        return run;
-      } catch (error) {
-        console.log(error)
-      }
+      eventEmitter.emit(RUN_CHANGED, transformedRun);
+
+      return transformedRun;
     },
     /**
      * Deletes consortium

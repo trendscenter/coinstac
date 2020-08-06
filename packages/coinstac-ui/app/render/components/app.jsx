@@ -5,14 +5,33 @@ import { connect } from 'react-redux';
 import { ipcRenderer } from 'electron';
 import { SnackbarProvider } from 'notistack';
 import { CssBaseline } from '@material-ui/core';
-import { MuiThemeProvider } from '@material-ui/core/styles';
+import { MuiThemeProvider, withStyles } from '@material-ui/core/styles';
 import ActivityIndicator from './activity-indicator/activity-indicator';
 import { autoLogin, logout, setError } from '../state/ducks/auth';
 import { notifyWarning } from '../state/ducks/notifyAndLog';
 import { EXPIRED_TOKEN, BAD_TOKEN } from '../utils/error-codes';
 import theme from '../styles/material-ui/theme';
 
-class App extends Component { // eslint-disable-line react/prefer-stateless-function
+const styles = {
+  success: {
+    backgroundColor: '#43a047 !important',
+    color: '#fff !important',
+  },
+  error: {
+    backgroundColor: '#d32f2f !important',
+    color: '#fff !important',
+  },
+  warning: {
+    backgroundColor: '#ff9800 !important',
+    color: '#fff !important',
+  },
+  info: {
+    backgroundColor: '#2196f3 !important',
+    color: '#fff !important',
+  },
+};
+
+class App extends Component {
   constructor(props) {
     super(props);
 
@@ -65,7 +84,7 @@ class App extends Component { // eslint-disable-line react/prefer-stateless-func
   }
 
   render() {
-    const { children, loading: { isLoading } } = this.props;
+    const { children, loading: { isLoading }, classes } = this.props;
 
     const { checkJWT } = this.state;
 
@@ -75,7 +94,15 @@ class App extends Component { // eslint-disable-line react/prefer-stateless-func
           <CssBaseline />
           <ActivityIndicator visible={isLoading} />
 
-          <SnackbarProvider maxSnack={3}>
+          <SnackbarProvider
+            maxSnack={3}
+            classes={{
+              variantSuccess: classes.success,
+              variantError: classes.error,
+              variantWarning: classes.warning,
+              variantInfo: classes.info,
+            }}
+          >
             { checkJWT && children }
           </SnackbarProvider>
         </MuiThemeProvider>
@@ -94,15 +121,18 @@ App.propTypes = {
   logout: PropTypes.func.isRequired,
   notifyWarning: PropTypes.func.isRequired,
   setError: PropTypes.func.isRequired,
+  classes: PropTypes.object.isRequired,
 };
 
 const mapStateToProps = ({ loading }) => ({
   loading,
 });
 
-export default connect(mapStateToProps, {
+const connectedApp = connect(mapStateToProps, {
   autoLogin,
   logout,
   setError,
   notifyWarning,
 })(App);
+
+export default withStyles(styles)(connectedApp);
