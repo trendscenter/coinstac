@@ -3,25 +3,8 @@ const crypto = require('crypto');
 const Boom = require('boom');
 const jwt = require('jsonwebtoken');
 const Promise = require('bluebird');
-const dotenv = require('dotenv');
 const database = require('./database');
 const { transformToClient } = require('./utils');
-
-let dbmap;
-try {
-  dbmap = require('/etc/coinstac/cstacDBMap'); // eslint-disable-line import/no-absolute-path, import/no-unresolved, global-require
-} catch (e) {
-  console.log('No DBMap found: using defaults'); // eslint-disable-line no-console
-  dbmap = {
-    apiCredentials: {
-      username: 'server',
-      password: 'password',
-    },
-    cstacJWTSecret: 'test',
-  };
-}
-
-dotenv.config();
 
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
@@ -32,7 +15,7 @@ const helperFunctions = {
    * @return {string} A JWT for the requested user
    */
   createToken(user) {
-    return jwt.sign({ username: user }, dbmap.cstacJWTSecret, { algorithm: 'HS256', expiresIn: '12h' });
+    return jwt.sign({ username: user }, process.env.API_JWT_SECRET, { algorithm: 'HS256', expiresIn: '12h' });
   },
   /**
    * Create JWT for password reset
@@ -40,7 +23,7 @@ const helperFunctions = {
    * @return {string} A JWT for the requested email
    */
   createPasswordResetToken(email) {
-    return jwt.sign({ email }, dbmap.cstacJWTSecret, { algorithm: 'HS256', expiresIn: '24h' });
+    return jwt.sign({ email }, process.env.API_JWT_SECRET, { algorithm: 'HS256', expiresIn: '24h' });
   },
   /**
    * Create new user account
@@ -105,11 +88,6 @@ const helperFunctions = {
     }, { returnOriginal: false });
   },
   /**
-   * dbmap getter
-   * @return {Object} dbmap loaded
-   */
-  getDBMap() { return dbmap; },
-  /**
    * Returns user table object for requested user
    * @param {string} username username of requested user
    * @return {object} The requested user object
@@ -152,13 +130,6 @@ const helperFunctions = {
     });
   },
   /**
-   * merges the given map into the current map
-   * @param {Object} map dbmap attrs to set
-   */
-  setDBMap(map) {
-    dbmap = Object.assign({}, dbmap, map);
-  },
-  /**
    * Validates JWT from authenticated user
    * @param {object} decoded token contents
    * @param {object} request original request from client
@@ -186,6 +157,18 @@ const helperFunctions = {
       .countDocuments({ email: req.payload.email });
 
     return count === 0;
+  },
+  /**
+   * Checks if an email exists
+   * @param {object} req request
+   * @param {object} res response
+   * @return {object}   reply w/ does the email exist?
+   */
+  async validateEmail(req, res) {
+    const has = await !!this.validateUniqueEmail(req);
+    if (!has) return res(Boom.badRequest('No such email address'));
+
+    return res(has);
   },
   /**
    * Confirms that submitted username & email are new
@@ -261,8 +244,8 @@ const helperFunctions = {
     }
 
     try {
-      const { email } = jwt.verify(req.payload.token, dbmap.cstacJWTSecret);
-      const noEmail = await helperFunctions.validateUniqueEmail({ payload: { email } });
+      const { email } = jwt.verify(req.payload.token, process.env.API_JWT_SECRET);
+      const noEmail = await this.validateUniqueEmail({ payload: { email } });
 
       if (noEmail) {
         return res(Boom.badRequest('Invalid email'));
@@ -328,7 +311,6 @@ const helperFunctions = {
       });
     });
   },
-  JWTSecret: dbmap.cstacJWTSecret,
 };
 
 module.exports = helperFunctions;

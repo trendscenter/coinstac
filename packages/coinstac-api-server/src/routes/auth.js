@@ -1,5 +1,5 @@
 const helperFunctions = require('../auth-helpers');
-
+debugger
 module.exports = [
   {
     method: 'POST',
@@ -65,9 +65,7 @@ module.exports = [
     path: '/sendPasswordResetEmail',
     config: {
       auth: false,
-      pre: [
-        { method: helperFunctions.validateEmail },
-      ],
+      pre: [{ method: helperFunctions.validateEmail }],
       handler: (req, res) => {
         helperFunctions
           .savePasswordResetToken(req.payload.email)
@@ -81,9 +79,7 @@ module.exports = [
     path: '/resetPassword',
     config: {
       auth: false,
-      pre: [
-        { method: helperFunctions.validateResetToken },
-      ],
+      pre: [{ method: helperFunctions.validateResetToken }],
       handler: (req, res) => {
         helperFunctions
           .resetPassword(req.payload.token, req.payload.password)
