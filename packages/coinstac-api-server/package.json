@@ -1,6 +1,6 @@
 {
   "name": "coinstac-api-server",
-  "version": "5.0.3",
+  "version": "5.1.0",
   "description": "",
   "main": "src/index.js",
   "scripts": {
