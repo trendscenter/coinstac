@@ -1,5 +1,5 @@
 const helperFunctions = require('../auth-helpers');
-debugger
+
 module.exports = [
   {
     method: 'POST',
