@@ -1,21 +1,21 @@
 {
   "meta": {
-    "name": "Test Coinstac transfering files",
-    "id": "coinstac-file-transfer-test",
+    "name": "File transfer stress test",
+    "id": "coinstac-file-stress-test",
     "version": "v1.0.0",
     "repository": "github.com\/user\/computation.git",
-    "description": "sends a large file"
+    "description": "sends many small files"
   },
   "computation": {
     "type": "docker",
-    "dockerImage": "memtest",
+    "dockerImage": "coinstacteam/coinstac-file-stress-test",
     "command": [
       "python",
       "\/computation\/local.py"
     ],
     "remote": {
       "type": "docker",
-      "dockerImage": "memtest",
+      "dockerImage": "coinstacteam/coinstac-file-stress-test",
       "command": [
         "python",
         "\/computation\/remote.py"
@@ -36,8 +36,6 @@
         "type": "array",
         "label": "output files"
       }
-    },
-    "display": {
     }
   }
 }

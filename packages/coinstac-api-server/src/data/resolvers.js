@@ -8,7 +8,6 @@ const { uniq } = require('lodash');
 const { ObjectID } = require('mongodb');
 const helperFunctions = require('../auth-helpers');
 const initSubscriptions = require('./subscriptions');
-const config = require('../../config/default');
 const database = require('../database');
 const { transformToClient } = require('../utils');
 const {
@@ -269,7 +268,7 @@ const resolvers = {
       const pipelines = {};
       while (await pipelineSteps.hasNext()) {
         const currentStep = await pipelineSteps.next();
-        
+
 
         if (!(currentStep._id in pipelines)) {
           pipelines[currentStep._id] = {
@@ -428,7 +427,7 @@ const resolvers = {
         const run = transformToClient(result.ops[0]);
 
         await axios.post(
-          `http://${config.host}:${config.pipelineServer}/startPipeline`, { run }
+          `http://${process.env.PIPELINE_SERVER_HOSTNAME}:${process.env.PIPELINE_SERVER_PORT}/startPipeline`, { run }
         );
 
         eventEmitter.emit(RUN_CHANGED, run);

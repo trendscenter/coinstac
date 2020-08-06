@@ -8,14 +8,14 @@
   },
   "computation": {
     "type": "docker",
-    "dockerImage": "memtest",
+    "dockerImage": "coinstacteam/coinstac-file-stress-test",
     "command": [
       "python",
       "\/computation\/local.py"
     ],
     "remote": {
       "type": "docker",
-      "dockerImage": "memtest",
+      "dockerImage": "coinstacteam/coinstac-file-stress-test",
       "command": [
         "python",
         "\/computation\/remote.py"
