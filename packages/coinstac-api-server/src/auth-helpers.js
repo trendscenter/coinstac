@@ -66,7 +66,7 @@ const helperFunctions = {
    * @return {object}
    */
   async savePasswordResetToken(email) {
-    const resetToken = helperFunctions.createPasswordResetToken(email);
+    const resetToken = this.createPasswordResetToken(email);
 
     const msg = {
       to: email,
@@ -136,7 +136,7 @@ const helperFunctions = {
    * @param {function} callback function signature (err, isValid, alternative credentials)
    */
   validateToken(decoded, request, callback) {
-    helperFunctions.getUserDetails(decoded.username)
+    this.getUserDetails(decoded.username)
       .then((user) => {
         if (user) {
           callback(null, true, user);
@@ -171,27 +171,6 @@ const helperFunctions = {
     return res(has);
   },
   /**
-   * Confirms that submitted username & email are new
-   * @param {object} req request
-   * @param {object} res response
-   * @return {object} The submitted user information
-   */
-  validateUniqueUser(req, res) {
-    const isUsernameUnique = this.validateUniqueUsername(req);
-
-    if (!isUsernameUnique) {
-      return res(Boom.badRequest('Username taken'));
-    }
-
-    const isEmailUnique = this.validateUniqueEmail(req);
-
-    if (!isEmailUnique) {
-      return res(Boom.badRequest('Email taken'));
-    }
-
-    return res(req.payload);
-  },
-  /**
    * Confirms that submitted username is new
    * @param {object} req request
    * @return {boolean} Is the username unique?
@@ -203,6 +182,28 @@ const helperFunctions = {
       .countDocuments({ username: req.payload.username });
 
     return count === 0;
+  },
+  /**
+   * Confirms that submitted username & email are new
+   * @param {object} req request
+   * @param {object} res response
+   * @return {object} The submitted user information
+   */
+  async validateUniqueUser(req, res) {
+    debugger
+    const isUsernameUnique = await this.validateUniqueUsername(req);
+
+    if (!isUsernameUnique) {
+      return res(Boom.badRequest('Username taken'));
+    }
+
+    const isEmailUnique = this.validateUniqueEmail(req);
+
+    if (!isEmailUnique) {
+      return res(Boom.badRequest('Email taken'));
+    }
+
+    return res();
   },
   /**
    * Validate that authenticating user is using correct credentials
@@ -219,7 +220,7 @@ const helperFunctions = {
       return res(Boom.unauthorized('Incorrect username or password.'));
     }
 
-    const passwordMatch = await helperFunctions.verifyPassword(
+    const passwordMatch = await this.verifyPassword(
       req.payload.password, user.passwordHash
     );
 
@@ -265,7 +266,7 @@ const helperFunctions = {
   async resetPassword(token, password) {
     const db = database.getDbInstance();
 
-    const newPassword = await helperFunctions.hashPassword(password);
+    const newPassword = await this.hashPassword(password);
 
     return db.collection('users').updateOne({
       passwordResetToken: token,

@@ -30,6 +30,7 @@ server.register(plugins, (err) => {
     });
 
   server.auth.default('jwt');
+  server.bind(helperFunctions);
   server.route(routes);
 });
 
