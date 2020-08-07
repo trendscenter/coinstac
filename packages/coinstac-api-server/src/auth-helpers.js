@@ -66,7 +66,7 @@ const helperFunctions = {
    * @return {object}
    */
   async savePasswordResetToken(email) {
-    const resetToken = this.createPasswordResetToken(email);
+    const resetToken = helperFunctions.createPasswordResetToken(email);
 
     const msg = {
       to: email,
@@ -136,7 +136,7 @@ const helperFunctions = {
    * @param {function} callback function signature (err, isValid, alternative credentials)
    */
   validateToken(decoded, request, callback) {
-    this.getUserDetails(decoded.username)
+    helperFunctions.getUserDetails(decoded.username)
       .then((user) => {
         if (user) {
           callback(null, true, user);
@@ -165,10 +165,10 @@ const helperFunctions = {
    * @return {object}   reply w/ does the email exist?
    */
   async validateEmail(req, res) {
-    const has = await !!this.validateUniqueEmail(req);
-    if (!has) return res(Boom.badRequest('No such email address'));
+    const exists = !await helperFunctions.validateUniqueEmail(req);
+    if (!exists) return res(Boom.badRequest('No such email address'));
 
-    return res(has);
+    return res(exists);
   },
   /**
    * Confirms that submitted username is new
@@ -190,14 +190,13 @@ const helperFunctions = {
    * @return {object} The submitted user information
    */
   async validateUniqueUser(req, res) {
-    debugger
-    const isUsernameUnique = await this.validateUniqueUsername(req);
+    const isUsernameUnique = await helperFunctions.validateUniqueUsername(req);
 
     if (!isUsernameUnique) {
       return res(Boom.badRequest('Username taken'));
     }
 
-    const isEmailUnique = this.validateUniqueEmail(req);
+    const isEmailUnique = helperFunctions.validateUniqueEmail(req);
 
     if (!isEmailUnique) {
       return res(Boom.badRequest('Email taken'));
@@ -220,7 +219,7 @@ const helperFunctions = {
       return res(Boom.unauthorized('Incorrect username or password.'));
     }
 
-    const passwordMatch = await this.verifyPassword(
+    const passwordMatch = await helperFunctions.verifyPassword(
       req.payload.password, user.passwordHash
     );
 
@@ -246,7 +245,7 @@ const helperFunctions = {
 
     try {
       const { email } = jwt.verify(req.payload.token, process.env.API_JWT_SECRET);
-      const noEmail = await this.validateUniqueEmail({ payload: { email } });
+      const noEmail = await helperFunctions.validateUniqueEmail({ payload: { email } });
 
       if (noEmail) {
         return res(Boom.badRequest('Invalid email'));
@@ -266,7 +265,7 @@ const helperFunctions = {
   async resetPassword(token, password) {
     const db = database.getDbInstance();
 
-    const newPassword = await this.hashPassword(password);
+    const newPassword = await helperFunctions.hashPassword(password);
 
     return db.collection('users').updateOne({
       passwordResetToken: token,

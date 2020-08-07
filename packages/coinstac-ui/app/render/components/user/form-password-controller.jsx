@@ -103,12 +103,17 @@ class FormPasswordController extends Component {
     this.handleSendingEmailStateChange('loading', true);
 
     sendPasswordResetEmail({ email: sendingEmail.email })
-      .finally(() => {
+      .then(() => {
+        this.handleSendingEmailStateChange('loading', false);
+        this.handleTabChange('passwordReset');
+      })
+      .catch(() => {
         this.handleSendingEmailStateChange('loading', false);
       });
   }
 
   handleResetPassword = () => {
+    const { router } = this.context;
     const { resetPassword } = this.props;
     const { resettingPassword } = this.state;
 
@@ -118,6 +123,7 @@ class FormPasswordController extends Component {
       token: resettingPassword.token,
       password: resettingPassword.newPassword,
     })
+      .then(() => router.push('/login'))
       .finally(() => {
         this.handleResettingPasswordStateChange('loading', false);
       });
@@ -144,7 +150,7 @@ class FormPasswordController extends Component {
                 (_evt, value) => this.handleTabChange(value)
               }
             >
-              <Tab label="Send Email" value="sendEmail" />
+              <Tab label="Send Reset Email" value="sendEmail" />
               <Tab label="Password Reset" value="passwordReset" />
             </Tabs>
           </AppBar>

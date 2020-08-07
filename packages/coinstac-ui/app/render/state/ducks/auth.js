@@ -194,6 +194,7 @@ export const sendPasswordResetEmail = applyAsyncLoading(payload => dispatch => a
   .catch((err) => {
     const { statusCode, message } = getErrorDetail(err);
     dispatch(notifyError(statusCode === 400 ? message : 'Failed to send password reset email'));
+    throw err;
   }));
 
 export const resetPassword = applyAsyncLoading(payload => dispatch => axios.post(`${API_URL}/resetPassword`, payload)
