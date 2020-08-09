@@ -211,7 +211,7 @@ Settings.contextTypes = {
   router: PropTypes.object.isRequired,
 };
 
-const ComponentWithDatta = compose(
+const ComponentWithData = compose(
   graphql(
     UPDATE_PASSWORD_MUTATION,
     updatePasswordProps('updatePassword')
@@ -224,6 +224,6 @@ const connectedComponent = connect(null, {
   notifySuccess,
   notifyInfo,
   notifyError,
-})(ComponentWithDatta);
+})(ComponentWithData);
 
 export default withStyles(styles)(connectedComponent);
