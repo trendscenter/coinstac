@@ -1,3 +1,4 @@
+const sgMail = require('@sendgrid/mail');
 const crypto = require('crypto');
 const Boom = require('boom');
 const jwt = require('jsonwebtoken');
@@ -7,19 +8,7 @@ const database = require('./database');
 const { transformToClient } = require('./utils');
 const { eventEmitter, USER_CHANGED } = require('./data/events');
 
-let dbmap;
-try {
-  dbmap = require('/etc/coinstac/cstacDBMap'); // eslint-disable-line import/no-absolute-path, import/no-unresolved, global-require
-} catch (e) {
-  console.log('No DBMap found: using defaults'); // eslint-disable-line no-console
-  dbmap = {
-    apiCredentials: {
-      username: 'server',
-      password: 'password',
-    },
-    cstacJWTSecret: 'test',
-  };
-}
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 const helperFunctions = {
   /**
@@ -28,7 +17,15 @@ const helperFunctions = {
    * @return {string} A JWT for the requested user
    */
   createToken(id) {
-    return jwt.sign({ id }, dbmap.cstacJWTSecret, { algorithm: 'HS256', expiresIn: '12h' });
+    return jwt.sign({ id }, process.env.API_JWT_SECRET, { algorithm: 'HS256', expiresIn: '12h' });
+  },
+  /**
+   * Create JWT for password reset
+   * @param {string} email email
+   * @return {string} A JWT for the requested email
+   */
+  createPasswordResetToken(email) {
+    return jwt.sign({ email }, process.env.API_JWT_SECRET, { algorithm: 'HS256', expiresIn: '24h' });
   },
   /**
    * Create new user account
@@ -91,10 +88,32 @@ const helperFunctions = {
     return updatedUser;
   },
   /**
-   * dbmap getter
-   * @return {Object} dbmap loaded
+   * Save password reset token
+   * @param {string} email email to send password reset token
+   * @return {object}
    */
-  getDBMap() { return dbmap; },
+  async savePasswordResetToken(email) {
+    const resetToken = helperFunctions.createPasswordResetToken(email);
+
+    const msg = {
+      to: email,
+      from: 'no-reply@mrn.org',
+      subject: 'Password Reset Request',
+      html: `We received your password reset request. <br/>
+        Please use this token for password reset. <br/>
+        Token: <strong>${resetToken}</strong>`,
+    };
+
+    const db = database.getDbInstance();
+
+    await sgMail.send(msg);
+
+    return db.collection('users').updateOne({ email }, {
+      $set: {
+        passwordResetToken: resetToken,
+      },
+    }, { returnOriginal: false });
+  },
   /**
  * Returns user table object for requested user
  * @param {object} userId id of requested user
@@ -149,13 +168,6 @@ const helperFunctions = {
     });
   },
   /**
-   * merges the given map into the current map
-   * @param {Object} map dbmap attrs to set
-   */
-  setDBMap(map) {
-    dbmap = Object.assign({}, dbmap, map);
-  },
-  /**
    * Validates JWT from authenticated user
    * @param {object} decoded token contents
    * @param {object} request original request from client
@@ -185,25 +197,16 @@ const helperFunctions = {
     return count === 0;
   },
   /**
-   * Confirms that submitted username & email are new
+   * Checks if an email exists
    * @param {object} req request
    * @param {object} res response
-   * @return {object} The submitted user information
+   * @return {object}   reply w/ does the email exist?
    */
-  validateUniqueUser(req, res) {
-    const isUsernameUnique = this.validateUniqueUsername(req);
+  async validateEmail(req, res) {
+    const exists = !await helperFunctions.validateUniqueEmail(req);
+    if (!exists) return res(Boom.badRequest('No such email address'));
 
-    if (!isUsernameUnique) {
-      return res(Boom.badRequest('Username taken'));
-    }
-
-    const isEmailUnique = this.validateUniqueEmail(req);
-
-    if (!isEmailUnique) {
-      return res(Boom.badRequest('Email taken'));
-    }
-
-    return res(req.payload);
+    return res(exists);
   },
   /**
    * Confirms that submitted username is new
@@ -217,6 +220,27 @@ const helperFunctions = {
       .countDocuments({ username: req.payload.username });
 
     return count === 0;
+  },
+  /**
+   * Confirms that submitted username & email are new
+   * @param {object} req request
+   * @param {object} res response
+   * @return {object} The submitted user information
+   */
+  async validateUniqueUser(req, res) {
+    const isUsernameUnique = await helperFunctions.validateUniqueUsername(req);
+
+    if (!isUsernameUnique) {
+      return res(Boom.badRequest('Username taken'));
+    }
+
+    const isEmailUnique = helperFunctions.validateUniqueEmail(req);
+
+    if (!isEmailUnique) {
+      return res(Boom.badRequest('Email taken'));
+    }
+
+    return res();
   },
   /**
    * Validate that authenticating user is using correct credentials
@@ -242,6 +266,55 @@ const helperFunctions = {
     } else {
       res(Boom.unauthorized('Incorrect username or password.'));
     }
+  },
+  /**
+   * Confirms that submitted token is valid
+   * @param {object} req request
+   * @param {object} res response
+   * @return {object} The requested object
+   */
+  async validateResetToken(req, res) {
+    const db = database.getDbInstance();
+    const user = await db.collection('users').findOne({ passwordResetToken: req.payload.token });
+
+    if (!user) {
+      return res(Boom.badRequest('Invalid token'));
+    }
+
+    try {
+      const { email } = jwt.verify(req.payload.token, process.env.API_JWT_SECRET);
+      const noEmail = await helperFunctions.validateUniqueEmail({ payload: { email } });
+
+      if (noEmail) {
+        return res(Boom.badRequest('Invalid email'));
+      }
+
+      return res({ email });
+    } catch (err) {
+      res(Boom.badRequest(err));
+    }
+  },
+  /**
+   * Reset password
+   * @param {object} password token for resetting password
+   * @param {object} password new password
+   * @return {object}
+   */
+  async resetPassword(token, password) {
+    const db = database.getDbInstance();
+
+    const newPassword = await helperFunctions.hashPassword(password);
+
+    return db.collection('users').updateOne({
+      passwordResetToken: token,
+    }, {
+      $set: {
+        passwordHash: newPassword,
+        passwordResetToken: '',
+      },
+    }, {
+      returnOriginal: false,
+    });
   },
   /**
    * Verify that authenticating user is using correct password
@@ -276,7 +349,6 @@ const helperFunctions = {
       });
     });
   },
-  JWTSecret: dbmap.cstacJWTSecret,
 };
 
 module.exports = helperFunctions;

@@ -19,7 +19,7 @@ const styles = theme => ({
   },
   button: {
     width: '100%',
-    padding: `${theme.spacing.unit * 2}px 0`,
+    padding: `${theme.spacing(2)}px 0`,
     backgroundColor: '#0078d4',
     fontSize: 14,
     color: 'white',
