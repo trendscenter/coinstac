@@ -9,7 +9,7 @@ import MapsStepFieldFixedValue from './maps-step-field-fixed-value';
 
 const styles = theme => ({
   section: {
-    marginBottom: theme.spacing.unit * 2,
+    marginBottom: theme.spacing(2),
   },
 });
 

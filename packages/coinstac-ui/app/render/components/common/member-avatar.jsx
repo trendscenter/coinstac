@@ -12,7 +12,7 @@ import {
 const styles = theme => ({
   containerStyles: {
     display: 'inline-block',
-    margin: theme.spacing.unit,
+    margin: theme.spacing(1),
     verticalAlign: 'top',
     textAlign: 'center',
     position: 'relative',

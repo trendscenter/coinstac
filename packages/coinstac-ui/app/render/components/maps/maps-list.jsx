@@ -11,12 +11,12 @@ import { isUserInGroup } from '../../utils/helpers';
 
 const styles = theme => ({
   contentContainer: {
-    marginTop: theme.spacing.unit,
-    marginBottom: theme.spacing.unit,
+    marginTop: theme.spacing(1),
+    marginBottom: theme.spacing(1),
   },
   labelInline: {
     fontWeight: 'bold',
-    marginRight: theme.spacing.unit,
+    marginRight: theme.spacing(1),
     display: 'inline-block',
   },
   value: {
@@ -101,7 +101,7 @@ class MapsList extends Component {
         </div>
         <Grid
           container
-          spacing={16}
+          spacing={2}
           direction="row"
           alignItems="stretch"
         >

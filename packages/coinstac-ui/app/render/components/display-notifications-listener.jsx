@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { withSnackbar } from 'notistack';
-import { dequeueNotification } from '../../../state/ducks/notifyAndLog';
+import { dequeueNotification } from '../state/ducks/notifyAndLog';
 
 class DisplayNotificationsListener extends React.Component {
   componentDidUpdate(prevProps) {

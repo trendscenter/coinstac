@@ -25,7 +25,7 @@ import { notifySuccess, notifyError } from '../../state/ducks/notifyAndLog';
 
 const styles = theme => ({
   title: {
-    marginBottom: theme.spacing.unit,
+    marginBottom: theme.spacing(1),
   },
 });
 
