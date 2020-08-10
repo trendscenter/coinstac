@@ -2,7 +2,6 @@ const Boom = require('boom');
 const GraphQLJSON = require('graphql-type-json');
 const Promise = require('bluebird');
 const axios = require('axios');
-const dotenv = require('dotenv');
 const Issue = require('github-api/dist/components/Issue');
 const { PubSub, withFilter } = require('graphql-subscriptions');
 const { uniq } = require('lodash');
@@ -11,8 +10,6 @@ const helperFunctions = require('../auth-helpers');
 const initSubscriptions = require('./subscriptions');
 const database = require('../database');
 const { transformToClient } = require('../utils');
-
-dotenv.config()
 
 const {
   eventEmitter,
@@ -50,7 +47,7 @@ async function fetchOnePipeline(id) {
 
   let pipe = null;
   do {
-    const currentStep = await pipelineSteps.next();
+    const currentStep = await pipelineSteps.next(); // eslint-disable-line no-await-in-loop
 
     if (!pipe) {
       pipe = {
@@ -62,7 +59,7 @@ async function fetchOnePipeline(id) {
     currentStep.steps.computations = transformToClient(currentStep.steps.computations);
 
     pipe.steps.push(currentStep.steps);
-  } while (await pipelineSteps.hasNext());
+  } while (await pipelineSteps.hasNext()); // eslint-disable-line no-await-in-loop
 
   return pipe;
 }
@@ -949,7 +946,7 @@ const resolvers = {
       eventEmitter.emit(CONSORTIUM_CHANGED, consortia);
     },
     /**
-     * Updated password
+     * Updated user password
      * @param {object} auth User object from JWT middleware validateFunc
      * @param {object} args
      * @param {string} args.currentPassword Current password
@@ -982,7 +979,7 @@ const resolvers = {
       });
     },
     /**
-     * Save message
+     * Save a user message
      * @param {object} auth User object from JWT middleware validateFunc
      * @param {object} args
      * @param {string} args.threadId Thread Id
@@ -1062,7 +1059,7 @@ const resolvers = {
       return transformToClient(result);
     },
     /**
-     * Set read mesasge
+     * Set if a user has read a message
      * @param {object} auth User object from JWT middleware validateFunc
      * @param {object} args
      * @param {string} args.threadId Thread Id
@@ -1097,7 +1094,7 @@ const resolvers = {
      * @return {object} Created issue
      */
     createIssue: async ({ auth: { credentials } }, args) => {
-      const { title, body } = args.issue
+      const { title, body } = args.issue;
 
       const repository = process.env.COINSTAC_REPOSITORY_NAME
       const auth = {
@@ -1105,12 +1102,12 @@ const resolvers = {
       }
 
       try {
-        const issue = new Issue(repository, auth)
+        const issue = new Issue(repository, auth);
 
-        await issue.createIssue({ title, body })
-        return
+        await issue.createIssue({ title: `${credentials.username} - ${title}`, body });
       } catch (error) {
-        return Boom.notAcceptable('Failed to create issue on GitHub')
+        debugger
+        return Boom.notAcceptable('Failed to create issue on GitHub');
       }
     },
   },

@@ -1,19 +1,19 @@
-import React, { Component } from 'react'
-import PropTypes from 'prop-types'
-import { connect } from 'react-redux'
-import { compose, graphql, withApollo } from 'react-apollo'
-import { ValidatorForm, TextValidator } from 'react-material-ui-form-validator'
-import { trim } from 'lodash'
-import { Button, Typography } from '@material-ui/core'
-import { withStyles } from '@material-ui/core/styles'
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
+import { compose, graphql, withApollo } from 'react-apollo';
+import { ValidatorForm, TextValidator } from 'react-material-ui-form-validator';
+import { trim } from 'lodash';
+import { Button, Typography } from '@material-ui/core';
+import { withStyles } from '@material-ui/core/styles';
 import {
   CREATE_ISSUE_MUTATION,
-} from '../../state/graphql/functions'
+} from '../../state/graphql/functions';
 import {
   saveDocumentProp,
-} from '../../state/graphql/props'
-import { notifySuccess, notifyError } from '../../state/ducks/notifyAndLog'
-import StatusButtonWrapper from '../common/status-button-wrapper'
+} from '../../state/graphql/props';
+import { notifySuccess, notifyError } from '../../state/ducks/notifyAndLog';
+import StatusButtonWrapper from '../common/status-button-wrapper';
 
 const styles = theme => ({
   tabTitleContainer: {
@@ -38,52 +38,53 @@ const styles = theme => ({
   addMemberButton: {
     marginLeft: theme.spacing.unit * 2,
   },
-})
+});
 
 const INITIAL_STATE = {
   title: '',
   body: '',
   savingStatus: 'init',
-}
+};
 
 class Issue extends Component {
   state = INITIAL_STATE
 
-  handleChange = name => event => {
-    this.setState({ [name]: event.target.value })
+  handleChange = name => (event) => {
+    this.setState({ [name]: event.target.value });
   }
 
   handleSubmit = () => {
-    const { title, body } = this.state
+    const { title, body } = this.state;
+    const { createIssue, notifySuccess, notifyError } = this.props;
 
-    this.setState({ savingStatus: 'pending' })
+    this.setState({ savingStatus: 'pending' });
 
-    this.props.createIssue({ title: trim(title), body })
+    createIssue({ title: trim(title), body })
       .then(() => {
-        this.setState({ ...INITIAL_STATE, savingStatus: 'success' })
-        this.props.notifySuccess({ message: 'Issue is created on Github successfully' })
+        this.setState({ ...INITIAL_STATE, savingStatus: 'success' });
+        notifySuccess('Issue is created on Github successfully');
         this.issueCreateForm.resetValidations();
       })
       .catch(() => {
-        this.setState({ savingStatus: 'fail' })
-        this.props.notifyError({ message: 'Failed to create the issue on Github' })
-      })
+        this.setState({ savingStatus: 'fail' });
+        notifyError('Failed to create the issue on Github');
+      });
   }
 
   render() {
-    const { classes } = this.props
-    const { title, body, savingStatus } = this.state
+    const { classes } = this.props;
+    const { title, body, savingStatus } = this.state;
 
     return (
       <ValidatorForm
         instantValidate
         noValidate
-        ref={ref => this.issueCreateForm = ref}
+        ref={(ref) => { this.issueCreateForm = ref; }}
         onSubmit={this.handleSubmit}
       >
         <div className={classes.tabTitleContainer}>
           <Typography variant="h5">
-            Issue
+            Bug Report
           </Typography>
           <StatusButtonWrapper status={savingStatus}>
             <Button
@@ -104,7 +105,7 @@ class Issue extends Component {
           name="name"
           required
           validators={['required']}
-          errorMessages={['Issue title is required']}
+          errorMessages={['Bug report title is required']}
           className={classes.textField}
           withRequiredValidator
           onChange={this.handleChange('title')}
@@ -119,30 +120,31 @@ class Issue extends Component {
           multiline
           rows={10}
           validators={['required']}
-          errorMessages={['Issue content is required']}
+          errorMessages={['Bug report content is required']}
           className={classes.textField}
           withRequiredValidator
           onChange={this.handleChange('body')}
         />
       </ValidatorForm>
-    )
+    );
   }
 }
 
-Issue.propTypes = { 
+Issue.propTypes = {
   createIssue: PropTypes.func.isRequired,
   notifySuccess: PropTypes.func.isRequired,
   notifyError: PropTypes.func.isRequired,
-}
+  classes: PropTypes.object.isRequired,
+};
 
 const IssueWithData = compose(
   graphql(CREATE_ISSUE_MUTATION, saveDocumentProp('createIssue', 'issue')),
-  withApollo,
-)(Issue)
+  withApollo
+)(Issue);
 
 const connectedComponent = connect(null, {
   notifySuccess,
   notifyError,
 })(IssueWithData);
 
-export default withStyles(styles)(connectedComponent)
+export default withStyles(styles)(connectedComponent);

@@ -106,7 +106,7 @@ const UserAccount = (props) => {
           <ListItem disableGutters button component={Link} to="/dashboard/issues">
             <ListItemIcon><BugReportIcon /></ListItemIcon>
             <ListItemText
-              primary="Issues"
+              primary="Submit a bug"
               classes={{
                 root: classes.listItemButtonTextRoot,
               }}
