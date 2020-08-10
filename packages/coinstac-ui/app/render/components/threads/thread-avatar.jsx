@@ -22,7 +22,7 @@ const styles = theme => ({
     },
   },
   username: {
-    paddingLeft: theme.spacing.unit,
+    paddingLeft: theme.spacing(1),
   },
 });
 

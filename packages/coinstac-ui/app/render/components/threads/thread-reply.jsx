@@ -19,7 +19,7 @@ import CustomSelect from '../common/react-select';
 const BootstrapInput = withStyles(theme => ({
   root: {
     'label + &': {
-      marginTop: theme.spacing.unit * 3,
+      marginTop: theme.spacing(3),
     },
   },
   input: {
@@ -54,20 +54,20 @@ const BootstrapInput = withStyles(theme => ({
 const styles = theme => ({
   wrapper: {
     borderTop: `1px solid ${theme.palette.grey[300]}`,
-    padding: theme.spacing.unit * 2,
+    padding: theme.spacing(2),
   },
   recipients: {
-    paddingLeft: theme.spacing.unit * 2,
+    paddingLeft: theme.spacing(2),
     display: 'flex',
     alignItems: 'center',
     width: 300,
   },
   select: {
-    paddingLeft: theme.spacing.unit,
+    paddingLeft: theme.spacing(1),
   },
   textarea: {
-    margin: `${theme.spacing.unit * 2}px 0`,
-    padding: theme.spacing.unit * 2,
+    margin: `${theme.spacing(2)}px 0`,
+    padding: theme.spacing(2),
     fontSize: 16,
     width: '100%',
     height: 100,
@@ -85,11 +85,11 @@ const styles = theme => ({
     justifyContent: 'space-between',
   },
   formControl: {
-    marginRight: theme.spacing.unit,
+    marginRight: theme.spacing(1),
   },
   replyButton: {
     width: 100,
-    padding: `${theme.spacing.unit}px 0`,
+    padding: `${theme.spacing(1)}px 0`,
     backgroundColor: '#0078d4',
     fontSize: 14,
     color: 'white',

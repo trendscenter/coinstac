@@ -6,10 +6,10 @@ import { withStyles } from '@material-ui/core/styles';
 
 const styles = theme => ({
   pageTitle: {
-    marginBottom: theme.spacing.unit * 2,
+    marginBottom: theme.spacing(2),
   },
   logsContainer: {
-    padding: theme.spacing.unit * 2,
+    padding: theme.spacing(2),
     border: '1px inset #ccc',
     backgroundColor: '#ccc',
   },

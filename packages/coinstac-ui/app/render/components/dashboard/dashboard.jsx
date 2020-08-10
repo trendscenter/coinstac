@@ -52,7 +52,6 @@ import {
 } from '../../state/graphql/props';
 import StartPipelineListener from './listeners/start-pipeline-listener';
 import NotificationsListener from './listeners/notifications-listener';
-import DisplayNotificationsListener from './listeners/display-notifications-listener';
 import DashboardPipelineNavBar from './dashboard-pipeline-nav-bar';
 
 const styles = theme => ({
@@ -74,7 +73,7 @@ const styles = theme => ({
   content: {
     flexGrow: 1,
     backgroundColor: theme.palette.background.default,
-    padding: theme.spacing.unit * 3,
+    padding: theme.spacing(3),
   },
   status: {
     display: 'inline-block',
@@ -528,7 +527,7 @@ class Dashboard extends Component {
                     : (
                       <span className={classes.statusDown}>
                         <Typography
-                          variant="body2"
+                          variant="body1"
                           classes={{
                             root: classes.statusDownText,
                           }}
@@ -564,7 +563,6 @@ class Dashboard extends Component {
           remoteRuns={remoteRuns}
         />
         <NotificationsListener />
-        <DisplayNotificationsListener />
       </React.Fragment>
     );
   }

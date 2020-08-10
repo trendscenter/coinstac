@@ -1,0 +1,3 @@
+app/render/build/
+node_modules/
+coverage/
