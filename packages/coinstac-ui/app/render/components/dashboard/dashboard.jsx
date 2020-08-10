@@ -49,6 +49,7 @@ import {
 import {
   getAllAndSubProp,
   updateConsortiaMappedUsersProp,
+  userRunProp,
 } from '../../state/graphql/props';
 import StartPipelineListener from './listeners/start-pipeline-listener';
 import NotificationsListener from './listeners/notifications-listener';
@@ -376,7 +377,7 @@ class Dashboard extends Component {
 
   componentDidUpdate(prevProps) {
     const {
-      currentUser, updateUserPerms, remoteRuns, saveLocalRun
+      currentUser, updateUserPerms, remoteRuns, saveLocalRun,
     } = this.props;
 
     if (currentUser
@@ -635,13 +636,8 @@ const DashboardWithData = compose(
     'subscribeToComputations',
     'computationChanged'
   )),
-  graphql(FETCH_ALL_USER_RUNS_QUERY, getAllAndSubProp(
-    USER_RUN_CHANGED_SUBSCRIPTION,
-    'remoteRuns',
-    'fetchAllUserRuns',
-    'subscribeToUserRuns',
-    'userRunChanged',
-    'userId'
+  graphql(FETCH_ALL_USER_RUNS_QUERY, userRunProp(
+    USER_RUN_CHANGED_SUBSCRIPTION
   )),
   graphql(FETCH_ALL_CONSORTIA_QUERY, getAllAndSubProp(
     CONSORTIUM_CHANGED_SUBSCRIPTION,
