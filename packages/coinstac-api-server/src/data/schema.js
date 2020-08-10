@@ -175,6 +175,7 @@ const typeDefs = `
     updateUserConsortiumStatus(consortiumId: ID, status: String): User
     updateConsortiumMappedUsers(consortiumId: ID, mappedForRun: [ID]): JSON
     updateConsortiaMappedUsers(consortia: [ID]): JSON
+    updatePassword(currentPassword: String!, newPassword: String!): Boolean
     saveMessage(threadId: ID, title: String!, recipients: [String!], content: String!, action: ActionInput): Thread
     setReadMessage(threadId: ID, userId: ID): JSON
   }

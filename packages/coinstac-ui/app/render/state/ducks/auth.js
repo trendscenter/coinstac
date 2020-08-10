@@ -4,6 +4,7 @@ import { remote, ipcRenderer } from 'electron';
 import { get } from 'lodash';
 import { LOCATION_CHANGE } from 'react-router-redux';
 import { applyAsyncLoading } from './loading';
+import { notifySuccess, notifyError } from './notifyAndLog';
 
 const apiServer = remote.getGlobal('config').get('apiServer');
 const API_URL = `${apiServer.protocol}//${apiServer.hostname}${apiServer.port ? `:${apiServer.port}` : ''}${apiServer.pathname}`;
@@ -184,6 +185,25 @@ export const signUp = applyAsyncLoading(user => (dispatch, getState) => axios.po
     if (statusCode === 400) {
       dispatch(setError(message));
     }
+  }));
+
+export const sendPasswordResetEmail = applyAsyncLoading(payload => dispatch => axios.post(`${API_URL}/sendPasswordResetEmail`, payload)
+  .then(() => {
+    dispatch(notifySuccess('Sent password reset email successfully'));
+  })
+  .catch((err) => {
+    const { statusCode, message } = getErrorDetail(err);
+    dispatch(notifyError(statusCode === 400 ? message : 'Failed to send password reset email'));
+    throw err;
+  }));
+
+export const resetPassword = applyAsyncLoading(payload => dispatch => axios.post(`${API_URL}/resetPassword`, payload)
+  .then(() => {
+    dispatch(notifySuccess('Reset password successfully'));
+  })
+  .catch((err) => {
+    const { statusCode, message } = getErrorDetail(err);
+    dispatch(notifyError(statusCode === 400 ? message : 'Provided password reset token is not valid. It could be expired'));
   }));
 
 export default function reducer(state = INITIAL_STATE, { type, payload }) {
