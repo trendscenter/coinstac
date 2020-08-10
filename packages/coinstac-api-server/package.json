@@ -11,6 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@sendgrid/mail": "^6.5.0",
     "apollo-server-hapi-coinstac": "1.2.x",
     "axios": "^0.18.1",
     "bluebird": "^3.5.1",
@@ -21,7 +22,7 @@
     "graphql-subscriptions": "^0.5.8",
     "graphql-tools": "^1.2.3",
     "graphql-type-json": "^0.1.4",
-    "hapi": "^16.6.3",
+    "hapi": "^16.7.0",
     "hapi-auth-jwt2": "^7.4.1",
     "jsonwebtoken": "^7.4.3",
     "lodash": "^4.17.15",
