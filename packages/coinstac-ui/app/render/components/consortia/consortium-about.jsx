@@ -140,7 +140,7 @@ class ConsortiumAbout extends Component {
             About Consortium
           </Typography>
           {owner && (
-            <StatusButtonWrapper status={savingStatus}>
+            <StatusButtonWrapper style={{ backgroundColor: 'black' }} status={savingStatus}>
               <Button
                 variant="contained"
                 color="primary"
