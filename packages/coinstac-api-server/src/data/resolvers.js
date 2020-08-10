@@ -8,7 +8,6 @@ const { uniq } = require('lodash');
 const { ObjectID } = require('mongodb');
 const helperFunctions = require('../auth-helpers');
 const initSubscriptions = require('./subscriptions');
-const config = require('../../config/default');
 const database = require('../database');
 const { transformToClient } = require('../utils');
 const {
@@ -269,7 +268,7 @@ const resolvers = {
       const pipelines = {};
       while (await pipelineSteps.hasNext()) {
         const currentStep = await pipelineSteps.next();
-        
+
 
         if (!(currentStep._id in pipelines)) {
           pipelines[currentStep._id] = {
@@ -428,7 +427,7 @@ const resolvers = {
         const run = transformToClient(result.ops[0]);
 
         await axios.post(
-          `http://${config.host}:${config.pipelineServer}/startPipeline`, { run }
+          `http://${process.env.PIPELINE_SERVER_HOSTNAME}:${process.env.PIPELINE_SERVER_PORT}/startPipeline`, { run }
         );
 
         eventEmitter.emit(RUN_CHANGED, run);
@@ -929,6 +928,39 @@ const resolvers = {
       });
 
       eventEmitter.emit(CONSORTIUM_CHANGED, consortia);
+    },
+    /**
+     * Updated password
+     * @param {object} auth User object from JWT middleware validateFunc
+     * @param {object} args
+     * @param {string} args.currentPassword Current password
+     * @param {string} args.newPassword New password
+     * @return {boolean} Success status
+     */
+    updatePassword: async ({ auth: { credentials } }, args) => {
+      const { currentPassword, newPassword } = args;
+      const db = database.getDbInstance();
+
+      const currentUser = await db.collection('users').findOne({ _id: credentials.id });
+
+      const isPasswordCorrect =
+        await helperFunctions.verifyPassword(currentPassword, currentUser.passwordHash)
+
+      if (!isPasswordCorrect) {
+        return Boom.badData('Current password is not correct')
+      }
+
+      const newPasswordHash = await helperFunctions.hashPassword(newPassword)
+
+      await db.collection('users').findOneAndUpdate({
+        _id: credentials.id
+      }, {
+        $set: {
+          passwordHash: newPasswordHash,
+        },
+      }, {
+        returnOriginal: false,
+      });
     },
     /**
      * Save message
