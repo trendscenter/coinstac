@@ -13,11 +13,11 @@ const HOURS_SINCE_ACTIVE = 72;
 
 const styles = theme => ({
   pageTitle: {
-    marginBottom: theme.spacing.unit * 2,
+    marginBottom: theme.spacing(2),
   },
   pageSubtitle: {
-    marginBottom: theme.spacing.unit * 2,
-    marginTop: theme.spacing.unit * 2,
+    marginBottom: theme.spacing(2),
+    marginTop: theme.spacing(2),
   },
 });
 
@@ -39,7 +39,7 @@ function DashboardHome(props) {
         {`${userId}'s Home`}
       </Typography>
       <Divider />
-      <Typography variant="title" className={classes.pageSubtitle}>
+      <Typography variant="h6" className={classes.pageSubtitle}>
         {`Run Activity in the Last ${HOURS_SINCE_ACTIVE} Hours`}
       </Typography>
       <RunsList

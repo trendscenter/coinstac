@@ -16,18 +16,18 @@ import path from 'path';
 const styles = theme => ({
   rootPaper: {
     ...theme.mixins.gutters(),
-    paddingTop: theme.spacing.unit * 2,
-    paddingBottom: theme.spacing.unit * 2,
-    marginTop: theme.spacing.unit * 2,
+    paddingTop: theme.spacing(2),
+    paddingBottom: theme.spacing(2),
+    marginTop: theme.spacing(2),
     height: '100%',
   },
   title: {
-    marginBottom: theme.spacing.unit,
+    marginBottom: theme.spacing(1),
     fontWeight: '500',
     fontSize: '1rem',
   },
   nestedListItem: {
-    paddingLeft: theme.spacing.unit * 2,
+    paddingLeft: theme.spacing(2),
     paddingTop: 0,
     paddingBottom: 0,
   },
@@ -37,7 +37,7 @@ const styles = theme => ({
   interestList: {
     width: '50%',
     flex: '0 0 auto',
-    marginRight: theme.spacing.unit,
+    marginRight: theme.spacing(1),
     paddingLeft: 0,
   },
   dropZone: {

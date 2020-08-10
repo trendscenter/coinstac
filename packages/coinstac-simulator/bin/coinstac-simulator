@@ -2,8 +2,6 @@
 
 'use strict';
 
-require('trace');
-require('clarify');
 const util = require('util');
 const readFile = util.promisify(require('fs').readFile);
 const writeFile = util.promisify(require('fs').writeFile);
@@ -325,7 +323,7 @@ fulfilledPipelineSpec
     }
     logger.info('Simulator run finished');
     if (globalMode === 'decentralized') {
-      logger.info(`Decentralized results:\n ${JSON.stringify(results.remote, null, 2)}`);
+      logger.info(`Decentralized results:\n ${JSON.stringify(results.locals[0], null, 2)}`);
     } else {
       logger.info('Local run(s) finished');
       results.locals.forEach((res, idx) => logger.info(`Client ${idx} results:\n${JSON.stringify(res, null, 2)}\n`));

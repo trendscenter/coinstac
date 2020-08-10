@@ -26,6 +26,9 @@ http://dx.doi.org/10.5210/ojphi.v8i3.7251
 S. Plis, A.D. Sarwate, D. Wood, C. Dieringer, D. Landis, C. Reed, S.R. Panta, J.A. Turner, J.M. Shoemaker, K.W. Carter, P. Thompson, K. Hutchison, V.D. Calhoun, COINSTAC: A Privacy Enabled Model and Prototype for Leveraging and Processing Decentralized Brain Imaging Data, Frontiers in Neuroscience 10(365): August 2016.  
 http://dx.doi.org/10.3389/fnins.2016.00365
 
+A.D. Sarwate, S. Plis, J.A. Turner, M. R. Arbabshirani, V.D. Calhoun, Sharing privacy-sensitive access to neuroimaging and genetics data: a review and preliminary validation, Frontiers in Neuroinformatics 8(35): April 2014.
+https://dx.doi.org/10.3389/fninf.2014.00035
+
 
 ## Conference Papers
 
