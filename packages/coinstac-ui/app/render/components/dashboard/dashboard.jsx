@@ -52,7 +52,6 @@ import {
 } from '../../state/graphql/props';
 import StartPipelineListener from './listeners/start-pipeline-listener';
 import NotificationsListener from './listeners/notifications-listener';
-import DisplayNotificationsListener from './listeners/display-notifications-listener';
 import DashboardPipelineNavBar from './dashboard-pipeline-nav-bar';
 
 const styles = theme => ({
@@ -564,7 +563,6 @@ class Dashboard extends Component {
           remoteRuns={remoteRuns}
         />
         <NotificationsListener />
-        <DisplayNotificationsListener />
       </React.Fragment>
     );
   }
