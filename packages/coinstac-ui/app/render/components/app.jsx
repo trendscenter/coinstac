@@ -11,6 +11,7 @@ import { autoLogin, logout, setError } from '../state/ducks/auth';
 import { notifyWarning } from '../state/ducks/notifyAndLog';
 import { EXPIRED_TOKEN, BAD_TOKEN } from '../utils/error-codes';
 import theme from '../styles/material-ui/theme';
+import DisplayNotificationsListener from './display-notifications-listener';
 
 class App extends Component { // eslint-disable-line react/prefer-stateless-function
   constructor(props) {
@@ -77,6 +78,8 @@ class App extends Component { // eslint-disable-line react/prefer-stateless-func
 
           <SnackbarProvider maxSnack={3}>
             { checkJWT && children }
+
+          <DisplayNotificationsListener />
           </SnackbarProvider>
         </MuiThemeProvider>
       </div>
