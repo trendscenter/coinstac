@@ -86,7 +86,7 @@ class Issue extends Component {
           <Typography variant="h5">
             Bug Report
           </Typography>
-          <StatusButtonWrapper status={savingStatus}>
+          <StatusButtonWrapper style={{ paddingRight: '50px' }} status={savingStatus}>
             <Button
               variant="contained"
               color="primary"
