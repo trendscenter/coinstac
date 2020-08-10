@@ -1099,10 +1099,9 @@ const resolvers = {
     createIssue: async ({ auth: { credentials } }, args) => {
       const { title, body } = args.issue
 
-      const repository = process.env.GIT_REPO
+      const repository = process.env.COINSTAC_REPOSITORY_NAME
       const auth = {
-        username: process.env.GIT_USER_NAME,
-        password: process.env.GET_USER_PASSWORD,
+        token: process.env.GITHUB_ACCESS_TOKEN,
       }
 
       try {
