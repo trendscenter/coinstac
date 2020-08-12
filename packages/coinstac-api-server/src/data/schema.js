@@ -69,14 +69,14 @@ const typeDefs = `
     id: ID!
     controller: PipelineController
     computations: [Computation]
-    ${sharedFields.pipelineStepFields} 
+    ${sharedFields.pipelineStepFields}
   }
 
   input PipelineStepInput {
     id: ID
     controller: PipelineControllerInput
     computations: [ID]
-    ${sharedFields.pipelineStepFields} 
+    ${sharedFields.pipelineStepFields}
   }
 
   type Pipeline {
@@ -97,7 +97,8 @@ const typeDefs = `
 
   type Run {
     id: ID!,
-    clients: [String]
+    clients: [ID]
+    members: JSON
     consortiumId: ID!
     startDate: String
     endDate: String
@@ -131,24 +132,19 @@ const typeDefs = `
 
   type MessageOutput {
     id: ID
-    sender: ID
-    recipients: [String]
+    sender: JSON
+    recipients: JSON
     content: String
     date: String
     action: ActionOutput
   }
 
-  type ThreadUserOutput {
-    username: String
-    isRead: Boolean
-  }
-
   type Thread {
     id: ID
     messages: [MessageOutput]
-    owner: ID
+    owner: JSON
     title: String
-    users: [ThreadUserOutput]
+    users: JSON
     date: String
   }
 
@@ -156,14 +152,14 @@ const typeDefs = `
   type Mutation {
     # Stringify incoming computation, parse prior to insertion call
     addComputation(computationSchema: ComputationInput): Computation
-    addUserRole(userId: ID!, table: String!, doc: String!, role: String!): User
+    addUserRole(userId: ID!, table: String!, doc: String!, role: String!, userName: String): User
     createRun(consortiumId: ID): Run
     deleteConsortiumById(consortiumId: ID): Consortium
     deletePipeline(pipelineId: ID): Pipeline
     joinConsortium(consortiumId: ID!): Consortium
     leaveConsortium(consortiumId: ID!): Consortium
     removeComputation(computationId: ID): Computation
-    removeUserRole(userId: ID!, table: String!, doc: String!, role: String!): User
+    removeUserRole(userId: ID!, table: String!, doc: String!, role: String!, userName: String): User
     saveActivePipeline(consortiumId: ID, activePipelineId: ID): JSON
     saveConsortium(consortium: ConsortiumInput!): Consortium
     saveError(runId: ID, error: JSON): JSON
@@ -176,7 +172,7 @@ const typeDefs = `
     updateConsortiumMappedUsers(consortiumId: ID, mappedForRun: [ID]): JSON
     updateConsortiaMappedUsers(consortia: [ID]): JSON
     updatePassword(currentPassword: String!, newPassword: String!): Boolean
-    saveMessage(threadId: ID, title: String!, recipients: [String!], content: String!, action: ActionInput): Thread
+    saveMessage(threadId: ID, title: String!, recipients: JSON, content: String!, action: ActionInput): Thread
     setReadMessage(threadId: ID, userId: ID): JSON
   }
 

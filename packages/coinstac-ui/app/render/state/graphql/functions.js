@@ -195,7 +195,7 @@ export const UPDATE_PASSWORD_MUTATION = gql`
 `;
 
 export const SAVE_MESSAGE_MUTATION = gql`
-  mutation saveMessage($threadId: ID, $title: String!, $recipients: [String!], $content: String!, $action: ActionInput)
+  mutation saveMessage($threadId: ID, $title: String!, $recipients: JSON, $content: String!, $action: ActionInput)
     ${mutations.saveMessage}
 `;
 
