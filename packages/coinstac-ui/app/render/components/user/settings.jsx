@@ -10,6 +10,7 @@ import { updatePasswordProps } from '../../state/graphql/props';
 import { UPDATE_PASSWORD_MUTATION } from '../../state/graphql/functions';
 import { notifySuccess, notifyInfo, notifyError } from '../../state/ducks/notifyAndLog';
 import { clearRuns } from '../../state/ducks/runs';
+import UserEditController from './user-edit-controller';
 
 const styles = theme => ({
   pageTitle: {
@@ -118,6 +119,8 @@ class Settings extends Component {
             Settings
           </Typography>
         </div>
+        <UserEditController />
+        <hr />
         <Typography variant="h5" className={classes.removeDataTitle}>
           Remove Data
         </Typography>

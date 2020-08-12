@@ -107,7 +107,10 @@ const config = {
     // relative to entry path
     publicPath: '../../build/render/',
   },
-  plugins: [new webpack.optimize.OccurrenceOrderPlugin(), new webpack.HotModuleReplacementPlugin()],
+  plugins: [
+    new webpack.optimize.OccurrenceOrderPlugin(),
+    new webpack.HotModuleReplacementPlugin()
+  ],
   resolve: {
     extensions: ['.json', '.js', '.jsx'],
   },
