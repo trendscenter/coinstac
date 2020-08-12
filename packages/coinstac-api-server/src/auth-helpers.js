@@ -3,19 +3,21 @@ const crypto = require('crypto');
 const Boom = require('boom');
 const jwt = require('jsonwebtoken');
 const Promise = require('bluebird');
+const { ObjectID } = require('mongodb');
 const database = require('./database');
 const { transformToClient } = require('./utils');
+const { eventEmitter, USER_CHANGED } = require('./data/events');
 
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 const helperFunctions = {
   /**
    * Create JWT for user signing in to application
-   * @param {string} user username of authenticating user passed in from route handler
+   * @param {string} user id of authenticating user passed in from route handler
    * @return {string} A JWT for the requested user
    */
-  createToken(user) {
-    return jwt.sign({ username: user }, process.env.API_JWT_SECRET, { algorithm: 'HS256', expiresIn: '12h' });
+  createToken(id) {
+    return jwt.sign({ id }, process.env.API_JWT_SECRET, { algorithm: 'HS256', expiresIn: '12h' });
   },
   /**
    * Create JWT for password reset
@@ -33,8 +35,9 @@ const helperFunctions = {
    */
   async createUser(user, passwordHash) {
     const userDetails = {
-      _id: user.username,
+      _id: user._id || new ObjectID(),
       username: user.username,
+      name: user.name,
       email: user.email,
       institution: user.institution,
       passwordHash,
@@ -59,6 +62,30 @@ const helperFunctions = {
     const result = await db.collection('users').insertOne(userDetails);
 
     return result.ops[0];
+  },
+  async updateUser(user) {
+    const db = database.getDbInstance();
+
+    const result = await db.collection('users').findOneAndUpdate({
+      _id: ObjectID(user.id),
+    }, {
+      $set: {
+        name: user.name,
+        username: user.username,
+        email: user.email,
+        photo: user.photo,
+        photoID: user.photoID,
+        institution: user.institution,
+      },
+    }, {
+      returnOriginal: false,
+    });
+
+    const updatedUser = transformToClient(result.value);
+
+    eventEmitter.emit(USER_CHANGED, updatedUser);
+
+    return updatedUser;
   },
   /**
    * Save password reset token
@@ -86,6 +113,17 @@ const helperFunctions = {
         passwordResetToken: resetToken,
       },
     }, { returnOriginal: false });
+  },
+  /**
+ * Returns user table object for requested user
+ * @param {object} userId id of requested user
+ * @return {object} The requested user object
+ */
+  async getUserDetailsByID(userId) {
+    const db = database.getDbInstance();
+
+    const user = await db.collection('users').findOne({ _id: ObjectID(userId) });
+    return transformToClient(user);
   },
   /**
    * Returns user table object for requested user
@@ -136,7 +174,7 @@ const helperFunctions = {
    * @param {function} callback function signature (err, isValid, alternative credentials)
    */
   validateToken(decoded, request, callback) {
-    helperFunctions.getUserDetails(decoded.username)
+    helperFunctions.getUserDetailsByID(decoded.id)
       .then((user) => {
         if (user) {
           callback(null, true, user);

@@ -30,6 +30,7 @@
     "lodash": "^4.17.15",
     "mongodb": "^3.5.5",
     "subscriptions-transport-ws": "^0.9.9",
-    "trace": "^3.1.1"
+    "trace": "^3.1.1",
+    "uuid": "^7.0.3"
   }
 }

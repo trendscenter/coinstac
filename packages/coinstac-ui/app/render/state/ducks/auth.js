@@ -23,6 +23,7 @@ const INITIAL_STATE = {
     permissions: {},
     email: '',
     institution: '',
+    photo: '',
     consortiaStatuses: {},
   },
   appDirectory: localStorage.getItem('appDirectory') || remote.getGlobal('config').get('coinstacHome'),
@@ -65,7 +66,7 @@ const initCoreAndSetToken = async (reqUser, data, appDirectory, dispatch) => {
     localStorage.setItem('appDirectory', appDirectory);
   }
 
-  await ipcPromise.send('login-init', { userId: reqUser.username, appDirectory });
+  await ipcPromise.send('login-init', { userId: reqUser.userid, appDirectory });
 
   const user = { ...data.user, label: reqUser.username };
 
@@ -124,7 +125,7 @@ export const autoLogin = applyAsyncLoading(() => (dispatch, getState) => {
     .then(({ data }) => {
       const { auth: { appDirectory } } = getState();
       return initCoreAndSetToken(
-        { username: data.user.id, saveLogin, password: 'password' },
+        { id: data.user.id, saveLogin, password: 'password' },
         data,
         appDirectory,
         dispatch
@@ -158,7 +159,8 @@ export const checkApiVersion = applyAsyncLoading(() => dispatch => axios.get(`${
 export const login = applyAsyncLoading(({ username, password, saveLogin }) => (dispatch, getState) => axios.post(`${API_URL}/authenticate`, { username, password })
   .then(({ data }) => {
     const { auth: { appDirectory } } = getState();
-    return initCoreAndSetToken({ username, password, saveLogin }, data, appDirectory, dispatch);
+    const userid = data.user.id;
+    return initCoreAndSetToken({ userid, password, saveLogin }, data, appDirectory, dispatch);
   })
   .catch((err) => {
     console.error(err); // eslint-disable-line no-console
@@ -179,6 +181,24 @@ export const signUp = applyAsyncLoading(user => (dispatch, getState) => axios.po
   .then(({ data }) => {
     const { auth: { appDirectory } } = getState();
     return initCoreAndSetToken(user, data, appDirectory, dispatch);
+  })
+  .catch((err) => {
+    const { statusCode, message } = getErrorDetail(err);
+    if (statusCode === 400) {
+      dispatch(setError(message));
+    }
+  }));
+
+export const update = applyAsyncLoading(user => dispatch => axios.post(`${API_URL}/updateAccount`, user)
+  .then(({ data }) => {
+    const userNew = {
+      ...data.user,
+      username: user.username,
+      photo: user.photo,
+      hotoID: user.photoID,
+      name: user.name,
+    };
+    dispatch(setUser(userNew));
   })
   .catch((err) => {
     const { statusCode, message } = getErrorDetail(err);

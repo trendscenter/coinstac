@@ -31,6 +31,11 @@ const styles = {
   listItemButtonTextRoot: {
     paddingLeft: 0,
   },
+  userPhoto: {
+    width: '40px',
+    height: '40px',
+    marginTop: '5px',
+  },
 };
 
 const UserAccount = (props) => {
@@ -42,13 +47,14 @@ const UserAccount = (props) => {
     return <div className={classes.root} />;
   }
 
-  const { id, label, email } = auth.user;
+  const { id, username, email } = auth.user;
 
   return (
     <div className={classes.root}>
       <MemberAvatar
         consRole="Member"
-        name={id}
+        id={id}
+        name={username}
         width={40}
       />
       <div className={classes.textContainer}>
@@ -65,7 +71,7 @@ const UserAccount = (props) => {
           >
             <ListItemText disableTypography>
               <Typography variant="subtitle2" className="user-account-name">
-                { label }
+                { username }
               </Typography>
             </ListItemText>
           </ListItem>
