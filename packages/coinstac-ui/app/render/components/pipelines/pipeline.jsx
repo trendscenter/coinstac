@@ -41,7 +41,7 @@ import {
   getAllAndSubProp,
 } from '../../state/graphql/props';
 import { notifySuccess, notifyError } from '../../state/ducks/notifyAndLog';
-import { isPipelineOwner, getGraphQLErrorMessage } from '../../utils/helpers';
+import { isPipelineOwner, getGraphQLErrorMessage, isUserInGroup } from '../../utils/helpers';
 
 const computationTarget = {
   drop() {
@@ -57,23 +57,23 @@ const collect = (connect, monitor) => (
 
 const styles = theme => ({
   title: {
-    marginBottom: theme.spacing.unit * 2,
+    marginBottom: theme.spacing(2),
   },
   formControl: {
-    marginBottom: theme.spacing.unit * 2,
+    marginBottom: theme.spacing(2),
   },
   owningConsortiumButtonTitle: {
-    marginBottom: theme.spacing.unit,
+    marginBottom: theme.spacing(1),
   },
   savePipelineButtonContainer: {
     textAlign: 'right',
-    marginBottom: theme.spacing.unit * 2,
+    marginBottom: theme.spacing(2),
   },
   tooltipPaper: {
     ...theme.mixins.gutters(),
-    paddingTop: theme.spacing.unit * 2,
-    paddingBottom: theme.spacing.unit * 2,
-    marginBottom: theme.spacing.unit * 2,
+    paddingTop: theme.spacing(2),
+    paddingBottom: theme.spacing(2),
+    marginBottom: theme.spacing(2),
     backgroundColor: '#fef7e4',
     textAlign: 'center',
   },
@@ -580,7 +580,7 @@ class Pipeline extends Component {
             className={classes.formControl}
           />
           <div className={classes.formControl}>
-            <Typography variant="title" className={classes.owningConsortiumButtonTitle}>Owning Consortium</Typography>
+            <Typography variant="h6" className={classes.owningConsortiumButtonTitle}>Owning Consortium</Typography>
             <Button
               id="pipelineconsortia"
               variant="contained"
@@ -597,7 +597,7 @@ class Pipeline extends Component {
               onClose={this.closeOwningConsortiumMenu}
             >
               {consortia && consortia
-                .filter(cons => cons.owners.includes(auth.user.id))
+                .filter(cons => isUserInGroup(auth.user.id, cons.owners))
                 .map(cons => (
                   <MenuItem
                     key={cons.id}
@@ -639,7 +639,7 @@ class Pipeline extends Component {
             className={classes.formControl}
           />
           <Paper className={classes.tooltipPaper}>
-            <Typography className={classes.tooltip} variant="body1">
+            <Typography className={classes.tooltip} variant="body2">
               Build your pipelines by adding computation steps in the space below.
               Arrange computations vertically to determine their order from first
               (highest) to last (lowest)
@@ -700,7 +700,7 @@ class Pipeline extends Component {
             ))}
           </div>
           {!pipeline.steps.length && (
-            <Typography variant="body1">
+            <Typography variant="body2">
               No computations added
             </Typography>
           )}

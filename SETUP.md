@@ -1,6 +1,6 @@
 # Setup
 
-These instructions explain how to get COINSTAC up and running on your machine:
+These instructions explain how to get COINSTAC up and running on your machine for development or to run your own COINSTAC system:
 
 ## Required Software
 

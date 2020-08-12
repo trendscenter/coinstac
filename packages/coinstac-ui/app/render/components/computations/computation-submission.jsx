@@ -16,11 +16,12 @@ import { getGraphQLErrorMessage } from '../../utils/helpers';
 
 const styles = theme => ({
   topMargin: {
-    marginTop: theme.spacing.unit * 2,
+    marginTop: theme.spacing(2),
+
   },
   description: {
-    marginTop: theme.spacing.unit * 2,
-    marginBottom: theme.spacing.unit * 2,
+    marginTop: theme.spacing(2),
+    marginBottom: theme.spacing(2),
   },
   actionsContainer: {
     display: 'flex',
@@ -83,7 +84,7 @@ class ComputationSubmission extends Component {
             Add Computation
           </Typography>
         </div>
-        <Typography variant="body1" className={classes.description}>
+        <Typography variant="body2" className={classes.description}>
           Use the button below to upload your schema for review. Prior to submission,
           your schema will be validated. Please fix any errors found therein to unlock the
           <span style={{ fontWeight: 'bold' }}> Submit </span>

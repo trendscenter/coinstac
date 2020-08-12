@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import Typography from '@material-ui/core/Typography';
 import RunItem from './run-item';
+import { isUserInGroup } from '../../utils/helpers';
 
 function getActiveTime(hoursSinceActive) {
   return Date.now() - (hoursSinceActive * 60 * 60 * 1000);
@@ -28,9 +29,10 @@ const RunsList = ({
         if ((!limitToComplete || (limitToComplete && (run.status === 'complete' || run.status === 'error')))
           && (run.startDate > activeTime || run.endDate > activeTime)
           && consortium
-          && (consortium.owners.indexOf(auth.user.id) > -1
-            || consortium.members.indexOf(auth.user.id) > -1
-            || (run.sharedUsers && run.sharedUsers.indexOf(auth.user.id) > -1)
+          && (
+            isUserInGroup(auth.user.id, consortium.members)
+            || isUserInGroup(auth.user.id, consortium.owners)
+            || (run.sharedUsers && isUserInGroup(auth.user.id, run.sharedUsers))
           )
         ) {
           return (
@@ -51,7 +53,7 @@ const RunsList = ({
       {
         (!runs || !runs.length || runNoResultsCount === runs.length)
         && (
-          <Typography variant="body1">
+          <Typography variant="body2">
             {
               hoursSinceActive === 0
                 ? (

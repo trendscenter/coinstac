@@ -16,6 +16,7 @@ import DashboardHome from './components/dashboard/dashboard-home';
 import RouteContainer from './containers/route-container';
 import Login from './components/user/form-login-controller';
 import Signup from './components/user/form-signup-controller';
+import ForgotPassword from './components/user/form-password-controller';
 import Maps from './components/maps/maps';
 import MapsEdit from './components/maps/maps-edit';
 import PipelinesList from './components/pipelines/pipelines-list';
@@ -23,6 +24,7 @@ import Pipeline from './components/pipelines/pipeline';
 import ResultsList from './components/results/results-list';
 import Result from './components/results/result';
 import Settings from './components/user/settings';
+import Issues from './components/issues';
 import Threads from './components/threads';
 import Logs from './components/logs-display/logs';
 import Papaya from './components/papaya';
@@ -33,6 +35,7 @@ export default (
     <IndexRedirect to="/login" />
     <Route path="login" component={Login} />
     <Route path="signup" component={Signup} />
+    <Route path="forgot-password" component={ForgotPassword} />
     <Route path="dashboard" component={Dashboard}>
       <IndexRoute component={DashboardHome} />
       <Route path="consortia" component={RouteContainer}>
@@ -60,6 +63,7 @@ export default (
         <Route path="new" component={ComputationSubmission} />
       </Route>
       <Route path="settings" component={Settings} />
+      <Route path="issues" component={Issues} />
       <Route path="threads" component={Threads} />
       <Route path="logs" component={Logs} />
       <Route path="papaya" component={Papaya} />

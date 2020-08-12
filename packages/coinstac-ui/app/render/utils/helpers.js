@@ -19,3 +19,9 @@ export const isAllowedForComputationChange = (user) => {
 export const getGraphQLErrorMessage = (error, defaultMessag) => {
   return get(error, 'graphQLErrors.0.message', defaultMessag);
 };
+
+export const isUserInGroup = (userId, groupArr) => {
+  return Array.isArray(groupArr)
+    ? groupArr.findIndex(user => user === userId)
+    : userId in groupArr;
+};

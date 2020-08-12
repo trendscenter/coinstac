@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
-import { isEqual, omit } from 'lodash';
+import { omit } from 'lodash';
 import {
   CircularProgress,
   FormControl,
@@ -19,7 +19,7 @@ import CustomSelect from '../common/react-select';
 const BootstrapInput = withStyles(theme => ({
   root: {
     'label + &': {
-      marginTop: theme.spacing.unit * 3,
+      marginTop: theme.spacing(3),
     },
   },
   input: {
@@ -54,20 +54,20 @@ const BootstrapInput = withStyles(theme => ({
 const styles = theme => ({
   wrapper: {
     borderTop: `1px solid ${theme.palette.grey[300]}`,
-    padding: theme.spacing.unit * 2,
+    padding: theme.spacing(2),
   },
   recipients: {
-    paddingLeft: theme.spacing.unit * 2,
+    paddingLeft: theme.spacing(2),
     display: 'flex',
     alignItems: 'center',
     width: 300,
   },
   select: {
-    paddingLeft: theme.spacing.unit,
+    paddingLeft: theme.spacing(1),
   },
   textarea: {
-    margin: `${theme.spacing.unit * 2}px 0`,
-    padding: theme.spacing.unit * 2,
+    margin: `${theme.spacing(2)}px 0`,
+    padding: theme.spacing(2),
     fontSize: 16,
     width: '100%',
     height: 100,
@@ -85,11 +85,11 @@ const styles = theme => ({
     justifyContent: 'space-between',
   },
   formControl: {
-    marginRight: theme.spacing.unit,
+    marginRight: theme.spacing(1),
   },
   replyButton: {
     width: 100,
-    padding: `${theme.spacing.unit}px 0`,
+    padding: `${theme.spacing(1)}px 0`,
     backgroundColor: '#0078d4',
     fontSize: 14,
     color: 'white',
@@ -142,7 +142,7 @@ class ThreadReply extends Component {
       this.initializeState(nextProps);
     }
 
-    if (!isEqual(threadUsers, nextProps.threadUsers)) {
+    if (Object.keys(threadUsers).length !== Object.keys(nextProps.threadUsers).length) {
       this.initializeDefaultRecipients(nextProps, this.context);
     }
   }
@@ -160,9 +160,9 @@ class ThreadReply extends Component {
     const { threadUsers } = props;
     const { auth } = context;
 
-    const defaultSelectedRecipients = (threadUsers || [])
-      .filter(({ username }) => username !== auth.user.id)
-      .map(({ username }) => ({ value: username, label: username, isFixed: true }));
+    const defaultSelectedRecipients = Object.keys(threadUsers || {})
+      .filter(id => id !== auth.user.id)
+      .map(id => ({ value: id, label: threadUsers[id].username, isFixed: true }));
 
     this.setState({
       selectedRecipients: defaultSelectedRecipients,
@@ -231,7 +231,10 @@ class ThreadReply extends Component {
       {
         threadId,
         title,
-        recipients: selectedRecipients.map(recipient => recipient.value),
+        recipients: selectedRecipients.reduce((acc, recipient) => {
+          acc[recipient.value] = recipient.label;
+          return acc;
+        }, {}),
         content: message,
       },
       (action === 'join-consortium' && selectedConsortium !== 'none') && ({
@@ -326,7 +329,7 @@ class ThreadReply extends Component {
 
     const allRecipients = (users || [])
       .filter(user => user.id !== auth.user.id)
-      .map(user => ({ value: user.id, label: user.id }));
+      .map(user => ({ value: user.id, label: user.username }));
 
     return allRecipients;
   }
@@ -339,7 +342,7 @@ class ThreadReply extends Component {
     ];
 
     consortia.forEach((consortium) => {
-      if (consortium.owners.indexOf(auth.user.id) !== -1) {
+      if (auth.user.id in consortium.owners) {
         allConsortia.push({ value: consortium.id, label: consortium.name });
       }
     });
@@ -385,7 +388,7 @@ class ThreadReply extends Component {
     return (
       <div className={classes.wrapper}>
         <div style={{ display: 'flex', alignItems: 'center' }}>
-          <ThreadAvatar username={auth.user.id} showUsername />
+          <ThreadAvatar username={auth.user.username} showUsername />
 
           <div className={classes.recipients}>
             <span>To:</span>
@@ -485,7 +488,7 @@ class ThreadReply extends Component {
 
 ThreadReply.defaultProps = {
   threadId: '',
-  threadUsers: [],
+  threadUsers: {},
   title: '',
 };
 
@@ -493,7 +496,7 @@ ThreadReply.propTypes = {
   classes: PropTypes.object.isRequired,
   savingStatus: PropTypes.string.isRequired,
   threadId: PropTypes.any, // eslint-disable-line react/no-unused-prop-types
-  threadUsers: PropTypes.array,
+  threadUsers: PropTypes.object,
   title: PropTypes.any,
   onSend: PropTypes.func.isRequired,
 };
