@@ -18,6 +18,8 @@
     "boom": "^5.2.0",
     "clarify": "^2.1.0",
     "coinstac-graphql-schema": "^5.0.0",
+    "dotenv": "^8.2.0",
+    "github-api": "^3.3.0",
     "graphql": "^0.10.5",
     "graphql-subscriptions": "^0.5.8",
     "graphql-tools": "^1.2.3",

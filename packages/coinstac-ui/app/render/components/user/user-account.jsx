@@ -10,6 +10,7 @@ import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import SettingsIcon from '@material-ui/icons/Settings';
+import BugReportIcon from '@material-ui/icons/BugReport';
 import ExitToAppIcon from '@material-ui/icons/ExitToApp';
 import MessageIcon from '@material-ui/icons/Message';
 import MemberAvatar from '../common/member-avatar';
@@ -103,6 +104,15 @@ const UserAccount = (props) => {
             <ListItemIcon><SettingsIcon /></ListItemIcon>
             <ListItemText
               primary="Settings"
+              classes={{
+                root: classes.listItemButtonTextRoot,
+              }}
+            />
+          </ListItem>
+          <ListItem disableGutters button component={Link} to="/dashboard/issues">
+            <ListItemIcon><BugReportIcon /></ListItemIcon>
+            <ListItemText
+              primary="Submit a bug"
               classes={{
                 root: classes.listItemButtonTextRoot,
               }}

@@ -99,6 +99,11 @@ const mutations = {
       setReadMessage(threadId: $threadId, userId: $userId)
     }
   `,
+  createIssue: `
+    {
+      createIssue(issue: $issue)
+    }
+  `,
 };
 
 module.exports = mutations;

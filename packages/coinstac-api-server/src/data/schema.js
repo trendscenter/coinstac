@@ -148,6 +148,11 @@ const typeDefs = `
     date: String
   }
 
+  input IssueInput {
+    title: String
+    body: String
+  }
+
   # This is the general mutation description
   type Mutation {
     # Stringify incoming computation, parse prior to insertion call
@@ -174,6 +179,7 @@ const typeDefs = `
     updatePassword(currentPassword: String!, newPassword: String!): Boolean
     saveMessage(threadId: ID, title: String!, recipients: JSON, content: String!, action: ActionInput): Thread
     setReadMessage(threadId: ID, userId: ID): JSON
+    createIssue(issue: IssueInput!): JSON
   }
 
   # This is a description of the queries
