@@ -1,14 +1,16 @@
-/* eslint-disable no-await-in-loop */
 const Boom = require('boom');
 const GraphQLJSON = require('graphql-type-json');
 const Promise = require('bluebird');
-const { PubSub, withFilter } = require('graphql-subscriptions');
 const axios = require('axios');
+const Issue = require('github-api/dist/components/Issue');
+const { PubSub, withFilter } = require('graphql-subscriptions');
+const { uniq } = require('lodash');
 const { ObjectID } = require('mongodb');
 const helperFunctions = require('../auth-helpers');
 const initSubscriptions = require('./subscriptions');
 const database = require('../database');
 const { transformToClient } = require('../utils');
+
 const {
   eventEmitter,
   COMPUTATION_CHANGED,
@@ -45,7 +47,7 @@ async function fetchOnePipeline(id) {
 
   let pipe = null;
   do {
-    const currentStep = await pipelineSteps.next();
+    const currentStep = await pipelineSteps.next(); // eslint-disable-line no-await-in-loop
 
     if (!pipe) {
       pipe = {
@@ -57,7 +59,7 @@ async function fetchOnePipeline(id) {
     currentStep.steps.computations = transformToClient(currentStep.steps.computations);
 
     pipe.steps.push(currentStep.steps);
-  } while (await pipelineSteps.hasNext());
+  } while (await pipelineSteps.hasNext()); // eslint-disable-line no-await-in-loop
 
   return pipe;
 }
@@ -952,7 +954,7 @@ const resolvers = {
       }
     },
     /**
-     * Updated password
+     * Updated user password
      * @param {object} auth User object from JWT middleware validateFunc
      * @param {object} args
      * @param {string} args.currentPassword Current password
@@ -985,7 +987,7 @@ const resolvers = {
       });
     },
     /**
-     * Save message
+     * Save a user message
      * @param {object} auth User object from JWT middleware validateFunc
      * @param {object} args
      * @param {string} args.threadId Thread Id
@@ -1097,7 +1099,7 @@ const resolvers = {
       return transformToClient(result);
     },
     /**
-     * Set read mesasge
+     * Set if a user has read a message
      * @param {object} auth User object from JWT middleware validateFunc
      * @param {object} args
      * @param {string} args.threadId Thread Id
@@ -1122,7 +1124,31 @@ const resolvers = {
       eventEmitter.emit(THREAD_CHANGED, result.value);
 
       return transformToClient(result.value);
-    }
+    },
+    /**
+     * Create github issue
+     * @param {object} auth User object from JWT middleware validateFunc
+     * @param {object} args
+     * @param {object} args.issue Issue
+     * @return {object} Created issue
+     */
+    createIssue: async ({ auth: { credentials } }, args) => {
+      const { title, body } = args.issue;
+
+      const repository = process.env.COINSTAC_REPOSITORY_NAME
+      const auth = {
+        username: process.env.GITHUB_BOT_USERNAME,
+        password: process.env.GITHUB_ACCESS_TOKEN,
+      }
+
+      try {
+        const issue = new Issue(repository, auth);
+
+        await issue.createIssue({ title: `${credentials.username} - ${title}`, body });
+      } catch (error) {
+        return Boom.notAcceptable('Failed to create issue on GitHub');
+      }
+    },
   },
   Subscription: {
     /**
