@@ -119,13 +119,9 @@ class Settings extends Component {
             Settings
           </Typography>
         </div>
-<<<<<<< HEAD
         <UserEditController />
         <hr />
-        <Typography variant="h5" className={classes.pageSubtitle}>
-=======
         <Typography variant="h5" className={classes.removeDataTitle}>
->>>>>>> master
           Remove Data
         </Typography>
         <form method="post" onSubmit={this.clearData}>
