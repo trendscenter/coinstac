@@ -1098,7 +1098,8 @@ const resolvers = {
 
       const repository = process.env.COINSTAC_REPOSITORY_NAME
       const auth = {
-        token: process.env.GITHUB_ACCESS_TOKEN,
+        username: process.env.GITHUB_BOT_USERNAME,
+        password: process.env.GITHUB_ACCESS_TOKEN,
       }
 
       try {
@@ -1106,7 +1107,6 @@ const resolvers = {
 
         await issue.createIssue({ title: `${credentials.username} - ${title}`, body });
       } catch (error) {
-        debugger
         return Boom.notAcceptable('Failed to create issue on GitHub');
       }
     },
