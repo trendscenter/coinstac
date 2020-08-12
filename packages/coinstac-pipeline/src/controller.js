@@ -196,6 +196,7 @@ module.exports = {
                   if (error) return err(error);
                   setStateProp('state', 'finished remote iteration');
                   controllerState.success = !!output.success;
+
                   cb();
                 },
               });
@@ -215,16 +216,17 @@ module.exports = {
               });
             case 'doneRemote':
               setStateProp('state', 'waiting on local users');
-              // we want the success output, grabbing the last currentOutput is fine
-              // Note that input arg === controllerState.currentOutput.output at this point
+              // grab now as it gets removed on send to clients
+              const finalOutput = store.get(runId, clientId); // eslint-disable-line no-case-declarations, max-len
               return remoteHandler({
                 success: controllerState.success,
                 transmitOnly: true,
                 iteration: controllerState.iteration,
                 callback: (error) => {
                   if (error) return err(error);
+                  // final output for remote
                   setStateProp('state', 'finished final remote iteration');
-                  cb();
+                  cb(finalOutput);
                 },
               });
             case 'done':

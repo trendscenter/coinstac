@@ -64,5 +64,4 @@ packages/coinstac-ui/coinstac-linux*
 packages/coinstac-ui/coinstac-win32*
 packages/coinstac-ui/coinstac-mas*
 
-# Environment file
-.env
+packages/coinstac-ui/config/local-build-copy.json

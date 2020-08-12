@@ -349,7 +349,8 @@ class Dashboard extends Component {
         if (consortia[i] && nextProps.consortia[i].id === consortia[i].id
             && nextProps.consortia[i].activePipelineId
             && !consortia[i].activePipelineId
-            && nextProps.consortia[i].members.indexOf(user.id) > -1) {
+            && user.id in nextProps.consortia[i].members
+        ) {
           const computationData = client.readQuery({ query: FETCH_ALL_COMPUTATIONS_QUERY });
           const pipelineData = client.readQuery({ query: FETCH_ALL_PIPELINES_QUERY });
           const pipeline = pipelineData.fetchAllPipelines
@@ -441,10 +442,7 @@ class Dashboard extends Component {
 
     const { id: userId } = auth.user;
 
-    const unreadThreads = threads.filter((thread) => {
-      return thread.users
-        .filter(({ username, isRead }) => username === userId && !isRead).length > 0;
-    });
+    const unreadThreads = threads.filter(thread => userId in thread && !thread[userId].isRead);
 
     return unreadThreads.length;
   }
@@ -677,7 +675,12 @@ const DashboardWithData = compose(
           if (data.userChanged.delete) {
             return { fetchUser: null };
           }
-          return { fetchUser: data.userChanged };
+          return {
+            fetchUser: {
+              ...prevResult.fetchUser,
+              ...data.userChanged,
+            },
+          };
         },
       }),
     }),
