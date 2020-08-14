@@ -128,7 +128,7 @@
   },
   "scripts": {
     "build:webpack": "cross-env NODE_ENV=production webpack --mode=production",
-    "build": "npm i && npm run build:webpack && node ./scripts/build.js production",
+    "build-prod": "npm i && npm run build:webpack && node ./scripts/build.js production",
     "build-dev": "npm i && node ./scripts/build-setup.js  && npm dedupe && npm run build:webpack && node ./scripts/build.js development",
     "build-local": "npm i && node ./scripts/build-setup.js && npm dedupe && npm run build:webpack && node ./scripts/build.js",
     "start": "electron . --log-level=debug",
