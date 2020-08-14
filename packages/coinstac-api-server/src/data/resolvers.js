@@ -402,7 +402,7 @@ const resolvers = {
       const { computationSchema } = args;
 
       if (!isAllowedForComputationChange(permissions)) {
-        return Boom.forbidden('Only admin or author can add computation.');
+        return Boom.forbidden('Action not permitted');
       }
 
       const db = database.getDbInstance();
@@ -664,7 +664,7 @@ const resolvers = {
       }
 
       if (computation.submittedBy !== credentials.username && !isAdmin(credentials.permissions)) {
-        return Boom.forbidden('Only admin or computation owner can delete computations.');
+        return Boom.forbidden('Action not permitted');
       }
 
       const deleteComputationResult = await db.collection('computations').findOneAndDelete({ _id: ObjectID(args.computationId) });
