@@ -327,23 +327,11 @@ class ComputationsList extends Component {
         {otherComputations.length > 0 && <Typography variant="h6">Other Computations</Typography>}
         {otherComputations.length > 0 && this.getTable(otherComputations)}
 
-<<<<<<< HEAD
         {(!computations || !computations.length) && (
-          <Typography variant="body1">
+          <Typography variant="body2">
             No computations found
           </Typography>
         )}
-=======
-        {
-          (!computations || !computations.length)
-          && (
-            <Typography variant="body2">
-              No computations found
-            </Typography>
-          )
-        }
->>>>>>> master
-
         <ListDeleteModal
           close={this.closeModal}
           deleteItem={this.removeComputation}
