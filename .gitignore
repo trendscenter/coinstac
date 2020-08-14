@@ -65,3 +65,4 @@ packages/coinstac-ui/coinstac-win32*
 packages/coinstac-ui/coinstac-mas*
 
 packages/coinstac-ui/config/local-build-copy.json
+build/
