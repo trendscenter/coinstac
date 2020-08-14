@@ -409,7 +409,6 @@ const resolvers = {
 
       const filteredComputations = await filterComputationsByMetaId(db, computationSchema.meta.id);
 
-<<<<<<< HEAD
       if (filteredComputations.length === 0) {
         const result = await db.collection('computations').insertOne({
           ...computationSchema,
@@ -417,15 +416,6 @@ const resolvers = {
         });
 
         const computation = result.ops[0];
-=======
-      await db.collection('computations').replaceOne({
-        _id: args.computationSchema.id,
-      }, {
-        ...args.computationSchema, submittedBy: ObjectID(credentials.id)
-      }, {
-        upsert: true
-      });
->>>>>>> master
 
         eventEmitter.emit(COMPUTATION_CHANGED, computation);
 
@@ -436,7 +426,7 @@ const resolvers = {
         const computation = filteredComputations[0];
 
         if (computation.submittedBy !== credentials.id && !isAdmin(credentials.permissions)) {
-          return Boom.forbidden('Only admin or computation owner can update computations.');
+          return Boom.forbidden('Incorrect permissions to update computation');
         }
 
         const updatedComputationResult = await db.collection('computations').findOneAndUpdate({
