@@ -48,7 +48,9 @@ class ComputationSubmission extends Component {
 
         this.setState({ activeSchema: res, validationErrors: error });
       })
-      .catch(() => {});
+      .catch((e) => {
+        notifyError(e.message);
+      });
   }
 
   addComputation = () => {
