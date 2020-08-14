@@ -2,7 +2,7 @@ const Boom = require('boom');
 const GraphQLJSON = require('graphql-type-json');
 const Promise = require('bluebird');
 const axios = require('axios');
-const { get, uniq } = require('lodash');
+const { get } = require('lodash');
 const Issue = require('github-api/dist/components/Issue');
 const { PubSub, withFilter } = require('graphql-subscriptions');
 const { ObjectID } = require('mongodb');
@@ -469,22 +469,18 @@ const resolvers = {
           return Boom.forbidden('Action not permitted');
         }
 
-        await addUserPermissions({ doc: ObjectID(args.doc), role: args.role, userId: args.userId, table: args.table });
+        await addUserPermissions({ doc: ObjectID(args.doc), role: args.role, userId: ObjectID(args.userId), table: args.table });
       }
 
       if (args.roleType === 'app') {
-        if ((!isAdmin(permissions) && !isAuthor(permissions)) || (AVAILABLE_USER_APP_ROLES.indexOf(args.role) === -1)) {
+        if (!isAdmin(permissions) || (AVAILABLE_USER_APP_ROLES.indexOf(args.role) === -1)) {
           return Boom.forbidden('Action not permitted');
         }
 
-<<<<<<< HEAD
         await changeUserAppRole(args, 'add');
       }
-=======
-      await addUserPermissions({ doc: ObjectID(args.doc), role: args.role, userId: ObjectID(args.userId), table: args.table });
 
       return helperFunctions.getUserDetailsByID(args.userId);
->>>>>>> master
     },
     /**
      * Add run to database
@@ -701,23 +697,18 @@ const resolvers = {
           return Boom.forbidden('Action not permitted');
         }
 
-        await removeUserPermissions({ doc: ObjectID(args.doc), role: args.role, userId: args.userId, table: args.table });
+        await removeUserPermissions({ doc: ObjectID(args.doc), role: args.role, userId: ObjectID(args.userId), table: args.table });
       }
 
-<<<<<<< HEAD
       if (args.roleType === 'app') {
-        if ((!isAdmin(permissions) && !isAuthor(permissions)) || (AVAILABLE_USER_APP_ROLES.indexOf(args.role) === -1)) {
+        if (!isAdmin(permissions) || (AVAILABLE_USER_APP_ROLES.indexOf(args.role) === -1)) {
           return Boom.forbidden('Action not permitted');
         }
 
         await changeUserAppRole(args, 'remove');
       }
-      // await removeUserPermissions({ doc: ObjectID(args.doc), role: args.role, userId: args.userId, table: args.table });
-=======
-      await removeUserPermissions({ doc: ObjectID(args.doc), role: args.role, userId: ObjectID(args.userId), table: args.table });
 
       return helperFunctions.getUserDetailsByID(args.userId);
->>>>>>> master
     },
     /**
      * Sets active pipeline on consortia object
