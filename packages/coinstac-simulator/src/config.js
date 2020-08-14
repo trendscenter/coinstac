@@ -5,12 +5,28 @@ const query = `mutation addComputation($computationSchema: ComputationInput!) {
   }
 }
 `;
-
-module.exports = {
-  apiServer: 'localhost',
-  port: '3100',
+let config = {
   graphql: {
     query,
     operationName,
   },
+};
+
+if(process.env.NODE_ENV === 'DEVELOPMENT') {
+  config = Object.assign(config,
+    {
+      protocol: 'http',
+      apiServer: 'localhost',
+      port: '3100',
+    });
+} else {
+  config = Object.assign(config,
+    {
+      protocol: 'https',
+      apiServer: 'coinstac.rs.gsu.edu',
+      port: '443',
+    });
+}
+module.exports = {
+
 };
