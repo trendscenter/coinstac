@@ -449,7 +449,7 @@ const resolvers = {
         return run;
       } catch (error) {
         if (error.code === 'ECONNREFUSED') {
-          return Boom.serverUnavailable('Pipeline server does not work.');
+          return Boom.serverUnavailable('Pipeline server unavailable');
         }
 
         return Boom.notAcceptable(error);
