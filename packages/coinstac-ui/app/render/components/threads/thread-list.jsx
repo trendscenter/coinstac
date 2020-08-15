@@ -19,7 +19,7 @@ const styles = theme => ({
   },
   button: {
     width: '100%',
-    padding: `${theme.spacing.unit * 2}px 0`,
+    padding: `${theme.spacing(2)}px 0`,
     backgroundColor: '#0078d4',
     fontSize: 14,
     color: 'white',
@@ -35,7 +35,7 @@ const styles = theme => ({
 class ThreadList extends Component {
   isThreadUnread = (thread) => {
     const { auth } = this.context;
-    const user = thread.users.find(({ username }) => username === auth.user.id);
+    const user = thread.users[auth.user.id];
 
     return !get(user, 'isRead', true);
   }

@@ -12,7 +12,7 @@ const styles = theme => ({
   },
   title: {
     textAlign: 'center',
-    padding: theme.spacing.unit * 2,
+    padding: theme.spacing(2),
     borderBottom: `1px solid ${theme.palette.grey[300]}`,
   },
   input: {

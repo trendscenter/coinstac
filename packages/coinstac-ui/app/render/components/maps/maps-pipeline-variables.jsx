@@ -10,9 +10,9 @@ import MapsStepFieldset from './maps-step-fieldset';
 const styles = theme => ({
   rootPaper: {
     ...theme.mixins.gutters(),
-    paddingTop: theme.spacing.unit * 2,
-    paddingBottom: theme.spacing.unit * 2,
-    marginTop: theme.spacing.unit * 2,
+    paddingTop: theme.spacing(2),
+    paddingBottom: theme.spacing(2),
+    marginTop: theme.spacing(2),
     height: '100%',
   },
 });
@@ -32,7 +32,7 @@ function MapsPipelineVariables(props) {
         className={classes.rootPaper}
         elevation={1}
       >
-        <Typography variant="headline" className={classes.title}>
+        <Typography variant="h5" className={classes.title}>
           { `${consortium.name}: Pipeline` }
         </Typography>
         <Divider />
