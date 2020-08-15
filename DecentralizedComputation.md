@@ -2,12 +2,12 @@
 
 A  [Decentralized Computation](http://mrn-code.github.io/coinstac/coinstac-common/DecentralizedComputation.html) is a [data type in coinstac-common](http://mrn-code.github.io/coinstac/coinstac-common/index.html). As a consortium leader or designer, your goal is to provide the content and algorithms for how pipelines, analyses, or general computations are run both on  consortium members' devices, as well as on a central compute server.
 
-a `DecentralizedComputation` is composed of three parts:
+A `DecentralizedComputation` is composed of three parts:
 - the overall description of your computation.
 - the description of what each member needs to execute.
 - the description of what the central server needs to compute.
 
-let's figure out how to build one.
+Let's figure out how to build one.
 
 ## prepare
 - install [nodejs](https://nodejs.org).  it's a quick [installation](https://nodejs.org/en/download/).
@@ -16,11 +16,11 @@ let's figure out how to build one.
 
 ## design
 
-how to design an `DecentralizedComputation` is best discovered through example. we will follow some examples found in the integration repository mentioned above.
+How to design an `DecentralizedComputation` is best discovered through example. we will follow some examples found in the integration repository mentioned above.
 
 ### definition
 
-the general form of a `DecentralizedComputation` is a simple `.js` file defined as follows:
+The general form of a `DecentralizedComputation` is a simple `.js` file defined as follows:
 
 ```js
 {
@@ -41,7 +41,7 @@ A few things to note:
 
 ### pipeline basics
 
-a [`Pipeline`]http://mrn-code.github.io/coinstac/coinstac-common/Pipeline.html) in COINSTAC is not your run-of-the-mill, [traditional sequential Pipeline](https://en.wikipedia.org/wiki/Pipeline_(computing)).  COINSTAC decentralized Pipelines differ from traditional pipelines with the following modifications:
+a `Pipeline` in COINSTAC is not your run-of-the-mill, [traditional sequential Pipeline](https://en.wikipedia.org/wiki/Pipeline_(computing)).  COINSTAC decentralized Pipelines differ from traditional pipelines with the following modifications:
 
 - COINSTAC Pipelines may `halt` and `resume`.
 - COINSTAC Pipelines may conditionally `progress` to subsequent steps, or, repeat the current step many times.
@@ -58,7 +58,7 @@ local: [{
 }],
 ```
 
-It would appear that this single step Pipeline simply runs `node ./process-data.js`.  In fact, it does do this, _however_, also provides a great deal of extra data to the passed command as well.  The _actual_ command run is something more to the tune of:
+It would appear that this single step Pipeline simply runs `node ./process-data.js`.  In fact, it does do this, _however_ it also provides a great deal of extra data to the passed command as well.  The _actual_ command run is something more to the tune of:
 
 `node ./process-data.js -run { ...coinstac-inputs }`
 

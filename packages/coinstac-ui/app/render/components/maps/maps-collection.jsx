@@ -17,14 +17,14 @@ import MapsFilePicker from './maps-file-picker';
 
 const styles = theme => ({
   removeFileGroupButton: {
-    marginTop: theme.spacing.unit,
-    marginBottom: theme.spacing.unit,
+    marginTop: theme.spacing(1),
+    marginBottom: theme.spacing(1),
   },
   rootPaper: {
     ...theme.mixins.gutters(),
-    paddingTop: theme.spacing.unit * 2,
-    paddingBottom: theme.spacing.unit * 2,
-    marginTop: theme.spacing.unit * 2,
+    paddingTop: theme.spacing(2),
+    paddingBottom: theme.spacing(2),
+    marginTop: theme.spacing(2),
     height: '100%',
   },
   fileList: {
@@ -39,7 +39,7 @@ const styles = theme => ({
     margin: '0.25rem',
   },
   actionsContainer: {
-    marginTop: theme.spacing.unit * 2,
+    marginTop: theme.spacing(2),
   },
   timesIcon: {
     color: '#f05a29 !important',
