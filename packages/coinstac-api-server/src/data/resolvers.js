@@ -117,7 +117,6 @@ async function removeUserPermissions(args) {
   });
 
   const { permissions } = user;
-
   const index = permissions[args.table][args.doc].findIndex(p => p === args.role);
   permissions[args.table][args.doc].splice(index, 1);
 
@@ -151,9 +150,8 @@ async function removeUserPermissions(args) {
         [`${args.role}s.${args.userId}`]: userUpdateResult.value.username,
       },
     };
-
     if (permissions[args.table][args.doc].length === 0) {
-      updateObj.$pull.mappedForRun = args.userId;
+      updateObj.$pull = Object.assign(updateObj.$pull || {}, { mappedForRun: args.userId });
     }
 
     const consortiaUpdateResult = await db.collection('consortia').findOneAndUpdate({ _id: args.doc }, updateObj, { returnOriginal: false });
@@ -397,7 +395,7 @@ const resolvers = {
         return Boom.forbidden('Action not permitted');
       }
 
-      await addUserPermissions({ doc: ObjectID(args.doc), role: args.role, userId: ObjectID(args.userId), table: args.table });
+      await addUserPermissions({ doc: ObjectID(args.doc), role: args.role, userId: args.userId, table: args.table });
 
       return helperFunctions.getUserDetailsByID(args.userId);
     },
