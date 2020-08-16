@@ -1,0 +1,72 @@
+{
+  "meta": {
+    "name": "Decentralized Multishot TSNE Demo",
+    "id": "dsne-ms",
+    "version": "v1.0.0",
+    "repository": "https:\/\/github.com\/trendscenter\/coinstac-dsne-multishot\/",
+    "description": "A Test from Decentralized Multishot TSNE"
+  },
+  "computation": {
+    "type": "docker",
+    "dockerImage": "coinstacteam/dsne-ms",
+    "command": [
+      "python",
+      "\/computation\/local.py"
+    ],
+    "remote": {
+      "type": "docker",
+      "dockerImage": "coinstacteam/dsne-ms",
+      "command": [
+        "python",
+        "\/computation\/remote.py"
+      ]
+    },
+    "input": {
+      "data": {
+        "label": "Data",
+        "type": "singles",
+        "items": ["site_data", "site_label"],
+        "extensions": [["csv", "txt"]],
+        "order": 0
+      },
+      "no_dims": {
+        "type": "number",
+        "label": "No DIMS",
+        "default": 2,
+        "order": 2
+      },
+      "initial_dims": {
+        "type": "number",
+        "label": "Initial DIMS",
+        "default": 30,
+        "order": 3
+      },
+      "perplexity": {
+        "type": "range",
+        "label": "Perplexity",
+        "default": 100,
+        "min": -5,
+        "max": 100,
+        "step": 5,
+        "order": 4
+      },
+      "max_iterations": {
+        "type": "number",
+        "label": "Max Iterations",
+        "default": 1000,
+        "order": 5
+      }
+    },
+    "output": {
+      "embedding": {
+        "type": "array"
+      },
+      "image_path": {
+        "type": "string"
+      }
+    },
+    "display": {
+      "type": "images"
+    }
+  }
+}

@@ -10,9 +10,9 @@ import MapsStepFieldset from './maps-step-fieldset';
 const styles = theme => ({
   rootPaper: {
     ...theme.mixins.gutters(),
-    paddingTop: theme.spacing.unit * 2,
-    paddingBottom: theme.spacing.unit * 2,
-    marginTop: theme.spacing.unit * 2,
+    paddingTop: theme.spacing(2),
+    paddingBottom: theme.spacing(2),
+    marginTop: theme.spacing(2),
     height: '100%',
   },
 });
@@ -32,15 +32,20 @@ function MapsPipelineVariables(props) {
         className={classes.rootPaper}
         elevation={1}
       >
-        <Typography variant="headline" className={classes.title}>
+        <Typography variant="h5" className={classes.title}>
           { `${consortium.name}: Pipeline` }
         </Typography>
         <Divider />
         {
           consortium.pipelineSteps && consortium.pipelineSteps.map((step) => {
-            const { inputMap } = step;
+            const { computations, inputMap } = step;
 
-            return Object.keys(inputMap).map((inputMapKey) => {
+            const inputs = { ...inputMap, ...computations[0].computation.input };
+
+            return Object.entries(inputs).map((input) => {
+              const inputMapKey = input[0];
+              const inputMapValue = input[1];
+
               if (inputMapKey === 'meta') {
                 return;
               }
@@ -49,6 +54,7 @@ function MapsPipelineVariables(props) {
                 <MapsStepFieldset
                   registerDraggableContainer={registerDraggableContainer}
                   key={`step-${inputMapKey}`}
+                  fieldsetLabel={inputMapValue.label}
                   fieldsetName={inputMapKey}
                   stepFieldset={inputMap[inputMapKey]}
                   stepsDataMappings={stepsDataMappings}

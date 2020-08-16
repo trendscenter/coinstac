@@ -1,6 +1,6 @@
 # Setup
 
-These instructions explain how to get COINSTAC up and running on your machine:
+These instructions explain how to get COINSTAC up and running on your machine for development or to run your own COINSTAC system:
 
 ## Required Software
 
@@ -33,6 +33,8 @@ Move into the _coinstac_ directory (`cd coinstac`) and run the following command
 npm install // needed only for initial top level setup
 npm run build
 ```
+
+These [dependencies](https://github.com/trendscenter/coinstac/blob/master/package-lock.json) will be installed.
 
 ## Updating Source Code
 Any time you pull in new code, you'll need to rebuild the application.

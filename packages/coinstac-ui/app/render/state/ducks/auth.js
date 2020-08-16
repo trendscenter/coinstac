@@ -1,12 +1,15 @@
 import axios from 'axios';
 import ipcPromise from 'ipc-promise';
-import { remote } from 'electron';
+import { remote, ipcRenderer } from 'electron';
 import { get } from 'lodash';
 import { LOCATION_CHANGE } from 'react-router-redux';
 import { applyAsyncLoading } from './loading';
+import { notifySuccess, notifyError } from './notifyAndLog';
 
 const apiServer = remote.getGlobal('config').get('apiServer');
 const API_URL = `${apiServer.protocol}//${apiServer.hostname}${apiServer.port ? `:${apiServer.port}` : ''}${apiServer.pathname}`;
+
+export const API_TOKEN_KEY = `id_token_${remote.getCurrentWindow().id}`;
 
 const getErrorDetail = error => ({
   message: get(error, 'response.data.message'),
@@ -20,6 +23,7 @@ const INITIAL_STATE = {
     permissions: {},
     email: '',
     institution: '',
+    photo: '',
     consortiaStatuses: {},
   },
   appDirectory: localStorage.getItem('appDirectory') || remote.getGlobal('config').get('coinstacHome'),
@@ -57,28 +61,40 @@ export const setApiVersionCheck = isApiVersionCompatible => ({
 });
 
 // Helpers
-const initCoreAndSetToken = (reqUser, data, appDirectory, dispatch) => {
+const initCoreAndSetToken = async (reqUser, data, appDirectory, dispatch) => {
   if (appDirectory) {
     localStorage.setItem('appDirectory', appDirectory);
   }
 
-  return ipcPromise.send('login-init', { userId: reqUser.username, appDirectory })
-    .then(() => {
-      const user = { ...data.user, label: reqUser.username };
+  await ipcPromise.send('login-init', { userId: reqUser.userid, appDirectory });
+
+  const user = { ...data.user, label: reqUser.username };
+
+  remote.getCurrentWindow().webContents.send('login-success', data.user.id);
+
+  return new Promise((resolve) => {
+    ipcRenderer.on('app-init-finished', () => {
+      const tokenData = {
+        token: data.id_token,
+        userId: user.id,
+      };
 
       if (reqUser.saveLogin) {
-        localStorage.setItem('id_token', data.id_token);
+        localStorage.setItem(API_TOKEN_KEY, JSON.stringify(tokenData));
       } else {
-        sessionStorage.setItem('id_token', data.id_token);
+        sessionStorage.setItem(API_TOKEN_KEY, JSON.stringify(tokenData));
       }
 
       dispatch(setUser(user));
+
+      resolve();
     });
+  });
 };
 
 export const logout = applyAsyncLoading(() => (dispatch) => {
-  localStorage.removeItem('id_token');
-  sessionStorage.removeItem('id_token');
+  localStorage.removeItem(API_TOKEN_KEY);
+  sessionStorage.removeItem(API_TOKEN_KEY);
   return ipcPromise.send('logout')
     .then(() => {
       dispatch(clearUser());
@@ -86,11 +102,11 @@ export const logout = applyAsyncLoading(() => (dispatch) => {
 });
 
 export const autoLogin = applyAsyncLoading(() => (dispatch, getState) => {
-  let token = localStorage.getItem('id_token');
+  let token = localStorage.getItem(API_TOKEN_KEY);
   let saveLogin = true;
 
   if (!token || token === 'null' || token === 'undefined') {
-    token = sessionStorage.getItem('id_token');
+    token = sessionStorage.getItem(API_TOKEN_KEY);
     saveLogin = false;
   }
 
@@ -98,16 +114,18 @@ export const autoLogin = applyAsyncLoading(() => (dispatch, getState) => {
     return;
   }
 
+  token = JSON.parse(token);
+
   return axios.post(
     `${API_URL}/authenticateByToken`,
     null,
-    { headers: { Authorization: `Bearer ${token}` } }
+    { headers: { Authorization: `Bearer ${token.token}` } }
   )
     // TODO: GET RID OF CORE INIT
     .then(({ data }) => {
       const { auth: { appDirectory } } = getState();
       return initCoreAndSetToken(
-        { username: data.user.id, saveLogin, password: 'password' },
+        { id: data.user.id, saveLogin, password: 'password' },
         data,
         appDirectory,
         dispatch
@@ -141,7 +159,8 @@ export const checkApiVersion = applyAsyncLoading(() => dispatch => axios.get(`${
 export const login = applyAsyncLoading(({ username, password, saveLogin }) => (dispatch, getState) => axios.post(`${API_URL}/authenticate`, { username, password })
   .then(({ data }) => {
     const { auth: { appDirectory } } = getState();
-    return initCoreAndSetToken({ username, password, saveLogin }, data, appDirectory, dispatch);
+    const userid = data.user.id;
+    return initCoreAndSetToken({ userid, password, saveLogin }, data, appDirectory, dispatch);
   })
   .catch((err) => {
     console.error(err); // eslint-disable-line no-console
@@ -168,6 +187,43 @@ export const signUp = applyAsyncLoading(user => (dispatch, getState) => axios.po
     if (statusCode === 400) {
       dispatch(setError(message));
     }
+  }));
+
+export const update = applyAsyncLoading(user => dispatch => axios.post(`${API_URL}/updateAccount`, user)
+  .then(({ data }) => {
+    const userNew = {
+      ...data.user,
+      username: user.username,
+      photo: user.photo,
+      hotoID: user.photoID,
+      name: user.name,
+    };
+    dispatch(setUser(userNew));
+  })
+  .catch((err) => {
+    const { statusCode, message } = getErrorDetail(err);
+    if (statusCode === 400) {
+      dispatch(setError(message));
+    }
+  }));
+
+export const sendPasswordResetEmail = applyAsyncLoading(payload => dispatch => axios.post(`${API_URL}/sendPasswordResetEmail`, payload)
+  .then(() => {
+    dispatch(notifySuccess('Sent password reset email successfully'));
+  })
+  .catch((err) => {
+    const { statusCode, message } = getErrorDetail(err);
+    dispatch(notifyError(statusCode === 400 ? message : 'Failed to send password reset email'));
+    throw err;
+  }));
+
+export const resetPassword = applyAsyncLoading(payload => dispatch => axios.post(`${API_URL}/resetPassword`, payload)
+  .then(() => {
+    dispatch(notifySuccess('Reset password successfully'));
+  })
+  .catch((err) => {
+    const { statusCode, message } = getErrorDetail(err);
+    dispatch(notifyError(statusCode === 400 ? message : 'Provided password reset token is not valid. It could be expired'));
   }));
 
 export default function reducer(state = INITIAL_STATE, { type, payload }) {

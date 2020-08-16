@@ -11,7 +11,7 @@ import classnames from 'classnames';
 
 const styles = theme => ({
   root: {
-    padding: theme.spacing.unit * 2,
+    padding: theme.spacing(2),
     backgroundColor: '#F05A28',
     transition: 'all 0.5s ease-out',
   },
@@ -19,7 +19,7 @@ const styles = theme => ({
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: theme.spacing.unit * 2,
+    marginBottom: theme.spacing(2),
   },
   title: {
     color: '#f5f5f5',

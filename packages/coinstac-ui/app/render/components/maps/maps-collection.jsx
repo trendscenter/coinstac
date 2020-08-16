@@ -17,14 +17,14 @@ import MapsFilePicker from './maps-file-picker';
 
 const styles = theme => ({
   removeFileGroupButton: {
-    marginTop: theme.spacing.unit,
-    marginBottom: theme.spacing.unit,
+    marginTop: theme.spacing(1),
+    marginBottom: theme.spacing(1),
   },
   rootPaper: {
     ...theme.mixins.gutters(),
-    paddingTop: theme.spacing.unit * 2,
-    paddingBottom: theme.spacing.unit * 2,
-    marginTop: theme.spacing.unit * 2,
+    paddingTop: theme.spacing(2),
+    paddingBottom: theme.spacing(2),
+    marginTop: theme.spacing(2),
     height: '100%',
   },
   fileList: {
@@ -39,7 +39,7 @@ const styles = theme => ({
     margin: '0.25rem',
   },
   actionsContainer: {
-    marginTop: theme.spacing.unit * 2,
+    marginTop: theme.spacing(2),
   },
   timesIcon: {
     color: '#f05a29 !important',
@@ -200,6 +200,7 @@ class MapsCollection extends Component {
       saveDataMapping,
       setSelectedDataFile,
       removeSelectedFile,
+      getFileName,
     } = this.props;
 
     const remainingDataVariables = this.getRemainingDataVariables(
@@ -256,7 +257,8 @@ class MapsCollection extends Component {
                   )
                 }
                 {
-                  dataType === 'bundle' && (
+                  dataType === 'bundle' ||
+                  dataType === 'singles' && (
                     <div>
                       <Typography>
                         <span className="bold">File(s):</span>
@@ -277,7 +279,7 @@ class MapsCollection extends Component {
                   {
                     remainingDataVariables && (
                       <div className="card-deck" ref={(ref) => { this.container = ref; }}>
-                        {
+                        { dataType !== 'singles' &&
                           remainingDataVariables.map(columnName => (
                             <div
                               className={`card-draggable card-${columnName.toLowerCase()}`}
@@ -291,6 +293,21 @@ class MapsCollection extends Component {
                                 className={classNames('fa fa-times-circle', classes.timesIcon)}
                                 onClick={() => removeColumnFromDataFileHeader(columnName)}
                               />
+                            </div>
+                          ))
+                        }
+                        { dataType == 'singles' &&
+                          remainingDataVariables.map(filePath => (
+                            <div
+                              className={`card-draggable card-${getFileName(filePath).toLowerCase()}`}
+                              data-string={filePath}
+                              key={getFileName(filePath)}
+                            >
+                              <FileCopyIcon />
+                              { getFileName(filePath) }
+                              <span onClick={() => removeColumnFromDataFileHeader(filePath)}>
+                                <Icon className={classNames('fa fa-times-circle', classes.timesIcon)} />
+                              </span>
                             </div>
                           ))
                         }
@@ -321,6 +338,7 @@ class MapsCollection extends Component {
                         style={{
                           backgroundColor: '#5cb85c',
                           color: '#fff',
+                          marginRight: '1rem',
                         }}
                         onClick={removeExtraColumnsFromDataFileHeader}
                       >

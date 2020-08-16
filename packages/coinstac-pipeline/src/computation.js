@@ -1,16 +1,17 @@
 'use strict';
 
-const docker = require('coinstac-docker-manager');
+const _ = require('lodash');
 
 module.exports = {
-  create(spec, mode, runId, clientId) {
+  create(spec, mode, runId, clientId, docker) {
     const computation = Object.assign(
       {},
       spec.computation,
       mode === 'remote' ? spec.computation.remote : {}
     );
     const { meta } = spec;
-
+    const dockerOptions = mode === 'remote'
+      ? (spec.computation.remote.dockerOptions || {}) : (spec.computation.dockerOptions || {});
     return {
       computation,
       meta,
@@ -23,7 +24,7 @@ module.exports = {
           this.meta.id,
           `${this.runId}-${this.clientId}`,
           {
-            docker: {
+            docker: _.merge({
               Image: computation.dockerImage,
               HostConfig: {
                 Binds: [
@@ -33,28 +34,15 @@ module.exports = {
                   `${baseDirectory}/transfer:/transfer:rw`,
                 ],
               },
-            },
+            }, dockerOptions),
           }
         )
           .then((service) => {
-            return service(computation.command.concat([`${JSON.stringify(input)}`]))
-              .catch((error) => {
-                // decorate w/ input
-                error.input = input;
-                throw error;
-              })
-              .then((data) => {
-                if (typeof data === 'string') {
-                  const err = new Error(`Computation output serialization failed with value: ${data}`);
-                  err.input = input;
-                  throw err;
-                }
-                return data;
-              });
+            return service(computation.command.concat([`${JSON.stringify(input)}`]));
           });
       },
       stop() {
-        return docker.stopService(this.meta.id, `${this.runId}-${this.clientId}`);
+        return docker.stopService(this.meta.id, `${this.runId}-${this.clientId}`, true);
       },
     };
   },

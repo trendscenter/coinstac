@@ -148,11 +148,6 @@ export const USER_CHANGED_SUBSCRIPTION = gql`
     ${queries.userChanged}
 `;
 
-export const USER_METADATA_CHANGED_SUBSCRIPTION = gql`
-  subscription userMetadataChanged($userId: ID)
-    ${queries.userMetadataChanged}
-`;
-
 export const REMOVE_USER_ROLE_MUTATION = gql`
   mutation removeUserRole($userId: ID!, $table: String!, $doc: String!, $role: String!)
     ${mutations.removeUserRole}
@@ -194,12 +189,22 @@ export const UPDATE_CONSORTIA_MAPPED_USERS_MUTATION = gql`
     ${mutations.updateConsortiaMappedUsers}
 `;
 
+export const UPDATE_PASSWORD_MUTATION = gql`
+  mutation updatePassword($currentPassword: String!, $newPassword: String!)
+    ${mutations.updatePassword}
+`;
+
 export const SAVE_MESSAGE_MUTATION = gql`
-  mutation saveMessage($threadId: ID, $title: String!, $recipients: [String!], $content: String!, $action: ActionInput)
+  mutation saveMessage($threadId: ID, $title: String!, $recipients: JSON, $content: String!, $action: ActionInput)
     ${mutations.saveMessage}
 `;
 
 export const SET_READ_MESSAGE_MUTATION = gql`
   mutation setReadMessage($threadId: ID!, $userId: ID!)
     ${mutations.setReadMessage}
+`;
+
+export const CREATE_ISSUE_MUTATION = gql`
+  mutation createIssue($issue: IssueInput!)
+    ${mutations.createIssue}
 `;

@@ -40,6 +40,7 @@ const PipelineManager = require('coinstac-pipeline');
  */
 class CoinstacClient {
   constructor(opts) {
+
     if (!opts || !(opts instanceof Object)) {
       throw new TypeError('coinstac-client requires configuration opts');
     }
@@ -161,13 +162,13 @@ class CoinstacClient {
   }
 
   /**
-   * Get array of file paths recursively
-   *
-   * @param {object} group
-   * @param {array} group.paths the paths to traverse
-   * @param {string} group.parentDir parent directory if diving into subdir
-   * @param {string} group.error present if error found
-   */
+    * Get array of file paths recursively
+    *
+    * @param {object} group
+    * @param {array} group.paths the paths to traverse
+    * @param {string} group.parentDir parent directory if diving into subdir
+    * @param {string} group.error present if error found
+    */
   static async getSubPathsAndGroupExtension(group, multext) {
     let pathsArray = [];
     let extension = null;
@@ -217,7 +218,7 @@ class CoinstacClient {
         const thisExtension = path.extname(p);
 
         if ((!multext && group.extension && thisExtension !== group.extension)
-            || (!multext && extension && extension !== thisExtension)) {
+             || (!multext && extension && extension !== thisExtension)) {
           return { error: `Group contains multiple extensions - ${thisExtension} & ${group.extension || extension}.` };
         }
 
@@ -257,18 +258,19 @@ class CoinstacClient {
         const escape = (string) => {
           return string.replace(e, '\\$&');
         };
-
-        for (let i = 0; i < filesArray.length; i += 1) {
-          const pathsep = new RegExp(`${escape(path.sep)}|:`, 'g');
-          linkPromises.push(
-            linkAsync(filesArray[i], path.resolve(this.appDirectory, 'input', this.clientId, runId, filesArray[i].replace(pathsep, '-')))
-              .catch((e) => {
-              // permit dupes
-                if (e.code && e.code !== 'EEXIST') {
-                  throw e;
-                }
-              })
-          );
+        if (filesArray) {
+          for (let i = 0; i < filesArray.length; i += 1) {
+            const pathsep = new RegExp(`${escape(path.sep)}|:`, 'g');
+            linkPromises.push(
+              linkAsync(filesArray[i], path.resolve(this.appDirectory, 'input', this.clientId, runId, filesArray[i].replace(pathsep, '-')))
+                .catch((e) => {
+                // permit dupes
+                  if (e.code && e.code !== 'EEXIST') {
+                    throw e;
+                  }
+                })
+            );
+          }
         }
 
         const runObj = { spec: clientPipeline, runId, timeout: clientPipeline.timeout };

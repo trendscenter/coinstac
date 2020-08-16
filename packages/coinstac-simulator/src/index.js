@@ -2,7 +2,8 @@
 
 const Pipeline = require('coinstac-pipeline');
 const path = require('path');
-const mosca = require('mosca');
+const { fork } = require('child_process');
+const exitHook = require('exit-hook');
 
 /**
  * Starts a simulator run with the given pipeline spec
@@ -16,14 +17,16 @@ const mosca = require('mosca');
 const startRun = ({
   spec, runMode = 'local', clientCount = 1, operatingDirectory = 'test',
 }) => {
-  const server = new mosca.Server({ port: 1883 });
-
-  server.on('clientConnected', (client) => {
-    console.log('Mosca client connected', client.id); // eslint-disable-line no-console
-  });
-
-  return new Promise((resolve) => {
-    server.on('ready', resolve);
+  return new Promise((resolve, reject) => {
+    // the execArgv opt are a work around for https://github.com/nodejs/node/issues/9435
+    const mqtt = fork(path.resolve(__dirname, 'mqtt-server.js'), { execArgv: [], stdio: ['inherit', 'inherit', 'inherit', 'ipc'] });
+    mqtt.on('message', (m) => {
+      if (m.e) return reject(m.e);
+      if (m.started) resolve();
+    });
+    exitHook(() => {
+      mqtt.kill();
+    });
   })
     .then(async () => {
       const pipelines = {
@@ -37,6 +40,9 @@ const startRun = ({
           clientId: 'remote',
           mode: 'remote',
           operatingDirectory: path.resolve(operatingDirectory),
+          mqttRemoteURL: 'localhost',
+          mqttRemotePort: '1883',
+          mqttRemoteProtocol: 'mqtt:',
         });
         pipelines.remote = {
           manager: remoteManager,
@@ -44,6 +50,7 @@ const startRun = ({
             spec: remoteSpec,
             runId: 'simulatorRun',
             clients: Array.from(Array(clientCount)).map((val, idx) => `local${idx}`),
+            owner: 'local0',
           }),
         };
       }
@@ -59,36 +66,34 @@ const startRun = ({
           pipeline: localPipelineManager.startPipeline({
             spec: localSpec,
             runId: 'simulatorRun',
+            owner: 'local0',
           }),
         });
       }
 
-      let throwCount = Object.keys(pipelines).length;
       const allResults = Promise.all(Object.keys(pipelines).map((key) => {
         if (key === 'locals') {
           return Promise.all(pipelines[key].map(
             (localP, index) => localP.pipeline.result
               .then((res) => { pipelines[key][index].pipeline.result = res; })
               .catch((e) => {
-                // see if you're the last node to err, throw is so
-                throwCount -= 1;
-                if (throwCount === 0) throw e;
+                return e;
               })
           ));
         }
         return pipelines.remote.pipeline.result
           .then((res) => { pipelines[key].pipeline.result = res; })
           .catch((e) => {
-            // see if you're the last node to err, throw is so
-            throwCount -= 1;
-            if (throwCount === 0) throw e;
+            return e;
           });
       }))
-        .then(() => {
-          if (runMode === 'decentralized') {
-            return { remote: pipelines.remote.pipeline.result };
-          }
-          return { locals: pipelines.locals.map(local => local.pipeline.result) };
+        .then((errors) => {
+          // error sent to remote or the first local for local runs
+          if (errors[1] || errors[0][0]) throw errors[1] || errors[0][0];
+          return {
+            remote: pipelines.remote.pipeline.result,
+            locals: pipelines.locals.map(local => local.pipeline.result),
+          };
         });
 
       return { pipelines, allResults };

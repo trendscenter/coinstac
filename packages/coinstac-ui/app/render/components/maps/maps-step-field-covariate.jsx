@@ -12,16 +12,16 @@ import classNames from 'classnames';
 const styles = theme => ({
   rootPaper: {
     ...theme.mixins.gutters(),
-    paddingTop: theme.spacing.unit * 1.5,
-    paddingBottom: theme.spacing.unit * 1.5,
-    marginTop: theme.spacing.unit * 1.5,
+    paddingTop: theme.spacing(1.5),
+    paddingBottom: theme.spacing(1.5),
+    marginTop: theme.spacing(1.5),
     height: '100%',
   },
   title: {
-    marginBottom: theme.spacing.unit * 1.5,
+    marginBottom: theme.spacing(1.5),
   },
   nestedListItem: {
-    paddingLeft: theme.spacing.unit * 3,
+    paddingLeft: theme.spacing(3),
   },
   listDropzoneContainer: {
     display: 'flex',
@@ -29,7 +29,7 @@ const styles = theme => ({
   interestList: {
     width: '50%',
     flex: '0 0 auto',
-    marginRight: theme.spacing.unit,
+    marginRight: theme.spacing(1),
   },
   dropZone: {
     flex: '1 0 auto',
@@ -70,6 +70,7 @@ class MapsStepFieldCovariate extends Component {
   render() {
     const {
       step,
+      label,
       type,
       classes,
       column,

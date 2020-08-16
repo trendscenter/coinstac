@@ -29,7 +29,7 @@ import {
   updateDockerOutput,
 } from '../../state/ducks/docker';
 import { updateUserConsortiaStatuses, updateUserPerms } from '../../state/ducks/auth';
-import { appendLogMessage, clearLogs, loadLocalData } from '../../state/ducks/app';
+import { appendLogMessage } from '../../state/ducks/app';
 import {
   COMPUTATION_CHANGED_SUBSCRIPTION,
   CONSORTIUM_CHANGED_SUBSCRIPTION,
@@ -39,7 +39,7 @@ import {
   FETCH_ALL_USER_RUNS_QUERY,
   FETCH_ALL_THREADS_QUERY,
   PIPELINE_CHANGED_SUBSCRIPTION,
-  USER_METADATA_CHANGED_SUBSCRIPTION,
+  USER_CHANGED_SUBSCRIPTION,
   USER_RUN_CHANGED_SUBSCRIPTION,
   THREAD_CHANGED_SUBSCRIPTION,
   UPDATE_USER_CONSORTIUM_STATUS_MUTATION,
@@ -52,7 +52,6 @@ import {
 } from '../../state/graphql/props';
 import StartPipelineListener from './listeners/start-pipeline-listener';
 import NotificationsListener from './listeners/notifications-listener';
-import DisplayNotificationsListener from './listeners/display-notifications-listener';
 import DashboardPipelineNavBar from './dashboard-pipeline-nav-bar';
 
 const styles = theme => ({
@@ -74,7 +73,7 @@ const styles = theme => ({
   content: {
     flexGrow: 1,
     backgroundColor: theme.palette.background.default,
-    padding: theme.spacing.unit * 3,
+    padding: theme.spacing(3),
   },
   status: {
     display: 'inline-block',
@@ -127,7 +126,6 @@ class Dashboard extends Component {
       auth: { user },
       maps,
       consortia,
-      loadLocalData,
       getDockerStatus,
       writeLog,
       updateDockerOutput,
@@ -136,13 +134,10 @@ class Dashboard extends Component {
       notifyError,
       updateLocalRun,
       saveLocalRun,
-      clearLogs,
-      subscribeToUserMetaData,
+      subscribeToUser,
       subscribeToUserRuns,
     } = this.props;
     const { router } = this.context;
-
-    loadLocalData();
 
     dockerInterval = setInterval(() => {
       const status = getDockerStatus();
@@ -190,16 +185,14 @@ class Dashboard extends Component {
     ipcRenderer.on('local-run-complete', (event, arg) => {
       notifySuccess(`${arg.consName} Pipeline Complete.`);
 
-      updateLocalRun(arg.run.id, { results: arg.run.results, status: 'complete' });
+      updateLocalRun(arg.run.id, { results: arg.run.results, status: 'complete', type: arg.run.type });
     });
 
     ipcRenderer.on('local-run-error', (event, arg) => {
       notifyError(`${arg.consName} Pipeline Error.`);
 
-      updateLocalRun(arg.run.id, { error: arg.run.error, status: 'error' });
+      updateLocalRun(arg.run.id, { error: arg.run.error, status: 'error', type: arg.run.type });
     });
-
-    clearLogs();
 
     ipcRenderer.on('log-message', (event, arg) => {
       const { appendLogMessage } = this.props;
@@ -208,7 +201,7 @@ class Dashboard extends Component {
 
     ipcRenderer.send('load-initial-log');
 
-    this.unsubscribeToUserMetadata = subscribeToUserMetaData(user.id);
+    this.unsubscribeToUser = subscribeToUser(user.id);
     this.unsubscribeToUserRuns = subscribeToUserRuns(user.id);
 
     ipcRenderer.on('docker-error', (event, arg) => {
@@ -300,7 +293,7 @@ class Dashboard extends Component {
 
           // Update status of run in localDB
           ipcRenderer.send('clean-remote-pipeline', nextProps.remoteRuns[i].id);
-          updateLocalRun(run.id, { error: run.error, status: 'error' });
+          updateLocalRun(run.id, { error: run.error, status: 'error', type: run.type });
           notifyError(`${consortium.name} Pipeline Error.`);
 
           // Run already in props but results are incoming
@@ -356,7 +349,8 @@ class Dashboard extends Component {
         if (consortia[i] && nextProps.consortia[i].id === consortia[i].id
             && nextProps.consortia[i].activePipelineId
             && !consortia[i].activePipelineId
-            && nextProps.consortia[i].members.indexOf(user.id) > -1) {
+            && user.id in nextProps.consortia[i].members
+        ) {
           const computationData = client.readQuery({ query: FETCH_ALL_COMPUTATIONS_QUERY });
           const pipelineData = client.readQuery({ query: FETCH_ALL_PIPELINES_QUERY });
           const pipeline = pipelineData.fetchAllPipelines
@@ -381,12 +375,20 @@ class Dashboard extends Component {
   }
 
   componentDidUpdate(prevProps) {
-    const { currentUser, updateUserPerms } = this.props;
+    const {
+      currentUser, updateUserPerms, remoteRuns, saveLocalRun
+    } = this.props;
 
     if (currentUser
       && (!prevProps.currentUser || prevProps.currentUser.permissions !== currentUser.permissions)
     ) {
       updateUserPerms(currentUser.permissions);
+    }
+
+    if (prevProps.remoteRuns.length === 0 && remoteRuns.length > prevProps.remoteRuns.length) {
+      remoteRuns
+        .filter(run => run.type === 'local')
+        .forEach(run => saveLocalRun(run));
     }
   }
 
@@ -401,7 +403,7 @@ class Dashboard extends Component {
     unsubscribePipelines();
     unsubscribeThreads();
 
-    this.unsubscribeToUserMetadata();
+    this.unsubscribeToUser();
     this.unsubscribeToUserRuns();
 
     ipcRenderer.removeAllListeners('docker-out');
@@ -440,10 +442,7 @@ class Dashboard extends Component {
 
     const { id: userId } = auth.user;
 
-    const unreadThreads = threads.filter((thread) => {
-      return thread.users
-        .filter(({ username, isRead }) => username === userId && !isRead).length > 0;
-    });
+    const unreadThreads = threads.filter(thread => userId in thread && !thread[userId].isRead);
 
     return unreadThreads.length;
   }
@@ -526,7 +525,7 @@ class Dashboard extends Component {
                     : (
                       <span className={classes.statusDown}>
                         <Typography
-                          variant="body2"
+                          variant="body1"
                           classes={{
                             root: classes.statusDownText,
                           }}
@@ -562,7 +561,6 @@ class Dashboard extends Component {
           remoteRuns={remoteRuns}
         />
         <NotificationsListener />
-        <DisplayNotificationsListener />
       </React.Fragment>
     );
   }
@@ -599,9 +597,7 @@ Dashboard.propTypes = {
   runs: PropTypes.array,
   threads: PropTypes.array,
   appendLogMessage: PropTypes.func.isRequired,
-  clearLogs: PropTypes.func.isRequired,
   getDockerStatus: PropTypes.func.isRequired,
-  loadLocalData: PropTypes.func.isRequired,
   notifyError: PropTypes.func.isRequired,
   notifyInfo: PropTypes.func.isRequired,
   notifySuccess: PropTypes.func.isRequired,
@@ -611,14 +607,14 @@ Dashboard.propTypes = {
   subscribeToConsortia: PropTypes.func.isRequired,
   subscribeToPipelines: PropTypes.func.isRequired,
   subscribeToThreads: PropTypes.func.isRequired,
-  subscribeToUserMetaData: PropTypes.func.isRequired,
+  subscribeToUser: PropTypes.func.isRequired,
   subscribeToUserRuns: PropTypes.func.isRequired,
   updateConsortiaMappedUsers: PropTypes.func.isRequired,
   updateDockerOutput: PropTypes.func.isRequired,
   updateLocalRun: PropTypes.func.isRequired,
   updateUserConsortiumStatus: PropTypes.func.isRequired,
-  updateUserPerms: PropTypes.func.isRequired,
   writeLog: PropTypes.func.isRequired,
+  updateUserPerms: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = ({ auth, runs, maps }) => ({
@@ -672,14 +668,19 @@ const DashboardWithData = compose(
     }),
     props: props => ({
       currentUser: props.data.fetchUser,
-      subscribeToUserMetaData: userId => props.data.subscribeToMore({
-        document: USER_METADATA_CHANGED_SUBSCRIPTION,
+      subscribeToUser: userId => props.data.subscribeToMore({
+        document: USER_CHANGED_SUBSCRIPTION,
         variables: { userId },
         updateQuery: (prevResult, { subscriptionData: { data } }) => {
-          if (data.userMetadataChanged.delete) {
+          if (data.userChanged.delete) {
             return { fetchUser: null };
           }
-          return { fetchUser: data.userMetadataChanged };
+          return {
+            fetchUser: {
+              ...prevResult.fetchUser,
+              ...data.userChanged,
+            },
+          };
         },
       }),
     }),
@@ -714,9 +715,7 @@ const connectedComponent = connect(mapStateToProps,
     updateUserConsortiaStatuses,
     writeLog,
     updateUserPerms,
-    clearLogs,
     appendLogMessage,
-    loadLocalData,
   })(DashboardWithData);
 
 export default withStyles(styles)(connectedComponent);

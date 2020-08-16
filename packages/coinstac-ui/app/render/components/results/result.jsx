@@ -12,7 +12,7 @@ import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
 import classNames from 'classnames';
-import TimeStamp from 'react-timestamp';
+import moment from 'moment';
 import { shell } from 'electron';
 import path from 'path';
 import Box from './displays/box-plot';
@@ -22,15 +22,13 @@ import Images from './displays/images';
 import String from './displays/string';
 import PipelineStep from '../pipelines/pipeline-step';
 import Iframe from './displays/iframe';
-import { getLocalRun } from '../../state/ducks/runs';
-
 
 const styles = theme => ({
   paper: {
     ...theme.mixins.gutters(),
-    paddingTop: theme.spacing.unit * 2,
-    paddingBottom: theme.spacing.unit * 2,
-    marginTop: theme.spacing.unit * 2,
+    paddingTop: theme.spacing(2),
+    paddingBottom: theme.spacing(2),
+    marginTop: theme.spacing(2),
     display: 'flex',
   },
   resultsInfo: {
@@ -46,10 +44,10 @@ const styles = theme => ({
   },
   label: {
     fontWeight: 'bold',
-    marginRight: theme.spacing.unit,
+    marginRight: theme.spacing(1),
   },
   formControl: {
-    marginBottom: theme.spacing.unit * 2,
+    marginBottom: theme.spacing(2),
   },
   error: {
     color: 'red',
@@ -70,9 +68,9 @@ class Result extends Component {
   };
 
   componentDidMount() {
-    const { params, getLocalRun } = this.props;
+    const { params: { resultId }, runs } = this.props;
 
-    const run = getLocalRun(params.resultId);
+    const run = runs.find(run => run.id === resultId);
 
     let plotData = {};
 
@@ -178,12 +176,7 @@ class Result extends Component {
                 <div className={classes.timestamp}>
                   <Typography className={classes.label}>Start date:</Typography>
                   <Typography>
-                    <TimeStamp
-                      time={run.startDate / 1000}
-                      precision={2}
-                      autoUpdate={10}
-                      format="full"
-                    />
+                    {moment.unix(run.startDate / 1000).format('MMMM Do YYYY, h:mm:ss a')}
                   </Typography>
                 </div>
               )
@@ -194,12 +187,7 @@ class Result extends Component {
                 <div className={classes.timestamp}>
                   <Typography className={classes.label}>End date:</Typography>
                   <Typography>
-                    <TimeStamp
-                      time={run.endDate / 1000}
-                      precision={2}
-                      autoUpdate={10}
-                      format="full"
-                    />
+                    {moment.unix(run.endDate / 1000).format('MMMM Do YYYY, h:mm:ss a')}
                   </Typography>
                 </div>
               )
@@ -277,7 +265,7 @@ class Result extends Component {
                   <Iframe
                     plotData={plotData}
                     title={`${consortium.name}_${run.pipelineSnapshot.name}`}
-                    path={`${appDirectory}/output/${user.id}/${run.id}/${run.pipelineSnapshot.steps[0].inputMap.results_html_path.value}`}
+                    path={path.join(appDirectory, 'output', user.id, run.id, run.pipelineSnapshot.steps[0].inputMap.results_html_path.value)}
                   />
                 )
               }
@@ -285,6 +273,7 @@ class Result extends Component {
                 selectedDisplayType.type === 'images'
                 && (
                   <Images
+                    imagePath={path.join(appDirectory, 'output', user.id, run.id, plotData.file_name)}
                     plotData={plotData}
                     title={`${consortium.name}_${run.pipelineSnapshot.name}`}
                   />
@@ -383,16 +372,16 @@ Result.propTypes = {
   auth: PropTypes.object.isRequired,
   classes: PropTypes.object.isRequired,
   consortia: PropTypes.array.isRequired,
+  runs: PropTypes.object.isRequired,
   params: PropTypes.object.isRequired,
-  getLocalRun: PropTypes.func.isRequired,
 };
 
-const mapStateToProps = ({ auth }) => ({
-  auth,
-});
+const mapStateToProps = ({ auth, runs: { runs } }) => {
+  return { auth, runs };
+};
 
 const connectedComponent = compose(
-  connect(mapStateToProps, { getLocalRun }),
+  connect(mapStateToProps),
   DragDropContext(HTML5Backend)
 )(Result);
 

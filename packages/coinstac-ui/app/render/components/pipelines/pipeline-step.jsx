@@ -110,7 +110,7 @@ class PipelineStep extends Component {
         {
           localOutputs.map((localOutput) => {
             const output = [(
-              <Typography key={`${id}-${localOutput[0]}-output`} variant="body1">
+              <Typography key={`${id}-${localOutput[0]}-output`} variant="body2">
                 {localOutput[1].label}
                 {' '}
 (
@@ -209,11 +209,11 @@ class PipelineStep extends Component {
       <div key={`step-${step.id}`}>
         <ExpansionPanel className="pipeline-step" style={{ ...styles.draggable, opacity: isDragging ? 0 : 1 }}>
           <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography variant="headline">{step.computations[0].meta.name}</Typography>
+            <Typography variant="h5">{step.computations[0].meta.name}</Typography>
           </ExpansionPanelSummary>
           <ExpansionPanelDetails className={classes.expansionPanelContent} key={`step-exp-${step.id}`}>
             <div className={classes.inputParametersContainer}>
-              <Typography variant="title">Input Parameters:</Typography>
+              <Typography variant="h6">Input Parameters:</Typography>
               <Button
                 variant="contained"
                 color="secondary"
@@ -256,7 +256,7 @@ class PipelineStep extends Component {
                 })
               }
             </div>
-            <Typography variant="title">Output:</Typography>
+            <Typography variant="h6">Output:</Typography>
             {compIO && this.showOutput(10, step.id, compIO.computation.output)}
           </ExpansionPanelDetails>
         </ExpansionPanel>

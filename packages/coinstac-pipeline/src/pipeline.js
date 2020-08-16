@@ -10,10 +10,12 @@ const {
   sep,
 } = require('path');
 const mkdirp = pify(require('mkdirp'));
-const rimraf = pify(require('rimraf'));
+const rmrf = pify(require('rimraf'));
 const Controller = require('./controller');
 
-const hardLink = pify(fs.link);
+
+const { link } = fs.promises;
+const hardLink = link;
 
 module.exports = {
   create(
@@ -25,6 +27,8 @@ module.exports = {
       clientId,
       userDirectories,
       owner,
+      logger,
+      dockerManager,
     }
   ) {
     const cache = {};
@@ -40,6 +44,8 @@ module.exports = {
         operatingDirectory,
         clientId,
         owner,
+        logger,
+        dockerManager,
       })
     );
 
@@ -183,7 +189,7 @@ module.exports = {
         const cleanup = () => {
           return Promise.all(fpCleanup.map((file) => {
             // rmraf from the base file/dir
-            return rimraf(join(
+            return rmrf(join(
               userDirectories.baseDirectory,
               relative(userDirectories.baseDirectory, file).split(sep)[0]
             ))

@@ -46,11 +46,7 @@ UserAccountController.propTypes = {
   writeLog: PropTypes.func.isRequired,
 };
 
-const mapStateToProps = ({ auth }) => ({
-  user: auth.user,
-});
-
-export default connect(mapStateToProps, {
+export default connect(null, {
   logout,
   notifyError,
   notifySuccess,

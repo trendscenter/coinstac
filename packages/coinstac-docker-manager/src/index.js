@@ -1,17 +1,13 @@
+'use strict';
+
 const Docker = require('dockerode');
 const { reduce } = require('lodash');
 const request = require('request-stream');
 const portscanner = require('portscanner');
 const http = require('http');
-const { Readable } = require('stream');
-const ss = require('coinstac-socket.io-stream');
-const socketIOClient = require('socket.io-client');
 const winston = require('winston');
-
-const perfTime = () => {
-  const t = process.hrtime();
-  return t[0] * 1000 + t[1] / 1000000;
-};
+const WS = require('ws');
+const _ = require('lodash');
 
 let logger;
 winston.loggers.add('docker-manager', {
@@ -35,6 +31,7 @@ const docker = new Docker();
 // const jobPool = {};
 let services = {};
 const portBlackList = new Set();
+let portLock = false;
 
 /**
  * Set an external logger instance
@@ -49,102 +46,27 @@ const setLogger = (loggerInstance) => {
  * @param  {string} serviceId Id to consume the port
  * @return {int}              open port assigned
  */
-const generateServicePort = async (serviceId, start = 8100) => {
-  let newPort = await portscanner.findAPortNotInUse(start, 49151, '127.0.0.1');
-  if (portBlackList.has(newPort)) {
-    newPort = await generateServicePort(serviceId, newPort + 5);
+const generateServicePort = async (serviceId, start = 8101, thisLock = false) => {
+  let newPort;
+  if (portLock && !thisLock) {
+    await setTimeoutPromise(Math.floor(Math.random() * 300));
+    newPort = await generateServicePort(serviceId, newPort);
     return newPort;
   }
-  // base case
+  portLock = true;
+  newPort = await portscanner.findAPortNotInUse(start, 49151, '127.0.0.1');
+  if (portBlackList.has(newPort)) {
+    newPort = await generateServicePort(serviceId, newPort + 1, true);
+    portBlackList.add(newPort);
+    portLock = false;
+    services[serviceId].port = newPort;
+    return newPort;
+  }
   portBlackList.add(newPort);
+  portLock = false;
   services[serviceId].port = newPort;
   return newPort;
 };
-
-// const manageStream = (stream, jobId) => {
-//   streamPool[jobId] = { stream, data: '', error: '' };
-
-//   let header = null;
-//   stream.on('readable', () => {
-//     // Demux streams, docker puts stdout/err together
-//     header = header || stream.read(8);
-//     while (header !== null) {
-//       const type = header.readUInt8(0);
-//       const payload = stream.read(header.readUInt32BE(4));
-//       if (payload === null) break;
-//       if (type === 2) {
-//         streamPool[jobId].error += payload;
-//       } else {
-//         streamPool[jobId].data += payload;
-//       }
-//       header = stream.read(8);
-//     }
-//   });
-
-//   return new Promise((resolve, reject) => {
-//     stream.on('end', () => {
-//       const container = jobPool[jobId];
-//       if (streamPool[jobId].error) {
-//         container.remove()
-//           .then(() => {
-//             jobPool[jobId] = undefined;
-//           });
-//         reject(streamPool[jobId].error);
-//         streamPool[jobId] = undefined;
-//       } else {
-//         resolve(streamPool[jobId].data);
-//         streamPool[jobId] = undefined;
-
-//         container.remove()
-//           .then(() => {
-//             jobPool[jobId] = undefined;
-//           });
-//       }
-//     });
-//     stream.on('error', (err) => {
-//       const container = jobPool[jobId];
-
-//       streamPool[jobId] = undefined;
-
-//       container.stop()
-//         .then(() => container.remove())
-//         .then(() => {
-//           jobPool[jobId] = undefined;
-//         });
-//       reject(err);
-//     });
-//   });
-// };
-
-// const queueJob = (jobId, input, opts) => {
-//   const jobOpts = Object.assign(
-//     {
-//       AttachStdin: true,
-//       AttachStdout: true,
-//       AttachStderr: true,
-//       Cmd: input,
-//     },
-//     Object.assign({}, opts, opts.Image.includes(':') ? {} : { Image: `${opts.Image}:latest` })
-//   );
-//   return docker.createContainer(jobOpts).then((container) => {
-//     jobPool[jobId] = container;
-
-//     // Return a Promise that resolves when the container's data stream 2closes,
-//     // which should happen when the comp is done.
-//     const dataFinished = new Promise((resolve, reject) => {
-//       container.attach({ stream: true, stdout: true, stderr: true }, (err, stream) => {
-//         if (!err) {
-//           resolve(manageStream(stream, jobId));
-//         }
-
-//         reject(err);
-//       });
-//     });
-
-//     return container.start()
-//       .then(() => dataFinished);
-//   });
-// };
 
 /**
  * Retrieve list of all local Docker images
@@ -163,7 +85,7 @@ const getStatus = () => {
 };
 
 /**
- * start or use an already started docker service based on serviceID
+ * start or use an already started docker service based on serviceId
  * @param  {string} serviceId     unique ID to describe the service
  * @param  {string} serviceUserId unique user ID for use of this service
  * @param  {Object} opts          options for the service, { docker: {...} } opts are
@@ -211,20 +133,12 @@ const startService = (serviceId, serviceUserId, opts) => {
             Tty: true,
           };
 
-          // merge opts one level deep
-          const memo = {};
-          for (let [key] of Object.entries(defaultOpts)) { // eslint-disable-line no-restricted-syntax, max-len, prefer-const
-            memo[key] = Object.assign(
-              defaultOpts[key],
-              opts.docker && opts.docker[key] ? opts.docker[key] : {}
-            );
-          }
-
-          const jobOpts = Object.assign(
-            {},
+          const jobOpts = _.merge(
             opts.docker,
-            memo
+            defaultOpts,
+            {}
           );
+
           return docker.createContainer(jobOpts);
         })
         .then((container) => {
@@ -232,7 +146,7 @@ const startService = (serviceId, serviceUserId, opts) => {
           services[serviceId].container = container;
           return container.start();
         })
-      // is the container service ready?
+        // is the container service ready?
         .then(() => {
           logger.silly(`Cointainer started: ${serviceId}`);
           const checkServicePort = () => {
@@ -267,7 +181,6 @@ const startService = (serviceId, serviceUserId, opts) => {
                   logger.silly(`Container timeout for ${serviceId}`);
                   return setTimeoutPromise(5000);
                 }
-
                 // not a socket error, throw
                 throw status;
               });
@@ -350,106 +263,128 @@ const startService = (serviceId, serviceUserId, opts) => {
               proxR = resolve;
               proxRj = reject;
             });
-            const socket = socketIOClient(`http://127.0.0.1:${services[serviceId].port}`);
-            socket.on('connect', () => {
-              const stream = ss.createStream();
-              ss(socket).emit('run', stream, {
-                control: {
-                  command: data[0],
-                  args: data.slice(1, 2),
-                },
-              });
-              let start = 0;
-              const dBuff = Buffer.from(data[2]);
-              logger.debug(`Input data size: ${dBuff.length}`);
-              const dataStream = new Readable();
-              dataStream._read = () => {
-                setImmediate(() => {
-                  if (start !== dBuff.length) {
-                    dataStream.push(dBuff.slice(start, start + 10000000));
-                    if (start + 10000000 > dBuff.length) {
-                      start += dBuff.length - start;
+            new Promise((resolve) => {
+              let count = 0;
+              const testConnection = () => {
+                const ws = new WS(`ws://127.0.0.1:${services[serviceId].port}`);
+                ws.on('open', () => {
+                  ws.close(1000, 'Test Connection');
+                  resolve();
+                });
+                ws.on('error', (e) => {
+                  if (e.code && (e.code === 'ECONNRESET' || e.code === 'ECONNREFUSED')) {
+                    ws.terminate();
+                    if (count > 10) {
+                      proxRj(new Error('Docker ws server timeout exceeded'));
                     } else {
-                      start += 10000000;
+                      count += 1;
+                      setTimeout(testConnection, 200 * count);
                     }
                   } else {
-                    dataStream.push(null);
+                    proxRj(e);
                   }
                 });
               };
-              let transmitEnd;
-              stream.on('end', () => { transmitEnd = perfTime(); });
-              const transmitStart = perfTime();
-              dataStream.pipe(stream);
-              let outRes;
-              let outRej;
-              let stdout = '';
-              const stdoutProm = new Promise((resolve, reject) => {
-                outRes = resolve;
-                outRej = reject;
+              testConnection();
+            }).then(() => {
+              const ws = new WS(`ws://127.0.0.1:${services[serviceId].port}`);
+              ws.on('open', () => {
+                ws.send(JSON.stringify({
+                  command: data[0],
+                  args: data.slice(1, 2),
+                }));
+                logger.debug(`Input data size: ${data[2].length}`);
+                ws.send(data[2]);
+                ws.send(null);
               });
-              let receiveStart;
-              let receiveEnd;
-              ss(socket).on('stdout', (stream) => {
-                stream.on('data', (chunk) => {
-                  receiveStart = perfTime();
-                  stdout += chunk;
-                });
-                stream.on('end', () => {
-                  receiveEnd = perfTime();
-                  outRes(stdout);
-                  logger.debug('Docker stream closed');
-                  logger.debug(`Output size: ${stdout.length}`);
-                });
-                stream.on('err', err => outRej(err));
+              ws.on('error', (e) => {
+                proxRj(e);
               });
-
-              let errRes;
-              let errRej;
-              let stderr = '';
-              const stderrProm = new Promise((resolve, reject) => {
-                errRes = resolve;
-                errRej = reject;
-              });
-              ss(socket).on('stderr', (stream) => {
-                stream.on('data', (chunk) => {
-                  receiveStart = perfTime();
-                  stderr += chunk;
-                });
-                stream.on('end', () => {
-                  receiveEnd = perfTime();
-                  errRes(stderr);
-                });
-                stream.on('err', err => errRej(err));
-              });
-
-              const endProm = new Promise((resolve) => {
-                socket.on('exit', (compOutput) => {
-                  resolve(compOutput);
-                });
-              });
-              Promise.all([stdoutProm, stderrProm, endProm])
-                .then((output) => {
-                  logger.debug(`Transmit time: ${(transmitEnd - transmitStart) / 1000}`);
-                  logger.debug(`Approx comp time: ${(receiveStart - transmitEnd) / 1000}`);
-                  logger.debug(`Receive time: ${(receiveEnd - receiveStart) / 1000}`);
-                  socket.disconnect();
-                  if (output[1] || output[2].code !== 0) {
-                    throw new Error(`Computation failed with exitcode ${output[2].code}\n Error message:\n${output[1]}}`);
-                  } else if (output[2].error) {
-                    throw new Error(`Computation failed to start\n Error message:\n${output[2].error}}`);
-                  }
-                  // NOTE: limited to sub 256mb
-                  let parsed;
+              new Promise((resolve, reject) => {
+                let stdout = '';
+                let stderr = '';
+                let outfin = false;
+                let errfin = false;
+                let code;
+                ws.on('message', (data) => {
+                  let res;
                   try {
-                    parsed = JSON.parse(output[0]);
+                    res = JSON.parse(data);
                   } catch (e) {
-                    parsed = output[0]; // eslint-disable-line prefer-destructuring
+                    ws.close(1011, 'Data parse error');
+                    return reject(e);
                   }
-                  proxR(parsed);
-                }).catch(error => proxRj(error));
-            });
+                  switch (res.type) {
+                    case 'error':
+                      ws.close(1011, 'Computation start error');
+                      return reject(res.error);
+                    case 'stderr':
+                      errfin = res.end;
+                      stderr += res.data || '';
+                      if (code !== undefined && outfin && errfin) {
+                        ws.close(1000, 'Normal Client disconnect');
+                        resolve({
+                          code,
+                          stdout,
+                          stderr,
+                        });
+                      }
+                      break;
+                    case 'stdout':
+                      outfin = res.end;
+                      stdout += res.data || '';
+                      if (code !== undefined && outfin && errfin) {
+                        ws.close(1000, 'Normal Client disconnect');
+                        resolve({
+                          code,
+                          stdout,
+                          stderr,
+                        });
+                      }
+                      break;
+                    case 'close':
+                      ({ code } = res);
+                      if (outfin && errfin) {
+                        ws.close(1000, 'Normal Client disconnect');
+                        resolve({
+                          code,
+                          stdout,
+                          stderr,
+                        });
+                      }
+                      break;
+                    default:
+                  }
+                });
+              }).then((output) => {
+                logger.debug('Docker container closed');
+                if (output.code !== 0) {
+                  throw new Error(`Computation failed with exitcode ${output.code} and stderr ${output.stderr}`);
+                }
+                logger.silly(`Docker stderr: ${output.stderr}`);
+                logger.debug(`Output size: ${output.stdout.length}`);
 
+                let error;
+                try {
+                  const parsed = JSON.parse(output.stdout);
+                  proxR(parsed);
+                } catch (e) {
+                  error = e;
+                  logger.error(`Computation output serialization failed with value: ${output.stdout}`);
+                  error.message = `${error.message}\n Additional computation failure information:\n
+                  Error code: ${output.code}\n
+                  Stderr: ${output.stderr}
+                  `;
+                  error.error = `${error.error}\n Additional computation failure information:\n
+                  Error code: ${output.code}\n
+                  Stderr: ${output.stderr}
+                  `;
+                  throw error;
+                }
+              }).catch((e) => {
+                proxRj(e);
+              });
+            });
             return prox;
           };
           services[serviceId].state = 'running';
@@ -476,11 +411,13 @@ const startService = (serviceId, serviceUserId, opts) => {
     if (services[serviceId].users.indexOf(serviceUserId) === -1) {
       services[serviceId].users.push(serviceUserId);
     }
-    if (services[serviceId].container) {
+    if (services[serviceId].container && services[serviceId].state !== 'starting') {
       logger.silly('Returning already started service');
       return new Promise((resolve, reject) => {
         services[serviceId].container.inspect((error, data) => {
-          if (error) reject(error);
+          if (error) {
+            reject(error);
+          }
           if (data.State.Running === true) {
             return resolve(services[serviceId].service);
           }
@@ -490,6 +427,7 @@ const startService = (serviceId, serviceUserId, opts) => {
         });
       });
     }
+    return Promise.resolve(services[serviceId].service);
   }
   return createService();
 };
