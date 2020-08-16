@@ -410,16 +410,23 @@ const resolvers = {
         return Boom.unauthorized('User not authenticated');
       }
 
+      const db = database.getDbInstance();
+
+      const consortium = await db.collection('consortia').findOne({ _id: ObjectID(consortiumId) });
+
+      if (!consortium) {
+        return Boom.notFound('Consortium with provided id not found');
+      }
+
+      const pipeline = await fetchOnePipeline(consortium.activePipelineId);
+
+      if (!pipeline) {
+        return Boom.notFound('Active pipeline not found on this consortium');
+      }
+
       try {
-        const db = database.getDbInstance();
-
-        const consortium = await db.collection('consortia').findOne({ _id: ObjectID(consortiumId) });
-        const pipeline = await fetchOnePipeline(consortium.activePipelineId);
-
         const clientArray = Object.keys(consortium.members);
-
         const isPipelineDecentralized = pipeline.steps.findIndex(step => step.controller.type === 'decentralized') > -1;
-
         const result = await db.collection('runs').insertOne({
             clients: clientArray,
             members: consortium.members,
@@ -439,7 +446,11 @@ const resolvers = {
 
         return run;
       } catch (error) {
-        console.log(error)
+        if (error.code === 'ECONNREFUSED') {
+          return Boom.serverUnavailable('Pipeline server unavailable');
+        }
+
+        return Boom.notAcceptable(error);
       }
     },
     /**

@@ -5,7 +5,7 @@ import { Link } from 'react-router';
 import { compose, graphql, withApollo } from 'react-apollo';
 import { ipcRenderer } from 'electron';
 import classNames from 'classnames';
-import { orderBy } from 'lodash';
+import { get, orderBy } from 'lodash';
 import {
   Button, Menu, MenuItem, TextField, Typography,
 } from '@material-ui/core';
@@ -32,7 +32,7 @@ import {
   saveDocumentProp,
   consortiumSaveActivePipelineProp,
 } from '../../state/graphql/props';
-import { notifyInfo } from '../../state/ducks/notifyAndLog';
+import { notifyInfo, notifyError } from '../../state/ducks/notifyAndLog';
 import { pipelineNeedsDataMapping } from '../../../main/utils/run-pipeline-functions';
 import { isUserInGroup } from '../../utils/helpers';
 
@@ -384,11 +384,12 @@ class ConsortiaList extends Component {
 
   startPipeline(consortiumId) {
     return () => {
-      const {
-        createRun,
-      } = this.props;
+      const { createRun, notifyError } = this.props;
 
-      createRun(consortiumId);
+      createRun(consortiumId)
+        .catch(({ graphQLErrors }) => {
+          notifyError(get(graphQLErrors, '0.message', 'Failed to start pipeline'));
+        });
     };
   }
 
@@ -557,6 +558,7 @@ ConsortiaList.propTypes = {
   joinConsortium: PropTypes.func.isRequired,
   leaveConsortium: PropTypes.func.isRequired,
   notifyInfo: PropTypes.func.isRequired,
+  notifyError: PropTypes.func.isRequired,
   pullComputations: PropTypes.func.isRequired,
 };
 
@@ -583,6 +585,7 @@ export default withStyles(styles)(
   connect(mapStateToProps,
     {
       notifyInfo,
+      notifyError,
       pullComputations,
       deleteAllDataMappingsFromConsortium,
     })(ConsortiaListWithData)
