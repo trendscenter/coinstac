@@ -156,7 +156,7 @@ class ConsortiaList extends Component {
         Object.keys(consortium.members)
           .filter(userId => !(userId in consortium.owners))
           .map(userId => ({
-            id: userId, name: consortium.owners[userId], owner: false, member: true,
+            id: userId, name: consortium.members[userId], owner: false, member: true,
           }))
       );
 
