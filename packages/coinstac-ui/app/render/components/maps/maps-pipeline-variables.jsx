@@ -27,7 +27,7 @@ function MapsPipelineVariables(props) {
   } = props;
 
   return (
-    <Grid item sm={4}>
+    <Grid item xs={12} sm={12} md={6} lg={4}>
       <Paper
         className={classes.rootPaper}
         elevation={1}
@@ -40,10 +40,9 @@ function MapsPipelineVariables(props) {
           consortium.pipelineSteps && consortium.pipelineSteps.map((step) => {
             const { computations, inputMap } = step;
 
-            const inputs = {...inputMap, ...computations[0].computation.input};
+            const inputs = { ...inputMap, ...computations[0].computation.input };
 
             return Object.entries(inputs).map((input) => {
-
               const inputMapKey = input[0];
               const inputMapValue = input[1];
 

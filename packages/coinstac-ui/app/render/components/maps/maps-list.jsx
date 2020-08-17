@@ -79,7 +79,7 @@ class MapsList extends Component {
     ));
 
     return (
-      <Grid item sm={6} lg={4} key={`${consortium.id}-list-item`}>
+      <Grid item xs={12} sm={12} md={6} lg={4} key={`${consortium.id}-list-item`}>
         <ListItem
           itemObject={consortium}
           itemOptions={itemOptions}

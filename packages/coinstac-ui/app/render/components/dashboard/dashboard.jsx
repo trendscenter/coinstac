@@ -376,7 +376,7 @@ class Dashboard extends Component {
 
   componentDidUpdate(prevProps) {
     const {
-      currentUser, updateUserPerms, remoteRuns, saveLocalRun
+      currentUser, updateUserPerms, remoteRuns, saveLocalRun,
     } = this.props;
 
     if (currentUser
@@ -495,7 +495,7 @@ class Dashboard extends Component {
     return (
       <React.Fragment>
         <Grid container>
-          <Grid item xs={12} sm={3} className={classes.gridContainer}>
+          <Grid item xs={12} sm={5} md={3} lg={2} className={classes.gridContainer}>
             <Drawer
               variant="permanent"
               anchor="left"
@@ -513,36 +513,31 @@ class Dashboard extends Component {
                     unreadThreadCount={this.unreadThreadCount}
                   />
                 </ListItem>
-              </List>
-              <List>
                 <ListItem>
-                  { dockerStatus
-                    ? (
-                      <span className={classes.statusGood}>
-                        <Typography variant="subtitle2">
-                          Docker Status:
-                        </Typography>
-                        <span className={classes.statusUp} />
-                      </span>
-                    )
-                    : (
-                      <span className={classes.statusDown}>
-                        <Typography
-                          variant="body1"
-                          classes={{
-                            root: classes.statusDownText,
-                          }}
-                        >
-                          Docker Is Not Running!
-                        </Typography>
-                      </span>
-                    )
-                  }
+                  {dockerStatus ? (
+                    <span className={classes.statusGood}>
+                      <Typography variant="subtitle2">
+                        Docker Status:
+                      </Typography>
+                      <span className={classes.statusUp} />
+                    </span>
+                  ) : (
+                    <span className={classes.statusDown}>
+                      <Typography
+                        variant="body1"
+                        classes={{
+                          root: classes.statusDownText,
+                        }}
+                      >
+                        Docker Is Not Running!
+                      </Typography>
+                    </span>
+                  )}
                 </ListItem>
               </List>
             </Drawer>
           </Grid>
-          <Grid item xs={12} sm={9}>
+          <Grid item xs={12} sm={7} md={9} lg={10}>
             <DashboardPipelineNavBar router={router} consortia={consortia} localRuns={runs} />
             <main className="content-pane">
               {this.canShowBackButton && (

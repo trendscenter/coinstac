@@ -957,7 +957,7 @@ const resolvers = {
      */
     saveMessage: async ({ auth: { credentials } }, args) => {
       const { title, recipients, content, action } = args;
-      const threadId = ObjectID(args.threadId);
+      const threadId = args.threadId ? ObjectID(args.threadId) : null;
 
       const db = database.getDbInstance();
 

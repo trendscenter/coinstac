@@ -208,7 +208,7 @@ class ConsortiumAbout extends Component {
                 </div>
               )
             }
-            <Table id="consortium-member-table">
+            <Table size="small" id="consortium-member-table">
               <TableHead>
                 <TableRow>
                   <TableCell>Username</TableCell>
@@ -240,22 +240,18 @@ class ConsortiumAbout extends Component {
                     <TableCell>
                       <Checkbox disabled checked={consUser.member} name="isMember" />
                     </TableCell>
-                    {
-                      owner && (
-                        <TableCell>
-                          {user.id !== consUser.id && (
-                          <Button
-                            variant="contained"
-                            color="default"
-                            onClick={() => this.removeMember(consUser)}
-                          >
-                                Remove
-                            <DeleteIcon />
-                          </Button>
-                          )}
-                        </TableCell>
-                      )
-                    }
+                    <TableCell>
+                      {owner && user.id !== consUser.id && (
+                        <Button
+                          variant="contained"
+                          color="default"
+                          onClick={() => this.removeMember(consUser)}
+                        >
+                              Remove
+                          <DeleteIcon />
+                        </Button>
+                      )}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>

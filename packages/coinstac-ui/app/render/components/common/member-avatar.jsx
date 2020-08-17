@@ -9,6 +9,7 @@ const styles = theme => ({
   containerStyles: {
     display: 'inline-block',
     margin: theme.spacing(1),
+    marginLeft: 0,
     verticalAlign: 'top',
     textAlign: 'center',
     position: 'relative',
@@ -38,18 +39,17 @@ function MemberAvatar({
   return (
     <div key={`${name}-avatar`} className={classes.containerStyles}>
       <Avatar name={name} size={width} />
-      {
-        consRole && showDetails
-        && <Typography variant="subtitle2" className={classes.textStyles}>{consRole}</Typography>
-      }
-      {
-        showDetails
-        && <Typography variant="caption" className={classes.textStyles}>{name}</Typography>
-      }
-      {
-        mapped
-        && <DoneIcon className={classes.markStyles} />
-      }
+      {consRole && showDetails && (
+        <Typography variant="subtitle2" className={classes.textStyles}>
+          {consRole}
+        </Typography>
+      )}
+      {showDetails && (
+        <Typography variant="caption" className={classes.textStyles}>
+          {name}
+        </Typography>
+      )}
+      {mapped && <DoneIcon className={classes.markStyles} />}
     </div>
   );
 }
