@@ -5,8 +5,8 @@ const winston = require('winston');
 const { createReadStream, unlink } = require('fs');
 const unzip = require('unzipper');
 const resolvePath = require('path').resolve;
-const wsServer = require('../mock-servers/server-ws');
-const httpServer = require('../mock-servers/server-http');
+const wsServer = require('../../coinstac-images/coinstac-base/server-ws2');
+const httpServer = require('../../coinstac-images/coinstac-base/server-http');
 const mocks = require('../helpers/mocks');
 const dockerManager = require('../src');
 

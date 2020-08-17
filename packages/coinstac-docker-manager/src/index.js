@@ -27,8 +27,6 @@ const setTimeoutPromise = (delay) => {
 
 // TODO: ENV specific socket
 const docker = new Docker();
-// const streamPool = {};
-// const jobPool = {};
 let services = {};
 const portBlackList = new Set();
 let portLock = false;
@@ -602,7 +600,6 @@ module.exports = {
   pullImagesFromList,
   pruneImages,
   removeImage,
-  // queueJob,
   setLogger,
   startService,
   stopService,
