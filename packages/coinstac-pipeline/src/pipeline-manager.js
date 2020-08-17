@@ -25,7 +25,6 @@ const Store = require('./io-store');
 const {
   readdir,
   unlink,
-  rmdir,
 } = fs.promises;
 
 winston.loggers.add('pipeline', {
