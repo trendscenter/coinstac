@@ -7,6 +7,7 @@ import { withStyles } from '@material-ui/core';
 import ListItem from '../common/list-item';
 import { deleteDataMapping } from '../../state/ducks/maps';
 import { pipelineNeedsDataMapping } from '../../../main/utils/run-pipeline-functions';
+import { isUserInGroup } from '../../utils/helpers';
 
 const styles = theme => ({
   contentContainer: {
@@ -22,12 +23,6 @@ const styles = theme => ({
     display: 'inline-block',
   },
 });
-
-function isMember(userId, groupArr) {
-  if (userId && groupArr) {
-    return groupArr.indexOf(userId) !== -1;
-  }
-}
 
 class MapsList extends Component {
   deleteDataMapping = consortiumId => () => {
@@ -48,7 +43,7 @@ class MapsList extends Component {
 
     const pipeline = pipelines.find(pipeline => pipeline.id === consortium.activePipelineId);
 
-    if (!pipeline || !isMember(auth.user.id, consortium.members)) {
+    if (!pipeline || !isUserInGroup(auth.user.id, consortium.members)) {
       return null;
     }
 

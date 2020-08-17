@@ -3,7 +3,7 @@ function transformItem(item) {
     return item;
   }
 
-  const copy = { ...item, id: item._id };
+  const copy = { ...item, id: item._id.toString() };
   delete copy._id;
   return copy;
 }

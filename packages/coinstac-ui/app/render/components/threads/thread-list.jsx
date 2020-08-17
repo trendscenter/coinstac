@@ -38,7 +38,7 @@ const styles = theme => ({
 class ThreadList extends Component {
   isThreadUnread = (thread) => {
     const { auth } = this.context;
-    const user = thread.users.find(({ username }) => username === auth.user.id);
+    const user = thread.users[auth.user.id];
 
     return !get(user, 'isRead', true);
   }
