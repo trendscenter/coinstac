@@ -24,6 +24,7 @@ import Pipeline from './components/pipelines/pipeline';
 import ResultsList from './components/results/results-list';
 import Result from './components/results/result';
 import Settings from './components/user/settings';
+import Issues from './components/issues';
 import Threads from './components/threads';
 import Logs from './components/logs-display/logs';
 import Papaya from './components/papaya';
@@ -61,6 +62,7 @@ export default (
         <Route path="new" component={ComputationSubmission} />
       </Route>
       <Route path="settings" component={Settings} />
+      <Route path="issues" component={Issues} />
       <Route path="threads" component={Threads} />
       <Route path="logs" component={Logs} />
       <Route path="papaya" component={Papaya} />
