@@ -32,3 +32,9 @@ export function pipelineNeedsDataMapping(pipeline) {
 
   return needsDataMapping;
 }
+
+export const isUserInGroup = (userId, groupArr) => {
+  return Array.isArray(groupArr)
+    ? groupArr.findIndex(user => user === userId)
+    : userId in groupArr;
+};

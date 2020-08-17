@@ -195,11 +195,16 @@ export const UPDATE_PASSWORD_MUTATION = gql`
 `;
 
 export const SAVE_MESSAGE_MUTATION = gql`
-  mutation saveMessage($threadId: ID, $title: String!, $recipients: [String!], $content: String!, $action: ActionInput)
+  mutation saveMessage($threadId: ID, $title: String!, $recipients: JSON, $content: String!, $action: ActionInput)
     ${mutations.saveMessage}
 `;
 
 export const SET_READ_MESSAGE_MUTATION = gql`
   mutation setReadMessage($threadId: ID!, $userId: ID!)
     ${mutations.setReadMessage}
+`;
+
+export const CREATE_ISSUE_MUTATION = gql`
+  mutation createIssue($issue: IssueInput!)
+    ${mutations.createIssue}
 `;

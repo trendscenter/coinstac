@@ -322,6 +322,7 @@ class MapsCollection extends Component {
                         style={{
                           backgroundColor: '#5cb85c',
                           color: '#fff',
+                          marginRight: '1rem',
                         }}
                         onClick={removeExtraColumnsFromDataFileHeader}
                       >
