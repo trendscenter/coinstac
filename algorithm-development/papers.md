@@ -6,10 +6,10 @@ Below is a list of papers related to COINSTAC.
 ## Journal Papers
 
 H. Gazula, B. Holla, Z. Zhang, J. Xu, E. Verner, R. Kelly, G. Schumann, V. D. Calhoun,
-“Decentralized multi-site VBM analysis during adolescence shows structural changes linked to age, body mass index, and smoking: A COINSTAC analysis,” bioRxiv 846386; 2020. 
+Decentralized multi-site VBM analysis during adolescence shows structural changes linked to age, body mass index, and smoking: A COINSTAC analysis, bioRxiv 846386; 2020. 
 https://doi.org/10.1101/846386
 
-H. Gazula, R. Kelly, J. Romero, E. Verner, B. Baker, R. F. Silva, H. Imtiaz, D. K. Saha, R. Raja, J. A. Turner, A. D. Sarwate, S. M. Plis, and V. D. Calhoun. “COINSTAC: Collaborative Informatics and Neuroimaging Suite Toolkit for Anonymous Computation,” Journal of Open Source Software, 5(47), 2166: 2020. https://doi.org/10.21105/joss.02166.
+H. Gazula, R. Kelly, J. Romero, E. Verner, B. Baker, R. F. Silva, H. Imtiaz, D. K. Saha, R. Raja, J. A. Turner, A. D. Sarwate, S. M. Plis, and V. D. Calhoun. COINSTAC: Collaborative Informatics and Neuroimaging Suite Toolkit for Anonymous Computation, Journal of Open Source Software, 5(47), 2166: 2020. https://doi.org/10.21105/joss.02166.
 
 M. Ghassemi, Z. Shakeri, A.D. Sarwate, W.U. Bajwa, Learning Mixtures of Separable Dictionaries for Tensor Data: Analysis and Algorithms, IEEE Transactions on Signal Processing : to appear 2020.  
 http://dx.doi.org/10.1109/TSP.2019.2952046
@@ -69,6 +69,7 @@ http://mural.maynoothuniversity.ie/10230/1/BP-CometCloudCare-2014.pdf
 
 ## Presentations
 
-E. Verner, H. Gazula, R. Kelly, J. Romero, B.T. Baker, R.F. Silva, H. Imtiaz, D.K. Saha, R. Raja, J.A.Turner, S.M. Plis, V.D. Calhoun, “Open, Reproducible, and Decentralized Workflows with COINSTAC,” Annual Meeting of the Organization for Human Brain Mapping. Montreal, CA. June 2020.
+E. Verner, H. Gazula, R. Kelly, J. Romero, B.T. Baker, R.F. Silva, H. Imtiaz, D.K. Saha, R. Raja, J.A.Turner, S.M. Plis, V.D. Calhoun, Open, Reproducible, and Decentralized Workflows with COINSTAC, Annual Meeting of the Organization for Human Brain Mapping. Montreal, CA. June 2020.
 https://doi.org/10.5281/zenodo.3906184
 
+S. Plis, A. Sarwate, J. Turner, M. Arbabshirani, V. Calhoun, From Private Sites to Big Data Without Compromising Privacy: a Case of Neuroimaging Data Classification, Value in Health 17: A1-A295, 2014.
