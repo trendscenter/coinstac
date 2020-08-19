@@ -165,6 +165,12 @@ Below is a list of COINSTAC computations that have been implemented.
   - Maintainer: [Rajikha Raja](https://github.com/rajikha)
   - Repository: https://github.com/trendscenter/coinstac-LME-Freesurfer
   
+- Decentralized Structural ROI Regression
+  - Algorithm Developer: [Fatemeh Mohebbi](https://github.com/FatemehMhbi)
+  - Computation Creator: [Fatemeh Mohebbi](https://github.com/FatemehMhbi)
+  - Maintainer: [Fatemeh Mohebbi](https://github.com/FatemehMhbi)
+  - Repository: https://github.com/trendscenter/coinstac-regression-vbm-stats
+  
 ## Under development
 
 - Decentralized Joint Independent Component Analysis
