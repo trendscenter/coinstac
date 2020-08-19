@@ -29,15 +29,11 @@ http://dx.doi.org/10.12688/f1000research.12353.1
 N.D. Goldstein, A.D. Sarwate, Privacy, security, and the public health researcher in the era of electronic health record research, Online Journal of Public Health Informatics 8(3): pp. e207, December 2016.  
 http://dx.doi.org/10.5210/ojphi.v8i3.7251
 
-S. Plis, A.D. Sarwate, D. Wood, C. Dieringer, D. Landis, C. Reed, S.R. Panta, J.A. Turner, J.M. Shoemaker, K.W. Carter, P. Thompson, K. Hutchison, V.D. Calhoun, COINSTAC: A Privacy Enabled Model and Prototype for Leveraging and Processing Decentralized Brain Imaging Data, Frontiers in Neuroscience 10(365): August 2016.  
+S. Plis, A.D. Sarwate, D. Wood, C. Dieringer, D. Landis, C. Reed, S.R. Panta, J.A. Turner, J.M. Shoemaker, K.W. Carter, P. Thompson, K. Hutchison, V.D. Calhoun, COINSTAC: A Privacy Enabled Model and Prototype for Leveraging and Processing Decentralized Brain Imaging Data, Frontiers in Neuroscience 10(365): August 2016.
 http://dx.doi.org/10.3389/fnins.2016.00365
 
 A.D. Sarwate, S. Plis, J.A. Turner, M. R. Arbabshirani, V.D. Calhoun, Sharing privacy-sensitive access to neuroimaging and genetics data: a review and preliminary validation, Frontiers in Neuroinformatics 8(35): April 2014.
 https://dx.doi.org/10.3389/fninf.2014.00035
-
-V.K. Potluru, J. Diaz-Montes, A.D. Sarwate, S.M. Plis, V.D. Calhoun, B.A. Pearlmutter, M. Parashar, CometCloudCare (C3): Distributed Machine Learning Platform-as-a-Service with Privacy Preservation, 2014.
-http://mural.maynoothuniversity.ie/10230/1/BP-CometCloudCare-2014.pdf
-
 
 ## Conference Papers
 
@@ -67,6 +63,9 @@ http://dx.doi.org/10.1109/ICASSP.2016.7472089
 
 B. Baker, R. Silva, V.D. Calhoun, A.D. Sarwate, S. Plis, Large scale collaboration with autonomy: decentralized data ICA, Proceedings of the IEEE International Workshop on Machine Learning For Signal Processing (MLSP), Boston, MA, USA, pp. 1–6, 17–20 September 2015.  
 http://dx.doi.org/10.1109/MLSP.2015.7324344
+
+V.K. Potluru, J. Diaz-Montes, A.D. Sarwate, S.M. Plis, V.D. Calhoun, B.A. Pearlmutter, M. Parashar, CometCloudCare (C3): Distributed Machine Learning Platform-as-a-Service with Privacy Preservation, Neural Information Processing Systems (NIPS), Montreal, QC, Canada, 8-13 December 2014.
+http://mural.maynoothuniversity.ie/10230/1/BP-CometCloudCare-2014.pdf
 
 ## Presentations
 
