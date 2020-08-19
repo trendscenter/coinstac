@@ -5,7 +5,6 @@ const webpack = require('webpack');
 const pkg = require('./package.json');
 
 const port = 3000;
-console.log(process.env);
 
 const config = {
   bail: true,
