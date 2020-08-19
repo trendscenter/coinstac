@@ -5,6 +5,9 @@ Below is a list of papers related to COINSTAC.
 
 ## Journal Papers
 
+D.K. Saha, V.D. Calhoun, Y. Du, Z. Fu, S.R. Panta, S.M. Plis, dSNE: a visualization approach for use with decentralized data, bioRxiv 826974; 2020.
+https://doi.org/10.1101/826974
+
 H. Gazula, B. Holla, Z. Zhang, J. Xu, E. Verner, R. Kelly, G. Schumann, V. D. Calhoun,
 Decentralized multi-site VBM analysis during adolescence shows structural changes linked to age, body mass index, and smoking: A COINSTAC analysis, bioRxiv 846386; 2020. 
 https://doi.org/10.1101/846386
@@ -46,8 +49,14 @@ http://dx.doi.org/10.1109/ICASSP.2018.8461303
 H. Imtiaz, A.D. Sarwate, Differentially Private Distributed Principal Component Analysis, Proceedings of the 43rd IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP), Calgary, AB, Canada, pp. 2206–2210, 15–20 April 2018.  
 http://dx.doi.org/10.1109/ICASSP.2018.8462519
 
-H. Imtiaz, A.D. Sarwate, Differentially Private Canonical Correlation Analysis, Proceedings of the 2017 IEEE Global Conference on Signal and Information Processing (GlobalSIP), Montreal, QC, Canada, pp. 283 –287, 14–16 November 2017.  
+H. Imtiaz, A.D. Sarwate, Differentially Private Canonical Correlation Analysis, Proceedings of the 2017 IEEE Global Conference on Signal and Information Processing (GlobalSIP), Montreal, QC, Canada, pp. 283–287, 14–16 November 2017.  
 http://dx.doi.org/10.1109/GlobalSIP.2017.8308649
+
+D.K. Saha, V.D. Calhoun, S.R. Panta, S.M. Plis, See without looking: joint visualization of sensitive multi-site datasets, Proceedings of the Twenty-Sixth International Joint Conference on Artificial Intelligence (IJCAI-17), Melbourne, Australia, pp. 2672-2678, 19-25 August 2017.
+https://pdfs.semanticscholar.org/ec0d/46470a48bf3a60c641d8fed0a7748a7c9a2d.pdf
+
+N. Lewis, S.M. Plis, V.D. Calhoun, Cooperative learning: Decentralized data neural network, 2017 International Joint Conference on Neural Networks (IJCNN), Anchorage, AK, USA, pp. 324-331, 14-19 May 2017.
+http://dx.doi.org/10.1109/IJCNN.2017.7965872.
 
 N. Wojtalewicz, R. Silva, V. Calhoun, A. Sarwate, S. Plis, Decentralized Independent Vector Analysis, Proceedings of the 42nd IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP), New Orleans, LA, USA, pp. 826–830, 5–9 March 2017.  
 http://dx.doi.org/10.1109/ICASSP.2017.7952271
