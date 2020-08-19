@@ -140,8 +140,7 @@
     "test:seed-dexie": "node ./test/data/seed-collection-data.js",
     "test:e2e-single": "npm run build:webpack && mocha --timeout=120000 --env NODE_ENV=test test/e2e/computation-run.test.js",
     "test:e2e": "npm run build:webpack && mocha --timeout=120000 --env NODE_ENV=test test/e2e/*.test.js",
-    "watch": "webpack-dev-server --mode=development",
-    "stuff": "npm i"
+    "watch": "webpack-dev-server --mode=development"
   },
   "repository": {
     "type": "git",

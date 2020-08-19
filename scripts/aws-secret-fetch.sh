@@ -34,50 +34,9 @@ unset AWS_SECRET_ACCESS_KEY
 unset AWS_SESSION_TOKEN
 
 if [ $3 = export ]; then
-  echo "export CLOUDINARY_UPLOAD_PRESET=$(echo $CONFIG | jq -r .CLOUDINARY_UPLOAD_PRESET)"
-  echo "export CLOUDINARY_API_KEY=$(echo $CONFIG | jq -r .CLOUDINARY_API_KEY)"
-  echo "export CLOUDINARY_API_SECRET=$(echo $CONFIG | jq -r .CLOUDINARY_API_SECRET)"
-  echo "export CLOUDINARY_UPLOAD_URL=$(echo $CONFIG | jq -r .CLOUDINARY_UPLOAD_URL)"
-  echo "export CLOUDINARY_DELETE_URL=$(echo $CONFIG | jq -r .CLOUDINARY_DELETE_URL)"
-  echo "export GITHUB_ACCESS_TOKEN=$(echo $CONFIG | jq -r .GITHUB_ACCESS_TOKEN)"
-  echo "export SENDGRID_API_KEY=$(echo $CONFIG | jq -r .SENDGRID_API_KEY)"
-  echo "export API_SERVER_PORT=$(echo $CONFIG | jq -r .API_SERVER_PORT)"
-  echo "export API_SERVER_HOSTNAME=$(echo $CONFIG | jq -r .API_SERVER_HOSTNAME)"
-  echo "export MONGODB_CONN_STRING=$(echo $CONFIG | jq -r .MONGODB_CONN_STRING)"
-  echo "export DATABASE_NAME=$(echo $CONFIG | jq -r .DATABASE_NAME)"
-  echo "export PIPELINE_SERVER_PORT=$(echo $CONFIG | jq -r .PIPELINE_SERVER_PORT)"
-  echo "export PIPELINE_SERVER_HOSTNAME=$(echo $CONFIG | jq -r .PIPELINE_SERVER_HOSTNAME)"
-  echo "export PIPELINE_SERVER_OPERARTING_DIR=$(echo $CONFIG | jq -r .PIPELINE_SERVER_OPERARTING_DIR)"
-  echo "export MQTT_SERVER_HOSTNAME=$(echo $CONFIG | jq -r .MQTT_SERVER_HOSTNAME)"
-  echo "export MQTT_SERVER_PATHNAME=$(echo $CONFIG | jq -r .MQTT_SERVER_PATHNAME)"
-  echo "export MQTT_SERVER_PORT=$(echo $CONFIG | jq -r .MQTT_SERVER_PORT)"
-  echo "export MQTT_SERVER_PROTOCOL=$(echo $CONFIG | jq -r .MQTT_SERVER_PROTOCOL)"
-  echo "export API_JWT_SECRET=$(echo $CONFIG | jq -r .API_JWT_SECRET)"
-  echo "export SERVER_API_USERNAME=$(echo $CONFIG | jq -r .SERVER_API_USERNAME)"
-  echo "export SERVER_API_PASSWORD=$(echo $CONFIG | jq -r .SERVER_API_PASSWORD)"
-
+  echo $CONFIG | jq -r 'to_entries[] | "export \(.key)=\(.value)"'
 elif [ $3 = systemd ]; then
-  echo "CLOUDINARY_UPLOAD_PRESET=$(echo $CONFIG | jq -r .CLOUDINARY_UPLOAD_PRESET)"
-  echo "CLOUDINARY_API_KEY=$(echo $CONFIG | jq -r .CLOUDINARY_API_KEY)"
-  echo "CLOUDINARY_API_SECRET=$(echo $CONFIG | jq -r .CLOUDINARY_API_SECRET)"
-  echo "CLOUDINARY_UPLOAD_URL=$(echo $CONFIG | jq -r .CLOUDINARY_UPLOAD_URL)"
-  echo "CLOUDINARY_DELETE_URL=$(echo $CONFIG | jq -r .CLOUDINARY_DELETE_URL)"
-  echo "GITHUB_ACCESS_TOKEN=$(echo $CONFIG | jq -r .GITHUB_ACCESS_TOKEN)"
-  echo "SENDGRID_API_KEY=$(echo $CONFIG | jq -r .SENDGRID_API_KEY)"
-  echo "API_SERVER_PORT=$(echo $CONFIG | jq -r .API_SERVER_PORT)"
-  echo "API_SERVER_HOSTNAME=$(echo $CONFIG | jq -r .API_SERVER_HOSTNAME)"
-  echo "MONGODB_CONN_STRING=$(echo $CONFIG | jq -r .MONGODB_CONN_STRING)"
-  echo "DATABASE_NAME=$(echo $CONFIG | jq -r .DATABASE_NAME)"
-  echo "PIPELINE_SERVER_PORT=$(echo $CONFIG | jq -r .PIPELINE_SERVER_PORT)"
-  echo "PIPELINE_SERVER_HOSTNAME=$(echo $CONFIG | jq -r .PIPELINE_SERVER_HOSTNAME)"
-  echo "PIPELINE_SERVER_OPERARTING_DIR=$(echo $CONFIG | jq -r .PIPELINE_SERVER_OPERARTING_DIR)"
-  echo "MQTT_SERVER_HOSTNAME=$(echo $CONFIG | jq -r .MQTT_SERVER_HOSTNAME)"
-  echo "MQTT_SERVER_PATHNAME=$(echo $CONFIG | jq -r .MQTT_SERVER_PATHNAME)"
-  echo "MQTT_SERVER_PORT=$(echo $CONFIG | jq -r .MQTT_SERVER_PORT)"
-  echo "MQTT_SERVER_PROTOCOL=$(echo $CONFIG | jq -r .MQTT_SERVER_PROTOCOL)"
-  echo "API_JWT_SECRET=$(echo $CONFIG | jq -r .API_JWT_SECRET)"
-  echo "SERVER_API_USERNAME=$(echo $CONFIG | jq -r .SERVER_API_USERNAME)"
-  echo "SERVER_API_PASSWORD=$(echo $CONFIG | jq -r .SERVER_API_PASSWORD)"
+  echo $CONFIG | jq -r 'to_entries[] | "\(.key)=\(.value)"'
 else
   echo $CONFIG
 fi
