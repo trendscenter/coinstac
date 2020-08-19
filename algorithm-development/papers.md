@@ -5,6 +5,12 @@ Below is a list of papers related to COINSTAC.
 
 ## Journal Papers
 
+H. Gazula, B. Holla, Z. Zhang, J. Xu, E. Verner, R. Kelly, G. Schumann, V. D. Calhoun,
+“Decentralized multi-site VBM analysis during adolescence shows structural changes linked to age, body mass index, and smoking: A COINSTAC analysis,” bioRxiv 846386; 2020. 
+https://doi.org/10.1101/846386
+
+H. Gazula, R. Kelly, J. Romero, E. Verner, B. Baker, R. F. Silva, H. Imtiaz, D. K. Saha, R. Raja, J. A. Turner, A. D. Sarwate, S. M. Plis, and V. D. Calhoun. “COINSTAC: Collaborative Informatics and Neuroimaging Suite Toolkit for Anonymous Computation,” Journal of Open Source Software, 5(47), 2166: 2020. https://doi.org/10.21105/joss.02166.
+
 M. Ghassemi, Z. Shakeri, A.D. Sarwate, W.U. Bajwa, Learning Mixtures of Separable Dictionaries for Tensor Data: Analysis and Algorithms, IEEE Transactions on Signal Processing : to appear 2020.  
 http://dx.doi.org/10.1109/TSP.2019.2952046
 
@@ -28,6 +34,9 @@ http://dx.doi.org/10.3389/fnins.2016.00365
 
 A.D. Sarwate, S. Plis, J.A. Turner, M. R. Arbabshirani, V.D. Calhoun, Sharing privacy-sensitive access to neuroimaging and genetics data: a review and preliminary validation, Frontiers in Neuroinformatics 8(35): April 2014.
 https://dx.doi.org/10.3389/fninf.2014.00035
+
+V.K. Potluru, J. Diaz-Montes, A.D. Sarwate, S.M. Plis, V.D. Calhoun, B.A. Pearlmutter, M. Parashar, CometCloudCare (C3): Distributed Machine Learning Platform-as-a-Service with Privacy Preservation, 2014.
+http://mural.maynoothuniversity.ie/10230/1/BP-CometCloudCare-2014.pdf
 
 
 ## Conference Papers
