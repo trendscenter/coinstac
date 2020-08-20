@@ -39,9 +39,10 @@ export default class StatusButtonWrapper extends Component {
   }
 
   render() {
-    const { children } = this.props;
+    const { children, style } = this.props;
 
     const wrapperStyle = {
+      ...style,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'flex-end',
@@ -58,10 +59,12 @@ export default class StatusButtonWrapper extends Component {
 
 StatusButtonWrapper.propTypes = {
   children: PropTypes.node,
+  style: PropTypes.object,
   status: PropTypes.oneOf(['init', 'pending', 'success', 'fail']),
 };
 
 StatusButtonWrapper.defaultProps = {
   children: null,
+  style: {},
   status: 'init',
 };

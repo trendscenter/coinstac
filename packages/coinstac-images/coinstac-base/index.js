@@ -1,4 +1,4 @@
-const server = require('./server-ws');
+const server = require('./server-ws2');
 const serverHttp = require('./server-http');
 
 const inOpts = process.argv[2] ? JSON.parse(process.argv[2]) : {};
