@@ -6,7 +6,7 @@ import Grid from '@material-ui/core/Grid';
 import { withStyles } from '@material-ui/core';
 import ListItem from '../common/list-item';
 import { deleteDataMapping } from '../../state/ducks/maps';
-import { pipelineNeedsDataMapping } from '../../../main/utils/run-pipeline-functions';
+import { pipelineNeedsDataMapping } from '../../utils/helpers';
 import { isUserInGroup } from '../../utils/helpers';
 
 const styles = theme => ({

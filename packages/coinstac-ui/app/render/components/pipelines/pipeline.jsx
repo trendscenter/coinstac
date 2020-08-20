@@ -262,10 +262,10 @@ class Pipeline extends Component {
             return { [key]: inputMap[key] };
           }));
 
-        if ('covariates' in inputMap && 'ownerMappings' in inputMap.covariates && inputMap.covariates.ownerMappings.length) {
-          let covariateMappings = [...inputMap.covariates.ownerMappings];
+        if ('covariates' in inputMap && 'value' in inputMap.covariates && inputMap.covariates.value.length) {
+          let covariateMappings = [...inputMap.covariates.value];
 
-          covariateMappings = inputMap.covariates.ownerMappings
+          covariateMappings = inputMap.covariates.value
             .filter(cov => cov.fromCache)
             .map((cov) => {
               if (index >= stepIndex && movedStepIndex < stepIndex) {
@@ -285,7 +285,7 @@ class Pipeline extends Component {
           inputMap = {
             ...inputMap,
             covariates: {
-              ownerMappings: covariateMappings,
+              value: covariateMappings,
             },
           };
         }
@@ -305,9 +305,9 @@ class Pipeline extends Component {
           if (key !== 'covariates' && 'fromCache' in movedStep.inputMap[key]
             && movedStep.inputMap[key].step >= index) {
             return { [key]: {} };
-          } if (key === 'covariates' && 'ownerMappings' in movedStep.inputMap.covariates && movedStep.inputMap.covariates.ownerMappings.length) {
+          } if (key === 'covariates' && 'value' in movedStep.inputMap.covariates && movedStep.inputMap.covariates.value.length) {
             return {
-              [key]: movedStep.inputMap[key].ownerMappings
+              [key]: movedStep.inputMap[key].value
                 .filter(cov => cov.fromCache)
                 .map((cov) => {
                   if (cov.fromCache.step >= index) {

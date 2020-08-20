@@ -53,30 +53,7 @@ class MapsFilePicker extends React.Component {
   }
 
   addFolderGroup = () => {
-    ipcPromise.send('open-dialog', 'bundle')
-      .then((obj) => {
-        if (obj.error) {
-          this.setState({ filesError: obj.error });
-          return;
-        }
-        const { setSelectedDataFile } = this.props;
-
-        const dataFile = {
-          extension: obj.extension,
-          files: obj.paths,
-        };
-
-        setSelectedDataFile(dataFile);
-
-        this.setState({ filesError: null });
-      })
-      .catch((error) => {
-        this.setState({ filesError: error.message });
-      });
-  }
-
-  addSingleGroup = () => {
-    ipcPromise.send('open-dialog', 'singles')
+    ipcPromise.send('open-dialog', 'files')
       .then((obj) => {
         if (obj.error) {
           this.setState({ filesError: obj.error });
@@ -106,7 +83,7 @@ class MapsFilePicker extends React.Component {
     return (
       <div>
         {
-          dataType === 'array'
+          dataType === 'freesurfer'
           && (
             <div>
               <Button
@@ -122,7 +99,7 @@ class MapsFilePicker extends React.Component {
           )
         }
         {
-          dataType === 'bundle'
+          dataType === 'files'
           && (
             <div>
               <Button
@@ -132,22 +109,6 @@ class MapsFilePicker extends React.Component {
                 onClick={this.addFolderGroup}
               >
                 Add Files from Folder
-              </Button>
-              <Divider />
-            </div>
-          )
-        }
-        {
-          dataType === 'singles'
-          && (
-            <div>
-              <Button
-                variant="contained"
-                color="primary"
-                className={classes.addFileGroupButton}
-                onClick={this.addSingleGroup}
-              >
-                Add Single File(s)
               </Button>
               <Divider />
             </div>

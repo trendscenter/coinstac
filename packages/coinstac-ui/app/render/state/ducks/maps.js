@@ -3,7 +3,6 @@ import {
   join,
   isAbsolute,
   resolve,
-  sep,
 } from 'path';
 import { applyAsyncLoading } from './loading';
 
@@ -16,36 +15,36 @@ const INITIAL_STATE = {
 };
 
 export const saveDataMapping = applyAsyncLoading(
-  (consortiumId, pipelineId, mappings, dataFile) => async (dispatch) => {
+  (consortium, mappings, dataFile) => async (dispatch) => {
     const map = {
-      consortiumId,
-      pipelineId,
-      dataType: dataFile.dataType,
-      dataMappings: mappings,
+      consortiumId: consortium.id,
+      pipelineId: consortium.activePipelineId,
+      metaFilePath: dataFile.metaFilePath,
+      dataMappings: [],
+      dataFiles: dataFile.files,
     };
 
     const mappedColumns = [];
+    const stepIndex = 0; // only one step is supported right now on maps
 
-    if (dataFile.dataType === 'array') {
-      if (dataFile.extension === '.csv') {
-        const csvLines = [...dataFile.metaFile];
-        csvLines.shift();
+    if (dataFile.dataType === 'freesurfer') {
+      const files = dataFile.metaFile.map((csvLine) => {
+        const file = csvLine[0];
+        return isAbsolute(file) ? file : resolve(join(dirname(dataFile.metaFilePath), file));
+      });
 
-        const files = csvLines.map((csvLine) => {
-          const file = csvLine[0];
-          return isAbsolute(file) ? file : resolve(join(dirname(dataFile.metaFilePath), file));
-        });
+      files.shift();
 
-        map.data = [{
-          allFiles: files,
-          filesData: [],
-        }];
-      }
-      map.data[0].baseDirectory = dirname(dataFile.metaFilePath);
-      map.data[0].metaFilePath = dataFile.metaFilePath;
+      map.dataFiles = files;
 
-      Object.keys(mappings[0]).forEach((fieldsetName) => {
-        mappings[0][fieldsetName].forEach((field) => {
+      const stepDataMap = {};
+
+      Object.keys(mappings[stepIndex]).forEach((fieldsetName) => {
+        stepDataMap[fieldsetName] = {
+          value: {},
+        };
+
+        mappings[stepIndex][fieldsetName].forEach((field) => {
           const mappedColumn = {
             name: field.dataFileFieldName,
             index: dataFile.metaFile[0].findIndex(c => c === field.dataFileFieldName),
@@ -67,23 +66,11 @@ export const saveDataMapping = applyAsyncLoading(
           parsedRow[mappedColumn.name] = dataRow[mappedColumn.index];
         });
 
-        map.data[0].filesData.push(parsedRow);
+        const rowId = dataRow[0];
+        stepDataMap.covariates.value[rowId] = parsedRow;
       });
-    } else if (dataFile.dataType === 'bundle' || dataFile.dataType === 'singles') {
-      const e = new RegExp(/[-\/\\^$*+?.()|[\]{}]/g); // eslint-disable-line no-useless-escape
-      const escape = (string) => {
-        return string.replace(e, '\\$&');
-      };
-      const pathsep = new RegExp(`${escape(sep)}|:`, 'g');
 
-      map.dataMappings.forEach((step, i) => {
-        Object.keys(step).forEach((variable) => {
-          if (map.dataMappings[i][variable][0] && map.dataMappings[i][variable][0].dataFileFieldName === 'bundle') {
-            map.dataMappings[i][variable] = dataFile.files.map((f => f.replace(pathsep, '-')));
-          }
-        });
-      });
-      map.files = dataFile.files;
+      map.dataMappings.push(stepDataMap);
     }
 
     dispatch(({

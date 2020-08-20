@@ -5,7 +5,7 @@ import Grid from '@material-ui/core/Grid';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
-import MapsStepFieldset from './maps-step-fieldset';
+import MapsStepField from './maps-step-field';
 
 const styles = theme => ({
   rootPaper: {
@@ -42,27 +42,30 @@ function MapsPipelineVariables(props) {
 
             const inputs = { ...inputMap, ...computations[0].computation.input };
 
-            return Object.entries(inputs).map((input) => {
-              const inputMapKey = input[0];
-              const inputMapValue = input[1];
+            return Object.keys(inputs)
+              .sort((inputKeyA, inputKeyB) => {
+                if (inputMap[inputKeyA].fulfilled) return 1;
+                if (inputMap[inputKeyB].fulfilled) return -1;
+                return 0;
+              })
+              .map((inputKey) => {
+                if (inputKey === 'meta') {
+                  return;
+                }
 
-              if (inputMapKey === 'meta') {
-                return;
-              }
-
-              return (
-                <MapsStepFieldset
-                  registerDraggableContainer={registerDraggableContainer}
-                  key={`step-${inputMapKey}`}
-                  fieldsetLabel={inputMapValue.label}
-                  fieldsetName={inputMapKey}
-                  stepFieldset={inputMap[inputMapKey]}
-                  stepsDataMappings={stepsDataMappings}
-                  consortium={consortium}
-                  unmapField={unmapField}
-                />
-              );
-            });
+                return (
+                  <MapsStepField
+                    registerDraggableContainer={registerDraggableContainer}
+                    key={`step-${inputKey}`}
+                    fieldName={inputKey}
+                    fieldCompSpec={inputs[inputKey]}
+                    fieldPipeline={inputMap[inputKey]}
+                    stepsDataMappings={stepsDataMappings}
+                    consortium={consortium}
+                    unmapField={unmapField}
+                  />
+                );
+              });
           })
         }
       </Paper>

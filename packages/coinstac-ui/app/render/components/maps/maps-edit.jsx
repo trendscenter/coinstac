@@ -1,3 +1,4 @@
+/* eslint-disable no-case-declarations */
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { Link } from 'react-router';
@@ -37,6 +38,20 @@ const drake = dragula({
   revertOnSpill: true,
 });
 
+function findDataFileInput(pipeline) {
+  const compInputs = pipeline.computations[0].computation.input;
+
+  let dataFileInput = null;
+
+  Object.keys(compInputs).forEach((inputKey) => {
+    if (compInputs[inputKey].type === 'files') {
+      dataFileInput = compInputs[inputKey];
+    }
+  });
+
+  return dataFileInput;
+}
+
 class MapsEdit extends Component {
   constructor(props) {
     super(props);
@@ -45,7 +60,7 @@ class MapsEdit extends Component {
       activeConsortium: null,
       containers: [],
       stepsDataMappings: [],
-      dataType: 'array',
+      dataType: 'freesurfer',
       isMapped: false,
       stepsMapped: 0,
       dataFile: null,
@@ -82,15 +97,12 @@ class MapsEdit extends Component {
 
     let totalInputFields = 0;
 
-    if (pipeline.steps[0].inputMap.covariates) {
-      const ctotal = pipeline.steps[0].inputMap.covariates.ownerMappings.length;
-      totalInputFields += ctotal;
-    }
-
-    if (pipeline.steps[0].inputMap.data) {
-      const dtotal = pipeline.steps[0].inputMap.data.ownerMappings.length;
-      totalInputFields += dtotal;
-    }
+    Object.keys(pipeline.steps[0].inputMap).forEach((inputMapKey) => {
+      const inputMapItem = pipeline.steps[0].inputMap[inputMapKey];
+      if (!inputMapItem.fulfilled) {
+        totalInputFields += inputMapItem.value.length;
+      }
+    });
 
     this.setState({ stepsTotal: totalInputFields });
 
@@ -107,8 +119,7 @@ class MapsEdit extends Component {
     const { dataFile, stepsDataMappings, activeConsortium } = this.state;
     const { saveDataMapping, updateConsortiumMappedUsers, auth } = this.props;
 
-    saveDataMapping(activeConsortium.id, activeConsortium.activePipelineId,
-      stepsDataMappings, dataFile);
+    saveDataMapping(activeConsortium, stepsDataMappings, dataFile);
 
     const currentUserId = auth.user.id;
     let mappedForRun = activeConsortium.mappedForRun || [];
@@ -128,21 +139,20 @@ class MapsEdit extends Component {
         stepsDataMappings: [],
       };
 
-      const { dataFile, dataType } = prevState;
+      const { dataFile, dataType, activeConsortium } = prevState;
 
       if (dataFile) {
         switch (dataType) {
-          case 'array':
-            stateChanges.dataFileHeader = dataFile.metaFile[0]
+          case 'freesurfer':
+            const [, ...header] = dataFile.metaFile[0];
+            stateChanges.dataFileHeader = header;
             break;
-          case 'bundle':
-            stateChanges.dataFileHeader = [dataType]
-            break;
-          case 'singles':
-            stateChanges.dataFileHeader = dataFile.files
+          case 'files':
+            const dataFileInput = findDataFileInput(activeConsortium.pipelineSteps[0]);
+            stateChanges.dataFileHeader = dataFileInput.source === 'owner' ? [] : dataFileInput.items;
             break;
           default:
-            stateChanges.dataFileHeader = [dataType]
+            stateChanges.dataFileHeader = [];
             break;
         }
       }
@@ -313,22 +323,23 @@ class MapsEdit extends Component {
 
   setSelectedDataFile = (dataFile) => {
     this.setState((prevState) => {
-      const { dataType } = prevState;
+      const { dataType, activeConsortium } = prevState;
+
       let fileHeader;
       switch (dataType) {
-        case 'array':
-          fileHeader = dataFile.metaFile[0]
+        case 'freesurfer':
+          const [, ...header] = dataFile.metaFile[0];
+          fileHeader = header;
           break;
-        case 'bundle':
-          fileHeader = [dataType]
-          break;
-        case 'singles':
-          fileHeader = dataFile.files
+        case 'files':
+          const dataFileInput = findDataFileInput(activeConsortium.pipelineSteps[0]);
+          fileHeader = dataFileInput.source === 'owner' ? [] : dataFileInput.items;
           break;
         default:
-          fileHeader = [dataType]
+          fileHeader = [];
           break;
       }
+
       return {
         dataFileHeader: fileHeader,
         dataFile: {
