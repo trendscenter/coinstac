@@ -1,36 +1,31 @@
+const sgMail = require('@sendgrid/mail');
 const crypto = require('crypto');
 const Boom = require('boom');
 const jwt = require('jsonwebtoken');
-const rethink = require('rethinkdb');
 const Promise = require('bluebird');
-const config = require('../config/default');
+const { ObjectID } = require('mongodb');
+const database = require('./database');
+const { transformToClient } = require('./utils');
+const { eventEmitter, USER_CHANGED } = require('./data/events');
 
-let dbmap;
-try {
-  dbmap = require('/etc/coinstac/cstacDBMap'); // eslint-disable-line import/no-absolute-path, import/no-unresolved, global-require
-} catch (e) {
-  console.log('No DBMap found: using defaults'); // eslint-disable-line no-console
-  dbmap = {
-    rethinkdbAdmin: {
-      user: 'admin',
-      password: '',
-    },
-    rethinkdbServer: {
-      username: 'server',
-      password: 'password',
-    },
-    cstacJWTSecret: 'test',
-  };
-}
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 const helperFunctions = {
   /**
    * Create JWT for user signing in to application
-   * @param {string} user username of authenticating user passed in from route handler
+   * @param {string} user id of authenticating user passed in from route handler
    * @return {string} A JWT for the requested user
    */
-  createToken(user) {
-    return jwt.sign({ username: user }, dbmap.cstacJWTSecret, { algorithm: 'HS256', expiresIn: '12h' });
+  createToken(id) {
+    return jwt.sign({ id }, process.env.API_JWT_SECRET, { algorithm: 'HS256', expiresIn: '12h' });
+  },
+  /**
+   * Create JWT for password reset
+   * @param {string} email email
+   * @return {string} A JWT for the requested email
+   */
+  createPasswordResetToken(email) {
+    return jwt.sign({ email }, process.env.API_JWT_SECRET, { algorithm: 'HS256', expiresIn: '24h' });
   },
   /**
    * Create new user account
@@ -38,70 +33,108 @@ const helperFunctions = {
    * @param {string} passwordHash string of hashed password
    * @return {object} The updated user object
    */
-  createUser(user, passwordHash) {
-    return helperFunctions.getRethinkConnection()
-      .then((connection) => {
-        const userDetails = {
-          id: user.username,
-          email: user.email,
-          institution: user.institution,
-          passwordHash,
-          permissions: {
-            computations: {},
-            consortia: {},
-            pipelines: {},
-          },
-          consortiaStatuses: {},
-        };
-
-        if (user.permissions) {
-          userDetails.permissions = user.permissions;
-        }
-
-        if (user.consortiaStatuses) {
-          userDetails.consortiaStatuses = user.consortiaStatuses;
-        }
-
-        return rethink.table('users')
-          .insert(userDetails, { returnChanges: true })
-          .run(connection).then(res => connection.close().then(() => res));
-      })
-      .then(result => result.changes[0].new_val);
-  },
-  /**
-   * dbmap getter
-   * @return {Object} dbmap loaded
-   */
-  getDBMap() { return dbmap; },
-  /**
-   * Returns RethinkDB connection
-   * @return {object} A connection to RethinkDB
-   */
-  getRethinkConnection() {
-    const defaultConnectionConfig = {
-      host: config.host,
-      port: config.rethinkPort,
-      db: config.cstacDB,
+  async createUser(user, passwordHash) {
+    const userDetails = {
+      _id: user._id || new ObjectID(),
+      username: user.username,
+      name: user.name,
+      email: user.email,
+      institution: user.institution,
+      passwordHash,
+      permissions: {
+        computations: {},
+        consortia: {},
+        pipelines: {},
+      },
+      consortiaStatuses: {},
     };
 
-    defaultConnectionConfig.user = dbmap.rethinkdbAdmin.user;
-    defaultConnectionConfig.password = dbmap.rethinkdbAdmin.password;
+    if (user.permissions) {
+      userDetails.permissions = user.permissions;
+    }
 
-    return rethink.connect(Object.assign({}, defaultConnectionConfig));
+    if (user.consortiaStatuses) {
+      userDetails.consortiaStatuses = user.consortiaStatuses;
+    }
+
+    const db = database.getDbInstance();
+
+    const result = await db.collection('users').insertOne(userDetails);
+
+    return result.ops[0];
+  },
+  async updateUser(user) {
+    const db = database.getDbInstance();
+
+    const result = await db.collection('users').findOneAndUpdate({
+      _id: ObjectID(user.id),
+    }, {
+      $set: {
+        name: user.name,
+        username: user.username,
+        email: user.email,
+        photo: user.photo,
+        photoID: user.photoID,
+        institution: user.institution,
+      },
+    }, {
+      returnOriginal: false,
+    });
+
+    const updatedUser = transformToClient(result.value);
+
+    eventEmitter.emit(USER_CHANGED, updatedUser);
+
+    return updatedUser;
+  },
+  /**
+   * Save password reset token
+   * @param {string} email email to send password reset token
+   * @return {object}
+   */
+  async savePasswordResetToken(email) {
+    const resetToken = helperFunctions.createPasswordResetToken(email);
+
+    const msg = {
+      to: email,
+      from: 'no-reply@mrn.org',
+      subject: 'Password Reset Request',
+      html: `We received your password reset request. <br/>
+        Please use this token for password reset. <br/>
+        Token: <strong>${resetToken}</strong>`,
+    };
+
+    const db = database.getDbInstance();
+
+    await sgMail.send(msg);
+
+    return db.collection('users').updateOne({ email }, {
+      $set: {
+        passwordResetToken: resetToken,
+      },
+    }, { returnOriginal: false });
+  },
+  /**
+ * Returns user table object for requested user
+ * @param {object} userId id of requested user
+ * @return {object} The requested user object
+ */
+  async getUserDetailsByID(userId) {
+    const db = database.getDbInstance();
+
+    const user = await db.collection('users').findOne({ _id: ObjectID(userId) });
+    return transformToClient(user);
   },
   /**
    * Returns user table object for requested user
-   * @param {object} credentials credentials of requested user
+   * @param {string} username username of requested user
    * @return {object} The requested user object
    */
-  async getUserDetails(credentials) {
-    const connection = await helperFunctions.getRethinkConnection();
+  async getUserDetails(username) {
+    const db = database.getDbInstance();
 
-    const user = await rethink.table('users').get(credentials.username).run(connection);
-
-    await connection.close();
-
-    return user;
+    const user = await db.collection('users').findOne({ username });
+    return transformToClient(user);
   },
   /**
    * Hashes password for storage in database
@@ -135,22 +168,15 @@ const helperFunctions = {
     });
   },
   /**
-   * merges the given map into the current map
-   * @param {Object} map dbmap attrs to set
-   */
-  setDBMap(map) {
-    dbmap = Object.assign({}, dbmap, map);
-  },
-  /**
    * Validates JWT from authenticated user
    * @param {object} decoded token contents
    * @param {object} request original request from client
    * @param {function} callback function signature (err, isValid, alternative credentials)
    */
   validateToken(decoded, request, callback) {
-    helperFunctions.getUserDetails({ username: decoded.username })
+    helperFunctions.getUserDetailsByID(decoded.id)
       .then((user) => {
-        if (user.id) {
+        if (user) {
           callback(null, true, user);
         } else {
           callback(null, false, null);
@@ -160,15 +186,40 @@ const helperFunctions = {
   /**
    * Confirms that submitted email is new
    * @param {object} req request
-   * @param {object} connection GraphQL connection
    * @return {boolean} Is the email unique?
    */
-  validateUniqueEmail(req, connection) {
-    return rethink.table('users')
-      .filter({ email: req.payload.email })
-      .count()
-      .eq(0)
-      .run(connection);
+  async validateUniqueEmail(req) {
+    const db = database.getDbInstance();
+
+    const count = await db.collection('users')
+      .countDocuments({ email: req.payload.email });
+
+    return count === 0;
+  },
+  /**
+   * Checks if an email exists
+   * @param {object} req request
+   * @param {object} res response
+   * @return {object}   reply w/ does the email exist?
+   */
+  async validateEmail(req, res) {
+    const exists = !await helperFunctions.validateUniqueEmail(req);
+    if (!exists) return res(Boom.badRequest('No such email address'));
+
+    return res(exists);
+  },
+  /**
+   * Confirms that submitted username is new
+   * @param {object} req request
+   * @return {boolean} Is the username unique?
+   */
+  async validateUniqueUsername(req) {
+    const db = database.getDbInstance();
+
+    const count = await db.collection('users')
+      .countDocuments({ username: req.payload.username });
+
+    return count === 0;
   },
   /**
    * Confirms that submitted username & email are new
@@ -176,38 +227,20 @@ const helperFunctions = {
    * @param {object} res response
    * @return {object} The submitted user information
    */
-  validateUniqueUser(req, res) {
-    return helperFunctions.getRethinkConnection()
-      .then(connection => helperFunctions.validateUniqueUsername(req, connection)
-        .then((isUniqueUsername) => {
-          if (isUniqueUsername) {
-            return helperFunctions.validateUniqueEmail(req, connection)
-              .then(res => connection.close().then(() => res));
-          }
+  async validateUniqueUser(req, res) {
+    const isUsernameUnique = await helperFunctions.validateUniqueUsername(req);
 
-          res(Boom.badRequest('Username taken'));
-          return connection.close();
-        })
-        .then((isUniqueEmail) => {
-          if (isUniqueEmail) {
-            res(req.payload);
-          } else if (isUniqueEmail === false) {
-            res(Boom.badRequest('Email taken'));
-          }
-        }));
-  },
-  /**
-   * Confirms that submitted username is new
-   * @param {object} req request
-   * @param {object} connection GraphQL connection
-   * @return {boolean} Is the username unique?
-   */
-  validateUniqueUsername(req, connection) {
-    return rethink.table('users')
-      .getAll(req.payload.username)
-      .count()
-      .eq(0)
-      .run(connection);
+    if (!isUsernameUnique) {
+      return res(Boom.badRequest('Username taken'));
+    }
+
+    const isEmailUnique = helperFunctions.validateUniqueEmail(req);
+
+    if (!isEmailUnique) {
+      return res(Boom.badRequest('Email taken'));
+    }
+
+    return res();
   },
   /**
    * Validate that authenticating user is using correct credentials
@@ -215,22 +248,73 @@ const helperFunctions = {
    * @param {object} res response
    * @return {object} The requested user object
    */
-  validateUser(req, res) {
-    return helperFunctions.getUserDetails(req.payload)
-      .then((user) => {
-        if (user) {
-          helperFunctions.verifyPassword(req.payload.password, user.passwordHash)
-            .then((passwordMatch) => {
-              if (user && user.passwordHash && passwordMatch) {
-                res(user);
-              } else {
-                res(Boom.unauthorized('Incorrect username or password.'));
-              }
-            });
-        } else {
-          res(Boom.unauthorized('Incorrect username or password.'));
-        }
-      });
+  async validateUser(req, res) {
+    const db = database.getDbInstance();
+
+    const user = await db.collection('users').findOne({ username: req.payload.username });
+
+    if (!user) {
+      return res(Boom.unauthorized('Incorrect username or password.'));
+    }
+
+    const passwordMatch = await helperFunctions.verifyPassword(
+      req.payload.password, user.passwordHash
+    );
+
+    if (passwordMatch) {
+      res(transformToClient(user));
+    } else {
+      res(Boom.unauthorized('Incorrect username or password.'));
+    }
+  },
+  /**
+   * Confirms that submitted token is valid
+   * @param {object} req request
+   * @param {object} res response
+   * @return {object} The requested object
+   */
+  async validateResetToken(req, res) {
+    const db = database.getDbInstance();
+    const user = await db.collection('users').findOne({ passwordResetToken: req.payload.token });
+
+    if (!user) {
+      return res(Boom.badRequest('Invalid token'));
+    }
+
+    try {
+      const { email } = jwt.verify(req.payload.token, process.env.API_JWT_SECRET);
+      const noEmail = await helperFunctions.validateUniqueEmail({ payload: { email } });
+
+      if (noEmail) {
+        return res(Boom.badRequest('Invalid email'));
+      }
+
+      return res({ email });
+    } catch (err) {
+      res(Boom.badRequest(err));
+    }
+  },
+  /**
+   * Reset password
+   * @param {object} password token for resetting password
+   * @param {object} password new password
+   * @return {object}
+   */
+  async resetPassword(token, password) {
+    const db = database.getDbInstance();
+
+    const newPassword = await helperFunctions.hashPassword(password);
+
+    return db.collection('users').updateOne({
+      passwordResetToken: token,
+    }, {
+      $set: {
+        passwordHash: newPassword,
+        passwordResetToken: '',
+      },
+    }, {
+      returnOriginal: false,
+    });
   },
   /**
    * Verify that authenticating user is using correct password
@@ -265,7 +349,6 @@ const helperFunctions = {
       });
     });
   },
-  JWTSecret: dbmap.cstacJWTSecret,
 };
 
 module.exports = helperFunctions;

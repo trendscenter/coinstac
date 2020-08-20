@@ -18,25 +18,25 @@ import TimeAgo from './time-ago';
 const styles = theme => ({
   rootPaper: {
     ...theme.mixins.gutters(),
-    paddingTop: theme.spacing.unit * 2,
-    paddingBottom: theme.spacing.unit * 2,
-    marginTop: theme.spacing.unit * 2,
+    paddingTop: theme.spacing(2),
+    paddingBottom: theme.spacing(2),
+    marginTop: theme.spacing(2),
   },
   titleContainer: {
     display: 'flex',
     justifyContent: 'space-between',
-    marginBottom: theme.spacing.unit,
+    marginBottom: theme.spacing(1),
   },
   label: {
     display: 'inline-block',
     fontWeight: 'bold',
-    marginRight: theme.spacing.unit,
+    marginRight: theme.spacing(1),
   },
   value: {
     display: 'inline-block',
   },
   contentContainer: {
-    marginBottom: theme.spacing.unit,
+    marginBottom: theme.spacing(1),
   },
   actionButtons: {
     display: 'flex',
@@ -50,13 +50,25 @@ const styles = theme => ({
     justifyContent: 'space-between',
   },
   runStatePaper: {
-    width: `calc(50% - ${theme.spacing.unit}px)`,
+    width: `calc(50% - ${theme.spacing(1)}px)`,
   },
   runTitle: {
     textDecoration: 'underline',
-    marginBottom: theme.spacing.unit,
+    marginBottom: theme.spacing(1),
   },
 });
+
+function parseWaiting(runObject, stateKey) {
+  const users = [];
+
+  runObject[stateKey].waitingOn.forEach((client) => {
+    if (client in runObject.members) {
+      users.push(runObject.members[client]);
+    }
+  });
+
+  return users;
+}
 
 function getStateWell(runObject, stateName, stateKey, classes) {
   const {
@@ -67,7 +79,7 @@ function getStateWell(runObject, stateName, stateKey, classes) {
     <Paper
       className={classNames(classes.rootPaper, classes.runStatePaper)}
     >
-      <Typography variant="headline" className={classes.runTitle}>
+      <Typography variant="h5" className={classes.runTitle}>
         {`${stateName} Pipeline State:`}
       </Typography>
       {
@@ -87,7 +99,7 @@ function getStateWell(runObject, stateName, stateKey, classes) {
           <div>
             <Typography className={classes.label}>Waiting on Users:</Typography>
             <Typography className={classes.value}>
-              {controllerState.includes('waiting on') ? waitingOn.join(', ') : ''}
+              {controllerState.includes('waiting on') ? parseWaiting(runObject, stateKey) : ''}
             </Typography>
           </div>
         )
@@ -146,7 +158,7 @@ class RunItem extends Component {
     const { consortiumName, runObject, classes } = this.props;
     const {
       id, startDate, endDate, status, localPipelineState, remotePipelineState,
-      clients, pipelineSnapshot, results, error,
+      members, pipelineSnapshot, results, error,
     } = runObject;
 
     return (
@@ -156,7 +168,7 @@ class RunItem extends Component {
         className={classNames(classes.rootPaper, 'run-item-paper')}
       >
         <div className={classes.titleContainer}>
-          <Typography variant="headline">
+          <Typography variant="h5">
             { consortiumName }
             {
               pipelineSnapshot
@@ -166,7 +178,7 @@ class RunItem extends Component {
           {
             !endDate && status === 'started'
             && (
-              <Typography variant="headline">
+              <Typography variant="h5">
                 {'Started: '}
                 <TimeAgo timestamp={runObject.startDate / 1000} />
               </Typography>
@@ -175,7 +187,7 @@ class RunItem extends Component {
           {
             endDate
             && (
-              <Typography variant="headline">
+              <Typography variant="h5">
                 {'Completed: '}
                 <TimeAgo timestamp={runObject.endDate / 1000} />
               </Typography>
@@ -244,14 +256,20 @@ class RunItem extends Component {
             )
           }
           {
-            clients
+            members
             && (
               <div>
                 <Typography className={classes.label}>
                   Clients:
                 </Typography>
                 <Typography className={classes.value}>
-                  { clients.join(', ') }
+                  {
+                    Object.values(members).map(member => (
+                      <span>
+                        { `${member},` }
+                      </span>
+                    ))
+                  }
                 </Typography>
               </div>
             )

@@ -82,6 +82,7 @@ const sharedFields = {
   runFields: `
     id
     clients
+    members
     consortiumId
     startDate
     endDate
@@ -96,13 +97,19 @@ const sharedFields = {
     id
     email
     institution
-    passwordHash
+    username
     permissions
+    photo
+    photoID
+    name
     consortiaStatuses
   `,
   userEmailIds: `
     id
     email
+    username
+    photo
+    photoID
   `,
   resultFields: `
     id
@@ -119,10 +126,7 @@ const sharedFields = {
     id
     owner
     title
-    users {
-      username
-      isRead
-    }
+    users
     date
     messages {
       id

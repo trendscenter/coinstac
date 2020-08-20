@@ -20,27 +20,27 @@ import {
 
 const styles = theme => ({
   tabTitle: {
-    marginTop: theme.spacing.unit * 2,
+    marginTop: theme.spacing(2),
   },
   paper: {
-    padding: theme.spacing.unit * 2,
-    marginTop: theme.spacing.unit,
-    marginBottom: theme.spacing.unit * 3,
+    padding: theme.spacing(2),
+    marginTop: theme.spacing(1),
+    marginBottom: theme.spacing(3),
   },
   pipelinesActions: {
-    marginTop: theme.spacing.unit * 2,
+    marginTop: theme.spacing(2),
   },
   pipelineDropdownsContainer: {
     display: 'flex',
     justifyContent: 'space-around',
-    marginTop: theme.spacing.unit * 2,
+    marginTop: theme.spacing(2),
   },
   newPipelineContainer: {
-    marginTop: theme.spacing.unit * 4,
+    marginTop: theme.spacing(4),
     textAlign: 'center',
   },
   createPipelineHint: {
-    marginBottom: theme.spacing.unit * 1,
+    marginBottom: theme.spacing(1),
   },
 });
 
@@ -68,24 +68,27 @@ class ConsortiumPipeline extends Component {
     this.closeSharedPipelinesMenu = this.closeSharedPipelinesMenu.bind(this);
   }
 
-  static getDerivedStateFromProps(props, state) {
-    if (props.pipelines.length > 0 && props.consortium.activePipelineId
-      && (!state.activePipeline || state.activePipeline.id !== props.consortium.activePipelineId)
-    ) {
-      const activePipeline = props.pipelines
-        .find(cons => cons.id === props.consortium.activePipelineId);
+  componentDidMount() {
+    const { consortium, pipelines } = this.props;
 
-      return { activePipeline };
+    if (consortium && consortium.activePipelineId) {
+      const activePipeline = pipelines.find(p => p.id === consortium.activePipelineId);
+
+      this.setState({ activePipeline });
     }
-
-    return null;
   }
 
-  selectPipeline = pipelineId => () => {
-    const { consortium, saveActivePipeline } = this.props;
-    saveActivePipeline(consortium.id, pipelineId);
+  selectPipeline = pipelineId => async () => {
+    const { consortium, saveActivePipeline, pipelines } = this.props;
+
     this.closeOwnedPipelinesMenu();
     this.closeSharedPipelinesMenu();
+
+    await saveActivePipeline(consortium.id, pipelineId);
+
+    const activePipeline = pipelines.find(p => p.id === pipelineId);
+
+    this.setState({ activePipeline });
   }
 
   openOwnedPipelinesMenu(event) {
@@ -141,14 +144,14 @@ class ConsortiumPipeline extends Component {
                 >
                   {activePipeline.name}
                 </Typography>
-                <Typography variant="body1">
+                <Typography variant="body2">
                   {activePipeline.description}
                 </Typography>
               </div>
             )
           }
           {
-            !activePipeline.id && <Typography variant="body1"><em>No active pipeline</em></Typography>
+            !activePipeline.id && <Typography variant="body2"><em>No active pipeline</em></Typography>
           }
         </Paper>
         {
@@ -214,7 +217,7 @@ class ConsortiumPipeline extends Component {
                 </div>
               </div>
               <div className={classes.newPipelineContainer}>
-                <Typography variant="body1" className={classes.createPipelineHint}><em>Or create a new pipeline</em></Typography>
+                <Typography variant="body2" className={classes.createPipelineHint}><em>Or create a new pipeline</em></Typography>
                 <Button
                   variant="contained"
                   color="secondary"

@@ -23,9 +23,9 @@ const styles = theme => ({
   lambdaContainer: {
     display: 'flex',
     alignItems: 'center',
-    marginTop: theme.spacing.unit * 2,
-    marginBottom: theme.spacing.unit * 2,
-    marginLeft: theme.spacing.unit,
+    marginTop: theme.spacing(2),
+    marginBottom: theme.spacing(2),
+    marginLeft: theme.spacing(1),
   },
 });
 
@@ -268,7 +268,7 @@ class PipelineStepInput extends Component {
                 }
                 {
                   objParams.description
-                  && <Typography variant="body1">{ objParams.description }</Typography>
+                  && <Typography variant="body2">{ objParams.description }</Typography>
                 }
                 {/*
                   objParams.type === 'file'

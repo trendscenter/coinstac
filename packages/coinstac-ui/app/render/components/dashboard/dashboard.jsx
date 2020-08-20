@@ -39,7 +39,7 @@ import {
   FETCH_ALL_USER_RUNS_QUERY,
   FETCH_ALL_THREADS_QUERY,
   PIPELINE_CHANGED_SUBSCRIPTION,
-  USER_METADATA_CHANGED_SUBSCRIPTION,
+  USER_CHANGED_SUBSCRIPTION,
   USER_RUN_CHANGED_SUBSCRIPTION,
   THREAD_CHANGED_SUBSCRIPTION,
   UPDATE_USER_CONSORTIUM_STATUS_MUTATION,
@@ -52,7 +52,6 @@ import {
 } from '../../state/graphql/props';
 import StartPipelineListener from './listeners/start-pipeline-listener';
 import NotificationsListener from './listeners/notifications-listener';
-import DisplayNotificationsListener from './listeners/display-notifications-listener';
 import DashboardPipelineNavBar from './dashboard-pipeline-nav-bar';
 
 const styles = theme => ({
@@ -74,7 +73,7 @@ const styles = theme => ({
   content: {
     flexGrow: 1,
     backgroundColor: theme.palette.background.default,
-    padding: theme.spacing.unit * 3,
+    padding: theme.spacing(3),
   },
   status: {
     display: 'inline-block',
@@ -135,7 +134,7 @@ class Dashboard extends Component {
       notifyError,
       updateLocalRun,
       saveLocalRun,
-      subscribeToUserMetaData,
+      subscribeToUser,
       subscribeToUserRuns,
     } = this.props;
     const { router } = this.context;
@@ -202,7 +201,7 @@ class Dashboard extends Component {
 
     ipcRenderer.send('load-initial-log');
 
-    this.unsubscribeToUserMetadata = subscribeToUserMetaData(user.id);
+    this.unsubscribeToUser = subscribeToUser(user.id);
     this.unsubscribeToUserRuns = subscribeToUserRuns(user.id);
 
     ipcRenderer.on('docker-error', (event, arg) => {
@@ -350,7 +349,8 @@ class Dashboard extends Component {
         if (consortia[i] && nextProps.consortia[i].id === consortia[i].id
             && nextProps.consortia[i].activePipelineId
             && !consortia[i].activePipelineId
-            && nextProps.consortia[i].members.indexOf(user.id) > -1) {
+            && user.id in nextProps.consortia[i].members
+        ) {
           const computationData = client.readQuery({ query: FETCH_ALL_COMPUTATIONS_QUERY });
           const pipelineData = client.readQuery({ query: FETCH_ALL_PIPELINES_QUERY });
           const pipeline = pipelineData.fetchAllPipelines
@@ -403,7 +403,7 @@ class Dashboard extends Component {
     unsubscribePipelines();
     unsubscribeThreads();
 
-    this.unsubscribeToUserMetadata();
+    this.unsubscribeToUser();
     this.unsubscribeToUserRuns();
 
     ipcRenderer.removeAllListeners('docker-out');
@@ -442,10 +442,7 @@ class Dashboard extends Component {
 
     const { id: userId } = auth.user;
 
-    const unreadThreads = threads.filter((thread) => {
-      return thread.users
-        .filter(({ username, isRead }) => username === userId && !isRead).length > 0;
-    });
+    const unreadThreads = threads.filter(thread => userId in thread && !thread[userId].isRead);
 
     return unreadThreads.length;
   }
@@ -528,7 +525,7 @@ class Dashboard extends Component {
                     : (
                       <span className={classes.statusDown}>
                         <Typography
-                          variant="body2"
+                          variant="body1"
                           classes={{
                             root: classes.statusDownText,
                           }}
@@ -564,7 +561,6 @@ class Dashboard extends Component {
           remoteRuns={remoteRuns}
         />
         <NotificationsListener />
-        <DisplayNotificationsListener />
       </React.Fragment>
     );
   }
@@ -611,7 +607,7 @@ Dashboard.propTypes = {
   subscribeToConsortia: PropTypes.func.isRequired,
   subscribeToPipelines: PropTypes.func.isRequired,
   subscribeToThreads: PropTypes.func.isRequired,
-  subscribeToUserMetaData: PropTypes.func.isRequired,
+  subscribeToUser: PropTypes.func.isRequired,
   subscribeToUserRuns: PropTypes.func.isRequired,
   updateConsortiaMappedUsers: PropTypes.func.isRequired,
   updateDockerOutput: PropTypes.func.isRequired,
@@ -672,14 +668,19 @@ const DashboardWithData = compose(
     }),
     props: props => ({
       currentUser: props.data.fetchUser,
-      subscribeToUserMetaData: userId => props.data.subscribeToMore({
-        document: USER_METADATA_CHANGED_SUBSCRIPTION,
+      subscribeToUser: userId => props.data.subscribeToMore({
+        document: USER_CHANGED_SUBSCRIPTION,
         variables: { userId },
         updateQuery: (prevResult, { subscriptionData: { data } }) => {
-          if (data.userMetadataChanged.delete) {
+          if (data.userChanged.delete) {
             return { fetchUser: null };
           }
-          return { fetchUser: data.userMetadataChanged };
+          return {
+            fetchUser: {
+              ...prevResult.fetchUser,
+              ...data.userChanged,
+            },
+          };
         },
       }),
     }),
