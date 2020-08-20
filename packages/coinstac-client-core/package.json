@@ -35,12 +35,12 @@
     "csv-parse": "^4.4.3",
     "lodash": "^4.17.10",
     "mkdirp": "^0.5.1",
-    "nyc": "^15.0.1",
-    "sinon": "^9.0.2",
     "winston": "^3.2.1"
   },
   "devDependencies": {
-    "ava": "^3.8.1"
+    "ava": "^3.8.1",
+    "nyc": "^15.0.1",
+    "sinon": "^9.0.2",
   },
   "ava": {
     "files": [
