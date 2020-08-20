@@ -39,7 +39,7 @@
     "sinon": "^9.0.2",
     "winston": "^3.2.1"
   },
-  devDependencies: {
+  "devDependencies": {
     "ava": "^3.8.1"
   },
   "ava": {
