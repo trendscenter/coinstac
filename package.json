@@ -3,7 +3,8 @@
   "version": "2.0.0",
   "description": "Decentralized Analyses Made Easy",
   "main": "index.js",
-  "dependencies": {},
+  "dependencies": {
+  },
   "devDependencies": {
     "babel-eslint": "^10.0.3",
     "concurrently": "^5.1.0",
@@ -21,8 +22,7 @@
     "marked": "^0.8.0",
     "minami": "^1.2.3",
     "minimist": "^1.2.5",
-    "pre-commit": "^1.2.2",
-    "swig-templates": "^2.0.3"
+    "pre-commit": "^1.2.2"
   },
   "scripts": {
     "api-server": "cd packages/coinstac-api-server/ && docker-compose up -d && npm start",
