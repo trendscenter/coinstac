@@ -6,8 +6,8 @@ const schemaFields = {
     description: String!
     name: String!
     tags: [String]
-    owners: [ID]
-    members: [ID]
+    owners: JSON
+    members: JSON
     pipelines: [ID]
     results: [ID]
     isPrivate: Boolean
@@ -64,7 +64,11 @@ const schemaFields = {
     consortiaStatuses: JSON
     email: String!
     institution: String
+    username: String!
     permissions: JSON
+    photo: String
+    photoID: String
+    name: String
   `,
 };
 

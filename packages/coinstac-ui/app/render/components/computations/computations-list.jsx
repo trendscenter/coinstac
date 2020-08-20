@@ -27,25 +27,25 @@ const MAX_LENGTH_COMPUTATIONS = 5;
 
 const styles = theme => ({
   titleContainer: {
-    marginBottom: theme.spacing.unit * 2,
+    marginBottom: theme.spacing(2),
   },
   downloadAllButton: {
-    marginBottom: theme.spacing.unit * 4,
+    marginBottom: theme.spacing(4),
   },
   computationsContainer: {
-    marginBottom: theme.spacing.unit * 4,
+    marginBottom: theme.spacing(4),
   },
   rootPaper: {
     ...theme.mixins.gutters(),
-    paddingTop: theme.spacing.unit * 2,
-    paddingBottom: theme.spacing.unit * 2,
-    marginTop: theme.spacing.unit * 2,
+    paddingTop: theme.spacing(2),
+    paddingBottom: theme.spacing(2),
+    marginTop: theme.spacing(2),
   },
   computationName: {
-    marginBottom: theme.spacing.unit,
+    marginBottom: theme.spacing(1),
   },
   computationDescription: {
-    marginBottom: theme.spacing.unit * 2,
+    marginBottom: theme.spacing(2),
   },
   computationActions: {
     display: 'flex',
@@ -122,10 +122,10 @@ class ComputationsList extends Component { // eslint-disable-line
                 elevation={1}
                 key={comp.id}
               >
-                <Typography variant="headline" className={classes.computationName}>
+                <Typography variant="h5" className={classes.computationName}>
                   { comp.meta.name }
                 </Typography>
-                <Typography variant="body1" className={classes.computationDescription}>
+                <Typography variant="body2" className={classes.computationDescription}>
                   { comp.meta.description }
                 </Typography>
                 <div className={classes.computationActions}>
@@ -324,7 +324,7 @@ MB
         {
           (!computations || !computations.length)
           && (
-            <Typography variant="body1">
+            <Typography variant="body2">
               No computations found
             </Typography>
           )

@@ -2,11 +2,10 @@
 
 module.exports = {
   preIteration(controllerState) {
-    if (controllerState.currentOutput
-      && controllerState.currentOutput.success
+    if (controllerState.success
       && controllerState.mode === 'remote') {
       return 'doneRemote';
-    } if (controllerState.currentOutput && controllerState.currentOutput.success) {
+    } if (controllerState.success) {
       return 'done';
     } if (controllerState.remoteInitial) {
       return 'firstServerRemote';

@@ -35,6 +35,7 @@ const PipelineManager = require('coinstac-pipeline');
  */
 class CoinstacClient {
   constructor(opts) {
+
     if (!opts || !(opts instanceof Object)) {
       throw new TypeError('coinstac-client requires configuration opts');
     }
@@ -252,18 +253,19 @@ class CoinstacClient {
         const escape = (string) => {
           return string.replace(e, '\\$&');
         };
-
-        for (let i = 0; i < filesArray.length; i += 1) {
-          const pathsep = new RegExp(`${escape(path.sep)}|:`, 'g');
-          linkPromises.push(
-            fs.link(filesArray[i], path.resolve(this.appDirectory, 'input', this.clientId, runId, filesArray[i].replace(pathsep, '-')))
-              .catch((e) => {
-              // permit dupes
-                if (e.code && e.code !== 'EEXIST') {
-                  throw e;
-                }
-              })
-          );
+        if (filesArray) {
+          for (let i = 0; i < filesArray.length; i += 1) {
+            const pathsep = new RegExp(`${escape(path.sep)}|:`, 'g');
+            linkPromises.push(
+              linkAsync(filesArray[i], path.resolve(this.appDirectory, 'input', this.clientId, runId, filesArray[i].replace(pathsep, '-')))
+                .catch((e) => {
+                // permit dupes
+                  if (e.code && e.code !== 'EEXIST') {
+                    throw e;
+                  }
+                })
+            );
+          }
         }
 
         const runObj = { spec: clientPipeline, runId, timeout: clientPipeline.timeout };

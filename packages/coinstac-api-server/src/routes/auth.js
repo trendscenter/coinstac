@@ -10,10 +10,10 @@ module.exports = [
         { method: helperFunctions.validateUser, assign: 'user' },
       ],
       handler: (req, res) => {
-        delete req.pre.user.passwordHash;
+        req.pre.user.passwordHash = undefined;
 
         res({
-          id_token: helperFunctions.createToken(req.pre.user.username),
+          id_token: helperFunctions.createToken(req.pre.user.id),
           user: req.pre.user,
         }).code(201);
       },
@@ -25,13 +25,17 @@ module.exports = [
     config: {
       auth: 'jwt',
       handler: ({
-        auth: { credentials },
+        auth: {
+          credentials: {
+            email, id, institution, permissions, username, photo, photoID, name,
+          },
+        },
       }, res) => {
-        delete credentials.passwordHash;
-
         res({
-          id_token: helperFunctions.createToken(credentials.username),
-          user: credentials,
+          id_token: helperFunctions.createToken(id),
+          user: {
+            email, id, institution, permissions, username, photo, photoID, name,
+          },
         }).code(201);
       },
     },
@@ -48,15 +52,61 @@ module.exports = [
         helperFunctions.hashPassword(req.payload.password)
           .then(passwordHash => helperFunctions.createUser(req.payload, passwordHash))
           .then(({
-            _id, username, institution, email, permissions,
+            email, _id, institution, permissions, username, photo, photoID, name,
           }) => {
             res({
               id_token: helperFunctions.createToken(username),
               user: {
-                id: _id, username, institution, email, permissions,
+                email, _id, institution, permissions, username, photo, photoID, name,
               },
             }).code(201);
           });
+      },
+    },
+  },
+  {
+    method: 'POST',
+    path: '/updateAccount',
+    config: {
+      auth: false,
+      handler: (req, res) => {
+        helperFunctions.updateUser(req.payload)
+          .then(({
+            id, institution, email, photo, photoID, name, permissions,
+          }) => {
+            res({
+              user: {
+                id, institution, email, photo, photoID, name, permissions,
+              },
+            }).code(201);
+          });
+      },
+    },
+  },
+  {
+    method: 'POST',
+    path: '/sendPasswordResetEmail',
+    config: {
+      auth: false,
+      pre: [{ method: helperFunctions.validateEmail }],
+      handler: (req, res) => {
+        helperFunctions
+          .savePasswordResetToken(req.payload.email)
+          .then(() => res().code(204))
+          .catch(() => res().code(400));
+      },
+    },
+  },
+  {
+    method: 'POST',
+    path: '/resetPassword',
+    config: {
+      auth: false,
+      pre: [{ method: helperFunctions.validateResetToken }],
+      handler: (req, res) => {
+        helperFunctions
+          .resetPassword(req.payload.token, req.payload.password)
+          .then(() => res().code(204));
       },
     },
   },

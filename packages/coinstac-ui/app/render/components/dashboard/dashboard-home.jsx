@@ -13,11 +13,11 @@ const HOURS_SINCE_ACTIVE = 72;
 
 const styles = theme => ({
   pageTitle: {
-    marginBottom: theme.spacing.unit * 2,
+    marginBottom: theme.spacing(2),
   },
   pageSubtitle: {
-    marginBottom: theme.spacing.unit * 2,
-    marginTop: theme.spacing.unit * 2,
+    marginBottom: theme.spacing(2),
+    marginTop: theme.spacing(2),
   },
 });
 
@@ -29,17 +29,17 @@ function DashboardHome(props) {
   const {
     consortia,
     runs,
-    userId,
+    user,
     classes,
   } = props;
 
   return (
     <div>
       <Typography variant="h4" className={classes.pageTitle}>
-        {`${userId}'s Home`}
+        {`${user.username}'s Home`}
       </Typography>
       <Divider />
-      <Typography variant="title" className={classes.pageSubtitle}>
+      <Typography variant="h6" className={classes.pageSubtitle}>
         {`Run Activity in the Last ${HOURS_SINCE_ACTIVE} Hours`}
       </Typography>
       <RunsList
@@ -57,13 +57,12 @@ DashboardHome.propTypes = {
   classes: PropTypes.object.isRequired,
   consortia: PropTypes.array.isRequired,
   runs: PropTypes.array.isRequired,
-  userId: PropTypes.string.isRequired,
+  user: PropTypes.object.isRequired,
 };
 
-const mapStateToProps = ({ auth, runs }) => ({
-  runs: runs.runs,
-  userId: auth.user.id,
-});
+function mapStateToProps({ auth: { user }, runs: { runs } }) {
+  return { runs, user };
+}
 
 const connectedComponent = connect(mapStateToProps)(DashboardHome);
 

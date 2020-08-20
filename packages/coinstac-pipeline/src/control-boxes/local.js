@@ -2,7 +2,7 @@
 
 module.exports = {
   preIteration(controllerState) {
-    if (controllerState.currentOutput && controllerState.currentOutput.success) {
+    if (controllerState.success) {
       return 'done';
     }
 
