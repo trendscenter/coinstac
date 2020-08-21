@@ -1,15 +1,20 @@
 import React, { Component } from 'react';
-import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
-import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
-import Typography from '@material-ui/core/Typography';
 import CheckIcon from '@material-ui/icons/Check';
-import { withStyles } from '@material-ui/core/styles';
 import { setClientCoreUrlAsync } from '../../state/ducks/auth';
-import { notifyInfo } from '../../state/ducks/notifyAndLog';
+import { connect } from 'react-redux';
+import { compose, graphql, withApollo } from 'react-apollo';
+import { get } from 'lodash';
+import { Button, CircularProgress, Typography } from '@material-ui/core';
+import { withStyles } from '@material-ui/core/styles';
+import { ValidatorForm, TextValidator } from 'react-material-ui-form-validator';
+import { updatePasswordProps } from '../../state/graphql/props';
+import { UPDATE_PASSWORD_MUTATION } from '../../state/graphql/functions';
+import { notifySuccess, notifyInfo, notifyError } from '../../state/ducks/notifyAndLog';
 import { clearRuns } from '../../state/ducks/runs';
+import UserEditController from './user-edit-controller';
 
 const styles = theme => ({
   pageTitle: {
@@ -18,6 +23,13 @@ const styles = theme => ({
   pageSubtitle: {
     marginBottom: theme.spacing(1),
     borderBottom: `1px solid ${theme.palette.grey[300]}`,
+  },
+  removeDataTitle: {
+    marginBottom: theme.spacing.unit,
+  },
+  updatePasswordTitle: {
+    marginTop: theme.spacing.unit * 5,
+    marginBottom: theme.spacing.unit,
   },
   sectionTitle: {
     marginBottom: theme.spacing(1),
@@ -46,6 +58,19 @@ const styles = theme => ({
     marginTop: theme.spacing(1),
     marginLeft: theme.spacing(1),
   },
+  formControl: {
+    marginBottom: theme.spacing.unit,
+    display: 'block',
+  },
+  spinner: {
+    color: theme.palette.grey[500],
+    marginLeft: theme.spacing.unit * 2,
+  },
+  buttonWrapper: {
+    display: 'flex',
+    alignItems: 'center',
+    marginTop: theme.spacing.unit * 2,
+  },
 });
 
 class Settings extends Component {
@@ -55,6 +80,10 @@ class Settings extends Component {
     this.state = {
       editingURL: props.clientServerURL,
       savingURLStatus: 'init',
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: '',
+      isUpdating: false,
     };
   }
 
@@ -65,6 +94,18 @@ class Settings extends Component {
     if (clientServerURL !== nextProps.clientServerURL) {
       this.setState({ editingURL: nextProps.clientServerURL });
     }
+  }
+
+  componentDidMount() {
+    ValidatorForm.addValidationRule(
+      'isPasswordMatch',
+      // eslint-disable-next-line react/destructuring-assignment
+      value => value === this.state.newPassword
+    );
+  }
+
+  componentWillUnmount() {
+    ValidatorForm.removeValidationRule('isPasswordMatch');
   }
 
   clearData = (e) => {
@@ -100,9 +141,49 @@ class Settings extends Component {
     this.setState({ editingURL: clientServerURL, savingURLStatus: 'init' });
   }
 
+  updatePassword = () => {
+    const { currentPassword, newPassword, isUpdating } = this.state;
+    const { updatePassword, notifySuccess, notifyError } = this.props;
+
+    if (isUpdating) {
+      return;
+    }
+
+    this.setState({ isUpdating: true });
+
+    updatePassword({ currentPassword, newPassword })
+      .then(() => {
+        notifySuccess('Password updated successfully');
+        this.setState({
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: '',
+          isUpdating: false,
+        });
+        this.passwordResetForm.resetValidations();
+      })
+      .catch(({ graphQLErrors }) => {
+        notifyError(get(graphQLErrors, '0.message', 'Failed to update password'));
+      })
+      .finally(() => {
+        this.setState({ isUpdating: false });
+      });
+  }
+
+  updatePasswordParam = ({ param, value }) => {
+    this.setState({ [param]: value });
+  }
+
   render() {
     const { classes, clientServerURL } = this.props;
-    const { editingURL, savingURLStatus } = this.state;
+    const {
+      currentPassword,
+      newPassword,
+      confirmPassword,
+      isUpdating,
+      editingURL,
+      savingURLStatus,
+    } = this.state;
 
     return (
       <div className="settings">
@@ -111,8 +192,9 @@ class Settings extends Component {
             Settings
           </Typography>
         </div>
-
-        <Typography variant="h5" className={classes.pageSubtitle}>
+        <UserEditController />
+        <hr />
+        <Typography variant="h5" className={classes.removeDataTitle}>
           Remove Data
         </Typography>
         <form method="post" onSubmit={this.clearData}>
@@ -158,6 +240,67 @@ class Settings extends Component {
           </Button>
           {savingURLStatus === 'success' && <CheckIcon className={classes.checkIcon} color="primary" />}
         </div>
+        <Typography variant="h5" className={classes.updatePasswordTitle}>
+          Update Password
+        </Typography>
+
+        <ValidatorForm
+          instantValidate
+          noValidate
+          ref={(ref) => { this.passwordResetForm = ref; }}
+          onSubmit={this.updatePassword}
+        >
+          <TextValidator
+            className={classes.formControl}
+            type="password"
+            label="Current Password"
+            value={currentPassword}
+            validators={['required']}
+            errorMessages={['Current password is required']}
+            withRequiredValidator
+            required
+            onChange={evt => this.updatePasswordParam({
+              param: 'currentPassword', value: evt.target.value,
+            })}
+          />
+          <TextValidator
+            className={classes.formControl}
+            type="password"
+            label="New Password"
+            value={newPassword}
+            validators={['required']}
+            errorMessages={['New password is required']}
+            withRequiredValidator
+            required
+            onChange={evt => this.updatePasswordParam({
+              param: 'newPassword', value: evt.target.value,
+            })}
+          />
+          <TextValidator
+            className={classes.formControl}
+            type="password"
+            label="Confirm Password"
+            value={confirmPassword}
+            validators={['isPasswordMatch', 'required']}
+            errorMessages={['Password mismatch', 'Confirm password is required']}
+            withRequiredValidator
+            required
+            onChange={evt => this.updatePasswordParam({
+              param: 'confirmPassword', value: evt.target.value,
+            })}
+          />
+          <div className={classes.buttonWrapper}>
+            <Button
+              variant="contained"
+              color="primary"
+              type="submit"
+              disabled={isUpdating}
+            >
+              Update
+            </Button>
+            {isUpdating && <CircularProgress size={30} className={classes.spinner} />}
+          </div>
+        </ValidatorForm>
       </div>
     );
   }
@@ -168,12 +311,23 @@ Settings.propTypes = {
   classes: PropTypes.object.isRequired,
   setClientCoreUrlAsync: PropTypes.func.isRequired,
   clearRuns: PropTypes.func.isRequired,
+  notifyError: PropTypes.func.isRequired,
   notifyInfo: PropTypes.func.isRequired,
+  notifySuccess: PropTypes.func.isRequired,
+  updatePassword: PropTypes.func.isRequired,
 };
 
 Settings.contextTypes = {
   router: PropTypes.object.isRequired,
 };
+
+const ComponentWithData = compose(
+  graphql(
+    UPDATE_PASSWORD_MUTATION,
+    updatePasswordProps('updatePassword')
+  ),
+  withApollo
+)(Settings);
 
 const mapStateToProps = ({ auth }) => ({
   clientServerURL: auth.clientServerURL,
@@ -182,7 +336,9 @@ const mapStateToProps = ({ auth }) => ({
 const connectedComponent = connect(mapStateToProps, {
   setClientCoreUrlAsync,
   clearRuns,
+  notifySuccess,
   notifyInfo,
-})(Settings);
+  notifyError,
+})(ComponentWithData);
 
 export default withStyles(styles)(connectedComponent);

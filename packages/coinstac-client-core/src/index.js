@@ -286,17 +286,19 @@ class CoinstacClient {
             return string.replace(e, '\\$&');
           };
 
-          for (let i = 0; i < filesArray.length; i += 1) {
-            const pathsep = new RegExp(`${escape(path.sep)}|:`, 'g');
-            linkPromises.push(
-              linkAsync(filesArray[i], path.resolve(this.appDirectory, 'input', this.clientId, runId, filesArray[i].replace(pathsep, '-')))
-                .catch((e) => {
-                // permit dupes
-                  if (e.code && e.code !== 'EEXIST') {
-                    throw e;
-                  }
-                })
-            );
+          if (filesArray) {
+            for (let i = 0; i < filesArray.length; i += 1) {
+              const pathsep = new RegExp(`${escape(path.sep)}|:`, 'g');
+              linkPromises.push(
+                linkAsync(filesArray[i], path.resolve(this.appDirectory, 'input', this.clientId, runId, filesArray[i].replace(pathsep, '-')))
+                  .catch((e) => {
+                  // permit dupes
+                    if (e.code && e.code !== 'EEXIST') {
+                      throw e;
+                    }
+                  })
+              );
+            }
           }
 
           return Promise.all(linkPromises)
@@ -325,7 +327,6 @@ class CoinstacClient {
                 if (res.runId !== runId) {
                   return;
                 }
-
                 if (res.event === 'update') {
                   stateEmitter.emit('update', res.data);
                 }
