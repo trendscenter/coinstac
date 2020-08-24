@@ -27,7 +27,10 @@ const app = new Application({
 });
 
 describe('e2e run computation with 1 member', () => {
-  before(() => app.start());
+  before(async () => {
+    await app.start();
+    return app.client.waitUntilWindowLoaded(10000);
+  });
 
   after(() => {
     if (app && app.isRunning()) {
@@ -35,188 +38,328 @@ describe('e2e run computation with 1 member', () => {
     }
   });
 
-  it('displays the correct title', () => (
-    app.client.waitUntilWindowLoaded(10000)
-      .getTitle().should.eventually.equal('COINSTAC')
-  ));
+  it('displays the correct title', async () => {
+    app.client.getTitle().should.eventually.equal('COINSTAC');
+  });
 
-  it('authenticates demo user', () => (
-    app.client
-      .waitForVisible('#login-username', EXIST_TIMEOUT)
-      .setValue('#login-username', USER_ID)
-      .setValue('#login-password', PASS)
-      .click('button=Log In')
-      .waitForExist('.user-account-name', EXIST_TIMEOUT)
-      .getText('.user-account-name').should.eventually.equal(USER_ID)
-  ));
+  it('authenticates demo user', async () => {
+    const usernameField = await app.client.$('#login-username');
+    await usernameField.waitForClickable({ timeout: EXIST_TIMEOUT });
+    await usernameField.setValue(USER_ID);
 
-  it('accesses the Add Consortium page', () => (
-    app.client
-      .click('a=Consortia')
-      .waitForVisible('a[name="create-consortium-button"]', EXIST_TIMEOUT)
-      .click('a[name="create-consortium-button"]')
-      .isVisible('h4=Consortium Creation').should.eventually.equal(true)
-  ));
+    const passwordField = await app.client.$('#login-password');
+    await passwordField.setValue(PASS);
 
-  it('creates a consortium', () => (
-    app.client
-      .setValue('#name', CONS_NAME)
-      .setValue('#description', CONS_DESC)
-      .click('button=Save')
-      .waitForVisible('span=Consortium Saved', EXIST_TIMEOUT)
-      .click('a=Consortia')
-      .waitForVisible(`h5=${CONS_NAME}`)
-  ));
+    const loginButton = await app.client.$('button=Log In');
+    await loginButton.click();
 
-  it('accesses the Add Pipeline page', () => (
-    app.client
-      .click('a=Pipelines')
-      .waitForVisible('a[name="create-pipeline-button"]', EXIST_TIMEOUT)
-      .click('a[name="create-pipeline-button"]')
-      .isVisible('h4=Pipeline Creation').should.eventually.equal(true)
-  ));
+    const userTitleElement = await app.client.$('.user-account-name');
+    await userTitleElement.waitForDisplayed({ timeout: EXIST_TIMEOUT });
 
-  it('creates a pipeline', () => (
-    app.client
-      .setValue('#name', PIPE_NAME)
-      .setValue('#description', PIPE_DESC)
-      .click('#pipelineconsortia')
-      .waitForVisible('#consortium-menu', EXIST_TIMEOUT)
-      .element('#consortium-menu')
-      .waitForVisible(`li=${CONS_NAME}`, EXIST_TIMEOUT)
-      .element('#consortium-menu')
-      .click(`li=${CONS_NAME}`)
-      .waitForVisible('#consortium-menu', EXIST_TIMEOUT, true)
-      .click('#computation-dropdown')
-      .waitForVisible('#computation-menu', EXIST_TIMEOUT)
-      .element('#computation-menu')
-      .waitForVisible(`li=${COMPUTATION_NAME}`, EXIST_TIMEOUT)
-      .element('#computation-menu')
-      .click(`li=${COMPUTATION_NAME}`)
-      .waitForVisible('#computation-menu', EXIST_TIMEOUT, true)
-      .waitForVisible('.pipeline-step')
-      .click('.pipeline-step')
-      .waitForVisible('button=Add Covariates')
-      .click('button=Add Covariates')
-      .click('#covariates-0-data-dropdown')
-      .waitForVisible('#covariates-0-data-dropdown-menu', EXIST_TIMEOUT)
-      .element('#covariates-0-data-dropdown-menu')
-      .click('li=boolean')
-      .waitForVisible('#covariates-0-data-dropdown-menu', EXIST_TIMEOUT, true)
-      .click('#input-source-0-dropdown')
-      .waitForVisible('#input-source-0-dropdown-menu', EXIST_TIMEOUT)
-      .element('#input-source-0-dropdown-menu')
-      .click('li=File')
-      .waitForVisible('#input-source-0-dropdown-menu', EXIST_TIMEOUT, true)
-      .setValue('#covariates-0-input-name', 'isControl')
-      .click('button=Add Covariates')
-      .click('#covariates-1-data-dropdown')
-      .waitForVisible('#covariates-1-data-dropdown-menu', EXIST_TIMEOUT)
-      .element('#covariates-1-data-dropdown-menu')
-      .click('li=number')
-      .waitForVisible('#covariates-1-data-dropdown-menu', EXIST_TIMEOUT, true)
-      .click('#input-source-1-dropdown')
-      .waitForVisible('#input-source-1-dropdown-menu', EXIST_TIMEOUT)
-      .element('#input-source-1-dropdown-menu')
-      .click('li=File')
-      .waitForVisible('#input-source-1-dropdown-menu', EXIST_TIMEOUT, true)
-      .setValue('#covariates-1-input-name', 'age')
-      .click('button=Add Data')
-      .click('#data-0-data-dropdown')
-      .waitForVisible('#data-0-data-dropdown-menu', EXIST_TIMEOUT)
-      .element('#data-0-data-dropdown-menu')
-      .click('li=FreeSurfer')
-      .waitForVisible('#data-0-data-dropdown-menu', EXIST_TIMEOUT, true)
-      .click('#data-0-area')
-      .waitForVisible('#data-0-area .react-select-dropdown-menu', EXIST_TIMEOUT)
-      .element('#data-0-area .react-select-dropdown-menu')
-      .waitForVisible('div=5th-Ventricle', EXIST_TIMEOUT)
-      .element('#data-0-area .react-select-dropdown-menu')
-      .click('div=5th-Ventricle')
-      .waitForVisible('#data-0-area .react-select-dropdown-menu', EXIST_TIMEOUT, true)
-      .setValue('[name="step-lambda"]', '0')
-      .click('button=Save Pipeline')
-      .waitForVisible('span=Pipeline Saved', EXIST_TIMEOUT)
-  ));
+    // Assert
+    userTitleElement.getText().should.eventually.equal(USER_ID);
+  });
 
-  it('sets the created pipeline to the consortium', () => (
-    app.client
-      .click('a=Consortia')
-      .waitForVisible(`a[name="${CONS_NAME}"]`, EXIST_TIMEOUT)
-      .click(`a[name="${CONS_NAME}"]`)
-      .waitForVisible('#consortium-tabs', EXIST_TIMEOUT)
-      .element('#consortium-tabs')
-      .waitForVisible('span=Pipelines', EXIST_TIMEOUT)
-      .element('#consortium-tabs')
-      .click('span=Pipelines')
-      .waitForVisible('#owned-pipelines-dropdown', EXIST_TIMEOUT)
-      .click('#owned-pipelines-dropdown')
-      .waitForVisible('#owned-pipelines-dropdown-menu', EXIST_TIMEOUT)
-      .element('#owned-pipelines-dropdown-menu')
-      .click(`li=${PIPE_NAME}`)
-      .waitForVisible(`a=${PIPE_NAME}`, EXIST_TIMEOUT)
-      .waitForVisible('span=Pipeline computations downloading via Docker.', EXIST_TIMEOUT)
-      .waitForVisible(`span=${COMPUTATION_NAME} Download Complete`, COMPUTATION_DOWNLOAD_TIMEOUT)
-      .waitForVisible('span*=Pipeline Computations Downloaded', COMPUTATION_DOWNLOAD_TIMEOUT)
-  ));
+  it('accesses the Add Consortium page', async () => {
+    const consortiaMenuButton = await app.client.$('a=Consortia');
+    await consortiaMenuButton.click();
 
-  it('map data to consortium', () => (
-    app.client
-      .click('a=Maps')
-      .waitForVisible(`a[name="${CONS_NAME}"]`, 20000)
-      .click(`a[name="${CONS_NAME}"]`)
-      .waitForVisible('button=Add Files Group', EXIST_TIMEOUT)
-      .click('button=Add Files Group')
-      .waitForVisible('button=Auto Map', EXIST_TIMEOUT)
-      .click('button=Auto Map')
-      .waitForVisible('button=Save', EXIST_TIMEOUT)
-      .click('button=Save')
-      .waitForVisible('a=Back to Consortia', EXIST_TIMEOUT)
-      .click('a=Back to Consortia')
-  ));
+    const createConsortiumButton = await app.client.$('a[name="create-consortium-button"]');
+    await createConsortiumButton.waitForClickable({ timeout: EXIST_TIMEOUT });
+    await createConsortiumButton.click();
 
-  it('runs a computation', () => (
-    app.client
-      .waitForVisible('button=Start Pipeline', EXIST_TIMEOUT)
-      .click('button=Start Pipeline')
-      .waitForVisible(`span=Pipeline Starting for ${CONS_NAME}.`, EXIST_TIMEOUT)
-  ));
+    const createConsortiumTitle = await app.client.$('h4=Consortium Creation');
 
-  it('displays computation progress', () => (
-    app.client
-      .click('a=Home')
-      .waitForVisible('div.run-item-paper:first-child', EXIST_TIMEOUT)
-      .element('div.run-item-paper:first-child')
-      .isVisible('span=In Progress').should.eventually.equal(true)
-  ));
+    // Assert
+    createConsortiumTitle.waitForDisplayed({
+      timeout: EXIST_TIMEOUT,
+    }).should.eventually.equal(true);
+  });
 
-  it('displays results', () => (
-    app.client
-      .click('a=Home')
-      .waitForVisible('div.run-item-paper:first-child', EXIST_TIMEOUT)
-      .element('div.run-item-paper:first-child')
-      .waitForVisible('a=View Results', COMPUTATION_TIMEOUT)
-      .element('div.run-item-paper:first-child')
-      .click('a=View Results')
-      .waitForVisible('h3=Regressions', EXIST_TIMEOUT)
-      .isVisible(`h6=Results: ${CONS_NAME} || ${PIPE_NAME}`).should.eventually.equal(true)
-  ));
+  it('creates a consortium', async () => {
+    const nameField = await app.client.$('#name');
+    await nameField.setValue(CONS_NAME);
 
-  it('deletes consortium', () => (
-    app.client
-      .click('a=Consortia')
-      .waitForVisible(`button[name="${CONS_NAME}-delete"]`, EXIST_TIMEOUT)
-      .click(`button[name="${CONS_NAME}-delete"]`)
-      .waitForVisible('#list-delete-modal')
-      .element('#list-delete-modal')
-      .click('button=Delete')
-      .waitForVisible(`h1=${CONS_NAME}`, EXIST_TIMEOUT, true)
-  ));
+    const descriptionField = await app.client.$('#description');
+    await descriptionField.setValue(CONS_DESC);
 
-  it('logs out', () => (
-    app.client
-      .waitForVisible('a=Log Out', EXIST_TIMEOUT)
-      .click('a=Log Out')
-      .waitForVisible('button=Log In', EXIST_TIMEOUT)
-  ));
+    const saveButton = await app.client.$('button=Save');
+    await saveButton.click();
+
+    const saveNotification = await app.client.$('span=Consortium Saved');
+    const isSaveNotificationDisplayed = await saveNotification.waitForDisplayed({
+      timeout: EXIST_TIMEOUT,
+    });
+
+    const consortiaMenuButton = await app.client.$('a=Consortia');
+    await consortiaMenuButton.click();
+
+    const consortiumItemListTitle = await app.client.$(`h5=${CONS_NAME}`);
+    const isItemListDisplayed = await consortiumItemListTitle.waitForDisplayed({
+      timeout: EXIST_TIMEOUT,
+    });
+
+    // Assert
+    isSaveNotificationDisplayed.should.equal(true);
+    isItemListDisplayed.should.equal(true);
+  });
+
+  it('accesses the Add Pipeline page', async () => {
+    const pipelinesMenuButton = await app.client.$('a=Pipelines');
+    await pipelinesMenuButton.click();
+
+    const createPipelineButton = await app.client.$('a[name="create-pipeline-button"]');
+    await createPipelineButton.waitForClickable({ timeout: EXIST_TIMEOUT });
+    await createPipelineButton.click();
+
+    const createPipelineTitle = await app.client.$('h4=Pipeline Creation');
+
+    // Assert
+    createPipelineTitle.waitForDisplayed({
+      timeout: EXIST_TIMEOUT,
+    }).should.eventually.equal(true);
+  });
+
+  it('creates a pipeline', async () => {
+    const nameField = await app.client.$('#name');
+    await nameField.setValue(PIPE_NAME);
+
+    const descriptionField = await app.client.$('#description');
+    await descriptionField.setValue(PIPE_DESC);
+
+    const consortiumDropdown = await app.client.$('#pipelineconsortia');
+    await consortiumDropdown.waitForClickable({ timeout: EXIST_TIMEOUT });
+    await consortiumDropdown.click();
+    const consortiumMenu = await app.client.$('#consortium-menu');
+    await consortiumMenu.waitForDisplayed({ timeout: EXIST_TIMEOUT });
+    const consortiumItem = await consortiumMenu.$(`li=${CONS_NAME}`);
+    await consortiumItem.waitForClickable({ timeout: EXIST_TIMEOUT });
+    await consortiumItem.click();
+    await consortiumDropdown.waitForClickable({ timeout: EXIST_TIMEOUT });
+
+    const computationDropdown = await app.client.$('#computation-dropdown');
+    await computationDropdown.waitForClickable({ timeout: EXIST_TIMEOUT });
+    await computationDropdown.click();
+    const computationMenu = await app.client.$('#computation-menu');
+    await computationMenu.waitForExist({ timeout: EXIST_TIMEOUT });
+    const computationItem = await computationMenu.$(`li=${COMPUTATION_NAME}`);
+    await computationItem.waitForClickable({ timeout: EXIST_TIMEOUT });
+    await computationItem.click({ x: 10, y: 10 });
+    await computationDropdown.waitForClickable({ timeout: EXIST_TIMEOUT });
+
+    const pipelineStepElement = await app.client.$('.pipeline-step');
+    await pipelineStepElement.waitForClickable({ timeout: EXIST_TIMEOUT });
+    await pipelineStepElement.click();
+
+    const addCovariate = async (name, type, index) => {
+      const addCovariatesButton = await app.client.$('button=Add Covariates');
+      await addCovariatesButton.click();
+
+      const dataDropdown = await app.client.$(`#covariates-${index}-data-dropdown`);
+      await dataDropdown.waitForClickable({ timeout: EXIST_TIMEOUT });
+      await dataDropdown.click();
+      const dataDropdownMenu = await app.client.$(`#covariates-${index}-data-dropdown-menu`);
+      await dataDropdownMenu.waitForDisplayed({ timeout: EXIST_TIMEOUT });
+      const dataTypeOption = await dataDropdownMenu.$(`li=${type}`);
+      await dataTypeOption.waitForClickable({ timeout: EXIST_TIMEOUT });
+      await dataTypeOption.click();
+      await dataDropdown.waitForClickable({ timeout: EXIST_TIMEOUT });
+
+      const sourceDropdown = await app.client.$(`#input-source-${index}-dropdown`);
+      await sourceDropdown.waitForDisplayed({ timeout: EXIST_TIMEOUT });
+      await sourceDropdown.click();
+      const sourceDropdownMenu = await app.client.$(`#input-source-${index}-dropdown-menu`);
+      await sourceDropdownMenu.waitForDisplayed({ timeout: EXIST_TIMEOUT });
+      const sourceFileOption = await sourceDropdownMenu.$('li=File');
+      await sourceFileOption.waitForClickable({ timeout: EXIST_TIMEOUT });
+      await sourceFileOption.click();
+      await sourceDropdown.waitForClickable({ timeout: EXIST_TIMEOUT });
+
+      const nameInput = await app.client.$(`#covariates-${index}-input-name`);
+      await nameInput.setValue(name);
+    };
+
+    await addCovariate('isControl', 'boolean', 0);
+    await addCovariate('age', 'number', 1);
+
+    const addDataButton = await app.client.$('button=Add Data');
+    await addDataButton.click();
+
+    const dataDropdown = await app.client.$('#data-0-data-dropdown');
+    await dataDropdown.waitForClickable({ timeout: EXIST_TIMEOUT });
+    await dataDropdown.click();
+    const dataDropdownMenu = await app.client.$('#data-0-data-dropdown-menu');
+    await dataDropdownMenu.waitForDisplayed({ timeout: EXIST_TIMEOUT });
+    const freesurferOption = await dataDropdownMenu.$('li=FreeSurfer');
+    await freesurferOption.waitForClickable({ timeout: EXIST_TIMEOUT });
+    await freesurferOption.click();
+    await dataDropdown.waitForClickable({ timeout: EXIST_TIMEOUT });
+
+    const dataInterest = await app.client.$('#data-0-area');
+    await dataInterest.waitForClickable({ timeout: EXIST_TIMEOUT });
+    await dataInterest.click();
+    const dataInterestDropdownMenu = await dataInterest.$('.react-select-dropdown-menu');
+    await dataInterestDropdownMenu.waitForDisplayed({ timeout: EXIST_TIMEOUT });
+    const fifthVentricleOption = await dataInterestDropdownMenu.$('div=5th-Ventricle');
+    await fifthVentricleOption.waitForClickable();
+    await fifthVentricleOption.click();
+
+    const lambdaField = await app.client.$('[name="step-lambda"]');
+    await lambdaField.setValue('0');
+
+    const saveButton = await app.client.$('button=Save Pipeline');
+    await saveButton.click();
+
+    const saveNotification = await app.client.$('span=Pipeline Saved');
+    const isSaveNotificationDisplayed = await saveNotification.waitForDisplayed({
+      timeout: EXIST_TIMEOUT,
+    });
+
+    // Assert
+    isSaveNotificationDisplayed.should.equal(true);
+  });
+
+  it('sets the created pipeline to the consortium', async () => {
+    const consortiaMenuButton = await app.client.$('a=Consortia');
+    await consortiaMenuButton.click();
+
+    const viewDetailsButton = await app.client.$(`a[name="${CONS_NAME}"]`);
+    await viewDetailsButton.waitForClickable({ timeout: EXIST_TIMEOUT });
+    await viewDetailsButton.click();
+
+    const consortiumEditTabs = await app.client.$('#consortium-tabs');
+    const pipelinesTabMenu = await consortiumEditTabs.$('span=Pipelines');
+    await pipelinesTabMenu.waitForClickable({ timeout: EXIST_TIMEOUT });
+    await pipelinesTabMenu.click();
+
+    const pipelineSelectDropdown = await app.client.$('#owned-pipelines-dropdown');
+    await pipelineSelectDropdown.waitForClickable({ timeout: EXIST_TIMEOUT });
+    await pipelineSelectDropdown.click();
+    const pipelineDropdownMenu = await app.client.$('#owned-pipelines-dropdown-menu');
+    await pipelineDropdownMenu.waitForDisplayed({ timeout: EXIST_TIMEOUT });
+    const pipelineOption = await pipelineDropdownMenu.$(`li=${PIPE_NAME}`);
+    await pipelineOption.waitForClickable({ timeout: EXIST_TIMEOUT });
+    await pipelineOption.click();
+    await pipelineSelectDropdown.waitForClickable({ timeout: EXIST_TIMEOUT });
+
+    // Assert
+    const pipelineLink = await app.client.$(`a=${PIPE_NAME}`);
+    const pipelineDownloadCompleteNotification = await app.client.$(`span=${COMPUTATION_NAME} Download Complete`);
+
+    pipelineLink
+      .waitForDisplayed({ timeout: EXIST_TIMEOUT }).should.eventually.equal(true);
+
+    pipelineDownloadCompleteNotification
+      .waitForDisplayed({ timeout: COMPUTATION_DOWNLOAD_TIMEOUT }).should.eventually.equal(true);
+  });
+
+  it('map data to consortium', async () => {
+    const mapsMenuButton = await app.client.$('a=Maps');
+    await mapsMenuButton.click();
+
+    const consortiumMapItemButton = await app.client.$(`a[name="${CONS_NAME}"]`);
+    await consortiumMapItemButton.waitForClickable({ timeout: EXIST_TIMEOUT });
+    await consortiumMapItemButton.click();
+
+    const addFilesGroupButton = await app.client.$('button=Add Files Group');
+    await addFilesGroupButton.waitForClickable({ timeout: EXIST_TIMEOUT });
+    await addFilesGroupButton.click();
+
+    const autoMapButton = await app.client.$('button=Auto Map');
+    await autoMapButton.waitForClickable({ timeout: EXIST_TIMEOUT });
+    await autoMapButton.click();
+
+    const saveButton = await app.client.$('button=Save');
+    await saveButton.waitForClickable({ timeout: EXIST_TIMEOUT });
+    await saveButton.click();
+
+    const backToConsortiaLink = await app.client.$('a=Back to Consortia');
+    await backToConsortiaLink.waitForClickable({ timeout: EXIST_TIMEOUT });
+    await backToConsortiaLink.click();
+
+    // Assert
+    const startPipelineButton = await app.client.$('button=Start Pipeline');
+
+    startPipelineButton.waitForClickable({ timeout: EXIST_TIMEOUT })
+      .should.eventually.equal(true);
+  });
+
+  it('runs a computation', async () => {
+    const startPipelineButton = await app.client.$('button=Start Pipeline');
+    await startPipelineButton.waitForClickable({ timeout: EXIST_TIMEOUT });
+    await startPipelineButton.click();
+
+    // Assert
+    const pipelineStartNotification = await app.client.$(`span=Pipeline Starting for ${CONS_NAME}.`);
+
+    pipelineStartNotification.waitForDisplayed({ timeout: EXIST_TIMEOUT })
+      .should.eventually.equal(true);
+  });
+
+  it('displays computation progress', async () => {
+    const homeMenuButton = await app.client.$('a=Home');
+    await homeMenuButton.click();
+
+    const runItem = await app.client.$('div.run-item-paper:first-child');
+    await runItem.waitForDisplayed({ timeout: EXIST_TIMEOUT });
+
+    // Assert
+    const inProgressText = await runItem.$('span=In Progress');
+
+    inProgressText.waitForDisplayed({ timeout: EXIST_TIMEOUT })
+      .should.eventually.equal(true);
+  });
+
+  it('displays results', async () => {
+    const runItem = await app.client.$('div.run-item-paper:first-child');
+    const viewResultsButton = await runItem.$('a=View Results');
+
+    // Wait for computation to complete (results button only shows up at the end of the run)
+    await viewResultsButton.waitForClickable({ timeout: COMPUTATION_TIMEOUT });
+
+    await viewResultsButton.click();
+
+    // Assert
+    const resultsPageTitle = await app.client.$('h3=Regressions');
+    const resultDescription = await app.client.$(`h6=Results: ${CONS_NAME} || ${PIPE_NAME}`);
+
+    resultsPageTitle.waitForDisplayed({ timeout: EXIST_TIMEOUT })
+      .should.eventually.equal(true);
+
+    resultDescription.waitForDisplayed({ timeout: EXIST_TIMEOUT })
+      .should.eventually.equal(true);
+  });
+
+  it('deletes consortium', async () => {
+    const consortiaMenuButton = await app.client.$('a=Consortia');
+    await consortiaMenuButton.click();
+
+    const deleteConsortiumButton = await app.client.$(`button[name="${CONS_NAME}-delete"]`);
+    await deleteConsortiumButton.waitForClickable({ timeout: EXIST_TIMEOUT });
+    await deleteConsortiumButton.click();
+
+    const deleteModal = await app.client.$('#list-delete-modal');
+    const confirmButton = await deleteModal.$('button=Delete');
+    await confirmButton.waitForClickable({ timeout: EXIST_TIMEOUT });
+
+    await confirmButton.click();
+
+    // Assert
+    const consortiumListItemTitle = await app.client.$(`h1=${CONS_NAME}`);
+
+    // Wait for consortium item to be deleted from consortium list
+    consortiumListItemTitle.waitForDisplayed({ timeout: EXIST_TIMEOUT, reverse: true })
+      .should.eventually.equal(true);
+  });
+
+  it('logs out', async () => {
+    const logoutButton = await app.client.$('a=Log Out');
+    await logoutButton.waitForClickable({ timeout: EXIST_TIMEOUT });
+    await logoutButton.click();
+
+    // Assert
+    const loginButton = await app.client.$('button=Log In');
+
+    loginButton.waitForClickable({ timeout: EXIST_TIMEOUT }).should.eventually.equal(true);
+  });
 });

@@ -138,8 +138,8 @@
     "docs": "mkdir -p docs && jsdoc -t ./node_modules/minami -d docs -R README.md -r src/",
     "test": "nyc --reporter=lcov --check-coverage --lines=1 --functions=1 --branches=1 babel-node test/",
     "test:seed-dexie": "node ./test/data/seed-collection-data.js",
-    "test:e2e-single": "npm run build:webpack && mocha --timeout=120000 --env NODE_ENV=test test/e2e/computation-run.test.js",
-    "test:e2e": "npm run build:webpack && mocha --timeout=120000 --env NODE_ENV=test test/e2e/*.test.js",
+    "test:e2e-single": "npm run build:webpack && env NODE_ENV=test mocha --timeout=120000 test/e2e/computation-run.test.js",
+    "test:e2e": "npm run build:webpack && env NODE_ENV=test mocha --timeout=120000 test/e2e/*.test.js",
     "watch": "webpack-dev-server --mode=development"
   },
   "repository": {
