@@ -39,7 +39,7 @@ describe('e2e run computation with 1 member', () => {
   });
 
   it('displays the correct title', async () => {
-    app.client.getTitle().should.eventually.equal('COINSTAC');
+    return app.client.getTitle().should.eventually.equal('COINSTAC');
   });
 
   it('authenticates demo user', async () => {
@@ -57,7 +57,7 @@ describe('e2e run computation with 1 member', () => {
     await userTitleElement.waitForDisplayed({ timeout: EXIST_TIMEOUT });
 
     // Assert
-    userTitleElement.getText().should.eventually.equal(USER_ID);
+    return userTitleElement.getText().should.eventually.equal(USER_ID);
   });
 
   it('accesses the Add Consortium page', async () => {
@@ -71,7 +71,7 @@ describe('e2e run computation with 1 member', () => {
     const createConsortiumTitle = await app.client.$('h4=Consortium Creation');
 
     // Assert
-    createConsortiumTitle.waitForDisplayed({
+    return createConsortiumTitle.waitForDisplayed({
       timeout: EXIST_TIMEOUT,
     }).should.eventually.equal(true);
   });
@@ -115,7 +115,7 @@ describe('e2e run computation with 1 member', () => {
     const createPipelineTitle = await app.client.$('h4=Pipeline Creation');
 
     // Assert
-    createPipelineTitle.waitForDisplayed({
+    return createPipelineTitle.waitForDisplayed({
       timeout: EXIST_TIMEOUT,
     }).should.eventually.equal(true);
   });
@@ -216,7 +216,7 @@ describe('e2e run computation with 1 member', () => {
     });
 
     // Assert
-    isSaveNotificationDisplayed.should.equal(true);
+    return isSaveNotificationDisplayed.should.equal(true);
   });
 
   it('sets the created pipeline to the consortium', async () => {
@@ -246,11 +246,12 @@ describe('e2e run computation with 1 member', () => {
     const pipelineLink = await app.client.$(`a=${PIPE_NAME}`);
     const pipelineDownloadCompleteNotification = await app.client.$(`span=${COMPUTATION_NAME} Download Complete`);
 
-    pipelineLink
-      .waitForDisplayed({ timeout: EXIST_TIMEOUT }).should.eventually.equal(true);
-
-    pipelineDownloadCompleteNotification
-      .waitForDisplayed({ timeout: COMPUTATION_DOWNLOAD_TIMEOUT }).should.eventually.equal(true);
+    return Promise.all([
+      pipelineLink
+        .waitForDisplayed({ timeout: EXIST_TIMEOUT }).should.eventually.equal(true),
+      pipelineDownloadCompleteNotification
+        .waitForDisplayed({ timeout: COMPUTATION_DOWNLOAD_TIMEOUT }).should.eventually.equal(true),
+    ]);
   });
 
   it('map data to consortium', async () => {
@@ -280,7 +281,7 @@ describe('e2e run computation with 1 member', () => {
     // Assert
     const startPipelineButton = await app.client.$('button=Start Pipeline');
 
-    startPipelineButton.waitForClickable({ timeout: EXIST_TIMEOUT })
+    return startPipelineButton.waitForClickable({ timeout: EXIST_TIMEOUT })
       .should.eventually.equal(true);
   });
 
@@ -292,7 +293,7 @@ describe('e2e run computation with 1 member', () => {
     // Assert
     const pipelineStartNotification = await app.client.$(`span=Pipeline Starting for ${CONS_NAME}.`);
 
-    pipelineStartNotification.waitForDisplayed({ timeout: EXIST_TIMEOUT })
+    return pipelineStartNotification.waitForDisplayed({ timeout: EXIST_TIMEOUT })
       .should.eventually.equal(true);
   });
 
@@ -306,7 +307,7 @@ describe('e2e run computation with 1 member', () => {
     // Assert
     const inProgressText = await runItem.$('span=In Progress');
 
-    inProgressText.waitForDisplayed({ timeout: EXIST_TIMEOUT })
+    return inProgressText.waitForDisplayed({ timeout: EXIST_TIMEOUT })
       .should.eventually.equal(true);
   });
 
@@ -323,11 +324,12 @@ describe('e2e run computation with 1 member', () => {
     const resultsPageTitle = await app.client.$('h3=Regressions');
     const resultDescription = await app.client.$(`h6=Results: ${CONS_NAME} || ${PIPE_NAME}`);
 
-    resultsPageTitle.waitForDisplayed({ timeout: EXIST_TIMEOUT })
-      .should.eventually.equal(true);
-
-    resultDescription.waitForDisplayed({ timeout: EXIST_TIMEOUT })
-      .should.eventually.equal(true);
+    return Promise.all([
+      resultsPageTitle.waitForDisplayed({ timeout: EXIST_TIMEOUT })
+        .should.eventually.equal(true),
+      resultDescription.waitForDisplayed({ timeout: EXIST_TIMEOUT })
+        .should.eventually.equal(true),
+    ]);
   });
 
   it('deletes consortium', async () => {
@@ -348,7 +350,7 @@ describe('e2e run computation with 1 member', () => {
     const consortiumListItemTitle = await app.client.$(`h1=${CONS_NAME}`);
 
     // Wait for consortium item to be deleted from consortium list
-    consortiumListItemTitle.waitForDisplayed({ timeout: EXIST_TIMEOUT, reverse: true })
+    return consortiumListItemTitle.waitForDisplayed({ timeout: EXIST_TIMEOUT, reverse: true })
       .should.eventually.equal(true);
   });
 
@@ -360,6 +362,6 @@ describe('e2e run computation with 1 member', () => {
     // Assert
     const loginButton = await app.client.$('button=Log In');
 
-    loginButton.waitForClickable({ timeout: EXIST_TIMEOUT }).should.eventually.equal(true);
+    return loginButton.waitForClickable({ timeout: EXIST_TIMEOUT }).should.eventually.equal(true);
   });
 });

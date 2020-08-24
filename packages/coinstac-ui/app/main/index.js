@@ -154,7 +154,7 @@ loadConfig()
       // TODO: hacky way to not get a mqtt reconnn loop
       // a better way would be to make an actual shutdown fn for pipeline
       return new Promise((resolve) => {
-        initializedCore.pipelineManager.mqtCon.end(true, () => {
+        initializedCore.pipelineManager.mqttClient.end(true, () => {
           initializedCore = undefined;
           resolve();
         });
