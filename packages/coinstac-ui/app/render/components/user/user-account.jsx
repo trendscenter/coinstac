@@ -10,6 +10,7 @@ import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import SettingsIcon from '@material-ui/icons/Settings';
+import BugReportIcon from '@material-ui/icons/BugReport';
 import ExitToAppIcon from '@material-ui/icons/ExitToApp';
 import MessageIcon from '@material-ui/icons/Message';
 import MemberAvatar from '../common/member-avatar';
@@ -30,6 +31,11 @@ const styles = {
   listItemButtonTextRoot: {
     paddingLeft: 0,
   },
+  userPhoto: {
+    width: '40px',
+    height: '40px',
+    marginTop: '5px',
+  },
 };
 
 const UserAccount = (props) => {
@@ -41,13 +47,14 @@ const UserAccount = (props) => {
     return <div className={classes.root} />;
   }
 
-  const { id, label, email } = auth.user;
+  const { id, username, email } = auth.user;
 
   return (
     <div className={classes.root}>
       <MemberAvatar
         consRole="Member"
-        name={id}
+        id={id}
+        name={username}
         width={40}
       />
       <div className={classes.textContainer}>
@@ -64,7 +71,7 @@ const UserAccount = (props) => {
           >
             <ListItemText disableTypography>
               <Typography variant="subtitle2" className="user-account-name">
-                { label }
+                { username }
               </Typography>
             </ListItemText>
           </ListItem>
@@ -97,6 +104,15 @@ const UserAccount = (props) => {
             <ListItemIcon><SettingsIcon /></ListItemIcon>
             <ListItemText
               primary="Settings"
+              classes={{
+                root: classes.listItemButtonTextRoot,
+              }}
+            />
+          </ListItem>
+          <ListItem disableGutters button component={Link} to="/dashboard/issues">
+            <ListItemIcon><BugReportIcon /></ListItemIcon>
+            <ListItemText
+              primary="Submit a bug"
               classes={{
                 root: classes.listItemButtonTextRoot,
               }}
