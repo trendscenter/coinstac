@@ -39,7 +39,7 @@ function createWindow() {
     },
   });
 
-  mainWindow.loadURL(`file://${renderIndexPath}`);
+  mainWindow.loadFile(renderIndexPath);
 
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
@@ -91,7 +91,7 @@ function createWindow() {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-electronApp.on('ready', createWindow);
+electronApp.whenReady().then(createWindow);
 
 // Quit when all windows are closed.
 electronApp.on('window-all-closed', () => {
