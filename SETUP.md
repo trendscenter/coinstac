@@ -9,32 +9,37 @@ You’ll need some software installed:
 1. **Build tools,** namely g++/gcc.
   * OS X: The easiest way to install Xcode through Apple’s App Store. (You can try [installing the command line tools](https://www.maketecheasier.com/install-command-line-tools-without-xcode/))
   * Linux: `apt-get install build-essential` for Ubuntu-flavored versions. Check your distro for details.
+  * Windows: requires npm to be installed first (go to step 3) `npm install --global windows-build-tools`
 2. **Install git.** See https://git-scm.com/download. You may also try [GitHub’s desktop client](https://desktop.github.com/): see [their post for CLI instructions](https://github.com/blog/1510-installing-git-from-github-for-mac).
-3. **Install Node.js**, specifically version 8.2.1. You can enter `node -v` to find out which version you have.
+3. **Install Node.js**, Coinstac aims to use node LTS but usually the last few versions are fine. You can enter `node -v` to find out which version you have.
+   * Download the latest LTS build from [nodejs.org](https://nodejs.org/)
    * Consider [using n](https://www.npmjs.com/package/n) for easy Node.js version management if you already have a version of Node.js installed.
-   * Linux: See the [official installation instructions](https://nodejs.org/en/download/package-manager/#debian-and-ubuntu-based-linux-distributions)
-   * OS X: Download the [package](https://nodejs.org/download/release/v8.2.1/node-v8.2.1.pkg) and run the installer
+4. Install a MQTT client, any will work listening on localhost and the standard mqtt port (1883). We prefer [mosquitto](https://mosquitto.org/) but any client should work. Mosquitto is available on `brew` and `apt`.
+5. To run computations and have the UI not complain, you'll need [Docker](https://docs.docker.com/get-docker/). Docker memory requirements differ per computation, but 4gb is recommended as a minimum and 12gb will allow most any computation to run.
+
 
 ## Downloading Source Code
 
-Open a shell and navigate (using `cd`) to the directory where you want to install COINSTAC. This can be anywhere, but if you're following the development instructions below, having it in your HOME directory is recommended. Then, use git to download the repository:
+Open a shell and navigate to the directory where you want to install COINSTAC. This can be anywhere, but if you're following the development instructions below, having it in your HOME directory is recommended. Then, use git to download the repository:
 
 ```shell
 git clone https://github.com/MRN-Code/coinstac.git
 ```
 
-This will place COINSTAC into a new folder named “coinstac” and check out the “demo” branch.
+This will place COINSTAC into a new folder named “coinstac” and check out the “master” branch.
 
 ## Installing Dependencies
 
-Move into the _coinstac_ directory (`cd coinstac`) and run the following commands:
+From the `coinstac` directory run the following commands:
 
 ```shell
-npm install // needed only for initial top level setup
+#  needed only for initial top level setup
+npm install
+# runs npm i in the sub packages, and links the packages together via lerna
 npm run build
 ```
 
-These [dependencies](https://github.com/trendscenter/coinstac/blob/master/package-lock.json) will be installed.
+This will install all dependencies including all `package.json` contents of each sub package
 
 ## Updating Source Code
 Any time you pull in new code, you'll need to rebuild the application.
@@ -47,24 +52,31 @@ Any time you pull in new code, you'll need to rebuild the application.
 
 The user interface is an [Electron application](http://electron.atom.io/). To run it:
 
-1. Make sure you’re in the _coinstac/packages/coinstac-ui/_ directory.
-2. If running for the first time: Run `npm install` to make sure all the necessary packages are installed.
-3. Run `npm start` to start the UI
+1. In the top level `coinstac` directory run `npm run devdata` to start and prime the database
+2. Make sure your mqtt service (mosquitto or otherwise) is running, a daemon is fine
+3. Export the example config from the top level `./.env-example.sh` or otherwise put it in your env
+4. Still in the top level directory run `npm run start` to run webpack, and the api services
+5. Either in a new cli window or tmux/screen/etc session make go to the _coinstac/packages/coinstac-ui/_ directory.
+6. Run `npm start` to start the UI
+
+**Test data for collections mapping can be found in `coinstac/algorithm-development/test-data/`**
+
+## Steps to Setup Pipeline
+
+A YouTube video showing the basic steps for creating a Consortia, adding Collection files, and running a Pipeline.
+
+[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/QL95M74usAA/0.jpg)](https://www.youtube.com/watch?v=QL95M74usAA)
 
 ## Troubleshooting
 
-* Ensure machines have at least 2 GB of memory. If you don’t have that much memory, run `npm install` in each directory in _coinstac/packages/_.
-* If `npm run build` fails repeatedly, there’s likely a problem with [lerna’s](https://lernajs.io/) persisted state. Remove the _node_modules_ directory from each of the _coinstac/packages/<package name>_ directories.
+* If `npm run build` fails repeatedly, there’s likely a problem with [lerna’s](https://lernajs.io/) persisted state. Remove the _node_modules_ by running `npm run clean` in the top level directory.
 * If you notice repeated `TypeError`s related to COINSTAC internal methods, the COINSTAC internals maybe be unlinked. Run `npm run build` to re-link them.
+* If you're trying to test simulator code, the mqtt service must be shut down, as simulator packages its own.
 
-# Development Setup
 
-Follow the general steps above before continuing.
+## Additional Suggested Software
 
-## Additional Required Software
-
-1. **RethinkDB** On OSX, using [Homebrew](https://brew.sh/), use: `brew update && brew install rethinkdb`. Other options [here](https://rethinkdb.com/docs/install/).
-2. **VSCode** There are no shortage of options when it comes to an editor, but [VSCode](https://code.visualstudio.com/) offers some great [debugging functionality](https://code.visualstudio.com/Docs/editor/debugging). The root directory has a `launch.json` as outlined [here](https://code.visualstudio.com/Docs/editor/debugging#_launch-configurations), with the following contents:
+1. **VSCode** There are no shortage of options when it comes to an editor, but [VSCode](https://code.visualstudio.com/) offers some great [debugging functionality](https://code.visualstudio.com/Docs/editor/debugging). The root directory has a `launch.json` as outlined [here](https://code.visualstudio.com/Docs/editor/debugging#_launch-configurations), with the following contents:
 
    ```json
    {
@@ -99,26 +111,6 @@ Follow the general steps above before continuing.
       ]
    }
    ```
-3. **Docker** Download [here](https://www.docker.com/get-docker)
-4. **mosquitto** `brew install mosquitto`
-
-## Additional Source Code
-
-1. **CSTAC DB** Next, create a new directory and file at `/etc/coinstac/cstacDBMap.json` with the following contents:
-
-   ```json
-    {
-      "rethinkdbAdmin": {
-        "user": "admin",
-        "password": ""
-      },
-      "rethinkdbServer": {
-        "username": "server",
-        "password": "password"
-      },
-      "cstacJWTSecret": "friends"
-    }
-
 
 ## Configuration
 
@@ -166,14 +158,15 @@ Place the following in `/coinstac-server/config/local.json`
    }
    ```
 
-## Run Development Environment
+## Development Environment Breakdown
 
-Five services need to be run in the following order to start COINSTAC in development mode:
+Five services need to be run in the following order to start COINSTAC in development mode, `npm run start` in root takes care of webpack, api, and pipeline servers:
 
 1. **Docker**
-2. **RethinkDB**:
+2. **Mongodb**:
   ```shell
-  rethinkdb --daemon
+  # from coinstac root, will wipe any coinstac mongo instance
+  npm run devdata
   ```
 3. **COINSTAC-API-SERVER**:
   If it's the first time the app has been started, or you want to clear back to base data run:
@@ -194,11 +187,12 @@ Five services need to be run in the following order to start COINSTAC in develop
   ```shell
   NODE_ENV=development && cd ~/coinstac/packages/coinstac-ui && npm run watch
   ```
-2. **mosquitto**:
+6. **mosquitto**:
   ```shell
+  # default config is fine
   mosquitto -c /path/to/your/config
   ```
-Next, you'll need to start the application. You can do this from the command line or via VSCode.
+7. Next, you'll need to start the application. You can do this from the command line or via VSCode.
 
 * **Command Line**:
   ```shell
@@ -206,11 +200,3 @@ Next, you'll need to start the application. You can do this from the command lin
   ```
 * **VSCode**:
 Open the COINSTAC repo in VSCode and click on the debugging icon, which is the fourth icon down on the left-hand side of the screen. At the top of the left-hand side panel should be a *DEBUG* dropdown. Select `Debug` in the dropdown and hit the play button to begin debugging.
-
-**Test data for collections mapping can be found in `coinstac/algorithm-development/test-data/`**
-
-## Steps to Setup Pipeline
-
-A YouTube video showing the basic steps for creating a Consortia, adding Collection files, and running a Pipeline.
-
-[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/QL95M74usAA/0.jpg)](https://www.youtube.com/watch?v=QL95M74usAA)
