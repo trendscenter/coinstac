@@ -1105,8 +1105,8 @@ module.exports = {
             if (mode === 'remote') {
               throw err;
             }
-
-            mqtCon.publish(
+            // local pipeline user stop error, or other uncaught error
+            mqttClient.publish(
               'run',
               JSON.stringify({ id: clientId, runId, error: err }),
               { qos: 1 },
