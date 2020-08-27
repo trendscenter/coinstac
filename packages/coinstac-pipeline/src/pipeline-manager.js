@@ -1,11 +1,9 @@
 'use strict';
 
 const fs = require('fs');
-const _ = require('lodash');
 const mqtt = require('mqtt');
 const { promisify } = require('util');
 const mkdirp = promisify(require('mkdirp'));
-const rimraf = promisify(require('rimraf'));
 const path = require('path');
 const http = require('http');
 const https = require('https');
@@ -15,11 +13,19 @@ const Emitter = require('events');
 const winston = require('winston');
 const express = require('express');
 const multer = require('multer');
-const decompress = require('decompress');
 const uuid = require('uuid/v4');
 const dockerManager = require('coinstac-docker-manager');
+const tar = require('tar-fs');
+const zlib = require('zlib');
+const merge2 = require('merge2');
+const pify = require('util').promisify;
+const rmrf = pify(require('rimraf'));
+const Store = require('./io-store');
 
-const readdir = promisify(fs.readdir);
+const {
+  readdir,
+  unlink,
+} = fs.promises;
 
 winston.loggers.add('pipeline', {
   level: 'info',
@@ -31,6 +37,75 @@ const defaultLogger = winston.loggers.get('pipeline');
 defaultLogger.level = process.LOGLEVEL ? process.LOGLEVEL : 'info';
 
 const Pipeline = require('./pipeline');
+
+/**
+ * Takes an input stream and writes it to disk in
+ * chunks specified by the chunk size
+ * @param  {Object} stream      stream to split
+ * @param  {string} filePath    destination
+ * @param  {integer} chunkSize  split size
+ * @return {Object}             Promise on output close
+ */
+const splitFilesFromStream = (stream, filePath, chunkSize) => {
+  let currentChunk = 0;
+  let currentChunkLen = 0;
+  const asyncStreams = [];
+  const splits = [];
+  const newFileStream = fs.createWriteStream(
+    `${filePath}.${currentChunk}`
+  );
+  splits[currentChunk] = {
+    filePath: `${filePath}.${currentChunk}`,
+    stream: newFileStream,
+  };
+  asyncStreams.push(new Promise((resolve, reject) => {
+    splits[currentChunk].stream.on('close', () => resolve());
+    splits[currentChunk].stream.on('error', e => reject(e));
+  }));
+  stream.on('data', (data) => {
+    if (currentChunkLen >= chunkSize) {
+      splits[currentChunk].stream.end();
+      currentChunk += 1;
+      const newFileStream = fs.createWriteStream(
+        `${filePath}.${currentChunk}`
+      );
+      splits[currentChunk] = {
+        filePath: `${filePath}.${currentChunk}`,
+        stream: newFileStream,
+      };
+      asyncStreams.push(new Promise((resolve, reject) => {
+        splits[currentChunk].stream.on('close', () => resolve());
+        splits[currentChunk].stream.on('error', () => reject());
+      }));
+      splits[currentChunk].stream.write(data);
+      currentChunkLen = data.length;
+    } else {
+      splits[currentChunk].stream.write(data);
+      currentChunkLen += data.length;
+    }
+  });
+  asyncStreams.push(new Promise((resolve, reject) => {
+    stream.on('end', () => {
+      splits[currentChunk].stream.end();
+      resolve();
+    });
+    stream.on('error', (e) => {
+      reject(e);
+    });
+  }));
+  return Promise.all(asyncStreams)
+    .then(() => splits.map(split => path.basename(split.filePath)));
+};
+
+const extractTar = (parts, outdir) => {
+  return new Promise((resolve, reject) => {
+    const unpack = merge2(...parts.map(part => fs.createReadStream(part)))
+      .pipe(zlib.createGunzip())
+      .pipe(tar.extract(outdir));
+    unpack.on('finish', () => resolve());
+    unpack.on('error', e => reject(e));
+  });
+};
 
 /**
  * get files in a dir recursively
@@ -75,11 +150,12 @@ module.exports = {
     mqttRemoteURL = 'localhost',
     unauthHandler, // eslint-disable-line no-unused-vars
   }) {
+    const store = Store.init(clientId);
     const activePipelines = {};
     let io;
     let socket;
-    let mqtCon;
-    let serverMqt;
+    let mqttClient;
+    let mqttServer;
     const remoteClients = {};
     const request = remoteProtocol.trim() === 'https:' ? https : http;
     logger = logger || defaultLogger;
@@ -123,6 +199,7 @@ module.exports = {
               }
             );
           } else if (method === 'post') {
+            logger.silly(`############# ZIPPED FILE SIZE: ${fs.statSync(path.join(directory, file)).size / 1048576}`);
             const form = new FormData();
             form.append('filename', file);
             form.append('compressed', compressed.toString());
@@ -130,7 +207,11 @@ module.exports = {
             form.append('clientId', clientId);
             form.append('runId', runId);
             form.append('file', fs.createReadStream(
-              path.join(directory, file)
+              path.join(directory, file),
+              {
+                headers: { 'transfer-encoding': 'chunked' },
+                knownSize: NaN,
+              }
             ));
             form.submit(`${remoteProtocol}//${remoteURL}:${remotePort}${remotePathname}`,
               (err, res) => {
@@ -150,7 +231,7 @@ module.exports = {
                 });
               });
           }
-        }, 500 * factor);
+        }, 5000 * factor);
       });
     };
 
@@ -166,14 +247,16 @@ module.exports = {
      *                           or the limit is reached
      */
     const transferFiles = async (method, limit, files, clientId, runId, directory) => {
-      return Promise.all(files.reduce((memo, file) => {
+      logger.silly(`Sending ${files.length} files`);
+      return Promise.all(files.reduce((memo, file, index) => {
         memo.push((async () => {
           let retryLimit = 0;
           let success = false;
+          let partFile;
           // retry 1000 times w/ backout
           while (retryLimit < limit) {
             try {
-              const packedFile = await exponentialRequest( // eslint-disable-line no-await-in-loop, max-len
+              partFile = await exponentialRequest( // eslint-disable-line no-await-in-loop, max-len
                 method,
                 retryLimit,
                 file,
@@ -182,22 +265,30 @@ module.exports = {
                 directory,
                 true
               );
-              if (method === 'get' && packedFile) {
-                await decompress(path.join(directory, packedFile), directory); // eslint-disable-line no-await-in-loop, max-len
-                await rimraf(path.join(directory, packedFile)); // eslint-disable-line no-await-in-loop, max-len
-              }
               success = true;
               break;
             } catch (e) {
-              if (e.code && e.code === 'ECONNREFUSED') {
+              logger.silly(JSON.stringify(e));
+              if ((e.code
+                && (
+                  e.code === 'ECONNREFUSED'
+                  || e.code === 'EPIPE'
+                  || e.code === 'ECONNRESET'
+                  || e.code === 'EAGAIN'
+                ))
+                || (e.message && e.message.includes('EPIPE'))
+              ) {
                 retryLimit += 1;
-                logger.silly(`Retrying file request: ${files}`);
-                logger.silly(`File request failed with: ${e.name}`);
+                logger.silly(`Retrying file request: ${file}`);
+                logger.silly(`File request failed with: ${e.message}`);
+              } else {
+                throw e;
               }
-              throw e;
             }
           }
           if (!success) throw new Error('Service down, file retry limit reached');
+          logger.silly(`Successfully sent file ${index}`);
+          return partFile;
         })());
         return memo;
       }, []));
@@ -210,9 +301,9 @@ module.exports = {
      */
     const cleanupPipeline = (runId) => {
       return Promise.all([
-        rimraf(path.resolve(activePipelines[runId].transferDirectory)),
-        rimraf(path.resolve(activePipelines[runId].cacheDirectory)),
-        rimraf(path.resolve(activePipelines[runId].systemDirectory)),
+        rmrf(path.resolve(activePipelines[runId].transferDirectory)),
+        rmrf(path.resolve(activePipelines[runId].cacheDirectory)),
+        rmrf(path.resolve(activePipelines[runId].systemDirectory)),
       ]).then(() => {
         delete activePipelines[runId];
         Object.keys(remoteClients).forEach((key) => {
@@ -228,13 +319,13 @@ module.exports = {
       clientList.forEach((client) => {
         if (opts && opts.success && opts.limitOutputToOwner) {
           if (client === opts.owner) {
-            serverMqt.publish(`${client}-run`, JSON.stringify(data), { qos: 1 }, (err) => { if (err) logger.error(`Mqtt error: ${err}`); });
+            mqttServer.publish(`${client}-run`, JSON.stringify(data), { qos: 1 }, (err) => { if (err) logger.error(`Mqtt error: ${err}`); });
           } else {
             const limitedData = Object.assign({}, data, { files: undefined, output: { success: true, output: { message: 'output sent to consortium owner' } } });
-            serverMqt.publish(`${client}-run`, JSON.stringify(limitedData), { qos: 1 }, (err) => { if (err) logger.error(`Mqtt error: ${err}`); });
+            mqttServer.publish(`${client}-run`, JSON.stringify(limitedData), { qos: 1 }, (err) => { if (err) logger.error(`Mqtt error: ${err}`); });
           }
         } else {
-          serverMqt.publish(`${client}-run`, JSON.stringify(data), { qos: 1 }, (err) => { if (err) logger.error(`Mqtt error: ${err}`); });
+          mqttServer.publish(`${client}-run`, JSON.stringify(data), { qos: 0 }, (err) => { if (err) logger.error(`Mqtt error: ${err}`); });
         }
       });
     };
@@ -244,7 +335,7 @@ module.exports = {
       activePipelines[runId].clients.forEach((client) => {
         const clientRun = remoteClients[client][runId];
         if ((clientRun
-          && !clientRun.currentOutput)
+          && !store.has(runId, client))
         // test if we have all files, if there are any
           || (clientRun
             && (clientRun.files.expected.length !== 0
@@ -260,15 +351,12 @@ module.exports = {
       return waiters;
     };
 
-    const aggregateRun = (runId) => {
-      return _.reduce(remoteClients, (memo, client, id) => {
-        if (client[runId]) {
-          memo[id] = client[runId].currentOutput;
-          client[runId].currentOutput = undefined;
-          client[runId].files = { received: [], expected: [] };
+    const clearClientFileList = (runId) => {
+      Object.keys(remoteClients).forEach((client) => {
+        if (remoteClients[client][runId]) {
+          remoteClients[client][runId].files = { received: [], expected: [] };
         }
-        return memo;
-      }, {});
+      });
     };
 
     // TODO: secure socket layer
@@ -295,52 +383,74 @@ module.exports = {
 
       const upload = multer({ storage });
       const app = express();
+      app.use(express.json({ limit: '100mb' }));
+      app.use(express.urlencoded({ limit: '100mb' }));
 
       app.post('/transfer', upload.single('file'), (req, res) => {
         res.end();
+        const { clientId, runId } = req.body;
+        const client = remoteClients[clientId][runId];
 
-        // check to see if we can run
-        let prom = Promise.resolve();
-        if (req.body.compressed === 'true') {
-          prom = decompress(
-            path.join(
-              activePipelines[req.body.runId].baseDirectory,
-              req.body.clientId,
-              req.body.filename
-            ),
-            path.join(activePipelines[req.body.runId].baseDirectory, req.body.clientId)
-          );
-        }
-        prom.then(() => rimraf(
-          path.join(
-            activePipelines[req.body.runId].baseDirectory,
-            req.body.clientId,
-            req.body.filename
-          )
-        )).then(() => {
-          remoteClients[req.body.clientId][req.body.runId].files.received
+
+        Promise.resolve().then(() => {
+          // is this file the last?
+          if (client.files.expected.length !== 0
+            && client.files.expected
+              .every(e => [req.body.filename, ...client.files.received].includes(e))) {
+            const workDir = path.join(
+              activePipelines[runId].baseDirectory,
+              clientId
+            );
+            const tars = client.files.expected
+              .map(file => path.join(workDir, file))
+              .sort((a, b) => parseInt(path.extname(a), 10) > parseInt(path.extname(b), 10));
+            return extractTar(tars, workDir)
+              .then(() => Promise.all(tars.map(tar => unlink(tar))));
+          }
+        }).then(() => {
+          // we add the file here, otherwise there can be a race condition
+          // with multiple clients untaring
+          client.files.received
             .push(req.body.filename);
-          const waitingOn = waitingOnForRun(req.body.runId);
-          activePipelines[req.body.runId].currentState.waitingOn = waitingOn;
+          const waitingOn = waitingOnForRun(runId);
+          activePipelines[runId].currentState.waitingOn = waitingOn;
           const stateUpdate = Object.assign(
             {},
-            activePipelines[req.body.runId].pipeline.currentState,
-            activePipelines[req.body.runId].currentState
+            activePipelines[runId].pipeline.currentState,
+            activePipelines[runId].currentState
           );
-          activePipelines[req.body.runId].stateEmitter
+          activePipelines[runId].stateEmitter
             .emit('update', stateUpdate);
           logger.silly(JSON.stringify(stateUpdate));
           if (waitingOn.length === 0) {
-            activePipelines[req.body.runId].state = 'received all clients data';
-            logger.silly('Received all client data');
+            activePipelines[runId].state = 'received all clients data and files';
+            logger.silly('Received all client data and files');
             // clear transfer and start run
-            activePipelines[req.body.runId].remote.resolve(
-              rimraf(path.join(activePipelines[req.body.runId].transferDirectory, '*'))
-                .then(() => ({ output: aggregateRun(req.body.runId) }))
-            );
+            clearClientFileList(runId);
+            rmrf(path.join(activePipelines[runId].transferDirectory, '*'))
+              .then(() => {
+                activePipelines[runId].remote
+                  .resolve({ success: false });
+              });
           }
+        }).catch((error) => {
+          const runError = Object.assign(
+            error,
+            {
+              error: `Pipeline error from pipeline central node, Error details: ${error.error}`,
+              message: `Pipeline error from pipeline central node, Error details: ${error.message}`,
+            }
+          );
+          activePipelines[runId].state = 'received client error';
+          activePipelines[runId].error = runError;
+          clientPublish(
+            activePipelines[runId].clients,
+            { runId, error: runError }
+          );
+          activePipelines[runId].remote.reject(runError);
         });
       });
+
       app.get('/transfer', (req, res) => {
         const file = path.join(
           activePipelines[req.query.runId].transferDirectory,
@@ -367,7 +477,7 @@ module.exports = {
       /**
        * mqtt server-side setup
        */
-      serverMqt = mqtt.connect(
+      mqttServer = mqtt.connect(
         `${mqttRemoteProtocol}//${mqttRemoteURL}:${mqttRemotePort}`,
         {
           clientId: `${clientId}_${Math.random().toString(16).substr(2, 8)}`,
@@ -375,117 +485,122 @@ module.exports = {
         }
       );
       await new Promise((resolve) => {
-        serverMqt.on('connect', () => {
+        mqttServer.on('connect', () => {
           logger.silly(`mqtt connection up ${clientId}`);
-          serverMqt.subscribe('register', { qos: 1 }, (err) => {
+          mqttServer.subscribe('register', { qos: 0 }, (err) => {
             resolve();
             if (err) logger.error(`Mqtt error: ${err}`);
           });
-          serverMqt.subscribe('run', { qos: 1 }, (err) => {
+          mqttServer.subscribe('run', { qos: 0 }, (err) => {
             if (err) logger.error(`Mqtt error: ${err}`);
           });
         });
       });
 
-      serverMqt.on('message', (topic, dataBuffer) => {
+      mqttServer.on('message', (topic, dataBuffer) => {
         const data = JSON.parse(dataBuffer);
+        const {
+          id, runId, output, error, files,
+        } = data;
         switch (topic) {
           case 'run':
-            logger.silly(`############ Received client data: ${data.id}`);
-            if (!activePipelines[data.runId] || !remoteClients[data.id]) {
-              return serverMqt.publish(`${data.id}-run`, JSON.stringify({ runId: data.runId, error: new Error('Remote has no such pipeline run') }));
+            logger.silly(`############ Received client data: ${id}`);
+            if (!activePipelines[runId] || !remoteClients[id]) {
+              return mqttServer.publish(`${id}-run`, JSON.stringify({ runId, error: new Error('Remote has no such pipeline run') }));
             }
 
             // normal pipeline operation
-            if (remoteClients[data.id] && remoteClients[data.id][data.runId]) {
-              remoteClients[data.id].lastSeen = Math.floor(Date.now() / 1000);
+            if (remoteClients[id] && remoteClients[id][runId]) {
+              remoteClients[id].lastSeen = Math.floor(Date.now() / 1000);
 
               // is the client giving us an error?
-              if (!data.error) {
+              if (!error) {
                 // has this pipeline error'd out?
-                if (!activePipelines[data.runId].error) {
+                if (!activePipelines[runId].error) {
                   // check if the msg is a dup, either for a current or past iteration
-                  if (remoteClients[data.id][data.runId].currentOutput
-                    || activePipelines[data.runId].pipeline.currentState.currentIteration + 1
+                  if (store.has(runId, id)
+                    || activePipelines[runId].pipeline.currentState.currentIteration + 1
                     !== data.iteration
                   ) {
-                    logger.silly(`Duplicate message client ${data.id}`);
+                    logger.silly(`Duplicate message client ${id}`);
                     return;
                   }
-                  remoteClients[data.id][data.runId].currentOutput = data.output.output;
-                  if (data.files) {
-                    remoteClients[data.id][data.runId].files.expected.push(...data.files);
+                  store.put(runId, id, output);
+
+                  if (files) {
+                    remoteClients[id][runId].files.expected.push(...files);
                   }
-                  if (activePipelines[data.runId].state !== 'pre-pipeline') {
-                    const waitingOn = waitingOnForRun(data.runId);
-                    activePipelines[data.runId].currentState.waitingOn = waitingOn;
+                  if (activePipelines[runId].state !== 'pre-pipeline') {
+                    const waitingOn = waitingOnForRun(runId);
+                    activePipelines[runId].currentState.waitingOn = waitingOn;
                     const stateUpdate = Object.assign(
                       {},
-                      activePipelines[data.runId].pipeline.currentState,
-                      activePipelines[data.runId].currentState
+                      activePipelines[runId].pipeline.currentState,
+                      activePipelines[runId].currentState
                     );
-                    activePipelines[data.runId].stateEmitter
+                    activePipelines[runId].stateEmitter
                       .emit('update', stateUpdate);
                     logger.silly(JSON.stringify(stateUpdate));
                     if (waitingOn.length === 0) {
-                      activePipelines[data.runId].state = 'received all clients data';
+                      activePipelines[runId].state = 'received all clients data';
                       logger.silly('Received all client data');
                       // clear transfer and start run
-                      activePipelines[data.runId].remote.resolve(
-                        rimraf(path.join(activePipelines[data.runId].transferDirectory, '*')).then(() => ({ output: aggregateRun(data.runId) }))
-                      );
+                      clearClientFileList(runId);
+                      rmrf(path.join(activePipelines[runId].transferDirectory, '*'))
+                        .then(() => activePipelines[runId].remote
+                          .resolve({ success: false }));
                     }
                   }
                 } else {
                   clientPublish(
-                    activePipelines[data.runId].clients,
-                    { runId: data.runId, error: activePipelines[data.runId].error }
+                    activePipelines[runId].clients,
+                    { runId, error: activePipelines[runId].error }
                   );
                 }
               } else {
                 const runError = Object.assign(
-                  data.error,
+                  error,
                   {
-                    error: `Pipeline error from pipeline ${data.runId} user: ${data.id}\n Error details: ${data.error.error}`,
-                    message: `Pipeline error from pipeline ${data.runId} user: ${data.id}\n Error details: ${data.error.message}`,
+                    error: `Pipeline error from pipeline ${runId} user: ${id}\n Error details: ${error.error}`,
+                    message: `Pipeline error from pipeline ${runId} user: ${id}\n Error details: ${error.message}`,
                   }
                 );
-                activePipelines[data.runId].state = 'received client error';
-                activePipelines[data.runId].error = runError;
+                activePipelines[runId].state = 'received client error';
+                activePipelines[runId].error = runError;
                 clientPublish(
-                  activePipelines[data.runId].clients,
-                  { runId: data.runId, error: runError }
+                  activePipelines[runId].clients,
+                  { runId, error: runError }
                 );
-                activePipelines[data.runId].remote.reject(runError);
+                activePipelines[runId].remote.reject(runError);
               }
             }
             break;
           case 'register':
-            if (!activePipelines[data.runId] || activePipelines[data.runId].state === 'created') {
-              remoteClients[data.id] = Object.assign(
+            if (!activePipelines[runId] || activePipelines[runId].state === 'created') {
+              remoteClients[id] = Object.assign(
                 {
-                  [data.runId]: { state: {}, files: { expected: [], received: [] } },
+                  [runId]: { state: {}, files: { expected: [], received: [] } },
                   state: 'pre-registered',
                 },
-                remoteClients[data.id]
+                remoteClients[id]
               );
             } else {
-              serverMqt.publish(`${data.id}-register`, JSON.stringify({ runId: data.runId }));
-              remoteClients[data.id].state = 'registered';
+              mqttServer.publish(`${id}-register`, JSON.stringify({ runId }));
+              remoteClients[id].state = 'registered';
             }
             break;
           case 'finished':
-            if (activePipelines[data.runId] && activePipelines[data.runId].clients[data.id]) {
-              if (activePipelines[data.runId].finalTransferList) {
-                activePipelines[data.runId].finalTransferList.add(data.id);
-                if (activePipelines[data.runId].clients
-                  .every(value => activePipelines[data.runId].finalTransferList.has(value))
+            if (activePipelines[runId] && activePipelines[runId].clients[id]) {
+              if (activePipelines[runId].finalTransferList) {
+                activePipelines[runId].finalTransferList.add(id);
+                if (activePipelines[runId].clients
+                  .every(value => activePipelines[runId].finalTransferList.has(value))
                   || (
-                    activePipelines[data.runId].limitOutputToOwner
-                    && data.id === activePipelines[data.runId].owner
+                    activePipelines[runId].limitOutputToOwner
+                    && id === activePipelines[runId].owner
                   )
                 ) {
-                  cleanupPipeline(data.runId)
+                  cleanupPipeline(runId)
                     .catch(e => logger.error(`Pipeline cleanup failure: ${e}`));
                 }
               }
@@ -497,7 +612,7 @@ module.exports = {
     } else {
       let clientInit = false;
       logger.silly('Starting local pipeline manager');
-      mqtCon = mqtt.connect(
+      mqttClient = mqtt.connect(
         `${mqttRemoteProtocol}//${mqttRemoteURL}:${mqttRemotePort}`,
         {
           clientId: `${clientId}_${Math.random().toString(16).substr(2, 8)}`,
@@ -506,23 +621,23 @@ module.exports = {
       );
 
       await new Promise((resolve, reject) => {
-        mqtCon.on('connect', () => {
+        mqttClient.on('connect', () => {
           clientInit = true;
           logger.silly(`mqtt connection up ${clientId}`);
-          mqtCon.subscribe(`${clientId}-register`, { qos: 1 }, (err) => {
+          mqttClient.subscribe(`${clientId}-register`, { qos: 0 }, (err) => {
             resolve();
             if (err) logger.error(`Mqtt error: ${err}`);
           });
-          mqtCon.subscribe(`${clientId}-run`, { qos: 1 }, (err) => {
+          mqttClient.subscribe(`${clientId}-run`, { qos: 0 }, (err) => {
             if (err) logger.error(`Mqtt error: ${err}`);
           });
         });
-        mqtCon.on('offline', () => {
+        mqttClient.on('offline', () => {
           if (!clientInit) reject(new Error('MQTT connection down'));
         });
       });
 
-      mqtCon.on('message', (topic, dataBuffer) => {
+      mqttClient.on('message', async (topic, dataBuffer) => {
         const data = JSON.parse(dataBuffer);
         // TODO: step check?
         switch (topic) {
@@ -537,57 +652,66 @@ module.exports = {
               activePipelines[data.runId].state = 'received central node data';
               logger.silly('received central node data');
 
-              let preWork;
+              let error;
               if (data.files) {
-                const workDir = data.output.success
-                  ? activePipelines[data.runId].outputDirectory
-                  : activePipelines[data.runId].baseDirectory;
-                preWork = transferFiles('get', 1000, data.files, clientId, data.runId, workDir);
-              } else {
-                preWork = Promise.resolve();
+                try {
+                  const workDir = data.success
+                    ? activePipelines[data.runId].outputDirectory
+                    : activePipelines[data.runId].baseDirectory;
+                  const paths = await transferFiles('get', 300, data.files, clientId, data.runId, workDir);
+                  const fullPathFiles = paths
+                    .map(p => path.join(workDir, p));
+                  await extractTar(fullPathFiles, workDir);
+                  await Promise.all(fullPathFiles.map(f => unlink(f)));
+                } catch (e) {
+                  error = e;
+                }
               }
-              // clear transfer dir after we know its been transfered
-              preWork
-                .then(() => {
-                  rimraf(path.join(activePipelines[data.runId].transferDirectory, '*'));
-                })
-                .then(() => {
-                  if (data.output.success && data.files) {
-                    // let the remote know we have the files
-                    mqtCon.publish(
-                      'finished',
-                      JSON.stringify(
-                        {
-                          id: clientId,
-                          runId: data.runId,
-                        }
-                      ),
-                      { qos: 1 },
-                      (err) => { if (err) logger.error(`Mqtt error: ${err}`); }
-                    );
-                  }
-                  activePipelines[data.runId].remote.resolve(data.output);
-                })
-                .catch((e) => {
-                  if (data.output.success) throw e;
-                  mqtCon.publish(
-                    'run',
-                    JSON.stringify(
-                      {
-                        id: clientId,
-                        runId: data.runId,
-                        error: { stack: e.stack, message: e.message },
-                      }
-                    ),
-                    { qos: 1 },
-                    (err) => { if (err) logger.error(`Mqtt error: ${err}`); }
-                  );
-                  activePipelines[data.runId].remote.reject(e);
-                });
+              if (data.success && data.files) {
+                // let the remote know we have the files
+                mqttClient.publish(
+                  'finished',
+                  JSON.stringify(
+                    {
+                      id: clientId,
+                      runId: data.runId,
+                    }
+                  ),
+                  { qos: 0 },
+                  (err) => { if (err) logger.error(`Mqtt error: ${err}`); }
+                );
+              }
+
+              if (error) {
+                if (data.success) throw error;
+                mqttClient.publish(
+                  'run',
+                  JSON.stringify(
+                    {
+                      id: clientId,
+                      runId: data.runId,
+                      error: { stack: error.stack, message: error.message },
+                    }
+                  ),
+                  { qos: 0 },
+                  (err) => { if (err) logger.error(`Mqtt error: ${err}`); }
+                );
+                activePipelines[data.runId].remote.reject(error);
+              } else {
+                store.put(data.runId, clientId, data.output);
+                // why is this resolve in a promise? It's a terrible hack to
+                // keep docker happy mounting the transfer dir. If there are comp
+                // issues writing to it, this is the place to look
+                await rmrf(path.join(activePipelines[data.runId].transferDirectory, '*'))
+                  .then(() => {
+                    activePipelines[data.runId].remote.resolve({ success: data.success });
+                  });
+              }
             } else if (data.error && activePipelines[data.runId]) {
               activePipelines[data.runId].state = 'received error';
               activePipelines[data.runId].remote.reject(Object.assign(new Error(), data.error));
             }
+
             break;
           case `${clientId}-register`:
             if (activePipelines[data.runId]) {
@@ -617,7 +741,7 @@ module.exports = {
       operatingDirectory,
       remoteClients,
       socket,
-      mqtCon,
+      mqttClient,
 
       /**
        * Starts a pipeline given a pipeline spec, client list and unique ID
@@ -684,10 +808,10 @@ module.exports = {
 
         if (mode === 'local') {
           activePipelines[runId].registered = false;
-          mqtCon.publish(
+          mqttClient.publish(
             'register',
             JSON.stringify({ id: clientId, runId }),
-            { qos: 1 }
+            { qos: 0 }
           );
         }
         /**
@@ -695,7 +819,8 @@ module.exports = {
          * @param  {Object} pipeline pipeline to preform the messaging on
          * @param  {Object} message  data to serialize to recipient
          */
-        activePipelines[runId].communicate = async (pipeline, message, messageIteration) => {
+        activePipelines[runId].communicate = async (pipeline, success, messageIteration) => {
+          const message = store.getAndRemove(pipeline.id, clientId);
           if (mode === 'remote') {
             if (message instanceof Error) {
               const runError = Object.assign(
@@ -721,28 +846,15 @@ module.exports = {
                     const archive = archiver('tar', {
                       gzip: true,
                       gzipOptions: {
-                        level: 2,
+                        level: 9,
                       },
                     });
-                    const archiveName = `${pipeline.id}-${uuid()}-tempOutput.tar.gz`;
-                    const archiveFp = path.join(
-                      activePipelines[pipeline.id].transferDirectory, archiveName
+                    const archiveFilename = `${pipeline.id}-${uuid()}-tempOutput.tar.gz`;
+                    const splitProm = splitFilesFromStream(
+                      archive,
+                      path.join(activePipelines[pipeline.id].transferDirectory, archiveFilename),
+                      22428800 // 20MB chunk size
                     );
-                    const output = fs.createWriteStream(
-                      archiveFp
-                    );
-
-                    const archProm = new Promise((resolve, reject) => {
-                      output.on('close', () => {
-                        resolve();
-                      });
-
-                      archive.on('error', (err) => {
-                        reject(err);
-                      });
-                    });
-
-                    archive.pipe(output);
                     data.files.forEach((file) => {
                       archive.append(
                         fs.createReadStream(
@@ -758,8 +870,8 @@ module.exports = {
                       );
                     });
                     archive.finalize();
-                    return archProm.then(() => {
-                      if (message.success) {
+                    return splitProm.then((files) => {
+                      if (success) {
                         activePipelines[pipeline.id].finalTransferList = new Set();
                       }
                       clientPublish(
@@ -767,11 +879,12 @@ module.exports = {
                         {
                           runId: pipeline.id,
                           output: message,
-                          files: [archiveName],
+                          success,
+                          files: [...files],
                           iteration: messageIteration,
                         },
                         {
-                          success: message.success,
+                          success,
                           limitOutputToOwner: activePipelines[pipeline.id].limitOutputToOwner,
                           owner: activePipelines[pipeline.id].owner,
                         }
@@ -783,14 +896,22 @@ module.exports = {
                     {
                       runId: pipeline.id,
                       output: message,
+                      success,
                       iteration: messageIteration,
                     },
                     {
-                      success: message.success,
+                      success,
                       limitOutputToOwner: activePipelines[pipeline.id].limitOutputToOwner,
                       owner: activePipelines[pipeline.id].owner,
                     }
 
+                  );
+                }).catch((e) => {
+                  mqttClient.publish(
+                    'run',
+                    JSON.stringify({ id: clientId, runId: pipeline.id, error: `Error from central node ${e}` }),
+                    { qos: 0 },
+                    (err) => { if (err) logger.error(`Mqtt error: ${err}`); }
                   );
                 });
             }
@@ -800,10 +921,10 @@ module.exports = {
               if (!activePipelines[pipeline.id].registered) {
                 activePipelines[pipeline.id].stashedOutput = message;
               } else {
-                mqtCon.publish(
+                mqttClient.publish(
                   'run',
                   JSON.stringify({ id: clientId, runId: pipeline.id, error: message }),
-                  { qos: 1 },
+                  { qos: 0 },
                   (err) => { if (err) logger.error(`Mqtt error: ${err}`); }
                 );
                 activePipelines[pipeline.id].stashedOutput = undefined;
@@ -815,28 +936,19 @@ module.exports = {
                     if (!activePipelines[pipeline.id].registered) {
                       activePipelines[pipeline.id].stashedOutput = message;
                     } else {
-                      const archiveFilename = `${pipeline.id}-${clientId}-tempOutput.tar.gz`;
-                      const output = fs.createWriteStream(
-                        path.join(activePipelines[pipeline.id].transferDirectory, archiveFilename)
-                      );
                       const archive = archiver('tar', {
                         gzip: true,
                         gzipOptions: {
-                          level: 2,
+                          level: 9,
                         },
                       });
 
-                      const archProm = new Promise((resolve, reject) => {
-                        output.on('close', () => {
-                          resolve();
-                        });
-
-                        archive.on('error', (err) => {
-                          reject(err);
-                        });
-                      });
-
-                      archive.pipe(output);
+                      const archiveFilename = `${pipeline.id}-${clientId}-tempOutput.tar.gz`;
+                      const splitProm = splitFilesFromStream(
+                        archive,
+                        path.join(activePipelines[pipeline.id].transferDirectory, archiveFilename),
+                        22428800 // 20MB chunk size
+                      );
                       data.files.forEach((file) => {
                         archive.append(
                           fs.createReadStream(
@@ -852,32 +964,32 @@ module.exports = {
                         );
                       });
                       archive.finalize();
-                      return archProm.then(() => {
+                      return splitProm.then((files) => {
                         logger.debug('############# Local client sending out data with files');
-                        mqtCon.publish(
+                        mqttClient.publish(
                           'run',
                           JSON.stringify({
                             id: clientId,
                             runId: pipeline.id,
                             output: message,
-                            files: [archiveFilename],
+                            files: [...files],
                             iteration: messageIteration,
                           }),
-                          { qos: 1 },
+                          { qos: 0 },
                           (err) => { if (err) logger.error(`Mqtt error: ${err}`); }
                         );
                         activePipelines[pipeline.id].stashedOutput = undefined;
                         transferFiles(
                           'post',
                           100,
-                          [archiveFilename],
+                          [...files],
                           clientId,
                           pipeline.id,
                           activePipelines[pipeline.id].transferDirectory
                         ).catch((e) => {
                           // files failed to send, bail
                           logger.error(`Client file send error: ${e}`);
-                          mqtCon.publish(
+                          mqttClient.publish(
                             'run',
                             JSON.stringify(
                               {
@@ -897,7 +1009,7 @@ module.exports = {
                       activePipelines[pipeline.id].stashedOutput = message;
                     } else {
                       logger.debug('############# Local client sending out data');
-                      mqtCon.publish(
+                      mqttClient.publish(
                         'run',
                         JSON.stringify({
                           id: clientId,
@@ -918,46 +1030,38 @@ module.exports = {
 
         /**
          * callback fn passed down to facilitate external communication
-         * @param  {[type]} input        data to send
+         * @param  {[type]} success      informs transmission of completion
          * @param  {[type]} noop         do nothing but resolve
          * @param  {[type]} transmitOnly send without input
          * @param  {[type]} iteration    the iteration for the input
          * @return {[type]}              Promise when we get a response
          */
         const remoteHandler = async ({
-          input, noop, transmitOnly, iteration,
+          success, noop, transmitOnly, iteration, callback,
         }) => {
-          let proxRes;
-          let proxRej;
-
-          const prom = new Promise((resolve, reject) => {
-            proxRes = resolve;
-            proxRej = reject;
-          });
           activePipelines[runId].remote = {
-            resolve: proxRes,
-            reject: proxRej,
+            resolve: callback.bind(null, null),
+            reject: callback,
           };
           if (!noop) {
             await activePipelines[runId].communicate(
               activePipelines[runId].pipeline,
-              input,
+              success,
               iteration
             );
             // only send out results, don't wait
             // this allows the last remote iteration to just finish
             if (transmitOnly) {
-              proxRes();
+              callback();
             }
 
             if (mode === 'remote') activePipelines[runId].state = 'running';
           } else if (activePipelines[runId].state === 'created') {
             activePipelines[runId].state = 'running';
             activePipelines[runId].clients.forEach((client) => {
-              serverMqt.publish(`${client}-register`, JSON.stringify({ runId }));
+              mqttServer.publish(`${client}-register`, JSON.stringify({ runId }));
             });
           }
-          return prom;
         };
 
         const pipelineProm = Promise.all([

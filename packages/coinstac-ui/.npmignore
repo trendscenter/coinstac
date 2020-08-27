@@ -1,5 +1,6 @@
 .jsdoc.json
 app/render/build/
+build/
 coinstac-*
 config
 CONTRIBUTING.md
