@@ -2,7 +2,8 @@
 
 const Pipeline = require('coinstac-pipeline');
 const path = require('path');
-const mosca = require('mosca');
+const { fork } = require('child_process');
+const exitHook = require('exit-hook');
 
 /**
  * Starts a simulator run with the given pipeline spec
@@ -16,14 +17,16 @@ const mosca = require('mosca');
 const startRun = ({
   spec, runMode = 'local', clientCount = 1, operatingDirectory = 'test',
 }) => {
-  const server = new mosca.Server({ port: 1883 });
-
-  server.on('clientConnected', (client) => {
-    console.log('Mosca client connected', client.id); // eslint-disable-line no-console
-  });
-
-  return new Promise((resolve) => {
-    server.on('ready', resolve);
+  return new Promise((resolve, reject) => {
+    // the execArgv opt are a work around for https://github.com/nodejs/node/issues/9435
+    const mqtt = fork(path.resolve(__dirname, 'mqtt-server.js'), { execArgv: [], stdio: ['inherit', 'inherit', 'inherit', 'ipc'] });
+    mqtt.on('message', (m) => {
+      if (m.e) return reject(m.e);
+      if (m.started) resolve();
+    });
+    exitHook(() => {
+      mqtt.kill();
+    });
   })
     .then(async () => {
       const pipelines = {
@@ -37,6 +40,9 @@ const startRun = ({
           clientId: 'remote',
           mode: 'remote',
           operatingDirectory: path.resolve(operatingDirectory),
+          mqttRemoteURL: 'localhost',
+          mqttRemotePort: '1883',
+          mqttRemoteProtocol: 'mqtt:',
         });
         pipelines.remote = {
           manager: remoteManager,
