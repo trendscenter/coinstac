@@ -29,14 +29,14 @@ function DashboardHome(props) {
   const {
     consortia,
     runs,
-    userId,
+    user,
     classes,
   } = props;
 
   return (
     <div>
       <Typography variant="h4" className={classes.pageTitle}>
-        {`${userId}'s Home`}
+        {`${user.username}'s Home`}
       </Typography>
       <Divider />
       <Typography variant="h6" className={classes.pageSubtitle}>
@@ -57,13 +57,12 @@ DashboardHome.propTypes = {
   classes: PropTypes.object.isRequired,
   consortia: PropTypes.array.isRequired,
   runs: PropTypes.array.isRequired,
-  userId: PropTypes.string.isRequired,
+  user: PropTypes.object.isRequired,
 };
 
-const mapStateToProps = ({ auth, runs }) => ({
-  runs: runs.runs,
-  userId: auth.user.id,
-});
+function mapStateToProps({ auth: { user }, runs: { runs } }) {
+  return { runs, user };
+}
 
 const connectedComponent = connect(mapStateToProps)(DashboardHome);
 

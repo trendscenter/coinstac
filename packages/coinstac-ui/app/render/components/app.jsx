@@ -11,6 +11,7 @@ import { autoLogin, logout, setError } from '../state/ducks/auth';
 import { notifyWarning } from '../state/ducks/notifyAndLog';
 import { EXPIRED_TOKEN, BAD_TOKEN } from '../utils/error-codes';
 import theme from '../styles/material-ui/theme';
+import DisplayNotificationsListener from './display-notifications-listener';
 
 const styles = {
   success: {
@@ -104,6 +105,8 @@ class App extends Component {
             }}
           >
             { checkJWT && children }
+
+          <DisplayNotificationsListener />
           </SnackbarProvider>
         </MuiThemeProvider>
       </div>

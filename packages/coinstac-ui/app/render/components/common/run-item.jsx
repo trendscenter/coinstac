@@ -58,6 +58,18 @@ const styles = theme => ({
   },
 });
 
+function parseWaiting(runObject, stateKey) {
+  const users = [];
+
+  runObject[stateKey].waitingOn.forEach((client) => {
+    if (client in runObject.members) {
+      users.push(runObject.members[client]);
+    }
+  });
+
+  return users;
+}
+
 function getStateWell(runObject, stateName, stateKey, classes) {
   const {
     mode, waitingOn, controllerState, currentIteration, pipelineStep, totalSteps,
@@ -87,7 +99,7 @@ function getStateWell(runObject, stateName, stateKey, classes) {
           <div>
             <Typography className={classes.label}>Waiting on Users:</Typography>
             <Typography className={classes.value}>
-              {controllerState.includes('waiting on') ? waitingOn.join(', ') : ''}
+              {controllerState.includes('waiting on') ? parseWaiting(runObject, stateKey) : ''}
             </Typography>
           </div>
         )
@@ -146,7 +158,7 @@ class RunItem extends Component {
     const { consortiumName, runObject, classes } = this.props;
     const {
       id, startDate, endDate, status, localPipelineState, remotePipelineState,
-      clients, pipelineSnapshot, results, error,
+      members, pipelineSnapshot, results, error,
     } = runObject;
 
     return (
@@ -244,14 +256,20 @@ class RunItem extends Component {
             )
           }
           {
-            clients
+            members
             && (
               <div>
                 <Typography className={classes.label}>
                   Clients:
                 </Typography>
                 <Typography className={classes.value}>
-                  { clients.join(', ') }
+                  {
+                    Object.values(members).map(member => (
+                      <span>
+                        { `${member},` }
+                      </span>
+                    ))
+                  }
                 </Typography>
               </div>
             )
