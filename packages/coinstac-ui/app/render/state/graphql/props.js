@@ -267,6 +267,16 @@ export const consortiumSaveActivePipelineProp = (name) => {
   };
 };
 
+export const updatePasswordProps = (name) => {
+  return {
+    props: ({ mutate }) => ({
+      [name]: ({ currentPassword, newPassword }) => mutate({
+        variables: { currentPassword, newPassword },
+      })
+    }),
+  };
+};
+
 export const saveMessageProp = (name) => {
   return {
     props: ({ mutate }) => ({
@@ -280,7 +290,6 @@ export const saveMessageProp = (name) => {
     }),
   };
 };
-
 
 export const setReadMessageProp = (name) => {
   return {

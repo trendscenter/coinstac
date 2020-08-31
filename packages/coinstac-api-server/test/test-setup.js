@@ -9,7 +9,7 @@ const drneVbm = require('./data/coinstac-schema-regression-vbm');
 const msrVbm = require('./data/coinstac-schema-regression-ms-vbm');
 
 const drneFsl = require('./data/coinstac-schema-regression-fsl');
-// const ssrFsl = require('./data/coinstac-schema-regression-ss-fsl');
+const ssrFsl = require('./data/coinstac-schema-regression-ss-fsl');
 const msrFsl = require('./data/coinstac-schema-regression-ms-fsl');
 
 const gica = require('./data/coinstac-gica-pipeline');
@@ -55,6 +55,16 @@ const COMPUTATION_IDS = [
   database.createUniqueId(),
   database.createUniqueId(),
   database.createUniqueId(),
+  database.createUniqueId(),
+];
+
+const USER_IDS = [
+  database.createUniqueId(),
+  database.createUniqueId(),
+  database.createUniqueId(),
+  database.createUniqueId(),
+  database.createUniqueId(),
+  database.createUniqueId(),
 ];
 
 async function populateComputations() {
@@ -76,6 +86,7 @@ async function populateComputations() {
     { ...enigmaSans, submittedBy: 'author', _id: COMPUTATION_IDS[12] },
     { ...localError, submittedBy: 'author', _id: COMPUTATION_IDS[13] },
     { ...fmri, submittedBy: 'author', _id: COMPUTATION_IDS[14] },
+    { ...ssrFsl, submittedBy: 'author', _id: COMPUTATION_IDS[15] },
   ]);
 }
 
@@ -87,8 +98,12 @@ async function populateConsortia() {
       _id: CONSORTIA_IDS[0],
       name: 'Test Consortia 1',
       description: 'This consortia is for testing.',
-      owners: ['author'],
-      members: ['author'],
+      owners: {
+        [USER_IDS[5]]: 'author',
+      },
+      members: {
+        [USER_IDS[5]]: 'author',
+      },
       isPrivate: false,
       createDate: 1551333489519,
     },
@@ -97,8 +112,13 @@ async function populateConsortia() {
       activePipelineId: PIPELINE_IDS[0],
       name: 'Test Consortia 2',
       description: 'This consortia is for testing too.',
-      owners: ['test1'],
-      members: ['author', 'test1'],
+      owners: {
+        [USER_IDS[0]]: 'test1',
+      },
+      members: {
+        [USER_IDS[0]]: 'test1',
+        [USER_IDS[5]]: 'author',
+      },
       isPrivate: false,
       createDate: 1551666489519,
     },
@@ -119,7 +139,7 @@ async function populatePipelines() {
       steps: [
         {
           computations: [
-            COMPUTATION_IDS[0],
+            COMPUTATION_IDS[15],
           ],
           controller: {
             id: null,
@@ -211,7 +231,9 @@ async function populateRuns() {
 
   db.collection('runs').insertMany([
     {
-      clients: ['test1'],
+      clients: {
+        [USER_IDS[0]]: 'test1',
+      },
       consortiumId: CONSORTIA_IDS[1],
       pipelineSnapshot: {
         id: '52d44390-07a5-4b8c-85c9-e22821ce7183',
@@ -230,7 +252,6 @@ async function populateRuns() {
                   name: 'VBM Preprocessor',
                   description: 'This computation runs Voxel Based Morphometry on structural T1 weighted MRI scans(BIDS format and T1w nifiti) using SPMv12 standalone and MATLAB Runtimev713. Each scan takes approximately 5 mins to run on a system with 2.3 GHz,i5 equivalent processor, 8GB RAM. Each scan output directory takes about 150MB space. Please make sure to have the space and resources.',
                   version: 'v1.0',
-                  __typename: 'ComputationMeta',
                 },
                 computation: {
                   type: 'docker',
@@ -280,16 +301,13 @@ async function populateRuns() {
                   display: {
                     type: 'string',
                   },
-                  __typename: 'ComputationField',
                 },
-                __typename: 'Computation',
               },
             ],
             controller: {
               id: null,
               options: {},
               type: 'local',
-              __typename: 'PipelineController',
             },
             inputMap: {
               data: {
@@ -308,10 +326,8 @@ async function populateRuns() {
                 value: 6,
               },
             },
-            __typename: 'PipelineStep',
           },
         ],
-        __typename: 'Pipeline',
       },
       startDate: 1551726489519,
       type: 'local',
@@ -322,7 +338,6 @@ async function populateRuns() {
       },
       endDate: null,
       userErrors: null,
-      __typename: 'Run',
       status: 'complete',
       localPipelineState: {
         controllerState: 'stopped',
@@ -334,9 +349,9 @@ async function populateRuns() {
     },
     {
       id: 'b23af8ff-18fa-479d-adc7-19408abb3741',
-      clients: [
-        'test1',
-      ],
+      clients: {
+        [USER_IDS[0]]: 'test1',
+      },
       consortiumId: CONSORTIA_IDS[1],
       startDate: '1568405561851',
       endDate: '1568408608526',
@@ -540,14 +555,13 @@ async function populateRuns() {
         computation_phase: 'dkmnx_remote_final',
       },
       type: 'decentralized',
-      __typename: 'Run',
       status: 'complete',
     },
     {
       id: 'results-2',
-      clients: [
-        'test1',
-      ],
+      clients: {
+        [USER_IDS[0]]: 'test1',
+      },
       consortiumId: CONSORTIA_IDS[1],
       startDate: '1518559440672',
       endDate: '1518559440685',
@@ -566,6 +580,10 @@ async function populateRuns() {
                       type: 'table',
                     },
                   ],
+                },
+                message: {
+                  description: 'Output message from VBM step',
+                  type: 'string',
                 },
               },
             ],
@@ -623,14 +641,13 @@ async function populateRuns() {
         ],
       },
       type: 'decentralized',
-      __typename: 'Run',
       status: 'complete',
     },
     {
       id: 'results-1',
-      clients: [
-        'test1',
-      ],
+      clients: {
+        [USER_IDS[0]]: 'test1',
+      },
       consortiumId: CONSORTIA_IDS[1],
       startDate: '1518559440668',
       endDate: '1551465751260',
@@ -787,7 +804,6 @@ async function populateRuns() {
         ],
       },
       type: 'decentralized',
-      __typename: 'Run',
       status: 'complete',
     },
   ]);
@@ -797,7 +813,9 @@ async function populateUsers() {
   const password = await helperFunctions.hashPassword('password');
 
   await helperFunctions.createUser({
+    _id: USER_IDS[0],
     username: 'test1',
+    name: 'Testy Testerson',
     institution: 'mrn',
     email: 'test@mrn.org',
     permissions: {
@@ -815,7 +833,9 @@ async function populateUsers() {
   }, password);
 
   await helperFunctions.createUser({
+    _id: USER_IDS[1],
     username: 'test2',
+    name: 'Deuce Masterson',
     institution: 'mrn',
     email: 'test2@mrn.org',
     permissions: {
@@ -833,7 +853,9 @@ async function populateUsers() {
   }, password);
 
   await helperFunctions.createUser({
+    _id: USER_IDS[2],
     username: 'test3',
+    name: 'Tre Testington III',
     institution: 'mrn',
     email: 'test3@mrn.org',
     permissions: {
@@ -851,7 +873,9 @@ async function populateUsers() {
   }, password);
 
   await helperFunctions.createUser({
+    _id: USER_IDS[3],
     username: 'test4',
+    name: 'Quattro Quintana',
     institution: 'mrn',
     email: 'test4@mrn.org',
     permissions: {
@@ -869,7 +893,9 @@ async function populateUsers() {
   }, password);
 
   await helperFunctions.createUser({
+    _id: USER_IDS[4],
     username: 'test5',
+    name: 'Cinco Chavez',
     institution: 'mrn',
     email: 'test5@mrn.org',
     permissions: {
@@ -887,7 +913,9 @@ async function populateUsers() {
   }, password);
 
   await helperFunctions.createUser({
+    _id: USER_IDS[5],
     username: 'author',
+    name: 'Arturo Andersson',
     institution: 'mrn',
     email: 'author@mrn.org',
     permissions: {
@@ -904,7 +932,9 @@ async function populateUsers() {
     || process.env.SERVER_API_PASSWORD);
 
   await helperFunctions.createUser({
+    _id: USER_IDS[6],
     username: process.env.SERVER_API_USERNAME,
+    name: 'Sally Serverson',
     institution: 'mrn',
     email: 'server@mrn.org',
     permissions: {
