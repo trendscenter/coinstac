@@ -59,6 +59,7 @@ const RunsList = ({
                 ? (
                   <span>
                     No
+                    {' '}
                     {limitToComplete ? 'results' : 'runs'}
                     {' '}
                     found
@@ -67,6 +68,7 @@ const RunsList = ({
                 : (
                   <span>
                     No activity in the last
+                    {' '}
                     <span className="bold">{hoursSinceActive}</span>
                     {' '}
                     hours.
