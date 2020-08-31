@@ -40,7 +40,8 @@ const MAX_LENGTH_CONSORTIA = 50;
 
 const styles = theme => ({
   button: {
-    margin: theme.spacing(1),
+    marginTop: theme.spacing(1),
+    marginRight: theme.spacing(1),
   },
   contentContainer: {
     marginTop: theme.spacing(1),
