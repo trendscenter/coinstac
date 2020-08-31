@@ -42,6 +42,5 @@ fs.rename('./config/local.json', './config/local-build-copy.json')
   .then(() => electronBuilder.build(buildConfig))
   .then(() => fs.rename('./config/local-build-copy.json', './config/local.json'))
   .catch((err) => {
-    console.log('errao', err);
     if (err.code !== 'ENOENT') console.error('Build failed with:', err);
   });
