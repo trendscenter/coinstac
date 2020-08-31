@@ -394,7 +394,7 @@ const resolvers = {
         return Boom.forbidden('Action not permitted');
       }
 
-      await addUserPermissions({ doc: ObjectID(args.doc), role: args.role, userId: args.userId, table: args.table });
+      await addUserPermissions({ doc: ObjectID(args.doc), role: args.role, userId: ObjectID(args.userId), table: args.table });
 
       return helperFunctions.getUserDetailsByID(args.userId);
     },

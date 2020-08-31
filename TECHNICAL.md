@@ -224,7 +224,7 @@ Here is a simple example:
 ```
 The full code for this example can be found [here](https://github.com/trendscenter/coinstac-first-example)
 
-An in depth guide on how to create computations for Coinstac can be found [here](https://github.com/trendscenter/coinstac/blob/master/algorithm-development/coinstac-development-guide.md#Create-a-compsec) as well
+An in depth guide on how to create computations for Coinstac can be found [here](./algorithm-development/coinstac-development-guide.md) as well
 
 ## Database Structure
 
