@@ -1,4 +1,5 @@
 import update from 'immutability-helper';
+import { filter, keys } from 'lodash';
 import {
   FETCH_ALL_CONSORTIA_QUERY,
 } from './functions';
@@ -87,6 +88,60 @@ export const getAllAndSubProp = (document, listProp, query, subProp, subscriptio
       });
     },
   }),
+});
+
+export const userRunProp = document => ({
+  options: (props) => {
+    const opts = { fetchPolicy: 'cache-and-network' };
+
+    if (props.auth.user.id) {
+      opts.variables = { userId: props.auth.user.id };
+    }
+
+    return opts;
+  },
+  props: (props) => {
+    return {
+      remoteRuns: filter(props.data.fetchAllUserRuns, (run) => {
+        return (!keys(run).includes('remotePipelineState') || !!run.remotePipelineState);
+      }),
+      subscribeToUserRuns: () => {
+        const variables = {};
+        if (props.ownProps.auth.user.id) {
+          variables.userId = props.ownProps.auth.user.id;
+        }
+
+        return props.data.subscribeToMore({
+          document,
+          variables,
+          updateQuery: (prevResult, { subscriptionData: { data } }) => {
+            const { userRunChanged } = data;
+
+            const index = prevResult.fetchAllUserRuns.findIndex(c => c.id === userRunChanged.id);
+
+            if (userRunChanged.delete) {
+              return {
+                fetchAllUserRuns:
+                  prevResult.fetchAllUserRuns.filter(obj => obj.id !== userRunChanged.id),
+              };
+            } if (index !== -1) {
+              return {
+                fetchAllUserRuns: update(prevResult.fetchAllUserRuns, {
+                  $splice: [
+                    [index, 1, userRunChanged],
+                  ],
+                }),
+              };
+            }
+
+            return {
+              fetchAllUserRuns: [...prevResult.fetchAllUserRuns, userRunChanged],
+            };
+          },
+        });
+      },
+    };
+  },
 });
 
 export const getSelectAndSubProp = (activeProp, document, objId, subProp, subscription, query) => ({
@@ -212,6 +267,16 @@ export const consortiumSaveActivePipelineProp = (name) => {
   };
 };
 
+export const updatePasswordProps = (name) => {
+  return {
+    props: ({ mutate }) => ({
+      [name]: ({ currentPassword, newPassword }) => mutate({
+        variables: { currentPassword, newPassword },
+      })
+    }),
+  };
+};
+
 export const saveMessageProp = (name) => {
   return {
     props: ({ mutate }) => ({
@@ -225,7 +290,6 @@ export const saveMessageProp = (name) => {
     }),
   };
 };
-
 
 export const setReadMessageProp = (name) => {
   return {

@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
-import { isEqual, omit } from 'lodash';
+import { omit } from 'lodash';
 import {
   CircularProgress,
   FormControl,
@@ -27,10 +27,9 @@ const BootstrapInput = withStyles(theme => ({
     position: 'relative',
     backgroundColor: theme.palette.background.paper,
     border: '1px solid #ced4da',
-    fontSize: 16,
-    padding: '10px 26px 10px 12px',
+    fontSize: 12,
+    padding: '5px 8px 10px 12px',
     transition: theme.transitions.create(['border-color', 'box-shadow']),
-
     fontFamily: [
       '-apple-system',
       'BlinkMacSystemFont',
@@ -56,8 +55,14 @@ const styles = theme => ({
     borderTop: `1px solid ${theme.palette.grey[300]}`,
     padding: theme.spacing(2),
   },
+  recipientsWrapper: {
+    display: 'flex',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+  },
   recipients: {
-    paddingLeft: theme.spacing(2),
+    padding: theme.spacing(2),
+    paddingLeft: 0,
     display: 'flex',
     alignItems: 'center',
     width: 300,
@@ -66,7 +71,7 @@ const styles = theme => ({
     paddingLeft: theme.spacing(1),
   },
   textarea: {
-    margin: `${theme.spacing(2)}px 0`,
+    margin: `0 0 ${theme.spacing(2)}px`,
     padding: theme.spacing(2),
     fontSize: 16,
     width: '100%',
@@ -81,8 +86,8 @@ const styles = theme => ({
   },
   actionWrapper: {
     display: 'flex',
-    alignItems: 'center',
     justifyContent: 'space-between',
+    flexWrap: 'wrap',
   },
   formControl: {
     marginRight: theme.spacing(1),
@@ -90,6 +95,7 @@ const styles = theme => ({
   replyButton: {
     width: 100,
     padding: `${theme.spacing(1)}px 0`,
+    margin: `${theme.spacing(1)}px 0`,
     backgroundColor: '#0078d4',
     fontSize: 14,
     color: 'white',
@@ -107,11 +113,15 @@ const styles = theme => ({
   loader: {
     width: '20px !important',
     height: '20px !important',
-    marginRight: 10,
+    marginRight: theme.spacing(1),
   },
   note: {
-    marginLeft: 20,
+    paddingTop: theme.spacing(2),
+    paddingBottom: theme.spacing(2),
     color: 'red',
+  },
+  menuItem: {
+    fontSize: 12,
   },
 });
 
@@ -142,7 +152,7 @@ class ThreadReply extends Component {
       this.initializeState(nextProps);
     }
 
-    if (!isEqual(threadUsers, nextProps.threadUsers)) {
+    if (Object.keys(threadUsers).length !== Object.keys(nextProps.threadUsers).length) {
       this.initializeDefaultRecipients(nextProps, this.context);
     }
   }
@@ -160,9 +170,9 @@ class ThreadReply extends Component {
     const { threadUsers } = props;
     const { auth } = context;
 
-    const defaultSelectedRecipients = (threadUsers || [])
-      .filter(({ username }) => username !== auth.user.id)
-      .map(({ username }) => ({ value: username, label: username, isFixed: true }));
+    const defaultSelectedRecipients = Object.keys(threadUsers || {})
+      .filter(id => id !== auth.user.id)
+      .map(id => ({ value: id, label: threadUsers[id].username, isFixed: true }));
 
     this.setState({
       selectedRecipients: defaultSelectedRecipients,
@@ -231,7 +241,10 @@ class ThreadReply extends Component {
       {
         threadId,
         title,
-        recipients: selectedRecipients.map(recipient => recipient.value),
+        recipients: selectedRecipients.reduce((acc, recipient) => {
+          acc[recipient.value] = recipient.label;
+          return acc;
+        }, {}),
         content: message,
       },
       (action === 'join-consortium' && selectedConsortium !== 'none') && ({
@@ -326,7 +339,7 @@ class ThreadReply extends Component {
 
     const allRecipients = (users || [])
       .filter(user => user.id !== auth.user.id)
-      .map(user => ({ value: user.id, label: user.id }));
+      .map(user => ({ value: user.id, label: user.username }));
 
     return allRecipients;
   }
@@ -339,7 +352,7 @@ class ThreadReply extends Component {
     ];
 
     consortia.forEach((consortium) => {
-      if (consortium.owners.indexOf(auth.user.id) !== -1) {
+      if (auth.user.id in consortium.owners) {
         allConsortia.push({ value: consortium.id, label: consortium.name });
       }
     });
@@ -384,7 +397,7 @@ class ThreadReply extends Component {
 
     return (
       <div className={classes.wrapper}>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
+        <div className={classes.recipientsWrapper}>
           <ThreadAvatar username={auth.user.id} showUsername />
 
           <div className={classes.recipients}>
@@ -428,6 +441,7 @@ class ThreadReply extends Component {
                   <MenuItem
                     key={action.value}
                     value={action.value}
+                    className={classes.menuItem}
                   >
                     {action.label}
                   </MenuItem>
@@ -447,6 +461,7 @@ class ThreadReply extends Component {
                     <MenuItem
                       key={consortium.value}
                       value={consortium.value}
+                      className={classes.menuItem}
                     >
                       {consortium.label}
                     </MenuItem>
@@ -467,6 +482,7 @@ class ThreadReply extends Component {
                     <MenuItem
                       key={result.value}
                       value={result.value}
+                      className={classes.menuItem}
                     >
                       {result.label}
                     </MenuItem>
@@ -485,7 +501,7 @@ class ThreadReply extends Component {
 
 ThreadReply.defaultProps = {
   threadId: '',
-  threadUsers: [],
+  threadUsers: {},
   title: '',
 };
 
@@ -493,7 +509,7 @@ ThreadReply.propTypes = {
   classes: PropTypes.object.isRequired,
   savingStatus: PropTypes.string.isRequired,
   threadId: PropTypes.any, // eslint-disable-line react/no-unused-prop-types
-  threadUsers: PropTypes.array,
+  threadUsers: PropTypes.object,
   title: PropTypes.any,
   onSend: PropTypes.func.isRequired,
 };

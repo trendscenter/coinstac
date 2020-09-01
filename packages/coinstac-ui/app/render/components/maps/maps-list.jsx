@@ -6,12 +6,7 @@ import Grid from '@material-ui/core/Grid';
 import MapsListItem from './maps-list-item';
 import { deleteDataMapping } from '../../state/ducks/maps';
 import { pipelineNeedsDataMapping } from '../../../main/utils/run-pipeline-functions';
-
-function isMember(userId, groupArr) {
-  if (userId && groupArr) {
-    return groupArr.indexOf(userId) !== -1;
-  }
-}
+import { isUserInGroup } from '../../utils/helpers';
 
 class MapsList extends Component {
   deleteDataMapping = consortiumId => () => {
@@ -31,7 +26,7 @@ class MapsList extends Component {
 
     const pipeline = pipelines.find(pipeline => pipeline.id === consortium.activePipelineId);
 
-    if (!pipeline || !isMember(auth.user.id, consortium.members)) {
+    if (!pipeline || !isUserInGroup(auth.user.id, consortium.members)) {
       return null;
     }
 
@@ -41,7 +36,7 @@ class MapsList extends Component {
     const needsDataMapping = !hasDataMap && pipelineNeedsDataMapping(pipeline);
 
     return (
-      <Grid item sm={6} lg={4} key={`${consortium.id}-list-item`}>
+      <Grid item xs={12} sm={12} md={6} lg={4} key={`${consortium.id}-list-item`}>
         <MapsListItem
           consortium={consortium}
           pipeline={pipeline}
