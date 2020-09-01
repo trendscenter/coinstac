@@ -58,7 +58,7 @@ class MapsCsvField extends React.Component {
     this.state = {
       remainingHeader: [],
       selectedFiles: [],
-      autoMapError: true,
+      autoMapError: false,
     };
 
     this.autoMap = this.autoMap.bind(this);

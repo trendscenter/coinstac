@@ -18,7 +18,7 @@ import Login from './components/user/form-login-controller';
 import Signup from './components/user/form-signup-controller';
 import ForgotPassword from './components/user/form-password-controller';
 import Maps from './components/maps/maps';
-import MapsEdit from './components/maps/maps-edit2';
+import MapsEdit from './components/maps/maps-edit';
 import PipelinesList from './components/pipelines/pipelines-list';
 import Pipeline from './components/pipelines/pipeline';
 import ResultsList from './components/results/results-list';
