@@ -133,7 +133,7 @@ class Threads extends Component {
 
     const { members, activePipelineId } = consortium;
 
-    if (members.indexOf(auth.user.id) !== -1 || !activePipelineId) {
+    if (auth.user.id in members || !activePipelineId) {
       router.push('/dashboard/consortia');
       return;
     }
