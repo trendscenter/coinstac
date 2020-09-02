@@ -4,7 +4,6 @@ const Promise = require('bluebird');
 const axios = require('axios');
 const Issue = require('github-api/dist/components/Issue');
 const { PubSub, withFilter } = require('graphql-subscriptions');
-const { uniq } = require('lodash');
 const { ObjectID } = require('mongodb');
 const helperFunctions = require('../auth-helpers');
 const initSubscriptions = require('./subscriptions');
@@ -399,7 +398,7 @@ const resolvers = {
         return Boom.forbidden('Action not permitted');
       }
 
-      await addUserPermissions({ doc: ObjectID(args.doc), role: args.role, userId: args.userId, table: args.table });
+      await addUserPermissions({ doc: ObjectID(args.doc), role: args.role, userId: ObjectID(args.userId), table: args.table });
 
       return helperFunctions.getUserDetailsByID(args.userId);
     },
@@ -1017,7 +1016,8 @@ const resolvers = {
      * @return {object} Updated message
      */
     saveMessage: async ({ auth: { credentials } }, args) => {
-      const { title, recipients, content, action, threadId } = args;
+      const { title, recipients, content, action } = args;
+      const threadId = args.threadId ? ObjectID(args.threadId) : null;
 
       const db = database.getDbInstance();
 

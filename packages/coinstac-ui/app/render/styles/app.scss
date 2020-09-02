@@ -1,7 +1,6 @@
 @import "./variables";
 @import "./mixins";
 @import "./classes";
-
 @import "./alert";
 @import "./computation-field";
 @import "./computation-select";
@@ -11,7 +10,6 @@
 @import "./consortium-result";
 @import "./consortium-result-list";
 @import "./consortium-result-table";
-@import "./list-item";
 @import "./dragula";
 @import "./maps-collection";
 @import "./maps-list";
@@ -25,6 +23,7 @@
 
 body {
   margin: 0;
+  width: 100%;
   font-family: "Roboto", "Helvetica", "Arial", sans-serif;
 }
 
@@ -38,15 +37,14 @@ html {
 
 .screen {
   min-height: 100vh;
-  padding-top: $grid-gutter-width / 2;
-  padding-bottom: $grid-gutter-width / 2;
-}
-.screen__content {
-  display: flex;
-  min-height: 100vh;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
+
+  &__content {
+    display: flex;
+    min-height: 100vh;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
 }
 
 /**
@@ -57,7 +55,6 @@ html {
   display: flex;
   justify-content: center;
   align-items: center;
-  flex: 0 0 auto;
   padding: 1rem 0;
 
   abbr[title] {
@@ -82,11 +79,8 @@ html {
   }
 }
 
-.mainnav {
-  padding-left: 0.5rem !important;
-  svg {
-    color: #003c52 !important;
-  }
+.mainnav svg {
+  color: #003c52 !important;
 }
 
 /**
@@ -142,10 +136,7 @@ html {
   background: white;
   min-height: 100vh;
   position: relative;
-
-  @media (min-width: $screen-sm) {
-    padding: $grid-gutter-width / 2;
-  }
+  padding: $grid-gutter-width / 2;
 
   .back-button {
     position: absolute;
@@ -242,9 +233,6 @@ html {
 /** Consortia */
 .dashboard-consortia > .row > .col-sm-6:nth-child(odd) {
     clear: both;
-}
-.consortium {
-
 }
 .consortium .btn-toolbar {
     .glyphicon {

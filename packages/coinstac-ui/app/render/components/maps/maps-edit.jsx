@@ -123,16 +123,17 @@ class MapsEdit extends Component {
       if (dataFile) {
         switch (dataType) {
           case 'array':
-            stateChanges.dataFileHeader = dataFile.metaFile[0]
+            // eslint-disable-next-line prefer-destructuring
+            stateChanges.dataFileHeader = dataFile.metaFile[0];
             break;
           case 'bundle':
-            stateChanges.dataFileHeader = [dataType]
+            stateChanges.dataFileHeader = [dataType];
             break;
           case 'singles':
-            stateChanges.dataFileHeader = dataFile.files
+            stateChanges.dataFileHeader = dataFile.files;
             break;
           default:
-            stateChanges.dataFileHeader = [dataType]
+            stateChanges.dataFileHeader = [dataType];
             break;
         }
       }
@@ -307,16 +308,17 @@ class MapsEdit extends Component {
       let fileHeader;
       switch (dataType) {
         case 'array':
-          fileHeader = dataFile.metaFile[0]
+          // eslint-disable-next-line prefer-destructuring
+          fileHeader = dataFile.metaFile[0];
           break;
         case 'bundle':
-          fileHeader = [dataType]
+          fileHeader = [dataType];
           break;
         case 'singles':
-          fileHeader = dataFile.files
+          fileHeader = dataFile.files;
           break;
         default:
-          fileHeader = [dataType]
+          fileHeader = [dataType];
           break;
       }
       return {
@@ -374,7 +376,7 @@ class MapsEdit extends Component {
                   stepsDataMappings={stepsDataMappings}
                   unmapField={this.unmapField}
                 />
-                <Grid item sm={8}>
+                <Grid item xs={12} sm={12} md={6} lg={8}>
                   <Paper
                     className={classes.rootPaper}
                     elevation={1}

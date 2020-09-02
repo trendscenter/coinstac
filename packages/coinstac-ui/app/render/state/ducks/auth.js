@@ -153,7 +153,7 @@ export const autoLogin = applyAsyncLoading(() => (dispatch, getState) => {
 
 export const checkApiVersion = applyAsyncLoading(() => dispatch => axios.get(`${API_URL}/version`)
   .then(({ data }) => {
-    const versionsMatch = process.env.NODE_ENV !== 'production' || data === remote.app.getVersion();
+    const versionsMatch = remote.process.env.NODE_ENV !== 'production' || data === remote.app.getVersion();
     dispatch(setApiVersionCheck(versionsMatch));
   })
   .catch(() => {

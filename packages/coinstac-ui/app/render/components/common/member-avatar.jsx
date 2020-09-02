@@ -13,6 +13,7 @@ const styles = theme => ({
   containerStyles: {
     display: 'inline-block',
     margin: theme.spacing(1),
+    marginLeft: 0,
     verticalAlign: 'top',
     textAlign: 'center',
     position: 'relative',

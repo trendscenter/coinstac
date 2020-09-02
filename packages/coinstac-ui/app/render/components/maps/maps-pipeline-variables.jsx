@@ -27,7 +27,7 @@ function MapsPipelineVariables(props) {
   } = props;
 
   return (
-    <Grid item sm={4}>
+    <Grid item xs={12} sm={12} md={6} lg={4}>
       <Paper
         className={classes.rootPaper}
         elevation={1}
