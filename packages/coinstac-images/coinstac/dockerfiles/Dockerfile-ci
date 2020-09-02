@@ -1,7 +1,7 @@
 FROM node:lts-buster
 ARG BRANCH=master
 RUN apt-get update && \
-    apt-get install -y awscli
+    apt-get install --no-install-recommends -y awscli jq
 RUN cd /usr/local/src/ \
   && git clone https://github.com/trendscenter/coinstac.git \
   && cd coinstac \

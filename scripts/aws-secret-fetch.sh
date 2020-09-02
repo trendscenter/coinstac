@@ -10,7 +10,7 @@ if [ $1 -eq 0 ] || [ $2 = "" ] || [ $3 = "" ]; then
     exit 1
 fi
 
-if [ $4 != "ci" ]
+if [ $4 != "ci" ]; then
   unset AWS_ACCESS_KEY_ID
   unset AWS_SECRET_ACCESS_KEY
   unset AWS_SESSION_TOKEN
