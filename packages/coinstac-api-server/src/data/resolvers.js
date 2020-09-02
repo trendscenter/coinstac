@@ -351,7 +351,29 @@ const resolvers = {
     validateComputation: (_, args) => {
       return new Promise();
     },
-    fetchUsersOnlineStatus: () => {
+    fetchUsersOnlineStatus: async ({ auth: { credentials } }) => {
+      // Find the users that are in the same consortia as the logged user
+      const db = database.getDbInstance();
+
+      const user = await helperFunctions.getUserDetailsByID(credentials.id);
+
+      const consortiaIds = Object.keys(user.permissions.consortia).map(id => ObjectID(id));
+      const consortia = await db.collection('consortia').find(
+        { _id: { $in: consortiaIds } },
+        { projection: { members: 1 } }
+      ).toArray();
+
+      const allUsersStatus = getOnlineUsers();
+      const relatedUsersStatus = {};
+
+      consortia.forEach((consortium) => {
+        Object.keys(consortium.members).forEach((memberId) => {
+          if (!(memberId in relatedUsersStatus)) {
+            relatedUsersStatus[memberId] = allUsersStatus[memberId] || false;
+          }
+        });
+      });
+
       return getOnlineUsers();
     }
   },
@@ -1252,7 +1274,31 @@ const resolvers = {
      * Users online status subscription
      */
     usersOnlineStatusChanged: {
-      subscribe: () => pubsub.asyncIterator('usersOnlineStatusChanged')
+      subscribe: () => pubsub.asyncIterator('usersOnlineStatusChanged'),
+      resolve: async (payload, args, context, info) => {
+        // Find the users that are in the same consortia as the logged user
+        const db = database.getDbInstance();
+
+        const user = await helperFunctions.getUserDetailsByID(context.userId);
+
+        const consortiaIds = Object.keys(user.permissions.consortia).map(id => ObjectID(id));
+        const consortia = await db.collection('consortia').find(
+          { _id: { $in: consortiaIds } },
+          { projection: { members: 1 } }
+        ).toArray();
+
+        const usersStatus = {};
+
+        consortia.forEach((consortium) => {
+          Object.keys(consortium.members).forEach((memberId) => {
+            if (!(memberId in usersStatus)) {
+              usersStatus[memberId] = payload.usersOnlineStatusChanged[memberId] || false;
+            }
+          });
+        });
+
+        return usersStatus;
+      },
     }
   },
 };

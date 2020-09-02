@@ -179,7 +179,7 @@ class ConsortiaList extends Component {
           showDetails
           width={40}
           ready={
-            usersOnlineStatus[user.id]
+            usersOnlineStatus[user.id] && pipeline
             && (!needsDataMapping || (consortium.mappedForRun && consortium.mappedForRun.indexOf(user.id) > -1)) // eslint-disable-line max-len
           }
         />

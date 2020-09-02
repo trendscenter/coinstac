@@ -6,7 +6,7 @@ const {
   WS_CONNECTION_STARTED,
   WS_CONNECTION_TERMINATED,
 } = require('./data/events');
-const { connectionHasUser, linkConnectionToUser } = require('./data/user-online-status-tracker');
+const { connectionHasUser, linkConnectionToUser, getUserId } = require('./data/user-online-status-tracker');
 
 const activate = (pipelineServer) => {
   const subServer = SubscriptionServer.create(
@@ -24,13 +24,14 @@ const activate = (pipelineServer) => {
         eventEmitter.emit(WS_CONNECTION_TERMINATED, ws.upgradeReq.headers['sec-websocket-key']);
       },
       onOperation: (message, params, ws) => {
-        if (params.operationName === 'userChanged') {
-          const connectionId = ws.upgradeReq.headers['sec-websocket-key'];
+        const connectionId = ws.upgradeReq.headers['sec-websocket-key'];
 
-          if (!connectionHasUser(connectionId)) {
-            linkConnectionToUser(connectionId, params.variables.userId);
-          }
+        if (params.operationName === 'userChanged' && !connectionHasUser(connectionId)) {
+          linkConnectionToUser(connectionId, params.variables.userId);
         }
+
+        const connectedUser = getUserId(connectionId);
+        params.context.userId = connectedUser;
 
         return params;
       },

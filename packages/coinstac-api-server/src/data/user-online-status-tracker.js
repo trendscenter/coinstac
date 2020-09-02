@@ -9,11 +9,11 @@ const {
 
 // A map that stores the current ws connections on the server.
 // key: ws connection id
-// value: username of the connected user
+// value: id of the connected user
 const connections = new Map();
 
 // A map that links connected users to their ws connections
-// key: username
+// key: user id
 // value: ws connection id
 const usersConnected = new Map();
 
@@ -26,14 +26,18 @@ function getOnlineUsers() {
   }, {});
 }
 
+function getUserId(connectionId) {
+  return connections.get(connectionId);
+}
+
 function connectionHasUser(connectionId) {
   const user = connections.get(connectionId);
   return !!user;
 }
 
-function linkConnectionToUser(connectionId, username) {
-  connections.set(connectionId, username);
-  usersConnected.set(username, connectionId);
+function linkConnectionToUser(connectionId, userId) {
+  connections.set(connectionId, userId);
+  usersConnected.set(userId, connectionId);
 
   eventEmitter.emit(USER_SESSION_STARTED, getOnlineUsers());
 }
@@ -54,14 +58,14 @@ function _wsConnectionTerminated(connectionId) {
   connections.delete(connectionId);
 }
 
-function _userLogout(username) {
-  const connectionId = usersConnected.get(username);
+function _userLogout(userId) {
+  const connectionId = usersConnected.get(userId);
 
   if (connectionId) {
     connections.set(connectionId, null);
   }
 
-  usersConnected.delete(username);
+  usersConnected.delete(userId);
 
   eventEmitter.emit(USER_SESSION_FINISHED, getOnlineUsers());
 }
@@ -74,4 +78,5 @@ module.exports = {
   connectionHasUser,
   linkConnectionToUser,
   getOnlineUsers,
+  getUserId,
 };
