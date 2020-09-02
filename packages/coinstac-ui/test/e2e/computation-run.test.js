@@ -24,6 +24,11 @@ chai.use(chaiAsPromised);
 const app = new Application({
   path: electron,
   args: [appPath, '-r', mocksPath],
+  chromeDriverArgs: [
+    '--no-sandbox',
+    '--whitelisted-ips=',
+    '--disable-dev-shm-usage',
+  ],
 });
 
 describe('e2e run computation with 1 member', () => {

@@ -21,6 +21,11 @@ const app1 = new Application({
   path: electron,
   env: { TEST_INSTANCE: 'test-1' },
   args: [appPath, '-r', mocksPath],
+  chromeDriverArgs: [
+    '--no-sandbox',
+    '--whitelisted-ips=',
+    '--disable-dev-shm-usage',
+  ],
   port: 9515,
 });
 
@@ -28,6 +33,11 @@ const app2 = new Application({
   path: electron,
   env: { TEST_INSTANCE: 'test-2' },
   args: [appPath, '-r', mocksPath],
+  chromeDriverArgs: [
+    '--no-sandbox',
+    '--whitelisted-ips=',
+    '--disable-dev-shm-usage',
+  ],
   port: 9516,
 });
 

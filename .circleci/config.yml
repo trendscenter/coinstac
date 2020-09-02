@@ -10,7 +10,7 @@ jobs:
      - image: coinstacteam/coinstac-api
      - image: coinstacteam/coinstac-server
     steps:
-      - run: npm run -s getconfig -- 1 local export ci > env.sh && . ./env.sh && rm env.sh && xvfb-run --auto-servernum --server-args='-screen 0, 1600x900x24' npm run test:e2e
+      - run: npm run -s getconfig -- 1 local export ci > env.sh && . ./env.sh && rm env.sh && cd packages/coinstac-ui && xvfb-run --auto-servernum --server-args='-screen 0, 1600x900x24' npm run test:e2e
 workflows:
   build-and-test:
     jobs:

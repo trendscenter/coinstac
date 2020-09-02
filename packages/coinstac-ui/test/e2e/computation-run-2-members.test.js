@@ -6,7 +6,6 @@ const electron = require('electron');
 
 const appPath = path.join(__dirname, '../..');
 const mocksPath = path.join(__dirname, 'mocks.js');
-
 const EXIST_TIMEOUT = 6000;
 const COMPUTATION_TIMEOUT = 150000;
 const COMPUTATION_DOWNLOAD_TIMEOUT = 40000;
@@ -22,10 +21,17 @@ const COMPUTATION_NAME = 'Regression - FreeSurfer Volumes';
 chai.should();
 chai.use(chaiAsPromised);
 
+// chromedriver opts are for headless usage
+// but dont affect local tests
 const app1 = new Application({
   path: electron,
   env: { TEST_INSTANCE: 'test-1' },
   args: [appPath, '-r', mocksPath],
+  chromeDriverArgs: [
+    '--no-sandbox',
+    '--whitelisted-ips=',
+    '--disable-dev-shm-usage',
+  ],
   port: 9515,
 });
 
@@ -33,6 +39,11 @@ const app2 = new Application({
   path: electron,
   env: { TEST_INSTANCE: 'test-2' },
   args: [appPath, '-r', mocksPath],
+  chromeDriverArgs: [
+    '--no-sandbox',
+    '--whitelisted-ips=',
+    '--disable-dev-shm-usage',
+  ],
   port: 9516,
 });
 

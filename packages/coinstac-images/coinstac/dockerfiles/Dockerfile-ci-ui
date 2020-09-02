@@ -8,5 +8,3 @@ RUN apt-get update && \
     libasound2-dev \
     unzip \
     && rm -rf /var/lib/apt/lists/*
-
-WORKDIR /usr/local/src/coinstac/packages/coinstac-ui
