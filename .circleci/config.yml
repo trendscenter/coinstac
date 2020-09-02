@@ -2,7 +2,6 @@ version: 2.1
 jobs:
   build-and-test:
     docker:
-
      - image: coinstacteam/coinstac-ui:ci
      - image: mongo:4.4.0-bionic
        environment:
@@ -12,3 +11,7 @@ jobs:
      - image: coinstacteam/coinstac-server
     steps:
       - run: npm run -s getconfig -- 1 local export ci > env.sh && . ./env.sh && rm env.sh && xvfb-run --auto-servernum --server-args='-screen 0, 1600x900x24' npm run test:e2e
+workflows:
+  build-and-test:
+    jobs:
+      - build-and-test
