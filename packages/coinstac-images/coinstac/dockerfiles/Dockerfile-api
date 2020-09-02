@@ -1,4 +1,4 @@
 FROM coinstacteam/coinstac:ci
 
 EXPOSE 3100
-CMD npm run getconfig -- 0 local shell ci && npm run api
+CMD npm run -s getconfig -- 1 local export ci > env.sh && . ./env.sh && rm env.sh && npm run api-ci

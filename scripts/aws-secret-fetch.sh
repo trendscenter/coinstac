@@ -32,7 +32,6 @@ else
 fi
 CONFIG=$(aws secretsmanager get-secret-value --secret-id $SECRETID --query SecretString --output text)
 
-
 unset AWS_ACCESS_KEY_ID
 unset AWS_SECRET_ACCESS_KEY
 unset AWS_SESSION_TOKEN
@@ -41,8 +40,6 @@ if [ $3 = export ]; then
   echo $CONFIG | jq -r 'to_entries[] | "export \(.key)=\(.value)"'
 elif [ $3 = systemd ]; then
   echo $CONFIG | jq -r 'to_entries[] | "\(.key)=\(.value)"'
-elif [ $3 = shell ]; then
-  export $CONFIG | jq -r 'to_entries[] | "\(.key)=\(.value)"'
 else
   echo $CONFIG
 fi
