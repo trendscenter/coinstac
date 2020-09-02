@@ -1,0 +1,5 @@
+FROM coinstacteam/coinstac:ci
+WORKDIR /usr/local/src/coinstac/packages/coinstac-server
+
+EXPOSE 3200
+CMD npm run getconfig -- 0 local shell ci && npm run server

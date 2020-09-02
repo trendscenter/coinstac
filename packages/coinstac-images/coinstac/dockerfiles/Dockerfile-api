@@ -1,0 +1,4 @@
+FROM coinstacteam/coinstac:ci
+
+EXPOSE 3100
+CMD npm run getconfig -- 0 local shell ci && npm run api

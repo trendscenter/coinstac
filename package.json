@@ -24,6 +24,7 @@
     "pre-commit": "^1.2.2"
   },
   "scripts": {
+    "api-ci": "cd packages/coinstac-api-server/ && npm start",
     "api-server": "cd packages/coinstac-api-server/ && docker-compose up -d && npm start",
     "build": "lerna bootstrap",
     "build-app": "mkdir -p ./build && docker pull coinstacteam/coinstac && scripts/dockerbuild.sh $1",
@@ -35,6 +36,7 @@
     "lintfix": "eslint --fix '**/*.js' '**/*.jsx' '**/bin/*'",
     "publish": "lerna publish",
     "server": "cd packages/coinstac-server/ && npm start",
+    "server-ci": "cd packages/coinstac-server/ && npm start -- --no-images",
     "start": "concurrently \"npm run api-server\" \"sleep 6 && npm run server\" \"npm run watch\" ",
     "switch:prod": "cp packages/coinstac-ui/config/local-production.json packages/coinstac-ui/config/local.json",
     "switch:dev": "cp packages/coinstac-ui/config/local-development.json packages/coinstac-ui/config/local.json",
