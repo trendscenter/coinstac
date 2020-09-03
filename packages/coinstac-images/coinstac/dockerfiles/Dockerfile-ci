@@ -6,6 +6,7 @@ RUN cd /usr/local/src/ \
   && git clone https://github.com/trendscenter/coinstac.git \
   && cd coinstac \
   && git checkout $BRANCH \
+  && git pull \
   && npm i && npm run build
 
   #Set working directory
