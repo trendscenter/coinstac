@@ -3,19 +3,18 @@ jobs:
   build-and-test:
     docker:
       - image: 'coinstacteam/coinstac-ui:ci'
-      - image: 'mongo:4.4.0-bionic'
-        environment:
-          MONGO_INITDB_ROOT_USERNAME: root
-          MONGO_INITDB_ROOT_PASSWORD: test
-      - image: coinstacteam/coinstac-api
-      - image: coinstacteam/coinstac-server
+      # - image: 'mongo:4.4.0-bionic'
+      #   environment:
+      #     MONGO_INITDB_ROOT_USERNAME: root
+      #     MONGO_INITDB_ROOT_PASSWORD: test
+      # - image: coinstacteam/coinstac-api
+      # - image: coinstacteam/coinstac-server
     working_directory: /usr/local/src/coinstac
     steps:
-      - run: env && exit 1
-      # - run: >-
-      #     npm run getconfig -- 1 local export ci > env.sh && . ./env.sh && rm
-      #     env.sh && cd packages/coinstac-ui && xvfb-run --auto-servernum
-      #     --server-args='-screen 0, 1600x900x24' npm run test:e2e
+      - run: >-
+          npm run getconfig -- 1 local export ci > env.sh && . ./env.sh && rm
+          env.sh && cd packages/coinstac-ui && xvfb-run --auto-servernum
+          --server-args='-screen 0, 1600x900x24' npm run test:e2e
 workflows:
   build-and-test:
     jobs:
