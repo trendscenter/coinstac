@@ -10,7 +10,7 @@ jobs:
      - image: coinstacteam/coinstac-api
      - image: coinstacteam/coinstac-server
     steps:
-      - run: which xvfb && exit 1
+      - run: which xvfb-run && exit 1
       - run: cd packages/coinstac-ui && xvfb-run --auto-servernum --server-args='-screen 0, 1600x900x24' npm run test:e2e
 workflows:
   build-and-test:
