@@ -8,7 +8,7 @@ jobs:
       #     MONGO_INITDB_ROOT_USERNAME: root
       #     MONGO_INITDB_ROOT_PASSWORD: test
       - image: coinstacteam/coinstac-api
-        commmand: env && exit 1
+        command: env && exit 1
       # - image: coinstacteam/coinstac-server
     working_directory: /usr/local/src/coinstac
     steps:
