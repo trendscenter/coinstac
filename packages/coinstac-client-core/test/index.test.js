@@ -7,88 +7,92 @@ const fsPromise = require('fs').promises;
 const fs = require('fs');
 const PipelineManager = require('coinstac-pipeline');
 
-const { CORE_CONFIGURATION } = require('./mock');
+const { CORE_CONFIGURATION, METAFILE } = require('./mock');
 
 const CoinstacClient = require('../src');
 
 const managerMock = {
-  startPipeline: sinon.stub(),
-  stopPipeline: sinon.stub(),
+  startPipeline: sinon.spy(),
+  stopPipeline: sinon.spy(),
 };
 
+let client;
 
-test.before(() => {
+test.before(async () => {
   sinon.stub(PipelineManager, 'create').resolves(managerMock);
+
+  client = new CoinstacClient(CORE_CONFIGURATION);
+  await client.initialize();
 });
 
 test('create client', (t) => {
-  // eslint-disable-next-line no-new
-  new CoinstacClient(CORE_CONFIGURATION);
-
-  t.pass();
-
   try {
     // eslint-disable-next-line no-new
     new CoinstacClient();
   } catch (error) {
-    t.pass(error.message, 'coinstac-client requires configuration opts');
+    t.is(error.message, 'coinstac-client requires configuration opts');
   }
 });
 
-test('client initialize', async (t) => {
-  const client = new CoinstacClient(CORE_CONFIGURATION);
-  const res = await client.initialize();
-
-  t.deepEqual(managerMock, res);
-});
-
-test('getCSV', async (t) => {
+test('getCSV and getJSONSchema', async (t) => {
+  /**
+   * getCSV
+   */
   sinon.stub(fsPromise, 'readFile').resolves('file content');
-
   sinon.stub(csvParse.default).yields(null, 'content');
 
-  await CoinstacClient.getCSV('file1');
+  const res1 = await CoinstacClient.getCSV('file1');
+  t.is(res1, JSON.stringify([['file content']]));
 
-  t.pass();
+  fsPromise.readFile.restore();
+
+  const fileError = new Error('Cannot find');
+  sinon.stub(fsPromise, 'readFile').rejects(fileError);
+
+  try {
+    await CoinstacClient.getCSV('file1');
+  } catch (error) {
+    t.is(error, fileError);
+  }
+
+  fsPromise.readFile.restore();
+
+  /**
+   * getJSONSchema
+   */
+  const schema = { meta: { id: 1 } };
+  sinon.stub(fsPromise, 'readFile').resolves(JSON.stringify(schema));
+  const res2 = await CoinstacClient.getJSONSchema('schema');
+
+  t.deepEqual(res2, schema);
 
   fsPromise.readFile.restore();
 });
 
 test('getFileIndex', (t) => {
-  const arr = ['1', ['meta', 'class.csv', 'license', 'test.nii']];
-  const res = CoinstacClient.getFileIndex(arr);
+  const res = CoinstacClient.getFileIndex(METAFILE);
 
-  t.is(res, 3);
+  t.is(res, 0);
 });
 
 test('parseMetaFile', (t) => {
-  const metaFile1 = [['0', '1'], ['meta', 'class.csv', 'license', 'test.nii']];
-  const res1 = CoinstacClient.parseMetaFile(metaFile1);
-  const expectedRes1 = [[undefined, '0', '1'], ['test.nii', 'meta', 'class.csv', 'license']];
+  const res = CoinstacClient.parseMetaFile(METAFILE);
 
-  t.deepEqual(res1, expectedRes1);
+  t.deepEqual(res, METAFILE);
 });
 
 test('getFilesFromMetadata', (t) => {
   const metaFilePath = '/etc/coinstac/files';
-  const metaFile = ['1', ['test.nii', 'license']];
 
-  const res = CoinstacClient.getFilesFromMetadata(metaFilePath, metaFile);
+  const res = CoinstacClient.getFilesFromMetadata(metaFilePath, METAFILE);
 
-  t.deepEqual(res, ['/etc/coinstac/test.nii']);
+  t.deepEqual(res.length, METAFILE.length - 1);
 });
 
-test.serial('getJSONSchema', async (t) => {
-  const schema = { meta: { id: 1 } };
-  sinon.stub(fsPromise, 'readFile').resolves(JSON.stringify(schema));
-  const res = await CoinstacClient.getJSONSchema('schema');
-
-  t.deepEqual(res, schema);
-
-  fsPromise.readFile.restore();
-});
-
-test.serial('getSubPathAndGroupExtension', async (t) => {
+test('getSubPathsAndGroupExtension and unlinkFiles', async (t) => {
+  /**
+   * getSubPathsAndGroupExtension
+   */
   const group1 = { paths: [] };
   const res1 = await CoinstacClient.getSubPathsAndGroupExtension(group1);
   t.is(res1, null);
@@ -108,10 +112,10 @@ test.serial('getSubPathAndGroupExtension', async (t) => {
     .resolves(['test.nii', 'test.gz'])
     .resolves([]);
 
-  const group3 = { paths: ['test', 'class'], parentDir: '/etc/coinstac', extension: 'csv' };
+  const group3 = { paths: ['dev/test.nii', 'dev/class.csv'], parentDir: '/etc/coinstac', extension: 'csv' };
   const res3 = await CoinstacClient.getSubPathsAndGroupExtension(group3);
 
-  t.pass(res3, { paths: [], extension: null });
+  t.deepEqual(res3, { paths: [], extension: null });
 
   fsPromise.stat.restore();
   fsPromise.readdir.restore();
@@ -128,63 +132,17 @@ test.serial('getSubPathAndGroupExtension', async (t) => {
     .resolves(['test.nii', 'dir'])
     .resolves([]);
 
-  const group4 = { paths: ['test', 'class'], parentDir: '/etc/coinstac', extension: 'nii' };
+  const group4 = { paths: ['home/test.nii', 'home/class.csv'], parentDir: '/etc/coinstac', extension: 'nii' };
   const res4 = await CoinstacClient.getSubPathsAndGroupExtension(group4, true);
 
-  t.pass(res4, { paths: ['/etc/coinstac/class'], extension: null });
+  t.deepEqual(res4, { paths: ['/etc/coinstac/home/class.csv'], extension: null });
 
   fsPromise.stat.restore();
   fsPromise.readdir.restore();
-});
 
-test.serial('startPipeline', async (t) => {
-  const client = new CoinstacClient(CORE_CONFIGURATION);
-  await client.initialize();
-
-  sinon.stub(fs, 'mkdir').yields(null);
-  sinon.stub(fsPromise, 'link').resolves();
-
-  await client.startPipeline(
-    [],
-    'consortium-1',
-    { name: 'pipeline', timeout: 10 },
-    ['test.nii', 'test.csv'],
-    'run-1'
-  );
-
-  t.pass();
-
-  fsPromise.link.restore();
-
-  sinon.stub(fsPromise, 'link').rejects({ code: 'EACCESS' });
-
-  try {
-    await client.startPipeline(
-      [],
-      'consortium-1',
-      { name: 'pipeline', timeout: 10 },
-      ['test.nii', 'test.csv'],
-      'run-1'
-    );
-  } catch {
-    t.pass();
-  }
-
-  fsPromise.link.restore();
-});
-
-test.serial('requestPipelineStop', async (t) => {
-  const client = new CoinstacClient(CORE_CONFIGURATION);
-  await client.initialize();
-
-  client.requestPipelineStop();
-
-  t.pass();
-});
-
-test.serial('unlinkFiles', async (t) => {
-  const client = new CoinstacClient(CORE_CONFIGURATION);
-
+  /**
+   * unlinkFiles
+   */
   sinon.stub(fsPromise, 'stat').rejects({ code: 'ENOENT' });
 
   const files1 = await client.unlinkFiles('run-1');
@@ -193,12 +151,13 @@ test.serial('unlinkFiles', async (t) => {
   fsPromise.stat.restore();
 
   /* new case */
-  sinon.stub(fsPromise, 'stat').rejects('error');
+  const statError = new Error('error');
+  sinon.stub(fsPromise, 'stat').rejects(statError);
 
   try {
     await client.unlinkFiles('run-1');
-  } catch {
-    t.pass();
+  } catch (error) {
+    t.is(error, statError);
   }
 
   fsPromise.stat.restore();
@@ -215,6 +174,51 @@ test.serial('unlinkFiles', async (t) => {
 
   fsPromise.stat.restore();
   fsPromise.readdir.restore();
+});
+
+test('startPipeline', async (t) => {
+  await client.initialize();
+
+  sinon.stub(fs, 'mkdir').yields(null);
+  sinon.stub(fsPromise, 'link').resolves();
+
+  const clients = [];
+  const consortiumId = 'consortium-1';
+  const clientPipeline = { name: 'pipeline', timeout: 10 };
+  const filesArray = ['test.nii', 'test.csv'];
+  const runId = 'run-1';
+
+  await client.startPipeline(clients, consortiumId, clientPipeline, filesArray, runId);
+
+  t.pass();
+
+  fsPromise.link.restore();
+
+  const errorCode = 'EACCESS';
+
+  sinon.stub(fsPromise, 'link').rejects({ code: errorCode });
+
+  try {
+    await client.startPipeline(
+      [],
+      'consortium-1',
+      { name: 'pipeline', timeout: 10 },
+      ['test.nii', 'test.csv'],
+      'run-1'
+    );
+  } catch (error) {
+    t.is(error.code, errorCode);
+  }
+
+  fsPromise.link.restore();
+});
+
+test('requestPipelineStop', async (t) => {
+  const pipelineId = 'pineline-1';
+  const runId = 'run-1';
+  client.requestPipelineStop(pipelineId, runId);
+
+  t.true(managerMock.stopPipeline.calledWith(pipelineId, runId));
 });
 
 test.after.always('cleanup', () => {
