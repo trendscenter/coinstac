@@ -41,9 +41,11 @@ const styles = theme => ({
   actionButtons: {
     display: 'flex',
     justifyContent: 'space-between',
+    flexWrap: 'wrap',
   },
   resultButtons: {
     display: 'flex',
+    flexWrap: 'wrap',
   },
   runStateContainer: {
     display: 'flex',
@@ -56,7 +58,26 @@ const styles = theme => ({
     textDecoration: 'underline',
     marginBottom: theme.spacing(1),
   },
+  button: {
+    marginTop: theme.spacing(1),
+    marginRight: theme.spacing(1),
+  },
+  pipelineButton: {
+    marginTop: theme.spacing(1),
+  },
 });
+
+function parseWaiting(runObject, stateKey) {
+  const users = [];
+
+  runObject[stateKey].waitingOn.forEach((client) => {
+    if (client in runObject.members) {
+      users.push(runObject.members[client]);
+    }
+  });
+
+  return users;
+}
 
 function getStateWell(runObject, stateName, stateKey, classes) {
   const {
@@ -87,7 +108,7 @@ function getStateWell(runObject, stateName, stateKey, classes) {
           <div>
             <Typography className={classes.label}>Waiting on Users:</Typography>
             <Typography className={classes.value}>
-              {controllerState.includes('waiting on') ? waitingOn.join(', ') : ''}
+              {controllerState.includes('waiting on') ? parseWaiting(runObject, stateKey) : ''}
             </Typography>
           </div>
         )
@@ -146,7 +167,7 @@ class RunItem extends Component {
     const { consortiumName, runObject, classes } = this.props;
     const {
       id, startDate, endDate, status, localPipelineState, remotePipelineState,
-      clients, pipelineSnapshot, results, error,
+      members, pipelineSnapshot, results, error,
     } = runObject;
 
     return (
@@ -244,14 +265,20 @@ class RunItem extends Component {
             )
           }
           {
-            clients
+            members
             && (
               <div>
                 <Typography className={classes.label}>
                   Clients:
                 </Typography>
                 <Typography className={classes.value}>
-                  { clients.join(', ') }
+                  {
+                    Object.values(members).map(member => (
+                      <span>
+                        { `${member},` }
+                      </span>
+                    ))
+                  }
                 </Typography>
               </div>
             )
@@ -277,13 +304,14 @@ class RunItem extends Component {
                   color="primary"
                   component={Link}
                   to={`/dashboard/results/${id}`}
+                  className={classes.button}
                 >
                   View Results
                 </Button>
                 <Button
                   variant="contained"
                   color="primary"
-                  style={{ marginLeft: 10 }}
+                  className={classes.button}
                   onClick={this.handleOpenResult}
                 >
                   Open Results
@@ -298,6 +326,7 @@ class RunItem extends Component {
                 variant="contained"
                 component={Link}
                 to={`/dashboard/results/${id}`}
+                className={classes.button}
               >
                 View Error
               </Button>
@@ -311,6 +340,7 @@ class RunItem extends Component {
                 color="secondary"
                 component={Link}
                 to={`/dashboard/pipelines/snapShot/${pipelineSnapshot.id}`}
+                className={classes.pipelineButton}
               >
                 View Pipeline
               </Button>
@@ -323,6 +353,7 @@ class RunItem extends Component {
                 <Button
                   variant="contained"
                   component={Link}
+                  className={classes.button}
                   onClick={this.handleStopPipeline}
                 >
                   Stop Pipeline

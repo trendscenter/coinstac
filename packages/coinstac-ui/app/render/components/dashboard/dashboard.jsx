@@ -47,10 +47,10 @@ import {
 import {
   getAllAndSubProp,
   updateConsortiaMappedUsersProp,
+  userRunProp,
 } from '../../state/graphql/props';
 import StartPipelineListener from './listeners/start-pipeline-listener';
 import NotificationsListener from './listeners/notifications-listener';
-import DisplayNotificationsListener from './listeners/display-notifications-listener';
 import DashboardPipelineNavBar from './dashboard-pipeline-nav-bar';
 
 const styles = theme => ({
@@ -348,7 +348,8 @@ class Dashboard extends Component {
         if (consortia[i] && nextProps.consortia[i].id === consortia[i].id
             && nextProps.consortia[i].activePipelineId
             && !consortia[i].activePipelineId
-            && nextProps.consortia[i].members.indexOf(user.id) > -1) {
+            && user.id in nextProps.consortia[i].members
+        ) {
           const computationData = client.readQuery({ query: FETCH_ALL_COMPUTATIONS_QUERY });
           const pipelineData = client.readQuery({ query: FETCH_ALL_PIPELINES_QUERY });
           const pipeline = pipelineData.fetchAllPipelines
@@ -374,7 +375,7 @@ class Dashboard extends Component {
 
   componentDidUpdate(prevProps) {
     const {
-      currentUser, updateUserPerms, remoteRuns, saveLocalRun
+      currentUser, updateUserPerms, remoteRuns, saveLocalRun,
     } = this.props;
 
     if (currentUser
@@ -440,10 +441,7 @@ class Dashboard extends Component {
 
     const { id: userId } = auth.user;
 
-    const unreadThreads = threads.filter((thread) => {
-      return thread.users
-        .filter(({ username, isRead }) => username === userId && !isRead).length > 0;
-    });
+    const unreadThreads = threads.filter(thread => userId in thread && !thread[userId].isRead);
 
     return unreadThreads.length;
   }
@@ -493,7 +491,7 @@ class Dashboard extends Component {
     return (
       <React.Fragment>
         <Grid container>
-          <Grid item xs={12} sm={3} className={classes.gridContainer}>
+          <Grid item xs={12} sm={5} md={3} lg={2} className={classes.gridContainer}>
             <Drawer
               variant="permanent"
               anchor="left"
@@ -511,36 +509,31 @@ class Dashboard extends Component {
                     unreadThreadCount={this.unreadThreadCount}
                   />
                 </ListItem>
-              </List>
-              <List>
                 <ListItem>
-                  { dockerStatus
-                    ? (
-                      <span className={classes.statusGood}>
-                        <Typography variant="subtitle2">
-                          Docker Status:
-                        </Typography>
-                        <span className={classes.statusUp} />
-                      </span>
-                    )
-                    : (
-                      <span className={classes.statusDown}>
-                        <Typography
-                          variant="body1"
-                          classes={{
-                            root: classes.statusDownText,
-                          }}
-                        >
-                          Docker Is Not Running!
-                        </Typography>
-                      </span>
-                    )
-                  }
+                  {dockerStatus ? (
+                    <span className={classes.statusGood}>
+                      <Typography variant="subtitle2">
+                        Docker Status:
+                      </Typography>
+                      <span className={classes.statusUp} />
+                    </span>
+                  ) : (
+                    <span className={classes.statusDown}>
+                      <Typography
+                        variant="body1"
+                        classes={{
+                          root: classes.statusDownText,
+                        }}
+                      >
+                        Docker Is Not Running!
+                      </Typography>
+                    </span>
+                  )}
                 </ListItem>
               </List>
             </Drawer>
           </Grid>
-          <Grid item xs={12} sm={9}>
+          <Grid item xs={12} sm={7} md={9} lg={10}>
             <DashboardPipelineNavBar router={router} consortia={consortia} localRuns={runs} />
             <main className="content-pane">
               {this.canShowBackButton && (
@@ -562,7 +555,6 @@ class Dashboard extends Component {
           remoteRuns={remoteRuns}
         />
         <NotificationsListener />
-        <DisplayNotificationsListener />
       </React.Fragment>
     );
   }
@@ -633,13 +625,8 @@ const DashboardWithData = compose(
     'subscribeToComputations',
     'computationChanged'
   )),
-  graphql(FETCH_ALL_USER_RUNS_QUERY, getAllAndSubProp(
-    USER_RUN_CHANGED_SUBSCRIPTION,
-    'remoteRuns',
-    'fetchAllUserRuns',
-    'subscribeToUserRuns',
-    'userRunChanged',
-    'userId'
+  graphql(FETCH_ALL_USER_RUNS_QUERY, userRunProp(
+    USER_RUN_CHANGED_SUBSCRIPTION
   )),
   graphql(FETCH_ALL_CONSORTIA_QUERY, getAllAndSubProp(
     CONSORTIUM_CHANGED_SUBSCRIPTION,
@@ -677,7 +664,12 @@ const DashboardWithData = compose(
           if (data.userChanged.delete) {
             return { fetchUser: null };
           }
-          return { fetchUser: data.userChanged };
+          return {
+            fetchUser: {
+              ...prevResult.fetchUser,
+              ...data.userChanged,
+            },
+          };
         },
       }),
     }),

@@ -9,8 +9,11 @@ const styles = theme => ({
   wrapper: {
     display: 'flex',
     flexDirection: 'column',
-    width: 250,
+    minWidth: 250,
     borderRight: `1px solid ${theme.palette.grey[300]}`,
+    [theme.breakpoints.down('sm')]: {
+      minWidth: 180,
+    },
   },
   threads: {
     flex: 1,
@@ -35,7 +38,7 @@ const styles = theme => ({
 class ThreadList extends Component {
   isThreadUnread = (thread) => {
     const { auth } = this.context;
-    const user = thread.users.find(({ username }) => username === auth.user.id);
+    const user = thread.users[auth.user.id];
 
     return !get(user, 'isRead', true);
   }

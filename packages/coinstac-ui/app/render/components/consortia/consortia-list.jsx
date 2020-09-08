@@ -5,7 +5,7 @@ import { Link } from 'react-router';
 import { compose, graphql, withApollo } from 'react-apollo';
 import { ipcRenderer } from 'electron';
 import classNames from 'classnames';
-import { orderBy } from 'lodash';
+import { get, orderBy } from 'lodash';
 import Button from '@material-ui/core/Button';
 import Menu from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
@@ -34,14 +34,16 @@ import {
   saveDocumentProp,
   consortiumSaveActivePipelineProp,
 } from '../../state/graphql/props';
-import { notifyInfo } from '../../state/ducks/notifyAndLog';
+import { notifyInfo, notifyError } from '../../state/ducks/notifyAndLog';
 import { pipelineNeedsDataMapping } from '../../../main/utils/run-pipeline-functions';
+import { isUserInGroup } from '../../utils/helpers';
 
 const MAX_LENGTH_CONSORTIA = 50;
 
 const styles = theme => ({
   button: {
-    margin: theme.spacing(1),
+    marginTop: theme.spacing(1),
+    marginRight: theme.spacing(1),
   },
   contentContainer: {
     marginTop: theme.spacing(1),
@@ -71,10 +73,6 @@ const styles = theme => ({
     marginBottom: theme.spacing(4),
   },
 });
-
-const isUserA = (userId, groupArr) => {
-  return groupArr.indexOf(userId) !== -1;
-};
 
 class ConsortiaList extends Component {
   constructor(props) {
@@ -153,27 +151,26 @@ class ConsortiaList extends Component {
       </div>
     );
 
-    // Add owner/member list
-    const ownersIds = consortium.owners.reduce((acc, user) => {
-      acc[user] = true;
-      return acc;
-    }, {});
-
-    const consortiumUsers = consortium.owners
-      .map(user => ({ id: user, owner: true, member: true }))
+    const consortiumUsers = Object.keys(consortium.owners)
+      .map(userId => ({
+        id: userId, name: consortium.owners[userId], owner: true, member: true,
+      }))
       .concat(
-        consortium.members
-          .filter(user => !Object.prototype.hasOwnProperty.call(ownersIds, user))
-          .map(user => ({ id: user, member: true }))
+        Object.keys(consortium.members)
+          .filter(userId => !(userId in consortium.owners))
+          .map(userId => ({
+            id: userId, name: consortium.members[userId], owner: false, member: true,
+          }))
       );
 
     const avatars = consortiumUsers
       .filter((v, i, a) => i === a.indexOf(v))
       .map(user => (
         <MemberAvatar
+          id={user.id}
           key={`${user.id}-avatar`}
           consRole={user.owner ? 'Owner' : 'Member'}
-          name={user.id}
+          name={user.name}
           showDetails
           width={40}
           mapped={
@@ -332,12 +329,12 @@ class ConsortiaList extends Component {
         key={`${consortium.id}-list-item`}
         itemObject={consortium}
         deleteItem={this.openModal}
-        owner={isUserA(user.id, consortium.owners)}
+        owner={isUserInGroup(user.id, consortium.owners)}
         highlight={consortiumJoinedByThread === consortium.id}
         itemOptions={
           this.getOptions(
-            isUserA(user.id, consortium.members),
-            isUserA(user.id, consortium.owners),
+            isUserInGroup(user.id, consortium.members),
+            isUserInGroup(user.id, consortium.owners),
             consortium
           )
         }
@@ -364,7 +361,7 @@ class ConsortiaList extends Component {
   }
 
   getConsortiaByOwner = () => {
-    const { auth } = this.props;
+    const { auth: { user } } = this.props;
 
     const consortia = this.getFilteredConsortia();
 
@@ -374,7 +371,7 @@ class ConsortiaList extends Component {
     if (consortia && consortia.length <= MAX_LENGTH_CONSORTIA) {
       consortia.forEach((consortium) => {
         const { owners, members } = consortium;
-        if ([...owners, ...members].indexOf(auth.user.id) !== -1) {
+        if (user.id in owners || user.id in members) {
           memberConsortia.push(consortium);
         } else {
           otherConsortia.push(consortium);
@@ -390,11 +387,12 @@ class ConsortiaList extends Component {
 
   startPipeline(consortiumId) {
     return () => {
-      const {
-        createRun,
-      } = this.props;
+      const { createRun, notifyError } = this.props;
 
-      createRun(consortiumId);
+      createRun(consortiumId)
+        .catch(({ graphQLErrors }) => {
+          notifyError(get(graphQLErrors, '0.message', 'Failed to start pipeline'));
+        });
     };
   }
 
@@ -562,6 +560,7 @@ ConsortiaList.propTypes = {
   joinConsortium: PropTypes.func.isRequired,
   leaveConsortium: PropTypes.func.isRequired,
   notifyInfo: PropTypes.func.isRequired,
+  notifyError: PropTypes.func.isRequired,
   pullComputations: PropTypes.func.isRequired,
 };
 
@@ -588,6 +587,7 @@ export default withStyles(styles)(
   connect(mapStateToProps,
     {
       notifyInfo,
+      notifyError,
       pullComputations,
       deleteAllDataMappingsFromConsortium,
     })(ConsortiaListWithData)

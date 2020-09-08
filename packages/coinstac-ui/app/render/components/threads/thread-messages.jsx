@@ -5,7 +5,7 @@ import ThreadMessage from './thread-message';
 
 const styles = () => ({
   wrapper: {
-    overflow: 'auto',
+    width: '100%',
     flex: 1,
     display: 'flex',
     flexDirection: 'column',

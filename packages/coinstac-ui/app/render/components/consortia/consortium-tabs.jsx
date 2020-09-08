@@ -38,8 +38,8 @@ class ConsortiumTabs extends Component {
     const consortium = {
       name: '',
       description: '',
-      members: [],
-      owners: [],
+      members: {},
+      owners: {},
       activePipelineId: '',
       activeComputationInputs: [],
       tags: [],
@@ -91,8 +91,8 @@ class ConsortiumTabs extends Component {
       const remoteConsortium = consortia.find(c => c.id === consortium.id);
 
       if (remoteConsortium && prevRemoteConsortium && (
-        prevRemoteConsortium.members.length !== remoteConsortium.members.length
-        || prevRemoteConsortium.owners.length !== remoteConsortium.owners.length
+        Object.keys(prevRemoteConsortium.members).length !== Object.keys(remoteConsortium.members).length
+        || Object.keys(prevRemoteConsortium.owners).length !== Object.keys(remoteConsortium.owners).length
       )) {
         const consortiumUsers = this.getConsortiumUsers(remoteConsortium);
 
@@ -109,15 +109,20 @@ class ConsortiumTabs extends Component {
   }
 
   getConsortiumUsers = (consortium) => {
-    const consortiumUsers = [];
-
-    consortium.owners.forEach(user => consortiumUsers.push({
-      id: user, owner: true, member: true,
+    const consortiumUsers = Object.keys(consortium.owners).map(userId => ({
+      id: userId, name: consortium.owners[userId], owner: true, member: true,
     }));
 
-    consortium.members
-      .filter(user => consortiumUsers.findIndex(consUser => consUser.id === user) === -1)
-      .forEach(user => consortiumUsers.push({ id: user, member: true }));
+    Object.keys(consortium.members)
+      .forEach((userId) => {
+        if (userId in consortium.owners) {
+          return;
+        }
+
+        consortiumUsers.push({
+          id: userId, name: consortium.members[userId], owner: false, member: true,
+        });
+      });
 
     return consortiumUsers.sort((a, b) => a.id.localeCompare(b.id));
   }
@@ -140,9 +145,7 @@ class ConsortiumTabs extends Component {
     const { selectedTabIndex, consortium } = this.state;
     const isEditingConsortium = !!consortium.id;
 
-    const isOwner = consortium.owners.indexOf(auth.user.id) > -1
-      || !params.consortiumId;
-
+    const isOwner = auth.user.id in consortium.owners || !params.consortiumId;
 
     if (selectedTabIndex === 1) {
       if (!isEditingConsortium) {
@@ -164,16 +167,6 @@ class ConsortiumTabs extends Component {
     const { consortium } = this.state;
 
     e.preventDefault();
-
-    /* This is creating a duplicate consortia owner. Why is this here?
-    //
-    if (this.state.consortium.owners.indexOf(this.props.auth.user.id) === -1) {
-      this.setState(prevState => ({
-        owners: prevState.consortium.owners.push(this.props.auth.user.id),
-      }));
-    }
-    //
-    */
 
     this.setState({ savingStatus: 'pending' });
 
@@ -208,7 +201,6 @@ class ConsortiumTabs extends Component {
     const {
       auth,
       users,
-      params,
       addUserRole,
       removeUserRole,
       pipelines,
@@ -230,8 +222,7 @@ class ConsortiumTabs extends Component {
       ? 'Consortium Edit'
       : 'Consortium Creation';
 
-    const isOwner = consortium.owners.indexOf(user.id) > -1
-      || !params.consortiumId;
+    const isOwner = user.id in consortium.owners || !isEditingConsortium;
 
     return (
       <div>

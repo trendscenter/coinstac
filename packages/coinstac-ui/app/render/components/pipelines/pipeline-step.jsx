@@ -7,7 +7,7 @@ import { graphql } from 'react-apollo';
 import Button from '@material-ui/core/Button';
 import Accordion from '@material-ui/core/Accordion';
 import AccordionSummary from '@material-ui/core/AccordionSummary';
-import AccordionDetails from '@material-ui/core/AccordionActions';
+import AccordionDetails from '@material-ui/core/AccordionDetails';
 import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
@@ -20,7 +20,7 @@ const styles = theme => ({
   pipelineStep: {
     marginBottom: theme.spacing(2),
   },
-  expansionPanelContent: {
+  accordionPanelContent: {
     display: 'block',
   },
   inputParametersContainer: {
@@ -214,7 +214,7 @@ class PipelineStep extends Component {
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography variant="h5">{step.computations[0].meta.name}</Typography>
           </AccordionSummary>
-          <AccordionDetails className={classes.expansionPanelContent} key={`step-exp-${step.id}`}>
+          <AccordionDetails className={classes.accordionPanelContent} key={`step-exp-${step.id}`}>
             <div className={classes.inputParametersContainer}>
               <Typography variant="h6">Input Parameters:</Typography>
               <Button
@@ -237,7 +237,7 @@ class PipelineStep extends Component {
                   const items = group[1];
 
                   return (
-                    <ExpansionPanel
+                    <Accordion
                       key={name}
                       className="pipeline-step"
                       style={{
@@ -246,15 +246,15 @@ class PipelineStep extends Component {
                         margin: '1rem 0',
                       }}
                     >
-                      <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
+                      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                         <span>
                           {`${capitalize(name)} Fields`}
                         </span>
-                      </ExpansionPanelSummary>
-                      <ExpansionPanelDetails className={classes.expansionPanelContent}>
+                      </AccordionSummary>
+                      <AccordionDetails className={classes.accordionContent}>
                         {items && items.map(this.renderPipelineStepInput)}
-                      </ExpansionPanelDetails>
-                    </ExpansionPanel>
+                      </AccordionDetails>
+                    </Accordion>
                   );
                 })
               }

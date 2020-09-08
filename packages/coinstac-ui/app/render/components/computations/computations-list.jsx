@@ -40,6 +40,10 @@ const styles = theme => ({
     paddingTop: theme.spacing(2),
     paddingBottom: theme.spacing(2),
     marginTop: theme.spacing(2),
+    [theme.breakpoints.down('sm')]: {
+      paddingLeft: theme.spacing(1),
+      paddingRight: theme.spacing(1),
+    },
   },
   computationName: {
     marginBottom: theme.spacing(1),
@@ -50,6 +54,12 @@ const styles = theme => ({
   computationActions: {
     display: 'flex',
     justifyContent: 'space-around',
+    [theme.breakpoints.down('sm')]: {
+      justifyContent: 'space-between',
+    },
+  },
+  errorMessage: {
+    paddingTop: theme.spacing(2),
   },
 });
 
@@ -174,9 +184,9 @@ class ComputationsList extends Component { // eslint-disable-line
                         <em>
                           { compLocalImage.size.toString().slice(0, -6) }
                           {' '}
-MB
+                          MB
                         </em>
-)
+                        )
                       </Button>
                     )
                   }
@@ -195,7 +205,7 @@ MB
                 {
                   docker.dockerOut[comp.id]
                   && (
-                    <pre style={{ marginTop: 15 }}>
+                    <div className={classes.errorMessage}>
                       {docker.dockerOut[comp.id].map(elem => (
                         <div
                           key={elem.id && elem.id !== 'latest' ? elem.id : elem.status}
@@ -209,7 +219,7 @@ MB
                           {elem.progress}
                         </div>
                       ))}
-                    </pre>
+                    </div>
                   )
                 }
                 {

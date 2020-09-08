@@ -92,11 +92,11 @@ const ThreadCard = ({
       onClick={onClick}
     >
       <div className={classes.avatarWrapper}>
-        <ThreadAvatar username={thread.owner} />
+        <ThreadAvatar username={thread.owner.username} />
       </div>
       <div style={{ flex: 1 }}>
         <div className={classNames(classes.owner, { unread: isUnread })}>
-          {thread.owner}
+          {thread.owner.username}
         </div>
         <div className={classes.titleWrapper}>
           <span className={classNames(classes.title, { unread: isUnread })}>

@@ -6,9 +6,12 @@ import ThreadReply from './thread-reply';
 
 const styles = theme => ({
   wrapper: {
-    flex: 1,
+    width: 'calc(100% - 250px)',
     display: 'flex',
     flexDirection: 'column',
+    [theme.breakpoints.down('sm')]: {
+      width: 'calc(100% - 180px)',
+    },
   },
   title: {
     textAlign: 'center',

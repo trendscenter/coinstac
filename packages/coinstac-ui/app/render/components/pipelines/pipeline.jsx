@@ -39,7 +39,7 @@ import {
   getAllAndSubProp,
 } from '../../state/graphql/props';
 import { notifySuccess, notifyError } from '../../state/ducks/notifyAndLog';
-import { isPipelineOwner } from '../../utils/helpers';
+import { isPipelineOwner, isUserInGroup } from '../../utils/helpers';
 
 const computationTarget = {
   drop() {
@@ -596,7 +596,7 @@ class Pipeline extends Component {
               onClose={this.closeOwningConsortiumMenu}
             >
               {consortia && consortia
-                .filter(cons => cons.owners.includes(auth.user.id))
+                .filter(cons => isUserInGroup(auth.user.id, cons.owners))
                 .map(cons => (
                   <MenuItem
                     key={cons.id}
