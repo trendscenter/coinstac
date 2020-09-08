@@ -11,6 +11,7 @@ jobs:
       # - image: coinstacteam/coinstac-server
     working_directory: /usr/local/src/coinstac
     steps:
+      - setup_remote_docker
       - run: docker ps
       # - run: >-
       #     npm run -s getconfig -- 1 local export ci > env.sh && . ./env.sh && rm
