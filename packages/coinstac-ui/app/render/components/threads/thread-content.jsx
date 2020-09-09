@@ -7,15 +7,17 @@ import ThreadMessages from './thread-messages';
 
 const styles = theme => ({
   wrapper: {
-    flex: 1,
+    width: 'calc(100% - 250px)',
     display: 'flex',
     flexDirection: 'column',
+    [theme.breakpoints.down('sm')]: {
+      width: 'calc(100% - 180px)',
+    },
   },
   title: {
     textAlign: 'center',
     fontWeight: 600,
-    padding: `${theme.spacing.unit * 2}px 0`,
-    borderBottom: `1px solid ${theme.palette.grey[300]}`,
+    padding: `${theme.spacing(2)}px 0`,
   },
 });
 

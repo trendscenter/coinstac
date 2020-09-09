@@ -10,9 +10,9 @@ import { withStyles } from '@material-ui/core/styles';
 const styles = theme => ({
   rootPaper: {
     ...theme.mixins.gutters(),
-    paddingTop: theme.spacing.unit * 2,
-    paddingBottom: theme.spacing.unit * 2,
-    marginTop: theme.spacing.unit * 2,
+    paddingTop: theme.spacing(2),
+    paddingBottom: theme.spacing(2),
+    marginTop: theme.spacing(2),
     height: '100%',
     display: 'flex',
     flexDirection: 'column',
@@ -21,14 +21,32 @@ const styles = theme => ({
   titleContainer: {
     display: 'flex',
     justifyContent: 'space-between',
-    marginBottom: theme.spacing.unit,
+    marginBottom: theme.spacing(1),
   },
   description: {
-    marginBottom: theme.spacing.unit * 2,
+    marginBottom: theme.spacing(2),
   },
   highlight: {
     backgroundColor: 'yellow',
     color: 'red',
+  },
+  button: {
+    marginTop: theme.spacing(1),
+    marginRight: theme.spacing(1),
+  },
+  deleteButton: {
+    marginTop: theme.spacing(1),
+  },
+  listItemActions: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+  },
+  listItemActionsPrimary: {
+    display: 'flex',
+    alignItems: 'center',
+    flexWrap: 'wrap',
   },
 });
 
@@ -51,25 +69,26 @@ const ListItem = ({
     elevation={4}
   >
     <div className={classes.titleContainer}>
-      <Typography variant="headline" className={highlight ? classes.highlight : ''}>
+      <Typography variant="h5" className={highlight ? classes.highlight : ''}>
         { itemObject.name }
       </Typography>
       {
         itemOptions.owner && <Typography>Owner</Typography>
       }
     </div>
-    <Typography variant="body1" className={classes.description}>
+    <Typography variant="body2" className={classes.description}>
       { itemObject.description }
     </Typography>
     { itemOptions.text }
-    <div className="list-item__actions">
-      <div className="list-item__actions-primary">
+    <div className={classes.listItemActions}>
+      <div className={classes.listItemActionsPrimary}>
         <Button
           variant="contained"
           color={linkButtonColor || 'primary'}
           component={Link}
           to={`${itemRoute}/${itemObject.id}`}
           name={itemObject.name}
+          className={classes.button}
         >
           { linkButtonText || 'View Details' }
         </Button>
@@ -82,6 +101,7 @@ const ListItem = ({
             color="secondary"
             onClick={deleteItem(itemObject.id)}
             name={`${itemObject.name}-delete`}
+            className={classes.deleteButton}
           >
             { deleteButtonText || 'Delete' }
             <DeleteIcon />

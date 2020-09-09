@@ -22,7 +22,8 @@ const styles = theme => ({
     },
   },
   username: {
-    paddingLeft: theme.spacing.unit,
+    paddingLeft: theme.spacing(1),
+    paddingRight: theme.spacing(1),
   },
 });
 
@@ -44,7 +45,9 @@ const ThreadAvatar = ({
     >
       {toUpper(get(username, '0'))}
     </Avatar>
-    <span className={classes.username}>{showUsername && username}</span>
+    {showUsername && username && (
+      <span className={classes.username}>{username}</span>
+    )}
   </div>
 );
 

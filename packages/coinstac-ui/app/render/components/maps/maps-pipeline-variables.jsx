@@ -10,9 +10,9 @@ import MapsStepFieldset from './maps-step-fieldset';
 const styles = theme => ({
   rootPaper: {
     ...theme.mixins.gutters(),
-    paddingTop: theme.spacing.unit * 2,
-    paddingBottom: theme.spacing.unit * 2,
-    marginTop: theme.spacing.unit * 2,
+    paddingTop: theme.spacing(2),
+    paddingBottom: theme.spacing(2),
+    marginTop: theme.spacing(2),
     height: '100%',
   },
 });
@@ -27,12 +27,12 @@ function MapsPipelineVariables(props) {
   } = props;
 
   return (
-    <Grid item sm={4}>
+    <Grid item xs={12} sm={12} md={6} lg={4}>
       <Paper
         className={classes.rootPaper}
         elevation={1}
       >
-        <Typography variant="headline" className={classes.title}>
+        <Typography variant="h5" className={classes.title}>
           { `${consortium.name}: Pipeline` }
         </Typography>
         <Divider />
@@ -40,10 +40,9 @@ function MapsPipelineVariables(props) {
           consortium.pipelineSteps && consortium.pipelineSteps.map((step) => {
             const { computations, inputMap } = step;
 
-            const inputs = {...inputMap, ...computations[0].computation.input};
+            const inputs = { ...inputMap, ...computations[0].computation.input };
 
             return Object.entries(inputs).map((input) => {
-
               const inputMapKey = input[0];
               const inputMapValue = input[1];
 

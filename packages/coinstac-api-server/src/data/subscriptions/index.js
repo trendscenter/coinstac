@@ -122,7 +122,6 @@ function userChanged(user) {
   }
 }
 
-
 function initSubscriptions(ps) {
   pubSub = ps;
 

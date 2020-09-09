@@ -1,7 +1,6 @@
 @import "./variables";
 @import "./mixins";
 @import "./classes";
-
 @import "./alert";
 @import "./computation-field";
 @import "./computation-select";
@@ -11,7 +10,6 @@
 @import "./consortium-result";
 @import "./consortium-result-list";
 @import "./consortium-result-table";
-@import "./list-item";
 @import "./dragula";
 @import "./maps-collection";
 @import "./maps-list";
@@ -25,7 +23,12 @@
 
 body {
   margin: 0;
+  width: 100%;
   font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 .bold {
@@ -34,15 +37,14 @@ body {
 
 .screen {
   min-height: 100vh;
-  padding-top: $grid-gutter-width / 2;
-  padding-bottom: $grid-gutter-width / 2;
-}
-.screen__content {
-  display: flex;
-  min-height: 100vh;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
+
+  &__content {
+    display: flex;
+    min-height: 100vh;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
 }
 
 /**
@@ -53,7 +55,6 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  flex: 0 0 auto;
   padding: 1rem 0;
 
   abbr[title] {
@@ -78,11 +79,8 @@ body {
   }
 }
 
-.mainnav {
-  padding-left: 0.5rem !important;
-  svg {
-    color: #003c52 !important;
-  }
+.mainnav svg {
+  color: #003c52 !important;
 }
 
 /**
@@ -138,10 +136,7 @@ body {
   background: white;
   min-height: 100vh;
   position: relative;
-
-  @media (min-width: $screen-sm) {
-    padding: $grid-gutter-width / 2;
-  }
+  padding: $grid-gutter-width / 2;
 
   .back-button {
     position: absolute;
@@ -171,6 +166,57 @@ body {
   }
 }
 
+/** Settings */
+
+.settings {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  padding: 20px;
+
+  .logs-wrapper {
+    height: calc(100% - 70px);
+    border: 1px inset white;
+    background-color: whitesmoke;
+    position: relative;
+  }
+
+  .logs-wrapper:hover {
+    .scroll-to-bottom,
+    .scroll-to-top {
+      opacity: 1;
+    }
+  }
+
+  .scroll-to-bottom,
+  .scroll-to-top {
+    position: absolute;
+    right: 20px;
+    width: 40px;
+    height: 40px;
+    background-color: #eee;
+    border-radius: 100%;
+    border-color: transparent;
+    cursor: pointer;
+    opacity: 0;
+    transition: 0.1s ease-in-out opacity;
+
+    &:focus {
+      outline: none;
+    }
+  }
+
+  .scroll-to-bottom {
+    top: 15px;
+  }
+
+  .scroll-to-top {
+    bottom: 15px;
+  }
+}
+
 
 /** File items */
 .file-item {
@@ -187,9 +233,6 @@ body {
 /** Consortia */
 .dashboard-consortia > .row > .col-sm-6:nth-child(odd) {
     clear: both;
-}
-.consortium {
-
 }
 .consortium .btn-toolbar {
     .glyphicon {

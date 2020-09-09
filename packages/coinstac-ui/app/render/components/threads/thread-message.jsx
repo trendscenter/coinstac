@@ -7,26 +7,27 @@ import ThreadAvatar from './thread-avatar';
 const styles = theme => ({
   wrapper: {
     borderTop: `1px solid ${theme.palette.grey[300]}`,
-    padding: theme.spacing.unit * 2,
+    padding: theme.spacing(2),
   },
   users: {
     display: 'flex',
     alignItems: 'center',
-    paddingBottom: theme.spacing.unit * 2,
+    flexWrap: 'wrap',
+    paddingBottom: theme.spacing(2),
     borderBottom: '1px solid #f3f2f1',
     '&>span': {
       fontWeight: 600,
     },
   },
   to: {
-    paddingLeft: theme.spacing.unit,
+    paddingLeft: theme.spacing(1),
   },
   avatarWrapper: {
-    paddingLeft: theme.spacing.unit * 1.5,
-    paddingRight: theme.spacing.unit,
+    paddingLeft: theme.spacing(1.5),
+    paddingRight: theme.spacing(1),
   },
   button: {
-    padding: theme.spacing.unit,
+    padding: theme.spacing(1),
     backgroundColor: '#0078d4',
     fontSize: 12,
     color: 'white',
@@ -38,6 +39,11 @@ const styles = theme => ({
       backgroundColor: '#005a9e',
     },
   },
+  fromTo: {
+    display: 'flex',
+    alignItems: 'center',
+    padding: `${theme.spacing(1) / 2}px 0`,
+  },
 });
 
 const ThreadMessage = ({ classes, message, joinConsortium }) => {
@@ -48,26 +54,30 @@ const ThreadMessage = ({ classes, message, joinConsortium }) => {
   return (
     <div className={classes.wrapper}>
       <div className={classes.users}>
-        <span>From:</span>
-        <div className={classes.avatarWrapper}>
-          <ThreadAvatar
-            username={sender}
-            showUsername
-          />
-        </div>
-        <span className={classes.to}>To:</span>
-        {recipients.map(recipient => (
-          <div
-            className={classes.avatarWrapper}
-            key={recipient}
-          >
+        <div className={classes.fromTo}>
+          <span>From:</span>
+          <div className={classes.avatarWrapper}>
             <ThreadAvatar
-              username={recipient}
+              username={sender}
               showUsername
-              isSender={false}
             />
           </div>
-        ))}
+        </div>
+        <div className={classes.fromTo}>
+          <span className={classes.to}>To:</span>
+          {recipients.map(recipient => (
+            <div
+              className={classes.avatarWrapper}
+              key={recipient}
+            >
+              <ThreadAvatar
+                username={recipient}
+                showUsername
+                isSender={false}
+              />
+            </div>
+          ))}
+        </div>
       </div>
       <p>
         {content}

@@ -20,27 +20,30 @@ import {
 
 const styles = theme => ({
   tabTitle: {
-    marginTop: theme.spacing.unit * 2,
+    marginTop: theme.spacing(2),
   },
   paper: {
-    padding: theme.spacing.unit * 2,
-    marginTop: theme.spacing.unit,
-    marginBottom: theme.spacing.unit * 3,
+    padding: theme.spacing(2),
+    marginTop: theme.spacing(1),
+    marginBottom: theme.spacing(3),
   },
   pipelinesActions: {
-    marginTop: theme.spacing.unit * 2,
+    marginTop: theme.spacing(2),
   },
   pipelineDropdownsContainer: {
     display: 'flex',
     justifyContent: 'space-around',
-    marginTop: theme.spacing.unit * 2,
+    flexWrap: 'wrap',
+  },
+  pipelineButton: {
+    marginTop: theme.spacing(2),
   },
   newPipelineContainer: {
-    marginTop: theme.spacing.unit * 4,
+    marginTop: theme.spacing(4),
     textAlign: 'center',
   },
   createPipelineHint: {
-    marginBottom: theme.spacing.unit * 1,
+    marginBottom: theme.spacing(1),
   },
 });
 
@@ -144,14 +147,14 @@ class ConsortiumPipeline extends Component {
                 >
                   {activePipeline.name}
                 </Typography>
-                <Typography variant="body1">
+                <Typography variant="body2">
                   {activePipeline.description}
                 </Typography>
               </div>
             )
           }
           {
-            !activePipeline.id && <Typography variant="body1"><em>No active pipeline</em></Typography>
+            !activePipeline.id && <Typography variant="body2"><em>No active pipeline</em></Typography>
           }
         </Paper>
         {
@@ -161,7 +164,7 @@ class ConsortiumPipeline extends Component {
               <Typography variant="h5">Activate a pipeline from...</Typography>
               <Divider />
               <div className={classes.pipelineDropdownsContainer}>
-                <div>
+                <div className={classes.pipelineButton}>
                   <Button
                     id="owned-pipelines-dropdown"
                     variant="contained"
@@ -188,7 +191,7 @@ class ConsortiumPipeline extends Component {
                     }
                   </Menu>
                 </div>
-                <div>
+                <div className={classes.pipelineButton}>
                   <Button
                     id="shared-pipelines-dropdown"
                     variant="contained"
@@ -217,7 +220,7 @@ class ConsortiumPipeline extends Component {
                 </div>
               </div>
               <div className={classes.newPipelineContainer}>
-                <Typography variant="body1" className={classes.createPipelineHint}><em>Or create a new pipeline</em></Typography>
+                <Typography variant="body2" className={classes.createPipelineHint}><em>Or create a new pipeline</em></Typography>
                 <Button
                   variant="contained"
                   color="secondary"
