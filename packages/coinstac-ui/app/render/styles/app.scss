@@ -20,6 +20,7 @@
 @import "./project-covariates-mapper";
 @import "./project-file";
 @import "./project-form";
+@import "./react-mde";
 @import "./table.scss";
 @import "./user-list";
 
@@ -242,9 +243,6 @@ html {
 /** Consortia */
 .dashboard-consortia > .row > .col-sm-6:nth-child(odd) {
     clear: both;
-}
-.consortium {
-
 }
 .consortium .btn-toolbar {
     .glyphicon {
