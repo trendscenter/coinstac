@@ -179,12 +179,9 @@ class FormLogin extends Component {
         <FormStartupDirectory
           appDirectory={auth.appDirectory}
           clientServerURL={auth.clientServerURL}
-          close={this.closeStartupDirectoryDialog}
-          onSubmit={this.changeAppData}
           open={isStartupDirectoryDialogOpen}
+          onSubmit={this.changeAppData}
           close={this.toggleStartupDirectoryDialog}
-          appDirectory={auth.appDirectory}
-          onSubmit={this.changeAppDirectory}
         />
       </div>
     );
