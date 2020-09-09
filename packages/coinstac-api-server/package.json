@@ -42,10 +42,11 @@
   "devDependencies": {
     "apollo-client": "^1.4.0",
     "ava": "^3.8.1",
+    "cross-env": "^7.0.2",
     "graphql-tag": "^2.10.3",
     "sinon": "^9.0.2",
-    "ws": "^7.3.0",
     "trace": "^3.1.1",
-    "uuid": "^7.0.3"
+    "uuid": "^7.0.3",
+    "ws": "^7.3.0"
   }
 }
