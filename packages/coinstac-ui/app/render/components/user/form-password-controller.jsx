@@ -22,7 +22,7 @@ import {
 const styles = theme => ({
   formControl: {
     flex: '1 0 auto',
-    marginBottom: theme.spacing.unit * 2,
+    marginBottom: theme.spacing(2),
   },
   paper: {
     maxWidth: 320,
@@ -31,7 +31,7 @@ const styles = theme => ({
     textAlign: 'right',
   },
   tabPanel: {
-    padding: theme.spacing.unit * 2,
+    padding: theme.spacing(2),
   },
 });
 

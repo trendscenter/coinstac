@@ -68,7 +68,7 @@ const styles = theme => ({
   computationButtons: {
     display: 'flex',
     '& > button': {
-      marginLeft: theme.spacing.unit,
+      marginLeft: theme.spacing(1),
     },
   },
 });

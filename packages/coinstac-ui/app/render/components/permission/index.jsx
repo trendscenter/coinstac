@@ -43,13 +43,20 @@ class Permission extends Component {
   }
 
   componentDidMount() {
-    const { subscribeToUsers } = this.props;
+    const { currentUser, subscribeToUsers } = this.props;
+    const { router } = this.context;
 
-    this.unsubscribeUsers = subscribeToUsers(null);
+    if (!get(currentUser, 'permissions.roles.admin')) {
+      router.push('/');
+    } else {
+      this.unsubscribeUsers = subscribeToUsers(null);
+    }
   }
 
   componentWillUnmount() {
-    this.unsubscribeUsers();
+    if (this.unsubscribeUsers) {
+      this.unsubscribeUsers();
+    }
   }
 
   logoutUser = () => {
