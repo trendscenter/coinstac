@@ -30,10 +30,6 @@ process.env.NODE_ENV = process.env.NODE_ENV || 'production';
 // Watch the following issue for progress on dialog support
 // https://github.com/electron/spectron/issues/94
 if (process.env.NODE_ENV === 'test') {
-  if (process.env.TEST_INSTANCE) {
-    electron.app.setPath('userData', `${electron.app.getPath('userData')}-${process.env.TEST_INSTANCE}`);
-  }
-
   mock(electron.dialog);
 }
 
@@ -168,7 +164,7 @@ loadConfig()
       // TODO: hacky way to not get a mqtt reconnn loop
       // a better way would be to make an actual shutdown fn for pipeline
       return new Promise((resolve) => {
-        initializedCore.pipelineManager.mqtCon.end(true, () => {
+        initializedCore.pipelineManager.mqttClient.end(true, () => {
           initializedCore = undefined;
           resolve();
         });
