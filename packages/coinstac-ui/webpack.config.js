@@ -109,7 +109,14 @@ const config = {
   },
   plugins: [
     new webpack.optimize.OccurrenceOrderPlugin(),
-    new webpack.HotModuleReplacementPlugin()
+    new webpack.HotModuleReplacementPlugin(),
+    new webpack.DefinePlugin({
+      'process.env.CLOUDINARY_UPLOAD_PRESET': JSON.stringify(process.env.CLOUDINARY_UPLOAD_PRESET),
+      'process.env.CLOUDINARY_API_KEY': JSON.stringify(process.env.CLOUDINARY_API_KEY),
+      'process.env.CLOUDINARY_API_SECRET': JSON.stringify(process.env.CLOUDINARY_API_SECRET),
+      'process.env.CLOUDINARY_UPLOAD_URL': JSON.stringify(process.env.CLOUDINARY_UPLOAD_URL),
+      'process.env.CLOUDINARY_DELETE_URL': JSON.stringify(process.env.CLOUDINARY_UPLOAD_PRESET),
+    }),
   ],
   resolve: {
     extensions: ['.json', '.js', '.jsx'],
@@ -119,7 +126,6 @@ const config = {
 if (process.env.NODE_ENV === 'development') {
   config.bail = false;
   config.devtool = 'eval-source-map';
-  // config.plugins.push(new webpack.NoErrorsPlugin());
 
   // Massage configuration for hot module replacement:
   config.output.publicPath = `http://localhost:${port}/`;

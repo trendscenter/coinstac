@@ -9,7 +9,7 @@ const drneVbm = require('./data/coinstac-schema-regression-vbm');
 const msrVbm = require('./data/coinstac-schema-regression-ms-vbm');
 
 const drneFsl = require('./data/coinstac-schema-regression-fsl');
-// const ssrFsl = require('./data/coinstac-schema-regression-ss-fsl');
+const ssrFsl = require('./data/coinstac-schema-regression-ss-fsl');
 const msrFsl = require('./data/coinstac-schema-regression-ms-fsl');
 
 const gica = require('./data/coinstac-gica-pipeline');
@@ -55,6 +55,7 @@ const COMPUTATION_IDS = [
   database.createUniqueId(),
   database.createUniqueId(),
   database.createUniqueId(),
+  database.createUniqueId(),
 ];
 
 const USER_IDS = [
@@ -85,6 +86,7 @@ async function populateComputations() {
     { ...enigmaSans, submittedBy: 'author', _id: COMPUTATION_IDS[12] },
     { ...localError, submittedBy: 'author', _id: COMPUTATION_IDS[13] },
     { ...fmri, submittedBy: 'author', _id: COMPUTATION_IDS[14] },
+    { ...ssrFsl, submittedBy: 'author', _id: COMPUTATION_IDS[15] },
   ]);
 }
 
@@ -137,7 +139,7 @@ async function populatePipelines() {
       steps: [
         {
           computations: [
-            COMPUTATION_IDS[0],
+            COMPUTATION_IDS[15],
           ],
           controller: {
             id: null,

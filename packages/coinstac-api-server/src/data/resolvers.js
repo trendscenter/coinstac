@@ -120,7 +120,6 @@ async function removeUserPermissions(args) {
   });
 
   const { permissions } = user;
-
   const index = permissions[args.table][args.doc].findIndex(p => p === args.role);
   permissions[args.table][args.doc].splice(index, 1);
 
@@ -154,9 +153,8 @@ async function removeUserPermissions(args) {
         [`${args.role}s.${args.userId}`]: userUpdateResult.value.username,
       },
     };
-
     if (permissions[args.table][args.doc].length === 0) {
-      updateObj.$pull.mappedForRun = args.userId;
+      updateObj.$pull = Object.assign(updateObj.$pull || {}, { mappedForRun: args.userId });
     }
 
     const consortiaUpdateResult = await db.collection('consortia').findOneAndUpdate({ _id: args.doc }, updateObj, { returnOriginal: false });
@@ -493,16 +491,23 @@ const resolvers = {
         return Boom.unauthorized('User not authenticated');
       }
 
+      const db = database.getDbInstance();
+
+      const consortium = await db.collection('consortia').findOne({ _id: ObjectID(consortiumId) });
+
+      if (!consortium) {
+        return Boom.notFound('Consortium with provided id not found');
+      }
+
+      const pipeline = await fetchOnePipeline(consortium.activePipelineId);
+
+      if (!pipeline) {
+        return Boom.notFound('Active pipeline not found on this consortium');
+      }
+
       try {
-        const db = database.getDbInstance();
-
-        const consortium = await db.collection('consortia').findOne({ _id: ObjectID(consortiumId) });
-        const pipeline = await fetchOnePipeline(consortium.activePipelineId);
-
         const clientArray = Object.keys(consortium.members);
-
         const isPipelineDecentralized = pipeline.steps.findIndex(step => step.controller.type === 'decentralized') > -1;
-
         const result = await db.collection('runs').insertOne({
             clients: clientArray,
             members: consortium.members,
@@ -522,7 +527,11 @@ const resolvers = {
 
         return run;
       } catch (error) {
-        console.log(error)
+        if (error.code === 'ECONNREFUSED') {
+          return Boom.serverUnavailable('Pipeline server unavailable');
+        }
+
+        return Boom.notAcceptable(error);
       }
     },
     /**
@@ -1098,7 +1107,8 @@ const resolvers = {
      * @return {object} Updated message
      */
     saveMessage: async ({ auth: { credentials } }, args) => {
-      const { title, recipients, content, action, threadId } = args;
+      const { title, recipients, content, action } = args;
+      const threadId = args.threadId ? ObjectID(args.threadId) : null;
 
       const db = database.getDbInstance();
 
