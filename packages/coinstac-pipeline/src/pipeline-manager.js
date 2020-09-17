@@ -1100,6 +1100,20 @@ module.exports = {
             }
             // we have clients waiting on final transfer output, just give results
             return res;
+          })
+          .catch((err) => {
+            if (mode === 'remote') {
+              throw err;
+            }
+            // local pipeline user stop error, or other uncaught error
+            mqttClient.publish(
+              'run',
+              JSON.stringify({ id: clientId, runId, error: err }),
+              { qos: 1 },
+              (err) => { if (err) logger.error(`Mqtt error: ${err}`); }
+            );
+
+            throw err;
           });
 
         return {

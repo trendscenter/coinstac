@@ -55,8 +55,8 @@ export default function (apolloClient) {
     applyMiddleware(
       apolloClient.middleware(),
       thunkMiddleware,
-      promiseMiddleware,
-      createLogger({ collapsed: true })
+      promiseMiddleware
+      // createLogger({ collapsed: true })
     )
   );
 
