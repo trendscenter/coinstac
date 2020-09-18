@@ -8,3 +8,6 @@ RUN apt-get update && \
     libasound2-dev \
     unzip \
     && rm -rf /var/lib/apt/lists/*
+
+CMD . ./config/.env-ci.sh && cd packages/coinstac-ui && xvfb-run --auto-servernum \
+  --server-args='-screen 0, 1600x900x24' npm run test:e2e

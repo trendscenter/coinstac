@@ -1,4 +1,4 @@
 FROM coinstacteam/coinstac:ci
 
 EXPOSE 3200
-CMD . ./.env-example.sh && npm run server-ci
+CMD . ./config/.env-ci.sh && npm run server-ci

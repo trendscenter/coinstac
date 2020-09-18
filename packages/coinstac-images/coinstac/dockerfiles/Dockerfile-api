@@ -1,4 +1,4 @@
 FROM coinstacteam/coinstac:ci
 
 EXPOSE 3100
-CMD docker ps
+CMD . ./config/.env-ci.sh && npm run api-ci
