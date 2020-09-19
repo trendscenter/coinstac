@@ -406,6 +406,20 @@ describe('e2e run computation with 2 members', () => {
   });
 
   it('displays results', async () => {
+    await app1.client.getMainProcessLogs().then((logs) => {
+      logs.forEach((log) => {
+        console.log(log)
+      });
+    });
+    console.log('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%');
+    await app1.client.getRenderProcessLogs().then((logs) => {
+      logs.forEach((log) => {
+        console.log(log.message)
+        console.log(log.source)
+        console.log(log.level)
+      });
+    });
+
     const runItem = await app1.client.$('div.run-item-paper:first-child');
     const viewResultsButton = await runItem.$('a=View Results');
 

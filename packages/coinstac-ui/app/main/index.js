@@ -299,6 +299,8 @@ loadConfig()
                 });
             })
             .catch((error) => {
+              console.log('*************************************************************************************');
+              console.log(error);
               mainWindow.webContents.send('local-run-error', {
                 consName: consortium.name,
                 run: Object.assign(
