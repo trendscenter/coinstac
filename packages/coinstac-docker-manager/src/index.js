@@ -486,7 +486,8 @@ const startService = (serviceId, serviceUserId, opts) => {
             return setTimeoutPromise(200)
               .then(() => tryStartService());
           }
-          proxRej(err);
+          // wtf, rejects promise twice, why????
+          // proxRej(err);
           throw err;
         });
     };

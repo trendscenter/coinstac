@@ -176,7 +176,7 @@ module.exports = {
                       stack,
                     }
                   );
-                  logger.silly(`Pipeline Error: ${iterationError}`);
+                  logger.error(`Pipeline Error: ${iterationError}`);
                   if (controller.type === 'local') {
                     err(iterationError);
                   } else {
