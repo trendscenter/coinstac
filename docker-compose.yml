@@ -5,8 +5,8 @@ services:
     image: eclipse-mosquitto
     ports:
       - "1883:1883"
-    network_mode: "host"
-
+    networks:
+      - ci_network
   mongo:
     image: mongo
     environment:
@@ -16,7 +16,8 @@ services:
       - "27017:27017"
     volumes:
       - ./mongo_data/:/data/db
-    network_mode: "host"
+    networks:
+      - ci_network
   ui:
     depends_on:
       - 'api'
@@ -28,11 +29,11 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - local-volume:/root/.coinstac
-    network_mode: "host"
-
+    networks:
+      - ci_network
     environment:
       - CI=true
-      - CI_DOCKER_NETWORK=host
+      - CI_DOCKER_NETWORK=ci-network
       - CI_VOLUME=local-volume
   api:
     depends_on:
@@ -45,8 +46,8 @@ services:
       - "80:80"
       - "443:443"
       - "3100:3100"
-    network_mode: "host"
-
+    networks:
+      - ci_network
   server:
     depends_on:
       - 'api'
@@ -57,16 +58,16 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - remote-volume:/tmp/coinstac
-    network_mode: "host"
-
+    networks:
+        - ci_network
     environment:
       - CI=true
-      - CI_DOCKER_NETWORK=host
+      - CI_DOCKER_NETWORK=ci-network
       - CI_VOLUME=remote-volume
-# networks:
-#     ci_network:
-#       name: ci-network
-#       driver: host
+networks:
+    ci_network:
+      name: ci-network
+      driver: bridge
 volumes:
   local-volume:
   remote-volume:

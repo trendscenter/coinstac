@@ -211,7 +211,7 @@ const startService = (serviceId, serviceUserId, opts) => {
             },
             HostConfig: {
               PortBindings: {
-                '8881/tcp': [{ HostPort: `${port}`, HostIp: '127.0.0.1' }],
+                '8881/tcp': [{ HostPort: `${port}`, HostIp: process.env.CI ? '' : '127.0.0.1' }],
                 ...(process.LOGLEVEL === 'debug' && { '4444/tcp': [{ HostPort: '4444', HostIp: '127.0.0.1' }] }),
               },
             },
@@ -232,12 +232,13 @@ const startService = (serviceId, serviceUserId, opts) => {
           return container.start();
         })
         // is the container service ready?
-        .then(() => {
+        .then((container) => {
+          services[serviceId].hostname = process.env.CI ? container.id : '127.0.0.1';
           logger.silly(`Cointainer started: ${serviceId}`);
           const checkServicePort = () => {
             if (opts.http) {
               return new Promise((resolve, reject) => {
-                const req = request(`http://127.0.0.1:${services[serviceId].port}/run`, { method: 'POST' }, (err, res) => {
+                const req = request(`http://${services[serviceId].hostname}:${services[serviceId].port}/run`, { method: 'POST' }, (err, res) => {
                   let buf = '';
                   if (err) {
                     return reject(err);
@@ -280,7 +281,7 @@ const startService = (serviceId, serviceUserId, opts) => {
           services[serviceId].service = (data) => {
             if (opts.http) {
               return new Promise((resolve, reject) => {
-                const req = request(`http://127.0.0.1:${services[serviceId].port}/run`, { method: 'POST' }, (err, res) => {
+                const req = request(`http://${services[serviceId].hostname}:${services[serviceId].port}/run`, { method: 'POST' }, (err, res) => {
                   let buf = '';
                   if (err) {
                     return reject(err);
@@ -352,7 +353,7 @@ const startService = (serviceId, serviceUserId, opts) => {
             new Promise((resolve) => {
               let count = 0;
               const testConnection = () => {
-                const ws = new WS(`ws://127.0.0.1:${services[serviceId].port}`);
+                const ws = new WS(`ws://${services[serviceId].hostname}:${services[serviceId].port}`);
                 ws.on('open', () => {
                   ws.close(1000, 'Test Connection');
                   resolve();
@@ -373,7 +374,7 @@ const startService = (serviceId, serviceUserId, opts) => {
               };
               testConnection();
             }).then(() => {
-              const ws = new WS(`ws://127.0.0.1:${services[serviceId].port}`);
+              const ws = new WS(`ws://${services[serviceId].hostname}:${services[serviceId].port}`);
               ws.on('open', () => {
                 ws.send(JSON.stringify({
                   command: data[0],
