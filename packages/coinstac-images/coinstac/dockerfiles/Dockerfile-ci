@@ -20,12 +20,12 @@ RUN apt-get update && \
   apt-get install --no-install-recommends -y \
   docker-ce-cli
 
+# bust cache for repo updates
+ADD https://api.github.com/repos/trendscenter/coinstac/git/refs/heads/$BRANCH version.json
 RUN cd /usr/local/src/ \
-  && git clone https://github.com/trendscenter/coinstac.git
+  && git clone --depth=1 --branch $BRANCH https://github.com/trendscenter/coinstac.git
 
 RUN cd /usr/local/src/coinstac \
-  && git checkout $BRANCH \
-  && git pull \
   && npm i && npm run build
 
 WORKDIR /usr/local/src/coinstac

@@ -14,6 +14,8 @@ const bc = require('blessed-contrib');
 const winston = require('winston');
 const pkg = require('../package.json');
 
+Error.stackTraceLimit = 100;
+
 const logger = winston.createLogger({
   level: 'info',
   transports: [
