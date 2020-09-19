@@ -1,0 +1,72 @@
+version: "3"
+
+services:
+  mqtt:
+    image: eclipse-mosquitto
+    ports:
+      - "1883:1883"
+    networks:
+      - ci_network
+  mongo:
+    image: mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: test
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./mongo_data/:/data/db
+    networks:
+      - ci_network
+
+  ui:
+    depends_on:
+      - 'api'
+      - 'server'
+      - 'mqtt'
+    image: coinstacteam/coinstac-ui:ci
+    stdin_open: true
+    tty: true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - local-volume:/root/.coinstac
+    networks:
+      - ci_network
+    environment:
+      - CI=true
+      - CI_DOCKER_NETWORK=ci_network
+      - CI_VOLUME=local-volume
+  api:
+    depends_on:
+      - 'mongo'
+    image: coinstacteam/coinstac-api
+    stdin_open: true
+    tty: true
+    privileged: true
+    ports:
+      - "80:80"
+      - "443:443"
+      - "3100:3100"
+    networks:
+      - ci_network
+  server:
+    depends_on:
+      - 'api'
+      - 'mqtt'
+    image: coinstacteam/coinstac-server
+    ports:
+      - "3200:3200"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - remote-volume:/tmp/coinstac
+    networks:
+        - ci_network
+    environment:
+      - CI=true
+      - CI_DOCKER_NETWORK=ci_network
+      - CI_VOLUME=remote-volume
+networks:
+    ci_network:
+volumes:
+  local-volume:
+  remote-volume:

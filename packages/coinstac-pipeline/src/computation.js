@@ -32,7 +32,7 @@ module.exports = {
         if (process.env.CI) {
           HostConfig = {
             Binds: [
-              `${process.env.CI_VOLUME}:/`,
+              `${process.env.CI_VOLUME}:${operatingDirectory}`,
             ],
             NetworkMode: process.env.CI_DOCKER_NETWORK,
           };
