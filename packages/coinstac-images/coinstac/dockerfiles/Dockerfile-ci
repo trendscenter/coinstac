@@ -18,8 +18,8 @@ RUN apt-get update && \
 RUN cd /usr/local/src/ \
   && git clone https://github.com/trendscenter/coinstac.git \
   && cd coinstac \
-  && git checkout $BRANCH \
-  && git pull \
+  && git checkout $BRANCH
+RUN git pull \
   && npm i && npm run build
 
   #Set working directory

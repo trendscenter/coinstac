@@ -41,13 +41,20 @@ module.exports = {
     const activeControlBox = controllers[controller.type];
     const computationStep = 0;
     const stateEmitter = new Emitter();
+    let dockerBaseDir = '';
+    if (process.env.CI) {
+      // for shared volume in CI context
+      dockerBaseDir = operatingDirectory;
+    }
     const controllerState = {
       activeComputations: [],
       // docker analogs to the user directories
-      baseDirectory: `/input/${clientId}/${runId}`,
-      outputDirectory: `/output/${clientId}/${runId}`,
-      cacheDirectory: `/cache/${clientId}/${runId}`,
-      transferDirectory: `/transfer/${clientId}/${runId}`,
+      // no path resolving as containers and host
+      // may not be the same os
+      baseDirectory: `${dockerBaseDir}/input/${clientId}/${runId}`,
+      outputDirectory: `${dockerBaseDir}/output/${clientId}/${runId}`,
+      cacheDirectory: `${dockerBaseDir}/cache/${clientId}/${runId}`,
+      transferDirectory: `${dockerBaseDir}/transfer/${clientId}/${runId}`,
       clientId,
       currentBoxCommand: undefined,
       currentComputations,
@@ -148,7 +155,7 @@ module.exports = {
                       owner,
                     }))(controllerState),
                   },
-                  { baseDirectory: operatingDirectory }
+                  { operatingDirectory }
                 )
                 .then(({ cache, success, output }) => {
                   computationCache = Object.assign(computationCache, cache);
