@@ -24,17 +24,15 @@ services:
       - 'server'
       - 'mqtt'
     image: coinstacteam/coinstac-ui:ci
-    stdin_open: true
-    tty: true
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - local-volume:/root/.coinstac
+      - coinstac_local-volume:/root/.coinstac
     networks:
       - ci_network
     environment:
       - CI=true
       - CI_DOCKER_NETWORK=ci-network
-      - CI_VOLUME=local-volume
+      - CI_VOLUME=coinstac_local-volume
   api:
     depends_on:
       - 'mongo'
@@ -57,13 +55,13 @@ services:
       - "3200:3200"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - remote-volume:/tmp/coinstac
+      - coinstac_remote-volume:/tmp/coinstac
     networks:
         - ci_network
     environment:
       - CI=true
       - CI_DOCKER_NETWORK=ci-network
-      - CI_VOLUME=remote-volume
+      - CI_VOLUME=coinstac_remote-volume
 networks:
     ci_network:
       name: ci-network

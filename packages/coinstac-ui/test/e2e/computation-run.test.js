@@ -37,7 +37,14 @@ describe('e2e run computation with 1 member', () => {
     return app.client.waitUntilWindowLoaded(10000);
   });
 
-  after(() => {
+  after(async () => {
+    if (this.currentTest.state === 'failed' && process.env.CI) {
+      await app.client.getMainProcessLogs().then((logs) => {
+        logs.forEach((log) => {
+          console.log(log); // eslint-disable-line no-console
+        });
+      });
+    }
     if (app && app.isRunning()) {
       return app.stop();
     }

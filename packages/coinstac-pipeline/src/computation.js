@@ -34,6 +34,9 @@ module.exports = {
             Binds: [
               `${process.env.CI_VOLUME}:${operatingDirectory}`,
             ],
+            Volumes: {
+              [operatingDirectory]: {},
+            },
             NetworkMode: process.env.CI_DOCKER_NETWORK,
           };
         }

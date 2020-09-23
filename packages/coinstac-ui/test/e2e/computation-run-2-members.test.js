@@ -60,12 +60,25 @@ describe('e2e run computation with 2 members', () => {
     ]);
   });
 
-  after(() => (
-    Promise.all([
+  after(async () => {
+    if (this.currentTest.state === 'failed' && process.env.CI) {
+      await app1.client.getMainProcessLogs().then((logs) => {
+        logs.forEach((log) => {
+          console.log(log); // eslint-disable-line no-console
+        });
+      });
+      console.log('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Second Client Logs %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'); // eslint-disable-line no-console
+      await app2.client.getMainProcessLogs().then((logs) => {
+        logs.forEach((log) => {
+          console.log(log); // eslint-disable-line no-console
+        });
+      });
+    }
+    return Promise.all([
       app1.stop(),
       app2.stop(),
-    ])
-  ));
+    ]);
+  });
 
   it('displays the correct title', async () => {
     return app1.client.getTitle().should.eventually.equal('COINSTAC');
@@ -406,20 +419,6 @@ describe('e2e run computation with 2 members', () => {
   });
 
   it('displays results', async () => {
-    await app1.client.getMainProcessLogs().then((logs) => {
-      logs.forEach((log) => {
-        console.log(log)
-      });
-    });
-    console.log('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%');
-    await app1.client.getRenderProcessLogs().then((logs) => {
-      logs.forEach((log) => {
-        console.log(log.message)
-        console.log(log.source)
-        console.log(log.level)
-      });
-    });
-
     const runItem = await app1.client.$('div.run-item-paper:first-child');
     const viewResultsButton = await runItem.$('a=View Results');
 

@@ -49,14 +49,16 @@ async function loadPersistedState(userId, persistor, store) {
 
 export default function (apolloClient) {
   const persistedReducer = persistReducer(persistConfig, rootReducer(apolloClient));
-
+  const middleware = [
+    apolloClient.middleware(),
+    thunkMiddleware,
+    promiseMiddleware,
+  ];
   const store = createStore(
     persistedReducer,
-    applyMiddleware(
-      apolloClient.middleware(),
-      thunkMiddleware,
-      promiseMiddleware,
-      createLogger({ collapsed: true })
+    applyMiddleware.apply(
+      this,
+      (process.env.CI ? [...middleware, createLogger({ collapsed: true })] : middleware)
     )
   );
 
