@@ -4,9 +4,7 @@ jobs:
     machine:
       image: ubuntu-1604:201903-01
     steps:
-      - run:
-        name: "End to End Testing"
-        command: docker-compose up --exit-code-from ui
+      - run: docker-compose up --exit-code-from ui
 workflows:
   build-and-test:
     jobs:
