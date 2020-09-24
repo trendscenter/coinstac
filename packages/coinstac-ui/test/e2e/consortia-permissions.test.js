@@ -54,12 +54,25 @@ describe('e2e consortia permissions', () => {
     ]);
   });
 
-  after(() => (
+  after(async () => {
+    if (process.env.CI) {
+      await app1.client.getMainProcessLogs().then((logs) => {
+        logs.forEach((log) => {
+          console.log(log); // eslint-disable-line no-console
+        });
+      });
+      console.log('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Second Client Logs %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'); // eslint-disable-line no-console
+      await app2.client.getMainProcessLogs().then((logs) => {
+        logs.forEach((log) => {
+          console.log(log); // eslint-disable-line no-console
+        });
+      });
+    }
     Promise.all([
       app1.stop(),
       app2.stop(),
-    ])
-  ));
+    ]);
+  });
 
   it('authenticates demo user on first instance', async () => {
     const usernameField = await app1.client.$('#login-username');

@@ -26,7 +26,7 @@ services:
     image: coinstacteam/coinstac-ui:ci
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - coinstac_local-volume:/root/.coinstac
+      - local-volume:/root/.coinstac
     networks:
       - ci_network
     environment:
@@ -55,7 +55,7 @@ services:
       - "3200:3200"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - coinstac_remote-volume:/tmp/coinstac
+      - remote-volume:/tmp/coinstac
     networks:
         - ci_network
     environment:

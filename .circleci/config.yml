@@ -1,22 +1,12 @@
 version: 2.1
 jobs:
   build-and-test:
-    docker:
-      - image: 'coinstacteam/coinstac-ui:ci'
-      # - image: 'mongo:4.4.0-bionic'
-      #   environment:
-      #     MONGO_INITDB_ROOT_USERNAME: root
-      #     MONGO_INITDB_ROOT_PASSWORD: test
-      - image: coinstacteam/coinstac-api
-      # - image: coinstacteam/coinstac-server
-    working_directory: /usr/local/src/coinstac
+    machine:
+      image: ubuntu-1604:201903-01
     steps:
-      - setup_remote_docker
-      - run: docker ps
-      # - run: >-
-      #     npm run -s getconfig -- 1 local export ci > env.sh && . ./env.sh && rm
-      #     env.sh && cd packages/coinstac-ui && xvfb-run --auto-servernum
-      #     --server-args='-screen 0, 1600x900x24' npm run test:e2e
+      - run:
+        name: "End to End Testing"
+        command: docker-compose up --exit-code-from ui
 workflows:
   build-and-test:
     jobs:

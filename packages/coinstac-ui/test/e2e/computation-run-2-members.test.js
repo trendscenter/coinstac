@@ -61,7 +61,7 @@ describe('e2e run computation with 2 members', () => {
   });
 
   after(async () => {
-    if (this.currentTest.state === 'failed' && process.env.CI) {
+    if (process.env.CI) {
       await app1.client.getMainProcessLogs().then((logs) => {
         logs.forEach((log) => {
           console.log(log); // eslint-disable-line no-console
