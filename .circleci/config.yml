@@ -5,8 +5,9 @@ jobs:
       image: ubuntu-1604:201903-01
     steps:
       - checkout
-      - run: ./scripts/dockerbuild-for-ci.sh
-      - run: docker-compose up --exit-code-from ui
+      - run: ls -lah
+      # - run: ./scripts/dockerbuild-for-ci.sh
+      # - run: docker-compose up --exit-code-from ui
 workflows:
   build-and-test:
     jobs:
