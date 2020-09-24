@@ -1,9 +1,12 @@
 version: 2.1
 jobs:
   build-and-test:
+    workdir: /usr/local/src
     machine:
       image: ubuntu-1604:201903-01
     steps:
+      - checkout
+      - run: cd coinstac && ./scripts/dockerbuild-for-ci.sh
       - run: docker-compose up --exit-code-from ui
 workflows:
   build-and-test:
