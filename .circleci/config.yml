@@ -1,7 +1,6 @@
 version: 2.1
 jobs:
   build-and-test:
-    working_directory: /usr/local/src
     machine:
       image: ubuntu-1604:201903-01
     steps:
