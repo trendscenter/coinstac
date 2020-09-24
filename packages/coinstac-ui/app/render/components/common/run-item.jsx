@@ -41,9 +41,11 @@ const styles = theme => ({
   actionButtons: {
     display: 'flex',
     justifyContent: 'space-between',
+    flexWrap: 'wrap',
   },
   resultButtons: {
     display: 'flex',
+    flexWrap: 'wrap',
   },
   runStateContainer: {
     display: 'flex',
@@ -55,6 +57,13 @@ const styles = theme => ({
   runTitle: {
     textDecoration: 'underline',
     marginBottom: theme.spacing(1),
+  },
+  button: {
+    marginTop: theme.spacing(1),
+    marginRight: theme.spacing(1),
+  },
+  pipelineButton: {
+    marginTop: theme.spacing(1),
   },
 });
 
@@ -295,13 +304,14 @@ class RunItem extends Component {
                   color="primary"
                   component={Link}
                   to={`/dashboard/results/${id}`}
+                  className={classes.button}
                 >
                   View Results
                 </Button>
                 <Button
                   variant="contained"
                   color="primary"
-                  style={{ marginLeft: 10 }}
+                  className={classes.button}
                   onClick={this.handleOpenResult}
                 >
                   Open Results
@@ -316,6 +326,7 @@ class RunItem extends Component {
                 variant="contained"
                 component={Link}
                 to={`/dashboard/results/${id}`}
+                className={classes.button}
               >
                 View Error
               </Button>
@@ -329,6 +340,7 @@ class RunItem extends Component {
                 color="secondary"
                 component={Link}
                 to={`/dashboard/pipelines/snapShot/${pipelineSnapshot.id}`}
+                className={classes.pipelineButton}
               >
                 View Pipeline
               </Button>
@@ -341,6 +353,7 @@ class RunItem extends Component {
                 <Button
                   variant="contained"
                   component={Link}
+                  className={classes.button}
                   onClick={this.handleStopPipeline}
                 >
                   Stop Pipeline
