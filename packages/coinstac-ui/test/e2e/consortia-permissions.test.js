@@ -5,7 +5,6 @@ const path = require('path');
 const electron = require('electron');
 
 const appPath = path.join(__dirname, '../..');
-const mocksPath = path.join(__dirname, 'mocks.js');
 
 const EXIST_TIMEOUT = 6000;
 const USER_ID_1 = 'test1';
@@ -20,7 +19,7 @@ chai.use(chaiAsPromised);
 const app1 = new Application({
   path: electron,
   env: { TEST_INSTANCE: 'test-1' },
-  args: [appPath, '-r', mocksPath],
+  args: [appPath],
   chromeDriverArgs: [
     '--no-sandbox',
     '--whitelisted-ips=',
@@ -32,7 +31,7 @@ const app1 = new Application({
 const app2 = new Application({
   path: electron,
   env: { TEST_INSTANCE: 'test-2' },
-  args: [appPath, '-r', mocksPath],
+  args: [appPath],
   chromeDriverArgs: [
     '--no-sandbox',
     '--whitelisted-ips=',

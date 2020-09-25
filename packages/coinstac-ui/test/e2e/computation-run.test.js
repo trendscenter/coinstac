@@ -5,7 +5,6 @@ const path = require('path');
 const electron = require('electron');
 
 const appPath = path.join(__dirname, '../..');
-const mocksPath = path.join(__dirname, 'mocks.js');
 
 const EXIST_TIMEOUT = 10000;
 const COMPUTATION_TIMEOUT = 150000;
@@ -23,7 +22,7 @@ chai.use(chaiAsPromised);
 
 const app = new Application({
   path: electron,
-  args: [appPath, '-r', mocksPath],
+  args: [appPath],
   chromeDriverArgs: [
     '--no-sandbox',
     '--whitelisted-ips=',
