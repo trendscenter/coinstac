@@ -13,18 +13,10 @@ module.exports = {
    * @returns {Promise} Resolves to a string representing the meta file's full
    * path.
    */
-  showDialog: (mainWindow, filters, properties) => {
-    return new Promise((resolve) => {
-      dialog.showOpenDialog(
-        mainWindow,
-        {
-          filters,
-          properties,
-        },
-        files => resolve({ filePaths: files })
-      );
-    });
-  },
+  showDialog: (mainWindow, filters, properties) => dialog.showOpenDialog(mainWindow, {
+    filters,
+    properties,
+  }),
 
   /**
    * Select files.
