@@ -113,8 +113,12 @@ const helperFunctions = {
   async getUserDetailsByID(userId) {
     const db = database.getDbInstance();
 
-    const user = await db.collection('users').findOne({ _id: ObjectID(userId) });
-    return transformToClient(user);
+    try {
+      const user = await db.collection('users').findOne({ _id: ObjectID(userId) });
+      return transformToClient(user);
+    } catch {
+      return null;
+    }
   },
   /**
    * Returns user table object for requested user
@@ -195,7 +199,7 @@ const helperFunctions = {
    */
   async validateEmail(req, res) {
     const exists = !await helperFunctions.validateUniqueEmail(req);
-    if (!exists) return res(Boom.badRequest('No such email address'));
+    if (!exists) return res(Boom.badRequest('Invalid email'));
 
     return res(exists);
   },
@@ -225,7 +229,7 @@ const helperFunctions = {
       return res(Boom.badRequest('Username taken'));
     }
 
-    const isEmailUnique = helperFunctions.validateUniqueEmail(req);
+    const isEmailUnique = await helperFunctions.validateUniqueEmail(req);
 
     if (!isEmailUnique) {
       return res(Boom.badRequest('Email taken'));

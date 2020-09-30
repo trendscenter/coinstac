@@ -2,13 +2,18 @@ const test = require('ava');
 const { transformToClient } = require('../src/utils');
 
 test('transformToClient', (t) => {
-  const newUser = { _id: 'test', username: 'test', email: 'test@mrn.org' };
   const inputArray = [
-    newUser, { ...newUser, id: newUser._id },
+    { _id: 'test1', username: 'test1' },
+    { id: 'test2', _id: 'test2', username: 'test2' },
   ];
 
-  transformToClient(inputArray);
-  transformToClient(newUser);
+  const res1 = transformToClient(inputArray);
+  t.deepEqual(res1, [
+    { id: 'test1', username: 'test1' },
+    { id: 'test2', _id: 'test2', username: 'test2' },
+  ]);
 
-  t.pass();
+
+  const res2 = transformToClient(inputArray[0]);
+  t.deepEqual(res2, { id: 'test1', username: 'test1' });
 });

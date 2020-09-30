@@ -316,7 +316,7 @@ const resolvers = {
      * @param {string} args.userId Requested user ID, restricted to authenticated user for time being
      * @return {object} Requested user if id present, null otherwise
      */
-    fetchUser: ({ auth: { credentials } }, args) => {
+    fetchUser: (_, args) => {
       return helperFunctions.getUserDetailsByID(args.userId);
     },
     fetchAllUsers: async () => {
@@ -462,9 +462,9 @@ const resolvers = {
 
       const db = database.getDbInstance();
 
-      const deleteConsortiumResult = await db.collection('consortia').findOneAndDelete({ _id: ObjectID(args.consortiumId) });
+      const deletedConsortiumResult = await db.collection('consortia').findOneAndDelete({ _id: ObjectID(args.consortiumId) });
 
-      eventEmitter.emit(CONSORTIUM_DELETED, deleteConsortiumResult.value);
+      eventEmitter.emit(CONSORTIUM_DELETED, deletedConsortiumResult.value);
 
       const userIds = await db.collection('users').find({
         [`permissions.consortia.${args.consortiumId}`]: { $exists: true }
@@ -495,7 +495,7 @@ const resolvers = {
 
       eventEmitter.emit(PIPELINE_DELETED, pipelines);
 
-      return transformToClient(deleteConsortiumResult.value);
+      return transformToClient(deletedConsortiumResult.value);
     },
     /**
      * Deletes pipeline
@@ -536,7 +536,9 @@ const resolvers = {
         returnOriginal: false
       });
 
-      eventEmitter.emit(CONSORTIUM_CHANGED, updateConsortiumResult.value);
+      if (updateConsortiumResult.value) {
+        eventEmitter.emit(CONSORTIUM_CHANGED, updateConsortiumResult.value);
+      }
 
       return transformToClient(deletePipelineResult.value);
     },
@@ -951,7 +953,7 @@ const resolvers = {
 
         const consortia = await db.collection('consortia').find({
           _id: { $in: updatedConsortiaIds.map(c => c._id) }
-        });
+        }).toArray();
 
         eventEmitter.emit(CONSORTIUM_CHANGED, consortia);
       }
@@ -1149,7 +1151,7 @@ const resolvers = {
         const issue = new Issue(repository, auth);
 
         await issue.createIssue({ title: `${credentials.username} - ${title}`, body });
-      } catch (error) {
+      } catch {
         return Boom.notAcceptable('Failed to create issue on GitHub');
       }
     },

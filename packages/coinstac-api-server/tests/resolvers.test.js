@@ -2,44 +2,61 @@
 const test = require('ava');
 const sinon = require('sinon');
 const axios = require('axios');
+const sgMail = require('@sendgrid/mail');
 const crypto = require('crypto');
-const { graphql } = require('graphql');
-const { SubscriptionClient } = require('subscriptions-transport-ws');
-const { ApolloClient } = require('apollo-client');
-const gql = require('graphql-tag');
-const WebSocket = require('ws');
-const { EventEmitter } = require('events');
+const Issue = require('github-api/dist/components/Issue');
+const jwt = require('jsonwebtoken');
+// const { graphql } = require('graphql');
+// const { SubscriptionClient } = require('subscriptions-transport-ws');
+// const { ApolloClient } = require('apollo-client');
+// const gql = require('graphql-tag');
+// const WebSocket = require('ws');
+// const { EventEmitter } = require('events');
 const database = require('../src/database');
-const populate = require('../seed/populate');
+const {
+  populate,
+  CONSORTIA_IDS,
+  COMPUTATION_IDS,
+  PIPELINE_IDS,
+  USER_IDS,
+  RUN_IDS,
+} = require('../seed/populate');
 const helperFunctions = require('../src/auth-helpers');
-const { schema } = require('../src/data/schema');
+// const { schema } = require('../src/data/schema');
 const { resolvers } = require('../src/data/resolvers');
 
 const { Query, Mutation } = resolvers;
 
-const SUB_URL = 'ws://localhost:3100/subscriptions';
+// const SUB_URL = 'ws://localhost:3100/subscriptions';
 
 /**
  * Error messages
  */
 const UNAUTHENTICATED_ERROR = 'User not authenticated';
 const ACTION_PERMIT_ERROR = 'Action not permitted';
-const UNIQUE_USERNAME_ERROR = 'Username taken';
 const DUPLICATE_CONSORTIUM_ERROR = 'Consortium with same name already exists';
 const INVALID_PIPELINE_STEP = 'Some of the covariates are incomplete';
+const INVALID_TOKEN = 'Invalid token';
+const INVALID_EMAIL = 'Invalid email';
+const INVALID_CONSORTIUM = 'Consortium with provided id not found';
+const MISSING_ACTIVE_PIPELINE = 'Active pipeline not found on this consortium';
+const PIPELINE_SERVER_UNAVAILABLE = 'Pipeline server unavailable';
+const FAILED_CREATE_ISSUE = 'Failed to create issue on GitHub';
+const INVALID_PASSWORD = 'Current password is not correct';
+const RUNS_ON_PIPELINE = 'Runs on this pipeline exist';
 
 /**
  * Variables
  */
 let networkInterface;
-let apolloClient;
+// let apolloClient;
 
-function getAuthByUsername(username) {
-  return { auth: { credentials: { id: username, username } } };
+function getAuth(id, username) {
+  return { auth: { credentials: { id, username: username || id } } };
 }
 
 function getMessageFromError(error) {
-  return error.output.payload.mesage;
+  return error.output.payload.message;
 }
 
 /*
@@ -49,66 +66,118 @@ function getMessageFromError(error) {
   waitForNext function to resolve. In the end of the test, you should call the unsubscribe
   function to release resources.
 */
-function subscribe(query, variables) {
-  const subDataEventEmitter = new EventEmitter();
+// function subscribe(query, variables) {
+//   const subDataEventEmitter = new EventEmitter();
 
-  let currentWaitIndex = 0;
-  let currentDataIndex = 0;
+//   let currentWaitIndex = 0;
+//   let currentDataIndex = 0;
 
-  const subscription = apolloClient
-    .subscribe({
-      query,
-      variables,
-    })
-    .subscribe({
-      next: (data) => {
-        subDataEventEmitter.emit(`sub-data-${currentDataIndex}`, data);
-        currentDataIndex += 1;
-      },
-    });
+//   const subscription = apolloClient
+//     .subscribe({
+//       query,
+//       variables,
+//     })
+//     .subscribe({
+//       next: (data) => {
+//         subDataEventEmitter.emit(`sub-data-${currentDataIndex}`, data);
+//         currentDataIndex += 1;
+//       },
+//     });
 
-  return {
-    waitForNext() {
-      return new Promise((resolve) => {
-        subDataEventEmitter.on(`sub-data-${currentWaitIndex}`, data => resolve(data));
-        currentWaitIndex += 1;
-      });
-    },
-    unsubscribe() {
-      subscription.unsubscribe();
-    },
-  };
-}
+//   return {
+//     waitForNext() {
+//       return new Promise((resolve) => {
+//         subDataEventEmitter.on(`sub-data-${currentWaitIndex}`, data => resolve(data));
+//         currentWaitIndex += 1;
+//       });
+//     },
+//     unsubscribe() {
+//       subscription.unsubscribe();
+//     },
+//   };
+// }
 
 test.before(async () => {
   await populate(false);
 
   require('../src');
 
-  networkInterface = new SubscriptionClient(SUB_URL, {
-    reconnect: false,
-  }, WebSocket);
+  // networkInterface = new SubscriptionClient(SUB_URL, {
+  //   reconnect: false,
+  // }, WebSocket);
 
-  apolloClient = new ApolloClient({
-    networkInterface,
-  });
+  // apolloClient = new ApolloClient({
+  //   networkInterface,
+  // });
 });
 
-test.beforeEach(() => {
-  networkInterface.unsubscribeAll();
-});
+// test.beforeEach(() => {
+//   networkInterface.unsubscribeAll();
+// });
 
 /**
  * Auth helper tests
  */
 
-test.serial('createToken', (t) => {
-  helperFunctions.createToken('test-1');
+test('createToken', (t) => {
+  const token = helperFunctions.createToken('test-1');
 
-  t.pass();
+  t.is(token.length, 147);
 });
 
-test.serial('createUser', async (t) => {
+test('createPasswordResetToken, savePasswordResetToken, validateResetToken and resetPassword', async (t) => {
+  /* createPasswordResetToken */
+  const email = 'test@mrn.org';
+  const token = helperFunctions.createPasswordResetToken(email);
+
+  t.is(token.length, 159);
+
+  /* savePasswordResetToken */
+  sinon.stub(sgMail, 'send').resolves();
+
+  const user = await helperFunctions.savePasswordResetToken(email);
+  t.not(user.passwordResetToken, null);
+
+  sgMail.send.restore();
+
+  /* validateResetToken */
+  const req = {
+    payload: { token },
+  };
+
+  await helperFunctions.validateResetToken(req, (res) => {
+    t.is(res.email, email);
+  });
+
+  const invalidTokenReq = {
+    payload: { token: 'token' },
+  };
+  await helperFunctions.validateResetToken(invalidTokenReq, (error) => {
+    t.is(getMessageFromError(error), INVALID_TOKEN);
+  });
+
+  sinon.stub(jwt, 'verify').throws(new Error('error'));
+  await helperFunctions.validateResetToken(req, (error) => {
+    t.is(getMessageFromError(error), 'error');
+  });
+  jwt.verify.restore();
+
+  sinon.stub(jwt, 'verify').resolves({ email: 'email@mrn.org' });
+  await helperFunctions.validateResetToken(req, (error) => {
+    t.is(getMessageFromError(error), INVALID_EMAIL);
+  });
+  jwt.verify.restore();
+
+  /* resetPassword */
+  const newPassword = 'newPassword';
+  await helperFunctions.resetPassword(token, newPassword);
+
+  const res = await helperFunctions.getUserDetailsByID(USER_IDS[0]);
+
+  t.is(res.passwordResetToken, '');
+});
+
+test('createUser', async (t) => {
   const passwordHash = await helperFunctions.hashPassword('password');
 
   const user = {
@@ -121,83 +190,88 @@ test.serial('createUser', async (t) => {
   t.is(createdUser.username, user.username);
 });
 
-test.serial('getUserDetails', async (t) => {
+test('updateUser', async (t) => {
+  const user = await helperFunctions.getUserDetailsByID(USER_IDS[4]);
+  const newUsername = 'test6';
+
+  const newUser = {
+    ...user,
+    username: newUsername,
+  };
+
+  const updatedUser = await helperFunctions.updateUser(newUser);
+
+  t.is(updatedUser.username, newUsername);
+});
+
+test('getUserDetailsByID', async (t) => {
+  const userId = USER_IDS[0];
+
+  const user = await helperFunctions.getUserDetailsByID(userId);
+
+  t.is(user.id, userId.toHexString());
+
+  const invalidUser = await helperFunctions.getUserDetailsByID('test1');
+  t.falsy(invalidUser);
+});
+
+test('getUserDetails', async (t) => {
   const username = 'test1';
   const user = await helperFunctions.getUserDetails(username);
 
   t.is(user.username, username);
 });
 
-test.serial('hashPassword', async (t) => {
-  await helperFunctions.hashPassword('password');
+test('hashPassword and verifyPassword', async (t) => {
+  /* hashPassword */
+  const passwordHash = await helperFunctions.hashPassword('password');
 
-  t.pass();
+  t.is(passwordHash.length, 120);
 
   sinon.stub(crypto, 'pbkdf2').yields(new Error('error'), null);
 
   try {
     await helperFunctions.hashPassword('password');
-  } catch {
-    t.pass();
+  } catch (err) {
+    t.is(err.message, 'error');
+  }
+
+  crypto.pbkdf2.restore();
+
+  /* verifyPassword */
+  const isValid1 = await helperFunctions.verifyPassword('password', passwordHash);
+  t.true(isValid1);
+
+  const isValid2 = await helperFunctions.verifyPassword('password');
+  t.false(isValid2);
+
+  sinon.stub(crypto, 'pbkdf2').yields(new Error('error'), null);
+
+  try {
+    await helperFunctions.verifyPassword('password', passwordHash);
+  } catch (error) {
+    t.is(error.message, 'error');
   }
 
   crypto.pbkdf2.restore();
 });
 
-test.serial('validateToken', (t) => {
-  const decoded1 = { username: 'test1' };
+test('validateToken and validateUser', async (t) => {
+  const users = await Query.fetchAllUsers();
+  const decoded1 = { id: users[0].id };
 
   helperFunctions.validateToken(decoded1, null, (_, valid, user) => {
     t.true(valid);
-    t.is(user.username, decoded1.username);
+    t.is(user.id, decoded1.id);
   });
 
-  const decoded2 = { username: 'invalid-user' };
+  const decoded2 = { id: 'invalid-user' };
 
   helperFunctions.validateToken(decoded2, null, (_, valid, user) => {
     t.false(valid);
     t.falsy(user);
   });
 
-  t.pass();
-});
-
-test.serial('validateUniqueEmail', async (t) => {
-  const req = { payload: { email: 'test@mrn.org' } };
-
-  const isValid = await helperFunctions.validateUniqueEmail(req);
-
-  t.false(isValid);
-});
-
-test.serial('validateUniqueUser', async (t) => {
-  const req1 = { payload: { username: 'test1', email: 'test@mrn.org' } };
-
-  await helperFunctions.validateUniqueUser(req1, (error) => {
-    t.is(error.output.payload.message, 'Username taken');
-  });
-
-  const req2 = { payload: { username: 'newuser', email: 'test@mrn.org' } };
-
-  await helperFunctions.validateUniqueUser(req2, (error) => {
-    t.is(error.output.payload.message, 'Email taken');
-  });
-
-  const req3 = { payload: { username: 'newuser', email: 'newuser@mrn.org' } };
-  await helperFunctions.validateUniqueUser(req3, (user) => {
-    t.deepEqual(user, req3.payload);
-  });
-});
-
-test.serial('validateUniqueUsername', async (t) => {
-  const req = { payload: { username: 'valid-user' } };
-
-  const isUnique = await helperFunctions.validateUniqueUsername(req);
-
-  t.true(isUnique);
-});
-
-test.serial('validateUser', async (t) => {
   const req1 = { payload: { username: 'test1', password: 'password' } };
 
   await helperFunctions.validateUser(req1, (user) => {
@@ -217,38 +291,64 @@ test.serial('validateUser', async (t) => {
   });
 });
 
-test.serial('verifyPassword', async (t) => {
-  const passwordHash = await helperFunctions.hashPassword('password');
+test('validateEmail', async (t) => {
+  let req = {
+    payload: { email: 'test@mrn.org' },
+  };
 
-  const isValid1 = await helperFunctions.verifyPassword('password', passwordHash);
+  await helperFunctions.validateEmail(req, (exists) => {
+    t.true(exists);
+  });
 
-  t.true(isValid1);
+  req = {
+    payload: { email: 'email@mrn.org' },
+  };
 
-  const isValid2 = await helperFunctions.verifyPassword('password');
-
-  t.false(isValid2);
-
-  sinon.stub(crypto, 'pbkdf2').yields('error', null);
-
-  try {
-    await helperFunctions.verifyPassword('password', passwordHash);
-  } catch (error) {
-    t.is(error, 'error');
-  }
-
-  crypto.pbkdf2.restore();
+  await helperFunctions.validateEmail(req, (error) => {
+    t.is(getMessageFromError(error), INVALID_EMAIL);
+  });
 });
 
-test.serial('setDBMap', (t) => {
-  helperFunctions.setDBMap({ cstacJWTSecret: 'secret' });
-  t.pass();
+test('validateUniqueEmail', async (t) => {
+  const req = { payload: { email: 'test@mrn.org' } };
+
+  const isValid = await helperFunctions.validateUniqueEmail(req);
+
+  t.false(isValid);
 });
 
+test('validateUniqueUsername', async (t) => {
+  const req = { payload: { username: 'valid-user' } };
+
+  const isUnique = await helperFunctions.validateUniqueUsername(req);
+
+  t.true(isUnique);
+});
+
+test('validateUniqueUser', async (t) => {
+  const req1 = { payload: { username: 'test1', email: 'test@mrn.org' } };
+
+  await helperFunctions.validateUniqueUser(req1, (error) => {
+    t.is(error.output.payload.message, 'Username taken');
+  });
+
+  const req2 = { payload: { username: 'newuser', email: 'test@mrn.org' } };
+
+  await helperFunctions.validateUniqueUser(req2, (error) => {
+    t.is(error.output.payload.message, 'Email taken');
+  });
+
+  const req3 = { payload: { username: 'newuser', email: 'newuser@mrn.org' } };
+  const res = sinon.spy();
+
+  await helperFunctions.validateUniqueUser(req3, res);
+  t.true(res.called);
+});
 
 /**
  * Query tests
  */
-test.serial('fetchAll Results and fetchResult', async (t) => {
+test('fetchAll Results and fetchResult', async (t) => {
   const results = await Query.fetchAllResults();
 
   t.is(results.length, 4);
@@ -262,8 +362,8 @@ test.serial('fetchAll Results and fetchResult', async (t) => {
   t.deepEqual(result2.id, results[0].id);
 });
 
-test.serial('fetchAllConsortia', async (t) => {
-  const auth = getAuthByUsername('test1');
+test('fetchAllConsortia', async (t) => {
+  const auth = getAuth('test1');
   const consortia = await Query.fetchAllConsortia(auth);
 
   t.is(consortia.length, 2);
@@ -277,10 +377,10 @@ test.serial('fetchAllConsortia', async (t) => {
   t.deepEqual(consortium2.id, consortia[0].id);
 });
 
-test.serial('fetchAllComputations and fetchComputation', async (t) => {
+test('fetchAllComputations and fetchComputation', async (t) => {
   const computations = await Query.fetchAllComputations();
 
-  t.is(computations.length, 15);
+  t.is(computations.length, 16);
 
   const ids = [computations[0].id, computations[1].id];
 
@@ -303,10 +403,10 @@ test.serial('fetchAllComputations and fetchComputation', async (t) => {
   t.is(computation3.length, ids.length);
 });
 
-test.serial('fetchAllPipelines and fetchPipeline', async (t) => {
+test('fetchAllPipelines and fetchPipeline', async (t) => {
   const pipelines = await Query.fetchAllPipelines();
 
-  t.is(pipelines.length, 3);
+  t.is(pipelines.length, 4);
 
   const pipeline1 = await Query.fetchPipeline({}, {});
 
@@ -319,37 +419,25 @@ test.serial('fetchAllPipelines and fetchPipeline', async (t) => {
   t.deepEqual(pipeline2.id, pipelines[0].id);
 });
 
-test.serial('fetchUser', async (t) => {
-  const userId = 'test1';
-  const auth = getAuthByUsername(userId);
-
-  try {
-    await Query.fetchUser(auth, { userId: 'test2' });
-  } catch (error) {
-    t.is(getMessageFromError(error), UNIQUE_USERNAME_ERROR);
-  }
-
-  const user = await Query.fetchUser(auth, { userId });
-
-  t.is(user.id, userId);
-});
-
-test.serial('fetchAllUsers', async (t) => {
+test('fetchAllUsers and fetchUser', async (t) => {
   const users = await Query.fetchAllUsers();
+  t.is(users.length, 7);
 
-  t.is(users.length, 8);
+  const userId = USER_IDS[0];
+
+  const user = await Query.fetchUser({}, { userId });
+  t.is(user.id, userId.toHexString());
 });
 
-test.serial('fetchAllUserRuns', async (t) => {
-  const auth = getAuthByUsername('test1');
+test('fetchAllUserRuns', async (t) => {
+  const auth = getAuth(USER_IDS[0], 'test1');
   const runs = await Query.fetchAllUserRuns(auth);
 
   t.is(runs.length, 4);
 });
 
-test.serial('fetchAllThreads', async (t) => {
-  const auth = getAuthByUsername('test1');
-
+test('fetchAllThreads', async (t) => {
+  const auth = getAuth(USER_IDS[0], 'test1');
   const threads = await Query.fetchAllThreads(auth);
 
   t.is(threads.length, 0);
@@ -358,19 +446,18 @@ test.serial('fetchAllThreads', async (t) => {
 /**
  * Mutation tests
  */
-test.serial('addComputation', async (t) => {
-  const auth = getAuthByUsername('test1');
-  const args = { computationSchema: { meta: {} } };
+test('addComputation', async (t) => {
+  const auth = getAuth(USER_IDS[0]);
+  const args = { computationSchema: { meta: {}, id: database.createUniqueId() } };
 
   const res = await Mutation.addComputation(auth, args);
 
-  t.deepEqual(res.meta, args.computationSchema.meta);
+  t.deepEqual(res, args.computationSchema);
 });
 
-test.serial('addUserRole', async (t) => {
-  const auth = getAuthByUsername('test1');
-  const consortia = await Query.fetchAllConsortia(auth);
-  const consortiumId = consortia[0].id;
+test('addUserRole', async (t) => {
+  const consortiumId = CONSORTIA_IDS[0];
+  const userId = USER_IDS[0];
 
   const invalidPermissions = {
     consortia: {
@@ -382,16 +469,13 @@ test.serial('addUserRole', async (t) => {
     table: 'consortia',
     doc: consortiumId,
     role: 'admin',
-    userId: 'test1',
+    userId,
   };
 
-  try {
-    await Mutation.addUserRole(
-      { auth: { credentials: { permissions: invalidPermissions } } }, args
-    );
-  } catch (error) {
-    t.is(getMessageFromError(error), ACTION_PERMIT_ERROR);
-  }
+  const error = await Mutation.addUserRole(
+    { auth: { credentials: { permissions: invalidPermissions } } }, args
+  );
+  t.is(getMessageFromError(error), ACTION_PERMIT_ERROR);
 
   const permissions = {
     consortia: {
@@ -403,13 +487,12 @@ test.serial('addUserRole', async (t) => {
     { auth: { credentials: { permissions } } }, args
   );
 
-  t.deepEqual(res.id, 'test1');
+  t.is(res.id, userId.toHexString());
 });
 
-test.serial('removeUserRole', async (t) => {
-  const auth = getAuthByUsername('test1');
-  const consortia = await Query.fetchAllConsortia(auth);
-  const consortiumId = consortia[0].id;
+test('removeUserRole', async (t) => {
+  const consortiumId = CONSORTIA_IDS[0];
+  const userId = USER_IDS[0];
 
   const invalidPermissions = {
     consortia: {
@@ -421,16 +504,13 @@ test.serial('removeUserRole', async (t) => {
     table: 'consortia',
     doc: consortiumId,
     role: 'admin',
-    userId: 'test1',
+    userId,
   };
 
-  try {
-    await Mutation.removeUserRole(
-      { auth: { credentials: { permissions: invalidPermissions } } }, args
-    );
-  } catch (error) {
-    t.is(getMessageFromError(error), ACTION_PERMIT_ERROR);
-  }
+  const error = await Mutation.removeUserRole(
+    { auth: { credentials: { permissions: invalidPermissions } } }, args
+  );
+  t.is(getMessageFromError(error), ACTION_PERMIT_ERROR);
 
   const permissions = {
     consortia: {
@@ -442,76 +522,53 @@ test.serial('removeUserRole', async (t) => {
     { auth: { credentials: { permissions } } }, args
   );
 
-  t.deepEqual(res.id, 'test1');
+  t.deepEqual(res.id, userId.toHexString());
 });
 
-test.serial('createRun', async (t) => {
-  try {
-    await Mutation.createRun({}, { consortiumId: 'con-1' });
-  } catch (error) {
-    t.is(getMessageFromError(error), UNAUTHENTICATED_ERROR);
-  }
+test('createRun', async (t) => {
+  let error = await Mutation.createRun({}, { consortiumId: database.createUniqueId() });
+  t.is(getMessageFromError(error), UNAUTHENTICATED_ERROR);
 
-  try {
-    await Mutation.createRun({ auth: {} }, { consortiumId: 'con-1' });
-  } catch (error) {
-    t.is(getMessageFromError(error), UNAUTHENTICATED_ERROR);
-  }
+  error = await Mutation.createRun({ auth: {} }, { consortiumId: database.createUniqueId() });
+  t.is(getMessageFromError(error), UNAUTHENTICATED_ERROR);
 
-  const auth = getAuthByUsername('test1');
+  const auth = getAuth(USER_IDS[0], 'test1');
 
-  const consortia = await Query.fetchAllConsortia(auth);
-  const consortiumId = consortia[1].id;
+
+  error = await Mutation.createRun(auth, { consortiumId: database.createUniqueId() });
+  t.is(getMessageFromError(error), INVALID_CONSORTIUM);
+
+  const consortiumId1 = CONSORTIA_IDS[0];
+
+  error = await Mutation.createRun(auth, { consortiumId: consortiumId1 });
+  t.is(getMessageFromError(error), MISSING_ACTIVE_PIPELINE);
 
   sinon.stub(axios, 'post').resolves();
 
-  const run = await Mutation.createRun(auth, { consortiumId });
-  t.deepEqual(run.consortiumId, consortiumId);
+  const consortiumId2 = CONSORTIA_IDS[1];
+
+  const run = await Mutation.createRun(auth, { consortiumId: consortiumId2 });
+  t.is(run.consortiumId, consortiumId2);
+
+  axios.post.restore();
+
+  sinon.stub(axios, 'post').rejects({ code: 'ECONNREFUSED' });
+
+  const error1 = await Mutation.createRun(auth, { consortiumId: consortiumId2 });
+  t.is(getMessageFromError(error1), PIPELINE_SERVER_UNAVAILABLE);
+
+  axios.post.restore();
+
+  sinon.stub(axios, 'post').rejects(new Error('error'));
+
+  const error2 = await Mutation.createRun(auth, { consortiumId: consortiumId2 });
+  t.is(error2.output.payload.statusCode, 406);
 
   axios.post.restore();
 });
 
-test.serial('deletePipeline', async (t) => {
-  const pipelines = await Query.fetchAllPipelines();
-  const pipelineId = pipelines[0].id;
-  const consortiumId = pipelines[0].owningConsortium;
-
-  const invalidPermission = {
-    consortia: {
-      [consortiumId]: null,
-    },
-  };
-
-  try {
-    await Mutation.deletePipeline(
-      { auth: { credentials: { permissions: invalidPermission } } }, { pipelineId }
-    );
-  } catch (error) {
-    t.is(getMessageFromError(error), ACTION_PERMIT_ERROR);
-  }
-
-  const permissions = {
-    consortia: {
-      [consortiumId]: ['owner'],
-    },
-  };
-
-  const auth = getAuthByUsername('test1');
-  const runs = await Query.fetchAllUserRuns(auth);
-
-  await Mutation.deletePipeline(
-    { auth: { credentials: { permissions } } }, { pipelineId: runs[0].pipelineSnapshot.id }
-  );
-
-  const deletedPipeline = await Mutation.deletePipeline(
-    { auth: { credentials: { permissions } } }, { pipelineId }
-  );
-
-  t.deepEqual(deletedPipeline.id, pipelineId);
-});
-
-test.serial('saveActivePipeline', async (t) => {
-  const auth = getAuthByUsername('author');
+test('saveActivePipeline', async (t) => {
+  const auth = getAuth('author');
   const consortia = await Query.fetchAllConsortia(auth);
   const pipelines = await Query.fetchAllPipelines();
 
@@ -523,56 +580,95 @@ test.serial('saveActivePipeline', async (t) => {
   t.deepEqual(consortium.id, consortiumId);
 });
 
-test.serial('saveConsortium', async (t) => {
-  const pipelines = await Query.fetchAllPipelines();
-  const auth = { auth: { credentials: { id: 'test1', permissions: { } } } };
+test('saveConsortium', async (t) => {
+  /* saveConsortium */
+  let auth = {
+    auth: { credentials: { id: USER_IDS[0], username: 'test1', permissions: { } } },
+  };
+
   const consortium1 = {
     name: 'Consortium 1',
     description: 'Consortium Desc 1',
     isPrivate: false,
-    owners: [],
-    members: [],
-    activePipelineId: pipelines[0].id,
+    owners: {},
+    members: {},
+    activePipelineId: PIPELINE_IDS[0],
   };
 
   const createdConsortium = await Mutation.saveConsortium(auth, { consortium: consortium1 });
-
   t.is(createdConsortium.name, consortium1.name);
 
-  try {
-    await Mutation.saveConsortium(auth, { consortium: consortium1 });
-  } catch (error) {
-    t.is(getMessageFromError(error), DUPLICATE_CONSORTIUM_ERROR);
-  }
-
-  const consortia = await Query.fetchAllConsortia(getAuthByUsername('test1'));
+  let error = await Mutation.saveConsortium(auth, { consortium: consortium1 });
+  t.is(getMessageFromError(error), DUPLICATE_CONSORTIUM_ERROR);
 
   const consortium2 = {
-    ...consortium1,
-    id: consortia[0].id,
+    id: createdConsortium.id,
+    name: 'Consortium 2',
   };
 
-  const permissions = {
-    consortia: {
-      [consortia[0].id]: [],
+  auth = {
+    auth: {
+      credentials: {
+        id: USER_IDS[0],
+        username: 'test1',
+        permissions: {
+          consortia: {
+            [createdConsortium.id]: ['owner'],
+          },
+        },
+      },
     },
   };
 
-  try {
-    await Mutation.saveConsortium(
-      { auth: { credentials: { permissions } } },
-      { consortium: consortium2 }
-    );
-  } catch (error) {
-    t.is(getMessageFromError(error), ACTION_PERMIT_ERROR);
-  }
+  const updatedConsortium = await Mutation.saveConsortium(auth, { consortium: consortium2 });
+  t.is(updatedConsortium.name, consortium2.name);
+
+  const consortium3 = {
+    ...consortium1,
+    id: CONSORTIA_IDS[0],
+  };
+
+  let permissions = {
+    consortia: {
+      [CONSORTIA_IDS[0]]: [],
+    },
+  };
+
+  error = await Mutation.saveConsortium(
+    { auth: { credentials: { permissions } } },
+    { consortium: consortium3 }
+  );
+
+  t.is(getMessageFromError(error), ACTION_PERMIT_ERROR);
+
+  /* deleteConsortiumById */
+  const consortiumId = createdConsortium.id;
+
+  const invalidPermissions = {
+    consortia: {},
+  };
+
+  error = await Mutation.deleteConsortiumById(
+    { auth: { credentials: { permissions: invalidPermissions } } },
+    { consortiumId }
+  );
+  t.is(getMessageFromError(error), ACTION_PERMIT_ERROR);
+
+  permissions = {
+    consortia: {
+      [consortiumId]: ['owner'],
+    },
+  };
+
+  const deletedConsortium = await Mutation.deleteConsortiumById(
+    { auth: { credentials: { permissions } } }, { consortiumId }
+  );
+
+  t.deepEqual(deletedConsortium.id, consortiumId);
 });
 
-test.serial('saveError', async (t) => {
-  const auth = getAuthByUsername('test1');
-  const runs = await Query.fetchAllUserRuns(auth);
-
-  const args1 = { runId: runs[1]._id, error: { messag: 'Error' } };
+test('saveError', async (t) => {
+  const args1 = { runId: RUN_IDS[1], error: { message: 'error' } };
   const run1 = await Mutation.saveError({}, args1);
 
   t.deepEqual(run1.error, args1.error);
@@ -583,11 +679,8 @@ test.serial('saveError', async (t) => {
   t.is(run2, undefined);
 });
 
-test.serial('saveResults', async (t) => {
-  const auth = getAuthByUsername('test1');
-  const runs = await Query.fetchAllUserRuns(auth);
-
-  const args1 = { runId: runs[1]._id, results: { messag: 'Result' } };
+test('saveResults', async (t) => {
+  const args1 = { runId: RUN_IDS[1], results: { message: 'Result' } };
   const run1 = await Mutation.saveResults({}, args1);
 
   t.deepEqual(run1.results, args1.results);
@@ -598,23 +691,20 @@ test.serial('saveResults', async (t) => {
   t.is(run2, undefined);
 });
 
-test.serial('savePipeline', async (t) => {
-  const auth = getAuthByUsername('test1');
-  const consortia = await Query.fetchAllConsortia(auth);
-  const computations = await Query.fetchAllComputations();
-
+test('savePipeline', async (t) => {
+  /* savePipeline */
   const args1 = {
     pipeline: {
       name: 'Decentralized Pipeline',
       description: 'Test description',
-      owningConsortium: consortia[0].id,
+      owningConsortium: CONSORTIA_IDS[0],
       shared: false,
       steps: [{
         id: 'UIKDl-',
         controller: {
           type: 'decentralized',
         },
-        computations: [computations[0].id],
+        computations: [COMPUTATION_IDS[0]],
         inputMap: {
           start: {
             value: 1,
@@ -636,7 +726,7 @@ test.serial('savePipeline', async (t) => {
         controller: {
           type: 'decentralized',
         },
-        computations: [computations[0].id],
+        computations: [COMPUTATION_IDS[0]],
         inputMap: {
           start: {
             value: 1,
@@ -651,19 +741,45 @@ test.serial('savePipeline', async (t) => {
     },
   };
 
-  try {
-    await Mutation.savePipeline({}, args2);
-  } catch (error) {
-    t.is(getMessageFromError(error), INVALID_PIPELINE_STEP);
-  }
+  let error = await Mutation.savePipeline({}, args2);
+  t.is(getMessageFromError(error), INVALID_PIPELINE_STEP);
+
+  /* deletePipeline */
+  const pipelines = await Query.fetchAllPipelines();
+  const pipelineId = pipelines[0].id;
+  const consortiumId = pipelines[0].owningConsortium;
+
+  const invalidPermission = {
+    consortia: {
+      [consortiumId]: null,
+    },
+  };
+
+  error = await Mutation.deletePipeline(
+    { auth: { credentials: { permissions: invalidPermission } } }, { pipelineId }
+  );
+  t.is(getMessageFromError(error), ACTION_PERMIT_ERROR);
+
+  const permissions = {
+    consortia: {
+      [consortiumId]: ['owner'],
+    },
+  };
+
+  error = await Mutation.deletePipeline(
+    { auth: { credentials: { permissions } } }, { pipelineId }
+  );
+  t.is(getMessageFromError(error), RUNS_ON_PIPELINE);
+
+  error = await Mutation.deletePipeline(
+    { auth: { credentials: { permissions } } }, { pipelineId: PIPELINE_IDS[1] }
+  );
+  // t.is(getMessageFromError(error), RUNS_ON_PIPELINE);
 });
 
-test.serial('updateRunState', async (t) => {
-  const auth = getAuthByUsername('test1');
-  const runs = await Query.fetchAllUserRuns(auth);
-
+test('updateRunState', async (t) => {
   const args = {
-    runId: runs[0].id,
+    runId: RUN_IDS[0],
     data: {
       state: 'running',
     },
@@ -674,10 +790,9 @@ test.serial('updateRunState', async (t) => {
   t.deepEqual(res.remotePipelineState, args.data);
 });
 
-test.serial('updateUserConsortiumStatus', async (t) => {
-  const auth = getAuthByUsername('test1');
-  const consortia = await Query.fetchAllConsortia(auth);
-  const consortiumId = consortia[0].id;
+test('updateUserConsortiumStatus', async (t) => {
+  const auth = getAuth(USER_IDS[0], 'test1');
+  const consortiumId = CONSORTIA_IDS[1];
   const status = 'completed';
 
   const res = await Mutation.updateUserConsortiumStatus(auth, { consortiumId, status });
@@ -685,39 +800,52 @@ test.serial('updateUserConsortiumStatus', async (t) => {
   t.is(res.consortiaStatuses[consortiumId], status);
 });
 
-test.serial('updateConsortiumMappedUsers', async (t) => {
-  const auth = getAuthByUsername('test1');
-  const consortia = await Query.fetchAllConsortia(auth);
-
-  const args = {
-    consortiumId: consortia[0].id,
-    mappedForRun: ['test2', 'test3'],
+test('updateConsortiumMappedUsers and updateConsortiaMappedUsers', async (t) => {
+  /* updateConsortiumMappedUsers */
+  let args = {
+    consortiumId: CONSORTIA_IDS[0],
+    mappedForRun: [USER_IDS[0], USER_IDS[1]],
   };
 
-  const res = await Mutation.updateConsortiumMappedUsers({}, args);
+  let res = await Mutation.updateConsortiumMappedUsers({}, args);
 
   t.deepEqual(res.mappedForRun, args.mappedForRun);
-});
 
-test.serial('updateConsortiaMappedUsers', async (t) => {
-  const auth = getAuthByUsername('test1');
+  /* updateConsortiaMappedUsers */
+  const auth = getAuth(USER_IDS[0], 'test1');
 
-  const res = await Mutation.updateConsortiaMappedUsers(auth, { consortia: null });
+  res = await Mutation.updateConsortiaMappedUsers(auth, { consortia: null });
   t.is(res, undefined);
 
-  const consortia = await Query.fetchAllConsortia(auth);
-
-  const args = {
-    consortia: [consortia[0].id],
+  args = {
+    consortia: [CONSORTIA_IDS[0]],
   };
 
   await Mutation.updateConsortiaMappedUsers(auth, args);
-  t.pass();
 });
 
-test.serial('saveMessage', async (t) => {
-  const auth = getAuthByUsername('test1');
-  const runs = await Query.fetchAllUserRuns(auth);
+test('updatePassword', async (t) => {
+  const auth = getAuth(USER_IDS[0], 'test1');
+
+  let args = {
+    currentPassword: 'admin',
+    newPassword: 'admin123',
+  };
+
+  const res = await Mutation.updatePassword(auth, args);
+  t.is(getMessageFromError(res), INVALID_PASSWORD);
+
+  args = {
+    currentPassword: 'password',
+    newPassword: 'admin',
+  };
+
+  await Mutation.updatePassword(auth, args);
+});
+
+test('saveMessage and setReadMessage', async (t) => {
+  /* saveMessage */
+  const auth = getAuth(USER_IDS[0], 'test1');
 
   const args1 = {
     title: 'Test Thread',
@@ -726,7 +854,7 @@ test.serial('saveMessage', async (t) => {
     action: {
       type: 'share-result',
       detail: {
-        id: runs[0].id,
+        id: RUN_IDS[0],
       },
     },
   };
@@ -735,7 +863,7 @@ test.serial('saveMessage', async (t) => {
 
   t.is(res1.title, args1.title);
 
-  const threads = await Query.fetchAllThreads(auth);
+  let threads = await Query.fetchAllThreads(auth);
   const args2 = {
     threadId: threads[0].id,
     recipients: ['author', 'test4'],
@@ -745,11 +873,9 @@ test.serial('saveMessage', async (t) => {
   const res2 = await Mutation.saveMessage(auth, args2);
 
   t.is(res2.messages.length, 2);
-});
 
-test.serial('setReadMessage', async (t) => {
-  const auth = getAuthByUsername('test2');
-  const threads = await Query.fetchAllThreads(auth);
+  /* setReadMessage */
+  threads = await Query.fetchAllThreads(auth);
 
   const args = {
     threadId: threads[0].id,
@@ -758,162 +884,144 @@ test.serial('setReadMessage', async (t) => {
 
   const res = await Mutation.setReadMessage({}, args);
 
-  t.true(res.users.some(user => user.isRead && user.username === 'test2'));
+  t.true(res.users[args.userId].isRead);
 });
 
-test.serial('joinConsortium', async (t) => {
-  const auth = getAuthByUsername('test1');
-  const consortia = await Query.fetchAllConsortia(auth);
-  const consortiumId1 = consortia[0].id;
+test('joinConsortium', async (t) => {
+  const userId = USER_IDS[0];
+  const username = 'test1';
+
+  const auth = getAuth(userId, username);
+  const consortiumId1 = CONSORTIA_IDS[0];
 
   const res1 = await Mutation.joinConsortium(auth, { consortiumId: consortiumId1 });
-  t.deepEqual(res1.id, 'test1');
+  t.deepEqual(res1.id, userId.toHexString());
 
-  const consortiumId2 = consortia[1].id;
+  const consortiumId2 = CONSORTIA_IDS[1];
   const res2 = await Mutation.joinConsortium(auth, { consortiumId: consortiumId2 });
   t.deepEqual(res2._id, consortiumId2);
 });
 
-test.serial('leaveConsortium', async (t) => {
-  const auth = getAuthByUsername('test1');
-  const consortia = await Query.fetchAllConsortia(auth);
-  const consortiumId = consortia[0].id;
+test('leaveConsortium', async (t) => {
+  const userId = USER_IDS[0];
+  const username = 'test1';
+  const auth = getAuth(userId, username);
+  const consortiumId = CONSORTIA_IDS[0];
 
   const res = await Mutation.leaveConsortium(auth, { consortiumId });
 
-  t.deepEqual(res.id, 'test1');
+  t.deepEqual(res.id, userId.toHexString());
 });
 
-test.serial('deleteConsortiumById', async (t) => {
-  const auth = getAuthByUsername('test1');
-  const consortia = await Query.fetchAllConsortia(auth);
+test('removeComputation', async (t) => {
+  const auth1 = getAuth(USER_IDS[0], 'test1');
+  const computationId = COMPUTATION_IDS[0];
 
-  const consortiumId = consortia[0].id;
+  const error = await Mutation.removeComputation(auth1, { computationId });
+  t.is(getMessageFromError(error), ACTION_PERMIT_ERROR);
 
-  const invalidPermissions = {
-    consortia: {},
-  };
+  const auth2 = getAuth(USER_IDS[5], 'author');
+  const res = await Mutation.removeComputation(auth2, { computationId });
 
-  try {
-    await Mutation.deleteConsortiumById(
-      { auth: { credentials: { permissions: invalidPermissions } } },
-      { consortiumId }
-    );
-  } catch (error) {
-    t.is(getMessageFromError(error), ACTION_PERMIT_ERROR);
-  }
+  t.deepEqual(res.id, computationId.toHexString());
+});
 
-  const permissions = {
-    consortia: {
-      [consortiumId]: ['owner'],
+test('createIssue', async (t) => {
+  const auth = getAuth(USER_IDS[0], 'test1');
+  const args = {
+    issue: {
+      title: 'Test Issue',
+      body: 'test issue',
     },
   };
 
-  const deletedConsortium = await Mutation.deleteConsortiumById(
-    { auth: { credentials: { permissions } } }, { consortiumId }
-  );
+  sinon.stub(Issue, '__proto__').returns({ createIssue: sinon.stub().rejects() });
 
-  t.deepEqual(deletedConsortium.id, consortiumId);
-});
-
-test.serial('removeComputation', async (t) => {
-  const auth1 = getAuthByUsername('test1');
-  const computations = await Query.fetchAllComputations();
-  const computationId = computations[0].id;
-
-  try {
-    await Mutation.removeComputation(auth1, { computationId });
-  } catch (error) {
-    t.is(getMessageFromError(error), ACTION_PERMIT_ERROR);
-  }
-
-  const auth2 = getAuthByUsername('author');
-  const res = await Mutation.removeComputation(auth2, { computationId });
-
-  t.deepEqual(res.id, computationId);
+  const res = await Mutation.createIssue(auth, args);
+  t.is(getMessageFromError(res), FAILED_CREATE_ISSUE);
 });
 
 /**
  * Subscription tests
  */
-test.serial('consortium subscription', async (t) => {
-  const auth = getAuthByUsername('test1');
+// test.serial('consortium subscription', async (t) => {
+//   const auth = getAuth(USER_IDS[0], 'test1');
 
-  const consortium = {
-    name: 'Consortium Test Sub 1',
-    description: 'Consortium Test Sub Desc 1',
-    isPrivate: false,
-    owners: [],
-    members: [],
-  };
+//   const consortium = {
+//     name: 'Consortium Test Sub 1',
+//     description: 'Consortium Test Sub Desc 1',
+//     isPrivate: false,
+//     owners: [],
+//     members: [],
+//   };
 
-  const NEW_NAME = 'Consortium Test Sub 1 Updated';
+//   const NEW_NAME = 'Consortium Test Sub 1 Updated';
 
-  const subDataControl = subscribe(gql`
-    subscription consortiumChanged($consortiumId: ID) {
-      consortiumChanged(consortiumId: $consortiumId) {
-        id
-        name
-      }
-    }
-  `, {
-    consortiumId: null,
-  });
+//   const subDataControl = subscribe(gql`
+//     subscription consortiumChanged($consortiumId: ID) {
+//       consortiumChanged(consortiumId: $consortiumId) {
+//         id
+//         name
+//       }
+//     }
+//   `, {
+//     consortiumId: null,
+//   });
 
-  const insertConsortiumSubDataPromise = subDataControl.waitForNext();
+//   const insertConsortiumSubDataPromise = subDataControl.waitForNext();
 
-  const { data: { saveConsortium: createdConsortium } } = await graphql(schema, `
-    mutation saveConsortium($consortium: ConsortiumInput!) {
-      saveConsortium(consortium: $consortium) {
-        id
-        name
-      }
-    }
-  `, auth, null, { consortium });
+//   const { data: { saveConsortium: createdConsortium } } = await graphql(schema, `
+//     mutation saveConsortium($consortium: ConsortiumInput!) {
+//       saveConsortium(consortium: $consortium) {
+//         id
+//         name
+//       }
+//     }
+//   `, auth, null, { consortium });
 
-  const insertConsortiumSubData = await insertConsortiumSubDataPromise;
+//   const insertConsortiumSubData = await insertConsortiumSubDataPromise;
 
-  t.is(insertConsortiumSubData.consortiumChanged.name, consortium.name);
+//   t.is(insertConsortiumSubData.consortiumChanged.name, consortium.name);
 
-  consortium.id = createdConsortium.id;
-  consortium.name = NEW_NAME;
+//   consortium.id = createdConsortium.id;
+//   consortium.name = NEW_NAME;
 
-  auth.auth.credentials.permissions = {
-    consortia: {
-      [consortium.id]: ['owner'],
-    },
-  };
+//   auth.auth.credentials.permissions = {
+//     consortia: {
+//       [consortium.id]: ['owner'],
+//     },
+//   };
 
-  const updateConsortiumSubDataPromise = subDataControl.waitForNext();
+//   const updateConsortiumSubDataPromise = subDataControl.waitForNext();
 
-  await graphql(schema, `
-    mutation saveConsortium($consortium: ConsortiumInput!) {
-      saveConsortium(consortium: $consortium) {
-        id
-        name
-      }
-    }
-  `, auth, null, { consortium });
+//   await graphql(schema, `
+//     mutation saveConsortium($consortium: ConsortiumInput!) {
+//       saveConsortium(consortium: $consortium) {
+//         id
+//         name
+//       }
+//     }
+//   `, auth, null, { consortium });
 
-  const updateConsortiumSubData = await updateConsortiumSubDataPromise;
+//   const updateConsortiumSubData = await updateConsortiumSubDataPromise;
 
-  t.is(updateConsortiumSubData.consortiumChanged.name, NEW_NAME);
+//   t.is(updateConsortiumSubData.consortiumChanged.name, NEW_NAME);
 
-  // Cleanup
-  await graphql(schema, `
-    mutation deleteConsortiumById($consortiumId: ID) {
-      deleteConsortiumById(consortiumId: $consortiumId) {
-        id
-        name
-      }
-    }
-  `, auth, null, { consortiumId: consortium.id.toString() });
+//   // Cleanup
+//   await graphql(schema, `
+//     mutation deleteConsortiumById($consortiumId: ID) {
+//       deleteConsortiumById(consortiumId: $consortiumId) {
+//         id
+//         name
+//       }
+//     }
+//   `, auth, null, { consortiumId: consortium.id.toString() });
 
-  subDataControl.unsubscribe();
-});
-
+//   subDataControl.unsubscribe();
+// });
 
 test.after.always('cleanup', async () => {
+  database.dropDbInstance();
   await database.close();
   networkInterface.close();
 });

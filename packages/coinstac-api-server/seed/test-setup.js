@@ -1,3 +1,3 @@
-const populate = require('./populate');
+const { populate } = require('./populate');
 
 populate();
