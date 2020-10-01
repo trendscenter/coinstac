@@ -31,8 +31,6 @@ const app = new Application({
   ],
 });
 
-console.log('-------- TEST NODE ENV -------------', process.env.NODE_ENV);
-
 describe('e2e run computation with 1 member', () => {
   before(async () => {
     await app.start();
