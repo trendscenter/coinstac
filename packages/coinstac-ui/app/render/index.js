@@ -28,6 +28,8 @@ const store = configureStore(client);
 
 const history = syncHistoryWithStore(hashHistory, store);
 
+console.log('---------- REMOTE PROCESS NODE ENV -------------', remote.process.env.NODE_ENV);
+
 render(
   <ApolloProvider store={store} client={client}>
     <Root history={history} />

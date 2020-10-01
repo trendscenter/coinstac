@@ -36,6 +36,7 @@ module.exports = {
    * path.
    */
   showDialog: (mainWindow, filters, properties) => {
+    console.log('---------------------- MAIN PROCESS NODE ENV ----------------', process.env.NODE_ENV)
     if (process.env.NODE_ENV === 'test') {
       return mockFileDialog();
     }

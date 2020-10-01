@@ -18,7 +18,7 @@ chai.use(chaiAsPromised);
 
 const app1 = new Application({
   path: electron,
-  env: { TEST_INSTANCE: 'test-1' },
+  env: { TEST_INSTANCE: 'test-1', NODE_ENV: 'test' },
   args: [appPath],
   chromeDriverArgs: [
     '--no-sandbox',
@@ -30,7 +30,7 @@ const app1 = new Application({
 
 const app2 = new Application({
   path: electron,
-  env: { TEST_INSTANCE: 'test-2' },
+  env: { TEST_INSTANCE: 'test-2', NODE_ENV: 'test' },
   args: [appPath],
   chromeDriverArgs: [
     '--no-sandbox',
