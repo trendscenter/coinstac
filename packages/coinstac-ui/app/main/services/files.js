@@ -2,6 +2,7 @@
 
 const { dialog } = require('electron');
 const path = require('path');
+const fs = require('fs');
 
 // Mock file dialogue in testing environment
 // Watch the following issue for progress on dialog support
@@ -19,7 +20,13 @@ function mockFileDialog() {
       count = 1;
   }
 
+  console.log('---------------- ENTROU 2 --------------');
+
   const testDataFilePath = path.join(__dirname, `../../../../../algorithm-development/test-data/freesurfer-test-data/site${count}/site${count}_Covariate.csv`);
+  console.log('---------------- ENTROU 3 --------------', testDataFilePath);
+
+  const exists = fs.existsSync(testDataFilePath);
+  console.log('---------------- ENTROU 4 --------------', exists);
 
   return Promise.resolve({ filePaths: [testDataFilePath] });
 }
@@ -38,6 +45,7 @@ module.exports = {
   showDialog: (mainWindow, filters, properties) => {
     console.log('---------------------- MAIN PROCESS NODE ENV ----------------', process.env.NODE_ENV)
     if (process.env.NODE_ENV === 'test') {
+      console.log('------- ENTROU ----------');
       return mockFileDialog();
     }
 
