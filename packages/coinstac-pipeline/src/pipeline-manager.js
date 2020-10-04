@@ -1142,8 +1142,8 @@ module.exports = {
               debugProfile('**************************** Profiling totals ***************************');
               const totalTime = Date.now() - pipelineStartTime;
               activePipelines[runId].clients.forEach((client) => {
-                Object.keys(remoteClients[clients][runId].debug.profiling).forEach((task) => {
-                  debugProfile(`Total ${task} time for ${client} took: ${remoteClients[clients][runId].debug.profiling[task]}ms`);
+                Object.keys(remoteClients[client][runId].debug.profiling).forEach((task) => {
+                  debugProfile(`Total ${task} time for ${client} took: ${remoteClients[client][runId].debug.profiling[task]}ms`);
                 });
               });
               debugProfile(`Total pipeline time: ${totalTime}ms`);
