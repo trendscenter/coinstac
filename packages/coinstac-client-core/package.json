@@ -1,6 +1,6 @@
 {
   "name": "coinstac-client-core",
-  "version": "5.1.1",
+  "version": "5.1.2",
   "description": "COINSTAC business logic for clients.",
   "main": "src/index.js",
   "scripts": {
@@ -30,7 +30,7 @@
   "homepage": "https://github.com/MRN-Code/coinstac#readme",
   "dependencies": {
     "coinstac-docker-manager": "^5.1.1",
-    "coinstac-pipeline": "^5.1.1",
+    "coinstac-pipeline": "^5.1.2",
     "convict": "^4.3.2",
     "csv-parse": "^4.4.3",
     "lodash": "^4.17.10",
