@@ -1,0 +1,307 @@
+{
+    "meta": {
+        "name": "Decentralized Mancova",
+        "id": "dmancova",
+        "version": "v1.0.0",
+        "repository": "",
+        "description": "A demo for decentralized mancova"
+    },
+    "computation": {
+        "type": "docker",
+        "dockerImage": "coinstacteam/dmancova:latest",
+        "command": [
+            "python",
+            "\/computation\/local.py"
+        ],
+        "remote": {
+            "type": "docker",
+            "dockerImage": "coinstacteam/dmancova:latest",
+            "command": [
+                "python",
+                "\/computation\/remote.py"
+            ]
+        },
+        "input": {
+            "data": {
+              "label": "Data",
+              "type": "bundle",
+              "items": ["NIfTI"],
+              "extensions": [["csv", "txt"]],
+              "order": 0
+            },
+            "mask": {
+                "group": "options",
+                "default": "average",
+                "label": "Mask",
+                "type": "string",
+                "source": "owner",
+                "order": 1
+            },
+            "ica_method": {
+              "group": "options",
+              "label": "Interactions",
+              "default": ["spatially constrained"],
+              "type": "object",
+              "source": "owner",
+              "order": 2
+            },
+            "num_ics": {
+                "group": "options",
+                "default": 20,
+                "label": "Global Number of Independent Components",
+                "min": 1,
+                "max": 100,
+                "type": "number",
+                "source": "owner",
+                "order": 3
+            },
+            "scica_template": {
+                "group": "options",
+                "default": "\/computation\/local_data\/NeuroMark.nii",
+                "label": "Spatially Constrained ICA Template",
+                "type": "string",
+                "source": "owner",
+                "order": 4
+            },
+            "results_html_path": {
+              "group": "options",
+              "label": "Results",
+              "default": [
+                { "title": "Univariate Regression", "path": "coinstac-univariate-regression-\/coinstac-gica_mancovan_results_summary\/icatb_mancovan_results_summary.html"},
+                { "title": "Univariate TTest2 Diagnosis", "path": "coinstac-univariate-ttest2-gender\/coinstac-gica_mancovan_results_summary\/icatb_mancovan_results_summary.html"},
+                { "title": "GICA Results", "path": "coinstac-gica\/coinstac-gica_gica_results\/icatb_gica_html_report.html"}
+              ],
+              "type": "object",
+              "source": "owner",
+              "order": 5
+            },
+            "interactions": {
+              "group": "options",
+              "label": "Interactions",
+              "default": [],
+              "type": "object",
+              "source": "owner",
+              "order": 6
+            },
+            "features": {
+              "group": "options",
+              "label": "Features",
+              "default": [
+                "spatial maps",
+                "timecourses spectra",
+                "univariate_test_list"
+              ],
+              "type": "object",
+              "source": "owner",
+              "order": 7
+            },
+            "TR": {
+              "group": "options",
+              "default": 2,
+              "label": "TR",
+              "type": "number",
+              "source": "owner",
+              "order": 8
+            },
+            "numOfPCs": {
+              "group": "options",
+              "type": "set",
+              "label": "Number of PCs",
+              "default": [5,5,5],
+              "order": 9
+            },
+            "univariate_test_list": {
+              "group": "options",
+              "type": "object",
+              "label": "Univariate Test List",
+              "default": [
+                {
+                    "regression": {
+                        "age": [
+                            "gender"
+                        ],
+                        "gender": [
+                            "age"
+                        ],
+                        "gender_X_age": []
+                    }
+                },
+                {
+                    "ttest2": {
+                        "datasets": [],
+                        "name": [
+                            "Male",
+                            "Female"
+                        ],
+                        "variable": "gender"
+                    }
+                },
+                {
+                    "ttest": {
+                        "datasets": [],
+                        "name": [
+                            "Male",
+                            "Female"
+                        ],
+                        "variable": "gender"
+                    }
+                },
+                {
+                    "ttest": {
+                        "datasets": [],
+                        "name": [
+                            "Male"
+                        ],
+                        "variable": "gender"
+                    }
+                }
+              ],
+              "order": 10
+            },
+            "t_threshold": {
+              "group": "options",
+              "type": "number",
+              "label": "T Threshold",
+              "default": 0.05,
+              "order": 11
+            },
+            "freq_limits": {
+              "group": "options",
+              "type": "set",
+              "label": "Frequency Limits",
+              "default": [0.1,0.15],
+              "order": 12
+            },
+            "p_threshold": {
+              "group": "options",
+              "type": "number",
+              "label": "P Threshold",
+              "default": 0.05,
+              "order": 13
+            },
+            "display_p_threshold": {
+              "group": "options",
+              "type": "number",
+              "label": "Display P Threshold",
+              "default": 0.05,
+              "order": 14
+            },
+            "comp_network_names": {
+              "group": "options",
+              "label": "Comp Network Names",
+              "default": {
+                "SC": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5
+                ],
+                "AUD": [
+                    6,
+                    7
+                ],
+                "SM": [
+                    8,
+                    9,
+                    10,
+                    11,
+                    12,
+                    13,
+                    14,
+                    15,
+                    16
+                ],
+                "VIS": [
+                    17,
+                    18,
+                    19,
+                    20,
+                    21,
+                    22,
+                    23,
+                    24,
+                    25
+                ],
+                "CC": [
+                    26,
+                    27,
+                    28,
+                    29,
+                    30,
+                    31,
+                    32,
+                    33,
+                    34,
+                    35,
+                    36,
+                    37,
+                    38,
+                    39,
+                    40,
+                    41,
+                    42
+                ],
+                "DMN": [
+                    43,
+                    44,
+                    45,
+                    46,
+                    47,
+                    48,
+                    49
+                ],
+                "CR": [
+                    50,
+                    51,
+                    52,
+                    53
+                ]
+              },
+              "type": "object",
+              "source": "owner",
+              "order": 15
+            },
+            "image_values": {
+              "group": "options",
+              "label": "Image Values",
+              "default": "positive",
+              "type": "string",
+              "source": "owner",
+              "order": 16
+            },
+            "threshdesc": {
+              "group": "options",
+              "type": "string",
+              "default": "none",
+              "label": "Threshdesc",
+              "order": 17
+            },
+            "gica_input_dir": {
+              "group": "options",
+              "type": "string",
+              "default": "coinstac-gica",
+              "label": "GICA Input Directory",
+              "order": 18
+            },
+            "run_mancova": {
+              "group": "options",
+              "type": "boolean",
+              "default": true,
+              "label": "Run Mancova",
+              "order": 19
+            },
+            "run_univariate_tests": {
+              "group": "options",
+              "type": "boolean",
+              "default": true,
+              "label": "Run Univariate Tests",
+              "order": 20
+            }
+        },
+        "output": {},
+        "display": {
+          "type": "iframe"
+        }
+    }
+}
