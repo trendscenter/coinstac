@@ -1,9 +1,21 @@
-# Papers
+# Papers and Presentations
 [![Coinstac](https://github.com/MRN-Code/coinstac/raw/master/packages/coinstac-ui/img/icons/png/64x64.png)](https://github.com/MRN-Code/coinstac)
 
 Below is a list of papers related to COINSTAC.
 
 ## Journal Papers
+
+D.K. Saha, V.D. Calhoun, Y. Du, Z. Fu, S.R. Panta, S.M. Plis, dSNE: a visualization approach for use with decentralized data, bioRxiv 826974; 2020.
+https://doi.org/10.1101/826974
+
+H. Gazula, B. Holla, Z. Zhang, J. Xu, E. Verner, R. Kelly, G. Schumann, V. D. Calhoun,
+Decentralized multi-site VBM analysis during adolescence shows structural changes linked to age, body mass index, and smoking: A COINSTAC analysis, bioRxiv 846386; 2020. 
+https://doi.org/10.1101/846386
+
+B. T. Baker, E. Damaraju, R. F. Silva, S. M. Plis, V. D. Calhoun, Decentralized dynamic functional network connectivity: State analysis in collaborative settings, Human Brain Mapping 41: pp. 2909–2925, 2020.
+https://doi.org/10.1002/hbm.24986
+
+H. Gazula, R. Kelly, J. Romero, E. Verner, B. Baker, R. F. Silva, H. Imtiaz, D. K. Saha, R. Raja, J. A. Turner, A. D. Sarwate, S. M. Plis, and V. D. Calhoun. COINSTAC: Collaborative Informatics and Neuroimaging Suite Toolkit for Anonymous Computation, Journal of Open Source Software, 5(47), 2166: 2020. https://doi.org/10.21105/joss.02166.
 
 M. Ghassemi, Z. Shakeri, A.D. Sarwate, W.U. Bajwa, Learning Mixtures of Separable Dictionaries for Tensor Data: Analysis and Algorithms, IEEE Transactions on Signal Processing : to appear 2020.  
 http://dx.doi.org/10.1109/TSP.2019.2952046
@@ -23,12 +35,11 @@ http://dx.doi.org/10.12688/f1000research.12353.1
 N.D. Goldstein, A.D. Sarwate, Privacy, security, and the public health researcher in the era of electronic health record research, Online Journal of Public Health Informatics 8(3): pp. e207, December 2016.  
 http://dx.doi.org/10.5210/ojphi.v8i3.7251
 
-S. Plis, A.D. Sarwate, D. Wood, C. Dieringer, D. Landis, C. Reed, S.R. Panta, J.A. Turner, J.M. Shoemaker, K.W. Carter, P. Thompson, K. Hutchison, V.D. Calhoun, COINSTAC: A Privacy Enabled Model and Prototype for Leveraging and Processing Decentralized Brain Imaging Data, Frontiers in Neuroscience 10(365): August 2016.  
+S. Plis, A.D. Sarwate, D. Wood, C. Dieringer, D. Landis, C. Reed, S.R. Panta, J.A. Turner, J.M. Shoemaker, K.W. Carter, P. Thompson, K. Hutchison, V.D. Calhoun, COINSTAC: A Privacy Enabled Model and Prototype for Leveraging and Processing Decentralized Brain Imaging Data, Frontiers in Neuroscience 10(365): August 2016.
 http://dx.doi.org/10.3389/fnins.2016.00365
 
 A.D. Sarwate, S. Plis, J.A. Turner, M. R. Arbabshirani, V.D. Calhoun, Sharing privacy-sensitive access to neuroimaging and genetics data: a review and preliminary validation, Frontiers in Neuroinformatics 8(35): April 2014.
 https://dx.doi.org/10.3389/fninf.2014.00035
-
 
 ## Conference Papers
 
@@ -41,8 +52,14 @@ http://dx.doi.org/10.1109/ICASSP.2018.8461303
 H. Imtiaz, A.D. Sarwate, Differentially Private Distributed Principal Component Analysis, Proceedings of the 43rd IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP), Calgary, AB, Canada, pp. 2206–2210, 15–20 April 2018.  
 http://dx.doi.org/10.1109/ICASSP.2018.8462519
 
-H. Imtiaz, A.D. Sarwate, Differentially Private Canonical Correlation Analysis, Proceedings of the 2017 IEEE Global Conference on Signal and Information Processing (GlobalSIP), Montreal, QC, Canada, pp. 283 –287, 14–16 November 2017.  
+H. Imtiaz, A.D. Sarwate, Differentially Private Canonical Correlation Analysis, Proceedings of the 2017 IEEE Global Conference on Signal and Information Processing (GlobalSIP), Montreal, QC, Canada, pp. 283–287, 14–16 November 2017.  
 http://dx.doi.org/10.1109/GlobalSIP.2017.8308649
+
+D.K. Saha, V.D. Calhoun, S.R. Panta, S.M. Plis, See without looking: joint visualization of sensitive multi-site datasets, Proceedings of the Twenty-Sixth International Joint Conference on Artificial Intelligence (IJCAI-17), Melbourne, Australia, pp. 2672-2678, 19-25 August 2017.
+https://pdfs.semanticscholar.org/ec0d/46470a48bf3a60c641d8fed0a7748a7c9a2d.pdf
+
+N. Lewis, S.M. Plis, V.D. Calhoun, Cooperative learning: Decentralized data neural network, 2017 International Joint Conference on Neural Networks (IJCNN), Anchorage, AK, USA, pp. 324-331, 14-19 May 2017.
+http://dx.doi.org/10.1109/IJCNN.2017.7965872.
 
 N. Wojtalewicz, R. Silva, V. Calhoun, A. Sarwate, S. Plis, Decentralized Independent Vector Analysis, Proceedings of the 42nd IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP), New Orleans, LA, USA, pp. 826–830, 5–9 March 2017.  
 http://dx.doi.org/10.1109/ICASSP.2017.7952271
@@ -59,5 +76,15 @@ http://dx.doi.org/10.1109/ICASSP.2016.7472089
 B. Baker, R. Silva, V.D. Calhoun, A.D. Sarwate, S. Plis, Large scale collaboration with autonomy: decentralized data ICA, Proceedings of the IEEE International Workshop on Machine Learning For Signal Processing (MLSP), Boston, MA, USA, pp. 1–6, 17–20 September 2015.  
 http://dx.doi.org/10.1109/MLSP.2015.7324344
 
+V.K. Potluru, J. Diaz-Montes, A.D. Sarwate, S.M. Plis, V.D. Calhoun, B.A. Pearlmutter, M. Parashar, CometCloudCare (C3): Distributed Machine Learning Platform-as-a-Service with Privacy Preservation, Neural Information Processing Systems (NIPS), Montreal, QC, Canada, 8-13 December 2014.
+http://mural.maynoothuniversity.ie/10230/1/BP-CometCloudCare-2014.pdf
 
+## Presentations
 
+E. Verner, A.D. Sarwate, R. Kelly, J. Romero, B.T. Baker, R.F. Silva, H. Imtiaz, D.K. Saha, R. Raja, J.A.Turner, S.M. Plis, V.D. Calhoun, COINSTAC: A Decentralized, Differentially Private Application for Neuroimaging, OpenMined Privacy Conference 2020, September 2020.
+https://zenodo.org/record/4053026#.X3BzPC3My-U
+
+E. Verner, H. Gazula, R. Kelly, J. Romero, B.T. Baker, R.F. Silva, H. Imtiaz, D.K. Saha, R. Raja, J.A.Turner, S.M. Plis, V.D. Calhoun, Open, Reproducible, and Decentralized Workflows with COINSTAC, Annual Meeting of the Organization for Human Brain Mapping. Montreal, CA. June 2020.
+https://doi.org/10.5281/zenodo.3906184
+
+S. Plis, A. Sarwate, J. Turner, M. Arbabshirani, V. Calhoun, From Private Sites to Big Data Without Compromising Privacy: a Case of Neuroimaging Data Classification, Value in Health 17: A1-A295, 2014.
