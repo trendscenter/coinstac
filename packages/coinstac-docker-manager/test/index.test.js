@@ -19,8 +19,8 @@ const {
   removeImage,
   setLogger,
   startService,
-  stopService,
-  stopAllServices,
+  // stopService,
+  // stopAllServices,
   docker,
 } = dockerManager;
 
@@ -53,56 +53,16 @@ test.before(() => httpServer.start({ port: HTTP_SERVER_PORT })
     });
   }));
 
-test('getImages', async (t) => {
+test('getImages, pruneImages and removeImage', async (t) => {
+  /* getImages */
   sinon.stub(docker, 'listImages').resolves(ALL_IMAGES);
 
   const res = await getImages();
   t.is(res.length, ALL_IMAGES.length);
 
   docker.listImages.restore();
-});
 
-test('getStatus', async (t) => {
-  sinon.stub(docker, 'ping').resolves('OK');
-
-  const status = await getStatus();
-  t.is(status, 'OK');
-
-  docker.ping.restore();
-});
-
-test('pullImages', async (t) => {
-  sinon.stub(docker, 'pull').yields(null, 'stream');
-  let images = await pullImages(COMPUTATIONS);
-
-  t.deepEqual(
-    images.map(image => image.compId),
-    COMPUTATIONS.map(comp => comp.compId)
-  );
-  docker.pull.restore();
-
-  sinon.stub(docker, 'pull').yields('error', null);
-  images = await pullImages(COMPUTATIONS);
-
-  t.deepEqual(
-    images.map(image => image.compId),
-    COMPUTATIONS.map(comp => comp.compId)
-  );
-  docker.pull.restore();
-});
-
-test.serial.before('pullImagesFromList', async (t) => {
-  sinon.stub(docker, 'pull').yields(null, 'stream');
-
-  const compList = COMPUTATIONS.map(comp => comp.img);
-  const images = await pullImagesFromList(compList);
-
-  t.is(compList.length, images.length);
-
-  docker.pull.restore();
-});
-
-test.serial.before('pruneImages', async (t) => {
+  /* pruneImages */
   sinon.stub(docker, 'listImages').yields(null, ALL_IMAGES);
 
   const getImageSuccessCallback = { remove: sinon.stub().yields(null, 'success') };
@@ -124,17 +84,55 @@ test.serial.before('pruneImages', async (t) => {
 
   docker.listImages.restore();
   docker.getImage.restore();
-});
 
-test('removeImage', async (t) => {
-  const getImageSuccessCallback = { remove: sinon.stub() };
-  sinon.stub(docker, 'getImage').returns(getImageSuccessCallback);
+  /* removeImage */
+  sinon.stub(docker, 'getImage').returns({ remove: sinon.stub() });
   const image = COMPUTATIONS[0].img;
 
   await removeImage(image);
   t.pass();
 
   docker.getImage.restore();
+});
+
+test('getStatus', async (t) => {
+  sinon.stub(docker, 'ping').resolves('OK');
+
+  const status = await getStatus();
+  t.is(status, 'OK');
+
+  docker.ping.restore();
+});
+
+test('pullImages and pullImagesFromList', async (t) => {
+  /* pullImages */
+  sinon.stub(docker, 'pull').yields(null, 'stream');
+  let images = await pullImages(COMPUTATIONS);
+
+  t.deepEqual(
+    images.map(image => image.compId),
+    COMPUTATIONS.map(comp => comp.compId)
+  );
+  docker.pull.restore();
+
+  sinon.stub(docker, 'pull').yields('error', null);
+  images = await pullImages(COMPUTATIONS);
+
+  t.deepEqual(
+    images.map(image => image.compId),
+    COMPUTATIONS.map(comp => comp.compId)
+  );
+  docker.pull.restore();
+
+  /* pullImagesFromList */
+  sinon.stub(docker, 'pull').yields(null, 'stream');
+
+  const compList = COMPUTATIONS.map(comp => comp.img);
+  images = await pullImagesFromList(compList);
+
+  t.is(compList.length, images.length);
+
+  docker.pull.restore();
 });
 
 test('setLogger', async (t) => {
@@ -166,166 +164,166 @@ test('startService1', async (t) => {
   docker.createContainer.restore();
 });
 
-test.serial.before('startService2', async (t) => {
-  sinon.stub(portscanner, 'findAPortNotInUse').returns(getRandomPort());
-  sinon.stub(docker, 'createContainer').returns({
-    start: sinon.stub(),
-    stop: sinon.stub(),
-    inspect: sinon.stub().yields('error', null),
-  });
+// test.serial.before('startService2', async (t) => {
+//   sinon.stub(portscanner, 'findAPortNotInUse').returns(getRandomPort());
+//   sinon.stub(docker, 'createContainer').returns({
+//     start: sinon.stub(),
+//     stop: sinon.stub(),
+//     inspect: sinon.stub().yields('error', null),
+//   });
 
-  const opts = {
-    docker: { CMD: [] },
-  };
+//   const opts = {
+//     docker: { CMD: [] },
+//   };
 
-  await startService('service-2', 'test-2', opts);
-  t.pass();
+//   await startService('service-2', 'test-2', opts);
+//   t.pass();
 
-  portscanner.findAPortNotInUse.restore();
-  docker.createContainer.restore();
-});
+//   portscanner.findAPortNotInUse.restore();
+//   docker.createContainer.restore();
+// });
 
-test.serial.before('startService3', async (t) => {
-  sinon.stub(portscanner, 'findAPortNotInUse').returns(getRandomPort());
-  sinon.stub(docker, 'createContainer').returns({
-    start: sinon.stub(),
-    stop: sinon.stub(),
-    inspect: sinon.stub().yields(null, { State: { Running: true } }),
-  });
+// test.serial.before('startService3', async (t) => {
+//   sinon.stub(portscanner, 'findAPortNotInUse').returns(getRandomPort());
+//   sinon.stub(docker, 'createContainer').returns({
+//     start: sinon.stub(),
+//     stop: sinon.stub(),
+//     inspect: sinon.stub().yields(null, { State: { Running: true } }),
+//   });
 
-  const opts = {
-    docker: { CMD: [] },
-  };
+//   const opts = {
+//     docker: { CMD: [] },
+//   };
 
-  await startService('service-3', 'test-3', opts);
-  await startService('service-3', 'test-3', opts);
-  t.pass();
+//   await startService('service-3', 'test-3', opts);
+//   await startService('service-3', 'test-3', opts);
+//   t.pass();
 
-  portscanner.findAPortNotInUse.restore();
-  docker.createContainer.restore();
-});
+//   portscanner.findAPortNotInUse.restore();
+//   docker.createContainer.restore();
+// });
 
-test.serial.before('startService4', async (t) => {
-  sinon.stub(portscanner, 'findAPortNotInUse').returns(getRandomPort());
-  sinon.stub(docker, 'createContainer').returns({
-    start: sinon.stub(),
-    stop: sinon.stub(),
-    inspect: sinon.stub().yields(null, { State: { Running: false } }),
-  });
+// test.serial.before('startService4', async (t) => {
+//   sinon.stub(portscanner, 'findAPortNotInUse').returns(getRandomPort());
+//   sinon.stub(docker, 'createContainer').returns({
+//     start: sinon.stub(),
+//     stop: sinon.stub(),
+//     inspect: sinon.stub().yields(null, { State: { Running: false } }),
+//   });
 
-  const opts = {
-    docker: { CMD: [] },
-  };
+//   const opts = {
+//     docker: { CMD: [] },
+//   };
 
-  await startService('service-4', 'test-4', opts);
-  t.pass();
+//   await startService('service-4', 'test-4', opts);
+//   t.pass();
 
-  portscanner.findAPortNotInUse.restore();
-  docker.createContainer.restore();
-});
+//   portscanner.findAPortNotInUse.restore();
+//   docker.createContainer.restore();
+// });
 
-test.serial.before('startService5', async (t) => {
-  sinon.stub(portscanner, 'findAPortNotInUse').returns(WS_SERVER_PORT);
-  sinon.stub(docker, 'createContainer').returns({
-    start: sinon.stub(),
-    stop: sinon.stub(),
-    inspect: sinon.stub().yields(null, { State: { Running: true } }),
-  });
+// test.serial.before('startService5', async (t) => {
+//   sinon.stub(portscanner, 'findAPortNotInUse').returns(WS_SERVER_PORT);
+//   sinon.stub(docker, 'createContainer').returns({
+//     start: sinon.stub(),
+//     stop: sinon.stub(),
+//     inspect: sinon.stub().yields(null, { State: { Running: true } }),
+//   });
 
-  const opts = {
-    docker: { CMD: [] },
-  };
+//   const opts = {
+//     docker: { CMD: [] },
+//   };
 
-  const service = await startService('service-5', 'test-5', opts);
-  await service(['node', '', '']);
+//   const service = await startService('service-5', 'test-5', opts);
+//   await service(['node', '', '']);
 
-  t.pass();
+//   t.pass();
 
-  portscanner.findAPortNotInUse.restore();
-  docker.createContainer.restore();
-});
+//   portscanner.findAPortNotInUse.restore();
+//   docker.createContainer.restore();
+// });
 
-test.serial.before('startService6', async (t) => {
-  sinon.stub(portscanner, 'findAPortNotInUse').returns(HTTP_SERVER_PORT);
-  sinon.stub(docker, 'createContainer').returns({
-    start: sinon.stub(),
-    stop: sinon.stub(),
-    inspect: sinon.stub().yields(null, { State: { Running: true } }),
-  });
+// test.serial.before('startService6', async (t) => {
+//   sinon.stub(portscanner, 'findAPortNotInUse').returns(HTTP_SERVER_PORT);
+//   sinon.stub(docker, 'createContainer').returns({
+//     start: sinon.stub(),
+//     stop: sinon.stub(),
+//     inspect: sinon.stub().yields(null, { State: { Running: true } }),
+//   });
 
-  const opts = {
-    docker: { CMD: [] },
-    http: true,
-  };
+//   const opts = {
+//     docker: { CMD: [] },
+//     http: true,
+//   };
 
-  const service1 = await startService('service-6', 'test-6', opts);
-  await service1(['node', '', '']);
+//   const service1 = await startService('service-6', 'test-6', opts);
+//   await service1(['node', '', '']);
 
-  const service2 = await startService('service-6', 'test-7', opts);
-  await service2(['node', '', '']);
+//   const service2 = await startService('service-6', 'test-7', opts);
+//   await service2(['node', '', '']);
 
-  t.pass();
+//   t.pass();
 
-  portscanner.findAPortNotInUse.restore();
-  docker.createContainer.restore();
-});
+//   portscanner.findAPortNotInUse.restore();
+//   docker.createContainer.restore();
+// });
 
-test.serial.before('stopService1', async (t) => {
-  const opts = { docker: {} };
+// test.serial.before('stopService1', async (t) => {
+//   const opts = { docker: {} };
 
-  sinon.stub(portscanner, 'findAPortNotInUse').returns(getRandomPort());
-  sinon.stub(docker, 'createContainer').returns({
-    start: sinon.stub(),
-    stop: sinon.stub().resolves(),
-    inspect: sinon.stub().yields(null, { State: { Running: true } }),
-  });
+//   sinon.stub(portscanner, 'findAPortNotInUse').returns(getRandomPort());
+//   sinon.stub(docker, 'createContainer').returns({
+//     start: sinon.stub(),
+//     stop: sinon.stub().resolves(),
+//     inspect: sinon.stub().yields(null, { State: { Running: true } }),
+//   });
 
-  await startService('service', 'test', opts);
-  await stopService('service', 'test');
+//   await startService('service', 'test', opts);
+//   await stopService('service', 'test');
 
-  t.pass();
+//   t.pass();
 
-  portscanner.findAPortNotInUse.restore();
-  docker.createContainer.restore();
-});
+//   portscanner.findAPortNotInUse.restore();
+//   docker.createContainer.restore();
+// });
 
-test.serial.before('stopService2', async (t) => {
-  const opts = { docker: {} };
+// test.serial.before('stopService2', async (t) => {
+//   const opts = { docker: {} };
 
-  sinon.stub(portscanner, 'findAPortNotInUse').returns(getRandomPort());
-  sinon.stub(docker, 'createContainer').returns({
-    start: sinon.stub(),
-    stop: sinon.stub().rejects('error'),
-    inspect: sinon.stub().yields(null, { State: { Running: true } }),
-  });
+//   sinon.stub(portscanner, 'findAPortNotInUse').returns(getRandomPort());
+//   sinon.stub(docker, 'createContainer').returns({
+//     start: sinon.stub(),
+//     stop: sinon.stub().rejects('error'),
+//     inspect: sinon.stub().yields(null, { State: { Running: true } }),
+//   });
 
-  await startService('service', 'test-1', opts);
-  await stopService('service', 'test-1');
+//   await startService('service', 'test-1', opts);
+//   await stopService('service', 'test-1');
 
-  t.pass();
+//   t.pass();
 
-  portscanner.findAPortNotInUse.restore();
-  docker.createContainer.restore();
-});
+//   portscanner.findAPortNotInUse.restore();
+//   docker.createContainer.restore();
+// });
 
-test.serial.before('stopAllServices', async (t) => {
-  const opts = { docker: {} };
+// test.serial.before('stopAllServices', async (t) => {
+//   const opts = { docker: {} };
 
-  sinon.stub(portscanner, 'findAPortNotInUse').returns(getRandomPort());
-  sinon.stub(docker, 'createContainer').returns({
-    start: sinon.stub(),
-    stop: sinon.stub(),
-    inspect: sinon.stub().yields(null, { State: { Running: true } }),
-  });
+//   sinon.stub(portscanner, 'findAPortNotInUse').returns(getRandomPort());
+//   sinon.stub(docker, 'createContainer').returns({
+//     start: sinon.stub(),
+//     stop: sinon.stub(),
+//     inspect: sinon.stub().yields(null, { State: { Running: true } }),
+//   });
 
-  await startService('service', 'test', opts);
-  await stopAllServices();
+//   await startService('service', 'test', opts);
+//   await stopAllServices();
 
-  t.pass();
+//   t.pass();
 
-  portscanner.findAPortNotInUse.restore();
-  docker.createContainer.restore();
-});
+//   portscanner.findAPortNotInUse.restore();
+//   docker.createContainer.restore();
+// });
 
 test.after.always('cleanup file for ws server', () => new Promise((resolve, reject) => {
   unlink(resolvePath(__dirname, './large.json'), (err) => {
