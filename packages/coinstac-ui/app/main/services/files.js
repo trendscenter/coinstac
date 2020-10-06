@@ -39,14 +39,12 @@ module.exports = {
       return mockFileDialog();
     }
 
-    return new Promise((resolve) => {
-      dialog.showOpenDialog(
+    return dialog.showOpenDialog(
         mainWindow,
         {
           filters,
           properties,
         },
-        files => resolve({ filePaths: files })
       );
     });
   },

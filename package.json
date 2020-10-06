@@ -17,7 +17,7 @@
     "gh-pages": "^3.0.0",
     "github-markdown-css": "^2.10.0",
     "jsdoc": "^3.6.3",
-    "lerna": "^3.22.0",
+    "lerna": "^2.8.0",
     "marked": "^0.8.0",
     "minami": "^1.2.3",
     "minimist": "^1.2.5",

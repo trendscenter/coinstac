@@ -100,7 +100,7 @@ To run your computation in Coinstac you'll need to encapsulate it in a docker im
 
 **Note**: please ignore any test or extraneous files using a `.dockerignore`, this keeps image size down
 ```sh
-FROM coinstacteam/coinstac-base-python-stream
+FROM coinstacteam/coinstac-base
 # Set the working directory
 WORKDIR /computation
 # Copy the current directory contents into the container

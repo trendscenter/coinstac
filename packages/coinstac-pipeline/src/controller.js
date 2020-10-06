@@ -1,8 +1,11 @@
 'use strict';
 
+const debug = require('debug');
 const Emitter = require('events');
 const Computation = require('./computation');
 const Store = require('./io-store');
+
+const debugProfilePipeline = debug('pipeline:profile-pipeline');
 
 const controllers = {};
 controllers.local = require('./control-boxes/local');
@@ -62,6 +65,7 @@ module.exports = {
       iteration: undefined,
       mode,
       owner,
+      received: Date.now(),
       runType: 'sequential',
       state: undefined,
       stopByUser: undefined,
@@ -72,6 +76,9 @@ module.exports = {
       stateEmitter.emit('update', controllerState);
     };
     const stopByUserErrorMessage = 'The pipeline run has been stopped by a user';
+    let totalCompTime = 0;
+    let totalCodeTime = 0;
+    debugProfilePipeline.log = l => logger.info(`PROFILING: ${l}`);
 
     return {
       activeControlBox,
@@ -131,6 +138,10 @@ module.exports = {
               compInput = compInput || overideInput;
               setStateProp('iteration', controllerState.iteration + 1);
               setStateProp('state', 'waiting on computation');
+              const compStart = Date.now(); // eslint-disable-line no-case-declarations
+              const codeTime = compStart - controllerState.received; // eslint-disable-line no-case-declarations,max-len
+              totalCodeTime += codeTime;
+              debugProfilePipeline(`Recieved to start time on ${clientId} took: ${codeTime}ms`);
               return controllerState.activeComputations[controllerState.computationIndex]
                 .start(
                   {
@@ -158,6 +169,9 @@ module.exports = {
                   { operatingDirectory }
                 )
                 .then(({ cache, success, output }) => {
+                  const compTime = Date.now() - compStart;
+                  totalCompTime += compTime;
+                  debugProfilePipeline(`Computation time on ${clientId} took: ${compTime}ms`);
                   computationCache = Object.assign(computationCache, cache);
                   controllerState.success = !!success;
                   setStateProp('state', 'finished iteration');
@@ -203,6 +217,7 @@ module.exports = {
                   if (error) return err(error);
                   setStateProp('state', 'finished remote iteration');
                   controllerState.success = !!output.success;
+                  controllerState.received = output.debug.received;
 
                   cb();
                 },
@@ -218,6 +233,7 @@ module.exports = {
                   if (error) return err(error);
                   setStateProp('state', 'finished remote iteration');
                   controllerState.success = !!output.success;
+                  controllerState.received = output.debug.received;
                   cb();
                 },
               });
@@ -324,7 +340,12 @@ module.exports = {
           waterfall(input, (result) => {
             setStateProp('state', 'stopped');
             controllerState.activeComputations[controllerState.computationIndex].stop()
-              .then(() => res(result))
+              .then(() => {
+                debugProfilePipeline(`**************************** ${clientId} totals ***************************`);
+                debugProfilePipeline(`Total Computation time on ${clientId} took: ${totalCompTime}ms`);
+                debugProfilePipeline(`Total Code time on ${clientId} took: ${totalCodeTime}ms`);
+                res(result);
+              })
               .catch(error => rej(error));
           }, pipelineErrorCallback);
         });
