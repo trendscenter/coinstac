@@ -5,9 +5,8 @@ jobs:
       image: ubuntu-1604:201903-01
     steps:
       - run: git clone --depth 1 -b $CIRCLE_BRANCH git@github.com:trendscenter/coinstac.git
-      - run: cd coinstac
-      - run: ./scripts/dockerbuild-for-ci.sh
-      - run: docker-compose up --exit-code-from ui
+      - run: cd coinstac && ./scripts/dockerbuild-for-ci.sh
+      - run: cd coinstac && docker-compose up --exit-code-from ui
 workflows:
   build-and-test:
     jobs:
