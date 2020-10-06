@@ -4,7 +4,7 @@ jobs:
     machine:
       image: ubuntu-1604:201903-01
     steps:
-      - run: git clone --depth 1 git@github.com:trendscenter/coinstac.git
+      - run: git clone --depth 1 -b $CIRCLE_BRANCH git@github.com:trendscenter/coinstac.git
       - run: cd coinstac
       - run: ./scripts/dockerbuild-for-ci.sh
       - run: docker-compose up --exit-code-from ui
