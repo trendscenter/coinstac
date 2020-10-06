@@ -40,13 +40,12 @@ module.exports = {
     }
 
     return dialog.showOpenDialog(
-        mainWindow,
-        {
-          filters,
-          properties,
-        },
-      );
-    });
+      mainWindow,
+      {
+        filters,
+        properties,
+      }
+    );
   },
 
   /**
