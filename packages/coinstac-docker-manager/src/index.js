@@ -202,7 +202,15 @@ const startService = (serviceId, serviceUserId, opts) => {
     const tryStartService = () => {
       return generateServicePort(serviceId)
         .then((port) => {
+          // port is initially set in generateServicePort, but really should be moved
+          // here if that works (breaks tests?)
+          services[serviceId].port = process.env.CI ? '8881' : port;
           logger.silly(`Starting service ${serviceId} at port: ${port}`);
+
+          const PortBindings = process.env.CI ? {} : {
+            '8881/tcp': [{ HostPort: `${port}`, HostIp: process.env.CI ? '' : '127.0.0.1' }],
+            ...(process.LOGLEVEL === 'debug' && { '4444/tcp': [{ HostPort: '4444', HostIp: '127.0.0.1' }] }),
+          };
           const defaultOpts = {
           // this port is coupled w/ the internal base server image FYI
             ExposedPorts: {
@@ -210,10 +218,7 @@ const startService = (serviceId, serviceUserId, opts) => {
               ...(process.LOGLEVEL === 'debug' && { '4444/tcp': {} }),
             },
             HostConfig: {
-              PortBindings: {
-                '8881/tcp': [{ HostPort: `${port}`, HostIp: '127.0.0.1' }],
-                ...(process.LOGLEVEL === 'debug' && { '4444/tcp': [{ HostPort: '4444', HostIp: '127.0.0.1' }] }),
-              },
+              PortBindings,
             },
             Tty: true,
           };
@@ -229,15 +234,16 @@ const startService = (serviceId, serviceUserId, opts) => {
         .then((container) => {
           logger.silly(`Starting cointainer: ${serviceId}`);
           services[serviceId].container = container;
-          return container.start();
+          return container.start().then(c => c.inspect());
         })
         // is the container service ready?
-        .then(() => {
+        .then((container) => {
+          services[serviceId].hostname = process.env.CI ? container.Config.Hostname : '127.0.0.1';
           logger.silly(`Cointainer started: ${serviceId}`);
           const checkServicePort = () => {
             if (opts.http) {
               return new Promise((resolve, reject) => {
-                const req = request(`http://127.0.0.1:${services[serviceId].port}/run`, { method: 'POST' }, (err, res) => {
+                const req = request(`http://${services[serviceId].hostname}:${services[serviceId].port}/run`, { method: 'POST' }, (err, res) => {
                   let buf = '';
                   if (err) {
                     return reject(err);
@@ -280,7 +286,7 @@ const startService = (serviceId, serviceUserId, opts) => {
           services[serviceId].service = (data) => {
             if (opts.http) {
               return new Promise((resolve, reject) => {
-                const req = request(`http://127.0.0.1:${services[serviceId].port}/run`, { method: 'POST' }, (err, res) => {
+                const req = request(`http://${services[serviceId].hostname}:${services[serviceId].port}/run`, { method: 'POST' }, (err, res) => {
                   let buf = '';
                   if (err) {
                     return reject(err);
@@ -352,7 +358,7 @@ const startService = (serviceId, serviceUserId, opts) => {
             new Promise((resolve) => {
               let count = 0;
               const testConnection = () => {
-                const ws = new WS(`ws://127.0.0.1:${services[serviceId].port}`);
+                const ws = new WS(`ws://${services[serviceId].hostname}:${services[serviceId].port}`);
                 ws.on('open', () => {
                   ws.close(1000, 'Test Connection');
                   resolve();
@@ -373,7 +379,7 @@ const startService = (serviceId, serviceUserId, opts) => {
               };
               testConnection();
             }).then(() => {
-              const ws = new WS(`ws://127.0.0.1:${services[serviceId].port}`);
+              const ws = new WS(`ws://${services[serviceId].hostname}:${services[serviceId].port}`);
               ws.on('open', () => {
                 ws.send(JSON.stringify({
                   command: data[0],
@@ -486,7 +492,7 @@ const startService = (serviceId, serviceUserId, opts) => {
             return setTimeoutPromise(200)
               .then(() => tryStartService());
           }
-          proxRej(err);
+
           throw err;
         });
     };
