@@ -1,5 +1,6 @@
 version: 2.1
 jobs:
+  working_directory: /root/coinstac
   build-and-test:
     machine:
       image: ubuntu-1604:201903-01
