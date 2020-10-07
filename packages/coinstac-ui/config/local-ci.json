@@ -1,0 +1,26 @@
+{
+  "apiServer": {
+    "hostname": "api",
+    "pathname": "",
+    "port": "3100",
+    "protocol": "http:"
+  },
+  "subApiServer": {
+    "hostname": "api",
+    "pathname": "",
+    "port": "3100",
+    "protocol": "ws:"
+  },
+  "fileServer": {
+    "hostname": "server",
+    "pathname": "/transfer",
+    "port": "3300",
+    "protocol": "http:"
+  },
+  "mqttServer": {
+    "hostname": "mqtt",
+    "pathname": "",
+    "port": "1883",
+    "protocol": "mqtt:"
+  }
+}

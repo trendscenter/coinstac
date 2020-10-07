@@ -10,6 +10,7 @@ const unlinkAsync = pify(fs.unlink);
 const linkAsync = pify(fs.link);
 const statAsync = pify(fs.stat);
 const readdirAsync = pify(fs.readdir);
+const copy = pify(fs.copyFile);
 
 const path = require('path');
 const winston = require('winston');
@@ -40,7 +41,6 @@ const PipelineManager = require('coinstac-pipeline');
  */
 class CoinstacClient {
   constructor(opts) {
-
     if (!opts || !(opts instanceof Object)) {
       throw new TypeError('coinstac-client requires configuration opts');
     }
@@ -259,10 +259,11 @@ class CoinstacClient {
           return string.replace(e, '\\$&');
         };
         if (filesArray) {
+          const stageFiles = process.env.CI ? copy : linkAsync
           for (let i = 0; i < filesArray.length; i += 1) {
             const pathsep = new RegExp(`${escape(path.sep)}|:`, 'g');
             linkPromises.push(
-              linkAsync(filesArray[i], path.resolve(this.appDirectory, 'input', this.clientId, runId, filesArray[i].replace(pathsep, '-')))
+              stageFiles(filesArray[i], path.resolve(this.appDirectory, 'input', this.clientId, runId, filesArray[i].replace(pathsep, '-')))
                 .catch((e) => {
                 // permit dupes
                   if (e.code && e.code !== 'EEXIST') {

@@ -2,6 +2,7 @@
 
 <img src="https://raw.githubusercontent.com/MRN-Code/coinstac/master/img/coinstac.png" height="75px">
 
+[![CircleCI](https://circleci.com/gh/trendscenter/coinstac.svg?style=shield)](https://circleci.com/gh/trendcenter/coinstac)
 [![DOI](https://zenodo.org/badge/52497909.svg)](https://zenodo.org/badge/latestdoi/52497909)
 
 _Collaborative Informatics and Neuroimaging Suite Toolkit for Anonymous Computation._ A research project by your friends at the [Center for Translational Research in Neuroimaging and Data Science (TReNDS)](https://www.trendscenter.org).

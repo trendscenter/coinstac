@@ -37,10 +37,10 @@ program
   .option('-t, --showinput', ' on errors show comp input that computation failed with')
   .option('-e, --debug', ' enter debug mode, displays extra info including input')
   .option('-p, --pipeline [path]', ' give a pipeline file to run a full pipeline from, working dir used is first comp listed')
-  .option('-x, --silly', ' enter silly logging, everything in debug mode + even more')
   .option('-u, --upload', ' upload computation spec')
-  .option('-user, --username [username]', ' username')
-  .option('-pass, --password [password]', ' password');
+  .option('--username [username]', ' username for uploads')
+  .option('--password [password]', ' password for uploads')
+  .option('--loglevel [level]', ' enter info, debug, and silly log levels');
 
 program.on('--help', () => {
   logger.info([ // eslint-disable-line
@@ -63,9 +63,9 @@ program.parse(process.argv);
 let globalMode = 'local';
 const inSpecPath = program.directory ? path.join(program.directory, 'inputspec.json') : path.join('.', 'test', 'inputspec.json');
 
-if (program.debug || program.silly) {
+if (program.loglevel) {
   DEBUG_MODE = true;
-  process.LOGLEVEL = program.silly ? 'silly' : 'debug';
+  process.LOGLEVEL = program.loglevel;
   logger.level = process.LOGLEVEL;
 } else if (DEBUG_MODE) {
   process.LOGLEVEL = 'debug';
