@@ -1,12 +1,18 @@
 function parsePipelineInput(pipeline, dataMappings) {
   const steps = [];
 
+  let filesArray = [];
+
   pipeline.steps.forEach((step, stepIndex) => {
-    const consortiumMappedStepData = dataMappings ? dataMappings.dataMappings[stepIndex] : null;
+    const consortiumMappedStepData = dataMappings ? dataMappings.map[stepIndex] : null;
 
     if (!consortiumMappedStepData) {
       steps.push({ ...step });
       return;
+    }
+
+    if (consortiumMappedStepData.files && consortiumMappedStepData.files.length > 0) {
+      filesArray = filesArray.concat(consortiumMappedStepData.files);
     }
 
     const inputMapSchema = { ...step.inputMap };
@@ -24,7 +30,7 @@ function parsePipelineInput(pipeline, dataMappings) {
   });
 
   return {
-    filesArray: dataMappings ? dataMappings.dataFiles : [], // files for core to simlink
+    filesArray, // files for core to simlink
     steps,
   };
 }

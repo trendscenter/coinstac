@@ -8,7 +8,7 @@ import MapsEditForm from './maps-edit-form';
 import { saveDataMapping } from '../../state/ducks/maps';
 
 function MapsEdit({
-  params, maps, pipelines, consortia,
+  params, maps, pipelines, consortia, saveDataMapping,
 }) {
   const [isMapped, setIsMapped] = useState(false);
   const [consortium, setConsortium] = useState(null);
@@ -30,6 +30,15 @@ function MapsEdit({
       setIsMapped(true);
     }
   }, []);
+
+  function onChange(fieldName, fieldData) {
+    setDataMap({ ...dataMap, [fieldName]: fieldData });
+  }
+
+  function commitSaveDataMap() {
+    setIsMapped(true);
+    saveDataMapping(consortium.id, pipeline.id, dataMap);
+  }
 
   return (
     <div>
@@ -58,7 +67,8 @@ function MapsEdit({
           <MapsEditForm
             pipeline={pipeline}
             dataMap={dataMap}
-            onChange={(fieldName, fieldData) => setDataMap({ ...dataMap, [fieldName]: fieldData })}
+            onChange={onChange}
+            onSubmit={commitSaveDataMap}
           />
         )
       }
@@ -71,6 +81,7 @@ MapsEdit.propTypes = {
   maps: PropTypes.array.isRequired,
   pipelines: PropTypes.array.isRequired,
   consortia: PropTypes.array.isRequired,
+  saveDataMapping: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = ({ auth, maps }) => ({

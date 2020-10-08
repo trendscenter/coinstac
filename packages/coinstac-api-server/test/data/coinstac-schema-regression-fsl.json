@@ -36,6 +36,12 @@
         "type": "csv",
         "items": ["boolean", "number"],
         "source": "member"
+      },
+      "data": {
+        "label": "Data",
+        "type": "freesurfer",
+        "items": ["FreeSurfer"],
+        "source": "owner"
       }
     },
     "output": {

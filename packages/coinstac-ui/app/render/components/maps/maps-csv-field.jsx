@@ -112,7 +112,7 @@ class MapsCsvField extends React.Component {
         selectedFiles,
       });
 
-      onChange(fieldName, { fileData: parsedFiles, maps: {} });
+      onChange(fieldName, { fileData: parsedFiles, files: selectedFiles, maps: {} });
     };
 
     readFiles();
@@ -135,7 +135,9 @@ class MapsCsvField extends React.Component {
   }
 
   autoMap() {
-    const { fieldName, field, fieldDataMap, onChange } = this.props;
+    const {
+      fieldName, field, fieldDataMap, onChange,
+    } = this.props;
 
     const { remainingHeader } = this.state;
 
@@ -168,7 +170,7 @@ class MapsCsvField extends React.Component {
 
   render() {
     const {
-      fieldName, field, fieldDataMap, onChange, classes,
+      fieldName, field, fieldDataMap, classes,
     } = this.props;
 
     const { remainingHeader, selectedFiles, autoMapError } = this.state;
@@ -253,5 +255,17 @@ class MapsCsvField extends React.Component {
     );
   }
 }
+
+MapsCsvField.propTypes = {
+  classes: PropTypes.object.isRequired,
+  field: PropTypes.object.isRequired,
+  fieldDataMap: PropTypes.object,
+  fieldName: PropTypes.string.isRequired,
+  onChange: PropTypes.func.isRequired,
+};
+
+MapsCsvField.defaultProps = {
+  fieldDataMap: null,
+};
 
 export default withStyles(styles)(MapsCsvField);

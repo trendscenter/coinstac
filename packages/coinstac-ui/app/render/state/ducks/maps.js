@@ -15,67 +15,16 @@ const INITIAL_STATE = {
 };
 
 export const saveDataMapping = applyAsyncLoading(
-  (consortium, mappings, dataFile) => async (dispatch) => {
-    const map = {
-      consortiumId: consortium.id,
-      pipelineId: consortium.activePipelineId,
-      metaFilePath: dataFile.metaFilePath,
-      dataMappings: [],
-      dataFiles: dataFile.files,
+  (consortiumId, pipelineId, map) => async (dispatch) => {
+    const mapping = {
+      consortiumId,
+      pipelineId,
+      map,
     };
-
-    const mappedColumns = [];
-    const stepIndex = 0; // only one step is supported right now on maps
-
-    if (dataFile.dataType === 'freesurfer') {
-      const files = dataFile.metaFile.map((csvLine) => {
-        const file = csvLine[0];
-        return isAbsolute(file) ? file : resolve(join(dirname(dataFile.metaFilePath), file));
-      });
-
-      files.shift();
-
-      map.dataFiles = files;
-
-      const stepDataMap = {};
-
-      Object.keys(mappings[stepIndex]).forEach((fieldsetName) => {
-        stepDataMap[fieldsetName] = {
-          value: {},
-        };
-
-        mappings[stepIndex][fieldsetName].forEach((field) => {
-          const mappedColumn = {
-            name: field.dataFileFieldName,
-            index: dataFile.metaFile[0].findIndex(c => c === field.dataFileFieldName),
-          };
-
-          mappedColumns.push(mappedColumn);
-        });
-      });
-
-      dataFile.metaFile.forEach((dataRow, index) => {
-        // first row is the header
-        if (index === 0) {
-          return;
-        }
-
-        const parsedRow = {};
-
-        mappedColumns.forEach((mappedColumn) => {
-          parsedRow[mappedColumn.name] = dataRow[mappedColumn.index];
-        });
-
-        const rowId = dataRow[0];
-        stepDataMap.covariates.value[rowId] = parsedRow;
-      });
-
-      map.dataMappings.push(stepDataMap);
-    }
 
     dispatch(({
       type: SAVE_DATA_MAPPING,
-      payload: map,
+      payload: mapping,
     }));
   }
 );

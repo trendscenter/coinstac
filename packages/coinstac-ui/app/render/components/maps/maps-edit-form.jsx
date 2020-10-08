@@ -12,13 +12,11 @@ const styles = theme => ({
   },
 });
 
-function MapsEditForm({ pipeline, dataMap, onChange, classes }) {
+function MapsEditForm({
+  pipeline, dataMap, onSubmit, onChange, classes,
+}) {
   return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-      }}
-    >
+    <form onSubmit={onSubmit}>
       {
         pipeline && pipeline.steps && pipeline.steps.map((step) => {
           const { computations, inputMap } = step;
@@ -59,5 +57,17 @@ function MapsEditForm({ pipeline, dataMap, onChange, classes }) {
     </form>
   );
 }
+
+MapsEditForm.propTypes = {
+  pipeline: PropTypes.object,
+  dataMap: PropTypes.object.isRequired,
+  onSubmit: PropTypes.func.isRequired,
+  onChange: PropTypes.func.isRequired,
+  classes: PropTypes.object.isRequired,
+};
+
+MapsEditForm.defaultProps = {
+  pipeline: null,
+};
 
 export default withStyles(styles)(MapsEditForm);
