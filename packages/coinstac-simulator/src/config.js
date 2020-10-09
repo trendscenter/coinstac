@@ -12,12 +12,12 @@ let config = {
   },
 };
 
-if(process.env.NODE_ENV === 'DEVELOPMENT') {
+if(process.env.API_SERVER_HOSTNAME) {
   config = Object.assign(config,
     {
       protocol: 'http',
-      apiServer: 'localhost',
-      port: '3100',
+      apiServer: process.env.API_SERVER_HOSTNAME,
+      port: process.env.API_SERVER_PORT,
     });
 } else {
   config = Object.assign(config,
