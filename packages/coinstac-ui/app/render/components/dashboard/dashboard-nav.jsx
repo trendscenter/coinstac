@@ -47,9 +47,9 @@ const DashboardNav = ({ user }) => {
         <ListItemText primary="Logs" />
       </ListItem>
       {isAdmin(user) && (
-        <ListItem button component={Link} to="/dashboard/permission">
+        <ListItem button component={Link} to="/dashboard/permissions">
           <ListItemIcon><SecurityIcon /></ListItemIcon>
-          <ListItemText primary="Permission" />
+          <ListItemText primary="Permissions" />
         </ListItem>
       )}
     </List>
