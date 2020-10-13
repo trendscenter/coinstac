@@ -29,7 +29,7 @@ const unhandledBootLogger = () => {
     return console.error(`${new Date()} ERROR: ${data}`); // eslint-disable-line no-console
   };
 
-  if (process.env === 'development') {
+  if (process.env.NODE_ENV === 'development') {
     console.error( // eslint-disable-line no-console
       `${new Date()} WARNING: boot error logging to file disabled`
     );
@@ -40,7 +40,7 @@ const unhandledBootLogger = () => {
     mkdirpSync(logLocation, 0o0775);
 
     const fileLogger = (data) => {
-      if (process.ENV === 'development') {
+      if (process.env.NODE_ENV === 'development') {
         return console.error(`${new Date()} ERROR: ${data}`); // eslint-disable-line no-console
       }
       return fs.appendFileSync(logFilePath, `${new Date()} ERROR: ${data}${os.EOL}`);

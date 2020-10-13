@@ -5,7 +5,6 @@ const pify = require('util').promisify;
 const csvParse = require('csv-parse');
 const mkdirp = pify(require('mkdirp'));
 const fs = require('fs').promises;
-
 const path = require('path');
 const winston = require('winston');
 // set w/ config etc post release
@@ -253,10 +252,11 @@ class CoinstacClient {
           return string.replace(e, '\\$&');
         };
         if (filesArray) {
+          const stageFiles = process.env.CI ? fs.copy : fs.link
           for (let i = 0; i < filesArray.length; i += 1) {
             const pathsep = new RegExp(`${escape(path.sep)}|:`, 'g');
             linkPromises.push(
-              fs.link(filesArray[i], path.resolve(this.appDirectory, 'input', this.clientId, runId, filesArray[i].replace(pathsep, '-')))
+              stageFiles(filesArray[i], path.resolve(this.appDirectory, 'input', this.clientId, runId, filesArray[i].replace(pathsep, '-')))
                 .catch((e) => {
                 // permit dupes
                   if (e.code && e.code !== 'EEXIST') {
