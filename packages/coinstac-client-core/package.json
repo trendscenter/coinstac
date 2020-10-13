@@ -6,7 +6,7 @@
   "scripts": {
     "clean": "rm -rf .nyc_output coverage .tmp",
     "docs": "mkdir -p docs && jsdoc -c .jsdoc.json src/",
-    "test": "echo write tests plz"
+    "test": "nyc ava"
   },
   "repository": {
     "type": "git",
@@ -36,5 +36,16 @@
     "lodash": "^4.17.10",
     "mkdirp": "^0.5.1",
     "winston": "^3.2.1"
+  },
+  "devDependencies": {
+    "ava": "^3.8.1",
+    "nyc": "^15.0.1",
+    "sinon": "^9.0.2"
+  },
+  "ava": {
+    "files": [
+      "test/**.test.js"
+    ],
+    "timeout": "20s"
   }
 }
