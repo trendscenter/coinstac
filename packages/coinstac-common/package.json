@@ -1,6 +1,6 @@
 {
   "name": "coinstac-common",
-  "version": "5.1.1",
+  "version": "5.1.3",
   "description": "COINSTAC core functionality.",
   "main": "src/index.js",
   "directories": {
@@ -23,7 +23,7 @@
     "url": "https://github.com/MRN-Code/coinstac/issues"
   },
   "dependencies": {
-    "coinstac-docker-manager": "^5.1.1",
+    "coinstac-docker-manager": "^5.1.3",
     "joi": "^10.6.0"
   },
   "homepage": "http://mrn-code.github.io/coinstac#readme",
