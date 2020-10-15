@@ -23,6 +23,10 @@ require('./styles/app.scss');
 const rootEl = document.getElementById('app');
 global.config = remote.getGlobal('config');
 
+if (process.env.NODE_ENV !== 'development') {
+  global.console.warn = () => {};
+}
+
 const client = getApolloClient(global.config);
 const store = configureStore(client);
 
