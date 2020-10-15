@@ -533,11 +533,10 @@ module.exports = {
 
             // normal pipeline operation
             if (remoteClients[id] && remoteClients[id][runId]) {
-              remoteClients[id][runId].debug.received = Date.now();
-              remoteClients[id][runId].debug.sent = data.debug.sent;
-
               // is the client giving us an error?
               if (!error) {
+                remoteClients[id][runId].debug.received = Date.now();
+                remoteClients[id][runId].debug.sent = data.debug.sent;
                 // has this pipeline error'd out?
                 if (!activePipelines[runId].error) {
                   // check if the msg is a dup, either for a current or past iteration
