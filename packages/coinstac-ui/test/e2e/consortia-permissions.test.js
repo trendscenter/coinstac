@@ -4,6 +4,8 @@ const chaiAsPromised = require('chai-as-promised');
 const path = require('path');
 const electron = require('electron');
 
+const { logFilter } = require('./helper');
+
 const appPath = path.join(__dirname, '../..');
 
 const EXIST_TIMEOUT = 6000;
@@ -56,13 +58,13 @@ describe('e2e consortia permissions', () => {
   after(async () => {
     if (process.env.CI) {
       await app1.client.getMainProcessLogs().then((logs) => {
-        logs.forEach((log) => {
+        logs.filter(logFilter).forEach((log) => {
           console.log(log); // eslint-disable-line no-console
         });
       });
       console.log('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Second Client Logs %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'); // eslint-disable-line no-console
       await app2.client.getMainProcessLogs().then((logs) => {
-        logs.forEach((log) => {
+        logs.filter(logFilter).forEach((log) => {
           console.log(log); // eslint-disable-line no-console
         });
       });
