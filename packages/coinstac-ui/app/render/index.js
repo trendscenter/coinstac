@@ -23,7 +23,7 @@ require('./styles/app.scss');
 const rootEl = document.getElementById('app');
 global.config = remote.getGlobal('config');
 
-if (process.env.NODE_ENV !== 'development') {
+if (process.env.CI) {
   global.console.warn = () => {};
 }
 
