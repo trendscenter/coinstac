@@ -970,7 +970,7 @@ const resolvers = {
       const { currentPassword, newPassword } = args;
       const db = database.getDbInstance();
 
-      const currentUser = await db.collection('users').findOne({ _id: credentials.id });
+      const currentUser = await db.collection('users').findOne({ _id: ObjectID(credentials.id) });
 
       const isPasswordCorrect =
         await helperFunctions.verifyPassword(currentPassword, currentUser.passwordHash)
@@ -982,7 +982,7 @@ const resolvers = {
       const newPasswordHash = await helperFunctions.hashPassword(newPassword)
 
       await db.collection('users').findOneAndUpdate({
-        _id: credentials.id
+        _id: ObjectID(credentials.id)
       }, {
         $set: {
           passwordHash: newPasswordHash,

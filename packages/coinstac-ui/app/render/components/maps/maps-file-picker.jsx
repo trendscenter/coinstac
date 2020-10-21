@@ -1,11 +1,13 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
 import ipcPromise from 'ipc-promise';
 import { withStyles } from '@material-ui/core/styles';
 import Paper from '@material-ui/core/Paper';
 import Button from '@material-ui/core/Button';
 import Divider from '@material-ui/core/Divider';
 import Typography from '@material-ui/core/Typography';
+import { notifyError } from '../../state/ducks/notifyAndLog';
 
 const styles = theme => ({
   addFileGroupButton: {
@@ -35,6 +37,8 @@ class MapsFilePicker extends React.Component {
   }
 
   addFileGroup = () => {
+    const { notifyError } = this.props;
+
     ipcPromise.send('open-dialog', 'metafile')
       .then((obj) => {
         if (obj.error) {
@@ -48,6 +52,7 @@ class MapsFilePicker extends React.Component {
 
         this.setState({ filesError: null });
       }).catch((error) => {
+        notifyError(error.message);
         this.setState({ filesError: error.message });
       });
   }
@@ -172,6 +177,12 @@ MapsFilePicker.propTypes = {
   classes: PropTypes.object.isRequired,
   dataType: PropTypes.string.isRequired,
   setSelectedDataFile: PropTypes.func.isRequired,
+  notifyError: PropTypes.func.isRequired,
 };
 
-export default withStyles(styles)(MapsFilePicker);
+const connectedComponent = connect(null,
+  {
+    notifyError,
+  })(MapsFilePicker);
+
+export default withStyles(styles)(connectedComponent);

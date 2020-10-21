@@ -12,6 +12,9 @@ H. Gazula, B. Holla, Z. Zhang, J. Xu, E. Verner, R. Kelly, G. Schumann, V. D. Ca
 Decentralized multi-site VBM analysis during adolescence shows structural changes linked to age, body mass index, and smoking: A COINSTAC analysis, bioRxiv 846386; 2020. 
 https://doi.org/10.1101/846386
 
+B. T. Baker, E. Damaraju, R. F. Silva, S. M. Plis, V. D. Calhoun, Decentralized dynamic functional network connectivity: State analysis in collaborative settings, Human Brain Mapping 41: pp. 2909–2925, 2020.
+https://doi.org/10.1002/hbm.24986
+
 H. Gazula, R. Kelly, J. Romero, E. Verner, B. Baker, R. F. Silva, H. Imtiaz, D. K. Saha, R. Raja, J. A. Turner, A. D. Sarwate, S. M. Plis, and V. D. Calhoun. COINSTAC: Collaborative Informatics and Neuroimaging Suite Toolkit for Anonymous Computation, Journal of Open Source Software, 5(47), 2166: 2020. https://doi.org/10.21105/joss.02166.
 
 M. Ghassemi, Z. Shakeri, A.D. Sarwate, W.U. Bajwa, Learning Mixtures of Separable Dictionaries for Tensor Data: Analysis and Algorithms, IEEE Transactions on Signal Processing : to appear 2020.  
@@ -77,6 +80,9 @@ V.K. Potluru, J. Diaz-Montes, A.D. Sarwate, S.M. Plis, V.D. Calhoun, B.A. Pearlm
 http://mural.maynoothuniversity.ie/10230/1/BP-CometCloudCare-2014.pdf
 
 ## Presentations
+
+E. Verner, A.D. Sarwate, R. Kelly, J. Romero, B.T. Baker, R.F. Silva, H. Imtiaz, D.K. Saha, R. Raja, J.A.Turner, S.M. Plis, V.D. Calhoun, COINSTAC: A Decentralized, Differentially Private Application for Neuroimaging, OpenMined Privacy Conference 2020, September 2020.
+https://zenodo.org/record/4053026#.X3BzPC3My-U
 
 E. Verner, H. Gazula, R. Kelly, J. Romero, B.T. Baker, R.F. Silva, H. Imtiaz, D.K. Saha, R. Raja, J.A.Turner, S.M. Plis, V.D. Calhoun, Open, Reproducible, and Decentralized Workflows with COINSTAC, Annual Meeting of the Organization for Human Brain Mapping. Montreal, CA. June 2020.
 https://doi.org/10.5281/zenodo.3906184

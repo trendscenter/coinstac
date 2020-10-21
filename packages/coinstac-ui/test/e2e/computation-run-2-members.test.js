@@ -5,8 +5,6 @@ const path = require('path');
 const electron = require('electron');
 
 const appPath = path.join(__dirname, '../..');
-const mocksPath = path.join(__dirname, 'mocks.js');
-
 const EXIST_TIMEOUT = 6000;
 const COMPUTATION_TIMEOUT = 150000;
 const COMPUTATION_DOWNLOAD_TIMEOUT = 40000;
@@ -22,17 +20,29 @@ const COMPUTATION_NAME = 'Regression - FreeSurfer Volumes';
 chai.should();
 chai.use(chaiAsPromised);
 
+// chromedriver opts are for headless usage
+// but dont affect local tests
 const app1 = new Application({
   path: electron,
-  env: { TEST_INSTANCE: 'test-1' },
-  args: [appPath, '-r', mocksPath],
+  env: { TEST_INSTANCE: 'test-1', NODE_ENV: 'test' },
+  args: [appPath],
+  chromeDriverArgs: [
+    '--no-sandbox',
+    '--whitelisted-ips=',
+    '--disable-dev-shm-usage',
+  ],
   port: 9515,
 });
 
 const app2 = new Application({
   path: electron,
-  env: { TEST_INSTANCE: 'test-2' },
-  args: [appPath, '-r', mocksPath],
+  env: { TEST_INSTANCE: 'test-2', NODE_ENV: 'test' },
+  args: [appPath],
+  chromeDriverArgs: [
+    '--no-sandbox',
+    '--whitelisted-ips=',
+    '--disable-dev-shm-usage',
+  ],
   port: 9516,
 });
 
@@ -49,12 +59,25 @@ describe('e2e run computation with 2 members', () => {
     ]);
   });
 
-  after(() => (
-    Promise.all([
+  after(async () => {
+    if (process.env.CI) {
+      await app1.client.getMainProcessLogs().then((logs) => {
+        logs.forEach((log) => {
+          console.log(log); // eslint-disable-line no-console
+        });
+      });
+      console.log('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Second Client Logs %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'); // eslint-disable-line no-console
+      await app2.client.getMainProcessLogs().then((logs) => {
+        logs.forEach((log) => {
+          console.log(log); // eslint-disable-line no-console
+        });
+      });
+    }
+    return Promise.all([
       app1.stop(),
       app2.stop(),
-    ])
-  ));
+    ]);
+  });
 
   it('displays the correct title', async () => {
     return app1.client.getTitle().should.eventually.equal('COINSTAC');

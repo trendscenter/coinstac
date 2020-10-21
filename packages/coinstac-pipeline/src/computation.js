@@ -18,22 +18,35 @@ module.exports = {
       mode,
       runId,
       clientId,
-      start(input, { baseDirectory }) {
+      start(input, { operatingDirectory }) {
         // console.log(input); Keeping this for future ref.
+        let HostConfig = {
+          Binds:
+          [
+            `${operatingDirectory}/input:/input:ro`,
+            `${operatingDirectory}/output:/output:rw`,
+            `${operatingDirectory}/cache:/cache:rw`,
+            `${operatingDirectory}/transfer:/transfer:rw`,
+          ],
+        };
+        if (process.env.CI) {
+          HostConfig = {
+            Binds: [
+              `${process.env.CI_VOLUME}:${operatingDirectory}`,
+            ],
+            Volumes: {
+              [operatingDirectory]: {},
+            },
+            NetworkMode: process.env.CI_DOCKER_NETWORK,
+          };
+        }
         return docker.startService(
           this.meta.id,
           `${this.runId}-${this.clientId}`,
           {
             docker: _.merge({
               Image: computation.dockerImage,
-              HostConfig: {
-                Binds: [
-                  `${baseDirectory}/input:/input:ro`,
-                  `${baseDirectory}/output:/output:rw`,
-                  `${baseDirectory}/cache:/cache:rw`,
-                  `${baseDirectory}/transfer:/transfer:rw`,
-                ],
-              },
+              HostConfig,
             }, dockerOptions),
           }
         )
