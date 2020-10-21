@@ -1,5 +1,6 @@
 const test = require('ava');
 const { transformToClient } = require('../src/utils');
+const plugins = require('../src/plugins');
 
 test('transformToClient', (t) => {
   const inputArray = [
@@ -16,4 +17,10 @@ test('transformToClient', (t) => {
 
   const res2 = transformToClient(inputArray[0]);
   t.deepEqual(res2, { id: 'test1', username: 'test1' });
+});
+
+test('plugins', (t) => {
+  plugins[2].options.graphqlOptions();
+
+  t.is(plugins.length, 3);
 });

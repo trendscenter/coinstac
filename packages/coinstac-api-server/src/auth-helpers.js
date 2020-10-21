@@ -235,7 +235,7 @@ const helperFunctions = {
       return res(Boom.badRequest('Email taken'));
     }
 
-    return res();
+    return res(true);
   },
   /**
    * Validate that authenticating user is using correct credentials

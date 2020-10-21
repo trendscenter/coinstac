@@ -66,6 +66,25 @@ module.exports = [
   },
   {
     method: 'POST',
+    path: '/updateAccount',
+    config: {
+      auth: false,
+      handler: async (req, res) => {
+        const user = await helperFunctions.updateUser(req.payload);
+        const {
+          id, institution, email, photo, photoID, name, username, permissions,
+        } = user;
+
+        res({
+          user: {
+            id, institution, email, photo, photoID, name, username, permissions,
+          },
+        }).code(201);
+      },
+    },
+  },
+  {
+    method: 'POST',
     path: '/sendPasswordResetEmail',
     config: {
       auth: false,

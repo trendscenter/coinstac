@@ -6,6 +6,8 @@ const authRoutes = require('../src/routes/auth');
 const versionRoutes = require('../src/routes/version');
 const helperFunctions = require('../src/auth-helpers');
 
+const { USER_IDS } = require('../seed/populate');
+
 const resMock = { code: () => {} };
 
 test('routes', (t) => {
@@ -94,6 +96,37 @@ test('createAccount', async (t) => {
 
   helperFunctions.hashPassword.restore();
   helperFunctions.createUser.restore();
+});
+
+test('updateAccount', async (t) => {
+  const updateAccount = find(authRoutes, { path: '/updateAccount' });
+
+  const req = {
+    payload: {
+      id: USER_IDS[0],
+      name: 'John',
+      username: 'test1',
+      email: 'test1@mrn.org',
+      photo: 'photo',
+      photoID: 'photoId',
+      institution: 'institution',
+    },
+  };
+
+  sinon.stub(helperFunctions, 'updateUser').resolves({
+    ...req.payload,
+    permissions: {},
+  });
+
+  const res = (payload) => {
+    t.is(payload.user.username, req.payload.username);
+
+    return resMock;
+  };
+
+  await updateAccount.config.handler(req, res);
+
+  helperFunctions.updateUser.restore();
 });
 
 test('sendPasswordResetEmail', async (t) => {
