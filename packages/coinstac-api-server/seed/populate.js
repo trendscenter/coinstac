@@ -236,12 +236,11 @@ async function populateRuns() {
 
   db.collection('runs').insertMany([
     {
+      _id: RUN_IDS[0],
       clients: [
         USER_IDS[0].toHexString(),
       ],
-      members: {
-        [USER_IDS[0]]: 'test1',
-      },
+      members: [USER_IDS[0]],
       consortiumId: CONSORTIA_IDS[1],
       pipelineSnapshot: {
         id: PIPELINE_IDS[0].toHexString(),
@@ -356,13 +355,11 @@ async function populateRuns() {
       },
     },
     {
-      id: 'b23af8ff-18fa-479d-adc7-19408abb3741',
+      _id: RUN_IDS[1],
       clients: [
         USER_IDS[0].toHexString(),
       ],
-      members: {
-        [USER_IDS[0]]: 'test1',
-      },
+      members: [USER_IDS[0]],
       consortiumId: CONSORTIA_IDS[1],
       startDate: '1568405561851',
       endDate: '1568408608526',
@@ -573,9 +570,7 @@ async function populateRuns() {
       clients: [
         USER_IDS[0].toHexString(),
       ],
-      members: {
-        [USER_IDS[0]]: 'test1',
-      },
+      members: [USER_IDS[0]],
       consortiumId: CONSORTIA_IDS[1],
       startDate: '1518559440672',
       endDate: '1518559440685',
@@ -658,13 +653,11 @@ async function populateRuns() {
       status: 'complete',
     },
     {
-      id: 'results-1',
+      _id: RUN_IDS[2],
       clients: [
         USER_IDS[0].toHexString(),
       ],
-      members: {
-        [USER_IDS[0]]: 'test1',
-      },
+      members: [USER_IDS[0]],
       consortiumId: CONSORTIA_IDS[1],
       startDate: '1518559440668',
       endDate: '1551465751260',

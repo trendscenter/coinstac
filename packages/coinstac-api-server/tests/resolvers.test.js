@@ -368,7 +368,7 @@ test('fetchAllUsers and fetchUser', async (t) => {
 });
 
 test('fetchAllUserRuns', async (t) => {
-  const auth = getAuth(USER_IDS[0], 'test1');
+  const auth = getAuth(USER_IDS[0].toHexString());
   const runs = await Query.fetchAllUserRuns(auth);
 
   t.is(runs.length, 4);
