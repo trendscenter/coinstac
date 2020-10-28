@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "debug": "^4.2.0",
     "dockerode": "^2.5.5",
     "lodash": "^4.17.10",
     "portscanner": "^2.2.0",

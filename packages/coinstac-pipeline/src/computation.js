@@ -51,7 +51,7 @@ module.exports = {
           }
         )
           .then((service) => {
-            return service(computation.command.concat([`${JSON.stringify(input)}`]));
+            return service(computation.command.concat([`${JSON.stringify(input)}`]), `${this.runId}-${this.clientId}`);
           });
       },
       stop() {
