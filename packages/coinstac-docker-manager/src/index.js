@@ -481,9 +481,7 @@ const startService = (serviceId, serviceUserId, opts) => {
     if (services[serviceId].container && services[serviceId].state !== 'starting') {
       logger.silly('Returning already started service');
       return new Promise((resolve, reject) => {
-        console.time('inspect');
         services[serviceId].container.inspect((error, data) => {
-          console.timeEnd('inspect');
           if (error) {
             reject(error);
           }
