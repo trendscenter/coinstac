@@ -23,7 +23,6 @@ logger.level = process.LOGLEVEL ? process.LOGLEVEL : 'info';
 const debugProfile = debug('pipeline:profile-manager');
 debugProfile.log = l => logger.info(`PROFILING: ${l}`);
 
-
 const setTimeoutPromise = (delay) => {
   return new Promise((resolve) => {
     setTimeout(resolve, delay);
