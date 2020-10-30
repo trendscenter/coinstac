@@ -37,6 +37,7 @@ let portLock = false;
  */
 const setLogger = (loggerInstance) => {
   logger = loggerInstance;
+  return logger;
 };
 
 /**
@@ -364,7 +365,7 @@ const startService = (serviceId, serviceUserId, opts) => {
 
                 let error;
                 try {
-                  const parsed = JSON.parse(output.stdout);
+                  const parsed = output.stdout ? JSON.parse(output.stdout) : {};
                   proxR(parsed);
                 } catch (e) {
                   error = e;
@@ -540,7 +541,7 @@ const pullImagesFromList = comps => Promise.all(comps.map(image => pullImage(`${
  * @return {Promise}
  */
 const removeImage = (imageId) => {
-  return docker.getImage(imageId).remove();
+  return docker.getImage(imageId).remove().then(() => imageId);
 };
 
 /**
@@ -554,7 +555,7 @@ const removeImage = (imageId) => {
  */
 const stopService = (serviceId, serviceUserId, waitForBox) => {
   const service = services[serviceId];
-  if (!service) return Promise.resolve();
+  if (!service) return Promise.resolve(serviceId);
   if (service.users.indexOf(serviceUserId) > -1) {
     service.users.splice(service.users.indexOf(serviceUserId), 1);
   }
@@ -571,12 +572,12 @@ const stopService = (serviceId, serviceUserId, waitForBox) => {
           service.state = 'zombie';
           service.error = err;
         });
-      return waitForBox ? boxPromise : Promise.resolve();
+      return waitForBox ? boxPromise : Promise.resolve(serviceId);
     }
     delete services[serviceId];
-    return Promise.resolve();
+    return Promise.resolve(serviceId);
   }
-  return Promise.resolve();
+  return Promise.resolve(serviceId);
 };
 
 /**
@@ -589,7 +590,9 @@ const stopAllServices = () => {
       .map(serviceId => services[serviceId].container.stop())
   )
     .then(() => {
+      const res = services;
       services = {};
+      return res;
     });
 };
 
