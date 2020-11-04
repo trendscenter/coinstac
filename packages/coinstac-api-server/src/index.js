@@ -1,5 +1,3 @@
-require('trace');
-require('clarify');
 const hapi = require('hapi');
 const helperFunctions = require('./auth-helpers');
 const plugins = require('./plugins');
