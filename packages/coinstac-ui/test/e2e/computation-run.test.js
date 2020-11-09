@@ -4,6 +4,8 @@ const chaiAsPromised = require('chai-as-promised');
 const path = require('path');
 const electron = require('electron');
 
+const { logFilter } = require('./helper');
+
 const appPath = path.join(__dirname, '../..');
 
 const EXIST_TIMEOUT = 10000;
@@ -40,7 +42,7 @@ describe('e2e run computation with 1 member', () => {
   after(async () => {
     if (process.env.CI) {
       await app.client.getMainProcessLogs().then((logs) => {
-        logs.forEach((log) => {
+        logs.filter(logFilter).forEach((log) => {
           console.log(log); // eslint-disable-line no-console
         });
       });
