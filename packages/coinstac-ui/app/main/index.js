@@ -7,15 +7,11 @@
 
 'use strict';
 
-require('trace');
-require('clarify');
-
 Error.stackTraceLimit = 100;
 
 const { compact } = require('lodash'); // eslint-disable-line no-unused-vars
 const electron = require('electron');
 const ipcPromise = require('ipc-promise');
-const mock = require('../../test/e2e/mocks');
 const ipcFunctions = require('./utils/ipc-functions');
 const runPipelineFunctions = require('./utils/run-pipeline-functions');
 
@@ -25,13 +21,6 @@ const { EXPIRED_TOKEN, BAD_TOKEN } = require('../render/utils/error-codes');
 
 // if no env set prd
 process.env.NODE_ENV = process.env.NODE_ENV || 'production';
-
-// Mock file dialogue in testing environment
-// Watch the following issue for progress on dialog support
-// https://github.com/electron/spectron/issues/94
-if (process.env.NODE_ENV === 'test') {
-  mock(electron.dialog);
-}
 
 // Set up root paths
 require('../common/utils/add-root-require-path.js');
@@ -550,21 +539,7 @@ loadConfig()
         filters,
         properties
       )
-        .then(({ filePaths }) => postDialogFunc(filePaths, initializedCore))
-        .catch((err) => {
-          //  Below error happens when File Dialog is cancelled.
-          //  Not really an error.
-          //  Let's not freak people out.
-          if (!err.message.contains("Cannot read property '0' of undefined")) {
-            logger.error(err);
-            mainWindow.webContents.send('docker-error', {
-              err: {
-                message: err.message,
-                stack: err.stack,
-              },
-            });
-          }
-        });
+        .then(({ filePaths }) => postDialogFunc(filePaths, initializedCore));
     });
     /**
    * IPC Listener to remove a Docker image

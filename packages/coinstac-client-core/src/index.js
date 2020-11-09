@@ -7,7 +7,7 @@ const mkdirp = pify(require('mkdirp'));
 const Emitter = require('events');
 const axios = require('axios');
 const nes = require('nes');
-const fs = require('fs');
+const fs = require('fs').promises;
 const path = require('path');
 const winston = require('winston');
 const DockerManager = require('coinstac-docker-manager');
@@ -17,11 +17,6 @@ const PipelineManager = require('coinstac-pipeline');
 process.LOGLEVEL = 'silly';
 
 const { Logger, transports: { Console } } = winston;
-
-const unlinkAsync = pify(fs.unlink);
-const linkAsync = pify(fs.link);
-const statAsync = pify(fs.stat);
-const readdirAsync = pify(fs.readdir);
 
 /**
  * Create a user client for COINSTAC
@@ -105,7 +100,7 @@ class CoinstacClient {
    * @returns {Promise<Project>}
    */
   static getCSV(filename) {
-    return pify(fs.readFile)(filename)
+    return fs.readFile(filename)
       .then(data => pify(csvParse)(data.toString()))
       .then(JSON.stringify);
   }
@@ -177,7 +172,7 @@ class CoinstacClient {
    * @returns {Promise<Project>}
    */
   static getJSONSchema(filename) {
-    return pify(fs.readFile)(filename)
+    return fs.readFile(filename)
       .then(data => JSON.parse(data.toString()));
   }
 
@@ -211,10 +206,10 @@ class CoinstacClient {
         p = path.join(group.parentDir, p);
       }
 
-      const stats = await statAsync(p);
+      const stats = await fs.stat(p);
 
       if (stats.isDirectory()) {
-        const dirs = await readdirAsync(p);
+        const dirs = await fs.readdir(p);
         const paths = [...dirs.filter(item => !(/(^|\/)\.[^/.]/g).test(item))];
         // Recursively retrieve path contents of directory
         const subGroup = await this.getSubPathsAndGroupExtension({
@@ -285,12 +280,12 @@ class CoinstacClient {
           const escape = (string) => {
             return string.replace(e, '\\$&');
           };
-
           if (filesArray) {
+            const stageFiles = process.env.CI ? fs.copy : fs.link
             for (let i = 0; i < filesArray.length; i += 1) {
               const pathsep = new RegExp(`${escape(path.sep)}|:`, 'g');
               linkPromises.push(
-                linkAsync(filesArray[i], path.resolve(this.appDirectory, 'input', this.clientId, runId, filesArray[i].replace(pathsep, '-')))
+                stageFiles(filesArray[i], path.resolve(this.appDirectory, 'input', this.clientId, runId, filesArray[i].replace(pathsep, '-')))
                   .catch((e) => {
                   // permit dupes
                     if (e.code && e.code !== 'EEXIST') {
@@ -369,7 +364,7 @@ class CoinstacClient {
   unlinkFiles(runId) {
     const fullPath = path.join(this.appDirectory, 'input', this.clientId, runId);
 
-    return statAsync(fullPath).then((stats) => {
+    return fs.stat(fullPath).then((stats) => {
       return stats.isDirectory();
     })
       .catch((err) => {
@@ -381,22 +376,13 @@ class CoinstacClient {
           return [];
         }
 
-        return new Promise((res, rej) => {
-          return fs.readdir(fullPath,
-            (error, filesArray) => {
-              if (error) {
-                rej(error);
-              } else {
-                res(filesArray);
-              }
-            });
-        });
+        return fs.readdir(fullPath);
       })
       .then((filesArray) => {
         const unlinkPromises = [];
         for (let i = 0; i < filesArray.length; i += 1) {
           unlinkPromises.push(
-            unlinkAsync(path.resolve(fullPath, filesArray[i]))
+            fs.unlink(path.resolve(fullPath, filesArray[i]))
           );
         }
         return Promise.all(unlinkPromises);
