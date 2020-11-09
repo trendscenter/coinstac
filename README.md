@@ -4,6 +4,7 @@
 
 [![CircleCI](https://circleci.com/gh/trendscenter/coinstac.svg?style=shield)](https://circleci.com/gh/trendcenter/coinstac)
 [![DOI](https://zenodo.org/badge/52497909.svg)](https://zenodo.org/badge/latestdoi/52497909)
+[![DOI](https://joss.theoj.org/papers/10.21105/joss.02166/status.svg)](https://doi.org/10.21105/joss.02166)
 
 _Collaborative Informatics and Neuroimaging Suite Toolkit for Anonymous Computation._ A research project by your friends at the [Center for Translational Research in Neuroimaging and Data Science (TReNDS)](https://www.trendscenter.org).
 

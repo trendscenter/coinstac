@@ -50,6 +50,7 @@ import {
   getAllAndSubProp,
   updateConsortiaMappedUsersProp,
   userRunProp,
+  userProp,
 } from '../../state/graphql/props';
 import StartPipelineListener from './listeners/start-pipeline-listener';
 import NotificationsListener from './listeners/notifications-listener';
@@ -651,31 +652,9 @@ const DashboardWithData = compose(
     'subscribeToThreads',
     'threadChanged'
   )),
-  graphql(FETCH_USER_QUERY, {
-    skip: props => !props.auth || !props.auth.user || !props.auth.user.id,
-    options: props => ({
-      fetchPolicy: 'cache-and-network',
-      variables: { userId: props.auth.user.id },
-    }),
-    props: props => ({
-      currentUser: props.data.fetchUser,
-      subscribeToUser: userId => props.data.subscribeToMore({
-        document: USER_CHANGED_SUBSCRIPTION,
-        variables: { userId },
-        updateQuery: (prevResult, { subscriptionData: { data } }) => {
-          if (data.userChanged.delete) {
-            return { fetchUser: null };
-          }
-          return {
-            fetchUser: {
-              ...prevResult.fetchUser,
-              ...data.userChanged,
-            },
-          };
-        },
-      }),
-    }),
-  }),
+  graphql(FETCH_USER_QUERY, userProp(
+    USER_CHANGED_SUBSCRIPTION
+  )),
   graphql(UPDATE_USER_CONSORTIUM_STATUS_MUTATION, {
     props: ({ ownProps, mutate }) => ({
       updateUserConsortiumStatus: (consortiumId, status) => mutate({

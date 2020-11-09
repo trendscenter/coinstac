@@ -1,5 +1,3 @@
-require('trace');
-require('clarify');
 const database = require('../src/database');
 const helperFunctions = require('../src/auth-helpers');
 
