@@ -166,7 +166,7 @@ async function changeUserAppRole(args, addOrRemove) {
   const db = database.getDbInstance();
   const { userId, role } = args;
 
-  const userUpdateResult = await db.collection('users').findOneAndUpdate({ _id: userId }, {
+  const userUpdateResult = await db.collection('users').findOneAndUpdate({ _id: ObjectID(userId) }, {
     $set: {
       [`permissions.roles.${role}`]: addOrRemove === 'add',
     },
@@ -457,6 +457,10 @@ const resolvers = {
     addUserRole: async ({ auth: { credentials } }, args) => {
       const { permissions } = credentials;
 
+      if (credentials.id === args.userId) {
+        return Boom.forbidden('You are not allowed to change your own permission');
+      }
+
       if (AVAILABLE_ROLE_TYPES.indexOf(args.roleType) === -1) {
         return Boom.forbidden('Invalid role type');
       }
@@ -696,6 +700,10 @@ const resolvers = {
      */
     removeUserRole: async ({ auth: { credentials } }, args) => {
       const { permissions } = credentials;
+
+      if (credentials.id === args.userId) {
+        return Boom.forbidden('You are not allowed to change your own permission');
+      }
 
       if (AVAILABLE_ROLE_TYPES.indexOf(args.roleType) === -1) {
         return Boom.forbidden('Invalid role type');
