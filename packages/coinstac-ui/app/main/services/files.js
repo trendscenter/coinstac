@@ -1,6 +1,27 @@
 'use strict';
 
 const { dialog } = require('electron');
+const path = require('path');
+
+// Mock file dialogue in testing environment
+// Watch the following issue for progress on dialog support
+// https://github.com/electron/spectron/issues/94
+function mockFileDialog() {
+  let count;
+  switch (process.env.TEST_INSTANCE) {
+    case 'test-1':
+      count = 1;
+      break;
+    case 'test-2':
+      count = 2;
+      break;
+    default:
+      count = 1;
+  }
+
+  const testDataFilePath = path.join(__dirname, `../../../../../algorithm-development/test-data/freesurfer-test-data/site${count}/site${count}_Covariate.csv`);
+  return Promise.resolve({ filePaths: [testDataFilePath] });
+}
 
 module.exports = {
   /**
@@ -14,16 +35,17 @@ module.exports = {
    * path.
    */
   showDialog: (mainWindow, filters, properties) => {
-    return new Promise((resolve) => {
-      dialog.showOpenDialog(
-        mainWindow,
-        {
-          filters,
-          properties,
-        },
-        files => resolve({ filePaths: files })
-      );
-    });
+    if (process.env.NODE_ENV === 'test') {
+      return mockFileDialog();
+    }
+
+    return dialog.showOpenDialog(
+      mainWindow,
+      {
+        filters,
+        properties,
+      }
+    );
   },
 
   /**

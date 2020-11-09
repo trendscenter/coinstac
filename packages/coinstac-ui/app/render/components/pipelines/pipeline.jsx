@@ -558,7 +558,7 @@ class Pipeline extends Component {
             <FormControlLabel
               control={(
                 <Checkbox
-                  checked={pipeline.isActive}
+                  checked={pipeline.isActive || false}
                   disabled={!owner}
                   onChange={evt => this.updatePipeline({ param: 'isActive', value: evt.target.checked })}
                 />

@@ -273,8 +273,8 @@ class RunItem extends Component {
                 </Typography>
                 <Typography className={classes.value}>
                   {
-                    Object.values(members).map(member => (
-                      <span>
+                    Object.values(members).map((member, ind) => (
+                      <span key={`${member}-${ind}`}>
                         { `${member},` }
                       </span>
                     ))

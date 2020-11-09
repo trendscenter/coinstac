@@ -1,5 +1,3 @@
-require('trace');
-require('clarify');
 const database = require('../src/database');
 const helperFunctions = require('../src/auth-helpers');
 
@@ -231,7 +229,10 @@ async function populateRuns() {
 
   db.collection('runs').insertMany([
     {
-      clients: {
+      clients: [
+        USER_IDS[0].toHexString(),
+      ],
+      members: {
         [USER_IDS[0]]: 'test1',
       },
       consortiumId: CONSORTIA_IDS[1],
@@ -349,7 +350,10 @@ async function populateRuns() {
     },
     {
       id: 'b23af8ff-18fa-479d-adc7-19408abb3741',
-      clients: {
+      clients: [
+        USER_IDS[0].toHexString(),
+      ],
+      members: {
         [USER_IDS[0]]: 'test1',
       },
       consortiumId: CONSORTIA_IDS[1],
@@ -559,7 +563,10 @@ async function populateRuns() {
     },
     {
       id: 'results-2',
-      clients: {
+      clients: [
+        USER_IDS[0].toHexString(),
+      ],
+      members: {
         [USER_IDS[0]]: 'test1',
       },
       consortiumId: CONSORTIA_IDS[1],
@@ -645,7 +652,10 @@ async function populateRuns() {
     },
     {
       id: 'results-1',
-      clients: {
+      clients: [
+        USER_IDS[0].toHexString(),
+      ],
+      members: {
         [USER_IDS[0]]: 'test1',
       },
       consortiumId: CONSORTIA_IDS[1],
