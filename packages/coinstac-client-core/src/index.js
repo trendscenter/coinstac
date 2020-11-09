@@ -17,7 +17,7 @@ const winston = require('winston');
 process.LOGLEVEL = 'silly';
 
 const { Logger, transports: { Console } } = winston;
-const DockerManager = require('coinstac-docker-manager');
+const Manager = require('coinstac-manager');
 const PipelineManager = require('coinstac-pipeline');
 
 
@@ -40,7 +40,6 @@ const PipelineManager = require('coinstac-pipeline');
  */
 class CoinstacClient {
   constructor(opts) {
-
     if (!opts || !(opts instanceof Object)) {
       throw new TypeError('coinstac-client requires configuration opts');
     }
@@ -48,8 +47,8 @@ class CoinstacClient {
     this.logger = opts.logger || new Logger({ transports: [new Console()] });
     this.appDirectory = opts.appDirectory;
 
-    this.dockerManager = DockerManager;
-    this.dockerManager.setLogger(this.logger);
+    this.Manager = Manager;
+    this.Manager.setLogger(this.logger);
 
     /* istanbul ignore if */
     if (opts.logLevel) {

@@ -23,6 +23,7 @@ module.exports = {
     runId,
     {
       mode,
+      imageDirectory,
       operatingDirectory,
       clientId,
       userDirectories,
@@ -41,6 +42,7 @@ module.exports = {
     const pipelineSteps = steps.map(
       step => Controller.create(step, runId, {
         mode,
+        imageDirectory,
         operatingDirectory,
         clientId,
         owner,

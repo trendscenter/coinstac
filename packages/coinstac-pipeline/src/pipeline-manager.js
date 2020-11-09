@@ -14,7 +14,6 @@ const winston = require('winston');
 const express = require('express');
 const multer = require('multer');
 const uuid = require('uuid/v4');
-const dockerManager = require('coinstac-docker-manager');
 const tar = require('tar-fs');
 const zlib = require('zlib');
 const merge2 = require('merge2');
@@ -138,6 +137,7 @@ module.exports = {
    */
   async create({
     clientId,
+    imageDirectory = './',
     logger,
     operatingDirectory = './',
     mode,
@@ -770,12 +770,12 @@ module.exports = {
             state: 'created',
             pipeline: Pipeline.create(spec, runId, {
               mode,
+              imageDirectory,
               operatingDirectory,
               clientId,
               userDirectories,
               owner: spec.owner,
               logger,
-              dockerManager,
             }),
             baseDirectory: path.resolve(operatingDirectory, 'input', clientId, runId),
             cacheDirectory: userDirectories.cacheDirectory,
@@ -1144,7 +1144,6 @@ module.exports = {
         }
       },
       waitingOnForRun,
-      dockerManager,
     };
   },
 };

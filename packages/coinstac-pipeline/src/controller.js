@@ -25,18 +25,24 @@ module.exports = {
   },
   runId,
   {
-    operatingDirectory,
-    mode,
     clientId,
-    owner,
+    imageDirectory,
     logger,
-    dockerManager,
+    operatingDirectory,
+    owner,
+    mode,
   }) {
     const store = Store.init(clientId);
     let computationCache = {};
     let pipelineErrorCallback;
     const currentComputations = computations.map(
-      comp => Computation.create(comp, mode, runId, clientId, dockerManager)
+      comp => Computation.create({
+        clientId,
+        spec: comp,
+        imageDirectory,
+        mode,
+        runId,
+      })
     );
     const activeControlBox = controllers[controller.type];
     const computationStep = 0;
