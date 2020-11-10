@@ -149,11 +149,15 @@ test('setLogger', async (t) => {
   t.deepEqual(res, logger);
 });
 
-test('startService, stopService, stopAllServices, generateServicePort', async (t) => {
+test('startService, stopService, stopAllServices', async (t) => {
   /* startService1 */
+  const container = {
+    inspect: () => {},
+  };
+
   sinon.stub(portscanner, 'findAPortNotInUse').returns(getRandomPort());
   sinon.stub(docker, 'createContainer').returns({
-    start: () => {},
+    start: sinon.stub().resolves(container),
     stop: () => {},
     inspect: sinon.stub().yields(null, { State: { Running: true } }),
   });
@@ -171,7 +175,7 @@ test('startService, stopService, stopAllServices, generateServicePort', async (t
   /* startService2 */
   sinon.stub(portscanner, 'findAPortNotInUse').returns(getRandomPort());
   sinon.stub(docker, 'createContainer').returns({
-    start: () => {},
+    start: sinon.stub().resolves(container),
     stop: () => {},
     inspect: sinon.stub().yields('error', null),
   });
@@ -187,10 +191,10 @@ test('startService, stopService, stopAllServices, generateServicePort', async (t
   portscanner.findAPortNotInUse.restore();
   docker.createContainer.restore();
 
-  /* startService3 */
+  // /* startService3 */
   sinon.stub(portscanner, 'findAPortNotInUse').returns(getRandomPort());
   sinon.stub(docker, 'createContainer').returns({
-    start: () => {},
+    start: sinon.stub().resolves(container),
     stop: () => {},
     inspect: sinon.stub().yields(null, { State: { Running: true } }),
   });
@@ -206,7 +210,7 @@ test('startService, stopService, stopAllServices, generateServicePort', async (t
   /* startService4 */
   sinon.stub(portscanner, 'findAPortNotInUse').returns(getRandomPort());
   sinon.stub(docker, 'createContainer').returns({
-    start: () => {},
+    start: sinon.stub().resolves(container),
     stop: () => {},
     inspect: sinon.stub().yields(null, { State: { Running: false } }),
   });
@@ -220,7 +224,7 @@ test('startService, stopService, stopAllServices, generateServicePort', async (t
   /* startService5 */
   sinon.stub(portscanner, 'findAPortNotInUse').returns(WS_SERVER_PORT);
   sinon.stub(docker, 'createContainer').returns({
-    start: () => {},
+    start: sinon.stub().resolves(container),
     stop: () => {},
     inspect: sinon.stub().yields(null, { State: { Running: true } }),
   });
@@ -236,7 +240,7 @@ test('startService, stopService, stopAllServices, generateServicePort', async (t
   /* startService6 */
   sinon.stub(portscanner, 'findAPortNotInUse').returns(HTTP_SERVER_PORT);
   sinon.stub(docker, 'createContainer').returns({
-    start: () => {},
+    start: sinon.stub().resolves(container),
     stop: () => {},
     inspect: sinon.stub().yields(null, { State: { Running: true } }),
   });
@@ -264,7 +268,7 @@ test('startService, stopService, stopAllServices, generateServicePort', async (t
 
   sinon.stub(portscanner, 'findAPortNotInUse').returns(getRandomPort());
   sinon.stub(docker, 'createContainer').returns({
-    start: () => {},
+    start: sinon.stub().resolves(container),
     stop: sinon.stub().resolves(),
     inspect: sinon.stub().yields(null, { State: { Running: true } }),
   });
@@ -280,7 +284,7 @@ test('startService, stopService, stopAllServices, generateServicePort', async (t
   /* stopService2 */
   sinon.stub(portscanner, 'findAPortNotInUse').returns(getRandomPort());
   sinon.stub(docker, 'createContainer').returns({
-    start: () => {},
+    start: sinon.stub().resolves(container),
     stop: sinon.stub().rejects('error'),
     inspect: sinon.stub().yields(null, { State: { Running: true } }),
   });
@@ -296,7 +300,7 @@ test('startService, stopService, stopAllServices, generateServicePort', async (t
   /* stopAllServices */
   sinon.stub(portscanner, 'findAPortNotInUse').returns(getRandomPort());
   sinon.stub(docker, 'createContainer').returns({
-    start: () => {},
+    start: sinon.stub().resolves(container),
     stop: () => {},
     inspect: sinon.stub().yields(null, { State: { Running: true } }),
   });
@@ -305,7 +309,7 @@ test('startService, stopService, stopAllServices, generateServicePort', async (t
   const services = await stopAllServices();
 
   t.true(keys(services).includes('service'));
-  t.true(services.service.users.includes('test-1'));
+  t.true(Object.keys(services.service.users).includes('test-1'));
 
   portscanner.findAPortNotInUse.restore();
   docker.createContainer.restore();
