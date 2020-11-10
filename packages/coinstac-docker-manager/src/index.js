@@ -170,7 +170,7 @@ const startService = (serviceId, serviceUserId, opts) => {
         .then((container) => {
           services[serviceId].hostname = process.env.CI ? container.Config.Hostname : '127.0.0.1';
           logger.silly(`Cointainer started: ${serviceId}`);
-         logger.silly(`Returning service access funcion for ${serviceId}`);
+          logger.silly(`Returning service access funcion for ${serviceId}`);
           dockerCompStart = Date.now();
           const dockerPreComp = dockerCompStart - dockerPreCompStart;
           services[serviceId].users[serviceUserId].debug.dockerPreComp += dockerPreComp;
