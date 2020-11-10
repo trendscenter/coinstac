@@ -10,15 +10,13 @@ const Container = (args) => {
   let stdout = '';
   // mimics docker api for compat
   const State = { Running: true };
-  debugger
   const process = spawn('singularity', args);
 
   return new Promise((resolve, reject) => {
-    process.stdout.on('data', (data) => { debugger; stdout += data; });
+    process.stdout.on('data', (data) => { stdout += data; });
     process.stderr.on('data', (data) => { stderr += data; });
     process.on('error', e => reject(e));
     process.on('close', (code) => {
-      debugger
       if (code !== 0) {
         error = stderr;
         utils.logger.error(error);
@@ -32,8 +30,8 @@ const Container = (args) => {
       error,
       State,
       inspect(cb) {
-        if (this.state !== 'running' || process.killed) return cb(new Error(`Singularity container not running: ${this.error}`));
-        cb(undefined, this.State);
+        if (this.State.Running !== 'running' || process.killed) return cb(new Error(`Singularity container not running: ${this.error}`));
+        cb(undefined, { State: this.State });
       },
       stop() {
         return new Promise((resolve, reject) => {

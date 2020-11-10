@@ -7,12 +7,11 @@ const WS = require('ws');
 const utils = require('../utils');
 
 const docker = new Docker();
-const { logger } = utils;
 
 module.exports = {
   // id, port
   createService(serviceId, port, opts) {
-    logger.silly(`Request to start service ${serviceId}`);
+    utils.logger.silly(`Request to start service ${serviceId}`);
     let serviceStartedRecurseLimit = 0;
     // better way than global?
     if (process.LOGLEVEL) {
@@ -24,7 +23,7 @@ module.exports = {
     }
 
     const tryStartService = () => {
-      logger.silly(`Starting service ${serviceId} at port: ${port}`);
+      utils.logger.silly(`Starting service ${serviceId} at port: ${port}`);
       const defaultOpts = {
       // this port is coupled w/ the internal base server image FYI
         ExposedPorts: {
@@ -48,12 +47,12 @@ module.exports = {
 
       return docker.createContainer(jobOpts)
         .then((container) => {
-          logger.silly(`Starting cointainer: ${serviceId}`);
+          utils.logger.silly(`Starting cointainer: ${serviceId}`);
           return container.start().then(() => container);
         })
         // is the container service ready?
         .then((container) => {
-          logger.silly(`Cointainer started: ${serviceId}`);
+          utils.logger.silly(`Cointainer started: ${serviceId}`);
           const checkServicePort = () => {
             if (opts.http) {
               return new Promise((resolve, reject) => {
@@ -83,7 +82,7 @@ module.exports = {
                       .then(() => checkServicePort());
                   }
                   // met limit, fallback to timeout
-                  logger.silly(`Container timeout for ${serviceId}`);
+                  utils.logger.silly(`Container timeout for ${serviceId}`);
                   return utils.setTimeoutPromise(5000);
                 }
                 // not a socket error, throw
@@ -96,7 +95,7 @@ module.exports = {
           return checkServicePort().then(() => container);
         })
         .then((container) => {
-          logger.silly(`Returning service access function for ${serviceId}`);
+          utils.logger.silly(`Returning service access function for ${serviceId}`);
           /**
            * Calls the WS server inside the container
            * with data format:
@@ -141,7 +140,7 @@ module.exports = {
                   command: data[0],
                   args: data.slice(1, 2),
                 }));
-                logger.debug(`Input data size: ${data[2].length}`);
+                utils.logger.debug(`Input data size: ${data[2].length}`);
                 ws.send(data[2]);
                 ws.send(null);
               });
@@ -205,12 +204,12 @@ module.exports = {
                   }
                 });
               }).then((output) => {
-                logger.debug('Docker service call finished');
+                utils.logger.debug('Docker service call finished');
                 if (output.code !== 0) {
                   throw new Error(`Computation failed with exitcode ${output.code} and stderr ${output.stderr}`);
                 }
-                logger.silly(`Docker stderr: ${output.stderr}`);
-                logger.debug(`Output size: ${output.stdout.length}`);
+                utils.logger.silly(`Docker stderr: ${output.stderr}`);
+                utils.logger.debug(`Output size: ${output.stdout.length}`);
 
                 let error;
                 try {
@@ -218,7 +217,7 @@ module.exports = {
                   proxR(parsed);
                 } catch (e) {
                   error = e;
-                  logger.error(`Computation output serialization failed with value: ${output.stdout}`);
+                  utils.logger.error(`Computation output serialization failed with value: ${output.stdout}`);
                   error.message = `${error.message}\n Additional computation failure information:\n
                   Error code: ${output.code}\n
                   Stderr: ${output.stderr}
