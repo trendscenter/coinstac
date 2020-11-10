@@ -458,7 +458,7 @@ const resolvers = {
       const { permissions } = credentials;
 
       if (credentials.id === args.userId) {
-        return Boom.forbidden('You are not allowed to change your own permission');
+        return Boom.forbidden('You cannot change your own permissions');
       }
 
       if (AVAILABLE_ROLE_TYPES.indexOf(args.roleType) === -1) {
@@ -702,7 +702,7 @@ const resolvers = {
       const { permissions } = credentials;
 
       if (credentials.id === args.userId) {
-        return Boom.forbidden('You are not allowed to change your own permission');
+        return Boom.forbidden('You cannot remoe your own permissions');
       }
 
       if (AVAILABLE_ROLE_TYPES.indexOf(args.roleType) === -1) {
