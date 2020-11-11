@@ -1,4 +1,8 @@
 function transformItem(item) {
+  if (!item) {
+    return null;
+  }
+
   if ('id' in item) {
     return item;
   }

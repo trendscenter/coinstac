@@ -103,7 +103,6 @@ function threadChanged(thread) {
     threadChanged: t,
     threadId: t.id,
   });
-
 }
 
 function publishUser(user) {

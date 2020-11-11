@@ -1,6 +1,5 @@
 const Boom = require('boom');
 const GraphQLJSON = require('graphql-type-json');
-const Promise = require('bluebird');
 const axios = require('axios');
 const Issue = require('github-api/dist/components/Issue');
 const { PubSub, withFilter } = require('graphql-subscriptions');
@@ -41,6 +40,7 @@ async function fetchOnePipeline(id) {
 
   const hasSteps = await pipelineSteps.hasNext();
   if (!hasSteps) {
+    /* istanbul ignore next */
     return db.collection('pipelines').findOne({ _id: id });
   }
 
@@ -276,7 +276,6 @@ const resolvers = {
       while (await pipelineSteps.hasNext()) {
         const currentStep = await pipelineSteps.next();
 
-
         if (!(currentStep._id in pipelines)) {
           pipelines[currentStep._id] = {
             ...currentStep,
@@ -317,7 +316,7 @@ const resolvers = {
      * @param {string} args.userId Requested user ID, restricted to authenticated user for time being
      * @return {object} Requested user if id present, null otherwise
      */
-    fetchUser: ({ auth: { credentials } }, args) => {
+    fetchUser: (_, args) => {
       return helperFunctions.getUserDetailsByID(args.userId);
     },
     fetchAllUsers: async () => {
@@ -326,7 +325,7 @@ const resolvers = {
       const users = await db.collection('users').find().toArray();
       return transformToClient(users);
     },
-    fetchAllUserRuns: async ({ auth: { credentials } }, args) => {
+    fetchAllUserRuns: async ({ auth: { credentials } }) => {
       const db = database.getDbInstance();
 
       const runs = await db.collection('runs').find({
@@ -346,9 +345,6 @@ const resolvers = {
       }).toArray();
 
       return transformToClient(threads);
-    },
-    validateComputation: (_, args) => {
-      return new Promise();
     },
   },
   Mutation: {
@@ -466,9 +462,9 @@ const resolvers = {
 
       const db = database.getDbInstance();
 
-      const deleteConsortiumResult = await db.collection('consortia').findOneAndDelete({ _id: ObjectID(args.consortiumId) });
+      const deletedConsortiumResult = await db.collection('consortia').findOneAndDelete({ _id: ObjectID(args.consortiumId) });
 
-      eventEmitter.emit(CONSORTIUM_DELETED, deleteConsortiumResult.value);
+      eventEmitter.emit(CONSORTIUM_DELETED, deletedConsortiumResult.value);
 
       const userIds = await db.collection('users').find({
         [`permissions.consortia.${args.consortiumId}`]: { $exists: true }
@@ -499,7 +495,7 @@ const resolvers = {
 
       eventEmitter.emit(PIPELINE_DELETED, pipelines);
 
-      return transformToClient(deleteConsortiumResult.value);
+      return transformToClient(deletedConsortiumResult.value);
     },
     /**
      * Deletes pipeline
@@ -540,7 +536,9 @@ const resolvers = {
         returnOriginal: false
       });
 
-      eventEmitter.emit(CONSORTIUM_CHANGED, updateConsortiumResult.value);
+      if (updateConsortiumResult.value) {
+        eventEmitter.emit(CONSORTIUM_CHANGED, updateConsortiumResult.value);
+      }
 
       return transformToClient(deletePipelineResult.value);
     },
@@ -553,7 +551,7 @@ const resolvers = {
      */
     joinConsortium: async ({ auth: { credentials } }, args) => {
       const db = database.getDbInstance();
-      let consortium = await db.collection('consortia').findOne({ _id: ObjectID(args.consortiumId) });
+      const consortium = await db.collection('consortia').findOne({ _id: ObjectID(args.consortiumId) });
 
       if (credentials.id in consortium.members) {
         return consortium;
@@ -625,7 +623,7 @@ const resolvers = {
      * @param {string} args.consortiumId Consortium to update
      * @param {string} args.activePipelineId Pipeline ID to mark as active
      */
-    saveActivePipeline: async ({ auth: { credentials } }, args) => {
+    saveActivePipeline: async (_, args) => {
       // const { permissions } = credentials;
       /* TODO: Add permissions
       if (!permissions.consortia.write
@@ -702,6 +700,11 @@ const resolvers = {
       }
 
       const consortium = await db.collection('consortia').findOne({ _id: consortiumData.id });
+
+      if (isUpdate) {
+        eventEmitter.emit(CONSORTIUM_CHANGED, consortium);
+      }
+
       return transformToClient(consortium);
     },
     /**
@@ -751,7 +754,7 @@ const resolvers = {
      * @param {object} args.pipeline Pipeline object to add/update
      * @return {object} New/updated pipeline object
      */
-    savePipeline: async ({ auth: { credentials } }, args) => {
+    savePipeline: async (_, args) => {
       // const { permissions } = credentials;
       /* TODO: Add permissions
       if (!permissions.consortia.write
@@ -841,12 +844,6 @@ const resolvers = {
 
       return transformToClient(result.value);
     },
-    setActiveComputation: (_, args) => {
-      return new Promise();
-    },
-    setComputationInputs: (_, args) => {
-      return new Promise();
-    },
     /**
      * Updates run remote state
      * @param {object} auth User object from JWT middleware validateFunc
@@ -904,7 +901,7 @@ const resolvers = {
      * @param {string} args.mappedForRun New mappedUsers
      * @return {object} Updated consortia
      */
-    updateConsortiumMappedUsers: async ({ auth: { credentials } }, args) => {
+    updateConsortiumMappedUsers: async (_, args) => {
       const db = database.getDbInstance();
 
       const result = await db.collection('consortia').findOneAndUpdate({
@@ -956,7 +953,7 @@ const resolvers = {
 
         const consortia = await db.collection('consortia').find({
           _id: { $in: updatedConsortiaIds.map(c => c._id) }
-        });
+        }).toArray();
 
         eventEmitter.emit(CONSORTIUM_CHANGED, consortia);
       }
@@ -1028,7 +1025,7 @@ const resolvers = {
       let result;
 
       if (threadId) {
-        const thread = await db.collection('threads').findOne({ _id: ObjectID(threadId) });
+        const thread = await db.collection('threads').findOne({ _id: threadId });
 
         const { users } = thread;
 
@@ -1154,7 +1151,7 @@ const resolvers = {
         const issue = new Issue(repository, auth);
 
         await issue.createIssue({ title: `${credentials.username} - ${title}`, body });
-      } catch (error) {
+      } catch {
         return Boom.notAcceptable('Failed to create issue on GitHub');
       }
     },
