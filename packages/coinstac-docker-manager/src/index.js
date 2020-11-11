@@ -212,7 +212,6 @@ const startService = (serviceId, serviceUserId, opts) => {
           return checkServicePort();
         })
         .then(() => {
-          logger.silly(`Returning service access func for ${serviceId}`);
           logger.silly(`Returning service access funcion for ${serviceId}`);
           dockerCompStart = Date.now();
           const dockerPreComp = dockerCompStart - dockerPreCompStart;
