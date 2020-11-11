@@ -878,7 +878,7 @@ test('createIssue', async (t) => {
     },
   };
 
-  sinon.stub(Issue, '__proto__').returns({ createIssue: sinon.stub().rejects() });
+  sinon.stub(Issue.prototype, 'createIssue').rejects();
 
   const res = await Mutation.createIssue(auth, args);
   t.is(getMessageFromError(res), FAILED_CREATE_ISSUE);

@@ -5,7 +5,7 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
-    "test": "docker-compose up -d && cross-env NODE_ENV=test nyc ava",
+    "test": "docker-compose down && sleep 3 && docker-compose up -d && cross-env NODE_ENV=test nyc ava",
     "test-setup": "docker-compose up -d && node seed/test-setup.js"
   },
   "author": "",
