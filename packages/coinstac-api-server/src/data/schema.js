@@ -170,8 +170,6 @@ const typeDefs = `
     saveError(runId: ID, error: JSON): JSON
     savePipeline(pipeline: PipelineInput): Pipeline
     saveResults(runId: ID, results: JSON): JSON
-    setActiveComputation(computationId: ID, consortiumId: ID): String
-    setComputationInputs(consortiumId: ID, fieldIndex: Int, values: String ): String
     updateRunState(runId: ID, data: JSON): JSON
     updateUserConsortiumStatus(consortiumId: ID, status: String): User
     updateConsortiumMappedUsers(consortiumId: ID, mappedForRun: [ID]): JSON

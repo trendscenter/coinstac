@@ -48,19 +48,19 @@ module.exports = [
       pre: [
         { method: helperFunctions.validateUniqueUser },
       ],
-      handler: (req, res) => {
-        helperFunctions.hashPassword(req.payload.password)
-          .then(passwordHash => helperFunctions.createUser(req.payload, passwordHash))
-          .then(({
-            email, _id, institution, permissions, username, photo, photoID, name,
-          }) => {
-            res({
-              id_token: helperFunctions.createToken(username),
-              user: {
-                email, _id, institution, permissions, username, photo, photoID, name,
-              },
-            }).code(201);
-          });
+      handler: async (req, res) => {
+        const passwordHash = await helperFunctions.hashPassword(req.payload.password);
+        const user = await helperFunctions.createUser(req.payload, passwordHash);
+        const {
+          _id, username, institution, email, permissions,
+        } = user;
+
+        res({
+          id_token: helperFunctions.createToken(username),
+          user: {
+            id: _id, username, institution, email, permissions,
+          },
+        }).code(201);
       },
     },
   },
@@ -69,17 +69,17 @@ module.exports = [
     path: '/updateAccount',
     config: {
       auth: false,
-      handler: (req, res) => {
-        helperFunctions.updateUser(req.payload)
-          .then(({
-            id, institution, email, photo, photoID, name, permissions,
-          }) => {
-            res({
-              user: {
-                id, institution, email, photo, photoID, name, permissions,
-              },
-            }).code(201);
-          });
+      handler: async (req, res) => {
+        const user = await helperFunctions.updateUser(req.payload);
+        const {
+          id, institution, email, photo, photoID, name, username, permissions,
+        } = user;
+
+        res({
+          user: {
+            id, institution, email, photo, photoID, name, username, permissions,
+          },
+        }).code(201);
       },
     },
   },
