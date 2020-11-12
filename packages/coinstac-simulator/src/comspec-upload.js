@@ -16,16 +16,13 @@ const compspecUpload = (username, password, logger) => {
 
       const json = JSON.parse(fs.readFileSync('./compspec.json'));
       const validationResult = services.validator.validate(json, 'computation');
-
       if (validationResult.error) {
-        logger.error('Computation schema is not valid');
-
+        let err = 'Computation schema is not valid:';
         validationResult.error.details.forEach((error) => {
-          logger.error(`${error.path}: ${error.message}`);
+          err += ` ${error.path}: ${error.message}\n`;
         });
 
-        reject();
-        return;
+        throw new Error(err);
       }
 
       const payload = JSON.stringify({
@@ -44,30 +41,32 @@ const compspecUpload = (username, password, logger) => {
       const { data: createdData } = await axios.post('/graphql', payload, { headers });
 
       if (createdData.errors) {
-        logger.error(get(createdData, 'errors.0.message', 'Failed to upload computation'));
-        reject();
-        return;
+        throw new Error(get(createdData, 'errors.0.message', 'Failed to upload computation'));
       }
 
       logger.info('Successfully uploaded computation schema');
       resolve();
     } catch (error) {
-      let message = get(error, 'response.data.message');
-
-      if (!message) {
-        const { response, data } = error;
-
-        if (!response) {
-          message = 'Failed to parse computation schema.';
-        } else if (get(data, 'statusCode') === 404) {
-          message = 'Network failed.';
-        } else {
-          message = 'Failed to upload computation schema.';
-        }
+      let message;
+      if (error.message && error.message.includes('JSON')) return reject(new Error(`Compspec JSON parsing failed\n ${error.message}`));
+      const code = error.code || (error.response ? error.response.status : '');
+      switch (code) {
+        case 401:
+          message = get(error, 'response.data.message');
+          break;
+        case 403:
+          message = get(error, 'response.data.message');
+          break;
+        case 'ENOTFOUND':
+          message = 'Could not contact coinstac servers';
+          break;
+        case 'ECONNREFUSED':
+          message = 'Could not contact coinstac servers';
+          break;
+        default:
+          message = error.message || error;
       }
-
-      logger.error(message);
-      reject();
+      reject(new Error(message));
     }
   });
 };

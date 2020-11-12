@@ -5,6 +5,7 @@ const query = `mutation addComputation($computationSchema: ComputationInput!) {
   }
 }
 `;
+
 let config = {
   graphql: {
     query,
@@ -12,7 +13,7 @@ let config = {
   },
 };
 
-if(process.env.API_SERVER_HOSTNAME) {
+if (process.env.API_SERVER_HOSTNAME) {
   config = Object.assign(config,
     {
       protocol: 'http',
@@ -27,6 +28,4 @@ if(process.env.API_SERVER_HOSTNAME) {
       port: '443',
     });
 }
-module.exports = {
-
-};
+module.exports = config;

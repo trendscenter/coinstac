@@ -2,7 +2,6 @@ const Joi = require('joi');
 
 module.exports = {
   schema: Joi.object().keys({
-    submittedBy: Joi.string().alphanum(),
     meta: Joi.object().keys({
       id: Joi.string().required(),
       description: Joi.string().required(),

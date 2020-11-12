@@ -73,17 +73,23 @@ if (program.loglevel) {
 }
 // require after LOGLEVEL set
 const sim = require('../src/');
-const compSim = require('../src/comspec-upload');
+const compUpload = require('../src/comspec-upload');
 
-if (program.upload && program.username && program.password) {
+if (program.upload) {
+  if (!program.username && !program.password) {
+    logger.error('Username and password required for compspec upload');
+    process.exit(1);
+  }
   logger.info('Uploading computation schema.');
 
-  compSim.compspecUpload(program.username, program.password, logger)
+  compUpload.compspecUpload(program.username, program.password, logger)
     .then(() => {
       process.exit();
     })
-    .catch(() => {
-      process.exit(0);
+    .catch((e) => {
+      debugger
+      logger.error(e.message);
+      process.exit(1);
     });
 } else {
   let table;
