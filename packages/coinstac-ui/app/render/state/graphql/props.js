@@ -257,9 +257,9 @@ export const saveDocumentProp = (funcName, objVar) => {
 export const userRolesProp = (name) => {
   return {
     props: ({ mutate }) => ({
-      [name]: (userId, table, doc, role) => mutate({
+      [name]: (userId, table, doc, role, roleType) => mutate({
         variables: {
-          userId, table, doc, role,
+          userId, table, doc, role, roleType,
         },
       }),
     }),

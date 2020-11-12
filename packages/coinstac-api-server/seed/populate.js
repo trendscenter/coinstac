@@ -835,6 +835,10 @@ async function populateUsers() {
         [CONSORTIA_IDS[1]]: ['owner', 'member'],
       },
       pipelines: {},
+      roles: {
+        admin: true,
+        author: true,
+      },
     },
     consortiaStatuses: {
       [CONSORTIA_IDS[0]]: 'none',
@@ -855,6 +859,10 @@ async function populateUsers() {
         [CONSORTIA_IDS[1]]: ['member'],
       },
       pipelines: {},
+      roles: {
+        admin: false,
+        author: true,
+      },
     },
     consortiaStatuses: {
       [CONSORTIA_IDS[0]]: 'none',
@@ -875,6 +883,10 @@ async function populateUsers() {
         [CONSORTIA_IDS[1]]: ['member'],
       },
       pipelines: {},
+      roles: {
+        admin: false,
+        author: false,
+      },
     },
     consortiaStatuses: {
       [CONSORTIA_IDS[0]]: 'none',
@@ -895,6 +907,10 @@ async function populateUsers() {
         [CONSORTIA_IDS[1]]: ['member'],
       },
       pipelines: {},
+      roles: {
+        admin: true,
+        author: true,
+      },
     },
     consortiaStatuses: {
       [CONSORTIA_IDS[0]]: 'none',
@@ -915,6 +931,10 @@ async function populateUsers() {
         [CONSORTIA_IDS[1]]: ['member'],
       },
       pipelines: {},
+      roles: {
+        admin: false,
+        author: true,
+      },
     },
     consortiaStatuses: {
       [CONSORTIA_IDS[0]]: 'none',
@@ -935,6 +955,10 @@ async function populateUsers() {
         [CONSORTIA_IDS[1]]: ['member'],
       },
       pipelines: {},
+      roles: {
+        admin: false,
+        author: false,
+      },
     },
   }, password);
 
@@ -951,6 +975,10 @@ async function populateUsers() {
       computations: {},
       consortia: {},
       pipelines: {},
+      roles: {
+        admin: true,
+        author: false,
+      },
     },
     consortiaStatuses: {
       [CONSORTIA_IDS[0]]: 'none',
