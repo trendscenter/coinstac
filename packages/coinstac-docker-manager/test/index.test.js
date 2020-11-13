@@ -191,7 +191,7 @@ test('startService, stopService, stopAllServices', async (t) => {
   portscanner.findAPortNotInUse.restore();
   docker.createContainer.restore();
 
-  // /* startService3 */
+  /* startService3 */
   sinon.stub(portscanner, 'findAPortNotInUse').returns(getRandomPort());
   sinon.stub(docker, 'createContainer').returns({
     start: sinon.stub().resolves(container),
@@ -230,9 +230,13 @@ test('startService, stopService, stopAllServices', async (t) => {
   });
 
   const service = await startService('service-5', 'test-5', opts);
-  res = await service(['node', '', '']);
 
-  t.deepEqual(res, {});
+  try {
+    const res = await service(['ls', '.', ''], 'test-5');
+    t.deepEqual(res, {});
+  } catch (error) {
+    t.is(error.code, undefined);
+  }
 
   portscanner.findAPortNotInUse.restore();
   docker.createContainer.restore();
@@ -251,12 +255,12 @@ test('startService, stopService, stopAllServices', async (t) => {
   };
 
   const service1 = await startService('service-6', 'test-6', opts);
-  res = await service1(['node', '', '']);
-  t.is(res, '');
+  res = await service1(['ls', '.', '']);
+  t.not(res, '');
 
   const service2 = await startService('service-6', 'test-7', opts);
-  res = await service2(['node', '', '']);
-  t.is(res, '');
+  res = await service2(['ls', '.', '']);
+  t.not(res, '');
 
   portscanner.findAPortNotInUse.restore();
   docker.createContainer.restore();
