@@ -8,6 +8,7 @@ const http = require('http');
 const winston = require('winston');
 const WS = require('ws');
 const _ = require('lodash');
+const debug = require('debug');
 
 let logger;
 winston.loggers.add('docker-manager', {
@@ -18,6 +19,9 @@ winston.loggers.add('docker-manager', {
 });
 logger = winston.loggers.get('docker-manager');
 logger.level = process.LOGLEVEL ? process.LOGLEVEL : 'info';
+
+const debugProfile = debug('pipeline:profile-manager');
+debugProfile.log = l => logger.info(`PROFILING: ${l}`);
 
 const setTimeoutPromise = (delay) => {
   return new Promise((resolve) => {
@@ -178,6 +182,11 @@ const getStatus = () => {
  * @return {Promise}              promise that resolves to the service function
  */
 const startService = (serviceId, serviceUserId, opts) => {
+  // debug timings
+  let dockerPreCompStart;
+  let dockerCompStart;
+  let dockerPostCompStart;
+
   logger.silly(`Request to start service ${serviceId}`);
   let recurseLimit = 0;
   let serviceStartedRecurseLimit = 0;
@@ -192,17 +201,32 @@ const startService = (serviceId, serviceUserId, opts) => {
   }
   const createService = () => {
     let proxRes;
-    let proxRej;
-    services[serviceId] = { users: [serviceUserId] };
+
+    dockerPreCompStart = Date.now();
+    services[serviceId] = {
+      users:
+      {
+        [serviceUserId]: {
+          debug: { dockerPreComp: 0, dockerComp: 0, dockerPostComp: 0 },
+        },
+      },
+    };
     services[serviceId].state = 'starting';
-    services[serviceId].service = new Promise((res, rej) => {
+    services[serviceId].service = new Promise((res) => {
       proxRes = res;
-      proxRej = rej;
     });
     const tryStartService = () => {
       return generateServicePort(serviceId)
         .then((port) => {
+          // port is initially set in generateServicePort, but really should be moved
+          // here if that works (breaks tests?)
+          services[serviceId].port = process.env.CI ? '8881' : port;
           logger.silly(`Starting service ${serviceId} at port: ${port}`);
+
+          const PortBindings = process.env.CI ? {} : {
+            '8881/tcp': [{ HostPort: `${port}`, HostIp: process.env.CI ? '' : '127.0.0.1' }],
+            ...(process.LOGLEVEL === 'debug' && { '4444/tcp': [{ HostPort: '4444', HostIp: '127.0.0.1' }] }),
+          };
           const defaultOpts = {
           // this port is coupled w/ the internal base server image FYI
             ExposedPorts: {
@@ -210,10 +234,7 @@ const startService = (serviceId, serviceUserId, opts) => {
               ...(process.LOGLEVEL === 'debug' && { '4444/tcp': {} }),
             },
             HostConfig: {
-              PortBindings: {
-                '8881/tcp': [{ HostPort: `${port}`, HostIp: '127.0.0.1' }],
-                ...(process.LOGLEVEL === 'debug' && { '4444/tcp': [{ HostPort: '4444', HostIp: '127.0.0.1' }] }),
-              },
+              PortBindings,
             },
             Tty: true,
           };
@@ -229,15 +250,16 @@ const startService = (serviceId, serviceUserId, opts) => {
         .then((container) => {
           logger.silly(`Starting cointainer: ${serviceId}`);
           services[serviceId].container = container;
-          return container.start();
+          return container.start().then(c => c.inspect());
         })
         // is the container service ready?
-        .then(() => {
+        .then((container) => {
+          services[serviceId].hostname = process.env.CI ? container.Config.Hostname : '127.0.0.1';
           logger.silly(`Cointainer started: ${serviceId}`);
           const checkServicePort = () => {
             if (opts.http) {
               return new Promise((resolve, reject) => {
-                const req = request(`http://127.0.0.1:${services[serviceId].port}/run`, { method: 'POST' }, (err, res) => {
+                const req = request(`http://${services[serviceId].hostname}:${services[serviceId].port}/run`, { method: 'POST' }, (err, res) => {
                   let buf = '';
                   if (err) {
                     return reject(err);
@@ -276,73 +298,13 @@ const startService = (serviceId, serviceUserId, opts) => {
           return checkServicePort();
         })
         .then(() => {
-          logger.silly(`Returning service access func for ${serviceId}`);
-          services[serviceId].service = (data) => {
-            if (opts.http) {
-              return new Promise((resolve, reject) => {
-                const req = request(`http://127.0.0.1:${services[serviceId].port}/run`, { method: 'POST' }, (err, res) => {
-                  let buf = '';
-                  if (err) {
-                    return reject(err);
-                  }
-                  // TODO: hey this is a stream, be cool to use that
-                  res.on('data', (chunk) => {
-                    buf += chunk;
-                  });
-                  res.on('end', () => resolve(buf));
-                  res.on('error', e => reject(e));
-                });
-                req.write(JSON.stringify({
-                  command: data[0],
-                  args: data.slice(1, 2),
-                }));
-                req.end(data[2]);
-              }).then((inData) => {
-                let errMatch;
-                let outMatch;
-                let codeMatch;
-                let endMatch;
-                let errData = Buffer.alloc(0);
-                let outData = Buffer.alloc(0);
-                let code = Buffer.alloc(0);
-
-                let data = Buffer.from(inData);
-                while (outMatch !== -1 || errMatch !== -1 || codeMatch !== -1) {
-                  outMatch = data.indexOf('stdoutSTART\n');
-                  endMatch = data.indexOf('stdoutEND\n');
-                  if (outMatch !== -1 && endMatch !== -1) {
-                    outData = Buffer.concat([outData, data.slice(outMatch + 'stdoutSTART\n'.length, endMatch)]);
-                    data = Buffer.concat([data.slice(0, outMatch), data.slice(endMatch + 'stdoutEND\n'.length)]);
-                  }
-                  errMatch = data.indexOf('stderrSTART\n');
-                  endMatch = data.indexOf('stderrEND\n');
-                  if (errMatch !== -1 && endMatch !== -1) {
-                    errData = Buffer.concat([errData, data.slice(errMatch + 'stderrSTART\n'.length, endMatch)]);
-                    data = Buffer.concat([data.slice(0, errMatch), data.slice(endMatch + 'stderrEND\n'.length)]);
-                  }
-                  codeMatch = data.indexOf('exitcodeSTART\n');
-                  endMatch = data.indexOf('exitcodeEND\n');
-                  if (codeMatch !== -1 && endMatch !== -1) {
-                    code = Buffer.concat([code, data.slice(codeMatch + 'exitcodeSTART\n'.length, endMatch)]);
-                    data = Buffer.concat([data.slice(0, codeMatch), data.slice(endMatch + 'exitcodeEND\n'.length)]);
-                  }
-                }
-
-                if (errData.length > 0) {
-                  throw new Error(`Computation failed with exitcode ${code.toString()}\n Error message:\n${errData.toString()}}`);
-                }
-                // NOTE: limited to sub 256mb
-                let parsed;
-                try {
-                  parsed = JSON.parse(outData.toString());
-                } catch (e) {
-                  parsed = outData.toString();
-                }
-                return parsed;
-              });
-            }
-
-            // no http opt use WS
+          logger.silly(`Returning service access funcion for ${serviceId}`);
+          dockerCompStart = Date.now();
+          const dockerPreComp = dockerCompStart - dockerPreCompStart;
+          services[serviceId].users[serviceUserId].debug.dockerPreComp += dockerPreComp;
+          debugProfile(`Manager initial startup for ${serviceUserId} computation took ${dockerPreComp}ms`);
+          services[serviceId].service = (data, serviceUserId) => {
+            dockerPreCompStart = Date.now();
             let proxR;
             let proxRj;
             const prox = new Promise((resolve, reject) => {
@@ -352,7 +314,7 @@ const startService = (serviceId, serviceUserId, opts) => {
             new Promise((resolve) => {
               let count = 0;
               const testConnection = () => {
-                const ws = new WS(`ws://127.0.0.1:${services[serviceId].port}`);
+                const ws = new WS(`ws://${services[serviceId].hostname}:${services[serviceId].port}`);
                 ws.on('open', () => {
                   ws.close(1000, 'Test Connection');
                   resolve();
@@ -373,7 +335,11 @@ const startService = (serviceId, serviceUserId, opts) => {
               };
               testConnection();
             }).then(() => {
-              const ws = new WS(`ws://127.0.0.1:${services[serviceId].port}`);
+              dockerCompStart = Date.now();
+              const dockerPreComp = dockerCompStart - dockerPreCompStart;
+              services[serviceId].users[serviceUserId].debug.dockerPreComp += dockerPreComp;
+              debugProfile(`Manger before computation took ${serviceUserId} ${dockerPreComp}ms`);
+              const ws = new WS(`ws://${services[serviceId].hostname}:${services[serviceId].port}`);
               ws.on('open', () => {
                 ws.send(JSON.stringify({
                   command: data[0],
@@ -392,7 +358,13 @@ const startService = (serviceId, serviceUserId, opts) => {
                 let outfin = false;
                 let errfin = false;
                 let code;
+                let first = true;
                 ws.on('message', (data) => {
+                  if (first) {
+                    dockerPostCompStart = Date.now();
+                    first = false;
+                  }
+
                   let res;
                   try {
                     res = JSON.parse(data);
@@ -443,7 +415,10 @@ const startService = (serviceId, serviceUserId, opts) => {
                   }
                 });
               }).then((output) => {
-                logger.debug('Docker container closed');
+                const dockerComp = dockerPostCompStart - dockerCompStart;
+                services[serviceId].users[serviceUserId].debug.dockerComp += dockerComp;
+                debugProfile(`Manager computation took ${serviceUserId} ${dockerComp}ms`);
+                logger.debug('Manager container closed');
                 if (output.code !== 0) {
                   throw new Error(`Computation failed with exitcode ${output.code} and stderr ${output.stderr}`);
                 }
@@ -453,6 +428,9 @@ const startService = (serviceId, serviceUserId, opts) => {
                 let error;
                 try {
                   const parsed = JSON.parse(output.stdout);
+                  const dockerPostComp = Date.now() - dockerPostCompStart;
+                  services[serviceId].users[serviceUserId].debug.dockerPostComp += dockerPostComp;
+                  debugProfile(`Manager parsing output took ${serviceUserId} ${dockerPostComp}ms`);
                   proxR(parsed);
                 } catch (e) {
                   error = e;
@@ -486,7 +464,7 @@ const startService = (serviceId, serviceUserId, opts) => {
             return setTimeoutPromise(200)
               .then(() => tryStartService());
           }
-          proxRej(err);
+
           throw err;
         });
     };
@@ -494,8 +472,10 @@ const startService = (serviceId, serviceUserId, opts) => {
   };
 
   if (services[serviceId] && (services[serviceId].state !== 'shutting down' && services[serviceId].state !== 'zombie')) {
-    if (services[serviceId].users.indexOf(serviceUserId) === -1) {
-      services[serviceId].users.push(serviceUserId);
+    if (!services[serviceId].users[serviceUserId]) {
+      services[serviceId].users[serviceUserId] = {
+        debug: { dockerPreComp: 0, dockerComp: 0, dockerPostComp: 0 },
+      };
     }
     if (services[serviceId].container && services[serviceId].state !== 'starting') {
       logger.silly('Returning already started service');
@@ -643,10 +623,14 @@ const removeImage = (imageId) => {
 const stopService = (serviceId, serviceUserId, waitForBox) => {
   const service = services[serviceId];
   if (!service) return Promise.resolve();
-  if (service.users.indexOf(serviceUserId) > -1) {
-    service.users.splice(service.users.indexOf(serviceUserId), 1);
+  if (service.users[serviceUserId]) {
+    debugProfile('**************************** Manager summary ***************************');
+    Object.keys(service.users[serviceUserId].debug).forEach((timing) => {
+      debugProfile(`Total time for ${serviceUserId} manager task ${timing} took ${service.users[serviceUserId].debug[timing]}ms`);
+    });
+    delete service.users[serviceUserId];
   }
-  if (service.users.length === 0) {
+  if (Object.keys(service.users).length === 0) {
     if (service.state !== 'starting') {
       service.state = 'shutting down';
       const boxPromise = service.container.stop()

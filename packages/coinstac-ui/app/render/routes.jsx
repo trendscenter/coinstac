@@ -4,8 +4,8 @@
  * @{@link  http://rackt.github.io/react-router/}
  * @{@link  https://github.com/rackt/react-router}
  */
-import { Route, IndexRoute, IndexRedirect } from 'react-router';
 import React from 'react';
+import { Route, IndexRoute, IndexRedirect } from 'react-router';
 import App from './components/app';
 import ComputationsList from './components/computations/computations-list';
 import ComputationSubmission from './components/computations/computation-submission';
@@ -28,6 +28,7 @@ import Issues from './components/issues';
 import Threads from './components/threads';
 import Logs from './components/logs-display/logs';
 import Papaya from './components/papaya';
+import Permissions from './components/permissions';
 
 export default (
   <Route path="/" component={App}>
@@ -66,6 +67,7 @@ export default (
       <Route path="threads" component={Threads} />
       <Route path="logs" component={Logs} />
       <Route path="papaya" component={Papaya} />
+      <Route path="permissions" component={Permissions} />
     </Route>
   </Route>
 );
