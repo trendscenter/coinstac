@@ -1,10 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import { get } from 'lodash';
-import Tab from '@material-ui/core/Tab';
-import Tabs from '@material-ui/core/Tabs';
-import Typography from '@material-ui/core/Typography';
+import { Tab, Tabs, Typography } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
 import { graphql, compose } from 'react-apollo';
 import ConsortiumAbout from './consortium-about';
@@ -24,6 +21,7 @@ import {
   USER_CHANGED_SUBSCRIPTION,
 } from '../../state/graphql/functions';
 import { notifySuccess, notifyError } from '../../state/ducks/notifyAndLog';
+import { getGraphQLErrorMessage } from '../../utils/helpers';
 
 const styles = theme => ({
   title: {
@@ -182,12 +180,12 @@ class ConsortiumTabs extends Component {
 
         notifySuccess('Consortium Saved');
       })
-      .catch(({ graphQLErrors }) => {
+      .catch((error) => {
         this.setState({
           savingStatus: 'fail',
         });
 
-        notifyError(get(graphQLErrors, '0.message', 'Failed to save consortium'));
+        notifyError(getGraphQLErrorMessage(error, 'Failed to save consoritum'));
       });
   }
 

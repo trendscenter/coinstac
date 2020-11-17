@@ -7,7 +7,7 @@ export const ADD_COMPUTATION_MUTATION = gql`
 `;
 
 export const ADD_USER_ROLE_MUTATION = gql`
-  mutation addUserRole($userId: ID!, $table: String!, $doc: String!, $role: String!)
+  mutation addUserRole($userId: ID!, $table: String!, $doc: String!, $role: String!, $roleType: String!)
     ${mutations.addUserRole}
 `;
 
@@ -149,7 +149,7 @@ export const USER_CHANGED_SUBSCRIPTION = gql`
 `;
 
 export const REMOVE_USER_ROLE_MUTATION = gql`
-  mutation removeUserRole($userId: ID!, $table: String!, $doc: String!, $role: String!)
+  mutation removeUserRole($userId: ID!, $table: String!, $doc: String!, $role: String!, $roleType: String!)
     ${mutations.removeUserRole}
 `;
 

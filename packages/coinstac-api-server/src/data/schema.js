@@ -157,21 +157,19 @@ const typeDefs = `
   type Mutation {
     # Stringify incoming computation, parse prior to insertion call
     addComputation(computationSchema: ComputationInput): Computation
-    addUserRole(userId: ID!, table: String!, doc: String!, role: String!, userName: String): User
+    addUserRole(userId: ID!, table: String!, doc: String!, role: String!, userName: String, roleType: String!): User
     createRun(consortiumId: ID): Run
     deleteConsortiumById(consortiumId: ID): Consortium
     deletePipeline(pipelineId: ID): Pipeline
     joinConsortium(consortiumId: ID!): Consortium
     leaveConsortium(consortiumId: ID!): Consortium
     removeComputation(computationId: ID): Computation
-    removeUserRole(userId: ID!, table: String!, doc: String!, role: String!, userName: String): User
+    removeUserRole(userId: ID!, table: String!, doc: String!, role: String!, userName: String, roleType: String!): User
     saveActivePipeline(consortiumId: ID, activePipelineId: ID): JSON
     saveConsortium(consortium: ConsortiumInput!): Consortium
     saveError(runId: ID, error: JSON): JSON
     savePipeline(pipeline: PipelineInput): Pipeline
     saveResults(runId: ID, results: JSON): JSON
-    setActiveComputation(computationId: ID, consortiumId: ID): String
-    setComputationInputs(consortiumId: ID, fieldIndex: Int, values: String ): String
     updateRunState(runId: ID, data: JSON): JSON
     updateUserConsortiumStatus(consortiumId: ID, status: String): User
     updateConsortiumMappedUsers(consortiumId: ID, mappedForRun: [ID]): JSON

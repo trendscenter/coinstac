@@ -1,3 +1,5 @@
+/* eslint-disable no-console */
+
 const hapi = require('hapi');
 const helperFunctions = require('./auth-helpers');
 const plugins = require('./plugins');
@@ -13,7 +15,7 @@ server.connection({
 
 server.register(plugins, (err) => {
   if (err) {
-    console.log(err); // eslint-disable-line no-console
+    console.log(err);
   }
 
   /**
@@ -35,10 +37,10 @@ database.connect()
   .then(() => {
     server.start((startErr) => {
       if (startErr) throw startErr;
-      console.log(`Server running at: ${server.info.uri}`); // eslint-disable-line no-console
+      console.log(`Server running at: ${server.info.uri}`);
       wsServer.activate(server);
     });
   })
   .catch((err) => {
-    console.error(err); // eslint-disable-line no-console
+    console.error(err);
   });

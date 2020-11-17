@@ -35,10 +35,12 @@
   "homepage": "https://github.com/MRN-Code/coinstac#readme",
   "dependencies": {
     "aedes": "^0.40.1",
+    "axios": "^0.19.2",
     "blessed": "^0.1.81",
     "blessed-contrib": "^4.8.5",
     "chalk": "^1.1.3",
     "clarify": "^2.1.0",
+    "coinstac-common": "^5.1.4",
     "coinstac-pipeline": "^5.1.4",
     "commander": "^2.15.1",
     "convict": "^4.3.2",
@@ -46,6 +48,7 @@
     "glob": "^7.1.2",
     "hermit": "^0.2.2",
     "inquirer": "^5.2.0",
+    "lodash": "^4.17.10",
     "mosca": "^2.8.3",
     "trace": "^3.1.1",
     "winston": "^3.0.0"

@@ -10,7 +10,7 @@ const mutations = {
   `,
   addUserRole: `
     {
-      addUserRole(userId: $userId, table: $table, doc: $doc, role: $role) {
+      addUserRole(userId: $userId, table: $table, doc: $doc, role: $role, roleType: $roleType) {
         ${sharedFields.userMetadata}
       }
     }
@@ -31,7 +31,7 @@ const mutations = {
   `,
   removeUserRole: `
     {
-      removeUserRole(userId: $userId, table: $table, doc: $doc, role: $role) {
+      removeUserRole(userId: $userId, table: $table, doc: $doc, role: $role, roleType: $roleType) {
         ${sharedFields.userMetadata}
       }
     }

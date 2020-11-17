@@ -502,7 +502,7 @@ class Dashboard extends Component {
               }}
             >
               <CoinstacAbbr />
-              <DashboardNav auth={auth} />
+              <DashboardNav user={auth.user} />
               <List>
                 <ListItem>
                   <UserAccountController

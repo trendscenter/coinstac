@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "coinstac-docker-manager": "^5.1.4",
-    "joi": "^10.6.0"
+    "joi": "^17.3.0"
   },
   "homepage": "http://mrn-code.github.io/coinstac#readme",
   "scripts": {

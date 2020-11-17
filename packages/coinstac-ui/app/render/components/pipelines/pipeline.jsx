@@ -39,7 +39,7 @@ import {
   getAllAndSubProp,
 } from '../../state/graphql/props';
 import { notifySuccess, notifyError } from '../../state/ducks/notifyAndLog';
-import { isPipelineOwner, isUserInGroup } from '../../utils/helpers';
+import { isPipelineOwner, getGraphQLErrorMessage, isUserInGroup } from '../../utils/helpers';
 
 const computationTarget = {
   drop() {
@@ -443,9 +443,9 @@ class Pipeline extends Component {
         await saveActivePipeline(savePipeline.owningConsortium, savePipeline.id);
       }
     } catch (error) {
-      notifyError(get(error.graphQLErrors, '0.message', 'Failed to save pipeline'));
-
       this.setState({ savingStatus: 'fail' });
+
+      notifyError(getGraphQLErrorMessage(error, 'Failed to save pipeline'));
     }
   }
 
