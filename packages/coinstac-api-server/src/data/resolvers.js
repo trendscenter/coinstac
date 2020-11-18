@@ -1036,7 +1036,7 @@ const resolvers = {
      * @param {string} args.mappedForRun New mappedUsers
      * @return {object} Updated consortia
      */
-    updateConsortiumMappedUsers: async (_, args) => {
+    updateConsortiumMappedUsers: async ({ auth: { credentials } }, args) => {
       const db = database.getDbInstance();
 
       const updateObj =  {};
