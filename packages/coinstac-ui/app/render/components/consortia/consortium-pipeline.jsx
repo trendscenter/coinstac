@@ -33,6 +33,9 @@ const styles = theme => ({
   pipelineDropdownsContainer: {
     display: 'flex',
     justifyContent: 'space-around',
+    flexWrap: 'wrap',
+  },
+  pipelineButton: {
     marginTop: theme.spacing(2),
   },
   newPipelineContainer: {
@@ -161,7 +164,7 @@ class ConsortiumPipeline extends Component {
               <Typography variant="h5">Activate a pipeline from...</Typography>
               <Divider />
               <div className={classes.pipelineDropdownsContainer}>
-                <div>
+                <div className={classes.pipelineButton}>
                   <Button
                     id="owned-pipelines-dropdown"
                     variant="contained"
@@ -188,7 +191,7 @@ class ConsortiumPipeline extends Component {
                     }
                   </Menu>
                 </div>
-                <div>
+                <div className={classes.pipelineButton}>
                   <Button
                     id="shared-pipelines-dropdown"
                     variant="contained"

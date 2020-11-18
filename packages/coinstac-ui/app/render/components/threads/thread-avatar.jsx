@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { get, toUpper } from 'lodash';
-import { Avatar } from '@material-ui/core';
+import Avatar from '@material-ui/core/Avatar';
 import { withStyles } from '@material-ui/core/styles';
 
 const styles = theme => ({
@@ -23,6 +23,7 @@ const styles = theme => ({
   },
   username: {
     paddingLeft: theme.spacing(1),
+    paddingRight: theme.spacing(1),
   },
 });
 
@@ -44,7 +45,9 @@ const ThreadAvatar = ({
     >
       {toUpper(get(username, '0'))}
     </Avatar>
-    <span className={classes.username}>{showUsername && username}</span>
+    {showUsername && username && (
+      <span className={classes.username}>{username}</span>
+    )}
   </div>
 );
 

@@ -2,9 +2,8 @@ const Joi = require('joi');
 
 module.exports = {
   schema: Joi.object().keys({
-    id: Joi.string(),
-    submittedBy: Joi.string().alphanum(),
     meta: Joi.object().keys({
+      id: Joi.string().required(),
       description: Joi.string().required(),
       name: Joi.string().required(),
       repository: Joi.string().required(),
@@ -15,8 +14,7 @@ module.exports = {
         .items(Joi.string().required())
         .min(1)
         .required(),
-      display: Joi.array()
-        .items(Joi.object()).required(),
+      display: Joi.any().required(),
       dockerImage: Joi.string().required(),
       input: Joi.any().required(),
       output: Joi.any().required(),

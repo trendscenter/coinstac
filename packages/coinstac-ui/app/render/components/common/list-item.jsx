@@ -30,6 +30,24 @@ const styles = theme => ({
     backgroundColor: 'yellow',
     color: 'red',
   },
+  button: {
+    marginTop: theme.spacing(1),
+    marginRight: theme.spacing(1),
+  },
+  deleteButton: {
+    marginTop: theme.spacing(1),
+  },
+  listItemActions: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+  },
+  listItemActionsPrimary: {
+    display: 'flex',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+  },
 });
 
 const ListItem = ({
@@ -62,14 +80,15 @@ const ListItem = ({
       { itemObject.description }
     </Typography>
     { itemOptions.text }
-    <div className="list-item__actions">
-      <div className="list-item__actions-primary">
+    <div className={classes.listItemActions}>
+      <div className={classes.listItemActionsPrimary}>
         <Button
           variant="contained"
           color={linkButtonColor || 'primary'}
           component={Link}
           to={`${itemRoute}/${itemObject.id}`}
           name={itemObject.name}
+          className={classes.button}
         >
           { linkButtonText || 'View Details' }
         </Button>
@@ -82,6 +101,7 @@ const ListItem = ({
             color="secondary"
             onClick={deleteItem(itemObject.id)}
             name={`${itemObject.name}-delete`}
+            className={classes.deleteButton}
           >
             { deleteButtonText || 'Delete' }
             <DeleteIcon />

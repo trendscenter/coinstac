@@ -2,15 +2,13 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { omit } from 'lodash';
-import {
-  CircularProgress,
-  FormControl,
-  InputBase,
-  InputLabel,
-  MenuItem,
-  Select,
-  Tooltip,
-} from '@material-ui/core';
+import CircularProgress from '@material-ui/core/CircularProgress';
+import FormControl from '@material-ui/core/FormControl';
+import InputBase from '@material-ui/core/InputBase';
+import InputLabel from '@material-ui/core/InputLabel';
+import MenuItem from '@material-ui/core/MenuItem';
+import Select from '@material-ui/core/Select';
+import Tooltip from '@material-ui/core/Tooltip';
 import { withStyles } from '@material-ui/core/styles';
 import ThreadAvatar from './thread-avatar';
 import { ThreadContext } from './context';
@@ -27,10 +25,9 @@ const BootstrapInput = withStyles(theme => ({
     position: 'relative',
     backgroundColor: theme.palette.background.paper,
     border: '1px solid #ced4da',
-    fontSize: 16,
-    padding: '10px 26px 10px 12px',
+    fontSize: 12,
+    padding: '5px 8px 10px 12px',
     transition: theme.transitions.create(['border-color', 'box-shadow']),
-
     fontFamily: [
       '-apple-system',
       'BlinkMacSystemFont',
@@ -56,8 +53,14 @@ const styles = theme => ({
     borderTop: `1px solid ${theme.palette.grey[300]}`,
     padding: theme.spacing(2),
   },
+  recipientsWrapper: {
+    display: 'flex',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+  },
   recipients: {
-    paddingLeft: theme.spacing(2),
+    padding: theme.spacing(2),
+    paddingLeft: 0,
     display: 'flex',
     alignItems: 'center',
     width: 300,
@@ -66,7 +69,7 @@ const styles = theme => ({
     paddingLeft: theme.spacing(1),
   },
   textarea: {
-    margin: `${theme.spacing(2)}px 0`,
+    margin: `0 0 ${theme.spacing(2)}px`,
     padding: theme.spacing(2),
     fontSize: 16,
     width: '100%',
@@ -81,8 +84,8 @@ const styles = theme => ({
   },
   actionWrapper: {
     display: 'flex',
-    alignItems: 'center',
     justifyContent: 'space-between',
+    flexWrap: 'wrap',
   },
   formControl: {
     marginRight: theme.spacing(1),
@@ -90,6 +93,7 @@ const styles = theme => ({
   replyButton: {
     width: 100,
     padding: `${theme.spacing(1)}px 0`,
+    margin: `${theme.spacing(1)}px 0`,
     backgroundColor: '#0078d4',
     fontSize: 14,
     color: 'white',
@@ -107,11 +111,15 @@ const styles = theme => ({
   loader: {
     width: '20px !important',
     height: '20px !important',
-    marginRight: 10,
+    marginRight: theme.spacing(1),
   },
   note: {
-    marginLeft: 20,
+    paddingTop: theme.spacing(2),
+    paddingBottom: theme.spacing(2),
     color: 'red',
+  },
+  menuItem: {
+    fontSize: 12,
   },
 });
 
@@ -387,8 +395,8 @@ class ThreadReply extends Component {
 
     return (
       <div className={classes.wrapper}>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <ThreadAvatar username={auth.user.username} showUsername />
+        <div className={classes.recipientsWrapper}>
+          <ThreadAvatar username={auth.user.id} showUsername />
 
           <div className={classes.recipients}>
             <span>To:</span>
@@ -431,6 +439,7 @@ class ThreadReply extends Component {
                   <MenuItem
                     key={action.value}
                     value={action.value}
+                    className={classes.menuItem}
                   >
                     {action.label}
                   </MenuItem>
@@ -450,6 +459,7 @@ class ThreadReply extends Component {
                     <MenuItem
                       key={consortium.value}
                       value={consortium.value}
+                      className={classes.menuItem}
                     >
                       {consortium.label}
                     </MenuItem>
@@ -470,6 +480,7 @@ class ThreadReply extends Component {
                     <MenuItem
                       key={result.value}
                       value={result.value}
+                      className={classes.menuItem}
                     >
                       {result.label}
                     </MenuItem>
