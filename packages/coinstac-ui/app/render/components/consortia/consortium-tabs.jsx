@@ -60,7 +60,7 @@ class ConsortiumTabs extends Component {
     const { consortia, params, subscribeToUsers } = this.props;
 
     if (params.consortiumId) {
-      const consortium = consortia.find(c => c.id === params.consortiumId);
+      const { __typename, ...consortium } = consortia.find(c => c.id === params.consortiumId);
       const consortiumUsers = this.getConsortiumUsers(consortium);
 
       this.setState({
@@ -89,8 +89,10 @@ class ConsortiumTabs extends Component {
       const remoteConsortium = consortia.find(c => c.id === consortium.id);
 
       if (remoteConsortium && prevRemoteConsortium && (
-        Object.keys(prevRemoteConsortium.members).length !== Object.keys(remoteConsortium.members).length
-        || Object.keys(prevRemoteConsortium.owners).length !== Object.keys(remoteConsortium.owners).length
+        Object.keys(prevRemoteConsortium.members).length
+          !== Object.keys(remoteConsortium.members).length
+        || Object.keys(prevRemoteConsortium.owners).length
+          !== Object.keys(remoteConsortium.owners).length
       )) {
         const consortiumUsers = this.getConsortiumUsers(remoteConsortium);
 
