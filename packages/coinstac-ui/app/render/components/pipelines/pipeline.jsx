@@ -11,15 +11,13 @@ import {
   isEqual, isEmpty, get, omit,
 } from 'lodash';
 import update from 'immutability-helper';
-import {
-  Button,
-  Checkbox,
-  FormControlLabel,
-  Menu,
-  MenuItem,
-  Paper,
-  Typography,
-} from '@material-ui/core';
+import Button from '@material-ui/core/Button';
+import Checkbox from '@material-ui/core/Checkbox';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
+import Menu from '@material-ui/core/Menu';
+import MenuItem from '@material-ui/core/MenuItem';
+import Paper from '@material-ui/core/Paper';
+import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
 import { ValidatorForm, TextValidator } from 'react-material-ui-form-validator';
 import ListDeleteModal from '../common/list-delete-modal';
@@ -110,6 +108,7 @@ class Pipeline extends Component {
       shared: false,
       steps: [],
       delete: false,
+      isActive: false,
       limitOutputToOwner: false,
     };
 
@@ -405,7 +404,7 @@ class Pipeline extends Component {
     } = this.props;
     const { pipeline } = this.state;
 
-    const isActive = get(pipeline, 'isActive', false);
+    const { isActive } = pipeline;
 
     const omittedPipeline = omit(pipeline, ['isActive']);
 
@@ -571,7 +570,7 @@ class Pipeline extends Component {
           <FormControlLabel
             control={(
               <Checkbox
-                checked={pipeline.limitOutputToOwner || false}
+                checked={pipeline.limitOutputToOwner}
                 disabled={!owner}
                 onChange={evt => this.updatePipeline({ param: 'limitOutputToOwner', value: evt.target.checked })}
               />

@@ -16,8 +16,11 @@ import PipelineStepInput from './pipeline-step-input';
 import { FETCH_COMPUTATION_QUERY } from '../../state/graphql/functions';
 import { compIOProp } from '../../state/graphql/props';
 
-const styles = () => ({
-  accordionContent: {
+const styles = theme => ({
+  pipelineStep: {
+    marginBottom: theme.spacing(2),
+  },
+  accordionPanelContent: {
     display: 'block',
   },
   inputParametersContainer: {
@@ -113,9 +116,9 @@ class PipelineStep extends Component {
               <Typography key={`${id}-${localOutput[0]}-output`} variant="body2">
                 {localOutput[1].label}
                 {' '}
-(
+                (
                 {localOutput[1].type}
-)
+                )
               </Typography>
             )];
 
@@ -206,12 +209,12 @@ class PipelineStep extends Component {
     }, {});
 
     return connectDragSource(connectDropTarget(
-      <div key={`step-${step.id}`}>
+      <div className={classes.pipelineStep} key={`step-${step.id}`}>
         <Accordion className="pipeline-step" style={{ ...styles.draggable, opacity: isDragging ? 0 : 1 }}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography variant="h5">{step.computations[0].meta.name}</Typography>
           </AccordionSummary>
-          <AccordionDetails className={classes.accordionContent} key={`step-exp-${step.id}`}>
+          <AccordionDetails className={classes.accordionPanelContent} key={`step-exp-${step.id}`}>
             <div className={classes.inputParametersContainer}>
               <Typography variant="h6">Input Parameters:</Typography>
               <Button
