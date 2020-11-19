@@ -22,6 +22,7 @@ const {
   THREAD_CHANGED,
   USER_CHANGED,
 } = require('./events');
+const { getOnlineUsers } = require('./user-online-status-tracker');
 
 const AVAILABLE_ROLE_TYPES = ['data', 'app'];
 const AVAILABLE_USER_APP_ROLES = ['admin', 'author'];
@@ -383,6 +384,31 @@ const resolvers = {
 
       return transformToClient(threads);
     },
+    fetchUsersOnlineStatus: async ({ auth: { credentials } }) => {
+      // Find the users that are in the same consortia as the logged user
+      const db = database.getDbInstance();
+
+      const user = await helperFunctions.getUserDetailsByID(credentials.id);
+
+      const consortiaIds = Object.keys(user.permissions.consortia).map(id => ObjectID(id));
+      const consortia = await db.collection('consortia').find(
+        { _id: { $in: consortiaIds } },
+        { projection: { members: 1 } }
+      ).toArray();
+
+      const allUsersStatus = getOnlineUsers();
+      const relatedUsersStatus = {};
+
+      consortia.forEach((consortium) => {
+        Object.keys(consortium.members).forEach((memberId) => {
+          if (!(memberId in relatedUsersStatus)) {
+            relatedUsersStatus[memberId] = allUsersStatus[memberId] || false;
+          }
+        });
+      });
+
+      return getOnlineUsers();
+    }
   },
   Mutation: {
     /**
@@ -1010,16 +1036,24 @@ const resolvers = {
      * @param {string} args.mappedForRun New mappedUsers
      * @return {object} Updated consortia
      */
-    updateConsortiumMappedUsers: async (_, args) => {
+    updateConsortiumMappedUsers: async ({ auth: { credentials } }, args) => {
       const db = database.getDbInstance();
+
+      const updateObj =  {};
+
+      if (args.isMapped) {
+        updateObj.$addToSet = {
+          mappedForRun: credentials.id
+        };
+      } else {
+        updateObj.$pull = {
+          mappedForRun: credentials.id
+        };
+      }
 
       const result = await db.collection('consortia').findOneAndUpdate({
         _id: ObjectID(args.consortiumId)
-      }, {
-        $set: {
-          mappedForRun: args.mappedForRun.map(id => ObjectID(id))
-        }
-      }, {
+      }, updateObj, {
         returnOriginal: false
       });
 
@@ -1043,29 +1077,27 @@ const resolvers = {
 
       const consortiaIds = args.consortia.map(id => ObjectID(id));
 
-      const updatedConsortiaIds = await db.collection('consortia').find({
+      const updateObj = {};
+
+      if (args.isMapped) {
+        updateObj.$addToSet = {
+          mappedForRun: credentials.id
+        };
+      } else {
+        updateObj.$pull = {
+          mappedForRun: credentials.id
+        };
+      }
+
+      await db.collection('consortia').updateMany({
         _id: { $in: consortiaIds },
-        mappedForRun: ObjectID(credentials.id)
-      }, {
-        projection: { _id: 1 }
+      }, updateObj);
+
+      const consortia = await db.collection('consortia').find({
+        _id: { $in: consortiaIds }
       }).toArray();
 
-      if (updatedConsortiaIds.length > 0) {
-        await db.collection('consortia').updateMany({
-          _id: { $in: consortiaIds },
-          mappedForRun: ObjectID(credentials.id)
-        }, {
-          $pull: {
-            mappedForRun: ObjectID(credentials.id)
-          }
-        });
-
-        const consortia = await db.collection('consortia').find({
-          _id: { $in: updatedConsortiaIds.map(c => c._id) }
-        }).toArray();
-
-        eventEmitter.emit(CONSORTIUM_CHANGED, consortia);
-      }
+      eventEmitter.emit(CONSORTIUM_CHANGED, consortia);
     },
     /**
      * Updated user password
@@ -1344,6 +1376,36 @@ const resolvers = {
         (payload, variables) => (variables.userId && payload.userRunChanged.clients.indexOf(variables.userId) > -1)
       )
     },
+    /**
+     * Users online status subscription
+     */
+    usersOnlineStatusChanged: {
+      subscribe: () => pubsub.asyncIterator('usersOnlineStatusChanged'),
+      resolve: async (payload, args, context, info) => {
+        // Find the users that are in the same consortia as the logged user
+        const db = database.getDbInstance();
+
+        const user = await helperFunctions.getUserDetailsByID(context.userId);
+
+        const consortiaIds = Object.keys(user.permissions.consortia).map(id => ObjectID(id));
+        const consortia = await db.collection('consortia').find(
+          { _id: { $in: consortiaIds } },
+          { projection: { members: 1 } }
+        ).toArray();
+
+        const usersStatus = {};
+
+        consortia.forEach((consortium) => {
+          Object.keys(consortium.members).forEach((memberId) => {
+            if (!(memberId in usersStatus)) {
+              usersStatus[memberId] = payload.usersOnlineStatusChanged[memberId] || false;
+            }
+          });
+        });
+
+        return usersStatus;
+      },
+    }
   },
 };
 

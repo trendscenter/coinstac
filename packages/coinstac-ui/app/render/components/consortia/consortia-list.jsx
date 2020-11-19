@@ -27,6 +27,8 @@ import {
   JOIN_CONSORTIUM_MUTATION,
   LEAVE_CONSORTIUM_MUTATION,
   SAVE_ACTIVE_PIPELINE_MUTATION,
+  FETCH_USERS_ONLINE_STATUS,
+  USERS_ONLINE_STATUS_CHANGED_SUBSCRIPTION,
 } from '../../state/graphql/functions';
 import {
   consortiaMembershipProp,
@@ -100,6 +102,8 @@ class ConsortiaList extends Component {
   }
 
   componentDidMount() {
+    const { subscribeToUsersOnlineStatus } = this.props;
+
     const { consortiumJoinedByThread } = this.state;
 
     if (consortiumJoinedByThread) {
@@ -107,6 +111,8 @@ class ConsortiaList extends Component {
         this.setState({ consortiumJoinedByThread: null });
       }, 5000);
     }
+
+    subscribeToUsersOnlineStatus();
   }
 
   getConsortiumPipelines = (consortium) => {
@@ -120,6 +126,7 @@ class ConsortiaList extends Component {
       classes,
       pipelines,
       runs,
+      usersOnlineStatus,
     } = this.props;
     const { isConsortiumPipelinesMenuOpen } = this.state;
 
@@ -173,9 +180,9 @@ class ConsortiaList extends Component {
           name={user.name}
           showDetails
           width={40}
-          mapped={
-            consortium.mappedForRun
-              && consortium.mappedForRun.indexOf(user.id) !== -1
+          ready={
+            usersOnlineStatus[user.id] && pipeline
+            && (!needsDataMapping || (consortium.mappedForRun && consortium.mappedForRun.indexOf(user.id) > -1)) // eslint-disable-line max-len
           }
         />
       ));
@@ -562,6 +569,12 @@ ConsortiaList.propTypes = {
   notifyInfo: PropTypes.func.isRequired,
   notifyError: PropTypes.func.isRequired,
   pullComputations: PropTypes.func.isRequired,
+  subscribeToUsersOnlineStatus: PropTypes.func.isRequired,
+  usersOnlineStatus: PropTypes.object,
+};
+
+ConsortiaList.defaultProps = {
+  usersOnlineStatus: {},
 };
 
 const mapStateToProps = ({ auth, maps }) => ({
@@ -580,6 +593,20 @@ const ConsortiaListWithData = compose(
   graphql(JOIN_CONSORTIUM_MUTATION, consortiaMembershipProp('joinConsortium')),
   graphql(LEAVE_CONSORTIUM_MUTATION, consortiaMembershipProp('leaveConsortium')),
   graphql(SAVE_ACTIVE_PIPELINE_MUTATION, consortiumSaveActivePipelineProp('saveActivePipeline')),
+  graphql(FETCH_USERS_ONLINE_STATUS, {
+    options: ({
+      fetchPolicy: 'cache-and-network',
+    }),
+    props: props => ({
+      usersOnlineStatus: props.data.fetchUsersOnlineStatus,
+      subscribeToUsersOnlineStatus: () => props.data.subscribeToMore({
+        document: USERS_ONLINE_STATUS_CHANGED_SUBSCRIPTION,
+        updateQuery: (_, { subscriptionData: { data } }) => {
+          return { fetchUsersOnlineStatus: data.usersOnlineStatusChanged };
+        },
+      }),
+    }),
+  }),
   withApollo
 )(ConsortiaList);
 

@@ -266,26 +266,6 @@ export const userRolesProp = (name) => {
   };
 };
 
-export const updateConsortiumMappedUsersProp = (name) => {
-  return {
-    props: ({ mutate }) => ({
-      [name]: ({ consortiumId, mappedForRun }) => mutate({
-        variables: { consortiumId, mappedForRun },
-      }),
-    }),
-  };
-};
-
-export const updateConsortiaMappedUsersProp = (name) => {
-  return {
-    props: ({ mutate }) => ({
-      [name]: ({ consortia }) => mutate({
-        variables: { consortia },
-      }),
-    }),
-  };
-};
-
 export const consortiumSaveActivePipelineProp = (name) => {
   return {
     props: ({ mutate }) => ({

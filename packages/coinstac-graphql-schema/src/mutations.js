@@ -74,12 +74,12 @@ const mutations = {
   `,
   updateConsortiumMappedUsers: `
     {
-      updateConsortiumMappedUsers(consortiumId: $consortiumId, mappedForRun: $mappedForRun)
+      updateConsortiumMappedUsers(consortiumId: $consortiumId, isMapped: $isMapped)
     }
   `,
   updateConsortiaMappedUsers: `
     {
-      updateConsortiaMappedUsers(consortia: $consortia)
+      updateConsortiaMappedUsers(consortia: $consortia, isMapped: $isMapped)
     }
   `,
   updatePassword: `

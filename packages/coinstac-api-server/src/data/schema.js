@@ -172,8 +172,8 @@ const typeDefs = `
     saveResults(runId: ID, results: JSON): JSON
     updateRunState(runId: ID, data: JSON): JSON
     updateUserConsortiumStatus(consortiumId: ID, status: String): User
-    updateConsortiumMappedUsers(consortiumId: ID, mappedForRun: [ID]): JSON
-    updateConsortiaMappedUsers(consortia: [ID]): JSON
+    updateConsortiumMappedUsers(consortiumId: ID, isMapped: Boolean): JSON
+    updateConsortiaMappedUsers(consortia: [ID], isMapped: Boolean): JSON
     updatePassword(currentPassword: String!, newPassword: String!): Boolean
     saveMessage(threadId: ID, title: String!, recipients: JSON, content: String!, action: ActionInput): Thread
     setReadMessage(threadId: ID, userId: ID): JSON
@@ -195,7 +195,7 @@ const typeDefs = `
     fetchResult(resultId: ID): Result
     fetchUser(userId: ID): User
     fetchAllThreads: [Thread]
-    validateComputation(compId: ID): Boolean
+    fetchUsersOnlineStatus: JSON
   }
 
   type Subscription {
@@ -205,6 +205,7 @@ const typeDefs = `
     threadChanged(threadId: ID): Thread
     userRunChanged(userId: ID): Run
     userChanged(userId: ID): User
+    usersOnlineStatusChanged: JSON
   }
 `;
 
