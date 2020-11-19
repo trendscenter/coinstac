@@ -83,7 +83,6 @@
     "winston": "^3.2.1"
   },
   "devDependencies": {
-    "archiver": "^3.1.1",
     "babel-cli": "^6.26.0",
     "babel-core": "^6.26.3",
     "babel-loader": "^7.1.5",
@@ -97,7 +96,7 @@
     "devtron": "^1.4.0",
     "electron": "^9.0.5",
     "electron-debug": "^3.1.0",
-    "electron-packager": "^14.0.4",
+    "electron-builder": "^22.7.0",
     "file-loader": "^2.0.0",
     "gh-pages": "^0.11.0",
     "html-loader": "^0.5.5",
@@ -128,9 +127,10 @@
   },
   "scripts": {
     "build:webpack": "cross-env NODE_ENV=production webpack --mode=production",
-    "build-prod": "npm i && npm run build:webpack && node ./scripts/build.js production",
-    "build-dev": "npm i && node ./scripts/build-setup.js  && npm dedupe && npm run build:webpack && node ./scripts/build.js development",
-    "build-local": "npm i && node ./scripts/build-setup.js && npm dedupe && npm run build:webpack && node ./scripts/build.js",
+    "dist": "npm i && npm run build:webpack && NODE_ENV=production DIST=true node ./scripts/build.js",
+    "build-prod": "npm i && npm run build:webpack && NODE_ENV=production node ./scripts/build.js",
+    "build-dev": "npm i && node ./scripts/build-setup.js && npm dedupe && npm run build:webpack && NODE_ENV=development node ./scripts/build.js",
+    "build-local": "npm i && node ./scripts/build-setup.js && npm dedupe && npm run build:webpack && NODE_ENV=local node ./scripts/build.js",
     "start": "electron . --log-level=debug",
     "build-native": "node ./scripts/build-native.js",
     "clean": "node scripts/clean.js",
