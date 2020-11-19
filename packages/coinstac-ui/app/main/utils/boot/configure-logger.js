@@ -50,7 +50,6 @@ async function configureLogger(config) {
       transports: [
         new winston.transports.Console(),
         new winston.transports.File({
-          // format: winston.format.timestamp(),
           filename: logFilePath,
         }),
         new winston.transports.Stream({
