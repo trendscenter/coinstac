@@ -41,10 +41,16 @@ async function configureLogger(config) {
 
     const logger = winston.loggers.add('coinstac-main', {
       level: 'silly',
+      format: winston.format.combine(
+        winston.format.timestamp(),
+        winston.format.printf(({
+          level, message, timestamp,
+        }) => `${timestamp} { message: ${message}, level: ${level} }`)
+      ),
       transports: [
-        new winston.transports.Console({ format: winston.format.timestamp() }),
+        new winston.transports.Console(),
         new winston.transports.File({
-          format: winston.format.timestamp(),
+          // format: winston.format.timestamp(),
           filename: logFilePath,
         }),
         new winston.transports.Stream({
