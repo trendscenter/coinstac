@@ -7,12 +7,11 @@ if (
   && process.env.NODE_ENV !== 'test'
 ) {
   // active long stack trace
-  require('trace'); // eslint-disable-line global-require
   const chain = require('stack-chain'); // eslint-disable-line global-require
   const { sep } = require('path'); // eslint-disable-line global-require
 
   // There is no limit for the size of the stack trace (v8 default is 10)
-  Error.stackTraceLimit = Infinity;
+  Error.stackTraceLimit = 100;
 
   chain.filter.attach((error, frames) => {
     return frames.filter((callSite) => {

@@ -62,6 +62,18 @@ Below is a list of COINSTAC computations that have been implemented.
   - Maintainer: [Harsh Gazula](https://github.com/hvgazula)
   - Repository: https://github.com/trendscenter/coinstac-enigma
   
+- Voxel-based Morphometry
+  - Algorithm Developer: [Sandeep Panta](https://github.com/spanta28)
+  - Computation Creator: [Sandeep Panta](https://github.com/spanta28)
+  - Maintainer: [Helen Petropoulos](https://github.com/hp404)
+  - Repository: https://github.com/trendscenter/Coinstac_VBM_computation 
+  
+- fMRI Preprocessing
+  - Algorithm Developer: [Sandeep Panta](https://github.com/spanta28)
+  - Computation Creator: [Sandeep Panta](https://github.com/spanta28)
+  - Maintainer: [Helen Petropoulos](https://github.com/hp404)
+  - Repository: https://github.com/trendscenter/Coinstac_fmri_computation
+  
 - Spatially Constrained ICA
   - Algorithm Developer: [Bradley Baker](https://github.com/bbradt)
   - Creator: [Bradley Baker](https://github.com/bbradt)

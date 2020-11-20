@@ -406,7 +406,6 @@ class PipelineStepInput extends Component {
                   objParams.type === 'boolean' && (
                     <PipelineStepInputBoolean
                       objKey={objKey}
-                      objParams={objParams}
                       owner={owner}
                       updateStep={updateStep}
                       getNewObj={this.getNewObj}

@@ -9,8 +9,11 @@ const styles = theme => ({
   wrapper: {
     display: 'flex',
     flexDirection: 'column',
-    width: 250,
+    minWidth: 250,
     borderRight: `1px solid ${theme.palette.grey[300]}`,
+    [theme.breakpoints.down('sm')]: {
+      minWidth: 180,
+    },
   },
   threads: {
     flex: 1,

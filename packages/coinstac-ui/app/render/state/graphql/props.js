@@ -1,4 +1,5 @@
 import update from 'immutability-helper';
+import { filter, get, keys } from 'lodash';
 import {
   FETCH_ALL_CONSORTIA_QUERY,
 } from './functions';
@@ -89,6 +90,97 @@ export const getAllAndSubProp = (document, listProp, query, subProp, subscriptio
   }),
 });
 
+export const userProp = document => ({
+  options: (props) => {
+    const opts = { fetchPolicy: 'cache-and-network' };
+    const userId = get(props, 'auth.user.id');
+
+    if (userId) {
+      opts.variables = { userId };
+    }
+
+    return opts;
+  },
+  props: (props) => {
+    return {
+      currentUser: props.data.fetchUser,
+      subscribeToUser: () => {
+        const userId = get(props, 'ownProps.auth.user.id');
+        const variables = userId ? { userId } : {};
+
+        return props.data.subscribeToMore({
+          document,
+          variables,
+          updateQuery: (prevResult, { subscriptionData: { data } }) => {
+            if (data.userChanged.delete) {
+              return { fetchUser: null };
+            }
+            return {
+              fetchUser: {
+                ...prevResult.fetchUser,
+                ...data.userChanged,
+              },
+            };
+          },
+        });
+      },
+    };
+  },
+});
+
+export const userRunProp = document => ({
+  options: (props) => {
+    const opts = { fetchPolicy: 'cache-and-network' };
+    const userId = get(props, 'auth.user.id');
+
+    if (userId) {
+      opts.variables = { userId };
+    }
+
+    return opts;
+  },
+  props: (props) => {
+    return {
+      remoteRuns: filter(props.data.fetchAllUserRuns, (run) => {
+        return (!keys(run).includes('remotePipelineState') || !!run.remotePipelineState);
+      }),
+      subscribeToUserRuns: () => {
+        const userId = get(props, 'ownProps.auth.user.id');
+        const variables = userId ? { userId } : {};
+
+        return props.data.subscribeToMore({
+          document,
+          variables,
+          updateQuery: (prevResult, { subscriptionData: { data } }) => {
+            const { userRunChanged } = data;
+
+            const index = prevResult.fetchAllUserRuns.findIndex(c => c.id === userRunChanged.id);
+
+            if (userRunChanged.delete) {
+              return {
+                fetchAllUserRuns:
+                  prevResult.fetchAllUserRuns.filter(obj => obj.id !== userRunChanged.id),
+              };
+            } if (index !== -1) {
+              return {
+                fetchAllUserRuns: update(prevResult.fetchAllUserRuns, {
+                  $splice: [
+                    [index, 1, userRunChanged],
+                  ],
+                }),
+              };
+            }
+
+            return {
+              fetchAllUserRuns: [...prevResult.fetchAllUserRuns, userRunChanged],
+            };
+          },
+        });
+      },
+    };
+  },
+});
+
 export const getSelectAndSubProp = (activeProp, document, objId, subProp, subscription, query) => ({
   options: (props) => {
     let theId = null;
@@ -165,30 +257,10 @@ export const saveDocumentProp = (funcName, objVar) => {
 export const userRolesProp = (name) => {
   return {
     props: ({ mutate }) => ({
-      [name]: (userId, table, doc, role) => mutate({
+      [name]: (userId, table, doc, role, roleType) => mutate({
         variables: {
-          userId, table, doc, role,
+          userId, table, doc, role, roleType,
         },
-      }),
-    }),
-  };
-};
-
-export const updateConsortiumMappedUsersProp = (name) => {
-  return {
-    props: ({ mutate }) => ({
-      [name]: ({ consortiumId, mappedForRun }) => mutate({
-        variables: { consortiumId, mappedForRun },
-      }),
-    }),
-  };
-};
-
-export const updateConsortiaMappedUsersProp = (name) => {
-  return {
-    props: ({ mutate }) => ({
-      [name]: ({ consortia }) => mutate({
-        variables: { consortia },
       }),
     }),
   };
@@ -217,7 +289,7 @@ export const updatePasswordProps = (name) => {
     props: ({ mutate }) => ({
       [name]: ({ currentPassword, newPassword }) => mutate({
         variables: { currentPassword, newPassword },
-      })
+      }),
     }),
   };
 };

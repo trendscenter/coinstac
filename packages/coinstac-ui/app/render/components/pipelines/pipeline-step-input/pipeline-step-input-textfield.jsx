@@ -2,46 +2,28 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import TextField from '@material-ui/core/TextField';
 
-class PipelineStepInputTextField extends React.Component {
-  componentDidMount() {
-    const {
-      objKey, objParams, owner, updateStep, getNewObj, step,
-    } = this.props;
+function PipelineStepInputTextField({
+  objKey, objParams, owner, isFromCache, updateStep, getNewObj, step,
+}) {
+  if (!step) {
+    return null;
+  }
 
-
-    if (!step.inputMap[objKey] && 'default' in objParams && owner) {
-      updateStep({
+  return (
+    <TextField
+      disabled={!owner || isFromCache}
+      name={`step-${objKey}`}
+      onChange={event => updateStep({
         ...step,
-        inputMap: getNewObj(objKey, { value: objParams.default }),
-      });
-    }
-  }
-
-  render() {
-    const {
-      objKey, objParams, owner, isFromCache, updateStep, getNewObj, step,
-    } = this.props;
-
-    if (!step) {
-      return null;
-    }
-
-    return (
-      <TextField
-        disabled={!owner || isFromCache}
-        name={`step-${objKey}`}
-        onChange={event => updateStep({
-          ...step,
-          inputMap: getNewObj(objKey, event.target.value ? { value: event.target.value } : 'DELETE_VAR'),
-        })}
-        value={
-          step.inputMap[objKey] && 'value' in step.inputMap[objKey]
-            ? step.inputMap[objKey].value
-            : objParams.default
-        }
-      />
-    );
-  }
+        inputMap: getNewObj(objKey, event.target.value ? { value: event.target.value } : 'DELETE_VAR'),
+      })}
+      value={
+        step.inputMap[objKey] && 'value' in step.inputMap[objKey]
+          ? step.inputMap[objKey].value
+          : objParams.default
+      }
+    />
+  );
 }
 
 PipelineStepInputTextField.defaultProps = {

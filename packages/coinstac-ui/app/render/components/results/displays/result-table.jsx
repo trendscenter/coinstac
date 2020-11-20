@@ -8,6 +8,7 @@ import TableCell from '@material-ui/core/TableCell';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import { withStyles } from '@material-ui/core/styles';
+import uuid from 'uuid/v4'; // eslint-disable-line
 
 const styles = () => ({
   downloadButtonContainer: {
@@ -66,7 +67,7 @@ function parseTableColumnOutput(output) {
   if (Array.isArray(output)) {
     const cols = [];
     // eslint-disable-next-line
-    output.map((o) => {
+    output.map((o, ind) => {
       o = parseFloat(o).toFixed(4);
       if (parseFloat(o) === 0) {
         o = 0;
@@ -74,7 +75,7 @@ function parseTableColumnOutput(output) {
         o = parseFloat(o).toExponential(4);
       }
       cols.push(
-        <td key={`value-${o}`}>
+        <td key={`value-${o}-${ind}`}>
           {`${o} `}
         </td>
       );
@@ -136,7 +137,7 @@ class TableResult extends Component {
         tableContents.push(
           this.makeTable(table, d, outputProps, null, marginLeft + 10)
         );
-        tableContents.push(<hr style={{ borderTop: '1px solid black' }} />);
+        tableContents.push(<hr key={uuid()} style={{ borderTop: '1px solid black' }} />);
       });
     } else if (table && table.subtables && typeof table.subtables === 'object') {
       table.subtables.forEach((t) => {
@@ -195,7 +196,7 @@ class TableResult extends Component {
       }
 
       tableContents.push(
-        <div>
+        <div key={uuid()}>
           {
             data.covariate_labels && data.covariate_labels.length > 0
             && (

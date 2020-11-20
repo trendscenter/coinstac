@@ -7,7 +7,7 @@ export const ADD_COMPUTATION_MUTATION = gql`
 `;
 
 export const ADD_USER_ROLE_MUTATION = gql`
-  mutation addUserRole($userId: ID!, $table: String!, $doc: String!, $role: String!)
+  mutation addUserRole($userId: ID!, $table: String!, $doc: String!, $role: String!, $roleType: String!)
     ${mutations.addUserRole}
 `;
 
@@ -149,7 +149,7 @@ export const USER_CHANGED_SUBSCRIPTION = gql`
 `;
 
 export const REMOVE_USER_ROLE_MUTATION = gql`
-  mutation removeUserRole($userId: ID!, $table: String!, $doc: String!, $role: String!)
+  mutation removeUserRole($userId: ID!, $table: String!, $doc: String!, $role: String!, $roleType: String!)
     ${mutations.removeUserRole}
 `;
 
@@ -180,12 +180,12 @@ export const UPDATE_USER_CONSORTIUM_STATUS_MUTATION = gql`
 `;
 
 export const UPDATE_CONSORTIUM_MAPPED_USERS_MUTATION = gql`
-  mutation updateConsortiumMappedUsers($consortiumId: ID, $mappedForRun: [ID])
+  mutation updateConsortiumMappedUsers($consortiumId: ID, $isMapped: Boolean)
     ${mutations.updateConsortiumMappedUsers}
 `;
 
 export const UPDATE_CONSORTIA_MAPPED_USERS_MUTATION = gql`
-  mutation updateConsortiaMappedUsers($consortia: [ID])
+  mutation updateConsortiaMappedUsers($consortia: [ID], $isMapped: Boolean)
     ${mutations.updateConsortiaMappedUsers}
 `;
 
@@ -202,6 +202,18 @@ export const SAVE_MESSAGE_MUTATION = gql`
 export const SET_READ_MESSAGE_MUTATION = gql`
   mutation setReadMessage($threadId: ID!, $userId: ID!)
     ${mutations.setReadMessage}
+`;
+
+export const FETCH_USERS_ONLINE_STATUS = gql`
+  query fetchUsersOnlineStatus {
+    fetchUsersOnlineStatus
+  }
+`;
+
+export const USERS_ONLINE_STATUS_CHANGED_SUBSCRIPTION = gql`
+  subscription usersOnlineStatusChanged {
+    usersOnlineStatusChanged
+  }
 `;
 
 export const CREATE_ISSUE_MUTATION = gql`
