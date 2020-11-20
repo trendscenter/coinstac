@@ -531,32 +531,28 @@ const resolvers = {
         return Boom.notFound('Active pipeline not found on this consortium');
       }
 
-      const isPipelineDecentralized = pipeline.steps.findIndex(step => step.controller.type === 'decentralized') > -1;
-
-      const run = {
-        _id: ObjectID(),
-        clients: clientArray,
-        members: consortium.members,
-        consortiumId,
-        pipelineSnapshot: pipeline,
-        startDate: Date.now(),
-        type: isPipelineDecentralized ? 'decentralized' : 'local',
-      };
-
       try {
         const clientArray = Object.keys(consortium.members);
+        const isPipelineDecentralized = pipeline.steps.findIndex(step => step.controller.type === 'decentralized') > -1;
+
+        const result = await db.collection('runs').insertOne({
+          clients: clientArray,
+          members: consortium.members,
+          consortiumId,
+          pipelineSnapshot: pipeline,
+          startDate: Date.now(),
+          type: isPipelineDecentralized ? 'decentralized' : 'local',
+        });
+
+        const run = transformToClient(result.ops[0]);
 
         await axios.post(
-          `http://${process.env.PIPELINE_SERVER_HOSTNAME}:${process.env.PIPELINE_SERVER_PORT}/startPipeline`, { run: transformedRun }
+          `http://${process.env.PIPELINE_SERVER_HOSTNAME}:${process.env.PIPELINE_SERVER_PORT}/startPipeline`, { run }
         );
 
-        const result = await db.collection('runs').insertOne(run);
+        eventEmitter.emit(RUN_CHANGED, run);
 
-        const transformedRun = transformToClient(run);
-
-        eventEmitter.emit(RUN_CHANGED, transformedRun);
-
-        return transformedRun;
+        return run;
       } catch (error) {
         if (error.code === 'ECONNREFUSED') {
           return Boom.serverUnavailable('Pipeline server unavailable');
