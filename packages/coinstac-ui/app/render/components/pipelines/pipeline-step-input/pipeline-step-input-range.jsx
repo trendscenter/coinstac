@@ -14,64 +14,44 @@ function makeNumberRange(min, max, step) {
   return range;
 }
 
-class PipelineStepInputRange extends React.Component {
-  componentDidMount() {
-    const {
-      objKey, objParams, owner, updateStep, getNewObj, step,
-    } = this.props;
+function PipelineStepInputRange({
+  objKey, objParams, owner, updateStep, getNewObj, step,
+}) {
+  if (!step || !objParams.min || !objParams.max || !objParams.step) {
+    return null;
+  }
 
-    if (!step.inputMap[objKey] && 'default' in objParams && owner) {
-      updateStep({
+  const value = step.inputMap[objKey] && 'value' in step.inputMap[objKey]
+    ? step.inputMap[objKey].value
+    : parseFloat(objParams.default);
+
+  return (
+    <Select
+      disabled={!owner}
+      onChange={event => updateStep({
         ...step,
         inputMap: getNewObj(
           objKey,
-          { value: objParams.default }
+          event.target.value
+            ? { value: event.target.value }
+            : 'DELETE_VAR'
         ),
-      });
-    }
-  }
-
-  render() {
-    const {
-      objKey, objParams, owner, updateStep, getNewObj, step,
-    } = this.props;
-
-    if (!step || !objParams.min || !objParams.max || !objParams.step) {
-      return null;
-    }
-
-    const value = step.inputMap[objKey] && 'value' in step.inputMap[objKey]
-      ? step.inputMap[objKey].value
-      : parseFloat(objParams.default);
-
-    return (
-      <Select
-        disabled={!owner}
-        onChange={event => updateStep({
-          ...step,
-          inputMap: getNewObj(
-            objKey,
-            event.target.value
-              ? { value: event.target.value }
-              : 'DELETE_VAR'
-          ),
-        })}
-        value={value}
-      >
-        {
-          makeNumberRange(objParams.min, objParams.max, objParams.step).map(val => (
-            <MenuItem
-              key={`${val}-select-option`}
-              value={parseFloat(val)}
-              selected={val === value}
-            >
-              {val.toString()}
-            </MenuItem>
-          ))
-        }
-      </Select>
-    );
-  }
+      })}
+      value={value}
+    >
+      {
+        makeNumberRange(objParams.min, objParams.max, objParams.step).map(val => (
+          <MenuItem
+            key={`${val}-select-option`}
+            value={parseFloat(val)}
+            selected={val === value}
+          >
+            {val.toString()}
+          </MenuItem>
+        ))
+      }
+    </Select>
+  );
 }
 
 PipelineStepInputRange.propTypes = {

@@ -3,14 +3,12 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { graphql, compose, withApollo } from 'react-apollo';
 import { find } from 'lodash';
-import {
-  Button,
-  Dialog,
-  DialogContent,
-  DialogContentText,
-  DialogActions,
-  Typography,
-} from '@material-ui/core';
+import Button from '@material-ui/core/Button';
+import Dialog from '@material-ui/core/Dialog';
+import DialogContent from '@material-ui/core/DialogContent';
+import DialogContentText from '@material-ui/core/DialogContentText';
+import DialogActions from '@material-ui/core/DialogActions';
+import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
 import ThreadList from './thread-list';
 import ThreadContent from './thread-content';

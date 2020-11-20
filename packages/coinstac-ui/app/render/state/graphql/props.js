@@ -1,5 +1,5 @@
 import update from 'immutability-helper';
-import { filter, keys } from 'lodash';
+import { filter, get, keys } from 'lodash';
 import {
   FETCH_ALL_CONSORTIA_QUERY,
 } from './functions';
@@ -90,12 +90,51 @@ export const getAllAndSubProp = (document, listProp, query, subProp, subscriptio
   }),
 });
 
+export const userProp = document => ({
+  options: (props) => {
+    const opts = { fetchPolicy: 'cache-and-network' };
+    const userId = get(props, 'auth.user.id');
+
+    if (userId) {
+      opts.variables = { userId };
+    }
+
+    return opts;
+  },
+  props: (props) => {
+    return {
+      currentUser: props.data.fetchUser,
+      subscribeToUser: () => {
+        const userId = get(props, 'ownProps.auth.user.id');
+        const variables = userId ? { userId } : {};
+
+        return props.data.subscribeToMore({
+          document,
+          variables,
+          updateQuery: (prevResult, { subscriptionData: { data } }) => {
+            if (data.userChanged.delete) {
+              return { fetchUser: null };
+            }
+            return {
+              fetchUser: {
+                ...prevResult.fetchUser,
+                ...data.userChanged,
+              },
+            };
+          },
+        });
+      },
+    };
+  },
+});
+
 export const userRunProp = document => ({
   options: (props) => {
     const opts = { fetchPolicy: 'cache-and-network' };
+    const userId = get(props, 'auth.user.id');
 
-    if (props.auth.user.id) {
-      opts.variables = { userId: props.auth.user.id };
+    if (userId) {
+      opts.variables = { userId };
     }
 
     return opts;
@@ -106,10 +145,8 @@ export const userRunProp = document => ({
         return (!keys(run).includes('remotePipelineState') || !!run.remotePipelineState);
       }),
       subscribeToUserRuns: () => {
-        const variables = {};
-        if (props.ownProps.auth.user.id) {
-          variables.userId = props.ownProps.auth.user.id;
-        }
+        const userId = get(props, 'ownProps.auth.user.id');
+        const variables = userId ? { userId } : {};
 
         return props.data.subscribeToMore({
           document,
@@ -220,30 +257,10 @@ export const saveDocumentProp = (funcName, objVar) => {
 export const userRolesProp = (name) => {
   return {
     props: ({ mutate }) => ({
-      [name]: (userId, table, doc, role) => mutate({
+      [name]: (userId, table, doc, role, roleType) => mutate({
         variables: {
-          userId, table, doc, role,
+          userId, table, doc, role, roleType,
         },
-      }),
-    }),
-  };
-};
-
-export const updateConsortiumMappedUsersProp = (name) => {
-  return {
-    props: ({ mutate }) => ({
-      [name]: ({ consortiumId, mappedForRun }) => mutate({
-        variables: { consortiumId, mappedForRun },
-      }),
-    }),
-  };
-};
-
-export const updateConsortiaMappedUsersProp = (name) => {
-  return {
-    props: ({ mutate }) => ({
-      [name]: ({ consortia }) => mutate({
-        variables: { consortia },
       }),
     }),
   };
@@ -272,7 +289,7 @@ export const updatePasswordProps = (name) => {
     props: ({ mutate }) => ({
       [name]: ({ currentPassword, newPassword }) => mutate({
         variables: { currentPassword, newPassword },
-      })
+      }),
     }),
   };
 };

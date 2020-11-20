@@ -1,20 +1,26 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
+import { compose, graphql, withApollo } from 'react-apollo';
 import PropTypes from 'prop-types';
 import Typography from '@material-ui/core/Typography';
 import Grid from '@material-ui/core/Grid';
 import MapsListItem from './maps-list-item';
 import { deleteDataMapping } from '../../state/ducks/maps';
 import { pipelineNeedsDataMapping } from '../../../main/utils/run-pipeline-functions';
+import {
+  UPDATE_CONSORTIUM_MAPPED_USERS_MUTATION,
+} from '../../state/graphql/functions';
 import { isUserInGroup } from '../../utils/helpers';
 
 class MapsList extends Component {
   deleteDataMapping = consortiumId => () => {
-    const { deleteDataMapping, consortia } = this.props;
+    const { deleteDataMapping, consortia, updateConsortiumMappedUsers } = this.props;
 
     const consortium = consortia.find(c => c.id === consortiumId);
 
     deleteDataMapping(consortium.id, consortium.activePipelineId);
+
+    updateConsortiumMappedUsers(consortium.id, false);
   }
 
   getMapItem = (consortium) => {
@@ -77,6 +83,7 @@ MapsList.propTypes = {
   maps: PropTypes.array.isRequired,
   pipelines: PropTypes.array.isRequired,
   deleteDataMapping: PropTypes.func.isRequired,
+  updateConsortiumMappedUsers: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = ({ auth, maps }) => ({
@@ -84,6 +91,19 @@ const mapStateToProps = ({ auth, maps }) => ({
   maps: maps.consortiumDataMappings,
 });
 
+const ComponentWithData = compose(
+  graphql(
+    UPDATE_CONSORTIUM_MAPPED_USERS_MUTATION, {
+      props: ({ mutate }) => ({
+        updateConsortiumMappedUsers: (consortiumId, isMapped) => mutate({
+          variables: { consortiumId, isMapped },
+        }),
+      }),
+    }
+  ),
+  withApollo
+)(MapsList);
+
 export default connect(mapStateToProps, {
   deleteDataMapping,
-})(MapsList);
+})(ComponentWithData);

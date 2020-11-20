@@ -18,10 +18,10 @@ const apiServer = `http://${process.env.API_SERVER_HOSTNAME}:${process.env.API_S
 const authenticateServer = () => {
   return axios.post(
     `${apiServer}/authenticate`,
-	  {
-		  username: process.env.SERVER_API_USERNAME,
-		  password: process.env.SERVER_API_PASSWORD,
-	  }
+    {
+      username: process.env.SERVER_API_USERNAME,
+      password: process.env.SERVER_API_PASSWORD,
+    }
   )
     .then((token) => {
       this.id_token = token.data.id_token;

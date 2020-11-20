@@ -42,27 +42,42 @@ function MapsPipelineVariables(props) {
 
             const inputs = { ...inputMap, ...computations[0].computation.input };
 
-            return Object.entries(inputs).map((input) => {
-              const inputMapKey = input[0];
-              const inputMapValue = input[1];
+            return Object.entries(inputs)
+              .sort((a, b) => {
+                const keyA = a[0];
+                const keyB = b[0];
 
-              if (inputMapKey === 'meta') {
-                return;
-              }
+                if (keyA === 'data' || keyA === 'covariates') {
+                  return -1;
+                }
 
-              return (
-                <MapsStepFieldset
-                  registerDraggableContainer={registerDraggableContainer}
-                  key={`step-${inputMapKey}`}
-                  fieldsetLabel={inputMapValue.label}
-                  fieldsetName={inputMapKey}
-                  stepFieldset={inputMap[inputMapKey]}
-                  stepsDataMappings={stepsDataMappings}
-                  consortium={consortium}
-                  unmapField={unmapField}
-                />
-              );
-            });
+                if (keyB === 'data' || keyB === 'covariates') {
+                  return 1;
+                }
+
+                return 0;
+              })
+              .map((input) => {
+                const inputMapKey = input[0];
+                const inputMapValue = input[1];
+
+                if (inputMapKey === 'meta' || !inputMap[inputMapKey]) {
+                  return;
+                }
+
+                return (
+                  <MapsStepFieldset
+                    registerDraggableContainer={registerDraggableContainer}
+                    key={`step-${inputMapKey}`}
+                    fieldsetLabel={inputMapValue.label}
+                    fieldsetName={inputMapKey}
+                    stepFieldset={inputMap[inputMapKey]}
+                    stepsDataMappings={stepsDataMappings}
+                    consortium={consortium}
+                    unmapField={unmapField}
+                  />
+                );
+              });
           })
         }
       </Paper>

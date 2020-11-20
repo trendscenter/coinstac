@@ -104,9 +104,10 @@ const sharedFields = {
     name
     consortiaStatuses
   `,
-  userEmailIds: `
+  userData: `
     id
     email
+    permissions
     username
     photo
     photoID
