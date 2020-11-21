@@ -5,8 +5,8 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
-    "test": "echo \"Error: no test specified\"",
-    "test-setup": "docker-compose up -d && node test/test-setup.js"
+    "test": "docker-compose down && sleep 3 && docker-compose up -d && cross-env NODE_ENV=test nyc ava",
+    "test-setup": "docker-compose up -d && node seed/test-setup.js"
   },
   "author": "",
   "license": "ISC",
@@ -28,8 +28,25 @@
     "hapi-auth-jwt2": "^7.4.1",
     "jsonwebtoken": "^7.4.3",
     "lodash": "^4.17.15",
-    "mongodb": "^3.5.5",
-    "subscriptions-transport-ws": "^0.9.9",
-    "uuid": "^7.0.3"
+    "mongodb": "^3.5.7",
+    "nyc": "^15.0.1",
+    "subscriptions-transport-ws": "^0.9.9"
+  },
+  "ava": {
+    "files": [
+      "tests/*.test.js",
+      "tests/*/*.test.js"
+    ],
+    "timeout": "20s"
+  },
+  "devDependencies": {
+    "apollo-client": "^1.4.0",
+    "ava": "^3.8.1",
+    "cross-env": "^7.0.2",
+    "graphql-tag": "^2.10.3",
+    "sinon": "^9.0.2",
+    "trace": "^3.1.1",
+    "uuid": "^7.0.3",
+    "ws": "^7.3.0"
   }
 }

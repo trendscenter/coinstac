@@ -9,6 +9,8 @@ const {
   RUN_CHANGED,
   THREAD_CHANGED,
   USER_CHANGED,
+  USER_SESSION_STARTED,
+  USER_SESSION_FINISHED,
 } = require('../events');
 const { transformToClient } = require('../../utils');
 
@@ -103,7 +105,6 @@ function threadChanged(thread) {
     threadChanged: t,
     threadId: t.id,
   });
-
 }
 
 function publishUser(user) {
@@ -123,6 +124,12 @@ function userChanged(user) {
   }
 }
 
+function usersOnlineStatusChanged(usersOnlineStatus) {
+  pubSub.publish('usersOnlineStatusChanged', {
+    usersOnlineStatusChanged: usersOnlineStatus,
+  });
+}
+
 function initSubscriptions(ps) {
   pubSub = ps;
 
@@ -140,6 +147,9 @@ function initSubscriptions(ps) {
   eventEmitter.on(THREAD_CHANGED, threadChanged);
 
   eventEmitter.on(USER_CHANGED, userChanged);
+
+  eventEmitter.on(USER_SESSION_STARTED, usersOnlineStatusChanged);
+  eventEmitter.on(USER_SESSION_FINISHED, usersOnlineStatusChanged);
 }
 
 module.exports = initSubscriptions;

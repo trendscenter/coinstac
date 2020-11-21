@@ -1,7 +1,7 @@
 const Boom = require('boom');
 const GraphQLJSON = require('graphql-type-json');
-const Promise = require('bluebird');
 const axios = require('axios');
+const { get } = require('lodash');
 const Issue = require('github-api/dist/components/Issue');
 const { PubSub, withFilter } = require('graphql-subscriptions');
 const { ObjectID } = require('mongodb');
@@ -22,6 +22,10 @@ const {
   THREAD_CHANGED,
   USER_CHANGED,
 } = require('./events');
+const { getOnlineUsers } = require('./user-online-status-tracker');
+
+const AVAILABLE_ROLE_TYPES = ['data', 'app'];
+const AVAILABLE_USER_APP_ROLES = ['admin', 'author'];
 
 async function fetchOnePipeline(id) {
   const db = database.getDbInstance();
@@ -41,6 +45,7 @@ async function fetchOnePipeline(id) {
 
   const hasSteps = await pipelineSteps.hasNext();
   if (!hasSteps) {
+    /* istanbul ignore next */
     return db.collection('pipelines').findOne({ _id: id });
   }
 
@@ -156,6 +161,39 @@ async function removeUserPermissions(args) {
     const consortiaUpdateResult = await db.collection('consortia').findOneAndUpdate({ _id: args.doc }, updateObj, { returnOriginal: false });
     eventEmitter.emit(CONSORTIUM_CHANGED, consortiaUpdateResult.value);
   }
+}
+
+async function changeUserAppRole(args, addOrRemove) {
+  const db = database.getDbInstance();
+  const { userId, role } = args;
+
+  const userUpdateResult = await db.collection('users').findOneAndUpdate({ _id: ObjectID(userId) }, {
+    $set: {
+      [`permissions.roles.${role}`]: addOrRemove === 'add',
+    },
+  }, {
+    returnOriginal: false,
+  });
+
+  eventEmitter.emit(USER_CHANGED, userUpdateResult.value);
+}
+
+async function filterComputationsByMetaId(db, metaId) {
+  const results = await db.collection('computations').find({ 'meta.id': metaId }).toArray();
+
+  return transformToClient(results);
+}
+
+function isAdmin(permissions) {
+  return get(permissions, 'roles.admin', false);
+}
+
+function isAuthor(permissions) {
+  return get(permissions, 'roles.author', false);
+}
+
+function isAllowedForComputationChange(permissions) {
+  return isAdmin(permissions) || isAuthor(permissions);
 }
 
 const pubsub = new PubSub();
@@ -276,7 +314,6 @@ const resolvers = {
       while (await pipelineSteps.hasNext()) {
         const currentStep = await pipelineSteps.next();
 
-
         if (!(currentStep._id in pipelines)) {
           pipelines[currentStep._id] = {
             ...currentStep,
@@ -317,7 +354,7 @@ const resolvers = {
      * @param {string} args.userId Requested user ID, restricted to authenticated user for time being
      * @return {object} Requested user if id present, null otherwise
      */
-    fetchUser: ({ auth: { credentials } }, args) => {
+    fetchUser: (_, args) => {
       return helperFunctions.getUserDetailsByID(args.userId);
     },
     fetchAllUsers: async () => {
@@ -326,7 +363,7 @@ const resolvers = {
       const users = await db.collection('users').find().toArray();
       return transformToClient(users);
     },
-    fetchAllUserRuns: async ({ auth: { credentials } }, args) => {
+    fetchAllUserRuns: async ({ auth: { credentials } }) => {
       const db = database.getDbInstance();
 
       const runs = await db.collection('runs').find({
@@ -347,35 +384,87 @@ const resolvers = {
 
       return transformToClient(threads);
     },
-    validateComputation: (_, args) => {
-      return new Promise();
-    },
+    fetchUsersOnlineStatus: async ({ auth: { credentials } }) => {
+      // Find the users that are in the same consortia as the logged user
+      const db = database.getDbInstance();
+
+      const user = await helperFunctions.getUserDetailsByID(credentials.id);
+
+      const consortiaIds = Object.keys(user.permissions.consortia).map(id => ObjectID(id));
+      const consortia = await db.collection('consortia').find(
+        { _id: { $in: consortiaIds } },
+        { projection: { members: 1 } }
+      ).toArray();
+
+      const allUsersStatus = getOnlineUsers();
+      const relatedUsersStatus = {};
+
+      consortia.forEach((consortium) => {
+        Object.keys(consortium.members).forEach((memberId) => {
+          if (!(memberId in relatedUsersStatus)) {
+            relatedUsersStatus[memberId] = allUsersStatus[memberId] || false;
+          }
+        });
+      });
+
+      return getOnlineUsers();
+    }
   },
   Mutation: {
     /**
      * Add computation to database
      * @param {object} args
      * @param {object} args.computationSchema Computation object to add/update
-     * @return {object} New/updated computation object
+     * @return {object} New computation object
      */
     addComputation: async ({ auth: { credentials } }, args) => {
+      const { permissions } = credentials;
+      const { computationSchema } = args;
+
+      if (!isAllowedForComputationChange(permissions)) {
+        return Boom.forbidden('Action not permitted');
+      }
+
       const db = database.getDbInstance();
 
-      args.computationSchema.id = args.computationSchema.id ? ObjectID(args.computationSchema.id) : new ObjectID();
+      const filteredComputations = await filterComputationsByMetaId(db, computationSchema.meta.id);
 
-      await db.collection('computations').replaceOne({
-        _id: args.computationSchema.id,
-      }, {
-        ...args.computationSchema, submittedBy: ObjectID(credentials.id)
-      }, {
-        upsert: true
-      });
+      if (filteredComputations.length === 0) {
+        const result = await db.collection('computations').insertOne({
+          ...computationSchema,
+          submittedBy: credentials.id,
+        });
 
-      const computation = transformToClient(args.computationSchema);
+        const computation = result.ops[0];
 
-      eventEmitter.emit(COMPUTATION_CHANGED, computation);
+        eventEmitter.emit(COMPUTATION_CHANGED, computation);
 
-      return computation;
+        return transformToClient(computation);
+      }
+
+      if (filteredComputations.length === 1) {
+        const computation = filteredComputations[0];
+
+        if (computation.submittedBy !== credentials.id && !isAdmin(credentials.permissions)) {
+          return Boom.forbidden('Incorrect permissions to update computation');
+        }
+
+        const updatedComputationResult = await db.collection('computations').findOneAndUpdate({
+          _id: ObjectID(computation.id)
+        }, {
+          $set: computationSchema,
+        }, {
+          returnOriginal: false,
+        });
+
+        eventEmitter.emit(COMPUTATION_CHANGED, updatedComputationResult.value);
+
+        return transformToClient(updatedComputationResult.value);
+      }
+
+      if (filteredComputations.length > 1) {
+        return Boom.forbidden('Computation with same meta id already exists.');
+      }
     },
     /**
      * Add new user role to user perms, currently consortia perms only
@@ -384,17 +473,36 @@ const resolvers = {
      * @param {string} args.doc Id of the document to add role to
      * @param {string} args.role Role to add to perms
      * @param {string} args.userId Id of the user to be added
+     * @param {string} args.roleType Type of role to add
      * @return {object} Updated user object
      */
     addUserRole: async ({ auth: { credentials } }, args) => {
-      const { permissions } = credentials
+      const { permissions } = credentials;
 
-      const documentPermissions = permissions[args.table][args.doc];
-      if (!documentPermissions || !documentPermissions.includes('owner')) {
-        return Boom.forbidden('Action not permitted');
+      if (credentials.id === args.userId) {
+        return Boom.forbidden('You cannot change your own permissions');
       }
 
-      await addUserPermissions({ doc: ObjectID(args.doc), role: args.role, userId: ObjectID(args.userId), table: args.table });
+      if (AVAILABLE_ROLE_TYPES.indexOf(args.roleType) === -1) {
+        return Boom.forbidden('Invalid role type');
+      }
+
+      if (args.roleType === 'data') {
+        const documentPermissions = permissions[args.table][args.doc];
+        if (!documentPermissions || !documentPermissions.includes('owner')) {
+          return Boom.forbidden('Action not permitted');
+        }
+
+        await addUserPermissions({ doc: ObjectID(args.doc), role: args.role, userId: ObjectID(args.userId), table: args.table });
+      }
+
+      if (args.roleType === 'app') {
+        if (!isAdmin(permissions) || (AVAILABLE_USER_APP_ROLES.indexOf(args.role) === -1)) {
+          return Boom.forbidden('Action not permitted');
+        }
+
+        await changeUserAppRole(args, 'add');
+      }
 
       return helperFunctions.getUserDetailsByID(args.userId);
     },
@@ -466,9 +574,9 @@ const resolvers = {
 
       const db = database.getDbInstance();
 
-      const deleteConsortiumResult = await db.collection('consortia').findOneAndDelete({ _id: ObjectID(args.consortiumId) });
+      const deletedConsortiumResult = await db.collection('consortia').findOneAndDelete({ _id: ObjectID(args.consortiumId) });
 
-      eventEmitter.emit(CONSORTIUM_DELETED, deleteConsortiumResult.value);
+      eventEmitter.emit(CONSORTIUM_DELETED, deletedConsortiumResult.value);
 
       const userIds = await db.collection('users').find({
         [`permissions.consortia.${args.consortiumId}`]: { $exists: true }
@@ -499,7 +607,7 @@ const resolvers = {
 
       eventEmitter.emit(PIPELINE_DELETED, pipelines);
 
-      return transformToClient(deleteConsortiumResult.value);
+      return transformToClient(deletedConsortiumResult.value);
     },
     /**
      * Deletes pipeline
@@ -540,7 +648,9 @@ const resolvers = {
         returnOriginal: false
       });
 
-      eventEmitter.emit(CONSORTIUM_CHANGED, updateConsortiumResult.value);
+      if (updateConsortiumResult.value) {
+        eventEmitter.emit(CONSORTIUM_CHANGED, updateConsortiumResult.value);
+      }
 
       return transformToClient(deletePipelineResult.value);
     },
@@ -553,7 +663,7 @@ const resolvers = {
      */
     joinConsortium: async ({ auth: { credentials } }, args) => {
       const db = database.getDbInstance();
-      let consortium = await db.collection('consortia').findOne({ _id: ObjectID(args.consortiumId) });
+      const consortium = await db.collection('consortia').findOne({ _id: ObjectID(args.consortiumId) });
 
       if (credentials.id in consortium.members) {
         return consortium;
@@ -584,10 +694,13 @@ const resolvers = {
      */
     removeComputation: async ({ auth: { credentials } }, args) => {
       const db = database.getDbInstance();
-
       const computation = await db.collection('computations').findOne({ _id: ObjectID(args.computationId) });
 
-      if (computation.submittedBy !== credentials.username) {
+      if (!computation) {
+        return Boom.forbidden('Cannot find computation');
+      }
+
+      if (computation.submittedBy !== credentials.username && !isAdmin(credentials.permissions)) {
         return Boom.forbidden('Action not permitted');
       }
 
@@ -605,16 +718,36 @@ const resolvers = {
      * @param {string} args.table Table of the document to add role to
      * @param {string} args.doc Id of the document to add role to
      * @param {string} args.role Role to add to perms
+     * @param {string} args.userId Id of the user to be removed
+     * @param {string} args.roleType Type of role to add
      * @return {object} Updated user object
      */
     removeUserRole: async ({ auth: { credentials } }, args) => {
       const { permissions } = credentials;
 
-      if (!permissions[args.table][args.doc] || !permissions[args.table][args.doc].includes('owner')) {
-        return Boom.forbidden('Action not permitted');
+      if (credentials.id === args.userId) {
+        return Boom.forbidden('You cannot remoe your own permissions');
       }
 
-      await removeUserPermissions({ doc: ObjectID(args.doc), role: args.role, userId: ObjectID(args.userId), table: args.table });
+      if (AVAILABLE_ROLE_TYPES.indexOf(args.roleType) === -1) {
+        return Boom.forbidden('Invalid role type');
+      }
+
+      if (args.roleType === 'data') {
+        if (!permissions[args.table][args.doc] || !permissions[args.table][args.doc].includes('owner')) {
+          return Boom.forbidden('Action not permitted');
+        }
+
+        await removeUserPermissions({ doc: ObjectID(args.doc), role: args.role, userId: ObjectID(args.userId), table: args.table });
+      }
+
+      if (args.roleType === 'app') {
+        if (!isAdmin(permissions) || (AVAILABLE_USER_APP_ROLES.indexOf(args.role) === -1)) {
+          return Boom.forbidden('Action not permitted');
+        }
+
+        await changeUserAppRole(args, 'remove');
+      }
 
       return helperFunctions.getUserDetailsByID(args.userId);
     },
@@ -625,7 +758,7 @@ const resolvers = {
      * @param {string} args.consortiumId Consortium to update
      * @param {string} args.activePipelineId Pipeline ID to mark as active
      */
-    saveActivePipeline: async ({ auth: { credentials } }, args) => {
+    saveActivePipeline: async (_, args) => {
       // const { permissions } = credentials;
       /* TODO: Add permissions
       if (!permissions.consortia.write
@@ -702,6 +835,11 @@ const resolvers = {
       }
 
       const consortium = await db.collection('consortia').findOne({ _id: consortiumData.id });
+
+      if (isUpdate) {
+        eventEmitter.emit(CONSORTIUM_CHANGED, consortium);
+      }
+
       return transformToClient(consortium);
     },
     /**
@@ -751,7 +889,7 @@ const resolvers = {
      * @param {object} args.pipeline Pipeline object to add/update
      * @return {object} New/updated pipeline object
      */
-    savePipeline: async ({ auth: { credentials } }, args) => {
+    savePipeline: async (_, args) => {
       // const { permissions } = credentials;
       /* TODO: Add permissions
       if (!permissions.consortia.write
@@ -841,12 +979,6 @@ const resolvers = {
 
       return transformToClient(result.value);
     },
-    setActiveComputation: (_, args) => {
-      return new Promise();
-    },
-    setComputationInputs: (_, args) => {
-      return new Promise();
-    },
     /**
      * Updates run remote state
      * @param {object} auth User object from JWT middleware validateFunc
@@ -907,13 +1039,21 @@ const resolvers = {
     updateConsortiumMappedUsers: async ({ auth: { credentials } }, args) => {
       const db = database.getDbInstance();
 
+      const updateObj =  {};
+
+      if (args.isMapped) {
+        updateObj.$addToSet = {
+          mappedForRun: credentials.id
+        };
+      } else {
+        updateObj.$pull = {
+          mappedForRun: credentials.id
+        };
+      }
+
       const result = await db.collection('consortia').findOneAndUpdate({
         _id: ObjectID(args.consortiumId)
-      }, {
-        $set: {
-          mappedForRun: args.mappedForRun.map(id => ObjectID(id))
-        }
-      }, {
+      }, updateObj, {
         returnOriginal: false
       });
 
@@ -937,29 +1077,27 @@ const resolvers = {
 
       const consortiaIds = args.consortia.map(id => ObjectID(id));
 
-      const updatedConsortiaIds = await db.collection('consortia').find({
+      const updateObj = {};
+
+      if (args.isMapped) {
+        updateObj.$addToSet = {
+          mappedForRun: credentials.id
+        };
+      } else {
+        updateObj.$pull = {
+          mappedForRun: credentials.id
+        };
+      }
+
+      await db.collection('consortia').updateMany({
         _id: { $in: consortiaIds },
-        mappedForRun: ObjectID(credentials.id)
-      }, {
-        projection: { _id: 1 }
+      }, updateObj);
+
+      const consortia = await db.collection('consortia').find({
+        _id: { $in: consortiaIds }
       }).toArray();
 
-      if (updatedConsortiaIds.length > 0) {
-        await db.collection('consortia').updateMany({
-          _id: { $in: consortiaIds },
-          mappedForRun: ObjectID(credentials.id)
-        }, {
-          $pull: {
-            mappedForRun: ObjectID(credentials.id)
-          }
-        });
-
-        const consortia = await db.collection('consortia').find({
-          _id: { $in: updatedConsortiaIds.map(c => c._id) }
-        });
-
-        eventEmitter.emit(CONSORTIUM_CHANGED, consortia);
-      }
+      eventEmitter.emit(CONSORTIUM_CHANGED, consortia);
     },
     /**
      * Updated user password
@@ -1028,7 +1166,7 @@ const resolvers = {
       let result;
 
       if (threadId) {
-        const thread = await db.collection('threads').findOne({ _id: ObjectID(threadId) });
+        const thread = await db.collection('threads').findOne({ _id: threadId });
 
         const { users } = thread;
 
@@ -1154,7 +1292,7 @@ const resolvers = {
         const issue = new Issue(repository, auth);
 
         await issue.createIssue({ title: `${credentials.username} - ${title}`, body });
-      } catch (error) {
+      } catch {
         return Boom.notAcceptable('Failed to create issue on GitHub');
       }
     },
@@ -1238,6 +1376,36 @@ const resolvers = {
         (payload, variables) => (variables.userId && payload.userRunChanged.clients.indexOf(variables.userId) > -1)
       )
     },
+    /**
+     * Users online status subscription
+     */
+    usersOnlineStatusChanged: {
+      subscribe: () => pubsub.asyncIterator('usersOnlineStatusChanged'),
+      resolve: async (payload, args, context, info) => {
+        // Find the users that are in the same consortia as the logged user
+        const db = database.getDbInstance();
+
+        const user = await helperFunctions.getUserDetailsByID(context.userId);
+
+        const consortiaIds = Object.keys(user.permissions.consortia).map(id => ObjectID(id));
+        const consortia = await db.collection('consortia').find(
+          { _id: { $in: consortiaIds } },
+          { projection: { members: 1 } }
+        ).toArray();
+
+        const usersStatus = {};
+
+        consortia.forEach((consortium) => {
+          Object.keys(consortium.members).forEach((memberId) => {
+            if (!(memberId in usersStatus)) {
+              usersStatus[memberId] = payload.usersOnlineStatusChanged[memberId] || false;
+            }
+          });
+        });
+
+        return usersStatus;
+      },
+    }
   },
 };
 

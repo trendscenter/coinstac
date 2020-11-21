@@ -257,30 +257,10 @@ export const saveDocumentProp = (funcName, objVar) => {
 export const userRolesProp = (name) => {
   return {
     props: ({ mutate }) => ({
-      [name]: (userId, table, doc, role) => mutate({
+      [name]: (userId, table, doc, role, roleType) => mutate({
         variables: {
-          userId, table, doc, role,
+          userId, table, doc, role, roleType,
         },
-      }),
-    }),
-  };
-};
-
-export const updateConsortiumMappedUsersProp = (name) => {
-  return {
-    props: ({ mutate }) => ({
-      [name]: ({ consortiumId, mappedForRun }) => mutate({
-        variables: { consortiumId, mappedForRun },
-      }),
-    }),
-  };
-};
-
-export const updateConsortiaMappedUsersProp = (name) => {
-  return {
-    props: ({ mutate }) => ({
-      [name]: ({ consortia }) => mutate({
-        variables: { consortia },
       }),
     }),
   };
