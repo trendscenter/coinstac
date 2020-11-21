@@ -2,11 +2,12 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 import PropTypes from 'prop-types';
-import Icon from '@material-ui/core/Icon';
+import IconButton from '@material-ui/core/IconButton';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
 import FileCopyIcon from '@material-ui/icons/FileCopy';
+import CancelIcon from '@material-ui/icons/Cancel';
 import classNames from 'classnames';
 
 const styles = theme => ({
@@ -46,6 +47,22 @@ const styles = theme => ({
     width: '1.5rem',
     height: '1.5rem',
   },
+  fileIcon: {
+    position: 'absolute',
+    top: '0.9rem',
+    left: '1rem',
+    fontSize: '1rem',
+  },
+  closeButton: {
+    background: 'white',
+    color: '#f05a29 !important',
+    padding: 0,
+    position: 'absolute',
+    top: '-0.75rem',
+    right: '-0.75rem',
+    width: '1.5rem',
+    height: '1.5rem',
+  },
 });
 
 class MapsStepFieldCovariate extends Component {
@@ -77,6 +94,7 @@ class MapsStepFieldCovariate extends Component {
       unmapField,
     } = this.props;
 
+
     const { name } = step;
 
     const isMapped = !!column;
@@ -98,12 +116,14 @@ class MapsStepFieldCovariate extends Component {
                     className="card-draggable"
                     ref={(ref) => { this.container = ref; }}
                   >
-                    <FileCopyIcon />
+                    <FileCopyIcon className={classes.fileIcon} />
                     { column }
-                    <Icon
-                      className={classNames('fa fa-times-circle', classes.timesIcon)}
+                    <IconButton
+                      className={classes.closeButton}
                       onClick={() => unmapField(type, column)}
-                    />
+                    >
+                      <CancelIcon />
+                    </IconButton>
                   </div>
                 ) : (
                   <div
