@@ -1,14 +1,13 @@
 const hapi = require('@hapi/hapi');
 const nes = require('nes');
-const config = require('./config');
 const routes = require('./routes');
 
 process.LOGLEVEL = 'silly';
 
 const init = async () => {
   const server = hapi.Server({
-    host: config.host,
-    port: config.hapiPort,
+    host: process.env.CLIENT_SERVER_HOSTNAME,
+    port: process.env.CLIENT_SERVER_PORT,
   });
 
   await server.register(nes);

@@ -3,8 +3,6 @@ const axios = require('axios');
 const PipelineManager = require('coinstac-pipeline');
 const { pullImagesFromList, removeImagesFromList } = require('coinstac-docker-manager');
 
-const config = require('./config');
-
 const DELAY = 5000;
 
 const dockerManagers = {};
@@ -17,11 +15,11 @@ async function getDockerManager(clientId) {
   const manager = await PipelineManager.create({
     mode: 'local',
     clientId,
-    operatingDirectory: path.resolve(config.operatingDirectory, 'coinstac'),
+    operatingDirectory: path.resolve(process.env.PIPELINE_SERVER_OPERARTING_DIR, 'coinstac'),
     remotePort: 3400,
-    mqttRemotePort: config.mqttServer.port,
-    mqttRemoteProtocol: config.mqttServer.protocol,
-    mqttRemoteURL: config.mqttServer.hostname,
+    mqttRemotePort: process.env.MQTT_SERVER_PORT,
+    mqttRemoteProtocol: process.env.MQTT_SERVER_PROTOCOL,
+    mqttRemoteURL: process.env.MQTT_SERVER_HOSTNAME,
   });
 
   return manager;
@@ -32,8 +30,10 @@ async function validateToken(authorization) {
     return false;
   }
 
+  const apiServer = `http://${process.env.API_SERVER_HOSTNAME}:${process.env.API_SERVER_PORT}`;
+
   try {
-    await axios.post(`${config.apiServer}/authenticateByToken`, null, { headers: { Authorization: authorization } });
+    await axios.post(`${apiServer}/authenticateByToken`, null, { headers: { Authorization: authorization } });
     return true;
   } catch {
     return false;

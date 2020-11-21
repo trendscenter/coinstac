@@ -1,8 +1,0 @@
-{
-  "mqttServer": {
-    "hostname": "localhost",
-    "pathname": "",
-    "port": "1883",
-    "protocol": "mqtt:"
-  }
-}
