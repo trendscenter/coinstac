@@ -117,7 +117,7 @@ module.exports = (server) => {
 
         function publishData(data) {
           setTimeout(() => {
-            server.publish('/pipelineResult', data);
+            server.publish(`/pipelineResult/${runId}`, data);
           }, DELAY);
         }
 

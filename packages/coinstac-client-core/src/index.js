@@ -56,7 +56,9 @@ class CoinstacClient {
     this.clientId = opts.userId;
     this.token = opts.token;
 
-    this.initializeSocket();
+    if (this.clientServerURL) {
+      this.initializeSocket();
+    }
   }
 
   initialize() {
@@ -79,13 +81,9 @@ class CoinstacClient {
   }
 
   async initializeSocket() {
-    if (!this.clientServerURL) {
-      return;
-    }
+    const websocketURL = `ws://${new URL(this.clientServerURL).host}`;
 
-    const url = this.clientServerURL.replace('https', 'ws').replace('http', 'ws');
-
-    this.socketClient = new nes.Client(url);
+    this.socketClient = new nes.Client(websocketURL);
     await this.socketClient.connect();
   }
 
@@ -281,7 +279,7 @@ class CoinstacClient {
             return string.replace(e, '\\$&');
           };
           if (filesArray) {
-            const stageFiles = process.env.CI ? fs.copy : fs.link
+            const stageFiles = process.env.CI ? fs.copy : fs.link;
             for (let i = 0; i < filesArray.length; i += 1) {
               const pathsep = new RegExp(`${escape(path.sep)}|:`, 'g');
               linkPromises.push(
@@ -318,21 +316,18 @@ class CoinstacClient {
 
           function getResult(socketClient) {
             return new Promise((resResolve, resReject) => {
-              socketClient.subscribe('/pipelineResult', (res) => {
-                if (res.runId !== runId) {
-                  return;
-                }
+              socketClient.subscribe(`/pipelineResult/${runId}`, (res) => {
                 if (res.event === 'update') {
                   stateEmitter.emit('update', res.data);
                 }
 
                 if (res.event === 'result') {
-                  socketClient.unsubscribe('/pipelineResult');
+                  socketClient.unsubscribe(`/pipelineResult/${runId}`);
                   resResolve(res.data);
                 }
 
                 if (res.event === 'error') {
-                  socketClient.unsubscribe('/pipelineResult');
+                  socketClient.unsubscribe(`/pipelineResult/${runId}`);
                   resReject(res.data);
                 }
               });

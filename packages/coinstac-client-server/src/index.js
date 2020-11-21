@@ -17,7 +17,7 @@ const init = async () => {
 
   await server.start();
 
-  server.subscription('/pipelineResult');
+  server.subscription('/pipelineResult/{id}');
 
   console.log(`Server running at: ${server.info.uri}`); // eslint-disable-line no-console
 };
