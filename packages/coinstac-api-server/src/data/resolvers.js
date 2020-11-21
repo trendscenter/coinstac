@@ -534,13 +534,14 @@ const resolvers = {
       try {
         const clientArray = Object.keys(consortium.members);
         const isPipelineDecentralized = pipeline.steps.findIndex(step => step.controller.type === 'decentralized') > -1;
+
         const result = await db.collection('runs').insertOne({
-            clients: clientArray,
-            members: consortium.members,
-            consortiumId,
-            pipelineSnapshot: pipeline,
-            startDate: Date.now(),
-            type: isPipelineDecentralized ? 'decentralized' : 'local',
+          clients: clientArray,
+          members: consortium.members,
+          consortiumId,
+          pipelineSnapshot: pipeline,
+          startDate: Date.now(),
+          type: isPipelineDecentralized ? 'decentralized' : 'local',
         });
 
         const run = transformToClient(result.ops[0]);

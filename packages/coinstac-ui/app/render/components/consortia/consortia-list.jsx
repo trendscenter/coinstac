@@ -37,6 +37,7 @@ import {
   consortiumSaveActivePipelineProp,
 } from '../../state/graphql/props';
 import { notifyInfo, notifyError } from '../../state/ducks/notifyAndLog';
+import { start, finish } from '../../state/ducks/loading';
 import { pipelineNeedsDataMapping } from '../../../main/utils/run-pipeline-functions';
 import { isUserInGroup } from '../../utils/helpers';
 
@@ -393,13 +394,19 @@ class ConsortiaList extends Component {
   }
 
   startPipeline(consortiumId) {
-    return () => {
-      const { createRun, notifyError } = this.props;
+    return async () => {
+      const {
+        createRun, startLoading, finishLoading, notifyError,
+      } = this.props;
 
-      createRun(consortiumId)
-        .catch(({ graphQLErrors }) => {
-          notifyError(get(graphQLErrors, '0.message', 'Failed to start pipeline'));
-        });
+      startLoading('start-pipeline');
+      try {
+        await createRun(consortiumId);
+      } catch ({ graphQLErrors }) {
+        notifyError(get(graphQLErrors, '0.message', 'Failed to start pipeline'));
+      } finally {
+        finishLoading('start-pipeline');
+      }
     };
   }
 
@@ -569,6 +576,8 @@ ConsortiaList.propTypes = {
   notifyInfo: PropTypes.func.isRequired,
   notifyError: PropTypes.func.isRequired,
   pullComputations: PropTypes.func.isRequired,
+  startLoading: PropTypes.func.isRequired,
+  finishLoading: PropTypes.func.isRequired,
   subscribeToUsersOnlineStatus: PropTypes.func.isRequired,
   usersOnlineStatus: PropTypes.object,
 };
@@ -617,5 +626,7 @@ export default withStyles(styles)(
       notifyError,
       pullComputations,
       deleteAllDataMappingsFromConsortium,
+      startLoading: start,
+      finishLoading: finish,
     })(ConsortiaListWithData)
 );

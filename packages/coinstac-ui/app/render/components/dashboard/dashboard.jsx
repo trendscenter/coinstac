@@ -5,12 +5,15 @@ import PropTypes from 'prop-types';
 import { ipcRenderer } from 'electron';
 import { isEqual } from 'lodash';
 import { withStyles } from '@material-ui/core/styles';
-import Drawer from '@material-ui/core/Drawer';
-import Grid from '@material-ui/core/Grid';
-import Icon from '@material-ui/core/Icon';
-import List from '@material-ui/core/List';
-import ListItem from '@material-ui/core/ListItem';
-import Typography from '@material-ui/core/Typography';
+import {
+  Drawer,
+  Grid,
+  Icon,
+  List,
+  ListItem,
+  Typography,
+} from '@material-ui/core';
+import update from 'immutability-helper';
 import DashboardNav from './dashboard-nav';
 import UserAccountController from '../user/user-account-controller';
 import {
@@ -638,9 +641,41 @@ const DashboardWithData = compose(
     'subscribeToComputations',
     'computationChanged'
   )),
-  graphql(FETCH_ALL_USER_RUNS_QUERY, userRunProp(
-    USER_RUN_CHANGED_SUBSCRIPTION
-  )),
+  graphql(FETCH_ALL_USER_RUNS_QUERY, {
+    options: {
+      fetchPolicy: 'cache-and-network',
+      pollInterval: 5000,
+    },
+    props: props => ({
+      remoteRuns: props.data.fetchAllUserRuns,
+      subscribeToUserRuns: userId => props.data.subscribeToMore({
+        document: USER_RUN_CHANGED_SUBSCRIPTION,
+        variables: { userId },
+        updateQuery: (prevResult, { subscriptionData: { data } }) => {
+          const index = prevResult.fetchAllUserRuns.findIndex(c => c.id === data.userRunChanged.id);
+
+          if (data.userRunChanged.delete) {
+            return {
+              fetchAllUserRuns: prevResult.fetchAllUserRuns
+                .filter(obj => obj.id !== data.userRunChanged.id),
+            };
+          } if (index !== -1) {
+            return {
+              fetchAllUserRuns: update(prevResult.fetchAllUserRuns, {
+                $splice: [
+                  [index, 1, data.userRunChanged],
+                ],
+              }),
+            };
+          }
+
+          return {
+            fetchAllUserRuns: [...prevResult.fetchAllUserRuns, data.userRunChanged],
+          };
+        },
+      }),
+    }),
+  }),
   graphql(FETCH_ALL_CONSORTIA_QUERY, getAllAndSubProp(
     CONSORTIUM_CHANGED_SUBSCRIPTION,
     'consortia',
