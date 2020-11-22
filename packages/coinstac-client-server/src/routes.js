@@ -25,9 +25,11 @@ async function getDockerManager(clientId) {
   return manager;
 }
 
-async function validateToken(authorization) {
+const validateToken = async (req, h) => {
+  const { headers: { authorization } } = req;
+
   if (!authorization) {
-    return false;
+    return h.response('Invalid token.').code(400).takeover();
   }
 
   const apiServer = `http://${process.env.API_SERVER_HOSTNAME}:${process.env.API_SERVER_PORT}`;
@@ -36,126 +38,128 @@ async function validateToken(authorization) {
     await axios.post(`${apiServer}/authenticateByToken`, null, { headers: { Authorization: authorization } });
     return true;
   } catch {
-    return false;
+    return h.response('Invalid token.').code(400).takeover();
   }
-}
+};
 
 module.exports = (server) => {
   return [
     {
       method: 'POST',
       path: '/pullImages',
-      handler: async (req, h) => {
-        const tokenIsValid = await validateToken(req.headers.authorization);
+      options: {
+        pre: [
+          { method: validateToken },
+        ],
+        handler: async (req, h) => {
+          try {
+            const { payload: { images } } = req;
 
-        if (!tokenIsValid) {
-          return h.response('Invalid token.').code(400);
-        }
-
-        const { payload: { images } } = req;
-
-        try {
-          await pullImagesFromList(images);
-          return h.response('Pulled images.').code(200);
-        } catch (error) {
-          return h.response(error.message).code(400);
-        }
+            await pullImagesFromList(images);
+            return h.response('Pulled images.').code(200);
+          } catch (error) {
+            return h.response(error.message).code(400);
+          }
+        },
       },
     },
     {
       method: 'POST',
       path: '/removeImages',
-      handler: async (req, h) => {
-        const tokenIsValid = await validateToken(req.headers.authorization);
+      options: {
+        pre: [
+          { method: validateToken },
+        ],
+        handler: async (req, h) => {
+          try {
+            const { payload: { images } } = req;
 
-        if (!tokenIsValid) {
-          return h.response('Invalid token.').code(400);
-        }
-
-        const { payload: { images } } = req;
-
-        try {
-          await removeImagesFromList(images);
-          return h.response('Removed images.').code(200);
-        } catch (error) {
-          return h.response(error.message).code(400);
-        }
+            await removeImagesFromList(images);
+            return h.response('Removed images.').code(200);
+          } catch (error) {
+            return h.response(error.message).code(400);
+          }
+        },
       },
     },
     {
       method: 'POST',
       path: '/startPipeline/{clientId}',
-      handler: async (req, h) => {
-        const tokenIsValid = await validateToken(req.headers.authorization);
+      options: {
+        pre: [
+          { method: validateToken },
+        ],
+        handler: async (req, h) => {
+          try {
+            const { clientId } = req.params;
 
-        if (!tokenIsValid) {
-          return h.response('Invalid token.').code(400);
-        }
+            const remotePipelineManager = await getDockerManager(clientId);
 
-        const { clientId } = req.params;
+            const { payload: { run } } = req;
+            const computationImageList = run.pipelineSnapshot.steps
+              .map(step => step.computations
+                .map(comp => comp.computation.dockerImage))
+              .reduce((acc, val) => acc.concat(val), []);
 
-        const remotePipelineManager = await getDockerManager(clientId);
+            await pullImagesFromList(computationImageList);
 
-        const { payload: { run } } = req;
-        const computationImageList = run.pipelineSnapshot.steps
-          .map(step => step.computations
-            .map(comp => comp.computation.dockerImage))
-          .reduce((acc, val) => acc.concat(val), []);
+            const { runId } = run;
 
-        await pullImagesFromList(computationImageList);
+            const managerResponse = remotePipelineManager.startPipeline({
+              clients: run.clients,
+              spec: run.pipelineSnapshot,
+              runId,
+              timeout: run.timeout,
+            });
 
-        const { runId } = run;
+            const { pipeline, result, stateEmitter } = managerResponse;
 
-        const managerResponse = remotePipelineManager.startPipeline({
-          clients: run.clients,
-          spec: run.pipelineSnapshot,
-          runId,
-          timeout: run.timeout,
-        });
+            function publishData(data) { // eslint-disable-line no-inner-declarations
+              setTimeout(() => {
+                server.publish(`/pipelineResult/${runId}`, data);
+              }, DELAY);
+            }
 
-        const { pipeline, result, stateEmitter } = managerResponse;
+            stateEmitter.on('update', (data) => {
+              publishData({ runId, data, event: 'update' });
+            });
 
-        function publishData(data) {
-          setTimeout(() => {
-            server.publish(`/pipelineResult/${runId}`, data);
-          }, DELAY);
-        }
+            result
+              .then((result) => {
+                publishData({ runId, data: result, event: 'result' });
+              })
+              .catch((error) => {
+                publishData({ runId, data: error, event: 'error' });
+              });
 
-        stateEmitter.on('update', (data) => {
-          publishData({ runId, data, event: 'update' });
-        });
-
-        result
-          .then((result) => {
-            publishData({ runId, data: result, event: 'result' });
-          })
-          .catch((error) => {
-            publishData({ runId, data: error, event: 'error' });
-          });
-
-        return h.response({ pipeline }).code(201);
+            return h.response({ pipeline }).code(201);
+          } catch (error) {
+            return h.response(error.message).code(400);
+          }
+        },
       },
     },
     {
       method: 'PATCH',
       path: '/stopPipeline/{clientId}/{runId}',
-      handler: async (req, h) => {
-        const tokenIsValid = await validateToken(req.headers.authorization);
+      options: {
+        pre: [
+          { method: validateToken },
+        ],
+        handler: async (req, h) => {
+          const { clientId, runId } = req.params;
 
-        if (!tokenIsValid) {
-          return h.response('Invalid token.').code(400);
-        }
+          try {
+            await validateToken(req.headers.authorization);
 
-        const { clientId, runId } = req.params;
+            const remotePipelineManager = await getDockerManager(clientId, runId);
 
-        try {
-          const remotePipelineManager = await getDockerManager(clientId, runId);
-
-          await remotePipelineManager.stopPipeline('', runId);
-          return h.response('Stopped pipeline.').code(200);
-        } catch (error) {
-          return h.response(error.message).code(400);
-        }
+            await remotePipelineManager.stopPipeline('', runId);
+            return h.response('Stopped pipeline.').code(200);
+          } catch (error) {
+            return h.response(error.message).code(400);
+          }
+        },
       },
     },
   ];
