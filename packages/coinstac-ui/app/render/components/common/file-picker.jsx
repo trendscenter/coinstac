@@ -51,12 +51,12 @@ async function openFileDialog(multiple, directory, extensions, filterName) {
     properties.push('multiSelections');
   }
 
-  const selectedFiles = await remote.dialog.showOpenDialog({
+  const result = await remote.dialog.showOpenDialog({
     filters,
     properties,
   });
 
-  return selectedFiles || [];
+  return result.canceled ? null : result.filePaths;
 }
 
 function FilePicker({
@@ -75,9 +75,11 @@ function FilePicker({
           onClick={async () => {
             const selectedFiles = await openFileDialog(multiple, directory, extensions, filterName);
 
-            const newFiles = files.concat(selectedFiles);
-            setFiles(newFiles);
-            onChange(newFiles);
+            if (selectedFiles) {
+              const newFiles = files.concat(selectedFiles);
+              setFiles(newFiles);
+              onChange(newFiles);
+            }
           }}
         >
           { directory ? 'Select Directory(s)' : 'Select File(s)' }

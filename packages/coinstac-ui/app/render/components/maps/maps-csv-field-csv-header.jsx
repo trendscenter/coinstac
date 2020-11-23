@@ -1,6 +1,16 @@
 import React from 'react';
 import { Typography } from '@material-ui/core';
 import FileCopyIcon from '@material-ui/icons/FileCopy';
+import { withStyles } from '@material-ui/core/styles';
+
+const styles = () => ({
+  fileIcon: {
+    position: 'absolute',
+    top: '0.9rem',
+    left: '1rem',
+    fontSize: '1rem',
+  },
+});
 
 class MapsCsvFieldCsvHeader extends React.Component {
   componentDidMount() {
@@ -27,7 +37,7 @@ class MapsCsvFieldCsvHeader extends React.Component {
                 data-string={columnName}
                 key={columnName}
               >
-                <FileCopyIcon />
+                <FileCopyIcon className={classes.fileIcon} />
                 { columnName }
               </div>
             ))
@@ -38,4 +48,4 @@ class MapsCsvFieldCsvHeader extends React.Component {
   }
 }
 
-export default MapsCsvFieldCsvHeader;
+export default withStyles(styles)(MapsCsvFieldCsvHeader);

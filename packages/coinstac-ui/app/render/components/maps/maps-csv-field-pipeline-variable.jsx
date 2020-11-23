@@ -1,7 +1,8 @@
 import React, { useRef, useEffect } from 'react';
 import Typography from '@material-ui/core/Typography';
+import IconButton from '@material-ui/core/IconButton';
 import FileCopyIcon from '@material-ui/icons/FileCopy';
-import Icon from '@material-ui/core/Icon';
+import CancelIcon from '@material-ui/icons/Cancel';
 import { withStyles } from '@material-ui/core/styles';
 import classNames from 'classnames';
 
@@ -24,15 +25,19 @@ const styles = theme => ({
   dropZone: {
     flex: '1 0 auto',
   },
-  timesIcon: {
+  fileIcon: {
+    position: 'absolute',
+    top: '0.9rem',
+    left: '1rem',
+    fontSize: '1rem',
+  },
+  closeButton: {
+    background: 'white',
     color: '#f05a29 !important',
-    fontSize: '1.25rem',
+    padding: 0,
     position: 'absolute',
     top: '-0.75rem',
     right: '-0.75rem',
-    background: 'white',
-    borderRadius: '50%',
-    border: '2px solid white',
     width: '1.5rem',
     height: '1.5rem',
   },
@@ -64,12 +69,14 @@ function MapsCsvFieldPipelineVariable({
             {
               mappedColumn && (
                 <div className="card-draggable">
-                  <FileCopyIcon />
+                  <FileCopyIcon className={classes.fileIcon} />
                   { mappedColumn }
-                  <Icon
-                    className={classNames('fa fa-times-circle', classes.timesIcon)}
+                  <IconButton
+                    className={classes.closeButton}
                     onClick={() => unmapField(name, mappedColumn)}
-                  />
+                  >
+                    <CancelIcon />
+                  </IconButton>
                 </div>
               )
             }
