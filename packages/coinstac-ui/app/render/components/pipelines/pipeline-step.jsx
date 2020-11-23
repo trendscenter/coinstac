@@ -5,9 +5,9 @@ import PropTypes from 'prop-types';
 import { compose } from 'redux';
 import { graphql } from 'react-apollo';
 import Button from '@material-ui/core/Button';
-import ExpansionPanel from '@material-ui/core/ExpansionPanel';
-import ExpansionPanelSummary from '@material-ui/core/ExpansionPanelSummary';
-import ExpansionPanelDetails from '@material-ui/core/ExpansionPanelDetails';
+import Accordion from '@material-ui/core/Accordion';
+import AccordionSummary from '@material-ui/core/AccordionSummary';
+import AccordionDetails from '@material-ui/core/AccordionDetails';
 import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
@@ -16,8 +16,11 @@ import PipelineStepInput from './pipeline-step-input';
 import { FETCH_COMPUTATION_QUERY } from '../../state/graphql/functions';
 import { compIOProp } from '../../state/graphql/props';
 
-const styles = () => ({
-  expansionPanelContent: {
+const styles = theme => ({
+  pipelineStep: {
+    marginBottom: theme.spacing(2),
+  },
+  accordionPanelContent: {
     display: 'block',
   },
   inputParametersContainer: {
@@ -87,7 +90,7 @@ class PipelineStep extends Component {
     const { compIO, possibleInputs, step } = this.props;
 
     if (!prevProps.possibleInputs && possibleInputs) {
-      this.orderComputations();
+      this.orderComputations(possibleInputs);
     }
 
     if (!prevProps.compIO && compIO) {
@@ -100,6 +103,72 @@ class PipelineStep extends Component {
   }
 
   orderComputations = (possibleInputs) => {
+    const { previousComputationIds } = this.props;
+
+    const orderedInputs = previousComputationIds.map((prevComp, possibleInputIndex) => {
+      const comp = possibleInputs.find(pI => pI.id === prevComp);
+      return {
+        inputs: comp ? comp.computation.output : [],
+        possibleInputIndex,
+      };
+    });
+
+    this.setState({ orderedInputs });
+  }
+
+  groupInputs = (compIO) => {
+    const compInputs = Object.keys(compIO.computation.input)
+      .map(inputKey => ({
+        key: inputKey,
+        value: compIO.computation.input[inputKey],
+      }))
+      .sort((a, b) => a.value.order - b.value.order);
+
+    const inputGroups = compInputs.reduce((acc, inputField) => {
+      if (!inputField.value.group) {
+        return acc;
+      }
+
+      if (!acc[inputField.value.group]) {
+        acc[inputField.value.group] = [];
+      }
+
+      acc[inputField.value.group].push(inputField);
+
+      return acc;
+    }, {});
+
+    this.setState({
+      compInputs,
+      inputGroups,
+    });
+  }
+
+  fillDefaultValues = (compIO) => {
+    const { updateStep, step } = this.props;
+
+    const defaultInputs = {};
+
+    Object.keys(compIO.computation.input).forEach((inputFieldKey) => {
+      const inputField = compIO.computation.input[inputFieldKey];
+
+      if ('default' in inputField) {
+        defaultInputs[inputFieldKey] = {
+          value: inputField.default,
+        };
+      }
+    });
+
+    if (Object.keys(defaultInputs).length > 0) {
+      updateStep({
+        ...step,
+        inputMap: defaultInputs,
+      });
+    }
+  }
+
+  // eslint-disable-next-line
+  UNSAFE_componentWillReceiveProps(nextProps) {
     const { previousComputationIds } = this.props;
 
     const orderedInputs = previousComputationIds.map((prevComp, possibleInputIndex) => {
@@ -176,9 +245,9 @@ class PipelineStep extends Component {
               <Typography key={`${id}-${localOutput[0]}-output`} variant="body2">
                 {localOutput[1].label}
                 {' '}
-(
+                (
                 {localOutput[1].type}
-)
+                )
               </Typography>
             )];
 
@@ -230,12 +299,12 @@ class PipelineStep extends Component {
     const { compInputs, inputGroups } = this.state;
 
     return connectDragSource(connectDropTarget(
-      <div key={`step-${step.id}`}>
-        <ExpansionPanel className="pipeline-step" style={{ ...styles.draggable, opacity: isDragging ? 0 : 1 }}>
-          <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
+      <div className={classes.pipelineStep} key={`step-${step.id}`}>
+        <Accordion className="pipeline-step" style={{ ...styles.draggable, opacity: isDragging ? 0 : 1 }}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography variant="h5">{step.computations[0].meta.name}</Typography>
-          </ExpansionPanelSummary>
-          <ExpansionPanelDetails className={classes.expansionPanelContent} key={`step-exp-${step.id}`}>
+          </AccordionSummary>
+          <AccordionDetails className={classes.accordionPanelContent} key={`step-exp-${step.id}`}>
             <div className={classes.inputParametersContainer}>
               <Typography variant="h6">Input Parameters:</Typography>
               <Button
@@ -259,7 +328,7 @@ class PipelineStep extends Component {
                   const items = group[1];
 
                   return (
-                    <ExpansionPanel
+                    <Accordion
                       key={name}
                       className="pipeline-step"
                       style={{
@@ -268,23 +337,23 @@ class PipelineStep extends Component {
                         margin: '1rem 0',
                       }}
                     >
-                      <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
+                      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                         <span>
                           {`${capitalize(name)} Fields`}
                         </span>
-                      </ExpansionPanelSummary>
-                      <ExpansionPanelDetails className={classes.expansionPanelContent}>
+                      </AccordionSummary>
+                      <AccordionDetails className={classes.accordionContent}>
                         {items && items.map(this.renderPipelineStepInput)}
-                      </ExpansionPanelDetails>
-                    </ExpansionPanel>
+                      </AccordionDetails>
+                    </Accordion>
                   );
                 })
               }
             </div>
             <Typography variant="h6">Output:</Typography>
             {compIO && this.showOutput(10, step.id, compIO.computation.output)}
-          </ExpansionPanelDetails>
-        </ExpansionPanel>
+          </AccordionDetails>
+        </Accordion>
       </div>
     ));
   }

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { compose, graphql, withApollo } from 'react-apollo';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { Link } from 'react-router';
@@ -6,9 +7,12 @@ import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
 import MapsEditForm from './maps-edit-form';
 import { saveDataMapping } from '../../state/ducks/maps';
+import {
+  UPDATE_CONSORTIUM_MAPPED_USERS_MUTATION,
+} from '../../state/graphql/functions';
 
 function MapsEdit({
-  params, maps, pipelines, consortia, saveDataMapping,
+  params, maps, pipelines, consortia, saveDataMapping, updateConsortiumMappedUsers
 }) {
   const [isMapped, setIsMapped] = useState(false);
   const [consortium, setConsortium] = useState(null);
@@ -38,6 +42,7 @@ function MapsEdit({
   function commitSaveDataMap() {
     setIsMapped(true);
     saveDataMapping(consortium.id, pipeline.id, dataMap);
+    updateConsortiumMappedUsers(consortium.id, true);
   }
 
   return (
@@ -82,6 +87,7 @@ MapsEdit.propTypes = {
   pipelines: PropTypes.array.isRequired,
   consortia: PropTypes.array.isRequired,
   saveDataMapping: PropTypes.func.isRequired,
+  updateConsortiumMappedUsers: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = ({ auth, maps }) => ({
@@ -89,7 +95,20 @@ const mapStateToProps = ({ auth, maps }) => ({
   maps: maps.consortiumDataMappings,
 });
 
+const ComponentWithData = compose(
+  graphql(
+    UPDATE_CONSORTIUM_MAPPED_USERS_MUTATION, {
+      props: ({ mutate }) => ({
+        updateConsortiumMappedUsers: (consortiumId, isMapped) => mutate({
+          variables: { consortiumId, isMapped },
+        }),
+      }),
+    }
+  ),
+  withApollo
+)(MapsEdit);
+
 export default connect(mapStateToProps,
   {
     saveDataMapping,
-  })(MapsEdit);
+  })(ComponentWithData);

@@ -1,5 +1,3 @@
-require('trace');
-require('clarify');
 const database = require('../src/database');
 const helperFunctions = require('../src/auth-helpers');
 
@@ -20,8 +18,8 @@ const vbm = require('./data/coinstac-vbm-pre');
 const fmri = require('./data/coinstac-fmri');
 
 const decentralized = require('./data/coinstac-decentralized-test');
-const transfer = require('./data/coinstac-file-transfer-test');
-const stress = require('./data/coinstac-file-stress-test');
+// const transfer = require('./data/coinstac-file-transfer-test');
+// const stress = require('./data/coinstac-file-stress-test');
 const decentralizedError = require('./data/coinstac-decentralized-error');
 const enigmaSans = require('./data/coinstac-enigma-sans');
 const local = require('./data/coinstac-local-test');
@@ -61,6 +59,13 @@ const COMPUTATION_IDS = [
 const USER_IDS = [
   database.createUniqueId(),
   database.createUniqueId(),
+  database.createUniqueId(),
+  database.createUniqueId(),
+  database.createUniqueId(),
+  database.createUniqueId(),
+];
+
+const RUN_IDS = [
   database.createUniqueId(),
   database.createUniqueId(),
   database.createUniqueId(),
@@ -231,12 +236,14 @@ async function populateRuns() {
 
   db.collection('runs').insertMany([
     {
-      clients: {
-        [USER_IDS[0]]: 'test1',
-      },
+      _id: RUN_IDS[0],
+      clients: [
+        USER_IDS[0].toHexString(),
+      ],
+      members: [USER_IDS[0]],
       consortiumId: CONSORTIA_IDS[1],
       pipelineSnapshot: {
-        id: '52d44390-07a5-4b8c-85c9-e22821ce7183',
+        id: PIPELINE_IDS[0].toHexString(),
         delete: false,
         description: '',
         name: 'VBM Pre',
@@ -348,10 +355,11 @@ async function populateRuns() {
       },
     },
     {
-      id: 'b23af8ff-18fa-479d-adc7-19408abb3741',
-      clients: {
-        [USER_IDS[0]]: 'test1',
-      },
+      _id: RUN_IDS[1],
+      clients: [
+        USER_IDS[0].toHexString(),
+      ],
+      members: [USER_IDS[0]],
       consortiumId: CONSORTIA_IDS[1],
       startDate: '1568405561851',
       endDate: '1568408608526',
@@ -559,9 +567,10 @@ async function populateRuns() {
     },
     {
       id: 'results-2',
-      clients: {
-        [USER_IDS[0]]: 'test1',
-      },
+      clients: [
+        USER_IDS[0].toHexString(),
+      ],
+      members: [USER_IDS[0]],
       consortiumId: CONSORTIA_IDS[1],
       startDate: '1518559440672',
       endDate: '1518559440685',
@@ -644,10 +653,11 @@ async function populateRuns() {
       status: 'complete',
     },
     {
-      id: 'results-1',
-      clients: {
-        [USER_IDS[0]]: 'test1',
-      },
+      _id: RUN_IDS[2],
+      clients: [
+        USER_IDS[0].toHexString(),
+      ],
+      members: [USER_IDS[0]],
       consortiumId: CONSORTIA_IDS[1],
       startDate: '1518559440668',
       endDate: '1551465751260',
@@ -825,6 +835,10 @@ async function populateUsers() {
         [CONSORTIA_IDS[1]]: ['owner', 'member'],
       },
       pipelines: {},
+      roles: {
+        admin: true,
+        author: true,
+      },
     },
     consortiaStatuses: {
       [CONSORTIA_IDS[0]]: 'none',
@@ -845,6 +859,10 @@ async function populateUsers() {
         [CONSORTIA_IDS[1]]: ['member'],
       },
       pipelines: {},
+      roles: {
+        admin: false,
+        author: true,
+      },
     },
     consortiaStatuses: {
       [CONSORTIA_IDS[0]]: 'none',
@@ -865,6 +883,10 @@ async function populateUsers() {
         [CONSORTIA_IDS[1]]: ['member'],
       },
       pipelines: {},
+      roles: {
+        admin: false,
+        author: false,
+      },
     },
     consortiaStatuses: {
       [CONSORTIA_IDS[0]]: 'none',
@@ -885,6 +907,10 @@ async function populateUsers() {
         [CONSORTIA_IDS[1]]: ['member'],
       },
       pipelines: {},
+      roles: {
+        admin: true,
+        author: true,
+      },
     },
     consortiaStatuses: {
       [CONSORTIA_IDS[0]]: 'none',
@@ -905,6 +931,10 @@ async function populateUsers() {
         [CONSORTIA_IDS[1]]: ['member'],
       },
       pipelines: {},
+      roles: {
+        admin: false,
+        author: true,
+      },
     },
     consortiaStatuses: {
       [CONSORTIA_IDS[0]]: 'none',
@@ -925,6 +955,10 @@ async function populateUsers() {
         [CONSORTIA_IDS[1]]: ['member'],
       },
       pipelines: {},
+      roles: {
+        admin: false,
+        author: false,
+      },
     },
   }, password);
 
@@ -941,6 +975,10 @@ async function populateUsers() {
       computations: {},
       consortia: {},
       pipelines: {},
+      roles: {
+        admin: true,
+        author: false,
+      },
     },
     consortiaStatuses: {
       [CONSORTIA_IDS[0]]: 'none',
@@ -949,7 +987,7 @@ async function populateUsers() {
   }, adminPassword);
 }
 
-async function populate() {
+async function populate(closeConnection = true) {
   await database.connect();
 
   database.dropDbInstance();
@@ -960,7 +998,16 @@ async function populate() {
   await populateRuns();
   await populateUsers();
 
-  database.close();
+  if (closeConnection) {
+    await database.close();
+  }
 }
 
-populate();
+module.exports = {
+  CONSORTIA_IDS,
+  COMPUTATION_IDS,
+  PIPELINE_IDS,
+  USER_IDS,
+  RUN_IDS,
+  populate,
+};

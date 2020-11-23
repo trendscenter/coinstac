@@ -17,11 +17,11 @@ const styles = theme => ({
     marginBottom: theme.spacing(2),
   },
   removeDataTitle: {
-    marginBottom: theme.spacing.unit,
+    marginBottom: theme.spacing(1),
   },
   updatePasswordTitle: {
-    marginTop: theme.spacing.unit * 5,
-    marginBottom: theme.spacing.unit,
+    marginTop: theme.spacing(5),
+    marginBottom: theme.spacing(1),
   },
   sectionTitle: {
     marginBottom: theme.spacing(1),
@@ -30,17 +30,17 @@ const styles = theme => ({
     marginTop: theme.spacing(1),
   },
   formControl: {
-    marginBottom: theme.spacing.unit,
+    marginBottom: theme.spacing(1),
     display: 'block',
   },
   spinner: {
     color: theme.palette.grey[500],
-    marginLeft: theme.spacing.unit * 2,
+    marginLeft: theme.spacing(2),
   },
   buttonWrapper: {
     display: 'flex',
     alignItems: 'center',
-    marginTop: theme.spacing.unit * 2,
+    marginTop: theme.spacing(2),
   },
 });
 

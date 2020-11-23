@@ -92,13 +92,17 @@ const initCoreAndSetToken = async (reqUser, data, appDirectory, dispatch) => {
   });
 };
 
-export const logout = applyAsyncLoading(() => (dispatch) => {
+export const logout = applyAsyncLoading(() => async (dispatch, getState) => {
   localStorage.removeItem(API_TOKEN_KEY);
   sessionStorage.removeItem(API_TOKEN_KEY);
-  return ipcPromise.send('logout')
-    .then(() => {
-      dispatch(clearUser());
-    });
+
+  const { auth: { user } } = getState();
+
+  await axios.post(`${API_URL}/logout`, { username: user.username });
+
+  await ipcPromise.send('logout');
+
+  dispatch(clearUser());
 });
 
 export const autoLogin = applyAsyncLoading(() => (dispatch, getState) => {
@@ -149,7 +153,7 @@ export const autoLogin = applyAsyncLoading(() => (dispatch, getState) => {
 
 export const checkApiVersion = applyAsyncLoading(() => dispatch => axios.get(`${API_URL}/version`)
   .then(({ data }) => {
-    const versionsMatch = process.env.NODE_ENV !== 'production' || data === remote.app.getVersion();
+    const versionsMatch = remote.process.env.NODE_ENV !== 'production' || data === remote.app.getVersion();
     dispatch(setApiVersionCheck(versionsMatch));
   })
   .catch(() => {

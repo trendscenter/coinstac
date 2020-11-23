@@ -372,7 +372,7 @@ Result.propTypes = {
   auth: PropTypes.object.isRequired,
   classes: PropTypes.object.isRequired,
   consortia: PropTypes.array.isRequired,
-  runs: PropTypes.object.isRequired,
+  runs: PropTypes.array.isRequired,
   params: PropTypes.object.isRequired,
 };
 

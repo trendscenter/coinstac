@@ -83,9 +83,11 @@ class ConsortiumAbout extends Component {
 
     if (owner && consUser.id !== user.id) {
       if (consUser.owner) {
-        removeUserRole(consUser.id, 'consortia', consortium.id, 'owner');
+        removeUserRole(consUser.id, 'consortia', consortium.id, 'owner', 'data');
+        addUserRole(consUser.id, 'consortia', consortium.id, 'member', 'data');
       } else {
-        addUserRole(consUser.id, 'consortia', consortium.id, 'owner');
+        addUserRole(consUser.id, 'consortia', consortium.id, 'owner', 'data');
+        removeUserRole(consUser.id, 'consortia', consortium.id, 'member', 'data');
       }
     }
   }
@@ -100,7 +102,7 @@ class ConsortiumAbout extends Component {
 
     this.setState({ isAddingMember: true });
 
-    addUserRole(newMember.value, 'consortia', consortium.id, 'member')
+    addUserRole(newMember.value, 'consortia', consortium.id, 'member', 'data')
       .then(() => {
         this.setState({ newMember: null });
       })
@@ -112,8 +114,8 @@ class ConsortiumAbout extends Component {
   removeMember = (user) => {
     const { consortium, removeUserRole } = this.props;
 
-    removeUserRole(user.id, 'consortia', consortium.id, 'owner');
-    removeUserRole(user.id, 'consortia', consortium.id, 'member');
+    removeUserRole(user.id, 'consortia', consortium.id, 'owner', 'data');
+    removeUserRole(user.id, 'consortia', consortium.id, 'member', 'data');
   }
 
   render() {
