@@ -2,12 +2,6 @@ import { indexOf } from 'lodash';
 import fs from 'fs';
 import CsvReadableStream from 'csv-reader';
 
-const COMP_INPUT_NEED_USER_DATA = [
-  'csv',
-  'freesurfer',
-  'files',
-];
-
 export function isPipelineOwner(permissions, owningConsortium) {
   return indexOf(permissions.consortia[owningConsortium], 'owner') !== -1;
 }
@@ -23,10 +17,7 @@ export function pipelineNeedsDataMapping(pipeline) {
     const inputMapSchemaKeys = Object.keys(step.inputMap);
 
     inputMapSchemaKeys.forEach((inputSchemaKey) => {
-      const compInputField = step.computations[0].computation.input[inputSchemaKey];
-      const compInputFieldType = compInputField.type.toLowerCase();
-
-      if (COMP_INPUT_NEED_USER_DATA.includes(compInputFieldType)) {
+      if (!step.inputMap[inputSchemaKey].fulfilled) {
         needsDataMapping = true;
       }
     });
