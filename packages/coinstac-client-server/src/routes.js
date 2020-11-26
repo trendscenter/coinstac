@@ -3,8 +3,6 @@ const axios = require('axios');
 const PipelineManager = require('coinstac-pipeline');
 const { pullImagesFromList, removeImagesFromList } = require('coinstac-docker-manager');
 
-const DELAY = 5000;
-
 const dockerManagers = {};
 
 async function getDockerManager(clientId) {
@@ -91,19 +89,35 @@ module.exports = (server) => {
         ],
         handler: async (req, h) => {
           try {
-            const { clientId } = req.params;
+            const { payload: { run }, params: { clientId } } = req;
+            const { runId } = run;
+
+            let subscribed = false;
+            const dataQueue = [];
+
+            const subscriptionURL = `/pipelineResult/${runId}`;
+
+            server.subscription(subscriptionURL, {
+              onSubscribe: () => {
+                subscribed = true;
+
+                dataQueue.forEach((data) => {
+                  server.publish(subscriptionURL, data);
+                });
+              },
+              onUnsubscribe: () => {
+                subscribed = false;
+              },
+            });
 
             const remotePipelineManager = await getDockerManager(clientId);
 
-            const { payload: { run } } = req;
             const computationImageList = run.pipelineSnapshot.steps
               .map(step => step.computations
                 .map(comp => comp.computation.dockerImage))
               .reduce((acc, val) => acc.concat(val), []);
 
             await pullImagesFromList(computationImageList);
-
-            const { runId } = run;
 
             const managerResponse = remotePipelineManager.startPipeline({
               clients: run.clients,
@@ -115,9 +129,11 @@ module.exports = (server) => {
             const { pipeline, result, stateEmitter } = managerResponse;
 
             function publishData(data) { // eslint-disable-line no-inner-declarations
-              setTimeout(() => {
-                server.publish(`/pipelineResult/${runId}`, data);
-              }, DELAY);
+              if (subscribed) {
+                server.publish(subscriptionURL, data);
+              } else {
+                dataQueue.push(data);
+              }
             }
 
             stateEmitter.on('update', (data) => {
