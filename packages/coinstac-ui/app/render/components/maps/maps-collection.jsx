@@ -1,17 +1,17 @@
 /* eslint-disable react/no-find-dom-node */
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
-import Icon from '@material-ui/core/Icon';
 import Paper from '@material-ui/core/Paper';
 import Button from '@material-ui/core/Button';
 import Divider from '@material-ui/core/Divider';
+import IconButton from '@material-ui/core/IconButton';
 import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
 import FileCopyIcon from '@material-ui/icons/FileCopy';
 import DeleteIcon from '@material-ui/icons/Delete';
+import CancelIcon from '@material-ui/icons/Cancel';
 import PropTypes from 'prop-types';
 import bitap from 'bitap';
-import classNames from 'classnames';
 import memoize from 'memoize-one';
 import MapsFilePicker from './maps-file-picker';
 
@@ -50,6 +50,22 @@ const styles = theme => ({
     background: 'white',
     borderRadius: '50%',
     border: '2px solid white',
+    width: '1.5rem',
+    height: '1.5rem',
+  },
+  fileIcon: {
+    position: 'absolute',
+    top: '0.9rem',
+    left: '1rem',
+    fontSize: '1rem',
+  },
+  closeButton: {
+    background: 'white',
+    color: '#f05a29 !important',
+    padding: 0,
+    position: 'absolute',
+    top: '-0.75rem',
+    right: '-0.75rem',
     width: '1.5rem',
     height: '1.5rem',
   },
@@ -286,13 +302,15 @@ class MapsCollection extends Component {
                               data-string={columnName}
                               key={columnName}
                             >
-                              <FileCopyIcon />
+                              <FileCopyIcon className={classes.fileIcon} />
                               { columnName }
                               { dataType !== 'array' ? `Bundle (${dataFile.files.length} files)` : '' }
-                              <Icon
-                                className={classNames('fa fa-times-circle', classes.timesIcon)}
+                              <IconButton
+                                className={classes.closeButton}
                                 onClick={() => removeColumnFromDataFileHeader(columnName)}
-                              />
+                              >
+                                <CancelIcon />
+                              </IconButton>
                             </div>
                           ))
                         }
@@ -303,11 +321,14 @@ class MapsCollection extends Component {
                               data-string={filePath}
                               key={getFileName(filePath)}
                             >
-                              <FileCopyIcon />
+                              <FileCopyIcon className={classes.fileIcon} />
                               { getFileName(filePath) }
-                              <span onClick={() => removeColumnFromDataFileHeader(filePath)}>
-                                <Icon className={classNames('fa fa-times-circle', classes.timesIcon)} />
-                              </span>
+                              <IconButton
+                                className={classes.closeButton}
+                                onClick={() => removeColumnFromDataFileHeader(filePath)}
+                              >
+                                <CancelIcon />
+                              </IconButton>
                             </div>
                           ))
                         }

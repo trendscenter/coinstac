@@ -13,7 +13,7 @@ import { EXPIRED_TOKEN, BAD_TOKEN } from '../utils/error-codes';
 import theme from '../styles/material-ui/theme';
 import DisplayNotificationsListener from './display-notifications-listener';
 
-class App extends Component { // eslint-disable-line react/prefer-stateless-function
+class App extends Component {
   constructor(props) {
     super(props);
 
@@ -76,10 +76,18 @@ class App extends Component { // eslint-disable-line react/prefer-stateless-func
           <CssBaseline />
           <ActivityIndicator visible={isLoading} />
 
-          <SnackbarProvider maxSnack={3}>
+          <SnackbarProvider
+            maxSnack={3}
+            classes={{
+              variantSuccess: 'notistack-notification notistack-notification-success',
+              variantError: 'notistack-notification notistack-notification-error',
+              variantWarning: 'notistack-notification notistack-notification-warning',
+              variantInfo: 'notistack-notification notistack-notification-info',
+            }}
+          >
             { checkJWT && children }
 
-          <DisplayNotificationsListener />
+            <DisplayNotificationsListener />
           </SnackbarProvider>
         </MuiThemeProvider>
       </div>

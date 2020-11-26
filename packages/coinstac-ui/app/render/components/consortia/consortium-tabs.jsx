@@ -164,7 +164,7 @@ class ConsortiumTabs extends Component {
     const {
       saveConsortium, notifySuccess, notifyError,
     } = this.props;
-    const { consortium } = this.state;
+    const { consortium: { __typename, ...consortium } } = this.state;
 
     e.preventDefault();
 
