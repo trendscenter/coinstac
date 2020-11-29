@@ -338,15 +338,15 @@ const startService = (serviceId, serviceUserId, opts) => {
               dockerCompStart = Date.now();
               const dockerPreComp = dockerCompStart - dockerPreCompStart;
               services[serviceId].users[serviceUserId].debug.dockerPreComp += dockerPreComp;
-              debugProfile(`Manger before computation took ${serviceUserId} ${dockerPreComp}ms`);
+              debugProfile(`Manger precomputation took ${serviceUserId} ${dockerPreComp}ms`);
               const ws = new WS(`ws://${services[serviceId].hostname}:${services[serviceId].port}`);
               ws.on('open', () => {
                 ws.send(JSON.stringify({
                   command: data[0],
-                  args: data.slice(1, 2),
+                  args: data.slice(1, -1),
                 }));
-                logger.debug(`Input data size: ${data[2].length}`);
-                ws.send(data[2]);
+                logger.debug(`Input data size: ${data.slice(-1)[0].length}`);
+                ws.send(data.slice(-1)[0]);
                 ws.send(null);
               });
               ws.on('error', (e) => {
