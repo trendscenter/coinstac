@@ -31,8 +31,6 @@ const setTimeoutPromise = (delay) => {
 
 // TODO: ENV specific socket
 const docker = new Docker();
-const streamPool = {};
-const jobPool = {};
 let services = {};
 const portBlackList = new Set();
 let portLock = false;
@@ -43,6 +41,7 @@ let portLock = false;
  */
 const setLogger = (loggerInstance) => {
   logger = loggerInstance;
+  return logger;
 };
 
 /**
@@ -70,91 +69,6 @@ const generateServicePort = async (serviceId, start = 8101, thisLock = false) =>
   portLock = false;
   services[serviceId].port = newPort;
   return newPort;
-};
-
-const manageStream = (stream, jobId) => {
-  streamPool[jobId] = { stream, data: '', error: '' };
-
-  let header = null;
-  stream.on('readable', () => {
-    // Demux streams, docker puts stdout/err together
-    header = header || stream.read(8);
-    while (header !== null) {
-      const type = header.readUInt8(0);
-      const payload = stream.read(header.readUInt32BE(4));
-      if (payload === null) break;
-      if (type === 2) {
-        streamPool[jobId].error += payload;
-      } else {
-        streamPool[jobId].data += payload;
-      }
-      header = stream.read(8);
-    }
-  });
-
-  return new Promise((resolve, reject) => {
-    stream.on('end', () => {
-      const container = jobPool[jobId];
-      if (streamPool[jobId].error) {
-        container.remove()
-          .then(() => {
-            jobPool[jobId] = undefined;
-          });
-        reject(streamPool[jobId].error);
-        streamPool[jobId] = undefined;
-      } else {
-        resolve(streamPool[jobId].data);
-        streamPool[jobId] = undefined;
-
-        container.remove()
-          .then(() => {
-            jobPool[jobId] = undefined;
-          });
-      }
-    });
-    stream.on('error', (err) => {
-      const container = jobPool[jobId];
-
-      streamPool[jobId] = undefined;
-
-      container.stop()
-        .then(() => container.remove())
-        .then(() => {
-          jobPool[jobId] = undefined;
-        });
-      reject(err);
-    });
-  });
-};
-
-const queueJob = (jobId, input, opts) => {
-  const jobOpts = Object.assign(
-    {
-      AttachStdin: true,
-      AttachStdout: true,
-      AttachStderr: true,
-      Cmd: input,
-    },
-    Object.assign({}, opts, opts.Image.includes(':') ? {} : { Image: `${opts.Image}:latest` })
-  );
-  return docker.createContainer(jobOpts).then((container) => {
-    jobPool[jobId] = container;
-
-    // Return a Promise that resolves when the container's data stream 2closes,
-    // which should happen when the comp is done.
-    const dataFinished = new Promise((resolve, reject) => {
-      container.attach({ stream: true, stdout: true, stderr: true }, (err, stream) => {
-        if (!err) {
-          resolve(manageStream(stream, jobId));
-        }
-
-        reject(err);
-      });
-    });
-
-    return container.start()
-      .then(() => dataFinished);
-  });
 };
 
 /**
@@ -304,6 +218,70 @@ const startService = (serviceId, serviceUserId, opts) => {
           services[serviceId].users[serviceUserId].debug.dockerPreComp += dockerPreComp;
           debugProfile(`Manager initial startup for ${serviceUserId} computation took ${dockerPreComp}ms`);
           services[serviceId].service = (data, serviceUserId) => {
+            if (opts.http) {
+              return new Promise((resolve, reject) => {
+                const req = request(`http://127.0.0.1:${services[serviceId].port}/run`, { method: 'POST' }, (err, res) => {
+                  let buf = '';
+                  if (err) {
+                    return reject(err);
+                  }
+                  // TODO: hey this is a stream, be cool to use that
+                  res.on('data', (chunk) => {
+                    buf += chunk;
+                  });
+                  res.on('end', () => resolve(buf));
+                  res.on('error', e => reject(e));
+                });
+                req.write(JSON.stringify({
+                  command: data[0],
+                  args: data.slice(1, 2),
+                }));
+                req.end(data[2]);
+              }).then((inData) => {
+                let errMatch;
+                let outMatch;
+                let codeMatch;
+                let endMatch;
+                let errData = Buffer.alloc(0);
+                let outData = Buffer.alloc(0);
+                let code = Buffer.alloc(0);
+
+                let data = Buffer.from(inData);
+                while (outMatch !== -1 || errMatch !== -1 || codeMatch !== -1) {
+                  outMatch = data.indexOf('stdoutSTART\n');
+                  endMatch = data.indexOf('stdoutEND\n');
+                  if (outMatch !== -1 && endMatch !== -1) {
+                    outData = Buffer.concat([outData, data.slice(outMatch + 'stdoutSTART\n'.length, endMatch)]);
+                    data = Buffer.concat([data.slice(0, outMatch), data.slice(endMatch + 'stdoutEND\n'.length)]);
+                  }
+                  errMatch = data.indexOf('stderrSTART\n');
+                  endMatch = data.indexOf('stderrEND\n');
+                  if (errMatch !== -1 && endMatch !== -1) {
+                    errData = Buffer.concat([errData, data.slice(errMatch + 'stderrSTART\n'.length, endMatch)]);
+                    data = Buffer.concat([data.slice(0, errMatch), data.slice(endMatch + 'stderrEND\n'.length)]);
+                  }
+                  codeMatch = data.indexOf('exitcodeSTART\n');
+                  endMatch = data.indexOf('exitcodeEND\n');
+                  if (codeMatch !== -1 && endMatch !== -1) {
+                    code = Buffer.concat([code, data.slice(codeMatch + 'exitcodeSTART\n'.length, endMatch)]);
+                    data = Buffer.concat([data.slice(0, codeMatch), data.slice(endMatch + 'exitcodeEND\n'.length)]);
+                  }
+                }
+
+                if (errData.length > 0) {
+                  throw new Error(`Computation failed with exitcode ${code.toString()}\n Error message:\n${errData.toString()}}`);
+                }
+                // NOTE: limited to sub 256mb
+                let parsed;
+                try {
+                  parsed = JSON.parse(outData.toString());
+                } catch (e) {
+                  parsed = outData.toString();
+                }
+                return parsed;
+              });
+            }
+            // no http opt use WS
             dockerPreCompStart = Date.now();
             let proxR;
             let proxRj;
@@ -427,7 +405,7 @@ const startService = (serviceId, serviceUserId, opts) => {
 
                 let error;
                 try {
-                  const parsed = JSON.parse(output.stdout);
+                  const parsed = output.stdout ? JSON.parse(output.stdout) : {};
                   const dockerPostComp = Date.now() - dockerPostCompStart;
                   services[serviceId].users[serviceUserId].debug.dockerPostComp += dockerPostComp;
                   debugProfile(`Manager parsing output took ${serviceUserId} ${dockerPostComp}ms`);
@@ -530,7 +508,7 @@ const pruneImages = () => {
         });
       });
     }));
-  });
+  }).catch(() => {});
 };
 
 /**
@@ -608,7 +586,7 @@ const pullImagesFromList = comps => Promise.all(comps.map(image => pullImage(`${
  * @return {Promise}
  */
 const removeImage = (imageId) => {
-  return docker.getImage(imageId).remove();
+  return docker.getImage(imageId).remove().then(() => imageId);
 };
 
 /**
@@ -622,7 +600,7 @@ const removeImage = (imageId) => {
  */
 const stopService = (serviceId, serviceUserId, waitForBox) => {
   const service = services[serviceId];
-  if (!service) return Promise.resolve();
+  if (!service) return Promise.resolve(serviceId);
   if (service.users[serviceUserId]) {
     debugProfile('**************************** Manager summary ***************************');
     Object.keys(service.users[serviceUserId].debug).forEach((timing) => {
@@ -643,12 +621,12 @@ const stopService = (serviceId, serviceUserId, waitForBox) => {
           service.state = 'zombie';
           service.error = err;
         });
-      return waitForBox ? boxPromise : Promise.resolve();
+      return waitForBox ? boxPromise : Promise.resolve(serviceId);
     }
     delete services[serviceId];
-    return Promise.resolve();
+    return Promise.resolve(serviceId);
   }
-  return Promise.resolve();
+  return Promise.resolve(serviceId);
 };
 
 /**
@@ -658,10 +636,12 @@ const stopService = (serviceId, serviceUserId, waitForBox) => {
 const stopAllServices = () => {
   return Promise.all(
     Object.keys(services)
-      .map(service => services[service].container.stop())
+      .map(serviceId => services[serviceId].container.stop())
   )
     .then(() => {
+      const res = services;
       services = {};
+      return res;
     });
 };
 
@@ -672,10 +652,10 @@ module.exports = {
   pullImagesFromList,
   pruneImages,
   removeImage,
-  queueJob,
   setLogger,
   startService,
   stopService,
   stopAllServices,
+  docker,
   Docker,
 };

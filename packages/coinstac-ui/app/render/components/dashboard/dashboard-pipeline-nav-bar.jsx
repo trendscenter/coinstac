@@ -118,6 +118,7 @@ DashboardPipelineNavBar.propTypes = {
   consortia: PropTypes.array.isRequired,
   localRuns: PropTypes.array.isRequired,
   classes: PropTypes.object.isRequired,
+  router: PropTypes.object.isRequired,
 };
 
 export default withStyles(styles)(DashboardPipelineNavBar);
