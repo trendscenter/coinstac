@@ -1,7 +1,10 @@
 function parsePipelineInput(pipeline, dataMappings) {
   const steps = [];
 
-  let filesArray = [];
+  const filesArray = {
+    files: [],
+    baseDirectory: null,
+  };
 
   pipeline.steps.forEach((step, stepIndex) => {
     const consortiumMappedStepData = dataMappings ? dataMappings.map[stepIndex] : null;
@@ -12,7 +15,8 @@ function parsePipelineInput(pipeline, dataMappings) {
     }
 
     if (consortiumMappedStepData.filesArray && consortiumMappedStepData.filesArray.length > 0) {
-      filesArray = filesArray.concat(consortiumMappedStepData.filesArray);
+      filesArray.files = filesArray.files.concat(consortiumMappedStepData.filesArray);
+      filesArray.baseDirectory = consortiumMappedStepData.baseDirectory;
     }
 
     steps.push({

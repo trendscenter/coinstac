@@ -1,9 +1,4 @@
-import {
-  dirname,
-  join,
-  isAbsolute,
-  resolve,
-} from 'path';
+import { dirname } from 'path';
 import { applyAsyncLoading } from './loading';
 
 const SAVE_DATA_MAPPING = 'SAVE_DATA_MAPPING';
@@ -41,6 +36,7 @@ export const saveDataMapping = applyAsyncLoading(
     pipeline.steps.forEach((step) => {
       const filesArray = [];
       const inputMap = {};
+      let baseDirectory = null;
 
       Object.keys(step.inputMap).forEach((inputMapKey) => {
         inputMap[inputMapKey] = { ...step.inputMap[inputMapKey] };
@@ -52,13 +48,15 @@ export const saveDataMapping = applyAsyncLoading(
         const inputMapVariables = inputMap[inputMapKey].value.map(field => field.name);
         const mappedData = map[inputMapKey];
 
-        filesArray.push(...mappedData.files);
-
         // has csv column mapping
         if (mappedData.maps) {
           const value = { ...mappedData.fileData[0].data };
 
+          baseDirectory = dirname(mappedData.files[0]);
+
           Object.keys(value).forEach((valueKey) => {
+            filesArray.push(valueKey);
+
             inputMapVariables.forEach((variable) => {
               const columnName = mappedData.maps[variable];
 
@@ -73,11 +71,14 @@ export const saveDataMapping = applyAsyncLoading(
           });
 
           inputMap[inputMapKey].value = value;
+        } else {
+          filesArray.push(...mappedData.files);
         }
       });
 
       mapData.push({
         filesArray,
+        baseDirectory,
         inputMap,
       });
     });

@@ -252,13 +252,13 @@ class CoinstacClient {
           const stageFiles = process.env.CI ? fs.copy : fs.link;
 
           for (let i = 0; i < filePaths.files.length; i += 1) {
-            const mkdir = path.normalize(filePaths.file[i]) === path.basename(filePaths.file[i])
-              ? Promise.resolve() : mkdirp(path.resolve(fp, path.dirname(filePaths.file[i])));
+            const mkdir = path.normalize(filePaths.files[i]) === path.basename(filePaths.files[i])
+              ? Promise.resolve() : mkdirp(path.resolve(fp, path.dirname(filePaths.files[i])));
 
             linkPromises.push( // eslint-disable-next-line no-loop-func
               mkdir.then(() => stageFiles(
-                path.resolve(filePaths.baseDirectory, filePaths.file[i]),
-                path.resolve(fp, path.basename(filePaths.file[i]))
+                path.resolve(filePaths.baseDirectory, filePaths.files[i]),
+                path.resolve(fp, path.basename(filePaths.files[i]))
               )
                 .catch((e) => {
                 // permit dupes
