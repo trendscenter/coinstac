@@ -21,9 +21,9 @@ function PipelineStepInputBoolean({
 
   const value =
     step.inputMap[objKey] &&
-    step.inputMap[objKey].value ?
-    step.inputMap[objKey].value :
-    objParams.default
+    typeof step.inputMap[objKey].value === 'boolean' ?
+      step.inputMap[objKey].value :
+      objParams.default
 
   const [checked, setChecked] = React.useState(value);
 
