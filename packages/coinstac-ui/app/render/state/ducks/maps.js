@@ -14,12 +14,78 @@ const INITIAL_STATE = {
   consortiumDataMappings: [],
 };
 
+// map
+// {
+//   covariates: {
+//     fileData: [{
+//       data: {
+//         subject0_aseg_stats.txt: {isControl: 'False', age: 22}
+//         subject1_aseg_stats.txt: {isControl: 'True', age: 47}
+//       }
+//     }],
+//     files: [],
+//     maps: {isControl: 'isControl', age: 'age'}
+//   }
+// }
+
+// inputMap covariates value
+// [
+//   {type: 'boolean', name: 'isControl'},
+//   {type: 'number', name: 'age'}
+// ]
+
 export const saveDataMapping = applyAsyncLoading(
-  (consortiumId, pipelineId, map) => async (dispatch) => {
+  (consortiumId, pipeline, map) => async (dispatch) => {
+    const mapData = [];
+
+    pipeline.steps.forEach((step) => {
+      const filesArray = [];
+      const inputMap = {};
+
+      Object.keys(step.inputMap).forEach((inputMapKey) => {
+        inputMap[inputMapKey] = { ...step.inputMap[inputMapKey] };
+
+        if (inputMap[inputMapKey].fulfilled) {
+          return;
+        }
+
+        const inputMapVariables = inputMap[inputMapKey].value.map(field => field.name);
+        const mappedData = map[inputMapKey];
+
+        filesArray.push(...mappedData.files);
+
+        // has csv column mapping
+        if (mappedData.maps) {
+          const value = { ...mappedData.fileData[0].data };
+
+          Object.keys(value).forEach((valueKey) => {
+            inputMapVariables.forEach((variable) => {
+              const columnName = mappedData.maps[variable];
+
+              if (columnName) {
+                value[valueKey][variable] = value[valueKey][columnName];
+
+                if (columnName !== variable) {
+                  delete value[valueKey][columnName];
+                }
+              }
+            });
+          });
+
+          inputMap[inputMapKey].value = value;
+        }
+      });
+
+      mapData.push({
+        filesArray,
+        inputMap,
+      });
+    });
+
     const mapping = {
       consortiumId,
-      pipelineId,
-      map,
+      pipelineId: pipeline.id,
+      map: mapData,
     };
 
     dispatch(({
