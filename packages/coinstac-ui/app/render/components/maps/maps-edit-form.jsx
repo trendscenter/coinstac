@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
 import Button from '@material-ui/core/Button';
 import MapsCsvField from './maps-csv-field';
+import MapsFilesField from './maps-files-field';
 
 const styles = theme => ({
   saveButtonContainer: {
@@ -37,8 +38,14 @@ function MapsEditForm({
                       onChange={onChange}
                     />
                   );
-                // case 'files':
-                //   return <MapsFilesField key={inputKey} fieldName={inputKey} />;
+                case 'files':
+                  return (
+                    <MapsFilesField
+                      key={inputKey}
+                      fieldName={inputKey}
+                      onChange={onChange}
+                    />
+                  );
                 default:
                   return null;
               }

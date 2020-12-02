@@ -28,7 +28,7 @@
         "items": ["ENIGMA"],
         "extensions": [["csv","txt"]],
         "order": 0,
-        "source": "owner"
+        "source": "member"
       }
     },
     "output": {
