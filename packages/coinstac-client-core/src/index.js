@@ -238,31 +238,34 @@ class CoinstacClient {
     clients,
     consortiumId,
     clientPipeline,
-    filesArray,
+    filePaths,
     runId,
     runPipeline // eslint-disable-line no-unused-vars
   ) {
-    return mkdirp(path.join(this.appDirectory, 'input', this.clientId, runId))
+    const fp = path.join(this.appDirectory, 'input', this.clientId, runId);
+    return mkdirp(fp)
       .then(() => {
       // TODO: validate runPipeline against clientPipeline
         const linkPromises = [];
 
-        const e = new RegExp(/[-\/\\^$*+?.()|[\]{}]/g); // eslint-disable-line no-useless-escape
-        const escape = (string) => {
-          return string.replace(e, '\\$&');
-        };
-        if (filesArray) {
-          const stageFiles = process.env.CI ? fs.copy : fs.link
-          for (let i = 0; i < filesArray.length; i += 1) {
-            const pathsep = new RegExp(`${escape(path.sep)}|:`, 'g');
-            linkPromises.push(
-              stageFiles(filesArray[i], path.resolve(this.appDirectory, 'input', this.clientId, runId, filesArray[i].replace(pathsep, '-')))
+        if (filePaths) {
+          const stageFiles = process.env.CI ? fs.copy : fs.link;
+
+          for (let i = 0; i < filePaths.files.length; i += 1) {
+            const mkdir = path.normalize(filePaths.file[i]) === path.basename(filePaths.file[i])
+              ? Promise.resolve() : mkdirp(path.resolve(fp, path.dirname(filePaths.file[i])));
+
+            linkPromises.push( // eslint-disable-next-line no-loop-func
+              mkdir.then(() => stageFiles(
+                path.resolve(filePaths.baseDirectory, filePaths.file[i]),
+                path.resolve(fp, path.basename(filePaths.file[i]))
+              )
                 .catch((e) => {
                 // permit dupes
                   if (e.code && e.code !== 'EEXIST') {
                     throw e;
                   }
-                })
+                }))
             );
           }
         }
