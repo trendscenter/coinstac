@@ -88,12 +88,13 @@ class PipelineStep extends Component {
 
   componentDidUpdate(prevProps) {
     const { compIO, possibleInputs, step } = this.props;
+    const { compInputs, orderedInputs } = this.state;
 
-    if (!prevProps.possibleInputs && possibleInputs) {
+    if ((!orderedInputs || !orderedInputs.length) && possibleInputs) {
       this.orderComputations(possibleInputs);
     }
 
-    if (!prevProps.compIO && compIO) {
+    if ((!compInputs || !compInputs.length) && compIO) {
       this.groupInputs(compIO);
 
       if (Object.entries(step.inputMap).length === 0) {
@@ -103,72 +104,6 @@ class PipelineStep extends Component {
   }
 
   orderComputations = (possibleInputs) => {
-    const { previousComputationIds } = this.props;
-
-    const orderedInputs = previousComputationIds.map((prevComp, possibleInputIndex) => {
-      const comp = possibleInputs.find(pI => pI.id === prevComp);
-      return {
-        inputs: comp ? comp.computation.output : [],
-        possibleInputIndex,
-      };
-    });
-
-    this.setState({ orderedInputs });
-  }
-
-  groupInputs = (compIO) => {
-    const compInputs = Object.keys(compIO.computation.input)
-      .map(inputKey => ({
-        key: inputKey,
-        value: compIO.computation.input[inputKey],
-      }))
-      .sort((a, b) => a.value.order - b.value.order);
-
-    const inputGroups = compInputs.reduce((acc, inputField) => {
-      if (!inputField.value.group) {
-        return acc;
-      }
-
-      if (!acc[inputField.value.group]) {
-        acc[inputField.value.group] = [];
-      }
-
-      acc[inputField.value.group].push(inputField);
-
-      return acc;
-    }, {});
-
-    this.setState({
-      compInputs,
-      inputGroups,
-    });
-  }
-
-  fillDefaultValues = (compIO) => {
-    const { updateStep, step } = this.props;
-
-    const defaultInputs = {};
-
-    Object.keys(compIO.computation.input).forEach((inputFieldKey) => {
-      const inputField = compIO.computation.input[inputFieldKey];
-
-      if ('default' in inputField) {
-        defaultInputs[inputFieldKey] = {
-          value: inputField.default,
-        };
-      }
-    });
-
-    if (Object.keys(defaultInputs).length > 0) {
-      updateStep({
-        ...step,
-        inputMap: defaultInputs,
-      });
-    }
-  }
-
-  // eslint-disable-next-line
-  UNSAFE_componentWillReceiveProps(nextProps) {
     const { previousComputationIds } = this.props;
 
     const orderedInputs = previousComputationIds.map((prevComp, possibleInputIndex) => {
