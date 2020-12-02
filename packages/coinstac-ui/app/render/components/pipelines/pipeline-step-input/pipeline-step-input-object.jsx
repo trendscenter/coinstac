@@ -1,21 +1,15 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import TextareaAutosize from '@material-ui/core/TextareaAutosize';
+import JSONInput from 'react-json-editor-ajrm';
+import locale from 'react-json-editor-ajrm/locale/en';
 
 function PipelineStepInputObject({
-  objKey, objParams, owner, updateStep, getNewObj, step, isFromCache
+  objKey, objParams, owner, isFromCache, updateStep, getNewObj, step,
 }) {
-  if (!step || !objParams.default) {
-    return null;
-  }
-
   if (!step.inputMap[objKey] && 'default' in objParams && owner) {
     updateStep({
       ...step,
-      inputMap: getNewObj(
-        objKey,
-        { value: objParams.default }
-      ),
+      inputMap: getNewObj(objKey, { value: objParams.default }),
     });
   }
 
@@ -23,23 +17,26 @@ function PipelineStepInputObject({
     return null;
   }
 
-  let value = step.inputMap[objKey] && 'value' in step.inputMap[objKey]
-    ? step.inputMap[objKey].value
-    : objParams.default;
-
   return (
-    <TextareaAutosize
-      disabled={!owner || isFromCache}
-      name={`step-${objKey}`}
-      onChange={event => updateStep({
-        ...step,
-        inputMap: getNewObj(objKey, event.target.value ? { value: JSON.parse(event.target.value) } : 'DELETE_VAR'),
-      })}
-      value={JSON.stringify(value)}
+    <JSONInput
+        disabled={!owner || isFromCache}
+        name={`step-${objKey}`}
+        onChange={value => updateStep({
+          ...step,
+          inputMap: getNewObj(objKey, value ? { value: value.jsObject } : 'DELETE_VAR'),
+        })}
+        placeholder={
+          step.inputMap[objKey] && 'value' in step.inputMap[objKey]
+            ? step.inputMap[objKey].value
+            : objParams.default
+        }
+        id = {`step-${objKey}`}
+        locale = { locale }
+        height = '250px'
+        theme = 'light_mitsuketa_tribute'
     />
   );
 }
-
 
 PipelineStepInputObject.defaultProps = {
   isFromCache: false,

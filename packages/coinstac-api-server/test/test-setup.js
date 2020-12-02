@@ -12,6 +12,7 @@ const drneFsl = require('./data/coinstac-schema-regression-fsl');
 const ssrFsl = require('./data/coinstac-schema-regression-ss-fsl');
 const msrFsl = require('./data/coinstac-schema-regression-ms-fsl');
 
+const dmancova = require('./data/coinstac-dmancova');
 const gica = require('./data/coinstac-gica-pipeline');
 const ddfnc = require('./data/coinstac-ddfnc-pipeline');
 const dpsvm = require('./data/coinstac-dpsvm');
@@ -87,6 +88,7 @@ async function populateComputations() {
     { ...localError, submittedBy: 'author', _id: COMPUTATION_IDS[13] },
     { ...fmri, submittedBy: 'author', _id: COMPUTATION_IDS[14] },
     { ...ssrFsl, submittedBy: 'author', _id: COMPUTATION_IDS[15] },
+    { ...dmancova, submittedBy: 'author', _id: COMPUTATION_IDS[16] },
   ]);
 }
 

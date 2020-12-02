@@ -21,13 +21,14 @@ const styles = theme => ({
   input: {
     display: 'flex',
     padding: 0,
+    height: 'auto',
   },
   valueContainer: {
     display: 'flex',
     flexWrap: 'wrap',
     flex: 1,
     alignItems: 'center',
-    overflow: 'hidden',
+    overflow: 'visible',
   },
   chip: {
     margin: `${theme.spacing(1) / 2}px ${theme.spacing(1) / 4}px`,

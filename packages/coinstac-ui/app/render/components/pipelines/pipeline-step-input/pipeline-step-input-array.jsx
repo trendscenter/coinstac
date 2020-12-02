@@ -3,55 +3,50 @@ import PropTypes from 'prop-types';
 import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
 
-class PipelineStepInputArray extends React.Component {
-  componentDidMount() {
-    const {
-      objKey, objParams, owner, updateStep, getNewObj, getSelectList, step,
-    } = this.props;
 
-    if (!step.inputMap[objKey] && 'default' in objParams && owner) {
-      updateStep({
+function PipelineStepInputArray({
+    objKey, objParams, owner, updateStep, getNewObj, step,
+}) {
+  if (!step || !objParams.default) {
+    return null;
+  }
+
+  if (!step.inputMap[objKey] && 'default' in objParams && owner) {
+    updateStep({
+      ...step,
+      inputMap: getNewObj(
+        objKey,
+        { value: objParams.default }
+      ),
+    });
+  }
+
+  return (
+    <Select
+      disabled={!owner}
+      multiple
+      onChange={event => updateStep({
         ...step,
         inputMap: getNewObj(
           objKey,
-          { value: getSelectList(step.inputMap[objKey].value, objParams.default) }
+          event.target.value
+            ? { value: getSelectList(step.inputMap[objKey].value, event.target.value) }
+            : 'DELETE_VAR'
         ),
-      });
-    }
-  }
-
-  render() {
-    const {
-      objKey, objParams, owner, updateStep, getNewObj, getSelectList, step,
-    } = this.props;
-
-    return (
-      <Select
-        disabled={!owner}
-        multiple
-        onChange={event => updateStep({
-          ...step,
-          inputMap: getNewObj(
-            objKey,
-            event.target.value
-              ? { value: getSelectList(step.inputMap[objKey].value, event.target.value) }
-              : 'DELETE_VAR'
-          ),
-        })}
-        value={
-          step.inputMap[objKey] && 'value' in step.inputMap[objKey]
-            ? step.inputMap[objKey].value
-            : [objParams.default]
-        }
-      >
-        {
-          objParams.values.map(val => (
-            <MenuItem key={`${val}-select-option`} value={val}>{val}</MenuItem>
-          ))
-        }
-      </Select>
-    );
-  }
+      })}
+      value={
+        step.inputMap[objKey] && 'value' in step.inputMap[objKey]
+          ? step.inputMap[objKey].value
+          : [objParams.default]
+      }
+    >
+      {
+        objParams.values.map(val => (
+          <MenuItem key={`${val}-select-option`} value={val}>{val}</MenuItem>
+        ))
+      }
+    </Select>
+  );
 }
 
 PipelineStepInputArray.propTypes = {

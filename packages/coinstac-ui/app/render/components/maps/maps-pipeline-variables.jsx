@@ -26,6 +26,15 @@ function MapsPipelineVariables(props) {
     classes,
   } = props;
 
+  const reverseObj = ((object) => {
+    let NewObj = {};
+    let keysArr = Object.keys(object);
+    for (let i = keysArr.length-1; i >= 0; i--) {
+        NewObj[keysArr[i]] = object[keysArr[i]];
+    }
+    return NewObj;
+})
+
   return (
     <Grid item sm={4}>
       <Paper
@@ -40,9 +49,9 @@ function MapsPipelineVariables(props) {
           consortium.pipelineSteps && consortium.pipelineSteps.map((step) => {
             const { computations, inputMap } = step;
 
-            const inputs = { ...inputMap, ...computations[0].computation.input };
+            let inputs = { ...inputMap, ...computations[0].computation.input };
 
-            return Object.entries(inputs).map((input) => {
+            return Object.entries(reverseObj(inputs)).map((input) => {
               const inputMapKey = input[0];
               const inputMapValue = input[1];
 

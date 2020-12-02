@@ -4,30 +4,52 @@ import TextField from '@material-ui/core/TextField';
 import update from 'immutability-helper';
 
 function PipelineStepInputSet({
-  objKey, owner, isFromCache, updateStep, getNewObj, step,
+  objKey, objParams, owner, isFromCache, updateStep, getNewObj, step
 }) {
-  if (!step) {
+  if (!step || !objParams.default) {
     return null;
   }
 
+  if (!step.inputMap[objKey] && 'default' in objParams && owner) {
+    updateStep({
+      ...step,
+      inputMap: getNewObj(
+        objKey,
+        { value: objParams.default }
+      ),
+    });
+  }
+
+  let val = step.inputMap[objKey] && step.inputMap[objKey].value ?
+    step.inputMap[objKey].value : objParams.default;
+
+  const [value, setValue] = React.useState(val);
+
+  const handleChange = (event) => {
+    updateStep({
+      ...step,
+      inputMap: getNewObj(objKey, {
+        value: update(step.inputMap[objKey].value, {
+          $splice: [[i, 1, event.target.value]],
+        }),
+      }),
+    });
+    React.useEffect(() => {
+      setValue(step.inputMap[objKey].value);
+    }, [step]);
+  }
+
   return (
-    <div>
+    <div className="input-set">
       {
-        step.inputMap[objKey] && step.inputMap[objKey].value.map((item, i) => (
+        value && value.map((item, i) => (
           // eslint-disable-next-line react/no-array-index-key
           <div key={`${objKey}-${i}`}>
             <TextField
               disabled={!owner || isFromCache}
               name={`step-${objKey}-${i}`}
               value={item}
-              onChange={event => updateStep({
-                ...step,
-                inputMap: getNewObj(objKey, {
-                  value: update(step.inputMap[objKey].value, {
-                    $splice: [[i, 1, event.target.value]],
-                  }),
-                }),
-              })}
+              onChange={handleChange}
             />
           </div>
         ))

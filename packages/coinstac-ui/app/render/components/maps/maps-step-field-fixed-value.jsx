@@ -29,24 +29,6 @@ function MapsStepFieldFixedValue(props) {
     classes,
   } = props;
 
-  let value = '';
-
-  switch (step.value) {
-    case (typeof step.value === 'boolean' && step.value === true):
-      value = 'true';
-      break;
-    case (typeof step.value === 'boolean' && step.value === false):
-      value = 'false';
-      break;
-    case (typeof step.value === 'object'):
-      value = JSON.stringify(step.value);
-      break;
-    default:
-      // eslint-disable-next-line prefer-destructuring
-      value = step.value;
-      break;
-  }
-
   // eslint-disable-next-line no-useless-escape
   const label = fieldName.replace(/\_/g, ' ');
 
@@ -56,10 +38,14 @@ function MapsStepFieldFixedValue(props) {
       elevation={1}
     >
       <List>
-        <strong className={classes.mediumWeight}>
-          { `${startCase(toLower(label))}: ` }
-        </strong>
-        <span>{ value }</span>
+        <div>
+          <strong className={classes.mediumWeight}>
+            { `${startCase(toLower(label))}: ` }
+          </strong>
+        </div>
+        <div>
+          <span>{ JSON.stringify(step.value) }</span>
+        </div>
       </List>
     </Paper>
   );

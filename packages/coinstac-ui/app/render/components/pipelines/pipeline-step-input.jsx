@@ -9,6 +9,7 @@ import { withStyles } from '@material-ui/core/styles';
 import InfoIcon from '@material-ui/icons/Info';
 import PipelineStepInputWithMappings from './pipeline-step-input-with-mappings';
 import PipelineStepInputTextField from './pipeline-step-input/pipeline-step-input-textfield';
+import PipelineStepInputObject from './pipeline-step-input/pipeline-step-input-object';
 import PipelineStepInputNumberTextField from './pipeline-step-input/pipeline-step-input-number-textfield';
 import PipelineStepInputArray from './pipeline-step-input/pipeline-step-input-array';
 import PipelineStepInputSet from './pipeline-step-input/pipeline-step-input-set';
@@ -230,6 +231,11 @@ class PipelineStepInput extends Component {
       isValue = true;
     }
 
+    if (step.inputMap[objKey] && typeof step.inputMap[objKey].value === 'boolean'
+      && step.inputMap[objKey].value === false) {
+      isValue = true;
+    }
+
     if (step.inputMap[objKey] && step.inputMap[objKey].fromCache) {
       isFromCache = true;
     }
@@ -315,6 +321,19 @@ class PipelineStepInput extends Component {
                   )
                 }
                 {
+                  objParams.type === 'object' && (
+                    <PipelineStepInputObject
+                      objKey={objKey}
+                      objParams={objParams}
+                      owner={owner}
+                      isFromCache={isFromCache}
+                      updateStep={updateStep}
+                      getNewObj={this.getNewObj}
+                      step={step}
+                    />
+                  )
+                }
+                {
                   objParams.type === 'number'
                   && (
                     <PipelineStepInputNumberTextField
@@ -345,6 +364,7 @@ class PipelineStepInput extends Component {
                   objParams.type === 'set' && (
                     <PipelineStepInputSet
                       objKey={objKey}
+                      objParams={objParams}
                       owner={owner}
                       isFromCache={isFromCache}
                       updateStep={updateStep}

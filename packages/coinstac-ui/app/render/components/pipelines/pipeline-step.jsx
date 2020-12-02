@@ -175,7 +175,7 @@ class PipelineStep extends Component {
         value.value = compIO.computation.input[key];
         value.key = key;
         newArray.push(value);
-        if (value.value.default && key !== 'covariates') {
+        if (value.value.default && key !== 'covariates' && key !== 'data') {
           let v = value.value.default;
           if (v === 0) {
             v = '0';
@@ -185,13 +185,6 @@ class PipelineStep extends Component {
       });
       Inputs = newArray.sort((a, b) => {
         return a.value.order - b.value.order;
-      });
-    }
-
-    if (Object.entries(defaultInputs).length > 0 && Object.entries(step.inputMap).length === 0) {
-      updateStep({
-        ...step,
-        inputMap: defaultInputs,
       });
     }
 

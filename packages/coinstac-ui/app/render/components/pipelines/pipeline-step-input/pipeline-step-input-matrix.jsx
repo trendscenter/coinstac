@@ -7,6 +7,16 @@ import update from 'immutability-helper';
 function PipelineStepInputMatrix({
   objKey, owner, isFromCache, updateStep, getNewObj, step,
 }) {
+  if (!step.inputMap[objKey] && 'default' in objParams && owner) {
+    updateStep({
+      ...step,
+      inputMap: getNewObj(
+        objKey,
+        { value: objParams.default }
+      ),
+    });
+  }
+
   return (
     <div>
       {
