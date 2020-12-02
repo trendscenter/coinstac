@@ -11,21 +11,13 @@ function parsePipelineInput(pipeline, dataMappings) {
       return;
     }
 
-    if (consortiumMappedStepData.files && consortiumMappedStepData.files.length > 0) {
-      filesArray = filesArray.concat(consortiumMappedStepData.files);
+    if (consortiumMappedStepData.filesArray && consortiumMappedStepData.filesArray.length > 0) {
+      filesArray = filesArray.concat(consortiumMappedStepData.filesArray);
     }
-
-    const inputMapSchema = { ...step.inputMap };
-
-    Object.keys(consortiumMappedStepData).forEach((mappedStepDataKey) => {
-      inputMapSchema[mappedStepDataKey] = {
-        ...consortiumMappedStepData[mappedStepDataKey],
-      };
-    });
 
     steps.push({
       ...step,
-      inputMap: inputMapSchema,
+      inputMap: consortiumMappedStepData.inputMap,
     });
   });
 
