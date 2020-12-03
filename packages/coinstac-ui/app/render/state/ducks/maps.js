@@ -1,4 +1,4 @@
-import { dirname } from 'path';
+import { dirname, basename } from 'path';
 import { applyAsyncLoading } from './loading';
 
 const SAVE_DATA_MAPPING = 'SAVE_DATA_MAPPING';
@@ -72,7 +72,10 @@ export const saveDataMapping = applyAsyncLoading(
 
           inputMap[inputMapKey].value = value;
         } else {
+          baseDirectory = dirname(mappedData.files[0]);
           filesArray.push(...mappedData.files);
+
+          inputMap[inputMapKey].value = mappedData.files.map(file => basename(file));
         }
       });
 

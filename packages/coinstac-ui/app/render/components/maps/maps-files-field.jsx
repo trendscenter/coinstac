@@ -29,7 +29,7 @@ function MapsFilesField({ fieldName, onChange, classes }) {
       </Typography>
       <FilePicker
         multiple
-        filterName=""
+        filterName="csv,txt files"
         extensions={['csv', 'txt']}
         onChange={files => setSelectedFiles(files)}
       />
