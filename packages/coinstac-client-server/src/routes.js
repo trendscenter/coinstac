@@ -97,13 +97,20 @@ module.exports = (server) => {
 
             const subscriptionURL = `/pipelineResult/${runId}`;
 
+            function publishData() { // eslint-disable-line no-inner-declarations
+              if (!subscribed) {
+                return;
+              }
+
+              while (dataQueue.length) {
+                server.publish(subscriptionURL, dataQueue.pop());
+              }
+            }
+
             server.subscription(subscriptionURL, {
               onSubscribe: () => {
                 subscribed = true;
-
-                dataQueue.forEach((data) => {
-                  server.publish(subscriptionURL, data);
-                });
+                publishData();
               },
               onUnsubscribe: () => {
                 subscribed = false;
@@ -128,24 +135,19 @@ module.exports = (server) => {
 
             const { pipeline, result, stateEmitter } = managerResponse;
 
-            function publishData(data) { // eslint-disable-line no-inner-declarations
-              if (subscribed) {
-                server.publish(subscriptionURL, data);
-              } else {
-                dataQueue.push(data);
-              }
-            }
-
             stateEmitter.on('update', (data) => {
-              publishData({ runId, data, event: 'update' });
+              dataQueue.push({ runId, data, event: 'update' });
+              publishData();
             });
 
             result
               .then((result) => {
-                publishData({ runId, data: result, event: 'result' });
+                dataQueue.push({ runId, data: result, event: 'result' });
+                publishData();
               })
               .catch((error) => {
-                publishData({ runId, data: error, event: 'error' });
+                dataQueue.push({ runId, data: error, event: 'error' });
+                publishData();
               });
 
             return h.response({ pipeline }).code(201);
