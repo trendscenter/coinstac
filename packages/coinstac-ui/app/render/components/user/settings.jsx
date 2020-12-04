@@ -3,7 +3,6 @@ import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import TextField from '@material-ui/core/TextField';
 import CheckIcon from '@material-ui/icons/Check';
-import { setClientCoreUrlAsync } from '../../state/ducks/auth';
 import { connect } from 'react-redux';
 import { compose, graphql, withApollo } from 'react-apollo';
 import { get } from 'lodash';
@@ -12,6 +11,7 @@ import { withStyles } from '@material-ui/core/styles';
 import { ValidatorForm, TextValidator } from 'react-material-ui-form-validator';
 import { updatePasswordProps } from '../../state/graphql/props';
 import { UPDATE_PASSWORD_MUTATION } from '../../state/graphql/functions';
+import { setClientCoreUrlAsync } from '../../state/ducks/auth';
 import { notifySuccess, notifyInfo, notifyError } from '../../state/ducks/notifyAndLog';
 import { clearRuns } from '../../state/ducks/runs';
 import UserEditController from './user-edit-controller';
@@ -232,7 +232,7 @@ class Settings extends Component {
           </Button>
           <Button
             variant="contained"
-            disabled={clientServerURL === editingURL || !editingURL}
+            disabled={clientServerURL === editingURL}
             className={classes.button}
             onClick={this.handleSave}
           >
