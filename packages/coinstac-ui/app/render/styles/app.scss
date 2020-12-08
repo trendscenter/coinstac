@@ -105,6 +105,28 @@ html {
 
 .dashboard {
   background: $gray-lighter;
+  display: flex;
+  min-height: 100vh;
+
+  @media (max-width: $screen-sm) {
+    display: block;
+  }
+
+  &-nav {
+    width: 325px;
+    background-color: #eee;
+    border-right: 1px solid rgba(0, 0, 0, 0.12);
+
+    @media (max-width: $screen-sm) {
+      width: 100%;
+      border-right-width: 0;
+    }
+  } 
+
+  &-content {
+    flex: 1;
+    background-color: #fff;
+  }
 }
 
 .navigation {

@@ -3,11 +3,8 @@ import { compose, graphql, withApollo } from 'react-apollo';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { ipcRenderer } from 'electron';
-import { isEqual } from 'lodash';
 import { withStyles } from '@material-ui/core/styles';
 import {
-  Drawer,
-  Grid,
   Icon,
   List,
   ListItem,
@@ -49,40 +46,13 @@ import {
 } from '../../state/graphql/functions';
 import {
   getAllAndSubProp,
-  userRunProp,
   userProp,
 } from '../../state/graphql/props';
 import StartPipelineListener from './listeners/start-pipeline-listener';
 import NotificationsListener from './listeners/notifications-listener';
 import DashboardPipelineNavBar from './dashboard-pipeline-nav-bar';
 
-const styles = theme => ({
-  root: {
-    display: 'flex',
-  },
-  gridContainer: {
-    position: 'relative',
-    minHeight: '100vh',
-  },
-  drawer: {
-    flexShrink: 0,
-  },
-  drawerPaper: {
-    backgroundColor: '#eee',
-    position: 'absolute',
-    right: 0,
-  },
-  content: {
-    flexGrow: 1,
-    backgroundColor: theme.palette.background.default,
-    padding: theme.spacing(3),
-  },
-  status: {
-    display: 'inline-block',
-    fontSize: '1.25rem',
-    position: 'relative',
-    width: '100%',
-  },
+const styles = () => ({
   statusGood: {
     display: 'flex',
     alignItems: 'center',
@@ -126,8 +96,6 @@ class Dashboard extends Component {
   componentDidMount() {
     const {
       auth: { user },
-      maps,
-      consortia,
       getDockerStatus,
       writeLog,
       updateDockerOutput,
@@ -504,73 +472,62 @@ class Dashboard extends Component {
 
     // @TODO don't render primary content whilst still loading/bg-services
     return (
-      <React.Fragment>
-        <Grid container>
-          <Grid item xs={12} sm={5} md={3} lg={2} className={classes.gridContainer}>
-            <Drawer
-              variant="permanent"
-              anchor="left"
-              className={classes.drawer}
-              classes={{
-                paper: classes.drawerPaper,
-              }}
-            >
-              <CoinstacAbbr />
-              <DashboardNav user={auth.user} />
-              <List>
-                <ListItem>
-                  <UserAccountController
-                    push={router.push}
-                    unreadThreadCount={this.unreadThreadCount}
-                  />
-                </ListItem>
-                <ListItem>
-                  {dockerStatus ? (
-                    <span className={classes.statusGood}>
-                      <Typography variant="subtitle2">
-                        Docker Status:
-                      </Typography>
-                      <span className={classes.statusUp} />
-                    </span>
-                  ) : (
-                    <span className={classes.statusDown}>
-                      <Typography
-                        variant="body1"
-                        classes={{
-                          root: classes.statusDownText,
-                        }}
-                      >
-                        Docker Is Not Running!
-                      </Typography>
-                    </span>
-                  )}
-                </ListItem>
-              </List>
-            </Drawer>
-          </Grid>
-          <Grid item xs={12} sm={7} md={9} lg={10}>
-            <DashboardPipelineNavBar router={router} consortia={consortia} localRuns={runs} />
-            <main className="content-pane">
-              {this.canShowBackButton && (
-                <button
-                  type="button"
-                  className="back-button"
-                  onClick={this.goBack}
-                >
-                  <Icon className="fa fa-arrow-up arrow-icon" />
-                </button>
+      <div className="dashboard">
+        <div className="dashboard-nav">
+          <CoinstacAbbr />
+          <DashboardNav user={auth.user} />
+          <List>
+            <ListItem>
+              <UserAccountController
+                push={router.push}
+                unreadThreadCount={this.unreadThreadCount}
+              />
+            </ListItem>
+            <ListItem>
+              {dockerStatus ? (
+                <span className={classes.statusGood}>
+                  <Typography variant="subtitle2">
+                    Docker Status:
+                  </Typography>
+                  <span className={classes.statusUp} />
+                </span>
+              ) : (
+                <span className={classes.statusDown}>
+                  <Typography
+                    variant="body1"
+                    classes={{
+                      root: classes.statusDownText,
+                    }}
+                  >
+                    Docker Is Not Running!
+                  </Typography>
+                </span>
               )}
-              {childrenWithProps}
-            </main>
-          </Grid>
-        </Grid>
+            </ListItem>
+          </List>
+        </div>
+        <div className="dashboard-content">
+          <DashboardPipelineNavBar router={router} consortia={consortia} localRuns={runs} />
+          <main className="content-pane">
+            {this.canShowBackButton && (
+              <button
+                type="button"
+                className="back-button"
+                onClick={this.goBack}
+              >
+                <Icon className="fa fa-arrow-up arrow-icon" />
+              </button>
+            )}
+            {childrenWithProps}
+          </main>
+        </div>
         <StartPipelineListener
           router={router}
           consortia={consortia}
           remoteRuns={remoteRuns}
         />
         <NotificationsListener />
-      </React.Fragment>
+      </div>
     );
   }
 }
@@ -584,7 +541,6 @@ Dashboard.contextTypes = {
 Dashboard.defaultProps = {
   computations: [],
   consortia: [],
-  maps: [],
   pipelines: [],
   remoteRuns: [],
   runs: [],
@@ -601,7 +557,6 @@ Dashboard.propTypes = {
   computations: PropTypes.array,
   consortia: PropTypes.array,
   currentUser: PropTypes.object,
-  maps: PropTypes.array,
   pipelines: PropTypes.array,
   remoteRuns: PropTypes.array,
   runs: PropTypes.array,
