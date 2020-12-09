@@ -5,11 +5,11 @@ import PropTypes from 'prop-types';
 import { ipcRenderer } from 'electron';
 import { withStyles } from '@material-ui/core/styles';
 import {
-  Icon,
   List,
   ListItem,
   Typography,
 } from '@material-ui/core';
+import ArrowUpwardIcon from '@material-ui/icons/ArrowUpward';
 import update from 'immutability-helper';
 import DashboardNav from './dashboard-nav';
 import UserAccountController from '../user/user-account-controller';
@@ -74,6 +74,9 @@ const styles = () => ({
     textShadow: '1px 1px 0px rgba(0, 0, 0, 1)',
   },
   statusDownText: {
+    color: 'white',
+  },
+  arrowIcon: {
     color: 'white',
   },
 });
@@ -515,7 +518,7 @@ class Dashboard extends Component {
                 className="back-button"
                 onClick={this.goBack}
               >
-                <Icon className="fa fa-arrow-up arrow-icon" />
+                <ArrowUpwardIcon className="arrow-icon" />
               </button>
             )}
             {childrenWithProps}
