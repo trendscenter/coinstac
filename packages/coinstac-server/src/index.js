@@ -3,7 +3,7 @@ const hapi = require('hapi');
 const axios = require('axios');
 // set w/ config etc post release
 process.LOGLEVEL = 'silly';
-const { pullImages } = require('coinstac-docker-manager');
+const { pullImages } = require('coinstac-manager');
 const graphqlSchema = require('coinstac-graphql-schema');
 const { program } = require('commander');
 const routes = require('./routes');

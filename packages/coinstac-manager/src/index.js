@@ -89,6 +89,7 @@ const getStatus = (provider = 'docker') => {
  * @return {Promise}              promise that resolves to the service function
  */
 const startService = (serviceId, serviceUserId, service, opts) => {
+  debugger
   const createService = () => {
     services[serviceId].state = 'starting';
     return generateServicePort(serviceId)
@@ -127,6 +128,16 @@ const startService = (serviceId, serviceUserId, service, opts) => {
     }
     return Promise.resolve(services[serviceId].service);
   }
+  if (!services[serviceId]) {
+    services[serviceId] = {
+      users: {
+        [serviceUserId]: {
+          debug: { dockerPreComp: 0, dockerComp: 0, dockerPostComp: 0 },
+        },
+      },
+    };
+  }
+
   return createService()
     .then(({ service, container }) => {
       services[serviceId].service = service;

@@ -3,7 +3,7 @@ const PipelineManager = require('coinstac-pipeline');
 const path = require('path');
 const axios = require('axios');
 const graphqlSchema = require('coinstac-graphql-schema');
-const { pullImagesFromList, pruneImages } = require('coinstac-docker-manager');
+const { pullImagesFromList, pruneImages } = require('coinstac-manager');
 
 const manager = PipelineManager.create({
   mode: 'remote',

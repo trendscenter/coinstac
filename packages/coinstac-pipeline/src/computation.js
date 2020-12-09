@@ -1,19 +1,19 @@
 'use strict';
 
 const _ = require('lodash');
-const Manager = require('coinstac-docker-manager');
+const Manager = require('coinstac-manager');
 const path = require('path');
 
 /**
  * Generates manager options per computation type
  * @param  {Object} computation      a computation spec
- * @param  {Object} baseDirectory    base directory reference for options
+ * @param  {Object} operatingDirectory    base directory reference for options
  * @param  {Object} containerOptions overide or complementary options from the spec
  * @return {Object}                  options
  */
 const managerOptions = ({
   computation,
-  baseDirectory,
+  operatingDirectory,
   containerOptions,
   imageDirectory,
 }) => {
@@ -25,10 +25,10 @@ const managerOptions = ({
           Image: computation.dockerImage,
           HostConfig: {
             Binds: [
-              `${baseDirectory}/input:/input:ro`,
-              `${baseDirectory}/output:/output:rw`,
-              `${baseDirectory}/cache:/cache:rw`,
-              `${baseDirectory}/transfer:/transfer:rw`,
+              `${operatingDirectory}/input:/input:ro`,
+              `${operatingDirectory}/output:/output:rw`,
+              `${operatingDirectory}/cache:/cache:rw`,
+              `${operatingDirectory}/transfer:/transfer:rw`,
             ],
           },
         }, containerOptions),
@@ -49,7 +49,7 @@ const managerOptions = ({
       opts = [
         '--contain',
         '-B',
-        `${baseDirectory}/input:/input:ro,${baseDirectory}/output:/output:rw,${baseDirectory}/cache:/cache:rw,${baseDirectory}/transfer:/transfer:rw`,
+        `${operatingDirectory}/input:/input:ro,${operatingDirectory}/output:/output:rw,${operatingDirectory}/cache:/cache:rw,${operatingDirectory}/transfer:/transfer:rw`,
         path.join(imageDirectory, computation.image),
       ];
       break;
@@ -93,14 +93,14 @@ module.exports = {
       /**
        * starts a run on the computation
        * @param  {Object} input         input passed to the manager
-       * @param  {String} baseDirectory the base directory
+       * @param  {String} operatingDirectory the base directory
        * @return {Promise}               Promise that resolves or rejects to output
        */
-      start(input, { baseDirectory }) {
+      start(input, { operatingDirectory }) {
         // console.log(input); Keeping this for future ref.
         const opts = managerOptions({
           computation,
-          baseDirectory,
+          operatingDirectory,
           containerOptions,
           imageDirectory,
         });

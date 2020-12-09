@@ -1,6 +1,6 @@
 'use strict';
 
-const dockerManager = require('coinstac-docker-manager');
+const dockerManager = require('coinstac-manager');
 const validator = require('./services/validator');
 
 

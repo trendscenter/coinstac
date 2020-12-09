@@ -1,4 +1,4 @@
-# coinstac-docker-manager
+# coinstac-manager
 
 <img src="https://raw.githubusercontent.com/MRN-Code/coinstac/master/img/coinstac.png" height="75px">
 
