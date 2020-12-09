@@ -1,12 +1,12 @@
 {
   "name": "coinstac-client-core",
-  "version": "5.1.0",
+  "version": "5.1.5",
   "description": "COINSTAC business logic for clients.",
   "main": "src/index.js",
   "scripts": {
     "clean": "rm -rf .nyc_output coverage .tmp",
     "docs": "mkdir -p docs && jsdoc -c .jsdoc.json src/",
-    "test": "echo write tests plz"
+    "test": "nyc ava"
   },
   "repository": {
     "type": "git",
@@ -29,12 +29,25 @@
   },
   "homepage": "https://github.com/MRN-Code/coinstac#readme",
   "dependencies": {
-    "coinstac-docker-manager": "^5.1.0",
-    "coinstac-pipeline": "^5.1.0",
+    "axios": "^0.19.2",
+    "coinstac-docker-manager": "^5.1.5",
+    "coinstac-pipeline": "^5.1.5",
     "convict": "^4.3.2",
     "csv-parse": "^4.4.3",
     "lodash": "^4.17.10",
     "mkdirp": "^0.5.1",
+    "nes": "^10.0.2",
     "winston": "^3.2.1"
+  },
+  "devDependencies": {
+    "ava": "^3.8.1",
+    "nyc": "^15.0.1",
+    "sinon": "^9.0.2"
+  },
+  "ava": {
+    "files": [
+      "test/**.test.js"
+    ],
+    "timeout": "20s"
   }
 }

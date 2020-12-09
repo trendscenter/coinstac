@@ -19,7 +19,11 @@ const zlib = require('zlib');
 const merge2 = require('merge2');
 const pify = require('util').promisify;
 const rmrf = pify(require('rimraf'));
+const debug = require('debug');
 const Store = require('./io-store');
+
+const debugProfile = debug('pipeline:profile');
+const debugProfileClient = debug('pipeline:profile-client');
 
 const {
   readdir,
@@ -159,6 +163,8 @@ module.exports = {
     const remoteClients = {};
     const request = remoteProtocol.trim() === 'https:' ? https : http;
     logger = logger || defaultLogger;
+    debugProfileClient.log = l => logger.info(`PROFILING: ${l}`);
+    debugProfile.log = l => logger.info(`PROFILING: ${l}`);
 
     /**
      * exponential backout for GET
@@ -239,7 +245,7 @@ module.exports = {
      *  transfer a file to or from the remote
      * @param  {string} method   POST or GET
      * @param  {integer} limit   retry limit for an unreachable host
-     * @param  {Array} files     files to send or recieve
+     * @param  {Array} files     files to send or receive
      * @param  {string} clientId this clients id
      * @param  {string} runId    the run context for the files
      * @return {Promise}         Promise when the files are received,
@@ -359,6 +365,18 @@ module.exports = {
       });
     };
 
+    const printClientTimeProfiling = (runId, task) => {
+      activePipelines[runId].clients.forEach((client) => {
+        const currentClient = remoteClients[client][runId];
+        if (currentClient) {
+          const time = currentClient.debug.received - currentClient.debug.sent;
+          currentClient.debug.profiling[task] = currentClient.debug.profiling[task]
+            ? currentClient.debug.profiling[task] + time : time;
+          debugProfileClient(`${task} took ${client}: ${time}ms`);
+        }
+      });
+    };
+
     // TODO: secure socket layer
     if (mode === 'remote') {
       logger.silly('Starting remote pipeline manager');
@@ -387,6 +405,7 @@ module.exports = {
       app.use(express.urlencoded({ limit: '100mb' }));
 
       app.post('/transfer', upload.single('file'), (req, res) => {
+        const received = Date.now();
         res.end();
         const { clientId, runId } = req.body;
         const client = remoteClients[clientId][runId];
@@ -397,6 +416,7 @@ module.exports = {
           if (client.files.expected.length !== 0
             && client.files.expected
               .every(e => [req.body.filename, ...client.files.received].includes(e))) {
+            remoteClients[clientId][runId].debug.received = Date.now();
             const workDir = path.join(
               activePipelines[runId].baseDirectory,
               clientId
@@ -429,8 +449,9 @@ module.exports = {
             clearClientFileList(runId);
             rmrf(path.join(activePipelines[runId].transferDirectory, '*'))
               .then(() => {
+                printClientTimeProfiling(runId, 'Transmission with files');
                 activePipelines[runId].remote
-                  .resolve({ success: false });
+                  .resolve({ debug: { received }, success: false });
               });
           }
         }).catch((error) => {
@@ -498,6 +519,7 @@ module.exports = {
       });
 
       mqttServer.on('message', (topic, dataBuffer) => {
+        const received = Date.now();
         const data = JSON.parse(dataBuffer);
         const {
           id, runId, output, error, files,
@@ -511,10 +533,10 @@ module.exports = {
 
             // normal pipeline operation
             if (remoteClients[id] && remoteClients[id][runId]) {
-              remoteClients[id].lastSeen = Math.floor(Date.now() / 1000);
-
               // is the client giving us an error?
               if (!error) {
+                remoteClients[id][runId].debug.received = Date.now();
+                remoteClients[id][runId].debug.sent = data.debug.sent;
                 // has this pipeline error'd out?
                 if (!activePipelines[runId].error) {
                   // check if the msg is a dup, either for a current or past iteration
@@ -547,8 +569,11 @@ module.exports = {
                       // clear transfer and start run
                       clearClientFileList(runId);
                       rmrf(path.join(activePipelines[runId].transferDirectory, '*'))
-                        .then(() => activePipelines[runId].remote
-                          .resolve({ success: false }));
+                        .then(() => {
+                          printClientTimeProfiling(runId, 'Transmission');
+                          activePipelines[runId].remote
+                            .resolve({ debug: { received }, success: false });
+                        });
                     }
                   }
                 } else {
@@ -638,6 +663,7 @@ module.exports = {
       });
 
       mqttClient.on('message', async (topic, dataBuffer) => {
+        const received = Date.now();
         const data = JSON.parse(dataBuffer);
         // TODO: step check?
         switch (topic) {
@@ -651,6 +677,7 @@ module.exports = {
               }
               activePipelines[data.runId].state = 'received central node data';
               logger.silly('received central node data');
+              debugProfileClient(`Transmission to ${clientId} took the remote: ${Date.now() - data.debug.sent}ms`);
 
               let error;
               if (data.files) {
@@ -704,7 +731,9 @@ module.exports = {
                 // issues writing to it, this is the place to look
                 await rmrf(path.join(activePipelines[data.runId].transferDirectory, '*'))
                   .then(() => {
-                    activePipelines[data.runId].remote.resolve({ success: data.success });
+                    activePipelines[data.runId].remote.resolve(
+                      { debug: { received }, success: data.success }
+                    );
                   });
               }
             } else if (data.error && activePipelines[data.runId]) {
@@ -755,6 +784,9 @@ module.exports = {
        *                               Promise for its result
        */
       startPipeline({ spec, clients = [], runId }) {
+        let pipelineStartTime;
+        store.put(`${runId}-profiling`, clientId, {});
+        if (mode === 'remote') pipelineStartTime = Date.now();
         if (activePipelines[runId] && activePipelines[runId].state !== 'pre-pipeline') {
           throw new Error('Duplicate pipeline started');
         }
@@ -790,6 +822,7 @@ module.exports = {
             remote: { reject: () => {} }, // noop for pre pipe errors
             owner: spec.owner,
             limitOutputToOwner: spec.limitOutputToOwner,
+            debug: {},
           },
           activePipelines[runId]
         );
@@ -800,7 +833,11 @@ module.exports = {
             {
               id: client,
               state: 'unregistered',
-              [runId]: { state: {}, files: { expected: [], received: [] } },
+              [runId]: {
+                state: {},
+                files: { expected: [], received: [] },
+                debug: { profiling: {} },
+              },
             },
             remoteClients[client]
           );
@@ -882,6 +919,7 @@ module.exports = {
                           success,
                           files: [...files],
                           iteration: messageIteration,
+                          debug: { sent: Date.now() },
                         },
                         {
                           success,
@@ -898,6 +936,7 @@ module.exports = {
                       output: message,
                       success,
                       iteration: messageIteration,
+                      debug: { sent: Date.now() },
                     },
                     {
                       success,
@@ -909,7 +948,12 @@ module.exports = {
                 }).catch((e) => {
                   mqttClient.publish(
                     'run',
-                    JSON.stringify({ id: clientId, runId: pipeline.id, error: `Error from central node ${e}` }),
+                    JSON.stringify({
+                      id: clientId,
+                      runId: pipeline.id,
+                      error: `Error from central node ${e}`,
+                      debug: { sent: Date.now() },
+                    }),
                     { qos: 0 },
                     (err) => { if (err) logger.error(`Mqtt error: ${err}`); }
                   );
@@ -923,7 +967,12 @@ module.exports = {
               } else {
                 mqttClient.publish(
                   'run',
-                  JSON.stringify({ id: clientId, runId: pipeline.id, error: message }),
+                  JSON.stringify({
+                    id: clientId,
+                    runId: pipeline.id,
+                    error: message,
+                    debug: { sent: Date.now() },
+                  }),
                   { qos: 0 },
                   (err) => { if (err) logger.error(`Mqtt error: ${err}`); }
                 );
@@ -974,6 +1023,7 @@ module.exports = {
                             output: message,
                             files: [...files],
                             iteration: messageIteration,
+                            debug: { sent: Date.now() },
                           }),
                           { qos: 0 },
                           (err) => { if (err) logger.error(`Mqtt error: ${err}`); }
@@ -996,6 +1046,7 @@ module.exports = {
                                 id: clientId,
                                 runId: pipeline.id,
                                 error: { stack: e.stack, message: e.message },
+                                debug: { sent: Date.now() },
                               }
                             ),
                             { qos: 1 },
@@ -1016,6 +1067,7 @@ module.exports = {
                           runId: pipeline.id,
                           output: message,
                           iteration: messageIteration,
+                          debug: { sent: Date.now() },
                         }),
                         { qos: 1 },
                         (err) => { if (err) logger.error(`Mqtt error: ${err}`); }
@@ -1085,6 +1137,16 @@ module.exports = {
                 return res;
               });
           }).then((res) => {
+            if (mode === 'remote') {
+              debugProfile('**************************** Profiling totals ***************************');
+              const totalTime = Date.now() - pipelineStartTime;
+              activePipelines[runId].clients.forEach((client) => {
+                Object.keys(remoteClients[client][runId].debug.profiling).forEach((task) => {
+                  debugProfile(`Total ${task} time for ${client} took: ${remoteClients[client][runId].debug.profiling[task]}ms`);
+                });
+              });
+              debugProfile(`Total pipeline time: ${totalTime}ms`);
+            }
             if (!activePipelines[runId].finalTransferList
                 || activePipelines[runId].clients
                   .every(value => activePipelines[runId].finalTransferList.has(value))

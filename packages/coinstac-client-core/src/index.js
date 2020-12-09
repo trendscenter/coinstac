@@ -4,19 +4,18 @@
 const pify = require('util').promisify;
 const csvParse = require('csv-parse');
 const mkdirp = pify(require('mkdirp'));
-const fs = require('fs');
-
-const unlinkAsync = pify(fs.unlink);
-const linkAsync = pify(fs.link);
-const statAsync = pify(fs.stat);
-const readdirAsync = pify(fs.readdir);
-
+const Emitter = require('events');
+const axios = require('axios');
+const nes = require('nes');
+const fs = require('fs').promises;
 const path = require('path');
 const winston = require('winston');
+
 // set w/ config etc post release
 process.LOGLEVEL = 'silly';
 
 const { Logger, transports: { Console } } = winston;
+
 const Manager = require('coinstac-manager');
 const PipelineManager = require('coinstac-pipeline');
 
@@ -46,6 +45,7 @@ class CoinstacClient {
     this.options = opts;
     this.logger = opts.logger || new Logger({ transports: [new Console()] });
     this.appDirectory = opts.appDirectory;
+    this.clientServerURL = opts.clientServerURL;
 
     this.Manager = Manager;
     this.Manager.setLogger(this.logger);
@@ -56,6 +56,11 @@ class CoinstacClient {
     }
 
     this.clientId = opts.userId;
+    this.token = opts.token;
+
+    if (this.clientServerURL) {
+      this.initializeSocket();
+    }
   }
 
   initialize() {
@@ -77,6 +82,17 @@ class CoinstacClient {
     });
   }
 
+  async initializeSocket() {
+    const websocketURL = `ws://${new URL(this.clientServerURL).host}`;
+
+    this.socketClient = new nes.Client(websocketURL);
+    await this.socketClient.connect();
+  }
+
+  setClientServerURL(clientServerURL) {
+    this.clientServerURL = clientServerURL;
+  }
+
   /**
    * Get a metadata CSV's contents.
    *
@@ -84,7 +100,7 @@ class CoinstacClient {
    * @returns {Promise<Project>}
    */
   static getCSV(filename) {
-    return pify(fs.readFile)(filename)
+    return fs.readFile(filename)
       .then(data => pify(csvParse)(data.toString()))
       .then(JSON.stringify);
   }
@@ -156,7 +172,7 @@ class CoinstacClient {
    * @returns {Promise<Project>}
    */
   static getJSONSchema(filename) {
-    return pify(fs.readFile)(filename)
+    return fs.readFile(filename)
       .then(data => JSON.parse(data.toString()));
   }
 
@@ -190,10 +206,10 @@ class CoinstacClient {
         p = path.join(group.parentDir, p);
       }
 
-      const stats = await statAsync(p);
+      const stats = await fs.stat(p);
 
       if (stats.isDirectory()) {
-        const dirs = await readdirAsync(p);
+        const dirs = await fs.readdir(p);
         const paths = [...dirs.filter(item => !(/(^|\/)\.[^/.]/g).test(item))];
         // Recursively retrieve path contents of directory
         const subGroup = await this.getSubPathsAndGroupExtension({
@@ -248,37 +264,86 @@ class CoinstacClient {
     runId,
     runPipeline // eslint-disable-line no-unused-vars
   ) {
-    return mkdirp(path.join(this.appDirectory, 'input', this.clientId, runId))
-      .then(() => {
-      // TODO: validate runPipeline against clientPipeline
-        const linkPromises = [];
+    const runObj = { spec: clientPipeline, runId, timeout: clientPipeline.timeout };
 
-        const e = new RegExp(/[-\/\\^$*+?.()|[\]{}]/g); // eslint-disable-line no-useless-escape
-        const escape = (string) => {
-          return string.replace(e, '\\$&');
-        };
-        if (filesArray) {
-          for (let i = 0; i < filesArray.length; i += 1) {
-            const pathsep = new RegExp(`${escape(path.sep)}|:`, 'g');
-            linkPromises.push(
-              linkAsync(filesArray[i], path.resolve(this.appDirectory, 'input', this.clientId, runId, filesArray[i].replace(pathsep, '-')))
-                .catch((e) => {
-                // permit dupes
-                  if (e.code && e.code !== 'EEXIST') {
-                    throw e;
-                  }
-                })
-            );
+    if (clients) {
+      runObj.clients = clients;
+    }
+
+    if (!this.clientServerURL) {
+      return mkdirp(path.join(this.appDirectory, 'input', this.clientId, runId))
+        .then(() => {
+        // TODO: validate runPipeline against clientPipeline
+          const linkPromises = [];
+
+          const e = new RegExp(/[-\/\\^$*+?.()|[\]{}]/g); // eslint-disable-line no-useless-escape
+          const escape = (string) => {
+            return string.replace(e, '\\$&');
+          };
+          if (filesArray) {
+            const stageFiles = process.env.CI ? fs.copy : fs.link;
+            for (let i = 0; i < filesArray.length; i += 1) {
+              const pathsep = new RegExp(`${escape(path.sep)}|:`, 'g');
+              linkPromises.push(
+                stageFiles(filesArray[i], path.resolve(this.appDirectory, 'input', this.clientId, runId, filesArray[i].replace(pathsep, '-')))
+                  .catch((e) => {
+                  // permit dupes
+                    if (e.code && e.code !== 'EEXIST') {
+                      throw e;
+                    }
+                  })
+              );
+            }
           }
-        }
 
-        const runObj = { spec: clientPipeline, runId, timeout: clientPipeline.timeout };
-        if (clients) {
-          runObj.clients = clients;
-        }
+          return Promise.all(linkPromises)
+            .then(() => this.pipelineManager.startPipeline(runObj));
+        });
+    }
 
-        return Promise.all(linkPromises)
-          .then(() => this.pipelineManager.startPipeline(runObj));
+    const run = {
+      ...runObj,
+      consortiumId,
+      pipelineSnapshot: clientPipeline,
+    };
+
+    return axios.post(
+      `${this.clientServerURL}/startPipeline/${this.clientId}`,
+      { run },
+      { headers: { Authorization: `Bearer ${this.token}` } }
+    )
+      .then(({ data }) => {
+        return new Promise((resolve) => {
+          const stateEmitter = new Emitter();
+
+          function getResult(socketClient) {
+            return new Promise((resResolve, resReject) => {
+              socketClient.subscribe(`/pipelineResult/${runId}`, (res) => {
+                if (res.event === 'update') {
+                  stateEmitter.emit('update', res.data);
+                }
+
+                if (res.event === 'result') {
+                  socketClient.unsubscribe(`/pipelineResult/${runId}`);
+                  resResolve(res.data);
+                }
+
+                if (res.event === 'error') {
+                  socketClient.unsubscribe(`/pipelineResult/${runId}`);
+                  resReject(res.data);
+                }
+              });
+            });
+          }
+
+          resolve({
+            pipeline: {
+              ...data.pipeline,
+              stateEmitter,
+            },
+            result: getResult(this.socketClient),
+          });
+        });
       });
   }
 
@@ -296,7 +361,7 @@ class CoinstacClient {
   unlinkFiles(runId) {
     const fullPath = path.join(this.appDirectory, 'input', this.clientId, runId);
 
-    return statAsync(fullPath).then((stats) => {
+    return fs.stat(fullPath).then((stats) => {
       return stats.isDirectory();
     })
       .catch((err) => {
@@ -308,22 +373,13 @@ class CoinstacClient {
           return [];
         }
 
-        return new Promise((res, rej) => {
-          return fs.readdir(fullPath,
-            (error, filesArray) => {
-              if (error) {
-                rej(error);
-              } else {
-                res(filesArray);
-              }
-            });
-        });
+        return fs.readdir(fullPath);
       })
       .then((filesArray) => {
         const unlinkPromises = [];
         for (let i = 0; i < filesArray.length; i += 1) {
           unlinkPromises.push(
-            unlinkAsync(path.resolve(fullPath, filesArray[i]))
+            fs.unlink(path.resolve(fullPath, filesArray[i]))
           );
         }
         return Promise.all(unlinkPromises);

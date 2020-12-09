@@ -80,9 +80,10 @@ class FormLogin extends Component {
     });
   }
 
-  changeAppDirectory = ({ appDirectory }) => {
-    const { changeAppDirectory } = this.props;
+  changeAppData = ({ appDirectory, clientServerURL }) => {
+    const { changeAppDirectory, changeClientServerURL } = this.props;
     changeAppDirectory(appDirectory);
+    changeClientServerURL(clientServerURL);
     this.setState({ isStartupDirectoryDialogOpen: false });
   }
 
@@ -176,10 +177,11 @@ class FormLogin extends Component {
           Change App Settings
         </Button>
         <FormStartupDirectory
-          open={isStartupDirectoryDialogOpen}
-          close={this.toggleStartupDirectoryDialog}
           appDirectory={auth.appDirectory}
-          onSubmit={this.changeAppDirectory}
+          clientServerURL={auth.clientServerURL}
+          open={isStartupDirectoryDialogOpen}
+          onSubmit={this.changeAppData}
+          close={this.toggleStartupDirectoryDialog}
         />
       </div>
     );
@@ -191,6 +193,7 @@ FormLogin.propTypes = {
   classes: PropTypes.object.isRequired,
   loading: PropTypes.object,
   changeAppDirectory: PropTypes.func.isRequired,
+  changeClientServerURL: PropTypes.func.isRequired,
   submit: PropTypes.func.isRequired,
 };
 

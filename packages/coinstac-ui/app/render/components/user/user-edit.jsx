@@ -12,12 +12,12 @@ const styles = theme => ({
     marginBottom: 10,
   },
   paper: {
-    padding: theme.spacing.unit * 2,
+    padding: theme.spacing(2),
     maxWidth: 300,
-    marginBottom: theme.spacing.unit * 2,
+    marginBottom: theme.spacing(2),
   },
   formControl: {
-    marginBottom: theme.spacing.unit * 2,
+    marginBottom: theme.spacing(2),
   },
   error: {
     textAlign: 'center',
@@ -90,14 +90,12 @@ class UserEdit extends Component {
     return (
       <Paper className={classes.paper}>
         <form onSubmit={this.handleSubmit}>
-          {
-            error && (
-              <p
-                className={classNames(classes.bottomMargin, classes.error)}
-                dangerouslySetInnerHTML={{ __html: error }}
-              />
-            )
-          }
+          {error && (
+            <p
+              className={classNames(classes.bottomMargin, classes.error)}
+              dangerouslySetInnerHTML={{ __html: error }} // eslint-disable-line react/no-danger
+            />
+          )}
           <TextField
             label="Name"
             value={name}

@@ -29,5 +29,5 @@ rmrf('./node_modules/coinstac-*(common|client-core|graphql-schema|docker-manager
     ncp('../coinstac-pipeline/package.json', './node_modules/coinstac-pipeline/package.json'),
     ncp('../coinstac-pipeline/src', './node_modules/coinstac-pipeline/src'),
   ]))
-  .then(() => paths.map(p => npmi(p)))
+  .then(() => Promise.all(paths.map(p => npmi(p))))
   .catch(console.error); // eslint-disable-line no-console

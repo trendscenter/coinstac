@@ -27,6 +27,7 @@ const INITIAL_STATE = {
     consortiaStatuses: {},
   },
   appDirectory: localStorage.getItem('appDirectory') || remote.getGlobal('config').get('coinstacHome'),
+  clientServerURL: localStorage.getItem('clientServerURL') || '',
   isApiVersionCompatible: true,
   locationStacks: [],
   error: null,
@@ -42,6 +43,7 @@ const CLEAR_ERROR = 'CLEAR_ERROR';
 const UPDATE_USER_CONSORTIA_STATUSES = 'UPDATE_USER_CONSORTIA_STATUSES';
 const UPDATE_USER_PERMS = 'UPDATE_USER_PERMS';
 const SET_APP_DIRECTORY = 'SET_APP_DIRECTORY';
+const SET_CLIENT_SERVER_URL = 'SET_CLIENT_SERVER_URL';
 const SET_API_VERSION_CHECK = 'SET_API_VERSION_CHECK';
 
 // Action Creators
@@ -55,18 +57,28 @@ export const updateUserConsortiaStatuses = statuses => ({
 });
 export const updateUserPerms = perms => ({ type: UPDATE_USER_PERMS, payload: perms });
 export const setAppDirectory = appDirectory => ({ type: SET_APP_DIRECTORY, payload: appDirectory });
+export const setClientServerURL = clientServerURL => ({
+  type: SET_CLIENT_SERVER_URL,
+  payload: clientServerURL,
+});
 export const setApiVersionCheck = isApiVersionCompatible => ({
   type: SET_API_VERSION_CHECK,
   payload: isApiVersionCompatible,
 });
 
 // Helpers
-const initCoreAndSetToken = async (reqUser, data, appDirectory, dispatch) => {
+const initCoreAndSetToken = async (reqUser, data, appDirectory, clientServerURL, dispatch) => {
   if (appDirectory) {
     localStorage.setItem('appDirectory', appDirectory);
   }
 
-  await ipcPromise.send('login-init', { userId: reqUser.userid, appDirectory });
+  if (clientServerURL) {
+    localStorage.setItem('clientServerURL', clientServerURL);
+  }
+
+  await ipcPromise.send('login-init', {
+    userId: data.user.id, appDirectory, clientServerURL, token: data.id_token,
+  });
 
   const user = { ...data.user, label: reqUser.username };
 
@@ -92,12 +104,24 @@ const initCoreAndSetToken = async (reqUser, data, appDirectory, dispatch) => {
   });
 };
 
-export const logout = applyAsyncLoading(() => (dispatch) => {
+export const logout = applyAsyncLoading(() => async (dispatch, getState) => {
   localStorage.removeItem(API_TOKEN_KEY);
   sessionStorage.removeItem(API_TOKEN_KEY);
-  return ipcPromise.send('logout')
+
+  const { auth: { user } } = getState();
+
+  await axios.post(`${API_URL}/logout`, { username: user.username });
+
+  await ipcPromise.send('logout');
+
+  dispatch(clearUser());
+});
+
+export const setClientCoreUrlAsync = applyAsyncLoading(url => (dispatch) => {
+  localStorage.setItem('clientServerURL', url);
+  return ipcPromise.send('set-client-server-url', url)
     .then(() => {
-      dispatch(clearUser());
+      dispatch(setClientServerURL(url));
     });
 });
 
@@ -123,11 +147,12 @@ export const autoLogin = applyAsyncLoading(() => (dispatch, getState) => {
   )
     // TODO: GET RID OF CORE INIT
     .then(({ data }) => {
-      const { auth: { appDirectory } } = getState();
+      const { auth: { appDirectory, clientServerURL } } = getState();
       return initCoreAndSetToken(
         { id: data.user.id, saveLogin, password: 'password' },
         data,
         appDirectory,
+        clientServerURL,
         dispatch
       );
     })
@@ -158,9 +183,10 @@ export const checkApiVersion = applyAsyncLoading(() => dispatch => axios.get(`${
 
 export const login = applyAsyncLoading(({ username, password, saveLogin }) => (dispatch, getState) => axios.post(`${API_URL}/authenticate`, { username, password })
   .then(({ data }) => {
-    const { auth: { appDirectory } } = getState();
-    const userid = data.user.id;
-    return initCoreAndSetToken({ userid, password, saveLogin }, data, appDirectory, dispatch);
+    const { auth: { appDirectory, clientServerURL } } = getState();
+    return initCoreAndSetToken(
+      { username, password, saveLogin }, data, appDirectory, clientServerURL, dispatch
+    );
   })
   .catch((err) => {
     console.error(err); // eslint-disable-line no-console
@@ -179,8 +205,8 @@ export const login = applyAsyncLoading(({ username, password, saveLogin }) => (d
 
 export const signUp = applyAsyncLoading(user => (dispatch, getState) => axios.post(`${API_URL}/createAccount`, user)
   .then(({ data }) => {
-    const { auth: { appDirectory } } = getState();
-    return initCoreAndSetToken(user, data, appDirectory, dispatch);
+    const { auth: { appDirectory, clientServerURL } } = getState();
+    return initCoreAndSetToken(user, data, appDirectory, clientServerURL, dispatch);
   })
   .catch((err) => {
     const { statusCode, message } = getErrorDetail(err);
@@ -244,7 +270,11 @@ export default function reducer(state = INITIAL_STATE, { type, payload }) {
     case UPDATE_USER_PERMS:
       return { ...state, user: { ...state.user, permissions: payload } };
     case SET_APP_DIRECTORY:
+      localStorage.setItem('appDirectory', payload);
       return { ...state, appDirectory: payload };
+    case SET_CLIENT_SERVER_URL:
+      localStorage.setItem('clientServerURL', payload);
+      return { ...state, clientServerURL: payload };
     case SET_API_VERSION_CHECK:
       return { ...state, isApiVersionCompatible: payload };
     case LOCATION_CHANGE:

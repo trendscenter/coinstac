@@ -33,6 +33,17 @@ const managerOptions = ({
           },
         }, containerOptions),
       };
+      if (process.env.CI) {
+        opts.docker.HostConfig = {
+          Binds: [
+            `${process.env.CI_VOLUME}:${operatingDirectory}`,
+          ],
+          Volumes: {
+            [operatingDirectory]: {},
+          },
+          NetworkMode: process.env.CI_DOCKER_NETWORK,
+        };
+      }
       break;
     case 'singularity':
       opts = [
@@ -100,7 +111,7 @@ module.exports = {
           opts
         )
           .then((service) => {
-            return service(computation.command.concat([`${JSON.stringify(input)}`]));
+            return service(computation.command.concat([`${JSON.stringify(input)}`]), `${this.runId}-${this.clientId}`);
           });
       },
       /**

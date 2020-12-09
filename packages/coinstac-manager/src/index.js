@@ -90,7 +90,6 @@ const getStatus = (provider = 'docker') => {
  */
 const startService = (serviceId, serviceUserId, service, opts) => {
   const createService = () => {
-    services[serviceId] = { users: [serviceUserId] };
     services[serviceId].state = 'starting';
     return generateServicePort(serviceId)
       .then((port) => {
@@ -99,8 +98,10 @@ const startService = (serviceId, serviceUserId, service, opts) => {
   };
 
   if (services[serviceId] && (services[serviceId].state !== 'shutting down' && services[serviceId].state !== 'zombie')) {
-    if (services[serviceId].users.indexOf(serviceUserId) === -1) {
-      services[serviceId].users.push(serviceUserId);
+    if (!services[serviceId].users[serviceUserId]) {
+      services[serviceId].users[serviceUserId] = {
+        debug: { dockerPreComp: 0, dockerComp: 0, dockerPostComp: 0 },
+      };
     }
     if (services[serviceId].container && services[serviceId].state !== 'starting') {
       logger.silly('Returning already started service');
@@ -248,6 +249,9 @@ const removeImage = (imageId, provider = 'docker') => {
   return serviceProviders[provider].getImage(imageId).remove();
 };
 
+const removeImagesFromList = comps => Promise.all(comps.map(image => removeImage(`${image}:latest`)))
+  .then(streams => streams.map((stream, index) => ({ stream, compId: comps[index] })));
+
 /**
  * Attempts to stop a given service
  * If there are no other users, the service stops
@@ -259,11 +263,11 @@ const removeImage = (imageId, provider = 'docker') => {
  */
 const stopService = (serviceId, serviceUserId, waitForBox) => {
   const service = services[serviceId];
-  if (!service) return Promise.resolve();
-  if (service.users.indexOf(serviceUserId) > -1) {
-    service.users.splice(service.users.indexOf(serviceUserId), 1);
+  if (!service) return Promise.resolve(serviceId);
+  if (service.users[serviceUserId]) {
+    delete service.users[serviceUserId];
   }
-  if (service.users.length === 0) {
+  if (Object.keys(service.users).length === 0) {
     if (service.state !== 'starting') {
       service.state = 'shutting down';
       const boxPromise = service.container.stop()
@@ -276,12 +280,12 @@ const stopService = (serviceId, serviceUserId, waitForBox) => {
           service.state = 'zombie';
           service.error = err;
         });
-      return waitForBox ? boxPromise : Promise.resolve();
+      return waitForBox ? boxPromise : Promise.resolve(serviceId);
     }
     delete services[serviceId];
-    return Promise.resolve();
+    return Promise.resolve(serviceId);
   }
-  return Promise.resolve();
+  return Promise.resolve(serviceId);
 };
 
 /**
@@ -305,6 +309,7 @@ module.exports = {
   pullImagesFromList,
   pruneImages,
   removeImage,
+  removeImagesFromList,
   setLogger,
   startService,
   stopService,

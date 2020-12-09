@@ -8,3 +8,6 @@ couchdb*
 coverage
 img
 test
+scripts
+dist
+electron-builder.yml
