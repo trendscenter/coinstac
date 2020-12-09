@@ -36,7 +36,7 @@ const managerOptions = ({
       break;
     case 'singularity':
       opts = [
-        // '--contain', // not yet working on osx
+        '--contain',
         '-B',
         `${baseDirectory}/input:/input:ro,${baseDirectory}/output:/output:rw,${baseDirectory}/cache:/cache:rw,${baseDirectory}/transfer:/transfer:rw`,
         path.join(imageDirectory, computation.image),
