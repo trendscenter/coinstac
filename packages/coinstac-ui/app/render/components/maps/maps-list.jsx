@@ -35,18 +35,22 @@ class MapsList extends Component {
       return null;
     }
 
-    const hasDataMap = maps.findIndex(m => m.consortiumId === consortium.id
+    const hasDataMapping = maps.findIndex(m => m.consortiumId === consortium.id
       && m.pipelineId === consortium.activePipelineId) > -1;
 
-    const needsDataMapping = !hasDataMap && pipelineNeedsDataMapping(pipeline);
+    const dataMapIsComplete = maps.findIndex(m => m.consortiumId === consortium.id
+      && m.pipelineId === consortium.activePipelineId && m.isComplete) > -1;
+
+    const needsDataMapping = !hasDataMapping && pipelineNeedsDataMapping(pipeline);
 
     return (
       <Grid item xs={12} sm={12} md={6} lg={4} key={`${consortium.id}-list-item`}>
         <MapsListItem
           consortium={consortium}
           pipeline={pipeline}
-          canDelete={hasDataMap}
+          canDelete={hasDataMapping}
           onDelete={this.deleteDataMapping}
+          dataMapIsComplete={dataMapIsComplete}
           needsDataMapping={needsDataMapping}
         />
       </Grid>

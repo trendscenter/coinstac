@@ -26,6 +26,32 @@ export function pipelineNeedsDataMapping(pipeline) {
   return needsDataMapping;
 }
 
+export function reducePipelineInputs(pipeline) {
+  if (!pipeline || !pipeline.steps) {
+    return [];
+  }
+
+  const reducedInputs = pipeline.steps.reduce((inputs, step) => {
+    const inputsArray = [...inputs];
+
+    Object.keys(step.inputMap).forEach((inputMapKey) => {
+      if (step.inputMap[inputMapKey].fulfilled) {
+        return;
+      }
+
+      if (Array.isArray(step.inputMap[inputMapKey].value)) {
+        inputsArray.push(...step.inputMap[inputMapKey].value);
+      } else {
+        inputsArray.push(step.inputMap[inputMapKey].value);
+      }
+    });
+
+    return inputsArray;
+  }, []);
+
+  return reducedInputs;
+}
+
 export const isAdmin = (user) => {
   return get(user, 'permissions.roles.admin', false);
 };

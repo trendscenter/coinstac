@@ -38,8 +38,14 @@ import {
   consortiumSaveActivePipelineProp,
   getAllAndSubProp,
 } from '../../state/graphql/props';
+import { updateMapStatus } from '../../state/ducks/maps';
 import { notifySuccess, notifyError } from '../../state/ducks/notifyAndLog';
-import { isPipelineOwner, getGraphQLErrorMessage, isUserInGroup } from '../../utils/helpers';
+import {
+  isPipelineOwner,
+  getGraphQLErrorMessage,
+  isUserInGroup,
+  reducePipelineInputs,
+} from '../../utils/helpers';
 
 const computationTarget = {
   drop() {
@@ -401,8 +407,11 @@ class Pipeline extends Component {
   savePipeline = async () => {
     const {
       auth: { user }, notifySuccess, notifyError, saveActivePipeline, savePipeline,
+      pipelines, updateMapStatus,
     } = this.props;
     const { pipeline } = this.state;
+
+    const oldPipeline = pipelines.find(p => p.id === pipeline.id);
 
     const { isActive } = pipeline;
 
@@ -435,6 +444,17 @@ class Pipeline extends Component {
         startingPipeline: newPipeline,
         savingStatus: 'success',
       });
+
+      if (oldPipeline) {
+        const oldPipelineInputs = reducePipelineInputs(oldPipeline);
+        const newPipelineInputs = reducePipelineInputs(newPipeline);
+        console.log('old', oldPipelineInputs);
+        console.log('new', newPipelineInputs);
+
+        if (oldPipelineInputs.length !== newPipelineInputs) {
+          updateMapStatus(newPipeline.owningConsortium, newPipeline.id, false);
+        }
+      }
 
       notifySuccess('Pipeline Saved');
 
@@ -765,6 +785,7 @@ const PipelineWithAlert = compose(
 const connectedComponent = connect(mapStateToProps, {
   notifySuccess,
   notifyError,
+  updateMapStatus,
 })(PipelineWithAlert);
 
 export default withStyles(styles)(connectedComponent);

@@ -2,6 +2,7 @@ import { dirname, basename } from 'path';
 import { applyAsyncLoading } from './loading';
 
 const SAVE_DATA_MAPPING = 'SAVE_DATA_MAPPING';
+const UPDATE_MAP_STATUS = 'UPDATE_MAP_STATUS';
 const DELETE_DATA_MAPPING = 'DELETE_DATA_MAPPING';
 const DELETE_ALL_DATA_MAPPINGS_FROM_CONSORTIUM = 'DELETE_ALL_DATA_MAPPINGS_FROM_CONSORTIUM';
 
@@ -90,11 +91,26 @@ export const saveDataMapping = applyAsyncLoading(
       consortiumId,
       pipelineId: pipeline.id,
       map: mapData,
+      dataMap: map,
+      isComplete: true,
     };
 
     dispatch(({
       type: SAVE_DATA_MAPPING,
       payload: mapping,
+    }));
+  }
+);
+
+export const updateMapStatus = applyAsyncLoading(
+  (consortiumId, pipelineId, complete) => async (dispatch) => {
+    dispatch(({
+      type: UPDATE_MAP_STATUS,
+      payload: {
+        consortiumId,
+        pipelineId,
+        complete,
+      },
     }));
   }
 );
@@ -126,6 +142,21 @@ export default function reducer(state = INITIAL_STATE, action) {
       return {
         ...state,
         consortiumDataMappings: [...state.consortiumDataMappings, action.payload],
+      };
+    case UPDATE_MAP_STATUS:
+      return {
+        ...state,
+        consortiumDataMappings: state.consortiumDataMappings
+          .map((map) => {
+            if (map.consortiumId === action.payload.consortiumId && map.pipelineId === action.payload.pipelineId) {
+              return {
+                ...map,
+                isComplete: action.payload.complete,
+              };
+            }
+
+            return map;
+          }),
       };
     case DELETE_DATA_MAPPING:
       return {

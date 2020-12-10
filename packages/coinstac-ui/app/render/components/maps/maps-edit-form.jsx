@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
 import Button from '@material-ui/core/Button';
+import CheckCircleIcon from '@material-ui/icons/CheckCircle';
 import MapsCsvField from './maps-csv-field';
 import MapsFilesField from './maps-files-field';
 
@@ -11,10 +12,19 @@ const styles = theme => ({
     display: 'flex',
     justifyContent: 'flex-end',
   },
+  successMessage: {
+    marginRight: theme.spacing(1),
+    display: 'flex',
+    alignItems: 'center',
+  },
+  successIcon: {
+    marginLeft: theme.spacing(0.5),
+    color: '#43a047',
+  },
 });
 
 function MapsEditForm({
-  pipeline, dataMap, onSubmit, onChange, classes,
+  pipeline, dataMap, onSubmit, onChange, saved, classes,
 }) {
   return (
     <form onSubmit={onSubmit}>
@@ -53,6 +63,14 @@ function MapsEditForm({
         })
       }
       <div className={classes.saveButtonContainer}>
+        {
+          saved && (
+            <span className={classes.successMessage}>
+              Consortium Saved
+              <CheckCircleIcon className={classes.successIcon} />
+            </span>
+          )
+        }
         <Button
           variant="contained"
           color="primary"
@@ -70,11 +88,13 @@ MapsEditForm.propTypes = {
   dataMap: PropTypes.object.isRequired,
   onSubmit: PropTypes.func.isRequired,
   onChange: PropTypes.func.isRequired,
+  saved: PropTypes.bool,
   classes: PropTypes.object.isRequired,
 };
 
 MapsEditForm.defaultProps = {
   pipeline: null,
+  saved: false,
 };
 
 export default withStyles(styles)(MapsEditForm);

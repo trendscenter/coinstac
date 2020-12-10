@@ -60,9 +60,9 @@ async function openFileDialog(multiple, directory, extensions, filterName) {
 }
 
 function FilePicker({
-  multiple, directory, extensions, filterName, onChange, tooltip, classes,
+  multiple, directory, extensions, filterName, selectedFiles, onChange,
+  deleteFile, tooltip, classes,
 }) {
-  const [files, setFiles] = useState([]);
   const [expandList, setExpandList] = useState(false);
 
   return (
@@ -76,9 +76,7 @@ function FilePicker({
             const selectedFiles = await openFileDialog(multiple, directory, extensions, filterName);
 
             if (selectedFiles) {
-              const newFiles = files.concat(selectedFiles);
-              setFiles(newFiles);
-              onChange(newFiles);
+              onChange(selectedFiles);
             }
           }}
         >
@@ -97,7 +95,7 @@ function FilePicker({
         }
       </div>
       {
-        files.length > 0 && (
+        selectedFiles && selectedFiles.length > 0 && (
           <Paper variant="outlined" className={classes.fileListContainer}>
             <List disablePadding>
               <ListItem button onClick={() => setExpandList(!expandList)}>
@@ -111,7 +109,7 @@ function FilePicker({
             <Collapse in={expandList} timeout="auto">
               <List disablePadding>
                 {
-                  files.map((file, index) => (
+                  selectedFiles.map((file, index) => (
                     <ListItem key={file} button>
                       <ListItemText>
                         <Typography
@@ -126,12 +124,7 @@ function FilePicker({
                         <IconButton
                           edge="end"
                           aria-label="delete"
-                          onClick={() => {
-                            const newFiles = files.filter((f, i) => i !== index);
-
-                            setFiles(newFiles);
-                            onChange(newFiles);
-                          }}
+                          onClick={() => deleteFile(index)}
                         >
                           <DeleteIcon />
                         </IconButton>
@@ -152,6 +145,7 @@ FilePicker.defaultProps = {
   multiple: false,
   directory: false,
   tooltip: null,
+  selectedFiles: [],
 };
 
 FilePicker.propTypes = {
@@ -161,7 +155,9 @@ FilePicker.propTypes = {
   filterName: PropTypes.string.isRequired,
   onChange: PropTypes.func.isRequired,
   tooltip: PropTypes.string,
+  selectedFiles: PropTypes.array,
   classes: PropTypes.object.isRequired,
+  deleteFile: PropTypes.func.isRequired,
 };
 
 export default withStyles(styles)(FilePicker);

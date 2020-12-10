@@ -44,6 +44,7 @@ const MapsListItem = ({
   canDelete,
   onDelete,
   needsDataMapping,
+  dataMapIsComplete,
   classes,
 }) => (
   <Paper
@@ -69,7 +70,7 @@ const MapsListItem = ({
           to={`/dashboard/maps/${consortium.id}`}
           name={consortium.name}
         >
-          { needsDataMapping ? 'Map Data to Consortium' : 'View Details' }
+          { needsDataMapping ? 'Map Data to Consortium' : 'Edit Mapped Data' }
         </Button>
       </div>
       {
@@ -86,9 +87,9 @@ const MapsListItem = ({
         )
       }
       {
-        needsDataMapping
-          ? <WarningIcon style={{ color: yellow[700] }} fontSize="large" />
-          : <CheckIcon style={{ color: green[500] }} fontSize="large" />
+        dataMapIsComplete
+          ? <CheckIcon style={{ color: green[500] }} fontSize="large" />
+          : <WarningIcon style={{ color: yellow[700] }} fontSize="large" />
       }
     </div>
   </Paper>
@@ -101,6 +102,7 @@ MapsListItem.propTypes = {
   onDelete: PropTypes.func.isRequired,
   canDelete: PropTypes.bool.isRequired,
   needsDataMapping: PropTypes.bool.isRequired,
+  dataMapIsComplete: PropTypes.bool.isRequired,
 };
 
 export default withStyles(styles)(MapsListItem);

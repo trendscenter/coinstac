@@ -135,10 +135,10 @@ class ConsortiaList extends Component {
 
     const pipeline = pipelines.find(pipe => pipe.id === consortium.activePipelineId);
 
-    const consortiumHasDataMap = maps.findIndex(m => m.consortiumId === consortium.id
-      && m.pipelineId === consortium.activePipelineId) > -1;
+    const dataMapIsComplete = maps.findIndex(m => m.consortiumId === consortium.id
+      && m.pipelineId === consortium.activePipelineId && m.isComplete) > -1;
 
-    const needsDataMapping = !consortiumHasDataMap && pipelineNeedsDataMapping(pipeline);
+    const needsDataMapping = !dataMapIsComplete && pipelineNeedsDataMapping(pipeline);
 
     // Add pipeline text
     text.push(

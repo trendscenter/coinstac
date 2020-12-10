@@ -63,12 +63,21 @@ class MapsCsvField extends React.Component {
 
     this.autoMap = this.autoMap.bind(this);
     this.onDrop = this.onDrop.bind(this);
+    this.setInitialState = this.setInitialState.bind(this);
     this.setSelectedFiles = this.setSelectedFiles.bind(this);
+    this.appendSelectedFiles = this.appendSelectedFiles.bind(this);
+    this.deleteFile = this.deleteFile.bind(this);
     this.unmapField = this.unmapField.bind(this);
   }
 
   componentDidMount() {
     drake.on('drop', this.onDrop);
+
+    const { fieldDataMap } = this.props;
+
+    if (fieldDataMap) {
+      this.setInitialState(fieldDataMap);
+    }
   }
 
   onDrop(fileDataMappingElement, targetPipelineElement) {
@@ -97,7 +106,7 @@ class MapsCsvField extends React.Component {
   }
 
   setSelectedFiles(selectedFiles) {
-    const { onChange, fieldName } = this.props;
+    const { onChange, fieldName, fieldDataMap } = this.props;
 
     const readFiles = async () => {
       const parsedFiles = await readCsvFreesurferFiles(selectedFiles);
@@ -105,17 +114,52 @@ class MapsCsvField extends React.Component {
       const header = new Set();
       parsedFiles.forEach(file => file.header.forEach(headerColumn => header.add(headerColumn)));
 
-      const headerArray = [...header];
+      let headerArray = [...header];
+
+      if (fieldDataMap && fieldDataMap.maps) {
+        const mappedColumns = Object.values(fieldDataMap.maps);
+        headerArray = headerArray.filter(col => !mappedColumns.includes(col));
+      }
 
       this.setState({
         remainingHeader: headerArray,
         selectedFiles,
       });
 
-      onChange(fieldName, { fileData: parsedFiles, files: selectedFiles, maps: {} });
+      onChange(fieldName, {
+        fileData: parsedFiles,
+        files: selectedFiles,
+        maps: fieldDataMap && fieldDataMap.maps ? fieldDataMap.maps : {},
+      });
     };
 
     readFiles();
+  }
+
+  setInitialState(fieldDataMap) {
+    if (fieldDataMap.files) {
+      this.setSelectedFiles(fieldDataMap.files);
+    }
+  }
+
+  appendSelectedFiles(selectedFiles) {
+    const { fieldDataMap } = this.props;
+
+    let files;
+    if (fieldDataMap && fieldDataMap.files && fieldDataMap.files.length > 0) {
+      files = fieldDataMap.files.concat(selectedFiles);
+    } else {
+      files = selectedFiles;
+    }
+
+    this.setSelectedFiles(files);
+  }
+
+  deleteFile(fileIndex) {
+    const { fieldDataMap } = this.props;
+
+    const newFiles = fieldDataMap.files.filter((f, i) => i !== fileIndex);
+    this.setSelectedFiles(newFiles);
   }
 
   unmapField(pipelineFieldName, columnName) {
@@ -184,7 +228,9 @@ class MapsCsvField extends React.Component {
           multiple
           filterName="csv"
           extensions={['csv', 'txt']}
-          onChange={files => this.setSelectedFiles(files)}
+          selectedFiles={fieldDataMap && fieldDataMap.files ? fieldDataMap.files : []}
+          onChange={files => this.appendSelectedFiles(files)}
+          deleteFile={fileIndex => this.deleteFile(fileIndex)}
           tooltip={filePickerTooltip}
         />
         {
@@ -234,7 +280,10 @@ class MapsCsvField extends React.Component {
                           mappedColumn={fieldDataMap && fieldDataMap.maps[pipelineVariable.name]}
                           registerDraggableContainer={container => drake.containers.push(container)}
                           unmapField={
-                            (pipelineFieldName, columnName) => this.unmapField(pipelineFieldName, columnName)
+                            (pipelineFieldName, columnName) => this.unmapField(
+                              pipelineFieldName,
+                              columnName
+                            )
                           }
                         />
                       ))

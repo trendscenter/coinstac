@@ -12,9 +12,9 @@ import {
 } from '../../state/graphql/functions';
 
 function MapsEdit({
-  params, maps, pipelines, consortia, saveDataMapping, updateConsortiumMappedUsers
+  params, maps, pipelines, consortia, saveDataMapping, updateConsortiumMappedUsers,
 }) {
-  const [isMapped, setIsMapped] = useState(false);
+  const [saved, setSaved] = useState(false);
   const [consortium, setConsortium] = useState(null);
   const [pipeline, setPipeline] = useState(null);
   const [dataMap, setDataMap] = useState({});
@@ -31,18 +31,21 @@ function MapsEdit({
     );
 
     if (consortiumDataMap) {
-      setIsMapped(true);
+      setDataMap(consortiumDataMap.dataMap);
     }
   }, []);
 
   function onChange(fieldName, fieldData) {
     setDataMap({ ...dataMap, [fieldName]: fieldData });
+    setSaved(false);
   }
 
-  function commitSaveDataMap() {
-    setIsMapped(true);
+  function commitSaveDataMap(e) {
+    e.preventDefault();
+
     saveDataMapping(consortium.id, pipeline, dataMap);
     updateConsortiumMappedUsers(consortium.id, true);
+    setSaved(true);
   }
 
   return (
@@ -52,31 +55,13 @@ function MapsEdit({
           { `Map - ${consortium && consortium.name}` }
         </Typography>
       </div>
-      {
-        isMapped ? (
-          <div>
-            <div className="alert alert-success" role="alert">
-              Mapping Complete!
-            </div>
-            <br />
-            <Button
-              variant="contained"
-              color="primary"
-              to="/dashboard/consortia"
-              component={Link}
-            >
-              Back to Consortia
-            </Button>
-          </div>
-        ) : (
-          <MapsEditForm
-            pipeline={pipeline}
-            dataMap={dataMap}
-            onChange={onChange}
-            onSubmit={commitSaveDataMap}
-          />
-        )
-      }
+      <MapsEditForm
+        pipeline={pipeline}
+        dataMap={dataMap}
+        onChange={onChange}
+        onSubmit={commitSaveDataMap}
+        saved={saved}
+      />
     </div>
   );
 }
