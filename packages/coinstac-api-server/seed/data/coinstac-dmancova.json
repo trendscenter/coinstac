@@ -67,7 +67,7 @@
               "group": "options",
               "label": "Results",
               "default": [
-		{ "title": "Univariate Regression", "path": "coinstac-univariate-regression\/coinstac-gica_merge_mancovan_results_summary\/icatb_mancovan_results_summary.html"},
+                { "title": "Univariate Regression", "path": "coinstac-univariate-regression\/coinstac-gica_merge_mancovan_results_summary\/icatb_mancovan_results_summary.html"},
                 { "title": "Univariate TTest2 Diagnosis", "path": "coinstac-univariate-ttest2-gender\/coinstac-gica_merge_mancovan_results_summary\/icatb_mancovan_results_summary.html"},
                 { "title": "GICA Results", "path": "coinstac-gica\/coinstac-gica\/coinstac-gica_gica_results\/icatb_gica_html_report.html"}
               ],
@@ -108,6 +108,7 @@
               "type": "set",
               "label": "Number of PCs",
               "default": [5,5,5],
+              "source": "owner",
               "order": 9
             },
             "univariate_test_list": {
@@ -137,6 +138,7 @@
                     }
                 }
               ],
+              "source": "owner",
               "order": 10
             },
             "t_threshold": {
@@ -144,6 +146,7 @@
               "type": "number",
               "label": "T Threshold",
               "default": 1.5,
+              "source": "owner",
               "order": 11
             },
             "freq_limits": {
@@ -151,6 +154,7 @@
               "type": "set",
               "label": "Frequency Limits",
               "default": [0.1,0.15],
+              "source": "owner",
               "order": 12
             },
             "p_threshold": {
@@ -158,6 +162,7 @@
               "type": "number",
               "label": "P Threshold",
               "default": 0.1,
+              "source": "owner",
               "order": 13
             },
             "display_p_threshold": {
@@ -165,6 +170,7 @@
               "type": "number",
               "label": "Display P Threshold",
               "default": 0.1,
+              "source": "owner",
               "order": 14
             },
             "comp_network_names": {
@@ -256,6 +262,7 @@
               "type": "string",
               "default": "none",
               "label": "Threshdesc",
+              "source": "owner",
               "order": 17
             },
             "gica_input_dir": {
@@ -263,6 +270,7 @@
               "type": "string",
               "default": "coinstac-gica",
               "label": "GICA Input Directory",
+              "source": "owner",
               "order": 18
             },
             "run_mancova": {
@@ -270,6 +278,7 @@
               "type": "boolean",
               "default": true,
               "label": "Run Mancova",
+              "source": "owner",
               "order": 19
             },
             "run_univariate_tests": {
@@ -277,6 +286,7 @@
               "type": "boolean",
               "default": true,
               "label": "Run Univariate Tests",
+              "source": "owner",
               "order": 20
             }
         },

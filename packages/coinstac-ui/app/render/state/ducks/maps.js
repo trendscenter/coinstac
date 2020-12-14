@@ -1,3 +1,4 @@
+/* eslint-disable no-case-declarations */
 import { dirname, basename } from 'path';
 import { applyAsyncLoading } from './loading';
 
@@ -139,9 +140,24 @@ export const deleteAllDataMappingsFromConsortium = applyAsyncLoading(
 export default function reducer(state = INITIAL_STATE, action) {
   switch (action.type) {
     case SAVE_DATA_MAPPING:
+      let updated = false;
+
+      const newDataMappings = state.consortiumDataMappings.map((map) => {
+        if (map.consortiumId === action.payload.consortiumId && map.pipelineId === action.payload.pipelineId) {
+          updated = true;
+          return action.payload;
+        }
+
+        return map;
+      });
+
+      if (updated) {
+        newDataMappings.push(action.payload);
+      }
+
       return {
         ...state,
-        consortiumDataMappings: [...state.consortiumDataMappings, action.payload],
+        consortiumDataMappings: newDataMappings,
       };
     case UPDATE_MAP_STATUS:
       return {

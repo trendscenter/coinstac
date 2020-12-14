@@ -53,6 +53,8 @@ function MapsEditForm({
                     <MapsFilesField
                       key={inputKey}
                       fieldName={inputKey}
+                      fieldDataMap={dataMap[inputKey]}
+                      fieldDescription={fieldDescription}
                       onChange={onChange}
                     />
                   );
