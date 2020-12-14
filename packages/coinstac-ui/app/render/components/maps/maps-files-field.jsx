@@ -17,6 +17,13 @@ const styles = theme => ({
   },
 });
 
+function deleteFile(fileIndex) {
+  const { fieldDataMap } = this.props;
+
+  const newFiles = fieldDataMap.files.filter((f, i) => i !== fileIndex);
+  this.setSelectedFiles(newFiles);
+}
+
 function MapsFilesField({ fieldName, onChange, classes }) {
   function setSelectedFiles(files) {
     onChange(fieldName, { files });
@@ -29,9 +36,10 @@ function MapsFilesField({ fieldName, onChange, classes }) {
       </Typography>
       <FilePicker
         multiple
-        filterName="csv,txt files"
-        extensions={['csv', 'txt']}
+        filterName="csv,txt,gz,nii files"
+        extensions={['csv', 'txt', 'gz', 'nii']}
         onChange={files => setSelectedFiles(files)}
+        deleteFile={fileIndex => this.deleteFile(fileIndex)}
       />
     </Paper>
   );
