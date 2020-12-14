@@ -134,7 +134,7 @@ class PipelineStep extends Component {
         acc[inputField.value.group] = [];
       }
 
-      acc[inputField.group].push(inputField);
+      acc[inputField.value.group].push(inputField);
 
       return acc;
     }, {});
@@ -277,7 +277,7 @@ class PipelineStep extends Component {
                           {`${capitalize(name)} Fields`}
                         </span>
                       </AccordionSummary>
-                      <AccordionDetails className={classes.accordionContent}>
+                      <AccordionDetails className={classes.accordionPanelContent}>
                         {items && items.map(this.renderPipelineStepInput)}
                       </AccordionDetails>
                     </Accordion>
