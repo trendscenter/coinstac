@@ -68,7 +68,7 @@ function MapsEditForm({
         {
           saved && (
             <span className={classes.successMessage}>
-              Consortium Saved
+              Data map saved
               <CheckCircleIcon className={classes.successIcon} />
             </span>
           )

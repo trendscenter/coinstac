@@ -151,7 +151,7 @@ export default function reducer(state = INITIAL_STATE, action) {
         return map;
       });
 
-      if (updated) {
+      if (!updated) {
         newDataMappings.push(action.payload);
       }
 
