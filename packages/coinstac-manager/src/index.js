@@ -35,6 +35,7 @@ let portLock = false;
  */
 const setLogger = (loggerInstance) => {
   logger = loggerInstance;
+  return logger;
 };
 
 /**
@@ -88,13 +89,12 @@ const getStatus = (provider = 'docker') => {
  *                                  are passed directly to the service
  * @return {Promise}              promise that resolves to the service function
  */
-const startService = (serviceId, serviceUserId, service, opts) => {
-  debugger
+const startService = (serviceId, serviceUserId, serviceType, opts) => {
   const createService = () => {
     services[serviceId].state = 'starting';
     return generateServicePort(serviceId)
       .then((port) => {
-        return serviceProviders[service].createService(serviceId, port, opts);
+        return serviceProviders[serviceType].createService(serviceId, port, opts);
       });
   };
 
@@ -313,17 +313,28 @@ const stopAllServices = () => {
     });
 };
 
+/**
+ * Stops all currently running containers
+ * @return {Promise} resolved when all services are stopped
+ */
+const getServices = () => {
+  return services;
+};
+
 module.exports = {
   getImages,
   getStatus,
+  getServices,
   pullImages,
   pullImagesFromList,
   pruneImages,
   removeImage,
   removeImagesFromList,
+  services,
   setLogger,
   startService,
   stopService,
   stopAllServices,
   Docker,
+  docker: dockerService.docker,
 };

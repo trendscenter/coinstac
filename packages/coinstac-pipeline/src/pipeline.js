@@ -29,7 +29,7 @@ module.exports = {
       userDirectories,
       owner,
       logger,
-      dockerManager,
+      Manager,
     }
   ) {
     const cache = {};
@@ -47,7 +47,7 @@ module.exports = {
         clientId,
         owner,
         logger,
-        dockerManager,
+        Manager,
       })
     );
 
