@@ -141,7 +141,6 @@ test('startService, stopService, stopAllServices', async (t) => {
   let opts = {
     docker: { CMD: [] },
   };
-  debugger
   let res = await startService('service-1', 'test-1', 'docker', opts);
   t.is(typeof res, 'function');
 

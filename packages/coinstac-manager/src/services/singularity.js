@@ -102,10 +102,10 @@ module.exports = {
               ws.on('open', () => {
                 ws.send(JSON.stringify({
                   command: data[0],
-                  args: data.slice(1, 2),
+                  args: data.slice(1, -1),
                 }));
-                utils.logger.debug(`Input data size: ${data[2].length}`);
-                ws.send(data[2]);
+                utils.logger.debug(`Input data size: ${data.slice(-1)[0].length}`);
+                ws.send(data.slice(-1)[0]);
                 ws.send(null);
               });
               ws.on('error', (e) => {
