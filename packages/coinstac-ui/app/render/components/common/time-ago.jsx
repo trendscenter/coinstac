@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import PropTypes from 'prop-types';
 import moment from 'moment';
 
 function useInterval(callback, delay) {
@@ -22,16 +23,19 @@ function useInterval(callback, delay) {
 }
 
 const TimeAgo = (props) => {
-
   const { timestamp } = props;
 
-  const [time, setTime] = useState(moment.unix(timestamp, "YYYYMMDD").fromNow());
+  const [time, setTime] = useState(moment.unix(timestamp, 'YYYYMMDD').fromNow());
 
   useInterval(() => {
-   setTime(moment.unix(timestamp).fromNow());
- }, 10000);
+    setTime(moment.unix(timestamp).fromNow());
+  }, 10000);
 
-  return (<span>{time}</span>)
-}
+  return (<span>{time}</span>);
+};
+
+TimeAgo.propTypes = {
+  timestamp: PropTypes.number.isRequired,
+};
 
 export default TimeAgo;

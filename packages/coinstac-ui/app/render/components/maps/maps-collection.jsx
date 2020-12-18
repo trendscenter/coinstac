@@ -272,66 +272,59 @@ class MapsCollection extends Component {
                     </div>
                   )
                 }
-                {
-                  dataType === 'bundle' ||
-                  dataType === 'singles' && (
-                    <div>
-                      <Typography>
-                        <span className="bold">File(s):</span>
-                      </Typography>
-                      <div className={classes.fileList}>
-                        {
-                          dataFile.files.map((file, i) => (
-                            <div key={file} className={classes.fileListItem}>
-                              { `(${i + 1}) ${file}` }
-                            </div>
-                          ))
-                        }
-                      </div>
+                {(dataType === 'bundle' || dataType === 'singles') && (
+                  <div>
+                    <Typography>
+                      <span className="bold">File(s):</span>
+                    </Typography>
+                    <div className={classes.fileList}>
+                      {
+                        dataFile.files.map((file, i) => (
+                          <div key={file} className={classes.fileListItem}>
+                            { `(${i + 1}) ${file}` }
+                          </div>
+                        ))
+                      }
                     </div>
-                  )
-                }
+                  </div>
+                )}
                 <div>
                   {
                     remainingDataVariables && (
                       <div className="card-deck" ref={(ref) => { this.container = ref; }}>
-                        { dataType !== 'singles' &&
-                          remainingDataVariables.map(columnName => (
-                            <div
-                              className={`card-draggable card-${columnName.toLowerCase()}`}
-                              data-string={columnName}
-                              key={columnName}
+                        {dataType !== 'singles' && remainingDataVariables.map(columnName => (
+                          <div
+                            className={`card-draggable card-${columnName.toLowerCase()}`}
+                            data-string={columnName}
+                            key={columnName}
+                          >
+                            <FileCopyIcon className={classes.fileIcon} />
+                            { columnName }
+                            { dataType !== 'array' ? `Bundle (${dataFile.files.length} files)` : '' }
+                            <IconButton
+                              className={classes.closeButton}
+                              onClick={() => removeColumnFromDataFileHeader(columnName)}
                             >
-                              <FileCopyIcon className={classes.fileIcon} />
-                              { columnName }
-                              { dataType !== 'array' ? `Bundle (${dataFile.files.length} files)` : '' }
-                              <IconButton
-                                className={classes.closeButton}
-                                onClick={() => removeColumnFromDataFileHeader(columnName)}
-                              >
-                                <CancelIcon />
-                              </IconButton>
-                            </div>
-                          ))
-                        }
-                        { dataType == 'singles' &&
-                          remainingDataVariables.map(filePath => (
-                            <div
-                              className={`card-draggable card-${getFileName(filePath).toLowerCase()}`}
-                              data-string={filePath}
-                              key={getFileName(filePath)}
+                              <CancelIcon />
+                            </IconButton>
+                          </div>
+                        ))}
+                        {dataType === 'singles' && remainingDataVariables.map(filePath => (
+                          <div
+                            className={`card-draggable card-${getFileName(filePath).toLowerCase()}`}
+                            data-string={filePath}
+                            key={getFileName(filePath)}
+                          >
+                            <FileCopyIcon className={classes.fileIcon} />
+                            {getFileName(filePath)}
+                            <IconButton
+                              className={classes.closeButton}
+                              onClick={() => removeColumnFromDataFileHeader(filePath)}
                             >
-                              <FileCopyIcon className={classes.fileIcon} />
-                              { getFileName(filePath) }
-                              <IconButton
-                                className={classes.closeButton}
-                                onClick={() => removeColumnFromDataFileHeader(filePath)}
-                              >
-                                <CancelIcon />
-                              </IconButton>
-                            </div>
-                          ))
-                        }
+                              <CancelIcon />
+                            </IconButton>
+                          </div>
+                        ))}
                       </div>
                     )
                   }
@@ -419,6 +412,7 @@ MapsCollection.propTypes = {
   stepsMapped: PropTypes.number.isRequired,
   stepsTotal: PropTypes.number.isRequired,
   addToDataMapping: PropTypes.func.isRequired,
+  getFileName: PropTypes.func.isRequired,
   registerDraggableContainer: PropTypes.func.isRequired,
   removeColumnFromDataFileHeader: PropTypes.func.isRequired,
   removeExtraColumnsFromDataFileHeader: PropTypes.func.isRequired,

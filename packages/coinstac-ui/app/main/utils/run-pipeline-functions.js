@@ -42,7 +42,7 @@ function encodeFilePath(filePath) {
 function makeDataObjFromDataMappings(dataMappings, stepIndex) {
   const dataObj = {};
   const dataMaps = dataMappings.dataMappings[stepIndex].data;
-  dataMaps.map((map) => {
+  dataMaps.forEach((map) => {
     const key = map.pipelineVariableName;
     dataObj[key] = encodeFilePath(map.dataFileFieldName);
   });
@@ -142,7 +142,6 @@ function parsePipelineInput(pipeline, dataMappings) {
       }
 
       if (dataMappings.dataType === 'array') {
-
         if (!consortiumMappedStepData) {
           throw new Error('Data was not mapped for at least one of the computation steps');
         }

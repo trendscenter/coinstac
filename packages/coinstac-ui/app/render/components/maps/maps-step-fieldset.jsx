@@ -100,7 +100,7 @@ class MapsStepFieldset extends Component {
 
     let inputCategoryName = capitalize(fieldsetName);
 
-    if(fieldsetLabel){
+    if (fieldsetLabel) {
       inputCategoryName = fieldsetLabel;
     } else if (fieldsetName !== 'covariates' && fieldsetName !== 'data') {
       inputCategoryName = 'Options';
@@ -128,9 +128,14 @@ class MapsStepFieldset extends Component {
   }
 }
 
+MapsStepFieldset.defaultProps = {
+  fieldsetLabel: '',
+};
+
 MapsStepFieldset.propTypes = {
   classes: PropTypes.object.isRequired,
   fieldsetName: PropTypes.string.isRequired,
+  fieldsetLabel: PropTypes.string,
   stepFieldset: PropTypes.object.isRequired,
   stepsDataMappings: PropTypes.array.isRequired,
   registerDraggableContainer: PropTypes.func.isRequired,

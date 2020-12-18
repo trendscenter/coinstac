@@ -87,7 +87,6 @@ if (program.upload) {
       process.exit();
     })
     .catch((e) => {
-      debugger
       logger.error(e.message);
       process.exit(1);
     });

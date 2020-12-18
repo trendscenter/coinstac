@@ -438,7 +438,6 @@ class MapsEdit extends Component {
 }
 
 MapsEdit.propTypes = {
-  auth: PropTypes.object.isRequired,
   classes: PropTypes.object.isRequired,
   consortia: PropTypes.array.isRequired,
   maps: PropTypes.array.isRequired,
