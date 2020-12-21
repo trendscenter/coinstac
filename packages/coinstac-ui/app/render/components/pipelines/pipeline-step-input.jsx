@@ -219,6 +219,11 @@ class PipelineStepInput extends Component {
       isValue = true;
     }
 
+    if (step.inputMap[objKey] && typeof step.inputMap[objKey].value === 'boolean'
+      && step.inputMap[objKey].value === false) {
+      isValue = true;
+    }
+
     if (step.inputMap[objKey] && step.inputMap[objKey].fromCache) {
       isFromCache = true;
     }
