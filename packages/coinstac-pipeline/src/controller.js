@@ -141,7 +141,7 @@ module.exports = {
               const compStart = Date.now(); // eslint-disable-line no-case-declarations
               const codeTime = compStart - controllerState.received; // eslint-disable-line no-case-declarations,max-len
               totalCodeTime += codeTime;
-              debugProfilePipeline(`Recieved to start time on ${clientId} took: ${codeTime}ms`);
+              debugProfilePipeline(`Recieved to manager start time on ${clientId} took: ${codeTime}ms`);
               return controllerState.activeComputations[controllerState.computationIndex]
                 .start(
                   {
@@ -171,7 +171,7 @@ module.exports = {
                 .then(({ cache, success, output }) => {
                   const compTime = Date.now() - compStart;
                   totalCompTime += compTime;
-                  debugProfilePipeline(`Computation time on ${clientId} took: ${compTime}ms`);
+                  debugProfilePipeline(`Computation time with overhead on ${clientId} took: ${compTime}ms`);
                   computationCache = Object.assign(computationCache, cache);
                   controllerState.success = !!success;
                   setStateProp('state', 'finished iteration');
@@ -342,8 +342,8 @@ module.exports = {
             controllerState.activeComputations[controllerState.computationIndex].stop()
               .then(() => {
                 debugProfilePipeline(`**************************** ${clientId} totals ***************************`);
-                debugProfilePipeline(`Total Computation time on ${clientId} took: ${totalCompTime}ms`);
-                debugProfilePipeline(`Total Code time on ${clientId} took: ${totalCodeTime}ms`);
+                debugProfilePipeline(`Total Computation time with overhead on ${clientId} took: ${totalCompTime}ms`);
+                debugProfilePipeline(`Total JS Code time on ${clientId} took: ${totalCodeTime}ms`);
                 res(result);
               })
               .catch(error => rej(error));
