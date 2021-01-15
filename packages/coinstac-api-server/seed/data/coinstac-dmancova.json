@@ -47,7 +47,7 @@
             },
             "num_ics": {
                 "group": "options",
-                "default": 20,
+                "default": 53,
                 "label": "Global Number of Independent Components",
                 "min": 1,
                 "max": 100,
@@ -117,25 +117,26 @@
               "label": "Univariate Test List",
               "default": [
                 {
-                    "regression": {
-                        "age": [
-                            "gender"
-                        ],
-                        "gender": [
-                            "age"
-                        ],
-                        "gender_X_age": []
-                    }
-                },
-                {
-                    "ttest2": {
-                        "datasets": [],
-                        "name": [
-                            "Male",
-                            "Female"
-                        ],
-                        "variable": "gender"
-                    }
+                   "regression":{
+                      "age":[
+                         "BMI",
+                         "tobacco",
+                         "FD",
+                         "site"
+                      ],
+                      "BMI":[
+                         "age",
+                         "tobacco",
+                         "FD",
+                         "site"
+                      ],
+                      "tobacco":[
+                         "age",
+                         "BMI",
+                         "FD",
+                         "site"
+                      ]
+                   }
                 }
               ],
               "source": "owner",
@@ -145,7 +146,7 @@
               "group": "options",
               "type": "number",
               "label": "T Threshold",
-              "default": 1.5,
+              "default": 1.0,
               "source": "owner",
               "order": 11
             },
@@ -161,7 +162,7 @@
               "group": "options",
               "type": "number",
               "label": "P Threshold",
-              "default": 0.1,
+              "default": 1.0,
               "source": "owner",
               "order": 13
             },
@@ -169,7 +170,7 @@
               "group": "options",
               "type": "number",
               "label": "Display P Threshold",
-              "default": 0.1,
+              "default": 1.0,
               "source": "owner",
               "order": 14
             },
@@ -273,13 +274,21 @@
               "source": "owner",
               "order": 18
             },
+            "skip_gica": {
+              "group": "options",
+              "type": "boolean",
+              "default": true,
+              "label": "Skip Local GICA Step",
+              "source": "owner",
+              "order": 19
+            },
             "run_mancova": {
               "group": "options",
               "type": "boolean",
               "default": true,
               "label": "Run Mancova",
               "source": "owner",
-              "order": 19
+              "order": 20
             },
             "run_univariate_tests": {
               "group": "options",
@@ -287,7 +296,7 @@
               "default": true,
               "label": "Run Univariate Tests",
               "source": "owner",
-              "order": 20
+              "order": 21
             }
         },
         "output": {},
