@@ -1,19 +1,24 @@
 {
-  "name": "coinstac-client-core",
-  "version": "5.1.5",
-  "description": "COINSTAC business logic for clients.",
+  "name": "coinstac-client-server",
+  "version": "5.0.0",
+  "description": "COINSTAC core server functionality.",
   "main": "src/index.js",
+  "bin": "bin/coinstac-server-core",
   "scripts": {
-    "clean": "rm -rf .nyc_output coverage .tmp",
+    "clean": "npm run clean:computations && npm run clean:db",
+    "clean:db": "node scripts/clean-db.js",
+    "clean:computations": "node scripts/clean-computations.js",
+    "test": "echo Refactor tests",
     "docs": "mkdir -p docs && jsdoc -c .jsdoc.json src/",
-    "test": "nyc ava"
+    "start": "node src/index.js"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/MRN-Code/coinstac.git"
   },
   "keywords": [
-    "coinstac"
+    "coinstac",
+    "distributed"
   ],
   "author": "NI Development - The Mind Research Network <nidev@mrn.org> (http://coins.mrn.org)",
   "contributors": [
@@ -29,25 +34,11 @@
   },
   "homepage": "https://github.com/MRN-Code/coinstac#readme",
   "dependencies": {
+    "@hapi/hapi": "^19.1.1",
     "axios": "^0.19.2",
-    "coinstac-docker-manager": "^5.1.5",
-    "coinstac-pipeline": "^5.1.5",
-    "convict": "^4.3.2",
-    "csv-parse": "^4.4.3",
-    "lodash": "^4.17.10",
-    "mkdirp": "^0.5.1",
-    "nes": "^10.0.2",
-    "winston": "^3.2.1"
-  },
-  "devDependencies": {
-    "ava": "^3.8.1",
-    "nyc": "^15.0.1",
-    "sinon": "^9.0.2"
-  },
-  "ava": {
-    "files": [
-      "test/**.test.js"
-    ],
-    "timeout": "20s"
+    "coinstac-docker-manager": "^5.1.4",
+    "coinstac-graphql-schema": "^5.1.1",
+    "coinstac-pipeline": "^5.1.4",
+    "nes": "^10.0.2"
   }
 }

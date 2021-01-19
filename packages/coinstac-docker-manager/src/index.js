@@ -589,6 +589,9 @@ const removeImage = (imageId) => {
   return docker.getImage(imageId).remove().then(() => imageId);
 };
 
+const removeImagesFromList = comps => Promise.all(comps.map(image => removeImage(`${image}:latest`)))
+  .then(streams => streams.map((stream, index) => ({ stream, compId: comps[index] })));
+
 /**
  * Attempts to stop a given service
  * If there are no other users, the service stops
@@ -652,6 +655,7 @@ module.exports = {
   pullImagesFromList,
   pruneImages,
   removeImage,
+  removeImagesFromList,
   setLogger,
   startService,
   stopService,

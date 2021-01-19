@@ -1,5 +1,8 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
+import classNames from 'classnames';
+import TextField from '@material-ui/core/TextField';
+import CheckIcon from '@material-ui/icons/Check';
 import { connect } from 'react-redux';
 import { compose, graphql, withApollo } from 'react-apollo';
 import { get } from 'lodash';
@@ -8,6 +11,7 @@ import { withStyles } from '@material-ui/core/styles';
 import { ValidatorForm, TextValidator } from 'react-material-ui-form-validator';
 import { updatePasswordProps } from '../../state/graphql/props';
 import { UPDATE_PASSWORD_MUTATION } from '../../state/graphql/functions';
+import { setClientCoreUrlAsync } from '../../state/ducks/auth';
 import { notifySuccess, notifyInfo, notifyError } from '../../state/ducks/notifyAndLog';
 import { clearRuns } from '../../state/ducks/runs';
 import UserEditController from './user-edit-controller';
@@ -15,6 +19,10 @@ import UserEditController from './user-edit-controller';
 const styles = theme => ({
   pageTitle: {
     marginBottom: theme.spacing(2),
+  },
+  pageSubtitle: {
+    marginBottom: theme.spacing(1),
+    borderBottom: `1px solid ${theme.palette.grey[300]}`,
   },
   removeDataTitle: {
     marginBottom: theme.spacing(1),
@@ -26,8 +34,29 @@ const styles = theme => ({
   sectionTitle: {
     marginBottom: theme.spacing(1),
   },
+  topMargin: {
+    marginTop: theme.spacing(4),
+  },
+  rightMargin: {
+    marginRight: theme.spacing(2),
+  },
+  textField: {
+    marginTop: theme.spacing(2),
+  },
+  directory: {
+    display: 'flex',
+    alignItems: 'flex-end',
+  },
   button: {
     marginTop: theme.spacing(1),
+  },
+  buttons: {
+    display: 'flex',
+    alignItems: 'center',
+  },
+  checkIcon: {
+    marginTop: theme.spacing(1),
+    marginLeft: theme.spacing(1),
   },
   formControl: {
     marginBottom: theme.spacing(1),
@@ -44,18 +73,27 @@ const styles = theme => ({
   },
 });
 
-const INITIAL_STATE = {
-  currentPassword: '',
-  newPassword: '',
-  confirmPassword: '',
-  isUpdating: false,
-};
-
 class Settings extends Component {
   constructor(props) {
     super(props);
 
-    this.state = INITIAL_STATE;
+    this.state = {
+      editingURL: props.clientServerURL,
+      savingURLStatus: 'init',
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: '',
+      isUpdating: false,
+    };
+  }
+
+  // eslint-disable-next-line
+  UNSAFE_componentWillReceiveProps(nextProps) {
+    const { clientServerURL } = this.props;
+
+    if (clientServerURL !== nextProps.clientServerURL) {
+      this.setState({ editingURL: nextProps.clientServerURL });
+    }
   }
 
   componentDidMount() {
@@ -78,6 +116,31 @@ class Settings extends Component {
     notifyInfo('Local data cleared');
   }
 
+  handleURLChange = (e) => {
+    this.setState({ editingURL: e.target.value, savingURLStatus: 'init' });
+  }
+
+  handleSave = () => {
+    const { setClientCoreUrlAsync } = this.props;
+    const { editingURL } = this.state;
+
+    this.setState({ savingURLStatus: 'pending' });
+
+    setClientCoreUrlAsync(editingURL)
+      .then(() => {
+        this.setState({ savingURLStatus: 'success' });
+      })
+      .catch(() => {
+        this.setState({ savingURLStatus: 'fail' });
+      });
+  }
+
+  handleReset = () => {
+    const { clientServerURL } = this.props;
+
+    this.setState({ editingURL: clientServerURL, savingURLStatus: 'init' });
+  }
+
   updatePassword = () => {
     const { currentPassword, newPassword, isUpdating } = this.state;
     const { updatePassword, notifySuccess, notifyError } = this.props;
@@ -91,7 +154,12 @@ class Settings extends Component {
     updatePassword({ currentPassword, newPassword })
       .then(() => {
         notifySuccess('Password updated successfully');
-        this.setState(INITIAL_STATE);
+        this.setState({
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: '',
+          isUpdating: false,
+        });
         this.passwordResetForm.resetValidations();
       })
       .catch(({ graphQLErrors }) => {
@@ -107,9 +175,14 @@ class Settings extends Component {
   }
 
   render() {
-    const { classes } = this.props;
+    const { classes, clientServerURL } = this.props;
     const {
-      currentPassword, newPassword, confirmPassword, isUpdating,
+      currentPassword,
+      newPassword,
+      confirmPassword,
+      isUpdating,
+      editingURL,
+      savingURLStatus,
     } = this.state;
 
     return (
@@ -135,6 +208,38 @@ class Settings extends Component {
           </Button>
         </form>
 
+        <Typography variant="h5" className={classNames(classes.pageSubtitle, classes.topMargin)}>
+          Save client server URL for local pipeline
+        </Typography>
+        <div className={classes.directory}>
+          <TextField
+            id="clientServerURL"
+            label="Client Server URL"
+            value={editingURL}
+            className={classes.textField}
+            onChange={this.handleURLChange}
+          />
+        </div>
+        <div className={classes.buttons}>
+          <Button
+            variant="contained"
+            color="secondary"
+            disabled={clientServerURL === editingURL}
+            className={classNames(classes.button, classes.rightMargin)}
+            onClick={this.handleReset}
+          >
+            Restore
+          </Button>
+          <Button
+            variant="contained"
+            disabled={clientServerURL === editingURL}
+            className={classes.button}
+            onClick={this.handleSave}
+          >
+            Save
+          </Button>
+          {savingURLStatus === 'success' && <CheckIcon className={classes.checkIcon} color="primary" />}
+        </div>
         <Typography variant="h5" className={classes.updatePasswordTitle}>
           Update Password
         </Typography>
@@ -202,7 +307,9 @@ class Settings extends Component {
 }
 
 Settings.propTypes = {
+  clientServerURL: PropTypes.string.isRequired,
   classes: PropTypes.object.isRequired,
+  setClientCoreUrlAsync: PropTypes.func.isRequired,
   clearRuns: PropTypes.func.isRequired,
   notifyError: PropTypes.func.isRequired,
   notifyInfo: PropTypes.func.isRequired,
@@ -222,7 +329,12 @@ const ComponentWithData = compose(
   withApollo
 )(Settings);
 
-const connectedComponent = connect(null, {
+const mapStateToProps = ({ auth }) => ({
+  clientServerURL: auth.clientServerURL,
+});
+
+const connectedComponent = connect(mapStateToProps, {
+  setClientCoreUrlAsync,
   clearRuns,
   notifySuccess,
   notifyInfo,
