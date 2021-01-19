@@ -260,12 +260,18 @@ class Result extends Component {
                 )
               }
               {
+                console.log(run.pipelineSnapshot.steps[0].inputMap.results_html_path.value)
+              }
+              {
                 selectedDisplayType.type === 'iframe'
                 && (
                   <Iframe
                     plotData={plotData}
                     title={`${consortium.name}_${run.pipelineSnapshot.name}`}
-                    path={path.join(appDirectory, 'output', user.id, run.id, run.pipelineSnapshot.steps[0].inputMap.results_html_path.value)}
+                    value={run.pipelineSnapshot.steps[0].inputMap.results_html_path.value}
+                    appDirectory={appDirectory}
+                    user={user}
+                    run={run}
                   />
                 )
               }
