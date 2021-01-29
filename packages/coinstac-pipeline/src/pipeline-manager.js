@@ -312,36 +312,36 @@ module.exports = {
         rmrf(path.resolve(activePipelines[runId].systemDirectory)),
       ]).then(() => {
         delete activePipelines[runId];
-        Object.keys(remoteClients).forEach((key) => {
-          if (remoteClients[key][runId]) {
-            delete remoteClients[key][runId];
+        Object.keys(remoteClients).forEach((clientId) => {
+          if (remoteClients[clientId][runId]) {
+            delete remoteClients[clientId][runId];
           }
         });
       });
     };
 
 
-    const clientPublish = (clientList, data, opts) => {
-      clientList.forEach((client) => {
+    const clientPublish = (clients, data, opts) => {
+      Object.keys(clients).forEach((clientId) => {
         if (opts && opts.success && opts.limitOutputToOwner) {
-          if (client === opts.owner) {
-            mqttServer.publish(`${client}-run`, JSON.stringify(data), { qos: 1 }, (err) => { if (err) logger.error(`Mqtt error: ${err}`); });
+          if (clientId === opts.owner) {
+            mqttServer.publish(`${clientId}-run`, JSON.stringify(data), { qos: 1 }, (err) => { if (err) logger.error(`Mqtt error: ${err}`); });
           } else {
             const limitedData = Object.assign({}, data, { files: undefined, output: { success: true, output: { message: 'output sent to consortium owner' } } });
-            mqttServer.publish(`${client}-run`, JSON.stringify(limitedData), { qos: 1 }, (err) => { if (err) logger.error(`Mqtt error: ${err}`); });
+            mqttServer.publish(`${clientId}-run`, JSON.stringify(limitedData), { qos: 1 }, (err) => { if (err) logger.error(`Mqtt error: ${err}`); });
           }
         } else {
-          mqttServer.publish(`${client}-run`, JSON.stringify(data), { qos: 0 }, (err) => { if (err) logger.error(`Mqtt error: ${err}`); });
+          mqttServer.publish(`${clientId}-run`, JSON.stringify(data), { qos: 0 }, (err) => { if (err) logger.error(`Mqtt error: ${err}`); });
         }
       });
     };
 
     const waitingOnForRun = (runId) => {
       const waiters = [];
-      activePipelines[runId].clients.forEach((client) => {
-        const clientRun = remoteClients[client][runId];
+      Object.keys(activePipelines[runId].clients).forEach((clientId) => {
+        const clientRun = remoteClients[clientId][runId];
         if ((clientRun
-          && !store.has(runId, client))
+          && !store.has(runId, clientId))
         // test if we have all files, if there are any
           || (clientRun
             && (clientRun.files.expected.length !== 0
@@ -350,7 +350,7 @@ module.exports = {
             )
           )
         ) {
-          waiters.push(client);
+          waiters.push(clientId);
         }
       });
 
@@ -358,21 +358,21 @@ module.exports = {
     };
 
     const clearClientFileList = (runId) => {
-      Object.keys(remoteClients).forEach((client) => {
-        if (remoteClients[client][runId]) {
-          remoteClients[client][runId].files = { received: [], expected: [] };
+      Object.keys(remoteClients).forEach((clientId) => {
+        if (remoteClients[clientId][runId]) {
+          remoteClients[clientId][runId].files = { received: [], expected: [] };
         }
       });
     };
 
     const printClientTimeProfiling = (runId, task) => {
-      activePipelines[runId].clients.forEach((client) => {
-        const currentClient = remoteClients[client][runId];
+      Object.keys(activePipelines[runId].clients).forEach((clientId) => {
+        const currentClient = remoteClients[clientId][runId];
         if (currentClient) {
           const time = currentClient.debug.received - currentClient.debug.sent;
           currentClient.debug.profiling[task] = currentClient.debug.profiling[task]
             ? currentClient.debug.profiling[task] + time : time;
-          debugProfileClient(`${task} took ${client}: ${time}ms`);
+          debugProfileClient(`${task} took ${clientId}: ${time}ms`);
         }
       });
     };
@@ -586,8 +586,8 @@ module.exports = {
                 const runError = Object.assign(
                   error,
                   {
-                    error: `Pipeline error from pipeline ${runId} user: ${id}\n Error details: ${error.error}`,
-                    message: `Pipeline error from pipeline ${runId} user: ${id}\n Error details: ${error.message}`,
+                    error: `Pipeline error from pipeline ${runId} user: ${activePipelines[runId].clients[id]}\n Error details: ${error.error}`,
+                    message: `Pipeline error from pipeline ${runId} user: ${activePipelines[runId].clients[id]}\n Error details: ${error.message}`,
                   }
                 );
                 activePipelines[runId].state = 'received client error';
@@ -618,8 +618,8 @@ module.exports = {
             if (activePipelines[runId] && activePipelines[runId].clients[id]) {
               if (activePipelines[runId].finalTransferList) {
                 activePipelines[runId].finalTransferList.add(id);
-                if (activePipelines[runId].clients
-                  .every(value => activePipelines[runId].finalTransferList.has(value))
+                if (Object.keys(activePipelines[runId].clients)
+                  .every(clientId => activePipelines[runId].finalTransferList.has(clientId))
                   || (
                     activePipelines[runId].limitOutputToOwner
                     && id === activePipelines[runId].owner
@@ -777,13 +777,13 @@ module.exports = {
        * for that pipeline. The return object is that pipeline and a promise that
        * resolves to the final output of the pipeline.
        * @param  {Object} spec         a valid pipeline specification
-       * @param  {Array}  [clients=[]] a list of client IDs particapating in pipeline
+       * @param  {Array}  clients={} a list of client IDs particapating in pipeline
        *                               only necessary for decentralized runs
        * @param  {String} runId        unique ID for the pipeline
        * @return {Object}              an object containing the active pipeline and
        *                               Promise for its result
        */
-      startPipeline({ spec, clients = [], runId }) {
+      startPipeline({ spec, clients = {}, runId }) {
         let pipelineStartTime;
         store.put(`${runId}-profiling`, clientId, {});
         if (mode === 'remote') pipelineStartTime = Date.now();
@@ -828,10 +828,11 @@ module.exports = {
         );
 
         // remote client object creation
-        clients.forEach((client) => {
-          remoteClients[client] = Object.assign(
+        Object.keys(clients).forEach((clientId) => {
+          remoteClients[clientId] = Object.assign(
             {
-              id: client,
+              id: clientId,
+              username: clients[clientId],
               state: 'unregistered',
               [runId]: {
                 state: {},
@@ -839,7 +840,7 @@ module.exports = {
                 debug: { profiling: {} },
               },
             },
-            remoteClients[client]
+            remoteClients[clientId]
           );
         });
 
@@ -1110,8 +1111,8 @@ module.exports = {
             if (mode === 'remote') activePipelines[runId].state = 'running';
           } else if (activePipelines[runId].state === 'created') {
             activePipelines[runId].state = 'running';
-            activePipelines[runId].clients.forEach((client) => {
-              mqttServer.publish(`${client}-register`, JSON.stringify({ runId }));
+            Object.keys(activePipelines[runId].clients).forEach((clientId) => {
+              mqttServer.publish(`${clientId}-register`, JSON.stringify({ runId }));
             });
           }
         };
@@ -1140,16 +1141,16 @@ module.exports = {
             if (mode === 'remote') {
               debugProfile('**************************** Profiling totals ***************************');
               const totalTime = Date.now() - pipelineStartTime;
-              activePipelines[runId].clients.forEach((client) => {
-                Object.keys(remoteClients[client][runId].debug.profiling).forEach((task) => {
-                  debugProfile(`Total ${task} time for ${client} took: ${remoteClients[client][runId].debug.profiling[task]}ms`);
+              Object.keys(activePipelines[runId].clients).forEach((clientId) => {
+                Object.keys(remoteClients[clientId][runId].debug.profiling).forEach((task) => {
+                  debugProfile(`Total ${task} time for ${clientId} took: ${remoteClients[clientId][runId].debug.profiling[task]}ms`);
                 });
               });
               debugProfile(`Total pipeline time: ${totalTime}ms`);
             }
             if (!activePipelines[runId].finalTransferList
-                || activePipelines[runId].clients
-                  .every(value => activePipelines[runId].finalTransferList.has(value))
+                || Object.keys(activePipelines[runId].clients)
+                  .every(clientId => activePipelines[runId].finalTransferList.has(clientId))
                 || (
                   activePipelines[runId].limitOutputToOwner
                   && activePipelines[runId].finalTransferList.has(activePipelines[runId].owner)

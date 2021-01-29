@@ -182,7 +182,7 @@ test('startPipeline', async (t) => {
   sinon.stub(fs, 'mkdir').yields(null);
   sinon.stub(fsPromise, 'link').resolves();
 
-  const clients = [];
+  const clients = {};
   const consortiumId = 'consortium-1';
   const clientPipeline = { name: 'pipeline', timeout: 10 };
   const filesArray = ['test.nii', 'test.csv'];
@@ -200,7 +200,7 @@ test('startPipeline', async (t) => {
 
   try {
     await client.startPipeline(
-      [],
+      {},
       'consortium-1',
       { name: 'pipeline', timeout: 10 },
       ['test.nii', 'test.csv'],
