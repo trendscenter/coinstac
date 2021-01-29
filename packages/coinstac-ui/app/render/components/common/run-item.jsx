@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 import { compose } from 'redux';
 import { connect } from 'react-redux';
 import { shell } from 'electron';
+import map from 'lodash/map';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
@@ -68,15 +69,8 @@ const styles = theme => ({
 });
 
 function parseWaiting(runObject, stateKey) {
-  const users = [];
-
-  runObject[stateKey].waitingOn.forEach((client) => {
-    if (client in runObject.members) {
-      users.push(runObject.members[client]);
-    }
-  });
-
-  return users;
+  return map(runObject[stateKey].waitingOn, clientId => runObject.clients[clientId])
+    .filter(clientId => Boolean(clientId));
 }
 
 function getStateWell(runObject, stateName, stateKey, classes) {
@@ -167,7 +161,7 @@ class RunItem extends Component {
     const { consortiumName, runObject, classes } = this.props;
     const {
       id, startDate, endDate, status, localPipelineState, remotePipelineState,
-      members, pipelineSnapshot, results, error,
+      clients, pipelineSnapshot, results, error,
     } = runObject;
 
     return (
@@ -265,20 +259,14 @@ class RunItem extends Component {
             )
           }
           {
-            members
+            clients
             && (
               <div>
                 <Typography className={classes.label}>
                   Clients:
                 </Typography>
                 <Typography className={classes.value}>
-                  {
-                    Object.values(members).map((member, ind) => (
-                      <span key={`${member}-${ind}`}>
-                        { `${member},` }
-                      </span>
-                    ))
-                  }
+                  {Object.values(clients).join(', ')}
                 </Typography>
               </div>
             )
