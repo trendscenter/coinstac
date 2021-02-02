@@ -124,9 +124,19 @@ loadConfig()
       mainWindow.webContents.send(BAD_TOKEN);
     });
 
-    ipcPromise.on('login-init', ({ userId, appDirectory }) => {
+    ipcPromise.on('login-init', ({
+      userId, appDirectory, clientServerURL, token,
+    }) => {
       return initializedCore
-        ? Promise.resolve() : configureCore(config, logger, userId, appDirectory || config.get('coinstacHome'))
+        ? Promise.resolve()
+        : configureCore(
+          config,
+          logger,
+          userId,
+          appDirectory || config.get('coinstacHome'),
+          clientServerURL || config.get('clientServerURL'),
+          token
+        )
           .then((c) => {
             initializedCore = c;
             return upsertCoinstacUserDir(c);
@@ -149,6 +159,11 @@ loadConfig()
         });
       });
     });
+
+    ipcPromise.on('set-client-server-url', url => new Promise((resolve) => {
+      initializedCore.setClientServerURL(url);
+      resolve();
+    }));
 
     function startPipelineRun(run, filesArray, consortium) {
       const pipeline = run.pipelineSnapshot;

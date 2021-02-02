@@ -17,6 +17,7 @@ const styles = theme => ({
   directoryField: {
     display: 'flex',
     alignItems: 'flex-end',
+    marginTop: theme.spacing(2),
   },
   textField: {
     flex: '1 0 auto',
@@ -28,10 +29,11 @@ class FormStartupDirectory extends React.Component {
   constructor(props) {
     super(props);
 
-    const { appDirectory } = props;
+    const { appDirectory, clientServerURL } = props;
 
     this.state = {
       currentDirectory: appDirectory,
+      currentClientServerURL: clientServerURL,
     };
   }
 
@@ -44,15 +46,19 @@ class FormStartupDirectory extends React.Component {
       });
   }
 
+  handleChangeURL = (evt) => {
+    this.setState({ currentClientServerURL: evt.target.value });
+  }
+
   submit = () => {
     const { onSubmit } = this.props;
-    const { currentDirectory } = this.state;
-    onSubmit({ appDirectory: currentDirectory });
+    const { currentDirectory, currentClientServerURL } = this.state;
+    onSubmit({ appDirectory: currentDirectory, clientServerURL: currentClientServerURL });
   }
 
   render() {
     const { open, close, classes } = this.props;
-    const { currentDirectory } = this.state;
+    const { currentDirectory, currentClientServerURL } = this.state;
 
     return (
       <Dialog open={open} onClose={close}>
@@ -72,6 +78,14 @@ class FormStartupDirectory extends React.Component {
             />
             <Button onClick={this.handleSelectDirectoryClick}>Select Directory</Button>
           </div>
+          <div className={classes.directoryField}>
+            <TextField
+              label="Client Server URL"
+              value={currentClientServerURL}
+              className={classes.textField}
+              onChange={this.handleChangeURL}
+            />
+          </div>
         </DialogContent>
         <DialogActions>
           <Button onClick={close}>Cancel</Button>
@@ -84,11 +98,13 @@ class FormStartupDirectory extends React.Component {
 
 FormStartupDirectory.defaultProps = {
   appDirectory: '',
+  clientServerURL: '',
   open: false,
 };
 
 FormStartupDirectory.propTypes = {
   appDirectory: PropTypes.string,
+  clientServerURL: PropTypes.string,
   open: PropTypes.bool,
   classes: PropTypes.object.isRequired,
   close: PropTypes.func.isRequired,

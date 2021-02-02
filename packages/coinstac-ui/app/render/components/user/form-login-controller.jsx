@@ -4,20 +4,13 @@ import { connect } from 'react-redux';
 import {
   login,
   setAppDirectory,
+  setClientServerURL,
   checkApiVersion,
 } from '../../state/ducks/auth';
 import FormLogin from './form-login';
 import LayoutNoauth from '../layout-noauth';
 
 class FormLoginController extends Component {
-  constructor(props) {
-    super(props);
-
-    this.submit = this.submit.bind(this);
-    this.checkForUser = this.checkForUser.bind(this);
-    this.changeAppDirectory = this.changeAppDirectory.bind(this);
-  }
-
   componentDidMount() {
     const { checkApiVersion } = this.props;
 
@@ -29,7 +22,7 @@ class FormLoginController extends Component {
     this.checkForUser();
   }
 
-  checkForUser() {
+  checkForUser = () => {
     const { router } = this.context;
     const { auth: { user } } = this.props;
     if (user && user.email.length) {
@@ -37,14 +30,19 @@ class FormLoginController extends Component {
     }
   }
 
-  submit(data) {
+  submit = (data) => {
     const { login } = this.props;
     login(data);
   }
 
-  changeAppDirectory(appDirectory) {
+  changeAppDirectory = (appDirectory) => {
     const { setAppDirectory } = this.props;
     setAppDirectory(appDirectory);
+  }
+
+  changeClientServerURL = (clientServerURL) => {
+    const { setClientServerURL } = this.props;
+    setClientServerURL(clientServerURL);
   }
 
   render() {
@@ -57,6 +55,7 @@ class FormLoginController extends Component {
           loading={loading}
           submit={this.submit}
           changeAppDirectory={this.changeAppDirectory}
+          changeClientServerURL={this.changeClientServerURL}
         />
       </LayoutNoauth>
     );
@@ -75,6 +74,7 @@ FormLoginController.propTypes = {
   checkApiVersion: PropTypes.func.isRequired,
   login: PropTypes.func.isRequired,
   setAppDirectory: PropTypes.func.isRequired,
+  setClientServerURL: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = ({ auth, loading }) => ({
@@ -84,5 +84,6 @@ const mapStateToProps = ({ auth, loading }) => ({
 export default connect(mapStateToProps, {
   login,
   setAppDirectory,
+  setClientServerURL,
   checkApiVersion,
 })(FormLoginController);

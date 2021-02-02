@@ -4,16 +4,19 @@
 const pify = require('util').promisify;
 const csvParse = require('csv-parse');
 const mkdirp = pify(require('mkdirp'));
+const Emitter = require('events');
+const axios = require('axios');
+const nes = require('nes');
 const fs = require('fs').promises;
 const path = require('path');
 const winston = require('winston');
+const DockerManager = require('coinstac-docker-manager');
+const PipelineManager = require('coinstac-pipeline');
+
 // set w/ config etc post release
 process.LOGLEVEL = 'silly';
 
 const { Logger, transports: { Console } } = winston;
-const DockerManager = require('coinstac-docker-manager');
-const PipelineManager = require('coinstac-pipeline');
-
 
 /**
  * Create a user client for COINSTAC
@@ -40,6 +43,7 @@ class CoinstacClient {
     this.options = opts;
     this.logger = opts.logger || new Logger({ transports: [new Console()] });
     this.appDirectory = opts.appDirectory;
+    this.clientServerURL = opts.clientServerURL;
 
     this.dockerManager = DockerManager;
     this.dockerManager.setLogger(this.logger);
@@ -50,6 +54,11 @@ class CoinstacClient {
     }
 
     this.clientId = opts.userId;
+    this.token = opts.token;
+
+    if (this.clientServerURL) {
+      this.initializeSocket();
+    }
   }
 
   initialize() {
@@ -69,6 +78,17 @@ class CoinstacClient {
       this.pipelineManager = manager;
       return manager;
     });
+  }
+
+  async initializeSocket() {
+    const websocketURL = `ws://${new URL(this.clientServerURL).host}`;
+
+    this.socketClient = new nes.Client(websocketURL);
+    await this.socketClient.connect();
+  }
+
+  setClientServerURL(clientServerURL) {
+    this.clientServerURL = clientServerURL;
   }
 
   /**
@@ -242,41 +262,86 @@ class CoinstacClient {
     runId,
     runPipeline // eslint-disable-line no-unused-vars
   ) {
-    const fp = path.join(this.appDirectory, 'input', this.clientId, runId);
-    return mkdirp(fp)
-      .then(() => {
-      // TODO: validate runPipeline against clientPipeline
-        const linkPromises = [];
+    const runObj = { spec: clientPipeline, runId, timeout: clientPipeline.timeout };
 
-        if (filePaths) {
-          const stageFiles = process.env.CI ? fs.copy : fs.link;
+    if (clients) {
+      runObj.clients = clients;
+    }
 
-          for (let i = 0; i < filePaths.files.length; i += 1) {
-            const mkdir = path.normalize(filePaths.files[i]) === path.basename(filePaths.files[i])
-              ? Promise.resolve() : mkdirp(path.resolve(fp, path.dirname(filePaths.files[i])));
+    if (!this.clientServerURL) {
+      return mkdirp(path.join(this.appDirectory, 'input', this.clientId, runId))
+        .then(() => {
+        // TODO: validate runPipeline against clientPipeline
+          const linkPromises = [];
 
-            linkPromises.push( // eslint-disable-next-line no-loop-func
-              mkdir.then(() => stageFiles(
-                path.resolve(filePaths.baseDirectory, filePaths.files[i]),
-                path.resolve(fp, path.basename(filePaths.files[i]))
-              )
-                .catch((e) => {
-                // permit dupes
-                  if (e.code && e.code !== 'EEXIST') {
-                    throw e;
-                  }
-                }))
-            );
+          const e = new RegExp(/[-\/\\^$*+?.()|[\]{}]/g); // eslint-disable-line no-useless-escape
+          const escape = (string) => {
+            return string.replace(e, '\\$&');
+          };
+          if (filesArray) {
+            const stageFiles = process.env.CI ? fs.copy : fs.link;
+            for (let i = 0; i < filesArray.length; i += 1) {
+              const pathsep = new RegExp(`${escape(path.sep)}|:`, 'g');
+              linkPromises.push(
+                stageFiles(filesArray[i], path.resolve(this.appDirectory, 'input', this.clientId, runId, filesArray[i].replace(pathsep, '-')))
+                  .catch((e) => {
+                  // permit dupes
+                    if (e.code && e.code !== 'EEXIST') {
+                      throw e;
+                    }
+                  })
+              );
+            }
           }
-        }
 
-        const runObj = { spec: clientPipeline, runId, timeout: clientPipeline.timeout };
-        if (clients) {
-          runObj.clients = clients;
-        }
+          return Promise.all(linkPromises)
+            .then(() => this.pipelineManager.startPipeline(runObj));
+        });
+    }
 
-        return Promise.all(linkPromises)
-          .then(() => this.pipelineManager.startPipeline(runObj));
+    const run = {
+      ...runObj,
+      consortiumId,
+      pipelineSnapshot: clientPipeline,
+    };
+
+    return axios.post(
+      `${this.clientServerURL}/startPipeline/${this.clientId}`,
+      { run },
+      { headers: { Authorization: `Bearer ${this.token}` } }
+    )
+      .then(({ data }) => {
+        return new Promise((resolve) => {
+          const stateEmitter = new Emitter();
+
+          function getResult(socketClient) {
+            return new Promise((resResolve, resReject) => {
+              socketClient.subscribe(`/pipelineResult/${runId}`, (res) => {
+                if (res.event === 'update') {
+                  stateEmitter.emit('update', res.data);
+                }
+
+                if (res.event === 'result') {
+                  socketClient.unsubscribe(`/pipelineResult/${runId}`);
+                  resResolve(res.data);
+                }
+
+                if (res.event === 'error') {
+                  socketClient.unsubscribe(`/pipelineResult/${runId}`);
+                  resReject(res.data);
+                }
+              });
+            });
+          }
+
+          resolve({
+            pipeline: {
+              ...data.pipeline,
+              stateEmitter,
+            },
+            result: getResult(this.socketClient),
+          });
+        });
       });
   }
 
