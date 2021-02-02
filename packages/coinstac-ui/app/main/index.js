@@ -492,52 +492,31 @@ loadConfig()
    * @param {String} org How the files being retrieved are organized
    * @return {String[]} List of file paths being retrieved
   */
-    ipcPromise.on('open-dialog', (org) => {
-      let filters;
-      let properties;
+    ipcPromise.on('open-dialog', ({ org, filters, properties }) => {
+      let dialogFilters;
+      let dialogProperties;
       let postDialogFunc;
 
-      if (org === 'metafile') {
-        filters = [{
-          name: 'CSV',
-          extensions: ['csv', 'txt'],
-        }];
-        properties = ['openFile'];
-        postDialogFunc = ipcFunctions.parseCSVMetafile;
-      } else if (org === 'jsonschema') {
-        filters = [{
+      if (org === 'jsonschema') {
+        dialogFilters = [{
           name: 'JSON Schema',
           extensions: ['json'],
         }];
-        properties = ['openFile'];
+        dialogProperties = ['openFile'];
         postDialogFunc = ipcFunctions.returnFileAsJSON;
       } else if (org === 'directory') {
-        properties = ['openDirectory'];
+        dialogProperties = ['openDirectory'];
         postDialogFunc = ipcFunctions.manualDirectorySelection;
-      } else if (org === 'files') {
-        filters = [
-          {
-            name: 'File Types',
-            extensions: ['jpeg', 'jpg', 'png', 'nii', 'csv', 'txt', 'rtf', 'gz', 'pickle'],
-          },
-        ];
-        properties = ['openFile', 'multiSelections'];
-        postDialogFunc = ipcFunctions.manualFileSelectionMultExt;
       } else {
-        filters = [
-          {
-            name: 'File Types',
-            extensions: ['jpeg', 'jpg', 'png', 'nii', 'csv', 'txt', 'rtf', 'gz', 'pickle'],
-          },
-        ];
-        properties = ['openDirectory', 'openFile', 'multiSelections'];
-        postDialogFunc = ipcFunctions.manualFileSelection;
+        dialogFilters = filters;
+        dialogProperties = properties;
+        postDialogFunc = ipcFunctions.manualDirectorySelection;
       }
 
       return fileFunctions.showDialog(
         mainWindow,
-        filters,
-        properties
+        dialogFilters,
+        dialogProperties
       )
         .then(({ filePaths }) => postDialogFunc(filePaths, initializedCore));
     });
