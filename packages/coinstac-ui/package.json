@@ -26,6 +26,7 @@
     "commander": "^2.15.1",
     "convict": "^1.5.0",
     "create-react-class": "^15.6.3",
+    "csv-reader": "^1.0.6",
     "d3": "^4.13.0",
     "deep-equal": "^1.0.1",
     "deep-parse-json": "^1.0.1",
