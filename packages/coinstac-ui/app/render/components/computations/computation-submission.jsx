@@ -1,21 +1,23 @@
 import React, { Component } from 'react';
-import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
 import { compose, graphql, withApollo } from 'react-apollo';
-import Button from '@material-ui/core/Button';
-import Typography from '@material-ui/core/Typography';
-import { withStyles } from '@material-ui/core/styles';
+import ReactJson from 'react-json-view';
 import ipcPromise from 'ipc-promise';
+import { Button, CircularProgress, Typography } from '@material-ui/core';
+import { withStyles } from '@material-ui/core/styles';
 import { services } from 'coinstac-common';
 import {
   ADD_COMPUTATION_MUTATION,
 } from '../../state/graphql/functions';
 import { saveDocumentProp } from '../../state/graphql/props';
-import { notifySuccess } from '../../state/ducks/notifyAndLog';
+import { notifySuccess, notifyError } from '../../state/ducks/notifyAndLog';
+import { getGraphQLErrorMessage } from '../../utils/helpers';
 
 const styles = theme => ({
   topMargin: {
-    marginTop: theme.spacing(1),
+    marginTop: theme.spacing(2),
+
   },
   description: {
     marginTop: theme.spacing(2),
@@ -27,59 +29,61 @@ const styles = theme => ({
   },
 });
 
-class ComputationSubmission extends Component { // eslint-disable-line
-  constructor(props) {
-    super(props);
-
-    this.state = { activeSchema: {}, submissionSuccess: null, validationErrors: null };
-    this.getComputationSchema = this.getComputationSchema.bind(this);
-    this.submitSchema = this.submitSchema.bind(this);
+class ComputationSubmission extends Component {
+  state = {
+    activeSchema: {},
+    validationErrors: null,
+    isSubmitting: false,
   }
 
-  getComputationSchema(e) {
-    e.preventDefault();
-    ipcPromise.send('open-dialog', 'jsonschema')
+  getComputationSchema = () => {
+    ipcPromise.send('open-dialog', { org: 'jsonschema' })
       .then((res) => {
         let error = null;
-        const validationReults = services.validator.validate(res, 'computation');
+        const validationReults = services.validator.validate(res, 'computation')
 
         if (validationReults.error) {
           error = validationReults.error.details;
         }
 
         this.setState({ activeSchema: res, validationErrors: error });
+      })
+      .catch((e) => {
+        notifyError(e.message);
       });
   }
 
-  submitSchema() {
-    const { router, submitSchema, notifySuccess } = this.props;
+  addComputation = () => {
+    const {
+      router, addComputation, notifySuccess, notifyError,
+    } = this.props;
     const { activeSchema } = this.state;
 
-    submitSchema(activeSchema)
-      .then((res) => {
+    this.setState({ isSubmitting: true });
+
+    addComputation(activeSchema)
+      .then(() => {
         this.setState({ activeSchema: {} });
-        if (res.data.addComputation) {
-          this.setState({ submissionSuccess: true });
-          router.push('/dashboard/computations');
-          notifySuccess('Computation Submission Successful');
-        } else {
-          this.setState({ submissionSuccess: false });
-        }
+        router.push('/dashboard/computations');
+        notifySuccess('Created Computation Successfully');
       })
-      .catch(() => {
-        this.setState({ submissionSuccess: false });
+      .catch((error) => {
+        notifyError(getGraphQLErrorMessage(error));
+      })
+      .finally(() => {
+        this.setState({ isSubmitting: false });
       });
   }
 
   render() {
     const { classes } = this.props;
-    const { activeSchema, validationErrors, submissionSuccess } = this.state;
+    const { activeSchema, validationErrors, isSubmitting } = this.state;
 
     return (
       <div>
         <div className="page-header">
           <Typography variant="h4">
-            Computation Submission:
+            Add Computation
           </Typography>
         </div>
         <Typography variant="body2" className={classes.description}>
@@ -99,51 +103,41 @@ class ComputationSubmission extends Component { // eslint-disable-line
           <Button
             variant="contained"
             color="primary"
-            disabled={!activeSchema.meta || validationErrors !== null}
-            onClick={this.submitSchema}
+            disabled={!activeSchema.meta || validationErrors !== null || isSubmitting}
+            onClick={this.addComputation}
           >
-            Submit
+            {isSubmitting ? <CircularProgress size={15} /> : 'Submit'}
           </Button>
         </div>
 
-        {
-          validationErrors
-          && (
-            <div>
-              <Typography variant="h6">
-                Validation Error
-              </Typography>
-              <ul>
-                {
-                  validationErrors.map(error => (
-                    <li key={error.path}>
-                      {`Error at ${error.path}: ${error.message}`}
-                    </li>
-                  ))
-                }
-              </ul>
-            </div>
-          )
-        }
-
-        {
-          !activeSchema.meta && submissionSuccess === false
-          && (
+        {validationErrors && (
+          <div>
             <Typography variant="h6">
-              <strong>Error!</strong>
-              Try again?
+              Validation Error
             </Typography>
-          )
-        }
+            <ul>
+              {
+                validationErrors.map(error => (
+                  <li key={error.path}>
+                    {`Error at ${error.path}: ${error.message}`}
+                  </li>
+                ))
+              }
+            </ul>
+          </div>
+        )}
 
-        {
-          activeSchema.meta
-          && (
-            <pre className={classes.topMargin}>
-              {JSON.stringify(activeSchema, null, 2)}
-            </pre>
-          )
-        }
+        {activeSchema.meta && (
+          <div className={classes.topMargin}>
+            <ReactJson
+              src={activeSchema}
+              theme="monokai"
+              displayDataTypes={false}
+              displayObjectSize={false}
+              enableClipboard={false}
+            />
+          </div>
+        )}
       </div>
     );
   }
@@ -153,16 +147,21 @@ ComputationSubmission.propTypes = {
   classes: PropTypes.object.isRequired,
   router: PropTypes.object.isRequired,
   notifySuccess: PropTypes.func.isRequired,
-  submitSchema: PropTypes.func.isRequired,
+  notifyError: PropTypes.func.isRequired,
+  addComputation: PropTypes.func.isRequired,
 };
 
 const ComputationSubmissionWithAlert = compose(
-  graphql(ADD_COMPUTATION_MUTATION, saveDocumentProp('submitSchema', 'computationSchema')),
+  graphql(
+    ADD_COMPUTATION_MUTATION,
+    saveDocumentProp('addComputation', 'computationSchema')
+  ),
   withApollo
 )(ComputationSubmission);
 
 const connectedComponent = connect(null, {
   notifySuccess,
+  notifyError,
 })(ComputationSubmissionWithAlert);
 
 export default withStyles(styles)(connectedComponent);

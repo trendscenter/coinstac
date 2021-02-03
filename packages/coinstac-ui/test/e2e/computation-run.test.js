@@ -17,7 +17,7 @@ const CONS_NAME = 'e2e-consortium-single';
 const CONS_DESC = 'e2e-description-single';
 const PIPE_NAME = 'e2e-pipeline-single';
 const PIPE_DESC = 'e2e-pipeline-description-single';
-const COMPUTATION_NAME = 'Regression - FreeSurfer Volumes';
+const COMPUTATION_NAME = 'Ridge Regression (Singleshot) - FreeSurfer Volumes';
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -179,16 +179,6 @@ describe('e2e run computation with 1 member', () => {
       await dataTypeOption.click();
       await dataDropdown.waitForClickable({ timeout: EXIST_TIMEOUT });
 
-      const sourceDropdown = await app.client.$(`#input-source-${index}-dropdown`);
-      await sourceDropdown.waitForDisplayed({ timeout: EXIST_TIMEOUT });
-      await sourceDropdown.click();
-      const sourceDropdownMenu = await app.client.$(`#input-source-${index}-dropdown-menu`);
-      await sourceDropdownMenu.waitForDisplayed({ timeout: EXIST_TIMEOUT });
-      const sourceFileOption = await sourceDropdownMenu.$('li=File');
-      await sourceFileOption.waitForClickable({ timeout: EXIST_TIMEOUT });
-      await sourceFileOption.click();
-      await sourceDropdown.waitForClickable({ timeout: EXIST_TIMEOUT });
-
       const nameInput = await app.client.$(`#covariates-${index}-input-name`);
       await nameInput.setValue(name);
     };
@@ -276,7 +266,7 @@ describe('e2e run computation with 1 member', () => {
     await consortiumMapItemButton.waitForClickable({ timeout: EXIST_TIMEOUT });
     await consortiumMapItemButton.click();
 
-    const addFilesGroupButton = await app.client.$('button=Add Files Group');
+    const addFilesGroupButton = await app.client.$('button=Select File(s)');
     await addFilesGroupButton.waitForClickable({ timeout: EXIST_TIMEOUT });
     await addFilesGroupButton.click();
 
@@ -288,9 +278,8 @@ describe('e2e run computation with 1 member', () => {
     await saveButton.waitForClickable({ timeout: EXIST_TIMEOUT });
     await saveButton.click();
 
-    const backToConsortiaLink = await app.client.$('a=Back to Consortia');
-    await backToConsortiaLink.waitForClickable({ timeout: EXIST_TIMEOUT });
-    await backToConsortiaLink.click();
+    const consortiaMenuButton = await app.client.$('a=Consortia');
+    await consortiaMenuButton.click();
 
     // Assert
     const startPipelineButton = await app.client.$('button=Start Pipeline');

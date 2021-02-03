@@ -4,11 +4,12 @@
 ///
 
 .card-deck {
-  margin: 2rem 0 1rem 0;
-  display: inline-block;
+  margin-top: 12px;
+  display: flex;
   background: #F5F5F5;
   border: 3px dashed #DDD;
   padding: 0.5rem 1rem;
+  padding-top: 0;
   border-radius: 0.5rem;
   width: 100%;
   min-height: 50px;
@@ -22,20 +23,11 @@
   position: relative;
   float: left;
   margin-right: 1rem;
-  margin-bottom: 1rem;
+  margin-top: 0.5rem;
   background-color: rgba(0, 0, 0, 0.2);
   transition: opacity 0.4s ease-in-out;
   line-height: 3rem;
   height: 3rem;
-  span {
-    color: #fff;
-  }
-  svg {
-    position: absolute;
-    top: 0.9rem;
-    left: 1rem;
-    font-size: 1rem;
-  }
 }
 
 .card-draggable:hover {

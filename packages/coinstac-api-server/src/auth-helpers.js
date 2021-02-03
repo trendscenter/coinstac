@@ -41,24 +41,15 @@ const helperFunctions = {
       email: user.email,
       institution: user.institution,
       passwordHash,
-      permissions: {
+      permissions: user.permissions || {
         computations: {},
         consortia: {},
         pipelines: {},
       },
-      consortiaStatuses: {},
+      consortiaStatuses: user.consortiaStatuses || {},
     };
 
-    if (user.permissions) {
-      userDetails.permissions = user.permissions;
-    }
-
-    if (user.consortiaStatuses) {
-      userDetails.consortiaStatuses = user.consortiaStatuses;
-    }
-
     const db = database.getDbInstance();
-
     const result = await db.collection('users').insertOne(userDetails);
 
     return result.ops[0];
@@ -122,8 +113,12 @@ const helperFunctions = {
   async getUserDetailsByID(userId) {
     const db = database.getDbInstance();
 
-    const user = await db.collection('users').findOne({ _id: ObjectID(userId) });
-    return transformToClient(user);
+    try {
+      const user = await db.collection('users').findOne({ _id: ObjectID(userId) });
+      return transformToClient(user);
+    } catch {
+      return null;
+    }
   },
   /**
    * Returns user table object for requested user
@@ -204,7 +199,7 @@ const helperFunctions = {
    */
   async validateEmail(req, res) {
     const exists = !await helperFunctions.validateUniqueEmail(req);
-    if (!exists) return res(Boom.badRequest('No such email address'));
+    if (!exists) return res(Boom.badRequest('Invalid email'));
 
     return res(exists);
   },
@@ -234,13 +229,13 @@ const helperFunctions = {
       return res(Boom.badRequest('Username taken'));
     }
 
-    const isEmailUnique = helperFunctions.validateUniqueEmail(req);
+    const isEmailUnique = await helperFunctions.validateUniqueEmail(req);
 
     if (!isEmailUnique) {
       return res(Boom.badRequest('Email taken'));
     }
 
-    return res();
+    return res(true);
   },
   /**
    * Validate that authenticating user is using correct credentials
@@ -262,10 +257,10 @@ const helperFunctions = {
     );
 
     if (passwordMatch) {
-      res(transformToClient(user));
-    } else {
-      res(Boom.unauthorized('Incorrect username or password.'));
+      return res(transformToClient(user));
     }
+
+    return res(Boom.unauthorized('Incorrect username or password.'));
   },
   /**
    * Confirms that submitted token is valid

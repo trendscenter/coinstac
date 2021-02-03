@@ -61,6 +61,9 @@ const styles = theme => ({
   imageUploadContainer: {
     marginTop: theme.spacing(6),
   },
+  membersContainer: {
+    marginTop: theme.spacing(4),
+  },
   imageUploadLabel: {
     color: theme.palette.grey[600],
     fontSize: 16,
@@ -111,6 +114,13 @@ const styles = theme => ({
   },
   progress: {
     margin: 'auto 0',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: theme.spacing(2),
+    marginBottom: theme.spacing(2),
+  },
+  addMemberButton: {
+    marginLeft: theme.spacing(2),
   },
 });
 

@@ -124,9 +124,19 @@ loadConfig()
       mainWindow.webContents.send(BAD_TOKEN);
     });
 
-    ipcPromise.on('login-init', ({ userId, appDirectory }) => {
+    ipcPromise.on('login-init', ({
+      userId, appDirectory, clientServerURL, token,
+    }) => {
       return initializedCore
-        ? Promise.resolve() : configureCore(config, logger, userId, appDirectory || config.get('coinstacHome'))
+        ? Promise.resolve()
+        : configureCore(
+          config,
+          logger,
+          userId,
+          appDirectory || config.get('coinstacHome'),
+          clientServerURL || config.get('clientServerURL'),
+          token
+        )
           .then((c) => {
             initializedCore = c;
             return upsertCoinstacUserDir(c);
@@ -149,6 +159,11 @@ loadConfig()
         });
       });
     });
+
+    ipcPromise.on('set-client-server-url', url => new Promise((resolve) => {
+      initializedCore.setClientServerURL(url);
+      resolve();
+    }));
 
     function startPipelineRun(run, filesArray, consortium) {
       const pipeline = run.pipelineSnapshot;
@@ -477,52 +492,31 @@ loadConfig()
    * @param {String} org How the files being retrieved are organized
    * @return {String[]} List of file paths being retrieved
   */
-    ipcPromise.on('open-dialog', (org) => {
-      let filters;
-      let properties;
+    ipcPromise.on('open-dialog', ({ org, filters, properties }) => {
+      let dialogFilters;
+      let dialogProperties;
       let postDialogFunc;
 
-      if (org === 'metafile') {
-        filters = [{
-          name: 'CSV',
-          extensions: ['csv', 'txt'],
-        }];
-        properties = ['openFile'];
-        postDialogFunc = ipcFunctions.parseCSVMetafile;
-      } else if (org === 'jsonschema') {
-        filters = [{
+      if (org === 'jsonschema') {
+        dialogFilters = [{
           name: 'JSON Schema',
           extensions: ['json'],
         }];
-        properties = ['openFile'];
+        dialogProperties = ['openFile'];
         postDialogFunc = ipcFunctions.returnFileAsJSON;
       } else if (org === 'directory') {
-        properties = ['openDirectory'];
+        dialogProperties = ['openDirectory'];
         postDialogFunc = ipcFunctions.manualDirectorySelection;
-      } else if (org === 'bundle' || org === 'singles') {
-        filters = [
-          {
-            name: 'File Types',
-            extensions: ['jpeg', 'jpg', 'png', 'nii', 'csv', 'txt', 'rtf', 'gz', 'pickle'],
-          },
-        ];
-        properties = ['openFile', 'multiSelections'];
-        postDialogFunc = ipcFunctions.manualFileSelectionMultExt;
       } else {
-        filters = [
-          {
-            name: 'File Types',
-            extensions: ['jpeg', 'jpg', 'png', 'nii', 'csv', 'txt', 'rtf', 'gz', 'pickle'],
-          },
-        ];
-        properties = ['openDirectory', 'openFile', 'multiSelections'];
-        postDialogFunc = ipcFunctions.manualFileSelection;
+        dialogFilters = filters;
+        dialogProperties = properties;
+        postDialogFunc = ipcFunctions.manualDirectorySelection;
       }
 
       return fileFunctions.showDialog(
         mainWindow,
-        filters,
-        properties
+        dialogFilters,
+        dialogProperties
       )
         .then(({ filePaths }) => postDialogFunc(filePaths, initializedCore));
     });

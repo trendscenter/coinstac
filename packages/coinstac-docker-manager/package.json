@@ -1,21 +1,38 @@
 {
   "name": "coinstac-docker-manager",
-  "version": "5.1.4",
+  "version": "5.1.5",
   "description": "",
   "main": "src/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\""
+    "test": "nyc ava"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "ava": "^3.8.1",
     "debug": "^4.2.0",
     "dockerode": "^2.5.5",
     "lodash": "^4.17.10",
     "portscanner": "^2.2.0",
     "request-stream": "^1.2.2",
+    "socket.io": "^2.1.1",
+    "socket.io-client": "^2.1.1",
+    "socket.io-stream": "^0.9.1",
+    "unzipper": "^0.10.3",
     "util": "^0.10.4",
     "winston": "^3.2.1",
     "ws": "^7.2.3"
+  },
+  "devDependencies": {
+    "get-stdin": "^6.0.0",
+    "nyc": "^15.0.1",
+    "sinon": "^9.0.2",
+    "trace": "^3.1.0"
+  },
+  "ava": {
+    "files": [
+      "test/**.test.js"
+    ],
+    "timeout": "20s"
   }
 }

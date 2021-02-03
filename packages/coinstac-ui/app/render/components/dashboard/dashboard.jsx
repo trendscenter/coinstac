@@ -13,6 +13,7 @@ import {
   ListItem,
   Typography,
 } from '@material-ui/core';
+import update from 'immutability-helper';
 import DashboardNav from './dashboard-nav';
 import UserAccountController from '../user/user-account-controller';
 import {
@@ -48,7 +49,6 @@ import {
 } from '../../state/graphql/functions';
 import {
   getAllAndSubProp,
-  updateConsortiaMappedUsersProp,
   userRunProp,
   userProp,
 } from '../../state/graphql/props';
@@ -209,8 +209,6 @@ class Dashboard extends Component {
     ipcRenderer.on('docker-error', (event, arg) => {
       notifyError(`Docker Error: ${arg.err.message}`);
     });
-
-    this.checkLocalMappedStatus(maps, consortia);
   }
 
   // eslint-disable-next-line
@@ -236,7 +234,7 @@ class Dashboard extends Component {
       unsubscribeComputations, unsubscribeConsortia, unsubscribePipelines, unsubscribeThreads,
     } = this.state;
 
-    if (!isEqual(consortia, nextProps.consortia)) {
+    if (consortia.length === 0 && nextProps.consortia.length > 0) {
       this.checkLocalMappedStatus(nextProps.maps, nextProps.consortia);
     }
 
@@ -452,19 +450,33 @@ class Dashboard extends Component {
   checkLocalMappedStatus = (maps, consortia) => {
     const { updateConsortiaMappedUsers, auth: { user } } = this.props;
 
-    const consortiaCurrentlyUserIsMappedFor = consortia
-      .filter(cons => cons.mappedForRun && cons.mappedForRun.indexOf(user.id) !== -1)
-      .map(cons => cons.id);
+    const consortiaUserIsMappedFor = [];
+    const consortiaUserIsNotMappedFor = [];
 
-    maps.forEach((map) => {
-      const index = consortiaCurrentlyUserIsMappedFor.indexOf(map.consortiumId);
+    consortia.forEach((consortium) => {
+      if (!(user.id in consortium.members)) {
+        return;
+      }
 
-      if (index > -1) {
-        consortiaCurrentlyUserIsMappedFor.splice(index, 1);
+      const consortiumDataMapping = maps.find(m => m.consortiumId === consortium.id
+        && m.pipelineId === consortium.activePipelineId);
+
+      if (consortium.mappedForRun && consortium.mappedForRun.indexOf(user.id) > -1) {
+        if (!consortiumDataMapping) {
+          consortiaUserIsNotMappedFor.push(consortium.id);
+        }
+      } else if (consortiumDataMapping) {
+        consortiaUserIsMappedFor.push(consortium.id);
       }
     });
 
-    updateConsortiaMappedUsers({ consortia: consortiaCurrentlyUserIsMappedFor });
+    if (consortiaUserIsMappedFor.length > 0) {
+      updateConsortiaMappedUsers(consortiaUserIsMappedFor, true);
+    }
+
+    if (consortiaUserIsNotMappedFor.length > 0) {
+      updateConsortiaMappedUsers(consortiaUserIsNotMappedFor, false);
+    }
   }
 
   render() {
@@ -504,7 +516,7 @@ class Dashboard extends Component {
               }}
             >
               <CoinstacAbbr />
-              <DashboardNav auth={auth} />
+              <DashboardNav user={auth.user} />
               <List>
                 <ListItem>
                   <UserAccountController
@@ -578,6 +590,7 @@ Dashboard.defaultProps = {
   runs: [],
   threads: [],
   currentUser: null,
+  subscribeToUser: null,
 };
 
 Dashboard.propTypes = {
@@ -604,7 +617,7 @@ Dashboard.propTypes = {
   subscribeToConsortia: PropTypes.func.isRequired,
   subscribeToPipelines: PropTypes.func.isRequired,
   subscribeToThreads: PropTypes.func.isRequired,
-  subscribeToUser: PropTypes.func.isRequired,
+  subscribeToUser: PropTypes.func,
   subscribeToUserRuns: PropTypes.func.isRequired,
   updateConsortiaMappedUsers: PropTypes.func.isRequired,
   updateDockerOutput: PropTypes.func.isRequired,
@@ -628,9 +641,41 @@ const DashboardWithData = compose(
     'subscribeToComputations',
     'computationChanged'
   )),
-  graphql(FETCH_ALL_USER_RUNS_QUERY, userRunProp(
-    USER_RUN_CHANGED_SUBSCRIPTION
-  )),
+  graphql(FETCH_ALL_USER_RUNS_QUERY, {
+    options: {
+      fetchPolicy: 'cache-and-network',
+      pollInterval: 5000,
+    },
+    props: props => ({
+      remoteRuns: props.data.fetchAllUserRuns,
+      subscribeToUserRuns: userId => props.data.subscribeToMore({
+        document: USER_RUN_CHANGED_SUBSCRIPTION,
+        variables: { userId },
+        updateQuery: (prevResult, { subscriptionData: { data } }) => {
+          const index = prevResult.fetchAllUserRuns.findIndex(c => c.id === data.userRunChanged.id);
+
+          if (data.userRunChanged.delete) {
+            return {
+              fetchAllUserRuns: prevResult.fetchAllUserRuns
+                .filter(obj => obj.id !== data.userRunChanged.id),
+            };
+          } if (index !== -1) {
+            return {
+              fetchAllUserRuns: update(prevResult.fetchAllUserRuns, {
+                $splice: [
+                  [index, 1, data.userRunChanged],
+                ],
+              }),
+            };
+          }
+
+          return {
+            fetchAllUserRuns: [...prevResult.fetchAllUserRuns, data.userRunChanged],
+          };
+        },
+      }),
+    }),
+  }),
   graphql(FETCH_ALL_CONSORTIA_QUERY, getAllAndSubProp(
     CONSORTIUM_CHANGED_SUBSCRIPTION,
     'consortia',
@@ -666,8 +711,13 @@ const DashboardWithData = compose(
     }),
   }),
   graphql(
-    UPDATE_CONSORTIA_MAPPED_USERS_MUTATION,
-    updateConsortiaMappedUsersProp('updateConsortiaMappedUsers')
+    UPDATE_CONSORTIA_MAPPED_USERS_MUTATION, {
+      props: ({ mutate }) => ({
+        updateConsortiaMappedUsers: (consortia, isMapped) => mutate({
+          variables: { consortia, isMapped },
+        }),
+      }),
+    }
   ),
   withApollo
 )(Dashboard);

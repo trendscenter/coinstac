@@ -12,7 +12,6 @@
 @import "./consortium-result-table";
 @import "./dragula";
 @import "./maps-collection";
-@import "./maps-list";
 @import "./page-header";
 @import "./project-card";
 @import "./project-covariates-mapper";
@@ -278,4 +277,29 @@ ul#loading_list {
   width: 100%;
   height: 100%;
   overflow: scroll;
+}
+
+.react-json-view {
+  padding: 15px;
+}
+
+/** Notifications */
+.notistack-notification {
+  color: #fff !important;
+
+  &-success {
+    background-color: #43a047 !important;
+  }
+
+  &-error {
+    background-color: #d32f2f !important;
+  }
+
+  &-warning {
+    background-color: #ff9800 !important;
+  }
+
+  &-info {
+    background-color: #2196f3 !important;
+  }
 }

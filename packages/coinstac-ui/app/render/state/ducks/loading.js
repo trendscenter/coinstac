@@ -4,10 +4,10 @@
 let asyncLoadingCallCount = 0;
 
 const LOADING_START = 'LOADING_START';
-const start = key => ({ type: LOADING_START, key });
+export const start = key => ({ type: LOADING_START, key });
 
 const LOADING_FINISH = 'LOADING_FINISH';
-const finish = key => ({ type: LOADING_FINISH, key });
+export const finish = key => ({ type: LOADING_FINISH, key });
 
 /**
  * Wraps a normal async action and applies the loading actions to it.

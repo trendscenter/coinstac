@@ -1,36 +1,25 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
+import { compose, graphql, withApollo } from 'react-apollo';
 import PropTypes from 'prop-types';
 import Typography from '@material-ui/core/Typography';
 import Grid from '@material-ui/core/Grid';
-import { withStyles } from '@material-ui/core';
-import ListItem from '../common/list-item';
+import MapsListItem from './maps-list-item';
 import { deleteDataMapping } from '../../state/ducks/maps';
-import { pipelineNeedsDataMapping } from '../../../main/utils/run-pipeline-functions';
-import { isUserInGroup } from '../../utils/helpers';
-
-const styles = theme => ({
-  contentContainer: {
-    marginTop: theme.spacing(1),
-    marginBottom: theme.spacing(1),
-  },
-  labelInline: {
-    fontWeight: 'bold',
-    marginRight: theme.spacing(1),
-    display: 'inline-block',
-  },
-  value: {
-    display: 'inline-block',
-  },
-});
+import {
+  UPDATE_CONSORTIUM_MAPPED_USERS_MUTATION,
+} from '../../state/graphql/functions';
+import { isUserInGroup, pipelineNeedsDataMapping } from '../../utils/helpers';
 
 class MapsList extends Component {
   deleteDataMapping = consortiumId => () => {
-    const { deleteDataMapping, consortia } = this.props;
+    const { deleteDataMapping, consortia, updateConsortiumMappedUsers } = this.props;
 
     const consortium = consortia.find(c => c.id === consortiumId);
 
     deleteDataMapping(consortium.id, consortium.activePipelineId);
+
+    updateConsortiumMappedUsers(consortium.id, false);
   }
 
   getMapItem = (consortium) => {
@@ -38,7 +27,6 @@ class MapsList extends Component {
       auth,
       pipelines,
       maps,
-      classes,
     } = this.props;
 
     const pipeline = pipelines.find(pipeline => pipeline.id === consortium.activePipelineId);
@@ -47,43 +35,23 @@ class MapsList extends Component {
       return null;
     }
 
-    const hasDataMap = maps.findIndex(m => m.consortiumId === consortium.id
+    const hasDataMapping = maps.findIndex(m => m.consortiumId === consortium.id
       && m.pipelineId === consortium.activePipelineId) > -1;
 
-    const needsDataMapping = !hasDataMap && pipelineNeedsDataMapping(pipeline);
+    const dataMapIsComplete = maps.findIndex(m => m.consortiumId === consortium.id
+      && m.pipelineId === consortium.activePipelineId && m.isComplete) > -1;
 
-    const itemOptions = {
-      text: [],
-      status: [],
-    };
-
-    itemOptions.text.push((
-      <div key={`${consortium.id}-active-pipeline-text`} className={classes.contentContainer}>
-        <Typography className={classes.labelInline}>
-          Active Pipeline:
-        </Typography>
-        <Typography className={classes.value}>{ pipeline.name }</Typography>
-      </div>
-    ));
-
-    itemOptions.status.push((
-      <span
-        key={`${consortium.id}-map-status`}
-        className={needsDataMapping ? 'mapped false' : 'mapped true'}
-      />
-    ));
+    const needsDataMapping = !hasDataMapping && pipelineNeedsDataMapping(pipeline);
 
     return (
       <Grid item xs={12} sm={12} md={6} lg={4} key={`${consortium.id}-list-item`}>
-        <ListItem
-          itemObject={consortium}
-          itemOptions={itemOptions}
-          itemRoute="/dashboard/maps"
-          linkButtonText={needsDataMapping ? 'Map Data to Consortium' : 'View Details'}
-          linkButtonColor={needsDataMapping ? 'secondary' : 'primary'}
-          canDelete={hasDataMap}
-          deleteItem={this.deleteDataMapping}
-          deleteButtonText="Clear Mapping"
+        <MapsListItem
+          consortium={consortium}
+          pipeline={pipeline}
+          canDelete={hasDataMapping}
+          onDelete={this.deleteDataMapping}
+          dataMapIsComplete={dataMapIsComplete}
+          needsDataMapping={needsDataMapping}
         />
       </Grid>
     );
@@ -101,7 +69,7 @@ class MapsList extends Component {
         </div>
         <Grid
           container
-          spacing={2}
+          spacing={3}
           direction="row"
           alignItems="stretch"
         >
@@ -114,11 +82,11 @@ class MapsList extends Component {
 
 MapsList.propTypes = {
   auth: PropTypes.object.isRequired,
-  classes: PropTypes.object.isRequired,
   consortia: PropTypes.array.isRequired,
   maps: PropTypes.array.isRequired,
   pipelines: PropTypes.array.isRequired,
   deleteDataMapping: PropTypes.func.isRequired,
+  updateConsortiumMappedUsers: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = ({ auth, maps }) => ({
@@ -126,8 +94,19 @@ const mapStateToProps = ({ auth, maps }) => ({
   maps: maps.consortiumDataMappings,
 });
 
-export default withStyles(styles)(
-  connect(mapStateToProps, {
-    deleteDataMapping,
-  })(MapsList)
-);
+const ComponentWithData = compose(
+  graphql(
+    UPDATE_CONSORTIUM_MAPPED_USERS_MUTATION, {
+      props: ({ mutate }) => ({
+        updateConsortiumMappedUsers: (consortiumId, isMapped) => mutate({
+          variables: { consortiumId, isMapped },
+        }),
+      }),
+    }
+  ),
+  withApollo
+)(MapsList);
+
+export default connect(mapStateToProps, {
+  deleteDataMapping,
+})(ComponentWithData);

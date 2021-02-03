@@ -6,8 +6,8 @@ module.exports = [
     path: '/version',
     config: {
       auth: false,
-      handler: (req, reply) => {
-        return reply(pkg.version);
+      handler: (_, res) => {
+        return res(pkg.version);
       },
     },
   },

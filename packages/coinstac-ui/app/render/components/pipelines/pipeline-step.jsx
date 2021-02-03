@@ -16,8 +16,11 @@ import PipelineStepInput from './pipeline-step-input';
 import { FETCH_COMPUTATION_QUERY } from '../../state/graphql/functions';
 import { compIOProp } from '../../state/graphql/props';
 
-const styles = () => ({
-  accordionContent: {
+const styles = theme => ({
+  pipelineStep: {
+    marginBottom: theme.spacing(2),
+  },
+  accordionPanelContent: {
     display: 'block',
   },
   inputParametersContainer: {
@@ -79,26 +82,90 @@ const collectDrop = connect => ({ connectDropTarget: connect.dropTarget() });
 class PipelineStep extends Component {
   state = {
     orderedInputs: [],
+    compInputs: [],
+    inputGroups: {},
   };
 
-  // eslint-disable-next-line
-  UNSAFE_componentWillReceiveProps(nextProps) {
+  componentDidUpdate(prevProps) {
+    const { compIO, possibleInputs, step } = this.props;
+    const { compInputs, orderedInputs } = this.state;
+
+    if ((!orderedInputs || !orderedInputs.length) && possibleInputs) {
+      this.orderComputations(possibleInputs);
+    }
+
+    if ((!compInputs || !compInputs.length) && compIO) {
+      this.groupInputs(compIO);
+
+      if (Object.entries(step.inputMap).length === 0) {
+        this.fillDefaultValues(compIO);
+      }
+    }
+  }
+
+  orderComputations = (possibleInputs) => {
     const { previousComputationIds } = this.props;
 
-    let orderedInputs = [];
+    const orderedInputs = previousComputationIds.map((prevComp, possibleInputIndex) => {
+      const comp = possibleInputs.find(pI => pI.id === prevComp);
+      return {
+        inputs: comp ? comp.computation.output : [],
+        possibleInputIndex,
+      };
+    });
 
-    // TODO: Find another way to force possibleInputs array to
-    //   always match order of previousComputationId
-    if (nextProps.possibleInputs) {
-      orderedInputs = previousComputationIds.map((prevComp, possibleInputIndex) => {
-        const comp = nextProps.possibleInputs.find(pI => pI.id === prevComp);
-        return {
-          inputs: comp ? comp.computation.output : [],
-          possibleInputIndex,
+    this.setState({ orderedInputs });
+  }
+
+  groupInputs = (compIO) => {
+    const compInputs = Object.keys(compIO.computation.input)
+      .map(inputKey => ({
+        key: inputKey,
+        value: compIO.computation.input[inputKey],
+      }))
+      .sort((a, b) => a.value.order - b.value.order);
+
+    const inputGroups = compInputs.reduce((acc, inputField) => {
+      if (!inputField.value.group) {
+        return acc;
+      }
+
+      if (!acc[inputField.value.group]) {
+        acc[inputField.value.group] = [];
+      }
+
+      acc[inputField.group].push(inputField);
+
+      return acc;
+    }, {});
+
+    this.setState({
+      compInputs,
+      inputGroups,
+    });
+  }
+
+  fillDefaultValues = (compIO) => {
+    const { updateStep, step } = this.props;
+
+    const defaultInputs = {};
+
+    Object.keys(compIO.computation.input).forEach((inputFieldKey) => {
+      const inputField = compIO.computation.input[inputFieldKey];
+
+      if ('default' in inputField) {
+        defaultInputs[inputFieldKey] = {
+          fulfilled: inputField.source === 'owner',
+          value: inputField.default,
         };
-      });
+      }
+    });
 
-      this.setState({ orderedInputs });
+    if (Object.keys(defaultInputs).length > 0) {
+      updateStep({
+        ...step,
+        inputMap: defaultInputs,
+      });
     }
   }
 
@@ -113,9 +180,9 @@ class PipelineStep extends Component {
               <Typography key={`${id}-${localOutput[0]}-output`} variant="body2">
                 {localOutput[1].label}
                 {' '}
-(
+                (
                 {localOutput[1].type}
-)
+                )
               </Typography>
             )];
 
@@ -162,56 +229,17 @@ class PipelineStep extends Component {
       isDragging,
       owner,
       step,
-      updateStep,
     } = this.props;
 
-    let Inputs = [];
-    const defaultInputs = {};
-
-    if (compIO) {
-      const newArray = [];
-      Object.keys(compIO.computation.input).forEach((key) => {
-        const value = Object.create(compIO.computation.input[key]);
-        value.value = compIO.computation.input[key];
-        value.key = key;
-        newArray.push(value);
-        if (value.value.default && key !== 'covariates') {
-          let v = value.value.default;
-          if (v === 0) {
-            v = '0';
-          }
-          defaultInputs[key] = { value: v };
-        }
-      });
-      Inputs = newArray.sort((a, b) => {
-        return a.value.order - b.value.order;
-      });
-    }
-
-    if (Object.entries(defaultInputs).length > 0 && Object.entries(step.inputMap).length === 0) {
-      updateStep({
-        ...step,
-        inputMap: defaultInputs,
-      });
-    }
-
-    const Groups = Inputs.reduce((acc, localInput) => {
-      if (localInput.group) {
-        if (!acc[localInput.group]) {
-          acc[localInput.group] = [];
-        }
-        acc[localInput.group].push(localInput);
-      }
-      return acc;
-    }, {});
+    const { compInputs, inputGroups } = this.state;
 
     return connectDragSource(connectDropTarget(
-      <div key={`step-${step.id}`}>
+      <div className={classes.pipelineStep} key={`step-${step.id}`}>
         <Accordion className="pipeline-step" style={{ ...styles.draggable, opacity: isDragging ? 0 : 1 }}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography variant="h5">{step.computations[0].meta.name}</Typography>
           </AccordionSummary>
-          <AccordionDetails className={classes.accordionContent} key={`step-exp-${step.id}`}>
+          <AccordionDetails className={classes.accordionPanelContent} key={`step-exp-${step.id}`}>
             <div className={classes.inputParametersContainer}>
               <Typography variant="h6">Input Parameters:</Typography>
               <Button
@@ -223,13 +251,14 @@ class PipelineStep extends Component {
                 Delete
               </Button>
             </div>
-            {compIO && Inputs && Inputs
-              .filter(localInput => !localInput.group)
-              .map(this.renderPipelineStepInput)}
+            {
+              compInputs
+                .filter(localInput => !localInput.value.group)
+                .map(this.renderPipelineStepInput)
+            }
             <div>
-              {Groups
-                && Object.entries(Groups).length > 0
-                && Object.entries(Groups).map((group) => {
+              {
+                Object.entries(inputGroups).map((group) => {
                   const name = group[0];
                   const items = group[1];
 

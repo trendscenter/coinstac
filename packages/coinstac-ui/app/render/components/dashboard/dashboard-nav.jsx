@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import { Link } from 'react-router';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
@@ -11,8 +12,10 @@ import ListAltIcon from '@material-ui/icons/ListAlt';
 import AssignmentIcon from '@material-ui/icons/Assignment';
 import EqualizerIcon from '@material-ui/icons/Equalizer';
 import DescriptionIcon from '@material-ui/icons/Description';
+import SecurityIcon from '@material-ui/icons/Security';
+import { isAdmin } from '../../utils/helpers';
 
-const DashboardNav = () => {
+const DashboardNav = ({ user }) => {
   return (
     <List className="mainnav">
       <ListItem button component="a" href="#/dashboard">
@@ -43,8 +46,18 @@ const DashboardNav = () => {
         <ListItemIcon><DescriptionIcon /></ListItemIcon>
         <ListItemText primary="Logs" />
       </ListItem>
+      {isAdmin(user) && (
+        <ListItem button component={Link} to="/dashboard/permissions">
+          <ListItemIcon><SecurityIcon /></ListItemIcon>
+          <ListItemText primary="Permissions" />
+        </ListItem>
+      )}
     </List>
   );
+};
+
+DashboardNav.propTypes = {
+  user: PropTypes.object.isRequired,
 };
 
 export default DashboardNav;

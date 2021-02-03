@@ -1,13 +1,8 @@
-import {
-  dirname,
-  join,
-  isAbsolute,
-  resolve,
-  sep,
-} from 'path';
+import { dirname, basename } from 'path';
 import { applyAsyncLoading } from './loading';
 
 const SAVE_DATA_MAPPING = 'SAVE_DATA_MAPPING';
+const UPDATE_MAP_STATUS = 'UPDATE_MAP_STATUS';
 const DELETE_DATA_MAPPING = 'DELETE_DATA_MAPPING';
 const DELETE_ALL_DATA_MAPPINGS_FROM_CONSORTIUM = 'DELETE_ALL_DATA_MAPPINGS_FROM_CONSORTIUM';
 
@@ -15,80 +10,107 @@ const INITIAL_STATE = {
   consortiumDataMappings: [],
 };
 
+// map
+// {
+//   covariates: {
+//     fileData: [{
+//       data: {
+//         subject0_aseg_stats.txt: {isControl: 'False', age: 22}
+//         subject1_aseg_stats.txt: {isControl: 'True', age: 47}
+//       }
+//     }],
+//     files: [],
+//     maps: {isControl: 'isControl', age: 'age'}
+//   }
+// }
+
+// inputMap covariates value
+// [
+//   {type: 'boolean', name: 'isControl'},
+//   {type: 'number', name: 'age'}
+// ]
+
 export const saveDataMapping = applyAsyncLoading(
-  (consortiumId, pipelineId, mappings, dataFile) => async (dispatch) => {
-    const map = {
-      consortiumId,
-      pipelineId,
-      dataType: dataFile.dataType,
-      dataMappings: mappings,
-    };
+  (consortiumId, pipeline, map) => async (dispatch) => {
+    const mapData = [];
 
-    const mappedColumns = [];
+    pipeline.steps.forEach((step) => {
+      const filesArray = [];
+      const inputMap = {};
+      let baseDirectory = null;
 
-    if (dataFile.dataType === 'array') {
-      if (dataFile.extension === '.csv') {
-        const csvLines = [...dataFile.metaFile];
-        csvLines.shift();
+      Object.keys(step.inputMap).forEach((inputMapKey) => {
+        inputMap[inputMapKey] = { ...step.inputMap[inputMapKey] };
 
-        const files = csvLines.map((csvLine) => {
-          const file = csvLine[0];
-          return isAbsolute(file) ? file : resolve(join(dirname(dataFile.metaFilePath), file));
-        });
-
-        map.data = [{
-          allFiles: files,
-          filesData: [],
-        }];
-      }
-      map.data[0].baseDirectory = dirname(dataFile.metaFilePath);
-      map.data[0].metaFilePath = dataFile.metaFilePath;
-
-      Object.keys(mappings[0]).forEach((fieldsetName) => {
-        mappings[0][fieldsetName].forEach((field) => {
-          const mappedColumn = {
-            name: field.dataFileFieldName,
-            index: dataFile.metaFile[0].findIndex(c => c === field.dataFileFieldName),
-          };
-
-          mappedColumns.push(mappedColumn);
-        });
-      });
-
-      dataFile.metaFile.forEach((dataRow, index) => {
-        // first row is the header
-        if (index === 0) {
+        if (inputMap[inputMapKey].fulfilled) {
           return;
         }
 
-        const parsedRow = {};
+        const inputMapVariables = inputMap[inputMapKey].value.map(field => field.name);
+        const mappedData = map[inputMapKey];
 
-        mappedColumns.forEach((mappedColumn) => {
-          parsedRow[mappedColumn.name] = dataRow[mappedColumn.index];
-        });
+        // has csv column mapping
+        if (mappedData.maps) {
+          const value = { ...mappedData.fileData[0].data };
 
-        map.data[0].filesData.push(parsedRow);
+          baseDirectory = dirname(mappedData.files[0]);
+
+          Object.keys(value).forEach((valueKey) => {
+            filesArray.push(valueKey);
+
+            inputMapVariables.forEach((variable) => {
+              const columnName = mappedData.maps[variable];
+
+              if (columnName) {
+                value[valueKey][variable] = value[valueKey][columnName];
+
+                if (columnName !== variable) {
+                  delete value[valueKey][columnName];
+                }
+              }
+            });
+          });
+
+          inputMap[inputMapKey].value = value;
+        } else {
+          baseDirectory = dirname(mappedData.files[0]);
+          filesArray.push(...mappedData.files);
+
+          inputMap[inputMapKey].value = mappedData.files.map(file => basename(file));
+        }
       });
-    } else if (dataFile.dataType === 'bundle' || dataFile.dataType === 'singles') {
-      const e = new RegExp(/[-\/\\^$*+?.()|[\]{}]/g); // eslint-disable-line no-useless-escape
-      const escape = (string) => {
-        return string.replace(e, '\\$&');
-      };
-      const pathsep = new RegExp(`${escape(sep)}|:`, 'g');
 
-      map.dataMappings.forEach((step, i) => {
-        Object.keys(step).forEach((variable) => {
-          if (map.dataMappings[i][variable][0] && map.dataMappings[i][variable][0].dataFileFieldName === 'bundle') {
-            map.dataMappings[i][variable] = dataFile.files.map((f => f.replace(pathsep, '-')));
-          }
-        });
+      mapData.push({
+        filesArray,
+        baseDirectory,
+        inputMap,
       });
-      map.files = dataFile.files;
-    }
+    });
+
+    const mapping = {
+      consortiumId,
+      pipelineId: pipeline.id,
+      map: mapData,
+      dataMap: map,
+      isComplete: true,
+    };
 
     dispatch(({
       type: SAVE_DATA_MAPPING,
-      payload: map,
+      payload: mapping,
+    }));
+  }
+);
+
+export const updateMapStatus = applyAsyncLoading(
+  (consortiumId, pipelineId, complete) => async (dispatch) => {
+    dispatch(({
+      type: UPDATE_MAP_STATUS,
+      payload: {
+        consortiumId,
+        pipelineId,
+        complete,
+      },
     }));
   }
 );
@@ -120,6 +142,21 @@ export default function reducer(state = INITIAL_STATE, action) {
       return {
         ...state,
         consortiumDataMappings: [...state.consortiumDataMappings, action.payload],
+      };
+    case UPDATE_MAP_STATUS:
+      return {
+        ...state,
+        consortiumDataMappings: state.consortiumDataMappings
+          .map((map) => {
+            if (map.consortiumId === action.payload.consortiumId && map.pipelineId === action.payload.pipelineId) {
+              return {
+                ...map,
+                isComplete: action.payload.complete,
+              };
+            }
+
+            return map;
+          }),
       };
     case DELETE_DATA_MAPPING:
       return {
