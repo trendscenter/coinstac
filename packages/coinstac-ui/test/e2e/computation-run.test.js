@@ -17,7 +17,7 @@ const CONS_NAME = 'e2e-consortium-single';
 const CONS_DESC = 'e2e-description-single';
 const PIPE_NAME = 'e2e-pipeline-single';
 const PIPE_DESC = 'e2e-pipeline-description-single';
-const COMPUTATION_NAME = 'Regression - FreeSurfer Volumes';
+const COMPUTATION_NAME = 'Ridge Regression (Singleshot) - FreeSurfer Volumes';
 
 chai.should();
 chai.use(chaiAsPromised);
