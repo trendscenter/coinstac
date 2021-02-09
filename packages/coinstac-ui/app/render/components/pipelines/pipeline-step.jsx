@@ -88,12 +88,13 @@ class PipelineStep extends Component {
 
   componentDidUpdate(prevProps) {
     const { compIO, possibleInputs, step } = this.props;
+    const { compInputs, orderedInputs } = this.state;
 
-    if (!prevProps.possibleInputs && possibleInputs) {
+    if ((!orderedInputs || !orderedInputs.length) && possibleInputs) {
       this.orderComputations(possibleInputs);
     }
 
-    if (!prevProps.compIO && compIO) {
+    if ((!compInputs || !compInputs.length) && compIO) {
       this.groupInputs(compIO);
 
       if (Object.entries(step.inputMap).length === 0) {
@@ -133,7 +134,7 @@ class PipelineStep extends Component {
         acc[inputField.value.group] = [];
       }
 
-      acc[inputField.value.group].push(inputField);
+      acc[inputField.group].push(inputField);
 
       return acc;
     }, {});
@@ -154,6 +155,7 @@ class PipelineStep extends Component {
 
       if ('default' in inputField) {
         defaultInputs[inputFieldKey] = {
+          fulfilled: inputField.source === 'owner',
           value: inputField.default,
         };
       }
@@ -164,27 +166,6 @@ class PipelineStep extends Component {
         ...step,
         inputMap: defaultInputs,
       });
-    }
-  }
-
-  // eslint-disable-next-line
-  UNSAFE_componentWillReceiveProps(nextProps) {
-    const { previousComputationIds } = this.props;
-
-    let orderedInputs = [];
-
-    // TODO: Find another way to force possibleInputs array to
-    //   always match order of previousComputationId
-    if (nextProps.possibleInputs) {
-      orderedInputs = previousComputationIds.map((prevComp, possibleInputIndex) => {
-        const comp = nextProps.possibleInputs.find(pI => pI.id === prevComp);
-        return {
-          inputs: comp ? comp.computation.output : [],
-          possibleInputIndex,
-        };
-      });
-
-      this.setState({ orderedInputs });
     }
   }
 
