@@ -17,7 +17,7 @@ export default function reducer(state = INITIAL_STATE, action) {
   switch (action.type) {
     case APPEND_LOG_MESSAGE:
       // eslint-disable-next-line no-case-declarations
-      const logs = action.payload.replace(/},{/g, '}\n{').match(exp);
+      const logs = action.payload.replace(/},{/g, '}\n{').match(exp) || [];
 
       return {
         ...state,
