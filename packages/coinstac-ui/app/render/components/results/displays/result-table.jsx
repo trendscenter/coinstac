@@ -124,7 +124,7 @@ class TableResult extends Component {
     exportTableToCSV(html, `${filename}.csv`);
   }
 
-  makeTable(table, data, outputProps, heading, marginLeft) {
+  makeTable(table, data, outputProps, heading, marginLeft, rawData = false) {
     const tableContents = [];
     if (heading) {
       tableContents.push(
@@ -132,7 +132,11 @@ class TableResult extends Component {
       );
     }
 
-    if ((table && table.subtables && Array.isArray(data))) {
+    if (rawData) {
+      tableContents.push(
+        <div>{JSON.stringify(data)}</div>
+      );
+    } else if ((table && table.subtables && Array.isArray(data))) {
       data.forEach((d) => {
         tableContents.push(
           this.makeTable(table, d, outputProps, null, marginLeft + 10)
@@ -333,7 +337,8 @@ class TableResult extends Component {
             computationOutput[t.source].label,
             0
           ))}
-        {!tables && this.makeTable(null, plotData.testData, null, 'Test Data', 0)}
+        {!tables && plotData.testData && this.makeTable(null, plotData.testData, null, 'Test Data', 0)}
+        {!tables && !plotData.testData && this.makeTable(null, plotData, null, null, 0, true)}
       </div>
     );
   }
