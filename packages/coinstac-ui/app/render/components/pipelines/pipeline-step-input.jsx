@@ -140,6 +140,15 @@ class PipelineStepInput extends Component {
     return [value];
   }
 
+  openInputSourceMenu = (event) => {
+    this.inputSourceButtonElement = event.currentTarget;
+    this.setState({ openInputSourceMenu: true });
+  }
+
+  closeInputSourceMenu = () => {
+    this.setState({ openInputSourceMenu: false });
+  }
+
   // Covars or data items
   addClientProp() {
     const {
@@ -167,15 +176,6 @@ class PipelineStepInput extends Component {
         },
       },
     });
-  }
-
-  openInputSourceMenu(event) {
-    this.inputSourceButtonElement = event.currentTarget;
-    this.setState({ openInputSourceMenu: true });
-  }
-
-  closeInputSourceMenu() {
-    this.setState({ openInputSourceMenu: false });
   }
 
   render() {
@@ -410,6 +410,7 @@ class PipelineStepInput extends Component {
             <Button
               id={`input-source-${objKey}-dropdown`}
               disabled={!owner || !objParams.type || isValue}
+              onClick={this.openInputSourceMenu}
             >
               {(!isValue && !isFromCache) ? 'Data Source' : (sourceDropDownLabel || 'Owner Defined Value')}
             </Button>
