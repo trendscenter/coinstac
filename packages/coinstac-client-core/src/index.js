@@ -72,8 +72,10 @@ class CoinstacClient {
       remotePathname: this.options.fileServer.pathname,
       remoteURL: this.options.fileServer.hostname,
       mqttRemotePort: this.options.mqttServer.port,
-      mqttRemoteWSPort: this.options.mqttServer.wssPort,
+      mqttRemoteWSPort: this.options.mqttWSServer.Port,
       mqttRemoteProtocol: this.options.mqttServer.protocol,
+      mqttRemoteWSProtocol: this.options.mqttWSServer.protocol,
+      mqttRemoteWSPathname: this.options.mqttWSServer.pathname,
       mqttRemoteURL: this.options.mqttServer.hostname,
     }).then((manager) => {
       this.pipelineManager = manager;

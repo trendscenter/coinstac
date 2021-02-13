@@ -151,6 +151,8 @@ module.exports = {
     mqttRemotePort = 1883,
     mqttRemoteWSPort = 9001,
     mqttRemoteProtocol = 'mqtt:',
+    mqttRemoteWSProtocol = 'ws:',
+    mqttRemoteWSPathname = '',
     remoteURL = 'localhost',
     mqttRemoteURL = 'localhost',
     unauthHandler, // eslint-disable-line no-unused-vars
@@ -645,40 +647,67 @@ module.exports = {
         }
       });
     } else {
+      /**
+       * Local node code
+       */
       let clientInit = false;
       logger.silly('Starting local pipeline manager');
-      mqttClient = mqtt.connect(
-        `${mqttRemoteProtocol}//${mqttRemoteURL}:${mqttRemotePort}`,
-        {
-          clientId: `${clientId}_${Math.random().toString(16).substr(2, 8)}`,
-          reconnectPeriod: 5000,
-        }
-      );
-
-      mqttClient.on('connect', () => {
-        clientInit = true;
-        logger.silly(`mqtt connection up ${clientId}`);
-        mqttClient.subscribe(`${clientId}-register`, { qos: 0 }, (err) => {
-          if (err) logger.error(`Mqtt error: ${err}`);
-        });
-        mqttClient.subscribe(`${clientId}-run`, { qos: 0 }, (err) => {
-          if (err) logger.error(`Mqtt error: ${err}`);
-        });
-      });
-
-      mqttClient.on('offline', () => {
-        if (!clientInit) {
-          logger.error('MQTT connection down');
-          mqtt.connect(
-            `wss://${mqttRemoteURL}:${mqttRemoteWSPort}`,
+      const getMqttConn = () => {
+        return new Promise((resolve, reject) => {
+          const client = mqtt.connect(
+            `${mqttRemoteProtocol}//${mqttRemoteURL}:${mqttRemotePort}`,
             {
               clientId: `${clientId}_${Math.random().toString(16).substr(2, 8)}`,
               reconnectPeriod: 5000,
-              protocol: 'wss',
             }
           );
-        }
-      });
+          client.on('offline', () => {
+            if (!clientInit) {
+              client.end(true, () => {
+                reject(new Error('MQTT_OFFLINE'));
+              });
+            }
+          });
+          client.on('connect', () => {
+            clientInit = true;
+            logger.silly(`mqtt connection up ${clientId}`);
+            client.subscribe(`${clientId}-register`, { qos: 0 }, (err) => {
+              if (err) logger.error(`Mqtt error: ${err}`);
+            });
+            client.subscribe(`${clientId}-run`, { qos: 0 }, (err) => {
+              if (err) logger.error(`Mqtt error: ${err}`);
+            });
+            resolve(client);
+          });
+        }).catch((e) => {
+          if (e.message === 'MQTT_OFFLINE') {
+            return new Promise((resolve) => {
+              logger.error('MQTT connection down trying WS/S');
+              const client = mqtt.connect(
+                `${mqttRemoteWSProtocol}//${mqttRemoteURL}:${mqttRemoteWSPort}${mqttRemoteWSPathname}`,
+                {
+                  clientId: `${clientId}_${Math.random().toString(16).substr(2, 8)}`,
+                  reconnectPeriod: 5000,
+                }
+              );
+              client.on('connect', () => {
+                clientInit = true;
+                logger.silly(`mqtt connection up ${clientId}`);
+                client.subscribe(`${clientId}-register`, { qos: 0 }, (err) => {
+                  if (err) logger.error(`Mqtt error: ${err}`);
+                });
+                client.subscribe(`${clientId}-run`, { qos: 0 }, (err) => {
+                  if (err) logger.error(`Mqtt error: ${err}`);
+                });
+                resolve(client);
+              });
+              resolve(client);
+            });
+          }
+        });
+      };
+
+      mqttClient = await getMqttConn();
 
       mqttClient.on('message', async (topic, dataBuffer) => {
         const received = Date.now();
