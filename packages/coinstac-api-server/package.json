@@ -13,7 +13,7 @@
   "dependencies": {
     "@sendgrid/mail": "^6.5.0",
     "apollo-server-hapi-coinstac": "1.2.x",
-    "axios": "^0.18.1",
+    "axios": "^0.21.1",
     "bluebird": "^3.5.1",
     "boom": "^5.2.0",
     "clarify": "^2.1.0",

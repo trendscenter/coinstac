@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import { remote } from 'electron';
+import ipcPromise from 'ipc-promise';
 import { withStyles } from '@material-ui/core/styles';
 import Button from '@material-ui/core/Button';
 import IconButton from '@material-ui/core/IconButton';
@@ -34,7 +34,7 @@ const styles = theme => ({
   },
 });
 
-async function openFileDialog(multiple, directory, extensions, filterName) {
+function openFileDialog(multiple, directory, extensions, filterName) {
   const filters = [
     { name: filterName, extensions },
   ];
@@ -51,12 +51,7 @@ async function openFileDialog(multiple, directory, extensions, filterName) {
     properties.push('multiSelections');
   }
 
-  const result = await remote.dialog.showOpenDialog({
-    filters,
-    properties,
-  });
-
-  return result.canceled ? null : result.filePaths;
+  return ipcPromise.send('open-dialog', { filters, properties });
 }
 
 function FilePicker({

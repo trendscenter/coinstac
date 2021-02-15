@@ -22,5 +22,11 @@
     "pathname": "",
     "port": "1883",
     "protocol": "mqtt:"
+  },
+  "mqttWSServer": {
+    "hostname": "localhost",
+    "port": "9001",
+    "protocol": "ws:",
+    "pathname": ""
   }
 }
