@@ -42,7 +42,6 @@ const startRun = ({
           operatingDirectory: path.resolve(operatingDirectory),
           mqttRemoteURL: 'localhost',
           mqttRemotePort: '1883',
-          mqttRemoteWSPort: '9001',
           mqttRemoteProtocol: 'mqtt:',
         });
         pipelines.remote = {
