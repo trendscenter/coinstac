@@ -21,5 +21,11 @@
     "hostname": "coinstac.rs.gsu.edu",
     "port": "80",
     "protocol": "mqtts:"
+  },
+  "mqttWSServer": {
+    "hostname": "coinstac.rs.gsu.edu",
+    "port": "80",
+    "protocol": "wss:",
+    "pathname": "/mqtt"
   }
 }
