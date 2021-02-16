@@ -45,6 +45,7 @@ function MapsEditForm({
                       fieldName={inputKey}
                       field={inputMap[inputKey]}
                       fieldDataMap={dataMap[inputKey]}
+                      fieldDescription={fieldDescription}
                       onChange={onChange}
                     />
                   );
