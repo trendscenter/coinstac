@@ -20,6 +20,7 @@ import PipelineStepInputUsers from './pipeline-step-input/pipeline-step-input-us
 import PipelineStepInputCsv from './pipeline-step-input/pipeline-step-input-csv';
 import PipelineStepInputFreesurfer from './pipeline-step-input/pipeline-step-input-freesurfer';
 import PipelineStepInputFiles from './pipeline-step-input/pipeline-step-input-files';
+import PipelineStepInputObject from './pipeline-step-input/pipeline-step-input-object';
 
 const styles = theme => ({
   lambdaContainer: {
@@ -218,6 +219,11 @@ class PipelineStepInput extends Component {
       isValue = true;
     }
 
+    if (step.inputMap[objKey] && typeof step.inputMap[objKey].value === 'boolean'
+      && step.inputMap[objKey].value === false) {
+      isValue = true;
+    }
+
     if (step.inputMap[objKey] && step.inputMap[objKey].fromCache) {
       isFromCache = true;
     }
@@ -395,6 +401,19 @@ class PipelineStepInput extends Component {
             {
               objParams.type === 'users' && (
                 <PipelineStepInputUsers
+                  objKey={objKey}
+                  objParams={objParams}
+                  owner={owner}
+                  updateStep={updateStep}
+                  getNewObj={this.getNewObj}
+                  step={step}
+                  users={users}
+                />
+              )
+            }
+            {
+              objParams.type === 'object' && (
+                <PipelineStepInputObject
                   objKey={objKey}
                   objParams={objParams}
                   owner={owner}

@@ -704,6 +704,7 @@ module.exports = {
               resolve(client);
             });
           }
+          throw e;
         });
       };
 

@@ -45,6 +45,7 @@ function MapsEditForm({
                       fieldName={inputKey}
                       field={inputMap[inputKey]}
                       fieldDataMap={dataMap[inputKey]}
+                      fieldDescription={fieldDescription}
                       onChange={onChange}
                     />
                   );
@@ -53,6 +54,8 @@ function MapsEditForm({
                     <MapsFilesField
                       key={inputKey}
                       fieldName={inputKey}
+                      fieldDataMap={dataMap[inputKey]}
+                      fieldDescription={fieldDescription}
                       onChange={onChange}
                     />
                   );
@@ -66,7 +69,7 @@ function MapsEditForm({
         {
           saved && (
             <span className={classes.successMessage}>
-              Consortium Saved
+              Data map saved
               <CheckCircleIcon className={classes.successIcon} />
             </span>
           )

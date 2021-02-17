@@ -17,9 +17,27 @@ const styles = theme => ({
   },
 });
 
-function MapsFilesField({ fieldName, onChange, classes }) {
-  function setSelectedFiles(files) {
-    onChange(fieldName, { files });
+function MapsFilesField({
+  fieldName, fieldDataMap, fieldDescription, onChange, classes,
+}) {
+  function setSelectedFiles(selectedFiles) {
+    onChange(fieldName, { files: selectedFiles });
+  }
+
+  function appendSelectedFiles(selectedFiles) {
+    let files;
+    if (fieldDataMap && fieldDataMap.files && fieldDataMap.files.length > 0) {
+      files = fieldDataMap.files.concat(selectedFiles);
+    } else {
+      files = selectedFiles;
+    }
+
+    setSelectedFiles(files);
+  }
+
+  function deleteFile(fileIndex) {
+    const newFiles = fieldDataMap.files.filter((f, i) => i !== fileIndex);
+    setSelectedFiles(newFiles);
   }
 
   return (
@@ -29,9 +47,11 @@ function MapsFilesField({ fieldName, onChange, classes }) {
       </Typography>
       <FilePicker
         multiple
-        filterName="csv,txt files"
-        extensions={['csv', 'txt']}
-        onChange={files => setSelectedFiles(files)}
+        filterName="csv,txt,gz,nii files"
+        extensions={fieldDescription.extensions}
+        onChange={files => appendSelectedFiles(files)}
+        selectedFiles={fieldDataMap && fieldDataMap.files ? fieldDataMap.files : []}
+        deleteFile={fileIndex => deleteFile(fileIndex)}
       />
     </Paper>
   );
@@ -40,8 +60,13 @@ function MapsFilesField({ fieldName, onChange, classes }) {
 MapsFilesField.propTypes = {
   classes: PropTypes.object.isRequired,
   fieldName: PropTypes.string.isRequired,
+  fieldDataMap: PropTypes.object,
+  fieldDescription: PropTypes.object.isRequired,
   onChange: PropTypes.func.isRequired,
 };
 
+MapsFilesField.defaultProps = {
+  fieldDataMap: null,
+};
 
 export default withStyles(styles)(MapsFilesField);

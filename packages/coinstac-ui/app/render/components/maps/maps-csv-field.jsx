@@ -214,7 +214,7 @@ class MapsCsvField extends React.Component {
 
   render() {
     const {
-      fieldName, field, fieldDataMap, classes,
+      fieldName, field, fieldDataMap, fieldDescription, classes,
     } = this.props;
 
     const { remainingHeader, selectedFiles, autoMapError } = this.state;
@@ -227,7 +227,7 @@ class MapsCsvField extends React.Component {
         <FilePicker
           multiple
           filterName="csv"
-          extensions={['csv', 'txt']}
+          extensions={fieldDescription.extensions}
           selectedFiles={fieldDataMap && fieldDataMap.files ? fieldDataMap.files : []}
           onChange={files => this.appendSelectedFiles(files)}
           deleteFile={fileIndex => this.deleteFile(fileIndex)}
@@ -310,6 +310,7 @@ MapsCsvField.propTypes = {
   field: PropTypes.object.isRequired,
   fieldDataMap: PropTypes.object,
   fieldName: PropTypes.string.isRequired,
+  fieldDescription: PropTypes.object.isRequired,
   onChange: PropTypes.func.isRequired,
 };
 
