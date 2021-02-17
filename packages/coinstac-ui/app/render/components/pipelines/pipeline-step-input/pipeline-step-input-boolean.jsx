@@ -5,10 +5,6 @@ import Checkbox from '@material-ui/core/Checkbox';
 function PipelineStepInputBoolean({
   objKey, objParams, owner, updateStep, getNewObj, step,
 }) {
-  // if (!step || !objParams.default) {
-  //   return null;
-  // }
-
   if (!step.inputMap[objKey] && 'default' in objParams && owner) {
     updateStep({
       ...step,
