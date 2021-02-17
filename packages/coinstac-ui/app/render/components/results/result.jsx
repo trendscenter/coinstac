@@ -260,9 +260,6 @@ class Result extends Component {
                 )
               }
               {
-                console.log(run.pipelineSnapshot.steps[0].inputMap.results_html_path.value)
-              }
-              {
                 selectedDisplayType.type === 'iframe'
                 && (
                   <Iframe
