@@ -6,6 +6,11 @@ import path from 'path';
 const Iframe = ({ appDirectory, run, value, user }) => {
   const iFrameHeight = '600px';
   let url = '';
+
+  if (!value) {
+    return null;
+  }
+
   if (typeof value === 'string') {
     url = path.join(appDirectory, 'output', user.id, run.id, value);
     return (
