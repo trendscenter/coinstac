@@ -9,7 +9,7 @@
     "add-graphql-subscriptions": "^1.0.1",
     "app-module-path": "^1.1.0",
     "async": "^2.6.1",
-    "axios": "^0.18.1",
+    "axios": "^0.21.1",
     "babel-polyfill": "^6.26.0",
     "babel-register": "^6.26.0",
     "bitap": "^1.0.1",
