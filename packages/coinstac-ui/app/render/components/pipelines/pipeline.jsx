@@ -38,8 +38,14 @@ import {
   consortiumSaveActivePipelineProp,
   getAllAndSubProp,
 } from '../../state/graphql/props';
+import { updateMapStatus } from '../../state/ducks/maps';
 import { notifySuccess, notifyError } from '../../state/ducks/notifyAndLog';
-import { isPipelineOwner, getGraphQLErrorMessage, isUserInGroup } from '../../utils/helpers';
+import {
+  isPipelineOwner,
+  getGraphQLErrorMessage,
+  isUserInGroup,
+  reducePipelineInputs,
+} from '../../utils/helpers';
 
 const computationTarget = {
   drop() {
@@ -261,10 +267,10 @@ class Pipeline extends Component {
             return { [key]: inputMap[key] };
           }));
 
-        if ('covariates' in inputMap && 'ownerMappings' in inputMap.covariates && inputMap.covariates.ownerMappings.length) {
-          let covariateMappings = [...inputMap.covariates.ownerMappings];
+        if ('covariates' in inputMap && 'value' in inputMap.covariates && inputMap.covariates.value.length) {
+          let covariateMappings = [...inputMap.covariates.value];
 
-          covariateMappings = inputMap.covariates.ownerMappings
+          covariateMappings = inputMap.covariates.value
             .filter(cov => cov.fromCache)
             .map((cov) => {
               if (index >= stepIndex && movedStepIndex < stepIndex) {
@@ -284,7 +290,7 @@ class Pipeline extends Component {
           inputMap = {
             ...inputMap,
             covariates: {
-              ownerMappings: covariateMappings,
+              value: covariateMappings,
             },
           };
         }
@@ -304,9 +310,9 @@ class Pipeline extends Component {
           if (key !== 'covariates' && 'fromCache' in movedStep.inputMap[key]
             && movedStep.inputMap[key].step >= index) {
             return { [key]: {} };
-          } if (key === 'covariates' && 'ownerMappings' in movedStep.inputMap.covariates && movedStep.inputMap.covariates.ownerMappings.length) {
+          } if (key === 'covariates' && 'value' in movedStep.inputMap.covariates && movedStep.inputMap.covariates.value.length) {
             return {
-              [key]: movedStep.inputMap[key].ownerMappings
+              [key]: movedStep.inputMap[key].value
                 .filter(cov => cov.fromCache)
                 .map((cov) => {
                   if (cov.fromCache.step >= index) {
@@ -401,8 +407,11 @@ class Pipeline extends Component {
   savePipeline = async () => {
     const {
       auth: { user }, notifySuccess, notifyError, saveActivePipeline, savePipeline,
+      pipelines, updateMapStatus,
     } = this.props;
     const { pipeline } = this.state;
+
+    const oldPipeline = pipelines.find(p => p.id === pipeline.id);
 
     const { isActive } = pipeline;
 
@@ -435,6 +444,17 @@ class Pipeline extends Component {
         startingPipeline: newPipeline,
         savingStatus: 'success',
       });
+
+      if (oldPipeline) {
+        const oldPipelineInputs = reducePipelineInputs(oldPipeline);
+        const newPipelineInputs = reducePipelineInputs(newPipeline);
+        console.log('old', oldPipelineInputs);
+        console.log('new', newPipelineInputs);
+
+        if (oldPipelineInputs.length !== newPipelineInputs) {
+          updateMapStatus(newPipeline.owningConsortium, newPipeline.id, false);
+        }
+      }
 
       notifySuccess('Pipeline Saved');
 
@@ -765,6 +785,7 @@ const PipelineWithAlert = compose(
 const connectedComponent = connect(mapStateToProps, {
   notifySuccess,
   notifyError,
+  updateMapStatus,
 })(PipelineWithAlert);
 
 export default withStyles(styles)(connectedComponent);

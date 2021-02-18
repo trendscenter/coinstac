@@ -18,7 +18,9 @@
         "input": {
             "start": {
                 "label": "Start",
-                "type": "number"
+                "type": "number",
+                "default": 0,
+                "source": "owner"
             }
         },
         "output": {
