@@ -86,7 +86,7 @@ class PipelineStep extends Component {
     inputGroups: {},
   };
 
-  componentDidUpdate(prevProps) {
+  componentDidUpdate() {
     const { compIO, possibleInputs, step } = this.props;
     const { compInputs, orderedInputs } = this.state;
 

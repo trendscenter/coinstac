@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import { Typography } from '@material-ui/core';
 import FileCopyIcon from '@material-ui/icons/FileCopy';
 import { withStyles } from '@material-ui/core/styles';
@@ -47,5 +48,15 @@ class MapsCsvFieldCsvHeader extends React.Component {
     );
   }
 }
+
+MapsCsvFieldCsvHeader.defaultProps = {
+  remainingHeader: [],
+};
+
+MapsCsvFieldCsvHeader.propTypes = {
+  classes: PropTypes.object.isRequired,
+  remainingHeader: PropTypes.array,
+  registerDraggableContainer: PropTypes.func.isRequired,
+};
 
 export default withStyles(styles)(MapsCsvFieldCsvHeader);

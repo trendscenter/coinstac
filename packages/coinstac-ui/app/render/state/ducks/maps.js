@@ -143,7 +143,9 @@ export default function reducer(state = INITIAL_STATE, action) {
       let updated = false;
 
       const newDataMappings = state.consortiumDataMappings.map((map) => {
-        if (map.consortiumId === action.payload.consortiumId && map.pipelineId === action.payload.pipelineId) {
+        if (map.consortiumId === action.payload.consortiumId
+          && map.pipelineId === action.payload.pipelineId
+        ) {
           updated = true;
           return action.payload;
         }
@@ -164,7 +166,9 @@ export default function reducer(state = INITIAL_STATE, action) {
         ...state,
         consortiumDataMappings: state.consortiumDataMappings
           .map((map) => {
-            if (map.consortiumId === action.payload.consortiumId && map.pipelineId === action.payload.pipelineId) {
+            if (map.consortiumId === action.payload.consortiumId
+              && map.pipelineId === action.payload.pipelineId
+            ) {
               return {
                 ...map,
                 isComplete: action.payload.complete,

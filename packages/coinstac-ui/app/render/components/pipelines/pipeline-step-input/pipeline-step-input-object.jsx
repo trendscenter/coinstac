@@ -19,21 +19,21 @@ function PipelineStepInputObject({
 
   return (
     <JSONInput
-        disabled={!owner || isFromCache}
-        name={`step-${objKey}`}
-        onChange={value => updateStep({
-          ...step,
-          inputMap: getNewObj(objKey, value ? { value: value.jsObject } : 'DELETE_VAR'),
-        })}
-        placeholder={
-          step.inputMap[objKey] && 'value' in step.inputMap[objKey]
-            ? step.inputMap[objKey].value
-            : objParams.default
-        }
-        id = {`step-${objKey}`}
-        locale = { locale }
-        height = '250px'
-        theme = 'light_mitsuketa_tribute'
+      disabled={!owner || isFromCache}
+      name={`step-${objKey}`}
+      onChange={value => updateStep({
+        ...step,
+        inputMap: getNewObj(objKey, value ? { value: value.jsObject } : 'DELETE_VAR'),
+      })}
+      placeholder={
+        step.inputMap[objKey] && 'value' in step.inputMap[objKey]
+          ? step.inputMap[objKey].value
+          : objParams.default
+      }
+      id={`step-${objKey}`}
+      locale={locale}
+      height="250px"
+      theme="light_mitsuketa_tribute"
     />
   );
 }

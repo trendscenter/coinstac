@@ -2,9 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { compose, graphql, withApollo } from 'react-apollo';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { Link } from 'react-router';
 import Typography from '@material-ui/core/Typography';
-import Button from '@material-ui/core/Button';
 import MapsEditForm from './maps-edit-form';
 import { saveDataMapping } from '../../state/ducks/maps';
 import {
