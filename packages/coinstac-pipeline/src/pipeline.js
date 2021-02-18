@@ -91,7 +91,6 @@ module.exports = {
       run(remoteHandler) {
         const packageState = () => {
           const { controllerState } = this.pipelineSteps[this.currentStep];
-
           this.currentState = {
             currentIteration: controllerState.iteration,
             controllerState: controllerState.state,
@@ -113,7 +112,7 @@ module.exports = {
             step.stateEmitter.on('update', () => stateEmitter.emit('update', packageState()));
           }
         );
-        // TODO: simlink here
+        // TODO: symlink here
         const loadCache = (output, step) => {
           const proms = [];
           if (cache[step]) {
@@ -170,12 +169,12 @@ module.exports = {
           return output;
         };
         const pipeineChain = pipelineSteps.reduce((prom, step, index) => {
-          setStateProp('currentStep', index);
           // remote doesn't execute local steps but shares the same spec
           if (this.mode === 'remote' && step.controller.type === 'local') {
             return Promise.resolve();
           }
           return prom.then(() => {
+            setStateProp('currentStep', index);
             return step.start(this.mode === 'remote' ? {} : loadInput(step), remoteHandler);
           })
             .then((output) => {

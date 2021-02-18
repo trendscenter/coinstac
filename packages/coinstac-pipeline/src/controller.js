@@ -303,7 +303,6 @@ module.exports = {
                 }
                 const fn = queue.shift();
                 controllerState.currentBoxCommand = activeControlBox.preIteration(controllerState);
-
                 if ((controllerState.mode === 'local' && controllerState.iteration === 0)
                 || (controllerState.mode === 'remote' && controllerState.remoteInitial)) {
                 // add initial input to first iteration
