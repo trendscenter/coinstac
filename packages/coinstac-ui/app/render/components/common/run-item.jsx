@@ -154,7 +154,7 @@ class RunItem extends Component {
     const { runObject, appDirectory, user } = this.props;
     const resultDir = path.join(appDirectory, 'output', user.id, runObject.id);
 
-    shell.openItem(resultDir);
+    shell.openPath(resultDir);
   }
 
   render() {

@@ -58,7 +58,7 @@ export default function (apolloClient) {
     persistedReducer,
     applyMiddleware.apply(
       this,
-      (process.env.CI ? [...middleware, createLogger({ collapsed: true })] : middleware)
+      (!process.env.CI ? [...middleware, createLogger({ collapsed: true })] : middleware)
     )
   );
 

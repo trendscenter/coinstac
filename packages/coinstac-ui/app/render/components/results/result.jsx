@@ -123,7 +123,7 @@ class Result extends Component {
     const { auth: { user, appDirectory } } = this.props;
     const resultDir = path.join(appDirectory, 'output', user.id, id);
 
-    shell.openItem(resultDir);
+    shell.openPath(resultDir);
   }
 
   handleSelect = (_event, value) => {
