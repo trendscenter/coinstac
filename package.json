@@ -3,7 +3,9 @@
   "version": "2.0.0",
   "description": "Decentralized Analyses Made Easy",
   "main": "index.js",
-  "dependencies": {},
+  "dependencies": {
+    "swig-templates": "^2.0.3"
+  },
   "devDependencies": {
     "babel-eslint": "^10.0.3",
     "concurrently": "^5.1.0",

@@ -2,7 +2,7 @@
 
 const net = require('net');
 require('trace');
-require('clarify');
+require('clarify'); // eslint-disable-line import/no-unresolved
 const { Transform } = require('stream');
 const { spawn } = require('child_process');
 const winston = require('winston');

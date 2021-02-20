@@ -15,11 +15,9 @@ function PipelineStepInputBoolean({
     });
   }
 
-  const value =
-    step.inputMap[objKey] &&
-    typeof step.inputMap[objKey].value === 'boolean' ?
-      step.inputMap[objKey].value :
-      objParams.default
+  const value = step.inputMap[objKey]
+    && typeof step.inputMap[objKey].value === 'boolean'
+    ? step.inputMap[objKey].value : objParams.default;
 
   const [checked, setChecked] = React.useState(value);
 

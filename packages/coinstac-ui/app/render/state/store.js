@@ -29,7 +29,7 @@ const persistConfig = {
   whitelist: ['maps', 'localRunResults'],
 };
 
-async function loadPersistedState(userId, persistor, store) {
+/* async function loadPersistedState(userId, persistor, store) {
   const electronStoreFolder = dirname(electronStore.path);
   electronStore.path = join(electronStoreFolder, `local-db-${userId}.json`);
 
@@ -45,7 +45,7 @@ async function loadPersistedState(userId, persistor, store) {
 
     store.dispatch(rehydrate(parsedState));
   }
-}
+} */
 
 export default function (apolloClient) {
   const persistedReducer = persistReducer(persistConfig, rootReducer(apolloClient));

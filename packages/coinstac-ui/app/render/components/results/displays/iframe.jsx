@@ -1,9 +1,10 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import PropTypes from 'prop-types';
 import path from 'path';
 
-const Iframe = ({ appDirectory, run, value, user }) => {
+const Iframe = ({
+  appDirectory, run, value, user,
+}) => {
   const iFrameHeight = '600px';
   let url = '';
   if (typeof value === 'string') {

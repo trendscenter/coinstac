@@ -1,4 +1,5 @@
 import React, { useRef, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import Typography from '@material-ui/core/Typography';
 import IconButton from '@material-ui/core/IconButton';
 import FileCopyIcon from '@material-ui/icons/FileCopy';
@@ -44,7 +45,7 @@ const styles = theme => ({
 });
 
 function MapsCsvFieldPipelineVariable({
-  name, mappedColumn, unmapField, registerDraggableContainer, classes
+  name, mappedColumn, unmapField, registerDraggableContainer, classes,
 }) {
   const ref = useRef(null);
 
@@ -86,5 +87,17 @@ function MapsCsvFieldPipelineVariable({
     </div>
   );
 }
+
+MapsCsvFieldPipelineVariable.defaultProps = {
+  mappedColumn: null,
+};
+
+MapsCsvFieldPipelineVariable.propTypes = {
+  classes: PropTypes.object.isRequired,
+  name: PropTypes.string.isRequired,
+  mappedColumn: PropTypes.any,
+  unmapField: PropTypes.func.isRequired,
+  registerDraggableContainer: PropTypes.func.isRequired,
+};
 
 export default withStyles(styles)(MapsCsvFieldPipelineVariable);

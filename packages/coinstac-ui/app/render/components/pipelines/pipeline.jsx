@@ -448,8 +448,6 @@ class Pipeline extends Component {
       if (oldPipeline) {
         const oldPipelineInputs = reducePipelineInputs(oldPipeline);
         const newPipelineInputs = reducePipelineInputs(newPipeline);
-        console.log('old', oldPipelineInputs);
-        console.log('new', newPipelineInputs);
 
         if (oldPipelineInputs.length !== newPipelineInputs) {
           updateMapStatus(newPipeline.owningConsortium, newPipeline.id, false);
