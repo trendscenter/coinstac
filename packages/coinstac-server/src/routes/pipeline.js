@@ -10,7 +10,9 @@ const manager = PipelineManager.create({
   clientId: 'remote',
   operatingDirectory: path.resolve(process.env.PIPELINE_SERVER_OPERARTING_DIR, 'coinstac'),
   mqttRemotePort: process.env.MQTT_SERVER_PORT,
+  mqttRemoteWSPort: process.env.MQTT_SERVER_WS_PORT,
   mqttRemoteProtocol: process.env.MQTT_SERVER_PROTOCOL,
+  mqttRemoteWSProtocol: process.env.MQTT_SERVER_WS_PROTOCOL,
   mqttRemoteURL: process.env.MQTT_SERVER_HOSTNAME,
 });
 const apiServer = `http://${process.env.API_SERVER_HOSTNAME}:${process.env.API_SERVER_PORT}`;

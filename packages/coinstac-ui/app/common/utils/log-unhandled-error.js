@@ -14,6 +14,14 @@ const logLocations = {
   win32: 'coinstac/',
 };
 
+const getCurrentDate = () => {
+  return new Date().toISOString();
+};
+
+const getLogMessage = ({ message, level }) => {
+  return `${getCurrentDate()} { message: ${message}, level: ${level} }`;
+};
+
 /**
  * returns a function to use for pre-boot error logging based on file
  * permissions, falls back to console otherwise
@@ -26,12 +34,12 @@ const unhandledBootLogger = () => {
   );
   const logFilePath = path.join(logLocation, 'coinstac-boot-error-log.txt');
   const consoleLogger = (data) => {
-    return console.error(`${new Date()} ERROR: ${data}`); // eslint-disable-line no-console
+    return console.error(getLogMessage({ message: data, level: 'error' })); // eslint-disable-line no-console
   };
 
   if (process.env.NODE_ENV === 'development') {
     console.error( // eslint-disable-line no-console
-      `${new Date()} WARNING: boot error logging to file disabled`
+      getLogMessage({ message: 'boot error logging to file disabled', level: 'warning' })
     );
     return consoleLogger;
   }
@@ -41,23 +49,23 @@ const unhandledBootLogger = () => {
 
     const fileLogger = (data) => {
       if (process.env.NODE_ENV === 'development') {
-        return console.error(`${new Date()} ERROR: ${data}`); // eslint-disable-line no-console
+        return console.error(getLogMessage({ message: data, level: 'error' })); // eslint-disable-line no-console
       }
-      return fs.appendFileSync(logFilePath, `${new Date()} ERROR: ${data}${os.EOL}`);
+      return fs.appendFileSync(logFilePath, getLogMessage({ message: `${data}${os.EOL}`, level: 'error' }));
     };
     return fileLogger;
   } catch (err) {
     // can't open file for writes, try to log to console
     console.error( // eslint-disable-line no-console
-      `${new Date()} WARNING: boot error logging to file disabled`
+      getLogMessage({ message: 'boot error logging to file disabled', level: 'error' })
     );
     /* eslint-disable no-console */
-    console.error(`ERROR: ${err}`);
-    console.error(`ERROR: ${err.stack}`);
+    getLogMessage({ message: err, level: 'error' });
+    getLogMessage({ message: err.stack, level: 'error' });
     /* eslint-enable no-console */
 
     const consoleLogger = (data) => {
-      return console.error(`${new Date()} ERROR: ${data}`); // eslint-disable-line no-console
+      return console.error(getLogMessage({ message: data, level: 'error' })); // eslint-disable-line no-console
     };
     return consoleLogger;
   }

@@ -2,7 +2,7 @@
 
 const http = require('http');
 require('trace');
-require('clarify');
+require('clarify'); // eslint-disable-line import/no-unresolved
 const { spawn } = require('child_process');
 const winston = require('winston');
 const socketIO = require('socket.io');

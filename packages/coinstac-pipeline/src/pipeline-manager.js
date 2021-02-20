@@ -149,7 +149,10 @@ module.exports = {
     remotePort = 3300,
     remoteProtocol = 'http:',
     mqttRemotePort = 1883,
+    mqttRemoteWSPort = 9001,
     mqttRemoteProtocol = 'mqtt:',
+    mqttRemoteWSProtocol = 'ws:',
+    mqttRemoteWSPathname = '',
     remoteURL = 'localhost',
     mqttRemoteURL = 'localhost',
     unauthHandler, // eslint-disable-line no-unused-vars
@@ -375,6 +378,15 @@ module.exports = {
           debugProfileClient(`${task} took ${clientId}: ${time}ms`);
         }
       });
+    };
+
+    const publishData = (key, data, qos = 0) => {
+      mqttClient.publish(
+        key,
+        JSON.stringify(data),
+        { qos },
+        (err) => { if (err) logger.error(`Mqtt error: ${err}`); }
+      );
     };
 
     // TODO: secure socket layer
@@ -635,32 +647,68 @@ module.exports = {
         }
       });
     } else {
+      /**
+       * Local node code
+       */
       let clientInit = false;
       logger.silly('Starting local pipeline manager');
-      mqttClient = mqtt.connect(
-        `${mqttRemoteProtocol}//${mqttRemoteURL}:${mqttRemotePort}`,
-        {
-          clientId: `${clientId}_${Math.random().toString(16).substr(2, 8)}`,
-          reconnectPeriod: 5000,
-        }
-      );
+      const getMqttConn = () => {
+        return new Promise((resolve, reject) => {
+          const client = mqtt.connect(
+            `${mqttRemoteProtocol}//${mqttRemoteURL}:${mqttRemotePort}`,
+            {
+              clientId: `${clientId}_${Math.random().toString(16).substr(2, 8)}`,
+              reconnectPeriod: 5000,
+            }
+          );
+          client.on('offline', () => {
+            if (!clientInit) {
+              client.end(true, () => {
+                reject(new Error('MQTT_OFFLINE'));
+              });
+            }
+          });
+          client.on('connect', () => {
+            clientInit = true;
+            logger.silly(`mqtt connection up ${clientId}`);
+            client.subscribe(`${clientId}-register`, { qos: 0 }, (err) => {
+              if (err) logger.error(`Mqtt error: ${err}`);
+            });
+            client.subscribe(`${clientId}-run`, { qos: 0 }, (err) => {
+              if (err) logger.error(`Mqtt error: ${err}`);
+            });
+            resolve(client);
+          });
+        }).catch((e) => {
+          if (e.message === 'MQTT_OFFLINE') {
+            return new Promise((resolve) => {
+              logger.error('MQTT connection down trying WS/S');
+              const client = mqtt.connect(
+                `${mqttRemoteWSProtocol}//${mqttRemoteURL}:${mqttRemoteWSPort}${mqttRemoteWSPathname}`,
+                {
+                  clientId: `${clientId}_${Math.random().toString(16).substr(2, 8)}`,
+                  reconnectPeriod: 5000,
+                }
+              );
+              client.on('connect', () => {
+                clientInit = true;
+                logger.silly(`mqtt connection up ${clientId}`);
+                client.subscribe(`${clientId}-register`, { qos: 0 }, (err) => {
+                  if (err) logger.error(`Mqtt error: ${err}`);
+                });
+                client.subscribe(`${clientId}-run`, { qos: 0 }, (err) => {
+                  if (err) logger.error(`Mqtt error: ${err}`);
+                });
+                resolve(client);
+              });
+              resolve(client);
+            });
+          }
+          throw e;
+        });
+      };
 
-      await new Promise((resolve, reject) => {
-        mqttClient.on('connect', () => {
-          clientInit = true;
-          logger.silly(`mqtt connection up ${clientId}`);
-          mqttClient.subscribe(`${clientId}-register`, { qos: 0 }, (err) => {
-            resolve();
-            if (err) logger.error(`Mqtt error: ${err}`);
-          });
-          mqttClient.subscribe(`${clientId}-run`, { qos: 0 }, (err) => {
-            if (err) logger.error(`Mqtt error: ${err}`);
-          });
-        });
-        mqttClient.on('offline', () => {
-          if (!clientInit) reject(new Error('MQTT connection down'));
-        });
-      });
+      mqttClient = await getMqttConn();
 
       mqttClient.on('message', async (topic, dataBuffer) => {
         const received = Date.now();
@@ -696,33 +744,19 @@ module.exports = {
               }
               if (data.success && data.files) {
                 // let the remote know we have the files
-                mqttClient.publish(
-                  'finished',
-                  JSON.stringify(
-                    {
-                      id: clientId,
-                      runId: data.runId,
-                    }
-                  ),
-                  { qos: 0 },
-                  (err) => { if (err) logger.error(`Mqtt error: ${err}`); }
-                );
+                publishData('finished', {
+                  id: clientId,
+                  runId: data.runId,
+                });
               }
 
               if (error) {
                 if (data.success) throw error;
-                mqttClient.publish(
-                  'run',
-                  JSON.stringify(
-                    {
-                      id: clientId,
-                      runId: data.runId,
-                      error: { stack: error.stack, message: error.message },
-                    }
-                  ),
-                  { qos: 0 },
-                  (err) => { if (err) logger.error(`Mqtt error: ${err}`); }
-                );
+                publishData('run', {
+                  id: clientId,
+                  runId: data.runId,
+                  error: { stack: error.stack, message: error.message },
+                });
                 activePipelines[data.runId].remote.reject(error);
               } else {
                 store.put(data.runId, clientId, data.output);
@@ -846,11 +880,7 @@ module.exports = {
 
         if (mode === 'local') {
           activePipelines[runId].registered = false;
-          mqttClient.publish(
-            'register',
-            JSON.stringify({ id: clientId, runId }),
-            { qos: 0 }
-          );
+          publishData('register', { id: clientId, runId });
         }
         /**
          * Communicate with the with node(s), clients to remote or remote to clients
@@ -947,17 +977,12 @@ module.exports = {
 
                   );
                 }).catch((e) => {
-                  mqttClient.publish(
-                    'run',
-                    JSON.stringify({
-                      id: clientId,
-                      runId: pipeline.id,
-                      error: `Error from central node ${e}`,
-                      debug: { sent: Date.now() },
-                    }),
-                    { qos: 0 },
-                    (err) => { if (err) logger.error(`Mqtt error: ${err}`); }
-                  );
+                  publishData('run', {
+                    id: clientId,
+                    runId: pipeline.id,
+                    error: `Error from central node ${e}`,
+                    debug: { sent: Date.now() },
+                  });
                 });
             }
           // local client
@@ -966,17 +991,12 @@ module.exports = {
               if (!activePipelines[pipeline.id].registered) {
                 activePipelines[pipeline.id].stashedOutput = message;
               } else {
-                mqttClient.publish(
-                  'run',
-                  JSON.stringify({
-                    id: clientId,
-                    runId: pipeline.id,
-                    error: message,
-                    debug: { sent: Date.now() },
-                  }),
-                  { qos: 0 },
-                  (err) => { if (err) logger.error(`Mqtt error: ${err}`); }
-                );
+                publishData('run', {
+                  id: clientId,
+                  runId: pipeline.id,
+                  error: message,
+                  debug: { sent: Date.now() },
+                });
                 activePipelines[pipeline.id].stashedOutput = undefined;
               }
             } else {
@@ -1016,19 +1036,14 @@ module.exports = {
                       archive.finalize();
                       return splitProm.then((files) => {
                         logger.debug('############# Local client sending out data with files');
-                        mqttClient.publish(
-                          'run',
-                          JSON.stringify({
-                            id: clientId,
-                            runId: pipeline.id,
-                            output: message,
-                            files: [...files],
-                            iteration: messageIteration,
-                            debug: { sent: Date.now() },
-                          }),
-                          { qos: 0 },
-                          (err) => { if (err) logger.error(`Mqtt error: ${err}`); }
-                        );
+                        publishData('run', {
+                          id: clientId,
+                          runId: pipeline.id,
+                          output: message,
+                          files: [...files],
+                          iteration: messageIteration,
+                          debug: { sent: Date.now() },
+                        });
                         activePipelines[pipeline.id].stashedOutput = undefined;
                         transferFiles(
                           'post',
@@ -1040,19 +1055,12 @@ module.exports = {
                         ).catch((e) => {
                           // files failed to send, bail
                           logger.error(`Client file send error: ${e}`);
-                          mqttClient.publish(
-                            'run',
-                            JSON.stringify(
-                              {
-                                id: clientId,
-                                runId: pipeline.id,
-                                error: { stack: e.stack, message: e.message },
-                                debug: { sent: Date.now() },
-                              }
-                            ),
-                            { qos: 1 },
-                            (err) => { if (err) logger.error(`Mqtt error: ${err}`); }
-                          );
+                          publishData('run', {
+                            id: clientId,
+                            runId: pipeline.id,
+                            error: { stack: e.stack, message: e.message },
+                            debug: { sent: Date.now() },
+                          }, 1);
                         });
                       });
                     }
@@ -1061,18 +1069,13 @@ module.exports = {
                       activePipelines[pipeline.id].stashedOutput = message;
                     } else {
                       logger.debug('############# Local client sending out data');
-                      mqttClient.publish(
-                        'run',
-                        JSON.stringify({
-                          id: clientId,
-                          runId: pipeline.id,
-                          output: message,
-                          iteration: messageIteration,
-                          debug: { sent: Date.now() },
-                        }),
-                        { qos: 1 },
-                        (err) => { if (err) logger.error(`Mqtt error: ${err}`); }
-                      );
+                      publishData('run', {
+                        id: clientId,
+                        runId: pipeline.id,
+                        output: message,
+                        iteration: messageIteration,
+                        debug: { sent: Date.now() },
+                      }, 1);
                       activePipelines[pipeline.id].stashedOutput = undefined;
                     }
                   }
@@ -1169,12 +1172,9 @@ module.exports = {
               throw err;
             }
             // local pipeline user stop error, or other uncaught error
-            mqttClient.publish(
-              'run',
-              JSON.stringify({ id: clientId, runId, error: err }),
-              { qos: 1 },
-              (err) => { if (err) logger.error(`Mqtt error: ${err}`); }
-            );
+            publishData('run', {
+              id: clientId, runId, error: err,
+            }, 1);
 
             throw err;
           });

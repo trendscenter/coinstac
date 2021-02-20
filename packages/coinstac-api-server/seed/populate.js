@@ -5,6 +5,7 @@ const dsneMS = require('./data/coinstac-dsne-ms');
 const drneVbm = require('./data/coinstac-schema-regression-vbm');
 // const ssrVbm = require('./data/coinstac-schema-regression-ss-vbm');
 const msrVbm = require('./data/coinstac-schema-regression-ms-vbm');
+const dmancova = require('./data/coinstac-dmancova');
 
 const drneFsl = require('./data/coinstac-schema-regression-fsl');
 const ssrFsl = require('./data/coinstac-schema-regression-ss-fsl');
@@ -92,6 +93,7 @@ async function populateComputations() {
     { ...localError, submittedBy: 'author', _id: COMPUTATION_IDS[13] },
     { ...fmri, submittedBy: 'author', _id: COMPUTATION_IDS[14] },
     { ...ssrFsl, submittedBy: 'author', _id: COMPUTATION_IDS[15] },
+    { ...dmancova, submittedBy: 'author', _id: COMPUTATION_IDS[16] },
   ]);
 }
 
@@ -154,21 +156,21 @@ async function populatePipelines() {
           id: 'HJKRyjTuM',
           inputMap: {
             covariates: {
-              ownerMappings: [
+              fulfilled: false,
+              value: [
                 {
                   name: 'isControl',
-                  source: 'file',
                   type: 'boolean',
                 },
                 {
                   name: 'age',
-                  source: 'file',
                   type: 'number',
                 },
               ],
             },
             data: {
-              ownerMappings: [
+              fulfilled: true,
+              value: [
                 {
                   type: 'FreeSurfer',
                   value: ['3rd-Ventricle', '4th-Ventricle', '5th-Ventricle'],

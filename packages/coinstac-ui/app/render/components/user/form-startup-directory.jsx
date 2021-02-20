@@ -38,7 +38,7 @@ class FormStartupDirectory extends React.Component {
   }
 
   handleSelectDirectoryClick = () => {
-    ipcPromise.send('open-dialog', 'directory')
+    ipcPromise.send('open-dialog', { org: 'directory' })
       .then((selectedDirectory) => {
         if (!selectedDirectory) return;
 

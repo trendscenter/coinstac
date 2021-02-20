@@ -16,6 +16,7 @@ async function getDockerManager(clientId) {
     operatingDirectory: path.resolve(process.env.PIPELINE_SERVER_OPERARTING_DIR, 'coinstac'),
     remotePort: 3400,
     mqttRemotePort: process.env.MQTT_SERVER_PORT,
+    mqttRemoteWSPort: process.env.MQTT_SERVER_WS_PORT,
     mqttRemoteProtocol: process.env.MQTT_SERVER_PROTOCOL,
     mqttRemoteURL: process.env.MQTT_SERVER_HOSTNAME,
   });

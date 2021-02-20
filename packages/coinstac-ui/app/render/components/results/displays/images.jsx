@@ -178,7 +178,7 @@ class Images extends Component {
 
       if (key.includes('global')) {
         output.push(
-          <div key={`page-${key}`} className={classNames(`page-${key}`, classes.page)} ref={(ref) => { this.global_page = ref; }}>{page}</div>
+          <div key={`page-${key}`} className={classNames(`page-${key}`, classes.page)} ref={(ref) => { this.globalPage = ref; }}>{page}</div>
         );
       } else {
         output.push(
@@ -192,8 +192,8 @@ class Images extends Component {
 
   renderCanvas = () => {
     const { plotData } = this.props;
-    const globalCanvas = ReactDOM.findDOMNode(this.global_canvas);
-    const globalResults = ReactDOM.findDOMNode(this.global_page);
+    const globalCanvas = ReactDOM.findDOMNode(this.globalCanvas);
+    const globalResults = ReactDOM.findDOMNode(this.globalPage);
 
     RasterizeHTML.drawHTML(globalResults.innerHTML, globalCanvas);
 
@@ -214,7 +214,7 @@ class Images extends Component {
     const {
       plotData, title, writeLog, notifyError,
     } = this.props;
-    const canvas = ReactDOM.findDOMNode(this.global_canvas);
+    const canvas = ReactDOM.findDOMNode(this.globalCanvas);
 
     try {
       canvas.getContext('2d');
@@ -223,14 +223,18 @@ class Images extends Component {
       const globalImg = canvas.toDataURL('image/jpg', 1.0);
       const globalItems = Object.keys(plotData.global_stats).length;
       const height = globalItems * 20;
+
       doc.addImage(globalImg, 'jpg', 5, 5, 200, height);
+
       Object.entries(plotData.local_stats).forEach(([key]) => {
         const canvas = `${key}_canvas`;
         const keyCanvas = ReactDOM.findDOMNode(this[canvas]);
         const canvasImg = keyCanvas.toDataURL('image/jpg', 1.0);
+
         doc.addPage();
         doc.addImage(canvasImg, 'jpg', 5, 5, 200, height);
       });
+
       doc.save(`${kebabCase(title)}.pdf`);
     } catch (err) {
       writeLog({ type: 'error', message: err });
@@ -239,54 +243,62 @@ class Images extends Component {
   }
 
   render() {
-    const { appDirectory, imagePath, plotData, classes } = this.props;
-    let global_items;
-    let local_items;
+    const { imagePath, plotData, classes } = this.props;
+    let globalItems;
+    let localItems;
     let height = 0;
-    if (plotData.image_path) {
-      image_path = plotData.image_path;
-    }
+
+    const localCanvas = [];
+
     if (plotData.global_stats && plotData.local_stats) {
-      global_items = Object.keys(plotData.global_stats).length;
-      local_items = Object.keys(plotData.local_stats).length;
-      height = global_items * 180;
-      let local_canvas = [];
+      globalItems = Object.keys(plotData.global_stats).length;
+      localItems = Object.keys(plotData.local_stats).length;
+      height = globalItems * 180;
+
+      // eslint-disable-next-line no-unused-vars
       Object.entries(plotData.local_stats).forEach(([key, value]) => {
-          local_canvas.push(<canvas className={'canvas'} ref={`${key}_canvas`} width="1600" height={height}></canvas>);
+        localCanvas.push(<canvas className="canvas" ref={`${key}_canvas`} width="1600" height={height} />);
       });
     }
+
     return (
       <div>
-        {global_items &&
-         local_items &&
-        <div>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={this.savePDF}
-            className={classes.pdfButton}
-          >
-            Download as pdf
-          </Button>
-          <div id="images" ref="results">
-            {plotData && this.drawImageResults(plotData)}
-          </div>
-          <div className={classes.print}>
-            <canvas ref="global_canvas" width="1600" height={height}></canvas>
-            {local_canvas}
-          </div>
-        </div>}
-        {imagePath &&
+        {globalItems && localItems && (
           <div>
-            <img src={imagePath} className={classes.image} />
-         </div>}
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={this.savePDF}
+              className={classes.pdfButton}
+            >
+              Download as pdf
+            </Button>
+            <div id="images" ref={(ref) => { this.results = ref; }}>
+              {plotData && this.drawImageResults(plotData)}
+            </div>
+            <div className={classes.print}>
+              <canvas ref={(ref) => { this.globalCanvas = ref; }} width="1600" height={height} />
+              {localCanvas}
+            </div>
+          </div>
+        )}
+        {imagePath && (
+          <div>
+            <img src={imagePath} className={classes.image} alt="result-iamge" />
+          </div>
+        )}
       </div>
     );
   }
 }
 
+Images.defaultProps = {
+  imagePath: '',
+};
+
 Images.propTypes = {
   classes: PropTypes.object.isRequired,
+  imagePath: PropTypes.string,
   plotData: PropTypes.object,
   title: PropTypes.string.isRequired,
   notifyError: PropTypes.func.isRequired,

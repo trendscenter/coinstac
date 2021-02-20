@@ -37,10 +37,10 @@ class ComputationSubmission extends Component {
   }
 
   getComputationSchema = () => {
-    ipcPromise.send('open-dialog', 'jsonschema')
+    ipcPromise.send('open-dialog', { org: 'jsonschema' })
       .then((res) => {
         let error = null;
-        const validationReults = services.validator.validate(res, 'computation')
+        const validationReults = services.validator.validate(res, 'computation');
 
         if (validationReults.error) {
           error = validationReults.error.details;

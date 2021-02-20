@@ -1,0 +1,20 @@
+@import '~react-mde/lib/styles/css/react-mde-all.css';
+
+.react-mde {
+  textarea {
+    font-size: 15px;
+  }
+
+  button {
+    font-size: 13px;
+  }
+
+  textarea:focus,
+  button:focus {
+    outline: none;
+  }
+
+  .grip {
+    height: initial;
+  }
+}

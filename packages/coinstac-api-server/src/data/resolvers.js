@@ -898,21 +898,6 @@ const resolvers = {
       }*/
       const db = database.getDbInstance();
 
-      if (args.pipeline && args.pipeline.steps) {
-        const invalidData = args.pipeline.steps.some(step =>
-          step.inputMap &&
-          step.inputMap.covariates &&
-          step.inputMap.covariates.ownerMappings &&
-          step.inputMap.covariates.ownerMappings.some(variable =>
-            !variable.type || !variable.source || !variable.name
-          )
-        );
-
-        if (invalidData) {
-          return Boom.badData('Some of the covariates are incomplete');
-        }
-      }
-
       args.pipeline.id = args.pipeline.id ? ObjectID(args.pipeline.id) : new ObjectID();
 
       if (args.pipeline.owningConsortium) {
