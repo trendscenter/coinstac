@@ -1,7 +1,7 @@
 const Boom = require('boom');
 const GraphQLJSON = require('graphql-type-json');
 const axios = require('axios');
-const { get } = require('lodash');
+const { get, keys } = require('lodash');
 const Issue = require('github-api/dist/components/Issue');
 const { PubSub, withFilter } = require('graphql-subscriptions');
 const { ObjectID } = require('mongodb');
@@ -368,7 +368,7 @@ const resolvers = {
 
       const runs = await db.collection('runs').find({
         $or: [
-          { clients: credentials.id },
+          { [`clients.${credentials.id}`]: { $exists: true } },
           { sharedUsers: credentials.id }
         ]
       }).toArray();
@@ -390,7 +390,7 @@ const resolvers = {
 
       const user = await helperFunctions.getUserDetailsByID(credentials.id);
 
-      const consortiaIds = Object.keys(user.permissions.consortia).map(id => ObjectID(id));
+      const consortiaIds = keys(user.permissions.consortia).map(id => ObjectID(id));
       const consortia = await db.collection('consortia').find(
         { _id: { $in: consortiaIds } },
         { projection: { members: 1 } }
@@ -400,7 +400,7 @@ const resolvers = {
       const relatedUsersStatus = {};
 
       consortia.forEach((consortium) => {
-        Object.keys(consortium.members).forEach((memberId) => {
+        keys(consortium.members).forEach((memberId) => {
           if (!(memberId in relatedUsersStatus)) {
             relatedUsersStatus[memberId] = allUsersStatus[memberId] || false;
           }
@@ -532,12 +532,10 @@ const resolvers = {
       }
 
       try {
-        const clientArray = Object.keys(consortium.members);
         const isPipelineDecentralized = pipeline.steps.findIndex(step => step.controller.type === 'decentralized') > -1;
 
         const result = await db.collection('runs').insertOne({
-          clients: clientArray,
-          members: consortium.members,
+          clients: consortium.members,
           consortiumId,
           pipelineSnapshot: pipeline,
           startDate: Date.now(),
@@ -1165,14 +1163,14 @@ const resolvers = {
           }
         };
 
-        Object.keys(users).forEach((userId) => {
+        keys(users).forEach((userId) => {
           updateObj.$set[`users.${userId}`] = {
             username: users[userId],
             isRead: userId === credentials.id
           };
         });
 
-        Object.keys(recipients).forEach((userId) => {
+        keys(recipients).forEach((userId) => {
           if (userId in users) {
             return;
           }
@@ -1198,7 +1196,7 @@ const resolvers = {
           date: Date.now(),
         };
 
-        Object.keys(recipients).forEach((userId) => {
+        keys(recipients).forEach((userId) => {
           thread.users[userId] = {
             username: recipients[userId],
             isRead: false,
@@ -1218,7 +1216,7 @@ const resolvers = {
       if (action && action.type === 'share-result') {
         const updateRunResult = await db.collection('runs').findOneAndUpdate({ _id: ObjectID(action.detail.id) }, {
           $addToSet: {
-            sharedUsers: { $each: Object.keys(recipients) }
+            sharedUsers: { $each: keys(recipients) }
           }
         }, {
           returnOriginal: false
@@ -1359,7 +1357,7 @@ const resolvers = {
     userRunChanged: {
       subscribe: withFilter(
         () => pubsub.asyncIterator('userRunChanged'),
-        (payload, variables) => (variables.userId && payload.userRunChanged.clients.indexOf(variables.userId) > -1)
+        (payload, variables) => (variables.userId && keys(payload.userRunChanged.clients).indexOf(variables.userId) > -1)
       )
     },
     /**
@@ -1373,7 +1371,7 @@ const resolvers = {
 
         const user = await helperFunctions.getUserDetailsByID(context.userId);
 
-        const consortiaIds = Object.keys(user.permissions.consortia).map(id => ObjectID(id));
+        const consortiaIds = keys(user.permissions.consortia).map(id => ObjectID(id));
         const consortia = await db.collection('consortia').find(
           { _id: { $in: consortiaIds } },
           { projection: { members: 1 } }
@@ -1382,7 +1380,7 @@ const resolvers = {
         const usersStatus = {};
 
         consortia.forEach((consortium) => {
-          Object.keys(consortium.members).forEach((memberId) => {
+          keys(consortium.members).forEach((memberId) => {
             if (!(memberId in usersStatus)) {
               usersStatus[memberId] = payload.usersOnlineStatusChanged[memberId] || false;
             }

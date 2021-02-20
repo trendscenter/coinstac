@@ -49,7 +49,10 @@ const startRun = ({
           pipeline: remoteManager.startPipeline({
             spec: remoteSpec,
             runId: 'simulatorRun',
-            clients: Array.from(Array(clientCount)).map((val, idx) => `local${idx}`),
+            clients: Array.from(Array(clientCount)).reduce((acc, elem, idx) => {
+              acc[`local${idx}`] = `local${idx}`;
+              return acc;
+            }, {}),
             owner: 'local0',
           }),
         };
