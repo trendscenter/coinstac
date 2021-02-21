@@ -3,7 +3,6 @@ import { compose, graphql, withApollo } from 'react-apollo';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { ipcRenderer } from 'electron';
-import { isEqual } from 'lodash';
 import { withStyles } from '@material-ui/core/styles';
 import {
   Drawer,
@@ -49,7 +48,6 @@ import {
 } from '../../state/graphql/functions';
 import {
   getAllAndSubProp,
-  userRunProp,
   userProp,
 } from '../../state/graphql/props';
 import StartPipelineListener from './listeners/start-pipeline-listener';
@@ -126,8 +124,6 @@ class Dashboard extends Component {
   componentDidMount() {
     const {
       auth: { user },
-      maps,
-      consortia,
       getDockerStatus,
       writeLog,
       updateDockerOutput,
@@ -584,7 +580,6 @@ Dashboard.contextTypes = {
 Dashboard.defaultProps = {
   computations: [],
   consortia: [],
-  maps: [],
   pipelines: [],
   remoteRuns: [],
   runs: [],
@@ -601,7 +596,6 @@ Dashboard.propTypes = {
   computations: PropTypes.array,
   consortia: PropTypes.array,
   currentUser: PropTypes.object,
-  maps: PropTypes.array,
   pipelines: PropTypes.array,
   remoteRuns: PropTypes.array,
   runs: PropTypes.array,

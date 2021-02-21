@@ -74,7 +74,10 @@ class CoinstacClient {
       remotePathname: this.options.fileServer.pathname,
       remoteURL: this.options.fileServer.hostname,
       mqttRemotePort: this.options.mqttServer.port,
+      mqttRemoteWSPort: this.options.mqttWSServer.Port,
       mqttRemoteProtocol: this.options.mqttServer.protocol,
+      mqttRemoteWSProtocol: this.options.mqttWSServer.protocol,
+      mqttRemoteWSPathname: this.options.mqttWSServer.pathname,
       mqttRemoteURL: this.options.mqttServer.hostname,
     }).then((manager) => {
       this.pipelineManager = manager;
@@ -260,7 +263,7 @@ class CoinstacClient {
     clients,
     consortiumId,
     clientPipeline,
-    filesArray,
+    filePaths,
     runId,
     runPipeline // eslint-disable-line no-unused-vars
   ) {
@@ -271,27 +274,30 @@ class CoinstacClient {
     }
 
     if (!this.clientServerURL) {
+      const fp = path.join(this.appDirectory, 'input', this.clientId, runId);
       return mkdirp(path.join(this.appDirectory, 'input', this.clientId, runId))
         .then(() => {
-        // TODO: validate runPipeline against clientPipeline
+          // TODO: validate runPipeline against clientPipeline
           const linkPromises = [];
 
-          const e = new RegExp(/[-\/\\^$*+?.()|[\]{}]/g); // eslint-disable-line no-useless-escape
-          const escape = (string) => {
-            return string.replace(e, '\\$&');
-          };
-          if (filesArray) {
+          if (filePaths) {
             const stageFiles = process.env.CI ? fs.copy : fs.link;
-            for (let i = 0; i < filesArray.length; i += 1) {
-              const pathsep = new RegExp(`${escape(path.sep)}|:`, 'g');
-              linkPromises.push(
-                stageFiles(filesArray[i], path.resolve(this.appDirectory, 'input', this.clientId, runId, filesArray[i].replace(pathsep, '-')))
+
+            for (let i = 0; i < filePaths.files.length; i += 1) {
+              const mkdir = path.normalize(filePaths.files[i]) === path.basename(filePaths.files[i])
+                ? Promise.resolve() : mkdirp(path.resolve(fp, path.dirname(filePaths.files[i])));
+
+              linkPromises.push( // eslint-disable-next-line no-loop-func
+                mkdir.then(() => stageFiles(
+                  path.resolve(filePaths.baseDirectory, filePaths.files[i]),
+                  path.resolve(fp, path.basename(filePaths.files[i]))
+                )
                   .catch((e) => {
                   // permit dupes
                     if (e.code && e.code !== 'EEXIST') {
                       throw e;
                     }
-                  })
+                  }))
               );
             }
           }

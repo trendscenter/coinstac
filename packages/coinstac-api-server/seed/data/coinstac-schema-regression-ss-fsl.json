@@ -11,19 +11,18 @@
     "dockerImage": "coinstacteam/ssr-fsl",
     "command": [
       "python",
-      "\/computation\/local.py"
+      "/computation/scripts/local.py"
     ],
     "remote": {
       "type": "docker",
       "dockerImage": "coinstacteam/ssr-fsl",
       "command": [
         "python",
-        "\/computation\/remote.py"
+        "/computation/scripts/remote.py"
       ]
     },
     "input": {
-      "lambda":
-      {
+      "lambda": {
         "default": 0,
         "label": "Lambda",
         "max": 1,
@@ -32,17 +31,17 @@
         "type": "number",
         "source": "owner"
       },
-      "covariates":
-      {
+      "covariates": {
         "label": "Covariates",
-        "type": "array",
-        "items": ["boolean", "number"]
+        "type": "csv",
+        "items": ["boolean", "number"],
+        "source": "member"
       },
       "data": {
         "label": "Data",
-        "type": "array",
+        "type": "freesurfer",
         "items": ["FreeSurfer"],
-        "extensions": [["csv", "txt"]]
+        "source": "owner"
       }
     },
     "output": {

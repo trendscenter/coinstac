@@ -37,7 +37,7 @@ import {
 } from '../../utils/helpers';
 import ComputationIO from './computation-io';
 
-const MAX_LENGTH_COMPUTATIONS = 5
+const MAX_LENGTH_COMPUTATIONS = 5;
 
 const styles = theme => ({
   titleContainer: {
@@ -79,7 +79,7 @@ const styles = theme => ({
 
 class ComputationsList extends Component {
   constructor(props) {
-    super(props)
+    super(props);
 
     this.state = {
       activeComp: null,
@@ -134,8 +134,8 @@ class ComputationsList extends Component {
     return (
       <div className={classes.computationsContainer}>
         {sortedComputations.map((comp) => {
-          const compLocalImage = docker.localImages[comp.computation.dockerImage]
-          const isDeletingComputation = isDeleting && computationToDelete === comp.id
+          const compLocalImage = docker.localImages[comp.computation.dockerImage];
+          const isDeletingComputation = isDeleting && computationToDelete === comp.id;
 
           return (
             <Paper
@@ -160,7 +160,12 @@ class ComputationsList extends Component {
                       compLocalImage.id
                     )}
                   >
-                    Remove Image (<em>{compLocalImage.size.toString().slice(0, -6)} MB</em>)
+                    Remove Image (
+                    <em>
+                      {compLocalImage.size.toString().slice(0, -6)}
+                      MB
+                    </em>
+                    )
                   </Button>
                 ) : (
                   <Button
@@ -175,7 +180,7 @@ class ComputationsList extends Component {
                     }
                   >
                     Download Image
-                  </Button>  
+                  </Button>
                 )}
 
                 <div className={classes.computationButtons}>
@@ -197,7 +202,9 @@ class ComputationsList extends Component {
                         <CircularProgress size={15} />
                       ) : (
                         <Fragment>
-                          Delete{' '}<DeleteIcon />
+                          Delete
+                          {' '}
+                          <DeleteIcon />
                         </Fragment>
                       )}
                     </Button>
@@ -211,7 +218,10 @@ class ComputationsList extends Component {
                       key={elem.id && elem.id !== 'latest' ? elem.id : elem.status}
                       style={elem.isErr ? { color: 'red' } : {}}
                     >
-                      {elem.id ? `${elem.id}: ` : ''}{elem.status} {elem.message} {elem.progress}
+                      {elem.id ? `${elem.id}: ` : ''}
+                      {elem.status}
+                      {elem.message}
+                      {elem.progress}
                     </div>
                   ))}
                 </pre>
@@ -220,7 +230,7 @@ class ComputationsList extends Component {
                 <ComputationIO computationId={activeComp.id} />
               )}
             </Paper>
-          )
+          );
         })}
       </div>
     );
@@ -324,8 +334,8 @@ class ComputationsList extends Component {
           </Button>
         )}
 
-        {computations && computations.length > 0 &&
-          computations.length <= MAX_LENGTH_COMPUTATIONS && this.getTable(computations)}
+        {computations && computations.length > 0
+          && computations.length <= MAX_LENGTH_COMPUTATIONS && this.getTable(computations)}
         {ownedComputations.length > 0 && <Typography variant="h6">Owned Computations</Typography>}
         {ownedComputations.length > 0 && this.getTable(ownedComputations)}
         {otherComputations.length > 0 && <Typography variant="h6">Other Computations</Typography>}
@@ -344,9 +354,9 @@ class ComputationsList extends Component {
           warningMessage="This action will delete the computation, invalidating all pipelines that are currently using it."
         />
       </div>
-    )
+    );
   }
-};
+}
 
 ComputationsList.defaultProps = {
   removeComputation: null,
@@ -361,6 +371,8 @@ ComputationsList.propTypes = {
   pullComputations: PropTypes.func.isRequired,
   removeComputation: PropTypes.func,
   removeImage: PropTypes.func.isRequired,
+  notifySuccess: PropTypes.func.isRequired,
+  notifyError: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = ({ auth, docker }) => ({

@@ -123,7 +123,7 @@ class Result extends Component {
     const { auth: { user, appDirectory } } = this.props;
     const resultDir = path.join(appDirectory, 'output', user.id, id);
 
-    shell.openItem(resultDir);
+    shell.openPath(resultDir);
   }
 
   handleSelect = (_event, value) => {
@@ -146,7 +146,7 @@ class Result extends Component {
     if (stepsLength > 0 && run.pipelineSnapshot.steps[stepsLength - 1].inputMap
       && run.pipelineSnapshot.steps[stepsLength - 1].inputMap.covariates) {
       covariates = run.pipelineSnapshot.steps[stepsLength - 1]
-        .inputMap.covariates.ownerMappings.map(m => m.name);
+        .inputMap.covariates.value.map(m => m.name);
     }
 
     if (displayTypes && !displayTypes.length) {
@@ -265,7 +265,10 @@ class Result extends Component {
                   <Iframe
                     plotData={plotData}
                     title={`${consortium.name}_${run.pipelineSnapshot.name}`}
-                    path={path.join(appDirectory, 'output', user.id, run.id, run.pipelineSnapshot.steps[0].inputMap.results_html_path.value)}
+                    value={run.pipelineSnapshot.steps[0].inputMap.results_html_path.value}
+                    appDirectory={appDirectory}
+                    user={user}
+                    run={run}
                   />
                 )
               }

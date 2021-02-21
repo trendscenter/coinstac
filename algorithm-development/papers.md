@@ -9,8 +9,8 @@ D.K. Saha, V.D. Calhoun, Y. Du, Z. Fu, S.R. Panta, S.M. Plis, dSNE: a visualizat
 https://doi.org/10.1101/826974
 
 H. Gazula, B. Holla, Z. Zhang, J. Xu, E. Verner, R. Kelly, G. Schumann, V. D. Calhoun,
-Decentralized multi-site VBM analysis during adolescence shows structural changes linked to age, body mass index, and smoking: A COINSTAC analysis, bioRxiv 846386; 2020. 
-https://doi.org/10.1101/846386
+Decentralized multi-site VBM analysis during adolescence shows structural changes linked to age, body mass index, and smoking: A COINSTAC analysis, Neuroinformatics, 2021. 
+https://doi.org/10.1007/s12021-020-09502-7
 
 B. T. Baker, E. Damaraju, R. F. Silva, S. M. Plis, V. D. Calhoun, Decentralized dynamic functional network connectivity: State analysis in collaborative settings, Human Brain Mapping 41: pp. 2909–2925, 2020.
 https://doi.org/10.1002/hbm.24986

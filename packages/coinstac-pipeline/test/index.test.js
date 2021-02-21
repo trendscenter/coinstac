@@ -186,7 +186,7 @@ test.before(async () => {
 
 test('test mixed decent/local pipeline', (t) => {
   const remotePipeline = remote.startPipeline({
-    clients: ['one'],
+    clients: { one: 'one' },
     spec: mixedPipelineSpec,
     runId: 'remotetest1',
   });
@@ -207,13 +207,19 @@ test('test mixed decent/local pipeline', (t) => {
 
 test('test decentralized error from remote and local node', (t) => {
   const remotePipeline = remote.startPipeline({
-    clients: ['one', 'three'],
+    clients: {
+      one: 'one',
+      three: 'three',
+    },
     spec: decentralizedErrorPipelineSpec,
     runId: 'remoteError',
   });
 
   const remotePipeline2 = remote.startPipeline({
-    clients: ['one', 'three'],
+    clients: {
+      one: 'one',
+      three: 'three',
+    },
     spec: decentralizedErrorLocalPipelineSpec,
     runId: 'remoteErrorLocal',
   });
@@ -310,7 +316,7 @@ test('test pre remote start data preservation', (t) => {
       setTimeout(() => {
         once = false;
         const remotePipeline = remote.startPipeline({
-          clients: ['one'],
+          clients: { one: 'one' },
           spec: decentralizedPipelineSpec,
           runId: 'prePipe',
         });
@@ -328,7 +334,10 @@ test('test pre remote start data preservation', (t) => {
       setTimeout(() => {
         once2 = false;
         const remotePipeline = remote.startPipeline({
-          clients: ['one', 'two'],
+          clients: {
+            one: 'one',
+            two: 'two',
+          },
           spec: decentralizedPipelineSpec,
           runId: 'prePipeMultUser',
         });
@@ -350,7 +359,7 @@ test('test pre remote start data preservation', (t) => {
 
 test('file transfer and output test', (t) => {
   const remotePipeline = remote.startPipeline({
-    clients: ['one'],
+    clients: { one: 'one' },
     spec: fileTestSpec,
     runId: 'fileTest',
   });

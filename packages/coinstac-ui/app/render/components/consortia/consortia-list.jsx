@@ -38,8 +38,7 @@ import {
 } from '../../state/graphql/props';
 import { notifyInfo, notifyError } from '../../state/ducks/notifyAndLog';
 import { start, finish } from '../../state/ducks/loading';
-import { pipelineNeedsDataMapping } from '../../../main/utils/run-pipeline-functions';
-import { isUserInGroup } from '../../utils/helpers';
+import { isUserInGroup, pipelineNeedsDataMapping } from '../../utils/helpers';
 
 const MAX_LENGTH_CONSORTIA = 50;
 
@@ -136,10 +135,10 @@ class ConsortiaList extends Component {
 
     const pipeline = pipelines.find(pipe => pipe.id === consortium.activePipelineId);
 
-    const consortiumHasDataMap = maps.findIndex(m => m.consortiumId === consortium.id
-      && m.pipelineId === consortium.activePipelineId) > -1;
+    const dataMapIsComplete = maps.findIndex(m => m.consortiumId === consortium.id
+      && m.pipelineId === consortium.activePipelineId && m.isComplete) > -1;
 
-    const needsDataMapping = !consortiumHasDataMap && pipelineNeedsDataMapping(pipeline);
+    const needsDataMapping = !dataMapIsComplete && pipelineNeedsDataMapping(pipeline);
 
     // Add pipeline text
     text.push(
