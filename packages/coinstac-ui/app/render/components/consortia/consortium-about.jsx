@@ -15,6 +15,7 @@ import DeleteIcon from '@material-ui/icons/Delete';
 import PropTypes from 'prop-types';
 import { ValidatorForm, TextValidator } from 'react-material-ui-form-validator';
 import memoize from 'memoize-one';
+import { omit } from 'lodash';
 import Select from '../common/react-select';
 import MemberAvatar from '../common/member-avatar';
 import StatusButtonWrapper from '../common/status-button-wrapper';
@@ -78,16 +79,26 @@ class ConsortiumAbout extends Component {
 
   toggleOwner = (consUser) => {
     const {
-      consortium, owner, user, addUserRole, removeUserRole,
+      consortium, owner, user, addUserRole, removeUserRole, updateConsortium,
     } = this.props;
 
     if (owner && consUser.id !== user.id) {
       if (consUser.owner) {
-        removeUserRole(consUser.id, 'consortia', consortium.id, 'owner', 'data');
-        addUserRole(consUser.id, 'consortia', consortium.id, 'member', 'data');
+        removeUserRole(consUser.id, 'consortia', consortium.id, 'owner', 'data')
+          .then(({ data }) => {
+            updateConsortium({ param: 'owners', value: omit(consortium.owners, [data.removeUserRole.id]) });
+          });
       } else {
-        addUserRole(consUser.id, 'consortia', consortium.id, 'owner', 'data');
-        removeUserRole(consUser.id, 'consortia', consortium.id, 'member', 'data');
+        addUserRole(consUser.id, 'consortia', consortium.id, 'owner', 'data')
+          .then(({ data }) => {
+            updateConsortium({
+              param: 'owners',
+              value: {
+                ...consortium.owners,
+                [data.addUserRole.id]: data.addUserRole.username,
+              },
+            });
+          });
       }
     }
   }
@@ -97,14 +108,21 @@ class ConsortiumAbout extends Component {
   }
 
   addMember = () => {
-    const { consortium, addUserRole } = this.props;
+    const { consortium, addUserRole, updateConsortium } = this.props;
     const { newMember } = this.state;
 
     this.setState({ isAddingMember: true });
 
     addUserRole(newMember.value, 'consortia', consortium.id, 'member', 'data')
-      .then(() => {
+      .then(({ data }) => {
         this.setState({ newMember: null });
+        updateConsortium({
+          param: 'members',
+          value: {
+            ...consortium.members,
+            [data.addUserRole.id]: data.addUserRole.username,
+          },
+        });
       })
       .finally(() => {
         this.setState({ isAddingMember: false });
@@ -112,10 +130,15 @@ class ConsortiumAbout extends Component {
   }
 
   removeMember = (user) => {
-    const { consortium, removeUserRole } = this.props;
+    const { consortium, removeUserRole, updateConsortium } = this.props;
 
-    removeUserRole(user.id, 'consortia', consortium.id, 'owner', 'data');
-    removeUserRole(user.id, 'consortia', consortium.id, 'member', 'data');
+    removeUserRole(user.id, 'consortia', consortium.id, 'owner', 'data').then(({ data }) => {
+      updateConsortium({ param: 'owners', value: omit(consortium.owners, [data.removeUserRole.id]) });
+    });
+
+    removeUserRole(user.id, 'consortia', consortium.id, 'member', 'data').then(({ data }) => {
+      updateConsortium({ param: 'members', value: omit(consortium.owners, [data.removeUserRole.id]) });
+    });
   }
 
   render() {
@@ -255,7 +278,7 @@ class ConsortiumAbout extends Component {
                               color="default"
                               onClick={() => this.removeMember(consUser)}
                             >
-                                  Remove
+                              Remove
                               <DeleteIcon />
                             </Button>
                             )}
