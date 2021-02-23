@@ -24,7 +24,7 @@
   },
   "mqttWSServer": {
     "hostname": "coinstacdev01.rs.gsu.edu",
-    "port": "80",
+    "port": "443",
     "protocol": "wss:",
     "pathname": "/mqtt"
   }

@@ -74,7 +74,7 @@ class CoinstacClient {
       remotePathname: this.options.fileServer.pathname,
       remoteURL: this.options.fileServer.hostname,
       mqttRemotePort: this.options.mqttServer.port,
-      mqttRemoteWSPort: this.options.mqttWSServer.Port,
+      mqttRemoteWSPort: this.options.mqttWSServer.port,
       mqttRemoteProtocol: this.options.mqttServer.protocol,
       mqttRemoteWSProtocol: this.options.mqttWSServer.protocol,
       mqttRemoteWSPathname: this.options.mqttWSServer.pathname,

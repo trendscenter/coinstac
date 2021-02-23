@@ -616,8 +616,14 @@ module.exports = {
             if (!activePipelines[runId] || activePipelines[runId].state === 'created') {
               remoteClients[id] = Object.assign(
                 {
-                  [runId]: { state: {}, files: { expected: [], received: [] } },
+                  id,
                   state: 'pre-registered',
+                  [runId]: {
+                    state: {},
+                    files: { expected: [], received: [] },
+                    debug: { profiling: {} },
+                  },
+
                 },
                 remoteClients[id]
               );
@@ -659,6 +665,7 @@ module.exports = {
             {
               clientId: `${clientId}_${Math.random().toString(16).substr(2, 8)}`,
               reconnectPeriod: 5000,
+              connectTimeout: 15 * 1000,
             }
           );
           client.on('offline', () => {
