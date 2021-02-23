@@ -173,7 +173,7 @@ loadConfig()
           .map(comp => comp.computation.dockerImage))
         .reduce((acc, val) => acc.concat(val), []);
 
-      return initializedCore.dockerManager.pullImagesFromList(computationImageList)
+      return initializedCore.Manager.pullImagesFromList(computationImageList)
         .then((compStreams) => {
           const streamProms = [];
 
@@ -231,7 +231,7 @@ loadConfig()
               });
             });
         })
-        .then(() => initializedCore.dockerManager.pruneImages())
+        .then(() => initializedCore.Manager.pruneImages())
         .then(() => {
           logger.verbose('############ Client starting pipeline');
 
@@ -390,7 +390,7 @@ loadConfig()
   * @return {Promise<String[]>} An array of all local Docker image names
   */
     ipcPromise.on('get-all-images', () => {
-      return initializedCore.dockerManager.getImages()
+      return initializedCore.Manager.getImages()
         .then((data) => {
           return data;
         })
@@ -411,7 +411,7 @@ loadConfig()
   * @return {Promise<boolean[]>} Docker running?
   */
     ipcPromise.on('get-status', () => {
-      return initializedCore.dockerManager.getStatus()
+      return initializedCore.Manager.getStatus()
         .then((result) => {
           return result;
         })
@@ -435,7 +435,7 @@ loadConfig()
   * @return {Promise}
   */
     ipcPromise.on('download-comps', (params) => { // eslint-disable-line no-unused-vars
-      return initializedCore.dockerManager
+      return initializedCore.Manager
         .pullImages(params.computations)
         .then((compStreams) => {
           let streamsComplete = 0;
@@ -525,7 +525,7 @@ loadConfig()
    * @param {String} imgId ID of the image to remove
    */
     ipcPromise.on('remove-image', ({ compId, imgId, imgName }) => {
-      return initializedCore.dockerManager.removeImage(imgId)
+      return initializedCore.Manager.removeImage(imgId)
         .catch((err) => {
           const output = [{
             message: err.message, status: 'error', statusCode: err.statusCode, isErr: true,

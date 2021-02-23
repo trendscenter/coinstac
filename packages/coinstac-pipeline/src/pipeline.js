@@ -23,12 +23,13 @@ module.exports = {
     runId,
     {
       mode,
+      imageDirectory,
       operatingDirectory,
       clientId,
       userDirectories,
       owner,
       logger,
-      dockerManager,
+      Manager,
     }
   ) {
     const cache = {};
@@ -41,11 +42,12 @@ module.exports = {
     const pipelineSteps = steps.map(
       step => Controller.create(step, runId, {
         mode,
+        imageDirectory,
         operatingDirectory,
         clientId,
         owner,
         logger,
-        dockerManager,
+        Manager,
       })
     );
 

@@ -10,13 +10,15 @@ const nes = require('nes');
 const fs = require('fs').promises;
 const path = require('path');
 const winston = require('winston');
-const DockerManager = require('coinstac-docker-manager');
-const PipelineManager = require('coinstac-pipeline');
 
 // set w/ config etc post release
 process.LOGLEVEL = 'silly';
 
 const { Logger, transports: { Console } } = winston;
+
+const Manager = require('coinstac-manager');
+const PipelineManager = require('coinstac-pipeline');
+
 
 /**
  * Create a user client for COINSTAC
@@ -45,8 +47,8 @@ class CoinstacClient {
     this.appDirectory = opts.appDirectory;
     this.clientServerURL = opts.clientServerURL;
 
-    this.dockerManager = DockerManager;
-    this.dockerManager.setLogger(this.logger);
+    this.Manager = Manager;
+    this.Manager.setLogger(this.logger);
 
     /* istanbul ignore if */
     if (opts.logLevel) {
@@ -72,7 +74,7 @@ class CoinstacClient {
       remotePathname: this.options.fileServer.pathname,
       remoteURL: this.options.fileServer.hostname,
       mqttRemotePort: this.options.mqttServer.port,
-      mqttRemoteWSPort: this.options.mqttWSServer.Port,
+      mqttRemoteWSPort: this.options.mqttWSServer.port,
       mqttRemoteProtocol: this.options.mqttServer.protocol,
       mqttRemoteWSProtocol: this.options.mqttWSServer.protocol,
       mqttRemoteWSPathname: this.options.mqttWSServer.pathname,

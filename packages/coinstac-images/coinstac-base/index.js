@@ -1,7 +1,10 @@
 const server = require('./server-ws2');
 const serverHttp = require('./server-http');
-
-const inOpts = process.argv[2] ? JSON.parse(process.argv[2]) : {};
+try {
+  const inOpts = process.argv[2] ? JSON.parse(process.argv[2]) : {};
+} catch(e) {
+  console.log(process.argv);
+}
 const opts = Object.assign(
   {
     port: 8881,

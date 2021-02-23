@@ -1,13 +1,13 @@
 const path = require('path');
 const axios = require('axios');
 const PipelineManager = require('coinstac-pipeline');
-const { pullImagesFromList, removeImagesFromList } = require('coinstac-docker-manager');
+const { pullImagesFromList, removeImagesFromList } = require('coinstac-manager');
 
-const dockerManagers = {};
+const Managers = {};
 
 async function getDockerManager(clientId) {
-  if (dockerManagers[clientId]) {
-    return dockerManagers[clientId];
+  if (Managers[clientId]) {
+    return Managers[clientId];
   }
 
   const manager = await PipelineManager.create({

@@ -8,12 +8,12 @@ Coinstac is a Electron based application environment for decentralized algorithm
   - An LTS release of [Node and NPM](https://nodejs.org/en/)
   - lastest version of [coinstac-simulator](https://npm.org/packages/coinstac-simulator)
     ```sudo npm i -g coinstac-simulator```
-  - latest version of [docker](https://docs.docker.com/install/)
+  - latest version of [docker](https://docs.docker.com/install/) or [singularity](https://sylabs.io/guides/3.7/user-guide/quick_start.html) (linux only)
 
 ## Getting Started
 To successfully run computation in the simulator we need to
 - [Create a compsec](#Create-a-compsec)
-- [Create a dockerfile](#Create-a-dockerfile)
+- [Use a container system](#Use-a-container-system)
 - [Create a the scripts](#Create-a-the-scripts)
 - [Create an inputspec](#Create-an-inputspec)
 
@@ -26,8 +26,9 @@ Starting a Coinstac computatation begins with making a `compspec.json` a documen
 Below is an example from the Coinstac regression algorithm. There is a metadata section containing usefull data, and a computation section for how to use your computation.
 
 The key sections here are
-- **type** - docker is the only supported method for running computations at the moment
-- **dockerImage** - the name of the docker image to run, the image needs to be pulled locally or available on dockerhub
+- **type** - docker or singularity
+- **dockerImage** - the name of the Docker image to run, the image needs to be pulled locally or available on dockerhub, omit this if using singularity
+- **image**  for Singularity, the name of your singularity image, path relative to the compspec file
 - **command** - the command to call when your docker image is started, this should be an array of args
 - **remote** - if your computation has a decentralized component, the remote section is a mirror of the above, but for the remote. The remote can and usually uses the same docker image but calls a different file.
 - **input** - what your computation needs to start running a full overview can be found in the [computation spec api doc](https://github.com/MRN-Code/coinstac/tree/master/algorithm-development/computation-specification-api.md). For now lets take a look at an example:
@@ -48,6 +49,7 @@ The key sections here are
 
 ##### Full compspec example
 #
+
 ```json
 {
   "meta": {
@@ -96,20 +98,30 @@ The key sections here are
         "extensions": [["csv", "txt"]]
       }
     },
-    "output": { // blank for now
+    "output": {
     },
-    "display": [ // blank for now
+    "display": [
     ]
   }
 }
 ```
 
-### Create a Dockerfile
-To run your computation in Coinstac you'll need to encapsulate it in a docker image, for now we have one base python 3.6 image that all computations must inherit from. The Docker file use that image as a base, puts your code into `/computation`, and does any install required by your code.
+The `output` and `display` sections can be blank for now, and will be used later for telling Coinstac UI how to deal with your computation once it completes.
+
+### Use a container system
+
+To run your computation in Coinstac you'll need to encapsulate it in an image. Coinstac either supports Docker or Singularity image formats, and Singularity `sif` images can be created from docker images.
+
+#### Create a Dockerfile with docker
+
+First, all Coinstac images need to inherit from a Coinstac base image which contains a microservice that allows the container to be persistent between iterations. A list of base images can be found [here](https://hub.docker.com/r/coinstacteam/coinstac-base/tags?page=1&ordering=last_updated). A typical computation setup often has two scripts for `remote` and `local` computation.
+
+This `Dockerfile` below puts your code into `/computation`, and does any install required by your code. The Dockerfile should be in your computation's root directory or otherwise reference paths based on it's location.
 
 **Note**: please ignore any test or extraneous files using a `.dockerignore`, this keeps image size down
+
 ```sh
-FROM coinstac/coinstac-base-python-stream
+FROM coinstacteam/coinstac-base
 # Set the working directory
 WORKDIR /computation
 # Copy the current directory contents into the container
@@ -119,6 +131,39 @@ RUN pip install -r requirements.txt
 # Copy the current directory contents into the container
 COPY . /computation
 ```
+
+#### Singularity sif
+The computation internals don't differ between container types, however you will have to use the same docker base image, making a tool like [docker2singularity](https://github.com/singularityhub/docker2singularity) an easy way to build containers. Once your `sif` file is built you can use it by changing the `image` type to `singularity` and adding an image name relative to the compspec under `image` rather than `dockerImage`.
+
+```
+{
+  "meta": {
+    "name": "my computation",
+    "id": "unique_computation_name",
+    "version": "v1.0.0",
+    "repository": "https:\/\/github.com\/user/comp",
+    "description": "Itsa Computation"
+  },
+  "computation": {
+    "type": "singularity",
+    "image": "my_image.sif",
+    "command": [
+      "python",
+      "\/computation\/local.py"
+    ],
+    "remote": {
+      "type": "singularity",
+      "image": "my_image.sif",
+      "command": [
+        "python",
+        "\/computation\/remote.py"
+      ]
+    },
+    .
+    .
+    .
+```
+
 ### Create the scripts
 Here is a simple example that just sends a number and sums it until it reaches `5`
 

@@ -36,7 +36,7 @@
   "dependencies": {
     "@hapi/hapi": "^19.1.1",
     "axios": "^0.19.2",
-    "coinstac-docker-manager": "^5.1.4",
+    "coinstac-manager": "^5.1.4",
     "coinstac-graphql-schema": "^5.1.1",
     "coinstac-pipeline": "^5.1.4",
     "nes": "^10.0.2"

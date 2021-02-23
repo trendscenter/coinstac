@@ -14,7 +14,6 @@ const winston = require('winston');
 const express = require('express');
 const multer = require('multer');
 const uuid = require('uuid/v4');
-const dockerManager = require('coinstac-docker-manager');
 const tar = require('tar-fs');
 const zlib = require('zlib');
 const merge2 = require('merge2');
@@ -142,6 +141,7 @@ module.exports = {
    */
   async create({
     clientId,
+    imageDirectory = './',
     logger,
     operatingDirectory = './',
     mode,
@@ -616,8 +616,14 @@ module.exports = {
             if (!activePipelines[runId] || activePipelines[runId].state === 'created') {
               remoteClients[id] = Object.assign(
                 {
-                  [runId]: { state: {}, files: { expected: [], received: [] } },
+                  id,
                   state: 'pre-registered',
+                  [runId]: {
+                    state: {},
+                    files: { expected: [], received: [] },
+                    debug: { profiling: {} },
+                  },
+
                 },
                 remoteClients[id]
               );
@@ -659,6 +665,7 @@ module.exports = {
             {
               clientId: `${clientId}_${Math.random().toString(16).substr(2, 8)}`,
               reconnectPeriod: 5000,
+              connectTimeout: 15 * 1000,
             }
           );
           client.on('offline', () => {
@@ -836,12 +843,12 @@ module.exports = {
             state: 'created',
             pipeline: Pipeline.create(spec, runId, {
               mode,
+              imageDirectory,
               operatingDirectory,
               clientId,
               userDirectories,
               owner: spec.owner,
               logger,
-              dockerManager,
             }),
             baseDirectory: path.resolve(operatingDirectory, 'input', clientId, runId),
             cacheDirectory: userDirectories.cacheDirectory,
@@ -1207,7 +1214,6 @@ module.exports = {
         }
       },
       waitingOnForRun,
-      dockerManager,
     };
   },
 };
