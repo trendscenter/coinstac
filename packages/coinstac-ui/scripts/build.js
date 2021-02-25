@@ -1,6 +1,7 @@
 /* eslint-disable no-console */
 const fs = require('fs').promises;
 const electronBuilder = require('electron-builder');
+const pkg = require('../package.json');
 
 const { NODE_ENV, DIST } = process.env;
 
@@ -8,8 +9,19 @@ const buildConfig = {};
 
 if (NODE_ENV === 'production' && DIST) {
   buildConfig.win = ['nsis'];
-  buildConfig.mac = ['dmg'];
+  buildConfig.mac = {
+    target: 'dmg',
+    hardenedRuntime: true,
+  };
+  buildConfig.dmg = {
+    name: `Coinstac v${pkg.version}`,
+    sign: false,
+  };
   buildConfig.linux = ['AppImage'];
+  buildConfig.build = {
+    afterSign: 'utils/notarize.js',
+    appId: 'com.trends.coinstac',
+  };
 } else {
   buildConfig.dir = true;
   buildConfig.win = ['zip'];
