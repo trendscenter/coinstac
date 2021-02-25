@@ -1,4 +1,4 @@
-if [ $1 -eq 0 ] || [ $2 = "" ] || [ $3 = "" ]; then
+if [[ $1 -eq 0 ]] || [[ $2 = "" ]] || [[ $3 = "" ]]; then
     echo "Incorrect arguments"
     echo ""
     echo "First argument for this script should be your MFA"
@@ -10,7 +10,7 @@ if [ $1 -eq 0 ] || [ $2 = "" ] || [ $3 = "" ]; then
     exit 1
 fi
 
-if [ $4 != "ci" ]; then
+if [[ $4 != "ci" ]]; then
   unset AWS_ACCESS_KEY_ID
   unset AWS_SECRET_ACCESS_KEY
   unset AWS_SESSION_TOKEN
@@ -25,7 +25,7 @@ if [ $4 != "ci" ]; then
   export AWS_SESSION_TOKEN=$SESSIONTOKEN
 fi
 
-if [ $2 != prod ]; then
+if [[ $2 != prod ]]; then
   SECRETID="coinstac-$2"
 else
   SECRETID="coinstac"
