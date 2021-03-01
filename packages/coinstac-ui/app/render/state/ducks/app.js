@@ -1,4 +1,6 @@
-import { takeRight } from 'lodash';
+import {
+  compact, map, split, takeRight,
+} from 'lodash';
 
 const INITIAL_STATE = {
   logs: [],
@@ -6,8 +8,6 @@ const INITIAL_STATE = {
 
 // Actions
 const APPEND_LOG_MESSAGE = 'APPEND_LOG_MESSAGE';
-
-const exp = new RegExp(/(\{"message":.+"level":.+\})/g);
 
 // Action Creators
 export const appendLogMessage = message => ({ type: APPEND_LOG_MESSAGE, payload: message });
@@ -17,7 +17,7 @@ export default function reducer(state = INITIAL_STATE, action) {
   switch (action.type) {
     case APPEND_LOG_MESSAGE:
       // eslint-disable-next-line no-case-declarations
-      const logs = action.payload.replace(/},{/g, '}\n{').match(exp) || [];
+      const logs = map(compact(split(action.payload, '}\n')), log => `${log}}`);
 
       return {
         ...state,

@@ -1,6 +1,7 @@
 'use strict';
 
-let logger = console.log;
+// eslint-disable-next-line no-console
+const logger = console.log;
 
 module.exports = {
   logger,
