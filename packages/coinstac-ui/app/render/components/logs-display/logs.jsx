@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import Icon from '@material-ui/core/Icon';
+import ArrowUpwardIcon from '@material-ui/icons/ArrowUpward';
+import ArrowDownwardIcon from '@material-ui/icons/ArrowDownward';
 import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
 
@@ -19,6 +20,10 @@ const styles = theme => ({
     display: 'block',
     whiteSpace: 'pre-wrap',
     wordWrap: 'break-word',
+    marginBottom: theme.spacing(1),
+    '&:last-of-type': {
+      marginBottom: 0,
+    },
   },
 });
 
@@ -51,9 +56,9 @@ class Logs extends Component {
             <button
               type="button"
               className="scroll-to-bottom"
-              onClick={this.handleScrollToBottom}
+              onClick={this.handleScrollToTop}
             >
-              <Icon className="fa fa-arrow-down arrow-icon" />
+              <ArrowUpwardIcon className="arrow-icon" />
             </button>
             <div id="logs-container" className={classes.logsContainer} onScroll={this.handleScroll}>
               {logs.map((message, ind) => (
@@ -68,9 +73,9 @@ class Logs extends Component {
             <button
               type="button"
               className="scroll-to-top"
-              onClick={this.handleScrollToTop}
+              onClick={this.handleScrollToBottom}
             >
-              <Icon className="fa fa-arrow-up arrow-icon" />
+              <ArrowDownwardIcon className="arrow-icon" />
             </button>
           </div>
         )}
