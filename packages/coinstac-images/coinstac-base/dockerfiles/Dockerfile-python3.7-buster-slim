@@ -1,12 +1,14 @@
 FROM python:3.7.8-slim-buster
 
+RUN pip install --upgrade pip
+
 # Node install start
 
 RUN groupadd --gid 1000 node \
   && useradd --uid 1000 --gid node --shell /bin/bash --create-home node
 
 RUN apt update && apt --no-install-recommends -y install curl python3-pip \
-  && curl -sL https://deb.nodesource.com/setup_12.x -o nodesource_setup.sh \
+  && curl -sL https://deb.nodesource.com/setup_14.x -o nodesource_setup.sh \
   && bash nodesource_setup.sh \
   && apt-get update \
   && apt --no-install-recommends -y install nodejs \
