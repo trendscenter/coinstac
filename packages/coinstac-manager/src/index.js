@@ -90,12 +90,17 @@ const getStatus = (provider = 'docker') => {
  * @return {Promise}              promise that resolves to the service function
  */
 const startService = (serviceId, serviceUserId, serviceType, opts) => {
-  const createService = () => {
+  const createAndAssignService = () => {
     services[serviceId].state = 'starting';
-    return generateServicePort(serviceId)
+    const eventualService = generateServicePort(serviceId)
       .then((port) => {
         return serviceProviders[serviceType].createService(serviceId, port, opts);
+      }).then(({ service, container }) => {
+        services[serviceId].container = container;
+        return service;
       });
+    services[serviceId].service = eventualService;
+    return eventualService;
   };
 
   if (services[serviceId] && (services[serviceId].state !== 'shutting down' && services[serviceId].state !== 'zombie')) {
@@ -116,12 +121,10 @@ const startService = (serviceId, serviceUserId, serviceType, opts) => {
           }
           // the service was somehow shutdown or crashed, make a new one
           logger.silly('Service was down, starting new instance');
-          resolve(createService(serviceId, services[serviceId].port, opts)
-            .then(({ service, container }) => {
-              services[serviceId].service = service;
-              services[serviceId].container = container;
+          resolve(createAndAssignService(serviceId, services[serviceId].port, opts)
+            .then(() => {
               services[serviceId].state = 'running';
-              return service;
+              return services[serviceId].service;
             }));
         });
       });
@@ -138,12 +141,10 @@ const startService = (serviceId, serviceUserId, serviceType, opts) => {
     };
   }
 
-  return createService()
-    .then(({ service, container }) => {
-      services[serviceId].service = service;
-      services[serviceId].container = container;
+  return createAndAssignService()
+    .then(() => {
       services[serviceId].state = 'running';
-      return service;
+      return services[serviceId].service;
     });
 };
 
