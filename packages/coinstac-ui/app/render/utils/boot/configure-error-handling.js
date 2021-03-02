@@ -5,7 +5,10 @@
 import { ipcRenderer } from 'electron';
 
 function onError(error) {
-  ipcRenderer.send('write-log', { type: 'error', message: `Unhandled error: ${error}` });
+  ipcRenderer.send('write-log', {
+    type: 'error',
+    message: `Unhandled error: ${typeof error === 'object' ? JSON.stringify(error) : error}`,
+  });
 }
 
 function onUnhandledRejection(event) {
