@@ -1,5 +1,7 @@
 FROM python:3.6.9-jessie
 
+RUN pip install --upgrade pip
+
 # Node install start
 
 RUN groupadd --gid 1000 node \

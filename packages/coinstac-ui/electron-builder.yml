@@ -1,5 +1,6 @@
 appId: com.github.trendscenter.coinstac
 productName: COINSTAC
+afterSign: './scripts/utils/notarize.js'
 files:
   - "**/*"
   - "build/render"
@@ -16,6 +17,9 @@ mac:
   icon: img/icons/coinstac.icns
   target: dmg
   category: public.app-category.education
+  hardenedRuntime: true
+dmg:
+  sign: false
 win:
   target: nsis
   icon: img/icons/coinstac.ico
@@ -28,6 +32,6 @@ nsis:
   license: LICENSE
 linux:
   target: AppImage
-  icon: img/icons/coinstac.icns
   category: Science
   executableName: COINSTAC
+  icon: img/icons/coinstac.icns

@@ -94,7 +94,7 @@ const startRun = ({
           // error sent to remote or the first local for local runs
           if (errors[1] || errors[0][0]) throw errors[1] || errors[0][0];
           return {
-            remote: pipelines.remote.pipeline.result,
+            remote: runMode === 'decentralized' ? pipelines.remote.pipeline.result : {},
             locals: pipelines.locals.map(local => local.pipeline.result),
           };
         });
