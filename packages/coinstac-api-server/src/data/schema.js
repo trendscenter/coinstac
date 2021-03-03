@@ -147,6 +147,12 @@ const typeDefs = `
     date: String
   }
 
+  type HeadlessClient {
+    id: ID
+    name: String
+    computationWhitelist: JSON
+  }
+
   input IssueInput {
     title: String
     body: String
@@ -195,6 +201,7 @@ const typeDefs = `
     fetchUser(userId: ID): User
     fetchAllThreads: [Thread]
     fetchUsersOnlineStatus: JSON
+    fetchAvailableHeadlessClients(computationId: ID): [HeadlessClient]
   }
 
   type Subscription {

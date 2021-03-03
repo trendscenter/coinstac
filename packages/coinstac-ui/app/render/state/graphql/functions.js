@@ -107,6 +107,11 @@ export const FETCH_ALL_THREADS_QUERY = gql`
     ${queries.fetchAllThreads}
 `;
 
+export const FETCH_AVAILABLE_HEADLESS_CLIENTS = gql`
+  query fetchAvailableHeadlessClients ($computationId: ID)
+    ${queries.fetchAvailableHeadlessClients}
+`;
+
 export const JOIN_CONSORTIUM_MUTATION = gql`
   mutation joinConsortium($consortiumId: ID!) {
     joinConsortium(consortiumId: $consortiumId){

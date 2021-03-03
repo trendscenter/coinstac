@@ -140,6 +140,10 @@ const sharedFields = {
       }
     }
   `,
+  headlessClientFields: `
+    id
+    name
+  `,
 };
 
 module.exports = sharedFields;

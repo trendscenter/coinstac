@@ -408,6 +408,15 @@ const resolvers = {
       });
 
       return getOnlineUsers();
+    },
+    fetchAvailableHeadlessClients: async (_, { computationId }) => {
+      const db = database.getDbInstance();
+
+      const headlessClients = await db.collection('headlessClients').find({
+        [`computationWhitelist.${computationId}`]: { $exists: true }
+      }).toArray();
+
+      return transformToClient(headlessClients);
     }
   },
   Mutation: {

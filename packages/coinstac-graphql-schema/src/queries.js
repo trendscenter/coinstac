@@ -131,6 +131,13 @@ const queries = {
       }
     }
   `,
+  fetchAvailableHeadlessClients: `
+    {
+      fetchAvailableHeadlessClients(computationId: $computationId) {
+        ${sharedFields.headlessClientFields}
+      }
+    }
+  `,
   pipelineChanged: `
     {
       pipelineChanged(pipelineId: $pipelineId) {

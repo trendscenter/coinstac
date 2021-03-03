@@ -52,6 +52,7 @@ const schemaFields = {
     id: ID!
     inputMap: JSON
     dataMeta: JSON
+    headlessMembers: [ID]
   `,
   resultFields: `
     id: ID!
