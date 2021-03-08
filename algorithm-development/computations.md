@@ -86,8 +86,8 @@ Below is a list of COINSTAC computations that have been implemented.
   - Maintainer: [Bradley Baker](https://github.com/bbradt)
   - Repository: https://github.com/trendscenter/coinstac_ddfnc_pipeline
   - Paper:
-    - H. Gazula, B. Baker, E. Damaraju, S. Plis, S. Panta, R. Silva,  V. Calhoun, Decentralized Analysis of Brain Imaging Data: Voxel-Based Morphometry and Dynamic Functional Network Connectivity, Frontiers in Neuroinformatics 12(55): August 2018.  
-    - http://dx.doi.org/10.3389/fninf.2018.00055
+    - B. Baker, E. Damaraju, R. Silva, S. Plis, V. Calhoun, Decentralized dynamic functional network connectivity: State analysis in collaborative settings, Human Brain Mapping 41(11): April 2020.  
+    - https://doi.org/10.1002/hbm.24986
 
 - Distributed t-Stochastic Neighbor Embedding
   - Algorithm Developer: [Debratta Saha](https://github.com/deblearn)
@@ -99,13 +99,15 @@ Below is a list of COINSTAC computations that have been implemented.
     - https://pdfs.semanticscholar.org/ec0d/46470a48bf3a60c641d8fed0a7748a7c9a2d.pdf
 
 - Differentially Private Support Vector Machines/Logistic Regression
-  - Algorithm Developer: [Anand Sarwate](https://github.com/adsarwate)
+  - Algorithm Developers: [Sergey Plis](https://github.com/sergeyplis) and [Anand Sarwate](https://github.com/adsarwate)
   - Computation Creator: [Huiwen Ju](https://github.com/hju5)
   - Maintainer: [Huiwen Ju](https://github.com/hju5)
   - Repository: https://github.com/trendscenter/coinstac-dpsvm
-  - Paper:
+  - Papers:
     - A.D. Sarwate, S. Plis, J.A. Turner, M. R. Arbabshirani, V.D. Calhoun, Sharing privacy-sensitive access to neuroimaging and genetics data: a review and preliminary validation, Frontiers in Neuroinformatics 8(35): April 2014.
     - https://dx.doi.org/10.3389/fninf.2014.00035
+    - L. Xie, S. M. Plis, A. D. Sarwate, Data-weighted ensemble learning for privacy-preserving distributed learning, 2016 IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP), 2016, 10.1109/ICASSP.2016.7472089, 10030420, 2309 to 2313, 10030420, OSTI, 25/07/2017 13:01:57.566000000
+    - https://par.nsf.gov/servlets/purl/10030420
 
 - Decentralized MANCOVA
   - Algorithm Developer: [Bradley Baker](https://github.com/bbradt)
