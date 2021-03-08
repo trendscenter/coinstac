@@ -8,8 +8,8 @@ const buildConfig = {};
 
 if (NODE_ENV === 'production' && DIST) {
   console.log('Preparing Distribution...');
-  // buildConfig.win = ['nsis'];
-  // buildConfig.mac = ['dmg'];
+  buildConfig.win = ['nsis'];
+  buildConfig.mac = ['dmg'];
   buildConfig.linux = ['AppImage'];
 } else {
   buildConfig.dir = true;
