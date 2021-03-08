@@ -34,4 +34,4 @@ linux:
   target: AppImage
   category: Science
   executableName: COINSTAC
-  icon: img/icons/coinstac.icns
+  icon: img/icons/coinstac.png
