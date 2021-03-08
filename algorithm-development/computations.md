@@ -107,14 +107,14 @@ Below is a list of COINSTAC computations that have been implemented.
     - A.D. Sarwate, S. Plis, J.A. Turner, M. R. Arbabshirani, V.D. Calhoun, Sharing privacy-sensitive access to neuroimaging and genetics data: a review and preliminary validation, Frontiers in Neuroinformatics 8(35): April 2014.
     - https://dx.doi.org/10.3389/fninf.2014.00035
 
-## Compatible with Simulator, but not yet in UI
-
 - Decentralized MANCOVA
   - Algorithm Developer: [Bradley Baker](https://github.com/bbradt)
   - Computation Creator: [Bradley Baker](https://github.com/bbradt)
   - Maintainer: [Bradley Baker](https://github.com/bbradt)
   - Repository: https://github.com/trendscenter/coinstac-mancova
   
+## Compatible with Simulator, but not yet in UI
+
 - Decentralized Neural Networks
   - Algorithm Developer: Noah Lewis
   - Computation Creator: [Aashis Khanal](https://github.com/sraashis)
@@ -182,7 +182,39 @@ Below is a list of COINSTAC computations that have been implemented.
   - Computation Creator: [Fatemeh Mohebbi](https://github.com/FatemehMhbi)
   - Maintainer: [Fatemeh Mohebbi](https://github.com/FatemehMhbi)
   - Repository: https://github.com/trendscenter/coinstac-regression-vbm-stats
-  
+
+- Decentralized Structural ROI Regression
+  - Algorithm Developer: [Fatemeh Mohebbi](https://github.com/FatemehMhbi)
+  - Computation Creator: [Fatemeh Mohebbi](https://github.com/FatemehMhbi)
+  - Maintainer: [Fatemeh Mohebbi](https://github.com/FatemehMhbi)
+  - Repository: https://github.com/trendscenter/coinstac-regression-vbm-stats
+
+- Brain Age on FreeSurfer Volumes
+  - Algorithm Developer: [Rajikha Raja](https://github.com/rajikha)
+  - Computation Creator: [Rajikha Raja](https://github.com/rajikha)
+  - Maintainer: [Sunitha Basodi](https://github.com/sunithabasodi)
+  - Repository: https://github.com/trendscenter/coinstac-brainage-freesurfer
+
+- Brain Age on Grey Matter AAL ROI Features
+  - Algorithm Developer: [Rajikha Raja](https://github.com/rajikha)
+  - Computation Creator: [Rajikha Raja](https://github.com/rajikha)
+  - Maintainer: [Sunitha Basodi](https://github.com/sunithabasodi)
+  - Repository: https://github.com/trendscenter/coinstac-brainage-gm
+
+- Brain Age on FNC Matrices
+  - Algorithm Developer: [Sunitha Basodi](https://github.com/sunithabasodi)
+  - Computation Creator: [Sunitha Basodi](https://github.com/sunithabasodi)
+  - Maintainer: [Sunitha Basodi](https://github.com/sunithabasodi)
+  - Repository: https://github.com/trendscenter/coinstac-brainage-fnc
+
+- Secure Multiparty Computation Regression
+  - Algorithm Developer: Nipuna Senanayake and Robert Podschwadt
+  - Computation Creator: [Debratta Saha](https://github.com/deblearn)
+
+- COMBAT-DC Harmonization
+  - Algorithm Developer: Victor Vergara and Biozid Bostami
+  - Computation Creator: [Biozid Bostami](https://github.com/biozid-0208)
+
 ## Under development
 
 - Decentralized Joint Independent Component Analysis
@@ -193,3 +225,8 @@ Below is a list of COINSTAC computations that have been implemented.
   - Paper:
     - B. Baker, A. Abrol, R.F. Silva, E. Damaraju, A.D. Sarwate, V.D. Calhoun, S.M. Plis, Decentralized Temporal Independent Component Analysis: Leveraging fMRI Data in Collaborative Settings, NeuroImage 186: pp. 557–569, February 2019.  
     - http://dx.doi.org/10.1016/j.neuroimage.2018.10.072
+
+- Differentially Private Mixed Effects Regression
+  - Algorithm Developer: [Ye Tao](https://github.com/yetaotjroc)
+  - Computation Creator: Ye Tao
+
