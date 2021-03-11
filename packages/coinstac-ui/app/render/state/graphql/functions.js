@@ -108,7 +108,7 @@ export const FETCH_ALL_THREADS_QUERY = gql`
 `;
 
 export const FETCH_AVAILABLE_HEADLESS_CLIENTS = gql`
-  query fetchAvailableHeadlessClients ($computationId: ID)
+  query fetchAvailableHeadlessClients
     ${queries.fetchAvailableHeadlessClients}
 `;
 

@@ -20,7 +20,9 @@ import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
 import { ValidatorForm, TextValidator } from 'react-material-ui-form-validator';
+import memoize from 'memoize-one';
 import ListDeleteModal from '../common/list-delete-modal';
+import Select from '../common/react-select';
 import StatusButtonWrapper from '../common/status-button-wrapper';
 import PipelineStep from './pipeline-step';
 import ItemTypes from './pipeline-item-types';
@@ -31,6 +33,7 @@ import {
   SAVE_ACTIVE_PIPELINE_MUTATION,
   FETCH_ALL_USERS_QUERY,
   USER_CHANGED_SUBSCRIPTION,
+  FETCH_AVAILABLE_HEADLESS_CLIENTS,
 } from '../../state/graphql/functions';
 import {
   getDocumentByParam,
@@ -84,6 +87,14 @@ const styles = theme => ({
   tooltip: {
     color: '#ab8e6b',
   },
+  headlessUsersContainer: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  headlessUserSelect: {
+    marginRight: theme.spacing(4),
+  },
 });
 
 const NumberFormatCustom = ({ inputRef, onChange, ...other }) => (
@@ -102,6 +113,10 @@ const NumberFormatCustom = ({ inputRef, onChange, ...other }) => (
 );
 
 class Pipeline extends Component {
+  mapHeadlessUsers = memoize(
+    users => (users ? users.map(u => ({ label: u.name, value: u.id })) : null)
+  );
+
   constructor(props) {
     super(props);
 
@@ -144,6 +159,7 @@ class Pipeline extends Component {
       openAddComputationStepMenu: false,
       showModal: false,
       savingStatus: 'init',
+      selectedHeadlessMember: null,
     };
   }
 
@@ -501,9 +517,25 @@ class Pipeline extends Component {
     }
   }
 
+  handleHeadlessMemberSelect = (value) => {
+    this.setState({ selectedHeadlessMember: value });
+  }
+
+  addHeadlessMember = () => {
+    const { selectedHeadlessMember: newHeadlessMember, pipeline } = this.state;
+
+    const headlessMembers = pipeline.headlessMembers
+      ? { ...pipeline.headlessMembers, [newHeadlessMember.value]: newHeadlessMember.label }
+      : { [newHeadlessMember.value]: newHeadlessMember.label };
+
+    this.updatePipeline({ param: 'headlessMembers', value: headlessMembers });
+
+    this.setState({ selectedHeadlessMember: null });
+  }
+
   render() {
     const {
-      connectDropTarget, consortia, users, classes, auth,
+      connectDropTarget, consortia, users, classes, auth, availableHeadlessClients,
     } = this.props;
     const {
       consortium,
@@ -513,12 +545,15 @@ class Pipeline extends Component {
       openAddComputationStepMenu,
       showModal,
       savingStatus,
+      selectedHeadlessMember,
     } = this.state;
 
     const isEditing = !!pipeline.id;
     const title = isEditing ? 'Pipeline Edit' : 'Pipeline Creation';
 
     const sortedComputations = this.sortComputations();
+
+    const headlessClientsOptions = this.mapHeadlessUsers(availableHeadlessClients);
 
     return connectDropTarget(
       <div>
@@ -655,6 +690,41 @@ class Pipeline extends Component {
             label="Share this pipeline with other consortia"
             className={classes.formControl}
           />
+          {
+            availableHeadlessClients && (
+              <div>
+                <Typography variant="h6">Headless Clients:</Typography>
+                <div className={classes.headlessUsersContainer}>
+                  <Select
+                    value={selectedHeadlessMember}
+                    placeholder="Select an user"
+                    options={headlessClientsOptions}
+                    onChange={this.handleHeadlessMemberSelect}
+                    removeSelected
+                    className={classes.headlessUserSelect}
+                    name="members-input"
+                  />
+                  <Button
+                    className={classes.addMemberButton}
+                    variant="contained"
+                    color="secondary"
+                    disabled={!selectedHeadlessMember}
+                    onClick={this.addHeadlessMember}
+                  >
+                    Add Headless Member
+                  </Button>
+                </div>
+                <ul>
+                  {
+                    pipeline.headlessMembers
+                    && Object.keys(pipeline.headlessMembers).map(headlessUserId => (
+                      <li key={headlessUserId}>{ pipeline.headlessMembers[headlessUserId] }</li>
+                    ))
+                  }
+                </ul>
+              </div>
+            )
+          }
           <Paper className={classes.tooltipPaper}>
             <Typography className={classes.tooltip} variant="body2">
               Build your pipelines by adding computation steps in the space below.
@@ -733,6 +803,7 @@ Pipeline.defaultProps = {
   users: [],
   subscribeToComputations: null,
   subscribeToPipelines: null,
+  availableHeadlessClients: [],
 };
 
 Pipeline.propTypes = {
@@ -750,6 +821,7 @@ Pipeline.propTypes = {
   notifySuccess: PropTypes.func.isRequired,
   savePipeline: PropTypes.func.isRequired,
   saveActivePipeline: PropTypes.func.isRequired,
+  availableHeadlessClients: PropTypes.array,
 };
 
 const mapStateToProps = ({ auth }) => ({
@@ -770,7 +842,12 @@ const PipelineWithData = compose(
     'fetchAllUsers',
     'subscribeToUsers',
     'userChanged'
-  ))
+  )),
+  graphql(FETCH_AVAILABLE_HEADLESS_CLIENTS, {
+    props: ({ data: { fetchAvailableHeadlessClients } }) => ({
+      availableHeadlessClients: fetchAvailableHeadlessClients,
+    }),
+  })
 )(Pipeline);
 
 const PipelineWithAlert = compose(

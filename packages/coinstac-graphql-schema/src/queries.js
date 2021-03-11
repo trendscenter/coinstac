@@ -133,7 +133,7 @@ const queries = {
   `,
   fetchAvailableHeadlessClients: `
     {
-      fetchAvailableHeadlessClients(computationId: $computationId) {
+      fetchAvailableHeadlessClients {
         ${sharedFields.headlessClientFields}
       }
     }
@@ -155,6 +155,13 @@ const queries = {
   userRunChanged: `
     {
       userRunChanged(userId: $userId) {
+        ${sharedFields.runFields}
+      }
+    }
+  `,
+  runWithHeadlessClientStarted: `
+    {
+      runWithHeadlessClientStarted(clientId: $clientId) {
         ${sharedFields.runFields}
       }
     }

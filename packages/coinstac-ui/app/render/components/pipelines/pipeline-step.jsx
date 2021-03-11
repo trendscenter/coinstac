@@ -12,11 +12,9 @@ import AccordionDetails from '@material-ui/core/AccordionDetails';
 import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
-import memoize from 'memoize-one';
-import Select from '../common/react-select';
 import ItemTypes from './pipeline-item-types';
 import PipelineStepInput from './pipeline-step-input';
-import { FETCH_COMPUTATION_QUERY, FETCH_AVAILABLE_HEADLESS_CLIENTS } from '../../state/graphql/functions';
+import { FETCH_COMPUTATION_QUERY } from '../../state/graphql/functions';
 import { compIOProp } from '../../state/graphql/props';
 
 const styles = theme => ({
@@ -25,14 +23,6 @@ const styles = theme => ({
   },
   accordionPanelContent: {
     display: 'block',
-  },
-  headlessUsersContainer: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  headlessUserSelect: {
-    marginRight: theme.spacing(4),
   },
   inputParametersContainer: {
     display: 'flex',
@@ -95,12 +85,7 @@ class PipelineStep extends Component {
     orderedInputs: [],
     compInputs: [],
     inputGroups: {},
-    selectedHeadlessMember: null,
   };
-
-  mapHeadlessUsers = memoize(
-    users => (users ? users.map(u => ({ label: u.name, value: u.id })) : null)
-  );
 
   componentDidUpdate() {
     const { compIO, possibleInputs, step } = this.props;
@@ -185,28 +170,6 @@ class PipelineStep extends Component {
     }
   }
 
-  handleHeadlessMemberSelect = (value) => {
-    this.setState({ selectedHeadlessMember: value });
-  }
-
-  addHeadlessMember = () => {
-    const { updateStep, step } = this.props;
-
-    const { selectedHeadlessMember } = this.state;
-
-    const stepHeadlessMembers = step.headlessMembers ? step.headlessMembers : [];
-
-    updateStep({
-      ...step,
-      headlessMembers: [
-        ...stepHeadlessMembers,
-        selectedHeadlessMember.value,
-      ],
-    });
-
-    this.setState({ selectedHeadlessMember: null });
-  }
-
   showOutput = (paddingLeft, id, output) => {
     const localOutputs = Object.entries(output).filter(elem => typeof elem[1] === 'object');
 
@@ -267,12 +230,9 @@ class PipelineStep extends Component {
       isDragging,
       owner,
       step,
-      availableHeadlessClients,
     } = this.props;
 
-    const { compInputs, inputGroups, selectedHeadlessMember } = this.state;
-
-    const headlessClientsOptions = this.mapHeadlessUsers(availableHeadlessClients);
+    const { compInputs, inputGroups } = this.state;
 
     return connectDragSource(connectDropTarget(
       <div className={classes.pipelineStep} key={`step-${step.id}`}>
@@ -281,50 +241,6 @@ class PipelineStep extends Component {
             <Typography variant="h5">{step.computations[0].meta.name}</Typography>
           </AccordionSummary>
           <AccordionDetails className={classes.accordionPanelContent} key={`step-exp-${step.id}`}>
-            {
-              availableHeadlessClients && (
-                <div>
-                  <Typography variant="h6">Headless Clients:</Typography>
-                  <div className={classes.headlessUsersContainer}>
-                    <Select
-                      value={selectedHeadlessMember}
-                      placeholder="Select an user"
-                      options={headlessClientsOptions}
-                      onChange={this.handleHeadlessMemberSelect}
-                      removeSelected
-                      className={classes.headlessUserSelect}
-                      name="members-input"
-                    />
-                    <Button
-                      className={classes.addMemberButton}
-                      variant="contained"
-                      color="secondary"
-                      disabled={!selectedHeadlessMember}
-                      onClick={this.addHeadlessMember}
-                    >
-                      Add Headless Member
-                    </Button>
-                  </div>
-                  <ul>
-                    {
-                      step.headlessMembers && step.headlessMembers.map((headlessUserId) => {
-                        if (!availableHeadlessClients) {
-                          return null;
-                        }
-
-                        const headlessUser = availableHeadlessClients.find(
-                          hc => hc.id === headlessUserId
-                        );
-
-                        return headlessUser
-                          ? <li key={headlessUserId}>{ headlessUser.name }</li>
-                          : null;
-                      })
-                    }
-                  </ul>
-                </div>
-              )
-            }
             <div className={classes.inputParametersContainer}>
               <Typography variant="h6">Input Parameters:</Typography>
               <Button
@@ -385,7 +301,6 @@ PipelineStep.defaultProps = {
   possibleInputs: [],
   updateStep: null,
   users: [],
-  availableHeadlessClients: [],
 };
 
 PipelineStep.propTypes = {
@@ -404,7 +319,6 @@ PipelineStep.propTypes = {
   deleteStep: PropTypes.func.isRequired,
   moveStep: PropTypes.func.isRequired,
   updateStep: PropTypes.func,
-  availableHeadlessClients: PropTypes.array,
 };
 
 const PipelineStepWithData = compose(
@@ -415,14 +329,6 @@ const PipelineStepWithData = compose(
     }),
     options: ({ previousComputationIds }) => ({
       variables: { computationIds: previousComputationIds },
-    }),
-  }),
-  graphql(FETCH_AVAILABLE_HEADLESS_CLIENTS, {
-    props: ({ data: { fetchAvailableHeadlessClients } }) => ({
-      availableHeadlessClients: fetchAvailableHeadlessClients,
-    }),
-    options: ({ computationId }) => ({
-      variables: { computationId },
     }),
   })
 )(PipelineStep);

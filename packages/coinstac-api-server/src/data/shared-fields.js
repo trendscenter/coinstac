@@ -42,6 +42,7 @@ const schemaFields = {
     shared: Boolean
     timeout: Int
     limitOutputToOwner: Boolean
+    headlessMembers: JSON
   `,
   pipelineControllerFields: `
     id: ID
@@ -52,7 +53,6 @@ const schemaFields = {
     id: ID!
     inputMap: JSON
     dataMeta: JSON
-    headlessMembers: [ID]
   `,
   resultFields: `
     id: ID!

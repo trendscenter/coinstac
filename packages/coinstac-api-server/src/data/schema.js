@@ -201,7 +201,8 @@ const typeDefs = `
     fetchUser(userId: ID): User
     fetchAllThreads: [Thread]
     fetchUsersOnlineStatus: JSON
-    fetchAvailableHeadlessClients(computationId: ID): [HeadlessClient]
+    fetchAvailableHeadlessClients: [HeadlessClient]
+    fetchHeadlessClientConfig(clientId: ID): HeadlessClient
   }
 
   type Subscription {
@@ -212,6 +213,7 @@ const typeDefs = `
     userRunChanged(userId: ID): Run
     userChanged(userId: ID): User
     usersOnlineStatusChanged: JSON
+    runWithHeadlessClientStarted(clientId: ID): Run
   }
 `;
 
