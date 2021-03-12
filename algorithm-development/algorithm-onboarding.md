@@ -188,12 +188,12 @@ sys.stdout.write(json.dumps(output))
 Now on the remote side of things we read things in similarly, but with the twist of the `input` document being nested for each site by the site name. We'll get how to grab the site name programmatically, but for now we know it will be `local0` as that is how site names are structured for simulator
 ```python
 inputFromLocal = json.loads(sys.stdin.read())
-inputFromLocal0 = input["input"]["local0"]["startingValue"]
+inputFromLocal0 = inputFromLocal["input"]["local0"]["startingValue"]
 ```
 Since all we're doing in this example is just echoing the starting value out, we finish with:
 
 ```python
-inputFromLocal0 = input["input"]["local0"]["startingValue"]
+inputFromLocal0 = inputFromLocal["input"]["local0"]["startingValue"]
 
 output = { "output": { "outputNumber": inputFromLocal0 }, "success": True }
 sys.stdout.write(json.dumps(output))
