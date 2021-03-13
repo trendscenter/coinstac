@@ -91,11 +91,8 @@ const initCoreAndSetToken = async (reqUser, data, appDirectory, clientServerURL,
         userId: user.id,
       };
 
-      if (reqUser.saveLogin) {
-        localStorage.setItem(API_TOKEN_KEY, JSON.stringify(tokenData));
-      } else {
-        sessionStorage.setItem(API_TOKEN_KEY, JSON.stringify(tokenData));
-      }
+      (reqUser.saveLogin ? localStorage : sessionStorage)
+        .setItem(API_TOKEN_KEY, JSON.stringify(tokenData));
 
       dispatch(setUser(user));
 
@@ -183,6 +180,11 @@ export const checkApiVersion = applyAsyncLoading(() => dispatch => axios.get(`${
 
 export const login = applyAsyncLoading(({ username, password, saveLogin }) => (dispatch, getState) => axios.post(`${API_URL}/authenticate`, { username, password })
   .then(({ data }) => {
+    const tokenData = {
+      token: data.id_token,
+      userId: data.user.id,
+    };
+    sessionStorage.setItem(API_TOKEN_KEY, JSON.stringify(tokenData));
     const { auth: { appDirectory, clientServerURL } } = getState();
     return initCoreAndSetToken(
       { username, password, saveLogin }, data, appDirectory, clientServerURL, dispatch
