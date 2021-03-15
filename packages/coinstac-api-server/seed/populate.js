@@ -992,7 +992,7 @@ async function populateHeadlessClients() {
     {
       name: 'Headless 1',
       computationWhitelist: {
-        [COMPUTATION_IDS[10]]: {
+        [COMPUTATION_IDS[15]]: {
           inputMap: {
             covariates: {
               type: 'csv',

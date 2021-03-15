@@ -1398,8 +1398,7 @@ const resolvers = {
     runWithHeadlessClientStarted: {
       subscribe: withFilter(
         () => pubsub.asyncIterator('runWithHeadlessClientStarted'),
-        (payload, variables) => (variables.clientId && payload.runWithHeadlessClientStarted.pipelineSnapshot
-          .headlessMembers.indexOf(variables.clientId) > -1)
+        (payload, variables) => (variables.clientId && variables.clientId in payload.runWithHeadlessClientStarted.pipelineSnapshot.headlessMembers)
       )
     },
     /**
