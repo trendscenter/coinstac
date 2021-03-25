@@ -40,34 +40,39 @@ const start = (opts) => {
           const task = JSON.parse(message);
           firstMessage = false;
           logger.debug(`Command: ${JSON.stringify(task)}`);
-          cmd = spawn(task.command, task.args);
+          try {
+            cmd = spawn(task.command, task.args);
 
-          cmd.stdout.on('data', (data) => {
-            ws.send(JSON.stringify({ type: 'stdout', data: data.toString(), end: false }));
-          });
+            cmd.stdout.on('data', (data) => {
+              ws.send(JSON.stringify({ type: 'stdout', data: data.toString(), end: false }));
+            });
 
-          cmd.stdout.on('close', () => {
-            ws.send(JSON.stringify({ type: 'stdout', end: true }));
-          });
+            cmd.stdout.on('close', () => {
+              ws.send(JSON.stringify({ type: 'stdout', end: true }));
+            });
 
-          cmd.stderr.on('data', (data) => {
-            ws.send(JSON.stringify({ type: 'stderr', data: data.toString(), end: false }));
-          });
+            cmd.stderr.on('data', (data) => {
+              ws.send(JSON.stringify({ type: 'stderr', data: data.toString(), end: false }));
+            });
 
-          cmd.stderr.on('close', () => {
-            ws.send(JSON.stringify({ type: 'stderr', end: true }));
-          });
+            cmd.stderr.on('close', () => {
+              ws.send(JSON.stringify({ type: 'stderr', end: true }));
+            });
 
-          cmd.on('close', (code) => {
-            ws.send(JSON.stringify({ type: 'close', code }));
-            if (code !== 0) {
-              logger.error(`${task.command} exited with code ${code}`);
-            }
-          });
-          cmd.on('error', (error) => {
-            ws.send(JSON.stringify({ type: 'error', error }));
-            logger.error(`Process failed to start:\n${error}`);
-          });
+            cmd.on('close', (code) => {
+              ws.send(JSON.stringify({ type: 'close', code }));
+              if (code !== 0) {
+                logger.error(`${task.command} exited with code ${code}`);
+              }
+            });
+            cmd.on('error', (error) => {
+              ws.send(JSON.stringify({ type: 'error', error }));
+              logger.error(`Process failed to start:\n${error}`);
+            });
+          } catch (e) {
+            ws.send(JSON.stringify({ type: 'error', e }));
+            logger.error(`Process failed to start:\n${e}`);
+          }
         } else if (Buffer.isBuffer(message) && message.length === 0) {
           cmd.stdin.end();
         } else {

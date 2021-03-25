@@ -18,6 +18,7 @@ const sharedFields = {
       description
       version
       id
+      compspecVersion
     }
     delete
     submittedBy
@@ -55,6 +56,7 @@ const sharedFields = {
           description
           version
           id
+          compspecVersion
         }
         computation {
           type

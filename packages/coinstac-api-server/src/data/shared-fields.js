@@ -26,6 +26,7 @@ const schemaFields = {
     id: String!
     tags: [String]
     version: String
+    compspecVersion: String
     controller: String
   `,
   computationRemoteFields: `
