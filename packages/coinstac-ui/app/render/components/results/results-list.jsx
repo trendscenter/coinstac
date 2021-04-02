@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import Typography from '@material-ui/core/Typography';
+import Tab from '@material-ui/core/Tab';
+import Tabs from '@material-ui/core/Tabs';
 import { withStyles } from '@material-ui/core/styles';
 import RunsList from '../common/runs-list';
+import FileViewer from './file-viewer';
 
 const styles = theme => ({
   pageTitle: {
@@ -11,6 +14,8 @@ const styles = theme => ({
 });
 
 const ResultsList = ({ runs, consortia, classes }) => {
+  const [selectedTab, setSelectedTab] = useState(1);
+
   return (
     <div>
       <div className="page-header">
@@ -19,12 +24,20 @@ const ResultsList = ({ runs, consortia, classes }) => {
         </Typography>
       </div>
 
-      <RunsList
-        consortia={consortia}
-        hoursSinceActive={0}
-        limitToComplete
-        runs={runs}
-      />
+      <Tabs value={selectedTab} onChange={(_, tab) => setSelectedTab(tab)}>
+        <Tab label="Results" />
+        <Tab label="Files" />
+      </Tabs>
+
+      {selectedTab === 0 && (
+        <RunsList
+          consortia={consortia}
+          hoursSinceActive={0}
+          limitToComplete
+          runs={runs}
+        />
+      )}
+      {selectedTab === 1 && <FileViewer consortia={consortia} runs={runs} />}
     </div>
   );
 };
