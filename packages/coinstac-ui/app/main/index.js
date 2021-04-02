@@ -12,6 +12,8 @@ Error.stackTraceLimit = 100;
 const { compact } = require('lodash'); // eslint-disable-line no-unused-vars
 const electron = require('electron');
 const ipcPromise = require('ipc-promise');
+const fs = require('fs');
+const path = require('path');
 const ipcFunctions = require('./utils/ipc-functions');
 const runPipelineFunctions = require('./utils/run-pipeline-functions');
 
@@ -43,6 +45,16 @@ const { configureLogger, readInitialLogContents } = require('./utils/boot/config
 const upsertCoinstacUserDir = require('./utils/boot/upsert-coinstac-user-dir.js');
 const loadConfig = require('../config.js');
 const fileFunctions = require('./services/files.js');
+
+
+const getAllFilesInDirectory = (directory) => {
+  const dirents = fs.readdirSync(directory, { withFileTypes: true });
+  const files = dirents.map((dirent) => {
+    const res = path.resolve(directory, dirent.name);
+    return dirent.isDirectory() ? getAllFilesInDirectory(res) : res;
+  });
+  return Array.prototype.concat(...files);
+};
 
 let initializedCore;
 // Boot up the main process
@@ -122,6 +134,65 @@ loadConfig()
       logger.error('A bad token was used on a request to the api');
 
       mainWindow.webContents.send(BAD_TOKEN);
+    });
+
+    /**
+     * IPC Listener to prepare consortia files
+     */
+    ipcMain.on('prepare-consortia-files', async (event, { userId, fileTree, appDirectory }) => {
+      const userRunDirectory = path.join(appDirectory, 'runs', userId);
+
+      if (!fs.existsSync(userRunDirectory)) {
+        fs.mkdirSync(userRunDirectory, { recursive: true });
+      }
+
+      const res = [];
+
+      fileTree.forEach((consortium) => {
+        const consortiumDirectory = path.join(userRunDirectory, consortium.name);
+
+        if (!fs.existsSync(consortiumDirectory)) {
+          fs.mkdirSync(consortiumDirectory);
+        }
+
+        consortium.runs.forEach((run) => {
+          const runDirectory = path.join(consortiumDirectory, `${run.pipelineName} - ${run.id}`);
+
+          if (!fs.existsSync(runDirectory)) {
+            fs.mkdirSync(runDirectory, { recursive: true });
+          }
+
+          const outputDirectory = path.join(appDirectory, 'output', userId, run.id);
+
+          if (fs.existsSync(outputDirectory)) {
+            const allFiles = getAllFilesInDirectory(outputDirectory);
+
+            allFiles.forEach((file) => {
+              const relativePath = file.replace(outputDirectory, '');
+              const symlinkPath = path.join(runDirectory, relativePath);
+
+              const symlinkDirectory = path.dirname(symlinkPath);
+
+              if (!fs.existsSync(symlinkDirectory)) {
+                fs.mkdirSync(symlinkDirectory, { recursive: true });
+              }
+
+              if (!fs.existsSync(symlinkPath)) {
+                fs.symlinkSync(file, symlinkPath);
+              }
+
+              let createdSymlinkPath = symlinkPath.replace(appDirectory, '');
+              if (createdSymlinkPath[0] === '/') {
+                createdSymlinkPath = createdSymlinkPath.slice(1);
+              }
+
+              res.push(createdSymlinkPath);
+            });
+          }
+        });
+      });
+
+      mainWindow.webContents.send('prepare-consortia-files', res);
     });
 
     ipcPromise.on('login-init', ({
