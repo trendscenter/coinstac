@@ -6,6 +6,7 @@
   "dependencies": {
     "@material-ui/core": "^4.11.0",
     "@material-ui/icons": "^4.9.1",
+    "@material-ui/lab": "^4.0.0-alpha.57",
     "add-graphql-subscriptions": "^1.0.1",
     "app-module-path": "^1.1.0",
     "async": "^2.6.1",
