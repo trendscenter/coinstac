@@ -91,13 +91,10 @@ export const getAllAndSubProp = (document, listProp, query, subProp, subscriptio
 });
 
 export const userProp = document => ({
+  skip: props => !get(props, 'auth.user.id'),
   options: (props) => {
-    const opts = { fetchPolicy: 'cache-and-network' };
     const userId = get(props, 'auth.user.id');
-
-    if (userId) {
-      opts.variables = { userId };
-    }
+    const opts = { fetchPolicy: 'cache-and-network', userId };
 
     return opts;
   },
@@ -106,7 +103,7 @@ export const userProp = document => ({
       currentUser: props.data.fetchUser,
       subscribeToUser: () => {
         const userId = get(props, 'ownProps.auth.user.id');
-        const variables = userId ? { userId } : {};
+        const variables = { userId };
 
         return props.data.subscribeToMore({
           document,
