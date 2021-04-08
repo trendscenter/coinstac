@@ -15,7 +15,6 @@
     "axios": "^0.21.1",
     "coinstac-client-core": "^5.2.1",
     "coinstac-graphql-schema": "^5.2.0",
-    "convict": "^6.0.0",
     "cross-fetch": "^3.0.6",
     "csv-reader": "^1.0.7",
     "graphql": "^15.5.0",

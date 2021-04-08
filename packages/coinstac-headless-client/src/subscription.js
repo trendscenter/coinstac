@@ -7,10 +7,10 @@ const RUN_WITH_HEADLESS_CLIENT_STARTED_SUBSCRIPTION = gql`
     ${queries.runWithHeadlessClientStarted}
 `;
 
-function subscribeToNewRuns(apolloClient) {
+function subscribeToNewRuns(clientId, apolloClient) {
   apolloClient.subscribe({
     query: RUN_WITH_HEADLESS_CLIENT_STARTED_SUBSCRIPTION,
-    variables: { clientId: process.env.HEADLESS_CLIENT_ID },
+    variables: { clientId },
   }).subscribe({
     next: (data) => {
       const run = data.data.runWithHeadlessClientStarted;

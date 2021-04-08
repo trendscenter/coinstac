@@ -1,24 +1,13 @@
-const { gql } = require('@apollo/client/core');
 const CoinstacClientCore = require('coinstac-client-core');
 const winston = require('winston');
 const path = require('path');
 const parseCsvFiles = require('./parse-csv-files');
 const mapData = require('./data-map');
 
-const HEADLESS_CLIENT_CONFIG_QUERY = gql`
-  query fetchHeadlessClientConfig($clientId: ID) {
-    fetchHeadlessClientConfig(clientId: $clientId) {
-      id
-      name
-      computationWhitelist
-    }
-  }
-`;
-
 let core = null;
 let headlessClientConfig = null;
 
-async function initialize(config, authToken, user, apolloClient) {
+async function initialize(config, authToken) {
   const logger = winston.loggers.add('coinstac-main', {
     level: 'silly',
     format: winston.format.combine(
@@ -31,9 +20,26 @@ async function initialize(config, authToken, user, apolloClient) {
   });
 
   const clientCoreConfig = {
-    ...config,
+    fileServer: {
+      hostname: process.env.FILE_SERVER_HOSTNAME,
+      pathname: process.env.FILE_SERVER_HOSTNAME,
+      port: process.env.FILE_SERVER_HOSTNAME,
+      protocol: process.env.FILE_SERVER_HOSTNAME,
+    },
+    mqttServer: {
+      hostname: process.env.MQTT_SERVER_HOSTNAME,
+      pathname: process.env.MQTT_SERVER_PATHNAME,
+      port: process.env.MQTT_SERVER_PORT,
+      protocol: process.env.MQTT_SERVER_PROTOCOL,
+    },
+    mqttWSServer: {
+      hostname: process.env.MQTT_WS_SERVER_HOSTNAME,
+      pathname: process.env.MQTT_WS_SERVER_PATHNAME,
+      port: process.env.MQTT_WS_SERVER_PORT,
+      protocol: process.env.MQTT_WS_SERVER_PROTOCOL,
+    },
     token: authToken,
-    userId: process.env.HEADLESS_CLIENT_ID,
+    userId: config.id,
     appDirectory: path.resolve('../'),
     logger,
   };
@@ -41,12 +47,7 @@ async function initialize(config, authToken, user, apolloClient) {
   core = new CoinstacClientCore(clientCoreConfig);
   await core.initialize();
 
-  const { data: { fetchHeadlessClientConfig } } = await apolloClient.query({
-    query: HEADLESS_CLIENT_CONFIG_QUERY,
-    variables: { clientId: process.env.HEADLESS_CLIENT_ID },
-  });
-
-  headlessClientConfig = await parseCsvFiles(fetchHeadlessClientConfig);
+  headlessClientConfig = await parseCsvFiles(config);
 }
 
 async function startPipelineRun(run) {

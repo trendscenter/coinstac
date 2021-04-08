@@ -5,17 +5,11 @@ const { getMainDefinition } = require('@apollo/client/utilities');
 const { WebSocketLink } = require('@apollo/client/link/ws');
 const ws = require('ws');
 
-function createApolloClient(config, authToken) {
-  const { apiServer, subApiServer } = config;
-
-  const API_URL = `${apiServer.protocol}//${apiServer.hostname}${apiServer.port ? `:${apiServer.port}` : ''}${apiServer.pathname}`;
-
-  const httpLink = new HttpLink({ uri: `${API_URL}/graphql` });
-
-  const SUB_URL = `${subApiServer.protocol}//${subApiServer.hostname}${subApiServer.port ? `:${subApiServer.port}` : ''}${subApiServer.pathname}`;
+function createApolloClient(authToken) {
+  const httpLink = new HttpLink({ uri: `${process.env.API_URL}/graphql` });
 
   const wsLink = new WebSocketLink({
-    uri: `${SUB_URL}/subscriptions`,
+    uri: `${process.env.SUB_API_URL}/subscriptions`,
     options: {
       reconnect: true,
     },

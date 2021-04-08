@@ -202,7 +202,6 @@ const typeDefs = `
     fetchAllThreads: [Thread]
     fetchUsersOnlineStatus: JSON
     fetchAvailableHeadlessClients: [HeadlessClient]
-    fetchHeadlessClientConfig(clientId: ID): HeadlessClient
   }
 
   type Subscription {

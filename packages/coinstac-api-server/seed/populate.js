@@ -991,6 +991,7 @@ async function populateHeadlessClients() {
   return db.collection('headlessClients').insertMany([
     {
       name: 'Headless 1',
+      apiKey: await helperFunctions.hashPassword('testApiKey'),
       computationWhitelist: {
         [COMPUTATION_IDS[15]]: {
           inputMap: {

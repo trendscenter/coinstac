@@ -43,6 +43,24 @@ module.exports = [
   },
   {
     method: 'POST',
+    path: '/authenticateWithApiKey',
+    config: {
+      auth: false,
+      pre: [
+        { method: helperFunctions.validateHeadlessClientApiKey, assign: 'headlessClient' },
+      ],
+      handler: (req, res) => {
+        req.pre.headlessClient.apiKey = undefined;
+
+        res({
+          authToken: helperFunctions.createToken(req.pre.headlessClient.id),
+          client: req.pre.headlessClient,
+        }).code(201);
+      },
+    },
+  },
+  {
+    method: 'POST',
     path: '/createAccount',
     config: {
       auth: false,

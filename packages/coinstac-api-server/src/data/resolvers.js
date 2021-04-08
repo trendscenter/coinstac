@@ -416,13 +416,6 @@ const resolvers = {
       const headlessClients = await db.collection('headlessClients').find().toArray();
 
       return transformToClient(headlessClients);
-    },
-    fetchHeadlessClientConfig: async (_, { clientId }) => {
-      const db = database.getDbInstance();
-
-      const headlessClient = await db.collection('headlessClients').findOne({ _id: ObjectID(clientId) });
-
-      return transformToClient(headlessClient);
     }
   },
   Mutation: {
