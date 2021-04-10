@@ -14,6 +14,7 @@ const electron = require('electron');
 const ipcPromise = require('ipc-promise');
 const fs = require('fs');
 const path = require('path');
+const moment = require('moment');
 const ipcFunctions = require('./utils/ipc-functions');
 const runPipelineFunctions = require('./utils/run-pipeline-functions');
 
@@ -156,7 +157,10 @@ loadConfig()
         }
 
         consortium.runs.forEach((run) => {
-          const runDirectory = path.join(consortiumDirectory, `${run.pipelineName} - ${run.id}`);
+          const runDirectory = path.join(
+            consortiumDirectory,
+            `${run.pipelineName} - ${run.id} - ${moment(run.endDate).format('YYYY-MM-DD')}`
+          );
 
           if (!fs.existsSync(runDirectory)) {
             fs.mkdirSync(runDirectory, { recursive: true });
@@ -168,7 +172,7 @@ loadConfig()
             const allFiles = getAllFilesInDirectory(outputDirectory);
 
             allFiles.forEach((file) => {
-              const relativePath = file.replace(outputDirectory, '');
+              const relativePath = path.relative(outputDirectory, file);
               const symlinkPath = path.join(runDirectory, relativePath);
 
               const symlinkDirectory = path.dirname(symlinkPath);
@@ -181,10 +185,7 @@ loadConfig()
                 fs.symlinkSync(file, symlinkPath);
               }
 
-              let createdSymlinkPath = symlinkPath.replace(appDirectory, '');
-              if (createdSymlinkPath[0] === '/') {
-                createdSymlinkPath = createdSymlinkPath.slice(1);
-              }
+              const createdSymlinkPath = path.relative(appDirectory, symlinkPath);
 
               res.push(createdSymlinkPath);
             });
