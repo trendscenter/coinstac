@@ -1,10 +1,7 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { ipcRenderer } from 'electron';
-import {
-  get, isArray, setWith, take, values,
-} from 'lodash';
+import { values } from 'lodash';
 import { makeStyles } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
 import TreeView from '@material-ui/lab/TreeView';
@@ -13,45 +10,6 @@ import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
 import ArrowRightIcon from '@material-ui/icons/ArrowRight';
 import FolderOutlinedIcon from '@material-ui/icons/FolderOutlined';
 import InsertDriveFileIcon from '@material-ui/icons/InsertDriveFile';
-
-const buildTree = (nodes) => {
-  const res = {};
-
-  nodes.forEach((node) => {
-    const segments = node.split('/');
-
-    for (let segIndex = 0; segIndex < segments.length; segIndex += 1) {
-      const parents = take(segments, segIndex);
-
-      const currentSegment = segments[segIndex];
-
-      if (segIndex === 0) {
-        if (!res[currentSegment]) {
-          res[currentSegment] = {
-            id: currentSegment,
-            name: currentSegment,
-            children: {},
-          };
-        }
-      } else {
-        const path = `${parents.join('.children.')}.children`;
-        const currentPath = [...path.split('.'), currentSegment];
-
-        if (!get(res, currentPath)) {
-          setWith(res, currentPath, {
-            id: currentSegment,
-            name: currentSegment,
-            children: {},
-          }, Object);
-        }
-      }
-    }
-  });
-
-  const output = values(res);
-
-  return isArray(output) && output.length > 0 ? output[0] : null;
-};
 
 const useStyles = makeStyles(theme => ({
   fileView: {
@@ -86,39 +44,7 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-const FileViewer = ({ auth, consortia, runs }) => {
-  const [fileTree, setFileTree] = useState(null);
-
-  const initialFileTree = useMemo(() => {
-    return consortia.map((consortium) => {
-      const consortiumRuns = runs.filter(
-        run => run.consortiumId === consortium.id
-      ).map(run => ({ id: run.id, pipelineName: run.pipelineSnapshot.name }));
-
-      return {
-        id: consortium.id,
-        name: consortium.name,
-        runs: consortiumRuns,
-      };
-    });
-  }, [consortia, runs]);
-
-  useEffect(() => {
-    if (auth && initialFileTree.length > 0) {
-      ipcRenderer.send('prepare-consortia-files', {
-        userId: auth.user.id,
-        fileTree: initialFileTree,
-        appDirectory: auth.appDirectory,
-      });
-    }
-  }, [auth, initialFileTree]);
-
-  useEffect(() => {
-    ipcRenderer.on('prepare-consortia-files', (event, nodes) => {
-      setFileTree(buildTree(nodes));
-    });
-  }, []);
-
+const FileViewer = ({ fileTree }) => {
   const classes = useStyles();
 
   const renderTree = (nodes) => {
@@ -166,13 +92,15 @@ const FileViewer = ({ auth, consortia, runs }) => {
 };
 
 FileViewer.propTypes = {
-  auth: PropTypes.object.isRequired,
-  consortia: PropTypes.array.isRequired,
-  runs: PropTypes.array.isRequired,
+  fileTree: PropTypes.object,
 };
 
-const mapStateToProps = ({ auth }) => ({
-  auth,
+FileViewer.defaultProps = {
+  fileTree: null,
+};
+
+const mapStateToProps = ({ app }) => ({
+  fileTree: app.fileTree,
 });
 
 export default connect(mapStateToProps)(FileViewer);

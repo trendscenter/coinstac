@@ -1,4 +1,6 @@
-import { get, indexOf } from 'lodash';
+import {
+  get, indexOf, isArray, setWith, take, values,
+} from 'lodash';
 import fs from 'fs';
 import CsvReadableStream from 'csv-reader';
 
@@ -121,3 +123,58 @@ export function readCsvFreesurferFiles(files) {
 
   return Promise.all(readPromises);
 }
+
+export const buildTree = (nodes) => {
+  const res = {};
+
+  nodes.forEach((node) => {
+    const segments = node.split('/');
+
+    for (let segIndex = 0; segIndex < segments.length; segIndex += 1) {
+      const parents = take(segments, segIndex);
+
+      const currentSegment = segments[segIndex];
+
+      if (segIndex === 0) {
+        if (!res[currentSegment]) {
+          res[currentSegment] = {
+            id: currentSegment,
+            name: currentSegment,
+            children: {},
+          };
+        }
+      } else {
+        const path = `${parents.join('.children.')}.children`;
+        const currentPath = [...path.split('.'), currentSegment];
+
+        if (!get(res, currentPath)) {
+          setWith(res, currentPath, {
+            id: currentSegment,
+            name: currentSegment,
+            children: {},
+          }, Object);
+        }
+      }
+    }
+  });
+
+  const output = values(res);
+
+  return isArray(output) && output.length > 0 ? output[0] : null;
+};
+
+export const generateInitalFileTree = (consortia, runs) => {
+  return consortia.map((consortium) => {
+    const consortiumRuns = runs.filter(
+      run => run.consortiumId === consortium.id && !!run.endDate
+    ).map(run => ({
+      id: run.id, pipelineName: run.pipelineSnapshot.name, endDate: Number(run.endDate),
+    }));
+
+    return {
+      id: consortium.id,
+      name: consortium.name,
+      runs: consortiumRuns,
+    };
+  });
+};

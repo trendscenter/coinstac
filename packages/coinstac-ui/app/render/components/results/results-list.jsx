@@ -14,7 +14,7 @@ const styles = theme => ({
 });
 
 const ResultsList = ({ runs, consortia, classes }) => {
-  const [selectedTab, setSelectedTab] = useState(1);
+  const [selectedTab, setSelectedTab] = useState(0);
 
   return (
     <div>

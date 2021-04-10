@@ -11,6 +11,7 @@ import {
 } from '@material-ui/core';
 import ArrowUpwardIcon from '@material-ui/icons/ArrowUpward';
 import update from 'immutability-helper';
+import { isEqual } from 'lodash';
 import DashboardNav from './dashboard-nav';
 import UserAccountController from '../user/user-account-controller';
 import {
@@ -27,7 +28,7 @@ import {
   updateDockerOutput,
 } from '../../state/ducks/docker';
 import { updateUserConsortiaStatuses, updateUserPerms } from '../../state/ducks/auth';
-import { appendLogMessage } from '../../state/ducks/app';
+import { appendLogMessage, setConsortiaFileTree } from '../../state/ducks/app';
 import {
   COMPUTATION_CHANGED_SUBSCRIPTION,
   CONSORTIUM_CHANGED_SUBSCRIPTION,
@@ -51,6 +52,8 @@ import {
 import StartPipelineListener from './listeners/start-pipeline-listener';
 import NotificationsListener from './listeners/notifications-listener';
 import DashboardPipelineNavBar from './dashboard-pipeline-nav-bar';
+import { buildTree, generateInitalFileTree } from '../../utils/helpers';
+
 
 const styles = () => ({
   statusGood: {
@@ -109,8 +112,11 @@ class Dashboard extends Component {
       saveLocalRun,
       subscribeToUser,
       subscribeToUserRuns,
+      setConsortiaFileTree,
     } = this.props;
     const { router } = this.context;
+
+    this.getFileTree(this.props);
 
     dockerInterval = setInterval(() => {
       const status = getDockerStatus();
@@ -180,6 +186,10 @@ class Dashboard extends Component {
     ipcRenderer.on('docker-error', (event, arg) => {
       notifyError(`Docker Error: ${arg.err.message}`);
     });
+
+    ipcRenderer.on('prepare-consortia-files', (event, nodes) => {
+      setConsortiaFileTree(buildTree(nodes));
+    });
   }
 
   // eslint-disable-next-line
@@ -223,6 +233,10 @@ class Dashboard extends Component {
 
     if (nextProps.threads && !unsubscribeThreads) {
       this.setState({ unsubscribeThreads: subscribeToThreads(null) });
+    }
+
+    if (!isEqual(consortia, nextProps.consortia) || !isEqual(runs, nextProps.runs)) {
+      this.getFileTree(nextProps);
     }
 
     if (nextProps.remoteRuns) {
@@ -383,6 +397,15 @@ class Dashboard extends Component {
     ipcRenderer.removeAllListeners('local-run-error');
     ipcRenderer.removeAllListeners('local-pipeline-state-update');
     ipcRenderer.removeAllListeners('docker-error');
+    ipcRenderer.removeAllListeners('prepare-consortia-files');
+  }
+
+  getFileTree = ({ auth, consortia, runs }) => {
+    ipcRenderer.send('prepare-consortia-files', {
+      userId: auth.user.id,
+      fileTree: generateInitalFileTree(consortia, runs),
+      appDirectory: auth.appDirectory,
+    });
   }
 
   goBack = () => {
@@ -583,6 +606,7 @@ Dashboard.propTypes = {
   updateUserConsortiumStatus: PropTypes.func.isRequired,
   writeLog: PropTypes.func.isRequired,
   updateUserPerms: PropTypes.func.isRequired,
+  setConsortiaFileTree: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = ({ auth, runs, maps }) => ({
@@ -694,6 +718,7 @@ const connectedComponent = connect(mapStateToProps,
     writeLog,
     updateUserPerms,
     appendLogMessage,
+    setConsortiaFileTree,
   })(DashboardWithData);
 
 export default withStyles(styles)(connectedComponent);
