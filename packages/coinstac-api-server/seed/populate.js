@@ -1,3 +1,4 @@
+const path = require('path');
 const database = require('../src/database');
 const helperFunctions = require('../src/auth-helpers');
 
@@ -1001,7 +1002,7 @@ async function populateHeadlessClients() {
                 { csvColumn: 'age', variableName: 'age' },
                 { csvColumn: 'isControl', variableName: 'isControl' },
               ],
-              dataFilePath: '/home/rochaeb/Documents/Projects/trends/coinstac/algorithm-development/test-data/freesurfer-test-data/site1/site1_Covariate.csv',
+              dataFilePath: path.resolve('../../../algorithm-development/test-data/freesurfer-test-data/site1/site1_Covariate.csv'),
             },
           },
         },
