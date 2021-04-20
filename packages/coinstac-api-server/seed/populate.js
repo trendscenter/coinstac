@@ -1002,7 +1002,7 @@ async function populateHeadlessClients() {
                 { csvColumn: 'age', variableName: 'age' },
                 { csvColumn: 'isControl', variableName: 'isControl' },
               ],
-              dataFilePath: path.resolve('../../../algorithm-development/test-data/freesurfer-test-data/site1/site1_Covariate.csv'),
+              dataFilePath: path.resolve('../../algorithm-development/test-data/freesurfer-test-data/site1/site1_Covariate.csv'),
             },
           },
         },

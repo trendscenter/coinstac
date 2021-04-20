@@ -92,13 +92,23 @@ const getStatus = (provider = 'docker') => {
 const startService = (serviceId, serviceUserId, serviceType, opts) => {
   const createAndAssignService = () => {
     services[serviceId].state = 'starting';
-    const eventualService = generateServicePort(serviceId)
-      .then((port) => {
-        return serviceProviders[serviceType].createService(serviceId, port, opts);
-      }).then(({ service, container }) => {
-        services[serviceId].container = container;
-        return service;
-      });
+    let depth = 0;
+    const tryService = () => {
+      return generateServicePort(serviceId)
+        .then((port) => {
+          return serviceProviders[serviceType].createService(serviceId, port, opts);
+        }).catch((e) => {
+          if (e.message.includes('port') && depth < 20) {
+            depth += 1;
+            return tryService();
+          }
+          throw e;
+        });
+    };
+    const eventualService = tryService().then(({ service, container }) => {
+      services[serviceId].container = container;
+      return service;
+    });
     services[serviceId].service = eventualService;
     return eventualService;
   };
