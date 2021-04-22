@@ -114,7 +114,21 @@ const NumberFormatCustom = ({ inputRef, onChange, ...other }) => (
 
 class Pipeline extends Component {
   mapHeadlessUsers = memoize(
-    users => (users ? users.map(u => ({ label: u.name, value: u.id })) : null)
+    (users, pipeline) => {
+      if (!users) {
+        return null;
+      }
+
+      return users
+        .map(u => ({ label: u.name, value: u.id }))
+        .filter((user) => {
+          if (pipeline.headlessMembers) {
+            return !(user.value in pipeline.headlessMembers);
+          }
+
+          return true;
+        });
+    }
   );
 
   constructor(props) {
@@ -160,6 +174,7 @@ class Pipeline extends Component {
       showModal: false,
       savingStatus: 'init',
       selectedHeadlessMember: null,
+      orderedComputations: null,
     };
   }
 
@@ -189,6 +204,23 @@ class Pipeline extends Component {
           }
         }
       );
+    }
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    const { computations } = this.props;
+    const { orderedComputations, pipeline } = this.state;
+
+    if (!orderedComputations || (!prevProps.computations && computations)
+      || prevProps.computations.length !== computations.length) {
+      this.sortComputations();
+    }
+
+    if (orderedComputations) {
+      if (!prevState.orderedComputations
+        || prevState.orderedComputations.length !== orderedComputations.length) {
+        this.filterAvailableComputations(pipeline.headlessMembers);
+      }
     }
   }
 
@@ -503,18 +535,23 @@ class Pipeline extends Component {
 
   sortComputations = () => {
     const { computations } = this.props;
-    if (computations && computations.length > 0) {
-      return computations.slice().sort((a, b) => {
-        const nameA = a.meta.name.toLowerCase();
-        const nameB = b.meta.name.toLowerCase();
 
-        if (nameA < nameB) {
-          return -1;
-        }
-
-        return (nameA > nameB) ? 1 : 0;
-      });
+    if (!computations || !computations.length) {
+      return;
     }
+
+    const orderedComputations = computations.slice().sort((a, b) => {
+      const nameA = a.meta.name.toLowerCase();
+      const nameB = b.meta.name.toLowerCase();
+
+      if (nameA < nameB) {
+        return -1;
+      }
+
+      return (nameA > nameB) ? 1 : 0;
+    });
+
+    this.setState({ orderedComputations });
   }
 
   handleHeadlessMemberSelect = (value) => {
@@ -531,6 +568,35 @@ class Pipeline extends Component {
     this.updatePipeline({ param: 'headlessMembers', value: headlessMembers });
 
     this.setState({ selectedHeadlessMember: null });
+
+    this.filterAvailableComputations(headlessMembers);
+  }
+
+  filterAvailableComputations = (headlessMembers) => {
+    const { availableHeadlessClients } = this.props;
+    const { orderedComputations } = this.state;
+
+    if (!headlessMembers) {
+      this.setState({ filteredComputations: [...orderedComputations] });
+      return;
+    }
+
+    const cloudComputations = Object.keys(headlessMembers)
+      .reduce((cloudComputations, headlessMemberId) => {
+        const headlessClientConfig = availableHeadlessClients
+          .find(client => client.id === headlessMemberId);
+
+        Object.keys(headlessClientConfig.computationWhitelist).forEach((compId) => {
+          cloudComputations[compId] = true;
+        });
+
+        return cloudComputations;
+      }, {});
+
+    const filteredComputations = orderedComputations
+      .filter(comp => comp.id in cloudComputations);
+
+    this.setState({ filteredComputations });
   }
 
   render() {
@@ -546,14 +612,12 @@ class Pipeline extends Component {
       showModal,
       savingStatus,
       selectedHeadlessMember,
+      filteredComputations,
     } = this.state;
-
     const isEditing = !!pipeline.id;
     const title = isEditing ? 'Pipeline Edit' : 'Pipeline Creation';
 
-    const sortedComputations = this.sortComputations();
-
-    const headlessClientsOptions = this.mapHeadlessUsers(availableHeadlessClients);
+    const headlessClientsOptions = this.mapHeadlessUsers(availableHeadlessClients, pipeline);
 
     return connectDropTarget(
       <div>
@@ -693,7 +757,7 @@ class Pipeline extends Component {
           {
             availableHeadlessClients && (
               <div>
-                <Typography variant="h6">Headless Clients:</Typography>
+                <Typography variant="h6">Cloud Users:</Typography>
                 <div className={classes.headlessUsersContainer}>
                   <Select
                     value={selectedHeadlessMember}
@@ -711,7 +775,7 @@ class Pipeline extends Component {
                     disabled={!selectedHeadlessMember}
                     onClick={this.addHeadlessMember}
                   >
-                    Add Headless Member
+                    Add Cloud User
                   </Button>
                 </div>
                 <ul>
@@ -748,7 +812,7 @@ class Pipeline extends Component {
               open={openAddComputationStepMenu}
               onClose={this.closeAddComputationStepMenu}
             >
-              {sortedComputations && sortedComputations.map(comp => (
+              {filteredComputations && filteredComputations.map(comp => (
                 <MenuItem
                   key={comp.id}
                   onClick={() => this.addStep(comp)}
