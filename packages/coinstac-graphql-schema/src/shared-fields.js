@@ -143,6 +143,7 @@ const sharedFields = {
   headlessClientFields: `
     id
     name
+    computationWhitelist
   `,
 };
 
