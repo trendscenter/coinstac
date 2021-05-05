@@ -68,7 +68,7 @@ html {
     &::before {
       background: url(../../../img/icons/png/256x256.png) no-repeat;
       background-size: contain;
-      content: '';
+      content: "";
       height: 4rem;
       width: 4rem;
       vertical-align: top;
@@ -96,7 +96,6 @@ html {
   }
 }
 
-
 /**
  * Navigation
  */
@@ -106,27 +105,39 @@ html {
 
 .dashboard {
   background: $gray-lighter;
-  display: flex;
   min-height: 100vh;
 
-  @media (max-width: $screen-sm) {
-    display: block;
-  }
-
   &-nav {
+    position: fixed;
+    left: 0;
     width: 325px;
+    height: 100%;
     background-color: #eee;
     border-right: 1px solid rgba(0, 0, 0, 0.12);
 
     @media (max-width: $screen-sm) {
       width: 100%;
       border-right-width: 0;
+      position: static;
+      left: initial;
+      height: auto;
     }
-  } 
+  }
 
   &-content {
-    flex: 1;
+    position: fixed;
+    left: 325px;
+    right: 0;
+    height: 100%;
     background-color: #fff;
+    overflow: auto;
+
+    @media (max-width: $screen-sm) {
+      position: static;
+      left: initial;
+      right: initial;
+      height: auto;
+    }
   }
 }
 
@@ -139,10 +150,10 @@ html {
     padding: $grid-gutter-width / 2 0;
 
     .logo {
-        margin-bottom: 2rem;
+      margin-bottom: 2rem;
     }
     > nav {
-        flex-grow: 1;
+      flex-grow: 1;
     }
   }
 }
@@ -238,57 +249,56 @@ html {
   }
 }
 
-
 /** File items */
 .file-item {
-    margin: 2rem 0;
+  margin: 2rem 0;
 
-    ul {
-        margin-bottom: 0;
-    }
+  ul {
+    margin-bottom: 0;
+  }
 }
 .file-item__name {
-    margin-top: 0;
+  margin-top: 0;
 }
 
 /** Consortia */
 .dashboard-consortia > .row > .col-sm-6:nth-child(odd) {
-    clear: both;
+  clear: both;
 }
 .consortium .btn-toolbar {
-    .glyphicon {
-        margin-right: .5rem;
-    }
+  .glyphicon {
+    margin-right: 0.5rem;
+  }
 }
 .consortium__tags .label {
-    margin: 0 .5rem .5rem 0;
+  margin: 0 0.5rem 0.5rem 0;
 }
 
 /** Page header with button */
 .page-header .btn {
-    margin-top: 2.5rem;
+  margin-top: 2.5rem;
 }
 .page-header .btn strong {
-    margin-right: .5rem;
+  margin-right: 0.5rem;
 }
 
 ul#loading_list {
-    position: absolute;
-    bottom: 0px;
-    right: 0px;
-    margin-bottom: 0px;
-    list-style: none;
-    font-style: italic;
-    font-size: x-small;
-    background: cornflowerblue;
+  position: absolute;
+  bottom: 0px;
+  right: 0px;
+  margin-bottom: 0px;
+  list-style: none;
+  font-style: italic;
+  font-size: x-small;
+  background: cornflowerblue;
 }
 
 #loading_list li {
-    padding: 2px 5px 2px 0;
+  padding: 2px 5px 2px 0;
 }
 
 #add_project {
-    margin-top: -5em;
+  margin-top: -5em;
 }
 
 #papaya-viewer {
