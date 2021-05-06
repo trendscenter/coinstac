@@ -4,11 +4,9 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { ipcRenderer } from 'electron';
 import { withStyles } from '@material-ui/core/styles';
-import {
-  List,
-  ListItem,
-  Typography,
-} from '@material-ui/core';
+import List from '@material-ui/core/List';
+import ListItem from '@material-ui/core/ListItem';
+import Typography from '@material-ui/core/Typography';
 import ArrowUpwardIcon from '@material-ui/icons/ArrowUpward';
 import update from 'immutability-helper';
 import DashboardNav from './dashboard-nav';

@@ -1,14 +1,12 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import {
-  TableRow,
-  TableCell,
-  Button,
-  Menu,
-  MenuItem,
-  Typography,
-  TextField,
-} from '@material-ui/core';
+import Button from '@material-ui/core/Button';
+import Menu from '@material-ui/core/Menu';
+import MenuItem from '@material-ui/core/MenuItem';
+import TableRow from '@material-ui/core/TableRow';
+import TableCell from '@material-ui/core/TableCell';
+import Typography from '@material-ui/core/Typography';
+import TextField from '@material-ui/core/TextField';
 import update from 'immutability-helper';
 
 class PipelineStepInputCsvTableRow extends React.Component {

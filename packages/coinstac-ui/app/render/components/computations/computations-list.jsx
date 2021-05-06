@@ -3,13 +3,11 @@ import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { graphql } from 'react-apollo';
 import { Link } from 'react-router';
-import {
-  Button,
-  CircularProgress,
-  Fab,
-  Paper,
-  Typography,
-} from '@material-ui/core';
+import Button from '@material-ui/core/Button';
+import CircularProgress from '@material-ui/core/CircularProgress';
+import Fab from '@material-ui/core/Fab';
+import Paper from '@material-ui/core/Paper';
+import Typography from '@material-ui/core/Typography';
 import AddIcon from '@material-ui/icons/Add';
 import DeleteIcon from '@material-ui/icons/Delete';
 import { withStyles } from '@material-ui/core/styles';
@@ -42,6 +40,10 @@ const MAX_LENGTH_COMPUTATIONS = 5;
 const styles = theme => ({
   titleContainer: {
     marginBottom: theme.spacing(2),
+  },
+  button: {
+    marginTop: theme.spacing(1),
+    marginRight: theme.spacing(1),
   },
   downloadAllButton: {
     marginBottom: theme.spacing(4),
@@ -312,6 +314,8 @@ class ComputationsList extends Component {
               component={Link}
               to="/dashboard/computations/new"
               className={classes.button}
+              name="create-consortium-button"
+              aria-label="add"
             >
               <AddIcon />
             </Fab>

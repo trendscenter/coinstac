@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { ipcRenderer } from 'electron';
 import { SnackbarProvider } from 'notistack';
-import { CssBaseline } from '@material-ui/core';
+import CssBaseline from '@material-ui/core/CssBaseline';
 import { MuiThemeProvider } from '@material-ui/core/styles';
 import ActivityIndicator from './activity-indicator/activity-indicator';
 import { autoLogin, logout, setError } from '../state/ducks/auth';
