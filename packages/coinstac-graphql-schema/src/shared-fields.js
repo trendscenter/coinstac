@@ -78,6 +78,7 @@ const sharedFields = {
       inputMap
       dataMeta
     }
+    headlessMembers
   `,
   runFields: `
     id

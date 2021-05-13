@@ -999,8 +999,8 @@ async function populateHeadlessClients() {
             covariates: {
               type: 'csv',
               dataMap: [
-                { csvColumn: 'age', variableName: 'age' },
-                { csvColumn: 'isControl', variableName: 'isControl' },
+                { csvColumn: 'age', variableName: 'age', type: 'number' },
+                { csvColumn: 'isControl', variableName: 'isControl', type: 'boolean' },
               ],
               dataFilePath: path.resolve('../../algorithm-development/test-data/freesurfer-test-data/site1/site1_Covariate.csv'),
             },

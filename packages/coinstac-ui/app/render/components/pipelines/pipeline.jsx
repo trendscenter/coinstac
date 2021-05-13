@@ -11,16 +11,20 @@ import {
   isEqual, isEmpty, get, omit,
 } from 'lodash';
 import update from 'immutability-helper';
+import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
 import Checkbox from '@material-ui/core/Checkbox';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Menu from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
 import Paper from '@material-ui/core/Paper';
+import Tooltip from '@material-ui/core/Tooltip';
 import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
+import InfoIcon from '@material-ui/icons/Info';
 import { ValidatorForm, TextValidator } from 'react-material-ui-form-validator';
 import memoize from 'memoize-one';
+
 import ListDeleteModal from '../common/list-delete-modal';
 import Select from '../common/react-select';
 import StatusButtonWrapper from '../common/status-button-wrapper';
@@ -49,6 +53,9 @@ import {
   isUserInGroup,
   reducePipelineInputs,
 } from '../../utils/helpers';
+
+const CLOUD_USERS_TOOLTIP = `Cloud users are persistent nodes that can run some pipelines. If you add one or more cloud users,
+  the available pipelines list will be filtered by the ones that the cloud users can run.`;
 
 const computationTarget = {
   drop() {
@@ -94,6 +101,10 @@ const styles = theme => ({
   },
   headlessUserSelect: {
     marginRight: theme.spacing(4),
+  },
+  cloudUserTitle: {
+    display: 'inline-block',
+    marginRight: theme.spacing(1),
   },
 });
 
@@ -757,7 +768,16 @@ class Pipeline extends Component {
           {
             availableHeadlessClients && (
               <div>
-                <Typography variant="h6">Cloud Users:</Typography>
+                <Box display="flex" alignItems="center">
+                  <Typography variant="h6" className={classes.cloudUserTitle}>Cloud Users:</Typography>
+                  <Tooltip
+                    title={
+                      <Typography variant="body1">{ CLOUD_USERS_TOOLTIP }</Typography>
+                    }
+                  >
+                    <InfoIcon />
+                  </Tooltip>
+                </Box>
                 <div className={classes.headlessUsersContainer}>
                   <Select
                     value={selectedHeadlessMember}
@@ -847,6 +867,9 @@ class Pipeline extends Component {
                 step={step}
                 updateStep={this.updateStep}
                 users={users}
+                headlessMembers={pipeline.headlessMembers}
+                headlessClientsConfig={availableHeadlessClients}
+                isEdit={!!pipeline.id}
               />
             ))}
           </div>

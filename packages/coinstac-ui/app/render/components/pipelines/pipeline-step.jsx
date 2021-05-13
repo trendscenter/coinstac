@@ -5,6 +5,7 @@ import PropTypes from 'prop-types';
 import { compose } from 'redux';
 import { graphql } from 'react-apollo';
 import { debounce } from 'lodash';
+import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
 import Accordion from '@material-ui/core/Accordion';
 import AccordionSummary from '@material-ui/core/AccordionSummary';
@@ -23,11 +24,6 @@ const styles = theme => ({
   },
   accordionPanelContent: {
     display: 'block',
-  },
-  inputParametersContainer: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
   },
 });
 
@@ -87,8 +83,14 @@ class PipelineStep extends Component {
     inputGroups: {},
   };
 
+  componentDidMount() {
+    this.prefillDataFromHeadlessClients();
+  }
+
   componentDidUpdate() {
-    const { compIO, possibleInputs, step } = this.props;
+    const {
+      compIO, possibleInputs, isEdit, updateStep, step
+    } = this.props;
     const { compInputs, orderedInputs } = this.state;
 
     if ((!orderedInputs || !orderedInputs.length) && possibleInputs) {
@@ -98,10 +100,63 @@ class PipelineStep extends Component {
     if ((!compInputs || !compInputs.length) && compIO) {
       this.groupInputs(compIO);
 
-      if (Object.entries(step.inputMap).length === 0) {
-        this.fillDefaultValues(compIO);
+      if (!isEdit) {
+        const inputMapDefaultValues = this.fillDefaultValues(compIO);
+        const inputMapPrefill = this.prefillDataFromHeadlessClients();
+
+        updateStep({
+          ...step,
+          inputMap: {
+            ...step.inputMap,
+            ...inputMapDefaultValues,
+            ...inputMapPrefill,
+          },
+        });
       }
     }
+  }
+
+  prefillDataFromHeadlessClients = () => {
+    const { headlessMembers, headlessClientsConfig, computationId } = this.props;
+
+    if (!headlessMembers) {
+      return;
+    }
+
+    const inputMap = {};
+
+    Object.keys(headlessMembers).forEach((headlessClientId) => {
+      const headlessClientConfig = headlessClientsConfig.find(hc => hc.id === headlessClientId);
+
+      if (!headlessClientConfig) {
+        return;
+      }
+
+      const computationConfig = headlessClientConfig.computationWhitelist[computationId];
+
+      Object.keys(computationConfig.inputMap).forEach((inputKey) => {
+        const input = computationConfig.inputMap[inputKey];
+
+        let value;
+
+        if (input.type === 'csv') {
+          value = input.dataMap.map(dataMapField => ({
+            name: dataMapField.variableName,
+            type: dataMapField.type,
+            suggested: true,
+          }));
+        }
+
+        if (value) {
+          inputMap[inputKey] = {
+            fulfilled: false,
+            value,
+          };
+        }
+      });
+    });
+
+    return inputMap;
   }
 
   orderComputations = (possibleInputs) => {
@@ -147,8 +202,6 @@ class PipelineStep extends Component {
   }
 
   fillDefaultValues = (compIO) => {
-    const { updateStep, step } = this.props;
-
     const defaultInputs = {};
 
     Object.keys(compIO.computation.input).forEach((inputFieldKey) => {
@@ -162,12 +215,7 @@ class PipelineStep extends Component {
       }
     });
 
-    if (Object.keys(defaultInputs).length > 0) {
-      updateStep({
-        ...step,
-        inputMap: defaultInputs,
-      });
-    }
+    return defaultInputs;
   }
 
   showOutput = (paddingLeft, id, output) => {
@@ -241,7 +289,7 @@ class PipelineStep extends Component {
             <Typography variant="h5">{step.computations[0].meta.name}</Typography>
           </AccordionSummary>
           <AccordionDetails className={classes.accordionPanelContent} key={`step-exp-${step.id}`}>
-            <div className={classes.inputParametersContainer}>
+            <Box display="flex" justifyContent="space-between" alignItems="center">
               <Typography variant="h6">Input Parameters:</Typography>
               <Button
                 variant="contained"
@@ -251,7 +299,7 @@ class PipelineStep extends Component {
               >
                 Delete
               </Button>
-            </div>
+            </Box>
             {
               compInputs
                 .filter(localInput => !localInput.value.group)
@@ -301,6 +349,9 @@ PipelineStep.defaultProps = {
   possibleInputs: [],
   updateStep: null,
   users: [],
+  headlessMembers: {},
+  headlessClientsConfig: [],
+  computationId: null,
 };
 
 PipelineStep.propTypes = {
@@ -319,6 +370,9 @@ PipelineStep.propTypes = {
   deleteStep: PropTypes.func.isRequired,
   moveStep: PropTypes.func.isRequired,
   updateStep: PropTypes.func,
+  headlessMembers: PropTypes.object,
+  headlessClientsConfig: PropTypes.array,
+  computationId: PropTypes.string,
 };
 
 const PipelineStepWithData = compose(
