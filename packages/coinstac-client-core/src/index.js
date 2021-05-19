@@ -267,7 +267,12 @@ class CoinstacClient {
     runId,
     runPipeline // eslint-disable-line no-unused-vars
   ) {
-    const runObj = { spec: clientPipeline, runId, timeout: clientPipeline.timeout };
+    const runObj = {
+      spec: clientPipeline,
+      runId,
+      timeout: clientPipeline.timeout,
+      token: this.token,
+    };
 
     if (clients) {
       runObj.clients = clients;

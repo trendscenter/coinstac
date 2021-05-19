@@ -99,9 +99,9 @@ module.exports = {
       operatingDirectory,
       setStateProp,
       pipelineErrorCallback,
-      stop: () => {
+      stop: (msg) => {
         setStateProp('stopByUser', 'stop');
-        pipelineErrorCallback(new Error(stopByUserErrorMessage));
+        pipelineErrorCallback(new Error(msg || stopByUserErrorMessage));
       },
       /**
        * Starts a controller, which in turn starts a computation, given the correct

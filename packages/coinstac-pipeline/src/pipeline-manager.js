@@ -140,6 +140,7 @@ module.exports = {
    * @return {Object}                          A pipeline manager
    */
   async create({
+    authPlugin,
     clientId,
     imageDirectory = './',
     logger,
@@ -159,6 +160,8 @@ module.exports = {
   }) {
     const store = Store.init(clientId);
     const activePipelines = {};
+    const subId = `${clientId}_${uuid()}`;
+    let authToken;
     let io;
     let socket;
     let mqttClient;
@@ -326,15 +329,16 @@ module.exports = {
 
     const clientPublish = (clients, data, opts) => {
       Object.keys(clients).forEach((clientId) => {
+        const { subId } = remoteClients[clientId];
         if (opts && opts.success && opts.limitOutputToOwner) {
           if (clientId === opts.owner) {
-            mqttServer.publish(`${clientId}-run`, JSON.stringify(data), { qos: 1 }, (err) => { if (err) logger.error(`Mqtt error: ${err}`); });
+            mqttServer.publish(`${subId}-run`, JSON.stringify(data), { qos: 1 }, (err) => { if (err) logger.error(`Mqtt error: ${err}`); });
           } else {
             const limitedData = Object.assign({}, data, { files: undefined, output: { success: true, output: { message: 'output sent to consortium owner' } } });
-            mqttServer.publish(`${clientId}-run`, JSON.stringify(limitedData), { qos: 1 }, (err) => { if (err) logger.error(`Mqtt error: ${err}`); });
+            mqttServer.publish(`${subId}-run`, JSON.stringify(limitedData), { qos: 1 }, (err) => { if (err) logger.error(`Mqtt error: ${err}`); });
           }
         } else {
-          mqttServer.publish(`${clientId}-run`, JSON.stringify(data), { qos: 0 }, (err) => { if (err) logger.error(`Mqtt error: ${err}`); });
+          mqttServer.publish(`${subId}-run`, JSON.stringify(data), { qos: 0 }, (err) => { if (err) logger.error(`Mqtt error: ${err}`); });
         }
       });
     };
@@ -383,7 +387,7 @@ module.exports = {
     const publishData = (key, data, qos = 0) => {
       mqttClient.publish(
         key,
-        JSON.stringify(data),
+        JSON.stringify(Object.assign({ authToken }, data)),
         { qos },
         (err) => { if (err) logger.error(`Mqtt error: ${err}`); }
       );
@@ -506,7 +510,33 @@ module.exports = {
           logger.error(`File server error: ${e}`);
         });
       });
+      /**
+       * run error helper function
+       */
+      const sendRunError = (error, runId, id, subId) => {
+        logger.error(`Run error for run ${runId} by ${id}: ${error.message}`);
+        if (!activePipelines[runId] || !remoteClients[id]) {
+          return mqttServer.publish(`${subId}-run`, JSON.stringify({ runId, error: error.message }));
+        }
 
+        // normal pipeline operation
+        if (remoteClients[id] && remoteClients[id][runId]) {
+          const runError = Object.assign(
+            error,
+            {
+              error: `Pipeline error from pipeline ${runId} user: ${activePipelines[runId].clients[id]}\n Error details: ${error.error}`,
+              message: `Pipeline error from pipeline ${runId} user: ${activePipelines[runId].clients[id]}\n Error details: ${error.message}`,
+            }
+          );
+          activePipelines[runId].state = 'received client error';
+          activePipelines[runId].error = runError;
+          clientPublish(
+            activePipelines[runId].clients,
+            { runId, error: runError }
+          );
+          activePipelines[runId].remote.reject(runError);
+        }
+      };
       /**
        * mqtt server-side setup
        */
@@ -534,123 +564,125 @@ module.exports = {
         const received = Date.now();
         const data = JSON.parse(dataBuffer);
         const {
-          id, runId, output, error, files,
+          authToken,
+          id,
+          runId,
+          output,
+          error,
+          files,
+          subId,
         } = data;
-        switch (topic) {
-          case 'run':
-            logger.silly(`############ Received client data: ${id}`);
-            if (!activePipelines[runId] || !remoteClients[id]) {
-              return mqttServer.publish(`${id}-run`, JSON.stringify({ runId, error: new Error('Remote has no such pipeline run') }));
-            }
+        console.log(topic);
+        const auth = authPlugin || (() => Promise.resolve({ id, auth: true }));
+        auth(authToken).then((res) => {
+          if (id !== res.id) throw new Error(`Pipeline User ${id} Authenticaton error`);
+          switch (topic) {
+            case 'run':
+              logger.silly(`############ Received client data: ${id}`);
+              if (!activePipelines[runId] || !remoteClients[id]) {
+                return mqttServer.publish(`${id}-run`, JSON.stringify({ runId, error: new Error('Remote has no such pipeline run') }));
+              }
 
-            // normal pipeline operation
-            if (remoteClients[id] && remoteClients[id][runId]) {
-              // is the client giving us an error?
-              if (!error) {
-                remoteClients[id][runId].debug.received = Date.now();
-                remoteClients[id][runId].debug.sent = data.debug.sent;
-                // has this pipeline error'd out?
-                if (!activePipelines[runId].error) {
-                  // check if the msg is a dup, either for a current or past iteration
-                  if (store.has(runId, id)
-                    || activePipelines[runId].pipeline.currentState.currentIteration + 1
-                    !== data.iteration
-                  ) {
-                    logger.silly(`Duplicate message client ${id}`);
-                    return;
-                  }
-                  store.put(runId, id, output);
-
-                  if (files) {
-                    remoteClients[id][runId].files.expected.push(...files);
-                  }
-                  if (activePipelines[runId].state !== 'pre-pipeline') {
-                    const waitingOn = waitingOnForRun(runId);
-                    activePipelines[runId].currentState.waitingOn = waitingOn;
-                    const stateUpdate = Object.assign(
-                      {},
-                      activePipelines[runId].pipeline.currentState,
-                      activePipelines[runId].currentState
-                    );
-                    activePipelines[runId].stateEmitter
-                      .emit('update', stateUpdate);
-                    logger.silly(JSON.stringify(stateUpdate));
-                    if (waitingOn.length === 0) {
-                      activePipelines[runId].state = 'received all clients data';
-                      logger.silly('Received all client data');
-                      // clear transfer and start run
-                      clearClientFileList(runId);
-                      rmrf(path.join(activePipelines[runId].transferDirectory, '*'))
-                        .then(() => {
-                          printClientTimeProfiling(runId, 'Transmission');
-                          activePipelines[runId].remote
-                            .resolve({ debug: { received }, success: false });
-                        });
+              // normal pipeline operation
+              if (remoteClients[id] && remoteClients[id][runId]) {
+                // is the client giving us an error?
+                if (!error) {
+                  remoteClients[id][runId].debug.received = Date.now();
+                  remoteClients[id][runId].debug.sent = data.debug.sent;
+                  // has this pipeline error'd out?
+                  if (!activePipelines[runId].error) {
+                    // check if the msg is a dup, either for a current or past iteration
+                    if (store.has(runId, id)
+                      || activePipelines[runId].pipeline.currentState.currentIteration + 1
+                      !== data.iteration
+                    ) {
+                      logger.silly(`Duplicate message client ${id}`);
+                      return;
                     }
+                    store.put(runId, id, output);
+
+                    if (files) {
+                      remoteClients[id][runId].files.expected.push(...files);
+                    }
+                    if (activePipelines[runId].state !== 'pre-pipeline') {
+                      const waitingOn = waitingOnForRun(runId);
+                      activePipelines[runId].currentState.waitingOn = waitingOn;
+                      const stateUpdate = Object.assign(
+                        {},
+                        activePipelines[runId].pipeline.currentState,
+                        activePipelines[runId].currentState
+                      );
+                      activePipelines[runId].stateEmitter
+                        .emit('update', stateUpdate);
+                      logger.silly(JSON.stringify(stateUpdate));
+                      if (waitingOn.length === 0) {
+                        activePipelines[runId].state = 'received all clients data';
+                        logger.silly('Received all client data');
+                        // clear transfer and start run
+                        clearClientFileList(runId);
+                        rmrf(path.join(activePipelines[runId].transferDirectory, '*'))
+                          .then(() => {
+                            printClientTimeProfiling(runId, 'Transmission');
+                            activePipelines[runId].remote
+                              .resolve({ debug: { received }, success: false });
+                          });
+                      }
+                    }
+                  } else {
+                    clientPublish(
+                      activePipelines[runId].clients,
+                      { runId, error: activePipelines[runId].error }
+                    );
                   }
                 } else {
-                  clientPublish(
-                    activePipelines[runId].clients,
-                    { runId, error: activePipelines[runId].error }
-                  );
+                  sendRunError(error, runId, id, subId);
                 }
-              } else {
-                const runError = Object.assign(
-                  error,
+              }
+              break;
+            case 'register':
+              if (!activePipelines[runId] || activePipelines[runId].state === 'created') {
+                remoteClients[id] = Object.assign(
                   {
-                    error: `Pipeline error from pipeline ${runId} user: ${activePipelines[runId].clients[id]}\n Error details: ${error.error}`,
-                    message: `Pipeline error from pipeline ${runId} user: ${activePipelines[runId].clients[id]}\n Error details: ${error.message}`,
-                  }
-                );
-                activePipelines[runId].state = 'received client error';
-                activePipelines[runId].error = runError;
-                clientPublish(
-                  activePipelines[runId].clients,
-                  { runId, error: runError }
-                );
-                activePipelines[runId].remote.reject(runError);
-              }
-            }
-            break;
-          case 'register':
-            if (!activePipelines[runId] || activePipelines[runId].state === 'created') {
-              remoteClients[id] = Object.assign(
-                {
-                  id,
-                  state: 'pre-registered',
-                  [runId]: {
-                    state: {},
-                    files: { expected: [], received: [] },
-                    debug: { profiling: {} },
-                  },
+                    id,
+                    subId,
+                    state: 'pre-registered',
+                    [runId]: {
+                      state: {},
+                      files: { expected: [], received: [] },
+                      debug: { profiling: {} },
+                    },
 
-                },
-                remoteClients[id]
-              );
-            } else {
-              mqttServer.publish(`${id}-register`, JSON.stringify({ runId }));
-              remoteClients[id].state = 'registered';
-            }
-            break;
-          case 'finished':
-            if (activePipelines[runId] && activePipelines[runId].clients[id]) {
-              if (activePipelines[runId].finalTransferList) {
-                activePipelines[runId].finalTransferList.add(id);
-                if (Object.keys(activePipelines[runId].clients)
-                  .every(clientId => activePipelines[runId].finalTransferList.has(clientId))
-                  || (
-                    activePipelines[runId].limitOutputToOwner
-                    && id === activePipelines[runId].owner
-                  )
-                ) {
-                  cleanupPipeline(runId)
-                    .catch(e => logger.error(`Pipeline cleanup failure: ${e}`));
+                  },
+                  remoteClients[id]
+                );
+              } else {
+                mqttServer.publish(`${subId}-register`, JSON.stringify({ runId }));
+                remoteClients[id].state = 'registered';
+                remoteClients[id].subId = subId;
+              }
+              break;
+            case 'finished':
+              if (activePipelines[runId] && activePipelines[runId].clients[id]) {
+                if (activePipelines[runId].finalTransferList) {
+                  activePipelines[runId].finalTransferList.add(id);
+                  if (Object.keys(activePipelines[runId].clients)
+                    .every(clientId => activePipelines[runId].finalTransferList.has(clientId))
+                    || (
+                      activePipelines[runId].limitOutputToOwner
+                      && id === activePipelines[runId].owner
+                    )
+                  ) {
+                    cleanupPipeline(runId)
+                      .catch(e => logger.error(`Pipeline cleanup failure: ${e}`));
+                  }
                 }
               }
-            }
-            break;
-          default:
-        }
+              break;
+            default:
+          }
+        }).catch((error) => {
+          sendRunError(error, runId, id, subId);
+        });
       });
     } else {
       /**
@@ -663,7 +695,7 @@ module.exports = {
           const client = mqtt.connect(
             `${mqttRemoteProtocol}//${mqttRemoteURL}:${mqttRemotePort}`,
             {
-              clientId: `${clientId}_${Math.random().toString(16).substr(2, 8)}`,
+              clientId: subId,
               reconnectPeriod: 5000,
               connectTimeout: 15 * 1000,
             }
@@ -678,10 +710,10 @@ module.exports = {
           client.on('connect', () => {
             clientInit = true;
             logger.silly(`mqtt connection up ${clientId}`);
-            client.subscribe(`${clientId}-register`, { qos: 0 }, (err) => {
+            client.subscribe(`${subId}-register`, { qos: 0 }, (err) => {
               if (err) logger.error(`Mqtt error: ${err}`);
             });
-            client.subscribe(`${clientId}-run`, { qos: 0 }, (err) => {
+            client.subscribe(`${subId}-run`, { qos: 0 }, (err) => {
               if (err) logger.error(`Mqtt error: ${err}`);
             });
             resolve(client);
@@ -693,17 +725,17 @@ module.exports = {
               const client = mqtt.connect(
                 `${mqttRemoteWSProtocol}//${mqttRemoteURL}:${mqttRemoteWSPort}${mqttRemoteWSPathname}`,
                 {
-                  clientId: `${clientId}_${Math.random().toString(16).substr(2, 8)}`,
+                  clientId: subId,
                   reconnectPeriod: 5000,
                 }
               );
               client.on('connect', () => {
                 clientInit = true;
                 logger.silly(`mqtt connection up ${clientId}`);
-                client.subscribe(`${clientId}-register`, { qos: 0 }, (err) => {
+                client.subscribe(`${subId}-register`, { qos: 0 }, (err) => {
                   if (err) logger.error(`Mqtt error: ${err}`);
                 });
-                client.subscribe(`${clientId}-run`, { qos: 0 }, (err) => {
+                client.subscribe(`${subId}-run`, { qos: 0 }, (err) => {
                   if (err) logger.error(`Mqtt error: ${err}`);
                 });
                 resolve(client);
@@ -722,7 +754,7 @@ module.exports = {
         const data = JSON.parse(dataBuffer);
         // TODO: step check?
         switch (topic) {
-          case `${clientId}-run`:
+          case `${subId}-run`:
             if (!data.error && activePipelines[data.runId]) {
               if (activePipelines[data.runId].pipeline.currentState.currentIteration
                 !== data.iteration
@@ -778,12 +810,23 @@ module.exports = {
                   });
               }
             } else if (data.error && activePipelines[data.runId]) {
-              activePipelines[data.runId].state = 'received error';
-              activePipelines[data.runId].remote.reject(Object.assign(new Error(), data.error));
+              const run = activePipelines[data.runId];
+              if (run && run.state !== 'running') {
+                const currentStepNumber = run.pipeline.currentStep;
+                const currentStep = run.pipeline.pipelineSteps[currentStepNumber];
+                run.state = 'received error';
+                run.remote.reject(Object.assign(new Error(), data.error));
+                if (currentStep) {
+                  currentStep.stop(data.error);
+                }
+              } else {
+                run.state = 'received error';
+                run.remote.reject(Object.assign(new Error(), data.error));
+              }
             }
 
             break;
-          case `${clientId}-register`:
+          case `${subId}-register`:
             if (activePipelines[data.runId]) {
               if (activePipelines[data.runId].registered) break;
               activePipelines[data.runId].registered = true;
@@ -818,13 +861,19 @@ module.exports = {
        * for that pipeline. The return object is that pipeline and a promise that
        * resolves to the final output of the pipeline.
        * @param  {Object} spec         a valid pipeline specification
-       * @param  {Array}  clients={} a list of client IDs particapating in pipeline
+       * @param  {Array}  clients={}   a list of client IDs particapating in pipeline
        *                               only necessary for decentralized runs
        * @param  {String} runId        unique ID for the pipeline
        * @return {Object}              an object containing the active pipeline and
        *                               Promise for its result
        */
-      startPipeline({ spec, clients = {}, runId }) {
+      startPipeline({
+        spec,
+        clients = {},
+        runId,
+        token,
+      }) {
+        authToken = token;
         let pipelineStartTime;
         store.put(`${runId}-profiling`, clientId, {});
         if (mode === 'remote') pipelineStartTime = Date.now();
@@ -873,6 +922,7 @@ module.exports = {
           remoteClients[clientId] = Object.assign(
             {
               id: clientId,
+              subId,
               username: clients[clientId],
               state: 'unregistered',
               [runId]: {
@@ -887,7 +937,7 @@ module.exports = {
 
         if (mode === 'local') {
           activePipelines[runId].registered = false;
-          publishData('register', { id: clientId, runId });
+          publishData('register', { id: clientId, runId, subId });
         }
         /**
          * Communicate with the with node(s), clients to remote or remote to clients
@@ -1122,7 +1172,7 @@ module.exports = {
           } else if (activePipelines[runId].state === 'created') {
             activePipelines[runId].state = 'running';
             Object.keys(activePipelines[runId].clients).forEach((clientId) => {
-              mqttServer.publish(`${clientId}-register`, JSON.stringify({ runId }));
+              mqttServer.publish(`${remoteClients[clientId].subId}-register`, JSON.stringify({ runId }));
             });
           }
         };

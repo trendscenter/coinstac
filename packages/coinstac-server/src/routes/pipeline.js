@@ -1,11 +1,24 @@
-// const helperFunctions = require('../auth-helpers');
 const PipelineManager = require('coinstac-pipeline');
 const path = require('path');
 const axios = require('axios');
 const graphqlSchema = require('coinstac-graphql-schema');
 const { pullImagesFromList, pruneImages } = require('coinstac-manager');
 
+const apiServer = `http://${process.env.API_SERVER_HOSTNAME}:${process.env.API_SERVER_PORT}`;
+
+const authPlugin = (token) => {
+  return axios.post(
+    `${apiServer}/authenticateByToken`,
+    null,
+    { headers: { Authorization: `Bearer ${token}` } }
+  )
+    .then(({ data }) => {
+      return { id: data.user.id };
+    });
+};
+
 const manager = PipelineManager.create({
+  authPlugin,
   mode: 'remote',
   clientId: 'remote',
   operatingDirectory: path.resolve(process.env.PIPELINE_SERVER_OPERARTING_DIR, 'coinstac'),
@@ -15,7 +28,6 @@ const manager = PipelineManager.create({
   mqttRemoteWSProtocol: process.env.MQTT_SERVER_WS_PROTOCOL,
   mqttRemoteURL: process.env.MQTT_SERVER_HOSTNAME,
 });
-const apiServer = `http://${process.env.API_SERVER_HOSTNAME}:${process.env.API_SERVER_PORT}`;
 
 const authenticateServer = () => {
   return axios.post(
@@ -74,7 +86,6 @@ module.exports = manager.then((remotePipelineManager) => {
       method: 'POST',
       path: '/startPipeline',
       config: {
-        // auth: 'jwt',
         handler: (req, res) => {
           authenticateServer()
             .then(() => {
