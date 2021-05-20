@@ -75,7 +75,7 @@ module.exports = [
         } = user;
 
         res({
-          id_token: helperFunctions.createToken(username),
+          id_token: helperFunctions.createToken(_id),
           user: {
             id: _id, username, institution, email, permissions,
           },
