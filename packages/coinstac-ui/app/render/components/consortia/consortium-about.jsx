@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
@@ -21,24 +22,8 @@ import MemberAvatar from '../common/member-avatar';
 import StatusButtonWrapper from '../common/status-button-wrapper';
 
 const styles = theme => ({
-  tabTitleContainer: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: theme.spacing(2),
-  },
   textField: {
     marginTop: theme.spacing(2),
-  },
-  membersContainer: {
-    marginTop: theme.spacing(4),
-  },
-  addMemberContainer: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: theme.spacing(2),
-    marginBottom: theme.spacing(2),
   },
   addMemberButton: {
     marginLeft: theme.spacing(2),
@@ -160,7 +145,7 @@ class ConsortiumAbout extends Component {
 
     return (
       <ValidatorForm onSubmit={saveConsortium} instantValidate noValidate>
-        <div className={classes.tabTitleContainer}>
+        <Box display="flex" justifyContent="space-between" alignItems="center" marginTop={2}>
           <Typography variant="h5">
             About Consortium
           </Typography>
@@ -178,7 +163,7 @@ class ConsortiumAbout extends Component {
               </StatusButtonWrapper>
             )
           }
-        </div>
+        </Box>
         <TextValidator
           id="name"
           label="Name"
@@ -210,11 +195,11 @@ class ConsortiumAbout extends Component {
         />
         {
           consortium.id && (
-            <div key="avatar-container" className={classes.membersContainer}>
+            <Box marginTop={4}>
               <Typography variant="subtitle2">Owner(s)/Members:</Typography>
               {
                 owner && (
-                  <div className={classes.addMemberContainer}>
+                  <Box display="flex" justifyContent="space-between" alignItems="center" marginTop={2} marginBottom={2}>
                     <Select
                       value={newMember}
                       placeholder="Select an user"
@@ -233,7 +218,7 @@ class ConsortiumAbout extends Component {
                     >
                         Add Member
                     </Button>
-                  </div>
+                  </Box>
                 )
               }
               <Table id="consortium-member-table">
@@ -289,7 +274,7 @@ class ConsortiumAbout extends Component {
                   ))}
                 </TableBody>
               </Table>
-            </div>
+            </Box>
           )
         }
       </ValidatorForm>

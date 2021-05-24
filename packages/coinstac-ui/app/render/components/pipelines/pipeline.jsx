@@ -15,12 +15,19 @@ import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
 import Checkbox from '@material-ui/core/Checkbox';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
+import Grid from '@material-ui/core/Grid';
+import IconButton from '@material-ui/core/IconButton';
+import List from '@material-ui/core/List';
+import ListItem from '@material-ui/core/ListItem';
+import ListItemSecondaryAction from '@material-ui/core/ListItemSecondaryAction';
+import ListItemText from '@material-ui/core/ListItemText';
 import Menu from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
 import Paper from '@material-ui/core/Paper';
 import Tooltip from '@material-ui/core/Tooltip';
 import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
+import DeleteIcon from '@material-ui/icons/Delete';
 import InfoIcon from '@material-ui/icons/Info';
 import { ValidatorForm, TextValidator } from 'react-material-ui-form-validator';
 import memoize from 'memoize-one';
@@ -70,17 +77,7 @@ const collect = (connect, monitor) => (
 );
 
 const styles = theme => ({
-  title: {
-    marginBottom: theme.spacing(2),
-  },
   formControl: {
-    marginBottom: theme.spacing(2),
-  },
-  owningConsortiumButtonTitle: {
-    marginBottom: theme.spacing(1),
-  },
-  savePipelineButtonContainer: {
-    textAlign: 'right',
     marginBottom: theme.spacing(2),
   },
   tooltipPaper: {
@@ -94,16 +91,10 @@ const styles = theme => ({
   tooltip: {
     color: '#ab8e6b',
   },
-  headlessUsersContainer: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
   headlessUserSelect: {
     marginRight: theme.spacing(4),
   },
   cloudUserTitle: {
-    display: 'inline-block',
     marginRight: theme.spacing(1),
   },
 });
@@ -583,11 +574,24 @@ class Pipeline extends Component {
     this.filterAvailableComputations(headlessMembers);
   }
 
+  removeHeadlessMember = headlessMemberId => () => {
+    const { pipeline } = this.state;
+
+    if (!(headlessMemberId in pipeline.headlessMembers)) {
+      return;
+    }
+
+    const { [headlessMemberId]: removedMember, ...remainingMembers } = pipeline.headlessMembers;
+
+    this.updatePipeline({ param: 'headlessMembers', value: remainingMembers });
+    this.filterAvailableComputations(remainingMembers);
+  }
+
   filterAvailableComputations = (headlessMembers) => {
     const { availableHeadlessClients } = this.props;
     const { orderedComputations } = this.state;
 
-    if (!headlessMembers) {
+    if (!headlessMembers || Object.keys(headlessMembers).length === 0) {
       this.setState({ filteredComputations: [...orderedComputations] });
       return;
     }
@@ -632,11 +636,9 @@ class Pipeline extends Component {
 
     return connectDropTarget(
       <div>
-        <div className="page-header">
-          <Typography variant="h4" className={classes.title}>
-            {title}
-          </Typography>
-        </div>
+        <Box className="page-header" marginBottom={2}>
+          <Typography variant="h4">{ title }</Typography>
+        </Box>
         <ValidatorForm instantValidate noValidate onSubmit={this.savePipeline}>
           <TextValidator
             id="name"
@@ -707,7 +709,7 @@ class Pipeline extends Component {
             className={classes.formControl}
           />
           <div className={classes.formControl}>
-            <Typography variant="h6" className={classes.owningConsortiumButtonTitle}>Owning Consortium</Typography>
+            <Typography variant="h6" gutterBottom>Owning Consortium</Typography>
             <Button
               id="pipelineconsortia"
               variant="contained"
@@ -741,7 +743,7 @@ class Pipeline extends Component {
               }
             </Menu>
           </div>
-          <div className={classes.savePipelineButtonContainer}>
+          <Box textAlign="right" marginBottom={2}>
             <StatusButtonWrapper status={savingStatus}>
               <Button
                 key="save-pipeline-button"
@@ -753,7 +755,7 @@ class Pipeline extends Component {
                 Save Pipeline
               </Button>
             </StatusButtonWrapper>
-          </div>
+          </Box>
           <FormControlLabel
             control={(
               <Checkbox
@@ -778,7 +780,7 @@ class Pipeline extends Component {
                     <InfoIcon />
                   </Tooltip>
                 </Box>
-                <div className={classes.headlessUsersContainer}>
+                <Box display="flex" justifyContent="space-between" alignItems="center">
                   <Select
                     value={selectedHeadlessMember}
                     placeholder="Select an user"
@@ -797,15 +799,26 @@ class Pipeline extends Component {
                   >
                     Add Cloud User
                   </Button>
-                </div>
-                <ul>
-                  {
-                    pipeline.headlessMembers
-                    && Object.keys(pipeline.headlessMembers).map(headlessUserId => (
-                      <li key={headlessUserId}>{ pipeline.headlessMembers[headlessUserId] }</li>
-                    ))
-                  }
-                </ul>
+                </Box>
+                <Grid container>
+                  <Grid item xs={12} md={6} lg={3}>
+                    <List>
+                      {
+                        pipeline.headlessMembers
+                        && Object.keys(pipeline.headlessMembers).map(headlessUserId => (
+                          <ListItem key={headlessUserId}>
+                            <ListItemText primary={pipeline.headlessMembers[headlessUserId]} />
+                            <ListItemSecondaryAction>
+                              <IconButton edge="end" aria-label="delete" onClick={this.removeHeadlessMember(headlessUserId)}>
+                                <DeleteIcon />
+                              </IconButton>
+                            </ListItemSecondaryAction>
+                          </ListItem>
+                        ))
+                      }
+                    </List>
+                  </Grid>
+                </Grid>
               </div>
             )
           }
