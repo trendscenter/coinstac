@@ -229,7 +229,7 @@ class TableResult extends Component {
                       return (
                         <TableRow key={`${heading}-${index}-objects-row`}>
                           {keys.map(key => (
-                            <TableCell style={{ fontFamily: 'Courier' }} key={`${heading}-${index}-${key[0]}-column`}>
+                            <TableCell key={`${heading}-${index}-${key[0]}-column`}>
                               {parseTableColumnOutput(d[key[0]])}
                             </TableCell>
                           ))}
@@ -279,7 +279,7 @@ class TableResult extends Component {
                   return (
                     <TableRow key={`${index}-objects-row`}>
                       {keys.map(key => (
-                        <TableCell style={{ fontFamily: 'Courier' }} key={`${key[0]}-column`}>
+                        <TableCell key={`${key[0]}-column`}>
                           {parseTableColumnOutput(d[key[0]])}
                         </TableCell>
                       ))}
@@ -295,7 +295,7 @@ class TableResult extends Component {
                         <TableCell className="bold" key={`${pair[0]}-numbers-column`}>
                           {outputProps.items[pair[0]] ? outputProps.items[pair[0]].label : pair[0]}
                         </TableCell>
-                        <TableCell style={{ fontFamily: 'Courier' }} key={`${pair[0]}-numbers-column-output`}>
+                        <TableCell key={`${pair[0]}-numbers-column-output`}>
                           {parseTableColumnOutput(pair[1])}
                         </TableCell>
                       </TableRow>
