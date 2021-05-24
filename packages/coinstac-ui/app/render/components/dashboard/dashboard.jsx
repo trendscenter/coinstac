@@ -11,6 +11,7 @@ import {
 } from '@material-ui/core';
 import ArrowUpwardIcon from '@material-ui/icons/ArrowUpward';
 import update from 'immutability-helper';
+import { startsWith } from 'lodash';
 import DashboardNav from './dashboard-nav';
 import UserAccountController from '../user/user-account-controller';
 import {
@@ -175,8 +176,22 @@ class Dashboard extends Component {
     this.unsubscribeToUser = subscribeToUser(user.id);
     this.unsubscribeToUserRuns = subscribeToUserRuns(user.id);
 
+    const DOCKER_IGNORABLE_MESSAGES = [
+      'connect ECONNREFUSED',
+      '(HTTP code 500) server error',
+      'socket hang up',
+    ];
+
     ipcRenderer.on('docker-error', (event, arg) => {
-      notifyError(`Docker Error: ${arg.err.message}`);
+      const { message } = arg.err;
+
+      const shouldNotify = DOCKER_IGNORABLE_MESSAGES.filter(
+        startString => startsWith(message, startString)
+      ).length === 0;
+
+      if (shouldNotify) {
+        notifyError(`Docker Error: ${arg.err.message}`);
+      }
     });
   }
 
