@@ -115,7 +115,7 @@ class Dashboard extends Component {
       const status = getDockerStatus();
       status.then((result) => {
         if (result === 'OK') {
-          this.setState({ dockerStatus: true });
+          this.setState({ dockerStatus: false });
         } else {
           this.setState({ dockerStatus: false });
         }
@@ -479,7 +479,7 @@ class Dashboard extends Component {
     const { router } = this.context;
 
     const childrenWithProps = React.cloneElement(children, {
-      computations, consortia, pipelines, runs, threads,
+      computations, consortia, pipelines, runs, threads, dockerStatus,
     });
 
     if (!auth || !auth.user.email.length) {

@@ -5,11 +5,12 @@ import { Link } from 'react-router';
 import { compose, graphql, withApollo } from 'react-apollo';
 import { ipcRenderer } from 'electron';
 import classNames from 'classnames';
-import { get, orderBy } from 'lodash';
+import { get, orderBy, some } from 'lodash';
 import Button from '@material-ui/core/Button';
 import Menu from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
 import TextField from '@material-ui/core/TextField';
+import Tooltip from '@material-ui/core/Tooltip';
 import Typography from '@material-ui/core/Typography';
 import Fab from '@material-ui/core/Fab';
 import AddIcon from '@material-ui/icons/Add';
@@ -46,6 +47,18 @@ const styles = theme => ({
   button: {
     marginTop: theme.spacing(1),
     marginRight: theme.spacing(1),
+  },
+  buttonDisabled: {
+    marginTop: theme.spacing(1),
+    marginRight: theme.spacing(1),
+    color: theme.palette.grey[400],
+    boxShadow: 'none',
+    pointerEvents: 'auto !important',
+    '&:hover': {
+      boxShadow: 'none',
+      backgroundColor: theme.palette.grey[300],
+      color: theme.palette.grey[400],
+    },
   },
   contentContainer: {
     marginTop: theme.spacing(1),
@@ -201,16 +214,33 @@ class ConsortiaList extends Component {
         return run.consortiumId === consortium.id && run.status === 'started';
       }).length > 0;
 
-      actions.push(
-        <Button
-          key={`${consortium.id}-start-pipeline-button`}
-          variant="contained"
-          className={classes.button}
-          onClick={this.startPipeline(consortium.id)}
-        >
-          Start Pipeline
-        </Button>
-      );
+      const computations = get(pipeline, 'steps.0.computations', []);
+      const hasDockerComputation = some(computations, computation => get(computation, 'computation.type') === 'docker');
+
+      if (hasDockerComputation) {
+        actions.push(
+          <Tooltip title="Docker is not running" placement="top">
+            <Button
+              key={`${consortium.id}-start-pipeline-button`}
+              variant="contained"
+              className={classes.buttonDisabled}
+            >
+              Start Pipeline
+            </Button>
+          </Tooltip>
+        );
+      } else {
+        actions.push(
+          <Button
+            key={`${consortium.id}-start-pipeline-button`}
+            variant="contained"
+            className={classes.button}
+            onClick={this.startPipeline(consortium.id)}
+          >
+            Start Pipeline
+          </Button>
+        );
+      }
 
       if (isPipelineRunning) {
         actions.push(
