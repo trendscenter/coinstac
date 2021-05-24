@@ -53,28 +53,26 @@ import NotificationsListener from './listeners/notifications-listener';
 import DashboardPipelineNavBar from './dashboard-pipeline-nav-bar';
 
 const styles = () => ({
-  statusGood: {
+  status: {
     display: 'flex',
     alignItems: 'center',
   },
+  statusText: {
+    fontSize: 16,
+  },
   statusUp: {
-    width: '1rem',
-    height: '1rem',
+    width: 20,
+    height: 20,
     background: '#5cb85c',
     borderRadius: '50%',
     marginLeft: '0.5rem',
   },
   statusDown: {
-    display: 'inline-block',
-    width: '100%',
+    width: 20,
+    height: 20,
     background: '#d9534f',
-    borderRadius: '0.5rem',
-    padding: '1rem',
-    textAlign: 'center',
-    textShadow: '1px 1px 0px rgba(0, 0, 0, 1)',
-  },
-  statusDownText: {
-    color: 'white',
+    borderRadius: '50%',
+    marginLeft: '0.5rem',
   },
   arrowIcon: {
     color: 'white',
@@ -487,25 +485,12 @@ class Dashboard extends Component {
               />
             </ListItem>
             <ListItem>
-              {dockerStatus ? (
-                <span className={classes.statusGood}>
-                  <Typography variant="subtitle2">
-                    Docker Status:
-                  </Typography>
-                  <span className={classes.statusUp} />
-                </span>
-              ) : (
-                <span className={classes.statusDown}>
-                  <Typography
-                    variant="body1"
-                    classes={{
-                      root: classes.statusDownText,
-                    }}
-                  >
-                    Docker Is Not Running!
-                  </Typography>
-                </span>
-              )}
+              <span className={classes.status}>
+                <Typography variant="subtitle2" className={classes.statusText}>
+                  Docker Status:
+                </Typography>
+                <span className={dockerStatus ? classes.statusUp : classes.statusDown} />
+              </span>
             </ListItem>
           </List>
         </div>
