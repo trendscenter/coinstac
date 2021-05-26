@@ -1,6 +1,6 @@
 # COINSTAC Headless Client
 
-The headless client allows a static dataset(s) to be made available to the larger COINSTAC ecosystem, giving the ability for others to run pipelines using your data without it ever leaving your systems.
+The headless client allows a static dataset(s) to be made available to the larger COINSTAC ecosystem, giving the ability for others to run pipelines using your data without it ever leaving your system
 
 ## Setup
 ### System Requirements
