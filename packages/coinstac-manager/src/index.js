@@ -87,9 +87,15 @@ const getStatus = (provider = 'docker') => {
  * @param  {string} serviceUserId unique user ID for use of this service
  * @param  {Object} opts          options for the service, eg: { docker: {...} } opts are
  *                                  are passed directly to the service
+ *
  * @return {Promise}              promise that resolves to the service function
  */
-const startService = (serviceId, serviceUserId, serviceType, opts) => {
+const startService = ({
+  serviceId,
+  serviceUserId,
+  serviceType,
+  opts,
+}) => {
   const createAndAssignService = () => {
     services[serviceId].state = 'starting';
     let depth = 0;
