@@ -77,6 +77,17 @@ class PipelineStepInput extends Component {
         return { ...inputCopy };
       }
 
+      if (prop in inputCopy) {
+        return {
+          ...inputCopy,
+          [prop]: {
+            ...inputCopy[prop],
+            ...value,
+          },
+
+        };
+      }
+
       return {
         ...inputCopy,
         [prop]: {
@@ -118,6 +129,16 @@ class PipelineStepInput extends Component {
       }
 
       newArr.splice(clientPropIndex, 1, newObj);
+    }
+
+    if (objKey in inputCopy) {
+      return {
+        ...inputCopy,
+        [objKey]: {
+          ...inputCopy[objKey],
+          value: [...newArr],
+        },
+      };
     }
 
     return {

@@ -78,6 +78,7 @@ const sharedFields = {
       inputMap
       dataMeta
     }
+    headlessMembers
   `,
   runFields: `
     id
@@ -139,6 +140,11 @@ const sharedFields = {
         detail
       }
     }
+  `,
+  headlessClientFields: `
+    id
+    name
+    computationWhitelist
   `,
 };
 
