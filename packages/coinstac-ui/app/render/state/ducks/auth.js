@@ -28,6 +28,7 @@ const INITIAL_STATE = {
   },
   appDirectory: localStorage.getItem('appDirectory') || remote.getGlobal('config').get('coinstacHome'),
   clientServerURL: localStorage.getItem('clientServerURL') || '',
+  disableSymlink: localStorage.getItem('disableSymlink') === 'true',
   isApiVersionCompatible: true,
   locationStacks: [],
   error: null,
@@ -45,6 +46,7 @@ const UPDATE_USER_PERMS = 'UPDATE_USER_PERMS';
 const SET_APP_DIRECTORY = 'SET_APP_DIRECTORY';
 const SET_CLIENT_SERVER_URL = 'SET_CLIENT_SERVER_URL';
 const SET_API_VERSION_CHECK = 'SET_API_VERSION_CHECK';
+const SET_DIABLE_SYMLINK = 'SET_DISABLE_SYMLINK';
 
 // Action Creators
 export const setUser = user => ({ type: SET_USER, payload: user });
@@ -64,6 +66,10 @@ export const setClientServerURL = clientServerURL => ({
 export const setApiVersionCheck = isApiVersionCompatible => ({
   type: SET_API_VERSION_CHECK,
   payload: isApiVersionCompatible,
+});
+export const setDisableSymlink = disableSymlink => ({
+  type: SET_DIABLE_SYMLINK,
+  payload: disableSymlink,
 });
 
 // Helpers
@@ -277,6 +283,9 @@ export default function reducer(state = INITIAL_STATE, { type, payload }) {
     case SET_CLIENT_SERVER_URL:
       localStorage.setItem('clientServerURL', payload);
       return { ...state, clientServerURL: payload };
+    case SET_DIABLE_SYMLINK:
+      localStorage.setItem('disableSymlink', payload);
+      return { ...state, disableSymlink: payload };
     case SET_API_VERSION_CHECK:
       return { ...state, isApiVersionCompatible: payload };
     case LOCATION_CHANGE:

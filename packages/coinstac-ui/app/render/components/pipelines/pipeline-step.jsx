@@ -89,7 +89,7 @@ class PipelineStep extends Component {
 
   componentDidUpdate() {
     const {
-      compIO, possibleInputs, isEdit, updateStep, step
+      compIO, possibleInputs, isEdit, updateStep, step,
     } = this.props;
     const { compInputs, orderedInputs } = this.state;
 
@@ -359,6 +359,7 @@ PipelineStep.propTypes = {
   compIO: PropTypes.object,
   id: PropTypes.string.isRequired,
   isDragging: PropTypes.bool.isRequired,
+  isEdit: PropTypes.bool.isRequired,
   owner: PropTypes.bool,
   pipelineIndex: PropTypes.number.isRequired,
   possibleInputs: PropTypes.array,
