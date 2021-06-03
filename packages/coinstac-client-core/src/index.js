@@ -1,5 +1,6 @@
 'use strict';
 
+/* eslint-disable no-unused-vars */
 // app package deps
 const pify = require('util').promisify;
 const csvParse = require('csv-parse');
@@ -265,7 +266,8 @@ class CoinstacClient {
     clientPipeline,
     filePaths,
     runId,
-    runPipeline // eslint-disable-line no-unused-vars
+    runPipeline,
+    disableSymlink = false
   ) {
     const runObj = { spec: clientPipeline, runId, timeout: clientPipeline.timeout };
 
