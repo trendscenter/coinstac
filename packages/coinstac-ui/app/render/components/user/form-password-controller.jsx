@@ -5,13 +5,11 @@ import {
   ValidatorForm,
   TextValidator,
 } from 'react-material-ui-form-validator';
-import {
-  AppBar,
-  Button,
-  Paper,
-  Tab,
-  Tabs,
-} from '@material-ui/core';
+import AppBar from '@material-ui/core/AppBar';
+import Button from '@material-ui/core/Button';
+import Paper from '@material-ui/core/Paper';
+import Tab from '@material-ui/core/Tab';
+import Tabs from '@material-ui/core/Tabs';
 import { withStyles } from '@material-ui/core/styles';
 import LayoutNoauth from '../layout-noauth';
 import {
