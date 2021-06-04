@@ -7,6 +7,7 @@ const {
   PIPELINE_CHANGED,
   PIPELINE_DELETED,
   RUN_CHANGED,
+  RUN_WITH_HEADLESS_CLIENT_STARTED,
   THREAD_CHANGED,
   USER_CHANGED,
   USER_SESSION_STARTED,
@@ -98,6 +99,15 @@ function runChanged(run) {
   });
 }
 
+function runWithHeadlessClientStarted(run) {
+  const r = transformToClient(run);
+
+  pubSub.publish('runWithHeadlessClientStarted', {
+    runWithHeadlessClientStarted: r,
+    runId: r.id,
+  });
+}
+
 function threadChanged(thread) {
   const t = transformToClient(thread);
 
@@ -143,6 +153,8 @@ function initSubscriptions(ps) {
   eventEmitter.on(PIPELINE_DELETED, pipelineDeleted);
 
   eventEmitter.on(RUN_CHANGED, runChanged);
+
+  eventEmitter.on(RUN_WITH_HEADLESS_CLIENT_STARTED, runWithHeadlessClientStarted);
 
   eventEmitter.on(THREAD_CHANGED, threadChanged);
 

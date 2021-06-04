@@ -1,15 +1,23 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import {
+  Box,
+  Button,
   TableRow,
   TableCell,
-  Button,
   Menu,
   MenuItem,
   Typography,
   TextField,
+  Tooltip,
 } from '@material-ui/core';
+import InfoIcon from '@material-ui/icons/Info';
 import update from 'immutability-helper';
+
+const CLOUD_USER_SUGGESTED_FIELD_TOOLTIP = `
+  This field is present on the cloud users with this name. If you delete this field, the cloud user won't be able to provide
+  data for it.
+`;
 
 class PipelineStepInputCsvTableRow extends React.Component {
   constructor(props) {
@@ -61,7 +69,7 @@ class PipelineStepInputCsvTableRow extends React.Component {
             id={`${objKey}-${index}-data-dropdown`}
             variant="contained"
             color="secondary"
-            disabled={!owner}
+            disabled={!owner || obj.suggested}
             onClick={this.openDataMenu}
           >
             {
@@ -95,16 +103,29 @@ class PipelineStepInputCsvTableRow extends React.Component {
         <TableCell>
           {
             !obj.fromCache && (
-              <TextField
-                id={`${objKey}-${index}-input-name`}
-                disabled={!owner}
-                placeholder="Variable Name"
-                value={obj.name || ''}
-                onChange={event => updateStep({
-                  ...step,
-                  inputMap: getNewObj('name', event.target.value, index),
-                })}
-              />
+              <Box display="flex" alignItems="center">
+                <TextField
+                  id={`${objKey}-${index}-input-name`}
+                  disabled={!owner || obj.suggested}
+                  placeholder="Variable Name"
+                  value={obj.name || ''}
+                  onChange={event => updateStep({
+                    ...step,
+                    inputMap: getNewObj('name', event.target.value, index),
+                  })}
+                />
+                {
+                  obj.suggested && (
+                    <Tooltip
+                      title={
+                        <Typography variant="body1">{ CLOUD_USER_SUGGESTED_FIELD_TOOLTIP }</Typography>
+                      }
+                    >
+                      <InfoIcon />
+                    </Tooltip>
+                  )
+                }
+              </Box>
             )
           }
           {
@@ -121,7 +142,7 @@ class PipelineStepInputCsvTableRow extends React.Component {
           <Button
             variant="contained"
             color="secondary"
-            disabled={!owner || !obj.type}
+            disabled={!owner}
             onClick={() => updateStep({
               ...step,
               inputMap: {

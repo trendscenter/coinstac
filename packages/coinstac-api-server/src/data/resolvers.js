@@ -19,6 +19,7 @@ const {
   PIPELINE_CHANGED,
   PIPELINE_DELETED,
   RUN_CHANGED,
+  RUN_WITH_HEADLESS_CLIENT_STARTED,
   THREAD_CHANGED,
   USER_CHANGED,
 } = require('./events');
@@ -408,6 +409,13 @@ const resolvers = {
       });
 
       return getOnlineUsers();
+    },
+    fetchAvailableHeadlessClients: async () => {
+      const db = database.getDbInstance();
+
+      const headlessClients = await db.collection('headlessClients').find().toArray();
+
+      return transformToClient(headlessClients);
     }
   },
   Mutation: {
@@ -534,8 +542,17 @@ const resolvers = {
       try {
         const isPipelineDecentralized = pipeline.steps.findIndex(step => step.controller.type === 'decentralized') > -1;
 
+        let runClients = { ...consortium.members };
+
+        if (pipeline.headlessMembers) {
+          runClients = {
+            ...consortium.members,
+            ...pipeline.headlessMembers
+          }
+        }
+
         const result = await db.collection('runs').insertOne({
-          clients: consortium.members,
+          clients: runClients,
           consortiumId,
           pipelineSnapshot: pipeline,
           startDate: Date.now(),
@@ -549,6 +566,10 @@ const resolvers = {
         );
 
         eventEmitter.emit(RUN_CHANGED, run);
+
+        if (pipeline.headlessMembers) {
+          eventEmitter.emit(RUN_WITH_HEADLESS_CLIENT_STARTED, run);
+        }
 
         return run;
       } catch (error) {
@@ -1358,6 +1379,19 @@ const resolvers = {
       subscribe: withFilter(
         () => pubsub.asyncIterator('userRunChanged'),
         (payload, variables) => (variables.userId && keys(payload.userRunChanged.clients).indexOf(variables.userId) > -1)
+      )
+    },
+    /**
+     * Subscription triggered
+     * @param {object} payload
+     * @param {string} payload.runId The run changed
+     * @param {object} variables
+     * @param {string} variables.clientId The user listened for
+     */
+    runWithHeadlessClientStarted: {
+      subscribe: withFilter(
+        () => pubsub.asyncIterator('runWithHeadlessClientStarted'),
+        (payload, variables) => (variables.clientId && variables.clientId in payload.runWithHeadlessClientStarted.pipelineSnapshot.headlessMembers)
       )
     },
     /**

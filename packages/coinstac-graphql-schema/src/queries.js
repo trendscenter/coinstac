@@ -131,6 +131,13 @@ const queries = {
       }
     }
   `,
+  fetchAvailableHeadlessClients: `
+    {
+      fetchAvailableHeadlessClients {
+        ${sharedFields.headlessClientFields}
+      }
+    }
+  `,
   pipelineChanged: `
     {
       pipelineChanged(pipelineId: $pipelineId) {
@@ -148,6 +155,13 @@ const queries = {
   userRunChanged: `
     {
       userRunChanged(userId: $userId) {
+        ${sharedFields.runFields}
+      }
+    }
+  `,
+  runWithHeadlessClientStarted: `
+    {
+      runWithHeadlessClientStarted(clientId: $clientId) {
         ${sharedFields.runFields}
       }
     }

@@ -1,0 +1,16 @@
+Metadata-Version: 1.1
+Name: coinstac
+Version: 0.1.0
+Summary: Python utility library for coinstac
+Home-page: https://github.com/trendscenter/coinstac/coinstac-utilities/coinstac-python
+Author: Ross Kelly
+Author-email: rkelly30@gsu.edu
+License: MIT
+Description: UNKNOWN
+Platform: UNKNOWN
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Science/Research
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7

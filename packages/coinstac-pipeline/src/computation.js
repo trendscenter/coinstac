@@ -27,7 +27,6 @@ const managerOptions = ({
             Binds: [
               `${operatingDirectory}/input:/input:ro`,
               `${operatingDirectory}/output:/output:rw`,
-              `${operatingDirectory}/cache:/cache:rw`,
               `${operatingDirectory}/transfer:/transfer:rw`,
             ],
           },
@@ -104,14 +103,18 @@ module.exports = {
           containerOptions,
           imageDirectory,
         });
+        opts.version = meta.compspecVersion || 1;
+
         return Manager.startService(
-          this.meta.id,
-          `${this.runId}-${this.clientId}`,
-          computation.type,
-          opts
+          {
+            serviceId: `${this.runId}-${this.clientId}`,
+            serviceUserId: `${this.runId}-${this.clientId}`,
+            serviceType: computation.type,
+            opts,
+          }
         )
           .then((service) => {
-            return service(computation.command.concat([`${JSON.stringify(input)}`]), `${this.runId}-${this.clientId}`);
+            return service(input, mode, computation.command);
           });
       },
       /**
@@ -119,7 +122,7 @@ module.exports = {
        * @return {Promise}   resolves on stop
        */
       stop() {
-        return Manager.stopService(this.meta.id, `${this.runId}-${this.clientId}`, true);
+        return Manager.stopService(`${this.runId}-${this.clientId}`, `${this.runId}-${this.clientId}`, true);
       },
     };
   },

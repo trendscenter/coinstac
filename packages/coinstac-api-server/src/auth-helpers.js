@@ -263,6 +263,31 @@ const helperFunctions = {
     return res(Boom.unauthorized('Incorrect username or password.'));
   },
   /**
+   * Validate api key used by headless client
+   * @param {object} req request
+   * @param {object} res response
+   * @return {object} The requested user object
+   */
+  async validateHeadlessClientApiKey(req, res) {
+    const db = database.getDbInstance();
+
+    const headlessClient = await db.collection('headlessClients').findOne({ name: req.payload.name });
+
+    if (!headlessClient) {
+      return res(Boom.unauthorized('No headless client is registered with this api key'));
+    }
+
+    const apiKeyMatch = await helperFunctions.verifyPassword(
+      req.payload.apiKey, headlessClient.apiKey
+    );
+
+    if (!apiKeyMatch) {
+      return res(Boom.unauthorized('Invalid API key.'));
+    }
+
+    return res(transformToClient(headlessClient));
+  },
+  /**
    * Confirms that submitted token is valid
    * @param {object} req request
    * @param {object} res response
