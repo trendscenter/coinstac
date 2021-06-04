@@ -50,6 +50,7 @@ class StartPipelineListener extends React.Component {
       localRunResults,
       consortia,
       maps,
+      notifyInfo,
     } = this.props;
 
     remoteRuns.forEach((remoteRun) => {
@@ -64,6 +65,11 @@ class StartPipelineListener extends React.Component {
       const consortium = consortia.find(c => c.id === remoteRun.consortiumId);
       const dataMapping = maps.find(m => m.consortiumId === consortium.id
         && m.pipelineId === consortium.activePipelineId);
+
+      if (!dataMapping) {
+        notifyInfo(`Run for ${consortium.name} is waiting for your data. Please map your data to take part of the consortium.`);
+        return;
+      }
 
       this.startPipeline(consortium, dataMapping, remoteRun);
     });
