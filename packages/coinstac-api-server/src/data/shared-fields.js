@@ -26,6 +26,7 @@ const schemaFields = {
     id: String!
     tags: [String]
     version: String
+    compspecVersion: String
     controller: String
   `,
   computationRemoteFields: `
@@ -42,6 +43,7 @@ const schemaFields = {
     shared: Boolean
     timeout: Int
     limitOutputToOwner: Boolean
+    headlessMembers: JSON
   `,
   pipelineControllerFields: `
     id: ID

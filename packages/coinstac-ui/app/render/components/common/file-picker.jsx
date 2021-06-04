@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import ipcPromise from 'ipc-promise';
 import { withStyles } from '@material-ui/core/styles';
+import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
 import IconButton from '@material-ui/core/IconButton';
 import List from '@material-ui/core/List';
@@ -24,10 +25,6 @@ const styles = theme => ({
     marginTop: theme.spacing(1),
     marginBottom: theme.spacing(1),
     marginRight: theme.spacing(1),
-  },
-  buttonContainer: {
-    display: 'flex',
-    alignItems: 'center',
   },
   fileListContainer: {
     marginTop: theme.spacing(1),
@@ -62,7 +59,7 @@ function FilePicker({
 
   return (
     <div>
-      <div className={classes.buttonContainer}>
+      <Box display="flex" alignItems="center">
         <Button
           variant="contained"
           color="secondary"
@@ -88,7 +85,7 @@ function FilePicker({
             </Tooltip>
           )
         }
-      </div>
+      </Box>
       {
         selectedFiles && selectedFiles.length > 0 && (
           <Paper variant="outlined" className={classes.fileListContainer}>
