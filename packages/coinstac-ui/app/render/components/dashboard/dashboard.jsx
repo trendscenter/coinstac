@@ -3,13 +3,12 @@ import { compose, graphql, withApollo } from 'react-apollo';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { ipcRenderer } from 'electron';
-import { withStyles } from '@material-ui/core/styles';
-import List from '@material-ui/core/List';
-import ListItem from '@material-ui/core/ListItem';
-import Typography from '@material-ui/core/Typography';
+import {
+  List,
+  ListItem,
+} from '@material-ui/core';
 import ArrowUpwardIcon from '@material-ui/icons/ArrowUpward';
 import update from 'immutability-helper';
-import { startsWith } from 'lodash';
 import DashboardNav from './dashboard-nav';
 import UserAccountController from '../user/user-account-controller';
 import {
@@ -21,11 +20,9 @@ import {
 import CoinstacAbbr from '../coinstac-abbr';
 import { saveLocalRun, updateLocalRun } from '../../state/ducks/runs';
 import {
-  getDockerStatus,
   pullComputations,
-  updateDockerOutput,
 } from '../../state/ducks/docker';
-import { updateUserConsortiaStatuses, updateUserPerms } from '../../state/ducks/auth';
+import { updateUserPerms } from '../../state/ducks/auth';
 import { appendLogMessage } from '../../state/ducks/app';
 import {
   COMPUTATION_CHANGED_SUBSCRIPTION,
@@ -39,7 +36,6 @@ import {
   USER_CHANGED_SUBSCRIPTION,
   USER_RUN_CHANGED_SUBSCRIPTION,
   THREAD_CHANGED_SUBSCRIPTION,
-  UPDATE_USER_CONSORTIUM_STATUS_MUTATION,
   UPDATE_CONSORTIA_MAPPED_USERS_MUTATION,
   FETCH_USER_QUERY,
 } from '../../state/graphql/functions';
@@ -47,45 +43,19 @@ import {
   getAllAndSubProp,
   userProp,
 } from '../../state/graphql/props';
+import DashboardPipelineNavBar from './dashboard-pipeline-nav-bar';
+import DockerStatusChecker from './docker-status-checker';
+
 import StartPipelineListener from './listeners/start-pipeline-listener';
 import NotificationsListener from './listeners/notifications-listener';
-import DashboardPipelineNavBar from './dashboard-pipeline-nav-bar';
-
-const styles = () => ({
-  status: {
-    display: 'flex',
-    alignItems: 'center',
-  },
-  statusText: {
-    fontSize: 16,
-  },
-  statusUp: {
-    width: 20,
-    height: 20,
-    background: '#5cb85c',
-    borderRadius: '50%',
-    marginLeft: '0.5rem',
-  },
-  statusDown: {
-    width: 20,
-    height: 20,
-    background: '#d9534f',
-    borderRadius: '50%',
-    marginLeft: '0.5rem',
-  },
-  arrowIcon: {
-    color: 'white',
-  },
-});
-
-let dockerInterval;
+import DockerEventsListeners from './listeners/docker-events-listeners';
+import LocalRunStatusListeners from './listeners/local-run-status-listeners';
 
 class Dashboard extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
-      dockerStatus: true,
       unsubscribeComputations: null,
       unsubscribeConsortia: null,
       unsubscribePipelines: null,
@@ -96,73 +66,9 @@ class Dashboard extends Component {
   componentDidMount() {
     const {
       auth: { user },
-      getDockerStatus,
-      writeLog,
-      updateDockerOutput,
-      updateUserConsortiumStatus,
-      notifySuccess,
-      notifyError,
-      updateLocalRun,
-      saveLocalRun,
       subscribeToUser,
       subscribeToUserRuns,
     } = this.props;
-    const { router } = this.context;
-
-    dockerInterval = setInterval(() => {
-      const status = getDockerStatus();
-      status.then((result) => {
-        if (result === 'OK') {
-          this.setState({ dockerStatus: true });
-        } else {
-          this.setState({ dockerStatus: false });
-        }
-      }, () => {
-        this.setState({ dockerStatus: false });
-      });
-    }, 5000);
-
-    process.nextTick(() => {
-      if (!user.email.length) {
-        writeLog({ type: 'verbose', message: 'Redirecting login (no authorized user)' });
-        router.push('/login');
-      }
-    });
-
-    ipcRenderer.on('docker-out', (_event, arg) => {
-      updateDockerOutput(arg);
-    });
-
-    ipcRenderer.on('docker-pull-complete', (event, arg) => {
-      updateUserConsortiumStatus(arg, 'pipeline-computations-downloaded');
-      notifySuccess(`${arg} Pipeline Computations Downloaded`);
-    });
-
-    ipcRenderer.on('local-pipeline-state-update', (event, arg) => {
-      updateLocalRun(
-        arg.run.id,
-        { localPipelineState: arg.data }
-      );
-    });
-
-    ipcRenderer.on('save-local-run', (event, arg) => {
-      saveLocalRun({
-        ...arg.run,
-        status: 'started',
-      });
-    });
-
-    ipcRenderer.on('local-run-complete', (event, arg) => {
-      notifySuccess(`${arg.consName} Pipeline Complete.`);
-
-      updateLocalRun(arg.run.id, { results: arg.run.results, status: 'complete', type: arg.run.type });
-    });
-
-    ipcRenderer.on('local-run-error', (event, arg) => {
-      notifyError(`${arg.consName} Pipeline Error.`);
-
-      updateLocalRun(arg.run.id, { error: arg.run.error, status: 'error', type: arg.run.type });
-    });
 
     ipcRenderer.on('log-message', (event, arg) => {
       const { appendLogMessage } = this.props;
@@ -173,24 +79,6 @@ class Dashboard extends Component {
 
     this.unsubscribeToUser = subscribeToUser(user.id);
     this.unsubscribeToUserRuns = subscribeToUserRuns(user.id);
-
-    const DOCKER_IGNORABLE_MESSAGES = [
-      'connect ECONNREFUSED',
-      '(HTTP code 500) server error',
-      'socket hang up',
-    ];
-
-    ipcRenderer.on('docker-error', (event, arg) => {
-      const { message } = arg.err;
-
-      const shouldNotify = DOCKER_IGNORABLE_MESSAGES.filter(
-        startString => startsWith(message, startString)
-      ).length === 0;
-
-      if (shouldNotify) {
-        notifyError(`Docker Error: ${arg.err.message}`);
-      }
-    });
   }
 
   // eslint-disable-next-line
@@ -379,7 +267,6 @@ class Dashboard extends Component {
       unsubscribeComputations, unsubscribeConsortia, unsubscribePipelines, unsubscribeThreads,
     } = this.state;
 
-    clearInterval(dockerInterval);
     unsubscribeComputations();
     unsubscribeConsortia();
     unsubscribePipelines();
@@ -387,13 +274,6 @@ class Dashboard extends Component {
 
     this.unsubscribeToUser();
     this.unsubscribeToUserRuns();
-
-    ipcRenderer.removeAllListeners('docker-out');
-    ipcRenderer.removeAllListeners('docker-pull-complete');
-    ipcRenderer.removeAllListeners('local-run-complete');
-    ipcRenderer.removeAllListeners('local-run-error');
-    ipcRenderer.removeAllListeners('local-pipeline-state-update');
-    ipcRenderer.removeAllListeners('docker-error');
   }
 
   goBack = () => {
@@ -471,13 +351,11 @@ class Dashboard extends Component {
       runs,
       remoteRuns,
       threads,
-      classes,
     } = this.props;
-    const { dockerStatus } = this.state;
     const { router } = this.context;
 
     const childrenWithProps = React.cloneElement(children, {
-      computations, consortia, pipelines, runs, threads, dockerStatus,
+      computations, consortia, pipelines, runs, threads,
     });
 
     if (!auth || !auth.user.email.length) {
@@ -498,12 +376,7 @@ class Dashboard extends Component {
               />
             </ListItem>
             <ListItem>
-              <span className={classes.status}>
-                <Typography variant="subtitle2" className={classes.statusText}>
-                  Docker Status:
-                </Typography>
-                <span className={dockerStatus ? classes.statusUp : classes.statusDown} />
-              </span>
+              <DockerStatusChecker />
             </ListItem>
           </List>
         </div>
@@ -528,6 +401,8 @@ class Dashboard extends Component {
           remoteRuns={remoteRuns}
         />
         <NotificationsListener />
+        <LocalRunStatusListeners />
+        <DockerEventsListeners />
       </div>
     );
   }
@@ -553,7 +428,6 @@ Dashboard.defaultProps = {
 Dashboard.propTypes = {
   auth: PropTypes.object.isRequired,
   children: PropTypes.node.isRequired,
-  classes: PropTypes.object.isRequired,
   client: PropTypes.object.isRequired,
   computations: PropTypes.array,
   consortia: PropTypes.array,
@@ -563,7 +437,6 @@ Dashboard.propTypes = {
   runs: PropTypes.array,
   threads: PropTypes.array,
   appendLogMessage: PropTypes.func.isRequired,
-  getDockerStatus: PropTypes.func.isRequired,
   notifyError: PropTypes.func.isRequired,
   notifyInfo: PropTypes.func.isRequired,
   notifySuccess: PropTypes.func.isRequired,
@@ -576,9 +449,7 @@ Dashboard.propTypes = {
   subscribeToUser: PropTypes.func,
   subscribeToUserRuns: PropTypes.func.isRequired,
   updateConsortiaMappedUsers: PropTypes.func.isRequired,
-  updateDockerOutput: PropTypes.func.isRequired,
   updateLocalRun: PropTypes.func.isRequired,
-  updateUserConsortiumStatus: PropTypes.func.isRequired,
   writeLog: PropTypes.func.isRequired,
   updateUserPerms: PropTypes.func.isRequired,
 };
@@ -656,16 +527,6 @@ const DashboardWithData = compose(
   graphql(FETCH_USER_QUERY, userProp(
     USER_CHANGED_SUBSCRIPTION
   )),
-  graphql(UPDATE_USER_CONSORTIUM_STATUS_MUTATION, {
-    props: ({ ownProps, mutate }) => ({
-      updateUserConsortiumStatus: (consortiumId, status) => mutate({
-        variables: { consortiumId, status },
-      })
-        .then(({ data: { updateUserConsortiumStatus: { consortiaStatuses } } }) => {
-          return ownProps.updateUserConsortiaStatuses(consortiaStatuses);
-        }),
-    }),
-  }),
   graphql(
     UPDATE_CONSORTIA_MAPPED_USERS_MUTATION, {
       props: ({ mutate }) => ({
@@ -680,18 +541,15 @@ const DashboardWithData = compose(
 
 const connectedComponent = connect(mapStateToProps,
   {
-    getDockerStatus,
     notifyError,
     notifyInfo,
     notifySuccess,
     pullComputations,
     saveLocalRun,
-    updateDockerOutput,
     updateLocalRun,
-    updateUserConsortiaStatuses,
     writeLog,
     updateUserPerms,
     appendLogMessage,
   })(DashboardWithData);
 
-export default withStyles(styles)(connectedComponent);
+export default connectedComponent;

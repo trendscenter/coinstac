@@ -24,7 +24,6 @@ const INITIAL_STATE = {
     email: '',
     institution: '',
     photo: '',
-    consortiaStatuses: {},
   },
   appDirectory: localStorage.getItem('appDirectory') || remote.getGlobal('config').get('coinstacHome'),
   clientServerURL: localStorage.getItem('clientServerURL') || '',
@@ -41,7 +40,6 @@ const SET_USER = 'SET_USER';
 const CLEAR_USER = 'CLEAR_USER';
 const SET_ERROR = 'SET_ERROR';
 const CLEAR_ERROR = 'CLEAR_ERROR';
-const UPDATE_USER_CONSORTIA_STATUSES = 'UPDATE_USER_CONSORTIA_STATUSES';
 const UPDATE_USER_PERMS = 'UPDATE_USER_PERMS';
 const SET_APP_DIRECTORY = 'SET_APP_DIRECTORY';
 const SET_CLIENT_SERVER_URL = 'SET_CLIENT_SERVER_URL';
@@ -53,10 +51,6 @@ export const setUser = user => ({ type: SET_USER, payload: user });
 export const clearUser = () => ({ type: CLEAR_USER });
 export const setError = error => ({ type: SET_ERROR, payload: error });
 export const clearError = () => ({ type: CLEAR_ERROR });
-export const updateUserConsortiaStatuses = statuses => ({
-  type: UPDATE_USER_CONSORTIA_STATUSES,
-  payload: statuses,
-});
 export const updateUserPerms = perms => ({ type: UPDATE_USER_PERMS, payload: perms });
 export const setAppDirectory = appDirectory => ({ type: SET_APP_DIRECTORY, payload: appDirectory });
 export const setClientServerURL = clientServerURL => ({
@@ -273,8 +267,6 @@ export default function reducer(state = INITIAL_STATE, { type, payload }) {
       return { ...state, error: payload };
     case CLEAR_ERROR:
       return { ...state, error: null };
-    case UPDATE_USER_CONSORTIA_STATUSES:
-      return { ...state, user: { ...state.user, consortiaStatuses: payload } };
     case UPDATE_USER_PERMS:
       return { ...state, user: { ...state.user, permissions: payload } };
     case SET_APP_DIRECTORY:
