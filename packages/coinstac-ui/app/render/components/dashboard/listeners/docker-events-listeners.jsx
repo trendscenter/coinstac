@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { connect } from 'react-redux';
-import { compose, graphql, withApollo } from 'react-apollo';
-import { startsWith } from 'lodash';
+import { graphql, withApollo } from '@apollo/client/react/hoc';
+import { startsWith, flowRight as compose } from 'lodash';
 import { ipcRenderer } from 'electron';
 import PropTypes from 'prop-types';
 

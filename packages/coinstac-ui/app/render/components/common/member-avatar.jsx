@@ -1,5 +1,6 @@
 import React from 'react';
-import { compose, graphql, withApollo } from 'react-apollo';
+import { graphql, withApollo } from '@apollo/client/react/hoc';
+import { flowRight as compose } from 'lodash';
 import Avatar from 'react-avatar';
 import PropTypes from 'prop-types';
 import Typography from '@material-ui/core/Typography';

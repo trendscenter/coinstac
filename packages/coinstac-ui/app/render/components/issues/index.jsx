@@ -2,10 +2,10 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { compose, graphql, withApollo } from 'react-apollo';
+import { graphql, withApollo } from '@apollo/client/react/hoc';
+import { flowRight as compose, trim } from 'lodash';
 import axios from 'axios';
 import crypto from 'crypto';
-import { trim } from 'lodash';
 import classNames from 'classnames';
 import Dropzone from 'react-dropzone';
 import { ValidatorForm, TextValidator } from 'react-material-ui-form-validator';

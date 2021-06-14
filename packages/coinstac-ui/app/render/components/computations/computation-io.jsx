@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { graphql } from 'react-apollo';
+import { graphql } from '@apollo/client/react/hoc';
 import ReactJson from 'react-json-view';
 import { withStyles } from '@material-ui/core/styles';
 import { FETCH_COMPUTATION_QUERY } from '../../state/graphql/functions';

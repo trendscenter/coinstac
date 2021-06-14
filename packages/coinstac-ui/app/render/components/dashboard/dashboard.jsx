@@ -1,5 +1,6 @@
 import { connect } from 'react-redux';
-import { compose, graphql, withApollo } from 'react-apollo';
+import { graphql, withApollo } from '@apollo/client/react/hoc';
+import { flowRight as compose } from 'lodash';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { ipcRenderer } from 'electron';
@@ -15,7 +16,6 @@ import {
   notifyError,
   notifyInfo,
   notifySuccess,
-  writeLog,
 } from '../../state/ducks/notifyAndLog';
 import CoinstacAbbr from '../coinstac-abbr';
 import { saveLocalRun, updateLocalRun } from '../../state/ducks/runs';
@@ -450,7 +450,6 @@ Dashboard.propTypes = {
   subscribeToUserRuns: PropTypes.func.isRequired,
   updateConsortiaMappedUsers: PropTypes.func.isRequired,
   updateLocalRun: PropTypes.func.isRequired,
-  writeLog: PropTypes.func.isRequired,
   updateUserPerms: PropTypes.func.isRequired,
 };
 
@@ -547,7 +546,6 @@ const connectedComponent = connect(mapStateToProps,
     pullComputations,
     saveLocalRun,
     updateLocalRun,
-    writeLog,
     updateUserPerms,
     appendLogMessage,
   })(DashboardWithData);

@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { graphql, compose, withApollo } from 'react-apollo';
-import { get } from 'lodash';
+import { graphql, withApollo } from '@apollo/client/react/hoc';
+import { flowRight as compose, get } from 'lodash';
 import Checkbox from '@material-ui/core/Checkbox';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import Table from '@material-ui/core/Table';

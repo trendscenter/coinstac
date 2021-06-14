@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { graphql } from 'react-apollo';
+import { graphql } from '@apollo/client/react/hoc';
 import { Link } from 'react-router';
 import Paper from '@material-ui/core/Paper';
 import Divider from '@material-ui/core/Divider';

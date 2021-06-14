@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { graphql } from 'react-apollo';
+import { graphql } from '@apollo/client/react/hoc';
 import { Link } from 'react-router';
 import Fab from '@material-ui/core/Fab';
 import Typography from '@material-ui/core/Typography';
