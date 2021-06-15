@@ -21,6 +21,11 @@ export const CONSORTIUM_CHANGED_SUBSCRIPTION = gql`
     ${queries.consortiumChanged}
 `;
 
+export const CONSORTIUM_PIPELINE_CHANGED_SUBSCRIPTION = gql`
+  subscription consortiumPipelineChanged
+    ${queries.consortiumPipelineChanged}
+`;
+
 export const THREAD_CHANGED_SUBSCRIPTION = gql`
   subscription threadChanged($threadId: ID)
     ${queries.threadChanged}

@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { graphql, withApollo } from '@apollo/client/react/hoc';
+import { graphql, withApollo } from '@apollo/react-hoc';
 import { flowRight as compose } from 'lodash';
 import PropTypes from 'prop-types';
 import Typography from '@material-ui/core/Typography';

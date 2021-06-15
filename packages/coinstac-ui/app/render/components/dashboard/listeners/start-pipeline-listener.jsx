@@ -1,58 +1,38 @@
-import React from 'react';
+import { useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { ipcRenderer } from 'electron';
 import { connect } from 'react-redux';
 import { notifyInfo } from '../../../state/ducks/notifyAndLog';
 
-class StartPipelineListener extends React.Component {
-  componentDidUpdate(prevProps) {
-    if (this.hasNewMappedData(prevProps)) {
-      this.startPipelineIfHasActiveRun();
-    } else if (this.hasNewRemoteRun(prevProps)) {
-      this.startRemoteRunsLocally();
-    }
+function StartPipelineListener({
+  maps, consortia, remoteRuns, localRuns, localRunResults, notifyInfo, networkVolume,
+}) {
+  function startPipeline(consortium, dataMapping, run) {
+    notifyInfo(`Pipeline Starting for ${consortium.name}.`);
+
+    ipcRenderer.send('start-pipeline', {
+      consortium, dataMappings: dataMapping, pipelineRun: run, networkVolume
+    });
   }
 
-  hasNewMappedData = (prevProps) => {
-    const { maps } = this.props;
-
-    return prevProps.maps.length < maps.length;
-  }
-
-  hasNewRemoteRun = (prevProps) => {
-    const { remoteRuns } = this.props;
-
-    return prevProps.remoteRuns.length < remoteRuns.length;
-  }
-
-  startPipelineIfHasActiveRun = () => {
-    const {
-      maps,
-      consortia,
-      remoteRuns,
-    } = this.props;
-
+  function startPipelineIfHasActiveRun() {
     const lastDataMapping = maps[maps.length - 1];
+
+    if (!lastDataMapping) {
+      return;
+    }
+
     const consortium = consortia.find(c => lastDataMapping.consortiumId === c.id);
 
     const run = remoteRuns.find(run => run.consortiumId === consortium.id
       && !run.results && !run.error);
 
     if (run) {
-      this.startPipeline(consortium, lastDataMapping, run);
+      startPipeline(consortium, lastDataMapping, run);
     }
   }
 
-  startRemoteRunsLocally = () => {
-    const {
-      remoteRuns,
-      localRuns,
-      localRunResults,
-      consortia,
-      maps,
-      notifyInfo,
-    } = this.props;
-
+  function startRemoteRunsLocally() {
     remoteRuns.forEach((remoteRun) => {
       if (localRuns.findIndex(run => run.id === remoteRun.id) > -1) {
         return;
@@ -71,23 +51,27 @@ class StartPipelineListener extends React.Component {
         return;
       }
 
-      this.startPipeline(consortium, dataMapping, remoteRun);
+      startPipeline(consortium, dataMapping, remoteRun);
     });
   }
 
-  startPipeline = (consortium, dataMapping, run) => {
-    const { notifyInfo, networkVolume } = this.props;
+  useEffect(() => {
+    if (!maps || !consortia) {
+      return;
+    }
 
-    notifyInfo(`Pipeline Starting for ${consortium.name}.`);
+    startPipelineIfHasActiveRun();
+  }, [maps, consortia]);
 
-    ipcRenderer.send('start-pipeline', {
-      consortium, dataMappings: dataMapping, pipelineRun: run, networkVolume,
-    });
-  }
+  useEffect(() => {
+    if (!remoteRuns || !consortia) {
+      return;
+    }
 
-  render() {
-    return null;
-  }
+    startRemoteRunsLocally();
+  }, [remoteRuns, consortia]);
+
+  return null;
 }
 
 StartPipelineListener.propTypes = {

@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { graphql, withApollo } from '@apollo/client/react/hoc';
+import { graphql, withApollo } from '@apollo/react-hoc';
 import { flowRight as compose, find } from 'lodash';
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';

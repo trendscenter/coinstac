@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
-import { graphql, withApollo } from '@apollo/client/react/hoc';
+import { graphql, withApollo } from '@apollo/react-hoc';
 import { DragDropContext, DropTarget } from 'react-dnd';
 import HTML5Backend from 'react-dnd-html5-backend';
 import NumberFormat from 'react-number-format';
@@ -234,9 +234,10 @@ class Pipeline extends Component {
     const owner = params.runId ? false : isPipelineOwner(user.permissions, owningConsortium);
 
     const data = client.readQuery({ query: FETCH_ALL_CONSORTIA_QUERY });
-    const consortium = data.fetchAllConsortia.find(cons => cons.id === owningConsortium);
+    let consortium = data.fetchAllConsortia.find(cons => cons.id === owningConsortium);
 
     if (consortium) {
+      consortium = { ...consortium };
       delete consortium.__typename;
     }
 

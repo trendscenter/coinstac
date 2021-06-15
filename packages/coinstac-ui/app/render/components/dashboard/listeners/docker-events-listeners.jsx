@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { connect } from 'react-redux';
-import { graphql, withApollo } from '@apollo/client/react/hoc';
-import { startsWith, flowRight as compose } from 'lodash';
+import { useMutation } from '@apollo/client';
+import { startsWith } from 'lodash';
 import { ipcRenderer } from 'electron';
 import PropTypes from 'prop-types';
 
@@ -16,15 +16,22 @@ const DOCKER_IGNORABLE_MESSAGES = [
 ];
 
 function DockerEventsListeners({
-  updateDockerOutput, updateUserConsortiumStatus, notifySuccess, notifyError,
+  updateDockerOutput, notifySuccess, notifyError,
 }) {
+  const [updateUserConsortiumStatus] = useMutation(UPDATE_USER_CONSORTIUM_STATUS_MUTATION);
+
   useEffect(() => {
     ipcRenderer.on('docker-out', (_event, arg) => {
       updateDockerOutput(arg);
     });
 
     ipcRenderer.on('docker-pull-complete', (event, arg) => {
-      updateUserConsortiumStatus(arg, 'pipeline-computations-downloaded');
+      updateUserConsortiumStatus({
+        variables: {
+          consortiumId: arg,
+          status: 'pipeline-computations-downloaded',
+        },
+      });
       notifySuccess(`${arg} Pipeline Computations Downloaded`);
     });
 
@@ -55,20 +62,9 @@ DockerEventsListeners.propTypes = {
   updateUserConsortiumStatus: PropTypes.func.isRequired,
 };
 
-const DockerEventsListenersWithData = compose(
-  graphql(UPDATE_USER_CONSORTIUM_STATUS_MUTATION, {
-    props: ({ mutate }) => ({
-      updateUserConsortiumStatus: (consortiumId, status) => mutate({
-        variables: { consortiumId, status },
-      }),
-    }),
-  }),
-  withApollo
-)(DockerEventsListeners);
-
 export default connect(null,
   {
     notifyError,
     notifySuccess,
     updateDockerOutput,
-  })(DockerEventsListenersWithData);
+  })(DockerEventsListeners);

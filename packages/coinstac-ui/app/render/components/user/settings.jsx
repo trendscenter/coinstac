@@ -5,7 +5,7 @@ import TextField from '@material-ui/core/TextField';
 import CheckIcon from '@material-ui/icons/Check';
 import Switch from '@material-ui/core/Switch';
 import { connect } from 'react-redux';
-import { graphql, withApollo } from '@apollo/client/react/hoc';
+import { graphql, withApollo } from '@apollo/react-hoc';
 import { flowRight as compose, get } from 'lodash';
 import Button from '@material-ui/core/Button';
 import CircularProgress from '@material-ui/core/CircularProgress';

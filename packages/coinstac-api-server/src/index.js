@@ -1,45 +1,58 @@
 /* eslint-disable no-console */
-
+const { ApolloServer } = require('apollo-server-hapi');
 const hapi = require('hapi');
+const jwt2 = require('hapi-auth-jwt2');
 const helperFunctions = require('./auth-helpers');
-const plugins = require('./plugins');
 const routes = require('./routes');
-const wsServer = require('./ws-server');
+const { schema } = require('./data/schema');
 const database = require('./database');
 
-const server = new hapi.Server();
-server.connection({
-  host: process.env.API_SERVER_HOSTNAME,
-  port: process.env.API_SERVER_PORT,
-});
+async function startServer() {
+  const server = new ApolloServer({
+    schema,
+    context: ({ request, connection }) => {
+      if (connection) {
+        return connection.context;
+      }
 
-server.register(plugins, (err) => {
-  if (err) {
-    console.log(err);
-  }
+      return {
+        credentials: request.auth ? request.auth.credentials : null,
+      };
+    },
+  });
+  await server.start();
 
-  /**
-   * JWT middleware validates token on each /graphql request
-   * User object with permissions returned from validateToken function
-   */
-  server.auth.strategy('jwt', 'jwt',
+  const app = new hapi.Server({
+    host: process.env.API_SERVER_HOSTNAME,
+    port: process.env.API_SERVER_PORT,
+  });
+
+  await app.register(jwt2);
+
+  app.auth.strategy('jwt', 'jwt',
     {
       key: process.env.API_JWT_SECRET,
-      validateFunc: helperFunctions.validateToken,
+      validate: helperFunctions.validateToken,
       verifyOptions: { algorithms: ['HS256'] },
     });
 
-  server.auth.default('jwt');
-  server.route(routes);
-});
+  app.auth.default('jwt');
+  app.route(routes);
+
+  await server.applyMiddleware({
+    app,
+  });
+
+  await server.installSubscriptionHandlers(app.listener);
+
+  await app.start();
+
+  console.log(`Server running at: ${app.info.uri}`); // eslint-disable-line no-console
+}
 
 database.connect()
   .then(() => {
-    server.start((startErr) => {
-      if (startErr) throw startErr;
-      console.log(`Server running at: ${server.info.uri}`);
-      wsServer.activate(server);
-    });
+    return startServer();
   })
   .catch((err) => {
     console.error(err);

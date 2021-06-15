@@ -52,6 +52,10 @@ class DashboardPipelineNavBar extends React.Component {
     const { localRuns, consortia } = this.props;
     const { runId } = this.state;
 
+    if (!consortia || !localRuns) {
+      return;
+    }
+
     const runs = localRuns || [];
     const prevRuns = prevProps.localRuns || [];
 
@@ -83,7 +87,8 @@ class DashboardPipelineNavBar extends React.Component {
   }
 
   render() {
-    const { classes, router } = this.props;
+    const { classes } = this.props;
+    const { router } = this.context;
 
     const { runId, consortiumName, pipelineName } = this.state;
 
@@ -115,10 +120,14 @@ class DashboardPipelineNavBar extends React.Component {
 }
 
 DashboardPipelineNavBar.propTypes = {
-  consortia: PropTypes.array.isRequired,
-  localRuns: PropTypes.array.isRequired,
+  consortia: PropTypes.array,
+  localRuns: PropTypes.array,
   classes: PropTypes.object.isRequired,
-  router: PropTypes.object.isRequired,
+};
+
+DashboardPipelineNavBar.defaultProps = {
+  consortia: [],
+  localRuns: [],
 };
 
 export default withStyles(styles)(DashboardPipelineNavBar);

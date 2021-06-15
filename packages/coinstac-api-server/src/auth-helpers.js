@@ -168,15 +168,13 @@ const helperFunctions = {
    * @param {object} request original request from client
    * @param {function} callback function signature (err, isValid, alternative credentials)
    */
-  validateToken(decoded, request, callback) {
-    helperFunctions.getUserDetailsByID(decoded.id)
-      .then((user) => {
-        if (user) {
-          callback(null, true, user);
-        } else {
-          callback(null, false, null);
-        }
-      });
+  async validateToken(decoded, request, h) {
+    const user = await helperFunctions.getUserDetailsByID(decoded.id);
+
+    return {
+      isValid: user && user.id,
+      credentials: user || null,
+    };
   },
   /**
    * Confirms that submitted email is new
@@ -243,13 +241,13 @@ const helperFunctions = {
    * @param {object} res response
    * @return {object} The requested user object
    */
-  async validateUser(req, res) {
+  async validateUser(req, h) {
     const db = database.getDbInstance();
 
     const user = await db.collection('users').findOne({ username: req.payload.username });
 
     if (!user) {
-      return res(Boom.unauthorized('Incorrect username or password.'));
+      return Boom.unauthorized('Incorrect username or password.');
     }
 
     const passwordMatch = await helperFunctions.verifyPassword(
@@ -257,10 +255,10 @@ const helperFunctions = {
     );
 
     if (passwordMatch) {
-      return res(transformToClient(user));
+      return h.response(transformToClient(user));
     }
 
-    return res(Boom.unauthorized('Incorrect username or password.'));
+    return Boom.unauthorized('Incorrect username or password.');
   },
   /**
    * Validate api key used by headless client

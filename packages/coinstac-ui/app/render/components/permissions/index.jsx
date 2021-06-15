@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { graphql, withApollo } from '@apollo/client/react/hoc';
+import { graphql, withApollo } from '@apollo/react-hoc';
 import { flowRight as compose, get } from 'lodash';
 import Checkbox from '@material-ui/core/Checkbox';
 import CircularProgress from '@material-ui/core/CircularProgress';

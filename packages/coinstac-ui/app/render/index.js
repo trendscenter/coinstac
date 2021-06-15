@@ -4,6 +4,7 @@ import { render } from 'react-dom';
 import { hashHistory } from 'react-router';
 import { ipcRenderer, remote } from 'electron';
 import { ApolloProvider } from '@apollo/client';
+import { ApolloProvider as ApolloHOCProvider } from '@apollo/react-hoc';
 import { Provider as ReduxProvider } from 'react-redux';
 import { syncHistoryWithStore } from 'react-router-redux';
 import getApolloClient from './state/apollo-client';
@@ -35,9 +36,11 @@ const history = syncHistoryWithStore(hashHistory, store);
 
 render(
   <ApolloProvider client={client}>
-    <ReduxProvider store={store}>
-      <Root history={history} />
-    </ReduxProvider>
+    <ApolloHOCProvider client={client}>
+      <ReduxProvider store={store}>
+        <Root history={history} />
+      </ReduxProvider>
+    </ApolloHOCProvider>
   </ApolloProvider>,
   rootEl
 );
@@ -51,9 +54,11 @@ if (module.hot) {
     /* eslint-enable global-require */
     render(
       <ApolloProvider client={client}>
-        <ReduxProvider store={store}>
-          <NextRoot history={history} />
-        </ReduxProvider>
+        <ApolloHOCProvider client={client}>
+          <ReduxProvider store={store}>
+            <NextRoot history={history} />
+          </ReduxProvider>
+        </ApolloHOCProvider>
       </ApolloProvider>,
       rootEl
     );

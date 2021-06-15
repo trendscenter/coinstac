@@ -16,6 +16,7 @@ const {
   COMPUTATION_DELETED,
   CONSORTIUM_CHANGED,
   CONSORTIUM_DELETED,
+  CONSORTIUM_PIPELINE_CHANGED,
   PIPELINE_CHANGED,
   PIPELINE_DELETED,
   RUN_CHANGED,
@@ -235,7 +236,7 @@ const resolvers = {
      * Fetches all public consortia and private consortia for which the current user has access
      * @return {array} All consortia to which the current user access
      */
-    fetchAllConsortia: async ({ auth: { credentials } }) => {
+    fetchAllConsortia: async (parent, args, { credentials }) => {
       const db = database.getDbInstance();
 
       const consortia = await db.collection('consortia').find({
@@ -364,7 +365,7 @@ const resolvers = {
       const users = await db.collection('users').find().toArray();
       return transformToClient(users);
     },
-    fetchAllUserRuns: async ({ auth: { credentials } }) => {
+    fetchAllUserRuns: async (parent, args, { credentials }) => {
       const db = database.getDbInstance();
 
       const runs = await db.collection('runs').find({
@@ -376,7 +377,7 @@ const resolvers = {
 
       return transformToClient(runs);
     },
-    fetchAllThreads: async ({ auth: { credentials } }) => {
+    fetchAllThreads: async (parent, args, { credentials }) => {
       const db = database.getDbInstance();
 
       const threads = await db.collection('threads').find({
@@ -385,7 +386,7 @@ const resolvers = {
 
       return transformToClient(threads);
     },
-    fetchUsersOnlineStatus: async ({ auth: { credentials } }) => {
+    fetchUsersOnlineStatus: async (parent, args, { credentials }) => {
       // Find the users that are in the same consortia as the logged user
       const db = database.getDbInstance();
 
@@ -425,7 +426,7 @@ const resolvers = {
      * @param {object} args.computationSchema Computation object to add/update
      * @return {object} New computation object
      */
-    addComputation: async ({ auth: { credentials } }, args) => {
+    addComputation: async (parent, args, { credentials }) => {
       const { permissions } = credentials;
       const { computationSchema } = args;
 
@@ -484,7 +485,7 @@ const resolvers = {
      * @param {string} args.roleType Type of role to add
      * @return {object} Updated user object
      */
-    addUserRole: async ({ auth: { credentials } }, args) => {
+    addUserRole: async (parent, args, { credentials }) => {
       const { permissions } = credentials;
 
       if (credentials.id === args.userId) {
@@ -519,8 +520,8 @@ const resolvers = {
      * @param {String} consortiumId Run object to add/update
      * @return {object} New/updated run object
      */
-    createRun: async ({ auth }, { consortiumId }) => {
-      if (!auth || !auth.credentials) {
+    createRun: async (parent, { consortiumId }, { credentials }) => {
+      if (!acredentials) {
         // No authorized user, reject
         return Boom.unauthorized('User not authenticated');
       }
@@ -587,7 +588,7 @@ const resolvers = {
      * @param {string} args.consortiumId Consortium id to delete
      * @return {object} Deleted consortium
      */
-    deleteConsortiumById: async ({ auth: { credentials: { permissions } } }, args) => {
+    deleteConsortiumById: async (parent, args, { credentials: { permissions } }) => {
       if (!permissions.consortia[args.consortiumId] || !permissions.consortia[args.consortiumId].includes('owner')) {
         return Boom.forbidden('Action not permitted');
       }
@@ -636,7 +637,7 @@ const resolvers = {
      * @param {string} args.pipelineId Pipeline id to delete
      * @return {object} Deleted pipeline
      */
-    deletePipeline: async ({ auth: { credentials: { permissions } } }, args) => {
+    deletePipeline: async (parent, args, { credentials: { permissions } }) => {
       const db = database.getDbInstance();
 
       const pipelineId = ObjectID(args.pipelineId);
@@ -681,7 +682,7 @@ const resolvers = {
      * @param {string} args.consortiumId Consortium id to join
      * @return {object} Updated consortium
      */
-    joinConsortium: async ({ auth: { credentials } }, args) => {
+    joinConsortium: async (parent, args, { credentials }) => {
       const db = database.getDbInstance();
       const consortium = await db.collection('consortia').findOne({ _id: ObjectID(args.consortiumId) });
 
@@ -700,7 +701,7 @@ const resolvers = {
      * @param {string} args.consortiumId Consortium id to join
      * @return {object} Updated consortium
      */
-    leaveConsortium: async ({ auth: { credentials } }, args) => {
+    leaveConsortium: async (parent, args, { credentials }) => {
       await removeUserPermissions({ userId: ObjectID(credentials.id), role: 'member', doc: ObjectID(args.consortiumId), table: 'consortia' });
 
       return helperFunctions.getUserDetails(credentials.username);
@@ -712,7 +713,7 @@ const resolvers = {
      * @param {string} args.computationId Computation id to delete
      * @return {object} Deleted computation
      */
-    removeComputation: async ({ auth: { credentials } }, args) => {
+    removeComputation: async (parent, args, { credentials }) => {
       const db = database.getDbInstance();
       const computation = await db.collection('computations').findOne({ _id: ObjectID(args.computationId) });
 
@@ -742,7 +743,7 @@ const resolvers = {
      * @param {string} args.roleType Type of role to add
      * @return {object} Updated user object
      */
-    removeUserRole: async ({ auth: { credentials } }, args) => {
+    removeUserRole: async (parent, args, { credentials }) => {
       const { permissions } = credentials;
 
       if (credentials.id === args.userId) {
@@ -800,7 +801,7 @@ const resolvers = {
         returnOriginal: false
       });
 
-      eventEmitter.emit(CONSORTIUM_CHANGED, result.value);
+      eventEmitter.emit(CONSORTIUM_PIPELINE_CHANGED, result.value);
 
       return transformToClient(result.value);
     },
@@ -811,7 +812,7 @@ const resolvers = {
      * @param {object} args.consortium Consortium object to add/update
      * @return {object} New/updated consortium object
      */
-    saveConsortium: async ({ auth: { credentials } }, args) => {
+    saveConsortium: async (parent, args, { credentials }) => {
       const { permissions } = credentials;
 
       const isUpdate = !!args.consortium.id;
@@ -1010,13 +1011,13 @@ const resolvers = {
     },
     /**
      * Saves consortium
-     * @param {object} auth User object from JWT middleware validateFunc
      * @param {object} args
      * @param {string} args.consortiumId Consortium id to update
      * @param {string} args.status New status
+     * @param {object} credentials User object from JWT middleware validateFunc
      * @return {object} Updated user object
      */
-    updateUserConsortiumStatus: async ({ auth: { credentials } }, { consortiumId, status }) => {
+    updateUserConsortiumStatus: async (parent, { consortiumId, status }, { credentials }) => {
       const db = database.getDbInstance();
 
       const result = await db.collection('users').findOneAndUpdate({
@@ -1041,7 +1042,7 @@ const resolvers = {
      * @param {string} args.mappedForRun New mappedUsers
      * @return {object} Updated consortia
      */
-    updateConsortiumMappedUsers: async ({ auth: { credentials } }, args) => {
+    updateConsortiumMappedUsers: async (parent, args, { credentials }) => {
       const db = database.getDbInstance();
 
       const updateObj =  {};
@@ -1073,7 +1074,7 @@ const resolvers = {
      * @param {string} args.consortia Mapped consortiums
      * @return {object} Updated consortia
      */
-    updateConsortiaMappedUsers: async ({ auth: { credentials } }, args) => {
+    updateConsortiaMappedUsers: async (parent, args, { credentials }) => {
       if (!Array.isArray(args.consortia) || args.consortia.length === 0) {
         return;
       }
@@ -1112,7 +1113,7 @@ const resolvers = {
      * @param {string} args.newPassword New password
      * @return {boolean} Success status
      */
-    updatePassword: async ({ auth: { credentials } }, args) => {
+    updatePassword: async (parent, args, { credentials }) => {
       const { currentPassword, newPassword } = args;
       const db = database.getDbInstance();
 
@@ -1148,7 +1149,7 @@ const resolvers = {
      * @param {object} args.action Message action
      * @return {object} Updated message
      */
-    saveMessage: async ({ auth: { credentials } }, args) => {
+    saveMessage: async (parent, args, { credentials }) => {
       const { title, recipients, content, action } = args;
       const threadId = args.threadId ? ObjectID(args.threadId) : null;
 
@@ -1284,7 +1285,7 @@ const resolvers = {
      * @param {object} args.issue Issue
      * @return {object} Created issue
      */
-    createIssue: async ({ auth: { credentials } }, args) => {
+    createIssue: async (parent, args, { credentials }) => {
       const { title, body } = args.issue;
 
       const repository = process.env.COINSTAC_REPOSITORY_NAME
@@ -1328,6 +1329,16 @@ const resolvers = {
         () => pubsub.asyncIterator('consortiumChanged'),
         (payload, variables) => (!variables.consortiumId || payload.consortiumId === variables.consortiumId)
       )
+    },
+    /**
+     * Consortium pipeline changed subscription
+     * @param {object} payload
+     * @param {string} payload.consortiumId The consortium changed
+     * @param {object} variables
+     * @param {string} variables.consortiumId The consortium listened for
+     */
+    consortiumPipelineChanged: {
+      subscribe: () => pubsub.asyncIterator('consortiumPipelineChanged'),
     },
     /**
      * Pipeline subscription

@@ -55,7 +55,7 @@ export default function () {
     persistedReducer,
     applyMiddleware.apply(
       this,
-      (!process.env.CI ? [...middleware, createLogger({ collapsed: true })] : middleware)
+      middleware
     )
   );
 

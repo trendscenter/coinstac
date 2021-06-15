@@ -32,25 +32,25 @@ function getApolloClient(config) {
     }
   });
 
-  // const authMiddleware = new ApolloLink((operation, forward) => {
-  //   // get the authentication token from local storage if it exists
-  //   let token = localStorage.getItem(API_TOKEN_KEY);
+  const authMiddleware = new ApolloLink((operation, forward) => {
+    // get the authentication token from local storage if it exists
+    let token = localStorage.getItem(API_TOKEN_KEY);
 
-  //   if (!token || token === 'null' || token === 'undefined') {
-  //     token = sessionStorage.getItem(API_TOKEN_KEY);
-  //   }
+    if (!token || token === 'null' || token === 'undefined') {
+      token = sessionStorage.getItem(API_TOKEN_KEY);
+    }
 
-  //   token = JSON.parse(token);
+    token = JSON.parse(token);
 
-  //   operation.setContext(({ headers = {} }) => ({
-  //     headers: {
-  //       ...headers,
-  //       authorization: token ? `Bearer ${token}` : null,
-  //     },
-  //   }));
+    operation.setContext(({ headers = {} }) => ({
+      headers: {
+        ...headers,
+        Authorization: token ? `Bearer ${token.token}` : null,
+      },
+    }));
 
-  //   return forward(operation);
-  // });
+    return forward(operation);
+  });
 
   const splitLink = split(
     ({ query }) => {
@@ -58,8 +58,7 @@ function getApolloClient(config) {
       return kind === 'OperationDefinition' && operation === 'subscription';
     },
     wsLink,
-    // concat(authMiddleware, httpLink)
-    httpLink
+    concat(authMiddleware, httpLink)
   );
 
   return new ApolloClient({
