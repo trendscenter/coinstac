@@ -267,7 +267,7 @@ class CoinstacClient {
     filePaths,
     runId,
     runPipeline,
-    disableSymlink = false
+    networkVolume = false
   ) {
     const runObj = { spec: clientPipeline, runId, timeout: clientPipeline.timeout };
 
@@ -283,7 +283,11 @@ class CoinstacClient {
           const linkPromises = [];
 
           if (filePaths) {
-            const stageFiles = process.env.CI ? fs.copy : fs.link;
+            let stageFiles = process.env.CI ? fs.copy : fs.link;
+            if (networkVolume) {
+              stageFiles = fs.symlink;
+              runObj.alternateInputDirectory = filePaths.baseDirectory;
+            }
 
             for (let i = 0; i < filePaths.files.length; i += 1) {
               const mkdir = path.normalize(filePaths.files[i]) === path.basename(filePaths.files[i])
@@ -387,7 +391,7 @@ class CoinstacClient {
         const unlinkPromises = [];
         for (let i = 0; i < filesArray.length; i += 1) {
           unlinkPromises.push(
-            fs.unlink(path.resolve(fullPath, filesArray[i]))
+            // fs.unlink(path.resolve(fullPath, filesArray[i]))
           );
         }
         return Promise.all(unlinkPromises);
