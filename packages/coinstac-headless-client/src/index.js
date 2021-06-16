@@ -14,6 +14,7 @@ async function start() {
 
     subscribeToNewRuns(client.id, apolloClient);
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('An unexpected error has occurred', error);
   }
 }

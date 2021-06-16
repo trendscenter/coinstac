@@ -17,6 +17,7 @@ function subscribeToNewRuns(clientId, apolloClient) {
       startPipelineRun(run);
     },
     error: (error) => {
+      // eslint-disable-next-line no-console
       console.error('An error occurred on the new runs subscription', error);
     },
   });

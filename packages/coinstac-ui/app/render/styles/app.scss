@@ -114,6 +114,7 @@ html {
     height: 100%;
     background-color: #eee;
     border-right: 1px solid rgba(0, 0, 0, 0.12);
+    overflow-y: auto;
 
     @media (max-width: $screen-sm) {
       width: 100%;
