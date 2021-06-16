@@ -172,9 +172,9 @@ html {
   padding: $grid-gutter-width / 2;
 
   .back-button {
-    position: absolute;
+    position: fixed;
     top: 0;
-    left: calc(50% - 40px);
+    left: calc(50% - 80px);
     margin: 0 auto;
     width: 80px;
     height: 40px;
