@@ -14,7 +14,7 @@ import { withStyles } from '@material-ui/core/styles';
 import { ValidatorForm, TextValidator } from 'react-material-ui-form-validator';
 import { updatePasswordProps } from '../../state/graphql/props';
 import { UPDATE_PASSWORD_MUTATION } from '../../state/graphql/functions';
-import { setClientCoreUrlAsync, setDisableSymlink } from '../../state/ducks/auth';
+import { setClientCoreUrlAsync, setNetworkVolume } from '../../state/ducks/auth';
 import { notifySuccess, notifyInfo, notifyError } from '../../state/ducks/notifyAndLog';
 import { clearRuns } from '../../state/ducks/runs';
 import UserEditController from './user-edit-controller';
@@ -177,13 +177,13 @@ class Settings extends Component {
     this.setState({ [param]: value });
   }
 
-  handleDisableSymlinkChange = (event) => {
-    const { setDisableSymlink } = this.props;
-    setDisableSymlink(event.target.checked);
+  handleNetworkVolumeChange = (event) => {
+    const { setNetworkVolume } = this.props;
+    setNetworkVolume(event.target.checked);
   }
 
   render() {
-    const { classes, clientServerURL, disableSymlink } = this.props;
+    const { classes, clientServerURL, networkVolume } = this.props;
     const {
       currentPassword,
       newPassword,
@@ -251,13 +251,13 @@ class Settings extends Component {
         </div>
 
         <Typography variant="h5" className={classes.topMargin}>
-          Disable Symlink
+          Enable network volume mounting for computations
         </Typography>
         <div className={classes.directory}>
           <Switch
-            checked={disableSymlink}
-            value={disableSymlink}
-            onChange={this.handleDisableSymlinkChange}
+            checked={networkVolume}
+            value={networkVolume}
+            onChange={this.handleNetworkVolumeChange}
           />
         </div>
 
@@ -328,7 +328,7 @@ class Settings extends Component {
 
 Settings.propTypes = {
   clientServerURL: PropTypes.string.isRequired,
-  disableSymlink: PropTypes.bool.isRequired,
+  networkVolume: PropTypes.bool.isRequired,
   classes: PropTypes.object.isRequired,
   setClientCoreUrlAsync: PropTypes.func.isRequired,
   clearRuns: PropTypes.func.isRequired,
@@ -336,7 +336,7 @@ Settings.propTypes = {
   notifyInfo: PropTypes.func.isRequired,
   notifySuccess: PropTypes.func.isRequired,
   updatePassword: PropTypes.func.isRequired,
-  setDisableSymlink: PropTypes.func.isRequired,
+  setNetworkVolume: PropTypes.func.isRequired,
 };
 
 Settings.contextTypes = {
@@ -353,12 +353,12 @@ const ComponentWithData = compose(
 
 const mapStateToProps = ({ auth }) => ({
   clientServerURL: auth.clientServerURL,
-  disableSymlink: auth.disableSymlink,
+  networkVolume: auth.networkVolume,
 });
 
 const connectedComponent = connect(mapStateToProps, {
   setClientCoreUrlAsync,
-  setDisableSymlink,
+  setNetworkVolume,
   clearRuns,
   notifySuccess,
   notifyInfo,

@@ -76,12 +76,12 @@ class StartPipelineListener extends React.Component {
   }
 
   startPipeline = (consortium, dataMapping, run) => {
-    const { notifyInfo, disableSymlink } = this.props;
+    const { notifyInfo, networkVolume } = this.props;
 
     notifyInfo(`Pipeline Starting for ${consortium.name}.`);
 
     ipcRenderer.send('start-pipeline', {
-      consortium, dataMappings: dataMapping, pipelineRun: run, disableSymlink,
+      consortium, dataMappings: dataMapping, pipelineRun: run, networkVolume,
     });
   }
 
@@ -97,7 +97,7 @@ StartPipelineListener.propTypes = {
   localRuns: PropTypes.array.isRequired,
   localRunResults: PropTypes.object.isRequired,
   maps: PropTypes.array.isRequired,
-  disableSymlink: PropTypes.bool.isRequired,
+  networkVolume: PropTypes.bool.isRequired,
   remoteRuns: PropTypes.array.isRequired,
   notifyInfo: PropTypes.func.isRequired,
 };
@@ -105,7 +105,7 @@ StartPipelineListener.propTypes = {
 const mapStateToProps = ({
   auth, runs, maps, localRunResults,
 }) => ({
-  disableSymlink: auth.disableSymlink,
+  networkVolume: auth.networkVolume,
   localRuns: runs.runs,
   localRunResults,
   maps: maps.consortiumDataMappings,
