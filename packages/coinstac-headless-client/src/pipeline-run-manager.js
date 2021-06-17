@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 const CoinstacClientCore = require('coinstac-client-core');
 const winston = require('winston');
 const path = require('path');
