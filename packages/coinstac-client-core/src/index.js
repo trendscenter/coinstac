@@ -391,7 +391,7 @@ class CoinstacClient {
         const unlinkPromises = [];
         for (let i = 0; i < filesArray.length; i += 1) {
           unlinkPromises.push(
-            // fs.unlink(path.resolve(fullPath, filesArray[i]))
+            fs.unlink(path.resolve(fullPath, filesArray[i]))
           );
         }
         return Promise.all(unlinkPromises);
