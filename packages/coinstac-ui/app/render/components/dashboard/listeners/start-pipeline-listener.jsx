@@ -86,8 +86,6 @@ class StartPipelineListener extends React.Component {
   }
 
   render() {
-    console.log('------- here --------');
-    console.log(this.props);
     return null;
   }
 }
