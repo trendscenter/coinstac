@@ -12,6 +12,7 @@ const path = require('path');
  * @return {Object}                  options
  */
 const managerOptions = ({
+  alternateInputDirectory,
   computation,
   operatingDirectory,
   containerOptions,
@@ -32,6 +33,7 @@ const managerOptions = ({
           },
         }, containerOptions),
       };
+      if (alternateInputDirectory) opts.docker.HostConfig.Binds.push(`${alternateInputDirectory}:${alternateInputDirectory}:ro`);
       if (process.env.CI) {
         opts.docker.HostConfig = {
           Binds: [
@@ -68,6 +70,7 @@ module.exports = {
    * @return {Object}          a computation
    */
   create({
+    alternateInputDirectory,
     clientId,
     imageDirectory,
     mode,
@@ -98,6 +101,7 @@ module.exports = {
       start(input, { operatingDirectory }) {
         // console.log(input); Keeping this for future ref.
         const opts = managerOptions({
+          alternateInputDirectory,
           computation,
           operatingDirectory,
           containerOptions,

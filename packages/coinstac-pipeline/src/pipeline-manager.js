@@ -824,7 +824,7 @@ module.exports = {
        * @return {Object}              an object containing the active pipeline and
        *                               Promise for its result
        */
-      startPipeline({ spec, clients = {}, runId }) {
+      startPipeline({ spec, clients = {}, runId, alternateInputDirectory }) {
         let pipelineStartTime;
         store.put(`${runId}-profiling`, clientId, {});
         if (mode === 'remote') pipelineStartTime = Date.now();
@@ -844,6 +844,7 @@ module.exports = {
               mode,
               imageDirectory,
               operatingDirectory,
+              alternateInputDirectory,
               clientId,
               userDirectories,
               owner: spec.owner,

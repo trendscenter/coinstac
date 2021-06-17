@@ -31,6 +31,7 @@ module.exports = {
     clientId,
     imageDirectory,
     logger,
+    alternateInputDirectory,
     operatingDirectory,
     owner,
     mode,
@@ -43,6 +44,7 @@ module.exports = {
         clientId,
         spec: comp,
         imageDirectory,
+        alternateInputDirectory,
         mode,
         runId,
       })

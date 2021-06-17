@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import TextField from '@material-ui/core/TextField';
 import CheckIcon from '@material-ui/icons/Check';
+import Switch from '@material-ui/core/Switch';
 import { connect } from 'react-redux';
 import { compose, graphql, withApollo } from 'react-apollo';
 import { get } from 'lodash';
@@ -13,7 +14,7 @@ import { withStyles } from '@material-ui/core/styles';
 import { ValidatorForm, TextValidator } from 'react-material-ui-form-validator';
 import { updatePasswordProps } from '../../state/graphql/props';
 import { UPDATE_PASSWORD_MUTATION } from '../../state/graphql/functions';
-import { setClientCoreUrlAsync } from '../../state/ducks/auth';
+import { setClientCoreUrlAsync, setNetworkVolume } from '../../state/ducks/auth';
 import { notifySuccess, notifyInfo, notifyError } from '../../state/ducks/notifyAndLog';
 import { clearRuns } from '../../state/ducks/runs';
 import UserEditController from './user-edit-controller';
@@ -176,8 +177,13 @@ class Settings extends Component {
     this.setState({ [param]: value });
   }
 
+  handleNetworkVolumeChange = (event) => {
+    const { setNetworkVolume } = this.props;
+    setNetworkVolume(event.target.checked);
+  }
+
   render() {
-    const { classes, clientServerURL } = this.props;
+    const { classes, clientServerURL, networkVolume } = this.props;
     const {
       currentPassword,
       newPassword,
@@ -196,6 +202,7 @@ class Settings extends Component {
         </div>
         <UserEditController />
         <hr />
+
         <Typography variant="h5" className={classes.removeDataTitle}>
           Remove Data
         </Typography>
@@ -210,7 +217,7 @@ class Settings extends Component {
           </Button>
         </form>
 
-        <Typography variant="h5" className={classNames(classes.pageSubtitle, classes.topMargin)}>
+        <Typography variant="h5" className={classes.topMargin}>
           Save client server URL for local pipeline
         </Typography>
         <div className={classes.directory}>
@@ -242,10 +249,21 @@ class Settings extends Component {
           </Button>
           {savingURLStatus === 'success' && <CheckIcon className={classes.checkIcon} color="primary" />}
         </div>
+
+        <Typography variant="h5" className={classes.topMargin}>
+          Enable network volume mounting for computations
+        </Typography>
+        <div className={classes.directory}>
+          <Switch
+            checked={networkVolume}
+            value={networkVolume}
+            onChange={this.handleNetworkVolumeChange}
+          />
+        </div>
+
         <Typography variant="h5" className={classes.updatePasswordTitle}>
           Update Password
         </Typography>
-
         <ValidatorForm
           instantValidate
           noValidate
@@ -310,6 +328,7 @@ class Settings extends Component {
 
 Settings.propTypes = {
   clientServerURL: PropTypes.string.isRequired,
+  networkVolume: PropTypes.bool.isRequired,
   classes: PropTypes.object.isRequired,
   setClientCoreUrlAsync: PropTypes.func.isRequired,
   clearRuns: PropTypes.func.isRequired,
@@ -317,6 +336,7 @@ Settings.propTypes = {
   notifyInfo: PropTypes.func.isRequired,
   notifySuccess: PropTypes.func.isRequired,
   updatePassword: PropTypes.func.isRequired,
+  setNetworkVolume: PropTypes.func.isRequired,
 };
 
 Settings.contextTypes = {
@@ -333,10 +353,12 @@ const ComponentWithData = compose(
 
 const mapStateToProps = ({ auth }) => ({
   clientServerURL: auth.clientServerURL,
+  networkVolume: auth.networkVolume,
 });
 
 const connectedComponent = connect(mapStateToProps, {
   setClientCoreUrlAsync,
+  setNetworkVolume,
   clearRuns,
   notifySuccess,
   notifyInfo,
