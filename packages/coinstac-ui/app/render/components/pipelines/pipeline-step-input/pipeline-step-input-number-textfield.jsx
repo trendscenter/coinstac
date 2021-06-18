@@ -15,6 +15,7 @@ function PipelineStepInputNumberTextField({
       disabled={!owner || isFromCache}
       name={`step-${objKey}`}
       type="number"
+      onFocus={event => event.target.select()}
       onChange={event => updateStep({
         ...step,
         inputMap: getNewObj(objKey, event.target.value ? { value: parseFloat(event.target.value) } : 'DELETE_VAR'),

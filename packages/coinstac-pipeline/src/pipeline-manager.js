@@ -824,7 +824,9 @@ module.exports = {
        * @return {Object}              an object containing the active pipeline and
        *                               Promise for its result
        */
-      startPipeline({ spec, clients = {}, runId, alternateInputDirectory }) {
+      startPipeline({
+        spec, clients = {}, runId, alternateInputDirectory,
+      }) {
         let pipelineStartTime;
         store.put(`${runId}-profiling`, clientId, {});
         if (mode === 'remote') pipelineStartTime = Date.now();
