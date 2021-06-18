@@ -1,5 +1,6 @@
 'use strict';
 
+/* eslint-disable no-unused-vars */
 // app package deps
 const pify = require('util').promisify;
 const csvParse = require('csv-parse');
@@ -265,7 +266,8 @@ class CoinstacClient {
     clientPipeline,
     filePaths,
     runId,
-    runPipeline // eslint-disable-line no-unused-vars
+    runPipeline,
+    networkVolume = false
   ) {
     const runObj = { spec: clientPipeline, runId, timeout: clientPipeline.timeout };
 
@@ -281,7 +283,11 @@ class CoinstacClient {
           const linkPromises = [];
 
           if (filePaths) {
-            const stageFiles = process.env.CI ? fs.copy : fs.link;
+            let stageFiles = process.env.CI ? fs.copy : fs.link;
+            if (networkVolume) {
+              stageFiles = fs.symlink;
+              runObj.alternateInputDirectory = filePaths.baseDirectory;
+            }
 
             for (let i = 0; i < filePaths.files.length; i += 1) {
               const mkdir = path.normalize(filePaths.files[i]) === path.basename(filePaths.files[i])

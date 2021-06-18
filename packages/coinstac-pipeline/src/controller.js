@@ -31,6 +31,7 @@ module.exports = {
     clientId,
     imageDirectory,
     logger,
+    alternateInputDirectory,
     operatingDirectory,
     owner,
     mode,
@@ -43,6 +44,7 @@ module.exports = {
         clientId,
         spec: comp,
         imageDirectory,
+        alternateInputDirectory,
         mode,
         runId,
       })
@@ -62,7 +64,8 @@ module.exports = {
       // may not be the same os
       baseDirectory: `${dockerBaseDir}/input/${clientId}/${runId}`,
       outputDirectory: `${dockerBaseDir}/output/${clientId}/${runId}`,
-      cacheDirectory: `${dockerBaseDir}/cache/${clientId}/${runId}`,
+      // volume mounts are very slow, cache doesnt need to be on the host
+      cacheDirectory: '/tmp',
       transferDirectory: `${dockerBaseDir}/transfer/${clientId}/${runId}`,
       clientId,
       currentBoxCommand: undefined,

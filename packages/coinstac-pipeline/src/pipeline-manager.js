@@ -20,6 +20,7 @@ const merge2 = require('merge2');
 const pify = require('util').promisify;
 const rmrf = pify(require('rimraf'));
 const debug = require('debug');
+const mv = pify(require('mv'));
 const Store = require('./io-store');
 
 const debugProfile = debug('pipeline:profile');
@@ -78,7 +79,7 @@ const splitFilesFromStream = (stream, filePath, chunkSize) => {
       };
       asyncStreams.push(new Promise((resolve, reject) => {
         splits[currentChunk].stream.on('close', () => resolve());
-        splits[currentChunk].stream.on('error', () => reject());
+        splits[currentChunk].stream.on('error', e => reject(e));
       }));
       splits[currentChunk].stream.write(data);
       currentChunkLen = data.length;
@@ -311,7 +312,6 @@ module.exports = {
     const cleanupPipeline = (runId) => {
       return Promise.all([
         rmrf(path.resolve(activePipelines[runId].transferDirectory)),
-        rmrf(path.resolve(activePipelines[runId].cacheDirectory)),
         rmrf(path.resolve(activePipelines[runId].systemDirectory)),
       ]).then(() => {
         delete activePipelines[runId];
@@ -459,7 +459,7 @@ module.exports = {
             logger.silly('Received all client data and files');
             // clear transfer and start run
             clearClientFileList(runId);
-            rmrf(path.join(activePipelines[runId].transferDirectory, '*'))
+            rmrf(path.join(activePipelines[runId].systemDirectory, '*'))
               .then(() => {
                 printClientTimeProfiling(runId, 'Transmission with files');
                 activePipelines[runId].remote
@@ -486,7 +486,7 @@ module.exports = {
 
       app.get('/transfer', (req, res) => {
         const file = path.join(
-          activePipelines[req.query.runId].transferDirectory,
+          activePipelines[req.query.runId].systemDirectory,
           req.query.file
         );
         fs.exists(file, (exists) => {
@@ -580,7 +580,7 @@ module.exports = {
                       logger.silly('Received all client data');
                       // clear transfer and start run
                       clearClientFileList(runId);
-                      rmrf(path.join(activePipelines[runId].transferDirectory, '*'))
+                      rmrf(path.join(activePipelines[runId].systemDirectory, '*'))
                         .then(() => {
                           printClientTimeProfiling(runId, 'Transmission');
                           activePipelines[runId].remote
@@ -770,7 +770,7 @@ module.exports = {
                 // why is this resolve in a promise? It's a terrible hack to
                 // keep docker happy mounting the transfer dir. If there are comp
                 // issues writing to it, this is the place to look
-                await rmrf(path.join(activePipelines[data.runId].transferDirectory, '*'))
+                await rmrf(path.join(activePipelines[data.runId].systemDirectory, '*'))
                   .then(() => {
                     activePipelines[data.runId].remote.resolve(
                       { debug: { received }, success: data.success }
@@ -824,7 +824,9 @@ module.exports = {
        * @return {Object}              an object containing the active pipeline and
        *                               Promise for its result
        */
-      startPipeline({ spec, clients = {}, runId }) {
+      startPipeline({
+        spec, clients = {}, runId, alternateInputDirectory,
+      }) {
         let pipelineStartTime;
         store.put(`${runId}-profiling`, clientId, {});
         if (mode === 'remote') pipelineStartTime = Date.now();
@@ -835,7 +837,6 @@ module.exports = {
         const userDirectories = {
           baseDirectory: path.resolve(operatingDirectory, 'input', clientId, runId),
           outputDirectory: path.resolve(operatingDirectory, 'output', clientId, runId),
-          cacheDirectory: path.resolve(operatingDirectory, 'cache', clientId, runId),
           transferDirectory: path.resolve(operatingDirectory, 'transfer', clientId, runId),
         };
         activePipelines[runId] = Object.assign(
@@ -845,13 +846,13 @@ module.exports = {
               mode,
               imageDirectory,
               operatingDirectory,
+              alternateInputDirectory,
               clientId,
               userDirectories,
               owner: spec.owner,
               logger,
             }),
             baseDirectory: path.resolve(operatingDirectory, 'input', clientId, runId),
-            cacheDirectory: userDirectories.cacheDirectory,
             outputDirectory: userDirectories.outputDirectory,
             transferDirectory: userDirectories.transferDirectory,
             systemDirectory: path.resolve(operatingDirectory, 'system', clientId, runId),
@@ -917,30 +918,47 @@ module.exports = {
               logger.silly('############ Sending out remote data');
               await getFilesAndDirs(activePipelines[pipeline.id].transferDirectory)
                 .then((data) => {
+                  return Promise.all([
+                    ...data.files.map((file) => {
+                      return mv(
+                        path.join(activePipelines[pipeline.id].transferDirectory, file),
+                        path.join(activePipelines[pipeline.id].systemDirectory, file)
+                      );
+                    }),
+                    ...data.directories.map((dir) => {
+                      return mv(
+                        path.join(activePipelines[pipeline.id].transferDirectory, dir),
+                        path.join(activePipelines[pipeline.id].systemDirectory, dir),
+                        { mkdirp: true }
+                      );
+                    }),
+                  ]).then(() => data);
+                })
+                .then((data) => {
                   if (data && (data.files.length !== 0 || data.directories.length !== 0)) {
                     const archive = archiver('tar', {
                       gzip: true,
                       gzipOptions: {
-                        level: 9,
+                        level: 0,
                       },
                     });
                     const archiveFilename = `${pipeline.id}-${uuid()}-tempOutput.tar.gz`;
                     const splitProm = splitFilesFromStream(
-                      archive,
-                      path.join(activePipelines[pipeline.id].transferDirectory, archiveFilename),
+                      archive, // stream
+                      path.join(activePipelines[pipeline.id].systemDirectory, archiveFilename),
                       22428800 // 20MB chunk size
                     );
                     data.files.forEach((file) => {
                       archive.append(
                         fs.createReadStream(
-                          path.join(activePipelines[pipeline.id].transferDirectory, file)
+                          path.join(activePipelines[pipeline.id].systemDirectory, file)
                         ),
                         { name: file }
                       );
                     });
                     data.directories.forEach((dir) => {
                       archive.directory(
-                        path.join(activePipelines[pipeline.id].transferDirectory, dir),
+                        path.join(activePipelines[pipeline.id].systemDirectory, dir),
                         dir
                       );
                     });
@@ -984,6 +1002,7 @@ module.exports = {
 
                   );
                 }).catch((e) => {
+                  logger.error(e);
                   publishData('run', {
                     id: clientId,
                     runId: pipeline.id,
@@ -1009,6 +1028,22 @@ module.exports = {
             } else {
               await getFilesAndDirs(activePipelines[pipeline.id].transferDirectory)
                 .then((data) => {
+                  return Promise.all(data.files.map((file) => {
+                    return mv(
+                      path.join(activePipelines[pipeline.id].transferDirectory, file),
+                      path.join(activePipelines[pipeline.id].systemDirectory, file)
+                    );
+                  })).then(() => data);
+                  // data.directories.forEach(async (dir) => {
+                  //   await mv(
+                  //     path.join(activePipelines[pipeline.id].transferDirectory, dir),
+                  //     path.join(activePipelines[pipeline.id].systemDirectory, dir),
+                  //     { mkdirp: true }
+                  //   );
+                  // });
+                  // return data;
+                })
+                .then((data) => {
                   if (data && (data.files.length !== 0 || data.directories.length !== 0)) {
                     if (!activePipelines[pipeline.id].registered) {
                       activePipelines[pipeline.id].stashedOutput = message;
@@ -1016,27 +1051,27 @@ module.exports = {
                       const archive = archiver('tar', {
                         gzip: true,
                         gzipOptions: {
-                          level: 9,
+                          level: 0,
                         },
                       });
 
                       const archiveFilename = `${pipeline.id}-${clientId}-tempOutput.tar.gz`;
                       const splitProm = splitFilesFromStream(
                         archive,
-                        path.join(activePipelines[pipeline.id].transferDirectory, archiveFilename),
+                        path.join(activePipelines[pipeline.id].systemDirectory, archiveFilename),
                         22428800 // 20MB chunk size
                       );
                       data.files.forEach((file) => {
                         archive.append(
                           fs.createReadStream(
-                            path.join(activePipelines[pipeline.id].transferDirectory, file)
+                            path.join(activePipelines[pipeline.id].systemDirectory, file)
                           ),
                           { name: file }
                         );
                       });
                       data.directories.forEach((dir) => {
                         archive.directory(
-                          path.join(activePipelines[pipeline.id].transferDirectory, dir),
+                          path.join(activePipelines[pipeline.id].systemDirectory, dir),
                           dir
                         );
                       });
@@ -1058,7 +1093,7 @@ module.exports = {
                           [...files],
                           clientId,
                           pipeline.id,
-                          activePipelines[pipeline.id].transferDirectory
+                          activePipelines[pipeline.id].systemDirectory
                         ).catch((e) => {
                           // files failed to send, bail
                           logger.error(`Client file send error: ${e}`);
@@ -1069,6 +1104,14 @@ module.exports = {
                             debug: { sent: Date.now() },
                           }, 1);
                         });
+                      }).catch((e) => {
+                        publishData('run', {
+                          id: clientId,
+                          runId: pipeline.id,
+                          error: e,
+                          debug: { sent: Date.now() },
+                        });
+                        throw e;
                       });
                     }
                   } else {
@@ -1086,6 +1129,15 @@ module.exports = {
                       activePipelines[pipeline.id].stashedOutput = undefined;
                     }
                   }
+                })
+                .catch((e) => {
+                  publishData('run', {
+                    id: clientId,
+                    runId: pipeline.id,
+                    error: e,
+                    debug: { sent: Date.now() },
+                  });
+                  throw e;
                 });
             }
           }
@@ -1130,7 +1182,6 @@ module.exports = {
         const pipelineProm = Promise.all([
           mkdirp(this.activePipelines[runId].baseDirectory),
           mkdirp(this.activePipelines[runId].outputDirectory),
-          mkdirp(this.activePipelines[runId].cacheDirectory),
           mkdirp(this.activePipelines[runId].transferDirectory),
           mkdirp(this.activePipelines[runId].systemDirectory),
         ])

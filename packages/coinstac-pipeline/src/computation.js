@@ -12,6 +12,7 @@ const path = require('path');
  * @return {Object}                  options
  */
 const managerOptions = ({
+  alternateInputDirectory,
   computation,
   operatingDirectory,
   containerOptions,
@@ -27,12 +28,12 @@ const managerOptions = ({
             Binds: [
               `${operatingDirectory}/input:/input:ro`,
               `${operatingDirectory}/output:/output:rw`,
-              `${operatingDirectory}/cache:/cache:rw`,
               `${operatingDirectory}/transfer:/transfer:rw`,
             ],
           },
         }, containerOptions),
       };
+      if (alternateInputDirectory) opts.docker.HostConfig.Binds.push(`${alternateInputDirectory}:${alternateInputDirectory}:ro`);
       if (process.env.CI) {
         opts.docker.HostConfig = {
           Binds: [
@@ -69,6 +70,7 @@ module.exports = {
    * @return {Object}          a computation
    */
   create({
+    alternateInputDirectory,
     clientId,
     imageDirectory,
     mode,
@@ -99,19 +101,24 @@ module.exports = {
       start(input, { operatingDirectory }) {
         // console.log(input); Keeping this for future ref.
         const opts = managerOptions({
+          alternateInputDirectory,
           computation,
           operatingDirectory,
           containerOptions,
           imageDirectory,
         });
+        opts.version = meta.compspecVersion || 1;
+
         return Manager.startService(
-          this.meta.id,
-          `${this.runId}-${this.clientId}`,
-          computation.type,
-          opts
+          {
+            serviceId: `${this.runId}-${this.clientId}`,
+            serviceUserId: `${this.runId}-${this.clientId}`,
+            serviceType: computation.type,
+            opts,
+          }
         )
           .then((service) => {
-            return service(computation.command.concat([`${JSON.stringify(input)}`]), `${this.runId}-${this.clientId}`);
+            return service(input, mode, computation.command);
           });
       },
       /**
@@ -119,7 +126,7 @@ module.exports = {
        * @return {Promise}   resolves on stop
        */
       stop() {
-        return Manager.stopService(this.meta.id, `${this.runId}-${this.clientId}`, true);
+        return Manager.stopService(`${this.runId}-${this.clientId}`, `${this.runId}-${this.clientId}`, true);
       },
     };
   },

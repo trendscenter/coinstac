@@ -1,3 +1,4 @@
+const path = require('path');
 const database = require('../src/database');
 const helperFunctions = require('../src/auth-helpers');
 
@@ -985,6 +986,31 @@ async function populateUsers() {
   }, adminPassword);
 }
 
+async function populateHeadlessClients() {
+  const db = database.getDbInstance();
+
+  return db.collection('headlessClients').insertMany([
+    {
+      name: 'Headless 1',
+      apiKey: await helperFunctions.hashPassword('testApiKey'),
+      computationWhitelist: {
+        [COMPUTATION_IDS[15]]: {
+          inputMap: {
+            covariates: {
+              type: 'csv',
+              dataMap: [
+                { csvColumn: 'age', variableName: 'age', type: 'number' },
+                { csvColumn: 'isControl', variableName: 'isControl', type: 'boolean' },
+              ],
+              dataFilePath: path.resolve('../../algorithm-development/test-data/freesurfer-test-data/site1/site1_Covariate.csv'),
+            },
+          },
+        },
+      },
+    },
+  ]);
+}
+
 async function populate(closeConnection = true) {
   await database.connect();
 
@@ -995,6 +1021,7 @@ async function populate(closeConnection = true) {
   await populatePipelines();
   await populateRuns();
   await populateUsers();
+  await populateHeadlessClients();
 
   if (closeConnection) {
     await database.close();
