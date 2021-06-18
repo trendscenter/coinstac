@@ -2,7 +2,7 @@
 Reference: Parallel Independent Component Analysis (pICA): (Liu et al. 2009)
 
 Code deverloper : cpanichvatana1@student.gsu.edu
-Version : 4.0 on 6/17/2021
+Version : 4.0 on 6/18/2021
 
 '''
 import numpy as np
@@ -1007,7 +1007,7 @@ class test_ica_methods(unittest.TestCase):
             if ICA_RUN_AVERAGE :
                 print('[LOG][Flow_8b_Parallel_ICA-Global] Multi-run ICA AVERAGE of ', str(self.run), " X run. Start.") 
                 self, GlobalA_mixer_X, S_sources_X, GlobalW_unmixer_X \
-                    = pica_infomax_run_average1(self, "X", ICA_RUN_NUMBER, self.GlobalPCA_U_X , \
+                    = pica_infomax_run_average2(self, "X", ICA_RUN_NUMBER, self.GlobalPCA_U_X , \
                                                                         GlobalW_unmixer_X_1 , \
                                                                         GlobalW_unmixer_X_2 , \
                                                                         GlobalW_unmixer_X_3 , \
@@ -1017,7 +1017,7 @@ class test_ica_methods(unittest.TestCase):
 
                 print('[LOG][Flow_8b_Parallel_ICA-Global] Multi-run ICA AVERAGE of ', str(self.run), " Y run. Start.") 
                 self, GlobalA_mixer_Y, S_sources_Y, GlobalW_unmixer_Y \
-                    = pica_infomax_run_average1(self, "Y", ICA_RUN_NUMBER, self.GlobalPCA_U_Y , \
+                    = pica_infomax_run_average2(self, "Y", ICA_RUN_NUMBER, self.GlobalPCA_U_Y , \
                                                                         GlobalW_unmixer_Y_1 , \
                                                                         GlobalW_unmixer_Y_2 , \
                                                                         GlobalW_unmixer_Y_3 , \
@@ -1028,7 +1028,7 @@ class test_ica_methods(unittest.TestCase):
             if ICA_RUN_ICASSO :
                 print('[LOG][Flow_8b_Parallel_ICA-Global] Multi-run ICA ICASSO of ', str(self.run), " X run. Start.")               
                 self, GlobalA_mixer_X, S_sources_X, GlobalW_unmixer_X \
-                    = pica_infomax_run_icasso2(self, "X", ICA_RUN_NUMBER, self.GlobalPCA_U_X , \
+                    = pica_infomax_run_icasso3(self, "X", ICA_RUN_NUMBER, self.GlobalPCA_U_X , \
                                                                         GlobalW_unmixer_X_1 , \
                                                                         GlobalW_unmixer_X_2 , \
                                                                         GlobalW_unmixer_X_3 , \
@@ -1038,7 +1038,7 @@ class test_ica_methods(unittest.TestCase):
 
                 print('[LOG][Flow_8b_Parallel_ICA-Global] Multi-run ICA ICASSO of ', str(self.run), " Y run. Start.")   
                 self, GlobalA_mixer_Y, S_sources_Y, GlobalW_unmixer_Y \
-                    = pica_infomax_run_icasso2(self, "Y", ICA_RUN_NUMBER, self.GlobalPCA_U_Y , \
+                    = pica_infomax_run_icasso3(self, "Y", ICA_RUN_NUMBER, self.GlobalPCA_U_Y , \
                                                                         GlobalW_unmixer_Y_1 , \
                                                                         GlobalW_unmixer_Y_2 , \
                                                                         GlobalW_unmixer_Y_3 , \
@@ -2253,7 +2253,7 @@ def pica_infomax3(self):
     return (self, GlobalA_mixer_X, S_sources_X, GlobalW_unmixer_X, \
                   GlobalA_mixer_Y, S_sources_Y, GlobalW_unmixer_Y )
 
-def pica_infomax_run_average1(self, XY, num_ica_runs, GlobalPCA_U,  m1, m2, m3, m4, m5):    
+def pica_infomax_run_average2(self, XY, num_ica_runs, GlobalPCA_U,  m1, m2, m3, m4, m5):    
     """Computes average ICA 
     *Input
         m1, m2, m3, m4, m5 : Globa W unmixer matrix from Infomax (components x components)
@@ -2269,21 +2269,10 @@ def pica_infomax_run_average1(self, XY, num_ica_runs, GlobalPCA_U,  m1, m2, m3, 
     #########################
     # Normalizing
     #########################
-    # Normalize m1, m2, m3, m4, m5 by removing mean and by removing standard deviation of the array
-            # x2d_demean = x2d - x2d.mean(axis=1).reshape((-1, 1))  
-    print('[LOG][Multirun ICA] De-mean ')
+    # Normalize m1, m2, m3, m4, m5 by removing mean 
+    # print('[LOG][Multirun ICA] De-mean ')
 
-    m1_demean = m1 - m1.mean(axis=1).reshape((-1, 1))    # Remove mean by row
-    m2_demean = m2 - m2.mean(axis=1).reshape((-1, 1))  
-    m3_demean = m3 - m3.mean(axis=1).reshape((-1, 1))  
-    m4_demean = m4 - m4.mean(axis=1).reshape((-1, 1))  
-    m5_demean = m5 - m5.mean(axis=1).reshape((-1, 1))  
 
-    m1_demean_std = m1_demean/np.std(m1_demean)          # Remove std by row
-    m2_demean_std = m2_demean/np.std(m2_demean)
-    m3_demean_std = m3_demean/np.std(m3_demean)
-    m4_demean_std = m4_demean/np.std(m4_demean)
-    m5_demean_std = m5_demean/np.std(m5_demean)
 
     #########################
     # Clustering
@@ -2292,59 +2281,55 @@ def pica_infomax_run_average1(self, XY, num_ica_runs, GlobalPCA_U,  m1, m2, m3, 
     print('[LOG][Multirun ICA] Clustering ')
     data_path_save = DATA_PATH_OUTPUT    
 
+            # def pica_2d_correlate7(Corr_X, Corr_Y,  data_path_save, data_file_save, screenshow=False, pltshow=False, pltsave=False):
+
     data_file_save =  "Correlation_Graph_"  + XY + "_m1_m2.jpeg"    
-    coef_m1_m2 = dpica_report.pica_2d_correlate5(m1_demean_std, m2_demean_std, data_path_save, data_file_save, True, True)    # 
-    print('[LOG][Multirun ICA] Clustering. Save ', data_file_save)
+    coef_m1_m2 = dpica_report_v3.pica_2d_correlate5(m1, m2, data_path_save, data_file_save, True, True)    # 
+    # print('[LOG][Multirun ICA] Clustering. Save ', data_file_save)
 
     data_file_save =  "Correlation_Graph_"  + XY + "_m1_m3.jpeg"    
-    coef_m1_m3 = dpica_report.pica_2d_correlate5(m1_demean_std, m3_demean_std, data_path_save, data_file_save, True, True)    # 
-    print('[LOG][Multirun ICA] Clustering. Save ', data_file_save)
+    coef_m1_m3 = dpica_report_v3.pica_2d_correlate5(m1, m3, data_path_save, data_file_save, True, True)    # 
+    # print('[LOG][Multirun ICA] Clustering. Save ', data_file_save)
 
     data_file_save =  "Correlation_Graph_"  + XY + "_m1_m4.jpeg"    
-    coef_m1_m4 = dpica_report.pica_2d_correlate5(m1_demean_std, m4_demean_std, data_path_save, data_file_save, True, True)    # 
-    print('[LOG][Multirun ICA] Clustering. Save ', data_file_save)
+    coef_m1_m4 = dpica_report_v3.pica_2d_correlate5(m1, m4, data_path_save, data_file_save, True, True)    # 
+    # print('[LOG][Multirun ICA] Clustering. Save ', data_file_save)
 
     data_file_save =  "Correlation_Graph_"  + XY + "_m1_m5.jpeg"    
-    coef_m1_m5 = dpica_report.pica_2d_correlate5(m1_demean_std, m5_demean_std, data_path_save, data_file_save, True, True)    # 
-    print('[LOG][Multirun ICA] Clustering. Save ', data_file_save)
+    coef_m1_m5 = dpica_report_v3.pica_2d_correlate5(m1, m5, data_path_save, data_file_save, True, True)    # 
+    # print('[LOG][Multirun ICA] Clustering. Save ', data_file_save)
 
     # Define m1 index 
-    # m1_demean_ordered = m1_demean
-    m1_demean_ordered = m1_demean_std
+    m1_ordered = m1
+
 
     # Finding numximum pair index m1 vs m2
-    max_index_row = np.argmax(abs(coef_m1_m2), axis=1)         
-    print('[LOG][Multirun ICA] Clustering. New index of m2 ', max_index_row)
-    m2_demean_ordered = m2_demean_std[max_index_row,:]        # Rearrange m2 in max_index_row(m1) order.
-    # Check sign 
-    
+    max_index_row = np.argmax(abs(coef_m1_m2), axis=1)         # [7, 0, 1, 2, 3, 4, 5, 6]  wrong [1, 1, 7, 5, 1, 3, 1, 5]
+    m2_ordered = m2[max_index_row,:]        # Rearrange m2 in max_index_row(m1) order.
     data_file_save =  "Correlation_Graph_"  + XY + "_m1_m2_ordered.jpeg"    
-    coef_m1_m3_ordered = dpica_report.pica_2d_correlate5(m1_demean_std, m2_demean_ordered, data_path_save, data_file_save, True, True)    
-    print('[LOG][Multirun ICA] Clustering. Save ', data_file_save)
+    coef_m1_m2_ordered = dpica_report_v3.pica_2d_correlate5(m1_ordered, m2_ordered, data_path_save, data_file_save, True, True)    
+    # print('[LOG][Multirun ICA] Clustering. Save ', data_file_save)
 
     # Finding numximum pair index m1 vs m3
     max_index_row = np.argmax(abs(coef_m1_m3), axis=1)        # [6, 7, 0, 1, 2, 3, 4, 5]
-    print('[LOG][Multirun ICA] Clustering. New index of m3 ', max_index_row)
-    m3_demean_ordered = m3_demean_std[max_index_row,:]        # Rearrange m3 in max_index_row(m1) order.
+    m3_ordered = m3[max_index_row,:]        # Rearrange m3 in max_index_row(m1) order.
     data_file_save =  "Correlation_Graph_"  + XY + "_m1_m3_ordered.jpeg"    
-    coef_m1_m3_ordered = dpica_report.pica_2d_correlate5(m1_demean_std, m3_demean_ordered, data_path_save, data_file_save, True, True)    
-    print('[LOG][Multirun ICA] Clustering. Save ', data_file_save)
+    coef_m1_m3_ordered = dpica_report_v3.pica_2d_correlate5(m1_ordered, m3_ordered, data_path_save, data_file_save, True, True)    
+    # print('[LOG][Multirun ICA] Clustering. Save ', data_file_save)
 
     # Finding numximum pair index m1 vs m4
     max_index_row = np.argmax(abs(coef_m1_m4), axis=1)         # [5, 6, 7, 0, 1, 2, 3, 4]
-    print('[LOG][Multirun ICA] Clustering. New index of m4 ', max_index_row)
-    m4_demean_ordered = m4_demean_std[max_index_row,:]        # Rearrange m4 in max_index_row(m1) order.
+    m4_ordered = m4[max_index_row,:]        # Rearrange m4 in max_index_row(m1) order.
     data_file_save =  "Correlation_Graph_"  + XY + "_m1_m4_ordered.jpeg"    
-    coef_m1_m4_ordered = dpica_report.pica_2d_correlate5(m1_demean_std, m4_demean_ordered, data_path_save, data_file_save, True, True)    
-    print('[LOG][Multirun ICA] Clustering. Save ', data_file_save)
+    coef_m1_m4_ordered = dpica_report_v3.pica_2d_correlate5(m1_ordered, m4_ordered, data_path_save, data_file_save, True, True)    
+    # print('[LOG][Multirun ICA] Clustering. Save ', data_file_save)
 
     # Finding numximum pair index m1 vs m5
     max_index_row = np.argmax(abs(coef_m1_m5), axis=1)         # [4, 5, 6, 7, 0, 1, 2, 3]  wrong [6, 6, 4, 2, 6, 0, 6, 2]
-    print('[LOG][Multirun ICA] Clustering. New index of m5 ', max_index_row)
-    m5_demean_ordered = m5_demean_std[max_index_row,:]        # Rearrange m5 in max_index_row(m1) order.
+    m5_ordered = m5[max_index_row,:]        # Rearrange m5 in max_index_row(m1) order.
     data_file_save =  "Correlation_Graph_"  + XY + "_m1_m5_ordered.jpeg"    
-    coef_m1_m5_ordered = dpica_report.pica_2d_correlate5(m1_demean_std, m5_demean_ordered, data_path_save, data_file_save, True, True)    
-    print('[LOG][Multirun ICA] Clustering. Save ', data_file_save)
+    coef_m1_m5_ordered = dpica_report_v3.pica_2d_correlate5(m1_ordered, m5_ordered, data_path_save, data_file_save, True, True)    
+    # print('[LOG][Multirun ICA] Clustering. Save ', data_file_save)
 
     print('[LOG][Multirun ICA] Clustering - Finish')
 
@@ -2354,56 +2339,46 @@ def pica_infomax_run_average1(self, XY, num_ica_runs, GlobalPCA_U,  m1, m2, m3, 
     # Using the -1 algorithm (not absolute algorithm)
     print('[LOG][Multirun ICA] Re-arranging - pattern')
 
-    m1_max_value = np.amax(m1_demean_ordered, axis=1)   # Find maxinum value of each row(component) for baseline
-    m2_max_value = np.amax(m2_demean_ordered, axis=1)   # Find maxinum value of each row(component) in m2
-    m3_max_value = np.amax(m3_demean_ordered, axis=1)   # Find maxinum value of each row(component) in m3
-    m4_max_value = np.amax(m4_demean_ordered, axis=1)   # Find maxinum value of each row(component) in m4
-    m5_max_value = np.amax(m5_demean_ordered, axis=1)   # Find maxinum value of each row(component) in m5
-
     # m1 Vs m2, m3, m4, m5
-    i = 0
-    THRESHOLD_MAX_DELTA = 0.01
-    for m1_value in m1_max_value :
-        print("Component ", i , " m1_max_value = ", m1_value)
-        print("Component ", i , " m2_max_value[", i , "] = ", m2_max_value[i] , " abs delta = ", abs(m1_value - m2_max_value[i]))
-        print("Component ", i , " m3_max_value[", i , "] = ", m3_max_value[i] , " abs delta = ", abs(m1_value - m3_max_value[i]))
-        print("Component ", i , " m4_max_value[", i , "] = ", m4_max_value[i] , " abs delta = ", abs(m1_value - m4_max_value[i]))
-        print("Component ", i , " m5_max_value[", i , "] = ", m5_max_value[i] , " abs delta = ", abs(m1_value - m5_max_value[i]))
+    for i in range(NCOMP) :
+        # Number of run = (num_ica_runs) 
+        # print("coef_m1_m2_ordered [", i , ",", i, "] = ", coef_m1_m2_ordered[i,i] )
+        # print("coef_m1_m3_ordered [", i , ",", i, "] = ", coef_m1_m3_ordered[i,i] )
+        # print("coef_m1_m4_ordered [", i , ",", i, "] = ", coef_m1_m4_ordered[i,i] )
+        # print("coef_m1_m5_ordered [", i , ",", i, "] = ", coef_m1_m5_ordered[i,i] )
 
-        if abs(m1_value - m2_max_value[i]) > THRESHOLD_MAX_DELTA :
-                m2_demean_ordered[i] = -1 * m2_demean_ordered[i]
-                print("Component ", i , " m2_[",i,"] is appied -1. " , abs(m1_value - m2_max_value[i]))    
-        if abs(m1_value - m3_max_value[i]) > THRESHOLD_MAX_DELTA :
-                m3_demean_ordered[i] = -1 * m3_demean_ordered[i]
-                print("Component ", i , " m3_[",i,"] is appied -1. " , abs(m1_value - m3_max_value[i]))                                 
-        if abs(m1_value - m4_max_value[i]) > THRESHOLD_MAX_DELTA :
-                m4_demean_ordered[i] = -1 * m4_demean_ordered[i]
-                print("Component ", i , " m4_[",i,"] is appied -1. " , abs(m1_value - m4_max_value[i]))                                 
-        if abs(m1_value - m5_max_value[i]) > THRESHOLD_MAX_DELTA :
-                m5_demean_ordered[i] = -1 * m5_demean_ordered[i]
-                print("Component ", i , " m5_[",i,"] is appied -1. " , abs(m1_value - m5_max_value[i]))                                 
-
-
-
-        i = i + 1
+        ## Switch current row to opposite sign
+        if coef_m1_m2_ordered[i,i] < 0 : 
+            m2_ordered[i] = -1 * m2_ordered[i]
+            print("[LOG][Multirun ICA] Re-arranging - Component ", i , "of m2_[",i,"] is appied -1. ")    
+        if coef_m1_m3_ordered[i,i] < 0 : 
+            m3_ordered[i] = -1 * m3_ordered[i]
+            print("[LOG][Multirun ICA] Re-arranging - Component ", i , "of m3_[",i,"] is appied -1. ")    
+        if coef_m1_m4_ordered[i,i] < 0 : 
+            m4_ordered[i] = -1 * m4_ordered[i]
+            print("[LOG][Multirun ICA] Re-arranging - Component ", i , "of m4_[",i,"] is appied -1. ")    
+        if coef_m1_m5_ordered[i,i] < 0 : 
+            m5_ordered[i] = -1 * m5_ordered[i]
+            print("[LOG][Multirun ICA] Re-arranging - Component ", i , "of m5_[",i,"] is appied -1. ")                        
 
     data_file_save =  "Correlation_Graph_"  + XY + "_m1_m2_ordered_flipped.jpeg"   
-    coef_m1_m2_ordered = dpica_report.pica_2d_correlate5(m1_demean_std, m2_demean_ordered, data_path_save, data_file_save, True, True)    
-    print('[LOG][Multirun ICA] Re-arranging - pattern. Save ', data_file_save)  
+    coef_m1_m2_ordered = dpica_report_v3.pica_2d_correlate5(m1_ordered, m2_ordered, data_path_save, data_file_save, True, True)    
+    # print('[LOG][Multirun ICA] Re-arranging - pattern. Save ', data_file_save)  
 
     data_file_save =  "Correlation_Graph_"  + XY + "_m1_m3_ordered_flipped.jpeg"   
-    coef_m1_m3_ordered = dpica_report.pica_2d_correlate5(m1_demean_std, m3_demean_ordered, data_path_save, data_file_save, True, True)    
-    print('[LOG][Multirun ICA] Re-arranging - pattern. Save ', data_file_save)  
+    coef_m1_m3_ordered = dpica_report_v3.pica_2d_correlate5(m1_ordered, m3_ordered, data_path_save, data_file_save, True, True)    
+    # print('[LOG][Multirun ICA] Re-arranging - pattern. Save ', data_file_save)  
 
     data_file_save =  "Correlation_Graph_"  + XY + "_m1_m4_ordered_flipped.jpeg"       
-    coef_m1_m4_ordered = dpica_report.pica_2d_correlate5(m1_demean_std, m4_demean_ordered, data_path_save, data_file_save, True, True)    
-    print('[LOG][Multirun ICA] Re-arranging - pattern. Save ', data_file_save)  
+    coef_m1_m4_ordered = dpica_report_v3.pica_2d_correlate5(m1_ordered, m4_ordered, data_path_save, data_file_save, True, True)    
+    # print('[LOG][Multirun ICA] Re-arranging - pattern. Save ', data_file_save)  
 
     data_file_save =  "Correlation_Graph_"  + XY + "_m1_m5_ordered_flipped.jpeg"   
-    coef_m1_m5_ordered = dpica_report.pica_2d_correlate5(m1_demean_std, m5_demean_ordered, data_path_save, data_file_save, True, True)    
-    print('[LOG][Multirun ICA] Re-arranging - pattern. Save ', data_file_save)  
+    coef_m1_m5_ordered = dpica_report_v3.pica_2d_correlate5(m1_ordered, m5_ordered, data_path_save, data_file_save, True, True)    
+    # print('[LOG][Multirun ICA] Re-arranging - pattern. Save ', data_file_save)  
 
     print('[LOG][Multirun ICA] Re-arranging - Finished')
+
 
     #########################
     # Computing the final weight W
@@ -2413,16 +2388,16 @@ def pica_infomax_run_average1(self, XY, num_ica_runs, GlobalPCA_U,  m1, m2, m3, 
 
     GlobalW_unmixer = []
     list_m = []
-    list_m.append(m1_demean_ordered)
-    list_m.append(m2_demean_ordered)
-    list_m.append(m3_demean_ordered)
-    list_m.append(m4_demean_ordered)
-    list_m.append(m5_demean_ordered)
+    list_m.append(m1_ordered)
+    list_m.append(m2_ordered)
+    list_m.append(m3_ordered)
+    list_m.append(m4_ordered)
+    list_m.append(m5_ordered)
 
     list_m = np.array(list_m)
 
     # Compute GlobalA 
-    GlobalW_unmixer = np.average(list_m, axis=0)
+    GlobalW_unmixer = np.average(list_m, axis=0)  # [5, 8, 8] ==> [8, 8] Average by row 
     print('[LOG][Multirun ICA] Average algorithm - Done')
 
     # Compute GlobalA_mixer and S_source
@@ -2431,7 +2406,7 @@ def pica_infomax_run_average1(self, XY, num_ica_runs, GlobalPCA_U,  m1, m2, m3, 
 
     return (self, GlobalA_mixer, S_sources, GlobalW_unmixer)
 
-def pica_infomax_run_icasso2(self, XY,  num_ica_runs, GlobalPCA_U,  m1, m2, m3, m4, m5):    
+def pica_infomax_run_icasso3(self, XY,  num_ica_runs, GlobalPCA_U,  m1, m2, m3, m4, m5):    
     """Computes ICASSO ICA 
     *Input
         m1, m2, m3, m4, m5 : Globa W unmixer matrix from Infomax (components x components)
@@ -2448,21 +2423,8 @@ def pica_infomax_run_icasso2(self, XY,  num_ica_runs, GlobalPCA_U,  m1, m2, m3, 
     # Normalizing
     #########################
     # Normalize m1, m2, m3, m4, m5 by removing mean and by removing standard deviation of the array
-            # x2d_demean = x2d - x2d.mean(axis=1).reshape((-1, 1))  
-    print('[LOG][Multirun ICA] De-mean ')
-
-    m1_demean = m1 - m1.mean(axis=1).reshape((-1, 1))    # Remove mean by row
-    m2_demean = m2 - m2.mean(axis=1).reshape((-1, 1))  
-    m3_demean = m3 - m3.mean(axis=1).reshape((-1, 1))  
-    m4_demean = m4 - m4.mean(axis=1).reshape((-1, 1))  
-    m5_demean = m5 - m5.mean(axis=1).reshape((-1, 1))  
-
-
-    m1_demean_std = m1_demean/np.std(m1_demean)          # Remove std by row
-    m2_demean_std = m2_demean/np.std(m2_demean)
-    m3_demean_std = m3_demean/np.std(m3_demean)
-    m4_demean_std = m4_demean/np.std(m4_demean)
-    m5_demean_std = m5_demean/np.std(m5_demean)
+     
+    # print('[LOG][Multirun ICA] De-mean ')
 
 
     #########################
@@ -2473,53 +2435,52 @@ def pica_infomax_run_icasso2(self, XY,  num_ica_runs, GlobalPCA_U,  m1, m2, m3, 
     data_path_save = DATA_PATH_OUTPUT    
 
     data_file_save =  "Correlation_Graph_"  + XY + "_m1_m2.jpeg"    
-    coef_m1_m2 = dpica_report.pica_2d_correlate5(m1_demean_std, m2_demean_std, data_path_save, data_file_save, True, True)    # 
-    print('[LOG][Multirun ICA] Clustering. Save ', data_file_save)
+    coef_m1_m2 = dpica_report_v3.pica_2d_correlate5(m1, m2, data_path_save, data_file_save, True, True)    # 
+    # print('[LOG][Multirun ICA] Clustering. Save ', data_file_save)
 
     data_file_save =  "Correlation_Graph_"  + XY + "_m1_m3.jpeg"    
-    coef_m1_m3 = dpica_report.pica_2d_correlate5(m1_demean_std, m3_demean_std, data_path_save, data_file_save, True, True)    # 
-    print('[LOG][Multirun ICA] Clustering. Save ', data_file_save)
+    coef_m1_m3 = dpica_report_v3.pica_2d_correlate5(m1, m3, data_path_save, data_file_save, True, True)    # 
+    # print('[LOG][Multirun ICA] Clustering. Save ', data_file_save)
 
     data_file_save =  "Correlation_Graph_"  + XY + "_m1_m4.jpeg"    
-    coef_m1_m4 = dpica_report.pica_2d_correlate5(m1_demean_std, m4_demean_std, data_path_save, data_file_save, True, True)    # 
-    print('[LOG][Multirun ICA] Clustering. Save ', data_file_save)
+    coef_m1_m4 = dpica_report_v3.pica_2d_correlate5(m1, m4, data_path_save, data_file_save, True, True)    # 
+    # print('[LOG][Multirun ICA] Clustering. Save ', data_file_save)
 
     data_file_save =  "Correlation_Graph_"  + XY + "_m1_m5.jpeg"    
-    coef_m1_m5 = dpica_report.pica_2d_correlate5(m1_demean_std, m5_demean_std, data_path_save, data_file_save, True, True)    # 
-    print('[LOG][Multirun ICA] Clustering. Save ', data_file_save)
+    coef_m1_m5 = dpica_report_v3.pica_2d_correlate5(m1, m5, data_path_save, data_file_save, True, True)    # 
+    # print('[LOG][Multirun ICA] Clustering. Save ', data_file_save)
 
     # Define m1 index 
-    # m1_demean_ordered = m1_demean
-    m1_demean_ordered = m1_demean_std
+    m1_ordered = m1
 
 
     # Finding numximum pair index m1 vs m2
     max_index_row = np.argmax(abs(coef_m1_m2), axis=1)         # [7, 0, 1, 2, 3, 4, 5, 6]  wrong [1, 1, 7, 5, 1, 3, 1, 5]
-    m2_demean_ordered = m2_demean_std[max_index_row,:]        # Rearrange m2 in max_index_row(m1) order.
+    m2_ordered = m2[max_index_row,:]        # Rearrange m2 in max_index_row(m1) order.
     data_file_save =  "Correlation_Graph_"  + XY + "_m1_m2_ordered.jpeg"    
-    coef_m1_m3_ordered = dpica_report.pica_2d_correlate5(m1_demean_std, m2_demean_ordered, data_path_save, data_file_save, True, True)    
-    print('[LOG][Multirun ICA] Clustering. Save ', data_file_save)
+    coef_m1_m2_ordered = dpica_report_v3.pica_2d_correlate5(m1_ordered, m2_ordered, data_path_save, data_file_save, True, True)    
+    # print('[LOG][Multirun ICA] Clustering. Save ', data_file_save)
 
     # Finding numximum pair index m1 vs m3
     max_index_row = np.argmax(abs(coef_m1_m3), axis=1)        # [6, 7, 0, 1, 2, 3, 4, 5]
-    m3_demean_ordered = m3_demean_std[max_index_row,:]        # Rearrange m3 in max_index_row(m1) order.
+    m3_ordered = m3[max_index_row,:]        # Rearrange m3 in max_index_row(m1) order.
     data_file_save =  "Correlation_Graph_"  + XY + "_m1_m3_ordered.jpeg"    
-    coef_m1_m3_ordered = dpica_report.pica_2d_correlate5(m1_demean_std, m3_demean_ordered, data_path_save, data_file_save, True, True)    
-    print('[LOG][Multirun ICA] Clustering. Save ', data_file_save)
+    coef_m1_m3_ordered = dpica_report_v3.pica_2d_correlate5(m1_ordered, m3_ordered, data_path_save, data_file_save, True, True)    
+    # print('[LOG][Multirun ICA] Clustering. Save ', data_file_save)
 
     # Finding numximum pair index m1 vs m4
     max_index_row = np.argmax(abs(coef_m1_m4), axis=1)         # [5, 6, 7, 0, 1, 2, 3, 4]
-    m4_demean_ordered = m4_demean_std[max_index_row,:]        # Rearrange m4 in max_index_row(m1) order.
+    m4_ordered = m4[max_index_row,:]        # Rearrange m4 in max_index_row(m1) order.
     data_file_save =  "Correlation_Graph_"  + XY + "_m1_m4_ordered.jpeg"    
-    coef_m1_m4_ordered = dpica_report.pica_2d_correlate5(m1_demean_std, m4_demean_ordered, data_path_save, data_file_save, True, True)    
-    print('[LOG][Multirun ICA] Clustering. Save ', data_file_save)
+    coef_m1_m4_ordered = dpica_report_v3.pica_2d_correlate5(m1_ordered, m4_ordered, data_path_save, data_file_save, True, True)    
+    # print('[LOG][Multirun ICA] Clustering. Save ', data_file_save)
 
     # Finding numximum pair index m1 vs m5
     max_index_row = np.argmax(abs(coef_m1_m5), axis=1)         # [4, 5, 6, 7, 0, 1, 2, 3]  wrong [6, 6, 4, 2, 6, 0, 6, 2]
-    m5_demean_ordered = m5_demean_std[max_index_row,:]        # Rearrange m5 in max_index_row(m1) order.
+    m5_ordered = m5[max_index_row,:]        # Rearrange m5 in max_index_row(m1) order.
     data_file_save =  "Correlation_Graph_"  + XY + "_m1_m5_ordered.jpeg"    
-    coef_m1_m5_ordered = dpica_report.pica_2d_correlate5(m1_demean_std, m5_demean_ordered, data_path_save, data_file_save, True, True)    
-    print('[LOG][Multirun ICA] Clustering. Save ', data_file_save)
+    coef_m1_m5_ordered = dpica_report_v3.pica_2d_correlate5(m1_ordered, m5_ordered, data_path_save, data_file_save, True, True)    
+    # print('[LOG][Multirun ICA] Clustering. Save ', data_file_save)
 
     print('[LOG][Multirun ICA] Clustering - Finish')
 
@@ -2529,55 +2490,44 @@ def pica_infomax_run_icasso2(self, XY,  num_ica_runs, GlobalPCA_U,  m1, m2, m3, 
     # Using the -1 algorithm (not absolute algorithm)
     print('[LOG][Multirun ICA] Re-arranging - pattern')
 
-    m1_max_value = np.amax(m1_demean_ordered, axis=1)   # Find maxinum value of each row(component) for baseline
-    m2_max_value = np.amax(m2_demean_ordered, axis=1)   # Find maxinum value of each row(component) in m2
-    m3_max_value = np.amax(m3_demean_ordered, axis=1)   # Find maxinum value of each row(component) in m3
-    m4_max_value = np.amax(m4_demean_ordered, axis=1)   # Find maxinum value of each row(component) in m4
-    m5_max_value = np.amax(m5_demean_ordered, axis=1)   # Find maxinum value of each row(component) in m5
-
     # m1 Vs m2, m3, m4, m5
-    i = 0
-    THRESHOLD_MAX_DELTA = 0.01
-    for m1_value in m1_max_value :
-        print("Component ", i , " m1_max_value = ", m1_value)
-        print("Component ", i , " m2_max_value[", i , "] = ", m2_max_value[i] , " abs delta = ", abs(m1_value - m2_max_value[i]))
-        print("Component ", i , " m3_max_value[", i , "] = ", m3_max_value[i] , " abs delta = ", abs(m1_value - m3_max_value[i]))
-        print("Component ", i , " m4_max_value[", i , "] = ", m4_max_value[i] , " abs delta = ", abs(m1_value - m4_max_value[i]))
-        print("Component ", i , " m5_max_value[", i , "] = ", m5_max_value[i] , " abs delta = ", abs(m1_value - m5_max_value[i]))
+    for i in range(NCOMP) :
+        # Number of run = (num_ica_runs) 
+        # print("coef_m1_m2_ordered [", i , ",", i, "] = ", coef_m1_m2_ordered[i,i] )
+        # print("coef_m1_m3_ordered [", i , ",", i, "] = ", coef_m1_m3_ordered[i,i] )
+        # print("coef_m1_m4_ordered [", i , ",", i, "] = ", coef_m1_m4_ordered[i,i] )
+        # print("coef_m1_m5_ordered [", i , ",", i, "] = ", coef_m1_m5_ordered[i,i] )
 
         ## Switch current row to opposite sign
-
-        if abs(m1_value - m2_max_value[i]) > THRESHOLD_MAX_DELTA :
-                m2_demean_ordered[i] = -1 * m2_demean_ordered[i]
-                print("Component ", i , " m2_[",i,"] is appied -1. " , abs(m1_value - m2_max_value[i]))    
-        if abs(m1_value - m3_max_value[i]) > THRESHOLD_MAX_DELTA :
-                m3_demean_ordered[i] = -1 * m3_demean_ordered[i]
-                print("Component ", i , " m3_[",i,"] is appied -1. " , abs(m1_value - m3_max_value[i]))                                 
-        if abs(m1_value - m4_max_value[i]) > THRESHOLD_MAX_DELTA :
-                m4_demean_ordered[i] = -1 * m4_demean_ordered[i]
-                print("Component ", i , " m4_[",i,"] is appied -1. " , abs(m1_value - m4_max_value[i]))                                 
-        if abs(m1_value - m5_max_value[i]) > THRESHOLD_MAX_DELTA :
-                m5_demean_ordered[i] = -1 * m5_demean_ordered[i]
-                print("Component ", i , " m5_[",i,"] is appied -1. " , abs(m1_value - m5_max_value[i]))                                 
-
-        i = i + 1  # Loop to next component.
-    # End or for loop.
+        if coef_m1_m2_ordered[i,i] < 0 : 
+            m2_ordered[i] = -1 * m2_ordered[i]
+            print("[LOG][Multirun ICA] Re-arranging - Component ", i , "of m2_[",i,"] is appied -1. ")    
+        if coef_m1_m3_ordered[i,i] < 0 : 
+            m3_ordered[i] = -1 * m3_ordered[i]
+            print("[LOG][Multirun ICA] Re-arranging - Component ", i , "of m3_[",i,"] is appied -1. ")    
+        if coef_m1_m4_ordered[i,i] < 0 : 
+            m4_ordered[i] = -1 * m4_ordered[i]
+            print("[LOG][Multirun ICA] Re-arranging - Component ", i , "of m4_[",i,"] is appied -1. ")    
+        if coef_m1_m5_ordered[i,i] < 0 : 
+            m5_ordered[i] = -1 * m5_ordered[i]
+            print("[LOG][Multirun ICA] Re-arranging - Component ", i , "of m5_[",i,"] is appied -1. ")                        
+    # End or for i loop.
 
     data_file_save =  "Correlation_Graph_"  + XY + "_m1_m2_ordered_flipped.jpeg"   
-    coef_m1_m2_ordered = dpica_report.pica_2d_correlate5(m1_demean_std, m2_demean_ordered, data_path_save, data_file_save, True, True)    
-    print('[LOG][Multirun ICA] Re-arranging - pattern. Save ', data_file_save)  
+    coef_m1_m2_ordered = dpica_report_v3.pica_2d_correlate5(m1_ordered, m2_ordered, data_path_save, data_file_save, True, True)    
+    # print('[LOG][Multirun ICA] Re-arranging - pattern. Save ', data_file_save)  
 
     data_file_save =  "Correlation_Graph_"  + XY + "_m1_m3_ordered_flipped.jpeg"   
-    coef_m1_m3_ordered = dpica_report.pica_2d_correlate5(m1_demean_std, m3_demean_ordered, data_path_save, data_file_save, True, True)    
-    print('[LOG][Multirun ICA] Re-arranging - pattern. Save ', data_file_save)  
+    coef_m1_m3_ordered = dpica_report_v3.pica_2d_correlate5(m1_ordered, m3_ordered, data_path_save, data_file_save, True, True)    
+    # print('[LOG][Multirun ICA] Re-arranging - pattern. Save ', data_file_save)  
 
     data_file_save =  "Correlation_Graph_"  + XY + "_m1_m4_ordered_flipped.jpeg"       
-    coef_m1_m4_ordered = dpica_report.pica_2d_correlate5(m1_demean_std, m4_demean_ordered, data_path_save, data_file_save, True, True)    
-    print('[LOG][Multirun ICA] Re-arranging - pattern. Save ', data_file_save)  
+    coef_m1_m4_ordered = dpica_report_v3.pica_2d_correlate5(m1_ordered, m4_ordered, data_path_save, data_file_save, True, True)    
+    # print('[LOG][Multirun ICA] Re-arranging - pattern. Save ', data_file_save)  
 
     data_file_save =  "Correlation_Graph_"  + XY + "_m1_m5_ordered_flipped.jpeg"   
-    coef_m1_m5_ordered = dpica_report.pica_2d_correlate5(m1_demean_std, m5_demean_ordered, data_path_save, data_file_save, True, True)    
-    print('[LOG][Multirun ICA] Re-arranging - pattern. Save ', data_file_save)  
+    coef_m1_m5_ordered = dpica_report_v3.pica_2d_correlate5(m1_ordered, m5_ordered, data_path_save, data_file_save, True, True)    
+    # print('[LOG][Multirun ICA] Re-arranging - pattern. Save ', data_file_save)  
 
     print('[LOG][Multirun ICA] Re-arranging - Finished')
 
@@ -2590,57 +2540,52 @@ def pica_infomax_run_icasso2(self, XY,  num_ica_runs, GlobalPCA_U,  m1, m2, m3, 
     GlobalW_unmixer = []
     list_m = []
 
-    # list_m = np.array(list_m)
-
     # m1 Vs m2, m3, m4, m5
-    i = 0
-    for m1_value in m1_max_value :
+    for i in range(NCOMP) :        
         coef_max_sum_list = []
         coef_max_sum = -1
         # m1 Vs m2
         data_file_save =  "Correlation_Graph_"  + XY + "_ICASSO_component_" + str(i) + "_m1_m2.jpeg"   
-        coef_component_m1_m2_file = dpica_report.pica_2d_correlate6(m1_demean_std[i], m2_demean_ordered[i], data_path_save, data_file_save, False, False, True)           
-        m11 = m1_demean_std[i]
-        m22 = m2_demean_ordered[i] 
-        coef_component_m1_m2 = np.corrcoef ( m1_demean_std[i], m2_demean_ordered[i] )
+        coef_component_m1_m2_file = dpica_report_v3.pica_2d_correlate6(m1_ordered[i], m2_ordered[i], data_path_save, data_file_save, False, False, True)           
+        coef_component_m1_m2 = np.corrcoef ( m1_ordered[i], m2_ordered[i] )
         coef_component_m1_m2_sum = np.sum(coef_component_m1_m2)
         print("[LOG][Multirun ICA] Centrotype - Component ", i , " coef_component_m1_m2_sum = " , coef_component_m1_m2_sum)    
 
         # m1 Vs m3
         data_file_save =  "Correlation_Graph_"  + XY + "_ICASSO_component_"+ str(i) + "_m1_m3.jpeg"   
-        coef_component_m1_m3_file = dpica_report.pica_2d_correlate6(m1_demean_std[i], m3_demean_ordered[i], data_path_save, data_file_save, False, False, True)           
-        coef_component_m1_m3 = np.corrcoef ( m1_demean_std[i], m3_demean_ordered[i] )
+        coef_component_m1_m3_file = dpica_report_v3.pica_2d_correlate6(m1_ordered[i], m3_ordered[i], data_path_save, data_file_save, False, False, True)           
+        coef_component_m1_m3 = np.corrcoef ( m1_ordered[i], m3_ordered[i] )
         coef_component_m1_m3_sum = np.sum(coef_component_m1_m3)
         print("[LOG][Multirun ICA] Centrotype - Component ", i , " coef_component_m1_m3_sum = " , coef_component_m1_m3_sum)    
         if coef_component_m1_m2_sum > coef_component_m1_m3_sum :
-                coef_max_sum_list = m2_demean_ordered[i]
+                coef_max_sum_list = m2_ordered[i]
                 coef_max_sum = coef_component_m1_m2_sum
                 print("[LOG][Multirun ICA] Centrotype - Component ", i , " m1m2 coef_max_sum = " , coef_max_sum)    
 
         else :            
-                coef_max_sum_list = m3_demean_ordered[i]
+                coef_max_sum_list = m3_ordered[i]
                 coef_max_sum = coef_component_m1_m3_sum
                 print("[LOG][Multirun ICA] Centrotype - Component ", i , " m1m3 coef_max_sum = " , coef_max_sum)    
         
         # m1 Vs m4
         data_file_save =  "Correlation_Graph_"  + XY + "_ICASSO_component_"+ str(i) + "_m1_m4.jpeg"   
-        coef_component_m1_m4_file = dpica_report.pica_2d_correlate6(m1_demean_std[i], m4_demean_ordered[i], data_path_save, data_file_save, False, False, True)           
-        coef_component_m1_m4 = np.corrcoef ( m1_demean_std[i], m4_demean_ordered[i] )
+        coef_component_m1_m4_file = dpica_report_v3.pica_2d_correlate6(m1_ordered[i], m4_ordered[i], data_path_save, data_file_save, False, False, True)           
+        coef_component_m1_m4 = np.corrcoef ( m1_ordered[i], m4_ordered[i] )
         coef_component_m1_m4_sum = np.sum(coef_component_m1_m4)
         print("[LOG][Multirun ICA] Centrotype - Component ", i , " coef_component_m1_m4_sum = " , coef_component_m1_m4_sum)    
         if coef_component_m1_m4_sum > coef_max_sum:
-                coef_max_sum_list = m4_demean_ordered[i]
+                coef_max_sum_list = m4_ordered[i]
                 coef_max_sum = coef_component_m1_m4_sum
                 print("[LOG][Multirun ICA] Centrotype - Component ", i , " m1m4 coef_max_sum = " , coef_max_sum)    
 
         # m1 Vs m5
         data_file_save =  "Correlation_Graph_"  + XY + "_ICASSO_component_"+ str(i) + "_m1_m5.jpeg"   
-        coef_component_m1_m5_file = dpica_report.pica_2d_correlate6(m1_demean_std[i], m5_demean_ordered[i], data_path_save, data_file_save, False, False, True)           
-        coef_component_m1_m5 = np.corrcoef ( m1_demean_std[i], m5_demean_ordered[i] )
+        coef_component_m1_m5_file = dpica_report_v3.pica_2d_correlate6(m1_ordered[i], m5_ordered[i], data_path_save, data_file_save, False, False, True)           
+        coef_component_m1_m5 = np.corrcoef ( m1_ordered[i], m5_ordered[i] )
         coef_component_m1_m5_sum = np.sum(coef_component_m1_m5)
         print("[LOG][Multirun ICA] Centrotype - Component ", i , " coef_component_m1_m5_sum = " , coef_component_m1_m5_sum)    
         if coef_component_m1_m5_sum > coef_max_sum:
-                coef_max_sum_list = m5_demean_ordered[i]
+                coef_max_sum_list = m5_ordered[i]
                 coef_max_sum = coef_component_m1_m5_sum
                 print("[LOG][Multirun ICA] Centrotype - Component ", i , " m1m5 coef_max_sum = " , coef_max_sum)    
 
@@ -2650,7 +2595,7 @@ def pica_infomax_run_icasso2(self, XY,  num_ica_runs, GlobalPCA_U,  m1, m2, m3, 
         print("[LOG][Multirun ICA] Centrotype - Component ", i , " list_m = " , len(list_m), ".")
 
 
-        i = i + 1  # Loop to next component.
+    #     i = i + 1  # Loop to next component.
     # End or for loop.
 
     list_m = np.array(list_m)
@@ -2667,8 +2612,6 @@ def pica_infomax_run_icasso2(self, XY,  num_ica_runs, GlobalPCA_U,  m1, m2, m3, 
     return (self, GlobalA_mixer, S_sources, GlobalW_unmixer)
 
 
-
-    end = time.time()
 
 if __name__ == '__main__':
     print('main')
