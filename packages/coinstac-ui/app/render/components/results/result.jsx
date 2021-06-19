@@ -256,6 +256,7 @@ class Result extends Component {
                     plotData={plotData}
                     tables={selectedDisplayType.tables ? selectedDisplayType.tables : null}
                     title={`${consortium.name}_${run.pipelineSnapshot.name}`}
+                    clients={run.clients}
                   />
                 )
               }
