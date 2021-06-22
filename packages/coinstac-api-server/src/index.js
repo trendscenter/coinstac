@@ -6,11 +6,17 @@ const helperFunctions = require('./auth-helpers');
 const routes = require('./routes');
 const { schema } = require('./data/schema');
 const database = require('./database');
+const {
+  eventEmitter,
+  WS_CONNECTION_STARTED,
+  WS_CONNECTION_TERMINATED,
+} = require('./data/events');
 
 async function startServer() {
   const server = new ApolloServer({
     schema,
-    context: ({ request, connection }) => {
+    context: (contextao) => {
+      const { connection, request } = contextao;
       if (connection) {
         return connection.context;
       }
@@ -18,6 +24,28 @@ async function startServer() {
       return {
         credentials: request.auth ? request.auth.credentials : null,
       };
+    },
+    subscriptions: {
+      async onConnect(connectionParams, ws) {
+        if (!connectionParams.authToken) {
+          return false;
+        }
+
+        try {
+          const connectionId = ws.upgradeReq.headers['sec-websocket-key'];
+          const { id } = await helperFunctions.decodeToken(connectionParams.authToken);
+
+          eventEmitter.emit(WS_CONNECTION_STARTED, connectionId, id);
+
+          return true;
+        } catch (error) {
+          console.error('An error occurred while establishing a websocket connection', error);
+        }
+      },
+      onDisconnect(ws) {
+        const connectionId = ws.upgradeReq.headers['sec-websocket-key'];
+        eventEmitter.emit(WS_CONNECTION_TERMINATED, connectionId);
+      },
     },
   });
   await server.start();

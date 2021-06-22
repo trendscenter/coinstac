@@ -3,11 +3,8 @@ import React from 'react';
 import { render } from 'react-dom';
 import { hashHistory } from 'react-router';
 import { ipcRenderer, remote } from 'electron';
-import { ApolloProvider } from '@apollo/client';
-import { ApolloProvider as ApolloHOCProvider } from '@apollo/react-hoc';
 import { Provider as ReduxProvider } from 'react-redux';
 import { syncHistoryWithStore } from 'react-router-redux';
-import getApolloClient from './state/apollo-client';
 import configureStore from './state/store';
 import { start as startErrorHandling } from './utils/boot/configure-error-handling';
 
@@ -29,19 +26,14 @@ if (process.env.CI) {
   global.console.warn = () => {};
 }
 
-const client = getApolloClient(global.config);
 const store = configureStore();
 
 const history = syncHistoryWithStore(hashHistory, store);
 
 render(
-  <ApolloProvider client={client}>
-    <ApolloHOCProvider client={client}>
-      <ReduxProvider store={store}>
-        <Root history={history} />
-      </ReduxProvider>
-    </ApolloHOCProvider>
-  </ApolloProvider>,
+  <ReduxProvider store={store}>
+    <Root history={history} />
+  </ReduxProvider>,
   rootEl
 );
 
@@ -53,13 +45,9 @@ if (module.hot) {
     const NextRoot = require('./containers/root').default;
     /* eslint-enable global-require */
     render(
-      <ApolloProvider client={client}>
-        <ApolloHOCProvider client={client}>
-          <ReduxProvider store={store}>
-            <NextRoot history={history} />
-          </ReduxProvider>
-        </ApolloHOCProvider>
-      </ApolloProvider>,
+      <ReduxProvider store={store}>
+        <NextRoot history={history} />
+      </ReduxProvider>,
       rootEl
     );
   });

@@ -9,6 +9,17 @@ import { onError } from '@apollo/client/link/error';
 import { API_TOKEN_KEY } from './ducks/auth';
 import { EXPIRED_TOKEN, BAD_TOKEN } from '../utils/error-codes';
 
+function getAuthToken() {
+  // get the authentication token from local storage if it exists
+  let token = localStorage.getItem(API_TOKEN_KEY);
+
+  if (!token || token === 'null' || token === 'undefined') {
+    token = sessionStorage.getItem(API_TOKEN_KEY);
+  }
+
+  return JSON.parse(token);
+}
+
 function getApolloClient(config) {
   const { apiServer, subApiServer } = config.getProperties();
   const API_URL = `${apiServer.protocol}//${apiServer.hostname}${apiServer.port ? `:${apiServer.port}` : ''}${apiServer.pathname}`;
@@ -17,7 +28,14 @@ function getApolloClient(config) {
   const SUB_URL = `${subApiServer.protocol}//${subApiServer.hostname}${subApiServer.port ? `:${subApiServer.port}` : ''}${subApiServer.pathname}`;
   const wsLink = new WebSocketLink({
     uri: `${SUB_URL}/graphql`,
-    options: { reconnect: true },
+    options: {
+      reconnect: true,
+      connectionParams: () => {
+        const token = getAuthToken();
+
+        return { authToken: token ? token.token : '' };
+      },
+    },
   });
 
   const unauthorizedLink = onError(({ networkError }) => {
@@ -33,14 +51,7 @@ function getApolloClient(config) {
   });
 
   const authMiddleware = new ApolloLink((operation, forward) => {
-    // get the authentication token from local storage if it exists
-    let token = localStorage.getItem(API_TOKEN_KEY);
-
-    if (!token || token === 'null' || token === 'undefined') {
-      token = sessionStorage.getItem(API_TOKEN_KEY);
-    }
-
-    token = JSON.parse(token);
+    const token = getAuthToken();
 
     operation.setContext(({ headers = {} }) => ({
       headers: {
@@ -61,10 +72,13 @@ function getApolloClient(config) {
     concat(authMiddleware, httpLink)
   );
 
-  return new ApolloClient({
-    link: unauthorizedLink.concat(splitLink),
-    cache: new InMemoryCache(),
-  });
+  return {
+    client: new ApolloClient({
+      link: unauthorizedLink.concat(splitLink),
+      cache: new InMemoryCache(),
+    }),
+    wsLink,
+  };
 }
 
 export default getApolloClient;

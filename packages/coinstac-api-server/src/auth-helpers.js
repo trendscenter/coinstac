@@ -20,6 +20,14 @@ const helperFunctions = {
     return jwt.sign({ id }, process.env.API_JWT_SECRET, { algorithm: 'HS256', expiresIn: '12h' });
   },
   /**
+   * Decode and verify validity of token
+   * @param {string} token
+   * @returns object that was inside token
+   */
+  decodeToken(token) {
+    return jwt.verify(token, process.env.API_JWT_SECRET);
+  },
+  /**
    * Create JWT for password reset
    * @param {string} email email
    * @return {string} A JWT for the requested email
@@ -168,7 +176,7 @@ const helperFunctions = {
    * @param {object} request original request from client
    * @param {function} callback function signature (err, isValid, alternative credentials)
    */
-  async validateToken(decoded, request, h) {
+  async validateToken(decoded) {
     const user = await helperFunctions.getUserDetailsByID(decoded.id);
 
     return {

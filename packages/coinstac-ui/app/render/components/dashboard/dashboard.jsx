@@ -1,9 +1,10 @@
 import { connect } from 'react-redux';
-import { useQuery } from '@apollo/client';
+import { useQuery, ApolloProvider } from '@apollo/client';
+import { ApolloProvider as ApolloHOCProvider } from '@apollo/react-hoc';
 import { get } from 'lodash';
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import PropTypes from 'prop-types';
-import { ipcRenderer } from 'electron';
+import { ipcRenderer, remote } from 'electron';
 import { List, ListItem } from '@material-ui/core';
 import ArrowUpwardIcon from '@material-ui/icons/ArrowUpward';
 
@@ -16,6 +17,7 @@ import {
 import CoinstacAbbr from '../coinstac-abbr';
 import { saveLocalRun, updateLocalRun } from '../../state/ducks/runs';
 import { updateUserPerms } from '../../state/ducks/auth';
+import getApolloClient from '../../state/apollo-client';
 import {
   COMPUTATION_CHANGED_SUBSCRIPTION,
   CONSORTIUM_CHANGED_SUBSCRIPTION,
@@ -169,6 +171,33 @@ Dashboard.propTypes = {
   updateUserPerms: PropTypes.func.isRequired,
 };
 
+const clientConfig = remote.getGlobal('config');
+
+function ConnectedDashboard(props) {
+  const apolloClient = useRef(null);
+
+  useEffect(() => {
+    apolloClient.current = getApolloClient(clientConfig);
+
+    return () => {
+      apolloClient.current.client.stop();
+      apolloClient.current.wsLink.subscriptionClient.close();
+    };
+  }, []);
+
+  if (!apolloClient.current) {
+    return null;
+  }
+
+  return (
+    <ApolloProvider client={apolloClient.current.client}>
+      <ApolloHOCProvider client={apolloClient.current.client}>
+        <Dashboard {...props} />
+      </ApolloHOCProvider>
+    </ApolloProvider>
+  );
+}
+
 const mapStateToProps = ({ auth, runs, maps }) => ({
   auth,
   runs: runs.runs,
@@ -183,6 +212,6 @@ const connectedComponent = connect(mapStateToProps,
     saveLocalRun,
     updateLocalRun,
     updateUserPerms,
-  })(Dashboard);
+  })(ConnectedDashboard);
 
 export default connectedComponent;
