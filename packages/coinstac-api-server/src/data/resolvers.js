@@ -521,7 +521,7 @@ const resolvers = {
      * @return {object} New/updated run object
      */
     createRun: async (parent, { consortiumId }, { credentials }) => {
-      if (!acredentials) {
+      if (!credentials) {
         // No authorized user, reject
         return Boom.unauthorized('User not authenticated');
       }
