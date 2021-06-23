@@ -38,12 +38,13 @@ function getApolloClient(config) {
     },
   });
 
-  const unauthorizedLink = onError(({ networkError }) => {
-    if (networkError.statusCode !== 401) {
+  const unauthorizedLink = onError((e) => {
+    console.log('ERRAO', e);
+    if (e.networkError.statusCode !== 401) {
       return;
     }
 
-    if (networkError.message === 'Expired token') {
+    if (e.networkError.message === 'Expired token') {
       ipcRenderer.send(EXPIRED_TOKEN);
     } else {
       ipcRenderer.send(BAD_TOKEN);

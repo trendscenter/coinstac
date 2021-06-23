@@ -1,22 +1,16 @@
+import React, { useEffect, useMemo, useRef } from 'react';
 import { connect } from 'react-redux';
+import { withRouter } from 'react-router';
 import { useQuery, ApolloProvider } from '@apollo/client';
 import { ApolloProvider as ApolloHOCProvider } from '@apollo/react-hoc';
 import { get } from 'lodash';
-import React, { useEffect, useMemo, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { ipcRenderer, remote } from 'electron';
 import { List, ListItem } from '@material-ui/core';
 import ArrowUpwardIcon from '@material-ui/icons/ArrowUpward';
 
 import UserAccountController from '../user/user-account-controller';
-import {
-  notifyError,
-  notifyInfo,
-  notifySuccess,
-} from '../../state/ducks/notifyAndLog';
 import CoinstacAbbr from '../coinstac-abbr';
-import { saveLocalRun, updateLocalRun } from '../../state/ducks/runs';
-import { updateUserPerms } from '../../state/ducks/auth';
 import getApolloClient from '../../state/apollo-client';
 import {
   COMPUTATION_CHANGED_SUBSCRIPTION,
@@ -27,10 +21,8 @@ import {
   FETCH_ALL_USER_RUNS_QUERY,
   FETCH_ALL_THREADS_QUERY,
   PIPELINE_CHANGED_SUBSCRIPTION,
-  USER_CHANGED_SUBSCRIPTION,
   USER_RUN_CHANGED_SUBSCRIPTION,
   THREAD_CHANGED_SUBSCRIPTION,
-  FETCH_USER_QUERY,
 } from '../../state/graphql/functions';
 import DashboardNav from './dashboard-nav';
 import DashboardPipelineNavBar from './dashboard-pipeline-nav-bar';
@@ -44,9 +36,11 @@ import LocalRunStatusListeners from './listeners/local-run-status-listeners';
 import LogListener from './listeners/log-listener';
 import UpdateDataMapStatusStartupListener from './listeners/update-data-map-status-startup-listener';
 import PullComputationsListener from './listeners/pull-computations-listener';
+import RemoteRunsListener from './listeners/remote-runs-listener';
+import UserPermissionsListener from './listeners/user-permissions-listener';
 
 function Dashboard({
-  auth, children, runs, maps,
+  auth, children, runs, maps, router,
 }) {
   const {
     data: consortiaData, subscribeToMore: subscribeToConsortia,
@@ -68,7 +62,7 @@ function Dashboard({
   subscribeToEntityList(subscribeToComputations, COMPUTATION_CHANGED_SUBSCRIPTION, 'fetchAllComputations', 'computationChanged');
   subscribeToEntityList(subscribeToPipelines, PIPELINE_CHANGED_SUBSCRIPTION, 'fetchAllPipelines', 'pipelineChanged');
   subscribeToEntityList(subscribeToThreads, THREAD_CHANGED_SUBSCRIPTION, 'fetchAllThreads', 'threadChanged');
-  subscribeToEntityList(subscribeToUserRuns, USER_RUN_CHANGED_SUBSCRIPTION, 'fetchAllUserRuns', 'userRunChanged');
+  subscribeToEntityList(subscribeToUserRuns, USER_RUN_CHANGED_SUBSCRIPTION, 'fetchAllUserRuns', 'userRunChanged', { userId: auth.user.id });
 
   useEffect(() => {
     ipcRenderer.send('load-initial-log');
@@ -91,6 +85,14 @@ function Dashboard({
   );
 
   const canShowBackButton = auth.locationStacks.length > 1;
+
+  function goBack() {
+    if (!canShowBackButton) return;
+
+    const { locationStacks } = auth;
+
+    router.push(locationStacks[locationStacks.length - 2]);
+  }
 
   const childrenWithProps = React.cloneElement(children, {
     computations, consortia, pipelines, runs, threads,
@@ -123,7 +125,7 @@ function Dashboard({
             <button
               type="button"
               className="back-button"
-              onClick={() => {}}
+              onClick={goBack}
             >
               <ArrowUpwardIcon className="arrow-icon" />
             </button>
@@ -141,34 +143,25 @@ function Dashboard({
       <LogListener />
       <UpdateDataMapStatusStartupListener maps={maps} consortia={consortia} userId={auth.user.id} />
       <PullComputationsListener userId={auth.user.id} />
+      <RemoteRunsListener userId={auth.user.id} consortia={consortia} />
+      <UserPermissionsListener userId={auth.user.id} />
     </div>
   );
 }
 
 Dashboard.displayName = 'Dashboard';
 
-Dashboard.contextTypes = {
-  router: PropTypes.object.isRequired,
-};
-
 Dashboard.defaultProps = {
   runs: [],
   maps: [],
-  currentUser: null,
 };
 
 Dashboard.propTypes = {
   auth: PropTypes.object.isRequired,
   children: PropTypes.node.isRequired,
-  currentUser: PropTypes.object,
   runs: PropTypes.array,
   maps: PropTypes.array,
-  notifyError: PropTypes.func.isRequired,
-  notifyInfo: PropTypes.func.isRequired,
-  notifySuccess: PropTypes.func.isRequired,
-  saveLocalRun: PropTypes.func.isRequired,
-  updateLocalRun: PropTypes.func.isRequired,
-  updateUserPerms: PropTypes.func.isRequired,
+  router: PropTypes.object.isRequired,
 };
 
 const clientConfig = remote.getGlobal('config');
@@ -177,16 +170,16 @@ function ConnectedDashboard(props) {
   const apolloClient = useRef(null);
 
   useEffect(() => {
-    apolloClient.current = getApolloClient(clientConfig);
-
     return () => {
+      if (!apolloClient.current) return;
+
       apolloClient.current.client.stop();
       apolloClient.current.wsLink.subscriptionClient.close();
     };
   }, []);
 
   if (!apolloClient.current) {
-    return null;
+    apolloClient.current = getApolloClient(clientConfig);
   }
 
   return (
@@ -204,14 +197,6 @@ const mapStateToProps = ({ auth, runs, maps }) => ({
   maps: maps.consortiumDataMappings,
 });
 
-const connectedComponent = connect(mapStateToProps,
-  {
-    notifyError,
-    notifyInfo,
-    notifySuccess,
-    saveLocalRun,
-    updateLocalRun,
-    updateUserPerms,
-  })(ConnectedDashboard);
+const connectedComponent = connect(mapStateToProps)(withRouter(ConnectedDashboard));
 
 export default connectedComponent;

@@ -1,9 +1,10 @@
 import { useEffect } from 'react';
 
-function SubscribeToEntityList(subscriptionFunc, document, query, subscriptionName) {
+function SubscribeToEntityList(subscriptionFunc, document, query, subscriptionName, variables) {
   useEffect(() => {
     const unsubscribe = subscriptionFunc({
       document,
+      variables,
       updateQuery: (prev, { subscriptionData: { data } }) => {
         if (!data) return prev;
 

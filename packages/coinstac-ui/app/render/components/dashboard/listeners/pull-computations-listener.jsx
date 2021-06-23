@@ -5,7 +5,6 @@ import { get } from 'lodash';
 
 import {
   CONSORTIUM_PIPELINE_CHANGED_SUBSCRIPTION,
-  FETCH_PIPELINE_QUERY,
   FETCH_ALL_PIPELINES_QUERY,
   FETCH_ALL_COMPUTATIONS_QUERY,
 } from '../../../state/graphql/functions';

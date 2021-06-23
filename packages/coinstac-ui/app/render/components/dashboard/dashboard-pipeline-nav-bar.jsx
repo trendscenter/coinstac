@@ -1,7 +1,7 @@
 /* eslint-disable react/no-did-update-set-state */
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Link } from 'react-router';
+import { Link, withRouter } from 'react-router';
 import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
 import LinearProgress from '@material-ui/core/LinearProgress';
@@ -87,8 +87,7 @@ class DashboardPipelineNavBar extends React.Component {
   }
 
   render() {
-    const { classes } = this.props;
-    const { router } = this.context;
+    const { classes, router } = this.props;
 
     const { runId, consortiumName, pipelineName } = this.state;
 
@@ -123,6 +122,7 @@ DashboardPipelineNavBar.propTypes = {
   consortia: PropTypes.array,
   localRuns: PropTypes.array,
   classes: PropTypes.object.isRequired,
+  router: PropTypes.object.isRequired,
 };
 
 DashboardPipelineNavBar.defaultProps = {
@@ -130,4 +130,4 @@ DashboardPipelineNavBar.defaultProps = {
   localRuns: [],
 };
 
-export default withStyles(styles)(DashboardPipelineNavBar);
+export default withStyles(styles)(withRouter(DashboardPipelineNavBar));

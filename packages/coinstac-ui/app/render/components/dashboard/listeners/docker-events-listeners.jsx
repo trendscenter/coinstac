@@ -59,7 +59,6 @@ function DockerEventsListeners({
 
 DockerEventsListeners.propTypes = {
   updateDockerOutput: PropTypes.func.isRequired,
-  updateUserConsortiumStatus: PropTypes.func.isRequired,
 };
 
 export default connect(null,
