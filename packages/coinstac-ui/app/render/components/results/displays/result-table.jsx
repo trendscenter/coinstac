@@ -124,11 +124,11 @@ class TableResult extends Component {
     exportTableToCSV(html, `${filename}.csv`);
   }
 
-  makeTable(table, data, outputProps, heading, marginLeft, rawData = false) {
+  makeTable(clients, table, data, outputProps, heading, marginLeft, rawData = false) {
     const tableContents = [];
     if (heading) {
       tableContents.push(
-        <h3 style={{ marginLeft }} key={heading}>{heading}</h3>
+        <h3 style={{ marginLeft }} key={heading}>{clients[heading] || heading}</h3>
       );
     }
 
@@ -139,7 +139,7 @@ class TableResult extends Component {
     } else if ((table && table.subtables && Array.isArray(data))) {
       data.forEach((d) => {
         tableContents.push(
-          this.makeTable(table, d, outputProps, null, marginLeft + 10)
+          this.makeTable(clients, table, d, outputProps, null, marginLeft + 10)
         );
         tableContents.push(<hr key={uuid()} style={{ borderTop: '1px solid black' }} />);
       });
@@ -153,6 +153,7 @@ class TableResult extends Component {
 
         tableContents.push(
           this.makeTable(
+            clients,
             t,
             data[t.source],
             outputProps.items[t.source],
@@ -165,6 +166,7 @@ class TableResult extends Component {
       Object.entries(data).forEach((keyValPair) => {
         tableContents.push(
           this.makeTable(
+            clients,
             null,
             keyValPair[1],
             outputProps,
@@ -196,7 +198,7 @@ class TableResult extends Component {
       if (heading.includes('Global')) {
         // do nothing
       } else {
-        heading = `Local - ${heading}`;
+        heading = `Local - ${clients[heading] || heading}`;
       }
 
       tableContents.push(
@@ -315,7 +317,7 @@ class TableResult extends Component {
 
   render() {
     const {
-      computationOutput, plotData, tables, classes,
+      clients, computationOutput, plotData, tables, classes,
     } = this.props;
 
     return (
@@ -331,14 +333,16 @@ class TableResult extends Component {
         </div>
         {
           tables && tables.map(t => this.makeTable(
+            clients,
             t,
             plotData[t.source],
             computationOutput[t.source],
             computationOutput[t.source].label,
             0
           ))}
-        {!tables && plotData.testData && this.makeTable(null, plotData.testData, null, 'Test Data', 0)}
-        {!tables && !plotData.testData && this.makeTable(null, plotData, null, null, 0, true)}
+        {!tables && plotData.testData && this.makeTable(clients, null, plotData.testData, null, 'Test Data', 0)}
+        {!tables && !plotData.testData
+          && this.makeTable(clients, null, plotData, null, null, 0, true)}
       </div>
     );
   }
@@ -346,6 +350,7 @@ class TableResult extends Component {
 
 TableResult.propTypes = {
   classes: PropTypes.object.isRequired,
+  clients: PropTypes.object,
   computationOutput: PropTypes.object,
   plotData: PropTypes.object.isRequired,
   tables: PropTypes.array,
@@ -353,6 +358,7 @@ TableResult.propTypes = {
 };
 
 TableResult.defaultProps = {
+  clients: {},
   computationOutput: null,
   tables: null,
   title: '',
