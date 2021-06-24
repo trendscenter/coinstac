@@ -113,7 +113,7 @@ class Dashboard extends Component {
       const status = getDockerStatus();
       status.then((result) => {
         if (result === 'OK') {
-          this.setState({ dockerStatus: false });
+          this.setState({ dockerStatus: true });
         } else {
           this.setState({ dockerStatus: false });
         }

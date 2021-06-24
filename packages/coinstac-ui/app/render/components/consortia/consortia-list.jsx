@@ -140,6 +140,7 @@ class ConsortiaList extends Component {
       pipelines,
       runs,
       usersOnlineStatus,
+      dockerStatus,
     } = this.props;
     const { isConsortiumPipelinesMenuOpen } = this.state;
 
@@ -217,7 +218,7 @@ class ConsortiaList extends Component {
       const computations = get(pipeline, 'steps.0.computations', []);
       const hasDockerComputation = some(computations, computation => get(computation, 'computation.type') === 'docker');
 
-      if (hasDockerComputation) {
+      if (hasDockerComputation && !dockerStatus) {
         actions.push(
           <Tooltip title="Docker is not running" placement="top">
             <Button
