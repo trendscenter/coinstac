@@ -9,7 +9,7 @@ import ListItem from '@material-ui/core/ListItem';
 import Typography from '@material-ui/core/Typography';
 import ArrowUpwardIcon from '@material-ui/icons/ArrowUpward';
 import update from 'immutability-helper';
-import { isEqual } from 'lodash';
+import { isEqual, startsWith } from 'lodash';
 import DashboardNav from './dashboard-nav';
 import UserAccountController from '../user/user-account-controller';
 import {
@@ -54,28 +54,26 @@ import { buildTree, generateInitalFileTree } from '../../utils/helpers';
 
 
 const styles = () => ({
-  statusGood: {
+  status: {
     display: 'flex',
     alignItems: 'center',
   },
+  statusText: {
+    fontSize: 16,
+  },
   statusUp: {
-    width: '1rem',
-    height: '1rem',
+    width: 20,
+    height: 20,
     background: '#5cb85c',
     borderRadius: '50%',
     marginLeft: '0.5rem',
   },
   statusDown: {
-    display: 'inline-block',
-    width: '100%',
+    width: 20,
+    height: 20,
     background: '#d9534f',
-    borderRadius: '0.5rem',
-    padding: '1rem',
-    textAlign: 'center',
-    textShadow: '1px 1px 0px rgba(0, 0, 0, 1)',
-  },
-  statusDownText: {
-    color: 'white',
+    borderRadius: '50%',
+    marginLeft: '0.5rem',
   },
   arrowIcon: {
     color: 'white',
@@ -181,8 +179,22 @@ class Dashboard extends Component {
     this.unsubscribeToUser = subscribeToUser(user.id);
     this.unsubscribeToUserRuns = subscribeToUserRuns(user.id);
 
+    const DOCKER_IGNORABLE_MESSAGES = [
+      'connect ECONNREFUSED',
+      '(HTTP code 500) server error',
+      'socket hang up',
+    ];
+
     ipcRenderer.on('docker-error', (event, arg) => {
-      notifyError(`Docker Error: ${arg.err.message}`);
+      const { message } = arg.err;
+
+      const shouldNotify = DOCKER_IGNORABLE_MESSAGES.filter(
+        startString => startsWith(message, startString)
+      ).length === 0;
+
+      if (shouldNotify) {
+        notifyError(`Docker Error: ${arg.err.message}`);
+      }
     });
 
     ipcRenderer.on('prepare-consortia-files', (event, nodes) => {
@@ -487,7 +499,7 @@ class Dashboard extends Component {
     const { router } = this.context;
 
     const childrenWithProps = React.cloneElement(children, {
-      computations, consortia, pipelines, runs, threads,
+      computations, consortia, pipelines, runs, threads, dockerStatus,
     });
 
     if (!auth || !auth.user.email.length) {
@@ -508,25 +520,12 @@ class Dashboard extends Component {
               />
             </ListItem>
             <ListItem>
-              {dockerStatus ? (
-                <span className={classes.statusGood}>
-                  <Typography variant="subtitle2">
-                    Docker Status:
-                  </Typography>
-                  <span className={classes.statusUp} />
-                </span>
-              ) : (
-                <span className={classes.statusDown}>
-                  <Typography
-                    variant="body1"
-                    classes={{
-                      root: classes.statusDownText,
-                    }}
-                  >
-                    Docker Is Not Running!
-                  </Typography>
-                </span>
-              )}
+              <span className={classes.status}>
+                <Typography variant="subtitle2" className={classes.statusText}>
+                  Docker Status:
+                </Typography>
+                <span className={dockerStatus ? classes.statusUp : classes.statusDown} />
+              </span>
             </ListItem>
           </List>
         </div>
