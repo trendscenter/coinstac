@@ -185,7 +185,9 @@ loadConfig()
                 fs.symlinkSync(file, symlinkPath);
               }
 
-              const createdSymlinkPath = path.relative(appDirectory, symlinkPath);
+              const createdSymlinkPath = path
+                .relative(appDirectory, symlinkPath)
+                .replace(`runs${path.sep}${userId}${path.sep}`, '');
 
               res.push(createdSymlinkPath);
             });

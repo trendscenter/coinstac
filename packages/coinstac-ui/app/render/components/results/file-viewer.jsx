@@ -85,14 +85,14 @@ const FileViewer = ({ fileTree }) => {
         defaultCollapseIcon={<ArrowDropDownIcon />}
         defaultExpandIcon={<ArrowRightIcon />}
       >
-        {renderTree(fileTree)}
+        {fileTree.map(renderTree)}
       </TreeView>
     </div>
   );
 };
 
 FileViewer.propTypes = {
-  fileTree: PropTypes.object,
+  fileTree: PropTypes.array,
 };
 
 FileViewer.defaultProps = {

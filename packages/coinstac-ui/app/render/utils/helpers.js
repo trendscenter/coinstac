@@ -1,5 +1,5 @@
 import {
-  get, indexOf, isArray, setWith, take, values,
+  get, indexOf, setWith, take, values,
 } from 'lodash';
 import fs from 'fs';
 import CsvReadableStream from 'csv-reader';
@@ -160,7 +160,7 @@ export const buildTree = (nodes) => {
 
   const output = values(res);
 
-  return isArray(output) && output.length > 0 ? output[0] : null;
+  return output;
 };
 
 export const generateInitalFileTree = (consortia, runs) => {
