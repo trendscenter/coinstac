@@ -939,7 +939,7 @@ module.exports = {
                     const archive = archiver('tar', {
                       gzip: true,
                       gzipOptions: {
-                        level: 0,
+                        level: 9,
                       },
                     });
                     const archiveFilename = `${pipeline.id}-${uuid()}-tempOutput.tar.gz`;
@@ -1028,20 +1028,21 @@ module.exports = {
             } else {
               await getFilesAndDirs(activePipelines[pipeline.id].transferDirectory)
                 .then((data) => {
-                  return Promise.all(data.files.map((file) => {
-                    return mv(
-                      path.join(activePipelines[pipeline.id].transferDirectory, file),
-                      path.join(activePipelines[pipeline.id].systemDirectory, file)
-                    );
-                  })).then(() => data);
-                  // data.directories.forEach(async (dir) => {
-                  //   await mv(
-                  //     path.join(activePipelines[pipeline.id].transferDirectory, dir),
-                  //     path.join(activePipelines[pipeline.id].systemDirectory, dir),
-                  //     { mkdirp: true }
-                  //   );
-                  // });
-                  // return data;
+                  return Promise.all([
+                    ...data.files.map((file) => {
+                      return mv(
+                        path.join(activePipelines[pipeline.id].transferDirectory, file),
+                        path.join(activePipelines[pipeline.id].systemDirectory, file)
+                      );
+                    }),
+                    ...data.directories.map((dir) => {
+                      return mv(
+                        path.join(activePipelines[pipeline.id].transferDirectory, dir),
+                        path.join(activePipelines[pipeline.id].systemDirectory, dir),
+                        { mkdirp: true }
+                      );
+                    }),
+                  ]).then(() => data);
                 })
                 .then((data) => {
                   if (data && (data.files.length !== 0 || data.directories.length !== 0)) {
@@ -1051,7 +1052,7 @@ module.exports = {
                       const archive = archiver('tar', {
                         gzip: true,
                         gzipOptions: {
-                          level: 0,
+                          level: 9,
                         },
                       });
 
