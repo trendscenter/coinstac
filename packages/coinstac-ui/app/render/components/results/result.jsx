@@ -276,7 +276,7 @@ class Result extends Component {
                 selectedDisplayType.type === 'images'
                 && (
                   <Images
-                    imagePath={path.join(appDirectory, 'output', user.id, run.id, plotData.file_name)}
+                    imagePath={path.join(appDirectory, 'output', user.id, run.id)}
                     plotData={plotData}
                     title={`${consortium.name}_${run.pipelineSnapshot.name}`}
                   />
