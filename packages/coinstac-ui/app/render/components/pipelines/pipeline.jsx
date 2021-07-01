@@ -11,16 +11,29 @@ import {
   isEqual, isEmpty, get, omit,
 } from 'lodash';
 import update from 'immutability-helper';
+import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
 import Checkbox from '@material-ui/core/Checkbox';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
+import Grid from '@material-ui/core/Grid';
+import IconButton from '@material-ui/core/IconButton';
+import List from '@material-ui/core/List';
+import ListItem from '@material-ui/core/ListItem';
+import ListItemSecondaryAction from '@material-ui/core/ListItemSecondaryAction';
+import ListItemText from '@material-ui/core/ListItemText';
 import Menu from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
 import Paper from '@material-ui/core/Paper';
+import Tooltip from '@material-ui/core/Tooltip';
 import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
+import DeleteIcon from '@material-ui/icons/Delete';
+import InfoIcon from '@material-ui/icons/Info';
 import { ValidatorForm, TextValidator } from 'react-material-ui-form-validator';
+import memoize from 'memoize-one';
+
 import ListDeleteModal from '../common/list-delete-modal';
+import Select from '../common/react-select';
 import StatusButtonWrapper from '../common/status-button-wrapper';
 import PipelineStep from './pipeline-step';
 import ItemTypes from './pipeline-item-types';
@@ -31,6 +44,7 @@ import {
   SAVE_ACTIVE_PIPELINE_MUTATION,
   FETCH_ALL_USERS_QUERY,
   USER_CHANGED_SUBSCRIPTION,
+  FETCH_AVAILABLE_HEADLESS_CLIENTS,
 } from '../../state/graphql/functions';
 import {
   getDocumentByParam,
@@ -47,6 +61,9 @@ import {
   reducePipelineInputs,
 } from '../../utils/helpers';
 
+const CLOUD_USERS_TOOLTIP = `Cloud users are persistent nodes that can run some pipelines. If you add one or more cloud users,
+  the available pipelines list will be filtered by the ones that the cloud users can run.`;
+
 const computationTarget = {
   drop() {
   },
@@ -60,17 +77,7 @@ const collect = (connect, monitor) => (
 );
 
 const styles = theme => ({
-  title: {
-    marginBottom: theme.spacing(2),
-  },
   formControl: {
-    marginBottom: theme.spacing(2),
-  },
-  owningConsortiumButtonTitle: {
-    marginBottom: theme.spacing(1),
-  },
-  savePipelineButtonContainer: {
-    textAlign: 'right',
     marginBottom: theme.spacing(2),
   },
   tooltipPaper: {
@@ -83,6 +90,12 @@ const styles = theme => ({
   },
   tooltip: {
     color: '#ab8e6b',
+  },
+  headlessUserSelect: {
+    marginRight: theme.spacing(4),
+  },
+  cloudUserTitle: {
+    marginRight: theme.spacing(1),
   },
 });
 
@@ -102,6 +115,24 @@ const NumberFormatCustom = ({ inputRef, onChange, ...other }) => (
 );
 
 class Pipeline extends Component {
+  mapHeadlessUsers = memoize(
+    (users, pipeline) => {
+      if (!users) {
+        return null;
+      }
+
+      return users
+        .map(u => ({ label: u.name, value: u.id }))
+        .filter((user) => {
+          if (pipeline.headlessMembers) {
+            return !(user.value in pipeline.headlessMembers);
+          }
+
+          return true;
+        });
+    }
+  );
+
   constructor(props) {
     super(props);
 
@@ -144,6 +175,8 @@ class Pipeline extends Component {
       openAddComputationStepMenu: false,
       showModal: false,
       savingStatus: 'init',
+      selectedHeadlessMember: null,
+      orderedComputations: null,
     };
   }
 
@@ -173,6 +206,23 @@ class Pipeline extends Component {
           }
         }
       );
+    }
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    const { computations } = this.props;
+    const { orderedComputations, pipeline } = this.state;
+
+    if (!orderedComputations || (!prevProps.computations && computations)
+      || prevProps.computations.length !== computations.length) {
+      this.sortComputations();
+    }
+
+    if (orderedComputations) {
+      if (!prevState.orderedComputations
+        || prevState.orderedComputations.length !== orderedComputations.length) {
+        this.filterAvailableComputations(pipeline.headlessMembers);
+      }
     }
   }
 
@@ -487,23 +537,86 @@ class Pipeline extends Component {
 
   sortComputations = () => {
     const { computations } = this.props;
-    if (computations && computations.length > 0) {
-      return computations.slice().sort((a, b) => {
-        const nameA = a.meta.name.toLowerCase();
-        const nameB = b.meta.name.toLowerCase();
 
-        if (nameA < nameB) {
-          return -1;
-        }
-
-        return (nameA > nameB) ? 1 : 0;
-      });
+    if (!computations || !computations.length) {
+      return;
     }
+
+    const orderedComputations = computations.slice().sort((a, b) => {
+      const nameA = a.meta.name.toLowerCase();
+      const nameB = b.meta.name.toLowerCase();
+
+      if (nameA < nameB) {
+        return -1;
+      }
+
+      return (nameA > nameB) ? 1 : 0;
+    });
+
+    this.setState({ orderedComputations });
+  }
+
+  handleHeadlessMemberSelect = (value) => {
+    this.setState({ selectedHeadlessMember: value });
+  }
+
+  addHeadlessMember = () => {
+    const { selectedHeadlessMember: newHeadlessMember, pipeline } = this.state;
+
+    const headlessMembers = pipeline.headlessMembers
+      ? { ...pipeline.headlessMembers, [newHeadlessMember.value]: newHeadlessMember.label }
+      : { [newHeadlessMember.value]: newHeadlessMember.label };
+
+    this.updatePipeline({ param: 'headlessMembers', value: headlessMembers });
+
+    this.setState({ selectedHeadlessMember: null });
+
+    this.filterAvailableComputations(headlessMembers);
+  }
+
+  removeHeadlessMember = headlessMemberId => () => {
+    const { pipeline } = this.state;
+
+    if (!(headlessMemberId in pipeline.headlessMembers)) {
+      return;
+    }
+
+    const { [headlessMemberId]: removedMember, ...remainingMembers } = pipeline.headlessMembers;
+
+    this.updatePipeline({ param: 'headlessMembers', value: remainingMembers });
+    this.filterAvailableComputations(remainingMembers);
+  }
+
+  filterAvailableComputations = (headlessMembers) => {
+    const { availableHeadlessClients } = this.props;
+    const { orderedComputations } = this.state;
+
+    if (!headlessMembers || Object.keys(headlessMembers).length === 0) {
+      this.setState({ filteredComputations: [...orderedComputations] });
+      return;
+    }
+
+    const cloudComputations = Object.keys(headlessMembers)
+      .reduce((cloudComputations, headlessMemberId) => {
+        const headlessClientConfig = availableHeadlessClients
+          .find(client => client.id === headlessMemberId);
+
+        Object.keys(headlessClientConfig.computationWhitelist).forEach((compId) => {
+          cloudComputations[compId] = true;
+        });
+
+        return cloudComputations;
+      }, {});
+
+    const filteredComputations = orderedComputations
+      .filter(comp => comp.id in cloudComputations);
+
+    this.setState({ filteredComputations });
   }
 
   render() {
     const {
-      connectDropTarget, consortia, users, classes, auth,
+      connectDropTarget, consortia, users, classes, auth, availableHeadlessClients,
     } = this.props;
     const {
       consortium,
@@ -513,20 +626,19 @@ class Pipeline extends Component {
       openAddComputationStepMenu,
       showModal,
       savingStatus,
+      selectedHeadlessMember,
+      filteredComputations,
     } = this.state;
-
     const isEditing = !!pipeline.id;
     const title = isEditing ? 'Pipeline Edit' : 'Pipeline Creation';
 
-    const sortedComputations = this.sortComputations();
+    const headlessClientsOptions = this.mapHeadlessUsers(availableHeadlessClients, pipeline);
 
     return connectDropTarget(
       <div>
-        <div className="page-header">
-          <Typography variant="h4" className={classes.title}>
-            {title}
-          </Typography>
-        </div>
+        <Box className="page-header" marginBottom={2}>
+          <Typography variant="h4">{ title }</Typography>
+        </Box>
         <ValidatorForm instantValidate noValidate onSubmit={this.savePipeline}>
           <TextValidator
             id="name"
@@ -597,7 +709,7 @@ class Pipeline extends Component {
             className={classes.formControl}
           />
           <div className={classes.formControl}>
-            <Typography variant="h6" className={classes.owningConsortiumButtonTitle}>Owning Consortium</Typography>
+            <Typography variant="h6" gutterBottom>Owning Consortium</Typography>
             <Button
               id="pipelineconsortia"
               variant="contained"
@@ -631,7 +743,7 @@ class Pipeline extends Component {
               }
             </Menu>
           </div>
-          <div className={classes.savePipelineButtonContainer}>
+          <Box textAlign="right" marginBottom={2}>
             <StatusButtonWrapper status={savingStatus}>
               <Button
                 key="save-pipeline-button"
@@ -643,7 +755,7 @@ class Pipeline extends Component {
                 Save Pipeline
               </Button>
             </StatusButtonWrapper>
-          </div>
+          </Box>
           <FormControlLabel
             control={(
               <Checkbox
@@ -655,6 +767,61 @@ class Pipeline extends Component {
             label="Share this pipeline with other consortia"
             className={classes.formControl}
           />
+          {
+            availableHeadlessClients && (
+              <div>
+                <Box display="flex" alignItems="center">
+                  <Typography variant="h6" className={classes.cloudUserTitle}>Cloud Users:</Typography>
+                  <Tooltip
+                    title={
+                      <Typography variant="body1">{ CLOUD_USERS_TOOLTIP }</Typography>
+                    }
+                  >
+                    <InfoIcon />
+                  </Tooltip>
+                </Box>
+                <Box display="flex" justifyContent="space-between" alignItems="center">
+                  <Select
+                    value={selectedHeadlessMember}
+                    placeholder="Select an user"
+                    options={headlessClientsOptions}
+                    onChange={this.handleHeadlessMemberSelect}
+                    removeSelected
+                    className={classes.headlessUserSelect}
+                    name="members-input"
+                  />
+                  <Button
+                    className={classes.addMemberButton}
+                    variant="contained"
+                    color="secondary"
+                    disabled={!selectedHeadlessMember}
+                    onClick={this.addHeadlessMember}
+                  >
+                    Add Cloud User
+                  </Button>
+                </Box>
+                <Grid container>
+                  <Grid item xs={12} md={6} lg={3}>
+                    <List>
+                      {
+                        pipeline.headlessMembers
+                        && Object.keys(pipeline.headlessMembers).map(headlessUserId => (
+                          <ListItem key={headlessUserId}>
+                            <ListItemText primary={pipeline.headlessMembers[headlessUserId]} />
+                            <ListItemSecondaryAction>
+                              <IconButton edge="end" aria-label="delete" onClick={this.removeHeadlessMember(headlessUserId)}>
+                                <DeleteIcon />
+                              </IconButton>
+                            </ListItemSecondaryAction>
+                          </ListItem>
+                        ))
+                      }
+                    </List>
+                  </Grid>
+                </Grid>
+              </div>
+            )
+          }
           <Paper className={classes.tooltipPaper}>
             <Typography className={classes.tooltip} variant="body2">
               Build your pipelines by adding computation steps in the space below.
@@ -678,7 +845,7 @@ class Pipeline extends Component {
               open={openAddComputationStepMenu}
               onClose={this.closeAddComputationStepMenu}
             >
-              {sortedComputations && sortedComputations.map(comp => (
+              {filteredComputations && filteredComputations.map(comp => (
                 <MenuItem
                   key={comp.id}
                   onClick={() => this.addStep(comp)}
@@ -713,6 +880,9 @@ class Pipeline extends Component {
                 step={step}
                 updateStep={this.updateStep}
                 users={users}
+                headlessMembers={pipeline.headlessMembers}
+                headlessClientsConfig={availableHeadlessClients}
+                isEdit={!!pipeline.id}
               />
             ))}
           </div>
@@ -733,6 +903,7 @@ Pipeline.defaultProps = {
   users: [],
   subscribeToComputations: null,
   subscribeToPipelines: null,
+  availableHeadlessClients: [],
 };
 
 Pipeline.propTypes = {
@@ -750,6 +921,7 @@ Pipeline.propTypes = {
   notifySuccess: PropTypes.func.isRequired,
   savePipeline: PropTypes.func.isRequired,
   saveActivePipeline: PropTypes.func.isRequired,
+  availableHeadlessClients: PropTypes.array,
 };
 
 const mapStateToProps = ({ auth }) => ({
@@ -770,7 +942,12 @@ const PipelineWithData = compose(
     'fetchAllUsers',
     'subscribeToUsers',
     'userChanged'
-  ))
+  )),
+  graphql(FETCH_AVAILABLE_HEADLESS_CLIENTS, {
+    props: ({ data: { fetchAvailableHeadlessClients } }) => ({
+      availableHeadlessClients: fetchAvailableHeadlessClients,
+    }),
+  })
 )(Pipeline);
 
 const PipelineWithAlert = compose(

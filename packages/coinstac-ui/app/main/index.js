@@ -165,7 +165,7 @@ loadConfig()
       resolve();
     }));
 
-    function startPipelineRun(run, filesArray, consortium) {
+    function startPipelineRun(run, filesArray, consortium, networkVolume) {
       const pipeline = run.pipelineSnapshot;
 
       const computationImageList = pipeline.steps
@@ -249,7 +249,8 @@ loadConfig()
             pipeline,
             filesArray,
             run.id,
-            run.pipelineSteps
+            run.pipelineSteps,
+            networkVolume
           )
             .then(({ pipeline, result }) => {
               // Listen for local pipeline state updates
@@ -324,7 +325,7 @@ loadConfig()
         });
     }
 
-    async function startPipeline(consortium, dataMappings, pipelineRun) {
+    async function startPipeline(consortium, dataMappings, pipelineRun, networkVolume) {
       try {
         const { filesArray, steps } = runPipelineFunctions.parsePipelineInput(
           pipelineRun.pipelineSnapshot, dataMappings
@@ -339,7 +340,7 @@ loadConfig()
 
         mainWindow.webContents.send('save-local-run', { run: pipelineRun });
 
-        await startPipelineRun(run, filesArray, consortium);
+        await startPipelineRun(run, filesArray, consortium, networkVolume);
       } catch (error) {
         mainWindow.webContents.send('notify-warning', error.message);
       }
@@ -353,7 +354,7 @@ loadConfig()
    * @return {Promise<String>} Status message
    */
     ipcMain.on('start-pipeline', (event, {
-      consortium, dataMappings, pipelineRun,
+      consortium, dataMappings, pipelineRun, networkVolume,
     }) => {
       // This is a way to avoid multiple instances of COINSTAC running on the same machine to start
       // the pipeline runs at the same time. We start the pipeline runs with random delays
@@ -361,7 +362,7 @@ loadConfig()
       const delayAmount = Math.floor(Math.random() * 3000);
 
       setTimeout(() => {
-        startPipeline(consortium, dataMappings, pipelineRun);
+        startPipeline(consortium, dataMappings, pipelineRun, networkVolume);
       }, delayAmount);
     });
 

@@ -1,6 +1,6 @@
 appId: com.github.trendscenter.coinstac
 productName: COINSTAC
-afterSign: './scripts/utils/notarize.js'
+afterSign: "./scripts/utils/notarize.js"
 files:
   - "**/*"
   - "build/render"
@@ -9,7 +9,6 @@ files:
   - "!config/local-production.json"
   - "!CONTRIBUTING.md"
   - "!coverage"
-  - "!img"
   - "!scripts"
   - "!test"
   - "!webpack.config.js"

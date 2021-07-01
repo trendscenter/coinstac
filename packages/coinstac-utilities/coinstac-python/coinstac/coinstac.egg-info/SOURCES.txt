@@ -1,0 +1,7 @@
+setup.py
+src/__init__.py
+src/coinstac.egg-info/PKG-INFO
+src/coinstac.egg-info/SOURCES.txt
+src/coinstac.egg-info/dependency_links.txt
+src/coinstac.egg-info/requires.txt
+src/coinstac.egg-info/top_level.txt
