@@ -13,7 +13,7 @@
    },
    "computation":{
       "type":"docker",
-      "dockerImage":"coinstacteam/vbm_pre",
+      "dockerImage":"coinstacteam/vbm-pre",
       "command":[
          "python",
          "\/computation\/run_vbm.py"
@@ -23,27 +23,20 @@
         "label": "Standalone",
         "type": "boolean",
         "default": true,
-        "order": 0
-      },
-      "data": {
-        "label": "Data",
-        "type": "bundle",
-        "items": ["NIfTI"],
-        "extensions": [["csv", "txt"]],
-        "order": 1
+        "order": 0,
+        "source": "owner"
       },
       "covariates": {
         "label": "Covariates",
-        "type": "array",
-        "items": [
-          "boolean",
-          "number"
-        ],
-        "order": 2,
-        "conditional": {
-           "variable": "standalone",
-           "value": false
-         }
+        "type": "csv",
+        "items": ["boolean", "number", "string"],
+        "source": "member"
+      },
+      "data": {
+        "label": "Data",
+        "type": "freesurfer",
+        "items": ["NiFTI"],
+        "source": "owner"
       },
       "options_smoothing_x_mm": {
         "type": "range",
@@ -54,7 +47,8 @@
         "step": 1,
         "tooltip": "Full width half maximum smoothing kernel value along x in mm",
         "order": 3,
-        "group": "smoothing"
+        "group": "smoothing",
+        "source": "owner"
       },
       "options_smoothing_y_mm": {
         "type": "range",
@@ -65,7 +59,8 @@
         "step": 1,
         "tooltip": "Full width half maximum smoothing kernel value along y in mm",
         "order": 4,
-        "group": "smoothing"
+        "group": "smoothing",
+        "source": "owner"
       },
       "options_smoothing_z_mm": {
         "type": "range",
@@ -76,7 +71,8 @@
         "step": 1,
         "tooltip": "Full width half maximum smoothing kernel value along z in mm",
         "order": 5,
-        "group": "smoothing"
+        "group": "smoothing",
+        "source": "owner"
       },
       "options_reorient_params_x_mm": {
         "type": "range",
@@ -87,7 +83,8 @@
         "step": 5,
         "tooltip": "x translation in mm",
         "order": 6,
-        "group": "reorientation"
+        "group": "reorientation",
+        "source": "owner"
       },
         "options_reorient_params_y_mm": {
         "type": "range",
@@ -98,7 +95,8 @@
         "step": 5,
         "tooltip": "y translation in mm",
         "order": 7,
-        "group": "reorientation"
+        "group": "reorientation",
+        "source": "owner"
       },
         "options_reorient_params_z_mm": {
         "type": "range",
@@ -109,7 +107,8 @@
         "step": 5,
         "tooltip": "z translation in mm",
         "order": 8,
-        "group": "reorientation"
+        "group": "reorientation",
+        "source": "owner"
       },
 	      "options_reorient_params_pitch": {
         "type": "range",
@@ -120,7 +119,8 @@
         "step": 5,
         "tooltip": "x rotation about - {pitch} (degrees). Ex: 90",
         "order": 9,
-        "group": "reorientation"
+        "group": "reorientation",
+        "source": "owner"
       },
         "options_reorient_params_roll": {
         "type": "range",
@@ -131,7 +131,8 @@
         "step": 5,
         "tooltip": "y rotation about - {roll}  (degrees). Ex: 180",
         "order": 10,
-        "group": "reorientation"
+        "group": "reorientation",
+        "source": "owner"
       },
         "options_reorient_params_yaw": {
         "type": "range",
@@ -142,7 +143,8 @@
         "step": 5,
         "tooltip": "z rotation about - {yaw}   (degrees). Ex: -45",
         "order": 11,
-        "group": "reorientation"
+        "group": "reorientation",
+        "source": "owner"
       },
         "options_BIAS_REGULARISATION": {
         "type": "select",
@@ -160,7 +162,8 @@
         ],
         "tooltip": "No regularization,Extremely light, very light, light, medium, heavy, very heavy, extremely heavy",
         "order": 12,
-        "group": "segmentation"
+        "group": "segmentation",
+        "source": "owner"
       },
      "options_FWHM_GAUSSIAN_SMOOTH_BIAS": {
         "type": "range",
@@ -171,7 +174,8 @@
         "step": 10,
         "tooltip": "FWHM_GAUSSIAN_SMOOTH_BIAS(mm) for segmentation",
         "order": 13,
-        "group": "segmentation"
+        "group": "segmentation",
+        "source": "owner"
       },
       "options_affine_regularization": {
         "type": "select",
@@ -185,7 +189,8 @@
         ],
         "tooltip": "The procedure is a local optimisation, so it needs reasonable initial starting estimates. Images should be placed in approximate alignment using the Display function of SPM before beginning. A Mutual Information affine registration with the tissue probability maps (D’Agostino et al, 2004) is used to achieve approximate alignment. Note that this step does not include any model for intensity non-uniformity. This means that if the procedure is to be initialised with the affine registration, then the data should not be too corrupted with this artifact.If there is a lot of intensity non-uniformity, then manually position your image in order to achieve closer starting estimates, and turn off the affine registration. Affine registration into a standard space can be made more robust by regularisation (penalising excessive stretching or shrinking). The best solutions can be obtained by knowing the approximate amount of stretching that is needed (e.g. ICBM templates are slightly bigger than typical brains, so greater zooms are likely to be needed). For example, if registering to an image in ICBM/MNI space, then choose this option. If registering to a template that is close in size, then select the appropriate option for this.",
         "order": 14,
-        "group": "segmentation"
+        "group": "segmentation",
+        "source": "owner"
       },
       "options_warping_regularization": {
         "type": "set",
@@ -194,7 +199,8 @@
         "tooltip": "Registration involves simultaneously minimising two terms. One of these is a measure of similarity between the images (mean-squared difference in the current situation), whereas the other is a measure of the roughness of the deformations. This measure of roughness involves the sum of the following terms: * Absolute displacements need to be penalised by a tiny amount. The first element encodes the amount of penalty on these. Ideally, absolute displacements should not be penalised, but it is necessary for technical reasons. * The ‘membrane energy’ of the deformation is penalised (2nd element), usually by a relatively small amount. This penalises the sum of squares of the derivatives of the velocity field (ie the sum of squares of the elements of the Jacobian tensors). * The ‘bending energy’ is penalised (3rd element). This penalises the sum of squares of the 2nd derivatives of the velocity. * Linear elasticity regularisation is also included (4th and 5th elements). The first parameter (mu) is similar to that for linear elasticity, except it penalises the sum of squares of the Jacobian tensors after they have been made symmetric (by averaging with the transpose). This term essentially penalises length changes, without penalising rotations. * The final term also relates to linear elasticity, and is the weight that denotes how much to penalise changes to the divergence of the velocities (lambda). This divergence is a measure of the rate of volumetric expansion or contraction. The amount of regularisation determines the tradeoff between the terms. More regularisation gives smoother deformations, where the smoothness measure is determined by the bending energy of the deformations.",
         "order": 15,
         "group": "segmentation",
-        "limit": 5
+        "limit": 5,
+        "source": "owner"
       },
       "options_sampling_distance": {
         "type": "range",
@@ -205,7 +211,8 @@
         "step": 1,
         "tooltip": "This encodes the approximate distance between sampled points when estimating the model parameters. Smaller values use more of the data, but the procedure is slower and needs more memory. Determining the “best” setting involves a compromise between speed and accuracy",
         "order": 16,
-        "group": "segmentation"
+        "group": "segmentation",
+        "source": "owner"
       },
       "options_mrf_weighting": {
         "type": "number",
@@ -213,7 +220,8 @@
         "default": 1,
         "tooltip": "When tissue class images are written out, a few iterations of a simple Markov Random Field (MRF) cleanup procedure are run. This parameter controls the strength of the MRF. Setting the value to zero will disable the cleanup.",
         "order": 17,
-        "group": "segmentation"
+        "group": "segmentation",
+        "source": "owner"
       },
       "options_cleanup": {
         "type": "select",
@@ -226,7 +234,8 @@
         ],
         "tooltip": "This uses a crude routine for extracting the brain from segmented images. It begins by taking the white matter, and eroding it a couple of times to get rid of any odd voxels. The algorithm continues on to do conditional dilations for several iterations, where the condition is based upon gray or white matter being present.This identified region is then used to clean up the grey and white matter partitions. Note that the fluid class will also be cleaned, such that aqueous and vitreous humour in the eyeballs, as well as other assorted fluid regions (except CSF) will be removed. If you find pieces of brain being chopped out in your data, then you may wish to disable or tone down the cleanup procedure. Note that the procedure uses a number of assumptions about what each tissue class refers to. If a different set of tissue priors are used, then this routine should be disabled.0=None,1=light,2=thorough",
         "order": 18,
-        "group": "segmentation"
+        "group": "segmentation",
+        "source": "owner"
       },
       "options_smoothing_implicit_masking": {
         "type": "boolean",
@@ -234,7 +243,8 @@
         "label": "Implicit masking for smoothing",
         "tooltip": "An implicit mask is a mask implied by a particular voxel value (0 for images with integer type, NaN for float images). If set to ’Yes’, the implicit masking of the input image is preserved in the smoothed image.",
         "order": 19,
-        "group": "segmentation"
+        "group": "segmentation",
+        "source": "owner"
       },
      "regression_resample_voxel_size": {
         "type": "range",
@@ -249,7 +259,8 @@
           "value": true
         },
         "order": 20,
-        "group": "segmentation"
+        "group": "segmentation",
+        "source": "owner"
       },
       "regression_file_input_type": {
         "type": "select",
@@ -266,7 +277,8 @@
           "value": true
         },
         "order": 21,
-        "group": "segmentation"
+        "group": "segmentation",
+        "source": "owner"
       }
     },
     "output": {
