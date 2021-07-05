@@ -1205,7 +1205,12 @@ class test_ica_methods(unittest.TestCase):
                                                                         GlobalW_unmixer_X_2 , \
                                                                         GlobalW_unmixer_X_3 , \
                                                                         GlobalW_unmixer_X_4 , \
-                                                                        GlobalW_unmixer_X_5 ) 
+                                                                        GlobalW_unmixer_X_5 , \
+                                                                        S_sources_X_1, \
+                                                                        S_sources_X_2, \
+                                                                        S_sources_X_3, \
+                                                                        S_sources_X_4, \
+                                                                        S_sources_X_5 )
                 print('[LOG][Flow_8b_Parallel_ICA-Global] Multi-run ICA AVERAGE of ', str(self.run), " X run. Finish.") 
 
                 print('[LOG][Flow_8b_Parallel_ICA-Global] Multi-run ICA AVERAGE of ', str(self.run), " Y run. Start.") 
@@ -1215,7 +1220,12 @@ class test_ica_methods(unittest.TestCase):
                                                                         GlobalW_unmixer_Y_2 , \
                                                                         GlobalW_unmixer_Y_3 , \
                                                                         GlobalW_unmixer_Y_4 , \
-                                                                        GlobalW_unmixer_Y_5 ) 
+                                                                        GlobalW_unmixer_Y_5 , \
+                                                                        S_sources_Y_1, \
+                                                                        S_sources_Y_2, \
+                                                                        S_sources_Y_3, \
+                                                                        S_sources_Y_4, \
+                                                                        S_sources_Y_5 )
                 print('[LOG][Flow_8b_Parallel_ICA-Global] Multi-run ICA AVERAGE of ', str(self.run), " Y run. Finish.") 
 
             if ICA_RUN_ICASSO :
@@ -1226,7 +1236,12 @@ class test_ica_methods(unittest.TestCase):
                                                                         GlobalW_unmixer_X_2 , \
                                                                         GlobalW_unmixer_X_3 , \
                                                                         GlobalW_unmixer_X_4 , \
-                                                                        GlobalW_unmixer_X_5 ) 
+                                                                        GlobalW_unmixer_X_5 , \
+                                                                        S_sources_X_1, \
+                                                                        S_sources_X_2, \
+                                                                        S_sources_X_3, \
+                                                                        S_sources_X_4, \
+                                                                        S_sources_X_5 )
                 print('[LOG][Flow_8b_Parallel_ICA-Global] Multi-run ICA ICASSO of ', str(self.run), " X run. Finish.")  
 
                 print('[LOG][Flow_8b_Parallel_ICA-Global] Multi-run ICA ICASSO of ', str(self.run), " Y run. Start.")   
@@ -1236,7 +1251,12 @@ class test_ica_methods(unittest.TestCase):
                                                                         GlobalW_unmixer_Y_2 , \
                                                                         GlobalW_unmixer_Y_3 , \
                                                                         GlobalW_unmixer_Y_4 , \
-                                                                        GlobalW_unmixer_Y_5 ) 
+                                                                        GlobalW_unmixer_Y_5 , \
+                                                                        S_sources_Y_1, \
+                                                                        S_sources_Y_2, \
+                                                                        S_sources_Y_3, \
+                                                                        S_sources_Y_4, \
+                                                                        S_sources_Y_5 )
                 print('[LOG][Flow_8b_Parallel_ICA-Global] Multi-run ICA ICASSO of ', str(self.run), " Y run. Finish.") 
 
         ##########################################################################
