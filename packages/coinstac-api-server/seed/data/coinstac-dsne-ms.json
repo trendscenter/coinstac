@@ -22,12 +22,18 @@
       ]
     },
     "input": {
-      "data": {
-        "label": "Data",
+      "site_data": {
+        "label": "Site Data",
         "type": "files",
-        "items": ["site_data", "site_label"],
+        "items": ["site_data"],
         "extensions": [["csv", "txt"]],
-        "order": 0,
+        "source": "member"
+      },
+      "site_label": {
+        "label": "Site Label",
+        "type": "files",
+        "items": ["site_label"],
+        "extensions": [["csv", "txt"]],
         "source": "member"
       },
       "no_dims": {

@@ -22,19 +22,18 @@
       ]
     },
     "input": {
+      "covariates": {
+        "label": "Labels",
+        "type": "csv",
+        "items": ["boolean", "number"],
+        "source": "member"
+      },
       "data": {
         "label": "Features",
-        "type": "array",
+        "type": "freesurfer",
         "items": ["FreeSurfer"],
-        "extensions": [["csv", "txt"]],
-        "order": 0
-      },
-      "covariates":
-      {
-        "label": "Labels",
-        "type": "array",
-        "items": ["boolean", "number"],
-        "order": 1
+        "extensions": ["csv", "txt"],
+        "source": "owner"
       },
       "lambda":
       {

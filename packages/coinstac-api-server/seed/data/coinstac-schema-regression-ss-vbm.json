@@ -51,17 +51,18 @@
         "type": "number",
         "source": "owner"
       },
-      "covariates":
-      {
+      "covariates": {
         "label": "Covariates",
-        "type": "array",
-        "items": ["boolean", "number", "string"]
+        "type": "csv",
+        "items": ["boolean", "number"],
+        "source": "member"
       },
       "data": {
         "label": "Data",
-        "type": "array",
-        "items": ["NIfTI"],
-        "extensions": [["csv", "txt"]]
+        "type": "freesurfer",
+        "items": ["FreeSurfer"],
+        "extensions": ["csv", "txt"],
+        "source": "owner"
       }
     },
     "output": {

@@ -24,7 +24,7 @@
         "input": {
             "data": {
               "label": "Data",
-              "type": "bundle",
+              "type": "files",
               "items": ["NIfTI"],
               "extensions": [["nii"]],
               "order": 0
@@ -45,6 +45,7 @@
                   "Spatially Constrained"
               ],
               "group": "ica",
+              "source": "owner",
               "order": 2
             },
             "num_ics": {
@@ -63,6 +64,7 @@
             "scica_template": {
                 "label": "Spatially Constrained ICA Template",
                 "type": "string",
+                "source": "owner",
                 "order": 4,
                 "group": "ica",
                 "default": "\/computation\/local_data\/NeuroMark.nii",
@@ -82,6 +84,7 @@
                     "Dynamic FNC"
                 ],
                 "group": "fnc_method",
+                "source": "owner",
                 "order": 5
             },
             "fnc_window_size": {

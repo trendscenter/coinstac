@@ -41,6 +41,7 @@
         "label": "Data",
         "type": "freesurfer",
         "items": ["FreeSurfer"],
+        "extensions": ["csv", "txt"],
         "source": "owner"
       }
     },
