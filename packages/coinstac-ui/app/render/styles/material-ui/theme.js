@@ -1,4 +1,4 @@
-import { createMuiTheme } from '@material-ui/core/styles';
+import { createTheme } from '@material-ui/core/styles';
 
 const palette = {
   primary: { main: '#3F6D87' },
@@ -6,7 +6,7 @@ const palette = {
 };
 const themeName = 'Coinstac';
 
-export default createMuiTheme({
+export default createTheme({
   themeName,
   palette,
   overrides: {

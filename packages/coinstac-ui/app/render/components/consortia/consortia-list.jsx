@@ -609,10 +609,12 @@ ConsortiaList.propTypes = {
   finishLoading: PropTypes.func.isRequired,
   subscribeToUsersOnlineStatus: PropTypes.func.isRequired,
   usersOnlineStatus: PropTypes.object,
+  dockerStatus: PropTypes.bool,
 };
 
 ConsortiaList.defaultProps = {
   usersOnlineStatus: {},
+  dockerStatus: false,
 };
 
 const mapStateToProps = ({ auth, maps }) => ({

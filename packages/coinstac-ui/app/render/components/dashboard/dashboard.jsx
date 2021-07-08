@@ -26,9 +26,10 @@ import {
 } from '../../state/graphql/functions';
 import DashboardNav from './dashboard-nav';
 import DashboardPipelineNavBar from './dashboard-pipeline-nav-bar';
-import DockerStatusChecker from './docker-status-checker';
+import DockerStatus from './docker-status';
 
 import subscribeToEntityList from './effects/subscribe-to-entity-list';
+import useDockerStatus from './effects/useDockerStatus';
 import StartPipelineListener from './listeners/start-pipeline-listener';
 import NotificationsListener from './listeners/notifications-listener';
 import DockerEventsListeners from './listeners/docker-events-listeners';
@@ -74,6 +75,8 @@ function Dashboard({
   const threads = get(threadsData, 'fetchAllThreads');
   const remoteRuns = get(userRunsData, 'fetchAllUserRuns');
 
+  const dockerStatus = useDockerStatus();
+
   const unreadThreadsCount = useMemo(
     () => {
       if (!threads) return 0;
@@ -95,7 +98,7 @@ function Dashboard({
   }
 
   const childrenWithProps = React.cloneElement(children, {
-    computations, consortia, pipelines, runs, threads,
+    computations, consortia, pipelines, runs, threads, dockerStatus,
   });
 
   if (!get(auth, 'user.email')) {
@@ -114,7 +117,7 @@ function Dashboard({
             />
           </ListItem>
           <ListItem>
-            <DockerStatusChecker />
+            <DockerStatus status={dockerStatus} />
           </ListItem>
         </List>
       </div>

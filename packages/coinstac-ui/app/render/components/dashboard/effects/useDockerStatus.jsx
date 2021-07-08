@@ -9,6 +9,8 @@ function useDockerStatus() {
       try {
         const status = await ipcPromise.send('get-status');
 
+        console.log('STATUS', status);
+
         setDockerStatus(status === 'OK');
       } catch (_) {
         setDockerStatus(false);

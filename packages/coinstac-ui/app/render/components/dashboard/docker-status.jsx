@@ -3,8 +3,6 @@ import PropTypes from 'prop-types';
 import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
 
-import useDockerStatus from './effects/useDockerStatus';
-
 const styles = () => ({
   status: {
     display: 'flex',
@@ -29,21 +27,24 @@ const styles = () => ({
   },
 });
 
-function DockerStatusChecker({ classes }) {
-  const dockerStatus = useDockerStatus();
-
+function DockerStatus({ classes, status }) {
   return (
     <span className={classes.status}>
       <Typography variant="subtitle2" className={classes.statusText}>
         Docker Status:
       </Typography>
-      <span className={dockerStatus ? classes.statusUp : classes.statusDown} />
+      <span className={status ? classes.statusUp : classes.statusDown} />
     </span>
   );
 }
 
-DockerStatusChecker.propTypes = {
+DockerStatus.defaultProps = {
+  status: false,
+};
+
+DockerStatus.propTypes = {
+  status: PropTypes.bool,
   classes: PropTypes.object.isRequired,
 };
 
-export default withStyles(styles)(DockerStatusChecker);
+export default withStyles(styles)(DockerStatus);
