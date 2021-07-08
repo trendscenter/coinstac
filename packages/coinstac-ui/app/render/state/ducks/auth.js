@@ -102,8 +102,8 @@ const initCoreAndSetToken = async (reqUser, data, appDirectory, clientServerURL,
 };
 
 export const logout = applyAsyncLoading(() => async (dispatch, getState) => {
-  // localStorage.removeItem(API_TOKEN_KEY);
-  // sessionStorage.removeItem(API_TOKEN_KEY);
+  localStorage.removeItem(API_TOKEN_KEY);
+  sessionStorage.removeItem(API_TOKEN_KEY);
 
   const { auth: { user } } = getState();
 
