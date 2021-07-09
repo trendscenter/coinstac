@@ -1,8 +1,9 @@
 import {
-  get, indexOf, setWith, take, values,
+  get, indexOf, setWith, take, values, keys,
 } from 'lodash';
 import fs from 'fs';
 import CsvReadableStream from 'csv-reader';
+import { v4 as uuidv4 } from 'uuid'; // eslint-disable-line
 
 export function isPipelineOwner(permissions, owningConsortium) {
   return indexOf(permissions.consortia[owningConsortium], 'owner') !== -1;
@@ -125,7 +126,7 @@ export function readCsvFreesurferFiles(files) {
 }
 
 export const buildTree = (nodes) => {
-  const res = {};
+  const trees = {};
 
   nodes.forEach((node) => {
     const segments = node.split('/');
@@ -136,8 +137,8 @@ export const buildTree = (nodes) => {
       const currentSegment = segments[segIndex];
 
       if (segIndex === 0) {
-        if (!res[currentSegment]) {
-          res[currentSegment] = {
+        if (!trees[currentSegment]) {
+          trees[currentSegment] = {
             id: currentSegment,
             name: currentSegment,
             children: {},
@@ -147,8 +148,8 @@ export const buildTree = (nodes) => {
         const path = `${parents.join('.children.')}.children`;
         const currentPath = [...path.split('.'), currentSegment];
 
-        if (!get(res, currentPath)) {
-          setWith(res, currentPath, {
+        if (!get(trees, currentPath)) {
+          setWith(trees, currentPath, {
             id: currentSegment,
             name: currentSegment,
             children: {},
@@ -158,9 +159,42 @@ export const buildTree = (nodes) => {
     }
   });
 
-  const output = values(res);
 
-  return output;
+  const root = {
+    id: 'root',
+    name: 'root',
+    children: trees,
+  };
+
+  const convertObjectToArray = (tree) => {
+    if (!tree.children) {
+      return {
+        id: `${tree.id}-${uuidv4()}`,
+        name: tree.name,
+        children: [],
+      };
+    }
+
+    if (Array.isArray(tree.children)) {
+      if (keys(tree.children) === 0) {
+        return {
+          id: `${tree.id}-${uuidv4()}`,
+          name: tree.name,
+          children: [],
+        };
+      }
+    }
+
+    return {
+      id: `${tree.id}-${uuidv4()}`,
+      name: tree.name,
+      children: values(tree.children).map(elem => convertObjectToArray(elem)),
+    };
+  };
+
+  const res = convertObjectToArray(root);
+
+  return res;
 };
 
 export const generateInitalFileTree = (consortia, runs) => {
