@@ -4,7 +4,7 @@ import React from 'react';
 import { ipcRenderer } from 'electron';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import { withStyles } from '@material-ui/core';
+import { withStyles } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
 import Divider from '@material-ui/core/Divider';
 import RunsList from '../common/runs-list';

@@ -73,6 +73,10 @@ export default class VariableSizeTree extends Tree {
     });
   }
 
+  getItemSize(index) {
+    return this.getRecordData(index).height;
+  }
+
   render() {
     const {
       children,
@@ -98,9 +102,5 @@ export default class VariableSizeTree extends Tree {
         {rowComponent}
       </VariableSizeList>
     );
-  }
-
-  getItemSize(index) {
-    return this.getRecordData(index).height;
   }
 }
