@@ -54,6 +54,7 @@ function MapsEdit({
         </Typography>
       </div>
       <MapsEditForm
+        consortiumId={consortium && consortium.id}
         pipeline={pipeline}
         dataMap={dataMap}
         onChange={onChange}

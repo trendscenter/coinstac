@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router';
 import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
 import Button from '@material-ui/core/Button';
@@ -24,16 +25,42 @@ const styles = theme => ({
     height: 30,
     color: '#43a047',
   },
+  backButton: {
+    marginLeft: theme.spacing(1),
+  },
 });
 
 function MapsEditForm({
-  pipeline, dataMap, onSubmit, onChange, saved, classes,
+  consortiumId, pipeline, dataMap, onSubmit, onChange, saved, classes,
 }) {
+  const getDataIsMapped = () => {
+    if (!pipeline || !pipeline.steps || pipeline.steps.length === 0) {
+      return false;
+    }
+
+    for (const step of pipeline.steps) { // eslint-disable-line no-restricted-syntax
+      const { inputMap } = step;
+
+      const unmappedCount = Object.keys(inputMap)
+        .filter(inputKey => !inputMap[inputKey].fulfilled)
+        .filter(inputKey => !dataMap[inputKey])
+        .length;
+
+      if (unmappedCount > 0) {
+        return false;
+      }
+    }
+
+    return true;
+  };
+
+  const isDataMapped = getDataIsMapped();
+
   return (
     <form onSubmit={onSubmit}>
       <div className={classes.saveButtonContainer}>
         {
-          saved && (
+          (saved || isDataMapped) && (
             <span className={classes.successMessage}>
               Data map saved
               <CheckCircleIcon className={classes.successIcon} />
@@ -47,6 +74,18 @@ function MapsEditForm({
         >
           Save
         </Button>
+        {isDataMapped && (
+          <Button
+            className={classes.backButton}
+            component={Link}
+            to={`/dashboard/consortia/${consortiumId}`}
+            variant="contained"
+            color="primary"
+            type="submit"
+          >
+            Back to Consortium
+          </Button>
+        )}
       </div>
       {
         pipeline && pipeline.steps && pipeline.steps.map((step) => {
@@ -90,6 +129,7 @@ function MapsEditForm({
 }
 
 MapsEditForm.propTypes = {
+  consortiumId: PropTypes.string.isRequired,
   pipeline: PropTypes.object,
   dataMap: PropTypes.object.isRequired,
   onSubmit: PropTypes.func.isRequired,
