@@ -13,12 +13,15 @@ const styles = theme => ({
     justifyContent: 'flex-end',
   },
   successMessage: {
+    fontSize: 16,
     marginRight: theme.spacing(1),
     display: 'flex',
     alignItems: 'center',
   },
   successIcon: {
     marginLeft: theme.spacing(0.5),
+    width: 30,
+    height: 30,
     color: '#43a047',
   },
 });
@@ -28,6 +31,23 @@ function MapsEditForm({
 }) {
   return (
     <form onSubmit={onSubmit}>
+      <div className={classes.saveButtonContainer}>
+        {
+          saved && (
+            <span className={classes.successMessage}>
+              Data map saved
+              <CheckCircleIcon className={classes.successIcon} />
+            </span>
+          )
+        }
+        <Button
+          variant="contained"
+          color="primary"
+          type="submit"
+        >
+          Save
+        </Button>
+      </div>
       {
         pipeline && pipeline.steps && pipeline.steps.map((step) => {
           const { computations, inputMap } = step;
@@ -65,23 +85,6 @@ function MapsEditForm({
             });
         })
       }
-      <div className={classes.saveButtonContainer}>
-        {
-          saved && (
-            <span className={classes.successMessage}>
-              Data map saved
-              <CheckCircleIcon className={classes.successIcon} />
-            </span>
-          )
-        }
-        <Button
-          variant="contained"
-          color="primary"
-          type="submit"
-        >
-          Save
-        </Button>
-      </div>
     </form>
   );
 }
