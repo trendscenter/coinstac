@@ -1,5 +1,6 @@
 import React from 'react';
-import { compose, graphql, withApollo } from 'react-apollo';
+import { useQuery } from '@apollo/client';
+import { get } from 'lodash';
 import Avatar from 'react-avatar';
 import PropTypes from 'prop-types';
 import Typography from '@material-ui/core/Typography';
@@ -33,14 +34,20 @@ const styles = theme => ({
 });
 
 function MemberAvatar({
+  id,
   name,
   consRole,
   showDetails,
   width,
   classes,
   ready,
-  user,
 }) {
+  const { data } = useQuery(FETCH_USER_QUERY, {
+    variables: { userId: id },
+  });
+
+  const user = get(data, 'fetchUser');
+
   return (
     <div key={`${name}-avatar`} className={classes.containerStyles}>
       {user && user.photo
@@ -63,11 +70,11 @@ function MemberAvatar({
 }
 
 MemberAvatar.propTypes = {
+  id: PropTypes.string.isRequired,
   name: PropTypes.string.isRequired,
   classes: PropTypes.object.isRequired,
   consRole: PropTypes.string,
   ready: PropTypes.bool,
-  user: PropTypes.object,
   showDetails: PropTypes.bool,
   width: PropTypes.number.isRequired,
 };
@@ -76,20 +83,6 @@ MemberAvatar.defaultProps = {
   consRole: null,
   showDetails: false,
   ready: false,
-  user: null,
 };
 
-const MemberAvatarWithData = compose(
-  graphql(FETCH_USER_QUERY, {
-    skip: props => !props.id,
-    options: props => ({
-      variables: { userId: props.id },
-    }),
-    props: props => ({
-      user: props.data.fetchUser,
-    }),
-  }),
-  withApollo
-)(MemberAvatar);
-
-export default withStyles(styles)(MemberAvatarWithData);
+export default withStyles(styles)(MemberAvatar);

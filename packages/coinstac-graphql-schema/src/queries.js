@@ -28,6 +28,13 @@ const queries = {
     }
   }
   `,
+  consortiumPipelineChanged: `
+  {
+    consortiumPipelineChanged {
+      ${sharedFields.consortiaFields}
+    }
+  }
+  `,
   threadChanged: `
   {
     threadChanged(threadId: $threadId) {
