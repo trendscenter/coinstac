@@ -4,6 +4,7 @@ const {
   COMPUTATION_DELETED,
   CONSORTIUM_CHANGED,
   CONSORTIUM_DELETED,
+  CONSORTIUM_PIPELINE_CHANGED,
   PIPELINE_CHANGED,
   PIPELINE_DELETED,
   RUN_CHANGED,
@@ -59,6 +60,15 @@ function consortiumDeleted(consortium) {
 
   pubSub.publish('consortiumChanged', {
     consortiumChanged: cons,
+    consortiumId: cons.id,
+  });
+}
+
+function consortiumPipelineChanged(consortium) {
+  const cons = transformToClient(consortium);
+
+  pubSub.publish('consortiumPipelineChanged', {
+    consortiumPipelineChanged: cons,
     consortiumId: cons.id,
   });
 }
@@ -148,6 +158,7 @@ function initSubscriptions(ps) {
 
   eventEmitter.on(CONSORTIUM_CHANGED, consortiumChanged);
   eventEmitter.on(CONSORTIUM_DELETED, consortiumDeleted);
+  eventEmitter.on(CONSORTIUM_PIPELINE_CHANGED, consortiumPipelineChanged);
 
   eventEmitter.on(PIPELINE_CHANGED, pipelineChanged);
   eventEmitter.on(PIPELINE_DELETED, pipelineDeleted);

@@ -2,10 +2,12 @@ import React, { Component, Fragment } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { Link } from 'react-router';
-import { compose, graphql, withApollo } from 'react-apollo';
+import { graphql, withApollo } from '@apollo/react-hoc';
 import { ipcRenderer } from 'electron';
 import classNames from 'classnames';
-import { get, orderBy, some } from 'lodash';
+import {
+  get, orderBy, some, flowRight as compose,
+} from 'lodash';
 import Button from '@material-ui/core/Button';
 import Menu from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
@@ -164,10 +166,7 @@ class ConsortiaList extends Component {
           classNames(classes.value, consortium.activePipelineId ? classes.green : classes.red)
         }
         >
-          {consortium.activePipelineId
-            ? pipeline.name
-            : 'None'
-          }
+          { pipeline ? pipeline.name : 'None' }
         </Typography>
       </div>
     );
@@ -597,7 +596,7 @@ ConsortiaList.propTypes = {
   pipelines: PropTypes.array.isRequired,
   router: PropTypes.object.isRequired,
   runs: PropTypes.array.isRequired,
-  dockerStatus: PropTypes.bool.isRequired,
+  dockerStatus: PropTypes.bool,
   createRun: PropTypes.func.isRequired,
   deleteAllDataMappingsFromConsortium: PropTypes.func.isRequired,
   saveActivePipeline: PropTypes.func.isRequired,
@@ -615,6 +614,7 @@ ConsortiaList.propTypes = {
 
 ConsortiaList.defaultProps = {
   usersOnlineStatus: {},
+  dockerStatus: false,
 };
 
 const mapStateToProps = ({ auth, maps }) => ({

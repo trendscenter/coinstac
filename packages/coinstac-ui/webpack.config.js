@@ -2,6 +2,7 @@
 
 const path = require('path');
 const webpack = require('webpack');
+const BundleAnalyzerPlugin = require('webpack-bundle-analyzer');
 const pkg = require('./package.json');
 
 const port = 3000;
@@ -131,7 +132,8 @@ if (process.env.NODE_ENV === 'development') {
   config.output.publicPath = `http://localhost:${port}/`;
   config.plugins.push(
     new webpack.HotModuleReplacementPlugin(),
-    new webpack.NamedModulesPlugin()
+    new webpack.NamedModulesPlugin(),
+    new BundleAnalyzerPlugin.BundleAnalyzerPlugin()
   );
 
   /**

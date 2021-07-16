@@ -1,4 +1,4 @@
-import { gql } from 'react-apollo';
+import { gql } from '@apollo/client';
 import { mutations, queries } from 'coinstac-graphql-schema';
 
 export const ADD_COMPUTATION_MUTATION = gql`
@@ -19,6 +19,11 @@ export const COMPUTATION_CHANGED_SUBSCRIPTION = gql`
 export const CONSORTIUM_CHANGED_SUBSCRIPTION = gql`
   subscription consortiumChanged($consortiumId: ID)
     ${queries.consortiumChanged}
+`;
+
+export const CONSORTIUM_PIPELINE_CHANGED_SUBSCRIPTION = gql`
+  subscription consortiumPipelineChanged
+    ${queries.consortiumPipelineChanged}
 `;
 
 export const THREAD_CHANGED_SUBSCRIPTION = gql`
