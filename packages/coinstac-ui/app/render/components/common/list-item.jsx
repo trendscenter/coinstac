@@ -50,7 +50,7 @@ const styles = theme => ({
   },
 });
 
-function ListItem ({
+function ListItem({
   owner,
   highlight,
   itemOptions,

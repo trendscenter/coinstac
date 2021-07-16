@@ -80,7 +80,7 @@ class StartPipelineListener extends React.Component {
     notifyInfo(`Pipeline Starting for ${consortium.name}.`);
 
     ipcRenderer.send('start-pipeline', {
-      consortium, dataMappings: dataMapping, pipelineRun: run, networkVolume
+      consortium, dataMappings: dataMapping, pipelineRun: run, networkVolume,
     });
   }
 

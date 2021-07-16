@@ -8,9 +8,13 @@ const INITIAL_STATE = {
 
 // Actions
 const APPEND_LOG_MESSAGE = 'APPEND_LOG_MESSAGE';
+const SET_CONSORTIA_FILE_TREE = 'SET_CONSORTIA_FILE_TREE';
 
 // Action Creators
 export const appendLogMessage = message => ({ type: APPEND_LOG_MESSAGE, payload: message });
+export const setConsortiaFileTree = fileTree => ({
+  type: SET_CONSORTIA_FILE_TREE, payload: fileTree,
+});
 
 // Reducer
 export default function reducer(state = INITIAL_STATE, action) {
@@ -22,6 +26,11 @@ export default function reducer(state = INITIAL_STATE, action) {
       return {
         ...state,
         logs: takeRight([...state.logs, ...logs], 500),
+      };
+    case SET_CONSORTIA_FILE_TREE:
+      return {
+        ...state,
+        fileTree: action.payload,
       };
     default:
       return state;
