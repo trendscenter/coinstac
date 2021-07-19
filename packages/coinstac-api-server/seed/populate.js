@@ -834,6 +834,7 @@ async function populateUsers() {
         [CONSORTIA_IDS[1]]: ['owner', 'member'],
       },
       pipelines: {},
+      headlessClients: {},
       roles: {
         admin: true,
         author: true,
@@ -858,6 +859,7 @@ async function populateUsers() {
         [CONSORTIA_IDS[1]]: ['member'],
       },
       pipelines: {},
+      headlessClients: {},
       roles: {
         admin: false,
         author: true,
@@ -882,6 +884,7 @@ async function populateUsers() {
         [CONSORTIA_IDS[1]]: ['member'],
       },
       pipelines: {},
+      headlessClients: {},
       roles: {
         admin: false,
         author: false,
@@ -906,6 +909,7 @@ async function populateUsers() {
         [CONSORTIA_IDS[1]]: ['member'],
       },
       pipelines: {},
+      headlessClients: {},
       roles: {
         admin: true,
         author: true,
@@ -930,6 +934,7 @@ async function populateUsers() {
         [CONSORTIA_IDS[1]]: ['member'],
       },
       pipelines: {},
+      headlessClients: {},
       roles: {
         admin: false,
         author: true,
@@ -954,6 +959,7 @@ async function populateUsers() {
         [CONSORTIA_IDS[1]]: ['member'],
       },
       pipelines: {},
+      headlessClients: {},
       roles: {
         admin: false,
         author: false,
@@ -974,6 +980,7 @@ async function populateUsers() {
       computations: {},
       consortia: {},
       pipelines: {},
+      headlessClients: {},
       roles: {
         admin: true,
         author: false,
