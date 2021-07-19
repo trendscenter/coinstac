@@ -8,9 +8,6 @@ function useDockerStatus() {
     const dockerInterval = setInterval(async () => {
       try {
         const status = await ipcPromise.send('get-status');
-
-        console.log('STATUS', status);
-
         setDockerStatus(status === 'OK');
       } catch (_) {
         setDockerStatus(false);

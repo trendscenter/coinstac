@@ -596,6 +596,7 @@ ConsortiaList.propTypes = {
   pipelines: PropTypes.array.isRequired,
   router: PropTypes.object.isRequired,
   runs: PropTypes.array.isRequired,
+  dockerStatus: PropTypes.bool,
   createRun: PropTypes.func.isRequired,
   deleteAllDataMappingsFromConsortium: PropTypes.func.isRequired,
   saveActivePipeline: PropTypes.func.isRequired,
@@ -609,7 +610,6 @@ ConsortiaList.propTypes = {
   finishLoading: PropTypes.func.isRequired,
   subscribeToUsersOnlineStatus: PropTypes.func.isRequired,
   usersOnlineStatus: PropTypes.object,
-  dockerStatus: PropTypes.bool,
 };
 
 ConsortiaList.defaultProps = {
