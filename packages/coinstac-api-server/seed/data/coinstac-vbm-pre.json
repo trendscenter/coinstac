@@ -30,12 +30,14 @@
         "label": "Covariates",
         "type": "csv",
         "items": ["boolean", "number", "string"],
+        "order": 1,
         "source": "member"
       },
       "data": {
         "label": "Data",
         "type": "freesurfer",
         "items": ["NiFTI"],
+        "order": 2,
         "source": "owner"
       },
       "options_smoothing_x_mm": {

@@ -54,20 +54,23 @@
       "covariates": {
         "label": "Covariates",
         "type": "csv",
-        "items": ["boolean", "number"],
+        "items": ["boolean", "number", "string"],
         "source": "member"
       },
       "data": {
         "label": "Data",
         "type": "freesurfer",
-        "items": ["FreeSurfer"],
-        "extensions": ["csv", "txt"],
+        "items": ["NiFTI"],
         "source": "owner"
       }
     },
     "output": {
       "avg_beta_vector": {
         "label": "Avg Beta Vector",
+        "type": "array"
+      },
+      "beta_vector_local": {
+        "label": "Beta Vector Local",
         "type": "array"
       },
       "r_2_global": {

@@ -22,6 +22,21 @@
       ]
     },
     "input": {
+      "covariates": {
+        "label": "Covariates",
+        "type": "csv",
+        "items": ["boolean", "number"],
+        "source": "member",
+        "order": 0
+      },
+      "data": {
+        "label": "Data",
+        "type": "freesurfer",
+        "items": ["FreeSurfer"],
+        "extensions": ["csv", "txt"],
+        "source": "owner",
+        "order": 1
+      }
       "lambda":
       {
         "default": 0,
@@ -30,7 +45,8 @@
         "min": 0,
         "step": 0.05,
         "type": "number",
-        "source": "owner"
+        "source": "owner",
+        "order": 2
       },
       "threshold":
       {
@@ -39,7 +55,8 @@
         "max": 1,
         "min": 0,
         "type": "number",
-        "source": "owner"
+        "source": "owner",
+        "order": 3
       },
       "voxel_size":
       {
@@ -49,20 +66,8 @@
         "min": 0,
         "step": 0.5,
         "type": "number",
-        "source": "owner"
-      },
-      "covariates": {
-        "label": "Covariates",
-        "type": "csv",
-        "items": ["boolean", "number"],
-        "source": "member"
-      },
-      "data": {
-        "label": "Data",
-        "type": "freesurfer",
-        "items": ["FreeSurfer"],
-        "extensions": ["csv", "txt"],
-        "source": "owner"
+        "source": "owner",
+        "order": 4
       }
     },
     "output": {
