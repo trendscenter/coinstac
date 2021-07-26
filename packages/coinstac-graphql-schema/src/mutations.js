@@ -104,6 +104,25 @@ const mutations = {
       createIssue(issue: $issue)
     }
   `,
+  createHeadlessClient: `
+    {
+      createHeadlessClient(data: $data) {
+        ${sharedFields.headlessClientFields}
+      }
+    }
+  `,
+  updateHeadlessClient: `
+    {
+      updateHeadlessClient(headlessClientId: $id, data: $data) {
+        ${sharedFields.headlessClientFields}
+      }
+    }
+  `,
+  generateHeadlessClientApiKey: `
+    {
+      generateHeadlessClientApiKey(headlessClientId: $headlessClientId)
+    }
+  `,
 };
 
 module.exports = mutations;

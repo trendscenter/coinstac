@@ -17,7 +17,7 @@ async function _turnUsersIntoOwners(headlessClientId, userIds) {
     _id: { $in: userIds },
   }, {
     $set: {
-      [`permissions.headlessClients.${headlessClientId}`]: 'owner'
+      [`permissions.headlessClients.${headlessClientId}`]: 'owner',
     },
   });
 
@@ -42,18 +42,45 @@ async function _removeOwnerPermissionFromUsers(headlessClientId, userIds) {
   eventEmitter.emit(USER_CHANGED, users);
 }
 
-async function createHeadlessClient(args, credentials) {
+async function fetchHeadlessClient(id, credentials) {
+  const db = database.getDbInstance();
+
+  const filter = { _id: { $eq: ObjectID(id) } };
+
+  if (!credentials.permissions.roles.admin) {
+    filter._id.$in = credentials.permissions.headlessClients || [];
+  }
+
+  return db.collection('headlessClients').findOne(filter);
+}
+
+async function fetchHeadlessClients(credentials) {
+  const db = database.getDbInstance();
+
+  const filter = {};
+
+  if (!credentials.permissions.roles.admin) {
+    filter._id = { $in: credentials.permissions.headlessClients || [] };
+  }
+
+  const headlessClients = await db.collection('headlessClients').find(filter).toArray();
+
+  return headlessClients;
+}
+
+
+async function createHeadlessClient(data, credentials) {
   if (!credentials.permissions.roles.admin) {
     throw new NotAuthorizedError('You do not have permission to execute this operation');
   }
 
   const db = database.getDbInstance();
 
-  const insertResult = await db.collection('headlessClients').insertOne(args);
+  const insertResult = await db.collection('headlessClients').insertOne(data);
 
   const headlessClient = insertResult.ops[0];
 
-  const { owners } = args;
+  const { owners } = data;
 
   if (owners) {
     const userIds = Object.keys(owners).map(id => ObjectID(id));
@@ -62,6 +89,7 @@ async function createHeadlessClient(args, credentials) {
   }
 
   eventEmitter.emit(HEADLESS_CLIENT_CHANGED, headlessClient);
+
   return headlessClient;
 }
 
@@ -103,29 +131,33 @@ async function deleteHeadlessClient(headlessClientId, credentials) {
 
   const db = database.getDbInstance();
 
-  const deletedResult = await db.collection('headlessClients').findOneAndDelete({ _id: ObjectID(args.consortiumId) });
+  const deletedResult = await db.collection('headlessClients').findOneAndDelete({ _id: ObjectID(headlessClientId) });
 
   const oldHeadlessClient = deletedResult.value;
 
   eventEmitter.emit(HEADLESS_CLIENT_DELETED, oldHeadlessClient);
 
-  const userIds = Object.keys(oldHeadlessClient.owners);
+  if (oldHeadlessClient.owners) {
+    const userIds = Object.keys(oldHeadlessClient.owners);
 
-  await _removeOwnerPermissionFromUsers(headlessClientId, userIds);
+    await _removeOwnerPermissionFromUsers(headlessClientId, userIds);
+  }
 
   return oldHeadlessClient;
 }
 
 async function generateHeadlessClientApiKey(headlessClientId, credentials) {
-  if (!credentials.permissions.roles.admin
+  if (!credentials.permissions.roles.admin && headlessClientId
     && !credentials.permissions.headlessClients[headlessClientId]) {
     throw new NotAuthorizedError('You do not have permission to execute this operation');
   }
 
-  return helperFunctions.hashPassword(`${headlessClientId}-${new Date().toISOString()}`);
+  return helperFunctions.hashPassword(new Date().toISOString());
 }
 
 module.exports = {
+  fetchHeadlessClient,
+  fetchHeadlessClients,
   createHeadlessClient,
   updateHeadlessClient,
   deleteHeadlessClient,

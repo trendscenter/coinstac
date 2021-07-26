@@ -49,6 +49,13 @@ const queries = {
     }
   }
   `,
+  headlessClientChanged: `
+  {
+    headlessClientChanged {
+      ${sharedFields.headlessClientFields}
+    }
+  }
+  `,
   fetchAllComputations: `
     {
       fetchAllComputations {
@@ -138,9 +145,16 @@ const queries = {
       }
     }
   `,
-  fetchAvailableHeadlessClients: `
+  fetchAllHeadlessClients: `
     {
-      fetchAvailableHeadlessClients {
+      fetchAllHeadlessClients {
+        ${sharedFields.headlessClientFields}
+      }
+    }
+  `,
+  fetchHeadlessClient: `
+    {
+      fetchHeadlessClient(id: $id) {
         ${sharedFields.headlessClientFields}
       }
     }

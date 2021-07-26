@@ -12,6 +12,7 @@ const sharedFields = {
         dockerImage
         command
       }
+      input
     }
     meta {
       name
@@ -147,6 +148,8 @@ const sharedFields = {
     id
     name
     computationWhitelist
+    apiKey
+    delete
   `,
 };
 

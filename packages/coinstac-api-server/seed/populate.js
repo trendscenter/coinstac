@@ -1014,6 +1014,7 @@ async function populateHeadlessClients() {
           },
         },
       },
+      owners: {},
     },
   ]);
 }
