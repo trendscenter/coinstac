@@ -1,5 +1,4 @@
 import React from 'react';
-import { Link } from 'react-router';
 import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
 import Button from '@material-ui/core/Button';
@@ -32,7 +31,7 @@ const styles = theme => ({
 
 function MapsEditForm({
   consortiumId, pipeline, dataMap, onSubmit, onChange, saved, classes,
-}) {
+}, { router }) {
   const getDataIsMapped = () => {
     if (!pipeline || !pipeline.steps || pipeline.steps.length === 0) {
       return false;
@@ -54,19 +53,22 @@ function MapsEditForm({
     return true;
   };
 
+  const handleGoBackToConsortium = () => {
+    localStorage.setItem('HIGHLIGHT_CONSORTIUM', consortiumId);
+    router.push('/dashboard/consortia');
+  };
+
   const isDataMapped = getDataIsMapped();
 
   return (
     <form onSubmit={onSubmit}>
       <div className={classes.saveButtonContainer}>
-        {
-          (saved || isDataMapped) && (
-            <span className={classes.successMessage}>
-              Data map saved
-              <CheckCircleIcon className={classes.successIcon} />
-            </span>
-          )
-        }
+        {saved && (
+          <span className={classes.successMessage}>
+            Data map saved
+            <CheckCircleIcon className={classes.successIcon} />
+          </span>
+        )}
         <Button
           variant="contained"
           color="primary"
@@ -77,11 +79,9 @@ function MapsEditForm({
         {isDataMapped && (
           <Button
             className={classes.backButton}
-            component={Link}
-            to={`/dashboard/consortia/${consortiumId}`}
             variant="contained"
             color="primary"
-            type="submit"
+            onClick={handleGoBackToConsortium}
           >
             Back to Consortium
           </Button>
@@ -128,8 +128,12 @@ function MapsEditForm({
   );
 }
 
+MapsEditForm.contextTypes = {
+  router: PropTypes.object.isRequired,
+};
+
 MapsEditForm.propTypes = {
-  consortiumId: PropTypes.string.isRequired,
+  consortiumId: PropTypes.string,
   pipeline: PropTypes.object,
   dataMap: PropTypes.object.isRequired,
   onSubmit: PropTypes.func.isRequired,
@@ -139,6 +143,7 @@ MapsEditForm.propTypes = {
 };
 
 MapsEditForm.defaultProps = {
+  consortiumId: '',
   pipeline: null,
   saved: false,
 };

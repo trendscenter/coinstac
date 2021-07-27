@@ -64,6 +64,7 @@ const ListItem = ({
   classes,
 }) => (
   <Paper
+    id={itemObject.id}
     key={`${itemObject.id}-list-item`}
     className={classes.rootPaper}
     elevation={4}
