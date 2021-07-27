@@ -50,7 +50,7 @@ const styles = theme => ({
   },
 });
 
-const ListItem = ({
+function ListItem({
   owner,
   highlight,
   itemOptions,
@@ -62,57 +62,63 @@ const ListItem = ({
   linkButtonColor,
   deleteButtonText,
   classes,
-}) => (
-  <Paper
-    id={itemObject.id}
-    key={`${itemObject.id}-list-item`}
-    className={classes.rootPaper}
-    elevation={4}
-  >
-    <div className={classes.titleContainer}>
-      <Typography variant="h5" className={highlight ? classes.highlight : ''}>
-        { itemObject.name }
-      </Typography>
-      {
-        itemOptions.owner && <Typography>Owner</Typography>
-      }
-    </div>
-    <Typography variant="body2" className={classes.description}>
-      { itemObject.description }
-    </Typography>
-    { itemOptions.text }
-    <div className={classes.listItemActions}>
-      <div className={classes.listItemActionsPrimary}>
-        <Button
-          variant="contained"
-          color={linkButtonColor || 'primary'}
-          component={Link}
-          to={`${itemRoute}/${itemObject.id}`}
-          name={itemObject.name}
-          className={classes.button}
-        >
-          { linkButtonText || 'View Details' }
-        </Button>
-        { itemOptions.actions }
+}) {
+  if (!itemObject || !itemOptions) {
+    return null;
+  }
+
+  return (
+    <Paper
+      id={itemObject.id}
+      key={`${itemObject.id}-list-item`}
+      className={classes.rootPaper}
+      elevation={4}
+    >
+      <div className={classes.titleContainer}>
+        <Typography variant="h5" className={highlight ? classes.highlight : ''}>
+          { itemObject.name }
+        </Typography>
+        {
+          itemOptions.owner && <Typography>Owner</Typography>
+        }
       </div>
-      {
-        deleteItem && (owner || canDelete) && (
+      <Typography variant="body2" className={classes.description}>
+        { itemObject.description }
+      </Typography>
+      { itemOptions.text }
+      <div className={classes.listItemActions}>
+        <div className={classes.listItemActionsPrimary}>
           <Button
             variant="contained"
-            color="secondary"
-            onClick={deleteItem(itemObject.id)}
-            name={`${itemObject.name}-delete`}
-            className={classes.deleteButton}
+            color={linkButtonColor || 'primary'}
+            component={Link}
+            to={`${itemRoute}/${itemObject.id}`}
+            name={itemObject.name}
+            className={classes.button}
           >
-            { deleteButtonText || 'Delete' }
-            <DeleteIcon />
+            { linkButtonText || 'View Details' }
           </Button>
-        )
-      }
-      { itemOptions.status }
-    </div>
-  </Paper>
-);
+          { itemOptions.actions }
+        </div>
+        {
+          deleteItem && (owner || canDelete) && (
+            <Button
+              variant="contained"
+              color="secondary"
+              onClick={deleteItem(itemObject.id)}
+              name={`${itemObject.name}-delete`}
+              className={classes.deleteButton}
+            >
+              { deleteButtonText || 'Delete' }
+              <DeleteIcon />
+            </Button>
+          )
+        }
+        { itemOptions.status }
+      </div>
+    </Paper>
+  );
+}
 
 ListItem.defaultProps = {
   owner: false,
@@ -122,6 +128,7 @@ ListItem.defaultProps = {
   deleteButtonText: null,
   deleteItem: null,
   canDelete: false,
+  itemOptions: null,
 };
 
 ListItem.propTypes = {
@@ -130,7 +137,7 @@ ListItem.propTypes = {
   deleteButtonText: PropTypes.string,
   highlight: PropTypes.bool,
   itemObject: PropTypes.object.isRequired,
-  itemOptions: PropTypes.object.isRequired,
+  itemOptions: PropTypes.object,
   itemRoute: PropTypes.string.isRequired,
   linkButtonColor: PropTypes.string,
   linkButtonText: PropTypes.string,

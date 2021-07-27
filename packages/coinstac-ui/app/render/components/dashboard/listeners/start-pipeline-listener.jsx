@@ -15,14 +15,16 @@ class StartPipelineListener extends React.Component {
 
   hasNewMappedData = (prevProps) => {
     const { maps } = this.props;
-
     return prevProps.maps.length < maps.length;
   }
 
   hasNewRemoteRun = (prevProps) => {
     const { remoteRuns } = this.props;
 
-    return prevProps.remoteRuns.length < remoteRuns.length;
+    if (!remoteRuns) return false;
+
+    return (!prevProps.remoteRuns && remoteRuns.length)
+      || prevProps.remoteRuns.length < remoteRuns.length;
   }
 
   startPipelineIfHasActiveRun = () => {
@@ -57,15 +59,12 @@ class StartPipelineListener extends React.Component {
       if (localRuns.findIndex(run => run.id === remoteRun.id) > -1) {
         return;
       }
-
       if (remoteRun.results || remoteRun.error || (remoteRun.id in localRunResults)) {
         return;
       }
-
       const consortium = consortia.find(c => c.id === remoteRun.consortiumId);
       const dataMapping = maps.find(m => m.consortiumId === consortium.id
         && m.pipelineId === consortium.activePipelineId);
-
       if (!dataMapping) {
         notifyInfo(`Run for ${consortium.name} is waiting for your data. Please map your data to take part of the consortium.`);
         return;
@@ -90,13 +89,18 @@ class StartPipelineListener extends React.Component {
   }
 }
 
+StartPipelineListener.defaultProps = {
+  consortia: [],
+  remoteRuns: [],
+};
+
 StartPipelineListener.propTypes = {
-  consortia: PropTypes.array.isRequired,
+  consortia: PropTypes.array,
   localRuns: PropTypes.array.isRequired,
   localRunResults: PropTypes.object.isRequired,
   maps: PropTypes.array.isRequired,
   networkVolume: PropTypes.bool.isRequired,
-  remoteRuns: PropTypes.array.isRequired,
+  remoteRuns: PropTypes.array,
   notifyInfo: PropTypes.func.isRequired,
 };
 
