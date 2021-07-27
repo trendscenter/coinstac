@@ -14,7 +14,7 @@ import EqualizerIcon from '@material-ui/icons/Equalizer';
 import DescriptionIcon from '@material-ui/icons/Description';
 import CloudIcon from '@material-ui/icons/Cloud';
 import SecurityIcon from '@material-ui/icons/Security';
-import { isAdmin } from '../../utils/helpers';
+import { isAdmin, isOwnerOfAnyHeadlessClient } from '../../utils/helpers';
 
 const DashboardNav = ({ user }) => {
   return (
@@ -47,7 +47,7 @@ const DashboardNav = ({ user }) => {
         <ListItemIcon><DescriptionIcon /></ListItemIcon>
         <ListItemText primary="Logs" />
       </ListItem>
-      {isAdmin(user) && (
+      {(isAdmin(user) || isOwnerOfAnyHeadlessClient(user)) && (
         <ListItem button component={Link} to="/dashboard/headlessClients">
           <ListItemIcon><CloudIcon /></ListItemIcon>
           <ListItemText primary="Cloud Users" />
