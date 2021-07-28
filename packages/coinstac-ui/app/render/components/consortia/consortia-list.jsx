@@ -102,9 +102,12 @@ class ConsortiaList extends Component {
       search: '',
       consortiumJoinedByThread:
         localStorage.getItem('CONSORTIUM_JOINED_BY_THREAD'),
+      highlightedConsortium:
+        localStorage.getItem('HIGHLIGHT_CONSORTIUM'),
     };
 
     localStorage.removeItem('CONSORTIUM_JOINED_BY_THREAD');
+    localStorage.removeItem('HIGHLIGHT_CONSORTIUM');
 
     this.deleteConsortium = this.deleteConsortium.bind(this);
     this.joinConsortium = this.joinConsortium.bind(this);
@@ -119,12 +122,19 @@ class ConsortiaList extends Component {
   componentDidMount() {
     const { subscribeToUsersOnlineStatus } = this.props;
 
-    const { consortiumJoinedByThread } = this.state;
+    const { consortiumJoinedByThread, highlightedConsortium } = this.state;
 
     if (consortiumJoinedByThread) {
       setTimeout(() => {
         this.setState({ consortiumJoinedByThread: null });
       }, 5000);
+    }
+
+    if (highlightedConsortium) {
+      const elem = document.getElementById(highlightedConsortium);
+      if (elem) {
+        elem.scrollIntoView({ block: 'center' });
+      }
     }
 
     subscribeToUsersOnlineStatus();
