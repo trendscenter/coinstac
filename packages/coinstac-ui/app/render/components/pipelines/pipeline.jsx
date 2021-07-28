@@ -631,6 +631,13 @@ class Pipeline extends Component {
     router.push('/dashboard/consortia');
   };
 
+  handleGoToMap = () => {
+    const { consortium } = this.state;
+    const { router } = this.context;
+
+    router.push(`/dashboard/maps/${consortium.id}`);
+  }
+
   render() {
     const {
       connectDropTarget, consortia, users, classes, auth, availableHeadlessClients,
@@ -761,6 +768,16 @@ class Pipeline extends Component {
             </Menu>
           </div>
           <Box textAlign="right" className={classes.buttonWrapper}>
+            {consortium && consortium.activePipelineId === pipeline.id && (
+              <Button
+                variant="contained"
+                color="primary"
+                className={classes.button}
+                onClick={this.handleGoToMap}
+              >
+                Map Local Data
+              </Button>
+            )}
             {consortium && (
               <Button
                 variant="contained"
