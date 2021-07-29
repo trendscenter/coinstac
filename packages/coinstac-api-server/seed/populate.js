@@ -1035,6 +1035,28 @@ async function populateHeadlessClients() {
   ]);
 }
 
+async function populateDatasets() {
+  const db = database.getDbInstance();
+
+  return db.collection('datasets').insertMany([
+    {
+      description: 'Brain MRI\'s from patients in the Chicago area. Age 20-30. Data already processed to be used on Freesurfer regressions.',
+      tags: ['mri', 'brain', 'young'],
+      covariates: ['age', 'sex'],
+    },
+    {
+      description: 'Data from brain cancer patients in the San Francisco Bay area. Age 0-16.',
+      tags: ['mri', 'brain', 'children', 'cancer'],
+      covariates: ['age', 'sex', 'weight', 'height'],
+    },
+    {
+      description: 'Freesurfer data from patients in the eastern coast in the United States. Age 60+.',
+      tags: ['mri', 'brain', 'senior'],
+      covariates: ['age', 'sex', 'blood pressure', 'glucose level'],
+    },
+  ]);
+}
+
 async function populate(closeConnection = true) {
   await database.connect();
 
@@ -1046,6 +1068,7 @@ async function populate(closeConnection = true) {
   await populateRuns();
   await populateUsers();
   await populateHeadlessClients();
+  await populateDatasets();
 
   if (closeConnection) {
     await database.close();

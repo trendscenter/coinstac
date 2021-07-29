@@ -152,6 +152,12 @@ const sharedFields = {
     hasApiKey
     delete
   `,
+  datasetFields: `
+    id
+    description
+    tags
+    covariates
+  `,
 };
 
 module.exports = sharedFields;

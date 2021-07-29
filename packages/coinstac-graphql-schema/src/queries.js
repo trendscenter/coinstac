@@ -187,6 +187,18 @@ const queries = {
       }
     }
   `,
+  searchDatasets: `
+    {
+      searchDatasets(searchString: $searchString, tags: $tags) {
+        ${sharedFields.datasetFields}
+      }
+    }
+  `,
+  fetchAllDatasetsTags: `
+    {
+      fetchAllDatasetsTags
+    }
+  `,
 };
 
 module.exports = queries;

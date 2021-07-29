@@ -161,6 +161,13 @@ const typeDefs = `
     owners: JSON
   }
 
+  type Dataset {
+    id: ID
+    description: String
+    tags: [String]
+    covariates: [String]
+  }
+
   input IssueInput {
     title: String
     body: String
@@ -215,6 +222,9 @@ const typeDefs = `
     fetchHeadlessClient(id: ID!): HeadlessClient
     fetchAllThreads: [Thread]
     fetchUsersOnlineStatus: JSON
+    fetchAvailableHeadlessClients: [HeadlessClient]
+    fetchAllDatasetsTags: [String]
+    searchDatasets(searchString: String, tags: [String]): [Dataset]
   }
 
   type Subscription {

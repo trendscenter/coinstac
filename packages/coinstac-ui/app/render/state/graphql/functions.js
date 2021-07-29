@@ -263,3 +263,13 @@ export const GENERATE_HEADLESS_CLIENT_API_KEY_MUTATION = gql`
   mutation generateHeadlessClientApiKey($headlessClientId: ID!)
     ${mutations.generateHeadlessClientApiKey}
 `;
+
+export const FETCH_ALL_DATASETS_TAGS_QUERY = gql`
+  query fetchAllDatasetsTags
+    ${queries.fetchAllDatasetsTags}
+`;
+
+export const SEARCH_DATASETS_QUERY = gql`
+  query searchDatasets($searchString: String, $tags: [String])
+    ${queries.searchDatasets}
+`;

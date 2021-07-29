@@ -431,6 +431,39 @@ const resolvers = {
         return Boom.internal(`Failed to fetch the headless client ${id}`, error);
       }
     },
+    fetchAllDatasetsTags: async () => {
+      const db = database.getDbInstance();
+
+      const result = await db.collection('datasets').aggregate([
+        { $unwind: '$tags' },
+        { $group: { _id: null, tags: { $addToSet: '$tags' } } }
+      ]).toArray();
+
+      return result.length ? result[0].tags : [];
+    },
+    searchDatasets: async (parent, { searchString = '', tags = [] }) => {
+      const db = database.getDbInstance();
+      console.log('SEARCH', searchString);
+      console.log('TAGS', tags);
+
+      const searchObj = {};
+
+      if (searchString) {
+        searchObj.$text = {
+          $search: searchString
+        };
+      }
+
+      if (tags && tags.length) {
+        searchObj.tags = { $all: tags };
+      }
+
+      const datasets = await db.collection('datasets').find(searchObj).toArray();
+
+      console.log('AA', datasets);
+
+      return transformToClient(datasets);
+    },
   },
   Mutation: {
     /**
