@@ -47,7 +47,6 @@ class PipelineStepInputFreesurferTableRow extends React.Component {
 
   selectInterest = (value, index) => {
     const { updateStep , getNewObj, step } = this.props;
-    console.log(index);
     if (value[0] && value[0].label === 'All Interests') {
       let options = freesurferDataOptions.freesurferROIs.slice(1);
       updateStep({
@@ -55,7 +54,6 @@ class PipelineStepInputFreesurferTableRow extends React.Component {
         inputMap: getNewObj('value', options, index, false),
       });
     } else {
-      console.log('Should not select all...');
       updateStep({
         ...step,
         inputMap: getNewObj('value', value ? value.map(val => val.value) : null, index, false),
