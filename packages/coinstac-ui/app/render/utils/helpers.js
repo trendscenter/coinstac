@@ -1,6 +1,9 @@
-import { get, indexOf } from 'lodash';
+import {
+  get, indexOf, setWith, take, values, keys,
+} from 'lodash';
 import fs from 'fs';
 import CsvReadableStream from 'csv-reader';
+import { v4 as uuidv4 } from 'uuid'; // eslint-disable-line
 
 export function isPipelineOwner(permissions, owningConsortium) {
   return indexOf(permissions.consortia[owningConsortium], 'owner') !== -1;
@@ -125,3 +128,91 @@ export function readCsvFreesurferFiles(files) {
 
   return Promise.all(readPromises);
 }
+
+export const buildTree = (nodes) => {
+  const trees = {};
+
+  nodes.forEach((node) => {
+    const segments = node.split('/');
+
+    for (let segIndex = 0; segIndex < segments.length; segIndex += 1) {
+      const parents = take(segments, segIndex);
+
+      const currentSegment = segments[segIndex];
+
+      if (segIndex === 0) {
+        if (!trees[currentSegment]) {
+          trees[currentSegment] = {
+            id: currentSegment,
+            name: currentSegment,
+            children: {},
+          };
+        }
+      } else {
+        const path = `${parents.join('.children.')}.children`;
+        const currentPath = [...path.split('.'), currentSegment];
+
+        if (!get(trees, currentPath)) {
+          setWith(trees, currentPath, {
+            id: currentSegment,
+            name: currentSegment,
+            children: {},
+          }, Object);
+        }
+      }
+    }
+  });
+
+
+  const root = {
+    id: 'root',
+    name: 'root',
+    children: trees,
+  };
+
+  const convertObjectToArray = (tree) => {
+    if (!tree.children) {
+      return {
+        id: `${tree.id}-${uuidv4()}`,
+        name: tree.name,
+        children: [],
+      };
+    }
+
+    if (Array.isArray(tree.children)) {
+      if (keys(tree.children) === 0) {
+        return {
+          id: `${tree.id}-${uuidv4()}`,
+          name: tree.name,
+          children: [],
+        };
+      }
+    }
+
+    return {
+      id: `${tree.id}-${uuidv4()}`,
+      name: tree.name,
+      children: values(tree.children).map(elem => convertObjectToArray(elem)),
+    };
+  };
+
+  const res = convertObjectToArray(root);
+
+  return res;
+};
+
+export const generateInitalFileTree = (consortia, runs) => {
+  return consortia.map((consortium) => {
+    const consortiumRuns = runs.filter(
+      run => run.consortiumId === consortium.id && !!run.endDate
+    ).map(run => ({
+      id: run.id, pipelineName: run.pipelineSnapshot.name, endDate: Number(run.endDate),
+    }));
+
+    return {
+      id: consortium.id,
+      name: consortium.name,
+      runs: consortiumRuns,
+    };
+  });
+};

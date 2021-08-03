@@ -2,8 +2,6 @@ const {
   eventEmitter,
   WS_CONNECTION_STARTED,
   WS_CONNECTION_TERMINATED,
-  USER_SESSION_STARTED,
-  USER_SESSION_FINISHED,
 } = require('./events');
 
 // A map that stores the current ws connections on the server.

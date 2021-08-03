@@ -39,7 +39,6 @@ function getApolloClient(config) {
   });
 
   const unauthorizedLink = onError((e) => {
-    console.log('ERRAO', e);
     if (e.networkError.statusCode !== 401) {
       return;
     }

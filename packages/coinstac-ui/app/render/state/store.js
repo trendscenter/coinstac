@@ -7,7 +7,6 @@
  * @{@link  https://github.com/rackt/redux/blob/master/examples/real-world/store/configureStore.js}
  */
 import { applyMiddleware, createStore } from 'redux';
-import { createLogger } from 'redux-logger';
 import promiseMiddleware from 'redux-promise';
 import thunkMiddleware from 'redux-thunk';
 import { persistStore, persistReducer } from 'redux-persist';

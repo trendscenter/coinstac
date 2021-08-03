@@ -8,7 +8,6 @@ import PropTypes from 'prop-types';
 import { ipcRenderer, remote } from 'electron';
 import { List, ListItem } from '@material-ui/core';
 import ArrowUpwardIcon from '@material-ui/icons/ArrowUpward';
-
 import UserAccountController from '../user/user-account-controller';
 import CoinstacAbbr from '../coinstac-abbr';
 import getApolloClient from '../../state/apollo-client';
@@ -39,6 +38,7 @@ import UpdateDataMapStatusStartupListener from './listeners/update-data-map-stat
 import PullComputationsListener from './listeners/pull-computations-listener';
 import RemoteRunsListener from './listeners/remote-runs-listener';
 import UserPermissionsListener from './listeners/user-permissions-listener';
+import TreeviewListener from './listeners/treeview-listener';
 
 function Dashboard({
   auth, children, runs, maps, router,
@@ -148,6 +148,12 @@ function Dashboard({
       <PullComputationsListener userId={auth.user.id} />
       <RemoteRunsListener userId={auth.user.id} consortia={consortia} />
       <UserPermissionsListener userId={auth.user.id} />
+      <TreeviewListener
+        userId={auth.user.id}
+        appDirectory={auth.appDirectory}
+        runs={runs}
+        consortia={consortia}
+      />
     </div>
   );
 }
