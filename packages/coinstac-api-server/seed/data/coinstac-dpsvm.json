@@ -22,41 +22,168 @@
       ]
     },
     "input": {
-      "data": {
-        "label": "Features",
-        "type": "array",
-        "items": ["FreeSurfer"],
-        "extensions": [["csv", "txt"]],
-        "order": 0
-      },
       "covariates":
       {
-        "label": "Labels",
-        "type": "array",
-        "items": ["boolean", "number"],
-        "order": 1
+        "label": "Covariates",
+        "type": "csv",
+        "description": "Demographic or medical features (e.g., isControl, sex, age)",
+        "items": ["boolean", "number", "string"],
+        "order": 0,
+        "source": "member"
       },
-      "lambda":
+      "data":
       {
-        "default": 0,
-        "label": "Lambda",
-        "max": 1,
-        "min": 0,
-        "step": 0.05,
-        "type": "number",
+        "label": "Measurements",
+        "type": "freesurfer",
+        "items": ["FreeSurfer"],
+        "extensions": [["csv", "txt"]],
+        "source": "owner"
+      },
+      "label":
+      {
+        "label": "Label",
+        "description": "The binary label to predict",
+        "type": "string",
         "source": "owner",
         "order": 2
+      },
+      "model_local":
+      {
+        "default": "SVM",
+        "label": "Model_local",
+        "description": "Binary classification model: SVM / LR",
+        "type": "string",
+        "source": "owner",
+        "order": 3
+      },
+      "is_private_local":
+      {
+        "default": true,
+        "label": "Is_private_local",
+        "description": "Private or public version of model",
+        "type": "boolean",
+        "source": "owner",
+        "order": 4
+      },
+      "perturb_method_local":
+      {
+        "default": "objective",
+        "label": "Perturb_method_local",
+        "description": "Perturbation method for conserving privacy: objective / output, not needed for public version",
+        "type": "string",
+        "source": "owner",
+        "order": 5
+      },
+      "lambda_local":
+      {
+        "default": 0.01,
+        "label": "Lambda_local",
+        "description": "Regularization parameter",
+        "max": 100,
+        "min": 0,
+        "step": "logrithmic",
+        "type": "number",
+        "source": "owner",
+        "order": 6
+      },
+      "epsilon_local":
+      {
+        "default": 1.0,
+        "label": "Epsilon_local",
+        "description": "Privacy parameter",
+        "max": 3,
+        "min": 0.1,
+        "step": 0.01,
+        "type": "number",
+        "source": "owner",
+        "order": 7
+      },
+      "huberconst_local":
+      {
+        "default": 0.5,
+        "label": "Huberconst_local",
+        "description": "Constant for huber loss",
+        "max": 0.5,
+        "min": 0.001,
+        "step": 0.01,
+        "type": "number",
+        "source": "owner",
+        "order": 8
+      },
+      "model_owner":
+      {
+        "default": "SVM",
+        "label": "Model_owner",
+        "description": "Binary classification model: SVM / LR",
+        "type": "string",
+        "source": "owner",
+        "order": 9
+      },
+      "is_private_owner":
+      {
+        "default": true,
+        "label": "Is_private_owner",
+        "description": "Private or public version of model",
+        "type": "boolean",
+        "source": "owner",
+        "order": 10
+      },
+      "perturb_method_owner":
+      {
+        "default": "objective",
+        "label": "Perturb_method_owner",
+        "description": "Perturbation method for conserving privacy: objective / output, not needed for public version",
+        "type": "string",
+        "source": "owner",
+        "order": 11
+      },
+      "lambda_owner":
+      {
+        "default": 0.01,
+        "label": "Lambda_owner",
+        "description": "Regularization parameter",
+        "max": 100,
+        "min": 0,
+        "step": "logrithmic",
+        "type": "number",
+        "source": "owner",
+        "order": 12
+      },
+      "epsilon_owner":
+      {
+        "default": 1.0,
+        "label": "Epsilon_owner",
+        "description": "Privacy parameter",
+        "max": 3,
+        "min": 0.1,
+        "step": 0.01,
+        "type": "number",
+        "source": "owner",
+        "order": 13
+      },
+      "huberconst_owner":
+      {
+        "default": 0.5,
+        "label": "Huberconst_owner",
+        "description": "Constant for huber loss",
+        "max": 0.5,
+        "min": 0.001,
+        "step": 0.01,
+        "type": "number",
+        "source": "owner",
+        "order": 14
       },
       "train_split":
       {
         "default": 0.8,
         "label": "Train Split",
+        "description": "Percentage of data used for training at the owner site",
         "max": 1,
         "min": 0,
         "step": 0.1,
         "type": "number",
         "source": "owner",
-        "order": 3
+        "order": 15
       }
     },
     "output": {
