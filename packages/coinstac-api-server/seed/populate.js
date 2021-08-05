@@ -77,7 +77,7 @@ const RUN_IDS = [
 async function populateComputations() {
   const db = database.getDbInstance();
 
-  return db.collection('computations').insertMany([
+  const comps2Insert = [
     { ...local, submittedBy: 'author', _id: COMPUTATION_IDS[0] },
     { ...decentralized, submittedBy: 'author', _id: COMPUTATION_IDS[1] },
     { ...msrFsl, submittedBy: 'author', _id: COMPUTATION_IDS[2] },
@@ -95,7 +95,20 @@ async function populateComputations() {
     { ...fmri, submittedBy: 'author', _id: COMPUTATION_IDS[14] },
     { ...ssrFsl, submittedBy: 'author', _id: COMPUTATION_IDS[15] },
     { ...dmancova, submittedBy: 'author', _id: COMPUTATION_IDS[16] },
-  ]);
+  ];
+  const currentComps = await db.collection('computations').find().toArray();
+  const operations = comps2Insert.reduce((ops, comp) => {
+    const cc = currentComps.find(cc => cc.computation.id === comp.computation.id);
+    if (cc) {
+      ops.update.push(Object.assign({}, comp, { _id: cc._id }));
+      return ops;
+    }
+    ops.insert.push(comp);
+    return ops;
+  }, { update: [], insert: [] });
+  debugger
+  if (operations.insert.length > 0) await db.collection('computations').insertMany(operations.insert);
+  if (operations.update.length > 0) await db.collection('computations').updateMany(operations.update);
 }
 
 async function populateConsortia() {
@@ -1028,6 +1041,15 @@ async function populate(closeConnection = true) {
   }
 }
 
+async function updateComputations(closeConnection = true) {
+  await database.connect();
+  await populateComputations();
+  if (closeConnection) {
+    await database.close();
+  }
+}
+
+
 module.exports = {
   CONSORTIA_IDS,
   COMPUTATION_IDS,
@@ -1035,4 +1057,5 @@ module.exports = {
   USER_IDS,
   RUN_IDS,
   populate,
+  updateComputations,
 };
