@@ -1,6 +1,6 @@
 {
   "name": "coinstac-server",
-  "version": "5.3.1",
+  "version": "5.3.2",
   "description": "COINSTAC core server functionality.",
   "main": "src/index.js",
   "bin": "bin/coinstac-server-core",
@@ -35,9 +35,9 @@
   "homepage": "https://github.com/MRN-Code/coinstac#readme",
   "dependencies": {
     "axios": "^0.21.1",
-    "coinstac-graphql-schema": "^5.3.0",
+    "coinstac-graphql-schema": "^5.3.2",
     "coinstac-manager": "^5.3.0",
-    "coinstac-pipeline": "^5.3.1",
+    "coinstac-pipeline": "^5.3.2",
     "commander": "^6.1.0",
     "hapi": "^16.6.3"
   }
