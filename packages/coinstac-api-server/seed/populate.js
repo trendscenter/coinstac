@@ -1,4 +1,5 @@
 const path = require('path');
+const { ObjectID } = require('mongodb');
 const database = require('../src/database');
 const helperFunctions = require('../src/auth-helpers');
 
@@ -106,9 +107,10 @@ async function populateComputations() {
     ops.insert.push(comp);
     return ops;
   }, { update: [], insert: [] });
-  debugger
   if (operations.insert.length > 0) await db.collection('computations').insertMany(operations.insert);
-  if (operations.update.length > 0) await db.collection('computations').updateMany(operations.update);
+  await Promise.all(operations.update.map(async (op) => {
+    await db.collection('computations').updateMany({ _id: ObjectID(op._id) }, { $set: { meta: op.meta, computation: op.computation } });
+  }));
 }
 
 async function populateConsortia() {
