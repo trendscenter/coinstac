@@ -32,33 +32,10 @@ const styles = theme => ({
 function MapsEditForm({
   consortiumId, pipeline, dataMap, onSubmit, onChange, saved, classes,
 }, { router }) {
-  const getDataIsMapped = () => {
-    if (!pipeline || !pipeline.steps || pipeline.steps.length === 0) {
-      return false;
-    }
-
-    for (const step of pipeline.steps) { // eslint-disable-line no-restricted-syntax
-      const { inputMap } = step;
-
-      const unmappedCount = Object.keys(inputMap)
-        .filter(inputKey => !inputMap[inputKey].fulfilled)
-        .filter(inputKey => !dataMap[inputKey])
-        .length;
-
-      if (unmappedCount > 0) {
-        return false;
-      }
-    }
-
-    return true;
-  };
-
   const handleGoBackToConsortium = () => {
     localStorage.setItem('HIGHLIGHT_CONSORTIUM', consortiumId);
     router.push('/dashboard/consortia');
   };
-
-  const isDataMapped = getDataIsMapped();
 
   return (
     <form onSubmit={onSubmit}>
@@ -76,7 +53,7 @@ function MapsEditForm({
         >
           Save
         </Button>
-        {isDataMapped && (
+        {saved && (
           <Button
             className={classes.backButton}
             variant="contained"

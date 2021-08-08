@@ -49,11 +49,19 @@ function MapsFilesField({
     setSelectedFiles(newFiles);
   }
 
+  function isMapped() {
+    if (!fieldDataMap || !fieldDataMap.files) {
+      return false;
+    }
+
+    return Array.isArray(fieldDataMap.files) && fieldDataMap.files.length > 0;
+  }
+
   return (
     <Paper className={classes.rootPaper} elevation={2}>
       <Typography variant="h4" className={classes.header}>
         {fieldName}
-        {Boolean(fieldDataMap) && <CheckCircleIcon className={classes.successIcon} />}
+        {isMapped() && <CheckCircleIcon className={classes.successIcon} />}
       </Typography>
       <FilePicker
         multiple
