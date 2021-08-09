@@ -18,7 +18,7 @@ from scipy.linalg import norm as mnorm
 import time
 import unittest
 # import pica_modality2_infomax_v4
-import dpica_mask_
+import dpica_mask
 import dpica_report as dpica_report
 import matplotlib.pyplot as plt
 import math
