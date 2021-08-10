@@ -1,4 +1,5 @@
 const { ObjectID } = require('mongodb');
+const uuid = require('uuid/v4');
 
 const database = require('../../database');
 const helperFunctions = require('../../auth-helpers');
@@ -117,7 +118,13 @@ async function updateHeadlessClient(headlessClientId, data, credentials) {
   await _turnUsersIntoOwners(headlessClientId, addPermissionsUserIds);
   await _removeOwnerPermissionFromUsers(headlessClientId, removePermissionsUserIds);
 
-  const updateResult = await db.collection('headlessClients').findOneAndReplace({ _id: ObjectID(headlessClientId) }, data);
+  const updateResult = await db.collection('headlessClients').findOneAndUpdate({ _id: ObjectID(headlessClientId) }, {
+    $set: {
+      name: data.name,
+      computationWhitelist: data.computationWhitelist,
+      owners: data.owners,
+    },
+  });
 
   eventEmitter.emit(HEADLESS_CLIENT_CHANGED, updateResult.value);
 
@@ -152,7 +159,19 @@ async function generateHeadlessClientApiKey(headlessClientId, credentials) {
     throw new NotAuthorizedError('You do not have permission to execute this operation');
   }
 
-  return helperFunctions.hashPassword(new Date().toISOString());
+  const db = database.getDbInstance();
+
+  const key = uuid();
+
+  const hashedKey = helperFunctions.hashPassword(key);
+
+  await db.collection('headlessClients').findOneAndUpdate({ _id: ObjectID(headlessClientId) }, {
+    $set: {
+      apiKey: hashedKey,
+    },
+  });
+
+  return key;
 }
 
 module.exports = {

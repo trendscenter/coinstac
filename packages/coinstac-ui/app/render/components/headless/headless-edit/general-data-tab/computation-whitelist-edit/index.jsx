@@ -8,12 +8,12 @@ import Tooltip from '@material-ui/core/Tooltip';
 import Typography from '@material-ui/core/Typography';
 import InfoIcon from '@material-ui/icons/Info';
 
-import Select from '../../../common/react-select';
+import Select from '../../../../common/react-select';
 import ComputationWhitelistEditItem from './computation-whitelist-edit-item';
 import useStyles from './computation-whitelist-edit.styles';
-import { FETCH_ALL_COMPUTATIONS_QUERY } from '../../../../state/graphql/functions';
+import { FETCH_ALL_COMPUTATIONS_QUERY } from '../../../../../state/graphql/functions';
 
-function ComputationWhitelistEdit({ computationWhitelist, addEmptyComputation, changeWhitelist }) {
+function ComputationWhitelistEdit({ computationWhitelist, addEmptyComputation, changeWhitelist, disabled }) {
   const [computationSelectValue, setComputationSelectValue] = useState(null);
 
   const classes = useStyles();
@@ -61,13 +61,14 @@ function ComputationWhitelistEdit({ computationWhitelist, addEmptyComputation, c
           placeholder="Select a computation"
           removeSelected
           name="add-computation-select"
+          disabled={disabled}
         />
         <Button
           variant="contained"
           color="secondary"
           onClick={addComputation}
           className={classes.addComputationButton}
-          disabled={!computationSelectValue}
+          disabled={!computationSelectValue || disabled}
         >
           Add computation
         </Button>
@@ -81,6 +82,7 @@ function ComputationWhitelistEdit({ computationWhitelist, addEmptyComputation, c
               computation={computation}
               changeWhitelist={changeWhitelist}
               computationWhitelistData={computationWhitelist[compId]}
+              disabled={disabled}
             />
           </Box>
         );
@@ -91,12 +93,14 @@ function ComputationWhitelistEdit({ computationWhitelist, addEmptyComputation, c
 
 ComputationWhitelistEdit.defaultProps = {
   computationWhitelist: null,
+  disabled: false,
 };
 
 ComputationWhitelistEdit.propTypes = {
   computationWhitelist: PropTypes.object,
   addEmptyComputation: PropTypes.func.isRequired,
   changeWhitelist: PropTypes.func.isRequired,
+  disabled: PropTypes.bool,
 };
 
 export default ComputationWhitelistEdit;

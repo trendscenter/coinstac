@@ -149,6 +149,7 @@ const typeDefs = `
     id: ID!
     name: String!
     computationWhitelist: JSON
+    owners: JSON
     apiKey: String
     delete: Boolean
   }
@@ -157,7 +158,6 @@ const typeDefs = `
     id: ID
     name: String
     computationWhitelist: JSON
-    apiKey: String
     owners: JSON
   }
 
@@ -194,7 +194,7 @@ const typeDefs = `
     createHeadlessClient(data: HeadlessClientInput!): HeadlessClient
     updateHeadlessClient(headlessClientId: ID!, data: HeadlessClientInput!): HeadlessClient
     deleteHeadlessClient(headlessClientId: ID!): HeadlessClient
-    generateHeadlessClientApiKey(headlessClientId: ID): String
+    generateHeadlessClientApiKey(headlessClientId: ID!): String
   }
 
   # This is a description of the queries

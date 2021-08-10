@@ -147,6 +147,7 @@ const sharedFields = {
   headlessClientFields: `
     id
     name
+    owners
     computationWhitelist
     apiKey
     delete

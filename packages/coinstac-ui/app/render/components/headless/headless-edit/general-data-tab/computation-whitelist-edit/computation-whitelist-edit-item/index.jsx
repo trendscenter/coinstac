@@ -8,7 +8,9 @@ import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 
 import CsvField from './csv-field';
 
-function ComputationWhitelistEditItem({ computation, changeWhitelist, computationWhitelistData }) {
+function ComputationWhitelistEditItem({
+  computation, changeWhitelist, computationWhitelistData, disabled,
+}) {
   const { id, meta: { name }, computation: { input } } = computation;
 
   const memberInputs = Object.keys(input).filter(inputKey => input[inputKey].source === 'member');
@@ -22,7 +24,7 @@ function ComputationWhitelistEditItem({ computation, changeWhitelist, computatio
   };
 
   return (
-    <Accordion>
+    <Accordion disabled={disabled}>
       <AccordionSummary
         expandIcon={<ExpandMoreIcon />}
       >
@@ -55,6 +57,7 @@ ComputationWhitelistEditItem.propTypes = {
   computation: PropTypes.object.isRequired,
   changeWhitelist: PropTypes.func.isRequired,
   computationWhitelistData: PropTypes.object.isRequired,
+  disabled: PropTypes.bool.isRequired,
 };
 
 export default ComputationWhitelistEditItem;
