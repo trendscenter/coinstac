@@ -443,8 +443,6 @@ const resolvers = {
     },
     searchDatasets: async (parent, { searchString = '', tags = [] }) => {
       const db = database.getDbInstance();
-      console.log('SEARCH', searchString);
-      console.log('TAGS', tags);
 
       const searchObj = {};
 
@@ -459,8 +457,6 @@ const resolvers = {
       }
 
       const datasets = await db.collection('datasets').find(searchObj).toArray();
-
-      console.log('AA', datasets);
 
       return transformToClient(datasets);
     },
@@ -1233,7 +1229,7 @@ const resolvers = {
 
         keys(users).forEach((userId) => {
           updateObj.$set[`users.${userId}`] = {
-            username: users[userId],
+            username: users[userId].username,
             isRead: userId === credentials.id
           };
         });

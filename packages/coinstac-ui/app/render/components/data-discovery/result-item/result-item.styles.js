@@ -7,4 +7,8 @@ export default makeStyles(theme => ({
   label: {
     fontWeight: 'bold',
   },
+  avatar: {
+    margin: 0,
+    marginBottom: theme.spacing(1),
+  },
 }));

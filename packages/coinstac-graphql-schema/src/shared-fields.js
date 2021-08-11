@@ -157,6 +157,7 @@ const sharedFields = {
     description
     tags
     covariates
+    owner
   `,
 };
 

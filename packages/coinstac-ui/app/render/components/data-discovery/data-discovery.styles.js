@@ -2,7 +2,7 @@ import { makeStyles } from '@material-ui/core/styles';
 
 export default makeStyles(theme => ({
   searchButton: {
-    marginLeft: theme.spacing(4),
+    marginTop: theme.spacing(2),
   },
   resultItem: {
     marginBottom: theme.spacing(2),

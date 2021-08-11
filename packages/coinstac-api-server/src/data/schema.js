@@ -166,6 +166,7 @@ const typeDefs = `
     description: String
     tags: [String]
     covariates: [String]
+    owner: JSON
   }
 
   input IssueInput {

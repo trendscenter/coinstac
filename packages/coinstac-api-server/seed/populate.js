@@ -1043,16 +1043,28 @@ async function populateDatasets() {
       description: 'Brain MRI\'s from patients in the Chicago area. Age 20-30. Data already processed to be used on Freesurfer regressions.',
       tags: ['mri', 'brain', 'young'],
       covariates: ['age', 'sex'],
+      owner: {
+        id: USER_IDS[0],
+        username: 'test1',
+      },
     },
     {
       description: 'Data from brain cancer patients in the San Francisco Bay area. Age 0-16.',
       tags: ['mri', 'brain', 'children', 'cancer'],
       covariates: ['age', 'sex', 'weight', 'height'],
+      owner: {
+        id: USER_IDS[1],
+        username: 'test2',
+      },
     },
     {
       description: 'Freesurfer data from patients in the eastern coast in the United States. Age 60+.',
       tags: ['mri', 'brain', 'senior'],
       covariates: ['age', 'sex', 'blood pressure', 'glucose level'],
+      owner: {
+        id: USER_IDS[2],
+        username: 'test3',
+      },
     },
   ]);
 }
