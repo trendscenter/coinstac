@@ -198,6 +198,25 @@ loadConfig()
       mainWindow.webContents.send('prepare-consortia-files', res);
     });
 
+    /**
+     * IPC Listener to generate provenance
+     */
+    ipcMain.on('generate-provenance', async (event, { appDirectory, runs }) => {
+      runs.forEach((run) => {
+        const runProvenanceDirectory = path.join(appDirectory, 'provenance', run.id);
+
+        if (!fs.existsSync(runProvenanceDirectory)) {
+          fs.mkdirSync(runProvenanceDirectory, { recursive: true });
+        }
+
+        const provenanceFilePath = path.join(runProvenanceDirectory, 'provenance.json');
+
+        if (!fs.existsSync(provenanceFilePath)) {
+          fs.writeFileSync(provenanceFilePath, JSON.stringify(run, null, 2));
+        }
+      });
+    });
+
     ipcPromise.on('login-init', ({
       userId, appDirectory, clientServerURL, token,
     }) => {
