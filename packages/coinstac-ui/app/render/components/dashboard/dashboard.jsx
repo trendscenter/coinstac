@@ -92,10 +92,13 @@ function Dashboard({
       };
     });
 
-    ipcRenderer.send('generate-provenance', {
+    const data = {
+      userId: auth.user.id,
       appDirectory: auth.appDirectory,
       runs,
-    });
+    };
+
+    ipcRenderer.send('generate-provenance', data);
   }, [remoteRuns]);
 
   const dockerStatus = useDockerStatus();

@@ -201,9 +201,9 @@ loadConfig()
     /**
      * IPC Listener to generate provenance
      */
-    ipcMain.on('generate-provenance', async (event, { appDirectory, runs }) => {
+    ipcMain.on('generate-provenance', async (event, { userId, appDirectory, runs }) => {
       runs.forEach((run) => {
-        const runProvenanceDirectory = path.join(appDirectory, 'provenance', run.id);
+        const runProvenanceDirectory = path.join(appDirectory, 'output', userId, run.id);
 
         if (!fs.existsSync(runProvenanceDirectory)) {
           fs.mkdirSync(runProvenanceDirectory, { recursive: true });
