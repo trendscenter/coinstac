@@ -55,11 +55,12 @@ function MapsEdit({
         </Typography>
       </div>
       <MapsEditForm
+        consortiumId={consortium && consortium.id}
         pipeline={pipeline}
         dataMap={dataMap}
+        saved={saved}
         onChange={onChange}
         onSubmit={commitSaveDataMap}
-        saved={saved}
       />
     </div>
   );

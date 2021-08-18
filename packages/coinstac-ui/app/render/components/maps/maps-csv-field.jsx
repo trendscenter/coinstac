@@ -7,6 +7,7 @@ import Grid from '@material-ui/core/Grid';
 import Button from '@material-ui/core/Button';
 import Tooltip from '@material-ui/core/Tooltip';
 import InfoIcon from '@material-ui/icons/Info';
+import CheckCircleIcon from '@material-ui/icons/CheckCircle';
 import red from '@material-ui/core/colors/red';
 import dragula from 'react-dragula';
 import FilePicker from '../common/file-picker';
@@ -21,6 +22,17 @@ const styles = theme => ({
     paddingTop: theme.spacing(1.5),
     paddingBottom: theme.spacing(1.5),
     marginTop: theme.spacing(1.5),
+  },
+  header: {
+    textTransform: 'capitalize',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  successIcon: {
+    width: 40,
+    height: 40,
+    color: '#43a047',
   },
   capitalize: {
     textTransform: 'capitalize',
@@ -68,6 +80,7 @@ class MapsCsvField extends React.Component {
     this.appendSelectedFiles = this.appendSelectedFiles.bind(this);
     this.deleteFile = this.deleteFile.bind(this);
     this.unmapField = this.unmapField.bind(this);
+    this.isMapped = this.isMapped.bind(this);
   }
 
   componentDidMount() {
@@ -134,6 +147,16 @@ class MapsCsvField extends React.Component {
     };
 
     readFiles();
+  }
+
+  isMapped() {
+    const { fieldDataMap } = this.props;
+    if (!fieldDataMap || !fieldDataMap.maps) {
+      return false;
+    }
+
+    const keys = Object.keys(fieldDataMap.maps);
+    return keys.filter(key => !fieldDataMap.maps[key]).length === 0;
   }
 
   setInitialState(fieldDataMap) {
@@ -221,8 +244,9 @@ class MapsCsvField extends React.Component {
 
     return (
       <Paper className={classes.rootPaper} elevation={2}>
-        <Typography variant="h4" className={classes.capitalize}>
-          { fieldName }
+        <Typography variant="h4" className={classes.header}>
+          {fieldName}
+          {this.isMapped() && <CheckCircleIcon className={classes.successIcon} />}
         </Typography>
         <FilePicker
           multiple
