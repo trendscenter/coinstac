@@ -29,6 +29,8 @@ import Threads from './components/threads';
 import Logs from './components/logs-display/logs';
 import Papaya from './components/papaya';
 import Permissions from './components/permissions';
+import HeadlessList from './components/headless/headless-list';
+import HeadlessEdit from './components/headless/headless-edit';
 
 export default (
   <Route path="/" component={App}>
@@ -61,6 +63,11 @@ export default (
       <Route path="computations" component={RouteContainer}>
         <IndexRoute component={ComputationsList} />
         <Route path="new" component={ComputationSubmission} />
+      </Route>
+      <Route path="headlessClients" component={RouteContainer}>
+        <IndexRoute component={HeadlessList} />
+        <Route path="new" component={HeadlessEdit} />
+        <Route path=":headlessClientId" component={HeadlessEdit} />
       </Route>
       <Route path="settings" component={Settings} />
       <Route path="issues" component={Issues} />

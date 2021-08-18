@@ -63,7 +63,7 @@ function ListItem({
   deleteButtonText,
   classes,
 }) {
-  if (!itemObject || !itemOptions) {
+  if (!itemObject) {
     return null;
   }
 
@@ -127,7 +127,7 @@ ListItem.defaultProps = {
   deleteButtonText: null,
   deleteItem: null,
   canDelete: false,
-  itemOptions: null,
+  itemOptions: {},
 };
 
 ListItem.propTypes = {

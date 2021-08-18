@@ -44,7 +44,7 @@ import {
   SAVE_ACTIVE_PIPELINE_MUTATION,
   FETCH_ALL_USERS_QUERY,
   USER_CHANGED_SUBSCRIPTION,
-  FETCH_AVAILABLE_HEADLESS_CLIENTS,
+  FETCH_ALL_HEADLESS_CLIENTS,
 } from '../../state/graphql/functions';
 import {
   getDocumentByParam,
@@ -944,9 +944,9 @@ const PipelineWithData = compose(
     'subscribeToUsers',
     'userChanged'
   )),
-  graphql(FETCH_AVAILABLE_HEADLESS_CLIENTS, {
-    props: ({ data: { fetchAvailableHeadlessClients } }) => ({
-      availableHeadlessClients: fetchAvailableHeadlessClients,
+  graphql(FETCH_ALL_HEADLESS_CLIENTS, {
+    props: ({ data: { fetchAllHeadlessClients } }) => ({
+      availableHeadlessClients: fetchAllHeadlessClients,
     }),
   })
 )(Pipeline);

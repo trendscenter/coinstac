@@ -12,6 +12,7 @@ const sharedFields = {
         dockerImage
         command
       }
+      input
     }
     meta {
       name
@@ -146,7 +147,10 @@ const sharedFields = {
   headlessClientFields: `
     id
     name
+    owners
     computationWhitelist
+    apiKey
+    delete
   `,
 };
 

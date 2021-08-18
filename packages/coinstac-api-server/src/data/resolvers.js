@@ -6,6 +6,7 @@ const Issue = require('github-api/dist/components/Issue');
 const { PubSub, withFilter } = require('graphql-subscriptions');
 const { ObjectID } = require('mongodb');
 const helperFunctions = require('../auth-helpers');
+const { headlessClients: headlessClientsController, headlessClients } = require('./controllers');
 const initSubscriptions = require('./subscriptions');
 const database = require('../database');
 const { transformToClient } = require('../utils');
@@ -25,6 +26,7 @@ const {
   USER_CHANGED,
 } = require('./events');
 const { getOnlineUsers } = require('./user-online-status-tracker');
+const { NotAuthorizedError } = require('./errors');
 
 const AVAILABLE_ROLE_TYPES = ['data', 'app'];
 const AVAILABLE_USER_APP_ROLES = ['admin', 'author'];
@@ -411,13 +413,24 @@ const resolvers = {
 
       return getOnlineUsers();
     },
-    fetchAvailableHeadlessClients: async () => {
-      const db = database.getDbInstance();
+    fetchAllHeadlessClients: async (parent, args, { credentials }) => {
+      try {
+        const headlessClients = await headlessClientsController.fetchHeadlessClients(credentials);
 
-      const headlessClients = await db.collection('headlessClients').find().toArray();
+        return transformToClient(headlessClients);
+      } catch (error) {
+        return Boom.internal('Failed to fetch the headless clients list', error);
+      }
+    },
+    fetchHeadlessClient: async (parent, { id }, { credentials }) => {
+      try {
+        const headlessClient = await headlessClientsController.fetchHeadlessClient(id, credentials);
 
-      return transformToClient(headlessClients);
-    }
+        return headlessClient ? transformToClient(headlessClient) : null;
+      } catch (error) {
+        return Boom.internal(`Failed to fetch the headless client ${id}`, error);
+      }
+    },
   },
   Mutation: {
     /**
@@ -1302,6 +1315,63 @@ const resolvers = {
         return Boom.notAcceptable('Failed to create issue on GitHub');
       }
     },
+    createHeadlessClient: async (parent, { data }, { credentials }) => {
+      try {
+        const headlessClient = await headlessClientsController.createHeadlessClient(data, credentials);
+
+        return transformToClient(headlessClient);
+      } catch (error) {
+        if (error instanceof NotAuthorizedError) {
+          return Boom.unauthorized(error.message);
+        }
+
+        return Boom.internal('Failed to create a headless client', error);
+      }
+    },
+    updateHeadlessClient: async (parent, args, { credentials }) => {
+      const { headlessClientId, data } = args;
+
+      try {
+        const headlessClient = await headlessClientsController.updateHeadlessClient(headlessClientId, data, credentials);
+
+        return transformToClient(headlessClient);
+      } catch (error) {
+        if (error instanceof NotAuthorizedError) {
+          return Boom.unauthorized(error.message);
+        }
+
+        return Boom.internal(`Failed to update the headless client ${headlessClientId}`, error);
+      }
+    },
+    deleteHeadlessClient: async (parent, args, { credentials }) => {
+      const { headlessClientId } = args;
+
+      try {
+        const deletedHeadlessClient = await headlessClientsController.deleteHeadlessClient(headlessClientId, credentials);
+
+        return transformToClient(deletedHeadlessClient);
+      } catch (error) {
+        if (error instanceof NotAuthorizedError) {
+          return Boom.unauthorized(error.message);
+        }
+
+        return Boom.internal(`Failed to delete the headless client ${headlessClientId}`, error);
+      }
+    },
+    generateHeadlessClientApiKey: async (parent, args, { credentials }) => {
+      const { headlessClientId } = args;
+
+      try {
+        const apiKey = await headlessClientsController.generateHeadlessClientApiKey(headlessClientId, credentials);
+        return apiKey;
+      } catch (error) {
+        if (error instanceof NotAuthorizedError) {
+          return Boom.unauthorized(error.message);
+        }
+
+        return Boom.internal(`Failed to create an Api Key for headless client ${headlessClientId}`, error);
+      }
+    },
   },
   Subscription: {
     /**
@@ -1391,6 +1461,9 @@ const resolvers = {
         () => pubsub.asyncIterator('userRunChanged'),
         (payload, variables) => (variables.userId && keys(payload.userRunChanged.clients).indexOf(variables.userId) > -1)
       )
+    },
+    headlessClientChanged: {
+      subscribe: () => pubsub.asyncIterator('headlessClientChanged'),
     },
     /**
      * Subscription triggered

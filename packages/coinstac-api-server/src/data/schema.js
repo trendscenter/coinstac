@@ -146,9 +146,19 @@ const typeDefs = `
   }
 
   type HeadlessClient {
+    id: ID!
+    name: String!
+    computationWhitelist: JSON
+    owners: JSON
+    apiKey: String
+    delete: Boolean
+  }
+
+  input HeadlessClientInput {
     id: ID
     name: String
     computationWhitelist: JSON
+    owners: JSON
   }
 
   input IssueInput {
@@ -181,6 +191,10 @@ const typeDefs = `
     saveMessage(threadId: ID, title: String!, recipients: JSON, content: String!, action: ActionInput): Thread
     setReadMessage(threadId: ID, userId: ID): JSON
     createIssue(issue: IssueInput!): JSON
+    createHeadlessClient(data: HeadlessClientInput!): HeadlessClient
+    updateHeadlessClient(headlessClientId: ID!, data: HeadlessClientInput!): HeadlessClient
+    deleteHeadlessClient(headlessClientId: ID!): HeadlessClient
+    generateHeadlessClientApiKey(headlessClientId: ID!): String
   }
 
   # This is a description of the queries
@@ -192,14 +206,15 @@ const typeDefs = `
     fetchAllResults: [Result]
     fetchAllUsers: [User]
     fetchAllUserRuns: [Run]
+    fetchAllHeadlessClients: [HeadlessClient]
     fetchComputation(computationIds: [ID]): [Computation]
     fetchConsortium(consortiumId: ID): Consortium
     fetchPipeline(pipelineId: ID): Pipeline
     fetchResult(resultId: ID): Result
     fetchUser(userId: ID): User
+    fetchHeadlessClient(id: ID!): HeadlessClient
     fetchAllThreads: [Thread]
     fetchUsersOnlineStatus: JSON
-    fetchAvailableHeadlessClients: [HeadlessClient]
   }
 
   type Subscription {
@@ -211,6 +226,7 @@ const typeDefs = `
     userRunChanged(userId: ID): Run
     userChanged(userId: ID): User
     usersOnlineStatusChanged: JSON
+    headlessClientChanged: HeadlessClient
     runWithHeadlessClientStarted(clientId: ID): Run
   }
 `;
