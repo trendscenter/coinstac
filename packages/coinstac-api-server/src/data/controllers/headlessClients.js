@@ -77,7 +77,10 @@ async function createHeadlessClient(data, credentials) {
 
   const db = database.getDbInstance();
 
-  const insertResult = await db.collection('headlessClients').insertOne(data);
+  const insertResult = await db.collection('headlessClients').insertOne({
+    ...data,
+    hasApiKey: false,
+  });
 
   const headlessClient = insertResult.ops[0];
 
@@ -118,13 +121,17 @@ async function updateHeadlessClient(headlessClientId, data, credentials) {
   await _turnUsersIntoOwners(headlessClientId, addPermissionsUserIds);
   await _removeOwnerPermissionFromUsers(headlessClientId, removePermissionsUserIds);
 
-  const updateResult = await db.collection('headlessClients').findOneAndUpdate({ _id: ObjectID(headlessClientId) }, {
-    $set: {
-      name: data.name,
-      computationWhitelist: data.computationWhitelist,
-      owners: data.owners,
+  const updateResult = await db.collection('headlessClients').findOneAndUpdate(
+    { _id: ObjectID(headlessClientId) },
+    {
+      $set: {
+        name: data.name,
+        computationWhitelist: data.computationWhitelist,
+        owners: data.owners,
+      },
     },
-  });
+    { returnDocument: 'after' }
+  );
 
   eventEmitter.emit(HEADLESS_CLIENT_CHANGED, updateResult.value);
 
@@ -165,11 +172,15 @@ async function generateHeadlessClientApiKey(headlessClientId, credentials) {
 
   const hashedKey = helperFunctions.hashPassword(key);
 
-  await db.collection('headlessClients').findOneAndUpdate({ _id: ObjectID(headlessClientId) }, {
-    $set: {
-      apiKey: hashedKey,
-    },
-  });
+  await db.collection('headlessClients').findOneAndUpdate(
+    { _id: ObjectID(headlessClientId) },
+    {
+      $set: {
+        apiKey: hashedKey,
+        hasApiKey: true,
+      },
+    }
+  );
 
   return key;
 }

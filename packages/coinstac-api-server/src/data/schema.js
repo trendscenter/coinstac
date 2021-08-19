@@ -150,7 +150,7 @@ const typeDefs = `
     name: String!
     computationWhitelist: JSON
     owners: JSON
-    apiKey: String
+    hasApiKey: Boolean
     delete: Boolean
   }
 

@@ -18,13 +18,20 @@ import {
   GENERATE_HEADLESS_CLIENT_API_KEY_MUTATION,
 } from '../../../../state/graphql/functions';
 
-function ApiKeyTab({ headlessClientId, headlessClientData }) {
+function ApiKeyTab({ headlessClientData, onHeadlessClientUpdate }) {
   const classes = useStyles();
 
   const [currentApiKey, setCurrentApiKey] = useState('');
 
+  function onSubmitComplete() {
+    onHeadlessClientUpdate(headlessClientData.id);
+  }
+
   const [generateKeyOnRemote] = useMutation(
-    GENERATE_HEADLESS_CLIENT_API_KEY_MUTATION
+    GENERATE_HEADLESS_CLIENT_API_KEY_MUTATION,
+    {
+      onCompleted: onSubmitComplete,
+    }
   );
 
   function copyToClipboard() {
@@ -32,7 +39,9 @@ function ApiKeyTab({ headlessClientId, headlessClientData }) {
   }
 
   async function generateApiKey() {
-    const result = await generateKeyOnRemote({ variables: { headlessClientId } });
+    const result = await generateKeyOnRemote({
+      variables: { headlessClientId: headlessClientData.id },
+    });
 
     const apiKey = get(result, 'data.generateHeadlessClientApiKey');
 
@@ -46,9 +55,9 @@ function ApiKeyTab({ headlessClientId, headlessClientData }) {
   return (
     <Box marginTop={3}>
       <Typography variant="body1">
-        {headlessClientData && headlessClientData.apiKey
+        {headlessClientData && headlessClientData.hasApiKey
           && 'This cloud user already has a configured API Key. In case you lost or forgot the current API key you can generate another one.'}
-        {headlessClientData && !headlessClientData.apiKey
+        {headlessClientData && !headlessClientData.hasApiKey
           && 'This cloud user does not have a configured API Key. Click on the button to generate one.'}
       </Typography>
       <Button
@@ -100,13 +109,12 @@ function ApiKeyTab({ headlessClientId, headlessClientData }) {
 }
 
 ApiKeyTab.defaultProps = {
-  headlessClientId: null,
   headlessClientData: null,
 };
 
 ApiKeyTab.propTypes = {
-  headlessClientId: PropTypes.string,
   headlessClientData: PropTypes.object,
+  onHeadlessClientUpdate: PropTypes.func.isRequired,
 };
 
 export default ApiKeyTab;
