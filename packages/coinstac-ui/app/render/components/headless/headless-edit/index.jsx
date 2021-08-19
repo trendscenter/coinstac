@@ -36,7 +36,7 @@ function HeadlessEdit({ params }) {
     getHeadlessClient({ variables: { id } });
   }
 
-  const isCreation = !headlessClientId;
+  const isCreation = !data;
   const title = isCreation ? 'Cloud User Creation' : 'Cloud User Edit';
 
   const headlessClientData = get(data, 'fetchHeadlessClient');
@@ -54,7 +54,6 @@ function HeadlessEdit({ params }) {
       </Tabs>
       {activeTab === TABS.generalData && (
         <GeneralDataTab
-          headlessClientId={headlessClientId}
           headlessClientData={headlessClientData}
           onHeadlessClientUpdate={refetchHeadlessClient}
         />
