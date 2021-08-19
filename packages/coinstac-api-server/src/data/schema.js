@@ -174,6 +174,13 @@ const typeDefs = `
     body: String
   }
 
+  input DatasetInput {
+    id: ID
+    description: String
+    tags: [String]
+    covariates: [String]
+  }
+
   # This is the general mutation description
   type Mutation {
     # Stringify incoming computation, parse prior to insertion call
@@ -203,6 +210,7 @@ const typeDefs = `
     updateHeadlessClient(headlessClientId: ID!, data: HeadlessClientInput!): HeadlessClient
     deleteHeadlessClient(headlessClientId: ID!): HeadlessClient
     generateHeadlessClientApiKey(headlessClientId: ID!): String
+    saveDataset(input: DatasetInput!): Dataset
   }
 
   # This is a description of the queries
@@ -226,6 +234,7 @@ const typeDefs = `
     fetchAvailableHeadlessClients: [HeadlessClient]
     fetchAllDatasetsTags: [String]
     searchDatasets(searchString: String, tags: [String]): [Dataset]
+    fetchDataset(id: ID!): Dataset
   }
 
   type Subscription {

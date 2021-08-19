@@ -7,4 +7,9 @@ export default makeStyles(theme => ({
   resultItem: {
     marginBottom: theme.spacing(2),
   },
+  firstSearchInfo: {
+    padding: theme.spacing(2),
+    background: theme.palette.info.main,
+    color: theme.palette.info.contrastText,
+  },
 }));

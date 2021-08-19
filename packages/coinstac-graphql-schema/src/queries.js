@@ -194,6 +194,13 @@ const queries = {
       }
     }
   `,
+  fetchDataset: `
+    {
+      fetchDataset(id: $id) {
+        ${sharedFields.datasetFields}
+      }
+    }
+  `,
   fetchAllDatasetsTags: `
     {
       fetchAllDatasetsTags

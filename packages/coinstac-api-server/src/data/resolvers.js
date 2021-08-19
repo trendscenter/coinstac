@@ -436,7 +436,10 @@ const resolvers = {
 
       const result = await db.collection('datasets').aggregate([
         { $unwind: '$tags' },
-        { $group: { _id: null, tags: { $addToSet: '$tags' } } }
+        { $group: { _id: null, tags: { $addToSet: '$tags' } } },
+        { $unwind: '$tags' },
+        { $sort: { tags: 1 } },
+        { $group: { _id: null, tags: { $push: '$tags' } } },
       ]).toArray();
 
       return result.length ? result[0].tags : [];
@@ -459,6 +462,13 @@ const resolvers = {
       const datasets = await db.collection('datasets').find(searchObj).toArray();
 
       return transformToClient(datasets);
+    },
+    fetchDataset: async (parent, { id }) => {
+      const db = database.getDbInstance();
+
+      const dataset = await db.collection('datasets').findOne({ _id: ObjectID(id) });
+
+      return transformToClient(dataset);
     },
   },
   Mutation: {
@@ -1400,6 +1410,52 @@ const resolvers = {
 
         return Boom.internal(`Failed to create an Api Key for headless client ${headlessClientId}`, error);
       }
+    },
+    saveDataset: async (parent, args, { credentials }) => {
+      const { id, description, tags, covariates } = args.input;
+
+      const db = database.getDbInstance();
+
+      let result;
+      if (id) {
+        const datasetId = ObjectID(id);
+
+        const dataset = await db.collection('datasets').findOne({ _id: datasetId });
+
+        if (!dataset) {
+          return Boom.notFound('Dataset not found');
+        } else if (!dataset.owner.id.equals(credentials._id)) {
+          return Boom.unauthorized('You do not have permission to edit this dataset');
+        }
+
+        const updateResult = await db.collection('datasets').findOneAndUpdate(
+          { _id: datasetId },
+          {
+            $set: {
+              description,
+              tags,
+              covariates,
+            }
+          },
+          { returnDocument: 'after' },
+        );
+
+        result = updateResult.value;
+      } else {
+        const insertResult = await db.collection('datasets').insertOne({
+          description,
+          tags,
+          covariates,
+          owner: {
+            id: credentials.id,
+            username: credentials.username,
+          }
+        });
+
+        result = insertResult.ops[0];
+      }
+
+      return transformToClient(result);
     },
   },
   Subscription: {

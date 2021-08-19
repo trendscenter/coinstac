@@ -32,6 +32,7 @@ import Permissions from './components/permissions';
 import HeadlessList from './components/headless/headless-list';
 import HeadlessEdit from './components/headless/headless-edit';
 import DataDiscovery from './components/data-discovery';
+import EditDataset from './components/data-discovery/edit-dataset';
 
 export default (
   <Route path="/" component={App}>
@@ -76,7 +77,11 @@ export default (
       <Route path="logs" component={Logs} />
       <Route path="papaya" component={Papaya} />
       <Route path="permissions" component={Permissions} />
-      <Route path="data-discovery" component={DataDiscovery} />
+      <Route path="data-discovery" component={RouteContainer}>
+        <IndexRoute component={DataDiscovery} />
+        <Route path="new" component={EditDataset} />
+        <Route path=":datasetId" component={EditDataset} />
+      </Route>
     </Route>
   </Route>
 );

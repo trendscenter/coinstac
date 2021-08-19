@@ -8,12 +8,13 @@ import Button from '@material-ui/core/Button';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import MessageIcon from '@material-ui/icons/Message';
+import EditIcon from '@material-ui/icons/Edit';
 
 import useStyles from './result-item.styles';
 import MemberAvatar from '../../common/member-avatar';
 
 function ResultItem({
-  description, covariates, tags, className, owner, auth,
+  id, description, covariates, tags, className, owner, auth,
 }) {
   const classes = useStyles();
 
@@ -42,7 +43,17 @@ function ResultItem({
             className={classes.avatar}
             showDetails
           />
-          {auth.user.id !== owner.id && (
+          {auth.user.id === owner.id ? (
+            <Button
+              variant="contained"
+              color="default"
+              endIcon={<EditIcon />}
+              component={Link}
+              to={`/dashboard/data-discovery/${id}`}
+            >
+              Edit data
+            </Button>
+          ) : (
             <Button
               variant="contained"
               color="secondary"
@@ -67,6 +78,7 @@ ResultItem.defaultProps = {
 };
 
 ResultItem.propTypes = {
+  id: PropTypes.string.isRequired,
   description: PropTypes.string.isRequired,
   covariates: PropTypes.array,
   tags: PropTypes.array,

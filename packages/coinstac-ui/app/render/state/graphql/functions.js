@@ -273,3 +273,13 @@ export const SEARCH_DATASETS_QUERY = gql`
   query searchDatasets($searchString: String, $tags: [String])
     ${queries.searchDatasets}
 `;
+
+export const FETCH_DATASET_QUERY = gql`
+  query fetchDataset($id: ID!)
+    ${queries.fetchDataset}
+`;
+
+export const SAVE_DATASET_MUTATION = gql`
+  mutation saveDataset($input: DatasetInput!)
+    ${mutations.saveDataset}
+`;
