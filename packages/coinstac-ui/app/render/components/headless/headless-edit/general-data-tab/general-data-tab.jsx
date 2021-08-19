@@ -142,6 +142,22 @@ function GeneralDataTab({ headlessClientId, headlessClientData, onHeadlessClient
     }));
   }
 
+  function removeComputation(compId) {
+    setFormData((prev) => {
+      const newCompWhitelist = Object.keys(prev.computationWhitelist)
+        .filter(key => key !== compId)
+        .reduce((aggr, key) => {
+          aggr[key] = prev.computationWhitelist[key];
+          return aggr;
+        }, {});
+
+      return {
+        ...prev,
+        computationWhitelist: newCompWhitelist,
+      };
+    });
+  }
+
   return (
     <form onSubmit={submit}>
       <TextField
@@ -171,6 +187,7 @@ function GeneralDataTab({ headlessClientId, headlessClientData, onHeadlessClient
         addEmptyComputation={addEmptyComputation}
         changeWhitelist={changeWhitelist}
         disabled={creating || updating}
+        removeComputation={removeComputation}
       />
       <Box marginTop={5} display="flex" alignItems="center">
         <Button
