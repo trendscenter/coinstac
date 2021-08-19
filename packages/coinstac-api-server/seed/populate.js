@@ -1015,6 +1015,7 @@ async function populateHeadlessClients() {
     {
       name: 'Headless 1',
       apiKey: await helperFunctions.hashPassword('testApiKey'),
+      hasApiKey: true,
       computationWhitelist: {
         [COMPUTATION_IDS[15]]: {
           inputMap: {

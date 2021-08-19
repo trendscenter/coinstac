@@ -19,15 +19,18 @@ import {
 } from '../../../../state/graphql/functions';
 import useStyles from './general-data.styles';
 
-function GeneralDataTab({ headlessClientId, headlessClientData }) {
+function GeneralDataTab({ headlessClientId, headlessClientData, onHeadlessClientUpdate }) {
   const classes = useStyles();
 
   const [formData, setFormData] = useState({});
   const [submitCompleted, setSubmitCompleted] = useState(false);
   const [submitError, setSubmitError] = useState(null);
 
-  function onSubmitComplete() {
+  function onSubmitComplete(data) {
     setSubmitCompleted(true);
+
+    const id = headlessClientId || get(data, 'createHeadlessClient.id') || get(data, 'updateHeadlessClient.id');
+    onHeadlessClientUpdate(id);
   }
 
   function onSubmitError(e) {
@@ -79,10 +82,12 @@ function GeneralDataTab({ headlessClientId, headlessClientData }) {
     setSubmitCompleted(false);
     setSubmitError(false);
 
-    if (headlessClientId && !createData) {
+    const id = headlessClientId || get(createData, 'createHeadlessClient.id');
+
+    if (id) {
       updateHeadlessClient({
         variables: {
-          id: createData ? createData.id : headlessClientId,
+          id,
           data: formData,
         },
       });
@@ -204,6 +209,7 @@ GeneralDataTab.defaultProps = {
 GeneralDataTab.propTypes = {
   headlessClientId: PropTypes.string,
   headlessClientData: PropTypes.object,
+  onHeadlessClientUpdate: PropTypes.func.isRequired,
 };
 
 export default GeneralDataTab;

@@ -6,7 +6,6 @@ function useEntityListSubscription(subscriptionFunc, document, query, subscripti
       document,
       variables,
       updateQuery: (prev, { subscriptionData: { data } }) => {
-        console.log('data', data);
         if (!data) return prev;
 
         if (data[subscriptionName].delete) {

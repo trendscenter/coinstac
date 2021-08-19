@@ -149,7 +149,7 @@ const sharedFields = {
     name
     owners
     computationWhitelist
-    apiKey
+    hasApiKey
     delete
   `,
 };

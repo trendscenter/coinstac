@@ -260,6 +260,6 @@ export const DELETE_HEADLESS_CLIENT_MUTATION = gql`
 `;
 
 export const GENERATE_HEADLESS_CLIENT_API_KEY_MUTATION = gql`
-  mutation generateHeadlessClientApiKey($headlessClientId: ID)
+  mutation generateHeadlessClientApiKey($headlessClientId: ID!)
     ${mutations.generateHeadlessClientApiKey}
 `;

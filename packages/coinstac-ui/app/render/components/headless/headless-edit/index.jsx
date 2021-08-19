@@ -21,7 +21,7 @@ function HeadlessEdit({ params }) {
 
   const [activeTab, setActiveTab] = useState(TABS.generalData);
 
-  const [getHeadlessClient, { data }] = useLazyQuery(FETCH_HEADLESS_CLIENT);
+  const [getHeadlessClient, { data }] = useLazyQuery(FETCH_HEADLESS_CLIENT, { fetchPolicy: 'cache-and-network' });
 
   useEffect(() => {
     if (!headlessClientId) return;
@@ -30,6 +30,10 @@ function HeadlessEdit({ params }) {
 
   function changeTab(e, value) {
     setActiveTab(value);
+  }
+
+  function refetchHeadlessClient(id) {
+    getHeadlessClient({ variables: { id } });
   }
 
   const isCreation = !headlessClientId;
@@ -46,18 +50,19 @@ function HeadlessEdit({ params }) {
       </Box>
       <Tabs value={activeTab} onChange={changeTab}>
         <Tab id={TABS.generalData} label="General Data" value={TABS.generalData} />
-        <Tab id={TABS.apiKeys} label="API Keys" value={TABS.apiKeys} disabled={isCreation} />
+        <Tab id={TABS.apiKeys} label="API Keys" value={TABS.apiKeys} disabled={!headlessClientData} />
       </Tabs>
       {activeTab === TABS.generalData && (
         <GeneralDataTab
           headlessClientId={headlessClientId}
           headlessClientData={headlessClientData}
+          onHeadlessClientUpdate={refetchHeadlessClient}
         />
       )}
       {activeTab === TABS.apiKeys && (
         <ApiKeyTab
-          headlessClientId={headlessClientId}
           headlessClientData={headlessClientData}
+          onHeadlessClientUpdate={refetchHeadlessClient}
         />
       )}
     </div>
