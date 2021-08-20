@@ -274,24 +274,24 @@ const helperFunctions = {
    * @param {object} res response
    * @return {object} The requested user object
    */
-  async validateHeadlessClientApiKey(req, res) {
+  async validateHeadlessClientApiKey(req, h) {
     const db = database.getDbInstance();
 
     const headlessClient = await db.collection('headlessClients').findOne({ name: req.payload.name });
 
     if (!headlessClient) {
-      return res(Boom.unauthorized('No headless client is registered with this api key'));
+      return Boom.unauthorized('No headless client is registered with this api key');
     }
 
     const apiKeyMatch = await helperFunctions.verifyPassword(
-      req.payload.apiKey, headlessClient.apiKey
+      String(req.payload.apiKey), headlessClient.apiKey
     );
 
     if (!apiKeyMatch) {
-      return res(Boom.unauthorized('Invalid API key.'));
+      return Boom.unauthorized('Invalid API key.');
     }
 
-    return res(transformToClient(headlessClient));
+    return h.response(transformToClient(headlessClient));
   },
   /**
    * Confirms that submitted token is valid

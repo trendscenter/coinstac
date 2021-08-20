@@ -19,7 +19,7 @@ import {
 } from '../../../../state/graphql/functions';
 import useStyles from './general-data.styles';
 
-function GeneralDataTab({ headlessClientId, headlessClientData, onHeadlessClientUpdate }) {
+function GeneralDataTab({ headlessClientData, onHeadlessClientUpdate }) {
   const classes = useStyles();
 
   const [formData, setFormData] = useState({});
@@ -29,7 +29,7 @@ function GeneralDataTab({ headlessClientId, headlessClientData, onHeadlessClient
   function onSubmitComplete(data) {
     setSubmitCompleted(true);
 
-    const id = headlessClientId || get(data, 'createHeadlessClient.id') || get(data, 'updateHeadlessClient.id');
+    const id = get(headlessClientData, 'id') || get(data, 'createHeadlessClient.id') || get(data, 'updateHeadlessClient.id');
     onHeadlessClientUpdate(id);
   }
 
@@ -82,7 +82,7 @@ function GeneralDataTab({ headlessClientId, headlessClientData, onHeadlessClient
     setSubmitCompleted(false);
     setSubmitError(false);
 
-    const id = headlessClientId || get(createData, 'createHeadlessClient.id');
+    const id = get(headlessClientData, 'id') || get(createData, 'createHeadlessClient.id');
 
     if (id) {
       updateHeadlessClient({
@@ -142,6 +142,22 @@ function GeneralDataTab({ headlessClientId, headlessClientData, onHeadlessClient
     }));
   }
 
+  function removeComputation(compId) {
+    setFormData((prev) => {
+      const newCompWhitelist = Object.keys(prev.computationWhitelist)
+        .filter(key => key !== compId)
+        .reduce((aggr, key) => {
+          aggr[key] = prev.computationWhitelist[key];
+          return aggr;
+        }, {});
+
+      return {
+        ...prev,
+        computationWhitelist: newCompWhitelist,
+      };
+    });
+  }
+
   return (
     <form onSubmit={submit}>
       <TextField
@@ -171,6 +187,7 @@ function GeneralDataTab({ headlessClientId, headlessClientData, onHeadlessClient
         addEmptyComputation={addEmptyComputation}
         changeWhitelist={changeWhitelist}
         disabled={creating || updating}
+        removeComputation={removeComputation}
       />
       <Box marginTop={5} display="flex" alignItems="center">
         <Button
@@ -202,12 +219,10 @@ function GeneralDataTab({ headlessClientId, headlessClientData, onHeadlessClient
 }
 
 GeneralDataTab.defaultProps = {
-  headlessClientId: null,
   headlessClientData: null,
 };
 
 GeneralDataTab.propTypes = {
-  headlessClientId: PropTypes.string,
   headlessClientData: PropTypes.object,
   onHeadlessClientUpdate: PropTypes.func.isRequired,
 };

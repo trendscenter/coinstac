@@ -13,7 +13,9 @@ import ComputationWhitelistEditItem from './computation-whitelist-edit-item';
 import useStyles from './computation-whitelist-edit.styles';
 import { FETCH_ALL_COMPUTATIONS_QUERY } from '../../../../../state/graphql/functions';
 
-function ComputationWhitelistEdit({ computationWhitelist, addEmptyComputation, changeWhitelist, disabled }) {
+function ComputationWhitelistEdit({
+  computationWhitelist, addEmptyComputation, changeWhitelist, disabled, removeComputation,
+}) {
   const [computationSelectValue, setComputationSelectValue] = useState(null);
 
   const classes = useStyles();
@@ -29,8 +31,11 @@ function ComputationWhitelistEdit({ computationWhitelist, addEmptyComputation, c
 
   const computationOptions = useMemo(() => {
     if (!computations) return [];
-    return computations.map(c => ({ label: c.meta.name, value: c.id }));
-  }, [computations]);
+
+    return computations
+      .filter(c => !computationWhitelist || !(c.id in computationWhitelist))
+      .map(c => ({ label: c.meta.name, value: c.id }));
+  }, [computations, computationWhitelist]);
 
   function onChangeComputationSelectValue(value) {
     setComputationSelectValue(value);
@@ -59,7 +64,6 @@ function ComputationWhitelistEdit({ computationWhitelist, addEmptyComputation, c
           options={computationOptions}
           onChange={onChangeComputationSelectValue}
           placeholder="Select a computation"
-          removeSelected
           name="add-computation-select"
           disabled={disabled}
         />
@@ -83,6 +87,7 @@ function ComputationWhitelistEdit({ computationWhitelist, addEmptyComputation, c
               changeWhitelist={changeWhitelist}
               computationWhitelistData={computationWhitelist[compId]}
               disabled={disabled}
+              removeComputation={removeComputation}
             />
           </Box>
         );
@@ -100,6 +105,7 @@ ComputationWhitelistEdit.propTypes = {
   computationWhitelist: PropTypes.object,
   addEmptyComputation: PropTypes.func.isRequired,
   changeWhitelist: PropTypes.func.isRequired,
+  removeComputation: PropTypes.func.isRequired,
   disabled: PropTypes.bool,
 };
 

@@ -170,7 +170,7 @@ async function generateHeadlessClientApiKey(headlessClientId, credentials) {
 
   const key = uuid();
 
-  const hashedKey = helperFunctions.hashPassword(key);
+  const hashedKey = await helperFunctions.hashPassword(key);
 
   await db.collection('headlessClients').findOneAndUpdate(
     { _id: ObjectID(headlessClientId) },
