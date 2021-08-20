@@ -40,6 +40,7 @@ function getApolloClient(config) {
 
   const unauthorizedLink = onError((e) => {
     if (e.networkError.statusCode !== 401) {
+      console.log('ERROR', e);
       return;
     }
 
