@@ -203,11 +203,11 @@ const helperFunctions = {
    * @param {object} res response
    * @return {object}   reply w/ does the email exist?
    */
-  async validateEmail(req, res) {
+  async validateEmail(req, h) {
     const exists = !await helperFunctions.validateUniqueEmail(req);
-    if (!exists) return res(Boom.badRequest('Invalid email'));
+    if (!exists) return Boom.badRequest('Invalid email');
 
-    return res(exists);
+    return h.response(exists);
   },
   /**
    * Confirms that submitted username is new
@@ -228,20 +228,20 @@ const helperFunctions = {
    * @param {object} res response
    * @return {object} The submitted user information
    */
-  async validateUniqueUser(req, res) {
+  async validateUniqueUser(req, h) {
     const isUsernameUnique = await helperFunctions.validateUniqueUsername(req);
 
     if (!isUsernameUnique) {
-      return res(Boom.badRequest('Username taken'));
+      return Boom.badRequest('Username taken');
     }
 
     const isEmailUnique = await helperFunctions.validateUniqueEmail(req);
 
     if (!isEmailUnique) {
-      return res(Boom.badRequest('Email taken'));
+      return Boom.badRequest('Email taken');
     }
 
-    return res(true);
+    return h.response(true);
   },
   /**
    * Validate that authenticating user is using correct credentials
@@ -299,12 +299,12 @@ const helperFunctions = {
    * @param {object} res response
    * @return {object} The requested object
    */
-  async validateResetToken(req, res) {
+  async validateResetToken(req, h) {
     const db = database.getDbInstance();
     const user = await db.collection('users').findOne({ passwordResetToken: req.payload.token });
 
     if (!user) {
-      return res(Boom.badRequest('Invalid token'));
+      return Boom.badRequest('Invalid token');
     }
 
     try {
@@ -312,12 +312,12 @@ const helperFunctions = {
       const noEmail = await helperFunctions.validateUniqueEmail({ payload: { email } });
 
       if (noEmail) {
-        return res(Boom.badRequest('Invalid email'));
+        return Boom.badRequest('Invalid email');
       }
 
-      return res({ email });
+      return h.response({ email });
     } catch (err) {
-      res(Boom.badRequest(err));
+      Boom.badRequest(err);
     }
   },
   /**
