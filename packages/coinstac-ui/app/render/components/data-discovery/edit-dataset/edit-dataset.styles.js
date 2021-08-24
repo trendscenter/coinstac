@@ -10,4 +10,10 @@ export default makeStyles(theme => ({
   statusMessage: {
     marginLeft: theme.spacing(0.5),
   },
+  info: {
+    padding: theme.spacing(2),
+    marginBottom: theme.spacing(2),
+    background: theme.palette.info.main,
+    color: theme.palette.info.contrastText,
+  },
 }));

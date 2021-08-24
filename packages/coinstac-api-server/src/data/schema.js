@@ -163,9 +163,8 @@ const typeDefs = `
 
   type Dataset {
     id: ID
-    description: String
-    tags: [String]
-    covariates: [String]
+    datasetDescription: JSON
+    participantsDescription: JSON
     owner: JSON
   }
 
@@ -176,9 +175,8 @@ const typeDefs = `
 
   input DatasetInput {
     id: ID
-    description: String
-    tags: [String]
-    covariates: [String]
+    datasetDescription: JSON
+    participantsDescription: JSON
   }
 
   # This is the general mutation description

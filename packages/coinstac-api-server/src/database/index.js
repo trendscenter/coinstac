@@ -22,7 +22,7 @@ function createDbInstance() {
 
   db.collection('headlessClients').createIndex({ name: 1 }, { unique: true });
 
-  db.collection('datasets').createIndex({ description: 'text' });
+  db.collection('datasets').createIndex({ '$**': 'text' });
 }
 
 function dropDbInstance() {

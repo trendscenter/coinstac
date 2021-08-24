@@ -154,9 +154,8 @@ const sharedFields = {
   `,
   datasetFields: `
     id
-    description
-    tags
-    covariates
+    datasetDescription
+    participantsDescription
     owner
   `,
 };

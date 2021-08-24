@@ -23,26 +23,19 @@ function DataDiscovery() {
 
   const [executedFirstSearch, setExecutedFirstSearch] = useState(false);
   const [searchString, setSearchString] = useState('');
-  const [searchTags, setSearchTags] = useState([]);
 
-  const { data: tagsData } = useQuery(FETCH_ALL_DATASETS_TAGS_QUERY, { fetchPolicy: 'cache-and-network' });
   const [searchDatasets, { data, loading }] = useLazyQuery(SEARCH_DATASETS_QUERY, { fetchPolicy: 'cache-and-network' });
 
   function handleSearchInputChange(e) {
     setSearchString(e.target.value);
   }
 
-  function handleTagInputChange(e, value) {
-    setSearchTags(value);
-  }
-
   function search() {
     setExecutedFirstSearch(true);
 
-    searchDatasets({ variables: { searchString, tags: searchTags } });
+    searchDatasets({ variables: { searchString } });
   }
 
-  const tags = get(tagsData, 'fetchAllDatasetsTags', []);
   const results = get(data, 'searchDatasets', []);
 
   return (
@@ -61,32 +54,13 @@ function DataDiscovery() {
         </Fab>
       </div>
       <Box marginY={2}>
-        <Grid container spacing={2}>
-          <Grid item xs={6}>
-            <TextField
-              id="search"
-              label="Search"
-              fullWidth
-              value={searchString}
-              onChange={handleSearchInputChange}
-            />
-          </Grid>
-          <Grid item xs={6}>
-            <Autocomplete
-              multiple
-              id="tags-standard"
-              options={tags}
-              onChange={handleTagInputChange}
-              renderInput={params => (
-                <TextField
-                  {...params}
-                  variant="standard"
-                  label="Tags"
-                />
-              )}
-            />
-          </Grid>
-        </Grid>
+        <TextField
+          id="search"
+          label="Search"
+          fullWidth
+          value={searchString}
+          onChange={handleSearchInputChange}
+        />
         <Button
           variant="contained"
           color="primary"
@@ -101,11 +75,7 @@ function DataDiscovery() {
       {results && results.map(result => (
         <ResultItem
           key={result.id}
-          id={result.id}
-          description={result.description}
-          tags={result.tags}
-          covariates={result.covariates}
-          owner={result.owner}
+          result={result}
           className={classes.resultItem}
         />
       ))}

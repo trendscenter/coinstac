@@ -1040,30 +1040,61 @@ async function populateDatasets() {
 
   return db.collection('datasets').insertMany([
     {
-      description: 'Brain MRI\'s from patients in the Chicago area. Age 20-30. Data already processed to be used on Freesurfer regressions.',
-      tags: ['mri', 'brain', 'young'],
-      covariates: ['age', 'sex'],
-      owner: {
-        id: USER_IDS[0],
-        username: 'test1',
-      },
-    },
-    {
-      description: 'Data from brain cancer patients in the San Francisco Bay area. Age 0-16.',
-      tags: ['mri', 'brain', 'children', 'cancer'],
-      covariates: ['age', 'sex', 'weight', 'height'],
       owner: {
         id: USER_IDS[1],
         username: 'test2',
       },
-    },
-    {
-      description: 'Freesurfer data from patients in the eastern coast in the United States. Age 60+.',
-      tags: ['mri', 'brain', 'senior'],
-      covariates: ['age', 'sex', 'blood pressure', 'glucose level'],
-      owner: {
-        id: USER_IDS[2],
-        username: 'test3',
+      datasetDescription: {
+        Name: 'The mother of all experiments',
+        BIDSVersion: '1.4.0',
+        DatasetType: 'raw',
+        License: 'CC0',
+        Authors: [
+          'Paul Broca',
+          'Carl Wernicke',
+        ],
+        Acknowledgements: 'Special thanks to Korbinian Brodmann for help in formatting this dataset in BIDS. We thank Alan Lloyd Hodgkin and Andrew Huxley for helpful comments and discussions about the experiment and manuscript; Hermann Ludwig Helmholtz for administrative support; and Claudius Galenus for providing data for the medial-to-lateral index analysis.',
+        HowToAcknowledge: 'Please cite this paper: https://www.ncbi.nlm.nih.gov/pubmed/001012092119281',
+        Funding: [
+          'National Institute of Neuroscience Grant F378236MFH1',
+          'National Institute of Neuroscience Grant 5RMZ0023106',
+        ],
+        EthicsApprovals: [
+          'Army Human Research Protections Office (Protocol ARL-20098-10051, ARL 12-040, and ARL 12-041)',
+        ],
+        ReferencesAndLinks: [
+          'https://www.ncbi.nlm.nih.gov/pubmed/001012092119281',
+          'Alzheimer A., & Kraepelin, E. (2015). Neural correlates of presenile dementia in humans. Journal of Neuroscientific Data, 2, 234001. doi:1920.8/jndata.2015.7',
+        ],
+        DatasetDOI: 'doi:10.0.2.3/dfjj.10',
+        HEDVersion: '7.1.1',
+      },
+      participantsDescription: {
+        age: {
+          Description: 'age of the participant',
+          Units: 'years',
+        },
+        sex: {
+          Description: 'sex of the participant as reported by the participant',
+          Levels: {
+            M: 'male',
+            F: 'female',
+          },
+        },
+        handedness: {
+          Description: 'handedness of the participant as reported by the participant',
+          Levels: {
+            left: 'left',
+            right: 'right',
+          },
+        },
+        group: {
+          Description: 'experimental group the participant belonged to',
+          Levels: {
+            read: 'participants who read an inspirational text before the experiment',
+            write: 'participants who wrote an inspirational text before the experiment',
+          },
+        },
       },
     },
   ]);

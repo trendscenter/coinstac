@@ -6,9 +6,13 @@ export default makeStyles(theme => ({
   },
   label: {
     fontWeight: 'bold',
+    marginRight: theme.spacing(1),
   },
   avatar: {
     margin: 0,
     marginBottom: theme.spacing(1),
+  },
+  detailsButton: {
+    marginTop: theme.spacing(1),
   },
 }));

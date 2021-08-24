@@ -1,25 +1,31 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
+import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
 import { useLazyQuery, useMutation } from '@apollo/client';
 import { get } from 'lodash';
 import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
 import CircularProgress from '@material-ui/core/CircularProgress';
-import TextField from '@material-ui/core/TextField';
+import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import CheckCircleIcon from '@material-ui/icons/CheckCircle';
 import ErrorIcon from '@material-ui/icons/Error';
+import Skeleton from '@material-ui/lab/Skeleton';
 
 import { FETCH_DATASET_QUERY, SAVE_DATASET_MUTATION } from '../../../state/graphql/functions';
+import JsonField from './json-field';
 import useStyles from './edit-dataset.styles';
 
-function EditDataset({ params }) {
+function EditDataset({ params, auth }) {
   const { datasetId } = params;
 
   const classes = useStyles();
 
-  const [formData, setFormData] = useState({});
+  const [datasetDescription, setDatasetDescription] = useState({});
+  const [participantsDescription, setParticipantsDescription] = useState({});
   const [submitCompleted, setSubmitCompleted] = useState(false);
   const [submitError, setSubmitError] = useState(null);
+  const [viewOnly, setViewOnly] = useState(true);
 
   function onSubmitComplete() {
     setSubmitCompleted(true);
@@ -36,19 +42,19 @@ function EditDataset({ params }) {
       return;
     }
 
-    const { description, tags, covariates } = remoteDatasetData;
+    const { datasetDescription, participantsDescription, owner } = remoteDatasetData;
 
-    const initialData = { description };
-
-    if (tags) {
-      initialData.tags = tags.join(',');
+    if (datasetDescription) {
+      setDatasetDescription(datasetDescription);
     }
 
-    if (covariates) {
-      initialData.covariates = covariates.join(',');
+    if (participantsDescription) {
+      setParticipantsDescription(participantsDescription);
     }
 
-    setFormData(initialData);
+    if (auth.user.id === owner.id) {
+      setViewOnly(false);
+    }
   }
 
   const [fetchDataset, { loading: fetching }] = useLazyQuery(FETCH_DATASET_QUERY, {
@@ -63,10 +69,21 @@ function EditDataset({ params }) {
   );
 
   useEffect(() => {
-    if (!datasetId) return;
+    if (!datasetId) {
+      setViewOnly(false);
+      return;
+    }
 
     fetchDataset({ variables: { id: datasetId } });
   }, [datasetId]);
+
+  const pageTitle = useMemo(() => {
+    if (viewOnly) {
+      return 'View Dataset Details';
+    }
+
+    return datasetId ? 'Edit Dataset' : 'Create dataset';
+  }, [viewOnly, datasetId]);
 
   function submit(e) {
     e.preventDefault();
@@ -75,7 +92,8 @@ function EditDataset({ params }) {
     setSubmitError(false);
 
     const submitData = {
-      ...formData,
+      datasetDescription,
+      participantsDescription,
     };
 
     if (datasetId) {
@@ -84,96 +102,92 @@ function EditDataset({ params }) {
       submitData.id = createdData.id;
     }
 
-    console.log('data', submitData);
-
     saveDataset({ variables: { input: submitData } });
   }
 
-  const handleTextInputChange = fieldName => (e) => {
-    const { value } = e.target;
+  function handleDatasetDescriptionChange(value) {
+    setDatasetDescription(value.jsObject);
+  }
 
-    setFormData(prev => ({
-      ...prev,
-      [fieldName]: value,
-    }));
-  };
-
-  const handleArrayChange = fieldName => (e) => {
-    const { value } = e.target;
-
-    const arrayValue = value.split(',');
-
-    setFormData(prev => ({
-      ...prev,
-      [fieldName]: arrayValue,
-    }));
-  };
+  function handleParticipantsDescriptionChange(value) {
+    setParticipantsDescription(value.jsObject);
+  }
 
   return (
     <Box>
-      <Box className="page-header">
+      <Box className="page-header" marginBottom={2}>
         <Typography variant="h4">
-          {datasetId ? 'Edit Dataset' : 'Create dataset'}
+          {fetching ? <Skeleton /> : pageTitle}
         </Typography>
       </Box>
+      <Paper elevation={1} className={classes.info}>
+        <Typography variant="body1">
+          We&apos;re currently using the BIDS standard for describing the datasets. You can read
+          more about it in their project page.
+        </Typography>
+      </Paper>
       <form onSubmit={submit}>
-        <TextField
-          label="Description"
-          value={formData.description || ''}
-          onChange={handleTextInputChange('description')}
-          className={classes.field}
-          fullWidth
-          required
-          disabled={submitting}
-        />
-        <TextField
-          label="Tags"
-          value={formData.tags || ''}
-          onChange={handleArrayChange('tags')}
-          className={classes.field}
-          fullWidth
-          disabled={submitting}
-        />
-        <TextField
-          label="Covariates"
-          value={formData.covariates || ''}
-          onChange={handleArrayChange('covariates')}
-          className={classes.field}
-          fullWidth
-          disabled={submitting}
-        />
-        <Box marginTop={5} display="flex" alignItems="center">
-          <Button
-            variant="contained"
-            color="primary"
-            type="submit"
-            disabled={submitting}
-          >
-            Save Changes
-          </Button>
-          <Box marginLeft={2} display="flex" alignItems="center">
-            {(submitting) && <CircularProgress size={20} />}
-            {submitCompleted && (
-              <React.Fragment>
-                <CheckCircleIcon className={classes.successIcon} />
-                <Typography variant="body2" className={classes.statusMessage}>
-                  Data saved
-                </Typography>
-              </React.Fragment>
-            )}
-            {submitError && (
-              <React.Fragment>
-                <ErrorIcon color="error" />
-                <Typography color="error" variant="body2" className={classes.statusMessage}>
-                  { submitError }
-                </Typography>
-              </React.Fragment>
-            )}
-          </Box>
+        <Box marginBottom={2}>
+          <JsonField
+            id="dataset-description"
+            name="Dataset Description"
+            initialValue={datasetDescription}
+            onChange={handleDatasetDescriptionChange}
+            disabled={submitting || viewOnly}
+          />
         </Box>
+        <Box marginBottom={2}>
+          <JsonField
+            id="participants-description"
+            name="Participants Description"
+            initialValue={participantsDescription}
+            onChange={handleParticipantsDescriptionChange}
+            disabled={submitting || viewOnly}
+          />
+        </Box>
+        {!viewOnly && (
+          <Box marginTop={3} display="flex" alignItems="center">
+            <Button
+              variant="contained"
+              color="primary"
+              type="submit"
+              disabled={submitting}
+            >
+              Save Changes
+            </Button>
+            <Box marginLeft={2} display="flex" alignItems="center">
+              {(submitting) && <CircularProgress size={20} />}
+              {submitCompleted && (
+                <React.Fragment>
+                  <CheckCircleIcon className={classes.successIcon} />
+                  <Typography variant="body2" className={classes.statusMessage}>
+                    Data saved
+                  </Typography>
+                </React.Fragment>
+              )}
+              {submitError && (
+                <React.Fragment>
+                  <ErrorIcon color="error" />
+                  <Typography color="error" variant="body2" className={classes.statusMessage}>
+                    { submitError }
+                  </Typography>
+                </React.Fragment>
+              )}
+            </Box>
+          </Box>
+        )}
       </form>
     </Box>
   );
 }
 
-export default EditDataset;
+EditDataset.propTypes = {
+  params: PropTypes.object.isRequired,
+  auth: PropTypes.object.isRequired,
+};
+
+const mapStateToProps = ({ auth }) => ({
+  auth,
+});
+
+export default connect(mapStateToProps)(EditDataset);

@@ -1412,7 +1412,7 @@ const resolvers = {
       }
     },
     saveDataset: async (parent, args, { credentials }) => {
-      const { id, description, tags, covariates } = args.input;
+      const { id, datasetDescription, participantsDescription } = args.input;
 
       const db = database.getDbInstance();
 
@@ -1432,9 +1432,8 @@ const resolvers = {
           { _id: datasetId },
           {
             $set: {
-              description,
-              tags,
-              covariates,
+              datasetDescription,
+              participantsDescription,
             }
           },
           { returnDocument: 'after' },
@@ -1443,9 +1442,8 @@ const resolvers = {
         result = updateResult.value;
       } else {
         const insertResult = await db.collection('datasets').insertOne({
-          description,
-          tags,
-          covariates,
+          datasetDescription,
+          participantsDescription,
           owner: {
             id: credentials.id,
             username: credentials.username,

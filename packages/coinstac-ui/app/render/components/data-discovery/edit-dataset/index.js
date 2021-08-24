@@ -1,3 +1,3 @@
-import EditDataset from "./edit-dataset";
+import EditDataset from './edit-dataset';
 
 export default EditDataset;
