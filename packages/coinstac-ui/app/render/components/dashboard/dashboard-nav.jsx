@@ -14,12 +14,8 @@ import EqualizerIcon from '@material-ui/icons/Equalizer';
 import DescriptionIcon from '@material-ui/icons/Description';
 import CloudIcon from '@material-ui/icons/Cloud';
 import SecurityIcon from '@material-ui/icons/Security';
-<<<<<<< HEAD
-import { isAdmin, isOwnerOfAnyHeadlessClient } from '../../utils/helpers';
-=======
 import LanguageIcon from '@material-ui/icons/Language';
-import { isAdmin } from '../../utils/helpers';
->>>>>>> First draft of data discovery page
+import { isAdmin, isOwnerOfAnyHeadlessClient } from '../../utils/helpers';
 
 const DashboardNav = ({ user }) => {
   return (

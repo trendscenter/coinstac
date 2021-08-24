@@ -122,8 +122,16 @@ function EditDataset({ params, auth }) {
       </Box>
       <Paper elevation={1} className={classes.info}>
         <Typography variant="body1">
-          We&apos;re currently using the BIDS standard for describing the datasets. You can read
-          more about it in their project page.
+          {`We're currently using the BIDS standard for describing the datasets. You can read
+          more about it in their `}
+          <a
+            href="https://bids-specification.readthedocs.io/en/stable/03-modality-agnostic-files.html"
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            project page
+          </a>
+          .
         </Typography>
       </Paper>
       <form onSubmit={submit}>

@@ -1041,8 +1041,8 @@ async function populateDatasets() {
   return db.collection('datasets').insertMany([
     {
       owner: {
-        id: USER_IDS[1],
-        username: 'test2',
+        id: USER_IDS[0],
+        username: 'test1',
       },
       datasetDescription: {
         Name: 'The mother of all experiments',
@@ -1093,6 +1093,98 @@ async function populateDatasets() {
           Levels: {
             read: 'participants who read an inspirational text before the experiment',
             write: 'participants who wrote an inspirational text before the experiment',
+          },
+        },
+      },
+    },
+    {
+      owner: {
+        id: USER_IDS[1],
+        username: 'test2',
+      },
+      datasetDescription: {
+        Name: 'Dataset test2',
+        BIDSVersion: '1.4.0',
+        DatasetType: 'raw',
+        License: 'CC0',
+        Authors: [
+          'Pramod Dorine',
+          'Angel Angerona',
+        ],
+        Acknowledgements: 'everybody',
+        HowToAcknowledge: 'Please cite this paper: https://www.ncbi.nlm.nih.gov/pubmed/001012092119281',
+        Funding: [
+          'National Institute of Neuroscience Grant AAAAA',
+        ],
+        EthicsApprovals: [
+          'Army Human Research Protections Office (Protocol ARL-20098-10051, ARL 12-040, and ARL 12-041)',
+        ],
+        ReferencesAndLinks: [
+          'https://www.ncbi.nlm.nih.gov/pubmed/001012092119281',
+          'Alzheimer A., & Kraepelin, E. (2015). Neural correlates of presenile dementia in humans. Journal of Neuroscientific Data, 2, 234001. doi:1920.8/jndata.2015.7',
+        ],
+        DatasetDOI: 'doi:10.0.2.3/dfjj.10',
+        HEDVersion: '7.1.1',
+      },
+      participantsDescription: {
+        age: {
+          Description: 'age of the participant',
+          Units: 'years',
+        },
+        sex: {
+          Description: 'sex of the participant as reported by the participant',
+          Levels: {
+            M: 'male',
+            F: 'female',
+          },
+        },
+      },
+    },
+    {
+      owner: {
+        id: USER_IDS[2],
+        username: 'test3',
+      },
+      datasetDescription: {
+        Name: 'Dataset test3',
+        BIDSVersion: '1.4.0',
+        DatasetType: 'raw',
+        License: 'CC0',
+        Authors: [
+          'Yordana Margareta',
+          'Tahlia Shannah',
+        ],
+        Acknowledgements: 'many thanks!',
+        Funding: [
+          'National Institute of Neuroscience Grant BBBBBB',
+        ],
+        EthicsApprovals: [
+          'Army Human Research Protections Office (Protocol ARL-20098-10051, ARL 12-040, and ARL 12-041)',
+        ],
+        ReferencesAndLinks: [
+          'https://www.ncbi.nlm.nih.gov/pubmed/001012092119281',
+          'Alzheimer A., & Kraepelin, E. (2015). Neural correlates of presenile dementia in humans. Journal of Neuroscientific Data, 2, 234001. doi:1920.8/jndata.2015.7',
+        ],
+        DatasetDOI: 'doi:10.0.2.3/dfjj.10',
+        HEDVersion: '7.1.1',
+      },
+      participantsDescription: {
+        age: {
+          Description: 'age of the participant',
+          Units: 'years',
+        },
+        sex: {
+          Description: 'sex of the participant as reported by the participant',
+          Levels: {
+            M: 'male',
+            F: 'female',
+          },
+        },
+        handedness: {
+          Description: 'handedness of the participant as reported by the participant',
+          Levels: {
+            left: 'left',
+            right: 'right',
           },
         },
       },

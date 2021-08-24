@@ -91,6 +91,11 @@ loadConfig()
     const mainWindow = getWindow();
     logger.verbose('main process booted');
 
+    mainWindow.webContents.on('new-window', (e, url) => {
+      e.preventDefault();
+      electron.shell.openExternal(url);
+    });
+
     logger.on('log-message', (arg) => {
       mainWindow.webContents.send('log-message', arg);
     });
