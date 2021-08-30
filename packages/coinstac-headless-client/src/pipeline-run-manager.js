@@ -41,7 +41,7 @@ async function initialize(config, authToken) {
     },
     token: authToken,
     userId: config.id,
-    appDirectory: path.resolve('../'),
+    appDirectory: path.resolve('/tmp') || process.env.COINSTAC_HEADLESS_WORKDIR,
     logger,
   };
 
