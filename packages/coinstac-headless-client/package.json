@@ -19,8 +19,9 @@
     "cross-fetch": "^3.0.6",
     "csv-reader": "^1.0.7",
     "graphql": "^15.5.0",
-    "subscriptions-transport-ws": "^0.9.18",
+    "mkdirp": "^1.0.4",
+    "subscriptions-transport-ws": "^0.10.0",
     "winston": "^3.3.3",
-    "ws": "^7.4.3"
+    "ws": "^7.5.4"
   }
 }
