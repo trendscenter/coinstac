@@ -33,6 +33,7 @@ import HeadlessList from './components/headless/headless-list';
 import HeadlessEdit from './components/headless/headless-edit';
 import DataDiscovery from './components/data-discovery';
 import EditDataset from './components/data-discovery/edit-dataset';
+import pipelineStates from './components/pipeline-states';
 
 export default (
   <Route path="/" component={App}>
@@ -82,6 +83,7 @@ export default (
         <Route path="new" component={EditDataset} />
         <Route path=":datasetId" component={EditDataset} />
       </Route>
+      <Route path="pipeline-states" component={pipelineStates} />
     </Route>
   </Route>
 );

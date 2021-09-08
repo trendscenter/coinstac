@@ -64,6 +64,12 @@ const DashboardNav = ({ user }) => {
           <ListItemText primary="Permissions" />
         </ListItem>
       )}
+      {(isAdmin(user)) && (
+        <ListItem button component={Link} to="/dashboard/pipeline-states">
+          <ListItemIcon><AssignmentIcon /></ListItemIcon>
+          <ListItemText primary="Pipeline States" />
+        </ListItem>
+      )}
     </List>
   );
 };

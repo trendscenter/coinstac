@@ -6,7 +6,7 @@ const Issue = require('github-api/dist/components/Issue');
 const { PubSub, withFilter } = require('graphql-subscriptions');
 const { ObjectID } = require('mongodb');
 const helperFunctions = require('../auth-helpers');
-const { headlessClients: headlessClientsController, headlessClients } = require('./controllers');
+const { headlessClients: headlessClientsController } = require('./controllers');
 const initSubscriptions = require('./subscriptions');
 const database = require('../database');
 const { transformToClient } = require('../utils');
@@ -126,7 +126,9 @@ async function removeUserPermissions(args) {
 
   const { permissions } = user;
   const index = permissions[args.table][args.doc].findIndex(p => p === args.role);
-  permissions[args.table][args.doc].splice(index, 1);
+  if (index >= 0) {
+    permissions[args.table][args.doc].splice(index, 1);
+  }
 
   let userUpdateResult;
 
