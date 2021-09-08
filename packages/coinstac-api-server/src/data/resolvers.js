@@ -126,7 +126,9 @@ async function removeUserPermissions(args) {
 
   const { permissions } = user;
   const index = permissions[args.table][args.doc].findIndex(p => p === args.role);
-  permissions[args.table][args.doc].splice(index, 1);
+  if (index >= 0) {
+    permissions[args.table][args.doc].splice(index, 1);
+  }
 
   let userUpdateResult;
 

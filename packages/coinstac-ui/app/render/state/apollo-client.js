@@ -40,6 +40,7 @@ function getApolloClient(config) {
 
   const unauthorizedLink = onError((e) => {
     if (e.networkError.statusCode !== 401) {
+      // eslint-disable-next-line
       console.log('ERROR', e);
       return;
     }

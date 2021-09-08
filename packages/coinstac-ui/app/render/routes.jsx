@@ -31,6 +31,7 @@ import Papaya from './components/papaya';
 import Permissions from './components/permissions';
 import HeadlessList from './components/headless/headless-list';
 import HeadlessEdit from './components/headless/headless-edit';
+import pipelineStates from './components/pipeline-states';
 
 export default (
   <Route path="/" component={App}>
@@ -75,6 +76,7 @@ export default (
       <Route path="logs" component={Logs} />
       <Route path="papaya" component={Papaya} />
       <Route path="permissions" component={Permissions} />
+      <Route path="pipeline-states" component={pipelineStates} />
     </Route>
   </Route>
 );
