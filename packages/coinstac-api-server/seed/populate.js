@@ -7,6 +7,7 @@ const drneVbm = require('./data/coinstac-schema-regression-vbm');
 // const ssrVbm = require('./data/coinstac-schema-regression-ss-vbm');
 const msrVbm = require('./data/coinstac-schema-regression-ms-vbm');
 const dmancova = require('./data/coinstac-dmancova');
+const dinunet = require('./data/coinstac-dinunet');
 
 const drneFsl = require('./data/coinstac-schema-regression-fsl');
 const ssrFsl = require('./data/coinstac-schema-regression-ss-fsl');
@@ -40,6 +41,7 @@ const PIPELINE_IDS = [
 ];
 
 const COMPUTATION_IDS = [
+  database.createUniqueId(),
   database.createUniqueId(),
   database.createUniqueId(),
   database.createUniqueId(),
@@ -95,6 +97,7 @@ async function populateComputations() {
     { ...fmri, submittedBy: 'author', _id: COMPUTATION_IDS[14] },
     { ...ssrFsl, submittedBy: 'author', _id: COMPUTATION_IDS[15] },
     { ...dmancova, submittedBy: 'author', _id: COMPUTATION_IDS[16] },
+    { ...dinunet, submittedBy: 'author', _id: COMPUTATION_IDS[17] },
   ]);
 }
 
