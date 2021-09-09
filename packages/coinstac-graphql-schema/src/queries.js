@@ -28,6 +28,13 @@ const queries = {
     }
   }
   `,
+  consortiumPipelineChanged: `
+  {
+    consortiumPipelineChanged {
+      ${sharedFields.consortiaFields}
+    }
+  }
+  `,
   threadChanged: `
   {
     threadChanged(threadId: $threadId) {
@@ -39,6 +46,13 @@ const queries = {
   {
     resultChanged(resultId: $resultId) {
       ${sharedFields.resultFields}
+    }
+  }
+  `,
+  headlessClientChanged: `
+  {
+    headlessClientChanged {
+      ${sharedFields.headlessClientFields}
     }
   }
   `,
@@ -131,9 +145,16 @@ const queries = {
       }
     }
   `,
-  fetchAvailableHeadlessClients: `
+  fetchAllHeadlessClients: `
     {
-      fetchAvailableHeadlessClients {
+      fetchAllHeadlessClients {
+        ${sharedFields.headlessClientFields}
+      }
+    }
+  `,
+  fetchHeadlessClient: `
+    {
+      fetchHeadlessClient(id: $id) {
         ${sharedFields.headlessClientFields}
       }
     }

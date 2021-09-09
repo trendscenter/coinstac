@@ -15,9 +15,8 @@ const REHYDRATE = 'REHYDRATE';
 export const clearState = state => ({ type: CLEAR_STATE, payload: state });
 export const rehydrate = state => ({ type: REHYDRATE, payload: state });
 
-function rootReducer(client) {
+function rootReducer() {
   const appReducer = combineReducers({
-    apollo: client.reducer(),
     app,
     auth,
     docker,

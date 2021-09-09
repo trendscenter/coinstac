@@ -1,4 +1,5 @@
 const path = require('path');
+const { ObjectID } = require('mongodb');
 const database = require('../src/database');
 const helperFunctions = require('../src/auth-helpers');
 
@@ -79,7 +80,7 @@ const RUN_IDS = [
 async function populateComputations() {
   const db = database.getDbInstance();
 
-  return db.collection('computations').insertMany([
+  const comps2Insert = [
     { ...local, submittedBy: 'author', _id: COMPUTATION_IDS[0] },
     { ...decentralized, submittedBy: 'author', _id: COMPUTATION_IDS[1] },
     { ...msrFsl, submittedBy: 'author', _id: COMPUTATION_IDS[2] },
@@ -98,7 +99,21 @@ async function populateComputations() {
     { ...ssrFsl, submittedBy: 'author', _id: COMPUTATION_IDS[15] },
     { ...dmancova, submittedBy: 'author', _id: COMPUTATION_IDS[16] },
     { ...dinunet, submittedBy: 'author', _id: COMPUTATION_IDS[17] },
-  ]);
+  ];
+  const currentComps = await db.collection('computations').find().toArray();
+  const operations = comps2Insert.reduce((ops, comp) => {
+    const cc = currentComps.find(cc => cc.computation.id === comp.computation.id);
+    if (cc) {
+      ops.update.push(Object.assign({}, comp, { _id: cc._id }));
+      return ops;
+    }
+    ops.insert.push(comp);
+    return ops;
+  }, { update: [], insert: [] });
+  if (operations.insert.length > 0) await db.collection('computations').insertMany(operations.insert);
+  await Promise.all(operations.update.map(async (op) => {
+    await db.collection('computations').updateMany({ _id: ObjectID(op._id) }, { $set: { meta: op.meta, computation: op.computation } });
+  }));
 }
 
 async function populateConsortia() {
@@ -837,6 +852,7 @@ async function populateUsers() {
         [CONSORTIA_IDS[1]]: ['owner', 'member'],
       },
       pipelines: {},
+      headlessClients: {},
       roles: {
         admin: true,
         author: true,
@@ -861,6 +877,7 @@ async function populateUsers() {
         [CONSORTIA_IDS[1]]: ['member'],
       },
       pipelines: {},
+      headlessClients: {},
       roles: {
         admin: false,
         author: true,
@@ -885,6 +902,7 @@ async function populateUsers() {
         [CONSORTIA_IDS[1]]: ['member'],
       },
       pipelines: {},
+      headlessClients: {},
       roles: {
         admin: false,
         author: false,
@@ -909,6 +927,7 @@ async function populateUsers() {
         [CONSORTIA_IDS[1]]: ['member'],
       },
       pipelines: {},
+      headlessClients: {},
       roles: {
         admin: true,
         author: true,
@@ -933,6 +952,7 @@ async function populateUsers() {
         [CONSORTIA_IDS[1]]: ['member'],
       },
       pipelines: {},
+      headlessClients: {},
       roles: {
         admin: false,
         author: true,
@@ -957,6 +977,7 @@ async function populateUsers() {
         [CONSORTIA_IDS[1]]: ['member'],
       },
       pipelines: {},
+      headlessClients: {},
       roles: {
         admin: false,
         author: false,
@@ -977,6 +998,7 @@ async function populateUsers() {
       computations: {},
       consortia: {},
       pipelines: {},
+      headlessClients: {},
       roles: {
         admin: true,
         author: false,
@@ -996,6 +1018,7 @@ async function populateHeadlessClients() {
     {
       name: 'Headless 1',
       apiKey: await helperFunctions.hashPassword('testApiKey'),
+      hasApiKey: true,
       computationWhitelist: {
         [COMPUTATION_IDS[15]]: {
           inputMap: {
@@ -1010,6 +1033,7 @@ async function populateHeadlessClients() {
           },
         },
       },
+      owners: {},
     },
   ]);
 }
@@ -1031,6 +1055,15 @@ async function populate(closeConnection = true) {
   }
 }
 
+async function updateComputations(closeConnection = true) {
+  await database.connect();
+  await populateComputations();
+  if (closeConnection) {
+    await database.close();
+  }
+}
+
+
 module.exports = {
   CONSORTIA_IDS,
   COMPUTATION_IDS,
@@ -1038,4 +1071,5 @@ module.exports = {
   USER_IDS,
   RUN_IDS,
   populate,
+  updateComputations,
 };

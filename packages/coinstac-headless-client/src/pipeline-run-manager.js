@@ -2,11 +2,13 @@
 const CoinstacClientCore = require('coinstac-client-core');
 const winston = require('winston');
 const path = require('path');
+const mkdirp = require('mkdirp');
 const parseCsvFiles = require('./parse-csv-files');
 const mapData = require('./data-map');
 
 let core = null;
 let headlessClientConfig = null;
+const appDirectory = path.resolve('/tmp/.coinstac') || process.env.COINSTAC_HEADLESS_WORKDIR;
 
 async function initialize(config, authToken) {
   const logger = winston.loggers.add('coinstac-main', {
@@ -19,7 +21,7 @@ async function initialize(config, authToken) {
     ),
     transports: [new winston.transports.Console()],
   });
-
+  await mkdirp(appDirectory);
   const clientCoreConfig = {
     fileServer: {
       hostname: process.env.FILE_SERVER_HOSTNAME,
@@ -41,7 +43,7 @@ async function initialize(config, authToken) {
     },
     token: authToken,
     userId: config.id,
-    appDirectory: path.resolve('../'),
+    appDirectory,
     logger,
   };
 

@@ -20,6 +20,14 @@ const helperFunctions = {
     return jwt.sign({ id }, process.env.API_JWT_SECRET, { algorithm: 'HS256', expiresIn: '12h' });
   },
   /**
+   * Decode and verify validity of token
+   * @param {string} token
+   * @returns object that was inside token
+   */
+  decodeToken(token) {
+    return jwt.verify(token, process.env.API_JWT_SECRET);
+  },
+  /**
    * Create JWT for password reset
    * @param {string} email email
    * @return {string} A JWT for the requested email
@@ -168,15 +176,13 @@ const helperFunctions = {
    * @param {object} request original request from client
    * @param {function} callback function signature (err, isValid, alternative credentials)
    */
-  validateToken(decoded, request, callback) {
-    helperFunctions.getUserDetailsByID(decoded.id)
-      .then((user) => {
-        if (user) {
-          callback(null, true, user);
-        } else {
-          callback(null, false, null);
-        }
-      });
+  async validateToken(decoded) {
+    const user = await helperFunctions.getUserDetailsByID(decoded.id);
+
+    return {
+      isValid: user && user.id,
+      credentials: user || null,
+    };
   },
   /**
    * Confirms that submitted email is new
@@ -197,11 +203,11 @@ const helperFunctions = {
    * @param {object} res response
    * @return {object}   reply w/ does the email exist?
    */
-  async validateEmail(req, res) {
+  async validateEmail(req, h) {
     const exists = !await helperFunctions.validateUniqueEmail(req);
-    if (!exists) return res(Boom.badRequest('Invalid email'));
+    if (!exists) return Boom.badRequest('Invalid email');
 
-    return res(exists);
+    return h.response(exists);
   },
   /**
    * Confirms that submitted username is new
@@ -222,20 +228,20 @@ const helperFunctions = {
    * @param {object} res response
    * @return {object} The submitted user information
    */
-  async validateUniqueUser(req, res) {
+  async validateUniqueUser(req, h) {
     const isUsernameUnique = await helperFunctions.validateUniqueUsername(req);
 
     if (!isUsernameUnique) {
-      return res(Boom.badRequest('Username taken'));
+      return Boom.badRequest('Username taken');
     }
 
     const isEmailUnique = await helperFunctions.validateUniqueEmail(req);
 
     if (!isEmailUnique) {
-      return res(Boom.badRequest('Email taken'));
+      return Boom.badRequest('Email taken');
     }
 
-    return res(true);
+    return h.response(true);
   },
   /**
    * Validate that authenticating user is using correct credentials
@@ -243,13 +249,13 @@ const helperFunctions = {
    * @param {object} res response
    * @return {object} The requested user object
    */
-  async validateUser(req, res) {
+  async validateUser(req, h) {
     const db = database.getDbInstance();
 
     const user = await db.collection('users').findOne({ username: req.payload.username });
 
     if (!user) {
-      return res(Boom.unauthorized('Incorrect username or password.'));
+      return Boom.unauthorized('Incorrect username or password.');
     }
 
     const passwordMatch = await helperFunctions.verifyPassword(
@@ -257,10 +263,10 @@ const helperFunctions = {
     );
 
     if (passwordMatch) {
-      return res(transformToClient(user));
+      return h.response(transformToClient(user));
     }
 
-    return res(Boom.unauthorized('Incorrect username or password.'));
+    return Boom.unauthorized('Incorrect username or password.');
   },
   /**
    * Validate api key used by headless client
@@ -268,24 +274,24 @@ const helperFunctions = {
    * @param {object} res response
    * @return {object} The requested user object
    */
-  async validateHeadlessClientApiKey(req, res) {
+  async validateHeadlessClientApiKey(req, h) {
     const db = database.getDbInstance();
 
     const headlessClient = await db.collection('headlessClients').findOne({ name: req.payload.name });
 
     if (!headlessClient) {
-      return res(Boom.unauthorized('No headless client is registered with this api key'));
+      return Boom.unauthorized('No headless client is registered with this api key');
     }
 
     const apiKeyMatch = await helperFunctions.verifyPassword(
-      req.payload.apiKey, headlessClient.apiKey
+      String(req.payload.apiKey), headlessClient.apiKey
     );
 
     if (!apiKeyMatch) {
-      return res(Boom.unauthorized('Invalid API key.'));
+      return Boom.unauthorized('Invalid API key.');
     }
 
-    return res(transformToClient(headlessClient));
+    return h.response(transformToClient(headlessClient));
   },
   /**
    * Confirms that submitted token is valid
@@ -293,12 +299,12 @@ const helperFunctions = {
    * @param {object} res response
    * @return {object} The requested object
    */
-  async validateResetToken(req, res) {
+  async validateResetToken(req, h) {
     const db = database.getDbInstance();
     const user = await db.collection('users').findOne({ passwordResetToken: req.payload.token });
 
     if (!user) {
-      return res(Boom.badRequest('Invalid token'));
+      return Boom.badRequest('Invalid token');
     }
 
     try {
@@ -306,12 +312,12 @@ const helperFunctions = {
       const noEmail = await helperFunctions.validateUniqueEmail({ payload: { email } });
 
       if (noEmail) {
-        return res(Boom.badRequest('Invalid email'));
+        return Boom.badRequest('Invalid email');
       }
 
-      return res({ email });
+      return h.response({ email });
     } catch (err) {
-      res(Boom.badRequest(err));
+      Boom.badRequest(err);
     }
   },
   /**

@@ -5,6 +5,7 @@ function parseCsvFile(file) {
   return new Promise((resolve, reject) => {
     try {
       const inputStream = fs.createReadStream(file, 'utf8');
+      inputStream.on('error', error => reject(error));
 
       const data = {};
       let header = [];
@@ -36,7 +37,8 @@ function parseCsvFile(file) {
           header = header.filter((col, i) => i !== 0);
 
           resolve({ header, data });
-        });
+        })
+        .on('error', error => reject(error));
     } catch (error) {
       reject(error);
     }

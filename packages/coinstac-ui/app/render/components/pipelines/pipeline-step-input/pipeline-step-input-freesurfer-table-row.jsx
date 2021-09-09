@@ -46,9 +46,9 @@ class PipelineStepInputFreesurferTableRow extends React.Component {
   }
 
   selectInterest = (value, index) => {
-    const { updateStep , getNewObj, step } = this.props;
+    const { updateStep, getNewObj, step } = this.props;
     if (value[0] && value[0].label === 'All Interests') {
-      let options = freesurferDataOptions.freesurferROIs.slice(1);
+      const options = freesurferDataOptions.freesurferROIs.slice(1);
       updateStep({
         ...step,
         inputMap: getNewObj('value', options, index, false),
@@ -72,7 +72,7 @@ class PipelineStepInputFreesurferTableRow extends React.Component {
 
   render() {
     const {
-      obj, index, objKey, objParams, owner, getNewObj, possibleInputs, step, updateStep,
+      obj, index, objKey, objParams, owner, possibleInputs, step, updateStep,
     } = this.props;
 
     const { openDataMenu, freeSurferOptions } = this.state;

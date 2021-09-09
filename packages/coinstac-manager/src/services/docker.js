@@ -13,6 +13,7 @@ module.exports = {
   createService(serviceId, port, opts) {
     utils.logger.silly(`Request to start service ${serviceId}`);
     let serviceStartedRecurseLimit = 0;
+    debugger
     const version = opts.version || 1;
     // better way than global?
     if (process.LOGLEVEL) {

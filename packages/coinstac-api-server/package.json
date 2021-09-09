@@ -1,6 +1,6 @@
 {
   "name": "coinstac-api-server",
-  "version": "5.3.0",
+  "version": "5.3.6",
   "description": "",
   "main": "src/index.js",
   "scripts": {
@@ -12,25 +12,24 @@
   "license": "ISC",
   "dependencies": {
     "@sendgrid/mail": "^6.5.0",
-    "apollo-server-hapi-coinstac": "1.2.x",
+    "apollo-server-hapi": "^2.25.1",
     "axios": "^0.21.1",
     "bluebird": "^3.5.1",
     "boom": "^5.2.0",
     "clarify": "^2.1.0",
-    "coinstac-graphql-schema": "^5.3.0",
+    "coinstac-graphql-schema": "^5.3.4",
     "dotenv": "^8.2.0",
     "github-api": "^3.3.0",
-    "graphql": "^0.10.5",
-    "graphql-subscriptions": "^0.5.8",
-    "graphql-tools": "^1.2.3",
+    "graphql": "^15.5.0",
+    "graphql-subscriptions": "^1.2.1",
     "graphql-type-json": "^0.1.4",
-    "hapi": "^16.7.0",
-    "hapi-auth-jwt2": "^7.4.1",
+    "hapi": "^18.1.0",
+    "hapi-auth-jwt2": "^10.2.0",
     "jsonwebtoken": "^7.4.3",
     "lodash": "^4.17.15",
     "mongodb": "^3.5.7",
     "nyc": "^15.0.1",
-    "subscriptions-transport-ws": "^0.9.9"
+    "subscriptions-transport-ws": "^0.9.19"
   },
   "ava": {
     "files": [
@@ -40,7 +39,6 @@
     "timeout": "20s"
   },
   "devDependencies": {
-    "apollo-client": "^1.4.0",
     "ava": "^3.8.1",
     "cross-env": "^7.0.2",
     "graphql-tag": "^2.10.3",

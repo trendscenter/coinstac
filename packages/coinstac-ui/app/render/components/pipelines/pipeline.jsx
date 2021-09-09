@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
-import { graphql, withApollo } from 'react-apollo';
+import { graphql, withApollo } from '@apollo/react-hoc';
 import { DragDropContext, DropTarget } from 'react-dnd';
 import HTML5Backend from 'react-dnd-html5-backend';
 import NumberFormat from 'react-number-format';
@@ -44,7 +44,7 @@ import {
   SAVE_ACTIVE_PIPELINE_MUTATION,
   FETCH_ALL_USERS_QUERY,
   USER_CHANGED_SUBSCRIPTION,
-  FETCH_AVAILABLE_HEADLESS_CLIENTS,
+  FETCH_ALL_HEADLESS_CLIENTS,
 } from '../../state/graphql/functions';
 import {
   getDocumentByParam,
@@ -234,9 +234,10 @@ class Pipeline extends Component {
     const owner = params.runId ? false : isPipelineOwner(user.permissions, owningConsortium);
 
     const data = client.readQuery({ query: FETCH_ALL_CONSORTIA_QUERY });
-    const consortium = data.fetchAllConsortia.find(cons => cons.id === owningConsortium);
+    let consortium = data.fetchAllConsortia.find(cons => cons.id === owningConsortium);
 
     if (consortium) {
+      consortium = { ...consortium };
       delete consortium.__typename;
     }
 
@@ -943,9 +944,9 @@ const PipelineWithData = compose(
     'subscribeToUsers',
     'userChanged'
   )),
-  graphql(FETCH_AVAILABLE_HEADLESS_CLIENTS, {
-    props: ({ data: { fetchAvailableHeadlessClients } }) => ({
-      availableHeadlessClients: fetchAvailableHeadlessClients,
+  graphql(FETCH_ALL_HEADLESS_CLIENTS, {
+    props: ({ data: { fetchAllHeadlessClients } }) => ({
+      availableHeadlessClients: fetchAllHeadlessClients,
     }),
   })
 )(Pipeline);

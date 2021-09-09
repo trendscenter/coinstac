@@ -28,7 +28,7 @@ RouteContainer.propTypes = {
   consortia: PropTypes.array,
   pipelines: PropTypes.array,
   runs: PropTypes.array,
-  dockerStatus: PropTypes.bool.isRequired,
+  dockerStatus: PropTypes.bool,
 };
 
 RouteContainer.defaultProps = {
@@ -37,4 +37,5 @@ RouteContainer.defaultProps = {
   consortia: [],
   pipelines: [],
   runs: [],
+  dockerStatus: false,
 };

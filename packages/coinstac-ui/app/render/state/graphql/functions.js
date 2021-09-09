@@ -1,4 +1,4 @@
-import { gql } from 'react-apollo';
+import { gql } from '@apollo/client';
 import { mutations, queries } from 'coinstac-graphql-schema';
 
 export const ADD_COMPUTATION_MUTATION = gql`
@@ -19,6 +19,11 @@ export const COMPUTATION_CHANGED_SUBSCRIPTION = gql`
 export const CONSORTIUM_CHANGED_SUBSCRIPTION = gql`
   subscription consortiumChanged($consortiumId: ID)
     ${queries.consortiumChanged}
+`;
+
+export const CONSORTIUM_PIPELINE_CHANGED_SUBSCRIPTION = gql`
+  subscription consortiumPipelineChanged
+    ${queries.consortiumPipelineChanged}
 `;
 
 export const THREAD_CHANGED_SUBSCRIPTION = gql`
@@ -105,11 +110,6 @@ export const FETCH_RESULT_QUERY = gql`
 export const FETCH_ALL_THREADS_QUERY = gql`
   query fetchAllThreads
     ${queries.fetchAllThreads}
-`;
-
-export const FETCH_AVAILABLE_HEADLESS_CLIENTS = gql`
-  query fetchAvailableHeadlessClients
-    ${queries.fetchAvailableHeadlessClients}
 `;
 
 export const JOIN_CONSORTIUM_MUTATION = gql`
@@ -224,4 +224,42 @@ export const USERS_ONLINE_STATUS_CHANGED_SUBSCRIPTION = gql`
 export const CREATE_ISSUE_MUTATION = gql`
   mutation createIssue($issue: IssueInput!)
     ${mutations.createIssue}
+`;
+
+export const FETCH_ALL_HEADLESS_CLIENTS = gql`
+  query fetchAllHeadlessClients
+    ${queries.fetchAllHeadlessClients}
+`;
+
+export const FETCH_HEADLESS_CLIENT = gql`
+  query fetchHeadlessClient($id: ID!)
+    ${queries.fetchHeadlessClient}
+`;
+
+export const HEADLESS_CLIENT_CHANGED_SUBSCRIPTION = gql`
+  subscription headlessClientChanged
+    ${queries.headlessClientChanged}
+`;
+
+export const CREATE_HEADLESS_CLIENT_MUTATION = gql`
+  mutation createHeadlessClient($data: HeadlessClientInput!)
+    ${mutations.createHeadlessClient}
+`;
+
+export const UPDATE_HEADLESS_CLIENT_MUTATION = gql`
+  mutation updateHeadlessClient($id: ID!, $data: HeadlessClientInput!)
+    ${mutations.updateHeadlessClient}
+`;
+
+export const DELETE_HEADLESS_CLIENT_MUTATION = gql`
+  mutation deleteHeadlessClient($headlessClientId: ID!) {
+    deleteHeadlessClient(headlessClientId: $headlessClientId){
+      id
+    }
+  }
+`;
+
+export const GENERATE_HEADLESS_CLIENT_API_KEY_MUTATION = gql`
+  mutation generateHeadlessClientApiKey($headlessClientId: ID!)
+    ${mutations.generateHeadlessClientApiKey}
 `;

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { compose, graphql, withApollo } from 'react-apollo';
+import { graphql, withApollo } from '@apollo/react-hoc';
+import { flowRight as compose } from 'lodash';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import Typography from '@material-ui/core/Typography';
@@ -54,11 +55,12 @@ function MapsEdit({
         </Typography>
       </div>
       <MapsEditForm
+        consortiumId={consortium && consortium.id}
         pipeline={pipeline}
         dataMap={dataMap}
+        saved={saved}
         onChange={onChange}
         onSubmit={commitSaveDataMap}
-        saved={saved}
       />
     </div>
   );

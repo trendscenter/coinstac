@@ -4,6 +4,7 @@ const {
   COMPUTATION_DELETED,
   CONSORTIUM_CHANGED,
   CONSORTIUM_DELETED,
+  CONSORTIUM_PIPELINE_CHANGED,
   PIPELINE_CHANGED,
   PIPELINE_DELETED,
   RUN_CHANGED,
@@ -12,6 +13,8 @@ const {
   USER_CHANGED,
   USER_SESSION_STARTED,
   USER_SESSION_FINISHED,
+  HEADLESS_CLIENT_CHANGED,
+  HEADLESS_CLIENT_DELETED,
 } = require('../events');
 const { transformToClient } = require('../../utils');
 
@@ -63,6 +66,15 @@ function consortiumDeleted(consortium) {
   });
 }
 
+function consortiumPipelineChanged(consortium) {
+  const cons = transformToClient(consortium);
+
+  pubSub.publish('consortiumPipelineChanged', {
+    consortiumPipelineChanged: cons,
+    consortiumId: cons.id,
+  });
+}
+
 function publishPipelineDeleted(pipeline) {
   const pipe = transformToClient(pipeline);
   pipe.delete = true;
@@ -87,6 +99,25 @@ function pipelineChanged(pipeline) {
   pubSub.publish('pipelineChanged', {
     pipelineChanged: pipe,
     pipelineId: pipe.id,
+  });
+}
+
+function headlessClientChanged(headlessClient) {
+  const hc = transformToClient(headlessClient);
+
+  pubSub.publish('headlessClientChanged', {
+    headlessClientChanged: hc,
+    headlessClientId: hc.id,
+  });
+}
+
+function headlessClientDeleted(headlessClient) {
+  const hc = transformToClient(headlessClient);
+  hc.delete = true;
+
+  pubSub.publish('headlessClientChanged', {
+    headlessClientChanged: hc,
+    headlessClientId: hc.id,
   });
 }
 
@@ -148,9 +179,13 @@ function initSubscriptions(ps) {
 
   eventEmitter.on(CONSORTIUM_CHANGED, consortiumChanged);
   eventEmitter.on(CONSORTIUM_DELETED, consortiumDeleted);
+  eventEmitter.on(CONSORTIUM_PIPELINE_CHANGED, consortiumPipelineChanged);
 
   eventEmitter.on(PIPELINE_CHANGED, pipelineChanged);
   eventEmitter.on(PIPELINE_DELETED, pipelineDeleted);
+
+  eventEmitter.on(HEADLESS_CLIENT_CHANGED, headlessClientChanged);
+  eventEmitter.on(HEADLESS_CLIENT_DELETED, headlessClientDeleted);
 
   eventEmitter.on(RUN_CHANGED, runChanged);
 

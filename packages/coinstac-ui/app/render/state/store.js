@@ -5,11 +5,8 @@
  * 'Real World' example:
  *
  * @{@link  https://github.com/rackt/redux/blob/master/examples/real-world/store/configureStore.js}
- *
- * Uses ApolloClient as outlined: https://medium.com/react-weekly/implementing-graphql-in-your-redux-app-dad7acf39e1b
  */
 import { applyMiddleware, createStore } from 'redux';
-import { createLogger } from 'redux-logger';
 import promiseMiddleware from 'redux-promise';
 import thunkMiddleware from 'redux-thunk';
 import { persistStore, persistReducer } from 'redux-persist';
@@ -47,10 +44,9 @@ const persistConfig = {
   }
 } */
 
-export default function (apolloClient) {
-  const persistedReducer = persistReducer(persistConfig, rootReducer(apolloClient));
+export default function () {
+  const persistedReducer = persistReducer(persistConfig, rootReducer());
   const middleware = [
-    apolloClient.middleware(),
     thunkMiddleware,
     promiseMiddleware,
   ];
@@ -58,7 +54,7 @@ export default function (apolloClient) {
     persistedReducer,
     applyMiddleware.apply(
       this,
-      (!process.env.CI ? [...middleware, createLogger({ collapsed: true })] : middleware)
+      middleware
     )
   );
 
