@@ -1457,6 +1457,13 @@ const resolvers = {
 
       return transformToClient(result);
     },
+    deleteDataset: async (parent, { id }) => {
+      const db = database.getDbInstance();
+
+      const deletedDatasetResult = await db.collection('datasets').findOneAndDelete({ _id: ObjectID(id) });
+
+      return transformToClient(deletedDatasetResult.value);
+    },
   },
   Subscription: {
     /**

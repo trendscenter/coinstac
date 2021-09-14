@@ -283,3 +283,8 @@ export const SAVE_DATASET_MUTATION = gql`
   mutation saveDataset($input: DatasetInput!)
     ${mutations.saveDataset}
 `;
+
+export const DELETE_DATASET_MUTATION = gql`
+  mutation deleteDataset($id: ID!)
+    ${mutations.deleteDataset}
+`;

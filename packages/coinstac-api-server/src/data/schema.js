@@ -209,6 +209,7 @@ const typeDefs = `
     deleteHeadlessClient(headlessClientId: ID!): HeadlessClient
     generateHeadlessClientApiKey(headlessClientId: ID!): String
     saveDataset(input: DatasetInput!): Dataset
+    deleteDataset(id: ID!): Dataset
   }
 
   # This is a description of the queries

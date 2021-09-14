@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useLazyQuery, useQuery } from '@apollo/client';
+import { useLazyQuery, useMutation } from '@apollo/client';
 import { Link } from 'react-router';
 import { get } from 'lodash';
 import Box from '@material-ui/core/Box';
@@ -16,15 +16,23 @@ import SearchIcon from '@material-ui/icons/Search';
 
 import useStyles from './data-discovery.styles';
 import ResultItem from './result-item';
-import { SEARCH_DATASETS_QUERY, FETCH_ALL_DATASETS_TAGS_QUERY } from '../../state/graphql/functions';
+import ListDeleteModal from '../common/list-delete-modal';
+import {
+  SEARCH_DATASETS_QUERY,
+  FETCH_ALL_DATASETS_TAGS_QUERY,
+  DELETE_DATASET_MUTATION,
+} from '../../state/graphql/functions';
 
 function DataDiscovery() {
   const classes = useStyles();
 
   const [executedFirstSearch, setExecutedFirstSearch] = useState(false);
   const [searchString, setSearchString] = useState('');
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [datasetToDelete, setDatasetToDelete] = useState(null);
 
   const [searchDatasets, { data, loading }] = useLazyQuery(SEARCH_DATASETS_QUERY, { fetchPolicy: 'cache-and-network' });
+  const [deleteRemoteDataset] = useMutation(DELETE_DATASET_MUTATION);
 
   function handleSearchInputChange(e) {
     setSearchString(e.target.value);
@@ -34,6 +42,31 @@ function DataDiscovery() {
     setExecutedFirstSearch(true);
 
     searchDatasets({ variables: { searchString } });
+  }
+
+  function closeDeleteModal() {
+    setShowDeleteModal(false);
+  }
+
+  function confirmDelete(datasetId) {
+    function action() {
+      setShowDeleteModal(true);
+      setDatasetToDelete(datasetId);
+    }
+
+    return action;
+  }
+
+  function deleteDataset() {
+    deleteRemoteDataset({
+      variables: { id: datasetToDelete },
+      refetchQueries: [
+        { query: SEARCH_DATASETS_QUERY, variables: { searchString } },
+      ],
+    });
+
+    closeDeleteModal();
+    setDatasetToDelete(false);
   }
 
   const results = get(data, 'searchDatasets', []);
@@ -76,6 +109,7 @@ function DataDiscovery() {
         <ResultItem
           key={result.id}
           result={result}
+          onClickDelete={confirmDelete(result.id)}
           className={classes.resultItem}
         />
       ))}
@@ -91,6 +125,12 @@ function DataDiscovery() {
           </Typography>
         </Paper>
       )}
+      <ListDeleteModal
+        close={closeDeleteModal}
+        deleteItem={deleteDataset}
+        itemName="dataset description"
+        show={showDeleteModal}
+      />
     </div>
   );
 }

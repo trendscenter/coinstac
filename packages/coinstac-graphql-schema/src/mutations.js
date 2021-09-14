@@ -130,6 +130,13 @@ const mutations = {
       }
     }
   `,
+  deleteDataset: `
+    {
+      deleteDataset(id: $id) {
+        ${sharedFields.datasetFields}
+      }
+    }
+  `,
 };
 
 module.exports = mutations;

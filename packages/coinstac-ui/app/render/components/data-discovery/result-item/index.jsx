@@ -7,6 +7,7 @@ import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
+import DeleteIcon from '@material-ui/icons/Delete';
 import EditIcon from '@material-ui/icons/Edit';
 import FolderOpenIcon from '@material-ui/icons/FolderOpen';
 import MessageIcon from '@material-ui/icons/Message';
@@ -14,7 +15,9 @@ import MessageIcon from '@material-ui/icons/Message';
 import useStyles from './result-item.styles';
 import MemberAvatar from '../../common/member-avatar';
 
-function ResultItem({ auth, result, className }) {
+function ResultItem({
+  auth, result, onClickDelete, className,
+}) {
   const classes = useStyles();
 
   const {
@@ -27,7 +30,9 @@ function ResultItem({ auth, result, className }) {
         <Box>
           <Box display="flex">
             <Typography variant="body2" className={classes.label}>Name:</Typography>
-            <Typography variant="body2">{ datasetDescription.Name }</Typography>
+            {datasetDescription && datasetDescription.Name && (
+              <Typography variant="body2">{ datasetDescription.Name }</Typography>
+            )}
           </Box>
           {participantsDescription && (
             <Box display="flex">
@@ -45,15 +50,26 @@ function ResultItem({ auth, result, className }) {
             showDetails
           />
           {auth.user.id === owner.id ? (
-            <Button
-              variant="contained"
-              color="default"
-              endIcon={<EditIcon />}
-              component={Link}
-              to={`/dashboard/data-discovery/${id}`}
-            >
-              Edit data
-            </Button>
+            <React.Fragment>
+              <Button
+                variant="contained"
+                color="default"
+                endIcon={<EditIcon />}
+                component={Link}
+                to={`/dashboard/data-discovery/${id}`}
+              >
+                Edit data
+              </Button>
+              <Button
+                variant="contained"
+                color="secondary"
+                endIcon={<DeleteIcon />}
+                onClick={onClickDelete}
+                className={classes.detailsButton}
+              >
+                Delete
+              </Button>
+            </React.Fragment>
           ) : (
             <React.Fragment>
               <Button
@@ -91,6 +107,7 @@ ResultItem.propTypes = {
   result: PropTypes.object.isRequired,
   className: PropTypes.string,
   auth: PropTypes.object.isRequired,
+  onClickDelete: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = ({ auth }) => ({
