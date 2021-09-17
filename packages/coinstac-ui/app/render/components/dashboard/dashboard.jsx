@@ -3,9 +3,7 @@ import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
 import { useQuery, ApolloProvider } from '@apollo/client';
 import { ApolloProvider as ApolloHOCProvider } from '@apollo/react-hoc';
-import {
-  filter, find, get, keys, omit, pick,
-} from 'lodash';
+import { get } from 'lodash';
 import PropTypes from 'prop-types';
 import { ipcRenderer, remote } from 'electron';
 import { List, ListItem } from '@material-ui/core';
@@ -76,30 +74,6 @@ function Dashboard({
   const pipelines = get(pipelinesData, 'fetchAllPipelines');
   const threads = get(threadsData, 'fetchAllThreads');
   const remoteRuns = get(userRunsData, 'fetchAllUserRuns');
-
-  useEffect(() => {
-    const runs = filter(remoteRuns, (run => !!run.endDate)).map((run) => {
-      const consortium = find(consortia, (consortium => consortium.id === run.consortiumId));
-      const clients = keys(run.clients).map(clientId => ({
-        id: clientId,
-        username: run.clients[clientId],
-      }));
-
-      return {
-        ...omit(run, ['clients', 'consortiumId', '__typename']),
-        consortium: pick(consortium, ['id', 'name']),
-        clients,
-      };
-    });
-
-    const data = {
-      userId: auth.user.id,
-      appDirectory: auth.appDirectory,
-      runs,
-    };
-
-    ipcRenderer.send('generate-provenance', data);
-  }, [remoteRuns]);
 
   const dockerStatus = useDockerStatus();
 
