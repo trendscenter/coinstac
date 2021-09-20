@@ -75,7 +75,17 @@ function getApolloClient(config) {
   return {
     client: new ApolloClient({
       link: unauthorizedLink.concat(splitLink),
-      cache: new InMemoryCache(),
+      cache: new InMemoryCache({
+        typePolicies: {
+          Query: {
+            fields: {
+              searchDatasets: {
+                merge: false, // prefer incoming server data over the data in the cache
+              },
+            },
+          },
+        },
+      }),
     }),
     wsLink,
   };

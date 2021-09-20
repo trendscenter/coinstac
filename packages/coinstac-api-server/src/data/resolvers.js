@@ -1447,7 +1447,7 @@ const resolvers = {
           datasetDescription,
           participantsDescription,
           owner: {
-            id: credentials.id,
+            id: credentials._id,
             username: credentials.username,
           }
         });
@@ -1457,12 +1457,18 @@ const resolvers = {
 
       return transformToClient(result);
     },
-    deleteDataset: async (parent, { id }) => {
+    deleteDataset: async (parent, { id }, { credentials }) => {
       const db = database.getDbInstance();
 
-      const deletedDatasetResult = await db.collection('datasets').findOneAndDelete({ _id: ObjectID(id) });
+      const dataset = await db.collection('datasets').findOne({ _id: ObjectID(id) });
 
-      return transformToClient(deletedDatasetResult.value);
+      if (!isAdmin(credentials.permissions) && !dataset.owner.id.equals(credentials._id)) {
+        return Boom.unauthorized('You do not have permission to delete this dataset');
+      }
+
+      await db.collection('datasets').deleteOne({ _id: ObjectID(id) });
+
+      return transformToClient(dataset);
     },
   },
   Subscription: {
