@@ -372,12 +372,18 @@ const resolvers = {
     fetchAllUserRuns: async (parent, args, { credentials }) => {
       const db = database.getDbInstance();
 
-      const runs = await db.collection('runs').find({
-        $or: [
-          { [`clients.${credentials.id}`]: { $exists: true } },
-          { sharedUsers: credentials.id }
-        ]
-      }).toArray();
+      let runs;
+
+      if (isAdmin(credentials.permissions)) {
+        runs = await db.collection('runs').find().toArray();
+      } else {
+        runs = await db.collection('runs').find({
+          $or: [
+            { [`clients.${credentials.id}`]: { $exists: true } },
+            { sharedUsers: credentials.id }
+          ]
+        }).toArray();
+      }
 
       return transformToClient(runs);
     },
