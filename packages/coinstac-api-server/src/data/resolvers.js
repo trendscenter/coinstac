@@ -415,7 +415,16 @@ const resolvers = {
 
       return getOnlineUsers();
     },
-    fetchAllHeadlessClients: async (parent, args, { credentials }) => {
+    fetchAllHeadlessClients: async () => {
+      try {
+        const headlessClients = await headlessClientsController.fetchAllHeadlessClients();
+
+        return transformToClient(headlessClients);
+      } catch (error) {
+        return Boom.internal('Failed to fetch the headless clients list', error);
+      }
+    },
+    fetchAccessibleHeadlessClients: async (parent, args, { credentials }) => {
       try {
         const headlessClients = await headlessClientsController.fetchHeadlessClients(credentials);
 

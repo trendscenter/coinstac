@@ -207,6 +207,7 @@ const typeDefs = `
     fetchAllUsers: [User]
     fetchAllUserRuns: [Run]
     fetchAllHeadlessClients: [HeadlessClient]
+    fetchAccessibleHeadlessClients: [HeadlessClient]
     fetchComputation(computationIds: [ID]): [Computation]
     fetchConsortium(consortiumId: ID): Consortium
     fetchPipeline(pipelineId: ID): Pipeline
