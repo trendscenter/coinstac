@@ -187,12 +187,14 @@ class ConsortiumAbout extends Component {
           className={classes.textField}
           onChange={this.handleTextFieldChange('description')}
         />
-        <FormControlLabel
-          control={
-            <Switch checked={consortium.isPrivate} value={consortium.isPrivate} onChange={this.handleSwitchChange('isPrivate')} />
-          }
-          label="Turn consortia private?"
-        />
+        {owner && (
+          <FormControlLabel
+            control={
+              <Switch checked={consortium.isPrivate} value={consortium.isPrivate} onChange={this.handleSwitchChange('isPrivate')} />
+            }
+            label="Turn consortia private?"
+          />
+        )}
         {
           consortium.id && (
             <Box marginTop={4}>
