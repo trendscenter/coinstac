@@ -55,7 +55,15 @@ async function fetchHeadlessClient(id, credentials) {
   return db.collection('headlessClients').findOne(filter);
 }
 
-async function fetchHeadlessClients(credentials) {
+async function fetchAllHeadlessClients() {
+  const db = database.getDbInstance();
+
+  const headlessClients = await db.collection('headlessClients').find().toArray();
+
+  return headlessClients;
+}
+
+async function fetchAccessibleHeadlessClients(credentials) {
   const db = database.getDbInstance();
 
   const filter = {};
@@ -187,7 +195,8 @@ async function generateHeadlessClientApiKey(headlessClientId, credentials) {
 
 module.exports = {
   fetchHeadlessClient,
-  fetchHeadlessClients,
+  fetchAllHeadlessClients,
+  fetchAccessibleHeadlessClients,
   createHeadlessClient,
   updateHeadlessClient,
   deleteHeadlessClient,
