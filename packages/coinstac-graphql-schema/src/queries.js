@@ -152,6 +152,13 @@ const queries = {
       }
     }
   `,
+  fetchAccessibleHeadlessClients: `
+    {
+      fetchAccessibleHeadlessClients {
+        ${sharedFields.headlessClientFields}
+      }
+    }
+  `,
   fetchHeadlessClient: `
     {
       fetchHeadlessClient(id: $id) {

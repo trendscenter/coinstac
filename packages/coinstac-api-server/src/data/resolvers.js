@@ -372,12 +372,18 @@ const resolvers = {
     fetchAllUserRuns: async (parent, args, { credentials }) => {
       const db = database.getDbInstance();
 
-      const runs = await db.collection('runs').find({
-        $or: [
-          { [`clients.${credentials.id}`]: { $exists: true } },
-          { sharedUsers: credentials.id }
-        ]
-      }).toArray();
+      let runs;
+
+      if (isAdmin(credentials.permissions)) {
+        runs = await db.collection('runs').find().toArray();
+      } else {
+        runs = await db.collection('runs').find({
+          $or: [
+            { [`clients.${credentials.id}`]: { $exists: true } },
+            { sharedUsers: credentials.id }
+          ]
+        }).toArray();
+      }
 
       return transformToClient(runs);
     },
@@ -415,7 +421,16 @@ const resolvers = {
 
       return getOnlineUsers();
     },
-    fetchAllHeadlessClients: async (parent, args, { credentials }) => {
+    fetchAllHeadlessClients: async () => {
+      try {
+        const headlessClients = await headlessClientsController.fetchAllHeadlessClients();
+
+        return transformToClient(headlessClients);
+      } catch (error) {
+        return Boom.internal('Failed to fetch the headless clients list', error);
+      }
+    },
+    fetchAccessibleHeadlessClients: async (parent, args, { credentials }) => {
       try {
         const headlessClients = await headlessClientsController.fetchHeadlessClients(credentials);
 

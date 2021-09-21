@@ -231,6 +231,11 @@ export const FETCH_ALL_HEADLESS_CLIENTS = gql`
     ${queries.fetchAllHeadlessClients}
 `;
 
+export const FETCH_ACCESSIBLE_HEADLESS_CLIENTS = gql`
+  query fetchAccessibleHeadlessClients
+    ${queries.fetchAllHeadlessClients}
+`;
+
 export const FETCH_HEADLESS_CLIENT = gql`
   query fetchHeadlessClient($id: ID!)
     ${queries.fetchHeadlessClient}

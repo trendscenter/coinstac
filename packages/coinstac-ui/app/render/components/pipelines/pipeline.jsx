@@ -97,6 +97,14 @@ const styles = theme => ({
   cloudUserTitle: {
     marginRight: theme.spacing(1),
   },
+  buttonWrapper: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+    marginBottom: theme.spacing(2),
+  },
+  button: {
+    marginRight: theme.spacing(1),
+  },
 });
 
 const NumberFormatCustom = ({ inputRef, onChange, ...other }) => (
@@ -615,6 +623,21 @@ class Pipeline extends Component {
     this.setState({ filteredComputations });
   }
 
+  handleGoBackToConsortium = () => {
+    const { consortium } = this.state;
+    const { router } = this.context;
+
+    localStorage.setItem('HIGHLIGHT_CONSORTIUM', consortium.id);
+    router.push('/dashboard/consortia');
+  };
+
+  handleGoToMap = () => {
+    const { consortium } = this.state;
+    const { router } = this.context;
+
+    router.push(`/dashboard/maps/${consortium.id}`);
+  }
+
   render() {
     const {
       connectDropTarget, consortia, users, classes, auth, availableHeadlessClients,
@@ -744,7 +767,27 @@ class Pipeline extends Component {
               }
             </Menu>
           </div>
-          <Box textAlign="right" marginBottom={2}>
+          <Box textAlign="right" className={classes.buttonWrapper}>
+            {consortium && consortium.activePipelineId === pipeline.id && (
+              <Button
+                variant="contained"
+                color="primary"
+                className={classes.button}
+                onClick={this.handleGoToMap}
+              >
+                Map Local Data
+              </Button>
+            )}
+            {consortium && (
+              <Button
+                variant="contained"
+                color="primary"
+                className={classes.button}
+                onClick={this.handleGoBackToConsortium}
+              >
+                Go to Consortium
+              </Button>
+            )}
             <StatusButtonWrapper status={savingStatus}>
               <Button
                 key="save-pipeline-button"
@@ -897,6 +940,10 @@ class Pipeline extends Component {
     );
   }
 }
+
+Pipeline.contextTypes = {
+  router: PropTypes.object.isRequired,
+};
 
 Pipeline.defaultProps = {
   activePipeline: null,
