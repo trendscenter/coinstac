@@ -58,6 +58,32 @@ class Threads extends Component {
     openDialog: false,
     savingStatus: 'init',
     selectedThread: null,
+    startingTitle: null,
+    startingRecipients: {},
+  }
+
+  componentDidMount() {
+    const { location } = this.props;
+
+    const stateChanges = {};
+
+    if (location.query.new) {
+      stateChanges.creatingNewThread = true;
+    }
+
+    if (location.query.title) {
+      stateChanges.startingTitle = location.query.title;
+    }
+
+    if (location.query.recipientId && location.query.recipientUsername) {
+      stateChanges.startingRecipients = {
+        [location.query.recipientId]: {
+          username: location.query.recipientUsername,
+        },
+      };
+    }
+
+    this.setState(stateChanges);
   }
 
   handleThreadClick = (threadId) => {
@@ -172,6 +198,7 @@ class Threads extends Component {
     } = this.props;
     const {
       selectedThread, creatingNewThread, openDialog, savingStatus,
+      startingTitle, startingRecipients,
     } = this.state;
 
     const thread = this.getSelectedThread();
@@ -196,6 +223,8 @@ class Threads extends Component {
               <ThreadNew
                 savingStatus={savingStatus}
                 onSend={this.handleSend}
+                startingTitle={startingTitle}
+                startingRecipients={startingRecipients}
               />
             ) : (
               <ThreadContent
@@ -254,6 +283,7 @@ Threads.propTypes = {
   pullComputations: PropTypes.func.isRequired,
   saveMessage: PropTypes.func.isRequired,
   setReadMessage: PropTypes.func.isRequired,
+  location: PropTypes.object.isRequired,
 };
 
 const ThreadsWithData = compose(

@@ -161,9 +161,22 @@ const typeDefs = `
     owners: JSON
   }
 
+  type Dataset {
+    id: ID
+    datasetDescription: JSON
+    participantsDescription: JSON
+    owner: JSON
+  }
+
   input IssueInput {
     title: String
     body: String
+  }
+
+  input DatasetInput {
+    id: ID
+    datasetDescription: JSON
+    participantsDescription: JSON
   }
 
   # This is the general mutation description
@@ -195,6 +208,8 @@ const typeDefs = `
     updateHeadlessClient(headlessClientId: ID!, data: HeadlessClientInput!): HeadlessClient
     deleteHeadlessClient(headlessClientId: ID!): HeadlessClient
     generateHeadlessClientApiKey(headlessClientId: ID!): String
+    saveDataset(input: DatasetInput!): Dataset
+    deleteDataset(id: ID!): Dataset
   }
 
   # This is a description of the queries
@@ -216,6 +231,10 @@ const typeDefs = `
     fetchHeadlessClient(id: ID!): HeadlessClient
     fetchAllThreads: [Thread]
     fetchUsersOnlineStatus: JSON
+    fetchAvailableHeadlessClients: [HeadlessClient]
+    fetchAllDatasetsTags: [String]
+    searchDatasets(searchString: String, tags: [String]): [Dataset]
+    fetchDataset(id: ID!): Dataset
   }
 
   type Subscription {

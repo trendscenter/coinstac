@@ -21,6 +21,8 @@ function createDbInstance() {
   db.collection('users').createIndex({ email: 1 }, { unique: true });
 
   db.collection('headlessClients').createIndex({ name: 1 }, { unique: true });
+
+  db.collection('datasets').createIndex({ '$**': 'text' });
 }
 
 function dropDbInstance() {
