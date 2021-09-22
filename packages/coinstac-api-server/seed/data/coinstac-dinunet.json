@@ -350,7 +350,8 @@
     },
     "output": {
     },
-    "display": [
-    ]
+    "display": {
+      "type": "string"
+    }
   }
 }
