@@ -21,6 +21,7 @@ const {
   PIPELINE_CHANGED,
   PIPELINE_DELETED,
   RUN_CHANGED,
+  RUN_DELETED,
   RUN_WITH_HEADLESS_CLIENT_STARTED,
   THREAD_CHANGED,
   USER_CHANGED,
@@ -696,6 +697,18 @@ const resolvers = {
       });
 
       eventEmitter.emit(PIPELINE_DELETED, pipelines);
+
+      const runs = await db.collection('runs').find({
+        consortiumId: args.consortiumId,
+        endDate: null,
+      }).toArray();
+
+      const n = await db.collection('runs').deleteMany({
+        consortiumId: args.consortiumId,
+        endDate: null,
+      });
+      debugger
+      eventEmitter.emit(RUN_DELETED, runs);
 
       return transformToClient(deletedConsortiumResult.value);
     },
