@@ -139,5 +139,25 @@ module.exports = manager.then((remotePipelineManager) => {
         },
       },
     },
+    {
+      method: 'POST',
+      path: '/stopPipeline',
+      config: {
+        // auth: 'jwt',
+        handler: (req, res) => {
+          authenticateServer()
+            .then(() => {
+              const { payload: { runId } } = req;
+              // TODO: fix this call w/ the stop fn changes
+              try {
+                remotePipelineManager.stopPipeline('', runId);
+                res({}).code(200);
+              } catch (e) {
+                res({}).code(500);
+              }
+            });
+        },
+      },
+    },
   ];
 });

@@ -707,8 +707,15 @@ const resolvers = {
         consortiumId: args.consortiumId,
         endDate: null,
       });
-      debugger
+
       eventEmitter.emit(RUN_DELETED, runs);
+      runs.forEach(async (run) => {
+        try {
+          await axios.post(
+            `http://${process.env.PIPELINE_SERVER_HOSTNAME}:${process.env.PIPELINE_SERVER_PORT}/stopPipeline`, { runId: run._id.valueOf() }
+          );
+        } catch (e) {}
+      });
 
       return transformToClient(deletedConsortiumResult.value);
     },
