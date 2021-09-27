@@ -142,7 +142,6 @@ function runDeleted(run) {
 
 function runChanged(run) {
   const r = transformToClient(run);
-  r.delete = true;
 
   pubSub.publish('pipelineChanged', {
     pipelineChanged: r,
