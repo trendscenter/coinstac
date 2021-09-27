@@ -21,6 +21,7 @@ const {
   PIPELINE_CHANGED,
   PIPELINE_DELETED,
   RUN_CHANGED,
+  RUN_DELETED,
   RUN_WITH_HEADLESS_CLIENT_STARTED,
   THREAD_CHANGED,
   USER_CHANGED,
@@ -696,6 +697,25 @@ const resolvers = {
       });
 
       eventEmitter.emit(PIPELINE_DELETED, pipelines);
+
+      const runs = await db.collection('runs').find({
+        consortiumId: args.consortiumId,
+        endDate: null,
+      }).toArray();
+
+      const n = await db.collection('runs').deleteMany({
+        consortiumId: args.consortiumId,
+        endDate: null,
+      });
+
+      eventEmitter.emit(RUN_DELETED, runs);
+      runs.forEach(async (run) => {
+        try {
+          await axios.post(
+            `http://${process.env.PIPELINE_SERVER_HOSTNAME}:${process.env.PIPELINE_SERVER_PORT}/stopPipeline`, { runId: run._id.valueOf() }
+          );
+        } catch (e) {}
+      });
 
       return transformToClient(deletedConsortiumResult.value);
     },

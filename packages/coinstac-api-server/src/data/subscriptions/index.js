@@ -8,6 +8,7 @@ const {
   PIPELINE_CHANGED,
   PIPELINE_DELETED,
   RUN_CHANGED,
+  RUN_DELETED,
   RUN_WITH_HEADLESS_CLIENT_STARTED,
   THREAD_CHANGED,
   USER_CHANGED,
@@ -121,12 +122,30 @@ function headlessClientDeleted(headlessClient) {
   });
 }
 
-function runChanged(run) {
+function publishRunDeleted(run) {
   const r = transformToClient(run);
+  r.delete = true;
 
   pubSub.publish('userRunChanged', {
     userRunChanged: r,
     runId: r.id,
+  });
+}
+
+function runDeleted(run) {
+  if (Array.isArray(run)) {
+    run.forEach(r => publishRunDeleted(r));
+  } else {
+    publishRunDeleted(run);
+  }
+}
+
+function runChanged(run) {
+  const r = transformToClient(run);
+
+  pubSub.publish('pipelineChanged', {
+    pipelineChanged: r,
+    pipelineId: r.id,
   });
 }
 
@@ -188,6 +207,7 @@ function initSubscriptions(ps) {
   eventEmitter.on(HEADLESS_CLIENT_DELETED, headlessClientDeleted);
 
   eventEmitter.on(RUN_CHANGED, runChanged);
+  eventEmitter.on(RUN_DELETED, runDeleted);
 
   eventEmitter.on(RUN_WITH_HEADLESS_CLIENT_STARTED, runWithHeadlessClientStarted);
 
