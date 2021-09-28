@@ -1,5 +1,4 @@
 const path = require('path');
-const { ObjectID } = require('mongodb');
 const database = require('../src/database');
 const helperFunctions = require('../src/auth-helpers');
 
@@ -8,8 +7,6 @@ const drneVbm = require('./data/coinstac-schema-regression-vbm');
 // const ssrVbm = require('./data/coinstac-schema-regression-ss-vbm');
 const msrVbm = require('./data/coinstac-schema-regression-ms-vbm');
 const dmancova = require('./data/coinstac-dmancova');
-const dinunet = require('./data/coinstac-dinunet');
-const dinunetGPU = require('./data/coinstac-dinunet-gpu');
 
 const drneFsl = require('./data/coinstac-schema-regression-fsl');
 const ssrFsl = require('./data/coinstac-schema-regression-ss-fsl');
@@ -19,6 +16,8 @@ const gica = require('./data/coinstac-gica-pipeline');
 const ddfnc = require('./data/coinstac-ddfnc-pipeline');
 const dpsvm = require('./data/coinstac-dpsvm');
 const vbm = require('./data/coinstac-vbm-pre');
+const vbmStats = require('./data/coinstac-schema-regression-vbm-stats');
+const brainAge = require('./data/coinstac-brainage-fnc');
 
 const fmri = require('./data/coinstac-fmri');
 
@@ -82,7 +81,7 @@ const RUN_IDS = [
 async function populateComputations() {
   const db = database.getDbInstance();
 
-  const comps2Insert = [
+  return db.collection('computations').insertMany([
     { ...local, submittedBy: 'author', _id: COMPUTATION_IDS[0] },
     { ...decentralized, submittedBy: 'author', _id: COMPUTATION_IDS[1] },
     { ...msrFsl, submittedBy: 'author', _id: COMPUTATION_IDS[2] },
@@ -100,23 +99,9 @@ async function populateComputations() {
     { ...fmri, submittedBy: 'author', _id: COMPUTATION_IDS[14] },
     { ...ssrFsl, submittedBy: 'author', _id: COMPUTATION_IDS[15] },
     { ...dmancova, submittedBy: 'author', _id: COMPUTATION_IDS[16] },
-    { ...dinunet, submittedBy: 'author', _id: COMPUTATION_IDS[17] },
-    { ...dinunetGPU, submittedBy: 'author', _id: COMPUTATION_IDS[18] },
-  ];
-  const currentComps = await db.collection('computations').find().toArray();
-  const operations = comps2Insert.reduce((ops, comp) => {
-    const cc = currentComps.find(cc => cc.computation.id === comp.computation.id);
-    if (cc) {
-      ops.update.push(Object.assign({}, comp, { _id: cc._id }));
-      return ops;
-    }
-    ops.insert.push(comp);
-    return ops;
-  }, { update: [], insert: [] });
-  if (operations.insert.length > 0) await db.collection('computations').insertMany(operations.insert);
-  await Promise.all(operations.update.map(async (op) => {
-    await db.collection('computations').updateMany({ _id: ObjectID(op._id) }, { $set: { meta: op.meta, computation: op.computation } });
-  }));
+    { ...brainAge, submittedBy: 'author', _id: COMPUTATION_IDS[17] },
+    { ...vbmStats, submittedBy: 'author', _id: COMPUTATION_IDS[18] },
+  ]);
 }
 
 async function populateConsortia() {
@@ -855,7 +840,6 @@ async function populateUsers() {
         [CONSORTIA_IDS[1]]: ['owner', 'member'],
       },
       pipelines: {},
-      headlessClients: {},
       roles: {
         admin: true,
         author: true,
@@ -880,7 +864,6 @@ async function populateUsers() {
         [CONSORTIA_IDS[1]]: ['member'],
       },
       pipelines: {},
-      headlessClients: {},
       roles: {
         admin: false,
         author: true,
@@ -905,7 +888,6 @@ async function populateUsers() {
         [CONSORTIA_IDS[1]]: ['member'],
       },
       pipelines: {},
-      headlessClients: {},
       roles: {
         admin: false,
         author: false,
@@ -930,7 +912,6 @@ async function populateUsers() {
         [CONSORTIA_IDS[1]]: ['member'],
       },
       pipelines: {},
-      headlessClients: {},
       roles: {
         admin: true,
         author: true,
@@ -955,7 +936,6 @@ async function populateUsers() {
         [CONSORTIA_IDS[1]]: ['member'],
       },
       pipelines: {},
-      headlessClients: {},
       roles: {
         admin: false,
         author: true,
@@ -980,7 +960,6 @@ async function populateUsers() {
         [CONSORTIA_IDS[1]]: ['member'],
       },
       pipelines: {},
-      headlessClients: {},
       roles: {
         admin: false,
         author: false,
@@ -1001,7 +980,6 @@ async function populateUsers() {
       computations: {},
       consortia: {},
       pipelines: {},
-      headlessClients: {},
       roles: {
         admin: true,
         author: false,
@@ -1021,22 +999,20 @@ async function populateHeadlessClients() {
     {
       name: 'Headless 1',
       apiKey: await helperFunctions.hashPassword('testApiKey'),
-      hasApiKey: true,
       computationWhitelist: {
         [COMPUTATION_IDS[15]]: {
           inputMap: {
             covariates: {
               type: 'csv',
               dataMap: [
-                { csvColumn: 'age', variableName: 'age', type: 'number' },
-                { csvColumn: 'isControl', variableName: 'isControl', type: 'boolean' },
+                { csvColumn: 'age', variableName: 'age' },
+                { csvColumn: 'isControl', variableName: 'isControl' },
               ],
               dataFilePath: path.resolve('../../algorithm-development/test-data/freesurfer-test-data/site1/site1_Covariate.csv'),
             },
           },
         },
       },
-      owners: {},
     },
   ]);
 }
@@ -1058,15 +1034,6 @@ async function populate(closeConnection = true) {
   }
 }
 
-async function updateComputations(closeConnection = true) {
-  await database.connect();
-  await populateComputations();
-  if (closeConnection) {
-    await database.close();
-  }
-}
-
-
 module.exports = {
   CONSORTIA_IDS,
   COMPUTATION_IDS,
@@ -1074,5 +1041,4 @@ module.exports = {
   USER_IDS,
   RUN_IDS,
   populate,
-  updateComputations,
 };

@@ -1,21 +1,36 @@
 {
   "meta": {
-    "name": "Decentralized Deep Artificial Neural Networks in COINSTAC (CPU capability only)",
-    "id": "coinstac-dinunet",
+    "name": "Decentralized Deep Artificial Neural Networks in COINSTAC (GPU accelerated)",
+    "id": "coinstac-dinunet-gpu",
     "version": "v1.0.0",
-    "repository": "https:\/\/github.com\/trendscenter\/dinunet_implementations.git",
-    "description": "NN implementations in COINSTAC for task that can be run in CPU only. Please use GPU version for GPU acceleration.",
+    "repository": "https:\/\/github.com\/trendscenter\/dinunet_implementations_gpu.git",
+    "description": "NN implementations in COINSTAC with GPU enabled. This only runs on GPU available machines",
     "compspecVersion": 2
   },
   "computation": {
     "type": "docker",
-    "dockerImage": "coinstacteam/coinstac-dinunet",
+    "dockerImage": "coinstacteam/coinstac-dinunet-gpu",
     "command": [
       "python"
     ],
+    "containerOptions": {
+      "HostConfig": {
+        "DeviceRequests": [
+          {
+            "Drivers": "nvidia",
+            "Capabilities": [
+              [
+                "gpu"
+              ]
+            ]
+          }
+        ],
+        "ShmSize": 2147483648
+      }
+    },
     "remote": {
       "type": "docker",
-      "dockerImage": "coinstacteam/coinstac-dinunet",
+      "dockerImage": "coinstacteam/coinstac-dinunet-gpu",
       "command": [
         "python"
       ]

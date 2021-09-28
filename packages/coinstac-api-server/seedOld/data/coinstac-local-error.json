@@ -1,0 +1,21 @@
+{
+  "meta": {
+    "name": "Local Error Test",
+    "id": "coinstac-local-error",
+    "version": "v1.0.0",
+    "repository": "github.com\/user\/computation.git",
+    "description": "errors locally"
+  },
+  "computation": {
+    "type": "docker",
+    "dockerImage": "coinstacteam/coinstac-local-error",
+    "command": [
+      "python",
+      "\/computation\/local.py"
+    ],
+    "input": {
+    },
+    "output": {
+    }
+  }
+}
