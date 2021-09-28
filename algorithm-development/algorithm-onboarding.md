@@ -14,10 +14,10 @@ In this guide we'll go through several examples that aim to teach the basics of 
 
 ## Getting Started
 To successfully run computation in the simulator we need to
-- [Create a compspec](#Create-a-compsec)
-- [Create a dockerfile](#Create-a-dockerfile)
-- [Create a the scripts](#Create-a-the-scripts)
-- [Create an inputspec](#Create-an-inputspec)
+- [Create a compspec](#create-a-compsec)
+- [Create a dockerfile](#create-a-dockerfile)
+- [Create the scripts](#create-the-scripts)
+- [Creating an inputspec](#creating-an-inputspec)
 
 Many of these topics are also covered in greater detail in the [computation development guide](https://github.com/trendscenter/coinstac/blob/master/algorithm-development/coinstac-development-guide.md)
 

@@ -21,6 +21,7 @@ const {
   PIPELINE_CHANGED,
   PIPELINE_DELETED,
   RUN_CHANGED,
+  RUN_DELETED,
   RUN_WITH_HEADLESS_CLIENT_STARTED,
   THREAD_CHANGED,
   USER_CHANGED,
@@ -421,7 +422,16 @@ const resolvers = {
 
       return getOnlineUsers();
     },
-    fetchAllHeadlessClients: async (parent, args, { credentials }) => {
+    fetchAllHeadlessClients: async () => {
+      try {
+        const headlessClients = await headlessClientsController.fetchAllHeadlessClients();
+
+        return transformToClient(headlessClients);
+      } catch (error) {
+        return Boom.internal('Failed to fetch the headless clients list', error);
+      }
+    },
+    fetchAccessibleHeadlessClients: async (parent, args, { credentials }) => {
       try {
         const headlessClients = await headlessClientsController.fetchHeadlessClients(credentials);
 
@@ -438,6 +448,45 @@ const resolvers = {
       } catch (error) {
         return Boom.internal(`Failed to fetch the headless client ${id}`, error);
       }
+    },
+    fetchAllDatasetsTags: async () => {
+      const db = database.getDbInstance();
+
+      const result = await db.collection('datasets').aggregate([
+        { $unwind: '$tags' },
+        { $group: { _id: null, tags: { $addToSet: '$tags' } } },
+        { $unwind: '$tags' },
+        { $sort: { tags: 1 } },
+        { $group: { _id: null, tags: { $push: '$tags' } } },
+      ]).toArray();
+
+      return result.length ? result[0].tags : [];
+    },
+    searchDatasets: async (parent, { searchString = '', tags = [] }) => {
+      const db = database.getDbInstance();
+
+      const searchObj = {};
+
+      if (searchString) {
+        searchObj.$text = {
+          $search: searchString
+        };
+      }
+
+      if (tags && tags.length) {
+        searchObj.tags = { $all: tags };
+      }
+
+      const datasets = await db.collection('datasets').find(searchObj).toArray();
+
+      return transformToClient(datasets);
+    },
+    fetchDataset: async (parent, { id }) => {
+      const db = database.getDbInstance();
+
+      const dataset = await db.collection('datasets').findOne({ _id: ObjectID(id) });
+
+      return transformToClient(dataset);
     },
   },
   Mutation: {
@@ -648,6 +697,25 @@ const resolvers = {
       });
 
       eventEmitter.emit(PIPELINE_DELETED, pipelines);
+
+      const runs = await db.collection('runs').find({
+        consortiumId: args.consortiumId,
+        endDate: null,
+      }).toArray();
+
+      const n = await db.collection('runs').deleteMany({
+        consortiumId: args.consortiumId,
+        endDate: null,
+      });
+
+      eventEmitter.emit(RUN_DELETED, runs);
+      runs.forEach(async (run) => {
+        try {
+          await axios.post(
+            `http://${process.env.PIPELINE_SERVER_HOSTNAME}:${process.env.PIPELINE_SERVER_PORT}/stopPipeline`, { runId: run._id.valueOf() }
+          );
+        } catch (e) {}
+      });
 
       return transformToClient(deletedConsortiumResult.value);
     },
@@ -1208,7 +1276,7 @@ const resolvers = {
 
         keys(users).forEach((userId) => {
           updateObj.$set[`users.${userId}`] = {
-            username: users[userId],
+            username: users[userId].username,
             isRead: userId === credentials.id
           };
         });
@@ -1379,6 +1447,63 @@ const resolvers = {
 
         return Boom.internal(`Failed to create an Api Key for headless client ${headlessClientId}`, error);
       }
+    },
+    saveDataset: async (parent, args, { credentials }) => {
+      const { id, datasetDescription, participantsDescription } = args.input;
+
+      const db = database.getDbInstance();
+
+      let result;
+      if (id) {
+        const datasetId = ObjectID(id);
+
+        const dataset = await db.collection('datasets').findOne({ _id: datasetId });
+
+        if (!dataset) {
+          return Boom.notFound('Dataset not found');
+        } else if (!dataset.owner.id.equals(credentials._id)) {
+          return Boom.unauthorized('You do not have permission to edit this dataset');
+        }
+
+        const updateResult = await db.collection('datasets').findOneAndUpdate(
+          { _id: datasetId },
+          {
+            $set: {
+              datasetDescription,
+              participantsDescription,
+            }
+          },
+          { returnDocument: 'after' },
+        );
+
+        result = updateResult.value;
+      } else {
+        const insertResult = await db.collection('datasets').insertOne({
+          datasetDescription,
+          participantsDescription,
+          owner: {
+            id: credentials._id,
+            username: credentials.username,
+          }
+        });
+
+        result = insertResult.ops[0];
+      }
+
+      return transformToClient(result);
+    },
+    deleteDataset: async (parent, { id }, { credentials }) => {
+      const db = database.getDbInstance();
+
+      const dataset = await db.collection('datasets').findOne({ _id: ObjectID(id) });
+
+      if (!isAdmin(credentials.permissions) && !dataset.owner.id.equals(credentials._id)) {
+        return Boom.unauthorized('You do not have permission to delete this dataset');
+      }
+
+      await db.collection('datasets').deleteOne({ _id: ObjectID(id) });
+
+      return transformToClient(dataset);
     },
   },
   Subscription: {

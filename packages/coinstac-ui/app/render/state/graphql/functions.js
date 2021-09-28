@@ -231,6 +231,11 @@ export const FETCH_ALL_HEADLESS_CLIENTS = gql`
     ${queries.fetchAllHeadlessClients}
 `;
 
+export const FETCH_ACCESSIBLE_HEADLESS_CLIENTS = gql`
+  query fetchAccessibleHeadlessClients
+    ${queries.fetchAllHeadlessClients}
+`;
+
 export const FETCH_HEADLESS_CLIENT = gql`
   query fetchHeadlessClient($id: ID!)
     ${queries.fetchHeadlessClient}
@@ -262,4 +267,29 @@ export const DELETE_HEADLESS_CLIENT_MUTATION = gql`
 export const GENERATE_HEADLESS_CLIENT_API_KEY_MUTATION = gql`
   mutation generateHeadlessClientApiKey($headlessClientId: ID!)
     ${mutations.generateHeadlessClientApiKey}
+`;
+
+export const FETCH_ALL_DATASETS_TAGS_QUERY = gql`
+  query fetchAllDatasetsTags
+    ${queries.fetchAllDatasetsTags}
+`;
+
+export const SEARCH_DATASETS_QUERY = gql`
+  query searchDatasets($searchString: String, $tags: [String])
+    ${queries.searchDatasets}
+`;
+
+export const FETCH_DATASET_QUERY = gql`
+  query fetchDataset($id: ID!)
+    ${queries.fetchDataset}
+`;
+
+export const SAVE_DATASET_MUTATION = gql`
+  mutation saveDataset($input: DatasetInput!)
+    ${mutations.saveDataset}
+`;
+
+export const DELETE_DATASET_MUTATION = gql`
+  mutation deleteDataset($id: ID!)
+    ${mutations.deleteDataset}
 `;

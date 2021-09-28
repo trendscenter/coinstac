@@ -123,6 +123,20 @@ const mutations = {
       generateHeadlessClientApiKey(headlessClientId: $headlessClientId)
     }
   `,
+  saveDataset: `
+    {
+      saveDataset(input: $input) {
+        ${sharedFields.datasetFields}
+      }
+    }
+  `,
+  deleteDataset: `
+    {
+      deleteDataset(id: $id) {
+        ${sharedFields.datasetFields}
+      }
+    }
+  `,
 };
 
 module.exports = mutations;
