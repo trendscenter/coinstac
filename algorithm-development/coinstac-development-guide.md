@@ -12,10 +12,10 @@ Coinstac is a Electron based application environment for decentralized algorithm
 
 ## Getting Started
 To successfully run computation in the simulator we need to
-- [Create a compsec](#Create-a-compsec)
-- [Use a container system](#Use-a-container-system)
-- [Create a the scripts](#Create-a-the-scripts)
-- [Create an inputspec](#Create-an-inputspec)
+- [Create a compsec](#create-a-compsec)
+- [Use a container system](#use-a-container-system)
+- [Create the scripts](#create-the-scripts)
+- [Creating an inputspec](#creating-an-inputspec)
 
 ## Other topics
 - [Advanced usage](#Advanced-usage)

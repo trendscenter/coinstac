@@ -17,6 +17,12 @@ const manager = PipelineManager.create({
 });
 const apiServer = `http://${process.env.API_SERVER_HOSTNAME}:${process.env.API_SERVER_PORT}`;
 
+const DELAY = 100;
+
+const updateRunMessageQueue = [];
+
+let queueTimerId = null;
+
 const authenticateServer = () => {
   return axios.post(
     `${apiServer}/authenticate`,
@@ -32,17 +38,34 @@ const authenticateServer = () => {
     });
 };
 
-const updateRunState = (runId, data) => axios({
-  method: 'post',
-  url: `${apiServer}/graphql`,
-  data: {
-    query: `mutation($runId: ID!, $data: JSON) ${graphqlSchema.mutations.updateRunState.replace(/\s{2,10}/g, ' ')}`,
-    variables: {
-      runId,
-      data,
-    },
-  },
-});
+const updateRunState = () => {
+  if (!queueTimerId) {
+    queueTimerId = setInterval(() => {
+      const run = updateRunMessageQueue.shift();
+      const { runId, data } = run;
+
+      console.log('Server update:'); // eslint-disable-line no-console
+      console.log(data); // eslint-disable-line no-console
+
+      axios({
+        method: 'post',
+        url: `${apiServer}/graphql`,
+        data: {
+          query: `mutation($runId: ID!, $data: JSON) ${graphqlSchema.mutations.updateRunState.replace(/\s{2,10}/g, ' ')}`,
+          variables: {
+            runId,
+            data,
+          },
+        },
+      });
+
+      if (updateRunMessageQueue.length === 0) {
+        clearInterval(queueTimerId);
+        queueTimerId = null;
+      }
+    }, DELAY);
+  }
+};
 
 const saveError = (runId, error) => axios({
   method: 'post',
@@ -99,9 +122,8 @@ module.exports = manager.then((remotePipelineManager) => {
                   stateEmitter.on('update', (data) => {
                     // TODO:  console most likely should be removed post proto development
                     // or made less noisy
-                    console.log('Server update:'); // eslint-disable-line no-console
-                    console.log(data); // eslint-disable-line no-console
-                    updateRunState(run.id, data);
+                    updateRunMessageQueue.push({ runId: run.id, data });
+                    updateRunState();
                   });
 
                   return result
@@ -113,6 +135,26 @@ module.exports = manager.then((remotePipelineManager) => {
                       saveError(run.id, error);
                     });
                 });
+            });
+        },
+      },
+    },
+    {
+      method: 'POST',
+      path: '/stopPipeline',
+      config: {
+        // auth: 'jwt',
+        handler: (req, res) => {
+          authenticateServer()
+            .then(() => {
+              const { payload: { runId } } = req;
+              // TODO: fix this call w/ the stop fn changes
+              try {
+                remotePipelineManager.stopPipeline('', runId);
+                res({}).code(200);
+              } catch (e) {
+                res({}).code(500);
+              }
             });
         },
       },

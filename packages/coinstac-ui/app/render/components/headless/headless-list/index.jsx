@@ -13,7 +13,7 @@ import ListDeleteModal from '../../common/list-delete-modal';
 import useEntityListSubscription from '../../../utils/effects/use-entity-list-subscription';
 import { isAdmin } from '../../../utils/helpers';
 import {
-  FETCH_ALL_HEADLESS_CLIENTS,
+  FETCH_ACCESSIBLE_HEADLESS_CLIENTS,
   HEADLESS_CLIENT_CHANGED_SUBSCRIPTION,
   DELETE_HEADLESS_CLIENT_MUTATION,
 } from '../../../state/graphql/functions';
@@ -21,7 +21,7 @@ import {
 function HeadlessList({ auth }) {
   const { user } = auth;
 
-  const { data, subscribeToMore } = useQuery(FETCH_ALL_HEADLESS_CLIENTS, { fetchPolicy: 'cache-and-network' });
+  const { data, subscribeToMore } = useQuery(FETCH_ACCESSIBLE_HEADLESS_CLIENTS, { fetchPolicy: 'cache-and-network' });
   const [submitDelete] = useMutation(DELETE_HEADLESS_CLIENT_MUTATION);
 
   useEntityListSubscription(subscribeToMore, HEADLESS_CLIENT_CHANGED_SUBSCRIPTION, 'fetchAllHeadlessClients', 'headlessClientChanged');

@@ -1,53 +1,69 @@
-import React, { Component } from 'react';
+import React, { useEffect } from 'react';
+import { ipcRenderer } from 'electron';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { get } from 'lodash';
 import Typography from '@material-ui/core/Typography';
+import Divider from '@material-ui/core/Divider';
 import { withStyles } from '@material-ui/core/styles';
+import RunsList from './runs-list';
 
-const styles = () => ({
-  avatarWrapper: {
-    display: 'flex',
-    alignItems: 'center',
-  },
-  checkbox: {
-    padding: 0,
+const styles = theme => ({
+  pageTitle: {
+    marginBottom: theme.spacing(2),
   },
 });
 
-class PipelineStates extends Component {
-  componentDidMount() {
-    const { currentUser } = this.props;
-    const { router } = this.context;
+const stopPipeline = (pipelineId, runId) => () => {
+  ipcRenderer.send('stop-pipeline', { pipelineId, runId });
+};
 
-    if (!get(currentUser, 'permissions.roles.admin')) {
+const PipelineStates = (
+  {
+    classes, user, consortia, runs,
+  },
+  { router }
+) => {
+  useEffect(() => {
+    if (!get(user, 'permissions.roles.admin')) {
       router.push('/');
     }
-  }
+  }, []);
 
-  render() {
-    return (
-      <div>
-        <div className="page-header">
-          <Typography variant="h4">
-            Pipeline States
-          </Typography>
-        </div>
-      </div>
-    );
-  }
-}
+  return (
+    <div>
+      <Typography variant="h4" className={classes.pageTitle}>
+        Pipeline States
+      </Typography>
+      <Divider />
+      <RunsList
+        consortia={consortia}
+        runs={runs}
+        stopPipeline={stopPipeline}
+      />
+    </div>
+  );
+};
 
 PipelineStates.contextTypes = {
   router: PropTypes.object.isRequired,
 };
 
-PipelineStates.propTypes = {
-  currentUser: PropTypes.object.isRequired,
+PipelineStates.defaultProps = {
+  consortia: [],
+  runs: [],
 };
 
-const mapStateToProps = ({ auth }) => ({
-  currentUser: auth.user,
+PipelineStates.propTypes = {
+  classes: PropTypes.object.isRequired,
+  consortia: PropTypes.array,
+  runs: PropTypes.array,
+  user: PropTypes.object.isRequired,
+};
+
+const mapStateToProps = ({ auth, runs }) => ({
+  runs: runs.runs,
+  user: auth.user,
 });
 
 const connectedComponent = connect(mapStateToProps)(PipelineStates);

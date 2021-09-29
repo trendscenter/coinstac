@@ -5,14 +5,19 @@
  * kicking off the render process (UI).
  */
 
+/* eslint-disable no-await-in-loop */
+
 'use strict';
 
 Error.stackTraceLimit = 100;
 
-const { compact } = require('lodash'); // eslint-disable-line no-unused-vars
+const {
+  compact, keys, pick, omit,
+} = require('lodash'); // eslint-disable-line no-unused-vars
 const electron = require('electron');
 const ipcPromise = require('ipc-promise');
 const fs = require('fs');
+const fsPromises = require('fs').promises;
 const path = require('path');
 const moment = require('moment');
 const ipcFunctions = require('./utils/ipc-functions');
@@ -57,6 +62,37 @@ const getAllFilesInDirectory = (directory) => {
   return Array.prototype.concat(...files);
 };
 
+const exists = async (path) => {
+  const result = await fsPromises.stat(path).catch(() => false);
+
+  return Boolean(result);
+};
+
+const generateRunProvenance = async (userId, appDirectory, run, consortium) => {
+  const clients = keys(run.clients).map(clientId => ({
+    id: clientId,
+    username: run.clients[clientId],
+  }));
+
+  const provenance = {
+    ...omit(run, ['clients', 'consortiumId', '__typename']),
+    consortium: pick(consortium, ['id', 'name']),
+    clients,
+  };
+
+  const runProvenanceDirectory = path.join(appDirectory, 'output', userId, provenance.id);
+
+  if (!await exists(runProvenanceDirectory)) {
+    await fsPromises.mkdir(runProvenanceDirectory, { recursive: true });
+  }
+
+  const provenanceFilePath = path.join(runProvenanceDirectory, 'provenance.json');
+
+  if (!await exists(provenanceFilePath)) {
+    await fsPromises.writeFile(provenanceFilePath, JSON.stringify(provenance, null, 2));
+  }
+};
+
 let initializedCore;
 // Boot up the main process
 loadConfig()
@@ -90,6 +126,11 @@ loadConfig()
 
     const mainWindow = getWindow();
     logger.verbose('main process booted');
+
+    mainWindow.webContents.on('new-window', (e, url) => {
+      e.preventDefault();
+      electron.shell.openExternal(url);
+    });
 
     logger.on('log-message', (arg) => {
       mainWindow.webContents.send('log-message', arg);
@@ -339,6 +380,10 @@ loadConfig()
                 ipcFunctions.sendNotification(
                   'Pipeline finished',
                   `Pipeline ${pipelineName} finished on consortia ${consortiumName}`
+                );
+
+                generateRunProvenance(
+                  initializedCore.clientId, initializedCore.appDirectory, run, consortium
                 );
 
                 return initializedCore.unlinkFiles(run.id)

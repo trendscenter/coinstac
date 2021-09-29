@@ -152,6 +152,13 @@ const queries = {
       }
     }
   `,
+  fetchAccessibleHeadlessClients: `
+    {
+      fetchAccessibleHeadlessClients {
+        ${sharedFields.headlessClientFields}
+      }
+    }
+  `,
   fetchHeadlessClient: `
     {
       fetchHeadlessClient(id: $id) {
@@ -185,6 +192,25 @@ const queries = {
       runWithHeadlessClientStarted(clientId: $clientId) {
         ${sharedFields.runFields}
       }
+    }
+  `,
+  searchDatasets: `
+    {
+      searchDatasets(searchString: $searchString, tags: $tags) {
+        ${sharedFields.datasetFields}
+      }
+    }
+  `,
+  fetchDataset: `
+    {
+      fetchDataset(id: $id) {
+        ${sharedFields.datasetFields}
+      }
+    }
+  `,
+  fetchAllDatasetsTags: `
+    {
+      fetchAllDatasetsTags
     }
   `,
 };
