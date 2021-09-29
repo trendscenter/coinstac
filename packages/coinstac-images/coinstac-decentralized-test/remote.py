@@ -8,7 +8,7 @@ sums = 0
 for site, output in doc['input'].items():
     sums = sums + output['sum'];
 sums = sums / len(doc['input'])
-if sums > 4:
+if sums > 20:
     success = True
 else:
     success = False

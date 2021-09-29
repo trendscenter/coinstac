@@ -367,7 +367,7 @@ class CoinstacClient {
    * @param {string} runId The id of the pipeline run
    */
   requestPipelineStop(pipelineId, runId) {
-    this.pipelineManager.stopPipeline(pipelineId, runId);
+    this.pipelineManager.stopPipeline(runId);
   }
 
   unlinkFiles(runId) {

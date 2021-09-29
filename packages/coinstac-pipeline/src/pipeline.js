@@ -31,6 +31,7 @@ module.exports = {
       owner,
       logger,
       Manager,
+      saveState,
     }
   ) {
     const cache = {};
@@ -38,7 +39,9 @@ module.exports = {
     let currentState;
 
     const stateEmitter = new Emitter();
-
+    if (saveState) {
+      ({ currentStep } = saveState.pipelineState);
+    }
 
     const pipelineSteps = steps.map(
       step => Controller.create(step, runId, {
@@ -50,6 +53,7 @@ module.exports = {
         owner,
         logger,
         Manager,
+        saveState,
       })
     );
 

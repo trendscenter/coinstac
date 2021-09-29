@@ -35,6 +35,7 @@ module.exports = {
     operatingDirectory,
     owner,
     mode,
+    saveState,
   }) {
     const store = Store.init(clientId);
     let computationCache = {};
@@ -57,7 +58,7 @@ module.exports = {
       // for shared volume in CI context
       dockerBaseDir = operatingDirectory;
     }
-    const controllerState = {
+    let controllerState = {
       activeComputations: [],
       // docker analogs to the user directories
       // no path resolving as containers and host
@@ -77,14 +78,20 @@ module.exports = {
       received: Date.now(),
       runType: 'sequential',
       state: undefined,
-      stopByUser: undefined,
+      stopSignal: undefined,
       success: false,
     };
+
+    if (saveState) ({ controllerState } = saveState.controllerState);
+
     const setStateProp = (prop, val) => {
       controllerState[prop] = val;
       stateEmitter.emit('update', controllerState);
     };
-    const stopByUserErrorMessage = 'The pipeline run has been stopped by a user';
+    const stopTypes = {
+      user: 'The pipeline run has been stopped by a user',
+      suspend: 'Pipeline operation suspended by user',
+    };
     let totalCompTime = 0;
     let totalCodeTime = 0;
     debugProfilePipeline.log = l => logger.info(`PROFILING: ${l}`);
@@ -102,9 +109,14 @@ module.exports = {
       operatingDirectory,
       setStateProp,
       pipelineErrorCallback,
-      stop: () => {
-        setStateProp('stopByUser', 'stop');
-        pipelineErrorCallback(new Error(stopByUserErrorMessage));
+      stop: (type) => {
+        return new Promise((resolve, reject) => {
+          if (stopTypes[type]) {
+            // decorate stop type for interaction with the waterfall
+            return setStateProp('stopSignal', Object.assign({ resolve, reject }, stopTypes[type]));
+          }
+          throw new Error('Invalid stop type');
+        });
       },
       /**
        * Starts a controller, which in turn starts a computation, given the correct
@@ -114,7 +126,7 @@ module.exports = {
        * @return {Promise}                resolves to the final computation output
        */
       start: (input, remoteHandler) => {
-        setStateProp('state', 'started');
+        setStateProp('state', 'Started');
         controllerState.remoteInitial = controllerState.mode === 'remote' ? true : undefined;
         if (!controllerState.initialized) {
           controllerState.runType = activeControlBox.runType || controllerState.runType;
@@ -146,7 +158,7 @@ module.exports = {
               // if there is no store input use the arg input (first iteration)
               compInput = compInput || overideInput;
               setStateProp('iteration', controllerState.iteration + 1);
-              setStateProp('state', 'waiting on computation');
+              setStateProp('state', 'Running computation');
               const compStart = Date.now(); // eslint-disable-line no-case-declarations
               const codeTime = compStart - controllerState.received; // eslint-disable-line no-case-declarations,max-len
               totalCodeTime += codeTime;
@@ -183,7 +195,7 @@ module.exports = {
                   debugProfilePipeline(`Computation time with overhead on ${clientId} took: ${compTime}ms`);
                   computationCache = Object.assign(computationCache, cache);
                   controllerState.success = !!success;
-                  setStateProp('state', 'finished iteration');
+                  setStateProp('state', 'Finished iteration');
                   store.put(runId, clientId, output);
                   cb();
                 }).catch(({
@@ -203,7 +215,7 @@ module.exports = {
                   if (controller.type === 'local') {
                     err(iterationError);
                   } else {
-                    setStateProp('state', 'finished iteration with error');
+                    setStateProp('state', 'Iteration finished with an error');
                     store.put(runId, clientId, iterationError);
                     cb();
                   }
@@ -218,13 +230,13 @@ module.exports = {
               //   .start(input);
               break;
             case 'remote':
-              setStateProp('state', controllerState.mode === 'remote' ? 'waiting on local users' : 'waiting on central node');
+              setStateProp('state', controllerState.mode === 'remote' ? 'Waiting on local nodes' : 'Waiting on central node');
               return remoteHandler({
                 success: controllerState.success,
                 iteration: controllerState.iteration,
                 callback: (error, output) => {
                   if (error) return err(error);
-                  setStateProp('state', 'finished remote iteration');
+                  // setStateProp('state', 'Finished iteration');
                   controllerState.success = !!output.success;
                   controllerState.received = output.debug.received;
 
@@ -234,20 +246,20 @@ module.exports = {
             case 'firstServerRemote':
               // TODO: not ideal, figure out better remote start
               // remove noop need
-              setStateProp('state', 'waiting on local users');
+              setStateProp('state', 'Waiting on local nodes');
               return remoteHandler({
                 success: controllerState.success,
                 noop: true,
                 callback: (error, output) => {
                   if (error) return err(error);
-                  setStateProp('state', 'finished remote iteration');
+                  setStateProp('state', 'Finished central node iteration');
                   controllerState.success = !!output.success;
                   controllerState.received = output.debug.received;
                   cb();
                 },
               });
             case 'doneRemote':
-              setStateProp('state', 'waiting on local users');
+              setStateProp('state', 'Waiting on nodes');
               // grab now as it gets removed on send to clients
               const finalOutput = store.get(runId, clientId); // eslint-disable-line no-case-declarations, max-len
               return remoteHandler({
@@ -257,7 +269,7 @@ module.exports = {
                 callback: (error) => {
                   if (error) return err(error);
                   // final output for remote
-                  setStateProp('state', 'finished final remote iteration');
+                  setStateProp('state', 'Finished final central node iteration');
                   cb(finalOutput);
                 },
               });
@@ -307,40 +319,47 @@ module.exports = {
           trampoline(() => {
             return queue.length
               ? function _cb(...args) {
-                if (controllerState.stopByUser === 'stop') {
-                  err(new Error(stopByUserErrorMessage));
-                }
-                const fn = queue.shift();
-                controllerState.currentBoxCommand = activeControlBox.preIteration(controllerState);
-                if ((controllerState.mode === 'local' && controllerState.iteration === 0)
-                || (controllerState.mode === 'remote' && controllerState.remoteInitial)) {
-                // add initial input to first iteration
-                  args.unshift(initialInput);
-                } else if (args.length === 0) {
-                  // no passed back input
-                  // this happens on the last iteration
-                  args.push(undefined);
-                }
+                if (controllerState.stopSignal) {
+                  const iterationError = new Error(controllerState.stopSignal);
+                  // store.put(runId, clientId, iterationError);
+                  // setStateProp('state', 'Iteration finished with an errorrr');
+                  // queue.length = 0;
+                  controllerState.stopSignal.resolve(store.getAndRemove(runId, clientId));
+                  err(iterationError);
+                } else {
+                  const fn = queue.shift();
+                  controllerState.currentBoxCommand = activeControlBox
+                    .preIteration(controllerState);
+                  if ((controllerState.mode === 'local' && controllerState.iteration === 0)
+                  || (controllerState.mode === 'remote' && controllerState.remoteInitial)) {
+                  // add initial input to first iteration
+                    args.unshift(initialInput);
+                  } else if (args.length === 0) {
+                    // no passed back input
+                    // this happens on the last iteration
+                    args.push(undefined);
+                  }
 
-                if (controllerState.currentBoxCommand !== 'done' && controllerState.currentBoxCommand !== 'doneRemote') {
-                  const lastCallback = queue.pop();
-                  queue.push(iterateComp);
-                  // done cb
-                  queue.push(lastCallback);
-                }
+                  if (controllerState.currentBoxCommand !== 'done' && controllerState.currentBoxCommand !== 'doneRemote') {
+                    const lastCallback = queue.pop();
+                    queue.push(iterateComp);
+                    // done cb
+                    queue.push(lastCallback);
+                  }
 
-                // necessary if this function call turns out synchronous
-                // the stack won't clear and overflow, has limited perf impact
-                setImmediate(() => fn.apply(this, args.concat([_cb, err])));
-                controllerState.remoteInitial = controllerState.mode === 'remote' ? false : undefined;
+                  // necessary if this function call turns out synchronous
+                  // the stack won't clear and overflow, has limited perf impact
+                  setImmediate(() => fn.apply(this, args.concat([_cb, err])));
+                  controllerState.remoteInitial = controllerState.mode === 'remote' ? false : undefined;
+                }
               }
               : undefined; // steps complete
           })();
         };
 
         const p = new Promise((res, rej) => {
-          pipelineErrorCallback = (err) => {
-            setStateProp('state', 'error');
+          pipelineErrorCallback = (err, type) => {
+            // setStateProp('state', 'Iteration finished with an error');
             controllerState.activeComputations[controllerState.computationIndex].stop()
               .then(() => rej(err))
               .catch(error => rej(error));

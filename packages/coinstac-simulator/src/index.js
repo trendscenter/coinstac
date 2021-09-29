@@ -73,7 +73,22 @@ const startRun = ({
           }),
         });
       }
-
+      setTimeout(() => {
+        console.log('*********************************STOP**********************************');
+        pipelines.locals[0].manager.suspendPipeline('simulatorRun')
+          .then((stuff) => {
+            const localSpec = Array.isArray(spec) ? spec[0] : spec;
+            pipelines.locals[0] = {
+              manager: pipelines.locals[0].manager,
+              pipeline: pipelines.locals[0].manager.startPipeline({
+                spec: localSpec,
+                runId: 'simulatorRun',
+                owner: 'local0',
+                saveState: stuff,
+              }),
+            };
+          });
+      }, 3000);
       const allResults = Promise.all(Object.keys(pipelines).map((key) => {
         if (key === 'locals') {
           return Promise.all(pipelines[key].map(
@@ -91,6 +106,7 @@ const startRun = ({
           });
       }))
         .then((errors) => {
+          debugger
           // error sent to remote or the first local for local runs
           if (errors[1] || errors[0][0]) throw errors[1] || errors[0][0];
           return {

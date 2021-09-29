@@ -218,7 +218,7 @@ test('requestPipelineStop', async (t) => {
   const runId = 'run-1';
   client.requestPipelineStop(pipelineId, runId);
 
-  t.true(managerMock.stopPipeline.calledWith(pipelineId, runId));
+  t.true(managerMock.stopPipeline.calledWith(runId));
 });
 
 test.after.always('cleanup', () => {

@@ -173,7 +173,7 @@ module.exports = (server) => {
 
             const remotePipelineManager = await getDockerManager(clientId, runId);
 
-            await remotePipelineManager.stopPipeline('', runId);
+            await remotePipelineManager.stopPipeline(runId);
             return h.response('Stopped pipeline.').code(200);
           } catch (error) {
             return h.response(error.message).code(400);
