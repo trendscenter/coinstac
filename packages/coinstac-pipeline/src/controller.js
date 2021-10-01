@@ -113,7 +113,7 @@ module.exports = {
         return new Promise((resolve, reject) => {
           if (stopTypes[type]) {
             // decorate stop type for interaction with the waterfall
-            return setStateProp('stopSignal', Object.assign({ resolve, reject }, stopTypes[type]));
+            return setStateProp('stopSignal', Object.assign({ resolve, reject }, { type: stopTypes[type] }));
           }
           throw new Error('Invalid stop type');
         });
@@ -320,10 +320,7 @@ module.exports = {
             return queue.length
               ? function _cb(...args) {
                 if (controllerState.stopSignal) {
-                  const iterationError = new Error(controllerState.stopSignal);
-                  // store.put(runId, clientId, iterationError);
-                  // setStateProp('state', 'Iteration finished with an errorrr');
-                  // queue.length = 0;
+                  const iterationError = new Error(controllerState.stopSignal.type);
                   controllerState.stopSignal.resolve(store.getAndRemove(runId, clientId));
                   err(iterationError);
                 } else {
@@ -358,8 +355,8 @@ module.exports = {
         };
 
         const p = new Promise((res, rej) => {
-          pipelineErrorCallback = (err, type) => {
-            // setStateProp('state', 'Iteration finished with an error');
+          pipelineErrorCallback = (err) => {
+            setStateProp('state', 'Iteration finished with an error');
             controllerState.activeComputations[controllerState.computationIndex].stop()
               .then(() => rej(err))
               .catch(error => rej(error));

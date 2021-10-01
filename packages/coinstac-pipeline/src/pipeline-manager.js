@@ -1243,15 +1243,26 @@ module.exports = {
             return res;
           })
           .catch((err) => {
-            if (mode === 'remote' || err.message === 'Pipeline operation suspended by user') {
-              throw err;
+            if (mode === 'remote' || err.message.includes('Pipeline operation suspended by user')) {
+              if (mode === 'remote') {
+                clientPublish(
+                  activePipelines[runId].clients,
+                  { runId, error: err }
+                );
+              }
+              return cleanupPipeline(runId)
+                .then(() => {
+                  throw err;
+                });
             }
             // local pipeline user stop error, or other uncaught error
             publishData('run', {
               id: clientId, runId, error: { message: err.message, stack: err.stack },
             }, 1);
-
-            throw err;
+            cleanupPipeline(runId)
+              .then(() => {
+                throw err;
+              });
           });
 
         return {
