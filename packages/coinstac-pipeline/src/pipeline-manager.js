@@ -862,7 +862,6 @@ module.exports = {
               userDirectories,
               owner: spec.owner,
               logger,
-              /* put in pipe DATA && controller */
             }),
             baseDirectory: path.resolve(operatingDirectory, 'input', clientId, runId),
             outputDirectory: userDirectories.outputDirectory,
@@ -898,9 +897,7 @@ module.exports = {
             remoteClients[clientId]
           );
         });
-        /** **********SET STATE DATA********
-        needs to propagate down to controller?
-        *** */
+
         if (mode === 'local') {
           activePipelines[runId].registered = false;
           publishData('register', { id: clientId, runId });
