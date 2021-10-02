@@ -60,7 +60,7 @@ const useStyles = makeStyles(theme => ({
 const FileViewer = ({ fileTree }) => {
   const classes = useStyles();
 
-  if (!fileTree) {
+  if (!fileTree || !Array.isArray(fileTree.children) || fileTree.children.length === 0) {
     return null;
   }
 
