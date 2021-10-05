@@ -28,6 +28,7 @@ const INITIAL_STATE = {
   appDirectory: localStorage.getItem('appDirectory') || remote.getGlobal('config').get('coinstacHome'),
   clientServerURL: localStorage.getItem('clientServerURL') || '',
   networkVolume: localStorage.getItem('networkVolume') === 'true',
+  hideTutorial: localStorage.getItem('hideTutorial') === 'true',
   isApiVersionCompatible: true,
   locationStacks: [],
   error: null,
@@ -45,6 +46,7 @@ const SET_APP_DIRECTORY = 'SET_APP_DIRECTORY';
 const SET_CLIENT_SERVER_URL = 'SET_CLIENT_SERVER_URL';
 const SET_API_VERSION_CHECK = 'SET_API_VERSION_CHECK';
 const SET_NETWORK_VOLUME = 'SET_NETWORK_VOLUME';
+const TOGGLE_TUTORIAL = 'TOGGLE_TUTORIAL';
 
 // Action Creators
 export const setUser = user => ({ type: SET_USER, payload: user });
@@ -64,6 +66,9 @@ export const setApiVersionCheck = isApiVersionCompatible => ({
 export const setNetworkVolume = networkVolume => ({
   type: SET_NETWORK_VOLUME,
   payload: networkVolume,
+});
+export const toggleTutorial = () => ({
+  type: TOGGLE_TUTORIAL,
 });
 
 // Helpers
@@ -255,7 +260,7 @@ export const resetPassword = applyAsyncLoading(payload => dispatch => axios.post
   }));
 
 export default function reducer(state = INITIAL_STATE, { type, payload }) {
-  const { locationStacks } = state;
+  const { locationStacks, hideTutorial } = state;
   const { pathname } = payload || {};
 
   switch (type) {
@@ -278,6 +283,9 @@ export default function reducer(state = INITIAL_STATE, { type, payload }) {
     case SET_NETWORK_VOLUME:
       localStorage.setItem('networkVolume', payload);
       return { ...state, networkVolume: payload };
+    case TOGGLE_TUTORIAL:
+      localStorage.setItem('hideTutorial', !hideTutorial);
+      return { ...state, hideTutorial: !hideTutorial };
     case SET_API_VERSION_CHECK:
       return { ...state, isApiVersionCompatible: payload };
     case LOCATION_CHANGE:
