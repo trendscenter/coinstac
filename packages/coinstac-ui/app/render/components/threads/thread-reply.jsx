@@ -396,7 +396,7 @@ class ThreadReply extends Component {
     return (
       <div className={classes.wrapper}>
         <div className={classes.recipientsWrapper}>
-          <ThreadAvatar username={auth.user.id} showUsername />
+          <ThreadAvatar username={auth.user.username} showUsername />
 
           <div className={classes.recipients}>
             <span>To:</span>

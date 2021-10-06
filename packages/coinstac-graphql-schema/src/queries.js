@@ -49,6 +49,13 @@ const queries = {
     }
   }
   `,
+  headlessClientChanged: `
+  {
+    headlessClientChanged {
+      ${sharedFields.headlessClientFields}
+    }
+  }
+  `,
   fetchAllComputations: `
     {
       fetchAllComputations {
@@ -138,9 +145,23 @@ const queries = {
       }
     }
   `,
-  fetchAvailableHeadlessClients: `
+  fetchAllHeadlessClients: `
     {
-      fetchAvailableHeadlessClients {
+      fetchAllHeadlessClients {
+        ${sharedFields.headlessClientFields}
+      }
+    }
+  `,
+  fetchAccessibleHeadlessClients: `
+    {
+      fetchAccessibleHeadlessClients {
+        ${sharedFields.headlessClientFields}
+      }
+    }
+  `,
+  fetchHeadlessClient: `
+    {
+      fetchHeadlessClient(id: $id) {
         ${sharedFields.headlessClientFields}
       }
     }
@@ -171,6 +192,25 @@ const queries = {
       runWithHeadlessClientStarted(clientId: $clientId) {
         ${sharedFields.runFields}
       }
+    }
+  `,
+  searchDatasets: `
+    {
+      searchDatasets(searchString: $searchString, tags: $tags) {
+        ${sharedFields.datasetFields}
+      }
+    }
+  `,
+  fetchDataset: `
+    {
+      fetchDataset(id: $id) {
+        ${sharedFields.datasetFields}
+      }
+    }
+  `,
+  fetchAllDatasetsTags: `
+    {
+      fetchAllDatasetsTags
     }
   `,
 };

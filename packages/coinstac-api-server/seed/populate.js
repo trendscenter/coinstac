@@ -1,4 +1,5 @@
 const path = require('path');
+const { ObjectID } = require('mongodb');
 const database = require('../src/database');
 const helperFunctions = require('../src/auth-helpers');
 
@@ -77,7 +78,7 @@ const RUN_IDS = [
 async function populateComputations() {
   const db = database.getDbInstance();
 
-  return db.collection('computations').insertMany([
+  const comps2Insert = [
     { ...local, submittedBy: 'author', _id: COMPUTATION_IDS[0] },
     { ...decentralized, submittedBy: 'author', _id: COMPUTATION_IDS[1] },
     { ...msrFsl, submittedBy: 'author', _id: COMPUTATION_IDS[2] },
@@ -95,7 +96,21 @@ async function populateComputations() {
     { ...fmri, submittedBy: 'author', _id: COMPUTATION_IDS[14] },
     { ...ssrFsl, submittedBy: 'author', _id: COMPUTATION_IDS[15] },
     { ...dmancova, submittedBy: 'author', _id: COMPUTATION_IDS[16] },
-  ]);
+  ];
+  const currentComps = await db.collection('computations').find().toArray();
+  const operations = comps2Insert.reduce((ops, comp) => {
+    const cc = currentComps.find(cc => cc.computation.id === comp.computation.id);
+    if (cc) {
+      ops.update.push(Object.assign({}, comp, { _id: cc._id }));
+      return ops;
+    }
+    ops.insert.push(comp);
+    return ops;
+  }, { update: [], insert: [] });
+  if (operations.insert.length > 0) await db.collection('computations').insertMany(operations.insert);
+  await Promise.all(operations.update.map(async (op) => {
+    await db.collection('computations').updateMany({ _id: ObjectID(op._id) }, { $set: { meta: op.meta, computation: op.computation } });
+  }));
 }
 
 async function populateConsortia() {
@@ -834,6 +849,7 @@ async function populateUsers() {
         [CONSORTIA_IDS[1]]: ['owner', 'member'],
       },
       pipelines: {},
+      headlessClients: {},
       roles: {
         admin: true,
         author: true,
@@ -858,6 +874,7 @@ async function populateUsers() {
         [CONSORTIA_IDS[1]]: ['member'],
       },
       pipelines: {},
+      headlessClients: {},
       roles: {
         admin: false,
         author: true,
@@ -882,6 +899,7 @@ async function populateUsers() {
         [CONSORTIA_IDS[1]]: ['member'],
       },
       pipelines: {},
+      headlessClients: {},
       roles: {
         admin: false,
         author: false,
@@ -906,6 +924,7 @@ async function populateUsers() {
         [CONSORTIA_IDS[1]]: ['member'],
       },
       pipelines: {},
+      headlessClients: {},
       roles: {
         admin: true,
         author: true,
@@ -930,6 +949,7 @@ async function populateUsers() {
         [CONSORTIA_IDS[1]]: ['member'],
       },
       pipelines: {},
+      headlessClients: {},
       roles: {
         admin: false,
         author: true,
@@ -954,6 +974,7 @@ async function populateUsers() {
         [CONSORTIA_IDS[1]]: ['member'],
       },
       pipelines: {},
+      headlessClients: {},
       roles: {
         admin: false,
         author: false,
@@ -974,6 +995,7 @@ async function populateUsers() {
       computations: {},
       consortia: {},
       pipelines: {},
+      headlessClients: {},
       roles: {
         admin: true,
         author: false,
@@ -993,6 +1015,7 @@ async function populateHeadlessClients() {
     {
       name: 'Headless 1',
       apiKey: await helperFunctions.hashPassword('testApiKey'),
+      hasApiKey: true,
       computationWhitelist: {
         [COMPUTATION_IDS[15]]: {
           inputMap: {
@@ -1004,6 +1027,164 @@ async function populateHeadlessClients() {
               ],
               dataFilePath: path.resolve('../../algorithm-development/test-data/freesurfer-test-data/site1/site1_Covariate.csv'),
             },
+          },
+        },
+      },
+      owners: {},
+    },
+  ]);
+}
+
+async function populateDatasets() {
+  const db = database.getDbInstance();
+
+  return db.collection('datasets').insertMany([
+    {
+      owner: {
+        id: USER_IDS[0],
+        username: 'test1',
+      },
+      datasetDescription: {
+        Name: 'The mother of all experiments',
+        BIDSVersion: '1.4.0',
+        DatasetType: 'raw',
+        License: 'CC0',
+        Authors: [
+          'Paul Broca',
+          'Carl Wernicke',
+        ],
+        Acknowledgements: 'Special thanks to Korbinian Brodmann for help in formatting this dataset in BIDS. We thank Alan Lloyd Hodgkin and Andrew Huxley for helpful comments and discussions about the experiment and manuscript; Hermann Ludwig Helmholtz for administrative support; and Claudius Galenus for providing data for the medial-to-lateral index analysis.',
+        HowToAcknowledge: 'Please cite this paper: https://www.ncbi.nlm.nih.gov/pubmed/001012092119281',
+        Funding: [
+          'National Institute of Neuroscience Grant F378236MFH1',
+          'National Institute of Neuroscience Grant 5RMZ0023106',
+        ],
+        EthicsApprovals: [
+          'Army Human Research Protections Office (Protocol ARL-20098-10051, ARL 12-040, and ARL 12-041)',
+        ],
+        ReferencesAndLinks: [
+          'https://www.ncbi.nlm.nih.gov/pubmed/001012092119281',
+          'Alzheimer A., & Kraepelin, E. (2015). Neural correlates of presenile dementia in humans. Journal of Neuroscientific Data, 2, 234001. doi:1920.8/jndata.2015.7',
+        ],
+        DatasetDOI: 'doi:10.0.2.3/dfjj.10',
+        HEDVersion: '7.1.1',
+      },
+      participantsDescription: {
+        age: {
+          Description: 'age of the participant',
+          Units: 'years',
+        },
+        sex: {
+          Description: 'sex of the participant as reported by the participant',
+          Levels: {
+            M: 'male',
+            F: 'female',
+          },
+        },
+        handedness: {
+          Description: 'handedness of the participant as reported by the participant',
+          Levels: {
+            left: 'left',
+            right: 'right',
+          },
+        },
+        group: {
+          Description: 'experimental group the participant belonged to',
+          Levels: {
+            read: 'participants who read an inspirational text before the experiment',
+            write: 'participants who wrote an inspirational text before the experiment',
+          },
+        },
+      },
+    },
+    {
+      owner: {
+        id: USER_IDS[1],
+        username: 'test2',
+      },
+      datasetDescription: {
+        Name: 'Dataset test2',
+        BIDSVersion: '1.4.0',
+        DatasetType: 'raw',
+        License: 'CC0',
+        Authors: [
+          'Pramod Dorine',
+          'Angel Angerona',
+        ],
+        Acknowledgements: 'everybody',
+        HowToAcknowledge: 'Please cite this paper: https://www.ncbi.nlm.nih.gov/pubmed/001012092119281',
+        Funding: [
+          'National Institute of Neuroscience Grant AAAAA',
+        ],
+        EthicsApprovals: [
+          'Army Human Research Protections Office (Protocol ARL-20098-10051, ARL 12-040, and ARL 12-041)',
+        ],
+        ReferencesAndLinks: [
+          'https://www.ncbi.nlm.nih.gov/pubmed/001012092119281',
+          'Alzheimer A., & Kraepelin, E. (2015). Neural correlates of presenile dementia in humans. Journal of Neuroscientific Data, 2, 234001. doi:1920.8/jndata.2015.7',
+        ],
+        DatasetDOI: 'doi:10.0.2.3/dfjj.10',
+        HEDVersion: '7.1.1',
+      },
+      participantsDescription: {
+        age: {
+          Description: 'age of the participant',
+          Units: 'years',
+        },
+        sex: {
+          Description: 'sex of the participant as reported by the participant',
+          Levels: {
+            M: 'male',
+            F: 'female',
+          },
+        },
+      },
+    },
+    {
+      owner: {
+        id: USER_IDS[2],
+        username: 'test3',
+      },
+      datasetDescription: {
+        Name: 'Dataset test3',
+        BIDSVersion: '1.4.0',
+        DatasetType: 'raw',
+        License: 'CC0',
+        Authors: [
+          'Yordana Margareta',
+          'Tahlia Shannah',
+        ],
+        Acknowledgements: 'many thanks!',
+        Funding: [
+          'National Institute of Neuroscience Grant BBBBBB',
+        ],
+        EthicsApprovals: [
+          'Army Human Research Protections Office (Protocol ARL-20098-10051, ARL 12-040, and ARL 12-041)',
+        ],
+        ReferencesAndLinks: [
+          'https://www.ncbi.nlm.nih.gov/pubmed/001012092119281',
+          'Alzheimer A., & Kraepelin, E. (2015). Neural correlates of presenile dementia in humans. Journal of Neuroscientific Data, 2, 234001. doi:1920.8/jndata.2015.7',
+        ],
+        DatasetDOI: 'doi:10.0.2.3/dfjj.10',
+        HEDVersion: '7.1.1',
+      },
+      participantsDescription: {
+        age: {
+          Description: 'age of the participant',
+          Units: 'years',
+        },
+        sex: {
+          Description: 'sex of the participant as reported by the participant',
+          Levels: {
+            M: 'male',
+            F: 'female',
+          },
+        },
+        handedness: {
+          Description: 'handedness of the participant as reported by the participant',
+          Levels: {
+            left: 'left',
+            right: 'right',
           },
         },
       },
@@ -1022,11 +1203,21 @@ async function populate(closeConnection = true) {
   await populateRuns();
   await populateUsers();
   await populateHeadlessClients();
+  await populateDatasets();
 
   if (closeConnection) {
     await database.close();
   }
 }
+
+async function updateComputations(closeConnection = true) {
+  await database.connect();
+  await populateComputations();
+  if (closeConnection) {
+    await database.close();
+  }
+}
+
 
 module.exports = {
   CONSORTIA_IDS,
@@ -1035,4 +1226,5 @@ module.exports = {
   USER_IDS,
   RUN_IDS,
   populate,
+  updateComputations,
 };

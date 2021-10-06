@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 require('cross-fetch/polyfill');
 const authenticate = require('./auth');
 const createApolloClient = require('./apollo-client');

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-function SubscribeToEntityList(subscriptionFunc, document, query, subscriptionName, variables) {
+function useEntityListSubscription(subscriptionFunc, document, query, subscriptionName, variables) {
   useEffect(() => {
     const unsubscribe = subscriptionFunc({
       document,
@@ -29,4 +29,4 @@ function SubscribeToEntityList(subscriptionFunc, document, query, subscriptionNa
   }, []);
 }
 
-export default SubscribeToEntityList;
+export default useEntityListSubscription;

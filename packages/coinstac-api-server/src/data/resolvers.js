@@ -6,6 +6,7 @@ const Issue = require('github-api/dist/components/Issue');
 const { PubSub, withFilter } = require('graphql-subscriptions');
 const { ObjectID } = require('mongodb');
 const helperFunctions = require('../auth-helpers');
+const { headlessClients: headlessClientsController } = require('./controllers');
 const initSubscriptions = require('./subscriptions');
 const database = require('../database');
 const { transformToClient } = require('../utils');
@@ -20,11 +21,13 @@ const {
   PIPELINE_CHANGED,
   PIPELINE_DELETED,
   RUN_CHANGED,
+  RUN_DELETED,
   RUN_WITH_HEADLESS_CLIENT_STARTED,
   THREAD_CHANGED,
   USER_CHANGED,
 } = require('./events');
 const { getOnlineUsers } = require('./user-online-status-tracker');
+const { NotAuthorizedError } = require('./errors');
 
 const AVAILABLE_ROLE_TYPES = ['data', 'app'];
 const AVAILABLE_USER_APP_ROLES = ['admin', 'author'];
@@ -124,7 +127,9 @@ async function removeUserPermissions(args) {
 
   const { permissions } = user;
   const index = permissions[args.table][args.doc].findIndex(p => p === args.role);
-  permissions[args.table][args.doc].splice(index, 1);
+  if (index >= 0) {
+    permissions[args.table][args.doc].splice(index, 1);
+  }
 
   let userUpdateResult;
 
@@ -368,12 +373,18 @@ const resolvers = {
     fetchAllUserRuns: async (parent, args, { credentials }) => {
       const db = database.getDbInstance();
 
-      const runs = await db.collection('runs').find({
-        $or: [
-          { [`clients.${credentials.id}`]: { $exists: true } },
-          { sharedUsers: credentials.id }
-        ]
-      }).toArray();
+      let runs;
+
+      if (isAdmin(credentials.permissions)) {
+        runs = await db.collection('runs').find().toArray();
+      } else {
+        runs = await db.collection('runs').find({
+          $or: [
+            { [`clients.${credentials.id}`]: { $exists: true } },
+            { sharedUsers: credentials.id }
+          ]
+        }).toArray();
+      }
 
       return transformToClient(runs);
     },
@@ -411,13 +422,72 @@ const resolvers = {
 
       return getOnlineUsers();
     },
-    fetchAvailableHeadlessClients: async () => {
+    fetchAllHeadlessClients: async () => {
+      try {
+        const headlessClients = await headlessClientsController.fetchAllHeadlessClients();
+
+        return transformToClient(headlessClients);
+      } catch (error) {
+        return Boom.internal('Failed to fetch the headless clients list', error);
+      }
+    },
+    fetchAccessibleHeadlessClients: async (parent, args, { credentials }) => {
+      try {
+        const headlessClients = await headlessClientsController.fetchHeadlessClients(credentials);
+
+        return transformToClient(headlessClients);
+      } catch (error) {
+        return Boom.internal('Failed to fetch the headless clients list', error);
+      }
+    },
+    fetchHeadlessClient: async (parent, { id }, { credentials }) => {
+      try {
+        const headlessClient = await headlessClientsController.fetchHeadlessClient(id, credentials);
+
+        return headlessClient ? transformToClient(headlessClient) : null;
+      } catch (error) {
+        return Boom.internal(`Failed to fetch the headless client ${id}`, error);
+      }
+    },
+    fetchAllDatasetsTags: async () => {
       const db = database.getDbInstance();
 
-      const headlessClients = await db.collection('headlessClients').find().toArray();
+      const result = await db.collection('datasets').aggregate([
+        { $unwind: '$tags' },
+        { $group: { _id: null, tags: { $addToSet: '$tags' } } },
+        { $unwind: '$tags' },
+        { $sort: { tags: 1 } },
+        { $group: { _id: null, tags: { $push: '$tags' } } },
+      ]).toArray();
 
-      return transformToClient(headlessClients);
-    }
+      return result.length ? result[0].tags : [];
+    },
+    searchDatasets: async (parent, { searchString = '', tags = [] }) => {
+      const db = database.getDbInstance();
+
+      const searchObj = {};
+
+      if (searchString) {
+        searchObj.$text = {
+          $search: searchString
+        };
+      }
+
+      if (tags && tags.length) {
+        searchObj.tags = { $all: tags };
+      }
+
+      const datasets = await db.collection('datasets').find(searchObj).toArray();
+
+      return transformToClient(datasets);
+    },
+    fetchDataset: async (parent, { id }) => {
+      const db = database.getDbInstance();
+
+      const dataset = await db.collection('datasets').findOne({ _id: ObjectID(id) });
+
+      return transformToClient(dataset);
+    },
   },
   Mutation: {
     /**
@@ -627,6 +697,25 @@ const resolvers = {
       });
 
       eventEmitter.emit(PIPELINE_DELETED, pipelines);
+
+      const runs = await db.collection('runs').find({
+        consortiumId: args.consortiumId,
+        endDate: null,
+      }).toArray();
+
+      const n = await db.collection('runs').deleteMany({
+        consortiumId: args.consortiumId,
+        endDate: null,
+      });
+
+      eventEmitter.emit(RUN_DELETED, runs);
+      runs.forEach(async (run) => {
+        try {
+          await axios.post(
+            `http://${process.env.PIPELINE_SERVER_HOSTNAME}:${process.env.PIPELINE_SERVER_PORT}/stopPipeline`, { runId: run._id.valueOf() }
+          );
+        } catch (e) {}
+      });
 
       return transformToClient(deletedConsortiumResult.value);
     },
@@ -1187,7 +1276,7 @@ const resolvers = {
 
         keys(users).forEach((userId) => {
           updateObj.$set[`users.${userId}`] = {
-            username: users[userId],
+            username: users[userId].username,
             isRead: userId === credentials.id
           };
         });
@@ -1302,6 +1391,120 @@ const resolvers = {
         return Boom.notAcceptable('Failed to create issue on GitHub');
       }
     },
+    createHeadlessClient: async (parent, { data }, { credentials }) => {
+      try {
+        const headlessClient = await headlessClientsController.createHeadlessClient(data, credentials);
+
+        return transformToClient(headlessClient);
+      } catch (error) {
+        if (error instanceof NotAuthorizedError) {
+          return Boom.unauthorized(error.message);
+        }
+
+        return Boom.internal('Failed to create a headless client', error);
+      }
+    },
+    updateHeadlessClient: async (parent, args, { credentials }) => {
+      const { headlessClientId, data } = args;
+
+      try {
+        const headlessClient = await headlessClientsController.updateHeadlessClient(headlessClientId, data, credentials);
+
+        return transformToClient(headlessClient);
+      } catch (error) {
+        if (error instanceof NotAuthorizedError) {
+          return Boom.unauthorized(error.message);
+        }
+
+        return Boom.internal(`Failed to update the headless client ${headlessClientId}`, error);
+      }
+    },
+    deleteHeadlessClient: async (parent, args, { credentials }) => {
+      const { headlessClientId } = args;
+
+      try {
+        const deletedHeadlessClient = await headlessClientsController.deleteHeadlessClient(headlessClientId, credentials);
+
+        return transformToClient(deletedHeadlessClient);
+      } catch (error) {
+        if (error instanceof NotAuthorizedError) {
+          return Boom.unauthorized(error.message);
+        }
+
+        return Boom.internal(`Failed to delete the headless client ${headlessClientId}`, error);
+      }
+    },
+    generateHeadlessClientApiKey: async (parent, args, { credentials }) => {
+      const { headlessClientId } = args;
+
+      try {
+        const apiKey = await headlessClientsController.generateHeadlessClientApiKey(headlessClientId, credentials);
+        return apiKey;
+      } catch (error) {
+        if (error instanceof NotAuthorizedError) {
+          return Boom.unauthorized(error.message);
+        }
+
+        return Boom.internal(`Failed to create an Api Key for headless client ${headlessClientId}`, error);
+      }
+    },
+    saveDataset: async (parent, args, { credentials }) => {
+      const { id, datasetDescription, participantsDescription } = args.input;
+
+      const db = database.getDbInstance();
+
+      let result;
+      if (id) {
+        const datasetId = ObjectID(id);
+
+        const dataset = await db.collection('datasets').findOne({ _id: datasetId });
+
+        if (!dataset) {
+          return Boom.notFound('Dataset not found');
+        } else if (!dataset.owner.id.equals(credentials._id)) {
+          return Boom.unauthorized('You do not have permission to edit this dataset');
+        }
+
+        const updateResult = await db.collection('datasets').findOneAndUpdate(
+          { _id: datasetId },
+          {
+            $set: {
+              datasetDescription,
+              participantsDescription,
+            }
+          },
+          { returnDocument: 'after' },
+        );
+
+        result = updateResult.value;
+      } else {
+        const insertResult = await db.collection('datasets').insertOne({
+          datasetDescription,
+          participantsDescription,
+          owner: {
+            id: credentials._id,
+            username: credentials.username,
+          }
+        });
+
+        result = insertResult.ops[0];
+      }
+
+      return transformToClient(result);
+    },
+    deleteDataset: async (parent, { id }, { credentials }) => {
+      const db = database.getDbInstance();
+
+      const dataset = await db.collection('datasets').findOne({ _id: ObjectID(id) });
+
+      if (!isAdmin(credentials.permissions) && !dataset.owner.id.equals(credentials._id)) {
+        return Boom.unauthorized('You do not have permission to delete this dataset');
+      }
+
+      await db.collection('datasets').deleteOne({ _id: ObjectID(id) });
+
+      return transformToClient(dataset);
+    },
   },
   Subscription: {
     /**
@@ -1391,6 +1594,9 @@ const resolvers = {
         () => pubsub.asyncIterator('userRunChanged'),
         (payload, variables) => (variables.userId && keys(payload.userRunChanged.clients).indexOf(variables.userId) > -1)
       )
+    },
+    headlessClientChanged: {
+      subscribe: () => pubsub.asyncIterator('headlessClientChanged'),
     },
     /**
      * Subscription triggered

@@ -1,0 +1,95 @@
+{
+  "meta": {
+    "name": "Regression - VBM Stats",
+    "id": "vbm-stats",
+    "version": "v1.0.0",
+    "repository": "https:\/\/github.com\/trendscenter\/coinstac-regression-vbm-stats",
+    "description": "Decentralized Regression for quantities, average, median, and average of lower and upper quartile for ROI from nifti files"
+  },
+  "computation": {
+    "type": "docker",
+    "dockerImage": "coinstacteam/vbm-stats",
+    "command": [
+      "python",
+      "\/computation\/scripts\/local.py"
+    ],
+    "remote": {
+      "type": "docker",
+      "dockerImage": "coinstacteam/vbm-stats",
+      "command": [
+        "python",
+        "\/computation\/scripts\/remote.py"
+      ]
+    },
+    "input": {
+      "lambda": {
+        "default": 0,
+        "label": "Lambda",
+        "max": 1,
+        "min": 0,
+        "step": 0.05,
+        "type": "number",
+        "source": "owner"
+      },
+      "covariates": {
+        "label": "Covariates",
+        "type": "csv",
+        "items": ["boolean", "number", "string"],
+        "source": "member"
+      },
+      "data": {
+        "label": "Data",
+        "type": "freesurfer",
+        "items": ["NiFTI"],
+        "source": "owner"
+      }
+    },
+    "output": {
+      "regressions": {
+        "label": "Regressions",
+        "type": "object",
+        "items": {
+          "MSE": {
+            "label": "MSE",
+            "type": "array"
+          },
+          "MSE_HC": {
+            "label": "MSE_HC",
+            "type": "array"
+          },
+          "MSE_SZ": {
+            "label": "MSE_SZ",
+            "type": "array"
+          },
+          "R_squared": {
+            "label": "R squared",
+            "type": "array"
+          },
+          "R_squared_HC": {
+            "label": "R squared_HC",
+            "type": "array"
+          },
+          "R_squared_SZ": {
+            "label": "R squared_SZ",
+            "type": "array"
+          }
+        }
+      }
+    },
+    "display": [
+      {
+        "type": "table",
+        "tables": [
+          {
+            "source": "MSE",
+            "source": "MSE_HC",
+            "source": "MSE_SZ",
+            "source": "R_squared",
+            "source": "R_squared_HC",
+            "source": "R_squared_SZ"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -14,7 +14,9 @@ function subscribeToNewRuns(clientId, apolloClient) {
   }).subscribe({
     next: (data) => {
       const run = data.data.runWithHeadlessClientStarted;
-      startPipelineRun(run);
+      startPipelineRun(run)
+        // eslint-disable-next-line no-console
+        .catch(e => console.error(`An error occurred on during a run: ${e}`));
     },
     error: (error) => {
       // eslint-disable-next-line no-console

@@ -45,6 +45,22 @@ class PipelineStepInputFreesurferTableRow extends React.Component {
     this.closeDataMenu();
   }
 
+  selectInterest = (value, index) => {
+    const { updateStep, getNewObj, step } = this.props;
+    if (value[0] && value[0].label === 'All Interests') {
+      const options = freesurferDataOptions.freesurferROIs.slice(1);
+      updateStep({
+        ...step,
+        inputMap: getNewObj('value', options, index, false),
+      });
+    } else {
+      updateStep({
+        ...step,
+        inputMap: getNewObj('value', value ? value.map(val => val.value) : null, index, false),
+      });
+    }
+  }
+
   openDataMenu(event) {
     this.dataButtonElement = event.currentTarget;
     this.setState({ openDataMenu: true });
@@ -56,7 +72,7 @@ class PipelineStepInputFreesurferTableRow extends React.Component {
 
   render() {
     const {
-      obj, index, objKey, objParams, owner, getNewObj, possibleInputs, step, updateStep,
+      obj, index, objKey, objParams, owner, possibleInputs, step, updateStep,
     } = this.props;
 
     const { openDataMenu, freeSurferOptions } = this.state;
@@ -109,10 +125,7 @@ class PipelineStepInputFreesurferTableRow extends React.Component {
               placeholder="Select Area(s) of Interest"
               options={freeSurferOptions}
               isMulti
-              onChange={value => updateStep({
-                ...step,
-                inputMap: getNewObj('value', value ? value.map(val => val.value) : null, index, false),
-              })}
+              onChange={value => this.selectInterest(value, index)}
             />
           </div>
         </TableCell>

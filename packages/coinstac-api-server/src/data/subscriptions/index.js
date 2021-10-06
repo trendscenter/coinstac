@@ -8,11 +8,14 @@ const {
   PIPELINE_CHANGED,
   PIPELINE_DELETED,
   RUN_CHANGED,
+  RUN_DELETED,
   RUN_WITH_HEADLESS_CLIENT_STARTED,
   THREAD_CHANGED,
   USER_CHANGED,
   USER_SESSION_STARTED,
   USER_SESSION_FINISHED,
+  HEADLESS_CLIENT_CHANGED,
+  HEADLESS_CLIENT_DELETED,
 } = require('../events');
 const { transformToClient } = require('../../utils');
 
@@ -100,12 +103,49 @@ function pipelineChanged(pipeline) {
   });
 }
 
-function runChanged(run) {
+function headlessClientChanged(headlessClient) {
+  const hc = transformToClient(headlessClient);
+
+  pubSub.publish('headlessClientChanged', {
+    headlessClientChanged: hc,
+    headlessClientId: hc.id,
+  });
+}
+
+function headlessClientDeleted(headlessClient) {
+  const hc = transformToClient(headlessClient);
+  hc.delete = true;
+
+  pubSub.publish('headlessClientChanged', {
+    headlessClientChanged: hc,
+    headlessClientId: hc.id,
+  });
+}
+
+function publishRunDeleted(run) {
   const r = transformToClient(run);
+  r.delete = true;
 
   pubSub.publish('userRunChanged', {
     userRunChanged: r,
     runId: r.id,
+  });
+}
+
+function runDeleted(run) {
+  if (Array.isArray(run)) {
+    run.forEach(r => publishRunDeleted(r));
+  } else {
+    publishRunDeleted(run);
+  }
+}
+
+function runChanged(run) {
+  const r = transformToClient(run);
+
+  pubSub.publish('pipelineChanged', {
+    pipelineChanged: r,
+    pipelineId: r.id,
   });
 }
 
@@ -163,7 +203,11 @@ function initSubscriptions(ps) {
   eventEmitter.on(PIPELINE_CHANGED, pipelineChanged);
   eventEmitter.on(PIPELINE_DELETED, pipelineDeleted);
 
+  eventEmitter.on(HEADLESS_CLIENT_CHANGED, headlessClientChanged);
+  eventEmitter.on(HEADLESS_CLIENT_DELETED, headlessClientDeleted);
+
   eventEmitter.on(RUN_CHANGED, runChanged);
+  eventEmitter.on(RUN_DELETED, runDeleted);
 
   eventEmitter.on(RUN_WITH_HEADLESS_CLIENT_STARTED, runWithHeadlessClientStarted);
 

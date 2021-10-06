@@ -12,8 +12,10 @@ import ListAltIcon from '@material-ui/icons/ListAlt';
 import AssignmentIcon from '@material-ui/icons/Assignment';
 import EqualizerIcon from '@material-ui/icons/Equalizer';
 import DescriptionIcon from '@material-ui/icons/Description';
+import CloudIcon from '@material-ui/icons/Cloud';
 import SecurityIcon from '@material-ui/icons/Security';
-import { isAdmin } from '../../utils/helpers';
+import LanguageIcon from '@material-ui/icons/Language';
+import { isAdmin, isOwnerOfAnyHeadlessClient } from '../../utils/helpers';
 
 const DashboardNav = ({ user }) => {
   return (
@@ -46,10 +48,26 @@ const DashboardNav = ({ user }) => {
         <ListItemIcon><DescriptionIcon /></ListItemIcon>
         <ListItemText primary="Logs" />
       </ListItem>
+      <ListItem button component={Link} to="/dashboard/data-discovery">
+        <ListItemIcon><LanguageIcon /></ListItemIcon>
+        <ListItemText primary="Data Discovery" />
+      </ListItem>
+      {(isAdmin(user) || isOwnerOfAnyHeadlessClient(user)) && (
+        <ListItem button component={Link} to="/dashboard/headlessClients">
+          <ListItemIcon><CloudIcon /></ListItemIcon>
+          <ListItemText primary="Cloud Users" />
+        </ListItem>
+      )}
       {isAdmin(user) && (
         <ListItem button component={Link} to="/dashboard/permissions">
           <ListItemIcon><SecurityIcon /></ListItemIcon>
           <ListItemText primary="Permissions" />
+        </ListItem>
+      )}
+      {(isAdmin(user)) && (
+        <ListItem button component={Link} to="/dashboard/pipeline-states">
+          <ListItemIcon><AssignmentIcon /></ListItemIcon>
+          <ListItemText primary="Pipeline States" />
         </ListItem>
       )}
     </List>

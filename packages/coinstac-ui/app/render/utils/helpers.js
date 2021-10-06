@@ -67,6 +67,10 @@ export const isAllowedForComputationChange = (user) => {
   return isAdmin(user) || isAuthor(user);
 };
 
+export const isOwnerOfAnyHeadlessClient = (user) => {
+  return Object.keys(get(user, 'permissions.headlessClients', {})).length > 0;
+};
+
 export const getGraphQLErrorMessage = (error, defaultMessag) => {
   return get(error, 'graphQLErrors.0.message', defaultMessag);
 };

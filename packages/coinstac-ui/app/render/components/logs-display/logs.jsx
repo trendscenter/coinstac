@@ -56,7 +56,7 @@ class Logs extends Component {
             <button
               type="button"
               className="scroll-to-bottom"
-              onClick={this.handleScrollToTop}
+              onClick={this.handleScrollToBottom}
             >
               <ArrowUpwardIcon className="arrow-icon" />
             </button>
@@ -73,7 +73,7 @@ class Logs extends Component {
             <button
               type="button"
               className="scroll-to-top"
-              onClick={this.handleScrollToBottom}
+              onClick={this.handleScrollToTop}
             >
               <ArrowDownwardIcon className="arrow-icon" />
             </button>

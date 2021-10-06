@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { ipcRenderer } from 'electron';
 import { connect } from 'react-redux';
-import { notifyInfo } from '../../../state/ducks/notifyAndLog';
+import { notifyInfo, notifyError } from '../../../state/ducks/notifyAndLog';
 
 class StartPipelineListener extends React.Component {
   componentDidUpdate(prevProps) {
@@ -63,6 +63,10 @@ class StartPipelineListener extends React.Component {
         return;
       }
       const consortium = consortia.find(c => c.id === remoteRun.consortiumId);
+      if (!consortium) {
+        notifyError('Consortium no longer exists for pipeline run.');
+        return;
+      }
       const dataMapping = maps.find(m => m.consortiumId === consortium.id
         && m.pipelineId === consortium.activePipelineId);
       if (!dataMapping) {

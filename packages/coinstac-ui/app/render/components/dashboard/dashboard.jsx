@@ -27,7 +27,7 @@ import DashboardNav from './dashboard-nav';
 import DashboardPipelineNavBar from './dashboard-pipeline-nav-bar';
 import DockerStatus from './docker-status';
 
-import subscribeToEntityList from './effects/subscribe-to-entity-list';
+import useEntityListSubscription from '../../utils/effects/use-entity-list-subscription';
 import useDockerStatus from './effects/useDockerStatus';
 import StartPipelineListener from './listeners/start-pipeline-listener';
 import NotificationsListener from './listeners/notifications-listener';
@@ -59,11 +59,11 @@ function Dashboard({
     data: userRunsData, subscribeToMore: subscribeToUserRuns,
   } = useQuery(FETCH_ALL_USER_RUNS_QUERY);
 
-  subscribeToEntityList(subscribeToConsortia, CONSORTIUM_CHANGED_SUBSCRIPTION, 'fetchAllConsortia', 'consortiumChanged');
-  subscribeToEntityList(subscribeToComputations, COMPUTATION_CHANGED_SUBSCRIPTION, 'fetchAllComputations', 'computationChanged');
-  subscribeToEntityList(subscribeToPipelines, PIPELINE_CHANGED_SUBSCRIPTION, 'fetchAllPipelines', 'pipelineChanged');
-  subscribeToEntityList(subscribeToThreads, THREAD_CHANGED_SUBSCRIPTION, 'fetchAllThreads', 'threadChanged');
-  subscribeToEntityList(subscribeToUserRuns, USER_RUN_CHANGED_SUBSCRIPTION, 'fetchAllUserRuns', 'userRunChanged', { userId: auth.user.id });
+  useEntityListSubscription(subscribeToConsortia, CONSORTIUM_CHANGED_SUBSCRIPTION, 'fetchAllConsortia', 'consortiumChanged');
+  useEntityListSubscription(subscribeToComputations, COMPUTATION_CHANGED_SUBSCRIPTION, 'fetchAllComputations', 'computationChanged');
+  useEntityListSubscription(subscribeToPipelines, PIPELINE_CHANGED_SUBSCRIPTION, 'fetchAllPipelines', 'pipelineChanged');
+  useEntityListSubscription(subscribeToThreads, THREAD_CHANGED_SUBSCRIPTION, 'fetchAllThreads', 'threadChanged');
+  useEntityListSubscription(subscribeToUserRuns, USER_RUN_CHANGED_SUBSCRIPTION, 'fetchAllUserRuns', 'userRunChanged', { userId: auth.user.id });
 
   useEffect(() => {
     ipcRenderer.send('load-initial-log');

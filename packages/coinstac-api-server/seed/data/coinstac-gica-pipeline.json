@@ -24,7 +24,7 @@
         "input": {
             "data": {
               "label": "Data",
-              "type": "bundle",
+              "type": "files",
               "items": ["NIfTI"],
               "extensions": [["nii"]],
               "order": 0

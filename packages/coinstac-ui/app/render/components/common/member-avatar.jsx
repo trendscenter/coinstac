@@ -3,9 +3,11 @@ import { useQuery } from '@apollo/client';
 import { get } from 'lodash';
 import Avatar from 'react-avatar';
 import PropTypes from 'prop-types';
+import cx from 'classnames';
 import Typography from '@material-ui/core/Typography';
 import DoneIcon from '@material-ui/icons/Done';
 import { withStyles } from '@material-ui/core/styles';
+
 import {
   FETCH_USER_QUERY,
 } from '../../state/graphql/functions';
@@ -21,6 +23,7 @@ const styles = theme => ({
   },
   textStyles: {
     fontSize: 12,
+    display: 'block',
   },
   markStyles: {
     fontSize: 14,
@@ -40,6 +43,7 @@ function MemberAvatar({
   showDetails,
   width,
   classes,
+  className,
   ready,
 }) {
   const { data } = useQuery(FETCH_USER_QUERY, {
@@ -49,7 +53,7 @@ function MemberAvatar({
   const user = get(data, 'fetchUser');
 
   return (
-    <div key={`${name}-avatar`} className={classes.containerStyles}>
+    <div key={`${name}-avatar`} className={cx(classes.containerStyles, className)}>
       {user && user.photo
         ? <Avatar name={name} size={width} src={user.photo} round />
         : <Avatar name={name} size={width} round />}
@@ -77,12 +81,14 @@ MemberAvatar.propTypes = {
   ready: PropTypes.bool,
   showDetails: PropTypes.bool,
   width: PropTypes.number.isRequired,
+  className: PropTypes.string,
 };
 
 MemberAvatar.defaultProps = {
   consRole: null,
   showDetails: false,
   ready: false,
+  className: null,
 };
 
 export default withStyles(styles)(MemberAvatar);

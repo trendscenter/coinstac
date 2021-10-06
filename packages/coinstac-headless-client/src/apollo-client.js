@@ -9,9 +9,12 @@ function createApolloClient(authToken) {
   const httpLink = new HttpLink({ uri: `${process.env.API_URL}/graphql` });
 
   const wsLink = new WebSocketLink({
-    uri: `${process.env.SUB_API_URL}/subscriptions`,
+    uri: `${process.env.SUB_API_URL}/graphql`,
     options: {
       reconnect: true,
+      connectionParams: () => ({
+        authToken,
+      }),
     },
     webSocketImpl: ws,
   });

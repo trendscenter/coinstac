@@ -29,6 +29,11 @@ import Threads from './components/threads';
 import Logs from './components/logs-display/logs';
 import Papaya from './components/papaya';
 import Permissions from './components/permissions';
+import HeadlessList from './components/headless/headless-list';
+import HeadlessEdit from './components/headless/headless-edit';
+import DataDiscovery from './components/data-discovery';
+import EditDataset from './components/data-discovery/edit-dataset';
+import pipelineStates from './components/pipeline-states';
 
 export default (
   <Route path="/" component={App}>
@@ -62,12 +67,23 @@ export default (
         <IndexRoute component={ComputationsList} />
         <Route path="new" component={ComputationSubmission} />
       </Route>
+      <Route path="headlessClients" component={RouteContainer}>
+        <IndexRoute component={HeadlessList} />
+        <Route path="new" component={HeadlessEdit} />
+        <Route path=":headlessClientId" component={HeadlessEdit} />
+      </Route>
       <Route path="settings" component={Settings} />
       <Route path="issues" component={Issues} />
       <Route path="threads" component={Threads} />
       <Route path="logs" component={Logs} />
       <Route path="papaya" component={Papaya} />
       <Route path="permissions" component={Permissions} />
+      <Route path="data-discovery" component={RouteContainer}>
+        <IndexRoute component={DataDiscovery} />
+        <Route path="new" component={EditDataset} />
+        <Route path=":datasetId" component={EditDataset} />
+      </Route>
+      <Route path="pipeline-states" component={pipelineStates} />
     </Route>
   </Route>
 );

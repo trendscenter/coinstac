@@ -63,12 +63,13 @@ function ListItem({
   deleteButtonText,
   classes,
 }) {
-  if (!itemObject || !itemOptions) {
+  if (!itemObject) {
     return null;
   }
 
   return (
     <Paper
+      id={itemObject.id}
       key={`${itemObject.id}-list-item`}
       className={classes.rootPaper}
       elevation={4}
@@ -127,7 +128,7 @@ ListItem.defaultProps = {
   deleteButtonText: null,
   deleteItem: null,
   canDelete: false,
-  itemOptions: null,
+  itemOptions: {},
 };
 
 ListItem.propTypes = {
