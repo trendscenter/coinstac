@@ -1,15 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useLazyQuery, useMutation } from '@apollo/client';
 import { Link } from 'react-router';
 import { get } from 'lodash';
 import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
 import Fab from '@material-ui/core/Fab';
-import Grid from '@material-ui/core/Grid';
 import Paper from '@material-ui/core/Paper';
 import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
-import Autocomplete from '@material-ui/lab/Autocomplete';
 import Skeleton from '@material-ui/lab/Skeleton';
 import AddIcon from '@material-ui/icons/Add';
 import SearchIcon from '@material-ui/icons/Search';
@@ -19,7 +17,6 @@ import ResultItem from './result-item';
 import ListDeleteModal from '../common/list-delete-modal';
 import {
   SEARCH_DATASETS_QUERY,
-  FETCH_ALL_DATASETS_TAGS_QUERY,
   DELETE_DATASET_MUTATION,
 } from '../../state/graphql/functions';
 
