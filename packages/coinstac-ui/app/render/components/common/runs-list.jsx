@@ -42,7 +42,7 @@ const RunsList = ({
               consortiumName={
                 consortium && consortium.name ? consortium.name : ''
               }
-              stopPipeline={stopPipeline(run.pipelineSnapshot.id, run.id)}
+              stopPipeline={stopPipeline(run.id)}
             />
           );
         }

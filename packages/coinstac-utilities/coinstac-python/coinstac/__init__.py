@@ -36,7 +36,7 @@ async def _run(websocket, path):
           print(e)
           print('remote data:')
           print(parsed['data'])
-          await websocket.send(json.dumps({ 'type': 'stderr', 'data': e, 'end': True }))
+          await websocket.send(json.dumps({ 'type': 'stderr', 'data': str(e), 'end': True }))
     elif parsed['mode'] == 'local':
         try:
           start = datetime.now()
@@ -48,7 +48,7 @@ async def _run(websocket, path):
           print(e)
           print('local data:')
           print(parsed['data'])
-          await websocket.send(json.dumps({ 'type': 'stderr', 'data': e, 'end': True }))
+          await websocket.send(json.dumps({ 'type': 'stderr', 'data': str(e), 'end': True }))
     else:
       await websocket.close()
 

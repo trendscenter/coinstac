@@ -455,8 +455,8 @@ module.exports = {
             .emit('update', stateUpdate);
           logger.silly(JSON.stringify(stateUpdate));
           if (waitingOn.length === 0) {
-            activePipelines[runId].state = 'received all clients data and files';
-            logger.silly('Received all client data and files');
+            activePipelines[runId].stateStatus = 'Received all nodes data and files';
+            logger.silly('Received all nodes data and files');
             // clear transfer and start run
             clearClientFileList(runId);
             rmrf(path.join(activePipelines[runId].systemDirectory, '*'))
@@ -474,7 +474,8 @@ module.exports = {
               message: `Pipeline error from pipeline central node, Error details: ${error.message}`,
             }
           );
-          activePipelines[runId].state = 'received client error';
+          activePipelines[runId].state = 'error';
+          activePipelines[runId].stateStatus = 'Received node error';
           activePipelines[runId].error = runError;
           clientPublish(
             activePipelines[runId].clients,
@@ -576,8 +577,8 @@ module.exports = {
                       .emit('update', stateUpdate);
                     logger.silly(JSON.stringify(stateUpdate));
                     if (waitingOn.length === 0) {
-                      activePipelines[runId].state = 'received all clients data';
-                      logger.silly('Received all client data');
+                      activePipelines[runId].stateStatus = 'Received all node data';
+                      logger.silly('Received all node data');
                       // clear transfer and start run
                       clearClientFileList(runId);
                       rmrf(path.join(activePipelines[runId].systemDirectory, '*'))
@@ -595,14 +596,19 @@ module.exports = {
                   );
                 }
               } else {
-                const runError = Object.assign(
-                  error,
-                  {
-                    error: `Pipeline error from pipeline ${runId} user: ${activePipelines[runId].clients[id]}\n Error details: ${error.error}`,
-                    message: `Pipeline error from pipeline ${runId} user: ${activePipelines[runId].clients[id]}\n Error details: ${error.message}`,
-                  }
-                );
-                activePipelines[runId].state = 'received client error';
+                let runError;
+                if (!error && !output) {
+                  runError = new Error('Malformed client output');
+                } else {
+                  runError = Object.assign(
+                    error,
+                    {
+                      error: `Pipeline error from pipeline ${runId} user: ${activePipelines[runId].clients[id]}\n Error details: ${error.error}`,
+                      message: `Pipeline error from pipeline ${runId} user: ${activePipelines[runId].clients[id]}\n Error details: ${error.message}`,
+                    }
+                  );
+                }
+                activePipelines[runId].stateStatus = 'Received client error';
                 activePipelines[runId].error = runError;
                 clientPublish(
                   activePipelines[runId].clients,
@@ -730,7 +736,7 @@ module.exports = {
                 logger.silly(`Duplicate message client ${data.id}`);
                 return;
               }
-              activePipelines[data.runId].state = 'received central node data';
+              activePipelines[data.runId].stateStatus = 'received central node data';
               logger.silly('received central node data');
               debugProfileClient(`Transmission to ${clientId} took the remote: ${Date.now() - data.debug.sent}ms`);
 
@@ -778,7 +784,8 @@ module.exports = {
                   });
               }
             } else if (data.error && activePipelines[data.runId]) {
-              activePipelines[data.runId].state = 'received error';
+              activePipelines[data.runId].state = 'error';
+              activePipelines[data.runId].stateStatus = 'Received error';
               activePipelines[data.runId].remote.reject(Object.assign(new Error(), data.error));
             }
 
@@ -825,7 +832,11 @@ module.exports = {
        *                               Promise for its result
        */
       startPipeline({
-        spec, clients = {}, runId, alternateInputDirectory,
+        spec,
+        clients = {},
+        runId,
+        alternateInputDirectory,
+        saveState,
       }) {
         let pipelineStartTime;
         store.put(`${runId}-profiling`, clientId, {});
@@ -866,7 +877,8 @@ module.exports = {
             limitOutputToOwner: spec.limitOutputToOwner,
             debug: {},
           },
-          activePipelines[runId]
+          activePipelines[runId],
+          saveState ? saveState.activePipeline : {}
         );
 
         // remote client object creation
@@ -907,7 +919,8 @@ module.exports = {
                   stack: message.stack,
                 }
               );
-              activePipelines[pipeline.id].state = 'central node error';
+              activePipelines[pipeline.id].state = 'error';
+              activePipelines[pipeline.id].stateStatus = 'Central node error';
               activePipelines[pipeline.id].error = runError;
               activePipelines[pipeline.id].remote.reject(runError);
               clientPublish(
@@ -1227,15 +1240,26 @@ module.exports = {
             return res;
           })
           .catch((err) => {
-            if (mode === 'remote') {
-              throw err;
+            if (mode === 'remote' || err.message.includes('Pipeline operation suspended by user')) {
+              if (mode === 'remote') {
+                clientPublish(
+                  activePipelines[runId].clients,
+                  { runId, error: err }
+                );
+              }
+              return cleanupPipeline(runId)
+                .then(() => {
+                  throw err;
+                });
             }
             // local pipeline user stop error, or other uncaught error
             publishData('run', {
-              id: clientId, runId, error: err,
+              id: clientId, runId, error: { message: err.message, stack: err.stack },
             }, 1);
-
-            throw err;
+            cleanupPipeline(runId)
+              .then(() => {
+                throw err;
+              });
           });
 
         return {
@@ -1251,7 +1275,21 @@ module.exports = {
 
         return this.activePipelines[runId].stateEmitter;
       },
-      stopPipeline(pipelineId, runId) {
+      suspendPipeline(runId) {
+        const run = this.activePipelines[runId];
+        const packagedState = {
+          activePipelineState: {
+            currentState: run.currentState,
+          },
+          pipelineState: {
+            currentStep: run.pipeline.currentStep,
+          },
+          controllerState: run.pipeline.pipelineSteps[run.pipeline.currentStep].controllerState,
+        };
+        return this.stopPipeline(runId, 'suspend')
+          .then(output => Object.assign({ output }, packagedState));
+      },
+      async stopPipeline(runId, type = 'user') {
         const run = this.activePipelines[runId];
 
         if (!run) {
@@ -1262,7 +1300,7 @@ module.exports = {
         const currentStep = run.pipeline.pipelineSteps[currentStepNumber];
 
         if (currentStep) {
-          currentStep.stop();
+          return currentStep.stop(type);
         }
       },
       waitingOnForRun,

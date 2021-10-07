@@ -148,13 +148,13 @@ module.exports = manager.then((remotePipelineManager) => {
           authenticateServer()
             .then(() => {
               const { payload: { runId } } = req;
-              // TODO: fix this call w/ the stop fn changes
-              try {
-                remotePipelineManager.stopPipeline('', runId);
-                res({}).code(200);
-              } catch (e) {
-                res({}).code(500);
-              }
+              remotePipelineManager.stopPipeline(runId, 'user')
+                .then(() => {
+                  res({}).code(200);
+                }).catch((e) => {
+                  console.error(e); // eslint-disable-line no-console
+                  res({}).code(500);
+                });
             });
         },
       },

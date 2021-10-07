@@ -9,8 +9,8 @@ module.exports = {
       return 'done';
     } if (controllerState.remoteInitial) {
       return 'firstServerRemote';
-    } if (controllerState.state === 'finished iteration'
-    || controllerState.state === 'finished iteration with error') {
+    } if (controllerState.state === 'Finished iteration'
+    || controllerState.state === 'Iteration finished with an error') {
       return 'remote';
     }
     return 'nextIteration';
