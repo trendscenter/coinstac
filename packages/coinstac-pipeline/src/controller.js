@@ -236,7 +236,7 @@ module.exports = {
                 iteration: controllerState.iteration,
                 callback: (error, output) => {
                   if (error) return err(error);
-                  // setStateProp('state', 'Finished iteration');
+                  setStateProp('state', 'Finished iteration');
                   controllerState.success = !!output.success;
                   controllerState.received = output.debug.received;
 
