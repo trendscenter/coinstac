@@ -77,4 +77,4 @@ Coinstac containers use local file system access in order to process input data 
 Containers are given two mounted read-write `output` and `transfer` folders to output final results and send data as files to other Clients.
 
 ## Contributions
-If there are any questions, errors, or additions to this guide please feel free to file an issue on the repo [here](https://github.com/trendscenter/coinstac/issues).
+If there are any questions, errors, or additions to this guide or security concerns please feel free to file an issue on the repo [here](https://github.com/trendscenter/coinstac/issues).
