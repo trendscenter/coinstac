@@ -9,6 +9,7 @@ from datetime import datetime
 
 local = None
 remote = None
+compTime = 0
 
 def importFile(path, name):
     spec = importlib.util.spec_from_file_location(name, path)
@@ -18,6 +19,7 @@ def importFile(path, name):
 async def _run(websocket, path):
     global local
     global remote
+    global compTime
     message = await websocket.recv()
     parsed = None
     try:
@@ -28,9 +30,11 @@ async def _run(websocket, path):
     if parsed['mode'] == 'remote':
         try:
           start = datetime.now()
-          output = await asyncio.get_event_loop().run_in_executor(None, remote.start, parsed['data'])
-          print('remote exec time:')
-          print((datetime.now() - start).total_seconds())
+          output = await asyncio.get_event_loop().run_in_executor(None, remote, parsed['data'])
+          time = (datetime.now() - start).total_seconds()
+          compTime += time
+          print('remote exec time:', time)
+          print('Total time so far:', compTime)
           await websocket.send(json.dumps({ 'type': 'stdout', 'data': output, 'end': True }))
         except Exception as e:
           print(e)
@@ -40,9 +44,11 @@ async def _run(websocket, path):
     elif parsed['mode'] == 'local':
         try:
           start = datetime.now()
-          output = await asyncio.get_event_loop().run_in_executor(None, local.start, parsed['data'])
-          print('local exec time:')
-          print((datetime.now() - start).total_seconds())
+          output = await asyncio.get_event_loop().run_in_executor(None, local, parsed['data'])
+          time = (datetime.now() - start).total_seconds()
+          compTime += time
+          print('local exec time:', time)
+          print('Total time so far:', compTime)
           await websocket.send(json.dumps({ 'type': 'stdout', 'data': output, 'end': True }))
         except Exception as e:
           print(e)
@@ -52,11 +58,11 @@ async def _run(websocket, path):
     else:
       await websocket.close()
 
-def start(localScript, remoteScript):
+def start(localFunction, remoteFunction):
     global local
     global remote
-    local = localScript
-    remote = remoteScript
+    local = localFunction
+    remote = remoteFunction
     start_server = websockets.serve(_run, '0.0.0.0', 8881)
     print("Python microservice started on 8881")
 
