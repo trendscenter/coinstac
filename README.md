@@ -85,6 +85,10 @@ You may wonder why we haven't been doing this before! Us too. Let's get started!
 - We would love for you to contribute to development. Please see our [contribution guidelines](./CONTRIBUTING.md).
 - Developer documentation and system design information may be found over in our [technical docs](./TECHNICAL.md).
 
+## Security
+
+- If you have questions regarding security, please read our [security overview](./SECURITY.md).
+
 ## Releases
 Binary releases for several platforms can be found [here](https://github.com/trendscenter/coinstac/releases), under each version's assets tab.
 
