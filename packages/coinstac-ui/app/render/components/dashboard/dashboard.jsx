@@ -41,7 +41,7 @@ import UserPermissionsListener from './listeners/user-permissions-listener';
 import TreeviewListener from './listeners/treeview-listener';
 
 function Dashboard({
-  auth, children, runs, maps, router,
+  auth, children, runs, maps, router, hideTutorial,
 }) {
   const {
     data: consortiaData, subscribeToMore: subscribeToConsortia,
@@ -109,7 +109,7 @@ function Dashboard({
     <div className="dashboard">
       <div className="dashboard-nav">
         <CoinstacAbbr />
-        <DashboardNav user={auth.user} />
+        <DashboardNav user={auth.user} hideTutorial={hideTutorial} />
         <List>
           <ListItem>
             <UserAccountController
@@ -171,6 +171,7 @@ Dashboard.propTypes = {
   runs: PropTypes.array,
   maps: PropTypes.array,
   router: PropTypes.object.isRequired,
+  hideTutorial: PropTypes.bool.isRequired,
 };
 
 const clientConfig = remote.getGlobal('config');
@@ -204,6 +205,7 @@ const mapStateToProps = ({ auth, runs, maps }) => ({
   auth,
   runs: runs.runs,
   maps: maps.consortiumDataMappings,
+  hideTutorial: auth.hideTutorial,
 });
 
 const connectedComponent = connect(mapStateToProps)(withRouter(ConnectedDashboard));

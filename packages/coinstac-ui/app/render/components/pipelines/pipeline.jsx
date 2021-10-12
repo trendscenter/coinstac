@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { compose } from 'redux';
+import Joyride from 'react-joyride';
 import { graphql, withApollo } from '@apollo/react-hoc';
 import { DragDropContext, DropTarget } from 'react-dnd';
 import HTML5Backend from 'react-dnd-html5-backend';
@@ -60,6 +61,7 @@ import {
   isUserInGroup,
   reducePipelineInputs,
 } from '../../utils/helpers';
+import STEPS from '../../constants/tutorial';
 
 const CLOUD_USERS_TOOLTIP = `Cloud users are persistent nodes that can run some pipelines. If you add one or more cloud users,
   the available pipelines list will be filtered by the ones that the cloud users can run.`;
@@ -710,6 +712,7 @@ class Pipeline extends Component {
           />
           {!isEditing && (
             <FormControlLabel
+              id="set-active"
               control={(
                 <Checkbox
                   checked={pipeline.isActive || false}
@@ -790,6 +793,7 @@ class Pipeline extends Component {
             )}
             <StatusButtonWrapper status={savingStatus}>
               <Button
+                id="save-pipeline"
                 key="save-pipeline-button"
                 variant="contained"
                 color="primary"
@@ -936,6 +940,9 @@ class Pipeline extends Component {
             </Typography>
           )}
         </ValidatorForm>
+        {!auth.hideTutorial && (
+          <Joyride steps={STEPS.pipeline} continuous disableScrollParentFix />
+        )}
       </div>
     );
   }

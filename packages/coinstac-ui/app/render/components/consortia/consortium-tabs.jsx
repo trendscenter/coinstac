@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
+import Joyride from 'react-joyride';
 import PropTypes from 'prop-types';
 import Tab from '@material-ui/core/Tab';
 import Tabs from '@material-ui/core/Tabs';
@@ -25,6 +26,7 @@ import {
 } from '../../state/graphql/functions';
 import { notifySuccess, notifyError } from '../../state/ducks/notifyAndLog';
 import { getGraphQLErrorMessage } from '../../utils/helpers';
+import STEPS from '../../constants/tutorial';
 
 const styles = theme => ({
   title: {
@@ -190,7 +192,7 @@ class ConsortiumTabs extends Component {
           savingStatus: 'fail',
         });
 
-        notifyError(getGraphQLErrorMessage(error, 'Failed to save consoritum'));
+        notifyError(getGraphQLErrorMessage(error, 'Failed to save consortium'));
       });
   }
 
@@ -211,7 +213,7 @@ class ConsortiumTabs extends Component {
       classes,
     } = this.props;
 
-    const { user } = auth;
+    const { user, hideTutorial } = auth;
     const {
       selectedTabIndex,
       consortium,
@@ -234,14 +236,17 @@ class ConsortiumTabs extends Component {
             {title}
           </Typography>
         </div>
+        {!hideTutorial && isEditingConsortium && (
+          <Joyride steps={STEPS.consortiumTabs} disableScrollParentFix />
+        )}
         <Tabs
           value={this.getTabIndex()}
           onChange={this.handleSelect}
           id="consortium-tabs"
         >
           <Tab label="About" />
-          { isEditingConsortium && <Tab label="Pipelines" /> }
-          { isEditingConsortium && isOwner && <Tab label="Runs" /> }
+          {isEditingConsortium && <Tab id="pipeline-tab" label="Pipelines" />}
+          {isEditingConsortium && isOwner && <Tab label="Runs" />}
         </Tabs>
         {
           selectedTabIndex === 0
@@ -257,6 +262,7 @@ class ConsortiumTabs extends Component {
               user={user}
               users={users}
               savingStatus={savingStatus}
+              hideTutorial={hideTutorial || isEditingConsortium}
             />
           )
         }
@@ -267,6 +273,7 @@ class ConsortiumTabs extends Component {
               consortium={consortium}
               owner={isOwner}
               pipelines={pipelines}
+              hideTutorial={hideTutorial}
             />
           )
         }

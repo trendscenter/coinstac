@@ -308,6 +308,10 @@ ul#loading_list {
   padding: 15px;
 }
 
+.react-joyride__beacon:focus {
+  outline: none;
+}
+
 /** Notifications */
 .notistack-notification {
   color: #fff !important;
