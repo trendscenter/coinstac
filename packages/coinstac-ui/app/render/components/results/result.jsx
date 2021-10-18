@@ -17,6 +17,7 @@ import { shell } from 'electron';
 import path from 'path';
 import Box from './displays/box-plot';
 import Scatter from './displays/scatter-plot';
+import SimpleTable from './displays/simple-table';
 import Table from './displays/result-table';
 import Images from './displays/images';
 import String from './displays/string';
@@ -257,6 +258,16 @@ class Result extends Component {
                     tables={selectedDisplayType.tables ? selectedDisplayType.tables : null}
                     title={`${consortium.name}_${run.pipelineSnapshot.name}`}
                     clients={run.clients}
+                  />
+                )
+              }
+              {
+                selectedDisplayType.type === 'simple-table'
+                && (
+                  <SimpleTable
+                    computationOutput={computationOutput}
+                    plotData={plotData}
+                    title={`${consortium.name}_${run.pipelineSnapshot.name}`}
                   />
                 )
               }
