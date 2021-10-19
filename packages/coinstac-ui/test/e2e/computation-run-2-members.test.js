@@ -227,16 +227,6 @@ describe('e2e run computation with 2 members', () => {
       await dataTypeOption.click();
       await dataDropdown.waitForClickable({ timeout: EXIST_TIMEOUT });
 
-      const sourceDropdown = await app1.client.$(`#input-source-${index}-dropdown`);
-      await sourceDropdown.waitForDisplayed({ timeout: EXIST_TIMEOUT });
-      await sourceDropdown.click();
-      const sourceDropdownMenu = await app1.client.$(`#input-source-${index}-dropdown-menu`);
-      await sourceDropdownMenu.waitForDisplayed({ timeout: EXIST_TIMEOUT });
-      const sourceFileOption = await sourceDropdownMenu.$('li=File');
-      await sourceFileOption.waitForClickable({ timeout: EXIST_TIMEOUT });
-      await sourceFileOption.click();
-      await sourceDropdown.waitForClickable({ timeout: EXIST_TIMEOUT });
-
       const nameInput = await app1.client.$(`#covariates-${index}-input-name`);
       await nameInput.setValue(name);
     };
@@ -344,7 +334,7 @@ describe('e2e run computation with 2 members', () => {
     await consortiumMapItemButton.waitForClickable({ timeout: EXIST_TIMEOUT });
     await consortiumMapItemButton.click();
 
-    const addFilesGroupButton = await app1.client.$('button=Add Files Group');
+    const addFilesGroupButton = await app1.client.$('button=Select File(s)');
     await addFilesGroupButton.waitForClickable({ timeout: EXIST_TIMEOUT });
     await addFilesGroupButton.click();
 
@@ -356,9 +346,8 @@ describe('e2e run computation with 2 members', () => {
     await saveButton.waitForClickable({ timeout: EXIST_TIMEOUT });
     await saveButton.click();
 
-    const backToConsortiaLink = await app1.client.$('a=Back to Consortia');
-    await backToConsortiaLink.waitForClickable({ timeout: EXIST_TIMEOUT });
-    await backToConsortiaLink.click();
+    const consortiaMenuButton = await app1.client.$('a=Consortia');
+    await consortiaMenuButton.click();
 
     // Assert
     const startPipelineButton = await app1.client.$('button=Start Pipeline');
@@ -375,7 +364,7 @@ describe('e2e run computation with 2 members', () => {
     await consortiumMapItemButton.waitForClickable({ timeout: EXIST_TIMEOUT });
     await consortiumMapItemButton.click();
 
-    const addFilesGroupButton = await app2.client.$('button=Add Files Group');
+    const addFilesGroupButton = await app2.client.$('button=Select File(s)');
     await addFilesGroupButton.waitForClickable({ timeout: EXIST_TIMEOUT });
     await addFilesGroupButton.click();
 
@@ -387,10 +376,13 @@ describe('e2e run computation with 2 members', () => {
     await saveButton.waitForClickable({ timeout: EXIST_TIMEOUT });
     await saveButton.click();
 
-    // Assert
-    const backToConsortiaLink = await app2.client.$('a=Back to Consortia');
+    const consortiaMenuButton = await app2.client.$('a=Consortia');
+    await consortiaMenuButton.click();
 
-    return backToConsortiaLink.waitForClickable({ timeout: EXIST_TIMEOUT })
+    // Assert
+    const mapDataButton = await app2.client.$('button=Map Local Data');
+
+    return mapDataButton.waitForDisplayed({ timeout: EXIST_TIMEOUT, reverse: true })
       .should.eventually.equal(true);
   });
 
