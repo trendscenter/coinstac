@@ -27,7 +27,6 @@ class App extends Component {
       autoLogin,
       setError,
       logout,
-      router,
       notifyWarning,
     } = this.props;
 
@@ -42,7 +41,6 @@ class App extends Component {
     ipcRenderer.on(EXPIRED_TOKEN, () => {
       setError(EXPIRED_TOKEN);
       logout();
-      router.push('/login');
     });
 
     ipcRenderer.on(BAD_TOKEN, () => {
@@ -100,7 +98,6 @@ App.displayName = 'App';
 App.propTypes = {
   children: PropTypes.node.isRequired,
   loading: PropTypes.object.isRequired,
-  router: PropTypes.object.isRequired,
   autoLogin: PropTypes.func.isRequired,
   logout: PropTypes.func.isRequired,
   notifyWarning: PropTypes.func.isRequired,

@@ -8,6 +8,7 @@ import PropTypes from 'prop-types';
 import { ipcRenderer, remote } from 'electron';
 import { List, ListItem } from '@material-ui/core';
 import ArrowUpwardIcon from '@material-ui/icons/ArrowUpward';
+
 import UserAccountController from '../user/user-account-controller';
 import CoinstacAbbr from '../coinstac-abbr';
 import getApolloClient from '../../state/apollo-client';
@@ -68,6 +69,14 @@ function Dashboard({
   useEffect(() => {
     ipcRenderer.send('load-initial-log');
   }, []);
+
+  useEffect(() => {
+    const email = get(auth, 'user.email');
+
+    if (!email) {
+      router.push('/login');
+    }
+  }, [auth]);
 
   const consortia = get(consortiaData, 'fetchAllConsortia');
   const computations = get(computationData, 'fetchAllComputations');
@@ -184,6 +193,7 @@ function ConnectedDashboard(props) {
 
       apolloClient.current.client.stop();
       apolloClient.current.wsLink.subscriptionClient.close();
+      apolloClient.current = null;
     };
   }, []);
 
