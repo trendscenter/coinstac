@@ -4,7 +4,7 @@ import { withStyles } from '@material-ui/core/styles';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import CheckCircleIcon from '@material-ui/icons/CheckCircle';
-import FilePicker from '../common/file-picker';
+import FilePicker from '../../common/file-picker';
 
 const styles = theme => ({
   rootPaper: {
@@ -30,7 +30,7 @@ function MapsFilesField({
   fieldName, fieldDataMap, fieldDescription, onChange, classes,
 }) {
   function setSelectedFiles(selectedFiles) {
-    onChange(fieldName, { files: selectedFiles });
+    onChange(fieldName, { type: fieldDescription.type, files: selectedFiles });
   }
 
   function appendSelectedFiles(selectedFiles) {
@@ -67,9 +67,9 @@ function MapsFilesField({
         multiple
         filterName="csv,txt,gz,nii files"
         extensions={fieldDescription.extensions}
-        onChange={files => appendSelectedFiles(files)}
-        selectedFiles={fieldDataMap && fieldDataMap.files ? fieldDataMap.files : []}
-        deleteFile={fileIndex => deleteFile(fileIndex)}
+        onChange={appendSelectedFiles}
+        selected={fieldDataMap && fieldDataMap.files ? fieldDataMap.files : []}
+        deleteItem={fileIndex => deleteFile(fileIndex)}
       />
     </Paper>
   );
