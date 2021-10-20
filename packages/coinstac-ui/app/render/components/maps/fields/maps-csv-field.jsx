@@ -127,8 +127,8 @@ class MapsCsvField extends React.Component {
 
   setSelectedFiles(selectedFiles) {
     const {
-          onChange, fieldName, fieldDataMap, fieldDescription,
-        } = this.props;
+      onChange, fieldName, fieldDataMap, fieldDescription,
+    } = this.props;
 
     const readFiles = async () => {
       const parsedFiles = await readCsvFreesurferFiles(selectedFiles);
@@ -160,13 +160,14 @@ class MapsCsvField extends React.Component {
   }
 
   isMapped() {
-    const { fieldDataMap } = this.props;
+    const { field, fieldDataMap } = this.props;
     if (!fieldDataMap || !fieldDataMap.maps) {
       return false;
     }
 
-    const keys = Object.keys(fieldDataMap.maps);
-    return keys.filter(key => !fieldDataMap.maps[key]).length === 0;
+    return field.value.filter(
+      pipelineVariable => !(pipelineVariable.name in fieldDataMap.maps)
+    ).length === 0;
   }
 
   setInitialState(fieldDataMap) {
@@ -196,7 +197,9 @@ class MapsCsvField extends React.Component {
   }
 
   unmapField(pipelineFieldName, columnName) {
-    const { fieldName, fieldDataMap, onChange } = this.props;
+    const {
+      fieldName, fieldDataMap, fieldDescription, onChange,
+    } = this.props;
 
     onChange(fieldName, {
       ...fieldDataMap,
@@ -204,6 +207,7 @@ class MapsCsvField extends React.Component {
         ...fieldDataMap.maps,
         [pipelineFieldName]: null,
       },
+      fieldType: fieldDescription.type,
     });
 
     this.setState(prevState => ({
@@ -213,7 +217,7 @@ class MapsCsvField extends React.Component {
 
   autoMap() {
     const {
-      fieldName, field, fieldDataMap, onChange,
+      fieldName, field, fieldDataMap, fieldDescription, onChange,
     } = this.props;
 
     const { remainingHeader } = this.state;
@@ -241,6 +245,7 @@ class MapsCsvField extends React.Component {
           ...fieldDataMap.maps,
           ...autoMap,
         },
+        fieldType: fieldDescription.type,
       });
     }
   }
@@ -262,9 +267,9 @@ class MapsCsvField extends React.Component {
           multiple
           filterName="csv"
           extensions={fieldDescription.extensions}
-          selectedFiles={fieldDataMap && fieldDataMap.files ? fieldDataMap.files : []}
+          selected={fieldDataMap && fieldDataMap.files ? fieldDataMap.files : []}
           onChange={files => this.appendSelectedFiles(files)}
-          deleteFile={fileIndex => this.deleteFile(fileIndex)}
+          deleteItem={fileIndex => this.deleteFile(fileIndex)}
           tooltip={filePickerTooltip}
         />
         {

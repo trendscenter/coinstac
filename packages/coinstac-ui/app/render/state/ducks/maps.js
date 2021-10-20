@@ -50,44 +50,45 @@ export const saveDataMapping = applyAsyncLoading(
 
         const mappedData = map[inputMapKey];
 
-        // has csv column mapping
-        if (mappedData && mappedData.fieldType === 'csv') {
-          const inputMapVariables = inputMap[inputMapKey].value.map(field => field.name);
+        if (mappedData) {
+          // has csv column mapping
+          if (mappedData.fieldType === 'csv') {
+            const inputMapVariables = inputMap[inputMapKey].value.map(field => field.name);
 
-          const value = { ...mappedData.fileData[0].data };
+            const value = { ...mappedData.fileData[0].data };
 
-          baseDirectory = dirname(mappedData.files[0]);
+            baseDirectory = dirname(mappedData.files[0]);
 
-          Object.keys(value).forEach((valueKey) => {
-            filesArray.push(valueKey);
+            Object.keys(value).forEach((valueKey) => {
+              filesArray.push(valueKey);
 
-            inputMapVariables.forEach((variable) => {
-              const columnName = mappedData.maps[variable];
+              inputMapVariables.forEach((variable) => {
+                const columnName = mappedData.maps[variable];
 
-              if (columnName) {
-                value[valueKey][variable] = value[valueKey][columnName];
+                if (columnName) {
+                  value[valueKey][variable] = value[valueKey][columnName];
 
-                if (columnName !== variable) {
-                  delete value[valueKey][columnName];
+                  if (columnName !== variable) {
+                    delete value[valueKey][columnName];
+                  }
                 }
-              }
+              });
             });
-          });
 
-          inputMap[inputMapKey].value = value;
-        } else if (mappedData && mappedData.fieldType === 'files') {
-          baseDirectory = dirname(mappedData.files[0]);
-          filesArray.push(...mappedData.files);
+            inputMap[inputMapKey].value = value;
+          } else if (mappedData.fieldType === 'files') {
+            baseDirectory = dirname(mappedData.files[0]);
+            filesArray.push(...mappedData.files);
 
-          inputMap[inputMapKey].value = mappedData.files.map(file => basename(file));
-        } else if (mappedData && mappedData.fieldType === 'directory') {
-          inputMap[inputMapKey].value = mappedData.directory;
-        } else if (mappedData && mappedData.fieldType === 'boolean'
-          || mappedData && mappedData.fieldType === 'number'
-          || mappedData && mappedData.fieldType === 'object'
-          || mappedData && mappedData.fieldType === 'text') {
-          inputMap[inputMapKey].value = mappedData.value;
+            inputMap[inputMapKey].value = mappedData.files.map(file => basename(file));
+          } else if (mappedData.fieldType === 'directory') {
+            inputMap[inputMapKey].value = mappedData.directory;
+          } else if (mappedData.fieldType === 'boolean' || mappedData.fieldType === 'number'
+            || mappedData.fieldType === 'object' || mappedData.fieldType === 'text') {
+            inputMap[inputMapKey].value = mappedData.value;
+          }
         }
+
         inputMap[inputMapKey].fulfilled = true;
       });
 
