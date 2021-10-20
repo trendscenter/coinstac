@@ -58,7 +58,7 @@ function MapsFilesField({
   }
 
   return (
-    <Paper className={classes.rootPaper} elevation={2}>
+    <div>
       <Typography variant="h4" className={classes.header}>
         {fieldName}
         {isMapped() && <CheckCircleIcon className={classes.successIcon} />}
@@ -71,7 +71,7 @@ function MapsFilesField({
         selectedFiles={fieldDataMap && fieldDataMap.files ? fieldDataMap.files : []}
         deleteFile={fileIndex => deleteFile(fileIndex)}
       />
-    </Paper>
+    </div>
   );
 }
 

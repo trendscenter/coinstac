@@ -243,7 +243,7 @@ class MapsCsvField extends React.Component {
     const { remainingHeader, selectedFiles, autoMapError } = this.state;
 
     return (
-      <Paper className={classes.rootPaper} elevation={2}>
+      <div>
         <Typography variant="h4" className={classes.header}>
           {fieldName}
           {this.isMapped() && <CheckCircleIcon className={classes.successIcon} />}
@@ -324,7 +324,7 @@ class MapsCsvField extends React.Component {
             </React.Fragment>
           )
         }
-      </Paper>
+      </div>
     );
   }
 }

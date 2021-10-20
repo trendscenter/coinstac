@@ -55,33 +55,31 @@ function MapsCsvFieldPipelineVariable({
 
   return (
     <div>
-      <div className={classNames('drop-panel', classes.rootPaper)}>
-        <Typography style={{ fontWeight: '500', fontSize: '1rem' }} className={classes.title}>
-          { name }
-        </Typography>
-        <div className={classes.listDropzoneContainer}>
-          <div className={classNames('drop-zone', classes.dropZone)}>
-            <div
-              className={`acceptor acceptor-${name}`}
-              data-name={name}
-              ref={ref => registerDraggableContainer(ref)}
-              style={mappedColumn ? { display: 'none' } : {}}
-            />
-            {
-              mappedColumn && (
-                <div className="card-draggable">
-                  <FileCopyIcon className={classes.fileIcon} />
-                  { mappedColumn }
-                  <IconButton
-                    className={classes.closeButton}
-                    onClick={() => unmapField(name, mappedColumn)}
-                  >
-                    <CancelIcon />
-                  </IconButton>
-                </div>
-              )
-            }
-          </div>
+      <Typography style={{ fontWeight: '500', fontSize: '1rem' }} className={classes.title}>
+        { name }
+      </Typography>
+      <div className={classes.listDropzoneContainer}>
+        <div className={classNames('drop-zone', classes.dropZone)}>
+          <div
+            className={`acceptor acceptor-${name}`}
+            data-name={name}
+            ref={ref => registerDraggableContainer(ref)}
+            style={mappedColumn ? { display: 'none' } : {}}
+          />
+          {
+            mappedColumn && (
+              <div className="card-draggable">
+                <FileCopyIcon className={classes.fileIcon} />
+                { mappedColumn }
+                <IconButton
+                  className={classes.closeButton}
+                  onClick={() => unmapField(name, mappedColumn)}
+                >
+                  <CancelIcon />
+                </IconButton>
+              </div>
+            )
+          }
         </div>
       </div>
     </div>
