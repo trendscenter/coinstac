@@ -4,19 +4,14 @@ import { withStyles } from '@material-ui/core/styles';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import CheckCircleIcon from '@material-ui/icons/CheckCircle';
-import FilePicker from '../common/file-picker';
+import FilePicker from '../../common/file-picker';
 
 const styles = theme => ({
   rootPaper: {
-    paddingLeft: theme.spacing(2),
-    paddingRight: theme.spacing(2),
+    ...theme.mixins.gutters(),
     paddingTop: theme.spacing(1.5),
     paddingBottom: theme.spacing(1.5),
     marginTop: theme.spacing(1.5),
-    [theme.breakpoints.up('sm')]: {
-      paddingLeft: theme.spacing(3),
-      paddingRight: theme.spacing(3),
-    },
   },
   header: {
     textTransform: 'capitalize',
@@ -31,35 +26,27 @@ const styles = theme => ({
   },
 });
 
-function MapsFilesField({
+function MapsDirectoryField({
   fieldName, fieldDataMap, fieldDescription, onChange, classes,
 }) {
-  function setSelectedFiles(selectedFiles) {
-    onChange(fieldName, { files: selectedFiles });
-  }
-
-  function appendSelectedFiles(selectedFiles) {
-    let files;
-    if (fieldDataMap && fieldDataMap.files && fieldDataMap.files.length > 0) {
-      files = fieldDataMap.files.concat(selectedFiles);
-    } else {
-      files = selectedFiles;
+  function setSelectedDirectory(selected) {
+    if (!selected || !selected.length) {
+      return;
     }
 
-    setSelectedFiles(files);
+    onChange(fieldName, { fieldType: fieldDescription.type, directory: selected[0] });
   }
 
-  function deleteFile(fileIndex) {
-    const newFiles = fieldDataMap.files.filter((f, i) => i !== fileIndex);
-    setSelectedFiles(newFiles);
+  function deleteDirectory() {
+    onChange(fieldName, { fieldType: fieldDescription.type, directory: '' });
   }
 
   function isMapped() {
-    if (!fieldDataMap || !fieldDataMap.files) {
+    if (!fieldDataMap || !fieldDataMap.directory) {
       return false;
     }
 
-    return Array.isArray(fieldDataMap.files) && fieldDataMap.files.length > 0;
+    return true;
   }
 
   return (
@@ -69,18 +56,16 @@ function MapsFilesField({
         {isMapped() && <CheckCircleIcon className={classes.successIcon} />}
       </Typography>
       <FilePicker
-        multiple
-        filterName="csv,txt,gz,nii files"
-        extensions={fieldDescription.extensions}
-        onChange={files => appendSelectedFiles(files)}
-        selectedFiles={fieldDataMap && fieldDataMap.files ? fieldDataMap.files : []}
-        deleteFile={fileIndex => deleteFile(fileIndex)}
+        directory
+        onChange={setSelectedDirectory}
+        selected={fieldDataMap && fieldDataMap.directory ? [fieldDataMap.directory] : []}
+        deleteItem={deleteDirectory}
       />
     </Paper>
   );
 }
 
-MapsFilesField.propTypes = {
+MapsDirectoryField.propTypes = {
   classes: PropTypes.object.isRequired,
   fieldName: PropTypes.string.isRequired,
   fieldDataMap: PropTypes.object,
@@ -88,8 +73,8 @@ MapsFilesField.propTypes = {
   onChange: PropTypes.func.isRequired,
 };
 
-MapsFilesField.defaultProps = {
+MapsDirectoryField.defaultProps = {
   fieldDataMap: null,
 };
 
-export default withStyles(styles)(MapsFilesField);
+export default withStyles(styles)(MapsDirectoryField);
