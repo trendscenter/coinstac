@@ -16,6 +16,8 @@ const msrFsl = require('./data/coinstac-schema-regression-ms-fsl');
 const gica = require('./data/coinstac-gica-pipeline');
 const ddfnc = require('./data/coinstac-ddfnc-pipeline');
 const dpsvm = require('./data/coinstac-dpsvm');
+const dinunet = require('./data/coinstac-dinunet');
+const dinunetGPU = require('./data/coinstac-dinunet-gpu');
 const vbm = require('./data/coinstac-vbm-pre');
 
 const fmri = require('./data/coinstac-fmri');
@@ -41,6 +43,9 @@ const PIPELINE_IDS = [
 ];
 
 const COMPUTATION_IDS = [
+  database.createUniqueId(),
+  database.createUniqueId(),
+  database.createUniqueId(),
   database.createUniqueId(),
   database.createUniqueId(),
   database.createUniqueId(),
@@ -96,6 +101,8 @@ async function populateComputations() {
     { ...fmri, submittedBy: 'author', _id: COMPUTATION_IDS[14] },
     { ...ssrFsl, submittedBy: 'author', _id: COMPUTATION_IDS[15] },
     { ...dmancova, submittedBy: 'author', _id: COMPUTATION_IDS[16] },
+    { ...dinunet, submittedBy: 'author', _id: COMPUTATION_IDS[17] },
+    { ...dinunetGPU, submittedBy: 'author', _id: COMPUTATION_IDS[18] },
   ];
   const currentComps = await db.collection('computations').find().toArray();
   const operations = comps2Insert.reduce((ops, comp) => {
