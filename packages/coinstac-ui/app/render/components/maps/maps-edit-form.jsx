@@ -3,8 +3,10 @@ import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
 import Button from '@material-ui/core/Button';
 import CheckCircleIcon from '@material-ui/icons/CheckCircle';
-import MapsCsvField from './maps-csv-field';
-import MapsFilesField from './maps-files-field';
+
+import MapsCsvField from './fields/maps-csv-field';
+import MapsDirectoryField from './fields/maps-directory-field';
+import MapsFilesField from './fields/maps-files-field';
 
 const styles = theme => ({
   saveButtonContainer: {
@@ -88,6 +90,16 @@ function MapsEditForm({
                 case 'files':
                   return (
                     <MapsFilesField
+                      key={inputKey}
+                      fieldName={inputKey}
+                      fieldDataMap={dataMap[inputKey]}
+                      fieldDescription={fieldDescription}
+                      onChange={onChange}
+                    />
+                  );
+                case 'directory':
+                  return (
+                    <MapsDirectoryField
                       key={inputKey}
                       fieldName={inputKey}
                       fieldDataMap={dataMap[inputKey]}

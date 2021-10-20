@@ -48,11 +48,12 @@ export const saveDataMapping = applyAsyncLoading(
           return;
         }
 
-        const inputMapVariables = inputMap[inputMapKey].value.map(field => field.name);
         const mappedData = map[inputMapKey];
 
         // has csv column mapping
-        if (mappedData.maps) {
+        if (mappedData.fieldType === 'csv') {
+          const inputMapVariables = inputMap[inputMapKey].value.map(field => field.name);
+
           const value = { ...mappedData.fileData[0].data };
 
           baseDirectory = dirname(mappedData.files[0]);
@@ -74,11 +75,13 @@ export const saveDataMapping = applyAsyncLoading(
           });
 
           inputMap[inputMapKey].value = value;
-        } else {
+        } else if (mappedData.fieldType === 'files') {
           baseDirectory = dirname(mappedData.files[0]);
           filesArray.push(...mappedData.files);
 
           inputMap[inputMapKey].value = mappedData.files.map(file => basename(file));
+        } else if (mappedData.fieldType === 'directory') {
+          inputMap[inputMapKey].value = mappedData.directory;
         }
       });
 

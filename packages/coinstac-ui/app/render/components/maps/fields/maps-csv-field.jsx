@@ -10,11 +10,11 @@ import InfoIcon from '@material-ui/icons/Info';
 import CheckCircleIcon from '@material-ui/icons/CheckCircle';
 import red from '@material-ui/core/colors/red';
 import dragula from 'react-dragula';
-import FilePicker from '../common/file-picker';
+import FilePicker from '../../common/file-picker';
 import MapsCsvFieldCsvHeader from './maps-csv-field-csv-header';
 import MapsCsvFieldPipelineVariable from './maps-csv-field-pipeline-variable';
-import { readCsvFreesurferFiles } from '../../utils/helpers';
-import mapVariablesToColumns from '../../utils/csv-column-auto-map';
+import { readCsvFreesurferFiles } from '../../../utils/helpers';
+import mapVariablesToColumns from '../../../utils/csv-column-auto-map';
 
 const styles = theme => ({
   rootPaper: {
@@ -101,7 +101,9 @@ class MapsCsvField extends React.Component {
       return;
     }
 
-    const { fieldName, onChange, fieldDataMap } = this.props;
+    const {
+      fieldName, onChange, fieldDataMap, fieldDescription,
+    } = this.props;
 
     this.setState(prevState => ({
       remainingHeader: prevState.remainingHeader.filter(column => column !== columnName),
@@ -113,13 +115,16 @@ class MapsCsvField extends React.Component {
         ...fieldDataMap.maps,
         [pipelineVariableName]: columnName,
       },
+      fieldType: fieldDescription.type,
     });
 
     fileDataMappingElement.remove();
   }
 
   setSelectedFiles(selectedFiles) {
-    const { onChange, fieldName, fieldDataMap } = this.props;
+    const {
+      onChange, fieldName, fieldDataMap, fieldDescription,
+    } = this.props;
 
     const readFiles = async () => {
       const parsedFiles = await readCsvFreesurferFiles(selectedFiles);
@@ -143,6 +148,7 @@ class MapsCsvField extends React.Component {
         fileData: parsedFiles,
         files: selectedFiles,
         maps: fieldDataMap && fieldDataMap.maps ? fieldDataMap.maps : {},
+        fieldType: fieldDescription.type,
       });
     };
 
@@ -150,13 +156,14 @@ class MapsCsvField extends React.Component {
   }
 
   isMapped() {
-    const { fieldDataMap } = this.props;
+    const { field, fieldDataMap } = this.props;
     if (!fieldDataMap || !fieldDataMap.maps) {
       return false;
     }
 
-    const keys = Object.keys(fieldDataMap.maps);
-    return keys.filter(key => !fieldDataMap.maps[key]).length === 0;
+    return field.value.filter(
+      pipelineVariable => !(pipelineVariable.name in fieldDataMap.maps)
+    ).length === 0;
   }
 
   setInitialState(fieldDataMap) {
@@ -186,7 +193,9 @@ class MapsCsvField extends React.Component {
   }
 
   unmapField(pipelineFieldName, columnName) {
-    const { fieldName, fieldDataMap, onChange } = this.props;
+    const {
+      fieldName, fieldDataMap, fieldDescription, onChange,
+    } = this.props;
 
     onChange(fieldName, {
       ...fieldDataMap,
@@ -194,6 +203,7 @@ class MapsCsvField extends React.Component {
         ...fieldDataMap.maps,
         [pipelineFieldName]: null,
       },
+      fieldType: fieldDescription.type,
     });
 
     this.setState(prevState => ({
@@ -203,7 +213,7 @@ class MapsCsvField extends React.Component {
 
   autoMap() {
     const {
-      fieldName, field, fieldDataMap, onChange,
+      fieldName, field, fieldDataMap, fieldDescription, onChange,
     } = this.props;
 
     const { remainingHeader } = this.state;
@@ -231,6 +241,7 @@ class MapsCsvField extends React.Component {
           ...fieldDataMap.maps,
           ...autoMap,
         },
+        fieldType: fieldDescription.type,
       });
     }
   }
@@ -252,9 +263,9 @@ class MapsCsvField extends React.Component {
           multiple
           filterName="csv"
           extensions={fieldDescription.extensions}
-          selectedFiles={fieldDataMap && fieldDataMap.files ? fieldDataMap.files : []}
+          selected={fieldDataMap && fieldDataMap.files ? fieldDataMap.files : []}
           onChange={files => this.appendSelectedFiles(files)}
-          deleteFile={fileIndex => this.deleteFile(fileIndex)}
+          deleteItem={fileIndex => this.deleteFile(fileIndex)}
           tooltip={filePickerTooltip}
         />
         {
