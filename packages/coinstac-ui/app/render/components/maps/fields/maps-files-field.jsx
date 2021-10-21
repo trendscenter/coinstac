@@ -30,7 +30,7 @@ function MapsFilesField({
   fieldName, fieldDataMap, fieldDescription, onChange, classes,
 }) {
   function setSelectedFiles(selectedFiles) {
-    onChange(fieldName, { type: fieldDescription.type, files: selectedFiles });
+    onChange(fieldName, { fieldType: fieldDescription.type, files: selectedFiles });
   }
 
   function appendSelectedFiles(selectedFiles) {
