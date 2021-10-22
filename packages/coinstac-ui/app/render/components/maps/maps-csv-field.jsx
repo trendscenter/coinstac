@@ -101,7 +101,9 @@ class MapsCsvField extends React.Component {
       return;
     }
 
-    const { fieldName, onChange, fieldDataMap } = this.props;
+    const {
+      fieldName, onChange, fieldDataMap, fieldDescription,
+    } = this.props;
 
     this.setState(prevState => ({
       remainingHeader: prevState.remainingHeader.filter(column => column !== columnName),
@@ -113,13 +115,16 @@ class MapsCsvField extends React.Component {
         ...fieldDataMap.maps,
         [pipelineVariableName]: columnName,
       },
+      fieldType: fieldDescription.type,
     });
 
     fileDataMappingElement.remove();
   }
 
   setSelectedFiles(selectedFiles) {
-    const { onChange, fieldName, fieldDataMap } = this.props;
+    const {
+          onChange, fieldName, fieldDataMap, fieldDescription,
+        } = this.props;
 
     const readFiles = async () => {
       const parsedFiles = await readCsvFreesurferFiles(selectedFiles);
@@ -143,6 +148,7 @@ class MapsCsvField extends React.Component {
         fileData: parsedFiles,
         files: selectedFiles,
         maps: fieldDataMap && fieldDataMap.maps ? fieldDataMap.maps : {},
+        fieldType: fieldDescription.type,
       });
     };
 

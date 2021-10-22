@@ -42,6 +42,8 @@ function MapsEdit({
   function commitSaveDataMap(e) {
     e.preventDefault();
 
+    console.log(pipeline, dataMap);
+
     saveDataMapping(consortium.id, pipeline, dataMap);
     updateConsortiumMappedUsers(consortium.id, true);
     setSaved(true);

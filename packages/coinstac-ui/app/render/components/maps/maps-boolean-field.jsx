@@ -6,7 +6,7 @@ import Box from '@material-ui/core/Box';
 import Checkbox from '@material-ui/core/Checkbox';
 import CheckCircleIcon from '@material-ui/icons/CheckCircle';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
-import TextField from '@material-ui/core/TextField';
+import Switch from '@material-ui/core/Switch';
 
 const styles = theme => ({
   rootPaper: {
@@ -29,7 +29,7 @@ const styles = theme => ({
 });
 
 
-function MapsTextField({
+function MapsBooleanField({
   fieldName, fieldDataMap, fieldDescription, onChange, classes,
 }) {
 
@@ -38,9 +38,8 @@ function MapsTextField({
   const [useDefault, setUseDefault] = useState(false);
 
   function changeHandler(e) {
-    setVal(e.target.value);
-    const value = fieldDescription.type === 'number' ? parseInt(e.target.value,10) : e.target.value;
-    onChange(fieldName, { fieldType: fieldDescription.type, value });
+    setVal(!val);
+    onChange(fieldName, { fieldType: fieldDescription.type, value: !val });
   }
 
   function defaultHandler(e) {
@@ -63,12 +62,10 @@ function MapsTextField({
         {fieldDescription.label}
         {isMapped() && <CheckCircleIcon className={classes.successIcon} />}
       </Typography>
-      <TextField
-        disabled={useDefault}
-        type={fieldDescription.type}
+      <Switch
         onChange={e => changeHandler(e)}
-        value={val}
-        placeholder={val ? val : fieldDescription.default}
+        value = {val ? val : fieldDescription.default}
+        checked = {val ? val : fieldDescription.default}
       />
       <FormControlLabel
         control={(
@@ -79,14 +76,14 @@ function MapsTextField({
           />
         )}
         label={
-          <Box component="div" fontSize={15} style={{ color: '#b7b7b7' }}>Use Default</Box>
+          <Box component="div" fontSize={15} style={{color: '#b7b7b7'}}>Use Default</Box>
         }
       />
-    </div>
+  </div>
   );
 }
 
-MapsTextField.propTypes = {
+MapsBooleanField.propTypes = {
   classes: PropTypes.object.isRequired,
   fieldName: PropTypes.string.isRequired,
   fieldDataMap: PropTypes.object,
@@ -94,8 +91,8 @@ MapsTextField.propTypes = {
   onChange: PropTypes.func.isRequired,
 };
 
-MapsTextField.defaultProps = {
+MapsBooleanField.defaultProps = {
   fieldDataMap: null,
 };
 
-export default withStyles(styles)(MapsTextField);
+export default withStyles(styles)(MapsBooleanField);

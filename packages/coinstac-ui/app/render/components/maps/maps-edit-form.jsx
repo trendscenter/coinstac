@@ -5,8 +5,10 @@ import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
 import CheckCircleIcon from '@material-ui/icons/CheckCircle';
+import MapsBooleanField from './maps-boolean-field';
 import MapsCsvField from './maps-csv-field';
 import MapsFilesField from './maps-files-field';
+import MapsObjectField from './maps-object-field';
 import MapsTextField from './maps-text-field';
 
 const styles = theme => ({
@@ -124,6 +126,39 @@ function MapsEditForm({
                   case 'number':
                     fieldviews.push(
                       <MapsTextField
+                        key={inputKey}
+                        fieldName={inputKey}
+                        fieldDataMap={dataMap[inputKey]}
+                        fieldDescription={fieldDescription}
+                        onChange={onChange}
+                      />
+                    );
+                    return;
+                  case 'string':
+                    fieldviews.push(
+                      <MapsTextField
+                        key={inputKey}
+                        fieldName={inputKey}
+                        fieldDataMap={dataMap[inputKey]}
+                        fieldDescription={fieldDescription}
+                        onChange={onChange}
+                      />
+                    );
+                    return;
+                  case 'boolean':
+                    fieldviews.push(
+                      <MapsBooleanField
+                        key={inputKey}
+                        fieldName={inputKey}
+                        fieldDataMap={dataMap[inputKey]}
+                        fieldDescription={fieldDescription}
+                        onChange={onChange}
+                      />
+                    );
+                    return;
+                  case 'object':
+                    fieldviews.push(
+                      <MapsObjectField
                         key={inputKey}
                         fieldName={inputKey}
                         fieldDataMap={dataMap[inputKey]}

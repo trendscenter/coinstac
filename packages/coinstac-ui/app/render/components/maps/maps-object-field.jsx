@@ -6,7 +6,8 @@ import Box from '@material-ui/core/Box';
 import Checkbox from '@material-ui/core/Checkbox';
 import CheckCircleIcon from '@material-ui/icons/CheckCircle';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
-import TextField from '@material-ui/core/TextField';
+import JSONInput from 'react-json-editor-ajrm';
+import locale from 'react-json-editor-ajrm/locale/en';
 
 const styles = theme => ({
   rootPaper: {
@@ -29,7 +30,7 @@ const styles = theme => ({
 });
 
 
-function MapsTextField({
+function MapsObjectField({
   fieldName, fieldDataMap, fieldDescription, onChange, classes,
 }) {
 
@@ -63,12 +64,14 @@ function MapsTextField({
         {fieldDescription.label}
         {isMapped() && <CheckCircleIcon className={classes.successIcon} />}
       </Typography>
-      <TextField
+      <JSONInput
         disabled={useDefault}
-        type={fieldDescription.type}
         onChange={e => changeHandler(e)}
         value={val}
         placeholder={val ? val : fieldDescription.default}
+        locale={locale}
+        height="250px"
+        theme="light_mitsuketa_tribute"
       />
       <FormControlLabel
         control={(
@@ -86,7 +89,7 @@ function MapsTextField({
   );
 }
 
-MapsTextField.propTypes = {
+MapsObjectField.propTypes = {
   classes: PropTypes.object.isRequired,
   fieldName: PropTypes.string.isRequired,
   fieldDataMap: PropTypes.object,
@@ -94,8 +97,8 @@ MapsTextField.propTypes = {
   onChange: PropTypes.func.isRequired,
 };
 
-MapsTextField.defaultProps = {
+MapsObjectField.defaultProps = {
   fieldDataMap: null,
 };
 
-export default withStyles(styles)(MapsTextField);
+export default withStyles(styles)(MapsObjectField);
