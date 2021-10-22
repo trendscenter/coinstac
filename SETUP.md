@@ -80,6 +80,10 @@ A YouTube video showing the basic steps for creating a Consortia, adding Collect
 * If you notice repeated `TypeError`s related to COINSTAC internal methods, the COINSTAC internals maybe be unlinked. Run `npm run build` to re-link them.
 * If you're trying to test simulator code, the mqtt service must be shut down, as simulator packages its own.
 
+## Configuration
+
+* Create a new file at `coinstac/packages/coinstac-ui/config/local.json` and copy into it the contents of `coinstac/packages/coinstac-ui/config/local-example.json`
+* Create a new file at `/coinstac-server/config/local.json` and copy into it the contents of `/coinstac-server/config/default.json`
 
 ## Additional Suggested Software
 
@@ -116,52 +120,6 @@ A YouTube video showing the basic steps for creating a Consortia, adding Collect
               "sourceMaps": false
           }
       ]
-   }
-   ```
-
-## Configuration
-
-Create a new file at `coinstac/packages/coinstac-ui/config/local.json` and copy into it the following, conversely there is a `local-example.json` that cointains the local defualts that work for local development work. Just copy that file to `local.json` in the `config` directory.
-
-   ```json
-   {
-     "apiServer": {
-       "hostname": "localhost",
-       "pathname": "",
-       "port": "3100",
-       "protocol": "http:"
-     },
-     "subApiServer": {
-       "hostname": "localhost",
-       "pathname": "",
-       "port": "3100",
-       "protocol": "ws:"
-     },
-     "pipelineWSServer": {
-       "hostname": "localhost",
-       "pathname": "",
-       "port": "3300",
-       "protocol": "http:"
-     },
-     "mqttServer": {
-       "hostname": "localhost",
-       "pathname": "",
-       "port": "1883",
-       "protocol": "mqtt:"
-     }
-   }
-   ```
-
-As well as the above config, the `coinstac-server` needs to be pointed to your local mosquitto instance.
-Place the following in `/coinstac-server/config/local.json`
-   ```json
-   {
-     "mqttServer": {
-       "hostname": "localhost",
-       "pathname": "",
-       "port": "1883",
-       "protocol": "mqtt:"
-     }
    }
    ```
 
