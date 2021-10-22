@@ -46,7 +46,7 @@ class MarkdownValidator extends ValidatorComponent {
     );
   }
 
-  render() {
+  renderValidatorComponent() {
     const {
       className, label, errorMessages, validators, requiredError, withRequiredValidator,
       value, ...rest
