@@ -52,7 +52,7 @@ class DashboardPipelineNavBar extends React.Component {
     const { localRuns, consortia } = this.props;
     const { runId } = this.state;
 
-    if (!consortia || !localRuns) {
+    if (!consortia || consortia.length === 0 || !localRuns) {
       return;
     }
 
@@ -64,12 +64,13 @@ class DashboardPipelineNavBar extends React.Component {
 
       if (lastRun) {
         const consortium = consortia.find(c => c.id === lastRun.consortiumId);
-
-        this.setState({
-          runId: lastRun.id,
-          consortiumName: consortium.name,
-          pipelineName: lastRun.pipelineSnapshot.name,
-        });
+        if (consortium) {
+          this.setState({
+            runId: lastRun.id,
+            consortiumName: consortium.name,
+            pipelineName: lastRun.pipelineSnapshot.name,
+          });
+        }
       }
     }
 
