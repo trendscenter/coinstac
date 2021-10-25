@@ -62,6 +62,7 @@ function ListItem({
   linkButtonColor,
   deleteButtonText,
   classes,
+  hideDetailButton,
 }) {
   if (!itemObject) {
     return null;
@@ -88,16 +89,18 @@ function ListItem({
       { itemOptions.text }
       <div className={classes.listItemActions}>
         <div className={classes.listItemActionsPrimary}>
-          <Button
-            variant="contained"
-            color={linkButtonColor || 'primary'}
-            component={Link}
-            to={`${itemRoute}/${itemObject.id}`}
-            name={itemObject.name}
-            className={classes.button}
-          >
-            { linkButtonText || 'View Details' }
-          </Button>
+          {!hideDetailButton && (
+            <Button
+              variant="contained"
+              color={linkButtonColor || 'primary'}
+              component={Link}
+              to={`${itemRoute}/${itemObject.id}`}
+              name={itemObject.name}
+              className={classes.button}
+            >
+              { linkButtonText || 'View Details' }
+            </Button>
+          )}
           { itemOptions.actions }
         </div>
         {
@@ -129,6 +132,7 @@ ListItem.defaultProps = {
   deleteItem: null,
   canDelete: false,
   itemOptions: {},
+  hideDetailButton: false,
 };
 
 ListItem.propTypes = {
@@ -142,6 +146,7 @@ ListItem.propTypes = {
   linkButtonColor: PropTypes.string,
   linkButtonText: PropTypes.string,
   owner: PropTypes.bool,
+  hideDetailButton: PropTypes.bool,
   deleteItem: PropTypes.func,
 };
 

@@ -386,6 +386,7 @@ class ConsortiaList extends Component {
           )
         }
         itemRoute="/dashboard/consortia"
+        hideDetailButton={!isUserInGroup(user.id, consortium.owners)}
       />
     );
   }
