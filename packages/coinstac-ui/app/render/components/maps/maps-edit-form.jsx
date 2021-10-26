@@ -1,14 +1,35 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
+import Paper from '@material-ui/core/Paper';
+import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
 import CheckCircleIcon from '@material-ui/icons/CheckCircle';
-
+import MapsBooleanField from './fields/maps-boolean-field';
 import MapsCsvField from './fields/maps-csv-field';
 import MapsDirectoryField from './fields/maps-directory-field';
 import MapsFilesField from './fields/maps-files-field';
+import MapsObjectField from './fields/maps-object-field';
+import MapsTextField from './fields/maps-text-field';
 
 const styles = theme => ({
+  rootPaper: {
+    ...theme.mixins.gutters(),
+    paddingTop: theme.spacing(1.5),
+    paddingBottom: theme.spacing(1.5),
+    marginTop: theme.spacing(1.5),
+  },
+  header: {
+    textTransform: 'capitalize',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  successIcon: {
+    width: 40,
+    height: 40,
+    color: '#43a047',
+  },
   saveButtonContainer: {
     marginTop: theme.spacing(2),
     display: 'flex',
@@ -39,6 +60,9 @@ function MapsEditForm({
     router.push('/dashboard/consortia');
   };
 
+  const pickerviews = [];
+  const fieldviews = [];
+
   return (
     <form onSubmit={onSubmit}>
       <div className={classes.saveButtonContainer}>
@@ -66,53 +90,127 @@ function MapsEditForm({
           </Button>
         )}
       </div>
-      {
-        pipeline && pipeline.steps && pipeline.steps.map((step) => {
-          const { computations, inputMap } = step;
+      <div>
+        {
+          pipeline && pipeline.steps && pipeline.steps.map((step) => {
+            const { computations, inputMap } = step;
 
-          return Object.keys(inputMap)
-            .filter(inputKey => !inputMap[inputKey].fulfilled)
-            .map((inputKey) => {
-              const fieldDescription = computations[0].computation.input[inputKey];
+            return Object.keys(inputMap)
+              .filter(inputKey => !inputMap[inputKey].fulfilled)
+              .map((inputKey) => {
+                const fieldDescription = computations[0].computation.input[inputKey];
 
-              switch (fieldDescription.type) {
-                case 'csv':
-                  return (
-                    <MapsCsvField
-                      key={inputKey}
-                      fieldName={inputKey}
-                      field={inputMap[inputKey]}
-                      fieldDataMap={dataMap[inputKey]}
-                      fieldDescription={fieldDescription}
-                      onChange={onChange}
-                    />
-                  );
-                case 'files':
-                  return (
-                    <MapsFilesField
-                      key={inputKey}
-                      fieldName={inputKey}
-                      fieldDataMap={dataMap[inputKey]}
-                      fieldDescription={fieldDescription}
-                      onChange={onChange}
-                    />
-                  );
-                case 'directory':
-                  return (
-                    <MapsDirectoryField
-                      key={inputKey}
-                      fieldName={inputKey}
-                      fieldDataMap={dataMap[inputKey]}
-                      fieldDescription={fieldDescription}
-                      onChange={onChange}
-                    />
-                  );
-                default:
-                  return null;
+                console.log(fieldDescription.type);
+
+                switch (fieldDescription.type) {
+                  case 'csv':
+                    pickerviews.push(
+                      <MapsCsvField
+                        key={inputKey}
+                        fieldName={inputKey}
+                        field={inputMap[inputKey]}
+                        fieldDataMap={dataMap[inputKey]}
+                        fieldDescription={fieldDescription}
+                        onChange={onChange}
+                      />
+                    );
+                    return;
+                  case 'files':
+                    pickerviews.push(
+                      <MapsFilesField
+                        key={inputKey}
+                        fieldName={inputKey}
+                        fieldDataMap={dataMap[inputKey]}
+                        fieldDescription={fieldDescription}
+                        onChange={onChange}
+                      />
+                    );
+                    return;
+                  case 'directory':
+                    pickerviews.push(
+                      <MapsDirectoryField
+                        key={inputKey}
+                        fieldName={inputKey}
+                        fieldDataMap={dataMap[inputKey]}
+                        fieldDescription={fieldDescription}
+                        onChange={onChange}
+                      />
+                    );
+                    return;
+                  case 'number':
+                    fieldviews.push(
+                      <MapsTextField
+                        key={inputKey}
+                        fieldName={inputKey}
+                        fieldDataMap={dataMap[inputKey]}
+                        fieldDescription={fieldDescription}
+                        onChange={onChange}
+                      />
+                    );
+                    return;
+                  case 'string':
+                    fieldviews.push(
+                      <MapsTextField
+                        key={inputKey}
+                        fieldName={inputKey}
+                        fieldDataMap={dataMap[inputKey]}
+                        fieldDescription={fieldDescription}
+                        onChange={onChange}
+                      />
+                    );
+                    return;
+                  case 'boolean':
+                    fieldviews.push(
+                      <MapsBooleanField
+                        key={inputKey}
+                        fieldName={inputKey}
+                        fieldDataMap={dataMap[inputKey]}
+                        fieldDescription={fieldDescription}
+                        onChange={onChange}
+                      />
+                    );
+                    return;
+                  case 'object':
+                    fieldviews.push(
+                      <MapsObjectField
+                        key={inputKey}
+                        fieldName={inputKey}
+                        fieldDataMap={dataMap[inputKey]}
+                        fieldDescription={fieldDescription}
+                        onChange={onChange}
+                      />
+                    );
+                    return;
+                  default:
+                    return null;
+                }
+              });
+          })
+        }
+        {pipeline
+          && (
+            <div>
+              {pickerviews && pickerviews.length > 0
+                && (
+                  <Paper className={classes.rootPaper} elevation={2}>
+                    {pickerviews}
+                  </Paper>
+                )
               }
-            });
-        })
-      }
+              {fieldviews && fieldviews.length > 0
+                && (
+                  <Paper className={classes.rootPaper} elevation={2}>
+                    <Typography variant="h4" className={classes.header}>
+                    Other Fields
+                    </Typography>
+                    {fieldviews}
+                  </Paper>
+                )
+              }
+            </div>
+          )
+        }
+      </div>
     </form>
   );
 }
