@@ -49,7 +49,7 @@ const styles = theme => ({
 });
 
 function MapsEditForm({
-  consortiumId, pipeline, dataMap, onSubmit, onChange, saved, classes, error
+  consortiumId, pipeline, dataMap, onSubmit, onChange, saved, classes, error,
 }, { router }) {
   const handleGoBackToConsortium = () => {
     localStorage.setItem('HIGHLIGHT_CONSORTIUM', consortiumId);
