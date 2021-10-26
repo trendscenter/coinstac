@@ -1,7 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
-import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import CheckCircleIcon from '@material-ui/icons/CheckCircle';
 import FilePicker from '../../common/file-picker';
@@ -50,7 +49,7 @@ function MapsDirectoryField({
   }
 
   return (
-    <Paper className={classes.rootPaper} elevation={2}>
+    <div>
       <Typography variant="h4" className={classes.header}>
         {fieldName}
         {isMapped() && <CheckCircleIcon className={classes.successIcon} />}
@@ -61,7 +60,7 @@ function MapsDirectoryField({
         selected={fieldDataMap && fieldDataMap.directory ? [fieldDataMap.directory] : []}
         deleteItem={deleteDirectory}
       />
-    </Paper>
+    </div>
   );
 }
 
