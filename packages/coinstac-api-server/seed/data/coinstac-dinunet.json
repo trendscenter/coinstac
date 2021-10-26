@@ -1,0 +1,322 @@
+{
+  "meta": {
+    "name": "Decentralized Deep Artificial Neural Networks in COINSTAC (CPU capability only)",
+    "id": "coinstac-dinunet",
+    "version": "v1.0.0",
+    "repository": "https:\/\/github.com\/trendscenter\/dinunet_implementations.git",
+    "description": "NN implementations in COINSTAC for task that can be run in CPU only. Please use GPU version for GPU acceleration.",
+    "compspecVersion": 2
+  },
+  "computation": {
+    "type": "docker",
+    "dockerImage": "coinstacteam/coinstac-dinunet",
+    "command": [
+      "python"
+    ],
+    "remote": {
+      "type": "docker",
+      "dockerImage": "coinstacteam/coinstac-dinunet",
+      "command": [
+        "python"
+      ]
+    },
+    "input": {
+      "covariates": {
+        "label": "Covariates",
+        "type": "csv",
+        "items": ["boolean", "number"],
+        "source": "member",
+        "order": 1
+      },
+      "data": {
+        "label": "Data",
+        "type": "freesurfer",
+        "items": ["FreeSurfer"],
+        "extensions": ["csv", "txt"],
+        "source": "owner",
+        "order": 2
+      },
+      "task_id": {
+        "default": "FS-Classification",
+        "values": [
+          "FS-Classification"
+        ],
+        "label": "Which task to run?",
+        "type": "select",
+        "source": "owner",
+        "group": "NN Params",
+        "order": 3
+      },
+      "mode": {
+        "default": "train",
+        "values": [
+          "train",
+          "test"
+        ],
+        "label": "NN Mode",
+        "type": "select",
+        "source": "owner",
+        "group": "NN Params",
+        "order": 4
+      },
+      "agg_engine": {
+        "default": "dSGD",
+        "values": [
+          "dSGD",
+          "rankDAD"
+        ],
+        "label": "Aggregation engine to use",
+        "type": "select",
+        "source": "owner",
+        "conditional": {
+          "variable": "mode",
+          "value": "train"
+        },
+        "group": "NN Params",
+        "order": 5
+      },
+      "num_reducers": {
+        "default": 2,
+        "label": "Number of reducers in the aggregator(Depends on number of sites)",
+        "type": "number",
+        "source": "owner",
+        "group": "NN Params",
+        "order": 6
+      },
+      "batch_size": {
+        "default": 16,
+        "label": "Batch size",
+        "type": "number",
+        "source": "member",
+        "group": "NN Params",
+        "order": 7
+      },
+      "local_iterations": {
+        "default": 1,
+        "label": "Number of gradient accumulate iterations(Effective batch size = batch_size * grad_accumulation_iters)",
+        "type": "number",
+        "source": "member",
+        "conditional": {
+          "variable": "mode",
+          "value": "train"
+        },
+        "group": "NN Params",
+        "order": 8
+      },
+      "learning_rate": {
+        "default": 0.001,
+        "label": "Learning rate",
+        "type": "number",
+        "source": "owner",
+        "conditional": {
+          "variable": "mode",
+          "value": "train"
+        },
+        "group": "NN Params",
+        "order": 9
+      },
+      "epochs": {
+        "default": 101,
+        "label": "Epochs",
+        "type": "number",
+        "source": "owner",
+        "conditional": {
+          "variable": "mode",
+          "value": "train"
+        },
+        "group": "NN Params",
+        "order": 10
+      },
+      "validation_epochs": {
+        "default": 1,
+        "label": "Number of epochs for validation step",
+        "type": "number",
+        "source": "owner",
+        "conditional": {
+          "variable": "mode",
+          "value": "train"
+        },
+        "group": "NN Params",
+        "order": 11
+      },
+      "pin_memory": {
+        "default": false,
+        "label": "Pin Memory",
+        "type": "boolean",
+        "source": "member",
+        "group": "NN Params",
+        "order": 12
+      },
+      "num_workers": {
+        "default": 0,
+        "label": "Number of workers",
+        "type": "number",
+        "source": "member",
+        "group": "NN Params",
+        "order": 13
+      },
+      "patience": {
+        "default": 35,
+        "label": "Early stop patience epochs",
+        "type": "number",
+        "source": "owner",
+        "conditional": {
+          "variable": "mode",
+          "value": "train"
+        },
+        "group": "NN Params",
+        "order": 14
+      },
+      "load_lim": {
+        "default": null,
+        "label": "Limit the data to be loaded (Useful for debugging the pipeline with few data)",
+        "type": "number",
+        "source": "owner",
+        "group": "NN Params",
+        "order": 15
+      },
+      "pretrain": {
+        "default": false,
+        "label": "Use the site with MAX amount of data to pre-train locally and begin distributed training from there.",
+        "type": "boolean",
+        "source": "owner",
+        "group": "NN Params",
+        "order": 16
+      },
+      "pretrain_args": {
+        "default": {
+          "epochs": 0,
+          "learning_rate": 0.001,
+          "batch_size": 16,
+          "gpus": [],
+          "local_iterations": 1,
+          "validation_epochs": 1,
+          "pin_memory": false,
+          "num_workers": 0,
+          "patience": 51
+        },
+        "label": "Pretrain arguments (Will override the main arguments above)",
+        "type": "object",
+        "source": "member",
+        "conditional": {
+          "variable": "pretrain",
+          "value": true
+        },
+        "group": "NN Params",
+        "order": 17
+      },
+      "dataloader_args": {
+        "default": {
+          "train": {"drop_last": true},
+          "validation": {"drop_last": false},
+          "test": {"drop_last": false}
+        },
+        "label": "Dataloader arguments (Will override the main arguments above)",
+        "type": "object",
+        "source": "member",
+        "group": "NN Params",
+        "order": 18
+      },
+      "split_ratio": {
+        "default": [0.8, 0.1, 0.1],
+        "label": "Data split ratio for train, validation, and/or test. Eg. [0.6, 0.2, 0.2], [0.8, 0.2], or [1](Default keys- train/validation/test will be used from left to right)",
+        "type": "object",
+        "source": "owner",
+        "group": "Pick one",
+        "order": 19
+      },
+      "num_folds": {
+        "default": null,
+        "label": "K-Fold Cross Validation, K? (Mutually exclusive with data split ratio)",
+        "type": "number",
+        "source": "owner",
+        "group": "Pick one",
+        "order": 20
+      },
+      "monitor_metric": {
+        "default": "f1",
+        "label": "Metric to monitor for model selection.",
+        "type": "select",
+        "values": ["f1", "accuracy", "precision", "recall", "overlap", "average", "time"],
+        "source": "owner",
+        "conditional": {
+          "variable": "mode",
+          "value": "train"
+        },
+        "group": "NN Params",
+        "order": 21
+      },
+      "metric_direction": {
+        "default": "maximize",
+        "label": "Metric direction of improvement.",
+        "type": "select",
+        "values": ["maximize", "minimize"],
+        "source": "owner",
+        "conditional": {
+          "variable": "mode",
+          "value": "train"
+        },
+        "group": "NN Params",
+        "order": 22
+      },
+      "log_header": {
+        "default": "Loss|F1",
+        "label": "Plots to be generated. Separate plot will be created for items separated by pipe (|).",
+        "type": "string",
+        "source": "owner",
+        "group": "NN Params",
+        "order": 23
+      },
+      "input_size": {
+        "default": 66,
+        "label": "Num of dependent variables",
+        "type": "number",
+        "source": "owner",
+        "conditional": {
+          "variable": "task_id",
+          "value": "FS-Classification"
+        },
+        "group": "Computation params",
+        "order": 24
+      },
+      "hidden_sizes": {
+        "default": [
+          256,
+          128,
+          64,
+          32
+        ],
+        "label": "Size of each inner NN layers (except input and the last layer)",
+        "type": "object",
+        "source": "owner",
+        "conditional": {
+          "variable": "task_id",
+          "value": "FS-Classification"
+        },
+        "group": "Computation params",
+        "order": 25
+      },
+      "num_class": {
+        "default": 2,
+        "label": "Number of classes",
+        "type": "number",
+        "source": "owner",
+        "group": "Computation params",
+        "order": 26
+      },
+      "labels_column": {
+        "default": "isControl",
+        "label": "Column name to be used as label",
+        "type": "string",
+        "source": "member",
+        "group": "Computation params",
+        "order": 27
+      }
+    },
+    "output": {
+    },
+    "display": {
+      "type": "string"
+    }
+  }
+}
