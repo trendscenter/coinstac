@@ -1,7 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
-import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import CheckCircleIcon from '@material-ui/icons/CheckCircle';
 import FilePicker from '../../common/file-picker';
@@ -63,7 +62,7 @@ function MapsFilesField({
   }
 
   return (
-    <Paper className={classes.rootPaper} elevation={2}>
+    <div>
       <Typography variant="h4" className={classes.header}>
         {fieldName}
         {isMapped() && <CheckCircleIcon className={classes.successIcon} />}
@@ -72,11 +71,11 @@ function MapsFilesField({
         multiple
         filterName="csv,txt,gz,nii files"
         extensions={fieldDescription.extensions}
-        onChange={appendSelectedFiles}
-        selected={fieldDataMap && fieldDataMap.files ? fieldDataMap.files : []}
-        deleteItem={fileIndex => deleteFile(fileIndex)}
+        onChange={files => appendSelectedFiles(files)}
+        selectedFiles={fieldDataMap && fieldDataMap.files ? fieldDataMap.files : []}
+        deleteFile={fileIndex => deleteFile(fileIndex)}
       />
-    </Paper>
+    </div>
   );
 }
 
