@@ -83,9 +83,14 @@ module.exports = {
       mode === 'remote' ? spec.computation.remote : {}
     );
     const { meta } = spec;
-    const containerOptions = mode === 'remote'
-      ? (spec.computation.remote.containerOptions || {})
-      : (spec.computation.containerOptions || {});
+    let containerOptions = {};
+    if (mode === 'remote') {
+      if (spec.computation.remote) {
+        containerOptions = spec.computation.remote.containerOptions || {};
+      }
+    } else {
+      containerOptions = spec.computation.containerOptions || {};
+    }
     return {
       computation,
       meta,
