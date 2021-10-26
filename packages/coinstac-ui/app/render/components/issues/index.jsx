@@ -139,7 +139,7 @@ A clear and concise description of what you expected to happen.
 
 **Desktop (please complete the following information):**
  - OS: [e.g. Windows 10, OSX 11.15]
- - Version [eg 5.0.1] - in the very top menu got to Coinstac -> about 
+ - Version [eg 5.0.1] - in the very top menu got to Coinstac -> about
 
 **Additional context**
 Add any other context about the problem here.
