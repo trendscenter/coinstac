@@ -71,9 +71,9 @@ function MapsFilesField({
         multiple
         filterName="csv,txt,gz,nii files"
         extensions={fieldDescription.extensions}
-        onChange={appendSelectedFiles}
-        selected={fieldDataMap && fieldDataMap.files ? fieldDataMap.files : []}
-        deleteItem={fileIndex => deleteFile(fileIndex)}
+        onChange={files => appendSelectedFiles(files)}
+        selectedFiles={fieldDataMap && fieldDataMap.files ? fieldDataMap.files : []}
+        deleteFile={fileIndex => deleteFile(fileIndex)}
       />
     </div>
   );

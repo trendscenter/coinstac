@@ -43,14 +43,13 @@ const styles = theme => ({
 function MapsTextField({
   fieldName, fieldDataMap, fieldDescription, onChange, classes,
 }) {
-
   const initialVal = fieldDataMap && fieldDataMap.value ? fieldDataMap.value : null;
   const [val, setVal] = useState(initialVal);
   const [useDefault, setUseDefault] = useState(false);
 
   function changeHandler(e) {
     setVal(e.target.value);
-    const value = fieldDescription.type === 'number' ? parseInt(e.target.value,10) : e.target.value;
+    const value = fieldDescription.type === 'number' ? parseInt(e.target.value, 10) : e.target.value;
     onChange(
       fieldName,
       {
@@ -61,7 +60,7 @@ function MapsTextField({
     );
   }
 
-  function defaultHandler(e) {
+  function defaultHandler() {
     setUseDefault(!useDefault);
     if (!useDefault) {
       setVal(fieldDescription.default);
@@ -70,11 +69,7 @@ function MapsTextField({
   }
 
   function isMapped() {
-    if (!fieldDataMap) {
-      return false;
-    }else{
-      return true;
-    }
+    return !!fieldDataMap;
   }
 
   return (
@@ -92,7 +87,7 @@ function MapsTextField({
         type={fieldDescription.type}
         onChange={e => changeHandler(e)}
         value={val}
-        placeholder={val ? val : fieldDescription.default}
+        placeholder={val || fieldDescription.default}
       />
       {fieldDescription.default && (
         <FormControlLabel
