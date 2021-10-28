@@ -148,7 +148,7 @@ describe('e2e run computation with 2 members', () => {
     const saveButton = await app1.client.$('button=Save');
     await saveButton.click();
 
-    const saveNotification = await app1.client.$('span=Consortium Saved');
+    const saveNotification = await app1.client.$('div=Consortium Saved');
     const isSaveNotificationDisplayed = await saveNotification.waitForDisplayed({
       timeout: EXIST_TIMEOUT,
     });
@@ -262,7 +262,7 @@ describe('e2e run computation with 2 members', () => {
     const saveButton = await app1.client.$('button=Save Pipeline');
     await saveButton.click();
 
-    const saveNotification = await app1.client.$('span=Pipeline Saved');
+    const saveNotification = await app1.client.$('div=Pipeline Saved');
     const isSaveNotificationDisplayed = await saveNotification.waitForDisplayed({
       timeout: EXIST_TIMEOUT,
     });
@@ -296,7 +296,7 @@ describe('e2e run computation with 2 members', () => {
 
     // Assert
     const pipelineLink = await app1.client.$(`a=${PIPE_NAME}`);
-    const pipelineDownloadCompleteNotification = await app1.client.$(`span=${COMPUTATION_NAME} Download Complete`);
+    const pipelineDownloadCompleteNotification = await app1.client.$(`div=${COMPUTATION_NAME} Download Complete`);
 
     return Promise.all([
       pipelineLink
@@ -316,7 +316,7 @@ describe('e2e run computation with 2 members', () => {
 
     // Assert
     const leaveConsortiumButton = await app2.client.$(`button[name="${CONS_NAME}-leave-cons-button"]`);
-    const pipelineDownloadCompleteNotification = await app2.client.$(`span=${COMPUTATION_NAME} Download Complete`);
+    const pipelineDownloadCompleteNotification = await app2.client.$(`div=${COMPUTATION_NAME} Download Complete`);
 
     return Promise.all([
       leaveConsortiumButton.waitForClickable({ timeout: EXIST_TIMEOUT })
@@ -392,7 +392,7 @@ describe('e2e run computation with 2 members', () => {
     await startPipelineButton.click();
 
     // Assert
-    const pipelineStartNotification = await app1.client.$(`span=Pipeline Starting for ${CONS_NAME}.`);
+    const pipelineStartNotification = await app1.client.$(`div=Pipeline Starting for ${CONS_NAME}.`);
 
     return pipelineStartNotification.waitForDisplayed({ timeout: EXIST_TIMEOUT })
       .should.eventually.equal(true);
