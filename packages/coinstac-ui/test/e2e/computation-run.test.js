@@ -100,7 +100,7 @@ describe('e2e run computation with 1 member', () => {
     const saveButton = await app.client.$('button=Save');
     await saveButton.click();
 
-    const saveNotification = await app.client.$('span=Consortium Saved');
+    const saveNotification = await app.client.$('div=Consortium Saved');
     const isSaveNotificationDisplayed = await saveNotification.waitForDisplayed({
       timeout: EXIST_TIMEOUT,
     });
@@ -214,7 +214,7 @@ describe('e2e run computation with 1 member', () => {
     const saveButton = await app.client.$('button=Save Pipeline');
     await saveButton.click();
 
-    const saveNotification = await app.client.$('span=Pipeline Saved');
+    const saveNotification = await app.client.$('div=Pipeline Saved');
     const isSaveNotificationDisplayed = await saveNotification.waitForDisplayed({
       timeout: EXIST_TIMEOUT,
     });
@@ -248,7 +248,7 @@ describe('e2e run computation with 1 member', () => {
 
     // Assert
     const pipelineLink = await app.client.$(`a=${PIPE_NAME}`);
-    const pipelineDownloadCompleteNotification = await app.client.$(`span=${COMPUTATION_NAME} Download Complete`);
+    const pipelineDownloadCompleteNotification = await app.client.$(`div=${COMPUTATION_NAME} Download Complete`);
 
     return Promise.all([
       pipelineLink
@@ -294,7 +294,7 @@ describe('e2e run computation with 1 member', () => {
     await startPipelineButton.click();
 
     // Assert
-    const pipelineStartNotification = await app.client.$(`span=Pipeline Starting for ${CONS_NAME}.`);
+    const pipelineStartNotification = await app.client.$(`div=Pipeline Starting for ${CONS_NAME}.`);
 
     return pipelineStartNotification.waitForDisplayed({ timeout: EXIST_TIMEOUT })
       .should.eventually.equal(true);
