@@ -90,7 +90,7 @@ const initCoreAndSetToken = async (reqUser, data, appDirectory, clientServerURL,
   remote.getCurrentWindow().webContents.send('login-success', data.user.id);
 
   return new Promise((resolve) => {
-    ipcRenderer.on('app-init-finished', () => {
+    ipcRenderer.once('app-init-finished', () => {
       const tokenData = {
         token: data.id_token,
         userId: user.id,
@@ -185,11 +185,6 @@ export const checkApiVersion = applyAsyncLoading(() => dispatch => axios.get(`${
 
 export const login = applyAsyncLoading(({ username, password, saveLogin }) => (dispatch, getState) => axios.post(`${API_URL}/authenticate`, { username, password })
   .then(({ data }) => {
-    const tokenData = {
-      token: data.id_token,
-      userId: data.user.id,
-    };
-    sessionStorage.setItem(API_TOKEN_KEY, JSON.stringify(tokenData));
     const { auth: { appDirectory, clientServerURL } } = getState();
     return initCoreAndSetToken(
       { username, password, saveLogin }, data, appDirectory, clientServerURL, dispatch

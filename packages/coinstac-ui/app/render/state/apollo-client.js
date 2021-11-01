@@ -25,14 +25,14 @@ function getApolloClient(config) {
   const API_URL = `${apiServer.protocol}//${apiServer.hostname}${apiServer.port ? `:${apiServer.port}` : ''}${apiServer.pathname}`;
   const httpLink = new HttpLink({ uri: `${API_URL}/graphql` });
 
+  const token = getAuthToken();
+
   const SUB_URL = `${subApiServer.protocol}//${subApiServer.hostname}${subApiServer.port ? `:${subApiServer.port}` : ''}${subApiServer.pathname}`;
   const wsLink = new WebSocketLink({
     uri: `${SUB_URL}/graphql`,
     options: {
       reconnect: true,
       connectionParams: () => {
-        const token = getAuthToken();
-
         return { authToken: token ? token.token : '' };
       },
     },
@@ -43,16 +43,10 @@ function getApolloClient(config) {
       return;
     }
 
-    if (e.networkError.message === 'Expired token') {
-      ipcRenderer.send(EXPIRED_TOKEN);
-    } else {
-      ipcRenderer.send(BAD_TOKEN);
-    }
+    ipcRenderer.send(EXPIRED_TOKEN);
   });
 
   const authMiddleware = new ApolloLink((operation, forward) => {
-    const token = getAuthToken();
-
     operation.setContext(({ headers = {} }) => ({
       headers: {
         ...headers,

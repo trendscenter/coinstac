@@ -39,7 +39,7 @@ async function startServer() {
 
           return true;
         } catch (error) {
-          console.error('An error occurred while establishing a websocket connection', error);
+          return false;
         }
       },
       onDisconnect(ws) {

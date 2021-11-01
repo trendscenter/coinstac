@@ -236,7 +236,7 @@ module.exports = {
                 iteration: controllerState.iteration,
                 callback: (error, output) => {
                   if (error) return err(error);
-                  setStateProp('state', 'Finished iteration');
+                  setStateProp('state', 'Recieved data from network');
                   controllerState.success = !!output.success;
                   controllerState.received = output.debug.received;
 

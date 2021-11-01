@@ -33,6 +33,9 @@ module.exports = {
 
     const tryStartService = () => {
       utils.logger.silly(`Starting service ${serviceId} at port: ${port}`);
+      // for debug mode just grab the last port # to try to not have containers collide
+      const portmunge = port.toString().slice(-2);
+      if (process.LOGLEVEL === 'debug') utils.logger.debug(`Container debug port at: 44${portmunge}`);
       const defaultOpts = {
       // this port is coupled w/ the internal base server image FYI
         ExposedPorts: {
@@ -42,7 +45,7 @@ module.exports = {
         HostConfig: {
           PortBindings: {
             '8881/tcp': [{ HostPort: `${port}`, HostIp: '127.0.0.1' }],
-            ...(process.LOGLEVEL === 'debug' && { '4444/tcp': [{ HostPort: '4444', HostIp: '127.0.0.1' }] }),
+            ...(process.LOGLEVEL === 'debug' && { '4444/tcp': [{ HostPort: `44${portmunge}`, HostIp: '127.0.0.1' }] }),
           },
         },
         Tty: true,
