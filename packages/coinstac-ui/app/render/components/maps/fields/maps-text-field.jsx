@@ -22,9 +22,20 @@ const styles = theme => ({
     alignItems: 'center',
   },
   successIcon: {
-    width: 40,
-    height: 40,
+    width: 30,
+    height: 30,
     color: '#43a047',
+  },
+  required: {
+    fontWeight: 'normal',
+    textAlign: 'left',
+    display: 'inline-flex',
+    width: 'auto',
+    flexDirection: 'row',
+    flexGrow: 1,
+    paddingLeft: '0.5rem',
+    fontSize: '0.75rem',
+    color: 'red',
   },
 });
 
@@ -40,7 +51,14 @@ function MapsTextField({
   function changeHandler(e) {
     setVal(e.target.value);
     const value = fieldDescription.type === 'number' ? parseInt(e.target.value,10) : e.target.value;
-    onChange(fieldName, { fieldType: fieldDescription.type, value });
+    onChange(
+      fieldName,
+      {
+        fieldType: fieldDescription.type,
+        required: fieldDescription.required,
+        value,
+      }
+    );
   }
 
   function defaultHandler(e) {
@@ -52,7 +70,9 @@ function MapsTextField({
   }
 
   function isMapped() {
-    if (fieldDataMap) {
+    if (!fieldDataMap) {
+      return false;
+    }else{
       return true;
     }
   }
@@ -61,7 +81,11 @@ function MapsTextField({
     <div>
       <Typography variant="h6" className={classes.header}>
         {fieldDescription.label}
-        {isMapped() && <CheckCircleIcon className={classes.successIcon} />}
+        {val && isMapped() && <CheckCircleIcon className={classes.successIcon} />}
+        {fieldDescription.required ? (
+          <span className={classes.required}>
+              (Input Required)
+          </span>) : ''}
       </Typography>
       <TextField
         disabled={useDefault}
@@ -70,18 +94,20 @@ function MapsTextField({
         value={val}
         placeholder={val ? val : fieldDescription.default}
       />
-      <FormControlLabel
-        control={(
-          <Checkbox
-            checked={useDefault}
-            onChange={e => defaultHandler(e)}
-            value={useDefault}
-          />
+      {fieldDescription.default && (
+        <FormControlLabel
+          control={(
+            <Checkbox
+              checked={useDefault}
+              onChange={e => defaultHandler(e)}
+              value={useDefault}
+            />
         )}
-        label={
-          <Box component="div" fontSize={15} style={{ color: '#b7b7b7' }}>Use Default</Box>
+          label={
+            <Box component="div" fontSize={15} style={{ color: '#b7b7b7' }}>Use Default</Box>
         }
-      />
+        />)
+    }
     </div>
   );
 }
