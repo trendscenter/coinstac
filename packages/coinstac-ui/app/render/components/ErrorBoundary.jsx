@@ -1,5 +1,5 @@
 import {
-  Box, Button, TextField,
+  Box, Button, Paper, TextField,
 } from '@material-ui/core';
 import axios from 'axios';
 import { remote } from 'electron';
@@ -7,15 +7,18 @@ import React, { useState } from 'react';
 import { API_TOKEN_KEY } from '../state/ducks/auth';
 
 const { app } = window.require('electron').remote;
+const { clipboard } = window.require('electron');
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { error: null, errorInfo: null, bugReportOpen: false };
+    this.state = { error: null, errorInfo: null };
   }
 
-  toggleBugReport = () => {
-    this.setState({ bugReportOpen: !this.state.bugReportOpen });
+  copyErrorDetails = () => {
+    clipboard.writeText(
+      `${this.state.error.toString()} \n ${this.state.errorInfo.componentStack}`
+    );
   };
 
   closeApplication = () => {
@@ -25,6 +28,12 @@ class ErrorBoundary extends React.Component {
   relaunchApplication = () => {
     app.relaunch();
     app.quit();
+  };
+
+  openBugReportGithub = () => {
+    window.open(
+      'https://github.com/trendscenter/coinstac/issues/new?assignees=&labels=&template=bug_report.md&title='
+    );
   };
 
   componentDidCatch(error, errorInfo) {
@@ -39,31 +48,36 @@ class ErrorBoundary extends React.Component {
   render() {
     if (this.state.errorInfo) {
       return (
-        <Box style={{
-          backgroundColor: 'white', padding: '10px', height: '90vh', overflowY: 'hidden',
-        }}
+        <Box
+          style={{
+            backgroundColor: 'white',
+            padding: '10px',
+            height: '100vh',
+          }}
         >
           <h2>Something went wrong.</h2>
-          <details style={{ whiteSpace: 'pre-wrap' }}>
-            {this.state.error && this.state.error.toString()}
-            <br />
-            {this.state.errorInfo.componentStack}
-          </details>
-          <Button variant="contained" onClick={this.toggleBugReport}>
-            Create Bug Report
-          </Button>
-          <Button variant="contained" onClick={this.relaunchApplication}>
-            restart
-          </Button>
-          <Button variant="contained" onClick={this.closeApplication}>
-            exit
-          </Button>
-          {this.state.bugReportOpen && (
-            <BugReport
-              error={this.state.error}
-              errorInfo={this.state.errorInfo}
-            />
-          )}
+
+          <Paper elevation={1} style={{ padding: '10px' }}>
+            <details style={{ whiteSpace: 'pre-wrap' }}>
+              {this.state.error && this.state.error.toString()}
+              <br />
+              {this.state.errorInfo.componentStack}
+            </details>
+            <Button variant="contained" onClick={this.copyErrorDetails}>
+              Copy Error Details
+            </Button>
+            <Button variant="contained" onClick={this.openBugReportGithub}>
+              submit a bug report
+            </Button>
+          </Paper>
+          <Paper elevation={1} style={{ padding: '10px' }}>
+            <Button variant="contained" onClick={this.relaunchApplication}>
+              restart
+            </Button>
+            <Button variant="contained" onClick={this.closeApplication}>
+              exit
+            </Button>
+          </Paper>
         </Box>
       );
     }
