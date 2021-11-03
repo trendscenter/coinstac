@@ -69,6 +69,7 @@ function MapsTextField({
   }
 
   function isMapped() {
+    // test
     return !!fieldDataMap;
   }
 
