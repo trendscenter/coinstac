@@ -3,6 +3,7 @@ import { graphql, withApollo } from '@apollo/react-hoc';
 import { flowRight as compose } from 'lodash';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
+import Alert from '@material-ui/lab/Alert';
 import Typography from '@material-ui/core/Typography';
 import MapsEditForm from './maps-edit-form';
 import { saveDataMapping } from '../../state/ducks/maps';
@@ -17,6 +18,8 @@ function MapsEdit({
   const [consortium, setConsortium] = useState(null);
   const [pipeline, setPipeline] = useState(null);
   const [dataMap, setDataMap] = useState({});
+  const [alertMsg, setAlertMsg] = useState(null);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     const consortium = consortia.find(c => c.id === params.consortiumId);
@@ -35,16 +38,46 @@ function MapsEdit({
   }, []);
 
   function onChange(fieldName, fieldData) {
-    setDataMap({ ...dataMap, [fieldName]: fieldData });
-    setSaved(false);
+    if (fieldData.required && !fieldData.value && fieldData.value !== 0) {
+      setAlertMsg(`Please set value for ${fieldName}`);
+      setError(true);
+    } else {
+      setDataMap({ ...dataMap, [fieldName]: fieldData });
+      setSaved(false);
+      setAlertMsg(false);
+      setError(false);
+    }
   }
 
   function commitSaveDataMap(e) {
     e.preventDefault();
 
-    saveDataMapping(consortium, pipeline, dataMap);
-    updateConsortiumMappedUsers(consortium.id, true);
-    setSaved(true);
+    let unfulfilledArr = Object.entries(pipeline.steps[0].inputMap);
+
+    unfulfilledArr = unfulfilledArr.filter(item => item[1].fulfilled === false);
+
+    const dataMapArr = Object.entries(dataMap);
+
+    const undef = [];
+
+    unfulfilledArr.forEach((v, i) => {
+      if (typeof dataMapArr[i] !== 'number' && !dataMapArr[i]) {
+        undef.push(unfulfilledArr[i][0]);
+      }
+    });
+
+    if (undef && typeof undef === 'object' && undef.length > 0) {
+      undef.forEach((item) => {
+        setAlertMsg(`Please set value for ${item}`);
+        setError(true);
+      });
+    } else {
+      saveDataMapping(consortium.id, pipeline, dataMap);
+      updateConsortiumMappedUsers(consortium.id, true);
+      setSaved(true);
+      setAlertMsg(false);
+      setError(false);
+    }
   }
 
   return (
@@ -53,6 +86,11 @@ function MapsEdit({
         <Typography variant="h4">
           { `Map - ${consortium && consortium.name}` }
         </Typography>
+        {alertMsg && (
+          <Alert variant="outlined" severity="warning">
+            {alertMsg}
+          </Alert>
+        )}
       </div>
       <MapsEditForm
         consortiumId={consortium && consortium.id}
@@ -61,6 +99,7 @@ function MapsEdit({
         saved={saved}
         onChange={onChange}
         onSubmit={commitSaveDataMap}
+        error={error}
       />
     </div>
   );

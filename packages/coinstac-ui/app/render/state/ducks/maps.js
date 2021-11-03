@@ -87,8 +87,8 @@ export const saveDataMapping = applyAsyncLoading(
           || mappedData && mappedData.fieldType === 'object'
           || mappedData && mappedData.fieldType === 'text') {
           inputMap[inputMapKey].value = mappedData.value;
-          inputMap[inputMapKey].fulfilled = true;
         }
+        inputMap[inputMapKey].fulfilled = true;
       });
 
       mapData.push({

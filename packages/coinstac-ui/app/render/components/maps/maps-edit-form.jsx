@@ -25,11 +25,6 @@ const styles = theme => ({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  successIcon: {
-    width: 40,
-    height: 40,
-    color: '#43a047',
-  },
   saveButtonContainer: {
     marginTop: theme.spacing(2),
     display: 'flex',
@@ -53,7 +48,7 @@ const styles = theme => ({
 });
 
 function MapsEditForm({
-  consortiumId, pipeline, dataMap, onSubmit, onChange, saved, classes,
+  consortiumId, pipeline, dataMap, onSubmit, onChange, saved, classes, error
 }, { router }) {
   const handleGoBackToConsortium = () => {
     localStorage.setItem('HIGHLIGHT_CONSORTIUM', consortiumId);
@@ -63,8 +58,11 @@ function MapsEditForm({
   const pickerviews = [];
   const fieldviews = [];
 
+  const dataCount = Object.entries(dataMap).length;
+
   return (
     <form onSubmit={onSubmit}>
+      {dataCount > 0 && !error && (
       <div className={classes.saveButtonContainer}>
         {saved && (
           <span className={classes.successMessage}>
@@ -90,6 +88,7 @@ function MapsEditForm({
           </Button>
         )}
       </div>
+      )}
       <div>
         {
           pipeline && pipeline.steps && pipeline.steps.map((step) => {
@@ -99,8 +98,6 @@ function MapsEditForm({
               .filter(inputKey => !inputMap[inputKey].fulfilled)
               .map((inputKey) => {
                 const fieldDescription = computations[0].computation.input[inputKey];
-
-                console.log(fieldDescription.type);
 
                 switch (fieldDescription.type) {
                   case 'csv':
@@ -227,12 +224,14 @@ MapsEditForm.propTypes = {
   onChange: PropTypes.func.isRequired,
   saved: PropTypes.bool,
   classes: PropTypes.object.isRequired,
+  error: PropTypes.bool,
 };
 
 MapsEditForm.defaultProps = {
   consortiumId: '',
   pipeline: null,
   saved: false,
+  error: false,
 };
 
 export default withStyles(styles)(MapsEditForm);
