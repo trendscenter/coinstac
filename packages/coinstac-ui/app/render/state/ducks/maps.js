@@ -1,6 +1,7 @@
 /* eslint-disable no-case-declarations */
 import { dirname, basename } from 'path';
 import { applyAsyncLoading } from './loading';
+import { startRun } from './runs';
 
 const SAVE_DATA_MAPPING = 'SAVE_DATA_MAPPING';
 const UPDATE_MAP_STATUS = 'UPDATE_MAP_STATUS';
@@ -32,7 +33,7 @@ const INITIAL_STATE = {
 // ]
 
 export const saveDataMapping = applyAsyncLoading(
-  (consortiumId, pipeline, map) => async (dispatch) => {
+  (consortium, pipeline, map) => async (dispatch, getState) => {
     const mapData = [];
 
     pipeline.steps.forEach((step) => {
@@ -89,17 +90,27 @@ export const saveDataMapping = applyAsyncLoading(
     });
 
     const mapping = {
-      consortiumId,
+      consortiumId: consortium.id,
       pipelineId: pipeline.id,
       map: mapData,
       dataMap: map,
       isComplete: true,
     };
 
-    dispatch(({
+    dispatch({
       type: SAVE_DATA_MAPPING,
       payload: mapping,
-    }));
+    });
+
+    const { runs } = getState();
+
+    const runAwaitingDataMap = runs.runsAwaitingDataMap.filter(
+      run => run.consortiumId === consortium.id && run.pipelineSnapshot.id === pipeline.id
+    );
+
+    if (runAwaitingDataMap) {
+      dispatch(startRun(runAwaitingDataMap, consortium));
+    }
   }
 );
 
