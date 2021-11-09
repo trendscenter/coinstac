@@ -42,7 +42,7 @@ function MapsEdit({
   function commitSaveDataMap(e) {
     e.preventDefault();
 
-    saveDataMapping(consortium.id, pipeline, dataMap);
+    saveDataMapping(consortium, pipeline, dataMap);
     updateConsortiumMappedUsers(consortium.id, true);
     setSaved(true);
   }

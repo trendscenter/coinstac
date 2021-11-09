@@ -293,3 +293,13 @@ export const DELETE_DATASET_MUTATION = gql`
   mutation deleteDataset($id: ID!)
     ${mutations.deleteDataset}
 `;
+
+export const FETCH_RUN_STATUS = gql`
+  query fetchRunStatus($runId: ID!)
+    ${queries.fetchRunStatus}
+`;
+
+export const RUN_STARTED_SUBSCRIPTION = gql`
+  subscription runStarted($userId: ID)
+    ${queries.runStarted}
+`;
