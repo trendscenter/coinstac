@@ -21,7 +21,7 @@ function ResultItem({
   const classes = useStyles();
 
   const {
-    id, datasetDescription, participantsDescription, owner,
+    id, datasetDescription, participantsDescription, otherInfo, owner,
   } = result;
 
   return (
@@ -39,6 +39,34 @@ function ResultItem({
               <Typography variant="body2" className={classes.label}>Variables:</Typography>
               <Typography variant="body2">{ Object.keys(participantsDescription).join(', ') }</Typography>
             </Box>
+          )}
+          {otherInfo && (
+            <React.Fragment>
+              {otherInfo.modality && (
+                <Box display="flex">
+                  <Typography variant="body2" className={classes.label}>Modality:</Typography>
+                  <Typography variant="body2">{ otherInfo.modality }</Typography>
+                </Box>
+              )}
+              {otherInfo.subjectGroups && (
+                <Box display="flex">
+                  <Typography variant="body2" className={classes.label}>Subject groups:</Typography>
+                  <Typography variant="body2">{ otherInfo.subjectGroups.join(', ') }</Typography>
+                </Box>
+              )}
+              {otherInfo.numberOfSubjects && (
+                <Box display="flex">
+                  <Typography variant="body2" className={classes.label}>Number of subjects:</Typography>
+                  <Typography variant="body2">{ otherInfo.numberOfSubjects }</Typography>
+                </Box>
+              )}
+              {otherInfo.numberOfSessions && (
+                <Box display="flex">
+                  <Typography variant="body2" className={classes.label}>Number of sessions:</Typography>
+                  <Typography variant="body2">{ otherInfo.numberOfSessions }</Typography>
+                </Box>
+              )}
+            </React.Fragment>
           )}
         </Box>
         <Box display="flex" flexDirection="column" justifyContent="center">
