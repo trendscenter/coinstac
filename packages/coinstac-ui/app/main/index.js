@@ -20,6 +20,7 @@ const fs = require('fs');
 const fsPromises = require('fs').promises;
 const path = require('path');
 const moment = require('moment');
+const Store = require('electron-store');
 const ipcFunctions = require('./utils/ipc-functions');
 const runPipelineFunctions = require('./utils/run-pipeline-functions');
 
@@ -42,7 +43,7 @@ parseCLIInput();
 require('./utils/boot/configure-dev-services.js');
 
 // Load the UI
-const getWindow = require('./utils/boot/configure-browser-window.js');
+const { getWindow, createWindow } = require('./utils/boot/configure-browser-window.js');
 
 // Set up error handling
 const logUnhandledError = require('../common/utils/log-unhandled-error.js');
@@ -94,6 +95,7 @@ const generateRunProvenance = async (userId, appDirectory, run, consortium) => {
 };
 
 let initializedCore;
+Store.initRenderer();
 // Boot up the main process
 loadConfig()
   .then(config => Promise.all([
@@ -122,8 +124,10 @@ loadConfig()
         console.error(err);// eslint-disable-line no-console
       }
     });
-    global.config = config;
 
+    ipcMain.handle('get-config', () => config.getProperties());
+
+    createWindow();
     const mainWindow = getWindow();
     logger.verbose('main process booted');
 

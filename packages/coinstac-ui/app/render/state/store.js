@@ -12,7 +12,7 @@ import thunkMiddleware from 'redux-thunk';
 import { persistStore, persistReducer } from 'redux-persist';
 import createElectronStorage from 'redux-persist-electron-storage';
 import { dirname, join } from 'path';
-import { ipcRenderer, remote } from 'electron';
+import { ipcRenderer } from 'electron';
 import rootReducer, { clearState, rehydrate } from './root-reducer';
 
 const ElectronStore = require('electron-store');
@@ -77,7 +77,7 @@ export default function () {
       store.dispatch(rehydrate(parsedState));
     }
 
-    remote.getCurrentWindow().webContents.send('app-init-finished');
+    ipcRenderer.invoke('app-init-finished');
   });
 
   ipcRenderer.on('logout', () => {

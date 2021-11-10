@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 const { ApolloServer } = require('apollo-server-hapi');
-const hapi = require('hapi');
-const jwt2 = require('hapi-auth-jwt2');
+const hapi = require('@hapi/hapi');
+const Jwt = require('@hapi/jwt');
 const helperFunctions = require('./auth-helpers');
 const routes = require('./routes');
 const { schema } = require('./data/schema');
@@ -27,6 +27,7 @@ async function startServer() {
     },
     subscriptions: {
       async onConnect(connectionParams, ws) {
+        debugger
         if (!connectionParams.authToken) {
           return false;
         }
@@ -55,13 +56,24 @@ async function startServer() {
     port: process.env.API_SERVER_PORT,
   });
 
-  await app.register(jwt2);
+  await app.register(Jwt);
 
   app.auth.strategy('jwt', 'jwt',
     {
-      key: process.env.API_JWT_SECRET,
+      keys: {
+        key: process.env.API_JWT_SECRET,
+        algorithms: ['HS256'],
+      },
       validate: helperFunctions.validateToken,
-      verifyOptions: { algorithms: ['HS256'] },
+      verify: {
+        aud: 'coinstac',
+        iss: 'coinstac',
+        sub: 'coinstac',
+        nbf: true,
+        exp: true,
+        maxAgeSec: 43200, // 24 hours
+        timeSkewSec: 15,
+      },
     });
 
   app.auth.default('jwt');

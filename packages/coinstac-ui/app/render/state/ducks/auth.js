@@ -1,15 +1,16 @@
 import axios from 'axios';
+import crypto from 'crypto';
 import ipcPromise from 'ipc-promise';
-import { remote, ipcRenderer } from 'electron';
+import { ipcRenderer, app } from 'electron';
 import { get } from 'lodash';
 import { LOCATION_CHANGE } from 'react-router-redux';
 import { applyAsyncLoading } from './loading';
 import { notifySuccess, notifyError } from './notifyAndLog';
 
-const apiServer = remote.getGlobal('config').get('apiServer');
+const { apiServer } = window.config;
 const API_URL = `${apiServer.protocol}//${apiServer.hostname}${apiServer.port ? `:${apiServer.port}` : ''}${apiServer.pathname}`;
 
-export const API_TOKEN_KEY = `id_token_${remote.getCurrentWindow().id}`;
+export const API_TOKEN_KEY = `id_token_${crypto.randomBytes(16).toString('base64')}`;
 
 const getErrorDetail = error => ({
   message: get(error, 'response.data.message'),
@@ -25,7 +26,7 @@ const INITIAL_STATE = {
     institution: '',
     photo: '',
   },
-  appDirectory: localStorage.getItem('appDirectory') || remote.getGlobal('config').get('coinstacHome'),
+  appDirectory: localStorage.getItem('appDirectory') || window.config.coinstacHome,
   clientServerURL: localStorage.getItem('clientServerURL') || '',
   networkVolume: localStorage.getItem('networkVolume') === 'true',
   isApiVersionCompatible: true,
@@ -82,7 +83,7 @@ const initCoreAndSetToken = async (reqUser, data, appDirectory, clientServerURL,
 
   const user = { ...data.user, label: reqUser.username };
 
-  remote.getCurrentWindow().webContents.send('login-success', data.user.id);
+  ipcRenderer.invoke('login-success', data.user.id);
 
   return new Promise((resolve) => {
     ipcRenderer.once('app-init-finished', () => {
@@ -171,7 +172,7 @@ export const autoLogin = applyAsyncLoading(() => (dispatch, getState) => {
 
 export const checkApiVersion = applyAsyncLoading(() => dispatch => axios.get(`${API_URL}/version`)
   .then(({ data }) => {
-    const versionsMatch = remote.process.env.NODE_ENV !== 'production' || data.slice(0, 3) === remote.app.getVersion().slice(0, 3);
+    const versionsMatch = window.process.env.NODE_ENV !== 'production' || data.slice(0, 3) === app.getVersion().slice(0, 3);
     dispatch(setApiVersionCheck(versionsMatch));
   })
   .catch(() => {

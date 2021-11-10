@@ -22,6 +22,7 @@ let mainWindow = null;
  */
 function createWindow() {
   const renderIndexPath = require.resolve('app/render/index.html');
+  const preloadPath = require.resolve('app/render/preload.js');
   const menu = electronDefaultMenu(electron.app, electron.shell);
   const size = electron.screen.getPrimaryDisplay().workAreaSize;
 
@@ -36,6 +37,7 @@ function createWindow() {
     show: false,
     webPreferences: {
       nodeIntegration: true,
+      preload: preloadPath,
     },
   });
 
@@ -74,7 +76,7 @@ function createWindow() {
           protocol: 'file:',
           slashes: true,
           webPreferences: {
-            devTools: false,
+            devTools: true,
           },
         }));
         // `webPreferences.devTools = false` doesn't work?!
@@ -87,11 +89,6 @@ function createWindow() {
     });
   electron.Menu.setApplicationMenu(electron.Menu.buildFromTemplate(menu));
 }
-
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
-electronApp.whenReady().then(createWindow);
 
 // Quit when all windows are closed.
 electronApp.on('window-all-closed', () => {
@@ -110,4 +107,12 @@ electronApp.on('activate', () => {
   }
 });
 
-module.exports = function getWindow() { return mainWindow; };
+module.exports = {
+  getWindow() { return mainWindow; },
+  createWindow() {
+    // This method will be called when Electron has finished
+    // initialization and is ready to create browser windows.
+    // Some APIs can only be used after this event occurs.
+    return electronApp.whenReady().then(createWindow);
+  },
+};

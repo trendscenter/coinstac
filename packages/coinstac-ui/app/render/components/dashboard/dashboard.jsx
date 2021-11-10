@@ -5,7 +5,7 @@ import { useQuery, ApolloProvider } from '@apollo/client';
 import { ApolloProvider as ApolloHOCProvider } from '@apollo/react-hoc';
 import { get } from 'lodash';
 import PropTypes from 'prop-types';
-import { ipcRenderer, remote } from 'electron';
+import { ipcRenderer } from 'electron';
 import { List, ListItem } from '@material-ui/core';
 import ArrowUpwardIcon from '@material-ui/icons/ArrowUpward';
 
@@ -182,7 +182,7 @@ Dashboard.propTypes = {
   router: PropTypes.object.isRequired,
 };
 
-const clientConfig = remote.getGlobal('config');
+const clientConfig = global.config;
 
 function ConnectedDashboard(props) {
   const apolloClient = useRef(null);
