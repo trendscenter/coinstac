@@ -286,7 +286,10 @@ class CoinstacClient {
             let stageFiles = process.env.CI ? fs.copy : fs.link;
             if (networkVolume) {
               stageFiles = fs.symlink;
-              runObj.alternateInputDirectory = filePaths.baseDirectory;
+              runObj.alternateInputDirectory = {
+                in: filePaths.baseDirectory,
+                out: '/c/user/data/input/',
+              } 
             }
 
             for (let i = 0; i < filePaths.files.length; i += 1) {
@@ -295,7 +298,7 @@ class CoinstacClient {
 
               linkPromises.push( // eslint-disable-next-line no-loop-func
                 mkdir.then(() => stageFiles(
-                  path.resolve(filePaths.baseDirectory, filePaths.files[i]),
+                  runObj.alternateInputDirectory.out + filePaths.files[i],
                   path.resolve(fp, path.basename(filePaths.files[i]))
                 )
                   .catch((e) => {

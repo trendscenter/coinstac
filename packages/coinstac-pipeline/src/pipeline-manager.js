@@ -1033,7 +1033,7 @@ module.exports = {
                 publishData('run', {
                   id: clientId,
                   runId: pipeline.id,
-                  error: message,
+                  error: { message: message.message, error: message.error, stack: message.stack },
                   debug: { sent: Date.now() },
                 });
                 activePipelines[pipeline.id].stashedOutput = undefined;
