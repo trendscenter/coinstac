@@ -1,11 +1,12 @@
 import axios from 'axios';
 import crypto from 'crypto';
 import ipcPromise from 'ipc-promise';
-import { ipcRenderer, app } from 'electron';
+import { app } from 'electron';
 import { get } from 'lodash';
 import { LOCATION_CHANGE } from 'react-router-redux';
 import { applyAsyncLoading } from './loading';
 import { notifySuccess, notifyError } from './notifyAndLog';
+import { clearUserState, loadUserState } from './statePersist';
 
 const { apiServer } = window.config;
 const API_URL = `${apiServer.protocol}//${apiServer.hostname}${apiServer.port ? `:${apiServer.port}` : ''}${apiServer.pathname}`;
@@ -82,24 +83,12 @@ const initCoreAndSetToken = async (reqUser, data, appDirectory, clientServerURL,
   });
 
   const user = { ...data.user, label: reqUser.username };
+  const tokenData = {
+    token: data.id_token,
+    userId: user.id,
+  };
 
-  ipcRenderer.invoke('login-success', data.user.id);
-
-  return new Promise((resolve) => {
-    ipcRenderer.once('app-init-finished', () => {
-      const tokenData = {
-        token: data.id_token,
-        userId: user.id,
-      };
-
-      (reqUser.saveLogin ? localStorage : sessionStorage)
-        .setItem(API_TOKEN_KEY, JSON.stringify(tokenData));
-
-      dispatch(setUser(user));
-
-      resolve();
-    });
-  });
+  dispatch(loadUserState(user, tokenData));
 };
 
 export const logout = applyAsyncLoading(() => async (dispatch, getState) => {
@@ -110,8 +99,7 @@ export const logout = applyAsyncLoading(() => async (dispatch, getState) => {
 
   await axios.post(`${API_URL}/logout`, { username: user.username });
 
-  await ipcPromise.send('logout');
-
+  dispatch(clearUserState());
   dispatch(clearUser());
 });
 
