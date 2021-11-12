@@ -69,7 +69,7 @@ describe('e2e consortia permissions', () => {
         });
       });
     }
-    Promise.all([
+    return Promise.all([
       app1.stop(),
       app2.stop(),
     ]);
@@ -137,7 +137,7 @@ describe('e2e consortia permissions', () => {
     const saveButton = await app1.client.$('button=Save');
     await saveButton.click();
 
-    const saveNotification = await app1.client.$('span=Consortium Saved');
+    const saveNotification = await app1.client.$('div=Consortium Saved');
     const isSaveNotificationDisplayed = await saveNotification.waitForDisplayed({
       timeout: EXIST_TIMEOUT,
     });
@@ -179,7 +179,7 @@ describe('e2e consortia permissions', () => {
     await addMemberButton.click();
 
     // Assert
-    const userListItem = await app1.client.$(`div=${USER_ID_2}`);
+    const userListItem = await app1.client.$(`span=${USER_ID_2}`);
 
     return userListItem.waitForDisplayed({ timeout: EXIST_TIMEOUT })
       .should.eventually.equal(true);
