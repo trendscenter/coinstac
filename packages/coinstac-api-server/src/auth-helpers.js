@@ -10,6 +10,10 @@ const { eventEmitter, USER_CHANGED } = require('./data/events');
 
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
+const audience = 'coinstac';
+const issuer = 'coinstac';
+const subject = 'coinstac';
+
 const helperFunctions = {
   /**
    * Create JWT for user signing in to application
@@ -17,7 +21,13 @@ const helperFunctions = {
    * @return {string} A JWT for the requested user
    */
   createToken(id) {
-    return jwt.sign({ id }, process.env.API_JWT_SECRET, { algorithm: 'HS256', expiresIn: '12h' });
+    return jwt.sign({ id }, process.env.API_JWT_SECRET, {
+      audience,
+      issuer,
+      subject,
+      algorithm: 'HS256',
+      expiresIn: '12h',
+    });
   },
   /**
    * Decode and verify validity of token
@@ -33,7 +43,13 @@ const helperFunctions = {
    * @return {string} A JWT for the requested email
    */
   createPasswordResetToken(email) {
-    return jwt.sign({ email }, process.env.API_JWT_SECRET, { algorithm: 'HS256', expiresIn: '24h' });
+    return jwt.sign({ email }, process.env.API_JWT_SECRET, {
+      audience,
+      issuer,
+      subject,
+      algorithm: 'HS256',
+      expiresIn: '24h',
+    });
   },
   /**
    * Create new user account
@@ -375,6 +391,9 @@ const helperFunctions = {
       });
     });
   },
+  audience,
+  issuer,
+  subject,
 };
 
 module.exports = helperFunctions;

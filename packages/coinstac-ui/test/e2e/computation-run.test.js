@@ -31,17 +31,20 @@ describe('e2e run computation with 1 member', () => {
   before(async () => {
     app = await electron.launch({
       // path: electron,
-      args: [appPath],
-      env: { NODE_ENV: 'test' },
+      args: ['--enable-logging', appPath],
+      env: Object.assign({}, process.env, { NODE_ENV: 'test' }),
+      logger: {
+        isEnabled: (name, severity) => true,
+        log: (name, severity, message, args) => console.log(`${name}: ${message}`)
+      },
       // chromeDriverArgs: [
       //   '--no-sandbox',
       //   '--whitelisted-ips=',
       //   '--disable-dev-shm-usage',
       // ],
     });
-    debugger
     appWindow = await app.firstWindow();
-    return;
+    appWindow.on('console', msg => console.log(msg.text()));
   });
 
   // after(async () => {
@@ -62,21 +65,14 @@ describe('e2e run computation with 1 member', () => {
   });
 
   it('authenticates demo user', async () => {
-    // const usernameField = await app.client.$();
     await appWindow.click('#login-username', { timeout: EXIST_TIMEOUT });
-    return appWindow.fill('#login-username', USER_ID);
+    await appWindow.fill('#login-username', USER_ID);
+    await appWindow.fill('#login-password', PASS);
 
-    // const passwordField = await app.client.$('#login-password');
-    // await passwordField.setValue(PASS);
-    //
-    // const loginButton = await app.client.$('button=Log In');
-    // await loginButton.click();
-    //
-    // const userTitleElement = await app.client.$('.user-account-name');
-    // await userTitleElement.waitForDisplayed({ timeout: EXIST_TIMEOUT });
-    //
-    // // Assert
-    // return userTitleElement.getText().should.eventually.equal(USER_ID);
+    await appWindow.click('text="Log In"');
+
+    // Assert
+    return appWindow.innerText('.user-account-name', { timeout: EXIST_TIMEOUT }).should.eventually.equal(USER_ID);
   });
 //
 //   it('accesses the Add Consortium page', async () => {

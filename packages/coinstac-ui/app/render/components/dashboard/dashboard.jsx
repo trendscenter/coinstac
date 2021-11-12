@@ -182,7 +182,7 @@ Dashboard.propTypes = {
   router: PropTypes.object.isRequired,
 };
 
-const clientConfig = global.config;
+const { apiServer, subApiServer } = window.config;
 
 function ConnectedDashboard(props) {
   const apolloClient = useRef(null);
@@ -198,7 +198,7 @@ function ConnectedDashboard(props) {
   }, []);
 
   if (!apolloClient.current) {
-    apolloClient.current = getApolloClient(clientConfig);
+    apolloClient.current = getApolloClient({ apiServer, subApiServer });
   }
 
   return (

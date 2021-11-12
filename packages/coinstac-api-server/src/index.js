@@ -27,7 +27,6 @@ async function startServer() {
     },
     subscriptions: {
       async onConnect(connectionParams, ws) {
-        debugger
         if (!connectionParams.authToken) {
           return false;
         }
@@ -37,7 +36,6 @@ async function startServer() {
           const { id } = await helperFunctions.decodeToken(connectionParams.authToken);
 
           eventEmitter.emit(WS_CONNECTION_STARTED, connectionId, id);
-
           return true;
         } catch (error) {
           return false;
@@ -58,7 +56,7 @@ async function startServer() {
 
   await app.register(Jwt);
 
-  app.auth.strategy('jwt', 'jwt',
+  app.auth.strategy('coinstac-jwt', 'jwt',
     {
       keys: {
         key: process.env.API_JWT_SECRET,
@@ -66,9 +64,9 @@ async function startServer() {
       },
       validate: helperFunctions.validateToken,
       verify: {
-        aud: 'coinstac',
-        iss: 'coinstac',
-        sub: 'coinstac',
+        aud: helperFunctions.audience,
+        iss: helperFunctions.issuer,
+        sub: helperFunctions.subject,
         nbf: true,
         exp: true,
         maxAgeSec: 43200, // 24 hours
@@ -76,7 +74,7 @@ async function startServer() {
       },
     });
 
-  app.auth.default('jwt');
+  app.auth.default('coinstac-jwt');
   app.route(routes);
 
   await server.applyMiddleware({

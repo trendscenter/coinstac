@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import Button from '@material-ui/core/Button';
 
 // Get Base App Dir
-const dir = global.config.coinstacHome;
+const dir = window.config.coinstacHome;
 
 class String extends Component {
   /**

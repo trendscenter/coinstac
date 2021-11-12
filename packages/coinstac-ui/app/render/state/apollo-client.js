@@ -20,8 +20,7 @@ function getAuthToken() {
   return JSON.parse(token);
 }
 
-function getApolloClient(config) {
-  const { apiServer, subApiServer } = config.getProperties();
+function getApolloClient({ apiServer, subApiServer }) {
   const API_URL = `${apiServer.protocol}//${apiServer.hostname}${apiServer.port ? `:${apiServer.port}` : ''}${apiServer.pathname}`;
   const httpLink = new HttpLink({ uri: `${API_URL}/graphql` });
 

@@ -88,6 +88,7 @@ function createWindow() {
       },
     });
   electron.Menu.setApplicationMenu(electron.Menu.buildFromTemplate(menu));
+  return mainWindow;
 }
 
 // Quit when all windows are closed.
@@ -103,7 +104,7 @@ electronApp.on('activate', () => {
   // On OS X it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
   if (mainWindow === null) {
-    createWindow();
+    // createWindow();
   }
 });
 
