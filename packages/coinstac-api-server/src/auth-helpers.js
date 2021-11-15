@@ -192,8 +192,8 @@ const helperFunctions = {
    * @param {object} request original request from client
    * @param {function} callback function signature (err, isValid, alternative credentials)
    */
-  async validateToken(decoded) {
-    const user = await helperFunctions.getUserDetailsByID(decoded.id);
+  async validateToken(data) {
+    const user = await helperFunctions.getUserDetailsByID(data.decoded.payload.id);
 
     return {
       isValid: user && user.id,
