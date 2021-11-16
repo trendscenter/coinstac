@@ -81,7 +81,6 @@ const initCoreAndSetToken = async (reqUser, data, appDirectory, clientServerURL,
   await ipcPromise.send('login-init', {
     userId: data.user.id, appDirectory, clientServerURL, token: data.id_token,
   });
-  debugger
   const user = { ...data.user, label: reqUser.username };
   const tokenData = {
     token: data.id_token,
