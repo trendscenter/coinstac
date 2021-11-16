@@ -1,11 +1,9 @@
 const { MongoClient, ObjectID } = require('mongodb');
-const testConfig = require('../../config/test');
 
 let client = null;
 let db = null;
 
-const MONGO_CONN_STRING = process.env.NODE_ENV === 'test'
-  ? testConfig.mongoConnString : process.env.MONGODB_CONN_STRING;
+const MONGO_CONN_STRING = process.env.MONGODB_CONN_STRING;
 async function connect() {
   client = new MongoClient(MONGO_CONN_STRING, {
     useUnifiedTopology: true,
