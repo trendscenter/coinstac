@@ -18,10 +18,12 @@ import TimeAgo from './time-ago';
 
 const styles = theme => ({
   rootPaper: {
-    ...theme.mixins.gutters(),
-    paddingTop: theme.spacing(2),
-    paddingBottom: theme.spacing(2),
+    padding: theme.spacing(2),
     marginTop: theme.spacing(2),
+    [theme.breakpoints.up('sm')]: {
+      paddingLeft: theme.spacing(3),
+      paddingRight: theme.spacing(3),
+    },
   },
   titleContainer: {
     display: 'flex',

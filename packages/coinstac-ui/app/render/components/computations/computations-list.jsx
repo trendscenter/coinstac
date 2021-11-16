@@ -52,13 +52,14 @@ const styles = theme => ({
     marginBottom: theme.spacing(4),
   },
   rootPaper: {
-    ...theme.mixins.gutters(),
     paddingTop: theme.spacing(2),
     paddingBottom: theme.spacing(2),
+    paddingLeft: theme.spacing(1),
+    paddingRight: theme.spacing(1),
     marginTop: theme.spacing(2),
-    [theme.breakpoints.down('sm')]: {
-      paddingLeft: theme.spacing(1),
-      paddingRight: theme.spacing(1),
+    [theme.breakpoints.up('sm')]: {
+      paddingLeft: theme.spacing(2),
+      paddingRight: theme.spacing(2),
     },
   },
   computationName: {
