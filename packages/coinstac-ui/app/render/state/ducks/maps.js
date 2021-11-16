@@ -113,7 +113,7 @@ export const saveDataMapping = applyAsyncLoading(
 
     const { runs } = getState();
 
-    const runAwaitingDataMap = runs.runsAwaitingDataMap.filter(
+    const runAwaitingDataMap = runs.runsAwaitingDataMap.find(
       run => run.consortiumId === consortium.id && run.pipelineSnapshot.id === pipeline.id
     );
 
