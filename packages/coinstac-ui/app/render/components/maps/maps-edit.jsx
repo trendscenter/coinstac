@@ -72,7 +72,7 @@ function MapsEdit({
         setError(true);
       });
     } else {
-      saveDataMapping(consortium.id, pipeline, dataMap);
+      saveDataMapping(consortium, pipeline, dataMap);
       updateConsortiumMappedUsers(consortium.id, true);
       setSaved(true);
       setAlertMsg(false);
