@@ -209,7 +209,7 @@ class Pipeline extends Component {
       this.setState(
         { pipeline: { ...other }, selectedId: newSelectedId, startingPipeline: { ...other } },
         () => {
-          if (nextProps.consortia.length && pipeline.owningConsortium) {
+          if (nextProps.consortia.length && other.owningConsortium) {
             this.setConsortium();
           }
         }
