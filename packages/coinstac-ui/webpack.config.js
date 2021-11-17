@@ -9,6 +9,7 @@ const port = 3000;
 const config = {
   bail: true,
   devServer: {
+    host: 'localhost',
     historyApiFallback: true,
     hot: true,
     port,
