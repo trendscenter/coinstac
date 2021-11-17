@@ -76,7 +76,7 @@ function createWindow() {
           protocol: 'file:',
           slashes: true,
           webPreferences: {
-            devTools: true,
+            devTools: false,
           },
         }));
         // `webPreferences.devTools = false` doesn't work?!
