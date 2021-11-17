@@ -69,27 +69,22 @@ describe('e2e run computation with 1 member', () => {
     await appWindow.fill('#login-username', USER_ID);
     await appWindow.fill('#login-password', PASS);
 
-    await appWindow.click('text="Log In"');
+    await appWindow.click('button:has-text("Log In")');
 
     // Assert
     return appWindow.innerText('.user-account-name', { timeout: EXIST_TIMEOUT }).should.eventually.equal(USER_ID);
   });
-//
-//   it('accesses the Add Consortium page', async () => {
-//     const consortiaMenuButton = await app.client.$('a=Consortia');
-//     await consortiaMenuButton.click();
-//
-//     const createConsortiumButton = await app.client.$('a[name="create-consortium-button"]');
-//     await createConsortiumButton.waitForClickable({ timeout: EXIST_TIMEOUT });
-//     await createConsortiumButton.click();
-//
-//     const createConsortiumTitle = await app.client.$('h4=Consortium Creation');
-//
-//     // Assert
-//     return createConsortiumTitle.waitForDisplayed({
-//       timeout: EXIST_TIMEOUT,
-//     }).should.eventually.equal(true);
-//   });
+
+  it('accesses the Add Consortium page', async () => {
+    await appWindow.click('a[has-text("Consorita")]');
+
+    await appWindow.click('a[name="create-consortium-button"]', { timeout: EXIST_TIMEOUT });
+
+    // Assert
+    return appWindow.isVisible('h4=Consortium Creation', {
+      timeout: EXIST_TIMEOUT,
+    }).should.eventually.equal(true);
+  });
 //
 //   it('creates a consortium', async () => {
 //     const nameField = await app.client.$('#name');
