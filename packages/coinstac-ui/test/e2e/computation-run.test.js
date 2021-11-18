@@ -260,7 +260,6 @@ describe('e2e run computation with 1 member', () => {
   it('logs out', async () => {
     await appWindow.click('a:has-text("Log Out")', { timeout: EXIST_TIMEOUT });
 
-    // a
     // Assert
     return appWindow.waitForSelector('button:has-text("Log In")', {
       state: 'visible',
