@@ -93,7 +93,7 @@ describe('e2e run computation with 1 member', () => {
     await appWindow.click('button:has-text("Save")');
 
     // Assert
-    await appWindow.waitForSelector('span:has-text("Consortium Saved")', {
+    await appWindow.waitForSelector('div:has-text("Consortium Saved")', {
       state: 'visible',
       timeout: EXIST_TIMEOUT,
     }).should.eventually.not.equal(null);
@@ -155,7 +155,7 @@ describe('e2e run computation with 1 member', () => {
     await appWindow.click('button:has-text("Save Pipeline")', { timeout: EXIST_TIMEOUT });
 
     // Assert
-    await appWindow.waitForSelector('span:has-text("Pipeline Saved")', {
+    await appWindow.waitForSelector('div:has-text("Pipeline Saved")', {
       state: 'visible',
       timeout: EXIST_TIMEOUT,
     }).should.eventually.not.equal(null);
@@ -177,7 +177,7 @@ describe('e2e run computation with 1 member', () => {
         state: 'visible',
         timeout: EXIST_TIMEOUT,
       }).should.eventually.not.equal(null),
-      appWindow.waitForSelector(`span:has-text("${COMPUTATION_NAME} Download Complete")`, {
+      appWindow.waitForSelector(`div:has-text("${COMPUTATION_NAME} Download Complete")`, {
         state: 'visible',
         timeout: COMPUTATION_DOWNLOAD_TIMEOUT,
       }).should.eventually.not.equal(null),
@@ -208,7 +208,7 @@ describe('e2e run computation with 1 member', () => {
     await appWindow.click('button:has-text("Start Pipeline")', { timeout: EXIST_TIMEOUT });
 
     // Assert
-    return appWindow.waitForSelector(`span:has-text("Pipeline Starting for ${CONS_NAME}.")`, {
+    return appWindow.waitForSelector(`div:has-text("Pipeline Starting for ${CONS_NAME}.")`, {
       state: 'visible',
       timeout: EXIST_TIMEOUT,
     }).should.eventually.not.equal(null);
