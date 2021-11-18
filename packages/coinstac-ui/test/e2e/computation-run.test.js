@@ -5,7 +5,6 @@ const path = require('path');
 // const electron = require('electron');
 const { _electron: electron } = require('playwright');
 
-
 const { logFilter } = require('./helper');
 
 const appPath = path.join(__dirname, '../..');
@@ -180,7 +179,7 @@ describe('e2e run computation with 1 member', () => {
       }).should.eventually.not.equal(null),
       appWindow.waitForSelector(`span:has-text("${COMPUTATION_NAME} Download Complete")`, {
         state: 'visible',
-        timeout: EXIST_TIMEOUT,
+        timeout: COMPUTATION_DOWNLOAD_TIMEOUT,
       }).should.eventually.not.equal(null),
     ]);
   });
