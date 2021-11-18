@@ -5,6 +5,8 @@ import { hashHistory } from 'react-router';
 import { ipcRenderer } from 'electron';
 import { Provider as ReduxProvider } from 'react-redux';
 import { syncHistoryWithStore } from 'react-router-redux';
+import 'core-js/stable';
+import 'regenerator-runtime/runtime';
 import configureStore from './state/store';
 import { start as startErrorHandling } from './utils/boot/configure-error-handling';
 
