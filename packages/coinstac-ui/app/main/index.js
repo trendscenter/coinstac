@@ -43,7 +43,7 @@ parseCLIInput();
 require('./utils/boot/configure-dev-services.js');
 
 // Load the UI
-const { getWindow, createWindow } = require('./utils/boot/configure-browser-window.js');
+const { createWindow } = require('./utils/boot/configure-browser-window.js');
 
 // Set up error handling
 const logUnhandledError = require('../common/utils/log-unhandled-error.js');
@@ -480,7 +480,8 @@ loadConfig()
       ipcMain.on('start-pipeline', (event, {
         consortium, dataMappings, pipelineRun, networkVolume,
       }) => {
-        // This is a way to avoid multiple instances of COINSTAC running on the same machine to start
+        // This is a way to avoid multiple instances of COINSTAC
+        // running on the same machine to start
         // the pipeline runs at the same time. We start the pipeline runs with random delays
         // between 0 and 3000ms.
         const delayAmount = Math.floor(Math.random() * 3000);
