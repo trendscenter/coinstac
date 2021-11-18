@@ -25,11 +25,13 @@ import Iframe from './displays/iframe';
 
 const styles = theme => ({
   paper: {
-    ...theme.mixins.gutters(),
-    paddingTop: theme.spacing(2),
-    paddingBottom: theme.spacing(2),
+    padding: theme.spacing(2),
     marginTop: theme.spacing(2),
     display: 'flex',
+    [theme.breakpoints.up('sm')]: {
+      paddingLeft: theme.spacing(3),
+      paddingRight: theme.spacing(3),
+    },
   },
   resultsInfo: {
     display: 'flex',

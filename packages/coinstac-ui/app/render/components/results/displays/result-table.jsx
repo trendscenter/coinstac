@@ -8,7 +8,7 @@ import TableCell from '@material-ui/core/TableCell';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import { withStyles } from '@material-ui/core/styles';
-import { v4 as uuid } from 'uuid'; // eslint-disable-line
+import { v4 as uuid } from 'uuid';
 
 const styles = () => ({
   downloadButtonContainer: {

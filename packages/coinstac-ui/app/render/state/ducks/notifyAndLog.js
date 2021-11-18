@@ -1,5 +1,7 @@
 /* eslint-disable no-case-declarations */
 import { ipcRenderer } from 'electron';
+import { v4 as uuidv4 } from 'uuid';
+
 import {
   ERROR,
   WARNING,
@@ -43,8 +45,9 @@ export const notifySuccess = message => ({
   message,
 });
 
-export const dequeueNotification = () => ({
+export const dequeueNotification = id => ({
   type: DEQUEUE_NOTIFICATION,
+  notificationId: id,
 });
 
 export default function reducer(state = INITIAL_STATE, action) {
@@ -54,16 +57,19 @@ export default function reducer(state = INITIAL_STATE, action) {
         ...state,
         notifications: [
           ...state.notifications,
-          { message: action.message, severity: action.severity },
+          {
+            id: uuidv4(),
+            message: action.message,
+            severity: action.severity,
+          },
         ],
       };
     case DEQUEUE_NOTIFICATION:
-      const notifications = [...state.notifications];
-      notifications.shift();
-
       return {
         ...state,
-        notifications,
+        notifications: state.notifications.filter(
+          notification => notification.id !== action.notificationId
+        ),
       };
     default:
       return state;
