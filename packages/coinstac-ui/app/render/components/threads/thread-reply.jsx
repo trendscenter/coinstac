@@ -136,7 +136,7 @@ const INITIAL_STATE = {
 class ThreadReply extends Component {
   state = INITIAL_STATE
 
-  UNSAFE_componentWillMount() { // eslint-disable-line
+  componentDidMount() { // eslint-disable-line
     this.initializeState(this.props);
     this.initializeDefaultRecipients(this.props, this.context);
   }

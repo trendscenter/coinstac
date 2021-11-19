@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 const { ApolloServer } = require('apollo-server-hapi');
-const hapi = require('hapi');
-const jwt2 = require('hapi-auth-jwt2');
+const hapi = require('@hapi/hapi');
+const Jwt = require('@hapi/jwt');
 const helperFunctions = require('./auth-helpers');
 const routes = require('./routes');
 const { schema } = require('./data/schema');
@@ -36,7 +36,6 @@ async function startServer() {
           const { id } = await helperFunctions.decodeToken(connectionParams.authToken);
 
           eventEmitter.emit(WS_CONNECTION_STARTED, connectionId, id);
-
           return true;
         } catch (error) {
           return false;
@@ -55,16 +54,27 @@ async function startServer() {
     port: process.env.API_SERVER_PORT,
   });
 
-  await app.register(jwt2);
+  await app.register(Jwt);
 
-  app.auth.strategy('jwt', 'jwt',
+  app.auth.strategy('coinstac-jwt', 'jwt',
     {
-      key: process.env.API_JWT_SECRET,
+      keys: {
+        key: process.env.API_JWT_SECRET,
+        algorithms: ['HS256'],
+      },
       validate: helperFunctions.validateToken,
-      verifyOptions: { algorithms: ['HS256'] },
+      verify: {
+        aud: helperFunctions.audience,
+        iss: helperFunctions.issuer,
+        sub: helperFunctions.subject,
+        nbf: true,
+        exp: true,
+        maxAgeSec: 43200, // 24 hours
+        timeSkewSec: 15,
+      },
     });
 
-  app.auth.default('jwt');
+  app.auth.default('coinstac-jwt');
   app.route(routes);
 
   await server.applyMiddleware({

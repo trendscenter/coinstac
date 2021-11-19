@@ -215,7 +215,7 @@ class ConsortiaList extends Component {
       ));
 
     text.push(
-      <div key="avatar-container" className={classes.contentContainer}>
+      <div key="avatar-wrapper" className={classes.contentContainer}>
         <Typography className={classes.label}>
           Owner(s)/Members:
         </Typography>

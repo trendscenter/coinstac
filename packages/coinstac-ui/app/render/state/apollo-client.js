@@ -7,7 +7,7 @@ import { getMainDefinition } from '@apollo/client/utilities';
 import { onError } from '@apollo/client/link/error';
 
 import { API_TOKEN_KEY } from './ducks/auth';
-import { EXPIRED_TOKEN, BAD_TOKEN } from '../utils/error-codes';
+import { EXPIRED_TOKEN } from '../utils/error-codes';
 
 function getAuthToken() {
   // get the authentication token from local storage if it exists
@@ -20,8 +20,7 @@ function getAuthToken() {
   return JSON.parse(token);
 }
 
-function getApolloClient(config) {
-  const { apiServer, subApiServer } = config.getProperties();
+function getApolloClient({ apiServer, subApiServer }) {
   const API_URL = `${apiServer.protocol}//${apiServer.hostname}${apiServer.port ? `:${apiServer.port}` : ''}${apiServer.pathname}`;
   const httpLink = new HttpLink({ uri: `${API_URL}/graphql` });
 

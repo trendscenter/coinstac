@@ -24,7 +24,7 @@ module.exports = [
     method: 'POST',
     path: '/authenticateByToken',
     config: {
-      auth: 'jwt',
+      auth: 'coinstac-jwt',
       handler: (req, h) => {
         const {
           auth: {

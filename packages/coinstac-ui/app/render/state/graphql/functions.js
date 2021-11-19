@@ -269,13 +269,13 @@ export const GENERATE_HEADLESS_CLIENT_API_KEY_MUTATION = gql`
     ${mutations.generateHeadlessClientApiKey}
 `;
 
-export const FETCH_ALL_DATASETS_TAGS_QUERY = gql`
-  query fetchAllDatasetsTags
-    ${queries.fetchAllDatasetsTags}
+export const FETCH_ALL_DATASETS_SUBJECT_GROUPS_QUERY = gql`
+  query fetchAllDatasetsSubjectGroups
+    ${queries.fetchAllDatasetsSubjectGroups}
 `;
 
 export const SEARCH_DATASETS_QUERY = gql`
-  query searchDatasets($searchString: String, $tags: [String])
+  query searchDatasets($searchString: String, $subjectGroups: [String], $modality: String)
     ${queries.searchDatasets}
 `;
 
