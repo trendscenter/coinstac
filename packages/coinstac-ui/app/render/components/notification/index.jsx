@@ -12,7 +12,9 @@ function Notification({
 
   const [visible, setVisible] = useState(true);
 
-  function handleClose() {
+  function handleClose(event, reason) {
+    if (reason === 'clickaway') return;
+
     setVisible(false);
     onClose(id);
   }

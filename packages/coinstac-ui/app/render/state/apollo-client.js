@@ -75,6 +75,9 @@ function getApolloClient({ apiServer, subApiServer }) {
               searchDatasets: {
                 merge: false, // prefer incoming server data over the data in the cache
               },
+              fetchAllConsortia: {
+                merge: false,
+              },
             },
           },
         },
