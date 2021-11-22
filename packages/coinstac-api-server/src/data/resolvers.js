@@ -701,7 +701,9 @@ const resolvers = {
           owningConsortium: ObjectID(args.consortiumId)
         });
 
-        eventEmitter.emit(PIPELINE_DELETED, pipelines);
+        eventEmitter.emit(PIPELINE_DELETED, pipelines.map((pipe) => ({
+          id: pipe._id
+        })));
       }
 
       const runs = await db.collection('runs').find({
@@ -756,7 +758,9 @@ const resolvers = {
       }
 
       const deletePipelineResult = await db.collection('pipelines').findOneAndDelete({ _id: pipelineId });
-      eventEmitter.emit(PIPELINE_DELETED, deletePipelineResult.value);
+      eventEmitter.emit(PIPELINE_DELETED, {
+        id: deletePipelineResult.value._id
+      });
 
       const updateConsortiumResult = await db.collection('consortia').findOneAndUpdate({
         activePipelineId: args.pipelineId
