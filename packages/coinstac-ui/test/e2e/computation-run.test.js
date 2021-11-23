@@ -46,18 +46,19 @@ describe('e2e run computation with 1 member', () => {
     appWindow.on('console', msg => console.log(msg.text()));
   });
 
-  // after(async () => {
-  //   if (process.env.CI) {
-  //     await app.client.getMainProcessLogs().then((logs) => {
-  //       logs.filter(logFilter).forEach((log) => {
-  //         console.log(log); // eslint-disable-line no-console
-  //       });
-  //     });
-  //   }
-  //   if (app && app.isRunning()) {
-  //     return app.stop();
-  //   }
-  // });
+  after(async () => {
+    return app.close();
+    // if (process.env.CI) {
+    //   await app.client.getMainProcessLogs().then((logs) => {
+    //     logs.filter(logFilter).forEach((log) => {
+    //       console.log(log); // eslint-disable-line no-console
+    //     });
+    //   });
+    // }
+    // if (app && app.isRunning()) {
+    //   return app.stop();
+    // }
+  });
 
   it('displays the correct title', async () => {
     return appWindow.title().should.eventually.equal('COINSTAC');
