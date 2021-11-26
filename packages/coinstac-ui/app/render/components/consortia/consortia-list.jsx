@@ -535,7 +535,7 @@ class ConsortiaList extends Component {
   }
 
   tutorialChange(tourState) {
-    if (tourState.index === 1 && tourState.lifecycle === 'complete') {
+    if (tourState.lifecycle === 'complete' && tourState.step.target === '.start-pipeline') {
       const { toggleTutorial } = this.props;
       toggleTutorial();
     }
