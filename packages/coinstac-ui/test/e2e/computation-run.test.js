@@ -1,11 +1,9 @@
-// const { Application } = require('spectron');
+/* eslint-disable no-console */
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 const path = require('path');
-// const electron = require('electron');
+const fs = require('fs').promises;
 const { _electron: electron } = require('playwright');
-
-const { logFilter } = require('./helper');
 
 const appPath = path.join(__dirname, '../..');
 
@@ -33,31 +31,20 @@ describe('e2e run computation with 1 member', () => {
       args: ['--enable-logging', appPath],
       env: Object.assign({}, process.env, { NODE_ENV: 'test' }),
       logger: {
-        isEnabled: (name, severity) => true,
-        log: (name, severity, message, args) => console.log(`${name}: ${message}`)
+        isEnabled: () => true,
+        log: (name, severity, message) => console.log(`${name}: ${message}`),
       },
-      // chromeDriverArgs: [
-      //   '--no-sandbox',
-      //   '--whitelisted-ips=',
-      //   '--disable-dev-shm-usage',
-      // ],
     });
     appWindow = await app.firstWindow();
     appWindow.on('console', msg => console.log(msg.text()));
   });
 
   after(async () => {
+    if (process.env.CI) {
+      console.log('/********** Main process logs **********/');
+      console.log(await fs.readFile('coinstac-log.json').toString());
+    }
     return app.close();
-    // if (process.env.CI) {
-    //   await app.client.getMainProcessLogs().then((logs) => {
-    //     logs.filter(logFilter).forEach((log) => {
-    //       console.log(log); // eslint-disable-line no-console
-    //     });
-    //   });
-    // }
-    // if (app && app.isRunning()) {
-    //   return app.stop();
-    // }
   });
 
   it('displays the correct title', async () => {

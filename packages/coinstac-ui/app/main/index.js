@@ -43,7 +43,7 @@ parseCLIInput();
 require('./utils/boot/configure-dev-services.js');
 
 // Load the UI
-const { getWindow, createWindow } = require('./utils/boot/configure-browser-window.js');
+const { createWindow } = require('./utils/boot/configure-browser-window.js');
 
 // Set up error handling
 const logUnhandledError = require('../common/utils/log-unhandled-error.js');

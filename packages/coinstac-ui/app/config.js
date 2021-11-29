@@ -48,12 +48,18 @@ const conf = convict({
   // these are appended to the home dir for you OS
   // *nix: ~/.config/coinstac
   // win: C:\Users\username\AppData\Local\Temp\coinstac
-  logLocations: {
-    darwin: 'Library/Logs/coinstac/',
-    freebsd: '.config/coinstac/',
-    linux: '.config/coinstac/',
-    sunos: '.config/coinstac/',
-    win32: 'coinstac/',
+  logLocations: process.env.NODE_ENV === 'test' ? {
+    darwin: './',
+    freebsd: './',
+    linux: './',
+    sunos: './',
+    win32: './',
+  } : {
+    darwin: path.join(process.env.HOME || process.env.TEMP, 'Library/Logs/coinstac/'),
+    freebsd: path.join(process.env.HOME || process.env.TEMP, '.config/coinstac/'),
+    linux: path.join(process.env.HOME || process.env.TEMP, '.config/coinstac/'),
+    sunos: path.join(process.env.HOME || process.env.TEMP, '.config/coinstac/'),
+    win32: path.join(process.env.HOME || process.env.TEMP, 'coinstac/'),
   },
   coinstacHome: path.join(home(), '.coinstac'),
   clientServerURL: '',
